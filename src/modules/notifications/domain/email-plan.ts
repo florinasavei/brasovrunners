@@ -58,7 +58,7 @@ export const DEFAULT_EMAIL_PLAN: EmailPlanSetting = {
 /**
  * Whether a plan takes the ceilings an Administrator types (§100): only «Altceva» (`CUSTOM`).
  * The form shows the two boxes only while such a plan is chosen, and the service drops whatever
- * the boxes held for any other plan before it validates (§NNN, amending §100).
+ * the boxes held for any other plan before it validates (§551, amending §100).
  */
 export function takesTypedCeilings(plan: EmailPlanId): boolean {
   return plan === "CUSTOM";

@@ -119,7 +119,7 @@ const referencedSomewhere = sql`(
   OR EXISTS (SELECT 1 FROM ${platformSettings} WHERE ${inFaqIntro})
   -- A picture in the members' pages (§524), kept in their platform setting.
   OR EXISTS (SELECT 1 FROM ${platformSettings} WHERE ${inMembersPage})
-  -- A picture in a newsletter sent (§NNN): the letter is in the subscribers' inboxes, which load
+  -- A picture in a newsletter sent (§550): the letter is in the subscribers' inboxes, which load
   -- it from this address for as long as they keep the message, so a send keeps its pictures.
   OR EXISTS (SELECT 1 FROM ${newsletterSends} WHERE ${names(sql`${newsletterSends.body}::text`)})
 )`;
@@ -324,7 +324,7 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
     .select({ assetId: mediaAssets.id })
     .from(mediaAssets)
     .innerJoin(platformSettings, inMembersPage);
-  // A picture in a newsletter sent (§NNN): one reference, the newsletter's page.
+  // A picture in a newsletter sent (§550): one reference, the newsletter's page.
   const inNewsletters = await db
     .select({ assetId: mediaAssets.id })
     .from(mediaAssets)

@@ -33,7 +33,7 @@ test.describe("BR-REQ-080-02 the Mailgun plan on «Setări» → «Emailuri»", 
     // Criterion 8: and the figure says whose allowance it is — one account, two deployments.
     await expect(main.getByText(/unui cont Mailgun folosit de QA și de producție/)).toBeVisible();
 
-    // §NNN (amending §100): the typed limits show only while «Altceva» is chosen — hidden on
+    // §551 (amending §100): the typed limits show only while «Altceva» is chosen — hidden on
     // Free, shown the moment the select changes, and what was typed survives a switch away and back.
     const select = main.getByLabel("Planul pe care e contul Mailgun");
     const typed = main.getByTestId("email-plan-typed-ceilings");

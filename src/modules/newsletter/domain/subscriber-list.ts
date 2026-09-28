@@ -1,7 +1,7 @@
 import { isNewsletterTopic, type OfferedTopic } from "./topics";
 
 /**
- * «Abonați» on `/admin/newsletter` (§NNN, amending §445; the owner, 2026-09-28 22:48: «în newsletter
+ * «Abonați» on `/admin/newsletter` (§550, amending §445; the owner, 2026-09-28 22:48: «în newsletter
  * vreau să și văd abonații și mailurile lor»): what the list's address says, and what each row's
  * state is. Pure, so the page, the CSV route and the tests read one rule.
  *
@@ -50,7 +50,7 @@ export function subscriberListInUse(query: SubscriberListQuery): boolean {
 }
 
 /**
- * A row's confirmation link, from `newsletter_tokens` and the outbox (§NNN, the brief's (8)):
+ * A row's confirmation link, from `newsletter_tokens` and the outbox (§550, the brief's (8)):
  *
  * - `confirmed` — the address confirmed; no link to speak of;
  * - `sending` — the confirmation email is still in the outbox: its link is minted when it leaves

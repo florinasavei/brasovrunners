@@ -20,7 +20,7 @@ function startGlyph(Glyph: ComponentType<{ "aria-hidden"?: "true"; sx?: object }
 }
 
 /**
- * The «Abonați» list's three controls (§NNN) — the address, the topic, the state — inside the
+ * The «Abonați» list's three controls (§550) — the address, the topic, the state — inside the
  * card's GET form, as the events list's are (§527, `EventListFields`): a client component only
  * because each field wears its glyph as an adornment, and an icon element may not cross the
  * server/client boundary (§370). A search box and two **native** selects, drawn on the server, so

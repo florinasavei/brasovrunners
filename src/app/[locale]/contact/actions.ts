@@ -87,7 +87,7 @@ export async function submitNewsletterAction(form: FormData): Promise<void> {
 }
 
 /**
- * «Vreau să mă dezabonez» under the newsletter's button (§NNN, amending §445): the address, and the
+ * «Vreau să mă dezabonez» under the newsletter's button (§550, amending §445): the address, and the
  * link to its own page mailed to it when it is subscribed. The pop-up's defences — Turnstile here,
  * the honeypot, the timing check and the per-address bucket in the service — and one answer whatever
  * the address is, `?nleave=sent`, so the form cannot say whether somebody reads the club's news.

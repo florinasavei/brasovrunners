@@ -59,11 +59,11 @@ const ENGLISH_FIELD_PATTERNS: readonly RegExp[] = [
   // «Întrebări frecvente» (§525): a card's question, its category and its answer.
   /^faq\[\d{1,3}\]\.(question|category)En$/,
   /^faq\[\d{1,3}\]\.answerEnBody$/,
-  // The newsletter's body, written in the editor (§NNN); its subject is `subjectEn` above.
+  // The newsletter's body, written in the editor (§550); its subject is `subjectEn` above.
   /^newsletterBodyEn$/,
 ];
 
-/** The newsletter composer's body (§NNN): a rich text posting as `newsletterBodyRo` / `newsletterBodyEn`. */
+/** The newsletter composer's body (§550): a rich text posting as `newsletterBodyRo` / `newsletterBodyEn`. */
 const NEWSLETTER_RICH_TEXT = /^newsletterBodyEn$/;
 
 /**

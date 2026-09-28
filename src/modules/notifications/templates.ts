@@ -884,7 +884,7 @@ export type TemplateData = {
   newsletterTopicsOther?: string;
   /** The confirmation message went to an address already subscribed: its action is the subscriber's own page. */
   newsletterAlready?: boolean;
-  /** …and it was asked for from the contact page's «Vreau să mă dezabonez» (§NNN), not by subscribing again. */
+  /** …and it was asked for from the contact page's «Vreau să mă dezabonez» (§550), not by subscribing again. */
   newsletterManageRequest?: boolean;
   /** The subscriber's own page — the topics and "unsubscribe" — on every newsletter message; never on anything else. */
   newsletterManageUrl?: string;
@@ -894,7 +894,7 @@ export type TemplateData = {
   newsletterBody?: string;
   newsletterBodyOther?: string;
   /**
-   * A newsletter written in the editor (§NNN): this half's document and the other half's. Set, it
+   * A newsletter written in the editor (§550): this half's document and the other half's. Set, it
    * is what the message carries; `newsletterBody` is the plain text of a send written before.
    */
   newsletterBodyDoc?: RichTextDoc;
@@ -2156,7 +2156,7 @@ const NEWSLETTER_MESSAGES: ReadonlySet<EmailMessageType> = new Set(["NEWSLETTER_
  */
 function newsletterParts(messageType: EmailMessageType, data: TemplateData): EmailBodyPart[] {
   if (messageType !== "NEWSLETTER") return [];
-  // Written in the editor (§NNN): its blocks and its pictures, every picture's address absolute.
+  // Written in the editor (§550): its blocks and its pictures, every picture's address absolute.
   if (data.newsletterBodyDoc) return newsletterBodyParts(data.newsletterBodyDoc, env.APP_BASE_URL);
   if (!data.newsletterBody) return [];
   const paragraphs = organizerParagraphs(data.newsletterBody);

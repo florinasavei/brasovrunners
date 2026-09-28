@@ -23,7 +23,7 @@ export function newsletterDialogOpen(outcome: NewsletterOutcome | null): boolean
   return outcome === "open" || outcome === "invalid" || outcome === "captcha" || outcome === "limited";
 }
 
-/** «Vreau să mă dezabonez» (§NNN): the fold's anchor, `/ro/contact#newsletter-leave`. */
+/** «Vreau să mă dezabonez» (§550): the fold's anchor, `/ro/contact#newsletter-leave`. */
 export const NEWSLETTER_LEAVE_ID = "newsletter-leave";
 
 /** Its action's answers, in `?nleave=`: `sent` whatever the address was; the rest a refusal to fix. */

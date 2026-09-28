@@ -162,11 +162,11 @@ export type AuditAction =
   /** A subscription removed by an Administrator at the person's written request (§445) — never the address. */
   | "newsletter.address_withdrawn"
   /**
-   * A subscription removed from the «Abonați» list's row (§NNN): who, why (the list, at the club's
+   * A subscription removed from the «Abonați» list's row (§550): who, why (the list, at the club's
    * hand) and whether it had confirmed; the subscriber's id, which no longer names a row — never the address.
    */
   | "newsletter.subscriber_unsubscribed"
-  /** The «Abonați» list downloaded as a CSV (§NNN): who, the filter's shape and how many rows — never a row. */
+  /** The «Abonați» list downloaded as a CSV (§550): who, the filter's shape and how many rows — never a row. */
   | "newsletter.subscribers_exported"
   /**
    * An event erased outright, with everyone registered for it (BR-REQ-037-06). Like

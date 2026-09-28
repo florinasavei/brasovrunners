@@ -47,7 +47,7 @@ type Props = {
 export const SUBSCRIBERS_ANCHOR = "newsletter-subscribers";
 
 /**
- * One table, two layouts by CSS alone (§NNN): a table from `md` up, and below it every row a block
+ * One table, two layouts by CSS alone (§550): a table from `md` up, and below it every row a block
  * — the address as its headline, each other cell a line with its column's name before it
  * (`data-label`), the button under them — so each row renders its «Dezabonează» form once, not
  * once per layout.
@@ -88,7 +88,7 @@ const ROW = (last: boolean) =>
 const HEAD_RULE = { borderBottom: 2, borderColor: "text.secondary", fontWeight: 700, whiteSpace: "nowrap" } as const;
 
 /**
- * «Abonați» / "Subscribers" on `/admin/newsletter` (§NNN, amending §445; the owner, 2026-09-28
+ * «Abonați» / "Subscribers" on `/admin/newsletter` (§550, amending §445; the owner, 2026-09-28
  * 22:48: «în newsletter vreau să și văd abonații și mailurile lor»): every subscriber, newest first
  * — the address as typed, the language, the topics in the pop-up's words, the state with what its
  * confirmation link is doing, since when and confirmed on — with a search by address, a topic and a

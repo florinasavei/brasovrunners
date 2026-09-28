@@ -41,7 +41,7 @@ export async function sendNewsletterAction(_previous: FormOutcome | null, form: 
       {
         topic: posted("topic"),
         subject: { ro: posted("subjectRo"), en: posted("subjectEn") },
-        // The two rich editors' hidden boxes (§NNN): each language's document as JSON.
+        // The two rich editors' hidden boxes (§550): each language's document as JSON.
         body: { ro: posted("newsletterBodyRo"), en: posted("newsletterBodyEn") },
         sendId: posted("sendId"),
       },
@@ -69,7 +69,7 @@ export async function previewNewsletterAction(input: {
   bodyRo: unknown;
   bodyEn: unknown;
 }): Promise<NewsletterPreview | null> {
-  // A body is the editor's document as JSON (§NNN): its own, larger ceiling; a subject stays short.
+  // A body is the editor's document as JSON (§550): its own, larger ceiling; a subject stays short.
   const read = (value: unknown, max = 20_000) => (typeof value === "string" ? value.slice(0, max) : "");
   try {
     const actor = await requireStaff();
@@ -111,7 +111,7 @@ export async function withdrawNewsletterAddressAction(_previous: FormOutcome | n
 }
 
 /**
- * «Dezabonează» on a row of the «Abonați» list (§NNN, amending §445). Administrator and
+ * «Dezabonează» on a row of the «Abonați» list (§550, amending §445). Administrator and
  * Superadministrator only — asserted at the door (`requireStaffCapability`) and again by the
  * service — after the one ConfirmDialog that names the address. Lands back on the list as it was
  * filtered (the form carries the list's own parameters, re-read through the parser, never passed

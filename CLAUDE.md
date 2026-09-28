@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.24-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.25-2026-09-27 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V2.24-2026-09-27`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V2.25-2026-09-27`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -459,7 +459,7 @@ it is the authority, this is the summary):
     and a privacy notice that describes the members' zone (§524). `/admin/legal` → «Aprobă acum textele care lipsesc…» approves
     in one press every text that has no approved version; a text already in force is «Versiune nouă» → «Pornește de la șablon»,
     one at a time. A Romanian lawyer should read the declarations first. This covers items 8 and 14 too.
-    Since §NNN the notice's template also says that only the club's organizers and administrators see the newsletter's
+    Since §550 the notice's template also says that only the club's organizers and administrators see the newsletter's
     subscriber list with the addresses and may download it — approve that notice before an Organizer reads the addresses
     on production.
 17. **Re-grade every event's difficulty** — migration `0104` put each event in the middle step of its old band (§526). Open each

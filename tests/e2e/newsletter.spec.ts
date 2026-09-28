@@ -36,7 +36,7 @@ test.describe("§445 the newsletter's own backoffice page", () => {
     await expect(compose.locator('input[name="topic"][value="DISCOUNTS"]')).toHaveCount(0);
     await compose.locator('input[name="topic"][value="GEAR_TESTING"]').check();
     const subject = `Testare de încălțăminte ${Date.now().toString(36)}`;
-    // One language per tab, the letter in the rich-text editor (§NNN): bold on the first line.
+    // One language per tab, the letter in the rich-text editor (§550): bold on the first line.
     await compose.getByLabel("Subiect (română)").fill(subject);
     const bodyRo = compose.getByTestId("newsletter-body-ro");
     await bodyRo.locator(".tiptap").click();
@@ -61,7 +61,7 @@ test.describe("§445 the newsletter's own backoffice page", () => {
     await expect(page.getByTestId("newsletter-sent-banner")).toBeVisible();
     expect(await newsletterMessagesTo(email)).toBe(1);
     await expect(page.getByTestId("newsletter-history")).toContainText(subject);
-    // The history says the letter's first line of words (§NNN).
+    // The history says the letter's first line of words (§550).
     await expect(page.getByTestId("newsletter-history")).toContainText("Sâmbătă, la start.");
   });
 
@@ -131,7 +131,7 @@ test.describe("§445 the newsletter's own backoffice page", () => {
     await expect(page.locator("#main").getByTestId("newsletter-composer")).toBeVisible();
     // The Administrator's withdrawal is not the Organizer's.
     await expect(page.getByTestId("newsletter-withdraw")).toHaveCount(0);
-    // The Organizer reads «Abonați» and its CSV, and is offered no «Dezabonează» (§NNN).
+    // The Organizer reads «Abonați» and its CSV, and is offered no «Dezabonează» (§550).
     await expect(page.locator("#main").getByTestId("newsletter-subscribers")).toBeVisible();
     await expect(page.getByTestId("newsletter-subscribers-csv")).toHaveCount(1);
     // The seeded address through the list's own search: the fold opens by itself on a filter.
@@ -194,7 +194,7 @@ test.describe("§445 the newsletter pop-up on the contact page", () => {
     await expect(dialog).toBeHidden();
   });
 
-  test("«Vreau să mă dezabonez» opens a one-box form that answers one sentence whatever the address, and mails the link only to a subscriber (§NNN)", async ({ page }) => {
+  test("«Vreau să mă dezabonez» opens a one-box form that answers one sentence whatever the address, and mails the link only to a subscriber (§550)", async ({ page }) => {
     const subscriber = address();
     const stranger = `stranger-${address()}`;
     await seedConfirmedSubscriber(subscriber, ["BIG_EVENTS"]);

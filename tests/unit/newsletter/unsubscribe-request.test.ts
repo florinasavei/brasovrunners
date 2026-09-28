@@ -6,11 +6,11 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN (amending §445; the owner, 2026-09-28 23:10: «oamenii pot să se și dezaboneze de la
+ * §550 (amending §445; the owner, 2026-09-28 23:10: «oamenii pot să se și dezaboneze de la
  * newsletter») — «Vreau să mă dezabonez» on the contact page: its words in both languages, its
  * answers in the address, and the message a subscriber receives from it.
  */
-describe("§NNN «Vreau să mă dezabonez»: the words", () => {
+describe("§550 «Vreau să mă dezabonez»: the words", () => {
   it("has the same keys in both languages, plain sentences of at most 200 characters, no ICU plural", () => {
     expect(Object.keys(ro.Newsletter.leave).sort()).toEqual(Object.keys(en.Newsletter.leave).sort());
     for (const catalogue of [ro, en]) {
@@ -40,7 +40,7 @@ describe("§NNN «Vreau să mă dezabonez»: the words", () => {
   });
 });
 
-describe("§NNN «Vreau să mă dezabonez»: the message", () => {
+describe("§550 «Vreau să mă dezabonez»: the message", () => {
   it("says what was asked in both halves, with the button to the subscriber's own page and no confirmation words", () => {
     const data = { ...emailSampleFor("NEWSLETTER_CONFIRM", "ro"), newsletterAlready: true, newsletterManageRequest: true };
     const message = renderBilingual("NEWSLETTER_CONFIRM", "ro", data, emailSampleActionUrl("ro"));

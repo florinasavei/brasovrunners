@@ -9,7 +9,7 @@ import { env } from "@/shared/config/env";
  * English, both required — every subscriber reads their own language first and the other under it
  * (§96), and "multi-lingual, always" is the owner's standing rule (§352).
  *
- * **The body is rich text since §NNN** (the owner, 2026-09-28: «trebuie să pot scrie cu Rich text
+ * **The body is rich text since §550** (the owner, 2026-09-28: «trebuie să pot scrie cu Rich text
  * editor abonaților!»): the platform's own editor, one per language, posting the document as JSON —
  * bold, italic, the two headings, the lists, a quote, links, and pictures the club stored
  * (`NEWSLETTER_BODY_BLOCKS`). A send written before stays the plain text it was stored as and is
@@ -31,10 +31,10 @@ export const NEWSLETTER_BODY_MAX = 6000;
 /** The posted document's own ceiling: a letter of 6 000 characters with its marks and pictures is far below it. */
 export const NEWSLETTER_BODY_JSON_MAX = 400_000;
 
-/** The composer's boxes, by the names the form posts (§NNN: the body's are the rich editors' hidden boxes). */
+/** The composer's boxes, by the names the form posts (§550: the body's are the rich editors' hidden boxes). */
 export type NewsletterBox = "subjectRo" | "subjectEn" | "newsletterBodyRo" | "newsletterBodyEn";
 
-/** A stored body: the editor's document, or the plain text a send written before §NNN carries. */
+/** A stored body: the editor's document, or the plain text a send written before §550 carries. */
 export type NewsletterBody = RichTextDoc | string;
 
 export type NewsletterWords = { subject: BilingualText; body: { ro: RichTextDoc; en: RichTextDoc } };
@@ -109,7 +109,7 @@ export function newsletterBodyText(body: NewsletterBody): string {
   return typeof body === "string" ? body : richTextToPlainText(body);
 }
 
-/** The first line of a body's words, for the sends' history (§NNN): at most `max` characters. */
+/** The first line of a body's words, for the sends' history (§550): at most `max` characters. */
 export function newsletterFirstLine(body: NewsletterBody, max = 120): string {
   const line = newsletterBodyText(body).split("\n").map((part) => part.trim()).find((part) => part !== "") ?? "";
   return line.length > max ? `${line.slice(0, max - 1).trimEnd()}…` : line;
@@ -165,7 +165,7 @@ export function checkNewsletterWords(input: {
 
 /**
  * The stored words of a send (`newsletter_sends.subject`/`body`), or `null` when a row does not
- * carry both languages. A body is a document (since §NNN) or the plain text an older send stored.
+ * carry both languages. A body is a document (since §550) or the plain text an older send stored.
  */
 export function readNewsletterWords(subject: unknown, body: unknown): StoredNewsletterWords | null {
   const pair = (value: unknown): BilingualText | null => {

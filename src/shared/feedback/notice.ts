@@ -138,7 +138,7 @@ const NOTHING_HAPPENED: ReadonlySet<string> = new Set([
   // The newsletter (§445): the same form pressed twice, and an address that was not on the list.
   "newsletterDuplicate",
   "newsletterNotFound",
-  // «Dezabonează» on a row the person had already left, or a second press (§NNN).
+  // «Dezabonează» on a row the person had already left, or a second press (§550).
   "newsletterUnsubscribedGone",
 ]);
 

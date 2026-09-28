@@ -20,7 +20,7 @@ export type NewsletterPreview = { subject: string; html: string };
  * like the send (`canSendNewsletter`, BR-REQ-060-01). An empty box previews as the platform's
  * fallback subject and an absent body — which is what the send would refuse.
  *
- * The bodies are the editors' documents since §NNN, rendered through the send's own path
+ * The bodies are the editors' documents since §550, rendered through the send's own path
  * (`newsletterBodyParts`): the same card, the same pictures at their absolute addresses. A body
  * the send would refuse (a film, a picture this club did not store) previews as absent.
  */

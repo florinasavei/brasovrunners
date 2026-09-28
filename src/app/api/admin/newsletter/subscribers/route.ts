@@ -16,7 +16,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 const CSV_LIMIT = 100_000;
 
 /**
- * «Descarcă CSV» on the newsletter's «Abonați» card (§NNN, amending §445): the filter the list shows
+ * «Descarcă CSV» on the newsletter's «Abonați» card (§550, amending §445): the filter the list shows
  * (`q`, `topic`, `state`), in the reader's language (`lang`), as a UTF-8 file with a BOM.
  *
  * Whoever reads the list may take it — `canSendNewsletter`, the page's own gate, asserted here

@@ -122,7 +122,7 @@ export default async function ContactPage({ params, searchParams }: Props) {
   const newsletterOutcome = parseNewsletterOutcome(newsletter);
   const newsletterOffered = (await orNull(() => cachedNewsletterOffered(now))) === true;
   const newsletterRefused = newsletterOutcome === "invalid" || newsletterOutcome === "captcha" || newsletterOutcome === "limited";
-  // «Vreau să mă dezabonez» (§NNN): its own answer, and its typed address in the same sealed draft.
+  // «Vreau să mă dezabonez» (§550): its own answer, and its typed address in the same sealed draft.
   const leaveOutcome = parseNewsletterLeaveOutcome(nleave);
   const leaveRefused = newsletterLeaveRefused(leaveOutcome);
   const draft = error || sent || newsletterRefused || leaveRefused ? await readFormDraft() : null;

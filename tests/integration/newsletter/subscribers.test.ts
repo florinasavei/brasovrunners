@@ -24,7 +24,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN (amending §445) — the newsletter's «Abonați» list, its CSV and its «Dezabonează», and the
+ * §550 (amending §445) — the newsletter's «Abonați» list, its CSV and its «Dezabonează», and the
  * letter written in the rich-text editor, on real PostgreSQL.
  *
  * The session is the real one (`session.ts`, the development switcher's cookie), so the CSV route
@@ -71,7 +71,7 @@ function letter(words: string): RichTextDoc {
   };
 }
 
-describe("§NNN the newsletter's subscribers, their CSV, the unsubscribe, and the letter in rich text", () => {
+describe("§550 the newsletter's subscribers, their CSV, the unsubscribe, and the letter in rich text", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
 
@@ -329,7 +329,7 @@ describe("§NNN the newsletter's subscribers, their CSV, the unsubscribe, and th
       { kind: "newsletter", id: "newsletter", title: null },
     ]);
 
-    // A send written before §NNN kept its words as plain text: it renders as it always did.
+    // A send written before §550 kept its words as plain text: it renders as it always did.
     await db.update(newsletterSends).set({ body: { ro: "Salut,\n\nne vedem sâmbătă.", en: "Hi,\n\nsee you on Saturday." } }).where(eq(newsletterSends.id, SEND_ID));
     const old = await renderOutboxMessage(row, db, NOW);
     expect(old.html).toContain(">Salut,</p>");

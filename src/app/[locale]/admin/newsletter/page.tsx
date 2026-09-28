@@ -31,7 +31,7 @@ const one = (value: string | string[] | undefined): string | undefined => (Array
  * «Newsletter» (§445): the backoffice's own entry, after «Emailuri» — the owner, 2026-09-26:
  * "pentru newsletter o să fie un meniu suplimentar în backoffice cu «Newsletter»". The subscribers
  * as numbers and the composer that writes to them, which `/admin/emails` held before; that page
- * keeps one line pointing here. Since §NNN (the owner, 2026-09-28: «în newsletter vreau să și văd
+ * keeps one line pointing here. Since §550 (the owner, 2026-09-28: «în newsletter vreau să și văd
  * abonații și mailurile lor») also the list itself, «Abonați», with the addresses, searched and
  * filtered through the address bar (`q`, `topic`, `state`) and downloadable as a CSV.
  *

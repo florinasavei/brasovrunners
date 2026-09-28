@@ -149,7 +149,7 @@ export default async function EmailPlanPanel({ locale, plan, volume, mayEdit, op
         data-testid="email-plan-form"
       >
         <input type="hidden" name="uiLocale" value={locale} />
-        {/* The typed boxes show only while «Altceva» is chosen (§NNN): CSS on the select's own state. */}
+        {/* The typed boxes show only while «Altceva» is chosen (§551): CSS on the select's own state. */}
         <Stack spacing={1.5} sx={{ maxWidth: 520, [typedCeilingsHiddenSelector()]: { display: "none" } }}>
           <RecallField
             select

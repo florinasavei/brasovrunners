@@ -117,7 +117,7 @@ export async function renderNewsletterRow(
     if (subscriber.confirmedAt !== null) {
       // Already subscribed: nothing to confirm, and the owner of the address changes things there.
       data.newsletterAlready = true;
-      // Asked for from «Vreau să mă dezabonez» (§NNN): the same link, words that say what was asked.
+      // Asked for from «Vreau să mă dezabonez» (§550): the same link, words that say what was asked.
       if ((payload as { request?: unknown }).request === NEWSLETTER_MANAGE_REQUEST) data.newsletterManageRequest = true;
       actionUrl = await manageUrl();
     } else {
@@ -139,7 +139,7 @@ export async function renderNewsletterRow(
     if (!words) throw new Error("newsletter: the send's words cannot be read");
     data.newsletterSubject = words.subject[locale];
     data.newsletterSubjectOther = words.subject[other];
-    // The editor's document since §NNN, or the plain text an older send stored — each half its own.
+    // The editor's document since §550, or the plain text an older send stored — each half its own.
     const mine = words.body[locale];
     const theirs = words.body[other];
     if (typeof mine === "string") data.newsletterBody = mine;

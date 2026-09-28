@@ -20,12 +20,12 @@ function manageSecretIn(message: OutgoingEmail): string {
 }
 
 /**
- * §NNN (amending §445; the owner, 2026-09-28 23:10: «oamenii pot să se și dezaboneze de la
+ * §550 (amending §445; the owner, 2026-09-28 23:10: «oamenii pot să se și dezaboneze de la
  * newsletter») — «Vreau să mă dezabonez» on the contact page, on real PostgreSQL: a subscribed
  * address is mailed the link to its own page, whose «Dezabonează-mă de la tot» removes it; any other
  * address gets the same answer and no message; the sign-up's per-address bucket refuses the fourth.
  */
-describe("§NNN «Vreau să mă dezabonez»: the link to leave, mailed only to a subscriber", () => {
+describe("§550 «Vreau să mă dezabonez»: the link to leave, mailed only to a subscriber", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
 

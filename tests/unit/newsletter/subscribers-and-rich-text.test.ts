@@ -45,7 +45,7 @@ const LETTER: RichTextDoc = {
   ],
 };
 
-describe("§NNN the newsletter's letter in the rich-text editor", () => {
+describe("§550 the newsletter's letter in the rich-text editor", () => {
   it("carries a bold line, a link, a list and a picture into the HTML and the text alternative", () => {
     const parts = newsletterBodyParts(LETTER, BASE);
     const html = parts.map((part) => part.html).join("\n");
@@ -129,7 +129,7 @@ describe("§NNN the newsletter's letter in the rich-text editor", () => {
   });
 });
 
-describe("§NNN the «Abonați» list's address and states", () => {
+describe("§550 the «Abonați» list's address and states", () => {
   it("reads only real topics and states from the address, and writes back only what narrows it", () => {
     const query = parseSubscriberListQuery({ q: "  ana@example.org ", topic: "GEAR_TESTING", state: "pending", saved: "x" });
     expect(query).toEqual({ q: "ana@example.org", topic: "GEAR_TESTING", state: "pending" });
@@ -154,7 +154,7 @@ describe("§NNN the «Abonați» list's address and states", () => {
   });
 });
 
-describe("§NNN the subscribers' CSV", () => {
+describe("§550 the subscribers' CSV", () => {
   const header = { email: "Adresa", language: "Limba", topics: "Teme", state: "Starea", subscribed: "Abonat din", confirmed: "Confirmat la" };
 
   it("starts with a BOM, keeps the table's columns and escapes the way the registrations export does", () => {

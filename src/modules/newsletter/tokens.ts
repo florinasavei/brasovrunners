@@ -22,7 +22,7 @@ export const NEWSLETTER_MANAGE_LINK_DAYS = 365;
 
 /**
  * A `NEWSLETTER_CONFIRM` row's `payload.request` when the subscriber asked for their own page from
- * the contact page («Vreau să mă dezabonez», §NNN) rather than subscribing again: the same link, words
+ * the contact page («Vreau să mă dezabonez», §550) rather than subscribing again: the same link, words
  * that say what was asked.
  */
 export const NEWSLETTER_MANAGE_REQUEST = "manage";

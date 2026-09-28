@@ -181,7 +181,7 @@ const manageLinkRequestSchema = z.object({
 });
 
 /**
- * «Vreau să mă dezabonez» on the contact page (§NNN, amending §445; the owner, 2026-09-28: «oamenii
+ * «Vreau să mă dezabonez» on the contact page (§550, amending §445; the owner, 2026-09-28: «oamenii
  * pot să se și dezaboneze de la newsletter»): somebody without a newsletter at hand types the
  * address, and a subscribed address is sent the link to its own page — the topics and «Dezabonează-mă
  * de la tot» — nothing else. Nothing changes here: the unsubscribe is the page's POST, by the link,
@@ -378,7 +378,7 @@ export async function withdrawNewsletterAddress<T extends Record<string, unknown
 }
 
 /**
- * «Dezabonează» on a row of the «Abonați» list (§NNN, amending §445): an Administrator removes one
+ * «Dezabonează» on a row of the «Abonați» list (§550, amending §445): an Administrator removes one
  * subscription — at the person's request, or an address that should not be there — exactly as the
  * subscriber's own «unsubscribe from everything» does (`deleteSubscriberIn`: the row, every link of
  * theirs by cascade, every newsletter still waiting for them), in one transaction with the audit row.
@@ -571,7 +571,7 @@ export type NewsletterSendRow = {
   topics: NewsletterTopic[];
   /** The subject as written, both languages; an alert's is null — its words are the event's. */
   subject: { ro: string; en: string } | null;
-  /** The body's first line of words, both languages (§NNN): what the letter says, at a glance. Null on an alert. */
+  /** The body's first line of words, both languages (§550): what the letter says, at a glance. Null on an alert. */
   firstLine: { ro: string; en: string } | null;
   eventId: string | null;
   recipients: number;

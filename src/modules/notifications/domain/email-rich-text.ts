@@ -215,7 +215,7 @@ function blockText(block: EmailBodyBlock, data: Facts): string[] {
 export type EmailBodyPart = { html: string; text: string[] };
 
 /**
- * A newsletter's vocabulary (§NNN, amending §445): the email's, plus **a picture**.
+ * A newsletter's vocabulary (§550, amending §445): the email's, plus **a picture**.
  *
  * §270 refuses a picture in the club's message texts because a picture there would be the club's
  * words pretending to be a registration's machinery, and because an unknown sender's picture is
@@ -282,7 +282,7 @@ function pictureParts(block: ImageBlock, baseUrl: string): EmailBodyPart {
 }
 
 /**
- * A newsletter's body as the message's parts (§NNN): the email's blocks as `emailBodyParts` draws
+ * A newsletter's body as the message's parts (§550): the email's blocks as `emailBodyParts` draws
  * them — nothing filled, a newsletter carries no field — and each picture through `pictureParts`.
  * A film or a table cannot be saved (`unsupportedNewsletterBlocks`); one that somehow is stored is
  * skipped, so the letter still leaves.

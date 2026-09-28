@@ -58,7 +58,7 @@ export async function updateEmailPlan<T extends Record<string, unknown>>(
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not change the email plan`);
   }
   /*
-    A catalogue plan ignores the typed boxes before they are validated (§NNN, amending §100): the
+    A catalogue plan ignores the typed boxes before they are validated (§551, amending §100): the
     boxes are hidden while such a plan is chosen and keep what was typed, so a switch back to
     «Altceva» loses nothing — and a leftover "0" in a box nobody can see must not refuse the save.
   */

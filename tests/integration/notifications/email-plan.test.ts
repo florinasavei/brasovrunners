@@ -76,7 +76,7 @@ describe("the email plan setting", () => {
   it("drops typed ceilings on a catalogue plan and keeps them on a custom one", async () => {
     await updateEmailPlan(db, admin, { plan: "FOUNDATION", dailyAllowance: 7, monthlyAllowance: 8 }, NOW);
     expect(await readEmailPlan(db)).toMatchObject({ plan: "FOUNDATION", dailyAllowance: null, monthlyAllowance: null });
-    // §NNN: the boxes are hidden under a catalogue plan and keep what was typed, so whatever they
+    // §551: the boxes are hidden under a catalogue plan and keep what was typed, so whatever they
     // hold — even a number «Altceva» would refuse — is ignored, never a refusal about a hidden box.
     await updateEmailPlan(db, admin, { plan: "BASIC", dailyAllowance: 0, monthlyAllowance: Number.NaN }, NOW);
     expect(await readEmailPlan(db)).toMatchObject({ plan: "BASIC", dailyAllowance: null, monthlyAllowance: null });

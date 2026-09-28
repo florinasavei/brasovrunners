@@ -347,7 +347,7 @@ export default async function NewsletterSignup({ locale, outcome, refused, typed
       </Box>
 
       {/*
-        «Vreau să mă dezabonez» (§NNN): for somebody with no newsletter at hand, whose every message
+        «Vreau să mă dezabonez» (§550): for somebody with no newsletter at hand, whose every message
         carries the way out. A native fold, so it opens without a script; the answer is one sentence
         whatever the address is, and the link to leave goes to the mailbox, never to this page.
       */}

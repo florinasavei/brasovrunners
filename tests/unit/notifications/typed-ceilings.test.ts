@@ -7,11 +7,11 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN, amending `DECISIONS.md` §100 — the typed monthly and daily limits on the Mailgun plan card
+ * §551, amending `DECISIONS.md` §100 — the typed monthly and daily limits on the Mailgun plan card
  * show only while «Altceva» is chosen. The owner, 2026-09-28: «ar trebui să apară doar când chiar
  * am selectat Altceva».
  */
-describe("§NNN the typed-ceiling boxes show only under «Altceva»", () => {
+describe("§551 the typed-ceiling boxes show only under «Altceva»", () => {
   const selector = typedCeilingsHiddenSelector();
   const shown: Record<(typeof EMAIL_PLAN_IDS)[number], boolean> = {
     FREE: false,

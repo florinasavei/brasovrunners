@@ -1,7 +1,7 @@
 import { TYPED_CEILING_PLAN_IDS } from "@/modules/notifications/domain/email-plan";
 
 /**
- * When the plan card shows its typed-ceiling boxes (§NNN, amending §100): only while the select
+ * When the plan card shows its typed-ceiling boxes (§551, amending §100): only while the select
  * holds a plan that takes them — «Altceva». The owner, 2026-09-28: «aceste câmpuri de limite
  * lunare care sunt pe «Altceva» ar trebui să apară doar când chiar am selectat Altceva».
  *

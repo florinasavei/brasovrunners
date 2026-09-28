@@ -1,7 +1,7 @@
 import { csvCell } from "@/modules/registrations/csv";
 
 /**
- * «Descarcă CSV» on the newsletter's «Abonați» card (§NNN, amending §445): the table's columns, one
+ * «Descarcă CSV» on the newsletter's «Abonați» card (§550, amending §445): the table's columns, one
  * row per subscriber the filter shows, in the reader's language.
  *
  * The registrations export's rules (`registrations/csv.ts`): every cell through the one `csvCell`, so

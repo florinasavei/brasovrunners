@@ -92,7 +92,7 @@ export async function newsletterMessagesTo(email: string): Promise<number> {
   });
 }
 
-/** How many «Vreau să mă dezabonez» links were queued for an address (§NNN): the confirmation message marked `request: manage`. */
+/** How many «Vreau să mă dezabonez» links were queued for an address (§550): the confirmation message marked `request: manage`. */
 export async function newsletterManageRequestsTo(email: string): Promise<number> {
   return withDatabase(async (client) => {
     const { rows } = await client.query<{ n: string }>(

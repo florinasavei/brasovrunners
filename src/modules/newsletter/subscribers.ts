@@ -8,7 +8,7 @@ import { type ConfirmLinkState, confirmLinkState, type SubscriberListQuery, SUBS
 import { normalizeTopics, type OfferedTopic } from "./domain/topics";
 
 /**
- * The newsletter's subscribers as the backoffice reads them (§NNN, amending §445; the owner,
+ * The newsletter's subscribers as the backoffice reads them (§550, amending §445; the owner,
  * 2026-09-28: «în newsletter vreau să și văd abonații și mailurile lor»). §445 showed numbers only;
  * the club now sees who, because a list it keeps and writes to is a list it must be able to answer
  * for — "am I on it?", "take me off", "how many really confirmed".

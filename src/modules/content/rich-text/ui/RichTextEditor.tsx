@@ -1022,7 +1022,7 @@ function RichTextEditorIsland({
             active={galleryOpen}
             onClick={() => setGalleryOpen((open) => !open)}
           />
-          {/* A newsletter takes pictures and no film (§NNN): an inbox plays nothing (§270). */}
+          {/* A newsletter takes pictures and no film (§550): an inbox plays nothing (§270). */}
           {features.video !== false && (
           <ToolbarButton
             label={labels.youtube}

@@ -26,7 +26,7 @@ import { SENDABLE_TOPICS } from "../domain/topics";
 import type { NewsletterAudience, NewsletterSendRow } from "../service";
 import NewsletterPreview from "./NewsletterPreview";
 
-/** The composer's two languages, as the tabs draw them (§NNN). */
+/** The composer's two languages, as the tabs draw them (§550). */
 const LANGUAGES = [
   { locale: "ro", suffix: "Ro", label: "langRo" },
   { locale: "en", suffix: "En", label: "langEn" },
@@ -41,7 +41,7 @@ type Props = {
   offered: boolean;
   /** The Administrator's: removing an address at the person's request. */
   mayWithdraw: boolean;
-  /** The «Abonați» list (§NNN), drawn between the numbers and the composer. */
+  /** The «Abonați» list (§550), drawn between the numbers and the composer. */
   subscribers?: ReactNode;
 };
 
@@ -50,9 +50,9 @@ type Props = {
  * backoffice cu «Newsletter»"), as cards. «Cifre și trimiteri»: the numbers — confirmed and
  * pending, per topic, and the last send; what was sent, with each letter's first line; and the
  * Administrator's form for an address somebody asked, in writing, to have removed. «Abonați»
- * (`NewsletterSubscribers`, §NNN) is the list itself, with the addresses. «Scrie abonaților»: a
+ * (`NewsletterSubscribers`, §550) is the list itself, with the addresses. «Scrie abonaților»: a
  * composer that writes to the subscribers of one topic in both languages — in the rich-text editor
- * since §NNN — with a preview of the message as it will arrive.
+ * since §550 — with a preview of the message as it will arrive.
  *
  * A Server Component around two `ActionForm`s, on a page only a role that may send opens
  * (`canSendNewsletter`, asserted by the page and again by the service). Both cards stand open — the
@@ -140,7 +140,7 @@ export default async function NewsletterPanel({ locale, audience, history, volum
                         sender: row.senderName ?? t("newsletter.historyNoSender"),
                       })}
                 </Typography>
-                {/* What the letter says, its first line of words (§NNN), under the line that says when and to whom. */}
+                {/* What the letter says, its first line of words (§550), under the line that says when and to whom. */}
                 {row.kind === "MESSAGE" && row.firstLine && row.firstLine[locale] !== "" && (
                   <Typography variant="body2" color="text.secondary" sx={{ fontStyle: "italic", wordBreak: "break-word" }} data-testid="newsletter-history-first-line">
                     {row.firstLine[locale]}
@@ -218,7 +218,7 @@ export default async function NewsletterPanel({ locale, audience, history, volum
               ))}
             </Box>
             {/*
-              The words, one language per tab (§NNN): the subject and the letter in the platform's
+              The words, one language per tab (§550): the subject and the letter in the platform's
               rich-text editor — bold, lists, links and pictures the club stored; no film and no
               table, which an inbox cannot draw (§270). «Tradu cardul: RO → EN» at the end of the
               tab row fills the English subject and letter from the Romanian (§514). Both tabs'
