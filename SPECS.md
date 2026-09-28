@@ -350,6 +350,7 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 152. An email's facts block keeps the difficulty as the band and step in words («Mediu, treapta 2 din 3»), without the level of fifteen (2026-09-27, `DECISIONS.md` §528).
 153. At every text size the public pages scale their typography together with no sideways scroll at 320 px, and the backoffice keeps its 16-px root (2026-09-27, `DECISIONS.md` §530).
 154. A fold header's own arrow (ExpandMore, ExpandLess, Chevron, ArrowDropDown/Up, KeyboardArrow) or an empty ListItemIcon does not count as its glyph; the source-walk test fails a fold that draws only its arrow.
+155. On a touch screen a tap on a pill with a tooltip (the difficulty's, the night's) opens it on the event page and on the listing card, where the tap does not follow the whole-card link; it closes on its own after the reading time, and the pill stays a plain element with no button role (2026-09-28, `DECISIONS.md` §528).
 
 **Verification:** e2e `registration-form.spec.ts` and `registration-entry.spec.ts` under both Playwright viewport projects, `event-pages.spec.ts` (criterion 12); unit `registrations/form-errors.test.ts`, `events/listing.test.ts`, `theme/brand.test.ts`; release check on a real device
 
