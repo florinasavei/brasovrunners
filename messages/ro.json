@@ -4990,7 +4990,7 @@
             {
               "title": "Se retrage sau nu mai poate veni",
               "steps": [
-                "Din emailul de confirmare: «Gestionează înscrierea» → «Anulează înscrierea».",
+                "Din emailul de confirmare: «Gestionează înscrierea» → «Anulează înscrierea pentru…» (cu numele persoanei) → «Da, anulează».",
                 "Din reminder: «Nu pot veni — anulez înscrierea».",
                 "Oricând: «Înscrierile mele», pe site, cu adresa lui. Locul trece imediat la lista de așteptare."
               ]
