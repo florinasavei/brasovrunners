@@ -32,8 +32,8 @@ const routeExists = (route: string) =>
   existsSync(path.join(ROOT, pageOf(route))) || existsSync(path.join(ROOT, "src/app/[locale]", route, "(list)", "page.tsx"));
 
 describe("BR-REQ-060-01 «Setări»: who opens which tab", () => {
-  it("offers the four content tabs from the Redactor up, «Costuri» and «Anti-robot» to the Administrators, nothing to the volunteer", () => {
-    const content = ["emails", "deadlines", "contact", "appearance"];
+  it("offers the three content tabs from the Redactor up, «Costuri» and «Anti-robot» to the Administrators, nothing to the volunteer", () => {
+    const content = ["emails", "deadlines", "appearance"];
     const expected: Record<StaffRole, string[]> = {
       // A club member (§524) has no backoffice at all.
       MEMBER: [],
@@ -198,11 +198,16 @@ describe("§516 «Sarcini» → «Club» rows point into the map", () => {
 
   it("sends the rows about a setting into «Setări», on the tab that holds it", () => {
     expect(TASK_TARGETS.botCheck).toEqual({ kind: "settings", tab: "platform", hash: "bot-check" });
-    expect(TASK_TARGETS.contactForm).toEqual({ kind: "settings", tab: "contact", hash: "contact-recipients" });
     expect(TASK_TARGETS.neonLimits).toEqual({ kind: "settings", tab: "costs", hash: "neon-limits" });
     expect(TASK_TARGETS.translation).toEqual({ kind: "settings", tab: "costs", hash: "translation-budget" });
     expect(TASK_TARGETS.declarationArchiveMail).toEqual({ kind: "settings", tab: "emails", hash: "club-notices" });
     for (const route of Object.values(SECTION_TARGET_ROUTE)) expect(route in routing.pathnames, route).toBe(true);
+  });
+
+  it("sends «Scrie-ne»'s row to «Pagini» → «Contact», the standard page that holds it (2026-09-28)", () => {
+    expect(TASK_TARGETS.contactForm).toEqual({ kind: "pages", entry: "contact", hash: "contact-recipients" });
+    expect(targetRoute(TASK_TARGETS.contactForm!)).toEqual({ pathname: "/admin/pages/contact", hash: "contact-recipients" });
+    expect(read("src/modules/diagnostics/ui/TaskTargetLink.tsx")).toContain('`${t("nav.pages")} → ${t("pages.tabContact")}`');
   });
 
   it("draws the link on the row, 44 pixels tall, named by the navigation's own words", () => {
@@ -228,8 +233,8 @@ describe("§516 nothing in src/ links to an address that moved", () => {
   };
   walk(path.join(ROOT, "src"));
 
-  it("has no href, redirect or route to /admin/emails, /admin/pages/appearance or a moved «Sarcini» panel", () => {
-    const moved = /["'`]\/admin\/(emails|pages\/appearance)["'`?#/]|panel=(costs|botCheck)\b|panel: "(costs|botCheck)"/;
+  it("has no href, redirect or route to /admin/emails, /admin/pages/appearance, /admin/settings/contact or a moved «Sarcini» panel", () => {
+    const moved = /["'`]\/admin\/(emails|pages\/appearance|settings\/contact)["'`?#/]|panel=(costs|botCheck)\b|panel: "(costs|botCheck)"/;
     const offenders = files
       .filter((file) => !file.endsWith(path.join("i18n", "moved-paths.ts")))
       .filter((file) => moved.test(code(readFileSync(file, "utf8"))))

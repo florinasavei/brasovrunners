@@ -83,9 +83,9 @@ test.describe("BR-REQ-080-02 the Mailgun plan on «Setări» → «Emailuri»", 
     await expect(main.getByRole("heading", { name: "Coada de trimitere" })).toBeVisible();
     await expect(main.getByRole("button", { name: "Trimite acum", exact: false })).toHaveCount(0);
     // When the queue leaves (§529) is read by whoever reads the queue; the switch is the Administrator's.
-    await expect(main.getByTestId("outbox-when-state")).toBeVisible();
-    await expect(main.getByTestId("outbox-when-next")).toContainText(/Următoarea trecere|Fiecare email pleacă imediat/);
+    await expect(main.getByTestId("outbox-when-state")).toContainText(/Emailurile pleacă (la trecerea programată; următoarea:|imediat după cererea)/);
     await expect(main.getByTestId("outbox-timing-form")).toHaveCount(0);
+    await expect(main.getByTestId("outbox-when").getByRole("switch")).toHaveCount(0);
     await expect(main.getByRole("heading", { name: "Copiile clubului" })).toBeVisible();
     await expect(main.getByRole("button", { name: /Salvează/ })).toHaveCount(0);
 
@@ -94,9 +94,9 @@ test.describe("BR-REQ-080-02 the Mailgun plan on «Setări» → «Emailuri»", 
     // The sentence in force depends on the shared row and on `CONTACT_FORM_TO`: with an address
     // in either it names the Bcc ("Copie ascunsă: …"); with neither — CI sets no variable, and the
     // Administrator's test below clears the row — it says nobody receives them, and names no copy.
-    // Whichever state this database is in, the Organizer is shown the sentence. On «Setări» →
-    // «Contact» since §516, where the card arrives open.
-    await page.goto("/ro/admin/settings/contact");
+    // Whichever state this database is in, the Organizer is shown the sentence. On «Pagini» →
+    // «Contact» since 2026-09-28 (it was «Setări» → «Contact», §516), where the card arrives open.
+    await page.goto("/ro/admin/pages/contact");
     await openFold(main.getByTestId("contact-recipients"));
     await expect(main.getByRole("heading", { name: "Cine primește mesajele de contact" })).toBeVisible();
     await expect(main.getByText("Cine primește mesajele de contact stabilește Administratorul", { exact: false })).toBeVisible();
@@ -111,7 +111,8 @@ test.describe("BR-REQ-080-02 the Mailgun plan on «Setări» → «Emailuri»", 
       The owner, 2026-09-28: "vreau să pot vedea exact când pleacă emailurile și să pot face on/off
       la acea setare". The queue panel opens with the timing, the next round and what holds it back;
       every row says its departure; the switch is «Termene»'s «Când pleacă emailurile», both values,
-      asking first.
+      asking first — a Material switch labelled «Trimite la trecerea programată», checked while the
+      round holds the mail, with one sentence under it saying the mode in force (§540).
 
       `data-timing` is the setting in force: the stored choice, else the environment's default —
       scheduled on QA and production, immediate on a laptop and on this suite's server, where no
@@ -128,27 +129,28 @@ test.describe("BR-REQ-080-02 the Mailgun plan on «Setări» → «Emailuri»", 
     const next = main.getByTestId("outbox-when-next");
     const holds = main.getByTestId("outbox-when-holds");
     const form = main.getByTestId("outbox-timing-form");
+    const toggle = form.getByRole("switch", { name: "Trimite la trecerea programată" });
     const says = {
       scheduled: async () => {
         await expect(state).toHaveAttribute("data-timing", "scheduled");
-        await expect(state).toContainText("Emailurile pleacă: la trecerea programată");
-        await expect(next).toContainText("Următoarea trecere:");
+        await expect(state).toContainText("Emailurile pleacă la trecerea programată; următoarea:");
+        await expect(toggle).toBeChecked();
+        await expect(next).toContainText("Un email pus în coadă acum așteaptă cel mult");
         await expect(holds).toContainText("monitorul care apelează site-ul");
       },
       immediate: async () => {
         await expect(state).toHaveAttribute("data-timing", "immediate");
-        await expect(state).toContainText("Emailurile pleacă: imediat după cerere");
-        await expect(next).toContainText("Fiecare email pleacă imediat după cererea");
+        await expect(state).toContainText("Emailurile pleacă imediat după cererea care le-a pus în coadă.");
+        await expect(toggle).not.toBeChecked();
+        await expect(next).toContainText("Ce rămâne (o nouă încercare, o amânare)");
       },
     };
     const switchTo = async (timing: "scheduled" | "immediate") => {
-      if (timing === "immediate") {
-        await form.getByRole("button", { name: "Trimite imediat după cerere" }).click();
-        await confirmDialog(page, "Emailurile să plece imediat după cerere?");
-      } else {
-        await form.getByRole("button", { name: "Trimite la trecerea programată" }).click();
-        await confirmDialog(page, "Emailurile să plece la trecerea programată?");
-      }
+      // The page is running: the switch is enabled and the no-JavaScript button is gone.
+      await expect(toggle).toBeEnabled();
+      await expect(form.getByRole("button", { name: /Trimite (imediat după cerere|la trecerea programată)/ })).toHaveCount(0);
+      await toggle.click();
+      await confirmDialog(page, timing === "immediate" ? "Emailurile să plece imediat după cerere?" : "Emailurile să plece la trecerea programată?");
       await says[timing]();
     };
 
@@ -158,7 +160,8 @@ test.describe("BR-REQ-080-02 the Mailgun plan on «Setări» → «Emailuri»", 
     await says[from]();
     // Every row the queue holds says when it leaves, whatever this database has queued now.
     for (const row of await main.getByTestId("outbox-row-leaves").all()) {
-      await expect(row).toHaveText(/^(Pleacă:|Întârziat:|Ținut până |Se trimite acum|Nu mai pleacă)/);
+      // «Pleacă acum»: a resend a press sent past the round, waiting for its drain (§540).
+      await expect(row).toHaveText(/^(Pleacă:|Pleacă acum|Întârziat:|Ținut până |Se trimite acum|Nu mai pleacă)/);
     }
 
     await switchTo(from === "scheduled" ? "immediate" : "scheduled");
@@ -202,12 +205,12 @@ test.describe("BR-REQ-070-04 who receives the contact messages", () => {
   // Set and cleared again, so the next test on this database starts from the environment's list.
   test("an Administrator sets who receives the contact messages, with a Cc and a Bcc", async ({ page }) => {
     await signIn(page, "Dev Administrator");
-    await page.goto("/ro/admin/settings/contact");
+    await page.goto("/ro/admin/pages/contact");
     const main = page.locator("#main");
 
     const contacts = main.getByTestId("contact-recipients");
     await expect(main.getByRole("heading", { name: "Cine primește mesajele de contact" })).toBeVisible();
-    // «Setări» → «Contact» is this card and the shown address alone, so it arrives open (§516),
+    // «Pagini» → «Contact» is this card and the shown address alone, so it arrives open (§516),
     // its summary still saying where the messages go right now.
     await expect(contacts).toHaveAttribute("open", "");
     await expect(contacts.locator(":scope > summary")).toContainText("Acum ajung la: ");
@@ -265,7 +268,7 @@ test.describe("BR-REQ-070-04 who receives the contact messages", () => {
   */
   test("a refused list stays in view, with JavaScript on and with it off", async ({ page, browser }) => {
     await signIn(page, "Dev Administrator");
-    await page.goto("/ro/admin/settings/contact");
+    await page.goto("/ro/admin/pages/contact");
     await hydrated(page);
     const contacts = page.locator("#main").getByTestId("contact-recipients");
     const to = "Către (adrese despărțite prin virgulă)";
@@ -289,7 +292,7 @@ test.describe("BR-REQ-070-04 who receives the contact messages", () => {
       storageState: await page.context().storageState(),
     });
     const bare = await scriptless.newPage();
-    await bare.goto("/ro/admin/settings/contact");
+    await bare.goto("/ro/admin/pages/contact");
     const fold = bare.locator("#main").getByTestId("contact-recipients");
     await openFold(fold);
     await fold.getByLabel(to).fill("nope");

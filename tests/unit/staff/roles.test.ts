@@ -593,7 +593,7 @@ describe("BR-REQ-060-01 the batch's own settings ask the right predicate (§450)
   });
 
   it("«Adresa de contact afișată» (§442) is a club setting: the Administrator's", () => {
-    expect(action("src/app/[locale]/admin/settings/contact/actions.ts", "updateShownContactAddressAction")).toContain("requireStaffCapability(canManageClubSettings)");
+    expect(action("src/app/[locale]/admin/pages/contact/actions.ts", "updateShownContactAddressAction")).toContain("requireStaffCapability(canManageClubSettings)");
     expect(source("src/modules/contact/shown-address.ts")).toMatch(/if \(!canManageClubSettings\(actor\.role\)\)/);
   });
 

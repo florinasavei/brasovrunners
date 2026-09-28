@@ -32,7 +32,7 @@ vi.mock("@/modules/public-cache/reads", () => ({
 
 const { default: CheckYourEmail } = await import("@/modules/registrations/ui/CheckYourEmail");
 
-type Offer = { atOnce: boolean; email: string; windowMinutes?: number; leavesAt?: Date | null; continueAction: (form: FormData) => Promise<void> };
+type Offer = { atOnce: boolean; email: string; windowMinutes?: number; leavesAt?: Date | null; submittedAt?: Date; continueAction: (form: FormData) => Promise<void> };
 
 async function render(offer?: Offer, firstName: string | null = null): Promise<string> {
   const element = (await CheckYourEmail({
@@ -148,6 +148,22 @@ describe("§536 the short screen after the first form", () => {
     expect(html).toContain("Dacă apeși „Da”, următorul email așteaptă cel mult 15 minute după ultimul formular și îi cuprinde pe toți.");
     expect(html).not.toContain("emailul așteaptă formularul următor");
     expect(html).not.toContain("unul singur pentru toți");
+  });
+
+  it("under «imediat» says «pleacă acum» on the redirect and «a plecat» on a reload an hour later (§540)", async () => {
+    wait.minutes = null;
+    wait.leavesAt = null;
+    const submittedAt = new Date("2026-09-28T10:00:00.000Z");
+    // The redirect from the submit, a few seconds after it.
+    vi.setSystemTime(new Date("2026-09-28T10:00:03.000Z"));
+    expect(await render({ ...offer, leavesAt: null, submittedAt })).toContain("Emailul către familia.pop@example.ro pleacă acum.");
+    // A reload an hour later: the request sent it long ago.
+    vi.setSystemTime(new Date("2026-09-28T11:00:00.000Z"));
+    const later = await render({ ...offer, leavesAt: null, submittedAt });
+    expect(later).toContain("Emailul către familia.pop@example.ro a plecat.");
+    expect(later).not.toContain("pleacă acum");
+    // A half sealed before the submit instant was kept: the old sentence, never a guess.
+    expect(await render({ ...offer, leavesAt: null })).toContain("pleacă acum.");
   });
 
   it("names the club's current window when the browser's half predates it", async () => {

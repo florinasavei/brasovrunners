@@ -18,7 +18,6 @@ import { canManageRegistrations, canReadContent, canSeeDiagnostics, type StaffRo
  *     emails      canReadContent          the messages and their words (the Redactor's, §247), the plan,
  *                                         the roads, the queue, the club's copies — each panel its own gate
  *     deadlines   canReadContent          «Termene» and the per-address limit (§377, §389)
- *     contact     canReadContent          who reads «Scrie-ne» and the address the site shows (§164, §442)
  *     appearance  canReadContent          the public pages' tint (§488)
  *     costs       canManageRegistrations  the money page and the database card (§479), as «Costuri» was
  *     platform    canManageRegistrations  the anti-robot check (§254, §282): the Superadministrator
@@ -34,7 +33,14 @@ import { canManageRegistrations, canReadContent, canSeeDiagnostics, type StaffRo
  * the backoffice is that page, reaches it through «Setări», and `/devs` draws its own three panels as
  * entries of this row (`SettingsSubNav`'s `configurationPanels`), never as a second row.
  */
-export const SETTINGS_TABS = ["emails", "deadlines", "contact", "appearance", "costs", "platform"] as const;
+/*
+ * «Contact» (who reads «Scrie-ne» and the address the site shows, §164, §442) was a tab here from
+ * §516 until the owner, 2026-09-28: «când dau click pe pagina de contact mă duce automat la
+ * Setări... ar trebui să rămân în același loc». It is a standard page of «Pagini» (§525), the row
+ * he pressed it from, at `/admin/pages/contact`, and `/admin/settings/contact` answers 308 there —
+ * one page, one way in, as «Configurație» (§520).
+ */
+export const SETTINGS_TABS = ["emails", "deadlines", "appearance", "costs", "platform"] as const;
 export type SettingsTab = (typeof SETTINGS_TABS)[number];
 
 /** The row's last entry: `/devs`, a tab of the row that is not a route of this section. */
@@ -50,7 +56,6 @@ export function offersConfigurationTab(role: StaffRole): boolean {
 export const SETTINGS_TAB_ROUTE = {
   emails: "/admin/settings/emails",
   deadlines: "/admin/settings/deadlines",
-  contact: "/admin/settings/contact",
   appearance: "/admin/settings/appearance",
   costs: "/admin/settings/costs",
   platform: "/admin/settings/platform",

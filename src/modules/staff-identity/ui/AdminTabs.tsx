@@ -6,6 +6,7 @@ import Tabs from "@mui/material/Tabs";
 import Tooltip from "@mui/material/Tooltip";
 import { readingTimeMs, TOOLTIP_TEXT_SX } from "@/shared/ui/tooltip-text";
 import { usePathname } from "next/navigation";
+import { activeAdminTabHref } from "../domain/admin-tab-match";
 import type { AdminSection } from "../domain/roles";
 import { useEffect, useRef } from "react";
 import ArticleIcon from "@mui/icons-material/Article";
@@ -82,17 +83,10 @@ const ICONS: Record<AdminSection, typeof EventIcon> = {
 export default function AdminTabs({ items }: { items: readonly AdminTab[] }) {
   const pathname = usePathname();
 
-  /**
-   * The longest matching href wins.
-   *
-   * `/ro/admin` is a prefix of `/ro/admin/registrations`, so a first-match rule would light up
-   * "Events" on every page in the backoffice. Comparing lengths picks the most specific tab,
-   * which is the one whose section the visitor is actually in.
-   */
-  const under = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
-  const active =
-    items.filter((item) => under(item.href)).sort((a, b) => b.href.length - a.href.length)[0] ??
-    items.find((item) => item.alsoActiveOn?.some(under));
+  // The longest matching href wins (`activeAdminTabHref`), so every part of a section — «Pagini» →
+  // «Contact» included, `/admin/pages/contact` — keeps its section lit.
+  const activeHref = activeAdminTabHref(items, pathname);
+  const active = items.find((item) => item.href === activeHref);
 
   /**
    * The current tab, in view, on a phone (`DECISIONS.md` §79). MUI scrolls the selected tab

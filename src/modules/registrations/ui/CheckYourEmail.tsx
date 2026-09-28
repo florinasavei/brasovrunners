@@ -14,7 +14,7 @@ import { daysPhrase, hoursPhrase, minutesPhrase } from "@/modules/deadlines/doma
 import { emailLeavesWords } from "@/modules/notifications/domain/email-wait";
 import { cachedDeadlines, cachedEmailLeavesAt, cachedEmailWaitMinutes } from "@/modules/public-cache/reads";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
-import { doneFamilySentence, emailHasLeft, offerHint } from "../domain/family-sitting";
+import { doneFamilySentence, offerHint, shortScreenEmailLeft } from "../domain/family-sitting";
 import type { SubmittedFacts } from "../form-draft";
 import FamilySittingOffer from "./FamilySittingOffer";
 
@@ -60,6 +60,8 @@ type Props = {
     email: string;
     windowMinutes?: number;
     leavesAt?: Date | null;
+    /** Under `immediate` (`leavesAt` null), when the form was sent: a reload a minute later says it left (§540). */
+    submittedAt?: Date;
     continueAction: (form: FormData) => Promise<void>;
   };
 };
@@ -137,7 +139,8 @@ export default async function CheckYourEmail({ eventTitle, whenLabel, eventHref,
     const now = new Date();
     const leavesAt = offer.leavesAt !== undefined ? offer.leavesAt : await cachedEmailLeavesAt(now);
     const leaves = emailLeavesWords(leavesAt, now, locale, "prose");
-    const left = leavesAt !== null && emailHasLeft(leavesAt, now);
+    // Under «imediat» too (§540): the redirect from the submit says «pleacă acum», a reload after a minute «a plecat».
+    const left = shortScreenEmailLeft({ leavesAt, submittedAt: offer.submittedAt, now });
     // The hint under «Da» names the club's window (§519): how long the email may wait for the next form.
     const sittingWindow = minutesPhrase(locale, offer.windowMinutes ?? (await cachedDeadlines()).familySittingMinutes);
     const hint = offerHint({ atOnce: offer.atOnce, leavesAt, now });

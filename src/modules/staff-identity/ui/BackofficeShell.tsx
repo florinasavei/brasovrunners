@@ -54,7 +54,7 @@ export default async function BackofficeShell({
     registrations: getPathname({ locale, href: "/admin/registrations" }),
     tasks: getPathname({ locale, href: "/admin/tasks" }),
     legal: getPathname({ locale, href: "/admin/legal" }),
-    // «Setări» (§516): the email page, «Termene», «Contact», «Aspect», «Costuri», «Anti-robot» — a bare
+    // «Setări» (§516): the email page, «Termene», «Aspect», «Costuri», «Anti-robot» — a bare
     // /admin/settings lands on the reader's first tab.
     settings: getPathname({ locale, href: "/admin/settings" }),
     newsletter: getPathname({ locale, href: "/admin/newsletter" }),

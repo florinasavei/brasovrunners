@@ -8,7 +8,7 @@ import { type TaskTarget, targetRoute } from "../domain/task-targets";
 
 /**
  * Where a row of «Sarcini» → «Club» is done (§516): one link under the row, named by the
- * navigation's own words — «Setări → Contact», «Documente legale» — and opening the card through
+ * navigation's own words — «Setări → Costuri», «Pagini → Contact», «Documente legale» — and opening the card through
  * its `#` (`OpenFoldFromHash`, §336). Nothing for a row with no target, or for a place the reader
  * may not open (the rows are the Administrator's, who opens them all; the gate is asked all the same).
  *
@@ -16,13 +16,24 @@ import { type TaskTarget, targetRoute } from "../domain/task-targets";
  */
 export default async function TaskTargetLink({ locale, role, target }: { locale: Locale; role: StaffRole; target: TaskTarget | undefined }) {
   if (!target) return null;
-  if (target.kind === "settings" ? !canOpenSettingsTab(role, target.tab) : target.section === "staff" ? !canManageStaff(role) : !canReadContent(role)) {
-    return null;
-  }
+  const allowed =
+    target.kind === "settings"
+      ? canOpenSettingsTab(role, target.tab)
+      : target.kind === "pages"
+        ? canReadContent(role)
+        : target.section === "staff"
+          ? canManageStaff(role)
+          : canReadContent(role);
+  if (!allowed) return null;
   const t = await getTranslations("Admin");
   const route = targetRoute(target);
   const path = getPathname({ locale, href: route.pathname });
-  const label = target.kind === "settings" ? `${t("nav.settings")} → ${t(`settingsTabs.${target.tab}`)}` : t(`nav.${target.section}`);
+  const label =
+    target.kind === "settings"
+      ? `${t("nav.settings")} → ${t(`settingsTabs.${target.tab}`)}`
+      : target.kind === "pages"
+        ? `${t("nav.pages")} → ${t("pages.tabContact")}`
+        : t(`nav.${target.section}`);
 
   return (
     <Box

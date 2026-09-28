@@ -16,9 +16,11 @@ import {
   ClubTodoMissing,
   type ClubTodoOp,
   type ClubTodoResult,
+  readClubTodoSeenDefaults,
   readClubTodoValue,
+  sortClubTodo,
 } from "./domain/club-todo";
-import { startingClubTodo } from "./domain/starting-list";
+import { CLUB_TODO_DEFAULT_IDS, mergeClubTodoDefaults, startingClubTodo } from "./domain/starting-list";
 
 /**
  * The club's checklist «De făcut» (§438): read by `/admin/tasks`, written one line at a time.
@@ -48,7 +50,11 @@ export async function readClubTodo<T extends Record<string, unknown>>(db: Databa
     .where(eq(platformSettings.key, CLUB_TODO_SETTING_KEY))
     .limit(1);
   if (!row) return { items: startingClubTodo(), stored: false, updatedAt: null };
-  return { items: readClubTodoValue(row.value), stored: true, updatedAt: row.updatedAt };
+  // The starting lines written since the row was stored (§538), added once each. A read stores
+  // nothing — the next write stores them with `seenDefaults`, under the row's lock, the same way
+  // the first write stores the starting list; until then every read adds the same lines.
+  const { items } = mergeClubTodoDefaults(readClubTodoValue(row.value), readClubTodoSeenDefaults(row.value));
+  return { items: sortClubTodo(items), stored: true, updatedAt: row.updatedAt };
 }
 
 /** What a form posts, before it is an operation: the service validates, the action only reads fields. */
@@ -139,14 +145,25 @@ export async function changeClubTodo<T extends Record<string, unknown>>(
   return db.transaction(async (tx) => {
     await tx
       .insert(platformSettings)
-      .values({ key: CLUB_TODO_SETTING_KEY, value: { items: startingClubTodo() }, updatedAt: now, updatedByStaffUserId: actor.id })
+      .values({
+        key: CLUB_TODO_SETTING_KEY,
+        value: { items: startingClubTodo(), seenDefaults: [...CLUB_TODO_DEFAULT_IDS] },
+        updatedAt: now,
+        updatedByStaffUserId: actor.id,
+      })
       .onConflictDoNothing({ target: platformSettings.key });
     const [row] = await tx
       .select()
       .from(platformSettings)
       .where(eq(platformSettings.key, CLUB_TODO_SETTING_KEY))
       .for("update");
-    const current = readClubTodoValue(row?.value);
+    const storedSeen = readClubTodoSeenDefaults(row?.value);
+    const merge = mergeClubTodoDefaults(readClubTodoValue(row?.value), storedSeen);
+    const current = merge.items;
+    // Whether the row lacks a starting line or the marker of having been given it (§538): then the
+    // list is written even when the press itself changed nothing, so the next read finds it stored.
+    const mergeChanged =
+      merge.added.length > 0 || storedSeen === null || merge.seenDefaults.length !== new Set(storedSeen).size;
 
     let result: ClubTodoResult;
     try {
@@ -156,12 +173,14 @@ export async function changeClubTodo<T extends Record<string, unknown>>(
       if (error instanceof ClubTodoFull) throw new DomainError("VALIDATION_ERROR", error.message, ["text"]);
       throw error;
     }
-    if (!result.changed) return result;
+    if (!result.changed && !mergeChanged) return result;
 
     await tx
       .update(platformSettings)
-      .set({ value: { items: result.items }, updatedAt: now, updatedByStaffUserId: actor.id })
+      .set({ value: { items: result.items, seenDefaults: merge.seenDefaults }, updatedAt: now, updatedByStaffUserId: actor.id })
       .where(eq(platformSettings.key, CLUB_TODO_SETTING_KEY));
+    // The trail records changes a person made, not the starting lines the list was given.
+    if (!result.changed) return result;
     await recordAuditEvent(tx, {
       actorStaffUserId: actor.id,
       action: AUDIT_ACTION[op.kind](op.kind === "setDone" ? op.done : undefined),

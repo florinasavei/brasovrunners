@@ -6,11 +6,24 @@ import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { type ChangeEvent, useState } from "react";
-import { useRecall } from "@/shared/forms/recall";
-import { shrinkImageInBrowser } from "@/modules/media/browser-shrink";
+import { presetCrop } from "@/modules/content/rich-text/domain/picture-frame";
+import type { ImageCrop } from "@/modules/content/rich-text/domain/schema";
+import ImageCropBox, { type ImageCropLabels } from "@/modules/content/rich-text/ui/ImageCropBox";
 import GalleryPicker, { type GalleryPickerLabels } from "@/modules/media/ui/GalleryPicker";
 import ImageQualityChoice, { type ImageQualityLabels, useImageQuality } from "@/modules/media/ui/ImageQualityChoice";
+import {
+  type ChosenFacts,
+  type ChosenFactsLabels,
+  describeChosenImage,
+  describeStoredImage,
+  type StoredFacts,
+  type StoredFactsLabels,
+} from "@/modules/media/ui/stored-facts";
+import { uploadPicture } from "@/modules/media/ui/upload-picture";
+import { recalledJson, useRecall } from "@/shared/forms/recall";
 import GlyphButton from "@/shared/ui/GlyphButton";
+import { readTeamPhotoCrop } from "../photo-crop";
+import TeamPhotoImage from "./TeamPhotoImage";
 
 export type TeamPhotoLabels = {
   /** "Fotografia" — the group's name. */
@@ -27,48 +40,99 @@ export type TeamPhotoLabels = {
   /** «Din galerie» and its picker's words (§485). */
   fromGallery: string;
   gallery: GalleryPickerLabels;
+  /** The crop box's words (§454), the text editor's own, with the card's title and help (§541). */
+  crop: ImageCropLabels;
+  /** What is going up and what it became (§437, §414), the text editor's own sentences. */
+  chosen: ChosenFactsLabels;
+  stored: StoredFactsLabels;
+  /** "Din galerie: {name}, {width} × {height} px." — a picture taken from the gallery (§485). */
+  picked: string;
 };
 
+/** The photograph on the card: its id, the master the crop box draws over, the small file, its size. */
+export type TeamPhotoValue = { id: string; src: string; preview: string; width: number; height: number };
+
 type Props = {
-  /** The stored picture on the card now, if any. */
-  assetId: string | null;
-  previewUrl: string | null;
+  /** The stored picture on the card now, if any, with the crop it is shown with. */
+  photo: TeamPhotoValue | null;
+  crop: ImageCrop | null;
   labels: TeamPhotoLabels;
   /** Distinguishes two of these on one page (a card's form and the "add" form). */
   inputId: string;
 };
 
 /**
- * A card's photograph (§459): choose a file, it is shrunk in the browser only if it must be and
- * stored exactly as a picture in a page is (`/api/admin/media`, §72, §414), and the card keeps
- * the stored picture's id in a hidden field the save posts. Nothing is saved on the card until
- * the form is — the picture waits in the store and is swept after a week if the card never keeps
- * it (§73).
+ * The shape a person's photograph starts in (§541): a square portrait — what the card always
+ * drew. The crop box offers every other shape of §454, and the club may pick one.
+ */
+export const TEAM_PHOTO_SHAPE = "1:1" as const;
+
+/** The crop a newly chosen photograph starts with: its largest square, in the middle. */
+export function initialTeamCrop(intrinsic: { width: number; height: number }): ImageCrop | null {
+  return presetCrop(TEAM_PHOTO_SHAPE, intrinsic);
+}
+
+/**
+ * A card's photograph (§459), with the upload every other picture has (§541, amending §474): the
+ * quality beside it (§414, §437), the chosen file's pixels and weight and what it became once
+ * stored, «Din galerie» beside it (§485) — and after the choice the crop box with §454's shapes,
+ * 1∶1 pressed first, a portrait. Uploaded through `uploadPicture`, the one upload a picture in the
+ * text and a film's poster use, never a second one.
  *
- * Or a picture the club already stored (§485): «Din galerie» opens the same picker every other
- * picture comes from, and the card keeps that picture's id exactly as it would an upload's — the
- * picture stays where else it is used, and the orphan sweep counts the card as one more place.
+ * The card keeps the picture's id and the crop in two hidden fields the save posts; nothing is
+ * saved on the card until the form is — an uploaded picture waits in the store and is swept after
+ * a week if the card never keeps it (§73). The stored file is never touched: the crop is four
+ * fractions the page draws (§241).
  *
  * All its words arrive as strings from the page (§353: a backoffice island reads no catalogue of
- * its own). After a refused save it comes back with the picture that was chosen: the id and the
- * preview's address are both posted and recalled (§315).
+ * its own). After a refused save it comes back with the picture and the crop that were chosen:
+ * both are posted and recalled (§315), the picture's addresses and size in one hidden field.
  */
 export default function TeamPhotoField(props: Props) {
   const recall = useRecall();
   return <PhotoField key={recall.generation} {...props} />;
 }
 
-function PhotoField({ assetId, previewUrl, labels, inputId }: Props) {
+const EMPTY: TeamPhotoValue = { id: "", src: "", preview: "", width: 0, height: 0 };
+
+/** The recalled picture, or the card's own: only a whole value is taken back. */
+function recalledPhoto(raw: string | undefined, id: string | undefined, fallback: TeamPhotoValue | null): TeamPhotoValue {
+  if (id === undefined) return fallback ?? EMPTY;
+  if (id === "") return EMPTY;
+  const value = recalledJson(raw, null) as Partial<TeamPhotoValue> | null;
+  if (value && typeof value.src === "string" && typeof value.preview === "string" && Number(value.width) > 0 && Number(value.height) > 0) {
+    return { id, src: value.src, preview: value.preview, width: Number(value.width), height: Number(value.height) };
+  }
+  return fallback && fallback.id === id ? fallback : { ...EMPTY, id };
+}
+
+function PhotoField({ photo: initial, crop: initialCrop, labels, inputId }: Props) {
   const recall = useRecall();
-  const [photo, setPhoto] = useState(() => ({
-    id: recall.value("photoAssetId") ?? assetId ?? "",
-    preview: recall.value("photoPreview") ?? previewUrl ?? "",
-  }));
+  const [photo, setPhoto] = useState<TeamPhotoValue>(() => recalledPhoto(recall.value("photoPicture"), recall.value("photoAssetId"), initial));
+  const [crop, setCrop] = useState<ImageCrop | null>(() => {
+    const recalled = recall.value("photoCrop");
+    if (recalled === undefined) return initialCrop;
+    const read = readTeamPhotoCrop(recalled);
+    return read === "invalid" ? null : read;
+  });
   const [state, setState] = useState<"idle" | "uploading" | "failed">("idle");
   const [galleryOpen, setGalleryOpen] = useState(false);
   // The session's choice, shared with every other uploader on the page (§414).
   const [quality, setQuality] = useImageQuality();
+  /** What is going up, or went up last (§437), and what it became (§414). */
+  const [chosen, setChosen] = useState<ChosenFacts | null>(null);
+  const [stored, setStored] = useState<StoredFacts | null>(null);
+  /** A picture taken from the gallery, said like an upload (§485). */
+  const [picked, setPicked] = useState<{ name: string; width: number; height: number } | null>(null);
   const named = recall.named("photoAssetId");
+  const lang = typeof document === "undefined" ? "ro" : document.documentElement.lang || "ro";
+  const sized = photo.id !== "" && photo.width > 0 && photo.height > 0;
+
+  /** A new photograph: its largest square first (§541), the crop box's shapes for the rest. */
+  const take = (next: TeamPhotoValue) => {
+    setPhoto(next);
+    setCrop(next.width > 0 && next.height > 0 ? initialTeamCrop(next) : null);
+  };
 
   const onChoose = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -76,19 +140,25 @@ function PhotoField({ assetId, previewUrl, labels, inputId }: Props) {
     event.target.value = "";
     if (!file) return;
     setState("uploading");
+    setChosen(null);
+    setStored(null);
+    setPicked(null);
     try {
-      const body = new FormData();
-      body.append("file", await shrinkImageInBrowser(file, quality), file.name.replace(/\.[^.]+$/, "") + ".webp");
-      body.append("originalFilename", file.name);
-      body.append("quality", quality);
-      const response = await fetch("/api/admin/media", { method: "POST", body });
-      if (!response.ok) throw new Error(String(response.status));
-      const uploaded = (await response.json()) as { assetId: string; src: string };
-      setPhoto({ id: uploaded.assetId, preview: uploaded.src });
+      const uploaded = await uploadPicture(file, setChosen, quality);
+      take({ id: uploaded.assetId, src: uploaded.src, preview: uploaded.src, width: uploaded.width, height: uploaded.height });
+      setStored(uploaded.stored ?? null);
       setState("idle");
     } catch {
       setState("failed");
     }
+  };
+
+  const remove = () => {
+    setPhoto(EMPTY);
+    setCrop(null);
+    setChosen(null);
+    setStored(null);
+    setPicked(null);
   };
 
   return (
@@ -97,17 +167,21 @@ function PhotoField({ assetId, previewUrl, labels, inputId }: Props) {
         {labels.legend}
       </Typography>
       <input type="hidden" name="photoAssetId" value={photo.id} />
-      <input type="hidden" name="photoPreview" value={photo.id ? photo.preview : ""} />
+      <input type="hidden" name="photoCrop" value={photo.id && crop ? JSON.stringify(crop) : ""} />
+      <input
+        type="hidden"
+        name="photoPicture"
+        value={photo.id ? JSON.stringify({ src: photo.src, preview: photo.preview, width: photo.width, height: photo.height }) : ""}
+      />
       <Stack direction="row" spacing={2} sx={{ alignItems: "center", flexWrap: "wrap", gap: 1 }}>
         {photo.id && photo.preview ? (
-          // eslint-disable-next-line @next/next/no-img-element -- the club's own stored picture
-          <img
-            src={photo.preview}
-            alt=""
-            width={96}
-            height={96}
-            style={{ width: 96, height: 96, objectFit: "cover", objectPosition: "50% 25%", borderRadius: 8, display: "block" }}
-          />
+          // The card's own drawing at 96 pixels: the crop in its shape, or the square it always was.
+          sized ? (
+            <TeamPhotoImage src={photo.preview} photo={{ width: photo.width, height: photo.height, crop }} width={96} radius={8} testId={`${inputId}-preview`} />
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element -- the club's own stored picture, size unknown
+            <img src={photo.preview} alt="" width={96} height={96} style={{ width: 96, height: 96, objectFit: "cover", objectPosition: "50% 25%", borderRadius: 8, display: "block" }} />
+          )
         ) : (
           <Typography variant="body2" color="text.secondary">
             {labels.none}
@@ -137,7 +211,7 @@ function PhotoField({ assetId, previewUrl, labels, inputId }: Props) {
           {labels.fromGallery}
         </GlyphButton>
         {photo.id && (
-          <GlyphButton icon="delete" variant="text" color="error" sx={{ minHeight: 44 }} onClick={() => setPhoto({ id: "", preview: "" })}>
+          <GlyphButton icon="delete" variant="text" color="error" sx={{ minHeight: 44 }} onClick={remove}>
             {labels.remove}
           </GlyphButton>
         )}
@@ -146,8 +220,11 @@ function PhotoField({ assetId, previewUrl, labels, inputId }: Props) {
         <Box sx={{ mt: 1, border: 1, borderColor: "divider", borderRadius: 1 }}>
           <GalleryPicker
             onPick={(picture) => {
-              // The small file for the 96-pixel preview, as the saved card's own preview is.
-              setPhoto({ id: picture.id, preview: picture.thumb });
+              // The master for the crop box, the small file for the preview, as the saved card's are.
+              take({ id: picture.id, src: picture.src, preview: picture.thumb, width: picture.width, height: picture.height });
+              setChosen(null);
+              setStored(null);
+              setPicked({ name: picture.name, width: picture.width, height: picture.height });
               setState("idle");
               setGalleryOpen(false);
             }}
@@ -160,6 +237,22 @@ function PhotoField({ assetId, previewUrl, labels, inputId }: Props) {
       <Box sx={{ mt: 1 }}>
         <ImageQualityChoice value={quality} onChange={setQuality} labels={labels.quality} disabled={state === "uploading"} />
       </Box>
+      {/* What is going up (§437) and what it became (§414): the text editor's own sentences. */}
+      {chosen && (
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} aria-live="polite" data-testid={`${inputId}-chosen`}>
+          {describeChosenImage(chosen, labels.chosen, lang)}
+        </Typography>
+      )}
+      {state === "idle" && stored && photo.id && (
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} aria-live="polite" data-testid={`${inputId}-stored`}>
+          {describeStoredImage(stored, labels.stored, lang)}
+        </Typography>
+      )}
+      {state === "idle" && picked && photo.id && (
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} aria-live="polite" data-testid={`${inputId}-picked`}>
+          {labels.picked.replace("{name}", picked.name).replace("{width}", String(picked.width)).replace("{height}", String(picked.height))}
+        </Typography>
+      )}
       <Typography
         variant="caption"
         color={state === "failed" || named ? "error" : "text.secondary"}
@@ -168,6 +261,26 @@ function PhotoField({ assetId, previewUrl, labels, inputId }: Props) {
       >
         {state === "failed" ? labels.failed : named && recall.fieldError ? recall.fieldError : labels.help}
       </Typography>
+      {/*
+        The crop box after the choice (§485's order), the text editor's own (§454): the five
+        shapes, 1∶1 held first — a portrait — and the rectangle over the whole photograph. Never
+        its pixels: the page draws the four fractions (§241). At most a phone's width, so the
+        photograph is never taller than the screen it is cropped on.
+      */}
+      {sized && (
+        <Box sx={{ mt: 1.5, maxWidth: 360 }} data-testid={`${inputId}-crop`}>
+          <ImageCropBox
+            key={`${photo.src}@${photo.width}x${photo.height}`}
+            src={photo.src}
+            intrinsic={{ width: photo.width, height: photo.height }}
+            crop={crop}
+            onChange={setCrop}
+            resting={TEAM_PHOTO_SHAPE}
+            labels={labels.crop}
+            testId={`${inputId}-crop-surface`}
+          />
+        </Box>
+      )}
     </Box>
   );
 }
