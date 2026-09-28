@@ -7,13 +7,7 @@ import { ALLOW_EVERY_RECIPIENT, APP_ENVIRONMENTS, EMAIL_DELIVERY_MODES, STAFF_AU
 // AGENTS.md §7.1: APP_ENV is the environment identity; NODE_ENV is not.
 // AGENTS.md §8: APP_BASE_URL is the single source of every absolute URL the app emits.
 
-/**
- * Comma-separated addresses, empty by default.
- *
- * Parsed here rather than at the point of use so that a malformed allowlist is a startup
- * failure with the offending entry named, not a message quietly captured six weeks later
- * because someone typed a semicolon.
- */
+/** Comma-separated addresses, parsed at startup so a malformed entry fails boot, named. */
 const allowlist = z
   .string()
   .default("")
@@ -28,22 +22,9 @@ export const envSchema = z
   .object({
     APP_ENV: z.enum(APP_ENVIRONMENTS).default("local"),
     /**
-     * The default is the port `yarn dev` actually starts on (`scripts/dev.mjs`), not 3000.
-     *
-     * It said 3000 and the dev server has never used it — `scripts/dev.mjs` picks 47821,
-     * deliberately far from 3000, 5173, 8000 and 8080 so it does not collide with another
-     * project. Every absolute URL this application emits derives from this value (§8), so the
-     * mismatch meant a locally rendered confirmation link pointed at a port with nothing
-     * listening on it, and the developer who clicked it learned nothing about their change.
-     *
-     * A trailing slash is dropped here, once. The value is typed by a person into a dashboard
-     * and `z.url()` accepts `https://host/`; some forty call sites join it as
-     * `${env.APP_BASE_URL}${pathname}`, and with the slash every one of them emitted
-     * `https://host//ro/…` — the sitemap, the `.ics` feed, every link in every email and the
-     * event page's own canonical, which is the address a scraper failed to match to the page
-     * (`events/share-links.ts`). Normalised rather than refused: a slash is a spelling, not an
-     * unsafe combination like the guards below, and a production that will not boot over one
-     * costs more than the character it removes. A base with a path prefix keeps the prefix.
+     * Defaults to the port `yarn dev` starts on (`scripts/dev.mjs`, 47821). A trailing slash is
+     * dropped once here, since call sites join it as `${env.APP_BASE_URL}${pathname}` (§8); a
+     * path prefix is kept.
      */
     APP_BASE_URL: z
       .url()
@@ -53,25 +34,9 @@ export const envSchema = z
     DATABASE_URL: z.url().optional(),
 
     /**
-     * How a member of staff proves who they are (AGENTS.md §8, §13.1).
-     *
-     * `dev-switcher` is the seeded switcher: pick a synthetic identity from a list, no
-     * password, no provider. It is a development tool and nothing else, so it is refused
-     * outright in qa and production below.
-     *
-     * `provider` is the real thing: Auth.js with the Zitadel OAuth provider, gated on the
-     * `staff_users` allowlist. Named for the mechanism rather than the vendor — matching
-     * `EMAIL_DELIVERY_MODE`'s style — so a future change to what Zitadel's own login policy
-     * offers is not an env var rename.
-     *
-     * `disabled` means there is no way to sign in at all — the safe default for qa and
-     * production until an operator explicitly turns `provider` on for that environment. The
-     * backoffice is not hidden when disabled — it is unreachable, because every guarded call
-     * starts by asking who is signing this request and gets nobody.
-     *
-     * Left optional so the safe value is derived rather than typed: local and test get the
-     * switcher, every other environment gets nothing until stated. Stating `dev-switcher`
-     * outside local or test fails at startup.
+     * How staff sign in (AGENTS.md §8, §13.1): `dev-switcher` (seeded identities, local and test
+     * only), `provider` (Auth.js + Zitadel, gated on `staff_users`), or `disabled` (nobody can).
+     * Optional: when unset it is derived per environment, below.
      */
     STAFF_AUTH_MODE: z.enum(STAFF_AUTH_MODES).optional(),
 
@@ -81,10 +46,8 @@ export const envSchema = z
     AUTH_ZITADEL_SECRET: z.string().min(1).optional(),
     AUTH_ZITADEL_ISSUER: z.url().optional(),
     /**
-     * A Zitadel service user's personal access token with `user.write` on the organization
-     * (`SETUP.md` §37): with it, adding a colleague on Echipa creates their Zitadel account and
-     * Zitadel emails the invitation (`DECISIONS.md` §123). Without it the row is still added
-     * and the page says to create the account in the console.
+     * A Zitadel service user's token with `user.write` (`SETUP.md` §37): lets Echipa create the
+     * account and send the invitation (`DECISIONS.md` §123). Without it only the row is added.
      */
     ZITADEL_MANAGEMENT_PAT: z.string().min(1).optional(),
 
@@ -93,87 +56,60 @@ export const envSchema = z
     /** How often the day-time monitor pings the job endpoints, in minutes (§148): 15 on production, 60 on QA. */
     PINGER_CADENCE_MINUTES: z.coerce.number().int().min(1).max(240).default(15),
 
-    // Reads the database's CU-hours, plan and quota for `/devs`, `/admin/tasks` and `/api/health`
-    // (SETUP.md §33), and writes the size ceiling and the quota from `/admin/tasks` → Costuri
-    // (§335). A project-scoped key has Editor access to its one project, which covers both.
+    // Reads Neon's usage, plan and quota (SETUP.md §33) and writes its limits (§335); a
+    // project-scoped key covers both.
     NEON_API_KEY: z.string().min(1).optional(),
     NEON_PROJECT_ID: z.string().min(1).optional(),
     /**
-     * `playwright.config.ts`'s `webServer` alone, never a developer's own shell: a developer's
-     * `.env.local` legitimately carries a real `NEON_API_KEY`/`NEON_PROJECT_ID` — reading the
-     * account's real figures while developing is the point of them — but that same file backs
-     * the end-to-end suite's `yarn build && yarn start`, and a suite must not call a real third
-     * party. Setting the two variables to `""` in `webServer.env` does not work: they are
-     * `z.string().min(1)`, so an empty string is refused rather than treated as absent. This
-     * flag is read once, below, to blank both regardless of what `.env.local` set — the schema
-     * itself treats them as unset, rather than each caller learning to check a second variable.
+     * Set by `playwright.config.ts`'s `webServer` only: blanks `NEON_API_KEY`/`NEON_PROJECT_ID`
+     * (below) so the suite never calls Neon even when `.env.local` has real keys. Setting them to
+     * `""` would not work: `min(1)` refuses an empty string.
      */
     E2E_DISABLE_NEON: z
       .string()
       .optional()
       .transform((value) => value === "true" || value === "1"),
     /**
-     * The weather forecast's stand-in (§402): `playwright.config.ts`'s `webServer` sets it, so
-     * the end-to-end suite's server answers every forecast with the same fixed hour and never
-     * reaches Open-Meteo — a suite must not call a real third party, and a real forecast would
-     * change what the page says from one run to the next. Ignored on production
-     * (`WEATHER_SOURCE`, below).
+     * Set by the e2e `webServer`: a fixed forecast instead of Open-Meteo, for a deterministic
+     * page (§402). Ignored on production (`WEATHER_SOURCE`, below).
      */
     E2E_WEATHER_STUB: z
       .string()
       .optional()
       .transform((value) => value === "true" || value === "1"),
     /**
-     * `playwright.config.ts`'s `webServer` alone, never a developer's own shell (found by
-     * re-review, `DECISIONS.md` §403): a page or event save fetches a YouTube film's poster
-     * from `i.ytimg.com` once, server-side (`modules/media/video-poster.ts`) — a real third
-     * party a CI runner may have no route to, which otherwise leaves the end-to-end suite
-     * either hanging on the fetch's own timeout or asserting a poster that never arrived. This
-     * flag swaps the *default* `fetchImpl` for a fixture image built in-process (`sharp`, no
-     * network at all) rather than asking every save path to thread a stub through from the
-     * route — the same shape as `E2E_DISABLE_NEON` above.
+     * Set by the e2e `webServer` only (`DECISIONS.md` §403): the YouTube poster fetch
+     * (`modules/media/video-poster.ts`) returns an in-process fixture instead of calling out,
+     * which CI may not reach. Ignored on production (`e2eStubYoutubePoster`).
      */
     E2E_STUB_YOUTUBE_POSTER: z
       .string()
       .optional()
       .transform((value) => value === "true" || value === "1"),
     /**
-     * `playwright.config.ts`'s `webServer` alone (§430): under `APP_ENV=test` — CI's end-to-end
-     * job — the store is `fake`, a Map inside the server process a spec cannot reach, so a spec
-     * that needs a picture stored the way the site stored one *before* an upload could (the
-     * older pictures' button: a version-4 prefix no upload makes any more) had no way to put
-     * one there. With this flag a miss in the fake store reads `.media/<key>` from the disk,
-     * read-only, where the spec writes its fixture — what `local` mode reads anyway. Only ever
-     * consulted in `fake` mode, which production never is.
+     * Set by the e2e `webServer` only (§430): a miss in the `fake` store reads `.media/<key>`
+     * from disk, read-only, so a spec can plant a legacy picture. Consulted only in `fake` mode.
      */
     E2E_FAKE_MEDIA_FROM_DISK: z
       .string()
       .optional()
       .transform((value) => value === "true" || value === "1"),
     /**
-     * `playwright.config.ts`'s `webServer` alone: under `APP_ENV=test` — CI's end-to-end job — the
-     * request that queues a message does not drain the outbox after its response
-     * (`notifications/drain.ts`), so nothing reached the capture `/devs` shows and every message
-     * stayed pending, which no laptop run (`local`, which drains) ever saw. With this flag the
-     * suite's server drains as every other environment does. Only ever consulted under `test`.
+     * Set by the e2e `webServer` only: under `APP_ENV=test` the outbox is not drained after a
+     * request (`notifications/drain.ts`); this makes the suite's server drain like `local`.
      */
     E2E_DRAIN_OUTBOX: z
       .string()
       .optional()
       .transform((value) => value === "true" || value === "1"),
-    // Read-only, for `/devs` to show this month's deployments and build minutes (§101). The
-    // project id is under the Vercel project's Settings → General; the team id only on a team.
+    // Read-only, for `/devs`'s deployments and build minutes (§101); team id only on a team.
     VERCEL_API_TOKEN: z.string().min(1).optional(),
     VERCEL_PROJECT_ID: z.string().min(1).optional(),
     VERCEL_TEAM_ID: z.string().min(1).optional(),
 
     /**
-     * The club's domain's renewal reminder (§435): the day it was registered, `YYYY-MM-DD`, and
-     * how many years have been paid from that day **in total** — renewing for three more years
-     * after the first is `4`. Their sum is the expiry `/admin/tasks` counts down to (amber at 90
-     * days, red at 30) and `/api/health` warns about at 30. Not secrets and not the domain's
-     * name: the name is `APP_BASE_URL`'s, so a change of domain changes these two and nothing
-     * else. Unset, the row says the date is not known.
+     * The domain renewal reminder (§435): registration date `YYYY-MM-DD` plus the years paid
+     * **in total** from it (three more after the first is `4`) give the expiry.
      */
     DOMAIN_REGISTERED_ON: z.preprocess((value) => (value === "" ? undefined : value), z.iso.date().optional()),
     DOMAIN_RENEWAL_YEARS: z.preprocess(
@@ -181,40 +117,20 @@ export const envSchema = z
       z.coerce.number().int().min(1).max(10).default(1),
     ),
 
-    /**
-     * The club's real site, for the "this is not the real site" banner to link to (§7.5).
-     *
-     * Deliberately not derived from `APP_BASE_URL`: that is *this* environment's host, and the
-     * whole point here is to name a different one. Optional, and unset on a developer's machine
-     * — there is no other site to send anybody to from localhost, and the banner just ends its
-     * sentence. Production never renders the banner at all.
-     */
+    /** The real site, linked from the "this is not the real site" banner (§7.5); not `APP_BASE_URL`. */
     PRODUCTION_SITE_URL: z.url().optional(),
 
     /**
-     * The club's own profiles elsewhere, for the footer and for the `sameAs` of the
-     * `SportsOrganization` structured data (BR-REQ-052-02 criterion 1, which has been
-     * incomplete for exactly this reason: inventing a profile URL misinforms a search engine
-     * rather than merely being wrong).
-     *
-     * Configuration and not a constant, because §8 forbids a hostname anywhere under `src/` and
-     * exempts no provider — and because a club that changes network should not need a release.
-     * All optional: unset, the footer shows no social links and `sameAs` is omitted entirely,
-     * which is the honest state rather than an empty array. Strava is where the club's runs are
-     * actually recorded, which for a running club is the profile that matters most.
+     * The club's profiles, for the footer and `sameAs` (BR-REQ-052-02 criterion 1).
+     * Configuration because §8 forbids a hostname under `src/`; unset omits them entirely.
      */
     CLUB_FACEBOOK_URL: z.url().optional(),
     CLUB_INSTAGRAM_URL: z.url().optional(),
     CLUB_STRAVA_URL: z.url().optional(),
 
     /**
-     * Where the club runs, "latitude,longitude" in decimal degrees (§394): the place whose sunset
-     * decides whether a start is a night event — the pill, the calendar line and the reminder's
-     * line, unless the organizer said "Da" or "Nu". A fact of the club like `CLUB_NAME` (§369),
-     * but configuration rather than a constant because another club running this platform
-     * runs somewhere else. Never a secret; unset is Brașov's centre (`DEFAULT_CLUB_COORDINATES`).
-     * A value that is not two numbers in range fails at startup with the value named, like the
-     * allowlist: a typo here would otherwise move every sunset without anybody noticing.
+     * Where the club runs, "latitude,longitude" (§394): its sunset decides night events. Unset is
+     * Brașov's centre; a malformed value fails at startup, named, as it would silently move every sunset.
      */
     CLUB_COORDINATES: z
       .string()
@@ -230,16 +146,9 @@ export const envSchema = z
       }),
 
     /**
-     * Where uploaded photos live (AGENTS.md §17; `DECISIONS.md` §66).
-     *
-     * Cloudflare R2 through its S3 API. Five values, all from the bucket's page and its API
-     * token (`SETUP.md` §32): the S3 endpoint is configuration rather than assembled from an
-     * account id, because §8 forbids a hostname literal under `src/` and exempts no provider;
-     * `R2_PUBLIC_BASE_URL` is the address the bucket's objects are read at — its `r2.dev`
-     * subdomain, or a custom one — so a photo is served by Cloudflare, never through a function.
-     *
-     * All optional here, and `STORAGE_MODE` below says what an incomplete set means: qa and
-     * production run without a gallery until the five exist, rather than refusing to boot.
+     * Cloudflare R2 for uploaded photos (AGENTS.md §17; `DECISIONS.md` §66; `SETUP.md` §32).
+     * `R2_PUBLIC_BASE_URL` serves objects directly, never through a function. An incomplete set
+     * means no gallery, not a failed boot (`STORAGE_MODE`, below).
      */
     R2_ENDPOINT: z.url().optional(),
     R2_ACCESS_KEY_ID: z.string().min(1).optional(),
@@ -247,30 +156,19 @@ export const envSchema = z
     R2_BUCKET: z.string().min(1).optional(),
     R2_PUBLIC_BASE_URL: z.url().optional(),
 
-    /**
-     * Cloudflare Turnstile on the public registration form (`DECISIONS.md` §97). Both or
-     * neither: with both set the widget shows and the server verifies; with neither the
-     * honeypot and the timing check stand alone, as before.
-     */
+    /** Cloudflare Turnstile (`DECISIONS.md` §97): both or neither; neither leaves the honeypot and timing check. */
     TURNSTILE_SITE_KEY: z.string().min(1).optional(),
     TURNSTILE_SECRET_KEY: z.string().min(1).optional(),
 
     /**
-     * «Tradu din română» (`DECISIONS.md` §464): which engine fills an English box from the
-     * Romanian one. `deepl` by default — one DeepL key with a one-time credit of 1 000 000 characters that
-     * does not renew (§497), the owner's choice for an ONG — and live only once `DEEPL_API_KEY` is set; `off` hides every button
-     * whatever keys exist. Without a key the buttons are absent and `/admin/tasks` shows the row.
+     * «Tradu din română» (`DECISIONS.md` §464, §497): `deepl` is live only once `DEEPL_API_KEY`
+     * is set; `off` hides every button.
      */
     TRANSLATE_PROVIDER: z.enum(TRANSLATE_PROVIDERS).default("deepl"),
     DEEPL_API_KEY: z.string().trim().min(1).optional(),
 
     // AGENTS.md §7.2 and §16.4. Defaults to the mode that transmits nothing.
-    /**
-     * Whether the registration form offers "appear publicly under another name" (§95, the
-     * club's organiser: kits are handed out against an identity card, so a nickname on the
-     * list only invites "somebody else took it"). Off unless set to `true`; the column and
-     * the list's fallback to the registered name stay either way.
-     */
+    /** Whether the form offers "appear publicly under another name" (§95); off unless `true`. */
     FEATURE_DISPLAY_NAME: z
       .string()
       .optional()
@@ -279,101 +177,47 @@ export const envSchema = z
     EMAIL_ALLOWLIST: allowlist,
     MAILGUN_API_KEY: z.string().min(1).optional(),
     MAILGUN_DOMAIN: z.string().min(1).optional(),
-    /**
-     * Mailgun's API base, e.g. its US or EU region endpoint.
-     *
-     * Configuration for the same reason the club's profile URLs are: §8 forbids a hostname under
-     * `src/` and exempts no provider. It also happens to matter — Mailgun's EU region is a
-     * different host, and a club whose participants are European may need it.
-     */
+    /** Mailgun's API base (US or EU region); configuration because of §8. */
     MAILGUN_API_BASE_URL: z.url().optional(),
 
     /**
-     * Who the club's email comes from, and where a reply goes (AGENTS.md §8, §16.4).
-     *
-     * Configuration rather than a literal, because a sending address contains a hostname and
-     * §8 exempts no provider. It is also what lets one build run against a Mailgun sandbox
-     * today and the club's own domain later without a line of code changing.
-     *
-     * Both are optional and both have a working default: the address falls back to
-     * `noreply@<MAILGUN_DOMAIN>`, which is valid on a sandbox from the moment the account
-     * exists. The club's real sender name and address are an owner decision (`BUSINESS.md`
-     * §9) and can be filled in whenever they are made.
-     *
-     * The name's default is the platform's one constant (`CLUB_NAME`, §215, §357), never the
-     * name written in again here: the From line of every message and the contact form's
-     * sender read it, so a renamed club is renamed in one place. `EMAIL_FROM_NAME` still wins
-     * when it is set.
+     * The From line (AGENTS.md §8, §16.4). The address falls back to `noreply@<MAILGUN_DOMAIN>`;
+     * the name to `CLUB_NAME` (§215, §357).
      */
     EMAIL_FROM_ADDRESS: z.email().optional(),
     EMAIL_FROM_NAME: z.string().min(1).max(120).default(CLUB_NAME),
-    /**
-     * Absent means a reply goes to the from address, which for `noreply@` means nowhere.
-     * Setting this to a mailbox the club actually reads is the whole of "people can reply".
-     */
+    /** Absent, replies go to the From address — nowhere, for `noreply@`. */
     EMAIL_REPLY_TO: z.email().optional(),
     /**
-     * The club's legal identity, written into the legal templates before the club reads them
-     * (`DECISIONS.md` §132). Environment and not source, for the reason the club's domain is
-     * kept out of `src/` (§8): the repository is public, and a registered seat is somebody's
-     * address. The values live on the Vercel projects and in `.env.local`.
+     * The club's legal identity for the legal templates (`DECISIONS.md` §132). Environment, not
+     * source: the repository is public and a registered seat is somebody's address.
      */
     CLUB_LEGAL_NAME: z.string().trim().min(1).max(200).optional(),
     CLUB_REGISTRATION_NUMBER: z.string().trim().min(1).max(60).optional(),
     CLUB_REGISTERED_ADDRESS: z.string().trim().min(1).max(300).optional(),
-    /**
-     * The club's archive mailbox for signed declarations (`DECISIONS.md` §99). Set, every
-     * signature — electronic or on paper at the desk — also queues `DECLARATION_ARCHIVE` to
-     * this address with the same PDF attached, so the archive builds itself; unset, the
-     * participant's copy and the per-event bundle on the event page are the archive.
-     */
+    /** When set, every signed declaration's PDF is also queued here as `DECLARATION_ARCHIVE` (`DECISIONS.md` §99). */
     DECLARATIONS_ARCHIVE_TO: z.email().optional(),
     /**
-     * The contact form's own way out (`DECISIONS.md` §149; the owner: "a contact form that
-     * submits to the club's Gmail and bypasses Mailgun"). Plain SMTP with a Gmail app password
-     * — the one message the platform sends that never touches the outbox or the Mailgun
-     * allowance, because it is correspondence, not transactional mail. The host and port are
-     * Google's defaults and stay configuration (§8); `CONTACT_FORM_TO` is where the message
-     * lands — the club's Gmail and a colleague's Yahoo, comma-separated — because the club
-     * decides who reads its mail, not the code. Never validated as a set at startup: a
-     * deployment without them shows "write to us at …" instead of the form (`CONTACT_FORM_MODE`).
-     *
-     * Since §164 `CONTACT_FORM_TO` is the *fallback*: the club edits the recipients and the
-     * copy list on `/admin/emails`, and that list answers only while the setting names
-     * nobody. There is no `CONTACT_FORM_CC` and there will not be one — a copy for a
-     * colleague is a club decision, made in the app, not a redeploy.
+     * The contact form's SMTP (Gmail app password), outside the outbox and Mailgun (`DECISIONS.md`
+     * §149). Not validated as a set: without it the page shows the address (`CONTACT_FORM_MODE`).
+     * `CONTACT_FORM_TO` is only the fallback for the recipients set in the app (§164).
      */
     CONTACT_SMTP_HOST: z.string().trim().min(1).default("smtp.gmail.com"),
     CONTACT_SMTP_PORT: z.coerce.number().int().min(1).max(65_535).default(465),
     CONTACT_SMTP_USER: z.email().optional(),
     CONTACT_SMTP_PASSWORD: z.string().min(1).optional(),
     CONTACT_FORM_TO: allowlist,
-    // Verifies inbound Mailgun webhooks (AGENTS.md §16.5) — a separate secret from the API
-    // key, since the two prove different things: one authenticates outbound calls this
-    // application makes, the other authenticates inbound calls Mailgun makes to it.
+    // Verifies inbound Mailgun webhooks (AGENTS.md §16.5); distinct from the outbound API key.
     MAILGUN_WEBHOOK_SIGNING_KEY: z.string().min(1).optional(),
   })
   /**
-   * BR-REQ-080-03 criterion 3: an unsafe combination fails at startup.
-   *
-   * At startup, and not at send time, because the failure these rules prevent is a message
-   * reaching a real person from a system that was not supposed to reach anyone. By the time a
-   * send is attempted the participant has already registered on a test system, the QA database
-   * already holds their address, and the mail is already going out. A process that refuses to
-   * boot is noticed by whoever deployed it, within seconds, before anything happened.
+   * BR-REQ-080-03 criterion 3: an unsafe combination fails at startup, not at send time, when a
+   * real person may already have been reached.
    */
   .superRefine((value, ctx) => {
     const { APP_ENV, EMAIL_DELIVERY_MODE, EMAIL_ALLOWLIST } = value;
 
-    /**
-     * The development staff switcher never runs where real content lives.
-     *
-     * AGENTS.md §13.1 permits a seeded switcher in local and test and requires it to be
-     * unavailable in qa and production. It hands out staff authority to whoever asks, so a
-     * process configured this way in qa is a backoffice with the lock taken off. Refused at
-     * startup, by the same reasoning as live email: a deployment that will not boot is noticed
-     * within seconds, and a permissive one is noticed after someone has used it.
-     */
+    // The dev switcher hands staff authority to anyone: local and test only (AGENTS.md §13.1).
     if (value.STAFF_AUTH_MODE === "dev-switcher" && APP_ENV !== "local" && APP_ENV !== "test") {
       ctx.addIssue({
         code: "custom",
@@ -382,9 +226,7 @@ export const envSchema = z
       });
     }
 
-    // A mode that can authenticate real staff needs Auth.js's own secret and the Zitadel
-    // credentials — missing one would surface as a broken sign-in for the first person who
-    // tries it, rather than as a deployment that did not start.
+    // Otherwise a missing credential surfaces as a broken sign-in, not a failed boot.
     if (
       value.STAFF_AUTH_MODE === "provider" &&
       (!value.AUTH_SECRET || !value.AUTH_ZITADEL_ID || !value.AUTH_ZITADEL_SECRET || !value.AUTH_ZITADEL_ISSUER)
@@ -398,14 +240,7 @@ export const envSchema = z
     }
 
 
-    /**
-     * Live delivery belongs to production alone.
-     *
-     * This is the rule the requirement names by example — "QA configured for live delivery" —
-     * and it is stated as a property of `live` rather than as a list of forbidden
-     * environments, so a fifth environment added later is refused by default rather than
-     * missed.
-     */
+    // Live delivery is production's alone — stated on `live`, so a new environment is refused by default.
     if (EMAIL_DELIVERY_MODE === "live" && APP_ENV !== "production") {
       ctx.addIssue({
         code: "custom",
@@ -414,8 +249,7 @@ export const envSchema = z
       });
     }
 
-    // §7.1: local and test capture. Not allowlist either — a developer's own address on an
-    // allowlist is still a real inbox, reached from a machine running seed data.
+    // §7.1: local and test capture — not even allowlist, which still reaches a real inbox.
     if ((APP_ENV === "local" || APP_ENV === "test") && EMAIL_DELIVERY_MODE !== "capture") {
       ctx.addIssue({
         code: "custom",
@@ -424,8 +258,7 @@ export const envSchema = z
       });
     }
 
-    // `*` (§163) is every recipient, and only where email is not live: on production the mode
-    // is `live` and the list is not read, so a stray star there would be a lie in the console.
+    // `*` (§163) is read only in allowlist mode; elsewhere it would mislead.
     if (EMAIL_ALLOWLIST.includes(ALLOW_EVERY_RECIPIENT) && EMAIL_DELIVERY_MODE !== "allowlist") {
       ctx.addIssue({
         code: "custom",
@@ -444,22 +277,19 @@ export const envSchema = z
     }
 
     for (const entry of EMAIL_ALLOWLIST) {
-      // `*` is the one entry that is not an address (§163): every recipient. The rule above
-      // has already refused it outside allowlist mode; here it must pass, or a deployment
-      // carrying the star cannot boot — which is how the QA build broke on 2026-09-20.
+      // `*` (§163) is not an address but must pass here; the rule above already scoped it.
       if (entry === ALLOW_EVERY_RECIPIENT) continue;
       if (!isValidEmail(entry)) {
         ctx.addIssue({
           code: "custom",
           path: ["EMAIL_ALLOWLIST"],
-          // The entry is configuration written by an operator, not participant data, so
-          // naming it is what makes the error fixable.
+          // Operator configuration, not participant data, so naming it is safe.
           message: `EMAIL_ALLOWLIST entry is not a valid address: "${entry}".`,
         });
       }
     }
 
-    // Configuration typed by an operator, so the bad entry is named (the allowlist's reasoning).
+    // Operator configuration, so the bad entry is named.
     for (const entry of value.CONTACT_FORM_TO) {
       if (!isValidEmail(entry)) {
         ctx.addIssue({
@@ -470,8 +300,7 @@ export const envSchema = z
       }
     }
 
-    // A mode that can transmit needs credentials. Missing ones would surface as a failed send
-    // per message rather than as a deployment that did not start.
+    // A transmitting mode needs credentials; fail at boot, not per message.
     if (
       EMAIL_DELIVERY_MODE !== "capture" &&
       (!value.MAILGUN_API_KEY || !value.MAILGUN_DOMAIN || !value.MAILGUN_API_BASE_URL)
@@ -483,53 +312,29 @@ export const envSchema = z
       });
     }
 
-    /**
-     * The check deliberately absent: production is NOT required to be live.
-     *
-     * AGENTS.md §7.2 pairs production with live delivery, and that is where this ends up. It
-     * is not enforced yet because it would refuse to start the pilot — production runs public
-     * event pages, has no Mailgun account, and enqueues no message of any kind, so capture
-     * there transmits nothing because there is nothing to transmit. The day the first message
-     * type ships (BR-REQ-080-01), production capturing email means participants never receive
-     * a confirmation, and this check must be added with it.
-     */
+    // Deliberately absent: production is not required to be `live` (AGENTS.md §7.2 pairs them,
+    // BR-REQ-080-01).
   })
   /**
-   * Derive the staff authentication mode when nobody stated one.
-   *
-   * Done here rather than with a Zod default so the safe value depends on the environment:
-   * a default of `dev-switcher` would enable the switcher in production the first time
-   * someone forgot the variable, and a default of `disabled` would mean every developer and
-   * the end-to-end suite must set it before they can sign in at all.
+   * Derived values. `STAFF_AUTH_MODE` defaults per environment (switcher in local/test,
+   * `disabled` elsewhere), which a plain Zod default cannot do.
    */
   .transform((value) => {
     const neonSwitchedOff = e2eNeonSwitchOff(value);
     return {
       ...value,
       E2E_DISABLE_NEON: neonSwitchedOff,
-      // Same guard as `E2E_DISABLE_NEON`, for the same reason: a stray copy of this flag must
-      // never make production hand back a fixture image instead of the real poster.
       E2E_STUB_YOUTUBE_POSTER: e2eStubYoutubePoster(value),
       STAFF_AUTH_MODE:
         value.STAFF_AUTH_MODE ??
         (value.APP_ENV === "local" || value.APP_ENV === "test"
           ? ("dev-switcher" as const)
           : ("disabled" as const)),
-      /**
-       * `E2E_DISABLE_NEON` blanks both regardless of what `.env.local` set (its own comment,
-       * above), so every reader of `env.NEON_API_KEY`/`env.NEON_PROJECT_ID` — there is no second
-       * copy to keep in sync — sees the end-to-end run as an environment with no Neon key at all.
-       * Never on production (`e2eNeonSwitchOff`).
-       */
       NEON_API_KEY: neonSwitchedOff ? undefined : value.NEON_API_KEY,
       NEON_PROJECT_ID: neonSwitchedOff ? undefined : value.NEON_PROJECT_ID,
       /**
-       * Derived, never set: `local` writes under `.media/` on a developer's disk and `fake`
-       * keeps objects in memory for tests, so neither environment needs a bucket; `r2` when
-       * the five variables are all present, and `unconfigured` when a deployed environment has
-       * not got them yet — the gallery then refuses uploads with a sentence and `/admin/tasks`
-       * says what to create. Deriving it from the variables is what makes "is the bucket wired"
-       * a fact the task board can read rather than a mode somebody remembers to flip.
+       * `local` writes under `.media/`, `fake` is in memory; a deployment is `r2` with all five
+       * variables, else `unconfigured` (uploads refused, `/admin/tasks` says what to create).
        */
       STORAGE_MODE:
         value.APP_ENV === "local"
@@ -544,16 +349,8 @@ export const envSchema = z
               ? ("r2" as const)
               : ("unconfigured" as const),
       /**
-       * Derived like `STORAGE_MODE`: local and test never open a socket — the message is kept
-       * in memory for the developer and the tests to read (§149); a deployment sends over SMTP
-       * when the sender and its password exist, and is `off` otherwise, which the contact page
-       * renders as "write to us at …" rather than a form that fails.
-       *
-       * The recipients are deliberately not part of this since §164: they live in
-       * `platform_settings.contactRecipients`, which a startup-time derivation cannot see, and
-       * `CONTACT_FORM_TO` is only their fallback. So this says whether the deployment can send
-       * at all, and `contact/delivery.ts` says whether there is anybody to send to — a form
-       * needs both, and either one missing shows the club's address instead.
+       * Local and test capture in memory (§149); a deployment is `smtp` with user and password,
+       * else `off`. Whether anyone receives it is `contact/delivery.ts`'s question (§164).
        */
       CONTACT_FORM_MODE:
         value.APP_ENV === "local" || value.APP_ENV === "test"
@@ -562,13 +359,8 @@ export const envSchema = z
             ? ("smtp" as const)
             : ("off" as const),
       /**
-       * Where the weather forecast comes from (§402). Derived, never set: `stub` for the
-       * end-to-end suite's server (`E2E_WEATHER_STUB`, whatever its APP_ENV — CI runs the suite
-       * under `test`), a fixed forecast with no request; `off` in the unit and integration tests
-       * (APP_ENV=test), which never open a socket — a test that wants a forecast hands one in;
-       * `open-meteo` everywhere else, a local `yarn dev` included, since the API is public and
-       * keyless. Production is always `open-meteo`: a stray flag there would print an invented
-       * forecast to every visitor.
+       * The forecast source (§402): `stub` for the e2e server (never production), `off` in unit
+       * tests, `open-meteo` everywhere else.
        */
       WEATHER_SOURCE:
         value.E2E_WEATHER_STUB && value.APP_ENV !== "production"
@@ -580,15 +372,8 @@ export const envSchema = z
   });
 
 /**
- * Whether `E2E_DISABLE_NEON` takes effect — everywhere but production (§335, Neon limits).
- *
- * The flag exists for the end-to-end suite's own server, so it never calls the real Neon API.
- * On production it would switch off exactly what the owner asked to keep: the 80% quota warning
- * on `/api/health`, the limits card and the task-board row — the one early alarm before Neon
- * suspends the site at its cap (§327). So a production process ignores it and says so once, at
- * startup, in the log. Ignored rather than refused: a stray variable must not be able to stop
- * the site from booting either, and ignoring it leaves production exactly as it would be
- * without it.
+ * `E2E_DISABLE_NEON` takes effect everywhere but production, where it would silence the quota
+ * alarm (§327, §335). Ignored with a warning rather than refused, so it cannot stop a boot.
  */
 function e2eNeonSwitchOff(value: { E2E_DISABLE_NEON: boolean; APP_ENV: string }): boolean {
   if (!value.E2E_DISABLE_NEON) return false;
@@ -601,11 +386,7 @@ function e2eNeonSwitchOff(value: { E2E_DISABLE_NEON: boolean; APP_ENV: string })
   return true;
 }
 
-/**
- * Whether `E2E_STUB_YOUTUBE_POSTER` takes effect — everywhere but production, exactly like
- * `e2eNeonSwitchOff` above and for the same reason: a stray copy of the variable must never
- * make a real deployment hand back a fixture image instead of the real one.
- */
+/** `E2E_STUB_YOUTUBE_POSTER` takes effect everywhere but production, like `e2eNeonSwitchOff`. */
 function e2eStubYoutubePoster(value: { E2E_STUB_YOUTUBE_POSTER: boolean; APP_ENV: string }): boolean {
   if (!value.E2E_STUB_YOUTUBE_POSTER) return false;
   if (value.APP_ENV === "production") {

@@ -1,12 +1,8 @@
 /**
- * A deployment keys what must outlive its process under its own secret (§543; the review of
- * 2026-09-28, round five): the family sitting's held places (`modules/registrations/family-place-slot.ts`)
- * with `AUTH_SECRET`, or `JOB_SECRET` where there is no sign-in. On qa and production neither is a
- * refusal, never a fallback — a key drawn per process would change every slot at a restart, and the
- * fixed local key is public. A deployment that signs staff in cannot start without `AUTH_SECRET`
- * already (`env.ts`, the provider rule); one that does not is refused at the first slot it keys. Local
- * and test fall back to the fixed key. Not a rule of `envSchema`, so a test may still parse a partial
- * qa or production configuration; and a module of its own, so a test that mocks `env.ts` keeps it.
+ * The family sitting's held places (`modules/registrations/family-place-slot.ts`) are keyed
+ * under `AUTH_SECRET`, else `JOB_SECRET` (§543). On qa and production having neither is refused,
+ * never a fallback: a per-process key changes at restart and the local key is public. Kept out
+ * of `envSchema` and `env.ts` so tests can parse partial configs or mock `env.ts`.
  */
 export function deploymentSecretIssue(value: { APP_ENV?: string; AUTH_SECRET?: string; JOB_SECRET?: string }): string | null {
   if (value.APP_ENV !== "qa" && value.APP_ENV !== "production") return null;

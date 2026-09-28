@@ -1,17 +1,6 @@
 /**
- * The configuration enums, defined once (AGENTS.md §1.5, rule 3: one rule in one place).
- *
- * `env.ts` validates against these and `/devs` renders them, and before this file existed the
- * second list did not exist at all: the diagnostics page could show which mode a deployment was
- * in and had no way to say what the alternatives were. Somebody looking at
- * `EMAIL_DELIVERY_MODE=capture` and asking "what else could this be?" had to open the source.
- *
- * Keeping the two in step by hand is exactly the kind of drift that makes a diagnostics page
- * lie, and a diagnostics page that lies is worse than none — so `env.ts` builds its `z.enum`
- * from these arrays rather than repeating the values. Adding a mode here is the only edit.
- *
- * `as const` and `readonly` are load-bearing: `z.enum` needs a literal tuple to produce a
- * union type rather than `string`.
+ * The configuration enums, defined once (AGENTS.md §1.5, rule 3): `env.ts` validates against
+ * them and `/devs` lists them. `as const` is load-bearing: `z.enum` needs a literal tuple.
  */
 
 /** AGENTS.md §7.1 — the environment identity. `NODE_ENV` is not this. */
@@ -26,26 +15,13 @@ export type EmailDeliveryMode = (typeof EMAIL_DELIVERY_MODES)[number];
 export const STAFF_AUTH_MODES = ["dev-switcher", "provider", "disabled"] as const;
 export type StaffAuthMode = (typeof STAFF_AUTH_MODES)[number];
 
-/**
- * «Tradu din română» (`DECISIONS.md` §464) — which engine fills an English box, or none. DeepL
- * API Free is the only one wired; a second provider is one more value here and one file in
- * `infrastructure/translate/`.
- */
+/** «Tradu din română» (`DECISIONS.md` §464) — the translation engine, or none. */
 export const TRANSLATE_PROVIDERS = ["deepl", "off"] as const;
 export type TranslateProviderSetting = (typeof TRANSLATE_PROVIDERS)[number];
 
 /**
- * What `/devs` renders, and the one place that says which enums are worth showing there.
- *
- * Values only — a mode name is not a secret and never becomes one. Nothing here reads `env`;
- * the page pairs this list with the current value it already holds.
- *
- * Every setting and every one of its values carries a message key, because a list of tokens
- * answers "what could this be?" and not "what would that do?", and the second question is the
- * one somebody has at two in the afternoon with a deployment behaving oddly. The prose lives
- * in `messages/*.json` under `Devs.setting.*`, not here — this module is imported by `env.ts`,
- * which runs before anything is translated, and §9.3 keeps user-facing strings out of code
- * regardless.
+ * The enums `/devs` shows, values only (never secrets). Each setting and value has its
+ * explanation under `Devs.setting.*` in `messages/*.json` (§9.3).
  */
 export const CONFIGURATION_ENUMS = [
   { variable: "APP_ENV", values: APP_ENVIRONMENTS },
@@ -55,7 +31,6 @@ export const CONFIGURATION_ENUMS = [
 
 /**
  * The one `EMAIL_ALLOWLIST` entry that is not an address: every recipient (`DECISIONS.md` §163).
- * It lives here, with the enums, because both the environment schema and the delivery decision
- * must agree on it and neither may import the other.
+ * Here because the env schema and the delivery decision share it and neither may import the other.
  */
 export const ALLOW_EVERY_RECIPIENT = "*";

@@ -1,45 +1,34 @@
 import { ALIAS_SEGMENTS } from "@/i18n/aliases";
 
 /**
- * Which URLs are staff-only, and therefore never indexed and never publicly cached.
- *
- * A pure function over a path, in a file of its own so it can be tested directly: importing
- * the proxy pulls in the Next.js middleware runtime, and a rule about which URLs are private
- * is exactly the kind of thing that is quietly wrong for a year.
- *
- * AGENTS.md §14.5 forbids a shared public cache on the backoffice; BR-REQ-051-02 criterion 2
- * requires a preview to be noindex and uncached.
+ * Which URLs are staff-only: never indexed, never publicly cached (AGENTS.md §14.5;
+ * BR-REQ-051-02 criterion 2). Separate from the proxy so it can be tested without Next's runtime.
  */
 
 /**
- * The first segment of every staff-only route, in both locales.
- *
- * Written as literal segments rather than derived from `routing.pathnames`, because this list
- * has to be right for URLs the router never produced — a bookmarked draft preview, a link
- * pasted into a chat, a crawler guessing. Adding a staff route means adding its segment here.
+ * The first segment of every staff-only route, in both locales. Literal rather than derived
+ * from `routing.pathnames`: it must hold for URLs the router never produced. A new staff route
+ * adds its segment here.
  */
 const PRIVATE_SEGMENTS: readonly string[] = [
   "admin",
-  // The configuration report. Not secret — it holds no value — but a map of what a deployment
-  // is missing, which is not something to hand a crawler.
+  // The configuration report: no values, but a map of what a deployment is missing.
   "devs",
   "preview",
   "previzualizare",
   "sign-in",
   "autentificare",
-  // The members' zone (§524): behind the sign-in, the club's words for its members alone.
+  // The members' zone (§524).
   "zona-membri",
   "members-area",
-  // The aliases people type, so the redirect itself carries the same headers as its
-  // destination (`src/i18n/aliases.ts`).
+  // Typed aliases, so the redirect carries its destination's headers (`src/i18n/aliases.ts`).
   ...ALIAS_SEGMENTS,
 ];
 
 export function isPrivatePath(pathname: string): boolean {
   const segments = pathname.split("/").filter(Boolean);
-  // The locale prefix is always present (`localePrefix: "always"`), so the segment that
-  // decides is the second one — but an unprefixed request reaches the proxy too, on its way to
-  // being redirected, and that one must be judged on its first.
+  // Normally the second segment decides (after the locale); an unprefixed request on its way
+  // to the redirect is judged on its first.
   return [segments[0], segments[1]].some(
     (segment) => segment !== undefined && PRIVATE_SEGMENTS.includes(segment),
   );
