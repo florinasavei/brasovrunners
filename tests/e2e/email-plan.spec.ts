@@ -111,7 +111,12 @@ test.describe("BR-REQ-080-02 the Mailgun plan on «Setări» → «Emailuri»", 
       The owner, 2026-09-28: "vreau să pot vedea exact când pleacă emailurile și să pot face on/off
       la acea setare". The queue panel opens with the timing, the next round and what holds it back;
       every row says its departure; the switch is «Termene»'s «Când pleacă emailurile», both values,
-      asking first. Back to the scheduled default at the end, for the next test on this database.
+      asking first.
+
+      `data-timing` is the setting in force: the stored choice, else the environment's default —
+      scheduled on QA and production, immediate on a laptop and on this suite's server, where no
+      pinger runs (§513, `defaultDeliveryTiming`). So the test reads where it starts, switches to the
+      other value, reads both, and puts it back where it found it, for the next test on this database.
     */
     await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin/settings/emails");
@@ -120,25 +125,44 @@ test.describe("BR-REQ-080-02 the Mailgun plan on «Setări» → «Emailuri»", 
     await openFold(queue);
 
     const state = main.getByTestId("outbox-when-state");
-    await expect(state).toHaveAttribute("data-timing", "scheduled");
-    await expect(state).toContainText("Emailurile pleacă: la trecerea programată");
-    await expect(main.getByTestId("outbox-when-next")).toContainText("Următoarea trecere:");
-    await expect(main.getByTestId("outbox-when-holds")).toContainText("monitorul care apelează site-ul");
+    const next = main.getByTestId("outbox-when-next");
+    const holds = main.getByTestId("outbox-when-holds");
+    const form = main.getByTestId("outbox-timing-form");
+    const says = {
+      scheduled: async () => {
+        await expect(state).toHaveAttribute("data-timing", "scheduled");
+        await expect(state).toContainText("Emailurile pleacă: la trecerea programată");
+        await expect(next).toContainText("Următoarea trecere:");
+        await expect(holds).toContainText("monitorul care apelează site-ul");
+      },
+      immediate: async () => {
+        await expect(state).toHaveAttribute("data-timing", "immediate");
+        await expect(state).toContainText("Emailurile pleacă: imediat după cerere");
+        await expect(next).toContainText("Fiecare email pleacă imediat după cererea");
+      },
+    };
+    const switchTo = async (timing: "scheduled" | "immediate") => {
+      if (timing === "immediate") {
+        await form.getByRole("button", { name: "Trimite imediat după cerere" }).click();
+        await confirmDialog(page, "Emailurile să plece imediat după cerere?");
+      } else {
+        await form.getByRole("button", { name: "Trimite la trecerea programată" }).click();
+        await confirmDialog(page, "Emailurile să plece la trecerea programată?");
+      }
+      await says[timing]();
+    };
+
+    const start = await state.getAttribute("data-timing");
+    expect(start === "scheduled" || start === "immediate", `data-timing="${start}"`).toBe(true);
+    const from = start === "scheduled" ? "scheduled" : "immediate";
+    await says[from]();
     // Every row the queue holds says when it leaves, whatever this database has queued now.
     for (const row of await main.getByTestId("outbox-row-leaves").all()) {
       await expect(row).toHaveText(/^(Pleacă:|Întârziat:|Ținut până |Se trimite acum|Nu mai pleacă)/);
     }
 
-    const form = main.getByTestId("outbox-timing-form");
-    await form.getByRole("button", { name: "Trimite imediat după cerere" }).click();
-    await confirmDialog(page, "Emailurile să plece imediat după cerere?");
-    await expect(state).toHaveAttribute("data-timing", "immediate");
-    await expect(state).toContainText("Emailurile pleacă: imediat după cerere");
-    await expect(main.getByTestId("outbox-when-next")).toContainText("Fiecare email pleacă imediat după cererea");
-
-    await form.getByRole("button", { name: "Trimite la trecerea programată" }).click();
-    await confirmDialog(page, "Emailurile să plece la trecerea programată?");
-    await expect(state).toHaveAttribute("data-timing", "scheduled");
+    await switchTo(from === "scheduled" ? "immediate" : "scheduled");
+    await switchTo(from);
   });
 
   test("a Redactor reads the figures and neither the queue nor the club's copies", async ({ page }) => {
