@@ -114,6 +114,8 @@ test.describe("BR-REQ-090-05 «Club» first, and «De făcut» beside it", () =>
     const faq = main.locator('[data-item-id="start-admin-faq-page"]');
     await expect(team).toContainText(/Scrie pagina Echipa: Pagini → Echipa → /);
     await expect(faq).toContainText(/Scrie pagina Întrebări frecvente: Pagini → Întrebări frecvente → /);
+    // §438's own team-page line, which the new one replaces, is not beside it.
+    await expect(main.locator('[data-item-id="start-admin-11"]')).toHaveCount(0);
     const teamLink = team.getByRole("link", { name: "Deschide pagina Echipa" });
     await expect(teamLink).toHaveAttribute("href", "/ro/admin/pages/team");
     await expect(teamLink.locator("svg")).toHaveCount(1);

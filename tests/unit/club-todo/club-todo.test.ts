@@ -21,6 +21,7 @@ import {
   CLUB_TODO_DEFAULT_IDS,
   CLUB_TODO_OWNER_SUGGESTIONS,
   clubTodoDefaultView,
+  firstClubTodo,
   mergeClubTodoDefaults,
   startingClubTodo,
 } from "@/modules/club-todo/domain/starting-list";
@@ -60,22 +61,31 @@ const input = (text: string, owner = "", due = "") => clubTodoInputSchema.parse(
 describe("§438 the starting list — the owner's two messages of 2026-09-26", () => {
   const items = startingClubTodo();
 
-  it("is twenty-one lines: the Administrator's twelve and the two pages (§NNN), then the Organizer's seven, in their order", () => {
-    expect(items).toHaveLength(21);
-    expect(items.slice(0, 14).every((item) => item.owner === "Administrator")).toBe(true);
-    expect(items.slice(14).every((item) => item.owner === "Organizator")).toBe(true);
-    expect(items.map((item) => item.order)).toEqual(Array.from({ length: 21 }, (_, index) => index + 1));
+  it("is twenty lines: the Administrator's eleven and the two pages (§NNN), then the Organizer's seven, in their order", () => {
+    expect(items).toHaveLength(20);
+    expect(items.slice(0, 13).every((item) => item.owner === "Administrator")).toBe(true);
+    expect(items.slice(13).every((item) => item.owner === "Organizator")).toBe(true);
+    expect(items.map((item) => item.order)).toEqual(Array.from({ length: 20 }, (_, index) => index + 1));
     expect(items[0].text).toMatch(/^Intră în backoffice/);
-    expect(items.slice(12, 14).map((item) => item.id)).toEqual(["start-admin-team-page", "start-admin-faq-page"]);
-    expect(items[14].text).toMatch(/^Intră în backoffice .*«Înscrieri»/);
+    expect(items.slice(11, 13).map((item) => item.id)).toEqual(["start-admin-team-page", "start-admin-faq-page"]);
+    expect(items[13].text).toMatch(/^Intră în backoffice .*«Înscrieri»/);
+  });
+
+  it("no longer starts with §438's line 11, which the team-page line replaces — the ids after it keep their number", () => {
+    expect(items.map((item) => item.id)).not.toContain("start-admin-11");
+    expect(items.find((item) => item.id === "start-admin-12")?.text).toMatch(/^După 10 octombrie/);
+    const first = firstClubTodo();
+    expect(first).toHaveLength(19);
+    expect(first.find((item) => item.id === "start-admin-11")?.text).toMatch(/^Pagina «Echipa»/);
   });
 
   it("has fixed, unique ids, so a tick pressed before anything is stored finds its line", () => {
     const ids = items.map((item) => item.id);
-    expect(new Set(ids).size).toBe(21);
-    expect(CLUB_TODO_DEFAULT_IDS).toEqual(ids);
+    expect(new Set(ids).size).toBe(20);
+    // The replaced line 11 stays among the ids a stored row has seen, so it is never given again.
+    expect([...CLUB_TODO_DEFAULT_IDS].sort()).toEqual([...ids, "start-admin-11"].sort());
     expect(ids[0]).toBe("start-admin-01");
-    expect(ids[20]).toBe("start-organizer-07");
+    expect(ids[19]).toBe("start-organizer-07");
     expect(startingClubTodo().map((item) => item.id)).toEqual(ids);
   });
 
@@ -102,7 +112,7 @@ describe("§438 the starting list — the owner's two messages of 2026-09-26", (
   });
 
   it("starts with every line open, and every line valid by the stored schema", () => {
-    expect(openClubTodoCount(items)).toBe(21);
+    expect(openClubTodoCount(items)).toBe(20);
     expect(readClubTodoValue({ items })).toEqual(items);
   });
 
@@ -169,13 +179,15 @@ describe("§NNN the Administrator's two pages — «Echipa» and «Întrebări f
 
   it("is added once to a list stored before it, at the end, and never to a list that has seen it", () => {
     // What production stored from §438: the nineteen lines, numbered 1 to 19.
-    const before = startingClubTodo()
-      .filter((item) => !item.id.endsWith("-page"))
-      .map((item, index) => ({ ...item, order: index + 1 }));
+    const before = firstClubTodo();
     expect(before).toHaveLength(19);
     const first = mergeClubTodoDefaults(before, null);
     expect(first.added.map((item) => item.id)).toEqual(["start-admin-team-page", "start-admin-faq-page"]);
     expect(first.added.map((item) => item.order)).toEqual([20, 21]);
+    // §438's line 11, untouched, leaves as the team-page line arrives: the two never stand together.
+    expect(first.removed.map((item) => item.id)).toEqual(["start-admin-11"]);
+    expect(first.items).toHaveLength(20);
+    expect(first.items.map((item) => item.id)).not.toContain("start-admin-11");
     expect(first.seenDefaults.sort()).toEqual([...CLUB_TODO_DEFAULT_IDS].sort());
 
     // A second merge of the merged list adds nothing.
@@ -186,6 +198,33 @@ describe("§NNN the Administrator's two pages — «Echipa» and «Întrebări f
     // A §438 line the club deleted before the marker existed is not revived either.
     const noFirst = before.filter((item) => item.id !== "start-admin-01");
     expect(mergeClubTodoDefaults(noFirst, null).items.map((item) => item.id)).not.toContain("start-admin-01");
+  });
+
+  it("keeps §438's line 11 when the club edited or ticked it, and never takes it off once the team line was seen", () => {
+    const before = firstClubTodo();
+    const edited = before.map((item) => (item.id === "start-admin-11" ? { ...item, text: "Echipa: pozele, până vineri" } : item));
+    const ticked = before.map((item) => (item.id === "start-admin-11" ? { ...item, done: true, doneAt: NOW.toISOString(), by: "Dev ADMIN" } : item));
+    for (const list of [edited, ticked]) {
+      const merged = mergeClubTodoDefaults(list, null);
+      expect(merged.removed).toEqual([]);
+      expect(merged.items.map((item) => item.id)).toEqual(expect.arrayContaining(["start-admin-11", "start-admin-team-page"]));
+    }
+    // Seen already (the club deleted the new line, then somebody typed line 11 back): nothing moves.
+    const seen = mergeClubTodoDefaults(before, null).seenDefaults;
+    const again = mergeClubTodoDefaults(before, seen);
+    expect(again.removed).toEqual([]);
+    expect(again.added).toEqual([]);
+  });
+
+  it("frees line 11's place for the team line on a list at the cap", () => {
+    const full = [
+      ...firstClubTodo(),
+      ...Array.from({ length: CLUB_TODO_MAX_ITEMS - 19 }, (_, index) => line(`x${index}`, 20 + index)),
+    ];
+    const merged = mergeClubTodoDefaults(full, null);
+    expect(merged.added.map((item) => item.id)).toEqual(["start-admin-team-page"]);
+    expect(merged.removed.map((item) => item.id)).toEqual(["start-admin-11"]);
+    expect(merged.items).toHaveLength(CLUB_TODO_MAX_ITEMS);
   });
 
   it("never grows a list past the cap, and adds the default it could not take once there is room", () => {
