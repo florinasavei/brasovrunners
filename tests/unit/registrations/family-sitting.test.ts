@@ -80,6 +80,37 @@ describe("§519 the browser's half of a sitting", () => {
     expect(opened?.shared).toBeUndefined();
   });
 
+  it("carries each person's place — reserved or the waiting list, never «none» (§543, the review of 2026-09-28, round three)", async () => {
+    const { isNewSittingPerson, sittingReservationFacts, withLatestPlace, withPlace, withSittingPerson } = await import("@/modules/registrations/domain/family-sitting");
+    const people = [
+      { name: "Ana Pop", birthDate: "1985-03-02" },
+      { name: "Maria Pop", birthDate: "2010-07-11", waitlist: true },
+      { name: "Dan Pop", birthDate: "2011-05-20" },
+    ];
+    expect(openFamilySittingCookie(sealFamilySittingCookie({ ...cookie, people })!)?.people).toEqual(people);
+    // Every person holds a place or waits for one: the marker counts two reserved and one waiting.
+    expect(sittingReservationFacts(people)).toEqual({ firstNames: ["Ana", "Maria", "Dan"], reserved: 2, waiting: 1 });
+    expect(withLatestPlace(cookie.people, "waitlist").at(-1)).toEqual({ name: "Maria Pop", birthDate: "2010-07-11", waitlist: true });
+    expect(withLatestPlace(cookie.people, undefined)).toEqual(cookie.people);
+    expect(withPlace({ name: "Dan Pop", birthDate: "", waitlist: true }, "reserved")).toEqual({ name: "Dan Pop", birthDate: "" });
+    // A correction keeps the place the person had, and is not a new person; another name is.
+    const corrected = withSittingPerson(people, { name: "Maria  Pop", birthDate: "2010-07-12" });
+    expect(corrected.people.at(-1)).toEqual({ name: "Maria Pop", birthDate: "2010-07-12", waitlist: true });
+    expect(isNewSittingPerson(people, corrected)).toBe(false);
+    expect(isNewSittingPerson(people, withSittingPerson(people, { name: "Ioana Pop", birthDate: "2012-01-01" }))).toBe(true);
+    // Another name on a typed birth date is set aside, not a new person (§493).
+    expect(isNewSittingPerson(people, withSittingPerson(people, { name: "Ioana Pop", birthDate: "2011-05-20" }))).toBe(false);
+  });
+
+  it("a stored reservation holds only while its fixed deadline is ahead, whatever the email is doing (§543)", async () => {
+    const { familyReservationHoldsAt } = await import("@/modules/registrations/domain/family-reservation");
+    const deadline = new Date(NOW.getTime() + 40 * 60_000);
+    expect(familyReservationHoldsAt(null, NOW)).toBe(false);
+    expect(familyReservationHoldsAt(deadline, NOW)).toBe(true);
+    expect(familyReservationHoldsAt(deadline, deadline)).toBe(false);
+    expect(familyReservationHoldsAt(deadline, new Date(deadline.getTime() + 60 * 60_000))).toBe(false);
+  });
+
   it("stands for a sitting of this event until its email leaves by itself", () => {
     expect(sittingCookieLive(cookie, EVENT_ID, NOW)).toBe(true);
     expect(sittingCookieLive(cookie, "00000000-0000-4000-8000-000000000002", NOW)).toBe(false);
@@ -319,8 +350,8 @@ describe("§519 the fix round of the second review", () => {
     expect(doneFamilySentence({ names: ["Ana Pop", "Ion Pop"], atOnce: true })).toBe("familyEach");
     expect(doneFamilySentence({ names: ["Ana Pop"], atOnce: true })).toBeNull();
     expect(doneFamilySentence(null)).toBeNull();
-    const ro = (await import("../../../messages/ro.json")).default as { Registration: { done: Record<string, unknown>; sitting: Record<string, string> } };
-    const en = (await import("../../../messages/en.json")).default as { Registration: { done: Record<string, unknown>; sitting: Record<string, string> } };
+    const ro = (await import("../../../messages/ro.json")).default as { Registration: { done: Record<string, unknown>; sitting: Record<string, unknown> } };
+    const en = (await import("../../../messages/en.json")).default as { Registration: { done: Record<string, unknown>; sitting: Record<string, unknown> } };
     expect(ro.Registration.done.familyEach).toBe("Fiecare persoană primește emailul ei.");
     expect(en.Registration.done.familyEach).toBe("Each person gets their own email.");
     expect(ro.Registration.sitting.leadNamed).toBe("Formularul lui {name} pentru {event} a ajuns.");
@@ -467,7 +498,7 @@ describe("§536 no sitting without a press", () => {
   });
 
   it("words the short screen in both catalogues: the form in, when it leaves, one true sentence under «Da»", async () => {
-    type Catalogue = { Registration: { done: Record<string, string>; sitting: Record<string, string> } };
+    type Catalogue = { Registration: { done: Record<string, string>; sitting: Record<string, unknown> } };
     const ro = (await import("../../../messages/ro.json")).default as unknown as Catalogue;
     const en = (await import("../../../messages/en.json")).default as unknown as Catalogue;
     // «pentru», never the colloquial «lui» before a feminine name in -a (the review of 2026-09-28, nit 4).
@@ -484,8 +515,8 @@ describe("§536 no sitting without a press", () => {
     expect(ro.Registration.sitting.addHintAtOnce).toBe("Fiecare persoană primește emailul ei.");
     for (const key of ["addHint", "addHintOn", "addHintLeft", "addHintAtOnce"]) {
       expect(en.Registration.sitting[key]).toBeTruthy();
-      expect(ro.Registration.sitting[key].length).toBeLessThanOrEqual(200);
-      expect(en.Registration.sitting[key].length).toBeLessThanOrEqual(200);
+      expect(String(ro.Registration.sitting[key]).length).toBeLessThanOrEqual(200);
+      expect(String(en.Registration.sitting[key]).length).toBeLessThanOrEqual(200);
     }
     // «Gata» stays, on the sitting's screen after «Da» (§519).
     expect(ro.Registration.sitting.done).toBe("Nu, gata — trimite-mi emailul");

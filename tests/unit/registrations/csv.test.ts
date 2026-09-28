@@ -71,7 +71,7 @@ describe("CSV formula neutralization", () => {
 
   it("includes the header row and uses CRLF line endings", () => {
     const csv = buildRegistrationsCsv([]);
-    expect(csv).toBe("Event,Name,First name,Last name,Identity document,Email,Status,Club member (declared),Medically fit (declared),Strava,Instagram,Socials on the public list,Guardian,Guardian identity document,Submitted,Confirmed,Race number (BIB),Checked in,Email bounced,Terms version,Terms accepted,Declaration version,Declaration signed");
+    expect(csv).toBe("Event,Name,First name,Last name,Identity document,Email,Status,Club member (declared),Medically fit (declared),Strava,Instagram,Socials on the public list,Guardian,Guardian identity document,Submitted,Confirmed,Race number (BIB),Checked in,Email bounced,Terms version,Terms accepted,Declaration version,Declaration signed,family");
 
     const withRow = buildRegistrationsCsv([
       {
@@ -130,20 +130,20 @@ describe("CSV formula neutralization", () => {
     ]);
     // Race day and the provider's verdict as the last two columns (§83): a time, and Yes or empty.
     expect(member.split("\r\n")[1]).toBe(
-      "Test,Ana,Ana,Pop,BV 123456,ana@example.ro,CONFIRMED,Yes,,https://www.strava.com/athletes/12345,ana.pop,,,,2026-09-04T10:00:00.000Z,,17,2026-10-11T06:40:00.000Z,Yes,,,,",
+      "Test,Ana,Ana,Pop,BV 123456,ana@example.ro,CONFIRMED,Yes,,https://www.strava.com/athletes/12345,ana.pop,,,,2026-09-04T10:00:00.000Z,,17,2026-10-11T06:40:00.000Z,Yes,,,,,",
     );
 
     // No number yet is an empty cell, never 0 (BR-REQ-038-01).
     const other = buildRegistrationsCsv([row]);
     expect(other.split("\r\n")[1]).toBe(
-      "Test,Ana,Ana,Pop,BV 123456,ana@example.ro,CONFIRMED,,,,,,,,2026-09-04T10:00:00.000Z,,,,,,,,",
+      "Test,Ana,Ana,Pop,BV 123456,ana@example.ro,CONFIRMED,,,,,,,,2026-09-04T10:00:00.000Z,,,,,,,,,",
     );
     expect(other).not.toContain("No");
 
     // Not confirmed yet: an empty cell, whatever the row holds (§NNN) — the number comes with the confirmation.
     const pending = buildRegistrationsCsv([{ ...row, status: "PENDING_DECLARATION", bibNumber: 17 }]);
     expect(pending.split("\r\n")[1]).toBe(
-      "Test,Ana,Ana,Pop,BV 123456,ana@example.ro,PENDING_DECLARATION,,,,,,,,2026-09-04T10:00:00.000Z,,,,,,,,",
+      "Test,Ana,Ana,Pop,BV 123456,ana@example.ro,PENDING_DECLARATION,,,,,,,,2026-09-04T10:00:00.000Z,,,,,,,,,",
     );
   });
 
@@ -213,11 +213,11 @@ describe("CSV formula neutralization", () => {
     ]);
     const [header, accepted, staff, older] = csv.split("\r\n");
     const columns = header.split(",");
-    // §425's two, now followed by the declaration's two (§499).
-    expect(columns.slice(-4, -2)).toEqual(["Terms version", "Terms accepted"]);
-    expect(accepted.split(",").slice(-4, -2)).toEqual(["3", "2026-09-25T10:00:00.000Z"]);
-    expect(staff.split(",").slice(-4, -2)).toEqual(["", ""]);
-    expect(older.split(",").slice(-4, -2)).toEqual(["", ""]);
+    // §425's two, now followed by the declaration's two (§499) and the family column (§543).
+    expect(columns.slice(-5, -3)).toEqual(["Terms version", "Terms accepted"]);
+    expect(accepted.split(",").slice(-5, -3)).toEqual(["3", "2026-09-25T10:00:00.000Z"]);
+    expect(staff.split(",").slice(-5, -3)).toEqual(["", ""]);
+    expect(older.split(",").slice(-5, -3)).toEqual(["", ""]);
   });
 
   /**
@@ -251,10 +251,11 @@ describe("CSV formula neutralization", () => {
       base,
     ]);
     const [header, signed, unsigned, older] = csv.split("\r\n");
-    expect(header.split(",").slice(-2)).toEqual(["Declaration version", "Declaration signed"]);
-    expect(signed.split(",").slice(-4)).toEqual(["3", "2026-09-25T10:00:00.000Z", "2", "2026-09-26T08:30:00.000Z"]);
-    expect(unsigned.split(",").slice(-2)).toEqual(["", ""]);
-    expect(older.split(",").slice(-2)).toEqual(["", ""]);
+    // Before the family column (§543), which is last.
+    expect(header.split(",").slice(-3, -1)).toEqual(["Declaration version", "Declaration signed"]);
+    expect(signed.split(",").slice(-5, -1)).toEqual(["3", "2026-09-25T10:00:00.000Z", "2", "2026-09-26T08:30:00.000Z"]);
+    expect(unsigned.split(",").slice(-3, -1)).toEqual(["", ""]);
+    expect(older.split(",").slice(-3, -1)).toEqual(["", ""]);
   });
 
   // §500 — whether the public list prints the socials: right after Instagram, as on the spreadsheet, "Yes" or empty.
@@ -284,7 +285,34 @@ describe("CSV formula neutralization", () => {
     expect(shown.split(",").slice(at - 1, at + 1)).toEqual(["ana.pop", "Yes"]);
     expect(kept.split(",")[at]).toBe("");
     expect(older.split(",")[at]).toBe("");
-    // The declaration's pair stays last (§499).
-    expect(header.split(",").slice(-2)).toEqual(["Declaration version", "Declaration signed"]);
+    // The declaration's pair stays after the terms (§499), the family column last (§543).
+    expect(header.split(",").slice(-3)).toEqual(["Declaration version", "Declaration signed", "family"]);
+  });
+
+  // §543 — the family marker in the export: the other people on the same address at the event, last, «; »-joined.
+  it("ends with the family column: the other people on the address, or an empty cell", () => {
+    const base = {
+      eventTitle: "Test",
+      registeredName: "Ana Pop",
+      firstName: "Ana",
+      lastName: "Pop",
+      idDocument: "",
+      email: "familia.pop@example.ro",
+      status: "PENDING_EMAIL_CONFIRMATION",
+      clubMemberDeclared: false,
+      fitnessDeclaredAt: null,
+      stravaUrl: "",
+      instagramHandle: "",
+      guardianName: "",
+      guardianIdDocument: "",
+      submittedAt: "2026-09-25T10:00:00.000Z",
+      confirmedAt: "",
+      checkedInAt: "",
+      emailBounced: false,
+    };
+    const [header, family, alone] = buildRegistrationsCsv([{ ...base, family: "Mihai Pop; Ioana Pop" }, base]).split("\r\n");
+    expect(header.split(",").at(-1)).toBe("family");
+    expect(family.split(",").at(-1)).toBe("Mihai Pop; Ioana Pop");
+    expect(alone.split(",").at(-1)).toBe("");
   });
 });

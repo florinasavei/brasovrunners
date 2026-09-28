@@ -84,6 +84,11 @@ export type RegistrationCsvRow = {
    * member claim — an empty cell is "not ticked", or ticked where it could not be kept.
    */
   listSocials?: boolean;
+  /**
+   * The family marker (§543): the other people registered on the same address at the event,
+   * «; »-joined, or empty — so a spreadsheet shows who came together.
+   */
+  family?: string;
 };
 
 const HEADER = [
@@ -116,6 +121,8 @@ const HEADER = [
   // After the terms (§499), last for the same reason.
   "Declaration version",
   "Declaration signed",
+  // Last (§543), for the same reason: the other people on the same address.
+  "family",
 ];
 
 export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[]): string {
@@ -149,6 +156,7 @@ export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[]): stri
         row.termsAcceptedAt ?? "",
         String(row.declarationVersion ?? ""),
         row.declarationSignedAt ?? "",
+        row.family ?? "",
       ]
         .map(csvCell)
         .join(","),

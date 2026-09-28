@@ -36,6 +36,7 @@ import {
 } from "./actions";
 import { declarationStateKey, isSignable } from "@/modules/registrations/domain/family-signing";
 import { DENSITY } from "@/theme/density";
+import FamilyChip from "@/modules/registrations/ui/FamilyChip";
 
 type Props = {
   params: Promise<{ locale: string; token: string }>;
@@ -225,6 +226,20 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
               <Typography variant="body1" sx={{ fontWeight: 600 }} data-testid="my-registration-name">
                 {t("mine.runner", { name: item.registeredName })}
               </Typography>
+              {/*
+                The family marker (§543; the owner, 2026-09-28: «trebuie un marker pentru familie»): the
+                other people on this address at the same event, from this page's own list — nothing more
+                is read, and nothing about another address (§39).
+              */}
+              <Box sx={{ mt: 0.5 }}>
+                <FamilyChip
+                  label={t("mine.family")}
+                  members={context.items
+                    .filter((other) => other.eventId === item.eventId && other.id !== item.id)
+                    .map((other) => ({ name: other.registeredName }))}
+                  testId="my-registration-family"
+                />
+              </Box>
               <Typography variant="body2" color="text.secondary" sx={{ mb: declarationLine(item) ? 0.5 : 1.5 }}>
                 {formatDay(item.eventStartsAt, { locale, timeZone: item.eventTimezone, style: "long", withTime: true })}
               </Typography>
@@ -250,6 +265,17 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
                 Not a waiting-list offer: its email already says its day, and paper on race day
                 does not answer an offer.
               */}
+              {/*
+                A family's reserved place (§543), still ahead: the same instant the family's email names,
+                so the page and the email agree on whose place is held and until when.
+              */}
+              {!item.eventCancelled && item.status === "PENDING_EMAIL_CONFIRMATION" && item.holdExpiresAt && item.holdExpiresAt.getTime() > now.getTime() && (
+                <Typography variant="body2" sx={{ mb: 1.5 }} data-testid="my-registration-reserved">
+                  {t("mine.reservedUntil", {
+                    until: formatDay(item.holdExpiresAt, { locale, timeZone: item.eventTimezone, style: "long", withTime: true, position: "inline" }),
+                  })}
+                </Typography>
+              )}
               {!item.eventCancelled &&
                 item.status === "PENDING_DECLARATION" &&
                 item.holdExpiresAt &&

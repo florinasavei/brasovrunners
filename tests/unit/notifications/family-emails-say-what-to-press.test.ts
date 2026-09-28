@@ -55,7 +55,10 @@ describe("§536 a family's one message says the one button does everything", () 
   it("opens with the one line, then one line per person with the birth date in words, the button with the count, and the link's life", () => {
     const message = family();
     const lead = "Un singur buton: confirmi adresa și cele 2 înscrieri, apoi semnezi pe rând declarațiile celor care mai au loc.";
-    expect(message.text.split("\n\n")[1].startsWith(`${lead}\n`)).toBe(true);
+    // The family marker first (§543), then the one line.
+    const block = message.text.split("\n\n")[1].split("\n");
+    expect(block[0]).toBe("Înscriere de familie: Ana și Maria.");
+    expect(block[1]).toBe(lead);
     expect(message.text).toContain("Persoana 1 din 2: Ana Pop, data nașterii 2 martie 1985");
     expect(message.text).toContain("Persoana 2 din 2: Maria Pop, data nașterii 11 iulie 2010");
     expect(message.text).not.toContain("la 2 martie");
@@ -66,6 +69,32 @@ describe("§536 a family's one message says the one button does everything", () 
     expect(message.text).toContain("One button: you confirm the address and the 2 registrations, then sign, one by one, the declarations of those who still have a place.");
     expect(message.text).toContain("Confirm and sign the declarations (2)");
     expect(message.text).not.toContain("emailul anterior");
+  });
+
+  // §543 — each person's place, the reserved places until when, and who the address held before with their state.
+  it("says each person's place and whose places are reserved until when, in both halves, and an earlier person's state", () => {
+    const message = family({
+      familySittingPeople: [
+        { ...people[0], place: "reserved" },
+        { ...people[1], place: "waitlist" },
+      ],
+      familyReservedUntilFormatted: "până la 13:44",
+      familyReservedUntilFormattedOther: "until 13:44",
+      familyRegisteredStates: [{ name: "Ion P.", state: "confirmed" }],
+    });
+    expect(message.text).toContain("Înscriere de familie: Ana și Maria — un loc rezervat până la 13:44, o persoană pe lista de așteptare.");
+    expect(message.text).toContain("Persoana 1 din 2: Ana Pop, data nașterii 2 martie 1985 — loc rezervat până la 13:44");
+    expect(message.text).toContain("Persoana 2 din 2: Maria Pop, data nașterii 11 iulie 2010 — pe lista de așteptare, după confirmare");
+    expect(message.text).toContain("Înscriși deja cu această adresă: Ion P. — confirmat");
+    expect(message.text).toContain("Family registration: Ana and Maria — one place reserved until 13:44, one person on the waiting list.");
+    expect(message.text).toContain("Person 2 of 2: Maria Pop, date of birth 11 July 2010 — on the waiting list, once confirmed");
+    expect(message.text).toContain("Already registered with this address: Ion P. — confirmed");
+    // Three reserved places read as Romanian counts them, with no ICU plural (§341).
+    const three = family({
+      familySittingPeople: ["Ana", "Mihai", "Ioana"].map((name) => ({ name: `${name} Pop`, birthDate: "", place: "reserved" as const })),
+      familyReservedUntilFormatted: "până la 13:44",
+    });
+    expect(three.text).toContain("Înscriere de familie: Ana, Mihai și Ioana — 3 locuri rezervate până la 13:44.");
   });
 
   it("says the button covers an earlier email's person too, only when one left before «Da»", () => {

@@ -55,6 +55,7 @@ import {
 import { currentFamilyStep, type FamilyStep, familySigningSteps, isFamilyWizard, isSignable } from "./domain/family-signing";
 import { readMyRegistrations } from "./my-registrations";
 import { isUuid } from "@/shared/ids";
+import { familyOf } from "./family-marker";
 
 /**
  * Wiring the email-token boundary (§13.2) to the registration lifecycle (§15).
@@ -551,6 +552,11 @@ export async function readRaceDayContext(secret: string, now: Date) {
     selfCheckinHours: deadlines.selfCheckinHours,
     /** The zone that instant is read in on the page — the event's own. */
     eventTimezone: event.timezone ?? CLUB_TIME_ZONE,
+    /**
+     * The family marker (§543): the other people on this address at the event, names only — behind the
+     * address's own link, the one place the names on it may be read (§389).
+     */
+    family: ((await familyOf(db, [registration])).get(registration.id) ?? []).map((member) => member.name),
   };
 }
 
