@@ -27,7 +27,6 @@ describe("BR-REQ-051-01 editorial workflow", () => {
   let close: () => Promise<void>;
   let author: StaffUser;
   let otherAuthor: StaffUser;
-  let editor: StaffUser;
   let admin: StaffUser;
 
   beforeAll(async () => {
@@ -44,10 +43,6 @@ describe("BR-REQ-051-01 editorial workflow", () => {
     [otherAuthor] = await db
       .insert(staffUsers)
       .values({ email: "other@dev.test", displayName: "Other author", role: "COPYWRITER" })
-      .returning();
-    [editor] = await db
-      .insert(staffUsers)
-      .values({ email: "moderator@dev.test", displayName: "Editor", role: "MODERATOR" })
       .returning();
     [admin] = await db
       .insert(staffUsers)
@@ -418,7 +413,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
         to: "DRAFT",
       });
       const reviewed = await transitionEvent(db, {
-        actor: editor,
+        actor: admin,
         eventId: event.id,
         expectedVersion: draft.version,
         to: "IN_REVIEW",
@@ -565,7 +560,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
 
       // Somebody else changed the event row — its times, say — after this page was rendered.
       await saveEventFields(db, {
-        actor: editor,
+        actor: admin,
         eventId: event.id,
         expectedVersion: event.version,
         fields: { ...EVENT_FIELDS, startsAtWallTime: "2026-10-11T10:00" },
@@ -590,7 +585,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       const { event } = await seedEvent();
 
       await saveEventFields(db, {
-        actor: editor,
+        actor: admin,
         eventId: event.id,
         expectedVersion: event.version,
         fields: { ...EVENT_FIELDS, distanceMeters: "10000" },
@@ -599,7 +594,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       expect(
         await codeOf(
           saveEventFields(db, {
-            actor: editor,
+            actor: admin,
             eventId: event.id,
             expectedVersion: event.version,
             fields: { ...EVENT_FIELDS, distanceMeters: "5000" },
@@ -681,13 +676,13 @@ describe("BR-REQ-051-01 editorial workflow", () => {
     });
   });
 
-  describe("the event row: every column an organizer owns", () => {
+  describe("the event row: every column the Administrator owns (§NNN)", () => {
     it("saves both times in the event timezone and the map link", async () => {
       const { event } = await seedEvent();
       const link = ["https:/", "maps.example.test", "brasov"].join("/");
 
       const saved = await saveEventFields(db, {
-        actor: editor,
+        actor: admin,
         eventId: event.id,
         expectedVersion: event.version,
         fields: {
@@ -704,14 +699,14 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       expect(saved.raceStartsAt?.toISOString()).toBe("2026-10-11T07:00:00.000Z");
       expect(saved.mapUrl).toBe(link);
       expect(saved.featured).toBe(true);
-      expect(saved.updatedByStaffUserId).toBe(editor.id);
+      expect(saved.updatedByStaffUserId).toBe(admin.id);
     });
 
     it("saves the type, the surface, the status, the distance and the climb", async () => {
       const { event } = await seedEvent();
 
       const saved = await saveEventFields(db, {
-        actor: editor,
+        actor: admin,
         eventId: event.id,
         expectedVersion: event.version,
         fields: {
@@ -736,7 +731,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       const { event } = await seedEvent();
 
       const saved = await saveEventFields(db, {
-        actor: editor,
+        actor: admin,
         eventId: event.id,
         expectedVersion: event.version,
         fields: { ...EVENT_FIELDS, endsAtWallTime: "2026-10-11T12:00" },
@@ -746,7 +741,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       expect(
         await codeOf(
           saveEventFields(db, {
-            actor: editor,
+            actor: admin,
             eventId: event.id,
             expectedVersion: saved.version,
             fields: { ...EVENT_FIELDS, endsAtWallTime: "2026-10-11T08:00" },
@@ -760,7 +755,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       const { event } = await seedEvent();
 
       const saved = await saveEventFields(db, {
-        actor: editor,
+        actor: admin,
         eventId: event.id,
         expectedVersion: event.version,
         fields: { ...EVENT_FIELDS, durationMinutes: "90" },
@@ -768,7 +763,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       expect(saved.endsAt?.toISOString()).toBe("2026-10-11T07:30:00.000Z");
 
       const both = await saveEventFields(db, {
-        actor: editor,
+        actor: admin,
         eventId: event.id,
         expectedVersion: saved.version,
         fields: { ...EVENT_FIELDS, durationMinutes: "30", endsAtWallTime: "2026-10-11T12:00" },
@@ -778,7 +773,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       for (const durationMinutes of ["0", "-5", "1.5", "99999"]) {
         expect(
           await codeOf(
-            saveEventFields(db, { actor: editor, eventId: event.id, expectedVersion: both.version, fields: { ...EVENT_FIELDS, durationMinutes } }),
+            saveEventFields(db, { actor: admin, eventId: event.id, expectedVersion: both.version, fields: { ...EVENT_FIELDS, durationMinutes } }),
           ),
         ).toBe("VALIDATION_ERROR");
       }
@@ -788,7 +783,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
     it("keeps a race start on a race only", async () => {
       const { event } = await seedEvent();
       const run = await saveEventFields(db, {
-        actor: editor,
+        actor: admin,
         eventId: event.id,
         expectedVersion: event.version,
         fields: { ...EVENT_FIELDS, type: "GROUP_RUN", raceStartsAtWallTime: "2026-10-11T10:00" },
@@ -801,7 +796,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       const { event } = await seedEvent();
       const link = "https://www.strava.com/clubs/1147727/group_events/3393211004834858860";
       const saved = await saveEventFields(db, {
-        actor: editor,
+        actor: admin,
         eventId: event.id,
         expectedVersion: event.version,
         fields: { ...EVENT_FIELDS, stravaEventUrl: link },
@@ -811,7 +806,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       expect(
         await codeOf(
           saveEventFields(db, {
-            actor: editor,
+            actor: admin,
             eventId: event.id,
             expectedVersion: saved.version,
             fields: { ...EVENT_FIELDS, stravaEventUrl: "https://example.test/not-strava" },
@@ -819,7 +814,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
         ),
       ).toBe("VALIDATION_ERROR");
 
-      const cleared = await saveEventFields(db, { actor: editor, eventId: event.id, expectedVersion: saved.version, fields: EVENT_FIELDS });
+      const cleared = await saveEventFields(db, { actor: admin, eventId: event.id, expectedVersion: saved.version, fields: EVENT_FIELDS });
       expect(cleared.stravaEventUrl).toBeNull();
     });
 
@@ -827,14 +822,14 @@ describe("BR-REQ-051-01 editorial workflow", () => {
     it("saves a Facebook event link, refuses one on another host, and clears it", async () => {
       const { event } = await seedEvent();
       const link = "https://www.facebook.com/events/1234567890";
-      const saved = await saveEventFields(db, { actor: editor, eventId: event.id, expectedVersion: event.version, fields: { ...EVENT_FIELDS, facebookEventUrl: link } });
+      const saved = await saveEventFields(db, { actor: admin, eventId: event.id, expectedVersion: event.version, fields: { ...EVENT_FIELDS, facebookEventUrl: link } });
       expect(saved.facebookEventUrl).toBe(link);
       expect(
         await codeOf(
-          saveEventFields(db, { actor: editor, eventId: event.id, expectedVersion: saved.version, fields: { ...EVENT_FIELDS, facebookEventUrl: "https://example.test/not-facebook" } }),
+          saveEventFields(db, { actor: admin, eventId: event.id, expectedVersion: saved.version, fields: { ...EVENT_FIELDS, facebookEventUrl: "https://example.test/not-facebook" } }),
         ),
       ).toBe("VALIDATION_ERROR");
-      const cleared = await saveEventFields(db, { actor: editor, eventId: event.id, expectedVersion: saved.version, fields: EVENT_FIELDS });
+      const cleared = await saveEventFields(db, { actor: admin, eventId: event.id, expectedVersion: saved.version, fields: EVENT_FIELDS });
       expect(cleared.facebookEventUrl).toBeNull();
     });
 
@@ -842,7 +837,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       const { event } = await seedEvent();
 
       const saved = await saveEventFields(db, {
-        actor: editor,
+        actor: admin,
         eventId: event.id,
         expectedVersion: event.version,
         fields: { ...EVENT_FIELDS, timezone: "UTC", startsAtWallTime: "2026-10-11T09:00" },
@@ -858,7 +853,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       expect(
         await codeOf(
           saveEventFields(db, {
-            actor: editor,
+            actor: admin,
             eventId: event.id,
             expectedVersion: event.version,
             fields: { ...EVENT_FIELDS, timezone: "Europe/Brasov" },
@@ -873,7 +868,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       const { event } = await seedEvent();
 
       const saved = await saveEventFields(db, {
-        actor: editor,
+        actor: admin,
         eventId: event.id,
         expectedVersion: event.version,
         fields: { ...EVENT_FIELDS, type: "MEETUP", surface: "" },
@@ -889,7 +884,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       expect(
         await codeOf(
           saveEventFields(db, {
-            actor: editor,
+            actor: admin,
             eventId: event.id,
             expectedVersion: event.version,
             fields: { ...EVENT_FIELDS, surface: "GRAVEL" },
@@ -901,14 +896,14 @@ describe("BR-REQ-051-01 editorial workflow", () => {
     it("clears the race start and the map link when the fields are emptied", async () => {
       const { event } = await seedEvent();
       const first = await saveEventFields(db, {
-        actor: editor,
+        actor: admin,
         eventId: event.id,
         expectedVersion: event.version,
         fields: { ...EVENT_FIELDS, raceStartsAtWallTime: "2026-10-11T10:00" },
       });
 
       const cleared = await saveEventFields(db, {
-        actor: editor,
+        actor: admin,
         eventId: event.id,
         expectedVersion: first.version,
         fields: EVENT_FIELDS,
@@ -924,7 +919,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       expect(
         await codeOf(
           saveEventFields(db, {
-            actor: editor,
+            actor: admin,
             eventId: event.id,
             expectedVersion: event.version,
             fields: { ...EVENT_FIELDS, raceStartsAtWallTime: "2026-10-11T08:00" },
@@ -941,7 +936,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
         expect(
           await codeOf(
             saveEventFields(db, {
-              actor: editor,
+              actor: admin,
               eventId: event.id,
               expectedVersion: event.version,
               fields: { ...EVENT_FIELDS, mapUrl: value },
@@ -963,7 +958,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       const route = ["https:/", "routes.example.test", "tampa"].join("/");
 
       const saved = await saveEventFields(db, {
-        actor: editor,
+        actor: admin,
         eventId: event.id,
         expectedVersion: event.version,
         fields: { ...EVENT_FIELDS, routeUrl: route },
@@ -971,7 +966,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       expect(saved.routeUrl).toBe(route);
 
       const cleared = await saveEventFields(db, {
-        actor: editor,
+        actor: admin,
         eventId: event.id,
         expectedVersion: saved.version,
         fields: EVENT_FIELDS,
@@ -985,7 +980,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       const route = ["https:/", "routes.example.test", "tampa"].join("/");
 
       const saved = await saveEventFields(db, {
-        actor: editor,
+        actor: admin,
         eventId: event.id,
         expectedVersion: event.version,
         fields: { ...EVENT_FIELDS, mapUrl: map, routeUrl: route },
@@ -1003,7 +998,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
         expect(
           await codeOf(
             saveEventFields(db, {
-              actor: editor,
+              actor: admin,
               eventId: event.id,
               expectedVersion: event.version,
               fields: { ...EVENT_FIELDS, routeUrl: value },
@@ -1018,13 +1013,13 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       const second = await seedEvent({ slug: "doi" });
 
       await saveEventFields(db, {
-        actor: editor,
+        actor: admin,
         eventId: first.event.id,
         expectedVersion: first.event.version,
         fields: { ...EVENT_FIELDS, featured: true },
       });
       await saveEventFields(db, {
-        actor: editor,
+        actor: admin,
         eventId: second.event.id,
         expectedVersion: second.event.version,
         fields: { ...EVENT_FIELDS, featured: true },
@@ -1046,7 +1041,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       const { event } = await seedEvent();
 
       const saved = await saveEventFields(db, {
-        actor: editor,
+        actor: admin,
         eventId: event.id,
         expectedVersion: event.version,
         fields: { ...EVENT_FIELDS, registrationMode: "NONE", capacity: "20" },
@@ -1062,7 +1057,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       expect(
         await codeOf(
           saveEventFields(db, {
-            actor: editor,
+            actor: admin,
             eventId: event.id,
             expectedVersion: event.version,
             fields: { ...EVENT_FIELDS, registrationMode: "INTERNAL", capacity: "6" },
@@ -1078,7 +1073,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       expect(
         await codeOf(
           saveEventFields(db, {
-            actor: editor,
+            actor: admin,
             eventId: event.id,
             expectedVersion: event.version,
             fields: { ...EVENT_FIELDS, registrationMode: "EXTERNAL" },
@@ -1089,7 +1084,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       // The organizer's link stays in the document behind "Fără înscrieri" and posts; it is
       // saved as none, and switching back to "La organizator" is typing it again or not at all.
       const saved = await saveEventFields(db, {
-        actor: editor,
+        actor: admin,
         eventId: event.id,
         expectedVersion: event.version,
         fields: { ...EVENT_FIELDS, registrationMode: "NONE", externalRegistrationUrl: link, externalProvider: "Asociația X" },
@@ -1103,7 +1098,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       const link = ["https:/", "entries.example.test", "race"].join("/");
 
       const saved = await saveEventFields(db, {
-        actor: editor,
+        actor: admin,
         eventId: event.id,
         expectedVersion: event.version,
         fields: {
@@ -1125,7 +1120,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       expect(
         await codeOf(
           saveEventFields(db, {
-            actor: editor,
+            actor: admin,
             eventId: event.id,
             expectedVersion: event.version,
             fields: {
@@ -1144,7 +1139,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       expect(
         await codeOf(
           saveEventFields(db, {
-            actor: editor,
+            actor: admin,
             eventId: event.id,
             expectedVersion: event.version,
             fields: { ...EVENT_FIELDS, registrationMode: "INTERNAL", capacity: value },

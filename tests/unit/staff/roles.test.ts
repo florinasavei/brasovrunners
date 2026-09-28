@@ -265,9 +265,11 @@ describe("BR-REQ-060-01 what each role may reach", () => {
     }
   });
 
-  it("reserves the event row — times, map link, featured — to editorial roles", () => {
+  it("reserves the event row — times, map link, featured — to the Administrator (§NNN)", () => {
     expect(canEditEventFields("ADMIN")).toBe(true);
-    expect(canEditEventFields("MODERATOR")).toBe(true);
+    expect(canEditEventFields("SUPERADMIN")).toBe(true);
+    expect(canEditEventFields("MODERATOR")).toBe(false);
+    expect(canEditEventFields("DEV")).toBe(false);
     expect(canEditEventFields("CONTRIBUTOR")).toBe(false);
   });
 
@@ -490,7 +492,8 @@ describe("BR-REQ-060-01 every capability × every role", () => {
     //                          MEMBER CONTRIB COPYW  MODER  DEV    ADMIN  SUPER
     isEditorial: /*           */ [false, false, false, true, true, true, true],
     canEditTexts: /*          */ [false, false, true, false, false, true, true],
-    canEditEventFields: /*    */ [false, false, false, true, true, true, true],
+    // §NNN: the event row is the Administrator's — the Organizer and the Tehnic read it.
+    canEditEventFields: /*    */ [false, false, false, false, false, true, true],
     canCreateEvent: /*        */ [false, false, false, false, false, true, true],
     canCreatePage: /*         */ [false, false, true, false, false, true, true],
     canEditTeamPage: /*       */ [false, false, true, false, false, true, true],

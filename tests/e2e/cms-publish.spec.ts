@@ -111,7 +111,7 @@ test.describe("BR-REQ-051-01 a copywriter writes and may not publish; a voluntee
 
     // A copywriter owns no settings, and each settings box says so rather than being missing.
     const kind = await openEditorBox(page, "Ce fel de eveniment");
-    const readOnly = kind.getByText("Setările le schimbă un Organizator sau un Administrator.");
+    const readOnly = kind.getByText("Setările le schimbă Administratorul.");
     await expect(readOnly).toBeVisible();
     await expect(readOnly).toHaveCount(1);
     // The cost, the links and the public list are boxes of their own since §406, where the page
@@ -155,6 +155,50 @@ test.describe("BR-REQ-051-01 a copywriter writes and may not publish; a voluntee
       expect((await page.goto("/ro/admin/events/new"))?.status()).toBe(404);
     });
   }
+});
+
+/*
+  §NNN — «Organizatorul nu ar trebui să poată edita evenimentele» (the owner, 2026-09-28). The
+  Organizer reads every event — the list, the editor, the ⋮'s links — and is offered no verb that
+  changes one; the server refuses each anyway (`tests/integration/cms/organizer-reads-events.test.ts`).
+*/
+test.describe("BR-REQ-060-01 an Organizer reads the events and changes none (§NNN)", () => {
+  test("offers «Deschide» on the list, no «Eveniment nou», and a ⋮ of links only", async ({ page }) => {
+    await signIn(page, "Dev Moderator");
+    await page.goto("/ro/admin");
+    await hydrated(page);
+
+    await expect(page.getByRole("link", { name: "Eveniment nou" })).toHaveCount(0);
+    await expect(page.getByTestId("event-row-edit")).toHaveCount(0);
+    // Attached, not visible: on a phone a row's actions sit inside its fold.
+    await expect(page.getByTestId("event-row-open").first()).toBeAttached();
+    // No tick: the bulk bar is the Administrator's.
+    await expect(page.locator('input[name="eventRef"]')).toHaveCount(0);
+
+    // The ⋮ of one visible row: its links, and none of the verbs.
+    await page.getByRole("button", { name: "Alte acțiuni" }).filter({ visible: true }).first().click();
+    await expect(page.getByRole("menuitem", { name: "Previzualizare" })).toBeVisible();
+    await expect(page.getByRole("menuitem", { name: "Duplică" })).toHaveCount(0);
+    await expect(page.getByRole("menuitem", { name: "Șterge" })).toHaveCount(0);
+    await page.keyboard.press("Escape");
+
+    expect((await page.goto("/ro/admin/events/new"))?.status()).toBe(404);
+  });
+
+  test("opens the editor read-only: the sentence, and no «Salvează», «Publică» or «Duplică»", async ({ page }) => {
+    await signIn(page, "Dev Moderator");
+    await page.goto("/ro/admin");
+    const event = EVENT_BY_PROJECT[test.info().project.name];
+    await page.getByRole("link", { name: event.title }).first().click();
+    await expect(page).toHaveURL(/\/admin\/events\//);
+
+    await expect(page.getByTestId("editor-read-only")).toHaveText("Evenimentul îl modifică Administratorul; aici îl poți citi. Ce vrei schimbat îi spui Administratorului.");
+    await expect(page.locator("#box-save")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Salvează", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Publică" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Mută în ciornă" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Duplică", exact: true })).toHaveCount(0);
+  });
 });
 
 test.describe("BR-REQ-050-02 an Administrator creates an event without a developer (§204)", () => {
