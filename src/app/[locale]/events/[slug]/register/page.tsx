@@ -176,7 +176,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   const { submitted, error, fields, retry, another, family, sent } = await searchParams;
   /*
     The family sitting (§519), the browser's sealed half, while its email has not left yet. After the
-    first form (§NNN) it is one question on the screen that says to open the inbox — «Mai înscrii pe
+    first form (§536) it is one question on the screen that says to open the inbox — «Mai înscrii pe
     cineva cu aceeași adresă?» — whose «Da» opens the sitting; after every form sent from that press
     on, the sitting's own screen, with «Gata»; with `?family=1` it is the next form, the address
     fixed. Everything it shows was typed on this browser (§39).
@@ -527,7 +527,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
 
       {sittingScreen && sitting ? (
         /*
-          The sitting's screen (§519), after «Da, încă o persoană» (§NNN): the people so far, «Gata»
+          The sitting's screen (§519), after «Da, încă o persoană» (§536): the people so far, «Gata»
           sends the one email, «Da» the next form. The same screen after every form, whatever the
           address holds (§39).
         */
@@ -563,7 +563,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
           facts={submittedFacts}
           window={stepsWindow}
           /*
-            After the first form (§NNN): the short screen — whose form is in, when its email leaves,
+            After the first form (§536): the short screen — whose form is in, when its email leaves,
             and «Mai înscrii pe cineva cu aceeași adresă?» with its one button. Its email leaves on the
             club's timing: nothing here waits for a press. The same screen after every first form,
             whatever the address holds (§39).

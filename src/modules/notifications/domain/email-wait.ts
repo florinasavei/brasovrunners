@@ -52,7 +52,7 @@ export function nextOutboxTick(input: {
 }
 
 /**
- * When a message queued now leaves, as the screen after the registration form says it (§NNN; the
+ * When a message queued now leaves, as the screen after the registration form says it (§536; the
  * owner, 2026-09-28: «sa inteleg ca nu primesc mailu daca nu apas…?»): null under `immediate` — the
  * request sends it — else the pinger call the outbox job is next expected at (`nextOutboxTick`). A
  * public page never reads the job's history, so with a minimum interval in force (§334, §447) the
@@ -78,7 +78,7 @@ export type EmailLeavesOn = { key: "leavesToday" | "leavesOn"; at: string };
 export type EmailLeavesWords = { key: "leavesNow" } | EmailLeavesOn;
 
 /**
- * When a message leaves, in words (§NNN, §529) — one function for the screen after the registration
+ * When a message leaves, in words (§536, §529) — one function for the screen after the registration
  * form («Emailul către ana@… pleacă la 10:15.» / «… pleacă marți, 29 septembrie, la 10:00.» / «…
  * pleacă acum.») and every row of the queue panel on `/admin/settings/emails` («Pleacă: 10:15
  * (estimat).»), so the two cannot say one message's time two ways. No instant is «now»; an instant on

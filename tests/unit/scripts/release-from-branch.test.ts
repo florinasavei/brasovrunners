@@ -10,7 +10,7 @@ import { todayIn } from "../../../scripts/land-tree.mjs";
 const UNKNOWN = ["BR", "REQ", "099", "09"].join("-");
 
 /**
- * §NNN — the landing and the merge run end to end on a throwaway repository, the way
+ * §535 — the landing and the merge run end to end on a throwaway repository, the way
  * `.github/workflows/release.yml` runs them: `yarn batch:merge origin/qa`, then
  * `yarn docs:land --tree --apply`. The baselines are invented (V9.x): a landing bumps every
  * literal of the current one, this file included.
@@ -43,7 +43,7 @@ function repo() {
   return { dir, git, put, read };
 }
 
-describe("§NNN yarn docs:land --tree lands the facts a branch carries", () => {
+describe("§535 yarn docs:land --tree lands the facts a branch carries", () => {
   it("bumps the baseline, numbers the section, the bullet, the criterion and the code, writes the hand steps and deletes the entry", () => {
     const { dir, git, put, read } = repo();
     const from = "BR-V9.40-2031-01-01";
@@ -179,7 +179,7 @@ describe("§NNN yarn docs:land --tree lands the facts a branch carries", () => {
   });
 });
 
-describe("§NNN yarn batch:merge resolves the conflicts every batch has, and stops on the rest", () => {
+describe("§535 yarn batch:merge resolves the conflicts every batch has, and stops on the rest", () => {
   function siblings() {
     const r = repo();
     r.put("messages/ro.json", '{\n  "Admin": {\n    "a": "A"\n  }\n}\n');

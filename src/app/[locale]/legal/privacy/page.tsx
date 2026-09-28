@@ -85,7 +85,7 @@ export default async function PrivacyNoticePage({ params }: Props) {
           <Typography variant="body2" color="text.secondary" sx={{ mb: { xs: DENSITY.gapSm, sm: 2 } }}>
             {t("inForce", {
               version: document.version,
-              // The whole date, the month in words, no weekday (§NNN).
+              // The whole date, the month in words, no weekday (§534).
               date: formatDateInWords(new Date(document.effectiveAt), { locale, timeZone: CLUB_TIME_ZONE }),
             })}
           </Typography>

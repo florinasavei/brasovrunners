@@ -87,7 +87,7 @@ export type DeclarationPdfInput = {
     date: string;
     idDocument: string;
     version: string;
-    /** «Versiunea 3, în vigoare din 12 septembrie 2026» — the signing pages' `Legal.inForce` (§499), no weekday (§NNN). */
+    /** «Versiunea 3, în vigoare din 12 septembrie 2026» — the signing pages' `Legal.inForce` (§499), no weekday (§534). */
     versionInForce: (version: number, effectiveAt: Date) => string;
     /** «semnată joi, 24 sept. 2026, la 18:05» — the footer of a signed entry's pages (§499). */
     signedWhen: (when: string) => string;

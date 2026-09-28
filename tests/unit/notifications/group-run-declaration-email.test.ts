@@ -48,7 +48,7 @@ describe("§393 the group run's declaration messages", () => {
       const ro = durationPhrase("ro", RETENTION.registrationsYearsAfterEvent, "years");
       const en = durationPhrase("en", RETENTION.registrationsYearsAfterEvent, "years");
       // Kept while the declaration is active, then at most the limitation period from the withdrawal
-      // (§NNN, the counsel's second pass) — never "three years from the signing" (§523's words).
+      // (§534, the counsel's second pass) — never "three years from the signing" (§523's words).
       expect(email.text).toContain("Păstreaz-o în căsuța clubului cât timp declarația este activă");
       expect(email.text).toContain("Keep it in the club's mailbox while the declaration is active");
       expect(email.text).toContain(`copia de aici o mai păstrezi cel mult ${ro} de la retragere`);

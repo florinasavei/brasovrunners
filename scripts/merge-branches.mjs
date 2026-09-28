@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Merge branches into the branch checked out, resolving the conflicts every batch has — the
- * integrate step of `docs/DISPATCHER.md`, and the first step of `.github/workflows/release.yml` (§NNN).
+ * integrate step of `docs/DISPATCHER.md`, and the first step of `.github/workflows/release.yml` (§535).
  *
  * Usage: yarn batch:merge <ref> [<ref> …] [--no-probe] [--no-checks]
  *        yarn batch:merge origin/qa                       bring a branch up to date with qa

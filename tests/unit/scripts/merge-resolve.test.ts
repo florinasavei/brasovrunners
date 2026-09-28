@@ -13,10 +13,10 @@ import {
 } from "../../../scripts/merge-resolve.mjs";
 
 /**
- * §NNN — the resolvers a batch merge uses, in the repository rather than on one PC, so a landing
+ * §535 — the resolvers a batch merge uses, in the repository rather than on one PC, so a landing
  * can run on GitHub Actions: the journal, the catalogues and the tests by rule, anything else a stop.
  */
-describe("§NNN which conflicts a rule resolves", () => {
+describe("§535 which conflicts a rule resolves", () => {
   it("resolves the journal, the two catalogues and test sources, and nothing else", () => {
     expect(conflictKind("src/db/migrations/meta/_journal.json")).toBe("journal");
     expect(conflictKind("messages/ro.json")).toBe("catalogue");
@@ -36,7 +36,7 @@ describe("§NNN which conflicts a rule resolves", () => {
   });
 });
 
-describe("§NNN the journal after two branches each added a migration", () => {
+describe("§535 the journal after two branches each added a migration", () => {
   const base = { version: "7", dialect: "postgresql", entries: [{ idx: 0, version: "7", when: 1000, tag: "0001_a", breakpoints: true }] };
   const ours = { ...base, entries: [...base.entries, { idx: 1, version: "7", when: 3000, tag: "0002_ours", breakpoints: true }] };
   const theirs = { ...base, entries: [...base.entries, { idx: 1, version: "7", when: 2000, tag: "0003_theirs", breakpoints: true }] };
@@ -59,7 +59,7 @@ describe("§NNN the journal after two branches each added a migration", () => {
   });
 });
 
-describe("§NNN the catalogues merged by key", () => {
+describe("§535 the catalogues merged by key", () => {
   it("keeps both sides' new keys, a one-sided change and a one-sided deletion", () => {
     const base = { Admin: { a: "A", gone: "G", same: "S" } };
     const ours = { Admin: { a: "A", gone: "G", same: "S2", mine: "M" } };
@@ -76,7 +76,7 @@ describe("§NNN the catalogues merged by key", () => {
   });
 });
 
-describe("§NNN a test file both sides appended to", () => {
+describe("§535 a test file both sides appended to", () => {
   it("merges two imports of one module into one carrying both sides' specifiers", () => {
     const text = ["<<<<<<< HEAD", 'import { a, c } from "./x";', "=======", 'import { a, b } from "./x";', ">>>>>>> feat/y"].join("\n");
     expect(unionConflicts(text).text).toBe('import { a, c, b } from "./x";');
@@ -111,7 +111,7 @@ describe("§NNN a test file both sides appended to", () => {
   });
 });
 
-describe("§NNN a key git's line merge left twice", () => {
+describe("§535 a key git's line merge left twice", () => {
   it("finds it at any depth and keeps the last value", () => {
     const raw = '{\r\n  "A": { "k": "first", "o": 1, "k": "last" },\r\n  "B": [ { "x": 1, "x": 2 } ]\r\n}\r\n';
     const { duplicates, text } = dedupeJsonKeys(raw);
@@ -126,7 +126,7 @@ describe("§NNN a key git's line merge left twice", () => {
   });
 });
 
-describe("§NNN production's migrations stay as production applied them", () => {
+describe("§535 production's migrations stay as production applied them", () => {
   const shipped = { entries: [{ idx: 0, tag: "0001_a", when: 1000 }, { idx: 1, tag: "0002_b", when: 2000 }] };
 
   it("passes a tree that only adds after the last shipped entry", () => {
@@ -143,7 +143,7 @@ describe("§NNN production's migrations stay as production applied them", () => 
   });
 });
 
-describe("§NNN the snapshot chain after sibling migrations", () => {
+describe("§535 the snapshot chain after sibling migrations", () => {
   it("links each snapshot to the one before it in journal order", () => {
     const snaps = [
       { id: "a", prevId: ZERO_ID },

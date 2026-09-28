@@ -50,7 +50,7 @@ describe("§503 a group run's self-declaration is kept until the signer asks", (
     expect(signed.text).toContain("Clubul o păstrează cât timp este necesară pentru alergările la care se aplică; dacă ceri retragerea ei, nu o mai folosește, iar o copie o păstrează cel mult termenul de prescripție, apoi o șterge.");
     expect(signed.text).toContain("The club keeps it as long as it is needed for the runs it applies to; if you ask for its withdrawal, it no longer uses it, keeps a copy at most for the limitation period, then deletes it.");
     const archive = buildOutgoingEmail({ to: "x@example.test", locale: "ro", idempotencyKey: "t:a", messageType: "GROUP_RUN_DECLARATION_ARCHIVE", data: DATA });
-    // Erased at the runner's withdrawal (§NNN, the counsel's second pass, in place of «ștergerea»).
+    // Erased at the runner's withdrawal (§534, the counsel's second pass, in place of «ștergerea»).
     expect(archive.text).toContain("cât timp declarația este activă; când alergătorul cere retragerea ei");
     expect(archive.text).toContain("while the declaration is active; when the runner asks for its withdrawal");
     const source = readFileSync("src/modules/notifications/templates.ts", "utf8");
@@ -64,7 +64,7 @@ describe("§503 a group run's self-declaration is kept until the signer asks", (
     const text = (key: keyof typeof LEGAL_TEMPLATES, locale: "ro" | "en") =>
       LEGAL_TEMPLATES[key][locale].body.sections.flatMap((section) => section.paragraphs).join(" ");
     for (const key of ["GROUP_RUN_DECLARATION_ASPHALT", "GROUP_RUN_DECLARATION_TRAIL"] as const) {
-      // Kept by its purpose (§NNN, the counsel's second pass, amending §503's words): no job sweeps it,
+      // Kept by its purpose (§534, the counsel's second pass, amending §503's words): no job sweeps it,
       // and the text states no number of days — the withdrawal at the signer's request ends its use.
       expect(text(key, "ro")).toMatch(/Declarația activă se păstrează cât timp este necesară pentru gestionarea participării mele la alergările la care se aplică\. Dacă cer retragerea ei, la adresa de contact a clubului, nu mai este folosită pentru participările viitoare/);
       expect(text(key, "en")).toMatch(/The active declaration is kept as long as it is needed to manage my taking part in the runs it applies to\. If I ask for its withdrawal, at the club's contact address, it is no longer used for any later run/);
@@ -76,13 +76,13 @@ describe("§503 a group run's self-declaration is kept until the signer asks", (
     expect(text("PRIVACY_NOTICE", "en")).toMatch(/We keep it as long as it is needed for your taking part in the runs it applies to\. If you ask us to withdraw it \(section 8\), we no longer use it for later runs/);
     expect(text("PRIVACY_NOTICE", "en")).toMatch(/A self-declaration signed on a group run: as long as it is needed for the runs it applies to; once you ask us to withdraw it, a copy only as long as a legal claim needs it/);
     expect(text("PRIVACY_NOTICE", "ro")).not.toMatch(/trei ani de la semnare/);
-    // §3's group-run paragraph follows the same retention: no "no end date", no "only at your request" (§NNN).
+    // §3's group-run paragraph follows the same retention: no "no end date", no "only at your request" (§534).
     for (const locale of ["ro", "en"] as const) {
       expect(text("PRIVACY_NOTICE", locale)).not.toMatch(/fără termen|no end date|ștergem doar la cererea ta|delete both only at your request/);
     }
     expect(text("PRIVACY_NOTICE", "ro")).toMatch(/acoperă atunci fiecare dată a ei, până când o retragi sau este înlocuită cu o versiune nouă/);
     expect(text("PRIVACY_NOTICE", "en")).toMatch(/it then covers every date of it, until you withdraw it or it is replaced by a new version/);
-    // Law 214/2024 by its number alone beside a signature: nothing reads as a qualified time stamp (§NNN).
+    // Law 214/2024 by its number alone beside a signature: nothing reads as a qualified time stamp (§534).
     for (const key of ["PRIVACY_NOTICE", "TERMS"] as const) {
       expect(text(key, "ro")).not.toMatch(/mărcii temporale/);
       expect(text(key, "en")).not.toMatch(/time stamps/);

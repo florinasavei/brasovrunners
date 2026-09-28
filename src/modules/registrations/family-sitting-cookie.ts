@@ -53,7 +53,7 @@ function sharedOf(json: string | undefined): Record<string, string> | undefined 
 }
 
 /*
-  The first form's seed (§NNN), always one shape: a letter and two ids, random ids where there is
+  The first form's seed (§536), always one shape: a letter and two ids, random ids where there is
   nothing to name. A first form that registered somebody, kept a form or only re-sent a message then
   seals to a cookie of the same length, so its size tells whoever typed a stranger's address nothing
   (§39). The letter: r/R a registration with/without its message, e/E a kept form, n nothing.
@@ -84,7 +84,7 @@ export function sealFamilySittingCookie(value: FamilySittingCookie, secret = pur
   const base = {
     s: value.sittingId ?? "",
     r: sealSeed(value.seed),
-    // «Da» was pressed on this browser (§NNN): the screens after it are the sitting's.
+    // «Da» was pressed on this browser (§536): the screens after it are the sitting's.
     j: value.joined ? "1" : "",
     e: value.eventId,
     m: value.email,
@@ -95,7 +95,7 @@ export function sealFamilySittingCookie(value: FamilySittingCookie, secret = pur
     a: value.atOnce ? "1" : "",
     // The window the action read (§519): the screen names this one, not the public cache's.
     k: value.windowMinutes !== undefined ? String(value.windowMinutes) : "",
-    // When the first form's email leaves (§NNN), computed once at submit; always 25 characters (§39).
+    // When the first form's email leaves (§536), computed once at submit; always 25 characters (§39).
     l: value.emailLeavesAt !== undefined ? sealEmailLeavesAt(value.emailLeavesAt) : "",
   };
   /*

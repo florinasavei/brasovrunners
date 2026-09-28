@@ -177,12 +177,12 @@ describe("§393 the two templates", () => {
   });
 
   /*
-    §NNN, the counsel's second pass (point 6): kept by its purpose, never by a count from the signing.
+    §534, the counsel's second pass (point 6): kept by its purpose, never by a count from the signing.
     The active declaration while it is needed for the runs it covers; withdrawn at the signer's request,
     used for no later run, a copy kept only as long as a legal claim needs it, the three-year limitation
     period in view, then deleted. «Three years from the signing» was untrue of a declaration still active.
   */
-  it("says it is optional, that it registers nobody, and keeps it by its purpose, never three years from the signing (§NNN)", () => {
+  it("says it is optional, that it registers nobody, and keeps it by its purpose, never three years from the signing (§534)", () => {
     for (const surface of ["asphalt", "trail"] as const) {
       const roText = TEXTS[surface].ro.join(" ");
       const enText = TEXTS[surface].en.join(" ");
@@ -204,12 +204,12 @@ describe("§393 the two templates", () => {
   });
 
   /*
-    §NNN — the counsel's second pass of 2026-09-28, point by point, in both languages and on both
+    §534 — the counsel's second pass of 2026-09-28, point by point, in both languages and on both
     surfaces: health as the runner's own assessment and never the organiser's certificate, the
     organiser's no medical assessment right after it, no medical question, «nu un serviciu de ghidaj
     (montan)» said once, «momentul semnării» and never a time stamp, and no «în nicio situație».
   */
-  describe("§NNN the counsel's second pass", () => {
+  describe("§534 the counsel's second pass", () => {
     const health = {
       trail: {
         ro: "• Declar că, din câte cunosc, starea mea de sănătate îmi permite să particip la o alergare pe teren montan și că nu cunosc existența unei afecțiuni sau recomandări medicale care să îmi interzică un astfel de efort. Îmi asum responsabilitatea de a-mi evalua starea înaintea fiecărei participări și de a nu participa sau de a mă opri dacă apar simptome ori o stare care face continuarea nesigură;",
@@ -310,7 +310,7 @@ describe("§393 the two templates", () => {
       expect(TEXTS[surface].ro[0]).toContain("particip la alergarea de grup descrisă mai jos");
       expect(TEXTS[surface].ro[0]).not.toMatch(/\{\{(event|eventDate|series)\}\}/);
       expect(roText).toContain("înainte de fiecare alergare îi citesc detaliile pe pagina ei");
-      // The validity in the counsel's words (§NNN, points 1–2): the whole series, signed once, from the
+      // The validity in the counsel's words (§534, points 1–2): the whole series, signed once, from the
       // date of signing, until withdrawn or replaced — the run of the signing day included («începând cu»).
       expect(roText).toContain(
         "Declarația este valabilă pentru toate alergările seriei {{series}} — {{seriesRhythm}}, cu plecare de obicei din {{seriesPlace}} — și nu trebuie semnată din nou la fiecare alergare.",
@@ -426,7 +426,7 @@ describe("§393 the two templates", () => {
 });
 
 describe("§393 the public offer line states the retention truthfully", () => {
-  it("says the club keeps it while it is needed and stops using it at the signer's withdrawal (§503, §NNN), with no number of days", () => {
+  it("says the club keeps it while it is needed and stops using it at the signer's withdrawal (§503, §534), with no number of days", () => {
     expect(ro.Event.groupRunDeclaration.line).toMatch(/clubul o păstrează cât timp este necesară pentru alergările la care se aplică și nu o mai folosește dacă ceri retragerea ei/);
     expect(en.Event.groupRunDeclaration.line).toMatch(/the club keeps it as long as it is needed for the runs it applies to and stops using it when you ask for its withdrawal/);
     expect(ro.Event.groupRunDeclaration.line).not.toMatch(/\{days\}|zile/);

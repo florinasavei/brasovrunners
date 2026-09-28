@@ -113,7 +113,7 @@ vi.mock("@/i18n/navigation", () => ({
 vi.mock("@/modules/registrations/ui/EmailDeliveryNotice", () => ({ default: () => null }));
 vi.mock("@/modules/registrations/ui/RegistrationJourney", () => ({ default: () => null }));
 vi.mock("@/modules/registrations/ui/RegistrationSteps", () => ({ default: () => null }));
-// The short screen after the first form (§NNN) is CheckYourEmail's own, given the offer's data.
+// The short screen after the first form (§536) is CheckYourEmail's own, given the offer's data.
 vi.mock("@/modules/registrations/ui/CheckYourEmail", () => ({
   default: ({ offer }: { offer?: { atOnce: boolean } }) =>
     createElement(
@@ -182,7 +182,7 @@ describe("§447 the registration page while the database is away", () => {
     expect(resting).not.toContain(ro.Registration.errors.databaseAwayTitle);
   });
 
-  it("§NNN after the first form, says to open the inbox with one question in it — no «Gata», nothing waits for a press", async () => {
+  it("§536 after the first form, says to open the inbox with one question in it — no «Gata», nothing waits for a press", async () => {
     state.sitting = {
       sittingId: "00000000-0000-4000-8000-0000000000aa",
       seed: null,

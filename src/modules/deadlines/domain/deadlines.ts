@@ -76,7 +76,7 @@ export type DeadlineRule = {
  *   disclosure whose purpose (who is coming, who came) is spent soon after the event, and the
  *   registration itself is kept three years for other reasons.
  * - the **family sitting** 0 to 60 minutes, 10 by default (§519): how long, after «Da, încă o
- *   persoană» (§NNN: the first form's email is never held before that press), the sitting's one
+ *   persoană» (§536: the first form's email is never held before that press), the sitting's one
  *   email waits for another person on the same address before it leaves by itself, when nobody
  *   presses «Gata» — counted again from every form sent and every «Da». Ten minutes is a second
  *   form filled on a phone; 0 holds nothing, every form's email leaving at once as before the
@@ -182,7 +182,7 @@ export function emailLinkExpiresAt(now: Date, deadlines: Pick<Deadlines, "confir
 
 /**
  * Until when a family sitting holds its one email back (§519): the club's minutes from the last
- * form sent in it, or the last «Da, încă o persoană» — the press that opens it (§NNN). «Gata» sends
+ * form sent in it, or the last «Da, încă o persoană» — the press that opens it (§536). «Gata» sends
  * it before; each further form in the sitting, and each «Da», moves this forward. At 0 the sitting
  * holds nothing (`familySittingHolds`).
  */

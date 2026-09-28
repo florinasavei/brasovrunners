@@ -69,7 +69,7 @@ export async function GET(
       // bib sheet already carry it — never a second copy of the name kept in the catalogue.
       organization: CLUB_NAME,
       version: t("legal.pdf.version", { version: document.version }),
-      // «În vigoare din 28 septembrie 2026»: the whole date, the month in words, no weekday (§NNN).
+      // «În vigoare din 28 septembrie 2026»: the whole date, the month in words, no weekday (§534).
       effectiveFrom: t("legal.pdf.effectiveFrom", {
         date: formatDateInWords(document.effectiveAt, { locale, timeZone: CLUB_TIME_ZONE }),
       }),

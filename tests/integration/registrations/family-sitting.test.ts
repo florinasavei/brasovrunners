@@ -20,7 +20,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * confirmare si claritate e top prio!»).
  *
  * The public form, sent several times in a row from one browser for people on one address. Since
- * §NNN (the owner, 2026-09-28: «sa inteleg ca nu primesc mailu daca nu apas pe „Nu, gata, trimite
+ * §536 (the owner, 2026-09-28: «sa inteleg ca nu primesc mailu daca nu apas pe „Nu, gata, trimite
  * mailul”?») the first form is an ordinary form — its email due at once, no sitting written — and
  * «Da, încă o persoană» opens the sitting, holding that email if it has not left. From that press
  * on, nothing the sitting holds leaves before «Gata» or the club's window, and from the second
@@ -120,13 +120,13 @@ const submission = (firstName: string, at: Date, overrides: Record<string, unkno
 const at = (minutes: number) => new Date(NOW.getTime() + minutes * 60_000);
 const PUBLIC = { source: "PUBLIC" as const, createdByStaffUserId: null };
 
-/** A first form, before any «Da» (§NNN): an ordinary form, which hands back what «Da» would open a sitting with. */
+/** A first form, before any «Da» (§536): an ordinary form, which hands back what «Da» would open a sitting with. */
 async function first(event: EventInput, firstName: string, minute: number, overrides: Record<string, unknown> = {}) {
   const result = await submitRegistration(db, event, submission(firstName, at(minute), overrides), at(minute), "REAL", { ...PUBLIC, sitting: { id: null, joined: false } });
   return { sittingId: result.sittingId ?? null, seed: result.sittingSeed ?? null };
 }
 
-/** «Da, încă o persoană» (§NNN): opens the sitting from the first form's seed, or starts an open one's window again. */
+/** «Da, încă o persoană» (§536): opens the sitting from the first form's seed, or starts an open one's window again. */
 async function yes(event: EventInput, press: { sittingId?: string | null; seed?: Awaited<ReturnType<typeof first>>["seed"] }, minute: number) {
   return continueFamilySitting(db, { sittingId: press.sittingId ?? null, seed: press.seed ?? null, eventId: event.id, locale: "ro" }, new Date(at(minute).getTime() + WINDOW_MS), at(minute));
 }
@@ -170,7 +170,7 @@ async function refusal(promise: Promise<unknown>) {
 }
 
 describe("§519 one person in a sitting", () => {
-  it("one form, no press: the verification email is due at once and no sitting is written (§NNN)", async () => {
+  it("one form, no press: the verification email is due at once and no sitting is written (§536)", async () => {
     const event = await createEvent();
     const { sittingId, seed } = await first(event, "Ana", 0);
     expect(sittingId).toBeNull();
@@ -186,7 +186,7 @@ describe("§519 one person in a sitting", () => {
     expect(seed).toEqual({ kind: "registration", id: ana.id, outboxId: row.id });
   });
 
-  it("a second plain form from the same browser, with no «Da», is a first form again: nothing held, nothing merged (§NNN)", async () => {
+  it("a second plain form from the same browser, with no «Da», is a first form again: nothing held, nothing merged (§536)", async () => {
     const event = await createEvent();
     await first(event, "Ana", 0);
     await first(event, "Ion", 1);
@@ -196,7 +196,7 @@ describe("§519 one person in a sitting", () => {
     expect(await db.select().from(familySittings)).toHaveLength(0);
   });
 
-  it("the same person sent twice with no «Da» is the ordinary re-send, never «already waiting to leave» (§NNN)", async () => {
+  it("the same person sent twice with no «Da» is the ordinary re-send, never «already waiting to leave» (§536)", async () => {
     const event = await createEvent();
     await first(event, "Ana", 0);
     await first(event, "Ana", 1);
@@ -368,7 +368,7 @@ describe("§519 a family in one sitting", () => {
 
     const { message, secret } = await familyLink(at(20));
     expect(message.subject).toContain("Înscriere de familie: 3 persoane la Crosul familiei");
-    // The first line says the one button does everything (§NNN; the owner, 2026-09-28), before anybody is named.
+    // The first line says the one button does everything (§536; the owner, 2026-09-28), before anybody is named.
     const lead = "Un singur buton: confirmi adresa și cele 3 înscrieri, apoi semnezi pe rând declarațiile celor care mai au loc.";
     expect(message.text).toContain(lead);
     expect(message.text.indexOf(lead)).toBeLessThan(message.text.indexOf("Persoana 1 din 3: Ana Pop"));
@@ -589,7 +589,7 @@ describe("§519 the fix round of 2026-09-27", () => {
     expect(released.nextAttemptAt?.toISOString()).toBe(at(9).toISOString());
   });
 
-  it("three people, one family email: the window holds it across every form, whatever pass of the outbox comes between (§519, §NNN)", async () => {
+  it("three people, one family email: the window holds it across every form, whatever pass of the outbox comes between (§519, §536)", async () => {
     const event = await createEvent();
     const sittingId = await start(event, "Ana", 0);
     await send(event, "Maria", 2, sittingId);
@@ -606,7 +606,7 @@ describe("§519 the fix round of 2026-09-27", () => {
     expect(message.subject).toContain("3 persoane");
   });
 
-  it("«Da» after the first email has left: the second is held, and the family email's one button confirms both (§NNN)", async () => {
+  it("«Da» after the first email has left: the second is held, and the family email's one button confirms both (§536)", async () => {
     const event = await createEvent();
     const { seed } = await first(event, "Ana", 0);
     // Ana's own verification email leaves before «Da» — «imediat», or a scheduled pass in between.
@@ -629,7 +629,7 @@ describe("§519 the fix round of 2026-09-27", () => {
 
     const { message, secret } = await familyLink(at(20));
     expect(message.subject).toContain("2 persoane");
-    // Ana's own email left before «Da»: one line says this button covers her too (§NNN) — never that the older one stopped working.
+    // Ana's own email left before «Da»: one line says this button covers her too (§536) — never that the older one stopped working.
     expect(message.text).toContain("Acest email îi cuprinde pe toți: butonul de mai jos confirmă și înscrierea din emailul anterior.");
     expect(message.text).toContain("This email covers everybody: the button below also confirms the registration from the earlier email.");
     const page = await readFamilySittingLink(db, secret!, "ro", at(21));
@@ -709,7 +709,7 @@ describe("§519 the fix round of 2026-09-27", () => {
     const rows = await db.select().from(registrations);
     const inOrder = ["Ana Pop", "Ion Pop", "Radu Pop"].map((name) => rows.find((row) => row.registeredName === name)!);
     // The blocks, after the greeting (which names the person of the first form).
-    // One line of intro (§NNN), then one block per person.
+    // One line of intro (§536), then one block per person.
     const intro = "Toți cei de mai jos sunt înscriși la Crosul familiei; sub fiecare nume, numărul, codul și QR-ul de arătat la masă.";
     expect(message.text).toContain(intro);
     expect(message.text).toContain("Everybody below is registered for");

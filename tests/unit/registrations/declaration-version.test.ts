@@ -17,7 +17,7 @@ const NOW = new Date("2026-09-27T10:00:00.000Z");
 const EFFECTIVE = new Date("2026-09-11T22:30:00.000Z");
 
 describe("§499 the declaration's version line", () => {
-  it("names the version and the day it took effect, the whole date with the month in words and no weekday (§NNN), on the club's clock, in both languages", () => {
+  it("names the version and the day it took effect, the whole date with the month in words and no weekday (§534), on the club's clock, in both languages", () => {
     expect(declarationWords("ro", NOW).versionInForce(3, EFFECTIVE)).toBe("Versiunea 3, în vigoare din 12 septembrie 2026");
     expect(declarationWords("en", NOW).versionInForce(3, EFFECTIVE)).toBe("Version 3, in force since 12 September 2026");
   });

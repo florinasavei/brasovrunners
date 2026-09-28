@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.18-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.19-2026-09-27 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V2.18-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.19-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1536,7 +1536,7 @@ nothing on production, and the reverse.
 
 **Why.** A release used to need the PC that ran the dispatcher: the landing text sat in its
 scratchpad and `yarn ship` ran from its checkout. `.github/workflows/release.yml` does the same
-on GitHub (`DECISIONS.md` §NNN), started by the label `ship` on a pull request into `qa`. It
+on GitHub (`DECISIONS.md` §535), started by the label `ship` on a pull request into `qa`. It
 needs three things GitHub cannot ship in a file, because the repository is public. Ten minutes,
 from a computer (the phone's browser works, in desktop mode).
 

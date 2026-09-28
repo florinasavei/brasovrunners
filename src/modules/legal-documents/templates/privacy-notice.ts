@@ -52,7 +52,7 @@
  * its archive copy is named; the processors' locations are no longer overstated; §7 is brought in
  * line with all of it, with an incident hold; §8 has the art. 12(3) extension and restriction.
  *
- * **The group-run declaration kept by its purpose (§NNN, the counsel's second pass of 2026-09-28).**
+ * **The group-run declaration kept by its purpose (§534, the counsel's second pass of 2026-09-28).**
  * Sections 3 and 7 say what the declaration's own text says: kept while it is needed for the runs it
  * applies to; once withdrawn at the signer's request, used for no later run, a copy kept only as long
  * as a legal claim needs it, the three-year limitation period in view — never «three years from the

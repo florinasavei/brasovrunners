@@ -870,7 +870,7 @@ export type SubmitRegistrationResult = {
    */
   sittingId?: string | null;
   /**
-   * What the first form of a would-be sitting left for «Da, încă o persoană» to open it with (§NNN):
+   * What the first form of a would-be sitting left for «Da, încă o persoană» to open it with (§536):
    * the registration or kept form it wrote and the message it queued. Null when it left nothing to
    * hold. Only for the action's sealed cookie, like `sittingId` (§39).
    */
@@ -927,7 +927,7 @@ export type RegistrationOrigin = {
    * The public form's family sitting (§519): the form is one of several a browser sends in a row
    * for people on one address, with one email at the end. Present on every public form.
    *
-   * `joined` is false on a form sent before any «Da, încă o persoană» (§NNN: no sitting without a
+   * `joined` is false on a form sent before any «Da, încă o persoană» (§536: no sitting without a
    * press): an ordinary form — its email due at once, no sitting written — that only hands back
    * what «Da» would open a sitting with (`sittingSeed`). It is true on the forms after «Da»; `id` is
    * then the sitting «Da» or an earlier form opened, from the browser's sealed half, or null. Those
@@ -1358,7 +1358,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
   let written = undefined as string | undefined;
   /** The family sitting this public form held its messages in (§519), for the browser's sealed half. */
   let sittingResult = null as string | null;
-  /** What the first form leaves for «Da, încă o persoană» to open a sitting with (§NNN), for the same half. */
+  /** What the first form leaves for «Da, încă o persoană» to open a sitting with (§536), for the same half. */
   let seedResult = null as SittingSeed | null;
   /*
     The club's deadlines (§377), read before the transaction and from the instance's memo when it
@@ -1456,7 +1456,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       opens a new one where it has something to hold. At a window of 0 («Termene») nothing is held:
       every form's email leaves at once, as before the sitting.
 
-      No sitting without a press (§NNN, amending §519; the owner, 2026-09-28): a form sent before
+      No sitting without a press (§536, amending §519; the owner, 2026-09-28): a form sent before
       «Da, încă o persoană» is not a sitting's. Its email is due at once and nothing is written for a
       sitting; it only remembers, for the browser's sealed half, what «Da» would take in (`offering`).
     */
@@ -1586,7 +1586,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
         ...(holding ? { notBefore: heldUntil } : {}),
       });
       if (holding && sitting) sitting = await holdInSitting(tx, sitting, { outboxId: queued?.id ?? null });
-      // Before «Da» (§NNN): the kept form and its message, due at once, for «Da» to take in.
+      // Before «Da» (§536): the kept form and its message, due at once, for «Da» to take in.
       if (offering && entry) seedResult = { kind: "entry", id: entry.id, outboxId: queued?.id ?? null };
       // The club's record, as for any re-submission (§312): the state found and the message sent —
       // never the name that was typed (§12.12). The registration's timeline reads it as a line.
@@ -1610,7 +1610,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       message: that message says what a re-send would. Nothing more is queued; the club's record
       still has the line (§312), and says the truth: the held message is the one that will leave,
       once — `held: true` beside its type, so the timeline reads "already waiting to leave" rather
-      than "re-sent" or "nothing to re-send". Only inside a sitting, after «Da» (§NNN): one person
+      than "re-sent" or "nothing to re-send". Only inside a sitting, after «Da» (§536): one person
       sent twice before any press is the ordinary re-send below, and so is a sitting that holds
       nothing — «Da» came after the first email had left.
     */
@@ -1753,7 +1753,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       A new registration of a sitting (§519): its verification email waits with the sitting's others,
       and the sitting — opened by this form when it is the first to hold anything — names it among
       the registrations its one button confirms. Outside a sitting, the email goes at once; before
-      «Da» (§NNN) it is remembered for that press, unmarked — «Da» marks it held only when it takes
+      «Da» (§536) it is remembered for that press, unmarked — «Da» marks it held only when it takes
       it in (`continueFamilySitting`; the review of 2026-09-28, nit F1). Either way it is the message
       that starts the link (`startingDeadline`, §513): its send re-bases it.
     */

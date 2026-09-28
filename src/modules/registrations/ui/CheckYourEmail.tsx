@@ -46,7 +46,7 @@ type Props = {
    */
   window: { opensDays: number } | null;
   /**
-   * After the first form of a would-be family (§NNN): the screen is then the short one — «Formularul
+   * After the first form of a would-be family (§536): the screen is then the short one — «Formularul
    * pentru Ana a ajuns.», «Emailul către ana@… pleacă la 10:15.» and «Mai înscrii pe cineva cu aceeași adresă?» with
    * its one button (`FamilySittingOffer`) — and nothing else. `atOnce`: the club's window is 0 (§519).
    * `continueAction` is «Da, încă o persoană», a server action, never a component. `email` is the
@@ -85,7 +85,7 @@ type Props = {
  * here as children, never handed to a client component as a prop, which is what fails
  * hydration (`GlyphChip.tsx`).
  *
- * **After the first form of a would-be family it is the short screen** (§NNN; the owner, 2026-09-28:
+ * **After the first form of a would-be family it is the short screen** (§536; the owner, 2026-09-28:
  * the screen must be clearer; the review's nits F0 and F2): the heading, then exactly three lines and
  * one button — whose form is in, when its email leaves, and «Mai înscrii pe cineva cu aceeași
  * adresă?» with «Da, încă o persoană» — and at most one sentence under the button. No steps and no

@@ -1,5 +1,5 @@
 /**
- * How a batch merge resolves the conflicts every batch has (§NNN) — the pure half of
+ * How a batch merge resolves the conflicts every batch has (§535) — the pure half of
  * `yarn batch:merge` (`scripts/merge-branches.mjs`), kept apart so the rules are testable.
  *
  * Sibling branches cut from the same `qa` collide in the same few files on every batch: the

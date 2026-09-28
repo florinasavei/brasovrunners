@@ -21,7 +21,7 @@ import { registrations } from "./registrations";
  *   confirmation; the one press confirms them all;
  * - `held_outbox_ids` are the messages the sitting holds back until «Gata» or `held_until`: the
  *   verification email and the family links while the sitting names one person, the one family
- *   message from the second person on. The row is written by «Da, încă o persoană» (§NNN), which
+ *   message from the second person on. The row is written by «Da, încă o persoană» (§536), which
  *   takes in the first form's registration or kept form and holds its message if it has not left;
  * - `held_until` is the club's sitting window («Termene») from the last submission or «Da»;
  *   `released_at` the press of «Gata»; `confirmed_at` the press of the family email's button;

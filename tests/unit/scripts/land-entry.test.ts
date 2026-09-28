@@ -214,7 +214,7 @@ describe("§426 docs:land — a literal §N above the next free number becomes t
     expect(rewrites).toEqual([`§999 → ${PLACEHOLDER}`, `§999 → ${PLACEHOLDER}`, `§999 → ${PLACEHOLDER}`]);
   });
 
-  it("is the placeholder, never a number — the landing of §426 numbered its own literal, so a guess landed citing §426 (§NNN)", () => {
+  it("is the placeholder, never a number — the landing of §426 numbered its own literal, so a guess landed citing §426 (§535)", () => {
     expect(PLACEHOLDER).toBe(["§", "N", "N", "N"].join(""));
     // At most the one citation of the decision that fixed it; the code builds the placeholder in two pieces.
     const source = readFileSync("scripts/land-entry.mjs", "utf8");

@@ -3,7 +3,7 @@ import path from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
- * §NNN — the approved legal text's PDF, the copy the club archives and hands to counsel, says the
+ * §534 — the approved legal text's PDF, the copy the club archives and hands to counsel, says the
  * version line as the public pages do: «În vigoare din 28 septembrie 2026» — the whole date, the
  * month in words, no weekday. The backoffice's own three places (the list, the document's page,
  * the delete confirmation) read the same helper.
@@ -62,7 +62,7 @@ async function effectiveFrom(locale: "ro" | "en"): Promise<string> {
   return labels?.effectiveFrom ?? "";
 }
 
-describe("§NNN the legal text's PDF says the version date in words, with no weekday", () => {
+describe("§534 the legal text's PDF says the version date in words, with no weekday", () => {
   beforeEach(() => {
     captured.labels = null;
   });

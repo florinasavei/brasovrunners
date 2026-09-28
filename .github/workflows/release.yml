@@ -1,6 +1,6 @@
 name: release
 
-# One pull request into `qa`, landed and shipped to production from GitHub alone (§NNN) — so a
+# One pull request into `qa`, landed and shipped to production from GitHub alone (§535) — so a
 # release no longer needs the PC that ran the dispatcher: the owner, from a phone, adds the label
 # `ship` to the pull request (or runs this workflow by hand with its number), and this job does what
 # `docs/DISPATCHER.md` § Land a batch and § Ship do on the PC:

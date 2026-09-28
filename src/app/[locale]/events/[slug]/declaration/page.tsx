@@ -187,7 +187,7 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
       </Typography>
 
       {/* Which approved text this is (§499): its version and the day it took effect, as the terms page says its own (§323) —
-          «în vigoare din 28 septembrie 2026», the whole date and no weekday (§NNN). */}
+          «în vigoare din 28 septembrie 2026», the whole date and no weekday (§534). */}
       <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }} data-testid="declaration-version">
         {legalCopy("inForce", {
           version: document.version,

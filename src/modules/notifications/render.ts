@@ -742,7 +742,7 @@ async function renderRow(
       data.familySittingPeople = listed;
       data.familyRegistered = await registeredOnAddress(db, found.eventId, found.participantId, found.registrationIds);
       data.addressCap = (await readAddressCap(db)).cap.registrationsPerAddress;
-      // Somebody listed already got an email of their own before «Da» (§NNN): one line says this button covers them too.
+      // Somebody listed already got an email of their own before «Da» (§536): one line says this button covers them too.
       if (
         people &&
         (await sittingEarlierEmailSent(db, {

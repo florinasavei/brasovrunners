@@ -14,7 +14,7 @@ import { readSignedFacts } from "./series";
  * from a link sent by email — the race's words (`signedByLink`) would say something untrue. The
  * same record beneath it: typed name, tick, the moment of signing, the text's fingerprint (§86).
  *
- * «Momentul semnării», as the platform records it, never a time stamp (§NNN, the counsel's point 14):
+ * «Momentul semnării», as the platform records it, never a time stamp (§534, the counsel's point 14):
  * the text it signs says the same, and the Romanian law is cited by its number alone, so no title
  * beside the moment reads as a qualified eIDAS time stamp.
  */

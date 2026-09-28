@@ -60,7 +60,7 @@ export function judgeChecks(checks, { tolerate } = {}) {
 }
 
 /**
- * The checks without those of the workflow named `workflow` (§NNN): a release run by
+ * The checks without those of the workflow named `workflow` (§535): a release run by
  * `.github/workflows/release.yml` is itself a check on the pull requests it ships, pending for as
  * long as it waits — judging it would wait for ever. Nothing is left out when `workflow` is empty.
  *
@@ -210,7 +210,7 @@ export function formatDuration(ms) {
 }
 
 /**
- * The last release in a `SHIP_TIMES_FILE` as a Markdown table (§NNN) — what the release workflow
+ * The last release in a `SHIP_TIMES_FILE` as a Markdown table (§535) — what the release workflow
  * writes to its run's summary page, so the owner reads ship's steps on a phone. Empty for no line.
  *
  * @param {string} jsonl  the times file's text: one JSON record per line, the newest last

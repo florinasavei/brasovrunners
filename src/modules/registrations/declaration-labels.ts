@@ -80,7 +80,7 @@ export function declarationWords(locale: Locale, now: Date): DeclarationLabels {
     idDocument: words.idDocument,
     version: words.version,
     // The day the version took effect, on the club's clock as `/admin/legal` and the signing pages show it (§499) —
-    // the whole date, the month in words, no weekday: «Versiunea 6, în vigoare din 28 septembrie 2026» (§NNN).
+    // the whole date, the month in words, no weekday: «Versiunea 6, în vigoare din 28 septembrie 2026» (§534).
     versionInForce: (version, effectiveAt) =>
       words.versionInForce
         .replace("{version}", String(version))

@@ -741,7 +741,7 @@ export type TemplateData = {
   familySittingPeople?: ReadonlyArray<{ name: string; birthDate: string }>;
   /**
    * Somebody the family message names already got an email of their own, which left before «Da» took
-   * them in (§NNN, `sittingEarlierEmailSent`): one line says this message's button covers them too.
+   * them in (§536, `sittingEarlierEmailSent`): one line says this message's button covers them too.
    */
   familyEarlierSent?: boolean;
   /** «Toate înscrierile mele» beside the family's button (§77, §519): the address's own page, its own token. */
@@ -938,10 +938,10 @@ const T = {
       contact: "Scrie-ne",
     },
     verify: {
-      // The event in the subject (§NNN): a parent with two races open sees which one this is.
+      // The event in the subject (§536): a parent with two races open sees which one this is.
       subject: (d: TemplateData) => `Confirmă adresa — ${d.eventTitle ?? "eveniment"}`,
       /*
-        What to press and what follows, in the first line (§NNN; the owner, 2026-09-28): confirming the
+        What to press and what follows, in the first line (§536; the owner, 2026-09-28): confirming the
         address runs the allocator (`allocateOrWaitlist`), which gives a place — then the declaration
         and the QR code (no registration without a declaration, §29) — or the waiting list when the
         event is full by then; the renderer cannot know which, so the line promises the declaration
@@ -1122,7 +1122,7 @@ const T = {
         /*
           The legitimate-interest choice of the notice, and the right to object (§419) — kept while the
           declaration is active and, after the runner asks for its withdrawal, at most the three-year
-          limitation period (§NNN, the counsel's second pass, replacing §523's "three years from the
+          limitation period (§534, the counsel's second pass, replacing §523's "three years from the
           signing", untrue of a declaration still active). Counted from the withdrawal: any claim
           arises at a run it covered, all of which came before.
         */
@@ -1392,7 +1392,7 @@ const T = {
     familySitting: {
       subject: (d: TemplateData) => `Înscriere de familie: ${peoplePhrase("ro", d.familySittingPeople?.length ?? 1)} la ${d.eventTitle ?? "eveniment"}`,
       /*
-        The first line (§NNN; the owner, 2026-09-28): the one button does everything. Confirming runs the
+        The first line (§536; the owner, 2026-09-28): the one button does everything. Confirming runs the
         allocator per person, so the declarations are promised only to whoever still has a place — a
         full event puts the rest on the waiting list (the review of 2026-09-28). The count is a number
         in the sentence, its Romanian form from `countForm` as everywhere here (§341).
@@ -1402,7 +1402,7 @@ const T = {
           ? "Un singur buton: confirmi adresa și înscrierea, apoi, dacă mai e loc, semnezi declarația."
           : `Un singur buton: confirmi adresa și cele ${count}${countForm(count, "ro") === "other" ? " de" : ""} înscrieri, apoi semnezi pe rând declarațiile celor care mai au loc.`,
       /*
-        When somebody listed already got an email of their own before «Da» (§NNN): that email's
+        When somebody listed already got an email of their own before «Da» (§536): that email's
         button still works for that one person, so this says only what is true — this one covers
         everybody, that registration included.
       */
@@ -1417,7 +1417,7 @@ const T = {
           ],
         })),
         ...(f.registered.length > 0 ? [{ label: "Înscriși deja cu această adresă", value: [{ text: f.registered.join(", "), bold: true }] }] : []),
-        // What the press does is the message's first line now (§NNN), so the box keeps only facts.
+        // What the press does is the message's first line now (§536), so the box keeps only facts.
         { label: "Termen", value: [{ text: "linkul e valabil " }, { text: f.hours, bold: true }, { text: " și se folosește o singură dată" }] },
         ...(f.cap !== undefined
           ? [{ label: "Limita", value: [{ text: "cel mult " }, { text: peoplePhrase("ro", f.cap), bold: true }, { text: " pe o adresă, la un eveniment" }] }]
@@ -1434,7 +1434,7 @@ const T = {
     familyConfirmed: {
       subject: (d: TemplateData) => `Confirmat: ${peoplePhrase("ro", d.familyConfirmed?.length ?? 1)} la ${d.eventTitle ?? "eveniment"}`,
       /*
-        One line of intro (§NNN; the owner, 2026-09-28), then one block per person. The club's copy
+        One line of intro (§536; the owner, 2026-09-28), then one block per person. The club's copy
         (§320) carries no desk code and no QR, so its line names only what it shows.
       */
       body: (d: TemplateData): string[] => [
@@ -2326,7 +2326,7 @@ export function buildTemplateContent(
         importante"), so the parent sees at a glance which event and which person the button is for.
       */
       /*
-        A family sitting's first line (§NNN): the one button does everything — and, when somebody listed
+        A family sitting's first line (§536): the one button does everything — and, when somebody listed
         already got an email of their own before «Da», that this one covers them too. Then its facts
         (§519): everybody joining now, each on a line of the one outlined box.
       */
@@ -2557,7 +2557,7 @@ function timingWords(locale: EmailLocale, timings: TemplateData["timings"]): Par
  * confirmation itself (§104), sent at once and again when the window opens. And the newsletter's
  * new-event alert (§445): a subscriber deciding whether to come reads the same when, where,
  * programme, route, cost and links as a runner who registered, from the same function. And the
- * verification email (§NNN; the owner, 2026-09-28): the first message says which event, when and
+ * verification email (§536; the owner, 2026-09-28): the first message says which event, when and
  * where, under the one line that says what to press.
  */
 const EVENT_FACTS_MESSAGES: ReadonlySet<EmailMessageType> = new Set([

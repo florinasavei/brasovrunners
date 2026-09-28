@@ -578,7 +578,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
           <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }} data-testid="declaration-version">
             {legalCopy("inForce", {
               version: declaration.version,
-              // The whole date, the month in words, no weekday (§NNN).
+              // The whole date, the month in words, no weekday (§534).
               date: formatDateInWords(declaration.effectiveAt, { locale, timeZone: CLUB_TIME_ZONE }),
             })}
           </Typography>

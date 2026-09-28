@@ -321,7 +321,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
       key: "effectiveAt",
       label: t("legal.effectiveAt"),
       hideBelow: "lg",
-      // The version line's date, as the public pages say it: no weekday, the month in words (§NNN).
+      // The version line's date, as the public pages say it: no weekday, the month in words (§534).
       render: (version) => formatDateInWords(version.effectiveAt, { locale, timeZone: CLUB_TIME_ZONE }),
     },
   ];

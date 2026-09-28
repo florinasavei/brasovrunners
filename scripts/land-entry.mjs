@@ -214,7 +214,7 @@ export function entryFromResults(chain, rounds = [], item = {}, label = "item") 
  * The decision placeholder an implementer cites before its number exists. Spelled in two pieces
  * here, never as one literal: `yarn docs:land` numbers every literal placeholder in the tracked
  * files by the commit that wrote it, and this file is tracked — the landing of §426 turned this
- * function's own placeholder into "§426", so a guessed number landed as a citation of §426 (§NNN).
+ * function's own placeholder into "§426", so a guessed number landed as a citation of §426 (§535).
  */
 export const PLACEHOLDER = "§" + "NNN";
 

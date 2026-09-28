@@ -68,7 +68,7 @@ async function sign(page: Page, locale: "ro" | "en", name: string, email: string
   await expect(page.locator("#main")).toContainText(locale === "ro" ? "TEXT DE EXEMPLU" : "SAMPLE TEXT");
   await expect(page.locator("#main")).toContainText(words.adults);
   await expect(page.getByTestId("group-run-declaration-adults")).toBeVisible();
-  // The text's version and the whole date it took effect, the month in words, no weekday (§NNN), over it, as the PDF says it (§499).
+  // The text's version and the whole date it took effect, the month in words, no weekday (§534), over it, as the PDF says it (§499).
   await expect(page.getByTestId("declaration-version")).toHaveText(
     locale === "ro" ? /^Versiunea \d+, în vigoare din \d{1,2} \p{L}+ \d{4}$/u : /^Version \d+, in force since \d{1,2} \p{L}+ \d{4}$/u,
   );

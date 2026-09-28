@@ -127,11 +127,11 @@ describe("BR-REQ-040-03 criterion 6 the zone the caller names, never the server'
 });
 
 /*
-  §NNN — a legal text's version line, the counsel's review of 2026-09-28: «Versiunea 6, în vigoare din
+  §534 — a legal text's version line, the counsel's review of 2026-09-28: «Versiunea 6, în vigoare din
   28 septembrie 2026», the whole date with the month in words and no weekday («luni, 28 sept. 2026» was
   the abbreviation it asked to drop) — on the club's clock, like every platform timestamp.
 */
-describe("§NNN the whole date in words, for a version line", () => {
+describe("§534 the whole date in words, for a version line", () => {
   it("writes the day, the month in full and the year, with no weekday, in both languages", () => {
     const monday = new Date("2026-09-28T09:00:00Z");
     expect(formatDateInWords(monday, { locale: "ro", timeZone: BUCHAREST })).toBe("28 septembrie 2026");

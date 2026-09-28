@@ -6,7 +6,7 @@ import { sameRunner } from "./name-key";
  * instant: unul singur, după ce apeși «Gata» sau după fereastra din Termene"; «asta cu wizzardul de
  * confirmare si claritate e top prio!»).
  *
- * The first form is an ordinary form (§NNN, amending §519; the owner, 2026-09-28: «sa inteleg ca nu
+ * The first form is an ordinary form (§536, amending §519; the owner, 2026-09-28: «sa inteleg ca nu
  * primesc mailu daca nu apas pe „Nu, gata, trimite mailul”?»): its email leaves on the club's
  * ordinary timing, and the screen that says to open the inbox says when it leaves, then asks one
  * question — «Mai înscrii pe cineva cu aceeași adresă?» — with one answer, «Da, încă o persoană».
@@ -40,7 +40,7 @@ export const SITTING_SENT_PARAM = "sent";
  * The payload mark of a verification email a sitting held (§519): rendered, its link's life is
  * counted from that send (`extendHeldVerificationLink`), as the message states it. A marker, never a
  * value. Written only when the message is held — by a form after «Da», or by «Da» itself taking the
- * first form's still-waiting email in (§NNN, `continueFamilySitting`); a first form alone never
+ * first form's still-waiting email in (§536, `continueFamilySitting`); a first form alone never
  * carries it (the review of 2026-09-28, nit F1).
  */
 export const SITTING_HELD = "sittingHeld";
@@ -49,20 +49,20 @@ export const SITTING_HELD = "sittingHeld";
  * The payload mark of a message a family holds that is not a verification email (§519, §529): the
  * queue panel (`notifications/queue.ts`) reads it, with `SITTING_HELD`, to count the row as the
  * family's hold and not as a retry. On a declaration request the renderer also reads it
- * (`render.ts`); on a kept form's `REGISTER_ANOTHER_PERSON`, which «Da» takes in (§NNN,
+ * (`render.ts`); on a kept form's `REGISTER_ANOTHER_PERSON`, which «Da» takes in (§536,
  * `continueFamilySitting`), nothing else does.
  */
 export const FAMILY_HELD = "familyHeld";
 
 /**
- * What the first form left for «Da» to open a sitting with (§NNN): the registration it created or
+ * What the first form left for «Da» to open a sitting with (§536): the registration it created or
  * restarted, or the kept form of §446, and the message it queued for it. Written by the action into
  * the browser's sealed half, never read from the registrations table by the screen (§39).
  */
 export type SittingSeed = { kind: "registration" | "entry"; id: string; outboxId: string | null };
 
 /**
- * Which screen follows a form (§NNN): before any «Da», the inbox's screen with the one question
+ * Which screen follows a form (§536): before any «Da», the inbox's screen with the one question
  * (`offer`); after a «Da» — from the second form on, or pressed and come back — §519's sitting screen
  * (`sitting`), with the people so far, «Gata» and the minutes left. No live half: the inbox's screen
  * alone.
@@ -73,7 +73,7 @@ export function afterFormScreen(cookie: FamilySittingCookie | null): "offer" | "
 }
 
 /**
- * The one sentence under «Da, încă o persoană» on the screen after the first form (§NNN; the review
+ * The one sentence under «Da, încă o persoană» on the screen after the first form (§536; the review
  * of 2026-09-28, nit F0: the sentence must be true of the email that screen names), chosen from what
  * the screen already knows — the club's window and when the first email leaves:
  *
@@ -93,7 +93,7 @@ export function offerHint(input: { atOnce: boolean; leavesAt: Date | null; now: 
 }
 
 /**
- * Whether the first form's email has left by now (§NNN): at once under `immediate` (no instant), else
+ * Whether the first form's email has left by now (§536): at once under `immediate` (no instant), else
  * once its scheduled pass has come. The short screen then says «a plecat» and promises no hold.
  */
 export function emailHasLeft(leavesAt: Date | null, now: Date): boolean {
@@ -101,7 +101,7 @@ export function emailHasLeft(leavesAt: Date | null, now: Date): boolean {
 }
 
 /**
- * The first form's leaving instant as the browser's half keeps it (§NNN): one letter and an ISO
+ * The first form's leaving instant as the browser's half keeps it (§536): one letter and an ISO
  * instant, always 25 characters — `s` and the scheduled pass, or `i` and the epoch when the request
  * itself sent it (`immediate`). A club setting, never the address's: the sealed length says nothing
  * about what the address holds (§39).
@@ -120,7 +120,7 @@ export function openEmailLeavesAt(text: string | undefined): Date | null | undef
 }
 
 /**
- * The people this browser lists after «Da, încă o persoană» (§NNN; the review of 2026-09-28, nit F2 of
+ * The people this browser lists after «Da, încă o persoană» (§536; the review of 2026-09-28, nit F2 of
  * round two). The first «Da» that found nothing left to open from its seed — the first person
  * confirmed their address from the email that left before the press, or their kept form lapsed — did
  * not bring that person into the sitting: their email is not the sitting's. The names on the next
@@ -240,15 +240,15 @@ export function familyHeldDeclaration(params: {
  * forms, so showing it back tells nobody anything about an address (§39, AGENTS.md §19.4).
  */
 export type FamilySittingCookie = {
-  /** The server's row, or null while there is none — before «Da» (§NNN), or a sitting that held nothing. */
+  /** The server's row, or null while there is none — before «Da» (§536), or a sitting that held nothing. */
   sittingId: string | null;
   /**
-   * What the first form left for «Da» to open the sitting with (§NNN); null once «Da» was pressed,
+   * What the first form left for «Da» to open the sitting with (§536); null once «Da» was pressed,
    * and for a form that left nothing to hold (a re-send, the address at the club's limit).
    */
   seed: SittingSeed | null;
   /**
-   * «Da, încă o persoană» was pressed on this browser (§NNN): the forms after it are the sitting's,
+   * «Da, încă o persoană» was pressed on this browser (§536): the forms after it are the sitting's,
    * and the screen after each of them is §519's sitting screen (`afterFormScreen`).
    */
   joined?: boolean;
@@ -274,7 +274,7 @@ export type FamilySittingCookie = {
    */
   windowMinutes?: number;
   /**
-   * When the first form's email leaves (§NNN; the review of 2026-09-28), computed once by the action
+   * When the first form's email leaves (§536; the review of 2026-09-28), computed once by the action
    * when the form was sent: the scheduled pass, or null when the request itself sent it. The short
    * screen reads this, never a time recomputed at render, so a reload after the pass says the email
    * has left instead of naming the next one. Absent on a half written before it was kept.

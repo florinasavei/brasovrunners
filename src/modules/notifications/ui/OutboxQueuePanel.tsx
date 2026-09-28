@@ -103,7 +103,7 @@ export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit,
       outboxRowOverdue({ now, dueAt, overdueAfterMs: EMAIL_HEALTH_THRESHOLDS.OVERDUE_AFTER_MS, intervalMinutes: delivery.overdueCadenceMinutes });
     const leavesAt = outboxRowLeavesAt({ dueAt, nextTickAt, intervalMinutes: runInterval, pingerMinutesAt: (instant) => pingerCadenceMinutes(instant) });
     // The departure in the words the screen after the registration form uses for the same message
-    // (`emailLeavesWords`, §NNN): «10:15» today, the short day with its «la» and hour otherwise.
+    // (`emailLeavesWords`, §536): «10:15» today, the short day with its «la» and hour otherwise.
     const at = emailLeavesWords(leavesAt, now, locale).at;
     // A family sitting's hold (§519): a turn in the future and no attempt made yet — not a retry,
     // not the newsletter's reserve. It says the hold's end and the round after it.

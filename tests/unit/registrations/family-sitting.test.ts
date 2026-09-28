@@ -347,11 +347,11 @@ describe("§519 the fix round of the second review", () => {
 });
 
 /**
- * §NNN (amending §519; the owner, 2026-09-28: «sa inteleg ca nu primesc mailu daca nu apas pe „Nu,
+ * §536 (amending §519; the owner, 2026-09-28: «sa inteleg ca nu primesc mailu daca nu apas pe „Nu,
  * gata, trimite mailul”?») — the first form is an ordinary form: its email leaves on the club's
  * timing, the screen says when, and «Da, încă o persoană» is the press that opens the sitting.
  */
-describe("§NNN no sitting without a press", () => {
+describe("§536 no sitting without a press", () => {
   const cookie = {
     sittingId: "00000000-0000-4000-8000-0000000000aa",
     seed: null,
@@ -478,7 +478,7 @@ describe("§NNN no sitting without a press", () => {
  * HH:MM», another day the weekday-led date that brings its own «la» (§452) — and the sentence under
  * «Da» naming the club's window, each variant true, in both languages.
  */
-describe("§NNN the short screen's sentences, formatted", () => {
+describe("§536 the short screen's sentences, formatted", () => {
   type Words = (key: string, values?: Record<string, string>) => string;
   const words = async (locale: "ro" | "en", namespace: "Registration.done" | "Registration.sitting"): Promise<Words> => {
     const { createTranslator } = await import("next-intl");

@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V2.18-2026-09-27`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V2.19-2026-09-27`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -564,7 +564,7 @@ It prints what it will do before it does it. `production` additionally requires 
 («Release de pe telefon».) The PC is off; a change was made in a Claude Code on the web session
 or by a cloud agent, and its pull request into `qa` is open. `.github/workflows/release.yml`
 lands it and ships it to production, the same steps `docs/DISPATCHER.md` § Land a batch and
-§ Ship do on the PC (`DECISIONS.md` §NNN). Set up once: `SETUP.md` § 41 — the `SHIP_TOKEN`
+§ Ship do on the PC (`DECISIONS.md` §535). Set up once: `SETUP.md` § 41 — the `SHIP_TOKEN`
 secret, the `SHIP_PRODUCTION_URL` variable, the `ship` label, and one dry run.
 
 ### Before the press: the pull request carries its release entry

@@ -1,5 +1,5 @@
 /**
- * Release facts that travel with the branch (§NNN) — the pure half of `yarn docs:land --tree`.
+ * Release facts that travel with the branch (§535) — the pure half of `yarn docs:land --tree`.
  *
  * Until now a change's DECISIONS section, CHANGELOG bullet and SPECS criteria lived in the
  * dispatcher's scratchpad as a workflow's saved result, and only the machine that ran the chain

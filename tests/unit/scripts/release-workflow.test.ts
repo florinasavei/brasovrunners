@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { timesTable, withoutWorkflow } from "../../../scripts/ship-checks.mjs";
 
 /**
- * §NNN — one workflow ships a pull request: `.github/workflows/release.yml`, started by the label
+ * §535 — one workflow ships a pull request: `.github/workflows/release.yml`, started by the label
  * `ship` or by hand. GitHub cannot run here, so the file is held to the lines that make it safe:
  * who can start it, which token writes, that nothing a person typed is pasted into a script, and
  * that it runs the same three tools the PC does.
@@ -11,7 +11,7 @@ import { timesTable, withoutWorkflow } from "../../../scripts/ship-checks.mjs";
 const workflow = readFileSync(".github/workflows/release.yml", "utf8").replace(/\r\n/g, "\n");
 const steps = workflow.slice(workflow.indexOf("\n    steps:\n"));
 
-describe("§NNN release.yml — who starts a release", () => {
+describe("§535 release.yml — who starts a release", () => {
   it("starts by hand with a PR number, or by the label ship on a pull request, nothing else", () => {
     expect(workflow).toMatch(/^on:\n {2}workflow_dispatch:\n/m);
     expect(workflow).toMatch(/\n {2}pull_request:\n {4}types: \[labeled\]\n/);
@@ -38,7 +38,7 @@ describe("§NNN release.yml — who starts a release", () => {
   });
 });
 
-describe("§NNN release.yml — the dry run and the summary page", () => {
+describe("§535 release.yml — the dry run and the summary page", () => {
   it("has a dry run, by hand only, that lands on the runner, shows the diff and pushes and ships nothing", () => {
     expect(workflow).toMatch(/\n {6}dry_run:\n {8}description: .*\n {8}required: false\n {8}type: boolean\n {8}default: false\n/);
     expect(workflow).toContain("DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run == true }}");
@@ -73,7 +73,7 @@ describe("§NNN release.yml — the dry run and the summary page", () => {
   });
 });
 
-describe("§NNN release.yml — the token and what a person typed", () => {
+describe("§535 release.yml — the token and what a person typed", () => {
   it("reads with its own token and writes only through SHIP_TOKEN, which it refuses to run without", () => {
     expect(workflow).toMatch(/\npermissions:\n {2}contents: read\n/);
     expect(workflow).not.toMatch(/: write\b/);
@@ -95,7 +95,7 @@ describe("§NNN release.yml — the token and what a person typed", () => {
   });
 });
 
-describe("§NNN release.yml — the same tools as the PC, in order", () => {
+describe("§535 release.yml — the same tools as the PC, in order", () => {
   it("merges qa by rule, lands the tree's entries, checks the docs, pushes, then ships", () => {
     const order = [
       "yarn install --immutable",

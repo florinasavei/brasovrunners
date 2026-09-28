@@ -31,7 +31,7 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  * for a document only when the text names one, asks for none. The basis is the club's legitimate
  * interest in evidence (art. 6(1)(f)), and art. 9(2)(f) for the health statement — the privacy
  * notice's §3 says the same — so the rights list names objection and restriction, and the data
- * paragraph says how long it is kept by its purpose, never by a count from the signing (§NNN, the
+ * paragraph says how long it is kept by its purpose, never by a count from the signing (§534, the
  * counsel's second pass of 2026-09-28, amending §503 and §523): the declaration in force is kept while
  * it is needed to manage the signer's taking part in the runs it covers; once the signer asks for its
  * withdrawal it is used for no later run, and a copy may be kept only as long as establishing,
@@ -39,7 +39,7 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  * (art. 2517 Codul civil) — then deleted. «Three years from the signing» was untrue of a declaration
  * still in force: a runner who signed in 2026 and still comes in 2030 is still covered by it.
  *
- * **The counsel's second pass (§NNN, 2026-09-28), in the text's own words.** Valid for the whole
+ * **The counsel's second pass (§534, 2026-09-28), in the text's own words.** Valid for the whole
  * series and signed once, «until it is withdrawn or replaced by a new version» — never «fără termen de
  * încetare»; the health sentence is the runner's own assessment «din câte cunosc», and the next bullet
  * says the organiser does not and cannot assess anyone medically — no question about a diagnosis, a
@@ -78,7 +78,7 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  * (`dropsParagraph`, `SERIES_MERGE_FIELDS`): the **series sentence** names `{{series}}`,
  * `{{seriesRhythm}}` and `{{seriesPlace}}` — every run of the series from the date of signing on,
  * signed once, a date that differs read on its own page, valid until it is withdrawn or replaced by a
- * new version, which the signer is asked to sign again (§NNN) —; the **one-off sentence** names `{{event}}`, `{{eventDate}}` and
+ * new version, which the signer is asked to sign again (§534) —; the **one-off sentence** names `{{event}}`, `{{eventDate}}` and
  * `{{eventLocation}}` — that one run. The opening names neither, so it reads right under both. The
  * service keeps one signature per person, series and version (`signGroupRunDeclaration`), which is
  * what the series sentence promises.
@@ -88,7 +88,7 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  * the renderer keeps exactly one of them, so a series never loses its sentence to an empty place.
  */
 /*
-  The validity in the counsel's words (§NNN, points 1–2): valid for the whole series, signed once, from
+  The validity in the counsel's words (§534, points 1–2): valid for the whole series, signed once, from
   the date of signing — «începând cu», so the run of the day it is signed on is covered too; the
   counsel's «după data semnării» would have left out the very run a runner signs at the start of —
   until it is withdrawn or replaced by a new version, never «fără termen de încetare».
@@ -99,7 +99,7 @@ const SERIES_TAIL_EN =
   "and need not be signed again for each run. The declaration applies to the runs of this series that I take part in from the date of signing onwards, and remains valid until it is withdrawn or replaced by a new version. If a date differs from the others — the place, the time or the route — I learn it from that date's page, and the declaration applies to that date too. If the organiser approves a new version of the declaration, the participant will be asked to sign it again.";
 
 /*
-  What a group run is, said once (§NNN, points 8–10): not a competition, and «o alergare de grup, nu un
+  What a group run is, said once (§534, points 8–10): not a competition, and «o alergare de grup, nu un
   serviciu de ghidaj montan» with no individual supervision — the trail's words; on asphalt a guiding
   service, with no mountain in it. The organiser sets and announces the time, the place and the route and
   may give general safety guidance. Optional, because a group run takes no registration (§111, §393) —
@@ -145,7 +145,7 @@ const closingRo = [
   "Îmi asum responsabilitatea pentru propria siguranță, pentru echipamentul meu și pentru deciziile pe care le iau pe traseu.",
   "Această declarație arată că am fost informat/ă despre riscurile de mai sus și că le accept, împreună cu obligațiile mele; acceptarea riscurilor nu înseamnă, prin ea însăși, că renunț la dreptul de a fi despăgubit (art. 1355 alin. (4) din Codul civil) și nu mă lipsește de niciun drept pe care mi-l dă legea. Organizatorul răspunde, potrivit legii, pentru prejudiciile care îi sunt imputabile; nu poate fi tras la răspundere, în limitele permise de lege, pentru cele care nu îi sunt imputabile, cum sunt urmările propriilor mele alegeri pe traseu, iar fapta mea poate reduce sau înlătura răspunderea lui, potrivit legii (art. 1371 din Codul civil).",
   "Sunt informat/ă că datele din această declarație — numele și adresa de email — sunt prelucrate de organizator*, conform Regulamentului (UE) 2016/679 (GDPR) și notei de confidențialitate a clubului, ca dovadă că am fost informat/ă despre riscurile acestor alergări și că le-am acceptat, în temeiul interesului legitim al organizatorului (art. 6 alin. (1) lit. f) GDPR), iar afirmația despre sănătate, doar pentru constatarea, exercitarea sau apărarea unui drept în instanță (art. 9 alin. (2) lit. f) GDPR). O copie îmi este trimisă pe adresa de email pe care am dat-o, iar una ajunge în arhiva clubului. Declarația activă se păstrează cât timp este necesară pentru gestionarea participării mele la alergările la care se aplică. Dacă cer retragerea ei, la adresa de contact a clubului, nu mai este folosită pentru participările viitoare; o copie poate fi păstrată și după aceea, doar pe perioada necesară constatării, exercitării sau apărării unor drepturi, ținând seama de termenul general de prescripție de trei ani (art. 2517 din Codul civil); după expirarea acestei perioade, copia se șterge. Am dreptul de acces, de rectificare, de ștergere, de restricționare și de opoziție, precum și dreptul de a depune plângere la Autoritatea Națională de Supraveghere a Prelucrării Datelor cu Caracter Personal (ANSPDCP); pentru ele scriu la <EMAIL DE CONTACT>.",
-  // «Momentul semnării» as the platform records it (§NNN, point 14): never called a time stamp, and no
+  // «Momentul semnării» as the platform records it (§534, point 14): never called a time stamp, and no
   // law's title beside it that could read as one — the Romanian law is cited by its number.
   "Semnez această declarație personal, doar pentru mine. Este semnată electronic: numele scris mai jos, bifa de acceptare, momentul semnării ({{signedAt}}) și amprenta textului citit sunt înregistrate împreună de platforma clubului. Este o semnătură electronică simplă, căreia nu i se poate refuza efectul juridic doar pentru că este electronică (art. 25 alin. (1) din Regulamentul (UE) nr. 910/2014 (eIDAS); Legea nr. 214/2024).",
   "*Prin Organizator se înțelege <DENUMIREA JURIDICĂ COMPLETĂ A CLUBULUI>, cu sediul în <ADRESA SEDIULUI>, <NUMĂR DE ÎNREGISTRARE / CUI>.",
@@ -160,7 +160,7 @@ const closingEn = [
 ];
 
 /*
-  Right after the runner's own health statement on both surfaces (§NNN, point 4, the counsel's words):
+  Right after the runner's own health statement on both surfaces (§534, point 4, the counsel's words):
   nobody on the organiser's side assesses a participant medically, and no question about a diagnosis,
   a treatment or a medical history is asked anywhere (point 5) — the statement stays the one health
   datum, under art. 9(2)(f).
@@ -181,7 +181,7 @@ const asphaltRisksRo = [
   "• Știu că după lăsarea întunericului vizibilitatea scade, pentru mine și pentru șoferi: la alergările care se desfășoară sau se termină după lăsarea întunericului port elemente reflectorizante și, unde drumul nu este luminat, o lanternă frontală funcțională;",
   "• Știu că vremea se poate schimba — căldură, frig, ploaie, polei — și că asfaltul ud sau înghețat, bordurile, gropile și capacele de canal pot provoca alunecări și căderi; accept riscul de cădere, entorsă, tăieturi sau lovituri;",
   "• Echipamentul este responsabilitatea mea: încălțăminte și îmbrăcăminte potrivite vremii, apă și un telefon mobil încărcat;",
-  // The runner's own assessment, never the organiser's certificate (§NNN, points 3–5): the trail's words, on a road.
+  // The runner's own assessment, never the organiser's certificate (§534, points 3–5): the trail's words, on a road.
   "• Declar că, din câte cunosc, starea mea de sănătate îmi permite să particip la o alergare de grup pe drumuri publice și că nu cunosc existența unei afecțiuni sau recomandări medicale care să îmi interzică un astfel de efort. Îmi asum responsabilitatea de a-mi evalua starea înaintea fiecărei participări și de a nu participa sau de a mă opri dacă apar simptome ori o stare care face continuarea nesigură; la nevoie, sun la 112;",
   ORGANISER_NO_MEDICAL_RO,
   "• Nu particip sub influența alcoolului, a drogurilor ori a altor substanțe care îmi afectează capacitatea de a participa în siguranță;",
@@ -212,10 +212,10 @@ const trailRisksRo = [
   "• Știu că traseul poate traversa habitatul animalelor sălbatice și că pot întâlni animale domestice sau câini de stână. Mă oblig să păstrez distanța, să nu provoc sau hrănesc animalele, să respect indicațiile organizatorului și recomandările autorităților și, în caz de urgență, să apelez 112;",
   "• Știu că vremea la munte se poate schimba repede — căldură, frig, ploaie, furtună, fulgere, ceață — și că după lăsarea întunericului vizibilitatea scade; accept că organizatorul poate schimba, scurta sau opri alergarea pentru siguranța celor care aleargă;",
   "• Echipamentul este responsabilitatea mea: încălțăminte potrivită terenului (pantofi de trail), îmbrăcăminte potrivită vremii, apă și un telefon mobil încărcat; la alergările care se desfășoară sau se termină după lăsarea întunericului, o lanternă frontală funcțională, cu bateriile încărcate;",
-  // Not guided is said once, in the opening (§NNN, point 9); stopping when unwell is the health bullet's.
+  // Not guided is said once, in the opening (§534, point 9); stopping when unwell is the health bullet's.
   "• Alerg în ritmul meu și îmi cunosc limitele: rămân pe traseul marcat și anunț organizatorul dacă mă despart de grup sau abandonez;",
   "• Știu că pe munte ajutorul poate ajunge greu și târziu: am telefonul la mine, cunosc numărul de urgență 112 și nu plec de pe traseu fără să anunț pe cineva din grup;",
-  // The counsel's words (§NNN, points 3–4): the runner's own assessment, then the organiser's none.
+  // The counsel's words (§534, points 3–4): the runner's own assessment, then the organiser's none.
   "• Declar că, din câte cunosc, starea mea de sănătate îmi permite să particip la o alergare pe teren montan și că nu cunosc existența unei afecțiuni sau recomandări medicale care să îmi interzică un astfel de efort. Îmi asum responsabilitatea de a-mi evalua starea înaintea fiecărei participări și de a nu participa sau de a mă opri dacă apar simptome ori o stare care face continuarea nesigură;",
   ORGANISER_NO_MEDICAL_RO,
   "• În ariile naturale protejate rămân pe traseele marcate și nu las în urmă niciun deșeu;",

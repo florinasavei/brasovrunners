@@ -125,7 +125,7 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
   const input = familyMode && liveSitting ? { ...typed, email: liveSitting.email, emailConfirm: undefined } : typed;
   /*
     The same address as the sitting on this browser continues it, and only on the form «Da, încă o
-    persoană» opened (§NNN: no sitting without a press). A second plain form from the same browser
+    persoană» opened (§536: no sitting without a press). A second plain form from the same browser
     is a first form again: its email is its own, nothing of the earlier one is held or merged.
   */
   const continuing = familyMode && liveSitting !== null && liveSitting.joined === true && sameMailbox(liveSitting.email, input.email);
@@ -168,7 +168,7 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
         honeypotOn: await honeypotIsOn(getDb(), new Date()),
         /*
           Every public form may begin a sitting (§519). Before «Da» it is an ordinary form that only
-          hands back what «Da» would take in (§NNN); after it, its messages wait for «Gata» or the window.
+          hands back what «Da» would take in (§536); after it, its messages wait for «Gata» or the window.
         */
         sitting: { id: continuing ? (liveSitting?.sittingId ?? null) : null, joined: continuing },
       },
@@ -230,7 +230,7 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
   // At a window of 0 nothing was held (§519): the cookie only keeps the address for the next person.
   const atOnce = minutes <= 0;
   /*
-    Always an id of one shape (§39): before «Da» (§NNN), and a sitting that held nothing — a re-send
+    Always an id of one shape (§39): before «Da» (§536), and a sitting that held nothing — a re-send
     about somebody already registered, the address at its limit — get a random one that names no
     row, and the seed seals to one length whatever it names (`family-sitting-cookie.ts`). A sealed
     cookie one uuid shorter would otherwise tell whoever typed a stranger's address which case it
@@ -239,7 +239,7 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
   */
   const heldUntil = sittingCookieUntil(now, minutes);
   /*
-    When this form's email leaves (§NNN; the review of 2026-09-28), computed once, here: the short
+    When this form's email leaves (§536; the review of 2026-09-28), computed once, here: the short
     screen reads it back from the browser's half and never recomputes it, so a reload after the pass
     says the email left rather than naming the next pass, and stops promising that «Da» holds it.
   */
@@ -279,7 +279,7 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
  * «Gata — trimite emailul» (§519): the sitting's one email leaves now, and this browser's sitting
  * ends. The screen after it is the one that says to open the inbox. Pressed with no sitting — the
  * window had passed, or the sitting held nothing — it is the same screen: the email left, or is
- * leaving, by itself (§39: the answer never depends on what the address holds). Since §NNN it is on
+ * leaving, by itself (§39: the answer never depends on what the address holds). Since §536 it is on
  * the sitting's screen only, after «Da»: the first form's screen has nothing to release.
  */
 export async function releaseFamilySittingAction(form: FormData): Promise<void> {
@@ -299,7 +299,7 @@ export async function releaseFamilySittingAction(form: FormData): Promise<void> 
 }
 
 /**
- * «Da, încă o persoană» (§519; §NNN: the press that opens the sitting). A press, never a link. The
+ * «Da, încă o persoană» (§519; §536: the press that opens the sitting). A press, never a link. The
  * first time, it opens the sitting from the first form's seed and holds that form's email when it has
  * not left yet; after that, it starts the club's window again from now (the review of 2026-09-27: the
  * window lapsed under the parent's hands while the next form was open) — on the server's row and

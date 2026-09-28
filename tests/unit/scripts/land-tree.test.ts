@@ -24,7 +24,7 @@ import {
 const UNKNOWN = ["BR", "REQ", "099", "09"].join("-");
 
 /**
- * §NNN — the release facts travel with the branch: one `.release/<slug>.json` per change, landed
+ * §535 — the release facts travel with the branch: one `.release/<slug>.json` per change, landed
  * by `yarn docs:land --tree` on the PC or by `.github/workflows/release.yml` from a phone. The
  * baselines here are invented (V9.x in 2031): a landing bumps every literal of the current one.
  */
@@ -36,7 +36,7 @@ const entry = {
   specsCriteria: [{ requirement: "BR-REQ-041-01", text: "The pill reads «Noapte»." }],
 };
 
-describe("§NNN .release entries — named after their branch, and checked before anything lands", () => {
+describe("§535 .release entries — named after their branch, and checked before anything lands", () => {
   it("names the file after the branch", () => {
     expect(slugOf("feat/night-pill")).toBe("feat-night-pill");
     expect(slugOf("claude/dreamy knuth")).toBe("claude-dreamy-knuth");
@@ -91,7 +91,7 @@ describe("§NNN .release entries — named after their branch, and checked befor
   });
 });
 
-describe("§NNN the baseline a phone release takes — BR-V2.NN, never a letter", () => {
+describe("§535 the baseline a phone release takes — BR-V2.NN, never a letter", () => {
   it("is the next minor, two digits, dated the landing day", () => {
     expect(nextBaseline("BR-V9.40-2031-01-01", "2031-01-02")).toBe("BR-V9.41-2031-01-02");
     expect(nextBaseline("BR-V9.09-2031-01-01", "2031-01-02")).toBe("BR-V9.10-2031-01-02");
@@ -127,7 +127,7 @@ describe("§NNN the baseline a phone release takes — BR-V2.NN, never a letter"
   });
 });
 
-describe("§NNN the hand steps of a landing, written by the landing", () => {
+describe("§535 the hand steps of a landing, written by the landing", () => {
   const clauses = [clauseOf({ ...entry, batchLine: `the night pill (see ${PLACEHOLDER})` }, 530), clauseOf(entry, 531)];
 
   it("words each change by its batch line, else its title, with its number", () => {
@@ -158,7 +158,7 @@ describe("§NNN the hand steps of a landing, written by the landing", () => {
   });
 });
 
-describe("§NNN which change a placeholder line belongs to", () => {
+describe("§535 which change a placeholder line belongs to", () => {
   const numberOf = new Map([["aaa", 530]]);
   const inBatch = new Set(["aaa", "mmm"]);
   const uncommitted = "0".repeat(40);
@@ -178,7 +178,7 @@ describe("§NNN which change a placeholder line belongs to", () => {
   });
 });
 
-describe("§NNN an entry checked on its pull request, and what an unattended landing refuses", () => {
+describe("§535 an entry checked on its pull request, and what an unattended landing refuses", () => {
   const entry = {
     branch: "feat/x",
     decisionsTitle: "X",
