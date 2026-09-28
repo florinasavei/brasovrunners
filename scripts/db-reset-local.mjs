@@ -2,11 +2,8 @@
 /**
  * Drop and rebuild the local development database.
  *
- * Why this is a script and not a one-line psql: dropping `public` is not enough. Drizzle
- * records which migrations it has applied in a table inside its own `drizzle` schema, which a
- * `DROP SCHEMA public CASCADE` leaves untouched. The next `db:migrate` then believes the
- * earlier migrations are already applied, tries only the newest one, and fails on an enum the
- * drop removed — leaving an empty database and a confusing error. Both schemas go, or neither.
+ * Both `public` and `drizzle` go: Drizzle's bookkeeping lives in its own schema, and keeping it
+ * makes the next `db:migrate` skip everything but the newest migration.
  *
  * Refuses to run against anything but a local database. Usage: yarn db:reset:local
  */
@@ -27,8 +24,7 @@ if (appEnv !== "local" && appEnv !== "test") {
   process.exit(1);
 }
 
-// A second, independent guard. APP_ENV is a variable someone can set wrongly; the host in the
-// connection string is what actually decides which database is destroyed.
+// A second guard: the host decides which database is destroyed, whatever APP_ENV says.
 const parsed = (() => {
   try {
     return new URL(url);
@@ -37,10 +33,8 @@ const parsed = (() => {
   }
 })();
 const host = parsed?.hostname ?? "";
-// The database and role the URL names — a worktree's own `brasov_runners_wf…` database, say. The
-// docker fallback below must reset exactly this one: it used to name `brasov_runners` outright, so
-// a worktree without psql on PATH dropped the MAIN checkout's database and then migrated and seeded
-// its own (reported 2026-09-24 by the payload-diet agent, which reset its database by hand instead).
+// The database and role the URL names (a worktree may have its own); the docker fallback must
+// reset exactly this one, never a hardcoded name.
 const database = parsed ? decodeURIComponent(parsed.pathname.replace(/^\//, "")) : "";
 const role = parsed ? decodeURIComponent(parsed.username) : "";
 
