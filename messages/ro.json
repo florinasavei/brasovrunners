@@ -5533,7 +5533,7 @@
         "declare": {
           "title": "Semnezi declarația",
           "body": "Din același email: o citești și îți scrii numele — online, sau pe hârtie la masa de înscrieri în ziua cursei.",
-          "bodyLater": "Locul e al tău. Semnezi declarația cu {opens} înainte de start, online sau pe hârtie la masa de înscrieri; poți semna și mai devreme."
+          "bodyLater": "Locul e al tău. Îți cerem declarația cu {opens} înainte de start, online sau pe hârtie la masa de înscrieri; poți semna și mai devreme."
         },
         "confirmed": {
           "title": "Ești înscris",
@@ -6009,6 +6009,7 @@
       "action": "Anulează înscrierea",
       "done": "Înscrierea a fost anulată.",
       "eventStarted": "Evenimentul a început deja; înscrierea nu mai poate fi anulată.",
+      "eventCancelled": "Evenimentul a fost anulat; nu trebuie să faci nimic.",
       "doneTitle": "Înscriere anulată",
       "declarationPdf": "Declarația pe care ai semnat-o (PDF)",
       "raceDayTitle": "În ziua cursei",

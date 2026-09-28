@@ -5533,7 +5533,7 @@
         "declare": {
           "title": "Sign the declaration",
           "body": "From that same email: read it and type your name — online, or on paper at the registration desk on race day.",
-          "bodyLater": "The place is yours. Sign the declaration {opens} before the start, online or on paper at the registration desk; you can sign earlier too."
+          "bodyLater": "The place is yours. We ask for the declaration {opens} before the start, online or on paper at the registration desk; you can sign earlier too."
         },
         "confirmed": {
           "title": "You are in",
@@ -6009,6 +6009,7 @@
       "action": "Cancel registration",
       "done": "Your registration has been cancelled.",
       "eventStarted": "This event has already started; the registration can no longer be cancelled.",
+      "eventCancelled": "The event has been cancelled; there is nothing you need to do.",
       "doneTitle": "Registration cancelled",
       "declarationPdf": "The declaration you signed (PDF)",
       "raceDayTitle": "On race day",

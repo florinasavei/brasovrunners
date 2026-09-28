@@ -9,7 +9,7 @@ import { describe, expect, it, vi } from "vitest";
  * The page is rendered on the server with the real catalogues, the form working, the anti-bot check
  * on, the FAQ on the site and the newsletter offered — every sentence it can draw at rest — and its
  * words are counted as a visitor reads them, in each language:
- * - the intro, one sentence of at most 15 words;
+ * - the intro, at most two short sentences of 15 words in all;
  * - everything above the form (the title, the intro, the FAQ's line): at most 120 words;
  * - everything down to the send button (the labels, the one helper left, Cloudflare's line, the
  *   privacy sentence, the button and its line): at most 120 words too.
@@ -103,7 +103,7 @@ function words(html: string): string[] {
 
 describe("§NNN the contact page says what it must and little else", () => {
   for (const lang of ["ro", "en"] as const) {
-    it(`keeps the intro to one sentence of at most 15 words (${lang})`, () => {
+    it(`keeps the intro to at most two short sentences, 15 words in all (${lang})`, () => {
       const intro = catalogues[lang].Contact.intro;
       expect(words(intro).length, intro).toBeLessThanOrEqual(15);
       expect(intro.split(/[.!?](\s|$)/).filter((part) => part && part.trim()).length, intro).toBeLessThanOrEqual(2);
