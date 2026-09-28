@@ -20,67 +20,24 @@ import { FORMER_KEY_PREFIX_PATTERN, LADDER_WIDTHS, ladderKeyPrefixOf } from "./l
 import { getStorage, isStorageConfigured, objectKey, type Storage } from "./storage";
 
 /**
- * The pictures stored before §414, given their ladder by one Administrator button, a batch per
- * press (§430).
+ * Pictures stored before §414, given their ladder by an Administrator button, a batch per press
+ * (§430). The ladder is read from the address (`ladder.ts`), so a picture must move:
  *
- * ## Why a button, and why it moves the picture
+ * 1. Files under `ladderKeyPrefixOf(old)` — deterministic, so a repeated press rewrites the same
+ *    keys; the master byte for byte, the thumbnail and rungs made from it.
+ * 2. One transaction moves the row and rewrites the prefix in every text `references.ts` reads,
+ *    bumping each row's `version` so an open editor is refused rather than writing the old
+ *    address back (AGENTS.md §11.5).
+ * 3. The old two files stay, so a copied address keeps working; `assetObjectKeys` removes them
+ *    with the picture.
  *
- * §414 left every older picture drawing the one file it always drew — "until it is uploaded
- * again" — because the page decides whether a picture has smaller siblings from its address
- * alone: a version-8 prefix has a ladder, a version-4 one does not (`ladder.ts`). A body is JSON
- * and the renderer does not ask the database about each picture in it, so writing the rungs
- * beside an old master would change nothing anybody sees. Asking the club to upload every old
- * picture again, into every body it sits in, is an afternoon; this is a press.
- *
- * So a picture is converted in three steps:
- *
- * 1. **Its files, under its new prefix.** `ladderKeyPrefixOf(old)` — the same UUID with its
- *    version digit at 8 — so the new address is a pure function of the old one, the same bytes
- *    land on the same keys if a press is cut off halfway and repeated, and the old address can
- *    always be derived back (`formerKeyPrefixOf`). The master is stored **byte for byte**, not
- *    re-encoded: the file a wide screen loads is exactly the one it loaded before. The thumbnail
- *    and the rungs are made from it (`ladderFromStoredMaster`).
- * 2. **One transaction** moves the row to the new prefix and rewrites the old prefix to the new one
- *    in every text the reference check reads (`references.ts`: a page's body, an event
- *    translation's five rich texts, a film's poster being an attribute of the description's
- *    youtube figure since §481), and bumps the `version` of every
- *    row it rewrote — an editor open on one of them is then refused at save as for any other
- *    change made meanwhile (AGENTS.md §11.5), instead of writing the old address back.
- * 3. **The old two files stay** at the old address. The pictures page offers a picture's address
- *    to paste into a newsletter or a post, and a browser offers any picture's; an address copied
- *    out of the site must not turn into a broken image because the club pressed a button. They
- *    are not strays: `assetObjectKeys` names them under the new prefix, so they go when the
- *    picture goes — removed from a page, deleted by hand, or taken by the orphan sweep.
- *
- * A gallery photo and an album cover reference the row by id, so moving the row is the whole of
- * their change. The public reads are expired once per press (§333).
- *
- * ## Why in batches
- *
- * An old master is at most 2400 pixels; its seven new files take one to three seconds here and
- * up to about seven on a deployed function, and a Server Action has a minute. A press takes at most `OLDER_PICTURES_PER_PRESS` pictures and starts none after
- * `OLDER_PICTURES_BUDGET_MS`, then says how many are left; the button stays until none are.
- *
- * ## What it never does
- *
- * It never touches a film poster fetched from YouTube (`yt-<id>`, §403: YouTube's own thumbnail
- * is at most 480 pixels and keeps its one file on purpose), nor a picture uploaded with a
- * ladder. A picture whose master is missing from the store, or is not a picture, is counted as
- * not converted and left exactly as it is — it was already a broken image, and the pictures page
- * is where it is removed.
+ * Never touches a `yt-<id>` poster (§403) or a laddered picture; a missing or unreadable master
+ * is counted as failed and left as is.
  */
 
 /**
- * The most pictures one press converts, and the time after which it starts no new one — sized
- * from a measurement, not a guess (§430). `ladderFromStoredMaster` on a 2400 × 1349 «Medie»
- * master (six rungs and the thumbnail) took 0.9–1.5 s on the development machine with every
- * core, and 2.5–2.6 s with `sharp` and libuv held to one thread — the honest figure for a
- * Vercel function, whose one vCPU runs the `Promise.all` of encodes one after another. Counting
- * that twice again for a slower CPU, eight R2 writes (about 0.8 MB) and the move's transaction,
- * one picture is at most about 7 s there. So a press starts none after 12 s and finishes within
- * about 20 s even when the last picture it starts is a slow one; on a fast machine it stops at
- * eight. The action runs inside the page's 60-second function (`admin/tasks/page.tsx`), so a
- * picture three times slower still ends in time.
+ * Per-press limits, measured (§430): about 7 s per picture on a one-vCPU function, so no new
+ * picture after 12 s keeps a press well inside the page's 60-second function.
  */
 export const OLDER_PICTURES_PER_PRESS = 8;
 
@@ -90,7 +47,7 @@ export const OLDER_PICTURES_BUDGET_MS = 12_000;
 /** A picture stored before §414: its prefix is a version-4 UUID (`ladder.ts`). */
 const isOlderPicture = sql`${mediaAssets.keyPrefix} ~ ${FORMER_KEY_PREFIX_PATTERN}`;
 
-/** How many pictures still have no ladder — what the task board's card says, and hides itself at zero. */
+/** How many pictures still have no ladder (the task board's card hides at zero). */
 export async function countOlderPictures<T extends Record<string, unknown>>(db: Database<T>): Promise<number> {
   const [row] = await db
     .select({ count: sql<number>`count(*)`.mapWith(Number) })
@@ -114,11 +71,7 @@ type Outcome = "converted" | "failed" | "skipped";
 const swapped = (column: AnyPgColumn, old: string, next: string): SQL => sql`replace(${column}::text, ${old}, ${next})`;
 const holds = (column: AnyPgColumn, old: string): SQL => sql`position(${old} in ${column}::text) > 0`;
 
-/**
- * One press of the button: up to `perPress` of the oldest pictures without a ladder, oldest
- * first, until the time budget is spent. Administrator only, asserted here as well as at the
- * action (BR-REQ-060-01), and one audit row per press.
- */
+/** One press: up to `perPress` oldest pictures within the budget; one audit row (BR-REQ-060-01). */
 export async function giveOlderPicturesTheirLadder<T extends Record<string, unknown>>(
   db: Database<T>,
   actor: Pick<StaffUser, "id" | "role">,
@@ -138,14 +91,8 @@ export async function giveOlderPicturesTheirLadder<T extends Record<string, unkn
   let failed = 0;
   const failedIds: string[] = [];
   /*
-    A cursor, not "the first twenty again": a picture that fails stays a candidate, and with more
-    failures than one page holds, re-reading the first page would convert nothing ever again. The
-    failures are retried on the next press — a missing file is one quick read.
-
-    The cursor's time is PostgreSQL's own text of the column, never a JavaScript `Date`: a `Date`
-    holds milliseconds and `created_at` holds microseconds, so a cursor made from one sits just
-    before the row it came from, and that row — a failed one, still a candidate — would be read
-    again and again until the time budget ran out (§430).
+    A cursor, so failures (still candidates) cannot fill every page. Its time is PostgreSQL's text
+    of the column, not a `Date`: milliseconds would sit before the microsecond row and re-read it (§430).
   */
   let after = null as { createdAt: string; id: string } | null;
   pages: while (converted < perPress) {
@@ -164,12 +111,7 @@ export async function giveOlderPicturesTheirLadder<T extends Record<string, unkn
     for (const asset of page) {
       if (converted >= perPress || clock() - started >= budgetMs) break pages;
       after = asset;
-      /*
-        One picture's surprise is that picture's failure, never the press's: an exception here
-        (a transient database error inside the move, a store that throws) would otherwise skip
-        the audit row and the cache expiry for the pictures already moved, and — the press going
-        oldest first — end every later press on this same picture (§430).
-      */
+      /* One picture's exception is its own failure, never the press's (audit, cache expiry; §430). */
       let outcome: Outcome;
       try {
         outcome = await convertOne(db, storage, asset);
@@ -264,12 +206,7 @@ async function convertOne<T extends Record<string, unknown>>(
       .update(pageTranslations)
       .set({ bodyJson: sql`${swapped(pageTranslations.bodyJson, old, next)}::jsonb`, version: sql`${pageTranslations.version} + 1` })
       .where(holds(pageTranslations.bodyJson, old));
-    // Not `events.video_poster_url` (§485): a film's poster lives in the description's youtube
-    // node, which the translations' swap above already carries; the column is unread and
-    // leaves the database in BR-V2.11 (§491).
-    // «Echipa»'s texts (§474), which `references.ts` reads too and this press had missed (§483):
-    // the words about each person, and the page's introduction in its platform setting. A card's
-    // photo is by id and follows the row above on its own.
+    // «Echipa»'s bios and introduction (§474, §483); a card's photo is by id and follows the row.
     await tx
       .update(teamMembers)
       .set({
@@ -282,7 +219,7 @@ async function convertOne<T extends Record<string, unknown>>(
       .update(platformSettings)
       .set({ value: sql`${swapped(platformSettings.value, old, next)}::jsonb` })
       .where(and(eq(platformSettings.key, TEAM_PAGE_SETTING_KEY), holds(platformSettings.value, old)));
-    // «Întrebări frecvente» (§525): the answers, and the page's introduction in its platform setting.
+    // FAQ answers and introduction (§525).
     await tx
       .update(faqQuestions)
       .set({
@@ -295,7 +232,7 @@ async function convertOne<T extends Record<string, unknown>>(
       .update(platformSettings)
       .set({ value: sql`${swapped(platformSettings.value, old, next)}::jsonb` })
       .where(and(eq(platformSettings.key, FAQ_PAGE_SETTING_KEY), holds(platformSettings.value, old)));
-    // The members' pages (§524), in their platform setting like the team's introduction.
+    // The members' pages (§524).
     await tx
       .update(platformSettings)
       .set({ value: sql`${swapped(platformSettings.value, old, next)}::jsonb` })
@@ -304,18 +241,14 @@ async function convertOne<T extends Record<string, unknown>>(
   });
   if (moved) return "converted";
 
-  // Not moved by this press: another press moved it first (its files are these very keys), or it
-  // was deleted meanwhile (these files are then nobody's).
+  // Another press moved it first (same keys), or it was deleted meanwhile.
   await removeUnlessMoved(db, storage, next);
   return "skipped";
 }
 
 /**
- * The new files go again only when no row holds the new prefix — never another press's result.
- *
- * Only the new prefix's own files, and so not `deleteAssetObjects`: for a laddered prefix that
- * also names the former address's two files, which are the old picture's — still needed by a
- * picture waiting for its ladder, and already removed with a picture deleted meanwhile.
+ * Removes the new prefix's files unless a row holds it. Not `deleteAssetObjects`, which would
+ * also take the former address's files.
  */
 async function removeUnlessMoved<T extends Record<string, unknown>>(db: Database<T>, storage: Storage, next: string): Promise<void> {
   const [row] = await db.select({ id: mediaAssets.id }).from(mediaAssets).where(eq(mediaAssets.keyPrefix, next)).limit(1);

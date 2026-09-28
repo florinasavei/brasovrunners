@@ -6,22 +6,11 @@ import { env } from "@/shared/config/env";
 import { bodyImageSrc, getStorage, objectKey } from "./storage";
 
 /**
- * A YouTube film's poster, fetched once and kept in the club's own store
- * (`DECISIONS.md` §403, AGENTS.md §17, `DECISIONS.md` §69/§110's "nothing is fetched from
- * Google until the reader presses" rule).
+ * A YouTube film's poster, fetched once by the server and kept in the club's own store, so a
+ * visitor's browser makes no request to Google before the click (§403, §69, §110; AGENTS.md §17).
  *
- * The *server* fetches YouTube's own thumbnail — a request from this application to
- * `i.ytimg.com`, made once, the same kind of request the editor already makes for its own
- * thumbnail (§110) — re-encodes it through the same `sharp` pipeline every picture goes
- * through, and stores it as an ordinary `media_assets` row behind the four-method adapter. The
- * facade a visitor's browser renders then shows *this* address, never YouTube's, so the
- * privacy property §69 built stands: no third-party request before the click.
- *
- * The row is keyed by the video id itself (`yt-<id>`, not a random UUID): a video embedded
- * in an event's description and in a page's body at once shares one stored poster rather than fetching and
- * storing it twice, and a repeat save of the same video costs one indexed lookup, not a new
- * fetch. The id is public — it is the whole of what a YouTube link already discloses — so
- * using it as the object key trades nothing away that "opaque keys" (§17) was protecting.
+ * Keyed `yt-<id>`: one stored poster per video wherever it is embedded. The id is public, so the
+ * key discloses nothing that opaque keys (§17) protect.
  */
 
 const POSTER_QUALITIES = ["hqdefault", "mqdefault", "default"] as const;
@@ -44,21 +33,14 @@ export function posterUrlFor(videoId: string): string {
 type FetchImage = typeof fetch;
 
 /**
- * How long a single quality is given to answer, however this runs (`DECISIONS.md` §403, found by
- * re-review): up to three qualities are tried in sequence, so with no timeout a hanging
- * `i.ytimg.com` could keep a save waiting for minutes — worse, one running inside a transaction
- * would outlive the pool's 30-second `idle_in_transaction_session_timeout` (`src/db/client.ts`)
- * and take the whole save down with it. A poster is a nicety; it is never worth that.
+ * Per-quality timeout (§403): three tries in sequence must never hold a save for minutes or
+ * outlive the pool's 30-second `idle_in_transaction_session_timeout` (`src/db/client.ts`).
  */
 const POSTER_FETCH_TIMEOUT_MS = 3000;
 
 /**
- * A fixture poster, built once in-process with `sharp` — never a request anywhere — for
- * `E2E_STUB_YOUTUBE_POSTER` (`shared/config/env.ts`, found by re-review, `DECISIONS.md` §403):
- * the end-to-end suite's own server otherwise makes a real request to `i.ytimg.com` on every
- * save that carries a film, which a CI runner with no route to it turns into either the full
- * fetch timeout on every quality tried or a poster that never arrives — a real dependency the
- * suite never asked for and the spec cannot see.
+ * A fixture poster made in-process under `E2E_STUB_YOUTUBE_POSTER` (§403), so the end-to-end
+ * server never depends on reaching `i.ytimg.com`.
  */
 let stubPosterBytes: Promise<Buffer> | null = null;
 function stubYoutubeFetch(): FetchImage {
@@ -74,18 +56,13 @@ function stubYoutubeFetch(): FetchImage {
   }) as FetchImage;
 }
 
-/** `fetch` in every real environment; a network-free fixture only where `E2E_STUB_YOUTUBE_POSTER` says so. */
 function defaultPosterFetch(): FetchImage {
   return env.E2E_STUB_YOUTUBE_POSTER ? stubYoutubeFetch() : fetch;
 }
 
 /**
- * Tries YouTube's thumbnail sizes from the largest down, and returns the first that answers
- * with actual image bytes. `hqdefault` is on every video that has finished processing;
- * `mqdefault` and `default` are the fallbacks for one that has not, or that was set private
- * after the link was pasted. A network failure, a timeout, a non-2xx answer or an empty body
- * moves to the next quality; nothing there means every quality failed and the caller keeps the
- * old poster or shows the text facade — never a broken image.
+ * The first of YouTube's thumbnail sizes, largest down, that answers with bytes; `null` when
+ * none does (the caller keeps the old poster or the text facade).
  */
 export async function fetchYoutubeThumbnail(
   videoId: string,
@@ -101,7 +78,7 @@ export async function fetchYoutubeThumbnail(
       if (bytes.byteLength === 0) continue;
       return bytes;
     } catch {
-      // The next quality is tried; a poster is a nicety, never something a save may fail over.
+      // A poster is never worth failing a save over.
       continue;
     }
   }
@@ -133,10 +110,8 @@ async function processPoster(input: Buffer): Promise<{ web: Buffer; thumb: Buffe
 }
 
 /**
- * Fetches and stores a video's poster if the club does not already have one, and answers with
- * the address to show. Never throws over a fetch or an encode failure — those come back as
- * `null`, which is "no poster could be made", not "the save failed": the caller decides between
- * keeping an older poster and falling back to the text facade.
+ * Stores a video's poster if missing and answers its address; a fetch or encode failure is
+ * `null` ("no poster"), never a throw.
  */
 export async function ensureYoutubePoster<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -198,11 +173,7 @@ export async function ensureYoutubePoster<T extends Record<string, unknown>>(
   return posterUrlFor(videoId);
 }
 
-/**
- * A minimal shape of a rich-text document — just enough to find and patch its `youtube` blocks
- * without this module importing the rich-text schema (which would make `media` depend on
- * `content`, the wrong direction). `RichText`'s own `RichTextDoc` is structurally this.
- */
+/** A minimal rich-text shape, so `media` need not import `content` (the wrong direction). */
 type YoutubeBlockLike = {
   type: "youtube";
   attrs: { videoId: string; poster?: string | null; posterSource?: "club" | "youtube" | null; [key: string]: unknown };
@@ -211,12 +182,8 @@ type OtherBlockLike = { type: string; attrs?: Record<string, unknown> };
 type RichTextLike = { type: "doc"; content?: Array<YoutubeBlockLike | OtherBlockLike> };
 
 /**
- * Every `youtube` block in a body whose `poster` is not already set gets one fetched
- * (`DECISIONS.md` §403) — a body may embed several different films, and each is stored once and
- * keyed by its own video id. A block
- * whose fetch fails is left exactly as parsed (`poster: null`), and `RichTextVideo` falls back
- * to the text facade for that one film — never a broken image, and never a reason to refuse
- * the save.
+ * Fetches a poster for every `youtube` block without one (§403); a failed fetch leaves the block
+ * as parsed and `RichTextVideo` shows the text facade.
  */
 export async function attachYoutubePosters<T extends Record<string, unknown>, D extends RichTextLike>(
   db: Database<T>,
@@ -229,8 +196,7 @@ export async function attachYoutubePosters<T extends Record<string, unknown>, D 
     doc.content.map(async (block) => {
       if (block.type !== "youtube") return block;
       const yt = block as YoutubeBlockLike;
-      // A club-chosen poster (the panel's own picker) is never replaced by the automatic fetch —
-      // an organizer's pick outlives whatever YouTube's own thumbnail happens to be today.
+      // A club-chosen poster is never replaced by the automatic fetch.
       if (yt.attrs.posterSource === "club") return block;
       if ((yt.attrs.poster ?? null) !== null) return block;
       try {
@@ -245,12 +211,3 @@ export async function attachYoutubePosters<T extends Record<string, unknown>, D 
   );
   return changed ? ({ ...doc, content } as D) : doc;
 }
-
-/*
-  `resolveEventVideoPoster`, which kept the event's old poster column in step with its old film
-  link column (both unread since §481, dropped from the database in BR-V2.11, §491), is gone with
-  the film section (§481): a film lives only in a description, and migration `0092`
-  moved each stored link — with its stored poster — into the descriptions as a `youtube` node. A
-  node that arrived without a poster gets one from `attachYoutubePosters` on the event's next save,
-  before any transaction opens, like any film pasted there (§403).
-*/

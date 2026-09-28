@@ -1,22 +1,12 @@
 /**
- * «Din galerie» — which stored pictures the picker shows (§485). Pure, with no database and no
- * browser in it: `GET /api/admin/media` narrows the list with it before the cap, so an old
- * picture is found by its name however many came after it, and the picker applies its place's
- * own rule (`accept`) with it on what came back. A test reads it without either.
- *
- * The order is the list's own — newest first, as the route reads it — and nothing here sorts.
+ * «Din galerie» — which stored pictures the picker shows (§485). Pure: `GET /api/admin/media`
+ * narrows with it before the cap, and the picker applies its place's `accept` on the answer.
+ * Nothing here sorts; the list stays newest first.
  */
 
-/**
- * Where a picture is used, as the picker's chips say it: an event's texts, an album, a standing
- * page, «Echipa» (a card's photo, a bio or the page's introduction). «toate» is no filter.
- */
+/** Where a picture is used, as the picker's chips say it; «toate» (`all`) is no filter. */
 export const PICTURE_SOURCES = ["all", "event", "album", "page", "team"] as const;
-/**
- * A chip: «toate», a kind of place, or «here» — THIS event, album or page, the one whose editor
- * the picker was opened from (§485: «Acest eveniment» / «This event»). «here» exists only where
- * the picker knows its place (`PickerScope`).
- */
+/** A chip; «here» is the place the picker was opened from, only when it has one (§485). */
 export type PictureSource = (typeof PICTURE_SOURCES)[number] | "here";
 export type PictureUse = Exclude<PictureSource, "all" | "here">;
 
@@ -25,11 +15,7 @@ export const PICKER_SCOPE_KINDS = ["event", "album", "page"] as const;
 export type PickerScopeKind = (typeof PICKER_SCOPE_KINDS)[number];
 export type PickerScope = { kind: PickerScopeKind; id: string };
 
-/**
- * What the filter needs of a picture: its file's name, the places it is used, and — when the
- * list was asked for from a place — whether that very place uses it (`here`, computed on the
- * server from the picture's references, never from the whole list in the browser).
- */
+/** What the filter needs of a picture; `here` is computed on the server from its references. */
 export type PickablePicture = { name: string; uses: readonly PictureUse[]; here?: boolean };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -51,8 +37,7 @@ export function usedHere(references: readonly { kind: string; id: string }[], sc
   return references.some((reference) => reference.kind === scope.kind && reference.id === scope.id);
 }
 
-/** A reference kind from the pictures page (`MediaReference`) as the picker's chip: the team page's introduction is «Echipa». */
-// «Întrebări frecvente» (§525) and the members' pages (§524) are pages the club writes: «Pagini».
+/** A `MediaReference` kind as a chip: the team intro is «Echipa», FAQ and members' pages «Pagini» (§524, §525). */
 export function pictureUseOf(kind: "album" | "page" | "event" | "team" | "teamIntro" | "faq" | "membersPage"): PictureUse {
   if (kind === "teamIntro") return "team";
   if (kind === "faq" || kind === "membersPage") return "page";
@@ -65,28 +50,18 @@ export function pictureUses(kinds: readonly ("album" | "page" | "event" | "team"
   return PICTURE_SOURCES.filter((source): source is PictureUse => source !== "all" && present.has(source));
 }
 
-/**
- * A query parameter read strictly: anything but one of the five words is «toate» — and «here»
- * only when the request names its place (`scoped`), since «here» means nothing without one.
- */
+/** Read strictly: anything unknown is «toate», and «here» only when `scoped`. */
 export function parsePictureSource(value: string | null | undefined, scoped = false): PictureSource {
   if (value === "here") return scoped ? "here" : "all";
   return (PICTURE_SOURCES as readonly string[]).includes(value ?? "") ? (value as PictureSource) : "all";
 }
 
-/**
- * A name as the search compares it: lower case, the diacritics gone — «Hartă» is found by
- * "harta", "HARTA" and "hartă" alike, as a person types on a phone without the Romanian keyboard.
- */
+/** Lower case without diacritics, so "harta" finds «Hartă». */
 export function foldForSearch(text: string): string {
   return text.normalize("NFD").replace(/\p{M}/gu, "").toLocaleLowerCase("ro");
 }
 
-/**
- * The pictures a place offers: those its rule accepts, used where the chip says, whose file
- * name holds what was typed (after `foldForSearch` on both sides; blank is everything). The
- * list's order is kept.
- */
+/** The pictures a place offers: accepted, matching the chip and the typed name; order kept. */
 export function visiblePictures<P extends PickablePicture>(
   pictures: readonly P[],
   {
@@ -104,5 +79,5 @@ export function visiblePictures<P extends PickablePicture>(
   );
 }
 
-/** How many pictures one answer carries at most, after the narrowing: a wall past this is not a choice. */
+/** The most pictures one answer carries, after narrowing. */
 export const PICKER_LIMIT = 300;

@@ -17,25 +17,14 @@ type Props = {
   locale: Locale;
   /** The pictures still without a ladder (`countOlderPictures`); the page renders nothing at zero. */
   left: number;
-  /** How many the press just made could not be converted (`?failed=` on the address it lands on); 0 says nothing. */
+  /** The last press's failures (`?failed=`); 0 says nothing. */
   lastFailed: number;
 };
 
 /**
- * The one-off button of §430: the pictures stored before §414 get their ladder, a batch per press.
- *
- * On the task board rather than on the pictures page because it is a thing owed once, by the
- * Administrator, and the board is where the owed things are; it disappears when nothing is left.
- * A Server Component with one form, the same shape as the cadence card beside the Neon plan
- * (`JobCadencePanel`): the question first (§384 — it changes what the public pages load and
- * bumps the version of every text it rewrites), then the toast with the numbers. The page and
+ * §430's one-off button on the task board: pre-§414 pictures get their ladder, a batch per press,
+ * confirmed first (§384). One total, not per kind: the decision is the same (§430). The page and
  * the service both assert the role (BR-REQ-060-01).
- *
- * One total, not a count per kind (gallery photo, picture in a text, album cover), on purpose
- * (§430): the press treats every kind alike, in one order, and the Administrator's one decision
- * — press until nothing is left — does not change with the split. A per-kind count would be
- * three reference joins on every load of the board for a number nobody acts on differently; the
- * pictures page already says where each one is used.
  */
 export default async function OlderPicturesPanel({ locale, left, lastFailed }: Props) {
   const t = await getTranslations("Admin");
@@ -53,11 +42,7 @@ export default async function OlderPicturesPanel({ locale, left, lastFailed }: P
       <Typography variant="body2" sx={{ fontWeight: 500 }} data-testid="older-pictures-left">
         {t(`tasks.olderPictures.left.${countForm(left, locale)}`, { count: left })}
       </Typography>
-      {/*
-        The last press's failures, on the card itself (§430): the toast fades, and a picture that
-        fails stays in the count above and is tried again on every press — the Administrator has
-        to learn here that pressing again will not help, and what will.
-      */}
+      {/* On the card, not only in the fading toast: pressing again will not help these (§430). */}
       {lastFailed > 0 && (
         <Alert severity="warning" sx={{ mt: 1 }} data-testid="older-pictures-failed">
           {t(`tasks.olderPictures.failed.${countForm(lastFailed, locale)}`, { count: lastFailed })}{" "}

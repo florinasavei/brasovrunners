@@ -5,26 +5,13 @@ import { env } from "@/shared/config/env";
 import { formerKeyPrefixOf, isLadderKeyPrefix, LADDER_WIDTHS } from "./ladder";
 
 /**
- * Where a photo's bytes live, behind the four-method adapter of AGENTS.md §17 — three of
- * them; "read metadata" is the database's job here, because the row records the dimensions and
- * size at upload and nothing needs to ask the bucket.
+ * Where a photo's bytes live, behind AGENTS.md §17's adapter ("read metadata" is the row's job).
+ * `env.STORAGE_MODE`: `local` (`.media/`, served by `/api/media/[...key]`), `fake` (an in-process
+ * Map, same route), `r2` (served by Cloudflare at `R2_PUBLIC_BASE_URL`), or `unconfigured`
+ * (refused with a readable sentence).
  *
- * Three implementations, chosen by `env.STORAGE_MODE` (derived, `env.ts`):
- *
- *   - `local`: files under `.media/` in the working directory, served back by
- *     `/api/media/[...key]` — a developer's laptop needs no bucket;
- *   - `fake`: a Map in this process, served by the same route — the test suites need no disk;
- *   - `r2`: Cloudflare R2 through its S3 API, read back at `R2_PUBLIC_BASE_URL` — Cloudflare
- *     serves the image, never a function, and egress is free.
- *
- * `unconfigured` is the fourth state and not an implementation: a deployed environment whose
- * five `R2_*` variables are not all set has no storage, and asking for one is refused with the
- * sentence the organizer needs rather than a stack trace.
- *
- * Keys are opaque and prefixed with the environment (`qa/…`, `production/…`), so two
- * environments can share one bucket without either seeing the other's photos; the objects
- * are the WebP variants of an asset, `<prefix>/web.webp` and `<prefix>/thumb.webp`, and since
- * §414 the ladder's rungs beside them, `<prefix>/<width>w.webp` (`ladder.ts`).
+ * Keys are prefixed with the environment so environments can share one bucket:
+ * `<env>/<prefix>/{web,thumb,<width>w}.webp` (§414).
  */
 
 /** `web` (the master), `thumb`, or a rung of the ladder by its width (§414, `ladder.ts`). */
@@ -32,15 +19,7 @@ export type StoredVariant = "web" | "thumb" | number;
 
 export type Storage = {
   put(key: string, body: Buffer, contentType: string): Promise<void>;
-  /**
-   * The object's bytes, or `null` when there is none (§281).
-   *
-   * Added for the last-good-page snapshots, which this application reads back itself rather
-   * than handing to a browser: a photo is fetched from Cloudflare's own address and never
-   * passes through a function, but a snapshot is consulted on the very request whose database
-   * read just failed, and that request must not depend on the public address being reachable
-   * from inside the function.
-   */
+  /** The object's bytes, or `null` (§281): for snapshots read back when the database failed. */
   get(key: string): Promise<Buffer | null>;
   delete(key: string): Promise<void>;
   /** The address a browser loads the object from. */
@@ -60,20 +39,14 @@ export function objectKey(keyPrefix: string, variant: StoredVariant): string {
 }
 
 /**
- * Every object an asset may own: the master and the thumbnail, and — for one stored with a
- * ladder (§414) — a key for every rung the ladder has, whether or not this picture was wide
- * enough to get it. Deleting a key that was never written is a no-op on R2, on the disk and in
- * memory, and it spares every caller of a delete from having to know the picture's width.
+ * Every object an asset may own, every rung included whatever its width (§414): deleting a key
+ * never written is a no-op, so callers need not know the picture's width.
  */
 export function assetObjectKeys(keyPrefix: string): string[] {
   const keys = [objectKey(keyPrefix, "web"), objectKey(keyPrefix, "thumb")];
   if (isLadderKeyPrefix(keyPrefix)) {
     keys.push(...LADDER_WIDTHS.map((width) => objectKey(keyPrefix, width)));
-    /*
-      A picture that got its ladder from the one-off button (§430) kept its two old files at its
-      old address, because an address may have been copied out of the site; they go when the
-      picture goes. For a picture uploaded with its ladder these two keys were never written.
-    */
+    /* The two files a §430 conversion kept at the old address. */
     const former = formerKeyPrefixOf(keyPrefix);
     keys.push(objectKey(former, "web"), objectKey(former, "thumb"));
   }
@@ -116,20 +89,14 @@ const localStorage: Storage = {
 };
 
 /**
- * One Map per process: the test suites and the end-to-end server each get their own. On
- * `globalThis`, not in module scope, because a production build gives each route its own
- * instance of this module — the album's delete action and `/api/media` would otherwise hold
- * two Maps, and a deleted photo would still be served (the CI failure of 2026-09-17).
+ * One Map per process, on `globalThis`: a production build gives each route its own module
+ * instance, and two Maps would keep serving a deleted photo.
  */
 const fakeObjects: Map<string, { body: Buffer; contentType: string }> = ((
   globalThis as { __brFakeMedia?: Map<string, { body: Buffer; contentType: string }> }
 ).__brFakeMedia ??= new Map());
 
-/**
- * A miss in the fake store, read from `.media/` on the disk when the end-to-end server says so
- * (`E2E_FAKE_MEDIA_FROM_DISK`, §430) — a spec's fixture of a picture no upload makes any more.
- * Read-only: a put or a delete touches only the Map, so the disk holds what the spec wrote.
- */
+/** A fake-store miss falls back to `.media/`, read-only, under `E2E_FAKE_MEDIA_FROM_DISK` (§430). */
 async function fakeObject(key: string): Promise<{ body: Buffer; contentType: string } | null> {
   const stored = fakeObjects.get(key);
   if (stored) return stored;
@@ -200,9 +167,7 @@ function r2Storage(): Storage {
         const bytes = await answer.Body?.transformToByteArray();
         return bytes ? Buffer.from(bytes) : null;
       } catch {
-        // A key that is not there, and a bucket having a bad minute, are the same answer to the
-        // caller: there is no last good copy. This is read on the path where the database has
-        // already failed, so it must not add a second throw to it.
+        // Missing or failing, the answer is "no copy": this path already follows a database failure.
         return null;
       }
     },
@@ -229,20 +194,15 @@ export function getStorage(): Storage {
 }
 
 /**
- * The address a *body* carries for a stored variant (`rich-text/domain/schema.ts`): the
- * store's own https address on R2, and a site-relative `/api/media/…` path in `local` and
- * `fake` mode — a body is served from this site, so the path is right, and the schema accepts
- * exactly those two shapes and no other (a `http://localhost` absolute would be refused).
+ * The address a body carries: https on R2, a site-relative path otherwise — the only two shapes
+ * `rich-text/domain/schema.ts` accepts.
  */
 export function bodyImageSrc(key: string): string {
   const url = getStorage().publicUrl(key);
   return url.startsWith("https://") ? url : new URL(url).pathname;
 }
 
-/**
- * The host a browser reads pictures from (§436, the network check): the bucket's public address on
- * R2 — Cloudflare serves them, never a function (§66) — and this site in every other mode.
- */
+/** The host a browser reads pictures from, for the network check (§436, §66). */
 export function publicPictureHost(): string {
   return new URL(env.STORAGE_MODE === "r2" && env.R2_PUBLIC_BASE_URL ? env.R2_PUBLIC_BASE_URL : env.APP_BASE_URL).host;
 }

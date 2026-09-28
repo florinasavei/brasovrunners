@@ -6,11 +6,7 @@ import { type ImageEncoding, type ProcessedImage, processUploadedImage, storedBy
 import { type ImageQuality, ladderKeyPrefixOf } from "./ladder";
 import { bodyImageSrc, deleteAssetObjects, getStorage, objectKey, type Storage } from "./storage";
 
-/**
- * What the person who uploaded a picture is told about it afterwards (§414): the size it was
- * stored at, the choice they made and what "high" turned into, what a wide screen loads, and how
- * many files it became. Facts, not advice — the sentence around them is the page's.
- */
+/** What the uploader is told afterwards (§414); the sentence around the facts is the page's. */
 export type StoredImageFacts = {
   width: number;
   height: number;
@@ -38,18 +34,14 @@ export function storedImageFacts(processed: ProcessedImage): StoredImageFacts {
   };
 }
 
-/**
- * A new asset's opaque prefix: a random UUID marked as carrying a ladder (`ladder.ts`
- * `isLadderKeyPrefix`), which is how a body's `<img>` knows it may ask for the smaller files.
- */
+/** A new asset's opaque prefix, marked as carrying a ladder (`isLadderKeyPrefix`). */
 export function newAssetKeyPrefix(): string {
   return ladderKeyPrefixOf(randomUUID());
 }
 
 /**
- * Every file of a processed picture into the store. On a failure the files already written are
- * removed again and the error goes on to the caller, who removes its row — a row pointing at a
- * picture that is half there is the broken image §66 says a row must never be.
+ * Every file of a processed picture into the store; on failure the written files are removed and
+ * the error rethrown for the caller to remove its row (§66).
  */
 export async function putImageObjects(storage: Storage, keyPrefix: string, processed: ProcessedImage): Promise<void> {
   try {
@@ -63,13 +55,9 @@ export async function putImageObjects(storage: Storage, keyPrefix: string, proce
 }
 
 /**
- * A picture for a body (BR-REQ-050-03 criterion 8, `DECISIONS.md` §72): uploaded from the
- * rich-text editor, stored exactly as a gallery photo is — the WebP ladder through the §17
- * adapter, one `media_assets` row — and handed back as the address the image node carries.
- *
- * Not tied to an album, and not tied to the page either: a body references the picture by
- * its address, so the row is the record of what was uploaded, by whom, and how big. A picture
- * removed from a body is swept once nothing has referenced it for a week (§73).
+ * A picture for a body (BR-REQ-050-03 criterion 8, §72), stored like a gallery photo and answered
+ * as the address the image node carries. Tied to no album or page; the sweep takes it once
+ * unreferenced (§73).
  */
 export async function uploadBodyImage<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -110,11 +98,7 @@ export async function uploadBodyImage<T extends Record<string, unknown>>(
   };
 }
 
-/**
- * The small picture of the newest stored asset, for the network check (§436): a real object on the
- * host pictures are read from, so a browser that can load it can load the gallery. `null` when no
- * picture is stored yet, or the store is not configured here.
- */
+/** The newest asset's thumbnail, a real object for the network check (§436); `null` when none. */
 export async function newestThumbnailUrl<T extends Record<string, unknown>>(db: Database<T>): Promise<string | null> {
   const [row] = await db.select({ keyPrefix: mediaAssets.keyPrefix }).from(mediaAssets).orderBy(desc(mediaAssets.createdAt)).limit(1);
   if (!row) return null;

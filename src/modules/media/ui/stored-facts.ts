@@ -2,12 +2,8 @@ import type { ImageFileFacts } from "../browser-shrink";
 import type { ImageQuality } from "../ladder";
 
 /**
- * The sentence shown after an upload (§414): what the picture became, in the words of the
- * catalogue. Pure — the two upload islands call it with the answer the route gave — so a test
- * can read it without a browser.
- *
- * The facts are the server's (`StoredImageFacts` in `media/service.ts`), repeated here as a
- * plain type because this file runs in the browser and that one imports the database.
+ * The sentence shown after an upload (§414). Mirrors `StoredImageFacts` (`media/service.ts`),
+ * which the browser cannot import.
  */
 export type StoredFacts = {
   width: number;
@@ -17,10 +13,7 @@ export type StoredFacts = {
   bytes: number;
   files: number;
   totalBytes: number;
-  /**
-   * The widest smaller copy (§437): the file a laptop at 2× takes in place of the master, or
-   * `null` when the picture is too small to have one.
-   */
+  /** The widest rung below the master (§437), or `null`. */
   topRung: { width: number; bytes: number } | null;
 };
 
@@ -33,18 +26,11 @@ export type StoredFactsLabels = {
   normal: string;
   high: string;
   original: string;
-  /**
-   * «Mare» or «Originală» that came out near-lossless — a poster, a screenshot, lettering — with
-   * `{quality}` for the choice's own words (§437; it named only «Înaltă» when that was the one).
-   */
+  /** «Mare» or «Originală» that came out near-lossless, with `{quality}` (§437). */
   nearLossless: string;
 };
 
-/**
- * What the person is about to upload (§437; the owner: "aș vrea să afișez și dimensiunea
- * imaginilor în editor, să știu ce încarc"): the chosen file's pixels and weight, and — only when
- * the browser drew it smaller to send it — what goes up instead.
- */
+/** What is about to be uploaded (§437); `sent` only when the browser sends another file. */
 export type ChosenFacts = { name: string; chosen: ImageFileFacts; sent?: ImageFileFacts };
 
 export type ChosenFactsLabels = {

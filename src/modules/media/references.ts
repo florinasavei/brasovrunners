@@ -16,47 +16,29 @@ import { DomainError } from "@/shared/errors/domain-error";
 import { bodyImageSrc, deleteAssetObjects, getStorage, objectKey } from "./storage";
 
 /**
- * Where a stored picture is used, and what happens to one that is used nowhere
- * (AGENTS.md §17 "reference check before delete"; `DECISIONS.md` §73).
+ * Where a stored picture is used, and what happens to one used nowhere (AGENTS.md §17; §73).
  *
- * A `media_assets` row is referenced by a gallery item, an album cover, or a body — a page's
- * `body_json`, an event translation's `body_json`, `excerpt_json`, `rules_json`, `schedule_json` or
- * `route_description` (§387: the map is a picture in that text) — where the image node
- * carries the variant's address and that address contains the asset's opaque `key_prefix`. Drafts count: a picture in a draft is
- * a picture somebody is about to publish, and the sweep must never take it. The check is one
- * SQL predicate, used by the sweep, the media list and the delete, so the three cannot
- * disagree about what "in use" means.
- *
- * The body check is a text search for the prefix inside the JSON rather than a JSON path
- * query, deliberately: the prefix is a UUID, which cannot occur in a body by accident, and a
- * `LIKE` over a few hundred rows every fifteen minutes is nothing — while a JSON path would
- * have to know the node shape, which is the schema module's business and nobody else's.
+ * One SQL predicate decides "in use" for the sweep, the media list and the delete, so they
+ * cannot disagree. Drafts count. A body is searched as text for the key prefix, not by JSON
+ * path: a UUID cannot occur by accident, and the node shape stays the schema module's business.
  */
 
 /** How long a picture may go unreferenced before the sweep takes it. */
 export const ORPHAN_ASSET_DAYS = 7;
 
-/** The sweep advances `last_referenced_at` at most this often, so it is not rewriting every referenced row every run. */
+/** How often at most the sweep rewrites `last_referenced_at` on a referenced row. */
 const TOUCH_INTERVAL_HOURS = 1;
 
 /**
- * `key_prefix` as a `LIKE` needle, with `_` escaped so it is never read as a single-character
- * wildcard (found by re-review, `DECISIONS.md` §403). Every prefix used to be a UUID, which
- * cannot contain one — a poster's is `yt-<videoId>` (`modules/media/video-poster.ts`), and a
- * YouTube video id may carry an underscore, which without escaping matches any character there
- * and over-retains an orphan poster the sweep should have taken.
+ * `key_prefix` as a `LIKE` needle, `_` escaped: a poster's `yt-<videoId>` may contain one, which
+ * would otherwise match any character and keep an orphan poster (§403).
  */
 const keyPrefixNeedle = sql`'%' || REPLACE(${mediaAssets.keyPrefix}, '_', '\\_') || '%'`;
 
 /**
- * The address a picture had before the older pictures' button moved it (§430), as a needle: for
- * a version-8 prefix the same UUID with its version digit back at 4 (`formerKeyPrefixOf`), and
- * for any other prefix NULL, which matches nothing. A text saved with the old address after the
- * move — a new page's or a new event's form open since before the press, which has no version to
- * be refused on — still names the picture, whose old files are kept for exactly that; without
- * this the sweep or a delete would take the picture, and those files with it. A UUID cannot occur
- * in a body by accident, and for a picture uploaded with its ladder the former address was never
- * written anywhere.
+ * The pre-§430 address as a needle (version digit back at 4; NULL, matching nothing, for any
+ * other prefix): a form open since before the conversion may still save the old address, whose
+ * files are kept for exactly that.
  */
 const formerKeyPrefixNeedle = sql`CASE WHEN ${mediaAssets.keyPrefix} ~ '^[0-9a-f]{8}-[0-9a-f]{4}-8' THEN '%' || overlay(${mediaAssets.keyPrefix} placing '4' from 15 for 1) || '%' END`;
 
@@ -65,10 +47,8 @@ const names = (text: SQL): SQL =>
   sql`(${text} LIKE ${keyPrefixNeedle} ESCAPE '\\' OR ${text} LIKE ${formerKeyPrefixNeedle})`;
 
 /**
- * Whether one event translation carries the asset in any of its rich texts. Every text the editor
- * lets a picture into is here — the summary, the description, the rules, the programme's notes and
- * the route description (§387) — because a text left out is a picture the sweep deletes from a
- * page that shows it. The rules and the programme's notes were missing until §387.
+ * Whether one event translation carries the asset in any rich text. Every text that takes a
+ * picture must be here, or the sweep deletes a picture a page shows (§387).
  */
 const inEventTranslation = sql`(${names(sql`${eventTranslations.bodyJson}::text`)}
     OR ${names(sql`${eventTranslations.excerptJson}::text`)}
@@ -76,25 +56,19 @@ const inEventTranslation = sql`(${names(sql`${eventTranslations.bodyJson}::text`
     OR ${names(sql`${eventTranslations.scheduleJson}::text`)}
     OR ${names(sql`${eventTranslations.routeDescriptionJson}::text`)})`;
 
-/** Whether a card of «Echipa» carries the asset in the words about the person, either language (§474). */
+/** A team card's bio, either language (§474). */
 const inTeamBio = sql`(${names(sql`${teamMembers.bioRoJson}::text`)} OR ${names(sql`${teamMembers.bioEnJson}::text`)})`;
 
-/**
- * Whether the team page's introduction carries the asset (§474): the one `platform_settings` row
- * of the page, whose value holds both languages' documents. Read as its text, like a body.
- */
+/** The team page's introduction, both languages in one `platform_settings` row (§474). */
 const inTeamIntro = sql`(${platformSettings.key} = ${TEAM_PAGE_SETTING_KEY} AND ${names(sql`${platformSettings.value}::text`)})`;
 
-/** Whether a question of «Întrebări frecvente» carries the asset in its answer, either language (§525). */
+/** An FAQ answer, either language (§525). */
 const inFaqAnswer = sql`(${names(sql`${faqQuestions.answerRoJson}::text`)} OR ${names(sql`${faqQuestions.answerEnJson}::text`)})`;
 
-/** Whether the FAQ page's introduction carries the asset (§525), kept in its platform setting like «Echipa»'s. */
+/** The FAQ page's introduction (§525). */
 const inFaqIntro = sql`(${platformSettings.key} = ${FAQ_PAGE_SETTING_KEY} AND ${names(sql`${platformSettings.value}::text`)})`;
 
-/**
- * Whether the members' pages carry the asset (§524): «Beneficiile membrilor» and the members' zone,
- * both languages of both in their one `platform_settings` row — read as its text, like the team's.
- */
+/** The members' pages, both in one `platform_settings` row (§524). */
 const inMembersPage = sql`(${platformSettings.key} = ${MEMBERS_PAGE_SETTING_KEY} AND ${names(sql`${platformSettings.value}::text`)})`;
 
 const referencedSomewhere = sql`(
@@ -123,15 +97,10 @@ const referencedSomewhere = sql`(
 const daysBefore = (now: Date, days: number) => new Date(now.getTime() - days * 24 * 60 * 60_000);
 
 /**
- * The orphan sweep: rides on the registration-maintenance job, last and in its own try/catch.
- *
- * Two statements and a loop. First, every referenced asset is marked as seen (throttled to
- * once an hour, so a quiet site writes nothing). Then every asset nothing has referenced for
- * `ORPHAN_ASSET_DAYS` — and that is at least that old, so a picture uploaded into an editor
- * and not yet saved keeps its grace — is deleted: the row first, in a statement that re-checks
- * the reference so a body saved a moment ago wins, then the two objects, best effort, exactly
- * as the gallery deletes a photo. A failed object delete is a stray object in the bucket and
- * not a reason to keep a row that says the picture exists.
+ * The orphan sweep, run last in the registration-maintenance job. Marks referenced assets seen
+ * (hourly at most), then deletes each asset unreferenced and uncreated for `ORPHAN_ASSET_DAYS`
+ * (an unsaved upload keeps its grace): the row first, re-checking the reference so a body saved
+ * a moment ago wins, then its objects best effort — a stray object beats a row that lies.
  */
 export async function sweepOrphanAssets<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -169,14 +138,9 @@ export async function sweepOrphanAssets<T extends Record<string, unknown>>(
 }
 
 /**
- * The pictures among `assetIds` that nothing references any more, deleted — rows only, in the
- * caller's transaction, each re-checked by the one predicate in the statement that deletes it.
- * Answers their key prefixes, whose objects the caller removes once its transaction commits.
- *
- * For a removal that takes away one place a picture was used — an album's photo, a whole album —
- * now that a picture can be in an album and in a text, on a card of «Echipa» or in another album
- * at once (§485, «Din galerie»). Before, taking a photo out of an album deleted the picture
- * outright, and a page that had chosen it from the gallery was left with a broken image.
+ * Deletes the rows among `assetIds` that nothing references any more, in the caller's
+ * transaction, and answers their key prefixes for the caller to remove after commit. For a
+ * removal of one use (an album photo), since a picture may be used in several places (§485).
  */
 export async function deleteAssetsNoLongerReferenced<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -220,41 +184,26 @@ export type MediaAssetRow = {
   /** The variant addresses, for the list and the picker — `webUrl` in the shape a body carries. */
   webUrl: string;
   thumbUrl: string;
-  /**
-   * The same picture's *absolute* address, which `webUrl` is not: a body stores a path when
-   * the bucket is this app (local and test storage), because a body outlives a hostname
-   * (§8, BR-REQ-101-02). Somebody pasting a picture into a newsletter or a Facebook post needs
-   * the whole address, so the list carries both rather than making the page rebuild one.
-   */
+  /** The absolute address, for pasting elsewhere; `webUrl` may be a path (§8, BR-REQ-101-02). */
   publicWebUrl: string;
   references: MediaReference[];
 };
 
 /**
- * What the bucket holds, in bytes: summed from the rows the list already read rather than
- * asked of the database again, so the figure at the top of the page and the rows under it
- * cannot disagree. `byte_size` is the web variant — the thumbnail beside it is a few
- * kilobytes, and the page says so instead of pretending this is the object count.
+ * Bytes stored, summed from the rows already read so the total and the rows agree. A lower
+ * bound: `byte_size` is the web variant only.
  */
 export function totalMediaBytes(rows: readonly Pick<MediaAssetRow, "byteSize">[]): number {
   return rows.reduce((sum, row) => sum + row.byteSize, 0);
 }
 
-/**
- * The same sum, asked of the database in one aggregate, for a page that does not list the rows —
- * Costuri's R2 line (§479). A lower bound for the same reason as above: the recorded size is one
- * variant per picture, not every object the bucket holds for it.
- */
+/** The same sum as one aggregate, for Costuri's R2 line (§479); likewise a lower bound. */
 export async function storedMediaBytes<T extends Record<string, unknown>>(db: Database<T>): Promise<number> {
   const [row] = await db.select({ total: sql<string | null>`coalesce(sum(${mediaAssets.byteSize}), 0)` }).from(mediaAssets);
   return Number(row?.total ?? 0);
 }
 
-/**
- * Every stored picture, newest first, with everywhere it is used — so an organizer can see
- * what a picture is and where before deciding anything about it. Four queries and a merge:
- * the assets, then each kind of reference joined to its title in the reader's locale.
- */
+/** Every stored picture, newest first, with everywhere it is used, titled in the reader's locale. */
 export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>(
   db: Database<T>,
   locale: Locale,
@@ -287,8 +236,7 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
   const inPages = await db
     .select({ assetId: mediaAssets.id, id: pageTranslations.pageId, title: pageTranslations.title, locale: pageTranslations.locale })
     .from(mediaAssets)
-    // At the address or the former one (§430), as the check that refuses a delete reads it: a
-    // picture the list shows as used nowhere must not be one the delete then refuses.
+    // Same predicate as the delete (§430), so the list and the refusal agree.
     .innerJoin(pageTranslations, names(sql`${pageTranslations.bodyJson}::text`));
 
   const inEvents = await db
@@ -301,7 +249,7 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
     .from(teamMembers)
     .where(isNotNull(teamMembers.photoMediaAssetId));
 
-  // A picture in the words about a person, and in the page's introduction (§474).
+  // §474.
   const inTeamBios = await db
     .select({ assetId: mediaAssets.id, id: teamMembers.id, title: teamMembers.name })
     .from(mediaAssets)
@@ -310,12 +258,11 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
     .select({ assetId: mediaAssets.id })
     .from(mediaAssets)
     .innerJoin(platformSettings, inTeamIntro);
-  // A picture in an answer of «Întrebări frecvente», or in its introduction (§525): one reference, the page.
+  // Any FAQ answer or the introduction is one reference, the page (§525).
   const inFaq = await db
     .select({ assetId: mediaAssets.id })
     .from(mediaAssets)
     .where(sql`EXISTS (SELECT 1 FROM ${faqQuestions} WHERE ${inFaqAnswer}) OR EXISTS (SELECT 1 FROM ${platformSettings} WHERE ${inFaqIntro})`);
-  // A picture in the members' pages (§524).
   const inMembersPages = await db
     .select({ assetId: mediaAssets.id })
     .from(mediaAssets)
@@ -324,8 +271,7 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
   const references = new Map<string, MediaReference[]>();
   const add = (assetId: string, reference: MediaReference) => {
     const list = references.get(assetId) ?? [];
-    // A picture in both languages of one page is one reference, named in the reader's locale
-    // when that translation carries it and in the other otherwise.
+    // Both languages of one page are one reference, titled in the reader's locale when possible.
     const existing = list.find((r) => r.kind === reference.kind && r.id === reference.id);
     if (existing) {
       if (reference.title && !existing.title) existing.title = reference.title;
@@ -356,11 +302,7 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
   }));
 }
 
-/**
- * Delete a picture by hand — the same roles that remove a gallery photo — and only when it
- * is used nowhere: a picture in a body is that page's, and taking it away would leave a broken
- * image on a published page. The list says where it is used; remove it there first.
- */
+/** Delete a picture by hand (editorial roles), only when it is used nowhere. */
 export async function deleteMediaAsset<T extends Record<string, unknown>>(
   db: Database<T>,
   input: { actor: { id: string; role: StaffRole }; assetId: string },

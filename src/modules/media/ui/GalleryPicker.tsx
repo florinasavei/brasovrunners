@@ -17,10 +17,7 @@ import { useEffect, useRef, useState } from "react";
 import { PICTURE_SOURCES, type PickerScope, pickerScopeParam, type PictureSource, type PictureUse, visiblePictures } from "../picker";
 import { formatBytes } from "./stored-facts";
 
-/**
- * Each chip's picture beside its words (§521: a glyph on every button): every picture, an event,
- * an album, a standing page, «Echipa», and «here» — the record whose editor opened the picker.
- */
+/** Each chip's glyph (§521). */
 const SOURCE_ICON = {
   all: CollectionsIcon,
   event: EventIcon,
@@ -30,12 +27,7 @@ const SOURCE_ICON = {
   here: MyLocationIcon,
 } as const;
 
-/**
- * One stored picture, as `GET /api/admin/media` lists it: the master's address in the shape a
- * body carries, the small file for the grid, the stored size and weight, the file's own name,
- * the kinds of place it is used, and whether it is a film's automatic poster (`yt-<id>`, §403)
- * rather than a picture somebody uploaded.
- */
+/** One stored picture, as `GET /api/admin/media` lists it; `poster` is a film's automatic `yt-<id>` (§403). */
 export type StoredPicture = {
   id: string;
   src: string;
@@ -61,32 +53,14 @@ export type GalleryPickerLabels = {
   /** The chips' legend, «Folosită în», and one word per chip, «toate» first. */
   sourceLegend: string;
   sources: Record<Exclude<PictureSource, "here">, string>;
-  /**
-   * The first chip when the picker knows its place (`scope`): «Acest eveniment», «Acest album»,
-   * «Această pagină» — the caller picks the word for its own kind (§485).
-   */
+  /** The first chip when the picker knows its place, worded by the caller (§485). */
   here?: string;
 };
 
 /**
- * «Din galerie» — every picture the club already stored, to use again wherever the backoffice
- * takes a picture (§485): a picture in a text, a film's poster, a card of «Echipa», an album.
- *
- * The list is asked for when the picker opens and never before: a form is opened far more often
- * than a picture is reused, and the list is a request every editor would otherwise make on every
- * load (§73). The newest first, as the pictures page shows them. A name box (accents and case
- * ignored) and a row of chips — «Folosită în»: toate, eveniment, album, pagină, echipă — narrow
- * them, and the server narrows before its cap, so an old picture is found by its name however
- * many came after it (`media/picker.ts`, the one filter both sides call).
- *
- * `withPosters` says whether the place can hold a film's automatic poster: 480 pixels of
- * YouTube's thumbnail belong under a film, not in a text, a card or an album, so those places
- * leave it out; the film's own poster picker takes it.
- *
- * Each thumbnail is a plain button (88 px: a thumb-sized target, BR-REQ-041-01 criterion 6) whose
- * accessible name is the file's with its size and weight, and the size and weight are written
- * under it — visible on a phone, where a hover title never shows. `onMouseDown` keeps the
- * editor's selection where it was, so a picture chosen in a text lands where the caret stood.
+ * «Din galerie» — reuse a stored picture wherever the backoffice takes one (§485). The list is
+ * fetched only when the picker opens (§73) and narrowed on both sides by `media/picker.ts`.
+ * Thumbnails are 88-px buttons (BR-REQ-041-01 criterion 6); `onMouseDown` keeps the editor's caret.
  */
 export default function GalleryPicker({
   onPick,
@@ -104,17 +78,9 @@ export default function GalleryPicker({
   withPosters?: boolean;
   /** Pictures already chosen in this sitting, marked as such (an album taking several). */
   picked?: readonly string[];
-  /**
-   * The event, album or page whose editor the picker is in (§485). With it, the picker opens on
-   * «Acest eveniment» (resp. album, page) — the pictures that place already uses, as the server
-   * reads them from its references — with «Toate» and the kinds of place beside it. A place with
-   * nothing yet opens on «Toate» instead of on an empty grid.
-   */
+  /** The place whose editor the picker is in (§485); it opens on that place's pictures, or «Toate» if none. */
   scope?: PickerScope;
-  /**
-   * Whether the picker opens on the place's own chip. An album's picker does not: every picture
-   * the album uses is already in it, so it opens on «Toate» with «Acest album» beside it.
-   */
+  /** False for an album, whose own pictures are already in it. */
   opensHere?: boolean;
   labels: GalleryPickerLabels;
   testId?: string;
@@ -163,8 +129,7 @@ export default function GalleryPicker({
     };
   }, [needle, source, withPosters, scopeParam]);
 
-  // The server's filter again, on what came back: the place's rule is held here too, and what is
-  // typed narrows at once while the next answer is on its way.
+  // The server's filter again, so typing narrows at once while the next answer is on its way.
   const shown = visiblePictures(pictures ?? [], {
     accept: (picture) => withPosters || !picture.poster,
     needle: filter,
@@ -259,7 +224,7 @@ export default function GalleryPicker({
                     >
                       <Box component="img" src={picture.thumb} alt="" width={88} height={88} loading="lazy" sx={{ display: "block", width: "100%", height: "100%", objectFit: "cover" }} />
                     </Box>
-                    {/* The stored size and weight, read on a phone too (§485); the button already says them. */}
+                    {/* Visible on a phone, where a title never shows (§485). */}
                     <Typography
                       variant="caption"
                       color="text.secondary"
