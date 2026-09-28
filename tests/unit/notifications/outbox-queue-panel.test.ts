@@ -130,10 +130,17 @@ describe("§529 the queue panel says when the emails leave", () => {
     const html = await render("ro");
     const leaves = [...html.matchAll(/data-testid="outbox-row-leaves"[^>]*>([^<]*)</g)].map((match) => match[1]);
     expect(leaves).toHaveLength(3);
-    expect(leaves[0]).toMatch(/^Pleacă: .*12:00 \(estimat\)\.$/);
+    // Today on the club's clock: the hour alone, in the words the screen after the form uses (`emailLeavesWords`, §NNN).
+    expect(leaves[0]).toBe("Pleacă: 12:00 (estimat).");
     expect(leaves[1]).toMatch(/^Întârziat: trebuia să fi plecat deja\./);
     expect(leaves[2]).toBe(ro.Admin.emails.queue.leaves.never);
     expect(html).toContain(ro.Admin.emails.queue.leaves.never);
+  });
+
+  it("says another day's departure as the short day with its own «la», as the screen after the form does (§NNN)", async () => {
+    const html = await render("ro", { delivery: { ...DELIVERY, nextTickAt: "2026-10-02T06:00:00.000Z" } });
+    const leaves = [...html.matchAll(/data-testid="outbox-row-leaves"[^>]*>([^<]*)</g)].map((match) => match[1]);
+    expect(leaves[0]).toBe("Pleacă: vin., 2 oct. 2026, la 09:00 (estimat).");
   });
 
   it("offers the Administrator the switch to the other value, asking first", async () => {
@@ -170,7 +177,7 @@ describe("§529 the queue panel says when the emails leave", () => {
     expect(html).toContain(en.Admin.emails.queue.when.on);
     expect(html).toMatch(/Next round: [^<]*12:00\. An email queued now waits at most 2 hours\./);
     expect(html).toContain(en.Admin.emails.queue.when.turnOff);
-    expect(html).toMatch(/Leaves: [^<]*12:00 \(estimated\)\./);
+    expect(html).toContain("Leaves: 12:00 (estimated).");
   });
 
   it("names the switch in «Termene»'s own words, both values", async () => {

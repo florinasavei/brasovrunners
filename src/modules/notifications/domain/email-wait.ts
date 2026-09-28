@@ -1,3 +1,5 @@
+import { CLUB_TIME_ZONE, formatDay, formatTime } from "@/i18n/dates";
+import { dayKey } from "@/modules/events/domain/calendar";
 import { minimumIntervalEnd, nextClubBoundary } from "@/modules/jobs/schedule";
 import type { DeliveryTiming } from "./delivery-timing";
 
@@ -47,6 +49,58 @@ export function nextOutboxTick(input: {
   if (intervalMinutes <= 0 || !lastRunAt) return tick;
   const floor = minimumIntervalEnd(lastRunAt, intervalMinutes);
   return floor.getTime() > tick.getTime() ? onGrid(floor) : tick;
+}
+
+/**
+ * When a message queued now leaves, as the screen after the registration form says it (§NNN; the
+ * owner, 2026-09-28: «sa inteleg ca nu primesc mailu daca nu apas…?»): null under `immediate` — the
+ * request sends it — else the pinger call the outbox job is next expected at (`nextOutboxTick`). A
+ * public page never reads the job's history, so with a minimum interval in force (§334, §447) the
+ * interval is counted from now: the latest the call can be, never a time that comes and goes first.
+ */
+export function emailLeavesAt(input: {
+  timing: DeliveryTiming;
+  now: Date;
+  pingerMinutes: number;
+  intervalMinutes: number;
+  governorFloorMinutes: number;
+}): Date | null {
+  if (input.timing === "immediate") return null;
+  const interval = Math.max(input.intervalMinutes, input.governorFloorMinutes);
+  return nextOutboxTick({ now: input.now, pingerMinutes: input.pingerMinutes, intervalMinutes: interval, lastRunAt: interval > 0 ? input.now : null });
+}
+
+/**
+ * When a message leaves, as a person reads it: now (the request sends it), today at an hour, or on
+ * another day with its hour.
+ */
+export type EmailLeavesOn = { key: "leavesToday" | "leavesOn"; at: string };
+export type EmailLeavesWords = { key: "leavesNow" } | EmailLeavesOn;
+
+/**
+ * When a message leaves, in words (§NNN, §529) — one function for the screen after the registration
+ * form («Emailul către ana@… pleacă la 10:15.» / «… pleacă marți, 29 septembrie, la 10:00.» / «…
+ * pleacă acum.») and every row of the queue panel on `/admin/settings/emails` («Pleacă: 10:15
+ * (estimat).»), so the two cannot say one message's time two ways. No instant is «now»; an instant on
+ * the club's clock today is the bare «HH:MM» (`leavesToday`, the sentence brings its «la»), on another
+ * day the inline day with its own «la» before the hour (`leavesOn`, §349, §439, §452) — a sentence
+ * never puts a second «la» or a «la» before a weekday-led date.
+ *
+ * `style` is the day's shape on another day: `prose` — the long weekday and month, no year, for a
+ * sentence a participant reads about a pass at most a day away (the review of 2026-09-28); `short` —
+ * «mar., 29 sept. 2026», the panel's row, where the year can matter to a row stuck for days.
+ */
+export type EmailLeavesStyle = "prose" | "short";
+
+export function emailLeavesWords(leavesAt: Date, now: Date, locale: string, style?: EmailLeavesStyle): EmailLeavesOn;
+export function emailLeavesWords(leavesAt: Date | null, now: Date, locale: string, style?: EmailLeavesStyle): EmailLeavesWords;
+export function emailLeavesWords(leavesAt: Date | null, now: Date, locale: string, style: EmailLeavesStyle = "short"): EmailLeavesWords {
+  if (leavesAt === null) return { key: "leavesNow" };
+  if (dayKey(leavesAt, CLUB_TIME_ZONE) === dayKey(now, CLUB_TIME_ZONE)) {
+    return { key: "leavesToday", at: formatTime(leavesAt, { locale, timeZone: CLUB_TIME_ZONE }) };
+  }
+  const day = style === "prose" ? ({ style: "long", month: "long", year: false } as const) : ({ style: "short" } as const);
+  return { key: "leavesOn", at: formatDay(leavesAt, { locale, timeZone: CLUB_TIME_ZONE, ...day, withTime: true, position: "inline" }) };
 }
 
 /** More than a week of real runs a queued row could wait behind: the estimate stops there. */

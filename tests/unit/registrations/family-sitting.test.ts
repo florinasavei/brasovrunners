@@ -7,6 +7,12 @@ vi.mock("next/headers", () => ({
 }));
 
 const {
+  afterFormScreen,
+  offerHint,
+  emailHasLeft,
+  openEmailLeavesAt,
+  peopleAfterYes,
+  sealEmailLeavesAt,
   compareFamilyOrder,
   doneFamilySentence,
   familyHeldDeclaration,
@@ -31,6 +37,7 @@ const { openFormDraft } = await import("@/modules/registrations/form-draft");
 const { declarationStateKey } = await import("@/modules/registrations/domain/family-signing");
 const { buildOutgoingEmail, joinNames } = await import("@/modules/notifications/templates");
 const { DEADLINE_RULES, familySittingHeldUntil, familySittingHolds } = await import("@/modules/deadlines/domain/deadlines");
+const { emailLeavesAt, emailLeavesWords } = await import("@/modules/notifications/domain/email-wait");
 
 /**
  * §519 — a family registered in one sitting, with one email: the pure half. What the browser keeps,
@@ -43,6 +50,7 @@ const EVENT_ID = "00000000-0000-4000-8000-000000000001";
 describe("§519 the browser's half of a sitting", () => {
   const cookie = {
     sittingId: "00000000-0000-4000-8000-0000000000aa",
+    seed: null,
     eventId: EVENT_ID,
     email: "familia.pop@example.ro",
     people: [
@@ -322,6 +330,7 @@ describe("§519 the fix round of the second review", () => {
     expect(sittingCookieMaxAgeSeconds(new Date(NOW.getTime() - 60_000), NOW)).toBe(60);
     const cookie = {
       sittingId: null,
+      seed: null,
       eventId: EVENT_ID,
       email: "familia.pop@example.ro",
       people: [{ name: "Ana Pop", birthDate: "1985-03-02" }],
@@ -334,5 +343,204 @@ describe("§519 the fix round of the second review", () => {
     expect(openFamilySittingCookie(sealFamilySittingCookie({ ...cookie, windowMinutes: undefined })!)?.windowMinutes).toBeUndefined();
     // The screen reads the window's end, never the grace: the sitting is over when its email leaves.
     expect(sittingCookieLive(cookie, EVENT_ID, new Date(NOW.getTime() + 600_000))).toBe(false);
+  });
+});
+
+/**
+ * §NNN (amending §519; the owner, 2026-09-28: «sa inteleg ca nu primesc mailu daca nu apas pe „Nu,
+ * gata, trimite mailul”?») — the first form is an ordinary form: its email leaves on the club's
+ * timing, the screen says when, and «Da, încă o persoană» is the press that opens the sitting.
+ */
+describe("§NNN no sitting without a press", () => {
+  const cookie = {
+    sittingId: "00000000-0000-4000-8000-0000000000aa",
+    seed: null,
+    eventId: EVENT_ID,
+    email: "familia.pop@example.ro",
+    people: [{ name: "Ana Pop", birthDate: "1985-03-02" }],
+    heldUntil: new Date(NOW.getTime() + 600_000),
+    sameBirthDate: null,
+  };
+  const registrationSeed = { kind: "registration" as const, id: "00000000-0000-4000-8000-0000000000b1", outboxId: "00000000-0000-4000-8000-0000000000c1" };
+
+  it("shows the one question after the first form, and the sitting's screen only after «Da»", () => {
+    expect(afterFormScreen({ ...cookie })).toBe("offer");
+    expect(afterFormScreen({ ...cookie, joined: false })).toBe("offer");
+    expect(afterFormScreen({ ...cookie, joined: true })).toBe("sitting");
+    expect(afterFormScreen(null)).toBeNull();
+  });
+
+  it("says when the email leaves: now under «imediat», at the next scheduled pass otherwise — before «Da» and after it alike", () => {
+    expect(emailLeavesWords(null, NOW, "ro")).toEqual({ key: "leavesNow" });
+    // The club's clock (Bucharest, UTC+3 in September): 10:15 UTC is 13:15, today, said as the hour alone.
+    expect(emailLeavesWords(new Date(NOW.getTime() + 15 * 60_000), NOW, "ro")).toEqual({ key: "leavesToday", at: "13:15" });
+    // Another day on the club's clock: the inline short day, which brings its own «la» before the hour (§452).
+    expect(emailLeavesWords(new Date(NOW.getTime() + 24 * 60 * 60_000), NOW, "ro")).toEqual({ key: "leavesOn", at: "lun., 28 sept. 2026, la 13:00" });
+    expect(emailLeavesAt({ timing: "immediate", now: NOW, pingerMinutes: 15, intervalMinutes: 0, governorFloorMinutes: 0 })).toBeNull();
+    const next = emailLeavesAt({ timing: "scheduled", now: NOW, pingerMinutes: 15, intervalMinutes: 0, governorFloorMinutes: 0 })!;
+    expect(next.getTime()).toBeGreaterThan(NOW.getTime());
+    expect(next.getTime()).toBeLessThanOrEqual(NOW.getTime() + 15 * 60_000);
+    expect(next.getUTCMinutes() % 15).toBe(0);
+    // A minimum interval counted from now: the latest the pass can be, never one that comes first.
+    const slow = emailLeavesAt({ timing: "scheduled", now: NOW, pingerMinutes: 15, intervalMinutes: 60, governorFloorMinutes: 0 })!;
+    expect(slow.getTime()).toBeGreaterThanOrEqual(NOW.getTime() + 60 * 60_000);
+  });
+
+  it("keeps the first form's seed in the browser's half, sealed to one length whatever it names (§39)", () => {
+    const withSeed = { ...cookie, seed: registrationSeed };
+    expect(openFamilySittingCookie(sealFamilySittingCookie(withSeed)!)).toEqual(withSeed);
+    const noMessage = { ...cookie, seed: { kind: "entry" as const, id: registrationSeed.id, outboxId: null } };
+    expect(openFamilySittingCookie(sealFamilySittingCookie(noMessage)!)?.seed).toEqual(noMessage.seed);
+    expect(openFamilySittingCookie(sealFamilySittingCookie(cookie)!)?.seed).toBeNull();
+    const joined = { ...cookie, joined: true };
+    expect(openFamilySittingCookie(sealFamilySittingCookie(joined)!)?.joined).toBe(true);
+    const lengths = new Set([cookie, withSeed, noMessage].map((value) => sealFamilySittingCookie(value)!.length));
+    expect(lengths.size).toBe(1);
+  });
+
+  it("keeps when the first form's email leaves, computed once at submit, at one length under either timing (the review of 2026-09-28)", () => {
+    const pass = new Date(NOW.getTime() + 15 * 60_000);
+    const scheduled = { ...cookie, seed: registrationSeed, emailLeavesAt: pass };
+    const immediate = { ...cookie, seed: registrationSeed, emailLeavesAt: null };
+    expect(openFamilySittingCookie(sealFamilySittingCookie(scheduled)!)?.emailLeavesAt).toEqual(pass);
+    expect(openFamilySittingCookie(sealFamilySittingCookie(immediate)!)?.emailLeavesAt).toBeNull();
+    // A half written before it was kept: absent, and the screen computes it as before.
+    expect(openFamilySittingCookie(sealFamilySittingCookie({ ...cookie, seed: registrationSeed })!)?.emailLeavesAt).toBeUndefined();
+    expect(sealFamilySittingCookie(scheduled)!.length).toBe(sealFamilySittingCookie(immediate)!.length);
+    expect(sealEmailLeavesAt(pass)).toHaveLength(25);
+    expect(sealEmailLeavesAt(null)).toHaveLength(25);
+    expect(openEmailLeavesAt(sealEmailLeavesAt(pass))).toEqual(pass);
+    expect(openEmailLeavesAt("x")).toBeUndefined();
+    expect(openEmailLeavesAt("")).toBeUndefined();
+  });
+
+  it("lists after «Da» only the people the sitting's email covers (the review of 2026-09-28)", () => {
+    const people = [{ name: "Ana Pop", birthDate: "2015-04-02" }];
+    // The seed opened a sitting: the first person is in it.
+    expect(peopleAfterYes({ holding: true, seed: registrationSeed, opened: "00000000-0000-4000-8000-0000000000aa", people })).toEqual({ people, seedSpent: false });
+    // Nothing left to open (the first person confirmed from the email that left before «Da»): not named.
+    expect(peopleAfterYes({ holding: true, seed: registrationSeed, opened: null, people })).toEqual({ people: [], seedSpent: true });
+    // A form that left no seed keeps its name as always (§39), and a window of 0 holds nobody.
+    expect(peopleAfterYes({ holding: true, seed: null, opened: null, people }).people).toEqual(people);
+    expect(peopleAfterYes({ holding: false, seed: registrationSeed, opened: null, people }).people).toEqual(people);
+  });
+
+  it("chooses the one sentence under «Da» by what the line above says (the review of 2026-09-28, nit F0)", () => {
+    const later = new Date(NOW.getTime() + 15 * 60_000);
+    // Scheduled: the email still waits, so «Da» holds it and the address gets one for everybody.
+    expect(offerHint({ atOnce: false, leavesAt: later, now: NOW })).toBe("addHint");
+    // «Imediat»: it has left, so the next person's email is the one that names everybody.
+    expect(offerHint({ atOnce: false, leavesAt: null, now: NOW })).toBe("addHintLeft");
+    // A window of 0: nothing is held under either timing.
+    expect(offerHint({ atOnce: true, leavesAt: later, now: NOW })).toBe("addHintAtOnce");
+    expect(offerHint({ atOnce: true, leavesAt: null, now: NOW })).toBe("addHintAtOnce");
+  });
+
+  it("promises no hold once the stored pass has come (the review of 2026-09-28: a reload after 13:15)", () => {
+    const pass = new Date(NOW.getTime() + 15 * 60_000);
+    const after = new Date(pass.getTime() + 60_000);
+    expect(emailHasLeft(pass, NOW)).toBe(false);
+    expect(emailHasLeft(pass, pass)).toBe(true);
+    expect(emailHasLeft(null, NOW)).toBe(true);
+    expect(offerHint({ atOnce: false, leavesAt: pass, now: pass })).toBe("addHintLeft");
+    expect(offerHint({ atOnce: false, leavesAt: pass, now: after })).toBe("addHintLeft");
+    expect(offerHint({ atOnce: true, leavesAt: pass, now: after })).toBe("addHintAtOnce");
+  });
+
+  it("words the short screen in both catalogues: the form in, when it leaves, one true sentence under «Da»", async () => {
+    type Catalogue = { Registration: { done: Record<string, string>; sitting: Record<string, string> } };
+    const ro = (await import("../../../messages/ro.json")).default as unknown as Catalogue;
+    const en = (await import("../../../messages/en.json")).default as unknown as Catalogue;
+    // «pentru», never the colloquial «lui» before a feminine name in -a (the review of 2026-09-28, nit 4).
+    expect(ro.Registration.done.formIn).toBe("Formularul pentru {name} a ajuns.");
+    expect(en.Registration.done.formIn).toBe("The form for {name} is in.");
+    expect(ro.Registration.done.leavesNow).toBe("Emailul către {email} pleacă acum.");
+    expect(en.Registration.done.leavesNow).toBe("The email to {email} leaves now.");
+    expect(ro.Registration.sitting.addHint).toBe("Dacă apeși „Da” până la {at}, emailul așteaptă formularul următor, cel mult {window}, și primiți unul singur pentru toți.");
+    expect(ro.Registration.sitting.addHintOn).toBe("Dacă apeși „Da” până {at}, emailul așteaptă formularul următor, cel mult {window}, și primiți unul singur pentru toți.");
+    expect(ro.Registration.done.leftAlready).toBe("Emailul către {email} a plecat.");
+    expect(en.Registration.done.leftAlready).toBe("The email to {email} has left.");
+    expect(en.Registration.done.leavesOn).toBe("The email to {email} leaves on {at}.");
+    expect(ro.Registration.sitting.addHintLeft).toBe("Dacă apeși „Da”, următorul email așteaptă cel mult {window} după ultimul formular și îi cuprinde pe toți.");
+    expect(ro.Registration.sitting.addHintAtOnce).toBe("Fiecare persoană primește emailul ei.");
+    for (const key of ["addHint", "addHintOn", "addHintLeft", "addHintAtOnce"]) {
+      expect(en.Registration.sitting[key]).toBeTruthy();
+      expect(ro.Registration.sitting[key].length).toBeLessThanOrEqual(200);
+      expect(en.Registration.sitting[key].length).toBeLessThanOrEqual(200);
+    }
+    // «Gata» stays, on the sitting's screen after «Da» (§519).
+    expect(ro.Registration.sitting.done).toBe("Nu, gata — trimite-mi emailul");
+  });
+});
+
+/**
+ * The review of 2026-09-28 (should-fix 2, nits 4 and 5): the leaving time in two shapes — today «la
+ * HH:MM», another day the weekday-led date that brings its own «la» (§452) — and the sentence under
+ * «Da» naming the club's window, each variant true, in both languages.
+ */
+describe("§NNN the short screen's sentences, formatted", () => {
+  type Words = (key: string, values?: Record<string, string>) => string;
+  const words = async (locale: "ro" | "en", namespace: "Registration.done" | "Registration.sitting"): Promise<Words> => {
+    const { createTranslator } = await import("next-intl");
+    const messages = (await import(`../../../messages/${locale}.json`)).default;
+    return createTranslator({ locale, messages, namespace }) as unknown as Words;
+  };
+  const leaving = async (locale: "ro" | "en", at: Date): Promise<string> => {
+    const said = emailLeavesWords(at, NOW, locale, "prose");
+    return (await words(locale, "Registration.done"))(said.key, { email: "ana@example.ro", at: said.at });
+  };
+
+  it("says today's hour after «la» / «at», once", async () => {
+    const soon = new Date(NOW.getTime() + 15 * 60_000);
+    expect(await leaving("ro", soon)).toBe("Emailul către ana@example.ro pleacă la 13:15.");
+    expect(await leaving("en", soon)).toBe("The email to ana@example.ro leaves at 13:15.");
+  });
+
+  it("says another day as the long weekday and month without the year, its own «la» / «at», never a second one before the weekday", async () => {
+    const tomorrow = new Date(NOW.getTime() + 24 * 60 * 60_000);
+    const ro = await leaving("ro", tomorrow);
+    expect(ro).toBe("Emailul către ana@example.ro pleacă luni, 28 septembrie, la 13:00.");
+    expect(ro).not.toMatch(/la luni|la .* la /);
+    const en = await leaving("en", tomorrow);
+    expect(en).toBe("The email to ana@example.ro leaves on Monday, 28 September, at 13:00.");
+    expect(en).not.toMatch(/at Monday/);
+  });
+
+  it("keeps the queue panel's short day, with its year", () => {
+    const tomorrow = new Date(NOW.getTime() + 24 * 60 * 60_000);
+    expect(emailLeavesWords(tomorrow, NOW, "ro").at).toBe("lun., 28 sept. 2026, la 13:00");
+    expect(emailLeavesWords(tomorrow, NOW, "ro", "short").at).toBe("lun., 28 sept. 2026, la 13:00");
+  });
+
+  it("says «now» with the address when the request sends", async () => {
+    const ro = await words("ro", "Registration.done");
+    const en = await words("en", "Registration.done");
+    expect(ro("leavesNow", { email: "ana@example.ro" })).toBe("Emailul către ana@example.ro pleacă acum.");
+    expect(en("leavesNow", { email: "ana@example.ro" })).toBe("The email to ana@example.ro leaves now.");
+  });
+
+  it("names the club's window under «Da» on the scheduled round and under «imediat», and nothing held at a window of 0", async () => {
+    const later = new Date(NOW.getTime() + 15 * 60_000);
+    for (const locale of ["ro", "en"] as const) {
+      const t = await words(locale, "Registration.sitting");
+      const window = locale === "ro" ? "10 minute" : "10 minutes";
+      const scheduled = t(offerHint({ atOnce: false, leavesAt: later, now: NOW }), { window, at: "13:15" });
+      const immediate = t(offerHint({ atOnce: false, leavesAt: null, now: NOW }), { window });
+      const atOnce = t(offerHint({ atOnce: true, leavesAt: later, now: NOW }), { window });
+      expect(scheduled).toContain(window);
+      expect(immediate).toContain(window);
+      expect(atOnce).not.toContain(window);
+      for (const sentence of [scheduled, immediate, atOnce]) expect(sentence.length).toBeLessThanOrEqual(200);
+    }
+    const ro = await words("ro", "Registration.sitting");
+    expect(ro("addHint", { window: "10 minute", at: "13:15" })).toBe("Dacă apeși „Da” până la 13:15, emailul așteaptă formularul următor, cel mult 10 minute, și primiți unul singur pentru toți.");
+    expect(ro("addHintOn", { window: "10 minute", at: "luni, 28 septembrie, la 13:00" })).toBe(
+      "Dacă apeși „Da” până luni, 28 septembrie, la 13:00, emailul așteaptă formularul următor, cel mult 10 minute, și primiți unul singur pentru toți.",
+    );
+    expect(ro("addHintLeft", { window: "10 minute" })).toBe("Dacă apeși „Da”, următorul email așteaptă cel mult 10 minute după ultimul formular și îi cuprinde pe toți.");
+    const en = await words("en", "Registration.sitting");
+    expect(en("addHint", { window: "10 minutes", at: "13:15" })).toBe("If you press “Yes” by 13:15, the email waits for the next form, at most 10 minutes, and you get one email for everybody.");
+    expect(en("addHintLeft", { window: "10 minutes" })).toBe("If you press “Yes”, the next email waits at most 10 minutes after the last form and covers everybody.");
+    expect(en("addHintAtOnce")).toBe("Each person gets their own email.");
   });
 });

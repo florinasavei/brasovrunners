@@ -11,7 +11,7 @@ import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { minutesPhrase } from "@/modules/deadlines/domain/duration-words";
 import { pingerCadenceMinutes } from "@/modules/jobs/quiet-hours";
 import { isBulkMessage } from "@/modules/notifications/domain/bulk";
-import { outboxRowLeavesAt, outboxRowOverdue } from "@/modules/notifications/domain/email-wait";
+import { emailLeavesWords, outboxRowLeavesAt, outboxRowOverdue } from "@/modules/notifications/domain/email-wait";
 import { EMAIL_HEALTH_THRESHOLDS } from "@/modules/notifications/health";
 import type { OutboxDelivery } from "@/modules/notifications/outbox-delivery";
 import type { OutboxQueue, QueuedMessage } from "@/modules/notifications/queue";
@@ -101,15 +101,18 @@ export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit,
     const late =
       !isBulkMessage(row.messageType) &&
       outboxRowOverdue({ now, dueAt, overdueAfterMs: EMAIL_HEALTH_THRESHOLDS.OVERDUE_AFTER_MS, intervalMinutes: delivery.overdueCadenceMinutes });
-    const at = outboxRowLeavesAt({ dueAt, nextTickAt, intervalMinutes: runInterval, pingerMinutesAt: (instant) => pingerCadenceMinutes(instant) });
+    const leavesAt = outboxRowLeavesAt({ dueAt, nextTickAt, intervalMinutes: runInterval, pingerMinutesAt: (instant) => pingerCadenceMinutes(instant) });
+    // The departure in the words the screen after the registration form uses for the same message
+    // (`emailLeavesWords`, §NNN): «10:15» today, the short day with its «la» and hour otherwise.
+    const at = emailLeavesWords(leavesAt, now, locale).at;
     // A family sitting's hold (§519): a turn in the future and no attempt made yet — not a retry,
     // not the newsletter's reserve. It says the hold's end and the round after it.
     if (row.nextAttemptAt && row.nextAttemptAt.getTime() > now.getTime() && row.familyHeld) {
-      return { text: t("emails.queue.leaves.held", { until: when.format(row.nextAttemptAt), at: when.format(at) }), late: false };
+      return { text: t("emails.queue.leaves.held", { until: when.format(row.nextAttemptAt), at }), late: false };
     }
     return { text: late
-        ? t(mayEdit ? "emails.queue.leaves.late" : "emails.queue.leaves.lateAskAdmin", { at: when.format(at) })
-        : t("emails.queue.leaves.at", { at: when.format(at) }), late };
+        ? t(mayEdit ? "emails.queue.leaves.late" : "emails.queue.leaves.lateAskAdmin", { at })
+        : t("emails.queue.leaves.at", { at }), late };
   };
 
   /*

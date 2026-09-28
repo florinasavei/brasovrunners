@@ -4055,7 +4055,7 @@
           "raceWeekDays": "0 = on race day only. From the same day, the editor's bib printing card opens by itself.",
           "seriesHorizonDays": "Dates already created stay if you lower it; the missing ones are filled in if you raise it.",
           "publicListDays": "Then the list closes by itself, even while the event still has it switched on. The privacy notice from the template states this number.",
-          "familySittingMinutes": "A family's email leaves once for everybody: on “Done”, or by itself this many minutes after the last form. 0 = each email leaves at once."
+          "familySittingMinutes": "After “Yes, one more person”, the family's email waits for “Done” at most this many minutes after the last form and leaves once, for everybody; at 0, each email leaves at once."
         },
         "legal": "Legal texts already approved keep the numbers written in them until you approve a new version from the template, which reads them from here.",
         "updatedAt": "Set {when}.",
@@ -5457,6 +5457,12 @@
       "heading": "Almost there!",
       "headingNamed": "Almost there, {name}!",
       "lead": "We have emailed you a link to confirm your place at {event}, {date}.",
+      "leavesNow": "The email to {email} leaves now.",
+      "leavesToday": "The email to {email} leaves at {at}.",
+      "leavesOn": "The email to {email} leaves on {at}.",
+      "leftAlready": "The email to {email} has left.",
+      "formIn": "The form for {name} is in.",
+      "formInUnnamed": "The form is in.",
       "nextTitle": "What happens next",
       "next": {
         "open": {
@@ -5735,6 +5741,10 @@
       "question": "Are you registering anyone else with the same address?",
       "add": "Yes, one more person",
       "addPending": "Opening the form…",
+      "addHint": "If you press “Yes” by {at}, the email waits for the next form, at most {window}, and you get one email for everybody.",
+      "addHintOn": "If you press “Yes” by {at}, the email waits for the next form, at most {window}, and you get one email for everybody.",
+      "addHintLeft": "If you press “Yes”, the next email waits at most {window} after the last form and covers everybody.",
+      "addHintAtOnce": "Each person gets their own email.",
       "done": "No, done — send me the email",
       "doneAtOnce": "No, I am done",
       "donePending": "Sending…",

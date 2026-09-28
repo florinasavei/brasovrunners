@@ -19,9 +19,12 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * instant: unul singur, după ce apeși «Gata» sau după fereastra din Termene"; «asta cu wizzardul de
  * confirmare si claritate e top prio!»).
  *
- * The public form, sent several times in a row from one browser for people on one address, mails
- * nothing until «Gata» or the club's window: every message its forms queue waits in the outbox, and
- * from the second person on they are one message — «Înscriere de familie: N persoane la …» — whose
+ * The public form, sent several times in a row from one browser for people on one address. Since
+ * §NNN (the owner, 2026-09-28: «sa inteleg ca nu primesc mailu daca nu apas pe „Nu, gata, trimite
+ * mailul”?») the first form is an ordinary form — its email due at once, no sitting written — and
+ * «Da, încă o persoană» opens the sitting, holding that email if it has not left. From that press
+ * on, nothing the sitting holds leaves before «Gata» or the club's window, and from the second
+ * person on the held messages are one — «Înscriere de familie: N persoane la …» — whose
  * one button confirms the address and everybody on it, and hands the browser the wizard's pass over
  * their declarations (§471). The same person sent twice in the sitting is one person; the club's limit
  * counts the sitting's kept forms; each person's refusal at the press is theirs alone.
@@ -48,6 +51,7 @@ const { OutboxMessageWithdrawn } = await import("@/modules/notifications/outbox"
 const { familyPassHolds } = await import("@/modules/registrations/family-signing");
 const { listActiveRegistrationsForParticipant, listPendingPeopleForParticipant } = await import("@/modules/registrations/my-registrations");
 const { consumeAndConfirmFamilySitting, consumeAndSignFamilyDeclaration } = await import("@/modules/registrations/token-actions");
+const { readOutboxQueue } = await import("@/modules/notifications/queue");
 
 type EventInput = Parameters<typeof submitRegistration>[1];
 
@@ -116,9 +120,26 @@ const submission = (firstName: string, at: Date, overrides: Record<string, unkno
 const at = (minutes: number) => new Date(NOW.getTime() + minutes * 60_000);
 const PUBLIC = { source: "PUBLIC" as const, createdByStaffUserId: null };
 
-/** One form of a sitting, as the public action sends it; the sitting's id comes back for the next. */
+/** A first form, before any «Da» (§NNN): an ordinary form, which hands back what «Da» would open a sitting with. */
+async function first(event: EventInput, firstName: string, minute: number, overrides: Record<string, unknown> = {}) {
+  const result = await submitRegistration(db, event, submission(firstName, at(minute), overrides), at(minute), "REAL", { ...PUBLIC, sitting: { id: null, joined: false } });
+  return { sittingId: result.sittingId ?? null, seed: result.sittingSeed ?? null };
+}
+
+/** «Da, încă o persoană» (§NNN): opens the sitting from the first form's seed, or starts an open one's window again. */
+async function yes(event: EventInput, press: { sittingId?: string | null; seed?: Awaited<ReturnType<typeof first>>["seed"] }, minute: number) {
+  return continueFamilySitting(db, { sittingId: press.sittingId ?? null, seed: press.seed ?? null, eventId: event.id, locale: "ro" }, new Date(at(minute).getTime() + WINDOW_MS), at(minute));
+}
+
+/** The first form and «Da» at the same minute: the sitting the next forms are sent in. */
+async function start(event: EventInput, firstName: string, minute: number, overrides: Record<string, unknown> = {}) {
+  const { seed } = await first(event, firstName, minute, overrides);
+  return yes(event, { seed }, minute);
+}
+
+/** One form of a sitting, after «Da», as the public action sends it; the sitting's id comes back for the next. */
 async function send(event: EventInput, firstName: string, minute: number, sittingId: string | null, overrides: Record<string, unknown> = {}) {
-  const result = await submitRegistration(db, event, submission(firstName, at(minute), overrides), at(minute), "REAL", { ...PUBLIC, sitting: { id: sittingId } });
+  const result = await submitRegistration(db, event, submission(firstName, at(minute), overrides), at(minute), "REAL", { ...PUBLIC, sitting: { id: sittingId, joined: true } });
   return result.sittingId ?? null;
 }
 
@@ -149,14 +170,56 @@ async function refusal(promise: Promise<unknown>) {
 }
 
 describe("§519 one person in a sitting", () => {
-  it("holds the verification email until the club's window, and «Gata» sends it now", async () => {
+  it("one form, no press: the verification email is due at once and no sitting is written (§NNN)", async () => {
     const event = await createEvent();
-    const sittingId = await send(event, "Ana", 0, null);
+    const { sittingId, seed } = await first(event, "Ana", 0);
+    expect(sittingId).toBeNull();
+    const [row] = await outbox();
+    expect(row.messageType).toBe("VERIFY_REGISTRATION_EMAIL");
+    // Due at once, on the club's ordinary timing: nothing waits for a press.
+    expect(row.nextAttemptAt).toBeNull();
+    // Never held, so never marked held (the review of 2026-09-28, nit F1): only the link's start.
+    expect(row.payloadJson).toEqual({ startsDeadline: true });
+    expect(await db.select().from(familySittings)).toHaveLength(0);
+    // What «Da» would take in: this registration and its message.
+    const [ana] = await db.select().from(registrations);
+    expect(seed).toEqual({ kind: "registration", id: ana.id, outboxId: row.id });
+  });
+
+  it("a second plain form from the same browser, with no «Da», is a first form again: nothing held, nothing merged (§NNN)", async () => {
+    const event = await createEvent();
+    await first(event, "Ana", 0);
+    await first(event, "Ion", 1);
+    const rows = await outbox();
+    expect(rows.map((row) => row.messageType)).toEqual(["VERIFY_REGISTRATION_EMAIL", "REGISTER_ANOTHER_PERSON"]);
+    for (const row of rows) expect(row.nextAttemptAt).toBeNull();
+    expect(await db.select().from(familySittings)).toHaveLength(0);
+  });
+
+  it("the same person sent twice with no «Da» is the ordinary re-send, never «already waiting to leave» (§NNN)", async () => {
+    const event = await createEvent();
+    await first(event, "Ana", 0);
+    await first(event, "Ana", 1);
+    const rows = await outbox();
+    expect(rows.map((row) => row.messageType)).toEqual(["VERIFY_REGISTRATION_EMAIL", "VERIFY_REGISTRATION_EMAIL"]);
+    for (const row of rows) expect(row.nextAttemptAt).toBeNull();
+    const [audit] = await db.select().from(auditLogs).where(eq(auditLogs.action, "registration.resubmitted"));
+    expect(audit.metadataJson).toEqual({ status: "PENDING_EMAIL_CONFIRMATION", resent: "VERIFY_REGISTRATION_EMAIL" });
+  });
+
+  it("«Da» opens the sitting and holds the first email until the club's window, and «Gata» sends it now", async () => {
+    const event = await createEvent();
+    const { seed } = await first(event, "Ana", 0);
+    const sittingId = await yes(event, { seed }, 1);
     expect(sittingId).not.toBeNull();
 
     const [row] = await outbox();
-    expect(row.messageType).toBe("VERIFY_REGISTRATION_EMAIL");
-    expect(row.nextAttemptAt?.toISOString()).toBe(new Date(NOW.getTime() + WINDOW_MS).toISOString());
+    expect(row.nextAttemptAt?.toISOString()).toBe(new Date(at(1).getTime() + WINDOW_MS).toISOString());
+    // «Da» took it in while it still waited, so it is marked held now, and only now (nit F1).
+    expect(row.payloadJson).toEqual({ startsDeadline: true, sittingHeld: true });
+    const [open] = await db.select().from(familySittings);
+    expect(open.heldOutboxIds).toEqual([row.id]);
+    expect(open.registrationIds).toHaveLength(1);
 
     await releaseFamilySitting(db, sittingId!, at(2));
     const [released] = await outbox();
@@ -171,7 +234,7 @@ describe("§519 one person in a sitting", () => {
 
   it("queues nothing more for the same person sent again in the sitting — its held message says it", async () => {
     const event = await createEvent();
-    const sittingId = await send(event, "Ana", 0, null);
+    const sittingId = await start(event, "Ana", 0);
     await send(event, "Ana", 1, sittingId);
     expect(await outbox()).toHaveLength(1);
     expect(await db.select().from(registrations)).toHaveLength(1);
@@ -187,7 +250,23 @@ describe("§519 one person in a sitting", () => {
     const event = await createEvent();
     // Ana registered before, outside any sitting; Ion's form, in a sitting of his own, is kept.
     await submitRegistration(db, event, submission("Ana", at(0)), at(0), "REAL", PUBLIC);
-    const sittingId = await send(event, "Ion", 1, null);
+    const sittingId = await start(event, "Ion", 1);
+    const [entryHeld] = (await outbox()).filter((candidate) => candidate.messageType === "REGISTER_ANOTHER_PERSON");
+    // «Da» held the kept form's message and tied the form to the sitting.
+    expect(entryHeld.nextAttemptAt?.toISOString()).toBe(new Date(at(1).getTime() + WINDOW_MS).toISOString());
+    // …marked as the family's hold (the review of 2026-09-28, round two), never as `sittingHeld`,
+    // which changes a verification link's life: the queue panel counts it as the family's, not a retry.
+    expect(entryHeld.payloadJson).toMatchObject({ familyHeld: true });
+    expect(entryHeld.payloadJson).not.toHaveProperty("sittingHeld");
+    // Ana's own email thrown back for a retry, with no flag: a retry, and only a retry.
+    const [anaEmail] = (await outbox()).filter((candidate) => candidate.messageType === "VERIFY_REGISTRATION_EMAIL");
+    await db.update(emailOutbox).set({ attemptCount: 1, nextAttemptAt: at(30) }).where(eq(emailOutbox.id, anaEmail.id));
+    const queue = await readOutboxQueue(db, 50, at(2));
+    expect(queue.held).toMatchObject({ total: 2, family: 1, retry: 1, reserve: 0 });
+    expect(queue.rows.find((row) => row.id === entryHeld.id)?.familyHeld).toBe(true);
+    expect(queue.rows.find((row) => row.id === anaEmail.id)?.familyHeld).toBe(false);
+    await db.update(emailOutbox).set({ attemptCount: 0, nextAttemptAt: null }).where(eq(emailOutbox.id, anaEmail.id));
+    expect((await db.select().from(pendingFamilyEntries))[0].sittingId).toBe(sittingId);
     await releaseFamilySitting(db, sittingId!, at(2));
     const [row] = (await outbox()).filter((candidate) => candidate.messageType === "REGISTER_ANOTHER_PERSON");
     expect((row.payloadJson as { familyEntryId?: string }).familyEntryId).toBeTruthy();
@@ -204,7 +283,7 @@ describe("§519 one person in a sitting", () => {
 describe("§519 a family in one sitting", () => {
   it("becomes one held message from the second person on, and a corrected form replaces the kept one", async () => {
     const event = await createEvent();
-    const sittingId = await send(event, "Ana", 0, null);
+    const sittingId = await start(event, "Ana", 0);
     expect(await send(event, "Maria", 2, sittingId)).toBe(sittingId);
     expect(await send(event, "Ion", 4, sittingId)).toBe(sittingId);
     // Ion again, the birth date corrected: the same person as the kept form, which it replaces.
@@ -226,7 +305,7 @@ describe("§519 a family in one sitting", () => {
 
   it("never overwrites a kept form with another name on its birth date (§493: twins, or a corrected name)", async () => {
     const event = await createEvent();
-    const sittingId = await send(event, "Ana", 0, null);
+    const sittingId = await start(event, "Ana", 0);
     await send(event, "Maria", 2, sittingId);
     // Twins: another name on Maria's birth date. Maria is kept as she was, and Ioana is not added.
     expect(await send(event, "Ioana", 3, sittingId, { birthDate: "2010-07-11", guardianName: "Ana Pop" })).toBe(sittingId);
@@ -250,7 +329,7 @@ describe("§519 a family in one sitting", () => {
 
   it("the family link lives the club's email-link window from the send, not from the first form", async () => {
     const event = await createEvent();
-    const sittingId = await send(event, "Ana", 0, null);
+    const sittingId = await start(event, "Ana", 0);
     await send(event, "Maria", 2, sittingId);
     const sentAt = at(75);
     await familyLink(sentAt);
@@ -269,7 +348,7 @@ describe("§519 a family in one sitting", () => {
     const event = await createEvent();
     // Ana registered outside any sitting; the sitting holds two kept forms and no registration of its own.
     await submitRegistration(db, event, submission("Ana", at(0)), at(0), "REAL", PUBLIC);
-    const sittingId = await send(event, "Maria", 1, null);
+    const sittingId = await start(event, "Maria", 1);
     await send(event, "Dan", 2, sittingId);
     const { secret } = await familyLink(at(20));
     const press = await consumeAndConfirmFamilySitting(secret!, { includedKeys: [], fitnessAcknowledged: false }, at(21));
@@ -283,16 +362,25 @@ describe("§519 a family in one sitting", () => {
 
   it("renders one family message: the subject, everybody by name and birth date, one button, and «Toate înscrierile mele»", async () => {
     const event = await createEvent();
-    const sittingId = await send(event, "Ana", 0, null);
+    const sittingId = await start(event, "Ana", 0);
     await send(event, "Maria", 2, sittingId);
     await send(event, "Ion", 4, sittingId);
 
     const { message, secret } = await familyLink(at(20));
     expect(message.subject).toContain("Înscriere de familie: 3 persoane la Crosul familiei");
-    for (const line of ["Ana Pop", "Maria Pop", "11 iulie 2010", "Ion Pop", "Confirm și semnez declarațiile (3)", "Toate înscrierile mele", "/inscrieri/ale-mele/"]) {
+    // The first line says the one button does everything (§NNN; the owner, 2026-09-28), before anybody is named.
+    const lead = "Un singur buton: confirmi adresa și cele 3 înscrieri, apoi semnezi pe rând declarațiile celor care mai au loc.";
+    expect(message.text).toContain(lead);
+    expect(message.text.indexOf(lead)).toBeLessThan(message.text.indexOf("Persoana 1 din 3: Ana Pop"));
+    // One line per person, the birth date in words, no «la» before it (§452).
+    expect(message.text).toContain("Persoana 2 din 3: Maria Pop, data nașterii 11 iulie 2010");
+    for (const line of ["Ion Pop", "Confirm și semnez declarațiile (3)", "Toate înscrierile mele", "/inscrieri/ale-mele/"]) {
       expect(message.text).toContain(line);
     }
+    // Nobody got an email of their own before «Da»: no line about an earlier one.
+    expect(message.text).not.toContain("emailul anterior");
     // The English half says the same in its own words (§96).
+    expect(message.text).toContain("One button: you confirm the address and the 3 registrations, then sign, one by one, the declarations of those who still have a place.");
     expect(message.text).toContain("Person 2 of 3: Maria Pop, date of birth 11 July 2010");
     expect(message.text).toContain("Confirm and sign the declarations (3)");
     expect(secret).not.toBeNull();
@@ -304,7 +392,7 @@ describe("§519 a family in one sitting", () => {
 
   it("the one button confirms the address and everybody ticked, deletes the unticked, holds the declaration requests and binds the wizard", async () => {
     const event = await createEvent();
-    const sittingId = await send(event, "Ana", 0, null);
+    const sittingId = await start(event, "Ana", 0);
     await send(event, "Maria", 2, sittingId);
     await send(event, "Ion", 4, sittingId);
     await send(event, "Dan", 5, sittingId);
@@ -379,7 +467,7 @@ describe("§519 a family in one sitting", () => {
     const [admin] = await db.insert(staffUsers).values({ email: "admin@example.ro", displayName: "Admin", role: "ADMIN" }).returning();
     await updateAddressCap(db, admin, { registrationsPerAddress: 2 }, NOW);
 
-    const sittingId = await send(event, "Ana", 0, null);
+    const sittingId = await start(event, "Ana", 0);
     await send(event, "Maria", 1, sittingId);
     // A third person on an address of two: the limit's own message, at once, and no kept form.
     await send(event, "Ion", 2, sittingId);
@@ -392,7 +480,7 @@ describe("§519 a family in one sitting", () => {
     const event = await createEvent(1);
     // The waiting list closed: one place, no line.
     await db.update(events).set({ waitlistCapacity: 0 }).where(eq(events.id, event.id));
-    const sittingId = await send(event, "Ana", 0, null);
+    const sittingId = await start(event, "Ana", 0);
     await send(event, "Ion", 1, sittingId);
     const { secret } = await familyLink(at(20));
     const page = await readFamilySittingLink(db, secret!, "ro", at(21));
@@ -406,7 +494,7 @@ describe("§519 a family in one sitting", () => {
 
   it("the press opens the wizard (§471): the pass it hands the browser signs each person in turn under the spent link", async () => {
     const event = await createEvent();
-    const sittingId = await send(event, "Ana", 0, null);
+    const sittingId = await start(event, "Ana", 0);
     await send(event, "Ion", 1, sittingId);
     const { secret } = await familyLink(at(20));
     const page = await readFamilySittingLink(db, secret!, "ro", at(21));
@@ -432,7 +520,7 @@ describe("§519 a family in one sitting", () => {
 
   it("«Toate înscrierile mele» lists the kept people, and each registration's declaration state", async () => {
     const event = await createEvent();
-    const sittingId = await send(event, "Ana", 0, null);
+    const sittingId = await start(event, "Ana", 0);
     await send(event, "Ion", 1, sittingId);
     const [participant] = await db.select().from(participants);
     const pending = await listPendingPeopleForParticipant(db, participant.id, "ro", at(2));
@@ -454,7 +542,7 @@ describe("§519 the fix round of 2026-09-27", () => {
     const event = await createEvent();
     // No participation window: the club's minutes are the hold (§104, §377).
     await db.update(events).set({ confirmationOpensDaysBefore: 0 }).where(eq(events.id, event.id));
-    const sittingId = await send(event, "Ana", 0, null);
+    const sittingId = await start(event, "Ana", 0);
     await send(event, "Ion", 1, sittingId);
     const { secret } = await familyLink(at(20));
     const page = await readFamilySittingLink(db, secret!, "ro", at(21));
@@ -477,7 +565,7 @@ describe("§519 the fix round of 2026-09-27", () => {
   it("at a window of 0 nothing is held: the verification email is due at once and no sitting is written", async () => {
     await setDeadlines({ familySittingMinutes: 0 });
     const event = await createEvent();
-    expect(await send(event, "Ana", 0, null)).toBeNull();
+    expect(await first(event, "Ana", 0)).toEqual({ sittingId: null, seed: null });
     const [row] = await outbox();
     expect(row.messageType).toBe("VERIFY_REGISTRATION_EMAIL");
     expect(row.nextAttemptAt).toBeNull();
@@ -486,24 +574,94 @@ describe("§519 the fix round of 2026-09-27", () => {
 
   it("«Da, încă o persoană» starts the window again: the row and the message it holds move together", async () => {
     const event = await createEvent();
-    const sittingId = await send(event, "Ana", 0, null);
+    const sittingId = await start(event, "Ana", 0);
     await send(event, "Ion", 1, sittingId);
     const until = new Date(at(8).getTime() + WINDOW_MS);
-    await continueFamilySitting(db, sittingId!, until, at(8));
+    expect(await yes(event, { sittingId }, 8)).toBe(sittingId);
     const [sitting] = await db.select().from(familySittings);
     expect(sitting.heldUntil.toISOString()).toBe(until.toISOString());
     const [row] = await outbox();
     expect(row.nextAttemptAt?.toISOString()).toBe(until.toISOString());
     // Sent already: a later «Da» moves nothing.
     await releaseFamilySitting(db, sittingId!, at(9));
-    await continueFamilySitting(db, sittingId!, new Date(at(12).getTime() + WINDOW_MS), at(12));
+    expect(await yes(event, { sittingId }, 12)).toBeNull();
     const [released] = await outbox();
     expect(released.nextAttemptAt?.toISOString()).toBe(at(9).toISOString());
   });
 
+  it("three people, one family email: the window holds it across every form, whatever pass of the outbox comes between (§519, §NNN)", async () => {
+    const event = await createEvent();
+    const sittingId = await start(event, "Ana", 0);
+    await send(event, "Maria", 2, sittingId);
+    // A scheduled pass at minute 3 finds nothing due: the family message waits for the window.
+    const [held] = await outbox();
+    expect(held.nextAttemptAt!.getTime()).toBeGreaterThan(at(3).getTime());
+    await send(event, "Ion", 4, sittingId);
+    const rows = await outbox();
+    expect(rows).toHaveLength(1);
+    expect(rows[0].id).toBe(held.id);
+    expect(rows[0].idempotencyKey).toBe(`family-sitting:${sittingId}`);
+    expect(rows[0].nextAttemptAt?.toISOString()).toBe(new Date(at(4).getTime() + WINDOW_MS).toISOString());
+    const message = await render(rows[0], at(20));
+    expect(message.subject).toContain("3 persoane");
+  });
+
+  it("«Da» after the first email has left: the second is held, and the family email's one button confirms both (§NNN)", async () => {
+    const event = await createEvent();
+    const { seed } = await first(event, "Ana", 0);
+    // Ana's own verification email leaves before «Da» — «imediat», or a scheduled pass in between.
+    const [anaEmail] = await outbox();
+    await db.update(emailOutbox).set({ status: "SENT", sentAt: at(1), attemptCount: 1 }).where(eq(emailOutbox.id, anaEmail.id));
+    const sittingId = await yes(event, { seed }, 2);
+    expect(sittingId).not.toBeNull();
+    // Nothing to hold: the email that left is not taken back.
+    const [open] = await db.select().from(familySittings);
+    expect(open.heldOutboxIds).toEqual([]);
+    expect(open.registrationIds).toHaveLength(1);
+    // …nor marked held (nit F1): it left as the ordinary email it was.
+    expect((await outbox()).find((row) => row.id === anaEmail.id)?.payloadJson).toEqual({ startsDeadline: true });
+
+    await send(event, "Ion", 3, sittingId);
+    const family = (await outbox()).filter((row) => row.id !== anaEmail.id);
+    expect(family).toHaveLength(1);
+    expect(family[0].payloadJson).toEqual({ familySittingId: sittingId });
+    expect(family[0].nextAttemptAt?.toISOString()).toBe(new Date(at(3).getTime() + WINDOW_MS).toISOString());
+
+    const { message, secret } = await familyLink(at(20));
+    expect(message.subject).toContain("2 persoane");
+    // Ana's own email left before «Da»: one line says this button covers her too (§NNN) — never that the older one stopped working.
+    expect(message.text).toContain("Acest email îi cuprinde pe toți: butonul de mai jos confirmă și înscrierea din emailul anterior.");
+    expect(message.text).toContain("This email covers everybody: the button below also confirms the registration from the earlier email.");
+    const page = await readFamilySittingLink(db, secret!, "ro", at(21));
+    if (!page.ok) throw new Error("the page could not read its link");
+    const result = await confirmFamilySitting(db, secret!, { includedKeys: page.people.map((person) => person.key), fitnessAcknowledged: true }, at(22));
+    if (!result.ok) throw new Error("the press did nothing");
+    expect((await db.select().from(registrations).orderBy(registrations.createdAt)).map((row) => [row.registeredName, row.status])).toEqual([
+      ["Ana Pop", "PENDING_DECLARATION"],
+      ["Ion Pop", "PENDING_DECLARATION"],
+    ]);
+  });
+
+  it("«Da» after the first person confirmed from the email that left before it opens nothing from the seed (the review of 2026-09-28)", async () => {
+    const event = await createEvent();
+    const { seed } = await first(event, "Ana", 0);
+    // Ana's email left before «Da», and she confirmed her address from it.
+    const [anaEmail] = await outbox();
+    await db.update(emailOutbox).set({ status: "SENT", sentAt: at(1), attemptCount: 1 }).where(eq(emailOutbox.id, anaEmail.id));
+    const [ana] = await db.select().from(registrations);
+    await db.update(registrations).set({ status: "PENDING_DECLARATION" }).where(eq(registrations.id, ana.id));
+    // «Da» finds no waiting registration under the seed: no sitting, and the browser's list drops her (`peopleAfterYes`).
+    expect(await yes(event, { seed }, 2)).toBeNull();
+    expect(await db.select().from(familySittings)).toHaveLength(0);
+    // The next form opens its own sitting; its email names Ion alone, as the browser's list now does.
+    const sittingId = await send(event, "Ion", 3, null);
+    const [open] = await db.select().from(familySittings).where(eq(familySittings.id, sittingId!));
+    expect(open.registrationIds).not.toContain(ana.id);
+  });
+
   it("a held verification email's link lives the club's window from its send, as the message says", async () => {
     const event = await createEvent();
-    const sittingId = await send(event, "Ana", 0, null);
+    const sittingId = await start(event, "Ana", 0);
     await releaseFamilySitting(db, sittingId!, at(1));
     const [row] = await outbox();
     const sentAt = at(9);
@@ -517,7 +675,7 @@ describe("§519 the fix round of 2026-09-27", () => {
 
   it("three people, one press: one confirmation with three QR codes and three race numbers, in the order the forms were sent, and the page lists the three numbers", async () => {
     const event = await createEvent();
-    const sittingId = await send(event, "Ana", 0, null);
+    const sittingId = await start(event, "Ana", 0);
     await send(event, "Ion", 1, sittingId);
     await send(event, "Radu", 2, sittingId);
     const { secret } = await familyLink(at(20));
@@ -551,7 +709,12 @@ describe("§519 the fix round of 2026-09-27", () => {
     const rows = await db.select().from(registrations);
     const inOrder = ["Ana Pop", "Ion Pop", "Radu Pop"].map((name) => rows.find((row) => row.registeredName === name)!);
     // The blocks, after the greeting (which names the person of the first form).
-    const blocks = message.text.indexOf("Înscrierile de mai jos");
+    // One line of intro (§NNN), then one block per person.
+    const intro = "Toți cei de mai jos sunt înscriși la Crosul familiei; sub fiecare nume, numărul, codul și QR-ul de arătat la masă.";
+    expect(message.text).toContain(intro);
+    expect(message.text).toContain("Everybody below is registered for");
+    const blocks = message.text.indexOf(intro);
+    expect(blocks).toBeGreaterThan(-1);
     const positions = inOrder.map((row) => message.text.indexOf(row.registeredName, blocks));
     expect(positions.every((position) => position >= 0)).toBe(true);
     expect([...positions].sort((a, b) => a - b)).toEqual(positions);
@@ -571,7 +734,7 @@ describe("§519 the fix round of 2026-09-27", () => {
   });
   it("a person who signs after the family's confirmation has left gets their own, as before", async () => {
     const event = await createEvent();
-    const sittingId = await send(event, "Ana", 0, null);
+    const sittingId = await start(event, "Ana", 0);
     await send(event, "Ion", 1, sittingId);
     const { secret } = await familyLink(at(20));
     const page = await readFamilySittingLink(db, secret!, "ro", at(21));

@@ -70,7 +70,7 @@ import { activeBotCheckSiteKey } from "@/modules/registrations/bot-check";
 import BotCheck from "@/modules/registrations/ui/BotCheck";
 import { continueFamilySittingAction, releaseFamilySittingAction, submitRegistrationAction } from "./actions";
 import FamilySittingNext from "@/modules/registrations/ui/FamilySittingNext";
-import { FAMILY_SITTING_FIELD, sittingCookieLive, sittingMinutesLeft, sittingNames } from "@/modules/registrations/domain/family-sitting";
+import { afterFormScreen, FAMILY_SITTING_FIELD, sittingCookieLive, sittingMinutesLeft, sittingNames } from "@/modules/registrations/domain/family-sitting";
 import { minutesPhrase } from "@/modules/deadlines/domain/duration-words";
 import { readFamilySittingCookie } from "@/modules/registrations/family-sitting-cookie";
 import { CLUB_NAME, PAGE_WIDTH } from "@/theme/brand";
@@ -175,14 +175,17 @@ export default async function RegisterPage({ params, searchParams }: Props) {
 
   const { submitted, error, fields, retry, another, family, sent } = await searchParams;
   /*
-    The family sitting (§519): the browser's sealed half, when its email has not left yet. After the
-    form it is the screen that asks «Mai înscrii pe cineva cu aceeași adresă?»; with `?family=1` it is
-    the next form, the address fixed. Everything it shows was typed on this browser (§39).
+    The family sitting (§519), the browser's sealed half, while its email has not left yet. After the
+    first form (§NNN) it is one question on the screen that says to open the inbox — «Mai înscrii pe
+    cineva cu aceeași adresă?» — whose «Da» opens the sitting; after every form sent from that press
+    on, the sitting's own screen, with «Gata»; with `?family=1` it is the next form, the address
+    fixed. Everything it shows was typed on this browser (§39).
   */
   const sittingCookie = resting ? null : await readFamilySittingCookie();
   const sitting = sittingCookieLive(sittingCookie, event.id, now) ? sittingCookie : null;
-  const sittingScreen = Boolean(submitted) && sent !== "1" && sitting !== null;
-  const familyForm = !submitted && family === "1" && sitting !== null;
+  const afterForm = Boolean(submitted) && sent !== "1" ? afterFormScreen(sitting) : null;
+  const sittingScreen = afterForm === "sitting";
+  const familyForm = !submitted && family === "1" && sitting?.joined === true;
   /*
     A link from an email sent before §446, which opened this form for another person on the address
     (§389). Retired: the email now carries one confirmation of the person the form named
@@ -524,9 +527,9 @@ export default async function RegisterPage({ params, searchParams }: Props) {
 
       {sittingScreen && sitting ? (
         /*
-          «Mai înscrii pe cineva cu aceeași adresă?» (§519) — before anything is mailed: «Încă o
-          persoană» opens the form again with the address fixed, «Gata» sends the one email. The
-          same screen after every form, whatever the address holds (§39).
+          The sitting's screen (§519), after «Da, încă o persoană» (§NNN): the people so far, «Gata»
+          sends the one email, «Da» the next form. The same screen after every form, whatever the
+          address holds (§39).
         */
         <FamilySittingNext
           email={sitting.email}
@@ -559,6 +562,24 @@ export default async function RegisterPage({ params, searchParams }: Props) {
           slug={slug}
           facts={submittedFacts}
           window={stepsWindow}
+          /*
+            After the first form (§NNN): the short screen — whose form is in, when its email leaves,
+            and «Mai înscrii pe cineva cu aceeași adresă?» with its one button. Its email leaves on the
+            club's timing: nothing here waits for a press. The same screen after every first form,
+            whatever the address holds (§39).
+          */
+          offer={
+            afterForm === "offer" && sitting
+              ? {
+                  atOnce: sitting.atOnce === true,
+                  email: sitting.email,
+                  windowMinutes: sitting.windowMinutes,
+                  // Computed once when the form was sent, never at render (the review of 2026-09-28).
+                  leavesAt: sitting.emailLeavesAt,
+                  continueAction: continueFamilySittingAction,
+                }
+              : undefined
+          }
         />
       ) : (
         <>
@@ -730,8 +751,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
             {event.participantListVisibility === "NAMES" ? t("privacyBannerWithList") : t("privacyBanner")}
           </Alert>
           {/*
-            The next person of a family sitting (§519): who was sent so far, that nothing is mailed
-            yet, and the way back to «Gata» without filling this one in.
+            The next person of a family sitting (§519): who was sent so far, that nothing waiting is
+            mailed yet, and the way back to «Gata» without filling this one in.
           */}
           {familyForm && sitting && (
             <Alert severity="success" icon={false} sx={{ mb: 2 }} data-testid="family-sitting-intro">
