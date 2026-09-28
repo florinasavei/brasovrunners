@@ -6,32 +6,30 @@ import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { textToBody } from "@/modules/legal-documents/domain/body-text";
 import { LEGAL_DOCUMENT_KEYS } from "@/modules/legal-documents/domain/keys";
 import {
-  approvePlatformTemplates,
   approveVersion,
   createDraftVersion,
   readLegalOverview,
   regenerateFromTemplates,
-  templateSourceOf,
 } from "@/modules/legal-documents/service";
 import { clubFactsFromEnv } from "@/modules/legal-documents/templates/club-facts";
-import { templateSha256 } from "@/modules/legal-documents/templates/template-hash";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
  * BR-REQ-053-02 (§NNN, amending §532) — «Regenerează din șablon» on one text's card: §532's own
  * press asked for one key. It makes one draft of that text and of no other, numbered next, with
- * the template it came from recorded on the row and an audit row saying who made it; and the
+ * an audit row saying who made it; and the
  * cards and «Versiune nouă» read each text's state, and «Șablon nou», from the same overview.
  */
 const NOW = new Date("2026-09-28T09:00:00.000Z");
 const LATER = new Date("2026-09-28T10:00:00.000Z");
-const FACTS = clubFactsFromEnv({
+const FACTS_ENV = {
   CLUB_LEGAL_NAME: "Asociația Exemplu",
   CLUB_REGISTRATION_NUMBER: "CIF 12345678",
   CLUB_REGISTERED_ADDRESS: "Str. Exemplu nr. 1, Brașov",
   EMAIL_REPLY_TO: "contact@example.test",
-});
+};
+const FACTS = clubFactsFromEnv(FACTS_ENV);
 
 const translations = (suffix: string) => [
   { locale: "ro" as const, title: `Termeni ${suffix}`, body: textToBody(`Clubul ${suffix}.`) },
@@ -63,7 +61,7 @@ describe("one text regenerated from its template (§NNN)", () => {
     [organizer] = await db.insert(staffUsers).values({ email: "org@dev.test", displayName: "Org", role: "MODERATOR" }).returning();
   });
 
-  it("makes one draft of that text only, numbered next, with its template and an audit row", async () => {
+  it("makes one draft of that text only, numbered next, with an audit row", async () => {
     // Two versions of the terms already, the second in force.
     const first = await createDraftVersion(db, admin, { key: "TERMS", translations: translations("v1") }, NOW);
     await approveVersion(db, admin, first, NOW);
@@ -80,13 +78,12 @@ describe("one text regenerated from its template (§NNN)", () => {
     expect(draft).toBeDefined();
     expect(draft?.isApproved).toBe(false);
     expect(draft?.createdByStaffUserId).toBe(admin.id);
-    expect(draft?.templateSha256).toBe(templateSha256("TERMS"));
 
     const audit = await db.select().from(auditLogs).where(eq(auditLogs.action, "legal_document.regenerated"));
     expect(audit).toHaveLength(1);
     expect(audit[0].entityId).toBe(draft?.id);
     expect(audit[0].actorStaffUserId).toBe(admin.id);
-    expect(audit[0].metadataJson).toEqual({ documentKey: "TERMS", version: 3, templateSha256: templateSha256("TERMS") });
+    expect(audit[0].metadataJson).toEqual({ documentKey: "TERMS", version: 3 });
   });
 
   it("on an empty database makes version 1 of that one text, and a second press doubles nothing", async () => {
@@ -109,13 +106,6 @@ describe("one text regenerated from its template (§NNN)", () => {
     expect(await codeOf(regenerateFromTemplates(db, organizer, FACTS, ["TERMS"], NOW))).not.toBe("ok");
     expect(await db.select().from(legalDocuments)).toHaveLength(0);
     expect(await db.select().from(auditLogs)).toHaveLength(0);
-  });
-
-  it("records the template on the one-press approval too", async () => {
-    await approvePlatformTemplates(db, admin, FACTS, NOW);
-    const rows = await db.select().from(legalDocuments);
-    expect(rows).toHaveLength(LEGAL_DOCUMENT_KEYS.length);
-    for (const row of rows) expect(row.templateSha256).toBe(templateSha256(row.key));
   });
 
   it("reads each text's state for the cards and «Versiune nouă»: in force, waiting, the next number, «Șablon nou»", async () => {
@@ -144,30 +134,13 @@ describe("one text regenerated from its template (§NNN)", () => {
     expect(approved.PRIVACY_NOTICE.regeneration).toBe("unchanged");
     expect(approved.PRIVACY_NOTICE.templateNewer).toBe(false);
 
-    // The template moved since that version was made from it (its stored fingerprint is older).
-    await db.update(legalDocuments).set({ templateSha256: "0".repeat(64) }).where(eq(legalDocuments.id, draftId));
-    expect((await readLegalOverview(db, FACTS, LATER)).PRIVACY_NOTICE.templateNewer).toBe(true);
+    // The same template with other facts written in (a new seat): the words in force differ, so newer.
+    const moved = clubFactsFromEnv({ ...FACTS_ENV, CLUB_REGISTERED_ADDRESS: "Str. Alta nr. 2, Brașov" });
+    expect((await readLegalOverview(db, moved, LATER)).PRIVACY_NOTICE.templateNewer).toBe(true);
 
-    // A text written from nothing, in force, with no fingerprint: compared by its words, so newer.
+    // A text written from nothing, in force: compared by its words, so newer.
     const own = await createDraftVersion(db, admin, { key: "TERMS", translations: translations("own") }, NOW);
     await approveVersion(db, admin, own, NOW);
     expect((await readLegalOverview(db, FACTS, LATER)).TERMS.templateNewer).toBe(true);
-  });
-
-  it("gives a draft made the long way the template it started from, and never one of another text", async () => {
-    expect(await templateSourceOf(db, "TERMS", { fromTemplate: "TERMS" })).toBe(templateSha256("TERMS"));
-    expect(await templateSourceOf(db, "TERMS", { fromTemplate: "PRIVACY_NOTICE" })).toBeNull();
-    expect(await templateSourceOf(db, "TERMS", {})).toBeNull();
-    expect(await templateSourceOf(db, "TERMS", { fromVersionId: "not-a-uuid" })).toBeNull();
-
-    // «Pornește versiunea următoare din aceasta» carries the fingerprint on.
-    const made = await createDraftVersion(
-      db,
-      admin,
-      { key: "TERMS", translations: translations("t"), templateSha256: templateSha256("TERMS") },
-      NOW,
-    );
-    expect(await templateSourceOf(db, "TERMS", { fromVersionId: made })).toBe(templateSha256("TERMS"));
-    expect(await templateSourceOf(db, "PRIVACY_NOTICE", { fromVersionId: made })).toBeNull();
   });
 });

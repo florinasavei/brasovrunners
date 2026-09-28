@@ -67,20 +67,6 @@ export const legalDocuments = pgTable(
     // modules/legal-documents/domain/content-hash.ts.
     contentSha256: text("content_sha256").notNull(),
 
-    /**
-     * The fingerprint of the platform's template this version started from (§NNN): the
-     * template's own words in both languages, before the club's facts were written in
-     * (`templateSha256` in `templates/catalogue.ts`). Set when a draft is made from a template —
-     * «Regenerează din șablon», «Pornește de la șablon», the one-press approval — and carried to
-     * the next version started from this one; null for a text written from nothing and for
-     * every version made before the column existed.
-     *
-     * It answers one question: has the template changed since the text in force was made from
-     * it? The content hash cannot, because the club fills its facts and may edit the words, so a
-     * text made from today's template seldom hashes like it.
-     */
-    templateSha256: text("template_sha256"),
-
     createdByStaffUserId: uuid("created_by_staff_user_id").references(() => staffUsers.id, {
       onDelete: "set null",
     }),

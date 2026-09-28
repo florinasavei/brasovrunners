@@ -1,6 +1,6 @@
 import { hasLocale } from "next-intl";
 import { getTranslations } from "next-intl/server";
-import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
+import { CLUB_TIME_ZONE, formatDateInWords, formatDay } from "@/i18n/dates";
 import { NextResponse } from "next/server";
 import { getDb } from "@/db/client";
 import { routing } from "@/i18n/routing";
@@ -69,8 +69,9 @@ export async function GET(
       // bib sheet already carry it — never a second copy of the name kept in the catalogue.
       organization: CLUB_NAME,
       version: t("legal.pdf.version", { version: document.version }),
+      // «În vigoare din 28 septembrie 2026»: the whole date, the month in words, no weekday (§534).
       effectiveFrom: t("legal.pdf.effectiveFrom", {
-        date: formatDay(document.effectiveAt, { locale, timeZone: CLUB_TIME_ZONE, style: "long", position: "inline" }),
+        date: formatDateInWords(document.effectiveAt, { locale, timeZone: CLUB_TIME_ZONE }),
       }),
       draftNotice: document.isApproved ? "" : t("legal.pdf.draftNotice"),
       generatedOn: t("legal.pdf.generatedOn", { date: formatDay(now, { locale, timeZone: CLUB_TIME_ZONE, style: "long", position: "inline" }) }),

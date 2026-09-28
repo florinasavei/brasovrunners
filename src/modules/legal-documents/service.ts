@@ -43,9 +43,7 @@ import {
   retireVersionNumber,
 } from "./repository";
 import { templatePrefill } from "./templates/catalogue";
-import { templateSha256 } from "./templates/template-hash";
 import { kindSummary, type LegalKindSummary, templateIsNewer } from "./domain/overview";
-import { isUuid } from "@/shared/ids";
 import { type ClubFacts, remainingPlaceholders } from "./templates/club-facts";
 import { LEGAL_DOCUMENT_KEYS, PLATFORM_APPROVAL_KEYS } from "./domain/keys";
 
@@ -258,33 +256,7 @@ async function assertStillADraft<T extends Record<string, unknown>>(
 export type SaveDraftInput = {
   key: LegalDocumentKey;
   translations: readonly LegalDocumentTranslationInput[];
-  /**
-   * The fingerprint of the platform template the draft started from (`templateSha256`, §NNN), or
-   * absent for a text written from nothing. Never read from a form as a value: the caller names
-   * the template or the version it started from, and `templateSourceOf` answers.
-   */
-  templateSha256?: string | null;
 };
-
-/**
- * Which template fingerprint a draft made the long way inherits (§NNN): `fromTemplate` — the key
- * «Pornește de la șablon» prefilled — when it is the draft's own key, the template's; `fromVersionId`
- * — «Pornește versiunea următoare din aceasta» — that version's own, when it is of the same key.
- * Anything else, a text written from nothing, none. Asked of the server's own catalogue and rows,
- * never taken from the form as a hash.
- */
-export async function templateSourceOf<T extends Record<string, unknown>>(
-  db: Database<T>,
-  key: LegalDocumentKey,
-  started: { fromTemplate?: string; fromVersionId?: string },
-): Promise<string | null> {
-  if (started.fromTemplate === key) return templateSha256(key);
-  if (started.fromVersionId && isUuid(started.fromVersionId)) {
-    const source = await findVersionWithTranslations(db, started.fromVersionId);
-    if (source && source.key === key) return source.templateSha256;
-  }
-  return null;
-}
 
 /**
  * Create the next draft version of one document.
@@ -321,7 +293,6 @@ export async function createDraftVersion<T extends Record<string, unknown>>(
         effectiveAt: now,
         isApproved: false,
         contentSha256: computeContentHash(input.translations),
-        templateSha256: input.templateSha256 ?? null,
         createdByStaffUserId: actor.id,
         approvedByStaffUserId: null,
         createdAt: now,
@@ -894,7 +865,7 @@ export async function approvePlatformTemplates<T extends Record<string, unknown>
         `the club's facts are not all set — ${key} still reads ${blanks.join(", ")}; set CLUB_LEGAL_NAME, CLUB_REGISTRATION_NUMBER, CLUB_REGISTERED_ADDRESS, and a contact address — EMAIL_REPLY_TO or the club's Gmail under «Adresa de contact afișată» on /admin/emails`,
       );
     }
-    const versionId = await createDraftVersion(db, actor, { key, translations, templateSha256: templateSha256(key) }, now);
+    const versionId = await createDraftVersion(db, actor, { key, translations }, now);
     await approveVersion(db, actor, versionId, now);
     result.approved.push(key);
   }
@@ -978,7 +949,7 @@ export async function readLegalOverview<T extends Record<string, unknown>>(
         inForceId,
         regeneration: regenerationOutcome(key, filledHash, rows, inForceId),
         hasPlaceholders: translations.some((translation) => remainingPlaceholders(translation.body).length > 0),
-        templateNewer: templateIsNewer(inForceRow, templateSha256(key), filledHash),
+        templateNewer: templateIsNewer(inForceRow, filledHash),
         nextVersion: await nextVersionNumber(db, key),
       };
       return [key, overview] as const;
@@ -1033,22 +1004,24 @@ export async function regenerateFromTemplates<T extends Record<string, unknown>>
         result.skipped.push(item.key);
         continue;
       }
-      const fingerprint = templateSha256(item.key);
       const draftId = await createDraftVersion(
         tx,
         actor,
-        { key: item.key, translations: templateTranslations(item.key, facts), templateSha256: fingerprint },
+        { key: item.key, translations: templateTranslations(item.key, facts) },
         now,
       );
-      // Who made this draft from which template (§NNN): one row per draft, in the same
-      // transaction, so a press that fails leaves neither a draft nor a row about one.
-      const draft = await findVersionWithTranslations(tx, draftId);
+      // Who made which draft (§NNN): one row per draft, in the same transaction, so a press that
+      // fails leaves neither a draft nor a row about one. Only the number is read back.
+      const [draft] = await tx
+        .select({ version: legalDocuments.version })
+        .from(legalDocuments)
+        .where(eq(legalDocuments.id, draftId));
       await recordAuditEvent(tx, {
         actorStaffUserId: actor.id,
         action: "legal_document.regenerated",
         entityType: "legal_document",
         entityId: draftId,
-        metadata: { documentKey: item.key, version: draft?.version ?? null, templateSha256: fingerprint },
+        metadata: { documentKey: item.key, version: draft?.version ?? null },
         now,
       });
       result.created.push(item.key);

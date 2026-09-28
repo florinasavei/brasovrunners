@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.18-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.19-2026-09-27 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V2.18-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.19-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -146,6 +146,7 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 6. Given an instant, when it is formatted, then it is read in the zone the caller names — the event's own zone for an event date, the club's zone for a platform timestamp — and a calendar day with no time is read as the day it names whatever the reader's or the server's zone (2026-09-23, `DECISIONS.md` §349).
 7. Given a bilingual email, when it is rendered, then every date in each half (the event's start, the hold deadline, the signing time) is written in that half's language, and the signed declaration writes its dates in the declaration's language (2026-09-23, `DECISIONS.md` §349).
 8. Criterion 5: given a date with its weekday inside a Romanian sentence, then no preposition precedes it (no 'pe', and 'până' without 'la'), and its time reads ', la HH:MM' / ', at HH:MM'; a date that starts a label, cell or heading keeps the bare ', HH:MM'; 'până la' remains only before a calendar day with no hour (a series' last date, a range's end).
+9. Every legal text's version line reads «Versiunea N, în vigoare din 28 septembrie 2026» / "Version N, in force since 28 September 2026": the whole date on the club's clock, the month in words, no weekday. This covers the terms, the privacy notice, both signing pages and every declaration PDF's title line and footer (`formatDateInWords`, 2026-09-28, `DECISIONS.md` §534).
 
 **Verification:** unit `i18n/formats.test.ts`; integration `notifications/locale.test.ts`
 
@@ -687,6 +688,7 @@ coffee is run on nothing.
 14. The end-to-end suite runs the registration form against a server with the anti-bot check on, using Cloudflare's published test keys (never the club's). It proves that a held press is sent by the check's answer rather than by the eight-second valve (§506).
 15. `/api/health` reports under `turnstile.lastDay` whether, in the last 24 hours, held presses were sent by the valve and widgets failed or never loaded — each as a level `none` / `some` (1–4) / `many` (5+), never a count, `null` when unread, with no effect on `status`; the signals travel with the registration form and are counted only after the registration went through, with no endpoint of their own (2026-09-27, `DECISIONS.md` §518).
 16. Criterion 3 is extended (§519). Given the same public form sent for an address with no registration, with registrations, or at the club's limit, when the responses are compared, then the redirect and the sitting cookie's shape are identical. The screen after the form lists, prefills and warns only from this browser's own forms. Only the outbox differs.
+17. Given a first form for a new address, an address already registered, or one at the club's limit, when the sealed family cookie is written, then it has the same length whatever the address holds, the stored leaving instant included (2026-09-27, `DECISIONS.md` §536).
 
 **Verification:** e2e `registration-submit.spec.ts`, `registration-form.spec.ts` (5); integration `participants/identity.test.ts`; unit `registrations/turnstile.test.ts`
 
@@ -919,6 +921,7 @@ registration — and it lists registrations and never changes an address.
 4. The participant is still the canonical email address. On an address that already holds a registration at an event, a second runner can be registered under the same participant. Each registration is told apart by the runner's name folded with `foldName`, stored as `registrations.name_key`, and unique per (event, participant, name_key) (2026-09-25, `DECISIONS.md` §389).
 5. The newsletter offers no discount-codes topic: the pop-up, the subscriber's own page, the composer and the privacy notice's {{newsletterTopics}} leave out every topic in RETIRED_TOPICS, and a posted retired topic is dropped, or refused when it is the only choice (§517).
 6. While a family sitting is live, the confirmation screen's facts outlive the automatic «Gata»: their cookie lives as long as the sitting's (window plus grace) and is refreshed on every continuing press; outside a sitting it lives ten minutes (2026-09-27, `DECISIONS.md` §519).
+7. Criterion 6 is amended (§536). While a family sitting is live, the confirmation screen's facts live as long as the sitting's cookie (window plus grace), so the one question stays on the screen with them; they are refreshed on every «Da». Outside a sitting they live ten minutes. The automatic «Gata» no longer exists.
 
 **Verification:** unit `participants/canonicalize.test.ts`
 
@@ -971,6 +974,12 @@ registration — and it lists registrations and never changes an address.
 21. Given people confirmed by the family's one button who sign their declarations, when the signatures are recorded, then exactly one REGISTRATION_CONFIRMED message is queued for the family, «Confirmat: N persoane la …». It carries each confirmed person's name, race number (provisional and labelled so, or «încă fără număr»), desk code and QR code, with «Toate înscrierile mele» as its button and every signed PDF attached, and no per-person confirmation is queued. It leaves once nobody is left to sign, or the wizard's half hour after the last signature. The club's copy is one message with names and numbers and no code or QR (2026-09-27, `DECISIONS.md` §519).
 22. Given the family confirmation already sent, when another person of that family signs, then that person receives their own confirmation as before (2026-09-27, `DECISIONS.md` §519).
 23. Given a family's declarations in the wizard, when «Declarațiile de pe această adresă» or its closing step shows a confirmed person, then the person's race number appears beside the desk code, from the same helper the confirmation email uses (2026-09-27, `DECISIONS.md` §519).
+24. Given the public form sent once from a browser with no «Da» pressed, when it is saved, then its email is due on the club's ordinary timing, no sitting row is written, and a second plain form from that browser is a first form again: nothing is held or merged (2026-09-27, `DECISIONS.md` §536).
+25. Given the screen after a first form, when it renders, then it shows the plain heading, «Formularul pentru {name} a ajuns.», one line saying when the email leaves, «Mai înscrii pe cineva cu aceeași adresă?» with the single button «Da, încă o persoană», and at most one sentence under it; no steps, no wait box and no «Gata», in both languages (2026-09-27, `DECISIONS.md` §536).
+26. Given the screen after a first form, when it says when the email leaves, then it reads the instant stored in the browser's sealed half when the form was sent, never one computed at render: «pleacă la HH:MM» today, «pleacă marți, 29 septembrie, la HH:MM» on another day (EN «leaves on …»), «pleacă acum» when the request sent it, and «a plecat» once the stored pass has come (2026-09-27, `DECISIONS.md` §536).
+27. Given the sentence under «Da» on the screen after a first form, when the stored pass is still ahead, then it promises the hold with its deadline («Dacă apeși „Da” până la {at}, …»); once the pass has come or under «imediat», it says the next email covers everybody; at a window of 0 it says each person gets their own email (2026-09-27, `DECISIONS.md` §536).
+28. Given «Da, încă o persoană» pressed after a first form, when the first form's registration is still waiting for its address and its email has not left, then a sitting is opened with it and that email is held until the club's window; a verification email is marked `sittingHeld`, a kept form's message `familyHeld` (2026-09-27, `DECISIONS.md` §536).
+29. Given «Da» pressed after the first person confirmed their address from the email that left before it, when the press is handled, then no sitting is opened from that seed, and the names the browser lists afterwards leave that person out (2026-09-27, `DECISIONS.md` §536).
 
 **Verification:** integration `registrations/uniqueness.test.ts`
 
@@ -1223,6 +1232,7 @@ registration — and it lists registrations and never changes an address.
 6. A registration cancelled from the participant's own manage link, or from "my registrations", lands on a page that also says so in a toast ("Gata: înscrierea ta e anulată." / "Done: your registration is cancelled."), shown once. A refused link or an event that has already started shows no toast.
 7. Every unsent row in the /admin/emails queue says when it leaves: the estimated next round; late, past the health check's overdue threshold; held until a family sitting ends, read from the email's sittingHeld / familyHeld flag; being sent now; or never, once every attempt is spent (2026-09-27, `DECISIONS.md` §529).
 8. «Trimite acum» asks first, names the emails due now, and counts those that stay held by reason (family, retry, the newsletter's reserve) as plain numbers. A late row tells only the Administrator to press it; other readers are told to tell the administrator (2026-09-27, `DECISIONS.md` §529).
+9. Given the /admin/emails queue, when it counts the rows held for later, then a row flagged `sittingHeld` or `familyHeld` counts only as the family's hold and an unflagged row with a future turn counts only as a retry (2026-09-27, `DECISIONS.md` §536).
 
 **Verification:** integration `registrations/unregister.test.ts`; e2e `unregister.spec.ts`
 
@@ -2009,6 +2019,8 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 43. The signed PDF of a group-run declaration says what its blanks said at the signing. Moving or renaming a date later changes nothing in it.
 44. A group-run declaration's text states the series (name, rhythm, usual place) for a run that repeats, and the run, its date and its place for a one-off run.
 45. From the signer's own emailed link, the run's page says «Ai semnat deja…» with the version and the day, and shows no button, while that version is in force. After a newer version it asks for a signature again. Without the link the page says nothing about anybody.
+46. The privacy notice says an older version's group-run signature is kept as evidence until the signer asks for its erasure, and promises no deletion the platform does not perform, in RO and EN (2026-09-28, `DECISIONS.md` §523).
+47. The club's archive email for a group-run declaration states one retention rule: kept while the declaration is active, at most three years after a withdrawal, then deleted (2026-09-28, `DECISIONS.md` §523).
 
 **Verification:** integration `legal/versions.test.ts`; unit `legal/inline.test.ts`; e2e `legal-pages.spec.ts`
 
@@ -2060,6 +2072,7 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 32. «Regenerează din șabloane» makes one draft per legal text whose platform template, with the club's facts, says something no approved version still offered says, never over a waiting draft, in one transaction, and puts nothing in force (2026-09-27, `DECISIONS.md` §532).
 33. «Aprobă ciornele» approves, in one transaction, exactly the drafts its dialog named, each by the one-version approval; a draft that is superseded, behind an approved version or still carries a club-fact placeholder is held with its reason, and a named draft that is no longer ready — checked before and again inside the transaction — refuses the whole press with nothing approved (2026-09-27, `DECISIONS.md` §532).
 34. The ticked versions are deleted in one press, all or none: drafts as one draft's delete, approved versions with one reason, `DELETE <n>` and an audit row each, the version that stops the press named (2026-09-27, `DECISIONS.md` §532).
+35. The platform's group-run self-declaration templates (asphalt and trail, Romanian and English) are valid for the whole series and signed once. They apply from the date of signing and stay valid until withdrawn or replaced by a new version, and never say «fără termen de încetare» / "with no end date". The health statement is the runner's own assessment («din câte cunosc» / "to the best of my knowledge"), followed at once by a bullet saying the organiser does not and cannot assess participants medically. No text asks about a diagnosis, a treatment or a medical history. They say once, in the opening, that the run is a group run and not a (mountain) guiding service with individual supervision. The signature names «momentul semnării» / "the moment of signing" and never a time stamp. Retention is stated by purpose, never as three years from the signing, in the templates and in the privacy notice's sections 3 and 7 (2026-09-27, `DECISIONS.md` §534).
 
 **Verification:** integration `legal/editor.test.ts`, `legal/deletion.test.ts`, `legal/withdrawal.test.ts`
 
@@ -2610,6 +2623,9 @@ When nothing needs changing, the page says "nothing to change" and no audit row 
 14. A batch's landing commit is the one documented commit made without the pre-commit hook; it runs `yarn docs:check` first and CI runs the full `yarn check` on its pull request (2026-09-27, `DECISIONS.md` §504).
 15. The docs-check workflow always runs, skips `yarn check` and the e2e shards only by a job condition when the exact tree was recorded as passing by this workflow on this repository within the last 24 hours, and runs everything when the record is missing, older, or the lookup fails (2026-09-27, `DECISIONS.md` §508).
 16. A batch's landing commit is the one documented commit made without the pre-commit hook; it runs `yarn docs:check` first and CI runs the full `yarn check` on its pull request (2026-09-27, `DECISIONS.md` §508).
+17. Given a branch's `.release/*.json` entries, when `yarn docs:check` runs, then an entry missing a required field, named for another branch, duplicated, or citing a requirement SPECS.md does not define fails the check; and when `yarn docs:land --tree` runs, it lands them with the next baseline (or a typed `--to` only when it comes after the current one), the batch line and the Released row, deletes them, and stops before writing anything on `docsNotes`, a requirement SPECS.md lacks, or a placeholder line no branch wrote. Verification: unit `scripts/land-tree.test.ts`, `scripts/release-from-branch.test.ts` (2026-09-27, `DECISIONS.md` §535).
+18. Given `yarn batch:merge`, when two branches collide in the migrations' journal, the message catalogues or a test file, then it resolves them by rule — one import per module carrying both sides' specifiers — runs `yarn install --immutable` when the merges changed `package.json` or `yarn.lock`, before the probe and the checks, and stops (exit 2) on any other conflict, on two branches with the same migration number, on a journal that moves a migration production or QA applied, or when `yarn migrations:check` or `yarn typecheck` fails on the merged tree. Verification: unit `scripts/merge-resolve.test.ts`, `scripts/release-from-branch.test.ts` (2026-09-27, `DECISIONS.md` §535).
+19. Given `.github/workflows/release.yml`, when a pull request into `qa` is labelled `ship` or the workflow is run by hand, then only a person with write access on a branch of this repository starts it, one release runs at a time with the concurrency group on the job, `qa` is merged in with `qa`'s own copy of the merge tool (a `qa` without it stops with a plain sentence), a dry run pushes and ships nothing and shows the landing's diff, every step's outcome and ship's timing are written to the run's summary, and ship is given production's baseline as the previous one. Verification: unit `scripts/release-workflow.test.ts` (2026-09-27, `DECISIONS.md` §535).
 
 **Verification:** repository settings audit; CI configuration; `.githooks/pre-commit` and `.github/workflows/docs-check.yml` compared
 

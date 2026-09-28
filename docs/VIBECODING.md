@@ -1,8 +1,8 @@
 # Vibecoding this repo — the one page to read before asking an AI to change anything
 
-<!-- PROJECT_BASELINE: BR-V2.18-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.19-2026-09-27 -->
 
-**Baseline `BR-V2.18-2026-09-27`**
+**Baseline `BR-V2.19-2026-09-27`**
 
 The owner's word for how this platform is built: an AI agent writes, the owner reads and
 merges. This page is the short version of everything an agent trips over. `CLAUDE.md` is the
@@ -35,6 +35,13 @@ over, drop the database (`su postgres -c "dropdb brasov_runners"`) and run
 has 16. There is no `gh` either: open the pull request through the GitHub tools. Never write a
 QA or production value anywhere; the session is local-only by design.
 [`DEVELOPMENT.md` § Coding from the phone](./DEVELOPMENT.md#coding-from-the-phone-claude-code-on-the-web).
+
+**To release from there**, the branch carries its own release facts: in place of editing
+`DECISIONS.md`, `CHANGELOG.md` and `SPECS.md`, commit one `.release/<branch-slug>.json` (the §
+text, the bullet, the criteria; `.release/README.md` has the shape) and write the README row,
+SETUP or docs text the change needs yourself. The owner then adds the label **ship** to the pull
+request and `.github/workflows/release.yml` lands and ships it
+([`RUNBOOKS.md` § Release from the phone](./RUNBOOKS.md#release-from-the-phone)).
 
 ## Where things live
 

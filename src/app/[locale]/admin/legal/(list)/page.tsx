@@ -7,7 +7,7 @@ import Typography from "@mui/material/Typography";
 import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { CLUB_TIME_ZONE, formatDay, formatDayRange } from "@/i18n/dates";
+import { CLUB_TIME_ZONE, formatDateInWords, formatDay, formatDayRange } from "@/i18n/dates";
 import { countForm } from "@/i18n/count-form";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
@@ -365,7 +365,8 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
       key: "effectiveAt",
       label: t("legal.effectiveAt"),
       hideBelow: "lg",
-      render: (version) => formatDay(version.effectiveAt, { locale, timeZone: CLUB_TIME_ZONE, style: "short" }),
+      // The version line's date, as the public pages say it: no weekday, the month in words (§534).
+      render: (version) => formatDateInWords(version.effectiveAt, { locale, timeZone: CLUB_TIME_ZONE }),
     },
   ];
 
@@ -553,7 +554,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
         line.key === "inForce"
           ? t("legal.kinds.inForce", {
               version: line.version,
-              date: formatDay(line.effectiveAt, { locale, timeZone: CLUB_TIME_ZONE, style: "short", position: "inline" }),
+              date: formatDateInWords(line.effectiveAt, { locale, timeZone: CLUB_TIME_ZONE }),
             })
           : line.key === "draftWaiting"
             ? t("legal.kinds.draftWaiting", { version: line.version })

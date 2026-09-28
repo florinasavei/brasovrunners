@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V2.18-2026-09-27`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V2.19-2026-09-27`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -12,6 +12,7 @@
 | [Domain binding](#domain-binding) | Once, at the end of M1 before launch |
 | [Legal document version](#legal-document-version) | Whenever an approved privacy, terms, or declaration version changes |
 | [Deploy a release](#deploy-a-release) | Every merge to `qa`, and every promotion to `main` |
+| [Release from the phone](#release-from-the-phone) | A release with the PC off — the owner on holiday, GitHub's app in hand |
 
 
 ---
@@ -554,6 +555,88 @@ It prints what it will do before it does it. `production` additionally requires 
 - A deployment finished without a smoke check. "The build went green" is not "the site works".
 - `yarn db:seed` against a deployed database: it deletes every event and translation before
   re-seeding. Use `yarn db:seed:legal` for the sample legal documents alone.
+
+
+---
+
+## Release from the phone
+
+(«Release de pe telefon».) The PC is off; a change was made in a Claude Code on the web session
+or by a cloud agent, and its pull request into `qa` is open. `.github/workflows/release.yml`
+lands it and ships it to production, the same steps `docs/DISPATCHER.md` § Land a batch and
+§ Ship do on the PC (`DECISIONS.md` §535). Set up once: `SETUP.md` § 41 — the `SHIP_TOKEN`
+secret, the `SHIP_PRODUCTION_URL` variable, the `ship` label, and one dry run.
+
+### Before the press: the pull request carries its release entry
+
+The branch must hold one `.release/<branch-slug>.json` (`.release/README.md`: the § title and
+text, the CHANGELOG bullet, the SPECS criteria) and write its own README, SETUP or docs text —
+the phone's release refuses an entry that leaves `docsNotes` for a person. The pull request's
+`docs-check` run already checks the entry: a red `docs-check` names what is wrong in it. A branch
+with no entry is refused ("Nothing to release"); a branch already landed by hand (its CLAUDE.md
+carries a newer baseline than `qa`'s) ships as it is.
+
+### The first time: a dry run
+
+1. GitHub app → the repository → **Actions** → **release** → **Run workflow**.
+2. **pr**: the pull request's number. **baseline**: leave empty (the next `BR-V2.NN` after
+   `qa`'s) or type one, like `BR-V2.18`. Tick **dry_run**. → **Run workflow**.
+3. Open the run → **Summary**: the steps, the landing commit, the files it would change and the
+   documents' diff. Nothing was pushed or shipped.
+
+### Every release: the label
+
+1. GitHub app → the pull request → **Labels** → tick **ship**.
+2. The run starts (**Actions** → **release**). It merges `qa` in, lands the entry as one commit
+   pushed to the branch, then runs `yarn ship`: the pull request's checks on the landed tree, the
+   merge into `qa`, `qa`'s run, the `qa → main` release PR, the production migration approved,
+   and production's `/api/health` reporting the new baseline. About an hour.
+3. It ends with a comment on the pull request: "Released BR-V2.NN…" or "The release stopped".
+   The run's **Summary** page says, in a table, each step's outcome and ship's minutes.
+
+If the pull request shows **«This branch has conflicts»**, the label starts nothing — GitHub runs
+no `pull_request` workflow while a branch cannot merge into its base, and no run, no summary and
+no comment appear. Use **Actions** → **release** → **Run workflow** → the PR's number instead
+(dry run off): a run by hand starts regardless, and its first step merges `qa` in by rule.
+
+One release runs at a time, and one more can wait for it; a newer request replaces the one
+waiting (GitHub keeps one pending run, the newest) — so release one pull request, then label the
+next. A running release is never cancelled by a new request. Only a person with write access can
+start one; anyone else's label stops at the first step.
+
+### When it stops
+
+The run's **Summary** says where, in words:
+
+- **Nothing happened at all** after ticking **ship** — no run under **Actions**, no comment: the
+  pull request has a merge conflict with `qa` («This branch has conflicts»). Run **release** by
+  hand with its number; the merge step resolves the journal, the catalogues and the tests by rule
+  and names anything else.
+- **A batch's `yarn batch:merge` stopped on README.md, SETUP.md or CLAUDE.md**: two branches
+  wrote the same lines of documentation — each branch writes its own index row, section or command
+  line, and no rule merges prose, so the stop is by design (`docs/DISPATCHER.md` § Cloud loop).
+  A Claude Code on the web session: "resolve the conflict in <file>, keep both sides' lines,
+  commit, and run yarn batch:merge again"; then push and tick **ship**.
+- **"qa has no scripts/merge-branches.mjs yet"**: the release tooling is not in `qa` yet — this
+  one release goes from the PC (`docs/DISPATCHER.md` § Ship).
+- **"Set once in … Secrets and variables"** or **"GitHub refused to say what … may do"**: the
+  token or the variable is missing or expired — `SETUP.md` § 41.
+- **"Bringing the branch up to date with qa stopped"**: a merge conflict no rule resolves (the
+  files are named), two branches that took the same migration number, a migration production or
+  QA already applied that the merge would move, or a typecheck that fails after the merge. Fix it
+  on the branch — a Claude Code on the web session: "merge origin/qa into this branch and fix" —
+  then tick **ship** again (the label came off at the stop).
+- **"The landing stopped"**: the entry is incomplete, leaves `docsNotes`, names a requirement
+  SPECS.md does not have, or a decision placeholder no branch wrote. Fix the entry on the branch
+  and tick **ship** again.
+- **"docs:check refused the landed tree"**: usually a new file without its README row — add it
+  on the branch.
+- A stop inside **Ship** (a red check, a migration that failed): the table's last line names the
+  step. If the pull request already merged into `qa`, running **release** again with its number
+  continues from there — a merged pull request ships `qa` as it is.
+
+Never push to `qa` or `main` by hand from the phone: the release PR and the production migration
+are the run's to open, merge and approve.
 
 
 ---

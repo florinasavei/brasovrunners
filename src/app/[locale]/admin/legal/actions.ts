@@ -22,7 +22,6 @@ import {
   deleteDraftVersion,
   deleteVersionsInBatch,
   regenerateFromTemplates,
-  templateSourceOf,
   updateDraftVersion,
   withdrawApprovedVersion,
 } from "@/modules/legal-documents/service";
@@ -89,14 +88,7 @@ export async function createLegalVersionAction(_previous: FormOutcome | null, fo
   let created: string;
   try {
     const actor = await requireStaffCapability(canWriteLegalTexts);
-    const db = getDb();
-    // Which template the draft started from, asked of the server's own catalogue and rows (§NNN):
-    // the form names the template or the version it was prefilled from, never a fingerprint.
-    const templateSha256 = await templateSourceOf(db, key, {
-      fromTemplate: text(form, "fromTemplate"),
-      fromVersionId: text(form, "fromVersionId"),
-    });
-    created = await createDraftVersion(db, actor, { key, translations: translationsFrom(form), templateSha256 }, new Date());
+    created = await createDraftVersion(getDb(), actor, { key, translations: translationsFrom(form) }, new Date());
   } catch (error) {
     return refused(error, form);
   }

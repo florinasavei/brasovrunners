@@ -32,7 +32,6 @@ export type OverviewVersion = {
   effectiveAt: Date;
   withdrawnAt: Date | null;
   contentSha256: string;
-  templateSha256: string | null;
 };
 
 /**
@@ -107,7 +106,10 @@ export function matchesLegalFilter(
   filter: LegalListFilter,
 ): boolean {
   if (filter.kind !== null && row.key !== filter.kind) return false;
-  return filter.state === "all" || STATE_OF_FILTER[filter.state] === state;
+  // «Toate» is every version still offered or waiting — never a withdrawn one. The point of
+  // withdrawing is to get a version out of the way, so «Retrase» is the one place it shows.
+  if (filter.state === "all") return state !== "withdrawn";
+  return STATE_OF_FILTER[filter.state] === state;
 }
 
 /** The rows the filter keeps, in the order they came (the repository's: per key, newest first). */
@@ -193,18 +195,15 @@ export function kindFoldOpens(summary: LegalKindSummary, filter: LegalListFilter
  * «Șablon nou» chip on «Versiune nouă» (§NNN, the owner, 2026-09-28).
  *
  * - With nothing in force, no: the state line already says «Nicio versiune în vigoare».
- * - A version that recorded its template (`template_sha256`, set when a draft is made from a
- *   template since this change) is compared by that fingerprint, whatever the club typed in it.
- * - A version from before, or written from nothing, has none: it is compared by its words with
- *   the template's, the club's facts written in — §532's `unchanged` test. A text the club edited
- *   reads as older than its template until a draft from the template is approved.
+ * - Otherwise the text in force is compared by its words with the template's, the club's facts
+ *   written in — the same test §532's `regenerationOutcome` calls `unchanged`. A text the club
+ *   edited after starting from a template reads as older than it until a draft from the template
+ *   is approved; no fingerprint of the template is stored, so no migration is needed for it.
  */
 export function templateIsNewer(
-  inForce: Pick<OverviewVersion, "contentSha256" | "templateSha256"> | undefined,
-  currentTemplateSha256: string,
+  inForce: Pick<OverviewVersion, "contentSha256"> | undefined,
   filledTemplateContentSha256: string,
 ): boolean {
   if (!inForce) return false;
-  if (inForce.templateSha256 !== null) return inForce.templateSha256 !== currentTemplateSha256;
   return inForce.contentSha256 !== filledTemplateContentSha256;
 }

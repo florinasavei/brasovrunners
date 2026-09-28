@@ -397,8 +397,8 @@
     "groupRunDeclaration": {
       "heading": "Declarație pe propria răspundere",
       "button": "Semnează declarația",
-      "line": "Semnează declarația pe propria răspundere: o primești pe email. La o alergare care se repetă o semnezi o singură dată, pentru toată seria {event}; clubul o păstrează cât timp vii la alergări și o șterge când îi ceri.",
-      "lineOneDate": "Semnează declarația pe propria răspundere pentru această alergare: o primești pe email; clubul o păstrează cât timp vii la alergări și o șterge când îi ceri.",
+      "line": "Semnează declarația pe propria răspundere: o primești pe email. La o alergare care se repetă o semnezi o singură dată, pentru toată seria {event}; clubul o păstrează cât timp este necesară pentru alergările la care se aplică și nu o mai folosește dacă ceri retragerea ei.",
+      "lineOneDate": "Semnează declarația pe propria răspundere pentru această alergare: o primești pe email; clubul o păstrează cât timp este necesară pentru alergările la care se aplică și nu o mai folosește dacă ceri retragerea ei.",
       "signedSeries": "Ai semnat deja declarația pentru aceste alergări (v. {version}, semnată {when}). Este valabilă pentru toate alergările seriei: nu o mai semnezi.",
       "signedOne": "Ai semnat deja declarația pentru această alergare (v. {version}, semnată {when}).",
       "signedOlder": "Ai semnat versiunea {version} a declarației ({when}). Între timp, organizatorul a aprobat o versiune nouă: citește-o și semneaz-o din nou.",
@@ -2065,7 +2065,6 @@
       "legalVersionWithdrawn": "Versiunea a fost retrasă. Rămâne în evidență, cu numărul ei, dar nu mai este oferită nicăieri.",
       "startFrom": {
         "title": "Pornește de la șablon",
-        "intro": "Alege documentul și primești textul complet, cu datele clubului deja scrise. Îl citești, îl schimbi cât vrei, apoi îl aprobi.",
         "orBlank": "Sau scrie de la zero în formularul de mai jos.",
         "help": "1. Alege șablonul (sau Regenerează toate) · 2. Citește și completează · 3. Aprobă — abia atunci intră în vigoare.",
         "regenerateAll": "Regenerează toate ({count})"
@@ -2195,7 +2194,7 @@
         "draftWaiting": "O ciornă așteaptă aprobarea: versiunea {version}",
         "draftPending": "Ciornă în așteptare: versiunea {version}",
         "templateNew": "Șablon nou",
-        "templateNewHint": "Șablonul s-a schimbat după ce a fost făcut textul în vigoare. Regenerează, citește și aprobă.",
+        "templateNewHint": "Textul în vigoare nu are cuvintele șablonului de acum. Regenerează, citește și aprobă.",
         "versions": "Versiunile",
         "versionsCount": {
           "one": "{count} versiune",
@@ -2249,7 +2248,7 @@
         "clear": "Arată toate versiunile"
       },
       "steps": {
-        "title": "1. Regenerează (ciornă din șablon) · 2. Citește și completează cele patru fapte · 3. Aprobă — abia atunci intră în vigoare",
+        "title": "1. Regenerează (ciornă din șablon) · 2. Citește ciorna și completează ce a rămas de forma '<'…> · 3. Aprobă — abia atunci intră în vigoare",
         "body": "Textul în vigoare rămâne pe site până aprobi ciorna. Cele patru fapte sunt denumirea clubului, CIF-ul, sediul și adresa de contact."
       },
       "tableCaptionOf": "Versiunile textului {kind}, cu starea și ce depinde de fiecare"
@@ -2552,11 +2551,12 @@
             "Dacă o listă trebuie păstrată, taie întâi coloana cu actul de identitate.",
             "Pe declarațiile semnate pe hârtie, taie sau acoperă rândul cu seria și numărul actului de identitate. Hârtia rămâne trei ani, apoi se distruge și ea.",
             "Distruge foaia de urgență și orice altă listă tipărită pentru ziua cursei (tocător sau rupte mărunt).",
-            "În Gmail-ul clubului, declarațiile mai vechi de trei ani: subject:(\"Declarație semnată\" OR \"Signed declaration\") older_than:3y.",
-            "Mesajele de pe formularul de contact mai vechi de 12 luni: subject:\"Mesaj de pe site\" older_than:1y.",
-            "Selectează-le pe toate și șterge-le.",
-            "Tot acolo, confirmările și copiile pentru club mai vechi de trei ani: subject:(\"Înscriere confirmată\" OR \"Registration confirmed\" OR \"Copie club\" OR \"Club copy\") older_than:3y.",
-            "Selectează-le pe toate și șterge-le. Căutarea are ambele limbi, ca să prindă subiectul în oricare dintre ele."
+            "În Gmail-ul clubului, șterge copiile declarațiilor de concurs mai vechi de trei ani. Unde subiectul vine în oricare limbă, căutarea le are pe amândouă, ca să-l prindă.",
+            "Caută subject:(\"Declarație semnată\" OR \"Signed declaration\") -subject:(\"Declarație semnată (alergare de grup)\" OR \"Signed declaration (group run)\") older_than:3y, apoi șterge tot ce găsește.",
+            "Copiile de la alergările de grup nu se șterg după vechime: rămân cât timp declarația e activă, cum spune e-mailul fiecăreia. Căutarea de mai sus le lasă deoparte.",
+            "Șterge mesajele de pe formularul de contact mai vechi de 12 luni: caută subject:\"Mesaj de pe site\" older_than:1y, apoi șterge tot ce găsește.",
+            "Tot acolo, șterge confirmările trimise clubului și copiile pentru club ale e-mailurilor către participanți, mai vechi de trei ani.",
+            "Caută subject:(\"Înscriere confirmată\" OR \"Registration confirmed\" OR \"Copie club\" OR \"Club copy\") older_than:3y, apoi șterge tot ce găsește."
           ]
         },
         "botCheck": {
@@ -2723,7 +2723,7 @@
           "how": [
             "/admin/legal → cardul „Declarație pe propria răspundere (alergare de grup, asfalt)” → „Regenerează din șablon”. Apoi ciorna: citește, completează, „Aprobă și publică”.",
             "La fel pentru „Declarație pe propria răspundere (alergare de grup, trail)”.",
-            "Aprobă și o versiune nouă a notei de confidențialitate din șablon: ea spune că declarația unei serii se păstrează cât timp alergătorul vine la alergări.",
+            "Aprobă și o versiune nouă a notei de confidențialitate din șablon: ea spune că declarația unei serii se păstrează cât timp este activă, iar după retragere cel mult trei ani.",
             "Cine a semnat versiunea veche vede pe pagina alergării, din linkul din emailul lui, că i se cere versiunea nouă; semnătura veche rămâne în listă."
           ]
         }
@@ -4117,7 +4117,7 @@
           "raceWeekDays": "0 = doar în ziua cursei. Din aceeași zi, cardul de tipărire a numerelor din editor se deschide singur.",
           "seriesHorizonDays": "Datele deja create rămân dacă micșorezi numărul; se completează singure dacă îl mărești.",
           "publicListDays": "Apoi lista se închide singură, chiar dacă evenimentul o are încă pornită. Nota de confidențialitate din șablon spune acest număr.",
-          "familySittingMinutes": "Emailul pentru o familie pleacă o dată pentru toți: la „Gata”, sau singur după atâtea minute de la ultimul formular. 0 = fiecare email pleacă imediat."
+          "familySittingMinutes": "După „Da, încă o persoană”, emailul familiei așteaptă „Gata” cel mult atâtea minute de la ultimul formular și pleacă o singură dată, pentru toți; la 0, fiecare email pleacă imediat."
         },
         "legal": "Textele legale aprobate deja păstrează numerele scrise în ele până aprobi o versiune nouă din șablon, care le citește de aici.",
         "updatedAt": "Setat {when}.",
@@ -5194,7 +5194,7 @@
     "groupRunDeclarations": {
       "title": "Declarații semnate (alergare de grup)",
       "count": "Semnate: {count}",
-      "help": "Cine a semnat declarația opțională și când. Clubul păstrează o declarație cât timp semnatarul vine la alergări și o șterge când îi cere: atunci o ștergi aici, cu motivul.",
+      "help": "Cine a semnat declarația opțională și când. Clubul o păstrează cât e necesară; când semnatarul cere retragerea ei, o ștergi aici, cu motivul.",
       "helpMore": "O semnătură marcată «serie» acoperă toate datele alergării; o versiune nouă se semnează din nou, iar cea veche rămâne. Nu se cere act de identitate; adresa semnatarului e în PDF.",
       "none": "Nicio declarație semnată încă.",
       "signedAt": "semnată {when} (v{version})",
@@ -5519,6 +5519,12 @@
       "heading": "Aproape gata!",
       "headingNamed": "Aproape gata, {name}!",
       "lead": "Ți-am trimis un email ca să-ți confirmi locul la {event}, {date}.",
+      "leavesNow": "Emailul către {email} pleacă acum.",
+      "leavesToday": "Emailul către {email} pleacă la {at}.",
+      "leavesOn": "Emailul către {email} pleacă {at}.",
+      "leftAlready": "Emailul către {email} a plecat.",
+      "formIn": "Formularul pentru {name} a ajuns.",
+      "formInUnnamed": "Formularul a ajuns.",
       "nextTitle": "Ce urmează",
       "next": {
         "open": {
@@ -5797,6 +5803,10 @@
       "question": "Mai înscrii pe cineva cu aceeași adresă?",
       "add": "Da, încă o persoană",
       "addPending": "Se deschide formularul…",
+      "addHint": "Dacă apeși „Da” până la {at}, emailul așteaptă formularul următor, cel mult {window}, și primiți unul singur pentru toți.",
+      "addHintOn": "Dacă apeși „Da” până {at}, emailul așteaptă formularul următor, cel mult {window}, și primiți unul singur pentru toți.",
+      "addHintLeft": "Dacă apeși „Da”, următorul email așteaptă cel mult {window} după ultimul formular și îi cuprinde pe toți.",
+      "addHintAtOnce": "Fiecare persoană primește emailul ei.",
       "done": "Nu, gata — trimite-mi emailul",
       "doneAtOnce": "Nu, am terminat",
       "donePending": "Se trimite…",

@@ -80,8 +80,13 @@ export async function readOutboxQueue<T extends Record<string, unknown>>(
   limit: number = OUTBOX_QUEUE_LIMIT,
   now: Date = new Date(),
 ): Promise<OutboxQueue> {
-  // The family hold is the payload's own flag (§519): a row Gmail's pace threw back is a retry, not a family.
-  const familyFlag = sql`(${emailOutbox.payloadJson} ->> 'sittingHeld') = 'true' or (${emailOutbox.payloadJson} ->> 'familyHeld') = 'true'`;
+  /*
+    The family hold is the payload's own flag (§519): a row Gmail's pace threw back is a retry, not a family.
+    One parenthesised boolean, never null (the review of 2026-09-28, round two): bare, its «or» bound
+    looser than the «and» it is put inside, so a flagged row counted as a retry too, and a row with
+    neither key made `not(…)` null, so a real retry counted nowhere.
+  */
+  const familyFlag = sql`coalesce((${emailOutbox.payloadJson} ->> 'sittingHeld') = 'true' or (${emailOutbox.payloadJson} ->> 'familyHeld') = 'true', false)`;
   const rows = await db
     .select({
       id: emailOutbox.id,

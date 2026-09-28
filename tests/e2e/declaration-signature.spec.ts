@@ -91,8 +91,8 @@ test.describe("BR-REQ-033-02 §314 the signature is the registered name", () => 
     const registration = await awaitingDeclaration(page, "js");
     await page.goto(registration.link);
     await hydrated(page);
-    // The text's version and the weekday it took effect, over it, as the PDF says it (§499).
-    await expect(page.getByTestId("declaration-version")).toHaveText(/^Versiunea \d+, în vigoare din \p{L}+, \d{1,2} .+ \d{4}$/u);
+    // The text's version and the whole date it took effect, the month in words, no weekday (§534), over it, as the PDF says it (§499).
+    await expect(page.getByTestId("declaration-version")).toHaveText(/^Versiunea \d+, în vigoare din \d{1,2} \p{L}+ \d{4}$/u);
 
     // The hint names the registered name, in bold.
     const hint = page.locator("#typedName-helper-text");

@@ -31,6 +31,7 @@
     "db:reset:local": "node --env-file-if-exists=.env.local scripts/db-reset-local.mjs",
     "docs:check": "node scripts/docs-check.mjs",
     "docs:land": "node scripts/land-batch.mjs",
+    "batch:merge": "node scripts/merge-branches.mjs",
     "secrets:check": "node scripts/secrets-check.mjs",
     "migrations:check": "node scripts/migration-check.mjs",
     "check": "yarn docs:check && yarn secrets:check && yarn migrations:check && yarn typecheck && yarn lint && yarn test",

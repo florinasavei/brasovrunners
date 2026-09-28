@@ -20,7 +20,6 @@ import {
   versionState,
   versionsOfKind,
 } from "@/modules/legal-documents/domain/overview";
-import { templateSha256 } from "@/modules/legal-documents/templates/template-hash";
 
 /**
  * BR-REQ-053-02 (§NNN, amending §532) — `/admin/legal` grouped by text, filtered through the
@@ -42,7 +41,6 @@ function row(key: LegalDocumentKey, version: number, extra: Partial<OverviewVers
     effectiveAt: DAY,
     withdrawnAt: null,
     contentSha256: HASH(version),
-    templateSha256: null,
     ...extra,
   };
 }
@@ -115,7 +113,9 @@ describe("the filter in the address", () => {
     const rows = [noticeInForce, noticeWithdrawn, termsDraft, termsInForce, termsOld];
     const inForce = { TERMS: termsInForce.id, PRIVACY_NOTICE: noticeInForce.id };
 
-    expect(filterLegalVersions(rows, inForce, NO_LEGAL_FILTER)).toEqual(rows);
+    // «Toate» keeps everything but the withdrawn: «Retrase» is the one place they show.
+    expect(filterLegalVersions(rows, inForce, NO_LEGAL_FILTER)).toEqual([noticeInForce, termsDraft, termsInForce, termsOld]);
+    expect(filterLegalVersions(rows, inForce, { state: "all", kind: "PRIVACY_NOTICE" })).toEqual([noticeInForce]);
     expect(filterLegalVersions(rows, inForce, { state: "inForce", kind: null })).toEqual([noticeInForce, termsInForce]);
     expect(filterLegalVersions(rows, inForce, { state: "drafts", kind: null })).toEqual([termsDraft]);
     expect(filterLegalVersions(rows, inForce, { state: "superseded", kind: null })).toEqual([termsOld]);
@@ -172,7 +172,7 @@ describe("a text's card", () => {
     const format = (locale: "ro" | "en") => {
       const t = createTranslator({ locale, messages: locale === "ro" ? ro : en, namespace: "Admin" });
       return {
-        inForce: t("legal.kinds.inForce", { version: 3, date: "4 sept. 2026" }),
+        inForce: t("legal.kinds.inForce", { version: 3, date: locale === "ro" ? "4 septembrie 2026" : "4 September 2026" }),
         none: t("legal.kinds.noneInForce"),
         waiting: t("legal.kinds.draftWaiting", { version: 4 }),
         pending: t("legal.kinds.draftPending", { version: 4 }),
@@ -181,7 +181,7 @@ describe("a text's card", () => {
       };
     };
     expect(format("ro")).toEqual({
-      inForce: "În vigoare: versiunea 3 din 4 sept. 2026",
+      inForce: "În vigoare: versiunea 3 din 4 septembrie 2026",
       none: "Nicio versiune în vigoare",
       waiting: "O ciornă așteaptă aprobarea: versiunea 4",
       pending: "Ciornă în așteptare: versiunea 4",
@@ -189,7 +189,7 @@ describe("a text's card", () => {
       count: "4 versiuni din 11",
     });
     expect(format("en")).toEqual({
-      inForce: "In force: version 3 of 4 sept. 2026",
+      inForce: "In force: version 3 since 4 September 2026",
       none: "No version in force",
       waiting: "A draft waits for approval: version 4",
       pending: "Draft waiting: version 4",
@@ -200,7 +200,7 @@ describe("a text's card", () => {
 
   it("gives the page's three steps and «Versiune nouă»'s in both languages", () => {
     expect(ro.Admin.legal.steps.title).toBe(
-      "1. Regenerează (ciornă din șablon) · 2. Citește și completează cele patru fapte · 3. Aprobă — abia atunci intră în vigoare",
+      "1. Regenerează (ciornă din șablon) · 2. Citește ciorna și completează ce a rămas de forma '<'…> · 3. Aprobă — abia atunci intră în vigoare",
     );
     expect(ro.Admin.legal.startFrom.help).toBe(
       "1. Alege șablonul (sau Regenerează toate) · 2. Citește și completează · 3. Aprobă — abia atunci intră în vigoare.",
@@ -211,25 +211,12 @@ describe("a text's card", () => {
 });
 
 describe("«Șablon nou»", () => {
-  const current = templateSha256("TERMS");
-  it("compares a version that recorded its template by that fingerprint, whatever the club typed", () => {
-    expect(templateIsNewer({ contentSha256: HASH(1), templateSha256: current }, current, HASH(2))).toBe(false);
-    expect(templateIsNewer({ contentSha256: HASH(1), templateSha256: HASH(9) }, current, HASH(2))).toBe(true);
-  });
-
-  it("compares an older version by its words with the template's, the facts written in", () => {
-    expect(templateIsNewer({ contentSha256: HASH(2), templateSha256: null }, current, HASH(2))).toBe(false);
-    expect(templateIsNewer({ contentSha256: HASH(1), templateSha256: null }, current, HASH(2))).toBe(true);
+  it("compares the text in force by its words with the template's, the facts written in", () => {
+    expect(templateIsNewer({ contentSha256: HASH(2) }, HASH(2))).toBe(false);
+    expect(templateIsNewer({ contentSha256: HASH(1) }, HASH(2))).toBe(true);
   });
 
   it("says nothing with no text in force", () => {
-    expect(templateIsNewer(undefined, current, HASH(2))).toBe(false);
-  });
-
-  it("fingerprints each template on its own words, one per text", () => {
-    const all = LEGAL_DOCUMENT_KEYS.map((key) => templateSha256(key));
-    expect(new Set(all).size).toBe(all.length);
-    expect(all.every((hash) => /^[0-9a-f]{64}$/.test(hash))).toBe(true);
-    expect(templateSha256("TERMS")).toBe(current);
+    expect(templateIsNewer(undefined, HASH(2))).toBe(false);
   });
 });

@@ -48,14 +48,8 @@ export default async function LegalDocumentForm({
   submitLabel,
   pendingLabel,
   incompleteHint,
-  startedFrom,
 }: {
   action: ActionFormAction;
-  /**
-   * What a new version was prefilled from — a template's key or a version's id — so the save can
-   * record which template it descends from (§NNN). The server looks the fingerprint up itself.
-   */
-  startedFrom?: { template?: string; versionId?: string };
   /** The interface language, so a failed save comes back on the page it left. */
   locale: string;
   /** Present when correcting an existing draft, absent when writing a new version. */
@@ -83,8 +77,6 @@ export default async function LegalDocumentForm({
       <Stack spacing={3}>
         <input type="hidden" name="uiLocale" value={locale} />
         {versionId && <input type="hidden" name="versionId" value={versionId} />}
-        {startedFrom?.template && <input type="hidden" name="fromTemplate" value={startedFrom.template} />}
-        {startedFrom?.versionId && <input type="hidden" name="fromVersionId" value={startedFrom.versionId} />}
 
         <Alert severity="warning">{t("editorWarning")}</Alert>
 

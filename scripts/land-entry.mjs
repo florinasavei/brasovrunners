@@ -211,11 +211,19 @@ export function entryFromResults(chain, rounds = [], item = {}, label = "item") 
 }
 
 /**
- * A literal `§N` a fixer or implementer typed instead of the `§426` placeholder — guessing at a
+ * The decision placeholder an implementer cites before its number exists. Spelled in two pieces
+ * here, never as one literal: `yarn docs:land` numbers every literal placeholder in the tracked
+ * files by the commit that wrote it, and this file is tracked — the landing of §426 turned this
+ * function's own placeholder into "§426", so a guessed number landed as a citation of §426 (§535).
+ */
+export const PLACEHOLDER = "§" + "NNN";
+
+/**
+ * A literal `§N` a fixer or implementer typed instead of the placeholder — guessing at a
  * number `land-batch.mjs` has not assigned yet. Above `threshold` (the last number already in
  * DECISIONS.md, before this batch's own numbers are handed out) it cannot be a citation of an
- * existing decision, so it is rewritten to `§426` before step 4's numbering gives it the real one;
- * `§N` at or below `threshold` is left alone, since it names a decision that already exists.
+ * existing decision, so it is rewritten to the placeholder before step 4's numbering gives it the
+ * real one; `§N` at or below `threshold` is left alone, since it names a decision that already exists.
  *
  * Rewrites every one of `entry`'s landed fields (title, body, changelog, each criterion's text) in
  * place and returns the sentences changed, for the dry run to print.
@@ -226,8 +234,8 @@ export function rewriteFreeSectionRefs(entry, threshold) {
   const fix = (text) =>
     String(text ?? "").replace(tooHigh, (whole, n) => {
       if (Number(n) <= threshold) return whole;
-      rewrites.push(`§${n} → §426`);
-      return "§426";
+      rewrites.push(`§${n} → ${PLACEHOLDER}`);
+      return PLACEHOLDER;
     });
   entry.title = fix(entry.title);
   entry.body = fix(entry.body);

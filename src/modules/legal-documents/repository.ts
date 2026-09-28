@@ -522,8 +522,6 @@ export type LegalDocumentVersionRow = {
    * already waiting as a draft (§532).
    */
   contentSha256: string;
-  /** The platform template this version started from, as its fingerprint, or null (§NNN, `templateIsNewer`). */
-  templateSha256: string | null;
   /**
    * When the club took this version out of circulation, or `null` — the one reader that keeps
    * withdrawn rows rather than filtering them out.
@@ -567,7 +565,6 @@ export async function listVersionsForBackoffice<T extends Record<string, unknown
       effectiveAt: legalDocuments.effectiveAt,
       approvedByStaffUserId: legalDocuments.approvedByStaffUserId,
       contentSha256: legalDocuments.contentSha256,
-      templateSha256: legalDocuments.templateSha256,
       withdrawnAt: legalDocuments.withdrawnAt,
       withdrawnByStaffUserId: legalDocuments.withdrawnByStaffUserId,
       locales: sql<string[]>`coalesce(array_agg(distinct ${legalDocumentTranslations.locale}::text) filter (where ${legalDocumentTranslations.locale} is not null), '{}')`,
@@ -690,7 +687,6 @@ export async function findVersionWithTranslations<T extends Record<string, unkno
       effectiveAt: Date;
       withdrawnAt: Date | null;
       contentSha256: string;
-      templateSha256: string | null;
       translations: Array<{ locale: string; title: string; body: unknown }>;
     }
   | undefined
@@ -706,7 +702,6 @@ export async function findVersionWithTranslations<T extends Record<string, unkno
       // and a version that renders as though nothing happened to it would be a lie of omission.
       withdrawnAt: legalDocuments.withdrawnAt,
       contentSha256: legalDocuments.contentSha256,
-      templateSha256: legalDocuments.templateSha256,
     })
     .from(legalDocuments)
     .where(eq(legalDocuments.id, id))

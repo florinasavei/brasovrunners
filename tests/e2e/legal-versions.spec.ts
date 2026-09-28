@@ -238,19 +238,22 @@ test.describe("legal documents: every text at once", () => {
     await hydrated(page);
     const terms = page.getByTestId("legal-kind-TERMS");
     await expect(terms.getByTestId("legal-kind-state").first()).toHaveText(/^(În vigoare: versiunea \d+ din .+|Nicio versiune în vigoare)$/);
+    // The card must offer the press: the sample terms in force are not the template's words, so
+    // «Regenerează din șablon» is there unless a draft already waits — a leftover of an interrupted
+    // run, which would leave the per-card path untested. Fail then rather than pass without it.
+    await expect(terms.getByTestId("legal-kind-regenerate-none"), "a TERMS draft already waits: reset the database").toHaveCount(0);
     const regenerateOne = terms.getByRole("button", { name: "Regenerează din șablon" });
-    if ((await regenerateOne.count()) > 0) {
-      await regenerateOne.click();
-      const dialog = page.getByRole("dialog", { name: "Faci o ciornă nouă pentru Termeni de concurs?" });
-      await expect(dialog).toContainText(/O ciornă nouă pentru Termeni de concurs, din șablon, versiunea \d+/);
-      await confirmDialog(page, "Faci o ciornă nouă pentru Termeni de concurs?");
-      await expect(page.getByTestId("toast")).toContainText("1 ciornă creată din șablon.", { timeout: 30_000 });
-      // Landed on «Ciorne», the new draft's text named as waiting, its versions open.
-      await expect(page).toHaveURL(/\/admin\/legal\?state=drafts/);
-      await hydrated(page);
-      await expect(page.getByTestId("legal-kind-TERMS")).toContainText(/O ciornă așteaptă aprobarea: versiunea \d+/);
-      await expect(page.getByTestId("legal-versions-TERMS")).toHaveAttribute("open", "");
-    }
+    await expect(regenerateOne).toBeVisible();
+    await regenerateOne.click();
+    const dialog = page.getByRole("dialog", { name: "Faci o ciornă nouă pentru Termeni de concurs?" });
+    await expect(dialog).toContainText(/O ciornă nouă pentru Termeni de concurs, din șablon, versiunea \d+/);
+    await confirmDialog(page, "Faci o ciornă nouă pentru Termeni de concurs?");
+    await expect(page.getByTestId("toast")).toContainText("1 ciornă creată din șablon.", { timeout: 30_000 });
+    // Landed on «Ciorne», the new draft's text named as waiting, its versions open.
+    await expect(page).toHaveURL(/\/admin\/legal\?state=drafts/);
+    await hydrated(page);
+    await expect(page.getByTestId("legal-kind-TERMS")).toContainText(/O ciornă așteaptă aprobarea: versiunea \d+/);
+    await expect(page.getByTestId("legal-versions-TERMS")).toHaveAttribute("open", "");
 
     // Regenerate the rest: the dialog names the texts, nothing is in force, the toast counts the drafts.
     const regenerateRest = tools.getByRole("button", { name: /^Regenerează din șabloane \(\d+\)$/ });

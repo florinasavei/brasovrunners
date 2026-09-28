@@ -26,7 +26,7 @@ import { createLegalVersionAction, regenerateLegalTemplatesAction } from "../act
 import { LEGAL_DOCUMENT_KEYS } from "@/modules/legal-documents/domain/keys";
 import { LEGAL_KIND_GROUPS } from "@/modules/legal-documents/domain/overview";
 import { readLegalOverview } from "@/modules/legal-documents/service";
-import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
+import { CLUB_TIME_ZONE, formatDateInWords } from "@/i18n/dates";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
@@ -169,7 +169,7 @@ export default async function NewLegalVersionPage({ params, searchParams }: Prop
                       kind.summary.inForce
                         ? t("legal.kinds.inForce", {
                             version: kind.summary.inForce.version,
-                            date: formatDay(kind.summary.inForce.effectiveAt, { locale, timeZone: CLUB_TIME_ZONE, style: "short", position: "inline" }),
+                            date: formatDateInWords(kind.summary.inForce.effectiveAt, { locale, timeZone: CLUB_TIME_ZONE }),
                           })
                         : t("legal.kinds.noneInForce"),
                       kind.summary.waitingDraft ? t("legal.kinds.draftPending", { version: kind.summary.waitingDraft.version }) : null,
@@ -241,7 +241,6 @@ export default async function NewLegalVersionPage({ params, searchParams }: Prop
         action={createLegalVersionAction}
         locale={locale}
         values={values}
-        startedFrom={fromTemplate && template ? { template } : source ? { versionId: source.id } : undefined}
         keyLocked={Boolean(source || fromTemplate)}
         submitLabel={t("legal.saveDraft")}
         pendingLabel={t("editor.saving")}
