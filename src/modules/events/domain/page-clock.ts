@@ -2,7 +2,7 @@ import { confirmationWindow } from "@/modules/registrations/domain/hold-deadline
 import { publicListClosesAt, type Deadlines } from "@/modules/deadlines/domain/deadlines";
 import { WEATHER_WINDOW_DAYS, weatherInstant } from "@/modules/weather/domain/forecast";
 import { SIGNING_GRACE_MINUTES } from "@/modules/group-run-declarations/domain";
-import { registrationClosingInstant } from "./registration-window";
+import { registrationClosesOrStarts } from "./registration-window";
 import { fromWallTimeInput, toWallTimeInput } from "./zoned-time";
 
 /**
@@ -50,7 +50,7 @@ export function eventClockInstants(event: ClockedEvent, deadlines?: Pick<Deadlin
   const startsAt = event.startsAt;
   if (startsAt) {
     instants.push(startsAt, event.raceStartsAt, event.endsAt, new Date(startsAt.getTime() + SIGNING_GRACE_MINUTES * 60_000));
-    instants.push(registrationClosingInstant({ registrationClosesAt: event.registrationClosesAt ?? null, startsAt }));
+    instants.push(registrationClosesOrStarts({ registrationClosesAt: event.registrationClosesAt ?? null, startsAt }));
     instants.push(new Date(weatherInstant({ startsAt, raceStartsAt: event.raceStartsAt }).getTime() - WEATHER_WINDOW_DAYS * DAY_MS));
     const window = confirmationWindow({ ...event, startsAt });
     if (window) instants.push(window.opensAt, window.deadline);

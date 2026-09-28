@@ -57,6 +57,6 @@
       "text": "Given production `robots.txt`, then the following are disallowed: every query permutation of the listing and the calendar, an event page asked `lista`, `interest`, `since` or `declaratie`, the live twins under `/<locale>/live/`, the registration and declaration forms, the token pages, the newsletter's pages and the share picture asked for a shape. The canonical listing, calendar and event pages stay crawlable, as do an event page with a key it does not read (`?fbclid=`), every Open Graph picture with or without Next's content-hash query (`/en/events/<slug>/opengraph-image?<hash>`), and the bare share picture named in the JSON-LD (2026-09-28, `DECISIONS.md` §NNN)."
     }
   ],
-  "docsNotes": "After the QA deploy, the deploy's own check (the dispatcher runs it): `curl -sI https://<qa host>/ro/evenimente` twice. The second answer must carry `x-vercel-cache: HIT` and `cache-control: public, max-age=0, must-revalidate`. A MISS on every ask, or `s-maxage` in the answer's `cache-control`, means the proxy set its header on Vercel; do not promote the release until the proxy's condition is fixed.",
+  "docsNotes": "",
   "batchLine": "the public pages served from the CDN — static for a stranger, a live twin for filters, months and signed-in staff"
 }
