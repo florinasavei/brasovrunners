@@ -5115,6 +5115,7 @@
       "backToEvent": "Back to the event",
       "title": "Permanent deletion: {event}",
       "whatGoes": "This permanently deletes the event “{event}” of {date}, in both languages, together with its {count} registrations and the personal data behind them.",
+      "whatGoesUndated": "This permanently deletes the event “{event}”, whose date is to be announced later, in both languages, together with its {count} registrations and the personal data behind them.",
       "breakdown": "Of those: {confirmed} confirmed, {real} real, {test} test.",
       "realPeople": "{count} of the registrations belong to real people. They go with their signed declarations and their addresses, and nothing can be recovered.",
       "noRealPeople": "No real registration: nobody loses a place.",

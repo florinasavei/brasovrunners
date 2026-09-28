@@ -60,6 +60,16 @@ export function typedStartOrNull(event: { startsAt: Date; timezone: string }): D
 }
 
 /**
+ * How a staff surface that prints the start in words may print it (§NNN): null while no date was
+ * typed — the surface says «Data se anunță mai târziu» or leaves the date out — and `hour: false`
+ * while the hour was left blank, so the day is printed alone, never at the provisional noon.
+ */
+export function typedStartShape(event: { startsAt: Date; timezone: string }): { at: Date; hour: boolean } | null {
+  const blank = blankStartParts(event.startsAt, event.timezone);
+  return blank.date ? null : { at: event.startsAt, hour: !blank.time };
+}
+
+/**
  * The start's posted value read back into its boxes. The form posts `YYYY-MM-DDTHH:mm` when both are
  * typed, the date alone, `THH:mm` for an hour alone, or "" (`admin/actions.ts`); a script or a test
  * posts the whole value. Null for anything else, which the service refuses as not a date and time.

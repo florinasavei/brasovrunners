@@ -40,7 +40,7 @@ import RowMenu from "@/shared/ui/RowMenu";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
 import { editionDifference, usualOf } from "@/modules/events/domain/series";
-import { typedStartOrNull } from "@/modules/events/domain/provisional-start";
+import { typedStartOrNull, typedStartShape } from "@/modules/events/domain/provisional-start";
 import { type DraftReason, draftRemedies, seriesDrafts } from "@/modules/events/domain/series-drafts";
 import SeriesDraftLine from "@/modules/content/events/ui/SeriesDraftLine";
 import { countForm } from "@/i18n/count-form";
@@ -310,8 +310,10 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
             {/* The route's pills, exactly as the listing's compact card draws them —
                 `buildRoutePills` and `RoutePills` (§388), so neither surface can read the route
                 in a different order or a different set from the other. A series shares one
-                route, so this reads the next occurrence's row once for the whole line. */}
-            <RoutePills pills={buildRoutePills(event, tEvent, format)} />
+                route, so this reads the next occurrence's row once for the whole line. A date or
+                an hour left blank (§NNN) gives the night pill no start, so no sunset of the
+                provisional day is invented. */}
+            <RoutePills pills={buildRoutePills({ ...event, startsAt: typedStartShape(event)?.hour ? event.startsAt : null }, tEvent, format)} />
             {sentence && (
               <Typography variant="body2" color="text.secondary">
                 {sentence}

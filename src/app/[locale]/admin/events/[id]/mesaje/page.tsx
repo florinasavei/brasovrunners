@@ -13,6 +13,7 @@ import { formatDay } from "@/i18n/dates";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { findEventForEditing } from "@/modules/content/events/repository";
+import { typedStartShape } from "@/modules/events/domain/provisional-start";
 import { readRepeatRule } from "@/modules/events/domain/repeat";
 import { EMAIL_SAMPLE } from "@/modules/notifications/domain/email-sample";
 import {
@@ -172,6 +173,12 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
   // are empty, and the next press is a new message rather than the last one again.
   const sendId = randomUUID();
   // Inside the history line's sentence, so in the language's own case (§349).
+  // The heading's date: the day and hour typed, the day alone for an hour left blank, or «Data se
+  // anunță mai târziu» for a date left blank (§NNN) — never the provisional start stored for either.
+  const start = typedStartShape(event);
+  const eventDate = start
+    ? formatDay(start.at, { locale, timeZone: event.timezone, style: "long", withTime: start.hour })
+    : t("editor.dateToBeAnnounced");
   const when = (at: Date) => formatDay(at, { locale, timeZone: event.timezone, style: "short", withTime: true, position: "inline" });
 
   return (
@@ -185,7 +192,7 @@ export default async function ParticipantMessagesPage({ params, searchParams }: 
           {t("participantMessages.title")}
         </Typography>
         <Typography variant="subtitle1" sx={{ fontWeight: 600 }} data-testid="participant-message-event">
-          {t("participantMessages.event", { event: title, date: formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long", withTime: true }) })}
+          {t("participantMessages.event", { event: title, date: eventDate })}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
           {t("participantMessages.intro")}

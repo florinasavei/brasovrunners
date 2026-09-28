@@ -5115,6 +5115,7 @@
       "backToEvent": "Înapoi la eveniment",
       "title": "Ștergere definitivă: {event}",
       "whatGoes": "Se șterge definitiv evenimentul „{event}” din {date}, în ambele limbi, împreună cu cele {count} înscrieri ale lui și cu datele persoanelor din spatele lor.",
+      "whatGoesUndated": "Se șterge definitiv evenimentul „{event}”, a cărui dată se anunță mai târziu, în ambele limbi, împreună cu cele {count} înscrieri ale lui și cu datele persoanelor din spatele lor.",
       "breakdown": "Dintre ele: {confirmed} confirmate, {real} reale, {test} de test.",
       "realPeople": "{count} dintre înscrieri sunt ale unor persoane reale. Dispar cu tot cu declarațiile semnate și cu adresele lor, și nu se pot recupera.",
       "noRealPeople": "Nicio înscriere reală: nimeni nu pierde un loc.",

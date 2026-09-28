@@ -1,7 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { hasLocale } from "next-intl";
 import { getTranslations } from "next-intl/server";
-import { formatDay } from "@/i18n/dates";
 import { NextResponse } from "next/server";
 import { getDb } from "@/db/client";
 import { registrations } from "@/db/schema/registrations";
@@ -10,7 +9,7 @@ import { shownContactAddresses } from "@/modules/contact/shown-address";
 import { bibDesignFromQuery } from "@/modules/registrations/bib-design";
 import { bibNumberFromQuery } from "@/modules/registrations/bib-design-query";
 import { renderBibImage } from "@/modules/registrations/bib-image";
-import { findEventForBibs } from "@/modules/registrations/bibs";
+import { bibEventDate, findEventForBibs } from "@/modules/registrations/bibs";
 import { canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
@@ -72,8 +71,9 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   const db = getDb();
   const event = await findEventForBibs(db, id, locale);
   if (!event) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
-  // The bib's own line, in the language it is drawn for and the event's zone (§349, §317).
-  const eventDate = formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long" });
+  // The bib's own line, in the language it is drawn for and the event's zone (§349, §317); empty
+  // while the date is to be announced later (§NNN).
+  const eventDate = bibEventDate(event, locale);
   // The first address the club shows (§442): one line of small print has room for one.
   const replyTo = (await shownContactAddresses(db))[0] ?? null;
   // The same facts the sheet's footer is made of (§180, §317), so either picture is a picture of

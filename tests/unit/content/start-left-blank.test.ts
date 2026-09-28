@@ -1,4 +1,11 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import { type ComponentProps, createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { NextIntlClientProvider } from "next-intl";
 import { describe, expect, it } from "vitest";
+import StartToBeAnnounced from "@/modules/content/events/ui/StartToBeAnnounced";
+import { bibEventDate } from "@/modules/registrations/bibs";
 import { resolveStart, startBoxesRequired } from "@/modules/content/events/start";
 import {
   blankStartParts,
@@ -6,6 +13,7 @@ import {
   readStartBoxes,
   startBoxValues,
   typedStartOrNull,
+  typedStartShape,
   UNDATED_DAY,
 } from "@/modules/events/domain/provisional-start";
 import { eventFormFieldName } from "@/modules/content/events/form-names";
@@ -105,5 +113,56 @@ describe("§NNN the provisional start", () => {
     expect(readStartBoxes("T10:00")).toEqual({ date: "", time: "10:00" });
     expect(readStartBoxes("  ")).toEqual({ date: "", time: "" });
     expect(readStartBoxes("tomorrow")).toBeNull();
+  });
+});
+
+describe("§NNN the staff surfaces that print the start in words", () => {
+  const blankDate = { startsAt: resolveStart("T19:00", dateLater, ZONE).startsAt, timezone: ZONE };
+  const blankHour = { startsAt: resolveStart("2027-03-14", timeLater, ZONE).startsAt, timezone: ZONE };
+  const typed = { startsAt: resolveStart("2027-03-14T19:00", off, ZONE).startsAt, timezone: ZONE };
+
+  it("gives the day alone for an hour left blank, nothing for a date left blank", () => {
+    expect(typedStartShape(blankDate)).toBeNull();
+    expect(typedStartShape(blankHour)).toEqual({ at: blankHour.startsAt, hour: false });
+    expect(typedStartShape(typed)).toEqual({ at: typed.startsAt, hour: true });
+  });
+
+  it("prints no 9999 on the bib preview, the sheet or the emergency sheet of a race without a date", () => {
+    for (const locale of ["ro", "en"]) {
+      expect(bibEventDate(blankDate, locale)).toBe("");
+      expect(bibEventDate(blankDate, locale)).not.toContain("9999");
+      expect(bibEventDate(typed, locale)).toContain("2027");
+      // A bib prints the day, never an hour: the blank hour's noon never shows either.
+      expect(bibEventDate(blankHour, locale)).toContain("2027");
+      expect(bibEventDate(blankHour, locale)).not.toContain("12:00");
+    }
+  });
+});
+
+describe("§NNN the start's boxes without JavaScript", () => {
+  const ROOT = path.resolve(__dirname, "../../..");
+  const messages = JSON.parse(readFileSync(path.join(ROOT, "messages/ro.json"), "utf8")) as { Admin: { pickers: Record<string, string> } };
+  const render = (defaults: typeof off) =>
+    renderToStaticMarkup(
+      createElement(
+        NextIntlClientProvider,
+        { locale: "ro", messages: { Admin: { pickers: messages.Admin.pickers } } } as unknown as ComponentProps<typeof NextIntlClientProvider>,
+        createElement(StartToBeAnnounced, {
+          labels: { date: "Începutul evenimentului", time: "Ora", help: "", dateSwitch: "Data", dateSwitchHelp: "", timeSwitch: "Ora", timeSwitchHelp: "" },
+          values: { date: "", time: "" },
+          defaults,
+          required: true,
+        }),
+      ),
+    );
+
+  it("carries no required attribute a switch ticked before the press could not lift; the server's rule refuses instead", () => {
+    // The create page's switches start off; ticked with JavaScript off, the save must still go through.
+    for (const defaults of [off, dateLater, timeLater]) {
+      const html = render(defaults);
+      expect(html).toContain('name="event.startsAtDate"');
+      expect(html).not.toMatch(/<input[^>]*name="event\.startsAt(Date|Time)"[^>]*required/);
+      expect(html).not.toMatch(/<input[^>]*required[^>]*name="event\.startsAt(Date|Time)"/);
+    }
   });
 });

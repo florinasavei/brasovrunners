@@ -8,6 +8,8 @@ import type { Database } from "@/db/types";
 import { type BibDesign, readBibDesign } from "./bib-design";
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { type CoHost, readCoHosts } from "@/modules/events/domain/co-hosts";
+import { typedStartOrNull } from "@/modules/events/domain/provisional-start";
+import { formatDay } from "@/i18n/dates";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import {
@@ -1031,6 +1033,16 @@ export async function setBibPrinted<T extends Record<string, unknown>>(
  * picture are the same card, and a route that had to assemble the header from three places is
  * how the two would come to disagree.
  */
+/**
+ * The date line a bib prints (§349, §317), in the language it is drawn for and the event's zone — or
+ * nothing while the date is left blank to be announced later (§NNN): the sample in the editor's
+ * «Înscriere» card, the sheet and the desk's picture never print the provisional day stored for it.
+ */
+export function bibEventDate(event: { startsAt: Date; timezone: string }, locale: string): string {
+  const at = typedStartOrNull(event);
+  return at ? formatDay(at, { locale, timeZone: event.timezone, style: "long" }) : "";
+}
+
 export async function findEventForBibs<T extends Record<string, unknown>>(
   db: Database<T>,
   eventId: string,
