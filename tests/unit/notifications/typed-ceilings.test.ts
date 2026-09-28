@@ -52,6 +52,9 @@ describe("§NNN the typed-ceiling boxes show only under «Altceva»", () => {
   it("says in the help line, in both languages, when the boxes appear", () => {
     expect(ro.Admin.emails.plan.customHelp).toMatch(/^Căsuțele de limite apar doar când alegi „Altceva”/);
     expect(en.Admin.emails.plan.customHelp).toMatch(/^The limit boxes appear only when you choose “Something else”/);
+    // And what one empty box means — no such ceiling — not only the case of both empty (§100).
+    expect(ro.Admin.emails.plan.customHelp).toContain("o căsuță lăsată goală înseamnă că limita aceea nu există");
+    expect(en.Admin.emails.plan.customHelp).toContain("a box left empty means that limit does not exist");
     for (const text of [ro.Admin.emails.plan.customHelp, en.Admin.emails.plan.customHelp]) expect(text.length).toBeLessThanOrEqual(200);
   });
 });

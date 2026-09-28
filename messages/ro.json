@@ -4011,7 +4011,7 @@
         "custom": "Altceva — scriu eu limitele de mai jos",
         "dailyAllowance": "Limita zilnică",
         "monthlyAllowance": "Limita lunară",
-        "customHelp": "Căsuțele de limite apar doar când alegi „Altceva”: scrie ce arată Mailgun în Account → Plan, iar amândouă goale înseamnă fără limită.",
+        "customHelp": "Căsuțele de limite apar doar când alegi „Altceva”: scrie ce arată Mailgun în Account → Plan; o căsuță lăsată goală înseamnă că limita aceea nu există.",
         "note": "Notă (de ce, până când)",
         "save": "Salvează planul",
         "readOnly": "Planul îl schimbă Administratorul. Cifrele de mai sus sunt la zi și pentru tine.",

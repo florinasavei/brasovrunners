@@ -4011,7 +4011,7 @@
         "custom": "Something else — I type the limits below",
         "dailyAllowance": "Daily limit",
         "monthlyAllowance": "Monthly limit",
-        "customHelp": "The limit boxes appear only when you choose “Something else”: type what Mailgun shows under Account → Plan, and both empty means no limit.",
+        "customHelp": "The limit boxes appear only when you choose “Something else”: type what Mailgun shows under Account → Plan; a box left empty means that limit does not exist.",
         "note": "Note (why, until when)",
         "save": "Save the plan",
         "readOnly": "The plan is the Administrator’s to change. The figures above are current for you too.",
