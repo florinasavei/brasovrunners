@@ -532,11 +532,19 @@ export async function processOutboxBatch(
     roads?: OutboxRoads;
     /** Only these rows (§NNN, `claimOutboxBatch`): a backoffice press's own message, sent now. */
     ids?: readonly string[];
+    /**
+     * Whether this batch is a run of the outbox job (the default). A press's own send (§NNN,
+     * `send-rows-now.ts`) passes `false`: it is not a pass of the scheduler, so it writes no
+     * `job_runs` row — the queue panel's «Ultima trecere programată», the next round counted from
+     * it (`nextOutboxTick`), `/api/health`'s stall check and the jobs' overview all read that table,
+     * and a press would move every one of them without the pinger having run.
+     */
+    recordRun?: boolean;
   },
 ): Promise<OutboxBatchSummary> {
-  const { sender, render, now, batchSize = OUTBOX_BATCH_SIZE, route, roads, ids } = params;
+  const { sender, render, now, batchSize = OUTBOX_BATCH_SIZE, route, roads, ids, recordRun = true } = params;
 
-  const jobRunId = await startJobRun(db, "email-outbox", now);
+  const jobRunId = recordRun ? await startJobRun(db, "email-outbox", now) : null;
   // The batch's clock moved on by the real time elapsed: what the re-base checks an offer against
   // under the event's lock (§513), never an instant older than the allocator's.
   const startedAtMs = Date.now();
@@ -724,12 +732,14 @@ export async function processOutboxBatch(
   // retry is the mechanism working, a failure or a bounce is not. A deferral is the mechanism
   // working too — the plan's limit, not a fault — so it is not an error; `/devs` shows the
   // volume against the allowance, which is where that belongs.
-  await finishJobRun(
-    db,
-    jobRunId,
-    { itemsProcessed: summary.claimed, errorCount: summary.failed + summary.bounced },
-    new Date(),
-  );
+  if (jobRunId) {
+    await finishJobRun(
+      db,
+      jobRunId,
+      { itemsProcessed: summary.claimed, errorCount: summary.failed + summary.bounced },
+      new Date(),
+    );
+  }
 
   return summary;
 }

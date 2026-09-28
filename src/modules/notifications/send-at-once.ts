@@ -1,4 +1,4 @@
-import { eq, or, sql } from "drizzle-orm";
+import { and, eq, or, sql } from "drizzle-orm";
 import { type EmailMessageType, emailOutbox } from "@/db/schema/email-outbox";
 import type { Database } from "@/db/types";
 import { DomainError } from "@/shared/errors/domain-error";
@@ -82,13 +82,23 @@ export async function clubCopyTypesFor<T extends Record<string, unknown>>(
 /**
  * The rows one press queued: the key it wrote, and every row keyed under it — the club's copies
  * (`<key>:club-copy:<address>`) and, for a send to many, each recipient's (`<key>:registration:<id>`).
+ *
+ * Only waiting rows (`PENDING`): the press has just queued them and nothing else may send them but
+ * this drain or the outbox job — and only a waiting row can be claimed anyway. The status is the
+ * claim index's first column (`email_outbox_status_next_attempt_created_idx`), so the prefix is
+ * compared over the queue, never over every message the club ever sent (§NNN review).
  */
 export async function outboxIdsForKey<T extends Record<string, unknown>>(db: Database<T>, key: string): Promise<string[]> {
   const under = `${key}:`;
   const rows = await db
     .select({ id: emailOutbox.id })
     .from(emailOutbox)
-    .where(or(eq(emailOutbox.idempotencyKey, key), sql`left(${emailOutbox.idempotencyKey}, ${under.length}) = ${under}`))
+    .where(
+      and(
+        eq(emailOutbox.status, "PENDING"),
+        or(eq(emailOutbox.idempotencyKey, key), sql`left(${emailOutbox.idempotencyKey}, ${under.length}) = ${under}`),
+      ),
+    )
     .orderBy(emailOutbox.createdAt);
   return rows.map((row) => row.id);
 }

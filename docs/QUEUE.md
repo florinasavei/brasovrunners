@@ -42,7 +42,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 | --- | --- |
 | The contract steps the night left: `events.event_difficulty` leaves the schema (§526: nothing reads it since `BR-V2.16`; every save still writes a word into it for a rollback), and the minimum-age CHECK tightens from 0 to 14 (§515) | a contract-only release after `BR-V2.16` is the rollback floor (`AGENTS.md` §7.6) |
 | A two-connection proof that the newsletter's daily new-event alert is sent once under two overlapping runs (§493: the in-process test proves the re-check, not the row lock) | a slot in `tests/concurrency` |
-| «Trimite acum» past the scheduled pass (§NNN) on the event editor's update notice («Anunță participanții») and its cancellation: both are queued inside the series save and still wait for the pass | a way to hand the save's own outbox ids to the press's drain after the series transaction |
+| «Trimite acum» past the scheduled pass (§NNN) on the event editor's update notice («Anunță participanții») and its cancellation, both queued inside the series save; and on «Trimite mulțumirea», the newsletter composer's sends and the race-day desk verbs' emails, which offer no choice yet. All of them still wait for the pass | a way to hand the save's own outbox ids to the press's drain after the series transaction; the same two-way dialog on the other presses |
 | The V2.12 landing wrote its four decisions twice: `DECISIONS.md` §506–§509 repeat §502–§505 (the code cites §502–§505), with twin `CHANGELOG.md` lines, twin `SPECS.md` criteria and a second «Batch 35» line in `CLAUDE.md` | the next docs landing |
 
 ## Waiting on the owner

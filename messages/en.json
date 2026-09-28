@@ -3791,12 +3791,12 @@
         "aside": "{waiting} · {state}",
         "when": {
           "title": "When emails leave",
-          "on": "Emails leave: on the scheduled round",
-          "off": "Emails leave: right after the request",
+          "stateOn": "Emails leave on the scheduled round; the next: {at}.",
+          "stateOff": "Emails leave right after the request that queued them.",
           "onShort": "on the scheduled round",
           "offShort": "right after the request",
-          "scheduled": "Emails leave on the site's scheduled round. Next round: {at}. An email queued now waits at most {wait}.",
-          "immediate": "Each email leaves right after the request that queued it. What is left (a retry, a deferral) leaves on the scheduled round; the next: {at}.",
+          "scheduled": "An email queued now waits at most {wait}.",
+          "immediate": "What is left (a retry, a deferral) leaves on the scheduled round; the next: {at}.",
           "holdsLead": "What holds the scheduled round now: {holds}.",
           "holds": {
             "pinger": "the monitor that calls the site, every {wait}",
@@ -6788,6 +6788,7 @@
       },
       "resentNow": "The email is leaving now, without waiting for the scheduled round.",
       "reminderSentNow": "The reminder is leaving now, without waiting for the scheduled round.",
+      "reinvitedNow": "The invitation is leaving now, without waiting for the scheduled round.",
       "participantMessageSentNow": {
         "one": "The email is leaving now for {count} participant, without waiting for the scheduled round.",
         "few": "The email is leaving now for {count} participants, without waiting for the scheduled round.",

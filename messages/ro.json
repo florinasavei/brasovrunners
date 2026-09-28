@@ -3791,12 +3791,12 @@
         "aside": "{waiting} · {state}",
         "when": {
           "title": "Când pleacă emailurile",
-          "on": "Emailurile pleacă: la trecerea programată",
-          "off": "Emailurile pleacă: imediat după cerere",
+          "stateOn": "Emailurile pleacă la trecerea programată; următoarea: {at}.",
+          "stateOff": "Emailurile pleacă imediat după cererea care le-a pus în coadă.",
           "onShort": "la trecerea programată",
           "offShort": "imediat după cerere",
-          "scheduled": "Emailurile pleacă la trecerea programată a site-ului. Următoarea trecere: {at}. Un email pus în coadă acum așteaptă cel mult {wait}.",
-          "immediate": "Fiecare email pleacă imediat după cererea care l-a pus în coadă. Ce rămâne (o nouă încercare, o amânare) pleacă la trecerea programată; următoarea: {at}.",
+          "scheduled": "Un email pus în coadă acum așteaptă cel mult {wait}.",
+          "immediate": "Ce rămâne (o nouă încercare, o amânare) pleacă la trecerea programată; următoarea: {at}.",
           "holdsLead": "Ce ține trecerea programată acum: {holds}.",
           "holds": {
             "pinger": "monitorul care apelează site-ul, o dată la {wait}",
@@ -6788,6 +6788,7 @@
       },
       "resentNow": "Emailul pleacă acum, fără să aștepte trecerea programată.",
       "reminderSentNow": "Reminderul pleacă acum, fără să aștepte trecerea programată.",
+      "reinvitedNow": "Invitația pleacă acum, fără să aștepte trecerea programată.",
       "participantMessageSentNow": {
         "one": "Emailul pleacă acum către {count} participant, fără să aștepte trecerea programată.",
         "few": "Emailul pleacă acum către {count} participanți, fără să aștepte trecerea programată.",

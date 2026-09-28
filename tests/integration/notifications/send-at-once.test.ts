@@ -3,6 +3,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 import { auditLogs } from "@/db/schema/audit-logs";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { events, eventTranslations } from "@/db/schema/events";
+import { jobRuns } from "@/db/schema/job-runs";
 import { platformSettings } from "@/db/schema/platform-settings";
 import { registrations } from "@/db/schema/registrations";
 import { staffUsers } from "@/db/schema/staff-users";
@@ -78,6 +79,7 @@ const { sendParticipantMessage } = await import("@/modules/notifications/partici
 const { processOutboxBatch } = await import("@/modules/notifications/outbox");
 const { sendOutboxRowsNow } = await import("@/modules/notifications/send-rows-now");
 const { readOutboxQueue } = await import("@/modules/notifications/queue");
+const { readOutboxDelivery } = await import("@/modules/notifications/outbox-delivery");
 const { SendNowRefused } = await import("@/modules/notifications/send-at-once");
 const { DELIVERY_TIMING_SETTING_KEY } = await import("@/modules/notifications/delivery-timing");
 const { CLUB_NOTICES_SETTING_KEY } = await import("@/modules/notifications/club-notices");
@@ -181,6 +183,25 @@ describe("§NNN a resend with «Trimite acum» leaves within its request", () =>
     const [audit] = await db.select().from(auditLogs).where(eq(auditLogs.action, "registration.sent_now"));
     expect(audit).toMatchObject({ actorStaffUserId: admin.id, entityType: "registration", entityId: registration.id });
     expect(audit.metadataJson).toMatchObject({ outboxId: queued.id, messageType: "REGISTRATION_CONFIRMED", bypassedSchedule: true });
+  });
+
+  it("is not a pass of the scheduler: no email-outbox job run is written, «Ultima trecere programată» does not move (review)", async () => {
+    const { registration } = await confirmedRunner();
+    // The scheduler's own last pass, an hour before the press.
+    const lastPass = new Date(NOW.getTime() - 3_600_000);
+    await db.insert(jobRuns).values({ jobName: "email-outbox", startedAt: lastPass, finishedAt: lastPass, itemsProcessed: 0, errorCount: 0 });
+    const later = new Date(NOW.getTime() + 60_000);
+    const before = await readOutboxDelivery(db, later);
+
+    await resendRegistrationMessage(db, admin, registration.id, later, undefined, "now");
+    await runAfters();
+
+    expect(held.sent).toHaveLength(1);
+    const runs = await db.select().from(jobRuns).where(eq(jobRuns.jobName, "email-outbox"));
+    expect(runs).toHaveLength(1);
+    const after = await readOutboxDelivery(db, later);
+    expect(after.lastRunAt).toBe(before.lastRunAt);
+    expect(after.nextTickAt).toBe(before.nextTickAt);
   });
 
   it("sends the club's copy with it, and nothing else of the queue", async () => {

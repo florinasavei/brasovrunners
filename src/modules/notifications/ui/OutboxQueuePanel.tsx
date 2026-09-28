@@ -20,6 +20,7 @@ import type { EmailVolumeToday } from "@/modules/notifications/volume";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
+import DeliveryTimingSwitch from "@/modules/notifications/ui/DeliveryTimingSwitch";
 
 type Props = {
   locale: Locale;
@@ -146,43 +147,20 @@ export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit,
       data-testid="outbox-queue"
     >
       {/*
-        When the queue leaves (§529): the switch's state, the next and the last real run, and what
-        holds the round back. Said to every reader of the queue; the switch is the Administrator's.
+        When the queue leaves (§529): the switch, the mode in force in one sentence, the next and the
+        last real run, and what holds the round back. Said to every reader of the queue; the switch
+        is the Administrator's. The switch replaced a button that named the other value (the owner:
+        «nu e clar cum funcționează acest toggle», §NNN): on is «La trecerea programată».
       */}
       <Box sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 1.5, mb: 2 }} data-testid="outbox-when">
-        <Stack direction="row" spacing={1} sx={{ alignItems: "center", flexWrap: "wrap", gap: 1, mb: 0.5 }}>
-          <Typography variant="body2" sx={{ fontWeight: 600 }}>
-            {t("emails.queue.when.title")}
-          </Typography>
-          <Chip
-            size="small"
-            color={scheduled ? "primary" : "default"}
-            label={scheduled ? t("emails.queue.when.on") : t("emails.queue.when.off")}
-            data-testid="outbox-when-state"
-            data-timing={delivery.timing}
-          />
-        </Stack>
-        <Typography variant="body2" data-testid="outbox-when-next">
-          {scheduled
-            ? t("emails.queue.when.scheduled", { at: when.format(nextTickAt), wait: minutesPhrase(locale, waitMinutes) })
-            : t("emails.queue.when.immediate", { at: when.format(nextTickAt) })}
+        <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+          {t("emails.queue.when.title")}
         </Typography>
-        <Typography variant="body2" color="text.secondary" data-testid="outbox-when-holds">
-          {t("emails.queue.when.holdsLead", { holds: holds.join(" · ") })}
-        </Typography>
-        <Typography variant="body2" color="text.secondary" data-testid="outbox-when-last">
-          {delivery.lastRunAt ? t("emails.queue.when.lastRun", { at: when.format(new Date(delivery.lastRunAt)) }) : t("emails.queue.when.neverRan")}
-        </Typography>
-        {/* The round is for everything automatic; a backoffice resend may leave at once (§NNN). */}
-        {scheduled && (
-          <Typography variant="body2" color="text.secondary" data-testid="outbox-when-bypass">
-            {t("emails.deliveryTiming.bypassHelp")}
-          </Typography>
-        )}
         {mayEditTiming && (
           /*
-            The switch (§529): the «Termene» setting (§513), one press to the other value, asking
-            first (§384) with what the press changes — switched off, the queue leaves now.
+            The «Termene» setting (§513) as a switch: a change posts the other value, asking first
+            (§384) with what the change does — switched off, the queue leaves now — and the toast
+            after. Without JavaScript the form's button posts the same (`DeliveryTimingSwitch`).
           */
           <ActionForm
             action={updateDeliveryTimingFromEmailsAction}
@@ -197,15 +175,34 @@ export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit,
           >
             <input type="hidden" name="uiLocale" value={locale} />
             <input type="hidden" name="timing" value={scheduled ? "immediate" : "scheduled"} />
-            <Box sx={{ mt: 1 }}>
-              <GlyphSubmitButton
-                label={scheduled ? t("emails.queue.when.turnOff") : t("emails.queue.when.turnOn")}
-                pendingLabel={t("emails.deadlines.saving")}
-                icon={scheduled ? "turnOff" : "turnOn"}
-                variant="outlined"
-              />
-            </Box>
+            <DeliveryTimingSwitch
+              checked={scheduled}
+              label={t("emails.queue.when.turnOn")}
+              fallbackLabel={scheduled ? t("emails.queue.when.turnOff") : t("emails.queue.when.turnOn")}
+              pendingLabel={t("emails.deadlines.saving")}
+            />
           </ActionForm>
+        )}
+        {/* The one statement of the mode in force, and what it means for an email queued now. */}
+        <Typography variant="body2" sx={{ fontWeight: 500 }} id="outbox-when-state" data-testid="outbox-when-state" data-timing={delivery.timing}>
+          {scheduled ? t("emails.queue.when.stateOn", { at: when.format(nextTickAt) }) : t("emails.queue.when.stateOff")}
+        </Typography>
+        <Typography variant="body2" color="text.secondary" data-testid="outbox-when-next">
+          {scheduled
+            ? t("emails.queue.when.scheduled", { wait: minutesPhrase(locale, waitMinutes) })
+            : t("emails.queue.when.immediate", { at: when.format(nextTickAt) })}
+        </Typography>
+        <Typography variant="body2" color="text.secondary" data-testid="outbox-when-holds">
+          {t("emails.queue.when.holdsLead", { holds: holds.join(" · ") })}
+        </Typography>
+        <Typography variant="body2" color="text.secondary" data-testid="outbox-when-last">
+          {delivery.lastRunAt ? t("emails.queue.when.lastRun", { at: when.format(new Date(delivery.lastRunAt)) }) : t("emails.queue.when.neverRan")}
+        </Typography>
+        {/* The round is for everything automatic; a backoffice resend may leave at once (§NNN). */}
+        {scheduled && (
+          <Typography variant="body2" color="text.secondary" data-testid="outbox-when-bypass">
+            {t("emails.deliveryTiming.bypassHelp")}
+          </Typography>
         )}
       </Box>
 

@@ -1173,6 +1173,8 @@ export async function resendStaffInviteAction(_previous: FormOutcome | null, for
   const locale = toLocale(form.get("uiLocale"));
   const path = getPathname({ locale, href: "/admin/staff" });
   let outcome: Record<string, string | undefined>;
+  // The toast's sentence: «pleacă acum» when the press sent it past the scheduled pass (§NNN).
+  let toast: Record<string, string | undefined> | undefined;
   try {
     const actor = await requireStaffCapability(canManageStaff);
     // The platform's own invitation again (§141), then Zitadel's password link where the key is set (§123).
@@ -1181,11 +1183,12 @@ export async function resendStaffInviteAction(_previous: FormOutcome | null, for
     const member = await resendStaffInvitation(getDb(), actor, text(form, "email"), new Date(), delivery);
     const invite = env.STAFF_AUTH_MODE === "provider" ? await resendZitadelInvite(member.email) : ({ kind: "unconfigured" } as const);
     outcome = { saved: "reinvited", invite: invite.kind, ...(invite.kind === "failed" ? { reason: invite.reason.slice(0, 120) } : {}) };
+    if (delivery === "now") toast = { saved: "reinvitedNow" };
   } catch (error) {
     // A «now» the day's allowance cannot hold says so in its own sentence (§80, §NNN).
     outcome = isDomainError(error) ? { error: sendNowRefusalCode(error) } : outcomeOf(error);
   }
-  return backTo(path, outcome);
+  return backTo(path, outcome, toast);
 }
 
 /**

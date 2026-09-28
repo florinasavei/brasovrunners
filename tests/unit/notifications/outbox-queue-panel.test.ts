@@ -118,10 +118,10 @@ async function render(locale: "ro" | "en", overrides: Partial<Props> = {}): Prom
 describe("§529 the queue panel says when the emails leave", () => {
   it("names the switch's state, the next and the last round, and what holds the round back, in Romanian", async () => {
     const html = await render("ro");
-    expect(html).toContain(ro.Admin.emails.queue.when.on);
     expect(html).toMatch(/data-testid="outbox-when-state"[^>]*data-timing="scheduled"/);
     // The next round at 12:00 club time, the wait the longest hold: the two-hour interval.
-    expect(html).toMatch(/Următoarea trecere: [^<]*12:00\. Un email pus în coadă acum așteaptă cel mult 2 ore\./);
+    expect(html).toMatch(/Emailurile pleacă la trecerea programată; următoarea: [^<]*12:00\./);
+    expect(html).toContain("Un email pus în coadă acum așteaptă cel mult 2 ore.");
     expect(html).toContain("monitorul care apelează site-ul, o dată la o oră");
     expect(html).toContain("cel mult o dată la 2 ore");
     expect(html).toMatch(/Ultima trecere programată: [^<]*10:00\./);
@@ -150,18 +150,43 @@ describe("§529 the queue panel says when the emails leave", () => {
     const on = await render("ro");
     expect(on).toMatch(/data-testid="outbox-timing-form"/);
     expect(on).toMatch(/<input type="hidden" name="timing" value="immediate"\/>/);
+    // Without JavaScript the button beside the switch posts the same form (§NNN).
     expect(on).toContain(ro.Admin.emails.queue.when.turnOff);
 
     const off = await render("ro", { delivery: { ...DELIVERY, timing: "immediate", waitMinutes: null } });
-    expect(off).toContain(ro.Admin.emails.queue.when.off);
+    expect(off).toContain(ro.Admin.emails.queue.when.stateOff);
     expect(off).toMatch(/<input type="hidden" name="timing" value="scheduled"\/>/);
     expect(off).toContain(ro.Admin.emails.queue.when.turnOn);
-    expect(off).toMatch(/Fiecare email pleacă imediat după cererea care l-a pus în coadă\./);
+  });
+
+  /** The switch's own input: MUI draws it as a checkbox with the `switch` role. */
+  const switchInput = (html: string) => html.match(/<input[^>]*role="switch"[^>]*>/)?.[0] ?? "";
+
+  it("is a switch labelled «Trimite la trecerea programată», checked under the scheduled setting, with one sentence of the mode (§NNN)", async () => {
+    const on = await render("ro");
+    expect(on).toContain(ro.Admin.emails.queue.when.turnOn);
+    expect(switchInput(on)).toMatch(/checked=""/);
+    expect(switchInput(on)).toMatch(/aria-describedby="outbox-when-state"/);
+    expect(on).toMatch(/id="outbox-when-state"[^>]*>Emailurile pleacă la trecerea programată; următoarea: [^<]*12:00\.</);
+    // The mode is said once: no chip beside the title repeating it.
+    expect(on.match(/data-testid="outbox-when-state"/g)).toHaveLength(1);
+
+    const off = await render("ro", { delivery: { ...DELIVERY, timing: "immediate", waitMinutes: null } });
+    expect(switchInput(off)).not.toMatch(/checked=""/);
+    expect(off).toMatch(/id="outbox-when-state"[^>]*>Emailurile pleacă imediat după cererea care le-a pus în coadă\.</);
+    expect(off).toContain("Ce rămâne (o nouă încercare, o amânare) pleacă la trecerea programată; următoarea:");
+
+    const english = await render("en");
+    expect(english).toContain("Send on the scheduled round");
+    expect(english).toMatch(/id="outbox-when-state"[^>]*>Emails leave on the scheduled round; the next: [^<]*12:00\.</);
+    const englishOff = await render("en", { delivery: { ...DELIVERY, timing: "immediate", waitMinutes: null } });
+    expect(englishOff).toMatch(/id="outbox-when-state"[^>]*>Emails leave right after the request that queued them\.</);
   });
 
   it("shows anybody else the timing and no switch", async () => {
     const html = await render("ro", { mayEditTiming: false, mayEdit: false });
-    expect(html).toContain(ro.Admin.emails.queue.when.on);
+    expect(html).toMatch(/data-testid="outbox-when-state"[^>]*>Emailurile pleacă la trecerea programată;/);
+    expect(html).not.toContain('role="switch"');
     expect(html).not.toContain("outbox-timing-form");
     expect(html).not.toContain('name="timing"');
   });
@@ -177,18 +202,18 @@ describe("§529 the queue panel says when the emails leave", () => {
 
   it("says the same in English", async () => {
     const html = await render("en");
-    expect(html).toContain(en.Admin.emails.queue.when.on);
-    expect(html).toMatch(/Next round: [^<]*12:00\. An email queued now waits at most 2 hours\./);
+    expect(html).toMatch(/Emails leave on the scheduled round; the next: [^<]*12:00\./);
+    expect(html).toContain("An email queued now waits at most 2 hours.");
     expect(html).toContain(en.Admin.emails.queue.when.turnOff);
     expect(html).toContain("Leaves: 12:00 (estimated).");
   });
 
   it("names the switch in «Termene»'s own words, both values", async () => {
     const on = await render("ro");
-    expect(on).toContain("Emailurile pleacă: la trecerea programată");
+    expect(on).toContain("Emailurile pleacă la trecerea programată;");
     expect(on).toContain("Trimite imediat după cerere");
     const off = await render("en", { delivery: { ...DELIVERY, timing: "immediate", waitMinutes: null } });
-    expect(off).toContain("Emails leave: right after the request");
+    expect(off).toContain("Emails leave right after the request that queued them.");
     expect(off).toContain("Send on the scheduled round");
   });
 
