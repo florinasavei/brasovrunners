@@ -5,24 +5,16 @@ import { readTranslationUsageForEnvironment, type TranslateEnvironment } from "@
 import { type TranslationCredit, translationCredit } from "./domain/credit";
 
 /**
- * The DeepL credit as DeepL's own meter states it (§497), cached an hour in Next's data cache like
- * the other provider reads (§402, §479) and expired after every press that reached DeepL — so
- * Costuri, the `/admin/tasks` row, `/api/health`, the editors' button and the press's own check
- * read one figure without asking DeepL on every page.
+ * The DeepL credit from DeepL's meter (§497), cached an hour in Next's data cache (§402, §479) and
+ * expired after every press that reached DeepL, so every screen reads one figure.
  *
- * The cache key names the provider's host kind and a short fingerprint of the key — the first
- * eight hex characters of its SHA-256, which cannot be turned back into the key — and never the
- * key itself (the §479 rule for Vercel's token). The fingerprint is there because Vercel's data
- * cache outlives a redeploy: a key replaced by another of the same kind would otherwise keep the
- * old key's «spent» reading for up to an hour. A failure is not put in the data cache — the next minute asks again — but it is
- * remembered in this server instance for `FAILURE_MEMO_MS`, so while DeepL is slow or away the
- * backoffice does not wait its five-second timeout on every page.
+ * A failure is not cached but memoised in this instance for `FAILURE_MEMO_MS`, so pages do not
+ * each wait DeepL's timeout while it is away.
  */
 
 const TAG = "br-translation-credit";
-/** An hour: the credit moves only when somebody presses, and every press expires it. */
+/** The credit moves only on a press, and every press expires it. */
 const CREDIT_CACHE_SECONDS = 3_600;
-/** How long a failed read is answered from memory before DeepL is asked again. */
 export const FAILURE_MEMO_MS = 60_000;
 
 let lastFailure: { at: number; keyId: string; reason: TranslatorFailure } | null = null;
@@ -54,8 +46,8 @@ export async function readTranslationCredit(
 }
 
 /**
- * The key's part of the cache key: its host kind and a non-reversible fingerprint (the first
- * eight hex characters of the key's SHA-256) — never the key — so a new key reads its own credit.
+ * Host kind plus a non-reversible fingerprint, never the key (§479). The data cache outlives a
+ * redeploy, so a replaced key must not inherit the old one's reading.
  */
 export function creditCacheKey(apiKey: string): string {
   const key = apiKey.trim();
@@ -92,7 +84,7 @@ async function askCredit(
   }
 }
 
-/** After a press that reached DeepL: the next reading is DeepL's new figure, not the cached one. */
+/** Called after a press that reached DeepL. */
 export function forgetTranslationCredit(): void {
   lastFailure = null;
   try {

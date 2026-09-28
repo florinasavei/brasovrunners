@@ -11,31 +11,11 @@ import { type TranslateOffer, useTranslateOffer } from "./TranslateProvider";
 import { useTranslateAll } from "./use-translate-all";
 
 /**
- * «Copiază și tradu tot: RO → EN» at the top of a record's editor (`DECISIONS.md` §464, §482; the
- * owner, 2026-09-26: «I wanna override the descriptions and all from RO to EN so I have the same
- * layout and all», and 2026-09-27: «I can't find or don't know how to use the AI translate … I
- * just wanna copy all from RO to English and auto-translate with a single button click»).
- *
- * Every English box of the form whose Romanian twin has words — the title, the summary, the
- * description, the rules, the route, the programme's notes and rows, what to bring, the place's
- * name, the partners' texts, the links' labels, the search-engine texts; on «Echipa» the role, the
- * words about the person and the links' labels — is filled with the Romanian translated, a rich
- * text keeping the Romanian's layout exactly (headings, lists, tables, pictures, films;
- * `domain/rich-text-html.ts`). One request; nothing saved until the ordinary save.
- *
- * **One press** (§482). Where every English box it fills is empty, the press translates at once.
- * It asks first (§384) only when English words already written would be replaced — naming how
- * many and which, and offering «Înlocuiește tot» or «Doar cele goale», so the remaining empty boxes
- * are still one press — or when the press would send more than `ASK_ABOVE_CHARACTERS` of the
- * day's budget, naming the figure (`charactersToSend`, the service's own count).
- *
- * **Always there** (§482) for a role that writes the club's words: a deployment with no DeepL key
- * draws it greyed, with the sentence saying why and, for a reader who may open the tasks page,
- * the link to the row with the steps — a missing button is one nobody can find. A key whose DeepL
- * credit is spent (§497) draws it greyed the same way, saying so and linking Costuri. A role that
- * writes no words sees nothing.
- *
- * Inside the form it reads, so it finds the boxes by the form they post in.
+ * «Copiază și tradu tot: RO → EN» at the top of a record's editor (`DECISIONS.md` §464, §482):
+ * fills every English box whose Romanian twin has words, rich texts keeping their layout; nothing
+ * is saved until the ordinary save. It asks first (§384) only to overwrite English words or past
+ * `ASK_ABOVE_CHARACTERS`. Greyed, with the reason and a link, when there is no key or the credit
+ * is spent (§497). It must sit inside the form it reads.
  */
 export default function TranslateAllButton() {
   const offer = useTranslateOffer();
@@ -43,7 +23,6 @@ export default function TranslateAllButton() {
   return offer.action ? <TranslateAllButtonIsland /> : <TranslateAllButtonOff offer={offer} />;
 }
 
-/** The frame both states share: an outlined card, the button first, the sentence under it. */
 function Frame({ children, off }: { children: ReactNode; off?: boolean }) {
   return (
     <Paper
@@ -100,7 +79,6 @@ function TranslateAllButtonOff({ offer }: { offer: TranslateOffer }) {
 function TranslateAllButtonIsland() {
   const t = useTranslations("Translate");
   const anchor = useRef<HTMLSpanElement>(null);
-  // The whole form (§482); the one question and the feedback are shared with a card's press (§514).
   const { pending, message, press, dialog } = useTranslateAll(() => ({ form: anchor.current?.closest("form") ?? null }), t("confirm.bigTitle"));
 
   return (

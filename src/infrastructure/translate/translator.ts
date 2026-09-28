@@ -3,11 +3,8 @@ import type { TranslateUsage, Translator } from "./adapter";
 import { createDeeplTranslator, readDeeplUsage } from "./deepl-adapter";
 
 /**
- * The translator this deployment has, or none (`DECISIONS.md` §464).
- *
- * None is an ordinary answer, not an error: `TRANSLATE_PROVIDER=off`, or `deepl` with no
- * `DEEPL_API_KEY`. The buttons are then absent (`TranslateProvider` is told so by the layout) and
- * the action refuses, in words, anything that reaches it anyway.
+ * The deployment's translator, or none (`DECISIONS.md` §464). None (`off`, or `deepl` without a
+ * key) is not an error: the buttons are absent and the action refuses in words.
  */
 export type TranslateEnvironment = { TRANSLATE_PROVIDER: TranslateProviderSetting; DEEPL_API_KEY?: string | undefined };
 
@@ -20,10 +17,7 @@ export function createTranslatorForEnvironment(env: TranslateEnvironment): Trans
   return null;
 }
 
-/**
- * What the configured key has used and may use (§497), from the provider's own meter, or null
- * when no translator is configured here. Throws `TranslatorError` when the provider says no.
- */
+/** The key's usage from the provider's meter (§497), or null when none is configured; throws `TranslatorError`. */
 export async function readTranslationUsageForEnvironment(
   env: TranslateEnvironment,
   fetchImpl?: (input: string, init: RequestInit) => Promise<Response>,

@@ -19,11 +19,10 @@ import { TRANSLATION_BUDGET_RULE } from "../domain/budget";
 type Props = {
   locale: Locale;
   state: TranslationBudgetState;
-  /** Characters sent since the club's midnight, from the audit rows (`budget.ts`). */
+  /** Since the club's midnight, from the audit rows (`budget.ts`). */
   usedToday: number;
-  /** Is a translator configured here (`TRANSLATE_PROVIDER` and `DEEPL_API_KEY`)? */
   configured: boolean;
-  /** DeepL's credit from its own meter (§497): given once, so used and left, with its level. */
+  /** DeepL's one-time credit from its meter (§497). */
   credit: CreditReading;
   mayEdit: boolean;
 };
@@ -31,11 +30,8 @@ type Props = {
 const CREDIT_COLOR = { ok: "text.secondary", watch: "warning.main", low: "error.main", spent: "error.main" } as const;
 
 /**
- * «Tradu din română» — how much of it the club spends a day (`DECISIONS.md` §464), beside the
- * other brakes on Costuri and built like them (`JobCadencePanel`): one form, the service asserting
- * the role and writing the audit row, a refusal handed back as the form's state (§315), one
- * question first (§384). It says what is spent today, what is used and left of the key's one-time DeepL credit (§497, DeepL's own figure), and that
- * only the club's own texts are ever sent.
+ * The daily translation budget on Costuri (`DECISIONS.md` §464), built like `JobCadencePanel`
+ * (§315, §384), with today's spend and the DeepL credit (§497).
  */
 export default async function TranslationBudgetPanel({ locale, state, usedToday, configured, credit, mayEdit }: Props) {
   const t = await getTranslations("Admin");
@@ -59,7 +55,7 @@ export default async function TranslationBudgetPanel({ locale, state, usedToday,
       <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} data-testid="translation-budget-today">
         {t("tasks.translationBudget.today", { used: number(usedToday), budget: number(state.budget.dailyCharacters) })}
       </Typography>
-      {/* The credit, as DeepL's own meter states it (§497): the daily figure above is the club's brake, this is what is left at all. */}
+      {/* The daily figure is the club's brake; this is what is left at all (§497). */}
       {credit.ok ? (
         <Typography variant="body2" color={CREDIT_COLOR[credit.credit.level]} sx={{ mt: 0.5 }} data-testid="translation-credit" data-level={credit.credit.level}>
           {t("tasks.translationBudget.credit.line", {

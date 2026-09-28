@@ -1,29 +1,17 @@
 import type { RichTextBlock, RichTextDoc, RichTextText } from "@/modules/content/rich-text/domain/schema";
 
 /**
- * A rich text translated without losing its layout (`DECISIONS.md` §464; the owner, 2026-09-26:
- * «I wanna override the descriptions and all from RO to EN so I have the same layout and all»).
+ * A rich text translated without losing its layout (`DECISIONS.md` §464). Only the words leave:
+ * each block's inline content as HTML, pictures' alt/caption and films' caption as plain text.
+ * They return into a copy of the same document, so every structure and attribute is the
+ * Romanian document's by construction.
  *
- * **The structure never leaves the site.** A document is walked block by block; what goes to the
- * provider is only the words: each paragraph's, heading's, list item's and table cell's inline
- * content as a line of HTML, and each picture's alt text and caption and each film's caption as
- * plain text. What comes back is put into a copy of the same document at the same places. So the
- * headings, the lists, the tables and their styles, the pictures with their address, size, crop
- * and side, the films with their id and poster — every attribute — are the Romanian document's,
- * byte for byte, and the two languages have the same layout by construction rather than by
- * whatever the provider chose to return.
- *
- * **Inline content is HTML of four tags**, which is what DeepL's `tag_handling: "html"` keeps
- * around the words it moves: `<b>`, `<i>`, and `<a data-l="N">`, where N is the link's index in a
- * list kept here. The link's address is never sent — only its place among the words — so a
- * provider cannot rewrite a URL, and the address is restored from the list on the way back. Text
- * is escaped on the way out and unescaped on the way in; any tag the provider invents is dropped
- * and its words kept.
+ * Inline HTML uses `<b>`, `<i>` and `<a data-l="N">` (N indexes a local list): a link's address
+ * is never sent, so the provider cannot rewrite it. Invented tags are dropped, their words kept.
  */
 
 export type InlineHtml = { html: string; links: string[] };
 
-/** One piece of a document the provider translates: a line of inline HTML, or a picture's or a film's words. */
 export type RichTextSegment = { format: "html"; html: string; links: string[] } | { format: "text"; text: string };
 
 const ALT_MAX = 300;
@@ -45,7 +33,6 @@ function unescapeHtml(text: string): string {
   });
 }
 
-/** A paragraph's inline content as the four-tag HTML the provider is sent, with its links' addresses kept aside. */
 export function inlineToHtml(content: readonly RichTextText[] | undefined): InlineHtml {
   const links: string[] = [];
   let html = "";
@@ -71,11 +58,7 @@ function sameMarks(a: readonly Mark[] | undefined, b: readonly Mark[] | undefine
   return JSON.stringify(a ?? []) === JSON.stringify(b ?? []);
 }
 
-/**
- * The provider's HTML back into inline content: the words with the marks the tags around them
- * say, the links' addresses from the list, empty text dropped (the schema refuses it) and
- * neighbours with the same marks joined, as the editor itself would store them.
- */
+/** Empty text is dropped (the schema refuses it) and same-mark neighbours joined, as the editor stores them. */
 export function htmlToInline(html: string, links: readonly string[]): RichTextText[] {
   const nodes: RichTextText[] = [];
   let bold = 0;
@@ -108,7 +91,7 @@ export function htmlToInline(html: string, links: readonly string[]): RichTextTe
         linkStack.push(index !== undefined ? (links[Number(index)] ?? null) : null);
       }
     }
-    // Any other tag — a <br>, a <span> the provider wrapped round a word — is dropped, its words kept.
+    // Any other tag is dropped, its words kept.
   }
   return nodes;
 }
@@ -121,11 +104,7 @@ type Visitor = {
   plain: (text: string, max: number) => string;
 };
 
-/**
- * Every block of a document, rebuilt with its words passed through the visitor and everything
- * else as it was. The one walk both halves use — collecting what to send and putting back what
- * came — so the two can never disagree about the order of the pieces.
- */
+/** The one walk both collecting and restoring use, so they cannot disagree on the pieces' order. */
 function walkDoc(doc: RichTextDoc, visit: Visitor): RichTextDoc {
   const paragraph = <P extends { content?: RichTextText[] }>(node: P): P => {
     const content = visit.inline(node.content);
@@ -164,7 +143,7 @@ function walkDoc(doc: RichTextDoc, visit: Visitor): RichTextDoc {
   return { ...doc, ...(doc.content ? { content: doc.content.map(block) } : {}) };
 }
 
-/** What of a document the provider is sent, in order: only pieces with words in them. */
+/** Only pieces with words in them. */
 export function richTextSegments(doc: RichTextDoc): RichTextSegment[] {
   const segments: RichTextSegment[] = [];
   walkDoc(doc, {
@@ -180,11 +159,7 @@ export function richTextSegments(doc: RichTextDoc): RichTextSegment[] {
   return segments;
 }
 
-/**
- * The same document with each piece replaced by its translation, in `richTextSegments`' order.
- * A picture's alt and caption are cut to the schema's limits, since a translation can be longer
- * than the words it came from; a paragraph whose translation has no words keeps none.
- */
+/** Translations in `richTextSegments`' order; alt and caption are cut to the schema's limits, as a translation may run longer. */
 export function withTranslatedSegments(doc: RichTextDoc, translations: readonly string[]): RichTextDoc {
   const segments = richTextSegments(doc);
   if (segments.length !== translations.length) throw new Error("a translation for every piece, and no more");
@@ -206,7 +181,7 @@ export function withTranslatedSegments(doc: RichTextDoc, translations: readonly 
   });
 }
 
-/** What a piece costs against the budget: the characters sent, tags included — the stricter count. */
+/** Characters sent, tags included — the stricter count. */
 export function segmentCharacters(segment: RichTextSegment): number {
   return segment.format === "html" ? segment.html.length : segment.text.length;
 }

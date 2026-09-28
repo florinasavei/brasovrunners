@@ -11,16 +11,10 @@ import { useTranslateAction } from "./TranslateProvider";
 import { useTranslatePress } from "./use-translate-press";
 
 /**
- * «Tradu din română» beside one English box (`DECISIONS.md` §464): fills it with the Romanian
- * box's words, translated — a draft to read and correct, never saved by the press. When the
- * English box already holds words, it asks first (§384), since the press would replace them.
- *
- * Given the English box's form name only; the Romanian twin is found by the pair's own spelling
- * (`domain/fields.ts`). Absent when the page offers no translation (no key, or a role that may
- * not), so a deployment without DeepL shows the editor exactly as before.
+ * «Tradu din română» beside one English box (`DECISIONS.md` §464); asks first (§384) before
+ * replacing words. Absent — not even a catalogue lookup — where the page offers no translation.
  */
 export default function TranslateFieldButton({ en }: { en: string }) {
-  // Nothing at all — not even a catalogue lookup — where the page offers no translation.
   return useTranslateAction() ? <TranslateFieldButtonIsland en={en} /> : null;
 }
 

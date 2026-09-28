@@ -12,21 +12,12 @@ import { type TranslateOffer, useTranslateOffer } from "./TranslateProvider";
 import { useTranslateAll } from "./use-translate-all";
 
 /**
- * Read by assistive technology, out of sight: the sticky tab row keeps its one line (§514).
- *
- * `"1px"` and not `1`: MUI reads a number between 0 and 1 in `sx` as a fraction, so `width: 1` is
- * `100%` and `m: -1` is eight pixels. The greyed button's reason was laid out as wide as the card,
- * starting at the row's right end: the editor scrolled sideways on a desktop and, on a phone, the
- * page grew wider than the screen and the cards landed over the save buttons (the same trap
- * `AdminTable`'s caption documents).
+ * Visually hidden, so the sticky tab row keeps one line (§514). `"1px"`, not `1`: MUI reads
+ * 0–1 in `sx` as a fraction (`width: 1` is 100%), which overflowed the page sideways.
  */
 const VISUALLY_HIDDEN = { position: "absolute", width: "1px", height: "1px", p: 0, m: "-1px", overflow: "hidden", clip: "rect(0 0 0 0)", whiteSpace: "nowrap", border: 0 } as const;
 
-/**
- * The button at the end of the tab row: never squeezed, 44 px tall. Below `sm` it is the translate
- * glyph alone in a 44-px square, so the sticky row stays one line on a phone (§480, §514); from `sm`
- * up the glyph and the words. The words are then in the `aria-label` and the tooltip.
- */
+/** Below `sm` the glyph alone in a 44-px square, so the sticky row stays one line on a phone (§480, §514). */
 const BUTTON_SX = {
   minHeight: 44,
   minWidth: { xs: 44, sm: 64 },
@@ -36,10 +27,9 @@ const BUTTON_SX = {
   "& .MuiButton-startIcon": { mr: { xs: 0, sm: 1 }, ml: { xs: 0, sm: -0.5 } },
 } as const;
 
-/** The wrapper that holds the tooltip (a disabled button fires no pointer events) and the row's right end. */
+/** Holds the tooltip, since a disabled button fires no pointer events. */
 const WRAPPER_SX = { ml: "auto", flex: "none", display: "inline-flex" } as const;
 
-/** The button's words: drawn from `sm` up, the glyph alone below it (the `aria-label` says them there). */
 function Words({ children }: { children: string }) {
   return (
     <Box component="span" data-translate-card-words="" sx={{ display: { xs: "none", sm: "inline" } }}>
@@ -49,30 +39,14 @@ function Words({ children }: { children: string }) {
 }
 
 /**
- * «Tradu cardul: RO → EN» / "Translate this card: RO → EN" in a card's Română | English tab row
- * (§514), between the one box's «Tradu din română» (§464) and the whole editor's «Copiază și tradu
- * tot» (§482): every English box of this card whose Romanian twin has words, in one press — the
- * card's boxes outside its tabs too (the programme's timed rows), since the card is the nearest
- * `Panel` around the strip (`cardOf`). The rest of the form is untouched.
+ * «Tradu cardul: RO → EN» in a card's tab row (§514): the whole editor's press (`useTranslateAll`,
+ * §482) narrowed to this card (`cardOf`). `onTranslated` brings the English tab forward.
  *
- * The same press as the whole editor's (`useTranslateAll`): it asks first only when English words
- * already written would be replaced («Înlocuiește tot» / «Doar cele goale») or the text is large,
- * says what happened in a toast naming the card (§496, «Gata: 3 câmpuri traduse în „Descrierea
- * completă”»), and saves nothing — the boxes change as if typed and the ordinary save stores them
- * under the both-languages rule (§352). When it filled something, `onTranslated` brings the
- * English tab forward, so the person reads the result.
+ * With no key or a spent credit it is greyed and says why (§482, §497). The tooltip's link is
+ * pointer-only; keyboard users reach the same link in the whole-editor strip above the cards.
+ * The Server Action re-checks role and key on every press (BR-REQ-060-01).
  *
- * **Always drawn for a role that writes the club's words** (§482, §497): with no DeepL key, or a
- * spent credit, it is greyed and says why — in a tooltip with the link to the steps or to Costuri,
- * and to assistive technology through `aria-describedby`. The tooltip's link is for the pointer
- * only; a keyboard user reaches the same steps through the whole editor's «Copiază și tradu tot»
- * strip right above the cards (§482), which draws that link in the page, so no focusable duplicate
- * is added here. A role that writes no words, or a page
- * with no translation at all, sees nothing. The Server Action asks the role and the key again on
- * every press (BR-REQ-060-01).
- *
- * The status line is read out (`role="status"`) and not drawn: it sits in the sticky tab row, and a
- * long sentence there would grow the row over the text scrolling under it; the toast says it.
+ * The status is announced, not drawn: a long sentence would grow the sticky row; the toast shows it.
  */
 export default function TranslateCardButton({ onTranslated }: { onTranslated?: () => void }) {
   const offer = useTranslateOffer();
@@ -80,7 +54,7 @@ export default function TranslateCardButton({ onTranslated }: { onTranslated?: (
   return offer.action ? <TranslateCardButtonIsland onTranslated={onTranslated} /> : <TranslateCardButtonOff offer={offer} />;
 }
 
-/** Why the button is greyed, in the whole editor's own sentences (§482, §497), and where to fix it. */
+/** Why the button is greyed (§482, §497), and where to fix it. */
 export function cardOffReason(offer: TranslateOffer): { reason: "spent" | "off"; href: string | null } {
   return offer.spent ? { reason: "spent", href: offer.costsHref ?? null } : { reason: "off", href: offer.setupHref };
 }
@@ -110,11 +84,7 @@ function TranslateCardButtonOff({ offer }: { offer: TranslateOffer }) {
         </>
       }
     >
-      {/*
-        A disabled button fires no pointer events: the wrapper holds the tooltip and the focus, and
-        the name — once (§520): the inner button carries no `aria-label` of its own, or a screen
-        reader walking the page reads «Tradu cardul» twice.
-      */}
+      {/* The wrapper carries the name once (§520); the inner button has no `aria-label`, or it is read twice. */}
       <Box
         component="span"
         tabIndex={0}

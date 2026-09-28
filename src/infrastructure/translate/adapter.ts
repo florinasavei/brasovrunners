@@ -1,27 +1,17 @@
 /**
- * The translation provider boundary (`DECISIONS.md` §464, «Tradu din română»).
+ * The translation provider boundary (`DECISIONS.md` §464; the `AGENTS.md` §17 adapter shape).
+ * Nothing provider-specific passes this file and `deepl-adapter.ts`; a second provider is a new
+ * file and one line in `translator.ts`.
  *
- * One method goes out, one list comes back: the club's Romanian words in, the English words out,
- * in the same order. Nothing about DeepL — its host, its error codes, its language tags — is
- * allowed past this file and `deepl-adapter.ts`, so adding a second provider (the owner kept the
- * door open for Claude, 2026-09-26) is a new file beside that one and one line in
- * `translator.ts`, and no module or screen changes at all. The `AGENTS.md` §17 shape: a narrow
- * adapter, a real implementation, a fake for the tests.
- *
- * **What crosses it is the club's own writing and nothing else.** A title, a description, a
- * partner's sentence, a link's label — the words the club types for a page or a message. Never a
- * participant's name, address or answer: the service accepts only the field names in
- * `modules/translate/domain/fields.ts`, and none of them holds personal data. The legal texts are
- * not among them either (§418: counsel-reviewed, translated by a person).
+ * Only the club's own writing crosses it — never personal data: the service accepts only the
+ * fields in `modules/translate/domain/fields.ts`. Legal texts are excluded (§418).
  */
 
-/** The two languages a club text is written in. */
 export type TranslateLanguage = "ro" | "en";
 
 /**
- * `text` is a plain box's words, sent as they are. `html` is the inline content of one paragraph
- * of a rich text, serialised to the four tags `domain/rich-text-html.ts` writes, so the provider
- * keeps bold, italic and links around the words they belong to.
+ * `html` is one rich-text paragraph's inline content in the tags `domain/rich-text-html.ts`
+ * writes, so the provider keeps marks and links on their words.
  */
 export type TranslateFormat = "text" | "html";
 
@@ -29,16 +19,13 @@ export type TranslateRequest = {
   from: TranslateLanguage;
   to: TranslateLanguage;
   format: TranslateFormat;
-  /** In order; the answer is in the same order, one string per string. */
+  /** The answer is in the same order, one string per string. */
   texts: readonly string[];
-  /**
-   * What the words are about, in words — the club's glossary (`domain/glossary.ts`). Read by the
-   * provider to choose its words, never translated, never returned; DeepL does not bill it.
-   */
+  /** The club's glossary (`domain/glossary.ts`); guides word choice, never translated or billed. */
   context?: string;
 };
 
-/** The providers this build wires. `off` is not one: it is the absence of a translator. */
+/** `off` is not a provider: it is the absence of a translator. */
 export type TranslateProviderName = "deepl";
 
 export interface Translator {
@@ -47,22 +34,15 @@ export interface Translator {
 }
 
 /**
- * What the provider says the key has used and may use (§497): DeepL's `GET /v2/usage` answer,
- * `character_count` and `character_limit`, in the key's own terms. On the club's key that is a
- * credit given once and never renewed (the Developer plan, 1 000 000 characters, 2026-09-27), so
- * nothing here calls it a month: `modules/translate/domain/credit.ts` reads it as a credit.
+ * The key's used and total characters from the provider's meter (§497). On the club's key it is a
+ * one-time credit, not a monthly allowance; `modules/translate/domain/credit.ts` reads it so.
  */
 export type TranslateUsage = { used: number; limit: number };
 
 /**
- * The three ways a provider says no, as the screen words them:
- *
- * - `quota` — the provider's own allowance is spent, answered as HTTP 456: a credit given once
- *   (the club's key, §497). A new credit or a new key; no month refills it.
- * - `refused` — the key is wrong or revoked (403). The Administrator's to fix; `/admin/tasks`
- *   names the variable.
- * - `unavailable` — anything else: a timeout, a 5xx, a 429, an answer of the wrong shape. Try
- *   again in a minute.
+ * - `quota` — the allowance is spent (HTTP 456); no month refills it (§497).
+ * - `refused` — the key is wrong or revoked (401/403).
+ * - `unavailable` — anything else (timeout, 5xx, 429, wrong shape); retryable.
  */
 export type TranslatorFailure = "quota" | "refused" | "unavailable";
 

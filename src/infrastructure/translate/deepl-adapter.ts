@@ -1,35 +1,24 @@
 import { type TranslateLanguage, type TranslateRequest, type TranslateUsage, type Translator, TranslatorError } from "./adapter";
 
 /**
- * DeepL's text API, v2 (`DECISIONS.md` §464; the owner, 2026-09-26: «use the free stuff, we are
- * an ONG»).
+ * DeepL's text API v2 (`DECISIONS.md` §464), per developers.deepl.com:
  *
- * Read from DeepL's own reference (developers.deepl.com, 2026-09-26), not from memory:
+ * - Auth only by the `DeepL-Auth-Key` header (the form-body key was retired in November 2025).
+ * - A free key (`…:fx`) works only on `api-free.deepl.com`, a paid one only on `api.deepl.com`;
+ *   the host is picked from the key. Both are in the EU.
+ * - At most 50 texts and 128 KiB per request; longer input is split.
+ * - `tag_handling: "html"` keeps rich-text marks on their words; `context` is never translated or billed.
+ * - 456 = quota spent (§497), 403 = wrong key, 429 = too many requests.
  *
- * - `POST /v2/translate`, JSON, `Authorization: DeepL-Auth-Key <key>` — the header is the only
- *   authentication DeepL still accepts (the form-body key was retired in November 2025).
- * - **The free plan has its own host**, `api-free.deepl.com`, and a free key ends in `:fx`; a paid
- *   key goes to `api.deepl.com`. Both are DeepL's, in the EU (DeepL SE, Cologne), and the host is
- *   picked from the key so a club that ever pays changes one variable and nothing else.
- * - Up to **50 texts per request**, answered in order; the whole request at most 128 KiB. A long
- *   description is split into several requests below both limits.
- * - `tag_handling: "html"` keeps the tags around the words they belong to — how a rich text keeps
- *   its bold, italic and links (`modules/translate/domain/rich-text-html.ts`).
- * - `context` is read and never translated or billed — the club's glossary goes there.
- * - `456` is "quota exceeded" (the key's one-time credit spent, §497), `403` a wrong key, `429` too
- *   many requests.
- *
- * English is `EN-GB`: the site's English is British (`en-GB` dates and numbers everywhere).
+ * English is `EN-GB`: the site's English is British.
  */
 
 const FREE_HOST = "https://api-free.deepl.com";
 const PRO_HOST = "https://api.deepl.com";
 
-/** DeepL's own ceiling is 50 texts a request. */
 const MAX_TEXTS_PER_REQUEST = 50;
 /** Under DeepL's 128 KiB request ceiling with room for the JSON around the texts and the context. */
 const MAX_CHARACTERS_PER_REQUEST = 60_000;
-/** A translation of a long description takes seconds; a hung request must not hold the press for a minute. */
 const TIMEOUT_MS = 20_000;
 
 const LANGUAGE: Record<TranslateLanguage, { source: string; target: string }> = {
@@ -41,16 +30,13 @@ type FetchLike = (input: string, init: RequestInit) => Promise<Response>;
 
 export type DeeplOptions = {
   apiKey: string;
-  /** Tests hand a fake; production uses the platform's own `fetch`. */
   fetchImpl?: FetchLike;
 };
 
-/** The host a key belongs to: a free key (`…:fx`) only works on the free host, and a paid one only on the other. */
 export function deeplHostFor(apiKey: string): string {
   return apiKey.trim().endsWith(":fx") ? FREE_HOST : PRO_HOST;
 }
 
-/** The texts cut into requests DeepL accepts: at most 50 each, and at most the character ceiling. */
 export function deeplBatches(texts: readonly string[]): string[][] {
   const batches: string[][] = [];
   let current: string[] = [];
@@ -74,17 +60,12 @@ function failureOf(status: number): TranslatorError {
   return new TranslatorError("unavailable", `DeepL answered ${status}`);
 }
 
-/** The usage question is a small GET; Costuri must not wait on it the way a translation may. */
+/** A small GET; Costuri must not wait on it the way a translation may. */
 const USAGE_TIMEOUT_MS = 5_000;
 
 /**
- * What the key has used and may use, from DeepL's own meter (§497): `GET /v2/usage` on the key's
- * host, the same header as a translation. DeepL's reference (developers.deepl.com, read
- * 2026-09-27): `character_count` is the characters translated so far in the key's current
- * allowance and `character_limit` the allowance — on the club's key a one-time credit
- * (1 000 000 at 0 used on 2026-09-27) that does not renew. The request is not billed.
- *
- * Throws `TranslatorError` in the same three words as a translation, so the screen says why.
+ * `GET /v2/usage` (§497), not billed: `character_count` used of `character_limit` — on the club's
+ * key a one-time credit that does not renew. Throws `TranslatorError` like a translation.
  */
 export async function readDeeplUsage({ apiKey, fetchImpl }: DeeplOptions): Promise<TranslateUsage> {
   const send: FetchLike = fetchImpl ?? ((input, init) => fetch(input, init));
@@ -161,8 +142,7 @@ export function createDeeplTranslator({ apiKey, fetchImpl }: DeeplOptions): Tran
     provider: "deepl",
     async translate(request) {
       const answers: string[] = [];
-      // One request after the other, never in parallel: a free key's rate limit is low, and a
-      // description is at most a few requests.
+      // Sequential: a free key's rate limit is low.
       for (const batch of deeplBatches(request.texts)) answers.push(...(await translateBatch(request, batch)));
       return answers;
     },

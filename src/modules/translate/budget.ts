@@ -16,25 +16,17 @@ import {
 } from "./domain/budget";
 
 /**
- * Where the club's daily translation allowance is kept, and how much of today's is spent
- * (`DECISIONS.md` §464).
+ * The daily translation allowance setting and today's spend (`DECISIONS.md` §464). The setting is
+ * a `platform_settings` row like every club setting (§377, §450).
  *
- * The setting is one `platform_settings` row in the shape of every other club setting (§377,
- * §389): a strict schema, the Administrator's capability (`canManageClubSettings`, §450 — it caps
- * what the club spends and cannot stop the platform) asserted here and not only by the hidden form,
- * an audit row naming who changed it from what to what, and a save that changes nothing writes
- * nothing.
- *
- * **The meter is the audit trail itself**, not a counter of its own: every press writes one
- * `content.translated` row carrying the characters it sent, so today's spend is the sum of those
- * rows since the club's midnight. No table, no migration, and a figure nobody can reset by hand.
+ * The meter is the audit trail: each press's `content.translated` row carries its characters, so
+ * no counter exists that anyone could reset.
  */
 
 export const TRANSLATION_BUDGET_SETTING_KEY = "translation-budget";
 /**
- * One fixed id per setting for the audit row. It was `…e00a` until §483, which the contact
- * address shown had taken the same afternoon: the audit rows written before keep that id and are
- * told apart by their `action`. `tests/unit/settings/entity-ids.test.ts` holds every id unique.
+ * Audit row id. Older rows carry `…e00a` (shared with another setting until §483), told apart by
+ * `action`; `tests/unit/settings/entity-ids.test.ts` holds every id unique.
  */
 export const TRANSLATION_BUDGET_SETTING_ENTITY_ID = "00000000-0000-4000-8000-00000000e010";
 
@@ -46,21 +38,17 @@ export async function readTranslationBudget<T extends Record<string, unknown>>(d
   return { budget: readTranslationBudgetValue(row.value), updatedAt: row.updatedAt };
 }
 
-/** The club's midnight today, as an instant: the day the allowance counts. */
+/** Midnight in the club's time zone: the day the allowance counts. */
 export function startOfClubDay(now: Date): Date {
   const today = toWallTimeInput(now, CLUB_TIME_ZONE).slice(0, 10);
   return fromWallTimeInput(`${today}T00:00`, CLUB_TIME_ZONE) ?? now;
 }
 
-/** The characters sent for translation since the club's midnight, by everybody. */
 export async function charactersTranslatedToday<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<number> {
   return charactersTranslatedSince(db, startOfClubDay(now));
 }
 
-/**
- * The characters sent for translation since an instant, by everybody — the day's allowance above,
- * and the month's line on Costuri → «Luna aceasta» (§479) against DeepL Free's monthly ceiling.
- */
+/** By everybody; also Costuri's month line (§479). */
 export async function charactersTranslatedSince<T extends Record<string, unknown>>(db: Database<T>, since: Date): Promise<number> {
   const [row] = await db
     .select({ total: sql<string | null>`coalesce(sum((${auditLogs.metadataJson}->>'characters')::integer), 0)` })

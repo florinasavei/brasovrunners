@@ -4,22 +4,12 @@ import { protectPlaceholders } from "./placeholders";
 import { richTextSegments, segmentCharacters } from "./rich-text-html";
 
 /**
- * The club's daily allowance of translated characters (`DECISIONS.md` §464, §497).
- *
- * The club's DeepL key carries a credit given once — 1 000 000 characters, never renewed — and
- * DeepL answers "quota exceeded" (HTTP 456) once it is spent (`domain/credit.ts`). Fifty thousand
- * a day by default keeps one enthusiastic afternoon — a dozen long descriptions translated three
- * times over — from spending a large share of it, and still covers every ordinary week: an
- * event's texts in full are five to fifteen thousand. The Administrator changes it on
- * `/admin/tasks` → Costuri; 0 turns the buttons' work off without touching a variable. The count
- * is the characters *sent*, tags included — stricter than DeepL's own, so the club's figure runs
- * out first.
+ * The club's daily allowance of translated characters (`DECISIONS.md` §464, §497), guarding the
+ * key's one-time credit (`domain/credit.ts`). The default 50 000 covers an ordinary week (an
+ * event's texts are 5–15 thousand); 0 turns translation off. It counts characters *sent*, tags
+ * included — stricter than DeepL's count, so the club's figure runs out first.
  */
-/**
- * The highest daily allowance the Administrator may type (§464, §497): a ceiling on the setting,
- * not a provider's figure — half of the club's one-time credit in a single day is already more
- * than any week needs.
- */
+/** The highest allowance the setting accepts (§464, §497); not a provider figure. */
 export const TRANSLATION_DAILY_CEILING_CHARACTERS = 500_000;
 
 export const TRANSLATION_BUDGET_RULE = {
@@ -50,18 +40,15 @@ export function readTranslationBudgetValue(value: unknown): TranslationBudget {
   return { ...DEFAULT_TRANSLATION_BUDGET };
 }
 
-/** Whether a press of `asked` characters fits what is left of today's allowance, and what is left. */
 export function budgetAllows(usedToday: number, asked: number, budget: TranslationBudget): { allowed: boolean; remaining: number } {
   const remaining = Math.max(0, budget.dailyCharacters - usedToday);
   return { allowed: asked <= remaining, remaining };
 }
 
 /**
- * The characters a press sends, counted exactly as the service counts them against the budget
- * (§464): a rich text's lines as the HTML that travels, tags included; a plain box's words with
- * its `{placeholders}` as the numbered markers that travel; a blank box nothing. The service and
- * «Copiază și tradu tot» both read this one function (§482), so the figure the question names
- * before the press is the figure the budget is charged after it.
+ * The characters a press sends, as they travel (rich text as tagged HTML, placeholders as
+ * markers). The service and «Copiază și tradu tot» share it, so the figure asked about before
+ * the press is the one charged after it (§464, §482).
  */
 export function charactersToSend(items: readonly ({ kind: "text"; text: string } | { kind: "rich"; doc: RichTextDoc })[]): number {
   let total = 0;
@@ -75,9 +62,5 @@ export function charactersToSend(items: readonly ({ kind: "text"; text: string }
   return total;
 }
 
-/**
- * Above this many characters «Copiază și tradu tot» always asks first, naming the figure (§482):
- * two fifths of the default day (50 000), so one press of a long race page never spends most of
- * the day's allowance without the person seeing the number.
- */
+/** Above this, «Copiază și tradu tot» asks first, naming the figure (§482): two fifths of the default day. */
 export const ASK_ABOVE_CHARACTERS = 20_000;

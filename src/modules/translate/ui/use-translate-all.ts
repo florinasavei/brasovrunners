@@ -8,32 +8,20 @@ import { ASK_ABOVE_CHARACTERS } from "../domain/budget";
 import { labelOfBox, planTranslateAll, type TranslateAllPlan } from "./form-fields";
 import { useTranslatePress } from "./use-translate-press";
 
-/**
- * Where a press reads and writes: the form the boxes post in, and — for one card — the card and
- * its name (`card`, for the toast «… traduse în „Descrierea completă”», §514).
- */
+/** `card` names the card for its toast (§514). */
 export type TranslateScope = { form: HTMLFormElement | null; within?: ParentNode | null; card?: string | null };
 
-/**
- * What follows a press (§514): `onDone` only when boxes were filled — a refusal, a failure or a
- * form with no Romanian words leaves the reader where they are, reading the line and the toast.
- */
+/** `onDone` only when boxes were filled (§514). */
 export function afterPress(result: { kind: string } | null, onDone?: () => void): void {
   if (result?.kind === "done") onDone?.();
 }
 
 /**
- * One press over many English boxes, with the one question it may ask first (§482): shared by
- * «Copiază și tradu tot: RO → EN» at the top of an editor (the whole form) and «Tradu cardul: RO →
- * EN» in a card's tab row (§514, the card's boxes only), so both ask the same question at the same
- * moments — English already written would be replaced («Înlocuiește tot» / «Doar cele goale»), or
- * the press would send more than `ASK_ABOVE_CHARACTERS` — and say what happened the same way
- * (`pressFeedback`: the line and the toast, §496).
+ * The many-box press shared by «Copiază și tradu tot» (§482) and «Tradu cardul» (§514), so both
+ * ask first on the same conditions and report the same way (§496).
  *
- * `scope` is read at the press, never at render: the boxes are the browser's, as typed now.
- * `bigTitle` is the question's title when only the size asks, in the press's own words.
- * `onDone` runs once the boxes were filled — a card's press brings its English tab forward (§514),
- * so the person reads the result rather than the unchanged Romanian.
+ * `scope` is read at the press, never at render. `bigTitle` titles the question when only the
+ * size asks.
  */
 export function useTranslateAll(scope: () => TranslateScope, bigTitle: string, onDone?: () => void) {
   const t = useTranslations("Translate");
@@ -47,7 +35,6 @@ export function useTranslateAll(scope: () => TranslateScope, bigTitle: string, o
   const press = () => {
     const { form, within, card } = scope();
     const plan = planTranslateAll(form, within);
-    // Empty English boxes and an ordinary amount of words: one press, no question.
     if (plan.replaced.length === 0 && plan.characters <= ASK_ABOVE_CHARACTERS) {
       go(form, plan.names, card);
       return;
@@ -86,7 +73,6 @@ export function useTranslateAll(scope: () => TranslateScope, bigTitle: string, o
     };
   })();
 
-  /** Everything `ConfirmDialog` takes, ready to spread. */
   const dialog = {
     open: asking !== null,
     spec,
