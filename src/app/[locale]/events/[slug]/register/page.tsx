@@ -37,6 +37,7 @@ import ReadAndAgree from "@/modules/registrations/ui/ReadAndAgree";
 import { isRichTextEmpty, readRichText } from "@/modules/content/rich-text/domain/schema";
 import { costUrlHost } from "@/modules/events/domain/cost";
 import { registrationState } from "@/modules/events/domain/registration-window";
+import { datedOrNull } from "@/modules/events/domain/dated";
 import { confirmationWindow } from "@/modules/registrations/domain/hold-deadlines";
 import { registrationEventWithLastGood } from "@/modules/resilience/event-copy";
 import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
@@ -148,7 +149,9 @@ export default async function RegisterPage({ params, searchParams }: Props) {
     skipped then; the ones the public cache answers are tried and may say nothing.
   */
   const eventRead = await registrationEventWithLastGood(locale, slug, now);
-  const event = eventRead.value;
+  // No form while the date is to be announced (§533): registration is «în curând» until it is,
+  // and the state below would say so anyway — this says it before a date is read.
+  const event = eventRead.value ? datedOrNull(eventRead.value) : null;
   if (!event) notFound();
   const resting = eventRead.freshness === "stale";
 

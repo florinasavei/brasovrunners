@@ -297,6 +297,8 @@ export async function forecastAutomaticEmails<T extends Record<string, unknown>>
       startsAt: events.startsAt,
       registrationOpensAt: events.registrationOpensAt,
       registrationOpensSoon: events.registrationOpensSoon,
+      dateToBeAnnounced: events.dateToBeAnnounced,
+      timeToBeAnnounced: events.timeToBeAnnounced,
       registrationClosesAt: events.registrationClosesAt,
       publishedAt: events.publishedAt,
       addresses: sql<number>`count(*)::int`,

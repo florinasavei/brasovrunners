@@ -33,8 +33,8 @@ import { env } from "@/shared/config/env";
 import { DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import JsonLd from "@/shared/ui/JsonLd";
 import Wordmark from "@/shared/ui/Wordmark";
-import type { listUpcomingEvents, PublicEvent } from "@/modules/events/repository";
-import { cachedDeadlines, cachedLatestPastEvent, cachedPastEvents, cachedUpcomingEvents } from "@/modules/public-cache/reads";
+import type { listUpcomingEvents, PublicEvent, PublicEventPage } from "@/modules/events/repository";
+import { cachedDeadlines, cachedLatestPastEvent, cachedPastEvents, cachedUndatedEvents, cachedUpcomingEvents } from "@/modules/public-cache/reads";
 
 import type { CalendarLayout } from "@/modules/events/ui/EventCalendar";
 import { CLUB_NAME, PAGE_WIDTH } from "@/theme/brand";
@@ -62,7 +62,8 @@ type Props = {
  * Whether a row is a night event (§394), for the filter's "Eveniment de noapte" box: the same answer
  * the row's own pill gives, at the club's place, per date.
  */
-const isNight = (event: PublicEvent) => clubNightEvent(event).night;
+// No night without a date (§533): an event whose date is to be announced has no sunset to compare.
+const isNight = (event: PublicEventPage) => event.startsAt !== null && clubNightEvent({ ...event, startsAt: event.startsAt }).night;
 
 /**
  * Rendered per request. Organizers publish and cancel events between deploys, so a build-time
@@ -146,15 +147,23 @@ export default async function EventsPage({ params, searchParams }: Props) {
     The past section's own read (§267) starts at the same moment and is awaited beside it, so the
     two cost the longer of the two, not the sum.
   */
-  const [read, pastRows] = await Promise.all([
+  const [read, pastRows, undatedRows] = await Promise.all([
     readWithLastGood(`events:${locale}`, () => loadListing(locale, now), now),
     readPastEvents(locale, now),
+    readUndatedEvents(locale),
   ]);
-  const { events, hasUpcoming } = read.value;
+  const listing = read.value;
+  // Between seasons (§167) the page leads with the club's last event so it is not blank — unless
+  // an event whose date is to be announced (§533) is ahead: then the page is not between seasons,
+  // and that section, under the cards, is what it has to show.
+  const { events, hasUpcoming }: Listing = !listing.hasUpcoming && undatedRows.length > 0 ? { events: [], hasUpcoming: false } : listing;
   // «Înscrieri deschise» is the page's own door (§413): one cached availability read per open
   // internal event among these rows, the entry its card and its page read too, and nothing for any
   // other row (`readRegistrationDoor`, §409).
-  const facts: FilterFacts<PublicEvent> = { night: isNight, door: await readRegistrationDoors([...events, ...pastRows], now) };
+  const facts: FilterFacts<PublicEventPage> = { night: isNight, door: await readRegistrationDoors([...events, ...pastRows], now) };
+  // The undated section under the cards, narrowed by the same filters: when it shows something, a
+  // filter that empties the dated cards is not "nothing to show".
+  const undatedShown = undatedRows.filter((event) => matchesListingFilter(event, filter, facts));
 
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
@@ -180,13 +189,16 @@ export default async function EventsPage({ params, searchParams }: Props) {
         {t("intro")}
       </Typography>
 
-      <ListingLead events={events} hasUpcoming={hasUpcoming} filter={filter} facts={facts} layout={layout} locale={locale} />
+      <ListingLead events={events} undated={undatedRows} hasUpcoming={hasUpcoming} filter={filter} facts={facts} layout={layout} locale={locale} />
 
       {/* The calendar moved to its own page in §251 — a tab after the events, because the
           front page is for "what is on next" and a grid of squares is what somebody planning a
           month wants. `modules/events/ui/CalendarSection.tsx` renders it there. */}
 
-      <ListingBody events={events} hasUpcoming={hasUpcoming} filter={filter} facts={facts} now={now} />
+      <ListingBody events={events} hasUpcoming={hasUpcoming} filter={filter} facts={facts} now={now} undatedBelow={undatedShown.length > 0} />
+
+      {/* The events whose date is to be announced (§533): under the dated ones, never in a month. */}
+      <UndatedEvents rows={undatedShown} now={now} />
 
       {/* What the club has already held, at the foot and folded (§267). */}
       <PastEvents
@@ -215,16 +227,19 @@ export default async function EventsPage({ params, searchParams }: Props) {
  */
 async function ListingLead({
   events,
+  undated,
   hasUpcoming,
   filter,
   facts,
   layout,
   locale,
 }: Listing & {
+  /** The events whose date is to be announced (§533): the panel offers their values too. */
+  undated: readonly PublicEventPage[];
   /** The filters the address names (§413): OR within a group, AND across groups. */
   filter: ListingFilter;
   /** The night and door answers, per row, the page read once (§394, §413). */
-  facts: FilterFacts<PublicEvent>;
+  facts: FilterFacts<PublicEventPage>;
   layout: CalendarLayout;
   locale: "ro" | "en";
 }) {
@@ -232,7 +247,7 @@ async function ListingLead({
   // What the panel offers (§413, §133's rule generalised): a box only where ticking it would change
   // what the page shows — read off every row, the lead's included, never off the filtered rows —
   // or where the address already ticks it, so a filtered page can say what it is filtered by.
-  const offer = offeredFilters(events, filter, facts);
+  const offer = offeredFilters<PublicEventPage>([...events, ...undated], filter, facts);
 
   return (
     <>
@@ -294,6 +309,43 @@ const CARD_GRID_SX = {
  * where the rest lives. The section says so in its own words rather than growing a pager.
  */
 const PAST_EVENTS_SHOWN = 12;
+
+/**
+ * The events whose date is to be announced (§533), or none when they cannot be read: like the past
+ * section, a section of what the page already has, never a reason for the listing to fail.
+ */
+async function readUndatedEvents(locale: EventLocale): Promise<PublicEventPage[]> {
+  try {
+    return await cachedUndatedEvents(locale);
+  } catch (error) {
+    unstable_rethrow(error);
+    console.error("[events] could not read the events whose date is to be announced", error);
+    return [];
+  }
+}
+
+/**
+ * «Data se anunță» (§533): the published events whose date is not announced yet, under the dated
+ * list — a card each, its «Când» saying so, never a countdown, a month or a forecast. The page hands
+ * it the rows its filters let through (no such event is a night one or has a door open: registration
+ * is «în curând» until the date is known). Nothing at all when there is none.
+ */
+async function UndatedEvents({ rows: shown, now }: { rows: readonly PublicEventPage[]; now: Date }) {
+  if (shown.length === 0) return null;
+  const t = await getTranslations("Events");
+  return (
+    <Box component="section" aria-labelledby="undated-events-title" data-testid="undated-events" sx={{ mt: { xs: DENSITY.sectionGapLg, sm: 4 } }}>
+      <Typography component="h2" variant="h5" id="undated-events-title" sx={{ mb: { xs: DENSITY.gapSm, sm: 2 } }}>
+        {t("undatedTitle")}
+      </Typography>
+      <Box component="ul" sx={CARD_GRID_SX}>
+        {shown.map((event, index) => (
+          <EventCard key={event.id} event={event} index={index} now={now} />
+        ))}
+      </Box>
+    </Box>
+  );
+}
 
 /**
  * How far back the past section looks (§413): the club's latest sixty past events — about a year
@@ -413,11 +465,14 @@ async function ListingBody({
   filter,
   facts,
   now,
+  undatedBelow = false,
 }: Listing & {
   /** The filters the address names (§413), the same the panel was given. */
   filter: ListingFilter;
-  facts: FilterFacts<PublicEvent>;
+  facts: FilterFacts<PublicEventPage>;
   now: Date;
+  /** The «Data se anunță» section (§533) shows something under this grid: no "nothing" sentence then. */
+  undatedBelow?: boolean;
 }) {
   const t = await getTranslations("Events");
   const filtered = activeFilterCount(filter) > 0;
@@ -436,7 +491,10 @@ async function ListingBody({
 
   // Nothing matches the filters: say so in those words, not "nothing is published" (§413) — the
   // panel above still names every tick and "Șterge filtrele" is one press away.
-  if (!featured && listed.length === 0) return <Alert severity="info">{filtered && events.length > 0 ? t("filter.none") : t("empty")}</Alert>;
+  if (!featured && listed.length === 0) {
+    if (undatedBelow) return null;
+    return <Alert severity="info">{filtered && events.length > 0 ? t("filter.none") : t("empty")}</Alert>;
+  }
 
   /*
     The weather at each card's start (§416; the owner: "aș vrea să văd vremea și pe cardul

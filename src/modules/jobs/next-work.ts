@@ -207,6 +207,8 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
     .selectDistinct({
       registrationOpensAt: events.registrationOpensAt,
       registrationOpensSoon: events.registrationOpensSoon,
+      dateToBeAnnounced: events.dateToBeAnnounced,
+      timeToBeAnnounced: events.timeToBeAnnounced,
       publishedAt: events.publishedAt,
       registrationClosesAt: events.registrationClosesAt,
       startsAt: events.startsAt,

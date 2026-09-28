@@ -609,6 +609,14 @@ export const eventFieldsSchema = z
      */
     locationToBeAnnounced: z.boolean().optional().default(false),
     /**
+     * «Data se anunță mai târziu» (§533): the date is not announced yet. Absent means "this caller
+     * is not editing it" (the §451 discipline): a form without the box must never announce a date
+     * the organizer holds back, nor hold back one they announced.
+     */
+    dateToBeAnnounced: z.boolean().optional(),
+    /** «Ora se anunță mai târziu» (§533): the day is announced, its time not yet. The same discipline. */
+    timeToBeAnnounced: z.boolean().optional(),
+    /**
      * Closed sets since migration `0018`, and optional because "the club has not said" is a
      * real answer — `""` from an unselected dropdown means exactly that, not a validation error.
      */

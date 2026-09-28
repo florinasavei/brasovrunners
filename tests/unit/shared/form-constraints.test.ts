@@ -46,6 +46,9 @@ const NOT_A_BOX = new Set([
   "locationToBeAnnounced",
   // «Înscrierile se deschid în curând» (§451): a tick in the registration window's card.
   "registrationOpensSoon",
+  // «Data se anunță mai târziu» and «Ora se anunță mai târziu» (§533): ticks under the start, in «Când și unde».
+  "dateToBeAnnounced",
+  "timeToBeAnnounced",
 ]);
 
 describe("the event form's constraints are the schema's (§315)", () => {

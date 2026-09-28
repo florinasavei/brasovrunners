@@ -13,7 +13,9 @@ import { routing } from "@/i18n/routing";
 import { findTranslationForPreview } from "@/modules/content/events/repository";
 import { placeNameIn } from "@/modules/events/domain/place";
 import { withoutPlaces } from "@/modules/events/domain/schedule";
-import type { PublicEvent } from "@/modules/events/repository";
+import { type PublicEventPage } from "@/modules/events/repository";
+import { datedOrNull } from "@/modules/events/domain/dated";
+import { dayIn } from "@/modules/registrations/domain/age";
 import { EVENT_LINK_KINDS, type EventLinkKind } from "@/modules/events/domain/links";
 import EventAgeRule from "@/modules/events/ui/EventAgeRule";
 import EventFacts from "@/modules/events/ui/EventFacts";
@@ -96,14 +98,21 @@ export default async function PreviewEventPage({ params }: Props) {
   // The place not announced yet (§328) is withheld here exactly as the public query withholds it,
   // so the preview shows the sentence the page will show — including the programme rows' places.
   const placeLater = event.locationToBeAnnounced;
-  const preview: PublicEvent = {
+  // The start not announced yet (§533) — its date, or only its time — withheld the same way: the
+  // preview says «Data se anunță» or the day with «Ora se anunță», as the page will.
+  const dateLater = event.dateToBeAnnounced || event.timeToBeAnnounced;
+  const dayOnly = event.timeToBeAnnounced && !event.dateToBeAnnounced ? dayIn(event.startsAt, event.timezone) : null;
+  const preview: PublicEventPage = {
     id: event.id,
     type: event.type,
     surface: event.surface,
     eventStatus: event.eventStatus,
-    startsAt: event.startsAt,
-    endsAt: event.endsAt,
-    raceStartsAt: event.raceStartsAt,
+    startsAt: dateLater ? null : event.startsAt,
+    endsAt: dateLater ? null : event.endsAt,
+    raceStartsAt: dateLater ? null : event.raceStartsAt,
+    dateToBeAnnounced: event.dateToBeAnnounced,
+    timeToBeAnnounced: event.timeToBeAnnounced,
+    announcedDay: dayOnly,
     timezone: event.timezone,
     mapUrl: placeLater ? null : event.mapUrl,
     // «Coordonate» (§416): withheld with the place, as the public query withholds them.
@@ -148,7 +157,8 @@ export default async function PreviewEventPage({ params }: Props) {
     routeDescriptionJson: translation.routeDescriptionJson,
     checklist: translation.checklist,
     discountNote: translation.discountNote,
-    scheduleItems: placeLater ? withoutPlaces(event.scheduleItems) : event.scheduleItems,
+    // No programme while the start is held back (§533): its rows are instants, as on the page.
+    scheduleItems: dateLater ? null : placeLater ? withoutPlaces(event.scheduleItems) : event.scheduleItems,
     coHosts: event.coHosts,
     coHostName: event.coHostName,
     coHostUrl: event.coHostUrl,
@@ -161,7 +171,9 @@ export default async function PreviewEventPage({ params }: Props) {
 
   const linkKindLabels = Object.fromEntries(EVENT_LINK_KINDS.map((kind) => [kind, tEvent(`links.kinds.${kind}`)])) as Record<EventLinkKind, string>;
   // The forecast the public page will show (§402): a draft within seven days of its start reads it too.
-  const weather = await forecastForEvent(preview, now);
+  // None while the date is to be announced (§533), as on the page.
+  const datedPreview = datedOrNull(preview);
+  const weather = datedPreview ? await forecastForEvent(datedPreview, now) : null;
 
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>

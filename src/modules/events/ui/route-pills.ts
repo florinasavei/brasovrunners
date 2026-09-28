@@ -53,7 +53,6 @@ export type RouteFactsSource = Pick<
   | "distanceMeters"
   | "elevationGainMeters"
   | "nightOverride"
-  | "startsAt"
   | "endsAt"
   | "scheduleItems"
   | "timezone"
@@ -68,7 +67,10 @@ export type RouteFactsSource = Pick<
 > &
   // The level on the club's scale of fifteen (§526), the difficulty's one column; optional like
   // `StoredDifficulty`'s, for a cached row from before it.
-  Pick<StoredDifficulty, "difficultyLevel">;
+  Pick<StoredDifficulty, "difficultyLevel"> & {
+    /** Null on an event page while the date is to be announced (§533): no date, so no night pill. */
+    startsAt: Date | null;
+  };
 
 /** A translator narrow enough for `buildRoutePills`: every call it makes is a plain key with an
  * optional value map, which is how `next-intl`'s own translator is called everywhere else here.
@@ -181,7 +183,9 @@ export function nightPill(
   >,
   t: Translate,
 ): Pill | null {
-  const facts = clubNightEvent(event);
+  const { startsAt } = event;
+  if (startsAt === null) return null;
+  const facts = clubNightEvent({ ...event, startsAt });
   if (!facts.night) return null;
   // The tooltip names the sunset alone (§415). `GlyphChip` only opens the tooltip on hover or
   // focus, so a chip that is itself a plain, unfocusable `div` never lets a keyboard or

@@ -8,6 +8,7 @@ import type {
 import { events } from "@/db/schema/events";
 import { registrations } from "@/db/schema/registrations";
 import type { Database, Transaction } from "@/db/types";
+import { startHeldBack } from "@/modules/events/domain/dated";
 import { registrationHasClosed, registrationState } from "@/modules/events/domain/registration-window";
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { findCurrentApprovedDocument, findEventDeclaration } from "@/modules/legal-documents/repository";
@@ -101,6 +102,14 @@ export type EventForRegistration = {
    * reads the row passes it; absent on a partial row (a fixture) is the column's default, false.
    */
   registrationOpensSoon?: boolean;
+  /**
+   * The date is to be announced (§533): nobody registers at any door, the desk's included — there
+   * is no day to count the minimum age on, and `startsAt` is only the organizer's provisional note.
+   * Absent on a partial row (a fixture) is the column's default, false.
+   */
+  dateToBeAnnounced?: boolean;
+  /** Only the time is to be announced (§533): refused at every door, like the date's switch. */
+  timeToBeAnnounced?: boolean;
   registrationClosesAt: Date | null;
   capacity: number | null;
   raceId: string | null;
@@ -168,6 +177,10 @@ function assertRegistrationOpen(event: EventForRegistration, now: Date, atTheDes
   if (event.registrationMode !== "INTERNAL") {
     throw new DomainError("VALIDATION_ERROR", "this event does not accept local registration");
   }
+  // Before the desk's exception: a date still to be announced (§533) takes nobody anywhere.
+  if (startHeldBack(event)) {
+    throw new DomainError("VALIDATION_ERROR", "the event's date is to be announced: registration is not open");
+  }
   if (atTheDesk) {
     if (event.eventStatus !== "SCHEDULED") {
       throw new DomainError("VALIDATION_ERROR", `the event is ${event.eventStatus}`);
@@ -181,6 +194,8 @@ function assertRegistrationOpen(event: EventForRegistration, now: Date, atTheDes
       startsAt: event.startsAt,
       registrationOpensAt: event.registrationOpensAt,
       registrationOpensSoon: event.registrationOpensSoon ?? false,
+      dateToBeAnnounced: event.dateToBeAnnounced ?? false,
+      timeToBeAnnounced: event.timeToBeAnnounced ?? false,
       registrationClosesAt: event.registrationClosesAt,
       publishedAt: event.publishedAt,
     },
@@ -1359,6 +1374,12 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     */
     const locked = await repo.lockEventForCapacity(tx, event.id);
     if (!locked) throw new DomainError("NOT_FOUND", "no such event");
+    // Asked again under the lock (§533): the date held back by a save that committed after the
+    // caller read the row. The save counts registrations under this same lock, so a submission and
+    // the switch cannot both pass — one waits for the other and finds it.
+    if (startHeldBack(locked)) {
+      throw new DomainError("VALIDATION_ERROR", "the event's date is to be announced: registration is not open");
+    }
 
     const participant = await findOrCreateParticipant(tx, identity, legalName, input.locale, now);
     if (origin.anotherPerson && origin.anotherPerson.participantId !== participant.id) {
