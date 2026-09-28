@@ -51,8 +51,8 @@ describe("§503 a group run's self-declaration is kept until the signer asks", (
     expect(signed.text).toContain("The club keeps it as long as it is needed for the runs it applies to; if you ask for its withdrawal, it no longer uses it, keeps a copy at most for the limitation period, then deletes it.");
     const archive = buildOutgoingEmail({ to: "x@example.test", locale: "ro", idempotencyKey: "t:a", messageType: "GROUP_RUN_DECLARATION_ARCHIVE", data: DATA });
     // Erased at the runner's withdrawal (§NNN, the counsel's second pass, in place of «ștergerea»).
-    expect(archive.text).toContain("cât timp alergătorul vine la alergări; când cere retragerea ei");
-    expect(archive.text).toContain("while the runner keeps coming to the runs; when they ask for its withdrawal");
+    expect(archive.text).toContain("cât timp declarația este activă; când alergătorul cere retragerea ei");
+    expect(archive.text).toContain("while the declaration is active; when the runner asks for its withdrawal");
     const source = readFileSync("src/modules/notifications/templates.ts", "utf8");
     const entries = [...source.matchAll(/groupRunDeclaration(?:Signed|Archive): \{[\s\S]*?\n {4}\},/g)].map((match) => match[0]);
     // Two entries per language.

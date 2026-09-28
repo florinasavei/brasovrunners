@@ -1114,7 +1114,7 @@ const T = {
           signing", untrue of a declaration still active). Counted from the withdrawal: any claim
           arises at a run it covered, all of which came before.
         */
-        `Copia pentru arhiva clubului. Păstreaz-o în căsuța clubului cât timp declarația este activă, ca în nota de confidențialitate. Declarația întreagă este în backoffice, pe pagina evenimentului, la „Declarații semnate (alergare de grup)”, cât timp alergătorul vine la alergări; când cere retragerea ei, o ștergi de acolo, cu motivul, iar copia de aici o mai păstrezi cel mult ${archivePeriod("ro")} de la retragere (termenul general de prescripție), apoi o ștergi, cu copiile ei; dacă alergătorul se opune și nu avem un motiv legitim mai puternic, șterge-o mai devreme.`,
+        `Copia pentru arhiva clubului. Păstreaz-o în căsuța clubului cât timp declarația este activă, ca în nota de confidențialitate. Declarația întreagă este în backoffice, pe pagina evenimentului, la „Declarații semnate (alergare de grup)”, cât timp declarația este activă; când alergătorul cere retragerea ei, o ștergi de acolo, cu motivul, iar copia de aici o mai păstrezi cel mult ${archivePeriod("ro")} de la retragere (termenul general de prescripție), apoi o ștergi, cu copiile ei; dacă alergătorul se opune și nu avem un motiv legitim mai puternic, șterge-o mai devreme.`,
       ],
     },
     clubConfirmationNotice: {
@@ -1606,7 +1606,7 @@ const T = {
         d.groupRunSeries
           ? `Attached is the self-declaration signed by ${d.participantName || "a runner"} for the group run series ${d.eventTitle ?? ""}${d.seriesRhythm ? ` (${d.seriesRhythm})` : ""}${d.signedAtFormatted ? `, on ${d.signedAtFormatted}` : ""}. It is valid for every run of the series.`
           : `Attached is the self-declaration signed by ${d.participantName || "a runner"} for the group run ${d.eventTitle ?? ""}${d.signedAtFormatted ? `, on ${d.signedAtFormatted}` : ""}.`,
-        `The club's archive copy. Keep it in the club's mailbox while the declaration is active, as the privacy notice says. The full declaration is in the backoffice, on the event's page, under “Signed declarations (group run)”, while the runner keeps coming to the runs; when they ask for its withdrawal, erase it there, with the reason, and keep this copy for at most ${archivePeriod("en")} from the withdrawal (the general limitation period), then delete it, with its copies; if the runner objects and we have no stronger legitimate reason, delete it sooner.`,
+        `The club's archive copy. Keep it in the club's mailbox while the declaration is active, as the privacy notice says. The full declaration is in the backoffice, on the event's page, under “Signed declarations (group run)”, while the declaration is active; when the runner asks for its withdrawal, erase it there, with the reason, and keep this copy for at most ${archivePeriod("en")} from the withdrawal (the general limitation period), then delete it, with its copies; if the runner objects and we have no stronger legitimate reason, delete it sooner.`,
       ],
     },
     clubConfirmationNotice: {

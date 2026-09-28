@@ -364,11 +364,11 @@ describe("§393 the two templates", () => {
     const enText = paragraphs(privacyNoticeEn).join(" ");
     expect(roText).toContain("Dacă o semnezi din nou pe același text, nu păstrăm a doua: îți retrimitem copia.");
     expect(roText).toContain(
-      "Pe o versiune nouă a textului, cea nouă e în vigoare, iar pe cea veche o păstrăm ca dovadă a ce ai acceptat atunci, după aceeași regulă ca o declarație retrasă (mai jos).",
+      "Pe o versiune nouă a textului, cea nouă e în vigoare, iar pe cea veche o păstrăm ca dovadă a ce ai acceptat atunci, până când ne ceri să o ștergem (secțiunea 8).",
     );
     expect(enText).toContain("If you sign it again on the same text, we keep no second one: we resend your copy.");
     expect(enText).toContain(
-      "On a new version of the text, the new one is in force and we keep the old one as evidence of what you accepted then, under the same rule as a withdrawn declaration (below).",
+      "On a new version of the text, the new one is in force and we keep the old one as evidence of what you accepted then, until you ask us to erase it (section 8).",
     );
     for (const text of [roText, enText]) expect(text).not.toMatch(/o înlocuiește pe cea veche|replaces the old one/);
   });

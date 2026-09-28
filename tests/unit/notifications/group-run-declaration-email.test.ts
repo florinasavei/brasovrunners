@@ -56,8 +56,8 @@ describe("§393 the group run's declaration messages", () => {
       expect(email.text).not.toMatch(/de la semnare|from the signing/);
       expect(email.text).toContain("dacă alergătorul se opune");
       // The platform's row while the runner comes to the runs, erased at their withdrawal (§503), never a number of days.
-      expect(email.text).toContain("cât timp alergătorul vine la alergări; când cere retragerea ei");
-      expect(email.text).toContain("while the runner keeps coming to the runs; when they ask for its withdrawal");
+      expect(email.text).toContain("cât timp declarația este activă; când alergătorul cere retragerea ei");
+      expect(email.text).toContain("while the declaration is active; when the runner asks for its withdrawal");
       expect(email.text).not.toMatch(/Cum folosim datele( tale)?:/);
     }
   });
