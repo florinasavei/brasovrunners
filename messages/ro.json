@@ -1892,7 +1892,7 @@
       "roles": {
         "CONTRIBUTOR": "masa de ridicare: scanează codurile, marchează prezența, confirmă pe hârtie, dă un loc liber, scrie un număr. Atât.",
         "COPYWRITER": "textele: descrierea, regulamentul, programul și paginile site-ului, în ambele limbi. Fără setări, fără publicare.",
-        "MODERATOR": "înscrierile și ziua cursei: citește evenimentele, înscrierile, exportul și numerele, scrie participanților, lucrează la masă. Nu creează, nu setează, nu publică un eveniment.",
+        "MODERATOR": "înscrierile și ziua cursei: citește evenimentele, înscrierile, exportul și numerele, scrie participanților, lucrează la masă, ține galeria. Nu creează, nu setează, nu publică un eveniment.",
         "DEV": "pagina tehnică /devs, ca să depaneze. Nu creează și nu setează evenimente; nu vede datele participanților.",
         "ADMIN": "conduce clubul: creează, setează, publică și anulează evenimentele; plus înscrierile, exportul, textele legale, emailurile, sarcinile, planurile și echipa.",
         "SUPERADMIN": "plus setările tehnice care pot opri serviciul — cât de des verifică site-ul, limitele bazei de date, verificarea anti-robot — și numirea altui Superadministrator.",
@@ -6233,7 +6233,7 @@
     "roleSummary": {
       "CONTRIBUTOR": "masa de ridicare a numerelor, și atât",
       "COPYWRITER": "textele oricărui eveniment și ale paginilor; trimite spre aprobare",
-      "MODERATOR": "înscrierile și ziua cursei: citește evenimentele, înscrierile, exportul și numerele, scrie participanților; nu modifică un eveniment",
+      "MODERATOR": "înscrierile și ziua cursei: citește evenimentele, înscrierile, exportul și numerele, scrie participanților, ține galeria; nu modifică un eveniment",
       "DEV": "pagina de configurare; nu modifică evenimente, fără date despre participanți",
       "ADMIN": "conduce clubul: creează, setează, publică și anulează evenimentele; plus înscrieri, export, texte legale, echipa, ștergerea unui eveniment",
       "SUPERADMIN": "plus setările tehnice care pot opri serviciul și numirea altui Superadministrator",

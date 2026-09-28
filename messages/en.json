@@ -1892,7 +1892,7 @@
       "roles": {
         "CONTRIBUTOR": "the desk: scans codes, marks people present, confirms on paper, gives a free place, types a number. That is all.",
         "COPYWRITER": "the words: descriptions, rules, programmes and the site's pages, in both languages. No settings, no publishing.",
-        "MODERATOR": "registrations and race day: reads the events, the registrations, the export and the numbers, messages the participants, works the desk. Creates, sets up and publishes no event.",
+        "MODERATOR": "registrations and race day: reads the events, the registrations, the export and the numbers, messages the participants, works the desk, keeps the gallery. Creates, sets up and publishes no event.",
         "DEV": "the technical page /devs, to diagnose. Creates and sets up no event; sees no participant data.",
         "ADMIN": "runs the club: creates, sets up, publishes and cancels the events; plus registrations, the export, the legal texts, the emails, the tasks, the plans and the team.",
         "SUPERADMIN": "plus the technical settings that can stop the service — how often the site checks, the database's limits, the anti-bot check — and naming another Superadministrator.",
@@ -6233,7 +6233,7 @@
     "roleSummary": {
       "CONTRIBUTOR": "the race-number desk, and nothing else",
       "COPYWRITER": "the words of any event and of the pages; submits for approval",
-      "MODERATOR": "registrations and race day: reads the events, the registrations, the export and the numbers, messages the participants; changes no event",
+      "MODERATOR": "registrations and race day: reads the events, the registrations, the export and the numbers, messages the participants, keeps the gallery; changes no event",
       "DEV": "the configuration page; changes no event, no participant data",
       "ADMIN": "runs the club: creates, sets up, publishes and cancels the events; plus registrations, export, legal texts, the team, deleting an event",
       "SUPERADMIN": "plus the technical settings that can stop the service, and naming another Superadministrator",
