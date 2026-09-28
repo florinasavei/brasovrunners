@@ -29,31 +29,15 @@ import { factsToKeep } from "./series";
 /**
  * Signing a group run's optional self-declaration, and erasing one (§393).
  *
- * **Never a registration.** A group run is turned up to (§111): signing creates no participant, no
- * registration and no place, touches no capacity and passes through no allocator. It writes one
- * `group_run_declarations` row and queues two messages through the outbox (§68): the signer's copy
- * with the PDF (`GROUP_RUN_DECLARATION_SIGNED`) and, when the club has a declarations mailbox, the
- * archive copy with the identity document masked (`GROUP_RUN_DECLARATION_ARCHIVE`, §99, §320) — in
- * the transaction that writes the row, so a rolled-back signature leaves no message and a message
- * never describes a signature that is not there.
+ * Never a registration (§111): no participant, place or allocator — one row plus the signer's and
+ * the archive's messages (§99, §320), queued in the row's transaction (§68).
  *
- * **The guards are the public forms'** (§97, §19.4): the honeypot and the timing check answer as a
- * signature would and write nothing (a distinct answer tells a script which check it tripped); the
- * Turnstile verdict is asked by the action; and a throttle keyed on a hash of the signer's
- * canonical address, because every post spends two messages of the club's allowance.
+ * Guards as the public forms (§97, AGENTS.md §19.4): bot posts answer as signed and write nothing;
+ * a throttle on the hashed address, since each post spends two messages.
  *
- * **One per person, series and version (§523).** A series' signature covers every date of the run
- * (§113), so a returning runner who signs again writes no second row: the one they signed for the
- * version in force is kept and its copy sent again (`keptSignature`), and the unique index on
- * (version, series, signer) holds two presses at once to one row. A newer version is a new row
- * beside the older one, which stays as evidence: a public press, which nobody verified, never
- * deletes a signature — only the Administrator's audited erase does. Nothing on the page tells a
- * kept signature from a new one.
- *
- * **Bound to the text that was read (§57).** The page posts the version's id and hash; a different
- * version in force at the press is refused with `CONFLICT` (`DECLARATION_CHANGED`) and nothing is
- * written. A version's hash covers both languages (§46), so the signer may ask for the PDF in the
- * other language and still sign exactly the version they read.
+ * One row per person, series and version (§523, `keptSignature`, a unique index); an unverified
+ * press never deletes. Bound to the version read (§57): another in force is `DECLARATION_CHANGED`;
+ * the hash covers both languages (§46).
  */
 
 export type GroupRunSigningInput = {
@@ -64,31 +48,22 @@ export type GroupRunSigningInput = {
   typedName: string;
   /** The kind and the series and number, composed by the action (§283); absent or empty when not typed. */
   idDocument?: string;
-  /**
-   * The signer's birth date, `YYYY-MM-DD` (§440): asked only while the run has a minimum age, and
-   * counted against it on the run's day — never stored, never in the declaration or the PDF.
-   */
+  /** `YYYY-MM-DD`, checked against the minimum age and never stored (§440). */
   birthDate?: string;
   email: string;
-  /** The language the declaration is signed in, and the PDF and the email are written in (§97). */
+  /** Also the PDF's and the email's language (§97). */
   locale: Locale;
   honeypot?: string;
   renderedAt?: string;
 };
 
 export type GroupRunSigningOutcome =
-  /**
-   * Signed: the row and the messages are written — or, when the same person had already signed the
-   * version in force for this run (`kept`, §523), that row is kept and its copy sent again. The page
-   * answers both alike; `kept` is for the tests and the log, never for the visitor.
-   */
+  /** `kept`: an existing signature's copy was resent (§523); for tests and logs, never the visitor. */
   | { outcome: "signed"; id: string; kept: boolean }
   /** A bot's post: answered as signed, and nothing written. */
   | { outcome: "ignored" }
-  /** Too many from this address this hour. */
   | { outcome: "limited"; retryAfter: number };
 
-/** The event facts that decide whether a signature may be taken now. */
 export type SignableEvent = {
   id: string;
   type: string;
@@ -97,9 +72,9 @@ export type SignableEvent = {
   editorialStatus: string;
   eventStatus: string;
   startsAt: Date;
-  /** The event's own minimum age (§329), zero for none: the signing page's door (§440). */
+  /** Zero for none (§329, §440). */
   minAge: number;
-  /** The run's own zone: the day the minimum age is counted on (§321). */
+  /** The minimum age is counted on the run's day in this zone (§321). */
   timezone: string;
 };
 
@@ -121,9 +96,8 @@ export async function findSignableEvent<T extends Record<string, unknown>>(db: D
     .from(events)
     .where(eq(events.id, eventId))
     .limit(1);
-  // A run whose date is to be announced (§533) has nothing to sign for yet: its start is only the
-  // organizer's provisional note, and the signed PDF and its email would print it. Not signable, as
-  // the page (which answers 404) says — asked here too, for a stale form or a post to the action.
+  // A date to be announced (§533) is only provisional and the PDF would print it; checked here too
+  // for a stale form.
   if (!row || startHeldBack(row)) return undefined;
   return row;
 }
@@ -137,14 +111,12 @@ export async function signGroupRunDeclaration<T extends Record<string, unknown>>
   input: GroupRunSigningInput,
   now: Date,
 ): Promise<GroupRunSigningOutcome> {
-  // The form's silence (§19.4): a trap filled with something that is not the signer's own
-  // address, or a post faster than a person reads — answered as signed, nothing written.
-  // A trap holding the signer's own address or name is a password manager, not a bot (§282).
+  // Bots are answered as signed (AGENTS.md §19.4); a trap holding the signer's own address or name
+  // is a password manager, not a bot (§282).
   const verdict = classifySubmission({ honeypot: input.honeypot, renderedAt: input.renderedAt, email: input.email, firstName: input.typedName }, now);
   if (verdict !== "ok" && verdict !== "autofill") return { outcome: "ignored" };
 
-  // A posted id that is not a uuid names no run, and never reaches a uuid column (§376): the
-  // form's own "closed" answer rather than PostgreSQL's 22P02 and a 500.
+  // A non-uuid must not reach a uuid column: 22P02 would be a 500 (§376).
   if (!isUuid(input.eventId)) throw new DomainError("NOT_FOUND", "this run offers no declaration to sign");
   if (!isUuid(input.documentId)) throw declarationChanged();
 
@@ -152,14 +124,10 @@ export async function signGroupRunDeclaration<T extends Record<string, unknown>>
   const key = event ? offeredGroupRunDeclarationKey(event) : null;
   if (!event || !key || !signingOpen(event, now)) throw new DomainError("NOT_FOUND", "this run offers no declaration to sign");
 
-  // The text in force, in the language chosen for it — the same version in both (§46).
   const document = await findCurrentApprovedDocument(db, key, input.locale, now);
   if (!document) throw new DomainError("NOT_FOUND", "the club has no approved declaration of this kind");
 
-  // A signature takes an address and an identity document: without an approved privacy notice in
-  // force to say why and for how long, nothing is taken — the rule a registration answers to
-  // (`submitRegistration`, BR-REQ-053-01), in the same words. NOT_FOUND, so the page says the
-  // declaration cannot be signed, which is true, and the run's page draws no button meanwhile.
+  // No personal data without an approved privacy notice in force, as for a registration (BR-REQ-053-01).
   const privacyNotice = await findCurrentApprovedDocument(db, "PRIVACY_NOTICE", input.locale, now);
   if (!privacyNotice) {
     throw new DomainError("NOT_FOUND", "no approved privacy notice exists yet; the declaration cannot be signed");
@@ -185,27 +153,21 @@ export async function signGroupRunDeclaration<T extends Record<string, unknown>>
   ];
   if (invalid.length > 0) throw new DomainError("VALIDATION_ERROR", `${invalid.join(", ")}: the declaration is incomplete`, invalid);
 
-  // Per address, hashed (§322): the bucket needs equality and nothing else.
+  // Keyed on the hashed address (§322).
   const throttle = await consumeRateLimit(db, "group-run-declaration", emailBucketKey("group-run-declaration", canonicalEmail as string), now);
   if (!throttle.allowed) return { outcome: "limited", retryAfter: throttle.retryAfter };
 
-  // The blanks as the signer read them, kept on the row for the PDF (§523): the run's and the series'.
+  // Kept on the row as the signer read them, for the PDF (§523).
   const facts = await groupRunMergeValues(db, event.id, input.locale, document.body);
   const signerKey = signerIdentity(input.email, typedName) as string;
 
   return db.transaction(async (tx) => {
     const txDb = tx as unknown as Database<T>;
-    /*
-      One declaration per person, series and version (§523): the signatures of the version in force
-      that cover this date — signed on it, or for its series on any date of it (§113). The same
-      person's is kept and sent again; otherwise this one is written. Nothing is deleted: an older
-      version's signature stays beside the new one, as the evidence for the runs it covered (§53).
-    */
+    // One declaration per person, series and version (§523): an existing one is resent, never replaced (§53).
     const dates = (await listSeriesDatesOf(txDb, event.id)).map((date) => date.id);
     const existing = keptSignature(await listCoveringSignatures(txDb, event.id, dates, document.id), { email: input.email, typedName }, document.id);
     const resend = async (kept: { id: string; email: string }) => {
-      // Their copy again, to the address the row keeps (the same mailbox, canonically): no second
-      // row, no second archive copy, and the page answers as it does to a signature (§39's rule).
+      // No second archive copy; the page answers as for a new signature (§39).
       await enqueueEmail(tx, {
         participantId: null,
         registrationId: null,
@@ -235,17 +197,13 @@ export async function signGroupRunDeclaration<T extends Record<string, unknown>>
       signedFacts: facts ? factsToKeep(facts.values) : null,
     });
     if (!row) {
-      /*
-        Another press for the same person wrote the row between our read and our write (§523): the
-        unique index refused this one, and nothing was written. Theirs is the signature; send it.
-      */
+      // A concurrent press won the unique index (§523); resend its row.
       const [raced] = await listCoveringSignatures(txDb, event.id, dates, document.id).then((rows) =>
         rows.filter((candidate) => signerIdentity(candidate.email, candidate.typedName) === signerKey),
       );
       if (!raced) throw new Error("the declaration was not written");
       return resend(raced);
     }
-    // The signer's copy, with the PDF: no participant, no registration, no token (§393).
     await enqueueEmail(tx, {
       participantId: null,
       registrationId: null,
@@ -256,7 +214,7 @@ export async function signGroupRunDeclaration<T extends Record<string, unknown>>
       idempotencyKey: `group-run-declaration:${row.id}:signed`,
       now,
     });
-    // The club's archive copy (§99), to the mailbox the club named, with its copies (§244).
+    // The club's archive copy (§99, §244).
     const copies = resolveDeclarationCopies(await readClubNotices(tx), env.DECLARATIONS_ARCHIVE_TO);
     if (copies.to) {
       await enqueueEmail(tx, {
@@ -275,13 +233,7 @@ export async function signGroupRunDeclaration<T extends Record<string, unknown>>
   });
 }
 
-/**
- * An Administrator erases one group-run declaration (§393, the shape of §67 and §88).
- *
- * The audit row first, in the same transaction: who acted, why, and the event — never who had
- * signed (`AGENTS.md` §12.12). Then the messages about it that still hold the signer's address, and
- * the row. A role below Administrator is refused here, whatever the screen drew (BR-REQ-060-01).
- */
+/** An Administrator erases one group-run declaration (§393, as §67 and §88; BR-REQ-060-01). */
 export async function eraseGroupRunDeclaration<T extends Record<string, unknown>>(
   db: Database<T>,
   actor: Pick<StaffUser, "id" | "role">,
@@ -304,17 +256,9 @@ export async function eraseGroupRunDeclaration<T extends Record<string, unknown>
 }
 
 /**
- * The ticked signatures of one run erased in one press (§532; the owner, 2026-09-28: «să pot face
- * batch delete și la declarații, cu confirmarea numărului șters»).
- *
- * Each one exactly as `eraseGroupRunDeclaration` erases one — the same `eraseSignature`: its audit
- * row first (who and why, never who had signed), its messages, the row — so the batch bypasses
- * nothing. One reason for all of them, as the batch screen asks once.
- *
- * `ids` is the set the confirm dialog counted, and it must still be the run's, whole: a signature
- * erased meanwhile (another tab, a colleague) or one not of this run refuses the whole press with a
- * `CONFLICT` and erases nothing, because the Administrator confirmed "N declarations", not the
- * N − 1 the rows became. One transaction, the rows locked, so two presses never share a signature.
+ * Erases the ticked signatures of one run, each through `eraseSignature`, one reason for all (§532).
+ * All-or-nothing: if any id is gone or not this run's, `CONFLICT` — the Administrator confirmed N,
+ * not N − 1. Rows locked in one transaction.
  */
 export async function eraseGroupRunDeclarations<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -344,7 +288,7 @@ export async function eraseGroupRunDeclarations<T extends Record<string, unknown
   });
 }
 
-/** The role and the reason every erase asks for (§393, §67): the trimmed reason, or a refusal. */
+/** Returns the trimmed reason, or refuses (§393, §67). */
 function assertMayErase(actor: Pick<StaffUser, "role">, typed: string): string {
   if (!canManageRegistrations(actor.role)) throw new DomainError("FORBIDDEN", "erasing a declaration is an Administrator's");
   const reason = typed.trim();
@@ -353,10 +297,8 @@ function assertMayErase(actor: Pick<StaffUser, "role">, typed: string): string {
 }
 
 /**
- * One signature erased, inside the caller's transaction — the one path the single and the batch
- * erase share. The audit row first: who acted, why, the event and the version — never who had
- * signed (`AGENTS.md` §12.12). Then the signer's and the club's messages, which carry the address
- * and name the row, and the row.
+ * The one erase path, in the caller's transaction: audit row first, never naming the signer
+ * (AGENTS.md §12.12); then its outbox rows, which carry the address; then the row.
  */
 async function eraseSignature<T extends Record<string, unknown>>(
   tx: Database<T>,

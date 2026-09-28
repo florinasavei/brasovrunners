@@ -1,7 +1,4 @@
-/**
- * The pure rules of a group run's optional self-declaration (§393), shared by the run's page, the
- * signing page and the service, with no database behind them.
- */
+/** Pure rules of a group run's optional self-declaration (§393); no database. */
 import { canonicalizeEmail, InvalidEmailError } from "@/modules/participants/domain/canonical-email";
 import { ADULT_AGE, ageOn, dayIn, isUnderMinimumAge } from "@/modules/registrations/domain/age";
 import { GROUP_RUN_TOO_YOUNG } from "./form";
@@ -9,11 +6,7 @@ import { GROUP_RUN_TOO_YOUNG } from "./form";
 /** How long after the start the page still takes a signature: somebody at the meeting point, late. */
 export const SIGNING_GRACE_MINUTES = 60;
 
-/**
- * Whether a signature may still be taken (§393): a published event, not cancelled, whose start is
- * at most `SIGNING_GRACE_MINUTES` behind. After that the declaration would be about a run that has
- * happened; the signature already taken is kept until the signer asks for its deletion (§503).
- */
+/** A published, uncancelled event whose start is at most `SIGNING_GRACE_MINUTES` behind (§393). */
 export function signingOpen(event: { editorialStatus: string; eventStatus: string; startsAt: Date }, now: Date): boolean {
   return (
     event.editorialStatus === "PUBLISHED" &&
@@ -23,38 +16,26 @@ export function signingOpen(event: { editorialStatus: string; eventStatus: strin
 }
 
 /**
- * The minimum age a group run's self-declaration states (§440, amended by §515): the event's own
- * `min_age` (§329), never under eighteen.
- *
- * The owner's review of 2026-09-27: the texts said at once «declar că am împlinit 18 ani» and «Declar
- * că am cel puțin {{minimumAge}}» — "elimină hardcodarea de 18 și folosește o singură regulă pe
- * `{{minimumAge}}`. Dacă group run-urile rămân doar pentru adulți, `minimumAge = 18` la configurarea
- * evenimentului, nu în text. Nu presupune că declarația de group run acoperă minorii." So the text
- * carries one sentence, «Declar că am cel puțin {{minimumAge}} împliniți la data alergării», and this
- * is its value: the run's number, which the editor's group-run box starts and stops at eighteen,
- * read as eighteen for a run saved before with the race's default of fourteen. The declaration has
- * no minor's signature and no parent's (that is the race's flow, §330), so it covers no minor.
+ * The `{{minimumAge}}` a group-run declaration states (§440, §515): the event's `min_age` (§329),
+ * never under eighteen — a run saved with the race's default of 14 reads as 18. The text has no
+ * minor's or parent's signature (§330), so it covers no minor.
  */
 export function groupRunMinimumAge(minAge: number): number {
   return Math.max(minAge, ADULT_AGE);
 }
 
 /**
- * Whether the signing page asks for a birth date (§440): only for a minimum above eighteen. At
- * eighteen the signer's own statement — the text's sentence, and the consent box that repeats it —
- * is what the declaration rests on, and a birth date would be data collected for no purpose (GDPR
- * art. 5(1)(c), the reason §418 took the identity number off this text). Above it, the page checks.
+ * A birth date is asked only for a minimum above eighteen (§440); at eighteen the signer's own
+ * statement suffices and a birth date would be data collected for no purpose (GDPR art. 5(1)(c), §418).
  */
 export function groupRunAsksBirthDate(minAge: number): boolean {
   return groupRunMinimumAge(minAge) > ADULT_AGE;
 }
 
 /**
- * The run's minimum age at the signing page's door (§440, amending §393): the event's own number
- * (§329) as `groupRunMinimumAge` binds it, counted on the run's day in the run's zone by `isUnderMinimumAge` — the rule the race's
- * registration door asks (`minimumAgeRule`), never a second one. Nothing is asked of a run at
- * eighteen (`groupRunAsksBirthDate`). A missing or unreadable date names the box; a date under the
- * minimum names the box and the marker, so the page says the number rather than "fill it in".
+ * The minimum-age check at the signing page (§440), counted on the run's day in its zone by the
+ * race's own rule (`isUnderMinimumAge`). An unreadable date names the box; an under-age one also
+ * names the marker, so the page can say the number.
  */
 export function birthDateRefusal(
   event: { minAge: number; startsAt: Date; timezone: string },
@@ -78,23 +59,16 @@ export const ID_DOCUMENT_MAX = 80;
 export const ERASE_REASON_MAX = 500;
 
 /**
- * How many days after the run's start the platform clears an identity document from a group run's
- * self-declaration (§393, §503). The declaration itself is kept until the signer asks for its
- * deletion (§503) — the Administrator's erase, never a sweep — but a document typed under a text
- * approved before §418 took `{{idDocument}}` off has no business outliving the run, as the race's
- * does not (§95). One number for the sweep (`RETENTION.groupRunIdDocumentDaysAfterEvent` is this)
- * and the signing page's help line, said through `durationPhrase`, never as a word typed into a
- * sentence.
+ * Days after the run's start the sweep clears a typed identity document (§393, §503, §95); the
+ * declaration itself stays until the signer asks. Also `RETENTION.groupRunIdDocumentDaysAfterEvent`
+ * and the signing page's help line.
  */
 export const GROUP_RUN_DECLARATION_ID_DOCUMENT_DAYS = 7;
 
 /**
- * Who a signature is, for "one declaration per person per series" (§523; `signer_key`, whose unique
- * index holds two presses at once to one row): the canonical address
- * (§10.4 — never a raw compare, so `Ana@Example.ro` is `ana@example.ro`) and the name as typed, read
- * loosely — case, accents and spacing make no other person («Ana  Popescu», «ana popescu», «Ană
- * Popescu»). The name is part of it because an address may be a family's (§389): a parent and a
- * grown child who share one sign one declaration each. Null for an address that is not one.
+ * The signer's identity for one declaration per person per series (§523; `signer_key`'s unique index):
+ * the canonical address (AGENTS.md §10.4) plus the name ignoring case, accents and spacing — an
+ * address may be a family's (§389). Null for an invalid address.
  */
 export function signerIdentity(email: string, typedName: string): string | null {
   let canonical: string;
@@ -117,18 +91,12 @@ export function signerIdentity(email: string, typedName: string): string | null 
 export type SeriesSignature = { id: string; legalDocumentId: string; email: string; typedName: string; acceptedAt: Date };
 
 /**
- * The signature a press on «Semnează declarația» keeps rather than writing a second (§523; the owner,
- * 2026-09-27: "a returning runner signs once; it has no end date and is deleted only at their
- * request"): the same person's earliest signature of the **version in force** among those that cover
- * this date — or null, and a row is written. The service then sends that copy again, and the page
- * answers exactly as a signature does, so it tells nobody whether the address had signed.
+ * The existing signature a signing press reuses instead of writing a row (§523): the same person's
+ * earliest signature of the version in force covering this date, or null. The page answers the
+ * same either way, so it reveals nothing about the address.
  *
- * **Nothing is ever taken away here.** An older version's signature is not this version's, so the
- * person signs again and gets a new row beside it; the older one stays — it is the evidence for the
- * runs attended under that text, and a version somebody signed is relied upon (§53, §151). A row
- * leaves only by the Administrator's erase, audited (§393), never by a public press, which nobody
- * verified: an address and a name typed by anyone must not delete a real signature. Another person
- * on the same address (§389), or another kind of text (asphalt and trail), is another signature.
+ * Never deletes: an older version's row stays as evidence (§53, §151); only the audited
+ * Administrator erase removes a row (§393), never an unverified public press.
  */
 export function keptSignature(
   existing: readonly SeriesSignature[],
@@ -144,11 +112,8 @@ export function keptSignature(
 }
 
 /**
- * What the run's page says to the person who opened it from their own link (§523): `current` — they
- * signed the version in force, «Ai semnat deja declarația pentru aceste alergări (v. N, semnată la …)»,
- * and no button —; `renew` — they signed an older version, which the club has since replaced, so the
- * page says so and offers the button again. Null — no link, a link that is not theirs or not for this
- * run, or another kind of text — and the page is the one every visitor sees.
+ * The run page's state for a signer arriving by their own link (§523): `current` signed the version
+ * in force (no button); `renew` signed a replaced version (button again); null is the public page.
  */
 export type SignedState = { kind: "current" | "renew"; version: number; acceptedAt: Date } | null;
 
@@ -158,10 +123,8 @@ export function signedStateFor(row: { legalDocumentId: string; version: number; 
 }
 
 /**
- * Whether the event's backoffice page draws "Declarații semnate (alergare de grup)" (§393): when
- * the run offers the declaration now, or when some are still kept — from before the organizer
- * unticked it, or from any past run, since nothing sweeps them (§503) — never merely because the
- * run is on asphalt or trail.
+ * The backoffice fold shows while the run offers the declaration or any signature is still kept
+ * (nothing sweeps them, §503) — not merely because of the surface (§393).
  */
 export function showsGroupRunDeclarationsFold(offeredKey: string | null, signedCount: number): boolean {
   return offeredKey !== null || signedCount > 0;

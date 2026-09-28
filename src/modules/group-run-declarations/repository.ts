@@ -9,30 +9,19 @@ import { seriesKey } from "@/modules/events/domain/series";
 import type { SeriesSignature } from "./domain";
 
 /**
- * The rows of a group run's optional self-declarations (§393). No update: a signature is what it
- * was when it was made (§57), apart from the identity document the retention sweep clears at seven
- * days, the date a series' declaration hangs on when that date is deleted
- * (`rehomeGroupRunDeclarationsOfEvent`), and the signer's own link, minted when their copy is sent
- * (`setGroupRunDeclarationViewToken`). Rows are kept until the signer asks for their deletion
- * (§503): they leave by the Administrator's erase, audited, or with the run's last date — never
- * by a public press (§523).
+ * Rows of a group run's self-declarations (§393). Immutable (§57) except the swept identity
+ * document, the rehomed date and the view token; kept until the signer asks (§503), removed only by
+ * the audited erase or with the run's last date (§523).
  *
- * **A series' declaration belongs to the run, not to one date (§523).** A weekly run is many rows of
- * `events` (§113), and a returning runner signs once. The row points at the date it was signed on
- * and records the series it covers (`series_key`, as `seriesKey` wrote it then); everything that
- * reads the declarations reads the whole series: the dates §113 groups, the same type and the same
- * title (trimmed, case-folded), in the default language — the listing's own rule. A date renamed on
- * purpose ("… — ediție de Crăciun") leaves the series and asks its own declaration, as it leaves the
- * line. A one-off run's declaration (`series_key` null), and every row from before §523, covers its
- * own date only, as its text said.
+ * A series' declaration covers the run (§523): the row points at the date signed on and records
+ * `series_key`; readers read every date §113 groups. A one-off's or pre-§523 row covers its date only.
  */
 
 export type NewGroupRunDeclaration = typeof groupRunDeclarations.$inferInsert;
 
 /**
- * Writes one signature, or nothing when the same person's signature of the same version already
- * covers the same series (or date): the unique index `group_run_declarations_one_per_series_signer_version`
- * decides, so two presses at once write one row and the second gets undefined — and reads the first.
+ * Undefined when `group_run_declarations_one_per_series_signer_version` already holds this signer,
+ * version and series (or date), so two concurrent presses write one row.
  */
 export async function insertGroupRunDeclaration<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -42,14 +31,7 @@ export async function insertGroupRunDeclaration<T extends Record<string, unknown
   return row;
 }
 
-/**
- * Every date of the run an event belongs to, itself included, soonest first (§523): the events of
- * its type whose default-language title is the same run's by `seriesKey` (§113) — the listing's own
- * rule, so the declaration covers exactly the dates the reader sees as one line. An event with no
- * default-language title is a series of one. The titles of one type are few (a weekly run for a few
- * seasons is a few hundred rows of two short columns), so they are compared here with the listing's
- * own function rather than a second, SQL spelling of it.
- */
+/** Every date of the event's run, itself included, soonest first (§523, §113). */
 export async function listSeriesDatesOf<T extends Record<string, unknown>>(
   db: Database<T>,
   eventId: string,
@@ -58,8 +40,8 @@ export async function listSeriesDatesOf<T extends Record<string, unknown>>(
 }
 
 /**
- * The run an event belongs to (§523): its dates, soonest first, and the series' key — null for a
- * one-off run, a date the grouping gives no other.
+ * The event's run (§523): its dates and the series key, null for a one-off. Grouped in JS with the
+ * listing's own `seriesKey` (§113) rather than a second SQL spelling; one type's titles are few.
  */
 export async function findRunSeries<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -85,10 +67,7 @@ export async function findRunSeries<T extends Record<string, unknown>>(
   return { key: dates.length > 1 ? key : null, dates };
 }
 
-/**
- * The condition "this row covers that date" (§523): signed on it, or signed for the series on any of
- * the series' dates. A one-off's, or a row from before §523, covers only its own date.
- */
+/** A row covers a date if signed on it, or signed for the series on any of its dates (§523). */
 function coversDate(eventId: string, seriesDates: readonly string[]) {
   return or(
     eq(groupRunDeclarations.eventId, eventId),
@@ -96,11 +75,7 @@ function coversDate(eventId: string, seriesDates: readonly string[]) {
   );
 }
 
-/**
- * What the backoffice lists (§393): who, when, and against which version of the text (§499) —
- * and, since §523, on which date of the run it was signed, for the PDF's address, and whether it
- * covers the series (`series`, the row's «serie» mark). Never the identity document or the address.
- */
+/** A backoffice row (§393, §499, §523); never the identity document or the address. */
 export type GroupRunDeclarationListRow = {
   id: string;
   eventId: string;
@@ -111,10 +86,7 @@ export type GroupRunDeclarationListRow = {
   series: boolean;
 };
 
-/**
- * The declarations of the run an event belongs to (§523): every date's, since one signature covers
- * them all — the same list on each date's backoffice page, in the order they were signed.
- */
+/** Every date's declarations of the event's run, in signing order — the same list on each date (§523). */
 export async function listGroupRunDeclarations<T extends Record<string, unknown>>(
   db: Database<T>,
   eventId: string,
@@ -137,10 +109,7 @@ export async function listGroupRunDeclarations<T extends Record<string, unknown>
   return rows.map(({ seriesKey: key, ...row }) => ({ ...row, series: key !== null }));
 }
 
-/**
- * The signatures of the version in force that cover a date (§523): what the signing press reads to
- * keep one declaration per person, series and version (`keptSignature`).
- */
+/** Signatures of `documentId` covering a date, for `keptSignature` (§523). */
 export async function listCoveringSignatures<T extends Record<string, unknown>>(
   db: Database<T>,
   eventId: string,
@@ -161,13 +130,9 @@ export async function listCoveringSignatures<T extends Record<string, unknown>>(
 }
 
 /**
- * Before a date of a run is deleted (§523): a series' declarations cover the run's other dates too,
- * so they move to another date rather than cascading away with this one — the next date after it,
- * or, when it was the last, the latest before it, so the evidence is never lost while the run has a
- * date. What a moved declaration says does not move with it: its PDF is drawn from what the blanks
- * said at the signing (`signed_facts`). A one-off's, and a row from before §523, covered this date
- * only, and go with it as before (§393), their outbox rows first (`deleteGroupRunDeclarationMessagesOfEvent`).
- * Returns how many moved.
+ * Before a date is deleted, moves its series declarations to the next date (else the latest before)
+ * so the evidence outlives the date (§523); the PDF still reads `signed_facts`. One-off and pre-§523
+ * rows cascade with the date (§393). Returns how many moved.
  */
 export async function rehomeGroupRunDeclarationsOfEvent<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<number> {
   const [any] = await db
@@ -189,10 +154,7 @@ export async function rehomeGroupRunDeclarationsOfEvent<T extends Record<string,
   return moved.length;
 }
 
-/**
- * One signed declaration with the text it was signed against: the version by id, in the language
- * it was signed in — what the PDF is drawn from. The hash is the row's own copy (§57).
- */
+/** A signed declaration with the text version and language it was signed in; the hash is the row's own (§57). */
 export async function findSignedGroupRunDeclaration<T extends Record<string, unknown>>(db: Database<T>, id: string) {
   const [row] = await db
     .select({
@@ -201,14 +163,14 @@ export async function findSignedGroupRunDeclaration<T extends Record<string, unk
       key: legalDocuments.key,
       version: groupRunDeclarations.declarationVersion,
       contentSha256: groupRunDeclarations.contentSha256,
-      // The day the signed version took effect, for the PDF's version line (§499).
+      // For the PDF's version line (§499).
       effectiveAt: legalDocuments.effectiveAt,
       locale: groupRunDeclarations.locale,
       typedName: groupRunDeclarations.typedName,
       idDocument: groupRunDeclarations.idDocument,
       email: groupRunDeclarations.email,
       acceptedAt: groupRunDeclarations.acceptedAt,
-      // What the blanks said at the signing, and whether it covers the series (§523).
+      // The facts as signed (§523).
       signedFacts: groupRunDeclarations.signedFacts,
       seriesKey: groupRunDeclarations.seriesKey,
       title: legalDocumentTranslations.title,
@@ -230,18 +192,14 @@ export async function findSignedGroupRunDeclaration<T extends Record<string, unk
 
 export type SignedGroupRunDeclaration = NonNullable<Awaited<ReturnType<typeof findSignedGroupRunDeclaration>>>;
 
-/**
- * The signer's own link (§523): the hash of the secret their copy carries, set when that copy is sent
- * — a newer copy's replaces it, so the newest email's link is the one that reads.
- */
+/** The signer's link hash, set when their copy is sent; a newer copy's replaces it (§523). */
 export async function setGroupRunDeclarationViewToken<T extends Record<string, unknown>>(db: Database<T>, id: string, tokenHash: string): Promise<void> {
   await db.update(groupRunDeclarations).set({ viewTokenHash: tokenHash }).where(eq(groupRunDeclarations.id, id));
 }
 
 /**
- * The declaration a link names, if it covers this date (§523): signed on it, or for the series on one
- * of the series' dates — and of the kind of text the date offers. A read, bound to the hash (never the
- * secret, §12.8), that tells the page nothing about anybody else; undefined for any other link.
+ * The declaration a link's hash names, if it covers this date and is of this text kind (§523,
+ * AGENTS.md §12.8); undefined otherwise.
  */
 export async function findSignatureByViewToken<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -264,10 +222,7 @@ export async function findSignatureByViewToken<T extends Record<string, unknown>
   return row;
 }
 
-/**
- * The date a signer's link should open (§523): the run's next date still to come, or the date signed
- * on when the run has none — so the email's button leads to a page that still offers the run.
- */
+/** The run's next published date, else the one signed on, so the link opens a page still offering the run (§523). */
 export async function nextDateOfRun<T extends Record<string, unknown>>(db: Database<T>, eventId: string, now: Date): Promise<string> {
   const { key, dates } = await findRunSeries(db, eventId);
   if (key === null) return eventId;
@@ -281,10 +236,8 @@ export async function nextDateOfRun<T extends Record<string, unknown>>(db: Datab
 }
 
 /**
- * The outbox rows about an event's declarations (§393), deleted before the event goes: the
- * declarations cascade with it, and a message about one would then be a row that carries the
- * signer's address and can never render. The same match the erase uses —
- * the payload's id compared as text, so a payload of any other shape is simply not matched.
+ * Deletes the outbox rows about an event's declarations before the event goes (§393): otherwise they
+ * keep the signer's address and can never render. Matches the payload id as text, as the erase does.
  */
 export async function deleteGroupRunDeclarationMessagesOfEvent<T extends Record<string, unknown>>(
   db: Database<T>,

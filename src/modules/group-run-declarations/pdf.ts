@@ -10,13 +10,9 @@ import type { SignedGroupRunDeclaration } from "./repository";
 import { readSignedFacts } from "./series";
 
 /**
- * How a group-run declaration was signed, under the signature (§393): on the run's own page, not
- * from a link sent by email — the race's words (`signedByLink`) would say something untrue. The
- * same record beneath it: typed name, tick, the moment of signing, the text's fingerprint (§86).
- *
- * «Momentul semnării», as the platform records it, never a time stamp (§534, the counsel's point 14):
- * the text it signs says the same, and the Romanian law is cited by its number alone, so no title
- * beside the moment reads as a qualified eIDAS time stamp.
+ * The signing method under the signature (§393, §86): on the run's page, not by an emailed link as
+ * the race's `signedByLink` says. «Momentul semnării», never "time stamp", and the law cited by
+ * number alone, so nothing reads as a qualified eIDAS time stamp (§534).
  */
 const SIGNED_ON_PAGE: Record<Locale, string> = {
   ro: "Semnat electronic {when}, pe pagina alergării de pe site-ul clubului: nume tastat, bifă explicită de acceptare, momentul semnării, așa cum l-a înregistrat platforma clubului, și amprenta SHA-256 a textului citit — semnătură electronică simplă în sensul Regulamentului (UE) nr. 910/2014 (eIDAS) și al Legii nr. 214/2024.",
@@ -28,17 +24,10 @@ export function signedOnPageWords(locale: Locale, when: string): string {
 }
 
 /**
- * One signed group-run declaration as a PDF (§393), drawn by the race declaration's own renderer
- * (§95): the lockup, the title, the text with its blanks filled in bold (§225), the typed name in a
- * hand, the version and the hash. Rendered from the rows on request, never stored as a file.
- *
- * `audience` as §320 decided for the race's: `participant` — the signer's own copy and the
- * backoffice's, the identity document as typed; `club` — the archive copy that leaves the platform
- * for a mailbox nothing sweeps, the document masked in the text and on the signature line alike,
- * from one value so the two cannot disagree. Required, never defaulted.
- *
- * The signer declares for themselves (adults only, §393), so `{{participant}}` and `{{declarant}}`
- * are the signer and `{{guardian}}` an em dash, as on an adult's race declaration.
+ * A signed group-run declaration as a PDF through the race's renderer (§393, §95), rendered on
+ * request, never stored. `audience` as §320: `club` is the archive copy, identity document masked in
+ * text and signature line from one value; required, never defaulted. Adults only, so the signer is
+ * both participant and declarant.
  */
 export async function renderGroupRunDeclarationPdf<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -48,11 +37,7 @@ export async function renderGroupRunDeclarationPdf<T extends Record<string, unkn
 ): Promise<Buffer | undefined> {
   const current = await eventMergeValues(db, signed.eventId, signed.locale);
   if (!current) return undefined;
-  /*
-    What the blanks said at the signing (§523, `signed_facts`): a date moved or renamed since never
-    changes what a signed declaration says (§57). A row from before §523 kept none, and reads the
-    event as it is — its text names no series field, so nothing of the series is filled or dropped.
-  */
+  // The facts as signed (`signed_facts`, §523, §57); a row from before §523 reads the event as it is.
   const kept = readSignedFacts(signed.signedFacts);
   const event = { ...current, title: kept?.event ?? current.title, values: kept ? { ...current.values, ...kept } : (await groupRunMergeValues(db, signed.eventId, signed.locale, signed.body))?.values ?? current.values };
   const labels = declarationWords(signed.locale, now);

@@ -19,33 +19,13 @@ import { findRunSeries, findSignatureByViewToken } from "../repository";
 import { signatureCoversSeries } from "../series";
 
 /**
- * "Semnează declarația pe propria răspundere" on a group run's page (§393; the owner, 2026-09-25:
- * "for these group runs I should just have an optional 'semnează declarația pe propria răspundere'
- * button that just opens the signing flow").
+ * The «Semnează declarația» section at `#declaratie` in the «Condiții de participare» fold (§393,
+ * §498): a small button, 44 px tall (BR-REQ-041-01 criterion 6). Rendered only when offered, an
+ * approved text of that kind and an approved privacy notice are in force, and signing is open.
  *
- * At `#declaratie`, the last part of the page's closed «Condiții de participare» fold, after the
- * rules and the photographs notice (§498; the owner, 2026-09-27, moving it from under the route's
- * pills): one line saying what happens — the copy by email, and how long the club keeps it — and
- * one small button to the signing page, «Semnează declarația» with a pen before it, under a
- * level-3 heading that names the section. Neither the heading nor the line calls it optional any
- * more — no «(opțional)», no «Dacă vrei»: the club recommends it, and for a trail run the
- * mountain rescue asks for it. Small — MUI's `size="small"`, the owner's «mai mic» — but a
- * thumb's 44 pixels tall (BR-REQ-041-01 criterion 6). Nothing at all unless the organizer offered it on a group run of asphalt or
- * trail, the club has an approved text of that kind in force, an approved privacy notice is in
- * force (the signature takes an address and an identity document, and the service refuses it
- * without one, as a registration is refused), and the run can still be signed for. The listing
- * card says nothing (§393).
- *
- * **The signer's own link (§523).** Opened from the signer's copy — `?declaratie=<secret>`, minted
- * when that copy was sent, its hash on the row — the section says what the link's declaration is:
- * «Ai semnat deja declarația pentru aceste alergări (v. N, semnată …)» and no button, while the
- * version signed is the one in force — on any date the signature covers, the run past or not; or,
- * once the club has approved a newer version, that the one signed was older, with the button again.
- * Read from the link alone, never from an address typed into anything: the page tells nobody else
- * whether somebody signed. Without the link, or with one that is not for this run, the section is
- * the one every visitor sees. A read, so opening the link changes nothing (§12.8).
- *
- * A Server Component with a plain link: no island, nothing for a visitor who does not press it.
+ * With the signer's own `?declaratie=` link (§523) it says what they signed and hides the button
+ * while that version is in force. Read from the link alone, so it reveals nothing about anyone
+ * else; a GET that changes nothing (AGENTS.md §12.8).
  */
 export default async function DeclarationOffer({
   event,
@@ -67,7 +47,7 @@ export default async function DeclarationOffer({
   locale: Locale;
   slug: string;
   now: Date;
-  /** `?declaratie=` from the signer's own link (§523), as the address carried it. */
+  /** `?declaratie=` from the signer's own link (§523). */
   viewToken?: string;
 }) {
   const key = offeredGroupRunDeclarationKey(event);
@@ -76,22 +56,17 @@ export default async function DeclarationOffer({
   const open = signingOpen({ ...event, editorialStatus: "PUBLISHED" }, now);
   const token = typeof viewToken === "string" && isWellFormedTokenSecret(viewToken) ? viewToken : null;
   if (!open && token === null) return null;
-  /*
-    An optional part of the page (§447): while the database cannot say which texts are in force — away,
-    or a red month's miss with no copy (§493) — the offer is left out rather than taking the event
-    page down with it. Signing needs the database anyway.
-  */
+  // Optional (§447, §493): without the database the offer is left out rather than failing the page.
   const [declaration, privacyNotice] = await readOrWhileAway(
     () => Promise.all([cachedCurrentApprovedDocument(key, locale, now), cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now)]),
     [undefined, undefined],
   );
   if (!declaration || !privacyNotice) return null;
-  // The signer's own declaration, from their link alone (§523): not cached, it is one person's.
+  // Not cached: it is one person's (§523).
   const mine = token ? await readOrWhileAway(() => findSignatureByViewToken(getDb(), hashTokenSecret(token), event.id, key), undefined) : undefined;
   const signed = signedStateFor(mine, declaration.id);
   if (!open && signed?.kind !== "current") return null;
-  // «For the whole series» only when both hold: the text names {{series}} AND the run has another
-  // date; a one-off run's signature covers its one date whatever the text (§523).
+  // The text names {{series}} AND the run has another date (§523).
   const coversSeries =
     signed === null &&
     signatureCoversSeries(declaration.body) &&
@@ -111,19 +86,14 @@ export default async function DeclarationOffer({
         {t("groupRunDeclaration.heading")}
       </Typography>
       {signed?.kind === "current" ? (
-        // Signed, the version in force (§523): what and when, and no button — there is nothing to sign.
         <Typography variant="body2" sx={{ mb: 1 }} data-testid="group-run-declaration-signed">
           {t(mine?.series ? "groupRunDeclaration.signedSeries" : "groupRunDeclaration.signedOne", { version: signed.version, when })}
         </Typography>
       ) : signed?.kind === "renew" ? (
-        // Signed an older version (§523): the club approved a new one, which is asked for again.
         <Typography variant="body2" sx={{ mb: 1 }} data-testid="group-run-declaration-renew">
           {t("groupRunDeclaration.signedOlder", { version: signed.version, when })}
         </Typography>
       ) : (
-        // Once for the whole run (§523): a returning runner reads here that they need not sign again —
-        // only while the text in force says so (`signatureCoversSeries`) and the run has another date;
-        // otherwise a signature covers its own date, and the line says this run.
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }} data-testid="group-run-declaration-line">
           {t(coversSeries ? "groupRunDeclaration.line" : "groupRunDeclaration.lineOneDate", { event: event.title })}
         </Typography>

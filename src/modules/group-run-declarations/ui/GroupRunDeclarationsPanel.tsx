@@ -19,22 +19,13 @@ import { ERASE_REASON_MAX } from "../domain";
 import type { GroupRunDeclarationListRow } from "../repository";
 
 /**
- * "Declarații semnate (alergare de grup)" on the event's backoffice page (§393): who signed the
- * run's optional self-declaration, and when, with each one's PDF. A closed fold (§336). The run's,
- * not the date's (§523): one signature covers every date of a repeated run, so every date's page
- * lists the same people, one row each.
+ * "Declarații semnate (alergare de grup)" on the event's backoffice page (§393, §336): the run's
+ * signatures, not the date's (§523). Organizer and Administrator only (§289, BR-REQ-060-01); name and
+ * moment only — the identity document and address stay in the PDF. The Administrator erases one or
+ * several with a reason (§67, §88, §532).
  *
- * For whoever may read the registrations — the Organizer and the Administrator (§289); the page
- * draws it only for them, and the PDF route asserts it again (BR-REQ-060-01). The name and the
- * moment only: the identity document and the address are in the PDF, which the route writes to
- * the trail. The Administrator may erase one, with a reason (§67, §88): the service refuses anybody
- * else whatever this screen drew.
- *
- * Or several (§532; the owner, 2026-09-28: «batch delete și la declarații, cu confirmarea numărului
- * șters»): a tick per row, one reason, «Șterge cele bifate». The ticks belong to the batch form
- * below the list by `form=` — each row already holds its own erase form, and forms cannot nest —
- * and the dialog counts them at the press («Ștergi 2 declarații semnate pentru «…»?»). What is
- * posted is the ids counted; the service refuses the whole press if that set is no longer the run's.
+ * The ticks join the batch form by `form=`, since each row already holds its own form and forms
+ * cannot nest; the dialog counts them at the press.
  */
 export default async function GroupRunDeclarationsPanel({
   eventId,
@@ -58,7 +49,7 @@ export default async function GroupRunDeclarationsPanel({
 }) {
   const t = await getTranslations("Admin");
   const messages = mayErase ? await refusalMessages({ reason: t("groupRunDeclarations.reason") }) : null;
-  // The batch form's refusals: a set that changed meanwhile says so, not "somebody else saved".
+  // A set changed meanwhile says so, not "somebody else saved".
   const batchMessages =
     mayErase && rows.length > 0
       ? await refusalMessages({ reason: t("groupRunDeclarations.reason"), declarationIds: t("groupRunDeclarations.ticked") }).then((words) => ({
@@ -104,18 +95,17 @@ export default async function GroupRunDeclarationsPanel({
                   )}
                   <Typography sx={{ fontWeight: 600 }}>{row.typedName}</Typography>
                 </Stack>
-                {/* Signed for the whole series (§523): the one signature every date of the run lists. */}
                 {row.series && <Chip size="small" variant="outlined" label={t("groupRunDeclarations.series")} sx={{ alignSelf: { xs: "flex-start", sm: "center" } }} data-testid="group-run-declaration-series" />}
                 <Typography variant="body2" color="text.secondary">
                   {t("groupRunDeclarations.signedAt", {
                     when: formatDay(row.acceptedAt, { locale, timeZone, style: "short", withTime: true, position: "inline" }),
-                    // The version signed (§499), in the shape the registration's page gives a declaration's.
+                    // §499.
                     version: row.version,
                   })}
                 </Typography>
                 <GlyphButton
                   icon="pdf"
-                  // Under the date it was signed on (§523): the list is the run's, the route checks the pair.
+                  // Under the date signed on; the route checks the pair (§523).
                   href={`/api/admin/events/${row.eventId}/group-run-declarations/${row.id}`}
                   variant="text"
                   size="small"
@@ -128,7 +118,6 @@ export default async function GroupRunDeclarationsPanel({
                 <ActionForm
                   action={eraseAction}
                   messages={messages}
-                  // The one confirmation dialog (§384): destructive, as every erase is.
                   confirm={{ title: t("groupRunDeclarations.eraseTitle"), body: t("groupRunDeclarations.eraseBody"), confirmLabel: t("groupRunDeclarations.erase"), cancelLabel: cancel, destructive: true }}
                   scope={`grd-${row.id}`}
                   data-testid="group-run-declaration-erase"
@@ -162,7 +151,6 @@ export default async function GroupRunDeclarationsPanel({
             id={batchForm}
             action={batchEraseAction}
             messages={batchMessages}
-            // The one dialog (§384), its body counted from the ticks at the press (`bodyCount`).
             confirm={{
               title: t("groupRunDeclarations.batchEraseTitle"),
               body: bodyForms.other,
