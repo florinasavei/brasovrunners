@@ -17,9 +17,9 @@
  *
  *     CONTRIBUTOR  proposes; edits their own drafts and submits them for approval
  *     MODERATOR    reads the events, the registrations, the export and the bibs; works the queue,
- *                  the desk and the messages to participants — and changes no event (§NNN)
+ *                  the desk and the messages to participants — and changes no event (§542)
  *     DEV          the configuration report; no event, no participant list
- *     ADMIN        runs the club: every event (§NNN), *changing* a registration, publication, the
+ *     ADMIN        runs the club: every event (§542), *changing* a registration, publication, the
  *                  legal texts, the team (every role but the top one), the plans and the club's
  *                  settings (§450)
  *     SUPERADMIN   the above, plus the platform settings that can stop the service — the jobs'
@@ -28,7 +28,7 @@
  *
  * **DEV is the one that is not obvious, so it is written down.** It exists so somebody helping
  * with the platform can read `/devs` and reproduce a problem — fixing an event is the
- * Administrator's since §NNN, as it is for the Organizer below it. It sits above
+ * Administrator's since §542, as it is for the Organizer below it. It sits above
  * MODERATOR only so that `canSeeDiagnostics` can be a threshold; it is not a step up in what it
  * may do to the club's participants.
  *
@@ -140,7 +140,7 @@ export function isEditorial(role: StaffRole): boolean {
  * The owner, of his two colleagues: "tot ce vreau e ca organizatorul să nu fie și redactor…
  * Redactorul scrie, Organizatorul organizează", and then, asked to confirm the consequence: "da,
  * așa vreau". An Organizer runs the queue and the desk; the event's settings — the date, the
- * place, the route, the capacity, the registration window — are the Administrator's since §NNN.
+ * place, the route, the capacity, the registration window — are the Administrator's since §542.
  * A Redactor writes the words. Neither does the other's job, and
  * a rank ladder cannot express that — rank would give the Organizer the Redactor's work simply
  * for being above them, which is what the club is asking not to happen.
@@ -292,7 +292,7 @@ export function eventEditorTransitions(
 }
 
 /**
- * **An event moves only for somebody who writes it (§NNN).** The table's answer, and a role that
+ * **An event moves only for somebody who writes it (§542).** The table's answer, and a role that
  * writes the event's words (`canEditTexts`, the Redactor's «Trimite spre verificare») or its
  * settings (`canEditEventFields`, the Administrator). The Organizer and the Tehnic write neither,
  * so they make no move on an event — not a submission, not a return to draft, not an archive —
@@ -309,7 +309,7 @@ export function canTransitionEvent(
 }
 
 /**
- * **The event row itself is the Administrator's (§NNN, amending §103, §204 and §289).** Its
+ * **The event row itself is the Administrator's (§542, amending §103, §204 and §289).** Its
  * times, its place, its route, its capacity, the registration and participation windows, the bib
  * band, its links and pictures, which event the site leads with, a series' dates, the update
  * notice and the cancellation: every save of an event, every one asserted in
@@ -338,7 +338,7 @@ export function canEditEventFields(role: StaffRole): boolean {
  * race at all, and since the registration block is part of the same row, it decides whether the
  * club takes entries. That is the club's decision, not the organizer's preparation of it.
  *
- * Since §NNN the Organizer does not configure one either (`canEditEventFields`): they open an
+ * Since §542 the Organizer does not configure one either (`canEditEventFields`): they open an
  * event the Administrator created to read it and to run its queue and its desk.
  */
 export function canCreateEvent(role: StaffRole): boolean {
@@ -464,13 +464,13 @@ export function canReadRegistrations(role: StaffRole): boolean {
  * Whoever holds editorial control (`isEditorial`) and may also read who they are
  * (`canReadRegistrations`) — so the Organizer, the Administrator and the Superadministrator.
  * Written as the conjunction rather than as a new list, so that moving either boundary moves this
- * with it. It read `canEditEventFields` until §NNN made the event row the Administrator's; the
+ * with it. It read `canEditEventFields` until §542 made the event row the Administrator's; the
  * Organizer keeps the message, which is an act on the list, not on the event.
  *
  * **The Tehnic role is out on purpose** (§364): this is a message on its own, of whatever was
  * typed, to a group the sender picks from the registrations' states — an act on the participant
  * list, and `DEV` is the role that never receives it (§38, §289). The §331 update and
- * cancellation notices ride on a save of the event, so since §NNN they are the Administrator's
+ * cancellation notices ride on a save of the event, so since §542 they are the Administrator's
  * alone (`canEditEventFields`). The volunteer and the Redactor are out as they are out of the
  * participant list.
  */

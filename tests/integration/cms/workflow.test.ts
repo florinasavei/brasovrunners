@@ -676,7 +676,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
     });
   });
 
-  describe("the event row: every column the Administrator owns (§NNN)", () => {
+  describe("the event row: every column the Administrator owns (§542)", () => {
     it("saves both times in the event timezone and the map link", async () => {
       const { event } = await seedEvent();
       const link = ["https:/", "maps.example.test", "brasov"].join("/");

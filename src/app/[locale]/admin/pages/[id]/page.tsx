@@ -90,7 +90,7 @@ export default async function EditPagePage({ params, searchParams }: Props) {
     One flag answered both and answered one of them wrongly: `savePage` asserts
     `canEditTexts` (service.ts) while this read `canEditEventFields`, which an Organizer then had —
     so the day the screen opened for them they would have been shown the editor and refused on
-    save. `deletePage` asserts `isEditorial` (`canEditEventFields` until §NNN), the wider of the two
+    save. `deletePage` asserts `isEditorial` (`canEditEventFields` until §542), the wider of the two
     and is left exactly as it is.
   */
   const maySave = canEditTexts(actor.role);

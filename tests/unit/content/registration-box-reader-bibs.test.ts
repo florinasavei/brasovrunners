@@ -7,7 +7,7 @@ import type { EditableEvent } from "@/modules/content/events/repository";
 import { canEditEventFields, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 
 /**
- * BR-REQ-060-01 — the Organizer reads the events and changes none (§NNN), and keeps reading the
+ * BR-REQ-060-01 — the Organizer reads the events and changes none (§542), and keeps reading the
  * race numbers (§289). «Participare și înscrieri» shows a reader one sentence in place of the
  * settings; the numbers' card — «Alocare și tipărire», «Vezi numerele», «Descarcă toate numerele
  * (PDF)» — is not a setting of the event, so it stays under that sentence. The page draws it only
@@ -68,7 +68,7 @@ async function render(mayEditSettings: boolean, bibPrint: ReactElement | null) {
   return new Response(stream).text();
 }
 
-describe("BR-REQ-060-01 a reader of the event keeps the race numbers' card (§NNN, §289)", () => {
+describe("BR-REQ-060-01 a reader of the event keeps the race numbers' card (§542, §289)", () => {
   it("draws the numbers' card under the read-only sentence when the settings are not the reader's", async () => {
     const html = await render(false, BIB_PRINT);
     expect(html).toContain("Setările le schimbă Administratorul.");

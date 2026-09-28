@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.20-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.21-2026-09-27 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V2.20-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.21-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1092,16 +1092,16 @@ sees them as Voluntar, Redactor, Organizator, Tehnic, Administrator, Superadmini
 ```text
 CONTRIBUTOR  the volunteer: the race-day desk and the guide, nothing else
 COPYWRITER   the words of any event and any page, at any status; submit a draft for review
-MODERATOR    the organizer: read the events (no change to one, §NNN), the gallery; read the registrations, the export, the bibs; the messages
+MODERATOR    the organizer: read the events (no change to one, §542), the gallery; read the registrations, the export, the bibs; the messages
 DEV          + the configuration report (/devs). No participant data — and, by §289, not the list either
-ADMIN        + every event (create, configure, publish, cancel, a series: `canEditEventFields`, §NNN), changing a registration, legal texts, emails, tasks, delete an event
+ADMIN        + every event (create, configure, publish, cancel, a series: `canEditEventFields`, §542), changing a registration, legal texts, emails, tasks, delete an event
 SUPERADMIN   + staff administration: the list itself, and every role on it
 ```
 
 `canEditTexts` (≥ COPYWRITER) is the line between writing and configuring; `isEditorial`
 (≥ MODERATOR) the line between writing and deciding for pages and albums; an event's row and
 its moves are `canEditEventFields` and `canTransitionEvent` (≥ ADMIN, and the Redactor's words
-and submission, §NNN). Until §103 the lowest role drafted its
+and submission, §542). Until §103 the lowest role drafted its
 own texts and submitted them; the club asked for a role whose whole job is the words and for
 volunteers who "can do just that" — the desk.
 

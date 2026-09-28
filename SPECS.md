@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.20-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.21-2026-09-27 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V2.20-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.21-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -2374,6 +2374,8 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 97. Every toast (`Feedback.*`) in both languages keeps to the backoffice's plain-words rule: at most 200 characters, no §-number or repository reference, no parenthesis over six words, no «platforma» / "the platform" and no hedge.
 98. An Administrator erases a run's ticked signed group-run declarations in one press: the confirm dialog names the count ticked and the run, the ids it counted are posted, a set no longer wholly the run's is refused with nothing erased, each signature is erased through the single erase's path with its own audit row that never names the signer, and every other role is refused on the server (2026-09-27, `DECISIONS.md` §532).
 99. A Redactor who is offered the «Pagini» tab reaches the `/admin/pages` list — its layout asks `canReadContent` on the server as the page does — and each row's ⋮ offers a role only the verbs its service accepts: «Editează» for `canEditTexts`, «Publică» / «Retrage» only where the editorial table lets that role make the move, «Șterge» and the move arrows only for `canEditEventFields`, so a Redactor edits a page but is shown neither delete, publish, unpublish nor reorder (2026-09-27, `DECISIONS.md` §537).
+100. An Organizer's create, save, publish, unpublish, archive, cancel, update notice, duplicate and series are refused with FORBIDDEN before anything is written, and an Administrator's are accepted; the Organizer keeps reading the events, the registrations, the export and the numbers, the desk and «Trimite un mesaj participanților», and the events list offers the Organizer «Deschide» and no verb that changes an event (2026-09-28, `DECISIONS.md` §542).
+101. Given the Organizer on a race's editor, when «Participare și înscrieri» renders read-only, then «Setările le schimbă Administratorul.» and the «Alocare și tipărire» card with «Descarcă toate numerele (PDF)» both appear; the Redactor's editor shows the sentence and no numbers' card (2026-09-28, `DECISIONS.md` §542).
 
 **Verification:** integration `auth/role-boundaries.test.ts`, `cms/crud.test.ts`, `registrations/test-kind.test.ts`; unit `staff/roles.test.ts`, `staff/zitadel-users.test.ts`, `registrations/row-verbs.test.ts`; e2e `cms-publish.spec.ts`
 

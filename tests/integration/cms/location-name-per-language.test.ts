@@ -117,7 +117,7 @@ describe("BR-REQ-011-01 criterion 30 the meeting point, once per language (§362
     const reviewed = await transitionEvent(db, { actor: admin, eventId: id, expectedVersion: (await rowOf(id)).version, to: "IN_REVIEW", now: NOW });
     return transitionEvent(db, { actor: admin, eventId: id, expectedVersion: reviewed.version, to: "PUBLISHED", now: NOW });
   };
-  /** The settings-only save of the event's fields (the Administrator's since §NNN): no words. */
+  /** The settings-only save of the event's fields (the Administrator's since §542): no words. */
   const saveSettingsOnly = async (id: string, fields: Record<string, unknown>, scope?: "all") =>
     saveEventAndTranslations(db, {
       actor: settingsEditor,

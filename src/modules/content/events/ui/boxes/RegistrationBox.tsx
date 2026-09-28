@@ -180,7 +180,7 @@ export default async function RegistrationBox({
     >
       {risk && <RiskLine>{t("editor.risk.registration")}</RiskLine>}
       {!mayEditSettings ? (
-        // A reader keeps what is not a setting of the event (§NNN): the race numbers' allocation and
+        // A reader keeps what is not a setting of the event (§542): the race numbers' allocation and
         // printing — «Vezi numerele», «Descarcă toate numerele (PDF)» — which the page draws only
         // for a role that reads the registrations (§289: the Organizer, not the Redactor).
         <Stack spacing={2}>

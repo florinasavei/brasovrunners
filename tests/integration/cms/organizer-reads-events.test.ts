@@ -16,14 +16,14 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-060-01, §NNN — the Organizer reads the events and changes none of them (the owner,
+ * BR-REQ-060-01, §542 — the Organizer reads the events and changes none of them (the owner,
  * 2026-09-28: «Organizatorul nu ar trebui să poată edita evenimentele»).
  *
  * Each of the event's writes is refused with FORBIDDEN for an Organizer, and the row is exactly as
  * it was — refused before anything is written — while the same call by an Administrator is
  * accepted. The Organizer's reads and registration verbs are the business of §289's tests.
  */
-describe("BR-REQ-060-01 §NNN the Organizer changes no event", () => {
+describe("BR-REQ-060-01 §542 the Organizer changes no event", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let organizer: StaffUser;

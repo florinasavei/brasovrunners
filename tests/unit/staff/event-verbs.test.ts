@@ -21,7 +21,7 @@ import {
 } from "@/modules/staff-identity/domain/roles";
 
 /**
- * BR-REQ-060-01, §NNN — «Organizatorul nu ar trebui să poată edita evenimentele» (the owner,
+ * BR-REQ-060-01, §542 — «Organizatorul nu ar trebui să poată edita evenimentele» (the owner,
  * 2026-09-28). Every verb on an event, against every role, written out as the expected answer: a
  * change to one cell has to be made here on purpose. The Organizer keeps every read and every
  * registration and race-day verb it had; it makes no change to an event.
@@ -48,7 +48,7 @@ const EVENT_VERBS: Record<string, { gate: (role: StaffRole) => boolean; row: Row
   "bring back from the archive (ARCHIVED → DRAFT)": { gate: (role) => canTransitionEvent(role, "ARCHIVED", "DRAFT", false), row: [false, false, false, false, false, true, true] },
   "delete (deleteEvent)": { gate: canDeleteEvent, row: [false, false, false, false, false, true, true] },
   "erase with its registrations (hardDeleteEvent)": { gate: canHardDeleteEvent, row: [false, false, false, false, false, true, true] },
-  // What the Organizer keeps (§289, §67, §364, §445), unchanged by §NNN.
+  // What the Organizer keeps (§289, §67, §364, §445), unchanged by §542.
   "read the event (the editor, read-only)": { gate: canReadContent, row: [false, false, true, true, true, true, true] },
   "read the registrations, the export, the numbers, the queue (§289)": { gate: canReadRegistrations, row: [false, false, false, true, false, true, true] },
   "the race-day desk (§67)": { gate: canWorkTheDesk, row: [false, true, true, true, true, true, true] },
@@ -56,7 +56,7 @@ const EVENT_VERBS: Record<string, { gate: (role: StaffRole) => boolean; row: Row
   "the newsletter (§445)": { gate: canSendNewsletter, row: [false, false, false, true, false, true, true] },
 };
 
-describe("BR-REQ-060-01 §NNN every event verb × every role", () => {
+describe("BR-REQ-060-01 §542 every event verb × every role", () => {
   it("names the roles in their order", () => {
     expect([...STAFF_ROLES]).toEqual([...ORDER]);
   });
@@ -78,7 +78,7 @@ describe("BR-REQ-060-01 §NNN every event verb × every role", () => {
   });
 });
 
-describe("BR-REQ-060-01 §NNN the events list offers each role only what its services accept", () => {
+describe("BR-REQ-060-01 §542 the events list offers each role only what its services accept", () => {
   it("offers the Organizer the list's reads and no verb that changes an event", () => {
     expect(eventListVerbs("MODERATOR")).toEqual({
       create: false,

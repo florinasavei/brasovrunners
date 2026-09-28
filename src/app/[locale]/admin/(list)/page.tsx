@@ -83,7 +83,7 @@ export const dynamic = "force-dynamic";
 
 /** The bulk form is the bar above the table (§114) and owns the checkboxes inside the table. */
 const BULK_FORM = "bulk-archive";
-/** The eye of «Deschide» for a reader (§NNN): the one `preview` glyph the row's ⋮ «Previzualizare» draws too (§318). */
+/** The eye of «Deschide» for a reader (§542): the one `preview` glyph the row's ⋮ «Previzualizare» draws too (§318). */
 const PreviewGlyph = ACTION_ICONS.preview;
 
 type EventRow = {
@@ -256,7 +256,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
   // Who may use the line's fixes, asked as the server asks it (BR-REQ-060-01): publishing is the
   // Administrator's crossing into public view (§201), and the series' switch is `canCreateEvent`,
   // as in the Recurență box — switching it *on* asks for publishing too (`setRepeatPublish`).
-  // Every verb of the list, as its service asserts it (§NNN, `eventListVerbs`): the Organizer reads.
+  // Every verb of the list, as its service asserts it (§542, `eventListVerbs`): the Organizer reads.
   const verbs = eventListVerbs(staffUser.role);
   const mayPublish = verbs.publish;
   const maySwitchSeries = verbs.switchSeries;
@@ -753,7 +753,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
               The pen, with the word from `sm` up: on a phone the row has a checkbox, this and
               the disclosure to fit, and an outlined "EDITEAZĂ" took a third of it. The
               accessible name is the full sentence either way. A role that changes nothing on the
-              event (§NNN: the Organizer, the Tehnic) gets the eye and «Deschide» — the same
+              event (§542: the Organizer, the Tehnic) gets the eye and «Deschide» — the same
               editor, read-only.
             */}
             <Button
@@ -779,7 +779,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
               Duplicate, Delete, the preview and the registrations behind "⋮" — a context menu
               (`EventRowMenu`). The verbs are the two hidden forms beside it, each a Server
               Action the menu submits after its confirmation; the role and the version guard
-              stay on the server. Every reader gets the ⋮ for its links (§NNN); the verbs in it
+              stay on the server. Every reader gets the ⋮ for its links (§542); the verbs in it
               are only the ones `eventListVerbs` grants.
             */}
             {/* Each verb's form asks its own question (§384); the menu only submits it. */}

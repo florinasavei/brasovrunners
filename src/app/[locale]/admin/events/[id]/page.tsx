@@ -512,7 +512,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           </Stack>
         </Box>
 
-        {/* A role that changes nothing on the event (§NNN: the Organizer, the Tehnic) reads it —
+        {/* A role that changes nothing on the event (§542: the Organizer, the Tehnic) reads it —
             the queue, the numbers and the message to the participants still work below. */}
         {!maySaveAnything && (
           <Alert severity="info" data-testid="editor-read-only">
@@ -807,7 +807,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   {/* «Copiază și tradu tot: RO → EN» (§464, §482): every English box of this form from its
                       Romanian twin, the layout kept, in one press — a question only when English
                       words already written would be replaced; nothing saved until Salvează. Not for
-                      a role that saves nothing here (§NNN): there is no box for it to fill. */}
+                      a role that saves nothing here (§542): there is no box for it to fill. */}
                   {maySaveAnything && <TranslateAllButton />}
                   {/* The page, top to bottom (§406): each card where the page draws the first thing
                       it holds, numbered and headed by whether the page shows it — the order of

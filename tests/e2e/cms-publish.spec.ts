@@ -158,11 +158,11 @@ test.describe("BR-REQ-051-01 a copywriter writes and may not publish; a voluntee
 });
 
 /*
-  §NNN — «Organizatorul nu ar trebui să poată edita evenimentele» (the owner, 2026-09-28). The
+  §542 — «Organizatorul nu ar trebui să poată edita evenimentele» (the owner, 2026-09-28). The
   Organizer reads every event — the list, the editor, the ⋮'s links — and is offered no verb that
   changes one; the server refuses each anyway (`tests/integration/cms/organizer-reads-events.test.ts`).
 */
-test.describe("BR-REQ-060-01 an Organizer reads the events and changes none (§NNN)", () => {
+test.describe("BR-REQ-060-01 an Organizer reads the events and changes none (§542)", () => {
   test("offers «Deschide» on the list, no «Eveniment nou», and a ⋮ of links only", async ({ page }) => {
     await signIn(page, "Dev Moderator");
     await page.goto("/ro/admin");

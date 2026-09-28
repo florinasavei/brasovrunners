@@ -26,7 +26,7 @@ import { pageFieldsSchema, type PageFieldsInput } from "./fields";
  * `allowedTransitions` and `canTransition`, the same role predicates. "May this person publish"
  * has one answer in this product, and a second copy of that answer for pages is a second place
  * for it to be wrong. `canCreateEvent` is named for events and reads
- * oddly here (its settings gate is `isEditorial` since §NNN made `canEditEventFields` the
+ * oddly here (its settings gate is `isEditorial` since §542 made `canEditEventFields` the
  * Administrator's); renaming it is a change to code that is about to run a real registration window,
  * so it is noted and deliberately not done today.
  *
