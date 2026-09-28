@@ -166,7 +166,8 @@ async function start(event: EventInput, firstName: string, minute: number, overr
     { sittingId: cookieId, seed: result.sittingSeed ?? null, eventId: event.id, locale: "ro" },
     firstWindowEnd,
     at(minute),
-    { firstWindowEnd },
+    // As the action presses it: the half's first person and address pick the person's slot.
+    { firstWindowEnd, firstName: `${firstName} Pop`, email: typeof overrides.email === "string" ? overrides.email : EMAIL },
   );
   // The id the browser keeps for the next form (`continueFamilySittingAction`): the sitting's, or its own.
   return { ...pressed, sittingId: pressed.sittingId ?? cookieId };
@@ -584,6 +585,31 @@ describe("BR-REQ-031-01 a form that writes no registration holds a place: the co
     expect(await available(event, at(5))).toBe(0);
   });
 
+  it("a person held again by a later sitting, once their own place lapsed, has one place when confirmed (round five)", async () => {
+    const event = await createEvent(50);
+    const { sittingId } = await start(event, "Ana", 0);
+    await send(event, "Mihai", 1, sittingId);
+    await releaseFamilySitting(db, sittingId!, at(2));
+    const [first] = (await db.select().from(emailOutbox)).filter((row) => (row.payloadJson as { familySittingId?: string }).familySittingId === sittingId);
+    const message = await renderOutboxMessage({ ...first, status: "PROCESSING", attemptCount: 1, lockedAt: at(3) }, db, at(3));
+    const secret = /\/inregistrari\/familie\/([A-Za-z0-9_-]+)/.exec(message.text)?.[1];
+    // Past the deadline (40): Ioana opens a new sitting, and Mihai, sent in it, is held there once.
+    const late = await send(event, "Ioana", 42, sittingId);
+    expect(late.sittingId).not.toBe(sittingId);
+    const mihai = await send(event, "Mihai", 43, late.sittingId ?? null);
+    expect(mihai.sittingPlace).toBe("reserved");
+    expect(await send(event, "Mihai", 44, late.sittingId ?? null).then((result) => result.sittingPlace)).toBe("reserved");
+    expect(await db.select().from(familyPlaceHolds)).toHaveLength(1);
+    expect(await available(event, at(44))).toBe(48);
+    // The first sitting's link, still alive, confirms Ana and Mihai: Mihai's held place is his, never counted against him.
+    const press = await consumeAndConfirmFamilySitting(secret!, { includedKeys: [], fitnessAcknowledged: true }, at(45));
+    if (!press.ok) throw new Error("the press did nothing");
+    expect(await db.select().from(familyPlaceHolds)).toHaveLength(0);
+    const statuses = (await rows()).map((row) => [row.registeredName, row.status]);
+    expect(statuses).toEqual(expect.arrayContaining([["Ana Pop", "PENDING_DECLARATION"], ["Mihai Pop", "PENDING_DECLARATION"], ["Ioana Pop", "PENDING_EMAIL_CONFIRMATION"]]));
+    expect(await available(event, at(45))).toBe(47);
+  });
+
   it("a replayed opening press holds nothing more", async () => {
     const event = await createEvent(50);
     await submitRegistration(db, event, submission("Ana", at(0)), at(0), "REAL", PUBLIC);
@@ -593,7 +619,7 @@ describe("BR-REQ-031-01 a form that writes no registration holds a place: the co
     const cookieId = randomUUID();
     const firstWindowEnd = new Date(at(0).getTime() + WINDOW_MS);
     for (let replay = 0; replay < 5; replay += 1) {
-      const pressed = await continueFamilySittingAndReserve(db, { sittingId: cookieId, seed: result.sittingSeed ?? null, eventId: event.id, locale: "ro" }, firstWindowEnd, at(replay), { firstWindowEnd });
+      const pressed = await continueFamilySittingAndReserve(db, { sittingId: cookieId, seed: result.sittingSeed ?? null, eventId: event.id, locale: "ro" }, firstWindowEnd, at(replay), { firstWindowEnd, firstName: "Ana Pop", email: EMAIL });
       expect(pressed.place).toBe("reserved");
     }
     // One held place, as a fresh address's press reserves one; Ana's confirmed place is counted too.

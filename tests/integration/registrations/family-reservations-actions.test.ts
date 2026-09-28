@@ -25,6 +25,9 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  *   register page renders from the cookie is byte for byte the same.
  * - **A form after the deadline** (finding 2) opens a new sitting, and its screen names only the people
  *   of that sitting, reserved until its own deadline — never the lapsed ones as reserved again.
+ * - **A half replayed from after the deadline** (round five): the server finds the person among every
+ *   registration and every held place of the address at the event, whatever sitting took it, so a
+ *   person holds at most one family place, and the three addresses keep one count and one screen.
  */
 const locale: "ro" | "en" = "ro";
 const START = new Date("2026-10-01T10:00:00.000Z");
@@ -428,5 +431,99 @@ describe("BR-REQ-034-02 a form after the sitting's deadline opens a new sitting,
     expect(holds.lapsedScreen).toBe(fresh.lapsedScreen);
     expect(holds.half).toEqual(fresh.half);
     expect(holds.count).toBe(fresh.count);
+  });
+});
+
+describe("BR-REQ-034-02 a half replayed from after the sitting's deadline adds nothing, for any address (§NNN, round five; §39)", () => {
+  /**
+   * Ana's form, «Da», Mihai's form, «Da» pressed on until minute 35, then past the deadline (minute 40):
+   * Ioana's form opens a new sitting.
+   * On the half that form wrote, Mihai is sent twice and Ana twice — the second of each a replay — and
+   * Ioana on the half from before the deadline, which names the old sitting. Then the three people of
+   * the new sitting are all held, and nobody is held twice.
+   */
+  async function lateReplays(kind: Case, slug: string, address: string, full = false) {
+    vi.setSystemTime(START);
+    const event = await createEvent(slug, full ? 1 : 50);
+    await prepare(kind, event, address, full);
+    jar.clear();
+    const steps: { step: string; redirect: string; count: number | null; screen: string; half: unknown }[] = [];
+    const record = async (step: string, redirect: string) => {
+      steps.push({ step, redirect, count: await available(event), screen: await screen(), half: half() });
+    };
+    await record("Ana", await post(slug, "Ana", address, false));
+    vi.setSystemTime(minutes(1));
+    await record("Da", await pressYes(slug));
+    vi.setSystemTime(minutes(2));
+    await record("Mihai", await post(slug, "Mihai", address));
+    // «Da» again and again keeps the browser's half alive past the deadline, which it never moves (40 minutes).
+    for (const minute of [9, 18, 27, 35]) {
+      vi.setSystemTime(minutes(minute));
+      await pressYes(slug);
+    }
+    // The half the last press wrote before the deadline: alive until 45, naming Ana and Mihai.
+    const beforeDeadline = jar.get(SITTING_COOKIE)!;
+
+    vi.setSystemTime(minutes(42));
+    await record("Ioana, past the deadline", await post(slug, "Ioana", address));
+    const pastDeadline = jar.get(SITTING_COOKIE)!;
+    const replay = async (step: string, firstName: string, sealed: string, minute: number) => {
+      jar.set(SITTING_COOKIE, sealed);
+      vi.setSystemTime(minutes(minute));
+      await record(step, await post(slug, firstName, address));
+    };
+    await replay("Mihai on the half from past the deadline", "Mihai", pastDeadline, 43);
+    // Ioana is held by the new sitting: a half from before the deadline, naming the old one, finds her.
+    await replay("Ioana on the half from before the deadline", "Ioana", beforeDeadline, 44);
+    await replay("Mihai on the half from past the deadline again", "Mihai", pastDeadline, 45);
+    await replay("Ana on the half from past the deadline", "Ana", pastDeadline, 46);
+    await replay("Ana on the same half again", "Ana", pastDeadline, 47);
+
+    // At most one live family place per person: no slot held twice, and no held place beside a reservation.
+    const now = new Date();
+    const liveHolds = (await db.select().from(familyPlaceHolds).where(eq(familyPlaceHolds.eventId, event.id))).filter((row) => row.expiresAt > now);
+    const reserved = (await db.select().from(registrations).where(eq(registrations.eventId, event.id))).filter(
+      (row) => row.status === "PENDING_EMAIL_CONFIRMATION" && row.holdExpiresAt !== null && row.holdExpiresAt > now,
+    );
+    return { steps, liveHolds: liveHolds.length, liveSlots: new Set(liveHolds.map((row) => row.slot)).size, reserved: reserved.length };
+  }
+
+  const comparable = (steps: Awaited<ReturnType<typeof lateReplays>>["steps"]) =>
+    steps.map((step) => [step.step, step.count, step.redirect.replace(/cros-[a-z-]+/, "SLUG")]);
+
+  it("with places free: one place per person of the new sitting, the replays add nothing, the same count and screen everywhere", async () => {
+    const fresh = await lateReplays("fresh", "cros-replay", "noua@example.ro");
+    // Mihai and Ana's places lapsed at 40, so each takes one again in the new sitting, once.
+    expect(fresh.steps.map((step) => step.count)).toEqual([50, 49, 48, 49, 48, 48, 48, 47, 47]);
+    expect(fresh.steps.filter((step) => step.step !== "Da").every((step) => step.redirect.includes("submitted=1"))).toBe(true);
+    // The three people of the new sitting are held once each: Ioana's registration reserved, Mihai and Ana held.
+    expect(fresh.reserved + fresh.liveHolds).toBe(3);
+    expect(fresh.liveSlots).toBe(fresh.liveHolds);
+
+    const holds = await lateReplays("holdsTheFirstPerson", "cros-replay-ana", "ana@example.ro");
+    const limit = await lateReplays("atItsLimit", "cros-replay-plin", "plina@example.ro");
+    for (const other of [holds, limit]) {
+      expect(comparable(other.steps)).toEqual(comparable(fresh.steps));
+      for (const [index, step] of other.steps.entries()) {
+        expect(step.screen, step.step).toBe(fresh.steps[index].screen);
+        expect(step.half, step.step).toEqual(fresh.steps[index].half);
+      }
+      expect(other.reserved + other.liveHolds).toBe(3);
+      expect(other.liveSlots).toBe(other.liveHolds);
+    }
+  });
+
+  it("on a full event: nothing is held, every step reads the same for every address", async () => {
+    const fresh = await lateReplays("fresh", "cros-replay", "noua@example.ro", true);
+    expect(fresh.steps.map((step) => step.count)).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0]);
+    expect(fresh.reserved + fresh.liveHolds).toBe(0);
+    for (const other of [await lateReplays("holdsTheFirstPerson", "cros-replay-ana", "ana@example.ro", true), await lateReplays("atItsLimit", "cros-replay-plin", "plina@example.ro", true)]) {
+      expect(comparable(other.steps)).toEqual(comparable(fresh.steps));
+      for (const [index, step] of other.steps.entries()) {
+        expect(step.screen, step.step).toBe(fresh.steps[index].screen);
+        expect(step.half, step.step).toEqual(fresh.steps[index].half);
+      }
+      expect(other.reserved + other.liveHolds).toBe(0);
+    }
   });
 });

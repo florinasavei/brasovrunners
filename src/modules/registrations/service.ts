@@ -1,4 +1,4 @@
-import { and, eq, gt, inArray, lte } from "drizzle-orm";
+import { and, eq, gt, lte } from "drizzle-orm";
 import { type Participant, participants } from "@/db/schema/participants";
 import { familyPlaceHolds, familySittings } from "@/db/schema/family-entries";
 import type {
@@ -422,10 +422,11 @@ async function reserveFamilyPlace<T extends Record<string, unknown>>(
  * nothing about what the address holds. With no place free it holds nothing and reads «pe lista de
  * așteptare», as a fresh address's form would.
  *
- * One hold per person of the sitting (`familyPlaceSlot`, the review of 2026-09-28, round four): a hold
- * still counted under the same slot is the person's, and the form adds nothing — as a fresh address's
- * form for a person the sitting already registered adds nothing. A lapsed one is taken again through
- * the allocator, exactly as a fresh address's lapsed reservation would be (`reserveFamilyPlace`).
+ * One hold per person the address sends at the event (`familyPlaceSlot`, the review of 2026-09-28,
+ * rounds four and five): a hold still counted under the same slot — in this sitting or an earlier one —
+ * is the person's, and the form adds nothing, as a fresh address's form for a person it already
+ * reserved adds nothing. A lapsed one under this sitting's key is taken again through the allocator,
+ * exactly as a fresh address's lapsed reservation would be (`reserveFamilyPlace`).
  */
 async function holdFamilyPlace<T extends Record<string, unknown>>(
   db: Transaction<T>,
@@ -435,12 +436,7 @@ async function holdFamilyPlace<T extends Record<string, unknown>>(
   settings: Deadlines,
   until: Date,
 ): Promise<FamilyPlace> {
-  const live = await db
-    .select({ id: familyPlaceHolds.id })
-    .from(familyPlaceHolds)
-    .where(and(eq(familyPlaceHolds.sittingKey, hold.sittingKey), eq(familyPlaceHolds.slot, hold.slot), gt(familyPlaceHolds.expiresAt, now)))
-    .limit(1);
-  if (live.length > 0) return "reserved";
+  if (await liveFamilyPlaceHoldOf(db, event.id, hold.slot, now)) return "reserved";
   // A lapsed hold under the same slot counts nowhere already: it goes, and the slot is taken afresh.
   await db
     .delete(familyPlaceHolds)
@@ -448,6 +444,30 @@ async function holdFamilyPlace<T extends Record<string, unknown>>(
   const { free } = await placeForNewcomer(db, event, now, settings);
   if (!free) return "waitlist";
   return (await repo.writeFamilyPlaceHold(db, { eventId: event.id, sittingKey: hold.sittingKey, slot: hold.slot, until }, now)) ? "reserved" : "waitlist";
+}
+
+/**
+ * Whether a sitting ever held a place for the person of this slot at the event, live or lapsed, in
+ * whichever sitting (§NNN, round five): until the day-late sweep (`purgeLapsedFamilySittings`) or the
+ * event's own maintenance clears a lapsed row.
+ */
+async function familyPlaceHoldTaken<T extends Record<string, unknown>>(db: Transaction<T>, eventId: string, slot: string): Promise<boolean> {
+  const [row] = await db
+    .select({ id: familyPlaceHolds.id })
+    .from(familyPlaceHolds)
+    .where(and(eq(familyPlaceHolds.eventId, eventId), eq(familyPlaceHolds.slot, slot)))
+    .limit(1);
+  return row !== undefined;
+}
+
+/** Whether the person of this slot holds a live family place at the event, in whichever sitting (§NNN, round five). */
+async function liveFamilyPlaceHoldOf<T extends Record<string, unknown>>(db: Transaction<T>, eventId: string, slot: string, now: Date): Promise<boolean> {
+  const [live] = await db
+    .select({ id: familyPlaceHolds.id })
+    .from(familyPlaceHolds)
+    .where(and(eq(familyPlaceHolds.eventId, eventId), eq(familyPlaceHolds.slot, slot), gt(familyPlaceHolds.expiresAt, now)))
+    .limit(1);
+  return live !== undefined;
 }
 
 /**
@@ -472,55 +492,60 @@ async function placeOfRegistration<T extends Record<string, unknown>>(
 }
 
 /**
- * The place of the person a sitting's form names (§NNN; the review of 2026-09-28, round four, §39,
- * AGENTS.md §19.4), decided by the server from the sitting's rows — never by the browser's half:
+ * The place of the person a sitting's form names (§NNN; the review of 2026-09-28, rounds four and five,
+ * §39, AGENTS.md §19.4), decided by the server from the address's rows at the event — never by the
+ * browser's half, and never by which sitting the half names:
  *
- * - the person is one of the sitting's registrations (a fresh address's earlier form for them, or its
+ * - the person is one of this sitting's registrations (a fresh address's earlier form for them, or its
  *   opening press's): that registration's place (`placeOfRegistration`) — nothing is added;
- * - otherwise their held place, one per person (`familyPlaceSlot`): taken now, or found there already
- *   (a person the address held before the sitting, sent again) — nothing is added either.
+ * - the person already has a live family place at the event, in whichever sitting it was taken: a
+ *   reservation on their registration, or their held place (`familyPlaceSlot`, one per person the
+ *   address sends) — nothing is added either;
+ * - otherwise their held place is taken now under this sitting's key.
  *
- * So a form adds one place per person of the sitting, once, whatever the address holds and however
- * often a sealed half is replayed: a fresh address and one that already holds the person follow the
- * same count and read the same words.
+ * So a person holds at most one family place at a time, and a form adds it once, whatever the address
+ * holds and however often a sealed half is replayed — a half from before a sitting's deadline or from
+ * after it alike: a fresh address and one that already holds the person follow the same count and read
+ * the same words. Once the person's place has lapsed with its sitting's deadline, the next sitting's
+ * form takes it again, for every address alike.
  */
 async function sittingPlaceOf<T extends Record<string, unknown>>(
   tx: Transaction<T>,
   event: LockedEventForRegistration,
-  scope: { sitting: { registrationIds: readonly string[] } | null; sittingKey: string | null },
+  scope: { sitting: { registrationIds: readonly string[] } | null; sittingKey: string | null; participantId: string },
   legalName: string,
   now: Date,
   settings: Deadlines,
   until: Date,
 ): Promise<FamilyPlace | null> {
-  const ids = scope.sitting?.registrationIds ?? [];
-  if (ids.length > 0) {
-    const [own] = await tx
-      .select({ id: registrations.id })
-      .from(registrations)
-      .where(and(inArray(registrations.id, [...ids]), eq(registrations.nameKey, registrationNameKey(legalName))))
-      .limit(1);
-    if (own) {
-      const place = await placeOfRegistration(tx, event, own.id, now, settings, until);
-      if (place !== null) return place;
-    }
+  const [own] = await tx
+    .select({ id: registrations.id, reserved: repo.familyReservationHolds(now) })
+    .from(registrations)
+    .where(and(eq(registrations.eventId, event.id), eq(registrations.participantId, scope.participantId), eq(registrations.nameKey, registrationNameKey(legalName))))
+    .limit(1);
+  if (own && scope.sitting?.registrationIds.includes(own.id)) {
+    const place = await placeOfRegistration(tx, event, own.id, now, settings, until);
+    if (place !== null) return place;
   }
+  if (own?.reserved) return "reserved";
+  const slot = familyPlaceSlot(event.id, scope.participantId, legalName);
+  if (await liveFamilyPlaceHoldOf(tx, event.id, slot, now)) return "reserved";
   if (!scope.sittingKey) return null;
-  return holdFamilyPlace(tx, event, { sittingKey: scope.sittingKey, slot: familyPlaceSlot(scope.sittingKey, legalName) }, now, settings, until);
+  return holdFamilyPlace(tx, event, { sittingKey: scope.sittingKey, slot }, now, settings, until);
 }
 
 /**
  * The first form's place at the press that opens the sitting (§NNN): its registration's place
  * (`placeOfRegistration`) when it wrote one, and otherwise — a kept form, a person the address already
- * holds, a first form that wrote nothing — the person's held place (`holdFamilyPlace`), under the slot
- * the sitting's later forms find for the same person (`familyPlaceSlot`, from the name the browser's
- * half carries for its first form). Every address reads the same (§39), and a replayed press finds its
- * own slot taken.
+ * holds, a first form that wrote nothing — the person's place as a later form finds it
+ * (`sittingPlaceOf`, from the name the browser's half carries for its first form): a live family
+ * place they already have, in whichever sitting, or their held place taken now. Every address reads
+ * the same (§39), and a replayed press finds the person's place taken.
  */
 async function placeOfFirstForm<T extends Record<string, unknown>>(
   tx: Transaction<T>,
   event: LockedEventForRegistration,
-  first: { registrationId: string | null; sittingKey: string | null; name: string | null },
+  first: { registrationId: string | null; sittingKey: string | null; participantId: string | null; name: string | null },
   now: Date,
   settings: Deadlines,
   until: Date,
@@ -529,8 +554,8 @@ async function placeOfFirstForm<T extends Record<string, unknown>>(
     const place = await placeOfRegistration(tx, event, first.registrationId, now, settings, until);
     if (place !== null) return place;
   }
-  if (!first.sittingKey) return null;
-  return holdFamilyPlace(tx, event, { sittingKey: first.sittingKey, slot: familyPlaceSlot(first.sittingKey, first.name) }, now, settings, until);
+  if (!first.participantId) return null;
+  return sittingPlaceOf(tx, event, { sitting: null, sittingKey: first.sittingKey, participantId: first.participantId }, first.name ?? "", now, settings, until);
 }
 
 /**
@@ -559,9 +584,10 @@ export async function continueFamilySittingAndReserve<T extends Record<string, u
   now: Date,
   /**
    * The press that opens the sitting: the end of the first form's window, and the name its form was
-   * sent for, as the browser's half carries them (§NNN) — the name only picks the person's slot.
+   * sent for and the address it was sent with, as the browser's half carries them (§NNN) — the two
+   * only pick the person's slot.
    */
-  opening: { firstWindowEnd: Date; firstName?: string | null } | null = null,
+  opening: { firstWindowEnd: Date; firstName?: string | null; email?: string | null } | null = null,
 ): Promise<{ sittingId: string | null; opened: boolean; reservedUntil: Date | null; place: FamilyPlace | null }> {
   if (!opening) {
     const continued = await continueFamilySitting(db, press, heldUntil, now, heldUntil);
@@ -590,9 +616,33 @@ export async function continueFamilySittingAndReserve<T extends Record<string, u
     if (!locked) return { sittingId: continued?.sittingId ?? null, opened: continued?.opened ?? false, reservedUntil: null, place: null };
     const lockedEvent = withLockedRow(publicFormEvent(locked, locked.publishedAt), locked);
     const seedRegistration = press.seed?.kind === "registration" && sitting?.registrationIds.includes(press.seed.id) ? press.seed.id : null;
-    const place = await placeOfFirstForm(tx, lockedEvent, { registrationId: seedRegistration, sittingKey, name: opening.firstName ?? null }, now, settings, reservedUntil);
+    const participantId = await participantIdOfAddress(tx, opening.email ?? null);
+    const place = await placeOfFirstForm(tx, lockedEvent, { registrationId: seedRegistration, sittingKey, participantId, name: opening.firstName ?? null }, now, settings, reservedUntil);
     return { sittingId: continued?.sittingId ?? null, opened: continued?.opened ?? false, reservedUntil, place };
   });
+}
+
+/** The held place of a registration's own person, released (§NNN, round five): by their slot, in whichever sitting. */
+async function releaseOwnFamilyPlaceHold<T extends Record<string, unknown>>(db: Transaction<T>, eventId: string, registrationId: string): Promise<void> {
+  const [row] = await db
+    .select({ participantId: registrations.participantId, registeredName: registrations.registeredName })
+    .from(registrations)
+    .where(eq(registrations.id, registrationId))
+    .limit(1);
+  if (!row) return;
+  await repo.releaseFamilyPlaceHold(db, { eventId, slot: familyPlaceSlot(eventId, row.participantId, row.registeredName) });
+}
+
+/** The participant of the address a sitting's half was sent with (§NNN, round five): only to pick a person's slot. */
+async function participantIdOfAddress<T extends Record<string, unknown>>(tx: Transaction<T>, email: string | null): Promise<string | null> {
+  if (!email) return null;
+  let canonical: string;
+  try {
+    canonical = canonicalizeEmail(email).canonicalEmail;
+  } catch {
+    return null;
+  }
+  return (await findParticipantByCanonicalEmail(tx, canonical))?.id ?? null;
 }
 
 /**
@@ -629,6 +679,12 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
     here rather than counted against it. Read before the sweep below, which clears a lapsed one.
   */
   const reserved = await repo.holdsFamilyReservation(db, registrationId, now);
+  /*
+    …and a place a family sitting held for this person without a registration of its own (§NNN, the
+    review of 2026-09-28, round five): a later sitting's form for somebody whose earlier reservation
+    had lapsed. It goes before the count, so the person's own held place is never counted against them.
+  */
+  await releaseOwnFamilyPlaceHold(db, event.id, registrationId);
   const { free, counts, eligibleWaitlisted } = await placeForNewcomer(db, event, now, settings);
   let direct = reserved || free;
 
@@ -1817,7 +1873,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
         correction or a birth-date clash (`isNewSittingPerson` false) takes nothing, for every address.
       */
       if (origin.sitting?.newPerson === true && placeResult === null) {
-        placeResult = await sittingPlaceOf(tx, lockedEvent, { sitting, sittingKey: sitting?.id ?? cookieKey }, legalName, now, settings, reservationUntil);
+        placeResult = await sittingPlaceOf(tx, lockedEvent, { sitting, sittingKey: sitting?.id ?? cookieKey, participantId: participant.id }, legalName, now, settings, reservationUntil);
       }
       if (!sitting) return;
       await settleSitting(tx, sitting, { heldUntil, recipientEmail: participant.deliveryEmail, now });
@@ -1893,7 +1949,16 @@ export async function submitRegistration<T extends Record<string, unknown>>(
         not an address that already holds some. The larger of the two, so a replayed half bounds nothing less.
       */
       const own = Math.max(written, origin.sitting?.people ?? 0);
-      if (!addressHasRoom(own, cap)) {
+      /*
+        …and never for a person this address already sent in a sitting at this event (§NNN, the review
+        of 2026-09-28, round five; §39): their held place, live or lapsed, is there under their slot, in
+        whichever sitting. A fresh address's form for such a person is their registration's re-send,
+        which the limit never refuses, so a replayed half — from before a sitting's deadline or after it
+        — is refused for no address. The form then adds nothing, or takes the lapsed place once again,
+        as the fresh address's re-send does (`sittingPlaceOf`).
+      */
+      const sentBefore = await familyPlaceHoldTaken(tx, event.id, familyPlaceSlot(event.id, participant.id, legalName));
+      if (!sentBefore && !addressHasRoom(own, cap)) {
         throw new DomainError("VALIDATION_ERROR", "this sitting's people already fill the club's limit per address", [SITTING_AT_CAP]);
       }
     }
@@ -2040,7 +2105,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       */
       placeResult =
         origin.sitting?.newPerson === true
-          ? await sittingPlaceOf(tx, lockedEvent, { sitting, sittingKey: sitting.id }, legalName, now, settings, reservationUntil)
+          ? await sittingPlaceOf(tx, lockedEvent, { sitting, sittingKey: sitting.id, participantId: participant.id }, legalName, now, settings, reservationUntil)
           : (await repo.holdsFamilyReservation(tx, existing.id, now))
             ? "reserved"
             : "waitlist";

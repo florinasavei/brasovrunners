@@ -44,13 +44,6 @@ export const SITTING_SENT_PARAM = "sent";
 export const SITTING_AT_CAP = "sittingAtCap";
 
 /**
- * The slot of a held place whose person has no name to key it by (§NNN, `family_place_holds`): one per
- * sitting, however often the browser's half is replayed. Every other hold is one per person
- * (`family-place-slot.ts`, the review of 2026-09-28, round four).
- */
-export const PRESS_SLOT = "press";
-
-/**
  * The payload mark of a verification email a sitting held (§519): rendered, its link's life is
  * counted from that send (`extendHeldVerificationLink`), as the message states it. A marker, never a
  * value. Written only when the message is held — by a form after «Da», or by «Da» itself taking the

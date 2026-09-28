@@ -131,8 +131,8 @@ export async function confirmFamilyEntry<T extends Record<string, unknown>>(
       sitting's deadline (§NNN): confirmed from its own email, the hold goes before the person is
       allocated, so their own held place is never counted against them.
     */
-    // The person's own slot (`familyPlaceSlot`, round four): the one the opening press held for them.
-    if (entry.sittingId) await releaseFamilyPlaceHold(tx, entry.sittingId, familyPlaceSlot(entry.sittingId, personOfEntry(entry).legalName));
+    // The person's own slot (`familyPlaceSlot`, rounds four and five): whichever sitting held it for them.
+    await releaseFamilyPlaceHold(tx, { eventId: entry.eventId, slot: familyPlaceSlot(entry.eventId, entry.participantId, personOfEntry(entry).legalName) });
 
     const created = await submitRegistration(
       tx,

@@ -369,8 +369,8 @@ export async function continueFamilySittingAction(form: FormData): Promise<void>
             { sittingId: sitting.sittingId, seed: sitting.seed, eventId: event.id, locale },
             familySittingHeldUntil(now, deadlines),
             now,
-            // The first form's person, as this half typed it: only picks the slot of their held place (§NNN).
-            opening ? { firstWindowEnd: sitting.heldUntil, firstName: sitting.people[0]?.name ?? null } : null,
+            // The first form's person and address, as this half typed them: only pick the slot of their held place (§NNN).
+            opening ? { firstWindowEnd: sitting.heldUntil, firstName: sitting.people[0]?.name ?? null, email: sitting.email } : null,
           )
         : null;
     const opened = continued?.sittingId ?? null;

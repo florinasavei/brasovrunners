@@ -722,11 +722,15 @@ export async function releaseFamilyPlaceHolds<T extends Record<string, unknown>>
   return gone.length;
 }
 
-/** One hold of a sitting released (§NNN): the opening press's (`PRESS_SLOT`), when its kept form is confirmed on its own. */
-export async function releaseFamilyPlaceHold<T extends Record<string, unknown>>(db: Database<T>, sittingKey: string, slot: string): Promise<boolean> {
+/**
+ * One person's held places released (§NNN): a kept form confirmed on its own, whose person now has a
+ * registration allocated like any other. By the person's slot at the event (`familyPlaceSlot`), in
+ * whichever sitting it was taken (the review of 2026-09-28, round five).
+ */
+export async function releaseFamilyPlaceHold<T extends Record<string, unknown>>(db: Database<T>, hold: { eventId: string; slot: string }): Promise<boolean> {
   const gone = await db
     .delete(familyPlaceHolds)
-    .where(and(eq(familyPlaceHolds.sittingKey, sittingKey), eq(familyPlaceHolds.slot, slot)))
+    .where(and(eq(familyPlaceHolds.eventId, hold.eventId), eq(familyPlaceHolds.slot, hold.slot)))
     .returning({ id: familyPlaceHolds.id });
   if (gone.length > 0) revalidatePublicContent("places");
   return gone.length > 0;
