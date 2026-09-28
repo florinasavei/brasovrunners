@@ -1,4 +1,5 @@
 import { env } from "@/shared/config/env";
+import { forgetKnownBudget, noteBudgetReading } from "./budget-level";
 import { cachedBudgetThresholds } from "./budget-thresholds";
 import {
   type BudgetThresholds,
@@ -22,7 +23,11 @@ import { type NeonDeps, type NeonMeter, readNeonMeter } from "./neon";
  * deciding whether it is resting for the month. None of them may wake the compute to find out, so
  * the answer comes from Neon's API (a different host, which answers whether or not the compute is
  * up), through the shared fifteen-minute reading (`readNeonMeter`), with a minute of this
- * instance's memory on top so a burst of pings or page views asks once.
+ * instance's memory on top so a burst of pings asks once.
+ *
+ * A public page never asks here (§549): its render is told the level this instance last read, by
+ * `budget-level.ts`, which every reading below notes and which makes no request of its own — a
+ * request to Neon inside a static page's render is the render's own and shortens or breaks the page.
  *
  * It never throws: no key, a refusal or a slow Neon is the level `unknown`, whose effects are none.
  */
@@ -42,7 +47,6 @@ type BudgetDeps = Pick<NeonDeps, "fetchImpl"> & { thresholds?: () => Promise<Bud
 const MEMO_MS = 60_000;
 
 let memo: { at: number; reading: BudgetReading } | null = null;
-let refreshing: Promise<BudgetReading> | null = null;
 
 const unknownReading = (thresholds: BudgetThresholds = DEFAULT_BUDGET_THRESHOLDS): BudgetReading => ({
   level: "unknown",
@@ -68,22 +72,8 @@ export async function readNeonBudget(now: Date = new Date(), deps: BudgetDeps = 
     console.error("[budget] could not read Neon", error);
   }
   memo = { at: now.getTime(), reading };
+  noteBudgetReading(reading, now);
   return reading;
-}
-
-/**
- * The level this instance last read, without waiting — for the public cache, which asks on every
- * read and must never make a visitor wait on Neon's API. A stale or missing memo starts one
- * refresh in the background and answers what it has (`unknown` on a cold instance: no effect).
- */
-export function peekNeonBudgetLevel(now: Date = new Date()): NeonBudgetLevel {
-  const fresh = memo && now.getTime() - memo.at >= 0 && now.getTime() - memo.at < MEMO_MS;
-  if (!fresh && !refreshing) {
-    refreshing = readNeonBudget(now).finally(() => {
-      refreshing = null;
-    });
-  }
-  return memo?.reading.level ?? "unknown";
 }
 
 /** The level and its effects for a meter already in hand. */
@@ -116,4 +106,5 @@ export async function budgetOfInForce(
 /** For the tests, which must not see one case's answer in the next. */
 export function forgetNeonBudget(): void {
   memo = null;
+  forgetKnownBudget();
 }
