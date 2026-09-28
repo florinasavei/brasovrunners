@@ -114,7 +114,7 @@ describe("§485 pictures from the gallery", () => {
 
   it("keeps a team card's photo and another album's photo when an album goes, and deletes the rest", async () => {
     const onCard = await uploadBodyImage(db, { actorId: editor.id, file: await photo(), originalFilename: "portret.jpg" });
-    await db.insert(teamMembers).values({ name: "Amalia", roleRo: "Antrenoare", roleEn: "Coach", photoMediaAssetId: onCard.assetId, position: 1 });
+    await db.insert(teamMembers).values({ name: "Ioana", roleRo: "Antrenoare", roleEn: "Coach", photoMediaAssetId: onCard.assetId, position: 1 });
     const going = await createAlbum(db, { actor: editor, fields: FIELDS("a") });
     const staying = await createAlbum(db, { actor: editor, fields: FIELDS("b") });
     const own = await addPhoto(db, { actor: editor, albumId: going.id, file: await photo("#123456"), originalFilename: "own.jpg" });

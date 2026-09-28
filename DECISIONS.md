@@ -20793,7 +20793,7 @@ Baseline `BR-V2.20-2026-09-27`.
 
 ## 538. «De făcut» tells the Administrator to write the Team and FAQ pages, and a stored list gains new starting lines once
 
-**The owner, 2026-09-28:** "de asemenea, actualizeaza lista de TODOs pt Amalia (Administrator) sa faca pagina de Echipa si Intrebari frecvente" — update the checklist so the Administrator writes the «Echipa» page and the «Întrebări frecvente» page.
+**The owner, 2026-09-28:** "de asemenea, actualizeaza lista de TODOs pentru Administrator sa faca pagina de Echipa si Intrebari frecvente" — update the checklist so the Administrator writes the «Echipa» page and the «Întrebări frecvente» page.
 
 **The problem.** §438's starting list was read only while no `clubTodo` row existed. Production has stored its list since the first press, so a line added to the starting list would never reach it.
 
