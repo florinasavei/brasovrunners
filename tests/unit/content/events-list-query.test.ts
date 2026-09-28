@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import {
+  eventListBack,
   arrangeEventList,
   countEventLines,
   eventListNarrowed,
@@ -242,5 +243,25 @@ describe("the events list page wires it (source)", () => {
     expect(page).toContain("rows={pageLines}");
     expect(page).toContain("currentParams={{ ...listParams");
     expect(page).not.toContain("sortable: true");
+  });
+});
+
+describe("§NNN the list's address through an action's `back`", () => {
+  it("round-trips the list's own keys and nothing else", () => {
+    const address = "q=tampa&state=DRAFT&sort=title-asc&dir=asc&page=2&perPage=50";
+    expect(eventListBack(address)).toBe(address);
+    expect(eventListBack(`?${address}`)).toBe(address);
+    expect(eventListBack(eventListBack(address))).toBe(address);
+  });
+
+  it("drops what is not the list's, and the defaults", () => {
+    expect(eventListBack("saved=deleted&error=X&next=//evil&sort=date-near&page=1&perPage=100")).toBe("");
+    expect(eventListBack("state=Încheiate&sort=nope&page=-3&perPage=7&dir=up")).toBe("");
+    expect(eventListBack("state=PAST&state=DRAFT")).toBe("state=PAST");
+    expect(eventListBack("")).toBe("");
+  });
+
+  it("reads the page's own search-params record the same way", () => {
+    expect(eventListBack({ q: " tâmpa ", state: ["ARCHIVED", "DRAFT"], saved: "x" })).toBe("q=t%C3%A2mpa&state=ARCHIVED");
   });
 });

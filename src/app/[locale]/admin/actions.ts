@@ -1,6 +1,7 @@
 "use server";
 
 import { cookies } from "next/headers";
+import { eventListBack } from "@/modules/content/events/list-query";
 import { redirect } from "next/navigation";
 import { flashOutcome } from "@/shared/feedback/flash";
 import { signOut } from "@/auth";
@@ -111,7 +112,14 @@ async function backTo(path: string, outcome: Record<string, string | undefined>,
   // `#admin-alert` so the browser lands on the outcome rather than at the top of a long page,
   // where a one-line alert about a save that failed is easy to walk straight past. Every
   // backoffice page gives that id to its alert region; it costs no JavaScript.
-  redirect(query ? `${path}?${query}#admin-alert` : path);
+  redirect(query ? `${path}${path.includes("?") ? "&" : "?"}${query}#admin-alert` : path);
+}
+
+/** The events list as the form was posted from it — its search, state, order and page (§NNN). */
+function eventListPath(form: FormData, locale: Locale): string {
+  const back = eventListBack(text(form, "back"));
+  const path = getPathname({ locale, href: "/admin" });
+  return back ? `${path}?${back}` : path;
 }
 
 function outcomeOf(error: unknown): { error: string } {
@@ -420,7 +428,8 @@ export async function transitionEventAction(_previous: FormOutcome | null, form:
  */
 export async function bulkArchiveEventsAction(form: FormData): Promise<void> {
   const locale = toLocale(form.get("uiLocale"));
-  const listPath = getPathname({ locale, href: "/admin" });
+  const listPath = eventListPath(form, locale);
+  const glue = listPath.includes("?") ? "&" : "?";
 
   const selected = selectedEventRefs(form);
 
@@ -448,7 +457,7 @@ export async function bulkArchiveEventsAction(form: FormData): Promise<void> {
   }
 
   await flashOutcome({ saved: "eventsArchived", archived: String(archived), failed: String(failed) });
-  redirect(`${listPath}?saved=eventsArchived&archived=${archived}&failed=${failed}#admin-alert`);
+  redirect(`${listPath}${glue}saved=eventsArchived&archived=${archived}&failed=${failed}#admin-alert`);
 }
 
 /**
@@ -461,7 +470,8 @@ export async function bulkArchiveEventsAction(form: FormData): Promise<void> {
  */
 export async function bulkPublishEventsAction(form: FormData): Promise<void> {
   const locale = toLocale(form.get("uiLocale"));
-  const listPath = getPathname({ locale, href: "/admin" });
+  const listPath = eventListPath(form, locale);
+  const glue = listPath.includes("?") ? "&" : "?";
 
   const selected = selectedEventRefs(form);
   if (selected.length === 0) return backTo(listPath, { error: "NOTHING_SELECTED" });
@@ -498,7 +508,7 @@ export async function bulkPublishEventsAction(form: FormData): Promise<void> {
   }
 
   await flashOutcome({ saved: "eventsPublished", published: String(published), failed: String(failed) });
-  redirect(`${listPath}?saved=eventsPublished&published=${published}&failed=${failed}#admin-alert`);
+  redirect(`${listPath}${glue}saved=eventsPublished&published=${published}&failed=${failed}#admin-alert`);
 }
 
 /**
@@ -509,7 +519,8 @@ export async function bulkPublishEventsAction(form: FormData): Promise<void> {
  */
 export async function bulkDeleteEventsAction(form: FormData): Promise<void> {
   const locale = toLocale(form.get("uiLocale"));
-  const listPath = getPathname({ locale, href: "/admin" });
+  const listPath = eventListPath(form, locale);
+  const glue = listPath.includes("?") ? "&" : "?";
 
   const selected = selectedEventRefs(form);
   if (selected.length === 0) return backTo(listPath, { error: "NOTHING_SELECTED" });
@@ -535,7 +546,7 @@ export async function bulkDeleteEventsAction(form: FormData): Promise<void> {
   }
 
   await flashOutcome({ saved: "eventsDeleted", deleted: String(deleted), failed: String(failed) });
-  redirect(`${listPath}?saved=eventsDeleted&deleted=${deleted}&failed=${failed}#admin-alert`);
+  redirect(`${listPath}${glue}saved=eventsDeleted&deleted=${deleted}&failed=${failed}#admin-alert`);
 }
 
 /**
@@ -708,7 +719,7 @@ export async function duplicateEventAction(_previous: FormOutcome | null, form: 
     outcome = outcomeOf(error);
   }
 
-  if (outcome) return backTo(getPathname({ locale, href: "/admin" }), outcome);
+  if (outcome) return backTo(eventListPath(form, locale), outcome);
   return backTo(editorPath(locale, copyId as string), { saved: "duplicated" });
 }
 
@@ -894,8 +905,8 @@ export async function deleteEventAction(_previous: FormOutcome | null, form: For
   }
 
   // Deleted or not, the event list is where there is something to look at — the editor for a
-  // deleted event is a 404.
-  return backTo(getPathname({ locale, href: "/admin" }), outcome);
+  // deleted event is a 404 — and the list as it was left, filtered and ordered (§NNN).
+  return backTo(eventListPath(form, locale), outcome);
 }
 
 /**

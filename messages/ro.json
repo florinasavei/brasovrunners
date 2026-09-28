@@ -872,7 +872,7 @@
         "title-desc": "Nume Z–A",
         "state": "Stare"
       },
-      "listApply": "Caută",
+      "listApply": "Aplică",
       "listCount": "{shown} din {total} evenimente",
       "listEmpty": "Niciun eveniment nu se potrivește. Schimbă căutarea sau starea, ori șterge filtrele."
     },

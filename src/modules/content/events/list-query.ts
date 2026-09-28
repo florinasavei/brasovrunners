@@ -96,6 +96,32 @@ export function eventListParams(query: EventListQuery): Record<string, string | 
   };
 }
 
+/** The page sizes `parseListQuery` offers; 100 is the events list's default and never written. */
+const BACK_PER_PAGE = ["25", "50"];
+
+/**
+ * The list's address as a Server Action carries it back (§NNN): the forms on the list post it as
+ * a hidden `back`, and the action redirects there, so an archive from «Ciorne», page 2, lands on
+ * «Ciorne», page 2. What comes in is a form field, so it is read through the same parser as the
+ * address and only the list's own keys survive — `q`, `state`, `sort`, `dir`, `page`,
+ * `perPage`, each validated — never an outcome flag, never another path. Empty for the plain list.
+ */
+export function eventListBack(raw: string | Record<string, Raw>): string {
+  const params: Record<string, Raw> = {};
+  if (typeof raw === "string") {
+    for (const [key, value] of new URLSearchParams(raw)) if (!(key in params)) params[key] = value;
+  } else Object.assign(params, raw);
+  const out = new URLSearchParams();
+  for (const [key, value] of Object.entries(eventListParams(parseEventListQuery(params)))) if (value !== undefined) out.set(key, value);
+  const dir = first(params.dir);
+  if (dir === "asc" || dir === "desc") out.set("dir", dir);
+  const page = Number(first(params.page));
+  if (Number.isInteger(page) && page > 1) out.set("page", String(page));
+  const perPage = first(params.perPage);
+  if (perPage !== undefined && BACK_PER_PAGE.includes(perPage)) out.set("perPage", perPage);
+  return out.toString();
+}
+
 type EditorialStatus = "DRAFT" | "IN_REVIEW" | "PUBLISHED" | "ARCHIVED";
 type EventStatus = "SCHEDULED" | "CANCELLED" | "COMPLETED";
 

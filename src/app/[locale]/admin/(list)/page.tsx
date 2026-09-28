@@ -60,6 +60,7 @@ import {
   countEventLines,
   EVENT_LIST_SORTS,
   EVENT_LIST_STATES,
+  eventListBack,
   eventListNarrowed,
   eventListParams,
   eventListQueryInUse,
@@ -193,6 +194,8 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
   const listParams = eventListParams(listQuery);
   const narrowed = eventListNarrowed(listQuery);
   const inUse = eventListQueryInUse(listQuery);
+  // Posted by every action form on the list, so the action's redirect returns here (§NNN).
+  const back = eventListBack(current);
   // The M of «N din M evenimente»: the lines with nothing narrowing them.
   const allLineCount = countEventLines(rows);
   const lines: ListRow[] = await Promise.all(
@@ -607,7 +610,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
       {/*
         Search, state and order (§NNN): one row above the list, never folded — a plain GET form
         with native selects, so the list's state is the address — bookmarked, kept across a
-        Server Action's redirect back, and working with JavaScript off, like the registrations
+        Server Action's redirect back (the forms post it as `back`), and working with JavaScript off, like the registrations
         list's filters and the public listing's (§413). Every control wears its glyph.
       */}
       <Box
@@ -643,7 +646,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
             }}
           />
           <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1 }}>
-            <GlyphButton icon="search" type="submit" variant="contained" sx={TAP_TARGET}>
+            <GlyphButton icon="filter" type="submit" variant="contained" sx={TAP_TARGET}>
               {t("events.listApply")}
             </GlyphButton>
             {inUse && (
@@ -665,6 +668,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
         <BulkBar
           formId={BULK_FORM}
           uiLocale={locale}
+          back={back}
           publish={bulkPublishEventsAction}
           archive={bulkArchiveEventsAction}
           remove={canDeleteEvent(staffUser.role) ? bulkDeleteEventsAction : undefined}
@@ -780,6 +784,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
                 >
                   <input type="hidden" name="uiLocale" value={locale} />
                   <input type="hidden" name="eventId" value={event.id} />
+                  <input type="hidden" name="back" value={back} />
                 </ActionForm>
                 {canDeleteEvent(staffUser.role) && (entries === 0 || entries === testEntries) && !isSeries && (
                   <ActionForm
@@ -790,6 +795,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
                   >
                     <input type="hidden" name="uiLocale" value={locale} />
                     <input type="hidden" name="eventId" value={event.id} />
+                    <input type="hidden" name="back" value={back} />
                   </ActionForm>
                 )}
                 <RowMenu

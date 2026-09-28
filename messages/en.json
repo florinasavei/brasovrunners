@@ -872,7 +872,7 @@
         "title-desc": "Name Z–A",
         "state": "State"
       },
-      "listApply": "Search",
+      "listApply": "Apply",
       "listCount": "{shown} of {total} events",
       "listEmpty": "No event matches. Change the search or the state, or clear the filters."
     },

@@ -29,7 +29,7 @@ test.describe("§NNN the backoffice events list: search, state, order", () => {
 
     await search.fill("tampa");
     await sort.selectOption({ label: "Nume Z–A" });
-    await form.getByRole("button", { name: "Caută" }).click();
+    await form.getByRole("button", { name: "Aplică" }).click();
 
     await expect(page).toHaveURL(/[?&]q=tampa(&|$)/);
     await expect(page).toHaveURL(/[?&]sort=title-desc(&|$)/);
@@ -40,7 +40,7 @@ test.describe("§NNN the backoffice events list: search, state, order", () => {
 
     // «Anulate» with the same search: the seed calls nothing off, so the list says why it is empty.
     await page.getByRole("combobox", { name: "Starea" }).selectOption({ label: "Anulate" });
-    await page.getByRole("search").getByRole("button", { name: "Caută" }).click();
+    await page.getByRole("search").getByRole("button", { name: "Aplică" }).click();
     await expect(page).toHaveURL(/[?&]state=CANCELLED(&|$)/);
     await expect(main.getByText("Niciun eveniment nu se potrivește.", { exact: false }).first()).toBeVisible();
 
