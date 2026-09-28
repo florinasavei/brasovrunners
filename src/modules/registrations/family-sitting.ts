@@ -7,7 +7,7 @@ import type { Locale } from "@/i18n/routing";
 import { drainOutboxAfterResponse } from "@/modules/notifications/drain";
 import { enqueueEmail } from "@/modules/notifications/outbox";
 import { isUuid } from "@/shared/ids";
-import { isFamilySitting, SITTING_HELD, type SittingSeed, sittingLinkExpiresAt } from "./domain/family-sitting";
+import { FAMILY_HELD, isFamilySitting, SITTING_HELD, type SittingSeed, sittingLinkExpiresAt } from "./domain/family-sitting";
 import { FAMILY_PASS_MINUTES, SIGNABLE_STATUSES } from "./domain/family-signing";
 import { liveSittingEntries } from "./family-entries";
 
@@ -259,23 +259,29 @@ function liveSittingWhere(eventId: string, now: Date) {
  * The first form's message, held until the window's end (§NNN) — only while it is still waiting and
  * never tried, and only the one the seed named for this registration. Null when it has left.
  *
- * A verification email taken in is marked held here, and only here (`SITTING_HELD`; the review of
- * 2026-09-28, nit F1): its link's life is then counted from the send, as for any held one. The first
- * form queued it unmarked, so a first form nobody pressed «Da» after reads as what it was.
+ * The message taken in is marked held here, and only here — the first form queued it unmarked, so a
+ * first form nobody pressed «Da» after reads as what it was:
+ *
+ * - a verification email with `SITTING_HELD` (the review of 2026-09-28, nit F1): its link's life is
+ *   then counted from the send, as for any held one;
+ * - a kept form's `REGISTER_ANOTHER_PERSON` with `FAMILY_HELD` (the review of 2026-09-28, round two):
+ *   the queue panel (§529, `notifications/queue.ts`) then counts it as the family's hold, with its
+ *   «Ținut până …» line, not as a retry. The renderer ignores the flag on that message; `SITTING_HELD`
+ *   is never reused for it, since it changes a verification link's life.
  */
 async function holdSeedMessage<T extends Record<string, unknown>>(
   tx: Transaction<T>,
   outboxId: string | null,
   registrationId: string,
   heldUntil: Date,
-  markHeld: boolean,
+  mark: typeof SITTING_HELD | typeof FAMILY_HELD,
 ): Promise<string | null> {
   if (!outboxId || !isUuid(outboxId)) return null;
   const [row] = await tx
     .update(emailOutbox)
     .set({
       nextAttemptAt: heldUntil,
-      ...(markHeld ? { payloadJson: sql`${emailOutbox.payloadJson} || ${JSON.stringify({ [SITTING_HELD]: true })}::jsonb` } : {}),
+      payloadJson: sql`${emailOutbox.payloadJson} || ${JSON.stringify({ [mark]: true })}::jsonb`,
     })
     .where(
       and(eq(emailOutbox.id, outboxId), eq(emailOutbox.registrationId, registrationId), eq(emailOutbox.status, "PENDING"), eq(emailOutbox.attemptCount, 0)),
@@ -308,7 +314,7 @@ async function openSittingFromSeed<T extends Record<string, unknown>>(
       .limit(1);
     if (already) return already.id;
     const sitting = await openSitting(tx, { eventId, participantId: registration.participantId, registrationId: registration.id, locale, heldUntil, now });
-    const outboxId = await holdSeedMessage(tx, seed.outboxId, registration.id, heldUntil, true);
+    const outboxId = await holdSeedMessage(tx, seed.outboxId, registration.id, heldUntil, SITTING_HELD);
     await holdInSitting(tx, sitting, { registrationId: registration.id, outboxId });
     const expiresAt = sittingLinkExpiresAt([registration.emailLinkExpiresAt, heldUntil], now) ?? heldUntil;
     await tx.update(familySittings).set({ expiresAt }).where(eq(familySittings.id, sitting.id));
@@ -323,7 +329,7 @@ async function openSittingFromSeed<T extends Record<string, unknown>>(
   // Scoped, as a kept form's own sitting always was, to the registration the address already holds here.
   const sitting = await openSitting(tx, { eventId, participantId: entry.participantId, registrationId: entry.registrationId, locale, heldUntil, now });
   await tx.update(pendingFamilyEntries).set({ sittingId: sitting.id }).where(eq(pendingFamilyEntries.id, entry.id));
-  const outboxId = await holdSeedMessage(tx, seed.outboxId, entry.registrationId, heldUntil, false);
+  const outboxId = await holdSeedMessage(tx, seed.outboxId, entry.registrationId, heldUntil, FAMILY_HELD);
   await holdInSitting(tx, sitting, { outboxId });
   const expiresAt = sittingLinkExpiresAt([entry.expiresAt, heldUntil], now) ?? heldUntil;
   await tx.update(familySittings).set({ expiresAt }).where(eq(familySittings.id, sitting.id));

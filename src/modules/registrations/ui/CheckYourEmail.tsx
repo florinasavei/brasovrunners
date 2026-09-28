@@ -14,7 +14,7 @@ import { daysPhrase, hoursPhrase, minutesPhrase } from "@/modules/deadlines/doma
 import { emailLeavesWords } from "@/modules/notifications/domain/email-wait";
 import { cachedDeadlines, cachedEmailLeavesAt, cachedEmailWaitMinutes } from "@/modules/public-cache/reads";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
-import { doneFamilySentence, offerHint } from "../domain/family-sitting";
+import { doneFamilySentence, emailHasLeft, offerHint } from "../domain/family-sitting";
 import type { SubmittedFacts } from "../form-draft";
 import FamilySittingOffer from "./FamilySittingOffer";
 
@@ -51,9 +51,17 @@ type Props = {
    * its one button (`FamilySittingOffer`) — and nothing else. `atOnce`: the club's window is 0 (§519).
    * `continueAction` is «Da, încă o persoană», a server action, never a component. `email` is the
    * address the form went to and `windowMinutes` the club's window as the action read it, both from the
-   * browser's half (absent on an older half: the club's current window).
+   * browser's half (absent on an older half: the club's current window). `leavesAt` is when the first
+   * form's email leaves, as the action computed it at submit (null: the request sent it; absent on an
+   * older half: computed now).
    */
-  offer?: { atOnce: boolean; email: string; windowMinutes?: number; continueAction: (form: FormData) => Promise<void> };
+  offer?: {
+    atOnce: boolean;
+    email: string;
+    windowMinutes?: number;
+    leavesAt?: Date | null;
+    continueAction: (form: FormData) => Promise<void>;
+  };
 };
 
 /**
@@ -88,7 +96,12 @@ export default async function CheckYourEmail({ eventTitle, whenLabel, eventHref,
   const locale = await getLocale();
   const familySentence = doneFamilySentence(facts);
   const family = familySentence !== null;
-  const heading = (
+  /*
+    The heading greets by first name, except where the line under it already says the name — a
+    family's last screen, and the short screen's «Formularul pentru Ana a ajuns.» (the review of
+    2026-09-28: the name twice in a row).
+  */
+  const heading = (named: boolean) => (
     <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 1 }}>
       <Box
         aria-hidden="true"
@@ -107,7 +120,7 @@ export default async function CheckYourEmail({ eventTitle, whenLabel, eventHref,
         <CelebrationIcon />
       </Box>
       <Typography component="h2" variant="h2" sx={{ fontSize: { xs: "1.5rem", sm: "1.75rem" } }}>
-        {facts?.firstName && !family ? t("done.headingNamed", { name: facts.firstName }) : t("done.heading")}
+        {named && facts?.firstName ? t("done.headingNamed", { name: facts.firstName }) : t("done.heading")}
       </Typography>
     </Box>
   );
@@ -115,23 +128,35 @@ export default async function CheckYourEmail({ eventTitle, whenLabel, eventHref,
   if (offer) {
     /*
       When the email leaves (§513), in the words the queue panel uses for the same message
-      (`emailLeavesWords`): the next scheduled pass on the club's clock, or now when the request
-      itself sends. Nothing on this screen has to be pressed for it to leave.
+      (`emailLeavesWords`, in its prose shape): the scheduled pass the action computed once when the
+      form was sent and kept in the browser's half, or now when the request itself sent it. Never
+      recomputed here (the review of 2026-09-28): a reload after the 13:15 pass would otherwise say
+      «pleacă la 13:30» about an email already sent. Once the pass has come, the line says it left and
+      the sentence under «Da» promises no hold. Nothing on this screen has to be pressed for it to leave.
     */
     const now = new Date();
-    const leavesAt = await cachedEmailLeavesAt(now);
-    const leaves = emailLeavesWords(leavesAt, now, locale);
+    const leavesAt = offer.leavesAt !== undefined ? offer.leavesAt : await cachedEmailLeavesAt(now);
+    const leaves = emailLeavesWords(leavesAt, now, locale, "prose");
+    const left = leavesAt !== null && emailHasLeft(leavesAt, now);
     // The hint under «Da» names the club's window (§519): how long the email may wait for the next form.
     const sittingWindow = minutesPhrase(locale, offer.windowMinutes ?? (await cachedDeadlines()).familySittingMinutes);
+    const hint = offerHint({ atOnce: offer.atOnce, leavesAt, now });
+    // «până la 13:15» today, «până marți, 29 septembrie, la 10:00» on another day (§452: no «la» before a weekday).
+    const hintKey = hint === "addHint" && leaves.key === "leavesOn" ? "addHintOn" : hint;
+    const leavesLine = left
+      ? t("done.leftAlready", { email: offer.email })
+      : leaves.key === "leavesNow"
+        ? t("done.leavesNow", { email: offer.email })
+        : t(`done.${leaves.key}`, { email: offer.email, at: leaves.at });
     return (
       <Stack spacing={3} data-testid="check-email-short">
         <Box>
-          {heading}
+          {heading(false)}
           <Typography variant="body1" data-testid="check-email-form-in">
             {facts?.firstName ? t("done.formIn", { name: facts.firstName }) : t("done.formInUnnamed")}
           </Typography>
           <Typography variant="body1" sx={{ mt: 0.5, fontWeight: 700 }} data-testid="check-email-leaves">
-            {leaves.key === "leavesNow" ? t("done.leavesNow", { email: offer.email }) : t(`done.${leaves.key}`, { email: offer.email, at: leaves.at })}
+            {leavesLine}
           </Typography>
         </Box>
         <FamilySittingOffer
@@ -139,7 +164,7 @@ export default async function CheckYourEmail({ eventTitle, whenLabel, eventHref,
             question: t("sitting.question"),
             add: t("sitting.add"),
             addPending: t("sitting.addPending"),
-            hint: t(`sitting.${offerHint({ atOnce: offer.atOnce, leavesAt })}`, { window: sittingWindow }),
+            hint: t(`sitting.${hintKey}`, { window: sittingWindow, at: "at" in leaves ? leaves.at : "" }),
           }}
           locale={locale}
           slug={slug}
@@ -163,7 +188,7 @@ export default async function CheckYourEmail({ eventTitle, whenLabel, eventHref,
   return (
     <Stack spacing={3}>
       <Box>
-        {heading}
+        {heading(!family)}
         <Typography variant="body1">{t("done.lead", { event: eventTitle, date: whenLabel })}</Typography>
         {/*
           A family sitting (§519): one email for everybody it sent the form for, named as typed on this

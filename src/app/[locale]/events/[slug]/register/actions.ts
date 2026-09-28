@@ -27,6 +27,7 @@ import {
   FAMILY_SITTING_FIELD,
   FAMILY_SITTING_PARAM,
   SITTING_SENT_PARAM,
+  peopleAfterYes,
   sittingCookieLive,
   sittingCookieMaxAgeSeconds,
   sittingCookieUntil,
@@ -38,6 +39,7 @@ import { clearFamilySittingCookie, readFamilySittingCookie, writeFamilySittingCo
 import { continueFamilySitting, releaseFamilySitting } from "@/modules/registrations/family-sitting";
 import type { SittingSeed } from "@/modules/registrations/domain/family-sitting";
 import { familySittingHeldUntil } from "@/modules/deadlines/domain/deadlines";
+import { cachedEmailLeavesAt } from "@/modules/public-cache/reads";
 
 function toLocale(value: FormDataEntryValue | null): Locale {
   return value === "en" ? "en" : "ro";
@@ -236,6 +238,12 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
     sitting from the seed or, with none, lets the next form open its own.
   */
   const heldUntil = sittingCookieUntil(now, minutes);
+  /*
+    When this form's email leaves (§NNN; the review of 2026-09-28), computed once, here: the short
+    screen reads it back from the browser's half and never recomputes it, so a reload after the pass
+    says the email left rather than naming the next pass, and stops promising that «Da» holds it.
+  */
+  const emailLeavesAt = await cachedEmailLeavesAt(now);
   await writeFamilySittingCookie(
     {
       sittingId: sittingId ?? randomUUID(),
@@ -247,6 +255,7 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
       heldUntil,
       atOnce,
       windowMinutes: minutes,
+      emailLeavesAt,
       shared,
       sameBirthDate: typedPerson.sameBirthDate,
     },
@@ -309,8 +318,8 @@ export async function continueFamilySittingAction(form: FormData): Promise<void>
   const event = await findPublishedEventBySlug(db, locale, slug);
   if (sitting && event && sittingCookieLive(sitting, event.id, now)) {
     const deadlines = await currentDeadlines(db);
-    const opened =
-      !sitting.atOnce && deadlines.familySittingMinutes > 0
+    const holding = !sitting.atOnce && deadlines.familySittingMinutes > 0;
+    const opened = holding
         ? await continueFamilySitting(
             db,
             { sittingId: sitting.sittingId, seed: sitting.seed, eventId: event.id, locale },
@@ -318,6 +327,8 @@ export async function continueFamilySittingAction(form: FormData): Promise<void>
             now,
           )
         : null;
+    // The names this browser lists name only the people the sitting's email covers (`peopleAfterYes`).
+    const { people, seedSpent } = peopleAfterYes({ holding, seed: sitting.seed, opened, people: sitting.people });
     const heldUntil = sittingCookieUntil(now, deadlines.familySittingMinutes);
     await writeFamilySittingCookie(
       {
@@ -326,6 +337,7 @@ export async function continueFamilySittingAction(form: FormData): Promise<void>
         sittingId: opened ?? sitting.sittingId ?? randomUUID(),
         seed: null,
         joined: true,
+        people,
         heldUntil,
         // Read afresh with the window (§519): a «Termene» change mid-sitting leaves no stale flag.
         atOnce: deadlines.familySittingMinutes <= 0,
@@ -339,7 +351,12 @@ export async function continueFamilySittingAction(form: FormData): Promise<void>
     const facts = await readSubmittedFacts();
     if (facts?.email) {
       await stashSubmittedFacts(
-        { email: facts.email, firstName: facts.firstName ?? "", names: facts.names, atOnce: deadlines.familySittingMinutes <= 0 },
+        {
+          email: facts.email,
+          firstName: facts.firstName ?? "",
+          names: seedSpent ? sittingNames(people) : facts.names,
+          atOnce: deadlines.familySittingMinutes <= 0,
+        },
         path,
         sittingCookieMaxAgeSeconds(heldUntil, now),
       );

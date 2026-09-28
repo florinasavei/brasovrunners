@@ -32,7 +32,7 @@ vi.mock("@/modules/public-cache/reads", () => ({
 
 const { default: CheckYourEmail } = await import("@/modules/registrations/ui/CheckYourEmail");
 
-type Offer = { atOnce: boolean; email: string; windowMinutes?: number; continueAction: (form: FormData) => Promise<void> };
+type Offer = { atOnce: boolean; email: string; windowMinutes?: number; leavesAt?: Date | null; continueAction: (form: FormData) => Promise<void> };
 
 async function render(offer?: Offer, firstName: string | null = null): Promise<string> {
   const element = (await CheckYourEmail({
@@ -95,14 +95,16 @@ describe("§NNN the short screen after the first form", () => {
 
   it("says the form is in and when the email leaves on the club's clock, then the question, and nothing else", async () => {
     const html = await render(offer, "Ana");
-    expect(html).toContain("Aproape gata, Ana!");
+    // The name once (the review of 2026-09-28): the plain heading, then whose form is in.
+    expect(html).toContain("Aproape gata!");
+    expect(html).not.toContain("Aproape gata, Ana!");
     expect(html).toContain("Formularul pentru Ana a ajuns.");
     expect(html).toContain("Emailul către familia.pop@example.ro pleacă la 13:15.");
     expect(html.indexOf("Emailul către familia.pop@example.ro pleacă la 13:15.")).toBeLessThan(html.indexOf('data-testid="family-sitting-offer"'));
     expect(html).toContain("Mai înscrii pe cineva cu aceeași adresă?");
     expect(html).toContain("Da, încă o persoană");
     // While the email still waits, «Da» holds it — at most the club's window — and one email covers everybody.
-    expect(html).toContain("Dacă apeși „Da”, emailul așteaptă formularul următor, cel mult 15 minute, și primiți unul singur pentru toți.");
+    expect(html).toContain("Dacă apeși „Da” până la 13:15, emailul așteaptă formularul următor, cel mult 15 minute, și primiți unul singur pentru toți.");
     // Said once, in one shape: no steps, no wait box, no second telling of the time (F2).
     expect(html).not.toContain("Ce urmează");
     expect(html).not.toContain("trecerea programată");
@@ -124,8 +126,28 @@ describe("§NNN the short screen after the first form", () => {
   it("on another day says the weekday-led date with its own «la», never a second one (§452)", async () => {
     wait.leavesAt = new Date("2026-09-29T07:00:00.000Z");
     const html = await render(offer, "Ana");
-    expect(html).toContain("Emailul către familia.pop@example.ro pleacă mar., 29 sept. 2026, la 10:00.");
+    expect(html).toContain("Emailul către familia.pop@example.ro pleacă marți, 29 septembrie, la 10:00.");
     expect(html).not.toContain("pleacă la mar");
+    expect(html).toContain("Dacă apeși „Da” până marți, 29 septembrie, la 10:00, emailul așteaptă formularul următor");
+  });
+
+  it("reads the pass the form stored, never one recomputed at render (the review of 2026-09-28)", async () => {
+    // The page recomputing now would name the next pass; the stored one is what the email waits for.
+    wait.leavesAt = new Date("2026-09-28T10:30:00.000Z");
+    const html = await render({ ...offer, leavesAt: new Date("2026-09-28T10:15:00.000Z") });
+    expect(html).toContain("Emailul către familia.pop@example.ro pleacă la 13:15.");
+    expect(html).not.toContain("13:30");
+  });
+
+  it("after the stored pass says the email left and promises no hold (a reload at 13:16)", async () => {
+    vi.setSystemTime(new Date("2026-09-28T10:16:00.000Z"));
+    wait.leavesAt = new Date("2026-09-28T10:30:00.000Z");
+    const html = await render({ ...offer, leavesAt: new Date("2026-09-28T10:15:00.000Z") }, "Ana");
+    expect(html).toContain("Emailul către familia.pop@example.ro a plecat.");
+    expect(html).not.toContain("pleacă la");
+    expect(html).toContain("Dacă apeși „Da”, următorul email așteaptă cel mult 15 minute după ultimul formular și îi cuprinde pe toți.");
+    expect(html).not.toContain("emailul așteaptă formularul următor");
+    expect(html).not.toContain("unul singur pentru toți");
   });
 
   it("names the club's current window when the browser's half predates it", async () => {

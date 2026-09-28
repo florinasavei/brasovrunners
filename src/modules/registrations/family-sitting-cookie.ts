@@ -2,7 +2,14 @@ import { randomUUID } from "node:crypto";
 import { cookies } from "next/headers";
 import { env } from "@/shared/config/env";
 import { isUuid } from "@/shared/ids";
-import { sittingCookieMaxAgeSeconds, type FamilySittingCookie, type SittingPerson, type SittingSeed } from "./domain/family-sitting";
+import {
+  openEmailLeavesAt,
+  sealEmailLeavesAt,
+  sittingCookieMaxAgeSeconds,
+  type FamilySittingCookie,
+  type SittingPerson,
+  type SittingSeed,
+} from "./domain/family-sitting";
 import { openFormDraft, purposeSecret, sealFormDraft } from "./form-draft";
 
 /**
@@ -88,6 +95,8 @@ export function sealFamilySittingCookie(value: FamilySittingCookie, secret = pur
     a: value.atOnce ? "1" : "",
     // The window the action read (§519): the screen names this one, not the public cache's.
     k: value.windowMinutes !== undefined ? String(value.windowMinutes) : "",
+    // When the first form's email leaves (§NNN), computed once at submit; always 25 characters (§39).
+    l: value.emailLeavesAt !== undefined ? sealEmailLeavesAt(value.emailLeavesAt) : "",
   };
   /*
     The shared boxes are a convenience: a cookie that would pass a browser's 4 KB with them keeps
@@ -112,6 +121,7 @@ export function openFamilySittingCookie(sealed: string, secret = purposeSecret(P
     heldUntil,
     atOnce: opened.a === "1" ? true : undefined,
     windowMinutes: windowMinutesOf(opened.k),
+    emailLeavesAt: openEmailLeavesAt(opened.l),
     shared: sharedOf(opened.f),
     sameBirthDate: typed !== "" && kept !== "" ? { typed, kept } : null,
   };

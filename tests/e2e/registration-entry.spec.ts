@@ -128,7 +128,7 @@ test.describe("BR-REQ-030-01 the featured event leads to the registration form",
     // The screen after the form greets by first name, from the form just posted (§224); the
     // same sentence for a first and a repeat registration, because nothing on it is read from
     // the registrations table (AGENTS.md §19.4).
-    await expect(page.getByRole("heading", { name: "Aproape gata, Ana!" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Aproape gata!", exact: true })).toBeVisible();
     // The same capture notice here, where somebody would otherwise stand with an inbox open.
     await expect(page.getByText(captureNotice)).toBeVisible();
     /*

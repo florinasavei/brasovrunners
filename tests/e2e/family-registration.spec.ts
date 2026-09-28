@@ -235,7 +235,8 @@ test.describe("§389 §446 a family on one address", () => {
     await page.goto(registerPath);
     await hydrated(page);
     await fillPerson(page, { firstName: "Ana", lastName, birthDate: "1985-03-02" }, email);
-    await expect(page.getByRole("heading", { name: `Aproape gata, Ana!` })).toBeVisible();
+    // The name once, in the line under the plain heading (the review of 2026-09-28).
+    await expect(page.getByRole("heading", { name: "Aproape gata!", exact: true })).toBeVisible();
     await expect(page.getByTestId("check-email-form-in")).toHaveText("Formularul pentru Ana a ajuns.");
     await expect(page.getByTestId("check-email-leaves")).toHaveText(`Emailul către ${email} pleacă acum.`);
     await expect(page.getByRole("heading", { name: "Mai înscrii pe cineva cu aceeași adresă?" })).toBeVisible();

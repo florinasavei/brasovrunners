@@ -79,21 +79,28 @@ export type EmailLeavesWords = { key: "leavesNow" } | EmailLeavesOn;
 
 /**
  * When a message leaves, in words (§NNN, §529) — one function for the screen after the registration
- * form («Emailul către ana@… pleacă la 10:15.» / «… pleacă luni, 29 sept. 2026, la 10:00.» / «… pleacă
- * acum.») and every row of the queue panel on `/admin/settings/emails` («Pleacă: 10:15 (estimat).»),
- * so the two cannot say one message's time two ways. No instant is «now»; an instant on the club's
- * clock today is the bare «HH:MM» (`leavesToday`, the sentence brings its «la»), on another day the
- * inline day with its own «la» before the hour (`leavesOn`, §349, §439, §452) — a sentence never puts
- * a second «la» or a «la» before a weekday-led date.
+ * form («Emailul către ana@… pleacă la 10:15.» / «… pleacă marți, 29 septembrie, la 10:00.» / «…
+ * pleacă acum.») and every row of the queue panel on `/admin/settings/emails` («Pleacă: 10:15
+ * (estimat).»), so the two cannot say one message's time two ways. No instant is «now»; an instant on
+ * the club's clock today is the bare «HH:MM» (`leavesToday`, the sentence brings its «la»), on another
+ * day the inline day with its own «la» before the hour (`leavesOn`, §349, §439, §452) — a sentence
+ * never puts a second «la» or a «la» before a weekday-led date.
+ *
+ * `style` is the day's shape on another day: `prose` — the long weekday and month, no year, for a
+ * sentence a participant reads about a pass at most a day away (the review of 2026-09-28); `short` —
+ * «mar., 29 sept. 2026», the panel's row, where the year can matter to a row stuck for days.
  */
-export function emailLeavesWords(leavesAt: Date, now: Date, locale: string): EmailLeavesOn;
-export function emailLeavesWords(leavesAt: Date | null, now: Date, locale: string): EmailLeavesWords;
-export function emailLeavesWords(leavesAt: Date | null, now: Date, locale: string): EmailLeavesWords {
+export type EmailLeavesStyle = "prose" | "short";
+
+export function emailLeavesWords(leavesAt: Date, now: Date, locale: string, style?: EmailLeavesStyle): EmailLeavesOn;
+export function emailLeavesWords(leavesAt: Date | null, now: Date, locale: string, style?: EmailLeavesStyle): EmailLeavesWords;
+export function emailLeavesWords(leavesAt: Date | null, now: Date, locale: string, style: EmailLeavesStyle = "short"): EmailLeavesWords {
   if (leavesAt === null) return { key: "leavesNow" };
   if (dayKey(leavesAt, CLUB_TIME_ZONE) === dayKey(now, CLUB_TIME_ZONE)) {
     return { key: "leavesToday", at: formatTime(leavesAt, { locale, timeZone: CLUB_TIME_ZONE }) };
   }
-  return { key: "leavesOn", at: formatDay(leavesAt, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" }) };
+  const day = style === "prose" ? ({ style: "long", month: "long", year: false } as const) : ({ style: "short" } as const);
+  return { key: "leavesOn", at: formatDay(leavesAt, { locale, timeZone: CLUB_TIME_ZONE, ...day, withTime: true, position: "inline" }) };
 }
 
 /** More than a week of real runs a queued row could wait behind: the estimate stops there. */

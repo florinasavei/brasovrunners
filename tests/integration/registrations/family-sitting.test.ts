@@ -51,6 +51,7 @@ const { OutboxMessageWithdrawn } = await import("@/modules/notifications/outbox"
 const { familyPassHolds } = await import("@/modules/registrations/family-signing");
 const { listActiveRegistrationsForParticipant, listPendingPeopleForParticipant } = await import("@/modules/registrations/my-registrations");
 const { consumeAndConfirmFamilySitting, consumeAndSignFamilyDeclaration } = await import("@/modules/registrations/token-actions");
+const { readOutboxQueue } = await import("@/modules/notifications/queue");
 
 type EventInput = Parameters<typeof submitRegistration>[1];
 
@@ -253,6 +254,18 @@ describe("§519 one person in a sitting", () => {
     const [entryHeld] = (await outbox()).filter((candidate) => candidate.messageType === "REGISTER_ANOTHER_PERSON");
     // «Da» held the kept form's message and tied the form to the sitting.
     expect(entryHeld.nextAttemptAt?.toISOString()).toBe(new Date(at(1).getTime() + WINDOW_MS).toISOString());
+    // …marked as the family's hold (the review of 2026-09-28, round two), never as `sittingHeld`,
+    // which changes a verification link's life: the queue panel counts it as the family's, not a retry.
+    expect(entryHeld.payloadJson).toMatchObject({ familyHeld: true });
+    expect(entryHeld.payloadJson).not.toHaveProperty("sittingHeld");
+    // Ana's own email thrown back for a retry, with no flag: a retry, and only a retry.
+    const [anaEmail] = (await outbox()).filter((candidate) => candidate.messageType === "VERIFY_REGISTRATION_EMAIL");
+    await db.update(emailOutbox).set({ attemptCount: 1, nextAttemptAt: at(30) }).where(eq(emailOutbox.id, anaEmail.id));
+    const queue = await readOutboxQueue(db, 50, at(2));
+    expect(queue.held).toMatchObject({ total: 2, family: 1, retry: 1, reserve: 0 });
+    expect(queue.rows.find((row) => row.id === entryHeld.id)?.familyHeld).toBe(true);
+    expect(queue.rows.find((row) => row.id === anaEmail.id)?.familyHeld).toBe(false);
+    await db.update(emailOutbox).set({ attemptCount: 0, nextAttemptAt: null }).where(eq(emailOutbox.id, anaEmail.id));
     expect((await db.select().from(pendingFamilyEntries))[0].sittingId).toBe(sittingId);
     await releaseFamilySitting(db, sittingId!, at(2));
     const [row] = (await outbox()).filter((candidate) => candidate.messageType === "REGISTER_ANOTHER_PERSON");
@@ -627,6 +640,23 @@ describe("§519 the fix round of 2026-09-27", () => {
       ["Ana Pop", "PENDING_DECLARATION"],
       ["Ion Pop", "PENDING_DECLARATION"],
     ]);
+  });
+
+  it("«Da» after the first person confirmed from the email that left before it opens nothing from the seed (the review of 2026-09-28)", async () => {
+    const event = await createEvent();
+    const { seed } = await first(event, "Ana", 0);
+    // Ana's email left before «Da», and she confirmed her address from it.
+    const [anaEmail] = await outbox();
+    await db.update(emailOutbox).set({ status: "SENT", sentAt: at(1), attemptCount: 1 }).where(eq(emailOutbox.id, anaEmail.id));
+    const [ana] = await db.select().from(registrations);
+    await db.update(registrations).set({ status: "PENDING_DECLARATION" }).where(eq(registrations.id, ana.id));
+    // «Da» finds no waiting registration under the seed: no sitting, and the browser's list drops her (`peopleAfterYes`).
+    expect(await yes(event, { seed }, 2)).toBeNull();
+    expect(await db.select().from(familySittings)).toHaveLength(0);
+    // The next form opens its own sitting; its email names Ion alone, as the browser's list now does.
+    const sittingId = await send(event, "Ion", 3, null);
+    const [open] = await db.select().from(familySittings).where(eq(familySittings.id, sittingId!));
+    expect(open.registrationIds).not.toContain(ana.id);
   });
 
   it("a held verification email's link lives the club's window from its send, as the message says", async () => {

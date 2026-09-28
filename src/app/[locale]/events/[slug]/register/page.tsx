@@ -567,7 +567,14 @@ export default async function RegisterPage({ params, searchParams }: Props) {
           */
           offer={
             afterForm === "offer" && sitting
-              ? { atOnce: sitting.atOnce === true, email: sitting.email, windowMinutes: sitting.windowMinutes, continueAction: continueFamilySittingAction }
+              ? {
+                  atOnce: sitting.atOnce === true,
+                  email: sitting.email,
+                  windowMinutes: sitting.windowMinutes,
+                  // Computed once when the form was sent, never at render (the review of 2026-09-28).
+                  leavesAt: sitting.emailLeavesAt,
+                  continueAction: continueFamilySittingAction,
+                }
               : undefined
           }
         />

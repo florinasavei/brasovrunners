@@ -46,6 +46,15 @@ export const SITTING_SENT_PARAM = "sent";
 export const SITTING_HELD = "sittingHeld";
 
 /**
+ * The payload mark of a message a family holds that is not a verification email (§519, §529): the
+ * queue panel (`notifications/queue.ts`) reads it, with `SITTING_HELD`, to count the row as the
+ * family's hold and not as a retry. On a declaration request the renderer also reads it
+ * (`render.ts`); on a kept form's `REGISTER_ANOTHER_PERSON`, which «Da» takes in (§NNN,
+ * `continueFamilySitting`), nothing else does.
+ */
+export const FAMILY_HELD = "familyHeld";
+
+/**
  * What the first form left for «Da» to open a sitting with (§NNN): the registration it created or
  * restarted, or the kept form of §446, and the message it queued for it. Written by the action into
  * the browser's sealed half, never read from the registrations table by the screen (§39).
@@ -69,14 +78,66 @@ export function afterFormScreen(cookie: FamilySittingCookie | null): "offer" | "
  * the screen already knows — the club's window and when the first email leaves:
  *
  * - `addHintAtOnce` — a window of 0: nothing is held, «Fiecare persoană primește emailul ei.»;
- * - `addHint` — the email still waits for the scheduled pass (`leavesAt` set): «Da» holds it, and the
- *   address gets one email for everybody;
- * - `addHintLeft` — it leaves now (`immediate`, no instant): it cannot be held, so the next person's
- *   email is the one that names everybody.
+ * - `addHint` — the email still waits for the scheduled pass (`leavesAt` still ahead of `now`): «Da»
+ *   pressed before that pass holds it, and the address gets one email for everybody;
+ * - `addHintLeft` — it leaves now (`immediate`, no instant), or the pass it was waiting for has come
+ *   (the review of 2026-09-28: a reload after it must not promise to hold an email already sent): it
+ *   cannot be held, so the next person's email is the one that names everybody.
+ *
+ * `leavesAt` is the instant the action stored when the form was sent (`FamilySittingCookie.emailLeavesAt`),
+ * never one recomputed at render: a reload after the pass would name the pass after it.
  */
-export function offerHint(input: { atOnce: boolean; leavesAt: Date | null }): "addHintAtOnce" | "addHint" | "addHintLeft" {
+export function offerHint(input: { atOnce: boolean; leavesAt: Date | null; now: Date }): "addHintAtOnce" | "addHint" | "addHintLeft" {
   if (input.atOnce) return "addHintAtOnce";
-  return input.leavesAt === null ? "addHintLeft" : "addHint";
+  return emailHasLeft(input.leavesAt, input.now) ? "addHintLeft" : "addHint";
+}
+
+/**
+ * Whether the first form's email has left by now (§NNN): at once under `immediate` (no instant), else
+ * once its scheduled pass has come. The short screen then says «a plecat» and promises no hold.
+ */
+export function emailHasLeft(leavesAt: Date | null, now: Date): boolean {
+  return leavesAt === null || now.getTime() >= leavesAt.getTime();
+}
+
+/**
+ * The first form's leaving instant as the browser's half keeps it (§NNN): one letter and an ISO
+ * instant, always 25 characters — `s` and the scheduled pass, or `i` and the epoch when the request
+ * itself sent it (`immediate`). A club setting, never the address's: the sealed length says nothing
+ * about what the address holds (§39).
+ */
+export function sealEmailLeavesAt(leavesAt: Date | null): string {
+  return leavesAt === null ? `i${new Date(0).toISOString()}` : `s${leavesAt.toISOString()}`;
+}
+
+/** The instant back (`sealEmailLeavesAt`): null for `immediate`, undefined when absent or malformed (an older half). */
+export function openEmailLeavesAt(text: string | undefined): Date | null | undefined {
+  if (!text || text.length !== 25) return undefined;
+  if (text[0] === "i") return null;
+  if (text[0] !== "s") return undefined;
+  const at = new Date(text.slice(1));
+  return Number.isFinite(at.getTime()) ? at : undefined;
+}
+
+/**
+ * The people this browser lists after «Da, încă o persoană» (§NNN; the review of 2026-09-28, nit F2 of
+ * round two). The first «Da» that found nothing left to open from its seed — the first person
+ * confirmed their address from the email that left before the press, or their kept form lapsed — did
+ * not bring that person into the sitting: their email is not the sitting's. The names on the next
+ * form and on the last screen then start without them, so they name only the people the sitting's
+ * email covers (`seedSpent`). Only a seed this browser's own first form left: a form that left none
+ * (a re-send, the address at its limit) keeps its name as it always did (§39: what the address held
+ * before this browser is never read back). At a window of 0 (`holding` false) nothing is held for
+ * anybody, and the list stays whole.
+ */
+export function peopleAfterYes(input: {
+  holding: boolean;
+  seed: SittingSeed | null;
+  opened: string | null;
+  people: readonly SittingPerson[];
+}): { people: SittingPerson[]; seedSpent: boolean } {
+  const seedSpent = input.holding && input.seed !== null && input.opened === null;
+  return { people: seedSpent ? [] : [...input.people], seedSpent };
 }
 
 /** At most this many names are kept in the browser's half: the club's limit per address is at most ten. */
@@ -212,6 +273,13 @@ export type FamilySittingCookie = {
    * Absent on a cookie written before it was kept.
    */
   windowMinutes?: number;
+  /**
+   * When the first form's email leaves (§NNN; the review of 2026-09-28), computed once by the action
+   * when the form was sent: the scheduled pass, or null when the request itself sent it. The short
+   * screen reads this, never a time recomputed at render, so a reload after the pass says the email
+   * has left instead of naming the next one. Absent on a half written before it was kept.
+   */
+  emailLeavesAt?: Date | null;
   /**
    * The facts the next form of the sitting starts with (`sittingSharedValues`): the city, the
    * country, the citizenship, the guardian, the emergency contact and the emails' language, as posted. Absent on a
