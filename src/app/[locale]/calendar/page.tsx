@@ -24,6 +24,8 @@ import ListingFilterPanel from "@/modules/events/ui/ListingFilterPanel";
 import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import { monthRange, parseMonth, parseYear, yearRange } from "@/modules/events/domain/calendar";
 import { cachedPublishedEventsBetween } from "@/modules/public-cache/reads";
+import { holdPageUntil } from "@/modules/public-cache/page-lifetime";
+import { nextWallMidnight } from "@/modules/events/domain/page-clock";
 import CalendarIntroFold from "@/modules/events/ui/CalendarIntroFold";
 import CalendarSection from "@/modules/events/ui/CalendarSection";
 import type { CalendarLayout, CalendarView } from "@/modules/events/ui/EventCalendar";
@@ -36,20 +38,35 @@ import { headingRule } from "@/theme/surfaces";
 
 type Props = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{
-    month?: string | string[];
-    year?: string | string[];
-    type?: string | string[];
-    view?: string | string[];
-    partner?: string | string[];
-    surface?: string | string[];
-    difficulty?: string | string[];
-    distance?: string | string[];
-    cost?: string | string[];
-    night?: string | string[];
-    registration?: string | string[];
-  }>;
+  /**
+   * The address's query — passed only by the live twin (`app/[locale]/live/calendar/page.tsx`), which
+   * the proxy sends a visit naming a month, a year, a layout or a filter to (§NNN). This static
+   * route never reads Next's `searchParams`: the bare calendar is this month, the same for everyone.
+   */
+  query?: Promise<CalendarQuery>;
 };
+
+type CalendarQuery = {
+  month?: string | string[];
+  year?: string | string[];
+  type?: string | string[];
+  view?: string | string[];
+  partner?: string | string[];
+  surface?: string | string[];
+  difficulty?: string | string[];
+  distance?: string | string[];
+  cost?: string | string[];
+  night?: string | string[];
+  registration?: string | string[];
+};
+
+/**
+ * Static at its bare address, made on its first visit and kept by the CDN (§NNN, amending §333):
+ * made again on a write to the events it shows, on a door's change, at midnight (the month's "today"
+ * and its turn), and at the latest after a day. A literal, as Next requires: it equals
+ * `PUBLIC_PAGE_CEILING_SECONDS` (a test holds them together).
+ */
+export const revalidate = 86400;
 
 /** Whether a date is a night event (§394), for the filter's box — the answer its own entry's tooltip gives. */
 const isNight = (event: PublicEvent) => clubNightEvent(event).night;
@@ -88,15 +105,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function CalendarPage({ params, searchParams }: Props) {
+export default async function CalendarPage({ params, query: asked }: Props) {
   const { locale } = await params;
-  const searched = await searchParams;
+  const searched: CalendarQuery = (await asked) ?? {};
   const { month: monthParam, year: yearParam, view: viewParam } = searched;
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
   const t = await getTranslations("Events");
   const now = new Date();
+  // This month, and today's square, are the day's: the static page is made again at midnight (§NNN).
+  await holdPageUntil([nextWallMidnight(now, CLUB_TIME_ZONE)], now);
 
   // The same readings of the address the listing makes (§89, §116, §137, §413), so a link that
   // was in somebody's history still means what it meant: the filters — `?type=RACE` and

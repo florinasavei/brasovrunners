@@ -28,6 +28,13 @@ export async function GET(request: Request, { params }: { params: Promise<{ loca
     elevationM: (m) => t("elevationM", { m }),
   });
   image.headers.set("Content-Disposition", `attachment; filename="${slug}-${shape}.png"`);
-  image.headers.set("Cache-Control", "public, max-age=3600");
+  /*
+    Kept by the CDN for an hour, then served once more while it is drawn again (§NNN): the file
+    depends on `?shape=`, so it stays a function, and a shared cache is what spares it being drawn
+    for every download. The same picture for everyone, never a person's; an hour is how long a
+    changed title may take to reach a picture somebody saves, and the Open Graph one follows the
+    save at once.
+  */
+  image.headers.set("Cache-Control", "public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400");
   return image;
 }

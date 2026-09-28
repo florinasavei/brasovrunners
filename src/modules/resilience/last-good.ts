@@ -4,10 +4,11 @@ import { redirect, unstable_rethrow } from "next/navigation";
 import { after } from "next/server";
 import { getStorage, isStorageConfigured } from "@/modules/media/storage";
 import { env } from "@/shared/config/env";
-import { readNeonBudget } from "@/modules/diagnostics/neon-budget";
+import { lastKnownBudget } from "@/modules/diagnostics/budget-level";
 import { DatabaseRestingError, isColdMiss } from "./breaker";
 import { defaultRestingUntil, isDatabaseAwayError, isQuotaRefusalError } from "./domain/database-away";
 import { REQUEST_PATH_HEADER, restingPageHref } from "./domain/resting-page";
+import { DEGRADED_PAGE_SECONDS, holdPageFor, pagesAreCachedHere, renderKind } from "@/modules/public-cache/page-lifetime";
 import {
   type Envelope,
   isSnapshotTooOld,
@@ -174,6 +175,8 @@ export async function readWithLastGood<T>(
         kept as this key's copy: it is not a newer truth than the copies it was made of.
       */
       noteSavedCopyServed(seen.oldest);
+      // A static page made from a copy is kept a minute, never a day (§NNN): the next visit after it asks again.
+      await holdPageFor(DEGRADED_PAGE_SECONDS);
       return { value, freshness: "saved", takenAt: seen.oldest, restingUntil: null };
     }
     const envelope = { takenAt: now, value };
@@ -205,16 +208,19 @@ export async function readWithLastGood<T>(
     // Once per outage and instance is enough for the log: the breaker makes every read after the
     // first one fail the same way, and a line per page view would bury the first.
     if (!(error instanceof DatabaseRestingError)) console.error("[resilience] serving the last good copy of", key, error);
+    // The CDN keeps an outage's page a minute, not a day (§NNN).
+    await holdPageFor(DEGRADED_PAGE_SECONDS);
     return { value: envelope.value, freshness: "stale", takenAt: envelope.takenAt, restingUntil };
   }
 }
 
 /**
  * Whether the database is away because Neon suspended the project for the month (§447) — asked
- * only on this failure path, only for an error that says the database is away, and of Neon's API
- * through the governor's shared reading, never of the database. The period's end when it is, so
- * the page can say when the site is whole again; null for every other outage, whose length nobody
- * knows.
+ * only on this failure path, only for an error that says the database is away, and of the level
+ * this instance last read (`budget-level.ts`), never of the database — and since §NNN never of
+ * Neon's API either: this runs inside a static page's render, where a request to Neon is the
+ * render's own. The period's end when it is, so the page can say when the site is whole again;
+ * null for every other outage, whose length nobody knows.
  *
  * While the project is suspended nothing can change the rows behind a copy — no write reaches a
  * database that is not running — so a copy taken before the suspension is still the newest truth
@@ -225,20 +231,16 @@ export async function readWithLastGood<T>(
 async function restingSince(error: unknown, now: Date): Promise<Date | null> {
   if (!isDatabaseAwayError(error)) return null;
   const quotaRefused = isQuotaRefusalError(error);
-  try {
-    const budget = await readNeonBudget(now);
-    /*
-      Neon's own refusal ("exceeded the compute time quota") is resting on its own, whatever the
-      level reads: with a project-scoped key the level comes from the operations log, which counts
-      only the floor and stops growing once the project is suspended, so the platform may still
-      read under 100% while Neon has already cut it off. The meter's period end when there is a
-      meter, the bounded default otherwise.
-    */
-    if (quotaRefused) return budget.meter ? budget.meter.periodEnd : defaultRestingUntil(now);
-    return budget.budget?.spent && budget.meter ? budget.meter.periodEnd : null;
-  } catch {
-    return quotaRefused ? defaultRestingUntil(now) : null;
-  }
+  const known = lastKnownBudget(now);
+  /*
+    Neon's own refusal ("exceeded the compute time quota") is resting on its own, whatever the
+    level reads: with a project-scoped key the level comes from the operations log, which counts
+    only the floor and stops growing once the project is suspended, so the platform may still
+    read under 100% while Neon has already cut it off. The period's end when a reading had one,
+    the bounded default otherwise — a cold instance that has heard no reading included.
+  */
+  if (quotaRefused) return known?.periodEnd ?? defaultRestingUntil(now);
+  return known?.spent && known.periodEnd ? known.periodEnd : null;
 }
 
 /**
@@ -260,13 +262,26 @@ export async function copyOf<T>(key: string, now: Date = new Date(), maxAgeHours
  * Send the reader to the short resting page (§447), naming the address they were on — which the
  * proxy put in a request header — so the page can bring them back. Throws Next's redirect; outside
  * a request (a test, a script) there is no header, and the way back is the site's root.
+ *
+ * On a production server the header is read only in a render Next answers per request (§NNN): a
+ * live twin, the registration and declaration forms, a token page (`renderKind() === "request"`).
+ * A static page's render never reads it: there `headers()` sets the render's revalidate to 0 before
+ * it throws, so catching the throw does not undo it — Next then answers 500 («Page changed from
+ * static to dynamic at runtime») instead of the resting page. So a static page's way back is the
+ * site's root — its address is the bare page, the same for everyone, and the resting page's own
+ * link leads home — and the redirect is held a minute first, so the CDN never keeps it for a day.
+ * A render Next cannot be asked about (`"unknown"`) is treated as a static one.
  */
 async function sendToRestingPage(): Promise<never> {
   let back: string | null = null;
-  try {
-    back = (await headers()).get(REQUEST_PATH_HEADER);
-  } catch {
-    back = null;
+  if (pagesAreCachedHere() && renderKind() !== "request") {
+    await holdPageFor(DEGRADED_PAGE_SECONDS);
+  } else {
+    try {
+      back = (await headers()).get(REQUEST_PATH_HEADER);
+    } catch {
+      back = null;
+    }
   }
   redirect(restingPageHref(back));
 }

@@ -156,10 +156,23 @@ sign in); or drop Zitadel for Auth.js against Google or Microsoft directly, whic
 becomes natural if the nonprofit grant lands and the staff already have club accounts
 (`DECISIONS.md` §56 tracks that application).
 
-### Two more worth knowing
+### Three more worth knowing
 
 - **Exceeding a Hobby cap pauses the feature for 30 days and you cannot buy your way out.** Not a
   bill — an outage with a fixed sentence. Upgrade *before* the window, never during it.
+- **Hobby's Active CPU (4 hours a month) is the cap the public site itself can reach.** On
+  2026-09-28 the club was at 3 h 02 m, with 160 K function invocations for 153 K edge requests in
+  30 days: every public page rendered per request (~68 ms of CPU each), for visitors and crawlers
+  alike. Since §NNN the public pages are static (ISR): Vercel's CDN answers a stranger's visit,
+  and a function runs only on the first visit after a write that changed the page, after its
+  clock turns (a door opening or closing, midnight, the forecast's hour), or after a day. What
+  still runs per request, on purpose: the proxy (Vercel runs it before the cache — a few ms of
+  locale resolution per page view), a filtered listing, a chosen month, `?lista=`, a signed-in
+  event page, the contact and registration forms, the token pages, the sitemap (shared-cached an
+  hour), the share picture (an hour), `/api/*` and the backoffice. Watch **Usage → Fluid Active
+  CPU** on the Vercel dashboard the week after a release; `x-nextjs-cache: HIT` on a second
+  `curl -sI` of a public page is the local proof (`docs/DEVELOPMENT.md` § Things that will catch
+  you out).
 - **Vercel Pro is per seat.** Three organizers who deploy is $60/month. Viewer seats are free and
   can see dashboards and deployments, so only people who actually deploy need a paid seat.
 

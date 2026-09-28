@@ -22,8 +22,8 @@ import { DENSITY } from "@/theme/density";
 
 type Props = { params: Promise<{ locale: string }> };
 
-/** Per request, from the public cache — the privacy notice's arrangement, for the same reasons (§333). */
-export const dynamic = "force-dynamic";
+/** Static, kept by the CDN — the privacy notice's arrangement, for the same reasons (§NNN, amending §333). */
+export const revalidate = 86400;
 
 /**
  * Its own title, and indexed only while a text is in force in this language — with a

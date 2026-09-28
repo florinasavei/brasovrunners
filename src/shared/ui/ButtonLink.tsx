@@ -3,6 +3,7 @@
 import Button, { type ButtonProps } from "@mui/material/Button";
 import type { ComponentProps } from "react";
 import { Link } from "@/i18n/navigation";
+import { prefetchFor } from "@/i18n/prefetch";
 
 // MUI's own `href` is a plain string. It is dropped so the locale-aware one wins: an
 // intersection of the two is a type nothing can satisfy, which surfaces as an error at the
@@ -15,6 +16,9 @@ type Props = Omit<ButtonProps, "href"> & Pick<ComponentProps<typeof Link>, "href
  * This exists because `component={Link}` cannot be written in a Server Component: passing a
  * component across the server/client boundary fails at prerender with "Functions cannot be
  * passed directly to Client Components". Both halves are client-side in here, so it is fine.
+ *
+ * Prefetched only when the target is a static public page (§NNN): the register form, «Zona membrilor»
+ * and the sign-in are rendered per request, and a prefetch of one would start a function per view.
  */
 export default function ButtonLink({ href, children, ...props }: Props) {
   return (
@@ -22,7 +26,7 @@ export default function ButtonLink({ href, children, ...props }: Props) {
     // object cannot be passed through them however the props are declared. The cast is
     // confined to this one line and the prop above it is fully typed, so a wrong route or a
     // missing parameter is still a compile error at the call site — which is where it matters.
-    <Button component={Link} href={href as never} {...props}>
+    <Button component={Link} href={href as never} prefetch={prefetchFor(href)} {...props}>
       {children}
     </Button>
   );

@@ -3,6 +3,7 @@
 import CardActionArea from "@mui/material/CardActionArea";
 import type { ComponentProps, ReactNode } from "react";
 import { Link } from "@/i18n/navigation";
+import { prefetchFor } from "@/i18n/prefetch";
 
 type Props = Pick<ComponentProps<typeof Link>, "href"> & { children: ReactNode };
 
@@ -19,7 +20,7 @@ type Props = Pick<ComponentProps<typeof Link>, "href"> & { children: ReactNode }
  */
 export default function CardLink({ href, children }: Props) {
   return (
-    <CardActionArea component={Link} href={href} sx={{ display: "block" }}>
+    <CardActionArea component={Link} href={href} prefetch={prefetchFor(href)} sx={{ display: "block" }}>
       {children}
     </CardActionArea>
   );

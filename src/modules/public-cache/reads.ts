@@ -43,7 +43,7 @@ import {
 import { readDeadlines } from "@/modules/deadlines/deadlines";
 import { DEFAULT_DEADLINES, type Deadlines } from "@/modules/deadlines/domain/deadlines";
 import { governorEffects } from "@/modules/diagnostics/domain/neon-budget";
-import { peekNeonBudgetLevel } from "@/modules/diagnostics/neon-budget";
+import { peekNeonBudgetLevel } from "@/modules/diagnostics/budget-level";
 import { readJobCadence } from "@/modules/jobs/cadence";
 import { pingerCadenceMinutes } from "@/modules/jobs/quiet-hours";
 import { readDeliveryTiming } from "@/modules/notifications/delivery-timing";
@@ -68,7 +68,8 @@ import { env } from "@/shared/config/env";
 import { readWithLastGood } from "@/modules/resilience/last-good";
 import { isDatabaseAwayError } from "@/modules/resilience/domain/database-away";
 import { answeringFromCacheOnly, type PublicContent, publicRead } from "./cache";
-import { clockWindow } from "./clock";
+import { type ChangesWhen, clockWindow } from "./clock";
+import { holdPageUntil } from "./page-lifetime";
 
 /**
  * Every read a public page makes, through the data cache (`DECISIONS.md` §333).
@@ -130,7 +131,23 @@ function isCacheableSlug(slug: string): boolean {
  */
 async function listingWindow(locale: Locale, now: Date): Promise<string> {
   const endings = await publicRead(["events.endings", locale], ["events"], () => listPublishedEventEndings(getDb(), locale));
-  return clockWindow(endings, now, "passed");
+  return heldClockWindow(endings, now, "passed");
+}
+
+/**
+ * `clockWindow`, and the static page being rendered kept no longer than the window's end (§NNN,
+ * amending §333): the key already says the answer changes then, so the page that shows it must
+ * be made again then too — the CDN would otherwise serve an event that ended as upcoming until
+ * midnight. A "passed" boundary changes a millisecond after its instant, so the page is held a
+ * millisecond past it (rounded up to the next second by `holdPageUntil`).
+ */
+async function heldClockWindow(instants: readonly Date[], now: Date, changes: ChangesWhen): Promise<string> {
+  const window = clockWindow(instants, now, changes);
+  if (window !== "after-last") {
+    const boundary = new Date(window).getTime();
+    await holdPageUntil([new Date(changes === "passed" ? boundary + 1 : boundary)], now);
+  }
+  return window;
 }
 
 /** `listUpcomingEvents`: what the listing leads with. */
@@ -256,7 +273,7 @@ export async function cachedPublicAvailability(eventId: string, now: Date): Prom
   const instants = await publicRead(["places.count-instants", eventId], ["places", "events"], () =>
     listPlaceCountInstants(getDb(), eventId),
   );
-  const window = clockWindow(instants, now, "reached");
+  const window = await heldClockWindow(instants, now, "reached");
   return publicRead(["places.available", eventId, window], ["places", "events"], async () => {
     const db = getDb();
     const event = await findEventForRegistrationById(db, eventId);
@@ -380,7 +397,7 @@ export async function cachedNewsletterOffered(now: Date): Promise<boolean> {
  */
 export async function cachedCurrentApprovedDocument(key: LegalDocumentKey, locale: Locale, now: Date) {
   const dates = await publicRead(["legal.effective-dates", key], ["legal"], () => listEffectiveDates(getDb(), key));
-  const window = clockWindow(dates, now, "reached");
+  const window = await heldClockWindow(dates, now, "reached");
   return publicRead(["legal.current", key, locale, window], ["legal"], () => findCurrentApprovedDocument(getDb(), key, locale, now));
 }
 
