@@ -3085,11 +3085,11 @@
       "deleteBody": "“{text}” leaves the list for the whole team and cannot be undone. The log keeps who deleted it and what it said. If it is only done, tick it instead.",
       "defaults": {
         "teamPage": {
-          "text": "Write the team page: Pages → The team → the introduction and a card for each person, with “Add a person” and “Put on the site” → “Publish the page”.",
+          "text": "Write the team page: Pages → The team → the introduction → “Save”; for each person “Add a person” → “Add the card” → “Put on the site” → “Publish the page”.",
           "link": "Open the team page"
         },
         "faqPage": {
-          "text": "Write the FAQ page: Pages → FAQ → the questions and answers, in Romanian and English → “Save the page” → “Put on the site” on each question → “Publish the page”.",
+          "text": "Write the FAQ page: Pages → FAQ → the questions and answers, in Romanian and English, with “On the site” ticked on each → “Save the page” → “Publish the page”.",
           "link": "Open the FAQ page"
         }
       }

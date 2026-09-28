@@ -1,6 +1,6 @@
 import en from "../../../../messages/en.json";
 import ro from "../../../../messages/ro.json";
-import type { ClubTodoItem } from "./club-todo";
+import { CLUB_TODO_MAX_ITEMS, type ClubTodoItem } from "./club-todo";
 
 /**
  * The list «De făcut» starts from, until somebody first changes it (§438).
@@ -186,18 +186,25 @@ export type ClubTodoMerge = {
  * A stored list with the defaults it has never seen added at its end, once each (§NNN). `seen` is
  * the row's `seenDefaults`, or null for a row written before it existed (read as §438's nineteen).
  * Idempotent: a line already on the list, or seen and since deleted, is never added again.
+ * A list at `CLUB_TODO_MAX_ITEMS` gets nothing more (the cap the add operation holds), and a
+ * default it could not take stays unseen, so it arrives once the club makes room.
  */
 export function mergeClubTodoDefaults(items: readonly ClubTodoItem[], seen: readonly string[] | null): ClubTodoMerge {
   const known = new Set(seen ?? FIRST_DEFAULT_IDS);
   const present = new Set(items.map((item) => item.id));
   let highest = items.reduce((max, item) => Math.max(max, item.order), 0);
   const added: ClubTodoItem[] = [];
+  const unadded = new Set<string>();
   for (const entry of ADDED_DEFAULTS) {
     if (known.has(entry.id) || present.has(entry.id)) continue;
+    if (items.length + added.length >= CLUB_TODO_MAX_ITEMS) {
+      unadded.add(entry.id);
+      continue;
+    }
     highest += 1;
     added.push(addedLine(entry, highest));
   }
-  const seenDefaults = [...new Set([...known, ...CLUB_TODO_DEFAULT_IDS])];
+  const seenDefaults = [...new Set([...known, ...CLUB_TODO_DEFAULT_IDS])].filter((id) => !unadded.has(id));
   return { items: [...items, ...added], seenDefaults, added };
 }
 

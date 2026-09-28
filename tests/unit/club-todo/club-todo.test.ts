@@ -131,9 +131,23 @@ describe("§NNN the Administrator's two pages — «Echipa» and «Întrebări f
     // The words the screens use, so the line and the button agree.
     expect(words.ro.teamPage.text).toContain(`«${ro.Admin.team.add}»`);
     expect(words.ro.teamPage.text).toContain(`«${ro.Admin.team.publish}»`);
+    expect(words.ro.teamPage.text).toContain(`«${ro.Admin.editor.save}»`);
+    expect(words.ro.teamPage.text).toContain(`«${ro.Admin.team.create}»`);
+    expect(words.ro.teamPage.text).toContain(`«${ro.Admin.team.show}»`);
+    expect(words.ro.faqPage.text).toContain(`«${ro.Admin.faq.onSite}»`);
     expect(words.ro.faqPage.text).toContain(`«${ro.Admin.faq.save}»`);
+    expect(words.ro.faqPage.text).toContain(`«${ro.Admin.faq.publish}»`);
+    expect(words.ro.faqPage.text).not.toContain(`«${ro.Admin.team.show}»`);
+    expect(words.en.teamPage.text).toContain(`“${en.Admin.editor.save}”`);
+    expect(words.en.teamPage.text).toContain(`“${en.Admin.team.create}”`);
     expect(words.en.teamPage.text).toContain(`“${en.Admin.team.show}”`);
+    expect(words.en.faqPage.text).toContain(`“${en.Admin.faq.onSite}”`);
+    expect(words.en.faqPage.text).toContain(`“${en.Admin.faq.save}”`);
     expect(words.en.faqPage.text).toContain(`“${en.Admin.faq.publish}”`);
+    // The FAQ ticks «Pe site» before the save, which then asks to save and put on the site.
+    expect(words.ro.faqPage.text.indexOf(`«${ro.Admin.faq.onSite}»`)).toBeLessThan(
+      words.ro.faqPage.text.indexOf(`«${ro.Admin.faq.save}»`),
+    );
   });
 
   it("stores the Romanian words under fixed ids, for the Administrator, undated", () => {
@@ -172,6 +186,20 @@ describe("§NNN the Administrator's two pages — «Echipa» and «Întrebări f
     // A §438 line the club deleted before the marker existed is not revived either.
     const noFirst = before.filter((item) => item.id !== "start-admin-01");
     expect(mergeClubTodoDefaults(noFirst, null).items.map((item) => item.id)).not.toContain("start-admin-01");
+  });
+
+  it("never grows a list past the cap, and adds the default it could not take once there is room", () => {
+    const almost = Array.from({ length: CLUB_TODO_MAX_ITEMS - 1 }, (_, index) => line(`x${index}`, index + 1));
+    const merged = mergeClubTodoDefaults(almost, null);
+    expect(merged.items).toHaveLength(CLUB_TODO_MAX_ITEMS);
+    expect(merged.added.map((item) => item.id)).toEqual(["start-admin-team-page"]);
+    expect(merged.seenDefaults).toContain("start-admin-team-page");
+    expect(merged.seenDefaults).not.toContain("start-admin-faq-page");
+    // At the cap nothing more; with one line gone, the waiting default arrives.
+    expect(mergeClubTodoDefaults(merged.items, merged.seenDefaults).added).toEqual([]);
+    const later = mergeClubTodoDefaults(merged.items.slice(1), merged.seenDefaults);
+    expect(later.added.map((item) => item.id)).toEqual(["start-admin-faq-page"]);
+    expect(later.seenDefaults).toContain("start-admin-faq-page");
   });
 
   it("reads the row's marker, and a row without one as null", () => {
