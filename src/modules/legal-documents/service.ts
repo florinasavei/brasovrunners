@@ -43,6 +43,7 @@ import {
   retireVersionNumber,
 } from "./repository";
 import { templatePrefill } from "./templates/catalogue";
+import { kindSummary, type LegalKindSummary, templateIsNewer } from "./domain/overview";
 import { type ClubFacts, remainingPlaceholders } from "./templates/club-facts";
 import { LEGAL_DOCUMENT_KEYS, PLATFORM_APPROVAL_KEYS } from "./domain/keys";
 
@@ -914,6 +915,50 @@ export async function planTemplateRegeneration<T extends Record<string, unknown>
 }
 
 /**
+ * One text as `/admin/legal`'s card and «Versiune nouă»'s button read it (§NNN): its summary
+ * (what is in force, which draft waits), what «Regenerează din șablon» would do with it — the same
+ * `regenerationOutcome` §532's press asks — whether its template is newer than the text in force,
+ * and the number its next draft would get (for the confirm dialog's «versiunea N»).
+ */
+export type LegalKindOverview = {
+  summary: LegalKindSummary;
+  inForceId: string | undefined;
+  regeneration: RegenerationOutcome;
+  /** A club fact is still a `<PLACEHOLDER>` in the template's text, the deployment's facts written in. */
+  hasPlaceholders: boolean;
+  templateNewer: boolean;
+  nextVersion: number;
+};
+
+export async function readLegalOverview<T extends Record<string, unknown>>(
+  db: Database<T>,
+  facts: ClubFacts,
+  now: Date,
+  versions?: readonly LegalDocumentVersionRow[],
+): Promise<Record<LegalDocumentKey, LegalKindOverview>> {
+  const rows = versions ?? (await listVersionsForBackoffice(db));
+  const entries = await Promise.all(
+    LEGAL_DOCUMENT_KEYS.map(async (key) => {
+      const translations = templateTranslations(key, facts);
+      const filledHash = computeContentHash(translations);
+      const inForceId = await findCurrentApprovedVersionId(db, key, now);
+      const summary = kindSummary(key, rows, inForceId);
+      const inForceRow = rows.find((row) => row.id === summary.inForce?.id);
+      const overview: LegalKindOverview = {
+        summary,
+        inForceId,
+        regeneration: regenerationOutcome(key, filledHash, rows, inForceId),
+        hasPlaceholders: translations.some((translation) => remainingPlaceholders(translation.body).length > 0),
+        templateNewer: templateIsNewer(inForceRow, filledHash),
+        nextVersion: await nextVersionNumber(db, key),
+      };
+      return [key, overview] as const;
+    }),
+  );
+  return Object.fromEntries(entries) as Record<LegalDocumentKey, LegalKindOverview>;
+}
+
+/**
  * Every legal text regenerated from the platform's current template, in one press (§532): a new
  * **draft** per key whose template now says something neither the text in force nor a draft
  * waiting says. The templates moved several times in a week (§418, §515, §523), and each move
@@ -959,7 +1004,26 @@ export async function regenerateFromTemplates<T extends Record<string, unknown>>
         result.skipped.push(item.key);
         continue;
       }
-      await createDraftVersion(tx, actor, { key: item.key, translations: templateTranslations(item.key, facts) }, now);
+      const draftId = await createDraftVersion(
+        tx,
+        actor,
+        { key: item.key, translations: templateTranslations(item.key, facts) },
+        now,
+      );
+      // Who made which draft (§NNN): one row per draft, in the same transaction, so a press that
+      // fails leaves neither a draft nor a row about one. Only the number is read back.
+      const [draft] = await tx
+        .select({ version: legalDocuments.version })
+        .from(legalDocuments)
+        .where(eq(legalDocuments.id, draftId));
+      await recordAuditEvent(tx, {
+        actorStaffUserId: actor.id,
+        action: "legal_document.regenerated",
+        entityType: "legal_document",
+        entityId: draftId,
+        metadata: { documentKey: item.key, version: draft?.version ?? null },
+        now,
+      });
       result.created.push(item.key);
     }
     return result;
