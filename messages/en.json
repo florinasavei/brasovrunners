@@ -6060,7 +6060,6 @@
     "manage": {
       "title": "Manage your registration",
       "prompt": "You can cancel this registration. The place will be released immediately.",
-      "action": "Cancel registration",
       "done": "Your registration has been cancelled.",
       "eventStarted": "This event has already started; the registration can no longer be cancelled.",
       "doneTitle": "Registration cancelled",
@@ -6073,6 +6072,7 @@
       "selfCheckInClosed": "Check-in opens on {date}.",
       "selfCheckInFailed": "Could not mark you as here. Tell the desk; they will sort it out.",
       "signedSent": "The signed declaration was sent to you by email.",
+      "signedPaper": "The declaration was signed on paper.",
       "familyTitle": "The registrations on this address",
       "familyIntro": "Each person has their own QR code and their own race number.",
       "personCancel": "Cancel the registration for {name}",

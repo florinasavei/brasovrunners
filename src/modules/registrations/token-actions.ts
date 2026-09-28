@@ -57,6 +57,7 @@ import { listManagedPeople, managedRegistration } from "./manage-family";
 import { currentFamilyStep, type FamilyStep, familySigningSteps, isFamilyWizard, isSignable } from "./domain/family-signing";
 import { readMyRegistrations } from "./my-registrations";
 import { isUuid } from "@/shared/ids";
+import { isActiveStatus } from "./domain/state-machine";
 import { familyOf } from "./family-marker";
 
 /**
@@ -613,6 +614,8 @@ export async function consumeAndCancel(secret: string, now: Date, registrationId
     if (!own) throw new DomainError("NOT_FOUND", "no such registration");
     const registration = await managedRegistration(tx, own, registrationId);
     if (!registration) throw new DomainError("NOT_FOUND", "not a registration this link manages");
+    // A sibling already cancelled is not on the page's list: refuse it rather than spend the link on a false «Gata».
+    if (registration.id !== own.id && !isActiveStatus(registration.status)) throw new DomainError("NOT_FOUND", "not an active registration of this family");
     const family = (await listManagedPeople(tx, own)).length > 1;
     const event = await loadEventForRegistration(tx, registration.eventId);
 

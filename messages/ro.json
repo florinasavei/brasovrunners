@@ -6060,7 +6060,6 @@
     "manage": {
       "title": "Gestionează înscrierea",
       "prompt": "Poți anula această înscriere. Locul va fi eliberat imediat.",
-      "action": "Anulează înscrierea",
       "done": "Înscrierea a fost anulată.",
       "eventStarted": "Evenimentul a început deja; înscrierea nu mai poate fi anulată.",
       "doneTitle": "Înscriere anulată",
@@ -6073,6 +6072,7 @@
       "selfCheckInClosed": "Marcarea prezenței se deschide din {date}.",
       "selfCheckInFailed": "Nu am putut marca prezența. Spune la masă, se rezolvă acolo.",
       "signedSent": "Declarația semnată ți-a fost trimisă pe email.",
+      "signedPaper": "Declarația a fost semnată pe hârtie.",
       "familyTitle": "Înscrierile de pe această adresă",
       "familyIntro": "Fiecare persoană are codul ei QR și numărul ei de concurs.",
       "personCancel": "Anulează înscrierea pentru {name}",

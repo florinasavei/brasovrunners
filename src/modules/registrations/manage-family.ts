@@ -1,4 +1,5 @@
-import { and, eq, inArray, or } from "drizzle-orm";
+import { and, desc, eq, inArray, or } from "drizzle-orm";
+import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { ACTIVE_REGISTRATION_STATUSES, type Registration, registrations, type RegistrationStatus } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
 import { isUuid } from "@/shared/ids";
@@ -40,6 +41,8 @@ export type ManagedPerson = {
   bibNumber: number | null;
   /** Off the public list (§143): the participant's own answer, per person. */
   listOptOut: boolean;
+  /** How the latest declaration was accepted — online (a signed PDF was emailed) or on paper at the desk (§67); null when none. */
+  declarationMethod: "EMAIL_LINK" | "PAPER" | null;
   /** The registration the link itself names. */
   own: boolean;
 };
@@ -69,6 +72,16 @@ export async function listManagedPeople<T extends Record<string, unknown>>(db: D
         or(eq(registrations.id, own.id), inArray(registrations.status, [...ACTIVE_REGISTRATION_STATUSES])),
       ),
     );
+  const ids = rows.map((row) => row.id);
+  const methods = new Map<string, "EMAIL_LINK" | "PAPER">();
+  if (ids.length > 0) {
+    const acceptances = await db
+      .select({ registrationId: declarationAcceptances.registrationId, method: declarationAcceptances.method })
+      .from(declarationAcceptances)
+      .where(inArray(declarationAcceptances.registrationId, ids))
+      .orderBy(desc(declarationAcceptances.acceptedAt));
+    for (const row of acceptances) if (row.registrationId && !methods.has(row.registrationId)) methods.set(row.registrationId, row.method);
+  }
   const ordered = withFamilyRank(rows, await sittingOrderFor(db, own.participantId, own.eventId)).sort(compareFamilyOrder);
   return ordered.map((row) => ({
     id: row.id,
@@ -78,6 +91,7 @@ export async function listManagedPeople<T extends Record<string, unknown>>(db: D
     checkedInAt: row.checkedInAt,
     bibNumber: row.bibNumber,
     listOptOut: row.listOptOut,
+    declarationMethod: methods.get(row.id) ?? null,
     own: row.id === own.id,
   }));
 }

@@ -242,10 +242,16 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                         </Typography>
                       )}
                     </Box>
-                    {/* The signed declaration went by email (§NNN): never a link to it on this page. */}
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }} data-testid="manage-declaration-sent">
-                      {t("manage.signedSent")}
-                    </Typography>
+                    {/* The signed declaration went by email only after an online signature; a paper one at the desk (§67) had no email. */}
+                    {one.declarationMethod === "EMAIL_LINK" ? (
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }} data-testid="manage-declaration-sent">
+                        {t("manage.signedSent")}
+                      </Typography>
+                    ) : one.declarationMethod === "PAPER" ? (
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }} data-testid="manage-declaration-paper">
+                        {t("manage.signedPaper")}
+                      </Typography>
+                    ) : null}
                     {!family && <Divider sx={{ mt: 3 }} />}
                   </Box>
                 )}

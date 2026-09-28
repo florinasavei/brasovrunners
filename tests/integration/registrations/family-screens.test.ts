@@ -397,6 +397,15 @@ describe("§NNN «Gestionează înscrierea» per person, and safe", () => {
     expect((await readRaceDayContext(secret, at(29))).ok).toBe(false);
   });
 
+  it("refuses a sibling already cancelled without spending the link — no false «Gata» from a stale page", async () => {
+    const { event, maria, secret } = await confirmedFamily();
+    await db.update(registrations).set({ status: "CANCELLED" }).where(eq(registrations.id, maria.id));
+    expect(await thrown(consumeAndCancel(secret, at(27), maria.id))).toBe("NOT_FOUND");
+    expect((await auditOf(maria.id)).some((row) => row.action === "registration.cancelled_by_participant")).toBe(false);
+    expect((await rowsOf(event.id)).find((row) => row.id === maria.id)?.status).toBe("CANCELLED");
+    expect((await readRaceDayContext(secret, at(27))).ok).toBe(true);
+  });
+
   it("keeps a one-person page for a single registration", async () => {
     const event = await createEvent();
     await submitRegistration(db, event, submission("Vecina", NOW, { lastName: "Singură", email: "singura@example.ro" }), NOW);
