@@ -763,7 +763,11 @@ describe("BR-REQ-053-02 deleting an approved legal version", () => {
     // Source-level, like `theme/wordmark.test.ts`: the pages need a request and a database to
     // render, and the rule is about which functions they call.
     const read = (relative: string) => readFileSync(path.join(process.cwd(), "src", relative), "utf8");
-    for (const page of ["app/[locale]/admin/legal/(list)/page.tsx", "app/[locale]/admin/legal/[id]/delete/page.tsx"]) {
+    for (const page of [
+      "app/[locale]/admin/legal/(list)/page.tsx",
+      "app/[locale]/admin/legal/[id]/delete/page.tsx",
+      "app/[locale]/admin/legal/delete/page.tsx",
+    ]) {
       const source = read(page);
       expect(source, page).toContain("readDeletionFacts(");
       expect(source, page).toContain("deletionObstacle(");

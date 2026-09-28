@@ -62,6 +62,7 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   withdrawInterestAction: [],
   // A group run's self-declaration erased (§393), from its fold: handed to the panel as `eraseAction`.
   eraseGroupRunDeclarationAction: ["eraseAction"],
+  eraseGroupRunDeclarationsAction: ["batchEraseAction"],
   assignBibNumbersAction: ["assignAction"],
   // The desk's spares reserved by a print (§444): handed to the bib card's forms as `sparesAction`.
   reserveSpareBibsAction: ["sparesAction"],
@@ -94,6 +95,9 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   sendOutboxNowFromEmailsAction: [],
   // Legal.
   approvePlatformTemplatesAction: [],
+  // Every text at once (§NNN): drafts from the templates, and the drafts approved, each naming its texts.
+  regenerateLegalTemplatesAction: [],
+  approveLegalDraftsAction: [],
   approveLegalVersionAction: [],
   deleteLegalVersionAction: [],
   withdrawLegalVersionAction: [],
@@ -183,6 +187,8 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   hardDeleteEventAction: "guarded by the event's title, typed: the typing is the question",
   eraseRegistrationFromListAction: "guarded by the registered name, typed: the typing is the question",
   deleteApprovedLegalVersionAction: "guarded by a typed phrase: the typing is the question",
+  deleteLegalVersionsAction:
+    "guarded by a typed phrase (DELETE <n>) when an approved version is ticked, the typing is the question; drafts alone ask in the §384 dialog (§NNN)",
   previewParticipantMessageAction: "a preview; sends nothing",
   previewNewsletterAction: "the newsletter composer's preview (§445); sends nothing, stores nothing",
   lookUpPersonAction: "reads; changes nothing",

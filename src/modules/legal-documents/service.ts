@@ -14,7 +14,15 @@ import {
   type LegalDocumentTranslationInput,
 } from "./domain/content-hash";
 import { isEmptyBody } from "./domain/body-text";
-import { matchesConfirmation } from "./domain/confirmation";
+import { matchesBatchConfirmation, matchesConfirmation } from "./domain/confirmation";
+import {
+  deletionOrder,
+  type DraftApprovalOutcome,
+  draftApprovalOutcome,
+  LegalBatchVersionRefused,
+  type RegenerationOutcome,
+  regenerationOutcome,
+} from "./domain/batch";
 import {
   type DeletionFacts,
   type DeletionObstacle,
@@ -36,7 +44,7 @@ import {
 } from "./repository";
 import { templatePrefill } from "./templates/catalogue";
 import { type ClubFacts, remainingPlaceholders } from "./templates/club-facts";
-import { PLATFORM_APPROVAL_KEYS } from "./domain/keys";
+import { LEGAL_DOCUMENT_KEYS, PLATFORM_APPROVAL_KEYS } from "./domain/keys";
 
 /**
  * Writing legal documents from the backoffice (BR-REQ-053-02, `DECISIONS.md` §46).
@@ -714,40 +722,55 @@ export async function deleteApprovedVersion<T extends Record<string, unknown>>(
 
   const deletedVersion = await db.transaction(async (tx) => {
     const row = await assertDeletable(tx, input.versionId, input.now);
-
-    // First, and in this transaction: the row that says this happened. It outlives the version
-    // — `audit_logs.entity_id` carries no foreign key — and once the delete below commits it is
-    // the only record that the club ever published these words, under this number.
-    await recordAuditEvent(tx, {
-      actorStaffUserId: actor.id,
-      action: "legal_document.deleted",
-      entityType: "legal_document",
-      entityId: row.id,
-      metadata: {
-        ...(await describeVersionForAudit(tx, row)),
-        reason: reason.slice(0, 500),
-        // Stated rather than implied: whoever reads this row a year from now should not have to
-        // know about `legal_document_numbering` to know the number went with it.
-        versionNumberRetired: true,
-      },
-      now: input.now,
-    });
-
-    await retireVersionNumber(tx, row.key, row.version, input.now);
-
-    const [deleted] = await tx
-      .delete(legalDocuments)
-      .where(and(eq(legalDocuments.id, row.id), eq(legalDocuments.isApproved, true)))
-      .returning({ id: legalDocuments.id });
-
-    if (!deleted) {
-      throw new DomainError("CONFLICT", "this version changed while it was being deleted");
-    }
-
+    await destroyApprovedVersion(tx, actor, row, reason, input.now, {});
     return { key: row.key, version: row.version };
   });
   revalidatePublicContent("legal");
   return deletedVersion;
+}
+
+/**
+ * The destruction itself, inside the caller's transaction and after its `assertDeletable`: the
+ * audit row, the retired number, the delete — one body for the single delete and the batch
+ * (§151, §NNN), so the batch cannot be the copy that forgets the number.
+ */
+async function destroyApprovedVersion<T extends Record<string, unknown>>(
+  tx: Database<T>,
+  actor: Pick<StaffUser, "id">,
+  row: LegalDocumentVersionRow,
+  reason: string,
+  now: Date,
+  extra: Record<string, unknown>,
+): Promise<void> {
+  // First, and in this transaction: the row that says this happened. It outlives the version
+  // — `audit_logs.entity_id` carries no foreign key — and once the delete below commits it is
+  // the only record that the club ever published these words, under this number.
+  await recordAuditEvent(tx, {
+    actorStaffUserId: actor.id,
+    action: "legal_document.deleted",
+    entityType: "legal_document",
+    entityId: row.id,
+    metadata: {
+      ...(await describeVersionForAudit(tx, row)),
+      reason: reason.slice(0, 500),
+      // Stated rather than implied: whoever reads this row a year from now should not have to
+      // know about `legal_document_numbering` to know the number went with it.
+      versionNumberRetired: true,
+      ...extra,
+    },
+    now,
+  });
+
+  await retireVersionNumber(tx, row.key, row.version, now);
+
+  const [deleted] = await tx
+    .delete(legalDocuments)
+    .where(and(eq(legalDocuments.id, row.id), eq(legalDocuments.isApproved, true)))
+    .returning({ id: legalDocuments.id });
+
+  if (!deleted) {
+    throw new DomainError("CONFLICT", "this version changed while it was being deleted");
+  }
 }
 
 /**
@@ -833,9 +856,7 @@ export async function approvePlatformTemplates<T extends Record<string, unknown>
       result.alreadyApproved.push(key);
       continue;
     }
-    // The same prefill as "start from the platform's text": the fields kept, the facts written in (§357).
-    const prefill = templatePrefill(key, facts);
-    const translations: LegalDocumentTranslationInput[] = (["ro", "en"] as const).map((locale) => ({ locale, ...prefill[locale] }));
+    const translations = templateTranslations(key, facts);
     const blanks = [...new Set(translations.flatMap((translation) => remainingPlaceholders(translation.body)))];
     if (blanks.length > 0) {
       throw new DomainError(
@@ -849,4 +870,281 @@ export async function approvePlatformTemplates<T extends Record<string, unknown>
   }
 
   return result;
+}
+
+/**
+ * A key's platform template as the two translations a draft is made of: the same prefill as
+ * "start from the platform's text" — the fields kept, the facts written in (§357) — read by the
+ * one press (§132) and by «Regenerează din șabloane» (§NNN), so both hash the same words.
+ */
+export function templateTranslations(key: LegalDocumentKey, facts: ClubFacts): LegalDocumentTranslationInput[] {
+  const prefill = templatePrefill(key, facts);
+  return (["ro", "en"] as const).map((locale) => ({ locale, ...prefill[locale] }));
+}
+
+export type RegenerationPlanItem = {
+  key: LegalDocumentKey;
+  outcome: RegenerationOutcome;
+  /** A club fact the deployment does not know is still a `<PLACEHOLDER>` in the template's text. */
+  hasPlaceholders: boolean;
+};
+
+/**
+ * What «Regenerează din șabloane» would do with every text of the catalogue (§NNN), read-only:
+ * the page shows it, its confirm dialog names the `create` keys, and the press asks it again
+ * of the rows as they are then.
+ */
+export async function planTemplateRegeneration<T extends Record<string, unknown>>(
+  db: Database<T>,
+  facts: ClubFacts,
+  now: Date,
+): Promise<RegenerationPlanItem[]> {
+  const versions = await listVersionsForBackoffice(db);
+  return Promise.all(
+    LEGAL_DOCUMENT_KEYS.map(async (key) => {
+      const translations = templateTranslations(key, facts);
+      const inForceId = await findCurrentApprovedVersionId(db, key, now);
+      return {
+        key,
+        outcome: regenerationOutcome(key, computeContentHash(translations), versions, inForceId),
+        hasPlaceholders: translations.some((translation) => remainingPlaceholders(translation.body).length > 0),
+      };
+    }),
+  );
+}
+
+/**
+ * Every legal text regenerated from the platform's current template, in one press (§NNN): a new
+ * **draft** per key whose template now says something neither the text in force nor a draft
+ * waiting says. The templates moved several times in a week (§418, §515, §523), and each move
+ * was six rounds of "Versiune nouă → pornește de la textul platformei → Salvează".
+ *
+ * Drafts only, and that is the rule, not caution: nothing is in force until the club reads it and
+ * approves it (§46), and approval stays its own press — one version at a time, or every draft at
+ * once through `approveDrafts`, which the page offers next. A draft is made by `createDraftVersion`,
+ * the long way's own function: the number derived, the hash computed from what is stored, the
+ * author on the row. A text whose facts the deployment does not know keeps its `<PLACEHOLDER>`,
+ * exactly as "start from the platform's text" leaves it, for the Administrator to type — and
+ * `approveDrafts` will not approve it until then.
+ *
+ * `keys` is what the page's confirm dialog named; a key the rows no longer call for (another tab
+ * made the draft meanwhile) is skipped rather than doubled.
+ */
+export type TemplateRegeneration = {
+  created: LegalDocumentKey[];
+  skipped: LegalDocumentKey[];
+};
+
+export async function regenerateFromTemplates<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  facts: ClubFacts,
+  keys: readonly string[],
+  now: Date,
+): Promise<TemplateRegeneration> {
+  assertMayEdit(actor);
+  const asked = new Set(keys);
+  if (asked.size === 0) throw new DomainError("VALIDATION_ERROR", "no text was named to regenerate", ["key"]);
+
+  // One transaction for every draft (each `createDraftVersion` nests as a savepoint): a press
+  // that fails at the fourth text leaves no three drafts behind it to explain. No revalidation
+  // after the commit — a draft is on no public page, and expiring the cache for one would only
+  // wake the database for the next visitor (§333).
+  return db.transaction(async (tx) => {
+    const plan = await planTemplateRegeneration(tx, facts, now);
+    const result: TemplateRegeneration = { created: [], skipped: [] };
+    for (const item of plan) {
+      if (!asked.has(item.key)) continue;
+      if (item.outcome !== "create") {
+        result.skipped.push(item.key);
+        continue;
+      }
+      await createDraftVersion(tx, actor, { key: item.key, translations: templateTranslations(item.key, facts) }, now);
+      result.created.push(item.key);
+    }
+    return result;
+  });
+}
+
+export type DraftApprovalItem = { row: LegalDocumentVersionRow; outcome: DraftApprovalOutcome };
+
+/** Whether a version's text still carries a club-fact `<PLACEHOLDER>` in either language. */
+async function versionHasPlaceholders<T extends Record<string, unknown>>(db: Database<T>, versionId: string): Promise<boolean> {
+  const document = await findVersionWithTranslations(db, versionId);
+  return (document?.translations ?? []).some(
+    (translation) => isLegalDocumentBody(translation.body) && remainingPlaceholders(translation.body).length > 0,
+  );
+}
+
+/**
+ * Every draft, with what «Aprobă toate ciornele» would do with it (`draftApprovalOutcome`, §NNN):
+ * read-only, for the page, its confirm dialog and the press.
+ */
+export async function planDraftApproval<T extends Record<string, unknown>>(db: Database<T>): Promise<DraftApprovalItem[]> {
+  const versions = await listVersionsForBackoffice(db);
+  return Promise.all(
+    versions
+      .filter((row) => !row.isApproved)
+      .map(async (row) => ({ row, outcome: draftApprovalOutcome(row, versions, await versionHasPlaceholders(db, row.id)) })),
+  );
+}
+
+/** Every named draft still in the plan and still `ready`, or the whole press refused (`approveDrafts`). */
+function assertDraftsReady(plan: readonly DraftApprovalItem[], ids: readonly string[]): void {
+  for (const id of ids) {
+    const item = plan.find((candidate) => candidate.row.id === id);
+    if (!item) throw new DomainError("NOT_FOUND", "no such draft");
+    if (item.outcome !== "ready") {
+      throw new DomainError(
+        "CONFLICT",
+        `version ${item.row.key} ${item.row.version} is no longer ready to approve (${item.outcome}); nothing was approved`,
+      );
+    }
+  }
+}
+
+/**
+ * The drafts the page listed, approved in one press (§NNN) — each by `approveVersion`, the
+ * one-version verb, in one transaction: all of them or none.
+ *
+ * `versionIds` is what the confirm dialog named, and every one must still be `ready` when the
+ * press lands — the newest draft of its key, above every approved version still offered, no
+ * placeholder left. One that is not (a draft edited into a placeholder, a newer draft typed in
+ * another tab) refuses the whole press with a `CONFLICT`, because an approval is one-way and the
+ * club approved the list it read, not the one the rows became. Approval stays the
+ * Administrator's (`assertMayEdit`, §450), and one-way (§46).
+ */
+export async function approveDrafts<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  versionIds: readonly string[],
+  now: Date,
+): Promise<number> {
+  assertMayEdit(actor);
+  const ids = [...new Set(versionIds)];
+  if (ids.length === 0) throw new DomainError("VALIDATION_ERROR", "no draft was named to approve", ["versionId"]);
+
+  // Checked twice, like the batch delete: before the transaction, so a refusal names the draft
+  // before anything is opened, and again inside it, against the rows the approvals will change —
+  // a draft that lost readiness between the two (a newer draft saved in another tab, a
+  // placeholder typed back in) refuses the whole press there too.
+  assertDraftsReady(await planDraftApproval(db), ids);
+  await db.transaction(async (tx) => {
+    assertDraftsReady(await planDraftApproval(tx), ids);
+    for (const id of ids) await approveVersion(tx, actor, id, now);
+  });
+  // After the commit as well: `approveVersion` revalidated inside the transaction, before the
+  // rows were visible to anybody else.
+  revalidatePublicContent("legal");
+  return ids.length;
+}
+
+export type DeleteVersionsInput = {
+  versionIds: readonly string[];
+  /** `DELETE 3` — the number of approved versions among them (`batchConfirmationPhrase`); unread when there are none. */
+  typedConfirmation: string;
+  /** Why; in every approved version's audit row. Unread when only drafts are deleted. */
+  reason: string;
+  now: Date;
+};
+
+export type DeletedVersions = { drafts: number; approved: number };
+
+/** The first reason `row` may not be deleted, in the words of whichever one-version verb it is for. */
+function batchObstacle(row: LegalDocumentVersionRow, facts: DeletionFacts): DomainError | null {
+  if (!row.isApproved) {
+    return isReliedOn({
+      acceptances: row.acceptanceCount,
+      events: row.eventCount,
+      privacyAcknowledgements: row.privacyAcknowledgementCount,
+    })
+      ? new DomainError("CONFLICT", "this version is referenced and cannot be deleted")
+      : null;
+  }
+  const obstacle = deletionObstacle(facts);
+  return obstacle ? refusalFor(obstacle) : null;
+}
+
+/**
+ * Several versions deleted in one press (§NNN): drafts as `deleteDraftVersion` deletes one (§53),
+ * approved versions as `deleteApprovedVersion` does (§151, §316) — the same obstacles, the same
+ * audit row per version written first, the same retired number — in one transaction, all or none.
+ *
+ * What is shared across the batch is only what a person types: one reason for every approved
+ * version's audit row, and one phrase, `DELETE <n>`, where n is how many approved versions the
+ * screen listed. With only drafts ticked, neither is asked, as for one draft.
+ *
+ * Checked twice, like the single delete: once before the transaction, so a refusal names what
+ * stands in the way before anything is opened, and again inside it, one version at a time in
+ * `deletionOrder`, each against the rows as the earlier deletions left them.
+ *
+ * All or none, and not "delete the rest, skip the one that became blocked": the screen asked
+ * `DELETE <n>` and one reason for exactly the approved versions it listed, and an audit row's
+ * reason and the typed count describe that list — deleting a different one under them would make
+ * both untrue. A version that became undeletable between the screen and the press therefore stops
+ * the whole press with `LegalBatchVersionRefused`, which names it (`GDPR 2`); the screen, read
+ * again, lists it under what stays, with the reason, and the rest go on the next press.
+ */
+export async function deleteVersionsInBatch<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  input: DeleteVersionsInput,
+): Promise<DeletedVersions> {
+  assertMayEdit(actor);
+  const ids = [...new Set(input.versionIds)];
+  if (ids.length === 0) throw new DomainError("VALIDATION_ERROR", "no version was selected", ["versionId"]);
+
+  const versions = await listVersionsForBackoffice(db);
+  const rows = ids.map((id) => {
+    const row = versions.find((candidate) => candidate.id === id);
+    if (!row) throw new DomainError("NOT_FOUND", "no such legal document version");
+    return row;
+  });
+  const facts = await readDeletionFacts(db, rows, versions, input.now);
+  rows.forEach((row, index) => {
+    const refusal = batchObstacle(row, facts[index]);
+    if (refusal) throw new LegalBatchVersionRefused(row, refusal);
+  });
+
+  const approvedCount = rows.filter((row) => row.isApproved).length;
+  const reason = input.reason.trim();
+  if (approvedCount > 0) {
+    if (reason.length < 3) {
+      throw new DomainError("VALIDATION_ERROR", "a deletion needs a reason; it is the only thing that survives it", ["reason"]);
+    }
+    if (!matchesBatchConfirmation(input.typedConfirmation, approvedCount)) {
+      throw new DomainError(
+        "VALIDATION_ERROR",
+        "the typed confirmation does not name this many approved versions; nothing was deleted",
+        ["typedConfirmation"],
+      );
+    }
+  }
+
+  await db.transaction(async (tx) => {
+    for (const planned of deletionOrder(rows)) {
+      const fresh = await listVersionsForBackoffice(tx);
+      const row = fresh.find((candidate) => candidate.id === planned.id);
+      if (!row || row.isApproved !== planned.isApproved) {
+        throw new LegalBatchVersionRefused(planned, new DomainError("CONFLICT", "it changed while the batch was being deleted"));
+      }
+      const [rowFacts] = await readDeletionFacts(tx, [row], fresh, input.now);
+      const refusal = batchObstacle(row, rowFacts);
+      if (refusal) throw new LegalBatchVersionRefused(row, refusal);
+
+      if (row.isApproved) {
+        await destroyApprovedVersion(tx, actor, row, reason, input.now, { batchSize: rows.length });
+        continue;
+      }
+      const [deleted] = await tx
+        .delete(legalDocuments)
+        .where(and(eq(legalDocuments.id, row.id), eq(legalDocuments.isApproved, false)))
+        .returning({ id: legalDocuments.id });
+      if (!deleted) {
+        throw new LegalBatchVersionRefused(row, new DomainError("CONFLICT", "it was approved while the batch was being deleted"));
+      }
+    }
+  });
+  revalidatePublicContent("legal");
+  return { drafts: rows.length - approvedCount, approved: approvedCount };
 }

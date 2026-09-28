@@ -434,4 +434,30 @@ test.describe.serial("§393 a group run's optional self-declaration", () => {
     const refused = await page.request.get(`/api/admin/events/${eventId}/group-run-declarations/${id}`);
     expect(refused.status()).toBe(403);
   });
+
+  test("the Administrator ticks the signatures left and erases them in one press, the dialog naming the count (§NNN)", async ({ page }) => {
+    await signIn(page, "Dev Administrator");
+    await page.goto(editorUrl);
+    await hydrated(page);
+    const fold = await openEditorBox(page, "Declarații semnate (alergare de grup)");
+    const rows = fold.getByTestId("group-run-declaration-row");
+    await expect(rows).toHaveCount(1);
+    await rows.first().getByRole("checkbox").check();
+    const batch = page.getByTestId("group-run-declarations-batch");
+    await batch.getByRole("textbox", { name: "Motivul ștergerii" }).fill("Au cerut ștergerea");
+    await batch.getByRole("button", { name: "Șterge cele bifate" }).click();
+    // The count ticked and the run, at the press.
+    await expect(page.getByRole("dialog")).toContainText(`Ștergi 1 declarație semnată pentru «${title}»? Nu se poate recupera.`);
+    await confirmDialog(page);
+    await page.waitForURL(/saved=groupRunDeclarationsErased/);
+    await expect(page.getByTestId("group-run-declarations-erased")).toContainText("1 declarație semnată a fost ștearsă");
+
+    const left = await withDatabase(async (client) => (await client.query("SELECT id FROM group_run_declarations WHERE event_id = $1", [eventId])).rows);
+    expect(left).toHaveLength(0);
+    const trail = await withDatabase(async (client) =>
+      (await client.query("SELECT id FROM audit_logs WHERE action = 'event.group_run_declaration_erased' AND entity_id = $1", [eventId])).rows,
+    );
+    // The single erase's row and this press's, one per signature.
+    expect(trail).toHaveLength(2);
+  });
 });

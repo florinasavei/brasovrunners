@@ -66,7 +66,7 @@ import { env } from "@/shared/config/env";
 import { readBibDesignForm } from "@/modules/registrations/bib-design-query";
 import { assignBibNumbers, reserveSpareBibs } from "@/modules/registrations/bibs";
 import { withdrawInterest } from "@/modules/registrations/interest";
-import { eraseGroupRunDeclaration } from "@/modules/group-run-declarations/service";
+import { eraseGroupRunDeclaration, eraseGroupRunDeclarations } from "@/modules/group-run-declarations/service";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
 
 /**
@@ -1035,6 +1035,26 @@ export async function eraseGroupRunDeclarationAction(_previous: FormOutcome | nu
     return refused(error, form);
   }
   return backTo(path, { saved: "groupRunDeclarationErased" });
+}
+
+/**
+ * An Administrator erases the ticked signatures of a run in one press (§NNN): the ids the confirm
+ * dialog counted, one reason, each through the single erase's own path. A set that changed since
+ * the page was drawn is refused whole and says so; the toast names how many went.
+ */
+export async function eraseGroupRunDeclarationsAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = toLocale(form.get("uiLocale"));
+  const eventId = text(form, "eventId");
+  const path = editorPath(locale, eventId);
+  let erased: number;
+  try {
+    const actor = await requireStaffCapability(canManageRegistrations);
+    const ids = form.getAll("declarationIds").filter((value): value is string => typeof value === "string");
+    ({ erased } = await eraseGroupRunDeclarations(getDb(), actor, { eventId, ids, reason: text(form, "reason") }, new Date()));
+  } catch (error) {
+    return refused(error, form);
+  }
+  return backTo(path, { saved: "groupRunDeclarationsErased", erased: String(erased) });
 }
 
 /** Adding a colleague (§123). A refused address or name comes back in its box (§315). */

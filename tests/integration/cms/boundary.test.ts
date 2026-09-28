@@ -201,6 +201,8 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       // number goes with it, and the phrase to type — a screen, like the event erase one,
       // written here by hand.
       "/admin/legal/[id]/delete",
+      // The ticked versions deleted in one press (§NNN): the same guarded service, by hand.
+      "/admin/legal/delete",
       "/admin/legal/new",
       // The network check (§436): what a staff member's network lets through, written by hand.
       "/admin/network",
@@ -316,10 +318,13 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
     for (const route of legalRoutes) {
       expect(route, `${route} must not edit a version in place`).not.toMatch(/\/edit$/);
     }
+    // Two deletion screens since §NNN — one version, and the ticked ones in one press — and both
+    // are the guarded kind: the batch deletes through `deleteVersionsInBatch`, which asks each
+    // version the single delete's own question (`legal/batch.test.ts`).
     expect(
       legalRoutes.filter((route) => /\/delete$/.test(route)),
-      "one deletion screen, and it is the guarded one",
-    ).toEqual(["/admin/legal/[id]/delete"]);
+      "the deletion screens, and they are the guarded ones",
+    ).toEqual(["/admin/legal/[id]/delete", "/admin/legal/delete"]);
 
     /**
      * The repository stays read-and-insert only. Every write that can change an existing row
@@ -374,14 +379,28 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       the only record the club published those words. It cannot move which version is current
       for the same reason withdrawal cannot, and it cannot reach anything anybody accepted.
     */
+    /*
+      §NNN adds no writer either, for `approvePlatformTemplates`' reason: `regenerateFromTemplates`
+      is `createDraftVersion` per key, `approveDrafts` is `approveVersion` per draft (in one
+      transaction), and `deleteVersionsInBatch` asks each version the single deletes' own
+      questions (`deletionObstacle`, `isReliedOn`) and destroys it through the body
+      `deleteApprovedVersion` uses — audit row, retired number. The three `plan…`/`template…`
+      names read.
+    */
     const service = await import("@/modules/legal-documents/service");
     expect(Object.keys(service).sort()).toEqual([
+      "approveDrafts",
       "approvePlatformTemplates",
       "approveVersion",
       "createDraftVersion",
       "deleteApprovedVersion",
       "deleteDraftVersion",
+      "deleteVersionsInBatch",
+      "planDraftApproval",
+      "planTemplateRegeneration",
       "readDeletionFacts",
+      "regenerateFromTemplates",
+      "templateTranslations",
       "updateDraftVersion",
       "withdrawApprovedVersion",
     ]);

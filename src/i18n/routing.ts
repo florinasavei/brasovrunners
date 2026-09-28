@@ -231,6 +231,11 @@ export const routing = defineRouting({
      * form must work with JavaScript off, and a mistyped confirmation needs somewhere to land.
      */
     "/admin/legal/[id]/delete": "/admin/legal/[id]/delete",
+    /**
+     * The versions ticked on the list, deleted in one press (§NNN): what goes, what cannot and
+     * why, one reason and one phrase (`DELETE <n>`) for the approved ones. `?id=…` once per tick.
+     */
+    "/admin/legal/delete": "/admin/legal/delete",
     "/admin/pages": "/admin/pages",
     "/admin/pages/new": "/admin/pages/new",
     /** The cards of «Echipa» (§459): beside the club's own pages, never one of them. */

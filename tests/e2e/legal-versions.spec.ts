@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
-import { signIn } from "./support/featured-event";
+import { cancelDialog, confirmDialog } from "./support/confirm";
+import { hydrated, signIn } from "./support/featured-event";
 
 /**
  * The body is written in the editor (§279), so a spec types into it as a person does: `## ` at
@@ -192,5 +193,75 @@ test.describe("legal documents: a version downloads as a PDF", () => {
       "/api/admin/legal/00000000-0000-4000-8000-000000000000/pdf?locale=ro",
     );
     expect(response.status()).toBe(403);
+  });
+});
+
+/**
+ * BR-REQ-053-02 (§NNN) — every text at once: «Regenerează din șabloane» makes the drafts,
+ * «Aprobă ciornele» names them before anything is in force, and «Șterge versiunile bifate» takes
+ * the ticked rows — the ticks belong to a GET form by `form=` — to `/admin/legal/delete`, which
+ * lists them and deletes them behind the §384 dialog, the toast saying how many went.
+ *
+ * On a reset database: the samples in force carry the not-approved banner (§29), so every template
+ * says something they do not and the press has drafts to make. The approval is opened and declined
+ * rather than pressed: it would put the platform's texts in force for every other spec of the same
+ * run, which reads the samples; the act is `tests/integration/legal/batch.test.ts`'s. The drafts
+ * this spec made are the ones it deletes — found as the ticks that were not there before the press —
+ * so the list is left as it was. Desktop only: one database, and the phone renders the same rows as
+ * labelled blocks.
+ */
+test.describe("legal documents: every text at once", () => {
+  test("regenerates drafts from the templates, names them for approval, and deletes the ticked ones", async ({ page }) => {
+    test.skip(test.info().project.name !== "desktop", "one database: the drafts are made and deleted once");
+    test.setTimeout(120_000);
+    await signIn(page, "Dev Administrator");
+    await page.goto("/ro/admin/legal");
+    await hydrated(page);
+
+    const tools = page.getByTestId("legal-batch-tools");
+    const ticks = page.locator('[data-testid="legal-batch-tick"]:visible input[type="checkbox"]');
+    const labelsOf = async () => Promise.all((await ticks.all()).map(async (tick) => (await tick.getAttribute("aria-label")) ?? ""));
+    // The list streams in behind «Se încarcă…»: read the ticks once the tools are on the page.
+    await expect(tools).toBeVisible();
+    const before = new Set(await labelsOf());
+
+    // Regenerate: the dialog names the texts, nothing is in force, the toast counts the drafts.
+    await tools.getByRole("button", { name: /^Regenerează din șabloane \(\d+\)$/ }).click();
+    await confirmDialog(page, /^Faci ciorne noi din șabloane \(\d+\)\?$/);
+    await expect(page.getByTestId("toast")).toContainText(/ciorn(ă nouă din șablon|e noi din șabloane)/, { timeout: 30_000 });
+    await hydrated(page);
+    await expect(tools.getByTestId("legal-regenerate-uptodate")).toBeVisible();
+
+    // Approve: every new draft is either offered (named in the dialog) or held with its reason.
+    await expect(tools.getByTestId("legal-approve-drafts-form").or(tools.getByTestId("legal-drafts-held")).first()).toBeVisible();
+    const approve = tools.getByRole("button", { name: /^Aprobă ciornele \(\d+\)$/ });
+    if ((await approve.count()) > 0) {
+      await approve.click();
+      await expect(page.getByRole("dialog", { name: /^Aprobi ciornele \(\d+\)\?$/ })).toContainText("Se aprobă:");
+      await cancelDialog(page, /^Aprobi ciornele/);
+    }
+
+    // Delete: tick the drafts this press made, through the GET form, to the batch screen.
+    const made = (await labelsOf()).filter((label) => !before.has(label));
+    expect(made.length).toBeGreaterThanOrEqual(2);
+    for (const label of made) await page.getByRole("checkbox", { name: label, exact: true }).check();
+    await tools.getByRole("button", { name: "Șterge versiunile bifate" }).click();
+    await expect(page).toHaveURL(/\/admin\/legal\/delete\?(id=[0-9a-f-]{36}&?){2,}/);
+    await expect(page.getByTestId("legal-batch-goes")).toContainText(`Se șterg (${made.length}):`);
+    await expect(page.getByTestId("legal-batch-stays")).toHaveCount(0);
+
+    // Drafts only: no typed phrase, one press behind the dialog, and the toast says how many went.
+    await expect(page.locator('input[name="typedConfirmation"]')).toHaveCount(0);
+    await hydrated(page);
+    await page.getByRole("button", { name: `Șterge ciornele (${made.length})` }).click();
+    await confirmDialog(page, `Ștergi ciornele (${made.length})?`);
+    await expect(page).toHaveURL(/\/admin\/legal(\?|#|$)/);
+    await expect(page.getByTestId("toast")).toContainText(`${made.length} ${made.length === 1 ? "versiune ștearsă" : made.length < 20 ? "versiuni șterse" : "de versiuni șterse"}.`, {
+      timeout: 30_000,
+    });
+    await hydrated(page);
+    // After the redirect the list streams in again: polled, not read once while it still loads.
+    await expect(tools).toBeVisible();
+    await expect.poll(async () => new Set(await labelsOf())).toEqual(before);
   });
 });
