@@ -171,7 +171,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     // «Adresa de contact afișată» (§442): every email's Reply-To, which the previews' "reply to this email" line follows.
     readShownContactAddress(db),
     /*
-      What waits in the queue and when it next leaves (§NNN), for the forecast's first line: the
+      What waits in the queue and when it next leaves (§513), for the forecast's first line: the
       pinger's cadence, the Administrator's interval and the governor's floor (§447) — the budget's
       reading is this instance's memo, the same one /admin/tasks reads. «Termene» says the same wait
       beside its «Când pleacă emailurile» setting, and the queue panel opens with it — the next and

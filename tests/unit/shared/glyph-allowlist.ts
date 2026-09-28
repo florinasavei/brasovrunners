@@ -4,7 +4,8 @@
  * and checks every entry still matches something, so a stale line fails rather than lingers.
  *
  * Two more exceptions are rules in the test itself, since they are recognised by shape, not file:
- * the order arrows «↑» / «↓» (the label *is* the glyph), and a self-closing `<button />` or
+ * the order arrows «↑» / «↓», as a `label` or as the button's only words (the label *is* the
+ * glyph), and a self-closing `<button />` or
  * `component="button"` with no children (an invisible overlay over a control that draws its own
  * picture, such as the telephone's flag).
  */
@@ -38,16 +39,6 @@ export const WITHOUT_GLYPH: ReadonlyArray<{ file: string; words: string; reason:
     file: "src/modules/media/ui/GalleryPicker.tsx",
     words: 'data-testid="gallery-picker-item"',
     reason: "§485: a gallery thumbnail — the picture itself is the button's face.",
-  },
-  {
-    file: "src/app/[locale]/admin/pages/faq/page.tsx",
-    words: "value={`${index}:up`}",
-    reason: "The FAQ card's order arrow «↑», a submit button of the page's one save: the label is the glyph, as on the other order arrows.",
-  },
-  {
-    file: "src/app/[locale]/admin/pages/faq/page.tsx",
-    words: "value={`${index}:down`}",
-    reason: "The FAQ card's order arrow «↓», a submit button of the page's one save: the label is the glyph, as on the other order arrows.",
   },
   {
     file: "src/shared/ui/BuildBadgeLink.tsx",

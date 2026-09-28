@@ -682,10 +682,10 @@ mail, and storing people's messages at a third party for nothing is not a featur
 works because the `mail.` MX records point at Mailgun. **Several people can read it:** the
 Forward destination takes a comma-separated list (`owner@…, amalia@…, dani@…`) and each gets a
 copy. Only `contact@` is routed — a reply sent to `noreply@mail.<domain>` is dropped, which
-is right, because every email the site sent carried `Reply-To: contact@…` until `BR-V2.04`; since then (§462) the Reply-To defaults to the Gmail in `CONTACT_SMTP_USER` unless the club saves «Adresa de contact afișată» on `/admin/emails`, so the Route matters for the older emails and for a club that chooses the mailbox. **The same mailbox is the declarations archive** once `DECLARATIONS_ARCHIVE_TO=brasovrunners@gmail.com`
+is right, because every email the site sent carried `Reply-To: contact@…` until `BR-V2.04`; since then (§462) the Reply-To defaults to the Gmail in `CONTACT_SMTP_USER` unless the club saves «Adresa de contact afișată» on «Setări» → «Contact» (`/admin/settings/contact#shown-contact-address`, since §516), so the Route matters for the older emails and for a club that chooses the mailbox. **The same mailbox is the declarations archive** once `DECLARATIONS_ARCHIVE_TO=brasovrunners@gmail.com`
 is set on the production project (`DECISIONS.md` §99): every signed declaration arrives there
 as a PDF at signing. One more message per registration on Mailgun's allowance. **Since
-`DECISIONS.md` §244 this is a setting instead**: `/admin/emails` → "Copiile clubului", where an
+`DECISIONS.md` §244 this is a setting instead**: «Setări» → «Emailuri» (`/admin/settings/emails`, §516) → "Copiile clubului", where an
 Administrator names the mailbox and any visible (Cc) or hidden (Bcc) copies, with the variable
 kept as the fallback for a deployment that names none. The same panel sets who is told when
 somebody confirms (§245) — each of those addresses is one more message per registration too. When the club gets Google or Microsoft
@@ -1065,7 +1065,7 @@ organizer opens. With these two variables `/devs` reads CU-hours, active hours a
 period. **Which plan the figures are read against is Neon's own answer** (`DECISIONS.md` §326,
 correcting §306): the project row the page already reads names the owning account's plan
 (`owner.subscription_type`, `launch_v3` since 2026-09-22). The Administrator's choice on
-`/admin/tasks` → Costuri → „Planul Neon (baza de date)" is only the fallback for an environment
+«Setări» → «Costuri» (`/admin/settings/costs`, §516) → „Planul Neon (baza de date)" is only the fallback for an environment
 without the key, or a Neon that did not answer; unset, it reads as Free. The limits set on each
 project are §40.
 
@@ -1276,7 +1276,7 @@ Locally the development switcher is the provider, so nothing is sent and the ale
 QA rather than the club's address (checked 2026-09-22). `CONTACT_SMTP_USER`,
 `CONTACT_SMTP_PASSWORD` and `CONTACT_FORM_TO` were written on 2026-09-20 and predate the builds
 now serving. The procedure below is kept for a new app password — Google shows one once — and for
-the part that stays the club's, which is who receives a message (`/admin/emails`).
+the part that stays the club's, which is who receives a message («Setări» → «Contact», `/admin/settings/contact`, §516).
 
 Five minutes, once, in the club's Google account and on Vercel (`DECISIONS.md` §149). The
 "Scrie-ne" page is built and works on every laptop (the message is captured, nothing is
@@ -1299,7 +1299,7 @@ club names — which is why a colleague's Yahoo can be on the list.
    all. Set it if you want the form to work before anybody opens the backoffice.
 4. Redeploy both projects.
 5. In the app — the part the club owns, and the part that changes without a developer:
-   `/admin/emails` → **"Cine primește mesajele de contact"** → **Către** = the mailboxes that
+   «Setări» → «Contact» (`/admin/settings/contact#contact-recipients`, §516) → **"Cine primește mesajele de contact"** → **Către** = the mailboxes that
    receive each message, comma-separated; **Copie (Cc)** = anybody who should get a copy and
    be visible to the others (the administrator colleague's Yahoo, say); **Copie ascunsă (Bcc)** = anybody who
    should get a copy without the others seeing it — an archive mailbox, say (§293) → Salvează. The sentence above the boxes
@@ -1326,7 +1326,7 @@ club names — which is why a colleague's Yahoo can be on the list.
    Do the same in any mailbox that is on "Către" or "Copie (Cc)" and wants it. (`DECISIONS.md`
    §310)
 
-To take the form away, clear the recipients on `/admin/emails` and leave `CONTACT_FORM_TO`
+To take the form away, clear the recipients on «Setări» → «Contact» (`/admin/settings/contact`) and leave `CONTACT_FORM_TO`
 empty — or remove `CONTACT_SMTP_USER` or `CONTACT_SMTP_PASSWORD` and redeploy: the page goes
 back to the address either way. Google's own limit on an ordinary account is about 500 messages a day,
 which is more than a club receives; the form's own limit is five an hour per sender.
@@ -1380,7 +1380,7 @@ languages go live together; that is the rule, not a setting.
 2. Open the registration form and read it as a runner would. Do **not** complete a real entry on
    production unless the club wants that row in its list; the rehearsal belongs on the QA host,
    where the same form sends real email to the addresses in `EMAIL_ALLOWLIST`.
-3. `/admin/emails` → the Mailgun plan. Free is **100 messages a day**, and a completed
+3. «Setări» → «Emailuri» (`/admin/settings/emails`, §516) → the Mailgun plan. Free is **100 messages a day**, and a completed
    registration costs about six, so about **16 entries a day** (`docs/PLATFORM.md`). If the
    race opens to a crowd, one month of **Basic** is $15 and is a setting on that screen — no
    deployment.
@@ -1456,7 +1456,7 @@ Together they sit under the $15 spending notification on Neon's Billing page (or
 kept). **A project that reaches its limit is suspended by Neon until the next billing period
 starts** — on production that is the site down: registrations, the desk, the emails. So the
 limit leaves room (production used 6.3 CU-hours in the first 37 hours, most of it two people
-testing all day), and `/admin/tasks` → Costuri shows the month's hours. To raise a limit before
+testing all day), and «Setări» → «Costuri» (`/admin/settings/costs`, §516) shows the month's hours. To raise a limit before
 it bites, the same call that set it, with the project's id and an API key allowed to change the
 project:
 
@@ -1529,5 +1529,5 @@ nothing on production, and the reverse.
    passes the health check (a 30-minute gap against 35), but by day a hold or a waiting-list offer
    is then released up to 30 minutes late instead of 15, at no saving: tick minute **45** too, so
    it reads `*/15 7-22 * * *` like the outbox.
-2. On QA, `/admin/tasks` → Costuri → „Cât de des verifică site-ul" → **2 ore** (the card is
+2. On QA, «Setări» → «Costuri» (`/admin/settings/costs#job-cadence`, §516) → „Cât de des verifică site-ul" → **2 ore** (the card is
    live since BR-V1.70); production stays on „La nevoie".

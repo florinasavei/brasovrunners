@@ -566,7 +566,7 @@ top (`DECISIONS.md` §98). Three causes, told apart by the same page:
 1. **Deferred by the allowance** — Mailgun Free's 100 messages a day are spent. Nothing is
    lost; the queue resumes at the time the alert names (the UTC reset, five minutes past).
    If it is registration day and people are waiting for confirmations: Mailgun → Billing →
-   Basic removes the daily limit the moment it is paid; then `/admin/emails` → "The Mailgun
+   Basic removes the daily limit the moment it is paid; then «Setări» → «Emailuri» (`/admin/settings/emails`, §516) → "The Mailgun
    plan" → Basic → save, so the counters and "Trimite acum" stop counting against a hundred
    (`DECISIONS.md` §100); the next scheduler tick — or "Trimite acum" — sends everything. When
    the month is over and the plan is cancelled, set it back to Free there. `docs/PLATFORM.md`

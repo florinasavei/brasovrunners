@@ -23,7 +23,7 @@ type Props = {
 export const dynamic = "force-dynamic";
 
 /**
- * «Setări» → «Anti-robot» (§516, «Platformă» until §NNN; it was `/admin/tasks` → «Anti-robot», which answers 308 here): the
+ * «Setări» → «Anti-robot» (§516, «Platformă» until §522; it was `/admin/tasks` → «Anti-robot», which answers 308 here): the
  * anti-robot check — Cloudflare Turnstile and the hidden trap (§254, §282) — the one setting that
  * can stop the service and has no price, which is why it is not on «Costuri» beside the database's
  * brakes (§479 keeps those with their money). The Superadministrator switches it (`canManagePlatform`,

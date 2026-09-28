@@ -49,18 +49,21 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
   const when = (at: Date) => formatDay(at, { locale, timeZone: event.timezone, style: "short", withTime: true, position: "inline" });
   const counts = await countOccupied(db, event.id, now);
   const occupied = computeOccupied(counts);
-  const rows = await listQueueForEvent(db, event.id);
+  const rows = await listQueueForEvent(db, event.id, now);
   const free = event.capacity === null ? null : Math.max(0, event.capacity - occupied);
   const holds = counts.pendingDeclarationHolds + counts.unexpiredWaitlistOfferedHolds;
   /*
     The line as the allocator counts it (§348, `domain/waitlist.ts#waitlistLength`): everybody
-    waiting, and the offers still open. An offer past its deadline that no sweep has expired yet
-    holds nothing any more (`countOccupied` stopped counting it at the deadline), so it is not
-    listed either — or the panel would show a row the title does not count, and an "offer until"
-    a time already gone.
+    waiting, and the offers still open — an offer before its deadline, or one whose email is still
+    queued (§520: its clock starts when the email leaves, so `countOccupied` keeps counting it past
+    the stored deadline; listed here since §NNN). An offer past its deadline with its email gone holds nothing any more,
+    so it is not listed either — or the panel would show a row the title does not count, and an
+    "offer until" a time already gone.
   */
   const line = rows.filter(
-    (row) => row.status === "WAITLISTED" || (row.status === "WAITLIST_OFFERED" && row.holdExpiresAt !== null && row.holdExpiresAt > now),
+    (row) =>
+      row.status === "WAITLISTED" ||
+      (row.status === "WAITLIST_OFFERED" && (row.offerEmailQueued || (row.holdExpiresAt !== null && row.holdExpiresAt > now))),
   );
   /*
     "7 din 10" when the line has a limit (§348), counted from the rows listed underneath, so the
@@ -118,7 +121,10 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
                 {row.registeredName}
                 {row.kind === "TEST" && <Chip size="small" label={t("queue.test")} sx={{ ml: 1 }} />}
               </Box>
-              {row.status === "WAITLIST_OFFERED" && row.holdExpiresAt ? (
+              {row.status === "WAITLIST_OFFERED" && row.offerEmailQueued ? (
+                // The stored deadline moves when the email leaves (§513, §520): no time to show yet.
+                <Chip size="small" color="warning" label={t("queue.offeredQueued")} />
+              ) : row.status === "WAITLIST_OFFERED" && row.holdExpiresAt ? (
                 <Chip
                   size="small"
                   color="warning"

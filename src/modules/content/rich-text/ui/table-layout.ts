@@ -89,10 +89,6 @@ export function tableSx(attrs: Parameters<typeof tableStyleOf>[0]) {
   } as const;
 }
 
-/** Every combination, as the editor's stylesheet needs them keyed by `data-` attribute. */
-export const TABLE_BORDER_COLOUR_VALUES = TABLE_BORDER_COLOURS;
-export const TABLE_HEADER_FILL_VALUES = TABLE_HEADER_FILLS;
-
 /**
  * The lines themselves, which is all that separates the three variants.
  *

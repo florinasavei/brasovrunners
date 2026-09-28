@@ -667,7 +667,8 @@ export function holdAwaitingItsFirstEmail(now: Date): SQL {
  * A declaration hold occupies its place by status, deadline or no deadline: since `DECISIONS.md`
  * §160 a lapsed hold is kept — the place stays the person's until the event starts — unless
  * somebody is waiting for it, and it is `expireStaleHolds` that decides, never this count. An
- * offer is a promise to the queue and still occupies only while its deadline is ahead.
+ * offer is a promise to the queue and still occupies only while its deadline is ahead — or while
+ * the email that starts that deadline is still queued (§520, `offerAwaitingItsFirstEmail`).
  */
 export async function countOccupied<T extends Record<string, unknown>>(
   db: Database<T>,

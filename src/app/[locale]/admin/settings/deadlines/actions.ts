@@ -15,8 +15,8 @@ import { flashOutcome } from "@/shared/feedback/flash";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
 
 /*
-  «Setări» → «Termene» (§NNN): the club's deadlines (§377), the per-address limit (§389) and «Când
-  pleacă emailurile» (§NNN). The three actions moved here, unchanged, from `/admin/emails`; they
+  «Setări» → «Termene» (§516): the club's deadlines (§377), the per-address limit (§389) and «Când
+  pleacă emailurile» (§513). The three actions moved here, unchanged, from `/admin/emails`; they
   land back on this tab.
 */
 
@@ -77,7 +77,7 @@ export async function updateAddressCapAction(_previous: FormOutcome | null, form
 }
 
 /**
- * «Când pleacă emailurile» (§NNN), in the "Termene" fold: the same gates and the same shape as the
+ * «Când pleacă emailurile» (§513), in the "Termene" fold: the same gates and the same shape as the
  * address cap above it — the Administrator at the door and in the service, one closed choice the
  * service's schema decides, a refusal back as the form's state.
  */
