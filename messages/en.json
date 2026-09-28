@@ -1901,6 +1901,7 @@
       "lineNone": "This event has no waiting list: once the places are gone, registration stops.",
       "test": "test",
       "offered": "offer until {until}",
+      "offeredQueued": "offer; its deadline runs from when the email leaves",
       "since": "since {when}",
       "interestTitle": "Addresses waiting for the opening notice: {count}",
       "interestHelp": "The addresses left at “Tell me”: each gets one email when registration opens. Type here the address of someone who no longer wants the message.",
@@ -4636,10 +4637,11 @@
               ]
             },
             {
-              "title": "The five texts, before the race is published",
+              "title": "The legal texts, before the race is published",
               "steps": [
-                "In one sitting, each from «Start from the template»: the terms, the privacy notice (GDPR), the race declaration, the asphalt declaration, the trail declaration.",
-                "Without approved terms, notice and declaration nobody can register. Without the trail declaration approved, no trail run offers the declaration.",
+                "«Legal documents» → «One step: approve the templates with the club's facts» → «Approve the missing texts now…»: each text not yet approved gets version 1, from its template, with the club's facts. A text already approved is not touched.",
+                "A text already approved whose template has changed (the terms, the GDPR notice, the declarations): «New version» → «Start from the template», one at a time.",
+                "Without approved terms, notice and a race declaration nobody can register. For a road race the editor picks the road declaration once it is approved, the trail one until then. The group runs' declarations appear only on the runs that tick them.",
                 "Until you approve the new notice, the public participant list shows the confirmed only."
               ]
             },

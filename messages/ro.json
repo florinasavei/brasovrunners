@@ -1901,6 +1901,7 @@
       "lineNone": "Evenimentul nu are listă de așteptare: când locurile se termină, înscrierile se opresc.",
       "test": "test",
       "offered": "ofertă până {until}",
+      "offeredQueued": "ofertă; termenul curge de când pleacă emailul",
       "since": "din {when}",
       "interestTitle": "Adrese care așteaptă anunțul deschiderii: {count}",
       "interestHelp": "Adresele lăsate la „Anunță-mă”: primesc un singur email când se deschid înscrierile. Tastează aici adresa cuiva care nu mai vrea mesajul.",
@@ -4636,10 +4637,11 @@
               ]
             },
             {
-              "title": "Cele cinci texte, înainte de publicarea cursei",
+              "title": "Textele legale, înainte de publicarea cursei",
               "steps": [
-                "Într-o singură ședință, fiecare de la «Pornește de la șablon»: termenii, nota de confidențialitate (GDPR), declarația de concurs, declarația pentru asfalt, declarația pentru trail.",
-                "Fără termeni, notă și declarație aprobate nu se poate înscrie nimeni. Fără declarația de trail aprobată, nicio alergare pe trail nu oferă declarația.",
+                "«Documente legale» → «Într-un pas: aprobă șabloanele cu datele clubului» → «Aprobă acum textele care lipsesc…»: fiecare text încă neaprobat primește versiunea 1, din șablon, cu datele clubului. Un text deja aprobat nu e atins.",
+                "Un text deja aprobat al cărui șablon s-a schimbat (termenii, nota GDPR, declarațiile): «Versiune nouă» → «Pornește de la șablon», pe rând.",
+                "Fără termeni, notă și o declarație de cursă aprobate nu se poate înscrie nimeni. Pentru o cursă pe asfalt editorul alege declarația de asfalt, dacă e aprobată, altfel pe cea de trail. Declarațiile alergărilor de grup apar doar la alergările care le bifează.",
                 "Până aprobi nota nouă, lista publică de participanți arată doar confirmații."
               ]
             },

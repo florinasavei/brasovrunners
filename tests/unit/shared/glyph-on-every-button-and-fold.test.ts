@@ -86,6 +86,14 @@ function drawsGlyph(node: ts.Node, passedOn: ReadonlySet<string>): boolean {
 const passedOnIn = (file: string) => new Set(PASSED_ON.filter((entry) => entry.file === file).map((entry) => entry.expression));
 
 const ARROW_LABEL = /\blabel="[↑↓]"/;
+const ARROW = /^[↑↓]$/;
+
+/** An order arrow written as the button's only words, `<Button …>↑</Button>`: the label is the glyph. */
+function isArrowButton(node: ts.Node): boolean {
+  if (!ts.isJsxElement(node)) return false;
+  const words = node.children.filter((child) => !(ts.isJsxText(child) && child.containsOnlyTriviaWhiteSpaces));
+  return words.length === 1 && ts.isJsxText(words[0]) && ARROW.test(words[0].text.trim());
+}
 
 function attribute(opening: ts.JsxOpeningElement | ts.JsxSelfClosingElement, name: string): string | undefined {
   const found = opening.attributes.properties.find((property) => ts.isJsxAttribute(property) && property.name.getText() === name);
@@ -99,7 +107,7 @@ function isButton(opening: ts.JsxOpeningElement | ts.JsxSelfClosingElement): boo
 
 function exempt(file: string, node: ts.Node): boolean {
   const text = node.getText();
-  if (ARROW_LABEL.test(text)) return true;
+  if (ARROW_LABEL.test(text) || isArrowButton(node)) return true;
   // A button with no children at all: an invisible overlay over a control that draws its own picture.
   if (ts.isJsxSelfClosingElement(node) && (node.tagName.getText() === "button" || attribute(node, "component") === '"button"')) return true;
   return WITHOUT_GLYPH.some((allowed) => allowed.file === file && text.includes(allowed.words));
@@ -179,6 +187,27 @@ describe("§521 a glyph on every button", () => {
       const text = read(file);
       expect(text, file).toMatch(/label="↑"[\s\S]*?ariaLabel=/);
     }
+    // The FAQ cards' arrows are the page's one save, written as the button's words, named too.
+    const faq = read("src/app/[locale]/admin/pages/faq/page.tsx");
+    expect(faq).toMatch(/value=\{`\$\{index\}:up`\}[^>]*aria-label=\{t\("faq\.moveUpNamed"/);
+    expect(faq).toMatch(/value=\{`\$\{index\}:down`\}[^>]*aria-label=\{t\("faq\.moveDownNamed"/);
+  });
+
+  it("recognises an order arrow written as the button's only words, and nothing more", () => {
+    const button = (source: string) => {
+      const file = ts.createSourceFile("x.tsx", `const x = ${source};`, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+      let found: ts.Node | undefined;
+      const visit = (node: ts.Node) => {
+        if (!found && ts.isJsxElement(node)) found = node;
+        ts.forEachChild(node, visit);
+      };
+      visit(file);
+      return found as ts.Node;
+    };
+    expect(isArrowButton(button("<Button type=\"submit\">\n  ↑\n</Button>"))).toBe(true);
+    expect(isArrowButton(button("<Button>↓</Button>"))).toBe(true);
+    expect(isArrowButton(button("<Button>↑ Sus</Button>"))).toBe(false);
+    expect(isArrowButton(button("<Button>{label}</Button>"))).toBe(false);
   });
 
   it("a wrapper that hands its caller's glyph on is itself checked where it is used", () => {
