@@ -1079,8 +1079,7 @@
       "special": "Ediție specială",
       "specialHelp": "O ediție aparte, de exemplu aniversară sau caritabilă, cu un marcaj pe card și pe pagină. Într-o serie, marcajul rămâne doar pe data aceasta.",
       "saveEvent": "Salvează detaliile evenimentului",
-      "saveCoversSettingsOnly": "Salvarea ta schimbă doar setările; textele sunt ale redactorului.",
-      "readOnly": "Evenimentul îl modifică Administratorul; aici îl poți citi. Ce vrei schimbat îi spui lui.",
+      "readOnly": "Evenimentul îl modifică Administratorul; aici îl poți citi. Ce vrei schimbat îi spui Administratorului.",
       "version": "versiunea {version}",
       "liveWarning": "Publicat: fiecare salvare apare imediat pe site, în ambele limbi.",
       "acknowledgeLive": "Am înțeles că modific conținut publicat.",
@@ -1893,8 +1892,8 @@
       "roles": {
         "CONTRIBUTOR": "masa de ridicare: scanează codurile, marchează prezența, confirmă pe hârtie, dă un loc liber, scrie un număr. Atât.",
         "COPYWRITER": "textele: descrierea, regulamentul, programul și paginile site-ului, în ambele limbi. Fără setări, fără publicare.",
-        "MODERATOR": "evenimentele: creează, setează (date, locuri, înscrieri), publică, galeria.",
-        "DEV": "plus pagina tehnică /devs. Fără datele participanților.",
+        "MODERATOR": "citește evenimentele, înscrierile, exportul și numerele; trimite mesaje participanților și lucrează la masa din ziua cursei. Nu modifică un eveniment.",
+        "DEV": "pagina tehnică /devs; fără evenimente și fără datele participanților.",
         "ADMIN": "conduce clubul: plus înscrierile, exportul, textele legale, emailurile, sarcinile, planurile și echipa.",
         "SUPERADMIN": "plus setările tehnice care pot opri serviciul — cât de des verifică site-ul, limitele bazei de date, verificarea anti-robot — și numirea altui Superadministrator.",
         "MEMBER": "zona membrilor de pe site, după autentificare. Fără backoffice."
@@ -4587,7 +4586,7 @@
               "title": "O schimbare la eveniment",
               "steps": [
                 "«Evenimente» → «Deschide»: vezi evenimentul cu toate cardurile lui, fără «Salvează».",
-                "Scrie-i Administratorului ce trebuie schimbat: data, locul, traseul, costul, locurile, înscrierile sau textele. Doar el anunță participanții despre schimbare."
+                "Scrie-i Administratorului ce trebuie schimbat: data, locul, traseul, costul, locurile, înscrierile sau textele. Doar Administratorul anunță participanții despre schimbare."
               ]
             },
             {
@@ -6234,8 +6233,8 @@
     "roleSummary": {
       "CONTRIBUTOR": "masa de ridicare a numerelor, și atât",
       "COPYWRITER": "textele oricărui eveniment și ale paginilor; trimite spre aprobare",
-      "MODERATOR": "creează și setează evenimente, publică, galeria",
-      "DEV": "plus pagina de configurare. Fără date despre participanți",
+      "MODERATOR": "citește evenimentele, înscrierile, exportul și numerele, trimite mesaje participanților, masa din ziua cursei; nu modifică un eveniment",
+      "DEV": "pagina de configurare; fără evenimente și fără date despre participanți",
       "ADMIN": "conduce clubul: plus înscrieri, participanți, export, texte legale, echipa, ștergerea unui eveniment",
       "SUPERADMIN": "plus setările tehnice care pot opri serviciul și numirea altui Superadministrator",
       "MEMBER": "zona membrilor de pe site. Fără backoffice"

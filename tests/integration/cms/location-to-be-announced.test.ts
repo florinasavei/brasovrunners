@@ -97,7 +97,7 @@ describe("BR-REQ-011-01 criterion 19 the place to be announced (§328)", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;
-  let organizer: StaffUser;
+  let settingsEditor: StaffUser;
 
   beforeAll(async () => {
     ({ db, close } = await createTestDatabase());
@@ -107,7 +107,7 @@ describe("BR-REQ-011-01 criterion 19 the place to be announced (§328)", () => {
   beforeEach(async () => {
     await resetTables(db);
     [admin] = await db.insert(staffUsers).values({ email: "admin@dev.test", displayName: "Ioana", role: "ADMIN" }).returning();
-    [organizer] = await db.insert(staffUsers).values({ email: "organizer@dev.test", displayName: "Mihai", role: "ADMIN" }).returning();
+    [settingsEditor] = await db.insert(staffUsers).values({ email: "settings-editor@dev.test", displayName: "Mihai", role: "ADMIN" }).returning();
   });
 
   const rowOf = async (id: string) => (await db.select().from(events).where(eq(events.id, id)))[0];
@@ -284,12 +284,12 @@ describe("BR-REQ-011-01 criterion 19 the place to be announced (§328)", () => {
       const fields = TYPED_EVENT_HALF;
 
       // A save that keeps the place hidden announces nothing.
-      const kept = await saveEventAndTranslations(db, { actor: organizer, eventId: created.event.id, expectedVersion: (await rowOf(created.event.id)).version, fields, translations: [], now: NOW });
+      const kept = await saveEventAndTranslations(db, { actor: settingsEditor, eventId: created.event.id, expectedVersion: (await rowOf(created.event.id)).version, fields, translations: [], now: NOW });
       expect(kept.placeAnnounced).toBe(false);
       expect((await findPublishedEventBySlug(db, "ro", "crosul-de-iarna"))?.locationName).toBeNull();
 
       const announced = await saveEventAndTranslations(db, {
-        actor: organizer,
+        actor: settingsEditor,
         eventId: created.event.id,
         expectedVersion: (await rowOf(created.event.id)).version,
         fields: { ...fields, locationToBeAnnounced: false },

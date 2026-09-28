@@ -192,7 +192,7 @@ test.describe("BR-REQ-060-01 an Organizer reads the events and changes none (§N
     await page.getByRole("link", { name: event.title }).first().click();
     await expect(page).toHaveURL(/\/admin\/events\//);
 
-    await expect(page.getByTestId("editor-read-only")).toHaveText("Evenimentul îl modifică Administratorul; aici îl poți citi. Ce vrei schimbat îi spui lui.");
+    await expect(page.getByTestId("editor-read-only")).toHaveText("Evenimentul îl modifică Administratorul; aici îl poți citi. Ce vrei schimbat îi spui Administratorului.");
     await expect(page.locator("#box-save")).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Salvează", exact: true })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Publică" })).toHaveCount(0);

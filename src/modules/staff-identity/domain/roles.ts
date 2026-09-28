@@ -139,8 +139,9 @@ export function isEditorial(role: StaffRole): boolean {
  *
  * The owner, of his two colleagues: "tot ce vreau e ca organizatorul să nu fie și redactor…
  * Redactorul scrie, Organizatorul organizează", and then, asked to confirm the consequence: "da,
- * așa vreau". An Organizer sets the date, the place, the route, the capacity, the registration
- * window, the queue and the desk. A Redactor writes the words. Neither does the other's job, and
+ * așa vreau". An Organizer runs the queue and the desk; the event's settings — the date, the
+ * place, the route, the capacity, the registration window — are the Administrator's since §NNN.
+ * A Redactor writes the words. Neither does the other's job, and
  * a rank ladder cannot express that — rank would give the Organizer the Redactor's work simply
  * for being above them, which is what the club is asking not to happen.
  *

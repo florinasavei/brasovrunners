@@ -859,12 +859,6 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   {maySaveAnything && (
                     <Panel glyph="save" static id="box-save" title={t("editor.boxes.save.title")}>
                       <Stack spacing={2}>
-                        {/* What this save covers, for the role whose save covers half the form. */}
-                        {maySaveSettings && !mayEditSomeText && (
-                          <Typography variant="body2" color="text.secondary">
-                            {t("editor.saveCoversSettingsOnly")}
-                          </Typography>
-                        )}
                         {/* A date of a series: which dates, in words, "this and the following" first. */}
                         {inSeries && maySaveSettings && <SeriesScopeBox locale={locale} />}
                         {/* Whether the participants hear about this save (§331), with the count. */}
