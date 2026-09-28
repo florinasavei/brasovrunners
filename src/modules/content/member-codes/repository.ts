@@ -8,7 +8,7 @@ import { dayIn } from "@/modules/registrations/domain/age";
  * The members' discount codes (§NNN), read. Two reads and no third: the backoffice's whole list, and
  * the members' zone's — which is called only behind the account (`canOpenMembersZone`, the zone's own
  * door) and never through the public cache (§333), a feed, an email or a public page. A public read
- * of this table does not exist, and `tests/unit/members/codes-never-public.test.ts` holds it so.
+ * of this table does not exist, and `tests/unit/events/members-only.test.ts` holds it so.
  */
 
 /** Every code, in the list's order, for «Pagini» → «Membri» → «Coduri de reducere». */

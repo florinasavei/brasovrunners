@@ -18,6 +18,8 @@ import { routing, type Locale } from "@/i18n/routing";
 import { readMembersZone } from "@/modules/content/members/page-settings";
 import { listDiscountCodesForMembers, type MembersDiscountCode } from "@/modules/content/member-codes/repository";
 import MemberCodes from "@/modules/content/member-codes/ui/MemberCodes";
+import { datedOrNull } from "@/modules/events/domain/dated";
+import { groupSeries, seriesLookup } from "@/modules/events/domain/series";
 import { membersOnlyEventsFor } from "@/modules/events/members-only";
 import EventCard from "@/modules/events/ui/EventCard";
 import CardMembershipIcon from "@mui/icons-material/CardMembership";
@@ -153,6 +155,20 @@ export default async function MembersAreaPage({ params }: Props) {
     membersOnlyOrNone(account, locale, now),
     codesOrNone(now),
   ]);
+  /*
+    A repeated members' run is one card with its dates, as on the listing (§113, §486): the dated
+    ones grouped, those whose date is to be announced after them one by one — §533 refuses a series
+    those, and `listMembersOnlyEvents` already puts them last.
+  */
+  const datedMembers = membersEvents.flatMap((event) => {
+    const dated = datedOrNull(event);
+    return dated ? [dated] : [];
+  });
+  const membersSeriesOf = seriesLookup(datedMembers);
+  const membersCards = [
+    ...groupSeries(datedMembers).map((series) => ({ key: series.key, event: series.members[0], dates: membersSeriesOf(series.members[0]) })),
+    ...membersEvents.filter((event) => event.startsAt === null).map((event) => ({ key: event.id, event, dates: undefined })),
+  ];
 
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
@@ -190,8 +206,8 @@ export default async function MembersAreaPage({ params }: Props) {
             {t("eventsTitle")}
           </Typography>
           <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" } }}>
-            {membersEvents.map((event, index) => (
-              <EventCard key={event.id} event={event} index={index} now={now} />
+            {membersCards.map((card, index) => (
+              <EventCard key={card.key} event={card.event} index={index} now={now} seriesDates={card.dates} />
             ))}
           </Box>
         </Box>

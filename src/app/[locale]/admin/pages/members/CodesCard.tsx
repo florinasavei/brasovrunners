@@ -169,7 +169,7 @@ function CodeRow({
           label={shown ? t("members.codes.shown") : expired ? t("members.codes.expired") : t("members.codes.hidden")}
         />
         {code.validUntil && (
-          <Chip size="small" variant="outlined" label={t("members.codes.until", { day: formatCalendarDay(code.validUntil, { locale }) })} />
+          <Chip size="small" variant="outlined" label={t("members.codes.until", { day: formatCalendarDay(code.validUntil, { locale, position: "inline" }) })} />
         )}
         {(code.descriptionRo === null) !== (code.descriptionEn === null) && (
           <Chip size="small" variant="outlined" color="warning" label={t("members.codes.oneLanguage")} />

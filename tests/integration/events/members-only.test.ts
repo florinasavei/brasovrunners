@@ -3,7 +3,7 @@ import { createTranslator } from "next-intl";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
-import { events } from "@/db/schema/events";
+import { events, eventTranslations } from "@/db/schema/events";
 import { newsletterSends, newsletterSubscribers } from "@/db/schema/newsletter";
 import { registrations } from "@/db/schema/registrations";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
@@ -29,6 +29,7 @@ vi.mock("next/headers", () => ({
 }));
 vi.mock("@/auth", () => ({ auth: async () => null, signIn: async () => {}, signOut: async () => {} }));
 vi.mock("@/db/client", () => ({ getDb: () => state.db }));
+vi.mock("@/app/[locale]/admin/actions", () => ({ signOutAction: async () => {} }));
 vi.mock("next-intl/server", () => {
   const catalogue = (locale: string) => (locale === "en" ? en : ro) as Record<string, object>;
   const translator = (locale: string, namespace: string) =>
@@ -50,6 +51,12 @@ const { submitRegistration } = await import("@/modules/registrations/service");
 const { GET: eventIcs } = await import("@/app/[locale]/events/[slug]/calendar.ics/route");
 const { generateMetadata, default: EventDetailPage } = await import("@/app/[locale]/events/[slug]/page");
 const { submitRegistrationAction } = await import("@/app/[locale]/events/[slug]/register/actions");
+const { default: RegisterPage } = await import("@/app/[locale]/events/[slug]/register/page");
+const { default: GroupRunDeclarationPage } = await import("@/app/[locale]/events/[slug]/declaration/page");
+const { default: MembersAreaPage } = await import("@/app/[locale]/members-area/page");
+const { default: EventCard } = await import("@/modules/events/ui/EventCard");
+const { default: StartList } = await import("@/modules/events/ui/StartList");
+const { signGroupRunDeclaration } = await import("@/modules/group-run-declarations/service");
 
 const NOW = new Date("2026-10-01T09:00:00.000Z");
 
@@ -124,6 +131,27 @@ async function redirectedTo(promise: Promise<unknown>): Promise<string> {
     throw error;
   }
   throw new Error("expected a redirect");
+}
+
+/**
+ * Every element of `type` in a page's returned tree, its children walked without rendering them — the
+ * zone's cards are async server components, which a static render cannot draw, and their props are
+ * what the test is about.
+ */
+function elementsOf(node: unknown, type: unknown): { props: Record<string, unknown> }[] {
+  if (Array.isArray(node)) return node.flatMap((child) => elementsOf(child, type));
+  if (typeof node !== "object" || node === null || !("props" in node)) return [];
+  const element = node as { type: unknown; props: Record<string, unknown> };
+  return [...(element.type === type ? [element] : []), ...elementsOf(element.props.children, type)];
+}
+
+/** Every string in a page's returned tree, its children and its inputs' values, without rendering. */
+function textsOf(node: unknown): string[] {
+  if (typeof node === "string") return [node];
+  if (Array.isArray(node)) return node.flatMap(textsOf);
+  if (typeof node !== "object" || node === null || !("props" in node)) return [];
+  const props = (node as { props: Record<string, unknown> }).props;
+  return [...(typeof props.value === "string" ? [props.value] : []), ...textsOf(props.children)];
 }
 
 /** Whether a page's call threw Next's 404. */
@@ -306,6 +334,84 @@ describe("§NNN events for the members alone", () => {
     it("the zone lists it for a member and for nobody else", async () => {
       expect(await membersOnlyEventsFor(null, "ro", NOW)).toEqual([]);
       expect(slugs(await membersOnlyEventsFor(member, "ro", NOW))).toEqual(["crosul-membrilor"]);
+    });
+
+    it("a repeated members' run is one card in the zone, with its dates (§113)", async () => {
+      // A second date of the same run: the same type and title, a week later (§113 recognises it).
+      await createEventAndPublish(db, {
+        actor: admin,
+        fields: { ...fields(), membersOnly: true, startsAtWallTime: "2027-03-21T10:00", translations: { ro: { ...MEMBERS.ro, slug: "crosul-membrilor-2" }, en: { ...MEMBERS.en, slug: "members-cross-2" } } },
+        publish: true,
+        now: NOW,
+      });
+      state.cookie = member.id;
+      const cards = elementsOf(await MembersAreaPage({ params: Promise.resolve({ locale: "ro" }) }), EventCard);
+      expect(cards).toHaveLength(1);
+      expect((cards[0].props.event as { slug: string }).slug).toBe("crosul-membrilor");
+      expect(slugs(cards[0].props.seriesDates as { slug: string }[])).toEqual(["crosul-membrilor", "crosul-membrilor-2"]);
+    });
+
+    it("the registration form: 404 to a stranger; for a member, the account's address, not asked", async () => {
+      // The page reads the wall clock: published before it, so the window is open today.
+      await db.update(events).set({ publishedAt: new Date("2026-01-01T00:00:00.000Z") }).where(eq(events.id, membersEventId));
+      const page = () => RegisterPage({ params: params(), searchParams: Promise.resolve({}) });
+      expect(await isNotFound(page())).toBe(true);
+      state.cookie = member.id;
+      const texts = textsOf(await page());
+      expect(texts).toContain(member.email);
+      expect(texts).toContain(ro.Registration.membersAddressLabel);
+    });
+
+    it("the participant list is not drawn for a member, and still is on a public event (§32)", async () => {
+      await createEventAndPublish(db, { actor: admin, fields: { ...fields(), translations: PUBLIC }, publish: true, now: NOW });
+      state.cookie = member.id;
+      const onPage = async (slug: string) =>
+        elementsOf(await EventDetailPage({ params: Promise.resolve({ locale: "ro", slug }), searchParams: Promise.resolve({}) }), StartList);
+      expect(await onPage("crosul-membrilor")).toHaveLength(0);
+      expect(await onPage("crosul-public")).toHaveLength(1);
+    });
+  });
+
+  describe("a group run for the members alone: its declaration behind the same door", () => {
+    async function membersRun() {
+      const [run] = await db
+        .insert(events)
+        .values({
+          type: "GROUP_RUN",
+          surface: "TRAIL",
+          offersGroupRunDeclaration: true,
+          membersOnly: true,
+          editorialStatus: "PUBLISHED",
+          publishedAt: NOW,
+          startsAt: new Date("2026-10-07T16:00:00.000Z"),
+          registrationMode: "NONE",
+          locationName: "Stația de telecabină",
+        })
+        .returning();
+      await db.insert(eventTranslations).values([
+        { eventId: run.id, locale: "ro", title: "Tura membrilor", slug: "tura-membrilor" },
+        { eventId: run.id, locale: "en", title: "The members' loop", slug: "members-loop" },
+      ]);
+      return run;
+    }
+    const page = () => GroupRunDeclarationPage({ params: Promise.resolve({ locale: "ro", slug: "tura-membrilor" }), searchParams: Promise.resolve({}) });
+
+    it("answers a stranger 404 and opens for a member", async () => {
+      await membersRun();
+      expect(await isNotFound(page())).toBe(true);
+      state.cookie = member.id;
+      expect(await isNotFound(page())).toBe(false);
+    });
+
+    it("the service refuses a signature without a members' session, as for a run that offers none", async () => {
+      const run = await membersRun();
+      await expect(
+        signGroupRunDeclaration(
+          db,
+          { eventId: run.id, documentId: declarationId, contentSha256: "x", accepted: true, typedName: "Ana Membru", birthDate: "1990-05-17", email: "membru@dev.test", locale: "ro" },
+          NOW,
+        ),
+      ).rejects.toMatchObject({ code: "NOT_FOUND" });
     });
   });
 

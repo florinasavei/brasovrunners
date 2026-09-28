@@ -271,10 +271,20 @@ export async function findSignatureByViewToken<T extends Record<string, unknown>
 export async function nextDateOfRun<T extends Record<string, unknown>>(db: Database<T>, eventId: string, now: Date): Promise<string> {
   const { key, dates } = await findRunSeries(db, eventId);
   if (key === null) return eventId;
+  // A public signer's link never lands on a date the club made the members' (§NNN): that page is
+  // a 404 for them. A member who signed on a members' date may be sent to any date of the run.
+  const [signed] = await db.select({ membersOnly: events.membersOnly }).from(events).where(eq(events.id, eventId)).limit(1);
   const [next] = await db
     .select({ id: events.id })
     .from(events)
-    .where(and(inArray(events.id, dates.map((date) => date.id)), gt(events.startsAt, now), eq(events.editorialStatus, "PUBLISHED")))
+    .where(
+      and(
+        inArray(events.id, dates.map((date) => date.id)),
+        gt(events.startsAt, now),
+        eq(events.editorialStatus, "PUBLISHED"),
+        signed?.membersOnly ? undefined : eq(events.membersOnly, false),
+      ),
+    )
     .orderBy(asc(events.startsAt))
     .limit(1);
   return next?.id ?? eventId;
