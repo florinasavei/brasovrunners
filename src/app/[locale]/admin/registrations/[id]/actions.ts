@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
+import { DELIVERY_CHOICE_FIELD, deliveryChoiceOf } from "@/modules/notifications/domain/send-at-once";
+import { sendNowRefusalCode } from "@/modules/notifications/send-at-once";
 import { resendRegistrationMessage } from "@/modules/registrations/admin-service";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
@@ -24,25 +26,30 @@ export async function resendRegistrationEmailAction(_previous: FormOutcome | nul
     href: { pathname: "/admin/registrations/[id]", params: { id: registrationId } },
   });
 
+  // The dialog's answer (§NNN): «now» past the scheduled pass, anything else the queue, as before.
+  const delivery = deliveryChoiceOf(form.get(DELIVERY_CHOICE_FIELD));
+
   let outcome: "sent" | { error: string };
   try {
     const actor = await requireStaff();
-    await resendRegistrationMessage(getDb(), actor, registrationId, new Date(), wanted);
+    await resendRegistrationMessage(getDb(), actor, registrationId, new Date(), wanted, delivery);
     outcome = "sent";
   } catch (error) {
     if (isDomainError(error)) {
-      outcome = { error: error.code };
+      // The allowance's own sentence for a «now» it cannot hold (§80, §NNN), never a generic one.
+      outcome = { error: sendNowRefusalCode(error) };
     } else {
       throw error;
     }
   }
 
   // `#admin-alert`, like every other backoffice redirect: land on the outcome — and the toast
-  // (§384) says which message went, from the same flag.
-  if (outcome === "sent") await flashOutcome({ saved: wanted === "EVENT_REMINDER" ? "reminderSent" : "resent" });
+  // (§384) says which message went, from the same flag, and whether it left now (§NNN).
+  if (outcome === "sent" && delivery === "now") await flashOutcome({ saved: wanted === "EVENT_REMINDER" ? "reminderSentNow" : "resentNow" });
+  else if (outcome === "sent") await flashOutcome({ saved: wanted === "EVENT_REMINDER" ? "reminderSent" : "resent" });
   redirect(
     outcome === "sent"
-      ? `${path}?resent=1#admin-alert`
+      ? `${path}?resent=${delivery === "now" ? "now" : "1"}#admin-alert`
       : `${path}?error=${outcome.error}#admin-alert`,
   );
 }

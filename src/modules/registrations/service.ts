@@ -48,7 +48,7 @@ import { registrationNameKey } from "./domain/name-key";
 import { currentAddressCap } from "./address-cap";
 import { familyEntryFields, insertFamilyEntry, liveSittingEntries, personOfEntry, replaceFamilyEntry } from "./family-entries";
 import { confirmedSittingOf, holdInSitting, lockLiveSitting, openSitting, queueFamilyConfirmed, settleSitting, sittingHasMessageToLeave } from "./family-sitting";
-import { familyHeldDeclaration, SITTING_HELD, type SittingSeed, sittingEntryFor } from "./domain/family-sitting";
+import { FAMILY_HELD, familyHeldDeclaration, SITTING_HELD, type SittingSeed, sittingEntryFor } from "./domain/family-sitting";
 import { addressHasRoom } from "./domain/address-cap";
 import { familyRegistrationOpen } from "./family-gate";
 import {
@@ -1577,8 +1577,15 @@ export async function submitRegistration<T extends Record<string, unknown>>(
         // the decision must agree, and the confirmation asks the limit again under the lock anyway.
         // The entry by its id alone — never a name or a date in the outbox (§12.12).
         // The entry's link starts with this message (§513): each submission is a new entry and its own first send.
+        // Held in a live sitting, it says so (`FAMILY_HELD`, §NNN): the queue panel (§529) counts it as
+        // the family's hold, not as a retry. The renderer ignores the flag on this message.
         payload: entry
-          ? startingDeadline({ atCap: false, registrationsPerAddress: cap.registrationsPerAddress, familyEntryId: entry.id })
+          ? startingDeadline({
+              atCap: false,
+              registrationsPerAddress: cap.registrationsPerAddress,
+              familyEntryId: entry.id,
+              ...(holding ? { [FAMILY_HELD]: true } : {}),
+            })
           : { atCap, registrationsPerAddress: cap.registrationsPerAddress },
         idempotencyKey: `registration:${decision.about.id}:another-person:${now.toISOString()}`,
         now,

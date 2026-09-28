@@ -6,7 +6,7 @@ import Box from "@mui/material/Box";
 import Link from "@mui/material/Link";
 import { type CSSProperties, type FormEvent, type ReactNode, useActionState, useEffect, useMemo, useRef, useState } from "react";
 import ConfirmDialog from "@/shared/feedback/ConfirmDialog";
-import { type ConfirmSpec, fillFromForm, pickConfirm, resolveBodyCount, resolveEmailCount } from "@/shared/feedback/notice";
+import { choiceAnswer, type ConfirmSpec, fillFromForm, pickConfirm, resolveBodyCount, resolveEmailCount } from "@/shared/feedback/notice";
 import { useToast } from "@/shared/feedback/toast-context";
 import { openFoldsAround, REVEAL_EVENT } from "@/shared/ui/fold";
 import { fieldId, type FormOutcome } from "./outcome";
@@ -217,11 +217,17 @@ export default function ActionFormIsland({
     setAsking({ spec: resolved, submitter });
   };
 
-  const answerYes = () => {
+  const answer = (which: "confirm" | "alternative") => {
     const pending = asking;
     setAsking(null);
     const element = form.current;
     if (!pending || !element) return;
+    // A two-way question (§NNN): the answer is the hidden field's value, set before the form is sent.
+    const chosen = choiceAnswer(pending.spec, which);
+    if (chosen) {
+      const input = element.elements.namedItem(chosen.field);
+      if (input instanceof HTMLInputElement) input.value = chosen.value;
+    }
     confirmed.current = true;
     // The same submitter, so a button's own `formAction` and `name=value` still travel (§287).
     const button = pending.submitter;
@@ -343,7 +349,16 @@ export default function ActionFormIsland({
         {children}
       </RecallProvider>
       {/* The question, drawn only while it is asked: fifty hidden row forms cost no dialog DOM. */}
-      {asking && <ConfirmDialog spec={asking.spec} open onCancel={() => setAsking(null)} onConfirm={answerYes} />}
+      {asking && (
+        <ConfirmDialog
+          spec={asking.spec}
+          open
+          onCancel={() => setAsking(null)}
+          onConfirm={() => answer("confirm")}
+          // A two-way question (§NNN): the quiet answer beside the primary one, never on Enter.
+          alternative={asking.spec.choice ? { label: asking.spec.choice.alternativeLabel, onClick: () => answer("alternative") } : null}
+        />
+      )}
     </form>
   );
 }

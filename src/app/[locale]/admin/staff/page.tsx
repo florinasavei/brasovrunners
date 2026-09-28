@@ -25,6 +25,8 @@ import { pageCount, parseListQuery } from "@/modules/staff-identity/domain/admin
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
 import RowMenu from "@/shared/ui/RowMenu";
 import { confirmWords } from "@/shared/feedback/confirm-words";
+import { withSendNowChoice } from "@/modules/notifications/domain/send-at-once";
+import { sendNowChoiceFor } from "@/modules/notifications/send-now-choice";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import {
   changeStaffRoleAction,
@@ -92,6 +94,8 @@ export default async function StaffPage({ params, searchParams }: Props) {
   const t = await getTranslations("Admin");
   const words = await confirmWords();
   const staff = await listStaff(getDb(), actor);
+  // «Retrimite invitația» asks «Trimite acum» or «Pune la coadă» (§NNN), under the scheduled timing only.
+  const sendNow = await sendNowChoiceFor(getDb(), locale);
   /**
    * Which of these rows has no sign-in account (§288). For two days every "Add" wrote the row
    * and created no account, and the page said so once, in a banner gone at the next click; the
@@ -461,10 +465,14 @@ export default async function StaffPage({ params, searchParams }: Props) {
                 id={`invite-${member.id}`}
                 action={resendStaffInviteAction}
                 hidden
-                confirm={{ title: t("staff.resendInviteTitle"), body: t("staff.resendInviteBody", { email: member.email }), confirmLabel: t("staff.resendInvite"), cancelLabel: words.cancel }}
+                confirm={withSendNowChoice(
+                  { title: t("staff.resendInviteTitle"), body: t("staff.resendInviteBody", { email: member.email }), confirmLabel: t("staff.resendInvite"), cancelLabel: words.cancel },
+                  sendNow,
+                )}
               >
                 <input type="hidden" name="uiLocale" value={locale} />
                 <input type="hidden" name="email" value={member.email} />
+                {sendNow && <input type="hidden" name={sendNow.field} value={sendNow.value} />}
               </ActionForm>
               <ActionForm
                 id={`password-${member.id}`}

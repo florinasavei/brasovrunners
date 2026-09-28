@@ -35,6 +35,11 @@ export type AuditAction =
   | "registration.deleted_by_staff"
   /** A refusal rather than a change — BR-REQ-037-02 criterion 5 requires it be recorded. */
   | "registration.resend_rate_limited"
+  /**
+   * A resend sent at once, past the scheduled pass (§NNN): the staff member (the actor), the outbox
+   * row's id and its message type — never the address or a body.
+   */
+  | "registration.sent_now"
   /** Race numbers given to an event's confirmed registrations, as a batch (BR-REQ-038-01). */
   | "registration.bibs_assigned"
   // The desk's spare numbers reserved by a print (§444): the range, never a name.
@@ -284,6 +289,12 @@ export type AuditAction =
    * The result page reads its report back from this row.
    */
   | "staff.members_invited"
+  /**
+   * «Retrimite invitația» sent at once, past the scheduled pass (§NNN): the staff member who pressed
+   * (the actor), the invited row (the entity), the outbox row's id and its message type — never the
+   * address.
+   */
+  | "staff.invitation_sent_now"
   /**
    * «Tradu din română» (§464): one row per press — who, which boxes by name, how many characters
    * went to which provider. Never the words, in either language. Also the day's meter: the

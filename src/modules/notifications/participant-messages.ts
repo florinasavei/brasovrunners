@@ -27,6 +27,9 @@ import {
   unknownOrganizerPlaceholders,
 } from "./domain/organizer-message";
 import { enqueueBulkClubCopies, enqueueEmail } from "./outbox";
+import { drainOutboxRowsAfterResponse } from "./drain";
+import { type DeliveryChoice, markedForNow } from "./domain/send-at-once";
+import { assertRoomToSendNow, clubCopyTypesFor, outboxIdsForKey } from "./send-at-once";
 import { renderBilingual, type TemplateData } from "./templates";
 
 /**
@@ -86,6 +89,11 @@ export type SendParticipantMessageInput = {
    * nothing: every row's key names it, and the audit row that records the send is looked for first.
    */
   sendId: string;
+  /**
+   * «now» sends every row of this press after the response, past the scheduled pass and inside the
+   * day's allowance (§NNN); «queue», the default, leaves it to «Când pleacă emailurile».
+   */
+  delivery?: DeliveryChoice;
 };
 
 export type SendParticipantMessageResult =
@@ -145,8 +153,9 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
   const audience = input.audience;
   // A posted id that is not a uuid names no event; asking Postgres would be a syntax error, not an answer.
   if (!UUID.test(input.eventId)) throw new DomainError("NOT_FOUND", "no such event");
+  const delivery: DeliveryChoice = input.delivery ?? "queue";
 
-  return db.transaction(async (tx) => {
+  const result: SendParticipantMessageResult = await db.transaction(async (tx) => {
     const event = await lockEventForCapacity(tx, input.eventId);
     if (!event) throw new DomainError("NOT_FOUND", "no such event");
 
@@ -176,6 +185,21 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
       .innerJoin(participants, eq(participants.id, registrations.participantId))
       .where(and(eq(registrations.eventId, input.eventId), inArray(registrations.status, [...AUDIENCE_STATUSES[audience]])));
     if (rows.length === 0) return { kind: "nobody" } as const;
+    /*
+      «Trimite acum» (§NNN): every message of this send inside the day's allowance, asked before any
+      row is written — refused with the allowance's sentence and nothing queued, never a silent
+      defer (§80). Test rows are sent too, so they are counted here too.
+    */
+    if (delivery === "now") {
+      // The club's one copy per address rides with a send that reaches a real participant (§419).
+      const copies = await clubCopyTypesFor(tx, { messageType: "ORGANIZER_MESSAGE", recipientEmail: "", real: rows.some((row) => row.kind === "REAL"), perSend: true });
+      await assertRoomToSendNow(tx, rows.map(() => "ORGANIZER_MESSAGE" as const), now, copies);
+    }
+    // Marked for the queue panel's «Pleacă acum» (§NNN); the club's copy carries the mark with it.
+    const payload = markedForNow(
+      { subject: { ro: message.subject.ro, en: message.subject.en }, body: { ro: message.body.ro, en: message.body.en } },
+      delivery,
+    );
 
     let real = 0;
     let test = 0;
@@ -188,10 +212,12 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
         recipientEmail: row.recipientEmail,
         // The words, both languages of both, and nothing about anybody (§14.5): no token, no body
         // rendered, no address beyond the row's own.
-        payload: { subject: { ro: message.subject.ro, en: message.subject.en }, body: { ro: message.body.ro, en: message.body.en } },
+        payload,
         idempotencyKey: `organizer-message:${input.sendId}:registration:${row.registrationId}`,
         requestedByStaffUserId: actor.id,
         now,
+        // Sent now by the press's own drain after the transaction (§NNN), not one per row.
+        drainAfter: delivery !== "now",
       });
       if (!inserted) continue;
       if (row.kind === "TEST") test += 1;
@@ -202,11 +228,12 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
     await enqueueBulkClubCopies(tx, {
       messageType: "ORGANIZER_MESSAGE",
       eventId: input.eventId,
-      payload: { subject: { ro: message.subject.ro, en: message.subject.en }, body: { ro: message.body.ro, en: message.body.en } },
+      payload,
       sendKey: `organizer-message:${input.sendId}`,
       realRecipients: real,
       requestedByStaffUserId: actor.id,
       now,
+      drainAfter: delivery !== "now",
     });
 
     await recordAuditEvent(tx, {
@@ -216,11 +243,22 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
       entityId: input.eventId,
       // Who (the actor), the group, the counts and the subject — never who received it, and never
       // the body (§12.12). The send's id is what makes a second press find this row.
-      metadata: { sendId: input.sendId, audience, recipients: real, test, subject: { ro: message.subject.ro, en: message.subject.en } },
+      // `delivery: "now"` — sent at once, past the scheduled pass (§NNN): the trail says which press it was.
+      metadata: {
+        sendId: input.sendId,
+        audience,
+        recipients: real,
+        test,
+        subject: { ro: message.subject.ro, en: message.subject.en },
+        ...(delivery === "now" ? { delivery: "now", bypassedSchedule: true } : {}),
+      },
       now,
     });
     return { kind: "queued", real, test } as const;
   });
+  // Every row of this send and the club's copy, after this response, whatever «Când pleacă emailurile» says.
+  if (delivery === "now" && result.kind === "queued") drainOutboxRowsAfterResponse(await outboxIdsForKey(db, `organizer-message:${input.sendId}`));
+  return result;
 }
 
 export type SentParticipantMessage = {

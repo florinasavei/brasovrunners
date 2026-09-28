@@ -576,6 +576,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   windowMinutes: sitting.windowMinutes,
                   // Computed once when the form was sent, never at render (the review of 2026-09-28).
                   leavesAt: sitting.emailLeavesAt,
+                  // Under «imediat», when the form was sent: a reload after a minute says the email left (§NNN).
+                  submittedAt: sitting.emailSubmittedAt,
                   continueAction: continueFamilySittingAction,
                 }
               : undefined

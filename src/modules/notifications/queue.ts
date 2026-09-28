@@ -2,6 +2,7 @@ import { and, asc, count, eq, gt, inArray, isNull, lte, not, or, sql } from "dri
 import { emailOutbox, type EmailMessageType, type EmailOutboxStatus } from "@/db/schema/email-outbox";
 import type { Database } from "@/db/types";
 import { BULK_MESSAGE_TYPES } from "./domain/bulk";
+import { SENT_NOW_FLAG } from "./domain/send-at-once";
 
 /**
  * What is actually queued, for the club rather than for a developer (`DECISIONS.md` §243; the
@@ -41,6 +42,8 @@ export type QueuedMessage = {
   isManualResend: boolean;
   /** A family sitting's hold, read from the payload's own flag (`sittingHeld` / `familyHeld`), never from timing. */
   familyHeld: boolean;
+  /** A press asked for it now, past the scheduled pass (§NNN): the payload's `sentNow` flag. */
+  sentNow: boolean;
 };
 
 /** The statuses that mean "still owed": waiting, mid-flight, or out of retries. */
@@ -99,6 +102,7 @@ export async function readOutboxQueue<T extends Record<string, unknown>>(
       createdAt: emailOutbox.createdAt,
       isManualResend: emailOutbox.isManualResend,
       familyHeld: sql<boolean>`coalesce((${familyFlag}), false)`,
+      sentNow: sql<boolean>`coalesce((${emailOutbox.payloadJson} ->> ${SENT_NOW_FLAG}::text) = 'true', false)`,
     })
     .from(emailOutbox)
     .where(inArray(emailOutbox.status, UNSENT))

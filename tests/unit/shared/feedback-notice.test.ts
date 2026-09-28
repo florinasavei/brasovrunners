@@ -88,6 +88,14 @@ describe("§384 the notice a redirect's outcome becomes", () => {
     expect(noticeOf({ saved: "invited", invite: "exists" })?.kind).toBe("success");
   });
 
+  it("§NNN «Retrimite invitația» with «Trimite acum»: a failed or unconfigured Zitadel invite is no green toast", () => {
+    // The action keeps the provider's answer in the toast (`{ ...outcome, saved: "reinvitedNow" }`).
+    for (const invite of ["failed", "unconfigured"]) {
+      expect(noticeOf({ saved: "reinvitedNow", invite, reason: "Errors.Internal" }), invite).toBeNull();
+    }
+    expect(noticeOf({ saved: "reinvitedNow", invite: "invited" })).toEqual({ kind: "success", key: "reinvitedNow" });
+  });
+
   it("never carries a name or a provider's words into the cookie — only numbers travel", () => {
     // The desk's search box is a participant's name, and it rides on the redirect's query.
     const desk = noticeOf({ eventId: "7f0c2d1e-0000-4000-8000-000000000000", q: "Ana Popescu", saved: "checkedIn" });
