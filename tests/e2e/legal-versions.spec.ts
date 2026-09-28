@@ -223,9 +223,10 @@ test.describe("legal documents: a version downloads as a PDF", () => {
  * The terms' waiting drafts, gone: the first test in this file saves a TERMS draft on desktop,
  * and an interrupted run leaves more, so without this the card would say «O ciornă așteaptă
  * deja» and the per-card press would never be exercised. Drafts only — never an approved row —
- * and none that anything references. Unlike the app's own delete (§151), this raw delete does
- * not retire the deleted drafts' numbers, so a later draft may take one again: accepted on the
- * test database, since every assertion here reads a version number as `\d+`.
+ * and none that anything references. It does what the app's own draft delete does
+ * (`deleteDraftVersion`): the translations go with the row by the `ON DELETE CASCADE`, and no
+ * number is retired, just as the app retires none for a draft — §151's retirement applies to
+ * approved versions only.
  */
 async function deleteWaitingTermsDrafts(): Promise<void> {
   if (!process.env.DATABASE_URL && existsSync(".env.local")) process.loadEnvFile(".env.local");

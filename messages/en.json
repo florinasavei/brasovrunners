@@ -2416,7 +2416,7 @@
           "how": [
             "The short way: /admin/legal → the “One step” box → check the legal name, CIF, seat and email shown → the approval button in the box.",
             "The notice, the terms and both race declarations, trail and road or park, come into force with the club's facts in them.",
-            "To read first: on each text's card, “Regenerate from the template” → open the draft, read, fill in → “Approve and publish”. All at once: “New version” → “Regenerate all”.",
+            "To read first: on each text's card, “Regenerate from the template” → open the draft, read, fill in → “Save draft” → “Approve and publish”. All at once: “New version” → “Regenerate all”.",
             "The long way, for a change: “New version” → pick the template → “Save draft” → PDF → “Approve and publish”. An approved text never changes; a correction is the next version.",
             "On each event, under Registration, pick the approved declaration (if not already)."
           ]
@@ -2644,7 +2644,7 @@
           "done": "The notice in force describes the stages: the public list shows beside each name whether the person is confirmed, registered awaiting confirmation, or on the waiting list.",
           "how": [
             "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. The section on the public list describes the stages.",
-            "Open the draft, read it, fill in what is left, then “Approve and publish”. From the moment it takes effect, every public list that is switched on shows the stages, with no other setting.",
+            "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish”. Once it takes effect, every public list that is switched on shows the stages, with no other setting.",
             "Approve the terms and the declaration from their templates as well, if not already, so they all say the same."
           ]
         },
@@ -2654,7 +2654,7 @@
           "done": "The notice in force describes Strava and Instagram on the public list: the form offers the tick, and the list shows them beside the names of those who ticked it.",
           "how": [
             "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. The section on the public list describes Strava and Instagram beside a name.",
-            "Open the draft, read it, fill in what is left, then “Approve and publish”.",
+            "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish”.",
             "From the moment it takes effect, the form offers the tick, with no other setting; the list shows them only for those who register from then on and tick it.",
             "Approve the terms from the template as well, if not already, so they say the same about the list."
           ]
@@ -2665,7 +2665,7 @@
           "done": "The notice in force describes the newsletter: the contact page offers the subscription, with the topics chosen and a confirmation by email.",
           "how": [
             "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. Section 5 has the paragraph about the club's news, and section 7 how long the address is kept.",
-            "Open the draft, read it, fill in what is left, then “Approve and publish”. Once it is in force, in both languages, the contact page shows the “Subscribe to the news” button, with no other setting.",
+            "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish”. Once in force in both languages, the contact page shows “Subscribe to the news”, with no other setting.",
             "You write the newsletter from the backoffice's “Newsletter” menu; the new-event announcements go by themselves."
           ]
         },
@@ -2675,7 +2675,7 @@
           "done": "The notice in force describes the team page: what it shows, on what basis, and how a card is taken down.",
           "how": [
             "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. Section 4 describes the team page.",
-            "Open the draft, read it, fill in what is left, then “Approve and publish”. The row closes by itself once the notice takes effect.",
+            "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish”. The row closes by itself once the notice takes effect.",
             "Only then publish the page, from /admin/pages/team → “Publish the page”.",
             "The same new notice also describes, in section 12, the club members' accounts (the members' area): approve it before inviting the first members from Team → “Add several members”."
           ]
@@ -2710,7 +2710,7 @@
           "todo": "At least one race declaration (trail, road or park) has no version from the template yet. Until the road one is approved, asphalt races sign trail.",
           "done": "Both race declarations, trail and road or park, are in force from the template: every race signs the declaration that fits its course.",
           "how": [
-            "/admin/legal → the “Self-declaration — trail race” card → “Regenerate from the template”. Then the draft: read, fill in, “Approve and publish”.",
+            "/admin/legal → the “Self-declaration — trail race” card → “Regenerate from the template”. Then the draft: read, fill in, “Save draft”, then “Approve and publish”.",
             "The same for “Self-declaration — road / park race”.",
             "A new race starts on the kind that fits its course by itself. A race saved earlier keeps the declaration chosen then.",
             "The trail one, for an asphalt race: open it, and the “Self-declaration” card says when the kind does not fit the course. Choose the road or park one and save."
@@ -2721,7 +2721,7 @@
           "todo": "The group-run declarations in force cover one date, so a runner signs again on each date. The new template covers the whole series (or the one-day run); approve it.",
           "done": "The group-run declarations in force say what they cover: a runner signs once for the whole series.",
           "how": [
-            "/admin/legal → the “Self-declaration (group run, asphalt)” card → “Regenerate from the template”. Then the draft: read, fill in, “Approve and publish”.",
+            "/admin/legal → the “Self-declaration (group run, asphalt)” card → “Regenerate from the template”. Then the draft: read, fill in, “Save draft”, then “Approve and publish”.",
             "The same for “Self-declaration (group run, trail)”.",
             "Approve a new version of the privacy notice from the template too: it says a series' declaration is kept while it is active, and after a withdrawal for at most three years.",
             "Whoever signed the old version sees on the run's page, from the link in their email, that the new version is asked for; the old signature stays in the list."

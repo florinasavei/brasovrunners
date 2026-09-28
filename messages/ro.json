@@ -2416,7 +2416,7 @@
           "how": [
             "Calea scurtă: /admin/legal → caseta „Într-un pas” → verifică denumirea, CIF-ul, sediul și emailul afișate → butonul de aprobare din casetă.",
             "Nota, termenii și cele două declarații de concurs, trail și șosea sau parc, intră în vigoare cu datele clubului în ele.",
-            "Dacă vrei să citești mai întâi: pe cardul fiecărui text, „Regenerează din șablon” → deschide ciorna, citește, completează → „Aprobă și publică”. Toate deodată: „Versiune nouă” → „Regenerează toate”.",
+            "Ca să citești întâi: pe cardul textului, „Regenerează din șablon” → citește ciorna, completează → „Salvează ciorna” → „Aprobă și publică”. Toate deodată: „Versiune nouă” → „Regenerează toate”.",
             "Calea lungă, pentru o modificare: „Versiune nouă” → alege șablonul → „Salvează ciorna” → PDF → „Aprobă și publică”. Un text aprobat nu se mai schimbă; corectarea e versiunea următoare.",
             "Pe fiecare eveniment, la Înscrieri, se alege declarația aprobată (dacă nu e deja)."
           ]
@@ -2644,7 +2644,7 @@
           "done": "Nota în vigoare descrie stadiile: lista publică arată lângă fiecare nume dacă e confirmat, înscris în așteptarea confirmării sau pe lista de așteptare.",
           "how": [
             "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Secțiunea despre lista publică descrie stadiile.",
-            "Deschide ciorna, citește, completează ce a rămas, apoi „Aprobă și publică”. Din momentul în care intră în vigoare, fiecare listă publică pornită arată stadiile, fără altă setare.",
+            "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”. Odată în vigoare, fiecare listă publică pornită arată stadiile, fără altă setare.",
             "Aprobă și termenii și declarația din șabloanele lor, dacă nu le-ai aprobat deja, ca toate să spună același lucru."
           ]
         },
@@ -2654,7 +2654,7 @@
           "done": "Nota în vigoare descrie Strava și Instagram pe lista publică: formularul oferă bifa, iar lista le arată lângă numele celor care au bifat-o.",
           "how": [
             "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Secțiunea despre lista publică descrie Strava și Instagram lângă nume.",
-            "Deschide ciorna, citește, completează ce a rămas, apoi „Aprobă și publică”.",
+            "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”.",
             "Din momentul în care intră în vigoare, formularul oferă bifa, fără altă setare; lista le arată doar celor care se înscriu de atunci și bifează.",
             "Aprobă și termenii din șablon, dacă nu i-ai aprobat deja, ca să spună același lucru despre listă."
           ]
@@ -2665,7 +2665,7 @@
           "done": "Nota în vigoare descrie newsletterul: pagina de contact arată abonarea, cu temele alese și confirmarea pe email.",
           "how": [
             "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Secțiunea 5 are paragraful despre noutățile clubului, iar secțiunea 7 cât păstrăm adresa.",
-            "Deschide ciorna, citește, completează ce a rămas, apoi „Aprobă și publică”. Odată în vigoare, în ambele limbi, pagina de contact arată butonul „Abonează-te la noutăți”, fără altă setare.",
+            "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”. Odată în vigoare în ambele limbi, pagina de contact arată „Abonează-te la noutăți”, fără altă setare.",
             "Newsletterul îl scrii din meniul „Newsletter” al backoffice-ului; anunțurile de evenimente noi pleacă singure."
           ]
         },
@@ -2675,7 +2675,7 @@
           "done": "Nota în vigoare descrie pagina Echipa: ce arată, pe ce temei și cum se scoate un card.",
           "how": [
             "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Secțiunea 4 descrie pagina Echipa.",
-            "Deschide ciorna, citește, completează ce a rămas, apoi „Aprobă și publică”. Rândul se închide singur când nota intră în vigoare.",
+            "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”. Rândul se închide singur când nota intră în vigoare.",
             "Abia apoi publică pagina, din /admin/pages/team → „Publică pagina”.",
             "Aceeași notă nouă descrie, în secțiunea 12, și conturile membrilor clubului (zona membrilor): aprob-o înainte să inviți primii membri din Echipa → „Adaugă mai mulți membri”."
           ]
@@ -2710,7 +2710,7 @@
           "todo": "Cel puțin o declarație de concurs (trail, șosea sau parc) nu are încă o versiune din șablon. Până e aprobată cea de șosea, asfaltul semnează trail.",
           "done": "Ambele declarații de concurs, trail și șosea sau parc, sunt în vigoare din șablon: fiecare concurs semnează declarația potrivită traseului lui.",
           "how": [
-            "/admin/legal → cardul „Declarație pe propria răspundere — cursă trail” → „Regenerează din șablon”. Apoi ciorna: citește, completează, „Aprobă și publică”.",
+            "/admin/legal → cardul „Declarație pe propria răspundere — cursă trail” → „Regenerează din șablon”. Apoi ciorna: citește, completează, „Salvează ciorna”, apoi „Aprobă și publică”.",
             "La fel pentru „Declarație pe propria răspundere — cursă pe asfalt / în parc”.",
             "Un concurs nou pornește singur de la varianta potrivită traseului. Un concurs salvat înainte păstrează declarația aleasă atunci.",
             "Cea de trail, pentru unul pe asfalt: deschide-l, iar cardul «Declarația pe propria răspundere» spune când varianta nu se potrivește traseului. Alege-o pe cea de șosea sau parc și salvează."
@@ -2721,7 +2721,7 @@
           "todo": "Declarațiile alergărilor de grup în vigoare acoperă o singură dată, deci alergătorul semnează la fiecare dată. Șablonul nou acoperă toată seria (sau alergarea de o zi); aprobă-l.",
           "done": "Declarațiile alergărilor de grup în vigoare spun ce acoperă: un alergător semnează o dată pentru toată seria.",
           "how": [
-            "/admin/legal → cardul „Declarație pe propria răspundere (alergare de grup, asfalt)” → „Regenerează din șablon”. Apoi ciorna: citește, completează, „Aprobă și publică”.",
+            "/admin/legal → cardul „Declarație pe propria răspundere (alergare de grup, asfalt)” → „Regenerează din șablon”. Apoi ciorna: citește, completează, „Salvează ciorna”, apoi „Aprobă și publică”.",
             "La fel pentru „Declarație pe propria răspundere (alergare de grup, trail)”.",
             "Aprobă și o versiune nouă a notei de confidențialitate din șablon: ea spune că declarația unei serii se păstrează cât timp este activă, iar după retragere cel mult trei ani.",
             "Cine a semnat versiunea veche vede pe pagina alergării, din linkul din emailul lui, că i se cere versiunea nouă; semnătura veche rămâne în listă."

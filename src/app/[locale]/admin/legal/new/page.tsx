@@ -145,9 +145,9 @@ export default async function NewLegalVersionPage({ params, searchParams }: Prop
         So it is where the regenerating is: the six templates in three labelled rows, each button
         with its text's state under it — in force, a draft waiting, none — and «Șablon nou» when
         the text in force differs by its words from the filled template (§532's `unchanged`
-        test). A press keeps its meaning,
-        the form below prefilled with that template (regenerating one text); «Regenerează toate»
-        makes a draft of every text whose template is due, through §532's own press.
+        test). A press keeps its meaning, the form below prefilled with that template
+        (regenerating one text); «Regenerează toate» makes a draft of every text whose template is
+        due, through §532's own press.
       */}
       {!values && overview && (
         <Paper variant="outlined" sx={{ p: { xs: 2, sm: 3 } }} data-testid="legal-start-from">
