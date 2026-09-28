@@ -722,6 +722,13 @@
       "when": 1790578270127,
       "tag": "0105_start_to_be_announced",
       "breakpoints": true
+    },
+    {
+      "idx": 103,
+      "version": "7",
+      "when": 1790589320586,
+      "tag": "0106_team_photo_crop",
+      "breakpoints": true
     }
   ]
 }
