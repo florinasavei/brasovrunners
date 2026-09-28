@@ -4,17 +4,9 @@ import type { Database } from "@/db/types";
 import { retryAfterSeconds, windowStart } from "./domain/window";
 
 /**
- * The database-backed throttle of AGENTS.md §19.4.
- *
- * "Use platform-native or a small database-backed throttle. Do not add Redis solely for V1."
- * This is that: one table, one statement per check, no new dependency and no new process. It
- * is not a general-purpose rate limiter and should not become one — §1.3.
- *
- * **The key is never an IP address.** §19.4 forbids IP or device as participant identity, and
- * the key is persisted here, so what goes in is something the application already knows about
- * the actor: a canonical email, a registration id, a token hash, a job name. That choice also makes the limit mean
- * something — throttling an address stops one person flooding one mailbox, which is the abuse
- * this actually has.
+ * The small database-backed throttle of AGENTS.md §19.4: one table, one statement per check, no
+ * Redis. The key is never an IP address (§19.4 forbids IP or device as identity); it is something
+ * the application already knows — a canonical email, a registration id, a token hash, a job name.
  */
 
 export type RateLimitScope =
@@ -32,119 +24,54 @@ export type RateLimitScope =
   | "bot-check-signal";
 
 /**
- * What each guarded action allows, as data.
- *
- * Deliberately generous. These exist to stop a script and a mailbox flood, not to police a
- * person who mistyped their address and tried again — and a limit a real user can hit is a
- * support request that costs more than the abuse it prevented.
- *
- * `/devs` renders this map directly rather than restating it, so a scope added here is a
- * scope a maintainer can see in the deployment. Add one and there is nothing else to update.
+ * Limits per scope, deliberately generous: they stop a script or a mailbox flood, not a person
+ * retrying. `/devs` renders this map directly.
  */
 export const RATE_LIMITS: Record<RateLimitScope, { limit: number; windowMs: number }> = {
-  // Five submissions per hour for one email identity. A participant registering, mistyping and
-  // retrying uses two or three; a script filling a mailbox uses hundreds.
+  // A person mistyping and retrying uses two or three; a script uses hundreds.
   "registration-submit": { limit: 5, windowMs: 60 * 60_000 },
   /**
-   * The emailed link that registers another person on the same address (§389), its own bucket
-   * on the same key — the canonical identity, hashed. §19.4's per-address limit holds
-   * behind the link too, but sharing "registration-submit" would let a family of four spend seven
-   * of its five (one form, three re-sends for a link, three links). Ten an hour is the highest
-   * cap an event may set per address (`domain/address-cap.ts`), so a real family never meets
-   * it, and a script that somehow held a live token still cannot flood one mailbox.
+   * The family link (§389): its own bucket on the same hashed identity, so a family does not
+   * spend the form's five. Ten is the highest per-address cap an event may set (`domain/address-cap.ts`).
    */
   "registration-link-submit": { limit: 10, windowMs: 60 * 60_000 },
   /**
-   * §19.4's second surface, keyed on the canonical email identity as that table requires.
-   *
-   * The threat is not somebody spamming themselves: it is a stranger typing *your* address
-   * into this form repeatedly, because the whole point of the surface is that it accepts an
-   * address nobody has proven they own. So the bucket belongs to the mailbox being written
-   * to, and `+tag` variants of one Gmail inbox share it — which is exactly what the canonical
-   * identity already means (§10.4).
-   *
-   * Three an hour rather than five: a participant who did not receive the first mail asks
-   * once, maybe twice while checking a spam folder. Five is the allowance for a form somebody
-   * can genuinely mistype their way through; this form has one field.
+   * §19.4, keyed on the canonical identity: the bucket belongs to the mailbox written to, since
+   * anyone can type any address here (`+tag` variants share it, §10.4). One field, so three.
    */
   "link-request": { limit: 3, windowMs: 60 * 60_000 },
-  // BR-REQ-037-02 criterion 5. Per registration, not per administrator: the thing being
-  // protected is one participant's inbox, and two organizers clicking resend at the same
-  // moment is the case that should be caught.
+  // BR-REQ-037-02 criterion 5. Per registration, not per administrator: it protects one inbox.
   "admin-resend": { limit: 5, windowMs: 60 * 60_000 },
   /**
-   * BR-REQ-036-02, §19.4's third surface. Keyed on the **presented token's hash**, which is
-   * what `modules/action-tokens/throttle.ts` computes and what the tokens table already
-   * stores — so this adds no new secret at rest and no IP.
-   *
-   * The threat is one token being hammered, not enumeration: 32 random bytes is not guessed,
-   * and a per-IP limit would key on something §19.4 forbids to defend against nothing. Ten
-   * per hour is well above the handful a real participant produces — a link scanner's
-   * prefetch, the page load, a reload or two, then the POST — and well below useful.
+   * BR-REQ-036-02, §19.4. Keyed on the presented token's hash (`action-tokens/throttle.ts`): no new
+   * secret at rest, no IP. Guards one token being hammered; 32 random bytes are not guessed.
    */
   "token-validate": { limit: 10, windowMs: 60 * 60_000 },
   /**
-   * §19.4's fifth surface, read as auth-adjacent: `JOB_SECRET` says *who*, and nothing until
-   * now said *how often*. A leaked secret was an unlimited outbox drain — every message the
-   * club will ever send, into somebody else's hands and out of Mailgun's daily allowance in
-   * one afternoon.
-   *
-   * Keyed on the job name, so the bucket is the endpoint itself rather than a caller: there
-   * is exactly one legitimate caller and no identity to key on beyond the secret already
-   * checked. Thirty an hour against a scheduler asking for twelve (a five-minute cron) and actually
-   * delivering roughly one every two hours (`docs/PLATFORM.md` limit 4) leaves room for a
-   * manual run and a catch-up burst, and still bounds the damage.
-   *
-   * Counted only after the secret has been verified, so an unauthenticated flood cannot fill
-   * the bucket and lock the real scheduler out — a guard that can be used to disable the
-   * thing it guards is worse than none.
+   * §19.4: `JOB_SECRET` says who, this says how often, so a leaked secret cannot drain the outbox.
+   * Keyed on the job name. Counted only after the secret is verified, so an unauthenticated flood
+   * cannot lock the real scheduler out.
    */
   "job-invoke": { limit: 30, windowMs: 60 * 60_000 },
-  /**
-   * "Send now" from the backoffice (`DECISIONS.md` §80): its own bucket, per Administrator,
-   * so a person at the button and the monitor never spend each other's allowance. Ten an
-   * hour is more presses than a queue ever needs and fewer than a stuck finger.
-   */
+  /** "Send now" (§80): per Administrator, so the button and the monitor never share a bucket. */
   "admin-send-now": { limit: 10, windowMs: 60 * 60_000 },
   /**
-   * The contact form (`DECISIONS.md` §149), keyed on a hash of the sender's canonical email —
-   * the registration form's identity, hashed because the form promises to keep no copy of the
-   * address and the row lives a day. The mailbox being protected is the club's own: a script
-   * posting the form fills it, and — unlike the outbox — every message here is a real SMTP
-   * send the moment it is posted. Five an hour is a person writing twice and correcting
-   * themselves; the sixth is told so plainly, because a person is not a bot (the form's silence
-   * is for the honeypot). A send the server refused is given back (`refundRateLimit`): it
-   * reached nobody.
+   * The contact form (§149), keyed on a hash of the canonical email (the form keeps no copy of the
+   * address). Every message is an immediate SMTP send; a refused send is refunded (`refundRateLimit`).
    */
   "contact-message": { limit: 5, windowMs: 60 * 60_000 },
   /**
-   * A group run's optional self-declaration (§393), keyed on a hash of the signer's canonical
-   * email like the contact form's. Every signature queues two messages — the signer's PDF and the
-   * club's archive copy — so a script posting the page spends the club's Mailgun allowance twice
-   * per post. Five an hour is a runner signing for Monday and correcting a typo, several times over.
+   * A group run's self-declaration (§393), hashed canonical email; each signature queues two
+   * messages, so a script spends the Mailgun allowance twice per post.
    */
   "group-run-declaration": { limit: 5, windowMs: 60 * 60_000 },
-  /**
-   * The newsletter's pop-up on the contact page (§445), keyed on a hash of the canonical address
-   * like the contact form's. Every accepted post sends one message — the confirmation link, or the
-   * link to an existing subscription — to an address nobody has proven, so the bucket belongs to
-   * that mailbox: three an hour is a person who did not see the first email, and not a stranger
-   * filling somebody's inbox.
-   */
+  /** The newsletter pop-up (§445), hashed canonical address: each post mails an unproven address. */
   "newsletter-subscribe": { limit: 3, windowMs: 60 * 60_000 },
-  /**
-   * «Tradu din română» (§464), per member of staff, keyed on their id like "Send now". Sixty an
-   * hour is an event's every box pressed one by one, twice, with room to spare; the daily
-   * character budget is what bounds the cost, and this bounds a stuck finger or a script holding
-   * a session.
-   */
+  /** «Tradu din română» (§464), per staff id; the daily character budget bounds the cost. */
   "content-translate": { limit: 60, windowMs: 60 * 60_000 },
   /**
-   * Not a throttle: a counter (§518). The anti-bot check's two failure signals — a held press the
-   * valve sent, a widget that failed or never loaded — per hour, keyed on the signal's own word
-   * (never a person), summed over the last day by `/api/health`
-   * (`registrations/bot-check-signals.ts`). The verdict is never read; the limit is only what
-   * `/devs` shows beside the scope.
+   * Not a throttle but a counter (§518): the anti-bot failure signals, keyed on the signal's word,
+   * summed by `/api/health` (`registrations/bot-check-signals.ts`). The verdict is never read.
    */
   "bot-check-signal": { limit: 10_000, windowMs: 60 * 60_000 },
 };
@@ -159,17 +86,9 @@ export type RateLimitVerdict = {
 };
 
 /**
- * Count this attempt and say whether it is allowed.
- *
- * One statement, and it has to be: two requests arriving in the same window would each read
- * the same count and each write the same increment, so a read followed by a write lets a
- * concurrent pair through together. `INSERT … ON CONFLICT DO UPDATE … RETURNING` is atomic —
- * the same reasoning `registrations/repository.ts` gives for making every transition one
- * guarded statement.
- *
- * It counts the attempt even when it refuses it. That is intentional: an actor who keeps
- * hammering while throttled keeps their window occupied rather than getting a fresh allowance
- * the moment they stop being counted.
+ * Count this attempt and say whether it is allowed. One atomic `INSERT … ON CONFLICT DO UPDATE`,
+ * because a read-then-write lets a concurrent pair through. A refused attempt is still counted,
+ * so hammering keeps the window occupied.
  */
 export async function consumeRateLimit<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -200,13 +119,8 @@ export async function consumeRateLimit<T extends Record<string, unknown>>(
 }
 
 /**
- * Give one attempt back, in the window `now` falls in.
- *
- * For the one case where an allowed attempt turned out to cost nothing: the contact form's
- * message the SMTP server refused. Nothing reached the mailbox, so the sender has not used
- * one of their five — and a person retrying while the club's mailbox is down must read "we
- * could not send", never "too many messages". One statement, atomic like the count, and the
- * table's own check keeps it at zero when there is nothing to give back.
+ * Give one attempt back in `now`'s window — for a contact message the SMTP server refused, which
+ * reached nobody. Never below zero.
  */
 export async function refundRateLimit<T extends Record<string, unknown>>(
   db: Database<T>,

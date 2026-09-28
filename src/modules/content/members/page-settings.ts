@@ -12,30 +12,16 @@ import { canEditMembersPage, canPublishMembersPage } from "@/modules/staff-ident
 import { DomainError } from "@/shared/errors/domain-error";
 
 /**
- * The members' pages (§524): «Beneficiile membrilor», the public page that says what a member of
- * the club gets and carries the sign-in button, and the members' zone behind that sign-in — one
- * page of the club's words for its members alone.
+ * The members' pages (§524): the public «Beneficiile membrilor» page and the members' zone behind
+ * the sign-in, in one `platform_settings` row shaped like «Echipa» (§459). Each text is both
+ * languages or neither (§352); publishing switches only the public page (§28).
  *
- * One `platform_settings` row, «Echipa»'s shape (§459): `status` is DRAFT until an Administrator
- * publishes the public page — both languages at once (§28) — and each of the two texts is the
- * club's, Romanian **and** English or neither (§352), written in the editor every page uses. The
- * members' zone does not wait for the public page: a member signed in reads it whatever the
- * public page's state, because it is behind the sign-in either way.
- *
- * **The zone's words never reach a public read.** `readPublicMembersPage` returns the status and
- * the benefits alone; the zone's text is read per request, by `readMembersZone`, only for a
- * signed-in account (`app/[locale]/members-area/page.tsx`), and never through the public cache.
- *
- * A row this code cannot read is a DRAFT page with no words — the safe answer: nothing is shown
- * that nobody decided to show.
+ * The zone's words never reach a public read or the public cache: `readMembersZone` is called per
+ * request for a signed-in account only. An unreadable row reads as a DRAFT with no words.
  */
 
 export const MEMBERS_PAGE_SETTING_KEY = "membersPage";
-/**
- * `audit_logs.entity_id` for this setting, one fixed id per key, never reused (§164's rule). Far
- * from the …e0NN run the sibling settings count up through, so a branch added beside this one
- * cannot take the same id by counting.
- */
+/** `audit_logs.entity_id` for this setting, fixed and never reused (§164); far from the …e0NN run. */
 export const MEMBERS_PAGE_SETTING_ENTITY_ID = "00000000-0000-4000-8000-00000000e0c1";
 
 /** Each text's words, counted as the page reads them (`richTextToPlainText`). */
@@ -43,10 +29,7 @@ export const MEMBERS_TEXT_MAX = 8000;
 
 export type MembersPageStatus = "DRAFT" | "PUBLISHED";
 
-/**
- * The page's state and its two texts. `*Json` is the document the editor wrote; the plain twin
- * keeps its words, for the page's description and so a reader of the row sees what it says.
- */
+/** The state and two texts; `*Json` is the editor's document, the plain twin its words. */
 export type MembersPageSettings = {
   status: MembersPageStatus;
   benefitsRo: string | null;
@@ -71,7 +54,6 @@ export const DEFAULT_MEMBERS_PAGE: MembersPageSettings = {
   zoneEnJson: null,
 };
 
-/** The two texts, by the name the forms, the audit and the editor use. */
 export const MEMBERS_TEXTS = ["benefits", "zone"] as const;
 export type MembersText = (typeof MEMBERS_TEXTS)[number];
 
@@ -98,10 +80,10 @@ const storedSchema = z.object({
   zoneEnJson: storedDoc,
 });
 
-/** A plain box of the form, absent reading as empty — the editor posts a document instead. */
+/** Absent reads as empty — the editor posts a document instead. */
 const plainBox = z.string().optional().default("").transform(normalizeTeamText).pipe(z.string().max(MEMBERS_TEXT_MAX));
 
-/** One text's two languages as posted: `<text>RoBody` and `<text>EnBody`, both or neither (§352). */
+/** One text's two languages as posted, both or neither (§352). */
 function textSchema(text: MembersText) {
   return z
     .object({ ro: plainBox, en: plainBox, roBody: richTextBox, enBody: richTextBox })
@@ -109,9 +91,7 @@ function textSchema(text: MembersText) {
       const pair = resolveRichPair(
         ctx,
         { ro: { plain: fields.ro, body: fields.roBody }, en: { plain: fields.en, body: fields.enBody } },
-        // The names the form posts, so a refusal lands on the box that was typed in (§315).
         { ro: { plain: `${text}Ro`, body: `${text}RoBody` }, en: { plain: `${text}En`, body: `${text}EnBody` } },
-        // A page's own column: a table fits, as on a standing page and «Echipa»'s introduction.
         { max: MEMBERS_TEXT_MAX, tables: true, what: text === "benefits" ? "the benefits" : "the members' zone" },
       );
       return { ro: pair.ro, en: pair.en };
@@ -134,10 +114,7 @@ export function membersTextDocs(settings: MembersPageSettings, text: MembersText
     : { ro: storedTeamDoc(settings.zoneRoJson, settings.zoneRo), en: storedTeamDoc(settings.zoneEnJson, settings.zoneEn) };
 }
 
-/**
- * One text in this language — the document, and its words for a description — or nulls unless both
- * sides are written (§352, §354): a pair with one side is none on both pages.
- */
+/** One text in this language, or nulls unless both sides are written (§352, §354). */
 export function membersTextFor(locale: string, settings: MembersPageSettings, text: MembersText): { doc: RichTextDoc | null; words: string | null } {
   const docs = membersTextDocs(settings, text);
   if (!docs.ro || !docs.en) return { doc: null, words: null };
@@ -146,15 +123,12 @@ export function membersTextFor(locale: string, settings: MembersPageSettings, te
   return { doc, words: words === "" ? null : words };
 }
 
-/** What a visitor may read of the members' pages: whether the public page is on, and its benefits. Never the zone. */
+/** The public part only: whether the page is on, and its benefits. Never the zone. */
 export type PublicMembersPage = { published: boolean; benefits: RichTextDoc | null; benefitsText: string | null };
 
 /**
- * Whether «Membri» is in the menu and the sitemap (§524): the page published **and** its benefits
- * written — both languages, since `benefits` is null for a text written in one (§352). A published
- * page with no words would put the platform's placeholder sentence in every visitor's menu; the
- * address itself still answers, for the link the club has already shared. «Echipa»'s rule (§459):
- * in the menu only while there is something to read.
+ * Whether «Membri» is in the menu and the sitemap: published and its benefits written in both
+ * languages (§524, §459). The address itself answers either way.
  */
 export function offersMembersEntry(page: Pick<PublicMembersPage, "published" | "benefits">): boolean {
   return page.published && page.benefits !== null;
@@ -167,7 +141,7 @@ export async function readPublicMembersPage<T extends Record<string, unknown>>(d
   return { published: true, benefits: benefits.doc, benefitsText: benefits.words };
 }
 
-/** The members' zone's words in this language, or null — for a signed-in account alone (the page asserts it). */
+/** The zone's words, or null — for a signed-in account alone (the page asserts it). */
 export async function readMembersZone<T extends Record<string, unknown>>(db: Database<T>, locale: Locale): Promise<RichTextDoc | null> {
   return membersTextFor(locale, await readMembersPageSettings(db), "zone").doc;
 }
@@ -193,15 +167,11 @@ async function writeSettings<T extends Record<string, unknown>>(
       now,
     });
   });
-  // The page, the header's entry and the sitemap read the public part from the public cache under
-  // `pages` (§333), as «Echipa» does. The zone is never cached, so nothing else is to expire.
+  // The public part is cached under `pages` (§333); the zone never is.
   revalidatePublicContent("pages");
 }
 
-/**
- * One of the two texts, both languages or neither — the Redactor's and the Administrator's
- * (`canEditMembersPage`). `fields` carries `<text>RoBody` / `<text>EnBody` as the editor posts them.
- */
+/** One of the two texts, both languages or neither (`canEditMembersPage`). */
 export async function saveMembersText<T extends Record<string, unknown>>(
   db: Database<T>,
   input: { actor: Actor; text: MembersText; fields: Record<string, unknown>; now?: Date },
@@ -240,10 +210,7 @@ export async function saveMembersText<T extends Record<string, unknown>>(
   return next;
 }
 
-/**
- * Put «Beneficiile membrilor» on the site in both languages, or take it off — the Administrator's,
- * the threshold of every other crossing into public view (§201). The zone is not switched by it.
- */
+/** Publish or unpublish «Beneficiile membrilor» — the Administrator's (§201). The zone is not switched by it. */
 export async function setMembersPagePublished<T extends Record<string, unknown>>(
   db: Database<T>,
   input: { actor: Actor; published: boolean; now?: Date },

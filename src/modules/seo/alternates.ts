@@ -3,24 +3,12 @@ import { routing, type Locale } from "@/i18n/routing";
 import { absoluteUrl } from "@/modules/events/share-links";
 
 /**
- * One canonical URL per page, and the language versions of it that exist (§342).
+ * One canonical URL per page and its existing language versions (§342); the page metadata and the
+ * sitemap both build from these, so they cannot disagree.
  *
- * Pure functions of a base URL and what the database said, so a test can hold them to a fixed
- * base and read them back — the page metadata and the sitemap both build from these, which is
- * what keeps the two from disagreeing about which address a page lives at.
- *
- * Three rules, each one a Search Console report it answers:
- *
- * - **The canonical is the locale's own path and nothing else.** No query string: the listing's
- *   type filter, the calendar's month, year and layout, the contact form's outcome and an event
- *   page's start-list page all render the same page under another address, and the builders
- *   never see the request, so a parameter cannot leak into one.
- * - **An alternate is listed only where the page exists.** An event, a standing page or an
- *   album with no translation in a locale is a 404 there (BR-REQ-040-02, §28), and a legal
- *   text with no approved version in a locale is not content; neither is advertised.
- * - **`x-default` is the Romanian URL**, the prefixed one. The unprefixed path would redirect
- *   (`localePrefix: "always"`), and Romanian is where the root sends everybody (`routing.ts`).
- *   A page with no Romanian version has no `x-default`.
+ * - The canonical is the locale's own path, never a query string.
+ * - An alternate is listed only where the page exists (BR-REQ-040-02, §28).
+ * - `x-default` is the prefixed Romanian URL (`localePrefix: "always"`); none without a Romanian version.
  */
 
 /** A page's absolute URL in each locale where it exists. */
@@ -30,7 +18,7 @@ export type LocaleUrls = Partial<Record<Locale, string>>;
 export type HreflangLanguages = Partial<Record<Locale | "x-default", string>>;
 
 /** The public pages whose address takes no parameter, and which exist in every locale. */
-// «Beneficiile membrilor» (§524) is one; the members' zone behind the sign-in never is.
+// «Beneficiile membrilor» (§524) is one; the members' zone never is.
 export type StaticPublicRoute =
   | "/events"
   | "/calendar"
@@ -62,9 +50,8 @@ export function staticRouteUrls(
 }
 
 /**
- * A slug page in each locale it has a published translation in — each at *that locale's own
- * slug* (BR-REQ-040-01 criterion 5): `tura-pe-tampa` and `tampa-trail` are one event, and
- * swapping the prefix on either is a 404.
+ * A slug page in each locale it is published in, at that locale's own slug (BR-REQ-040-01
+ * criterion 5).
  */
 export function slugRouteUrls(
   baseUrl: string,
@@ -91,9 +78,8 @@ export function hreflangLanguages(urls: LocaleUrls): HreflangLanguages {
 }
 
 /**
- * The page's `alternates` in `locale`: itself as the canonical, and its language versions.
- * `undefined` when the page does not exist in `locale` — a page that is not there declares
- * nothing rather than a canonical pointing somewhere else.
+ * The page's `alternates` in `locale`, or `undefined` when it does not exist there — a missing
+ * page declares no canonical at all.
  */
 export function pageAlternates(
   locale: Locale,
