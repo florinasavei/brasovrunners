@@ -132,6 +132,8 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   updateShownContactAddressAction: [],
   // The public pages' background tint (§488): every visitor sees the new colour from the next page view.
   updateSiteTintAction: [],
+  // The public pages' text size (§NNN): every visitor reads at the new size from the next page view.
+  updateSiteFontSizeAction: [],
   // Who receives the signed declarations and the confirmations, with personal data in them.
   updateClubNoticesAction: [],
   // Asks for "Revino la textul implicit" (`reset=1`) only; saving the wording is an editorial save.

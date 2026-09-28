@@ -964,6 +964,8 @@
       "shownAddressBody": "Site-ul arată de acum adresa aleasă, iar răspunsurile la emailurile clubului ajung la ea. Textele legale aprobate își păstrează adresa lor.",
       "siteTintTitle": "Schimbi fundalul site-ului?",
       "siteTintBody": "Fiecare pagină publică a site-ului se deschide de acum cu fundalul ales, pentru toți vizitatorii. Tema întunecată și backoffice-ul rămân cum sunt. Poți reveni oricând la «Alb».",
+      "siteFontSizeTitle": "Schimbi mărimea textului?",
+      "siteFontSizeBody": "Fiecare pagină publică a site-ului se deschide de acum cu textul la mărimea aleasă, pentru toți vizitatorii, în ambele teme. Backoffice-ul rămâne cum e. Poți reveni oricând la «Normal».",
       "translationBudgetTitle": "Salvezi bugetul de traduceri?",
       "translationBudgetBody": "Numărul nou se aplică de la următoarea apăsare pe „Tradu din română”. Ce s-a tradus azi rămâne numărat.",
       "deliveryTimingTitle": "Schimbi când pleacă emailurile?",
@@ -3159,6 +3161,27 @@
       "groupStandard": "Pagini standard",
       "groupCustom": "Pagini personalizate",
       "tabMembers": "Membri"
+    },
+    "fontSize": {
+      "title": "Mărimea textului",
+      "intro": "Cât de mare e textul pe paginile publice: titlurile, paragrafele și butoanele cresc sau scad împreună.",
+      "introMore": "Spațiile și lățimile paginii rămân la fel. Mărimea se înmulțește cu cea din browserul vizitatorului: cine și-a mărit textul îl vede în continuare mai mare.",
+      "current": "Acum: {size}",
+      "updatedAt": "Setat {when}.",
+      "legend": "Mărimea textului pe paginile publice",
+      "default": "implicit",
+      "save": "Salvează mărimea",
+      "saving": "Se salvează…",
+      "saved": "Mărimea textului a fost salvată.",
+      "readOnly": "Mărimea o alege Administratorul; vezi aici alegerea în vigoare.",
+      "scope": "Se aplică în ambele teme. Backoffice-ul rămâne mereu la mărimea lui.",
+      "sample": "Alergare de grup în Tâmpa, sâmbătă la 9:00",
+      "sizes": {
+        "small": { "name": "Mic", "help": "Textul paragrafelor la {px} px." },
+        "normal": { "name": "Normal", "help": "Mărimea de până acum: {px} px." },
+        "large": { "name": "Mare", "help": "Textul paragrafelor la {px} px." },
+        "xlarge": { "name": "Foarte mare", "help": "Textul paragrafelor la {px} px; pe telefon, unele rânduri se pot rupe în două." }
+      }
     },
     "appearance": {
       "title": "Aspectul site-ului",
@@ -6465,6 +6488,7 @@
       "groupRunDeclarationErased": "Declarația a fost ștearsă.",
       "shownContactAddress": "Adresa de contact afișată a fost salvată.",
       "siteTint": "Fundalul site-ului a fost salvat.",
+      "siteFontSize": "Mărimea textului a fost salvată.",
       "clubTodoAdded": "Adăugat pe listă.",
       "clubTodoSaved": "Rând salvat.",
       "clubTodoUnchanged": "Rândul spunea deja asta; nimic de schimbat.",
