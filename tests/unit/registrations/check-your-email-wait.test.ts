@@ -25,14 +25,14 @@ vi.mock("@/i18n/navigation", async () => {
   };
 });
 vi.mock("@/modules/public-cache/reads", () => ({
-  cachedDeadlines: async () => ({ confirmationHours: 48 }),
+  cachedDeadlines: async () => ({ confirmationHours: 48, familySittingMinutes: 10 }),
   cachedEmailWaitMinutes: async () => wait.minutes,
   cachedEmailLeavesAt: async () => wait.leavesAt,
 }));
 
 const { default: CheckYourEmail } = await import("@/modules/registrations/ui/CheckYourEmail");
 
-type Offer = { atOnce: boolean; continueAction: (form: FormData) => Promise<void> };
+type Offer = { atOnce: boolean; email: string; windowMinutes?: number; continueAction: (form: FormData) => Promise<void> };
 
 async function render(offer?: Offer, firstName: string | null = null): Promise<string> {
   const element = (await CheckYourEmail({
@@ -81,7 +81,7 @@ describe("§513 the screen after the form says the scheduled round's wait", () =
  * its button, and one true sentence under it. No steps, no wait box: the time is said once.
  */
 describe("§NNN the short screen after the first form", () => {
-  const offer: Offer = { atOnce: false, continueAction: async () => {} };
+  const offer: Offer = { atOnce: false, email: "familia.pop@example.ro", windowMinutes: 15, continueAction: async () => {} };
 
   beforeEach(() => {
     vi.useFakeTimers({ toFake: ["Date"] });
@@ -96,13 +96,13 @@ describe("§NNN the short screen after the first form", () => {
   it("says the form is in and when the email leaves on the club's clock, then the question, and nothing else", async () => {
     const html = await render(offer, "Ana");
     expect(html).toContain("Aproape gata, Ana!");
-    expect(html).toContain("Formularul lui Ana a ajuns.");
-    expect(html).toContain("Emailul pleacă la 13:15.");
-    expect(html.indexOf("Emailul pleacă la 13:15.")).toBeLessThan(html.indexOf('data-testid="family-sitting-offer"'));
+    expect(html).toContain("Formularul pentru Ana a ajuns.");
+    expect(html).toContain("Emailul către familia.pop@example.ro pleacă la 13:15.");
+    expect(html.indexOf("Emailul către familia.pop@example.ro pleacă la 13:15.")).toBeLessThan(html.indexOf('data-testid="family-sitting-offer"'));
     expect(html).toContain("Mai înscrii pe cineva cu aceeași adresă?");
     expect(html).toContain("Da, încă o persoană");
-    // While the email still waits, «Da» holds it: one email for everybody.
-    expect(html).toContain("Dacă apeși „Da”, emailul așteaptă formularul următor și primiți unul singur pentru toți.");
+    // While the email still waits, «Da» holds it — at most the club's window — and one email covers everybody.
+    expect(html).toContain("Dacă apeși „Da”, emailul așteaptă formularul următor, cel mult 15 minute, și primiți unul singur pentru toți.");
     // Said once, in one shape: no steps, no wait box, no second telling of the time (F2).
     expect(html).not.toContain("Ce urmează");
     expect(html).not.toContain("trecerea programată");
@@ -115,10 +115,22 @@ describe("§NNN the short screen after the first form", () => {
     wait.leavesAt = null;
     const html = await render(offer);
     expect(html).toContain("Formularul a ajuns.");
-    expect(html).toContain("Emailul pleacă acum.");
-    expect(html).toContain("Dacă apeși „Da”, următoarea persoană primește un email care îi cuprinde pe toți.");
+    expect(html).toContain("Emailul către familia.pop@example.ro pleacă acum.");
+    expect(html).toContain("Dacă apeși „Da”, următorul email așteaptă cel mult 15 minute după ultimul formular și îi cuprinde pe toți.");
     expect(html).not.toContain("emailul așteaptă");
     expect(html).not.toContain("De obicei ajunge într-un minut");
+  });
+
+  it("on another day says the weekday-led date with its own «la», never a second one (§452)", async () => {
+    wait.leavesAt = new Date("2026-09-29T07:00:00.000Z");
+    const html = await render(offer, "Ana");
+    expect(html).toContain("Emailul către familia.pop@example.ro pleacă mar., 29 sept. 2026, la 10:00.");
+    expect(html).not.toContain("pleacă la mar");
+  });
+
+  it("names the club's current window when the browser's half predates it", async () => {
+    const html = await render({ ...offer, windowMinutes: undefined });
+    expect(html).toContain("cel mult 10 minute,");
   });
 
   it("at a window of 0 says each person gets their own email, under either timing", async () => {

@@ -15,19 +15,19 @@ describe("§NNN the verification email says what to press first", () => {
     const message = renderBilingual("VERIFY_REGISTRATION_EMAIL", "ro", data, ACTION, null);
     expect(message.subject).toContain("Confirmă adresa — Crosul de toamnă");
     expect(message.subject).toContain("Confirm your address — ");
-    const first = "Apasă butonul ca să confirmi adresa. Apoi semnezi declarația și primești codul QR.";
+    const first = "Apasă butonul ca să confirmi adresa. Dacă mai e loc, semnezi apoi declarația și primești codul QR.";
     expect(message.text).toContain(first);
     // The first line of the body, right under the greeting.
     expect(message.text.split("\n\n")[1].startsWith(`${first}\n`)).toBe(true);
     expect(message.text).toMatch(/^Când: /m);
     expect(message.text).toMatch(/Linkul e valabil \d+ de ore; fără confirmare, înscrierea expiră\./);
-    expect(message.text).toContain("Press the button to confirm your address. Then you sign the declaration and get your QR code.");
+    expect(message.text).toContain("Press the button to confirm your address. If there is still a place, you then sign the declaration and get your QR code.");
   });
 
   it("keeps every field a placeholder in the editor's starting text — no literal value (§359)", () => {
     const prefill = emailCopyPrefill("VERIFY_REGISTRATION_EMAIL", "ro");
     expect(prefill.subject).toBe("Confirmă adresa — {eventTitle}");
-    expect(prefill.paragraphs[0]).toBe("Apasă butonul ca să confirmi adresa. Apoi semnezi declarația și primești codul QR.");
+    expect(prefill.paragraphs[0]).toBe("Apasă butonul ca să confirmi adresa. Dacă mai e loc, semnezi apoi declarația și primești codul QR.");
     expect(prefill.paragraphs.join("\n")).toContain("Linkul e valabil {confirmationHours}; fără confirmare, înscrierea expiră.");
     expect(emailCopyPrefill("VERIFY_REGISTRATION_EMAIL", "en").subject).toBe("Confirm your address — {eventTitle}");
   });
@@ -54,7 +54,7 @@ describe("§NNN a family's one message says the one button does everything", () 
 
   it("opens with the one line, then one line per person with the birth date in words, the button with the count, and the link's life", () => {
     const message = family();
-    const lead = "Un singur buton: confirmi adresa și cele 2 înscrieri, apoi semnezi declarațiile pe rând.";
+    const lead = "Un singur buton: confirmi adresa și cele 2 înscrieri, apoi semnezi pe rând declarațiile celor care mai au loc.";
     expect(message.text.split("\n\n")[1].startsWith(`${lead}\n`)).toBe(true);
     expect(message.text).toContain("Persoana 1 din 2: Ana Pop, data nașterii 2 martie 1985");
     expect(message.text).toContain("Persoana 2 din 2: Maria Pop, data nașterii 11 iulie 2010");
@@ -63,7 +63,7 @@ describe("§NNN a family's one message says the one button does everything", () 
     expect(message.text).toMatch(/Termen: linkul e valabil \d+ de ore și se folosește o singură dată/);
     // Said once: the old «Ce se întâmplă dacă apeși» row is the first line now.
     expect(message.text).not.toContain("Ce se întâmplă dacă apeși");
-    expect(message.text).toContain("One button: you confirm the address and the 2 registrations, then sign the declarations one by one.");
+    expect(message.text).toContain("One button: you confirm the address and the 2 registrations, then sign, one by one, the declarations of those who still have a place.");
     expect(message.text).toContain("Confirm and sign the declarations (2)");
     expect(message.text).not.toContain("emailul anterior");
   });
@@ -76,7 +76,7 @@ describe("§NNN a family's one message says the one button does everything", () 
 
   it("says one person plainly, with no count", () => {
     const message = family({ familySittingPeople: people.slice(0, 1) });
-    expect(message.text).toContain("Un singur buton: confirmi adresa și înscrierea, apoi semnezi declarația.");
+    expect(message.text).toContain("Un singur buton: confirmi adresa și înscrierea, apoi, dacă mai e loc, semnezi declarația.");
   });
 });
 

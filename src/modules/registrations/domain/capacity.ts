@@ -12,7 +12,11 @@ export type OccupiedCounts = {
    * place, until somebody waits for it or the event starts (`DECISIONS.md` §160).
    */
   pendingDeclarationHolds: number;
-  /** WAITLIST_OFFERED rows whose hold_expires_at is still in the future. */
+  /**
+   * WAITLIST_OFFERED rows whose hold_expires_at is still in the future, or whose offer email is
+   * still queued (§520): the offer's clock starts when that email leaves, so until then it holds
+   * its place whatever the stored deadline says.
+   */
   unexpiredWaitlistOfferedHolds: number;
 };
 
@@ -54,7 +58,7 @@ export function hasDirectAvailability(input: AvailabilityInput): boolean {
  * needs — `repository.ts#lapsedDeclarationHoldsToRelease` releases exactly this many, oldest
  * deadline first.
  *
- * The forecast on `/admin/emails` decides the same question by its own arithmetic instead
+ * The forecast on «Setări» → «Emailuri» (`/admin/settings/emails`, §516) decides the same question by its own arithmetic instead
  * (`notifications/domain/automatic-sends.ts#nextInLineReleases`: one lapse releases one place while
  * anybody still waits), because at the instant a hold is forecast to lapse the forecast has no
  * "free" count to ask for — nothing has actually lapsed yet for a query to count. The two agree

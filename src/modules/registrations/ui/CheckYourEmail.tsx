@@ -47,11 +47,13 @@ type Props = {
   window: { opensDays: number } | null;
   /**
    * After the first form of a would-be family (§NNN): the screen is then the short one — «Formularul
-   * lui Ana a ajuns.», «Emailul pleacă la 10:15.» and «Mai înscrii pe cineva cu aceeași adresă?» with
+   * pentru Ana a ajuns.», «Emailul către ana@… pleacă la 10:15.» and «Mai înscrii pe cineva cu aceeași adresă?» with
    * its one button (`FamilySittingOffer`) — and nothing else. `atOnce`: the club's window is 0 (§519).
-   * `continueAction` is «Da, încă o persoană», a server action, never a component.
+   * `continueAction` is «Da, încă o persoană», a server action, never a component. `email` is the
+   * address the form went to and `windowMinutes` the club's window as the action read it, both from the
+   * browser's half (absent on an older half: the club's current window).
    */
-  offer?: { atOnce: boolean; continueAction: (form: FormData) => Promise<void> };
+  offer?: { atOnce: boolean; email: string; windowMinutes?: number; continueAction: (form: FormData) => Promise<void> };
 };
 
 /**
@@ -119,6 +121,8 @@ export default async function CheckYourEmail({ eventTitle, whenLabel, eventHref,
     const now = new Date();
     const leavesAt = await cachedEmailLeavesAt(now);
     const leaves = emailLeavesWords(leavesAt, now, locale);
+    // The hint under «Da» names the club's window (§519): how long the email may wait for the next form.
+    const sittingWindow = minutesPhrase(locale, offer.windowMinutes ?? (await cachedDeadlines()).familySittingMinutes);
     return (
       <Stack spacing={3} data-testid="check-email-short">
         <Box>
@@ -127,7 +131,7 @@ export default async function CheckYourEmail({ eventTitle, whenLabel, eventHref,
             {facts?.firstName ? t("done.formIn", { name: facts.firstName }) : t("done.formInUnnamed")}
           </Typography>
           <Typography variant="body1" sx={{ mt: 0.5, fontWeight: 700 }} data-testid="check-email-leaves">
-            {leaves.key === "leavesAt" ? t("done.leavesAt", { at: leaves.at }) : t("done.leavesNow")}
+            {leaves.key === "leavesNow" ? t("done.leavesNow", { email: offer.email }) : t(`done.${leaves.key}`, { email: offer.email, at: leaves.at })}
           </Typography>
         </Box>
         <FamilySittingOffer
@@ -135,7 +139,7 @@ export default async function CheckYourEmail({ eventTitle, whenLabel, eventHref,
             question: t("sitting.question"),
             add: t("sitting.add"),
             addPending: t("sitting.addPending"),
-            hint: t(`sitting.${offerHint({ atOnce: offer.atOnce, leavesAt })}`),
+            hint: t(`sitting.${offerHint({ atOnce: offer.atOnce, leavesAt })}`, { window: sittingWindow }),
           }}
           locale={locale}
           slug={slug}

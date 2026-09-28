@@ -6,7 +6,7 @@ import Box from "@mui/material/Box";
 import Link from "@mui/material/Link";
 import { type CSSProperties, type FormEvent, type ReactNode, useActionState, useEffect, useMemo, useRef, useState } from "react";
 import ConfirmDialog from "@/shared/feedback/ConfirmDialog";
-import { type ConfirmSpec, fillFromForm, pickConfirm, resolveEmailCount } from "@/shared/feedback/notice";
+import { type ConfirmSpec, fillFromForm, pickConfirm, resolveBodyCount, resolveEmailCount } from "@/shared/feedback/notice";
 import { useToast } from "@/shared/feedback/toast-context";
 import { openFoldsAround, REVEAL_EVENT } from "@/shared/ui/fold";
 import { fieldId, type FormOutcome } from "./outcome";
@@ -202,9 +202,13 @@ export default function ActionFormIsland({
       return typeof value === "string" ? value : null;
     });
     if (!spec) return;
+    const valuesOf = (field: string) => data.getAll(field).filter((value): value is string => typeof value === "string");
+    // A body that counts the ticks (§532): with none ticked, nothing to ask — the server refuses.
+    const ticked = resolveBodyCount(spec, valuesOf);
+    if (!ticked) return;
     event.preventDefault();
     // A series save's email line, summed over the dates ticked at this press (§384).
-    const counted = resolveEmailCount(spec, (field) => data.getAll(field).filter((value): value is string => typeof value === "string"));
+    const counted = resolveEmailCount(ticked, valuesOf);
     // A typed value named in the sentence (§511): «Limita nouă: 100 ore-CU.».
     const resolved = fillFromForm(counted, (field) => {
       const value = data.get(field);

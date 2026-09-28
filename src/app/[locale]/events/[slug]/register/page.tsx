@@ -565,7 +565,11 @@ export default async function RegisterPage({ params, searchParams }: Props) {
             club's timing: nothing here waits for a press. The same screen after every first form,
             whatever the address holds (§39).
           */
-          offer={afterForm === "offer" && sitting ? { atOnce: sitting.atOnce === true, continueAction: continueFamilySittingAction } : undefined}
+          offer={
+            afterForm === "offer" && sitting
+              ? { atOnce: sitting.atOnce === true, email: sitting.email, windowMinutes: sitting.windowMinutes, continueAction: continueFamilySittingAction }
+              : undefined
+          }
         />
       ) : (
         <>

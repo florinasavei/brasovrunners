@@ -356,7 +356,7 @@ describe("§519 a family in one sitting", () => {
     const { message, secret } = await familyLink(at(20));
     expect(message.subject).toContain("Înscriere de familie: 3 persoane la Crosul familiei");
     // The first line says the one button does everything (§NNN; the owner, 2026-09-28), before anybody is named.
-    const lead = "Un singur buton: confirmi adresa și cele 3 înscrieri, apoi semnezi declarațiile pe rând.";
+    const lead = "Un singur buton: confirmi adresa și cele 3 înscrieri, apoi semnezi pe rând declarațiile celor care mai au loc.";
     expect(message.text).toContain(lead);
     expect(message.text.indexOf(lead)).toBeLessThan(message.text.indexOf("Persoana 1 din 3: Ana Pop"));
     // One line per person, the birth date in words, no «la» before it (§452).
@@ -367,7 +367,7 @@ describe("§519 a family in one sitting", () => {
     // Nobody got an email of their own before «Da»: no line about an earlier one.
     expect(message.text).not.toContain("emailul anterior");
     // The English half says the same in its own words (§96).
-    expect(message.text).toContain("One button: you confirm the address and the 3 registrations, then sign the declarations one by one.");
+    expect(message.text).toContain("One button: you confirm the address and the 3 registrations, then sign, one by one, the declarations of those who still have a place.");
     expect(message.text).toContain("Person 2 of 3: Maria Pop, date of birth 11 July 2010");
     expect(message.text).toContain("Confirm and sign the declarations (3)");
     expect(secret).not.toBeNull();

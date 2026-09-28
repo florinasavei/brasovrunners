@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.16-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.17-2026-09-27 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V2.16-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.17-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -181,6 +181,7 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 16. Every Română | English tab row whose words may be translated carries «Tradu cardul: RO → EN». This covers the event editor's cards, a standing page and an album. The press fills only the English boxes of the card around the row (the nearest Panel, including the card's boxes outside its tabs, such as the programme's timed rows), using the same allowlist and the same confirm question as «Copiază și tradu tot», and saves nothing.
 17. After a card press that filled boxes, the English tab is shown, and the toast names the card with the count (for example «Gata: 3 câmpuri traduse în „Descrierea completă”»), counted through countForm in both languages.
 18. For a role that writes the club's words, the card button is always drawn. With no DeepL key or a spent credit it is disabled and states the reason, with the link to the steps or to Costuri where the reader may open them.
+19. Given the backoffice events list's search, state and order controls, when they are shown in either language, then every label, option and count line comes from both message catalogues, and each control wears its glyph.
 
 **Verification:** CI check `i18n-parity`; unit `i18n/messages.test.ts`
 
@@ -343,6 +344,12 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 146. At 320 px the public FAQ page shows each question as a native fold that works without JavaScript, grouped under its category, with no sideways scroll, and a `#q-…` link opens its question (2026-09-27, `DECISIONS.md` §525).
 147. The difficulty is one level on the club's scale of fifteen: five bands (ușor, mediu, greuț, greu, foarte greu), three steps each, the band derived as ceil(level / 3); the event's pill shows the band and the step («Mediu 2») beside a gauge whose lit segments are the band and whose lit dots are the step, and a screen reader hears «Dificultate: mediu, treapta 2 din 3».
 148. The listing's difficulty filter ticks a band and matches all three of its steps; an event with no stated difficulty matches no difficulty box and shows no difficulty pill.
+149. The difficulty pill's tooltip names the band, the step and the level of fifteen («Mediu 2 — nivelul 5 din 15» / «Medium 2 — level 5 of 15»), with no example, and a screen reader hears the same thing once as the chip's name («Dificultate: mediu 2 — nivelul 5 din 15») (2026-09-27, `DECISIONS.md` §528).
+150. A band's filter box on the listing names the levels it covers on hover («Greuț: nivelurile 7–9 din 15») (2026-09-27, `DECISIONS.md` §528).
+151. The event editor's «?» beside «Dificultate» and «Treapta» shows the club's scale in the owner's words from one message set, `Admin.editor.difficultyScale`, in both languages, and «Ghid» points to that «?» instead of repeating the examples (2026-09-27, `DECISIONS.md` §528).
+152. An email's facts block keeps the difficulty as the band and step in words («Mediu, treapta 2 din 3»), without the level of fifteen (2026-09-27, `DECISIONS.md` §528).
+153. At every text size the public pages scale their typography together with no sideways scroll at 320 px, and the backoffice keeps its 16-px root (2026-09-27, `DECISIONS.md` §530).
+154. A fold header's own arrow (ExpandMore, ExpandLess, Chevron, ArrowDropDown/Up, KeyboardArrow) or an empty ListItemIcon does not count as its glyph; the source-walk test fails a fold that draws only its arrow.
 
 **Verification:** e2e `registration-form.spec.ts` and `registration-entry.spec.ts` under both Playwright viewport projects, `event-pages.spec.ts` (criterion 12); unit `registrations/form-errors.test.ts`, `events/listing.test.ts`, `theme/brand.test.ts`; release check on a real device
 
@@ -568,6 +575,7 @@ coffee is run on nothing.
 10. Beside the register button of an open, capped event, a line states the taken places out of the capacity ("12 înscriși din 50 de locuri" / "12 of 50 places taken"). It comes from the same cached read as the free places, so taken plus free equals the capacity. An uncapped event shows neither number (`tests/integration/registrations/registration-fill-render.test.ts`, `tests/e2e/registration-entry.spec.ts`).
 11. The listing card and the event page read one availability through one function (`readRegistrationDoor`), so they never disagree about a race's free places. When that read fails (§281), the card shows the window with no number and no button (2026-09-25, `DECISIONS.md` §409).
 12. A declaration hold whose first email is still PENDING or PROCESSING in the outbox is not lapsed: the sweep releases nothing and the lapsed count stays 0 — a 30-minute hold with its email pending at +45 minutes is kept, sent at +60 it runs to +90, and it is released to the person waiting at +91; a started event still closes every hold (2026-09-27, `DECISIONS.md` §513).
+13. The registration queue panel lists a waiting-list offer past its stored deadline while its first email is still queued, by the same guard the capacity count uses (`offerAwaitingItsFirstEmail`), so the panel's lines and its «Rezervate» figure never disagree; an offer past its deadline whose email has left is not listed.
 
 **Verification:** integration `capacity/public-availability.test.ts`; e2e `event-page.spec.ts`
 
@@ -1210,6 +1218,8 @@ registration — and it lists registrations and never changes an address.
 4. Given an event that has started, when unregistration is attempted, then it is refused with an explanation.
 5. Given a pending declaration, a waiting-list entry, or an active offer, when the participant cancels, then the same explicit-confirmation behavior applies.
 6. A registration cancelled from the participant's own manage link, or from "my registrations", lands on a page that also says so in a toast ("Gata: înscrierea ta e anulată." / "Done: your registration is cancelled."), shown once. A refused link or an event that has already started shows no toast.
+7. Every unsent row in the /admin/emails queue says when it leaves: the estimated next round; late, past the health check's overdue threshold; held until a family sitting ends, read from the email's sittingHeld / familyHeld flag; being sent now; or never, once every attempt is spent (2026-09-27, `DECISIONS.md` §529).
+8. «Trimite acum» asks first, names the emails due now, and counts those that stay held by reason (family, retry, the newsletter's reserve) as plain numbers. A late row tells only the Administrator to press it; other readers are told to tell the administrator (2026-09-27, `DECISIONS.md` §529).
 
 **Verification:** integration `registrations/unregister.test.ts`; e2e `unregister.spec.ts`
 
@@ -1333,6 +1343,7 @@ registration — and it lists registrations and never changes an address.
 9. Given `FEATURE_DISPLAY_NAME` unset or not `true`, when the public or the staff form renders, then no display-name field is offered and a posted value is ignored, so the list shows the registered name; the CSV export always carries the first name, the last name and the identity document beside the registered name (2026-09-18, `DECISIONS.md` §95).
 10. Given an event held in a time zone other than the club's, when its queue panel renders, then an offer's deadline and the time a runner joined the waiting list are written in the event's own zone, as the runner's email writes them, in the reader's language with the weekday (2026-09-24, `DECISIONS.md` §369, §92, §349). Verification: integration `registrations/queue-panel-zone.test.ts`.
 11. Given test registrations at an event, then the desk's counters and the events list's confirmed and checked-in counts leave them out. The desk list still shows them, labelled (2026-09-25, `DECISIONS.md` §420).
+12. Given a waiting-list offer whose offer email is still queued (PENDING or PROCESSING, marked as starting its deadline) before the close or the start, when the event's queue panel renders, then the offer is listed in the line even past its stored deadline, as the place count holds it, with the words that its deadline runs from when the email leaves and no deadline time; once that email has been sent, an offer past its deadline is no longer listed (2026-09-28, `DECISIONS.md` §531, §520). Verification: integration `registrations/queue-panel-zone.test.ts`.
 
 **Verification:** integration `registrations/test-kind.test.ts`
 
@@ -1717,6 +1728,15 @@ way through every step, and none of them is a way around the allocator.
 100. The event editor draws «Lista publică a participanților» (`#box-start-list`) as the last level-3 card inside «Program, regulament și declarație», after the declaration. It has no number and no chip of its own; the numbered cards run 1 to 9, and that card counts as drawn on the page when the public list is published.
 101. Given the editor or the create page of an event that takes registrations, when «Vârsta minimă (ani)» renders, then it takes a whole number from 14 to 99, prefilled with the event's value or 14 (an older event's 0 opens at 14), and a value under 14 is refused naming the box with every value kept. A group run's own box starts at 18 and does not accept less (2026-09-27, `DECISIONS.md` §515, amending criterion 29). Verification: integration `cms/crud.test.ts`, `cms/series-edit.test.ts`; unit `shared/form-constraints.test.ts`; e2e `registration-form.spec.ts`.
 102. The event editor asks the difficulty in «Ce fel de eveniment»: the band select and «Treapta», a segmented 1 · 2 · 3 of native radios in 44-pixel segments each with a dots glyph, side by side from `sm`; a step outside 1–3 or a band outside the five is refused at save.
+103. Given the backoffice events list, when the address carries `q`, `state`, `sort` and `dir` (written by a GET form with native selects that works without JavaScript), then:
+- only the lines with a date whose title, page address or place contains every typed word in either language (accents and case ignored) and whose state matches are listed;
+- the state is an editorial state, «Anulat» (the event's own status), «Viitoare» or «Trecute»;
+- a series is narrowed to its matching dates before it is grouped;
+- the lines are ordered by the club's default (featured, then soonest), by date, by title or by registrations, each with its natural direction when `dir` is absent;
+- an unknown value falls back to the default rather than being refused;
+- every sort, page-size and page link keeps the search and the state, and the list is paged.
+
+(§527.) Verification: unit `content/events-list-query.test.ts`.
 
 **Verification:** integration `cms/crud.test.ts`, `cms/workflow.test.ts`, `cms/repeat.test.ts`, `cms/turn-up-events.test.ts`, `cms/programme-rows.test.ts`; e2e `cms-publish.spec.ts`, `event-route.spec.ts`, `events-bulk.spec.ts`
 
@@ -1849,6 +1869,8 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 14. The confirm title's count is phrased through countForm's one / few / other keys, never an ICU plural (2026-09-27, `DECISIONS.md` §482).
 15. The backoffice guide's «Engleza dintr-o apăsare» is one four-step list per role (write the Romanian, press, read and correct, «Salvează»), and the Organizer's version does not contradict the rule that the title and description are the Administrator's (2026-09-27, `DECISIONS.md` §482).
 16. Given a translation press within the day's budget, when DeepL's credit as last read is spent, then the press is refused as `quota` and nothing is sent. When the credit is smaller than the press's characters, it is refused as `credit`, naming the characters left, and nothing is sent or metered. When the credit could not be read, the press goes to DeepL as before (2026-09-27, `DECISIONS.md` §497). Verification: integration `translate/translate.test.ts`.
+17. The backoffice events list reads its search, state and order from the address, applies them with one «Aplică» / "Apply" button, and shows «N din M evenimente» while it is narrowed (2026-09-27, `DECISIONS.md` §527).
+18. A bulk or row action taken from the events list redirects back to the same search, state, order and page. The `back` field is re-parsed so that only the list's own keys survive (2026-09-27, `DECISIONS.md` §527).
 
 **Verification:** integration `cms/workflow.test.ts`; concurrency `cms-conflict.test.ts` (`yarn test:concurrency`); e2e `cms-publish.spec.ts`
 
@@ -2032,6 +2054,9 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 29. An Administrator writes, approves, withdraws and deletes a legal document version, and uses the one-press approval of the platform's texts. An Organizer or Redactor reads.
 30. Given an Administrator on `/admin/legal` while any text of the catalogue has no approved version and the club's four facts are set, when they press «Aprobă textele platformei», then version 1 of each missing text is created from the platform's template with the facts written in and approved in the presser's name. The press covers exactly the catalogue's keys: the privacy notice, the terms, both race declarations and the two group-run declarations. A text already in force is left alone. The confirm dialog names each text. The intro and the button count the same list in plain sentences, never an ICU plural and never a fixed number (2026-09-27, `DECISIONS.md` §515). Verification: integration `legal/platform-approve.test.ts`; unit `legal-documents/race-declaration-keys.test.ts`; e2e `legal-versions.spec.ts`.
 31. Given the platform's templates, when the race declarations are read, then both are built from one shared body with a risk section per course, titled «Declarație pe propria răspundere — cursă trail» / «— cursă pe asfalt / în parc» and in English «Self-declaration — trail race» / «Self-declaration — road / park race». Both open by declaring the participant at least {{minimumAge}}, and no text carries an under-14 flow (2026-09-27, `DECISIONS.md` §515). Verification: unit `legal-documents/declaration-risks.test.ts`, `legal-documents/merge-fields.test.ts`.
+32. «Regenerează din șabloane» makes one draft per legal text whose platform template, with the club's facts, says something no approved version still offered says, never over a waiting draft, in one transaction, and puts nothing in force (2026-09-27, `DECISIONS.md` §532).
+33. «Aprobă ciornele» approves, in one transaction, exactly the drafts its dialog named, each by the one-version approval; a draft that is superseded, behind an approved version or still carries a club-fact placeholder is held with its reason, and a named draft that is no longer ready — checked before and again inside the transaction — refuses the whole press with nothing approved (2026-09-27, `DECISIONS.md` §532).
+34. The ticked versions are deleted in one press, all or none: drafts as one draft's delete, approved versions with one reason, `DELETE <n>` and an audit row each, the version that stops the press named (2026-09-27, `DECISIONS.md` §532).
 
 **Verification:** integration `legal/editor.test.ts`, `legal/deletion.test.ts`, `legal/withdrawal.test.ts`
 
@@ -2164,6 +2189,8 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 20. A participant's deadline that an email starts — the email link, the declaration hold, the waiting-list offer, the family link — counts from the moment that email is SENT, later by exactly the wait, capped as the allocator caps it, and never for a wait under a minute (2026-09-27, `DECISIONS.md` §513).
 21. The deadline is re-based once, on the first send of the message that started it (marked `startsDeadline` at enqueue): a resend, a reminder or a club copy moves nothing — a hold sent after 55 minutes moves once, and a resend ten minutes later leaves it unchanged; an offer likewise (2026-09-27, `DECISIONS.md` §513).
 22. The backoffice names «Termene» → «Când pleacă emailurile» wherever it says when email leaves, and under the scheduled setting says the monitors are what send it, in both languages (2026-09-27, `DECISIONS.md` §513).
+23. The queue on «Setări» → «Emailuri» states the delivery timing, the outbox job's next and last real run, and what holds the scheduled round back, each with its number; every unsent row states its estimated departure, and a row is marked late exactly when /api/health would count it overdue (one shared cadence function).
+24. «Trimite acum» confirms with the number of due messages it will send and the number held back, by reason (family sitting, retry or deferral, newsletter reserve), with the first hold's end; it is offered only while at least one message is due.
 
 **Verification:** integration `notifications/outbox.test.ts`; integration `notifications/send-now.test.ts`; integration `notifications/email-health.test.ts`; integration `notifications/email-plan.test.ts` (7); unit `notifications/email-plan.test.ts`; e2e `email-plan.spec.ts` (8)
 
@@ -2310,6 +2337,12 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 90. Only a role that edits the club's content may save the FAQ page, only an Administrator may put a question on the site, take one off, delete one that is on the site or publish the page, and every one of these is asserted on the server (2026-09-27, `DECISIONS.md` §525).
 91. In the backoffice form, Enter in any box is the plain save of the whole page and never moves a question; the arrows keep everything typed (2026-09-27, `DECISIONS.md` §525).
 92. The guide carries «Scara de dificultate a clubului» for the Organizer and the Administrator, in both languages. It describes the five bands and the three steps, quoting only the screen's own words. (tests/unit/staff/guide-words.test.ts)
+93. Given the backoffice events list, when a staff member types a search, picks a state or picks an order in the one row above the list, then the list narrows and reorders from the address (`q`, `state`, `sort`) through a GET form that works without JavaScript. A series is narrowed to its matching dates and sorted by its next date, else its last. «N din M evenimente» shows while the list is narrowed, and an unknown value in the address falls back to the whole list.
+94. The event editor's «Treapta» control has a «?» that explains the whole scale of fifteen with the club's examples, in both languages, in 200 characters or fewer, and is kept out of the radio group's own short description (§528).
+95. The queue panel's «Când pleacă emailurile» switch is drawn only for the Administrator and asserted again on the server; every reader of the queue sees the timing.
+96. Only a role holding `canManageClubSettings` changes «Mărimea textului»; the save asks first and writes an audit row `site_font_size.changed` (2026-09-27, `DECISIONS.md` §530).
+97. Every toast (`Feedback.*`) in both languages keeps to the backoffice's plain-words rule: at most 200 characters, no §-number or repository reference, no parenthesis over six words, no «platforma» / "the platform" and no hedge.
+98. An Administrator erases a run's ticked signed group-run declarations in one press: the confirm dialog names the count ticked and the run, the ids it counted are posted, a set no longer wholly the run's is refused with nothing erased, each signature is erased through the single erase's path with its own audit row that never names the signer, and every other role is refused on the server (2026-09-27, `DECISIONS.md` §532).
 
 **Verification:** integration `auth/role-boundaries.test.ts`, `cms/crud.test.ts`, `registrations/test-kind.test.ts`; unit `staff/roles.test.ts`, `staff/zitadel-users.test.ts`, `registrations/row-verbs.test.ts`; e2e `cms-publish.spec.ts`
 

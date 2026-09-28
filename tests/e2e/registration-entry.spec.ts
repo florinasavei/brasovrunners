@@ -137,10 +137,10 @@ test.describe("BR-REQ-030-01 the featured event leads to the registration form",
       sends on the request, so «acum»), and one question with one answer — and one true sentence under
       it. No «Gata», no steps, no wait box.
     */
-    await expect(page.getByTestId("check-email-form-in")).toHaveText("Formularul lui Ana a ajuns.");
-    await expect(page.getByTestId("check-email-leaves")).toHaveText("Emailul pleacă acum.");
+    await expect(page.getByTestId("check-email-form-in")).toHaveText("Formularul pentru Ana a ajuns.");
+    await expect(page.getByTestId("check-email-leaves")).toHaveText(`Emailul către ${address} pleacă acum.`);
     await expect(page.getByRole("heading", { name: "Mai înscrii pe cineva cu aceeași adresă?" })).toBeVisible();
-    await expect(page.getByTestId("family-sitting-offer-hint")).toHaveText("Dacă apeși „Da”, următoarea persoană primește un email care îi cuprinde pe toți.");
+    await expect(page.getByTestId("family-sitting-offer-hint")).toHaveText(/^Dacă apeși „Da”, următorul email așteaptă cel mult .+ după ultimul formular și îi cuprinde pe toți\.$/);
     await expect(page.getByRole("button", { name: "Nu, gata — trimite-mi emailul" })).toHaveCount(0);
     await expect(page.getByRole("heading", { name: "Ce urmează" })).toHaveCount(0);
     // BR-REQ-041-01 criterion 6: the one button is a real target on a phone.

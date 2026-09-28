@@ -240,7 +240,8 @@ describe("§336 the page hands every message to the card, and the panels fold", 
 
   it("names where each save lands, so its own panel opens and no other", () => {
     expect(page).toContain('openWhen={{ saved: saved === "emailPlan" }}');
-    expect(page).toContain('openWhen={{ saved: saved === "outboxSent", refused: Boolean(error) }}');
+    // The queue opens for "send now" and for its own switch (§529).
+    expect(page).toContain('openWhen={{ saved: saved === "outboxSent" || saved === "deliveryTiming", refused: Boolean(error) }}');
     expect(page).toContain('openWhen={{ saved: saved === "clubNotices" }}');
     // The words' save names its message on the way back, so that message's card opens.
     expect(read("src/app/[locale]/admin/settings/emails/actions.ts")).toMatch(/&message=\$\{messageType\}#admin-alert/);

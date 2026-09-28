@@ -43,7 +43,6 @@
     "intro": "Alergări, ture pe munte și antrenamente organizate de club — întotdeauna gratuite.",
     "empty": "Nu sunt evenimente publicate momentan. Revino în curând.",
     "noUpcoming": "Nu sunt evenimente viitoare programate. Cel mai recent eveniment al clubului:",
-    "pastNotice": "Acest eveniment a avut deja loc.",
     "featured": "Evenimentul principal",
     "pastCount": "{count, plural, one {# eveniment trecut} few {# evenimente trecute} other {# de evenimente trecute}}",
     "pastCountFiltered": "Din trecut, după filtre ({count})",
@@ -112,14 +111,12 @@
     "photosNotice": "La evenimentele clubului se pot face fotografii și filmări, pe care clubul le publică în galerie și pe canalele sale. Nu vrei să apari? Spune-i fotografului sau <contact>scrie-ne</contact> și scoatem fotografia, fără să ne spui de ce. Detalii în <privacy>nota de confidențialitate</privacy>.",
     "date": "Data",
     "startTime": "Ora de start",
-    "gatheringTime": "Ora de întâlnire",
     "gatheringAt": "întâlnire la {time}",
     "raceStartAt": "start la {time}",
     "gatheringAtBold": "întâlnire la <strong>{time}</strong>",
     "raceStartAtBold": "start la <strong>{time}</strong>",
     "when": "Când",
     "where": "Unde",
-    "raceStartTime": "Startul cursei",
     "meetingPoint": "Punct de întâlnire",
     "share": {
       "title": "Dă mai departe:",
@@ -183,8 +180,10 @@
       "ics": "{label}: {times} — ia o frontală"
     },
     "difficultyLevelShort": "{band} {step}",
-    "difficultyLevelSr": "Dificultate: {band}, treapta {step} din {steps}",
+    "difficultyLevelSr": "Dificultate: {band} {step} — nivelul {level} din {levels}",
     "difficultyWithStep": "{band}, treapta {step} din {steps}",
+    "difficultyLevelTooltip": "{band} {step} — nivelul {level} din {levels}",
+    "difficultyBandTitle": "{band}: nivelurile {from}–{to} din {levels}",
     "cost": "Cost",
     "registration": "Înscriere",
     "cancelled": "Anulat",
@@ -533,7 +532,6 @@
       "backToList": "Înapoi la înscrieri",
       "resend": "Retrimite emailul",
       "resendSent": "Emailul a fost pus în coadă din nou.",
-      "resendNothingToSend": "Nu există niciun email de retrimis pentru această stare.",
       "timeline": "Cronologie",
       "submitted": "Trimisă",
       "emailConfirmed": "Email confirmat",
@@ -783,9 +781,7 @@
       "tableCaption": "Evenimentele clubului, cu starea, data și numărul de înscrieri",
       "selectEvent": "Selectează „{title}”",
       "bulkArchiveTitle": "Arhivează evenimentele bifate",
-      "bulkArchiveHelp": "Arhivarea scoate evenimentul de pe site fără să șteargă nimic. Un eveniment modificat între timp de altcineva nu se arhivează, ca să nu se piardă modificarea lui.",
       "bulkArchiveAction": "Arhivează cele bifate",
-      "bulkArchivePending": "Se arhivează…",
       "eventsArchivedDone": {
         "one": "{count} eveniment arhivat.",
         "few": "{count} evenimente arhivate.",
@@ -797,7 +793,6 @@
         "other": "{count} nu au putut fi arhivate."
       },
       "deleteBlocked": "Nu se poate șterge: {count} persoane sunt înscrise. Arhivează evenimentul, sau folosește „Ștergere definitivă…” de mai jos, care șterge și înscrierile.",
-      "deleteBlockedShort": "{count} înscrieri",
       "eventsRepeatedOne": "Seria e pornită: {dates} creată acum, până {until} — următoarele {horizon}. Restul le creează site-ul singur, mereu cu {horizon} înainte, până la data aleasă sau la nesfârșit.",
       "eventsRepeatedMany": "Seria e pornită: {dates} create acum, până {until} — următoarele {horizon}. Restul le creează site-ul singur, mereu cu {horizon} înainte, până la data aleasă sau la nesfârșit.",
       "seriesDraftsOne": "{dates} în ciornă, nu e pe site:",
@@ -849,7 +844,32 @@
         "other": "{count} nu au putut fi publicate: o limbă e incompletă sau au fost modificate între timp."
       },
       "hardDelete": "Ștergere definitivă…",
-      "eventErased": "Eveniment șters definitiv, împreună cu {erased} înscrieri."
+      "eventErased": "Eveniment șters definitiv, împreună cu {erased} înscrieri.",
+      "listFormLabel": "Caută și filtrează evenimentele",
+      "listSearch": "Caută un eveniment",
+      "listSearchHelp": "Titlul, adresa paginii sau locul",
+      "listState": "Starea",
+      "listStateAll": "Toate",
+      "listStates": {
+        "UPCOMING": "Viitoare",
+        "PAST": "Încheiate",
+        "DRAFT": "Ciorne",
+        "IN_REVIEW": "În verificare",
+        "PUBLISHED": "Publicate",
+        "ARCHIVED": "Arhivate",
+        "CANCELLED": "Anulate"
+      },
+      "listSort": "Ordinea",
+      "listSorts": {
+        "date-near": "Data (cele mai apropiate)",
+        "date-old": "Data (cele mai vechi)",
+        "title-asc": "Nume A–Z",
+        "title-desc": "Nume Z–A",
+        "state": "Stare"
+      },
+      "listApply": "Aplică",
+      "listCount": "{shown} din {total} evenimente",
+      "listEmpty": "Niciun eveniment nu se potrivește. Schimbă căutarea sau starea, ori șterge filtrele."
     },
     "confirm": {
       "cancel": "Renunță",
@@ -964,6 +984,8 @@
       "shownAddressBody": "Site-ul arată de acum adresa aleasă, iar răspunsurile la emailurile clubului ajung la ea. Textele legale aprobate își păstrează adresa lor.",
       "siteTintTitle": "Schimbi fundalul site-ului?",
       "siteTintBody": "Fiecare pagină publică a site-ului se deschide de acum cu fundalul ales, pentru toți vizitatorii. Tema întunecată și backoffice-ul rămân cum sunt. Poți reveni oricând la «Alb».",
+      "siteFontSizeTitle": "Schimbi mărimea textului?",
+      "siteFontSizeBody": "Fiecare pagină publică a site-ului se deschide de acum cu textul la mărimea aleasă, pentru toți vizitatorii, în ambele teme. Backoffice-ul rămâne cum e. Poți reveni oricând la «Normal».",
       "translationBudgetTitle": "Salvezi bugetul de traduceri?",
       "translationBudgetBody": "Numărul nou se aplică de la următoarea apăsare pe „Tradu din română”. Ce s-a tradus azi rămâne numărat.",
       "deliveryTimingTitle": "Schimbi când pleacă emailurile?",
@@ -1008,10 +1030,11 @@
       "WALK_IN_BIB_TAKEN": "Persoana e înscrisă, dar numărul tocmai l-a dat altcineva, deci e neconfirmată. Caut-o în listă și apasă „Confirmă aici” cu alt număr.",
       "STAFF_ALREADY_ON_ADDRESS": "Persoana aceasta este deja înscrisă la eveniment cu această adresă de email. Caut-o în lista înscrierilor; pentru altă persoană, scrie numele ei.",
       "STAFF_ADDRESS_AT_CAP": "Adresa aceasta are deja atâtea înscrieri la eveniment câte permite clubul pe o adresă („Termene”). Folosește altă adresă de email pentru această persoană.",
-      "MEMBERS_ON_TEAM": "Sunt deja în echipă: {addresses}. Scoate-le din listă. Nu s-a adăugat nimeni."
+      "MEMBERS_ON_TEAM": "Sunt deja în echipă: {addresses}. Scoate-le din listă. Nu s-a adăugat nimeni.",
+      "LEGAL_BATCH_CONFIRMATION_MISMATCH": "Confirmarea scrisă nu este cea cerută. Nu s-a șters nimic — scrie exact textul de sub casetă, de exemplu „DELETE 2”.",
+      "LEGAL_BATCH_VERSION_BLOCKED": "Nu s-a șters nimic: între timp, {version} nu se mai poate șterge. Reîncarcă pagina: apare la „Rămân”, cu motivul; celelalte se șterg la apăsarea următoare."
     },
     "editor": {
-      "eventSection": "Detaliile evenimentului",
       "startsAt": "Începutul evenimentului",
       "startsAtHelp": "Ora locală a evenimentului ({timezone}). Pentru o cursă, aceasta este ora de întâlnire.",
       "raceStartsAt": "Startul cursei",
@@ -1042,7 +1065,6 @@
       "acknowledgeLive": "Am înțeles că modific conținut publicat.",
       "acknowledgeLiveHint": "Bifează că ai înțeles că modifici conținut publicat ca să poți salva.",
       "saving": "Se salvează…",
-      "saveTranslation": "Salvează textul",
       "slugHelp": "Adresa paginii, în cuvinte mici legate prin liniuțe. Se poate schimba doar înainte de prima publicare.",
       "slugLocked": "Pagina a fost publicată, așa că adresa rămâne neschimbată.",
       "costHelp": "Ce plătește un participant; site-ul nu încasează bani. Dacă locul se primește doar după plată, alege „Cu taxă” și pune linkul de plată.",
@@ -1075,9 +1097,7 @@
         "scheduleNotes": "Note sub program",
         "routeDescription": "Descriere traseu / antrenament"
       },
-      "sharedFieldHelp": "Comun ambelor limbi. Se completează o singură dată.",
       "tabIncomplete": "incomplet",
-      "settingsSection": "Setări",
       "save": "Salvează",
       "publicationSection": "Publicare",
       "newTitle": "Eveniment nou",
@@ -1109,7 +1129,6 @@
       "eventStatus": "Starea evenimentului",
       "timezone": "Fus orar",
       "endsAt": "Sfârșitul evenimentului",
-      "endsAtHelp": "Opțional. Lasă gol dacă s-a anunțat doar ora de start.",
       "distanceMeters": "Distanță",
       "distanceMetersHelp": "În metri. 10000 se afișează ca 10 km.",
       "elevationGainMeters": "Diferență de nivel (m)",
@@ -1129,7 +1148,6 @@
         "series": "Într-o serie, fiecare dată urmează apusul zilei ei: datele de iarnă sunt de noapte, cele de vară nu.",
         "help": "Automat: e de noapte când o parte a evenimentului cade după amurg sau înainte de zori. Se arată pe card, pe pagină, în calendar și în emailul de reamintire."
       },
-      "registrationSection": "Înscriere",
       "registrationMode": "Modul de înscriere",
       "registrationModeHelp": "Înscrierea aici cere o declarație; înscrierea în altă parte cere linkul organizatorului.",
       "capacity": "Număr de locuri",
@@ -1168,6 +1186,16 @@
       },
       "difficultySummary": "{band} {step}",
       "difficultyStepHelp": "1 = cel mai ușor din categorie, 3 = cel mai greu",
+      "difficultyScale": {
+        "EASY": "ușor: scurt, plat, pentru oricine",
+        "MEDIUM1": "mediu 1: alergarea de pe Tâmpa",
+        "MEDIUM2": "mediu 2: alergările mai lungi",
+        "MEDIUM3": "mediu 3: lungi și tehnice",
+        "FAIRLY_HARD": "greuț: de la semimaraton în sus",
+        "HARD": "greu: maratoane",
+        "VERY_HARD": "foarte greu: ultramaratoane și mai sus",
+        "steps": "în fiecare categorie 1 = cel mai ușor, 3 = cel mai greu"
+      },
       "costValues": {
         "FREE": "Gratuit",
         "PAID": "Cu taxă",
@@ -1229,10 +1257,8 @@
         "FORTNIGHTLY": "La două săptămâni",
         "MONTHLY": "Lunar"
       },
-      "repeatCount": "Câte ediții",
       "repeat": "Creează datele",
       "timeOfDay": "Ora",
-      "repeatWeeks": "Câte săptămâni / ediții",
       "repeatWeekdays": "În zilele (opțional):",
       "repeatWeekdaysHelp": "Ziua acestui eveniment e mereu în serie; bifează și alte zile, de exemplu miercuri pentru o tură de duminică.",
       "weekdays": {
@@ -1391,7 +1417,7 @@
       "createdNotPublishedOther": "Evenimentul a fost creat ca ciornă, dar nu a putut fi publicat: {reason}",
       "notice": {
         "notify": "Anunță participanții despre schimbare",
-        "count": "Participanți care ar primi emailul „Detalii actualizate”: {count}, doar dacă s-a schimbat locul, data, ora sau programul, ori scrii un mesaj. Mesaje: {messages} ({allowance}).",
+        "count": "Participanți care ar primi emailul „Detalii actualizate”: {count}, doar dacă s-a schimbat locul, data, ora sau programul, ori scrii un mesaj. Mesaje, cu tot cu copiile pentru club: {messages} ({allowance}).",
         "countNone": "Nu e nimeni înscris acum la această dată, așa că bifa nu trimite niciun email.",
         "countSeries": "Dacă modificarea ajunge și la alte date ale seriei, sunt anunțați și participanții acelor date, fiecare o singură dată, despre data lui.",
         "note": "Ce s-a schimbat (opțional)",
@@ -1404,7 +1430,7 @@
         "cancelReason": "Motivul anulării",
         "cancelReasonHelp": "Obligatoriu, în ambele limbi · text simplu, cel mult {max} de caractere în fiecare. Fiecare participant îl primește în limba în care s-a înscris; apare și în jurnalul de audit, cu numele tău.",
         "cancelNotify": "Anunță participanții că evenimentul a fost anulat",
-        "cancelCount": "Participanți care ar primi emailul „Eveniment anulat”: {count}. Mesaje cu tot cu copiile pentru club: {messages} — se scad din cota Mailgun ({allowance}).",
+        "cancelCount": "Participanți care ar primi emailul „Eveniment anulat”: {count}. Mesaje, cu tot cu copiile pentru club: {messages} ({allowance}).",
         "cancelCountNone": "Nu e nimeni înscris acum, așa că nu pleacă niciun email.",
         "allowanceDay": "planul {plan}: încă {remaining} azi",
         "allowanceMonth": "planul {plan}: încă {remaining} luna aceasta",
@@ -1901,6 +1927,7 @@
       "lineNone": "Evenimentul nu are listă de așteptare: când locurile se termină, înscrierile se opresc.",
       "test": "test",
       "offered": "ofertă până {until}",
+      "offeredQueued": "ofertă; termenul curge de când pleacă emailul",
       "since": "din {when}",
       "interestTitle": "Adrese care așteaptă anunțul deschiderii: {count}",
       "interestHelp": "Adresele lăsate la „Anunță-mă”: primesc un singur email când se deschid înscrierile. Tastează aici adresa cuiva care nu mai vrea mesajul.",
@@ -2109,7 +2136,50 @@
         "redo": "Înainte"
       },
       "listSocialsMissing": "Nota în vigoare nu descrie încă Strava și Instagram pe lista publică, deci nu apar. Aprobă o notă nouă din șablon.",
-      "listStatesMissing": "Nota în vigoare nu descrie încă stadiile de pe lista publică, deci lista arată doar confirmații. Aprobă o notă nouă din șablon."
+      "listStatesMissing": "Nota în vigoare nu descrie încă stadiile de pe lista publică, deci lista arată doar confirmații. Aprobă o notă nouă din șablon.",
+      "batch": {
+        "toolsTitle": "Toate textele deodată",
+        "regenerateIntro": "Șablonul s-a schimbat pentru: {texts}. Butonul face câte o ciornă nouă, cu datele clubului; nimic nu intră în vigoare până nu o aprobi.",
+        "regenerateBlanks": "În {texts} rămân câmpuri de completat, de forma '<'…>: scrie-le în ciornă înainte de aprobare.",
+        "regenerate": "Regenerează din șabloane ({count})",
+        "regeneratePending": "Se fac ciornele…",
+        "regenerateTitle": "Faci ciorne noi din șabloane ({count})?",
+        "regenerateBody": "Se face câte o ciornă nouă pentru: {texts}. Textele în vigoare rămân neschimbate până aprobi ciornele.",
+        "upToDate": "Fiecare text are deja cuvintele șablonului în vigoare sau o ciornă care așteaptă să fie citită și aprobată; o ciornă nouă din șablon se face după ce o aprobi sau o ștergi pe aceea.",
+        "approveIntro": "Ciorne gata de aprobat: {versions}.",
+        "approve": "Aprobă ciornele ({count})",
+        "approvePending": "Se aprobă…",
+        "approveTitle": "Aprobi ciornele ({count})?",
+        "approveBody": "Se aprobă: {versions}. Din acest moment sunt în vigoare pe site, ca texte ale clubului; o corectare este o versiune nouă.",
+        "heldIntro": "Nu se aprobă deodată:",
+        "held": {
+          "superseded": "există o ciornă mai nouă a aceluiași text; șterge-o pe aceasta sau aprob-o de pe pagina ei.",
+          "behind": "o versiune aprobată cu număr mai mare este deja oferită, deci aceasta n-ar intra niciodată în vigoare.",
+          "placeholders": "mai are câmpuri de completat, de forma '<'…>; deschide ciorna și scrie-le."
+        },
+        "deleteIntro": "Bifează în tabel versiunile de șters, apoi apasă butonul: vezi lista înainte de ștergere.",
+        "deleteTicked": "Șterge versiunile bifate",
+        "tick": "Bifează {version} pentru ștergere",
+        "backToList": "Înapoi la documentele legale",
+        "title": "Ștergerea versiunilor bifate",
+        "nothingSelected": "Nu ai bifat nicio versiune. Întoarce-te la listă și bifează versiunile de șters.",
+        "goes": "Se șterg ({count}):",
+        "stays": "Rămân, nu se pot șterge ({count}):",
+        "draftGoes": "ciornă; nimeni nu a văzut-o.",
+        "approvedGoes": "aprobată; dispare definitiv, numărul rămâne retras.",
+        "approvedConsequence": "Versiunile aprobate din listă ({count}) dispar definitiv: textul în ambele limbi, titlurile și rândul din evidență. Numerele lor rămân retrase. Nu se pot recupera.",
+        "phraseHelp": "Scrie exact „{phrase}” (numărul versiunilor aprobate din listă), ca să confirmi. Orice altceva oprește ștergerea.",
+        "reasonHelp": "Rămâne în jurnal, la fiecare versiune aprobată ștearsă. Este singurul lucru care supraviețuiește ștergerii.",
+        "action": "Șterge versiunile ({count})",
+        "pending": "Se șterge…",
+        "draftsOnly": "Doar ciorne: nimeni nu le-a văzut și numerele lor nu au fost date nimănui, așa că nu se cere confirmare scrisă.",
+        "draftsConfirmTitle": "Ștergi ciornele ({count})?",
+        "draftsConfirmBody": "Se șterg: {versions}. Nu se pot recupera.",
+        "regenerated": "Gata: ciorne noi din șabloane ({count}). Citește-le, apoi aprobă-le.",
+        "draftsApproved": "Gata: ciorne aprobate ({count}), în vigoare de acum.",
+        "deleted": "Gata: versiuni șterse ({count}).",
+        "deleteDrafts": "Șterge ciornele ({count})"
+      }
     },
     "tasks": {
       "title": "Ce mai este de făcut",
@@ -2272,7 +2342,8 @@
           "todo": "Acum este afișat un text de EXEMPLU, neaprobat. Până când clubul aprobă nota de confidențialitate, termenii și declarația, înscrierea refuză pe toată lumea.",
           "done": "Textele aprobate de club sunt publicate.",
           "how": [
-            "Calea scurtă: /admin/legal → caseta „Într-un pas” → verifică denumirea, CIF-ul, sediul și emailul afișate → butonul de aprobare din casetă. Nota, termenii și cele două declarații de concurs, trail și șosea sau parc, intră în vigoare cu datele clubului în ele.",
+            "Calea scurtă: /admin/legal → caseta „Într-un pas” → verifică denumirea, CIF-ul, sediul și emailul afișate → butonul de aprobare din casetă.",
+            "Nota, termenii și cele două declarații de concurs, trail și șosea sau parc, intră în vigoare cu datele clubului în ele.",
             "Dacă vrei să citești mai întâi: sub casetă, „Pornește de la șablon” → deschide fiecare, citește, apoi apasă butonul din casetă.",
             "Calea lungă, pentru o modificare: „Versiune nouă” → text → salvează ciorna → PDF → „Aprobă”. Un text aprobat nu se mai schimbă; corectarea e versiunea următoare.",
             "Pe fiecare eveniment, la Înscrieri, se alege declarația aprobată (dacă nu e deja)."
@@ -2284,23 +2355,37 @@
           "done": "Emailurile ajung la participanți.",
           "how": [
             "În Mailgun: Sending → Domains → „Add new domain”. Numele: {mailDomain}. Regiunea: EU. Nu folosi domeniul principal — el rămâne liber pentru poșta clubului.",
-            "Mailgun îți arată înregistrările DNS de creat: două TXT (SPF și DKIM) și un CNAME (tracking). Adaugă-le la ROMARG → cPanel → Zone Editor, exact cum le arată Mailgun, cu numele scurt (fără domeniul repetat). Atenție la DKIM: valoarea are peste 255 de caractere și cPanel o taie — scrie-o ca două șiruri între ghilimele, pe un singur rând („k=rsa; p=…prima parte” „…restul”), altfel Mailgun o vede trunchiată. Apoi „Verify” în Mailgun — poate dura până la o oră.",
-            "Tot în Mailgun: Sending → API keys → o cheie de trimitere (MAILGUN_API_KEY). Sending → Webhooks → copiază „HTTP webhook signing key” (MAILGUN_WEBHOOK_SIGNING_KEY) și adaugă webhook-ul {webhookUrl} pentru „Permanent Failure” și „Spam Complaints” — cele două pe care aplicația le folosește (o adresă respinsă apare la masă și pe înscriere). „Delivered” e opțional.",
-            "În Vercel, proiectul de producție → Settings → Environment Variables (sau `vercel env add NUME production`): MAILGUN_DOMAIN={mailDomain}, MAILGUN_API_KEY, MAILGUN_WEBHOOK_SIGNING_KEY, MAILGUN_API_BASE_URL=https://api.eu.mailgun.net/v3, EMAIL_REPLY_TO=o adresă pe care clubul o citește (dacă nu există încă, nu seta variabila deloc — goală, pornirea o refuză). Expeditorul e „{senderName}” <noreply@{mailDomain}> fără altă setare — numele din EMAIL_FROM_NAME, implicit numele clubului.",
-            "Probă pe QA, nu pe producție (producția refuză înscrierile până sunt aprobate textele legale): pe proiectul QA din Vercel pune aceleași MAILGUN_DOMAIN, MAILGUN_API_KEY, MAILGUN_API_BASE_URL (modul rămâne allowlist, EMAIL_ALLOWLIST=adresa ta), redeploy, înscrie-te pe QA — emailul vine de la noreply@{mailDomain}. Când merge: pe producție EMAIL_DELIVERY_MODE=live, redeploy. Rândul acesta devine verde."
+            "Mailgun îți arată înregistrările DNS de creat: două TXT (SPF și DKIM) și un CNAME (tracking).",
+            "Adaugă-le la ROMARG → cPanel → Zone Editor, exact cum le arată Mailgun, cu numele scurt (fără domeniul repetat).",
+            "Atenție la DKIM: valoarea are peste 255 de caractere și cPanel o taie — scrie-o ca două șiruri între ghilimele, pe un singur rând („k=rsa; p=…prima parte” „…restul”), altfel Mailgun o vede trunchiată.",
+            "Apoi „Verify” în Mailgun — poate dura până la o oră.",
+            "Tot în Mailgun: Sending → API keys → o cheie de trimitere (MAILGUN_API_KEY).",
+            "Sending → Webhooks → copiază „HTTP webhook signing key” (MAILGUN_WEBHOOK_SIGNING_KEY) și adaugă webhook-ul {webhookUrl} pentru „Permanent Failure” și „Spam Complaints”.",
+            "Cele două pe care aplicația le folosește (o adresă respinsă apare la masă și pe înscriere). „Delivered” e opțional.",
+            "În Vercel, proiectul de producție → Settings → Environment Variables (sau `vercel env add NUME production`): MAILGUN_DOMAIN={mailDomain}, MAILGUN_API_KEY, MAILGUN_WEBHOOK_SIGNING_KEY.",
+            "Tot acolo: MAILGUN_API_BASE_URL=https://api.eu.mailgun.net/v3 și EMAIL_REPLY_TO=o adresă pe care clubul o citește.",
+            "Dacă adresa nu există încă, nu seta EMAIL_REPLY_TO deloc: goală, pornirea o refuză.",
+            "Expeditorul e „{senderName}” <noreply@{mailDomain}> fără altă setare — numele din EMAIL_FROM_NAME, implicit numele clubului.",
+            "Probă pe QA, nu pe producție: producția refuză înscrierile până sunt aprobate textele legale.",
+            "Pe proiectul QA din Vercel pune aceleași MAILGUN_DOMAIN, MAILGUN_API_KEY, MAILGUN_API_BASE_URL (modul rămâne allowlist, EMAIL_ALLOWLIST=adresa ta), redeploy, înscrie-te pe QA.",
+            "Emailul vine de la noreply@{mailDomain}. Când merge: pe producție EMAIL_DELIVERY_MODE=live, redeploy. Rândul acesta devine verde."
           ]
         },
         "scheduler": {
           "title": "Monitoarele de producție pe cron-job.org",
-          "todo": "Monitoare pentru cele două sarcini programate, cu JOB_SECRET-ul mediului: la 15 minute ziua și o dată pe oră noaptea. Lipsește sau întârzie",
-          "done": "Ambele sarcini rulează la timp.",
+          "todo": "Monitoare pentru cele două sarcini programate, cu JOB_SECRET-ul mediului. Acest mediu e apelat la {pingerDay} ziua și la {pingerNight} noaptea. Lipsește sau întârzie",
+          "done": "Ambele sarcini rulează la timp. Acest mediu e apelat la {pingerDay} ziua și la {pingerNight} noaptea.",
           "how": [
             "Pe cron-job.org (cont gratuit): Settings → Time zone = Europe/Bucharest. Apoi „Create cronjob”, de patru ori pentru producție: câte două pe fiecare adresă (una de zi, una de noapte).",
-            "Adresele: {outboxUrl} și {maintenanceUrl}. La toate: Request method POST, iar la Headers: Authorization = Bearer urmat de JOB_SECRET-ul acestui mediu (valoarea din Vercel → Settings → Environment Variables; nu apare aici).",
-            "Zi: Execution schedule → Custom → toate zilele, orele 7–22, minutele 0, 15, 30, 45 (crontab */15 7-22 * * *). Noapte: Custom → toate zilele, orele 23 și 0–6, minutul 0 (0 0-6,23 * * *); monitorul de noapte pentru mentenanță poate sări peste 02:00 și 03:00 (0 0-1,4-6,23 * * *).",
-            "Bifează notificarea prin email la eșec, ca să afli când un monitor moare. La prima rulare rândul acesta devine verde; /devs arată fiecare sarcină cu ora ultimei rulări și consumul bazei de date. Noaptea site-ul răspunde mai încet la prima cerere — e voit.",
+            "Adresele: {outboxUrl} și {maintenanceUrl}.",
+            "La toate: Request method POST, iar la Headers: Authorization = Bearer urmat de JOB_SECRET-ul acestui mediu (valoarea din Vercel → Settings → Environment Variables; nu apare aici).",
+            "Zi: Execution schedule → Custom → toate zilele, orele 7–22, minutele 0, 15, 30, 45 (crontab */15 7-22 * * *).",
+            "Noapte: Custom → toate zilele, orele 23 și 0–6, minutul 0 (0 0-6,23 * * *); monitorul de noapte pentru mentenanță poate sări peste 02:00 și 03:00 (0 0-1,4-6,23 * * *).",
+            "Bifează notificarea prin email la eșec, ca să afli când un monitor moare. La prima rulare rândul acesta devine verde; /devs arată fiecare sarcină cu ora ultimei rulări și consumul bazei de date.",
+            "Noaptea site-ul răspunde mai încet la prima cerere — e voit.",
             "Pe QA: outbox-ul o dată pe oră (0 * * * *) și mentenanța la 2 ore (0 */2 * * *), iar pe Setări → Costuri „Cât de des verifică site-ul” = 2 ore: și QA plătește orele în care baza lui de date e trează.",
-            "Al treilea monitor, cel care te anunță când emailurile nu mai pleacă: „Create cronjob” cu adresa {baseUrl}/api/health, Request method GET, fără header — pe producție o dată pe oră, la minutul 2 (2 0-1,4-23 * * *), pe QA la 6 ore (2 */6 * * *). La Notifications bifează „on failure” și „when the job gets disabled”."
+            "Al treilea monitor, cel care te anunță când emailurile nu mai pleacă: „Create cronjob” cu adresa {baseUrl}/api/health, Request method GET, fără header.",
+            "Pe producție o dată pe oră, la minutul 2 (2 0-1,4-23 * * *), pe QA la 6 ore (2 */6 * * *). La Notifications bifează „on failure” și „when the job gets disabled”."
           ]
         },
         "retentionSweep": {
@@ -2308,7 +2393,8 @@
           "todo": "Pasul care șterge datele ajunse la termen a eșuat de două ori la rând, deci termenele nu se mai respectă singure. Monitoarele sunt în regulă",
           "done": "Ștergerea automată a datelor rulează fără erori.",
           "how": [
-            "Deschide /devs: rândul sarcinii registration-maintenance arată „eșuează” și, în ultima eroare, pașii care au eșuat (de exemplu retention:registrations-after-event). Numele pașilor sunt în src/modules/jobs/retention.ts.",
+            "Deschide /devs: rândul sarcinii registration-maintenance arată „eșuează” și, în ultima eroare, pașii care au eșuat (de exemplu „retention:registrations-after-event”).",
+            "Numele pașilor sunt în codul sarcinilor de retenție.",
             "În jurnalele funcției din Vercel caută „[retention] sweep step failed”: lângă numele pasului apare codul erorii bazei de date (de exemplu 57014, timp depășit), niciodată valorile.",
             "Repară cauza, apoi așteaptă următoarea rulare (cel mult 15 minute ziua, o oră noaptea). Rândul dispare singur după prima rulare fără erori, iar /api/health răspunde din nou ok."
           ]
@@ -2318,7 +2404,8 @@
           "todo": "Există un singur cont de staff — cel introdus de mână. Din /admin/staff, un Administrator invită organizatorii după adresa de email; contul lor Zitadel se leagă la prima autentificare.",
           "done": "Echipa are conturi.",
           "how": [
-            "Deschide /admin/staff, scrie adresa de email a persoanei și alege rolul: Organizator (setează evenimentele), Administrator (conduce clubul: înscrieri, texte legale, echipa, această pagină) sau Superadministrator (și setările tehnice; rolul îl dă doar alt Superadministrator).",
+            "Deschide /admin/staff, scrie adresa de email a persoanei și alege rolul: Organizator (setează evenimentele) sau Administrator (conduce clubul: înscrieri, texte legale, echipa, această pagină).",
+            "Superadministrator înseamnă și setările tehnice; rolul îl dă doar alt Superadministrator.",
             "„Adaugă” îi trimite pe email invitația clubului. Cu cheia de invitații pusă (ZITADEL_MANAGEMENT_PAT pe ambele proiecte Vercel), îi creează și contul Zitadel, cu link pentru parolă.",
             "Intră pe {baseUrl}/admin, se autentifică prin Zitadel și gata. „Access Denied” înseamnă email neverificat sau altă adresă decât cea invitată."
           ]
@@ -2332,16 +2419,21 @@
           "done": "Cheia funcționează: verificată chiar acum cu o căutare reală, a găsit contul tău. „Adaugă” pe Echipa creează contul de autentificare și Zitadel trimite linkul pentru parolă.",
           "how": [
             "Consola Zitadel → Users → Service Accounts → New: user name „brasovrunners-invites”, nume „{club} — invitații”, access token type Bearer. Create.",
-            "Organization → Managers → + New: service account-ul, rolul Org User Manager. Dialogul se numește „Add an Administrator”; dacă cere un Loginname, este „brasovrunners-invites”. Nu „Role Assignments”.",
-            "Pe service account → Personal Access Tokens → New. Consola nu oferă expirare aici și tokenul nu expiră — este un secret care se revocă de mână, pe același ecran, când nu mai e dorit. Copiază-l (se arată o singură dată) în managerul de parole și notează că nu are dată de sfârșit.",
+            "Organization → Managers → + New: service account-ul, rolul Org User Manager. Dialogul se numește „Add an Administrator”; dacă cere un Loginname, este „brasovrunners-invites”.",
+            "Nu „Role Assignments”.",
+            "Pe service account → Personal Access Tokens → New.",
+            "Consola nu oferă expirare aici și tokenul nu expiră — este un secret care se revocă de mână, pe același ecran, când nu mai e dorit.",
+            "Copiază-l (se arată o singură dată) în managerul de parole și notează că nu are dată de sfârșit.",
             "Vercel → proiectul de producție → Settings → Environment Variables: ZITADEL_MANAGEMENT_PAT = tokenul (Production). La fel pe proiectul QA. Redeploy pe ambele.",
-            "Verificare: reîncarcă această pagină după redeploy — rândul se face verde când cheia găsește contul tău, fără să inviți pe nimeni. Apoi, pe Echipa, „Adaugă” creează contul și Zitadel trimite linkul pentru parolă; cine nu s-a autentificat încă are „Retrimite invitația” pe rând."
+            "Verificare: reîncarcă această pagină după redeploy — rândul se face verde când cheia găsește contul tău, fără să inviți pe nimeni.",
+            "Apoi, pe Echipa, „Adaugă” creează contul și Zitadel trimite linkul pentru parolă; cine nu s-a autentificat încă are „Retrimite invitația” pe rând."
           ],
           "howBroken": [
             "Consola Zitadel → Organization → Managers → + New: service account-ul cheii („brasovrunners-invites”), rolul Org User Manager. Dialogul se numește „Add an Administrator”.",
             "Nu „Role Assignments”: acea pagină dă roluri într-un proiect și nu ajută la crearea utilizatorilor.",
             "Dacă Zitadel a răspuns 401 sau tokenul a fost revocat: pe service account → Personal Access Tokens → New, apoi noul token ca ZITADEL_MANAGEMENT_PAT pe ambele proiecte Vercel și redeploy.",
-            "Verificare: reîncarcă pagina; rândul se face verde când cheia găsește contul tău. Apoi, pe Echipa, pentru fiecare coleg marcat „Fără cont de autentificare”: ⋮ → „Retrage accesul”, apoi „Adaugă” din nou cu aceeași adresă."
+            "Verificare: reîncarcă pagina; rândul se face verde când cheia găsește contul tău.",
+            "Apoi, pe Echipa, pentru fiecare coleg marcat „Fără cont de autentificare”: ⋮ → „Retrage accesul”, apoi „Adaugă” din nou cu aceeași adresă."
           ],
           "howUnreachable": [
             "Reîncarcă pagina peste câteva minute: verificarea se face la fiecare deschidere, cu o căutare în Zitadel.",
@@ -2349,7 +2441,8 @@
           ],
           "capped": "Organizația are mai multe conturi decât citește verificarea: cel mult 2000, câte 200 pe pagină. Cheia poate funcționa, dar Echipa nu mai poate spune ce rând nu are cont de autentificare.",
           "howCapped": [
-            "Nu e nimic de reparat la cheie. Un dezvoltator ridică plafonul ACCOUNTS_LISTING_MAX din src/modules/staff-identity/zitadel-users.ts, sau șterge din consola Zitadel conturile care nu mai sunt folosite."
+            "Nu e nimic de reparat la cheie.",
+            "Un dezvoltator ridică plafonul ACCOUNTS_LISTING_MAX din codul conturilor Zitadel, sau șterge din consola Zitadel conturile care nu mai sunt folosite."
           ]
         },
         "mediaStorage": {
@@ -2359,9 +2452,12 @@
           "how": [
             "Cont Cloudflare (gratuit) pe adresa clubului. Nu trebuie mutat domeniul acolo.",
             "În meniul din stânga → R2 Object Storage → activează R2 (aici cere cardul; nu se plătește nimic sub 10 GB).",
-            "Create bucket → numele „brasovrunners-media”, locația „European Union”. Apoi, în setările bucket-ului, activează „Public access” prin subdomeniul r2.dev (sau un domeniu propriu) și copiază adresa publică — este R2_PUBLIC_BASE_URL.",
-            "R2 → „Manage R2 API Tokens” → Create API token → nume „brasovrunners-site”, permisiune „Object Read & Write”, doar pe acest bucket. Copiază Access Key ID, Secret Access Key și endpoint-ul S3 (apar o singură dată).",
-            "În Vercel → proiectul de producție (și cel de QA) → Settings → Environment Variables: R2_ENDPOINT, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET=brasovrunners-media, R2_PUBLIC_BASE_URL. Redeploy. Rândul acesta devine verde și pagina albumului primește butonul de încărcare."
+            "Create bucket → numele „brasovrunners-media”, locația „European Union”.",
+            "Apoi, în setările bucket-ului, activează „Public access” prin subdomeniul r2.dev (sau un domeniu propriu) și copiază adresa publică — este R2_PUBLIC_BASE_URL.",
+            "R2 → „Manage R2 API Tokens” → Create API token → nume „brasovrunners-site”, permisiune „Object Read & Write”, doar pe acest bucket.",
+            "Copiază Access Key ID, Secret Access Key și endpoint-ul S3 (apar o singură dată).",
+            "În Vercel → proiectul de producție (și cel de QA) → Settings → Environment Variables: R2_ENDPOINT, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET=brasovrunners-media, R2_PUBLIC_BASE_URL. Redeploy.",
+            "Rândul acesta devine verde și pagina albumului primește butonul de încărcare."
           ]
         },
         "publishEvents": {
@@ -2379,11 +2475,15 @@
           "todo": "Au trecut șapte zile de la eveniment: distrugeți listele descărcate și foile tipărite, cel târziu la 30 de zile. Rândul dispare singur.",
           "done": "Nicio listă sau foaie de distrus acum.",
           "how": [
-            "Șterge fișierele CSV și xlsx descărcate pentru eveniment și PDF-ul cu toate declarațiile — din Descărcări, din coș și din orice e-mail sau chat unde le-ai trimis. Dacă o listă trebuie păstrată, taie întâi coloana cu actul de identitate.",
+            "Șterge fișierele CSV și xlsx descărcate pentru eveniment și PDF-ul cu toate declarațiile — din Descărcări, din coș și din orice e-mail sau chat unde le-ai trimis.",
+            "Dacă o listă trebuie păstrată, taie întâi coloana cu actul de identitate.",
             "Pe declarațiile semnate pe hârtie, taie sau acoperă rândul cu seria și numărul actului de identitate. Hârtia rămâne trei ani, apoi se distruge și ea.",
             "Distruge foaia de urgență și orice altă listă tipărită pentru ziua cursei (tocător sau rupte mărunt).",
-            "În Gmail-ul clubului: copiile declarațiilor mai vechi de trei ani se găsesc cu subject:(\"Declarație semnată\" OR \"Signed declaration\") older_than:3y, iar mesajele de pe formularul de contact mai vechi de 12 luni cu subject:\"Mesaj de pe site\" older_than:1y — selectează-le pe toate și șterge-le.",
-            "Tot acolo, confirmările trimise clubului și copiile pentru club ale e-mailurilor către participanți, mai vechi de trei ani: subject:(\"Înscriere confirmată\" OR \"Registration confirmed\" OR \"Copie club\" OR \"Club copy\") older_than:3y — selectează-le pe toate și șterge-le. Căutarea are ambele limbi, ca să prindă subiectul în oricare dintre ele."
+            "În Gmail-ul clubului, declarațiile mai vechi de trei ani: subject:(\"Declarație semnată\" OR \"Signed declaration\") older_than:3y.",
+            "Mesajele de pe formularul de contact mai vechi de 12 luni: subject:\"Mesaj de pe site\" older_than:1y.",
+            "Selectează-le pe toate și șterge-le.",
+            "Tot acolo, confirmările și copiile pentru club mai vechi de trei ani: subject:(\"Înscriere confirmată\" OR \"Registration confirmed\" OR \"Copie club\" OR \"Club copy\") older_than:3y.",
+            "Selectează-le pe toate și șterge-le. Căutarea are ambele limbi, ca să prindă subiectul în oricare dintre ele."
           ]
         },
         "botCheck": {
@@ -2420,7 +2520,8 @@
           "how": [
             "Vercel → avatar → Account Settings → Tokens → Create: nume „brasovrunners-devs”, scope contul tău, expirare 1 an. Copiază tokenul (se arată o singură dată).",
             "Id-ul proiectului: Vercel → proiectul de producție → Settings → General → Project ID (începe cu prj_).",
-            "În Vercel → proiectul de producție → Settings → Environment Variables: VERCEL_API_TOKEN și VERCEL_PROJECT_ID (pe QA la fel, cu id-ul proiectului QA). Redeploy. Rândul devine verde; /devs arată cifrele. Traficul rămâne în dashboard → Usage — linkul e tot pe /devs."
+            "În Vercel → proiectul de producție → Settings → Environment Variables: VERCEL_API_TOKEN și VERCEL_PROJECT_ID (pe QA la fel, cu id-ul proiectului QA). Redeploy.",
+            "Rândul devine verde; /devs arată cifrele. Traficul rămâne în dashboard → Usage — linkul e tot pe /devs."
           ]
         },
         "domainRenewal": {
@@ -2431,7 +2532,8 @@
           "unknown": "Data expirării nu e cunoscută: pe acest mediu nu e setată DOMAIN_REGISTERED_ON, deci nimic nu amintește de reînnoire.",
           "how": [
             "Reînnoiește pe mai mulți ani la registrar; apoi actualizează DOMAIN_RENEWAL_YEARS.",
-            "DOMAIN_RENEWAL_YEARS e numărul total de ani plătiți de la înregistrare: după primul an plus o reînnoire pe 3 ani, e 4. În Vercel → proiectul de producție (și QA) → Settings → Environment Variables; lângă ea DOMAIN_REGISTERED_ON = ziua înregistrării domeniului {apex}, AAAA-LL-ZZ. Redeploy.",
+            "DOMAIN_RENEWAL_YEARS e numărul total de ani plătiți de la înregistrare: după primul an plus o reînnoire pe 3 ani, e 4.",
+            "În Vercel → proiectul de producție (și QA) → Settings → Environment Variables; lângă ea DOMAIN_REGISTERED_ON = ziua înregistrării domeniului {apex}, AAAA-LL-ZZ. Redeploy.",
             "Verifică: rândul acesta arată noua dată de expirare și devine verde când mai sunt peste 90 de zile."
           ]
         },
@@ -2442,9 +2544,12 @@
           "how": [
             "Contul Google al clubului → Security → 2-Step Verification: pornită (fără ea Google nu dă parole de aplicație).",
             "Tot în Security → App passwords → creează una cu numele „{club} site” → copiază cele 16 caractere (se arată o singură dată).",
-            "Vercel → proiectul de producție (și QA) → Settings → Environment Variables: CONTACT_SMTP_USER = adresa Gmail a clubului; CONTACT_SMTP_PASSWORD = cele 16 caractere. (CONTACT_FORM_TO nu mai e obligatorie — e doar rezerva pentru destinatari.)",
+            "Vercel → proiectul de producție (și QA) → Settings → Environment Variables: CONTACT_SMTP_USER = adresa Gmail a clubului; CONTACT_SMTP_PASSWORD = cele 16 caractere.",
+            "(CONTACT_FORM_TO nu mai e obligatorie — e doar rezerva pentru destinatari.)",
             "Redeploy pe ambele proiecte.",
-            "În aplicație: Setări → Contact → „Cine primește mesajele de contact” → scrie adresele la „Către”, dacă vrei o copie pentru cineva la „Copie (Cc)” și, pentru o copie pe care nimeni din mesaj nu o vede, la „Copie ascunsă (Bcc)” → Salvează. De aici se schimbă oricând, fără redeploy.",
+            "În aplicație: Setări → Contact → „Cine primește mesajele de contact” → scrie adresele la „Către” și, dacă vrei, o copie la „Copie (Cc)”.",
+            "O copie pe care nimeni din mesaj nu o vede merge la „Copie ascunsă (Bcc)” → Salvează.",
+            "De aici se schimbă oricând, fără redeploy.",
             "Deschide {baseUrl}/ro/contact și trimite un mesaj de probă: „Mesajul a plecat.” pe pagină și e-mailul în căsuță, cu „Reply” către cine a scris. Rândul acesta devine verde."
           ]
         },
@@ -2455,7 +2560,8 @@
           "done": "Pe acest mediu e setată o limită lunară, iar perioada curentă e confortabil sub ea.",
           "how": [
             "În fila Costuri, deschide „Limitele bazei de date”, alege „Cu limită” și scrie numărul recomandat acolo.",
-            "Cheia aceea e de ajuns dacă e „Project-scoped”: Neon îi dă acces de Editor pe proiectul ei, care citește și scrie limitele. Dacă Neon refuză scrierea, cardul spune asta și numește cheia care merge.",
+            "Cheia aceea e de ajuns dacă e „Project-scoped”: Neon îi dă acces de Editor pe proiectul ei, care citește și scrie limitele.",
+            "Dacă Neon refuză scrierea, cardul spune asta și numește cheia care merge.",
             "Verifică: după salvare, cifrele de deasupra formularului sunt ce ține Neon acum, niciodată ce a fost trimis. Rândul devine verde sub 80% din limită, și roșu la sau peste ea."
           ]
         },
@@ -2475,7 +2581,8 @@
           "done": "Nota în vigoare descrie Strava și Instagram pe lista publică: formularul oferă bifa, iar lista le arată lângă numele celor care au bifat-o.",
           "how": [
             "/admin/legal → „Versiune nouă” → Nota de confidențialitate → „Pornește de la șablon”. Secțiunea despre lista publică descrie Strava și Instagram lângă nume.",
-            "Citește textul, salvează ciorna, apoi „Aprobă”. Din momentul în care intră în vigoare, formularul oferă bifa, fără altă setare; lista le arată doar celor care se înscriu de atunci și bifează.",
+            "Citește textul, salvează ciorna, apoi „Aprobă”.",
+            "Din momentul în care intră în vigoare, formularul oferă bifa, fără altă setare; lista le arată doar celor care se înscriu de atunci și bifează.",
             "Aprobă și termenii din șablon, dacă nu i-ai aprobat deja, ca să spună același lucru despre listă."
           ]
         },
@@ -2505,10 +2612,13 @@
           "todo": "Butoanele „Copiază și tradu tot: RO → EN” și „Tradu din română” pornesc când pui cheia DeepL pe server; până atunci, engleza se scrie de mână.",
           "done": "Traducerea automată e pornită: sus în fiecare editor, „Copiază și tradu tot: RO → EN” traduce totul dintr-o apăsare.",
           "how": [
-            "Fă-ți un cont DeepL API (pagina „DeepL API” de pe site-ul DeepL): o singură cheie, cu un credit dat o singură dată de 1.000.000 de caractere, care nu se reînnoiește lunar. DeepL poate cere un card doar pentru verificare; creditul nu se taxează, iar un plan plătit se alege doar cu acordul explicit al clubului.",
+            "Fă-ți un cont DeepL API (pagina „DeepL API” de pe site-ul DeepL): o singură cheie, cu un credit dat o singură dată de 1.000.000 de caractere, care nu se reînnoiește lunar.",
+            "DeepL poate cere un card doar pentru verificare; creditul nu se taxează, iar un plan plătit se alege doar cu acordul explicit al clubului.",
             "În contul DeepL → API Keys: copiază cheia (una gratuită se termină cu „:fx”).",
-            "În Vercel → proiectul de producție (și QA, cu aceeași cheie sau cu una proprie) → Settings → Environment Variables: DEEPL_API_KEY = cheia. TRANSLATE_PROVIDER nu trebuie pus: implicit e deepl. Redeploy.",
-            "Deschide un eveniment: sus, „Copiază și tradu tot: RO → EN” nu mai e gri, iar sub câmpurile în engleză apare „Tradu din română”. Rândul acesta devine verde. Bugetul pe zi se alege la Setări → Costuri."
+            "În Vercel → proiectul de producție (și QA, cu aceeași cheie sau cu una proprie) → Settings → Environment Variables: DEEPL_API_KEY = cheia. TRANSLATE_PROVIDER nu trebuie pus: implicit e deepl.",
+            "Redeploy.",
+            "Deschide un eveniment: sus, „Copiază și tradu tot: RO → EN” nu mai e gri, iar sub câmpurile în engleză apare „Tradu din română”. Rândul acesta devine verde.",
+            "Bugetul pe zi se alege la Setări → Costuri."
           ],
           "credit": "Traducerea automată e pornită: sus în fiecare editor, „Copiază și tradu tot: RO → EN” traduce totul dintr-o apăsare. Creditul DeepL: folosite {creditUsed} din {creditLimit} caractere ({creditPercent}), rămân {creditRemaining} — se dă o singură dată.",
           "creditUnread": "Traducerea automată e pornită. Creditul DeepL: — {creditReason}",
@@ -2529,7 +2639,8 @@
           "how": [
             "/admin/legal → „Versiune nouă” → „Declarație pe propria răspundere — cursă trail” → „Pornește de la șablon”. Citește textul, completează denumirea clubului, salvează ciorna, apoi „Aprobă”.",
             "La fel pentru „Declarație pe propria răspundere — cursă pe asfalt / în parc”.",
-            "Un concurs nou pornește singur de la varianta potrivită traseului. Un concurs salvat înainte păstrează declarația aleasă atunci — cea de trail, pentru unul pe asfalt: deschide-l, iar cardul «Declarația pe propria răspundere» spune când varianta nu se potrivește traseului; alege-o pe cea de șosea sau parc și salvează."
+            "Un concurs nou pornește singur de la varianta potrivită traseului. Un concurs salvat înainte păstrează declarația aleasă atunci.",
+            "Cea de trail, pentru unul pe asfalt: deschide-l, iar cardul «Declarația pe propria răspundere» spune când varianta nu se potrivește traseului. Alege-o pe cea de șosea sau parc și salvează."
           ]
         },
         "groupRunSeriesTexts": {
@@ -2699,6 +2810,7 @@
       "olderPictures": {
         "title": "Imaginile vechi, fără mărimi pentru telefon",
         "intro": "Pozele vechi au un singur fișier mare, pe care telefonul îl descarcă întreg. Butonul le face mărimile mici, cel mult {perPress} la o apăsare.",
+        "introMore": "O imagine care nu reușește rămâne numărată și se reîncearcă la fiecare apăsare. Fișierul vechi rămâne până ștergi imaginea; atunci se șterge și el.",
         "left": {
           "one": "A rămas {count} imagine fără mărimi.",
           "few": "Au rămas {count} imagini fără mărimi.",
@@ -3160,6 +3272,39 @@
       "groupCustom": "Pagini personalizate",
       "tabMembers": "Membri"
     },
+    "fontSize": {
+      "title": "Mărimea textului",
+      "intro": "Cât de mare e textul pe paginile publice: titlurile, paragrafele și butoanele cresc sau scad împreună.",
+      "introMore": "Spațiile și lățimile paginii rămân la fel. Mărimea se înmulțește cu cea din browserul vizitatorului: cine și-a mărit textul îl vede în continuare mai mare.",
+      "current": "Acum: {size}",
+      "updatedAt": "Setat {when}.",
+      "legend": "Mărimea textului pe paginile publice",
+      "default": "implicit",
+      "save": "Salvează mărimea",
+      "saving": "Se salvează…",
+      "saved": "Mărimea textului a fost salvată.",
+      "readOnly": "Mărimea o alege Administratorul; vezi aici alegerea în vigoare.",
+      "scope": "Se aplică în ambele teme. Backoffice-ul rămâne mereu la mărimea lui.",
+      "sample": "Alergare de grup în Tâmpa, sâmbătă la 9:00",
+      "sizes": {
+        "small": {
+          "name": "Mic",
+          "help": "Textul paragrafelor la {px} px."
+        },
+        "normal": {
+          "name": "Normal",
+          "help": "Mărimea de până acum: {px} px."
+        },
+        "large": {
+          "name": "Mare",
+          "help": "Textul paragrafelor la {px} px."
+        },
+        "xlarge": {
+          "name": "Foarte mare",
+          "help": "Textul paragrafelor la {px} px; pe telefon, unele rânduri se pot rupe în două."
+        }
+      }
+    },
     "appearance": {
       "title": "Aspectul site-ului",
       "intro": "Culoarea deschisă pe care stau paginile publice. Alege o nuanță din culorile clubului sau scrie una.",
@@ -3405,15 +3550,23 @@
       "title": "Masa de ridicare a numerelor",
       "howTitle": "Cum merge ziua cursei, pas cu pas",
       "how": [
-        "Înainte de cursă (organizator): pe pagina evenimentului, în „Participare și înscrieri” → „Alocare și tipărire”, apasă „Descarcă toate numerele (PDF)” și tipărește-le — două pe o foaie A4. Tipărește și „Formular declarație pe hârtie (PDF)”, câteva exemplare, pentru cine semnează pe loc, iar un administrator tipărește din „Numere de rezervă pentru înscrierile de la fața locului” numere goale pentru cine se înscrie la masă.",
-        "Voluntarii: un Administrator le face conturi din „Echipa”, cu rolul Voluntar. Cu contul lor deschid această pagină pe telefon. Atât văd: nume, stare, număr. Nu văd adrese de email și nu pot anula pe nimeni.",
-        "Fiecare participant confirmat a primit pe email un cod QR. La masă: apasă „Scanează” (pe Android) sau deschide camera telefonului și îndreapt-o spre cod — se deschide rândul persoanei. Sau caută după nume ori după numărul de concurs.",
+        "Înainte de cursă (organizator): pe pagina evenimentului, în „Participare și înscrieri” → „Alocare și tipărire”, apasă „Descarcă toate numerele (PDF)” și tipărește-le — două pe o foaie A4.",
+        "Tipărește și câteva „Formular declarație pe hârtie (PDF)”, pentru cine semnează pe loc.",
+        "Un administrator tipărește din „Numere de rezervă pentru înscrierile de la fața locului” numere goale pentru cine se înscrie la masă.",
+        "Voluntarii: un Administrator le face conturi din „Echipa”, cu rolul Voluntar. Cu contul lor deschid această pagină pe telefon. Atât văd: nume, stare, număr.",
+        "Nu văd adrese de email și nu pot anula pe nimeni.",
+        "Fiecare participant confirmat a primit pe email un cod QR. La masă: apasă „Scanează” (pe Android) sau deschide camera telefonului și îndreapt-o spre cod — se deschide rândul persoanei.",
+        "Sau caută după nume ori după numărul de concurs.",
         "Apasă „Marchează prezent” și dă-i numărul din teanc. Nu are număr? Scrie-l în căsuță și apasă „Salvează nr.”.",
-        "Nu a primit emailul sau nu găsește QR-ul: caută după nume. Dacă scrie „Așteaptă semnarea declarației”, îi dai declarația pe hârtie să o semneze, apeși „Confirmă pe hârtie”, apoi „Marchează prezent”.",
-        "Nu s-a înscris deloc: „Adaugă pe cineva” — nume și email; bifa „Persoana este la masă” e deja pusă, iar „Numărul dat acum” propune următorul număr de rezervă: îi dai BID-ul acela și îi scrii numele cu markerul. Semnează declarația pe hârtie, apoi „Marchează prezent”. Dacă evenimentul e plin intră pe lista de așteptare; „Dă-i un loc” merge doar dacă s-a eliberat unul.",
+        "Nu a primit emailul sau nu găsește QR-ul: caută după nume.",
+        "Dacă scrie „Așteaptă semnarea declarației”, îi dai declarația pe hârtie să o semneze, apeși „Confirmă pe hârtie”, apoi „Marchează prezent”.",
+        "Nu s-a înscris deloc: „Adaugă pe cineva”. Nume și email.",
+        "Bifa „Persoana este la masă” e deja pusă, iar „Numărul dat acum” propune următorul număr de rezervă: îi dai BID-ul acela și îi scrii numele cu markerul.",
+        "Semnează declarația pe hârtie, apoi „Marchează prezent”. Dacă evenimentul e plin intră pe lista de așteptare; „Dă-i un loc” merge doar dacă s-a eliberat unul.",
         "Ai greșit? „Anulează prezența” o scoate. Orice apăsare rămâne în istoricul înscrierii, cu numele tău.",
         "La final, cifrele de pe această pagină sunt cifrele cursei: câți confirmați, câți prezenți. Cine nu a venit rămâne fără „prezent”.",
-        "Apare un chenar roșu „Înscriere anulată” sau „expirată”? Persoana nu mai are loc, chiar dacă are emailul în mână: nu i se dă număr și nu se marchează prezentă. Dacă scrie că numărul a fost tipărit, scoate BID-ul acela din teanc — numerele nu se refolosesc."
+        "Apare un chenar roșu „Înscriere anulată” sau „expirată”? Persoana nu mai are loc, chiar dacă are emailul în mână: nu i se dă număr și nu se marchează prezentă.",
+        "Dacă scrie că numărul a fost tipărit, scoate BID-ul acela din teanc — numerele nu se refolosesc."
       ],
       "noEvents": "Niciun eveniment cu înscriere locală în perioada asta.",
       "event": "Eveniment",
@@ -3615,8 +3768,39 @@
         "title": "Coada de trimitere",
         "intro": "Ce nu a plecat încă: tipul, destinatarul, când a intrat în coadă, câte încercări și ultimul răspuns al furnizorului. Mesajul se compune abia la trimitere.",
         "count": "În coadă: {count} mesaje.",
-        "facts": "În coadă din {queued} · încercări: {attempts} · următoarea încercare: {next}",
-        "nextAny": "la prima trimitere",
+        "aside": "{waiting} · {state}",
+        "when": {
+          "title": "Când pleacă emailurile",
+          "on": "Emailurile pleacă: la trecerea programată",
+          "off": "Emailurile pleacă: imediat după cerere",
+          "onShort": "la trecerea programată",
+          "offShort": "imediat după cerere",
+          "scheduled": "Emailurile pleacă la trecerea programată a site-ului. Următoarea trecere: {at}. Un email pus în coadă acum așteaptă cel mult {wait}.",
+          "immediate": "Fiecare email pleacă imediat după cererea care l-a pus în coadă. Ce rămâne (o nouă încercare, o amânare) pleacă la trecerea programată; următoarea: {at}.",
+          "holdsLead": "Ce ține trecerea programată acum: {holds}.",
+          "holds": {
+            "pinger": "monitorul care apelează site-ul, o dată la {wait}",
+            "interval": "«Cât de des verifică site-ul» din Setări → Costuri, cel mult o dată la {wait}",
+            "governor": "frâna de buget a bazei de date, cel mult o dată la {wait}"
+          },
+          "lastRun": "Ultima trecere programată: {at}.",
+          "neverRan": "Nicio trecere programată înregistrată încă.",
+          "turnOff": "Trimite imediat după cerere",
+          "turnOn": "Trimite la trecerea programată",
+          "offTitle": "Emailurile să plece imediat după cerere?",
+          "offBody": "Emailurile din coadă pleacă acum, iar de acum fiecare email pleacă imediat după cererea care l-a pus în coadă. Aceeași setare ca în «Termene». Niciun mesaj nu se pierde.",
+          "onTitle": "Emailurile să plece la trecerea programată?",
+          "onBody": "De acum emailurile pleacă la trecerea programată, în cel mult {wait}. Aceeași setare ca în «Termene». Niciun mesaj nu se pierde."
+        },
+        "facts": "În coadă din {queued} · încercări: {attempts}",
+        "leaves": {
+          "at": "Pleacă: {at} (estimat).",
+          "late": "Întârziat: trebuia să fi plecat deja. Următoarea trecere programată: {at}; sau apasă «Trimite acum».",
+          "lateAskAdmin": "Întârziat: trebuia să fi plecat deja. Următoarea trecere programată: {at}; sau anunță administratorul.",
+          "sending": "Se trimite acum.",
+          "never": "Nu mai pleacă singur: toate încercările s-au consumat.",
+          "held": "Ținut până {until}: o familie încă semnează. Apoi pleacă la trecerea următoare: {at} (estimat)."
+        },
         "lastError": "Ultimul răspuns al furnizorului: {error}",
         "manual": "Retrimis manual",
         "more": "Și încă {count} în coadă, neafișate aici.",
@@ -3624,6 +3808,15 @@
           "PENDING": "În așteptare",
           "PROCESSING": "Se trimite acum",
           "FAILED": "Oprit după toate încercările"
+        },
+        "sendNow": {
+          "held": "Rămân ținute: {count}, primul până {until}: {reasons}.",
+          "reasons": {
+            "family": "familie care încă semnează: {count}",
+            "retry": "reîncercare sau amânare: {count}",
+            "reserve": "rezerva pentru newsletter: {count}"
+          },
+          "nothingDue": "Niciun email nu e la rând acum: cele din coadă sunt ținute până la ora lor, se trimit chiar acum sau și-au consumat încercările."
         }
       },
       "copy": {
@@ -4311,13 +4504,10 @@
               "steps": [
                 "«Evenimente» → «Editează» → cardul «Ce fel de eveniment»: alegi «Dificultate» (categoria) și, alături, «Treapta» — 1, 2 sau 3.",
                 "Scara are 15 trepte: 5 categorii × 3 trepte. Treapta 1 e cea mai ușoară din categorie, 3 cea mai grea. Pe site apare categoria cu treapta ei, de exemplu „Mediu 2”.",
-                "«Ușor»: scurt și pe plat — pentru oricine.",
-                "«Mediu»: 1 e alergarea pe Tâmpa, 2 o alergare mai lungă, 3 una lungă și tehnică.",
-                "«Greuț»: de la semimaraton în sus.",
-                "«Greu»: maratoane.",
-                "«Foarte greu»: ultramaratoane și mai mult.",
+                "Ce înseamnă fiecare categorie și treaptă: apasă semnul de întrebare de lângă «Dificultate» sau «Treapta».",
                 "Treapta în celelalte categorii: 1 când traseul e la capătul ușor al categoriei, 3 când e aproape de următoarea (mai lung, mai abrupt, noaptea, noroi). Nu știi? 2.",
-                "Filtrul de pe site bifează o categorie întreagă: «Greu» arată toate cele trei trepte ale ei."
+                "Filtrul de pe site bifează o categorie întreagă: «Greu» arată toate cele trei trepte ale ei.",
+                "Nu-ți amintești scara? Semnul de întrebare de lângă «Treapta» o arată toată. Pe site, pastila dificultății spune la atingere nivelul din 15, de exemplu „Mediu 2 — nivelul 5 din 15”."
               ]
             },
             {
@@ -4384,13 +4574,10 @@
               "steps": [
                 "«Evenimente» → «Editează» → cardul «Ce fel de eveniment»: alegi «Dificultate» (categoria) și, alături, «Treapta» — 1, 2 sau 3.",
                 "Scara are 15 trepte: 5 categorii × 3 trepte. Treapta 1 e cea mai ușoară din categorie, 3 cea mai grea. Pe site apare categoria cu treapta ei, de exemplu „Mediu 2”.",
-                "«Ușor»: scurt și pe plat — pentru oricine.",
-                "«Mediu»: 1 e alergarea pe Tâmpa, 2 o alergare mai lungă, 3 una lungă și tehnică.",
-                "«Greuț»: de la semimaraton în sus.",
-                "«Greu»: maratoane.",
-                "«Foarte greu»: ultramaratoane și mai mult.",
+                "Ce înseamnă fiecare categorie și treaptă: apasă semnul de întrebare de lângă «Dificultate» sau «Treapta».",
                 "Treapta în celelalte categorii: 1 când traseul e la capătul ușor al categoriei, 3 când e aproape de următoarea (mai lung, mai abrupt, noaptea, noroi). Nu știi? 2.",
-                "Filtrul de pe site bifează o categorie întreagă: «Greu» arată toate cele trei trepte ale ei."
+                "Filtrul de pe site bifează o categorie întreagă: «Greu» arată toate cele trei trepte ale ei.",
+                "Nu-ți amintești scara? Semnul de întrebare de lângă «Treapta» o arată toată. Pe site, pastila dificultății spune la atingere nivelul din 15, de exemplu „Mediu 2 — nivelul 5 din 15”."
               ]
             },
             {
@@ -4636,11 +4823,17 @@
               ]
             },
             {
-              "title": "Cele cinci texte, înainte de publicarea cursei",
+              "title": "Textele legale ale clubului",
               "steps": [
-                "Într-o singură ședință, fiecare de la «Pornește de la șablon»: termenii, nota de confidențialitate (GDPR), declarația de concurs, declarația pentru asfalt, declarația pentru trail.",
-                "Fără termeni, notă și declarație aprobate nu se poate înscrie nimeni. Fără declarația de trail aprobată, nicio alergare pe trail nu oferă declarația.",
-                "Până aprobi nota nouă, lista publică de participanți arată doar confirmații."
+                "«Documente legale»: dacă sus e caseta «Într-un pas: aprobă șabloanele cu datele clubului», verifică datele clubului din ea și apasă «Aprobă acum textele care lipsesc…»: fiecare text încă neaprobat primește versiunea 1, din șablon, cu datele clubului. Un text deja aprobat nu e atins.",
+                "Textele al căror șablon s-a schimbat, toate deodată: la «Toate textele deodată» apasă «Regenerează din șabloane» și confirmă. Se face câte o ciornă pentru fiecare; nimic nu intră încă în vigoare.",
+                "Deschide fiecare ciornă din tabel, citește-o și completează ce a rămas de forma <…>, în română și în engleză; «Salvează ciorna».",
+                "Înapoi pe «Documente legale»: «Aprobă ciornele» și confirmă. Ciornele gata de aprobat intră în vigoare împreună; ce nu se poate aproba deodată e scris sub buton, cu motivul.",
+                "Un singur text de refăcut: «Documente legale» → «Versiune nouă» → sub «Pornește de la șablon» alege-l, apoi pașii de la „Aprobă o versiune nouă a unui text legal”.",
+                "Fără termeni, notă și o declarație de cursă aprobate nu se poate înscrie nimeni. Pentru o cursă pe asfalt editorul alege declarația de asfalt, dacă e aprobată, altfel pe cea de trail. O alergare de grup oferă declarația doar dacă o bifează și dacă textul ei (asfalt sau trail) e aprobat.",
+                "Până aprobi nota nouă, lista publică de participanți arată doar confirmații.",
+                "Ciorne sau versiuni de care nu mai ai nevoie: bifează-le în tabel, apasă «Șterge versiunile bifate» și verifică lista. Doar ciorne: «Șterge ciornele» și confirmă. Cu o versiune aprobată în listă: la «Confirmarea» scrii textul cerut (de exemplu „DELETE 2”), la «Motivul» de ce, apoi «Șterge versiunile».",
+                "Declarațiile semnate la o alergare de grup, când semnatarul cere ștergerea: «Evenimente» → «Editează» la alergare → «Declarații semnate (alergare de grup)» → «Șterge mai multe deodată»: bifează-le, completează o dată «Motivul ștergerii», apasă «Șterge cele bifate» și confirmă. În jurnal rămân numele tău și motivul, nu și al celui care a semnat."
               ]
             },
             {
@@ -4939,7 +5132,24 @@
       "erase": "Șterge declarația",
       "eraseTitle": "Ștergi declarația?",
       "eraseBody": "Declarația și mesajele despre ea se șterg definitiv. În jurnal rămân numele tău și motivul, nu și al celui care a semnat.",
-      "erased": "Declarația a fost ștearsă. În jurnal rămân numele tău și motivul."
+      "erased": "Declarația a fost ștearsă. În jurnal rămân numele tău și motivul.",
+      "tick": "Bifează declarația semnată de {name}",
+      "ticked": "Declarațiile bifate",
+      "batchTitle": "Șterge mai multe deodată",
+      "batchHelp": "Bifează declarațiile de șters, scrie motivul o singură dată și apasă «Șterge cele bifate». Fiecare rămâne în jurnal cu numele tău și motivul, nu și al celui care a semnat.",
+      "batchErase": "Șterge cele bifate",
+      "batchEraseTitle": "Ștergi declarațiile bifate?",
+      "batchEraseBody": {
+        "one": "Ștergi {count} declarație semnată pentru «{run}»? Nu se poate recupera.",
+        "few": "Ștergi {count} declarații semnate pentru «{run}»? Nu se pot recupera.",
+        "other": "Ștergi {count} de declarații semnate pentru «{run}»? Nu se pot recupera."
+      },
+      "batchChanged": "Declarațiile bifate s-au schimbat între timp — cel puțin una a fost deja ștearsă. Nu s-a șters nimic: reîncarcă pagina și bifează din nou.",
+      "batchErased": {
+        "one": "{count} declarație semnată a fost ștearsă. În jurnal rămân numele tău și motivul.",
+        "few": "{count} declarații semnate au fost șterse. În jurnal rămân numele tău și motivul.",
+        "other": "{count} de declarații semnate au fost șterse. În jurnal rămân numele tău și motivul."
+      }
     },
     "newsletter": {
       "title": "Abonați",
@@ -5236,9 +5446,10 @@
       "heading": "Aproape gata!",
       "headingNamed": "Aproape gata, {name}!",
       "lead": "Ți-am trimis un email ca să-ți confirmi locul la {event}, {date}.",
-      "leavesNow": "Emailul pleacă acum.",
-      "leavesAt": "Emailul pleacă la {at}.",
-      "formIn": "Formularul lui {name} a ajuns.",
+      "leavesNow": "Emailul către {email} pleacă acum.",
+      "leavesToday": "Emailul către {email} pleacă la {at}.",
+      "leavesOn": "Emailul către {email} pleacă {at}.",
+      "formIn": "Formularul pentru {name} a ajuns.",
       "formInUnnamed": "Formularul a ajuns.",
       "nextTitle": "Ce urmează",
       "next": {
@@ -5518,8 +5729,8 @@
       "question": "Mai înscrii pe cineva cu aceeași adresă?",
       "add": "Da, încă o persoană",
       "addPending": "Se deschide formularul…",
-      "addHint": "Dacă apeși „Da”, emailul așteaptă formularul următor și primiți unul singur pentru toți.",
-      "addHintLeft": "Dacă apeși „Da”, următoarea persoană primește un email care îi cuprinde pe toți.",
+      "addHint": "Dacă apeși „Da”, emailul așteaptă formularul următor, cel mult {window}, și primiți unul singur pentru toți.",
+      "addHintLeft": "Dacă apeși „Da”, următorul email așteaptă cel mult {window} după ultimul formular și îi cuprinde pe toți.",
       "addHintAtOnce": "Fiecare persoană primește emailul ei.",
       "done": "Nu, gata — trimite-mi emailul",
       "doneAtOnce": "Nu, am terminat",
@@ -6465,13 +6676,14 @@
         "other": "{count} de imagini au primit mărimile pentru telefon; rămase: {left}."
       },
       "picturesLadderedFailed": {
-        "one": "{count} imagine a primit mărimile pentru telefon; nereușite: {failed} (fișierul lipsește din stocare sau nu e o imagine — vezi «Imagini»); rămase: {left}.",
-        "few": "{count} imagini au primit mărimile pentru telefon; nereușite: {failed} (fișierul lipsește din stocare sau nu e o imagine — vezi «Imagini»); rămase: {left}.",
-        "other": "{count} de imagini au primit mărimile pentru telefon; nereușite: {failed} (fișierul lipsește din stocare sau nu e o imagine — vezi «Imagini»); rămase: {left}."
+        "one": "{count} imagine a primit mărimile pentru telefon; nereușite: {failed} — fișier lipsă sau care nu e o imagine, vezi «Imagini»; rămase: {left}.",
+        "few": "{count} imagini au primit mărimile pentru telefon; nereușite: {failed} — fișier lipsă sau care nu e o imagine, vezi «Imagini»; rămase: {left}.",
+        "other": "{count} de imagini au primit mărimile pentru telefon; nereușite: {failed} — fișier lipsă sau care nu e o imagine, vezi «Imagini»; rămase: {left}."
       },
       "groupRunDeclarationErased": "Declarația a fost ștearsă.",
       "shownContactAddress": "Adresa de contact afișată a fost salvată.",
       "siteTint": "Fundalul site-ului a fost salvat.",
+      "siteFontSize": "Mărimea textului a fost salvată.",
       "clubTodoAdded": "Adăugat pe listă.",
       "clubTodoSaved": "Rând salvat.",
       "clubTodoUnchanged": "Rândul spunea deja asta; nimic de schimbat.",
@@ -6529,6 +6741,26 @@
         "one": "Adăugat: {count} membru.",
         "few": "Adăugați: {count} membri.",
         "other": "Adăugați: {count} de membri."
+      },
+      "groupRunDeclarationsErased": {
+        "one": "{count} declarație semnată a fost ștearsă.",
+        "few": "{count} declarații semnate au fost șterse.",
+        "other": "{count} de declarații semnate au fost șterse."
+      },
+      "legalTemplatesRegenerated": {
+        "one": "{count} ciornă nouă din șablon.",
+        "few": "{count} ciorne noi din șabloane.",
+        "other": "{count} de ciorne noi din șabloane."
+      },
+      "legalDraftsApproved": {
+        "one": "{count} ciornă aprobată și în vigoare.",
+        "few": "{count} ciorne aprobate și în vigoare.",
+        "other": "{count} de ciorne aprobate și în vigoare."
+      },
+      "legalVersionsDeleted": {
+        "one": "{count} versiune ștearsă.",
+        "few": "{count} versiuni șterse.",
+        "other": "{count} de versiuni șterse."
       }
     }
   },

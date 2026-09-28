@@ -538,14 +538,14 @@ describe("BR-REQ-080-01 outbox renderer", () => {
     const hours = { ro: hoursPhrase("ro", DEFAULT_DEADLINES.confirmationHours), en: hoursPhrase("en", DEFAULT_DEADLINES.confirmationHours) };
     // §NNN (the owner, 2026-09-28): the event in the subject, and what to press and what follows first.
     expect(message.subject).toContain("Confirmă adresa — Crosul");
-    expect(message.text.indexOf("Apasă butonul ca să confirmi adresa. Apoi semnezi declarația și primești codul QR.")).toBeGreaterThan(-1);
+    expect(message.text.indexOf("Apasă butonul ca să confirmi adresa. Dacă mai e loc, semnezi apoi declarația și primești codul QR.")).toBeGreaterThan(-1);
     expect(message.text.indexOf("Apasă butonul ca să confirmi adresa.")).toBeLessThan(message.text.indexOf("Am primit o înscriere la Crosul"));
     expect(message.text).toContain("Am primit o înscriere la Crosul pe numele Ana Pop, trimisă cu această adresă de email.");
     // The link's life in one line, from «Termene» (§377).
     expect(message.text).toContain(`Linkul e valabil ${hours.ro}; fără confirmare, înscrierea expiră.`);
     expect(message.text).toContain("Datele din înscriere ni le-a trimis cine a completat formularul cu această adresă. Dacă nu Ana Pop l-a completat");
     expect(message.text).toContain("Dacă nu ai solicitat această înscriere, poți ignora acest mesaj.");
-    expect(message.text).toContain("Press the button to confirm your address. Then you sign the declaration and get your QR code.");
+    expect(message.text).toContain("Press the button to confirm your address. If there is still a place, you then sign the declaration and get your QR code.");
     expect(message.text).toContain(`The link is valid for ${hours.en}; without a confirmation, the registration expires.`);
     expect(message.text).toContain("If you did not request this registration, you can ignore this message.");
     // The event's facts block (§392) under the words, before the button.

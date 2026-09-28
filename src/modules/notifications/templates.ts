@@ -941,16 +941,18 @@ const T = {
       // The event in the subject (§NNN): a parent with two races open sees which one this is.
       subject: (d: TemplateData) => `Confirmă adresa — ${d.eventTitle ?? "eveniment"}`,
       /*
-        What to press and what follows, in the first line (§NNN; the owner, 2026-09-28): every
-        registration on the site goes from the address to the declaration and then to the QR code
-        (the allocator's PENDING_DECLARATION; no registration without a declaration, §29). Then the
+        What to press and what follows, in the first line (§NNN; the owner, 2026-09-28): confirming the
+        address runs the allocator (`allocateOrWaitlist`), which gives a place — then the declaration
+        and the QR code (no registration without a declaration, §29) — or the waiting list when the
+        event is full by then; the renderer cannot know which, so the line promises the declaration
+        only «if there is still a place» and is true of both outcomes (the review of 2026-09-28). Then the
         first message to whoever the form named (§419; GDPR art. 12(1), 14(2)(f), 14(3)(b)): whose
         registration it is, how long the link lasts and that the registration lapses without it,
         where the data came from — a family member registered on this address (§389) reads it
         first, and the privacy notice is the footer's link. The event's facts block (§392) follows.
       */
       body: (d: TemplateData) => [
-        "Apasă butonul ca să confirmi adresa. Apoi semnezi declarația și primești codul QR.",
+        "Apasă butonul ca să confirmi adresa. Dacă mai e loc, semnezi apoi declarația și primești codul QR.",
         `Am primit o înscriere la ${d.eventTitle ?? "eveniment"} pe numele ${d.participantName}, trimisă cu această adresă de email.`,
         `Linkul e valabil ${d.confirmationHours ?? hoursPhrase("ro", DEFAULT_DEADLINES.confirmationHours)}; fără confirmare, înscrierea expiră.`,
         `Datele din înscriere ni le-a trimis cine a completat formularul cu această adresă. Dacă nu ${d.participantName} l-a completat, arată-i acest mesaj: cum folosim datele scrie în nota de confidențialitate, la linkul de la sfârșitul mesajului. Dacă ${d.participantName} nu vrea să participe, nu confirma: înscrierea expiră singură.`,
@@ -1388,13 +1390,15 @@ const T = {
     familySitting: {
       subject: (d: TemplateData) => `Înscriere de familie: ${peoplePhrase("ro", d.familySittingPeople?.length ?? 1)} la ${d.eventTitle ?? "eveniment"}`,
       /*
-        The first line (§NNN; the owner, 2026-09-28): the one button does everything. The count is a
-        number in the sentence, its Romanian form from `countForm` as everywhere here (§341).
+        The first line (§NNN; the owner, 2026-09-28): the one button does everything. Confirming runs the
+        allocator per person, so the declarations are promised only to whoever still has a place — a
+        full event puts the rest on the waiting list (the review of 2026-09-28). The count is a number
+        in the sentence, its Romanian form from `countForm` as everywhere here (§341).
       */
       lead: (count: number) =>
         count <= 1
-          ? "Un singur buton: confirmi adresa și înscrierea, apoi semnezi declarația."
-          : `Un singur buton: confirmi adresa și cele ${count}${countForm(count, "ro") === "other" ? " de" : ""} înscrieri, apoi semnezi declarațiile pe rând.`,
+          ? "Un singur buton: confirmi adresa și înscrierea, apoi, dacă mai e loc, semnezi declarația."
+          : `Un singur buton: confirmi adresa și cele ${count}${countForm(count, "ro") === "other" ? " de" : ""} înscrieri, apoi semnezi pe rând declarațiile celor care mai au loc.`,
       /*
         When somebody listed already got an email of their own before «Da» (§NNN): that email's
         button still works for that one person, so this says only what is true — this one covers
@@ -1509,7 +1513,7 @@ const T = {
     verify: {
       subject: (d: TemplateData) => `Confirm your address — ${d.eventTitle ?? "the event"}`,
       body: (d: TemplateData) => [
-        "Press the button to confirm your address. Then you sign the declaration and get your QR code.",
+        "Press the button to confirm your address. If there is still a place, you then sign the declaration and get your QR code.",
         `We have received a registration for ${d.eventTitle ?? "an event"} in the name of ${d.participantName}, sent with this email address.`,
         `The link is valid for ${d.confirmationHours ?? hoursPhrase("en", DEFAULT_DEADLINES.confirmationHours)}; without a confirmation, the registration expires.`,
         `The details in this registration were sent to us by whoever filled in the form with this address. If that was not ${d.participantName}, show them this message: how we use the details is in the privacy notice, linked at the end of this message. If ${d.participantName} does not want to take part, do not confirm: the registration lapses by itself.`,
@@ -1874,8 +1878,8 @@ const T = {
       subject: (d: TemplateData) => `Family registration: ${peoplePhrase("en", d.familySittingPeople?.length ?? 1)} for ${d.eventTitle ?? "the event"}`,
       lead: (count: number) =>
         count <= 1
-          ? "One button: you confirm the address and the registration, then sign the declaration."
-          : `One button: you confirm the address and the ${count} registrations, then sign the declarations one by one.`,
+          ? "One button: you confirm the address and the registration, then, if there is still a place, sign the declaration."
+          : `One button: you confirm the address and the ${count} registrations, then sign, one by one, the declarations of those who still have a place.`,
       earlier: "This email covers everybody: the button below also confirms the registration from the earlier email.",
       facts: (f: FamilySittingFactsInput): FamilyFact[] => [
         ...(f.event ? [{ label: "The event", value: [{ text: f.when ? `${f.event}, ${f.when}` : f.event, bold: true }] }] : []),

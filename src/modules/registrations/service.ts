@@ -493,7 +493,7 @@ async function enqueueAllocationEmail<T extends Record<string, unknown>>(
     messageType,
     locale: allocated.locale,
     recipientEmail,
-    // The declaration's message starts the hold (§NNN); a family's held request says so too (`familyHeld`).
+    // The declaration's message starts the hold (§513); a family's held request says so too (`familyHeld`).
     payload: messageType === "COMPLETE_DECLARATION" ? startingDeadline(held ? { familyHeld: true } : {}) : {},
     idempotencyKey,
     now,

@@ -236,10 +236,10 @@ test.describe("§389 §446 a family on one address", () => {
     await hydrated(page);
     await fillPerson(page, { firstName: "Ana", lastName, birthDate: "1985-03-02" }, email);
     await expect(page.getByRole("heading", { name: `Aproape gata, Ana!` })).toBeVisible();
-    await expect(page.getByTestId("check-email-form-in")).toHaveText("Formularul lui Ana a ajuns.");
-    await expect(page.getByTestId("check-email-leaves")).toHaveText("Emailul pleacă acum.");
+    await expect(page.getByTestId("check-email-form-in")).toHaveText("Formularul pentru Ana a ajuns.");
+    await expect(page.getByTestId("check-email-leaves")).toHaveText(`Emailul către ${email} pleacă acum.`);
     await expect(page.getByRole("heading", { name: "Mai înscrii pe cineva cu aceeași adresă?" })).toBeVisible();
-    await expect(page.getByTestId("family-sitting-offer-hint")).toHaveText("Dacă apeși „Da”, următoarea persoană primește un email care îi cuprinde pe toți.");
+    await expect(page.getByTestId("family-sitting-offer-hint")).toHaveText(/^Dacă apeși „Da”, următorul email așteaptă cel mult .+ după ultimul formular și îi cuprinde pe toți\.$/);
     await expect(page.getByRole("heading", { name: "Ce urmează" })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Nu, gata — trimite-mi emailul" })).toHaveCount(0);
     // The first person's email left without any press.
@@ -283,7 +283,7 @@ test.describe("§389 §446 a family on one address", () => {
     expect(family.text).toContain(`Persoana 2 din 2: Maria ${lastName}, data nașterii 11 iulie 1990`);
     expect(family.text).toContain("Confirm și semnez declarațiile (2)");
     // The first line says the one button does everything (§NNN); Ana's own email left before «Da», so one line says this one covers her too.
-    expect(family.text).toContain("Un singur buton: confirmi adresa și cele 2 înscrieri, apoi semnezi declarațiile pe rând.");
+    expect(family.text).toContain("Un singur buton: confirmi adresa și cele 2 înscrieri, apoi semnezi pe rând declarațiile celor care mai au loc.");
     expect(family.text).toContain("Acest email îi cuprinde pe toți: butonul de mai jos confirmă și înscrierea din emailul anterior.");
     expect(family.links.some((href) => href.includes("/inscrieri/ale-mele/"))).toBe(true);
     const link = family.links.find((href) => href.includes("/inregistrari/familie/"));

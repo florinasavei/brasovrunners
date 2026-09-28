@@ -15,6 +15,7 @@ import { updateEmailCopy } from "@/modules/notifications/email-copy";
 import { updateEmailPlan } from "@/modules/notifications/email-plan";
 import { updateEmailTransport } from "@/modules/notifications/email-transport";
 import { sendOutboxNow } from "@/modules/notifications/send-now";
+import { updateDeliveryTiming } from "@/modules/notifications/delivery-timing";
 import { requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
 import { canManageClubSettings, canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
@@ -138,6 +139,30 @@ export async function sendOutboxNowFromEmailsAction(_previous: FormOutcome | nul
   // the rows it showed before the press (the same trap §164 and §100 documented above).
   revalidatePath(path);
   redirect(`${path}?${outcome}#admin-alert`);
+}
+
+/**
+ * The queue panel's switch (§529): «Trimitere programată» on or off, beside the rows it decides
+ * the departure of. The same setting, service and gates as «Când pleacă emailurile» in «Termene»
+ * (§513) — the Administrator at the door and in the service, one closed choice the schema decides,
+ * audited — landing back on the queue it has just changed. Switched off, the service also sends
+ * what the round was holding, after this response.
+ */
+export async function updateDeliveryTimingFromEmailsAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = localeOf(form);
+  const path = getPathname({ locale, href: "/admin/settings/emails" });
+
+  try {
+    const actor = await requireStaffCapability(canManageClubSettings);
+    await updateDeliveryTiming(getDb(), actor, { timing: form.get("timing") }, new Date());
+  } catch (error) {
+    return refused(error, form);
+  }
+  // The panel names the new timing and the queue's departures; «Termene» states the same setting.
+  revalidatePath(path);
+  revalidatePath(getPathname({ locale, href: "/admin/settings/deadlines" }));
+  await flashOutcome({ saved: "deliveryTiming" });
+  redirect(`${path}?saved=deliveryTiming#outbox-queue`);
 }
 
 /**

@@ -369,11 +369,9 @@ describe("§NNN no sitting without a press", () => {
   it("says when the email leaves: now under «imediat», at the next scheduled pass otherwise — before «Da» and after it alike", () => {
     expect(emailLeavesWords(null, NOW, "ro")).toEqual({ key: "leavesNow" });
     // The club's clock (Bucharest, UTC+3 in September): 10:15 UTC is 13:15, today, said as the hour alone.
-    expect(emailLeavesWords(new Date(NOW.getTime() + 15 * 60_000), NOW, "ro")).toEqual({ key: "leavesAt", at: "13:15" });
-    // Another day on the club's clock: the short day with its time, as the queue panel always said it.
-    const tomorrow = emailLeavesWords(new Date(NOW.getTime() + 24 * 60 * 60_000), NOW, "ro");
-    expect(tomorrow.key).toBe("leavesAt");
-    expect(tomorrow.key === "leavesAt" && tomorrow.at).toMatch(/28 sept\. 2026.*13:00/);
+    expect(emailLeavesWords(new Date(NOW.getTime() + 15 * 60_000), NOW, "ro")).toEqual({ key: "leavesToday", at: "13:15" });
+    // Another day on the club's clock: the inline short day, which brings its own «la» before the hour (§452).
+    expect(emailLeavesWords(new Date(NOW.getTime() + 24 * 60 * 60_000), NOW, "ro")).toEqual({ key: "leavesOn", at: "lun., 28 sept. 2026, la 13:00" });
     expect(emailLeavesAt({ timing: "immediate", now: NOW, pingerMinutes: 15, intervalMinutes: 0, governorFloorMinutes: 0 })).toBeNull();
     const next = emailLeavesAt({ timing: "scheduled", now: NOW, pingerMinutes: 15, intervalMinutes: 0, governorFloorMinutes: 0 })!;
     expect(next.getTime()).toBeGreaterThan(NOW.getTime());
@@ -411,14 +409,13 @@ describe("§NNN no sitting without a press", () => {
     type Catalogue = { Registration: { done: Record<string, string>; sitting: Record<string, string> } };
     const ro = (await import("../../../messages/ro.json")).default as unknown as Catalogue;
     const en = (await import("../../../messages/en.json")).default as unknown as Catalogue;
-    expect(ro.Registration.done.formIn).toBe("Formularul lui {name} a ajuns.");
-    expect(en.Registration.done.formIn).toBe("{name}'s form is in.");
-    expect(ro.Registration.done.leavesNow).toBe("Emailul pleacă acum.");
-    expect(ro.Registration.done.leavesAt).toBe("Emailul pleacă la {at}.");
-    expect(en.Registration.done.leavesNow).toBe("The email leaves now.");
-    expect(en.Registration.done.leavesAt).toBe("The email leaves at {at}.");
-    expect(ro.Registration.sitting.addHint).toBe("Dacă apeși „Da”, emailul așteaptă formularul următor și primiți unul singur pentru toți.");
-    expect(ro.Registration.sitting.addHintLeft).toBe("Dacă apeși „Da”, următoarea persoană primește un email care îi cuprinde pe toți.");
+    // «pentru», never the colloquial «lui» before a feminine name in -a (the review of 2026-09-28, nit 4).
+    expect(ro.Registration.done.formIn).toBe("Formularul pentru {name} a ajuns.");
+    expect(en.Registration.done.formIn).toBe("The form for {name} is in.");
+    expect(ro.Registration.done.leavesNow).toBe("Emailul către {email} pleacă acum.");
+    expect(en.Registration.done.leavesNow).toBe("The email to {email} leaves now.");
+    expect(ro.Registration.sitting.addHint).toBe("Dacă apeși „Da”, emailul așteaptă formularul următor, cel mult {window}, și primiți unul singur pentru toți.");
+    expect(ro.Registration.sitting.addHintLeft).toBe("Dacă apeși „Da”, următorul email așteaptă cel mult {window} după ultimul formular și îi cuprinde pe toți.");
     expect(ro.Registration.sitting.addHintAtOnce).toBe("Fiecare persoană primește emailul ei.");
     for (const key of ["addHint", "addHintLeft", "addHintAtOnce"]) {
       expect(en.Registration.sitting[key]).toBeTruthy();
@@ -427,5 +424,68 @@ describe("§NNN no sitting without a press", () => {
     }
     // «Gata» stays, on the sitting's screen after «Da» (§519).
     expect(ro.Registration.sitting.done).toBe("Nu, gata — trimite-mi emailul");
+  });
+});
+
+/**
+ * The review of 2026-09-28 (should-fix 2, nits 4 and 5): the leaving time in two shapes — today «la
+ * HH:MM», another day the weekday-led date that brings its own «la» (§452) — and the sentence under
+ * «Da» naming the club's window, each variant true, in both languages.
+ */
+describe("§NNN the short screen's sentences, formatted", () => {
+  type Words = (key: string, values?: Record<string, string>) => string;
+  const words = async (locale: "ro" | "en", namespace: "Registration.done" | "Registration.sitting"): Promise<Words> => {
+    const { createTranslator } = await import("next-intl");
+    const messages = (await import(`../../../messages/${locale}.json`)).default;
+    return createTranslator({ locale, messages, namespace }) as unknown as Words;
+  };
+  const leaving = async (locale: "ro" | "en", at: Date): Promise<string> => {
+    const said = emailLeavesWords(at, NOW, locale);
+    return (await words(locale, "Registration.done"))(said.key, { email: "ana@example.ro", at: said.at });
+  };
+
+  it("says today's hour after «la» / «at», once", async () => {
+    const soon = new Date(NOW.getTime() + 15 * 60_000);
+    expect(await leaving("ro", soon)).toBe("Emailul către ana@example.ro pleacă la 13:15.");
+    expect(await leaving("en", soon)).toBe("The email to ana@example.ro leaves at 13:15.");
+  });
+
+  it("says another day as the date with its own «la» / «at», never a second one before the weekday", async () => {
+    const tomorrow = new Date(NOW.getTime() + 24 * 60 * 60_000);
+    const ro = await leaving("ro", tomorrow);
+    expect(ro).toBe("Emailul către ana@example.ro pleacă lun., 28 sept. 2026, la 13:00.");
+    expect(ro).not.toMatch(/la lun|la .* la /);
+    const en = await leaving("en", tomorrow);
+    expect(en).toMatch(/^The email to ana@example\.ro leaves Mon, 28 Sept\w* 2026, at 13:00\.$/);
+    expect(en).not.toMatch(/at Mon/);
+  });
+
+  it("says «now» with the address when the request sends", async () => {
+    const ro = await words("ro", "Registration.done");
+    const en = await words("en", "Registration.done");
+    expect(ro("leavesNow", { email: "ana@example.ro" })).toBe("Emailul către ana@example.ro pleacă acum.");
+    expect(en("leavesNow", { email: "ana@example.ro" })).toBe("The email to ana@example.ro leaves now.");
+  });
+
+  it("names the club's window under «Da» on the scheduled round and under «imediat», and nothing held at a window of 0", async () => {
+    const later = new Date(NOW.getTime() + 15 * 60_000);
+    for (const locale of ["ro", "en"] as const) {
+      const t = await words(locale, "Registration.sitting");
+      const window = locale === "ro" ? "10 minute" : "10 minutes";
+      const scheduled = t(offerHint({ atOnce: false, leavesAt: later }), { window });
+      const immediate = t(offerHint({ atOnce: false, leavesAt: null }), { window });
+      const atOnce = t(offerHint({ atOnce: true, leavesAt: later }), { window });
+      expect(scheduled).toContain(window);
+      expect(immediate).toContain(window);
+      expect(atOnce).not.toContain(window);
+      for (const sentence of [scheduled, immediate, atOnce]) expect(sentence.length).toBeLessThanOrEqual(200);
+    }
+    const ro = await words("ro", "Registration.sitting");
+    expect(ro("addHint", { window: "10 minute" })).toBe("Dacă apeși „Da”, emailul așteaptă formularul următor, cel mult 10 minute, și primiți unul singur pentru toți.");
+    expect(ro("addHintLeft", { window: "10 minute" })).toBe("Dacă apeși „Da”, următorul email așteaptă cel mult 10 minute după ultimul formular și îi cuprinde pe toți.");
+    const en = await words("en", "Registration.sitting");
+    expect(en("addHint", { window: "10 minutes" })).toBe("If you press “Yes”, the email waits for the next form, at most 10 minutes, and you get one email for everybody.");
+    expect(en("addHintLeft", { window: "10 minutes" })).toBe("If you press “Yes”, the next email waits at most 10 minutes after the last form and covers everybody.");
+    expect(en("addHintAtOnce")).toBe("Each person gets their own email.");
   });
 });

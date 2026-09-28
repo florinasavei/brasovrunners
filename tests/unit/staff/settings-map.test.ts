@@ -161,7 +161,8 @@ describe("§516 every «Setări» tab is a route with the same shape", () => {
     const actionsOf = (tab: string) => read(`src/app/[locale]/admin/settings/${tab}/actions.ts`);
     for (const tab of SETTINGS_TABS) {
       const actions = actionsOf(tab);
-      const targets = [...actions.matchAll(/getPathname\(\{ locale, href: "([^"]+)" \}\)/g)].map((match) => match[1]);
+      // Where a save lands; a sibling tab that shows the same setting is only revalidated, never landed on.
+      const targets = [...actions.matchAll(/(?<!revalidatePath\()getPathname\(\{ locale, href: "([^"]+)" \}\)/g)].map((match) => match[1]);
       expect(targets.length, tab).toBeGreaterThan(0);
       for (const target of targets) expect(target, tab).toBe(SETTINGS_TAB_ROUTE[tab]);
       expect(actions, tab).not.toContain("panel=");

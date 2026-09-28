@@ -297,7 +297,33 @@ export type ConfirmSpec = {
    * `when` to match, and the server cannot know it before the press.
    */
   fillFrom?: readonly string[];
+  /**
+   * The body counted from the form as posted (§532): «Ștergi 2 declarații semnate…» for the
+   * signatures ticked at the press — the ticks exist only in the browser. Replaces `body` once the
+   * dialog opens (`resolveBodyCount`); with nothing ticked there is no question to ask, and the
+   * press goes to the server, which refuses it.
+   */
+  bodyCount?: BodyCount;
 };
+
+/** `ConfirmSpec.bodyCount`: the field whose distinct posted values are counted, and the body's three forms, each with `{count}`. */
+export type BodyCount = {
+  field: string;
+  forms: Readonly<Record<CountForm, string>>;
+  locale: string;
+};
+
+/**
+ * The dialog with its body counted from the posted values, or `null` when a counted body counts
+ * nothing — the caller then lets the press through unasked. A spec without `bodyCount` unchanged.
+ */
+export function resolveBodyCount(spec: ConfirmSpec, valuesOf: (field: string) => readonly string[]): ConfirmSpec | null {
+  const counted = spec.bodyCount;
+  if (!counted) return spec;
+  const total = new Set(valuesOf(counted.field)).size;
+  if (total === 0) return null;
+  return { ...spec, bodyCount: undefined, body: counted.forms[countForm(total, counted.locale)].replace("{count}", String(total)) };
+}
 
 /** `body` with each `fillFrom` field's posted value in its `{name}`; the spec unchanged without one. */
 export function fillFromForm(spec: ConfirmSpec, valueOf: (field: string) => string | null): ConfirmSpec {

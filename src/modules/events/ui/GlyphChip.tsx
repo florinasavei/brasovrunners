@@ -132,7 +132,9 @@ export default function GlyphChip({
   // `titleIsString` guard), which is why the tooltip is wrapped in a fragment only on this path —
   // the string form stays on every other chip, whose native, pre-hydration `title` attribute
   // `describeChild={true}` sets depends on it.
-  const describeChild = srSuffix !== tooltip;
+  // A chip with its own `srLabel` (the difficulty's, §528) already says the tooltip's sentence in
+  // its accessible name, so it takes the same path.
+  const describeChild = srSuffix !== tooltip && !srLabel;
   const tooltipTitle = describeChild ? tooltip : tooltip != null ? <>{tooltip}</> : tooltip;
   return tooltip ? (
     <Tooltip title={tooltipTitle} arrow describeChild={describeChild} enterTouchDelay={0}>

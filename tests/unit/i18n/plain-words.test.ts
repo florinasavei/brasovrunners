@@ -26,7 +26,7 @@ import ro from "../../../messages/ro.json";
  *    those are for the people who build the platform, never for the club;
  * 3. (§522, the plain-words pass over the whole backoffice) EVERY string the backoffice shows —
  *    `Admin.*`, the translate panel, the network page, the developers' page `/devs` (`Devs.*`),
- *    the Costuri budget card (`Budget.*`) and the backoffice's own error page (`STAFF_ERROR_KEYS`,
+ *    the Costuri budget card (`Budget.*`), the toasts (`Feedback.*`) and the backoffice's own error page (`STAFF_ERROR_KEYS`,
  *    named one by one because the rest of `Error.*` serves the public pages) — whatever its key is
  *    called (a notice, a dialog's body, an error, an email's «când pleacă», a task row, a «?»
  *    named `…More`, a guide's title or intro), keeps to the same 200 characters and no
@@ -88,8 +88,12 @@ const ALLOWED_LONG: Record<string, string> = {
   "Admin.registrations.journey.legend": "the «Pași» column legend names each of a registration's six steps on its own line",
 };
 
-/** The namespaces the backoffice draws: every string in them, not only the help texts (rule 3). */
-const SCREEN_SCOPES = ["Admin", "Translate", "Network", "Devs", "Budget"] as const;
+/**
+ * The namespaces the backoffice draws: every string in them, not only the help texts (rule 3).
+ * `Feedback` is the toasts (§384, §427): a toast is read in the second it shows, so it keeps to the
+ * same rule, on the backoffice and on the few public flows that land on one.
+ */
+const SCREEN_SCOPES = ["Admin", "Translate", "Network", "Devs", "Budget", "Feedback"] as const;
 
 /**
  * The staff-facing keys of `Error.*`, drawn by `AdminErrorPage` and `AdminRestingNotice`. Named one
@@ -97,8 +101,11 @@ const SCREEN_SCOPES = ["Admin", "Translate", "Network", "Devs", "Budget"] as con
  */
 const STAFF_ERROR_KEYS = ["staffTitle", "staffBody", "staffSettings"] as const;
 
+/** A task row's or the desk's «Cum» step: an array element, held to the length and the references, its parentheses free. */
+const ARRAY_STEP = /\.how(Broken|Capped|Unreachable)?\.\d+$/;
+
 /** The numbered steps, where the detail is meant to live: the guide's and a task row's «Cum». */
-const STEP_KEYS: readonly RegExp[] = [/^Admin\.guide\.sections\.\d+\.tasks\.\d+\.steps\.\d+$/, /\.how(Broken)?\.\d+$/];
+const STEP_KEYS: readonly RegExp[] = [/^Admin\.guide\.sections\.\d+\.tasks\.\d+\.steps\.\d+$/, ARRAY_STEP];
 
 function isStep(key: string): boolean {
   return STEP_KEYS.some((pattern) => pattern.test(key));
@@ -143,7 +150,8 @@ function leaves(catalogue: Catalogue, scope: string): Array<[string, string]> {
   const out: Array<[string, string]> = [];
   const walk = (node: unknown, key: string) => {
     if (typeof node === "string") out.push([key, node]);
-    else if (node && typeof node === "object" && !Array.isArray(node)) for (const [k, v] of Object.entries(node)) walk(v, `${key}.${k}`);
+    else if (Array.isArray(node)) node.forEach((v, i) => walk(v, `${key}.${i}`));
+    else if (node && typeof node === "object") for (const [k, v] of Object.entries(node)) walk(v, `${key}.${k}`);
   };
   walk(catalogue[scope], scope);
   return out;
@@ -170,6 +178,13 @@ function breaches(text: string, parenLimit: number = MAX_PAREN_WORDS): string[] 
   for (const [name, pattern] of FORBIDDEN) if (pattern.test(text)) why.push(name);
   for (const group of longParentheses(text, parenLimit)) why.push(`a parenthesis of more than ${parenLimit} words: ${group}`);
   return why;
+}
+
+
+/** A guide step keeps its length (the detail lives there); a «Cum» step is held to 200 characters. */
+function stepBreaches(key: string, text: string): string[] {
+  const why = breaches(text, Number.POSITIVE_INFINITY);
+  return ARRAY_STEP.test(key) ? why : why.filter((reason) => !reason.endsWith(" characters"));
 }
 
 describe("§511 the backoffice says one plain sentence per field, the rest behind «?»", () => {
@@ -202,8 +217,8 @@ describe("§511 the backoffice says one plain sentence per field, the rest behin
 
     it(`keeps every string the backoffice shows to ${MAX_HELP} characters and no parenthesis over ${MAX_SCREEN_PAREN_WORDS} words, steps apart (${locale})`, () => {
       const offenders = screenLeaves(catalogue)
-        .filter(([key]) => !isStep(key) && !(key in ALLOWED_LONG))
-        .map(([key, text]) => [key, breaches(text, MAX_SCREEN_PAREN_WORDS)] as const)
+        .filter(([key]) => !(key in ALLOWED_LONG))
+        .map(([key, text]) => [key, isStep(key) ? stepBreaches(key, text) : breaches(text, MAX_SCREEN_PAREN_WORDS)] as const)
         .filter(([, why]) => why.length > 0)
         .map(([key, why]) => `${key}: ${why.join("; ")}`);
       expect(offenders).toEqual([]);
@@ -217,9 +232,12 @@ describe("§511 the backoffice says one plain sentence per field, the rest behin
       expect(offenders).toEqual([]);
     });
 
-    it(`checks the backoffice's own error page, and only its staff keys (${locale})`, () => {
+    it(`checks the backoffice's own error page, and only its staff keys, and the toasts (${locale})`, () => {
       const keys = screenLeaves(catalogue).map(([key]) => key);
+      expect(keys.filter((key) => key.startsWith("Feedback.")).length).toBeGreaterThan(100);
       for (const key of STAFF_ERROR_KEYS) expect(keys).toContain(`Error.${key}`);
+      // The «Cum» steps are arrays, and the walk reads them.
+      expect(keys.filter((key) => ARRAY_STEP.test(key)).length).toBeGreaterThan(50);
       // The public error page's words are not the backoffice's.
       expect(keys).not.toContain("Error.body");
       expect(screenLeaves(catalogue).every(([, text]) => typeof text === "string" && text.length > 0)).toBe(true);

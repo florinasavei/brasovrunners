@@ -82,6 +82,10 @@ test.describe("BR-REQ-080-02 the Mailgun plan on «Setări» → «Emailuri»", 
     // registrations (§289) — so the Organizer has them now, where a Moderator had neither.
     await expect(main.getByRole("heading", { name: "Coada de trimitere" })).toBeVisible();
     await expect(main.getByRole("button", { name: "Trimite acum", exact: false })).toHaveCount(0);
+    // When the queue leaves (§529) is read by whoever reads the queue; the switch is the Administrator's.
+    await expect(main.getByTestId("outbox-when-state")).toBeVisible();
+    await expect(main.getByTestId("outbox-when-next")).toContainText(/Următoarea trecere|Fiecare email pleacă imediat/);
+    await expect(main.getByTestId("outbox-timing-form")).toHaveCount(0);
     await expect(main.getByRole("heading", { name: "Copiile clubului" })).toBeVisible();
     await expect(main.getByRole("button", { name: /Salvează/ })).toHaveCount(0);
 
@@ -100,6 +104,41 @@ test.describe("BR-REQ-080-02 the Mailgun plan on «Setări» → «Emailuri»", 
     await expect(main.getByLabel("Către (adrese despărțite prin virgulă)")).toHaveCount(0);
     await expect(main.getByLabel("Copie ascunsă – Bcc (adrese despărțite prin virgulă)")).toHaveCount(0);
     await expect(main.getByLabel("Copie ascunsă la emailurile către participanți (Bcc)")).toHaveCount(0);
+  });
+
+  test("an Administrator reads when the emails leave and switches the sending both ways (§529)", async ({ page }) => {
+    /*
+      The owner, 2026-09-28: "vreau să pot vedea exact când pleacă emailurile și să pot face on/off
+      la acea setare". The queue panel opens with the timing, the next round and what holds it back;
+      every row says its departure; the switch is «Termene»'s «Când pleacă emailurile», both values,
+      asking first. Back to the scheduled default at the end, for the next test on this database.
+    */
+    await signIn(page, "Dev Administrator");
+    await page.goto("/ro/admin/settings/emails");
+    const main = page.locator("#main");
+    const queue = main.getByTestId("outbox-queue");
+    await openFold(queue);
+
+    const state = main.getByTestId("outbox-when-state");
+    await expect(state).toHaveAttribute("data-timing", "scheduled");
+    await expect(state).toContainText("Emailurile pleacă: la trecerea programată");
+    await expect(main.getByTestId("outbox-when-next")).toContainText("Următoarea trecere:");
+    await expect(main.getByTestId("outbox-when-holds")).toContainText("monitorul care apelează site-ul");
+    // Every row the queue holds says when it leaves, whatever this database has queued now.
+    for (const row of await main.getByTestId("outbox-row-leaves").all()) {
+      await expect(row).toHaveText(/^(Pleacă:|Întârziat:|Ținut până |Se trimite acum|Nu mai pleacă)/);
+    }
+
+    const form = main.getByTestId("outbox-timing-form");
+    await form.getByRole("button", { name: "Trimite imediat după cerere" }).click();
+    await confirmDialog(page, "Emailurile să plece imediat după cerere?");
+    await expect(state).toHaveAttribute("data-timing", "immediate");
+    await expect(state).toContainText("Emailurile pleacă: imediat după cerere");
+    await expect(main.getByTestId("outbox-when-next")).toContainText("Fiecare email pleacă imediat după cererea");
+
+    await form.getByRole("button", { name: "Trimite la trecerea programată" }).click();
+    await confirmDialog(page, "Emailurile să plece la trecerea programată?");
+    await expect(state).toHaveAttribute("data-timing", "scheduled");
   });
 
   test("a Redactor reads the figures and neither the queue nor the club's copies", async ({ page }) => {
