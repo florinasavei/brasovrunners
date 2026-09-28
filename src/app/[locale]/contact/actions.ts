@@ -10,8 +10,8 @@ import { CONTACT_ERROR_SUMMARY_ID } from "@/modules/contact/fields";
 import { readContactRecipients } from "@/modules/contact/recipients";
 import { submitContactMessage } from "@/modules/contact/service";
 import { stashDraftValues, stashFormDraft } from "@/modules/registrations/form-draft";
-import { subscribeToNewsletter } from "@/modules/newsletter/service";
-import { NEWSLETTER_DIALOG_ID, NEWSLETTER_SECTION_ID } from "@/modules/newsletter/ui/newsletter-box";
+import { requestNewsletterManageLink, subscribeToNewsletter } from "@/modules/newsletter/service";
+import { NEWSLETTER_DIALOG_ID, NEWSLETTER_LEAVE_ID, NEWSLETTER_SECTION_ID } from "@/modules/newsletter/ui/newsletter-box";
 import { botCheckIsOn } from "@/modules/registrations/bot-check";
 import { TURNSTILE_FIELD } from "@/modules/registrations/domain/turnstile-widget";
 import { verifyTurnstile } from "@/modules/registrations/turnstile";
@@ -84,6 +84,51 @@ export async function submitNewsletterAction(form: FormData): Promise<void> {
     redirect(`${path}?newsletter=limited${since}#${NEWSLETTER_DIALOG_ID}`);
   }
   redirect(`${path}?newsletter=sent#${NEWSLETTER_SECTION_ID}`);
+}
+
+/**
+ * «Vreau să mă dezabonez» under the newsletter's button (§NNN, amending §445): the address, and the
+ * link to its own page mailed to it when it is subscribed. The pop-up's defences — Turnstile here,
+ * the honeypot, the timing check and the per-address bucket in the service — and one answer whatever
+ * the address is, `?nleave=sent`, so the form cannot say whether somebody reads the club's news.
+ * `invalid`, `captcha` and `limited` come back with the fold open and the address in the sealed
+ * draft (§142), never in the URL.
+ */
+export async function requestNewsletterManageLinkAction(form: FormData): Promise<void> {
+  const locale: Locale = form.get("locale") === "en" ? "en" : "ro";
+  const path = getPathname({ locale, href: "/contact" });
+  const renderedAt = text(form, "renderedAt");
+  const keepTyped = () => stashDraftValues({ newsletterLeaveEmail: text(form, "newsletterLeaveEmail").trim() }, path);
+  const since = renderedAt ? `&since=${encodeURIComponent(renderedAt)}` : "";
+
+  const requestHeaders = await headers();
+  const remoteIp = requestHeaders.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
+  const token = String(form.get(TURNSTILE_FIELD) ?? "");
+  const verdict = (await botCheckIsOn(getDb(), new Date())) ? await verifyTurnstile(token, remoteIp) : "not_configured";
+  if (verdict === "failed") {
+    await keepTyped();
+    redirect(`${path}?nleave=captcha${since}#${NEWSLETTER_LEAVE_ID}`);
+  }
+
+  let outcome: Awaited<ReturnType<typeof requestNewsletterManageLink>>;
+  try {
+    outcome = await requestNewsletterManageLink(
+      getDb(),
+      { email: text(form, "newsletterLeaveEmail"), honeypot: text(form, "honeypot") || undefined, renderedAt: renderedAt || undefined },
+      new Date(),
+    );
+  } catch (error) {
+    if (isDomainError(error) && error.code === "VALIDATION_ERROR") {
+      await keepTyped();
+      redirect(`${path}?nleave=invalid${since}#${NEWSLETTER_LEAVE_ID}`);
+    }
+    throw error;
+  }
+  if (outcome === "limited") {
+    await keepTyped();
+    redirect(`${path}?nleave=limited${since}#${NEWSLETTER_LEAVE_ID}`);
+  }
+  redirect(`${path}?nleave=sent#${NEWSLETTER_LEAVE_ID}`);
 }
 
 function text(form: FormData, name: string): string {

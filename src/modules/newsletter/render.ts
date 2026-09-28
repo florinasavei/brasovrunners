@@ -18,7 +18,7 @@ import { env } from "@/shared/config/env";
 import { readNewsletterWords } from "./domain/message";
 import { normalizeTopics } from "./domain/topics";
 import { topicsPhrase } from "./topic-words";
-import { issueNewsletterToken, NEWSLETTER_MANAGE_LINK_DAYS } from "./tokens";
+import { issueNewsletterToken, NEWSLETTER_MANAGE_LINK_DAYS, NEWSLETTER_MANAGE_REQUEST } from "./tokens";
 
 type RendererDb = Parameters<EmailRenderer>[1];
 
@@ -117,6 +117,8 @@ export async function renderNewsletterRow(
     if (subscriber.confirmedAt !== null) {
       // Already subscribed: nothing to confirm, and the owner of the address changes things there.
       data.newsletterAlready = true;
+      // Asked for from «Vreau să mă dezabonez» (§NNN): the same link, words that say what was asked.
+      if ((payload as { request?: unknown }).request === NEWSLETTER_MANAGE_REQUEST) data.newsletterManageRequest = true;
       actionUrl = await manageUrl();
     } else {
       // The double opt-in's link, for the club's email-link window (§377), superseding the last one.
@@ -137,8 +139,13 @@ export async function renderNewsletterRow(
     if (!words) throw new Error("newsletter: the send's words cannot be read");
     data.newsletterSubject = words.subject[locale];
     data.newsletterSubjectOther = words.subject[other];
-    data.newsletterBody = words.body[locale];
-    data.newsletterBodyOther = words.body[other];
+    // The editor's document since §NNN, or the plain text an older send stored — each half its own.
+    const mine = words.body[locale];
+    const theirs = words.body[other];
+    if (typeof mine === "string") data.newsletterBody = mine;
+    else data.newsletterBodyDoc = mine;
+    if (typeof theirs === "string") data.newsletterBodyOther = theirs;
+    else data.newsletterBodyDocOther = theirs;
     data.newsletterManageUrl = await manageUrl();
   } else {
     if (subscriber && subscriber.confirmedAt === null) throw new Error("newsletter: the address never confirmed");

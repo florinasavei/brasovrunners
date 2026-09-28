@@ -20,6 +20,13 @@ import { generateTokenSecret, hashTokenSecret, isWellFormedTokenSecret } from "@
 /** How long the link in every newsletter opens the subscriber's own page: a year, so last spring's still unsubscribes. */
 export const NEWSLETTER_MANAGE_LINK_DAYS = 365;
 
+/**
+ * A `NEWSLETTER_CONFIRM` row's `payload.request` when the subscriber asked for their own page from
+ * the contact page («Vreau să mă dezabonez», §NNN) rather than subscribing again: the same link, words
+ * that say what was asked.
+ */
+export const NEWSLETTER_MANAGE_REQUEST = "manage";
+
 export type NewsletterTokenPurpose = (typeof newsletterTokens.$inferSelect)["purpose"];
 
 export async function issueNewsletterToken<T extends Record<string, unknown>>(

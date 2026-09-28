@@ -59,7 +59,12 @@ const ENGLISH_FIELD_PATTERNS: readonly RegExp[] = [
   // «Întrebări frecvente» (§525): a card's question, its category and its answer.
   /^faq\[\d{1,3}\]\.(question|category)En$/,
   /^faq\[\d{1,3}\]\.answerEnBody$/,
+  // The newsletter's body, written in the editor (§NNN); its subject is `subjectEn` above.
+  /^newsletterBodyEn$/,
 ];
+
+/** The newsletter composer's body (§NNN): a rich text posting as `newsletterBodyRo` / `newsletterBodyEn`. */
+const NEWSLETTER_RICH_TEXT = /^newsletterBodyEn$/;
 
 /**
  * The rich texts that spell their pair `…RoBody` / `…EnBody`: «Echipa»'s bio and introduction
@@ -74,7 +79,7 @@ export function isTranslatableEnglishField(name: string): boolean {
 
 /** Whether the box holds a rich text (a Tiptap document) rather than plain words. */
 export function isRichTextField(name: string): boolean {
-  if (TEAM_RICH_TEXT.test(name)) return true;
+  if (TEAM_RICH_TEXT.test(name) || NEWSLETTER_RICH_TEXT.test(name)) return true;
   const translation = /^translations\.en\.(\w+)$/.exec(name);
   return translation !== null && RICH_TEXT_FIELDS.has(translation[1] ?? "");
 }

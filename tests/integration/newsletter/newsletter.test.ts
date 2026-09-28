@@ -338,7 +338,8 @@ describe("§445 the newsletter: consent, links, sends and the allowance", () => 
       const half = await sendNewsletter(db, actor, { topic: "GEAR_TESTING", subject: { ro: "a", en: "" }, body: { ro: "{participantName}", en: "b" }, sendId: SEND_ID }, NOW).catch(
         (error: unknown) => error,
       );
-      expect(isDomainError(half) && half.fields).toEqual(["subjectEn", "bodyRo"]);
+      // The bodies' boxes are the rich editors' (§NNN): `newsletterBodyRo` / `newsletterBodyEn`.
+      expect(isDomainError(half) && half.fields).toEqual(["subjectEn", "newsletterBodyRo"]);
       expect(await sendNewsletter(db, actor, { topic: "GEAR_TESTING", subject: { ro: "a", en: "b" }, body: { ro: "c", en: "d" }, sendId: SEND_ID }, NOW)).toEqual({ kind: "nobody" });
       expect(await db.select().from(newsletterSends)).toEqual([]);
     });

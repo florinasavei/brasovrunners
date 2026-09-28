@@ -3485,7 +3485,8 @@
       "usedInTeam": "On the team page: {title}",
       "usedInTeamIntro": "On the team page: the introduction",
       "usedInFaq": "On the FAQ page",
-      "usedInMembersPage": "On the members' pages"
+      "usedInMembersPage": "On the members' pages",
+      "usedInNewsletter": "In a newsletter sent"
     },
     "gallery": {
       "title": "Photo gallery",
@@ -4574,13 +4575,22 @@
               ]
             },
             {
-              "title": "Write to the newsletter subscribers",
+              "title": "Write to the newsletter's subscribers",
               "steps": [
-                "Press «Newsletter» in the top bar. See how many confirmed subscribers there are, per topic, and what was sent; no address appears, only the numbers.",
-                "Under «Write to the subscribers» pick the topic under «What it is about» and see how many receive it.",
-                "Write «Subject (Romanian)», «Subject (English)», «Text (Romanian)» and «Text (English)».",
+                "Press «Newsletter» in the top bar. «Numbers and sends» shows how many confirmed subscribers there are, per topic, and what was sent; the addresses are in the «Subscribers» card.",
+                "Under «Write to the subscribers» choose the topic under «What it is about» and see how many receive it.",
+                "On the «Română» tab write «Subject (Romanian)» and the text: headings, lists, links and pictures, as in a document.",
+                "Press «Translate this card: RO → EN», then read and correct the «English» tab.",
                 "Under «How it looks» read the email in both languages.",
-                "Press «Send the newsletter» and confirm. The message stays under «Sent». The new-event announcements go by themselves."
+                "Press «Send the newsletter» and confirm. The message stays under «Sent», with its first line. New-event announcements leave by themselves."
+              ]
+            },
+            {
+              "title": "See who subscribed",
+              "steps": [
+                "«Newsletter» → open the «Subscribers» card. Its line says how many are confirmed and how many pending.",
+                "Search under «Search the address» or choose «Topic» and «State», then press «Filter». «Download CSV» takes the list as filtered.",
+                "Removing an address is the Administrator's: tell them who asked."
               ]
             },
             {
@@ -4780,6 +4790,16 @@
               "steps": [
                 "When someone asks in writing to stop receiving the news: «Newsletter» → «Remove an address at someone's request».",
                 "Type the address under «Email address», press «Remove from the newsletter» and confirm. The address is deleted, with its topics."
+              ]
+            },
+            {
+              "title": "See, search and unsubscribe the subscribers",
+              "steps": [
+                "«Newsletter» → open the «Subscribers» card. Its line says how many are confirmed and how many pending; the newest address comes first.",
+                "Type the address, whole or part of it, under «Search the address». Choose «Topic» and «State» if you like, then press «Filter». «Clear the filters» shows the whole list again.",
+                "Under «Pending», the row says until when the confirmation link works, or «The link has expired.» An address never confirmed is deleted by itself.",
+                "«Download CSV» takes the list as filtered, with the same columns. Keep the file only as long as you need it, then delete it.",
+                "To remove someone, at their request: «Unsubscribe» on their row, then confirm. The address is deleted with its topics, as when the person unsubscribes."
               ]
             },
             {
@@ -5237,8 +5257,8 @@
       }
     },
     "newsletter": {
-      "title": "Subscribers",
-      "intro": "Who subscribed on the contact page and to which topics, what was sent and when. No address appears here, only the numbers.",
+      "title": "Numbers and sends",
+      "intro": "How many subscribed on the contact page and to which topics, what was sent and when. The list with the addresses is the «Subscribers» card.",
       "aside": {
         "one": "{count} subscriber",
         "few": "{count} subscribers",
@@ -5264,7 +5284,7 @@
       "subjectEn": "Subject (English)",
       "bodyRo": "Text (Romanian)",
       "bodyEn": "Text (English)",
-      "bodyHelp": "Plain text, at most {max} characters: a blank line starts a paragraph. No fields in braces — a newsletter has no name or event to put in them.",
+      "bodyHelp": "Write as in a document: headings, lists, links and pictures. At most {max} characters of text; pictures do not count. No fields in braces.",
       "send": "Send the newsletter",
       "sending": "Sending…",
       "confirmTitle": {
@@ -5300,7 +5320,59 @@
       "previewRo": "Preview in Romanian",
       "previewEn": "Preview in English",
       "previewLoading": "Preparing the preview…",
-      "previewUnavailable": "The preview is not available right now. The message can still be sent."
+      "previewUnavailable": "The preview is not available right now. The message can still be sent.",
+      "langRo": "Română",
+      "langEn": "English",
+      "subscribers": {
+        "title": "Subscribers",
+        "intro": "Every subscribed address, newest first. Search, filter, download the list or remove someone at their request.",
+        "confirmedCount": {
+          "one": "{count} confirmed subscriber",
+          "few": "{count} confirmed subscribers",
+          "other": "{count} confirmed subscribers"
+        },
+        "pendingCount": "{count} pending",
+        "counts": "{confirmed}, {pending}",
+        "filterLabel": "Search and filter the subscribers",
+        "search": "Search the address",
+        "searchHelp": "the whole address or part of it",
+        "topic": "Topic",
+        "topicAll": "All topics",
+        "state": "State",
+        "stateAll": "All",
+        "stateOptions": {
+          "confirmed": "Confirmed",
+          "pending": "Pending"
+        },
+        "apply": "Filter",
+        "clear": "Clear the filters",
+        "csv": "Download CSV",
+        "truncated": "The first {count} addresses are shown. The CSV has them all.",
+        "empty": "Nobody has subscribed yet.",
+        "noMatch": "No address matches the filter.",
+        "columns": {
+          "email": "Address",
+          "language": "Language",
+          "topics": "Topics",
+          "state": "State",
+          "since": "Subscribed",
+          "confirmedOn": "Confirmed",
+          "actions": "Actions"
+        },
+        "states": {
+          "confirmed": "Confirmed",
+          "pending": "Pending"
+        },
+        "link": {
+          "live": "The confirmation link works until {when}.",
+          "sending": "The confirmation email has not left yet.",
+          "expired": "The link has expired."
+        },
+        "unsubscribe": "Unsubscribe",
+        "unsubscribing": "Unsubscribing…",
+        "unsubscribeTitle": "Unsubscribe {email}?",
+        "unsubscribeBody": "The address leaves the newsletter, with its topics, as when the person unsubscribes. They can subscribe again from the contact page."
+      }
     },
     "team": {
       "title": "The «Team» page",
@@ -6894,7 +6966,9 @@
         "one": "The email is leaving now for {count} participant; the other {later} leave at the scheduled round.",
         "few": "The email is leaving now for the first {count} participants; the other {later} leave at the scheduled round.",
         "other": "The email is leaving now for the first {count} participants; the other {later} leave at the scheduled round."
-      }
+      },
+      "newsletterUnsubscribed": "The address was unsubscribed.",
+      "newsletterUnsubscribedGone": "The address was no longer on the list; nothing changed."
     }
   },
   "Network": {
@@ -7003,6 +7077,12 @@
       "captcha": "The anti-robot check did not pass. Tick it again and send.",
       "limited": "You have already asked a few times in the last hour. Check your inbox (and the Spam folder) or try again later.",
       "unavailable": "Subscribing to the news is not available right now. Try again later."
+    },
+    "leave": {
+      "open": "I want to unsubscribe",
+      "intro": "Type the address you receive the news at. We send it the link where you unsubscribe.",
+      "submit": "Send me the link",
+      "sent": "If the address is subscribed, you have received an email with the link to manage it."
     },
     "linkInvalid": "This link is no longer valid",
     "contactLink": "Go to the contact page",

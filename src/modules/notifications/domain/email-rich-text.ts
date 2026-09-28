@@ -1,4 +1,5 @@
 import { COLOR } from "@/theme/brand";
+import { isLadderKeyPrefix, ladderWidths, rungSrc } from "@/modules/media/ladder";
 import {
   alignmentOf,
   richTextSchema,
@@ -212,6 +213,90 @@ function blockText(block: EmailBodyBlock, data: Facts): string[] {
  * already registered" line in front, the night-event line after — and those are plain strings. `renderContent` walks one list and asks each item which it is.
  */
 export type EmailBodyPart = { html: string; text: string[] };
+
+/**
+ * A newsletter's vocabulary (§NNN, amending §445): the email's, plus **a picture**.
+ *
+ * §270 refuses a picture in the club's message texts because a picture there would be the club's
+ * words pretending to be a registration's machinery, and because an unknown sender's picture is
+ * blocked until the reader allows it. A newsletter is different on both counts: it is a letter the
+ * reader asked for, from an address they confirmed, and the owner asked for it with pictures
+ * (2026-09-28: «trebuie să pot scrie cu Rich text editor abonaților!»). What still holds is that a
+ * picture may be blocked, so its `alt` stands in for it and the plain-text half names it with its
+ * address. A film and a table stay refused, for §270's reasons.
+ */
+export const NEWSLETTER_BODY_BLOCKS = [...EMAIL_BODY_BLOCKS, "image"] as const;
+
+/** The blocks a newsletter cannot carry — a film, a table — in the order they were written. */
+export function unsupportedNewsletterBlocks(doc: RichTextDoc): string[] {
+  const allowed = new Set<string>(NEWSLETTER_BODY_BLOCKS);
+  return [...new Set((doc.content ?? []).map((block) => block.type).filter((type) => !allowed.has(type)))];
+}
+
+/**
+ * The width a picture is drawn at inside the message's card: 600 pixels less the card's padding
+ * and border (`templates.ts#card`), times the share of the column the editor gave it.
+ */
+const CARD_COLUMN_PX = 550;
+
+/** A rung at least twice as wide as the card, for a phone's sharp screen; the master when there is none. */
+const EMAIL_PICTURE_TARGET_PX = CARD_COLUMN_PX * 2;
+
+type ImageBlock = Extract<RichTextBlock, { type: "image" }>;
+
+/**
+ * The picture's address as a mail client must have it: absolute, from `APP_BASE_URL` for the
+ * local `/api/media/…` route (§72–§73), the store's public address as stored otherwise — and the
+ * smallest rung of its ladder (§414) still twice the card's width, so an inbox is not sent a
+ * 2400-pixel master to draw at 550.
+ */
+export function emailPictureSrc(block: ImageBlock, baseUrl: string): string {
+  const src = block.attrs.src;
+  const width = block.attrs.width;
+  const match = /\/([0-9a-f-]{36})\/web\.webp$/.exec(src);
+  let chosen = src;
+  if (match && width && isLadderKeyPrefix(match[1])) {
+    const rung = ladderWidths(width).find((candidate) => candidate >= EMAIL_PICTURE_TARGET_PX);
+    if (rung !== undefined) chosen = rungSrc(src, rung);
+  }
+  return chosen.startsWith("/") ? `${baseUrl.replace(/\/+$/, "")}${chosen}` : chosen;
+}
+
+/**
+ * One picture as the two halves carry it. The HTML is a centred block — a mail client floats
+ * nothing reliably and crops nothing at all, so the whole photograph is sent whatever crop or side
+ * the page would draw — at the editor's share of the card's width; the caption under it. The text
+ * half names it by its `alt` and its address, so a reader with HTML off still has it.
+ */
+function pictureParts(block: ImageBlock, baseUrl: string): EmailBodyPart {
+  const src = emailPictureSrc(block, baseUrl);
+  const width = Math.round((CARD_COLUMN_PX * block.attrs.widthPercent) / 100);
+  const alt = block.attrs.alt.trim();
+  const caption = block.attrs.caption.trim();
+  const img = `<img src="${escapeHtml(src)}" alt="${escapeHtml(alt)}" width="${width}" style="display:block;width:100%;max-width:${width}px;height:auto;border:0;margin:0 auto">`;
+  const captionHtml = caption === "" ? "" : `<br><span style="font-size:14px;color:${COLOR.inkMuted}">${escapeHtml(caption)}</span>`;
+  return {
+    html: `<p style="margin:0 0 14px;text-align:center">${img}${captionHtml}</p>`,
+    text: [alt === "" ? src : `[${alt}] ${src}`, ...(caption === "" ? [] : [caption])],
+  };
+}
+
+/**
+ * A newsletter's body as the message's parts (§NNN): the email's blocks as `emailBodyParts` draws
+ * them — nothing filled, a newsletter carries no field — and each picture through `pictureParts`.
+ * A film or a table cannot be saved (`unsupportedNewsletterBlocks`); one that somehow is stored is
+ * skipped, so the letter still leaves.
+ */
+export function newsletterBodyParts(doc: RichTextDoc, baseUrl: string): EmailBodyPart[] {
+  return (doc.content ?? [])
+    .flatMap((block): EmailBodyPart[] => {
+      if (block.type === "image") return [pictureParts(block, baseUrl)];
+      if (!(EMAIL_BODY_BLOCKS as readonly string[]).includes(block.type)) return [];
+      const email = block as EmailBodyBlock;
+      return [{ html: blockHtml(email, null), text: blockText(email, null) }];
+    })
+    .filter((part) => part.html !== "");
+}
 
 /** The club's body as those parts, in order. */
 export function emailBodyParts(doc: RichTextDoc, data: Facts): EmailBodyPart[] {
