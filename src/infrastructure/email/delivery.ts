@@ -4,15 +4,9 @@ import { GMAIL_CAP_DEFERRED_ERROR, type GmailAtCap, gmailJitterCeilingMs, type G
 import type { EmailAdapter, OutgoingEmail, SendResult } from "./adapter";
 
 /**
- * Which adapter a message goes to, and what its subject says (BR-REQ-080-03; AGENTS.md §16.4).
- *
- * The rule this file protects: a real person receives email from production and from nowhere
- * else. Everything below is one decision — send or capture — plus the QA subject marking, and
- * both are pure functions so they can be read and tested without a provider, an environment,
- * or a database.
- *
- * The unsafe-combination check itself lives in `src/shared/config/env.ts`, because the
- * requirement is that *startup* fails, not that the first send fails.
+ * Which adapter a message goes to, and what its subject says (BR-REQ-080-03; AGENTS.md §16.4):
+ * a real person receives email from production only. The unsafe-combination check is in
+ * `src/shared/config/env.ts`, so startup fails rather than the first send.
  */
 
 export type AppEnvironment = "local" | "test" | "qa" | "production";
@@ -23,26 +17,11 @@ export type DeliveryDecision = "send" | "capture";
 export { ALLOW_EVERY_RECIPIENT };
 
 /**
- * Whether one recipient may actually be transmitted to.
+ * Whether one recipient may actually be transmitted to. In `allowlist` mode only listed inboxes
+ * receive mail; everything else is captured. Membership compares canonical inboxes, never raw
+ * strings (`AGENTS.md` §10.4); an address that cannot be canonicalized is captured.
  *
- * `allowlist` is what a Mailgun sandbox domain is: it reaches at most five authorized
- * addresses, so QA can exercise real delivery to the people who work on it while every other
- * address — a synthetic participant, a seeded row, a typo — is captured instead of surprising
- * a stranger with mail from a test system.
- *
- * Membership goes through the versioned canonicalizer, never a string compare. That is a rule
- * with a reason (`AGENTS.md` §10.4): `Ana.Pop+qa@gmail.com` and `anapop@gmail.com` are one
- * inbox, and an allowlist that compared raw strings would capture a message the operator had
- * explicitly authorized — or, worse the other way round, fail to notice that two spellings of
- * one address were on the list.
- *
- * An address that cannot be canonicalized is captured. There is no address to send to.
- *
- * One entry is not an address: `*` authorizes every recipient (`DECISIONS.md` §163). It is
- * what an operator sets on QA when the people testing are more than a handful — a colleague
- * being invited, a runner walking through the journey — and it is deliberately the allowlist's
- * own escape hatch rather than `live`, so the mode stays `allowlist`, the subject keeps its
- * `[QA]` mark, production's "live only here" rule is untouched, and one character undoes it.
+ * `*` authorizes every recipient (§163) while keeping the mode `allowlist` and the `[QA]` mark.
  */
 export function decideDelivery(
   mode: EmailDeliveryMode,
@@ -52,9 +31,7 @@ export function decideDelivery(
   if (mode === "capture") return "capture";
   if (mode === "live") return "send";
 
-  // By inbox, not by identity: since canonicalization version 2 a dotted Gmail spelling is
-  // its own participant, but it is still the allowlisted person's inbox, and that is what
-  // the allowlist is about (`DECISIONS.md` §74).
+  // By inbox, not identity: a dotted Gmail spelling is its own participant but the same inbox (§74).
   let recipientInbox: string;
   try {
     recipientInbox = canonicalizeEmail(recipient).inboxEmail;
@@ -62,16 +39,14 @@ export function decideDelivery(
     return "capture";
   }
 
-  // Everyone, when the operator said so — after canonicalization, because an address that is
-  // not one has nowhere to go, star or no star.
+  // After canonicalization: a malformed address is captured even under `*`.
   if (allowlist.includes(ALLOW_EVERY_RECIPIENT)) return "send";
 
   return allowlist.some((entry) => {
     try {
       return canonicalizeEmail(entry).inboxEmail === recipientInbox;
     } catch {
-      // A malformed allowlist entry authorizes nothing. Startup validation rejects one, so
-      // reaching here means configuration changed under a running process.
+      // A malformed entry authorizes nothing (startup validation normally rejects one).
       return false;
     }
   })
@@ -83,15 +58,8 @@ export function decideDelivery(
 export const QA_SUBJECT_PREFIX = "[QA] ";
 
 /**
- * Mark a subject for the environment that produced it.
- *
- * Only QA is marked. Production must not be, obviously; local and test are marked by the fact
- * that nothing leaves the process. QA is the one environment where a message can reach a
- * human inbox that also receives the real thing, and a club organizer looking at two identical
- * "Confirmă-ți înscrierea" emails cannot tell which system asked.
- *
- * Marking is idempotent, because a manual resend of a captured QA message would otherwise
- * accumulate prefixes.
+ * Mark a QA subject, the one environment whose mail reaches inboxes that also get production's.
+ * Idempotent, so a resend does not stack prefixes.
  */
 export function markSubjectForEnvironment(subject: string, appEnv: AppEnvironment): string {
   if (appEnv !== "qa") return subject;
@@ -100,30 +68,13 @@ export function markSubjectForEnvironment(subject: string, appEnv: AppEnvironmen
 
 export type EmailSender = {
   send(message: OutgoingEmail): Promise<SendResult>;
-  /**
-   * The batch is over: let go of the Gmail road's one connection, when this sender opened it
-   * (§493). Safe to call twice, and on a sender that never sent through Gmail.
-   */
+  /** End of batch: release the Gmail connection if opened (§493). Safe to call twice. */
   close?(): void;
 };
 
 /**
- * The single object the outbox worker talks to.
- *
- * It owns the two decisions above and delegates the transmission itself. The worker therefore
- * has no idea which environment it is in, which is what keeps `AGENTS.md` §8's "no environment
- * branching in domain logic" true as the number of message types grows.
- *
- * `live` is a function rather than an adapter so that it is constructed only when a message
- * is actually going to be transmitted. That matters while `createMailgunAdapter` throws: a QA
- * process in allowlist mode starts, captures everything not on the list, and only fails when
- * it genuinely tries to reach a real inbox.
- */
-/**
- * The Gmail road, as the sender needs it for one batch (§443): the adapter (built on demand, like
- * Mailgun's), the club's cap, pace and choice at the cap, whether Mailgun's spent allowance spills
- * over, and the ledger Gmail's usage is read from before every message — shared by every sender, so
- * the cap (in recipients, as Google counts them) and the pace hold across drains and instances.
+ * The Gmail road for one batch (§443). The ledger is shared across senders, so the cap (in
+ * recipients, as Google counts them) and the pace hold across drains and instances.
  */
 export type GmailRoad = {
   adapter: () => EmailAdapter;
@@ -133,24 +84,18 @@ export type GmailRoad = {
   /** At the cap: wait for the rolling day to free room (`defer`), or Mailgun at once. */
   atGmailCap: GmailAtCap;
   overflowToGmail: boolean;
-  /**
-   * Told of every Gmail failure, before the sender turns to Mailgun or hands the row back — so a
-   * revoked app password is on `/admin/emails` and in `/api/health`, not merely spending Mailgun.
-   */
+  /** Told of every Gmail failure, so a revoked app password shows on `/admin/emails` and `/api/health`. */
   onFailure?: (error: string, at: Date) => Promise<void>;
   /** Injected for the tests; the real one waits. */
   sleep?: (ms: number) => Promise<void>;
   now?: () => Date;
   /** Injected for the tests; the real one is `Math.random`. */
   random?: () => number;
-  /**
-   * The most one sender may spend waiting on the pace. Past it, a Gmail message is handed back
-   * `paced` for the next run rather than keeping a function alive on a timer.
-   */
+  /** The most one sender waits on the pace; past it a message is handed back `paced`. */
   paceBudgetMs?: number;
 };
 
-/** Twenty seconds of pacing per batch: three or four Gmail sends at the default six seconds apart, and a function that ends. */
+/** Pacing per batch: three or four Gmail sends at the default six seconds apart. */
 export const GMAIL_PACE_BUDGET_MS = 20_000;
 
 const realSleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
@@ -160,13 +105,17 @@ function recipientsOf(message: OutgoingEmail): number {
   return 1 + (message.cc?.length ?? 0) + (message.bcc?.length ?? 0);
 }
 
+/**
+ * The object the outbox worker talks to, so the worker never branches on environment (AGENTS.md §8).
+ * `live` is a factory so the Mailgun adapter is built only when a message is really transmitted.
+ */
 export function createEmailSender(config: {
   appEnv: AppEnvironment;
   mode: EmailDeliveryMode;
   allowlist: readonly string[];
   capture: EmailAdapter;
   live: () => EmailAdapter;
-  /** The club's Gmail (§443). Absent — local, test, a deployment without the account — every message takes Mailgun's road. */
+  /** The club's Gmail (§443). Absent: every message takes Mailgun's road. */
   gmail?: GmailRoad;
 }): EmailSender {
   const gmail = config.gmail;
@@ -175,24 +124,16 @@ export function createEmailSender(config: {
   const random = gmail?.random ?? Math.random;
   const budget = gmail?.paceBudgetMs ?? GMAIL_PACE_BUDGET_MS;
   let waited = 0;
-  // One Gmail failure and this sender stops asking Gmail: the next message should not pay the
-  // same connection timeout to learn the same thing.
+  // After one Gmail failure this sender stops asking, rather than paying the timeout again.
   let gmailDown = false;
-  /*
-    One Gmail adapter per sender, which is one per batch (§493): built at the first Gmail message and
-    kept, so its pooled connection carries every Gmail message of the batch — one TLS handshake and
-    one login, not one of each per message — and `close()` lets it go when the batch ends.
-  */
+  // One Gmail adapter per sender (per batch), so one pooled connection serves the batch (§493).
   let gmailAdapter: EmailAdapter | null = null;
   const gmailAdapterOnce = (road: GmailRoad): EmailAdapter => (gmailAdapter ??= road.adapter());
 
   /**
-   * Gmail's answer for one message: carried, handed back (the pace, the cap the club chose to wait
-   * out, or a failure that may have been accepted), or not taken (null) — in which case Mailgun's
-   * road is next. `transmit` false is the captured case: nothing leaves, so nothing waits and
-   * nothing is counted against the cap, but the route is still recorded as it would have gone.
-   * `chosen` is whether the club chose Gmail for this message's group — only then does "defer at
-   * the cap" apply; a spill-over from Mailgun keeps Mailgun's own deferral.
+   * Gmail's answer for one message: a result (sent or handed back), or null for Mailgun next.
+   * `transmit` false is captured: nothing waits or counts, but the route is recorded. `chosen`
+   * (the club picked Gmail) is the only case "defer at the cap" applies.
    */
   async function viaGmail(message: OutgoingEmail, transmit: boolean, chosen: boolean): Promise<SendResult | null> {
     if (!gmail || gmailDown) return null;
@@ -203,11 +144,7 @@ export function createEmailSender(config: {
 
     const recipients = recipientsOf(message);
     const jitterMs = Math.floor(random() * gmailJitterCeilingMs(gmail.paceSeconds));
-    /*
-      Read afresh before every message, never from what this sender counted (§443 review): another
-      drain or instance may have sent a second ago, and an admission that fits the batch's waiting
-      holds its slot for all of them.
-    */
+    // Read afresh every message: another drain or instance may have just sent (§443).
     const admission = await gmail.ledger.admit({
       recipients,
       clock,
@@ -217,8 +154,7 @@ export function createEmailSender(config: {
       paceSeconds: gmail.paceSeconds,
     });
     if (!admission.admitted) {
-      // At the cap and the club said wait: deferred to the moment the oldest send leaves the
-      // rolling day, as a spent Mailgun allowance is deferred (§40) — never discarded.
+      // At the cap and the club chose to wait: deferred until the rolling day frees room (§40).
       if (admission.reason === "cap" && chosen && gmail.atGmailCap === "defer") {
         return { outcome: "throttled", error: GMAIL_CAP_DEFERRED_ERROR, retryAfter: admission.roomAt };
       }
@@ -233,36 +169,26 @@ export function createEmailSender(config: {
           paced: true,
         };
       }
-      /*
-        Until the slot the ledger holds, by this sender's clock now: the ledger's own transaction
-        took some of the wait already, and a send before its slot would be closer than the pace to
-        the one before it.
-      */
+      // Sleep until the held slot by the clock now: the ledger's transaction used part of the wait.
       const rest = admission.slotAt ? Math.max(0, admission.slotAt.getTime() - clock().getTime()) : admission.waitMs;
       if (rest > 0) await sleep(rest);
       waited += admission.waitMs;
     }
     const result = await gmailAdapterOnce(gmail).send(message);
     /*
-      The address itself refused for good (§493, `gmail-adapter.ts`): the bounce it is. Not a Gmail
-      failure — the account works, the next message still goes through it — and not Mailgun's to try,
-      which would spend a message of the allowance to bounce the same way hours later.
+      The address refused (permanently, or for now while the copies went; §493): not a Gmail
+      failure, and not Mailgun's to retry, which would bounce again or send the copies twice.
+      The outbox handles the row; the copies Gmail took count against its day.
     */
     const addressRefused =
       result.outcome === "permanent_failure" || (result.outcome === "transient_failure" && result.addressRefusedForNow === true);
     if (addressRefused) {
-      /*
-        The same for a temporary refusal of the address (a 4xx to the runner while the copies went):
-        the account works, so Gmail is not marked down and no Gmail failure is recorded; the row
-        goes back to the outbox's retry, never to Mailgun, which would send the copies twice. Either
-        way the copies Gmail took left the account and count against Google's day.
-      */
       const acceptedCopies = result.acceptedRecipients ?? 0;
       if (acceptedCopies > 0) {
         try {
           await gmail.ledger.accepted(acceptedCopies, clock());
         } catch {
-          // A ledger that could not note it must never change what happens to the message.
+          // Ledger errors never change the message's outcome.
         }
       }
       return result;
@@ -275,16 +201,16 @@ export function createEmailSender(config: {
       } catch {
         // Recording the failure must never be what stops the message.
       }
-      // Possibly accepted already: the outbox retries it later rather than Mailgun sending a second copy now.
+      // Possibly accepted: the outbox retries later rather than Mailgun sending a second copy.
       if (result.outcome === "transient_failure" && result.mayHaveBeenAccepted) return result;
       return null;
     }
-    // The moment Gmail took it: the row's `sent_at`, which every other sender paces from.
+    // The row's `sent_at`, which every sender paces from.
     const at = clock();
     try {
       await gmail.ledger.accepted(recipients, at);
     } catch {
-      // Sent is sent: a ledger that could not note it must never turn the message into a retry.
+      // Sent is sent: a ledger error must not turn it into a retry.
     }
     return { ...result, transport: "gmail", recipients, acceptedAt: at };
   }
@@ -296,7 +222,7 @@ export function createEmailSender(config: {
       try {
         opened?.close?.();
       } catch {
-        // Letting go of a connection must never be what fails the batch that used it.
+        // Closing must never fail the batch.
       }
     },
 
@@ -311,17 +237,8 @@ export function createEmailSender(config: {
       const adapter = transmit ? config.live() : config.capture;
 
       /*
-        A copy is a recipient (`DECISIONS.md` §244).
-
-        The decision above is about the message — whether this environment may transmit at all
-        — and it is made on the address the message is *for*. Every `cc` and `bcc` is then
-        judged on its own: a club mailbox nobody authorized must not receive a participant's
-        declaration from QA merely because the archive address happens to be on the allowlist.
-        Dropped one by one rather than capturing the whole message, so the copy the operator
-        did authorize still arrives.
-
-        A captured message keeps its lists untouched: capture is the local record of what would
-        have gone out, and filtering it there would hide what was about to happen.
+        Each copy is judged on its own (§244): unauthorized copies are dropped, authorized ones
+        still arrive. A captured message keeps its lists, as the record of what would have gone.
       */
       const copies =
         decision === "send"
@@ -334,16 +251,11 @@ export function createEmailSender(config: {
       const outgoing: OutgoingEmail = { ...marked, ...copies };
 
       /*
-        The road (§443). The environment's decision above is untouched and comes first: a captured
-        message is captured whichever road it would have taken, and the allowlist judges a Gmail
-        message exactly as it judges a Mailgun one — QA reaches a stranger by neither.
-
-        1. The club chose Gmail for this group: Gmail, if configured and not failed in this batch —
-           after the pace. At the cap, deferred or Mailgun, as the club chose. A failure before Gmail
-           could have taken it: Mailgun, at once. A failure after it might have: the outbox retries.
-           The address itself refused for good (a `5.1.x`): bounced, on neither road again (§493).
-        2. Mailgun refuses because the plan's allowance is spent (§40): Gmail, when the club lets
-           it spill over and Gmail can take it; otherwise the refusal stands and the outbox defers.
+        The road (§443), after the environment's decision, which applies to both roads alike.
+        1. Gmail chosen: Gmail if up, after the pace; at the cap, defer or Mailgun as the club chose;
+           a failure before acceptance falls to Mailgun, one after may have been accepted is retried;
+           a refused address bounces on neither road (§493).
+        2. Mailgun's allowance spent (§40): Gmail if the club allows spill-over, else the outbox defers.
       */
       if (outgoing.transport === "gmail") {
         const carried = await viaGmail(outgoing, transmit, true);
@@ -353,7 +265,7 @@ export function createEmailSender(config: {
       const result = await adapter.send(outgoing);
       if (result.outcome === "sent") return { ...result, transport: "mailgun", recipients: transmit ? recipientsOf(outgoing) : 0 };
       if (result.outcome === "throttled" && gmail?.overflowToGmail && outgoing.transport !== "gmail") {
-        // Carried, or handed back for the pace — either is sooner than Mailgun's reset.
+        // Carried or paced: either is sooner than Mailgun's reset.
         const spilled = await viaGmail(outgoing, transmit, false);
         if (spilled) return spilled;
       }

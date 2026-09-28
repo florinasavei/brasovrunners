@@ -1,18 +1,11 @@
 /**
- * The email provider boundary (AGENTS.md §3.4, §16).
- *
- * Four things go out, three things can come back. Nothing else about Mailgun — its SDK, its
- * error shapes, its retry semantics — is allowed past this file, so replacing the provider is
- * a new file next to `mailgun-adapter.ts` and one line in `createEmailSender`, and no domain
- * or module code changes at all.
- *
- * There is no `sendBatch`, no template registry and no attachment support, because nothing
- * needs them (`AGENTS.md` §1.3). Add a method when a caller exists.
+ * The email provider boundary (AGENTS.md §3.4, §16). Nothing provider-specific passes this file;
+ * a new provider is a new adapter and one line in `createEmailSender`.
  */
 
 export type EmailLocale = "ro" | "en";
 
-/** One message, already rendered. Templates are BR-REQ-080-01 and are not built yet. */
+/** One message, already rendered (BR-REQ-080-01). */
 export type OutgoingEmail = {
   /** The delivery address as the participant typed it (AGENTS.md §10.4). */
   to: string;
@@ -20,29 +13,22 @@ export type OutgoingEmail = {
   html: string;
   text: string;
   /**
-   * The club's own copies of this message (`DECISIONS.md` §244): visible on it, and invisible.
-   *
-   * Only the declaration archive uses them, and only because the club asked for a second
-   * reader without a deployment. They are envelope recipients like `to`, so every one of them
-   * spends a message of the Mailgun allowance, and the allowlist filters them one by one
-   * outside production — a copy must never be the thing that reaches a stranger's inbox from
-   * QA (`delivery.ts`).
+   * The club's own copies (§244). Envelope recipients like `to`: each spends allowance, and
+   * outside production the allowlist filters each one (`delivery.ts`).
    */
   cc?: readonly string[];
   bcc?: readonly string[];
   locale: EmailLocale;
   /**
-   * Passed to the provider so a webhook can be traced back to the outbox row (§16.5) without
-   * the provider's own id being the only link. It is the outbox row's idempotency key, which
-   * identifies the trigger and never the participant.
+   * The outbox row's idempotency key, passed to the provider so a webhook traces back to the row
+   * (§16.5). It identifies the trigger, never the participant.
    */
   idempotencyKey: string;
   /** Files carried with the message — the signed declaration (§95). Rendered at send time, never stored in the outbox. */
   attachments?: EmailAttachment[];
   /**
-   * The road the club chose for this message's group (§443). A wish, not an order: the sender
-   * takes Mailgun's road whenever Gmail is not configured, is at its daily cap, or failed. Absent
-   * means Mailgun.
+   * The club's chosen road for this message's group (§443). A preference: the sender falls back
+   * to Mailgun when Gmail is unconfigured, capped or failing. Absent means Mailgun.
    */
   transport?: EmailTransportName;
 };
@@ -53,26 +39,13 @@ export type EmailTransportName = "mailgun" | "gmail";
 export type EmailAttachment = { filename: string; contentType: string; data: Buffer };
 
 /**
- * The four outcomes the outbox knows how to act on.
+ * The outcomes the outbox acts on. Transient is retried with backoff; permanent never is, since
+ * retrying hard bounces ruins the domain's reputation (§16.1, §16.5). Throttled means the
+ * account's allowance is spent (a daily limit, `docs/PLATFORM.md` limit 1): the outbox waits for
+ * `retryAfter` instead of burning its six minute-scale attempts.
  *
- * The distinction between transient and permanent is the whole reason this is a union rather
- * than a boolean: a transient failure is retried with backoff, and a permanent one must not
- * be, because retrying a hard bounce for six attempts is how a sending domain's reputation is
- * destroyed (§16.1, §16.5).
- *
- * `throttled` is the third case, and it is not a shade of transient. A transient failure is
- * the provider being unable to take the message *now* and probably able in a minute, so the
- * outbox retries in one, two, four minutes and gives up after six attempts — about an hour.
- * A throttled failure is the provider refusing because **this account's own allowance is
- * spent**, which on Mailgun Free is a *daily* limit of 100 messages (`docs/PLATFORM.md`,
- * limit 1). Retrying that on a minute scale burns all six attempts inside the hour and marks
- * a confirmation FAILED that would have sent perfectly well the next morning — which is the
- * registration-day failure this distinction exists to prevent. Nothing was transmitted, so no
- * reputation was spent and there is nothing to back off *from*; what there is, is a reset to
- * wait for. `retryAfter` says when.
- *
- * `error` is a short provider reason for `email_outbox.last_error`. It is sanitized before it
- * is stored — never a body, an address, or an action token (§14.5).
+ * `error` is a short reason for `email_outbox.last_error`, sanitized: never a body, an address
+ * or an action token (§14.5).
  */
 export type SendResult =
   | {
@@ -80,57 +53,39 @@ export type SendResult =
       providerMessageId: string;
       /** Which road carried it (§443), set by the sender; the outbox stores it. Absent is Mailgun. */
       transport?: EmailTransportName;
-      /**
-       * How many recipients the send reached (§443): the address plus every copy transmitted, 0 when
-       * captured. Set by the sender; Gmail's cap is counted in recipients, as Google counts them.
-       */
+      /** Recipients reached, copies included, 0 when captured; Gmail's cap counts these (§443). */
       recipients?: number;
-      /**
-       * When the server took the message (§443 review), set by the sender for Gmail: the row's
-       * `sent_at`, which every other sender paces from. Absent is the batch's own time.
-       */
+      /** When Gmail took it: the row's `sent_at`, which pacing reads (§443). Absent is the batch's time. */
       acceptedAt?: Date;
     }
   | {
       outcome: "transient_failure";
       error: string;
       /**
-       * The connection broke where the server may already have taken the message (a socket error or
-       * a timeout, §443): sending it again by another road could reach the runner twice with the
-       * same link, so the sender does not; the outbox retries it on its own backoff.
+       * The connection broke after the server may have taken it (§443): no fallback road, which
+       * could deliver twice; the outbox retries on its backoff.
        */
       mayHaveBeenAccepted?: true;
       /**
-       * The runner's own address refused for now while the club's copies went (Gmail, §443): a
-       * refusal of the address, not of the account — the sender neither marks Gmail down nor
-       * records a Gmail failure, and the outbox retries the row on its own backoff.
+       * Gmail refused the runner's address for now while the copies went (§443): an address
+       * refusal, not an account one, so Gmail is not marked down.
        */
       addressRefusedForNow?: true;
-      /** How many recipients the server took all the same — the copies — for Gmail's daily ledger. */
+      /** Recipients taken anyway (the copies), for Gmail's daily ledger. */
       acceptedRecipients?: number;
     }
   | {
       outcome: "throttled";
       error: string;
-      /**
-       * Held back by Gmail's pace, not refused by anybody (§443): nothing was tried, so the
-       * outbox gives the attempt back rather than spending one of six on a few seconds' wait.
-       */
+      /** Held by Gmail's pace, nothing tried (§443): the outbox gives the attempt back. */
       paced?: true;
-      /**
-       * When the provider's allowance is expected back. The outbox schedules the next attempt
-       * for then rather than applying its own backoff. Absent means "the adapter does not
-       * know", and the outbox falls back to the next daily reset.
-       */
+      /** When the allowance is expected back; absent means the next daily reset. */
       retryAfter?: Date;
     }
   | {
       outcome: "permanent_failure";
       error: string;
-      /**
-       * How many recipients the server took before refusing the address (Gmail, §443): the club's
-       * copies left and count against Google's daily cap, so the sender credits the ledger with them.
-       */
+      /** Recipients (the copies) Gmail took before refusing the address; they count against its cap (§443). */
       acceptedRecipients?: number;
     };
 
@@ -138,10 +93,6 @@ export interface EmailAdapter {
   /** Identifies the adapter in logs and in the backoffice. Never a secret. */
   readonly name: string;
   send(message: OutgoingEmail): Promise<SendResult>;
-  /**
-   * Let go of whatever the adapter holds open between two messages — the Gmail road's one pooled
-   * SMTP connection (§493). Called once, when the batch that built it ends; an adapter that holds
-   * nothing (Mailgun's HTTP calls, the capture) has none.
-   */
+  /** Release what the adapter holds between messages (Gmail's pooled SMTP connection), once per batch (§493). */
   close?(): void;
 }

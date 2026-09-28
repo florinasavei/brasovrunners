@@ -1,13 +1,8 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 
 /**
- * Mailgun webhook signature verification (AGENTS.md §16.5).
- *
- * `HMAC-SHA256(signingKey, timestamp + token)`, hex-encoded, compared to the `signature` field
- * — verified against Mailgun's current documentation before this was written. A stale
- * timestamp is rejected separately: the HMAC alone proves the payload came from Mailgun, not
- * that it arrived recently, and a replayed old payload should not be able to re-trigger a
- * status change indefinitely.
+ * Mailgun webhook signature verification (AGENTS.md §16.5): hex `HMAC-SHA256(signingKey,
+ * timestamp + token)`. A stale timestamp is refused too, since the HMAC does not stop a replay.
  */
 
 const MAX_SIGNATURE_AGE_SECONDS = 15 * 60;

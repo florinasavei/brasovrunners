@@ -6,25 +6,12 @@ import { createGmailAdapter } from "./gmail-adapter";
 import { createMailgunAdapter } from "./mailgun-adapter";
 
 /**
- * Where configuration meets the provider (AGENTS.md §16.4, §7.2).
- *
- * The one place that reads the email settings and decides which adapter exists. Nothing else
- * in the application asks what environment it is in before sending a message (§8: no
- * environment branching outside configuration).
- *
- * The capture adapter comes back with the sender because it *is* the mailbox in local, test
- * and the captured half of QA: an end-to-end test reads action links out of it (§20.4), and a
- * developer checks it instead of an inbox.
+ * Where configuration meets the provider (AGENTS.md §16.4, §7.2, §8): the one place that picks
+ * the adapter. The capture adapter is returned too, as the mailbox tests and `/devs` read (§20.4).
  */
 /**
- * The From header, assembled from configuration (AGENTS.md §8).
- *
- * `noreply@<sending domain>` is the default because it is correct the moment a Mailgun account
- * exists — a sandbox domain accepts it, and so will the club's domain later — and because the
- * club's real sender address is an owner decision that has not been made yet (`BUSINESS.md`
- * §9). Set `EMAIL_FROM_ADDRESS` when it is.
- *
- * The display name is quoted, so a comma in it cannot split the header into two addresses.
+ * The From header (AGENTS.md §8): `EMAIL_FROM_ADDRESS`, else `noreply@<sending domain>`. The name
+ * is quoted so a comma cannot split the header.
  */
 export function formatSenderIdentity(config: {
   EMAIL_FROM_NAME: string;
@@ -37,10 +24,8 @@ export function formatSenderIdentity(config: {
 }
 
 /**
- * One capture for the process, not one per drain: what a request captured is what `/devs`
- * shows a minute later (§124; the owner, testing locally: "why did I not receive the
- * email?" — locally nothing is sent). Bounded, in memory, per instance; on the platforms
- * that transmit it holds only what the allowlist kept back and is never shown.
+ * One capture per process, not per drain, so `/devs` shows what a request captured (§124).
+ * Bounded, in memory, per instance.
  */
 const sharedCapture = createCaptureAdapter();
 const CAPTURE_KEEP = 50;
@@ -51,11 +36,7 @@ export function capturedEmails(): readonly CapturedEmail[] {
   return [...all.slice(Math.max(0, all.length - CAPTURE_KEEP))].reverse();
 }
 
-/**
- * The club's choice about the Gmail road for this batch (§443) and the ledger Gmail's usage is read
- * from before every message — the database's, built by the caller (`notifications/outbox-sender.ts`);
- * this file reads none.
- */
+/** The club's Gmail routing for this batch and its ledger (§443), built by `notifications/outbox-sender.ts`. */
 export type GmailRouting = {
   dailyCap: number;
   paceSeconds: number;
@@ -82,10 +63,8 @@ export function createEmailSenderForEnvironment(
     Pick<Env, "CONTACT_SMTP_HOST" | "CONTACT_SMTP_PORT" | "CONTACT_SMTP_USER" | "CONTACT_SMTP_PASSWORD">,
   options: {
     /**
-     * The Reply-To in force (§442): «Adresa de contact afișată» on `/admin/emails` — the mailbox,
-     * the club's Gmail, or both, comma-separated. Absent, `EMAIL_REPLY_TO` as before. Only the
-     * Reply-To follows the setting, on either road; the From stays the road's own — the Mailgun
-     * domain on Mailgun's (a Gmail From there fails DMARC), the Gmail account on Gmail's.
+     * The Reply-To in force (§442), on either road; absent, `EMAIL_REPLY_TO`. The From stays each
+     * road's own, since a Gmail From on Mailgun fails DMARC.
      */
     replyTo?: string;
     /** The club's routing for the Gmail road (§443); absent, every message takes Mailgun's. */
@@ -96,11 +75,7 @@ export function createEmailSenderForEnvironment(
   const replyTo = options.replyTo ?? config.EMAIL_REPLY_TO;
   const routing = options.gmail;
   const { CONTACT_SMTP_USER: gmailUser, CONTACT_SMTP_PASSWORD: gmailPassword } = config;
-  /*
-    The Gmail road exists only with the account and its app password — the contact form's two
-    variables (§149) — and only when the caller brought the club's routing. Without either, every
-    message takes Mailgun's road, as before §443.
-  */
+  // The Gmail road needs the contact form's account and app password (§149) and the club's routing.
   const gmail =
     routing && gmailUser && gmailPassword
       ? {
@@ -127,15 +102,7 @@ export function createEmailSenderForEnvironment(
     mode: config.EMAIL_DELIVERY_MODE,
     allowlist: config.EMAIL_ALLOWLIST,
     capture,
-    /**
-     * Constructed on demand, and only for a message that is actually being transmitted.
-     *
-     * Startup validation has already established that a transmitting mode carries credentials
-     * and that live delivery means production, so by the time this runs there is a key and a
-     * domain to build with. A QA process in allowlist mode therefore starts, captures
-     * everything not on the list, and only opens a connection for an address somebody
-     * explicitly authorized.
-     */
+    /** Built only for a message actually transmitted; startup validation guarantees the credentials. */
     live: () =>
       createMailgunAdapter({
         apiKey: config.MAILGUN_API_KEY ?? "",

@@ -2,29 +2,12 @@ import { randomUUID } from "node:crypto";
 import nodemailer from "nodemailer";
 
 /**
- * Plain SMTP, for the one message that must not go through Mailgun (`DECISIONS.md` §149).
+ * Plain SMTP through the club's Gmail for the contact form, which must not spend the Mailgun
+ * allowance (§149). Recipients arrive resolved (`modules/contact/domain/recipients.ts`, §164).
  *
- * The contact form's message is correspondence, not transactional mail: it is written by a
- * visitor to the club, it carries no token, no participant row depends on its delivery, and
- * every one of them would otherwise spend a unit of the Mailgun allowance the registrations
- * need (the owner: "email communication must be minimal so we meet the quota"). So it leaves
- * through the club's own Gmail — an app password, port 465, TLS from the first byte — and
- * lands in whichever mailboxes the club named, with the visitor as `Reply-To`. *Which*
- * mailboxes is not this module's question and not the environment's either since §164: the
- * resolution order is `platform_settings.contactRecipients` first and `CONTACT_FORM_TO`
- * behind it, in `modules/contact/domain/recipients.ts`; here they arrive already resolved.
- *
- * This is deliberately NOT an `EmailAdapter` (`adapter.ts`): that contract is the outbox's —
- * one recipient, an idempotency key, a locale tag, a classified failure the job retries. A
- * contact message has several recipients, no row to retry from and no queue; a failure is
- * told to the visitor on the spot with the club's address to write to instead. Two narrow
- * types instead of one wide one, and nothing here is reachable from `createEmailSender`.
- * Since §443 the outbox has a Gmail road of its own — `gmail-adapter.ts`, a real `EmailAdapter`
- * over the same connection (`createSmtpConnection`) — and this contract is still the contact form's.
- *
- * Nodemailer 10 ships its own types, and is the one SMTP client the ecosystem uses; Node has
- * no SMTP client of its own, and a hand-written one over `node:tls` is the kind of code that
- * works until Google changes a greeting. Pinned exactly in `package.json`.
+ * Not an `EmailAdapter`: a contact message has several recipients, no outbox row and no retry; a
+ * failure is told to the visitor at once. `createSmtpConnection` also serves the outbox's Gmail
+ * road (`gmail-adapter.ts`, §443).
  */
 
 export type SmtpAddress = { name: string; address: string };
@@ -32,14 +15,9 @@ export type SmtpAddress = { name: string; address: string };
 export type SmtpMessage = {
   from: SmtpAddress;
   to: readonly string[];
-  /** The club's own copy list (`DECISIONS.md` §164): everybody on it sees everybody else, which is what a club wants. */
+  /** The club's visible copy list (§164). */
   cc?: readonly string[];
-  /**
-   * The club's hidden copies (2026-09-22): Nodemailer puts them on the envelope (`RCPT TO`) and
-   * writes no `Bcc` header, so nobody else on the message — the Cc'd colleagues, the visitor
-   * answering "Reply all" — learns they exist. That is the whole of what Bcc means, and the
-   * reason `mailgun-adapter.ts` does the same for the outbox's copies (§244).
-   */
+  /** The club's hidden copies: envelope only, no `Bcc` header (§244). */
   bcc?: readonly string[];
   replyTo: SmtpAddress;
   subject: string;
@@ -64,11 +42,7 @@ export type SmtpConfig = {
   password: string;
 };
 
-/**
- * Bounded waits, in a serverless function that has ten seconds of a visitor's patience and
- * not Nodemailer's two-minute defaults: a Gmail that does not answer is a "write to us
- * directly" on the page, not a spinner.
- */
+/** Bounded waits for a serverless request, instead of Nodemailer's two-minute defaults. */
 const DNS_TIMEOUT_MS = 5_000;
 const CONNECTION_TIMEOUT_MS = 8_000;
 const GREETING_TIMEOUT_MS = 8_000;
@@ -85,17 +59,9 @@ export function describeSmtpFailure(error: unknown): string {
 }
 
 /**
- * The connection every SMTP send here opens — the contact form's and, since §443, the outbox's
- * Gmail road (`gmail-adapter.ts`) — so both keep the same TLS rule and the same bounded waits.
- *
- * `pooled` is the outbox's (§493): one batch sends several Gmail messages a few seconds apart, and
- * without a pool each of them paid its own TCP, TLS and login handshake — three round trips to
- * Google and one more "new sign-in" per message on an account Google watches for automated use.
- * Pooled, a batch keeps one connection (`maxConnections: 1`) and closes it when it ends
- * (`close()`); an idle one closes by itself after the socket wait below. A message whose connection
- * dropped while it was being sent is never re-sent by the pool (`maxRequeues: 0`): it may already
- * have been accepted, and the outbox decides what happens to it (`gmail-adapter.ts`), not Nodemailer.
- * The contact form sends one message per request and keeps its own connection.
+ * The SMTP connection for the contact form and the outbox's Gmail road (§443): one TLS rule, one
+ * set of waits. `pooled` (§493) keeps one connection per batch, avoiding a login per message;
+ * `maxRequeues: 0` because a dropped send may have been accepted and the outbox decides.
  */
 export function createSmtpConnection(config: SmtpConfig, options: { pooled?: boolean } = {}) {
   const base = smtpOptions(config);
@@ -108,12 +74,11 @@ function smtpOptions(config: SmtpConfig) {
   return {
     host: config.host,
     port: config.port,
-    // Implicit TLS on 465 (Gmail's submission port); STARTTLS otherwise, required, never
-    // opportunistic — an app password is not sent in the clear on a bad day.
+    // Implicit TLS on 465; STARTTLS otherwise, required so the app password never goes in the clear.
     secure: config.port === 465,
     requireTLS: config.port !== 465,
     auth: { user: config.user, pass: config.password },
-    // All four of Nodemailer's waits: the resolver's default is thirty seconds on its own.
+    // All four waits: the resolver alone defaults to thirty seconds.
     dnsTimeout: DNS_TIMEOUT_MS,
     connectionTimeout: CONNECTION_TIMEOUT_MS,
     greetingTimeout: GREETING_TIMEOUT_MS,
@@ -139,11 +104,8 @@ export function createSmtpTransport(config: SmtpConfig): SmtpTransport {
           text: message.text,
           html: message.html,
         });
-        // Gmail accepts for every address it relays; a recipient it refuses outright is a
-        // failure the visitor should hear about rather than a "sent" that reached nobody.
-        // Deliberately "every recipient", `cc` included: a copy that arrived is a message the
-        // club has, and telling the visitor "we could not send" would be a second, wrong
-        // message on top of a delivered one. A refused address shows in the function log.
+        // Failed only when every recipient, copies included, was refused: a delivered copy is a
+        // message the club has.
         if (info.accepted.length === 0) return { outcome: "failed", error: "smtp rejected every recipient" };
         return { outcome: "sent", providerMessageId: info.messageId };
       } catch (error) {
@@ -161,11 +123,7 @@ export type CaptureSmtpTransport = SmtpTransport & {
   clear(): void;
 };
 
-/**
- * The capture twin, for local, test and the end-to-end suite: accepts the message, keeps it
- * in memory, opens no socket. The same shape the outbox's capture adapter has, for the same
- * reason — a developer reads it on `/devs` instead of an inbox.
- */
+/** The capture twin for local, test and e2e: in memory, no socket; read on `/devs`. */
 export function createCaptureSmtpTransport(now: () => Date = () => new Date()): CaptureSmtpTransport {
   const captured: CapturedSmtpMessage[] = [];
 
