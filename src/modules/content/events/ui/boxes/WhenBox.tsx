@@ -5,12 +5,13 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import RecallField from "@/shared/forms/recall";
 import { textFieldConstraints } from "@/shared/forms/constraints";
-import CheckboxField from "@/shared/ui/CheckboxField";
 import Panel from "@/shared/ui/Panel";
+import { startBoxValues, typedStartOrNull } from "@/modules/events/domain/provisional-start";
 import { eventInputConstraints } from "../../constraints";
 import { DURATION_HOURS_CONSTRAINTS, DURATION_MINUTES_CONSTRAINTS, savedDurationMinutes, splitDuration } from "../../duration";
 import { placeSummary, summaryDateTime, timezoneSummary, whenSummary } from "../box-summaries";
 import OnlyForType from "../OnlyForType";
+import StartToBeAnnounced from "../StartToBeAnnounced";
 import WallTimeField from "../WallTimeField";
 import { BoxNote, type BoxProps, type LanguageEntry, requiredLine, RiskLine, SettingsReadOnly, summaryWords } from "./box-kit";
 import PlaceFields, { placeNameInBox } from "./PlaceBox";
@@ -97,42 +98,48 @@ export default async function WhenBox({
       openWhen={{ attention: event === null }}
       tone={risk ? "risk" : "default"}
     >
-      {risk && event && (
+      {/* Never the provisional start of a date left blank (§NNN) — though nobody can be registered then (§533). */}
+      {risk && event && typedStartOrNull(event) && (
         <RiskLine>{t("editor.risk.when", { date: summaryDateTime(event.startsAt, event.timezone, locale, "inline") })}</RiskLine>
       )}
       {risk && place && <RiskLine>{t("editor.risk.place", { place })}</RiskLine>}
       {mayEditSettings ? (
         <Stack spacing={2}>
           <PartHeading id="box-when-date">{t("editor.boxes.when.title")}</PartHeading>
-          {/* A date on MUI's picker and a native 24-hour time, whatever clock the browser speaks (§70, §345). */}
-          <WallTimeField
-            name="event.startsAt"
-            label={t("editor.startsAt")}
-            timeLabel={t("editor.timeOfDay")}
-            helperText={t("editor.startsAtHelp", { timezone: zone })}
-            value={event?.startsAt ?? null}
-            zone={zone}
-            required={eventInputConstraints("startsAtWallTime").required}
-          />
-          {inSeries && <BoxNote>{t("editor.boxes.when.series")}</BoxNote>}
-          {/* «Data se anunță mai târziu» (§533), the place's switch for the date (§328): the date
-              above stays, as the organizer's provisional note, and is published when this goes off.
-              Not on a series (a series is its dates; the service refuses it there). The marker says
-              the form carried the box, so an unticked one reads as "off", not "not edited". */}
-          {!inSeries && (
-            <Box data-testid="date-to-be-announced">
-              <input type="hidden" name="event.dateToBeAnnounced.present" value="1" />
-              <CheckboxField name="event.dateToBeAnnounced" defaultChecked={event?.dateToBeAnnounced ?? false}>
-                {t("editor.dateToBeAnnounced")}
-              </CheckboxField>
-              <BoxNote>{t("editor.dateToBeAnnouncedHelp")}</BoxNote>
-              {/* «Ora se anunță mai târziu» (§533): the day is published, the hour above is not. */}
-              <input type="hidden" name="event.timeToBeAnnounced.present" value="1" />
-              <CheckboxField name="event.timeToBeAnnounced" defaultChecked={event?.timeToBeAnnounced ?? false}>
-                {t("editor.timeToBeAnnounced")}
-              </CheckboxField>
-              <BoxNote>{t("editor.timeToBeAnnouncedHelp")}</BoxNote>
-            </Box>
+          {inSeries ? (
+            /* A date on MUI's picker and a native 24-hour time, whatever clock the browser speaks
+               (§70, §345). A series is its dates: no switch, the start always required (§533). */
+            <>
+              <WallTimeField
+                name="event.startsAt"
+                label={t("editor.startsAt")}
+                timeLabel={t("editor.timeOfDay")}
+                helperText={t("editor.startsAtHelp", { timezone: zone })}
+                value={event?.startsAt ?? null}
+                zone={zone}
+                required={eventInputConstraints("startsAtWallTime").required}
+              />
+              <BoxNote>{t("editor.boxes.when.series")}</BoxNote>
+            </>
+          ) : (
+            /* The same two boxes, then «Data se anunță mai târziu» and «Ora se anunță mai târziu»
+               (§533), the place's switch for the start (§328). While a switch is on, the box it
+               excuses is not required and may stay empty (§NNN): the boxes show "" for a part left
+               blank (`startBoxValues`), never the provisional value the platform stored for it. */
+            <StartToBeAnnounced
+              labels={{
+                date: t("editor.startsAt"),
+                time: t("editor.timeOfDay"),
+                help: t("editor.startsAtHelp", { timezone: zone }),
+                dateSwitch: t("editor.dateToBeAnnounced"),
+                dateSwitchHelp: t("editor.dateToBeAnnouncedHelp"),
+                timeSwitch: t("editor.timeToBeAnnounced"),
+                timeSwitchHelp: t("editor.timeToBeAnnouncedHelp"),
+              }}
+              values={startBoxValues(event?.startsAt ?? null, zone)}
+              defaults={{ dateToBeAnnounced: event?.dateToBeAnnounced ?? false, timeToBeAnnounced: event?.timeToBeAnnounced ?? false }}
+              required={eventInputConstraints("startsAtWallTime").required === true}
+            />
           )}
           {/* Only a race has a gun time apart from the meeting time (§71); hidden, not removed. */}
           <OnlyForType type="RACE" selectName="event.type" initialType={initialType}>

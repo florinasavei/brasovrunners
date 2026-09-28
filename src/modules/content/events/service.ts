@@ -51,6 +51,7 @@ import {
   isLiveContent,
 } from "@/modules/staff-identity/domain/roles";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
+import { resolveStart, type StartSwitches } from "./start";
 import { isBlankValue } from "@/shared/forms/blank-value";
 import { type BilingualText, isWrittenText, missingLanguage, type TextLanguage } from "@/shared/forms/both-languages";
 import { hasRichTextContent, parseRichText, type RichTextDoc, richTextToPlainText } from "@/modules/content/rich-text/domain/schema";
@@ -201,7 +202,21 @@ type ResolvedTimes = {
   scheduleItems: ScheduleItem[];
 };
 
-function resolveTimes(fields: EventFieldsInput): ResolvedTimes {
+/**
+ * The two switches as the save leaves them (§533): posted, else the row's — the discipline both
+ * follow (`fields.ts`: absent is "this caller is not editing it"). A new event starts announced.
+ */
+function switchesAfterSave(
+  fields: Pick<EventFieldsInput, "dateToBeAnnounced" | "timeToBeAnnounced">,
+  current: Pick<EditableEvent, "dateToBeAnnounced" | "timeToBeAnnounced"> | null,
+): StartSwitches {
+  return {
+    dateToBeAnnounced: fields.dateToBeAnnounced ?? current?.dateToBeAnnounced ?? false,
+    timeToBeAnnounced: fields.timeToBeAnnounced ?? current?.timeToBeAnnounced ?? false,
+  };
+}
+
+function resolveTimes(fields: EventFieldsInput, switches: StartSwitches): ResolvedTimes {
   const zone = fields.timezone;
 
   // Every refusal here names its field (§47, §315): the form links the sentence to the box.
@@ -219,14 +234,33 @@ function resolveTimes(fields: EventFieldsInput): ResolvedTimes {
     return parsed;
   };
 
-  const startsAt = required(fields.startsAtWallTime, "startsAt");
-  // A duration wins over an end time when both arrive: it is what the form asks for now.
+  // The start's date and hour may be left empty while they are to be announced (§NNN, amending
+  // §533): `resolveStart` stores the provisional parts in their place, and refuses an empty box the
+  // switches do not excuse, naming it (§47).
+  const { startsAt, blank } = resolveStart(fields.startsAtWallTime, switches, zone);
+  // A duration wins over an end time when both arrive: it is what the form asks for now. A length
+  // needs no hour, so it is kept whatever was left blank — it is the end that has no public reader
+  // while the start is held back (§533). An end typed on the clock is compared with the start, so it
+  // needs the start's date and hour, like the race's start below.
   const endsAt =
     fields.durationMinutes != null
       ? new Date(startsAt.getTime() + fields.durationMinutes * 60_000)
       : optional(fields.endsAtWallTime, "endsAt");
   // A gun time is a race's (§71): on any other type the field is hidden and its value ignored.
   const raceStartsAt = fields.type === "RACE" ? optional(fields.raceStartsAtWallTime, "raceStartsAt") : null;
+  // «Startul cursei» is checked against the event's start, so it waits for the start's own date and
+  // hour (§NNN): typed beside a blank one, it is refused naming its box rather than compared with the
+  // provisional value.
+  if ((blank.date || blank.time) && raceStartsAt) {
+    throw new DomainError(
+      "VALIDATION_ERROR",
+      "raceStartsAt: the race's start needs the event's own date and hour first",
+      ["raceStartsAt"],
+    );
+  }
+  if ((blank.date || blank.time) && fields.durationMinutes == null && endsAt) {
+    throw new DomainError("VALIDATION_ERROR", "endsAt: an end needs the event's own date and hour first", ["endsAt"]);
+  }
   const registrationOpensAt = optional(fields.registrationOpensAtWallTime, "registrationOpensAt");
   const registrationClosesAt = optional(fields.registrationClosesAtWallTime, "registrationClosesAt");
 
@@ -1557,7 +1591,7 @@ export async function saveEventFields<T extends Record<string, unknown>>(
   const fields = normalizeForMode(normalizeForType(parseOrThrow(eventFieldsSchema, ignoreHiddenFields(input.fields))));
   await assertCoherentRegistrationBlock(db, fields, now);
   await assertDateToBeAnnouncedAllowed(db, fields, current);
-  const times = resolveTimes(fields);
+  const times = resolveTimes(fields, switchesAfterSave(fields, current));
   // The same rule as the editor's save (§331): a cancellation says why, and tells whom it was asked to.
   const request = readNoticeRequest(input.actor, current, fields.eventStatus, input.notice, input.cancellation);
 
@@ -2076,7 +2110,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
     await assertCoherentRegistrationBlock(db, parsedEventFields, now);
     await assertDateToBeAnnouncedAllowed(db, parsedEventFields, current);
   }
-  const times = parsedEventFields ? resolveTimes(parsedEventFields) : undefined;
+  const times = parsedEventFields ? resolveTimes(parsedEventFields, switchesAfterSave(parsedEventFields, current)) : undefined;
   // The notice and the cancellation's reason, refused here like any other box (§331, §315).
   const request = readNoticeRequest(input.actor, current, parsedEventFields?.eventStatus, input.notice, input.cancellation);
   /*
@@ -2360,7 +2394,7 @@ async function prepareEventCreate<T extends Record<string, unknown>>(
   await assertCoherentRegistrationBlock(db, parsed, now);
   // A new event has nobody registered and repeats only after it exists (`repeatEvent` asks then).
   await assertDateToBeAnnouncedAllowed(db, parsed, null);
-  const times = resolveTimes(parsed);
+  const times = resolveTimes(parsed, switchesAfterSave(parsed, null));
   // Created cancelled or completed (§448): judged before any fetch, like every other refusal here.
   const cancelledBecause = readCreateStatus(input.actor, parsed.eventStatus, times.startsAt, input.cancellation, now);
   // A film pasted straight into any of a new event's five rich texts, in either language, gets

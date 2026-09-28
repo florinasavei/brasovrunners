@@ -40,6 +40,7 @@ import RowMenu from "@/shared/ui/RowMenu";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
 import { editionDifference, usualOf } from "@/modules/events/domain/series";
+import { typedStartOrNull } from "@/modules/events/domain/provisional-start";
 import { type DraftReason, draftRemedies, seriesDrafts } from "@/modules/events/domain/series-drafts";
 import SeriesDraftLine from "@/modules/content/events/ui/SeriesDraftLine";
 import { countForm } from "@/i18n/count-form";
@@ -223,8 +224,10 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
 
   const basePath = getPathname({ locale, href: "/admin" });
 
-  // A table cell: the short form, with its weekday (§349).
-  const shortDate = (event: EditableEvent) => formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "short" });
+  // A table cell: the short form, with its weekday (§349) — or «Data se anunță mai târziu» for a date
+  // left blank (§NNN), never the provisional day the platform stored in its place.
+  const shortDate = (event: EditableEvent) =>
+    typedStartOrNull(event) ? formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "short" }) : t("editor.dateToBeAnnounced");
 
   // "1 dată", "2 date", "20 de date" (§341): the count picks the catalogue's phrasing.
   const datesWords = (count: number) => tEvent(`series.count.${countForm(count, locale)}`, { count });

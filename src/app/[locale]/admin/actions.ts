@@ -166,6 +166,20 @@ function eventFieldsFrom(form: FormData) {
     if (!date) return "";
     return `${date}T${value(`${field}Time`) || "00:00"}`;
   };
+  /*
+    The event's own start, whose halves may each be left empty while it is to be announced (§NNN,
+    amending §533): posted as they are — the whole value, the date alone, `THH:mm` for an hour alone,
+    or "" — never with midnight for an empty hour, which would store a time nobody typed. The service
+    decides what the switches excuse (`start.ts#resolveStart`).
+  */
+  const startWallTime = () => {
+    const single = value("startsAtWallTime");
+    if (single) return single;
+    const date = value("startsAtDate");
+    const time = value("startsAtTime");
+    if (date && time) return `${date}T${time}`;
+    return date || (time ? `T${time}` : "");
+  };
 
   /**
    * The programme's rows (§117), posted as `event.schedule[i].<box>` by `ScheduleRowsEditor`;
@@ -227,7 +241,7 @@ function eventFieldsFrom(form: FormData) {
     surface: value("surface") || null,
     eventStatus: value("eventStatus"),
     timezone: value("timezone"),
-    startsAtWallTime: wallTime("startsAt"),
+    startsAtWallTime: startWallTime(),
     endsAtWallTime: wallTime("endsAt"),
     // «Durata» as hours and minutes (§433), joined into the minutes the service has read since §71.
     durationMinutes: joinDuration(value("durationHours"), value("durationMinutesPart")),

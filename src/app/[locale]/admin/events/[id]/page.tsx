@@ -118,6 +118,7 @@ import { readRepeatRule } from "@/modules/events/domain/repeat";
 import { readDeadlines } from "@/modules/deadlines/deadlines";
 import { seriesHorizonEnd, withinRaceWeek } from "@/modules/deadlines/domain/deadlines";
 import { fromWallTimeInput, toWallTimeInput, wallClockWeekday } from "@/modules/events/domain/zoned-time";
+import { startBoxValues, typedStartOrNull } from "@/modules/events/domain/provisional-start";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
@@ -732,8 +733,9 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                         <input type="hidden" name="eventId" value={event.id} />
                         <RepeatToggle name="repeatOn" label={t("editor.repeatOn")}>
                           <RepeatFields
-                            ownWeekday={wallClockWeekday(event.startsAt, event.timezone)}
-                            startTime={toWallTimeInput(event.startsAt, event.timezone).slice(11, 16)}
+                            // Neither the provisional day's weekday nor its hour for a part left blank (§NNN).
+                            ownWeekday={typedStartOrNull(event) ? wallClockWeekday(event.startsAt, event.timezone) : undefined}
+                            startTime={startBoxValues(event.startsAt, event.timezone).time}
                             draftSource={!live}
                           />
                           <Box sx={{ mt: 2 }}>
