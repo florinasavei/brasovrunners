@@ -7,6 +7,8 @@ import {
   leavesNow,
   markedForNow,
   roomToSendNow,
+  SEND_NOW_ROW_LIMIT,
+  sendNowSplit,
   SENT_NOW_FLAG,
   withSendNowChoice,
 } from "@/modules/notifications/domain/send-at-once";
@@ -97,6 +99,24 @@ describe("§NNN a resend's two answers", () => {
     for (const sentence of sentences) {
       expect(sentence.length).toBeLessThanOrEqual(200);
       expect(sentence).not.toMatch(/platforma|de obicei/i);
+    }
+  });
+});
+
+describe("§NNN a send to many past what one press sends (review)", () => {
+  it("sends the first forty now, the rest at the scheduled pass, and the club's copy only when the whole send fits", () => {
+    expect(SEND_NOW_ROW_LIMIT).toBe(40);
+    expect(sendNowSplit({ recipients: 12, copies: 1 })).toEqual({ now: 12, later: 0, copiesNow: true });
+    expect(sendNowSplit({ recipients: 40, copies: 0 })).toEqual({ now: 40, later: 0, copiesNow: true });
+    expect(sendNowSplit({ recipients: 40, copies: 1 })).toEqual({ now: 40, later: 0, copiesNow: false });
+    expect(sendNowSplit({ recipients: 45, copies: 1 })).toEqual({ now: 40, later: 5, copiesNow: false });
+  });
+
+  it("the toast names how many leave now and how many at the scheduled pass, in both languages", () => {
+    for (const messages of [ro, en]) {
+      const part = messages.Feedback.toast.participantMessageSentNowPart;
+      for (const form of ["one", "few", "other"] as const) expect(part[form]).toContain("{later}");
+      expect(part.other).toContain("{count}");
     }
   });
 });

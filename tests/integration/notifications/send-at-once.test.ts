@@ -81,6 +81,7 @@ const { sendOutboxRowsNow } = await import("@/modules/notifications/send-rows-no
 const { readOutboxQueue } = await import("@/modules/notifications/queue");
 const { readOutboxDelivery } = await import("@/modules/notifications/outbox-delivery");
 const { SendNowRefused } = await import("@/modules/notifications/send-at-once");
+const { SEND_NOW_ROW_LIMIT, leavesNow } = await import("@/modules/notifications/domain/send-at-once");
 const { DELIVERY_TIMING_SETTING_KEY } = await import("@/modules/notifications/delivery-timing");
 const { CLUB_NOTICES_SETTING_KEY } = await import("@/modules/notifications/club-notices");
 
@@ -112,12 +113,14 @@ beforeEach(async () => {
 });
 
 /** A confirmed runner of a group run, as the public form and the address link leave one. */
-async function confirmedRunner(email = "ana@example.ro") {
-  const [event] = await db
+async function confirmedRunner(email = "ana@example.ro", existing?: typeof events.$inferSelect) {
+  const [event] = existing
+    ? [existing]
+    : await db
     .insert(events)
     .values({ type: "GROUP_RUN", startsAt: new Date("2026-10-10T09:00:00.000Z"), registrationMode: "INTERNAL", capacity: null, editorialStatus: "PUBLISHED", publishedAt: NOW })
     .returning();
-  await db.insert(eventTranslations).values([
+  if (!existing) await db.insert(eventTranslations).values([
     { eventId: event.id, locale: "ro", title: "Alergarea de joi", slug: "alergarea-de-joi" },
     { eventId: event.id, locale: "en", title: "The Thursday run", slug: "thursday-run" },
   ]);
@@ -354,6 +357,42 @@ describe("§NNN the organizer's message with «Trimite acum»", () => {
     expect(held.sent).toEqual([{ to: "ana@example.ro", subject: "ORGANIZER_MESSAGE" }]);
     const [audit] = await db.select().from(auditLogs).where(eq(auditLogs.action, "event.participant_message_sent"));
     expect(audit.metadataJson).toMatchObject({ delivery: "now", bypassedSchedule: true });
+  });
+
+  it("past forty recipients (review): only the first forty are marked and sent now; the rest and the club's copy wait, unmarked, for the scheduled pass", async () => {
+    await db.insert(platformSettings).values({ key: CLUB_NOTICES_SETTING_KEY, value: { declarations: { to: "", cc: [], bcc: [] }, confirmations: { to: [] }, participants: { bcc: ["arhiva@club.test"] } }, updatedAt: NOW });
+    const { event } = await confirmedRunner("runner-0@example.ro");
+    for (let index = 1; index < 45; index += 1) await confirmedRunner(`runner-${index}@example.ro`, event);
+    const result = await sendParticipantMessage(
+      db,
+      admin,
+      {
+        eventId: event.id,
+        audience: "ALL_ACTIVE",
+        sendId: "1c1e6d4f-5a6b-4d2f-8e3c-8b9f0a1b2c3d",
+        subject: { ro: "Vreme rea", en: "Bad weather" },
+        body: { ro: "Startul se mută la 10:00.", en: "The start moves to 10:00." },
+        delivery: "now",
+      },
+      NOW,
+    );
+    expect(result).toMatchObject({ kind: "queued", real: 45, sentNow: SEND_NOW_ROW_LIMIT, later: 45 - SEND_NOW_ROW_LIMIT });
+
+    // Before the drain: «Pleacă acum» on exactly the forty the press will send, never on the rest.
+    const queue = await readOutboxQueue(db, 100, NOW);
+    const organizer = queue.rows.filter((row) => row.messageType === "ORGANIZER_MESSAGE");
+    expect(organizer.length).toBeGreaterThanOrEqual(45);
+    expect(organizer.filter((row) => row.sentNow)).toHaveLength(SEND_NOW_ROW_LIMIT);
+    for (const row of organizer) {
+      expect(leavesNow(row, NOW)).toBe(row.sentNow);
+    }
+
+    await runAfters();
+    expect(held.sent).toHaveLength(SEND_NOW_ROW_LIMIT);
+    const waiting = await db.select().from(emailOutbox).where(eq(emailOutbox.status, "PENDING"));
+    // The five past the limit, and the club's copy of a send most of the list has not had yet.
+    expect(waiting.filter((row) => row.messageType === "ORGANIZER_MESSAGE").length).toBeGreaterThanOrEqual(45 - SEND_NOW_ROW_LIMIT);
+    for (const row of waiting) expect((row.payloadJson as Record<string, unknown>).sentNow).toBeUndefined();
   });
 });
 

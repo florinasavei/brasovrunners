@@ -4,7 +4,7 @@ import type { Database } from "@/db/types";
 import { DomainError } from "@/shared/errors/domain-error";
 import { readClubNotices } from "./club-notices";
 import { clubCopyRecipients, isCopiedPerMessage, participantMessageBcc } from "./domain/club-notices";
-import { roomToSendNow } from "./domain/send-at-once";
+import { roomToSendNow, SENT_NOW_FLAG } from "./domain/send-at-once";
 import { preferredTransport, roadsByMessageType } from "./domain/email-transport";
 import { gmailIsConfigured, readEmailTransport } from "./email-transport";
 import { readEmailVolumeToday } from "./volume";
@@ -88,7 +88,11 @@ export async function clubCopyTypesFor<T extends Record<string, unknown>>(
  * claim index's first column (`email_outbox_status_next_attempt_created_idx`), so the prefix is
  * compared over the queue, never over every message the club ever sent (§NNN review).
  */
-export async function outboxIdsForKey<T extends Record<string, unknown>>(db: Database<T>, key: string): Promise<string[]> {
+export async function outboxIdsForKey<T extends Record<string, unknown>>(
+  db: Database<T>,
+  key: string,
+  options: { markedOnly?: boolean } = {},
+): Promise<string[]> {
   const under = `${key}:`;
   const rows = await db
     .select({ id: emailOutbox.id })
@@ -97,6 +101,8 @@ export async function outboxIdsForKey<T extends Record<string, unknown>>(db: Dat
       and(
         eq(emailOutbox.status, "PENDING"),
         or(eq(emailOutbox.idempotencyKey, key), sql`left(${emailOutbox.idempotencyKey}, ${under.length}) = ${under}`),
+        // A send to many past `SEND_NOW_ROW_LIMIT` (§NNN): only the rows the press marked leave now.
+        options.markedOnly ? sql`(${emailOutbox.payloadJson} ->> ${SENT_NOW_FLAG}::text) = 'true'` : undefined,
       ),
     )
     .orderBy(emailOutbox.createdAt);

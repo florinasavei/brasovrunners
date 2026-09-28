@@ -3859,13 +3859,10 @@
         "title": "The sending queue",
         "intro": "What has not left yet: the type, the recipient, when it was queued, how many attempts and the provider's last answer. The message is composed only at sending.",
         "count": "In the queue: {count} messages.",
-        "aside": "{waiting} · {state}",
         "when": {
           "title": "When emails leave",
           "stateOn": "Emails leave on the scheduled round; the next: {at}.",
           "stateOff": "Emails leave right after the request that queued them.",
-          "onShort": "on the scheduled round",
-          "offShort": "right after the request",
           "scheduled": "An email queued now waits at most {wait}.",
           "immediate": "What is left (a retry, a deferral) leaves on the scheduled round; the next: {at}.",
           "holdsLead": "What holds the scheduled round now: {holds}.",
@@ -6865,6 +6862,11 @@
         "one": "The email is leaving now for {count} participant, without waiting for the scheduled round.",
         "few": "The email is leaving now for {count} participants, without waiting for the scheduled round.",
         "other": "The email is leaving now for {count} participants, without waiting for the scheduled round."
+      },
+      "participantMessageSentNowPart": {
+        "one": "The email is leaving now for {count} participant; the other {later} leave at the scheduled round.",
+        "few": "The email is leaving now for the first {count} participants; the other {later} leave at the scheduled round.",
+        "other": "The email is leaving now for the first {count} participants; the other {later} leave at the scheduled round."
       }
     }
   },

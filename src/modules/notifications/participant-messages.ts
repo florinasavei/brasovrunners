@@ -28,7 +28,7 @@ import {
 } from "./domain/organizer-message";
 import { enqueueBulkClubCopies, enqueueEmail } from "./outbox";
 import { drainOutboxRowsAfterResponse } from "./drain";
-import { type DeliveryChoice, markedForNow } from "./domain/send-at-once";
+import { type DeliveryChoice, markedForNow, sendNowSplit } from "./domain/send-at-once";
 import { assertRoomToSendNow, clubCopyTypesFor, outboxIdsForKey } from "./send-at-once";
 import { renderBilingual, type TemplateData } from "./templates";
 
@@ -97,7 +97,12 @@ export type SendParticipantMessageInput = {
 };
 
 export type SendParticipantMessageResult =
-  | { kind: "queued"; real: number; test: number }
+  /**
+   * `sentNow` / `later` (§NNN): under «Trimite acum», how many recipients' rows this press sends
+   * after the response (at most `SEND_NOW_ROW_LIMIT`) and how many wait for the scheduled pass;
+   * absent for «Pune la coadă».
+   */
+  | { kind: "queued"; real: number; test: number; sentNow?: number; later?: number }
   /** This form was sent already: nothing was queued a second time. */
   | { kind: "duplicate" }
   /** Nobody is in the chosen group right now. Nothing was queued, and nothing was audited. */
@@ -190,20 +195,29 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
       row is written — refused with the allowance's sentence and nothing queued, never a silent
       defer (§80). Test rows are sent too, so they are counted here too.
     */
+    /*
+      A long list (§NNN review): only the first `SEND_NOW_ROW_LIMIT` recipients leave now, and the
+      club's copy only when the whole send fits; the rest wait for the scheduled pass, unmarked, so
+      neither the queue panel nor the toast says «acum» for them. Only what leaves now is asked of
+      the allowance.
+    */
+    let split = { now: 0, later: 0, copiesNow: false };
     if (delivery === "now") {
       // The club's one copy per address rides with a send that reaches a real participant (§419).
       const copies = await clubCopyTypesFor(tx, { messageType: "ORGANIZER_MESSAGE", recipientEmail: "", real: rows.some((row) => row.kind === "REAL"), perSend: true });
-      await assertRoomToSendNow(tx, rows.map(() => "ORGANIZER_MESSAGE" as const), now, copies);
+      split = sendNowSplit({ recipients: rows.length, copies: copies.length });
+      await assertRoomToSendNow(tx, rows.slice(0, split.now).map(() => "ORGANIZER_MESSAGE" as const), now, split.copiesNow ? copies : []);
     }
-    // Marked for the queue panel's «Pleacă acum» (§NNN); the club's copy carries the mark with it.
-    const payload = markedForNow(
-      { subject: { ro: message.subject.ro, en: message.subject.en }, body: { ro: message.body.ro, en: message.body.en } },
-      delivery,
-    );
+    const words = { subject: { ro: message.subject.ro, en: message.subject.en }, body: { ro: message.body.ro, en: message.body.en } };
+    // Marked for the queue panel's «Pleacă acum» (§NNN) — only a row this press sends now.
+    const nowPayload = markedForNow(words, delivery);
 
     let real = 0;
     let test = 0;
-    for (const row of rows) {
+    let sentNow = 0;
+    for (const [index, row] of rows.entries()) {
+      const leavesNow = delivery === "now" && index < split.now;
+      const payload = leavesNow ? nowPayload : words;
       const inserted = await enqueueEmail(tx, {
         participantId: row.participantId,
         registrationId: row.registrationId,
@@ -220,6 +234,7 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
         drainAfter: delivery !== "now",
       });
       if (!inserted) continue;
+      if (leavesNow) sentNow += 1;
       if (row.kind === "TEST") test += 1;
       else real += 1;
     }
@@ -228,7 +243,7 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
     await enqueueBulkClubCopies(tx, {
       messageType: "ORGANIZER_MESSAGE",
       eventId: input.eventId,
-      payload,
+      payload: split.copiesNow ? nowPayload : words,
       sendKey: `organizer-message:${input.sendId}`,
       realRecipients: real,
       requestedByStaffUserId: actor.id,
@@ -254,10 +269,12 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
       },
       now,
     });
-    return { kind: "queued", real, test } as const;
+    return delivery === "now"
+      ? ({ kind: "queued", real, test, sentNow, later: real + test - sentNow } as const)
+      : ({ kind: "queued", real, test } as const);
   });
-  // Every row of this send and the club's copy, after this response, whatever «Când pleacă emailurile» says.
-  if (delivery === "now" && result.kind === "queued") drainOutboxRowsAfterResponse(await outboxIdsForKey(db, `organizer-message:${input.sendId}`));
+  // The rows this press marked (at most `SEND_NOW_ROW_LIMIT`), after this response, whatever «Când pleacă emailurile» says.
+  if (delivery === "now" && result.kind === "queued") drainOutboxRowsAfterResponse(await outboxIdsForKey(db, `organizer-message:${input.sendId}`, { markedOnly: true }));
   return result;
 }
 
