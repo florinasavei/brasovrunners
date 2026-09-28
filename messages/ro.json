@@ -3788,13 +3788,10 @@
         "title": "Coada de trimitere",
         "intro": "Ce nu a plecat încă: tipul, destinatarul, când a intrat în coadă, câte încercări și ultimul răspuns al furnizorului. Mesajul se compune abia la trimitere.",
         "count": "În coadă: {count} mesaje.",
-        "aside": "{waiting} · {state}",
         "when": {
           "title": "Când pleacă emailurile",
           "stateOn": "Emailurile pleacă la trecerea programată; următoarea: {at}.",
           "stateOff": "Emailurile pleacă imediat după cererea care le-a pus în coadă.",
-          "onShort": "la trecerea programată",
-          "offShort": "imediat după cerere",
           "scheduled": "Un email pus în coadă acum așteaptă cel mult {wait}.",
           "immediate": "Ce rămâne (o nouă încercare, o amânare) pleacă la trecerea programată; următoarea: {at}.",
           "holdsLead": "Ce ține trecerea programată acum: {holds}.",
@@ -6793,6 +6790,11 @@
         "one": "Emailul pleacă acum către {count} participant, fără să aștepte trecerea programată.",
         "few": "Emailul pleacă acum către {count} participanți, fără să aștepte trecerea programată.",
         "other": "Emailul pleacă acum către {count} de participanți, fără să aștepte trecerea programată."
+      },
+      "participantMessageSentNowPart": {
+        "one": "Emailul pleacă acum către {count} participant; ceilalți {later} pleacă la trecerea programată.",
+        "few": "Emailul pleacă acum către primii {count} participanți; ceilalți {later} pleacă la trecerea programată.",
+        "other": "Emailul pleacă acum către primii {count} de participanți; ceilalți {later} pleacă la trecerea programată."
       }
     }
   },

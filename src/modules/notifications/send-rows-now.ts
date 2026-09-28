@@ -1,18 +1,19 @@
 import type { emailOutbox } from "@/db/schema/email-outbox";
 import type { Database } from "@/db/types";
 import { type OutboxBatchSummary, OUTBOX_BATCH_SIZE, processOutboxBatch } from "./outbox";
+import { SEND_NOW_ROW_LIMIT } from "./domain/send-at-once";
 import { createOutboxSender } from "./outbox-sender";
 import { createOutboxRenderer } from "./render";
 
 /**
- * Two batches of twenty: forty rows, twice what the ordinary drain after a response sends (one
- * batch, `drain.ts`). One person's resend is one row and its club copies; an organizer's message to
- * a long list sends its first forty now and the rest at the outbox job's next pass, which the drain
- * wakes. The bound keeps the `after()` short: a function stopped mid-batch leaves its rows
- * PROCESSING until the lock times out and the job sends them again, and the fewer rows one call
- * holds, the fewer a stop can send twice (§NNN review).
+ * Two batches of twenty: `SEND_NOW_ROW_LIMIT` (forty) rows, twice what the ordinary drain after a
+ * response sends (one batch, `drain.ts`). One person's resend is one row and its club copies; an
+ * organizer's message to a long list marks and hands over only its first forty
+ * (`sendNowSplit`), and the rest wait for the outbox job's next pass. The bound keeps the `after()`
+ * short: a function stopped mid-batch leaves its rows PROCESSING until the lock times out and the
+ * job sends them again, and the fewer rows one call holds, the fewer a stop can send twice (§NNN review).
  */
-const MAX_BATCHES = 2;
+const MAX_BATCHES = Math.ceil(SEND_NOW_ROW_LIMIT / OUTBOX_BATCH_SIZE);
 
 /**
  * Sends exactly these rows now (§NNN, `send-at-once.ts`), in the order they were queued, up to

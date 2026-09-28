@@ -136,10 +136,8 @@ export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit,
     <Panel glyph="outbox"
       title={t("emails.queue.title")}
       intro={t("emails.queue.intro")}
-      aside={t("emails.queue.aside", {
-        waiting: t("outbox.waitingShort", { count: queue.total }),
-        state: scheduled ? t("emails.queue.when.onShort") : t("emails.queue.when.offShort"),
-      })}
+      // The waiting count alone: the mode in force is said once, under the switch (§NNN review).
+      aside={t("outbox.waitingShort", { count: queue.total })}
       collapsible
       // Open while something waits (§269), and after "send now" or the switch answered — sent or refused (§336).
       openWhen={{ ...openWhen, attention: queue.total > 0 }}

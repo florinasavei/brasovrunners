@@ -96,10 +96,13 @@ export async function sendParticipantMessageAction(_previous: FormOutcome | null
   await flash(
     result.kind === "duplicate"
       ? { kind: "info", key: "participantMessageDuplicate" }
-      : // Sent now, past the scheduled pass (§NNN), says so; queued, as before.
-        delivery === "now"
-        ? { kind: "success", key: "participantMessageSentNow", values: { count: String(result.real), test: String(result.test) } }
-        : { kind: "success", key: "participantMessageSent", values: { count: String(result.real), test: String(result.test) } },
+      : // Sent now, past the scheduled pass (§NNN), says so; a list longer than one press sends
+        // (`SEND_NOW_ROW_LIMIT`) says how many leave now and how many at the scheduled pass; queued, as before.
+        delivery === "now" && (result.later ?? 0) > 0
+        ? { kind: "success", key: "participantMessageSentNowPart", values: { count: String(result.sentNow ?? 0), later: String(result.later ?? 0) } }
+        : delivery === "now"
+          ? { kind: "success", key: "participantMessageSentNow", values: { count: String(result.real), test: String(result.test) } }
+          : { kind: "success", key: "participantMessageSent", values: { count: String(result.real), test: String(result.test) } },
   );
   revalidatePath(path);
   redirect(`${path}?${query}#admin-alert`);

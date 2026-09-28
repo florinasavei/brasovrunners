@@ -125,8 +125,8 @@ describe("§529 the queue panel says when the emails leave", () => {
     expect(html).toContain("monitorul care apelează site-ul, o dată la o oră");
     expect(html).toContain("cel mult o dată la 2 ore");
     expect(html).toMatch(/Ultima trecere programată: [^<]*10:00\./);
-    // The closed line says the state beside the count.
-    expect(html).toContain("3 în așteptare · la trecerea programată");
+    // The closed line says the waiting count alone: the state is said once, under the switch (review).
+    expect(html).toContain("3 în așteptare</span>");
   });
 
   it("says each row's departure: the next round, late in red past the threshold, now, never", async () => {
@@ -168,8 +168,13 @@ describe("§529 the queue panel says when the emails leave", () => {
     expect(switchInput(on)).toMatch(/checked=""/);
     expect(switchInput(on)).toMatch(/aria-describedby="outbox-when-state"/);
     expect(on).toMatch(/id="outbox-when-state"[^>]*>Emailurile pleacă la trecerea programată; următoarea: [^<]*12:00\.</);
-    // The mode is said once: no chip beside the title repeating it.
-    expect(on.match(/data-testid="outbox-when-state"/g)).toHaveLength(1);
+    // The mode is said once: no chip in the «Când pleacă emailurile» box, and the panel's aside is the
+    // waiting count alone, never «· la trecerea programată» (review).
+    const whenBox = on.slice(on.indexOf('data-testid="outbox-when"'), on.indexOf('data-testid="outbox-when-last"'));
+    expect(whenBox.length).toBeGreaterThan(0);
+    expect(whenBox).not.toContain("MuiChip-root");
+    expect(on).not.toContain("· la trecerea programată");
+    expect(on).not.toContain("· imediat după cerere");
 
     const off = await render("ro", { delivery: { ...DELIVERY, timing: "immediate", waitMinutes: null } });
     expect(switchInput(off)).not.toMatch(/checked=""/);

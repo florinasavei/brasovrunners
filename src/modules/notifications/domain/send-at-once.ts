@@ -37,6 +37,25 @@ export function deliveryChoiceOf(value: unknown): DeliveryChoice {
  */
 export const SENT_NOW_FLAG = "sentNow";
 
+/**
+ * The most rows one press sends in its `after()` (§NNN review): two batches of the worker's twenty
+ * (`send-rows-now.ts`). A press that queues more — an organizer's message to a long list — marks
+ * and sends only its first rows now; the rest wait for the scheduled pass like any other row, and
+ * neither the queue panel nor the toast says «acum» for them.
+ */
+export const SEND_NOW_ROW_LIMIT = 40;
+
+/**
+ * Which of a send-to-many's rows leave now (§NNN): the first `limit` recipients, and the club's
+ * copies only when the whole send fits — a copy of a message most of the list has not yet had
+ * waits with the rest. `later` is how many recipients wait for the scheduled pass.
+ */
+export function sendNowSplit(input: { recipients: number; copies: number; limit?: number }): { now: number; later: number; copiesNow: boolean } {
+  const limit = input.limit ?? SEND_NOW_ROW_LIMIT;
+  const now = Math.min(input.recipients, limit);
+  return { now, later: input.recipients - now, copiesNow: input.recipients + input.copies <= limit };
+}
+
 /** The payload with the mark, for a press that sends now; unchanged for the queue. */
 export function markedForNow(payload: Record<string, unknown>, choice: DeliveryChoice): Record<string, unknown> {
   return choice === "now" ? { ...payload, [SENT_NOW_FLAG]: true } : payload;
