@@ -78,7 +78,10 @@ const STATIC_PAGES: readonly RegExp[] = [...PREFETCHED_PATHNAMES].map(
  * stale at once, and `stale-while-revalidate` then lets the browser show its old copy while it
  * asks again behind the page's back. So a page published a second ago read as the old page, and
  * the background request never finished for the browser's own tools (Playwright's `networkidle`
- * waited for it forever). Said here, off Vercel, so every server gives the browser what Vercel does.
+ * waited for it forever). Said here, off Vercel, so every server gives the browser what Vercel does
+ * for a static page. Only the pages: the `force-static` pictures and files (the Open Graph
+ * pictures, the `.ics`) keep Next's header off Vercel — a stale picture in a browser is harmless,
+ * and no test reads one after a save.
  */
 export const STATIC_PAGE_BROWSER_CACHE_CONTROL = "public, max-age=0, must-revalidate";
 

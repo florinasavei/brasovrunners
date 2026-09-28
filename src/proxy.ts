@@ -123,9 +123,12 @@ export default function proxy(request: NextRequest) {
       A static page's answer, off Vercel: the browser is told what Vercel's CDN tells it (§NNN,
       `STATIC_PAGE_BROWSER_CACHE_CONTROL` says why). Next keeps a `Cache-Control` already on the
       response rather than writing its own `s-maxage`, and its ISR copy is kept all the same. On
-      Vercel nothing is set here: the CDN reads Next's `s-maxage` and strips it itself.
+      Vercel nothing is set here: the CDN reads Next's `s-maxage` and strips it itself. Only on a
+      GET or a HEAD: a POST to the same address (a Server Action, a form sent without JavaScript)
+      is answered per request, and Next's own `no-store` on it must stand.
     */
-    if (process.env.VERCEL !== "1" && isStaticPublicAnswer(internal.pathname, url.searchParams, signedIn)) {
+    const readsThePage = request.method === "GET" || request.method === "HEAD";
+    if (process.env.VERCEL !== "1" && readsThePage && isStaticPublicAnswer(internal.pathname, url.searchParams, signedIn)) {
       response.headers.set("Cache-Control", STATIC_PAGE_BROWSER_CACHE_CONTROL);
     }
   }

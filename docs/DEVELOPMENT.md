@@ -292,9 +292,10 @@ does not import React, Next, MUI, or a provider SDK, and there is no `utils.ts`.
   `.ics` files and the Open Graph pictures are made on their first visit and kept (ISR), expired
   by the write that changes them — the same `revalidatePublicContent(...)` every write already
   calls — and by their clock (`src/modules/public-cache/page-lifetime.ts`). `curl -sI` shows it:
-  `x-nextjs-cache: HIT` on a second visit, with `Cache-Control: public, max-age=0,
-  must-revalidate` — what Vercel's CDN hands the browser for such a page, said by `proxy.ts`
-  everywhere else, because `next start` would otherwise give the browser Next's own `s-maxage`
+  `x-nextjs-cache: HIT` on a second visit, and on a static *page* `Cache-Control: public,
+  max-age=0, must-revalidate` — what Vercel's CDN hands the browser for such a page, said by
+  `proxy.ts` everywhere else for a GET or a HEAD (the pictures and the `.ics` files keep Next's
+  own header off Vercel), because `next start` would otherwise give the browser Next's own `s-maxage`
   and `stale-while-revalidate`, and the browser would show its copy from before the last save
   (and Playwright's `networkidle` would wait for its background request forever). On Vercel the
   CDN keeps Next's `s-maxage` and the proxy sets nothing. A filtered listing

@@ -1,4 +1,6 @@
+import { NextRequest } from "next/server";
 import { describe, expect, it } from "vitest";
+import proxy from "@/proxy";
 import { isStaticPublicAnswer, LIVE_SEGMENT, liveTwinPathname, mayBeSignedIn, STATIC_PAGE_BROWSER_CACHE_CONTROL } from "@/i18n/live-twin";
 import { PREFETCHED_PATHNAMES } from "@/i18n/prefetch";
 
@@ -87,5 +89,24 @@ describe("isStaticPublicAnswer", () => {
 
   it("says what Vercel's CDN sends the browser for an s-maxage page", () => {
     expect(STATIC_PAGE_BROWSER_CACHE_CONTROL).toBe("public, max-age=0, must-revalidate");
+  });
+});
+
+/**
+ * The proxy sets that header off Vercel only on a GET or a HEAD (a review nit): a POST to a static
+ * page's address — a Server Action, a form sent without JavaScript — is answered per request, and
+ * Next's own `no-store` on it must stand, which it does only while no `Cache-Control` is set first.
+ */
+describe("the proxy's browser header for a static page", () => {
+  const ask = (method: string) => proxy(new NextRequest("http://localhost:4000/ro/evenimente", { method })).headers.get("cache-control");
+
+  it("is set on a GET and a HEAD, off Vercel", () => {
+    expect(process.env.VERCEL).not.toBe("1");
+    expect(ask("GET")).toBe(STATIC_PAGE_BROWSER_CACHE_CONTROL);
+    expect(ask("HEAD")).toBe(STATIC_PAGE_BROWSER_CACHE_CONTROL);
+  });
+
+  it("is never set on a POST to the same address", () => {
+    expect(ask("POST")).toBeNull();
   });
 });
