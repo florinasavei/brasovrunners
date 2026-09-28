@@ -69,7 +69,7 @@ import {
   duplicateBranches,
   ENTRY_DIR,
   nextBaseline,
-  normalizeBaseline,
+  typedBaseline,
   handWork,
   numberForLine,
   orderEntries,
@@ -156,7 +156,7 @@ if (TREE) {
   }
   let to;
   try {
-    to = TO_FLAG ? normalizeBaseline(TO_FLAG, date) : nextBaseline(from, date);
+    to = TO_FLAG ? typedBaseline(TO_FLAG, from, date) : nextBaseline(from, date);
   } catch (error) {
     fail(error.message);
   }

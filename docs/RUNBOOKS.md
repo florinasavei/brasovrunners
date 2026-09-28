@@ -594,14 +594,26 @@ carries a newer baseline than `qa`'s) ships as it is.
 3. It ends with a comment on the pull request: "Released BR-V2.NN…" or "The release stopped".
    The run's **Summary** page says, in a table, each step's outcome and ship's minutes.
 
-One release at a time: a second label waits for the first run to finish, and is never
-cancelled by it. Only a person with write access can start one; anyone else's label stops at the
-first step.
+If the pull request shows **«This branch has conflicts»**, the label starts nothing — GitHub runs
+no `pull_request` workflow while a branch cannot merge into its base, and no run, no summary and
+no comment appear. Use **Actions** → **release** → **Run workflow** → the PR's number instead
+(dry run off): a run by hand starts regardless, and its first step merges `qa` in by rule.
+
+One release runs at a time, and one more can wait for it; a newer request replaces the one
+waiting (GitHub keeps one pending run, the newest) — so release one pull request, then label the
+next. A running release is never cancelled by a new request. Only a person with write access can
+start one; anyone else's label stops at the first step.
 
 ### When it stops
 
 The run's **Summary** says where, in words:
 
+- **Nothing happened at all** after ticking **ship** — no run under **Actions**, no comment: the
+  pull request has a merge conflict with `qa` («This branch has conflicts»). Run **release** by
+  hand with its number; the merge step resolves the journal, the catalogues and the tests by rule
+  and names anything else.
+- **"qa has no scripts/merge-branches.mjs yet"**: the release tooling is not in `qa` yet — this
+  one release goes from the PC (`docs/DISPATCHER.md` § Ship).
 - **"Set once in … Secrets and variables"** or **"GitHub refused to say what … may do"**: the
   token or the variable is missing or expired — `SETUP.md` § 41.
 - **"Bringing the branch up to date with qa stopped"**: a merge conflict no rule resolves (the

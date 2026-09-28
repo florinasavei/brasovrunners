@@ -14,6 +14,7 @@ import {
   releaseTitle,
   slugOf,
   todayIn,
+  typedBaseline,
   validateEntry,
   withBatchLine,
   withReleasedRow,
@@ -104,6 +105,15 @@ describe("§NNN the baseline a phone release takes — BR-V2.NN, never a letter"
     expect(normalizeBaseline("9.5", "2031-01-02")).toBe("BR-V9.05-2031-01-02");
     expect(normalizeBaseline("BR-V9.42-2031-01-05", "2031-01-02")).toBe("BR-V9.42-2031-01-05");
     expect(() => normalizeBaseline("V9.42B", "2031-01-02")).toThrow(/write it like BR-V2.18/);
+  });
+
+  it("refuses a typed baseline that does not come after the current one — a phone's `2.1` for `2.18` never lands backwards", () => {
+    expect(typedBaseline("9.41", "BR-V9.40-2031-01-01", "2031-01-02")).toBe("BR-V9.41-2031-01-02");
+    expect(typedBaseline("BR-V10.00", "BR-V9.99-2031-01-01", "2031-01-02")).toBe("BR-V10.00-2031-01-02");
+    expect(() => typedBaseline("9.4", "BR-V9.40-2031-01-01", "2031-01-02")).toThrow(/BR-V9.04 does not come after the current BR-V9.40/);
+    expect(() => typedBaseline("BR-V9.40", "BR-V9.40-2031-01-01", "2031-01-02")).toThrow(/does not come after/);
+    expect(() => typedBaseline("8.99", "BR-V9.40-2031-01-01", "2031-01-02")).toThrow(/does not come after/);
+    expect(() => typedBaseline("V9.41B", "BR-V9.40-2031-01-01", "2031-01-02")).toThrow(/write it like BR-V2.18/);
   });
 
   it("dates the landing in Brașov: 23:30 UTC on the 1st is already the 2nd there", () => {

@@ -1552,7 +1552,9 @@ keeps in `.env.local`.
 **dry_run** → **Run workflow**. It merges `qa` in and lands the entry on the runner only, and its
 summary page shows the landing commit and the diff it would push; nothing is pushed or shipped.
 Green there means the token, the variable and the scripts work; the first real press is then the
-label. `docs/RUNBOOKS.md` § Release from the phone has the everyday steps.
+label. `docs/RUNBOOKS.md` § Release from the phone has the everyday steps. A pull request that
+shows «This branch has conflicts» gets no run from the label at all — run **release** by hand
+with its number, as here with **dry_run** off.
 
 **When the token expires** the run stops at its first step and says so; generate a new one the
 same way and replace the secret's value (**Secrets** → `SHIP_TOKEN` → **Update**).

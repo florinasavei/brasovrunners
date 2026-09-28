@@ -44,7 +44,7 @@ THE MACHINE IS SHARED (several agents at once): run at most ONE \`next build\`/\
 RULES THAT BITE (always):
 - The repository is PUBLIC: never write a secret, a key, a token, a database URL, a personal email, an account or organisation id, or a local path with a user name into any tracked file, commit message or PR text.
 - Do NOT edit DECISIONS.md, CHANGELOG.md, SPECS.md, any PROJECT_BASELINE marker or baseline line, CLAUDE.md's batch lines or docs/QUEUE.md. Return the § body, the changelog line and the SPECS criteria in your structured output. Cite the new decision in code as \`§NNN\` (the orchestrator numbers it at landing).
-- DO write, on the branch, the rest of the documentation the change needs: a README.md index row for every new file under the root, docs/, scripts/, .github/ or .githooks/ (\`yarn docs:check\` fails without it); the SETUP.md or docs/*.md section a person needs; a line in CLAUDE.md's command list for a new \`yarn\` command. An unattended landing from GitHub has nobody to do it, so the entry's \`docsNotes\` stays empty; in your structured output \`docsNotes\` names what you wrote and where (or what you could not write).
+- DO write, on the branch, the rest of the documentation the change needs: a README.md index row for every new file under the root, docs/, scripts/, .github/ or .githooks/ (\`yarn docs:check\` fails without it); the SETUP.md or docs/*.md section a person needs; a line in CLAUDE.md's command list for a new \`yarn\` command. An unattended landing from GitHub has nobody to do it, so the entry's \`docsNotes\` stays empty. \`docsNotes\` means one thing, in the entry and in your structured output alike: text a person must still write at landing (it is printed as hand work, and a release from GitHub refuses it) — empty when you wrote it all. Say what documentation you wrote, and where, in \`summary\`.
 - The release facts travel with the branch: commit the same text as \`${ENTRY}\` — the fields \`branch\` ("${BRANCH}"), \`decisionsTitle\`, \`decisionsSection\`, \`changelogLine\`, \`specsCriteria\`, an empty \`docsNotes\` and a short \`batchLine\` (\`.release/README.md\` has the shape). It is what lets the branch be landed and shipped from GitHub (\`.github/workflows/release.yml\`) as well as by the orchestrator.
 - messages/ro.json and messages/en.json: every key in BOTH; one-word namespaces; no helper named t-something; no ICU plurals (use countForm). Both must parse.
 - The owner's standing rules: every text the club types is Română AND English, both or neither (\`src/shared/forms/both-languages.ts\`); nothing hardcoded in legal texts and emails — placeholders only.
@@ -79,7 +79,7 @@ const IMPL_SCHEMA = {
     decisionsSection: { type: 'string', description: 'Markdown body without the "## NNN." line' },
     changelogLine: { type: 'string', description: 'one English bullet, bold lead, ending with "§NNN."' },
     specsCriteria: { type: 'array', items: { type: 'object', properties: { requirement: { type: 'string' }, text: { type: 'string' } }, required: ['requirement', 'text'] } },
-    docsNotes: { type: 'string', description: 'text other baseline documents need (SETUP/CLAUDE/README), and where — or empty' },
+    docsNotes: { type: 'string', description: 'text a person must still write at landing (SETUP/CLAUDE/README), and where: hand work, refused by a release from GitHub — empty when it is all written on the branch (say what you wrote in summary)' },
     checks: {
       type: 'object',
       properties: {

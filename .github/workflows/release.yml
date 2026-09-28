@@ -5,8 +5,9 @@ name: release
 # `ship` to the pull request (or runs this workflow by hand with its number), and this job does what
 # `docs/DISPATCHER.md` § Land a batch and § Ship do on the PC:
 #
-#   1. brings the branch up to date with `qa` (`yarn batch:merge origin/qa`: the journal, the
-#      catalogues and the tests resolved by rule; any other conflict stops the run and names it);
+#   1. brings the branch up to date with `qa` (`yarn batch:merge origin/qa`, run from qa's own copy of
+#      the tool: the journal, the catalogues and the tests resolved by rule, the dependencies
+#      installed again when qa changed them; any other conflict stops the run and names it);
 #   2. lands the release facts the branch carries in `.release/*.json` (`yarn docs:land --tree`):
 #      the next baseline after `qa`'s, DECISIONS, CHANGELOG, SPECS, every decision placeholder
 #      numbered, the CLAUDE.md batch line, the queue's Released row; `yarn docs:check`; one commit,
@@ -20,6 +21,14 @@ name: release
 # commit and the diff it would push on the run's summary page, and pushes and ships nothing — the
 # rehearsal before a first real press. Every step writes its outcome to that summary page, so a
 # phone reads what happened without opening a log.
+#
+# A pull request that shows «This branch has conflicts» gets no `pull_request` run at all: GitHub
+# does not start one while the branch cannot merge into its base, so the label starts nothing and
+# leaves nothing on any summary page. Run this workflow by hand with the PR's number instead —
+# `workflow_dispatch` runs regardless, and step 1 merges qa in by rule.
+#
+# One release runs at a time and one more can wait: a newer request replaces the one waiting
+# (GitHub keeps one pending run per concurrency group). Release one pull request, then label the next.
 #
 # It needs, set once in the repository's settings and never in this file (the repository is
 # public; `SETUP.md` § 41 has the clicks, `docs/RUNBOOKS.md` § Release from the phone the use):
@@ -61,7 +70,8 @@ jobs:
     if: >-
       github.event_name == 'workflow_dispatch' ||
       (github.event.label.name == 'ship' && github.event.pull_request.head.repo.full_name == github.repository)
-    # One release at a time, and a release is never cancelled halfway by the next request. On the
+    # One release at a time, and a release is never cancelled halfway by the next request (a waiting
+    # one is: GitHub keeps one pending run per group, the newest). On the
     # job, not the workflow: every label added to any pull request starts a run, and a run skipped by
     # the `if` above must never enter the group — GitHub cancels a pending run when a newer one
     # queues in the same group, so a label such as `bug` would silently cancel a queued release.
@@ -149,6 +159,7 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: yarn
+      # The branch's dependencies; the merge below installs again when qa changed package.json or yarn.lock.
       - run: yarn install --immutable
 
       - name: Who commits
@@ -161,8 +172,20 @@ jobs:
         id: merge
         if: steps.pr.outputs.state == 'OPEN'
         run: |
+          # qa's merge tool and rules, not the branch's: a branch cut before they existed has no
+          # such script, and one cut later carries the rules it was cut with. The merge installs
+          # the dependencies again when qa changed them (the ones above are the branch's).
+          mkdir -p "$RUNNER_TEMP/land"
+          for f in merge-branches.mjs merge-resolve.mjs; do
+            if ! git show "origin/qa:scripts/$f" > "$RUNNER_TEMP/land/$f" 2> /dev/null; then
+              why="qa has no scripts/$f yet, so this workflow cannot bring the branch up to date: release this pull request from the PC (docs/DISPATCHER.md § Ship), once."
+              echo "::error::$why"
+              echo "**Stopped:** $why" >> "$GITHUB_STEP_SUMMARY"
+              exit 1
+            fi
+          done
           set +e
-          node scripts/merge-branches.mjs origin/qa > "$RUNNER_TEMP/merge.txt" 2>&1
+          node "$RUNNER_TEMP/land/merge-branches.mjs" origin/qa > "$RUNNER_TEMP/merge.txt" 2>&1
           code=$?
           set -e
           cat "$RUNNER_TEMP/merge.txt"

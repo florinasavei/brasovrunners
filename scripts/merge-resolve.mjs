@@ -19,6 +19,11 @@ export function conflictKind(path) {
   return null;
 }
 
+/** Whether the paths a merge changed include the dependencies — `package.json` or `yarn.lock` at the root — so the install must run again. */
+export function dependenciesChanged(paths) {
+  return paths.some((p) => ["package.json", "yarn.lock"].includes(String(p).replace(/\\/g, "/").trim()));
+}
+
 /**
  * The migrations' journal after a merge: every entry either side (or the base) knew, restricted to
  * the migration files present, in file-number order, `idx` from 0, and each `when` strictly after

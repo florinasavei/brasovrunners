@@ -298,4 +298,55 @@ describe("§NNN yarn batch:merge resolves the conflicts every batch has, and sto
     expect(run.stderr).toMatch(/no rule resolves: notes\.txt/);
     expect(existsSync(path.join(dir, ".git", "MERGE_HEAD"))).toBe(true);
   });
+
+  /**
+   * The runner installed the branch's dependencies before qa came in: when qa changed them, the
+   * checks would run against the old ones. A fake `yarn` first on the PATH records what it was asked.
+   */
+  function withFakeYarn(dir: string) {
+    const bin = path.join(dir, ".fake-bin");
+    mkdirSync(bin);
+    const log = path.join(dir, ".yarn-calls.txt");
+    writeFileSync(path.join(bin, "yarn"), '#!/bin/sh\necho "$@" >> "$YARN_LOG"\n', { mode: 0o755 });
+    writeFileSync(path.join(bin, "yarn.cmd"), '@echo %* >> "%YARN_LOG%"\r\n');
+    const env: NodeJS.ProcessEnv = { ...ENV, YARN_LOG: log };
+    const key = Object.keys(env).find((k) => k.toUpperCase() === "PATH") ?? "PATH";
+    env[key] = `${bin}${path.delimiter}${env[key] ?? ""}`;
+    const calls = () => (existsSync(log) ? readFileSync(log, "utf8") : "");
+    return { env, calls };
+  }
+
+  it("runs yarn install --immutable after a merge that changed yarn.lock, before the checks — and not when it did not", () => {
+    const { dir, git, put } = repo();
+    put("package.json", '{\n  "name": "t",\n  "private": true\n}\n');
+    put("yarn.lock", "# old\n");
+    put("notes.txt", "base\n");
+    put(".gitignore", ".fake-bin/\n.yarn-calls.txt\n");
+    git("add", "-A");
+    git("commit", "-qm", "base");
+    git("checkout", "-qb", "feat/mine");
+    put("notes.txt", "mine\n");
+    git("commit", "-qam", "mine");
+    git("checkout", "-q", "qa");
+    put("yarn.lock", "# new: qa added a dependency\n");
+    git("commit", "-qam", "qa adds a dependency");
+    git("checkout", "-q", "feat/mine");
+    const { env, calls } = withFakeYarn(dir);
+
+    const run = spawnSync("node", [MERGE, "qa", "--no-probe"], { cwd: dir, encoding: "utf8", env });
+    expect(run.status, run.stderr + run.stdout).toBe(0);
+    expect(run.stdout).toContain("the merges changed yarn.lock: yarn install --immutable");
+    expect(calls().trim()).toBe("install --immutable");
+
+    // A second merge that leaves the dependencies alone installs nothing.
+    git("checkout", "-q", "qa");
+    put("other.txt", "qa\n");
+    git("add", "-A");
+    git("commit", "-qm", "qa, no dependency");
+    git("checkout", "-q", "feat/mine");
+    const again = spawnSync("node", [MERGE, "qa", "--no-probe"], { cwd: dir, encoding: "utf8", env });
+    expect(again.status, again.stderr + again.stdout).toBe(0);
+    expect(again.stdout).not.toContain("yarn install");
+    expect(calls().trim()).toBe("install --immutable");
+  });
 });

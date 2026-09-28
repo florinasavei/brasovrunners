@@ -98,7 +98,9 @@ describe("§NNN release.yml — the token and what a person typed", () => {
 describe("§NNN release.yml — the same tools as the PC, in order", () => {
   it("merges qa by rule, lands the tree's entries, checks the docs, pushes, then ships", () => {
     const order = [
-      "node scripts/merge-branches.mjs origin/qa",
+      "yarn install --immutable",
+      'git show "origin/qa:scripts/$f" > "$RUNNER_TEMP/land/$f"',
+      'node "$RUNNER_TEMP/land/merge-branches.mjs" origin/qa',
       "node scripts/land-batch.mjs --tree --apply",
       "yarn docs:check",
       "git commit --no-verify",
@@ -108,6 +110,24 @@ describe("§NNN release.yml — the same tools as the PC, in order", () => {
     const at = order.map((s) => steps.indexOf(s));
     for (const [i, s] of order.entries()) expect(at[i], s).toBeGreaterThan(-1);
     expect([...at].sort((a, b) => a - b)).toEqual(at);
+  });
+
+  it("runs qa's own merge tool and rules, never the branch's, and says so plainly when qa has none", () => {
+    const merge = steps.slice(steps.indexOf("- name: Up to date with qa"), steps.indexOf("- name: Land the release facts"));
+    expect(merge).toContain("for f in merge-branches.mjs merge-resolve.mjs; do");
+    expect(merge).not.toContain("node scripts/merge-branches.mjs");
+    expect(merge).toContain("qa has no scripts/$f yet");
+    // The tool installs the dependencies again when qa changed them: the runner's are the branch's.
+    const tool = readFileSync("scripts/merge-branches.mjs", "utf8");
+    const install = tool.indexOf('spawnSync("yarn", ["install", "--immutable"]');
+    expect(install).toBeGreaterThan(-1);
+    expect(install).toBeLessThan(tool.indexOf("if (PROBE) refreshNewestSnapshot("));
+    expect(install).toBeLessThan(tool.indexOf('for (const script of ["migrations:check", "typecheck"])'));
+  });
+
+  it("names a conflicted pull request's way out: the label starts nothing, a run by hand does", () => {
+    expect(workflow).toContain("«This branch has conflicts»");
+    expect(workflow).toContain("`workflow_dispatch` runs regardless");
   });
 
   it("refuses a branch that carries nothing to release, and takes a branch landed by hand as it is", () => {

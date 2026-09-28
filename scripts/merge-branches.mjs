@@ -19,7 +19,11 @@
  * command again — merged refs are skipped, and a merge left with only rule-resolvable paths is
  * finished first.
  *
- * After the merges: the catalogues lose any key git's line merge left twice; when the journal was
+ * After the merges: the catalogues lose any key git's line merge left twice; when the merges changed
+ * `package.json` or `yarn.lock` (the ref added or upgraded a dependency), `yarn install --immutable`
+ * runs before anything below needs the dependencies — the installed ones are the pre-merge tree's,
+ * and a typecheck against them fails with «Cannot find module» although the code is fine (skipped
+ * only with both `--no-checks` and `--no-probe`, which then need no dependency); when the journal was
  * rebuilt, the snapshots are re-linked in journal order and the newest one's content refreshed from
  * the merged schema by a throwaway `drizzle-kit generate` (skipped with `--no-probe`); every
  * migration production (`origin/main`) and QA (`origin/qa`) already applied must be unchanged in
@@ -39,7 +43,7 @@
 import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import process from "node:process";
-import { conflictKind, dedupeJsonKeys, mergeJson3, rebuildJournal, relinkSnapshots, shippedJournalProblems, unionConflicts } from "./merge-resolve.mjs";
+import { conflictKind, dedupeJsonKeys, dependenciesChanged, mergeJson3, rebuildJournal, relinkSnapshots, shippedJournalProblems, unionConflicts } from "./merge-resolve.mjs";
 
 const argv = process.argv.slice(2);
 const PROBE = !argv.includes("--no-probe");
@@ -68,6 +72,8 @@ const stage = (n, file) => {
 };
 
 const branch = git("branch", "--show-current").trim() || "HEAD";
+// The tree the installed dependencies belong to: HEAD before this run merged anything.
+const startedAt = git("rev-parse", "HEAD").trim();
 let journalRebuilt = false;
 
 /** A migration file or snapshot among the unresolved paths: two siblings picked the same number. */
@@ -158,6 +164,16 @@ for (const file of ["messages/ro.json", "messages/en.json"]) {
 if (git("status", "--porcelain", "--", "messages").trim()) {
   git("add", "--", "messages");
   git("commit", "--no-verify", "-q", "-m", "chore(i18n): drop duplicate keys left by the merges");
+}
+
+// The dependencies, when the merges changed them: the probe and the checks below run yarn.
+if ((CHECKS || PROBE) && existsSync("package.json")) {
+  const changed = git("diff", "--name-only", startedAt, "HEAD", "--", "package.json", "yarn.lock").trim().split("\n").filter(Boolean);
+  if (dependenciesChanged(changed)) {
+    console.log(`the merges changed ${changed.join(" and ")}: yarn install --immutable`);
+    const r = spawnSync("yarn", ["install", "--immutable"], { encoding: "utf8", stdio: "inherit", shell: process.platform === "win32", timeout: 600_000 });
+    if (r.status !== 0) stop("yarn install --immutable fails on the merged tree — the merges are committed; the lockfile and package.json disagree: run yarn install, commit yarn.lock, and run this again");
+  }
 }
 
 // The snapshot chain, when the journal was rebuilt.

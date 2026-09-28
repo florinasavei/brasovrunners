@@ -134,6 +134,22 @@ export function normalizeBaseline(input, date) {
   return format(Number(m[1]), Number(m[2]), date);
 }
 
+/**
+ * The baseline a person typed (`--to`, the release workflow's `baseline` input), normalized, and
+ * refused unless it comes after `current` — a typo on a phone such as `2.1` would otherwise land a
+ * baseline that goes backwards. Throws with a sentence to show.
+ */
+export function typedBaseline(input, current, date) {
+  const to = normalizeBaseline(input, date);
+  const a = parseBaseline(to);
+  const b = parseBaseline(current);
+  if (!b) throw new Error(`not a baseline: ${current}`);
+  if (a.major < b.major || (a.major === b.major && a.minor <= b.minor)) {
+    throw new Error(`${shortBaseline(to)} does not come after the current ${shortBaseline(current)} — give a higher number, or leave it empty for the next one`);
+  }
+  return to;
+}
+
 /** The baseline without its date, as the batch line and the queue write it: `BR-V2.17`. */
 export const shortBaseline = (baseline) => String(baseline).replace(/-\d{4}-\d{2}-\d{2}$/, "");
 

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   conflictKind,
   dedupeJsonKeys,
+  dependenciesChanged,
   mergeImportLines,
   mergeJson3,
   rebuildJournal,
@@ -25,6 +26,13 @@ describe("§NNN which conflicts a rule resolves", () => {
     for (const other of ["src/app/page.tsx", "CLAUDE.md", "tests/fixtures/photo.jpg", "src/db/migrations/meta/0105_snapshot.json", "package.json"]) {
       expect(conflictKind(other), other).toBeNull();
     }
+  });
+
+  it("asks for an install again when a merge changed the root package.json or yarn.lock, and only then", () => {
+    expect(dependenciesChanged(["yarn.lock"])).toBe(true);
+    expect(dependenciesChanged(["src/a.ts", "package.json"])).toBe(true);
+    expect(dependenciesChanged([])).toBe(false);
+    expect(dependenciesChanged(["docs/package.json", "src/yarn.lock.ts"])).toBe(false);
   });
 });
 
