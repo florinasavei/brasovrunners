@@ -3285,7 +3285,7 @@
       "saved": "The site's text size was saved.",
       "readOnly": "The Administrator chooses the size; this is the choice in force.",
       "scope": "Applies in both themes. The backoffice always stays at its own size.",
-      "sample": "Group run on Tâmpa, Saturday at 9:00",
+      "sample": "Group run in Noua forest, Saturday at 9:00",
       "sizes": {
         "small": {
           "name": "Small",

@@ -23,7 +23,13 @@ test.describe("§527 the backoffice events list: search, state, order", () => {
     for (const control of [search, state, sort]) {
       await expect(control).toBeVisible();
       // The glyph sits in the field's own frame, before the words (the owner's rule, 2026-09-27).
-      await expect(control.locator("xpath=ancestor::div[contains(@class,'MuiInputBase-root')][1]").locator("svg")).toHaveCount(1);
+      // The adornment's glyph alone: a native select also draws MUI's arrow as an svg in the frame.
+      const frame = control.locator("xpath=ancestor::div[contains(@class,'MuiInputBase-root')][1]");
+      const glyph = frame.locator(".MuiInputAdornment-positionStart svg");
+      await expect(glyph).toHaveCount(1);
+      await expect(glyph).toHaveAttribute("aria-hidden", "true");
+      const [glyphBox, controlBox] = [await glyph.boundingBox(), await control.boundingBox()];
+      expect(glyphBox && controlBox && glyphBox.x + glyphBox.width <= controlBox.x + 1).toBe(true);
     }
     await expect(sort).toHaveValue("date-near");
 
@@ -35,7 +41,8 @@ test.describe("§527 the backoffice events list: search, state, order", () => {
     await expect(page).toHaveURL(/[?&]sort=title-desc(&|$)/);
     const main = page.locator("#main");
     await expect(main.getByRole("link", { name: "Tură pe Tâmpa", exact: true }).filter({ visible: true }).first()).toBeVisible();
-    await expect(page.getByTestId("events-list-count")).toHaveText(/^\d+ din \d+ evenimente$/);
+    // The visible copy, as the link above: after the press the page can hold the previous render hidden.
+    await expect(page.getByTestId("events-list-count").filter({ visible: true })).toHaveText(/^\d+ din \d+ evenimente$/);
     await expect(page.getByRole("searchbox", { name: "Caută un eveniment" })).toHaveValue("tampa");
 
     // «Anulate» with the same search: the seed calls nothing off, so the list says why it is empty.
