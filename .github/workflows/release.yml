@@ -1,0 +1,204 @@
+name: release
+
+# One pull request into `qa`, landed and shipped to production from GitHub alone (§NNN) — so a
+# release no longer needs the PC that ran the dispatcher: the owner, from a phone, adds the label
+# `ship` to the pull request (or runs this workflow by hand with its number), and this job does what
+# `docs/DISPATCHER.md` § Land a batch and § Ship do on the PC:
+#
+#   1. brings the branch up to date with `qa` (`yarn batch:merge origin/qa`: the journal, the
+#      catalogues and the tests resolved by rule; any other conflict stops the run and names it);
+#   2. lands the release facts the branch carries in `.release/*.json` (`yarn docs:land --tree`):
+#      the next baseline after `qa`'s, DECISIONS, CHANGELOG, SPECS, every decision placeholder
+#      numbered, the CLAUDE.md batch line, the queue's Released row; `yarn docs:check`; one commit,
+#      pushed to the branch — which starts the pull request's own `docs-check` run on the landed tree.
+#      A branch with no entry that already carries a baseline newer than `qa`'s was landed by hand
+#      and goes on to step 3 as it is;
+#   3. runs `yarn ship` (scripts/ship.mjs), exactly as on the PC: the checks, the merge into `qa`,
+#      the `qa` run, the release PR, the gated migration approved, production's `/api/health`.
+#
+# It needs two things set once in the repository's settings, never in this file (the repository is
+# public; `SETUP.md` carries the procedure):
+#   - the secret `RELEASE_TOKEN`: a token of an account allowed to merge into `qa` and `main` and to
+#     approve the `production` environment. GitHub's own `GITHUB_TOKEN` cannot do this job: a push or
+#     a merge made with it starts no workflow, so the landing commit would never be tested, the
+#     `qa` run `ship` waits for would never start, and `migrate.yml` would never run on `main`;
+#   - the variable `SHIP_PRODUCTION_URL`: production's origin, which `ship` asks for its health.
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: The pull request into qa to land and ship (its number)
+        required: true
+        type: string
+      baseline:
+        description: "The new baseline, like BR-V2.18 — empty: the next one after qa's"
+        required: false
+        type: string
+        default: ""
+  pull_request:
+    types: [labeled]
+
+# The job reads with its own token and writes only through RELEASE_TOKEN.
+permissions:
+  contents: read
+
+# One release at a time, and a release is never cancelled halfway by the next request.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  ship:
+    # From the label only when it is `ship`, and only for a branch of this repository — a fork's
+    # pull request gets no secrets and could not push its branch anyway.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.label.name == 'ship' && github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-latest
+    # A release waits on CI twice and on the migration; ship itself gives up well before this.
+    timeout-minutes: 300
+    env:
+      GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+      PR: ${{ inputs.pr || github.event.pull_request.number }}
+      BASELINE_INPUT: ${{ inputs.baseline }}
+      SHIP_PRODUCTION_URL: ${{ vars.SHIP_PRODUCTION_URL }}
+    steps:
+      - name: The release token and production's address are set
+        run: |
+          missing=""
+          [ -n "$GH_TOKEN" ] || missing="$missing the secret RELEASE_TOKEN;"
+          [ -n "$SHIP_PRODUCTION_URL" ] || missing="$missing the variable SHIP_PRODUCTION_URL;"
+          if [ -n "$missing" ]; then
+            echo "::error::Set once in the repository's Settings → Secrets and variables → Actions:$missing (SETUP.md has the steps)"
+            exit 1
+          fi
+          case "$PR" in ''|*[!0-9]*) echo "::error::'$PR' is not a pull request number"; exit 1 ;; esac
+
+      - name: Which pull request
+        id: pr
+        run: |
+          gh pr view "$PR" --repo "$GITHUB_REPOSITORY" --json state,baseRefName,headRefName,isCrossRepository,title > "$RUNNER_TEMP/pr.json"
+          state=$(jq -r .state "$RUNNER_TEMP/pr.json")
+          base=$(jq -r .baseRefName "$RUNNER_TEMP/pr.json")
+          head=$(jq -r .headRefName "$RUNNER_TEMP/pr.json")
+          cross=$(jq -r .isCrossRepository "$RUNNER_TEMP/pr.json")
+          [ "$base" = "qa" ] || { echo "::error::PR #$PR goes into $base; a release starts from a pull request into qa"; exit 1; }
+          [ "$cross" = "false" ] || { echo "::error::PR #$PR comes from a fork; only a branch of this repository is released"; exit 1; }
+          case "$state" in
+            OPEN) ref="$head" ;;
+            MERGED) ref="qa" ;;
+            *) echo "::error::PR #$PR is $state"; exit 1 ;;
+          esac
+          echo "state=$state" >> "$GITHUB_OUTPUT"
+          echo "head=$head" >> "$GITHUB_OUTPUT"
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+          jq -r .title "$RUNNER_TEMP/pr.json" > "$RUNNER_TEMP/pr-title.txt"
+          echo "PR #$PR ($state): $head → $base"
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.pr.outputs.ref }}
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_TOKEN }}
+
+      - run: corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: yarn
+      - run: yarn install --immutable
+
+      - name: Who commits
+        run: |
+          git config user.name "Brașov Runners release"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch --quiet origin qa main
+
+      - name: Up to date with qa
+        if: steps.pr.outputs.state == 'OPEN'
+        run: node scripts/merge-branches.mjs origin/qa
+
+      - name: Land the release facts
+        id: land
+        env:
+          STATE: ${{ steps.pr.outputs.state }}
+        run: |
+          baseline_of() { grep -oE '\*\*Baseline `BR-V[0-9]+\.[0-9]+-[0-9]{4}-[0-9]{2}-[0-9]{2}`\*\*' | head -n 1 | tr -d '*`' | sed 's/^Baseline //'; }
+          qa=$(git show origin/qa:CLAUDE.md | baseline_of)
+          here=$(baseline_of < CLAUDE.md)
+          if [ "$STATE" = "MERGED" ]; then
+            # Already in qa: ship continues from its step 3; production runs main's baseline.
+            {
+              echo "from=$(git show origin/main:CLAUDE.md | baseline_of)"
+              echo "to=$qa"
+              echo "title=$(cat "$RUNNER_TEMP/pr-title.txt")"
+            } >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if ls .release/*.json > /dev/null 2>&1; then
+            if [ -n "$BASELINE_INPUT" ]; then
+              node scripts/land-batch.mjs --tree --to "$BASELINE_INPUT" --apply
+            else
+              node scripts/land-batch.mjs --tree --apply
+            fi
+            yarn docs:check
+            to=$(grep -E '^to=' "$GITHUB_OUTPUT" | tail -n 1 | cut -d= -f2-)
+            title=$(grep -E '^title=' "$GITHUB_OUTPUT" | tail -n 1 | cut -d= -f2-)
+            git add -A
+            git commit --no-verify -q -F - <<EOF
+          docs: $to — $title
+
+          Lands the release facts this branch carried in .release/: the baseline bump, the CHANGELOG
+          section, the DECISIONS sections with their SPECS criteria, every decision placeholder
+          numbered, the CLAUDE.md batch line and the queue's Released row. Written by the release
+          workflow; CI runs the full yarn check on the pull request.
+          EOF
+          elif [ "$here" != "$qa" ]; then
+            echo "no .release/ entry, and the branch already carries $here over qa's $qa: landed by hand"
+            {
+              echo "from=$qa"
+              echo "to=$here"
+              echo "title=$(cat "$RUNNER_TEMP/pr-title.txt")"
+            } >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::Nothing to release: the branch has no .release/*.json and still carries qa's baseline $qa. Add the change's entry (.release/README.md) and label it again."
+            exit 1
+          fi
+
+      - name: Push the landing
+        if: steps.pr.outputs.state == 'OPEN'
+        env:
+          HEAD_REF: ${{ steps.pr.outputs.head }}
+        run: |
+          if [ "$(git rev-parse HEAD)" != "$(git rev-parse "origin/$HEAD_REF")" ]; then
+            git push origin "HEAD:$HEAD_REF"
+          else
+            echo "nothing new to push"
+          fi
+
+      - name: Ship
+        env:
+          FROM: ${{ steps.land.outputs.from }}
+          TO: ${{ steps.land.outputs.to }}
+          TITLE: ${{ steps.land.outputs.title }}
+          SHIP_TIMES_FILE: ${{ runner.temp }}/ship-times.jsonl
+          # This job is a check on the pull requests it ships; ship must not wait for itself.
+          SHIP_SKIP_WORKFLOW: release
+        run: node scripts/ship.mjs "$PR" "$TO" "$FROM" "$TITLE"
+
+      - name: Say so on the pull request
+        if: always() && steps.pr.outputs.state != ''
+        env:
+          OUTCOME: ${{ job.status }}
+          TO: ${{ steps.land.outputs.to }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          LABELLED: ${{ github.event_name == 'pull_request' }}
+        run: |
+          if [ "$OUTCOME" = "success" ]; then
+            gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" --body "Released ${TO:-the release}: production reports it. $RUN_URL" || true
+          else
+            gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" --body "The release stopped ($OUTCOME) — the log says where and why: $RUN_URL. Fix it, then add the label ship again (or run the release workflow)." || true
+            # The label comes off, so adding it again starts the release again.
+            [ "$LABELLED" = "true" ] && gh pr edit "$PR" --repo "$GITHUB_REPOSITORY" --remove-label ship || true
+          fi

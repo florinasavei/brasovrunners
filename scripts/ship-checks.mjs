@@ -59,6 +59,19 @@ export function judgeChecks(checks, { tolerate } = {}) {
   return verdict(red.length > 0 ? "red" : "green", { red, tolerated });
 }
 
+/**
+ * The checks without those of the workflow named `workflow` (§NNN): a release run by
+ * `.github/workflows/release.yml` is itself a check on the pull requests it ships, pending for as
+ * long as it waits — judging it would wait for ever. Nothing is left out when `workflow` is empty.
+ *
+ * @param {Array<{ name: string, workflow?: string }>} checks
+ * @param {string} workflow
+ */
+export function withoutWorkflow(checks, workflow) {
+  if (!workflow) return checks;
+  return checks.filter((c) => c.workflow !== workflow);
+}
+
 /** One reading as a comparable string: which checks exist and where each one stands. */
 function fingerprint(checks) {
   return checks
