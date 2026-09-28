@@ -180,7 +180,13 @@ export default async function RegistrationBox({
     >
       {risk && <RiskLine>{t("editor.risk.registration")}</RiskLine>}
       {!mayEditSettings ? (
-        <SettingsReadOnly />
+        // A reader keeps what is not a setting of the event (§542): the race numbers' allocation and
+        // printing — «Vezi numerele», «Descarcă toate numerele (PDF)» — which the page draws only
+        // for a role that reads the registrations (§289: the Organizer, not the Redactor).
+        <Stack spacing={2}>
+          <SettingsReadOnly />
+          {bibPrint}
+        </Stack>
       ) : (
         <Stack spacing={2}>
           <OnlyForType type={EVENT_TYPES.filter((type) => !takesRegistrations(type))} selectName="event.type" initialType={initialType}>

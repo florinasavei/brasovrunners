@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.20-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.21-2026-09-27 -->
 
 # Brașov Runners — Business Guide
 
-**Baseline `BR-V2.20-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.21-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Club organizers, event coordinators, content contributors, sponsors, and other non-technical stakeholders.
@@ -650,9 +650,9 @@ list of roles, so adding a role later cannot silently take one away.
 | --- | --- |
 | Volunteer (`CONTRIBUTOR`) | The race-day desk: scans, marks present, confirms on paper, gives a place, types a number. Nothing else (`DECISIONS.md` §103) |
 | Copywriter (`COPYWRITER`) | The words of every event and page, in both languages, at any status; submits drafts for approval. No settings, no publishing |
-| Organizer (`MODERATOR`) | Creates and configures events, approves — publishing, unpublishing, archiving — and the gallery. The club's editorial hands |
+| Organizer (`MODERATOR`) | Reads every event and changes none of them (`DECISIONS.md` §542); pages and the gallery — approving, publishing, unpublishing, archiving; reads the registrations, the export and the numbers; messages an event's participants |
 | Technical (dev) | The configuration report at `/devs`. **No participant data** |
-| Admin | Registrations, participants, waiting lists, exports, test registrations, and deleting an event |
+| Admin | Every event — creating, configuring, publishing, cancelling, a series (§542); changing registrations, participants, waiting lists, test registrations, and deleting an event |
 | Superadmin | The staff list itself: who is here and what they may do |
 
 **The line that matters is between Technical and Admin, and it is personal data.** Everything up

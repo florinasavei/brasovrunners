@@ -17,7 +17,7 @@ import { deleteAssetObjects, getStorage } from "@/modules/media/storage";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import {
   canCreateEvent,
-  canEditEventFields,
+  isEditorial,
   canTransition,
   type EditorialStatus,
 } from "@/modules/staff-identity/domain/roles";
@@ -110,7 +110,7 @@ export async function saveAlbum<T extends Record<string, unknown>>(
   db: Database<T>,
   input: { actor: Actor; albumId: string; expectedVersion: number; fields: unknown; now?: Date },
 ): Promise<GalleryAlbum> {
-  if (!canEditEventFields(input.actor.role)) {
+  if (!isEditorial(input.actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not edit an album`);
   }
   const fields = parseOrThrow(input.fields);
@@ -217,7 +217,7 @@ export async function addPhoto<T extends Record<string, unknown>>(
   db: Database<T>,
   input: { actor: Actor; albumId: string; file: Buffer; originalFilename: string; quality?: ImageQuality; now?: Date },
 ): Promise<{ itemId: string; assetId: string; stored: StoredImageFacts }> {
-  if (!canEditEventFields(input.actor.role)) {
+  if (!isEditorial(input.actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not add a photo`);
   }
   const now = input.now ?? new Date();
@@ -284,7 +284,7 @@ export async function addStoredPhoto<T extends Record<string, unknown>>(
   db: Database<T>,
   input: { actor: Actor; albumId: string; assetId: string; now?: Date },
 ): Promise<{ itemId: string | null; assetId: string; added: boolean }> {
-  if (!canEditEventFields(input.actor.role)) {
+  if (!isEditorial(input.actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not add a photo`);
   }
   const now = input.now ?? new Date();
@@ -325,7 +325,7 @@ export async function deletePhoto<T extends Record<string, unknown>>(
   db: Database<T>,
   input: { actor: Actor; itemId: string },
 ): Promise<void> {
-  if (!canEditEventFields(input.actor.role)) {
+  if (!isEditorial(input.actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not remove a photo`);
   }
   const prefixes = await db.transaction(async (tx) => {
@@ -365,7 +365,7 @@ export async function setCover<T extends Record<string, unknown>>(
   db: Database<T>,
   input: { actor: Actor; albumId: string; itemId: string },
 ): Promise<void> {
-  if (!canEditEventFields(input.actor.role)) {
+  if (!isEditorial(input.actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not choose a cover`);
   }
   const [item] = await db
@@ -386,7 +386,7 @@ export async function deleteAlbum<T extends Record<string, unknown>>(
   db: Database<T>,
   input: { actor: Actor; albumId: string },
 ): Promise<void> {
-  if (!canEditEventFields(input.actor.role)) {
+  if (!isEditorial(input.actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not delete an album`);
   }
   const prefixes = await db.transaction(async (tx) => {

@@ -46,7 +46,7 @@ import {
   canEditEventFields,
   canHardDeleteEvent,
   canEditTranslation,
-  canTransition,
+  canTransitionEvent,
   type EditorialStatus,
   isLiveContent,
 } from "@/modules/staff-identity/domain/roles";
@@ -1183,7 +1183,7 @@ export async function transitionEvent<T extends Record<string, unknown>>(
   const isOwnDraft =
     authored.length > 0 && authored.every((row) => row.authorStaffUserId === input.actor.id);
 
-  if (!canTransition(input.actor.role, current.editorialStatus, input.to, isOwnDraft)) {
+  if (!canTransitionEvent(input.actor.role, current.editorialStatus, input.to, isOwnDraft)) {
     throw new DomainError(
       "FORBIDDEN",
       `role ${input.actor.role} may not move an event from ${current.editorialStatus} to ${input.to}`,
@@ -1252,7 +1252,7 @@ export async function publishEvent<T extends Record<string, unknown>>(
   input: PublishEventInput,
 ): Promise<EditableEvent> {
   const now = input.now ?? new Date();
-  if (!canTransition(input.actor.role, "IN_REVIEW", "PUBLISHED", false)) {
+  if (!canTransitionEvent(input.actor.role, "IN_REVIEW", "PUBLISHED", false)) {
     throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not publish an event`);
   }
 
@@ -2546,7 +2546,7 @@ async function publishNewEvent<T extends Record<string, unknown>>(
 ): Promise<Omit<CreateAndPublishResult, "repeated">> {
   if (!publish) return { event, published: false, refusal: null };
 
-  if (!canTransition(actor.role, "IN_REVIEW", "PUBLISHED", false)) {
+  if (!canTransitionEvent(actor.role, "IN_REVIEW", "PUBLISHED", false)) {
     return {
       event,
       published: false,
@@ -2815,7 +2815,7 @@ export async function repeatEvent<T extends Record<string, unknown>>(
     `repeat.publish` is ticked by default now, and a new event is a draft).
   */
   const publish = input.rule.publish && source.editorialStatus === "PUBLISHED";
-  if (input.rule.publish && !canTransition(input.actor.role, "IN_REVIEW", "PUBLISHED", false)) {
+  if (input.rule.publish && !canTransitionEvent(input.actor.role, "IN_REVIEW", "PUBLISHED", false)) {
     throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not publish`);
   }
   const rule = repeatRuleSchema.safeParse({ cadence: input.rule.cadence, weekdays, until: input.rule.until, publish: input.rule.publish });
@@ -3038,7 +3038,7 @@ export async function setRepeatPublish<T extends Record<string, unknown>>(
     is live too (`materializeSeries`) — the editor says "waiting" for exactly that state, and the
     create page's own tick stores the same thing for a new draft.
   */
-  if (input.publish && !canTransition(input.actor.role, "IN_REVIEW", "PUBLISHED", false)) {
+  if (input.publish && !canTransitionEvent(input.actor.role, "IN_REVIEW", "PUBLISHED", false)) {
     throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not publish`);
   }
   // Guarded on `repeatRule` still being set, not merely on the id: a `stopRepeat` landing

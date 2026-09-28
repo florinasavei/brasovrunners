@@ -770,6 +770,8 @@
       "preview": "Previzualizare",
       "edit": "Editează",
       "editNamed": "Editează {title}",
+      "open": "Deschide",
+      "openNamed": "Deschide {title}",
       "moreActions": "Alte acțiuni",
       "registrationsLink": "Înscrieri ({count})",
       "emergencySheet": "Fișă de urgență",
@@ -783,6 +785,7 @@
       "seriesRenewsUntil": "Se reînnoiește automat: site-ul creează datele mereu cu {horizon} înainte, până {until}.",
       "seriesRenewsForever": "Se reînnoiește automat: site-ul creează datele mereu cu {horizon} înainte, la nesfârșit.",
       "seriesEdit": "Editează următoarea dată",
+      "seriesOpen": "Deschide următoarea dată",
       "seriesDeleteNote": "O serie se șterge din bara de deasupra listei: bifeaz-o, apoi „Șterge cele bifate”.",
       "deskCounts": "{confirmed} confirmate · {checkedIn} prezente",
       "columnEntries": "Înscrieri",
@@ -1077,7 +1080,7 @@
       "special": "Ediție specială",
       "specialHelp": "O ediție aparte, de exemplu aniversară sau caritabilă, cu un marcaj pe card și pe pagină. Într-o serie, marcajul rămâne doar pe data aceasta.",
       "saveEvent": "Salvează detaliile evenimentului",
-      "saveCoversSettingsOnly": "Salvarea ta schimbă doar setările; textele sunt ale redactorului.",
+      "readOnly": "Evenimentul îl modifică Administratorul; aici îl poți citi. Ce vrei schimbat îi spui Administratorului.",
       "version": "versiunea {version}",
       "liveWarning": "Publicat: fiecare salvare apare imediat pe site, în ambele limbi.",
       "acknowledgeLive": "Am înțeles că modific conținut publicat.",
@@ -1515,7 +1518,7 @@
       "boxes": {
         "summaryLabel": "Rezumat",
         "textsReadOnly": "Textele le scrie un Redactor sau un Administrator.",
-        "settingsReadOnly": "Setările le schimbă un Organizator sau un Administrator.",
+        "settingsReadOnly": "Setările le schimbă Administratorul.",
         "kind": {
           "title": "Ce fel de eveniment",
           "changes": "Tipul decide ce întreabă celelalte casete: o alergare de grup nu are înscrieri și nu are program — cele două casete de mai jos o spun.",
@@ -1890,9 +1893,9 @@
       "roles": {
         "CONTRIBUTOR": "masa de ridicare: scanează codurile, marchează prezența, confirmă pe hârtie, dă un loc liber, scrie un număr. Atât.",
         "COPYWRITER": "textele: descrierea, regulamentul, programul și paginile site-ului, în ambele limbi. Fără setări, fără publicare.",
-        "MODERATOR": "evenimentele: creează, setează (date, locuri, înscrieri), publică, galeria.",
-        "DEV": "plus pagina tehnică /devs. Fără datele participanților.",
-        "ADMIN": "conduce clubul: plus înscrierile, exportul, textele legale, emailurile, sarcinile, planurile și echipa.",
+        "MODERATOR": "înscrierile și ziua cursei: citește evenimentele, înscrierile, exportul și numerele, scrie participanților, lucrează la masă, ține galeria. Nu creează, nu setează, nu publică un eveniment.",
+        "DEV": "pagina tehnică /devs, ca să depaneze. Nu creează și nu setează evenimente; nu vede datele participanților.",
+        "ADMIN": "conduce clubul: creează, setează, publică și anulează evenimentele; plus înscrierile, exportul, textele legale, emailurile, sarcinile, planurile și echipa.",
         "SUPERADMIN": "plus setările tehnice care pot opri serviciul — cât de des verifică site-ul, limitele bazei de date, verificarea anti-robot — și numirea altui Superadministrator.",
         "MEMBER": "zona membrilor de pe site, după autentificare. Fără backoffice."
       },
@@ -2498,7 +2501,7 @@
           "todo": "Există un singur cont de staff — cel introdus de mână. Din /admin/staff, un Administrator invită organizatorii după adresa de email; contul lor Zitadel se leagă la prima autentificare.",
           "done": "Echipa are conturi.",
           "how": [
-            "Deschide /admin/staff, scrie adresa de email a persoanei și alege rolul: Organizator (setează evenimentele) sau Administrator (conduce clubul: înscrieri, texte legale, echipa, această pagină).",
+            "Deschide /admin/staff, scrie adresa de email a persoanei și alege rolul: Organizator (înscrierile și ziua cursei) sau Administrator (conduce clubul: evenimentele, înscrierile, echipa).",
             "Superadministrator înseamnă și setările tehnice; rolul îl dă doar alt Superadministrator.",
             "„Adaugă” îi trimite pe email invitația clubului. Cu cheia de invitații pusă (ZITADEL_MANAGEMENT_PAT pe ambele proiecte Vercel), îi creează și contul Zitadel, cu link pentru parolă.",
             "Intră pe {baseUrl}/admin, se autentifică prin Zitadel și gata. „Access Denied” înseamnă email neverificat sau altă adresă decât cea invitată."
@@ -4308,7 +4311,7 @@
               "title": "Bara de sus: ce găsești în fiecare tab",
               "steps": [
                 "Vezi doar taburile rolului tău; restul nu există pentru tine, și e în regulă.",
-                "«Evenimente»: toate evenimentele clubului; «Eveniment nou» și «Editează» sunt aici.",
+                "«Evenimente»: toate evenimentele clubului; «Eveniment nou» și «Editează» sunt aici; un rol care doar citește vede «Deschide».",
                 "«Înscrieri»: cine s-a înscris, cu filtre, export și pagina fiecărei înscrieri.",
                 "«Ziua cursei»: masa de ridicare a numerelor, pe telefon.",
                 "«Galerie» și «Pagini» (paginile standard — «Contact», «Echipa», «Întrebări frecvente», «Membri» — și paginile clubului).",
@@ -4332,9 +4335,9 @@
               "steps": [
                 "Voluntarul: masa din ziua cursei — caută, confirmă pe declarația de hârtie semnată de participant, dă un loc liber, un număr, marchează prezența. Vede nume, stare și număr, niciodată o adresă de email.",
                 "Redactorul: textele evenimentelor și paginile site-ului, în ambele limbi. Nu schimbă setările unui eveniment și nu publică.",
-                "Organizatorul: vede toate înscrierile, exportul și numerele de concurs; schimbă setările evenimentului (data, locul, traseul, costul, participarea); trimite mesaje participanților. Nu scrie textele, nu publică, nu anulează și nu șterge o înscriere, nu retrimite emailuri și nu alocă numerele.",
-                "Rolul Tehnic: pagina de configurație a site-ului, ca să depaneze; poate corecta setările unui eveniment. Nu vede înscrierile.",
-                "Administratorul conduce clubul: tot ce fac Organizatorul și Redactorul, plus «Creează și publică», corectarea, anularea și ștergerea unei înscrieri, retrimiterea emailurilor, «Alocă numerele», «Termene», planul Mailgun, documentele legale (versiune nouă, aprobare, retragere, ștergere) și conturile din «Echipa» (adaugă, schimbă rolul, retrage accesul) — în afară de rolul și rândul unui Superadministrator.",
+                "Organizatorul: vede evenimentele, toate înscrierile, exportul și numerele de concurs; trimite mesaje participanților; lucrează la masă. Nu schimbă un eveniment, nu anulează și nu șterge o înscriere.",
+                "Rolul Tehnic: pagina de configurație a site-ului, ca să depaneze. Nu schimbă evenimente și nu vede înscrierile.",
+                "Administratorul conduce clubul: tot ce fac Organizatorul și Redactorul, plus evenimentele («Eveniment nou», «Editează», «Creează și publică»), corectarea, anularea și ștergerea unei înscrieri, retrimiterea emailurilor, «Alocă numerele», «Termene», planul Mailgun, documentele legale (versiune nouă, aprobare, retragere, ștergere) și conturile din «Echipa» (adaugă, schimbă rolul, retrage accesul) — în afară de rolul și rândul unui Superadministrator.",
                 "Superadministratorul: tot ce face Administratorul, plus setările tehnice care pot opri serviciul — «Cât de des verifică site-ul», «Limitele bazei de date», pragurile din «Bugetul lunii» și «Anti-robot» — și numirea altui Superadministrator. O sarcină din ghid care cere acest rol începe cu „Rol necesar: Superadministrator”; dacă nu-l ai, roagă un Superadministrator să o facă."
               ]
             },
@@ -4500,14 +4503,14 @@
             {
               "title": "Ce nu e al tău",
               "steps": [
-                "Setările evenimentului (data, locul, locurile, înscrierile), publicarea, galeria și înscrierile. Dacă un text depinde de o setare greșită, spune-i Organizatorului sau Administratorului."
+                "Setările evenimentului (data, locul, locurile, înscrierile), publicarea, galeria și înscrierile. Dacă un text depinde de o setare greșită, spune-i Administratorului."
               ]
             }
           ]
         },
         {
           "title": "Organizator — înscrieri, numere, mesaje",
-          "who": "Rol: Organizator. Vezi tot și schimbi setările evenimentului; nu publici, nu anulezi și nu ștergi înscrieri.",
+          "who": "Rol: Organizator. Vezi evenimentele și toate înscrierile, lucrezi cu numerele, cu mesajele și la masă; nu schimbi evenimentul.",
           "roles": [
             "MODERATOR"
           ],
@@ -4545,7 +4548,7 @@
             {
               "title": "Descarcă și tipărește numerele de concurs",
               "steps": [
-                "«Evenimente» → «Editează» pe cursă.",
+                "«Evenimente» → «Deschide» pe cursă.",
                 "Deschide cardul «Participare și înscrieri», apoi «Alocare și tipărire».",
                 "«Vezi numerele» ca să le verifici pe ecran.",
                 "«Descarcă toate numerele (PDF)»: câte două numere A5 pe o foaie A4, cu linia de tăiere. «Câte unul pe pagină» dacă vrei unul singur, centrat pe A4.",
@@ -4565,7 +4568,7 @@
             {
               "title": "Trimite un mesaj participanților",
               "steps": [
-                "«Evenimente» → «Editează» → cardul «Înscrierile primite» → «Trimite un mesaj participanților».",
+                "«Evenimente» → «Deschide» → cardul «Înscrierile primite» → «Trimite un mesaj participanților».",
                 "La «Cui îi trimiți» alege grupul (toți, «Doar confirmații», lista de așteptare sau cei fără declarație) și vezi câți sunt.",
                 "Scrie «Subiect» și «Mesajul», în română și în engleză.",
                 "La «Cum arată emailul» citește ambele variante: «Înscris în română» și «Înscris în engleză».",
@@ -4587,46 +4590,23 @@
               "title": "Pregătește ziua cursei",
               "steps": [
                 "Tipărește numerele (vezi mai sus).",
-                "«Evenimente» → «Editează» → «Înscrierile primite»: tipărește câteva «Formular declarație pe hârtie (PDF)» și, dacă apare, «Formular declarație pentru un minor (PDF)».",
+                "«Evenimente» → «Deschide» → «Înscrierile primite»: tipărește câteva «Formular declarație pe hârtie (PDF)» și, dacă apare, «Formular declarație pentru un minor (PDF)».",
                 "Tot acolo, «Fișă de urgență»: telefoanele și contactele de urgență ale celor confirmați, pe o pagină. O iei la cursă și o distrugi după.",
                 "Voluntarii: roagă un Administrator să le facă conturi cu rolul Voluntar, apoi arată-le secțiunea „Ziua cursei” din ghidul acesta.",
                 "În ziua cursei: «Ziua cursei» în bara de sus."
               ]
             },
             {
-              "title": "Schimbă o setare a evenimentului",
+              "title": "O schimbare la eveniment",
               "steps": [
-                "«Evenimente» → «Editează».",
-                "Deschide cardul: «Când și unde», «Traseul», «Ce fel de eveniment» (costul e în el) sau «Participare și înscrieri». Schimbă ce trebuie.",
-                "Jos, în cardul «Salvare», la un eveniment publicat bifează «Am înțeles că modific conținut publicat.».",
-                "Participanții trebuie să afle? Bifează «Anunță participanții despre schimbare» și scrie nota în ambele limbi.",
-                "Apasă «Salvează». Textele (titlul, descrierea) nu le poți salva: spune-i Administratorului ce e greșit."
-              ]
-            },
-            {
-              "title": "Scara de dificultate a clubului",
-              "steps": [
-                "«Evenimente» → «Editează» → cardul «Ce fel de eveniment»: alegi «Dificultate» (categoria) și, alături, «Treapta» — 1, 2 sau 3.",
-                "Scara are 15 trepte: 5 categorii × 3 trepte. Treapta 1 e cea mai ușoară din categorie, 3 cea mai grea. Pe site apare categoria cu treapta ei, de exemplu „Mediu 2”.",
-                "Ce înseamnă fiecare categorie și treaptă: apasă semnul de întrebare de lângă «Dificultate» sau «Treapta».",
-                "Treapta în celelalte categorii: 1 când traseul e la capătul ușor al categoriei, 3 când e aproape de următoarea (mai lung, mai abrupt, noaptea, noroi). Nu știi? 2.",
-                "Filtrul de pe site bifează o categorie întreagă: «Greu» arată toate cele trei trepte ale ei.",
-                "Nu-ți amintești scara? Semnul de întrebare de lângă «Treapta» o arată toată. Pe site, pastila dificultății spune la atingere nivelul din 15, de exemplu „Mediu 2 — nivelul 5 din 15”."
-              ]
-            },
-            {
-              "title": "Engleza dintr-o apăsare",
-              "steps": [
-                "Scrie în română fiecare câmp pe care îl schimbi: locul, rândurile programului, etichetele linkurilor, descrierile partenerilor, nota pentru participanți. Titlul și descrierea rămân ale Administratorului, ca mai sus.",
-                "Sus în editor apasă «Copiază și tradu tot: RO → EN». Fiecare câmp pe care îl poți modifica ajunge tradus în perechea lui din engleză. Dacă engleza are deja text, te întreabă: «Înlocuiește tot» sau «Doar cele goale». Butonul e gri? Pe server lipsește încă cheia DeepL sau creditul ei (1.000.000 de caractere, dat o singură dată) s-a terminat: cere-i unui Administrator să pună o cheie sau un credit nou (pașii sunt în Sarcini → Club).",
-                "Citește engleza și corectează ce sună greșit.",
-                "Apasă «Salvează». Apăsarea pe traducere nu salvează nimic: până la «Salvează», pe site nu se schimbă nimic."
+                "«Evenimente» → «Deschide»: vezi evenimentul cu toate cardurile lui, fără «Salvează».",
+                "Scrie-i Administratorului ce trebuie schimbat: data, locul, traseul, costul, locurile, înscrierile sau textele. Doar Administratorul anunță participanții despre schimbare."
               ]
             },
             {
               "title": "Declarațiile semnate",
               "steps": [
-                "Toate ale unui eveniment: «Evenimente» → «Editează» → «Înscrierile primite» → «Declarațiile semnate (PDF)».",
+                "Toate ale unui eveniment: «Evenimente» → «Deschide» → «Înscrierile primite» → «Declarațiile semnate (PDF)».",
                 "A unei singure persoane: deschide înscrierea → «Declarația semnată (PDF)».",
                 "Conțin acte de identitate: păstrează-le doar în arhiva clubului."
               ]
@@ -4634,14 +4614,15 @@
             {
               "title": "Ce face Administratorul, nu tu",
               "steps": [
-                "Creează și publică evenimente, anulează sau șterge înscrieri, retrimite emailuri, «Alocă numerele», marchează numerele tipărite și trimite mulțumirile. Spune-i ce trebuie făcut."
+                "Creează, schimbă, publică, duplică și anulează evenimentele și anunță participanții despre o schimbare.",
+                "Anulează sau șterge înscrieri, retrimite emailuri, «Alocă numerele», marchează numerele tipărite și trimite mulțumirile. Spune-i ce trebuie făcut."
               ]
             }
           ]
         },
         {
           "title": "Administrator — evenimente, înscrieri, emailuri",
-          "who": "Rol: Administrator sau Superadministrator.",
+          "who": "Rol: Administrator sau Superadministrator. Doar tu creezi, setezi, publici și anulezi evenimentele; Redactorul le scrie textele.",
           "roles": [
             "ADMIN",
             "SUPERADMIN"
@@ -6291,9 +6272,9 @@
     "roleSummary": {
       "CONTRIBUTOR": "masa de ridicare a numerelor, și atât",
       "COPYWRITER": "textele oricărui eveniment și ale paginilor; trimite spre aprobare",
-      "MODERATOR": "creează și setează evenimente, publică, galeria",
-      "DEV": "plus pagina de configurare. Fără date despre participanți",
-      "ADMIN": "conduce clubul: plus înscrieri, participanți, export, texte legale, echipa, ștergerea unui eveniment",
+      "MODERATOR": "înscrierile și ziua cursei: citește evenimentele, înscrierile, exportul și numerele, scrie participanților, ține galeria; nu modifică un eveniment",
+      "DEV": "pagina de configurare; nu modifică evenimente, fără date despre participanți",
+      "ADMIN": "conduce clubul: creează, setează, publică și anulează evenimentele; plus înscrieri, export, texte legale, echipa, ștergerea unui eveniment",
       "SUPERADMIN": "plus setările tehnice care pot opri serviciul și numirea altui Superadministrator",
       "MEMBER": "zona membrilor de pe site. Fără backoffice"
     },

@@ -169,8 +169,9 @@ describe("§341 §351 the events list's wiring of the draft line", () => {
   });
 
   it("offers each fix only to a role the server lets use it (BR-REQ-060-01)", () => {
-    expect(page).toContain('const mayPublish = canTransition(staffUser.role, "IN_REVIEW", "PUBLISHED", false);');
-    expect(page).toContain("const maySwitchSeries = canCreateEvent(staffUser.role) && mayPublish;");
+    expect(page).toContain("const verbs = eventListVerbs(staffUser.role);");
+    expect(page).toContain("const mayPublish = verbs.publish;");
+    expect(page).toContain("const maySwitchSeries = verbs.switchSeries;");
     expect(page).toContain("remedies.publish && mayPublish");
     expect(page).toContain("remedies.autoPublish && source && maySwitchSeries");
     expect(page).toContain("remedies.openSource && source && mayPublish");

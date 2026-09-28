@@ -1,5 +1,5 @@
 import {
-  canEditEventFields,
+  isEditorial,
   canEditTexts,
   canTransition,
   type EditorialStatus,
@@ -11,7 +11,7 @@ import {
  *
  * The list's layout lets a Redactor in (`canReadContent`), so the ⋮ menu cannot be gated on
  * `canEditTexts` alone: a Redactor would be shown «Șterge», which `deletePage` refuses
- * (`canEditEventFields`), and «Publică» / «Retrage», which `transitionPage` refuses for any role
+ * (`isEditorial`), and «Publică» / «Retrage», which `transitionPage` refuses for any role
  * under the Administrator (`TRANSITIONS`). Each verb here asks the gate its service asserts, so the
  * menu offers only what the server would accept; the server still asserts it on every press.
  *
@@ -29,6 +29,6 @@ export function pageListVerbs(
     edit: canEditTexts(role),
     // `isOwnDraft` does not change a page's publish or unpublish row (`canTransition`).
     toggleTo: canTransition(role, status, target, false) ? target : null,
-    remove: canEditEventFields(role),
+    remove: isEditorial(role),
   };
 }

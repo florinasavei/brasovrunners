@@ -265,7 +265,7 @@ describe("§448 with people registered, the status card says so, and the first b
 describe("§358 a role that may only read the settings", () => {
   it("is told once, in the type's box, whose line still names the status; the other boxes are their heading and line", async () => {
     const drawn = await boxes(EVENT, { mayEditSettings: false, risk: RISK });
-    expect(drawn.kind.match(/Setările le schimbă un Organizator sau un Administrator\./g)).toHaveLength(1);
+    expect(drawn.kind.match(/Setările le schimbă Administratorul\./g)).toHaveLength(1);
     expect(summaryOf(drawn.kind)).toContain("Alergare de grup · Programat");
     expect(drawn.kind).not.toContain('id="box-status"');
     for (const [key, id, name, line] of [
