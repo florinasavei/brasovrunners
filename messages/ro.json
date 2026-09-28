@@ -183,9 +183,9 @@
       "ics": "{label}: {times} — ia o frontală"
     },
     "difficultyLevelShort": "{band} {step}",
-    "difficultyLevelSr": "Dificultate: {band}, treapta {step} din {steps}",
+    "difficultyLevelSr": "Dificultate: {band} {step} — nivelul {level} din {levels}",
     "difficultyWithStep": "{band}, treapta {step} din {steps}",
-    "difficultyLevelTooltip": "{band} {step} — nivelul {level} din {levels}: {example}",
+    "difficultyLevelTooltip": "{band} {step} — nivelul {level} din {levels}",
     "difficultyBandTitle": "{band}: nivelurile {from}–{to} din {levels}",
     "cost": "Cost",
     "registration": "Înscriere",
@@ -312,15 +312,6 @@
       "FAIRLY_HARD": "Greuț",
       "HARD": "Greu",
       "VERY_HARD": "Foarte greu"
-    },
-    "difficultyExamples": {
-      "EASY": "scurt, plat, pentru oricine",
-      "MEDIUM1": "alergarea de pe Tâmpa",
-      "MEDIUM2": "o alergare mai lungă",
-      "MEDIUM3": "o alergare lungă și tehnică",
-      "FAIRLY_HARD": "de la semimaraton în sus",
-      "HARD": "un maraton",
-      "VERY_HARD": "un ultramaraton sau mai mult"
     },
     "difficultyBandWords": {
       "EASY": "ușor",
@@ -1180,15 +1171,14 @@
       "difficultySummary": "{band} {step}",
       "difficultyStepHelp": "1 = cel mai ușor din categorie, 3 = cel mai greu",
       "difficultyScale": {
-        "intro": "Scara clubului: 15 niveluri, 5 categorii × 3 trepte; treapta 1 e cea mai ușoară din categorie, 3 cea mai grea.",
-        "EASY": "– ușor = scurt, plat, pentru oricine",
-        "MEDIUM1": "– mediu 1 = alergarea de pe Tâmpa",
-        "MEDIUM2": "– mediu 2 = alergare mai lungă",
-        "MEDIUM3": "– mediu 3 = lung și tehnic",
-        "FAIRLY_HARD": "– greuț = de la semimaraton în sus",
-        "HARD": "– greu = maratoane",
-        "VERY_HARD": "– foarte greu = ultramaratoane și mai mult",
-        "unsure": "Nu știi treapta? 2."
+        "EASY": "ușor: scurt, plat, pentru oricine",
+        "MEDIUM1": "mediu 1: alergarea de pe Tâmpa",
+        "MEDIUM2": "mediu 2: alergările mai lungi",
+        "MEDIUM3": "mediu 3: lungi și tehnice",
+        "FAIRLY_HARD": "greuț: de la semimaraton în sus",
+        "HARD": "greu: maratoane",
+        "VERY_HARD": "foarte greu: ultramaratoane și mai sus",
+        "steps": "în fiecare categorie 1 = cel mai ușor, 3 = cel mai greu"
       },
       "costValues": {
         "FREE": "Gratuit",
@@ -4333,11 +4323,7 @@
               "steps": [
                 "«Evenimente» → «Editează» → cardul «Ce fel de eveniment»: alegi «Dificultate» (categoria) și, alături, «Treapta» — 1, 2 sau 3.",
                 "Scara are 15 trepte: 5 categorii × 3 trepte. Treapta 1 e cea mai ușoară din categorie, 3 cea mai grea. Pe site apare categoria cu treapta ei, de exemplu „Mediu 2”.",
-                "«Ușor»: scurt și pe plat — pentru oricine.",
-                "«Mediu»: 1 e alergarea pe Tâmpa, 2 o alergare mai lungă, 3 una lungă și tehnică.",
-                "«Greuț»: de la semimaraton în sus.",
-                "«Greu»: maratoane.",
-                "«Foarte greu»: ultramaratoane și mai mult.",
+                "Ce înseamnă fiecare categorie și treaptă: apasă semnul de întrebare de lângă «Dificultate» sau «Treapta».",
                 "Treapta în celelalte categorii: 1 când traseul e la capătul ușor al categoriei, 3 când e aproape de următoarea (mai lung, mai abrupt, noaptea, noroi). Nu știi? 2.",
                 "Filtrul de pe site bifează o categorie întreagă: «Greu» arată toate cele trei trepte ale ei.",
                 "Nu-ți amintești scara? Semnul de întrebare de lângă «Treapta» o arată toată. Pe site, pastila dificultății spune la atingere nivelul din 15, de exemplu „Mediu 2 — nivelul 5 din 15”."
@@ -4407,11 +4393,7 @@
               "steps": [
                 "«Evenimente» → «Editează» → cardul «Ce fel de eveniment»: alegi «Dificultate» (categoria) și, alături, «Treapta» — 1, 2 sau 3.",
                 "Scara are 15 trepte: 5 categorii × 3 trepte. Treapta 1 e cea mai ușoară din categorie, 3 cea mai grea. Pe site apare categoria cu treapta ei, de exemplu „Mediu 2”.",
-                "«Ușor»: scurt și pe plat — pentru oricine.",
-                "«Mediu»: 1 e alergarea pe Tâmpa, 2 o alergare mai lungă, 3 una lungă și tehnică.",
-                "«Greuț»: de la semimaraton în sus.",
-                "«Greu»: maratoane.",
-                "«Foarte greu»: ultramaratoane și mai mult.",
+                "Ce înseamnă fiecare categorie și treaptă: apasă semnul de întrebare de lângă «Dificultate» sau «Treapta».",
                 "Treapta în celelalte categorii: 1 când traseul e la capătul ușor al categoriei, 3 când e aproape de următoarea (mai lung, mai abrupt, noaptea, noroi). Nu știi? 2.",
                 "Filtrul de pe site bifează o categorie întreagă: «Greu» arată toate cele trei trepte ale ei.",
                 "Nu-ți amintești scara? Semnul de întrebare de lângă «Treapta» o arată toată. Pe site, pastila dificultății spune la atingere nivelul din 15, de exemplu „Mediu 2 — nivelul 5 din 15”."

@@ -135,19 +135,19 @@ describe("§388 buildRoutePills — surface, difficulty, distance, elevation, ni
 
   // Through `buildRoutePills` and `RoutePills` for levels in every band and both locales, asserting
   // what the eye and a screen reader are given — the visible «Mediu 2», hidden from the reader, and
-  // the visually-hidden «Dificultate: mediu, treapta 2 din 3» in its place (§526).
+  // the visually-hidden «Dificultate: mediu 2 — nivelul 5 din 15» in its place (§526, §NNN).
   it.each([
     // The owner's five bands (§526): ușor, mediu, greuț, greu, foarte greu — three steps each.
-    ["ro", "EASY", 1, "Ușor 1", "Dificultate: ușor, treapta 1 din 3", "Ușor, treapta 1 din 3"],
-    ["ro", "MEDIUM", 5, "Mediu 2", "Dificultate: mediu, treapta 2 din 3", "Mediu, treapta 2 din 3"],
-    ["ro", "FAIRLY_HARD", 9, "Greuț 3", "Dificultate: greuț, treapta 3 din 3", "Greuț, treapta 3 din 3"],
-    ["ro", "HARD", 10, "Greu 1", "Dificultate: greu, treapta 1 din 3", "Greu, treapta 1 din 3"],
-    ["ro", "VERY_HARD", 15, "Foarte greu 3", "Dificultate: foarte greu, treapta 3 din 3", "Foarte greu, treapta 3 din 3"],
-    ["en", "EASY", 2, "Easy 2", "Difficulty: easy, step 2 of 3", "Easy, step 2 of 3"],
-    ["en", "MEDIUM", 4, "Medium 1", "Difficulty: medium, step 1 of 3", "Medium, step 1 of 3"],
-    ["en", "FAIRLY_HARD", 8, "Fairly hard 2", "Difficulty: fairly hard, step 2 of 3", "Fairly hard, step 2 of 3"],
-    ["en", "HARD", 12, "Hard 3", "Difficulty: hard, step 3 of 3", "Hard, step 3 of 3"],
-    ["en", "VERY_HARD", 13, "Very hard 1", "Difficulty: very hard, step 1 of 3", "Very hard, step 1 of 3"],
+    ["ro", "EASY", 1, "Ușor 1", "Dificultate: ușor 1 — nivelul 1 din 15", "Ușor, treapta 1 din 3"],
+    ["ro", "MEDIUM", 5, "Mediu 2", "Dificultate: mediu 2 — nivelul 5 din 15", "Mediu, treapta 2 din 3"],
+    ["ro", "FAIRLY_HARD", 9, "Greuț 3", "Dificultate: greuț 3 — nivelul 9 din 15", "Greuț, treapta 3 din 3"],
+    ["ro", "HARD", 10, "Greu 1", "Dificultate: greu 1 — nivelul 10 din 15", "Greu, treapta 1 din 3"],
+    ["ro", "VERY_HARD", 15, "Foarte greu 3", "Dificultate: foarte greu 3 — nivelul 15 din 15", "Foarte greu, treapta 3 din 3"],
+    ["en", "EASY", 2, "Easy 2", "Difficulty: easy 2 — level 2 of 15", "Easy, step 2 of 3"],
+    ["en", "MEDIUM", 4, "Medium 1", "Difficulty: medium 1 — level 4 of 15", "Medium, step 1 of 3"],
+    ["en", "FAIRLY_HARD", 8, "Fairly hard 2", "Difficulty: fairly hard 2 — level 8 of 15", "Fairly hard, step 2 of 3"],
+    ["en", "HARD", 12, "Hard 3", "Difficulty: hard 3 — level 12 of 15", "Hard, step 3 of 3"],
+    ["en", "VERY_HARD", 13, "Very hard 1", "Difficulty: very hard 1 — level 13 of 15", "Very hard, step 1 of 3"],
   ] as const)("in %s, %s at level %i shows «%s» and is heard as «%s»", async (locale, band, level, shown, heard, plain) => {
     currentLocale = locale;
     const t = await getTranslations("Event");
@@ -159,12 +159,11 @@ describe("§388 buildRoutePills — surface, difficulty, distance, elevation, ni
     // Where no gauge is drawn (an email's facts, §392), the words say the step.
     expect(pills[0]!.plain).toBe(plain);
     const html = renderToStaticMarkup(RoutePills({ pills }));
-    const label = /class="MuiChip-label[^"]*"[^>]*>([\s\S]*?)<\/span><\/span>/.exec(html)?.[1] ?? "";
-    // The visible words, hidden from a screen reader; the heard words in a span clipped to one pixel.
-    expect(label).toContain(`<span aria-hidden="true">${shown}</span>`);
-    // The first clipped span; the level of fifteen follows in a second one (the tooltip's words, §NNN).
-    expect(/<span class="MuiBox-root [^"]*">([^<]*)</.exec(label)?.[1]).toBe(heard);
-    expect(label).toContain(` — ${pills[0]!.tooltip}`);
+    // The visible words, hidden from a screen reader; the heard words, once, in a span clipped to
+    // one pixel — the level of fifteen inside them, never repeated after them (§NNN).
+    expect(html).toContain(`<span aria-hidden="true">${shown}</span>`);
+    expect(html).toContain(`>${heard}<`);
+    expect(html.split(heard.slice(heard.indexOf("—")))).toHaveLength(2);
     expect(html).not.toMatch(/aria-label=/);
   });
 });

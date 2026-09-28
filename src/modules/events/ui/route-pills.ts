@@ -4,7 +4,6 @@ import {
   DIFFICULTY_LEVEL_COUNT,
   DIFFICULTY_STEPS,
   difficultyBandOf,
-  difficultyExampleKey,
   difficultyLevelOf,
   difficultyStepOf,
   type StoredDifficulty,
@@ -135,35 +134,29 @@ export function routePillParts(
 /**
  * The difficulty's pill for a level on the club's scale of fifteen (§526): the gauge of the level
  * (the band's segments lit, the needle at the step, its dots), the band and the step in words —
- * «Mediu 2» — and, for a screen reader, «Dificultate: mediu, treapta 2 din 3». Every word from the
+ * «Mediu 2» — and, for a screen reader, «Dificultate: mediu 2 — nivelul 5 din 15». Every word from the
  * catalogue (`Event.difficultyValues`, `difficultyBandWords`, `difficultyLevelShort`,
  * `difficultyLevelSr`), never a string written here.
  *
- * **The tooltip names the level of fifteen (§NNN)** — «Mediu 2 — nivelul 5 din 15: o alergare mai
- * lungă» — the band and step the pill shows, then the gauge's position said in numbers, with the owner's own example for it (§526). The same sentence
- * rides in `srSuffix`, the night pill's way (§428): a plain, unfocusable chip never lets a keyboard
- * or a screen reader open a tooltip, so the words are in the chip's own accessible name, and
- * `GlyphChip` then leaves the tooltip's description off rather than read them twice.
+ * **The tooltip names the level of fifteen (§NNN)** — «Mediu 2 — nivelul 5 din 15» — the band and
+ * step the pill shows, then the gauge's position in numbers; never an example, which would say a
+ * non-Tâmpa «Mediu 1» is the Tâmpa run (the examples live in the backoffice «?» and «Ghid» only).
+ * A screen reader hears it once, in `srLabel` — «Dificultate: mediu 2 — nivelul 5 din 15» — so no
+ * `srSuffix` repeats it, and `GlyphChip` leaves the tooltip's description off for a chip with its
+ * own `srLabel`.
  */
 function difficultyPillOf(level: number, t: Translate): Pill {
   const band = difficultyBandOf(level);
   const step = difficultyStepOf(level);
   const steps = DIFFICULTY_STEPS.length;
-  const tooltip = t("difficultyLevelTooltip", {
-    band: t(`difficultyValues.${band}`),
-    step,
-    level,
-    levels: DIFFICULTY_LEVEL_COUNT,
-    example: t(`difficultyExamples.${difficultyExampleKey(level)}`),
-  });
+  const level15 = { step, level, levels: DIFFICULTY_LEVEL_COUNT };
   return {
     glyph: difficultyLevelGlyph(level),
     label: t("difficultyLevelShort", { band: t(`difficultyValues.${band}`), step }),
-    srLabel: t("difficultyLevelSr", { band: t(`difficultyBandWords.${band}`), step, steps }),
+    srLabel: t("difficultyLevelSr", { band: t(`difficultyBandWords.${band}`), ...level15 }),
     // Where no chip is drawn — the emails' facts block (§392): «Mediu, treapta 2 din 3».
     plain: t("difficultyWithStep", { band: t(`difficultyValues.${band}`), step, steps }),
-    tooltip,
-    srSuffix: tooltip,
+    tooltip: t("difficultyLevelTooltip", { band: t(`difficultyValues.${band}`), ...level15 }),
   };
 }
 

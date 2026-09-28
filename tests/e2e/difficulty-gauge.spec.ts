@@ -15,8 +15,8 @@ import { cardOnListing, openEditorBox } from "./support/fold";
  * seeded Tâmpa run is «Mediu 1» (level 4: two segments lit, one dot — the owner's own example of «mediu 1»); the interval session
  * «Foarte greu 3» (level 15, the top); the Sunday run «Ușor 1» (level 1, the bottom).
  *
- * The pill shows «Mediu 1», hidden from a screen reader, and carries «Dificultate: mediu, treapta 1
- * din 3» in a visually-hidden span in its place. A plain, roleless `<div>` (MUI's `Chip` when it is
+ * The pill shows «Mediu 1», hidden from a screen reader, and carries «Dificultate: mediu 1 —
+ * nivelul 4 din 15» in a visually-hidden span in its place. A plain, roleless `<div>` (MUI's `Chip` when it is
  * not `clickable`) has no computed accessible name, so the check is the real text —
  * `toContainText` — and the visible span's `aria-hidden`.
  */
@@ -46,7 +46,7 @@ async function expectGauge(pill: Locator, band: number, step?: number) {
 
 test.describe("BR-REQ-041-01 the difficulty pill names its level of fifteen on a tap (§NNN)", () => {
   test.use({ hasTouch: true, viewport: { width: 320, height: 720 } });
-  const SENTENCE = "Mediu 1 — nivelul 4 din 15: alergarea de pe Tâmpa";
+  const SENTENCE = "Mediu 1 — nivelul 4 din 15";
 
   test("on the event page, a tap on «Mediu 1» opens the tooltip", async ({ page }) => {
     await page.goto("/ro/evenimente/tura-pe-tampa");
@@ -70,20 +70,20 @@ test.describe("BR-REQ-041-01 the difficulty pill names its level of fifteen on a
 });
 
 test.describe("BR-REQ-041-01 the difficulty gauge (§412)", () => {
-  test("the event page's route row shows «Mediu 1» beside the gauge and is heard as «Dificultate: mediu, treapta 1 din 3»", async ({ page }) => {
+  test("the event page's route row shows «Mediu 1» beside the gauge and is heard as «Dificultate: mediu 1 — nivelul 4 din 15»", async ({ page }) => {
     await page.goto("/ro/evenimente/tura-pe-tampa");
     const traseu = page.getByTestId("event-facts").locator("dt", { hasText: /^Traseu$/ }).locator("xpath=following-sibling::dd[1]");
     const difficultyPill = traseu.locator(".MuiChip-root", { hasText: "Mediu 1" });
     await expect(difficultyPill).toBeVisible();
     await expect(difficultyPill.locator("svg.MuiChip-icon")).toHaveAttribute("aria-hidden", "true");
-    await expectWords(difficultyPill, "Mediu 1", "Dificultate: mediu, treapta 1 din 3");
+    await expectWords(difficultyPill, "Mediu 1", "Dificultate: mediu 1 — nivelul 4 din 15");
     await expectGauge(difficultyPill, 2, 1);
   });
 
   test("the English page says the band and the step in English", async ({ page }) => {
     await page.goto("/en/events/tampa-trail");
     const pill = page.getByTestId("event-facts").locator(".MuiChip-root", { hasText: "Medium 1" });
-    await expectWords(pill, "Medium 1", "Difficulty: medium, step 1 of 3");
+    await expectWords(pill, "Medium 1", "Difficulty: medium 1 — level 4 of 15");
     await expectGauge(pill, 2, 1);
   });
 
@@ -95,11 +95,11 @@ test.describe("BR-REQ-041-01 the difficulty gauge (§412)", () => {
       const card = (await cardOnListing(page, "Tură pe Tâmpa")).first();
       const pill = card.locator('[data-fact="pills"] .MuiChip-root', { hasText: "Mediu 1" });
       await expect(pill).toBeVisible();
-      await expectWords(pill, "Mediu 1", "Dificultate: mediu, treapta 1 din 3");
+      await expectWords(pill, "Mediu 1", "Dificultate: mediu 1 — nivelul 4 din 15");
       await expectGauge(pill, 2, 1);
       // The hardest end of the scale, on the seeded interval session (§526's seed).
       const hardest = page.locator("li", { hasText: "Antrenament de intervale" }).first().locator('[data-fact="pills"] .MuiChip-root', { hasText: "Foarte greu 3" });
-      await expectWords(hardest, "Foarte greu 3", "Dificultate: foarte greu, treapta 3 din 3");
+      await expectWords(hardest, "Foarte greu 3", "Dificultate: foarte greu 3 — nivelul 15 din 15");
       await expectGauge(hardest, 5, 3);
       // Nothing wider than the phone (§375's 320px lead).
       expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
@@ -127,7 +127,7 @@ test.describe("BR-REQ-041-01 the difficulty gauge (§412)", () => {
     const pill = page.locator(".MuiChip-root:visible", { hasText: "Mediu 1" }).first();
     await expect(pill).toBeVisible();
     await expect(pill.locator("svg.MuiChip-icon")).toHaveAttribute("aria-hidden", "true");
-    await expectWords(pill, "Mediu 1", "Dificultate: mediu, treapta 1 din 3");
+    await expectWords(pill, "Mediu 1", "Dificultate: mediu 1 — nivelul 4 din 15");
     await expectGauge(pill, 2, 1);
   });
 

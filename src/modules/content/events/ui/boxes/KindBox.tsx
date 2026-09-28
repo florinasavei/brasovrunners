@@ -176,5 +176,5 @@ export default async function KindBox({
   );
 }
 
-/** The «?»'s lines, in order: the scale, «Ușor», «Mediu» per step, the other bands, the fallback. */
-const DIFFICULTY_SCALE_LINES = ["intro", "EASY", "MEDIUM1", "MEDIUM2", "MEDIUM3", "FAIRLY_HARD", "HARD", "VERY_HARD", "unsure"] as const;
+/** The «?»'s lines, in order: «Ușor», «Mediu» per step, the other bands, what a step means — the owner's words (§NNN), which «Ghid» points to. */
+const DIFFICULTY_SCALE_LINES = ["EASY", "MEDIUM1", "MEDIUM2", "MEDIUM3", "FAIRLY_HARD", "HARD", "VERY_HARD", "steps"] as const;

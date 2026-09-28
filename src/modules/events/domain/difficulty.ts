@@ -61,15 +61,6 @@ export function difficultyBandLevels(band: DifficultyBand): { from: number; to: 
   return { from: difficultyLevel(band, DIFFICULTY_STEPS[0]), to: difficultyLevel(band, DIFFICULTY_STEPS[DIFFICULTY_STEPS.length - 1]) };
 }
 
-/**
- * The catalogue key of a level's example (§NNN, `Event.difficultyExamples`), in the owner's own
- * words of §526: «Mediu» has one per step (1 the run up Tâmpa, 2 a longer run, 3 long and
- * technical), every other band one for all three — `MEDIUM2` for level 5, `HARD` for 10 … 12.
- */
-export function difficultyExampleKey(level: number): string {
-  const band = difficultyBandOf(level);
-  return band === "MEDIUM" ? `${band}${difficultyStepOf(level)}` : band;
-}
 
 /** The step a level is inside its band, 1 … 3. */
 export function difficultyStepOf(level: number): DifficultyStep {
