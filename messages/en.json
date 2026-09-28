@@ -758,6 +758,7 @@
       "listOptInStates": "The list also shows the registration's stage: “{pending}”, “{waitlisted}” or “{confirmed}”; a cancelled registration does not appear.",
       "socialsOnList": "also on the public list, beside the name",
       "resubmittedHeld": "Registered again with the same address: {date} ({state}) — “{message}” is already waiting to leave, and leaves only once",
+      "familyChip": "Family",
       "resendSentNow": "The email is leaving now, without waiting for the scheduled round."
     },
     "events": {
@@ -1071,9 +1072,9 @@
       "placeToBeAnnouncedHelp": "On, everywhere says “Location to be announced soon” and the place and the map stay hidden. What you fill in stays unpublished until you turn it off.",
       "placeUnpublished": "Not published while the location is to be announced.",
       "dateToBeAnnounced": "Date to be announced later",
-      "dateToBeAnnouncedHelp": "Ticked, every page says “Date to be announced soon”; the date above stays unpublished and registration stays “opening soon”.",
+      "dateToBeAnnouncedHelp": "Ticked, every page says “Date to be announced soon”. The date and time above may stay empty; nothing typed there is published. Registration stays “opening soon”.",
       "timeToBeAnnounced": "Time to be announced later",
-      "timeToBeAnnouncedHelp": "Ticked, the day shows on the site and “Time to be announced soon” stands in for the time; registration stays “opening soon” and the event stays off the calendar.",
+      "timeToBeAnnouncedHelp": "Ticked, the day shows on the site and “Time to be announced soon” stands in for the time. The time above may stay empty. Registration stays “opening soon”, off the calendar.",
       "featured": "Lead the site with this event",
       "featuredHelp": "Only one event can be featured. The previously featured one loses the flag automatically.",
       "special": "A special edition",
@@ -1959,7 +1960,20 @@
       "interestNotFound": "That address was not on this event's list. Check whether they wrote from another one.",
       "simulate": "To try the waiting list (not in production): set a few places, add more test registrations than that, then cancel a confirmed one.",
       "simulateMore": "The first registrations take the places, held for {hold} each; the rest queue in order. A lapsed hold or more places also gives the first in line the offer; its email shows in the Outbox.",
-      "holdsHelpMore": "A lapsed hold stays the person's, and is released only when somebody is waiting for a place or when the event starts."
+      "holdsHelpMore": "A lapsed hold stays the person's, and is released only when somebody is waiting for a place or when the event starts.",
+      "familyTitle": {
+        "one": "{count} place reserved by a family",
+        "few": "{count} places reserved by families",
+        "other": "{count} places reserved by families"
+      },
+      "familyQueued": "reserved until {until}, a deadline fixed by the family's first form; the family's email has not left yet and does not move it",
+      "familyQueuedNoDeadline": "reserved; the family's email has not left yet",
+      "familyUntil": "reserved until {until}",
+      "familyHeld": {
+        "one": "{count} place held by a family for a form with no registration, until the family's deadline",
+        "few": "{count} places held by families for forms with no registration, until their deadlines",
+        "other": "{count} places held by families for forms with no registration, until their deadlines"
+      }
     },
     "testRegistrations": {
       "title": "Test registrations",
@@ -5018,6 +5032,7 @@
               "steps": [
                 "The first person registers with the form, like anyone.",
                 "The form is sent again with the same address for a different person — another name and another birth date than every person already registered. Nobody is registered yet: the screen shows the same “check your email” as always, so nobody learns from the form who is registered.",
+                "With «Yes, one more person» on the screen after the form, each next form reserves that person’s place at once. The address then gets one email for everybody, with one button.",
                 "The address gets the email “Registering one more person?”, with who is already registered and the person from the form, and one button, «I confirm I am registering another person».",
                 "The page it opens shows the details again; for an adult it asks one tick (the person declares their own health when they sign). The confirmation registers them straight away — no second confirmation link. The link is valid for {confirmation} and works once; unconfirmed details are deleted by themselves after that.",
                 "If only the name or only the birth date differs, nobody is registered: the address gets the existing registration's email, with one sentence on how to register someone else.",
@@ -5036,6 +5051,7 @@
               "title": "What you see in the backoffice",
               "steps": [
                 "In «Registrations», at the desk and in the export, each person is a row of their own, with the same address.",
+                "The rows of one address at an event carry the «Family» label with the others’ names: in «Registrations», in the registration queue, at the desk and in the export’s last column, family.",
                 "«My registrations» lists every registration of the address, each with its name. Cancelling or erasing one leaves the others alone.",
                 "Reminders and thank-yous come one per person."
               ]
@@ -5096,6 +5112,7 @@
       "backToEvent": "Back to the event",
       "title": "Permanent deletion: {event}",
       "whatGoes": "This permanently deletes the event “{event}” of {date}, in both languages, together with its {count} registrations and the personal data behind them.",
+      "whatGoesUndated": "This permanently deletes the event “{event}”, whose date is to be announced later, in both languages, together with its {count} registrations and the personal data behind them.",
       "breakdown": "Of those: {confirmed} confirmed, {real} real, {test} test.",
       "realPeople": "{count} of the registrations belong to real people. They go with their signed declarations and their addresses, and nothing can be recovered.",
       "noRealPeople": "No real registration: nobody loses a place.",
@@ -5569,7 +5586,8 @@
       "tooFast": "The automated check did not pass first time — it happens to real people too. Your answers are still here.",
       "tooFastNothingSent": "Nothing was registered and no email was sent to you. Press “Send the registration again” — your answers and your ticks are still here.",
       "tooFastResend": "Send the registration again",
-      "waitlistFullNothingSent": "Nothing was registered and no email was sent. What you filled in is still in the form."
+      "waitlistFullNothingSent": "Nothing was registered and no email was sent. What you filled in is still in the form.",
+      "sittingAtCap": "The people already sent with this address reach the club's limit for one event. Nothing was registered for this person: press “Done” or use another address."
     },
     "sections": {
       "about": "About you",
@@ -5819,7 +5837,25 @@
       "formLeft": "The email for the people above leaves by itself in {minutes}, unless you send this form before then.",
       "formAtOnce": "This person's email leaves as soon as you send the form.",
       "formBack": "I am not registering anyone else — back to “Done”",
-      "sameBirthDate": "The form for {name} was not kept: it has the same date of birth as {kept}, sent already. The list below is the one in the email. Did you mean to correct the name? Reply to the email and we will correct it. For a twin, send the form from another email address, or write to us and we will register them."
+      "sameBirthDate": "The form for {name} was not kept: it has the same date of birth as {kept}, sent already. The list below is the one in the email. Did you mean to correct the name? Reply to the email and we will correct it. For a twin, send the form from another email address, or write to us and we will register them.",
+      "marker": "Family registration: {names}.",
+      "markerPlaces": "Family registration: {names} — {places}.",
+      "reserved": {
+        "one": "one place reserved",
+        "few": "{count} places reserved",
+        "other": "{count} places reserved"
+      },
+      "waiting": {
+        "one": "one person on the waiting list",
+        "few": "{count} people on the waiting list",
+        "other": "{count} people on the waiting list"
+      },
+      "untilToday": "until {at}",
+      "untilOn": "until {at}",
+      "placeReserved": "place reserved",
+      "placeWaitlist": "on the waiting list, once confirmed",
+      "reservedHelp": "Each place is reserved the moment you send its form. The button in the email confirms them all.",
+      "reservationLapsed": "The places are no longer reserved. Confirm the address from the email; if there is still room, you get it then."
     }
   },
   "Registrations": {
@@ -6010,7 +6046,9 @@
         "title": "Waiting for the confirmation from the email",
         "person": "{name} — {event}",
         "how": "They are not registered yet: press the button in the email you got for them. Until then no place is held for them."
-      }
+      },
+      "family": "Family",
+      "reservedUntil": "Place reserved until {until}. Confirm the address from the email to keep it."
     },
     "manage": {
       "title": "Manage your registration",
@@ -6099,11 +6137,13 @@
     "familySitting": {
       "title": "Family registration for {event}",
       "titlePlain": "Family registration",
-      "intro": "The form was sent from {email} for {people}. Nobody is registered yet: check the list and press the button once.",
+      "intro": "The form was sent from {email} for {people}. The places are reserved, but nobody is confirmed yet: check the list and press the button once.",
+      "introLapsed": "The form was sent from {email} for {people}. The places are no longer reserved: confirm anyway, and each person gets a place if one is still free, or else one on the waiting list.",
       "joining": "Joining now",
       "personLabel": "{n}. {name}",
       "born": "Date of birth: {date}",
       "untick": "Someone should not be registered? Untick them: their details are deleted when you press, and they are not registered. Wrong details? Untick the person and send the form again for them.",
+      "withdrawLater": "Someone should not be registered? Once confirmed, withdraw them from “All my registrations” and their place is freed.",
       "next": "Once you press, the address {email} is confirmed, each person gets their own place (or a place on the waiting list), and you sign the declarations right away, one after the other. Each then gets their own QR code. At most {people} can register with one address for an event.",
       "fitnessAcknowledged": "I know that the adults I am registering declare for themselves, when they sign their declaration, that their health allows the effort.",
       "action": "Confirm and sign the declarations ({count})",

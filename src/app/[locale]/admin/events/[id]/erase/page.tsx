@@ -10,6 +10,7 @@ import { getDb } from "@/db/client";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { readEventErasurePlan } from "@/modules/content/events/repository";
+import { typedStartShape } from "@/modules/events/domain/provisional-start";
 import { canHardDeleteEvent } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { isUuid } from "@/shared/ids";
@@ -72,6 +73,10 @@ export default async function EraseEventPage({ params, searchParams }: Props) {
   const expected =
     plan.titles.find((entry) => entry.locale === locale)?.title ?? plan.titles[0]?.title ?? plan.eventId;
 
+  // The day and hour typed, the day alone for an hour left blank, no date at all for a date left
+  // blank (§545) — never the provisional start stored in place of either.
+  const start = typedStartShape({ startsAt: plan.startsAt, timezone: plan.timezone });
+
   return (
     <Stack spacing={3} sx={{ maxWidth: 640 }}>
       <Typography variant="body2">
@@ -94,11 +99,13 @@ export default async function EraseEventPage({ params, searchParams }: Props) {
       <Alert severity={plan.real > 0 ? "error" : "warning"} icon={false}>
         <Stack spacing={1}>
           <Typography variant="body2">
-            {t("erase.whatGoes", {
-              event: expected,
-              date: formatDay(plan.startsAt, { locale, timeZone: plan.timezone, style: "long", withTime: true, position: "inline" }),
-              count: plan.total,
-            })}
+            {start
+              ? t("erase.whatGoes", {
+                  event: expected,
+                  date: formatDay(start.at, { locale, timeZone: plan.timezone, style: "long", withTime: start.hour, position: "inline" }),
+                  count: plan.total,
+                })
+              : t("erase.whatGoesUndated", { event: expected, count: plan.total })}
           </Typography>
           {plan.total > 0 && (
             <Typography variant="body2">

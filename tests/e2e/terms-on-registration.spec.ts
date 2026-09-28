@@ -111,12 +111,13 @@ test.describe("§425 the accepted terms on the registration's page and in the ex
       const response = await page.request.get(`/api/admin/registrations/export?eventId=${seeded.eventId}&q=${encodeURIComponent(seeded.tag)}`);
       expect(response.status()).toBe(200);
       const [header, ...lines] = (await response.text()).split("\r\n");
-      // The terms' two columns, now followed by the declaration's two (§499).
-      expect(header.split(",").slice(-4)).toEqual(["Terms version", "Terms accepted", "Declaration version", "Declaration signed"]);
+      // The terms' two columns, then the declaration's two (§499), then the family column (§543).
+      expect(header.split(",").slice(-5, -1)).toEqual(["Terms version", "Terms accepted", "Declaration version", "Declaration signed"]);
+      expect(header.split(",").at(-1)).toBe("family");
       const publicLine = lines.find((line) => line.includes("Termeni public"));
       const staffLine = lines.find((line) => line.includes("Termeni staff"));
-      expect(publicLine?.split(",").slice(-4, -2)).toEqual(["1", ACCEPTED_AT]);
-      expect(staffLine?.split(",").slice(-4, -2)).toEqual(["", ""]);
+      expect(publicLine?.split(",").slice(-5, -3)).toEqual(["1", ACCEPTED_AT]);
+      expect(staffLine?.split(",").slice(-5, -3)).toEqual(["", ""]);
     } finally {
       await cleanup(seeded);
     }
