@@ -23,7 +23,7 @@ import { listTeamMembersForAdmin } from "@/modules/content/team/repository";
 import PagesSubNav from "@/modules/content/pages/ui/PagesSubNav";
 import { PAGES_ROW_ROUTE } from "@/modules/content/pages/pages-row";
 import { cachedContactFormReaches, cachedShownContactAddresses } from "@/modules/public-cache/reads";
-import { canEditTexts, canReadContent, type EditorialStatus } from "@/modules/staff-identity/domain/roles";
+import { canEditEventFields, canEditTexts, canReadContent, type EditorialStatus } from "@/modules/staff-identity/domain/roles";
 import { EDITORIAL_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { countMembers } from "@/modules/staff-identity/repository";
 import { requireStaff } from "@/modules/staff-identity/session";
@@ -71,6 +71,7 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
   const actor = await requireStaff();
   // Reading the club's pages, not writing them (§208).
   if (!canReadContent(actor.role)) notFound();
+  const mayMove = canEditEventFields(actor.role);
 
   const current = await searchParams;
   const { saved, error } = current;
@@ -285,7 +286,9 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
               {/* The ends have no button rather than a disabled one: there is nothing to
                   explain about an arrow that would move the first page above itself, and a
                   control that never does anything is worse than one that is not there. */}
-              {index > 0 && (
+              {/* The arrows only for a role `movePageInNav` accepts (`canEditEventFields`): a Redactor reads
+                  the list since its layout asks `canReadContent`, and an arrow it would be refused on is noise. */}
+              {mayMove && index > 0 && (
                 <Box component="form" action={movePageAction} data-action-key={actionKeyOf(movePageAction)}>
                   <input type="hidden" name="uiLocale" value={locale} />
                   <input type="hidden" name="pageId" value={row.id} />
@@ -298,7 +301,7 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
                   />
                 </Box>
               )}
-              {index < rows.length - 1 && (
+              {mayMove && index < rows.length - 1 && (
                 <Box component="form" action={movePageAction} data-action-key={actionKeyOf(movePageAction)}>
                   <input type="hidden" name="uiLocale" value={locale} />
                   <input type="hidden" name="pageId" value={row.id} />

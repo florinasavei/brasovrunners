@@ -5,6 +5,8 @@ import { routing } from "@/i18n/routing";
 import { PAGES_ROW_ENTRIES, PAGES_ROW_ROUTE, pagesRowEntryOf } from "@/modules/content/pages/pages-row";
 import { activeAdminTabHref } from "@/modules/staff-identity/domain/admin-tab-match";
 import { SETTINGS_TAB_ROUTE } from "@/modules/staff-identity/domain/settings-tabs";
+import { deletePage, movePageInNav } from "@/modules/content/pages/service";
+import { canEditEventFields, canReadContent } from "@/modules/staff-identity/domain/roles";
 
 /**
  * «Pagini»'s row keeps the reader in «Pagini» (the owner, 2026-09-28: «când dau click pe pagina de
@@ -108,5 +110,35 @@ describe("«Pagini»'s row: every entry an address of the section", () => {
     expect(actions.match(/href: "\/admin\/pages\/contact"/g)).toHaveLength(2);
     expect(actions).not.toContain("/admin/settings/contact");
     expect(actions.match(/requireStaffCapability\(canManageClubSettings\)/g)).toHaveLength(2);
+  });
+});
+
+describe("«Pagini»'s row on the club's own pages' editors, and the list's gate (§NNN)", () => {
+  it("renders the row with «Paginile clubului» marked on /admin/pages/new and /admin/pages/<id>", () => {
+    for (const file of ["src/app/[locale]/admin/pages/new/page.tsx", "src/app/[locale]/admin/pages/[id]/page.tsx"]) {
+      expect(read(file), file).toContain('<PagesSubNav locale={locale} active="pages" />');
+    }
+    expect(pagesRowEntryOf("/en/admin/pages/new")).toBe("pages");
+    expect(pagesRowEntryOf("/en/admin/pages/1b4e28ba-2fa1-11d2-883f-0016d3cca427")).toBe("pages");
+  });
+
+  it("gates the list's layout as the page and the tab do: a Redactor reaches the list (BR-REQ-060-01)", () => {
+    const layout = read("src/app/[locale]/admin/pages/(list)/layout.tsx");
+    expect(layout).toContain("if (!canReadContent(actor.role)) notFound();");
+    expect(layout).not.toContain("isEditorial(actor.role)");
+    expect(read("src/app/[locale]/admin/pages/(list)/page.tsx")).toContain("if (!canReadContent(actor.role)) notFound();");
+    expect(canReadContent("COPYWRITER")).toBe(true);
+    expect(canReadContent("CONTRIBUTOR")).toBe(false);
+  });
+
+  it("keeps the list's writes behind their own gates: a Redactor cannot reorder or delete", async () => {
+    const copywriter = { id: "00000000-0000-4000-8000-000000000001", role: "COPYWRITER" as const };
+    expect(canEditEventFields("COPYWRITER")).toBe(false);
+    // Refused before the database is asked, so no database is needed to prove it.
+    const db = {} as Parameters<typeof movePageInNav>[0];
+    await expect(movePageInNav(db, { actor: copywriter, pageId: "x", direction: "up" })).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(deletePage(db, { actor: copywriter, pageId: "x" })).rejects.toMatchObject({ code: "FORBIDDEN" });
+    // The arrows are drawn only for a role the move accepts.
+    expect(read("src/app/[locale]/admin/pages/(list)/page.tsx")).toContain("const mayMove = canEditEventFields(actor.role);");
   });
 });

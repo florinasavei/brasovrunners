@@ -30,6 +30,22 @@ test.describe("§262 the sections on a phone's header row", () => {
     }
   });
 
+  test("orders the sections Evenimente, Calendar, Contact, then the rest (§NNN)", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto("/ro/evenimente");
+
+    // Every entry is in the DOM, folded or not, in the one list's order; the first three are the
+    // owner's, whatever else the seed puts on the site after them.
+    const names = await page
+      .getByRole("navigation", { name: "Navigare principală" })
+      .locator("a")
+      .evaluateAll((links) => links.map((link) => link.textContent?.trim() ?? ""));
+    expect(names.slice(0, 3)).toEqual([...SECTIONS, "Contact"]);
+    const team = names.indexOf("Echipa");
+    const faq = names.indexOf("Întrebări");
+    if (team >= 0 && faq >= 0) expect(team).toBeLessThan(faq);
+  });
+
   test("keeps the row to one line at 320px, whatever it has to fold", async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 720 });
     await page.goto("/ro/evenimente");

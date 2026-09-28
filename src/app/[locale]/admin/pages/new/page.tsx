@@ -7,6 +7,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import PageFieldsForm from "@/modules/content/pages/ui/PageFieldsForm";
+import PagesSubNav from "@/modules/content/pages/ui/PagesSubNav";
 import { pageFormFieldLabels } from "@/modules/content/pages/ui/field-labels";
 import { canCreateEvent } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
@@ -36,6 +37,9 @@ export default async function NewPagePage({ params, searchParams }: Props) {
 
   return (
     <Stack spacing={3}>
+      {/* «Pagini»'s row, «Paginile clubului» marked: a new page stays in the section (`pagesRowEntryOf`). */}
+      <PagesSubNav locale={locale} active="pages" />
+
       <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
         {error && <Alert severity="error">{t(`errors.${error}`)}</Alert>}
       </Box>
