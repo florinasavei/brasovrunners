@@ -98,7 +98,7 @@ export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit,
     if (row.status === "FAILED") return { text: t("emails.queue.leaves.never"), late: false };
     // A press sent it now, past the scheduled pass (§NNN): it leaves after that press's response —
     // `emailLeavesWords`' own `leavesNow`, the instant null — never at the round the rest waits for.
-    if (leavesNow(row)) return { text: t(`emails.queue.leaves.${emailLeavesWords(null, now, locale).key}`), late: false };
+    if (leavesNow(row, now)) return { text: t(`emails.queue.leaves.${emailLeavesWords(null, now, locale).key}`), late: false };
     const dueAt = row.nextAttemptAt ?? row.createdAt;
     // Late by health's own number (§98, §447): `overdueCadenceMinutes` is the cadence `/api/health`
     // adds to its ninety minutes, the planned interval included — one judgement, two screens (§529).

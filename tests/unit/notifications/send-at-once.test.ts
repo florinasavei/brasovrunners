@@ -20,7 +20,7 @@ import { choiceAnswer, type ConfirmSpec } from "@/shared/feedback/notice";
  */
 const WORDS = {
   choice: { field: DELIVERY_CHOICE_FIELD, confirmValue: "now", alternativeValue: "queue", alternativeLabel: ro.Admin.confirm.sendNowChoice.queue },
-  note: "Emailurile pleacă acum la trecerea programată, în cel mult 2 ore. Alege dacă acesta pleacă acum sau o așteaptă.",
+  note: "Deocamdată, emailurile automate pleacă la trecerea programată, în cel mult 2 ore. Alege dacă acesta pleacă acum sau o așteaptă.",
   confirmLabel: ro.Admin.confirm.sendNowChoice.now,
 };
 
@@ -55,11 +55,17 @@ describe("§NNN a resend's two answers", () => {
     expect(markedForNow({ a: 1 }, "queue")).toEqual({ a: 1 });
   });
 
-  it("«Pleacă acum» only while the marked row waits untried", () => {
-    expect(leavesNow({ status: "PENDING", attemptCount: 0, sentNow: true })).toBe(true);
-    expect(leavesNow({ status: "PENDING", attemptCount: 1, sentNow: true })).toBe(false);
-    expect(leavesNow({ status: "PROCESSING", attemptCount: 1, sentNow: true })).toBe(false);
-    expect(leavesNow({ status: "PENDING", attemptCount: 0, sentNow: false })).toBe(false);
+  it("«Pleacă acum» only while the marked row waits untried, a moment after the press", () => {
+    const now = new Date("2026-10-01T07:04:00.000Z");
+    const row = { status: "PENDING", attemptCount: 0, sentNow: true, nextAttemptAt: null, createdAt: new Date("2026-10-01T07:03:30.000Z") };
+    expect(leavesNow(row, now)).toBe(true);
+    expect(leavesNow({ ...row, attemptCount: 1 }, now)).toBe(false);
+    expect(leavesNow({ ...row, status: "PROCESSING", attemptCount: 1 }, now)).toBe(false);
+    expect(leavesNow({ ...row, sentNow: false }, now)).toBe(false);
+    // Handed back by Gmail's pace (§443): the attempt given back, a turn of its own later on.
+    expect(leavesNow({ ...row, nextAttemptAt: new Date("2026-10-01T07:05:00.000Z") }, now)).toBe(false);
+    // A drain that never ran: long after the press, the row waits for the pass like any other.
+    expect(leavesNow({ ...row, createdAt: new Date("2026-10-01T06:50:00.000Z") }, now)).toBe(false);
   });
 
   it("a press fits the day's Mailgun allowance or is refused, never deferred in silence (§80)", () => {

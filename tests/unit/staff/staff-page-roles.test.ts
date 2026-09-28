@@ -42,6 +42,8 @@ vi.mock("@/modules/diagnostics/invite-key", () => ({
   hasNoAccount: () => false,
 }));
 vi.mock("@/shared/feedback/confirm-words", () => ({ confirmWords: async () => ({ cancel: "Renunță" }) }));
+// «Retrimite invitația»'s two answers read the club's timing (§NNN); the roles do not depend on it.
+vi.mock("@/modules/notifications/send-now-choice", () => ({ sendNowChoiceFor: async () => null }));
 vi.mock("@/shared/forms/refusal-messages", () => ({ refusalMessages: async () => ({}) }));
 vi.mock("@/app/[locale]/admin/actions", () => ({
   changeStaffRoleAction: vi.fn(),

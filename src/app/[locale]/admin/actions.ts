@@ -47,6 +47,8 @@ import { countAccountLines, createMemberAccounts, type MemberAccountLine } from 
 import { invalidAddresses } from "@/modules/contact/domain/recipients";
 import { canDeleteEvent, canHardDeleteEvent, canManageRegistrations, canManageStaff, canManageTestRegistrations, type EditorialStatus, isBackofficeRole, type StaffRole } from "@/modules/staff-identity/domain/roles";
 import { sendEventThanks } from "@/modules/notifications/event-mail";
+import { DELIVERY_CHOICE_FIELD, deliveryChoiceOf } from "@/modules/notifications/domain/send-at-once";
+import { sendNowRefusalCode } from "@/modules/notifications/send-at-once";
 import { DEV_STAFF_COOKIE, requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
 import {
   inviteZitadelUser,
@@ -1174,11 +1176,14 @@ export async function resendStaffInviteAction(_previous: FormOutcome | null, for
   try {
     const actor = await requireStaffCapability(canManageStaff);
     // The platform's own invitation again (§141), then Zitadel's password link where the key is set (§123).
-    const member = await resendStaffInvitation(getDb(), actor, text(form, "email"));
+    // «Trimite acum» or «Pune la coadă» (§NNN): the dialog's answer, the queue when none was offered.
+    const delivery = deliveryChoiceOf(form.get(DELIVERY_CHOICE_FIELD));
+    const member = await resendStaffInvitation(getDb(), actor, text(form, "email"), new Date(), delivery);
     const invite = env.STAFF_AUTH_MODE === "provider" ? await resendZitadelInvite(member.email) : ({ kind: "unconfigured" } as const);
     outcome = { saved: "reinvited", invite: invite.kind, ...(invite.kind === "failed" ? { reason: invite.reason.slice(0, 120) } : {}) };
   } catch (error) {
-    outcome = outcomeOf(error);
+    // A «now» the day's allowance cannot hold says so in its own sentence (§80, §NNN).
+    outcome = isDomainError(error) ? { error: sendNowRefusalCode(error) } : outcomeOf(error);
   }
   return backTo(path, outcome);
 }

@@ -1002,7 +1002,7 @@
       "sendNowChoice": {
         "now": "Trimite acum, fără să aștepte trecerea programată",
         "queue": "Pune la coadă pentru trecerea programată",
-        "note": "Emailurile pleacă acum la trecerea programată, în cel mult {wait}. Alege dacă acesta pleacă acum sau o așteaptă."
+        "note": "Deocamdată, emailurile automate pleacă la trecerea programată, în cel mult {wait}. Alege dacă acesta pleacă acum sau o așteaptă."
       }
     },
     "errors": {
@@ -4682,7 +4682,7 @@
                 "«Înscrieri» → caută persoana → apasă pe numele ei.",
                 "Nume greșit: la «Corectează numele» scrie numele bun → «Salvează numele».",
                 "Nu mai vine: «Anulează înscrierea», scrie «Motivul», apasă «Anulează înscrierea» și confirmă. Locul trece la lista de așteptare.",
-                "Nu a primit emailul: «Retrimite emailul».",
+                "Nu a primit emailul: «Retrimite emailul» → «Trimite acum, fără să aștepte trecerea programată».",
                 "Cere ștergerea datelor: «Șterge definitiv», scrie «Motivul ștergerii», bifează «Confirm că această ștergere este definitivă» și apasă «Șterge definitiv».",
                 "Mai multe deodată: pe listă bifează rândurile → «Anulează cele bifate»."
               ]
@@ -4760,7 +4760,7 @@
                 "«Echipa» e a Administratorului și a Superadministratorului. Rolul Superadministrator și rândul unui Superadministrator le schimbă doar un Superadministrator.",
                 "«Echipa» → «Adaugă o persoană»: «Adresă de email», «Nume», «Rol» (Voluntar pentru masă), «Limbă preferată».",
                 "Apasă «Adaugă» și confirmă. Persoana primește invitația pe email și își alege parola.",
-                "Nu a primit-o: pe rândul ei, «Retrimite invitația».",
+                "Nu a primit-o: pe rândul ei, «Retrimite invitația» → «Trimite acum, fără să aștepte trecerea programată».",
                 "Alt rol: «Schimbă rolul». A plecat din echipă: «Retrage accesul»."
               ]
             },

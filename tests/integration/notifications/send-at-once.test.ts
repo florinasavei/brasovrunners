@@ -73,6 +73,7 @@ vi.mock("@/modules/notifications/render", async (importOriginal) => ({
 const { fakeNextCache } = await import("../../helpers/next-cache");
 const { submitRegistration } = await import("@/modules/registrations/service");
 const { resendRegistrationMessage } = await import("@/modules/registrations/admin-service");
+const { resendStaffInvitation } = await import("@/modules/staff-identity/service");
 const { sendParticipantMessage } = await import("@/modules/notifications/participant-messages");
 const { processOutboxBatch } = await import("@/modules/notifications/outbox");
 const { sendOutboxRowsNow } = await import("@/modules/notifications/send-rows-now");
@@ -256,6 +257,39 @@ describe("§NNN a resend with «Trimite acum» leaves within its request", () =>
     expect(await resends()).toHaveLength(1);
   });
 
+  it("counts the club's copy against the allowance too, and a refusal spends none of the hour's resends", async () => {
+    const { registration } = await confirmedRunner();
+    await db.insert(platformSettings).values({
+      key: CLUB_NOTICES_SETTING_KEY,
+      value: { declarations: { to: "", cc: [], bcc: [] }, confirmations: { to: [] }, participants: { bcc: ["arhiva@club.test"] } },
+      updatedAt: NOW,
+    });
+    // Ninety-nine sent today: room for the message, not for the message and its copy.
+    await db.insert(emailOutbox).values(
+      Array.from({ length: 99 }, (_, index) => ({
+        participantId: null,
+        registrationId: null,
+        messageType: "REGISTRATION_STATE_NOTICE" as const,
+        locale: "ro" as const,
+        recipientEmail: `x${index}@example.ro`,
+        payloadJson: {},
+        idempotencyKey: `earlier:${index}`,
+        status: "SENT" as const,
+        attemptCount: 1,
+        sentAt: NOW,
+        createdAt: NOW,
+      })),
+    );
+    for (let press = 0; press < 5; press += 1) {
+      const refused = await resendRegistrationMessage(db, admin, registration.id, new Date(NOW.getTime() + 60_000 + press), undefined, "now").catch((error: unknown) => error);
+      expect(refused).toBeInstanceOf(SendNowRefused);
+    }
+    expect(await resends()).toHaveLength(0);
+    // The queue the refusal suggests is still allowed: the refused presses spent no resend.
+    await resendRegistrationMessage(db, admin, registration.id, new Date(NOW.getTime() + 120_000), undefined, "queue");
+    expect((await resends()).length).toBeGreaterThan(0);
+  });
+
   it("never sends again a row that has left (§39): the path takes only rows still waiting", async () => {
     const { registration } = await confirmedRunner();
     await resendRegistrationMessage(db, admin, registration.id, new Date(NOW.getTime() + 60_000), undefined, "now");
@@ -299,5 +333,66 @@ describe("§NNN the organizer's message with «Trimite acum»", () => {
     expect(held.sent).toEqual([{ to: "ana@example.ro", subject: "ORGANIZER_MESSAGE" }]);
     const [audit] = await db.select().from(auditLogs).where(eq(auditLogs.action, "event.participant_message_sent"));
     expect(audit.metadataJson).toMatchObject({ delivery: "now", bypassedSchedule: true });
+  });
+});
+
+describe("§NNN «Retrimite invitația» on Echipa with «Trimite acum»", () => {
+  /** A colleague on the list who has not signed in yet. */
+  async function invited() {
+    const [row] = await db.insert(staffUsers).values({ email: "voluntar@club.test", displayName: "Voluntar", role: "CONTRIBUTOR" }).returning();
+    return row;
+  }
+  const invitations = () => db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "STAFF_INVITATION"));
+  /** The inviter as the session holds them: the whole row. */
+  const adminRow = async () => (await db.select().from(staffUsers).where(eq(staffUsers.id, admin.id)))[0]!;
+
+  it("sends the invitation once after the response and names the press on the trail", async () => {
+    const member = await invited();
+    await resendStaffInvitation(db, await adminRow(), member.email, new Date(NOW.getTime() + 60_000), "now");
+    const [queued] = await invitations();
+    expect(queued.status).toBe("PENDING");
+    expect(queued.payloadJson).toMatchObject({ sentNow: true });
+
+    await runAfters();
+    expect(held.sent).toEqual([{ to: "voluntar@club.test", subject: "STAFF_INVITATION" }]);
+    const [sent] = await invitations();
+    expect(sent.status).toBe("SENT");
+    const [audit] = await db.select().from(auditLogs).where(eq(auditLogs.action, "staff.invitation_sent_now"));
+    expect(audit).toMatchObject({ actorStaffUserId: admin.id, entityType: "staff_user", entityId: member.id });
+    expect(audit.metadataJson).toMatchObject({ outboxId: queued.id, messageType: "STAFF_INVITATION", bypassedSchedule: true });
+  });
+
+  it("with «Pune la coadă» waits for the scheduled pass, as before", async () => {
+    const member = await invited();
+    await resendStaffInvitation(db, await adminRow(), member.email, new Date(NOW.getTime() + 60_000), "queue");
+    await runAfters();
+    expect(held.sent).toEqual([]);
+    const [queued] = await invitations();
+    expect(queued.status).toBe("PENDING");
+    expect(queued.payloadJson).not.toHaveProperty("sentNow");
+    expect(await db.select().from(auditLogs).where(eq(auditLogs.action, "staff.invitation_sent_now"))).toHaveLength(0);
+  });
+
+  it("refuses a «now» the day's allowance cannot hold, and queues nothing (§80)", async () => {
+    const member = await invited();
+    await db.insert(emailOutbox).values(
+      Array.from({ length: 100 }, (_, index) => ({
+        participantId: null,
+        registrationId: null,
+        messageType: "REGISTRATION_STATE_NOTICE" as const,
+        locale: "ro" as const,
+        recipientEmail: `x${index}@example.ro`,
+        payloadJson: {},
+        idempotencyKey: `earlier:${index}`,
+        status: "SENT" as const,
+        attemptCount: 1,
+        sentAt: NOW,
+        createdAt: NOW,
+      })),
+    );
+    const refused = await resendStaffInvitation(db, await adminRow(), member.email, new Date(NOW.getTime() + 60_000), "now").catch((error: unknown) => error);
+    expect(refused).toBeInstanceOf(SendNowRefused);
+    expect(await invitations()).toHaveLength(0);
+    expect(held.afters).toHaveLength(0);
   });
 });

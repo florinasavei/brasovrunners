@@ -82,7 +82,7 @@ test.describe("§NNN a resend may leave now, past the scheduled pass", () => {
       const dialog = page.getByRole("dialog", { name: "Retrimiți emailul?" });
       await expect(dialog).toBeVisible();
       await expect(dialog.getByTestId("confirm-dialog-alternative")).toHaveText("Pune la coadă pentru trecerea programată");
-      await expect(dialog).toContainText("Emailurile pleacă acum la trecerea programată");
+      await expect(dialog).toContainText("Deocamdată, emailurile automate pleacă la trecerea programată");
       await dialog.getByTestId("confirm-dialog-confirm").click();
       await expect(dialog).toBeHidden();
       // The banner and the toast say it leaves now; the trail names the press.

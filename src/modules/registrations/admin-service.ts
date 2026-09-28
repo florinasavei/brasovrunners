@@ -11,7 +11,7 @@ import { consumeRateLimit } from "@/modules/rate-limit/service";
 import { enqueueEmail } from "@/modules/notifications/outbox";
 import { drainOutboxRowsAfterResponse } from "@/modules/notifications/drain";
 import { type DeliveryChoice, markedForNow } from "@/modules/notifications/domain/send-at-once";
-import { assertRoomToSendNow, outboxIdsForKey } from "@/modules/notifications/send-at-once";
+import { assertRoomToSendNow, clubCopyTypesFor, outboxIdsForKey } from "@/modules/notifications/send-at-once";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { findParticipantByCanonicalEmail } from "@/modules/participants/repository";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
@@ -105,37 +105,6 @@ export async function resendRegistrationMessage<T extends Record<string, unknown
     }
   }
 
-  /**
-   * BR-REQ-037-02 criterion 5: "repeated resends... a rate limit applies and the refusal is
-   * recorded."
-   *
-   * Keyed on the registration rather than the administrator, because what is being protected is
-   * one participant's inbox — two organizers both clicking resend is exactly the case to catch,
-   * and it is invisible if each of them has their own allowance.
-   *
-   * Checked before the message type is derived so a throttled resend does nothing at all, and
-   * refused with a real error rather than a generic success: this caller is an authenticated
-   * Administrator looking at the screen, so there is nothing to leak and everything to gain
-   * from saying what happened.
-   */
-  const verdict = await consumeRateLimit(db, "admin-resend", registrationId, now);
-  if (!verdict.allowed) {
-    await recordAuditEvent(db, {
-      actorStaffUserId: actor.id,
-      participantId: registration.participantId,
-      action: "registration.resend_rate_limited",
-      entityType: "registration",
-      entityId: registrationId,
-      metadata: { count: verdict.count, limit: verdict.limit },
-      now,
-    });
-
-    throw new DomainError(
-      "VALIDATION_ERROR",
-      `this registration has had ${verdict.count} resends in the last hour; wait ${verdict.retryAfter} seconds`,
-    );
-  }
-
   const messageType = wanted ?? deriveAllowedResendMessageType(registration.status);
   if (!messageType) {
     throw new DomainError(
@@ -165,9 +134,45 @@ export async function resendRegistrationMessage<T extends Record<string, unknown
   /*
     «Trimite acum, fără să aștepte trecerea programată» (§NNN): inside the day's allowance, asked
     before anything is queued, so a refusal leaves nothing behind (§80: refused, never deferred in
-    silence). The club's copies ride on the club's own road and are not counted against it here.
+    silence). The club's copies ride with it, each on the club group's road, and count too.
   */
-  if (delivery === "now") await assertRoomToSendNow(db, [messageType], now);
+  if (delivery === "now") {
+    const copies = await clubCopyTypesFor(db, { messageType, recipientEmail: participant.deliveryEmail, real: registration.kind === "REAL" });
+    await assertRoomToSendNow(db, [messageType], now, copies);
+  }
+
+  /**
+   * BR-REQ-037-02 criterion 5: "repeated resends... a rate limit applies and the refusal is
+   * recorded."
+   *
+   * Keyed on the registration rather than the administrator, because what is being protected is
+   * one participant's inbox — two organizers both clicking resend is exactly the case to catch,
+   * and it is invisible if each of them has their own allowance.
+   *
+   * Checked after everything that only reads — the message type, the event, the day's allowance
+   * for a «now» (§NNN) — so a press refused for any of those spends none of the hour's resends and
+   * the «Pune la coadă» the allowance's refusal suggests is still allowed; a throttled resend
+   * queues nothing at all. Refused with a real error rather than a generic success: this caller
+   * is an authenticated Administrator looking at the screen, so there is nothing to leak and
+   * everything to gain from saying what happened.
+   */
+  const verdict = await consumeRateLimit(db, "admin-resend", registrationId, now);
+  if (!verdict.allowed) {
+    await recordAuditEvent(db, {
+      actorStaffUserId: actor.id,
+      participantId: registration.participantId,
+      action: "registration.resend_rate_limited",
+      entityType: "registration",
+      entityId: registrationId,
+      metadata: { count: verdict.count, limit: verdict.limit },
+      now,
+    });
+
+    throw new DomainError(
+      "VALIDATION_ERROR",
+      `this registration has had ${verdict.count} resends in the last hour; wait ${verdict.retryAfter} seconds`,
+    );
+  }
 
   const idempotencyKey = `registration:${registration.id}:manual-resend:${now.toISOString()}`;
   await db.transaction(async (tx) => {

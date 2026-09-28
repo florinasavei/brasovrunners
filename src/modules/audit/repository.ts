@@ -283,6 +283,12 @@ export type AuditAction =
    */
   | "staff.members_invited"
   /**
+   * «Retrimite invitația» sent at once, past the scheduled pass (§NNN): the staff member who pressed
+   * (the actor), the invited row (the entity), the outbox row's id and its message type — never the
+   * address.
+   */
+  | "staff.invitation_sent_now"
+  /**
    * «Tradu din română» (§464): one row per press — who, which boxes by name, how many characters
    * went to which provider. Never the words, in either language. Also the day's meter: the
    * translation budget sums these rows' `characters` since the club's midnight.

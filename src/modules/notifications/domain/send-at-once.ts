@@ -43,12 +43,30 @@ export function markedForNow(payload: Record<string, unknown>, choice: DeliveryC
 }
 
 /**
- * Whether the queue panel says «Pleacă acum» for a row (§NNN): marked by a press, still waiting,
- * never tried. Once tried — a transient failure put it back with a retry — it says its retry's time
- * like any other row, since the drain after the response is over.
+ * How long after a press its row may still be said to leave «acum»: the drain after the response
+ * takes seconds (§68). Past it the drain is over — an `after()` that failed, say — and the row waits
+ * for the scheduled pass like any other.
  */
-export function leavesNow(row: { status: string; attemptCount: number; sentNow: boolean }): boolean {
-  return row.sentNow && row.status === "PENDING" && row.attemptCount === 0;
+export const LEAVES_NOW_WITHIN_MS = 5 * 60_000;
+
+/**
+ * Whether the queue panel says «Pleacă acum» for a row (§NNN): marked by a press, still waiting,
+ * never tried, with no turn of its own, and pressed a moment ago. Once tried — a transient failure
+ * put it back with a retry — or handed back by Gmail's pace with a turn later on (the attempt given
+ * back, §443), or left behind by a drain that never ran, it says its time like any other row: the
+ * drain after the response is over.
+ */
+export function leavesNow(
+  row: { status: string; attemptCount: number; sentNow: boolean; nextAttemptAt: Date | null; createdAt: Date },
+  now: Date,
+): boolean {
+  return (
+    row.sentNow &&
+    row.status === "PENDING" &&
+    row.attemptCount === 0 &&
+    row.nextAttemptAt === null &&
+    now.getTime() - row.createdAt.getTime() <= LEAVES_NOW_WITHIN_MS
+  );
 }
 
 /** The choice's words, as the server worded them (`send-now-choice.ts`). */

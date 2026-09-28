@@ -206,10 +206,13 @@ export default async function DeadlinesPanel({ locale, state, mayEdit, openWhen,
           <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
             {t("emails.deliveryTiming.intro", waitWords)}
           </Typography>
-          {/* The setting is for everything automatic; a backoffice resend may leave at once (§NNN). */}
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }} data-testid="delivery-timing-bypass">
-            {t("emails.deliveryTiming.bypassHelp")}
-          </Typography>
+          {/* The setting is for everything automatic; a backoffice resend may leave at once (§NNN) —
+              said only under the scheduled pass, the one timing whose presses offer that choice. */}
+          {deliveryTiming.timing === "scheduled" && (
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }} data-testid="delivery-timing-bypass">
+              {t("emails.deliveryTiming.bypassHelp")}
+            </Typography>
+          )}
           {!mayEdit ? (
             <Typography variant="body2" data-testid="delivery-timing-value">
               {t(`emails.deliveryTiming.option.${deliveryTiming.timing}`, waitWords)}

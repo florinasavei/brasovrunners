@@ -2,8 +2,10 @@ import { eq, or, sql } from "drizzle-orm";
 import { type EmailMessageType, emailOutbox } from "@/db/schema/email-outbox";
 import type { Database } from "@/db/types";
 import { DomainError } from "@/shared/errors/domain-error";
+import { readClubNotices } from "./club-notices";
+import { clubCopyRecipients, isCopiedPerMessage, participantMessageBcc } from "./domain/club-notices";
 import { roomToSendNow } from "./domain/send-at-once";
-import { roadsByMessageType } from "./domain/email-transport";
+import { preferredTransport, roadsByMessageType } from "./domain/email-transport";
 import { gmailIsConfigured, readEmailTransport } from "./email-transport";
 import { readEmailVolumeToday } from "./volume";
 
@@ -41,21 +43,40 @@ export function sendNowRefusalCode(error: DomainError): string {
 }
 
 /**
- * Refuses a press whose Mailgun messages the day's allowance cannot hold. Gmail's road costs the
- * allowance nothing (§443); a road that is Gmail's where Gmail is not configured is Mailgun's.
+ * Refuses a press whose Mailgun messages the day's allowance cannot hold — the participants' and the
+ * club's copies that ride on them (`clubCopyTypes`), each on its own group's road. Gmail's road costs
+ * the allowance nothing (§443); a road that is Gmail's where Gmail is not configured is Mailgun's.
  */
 export async function assertRoomToSendNow<T extends Record<string, unknown>>(
   db: Database<T>,
   messageTypes: readonly EmailMessageType[],
   now: Date,
+  clubCopyTypes: readonly EmailMessageType[] = [],
 ): Promise<void> {
-  if (messageTypes.length === 0) return;
+  if (messageTypes.length === 0 && clubCopyTypes.length === 0) return;
   const [setting, volume] = await Promise.all([readEmailTransport(db), readEmailVolumeToday(db, now)]);
-  const roads = roadsByMessageType(setting, gmailIsConfigured());
-  const mailgunMessages = messageTypes.filter((type) => roads[type] === "mailgun").length;
+  const gmail = gmailIsConfigured();
+  const roads = roadsByMessageType(setting, gmail);
+  const copyRoad = (type: EmailMessageType) => (gmail ? preferredTransport(setting, type, true) : "mailgun");
+  const mailgunMessages =
+    messageTypes.filter((type) => roads[type] === "mailgun").length + clubCopyTypes.filter((type) => copyRoad(type) === "mailgun").length;
   if (!roomToSendNow({ remaining: volume.remaining, mailgunMessages })) {
     throw new SendNowRefused(`the day's Mailgun allowance has ${volume.remaining} left; ${mailgunMessages} would be sent now`);
   }
+}
+
+/**
+ * The club's copies a press's message brings with it, one message type per copy (§320, §419): per
+ * message for a real registration's own message (`enqueueClubCopies`), one per address for a send to
+ * many (`perSend`, `enqueueBulkClubCopies`). What the allowance check counts beside the message.
+ */
+export async function clubCopyTypesFor<T extends Record<string, unknown>>(
+  db: Database<T>,
+  input: { messageType: EmailMessageType; recipientEmail: string; real: boolean; perSend?: boolean },
+): Promise<EmailMessageType[]> {
+  if (!input.real || (!input.perSend && !isCopiedPerMessage(input.messageType))) return [];
+  const recipients = clubCopyRecipients(input.perSend ? "" : input.recipientEmail, participantMessageBcc(await readClubNotices(db)));
+  return recipients.map(() => input.messageType);
 }
 
 /**

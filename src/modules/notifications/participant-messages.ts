@@ -29,7 +29,7 @@ import {
 import { enqueueBulkClubCopies, enqueueEmail } from "./outbox";
 import { drainOutboxRowsAfterResponse } from "./drain";
 import { type DeliveryChoice, markedForNow } from "./domain/send-at-once";
-import { assertRoomToSendNow, outboxIdsForKey } from "./send-at-once";
+import { assertRoomToSendNow, clubCopyTypesFor, outboxIdsForKey } from "./send-at-once";
 import { renderBilingual, type TemplateData } from "./templates";
 
 /**
@@ -190,7 +190,11 @@ export async function sendParticipantMessage<T extends Record<string, unknown>>(
       row is written — refused with the allowance's sentence and nothing queued, never a silent
       defer (§80). Test rows are sent too, so they are counted here too.
     */
-    if (delivery === "now") await assertRoomToSendNow(tx, rows.map(() => "ORGANIZER_MESSAGE" as const), now);
+    if (delivery === "now") {
+      // The club's one copy per address rides with a send that reaches a real participant (§419).
+      const copies = await clubCopyTypesFor(tx, { messageType: "ORGANIZER_MESSAGE", recipientEmail: "", real: rows.some((row) => row.kind === "REAL"), perSend: true });
+      await assertRoomToSendNow(tx, rows.map(() => "ORGANIZER_MESSAGE" as const), now, copies);
+    }
     // Marked for the queue panel's «Pleacă acum» (§NNN); the club's copy carries the mark with it.
     const payload = markedForNow(
       { subject: { ro: message.subject.ro, en: message.subject.en }, body: { ro: message.body.ro, en: message.body.en } },
