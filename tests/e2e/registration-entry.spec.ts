@@ -129,24 +129,23 @@ test.describe("BR-REQ-030-01 the featured event leads to the registration form",
     // same sentence for a first and a repeat registration, because nothing on it is read from
     // the registrations table (AGENTS.md §19.4).
     await expect(page.getByRole("heading", { name: "Aproape gata, Ana!" })).toBeVisible();
-    // The address it went to, read back so a typo is caught before they walk away (§224).
-    await expect(page.getByText(address)).toBeVisible();
-    // And the same capture notice here, where somebody would otherwise stand with an inbox open.
+    // The same capture notice here, where somebody would otherwise stand with an inbox open.
     await expect(page.getByText(captureNotice)).toBeVisible();
     /*
-      The first form's email leaves without a press (§NNN, amending §519): the screen says when — the
-      e2e server sends on the request, so «acum» — then asks one question about another person on the
-      address, with one answer, and there is no «Gata» to press. The heading stays the inbox's own.
+      After the first form, the short screen (§NNN, amending §519; the owner, 2026-09-28): the heading,
+      then exactly three lines and one button — whose form is in, when its email leaves (the e2e server
+      sends on the request, so «acum»), and one question with one answer — and one true sentence under
+      it. No «Gata», no steps, no wait box.
     */
+    await expect(page.getByTestId("check-email-form-in")).toHaveText("Formularul lui Ana a ajuns.");
     await expect(page.getByTestId("check-email-leaves")).toHaveText("Emailul pleacă acum.");
-    await expect(page.getByRole("heading", { name: "Aproape gata, Ana!" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Mai înscrii pe cineva cu aceeași adresă?" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Da, încă o persoană" })).toBeVisible();
+    await expect(page.getByTestId("family-sitting-offer-hint")).toHaveText("Dacă apeși „Da”, următoarea persoană primește un email care îi cuprinde pe toți.");
     await expect(page.getByRole("button", { name: "Nu, gata — trimite-mi emailul" })).toHaveCount(0);
-    // BR-REQ-041-01 criterion 6: the way back is a real target on a phone.
-    const back = page.getByRole("link", { name: "Înapoi la eveniment" });
-    const backBox = await back.boundingBox();
-    expect(backBox?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await expect(page.getByRole("heading", { name: "Ce urmează" })).toHaveCount(0);
+    // BR-REQ-041-01 criterion 6: the one button is a real target on a phone.
+    const yesBox = await page.getByRole("button", { name: "Da, încă o persoană" }).boundingBox();
+    expect(yesBox?.height ?? 0).toBeGreaterThanOrEqual(44);
 
     /*
       BR-REQ-034-01 with the public cache in front of it (§333): the count both pages showed

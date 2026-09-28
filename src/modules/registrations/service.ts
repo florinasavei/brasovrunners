@@ -1732,13 +1732,13 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       A new registration of a sitting (§519): its verification email waits with the sitting's others,
       and the sitting — opened by this form when it is the first to hold anything — names it among
       the registrations its one button confirms. Outside a sitting, the email goes at once; before
-      «Da» (§NNN) it is marked as a sitting's, since «Da» may still hold it, and remembered for that
-      press. Either way it is the message that starts the link (`startingDeadline`, §513): its send
-      re-bases it.
+      «Da» (§NNN) it is remembered for that press, unmarked — «Da» marks it held only when it takes
+      it in (`continueFamilySitting`; the review of 2026-09-28, nit F1). Either way it is the message
+      that starts the link (`startingDeadline`, §513): its send re-bases it.
     */
     const holdVerification = async (registration: Registration) => {
       if (!inSitting) {
-        const queued = await enqueueVerificationEmail(tx, participant, registration, now, startingDeadline(offering ? { [SITTING_HELD]: true } : {}));
+        const queued = await enqueueVerificationEmail(tx, participant, registration, now, startingDeadline());
         if (offering) seedResult = { kind: "registration", id: registration.id, outboxId: queued?.id ?? null };
         return;
       }

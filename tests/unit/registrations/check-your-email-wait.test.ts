@@ -1,6 +1,6 @@
 import type { ReactElement, ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
  * §513 — the screen after the registration form says the wait the club's delivery timing makes:
@@ -32,13 +32,15 @@ vi.mock("@/modules/public-cache/reads", () => ({
 
 const { default: CheckYourEmail } = await import("@/modules/registrations/ui/CheckYourEmail");
 
-async function render(offer?: ReactNode): Promise<string> {
+type Offer = { atOnce: boolean; continueAction: (form: FormData) => Promise<void> };
+
+async function render(offer?: Offer, firstName: string | null = null): Promise<string> {
   const element = (await CheckYourEmail({
     eventTitle: "Crosul Tâmpei",
     whenLabel: "sâmbătă, 21 noiembrie 2026, la 10:00",
     eventHref: "/ro/evenimente/crosul-tampei",
     slug: "crosul-tampei",
-    facts: null,
+    facts: firstName ? { email: "familia.pop@example.ro", firstName } : null,
     window: null,
     offer,
   })) as ReactElement;
@@ -74,27 +76,63 @@ describe("§513 the screen after the form says the scheduled round's wait", () =
 
 /**
  * §NNN (the owner, 2026-09-28: «sa inteleg ca nu primesc mailu daca nu apas pe „Nu, gata, trimite
- * mailul”?») — the screen says when the email leaves, in bold, before it asks anything: nothing on it
- * has to be pressed for the email to leave.
+ * mailul”?», then: the screen must be clearer; the review's nits F0 and F2) — after the first form the
+ * screen is the short one: the heading, whose form is in, when its email leaves, the one question with
+ * its button, and one true sentence under it. No steps, no wait box: the time is said once.
  */
-describe("§NNN the screen after the form says when the email leaves, above the question", () => {
+describe("§NNN the short screen after the first form", () => {
+  const offer: Offer = { atOnce: false, continueAction: async () => {} };
+
   beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-09-28T10:00:00.000Z"));
     wait.minutes = 15;
     wait.leavesAt = new Date("2026-09-28T10:15:00.000Z");
   });
-
-  it("names the next scheduled pass on the club's clock, before the question", async () => {
-    const { createElement } = await import("react");
-    const html = await render(createElement("section", { "data-testid": "offer" }, "Mai înscrii pe cineva cu aceeași adresă?"));
-    expect(html).toContain("Emailul pleacă la 13:15 (următoarea trecere programată).");
-    expect(html.indexOf("Emailul pleacă la 13:15")).toBeLessThan(html.indexOf('data-testid="offer"'));
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
-  it("says it leaves now when the request itself sends", async () => {
+  it("says the form is in and when the email leaves on the club's clock, then the question, and nothing else", async () => {
+    const html = await render(offer, "Ana");
+    expect(html).toContain("Aproape gata, Ana!");
+    expect(html).toContain("Formularul lui Ana a ajuns.");
+    expect(html).toContain("Emailul pleacă la 13:15.");
+    expect(html.indexOf("Emailul pleacă la 13:15.")).toBeLessThan(html.indexOf('data-testid="family-sitting-offer"'));
+    expect(html).toContain("Mai înscrii pe cineva cu aceeași adresă?");
+    expect(html).toContain("Da, încă o persoană");
+    // While the email still waits, «Da» holds it: one email for everybody.
+    expect(html).toContain("Dacă apeși „Da”, emailul așteaptă formularul următor și primiți unul singur pentru toți.");
+    // Said once, in one shape: no steps, no wait box, no second telling of the time (F2).
+    expect(html).not.toContain("Ce urmează");
+    expect(html).not.toContain("trecerea programată");
+    expect(html).not.toContain("ajunge în cel mult");
+    expect(html).not.toContain("Ți-am trimis un email");
+  });
+
+  it("under «imediat» says it leaves now, and the sentence under «Da» does not promise to hold it (F0)", async () => {
     wait.minutes = null;
     wait.leavesAt = null;
-    const html = await render();
+    const html = await render(offer);
+    expect(html).toContain("Formularul a ajuns.");
     expect(html).toContain("Emailul pleacă acum.");
-    expect(html).not.toContain("următoarea trecere programată");
+    expect(html).toContain("Dacă apeși „Da”, următoarea persoană primește un email care îi cuprinde pe toți.");
+    expect(html).not.toContain("emailul așteaptă");
+    expect(html).not.toContain("De obicei ajunge într-un minut");
+  });
+
+  it("at a window of 0 says each person gets their own email, under either timing", async () => {
+    const html = await render({ ...offer, atOnce: true });
+    expect(html).toContain("Fiecare persoană primește emailul ei.");
+    wait.leavesAt = null;
+    expect(await render({ ...offer, atOnce: true })).toContain("Fiecare persoană primește emailul ei.");
+  });
+
+  it("keeps the full inbox screen, with the steps and the wait box, wherever no question is asked", async () => {
+    const html = await render();
+    expect(html).toContain("Ce urmează");
+    expect(html).toContain("ajunge în cel mult 15 minute.");
+    expect(html).not.toContain('data-testid="check-email-leaves"');
+    expect(html).not.toContain('data-testid="family-sitting-offer"');
   });
 });

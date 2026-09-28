@@ -8,7 +8,7 @@ vi.mock("next/headers", () => ({
 
 const {
   afterFormScreen,
-  emailLeavesSentence,
+  offerHint,
   compareFamilyOrder,
   doneFamilySentence,
   familyHeldDeclaration,
@@ -33,7 +33,7 @@ const { openFormDraft } = await import("@/modules/registrations/form-draft");
 const { declarationStateKey } = await import("@/modules/registrations/domain/family-signing");
 const { buildOutgoingEmail, joinNames } = await import("@/modules/notifications/templates");
 const { DEADLINE_RULES, familySittingHeldUntil, familySittingHolds } = await import("@/modules/deadlines/domain/deadlines");
-const { emailLeavesAt } = await import("@/modules/notifications/domain/email-wait");
+const { emailLeavesAt, emailLeavesWords } = await import("@/modules/notifications/domain/email-wait");
 
 /**
  * §519 — a family registered in one sitting, with one email: the pure half. What the browser keeps,
@@ -367,8 +367,13 @@ describe("§NNN no sitting without a press", () => {
   });
 
   it("says when the email leaves: now under «imediat», at the next scheduled pass otherwise — before «Da» and after it alike", () => {
-    expect(emailLeavesSentence(null)).toBe("leavesNow");
-    expect(emailLeavesSentence(new Date(NOW.getTime() + 15 * 60_000))).toBe("leavesAt");
+    expect(emailLeavesWords(null, NOW, "ro")).toEqual({ key: "leavesNow" });
+    // The club's clock (Bucharest, UTC+3 in September): 10:15 UTC is 13:15, today, said as the hour alone.
+    expect(emailLeavesWords(new Date(NOW.getTime() + 15 * 60_000), NOW, "ro")).toEqual({ key: "leavesAt", at: "13:15" });
+    // Another day on the club's clock: the short day with its time, as the queue panel always said it.
+    const tomorrow = emailLeavesWords(new Date(NOW.getTime() + 24 * 60 * 60_000), NOW, "ro");
+    expect(tomorrow.key).toBe("leavesAt");
+    expect(tomorrow.key === "leavesAt" && tomorrow.at).toMatch(/28 sept\. 2026.*13:00/);
     expect(emailLeavesAt({ timing: "immediate", now: NOW, pingerMinutes: 15, intervalMinutes: 0, governorFloorMinutes: 0 })).toBeNull();
     const next = emailLeavesAt({ timing: "scheduled", now: NOW, pingerMinutes: 15, intervalMinutes: 0, governorFloorMinutes: 0 })!;
     expect(next.getTime()).toBeGreaterThan(NOW.getTime());
@@ -391,15 +396,35 @@ describe("§NNN no sitting without a press", () => {
     expect(lengths.size).toBe(1);
   });
 
-  it("words the screen in both catalogues: when it leaves, the one question, the owner's sentence under «Da»", async () => {
-    const ro = (await import("../../../messages/ro.json")).default as { Registration: { done: Record<string, unknown>; sitting: Record<string, string> } };
-    const en = (await import("../../../messages/en.json")).default as { Registration: { done: Record<string, unknown>; sitting: Record<string, string> } };
+  it("chooses the one sentence under «Da» by what the line above says (the review of 2026-09-28, nit F0)", () => {
+    const later = new Date(NOW.getTime() + 15 * 60_000);
+    // Scheduled: the email still waits, so «Da» holds it and the address gets one for everybody.
+    expect(offerHint({ atOnce: false, leavesAt: later })).toBe("addHint");
+    // «Imediat»: it has left, so the next person's email is the one that names everybody.
+    expect(offerHint({ atOnce: false, leavesAt: null })).toBe("addHintLeft");
+    // A window of 0: nothing is held under either timing.
+    expect(offerHint({ atOnce: true, leavesAt: later })).toBe("addHintAtOnce");
+    expect(offerHint({ atOnce: true, leavesAt: null })).toBe("addHintAtOnce");
+  });
+
+  it("words the short screen in both catalogues: the form in, when it leaves, one true sentence under «Da»", async () => {
+    type Catalogue = { Registration: { done: Record<string, string>; sitting: Record<string, string> } };
+    const ro = (await import("../../../messages/ro.json")).default as unknown as Catalogue;
+    const en = (await import("../../../messages/en.json")).default as unknown as Catalogue;
+    expect(ro.Registration.done.formIn).toBe("Formularul lui {name} a ajuns.");
+    expect(en.Registration.done.formIn).toBe("{name}'s form is in.");
     expect(ro.Registration.done.leavesNow).toBe("Emailul pleacă acum.");
-    expect(ro.Registration.done.leavesAt).toBe("Emailul pleacă la {at} (următoarea trecere programată).");
+    expect(ro.Registration.done.leavesAt).toBe("Emailul pleacă la {at}.");
     expect(en.Registration.done.leavesNow).toBe("The email leaves now.");
-    expect(en.Registration.done.leavesAt).toContain("{at}");
-    expect(ro.Registration.sitting.addHint).toBe("Dacă da, ținem emailul și îl trimitem o singură dată, pentru toți.");
-    expect(en.Registration.sitting.addHint).toBe("If yes, we hold the email and send it once, for everybody.");
+    expect(en.Registration.done.leavesAt).toBe("The email leaves at {at}.");
+    expect(ro.Registration.sitting.addHint).toBe("Dacă apeși „Da”, emailul așteaptă formularul următor și primiți unul singur pentru toți.");
+    expect(ro.Registration.sitting.addHintLeft).toBe("Dacă apeși „Da”, următoarea persoană primește un email care îi cuprinde pe toți.");
+    expect(ro.Registration.sitting.addHintAtOnce).toBe("Fiecare persoană primește emailul ei.");
+    for (const key of ["addHint", "addHintLeft", "addHintAtOnce"]) {
+      expect(en.Registration.sitting[key]).toBeTruthy();
+      expect(ro.Registration.sitting[key].length).toBeLessThanOrEqual(200);
+      expect(en.Registration.sitting[key].length).toBeLessThanOrEqual(200);
+    }
     // «Gata» stays, on the sitting's screen after «Da» (§519).
     expect(ro.Registration.sitting.done).toBe("Nu, gata — trimite-mi emailul");
   });

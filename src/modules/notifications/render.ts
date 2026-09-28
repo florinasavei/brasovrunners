@@ -60,6 +60,7 @@ import {
   extendSittingLinks,
   findSittingById,
   linkSittingToken,
+  sittingEarlierEmailSent,
   sittingPeople,
   sittingStillOpen,
 } from "@/modules/registrations/family-sitting";
@@ -746,6 +747,16 @@ async function renderRow(
       data.familySittingPeople = listed;
       data.familyRegistered = await registeredOnAddress(db, found.eventId, found.participantId, found.registrationIds);
       data.addressCap = (await readAddressCap(db)).cap.registrationsPerAddress;
+      // Somebody listed already got an email of their own before «Da» (§NNN): one line says this button covers them too.
+      if (
+        people &&
+        (await sittingEarlierEmailSent(db, {
+          registrationIds: people.registrations.map((person) => person.id),
+          entryIds: people.entries.map((entry) => entry.id),
+        }))
+      ) {
+        data.familyEarlierSent = true;
+      }
     } else {
       data.familyEntryGone = true;
     }

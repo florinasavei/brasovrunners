@@ -177,6 +177,8 @@ describe("§519 one person in a sitting", () => {
     expect(row.messageType).toBe("VERIFY_REGISTRATION_EMAIL");
     // Due at once, on the club's ordinary timing: nothing waits for a press.
     expect(row.nextAttemptAt).toBeNull();
+    // Never held, so never marked held (the review of 2026-09-28, nit F1): only the link's start.
+    expect(row.payloadJson).toEqual({ startsDeadline: true });
     expect(await db.select().from(familySittings)).toHaveLength(0);
     // What «Da» would take in: this registration and its message.
     const [ana] = await db.select().from(registrations);
@@ -212,6 +214,8 @@ describe("§519 one person in a sitting", () => {
 
     const [row] = await outbox();
     expect(row.nextAttemptAt?.toISOString()).toBe(new Date(at(1).getTime() + WINDOW_MS).toISOString());
+    // «Da» took it in while it still waited, so it is marked held now, and only now (nit F1).
+    expect(row.payloadJson).toEqual({ startsDeadline: true, sittingHeld: true });
     const [open] = await db.select().from(familySittings);
     expect(open.heldOutboxIds).toEqual([row.id]);
     expect(open.registrationIds).toHaveLength(1);
@@ -351,10 +355,19 @@ describe("§519 a family in one sitting", () => {
 
     const { message, secret } = await familyLink(at(20));
     expect(message.subject).toContain("Înscriere de familie: 3 persoane la Crosul familiei");
-    for (const line of ["Ana Pop", "Maria Pop", "11 iulie 2010", "Ion Pop", "Confirm și semnez declarațiile (3)", "Toate înscrierile mele", "/inscrieri/ale-mele/"]) {
+    // The first line says the one button does everything (§NNN; the owner, 2026-09-28), before anybody is named.
+    const lead = "Un singur buton: confirmi adresa și cele 3 înscrieri, apoi semnezi declarațiile pe rând.";
+    expect(message.text).toContain(lead);
+    expect(message.text.indexOf(lead)).toBeLessThan(message.text.indexOf("Persoana 1 din 3: Ana Pop"));
+    // One line per person, the birth date in words, no «la» before it (§452).
+    expect(message.text).toContain("Persoana 2 din 3: Maria Pop, data nașterii 11 iulie 2010");
+    for (const line of ["Ion Pop", "Confirm și semnez declarațiile (3)", "Toate înscrierile mele", "/inscrieri/ale-mele/"]) {
       expect(message.text).toContain(line);
     }
+    // Nobody got an email of their own before «Da»: no line about an earlier one.
+    expect(message.text).not.toContain("emailul anterior");
     // The English half says the same in its own words (§96).
+    expect(message.text).toContain("One button: you confirm the address and the 3 registrations, then sign the declarations one by one.");
     expect(message.text).toContain("Person 2 of 3: Maria Pop, date of birth 11 July 2010");
     expect(message.text).toContain("Confirm and sign the declarations (3)");
     expect(secret).not.toBeNull();
@@ -592,6 +605,8 @@ describe("§519 the fix round of 2026-09-27", () => {
     const [open] = await db.select().from(familySittings);
     expect(open.heldOutboxIds).toEqual([]);
     expect(open.registrationIds).toHaveLength(1);
+    // …nor marked held (nit F1): it left as the ordinary email it was.
+    expect((await outbox()).find((row) => row.id === anaEmail.id)?.payloadJson).toEqual({ startsDeadline: true });
 
     await send(event, "Ion", 3, sittingId);
     const family = (await outbox()).filter((row) => row.id !== anaEmail.id);
@@ -601,6 +616,9 @@ describe("§519 the fix round of 2026-09-27", () => {
 
     const { message, secret } = await familyLink(at(20));
     expect(message.subject).toContain("2 persoane");
+    // Ana's own email left before «Da»: one line says this button covers her too (§NNN) — never that the older one stopped working.
+    expect(message.text).toContain("Acest email îi cuprinde pe toți: butonul de mai jos confirmă și înscrierea din emailul anterior.");
+    expect(message.text).toContain("This email covers everybody: the button below also confirms the registration from the earlier email.");
     const page = await readFamilySittingLink(db, secret!, "ro", at(21));
     if (!page.ok) throw new Error("the page could not read its link");
     const result = await confirmFamilySitting(db, secret!, { includedKeys: page.people.map((person) => person.key), fitnessAcknowledged: true }, at(22));
@@ -661,7 +679,12 @@ describe("§519 the fix round of 2026-09-27", () => {
     const rows = await db.select().from(registrations);
     const inOrder = ["Ana Pop", "Ion Pop", "Radu Pop"].map((name) => rows.find((row) => row.registeredName === name)!);
     // The blocks, after the greeting (which names the person of the first form).
-    const blocks = message.text.indexOf("Înscrierile de mai jos");
+    // One line of intro (§NNN), then one block per person.
+    const intro = "Toți cei de mai jos sunt înscriși la Crosul familiei; sub fiecare nume, numărul, codul și QR-ul de arătat la masă.";
+    expect(message.text).toContain(intro);
+    expect(message.text).toContain("Everybody below is registered for");
+    const blocks = message.text.indexOf(intro);
+    expect(blocks).toBeGreaterThan(-1);
     const positions = inOrder.map((row) => message.text.indexOf(row.registeredName, blocks));
     expect(positions.every((position) => position >= 0)).toBe(true);
     expect([...positions].sort((a, b) => a - b)).toEqual(positions);

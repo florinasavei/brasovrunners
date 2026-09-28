@@ -69,7 +69,6 @@ import { activeBotCheckSiteKey } from "@/modules/registrations/bot-check";
 import BotCheck from "@/modules/registrations/ui/BotCheck";
 import { continueFamilySittingAction, releaseFamilySittingAction, submitRegistrationAction } from "./actions";
 import FamilySittingNext from "@/modules/registrations/ui/FamilySittingNext";
-import FamilySittingOffer from "@/modules/registrations/ui/FamilySittingOffer";
 import { afterFormScreen, FAMILY_SITTING_FIELD, sittingCookieLive, sittingMinutesLeft, sittingNames } from "@/modules/registrations/domain/family-sitting";
 import { minutesPhrase } from "@/modules/deadlines/domain/duration-words";
 import { readFamilySittingCookie } from "@/modules/registrations/family-sitting-cookie";
@@ -561,16 +560,12 @@ export default async function RegisterPage({ params, searchParams }: Props) {
           facts={submittedFacts}
           window={stepsWindow}
           /*
-            «Mai înscrii pe cineva cu aceeași adresă?» (§NNN) — one question, with one answer, after
-            the first form. Its email leaves on the club's timing, as the line above it says: nothing
-            here waits for a press. The same screen after every first form, whatever the address
-            holds (§39).
+            After the first form (§NNN): the short screen — whose form is in, when its email leaves,
+            and «Mai înscrii pe cineva cu aceeași adresă?» with its one button. Its email leaves on the
+            club's timing: nothing here waits for a press. The same screen after every first form,
+            whatever the address holds (§39).
           */
-          offer={
-            afterForm === "offer" && sitting ? (
-              <FamilySittingOffer atOnce={sitting.atOnce === true} locale={locale} slug={slug} continueAction={continueFamilySittingAction} />
-            ) : undefined
-          }
+          offer={afterForm === "offer" && sitting ? { atOnce: sitting.atOnce === true, continueAction: continueFamilySittingAction } : undefined}
         />
       ) : (
         <>

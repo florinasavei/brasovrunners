@@ -1,3 +1,5 @@
+import { CLUB_TIME_ZONE, formatDay, formatTime } from "@/i18n/dates";
+import { dayKey } from "@/modules/events/domain/calendar";
 import { minimumIntervalEnd, nextClubBoundary } from "@/modules/jobs/schedule";
 import type { DeliveryTiming } from "./delivery-timing";
 
@@ -66,4 +68,25 @@ export function emailLeavesAt(input: {
   if (input.timing === "immediate") return null;
   const interval = Math.max(input.intervalMinutes, input.governorFloorMinutes);
   return nextOutboxTick({ now: input.now, pingerMinutes: input.pingerMinutes, intervalMinutes: interval, lastRunAt: interval > 0 ? input.now : null });
+}
+
+/** When a message leaves, as a person reads it: now, or at an instant on the club's clock. */
+export type EmailLeavesWords = { key: "leavesNow" } | { key: "leavesAt"; at: string };
+
+/**
+ * When a message leaves, in words (§NNN) — one function for the screen after the registration form
+ * («Emailul pleacă la 10:15.» / «Emailul pleacă acum.») and the queue panel's per-row time on
+ * `/admin/settings/emails` («următoarea încercare: 10:15»), so the two cannot say different times for
+ * one message. No instant is «now» (the request sends it); an instant on the club's clock today is
+ * «HH:MM», on another day the short day with its time (§349, §439).
+ */
+export function emailLeavesWords(leavesAt: Date | null, now: Date, locale: string): EmailLeavesWords {
+  if (leavesAt === null) return { key: "leavesNow" };
+  const today = dayKey(leavesAt, CLUB_TIME_ZONE) === dayKey(now, CLUB_TIME_ZONE);
+  return {
+    key: "leavesAt",
+    at: today
+      ? formatTime(leavesAt, { locale, timeZone: CLUB_TIME_ZONE })
+      : formatDay(leavesAt, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" }),
+  };
 }

@@ -113,8 +113,14 @@ vi.mock("@/i18n/navigation", () => ({
 vi.mock("@/modules/registrations/ui/EmailDeliveryNotice", () => ({ default: () => null }));
 vi.mock("@/modules/registrations/ui/RegistrationJourney", () => ({ default: () => null }));
 vi.mock("@/modules/registrations/ui/RegistrationSteps", () => ({ default: () => null }));
+// The short screen after the first form (§NNN) is CheckYourEmail's own, given the offer's data.
 vi.mock("@/modules/registrations/ui/CheckYourEmail", () => ({
-  default: ({ offer }: { offer?: ReactNode }) => createElement("div", { "data-testid": "check-your-email" }, offer),
+  default: ({ offer }: { offer?: { atOnce: boolean } }) =>
+    createElement(
+      "div",
+      { "data-testid": "check-your-email" },
+      offer ? createElement("div", { "data-testid": "family-sitting-offer", "data-at-once": offer.atOnce ? "yes" : "no" }) : null,
+    ),
 }));
 // The family sitting's browser half (§519) and its async screen, stood in for like the parts above.
 vi.mock("@/modules/registrations/family-sitting-cookie", () => ({ readFamilySittingCookie: async () => state.sitting }));
@@ -127,9 +133,6 @@ vi.mock("@/modules/registrations/ui/FamilySittingNext", () => ({
       "data-same": sameBirthDate?.typed ?? "",
       "data-release": releaseInMs > 0 ? "later" : "now",
     }),
-}));
-vi.mock("@/modules/registrations/ui/FamilySittingOffer", () => ({
-  default: ({ atOnce }: { atOnce: boolean }) => createElement("div", { "data-testid": "family-sitting-offer", "data-at-once": atOnce ? "yes" : "no" }),
 }));
 vi.mock("@/modules/resilience/ui/LastGoodNotice", () => ({
   default: ({ read }: { read: { freshness: string } }) => (read.freshness === "live" ? null : createElement("div", { "data-testid": "resting-notice" })),

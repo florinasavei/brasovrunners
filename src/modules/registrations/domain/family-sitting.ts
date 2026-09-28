@@ -37,9 +37,11 @@ export const AUTO_PRESS_FIELD = "autoPress";
 export const SITTING_SENT_PARAM = "sent";
 
 /**
- * The payload mark of a verification email a sitting may hold (§519; since §NNN also the first
- * form's, which «Da» may hold): rendered, its link's life is counted from that send
- * (`extendHeldVerificationLink`), as the message states it. A marker, never a value.
+ * The payload mark of a verification email a sitting held (§519): rendered, its link's life is
+ * counted from that send (`extendHeldVerificationLink`), as the message states it. A marker, never a
+ * value. Written only when the message is held — by a form after «Da», or by «Da» itself taking the
+ * first form's still-waiting email in (§NNN, `continueFamilySitting`); a first form alone never
+ * carries it (the review of 2026-09-28, nit F1).
  */
 export const SITTING_HELD = "sittingHeld";
 
@@ -62,11 +64,19 @@ export function afterFormScreen(cookie: FamilySittingCookie | null): "offer" | "
 }
 
 /**
- * The fact line above the question (§NNN): «Emailul pleacă acum» when the request itself sends it
- * (`immediate`, no instant), else «Emailul pleacă la HH:MM (următoarea trecere programată)».
+ * The one sentence under «Da, încă o persoană» on the screen after the first form (§NNN; the review
+ * of 2026-09-28, nit F0: the sentence must be true of the email that screen names), chosen from what
+ * the screen already knows — the club's window and when the first email leaves:
+ *
+ * - `addHintAtOnce` — a window of 0: nothing is held, «Fiecare persoană primește emailul ei.»;
+ * - `addHint` — the email still waits for the scheduled pass (`leavesAt` set): «Da» holds it, and the
+ *   address gets one email for everybody;
+ * - `addHintLeft` — it leaves now (`immediate`, no instant): it cannot be held, so the next person's
+ *   email is the one that names everybody.
  */
-export function emailLeavesSentence(leavesAt: Date | null): "leavesNow" | "leavesAt" {
-  return leavesAt === null ? "leavesNow" : "leavesAt";
+export function offerHint(input: { atOnce: boolean; leavesAt: Date | null }): "addHintAtOnce" | "addHint" | "addHintLeft" {
+  if (input.atOnce) return "addHintAtOnce";
+  return input.leavesAt === null ? "addHintLeft" : "addHint";
 }
 
 /** At most this many names are kept in the browser's half: the club's limit per address is at most ten. */

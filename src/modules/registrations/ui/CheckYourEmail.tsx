@@ -9,14 +9,14 @@ import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getLocale, getTranslations } from "next-intl/server";
-import type { ReactNode } from "react";
-import { CLUB_TIME_ZONE, formatTime } from "@/i18n/dates";
 import { Link } from "@/i18n/navigation";
 import { daysPhrase, hoursPhrase, minutesPhrase } from "@/modules/deadlines/domain/duration-words";
+import { emailLeavesWords } from "@/modules/notifications/domain/email-wait";
 import { cachedDeadlines, cachedEmailLeavesAt, cachedEmailWaitMinutes } from "@/modules/public-cache/reads";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
-import { doneFamilySentence, emailLeavesSentence } from "../domain/family-sitting";
+import { doneFamilySentence, offerHint } from "../domain/family-sitting";
 import type { SubmittedFacts } from "../form-draft";
+import FamilySittingOffer from "./FamilySittingOffer";
 
 /**
  * What happens next, in three steps — the same three glyphs `RegistrationSteps` gives the
@@ -46,11 +46,12 @@ type Props = {
    */
   window: { opensDays: number } | null;
   /**
-   * «Mai înscrii pe cineva cu aceeași adresă?» (§NNN: one question, on this screen, after the first
-   * form) — `FamilySittingOffer`, a Server Component rendered by the page. Right under the line that
-   * says when the email leaves, before the steps: the one thing to decide here.
+   * After the first form of a would-be family (§NNN): the screen is then the short one — «Formularul
+   * lui Ana a ajuns.», «Emailul pleacă la 10:15.» and «Mai înscrii pe cineva cu aceeași adresă?» with
+   * its one button (`FamilySittingOffer`) — and nothing else. `atOnce`: the club's window is 0 (§519).
+   * `continueAction` is «Da, încă o persoană», a server action, never a component.
    */
-  offer?: ReactNode;
+  offer?: { atOnce: boolean; continueAction: (form: FormData) => Promise<void> };
 };
 
 /**
@@ -58,9 +59,8 @@ type Props = {
  * "should be more fun"), and every fact the receipt it replaces carried.
  *
  * Warmth, not cuteness: a first name in the heading when there is one, the event and its date,
- * the address the message went to (§224), when the email leaves, in bold and once, right under
- * it (§224; §NNN: «Emailul pleacă la 10:15» or «Emailul pleacă acum», so nobody wonders whether a
- * press is still owed), three short steps with a glyph each, the spam folder, how long the link lives — the club's own hours (§377),
+ * the address the message went to (§224), three short steps with a glyph each, the wait in
+ * bold and once (§224, §513), the spam folder, how long the link lives — the club's own hours (§377),
  * the very number the link just sent was given, so this cannot promise what the platform does
  * not keep — and the sentence that keeps it true
  * for somebody who was already registered (§229). Then the two ways out when nothing arrives
@@ -74,52 +74,92 @@ type Props = {
  * A Server Component, like the rest of the flow (`AGENTS.md` §1.5): the icons are rendered
  * here as children, never handed to a client component as a prop, which is what fails
  * hydration (`GlyphChip.tsx`).
+ *
+ * **After the first form of a would-be family it is the short screen** (§NNN; the owner, 2026-09-28:
+ * the screen must be clearer; the review's nits F0 and F2): the heading, then exactly three lines and
+ * one button — whose form is in, when its email leaves, and «Mai înscrii pe cineva cu aceeași
+ * adresă?» with «Da, încă o persoană» — and at most one sentence under the button. No steps and no
+ * wait box: the leaving time is said once, in one shape, and nothing contradicts it.
  */
 export default async function CheckYourEmail({ eventTitle, whenLabel, eventHref, slug, facts, window, offer }: Props) {
   const t = await getTranslations("Registration");
   const locale = await getLocale();
+  const familySentence = doneFamilySentence(facts);
+  const family = familySentence !== null;
+  const heading = (
+    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 1 }}>
+      <Box
+        aria-hidden="true"
+        sx={{
+          width: 48,
+          height: 48,
+          flexShrink: 0,
+          borderRadius: "50%",
+          bgcolor: "success.main",
+          color: "success.contrastText",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <CelebrationIcon />
+      </Box>
+      <Typography component="h2" variant="h2" sx={{ fontSize: { xs: "1.5rem", sm: "1.75rem" } }}>
+        {facts?.firstName && !family ? t("done.headingNamed", { name: facts.firstName }) : t("done.heading")}
+      </Typography>
+    </Box>
+  );
+
+  if (offer) {
+    /*
+      When the email leaves (§513), in the words the queue panel uses for the same message
+      (`emailLeavesWords`): the next scheduled pass on the club's clock, or now when the request
+      itself sends. Nothing on this screen has to be pressed for it to leave.
+    */
+    const now = new Date();
+    const leavesAt = await cachedEmailLeavesAt(now);
+    const leaves = emailLeavesWords(leavesAt, now, locale);
+    return (
+      <Stack spacing={3} data-testid="check-email-short">
+        <Box>
+          {heading}
+          <Typography variant="body1" data-testid="check-email-form-in">
+            {facts?.firstName ? t("done.formIn", { name: facts.firstName }) : t("done.formInUnnamed")}
+          </Typography>
+          <Typography variant="body1" sx={{ mt: 0.5, fontWeight: 700 }} data-testid="check-email-leaves">
+            {leaves.key === "leavesAt" ? t("done.leavesAt", { at: leaves.at }) : t("done.leavesNow")}
+          </Typography>
+        </Box>
+        <FamilySittingOffer
+          words={{
+            question: t("sitting.question"),
+            add: t("sitting.add"),
+            addPending: t("sitting.addPending"),
+            hint: t(`sitting.${offerHint({ atOnce: offer.atOnce, leavesAt })}`),
+          }}
+          locale={locale}
+          slug={slug}
+          continueAction={offer.continueAction}
+        />
+      </Stack>
+    );
+  }
+
   const values = {
     confirmation: hoursPhrase(locale, (await cachedDeadlines()).confirmationHours),
     opens: daysPhrase(locale, window?.opensDays ?? 0),
   };
-  /*
-    The club sends on the scheduler's tick by default (§513): the email then leaves at the next pass,
-    and "within a minute" would be the promise that makes somebody fill the form in again. Said as the
-    instant on the club's clock (§NNN), in the words of «Următoarele emailuri automate».
-  */
-  const now = new Date();
-  const [leavesAt, waitMinutes] = await Promise.all([cachedEmailLeavesAt(now), cachedEmailWaitMinutes(now)]);
-  const leaves = emailLeavesSentence(leavesAt);
+  // The club sends on the scheduler's tick by default (§513): the wait is then the pinger's, and
+  // "within a minute" would be the promise that makes somebody fill the form in again.
+  const waitMinutes = await cachedEmailWaitMinutes(new Date());
   const stepBody = (key: (typeof NEXT)[number]["key"]) =>
     key === "declare" && window ? t("done.next.declare.bodyLater", values) : t(`done.next.${key}.body`, values);
   const textLink = { display: "inline-flex", alignItems: "center", minHeight: TAP_TARGET.minHeight } as const;
-  const familySentence = doneFamilySentence(facts);
-  const family = familySentence !== null;
 
   return (
     <Stack spacing={3}>
       <Box>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 1 }}>
-          <Box
-            aria-hidden="true"
-            sx={{
-              width: 48,
-              height: 48,
-              flexShrink: 0,
-              borderRadius: "50%",
-              bgcolor: "success.main",
-              color: "success.contrastText",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <CelebrationIcon />
-          </Box>
-          <Typography component="h2" variant="h2" sx={{ fontSize: { xs: "1.5rem", sm: "1.75rem" } }}>
-            {facts?.firstName && !family ? t("done.headingNamed", { name: facts.firstName }) : t("done.heading")}
-          </Typography>
-        </Box>
+        {heading}
         <Typography variant="body1">{t("done.lead", { event: eventTitle, date: whenLabel })}</Typography>
         {/*
           A family sitting (§519): one email for everybody it sent the form for, named as typed on this
@@ -144,19 +184,7 @@ export default async function CheckYourEmail({ eventTitle, whenLabel, eventHref,
             </Box>
           </Typography>
         )}
-        {/*
-          When it leaves, in bold and once (§224), before anything is asked (§NNN; the owner,
-          2026-09-28: «sa inteleg ca nu primesc mailu daca nu apas…?»): nothing on this screen has to
-          be pressed for it to leave.
-        */}
-        <Typography variant="body1" sx={{ mt: 1, fontWeight: 700 }} data-testid="check-email-leaves">
-          {leaves === "leavesAt" && leavesAt
-            ? t("done.leavesAt", { at: formatTime(leavesAt, { locale, timeZone: CLUB_TIME_ZONE }) })
-            : t("done.leavesNow")}
-        </Typography>
       </Box>
-
-      {offer}
 
       <Box component="section" aria-labelledby="check-email-next">
         <Typography id="check-email-next" component="h3" variant="h3" sx={{ fontSize: "1.125rem", mb: 1.5 }}>
@@ -194,8 +222,9 @@ export default async function CheckYourEmail({ eventTitle, whenLabel, eventHref,
       </Box>
 
       <Box sx={{ borderLeft: 3, borderColor: "primary.main", pl: 2 }}>
-        {/* How long it may take to arrive (§513), after the bold line above says when it leaves. */}
-        <Typography variant="body2">
+        {/* The wait, in bold and once (§224, §513): not knowing it is normal is what makes somebody
+            fill the form in again thirty seconds later. */}
+        <Typography variant="body2" sx={{ fontWeight: 700 }}>
           {waitMinutes === null ? t("done.delay") : t("done.delayScheduled", { wait: minutesPhrase(locale, waitMinutes) })}
         </Typography>
         <Typography variant="body2">{t("done.notArrived", values)}</Typography>

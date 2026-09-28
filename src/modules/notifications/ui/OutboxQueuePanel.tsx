@@ -8,6 +8,7 @@ import { getTranslations } from "next-intl/server";
 import { sendOutboxNowFromEmailsAction } from "@/app/[locale]/admin/settings/emails/actions";
 import type { Locale } from "@/i18n/routing";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
+import { emailLeavesWords } from "@/modules/notifications/domain/email-wait";
 import type { OutboxQueue } from "@/modules/notifications/queue";
 import type { EmailVolumeToday } from "@/modules/notifications/volume";
 import { confirmWords } from "@/shared/feedback/confirm-words";
@@ -42,6 +43,15 @@ export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit,
   const words = await confirmWords();
   // Inside the row's sentence ("În coadă din joi, 24 sept. 2026, 18:05"), short (§349).
   const when = { format: (at: Date) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" }) };
+  /*
+    When a row leaves, in the words the screen after the registration form uses for the same message
+    (§NNN, `emailLeavesWords`): «10:15» today, the short day and time otherwise.
+  */
+  const now = new Date();
+  const leaves = (at: Date) => {
+    const said = emailLeavesWords(at, now, locale);
+    return said.key === "leavesAt" ? said.at : when.format(at);
+  };
 
   return (
     <Panel glyph="outbox"
@@ -110,7 +120,7 @@ export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit,
                 {t("emails.queue.facts", {
                   queued: when.format(row.createdAt),
                   attempts: row.attemptCount,
-                  next: row.nextAttemptAt ? when.format(row.nextAttemptAt) : t("emails.queue.nextAny"),
+                  next: row.nextAttemptAt ? leaves(row.nextAttemptAt) : t("emails.queue.nextAny"),
                 })}
               </Typography>
               {row.lastError && (

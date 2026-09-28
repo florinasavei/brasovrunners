@@ -5237,7 +5237,9 @@
       "headingNamed": "Aproape gata, {name}!",
       "lead": "Ți-am trimis un email ca să-ți confirmi locul la {event}, {date}.",
       "leavesNow": "Emailul pleacă acum.",
-      "leavesAt": "Emailul pleacă la {at} (următoarea trecere programată).",
+      "leavesAt": "Emailul pleacă la {at}.",
+      "formIn": "Formularul lui {name} a ajuns.",
+      "formInUnnamed": "Formularul a ajuns.",
       "nextTitle": "Ce urmează",
       "next": {
         "open": {
@@ -5516,8 +5518,9 @@
       "question": "Mai înscrii pe cineva cu aceeași adresă?",
       "add": "Da, încă o persoană",
       "addPending": "Se deschide formularul…",
-      "addHint": "Dacă da, ținem emailul și îl trimitem o singură dată, pentru toți.",
-      "addHintAtOnce": "Fiecare persoană primește emailul ei, imediat ce îi trimiți formularul.",
+      "addHint": "Dacă apeși „Da”, emailul așteaptă formularul următor și primiți unul singur pentru toți.",
+      "addHintLeft": "Dacă apeși „Da”, următoarea persoană primește un email care îi cuprinde pe toți.",
+      "addHintAtOnce": "Fiecare persoană primește emailul ei.",
       "done": "Nu, gata — trimite-mi emailul",
       "doneAtOnce": "Nu, am terminat",
       "donePending": "Se trimite…",

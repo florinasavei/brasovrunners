@@ -5237,7 +5237,9 @@
       "headingNamed": "Almost there, {name}!",
       "lead": "We have emailed you a link to confirm your place at {event}, {date}.",
       "leavesNow": "The email leaves now.",
-      "leavesAt": "The email leaves at {at} (the next scheduled round).",
+      "leavesAt": "The email leaves at {at}.",
+      "formIn": "{name}'s form is in.",
+      "formInUnnamed": "The form is in.",
       "nextTitle": "What happens next",
       "next": {
         "open": {
@@ -5516,8 +5518,9 @@
       "question": "Are you registering anyone else with the same address?",
       "add": "Yes, one more person",
       "addPending": "Opening the form…",
-      "addHint": "If yes, we hold the email and send it once, for everybody.",
-      "addHintAtOnce": "Each person gets their own email, as soon as you send their form.",
+      "addHint": "If you press “Yes”, the email waits for the next form and you get one email for everybody.",
+      "addHintLeft": "If you press “Yes”, the next person gets an email that covers everybody.",
+      "addHintAtOnce": "Each person gets their own email.",
       "done": "No, done — send me the email",
       "doneAtOnce": "No, I am done",
       "donePending": "Sending…",

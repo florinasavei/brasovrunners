@@ -7,7 +7,7 @@ import type { Locale } from "@/i18n/routing";
 import { drainOutboxAfterResponse } from "@/modules/notifications/drain";
 import { enqueueEmail } from "@/modules/notifications/outbox";
 import { isUuid } from "@/shared/ids";
-import { isFamilySitting, type SittingSeed, sittingLinkExpiresAt } from "./domain/family-sitting";
+import { isFamilySitting, SITTING_HELD, type SittingSeed, sittingLinkExpiresAt } from "./domain/family-sitting";
 import { FAMILY_PASS_MINUTES, SIGNABLE_STATUSES } from "./domain/family-signing";
 import { liveSittingEntries } from "./family-entries";
 
@@ -258,17 +258,25 @@ function liveSittingWhere(eventId: string, now: Date) {
 /**
  * The first form's message, held until the window's end (§NNN) — only while it is still waiting and
  * never tried, and only the one the seed named for this registration. Null when it has left.
+ *
+ * A verification email taken in is marked held here, and only here (`SITTING_HELD`; the review of
+ * 2026-09-28, nit F1): its link's life is then counted from the send, as for any held one. The first
+ * form queued it unmarked, so a first form nobody pressed «Da» after reads as what it was.
  */
 async function holdSeedMessage<T extends Record<string, unknown>>(
   tx: Transaction<T>,
   outboxId: string | null,
   registrationId: string,
   heldUntil: Date,
+  markHeld: boolean,
 ): Promise<string | null> {
   if (!outboxId || !isUuid(outboxId)) return null;
   const [row] = await tx
     .update(emailOutbox)
-    .set({ nextAttemptAt: heldUntil })
+    .set({
+      nextAttemptAt: heldUntil,
+      ...(markHeld ? { payloadJson: sql`${emailOutbox.payloadJson} || ${JSON.stringify({ [SITTING_HELD]: true })}::jsonb` } : {}),
+    })
     .where(
       and(eq(emailOutbox.id, outboxId), eq(emailOutbox.registrationId, registrationId), eq(emailOutbox.status, "PENDING"), eq(emailOutbox.attemptCount, 0)),
     )
@@ -300,7 +308,7 @@ async function openSittingFromSeed<T extends Record<string, unknown>>(
       .limit(1);
     if (already) return already.id;
     const sitting = await openSitting(tx, { eventId, participantId: registration.participantId, registrationId: registration.id, locale, heldUntil, now });
-    const outboxId = await holdSeedMessage(tx, seed.outboxId, registration.id, heldUntil);
+    const outboxId = await holdSeedMessage(tx, seed.outboxId, registration.id, heldUntil, true);
     await holdInSitting(tx, sitting, { registrationId: registration.id, outboxId });
     const expiresAt = sittingLinkExpiresAt([registration.emailLinkExpiresAt, heldUntil], now) ?? heldUntil;
     await tx.update(familySittings).set({ expiresAt }).where(eq(familySittings.id, sitting.id));
@@ -315,7 +323,7 @@ async function openSittingFromSeed<T extends Record<string, unknown>>(
   // Scoped, as a kept form's own sitting always was, to the registration the address already holds here.
   const sitting = await openSitting(tx, { eventId, participantId: entry.participantId, registrationId: entry.registrationId, locale, heldUntil, now });
   await tx.update(pendingFamilyEntries).set({ sittingId: sitting.id }).where(eq(pendingFamilyEntries.id, entry.id));
-  const outboxId = await holdSeedMessage(tx, seed.outboxId, entry.registrationId, heldUntil);
+  const outboxId = await holdSeedMessage(tx, seed.outboxId, entry.registrationId, heldUntil, false);
   await holdInSitting(tx, sitting, { outboxId });
   const expiresAt = sittingLinkExpiresAt([entry.expiresAt, heldUntil], now) ?? heldUntil;
   await tx.update(familySittings).set({ expiresAt }).where(eq(familySittings.id, sitting.id));
@@ -512,6 +520,36 @@ export async function sittingPeople<T extends Record<string, unknown>>(
   entries: PendingFamilyEntry[];
 }> {
   return { registrations: await sittingPendingRegistrations(db, sitting), entries: await liveSittingEntries(db, sitting.id, now) };
+}
+
+/**
+ * Whether somebody the family message names already got an email of their own that left before
+ * «Da» took them in (§NNN): «Da» came after the first form's email had gone — its verification
+ * email, or the kept form's link of §446. That email's button still works for that one person; the
+ * family message then says in one line that its own button covers them too, so the parent does not
+ * wonder which to press. Only people the family message still names (`sittingPeople`), and only an
+ * email that has left (`SENT`).
+ */
+export async function sittingEarlierEmailSent<T extends Record<string, unknown>>(
+  db: Database<T>,
+  people: { registrationIds: readonly string[]; entryIds: readonly string[] },
+): Promise<boolean> {
+  const byRegistration =
+    people.registrationIds.length > 0
+      ? and(eq(emailOutbox.messageType, "VERIFY_REGISTRATION_EMAIL"), inArray(emailOutbox.registrationId, [...people.registrationIds]))
+      : undefined;
+  const byEntry =
+    people.entryIds.length > 0
+      ? and(eq(emailOutbox.messageType, "REGISTER_ANOTHER_PERSON"), inArray(sql<string>`${emailOutbox.payloadJson}->>'familyEntryId'`, [...people.entryIds]))
+      : undefined;
+  const which = byRegistration && byEntry ? or(byRegistration, byEntry) : (byRegistration ?? byEntry);
+  if (!which) return false;
+  const [row] = await db
+    .select({ id: emailOutbox.id })
+    .from(emailOutbox)
+    .where(and(eq(emailOutbox.status, "SENT"), which))
+    .limit(1);
+  return row !== undefined;
 }
 
 /**

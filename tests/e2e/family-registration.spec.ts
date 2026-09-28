@@ -210,8 +210,8 @@ test.describe("§389 §446 a family on one address", () => {
     const rows = await registrationsByEmail(email);
     expect(rows).toHaveLength(1);
     expect(await queuedPayloads(rows[0].id, "REGISTER_ANOTHER_PERSON")).toEqual([]);
-    // The first form's email is marked as a sitting's, which «Da» may still hold (§NNN), and starts the link; the re-send for the slip does neither.
-    expect(await queuedPayloads(rows[0].id, "VERIFY_REGISTRATION_EMAIL")).toEqual([{ sittingHeld: true, startsDeadline: true }, { anotherPersonHint: true }]);
+    // The first form's email starts the link and is never marked held — no «Da» took it in (§NNN, the review's nit F1); the re-send for the slip does neither.
+    expect(await queuedPayloads(rows[0].id, "VERIFY_REGISTRATION_EMAIL")).toEqual([{ startsDeadline: true }, { anotherPersonHint: true }]);
 
     // The re-sent email, as captured: the sentence, in both halves.
     const resent = await capturedEmail(page, email, "Dacă vrei să înscrii pe altcineva, trimite formularul cu numele complet și data de naștere a acelei persoane.");
@@ -227,17 +227,20 @@ test.describe("§389 §446 a family on one address", () => {
     const lastName = `Pop ${suffix}`;
 
     /*
-      The first form (§NNN): the inbox's own screen, which says when the email leaves — the e2e server
-      sends on the request — then asks one question with one answer. No «Gata»: nothing waits for a press.
+      The first form (§NNN): the short screen — whose form is in, when its email leaves (the e2e server
+      sends on the request, so «acum»), one question with one answer, and the one sentence that is true
+      of an email already gone. No «Gata»: nothing waits for a press.
     */
     await page.context().clearCookies({ name: "br_family_sitting" });
     await page.goto(registerPath);
     await hydrated(page);
     await fillPerson(page, { firstName: "Ana", lastName, birthDate: "1985-03-02" }, email);
     await expect(page.getByRole("heading", { name: `Aproape gata, Ana!` })).toBeVisible();
+    await expect(page.getByTestId("check-email-form-in")).toHaveText("Formularul lui Ana a ajuns.");
     await expect(page.getByTestId("check-email-leaves")).toHaveText("Emailul pleacă acum.");
     await expect(page.getByRole("heading", { name: "Mai înscrii pe cineva cu aceeași adresă?" })).toBeVisible();
-    await expect(page.getByTestId("family-sitting-offer-hint")).toHaveText("Dacă da, ținem emailul și îl trimitem o singură dată, pentru toți.");
+    await expect(page.getByTestId("family-sitting-offer-hint")).toHaveText("Dacă apeși „Da”, următoarea persoană primește un email care îi cuprinde pe toți.");
+    await expect(page.getByRole("heading", { name: "Ce urmează" })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Nu, gata — trimite-mi emailul" })).toHaveCount(0);
     // The first person's email left without any press.
     const own = await capturedEmail(page, email, "Am primit o înscriere la");
@@ -279,6 +282,9 @@ test.describe("§389 §446 a family on one address", () => {
     expect(family.text).toContain(`Persoana 1 din 2: Ana ${lastName}`);
     expect(family.text).toContain(`Persoana 2 din 2: Maria ${lastName}, data nașterii 11 iulie 1990`);
     expect(family.text).toContain("Confirm și semnez declarațiile (2)");
+    // The first line says the one button does everything (§NNN); Ana's own email left before «Da», so one line says this one covers her too.
+    expect(family.text).toContain("Un singur buton: confirmi adresa și cele 2 înscrieri, apoi semnezi declarațiile pe rând.");
+    expect(family.text).toContain("Acest email îi cuprinde pe toți: butonul de mai jos confirmă și înscrierea din emailul anterior.");
     expect(family.links.some((href) => href.includes("/inscrieri/ale-mele/"))).toBe(true);
     const link = family.links.find((href) => href.includes("/inregistrari/familie/"));
     expect(link).toBeTruthy();
