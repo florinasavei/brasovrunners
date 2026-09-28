@@ -5,7 +5,6 @@ import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
 import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { hasLocale } from "next-intl";
 import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
@@ -40,7 +39,7 @@ import BulkBar from "@/modules/content/events/ui/BulkBar";
 import RowMenu from "@/shared/ui/RowMenu";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
-import { editionDifference, groupSeries, usualOf } from "@/modules/events/domain/series";
+import { editionDifference, usualOf } from "@/modules/events/domain/series";
 import { type DraftReason, draftRemedies, seriesDrafts } from "@/modules/events/domain/series-drafts";
 import SeriesDraftLine from "@/modules/content/events/ui/SeriesDraftLine";
 import { countForm } from "@/i18n/count-form";
@@ -56,17 +55,18 @@ import { buildRoutePills } from "@/modules/events/ui/route-pills";
 import { recurrenceSentence } from "@/modules/events/ui/series-sentence";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import { CHECKBOX_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
-import Panel from "@/shared/ui/Panel";
 import {
+  arrangeEventList,
+  countEventLines,
   EVENT_LIST_SORTS,
   EVENT_LIST_STATES,
+  eventListNarrowed,
   eventListParams,
   eventListQueryInUse,
-  matchesEventList,
-  naturalDir,
+  MAX_EVENT_LIST_QUERY_LENGTH,
   parseEventListQuery,
-  sortEventLines,
 } from "@/modules/content/events/list-query";
+import EventListFields from "@/modules/content/events/ui/EventListFields";
 import PencilIcon from "@/shared/ui/PencilIcon";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import { ACTION_ICONS } from "@/shared/ui/action-icons";
@@ -172,15 +172,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
 
   // Race day, give or take: from the day before the start to the day after (§83).
   const DAY = 24 * 60 * 60_000;
-  // The search, the state and the order, from the address (§NNN) — a GET form writes them, so
-  // the list is a place to bookmark and it works with JavaScript off. The filter narrows the
-  // dates before they are grouped (`list-query.ts` says why); the order is applied to the lines.
-  const listQuery = parseEventListQuery(current);
-  const listParams = eventListParams(listQuery);
-  const narrowed = eventListQueryInUse(listQuery);
-  const rows: EventRow[] = events
-    .filter((row) => matchesEventList(row.event, row.translations, listQuery, now))
-    .map((row) => ({
+  const rows: EventRow[] = events.map((row) => ({
     ...row,
     entries: entriesByEvent.get(row.event.id)?.total ?? 0,
     testEntries: entriesByEvent.get(row.event.id)?.test ?? 0,
@@ -190,56 +182,40 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
         : null,
   }));
 
-  /**
-   * The same title and type is the same event again: one line, the dates folded inside it.
-   * Grouped after the fetch, so the list's own order — featured first, then soonest — is the
-   * order of the lines; the group sits where its first occurrence was.
-   */
-  const grouped: ListRow[] = await Promise.all(
-    groupSeries(rows.map((row) => ({ row, type: row.event.type, title: row.translations[0]?.title ?? row.event.id, startsAt: row.event.startsAt }))).map(
-      async (series) => {
-        const members = series.members.map((member) => member.row);
-        const next = members.find((member) => member.event.startsAt.getTime() >= now.getTime()) ?? members[members.length - 1];
-        const usual = members.length > 1 ? usualOf(members.map((member) => member.event)) : { place: null, time: null };
-        const notes = new Map<string, EditionNote>();
-        for (const member of members) {
-          const note = await editionNote(editionDifference(member.event, usual));
-          if (note) notes.set(member.event.id, note);
-        }
-        return {
-          key: series.key,
-          members,
-          next,
-          sentence: members.length > 1 ? await recurrenceSentence(members.map((member) => member.event), next.event.timezone, locale) : null,
-          notes,
-        };
-      },
-    ),
-  );
-
   /*
-    The list's order is the club's own by default — featured first, then soonest — the order an
-    organizer thinks in, and nothing in the address changes it until somebody asks for another
-    (§NNN): by date, by title or by registrations, from the form or a column's heading.
+    The search, the state and the order, from the address (§NNN) — a GET form writes them, so the
+    list is a place to bookmark and it works with JavaScript off. `arrangeEventList` narrows the
+    dates, groups what is left — the same title and type is the same event again, one line with
+    the dates folded inside it (§113) — and orders the lines, the nearest date first unless the
+    address asks otherwise (`list-query.ts` says why each step sits where it does).
   */
-  const lines = sortEventLines(
-    grouped,
-    // What each line shows: the next date's title and start, and the whole line's registrations.
-    ({ members, next }) => ({
-      title: next.translations[0]?.title ?? next.event.id,
-      startsAt: next.event.startsAt,
-      entries: members.reduce((sum, member) => sum + member.entries, 0),
+  const listQuery = parseEventListQuery(current);
+  const listParams = eventListParams(listQuery);
+  const narrowed = eventListNarrowed(listQuery);
+  const inUse = eventListQueryInUse(listQuery);
+  // The M of «N din M evenimente»: the lines with nothing narrowing them.
+  const allLineCount = countEventLines(rows);
+  const lines: ListRow[] = await Promise.all(
+    arrangeEventList(rows, listQuery, now, locale).map(async ({ key, members, next }) => {
+      const usual = members.length > 1 ? usualOf(members.map((member) => member.event)) : { place: null, time: null };
+      const notes = new Map<string, EditionNote>();
+      for (const member of members) {
+        const note = await editionNote(editionDifference(member.event, usual));
+        if (note) notes.set(member.event.id, note);
+      }
+      return {
+        key,
+        members,
+        next,
+        sentence: members.length > 1 ? await recurrenceSentence(members.map((member) => member.event), next.event.timezone, locale) : null,
+        notes,
+      };
     }),
-    listQuery,
-    locale,
   );
 
-  // The page and its size, as every backoffice list reads them; the sort is this list's own.
-  const query = {
-    ...parseListQuery(current, { sortable: [], defaultSort: "club", defaultPerPage: 100 }),
-    sort: listQuery.sort,
-    dir: listQuery.dir,
-  };
+  // The page and its size, as every backoffice list reads them. The order is the form's one
+  // select, never a column heading's (§NNN): two ways to say one thing would disagree.
+  const query = parseListQuery(current, { sortable: [], defaultSort: "startsAt", defaultPerPage: 100 });
   const pageLines = lines.slice(query.offset, query.offset + query.limit);
 
   const basePath = getPathname({ locale, href: "/admin" });
@@ -288,8 +264,6 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
     {
       key: "title",
       label: t("events.columnTitle"),
-      sortable: true,
-      initialDir: naturalDir("title"),
       primary: true,
       render: ({ members, next, sentence, notes }) => {
         const { event, translations } = next;
@@ -512,8 +486,6 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
     {
       key: "date",
       label: t("events.columnDate"),
-      sortable: true,
-      initialDir: naturalDir("date"),
       hideBelow: "md",
       render: ({ members }) =>
         members.length > 1
@@ -523,8 +495,6 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
     {
       key: "entries",
       label: t("events.columnEntries"),
-      sortable: true,
-      initialDir: naturalDir("entries"),
       align: "right",
       hideBelow: "lg",
       render: ({ members, next }) => {
@@ -635,89 +605,60 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
       </Stack>
 
       {/*
-        Search, state and order (§NNN): a plain GET form with native selects, so the list's state
-        is the address — bookmarked, kept across a Server Action's redirect back, and working with
-        JavaScript off, like the registrations list's filters and the public listing's (§413).
-        Closed on arrival (§336) unless something in the address is shaping the list (§269).
+        Search, state and order (§NNN): one row above the list, never folded — a plain GET form
+        with native selects, so the list's state is the address — bookmarked, kept across a
+        Server Action's redirect back, and working with JavaScript off, like the registrations
+        list's filters and the public listing's (§413). Every control wears its glyph.
       */}
-      <Panel
-        glyph="filters"
-        title={t("panels.filters")}
-        aside={narrowed ? t("events.listInUse", { shown: lines.length }) : t("events.listNone")}
-        collapsible
-        openWhen={{ inUse: narrowed }}
+      <Box
+        component="form"
+        method="get"
+        action={basePath}
+        role="search"
+        aria-label={t("events.listFormLabel")}
         id="events-filters"
         data-testid="events-filters"
       >
-        <Box component="form" method="get" action={basePath} role="search" aria-label={t("events.listFormLabel")}>
-          {query.perPage !== 100 && <input type="hidden" name="perPage" value={String(query.perPage)} />}
-          <Stack direction="row" sx={{ flexWrap: "wrap", gap: 2, alignItems: "flex-start" }}>
-            <TextField
-              name="q"
-              type="search"
-              label={t("events.listSearch")}
-              helperText={t("events.listSearchHelp")}
-              defaultValue={listQuery.q}
-              autoComplete="off"
-              slotProps={{ htmlInput: { maxLength: 100 } }}
-              sx={{ minWidth: 240, flexGrow: 1 }}
-            />
-            <TextField
-              select
-              name="state"
-              label={t("events.listState")}
-              defaultValue={listQuery.state ?? ""}
-              slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
-              sx={{ minWidth: 200 }}
-            >
-              <option value="">{t("events.listStateAll")}</option>
-              {EVENT_LIST_STATES.map((state) => (
-                <option key={state} value={state}>
-                  {t(`events.listStates.${state}`)}
-                </option>
-              ))}
-            </TextField>
-            <TextField
-              select
-              name="sort"
-              label={t("events.listSort")}
-              defaultValue={listQuery.sort}
-              slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
-              sx={{ minWidth: 200 }}
-            >
-              {EVENT_LIST_SORTS.map((sort) => (
-                <option key={sort} value={sort}>
-                  {t(`events.listSorts.${sort}`)}
-                </option>
-              ))}
-            </TextField>
-            {/* Read only for date, title and registrations; empty is each order's own first
-                direction (soonest, A to Z, most), so a changed order never inherits a stale one. */}
-            <TextField
-              select
-              name="dir"
-              label={t("events.listDir")}
-              defaultValue={listQuery.sort === "club" || listQuery.dir === naturalDir(listQuery.sort) ? "" : listQuery.dir}
-              slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
-              sx={{ minWidth: 200 }}
-            >
-              <option value="">{t("events.listDirNatural")}</option>
-              <option value="asc">{t("events.listDirAsc")}</option>
-              <option value="desc">{t("events.listDirDesc")}</option>
-            </TextField>
-            <Stack direction="row" sx={{ pt: 1, flexWrap: "wrap", gap: 1 }}>
-              <GlyphButton icon="filter" type="submit" variant="contained" sx={TAP_TARGET}>
-                {t("events.listApply")}
+        {query.perPage !== 100 && <input type="hidden" name="perPage" value={String(query.perPage)} />}
+        <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1.5, alignItems: "center" }}>
+          <EventListFields
+            search={{
+              label: t("events.listSearch"),
+              placeholder: t("events.listSearchHelp"),
+              value: listQuery.q,
+              maxLength: MAX_EVENT_LIST_QUERY_LENGTH,
+            }}
+            state={{
+              label: t("events.listState"),
+              value: listQuery.state ?? "",
+              options: [
+                { value: "", label: t("events.listStateAll") },
+                ...EVENT_LIST_STATES.map((state) => ({ value: state, label: t(`events.listStates.${state}`) })),
+              ],
+            }}
+            sort={{
+              label: t("events.listSort"),
+              value: listQuery.sort,
+              options: EVENT_LIST_SORTS.map((sort) => ({ value: sort, label: t(`events.listSorts.${sort}`) })),
+            }}
+          />
+          <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1 }}>
+            <GlyphButton icon="search" type="submit" variant="contained" sx={TAP_TARGET}>
+              {t("events.listApply")}
+            </GlyphButton>
+            {inUse && (
+              <GlyphButton icon="clearFilter" href={basePath} variant="text" sx={TAP_TARGET}>
+                {t("list.clear")}
               </GlyphButton>
-              {narrowed && (
-                <GlyphButton icon="clearFilter" href={basePath} variant="text" sx={TAP_TARGET}>
-                  {t("list.clear")}
-                </GlyphButton>
-              )}
-            </Stack>
+            )}
           </Stack>
-        </Box>
-      </Panel>
+        </Stack>
+        {narrowed && (
+          <Typography variant="body2" role="status" data-testid="events-list-count" sx={{ mt: 1, color: "text.secondary" }}>
+            {t("events.listCount", { shown: lines.length, total: allLineCount })}
+          </Typography>
+        )}
+      </Box>
 
       {/* The bulk verbs, above the ticks they act on (§114): all, N ticked, publish, archive, delete. */}
       {lines.length > 0 && canCreateEvent(staffUser.role) && (

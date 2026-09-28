@@ -1,3 +1,4 @@
+import { groupSeries } from "@/modules/events/domain/series";
 import { foldForSearch } from "@/modules/registrations/country-search";
 
 /**
@@ -5,41 +6,56 @@ import { foldForSearch } from "@/modules/registrations/country-search";
  * address and written back to it, and nowhere else — the model is the public listing's filters
  * (§413, `events/domain/listing-filter.ts`): a GET form with no script writes these parameters,
  * every link the server builds carries them, and a hand-edited value falls back rather than
- * refusing (`admin-list-query.ts`'s rule). Pure — the clock is the caller's `now`.
+ * refusing (`admin-list-query.ts`'s rule) — `?state=Încheiate`, the label typed for the key, is
+ * the whole list, never an error. Pure — the clock is the caller's `now`.
  *
  * - `q` — words, each of which must appear (accents and case ignored, the pickers' own
- *   `foldForSearch`, §463) in a title, a page address or a place name, in either language.
- * - `state` — one of the editorial states (Ciornă, În verificare, Publicat, Arhivat), or
- *   `CANCELLED` — the event's own state since §331, which a published race keeps when it is
- *   called off — or `UPCOMING` / `PAST` by the start.
- * - `sort` + `dir` — `club` (the default and the list's order since the start: featured first,
- *   then soonest), `date`, `title` or `entries`. `dir` is read only for the last three, and
- *   absent it is the direction each reads first: a date soonest first, a title A to Z, the
- *   registrations most first.
+ *   `foldForSearch`, §463) in a title, a page address or a place name, in either language:
+ *   «tampa» finds «Tâmpa».
+ * - `state` — what an organizer asks of the list, in the owner's words:
+ *   - `UPCOMING` «Viitoare» — a date still to come that is neither called off nor marked done;
+ *   - `PAST` «Încheiate» — a date that is over: its start has passed, or the club marked it
+ *     `COMPLETED`, either one; a called-off date is «Anulate», never «Încheiate», even once
+ *     its day has gone;
+ *   - `DRAFT` «Ciorne», `IN_REVIEW` «În verificare», `PUBLISHED` «Publicate», `ARCHIVED`
+ *     «Arhivate» — the editorial state. «În verificare» is kept on purpose: it is a state the
+ *     editor sets, and a date in it would otherwise be findable only by scrolling;
+ *   - `CANCELLED` «Anulate» — the event's own state since §331, which a published race keeps
+ *     when it is called off.
+ * - `sort` — one select, one parameter: `date-near` «Data (cele mai apropiate)», the default —
+ *   the dates still to come soonest first, then the past, the most recent first, so the next
+ *   race is at the top and last week's run right under the future; `date-old` «Data (cele mai
+ *   vechi)» — the oldest first, the whole list ascending; `title-asc` / `title-desc` «Nume A–Z» /
+ *   «Nume Z–A» in the reader's language (`ș` after `s`); `state` «Stare» — the editorial state
+ *   in the editor's order (Ciornă, În verificare, Publicat, Arhivat), then the called-off, then
+ *   the completed. Every order breaks a tie on `date-near`, then on the fetch's order.
+ *
+ * The club's former default — featured first, then soonest — is no longer the list's order: the
+ * brief's default is the nearest date, and a featured race is at most a few weeks out, so it sits
+ * at or near the top anyway; the star still marks it on its line.
  *
  * The filter narrows the *dates* before they are grouped into a series (§113), so a series
- * filtered to "Ciornă" is the line of its draft dates, and "Viitoare" folds only the dates still
- * to come — the tick then selects exactly the dates the line shows.
+ * filtered to «Ciorne» is the line of its draft dates, and «Viitoare» folds only the dates still
+ * to come — the tick then selects exactly the dates the line shows. A series line sorts by its
+ * `next` date: the first still to come, else its last.
  */
 
-export const EVENT_LIST_STATES = ["DRAFT", "IN_REVIEW", "PUBLISHED", "ARCHIVED", "CANCELLED", "UPCOMING", "PAST"] as const;
+export const EVENT_LIST_STATES = ["UPCOMING", "PAST", "DRAFT", "IN_REVIEW", "PUBLISHED", "ARCHIVED", "CANCELLED"] as const;
 export type EventListState = (typeof EVENT_LIST_STATES)[number];
 
-export const EVENT_LIST_SORTS = ["club", "date", "title", "entries"] as const;
+export const EVENT_LIST_SORTS = ["date-near", "date-old", "title-asc", "title-desc", "state"] as const;
 export type EventListSort = (typeof EVENT_LIST_SORTS)[number];
 
-/** Which way each order reads first when the address does not say. */
-const NATURAL_DIR: Record<EventListSort, "asc" | "desc"> = { club: "asc", date: "asc", title: "asc", entries: "desc" };
+export const DEFAULT_EVENT_LIST_SORT: EventListSort = "date-near";
 
 /** Longer than any title anybody types; a pasted paragraph is cut, not refused. */
-const MAX_QUERY_LENGTH = 100;
+export const MAX_EVENT_LIST_QUERY_LENGTH = 100;
 
 export type EventListQuery = {
   /** As typed, trimmed and cut — what the search box shows back. */
   q: string;
   state: EventListState | null;
   sort: EventListSort;
-  dir: "asc" | "desc";
 };
 
 type Raw = string | string[] | undefined;
@@ -50,24 +66,22 @@ function first(value: Raw): string | undefined {
 }
 
 export function parseEventListQuery(params: Record<string, Raw>): EventListQuery {
-  const q = (first(params.q) ?? "").trim().slice(0, MAX_QUERY_LENGTH);
+  const q = (first(params.q) ?? "").trim().slice(0, MAX_EVENT_LIST_QUERY_LENGTH);
   const stateRaw = first(params.state);
   const state = EVENT_LIST_STATES.find((value) => value === stateRaw) ?? null;
   const sortRaw = first(params.sort);
-  const sort = EVENT_LIST_SORTS.find((value) => value === sortRaw) ?? "club";
-  const dirRaw = first(params.dir);
-  const dir = sort === "club" ? "asc" : dirRaw === "asc" || dirRaw === "desc" ? dirRaw : NATURAL_DIR[sort];
-  return { q, state, sort, dir };
+  const sort = EVENT_LIST_SORTS.find((value) => value === sortRaw) ?? DEFAULT_EVENT_LIST_SORT;
+  return { q, state, sort };
 }
 
-/** The direction a column header's first press asks for (`AdminColumn.initialDir`). */
-export function naturalDir(sort: EventListSort): "asc" | "desc" {
-  return NATURAL_DIR[sort];
+/** Whether a search or a state narrows the list — the count line «N din M evenimente» shows. */
+export function eventListNarrowed(query: EventListQuery): boolean {
+  return query.q !== "" || query.state !== null;
 }
 
-/** Whether anything narrows or reorders the list — the fold opens and «Șterge filtrele» shows. */
+/** Whether anything narrows or reorders the list — «Șterge filtrele» shows. */
 export function eventListQueryInUse(query: EventListQuery): boolean {
-  return query.q !== "" || query.state !== null || query.sort !== "club";
+  return eventListNarrowed(query) || query.sort !== DEFAULT_EVENT_LIST_SORT;
 }
 
 /**
@@ -78,20 +92,22 @@ export function eventListParams(query: EventListQuery): Record<string, string | 
   return {
     q: query.q || undefined,
     state: query.state ?? undefined,
-    sort: query.sort === "club" ? undefined : query.sort,
-    dir: query.sort === "club" || query.dir === NATURAL_DIR[query.sort] ? undefined : query.dir,
+    sort: query.sort === DEFAULT_EVENT_LIST_SORT ? undefined : query.sort,
   };
 }
+
+type EditorialStatus = "DRAFT" | "IN_REVIEW" | "PUBLISHED" | "ARCHIVED";
+type EventStatus = "SCHEDULED" | "CANCELLED" | "COMPLETED";
 
 /** What a search and a filter read of one date. */
 export type ListedEvent = {
   startsAt: Date;
-  editorialStatus: "DRAFT" | "IN_REVIEW" | "PUBLISHED" | "ARCHIVED";
-  eventStatus: "SCHEDULED" | "CANCELLED" | "COMPLETED";
+  editorialStatus: EditorialStatus;
+  eventStatus: EventStatus;
   locationName: string | null;
 };
 
-export type ListedTranslation = { title: string; slug: string; locationName: string | null };
+export type ListedTranslation = { locale?: string; title: string; slug: string; locationName: string | null };
 
 export function matchesEventList(
   event: ListedEvent,
@@ -111,44 +127,126 @@ export function matchesEventList(
 }
 
 function matchesState(event: ListedEvent, state: EventListState | null, now: Date): boolean {
+  const started = event.startsAt.getTime() < now.getTime();
   switch (state) {
     case null:
       return true;
     case "CANCELLED":
       return event.eventStatus === "CANCELLED";
     case "UPCOMING":
-      return event.startsAt.getTime() >= now.getTime();
+      return !started && event.eventStatus === "SCHEDULED";
     case "PAST":
-      return event.startsAt.getTime() < now.getTime();
+      return event.eventStatus === "COMPLETED" || (started && event.eventStatus !== "CANCELLED");
     default:
       return event.editorialStatus === state;
   }
 }
 
-/** What an order reads of one line of the list. */
-export type SortableLine = { title: string; startsAt: Date; entries: number };
+/** What an order reads of one line of the list: its `next` date's. */
+export type SortableLine = { title: string; startsAt: Date; editorialStatus: EditorialStatus; eventStatus: EventStatus };
+
+const EDITORIAL_RANK: Record<EditorialStatus, number> = { DRAFT: 0, IN_REVIEW: 1, PUBLISHED: 2, ARCHIVED: 3 };
+
+/** «Stare»: the editorial states in the editor's order, then the called-off, then the completed. */
+function stateRank(line: SortableLine): number {
+  if (line.eventStatus === "CANCELLED") return 4;
+  if (line.eventStatus === "COMPLETED") return 5;
+  return EDITORIAL_RANK[line.editorialStatus];
+}
+
+/** The nearest first: what is still to come soonest first, then the past, most recent first. */
+function compareNear(a: SortableLine, b: SortableLine, now: number): number {
+  const aAhead = a.startsAt.getTime() >= now;
+  const bAhead = b.startsAt.getTime() >= now;
+  if (aAhead !== bAhead) return aAhead ? -1 : 1;
+  const byStart = a.startsAt.getTime() - b.startsAt.getTime();
+  return aAhead ? byStart : -byStart;
+}
 
 /**
- * The lines in the asked order. `club` keeps the order they came in — the fetch's own, featured
- * first, then soonest (§113) — and every other order breaks a tie on it, so equal lines never
- * swap places between two loads. A title compares in the reader's language (`ș` after `s`).
+ * The lines in the asked order. Every order breaks a tie on the nearest date and then on the
+ * order the lines came in, so equal lines never swap places between two loads.
  */
-export function sortEventLines<T>(lines: readonly T[], sortable: (line: T) => SortableLine, query: EventListQuery, locale: string): T[] {
-  if (query.sort === "club") return [...lines];
+export function sortEventLines<T>(
+  lines: readonly T[],
+  sortable: (line: T) => SortableLine,
+  query: Pick<EventListQuery, "sort">,
+  locale: string,
+  now: Date,
+): T[] {
   const collator = new Intl.Collator(locale, { sensitivity: "base", numeric: true });
-  const sign = query.dir === "asc" ? 1 : -1;
+  const at = now.getTime();
   const compare = (a: SortableLine, b: SortableLine): number => {
     switch (query.sort) {
-      case "date":
+      case "date-old":
         return a.startsAt.getTime() - b.startsAt.getTime();
-      case "title":
-        return collator.compare(a.title, b.title);
+      case "title-asc":
+        return collator.compare(a.title, b.title) || compareNear(a, b, at);
+      case "title-desc":
+        return collator.compare(b.title, a.title) || compareNear(a, b, at);
+      case "state":
+        return stateRank(a) - stateRank(b) || compareNear(a, b, at);
       default:
-        return a.entries - b.entries;
+        return compareNear(a, b, at);
     }
   };
   return lines
     .map((line, index) => ({ line, index, key: sortable(line) }))
-    .sort((a, b) => sign * compare(a.key, b.key) || a.index - b.index)
+    .sort((a, b) => compare(a.key, b.key) || a.index - b.index)
     .map(({ line }) => line);
+}
+
+/** What the list reads of one fetched date: the event and its translations. */
+export type ListedRow = {
+  event: ListedEvent & { id: string; type: string };
+  translations: readonly ListedTranslation[];
+};
+
+/** The title a line shows and sorts by: the reader's language's, else the first there is. */
+function titleOf(row: ListedRow, locale: string): string {
+  return (row.translations.find((translation) => translation.locale === locale) ?? row.translations[0])?.title ?? row.event.id;
+}
+
+/** The series key's title: the first translation's, as the list has always grouped (§113). */
+const groupTitleOf = (row: ListedRow) => row.translations[0]?.title ?? row.event.id;
+
+function groupRows<T extends ListedRow>(rows: readonly T[]) {
+  return groupSeries(rows.map((row) => ({ row, type: row.event.type, title: groupTitleOf(row), startsAt: row.event.startsAt })));
+}
+
+/** How many lines the list has with nothing narrowing it — the M of «N din M evenimente». */
+export function countEventLines(rows: readonly ListedRow[]): number {
+  return groupRows(rows).length;
+}
+
+export type ArrangedLine<T> = {
+  key: string;
+  /** Soonest first. */
+  members: T[];
+  /** The line's date: the first still to come, else the last. */
+  next: T;
+};
+
+/**
+ * The whole list's arithmetic, in the order the page draws it: narrow the dates, group them into
+ * lines (§113), pick each line's `next`, order the lines. The page decorates the result.
+ */
+export function arrangeEventList<T extends ListedRow>(rows: readonly T[], query: EventListQuery, now: Date, locale: string): ArrangedLine<T>[] {
+  const lines = groupRows(rows.filter((row) => matchesEventList(row.event, row.translations, query, now))).map((series) => {
+    const members = series.members.map((member) => member.row);
+    const next = members.find((member) => member.event.startsAt.getTime() >= now.getTime()) ?? members[members.length - 1];
+    return { key: series.key, members, next };
+  });
+  return sortEventLines(
+    lines,
+    ({ next }) => ({
+      title: titleOf(next, locale),
+      startsAt: next.event.startsAt,
+      editorialStatus: next.event.editorialStatus,
+      eventStatus: next.event.eventStatus,
+    }),
+    query,
+    locale,
+    now,
+  );
 }
