@@ -150,6 +150,7 @@ describe("§513 the card opens with the queue and the outbox job's next tick", (
     nextTickAt: "2026-10-01T07:15:00.000Z",
     lastRunAt: null,
     holds: { pingerMinutes: 15, intervalMinutes: 0, governorFloorMinutes: 0 },
+    overdueCadenceMinutes: 0,
   };
 
   async function withDelivery(locale: "ro" | "en", given: typeof delivery | (Omit<typeof delivery, "timing" | "waitMinutes"> & { timing: "immediate"; waitMinutes: null })) {

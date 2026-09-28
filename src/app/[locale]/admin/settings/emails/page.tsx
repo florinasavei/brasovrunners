@@ -30,7 +30,7 @@ import { copyFor } from "@/modules/notifications/domain/email-copy";
 import { NEVER_QUEUED_MESSAGE_TYPES } from "@/modules/notifications/domain/never-queued";
 import { readEmailCopy } from "@/modules/notifications/email-copy";
 import { readEmailPlan } from "@/modules/notifications/email-plan";
-import { readOutboxQueue } from "@/modules/notifications/queue";
+import { OUTBOX_QUEUE_LIMIT, readOutboxQueue } from "@/modules/notifications/queue";
 import EmailCopyEditor from "@/modules/notifications/ui/EmailCopyEditor";
 import EmailPlanPanel from "@/modules/notifications/ui/EmailPlanPanel";
 import EmailTransportPanel from "@/modules/notifications/ui/EmailTransportPanel";
@@ -148,7 +148,8 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     // Which road each group takes, Gmail's cap and pace (§443), beside the plan it spends less of.
     readEmailTransport(db),
     readEmailVolumeToday(db, now),
-    maySeeQueue ? readOutboxQueue(db) : null,
+    // The page's one "now": the due and the held rows «Trimite acum» names (§NNN) are counted at it.
+    maySeeQueue ? readOutboxQueue(db, OUTBOX_QUEUE_LIMIT, now) : null,
     // Who receives a signed declaration and who is told about a confirmation (§244, §245):
     // participant data again, so the same gate as the queue.
     maySeeQueue ? readClubNotices(db) : null,

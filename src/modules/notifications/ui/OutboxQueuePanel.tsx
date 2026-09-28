@@ -96,12 +96,31 @@ export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit,
     if (row.status === "PROCESSING") return { text: t("emails.queue.leaves.sending"), late: false };
     if (row.status === "FAILED") return { text: t("emails.queue.leaves.never"), late: false };
     const dueAt = row.nextAttemptAt ?? row.createdAt;
+    // Late by health's own number (§98, §447): `overdueCadenceMinutes` is the cadence `/api/health`
+    // adds to its ninety minutes, the planned interval included — one judgement, two screens (§NNN).
     const late =
       !isBulkMessage(row.messageType) &&
-      outboxRowOverdue({ now, dueAt, overdueAfterMs: EMAIL_HEALTH_THRESHOLDS.OVERDUE_AFTER_MS, intervalMinutes: runInterval });
+      outboxRowOverdue({ now, dueAt, overdueAfterMs: EMAIL_HEALTH_THRESHOLDS.OVERDUE_AFTER_MS, intervalMinutes: delivery.overdueCadenceMinutes });
     const at = outboxRowLeavesAt({ dueAt, nextTickAt, intervalMinutes: runInterval, pingerMinutesAt: (instant) => pingerCadenceMinutes(instant) });
+    // A family sitting's hold (§519): a turn in the future and no attempt made yet — not a retry,
+    // not the newsletter's reserve. It says the hold's end and the round after it.
+    if (row.nextAttemptAt && row.nextAttemptAt.getTime() > now.getTime() && row.attemptCount === 0 && !isBulkMessage(row.messageType)) {
+      return { text: t("emails.queue.leaves.held", { until: when.format(row.nextAttemptAt), at: when.format(at) }), late: false };
+    }
     return { text: t(late ? "emails.queue.leaves.late" : "emails.queue.leaves.at", { at: when.format(at) }), late };
   };
+
+  /*
+    What «Trimite acum» sends and what it leaves (§NNN): the claim's own rule — the due rows go, within
+    the day's limit; the held ones stay until their turn, each for its reason, counted apart.
+  */
+  const heldReasons = (["family", "retry", "reserve"] as const)
+    .filter((reason) => queue.held[reason] > 0)
+    .map((reason) => t(`emails.queue.sendNow.reasons.${reason}`, { count: queue.held[reason] }));
+  const sendNowBody =
+    queue.held.total > 0 && queue.held.until
+      ? `${t("confirm.sendNowBody")} ${t("emails.queue.sendNow.held", { count: queue.held.total, until: when.format(queue.held.until), reasons: heldReasons.join(" · ") })}`
+      : t("confirm.sendNowBody");
 
   return (
     <Panel glyph="outbox"
@@ -183,11 +202,13 @@ export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit,
             to send and room to send it, because a disabled button cannot say why. And only to
             the role that may press it (§291): for the Organizer the count above is the whole
             answer, and the else-branch's "allowance spent" would be an answer to a question they
-            were never offered. */}
-        {!mayEdit ? null : queue.total > 0 && (volume.remaining === null || volume.remaining > 0) ? (
+            were never offered. "Something to send" is a due row (§NNN): a queue held entirely —
+            a family still signing, a retry, the newsletter's reserve — sends nothing on a press,
+            and the sentence says so instead. */}
+        {!mayEdit ? null : queue.due > 0 && (volume.remaining === null || volume.remaining > 0) ? (
           <ActionForm
             action={sendOutboxNowFromEmailsAction}
-            confirm={{ title: t("confirm.sendNowTitle"), body: t("confirm.sendNowBody"), email: words.queue(queue.total), confirmLabel: t("outbox.sendNow"), cancelLabel: words.cancel }}
+            confirm={{ title: t("confirm.sendNowTitle"), body: sendNowBody, email: words.queue(queue.due), confirmLabel: t("outbox.sendNow"), cancelLabel: words.cancel }}
             data-testid="send-now-form"
           >
             <input type="hidden" name="uiLocale" value={locale} />
@@ -201,7 +222,7 @@ export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit,
           </ActionForm>
         ) : (
           <Typography variant="body2" color="text.secondary">
-            {queue.total === 0 ? t("outbox.nothingWaiting") : t("outbox.allowanceSpent")}
+            {queue.total === 0 ? t("outbox.nothingWaiting") : queue.due === 0 ? t("emails.queue.sendNow.nothingDue") : t("outbox.allowanceSpent")}
           </Typography>
         )}
       </Stack>

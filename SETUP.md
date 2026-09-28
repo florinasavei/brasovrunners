@@ -1504,6 +1504,25 @@ production; 125 on QA, which carries `PINGER_CADENCE_MINUTES=60`):
   Launch a wake costs at least five minutes (above). A job ping with nothing due answers from the
   cache and wakes nothing (§334), which is why the job monitors stay frequent.
 
+**QA's emails wait longer than production's, on purpose.** Under «Când pleacă emailurile» =
+«La trecerea programată» (the default) an email leaves at the outbox job's next real run. On QA
+the `qa outbox` monitor above is **hourly** and „Cât de des verifică site-ul" is 2 ore, so a QA
+email may wait up to about three hours — it has not stopped, it is waiting. `/admin/settings/emails`
+→ «Coada de trimitere» says it: the next round, the last one, what holds it back, and when each
+queued email leaves; `/admin/tasks` → the monitors row says this environment's cadence (from
+`PINGER_CADENCE_MINUTES`, 60 on QA). While testing on QA, either:
+
+1. on cron-job.org → `qa outbox` → Execution schedule → Custom → every 15 minutes
+   (`*/15 * * * *`), and on QA „Cât de des verifică site-ul" → „La nevoie" — then put both back
+   (hourly, 2 ore), because every real run wakes QA's database; or
+2. on QA's `/admin/settings/emails` → «Coada de trimitere» → «Trimite imediat după cerere» (the
+   same setting as «Termene» → «Când pleacă emailurile»); each email leaves seconds after the
+   request, and the switch sends what was already queued. Switch it back with «Trimite la trecerea
+   programată».
+
+**The setting is per environment:** each database keeps its own, so switching it on QA changes
+nothing on production, and the reverse.
+
 **Two things still open, both the owner's:**
 
 1. **prod maintenance day** reads `0,15,30` — the :45 run is missing (probably a click). It

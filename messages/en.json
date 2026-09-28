@@ -2292,8 +2292,8 @@
         },
         "scheduler": {
           "title": "Production monitors on cron-job.org",
-          "todo": "Monitors for the two scheduled jobs, with this environment's JOB_SECRET: every 15 minutes by day and hourly at night. Missing or late",
-          "done": "Both jobs are running on time.",
+          "todo": "Monitors for the two scheduled jobs, with this environment's JOB_SECRET. This environment is called every {pingerDay} by day and every {pingerNight} at night. Missing or late",
+          "done": "Both jobs are running on time. This environment is called every {pingerDay} by day and every {pingerNight} at night.",
           "how": [
             "On cron-job.org (free account): Settings → Time zone = Europe/Bucharest. Then “Create cronjob”, four times for production: two per address (one for the day, one for the night).",
             "The addresses: {outboxUrl} and {maintenanceUrl}. On all of them: Request method POST, and under Headers: Authorization = Bearer followed by this environment's JOB_SECRET (the value in Vercel → Settings → Environment Variables; it is not shown here).",
@@ -3618,10 +3618,10 @@
         "aside": "{waiting} · {state}",
         "when": {
           "title": "When emails leave",
-          "on": "Scheduled sending: on",
-          "off": "Scheduled sending: off",
-          "onShort": "scheduled sending",
-          "offShort": "immediate sending",
+          "on": "Emails leave: on the scheduled round",
+          "off": "Emails leave: right after the request",
+          "onShort": "on the scheduled round",
+          "offShort": "right after the request",
           "scheduled": "Emails leave on the site's scheduled round. Next round: {at}. An email queued now waits at most {wait}.",
           "immediate": "Each email leaves right after the request that queued it. What is left (a retry, a deferral) leaves on the scheduled round; the next: {at}.",
           "holdsLead": "What holds the scheduled round now: {holds}.",
@@ -3632,11 +3632,11 @@
           },
           "lastRun": "Last scheduled round: {at}.",
           "neverRan": "No scheduled round recorded yet.",
-          "turnOff": "Turn scheduled sending off",
-          "turnOn": "Turn scheduled sending on",
-          "offTitle": "Turn scheduled sending off?",
+          "turnOff": "Send right after the request",
+          "turnOn": "Send on the scheduled round",
+          "offTitle": "Should emails leave right after the request?",
           "offBody": "The queued emails leave now, and from now on each email leaves right after the request that queued it. The same setting as in «Deadlines». No message is lost.",
-          "onTitle": "Turn scheduled sending on?",
+          "onTitle": "Should emails leave on the scheduled round?",
           "onBody": "From now on emails leave on the scheduled round, within {wait}. The same setting as in «Deadlines». No message is lost."
         },
         "facts": "Queued since {queued} · attempts: {attempts}",
@@ -3644,7 +3644,8 @@
           "at": "Leaves: {at} (estimated).",
           "late": "Late: it should have left already. Next scheduled round: {at}; or press «Send now».",
           "sending": "Being sent now.",
-          "never": "Will not leave on its own: every attempt is spent."
+          "never": "Will not leave on its own: every attempt is spent.",
+          "held": "Held until {until}: a family is still signing. Then leaves on the next round: {at} (estimated)."
         },
         "lastError": "The provider's last answer: {error}",
         "manual": "Sent again by hand",
@@ -3653,6 +3654,15 @@
           "PENDING": "Waiting",
           "PROCESSING": "Sending now",
           "FAILED": "Stopped after every attempt"
+        },
+        "sendNow": {
+          "held": "{count, plural, one {# email stays held} other {# emails stay held}}, the first until {until}: {reasons}.",
+          "reasons": {
+            "family": "a family still signing: {count}",
+            "retry": "a retry or a deferral: {count}",
+            "reserve": "the newsletter's reserve: {count}"
+          },
+          "nothingDue": "No email is due now: the queued ones are held until their time, being sent right now, or out of attempts."
         }
       },
       "copy": {
