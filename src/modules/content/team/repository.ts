@@ -3,9 +3,10 @@ import { mediaAssets } from "@/db/schema/gallery";
 import { teamMembers } from "@/db/schema/team";
 import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
-import type { RichTextDoc } from "@/modules/content/rich-text/domain/schema";
+import type { ImageCrop, RichTextDoc } from "@/modules/content/rich-text/domain/schema";
 import { getStorage, objectKey } from "@/modules/media/storage";
 import { storedTeamDoc } from "./fields";
+import { storedTeamPhotoCrop } from "./photo-crop";
 import { readTeamLinks, type TeamLink, type TeamLinkKind, teamLinkLabel } from "./links";
 import { readTeamPageSettings, teamIntroFor } from "./page-settings";
 
@@ -28,6 +29,11 @@ export type TeamPhoto = {
   thumbUrl: string;
   width: number;
   height: number;
+  /**
+   * The part the card shows (§NNN), four fractions of the stored picture; null for the whole
+   * photograph, drawn as before — a square with the face near the top.
+   */
+  crop: ImageCrop | null;
 };
 
 /** One of a person's links as the page draws it: the club's label in this language, or null for the kind's word. */
@@ -86,13 +92,19 @@ const COLUMNS = {
   photoKeyPrefix: mediaAssets.keyPrefix,
   photoWidth: mediaAssets.width,
   photoHeight: mediaAssets.height,
+  photoCrop: teamMembers.photoCrop,
   position: teamMembers.position,
   visible: teamMembers.visible,
   version: teamMembers.version,
   updatedAt: teamMembers.updatedAt,
 };
 
-function photoOf(row: { photoKeyPrefix: string | null; photoWidth: number | null; photoHeight: number | null }): TeamPhoto | null {
+function photoOf(row: {
+  photoKeyPrefix: string | null;
+  photoWidth: number | null;
+  photoHeight: number | null;
+  photoCrop: unknown;
+}): TeamPhoto | null {
   if (!row.photoKeyPrefix || !row.photoWidth || !row.photoHeight) return null;
   const storage = getStorage();
   return {
@@ -100,6 +112,7 @@ function photoOf(row: { photoKeyPrefix: string | null; photoWidth: number | null
     thumbUrl: storage.publicUrl(objectKey(row.photoKeyPrefix, "thumb")),
     width: row.photoWidth,
     height: row.photoHeight,
+    crop: storedTeamPhotoCrop(row.photoCrop),
   };
 }
 
@@ -162,12 +175,12 @@ export async function listTeamMembersForAdmin<T extends Record<string, unknown>>
     .leftJoin(mediaAssets, eq(mediaAssets.id, teamMembers.photoMediaAssetId))
     .orderBy(asc(teamMembers.position), asc(teamMembers.createdAt));
 
-  return rows.map(({ photoKeyPrefix, photoWidth, photoHeight, bioRo, bioEn, bioRoJson, bioEnJson, link, links, ...row }) => ({
+  return rows.map(({ photoKeyPrefix, photoWidth, photoHeight, photoCrop, bioRo, bioEn, bioRoJson, bioEnJson, link, links, ...row }) => ({
     ...row,
     bioRo: storedTeamDoc(bioRoJson, bioRo),
     bioEn: storedTeamDoc(bioEnJson, bioEn),
     links: readTeamLinks(links, link),
-    photo: photoOf({ photoKeyPrefix, photoWidth, photoHeight }),
+    photo: photoOf({ photoKeyPrefix, photoWidth, photoHeight, photoCrop }),
   }));
 }
 

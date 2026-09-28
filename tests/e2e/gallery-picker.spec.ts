@@ -359,7 +359,20 @@ test.describe.serial("§485 pictures from the gallery", () => {
     await expect(picker).toHaveCount(0);
     // The card keeps the stored picture's own id — linked, never copied — and shows its small file.
     await expect(form.locator('[name="photoAssetId"]')).toHaveValue(picture.id);
-    await expect(photo.locator("img")).toHaveAttribute("src", picture.thumb);
+    await expect(photo.getByTestId("team-photo-new-preview").locator("img")).toHaveAttribute("src", picture.thumb);
+    // §NNN — the crop box after the choice, the text editor's own: five shapes, 1∶1 first (a
+    // portrait), and the crop the save posts. The 640 × 400 map's largest square is 62.5 % wide.
+    const cropBox = photo.getByTestId("team-photo-new-crop");
+    await expectShapes(cropBox, "1:1");
+    const posted = async () => JSON.parse((await form.locator('[name="photoCrop"]').inputValue()) || "null") as { w: number; h: number } | null;
+    expect(await posted()).toMatchObject({ w: 0.625, h: 1 });
+    await expect(photo.getByTestId("team-photo-new-preview")).toHaveAttribute("data-crop", "set");
+    // Another shape is the club's to pick: 4∶5 is taller than it is wide, in the preview too.
+    await cropBox.getByTestId("rich-text-crop-presets").getByRole("button", { name: "4:5", exact: true }).click();
+    const portrait = await posted();
+    expect(portrait && (portrait.w * 640) / (portrait.h * 400)).toBeCloseTo(0.8, 2);
+    const preview = await photo.getByTestId("team-photo-new-preview").boundingBox();
+    expect(preview && preview.height > preview.width).toBe(true);
     await form.getByRole("button", { name: "Adaugă cardul" }).click();
 
     const card = page.getByRole("list", { name: "Cardurile echipei, în ordinea de pe pagină" }).getByRole("listitem").filter({ hasText: name });
@@ -367,6 +380,10 @@ test.describe.serial("§485 pictures from the gallery", () => {
     // Hidden by default (§459), so the site's menu never gains «Echipa» from this spec.
     await expect(card.getByText("Ascuns", { exact: true })).toBeVisible();
     await expect(card.getByText("Fără fotografie", { exact: true })).toHaveCount(0);
+    // The crop was saved with the person: the card on the list draws it, and its editor opens on 4∶5.
+    await expect(card.locator('[data-crop="set"]').first()).toBeVisible();
+    await openFold(card.locator("details").filter({ hasText: "Editează cardul" }));
+    await expectShapes(card.getByTestId(/^team-photo-m[0-9a-f]{8}-crop$/), "4:5");
     expect((await listed(page, { q: fileName })).find((asset) => asset.id === picture.id)?.uses).toContain("team");
 
     await card.getByRole("button", { name: "Șterge cardul" }).click();
