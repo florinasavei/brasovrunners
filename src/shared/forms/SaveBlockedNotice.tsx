@@ -11,18 +11,9 @@ import GlyphButton from "@/shared/ui/GlyphButton";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 
 /**
- * What a blocked save says (§436), in the order the person acts on it: what happened and what is
- * still here; when NOT to press (the server may have run the save before its answer was lost, and
- * the version check does not protect a cancel, an erase or a message sent twice — so the page is
- * checked in a new tab first; a confirmation never arrives here, §495); the one button that sends the form the
- * simple way; and the page that names what to ask the office's IT to let through.
- *
- * The button is the only thing that sends anything. `onSend` is the replay (`replayNatively`) with
- * the press it belongs to; while it leaves, the button says «Se trimite…» and the next page
- * replaces this one. When even that cannot be sent, the notice says so and points at the phone.
- * Drawn by `ActionFormIsland` inside the form, above its refusal summary, and by the admin error
- * boundary for a plain form — only in the browser, after a failure, so a page that never meets one
- * never loads a word of it.
+ * What a blocked save says (§436): what happened, when NOT to press (the server may already have
+ * run it; §495), the one button that sends the form the simple way, and the IT page. The button
+ * is the only thing that sends; `onSend` is the replay. Drawn only after a failure.
  */
 export default function SaveBlockedNotice({ kept = true, onSend }: { kept?: boolean; onSend: () => Promise<boolean> }) {
   const t = useTranslations("Network");

@@ -15,10 +15,8 @@ import { describeSubmission, replayNatively, transportFailureOf } from "./save-f
 import SaveBlockedNotice from "./SaveBlockedNotice";
 
 /**
- * Bring a box into view wherever it sits (§350): every closed fold around it opened, and the
- * language tab that holds it — if any — brought forward by the strip itself (`REVEAL_EVENT`
- * bubbles up to it). The event editor puts a box three folds and a tab deep, and a box the reader
- * cannot see is a box the browser cannot focus.
+ * Bring a box into view: open every fold around it and let its language tab strip bring the tab
+ * forward (`REVEAL_EVENT` bubbles). A box out of view cannot take focus; §350.
  */
 export function revealField(element: HTMLElement | null): void {
   if (!element) return;
@@ -36,13 +34,9 @@ export type RefusalMessages = {
   fieldsIntro: string;
   /** "Check this field." — under a box the refusal named. */
   fieldError: string;
-  /** "What you typed is still in the boxes." — the one sentence the owner asked for. */
+  /** "What you typed is still in the boxes." */
   kept: string;
-  /**
-   * The same, after a CONFLICT: the boxes still hold what was typed, but "send again" would meet
-   * the same stale version — the colleague's save has to be loaded first, so the sentence says
-   * to copy what is needed before reloading.
-   */
+  /** After a CONFLICT: sending again meets the same stale version, so copy, then reload. */
   keptConflict: string;
 };
 
@@ -51,13 +45,8 @@ export type ActionFormAction = (state: FormOutcome | null, form: FormData) => Pr
 export const REFUSAL_SUMMARY_ID = "form-refusal";
 
 /**
- * A refusal's sentence with the action's words in its placeholders (`FormOutcome.errorValues`).
- *
- * The catalogue reaches this island raw (`refusalMessages` reads `t.raw("errors")`: a function
- * cannot cross from a Server Component), so `{age}` is still `{age}` here — the same template
- * the bulk bar and the photo uploader fill themselves. A placeholder the action did not fill is
- * left as it is rather than blanked, so a missing value is visible instead of a sentence with a
- * hole in it.
+ * Fill a raw catalogue template (`t.raw`: a function cannot cross from a Server Component) with
+ * `FormOutcome.errorValues`. An unfilled placeholder stays visible rather than blanked.
  */
 function sentenceFor(template: string, values: Readonly<Record<string, string>> | undefined): string {
   if (!values) return template;
@@ -65,50 +54,16 @@ function sentenceFor(template: string, values: Readonly<Record<string, string>> 
 }
 
 /**
- * A backoffice form whose refusal comes back with every box still filled (`DECISIONS.md` §315).
+ * A backoffice form whose refusal comes back with every box still filled (§315), with or without
+ * JavaScript (`useActionState`); the summary is §47's, focusable and first in the form.
  *
- * The one client island a form needs for this, and it holds one thing: the outcome the Server
- * Action returned. `useActionState` is what makes it work with JavaScript off — on a plain POST
- * the server runs the action and renders the page with the returned state, so the summary and
- * the recalled values are in the HTML — and with JavaScript on, the same state arrives without a
- * navigation, so the URL carries nothing (§14.5) and the browser stays where it was.
+ * `confirm` (§384): the submit is `preventDefault()`ed (React's form-action listener checks
+ * `defaultPrevented`) and a "yes" calls `requestSubmit()` with the same submitter. Without
+ * JavaScript the form just posts; the server holds every rule (BR-REQ-060-01). A returned
+ * `notice` becomes a toast after paint (§371); a refusal never does.
  *
- * The children are the page's own Server Components, rendered as they always were; the fields
- * among them read the recalled values through `RecallProvider`. A successful action redirects
- * from inside itself and this component never sees it.
- *
- * The summary is §47's: focusable, first in the form, naming each field as a link to its box.
- * A label for an indexed box (`event.schedule[2].date`) falls back to its unindexed name.
- *
- * ## Asking first, and saying it worked (§384)
- *
- * `confirm` puts the one `ConfirmDialog` in front of the submit: the `submit` event is caught,
- * the form as it stands is read (with the submitter, so a two-verb form asks the right question),
- * the first spec whose `when` conditions hold is shown, and nothing is sent until its button is
- * pressed — which calls `requestSubmit()` with the same submitter, so React's action receives
- * exactly the fields the first press would have. `preventDefault()` on the submit is what stops
- * React from running the action (`react-dom`'s form-action listener checks `defaultPrevented`).
- * A spec that matches nothing lets the submit through: the event save asks only when the notice
- * box is ticked or the status was set to cancelled. Without JavaScript there is no dialog and
- * the form posts, because every rule that matters is the server's (BR-REQ-060-01).
- *
- * A state the action *returns* with a `notice` reaches the toast provider from an effect, after
- * the answer painted (§371); an action that redirects flashes its notice instead (`flash.ts`).
- * A refusal is never a toast — it is the summary below.
- *
- * ## A save a network refused (§436)
- *
- * On the server this renders the Server Action itself, so React writes the hidden fields of the
- * no-JavaScript form. In the browser the action is wrapped: a failure of the *transport* — the call
- * never got an answer, or the answer was a proxy's block page rather than the action's
- * (`transportFailureOf`) — is caught and nothing is thrown: the boxes keep what was typed and
- * `SaveBlockedNotice` offers ONE button, «Trimite pe calea simplă», which sends the same form as a
- * plain browser POST (`replayNatively`) with the boxes as they stand and the button that was
- * pressed. Nothing is sent again on its own: a transport failure does not prove the server did not
- * run the action, and a cancel, an erase or a message sent twice happens twice (`save-fallback.ts`).
- * Anything else — a refusal (a returned state), a redirect, a server error — goes exactly where it
- * went before. `actionKey` is what the server wrapper (`ActionForm.tsx`) stamps so the page's HTML
- * can be searched for this form (`action-key.ts`).
+ * A transport failure (§436) offers «Trimite pe calea simplă» and is never re-sent on its own:
+ * the server may have run the action (`save-fallback.ts`).
  */
 export default function ActionFormIsland({
   action,
@@ -122,19 +77,12 @@ export default function ActionFormIsland({
   action: ActionFormAction;
   /** The Server Action's key (`actionKeyOf`), stamped by `ActionForm.tsx`; absent when it has none. */
   actionKey?: string;
-  /**
-   * The refusal summary's words. Absent on a form whose action never returns a refusal — a
-   * button and hidden fields, which redirect with `?error=` as they always did — so a list of
-   * fifty rows does not ship the error catalogue fifty times.
-   */
+  /** Absent when the action only redirects with `?error=`, so row forms don't ship the catalogue. */
   messages?: RefusalMessages;
   /** Ask before sending: one dialog, or the first of several whose `when` the form meets. */
   confirm?: ConfirmSpec | readonly ConfirmSpec[];
   children: ReactNode;
-  /**
-   * A prefix for the ids of this form's boxes and of its summary, for a form that shares its
-   * page with another posting the same names (`fieldId`). Absent on a page with one form.
-   */
+  /** Id prefix for a form sharing its page with another that posts the same names (`fieldId`). */
   scope?: string;
   id?: string;
   className?: string;
@@ -149,12 +97,8 @@ export default function ActionFormIsland({
   // The network refused the save; the simple way is offered, never taken on its own (§436).
   const [blocked, setBlocked] = useState(false);
 
-  /*
-    The action as the browser runs it (§436). A transport failure is caught here, before React
-    would throw it into the error boundary and take the form — and everything typed in it — off the
-    page. It sends nothing: it returns the state as it was and draws the notice, whose button is the
-    person's decision to send the form again (`sendSimple`).
-  */
+  // Catches a transport failure before the error boundary takes the typed form off the page;
+  // sends nothing, only draws the notice (§436).
   const guardedAction: ActionFormAction = async (previous, data) => {
     try {
       return await action(previous, data);
@@ -171,7 +115,7 @@ export default function ActionFormIsland({
     if (!element) return false;
     return replayNatively(describeSubmission(element, lastSubmitter.current));
   };
-  // The server renders the Server Action itself: that is what writes the no-JavaScript fields.
+  // On the server the bare action writes the no-JavaScript fields.
   const [state, formAction] = useActionState(typeof window === "undefined" ? action : guardedAction, null);
   const toast = useToast();
 
@@ -241,24 +185,13 @@ export default function ActionFormIsland({
     if (state?.notice) toast.show(state.notice);
   }, [state, toast]);
 
-  // A number that changes with every answer, derived during render so the server and the
-  // client agree on it: islands with state of their own key on it and re-mount from the
-  // recalled values. The "storing information from previous renders" pattern from React's own
-  // documentation, not an effect — an effect would paint the old values first.
+  // Bumped per answer during render (an effect would paint the old values first): stateful
+  // islands key on it and re-mount from the recalled values.
   const [tracked, setTracked] = useState<{ state: FormOutcome | null; generation: number }>({ state, generation: 0 });
   if (tracked.state !== state) setTracked({ state, generation: tracked.generation + 1 });
 
-  /*
-    **One value per answer, not one per render (§371).** A press re-renders this component before
-    anything is sent: `useActionState` marks its action pending the moment the form submits, in
-    the same task as the press. A value built inline was a new object on that render, so every box
-    that reads the recall — every `RecallField`, picker, select, rich-text editor and fold of the
-    event editor, a few hundred MUI components — re-rendered too, for nothing: the answer had not
-    changed. That was the whole of the owner's "blocked UI updates for 352ms" (1.5–2 s on a phone
-    at 4× CPU), measured by `tests/e2e/perf/inp.spec.ts`. Memoised on what the value is made of,
-    the press re-renders the buttons that show "Se salvează…" and nothing else; an answer from the
-    server still changes it, and every box still re-mounts from the recalled values (§315).
-  */
+  // Memoised: a press re-renders this component (pending state), and a new object would
+  // re-render every recalled box for nothing (§371, `tests/e2e/perf/inp.spec.ts`).
   const fieldError = messages?.fieldError ?? "";
   const recall = useMemo(
     () => ({ values: state?.values ?? null, fields: state?.fields ?? [], generation: tracked.generation, fieldError, scope }),
@@ -268,23 +201,15 @@ export default function ActionFormIsland({
   const summary = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!state?.error) return;
-    // The boxes the refusal names first, in order — a strip answers the first of a pass, so the
-    // first named box's tab is the one on top (§350): the event editor's boxes start closed, and
-    // a named box the reader cannot see is a refusal they cannot act on.
+    // Reveal the named boxes in order, so the first one's tab ends on top (§350).
     for (const name of state.fields) revealField(document.getElementById(fieldId(name, scope)));
-    // The folds around the form (§336): backoffice folds start closed, and an element in
-    // a closed `<details>` cannot take focus. Normally the person opened it to press and it is
-    // still open; this is for whatever closed it in between.
+    // An element in a closed `<details>` cannot take focus (§336).
     openFoldsAround(summary.current);
     summary.current?.focus();
   }, [state, scope]);
 
-  /*
-    A required box inside a closed fold or behind a hidden tab (§350): the browser fires
-    `invalid` on each box it refuses and then focuses the first — which it cannot do while the box
-    is out of view. Caught here, during the event, before the browser looks for something to
-    focus: the same moment `LocaleTabPanels` has always used for its own tabs.
-  */
+  // A required box in a closed fold or hidden tab: revealed during `invalid`, before the browser
+  // tries to focus it (§350).
   const onInvalidCapture = (event: FormEvent<HTMLFormElement>) => {
     revealField(event.target as HTMLElement);
   };
@@ -331,8 +256,7 @@ export default function ActionFormIsland({
                     <Link
                       href={`#${fieldId(name, scope)}`}
                       color="inherit"
-                      // The box may be folded away or behind a tab: open its way before the
-                      // browser scrolls to the fragment (§350).
+                      // Reveal the box before the browser scrolls to the fragment (§350).
                       onClick={() => revealField(document.getElementById(fieldId(name, scope)))}
                     >
                       {labelOf(name)}

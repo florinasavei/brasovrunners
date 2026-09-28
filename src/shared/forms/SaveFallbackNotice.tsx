@@ -11,28 +11,19 @@ import { Link } from "@/i18n/navigation";
 import { SAVE_FALLBACK_COOKIE } from "./save-fallback";
 
 /**
- * The line above the page after the simple way was tried (§436): the network blocked the scripted
- * request, the person pressed «Trimite pe calea simplă», the form left as a plain POST, and this is
- * the page the answer drew. The layout reads the cookie that button set (`SAVE_FALLBACK_COOKIE`)
- * and this island clears it, the way `ToastProvider` clears the flash — a refresh shows nothing.
- *
- * It says the path was *tried*, never that the save landed: a cookie set as the POST leaves cannot
- * know whether it arrived. The §384 toast is what says it landed, so the sentence pairs with it —
- * the confirmation means saved; no confirmation means check the page and try another network.
+ * The line on the page a «Trimite pe calea simplă» POST landed on (§436); clears its cookie, so a
+ * refresh shows nothing. It says the path was *tried* — only the §384 toast says the save landed.
  * The close button is 44 px (BR-REQ-041-01).
  *
- * It belongs to the one page the plain POST landed on (§436). The admin layout draws it, and Next
- * never re-renders a layout on a client navigation, so `shown` stays true on every page clicked to
- * afterwards: the line remembers the path it first rendered on and is gone for good once the path
- * differs — a later return to that path, by Back or a link, does not bring it back.
+ * Drawn by the layout, which a client navigation never re-renders, so it latches the first path
+ * and stays gone once the path differs.
  */
 export default function SaveFallbackNotice({ shown }: { shown: boolean }) {
   const t = useTranslations("Network");
   const pathname = usePathname();
   const [landedOn] = useState(pathname);
   const [dismissed, setDismissed] = useState(false);
-  // Latched while rendering (React's own "adjust state when a prop changes"): coming back to the
-  // landed path later — Back, a link to the same page — keeps it gone.
+  // Latched during render: returning to the landed path later keeps it gone.
   const [left, setLeft] = useState(false);
   if (!left && pathname !== landedOn) setLeft(true);
 
@@ -41,7 +32,7 @@ export default function SaveFallbackNotice({ shown }: { shown: boolean }) {
     try {
       document.cookie = `${SAVE_FALLBACK_COOKIE}=; Max-Age=0; path=/`;
     } catch {
-      // A refused write shows the line once more on refresh; the cookie expires in a minute anyway.
+      // The cookie expires in a minute anyway.
     }
   }, [shown]);
 

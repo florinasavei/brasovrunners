@@ -4,59 +4,29 @@ import type { FormNotice } from "@/shared/feedback/notice";
 /**
  * What a backoffice form is handed back when the server refuses it (`DECISIONS.md` §315).
  *
- * The owner: "if I submit an invalid form (eg: event creation) the entire page gets cleared".
- * Every backoffice action used to answer a refusal with a redirect — `?error=CODE#admin-alert`
- * — and the redirected GET rendered the page from the database, or from nothing on a create,
- * so every box the organizer had typed into came back empty. The public registration form
- * solved the same problem with a sealed cookie (`registrations/form-draft.ts`, §142, §286),
- * and a cookie holds about four kilobytes; an event's rich-text bodies run to tens.
+ * A refusal is returned, not redirected, so every box can read its value back (`RecallField`) —
+ * with JavaScript off too, nothing in the URL and no cookie size limit (an event's bodies exceed
+ * one). A success still redirects.
  *
- * So a refused backoffice submit does not redirect. The action **returns** this object, React's
- * `useActionState` hands it to the form (`ActionForm`), and every field reads its own value
- * back out of `values` (`RecallField`, `CheckboxField`, the editor islands). It works with
- * JavaScript off, because the server renders the page with the returned state on a plain POST;
- * it puts nothing in the URL; and it has no size limit a cookie has. A successful submit still
- * redirects exactly where it always did.
- *
- * `values` carries names and strings only — never a file, never a `$ACTION_*` field, and never
- * a value that exists to be retyped (`NEVER_KEPT`): a typed confirmation phrase, name or count is
- * the whole guard (§180, §287, §151), and refilling it would be the guard filling itself in.
+ * `values` holds strings only: never a file, a `$ACTION_*` field, or a value meant to be retyped
+ * (`NEVER_KEPT`) — refilling a typed confirmation would defeat the guard (§180, §287, §151).
  */
 export type FormOutcome = {
-  /**
-   * The domain error code, translated by the page as `Admin.errors.<code>`. Absent on the one
-   * other outcome an action may return: a success that stays on the page, carrying `notice`.
-   */
+  /** `Admin.errors.<code>`; absent on a success that stays on the page with `notice`. */
   error?: string;
-  /**
-   * "It worked", for an action that answers without redirecting (`shared/feedback/notice.ts`,
-   * §384): `ActionForm` hands it to the toast provider. An action that redirects flashes it
-   * instead (`flash.ts`) and never returns.
-   */
+  /** "It worked" as a toast, for an action that does not redirect (§384); a redirect flashes instead. */
   notice?: FormNotice;
-  /**
-   * What the sentence for `error` needs filled in, by placeholder name — `{ age: "16 ani" }` for
-   * `Admin.errors.UNDER_MINIMUM_AGE` (§329), whose number is the event's. Words the action
-   * computed, never anything typed: the summary substitutes them into the catalogue's `{age}`.
-   * Absent for every code whose sentence has no placeholder.
-   */
+  /** The sentence's placeholders (`{ age: "16 ani" }`, §329): words the action computed, never typed input. */
   errorValues?: Readonly<Record<string, string>>;
-  /**
-   * The form field names the refusal is about — the `name` attributes, so the summary can link
-   * to the boxes — or empty when it is about the whole form. Names only, never values.
-   */
+  /** The `name`s the refusal is about, for the summary's links; empty for the whole form. */
   fields: readonly string[];
-  /** Every posted string, by field name, so the page can put it back. A repeated name (a checkbox group) keeps every value. */
+  /** Every posted string by name; a repeated name keeps every value. */
   values: Readonly<Record<string, readonly string[]>>;
 };
 
 /**
- * What is never carried back into a box, whatever form posted it.
- *
- * A typed confirmation is meant to be typed (§180: the registered name; §287: the count of the
- * selection; §151: the legal document's phrase; the event erase's title). A password field does
- * not exist anywhere in this product (`AGENTS.md` §10.3) and is listed so it never will be kept
- * by accident. File inputs are not strings and are dropped by `keptValuesOf` itself.
+ * Never carried back into a box: typed confirmations (§180, §287, §151) and, should one ever
+ * exist, a password (`AGENTS.md` §10.3).
  */
 export const NEVER_KEPT: ReadonlySet<string> = new Set([
   "typedConfirmation",
@@ -67,7 +37,7 @@ export const NEVER_KEPT: ReadonlySet<string> = new Set([
   "confirm",
 ]);
 
-/** The values the page puts back: every posted string but the framework's own and the ones meant to be retyped. */
+/** Every posted string except the framework's `$…` fields and the ones meant to be retyped. */
 export function keptValuesOf(form: FormData, never: Iterable<string> = []): Record<string, string[]> {
   const skipped = new Set([...NEVER_KEPT, ...never]);
   const values: Record<string, string[]> = {};
@@ -79,14 +49,8 @@ export function keptValuesOf(form: FormData, never: Iterable<string> = []): Reco
 }
 
 /**
- * The outcome of a refused submit, from the error the service threw.
- *
- * A domain error is an expected answer — forbidden, stale, invalid — and becomes the state the
- * form re-renders from. Anything else is a bug and is rethrown to Next's error boundary rather
- * than flattened into a friendly message that hides it (`admin/actions.ts#outcomeOf`).
- *
- * `fieldNames` maps the service's field paths (`translations.ro.title`, `capacity`) to the
- * names the form actually posts (`event.capacity`); the default keeps them as they are.
+ * The outcome of a refused submit. Only a domain error becomes state; anything else is a bug and
+ * is rethrown to the error boundary. `fieldNames` maps service field paths to posted names.
  */
 export function refused(
   error: unknown,
@@ -101,19 +65,14 @@ export function refused(
   };
 }
 
-/**
- * The outcome of a submit that worked and stays on its page: no refusal, nothing to recall, and
- * the notice the toast provider says (§384). An action that redirects flashes instead.
- */
+/** A submit that worked and stays on its page, with its toast (§384). */
 export function succeeded(notice: FormNotice): FormOutcome {
   return { notice, fields: [], values: {} };
 }
 
 /**
- * The `id` a field carries so the refusal summary can link to it: `#field-<name>`, or
- * `#field-<scope>-<name>` for a form that shares its page with another posting the same name
- * (the registration page's cancel and erase both ask for a `reason`; the email copy editor is one
- * form per message and language) — two boxes with one id would be two labels for one box.
+ * The id the refusal summary links to; `scope` keeps it unique when two forms on a page post the
+ * same name.
  */
 export function fieldId(name: string, scope?: string): string {
   return scope ? `field-${scope}-${name}` : `field-${name}`;

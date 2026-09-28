@@ -1,58 +1,20 @@
 /**
  * A save that a corporate network refused, sent again as a plain browser form (§436).
  *
- * The owner, 2026-09-26: "[the Administrator] is still having trouble on her work laptop, but just on some
- * pages, performing some actions in the back-office like saving stuff". Her pages load; her saves
- * do not. A save with JavaScript on is not a form post: it is a `fetch` POST to the page's own
- * address with a `Next-Action` header, and its answer is an RSC stream (`text/x-component`). An
- * inspecting proxy (Zscaler, there) that passes ordinary page loads and form posts can refuse
- * exactly that request, or answer it with its own HTML block page — and then the button went back
- * to rest with nothing saved and nothing said.
+ * An inspecting proxy may block a Server Action `fetch` (a `Next-Action` POST answered as RSC)
+ * while passing plain form posts. React already writes hidden `$ACTION_…` fields for the
+ * no-JavaScript form, so on a *transport* failure the person is offered «Trimite pe calea simplă»:
+ * the same form as a plain `multipart/form-data` POST, the §384 flash cookie still carrying the toast.
  *
- * Every backoffice form already carries the other way in: React writes hidden `$ACTION_…` fields
- * into the server's HTML of a form whose action is a Server Action, so that the form works before
- * (or without) JavaScript — a plain `multipart/form-data` POST to the page, which Next decodes and
- * answers with a 303 to the page the action redirects to, or with the page itself carrying a
- * refusal. That is the request a proxy passes, because it is what every web form sends. So when the
- * scripted call fails *in transport*, the person is OFFERED to send the form again that way — one
- * button, «Trimite pe calea simplă» — with the values as they stand, and the flash cookie (§384)
- * still carries the toast to the page it lands on.
+ * Offered, never sent on its own: a transport failure (E394, a reset) does not prove the server did
+ * not run the action, and a cancel, an erase or a message has no version (§36) to stop a second run.
  *
- * **Offered, never sent on its own.** A transport failure does not prove the server did not run
- * the action: Next reports E394 for any answer that is not a Server Action's — a Vercel 504 or 413
- * in `text/plain`, or a proxy that replaced the answer after the server had done the work — and a
- * fetch can reject on a connection reset after the request arrived. The version check (§36) turns
- * a second save of an edited record into a conflict, but cancelling, erasing, «Trimite acum» or an
- * organizer's message have no version to check: sent twice, they happen twice. So the second send
- * is the person's decision, beside the sentence that tells them when not to make it.
- *
- * What this module decides and does, in the browser only:
- * - `transportFailureOf` — which failures are the network's, and so when the button is offered:
- *   the fetch rejected with the browser's own words for it («Failed to fetch», «NetworkError…»,
- *   «Load failed» — never any other `TypeError`, which is a bug in the page), or the answer was not
- *   a Server Action's (Next's "An unexpected response was received from the server.", error
- *   `E394` — an HTML block page, a 403). Never a refusal (that is a returned state, not an error),
- *   never a redirect or a 404 (Next's own signals, with a `digest`), never a server error (a
- *   `digest` too), and never "Server Action not found" (a new deployment: a plain post would fail
- *   the same way).
- * - `boundaryFailureOf` — the same, for the admin error boundary, which also sees every render
- *   error: only right after a press the guard remembered (`RECENT_PRESS_MS`).
- * - `describeSubmission` — the form, the button that sent it and the values, read once.
- * - `replayNatively` — the plain POST, built as a detached `<form>` so React has no say in it; run
- *   only from the button.
- *   The `$ACTION_…` fields come from the form itself when the server drew it; when the browser drew
- *   it (after a client-side navigation the page is rendered from the RSC payload, and React writes
- *   no such fields there) they come from the same form in the page's own HTML, fetched with a plain
- *   GET — the request the proxy lets through — and matched by the key the server stamps on it
- *   (`action-key.ts`). A button with a Server Action of its own must be found there too, by its
- *   place among the form's buttons and its words; anything that cannot be matched with certainty is
- *   not sent at all, because a guessed action could be a different verb.
+ * When the browser drew the form (after a client navigation, no `$ACTION_…` fields), they are read
+ * from the page's own HTML by a plain GET, matched by `action-key.ts`'s key; a form or button that
+ * cannot be matched with certainty is not sent, since a guessed action could be another verb.
  */
 
-/**
- * The cookie the button sets as the plain POST leaves, read by the admin layout on the page it
- * lands on. It says the simple path was *tried*; only the §384 toast says the save landed.
- */
+/** Set as the plain POST leaves: the simple path was *tried*; only the §384 toast says it landed. */
 export const SAVE_FALLBACK_COOKIE = "br-save-path";
 export const SAVE_FALLBACK_MAX_AGE_SECONDS = 60;
 
@@ -60,10 +22,10 @@ export const SAVE_FALLBACK_MAX_AGE_SECONDS = 60;
 export const UNEXPECTED_RESPONSE_MESSAGE = "An unexpected response was received from the server.";
 const UNEXPECTED_RESPONSE_CODE = "E394";
 
-/** The prefix of every field React writes for a Server Action form (`$ACTION_ID_…`, `$ACTION_REF_…`, `$ACTION_KEY`). */
+/** React's hidden Server Action fields: `$ACTION_ID_…`, `$ACTION_REF_…`, `$ACTION_KEY`. */
 const ACTION_FIELD_PREFIX = "$ACTION_";
 
-/** Stamped on a form by the server: the key `actionKeyOf` computed for its action. */
+/** Stamped on a form by the server: `actionKeyOf` of its action. */
 export const ACTION_KEY_ATTRIBUTE = "data-action-key";
 /** Stamped on every `ActionForm`, which handles its own failure; the global guard leaves those alone. */
 export const ACTION_FORM_ATTRIBUTE = "data-action-form";
@@ -71,19 +33,17 @@ export const ACTION_FORM_ATTRIBUTE = "data-action-form";
 export type TransportFailure = "network" | "unexpected";
 
 /**
- * The words each browser gives a `fetch` that got no answer: Chromium «Failed to fetch», Firefox
- * «NetworkError when attempting to fetch resource.», Safari «Load failed». Any other `TypeError` —
- * «Cannot read properties of null», «x is not a function» — is a bug in the page, not the network.
+ * A `fetch` that got no answer, per browser: Chromium, Firefox, Safari. Any other `TypeError` is a
+ * bug in the page, not the network.
  */
 const FETCH_FAILURE_WORDS = /^(Failed to fetch|NetworkError\b|Load failed)/;
 
 /**
- * Whether an error thrown by a Server Action call is the network's (see above), and which kind.
- * `null` for everything else, which then goes where it always went.
+ * The network's failure of a Server Action call, or `null` — never a refusal, a redirect, a 404,
+ * a server error (those carry a `digest`) or "Server Action not found" (a plain post fails too).
  */
 export function transportFailureOf(error: unknown): TransportFailure | null {
   if (!error || typeof error !== "object") return null;
-  // Next's own signals — a redirect, a 404, a server error — all carry a digest.
   if ("digest" in error && (error as { digest?: unknown }).digest !== undefined) return null;
   if (error instanceof TypeError) return FETCH_FAILURE_WORDS.test(error.message) ? "network" : null;
   if (!(error instanceof Error)) return null;
@@ -96,24 +56,19 @@ export function transportFailureOf(error: unknown): TransportFailure | null {
 export type Submission = {
   /** The values as they stood, with the pressed button's own name and value where it has them. */
   entries: Array<[string, FormDataEntryValue]>;
-  /** The page's address without its fragment — where the scripted call went, and where the plain POST goes. */
+  /** The page's address without its fragment. */
   url: string;
-  /** `data-action-key`, or null. */
   key: string | null;
-  /** The form's `id`, or null. */
   formId: string | null;
   /** Its place among the page's forms with the same key (or id), and how many there were. */
   ordinal: number;
   siblings: number;
   submitter: {
     name: string;
-    /** Its place among the form's submit buttons, and its words — to find it in the server's HTML. */
+    /** Index and words, to find the button in the server's HTML. */
     index: number;
     text: string;
-    /**
-     * A Server Action of its own that the browser drew (`formaction="javascript:…"`): its fields
-     * exist only in the server's HTML, and without them the form's own action would run instead.
-     */
+    /** A browser-drawn button action (`formaction="javascript:…"`): its fields exist only in the server's HTML. */
     ownAction: boolean;
   } | null;
   at: number;
@@ -132,7 +87,6 @@ function wordsOf(element: Element): string {
   return (element.textContent ?? "").replace(/\s+/g, " ").trim();
 }
 
-/** The address a plain POST goes to: this page, its query included, its fragment not. */
 function pageUrl(): string {
   return `${window.location.pathname}${window.location.search}`;
 }
@@ -143,7 +97,7 @@ function sameKeySiblings(root: ParentNode, key: string | null, formId: string | 
   return [];
 }
 
-/** Read one press — the values now, the button that sent them, and how to find the form again. */
+/** Read one press: the values now, the button, and how to find the form again. */
 export function describeSubmission(form: HTMLFormElement, submitter: HTMLElement | null): Submission {
   const button = submitter && isSubmitButton(submitter) && submitter.form === form ? submitter : null;
   let data: FormData;
@@ -177,11 +131,7 @@ export function describeSubmission(form: HTMLFormElement, submitter: HTMLElement
 
 const isActionField = (name: string) => name.startsWith(ACTION_FIELD_PREFIX);
 
-/**
- * The fields the plain POST carries, when the press already holds everything: the server drew the
- * form (its hidden `$ACTION_…` fields are among the values) and the button, if it has an action of
- * its own, was drawn by the server too (its name is the action's). `null` when something is missing.
- */
+/** The press's own values when they already carry the `$ACTION_…` fields (server-drawn), else `null`. */
 export function entriesFromPress(submission: Submission): Array<[string, FormDataEntryValue]> | null {
   if (submission.submitter?.ownAction) return null;
   const submitterName = submission.submitter?.name ?? "";
@@ -193,11 +143,7 @@ export function entriesFromPress(submission: Submission): Array<[string, FormDat
 /** The server's side of one form: its hidden `$ACTION_…` fields, and the pressed button's own name and value. */
 export type ServerFields = { fields: Array<[string, string]>; submitter: [string, string] | null };
 
-/**
- * The same form in the page's HTML as the server draws it, and the fields only that HTML has.
- * `null` whenever the match is not certain: no key and no id, a different number of such forms, a
- * pressed button with an action of its own that is not the same button there.
- */
+/** The same form in the server's HTML and its `$ACTION_…` fields; `null` unless the match is certain. */
 export function serverFieldsIn(document: Document, submission: Submission): ServerFields | null {
   const candidates = sameKeySiblings(document, submission.key, submission.formId);
   if (candidates.length === 0 || candidates.length !== submission.siblings) return null;
@@ -218,7 +164,7 @@ export function serverFieldsIn(document: Document, submission: Submission): Serv
   return { fields, submitter };
 }
 
-/** The values of the press with the server's fields put in: theirs first, the pressed button's last (the last action named wins). */
+/** The server's fields first, the pressed button's last (the last action named wins). */
 export function mergeServerFields(submission: Submission, server: ServerFields): Array<[string, FormDataEntryValue]> {
   const submitterName = submission.submitter?.name ?? "";
   const own = submission.entries.filter(([name]) => !isActionField(name) && !(server.submitter && name === submitterName && submitterName !== ""));
@@ -234,7 +180,7 @@ async function fetchServerFields(submission: Submission): Promise<ServerFields |
       headers: { accept: "text/html" },
     });
     if (!response.ok || !(response.headers.get("content-type") ?? "").includes("text/html")) return null;
-    // Sent to the sign-in page, or anywhere else: that page's forms are not this one's.
+    // Redirected elsewhere (the sign-in page): its forms are not this one's.
     if (response.redirected && new URL(response.url).pathname !== new URL(submission.url, window.location.href).pathname) return null;
     const html = await response.text();
     return serverFieldsIn(new DOMParser().parseFromString(html, "text/html"), submission);
@@ -243,10 +189,7 @@ async function fetchServerFields(submission: Submission): Promise<ServerFields |
   }
 }
 
-/**
- * The detached form: one field per value, a file as a file (`DataTransfer`), posted to the page as
- * `multipart/form-data` — the encoding React's own no-JavaScript form declares.
- */
+/** Posted as `multipart/form-data`, like React's own no-JavaScript form; a file stays a file. */
 function detachedForm(url: string, entries: Array<[string, FormDataEntryValue]>): HTMLFormElement {
   const form = document.createElement("form");
   form.method = "post";
@@ -274,15 +217,12 @@ function detachedForm(url: string, entries: Array<[string, FormDataEntryValue]>)
 }
 
 /**
- * Send one press again as a plain browser POST — only ever from the person's own click on «Trimite
- * pe calea simplă» (see above). `true` when it left — the page is on its way to the answer and
- * nothing more should be drawn; `false` when it could not be sent, and nothing was. The cookie is
- * set here, so it exists only when the button was pressed and the POST is leaving.
+ * Send one press again as a plain POST, only from the person's click. `true` when it left;
+ * `false` when nothing was sent. The cookie is set only here.
  */
 export async function replayNatively(submission: Submission): Promise<boolean> {
   try {
-    // With no network at all a plain post fails too, onto the browser's own error page — where
-    // what was typed is gone. Here, the form keeps it.
+    // Offline, a plain post would land on the browser's error page and lose what was typed.
     if (navigator.onLine === false) return false;
     let entries = entriesFromPress(submission);
     if (!entries) {
@@ -301,18 +241,10 @@ export async function replayNatively(submission: Submission): Promise<boolean> {
   }
 }
 
-/*
-  The last press of a form that is not an `ActionForm` — a plain `<form action={…}>`, a button
-  with its own action — kept for the admin error boundary, which is where such a form's failure
-  arrives, after React has taken the form off the page.
-*/
+// The last press of a non-`ActionForm` form, for the admin error boundary where its failure lands.
 let lastPress: Submission | null = null;
 
-/**
- * How recent a press must be for the boundary to take an error as its failure. A fetch that got
- * no answer rejects within the browser's own timeouts, and a proxy's block page arrives in a second
- * or two; ten seconds covers a slow network without pairing an old press with a later error.
- */
+/** How recent a press must be for the boundary to pair it with an error: a slow network, not an old press. */
 export const RECENT_PRESS_MS = 10_000;
 
 export function rememberSubmission(submission: Submission): void {
@@ -326,18 +258,14 @@ export function recentSubmission(now = Date.now(), maxAgeMs = RECENT_PRESS_MS): 
   return press;
 }
 
-/** Forget the press — once its button sent it, it is never offered again. */
+/** Once sent, a press is never offered again. */
 export function forgetSubmission(): void {
   lastPress = null;
 }
 
 /**
- * Whether the admin boundary takes an error for a blocked save (§436, the review's second
- * finding). The boundary sees every client render error in the backoffice, so the error alone is
- * not enough: there must be a press the guard remembered within `RECENT_PRESS_MS`, and the error
- * must be one of the transport's own (`transportFailureOf` — the browser's fetch-failure words or
- * Next's E394). A plain `TypeError` thrown by a render — a null read — is never one, press or not,
- * and goes on to the backoffice's own boundary with its reference number (§52).
+ * Whether the admin boundary treats an error as a blocked save (§436): only a transport failure
+ * right after a remembered press. Any other error goes to the backoffice's boundary (§52).
  */
 export function boundaryFailureOf(error: unknown, press: Submission | null, now = Date.now()): TransportFailure | null {
   if (!press || now - press.at > RECENT_PRESS_MS || press.at > now) return null;

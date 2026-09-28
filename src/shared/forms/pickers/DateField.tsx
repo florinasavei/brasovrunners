@@ -12,59 +12,37 @@ import { pickerDate, postedDate } from "./picker-values";
 import { DATE_DISPLAY_FORMAT, DATE_PATTERN } from "./wall-values";
 
 export type DateFieldProps = {
-  /** What the form posts, unchanged: `event.startsAtDate`, `repeat.until`, `takenOn`… */
+  /** The posted name: `event.startsAtDate`, `repeat.until`, `takenOn`… */
   name: string;
   label: string;
   /** `YYYY-MM-DD`, or "" for an empty box. A refused submit's value wins over it (§315). Ignored when `value` is given. */
   defaultValue?: string;
   /**
-   * A controlled value, for a box a parent must be able to move from outside a press —
-   * `ScheduleRowsEditor`'s rows following the event's start date (`shiftProgrammeDates`). When
-   * given, the box's own refusal lookup is skipped: the caller already seeded it from the same
-   * refusal (`recalledRows`), and a stale posted value under this row's *current* index would
-   * otherwise shadow a shift that happened after the press.
+   * Controlled, for a box a parent moves (`ScheduleRowsEditor`'s rows following the start date).
+   * Skips the refusal lookup: the caller seeds it, and a stale value by index would shadow a shift.
    */
   value?: string;
   required?: boolean;
   helperText?: string;
   size?: "small" | "medium";
   sx?: SxProps<Theme>;
-  /** Told the posted value on every change — `ScheduleRowsEditor` keeps a row's date in state. */
+  /** Called with the posted value on every change. */
   onValueChange?: (posted: string) => void;
   /**
-   * A button that empties the box; defaults to on for an optional date, off when required — as
-   * `TimeField`'s own `clearable` does. `ScheduleRowsEditor` turns it off for its narrow row date
-   * (150 pixels): a calendar button and a clear button are both held to a 44-pixel target
-   * (BR-REQ-041-01 criterion 6), and two of them beside `DD.MM.YYYY` collided with the digits on a
-   * phone the way the row's own time boxes did before they turned theirs off too — the row itself
-   * still empties with its own remove button.
+   * A clear button; on for an optional date by default. Off in a narrow box, where two 44-pixel
+   * buttons (BR-REQ-041-01 criterion 6) collide with the digits on a phone.
    */
   clearable?: boolean;
 };
 
 /**
- * A date in the backoffice, on MUI's date picker: `30.09.2026`, day first, with a calendar in the
- * backoffice's language (`DECISIONS.md` §345; the owner, over "09/30/2026": "timepickerul ar
- * trebui să fie tot element MUI"). A native `<input type="date">` prints the digits in the
- * *browser's* order, and nothing a page does changes that (§70).
+ * A backoffice date on MUI's picker, shown day first (`30.09.2026`) whatever the browser's
+ * locale, which a native `<input type="date">` cannot do (§345, §70). It posts `YYYY-MM-DD` from
+ * a hidden input; the picker's own input has no name.
  *
- * **What it posts has not changed:** `YYYY-MM-DD` under the same name, from a hidden input beside
- * the picker, so `admin/actions.ts` and every service read exactly what they read before, and a
- * refused submit brings the value back (`useRecall`) in the shape it went. The picker's own
- * input, which posts the *shown* text, is given no name.
- *
- * **Without JavaScript** the server's HTML is the scriptless box: a text input that takes
- * `YYYY-MM-DD` and refuses anything else by its `pattern`, posting under the same name. That is
- * the one shape the server reads, typed or picked; a second one (`dd.MM.yyyy` parsed on the
- * server) would be a parser to keep for a browser nobody on the club's staff uses.
- *
- * That box is also what a normal page paints first, with JavaScript on: the picker takes over
- * only once the island runs (`useIslandRunning`), so every visit briefly shows `2026-09-30` and
- * the `YYYY-MM-DD` placeholder before the swap to `30.09.2026`. The picker is seeded from
- * `initial`, not read back from the scriptless box's own DOM value, so anything typed into it in
- * that brief window is lost at the swap rather than carried into the picker.
- *
- * Needs `PickerProvider` above it — the backoffice's layout mounts it once.
+ * Without JavaScript, and until the island runs, it is a text box taking `YYYY-MM-DD` by
+ * `pattern` — the one shape the server reads. Anything typed before the swap is lost.
+ * Needs `PickerProvider` above it.
  */
 export default function DateField({ name, label, defaultValue = "", value, required = false, helperText, size, sx, onValueChange, clearable }: DateFieldProps) {
   const recall = useRecall();
@@ -115,12 +93,7 @@ export default function DateField({ name, label, defaultValue = "", value, requi
   );
 }
 
-/**
- * The picker and the hidden input that posts for it. Exported for
- * `tests/unit/shared/pickers-running.test.ts`, which renders it on the server under
- * `PickerProvider` and reads what it would post (`YYYY-MM-DD`, from the hidden input alone) and
- * what it shows (`30.09.2026`, day first); pages use `DateField`.
- */
+/** The picker and its posting hidden input; exported for `tests/unit/shared/pickers-running.test.ts`. */
 export function DatePickerInput({
   id,
   name,
@@ -153,14 +126,8 @@ export function DatePickerInput({
   const field = useRef<HTMLInputElement>(null);
   const hidden = useRef<HTMLInputElement>(null);
 
-  // Follows a controlled `initial` (`DateField`'s `value`) moved from outside the picker — the
-  // programme's rows shifting with the event's start date. Adjusted during render rather than in
-  // an effect (react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-
-  // changes): an effect would commit the stale value for one frame and cascade a second render
-  // on every keystroke, where this resolves before the box ever paints. A pick made *here* has
-  // already set `picked` (and, through `onValueChange`, the caller's own `initial` for the next
-  // render) to the same value, so the two agree and nothing below fires; only a genuinely
-  // external move — never one this box just reported — does.
+  // Follows a controlled `initial` moved from outside, adjusted during render (an effect would
+  // paint the stale value first). A pick made here already agrees, so only an external move fires.
   const [trackedInitial, setTrackedInitial] = useState(initial);
   if (initial !== trackedInitial) {
     setTrackedInitial(initial);
@@ -186,8 +153,6 @@ export function DatePickerInput({
         slotProps={{
           // `error` only when the refusal named the box: `false` would hide the picker's own red.
           textField: { id, required, error: error || undefined, helperText, size },
-          // An optional date can be emptied again with one press, as the native box could —
-          // unless the caller turned it off for a box too narrow to hold both buttons.
           field: { clearable },
           openPickerButton: { sx: PICKER_BUTTON_SX },
           clearButton: { sx: PICKER_BUTTON_SX },

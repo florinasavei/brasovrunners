@@ -1,12 +1,7 @@
 /**
- * Whether a posted value says nothing (§350, the event editor's "· incomplet" tab marks).
- *
- * A plain box is blank when it holds only whitespace. A rich-text field posts its Tiptap
- * document as JSON (`RichTextEditor`'s hidden input), and an empty editor still posts a document
- * — `{"type":"doc","content":[{"type":"paragraph"}]}` — so a document is blank when no node in it
- * carries text or is something other than structure: a picture, a film or a table is content even
- * without a word beside it. The same answer `isRichTextEmpty` gives on the server, without the
- * schema: this runs on every keystroke in the browser and must never throw on a half-typed value.
+ * Whether a posted value says nothing (§350): whitespace, or a Tiptap document with no text and
+ * no non-structural node (a picture or a table counts). Mirrors the server's `isRichTextEmpty`
+ * without the schema; runs per keystroke, so it never throws.
  */
 const STRUCTURE = new Set([
   "doc",

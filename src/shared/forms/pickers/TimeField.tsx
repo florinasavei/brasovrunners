@@ -12,7 +12,7 @@ import { useRecall } from "@/shared/forms/recall";
 import { normalizeTypedTime, TIME_PATTERN } from "./wall-values";
 
 export type TimeFieldProps = {
-  /** What the form posts, unchanged: `event.startsAtTime`, `event.schedule[0].time`… */
+  /** The posted name: `event.startsAtTime`, `event.schedule[0].time`… */
   name: string;
   label: string;
   /** `HH:mm` on the 24-hour clock, or "". A refused submit's value wins over it (§315). */
@@ -21,41 +21,22 @@ export type TimeFieldProps = {
   helperText?: string;
   size?: "small" | "medium";
   sx?: SxProps<Theme>;
-  /**
-   * A button that empties the box; on by default for an optional time (a programme row's end).
-   * `WallTimeField` turns it off for its time half: emptying the date empties the pair, and a
-   * second button would crowd a 140-pixel box.
-   */
+  /** A clear button; on for an optional time by default, off where it would crowd a narrow box. */
   clearable?: boolean;
 };
 
-/** Tell the form's own listeners (the series sentence, §371's scheduler) that the box moved. */
+/** Tell the form's listeners (the series sentence, §371's scheduler) that the box moved. */
 function announce(input: HTMLInputElement) {
   input.dispatchEvent(new Event("input", { bubbles: true }));
   input.dispatchEvent(new Event("change", { bubbles: true }));
 }
 
 /**
- * A time of day in the backoffice, on the 24-hour clock — **shown** that way as well as posted
- * (`DECISIONS.md` §439, amending §400; the owner, 2026-09-26: "iar ai făcut ora cu AM și PM… am
- * zis că vreau 24H format!").
+ * A backoffice time, shown and posted as 24-hour `HH:mm` (§439, amending §400). A plain text box,
+ * not `type=time`, which an English-language browser draws as "07:00 PM" whatever the page says.
  *
- * **Why a text box and not the browser's time input (`type=time`).** §400 swapped MUI's wheel picker for the
- * browser's own time control and accepted, in writing, that the browser draws it in *its* locale:
- * on an English-language Chrome or Edge that is "07:00 PM", whatever the page's `lang` says — no
- * attribute, no CSS and no `step` changes it. The owner's rule is the stronger one, so the box is
- * a plain MUI `TextField` that shows exactly the characters it posts: `19:00`.
- *
- * **Typing it.** A numeric keypad on a phone (`inputMode="numeric"`), at most five characters,
- * and no keystroke is ever rewritten — no colon added as the hour is typed, so «19:00» typed by
- * hand is «19:00». On leaving the box or pressing Enter in it, `normalizeTypedTime` reads the
- * usual shapes — "1900", "19.00", "930", "9:30", "7" — as
- * `HH:mm`; what it cannot read stays as typed for `pattern` (with JavaScript or without) and the
- * server (`isTimeValue`) to refuse. No AM/PM is ever read or shown.
- *
- * **What it posts has not changed:** `HH:mm` under the same name, the same value the native box
- * posted, so nothing below the form moved. §345's date half is untouched (`DateField` still runs
- * the picker, day-first); the time needs no island and no `PickerProvider`.
+ * Keystrokes are never rewritten; on blur or Enter `normalizeTypedTime` reads "1900", "9:30", "7"…
+ * and what it cannot read is left for `pattern` and the server to refuse. No `PickerProvider` needed.
  */
 export default function TimeField({ name, label, defaultValue = "", required = false, helperText, size, sx, clearable = !required }: TimeFieldProps) {
   const recall = useRecall();
@@ -83,8 +64,7 @@ export default function TimeField({ name, label, defaultValue = "", required = f
     announce(input);
   }
 
-  // Enter submits the form without leaving the box: normalise first, so «1900» + Enter posts
-  // 19:00 instead of meeting `pattern`'s refusal. The keydown runs before the implicit submit.
+  // Enter submits without a blur: normalise in keydown, which runs before the implicit submit.
   function onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
     if (event.key === "Enter" && event.target === field.current) normalize();
   }

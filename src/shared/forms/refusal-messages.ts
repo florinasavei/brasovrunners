@@ -2,18 +2,9 @@ import { getTranslations } from "next-intl/server";
 import type { RefusalMessages } from "@/shared/forms/ActionForm";
 
 /**
- * The words a backoffice form's refusal summary needs, translated once on the server and
- * handed to the `ActionForm` island as strings (`AGENTS.md` §14.5: the catalogue stays on the
- * server; `DECISIONS.md` §315).
- *
- * `fields` is the page's own map from a box's `name` to its label — the summary links each
- * named field to its box under that label (§47). The error messages are the whole of
- * `Admin.errors`, so a code the action returns tomorrow is already a sentence.
- *
- * `confirmation` is for a form guarded by something typed or ticked on purpose (`NEVER_KEPT`:
- * an erase's title, a legal version's phrase, a registration's name, "I understand"). That box
- * comes back empty by design, so "what you typed is still in the boxes" would be untrue about
- * the one box the reader is looking at; the sentence says the confirmation is asked again.
+ * A refusal summary's words, translated on the server for the `ActionForm` island (`AGENTS.md`
+ * §14.5, §315). `fields` maps each box's `name` to its label (§47). `confirmation`: the form has
+ * a `NEVER_KEPT` box, which comes back empty, so the "still in the boxes" sentence says so.
  */
 export async function refusalMessages(
   fields: Readonly<Record<string, string>> = {},

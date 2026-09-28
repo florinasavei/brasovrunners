@@ -2,20 +2,11 @@ import dayjs, { type Dayjs } from "dayjs";
 import { isDateValue } from "./wall-values";
 
 /**
- * The posted date string and the date picker's own value, both ways (`DECISIONS.md` §345).
+ * The posted date string and the date picker's Day.js value, both ways (`DECISIONS.md` §345).
  *
- * The date picker holds a Day.js object, which is an instant in the *browser's* zone. Nothing
- * here lets that zone reach what is posted: a date goes in as the browser's noon of that day and
- * comes out as the year, month and day it was built from — noon because it has no daylight-saving
- * gap anywhere, unlike midnight on the last Sunday of March in Bucharest. The event's own zone is
- * not a browser's business at all: the service turns the posted pair into an instant with the
- * zone the form also posts, exactly as before the pickers (`events/domain/zoned-time.ts`).
- *
- * The time half no longer goes through here: `TimeField` is a typed 24-hour text box since §400
- * and §439, which shows and posts `HH:mm` directly with no picker value to convert.
- *
- * What cannot be posted is posted as "": an empty box, or one half typed. The box itself says so
- * before the press (`DateField`), the way a half-typed native date box did.
+ * A Day.js value is an instant in the browser's zone, so a date goes in as local noon (no DST gap
+ * anywhere, unlike midnight) and comes out as the year, month and day it was built from; the
+ * event's zone is the service's (`events/domain/zoned-time.ts`). Unpostable values post "".
  */
 
 /** A posted date (`2026-09-30`) as the date picker's value; null for "" or anything malformed. */

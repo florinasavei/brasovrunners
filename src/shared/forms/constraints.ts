@@ -1,31 +1,11 @@
 import { z } from "zod";
 
 /**
- * The HTML constraint attributes a Zod rule already implies (`DECISIONS.md` §315).
+ * The HTML constraint attributes a Zod rule already implies (`DECISIONS.md` §315, §47), read off
+ * the schema so the browser's native validation cannot drift from the server's rules.
  *
- * The owner: "nu ar trebui sa pot crea evenimentul daca am campuri invalide!" A rule the server
- * refuses is a rule the browser can refuse first — `required`, `maxLength`, `pattern`,
- * `type="url"`, `min`/`max` — and native constraint validation works with JavaScript off, which
- * is why it is the platform's answer and not a library's (§47). What must not happen is a
- * second, hand-kept list of the same rules that drifts the day one of them changes; so the
- * attributes are read **off the schema**: its checks, its wrappers, and the `html` metadata a
- * schema declares where a rule lives in a closure the walker cannot see (a `refine`).
- *
- * What it reads:
- *
- *   - `required`: the schema refuses the empty string, which is what an empty box posts.
- *   - `minLength` / `maxLength`: a string's `min` and `max` checks. A minimum of one is
- *     `required` and is not repeated.
- *   - `pattern`: a string's `regex` check, with the anchors stripped — an HTML pattern is
- *     anchored by the browser — and spaces allowed at either end when a `trim` runs before it.
- *   - `type`: `email` and `url` string formats; `number` for a number schema.
- *   - `min` / `max` / `step`: a number's bounds and integer check.
- *   - `html` metadata (`schema.meta({ html: { ... } })`): merged last, so a schema whose rule is
- *     a `refine` can still say what it wants of the box — `optionalWholeNumber` in
- *     `content/events/fields.ts` declares its bounds this way.
- *
- * Wrappers — optional, nullable, default, pipe, union — are looked through; a checkbox, a rich
- * text and anything else that is not a box is the caller's business and never asks.
+ * Checks, formats and wrappers are walked; a rule hidden in a `refine` is declared as `html`
+ * metadata (`schema.meta({ html: { ... } })`), merged last.
  */
 export type HtmlConstraints = {
   required?: boolean;
@@ -43,7 +23,7 @@ export type HtmlMeta = { html?: HtmlConstraints };
 
 type Def = {
   type: string;
-  /** `z.email()` and `z.url()` are strings with a format of their own rather than a check. */
+  /** `z.email()` / `z.url()`: a format, not a check. */
   format?: string;
   checks?: ReadonlyArray<{ _zod: { def: Record<string, unknown> & { check: string } } }>;
   innerType?: unknown;
@@ -58,20 +38,15 @@ function defOf(schema: unknown): Def | null {
 }
 
 /**
- * `^…$` off, because the browser anchors an HTML pattern itself — and room for spaces at either
- * end when the schema trims before it tests. `slug: z.string().trim()….regex(SLUG)` takes
- * "my-race " as "my-race"; a pattern copied as it is would have the browser refuse what the
- * server accepts. JavaScript's `trim` strips exactly what `\s` matches.
+ * Anchors dropped (the browser anchors an HTML pattern), and spaces allowed at either end when the
+ * schema trims first, or the browser would refuse what the server accepts (`trim` strips `\s`).
  */
 function htmlPattern(regex: RegExp, trimmed: boolean): string {
   const source = regex.source.replace(/^\^/, "").replace(/\$$/, "");
   return trimmed ? `\\s*(?:${source})\\s*` : source;
 }
 
-/**
- * Whether an `overwrite` check is `.trim()`. Zod keeps only the function, the same shape as
- * `.toLowerCase()`, so it is asked what it does to a padded letter: a trim returns the letter.
- */
+/** Whether an `overwrite` check is `.trim()`: Zod keeps only the function, so try it on " x ". */
 function isTrim(check: Record<string, unknown>): boolean {
   if (typeof check.tx !== "function") return false;
   try {
@@ -143,8 +118,7 @@ function walk(schema: unknown, into: HtmlConstraints, depth = 0): void {
       break;
     case "pipe":
       walk(def.in, into, depth + 1);
-      // A pipe into a number schema (`z.string().transform(Number).pipe(z.number().min(0))`)
-      // carries its bounds on the far side; a pipe into a transform carries nothing readable.
+      // A pipe into a number schema carries its bounds on the far side; a transform carries nothing.
       if (defOf(def.out)?.type !== "transform") walk(def.out, into, depth + 1);
       break;
     case "union":
@@ -154,20 +128,14 @@ function walk(schema: unknown, into: HtmlConstraints, depth = 0): void {
       break;
   }
 
-  // Declared last, so it wins over what the checks said: the schema knows its own box best.
+  // Last, so declared metadata wins over the checks.
   const meta = z.globalRegistry.get(schema as z.ZodType) as HtmlMeta | undefined;
   if (meta?.html) Object.assign(into, meta.html);
 }
 
 /**
- * The attributes for the box behind one schema, or `{}` when the schema has nothing to say.
- *
- * `required` is asked of the schema directly rather than inferred from the presence of
- * `optional()`: does it refuse what an empty box arrives as? That is `""` for an action that
- * hands the posted string on as it is (the event form), and `undefined` for one that turns a
- * blank box into "not given" before the schema sees it (`blankIsAbsent` — the staff
- * registration form's optional details, `admin/registrations/actions.ts#optional`). A schema may
- * accept one and refuse the other, which is exactly why the question names which one.
+ * The attributes for the box behind one schema. `required` asks whether the schema refuses what
+ * an empty box arrives as: `""`, or `undefined` with `blankIsAbsent`.
  */
 export function htmlConstraints(schema: z.ZodType, options: ConstraintOptions = {}): HtmlConstraints {
   const into: HtmlConstraints = {};
@@ -181,21 +149,14 @@ export type ConstraintOptions = {
   blankIsAbsent?: boolean;
 };
 
-/**
- * The same, for one field of an object schema — the shape most `fields.ts` modules export.
- * An unknown field is `{}`: the box renders, the server refuses whatever it posts.
- */
+/** The same, for one field of an object schema; an unknown field is `{}`. */
 export function constraintsOf<S extends z.ZodObject>(schema: S, field: string, options: ConstraintOptions = {}): HtmlConstraints {
   const shape = schema.shape as Record<string, z.ZodType | undefined>;
   const member = shape[field];
   return member ? htmlConstraints(member, options) : {};
 }
 
-/**
- * The props a MUI `TextField` takes them as: `required` on the field, so MUI marks the label and
- * the browser refuses the box; the type on the field; and the whole set on the `<input>` itself
- * through `slotProps.htmlInput`, with whatever the box adds of its own (`inputMode`, say).
- */
+/** As MUI `TextField` props: `required` and `type` on the field (MUI marks the label), all on the `<input>`. */
 export function textFieldConstraints(constraints: HtmlConstraints, extra: Record<string, unknown> = {}) {
   return {
     required: constraints.required,

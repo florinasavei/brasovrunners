@@ -1,19 +1,9 @@
 /**
- * A name for a Server Action that the server can print and the browser can look for (§436).
+ * A Server Action's key, stamped on its `<form>` so the blocked-save fallback can find the same
+ * form in the server's HTML (§436, `save-fallback.ts`).
  *
- * The fallback of a blocked save (`save-fallback.ts`) re-sends a form as a plain browser POST, and
- * that POST has to name the action the way React's own no-JavaScript form does — hidden
- * `$ACTION_…` fields that only the server's HTML render writes. A form the browser drew itself,
- * after a client-side navigation, has none; the fallback then fetches the page's HTML and takes the
- * fields from the same form there. "The same form" is this key: stamped on the `<form>` by the
- * server in both renders, so the two can be matched without guessing by position alone.
- *
- * On the server a Server Action reference carries its id as `$$id` and its bound arguments as
- * `$$bound` (React's `registerServerReference`). The id is not a secret — the no-JavaScript form
- * prints it in its hidden fields already, and the RSC payload carries it — so it goes out as it
- * is; bound arguments are folded into a short hash, which is all a comparison needs. Anything that
- * is not a Server Action reference (a plain function in a unit test, a client-side call) has no
- * key, and the fallback then relies on the fields the page already holds.
+ * `$$id` (React's `registerServerReference`) is no secret — the no-JavaScript form prints it — and
+ * `$$bound` is folded into a short hash. Not a Server Action reference: no key.
  */
 export function actionKeyOf(action: unknown): string | undefined {
   if (typeof action !== "function") return undefined;
@@ -24,13 +14,13 @@ export function actionKeyOf(action: unknown): string | undefined {
   try {
     bound = JSON.stringify(reference.$$bound) ?? "";
   } catch {
-    // Bound arguments that do not serialize cannot be compared; no key is the honest answer.
+    // Unserializable bound arguments cannot be compared.
     return undefined;
   }
   return `${reference.$$id}.${fnv1a(bound)}`;
 }
 
-/** FNV-1a, 32 bits, as eight hex digits: short, stable, and nothing more is asked of it. */
+/** FNV-1a, 32 bits, as eight hex digits. */
 function fnv1a(text: string): string {
   let hash = 0x811c9dc5;
   for (let index = 0; index < text.length; index += 1) {
