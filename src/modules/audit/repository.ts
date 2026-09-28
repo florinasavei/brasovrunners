@@ -283,6 +283,16 @@ export type AuditAction =
   | "members_page.unpublished"
   | "members_page.text_saved"
   /**
+   * The members' discount codes (§NNN): a code added, written, hidden or shown again, moved, or
+   * deleted. The code's row id and the shape of the change — never the code, the partner or the words.
+   */
+  | "member_code.created"
+  | "member_code.saved"
+  | "member_code.hidden"
+  | "member_code.shown"
+  | "member_code.moved"
+  | "member_code.deleted"
+  /**
    * «Adaugă mai mulți membri» (§524): one row per press — how many were added, how many were
    * already members, and each member's sign-in account by row id (created, invited, failed with
    * the provider's words, unconfigured). Never an address or a name: the ids are the staff rows.
@@ -326,7 +336,9 @@ export type RecordAuditInput = {
     | "newsletter"
     | "team_member"
     | "content"
-    | "staff_user";
+    | "staff_user"
+    // `member_discount_code` for a code of the members' zone (§NNN).
+    | "member_discount_code";
   /** Null only for an act about no single row — an export of every event's registrations (§322). */
   entityId: string | null;
   /**

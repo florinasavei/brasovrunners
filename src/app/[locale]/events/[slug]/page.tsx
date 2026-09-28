@@ -48,6 +48,7 @@ import { confirmationWindow } from "@/modules/registrations/domain/hold-deadline
 import { parseInterestOutcome, parseInterestSince } from "@/modules/registrations/interest-box";
 import RegistrationInterestForm from "@/modules/registrations/ui/RegistrationInterestForm";
 import RegistrationSteps from "@/modules/registrations/ui/RegistrationSteps";
+import { membersEventBySlug } from "@/modules/events/members-only";
 import { canEditTexts } from "@/modules/staff-identity/domain/roles";
 import { getCurrentStaffUser } from "@/modules/staff-identity/session";
 import { forecastForEvent } from "@/modules/weather/source";
@@ -100,7 +101,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // The head says nothing rather than failing the page while the database is away (§447): the
   // body's own read decides between its last good copy and the resting page.
   const event = await readOrWhileAway(() => cachedPublishedEventBySlug(locale, slug), undefined);
-  if (!event) return {};
+  if (!event) {
+    /*
+      An event for the members alone (§NNN), read for a members' session only: its title and nothing
+      a search engine or a link preview could use — `noindex`, no canonical, no hreflang (§342), no
+      Open Graph card, whose picture answers 404 to everybody anyway.
+    */
+    const members = await readOrWhileAway(() => membersEventBySlug(locale, slug), undefined);
+    if (!members) return {};
+    return { title: members.seoTitle ?? members.title, robots: { index: false, follow: false } };
+  }
 
   return {
     title: event.seoTitle ?? event.title,
@@ -159,7 +169,17 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
     },
     now,
   );
-  const { event, interestBox } = read.value;
+  /*
+    An event for the members alone (§NNN): the public read above never meets one, so a slug it did
+    not find is asked once more, for a members' session only, live — never through the public cache
+    or the last good copy, both shared by every visitor (`events/members-only.ts`). Anybody else gets
+    the 404 an unpublished page gives (§28), never a sentence that the event exists.
+  */
+  const membersEvent = read.value.event ? undefined : await membersEventBySlug(locale, slug);
+  const event = read.value.event ?? membersEvent ?? null;
+  // No «Anunță-mă» on a members' event: its box is a public form, and a member is told by the zone.
+  const interestBox = membersEvent ? false : read.value.interestBox;
+  const membersOnly = membersEvent !== undefined;
   // An unknown slug, or one whose translation is still Draft or In review, is a 404 — never a
   // redirect to the other locale (BR-REQ-020-01 criterion 1, BR-REQ-040-02).
   if (!event) notFound();
@@ -182,7 +202,8 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
   const weather = dated ? await forecastForEvent(dated, now) : null;
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
-      {dated && (
+      {/* No structured data for a members' event (§NNN): nothing on its page is for a search engine. */}
+      {dated && !membersOnly && (
       <JsonLd
         data={sportsEventJsonLd(
           dated,
@@ -246,9 +267,11 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
       </Typography>
       {/* An edition apart (§168): the same badge the card and the hero wear, above the
           title where the overline already says what kind of event this is. */}
-      {event.isSpecial && (
-        <Box sx={{ mt: 1 }}>
-          <GlyphChip glyph="special" color="secondary" label={t("special")} />
+      {(event.isSpecial || membersOnly) && (
+        <Box sx={{ mt: 1, display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+          {event.isSpecial && <GlyphChip glyph="special" color="secondary" label={t("special")} />}
+          {/* For the members alone (§NNN): said on the page the member opened, never elsewhere. */}
+          {membersOnly && <GlyphChip glyph="membersOnly" color="primary" label={t("membersOnly")} />}
         </Box>
       )}
 
@@ -310,6 +333,8 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
           title={event.title}
           imageHref={`/${locale}/events/${slug}/share-image`}
           fileName={instagramFileName(slug)}
+          // A members' event is not shared (§NNN): its link opens for members, its pictures for nobody.
+          shareable={!membersOnly}
           calendar={
             dated ? {
               icsHref: `/${locale}/events/${slug}/calendar.ics`,
@@ -418,7 +443,8 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
 
       {/* Nothing at all unless this event publishes one (BR-REQ-039-01). */}
       {/* Nobody registers before the date is announced (§533), so an undated event has no list. */}
-      {dated && <StartList event={dated} page={lista} />}
+      {/* Nor a members' event (§NNN): the public list is a public disclosure (§32), and this page is not public. */}
+      {dated && !membersOnly && <StartList event={dated} page={lista} />}
     </Container>
   );
 }

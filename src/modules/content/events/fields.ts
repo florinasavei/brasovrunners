@@ -750,6 +750,12 @@ export const eventFieldsSchema = z
      * means an ordinary event.
      */
     isSpecial: z.boolean().optional().default(false),
+    /**
+     * «Doar pentru membrii BVR» (§NNN): the event exists only for a signed-in member and the
+     * backoffice. Absent means this caller is not editing it — the partners' discipline — so a
+     * fixture or an older form never turns a members' event public by not mentioning it.
+     */
+    membersOnly: z.boolean().optional(),
 
     // The registration block. The database refuses the combinations this does not: capacity and
     // a declaration only on an INTERNAL event, the external fields only on an EXTERNAL one.

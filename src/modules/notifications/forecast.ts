@@ -301,6 +301,7 @@ export async function forecastAutomaticEmails<T extends Record<string, unknown>>
       timeToBeAnnounced: events.timeToBeAnnounced,
       registrationClosesAt: events.registrationClosesAt,
       publishedAt: events.publishedAt,
+      membersOnly: events.membersOnly,
       addresses: sql<number>`count(*)::int`,
     })
     .from(registrationInterests)

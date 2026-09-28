@@ -33,6 +33,7 @@ import { printedNumbersACancelWouldVoid, raceNumberOf } from "@/modules/registra
 import { deriveAllowedResendMessageType } from "@/modules/registrations/domain/resend";
 import StaffJourney from "@/modules/registrations/ui/StaffJourney";
 import FamilyChip from "@/modules/registrations/ui/FamilyChip";
+import GlyphChip from "@/modules/events/ui/GlyphChip";
 import { familyOf } from "@/modules/registrations/family-marker";
 import { canManageRegistrations, canMessageParticipants, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { REGISTRATION_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
@@ -903,6 +904,10 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         spacing={1}
         sx={{ flexWrap: "wrap", gap: 1, alignItems: "center" }}
       >
+        {/* For the members alone (§NNN): the chip the events list wears, on the event this list shows. */}
+        {events.find((event) => event.id === filters.eventId)?.membersOnly && (
+          <GlyphChip glyph="membersOnly" color="primary" label={t("events.membersOnlyChip")} />
+        )}
         <Typography variant="body2" sx={{ fontWeight: 600 }}>
           {t("registrations.summaryTotal", { count: summary.real })}
         </Typography>
@@ -1058,7 +1063,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             <MenuItem value={ALL_EVENTS}>{t("registrations.filterAll")}</MenuItem>
             {events.map((event) => (
               <MenuItem key={event.id} value={event.id}>
-                {event.title ?? event.id}
+                {/* «Membri» after the title of an event for the members alone (§NNN). */}
+                {event.membersOnly ? t("registrations.filterMembersOnly", { title: event.title ?? event.id }) : (event.title ?? event.id)}
               </MenuItem>
             ))}
           </TextField>

@@ -3,6 +3,7 @@ import { routing } from "@/i18n/routing";
 import { toCalendarEvent } from "@/modules/events/calendar";
 import { buildCalendar } from "@/modules/events/ical";
 import { datedOrNull } from "@/modules/events/domain/dated";
+import { membersEventBySlug } from "@/modules/events/members-only";
 import { eventBySlugWithLastGood } from "@/modules/resilience/event-copy";
 import { env } from "@/shared/config/env";
 
@@ -17,7 +18,10 @@ export const dynamic = "force-dynamic";
 export async function GET(_request: Request, { params }: { params: Promise<{ locale: string; slug: string }> }) {
   const { locale, slug } = await params;
   const known = routing.locales.find((candidate) => candidate === locale);
-  const found = known ? await eventBySlugWithLastGood(known, slug) : undefined;
+  const publicRow = known ? await eventBySlugWithLastGood(known, slug) : undefined;
+  // A members' event (§NNN): its file for a members' session only, read live and never cached.
+  const membersRow = known && !publicRow ? await membersEventBySlug(known, slug) : undefined;
+  const found = publicRow ?? membersRow;
   // No file while the date is to be announced (§533): a calendar entry is a date, and the page offers none.
   const event = found ? datedOrNull(found) : null;
   if (!known || !event) return new Response("Not found", { status: 404 });
@@ -33,7 +37,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ loc
     headers: {
       "Content-Type": "text/calendar; charset=utf-8",
       "Content-Disposition": `attachment; filename="${slug}.ics"`,
-      "Cache-Control": "no-cache",
+      // A members' file is nobody else's: never kept by a shared cache or the browser (§NNN).
+      "Cache-Control": membersRow ? "private, no-store, max-age=0" : "no-cache",
+      ...(membersRow ? { "X-Robots-Tag": "noindex, nofollow" } : {}),
     },
   });
 }

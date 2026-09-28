@@ -30,6 +30,7 @@ import LegalDocumentBody from "@/modules/legal-documents/ui/LegalDocumentBody";
 import { cachedBotCheckSiteKey, cachedCurrentApprovedDocument, cachedDeadlines } from "@/modules/public-cache/reads";
 import { readOrWhileAway } from "@/modules/resilience/optional-read";
 import { formEventBySlug } from "@/modules/resilience/event-copy";
+import { membersEventBySlug } from "@/modules/events/members-only";
 import { dayIn, latestBirthDateFor, yearsPhrase } from "@/modules/registrations/domain/age";
 import { readFormDraft } from "@/modules/registrations/form-draft";
 import { DECLARATION_ERROR_SUMMARY_ID } from "@/modules/registrations/form-errors";
@@ -77,7 +78,8 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
 
   const now = new Date();
   // The cached row, or the database's own at a red month's miss (§493): this page reads it anyway.
-  const found = await formEventBySlug(locale, slug);
+  // A run for the members alone (§NNN): read for a members' session only, live, never cached.
+  const found = (await formEventBySlug(locale, slug)) ?? (await membersEventBySlug(locale, slug));
   // A group run whose date is to be announced (§533) takes no signature yet: nothing to sign for.
   const event = found ? datedOrNull(found) : null;
   const key = event ? offeredGroupRunDeclarationKey(event) : null;

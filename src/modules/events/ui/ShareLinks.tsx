@@ -35,9 +35,14 @@ type Props = {
   /** What the card is called when it is shared or saved. */
   fileName: string;
   calendar?: { icsHref: string; googleUrl: string };
+  /**
+   * False on an event for the members alone (§NNN): its link opens for a member only, and its
+   * share pictures answer 404 — so no Facebook, WhatsApp or Instagram button, the calendar kept.
+   */
+  shareable?: boolean;
 };
 
-export default async function ShareLinks({ url, title, imageHref, fileName, calendar }: Props) {
+export default async function ShareLinks({ url, title, imageHref, fileName, calendar, shareable = true }: Props) {
   const t = await getTranslations("Event");
   const anchor = (href: string, label: string, icon: ReactNode, download = false) => (
     <Button
@@ -65,6 +70,7 @@ export default async function ShareLinks({ url, title, imageHref, fileName, cale
   );
   return (
     <Stack spacing={0.5}>
+      {shareable && (
       <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", gap: { xs: DENSITY.gapXs, sm: 1 } }}>
         {caption(t("share.title"))}
         <NativeShareButton url={url} title={title} text={title} label={t("share.native")} />
@@ -81,6 +87,7 @@ export default async function ShareLinks({ url, title, imageHref, fileName, cale
           <SocialIcon network="instagram" size={20} />
         </InstagramShareButton>
       </Stack>
+      )}
       {calendar && (
         <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", gap: { xs: DENSITY.gapXs, sm: 1 } }}>
           {caption(t("share.calendarTitle"))}

@@ -408,6 +408,17 @@ export const events = pgTable(
     timeToBeAnnounced: boolean("time_to_be_announced").notNull().default(false),
 
     /**
+     * «Doar pentru membrii BVR» (§NNN; the owner, 2026-09-28): the event exists only for a signed-in
+     * member of the club (§524) and for the backoffice. The shape of the place's and the start's
+     * switches (§328, §533) — a state of the event, withheld in SQL: `publishedAnyDateIn` in
+     * `events/repository.ts`, the condition every public read shares, requires it false, so the
+     * listing, the calendar, the feed, the sitemap, the share pictures and the new-event alert never
+     * meet such a row. Its page, its `.ics` and its registration form answer only a members' session,
+     * read live, never from the public cache. Switching it on cancels nothing: registrations stay.
+     */
+    membersOnly: boolean("members_only").notNull().default(false),
+
+    /**
      * The two facts that stopped being free text in migration `0018`.
      *
      * Null means the club has not said, and the page then omits the row rather than guessing —

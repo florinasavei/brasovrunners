@@ -5,8 +5,15 @@ import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { MEMBERS_TEXTS, type MembersText, saveMembersText, setMembersPagePublished } from "@/modules/content/members/page-settings";
+import {
+  createDiscountCode,
+  deleteDiscountCode,
+  moveDiscountCode,
+  saveDiscountCode,
+  setDiscountCodeHidden,
+} from "@/modules/content/member-codes/service";
 import { canEditMembersPage, canPublishMembersPage } from "@/modules/staff-identity/domain/roles";
-import { requireStaffCapability } from "@/modules/staff-identity/session";
+import { requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { flashOutcome } from "@/shared/feedback/flash";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
@@ -70,4 +77,96 @@ export async function setMembersPagePublishedAction(_previous: FormOutcome | nul
   await flashOutcome(outcome);
   const query = outcome.error ? `?error=${outcome.error}` : `?saved=${outcome.saved}`;
   redirect(`${screen(form)}${query}#${outcome.error ? "admin-alert" : "members-page"}`);
+}
+
+// --- «Coduri de reducere» (§NNN) ----------------------------------------------------------------
+
+/**
+ * The members' discount codes: a saved or added code returns on a refusal, so every box comes back as
+ * typed (§315); every other outcome is a redirect to the card with a language-neutral code and a
+ * toast (§384). The door is a staff session; the service asserts each capability again
+ * (`canManageDiscountCodes`, `canEditDiscountCodeWords`, BR-REQ-060-01).
+ */
+function codeFieldsOf(form: FormData) {
+  return {
+    partnerName: text(form, "partnerName"),
+    code: text(form, "code"),
+    descriptionRo: text(form, "descriptionRo"),
+    descriptionEn: text(form, "descriptionEn"),
+    link: text(form, "link"),
+    validUntil: text(form, "validUntil"),
+  };
+}
+
+async function backToCodes(form: FormData, outcome: { error?: string; saved?: string }, anchor = "members-codes"): Promise<never> {
+  await flashOutcome(outcome);
+  const query = outcome.error ? `?error=${outcome.error}` : `?saved=${outcome.saved ?? "1"}`;
+  redirect(`${screen(form)}${query}#${outcome.error ? "admin-alert" : anchor}`);
+}
+
+function codeOutcomeOf(error: unknown): { error: string } {
+  if (!isDomainError(error)) throw error;
+  return { error: error.code };
+}
+
+export async function createDiscountCodeAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  let id: string;
+  try {
+    const actor = await requireStaff();
+    id = (await createDiscountCode(getDb(), { actor, fields: codeFieldsOf(form) })).id;
+  } catch (error) {
+    return refused(error, form);
+  }
+  return backToCodes(form, { saved: "memberCodeCreated" }, `code-${id}`);
+}
+
+export async function saveDiscountCodeAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const codeId = text(form, "codeId");
+  try {
+    const actor = await requireStaff();
+    await saveDiscountCode(getDb(), { actor, codeId, expectedVersion: Number(text(form, "expectedVersion")), fields: codeFieldsOf(form) });
+  } catch (error) {
+    return refused(error, form);
+  }
+  return backToCodes(form, { saved: "memberCodeSaved" }, `code-${codeId}`);
+}
+
+export async function setDiscountCodeHiddenAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const codeId = text(form, "codeId");
+  const wanted = text(form, "hidden") === "true";
+  let outcome: { error?: string; saved?: string };
+  try {
+    const actor = await requireStaff();
+    await setDiscountCodeHidden(getDb(), { actor, codeId, expectedVersion: Number(text(form, "expectedVersion")), hidden: wanted });
+    outcome = { saved: wanted ? "memberCodeHidden" : "memberCodeShown" };
+  } catch (error) {
+    outcome = codeOutcomeOf(error);
+  }
+  return backToCodes(form, outcome, `code-${codeId}`);
+}
+
+/** One place up or down; lands on the code it moved. A plain form: moving asks nothing first. */
+export async function moveDiscountCodeAction(form: FormData): Promise<void> {
+  const codeId = text(form, "codeId");
+  let outcome: { error?: string; saved?: string };
+  try {
+    const actor = await requireStaff();
+    await moveDiscountCode(getDb(), { actor, codeId, direction: text(form, "direction") === "up" ? "up" : "down" });
+    outcome = { saved: "memberCodeMoved" };
+  } catch (error) {
+    outcome = codeOutcomeOf(error);
+  }
+  return backToCodes(form, outcome, `code-${codeId}`);
+}
+
+export async function deleteDiscountCodeAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  let outcome: { error?: string; saved?: string };
+  try {
+    const actor = await requireStaff();
+    await deleteDiscountCode(getDb(), { actor, codeId: text(form, "codeId") });
+    outcome = { saved: "memberCodeDeleted" };
+  } catch (error) {
+    outcome = codeOutcomeOf(error);
+  }
+  return backToCodes(form, outcome);
 }

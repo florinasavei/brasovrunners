@@ -16,6 +16,11 @@ import { formatDay } from "@/i18n/dates";
 import { getPathname } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
 import { readMembersZone } from "@/modules/content/members/page-settings";
+import { listDiscountCodesForMembers, type MembersDiscountCode } from "@/modules/content/member-codes/repository";
+import MemberCodes from "@/modules/content/member-codes/ui/MemberCodes";
+import { membersOnlyEventsFor } from "@/modules/events/members-only";
+import EventCard from "@/modules/events/ui/EventCard";
+import CardMembershipIcon from "@mui/icons-material/CardMembership";
 import type { RichTextDoc } from "@/modules/content/rich-text/domain/schema";
 import RichText from "@/modules/content/rich-text/ui/RichText";
 import { cachedUpcomingEvents } from "@/modules/public-cache/reads";
@@ -50,6 +55,31 @@ async function zoneOrAway(locale: Locale): Promise<RichTextDoc | null | "away"> 
     if (!isDatabaseAwayError(error)) throw error;
     console.error("[members-area] the database is away; the zone rests", error);
     return "away";
+  }
+}
+
+/**
+ * The club's events for its members alone (§NNN), and its discount codes (§NNN): read here, per
+ * request, behind the account this page asked for — live, never through the public cache, which is
+ * shared by everybody. Empty while the database is away, like «Următoarele alergări».
+ */
+async function membersOnlyOrNone(account: Parameters<typeof membersOnlyEventsFor>[0], locale: Locale, now: Date) {
+  try {
+    return await membersOnlyEventsFor(account, locale, now);
+  } catch (error) {
+    unstable_rethrow(error);
+    if (!isDatabaseAwayError(error)) throw error;
+    return [];
+  }
+}
+
+async function codesOrNone(now: Date): Promise<MembersDiscountCode[]> {
+  try {
+    return await listDiscountCodesForMembers(getDb(), now);
+  } catch (error) {
+    unstable_rethrow(error);
+    if (!isDatabaseAwayError(error)) throw error;
+    return [];
   }
 }
 
@@ -116,7 +146,13 @@ export default async function MembersAreaPage({ params }: Props) {
   if (!canOpenMembersZone(account.role)) notFound();
 
   const t = await getTranslations("Members");
-  const [zone, upcoming] = await Promise.all([zoneOrAway(locale), upcomingOrNone(locale, new Date())]);
+  const now = new Date();
+  const [zone, upcoming, membersEvents, codes] = await Promise.all([
+    zoneOrAway(locale),
+    upcomingOrNone(locale, now),
+    membersOnlyOrNone(account, locale, now),
+    codesOrNone(now),
+  ]);
 
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
@@ -141,6 +177,28 @@ export default async function MembersAreaPage({ params }: Props) {
           {t("zoneEmpty")}
         </Typography>
       )}
+
+      {/*
+        «Evenimente pentru membri» (§NNN): the club's events for its members alone, upcoming first,
+        on the listing's own card with its door — the register button included. Nowhere else on the
+        site. Nothing when there is none.
+      */}
+      {membersEvents.length > 0 && (
+        <Box component="section" aria-labelledby="members-events-title" sx={{ mb: { xs: DENSITY.sectionGap, sm: 3 } }} data-testid="members-events">
+          <Typography id="members-events-title" variant="h2" sx={{ fontSize: "1.25rem", mb: 1, display: "flex", alignItems: "center", gap: 0.75 }}>
+            <CardMembershipIcon aria-hidden="true" sx={{ fontSize: 22 }} />
+            {t("eventsTitle")}
+          </Typography>
+          <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" } }}>
+            {membersEvents.map((event, index) => (
+              <EventCard key={event.id} event={event} index={index} now={now} />
+            ))}
+          </Box>
+        </Box>
+      )}
+
+      {/* «Coduri de reducere» (§NNN): the partners' codes, for the members alone (§517). */}
+      {codes.length > 0 && <MemberCodes codes={codes} locale={locale} />}
 
       <Box component="section" aria-labelledby="members-upcoming-title" sx={{ mb: { xs: DENSITY.sectionGap, sm: 3 } }} data-testid="members-upcoming">
         <Typography id="members-upcoming-title" variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>

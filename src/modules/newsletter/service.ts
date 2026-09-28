@@ -521,6 +521,7 @@ export async function queueNewEventAlerts<T extends Record<string, unknown>>(db:
       startsAt: events.startsAt,
       publishedAt: events.publishedAt,
       repeatOf: events.repeatOf,
+      membersOnly: events.membersOnly,
       coHosts: events.coHosts,
       coHostName: events.coHostName,
       coHostUrl: events.coHostUrl,
@@ -537,6 +538,9 @@ export async function queueNewEventAlerts<T extends Record<string, unknown>>(db:
         // that falls inside the window a publication has, like any other new event.
         eq(events.dateToBeAnnounced, false),
         eq(events.timeToBeAnnounced, false),
+        // Not an event for the members alone (§NNN): no subscriber hears of it. Still unseen, it is
+        // announced if the switch goes off inside the window a publication has, like any new event.
+        eq(events.membersOnly, false),
         sql`${events.publishedAt} >= ${since.toISOString()}::timestamptz`,
       ),
     )

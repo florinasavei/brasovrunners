@@ -17,6 +17,7 @@ import { TURNSTILE_FIELD } from "@/modules/registrations/domain/turnstile-widget
 import { verifyTurnstile } from "@/modules/registrations/turnstile";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { isDatabaseAwayError } from "@/modules/resilience/domain/database-away";
+import { membersViewer } from "@/modules/events/members-only";
 
 function text(form: FormData, name: string): string {
   const value = form.get(name);
@@ -84,6 +85,8 @@ async function signOrRefuse(form: FormData, locale: Locale, path: string): Promi
         locale: signingLocale,
         honeypot: text(form, "honeypot") || undefined,
         renderedAt: text(form, "renderedAt") || undefined,
+        // A run for the members alone (§NNN) takes a signature from a members' session only.
+        membersSession: async () => (await membersViewer()) !== null,
       },
       new Date(),
     );

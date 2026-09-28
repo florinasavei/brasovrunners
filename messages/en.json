@@ -434,7 +434,8 @@
         "captcha": "The anti-bot check did not pass. Please try again.",
         "action": "Sign the declaration"
       }
-    }
+    },
+    "membersOnly": "Members only"
   },
   "Admin": {
     "botCheck": {
@@ -759,7 +760,8 @@
       "socialsOnList": "also on the public list, beside the name",
       "resubmittedHeld": "Registered again with the same address: {date} ({state}) — “{message}” is already waiting to leave, and leaves only once",
       "familyChip": "Family",
-      "resendSentNow": "The email is leaving now, without waiting for the scheduled round."
+      "resendSentNow": "The email is leaving now, without waiting for the scheduled round.",
+      "filterMembersOnly": "{title} · Members"
     },
     "events": {
       "empty": "There is no event in the database.",
@@ -880,7 +882,8 @@
       },
       "listApply": "Apply",
       "listCount": "{shown} of {total} events",
-      "listEmpty": "No event matches. Change the search or the state, or clear the filters."
+      "listEmpty": "No event matches. Change the search or the state, or clear the filters.",
+      "membersOnlyChip": "Members"
     },
     "confirm": {
       "cancel": "Never mind",
@@ -1838,7 +1841,10 @@
       "declarationKinds": {
         "EVENT_DECLARATION": "Trail",
         "EVENT_DECLARATION_ROAD": "Road or park"
-      }
+      },
+      "membersOnly": "BVR members only",
+      "membersOnlyHelp": "Only signed-in members see it; it is not on the public site. Existing registrations stay.",
+      "membersOnlyShort": "Members only"
     },
     "preview": {
       "notice": "Staff preview. The status of this text is: {status}. This page is not public and is not indexed.",
@@ -4833,6 +4839,8 @@
                 "A member has an account but no backoffice: after «Sign in» they see the members' area alone.",
                 "«Staff» → «Add someone», «Role» «Membru», or «Add several members» for a list. Press «Add» and confirm; the member gets the invitation by email.",
                 "The words: «Pages» → «Standard pages» → «Members». «Members' benefits» is the public page with the sign-in button; «The members' area» is what a member sees after signing in. Both in Romanian and English.",
+                "Discount codes: on the same page, «Discount codes» → «Add a code». Only signed-in members see them, in their area.",
+                "An event for members only: in the editor, «What kind of event» → «BVR members only». It appears only in the members' area and only members register.",
                 "Put the page on the site: «Publish the page» (the Administrator only)."
               ]
             }
@@ -5484,7 +5492,54 @@
       "zoneRo": "Members' area (Romanian)",
       "zoneEn": "Members' area (English)",
       "textEmpty": "Not written yet.",
-      "textHelp": "In both languages or in neither, at most {max} characters each. As on a page: headings, lists, links, pictures, a table."
+      "textHelp": "In both languages or in neither, at most {max} characters each. As on a page: headings, lists, links, pictures, a table.",
+      "codes": {
+        "heading": "Discount codes",
+        "count": {
+          "one": "{count} code",
+          "few": "{count} codes",
+          "other": "{count} codes"
+        },
+        "help": "The codes appear only in the members' area, after signing in. They are not on the site, in emails or in the newsletter.",
+        "wordsOnly": "You may write the partner and the description. An administrator changes the code, the link and the date.",
+        "add": "Add a code",
+        "create": "Add the code",
+        "empty": "There is no code yet.",
+        "listLabel": "The discount codes, in the members' area's order",
+        "shown": "Shown to members",
+        "hidden": "Hidden",
+        "expired": "Expired",
+        "until": "Until {day}",
+        "oneLanguage": "Description in one language only",
+        "moveUp": "Move the {partner} code up",
+        "moveDown": "Move the {partner} code down",
+        "showTitle": "Show the {partner} code again?",
+        "showBody": "Members will see it in their area.",
+        "show": "Show",
+        "hideTitle": "Hide the {partner} code?",
+        "hideBody": "Members no longer see it. The code stays here and you can show it again at any time.",
+        "hide": "Hide",
+        "deleteTitle": "Delete the {partner} code?",
+        "deleteBody": "The code is gone for good, for every member.",
+        "delete": "Delete",
+        "edit": "Edit",
+        "saveTitle": "Save the {partner} code?",
+        "saveBody": "Members see the new text as soon as you save.",
+        "partner": "Partner",
+        "partnerHelp": "Who gives the discount, for example the shop's name.",
+        "code": "The code",
+        "codeHelp": "Exactly as the member types it at the partner's.",
+        "descriptionRo": "Description (Română)",
+        "descriptionEn": "Description (English)",
+        "descriptionHelp": "What it gives and how to use it, in short.",
+        "bothOrNeither": "In both languages or in neither.",
+        "link": "Link (optional)",
+        "linkHelp": "Where the code is used, with https://.",
+        "validUntil": "Valid until (optional)",
+        "validUntilHelp": "The last day members see it. Empty: no end.",
+        "createTitle": "Add the code?",
+        "createBody": "Members see it in their area as soon as you add it."
+      }
     }
   },
   "NotFound": {
@@ -5856,7 +5911,9 @@
       "placeWaitlist": "on the waiting list, once confirmed",
       "reservedHelp": "Each place is reserved the moment you send its form. The button in the email confirms them all.",
       "reservationLapsed": "The places are no longer reserved. Confirm the address from the email; if there is still room, you get it then."
-    }
+    },
+    "membersAddressLabel": "Your member account's address",
+    "membersAddressHelp": "You register with your account's address. One account registers one person."
   },
   "Registrations": {
     "invalidOrExpired": "This link is no longer valid. We can send you a new one, to the same email address.",
@@ -6888,7 +6945,13 @@
         "one": "The email is leaving now for {count} participant; the other {later} leave at the scheduled round.",
         "few": "The email is leaving now for the first {count} participants; the other {later} leave at the scheduled round.",
         "other": "The email is leaving now for the first {count} participants; the other {later} leave at the scheduled round."
-      }
+      },
+      "memberCodeCreated": "The code was added. Members see it.",
+      "memberCodeSaved": "The code was saved.",
+      "memberCodeHidden": "The code was hidden.",
+      "memberCodeShown": "The code is shown to members again.",
+      "memberCodeMoved": "The order of the codes was changed.",
+      "memberCodeDeleted": "The code was deleted."
     }
   },
   "Network": {
@@ -7136,6 +7199,12 @@
     "signOut": "Sign out",
     "upcomingTitle": "The next runs",
     "upcomingEmpty": "No run is announced right now.",
-    "upcomingAll": "Every event"
+    "upcomingAll": "Every event",
+    "eventsTitle": "Events for members",
+    "codesTitle": "Discount codes",
+    "copyCode": "Copy the code",
+    "codeCopied": "Copied",
+    "codeValidUntil": "Valid until {day}, inclusive.",
+    "codeLink": "Open the partner's page"
   }
 }
