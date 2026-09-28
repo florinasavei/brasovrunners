@@ -272,7 +272,7 @@
         "few": "{count} locuri",
         "other": "{count} de locuri"
       },
-      "full": "Nu mai sunt locuri libere. Poți intra pe lista de așteptare: dacă se eliberează un loc, primul de pe listă îl primește.",
+      "full": "Nu mai sunt locuri. Pe lista de așteptare, primul primește locul care se eliberează.",
       "waitlistFull": "Locurile și lista de așteptare sunt pline.",
       "fullNoWaitlist": "Toate locurile au fost ocupate, așa că înscrierile s-au închis.",
       "waitlistRoom": {
@@ -5507,13 +5507,13 @@
     "privacyLinkLabel": "nota de confidențialitate",
     "listOptIn": "Vreau să apar pe lista de participanți",
     "listSocials": "Arată și Strava și Instagram lângă numele meu pe listă",
-    "listSocialsHelp": "Doar împreună cu bifa de mai sus, că vrei să apari pe listă. Le scoți oricând din „Înscrierile mele”, ștergând Strava și Instagram sau ieșind de pe listă.",
+    "listSocialsHelp": "Doar cu bifa de mai sus. Le scoți oricând din „Înscrierile mele”.",
     "submit": "Trimite înscrierea",
     "submitting": "Se trimite…",
     "incompleteHint": "Completează câmpurile marcate cu * ca să trimiți.",
     "missingTitle": "Mai lipsesc:",
     "submittedTo": "L-am trimis la adresa:",
-    "submittedAlready": "Dacă erai deja înscris la acest eveniment, emailul conține confirmarea ta existentă — nu s-a creat o a doua înscriere.",
+    "submittedAlready": "Dacă erai deja înscris, emailul îți arată înscrierea existentă: nu se creează a doua.",
     "done": {
       "heading": "Aproape gata!",
       "headingNamed": "Aproape gata, {name}!",
@@ -5528,21 +5528,21 @@
       "next": {
         "open": {
           "title": "Deschizi emailul și apeși linkul",
-          "body": "Atât. Linkul e valabil {confirmation}."
+          "body": "Linkul e valabil {confirmation}."
         },
         "declare": {
           "title": "Semnezi declarația",
           "body": "Din același email: o citești și îți scrii numele — online, sau pe hârtie la masa de înscrieri în ziua cursei.",
-          "bodyLater": "Locul e al tău. Îți cerem confirmarea cu {opens} înainte de start: semnezi declarația online — sau pe hârtie, la masa de înscrieri în ziua cursei. Poți semna și mai devreme, din emailul de înscriere."
+          "bodyLater": "Locul e al tău. Semnezi declarația cu {opens} înainte de start, online sau pe hârtie la masa de înscrieri; poți semna și mai devreme."
         },
         "confirmed": {
           "title": "Ești înscris",
           "body": "Primești confirmarea, cu codul QR și numărul de concurs. Ne vedem la start!"
         }
       },
-      "delay": "De obicei ajunge într-un minut, cel târziu în cinci.",
-      "delayScheduled": "Emailurile pleacă la trecerea programată a platformei, așa că ajunge în cel mult {wait}.",
-      "notArrived": "Nu a venit? Uită-te și în Spam. Linkul e valabil {confirmation}, așa că ai timp.",
+      "delay": "Ajunge în cel mult cinci minute.",
+      "delayScheduled": "Ajunge în cel mult {wait}.",
+      "notArrived": "Nu a venit? Uită-te și în Spam.",
       "backToEvent": "Înapoi la eveniment",
       "family": "Un singur email, pentru toți: {names}.",
       "familyEach": "Fiecare persoană primește emailul ei."
@@ -5582,7 +5582,6 @@
     "displayName": "Nume afișat public",
     "displayNameHelp": "Implicit, pe listă și în rezultate apare numele tău complet; dacă preferi altceva, de exemplu „Ana P.”, scrie-l aici.",
     "birthDate": "Data nașterii",
-    "birthDateHelp": "Vârsta minimă este {age} împliniți în ziua cursei. Categoriile de vârstă se calculează tot la data cursei.",
     "birthDateEcho": "{date} · {age} în ziua evenimentului",
     "ageRule": {
       "minimumAndGuardian": "Vârsta minimă: {age}. Sub 18 ani, înscrierea se face de un părinte sau tutore, cu acordul acestuia.",
@@ -5595,15 +5594,14 @@
       "MALE": "Masculin",
       "UNSPECIFIED": "Prefer să nu spun"
     },
-    "sexHelp": "Pentru clasamentele pe categorii. Alege un răspuns — „Prefer să nu spun” e și el unul.",
+    "sexHelp": "Pentru clasamentele pe categorii.",
     "sexChoose": "Alege…",
     "sexMissing": "Alege sexul — poți alege „Prefer să nu spun”",
     "nationality": "Cetățenie",
     "country": "Țara de reședință",
     "city": "Oraș",
-    "originHelp": "Ne arată de unde vin participanții evenimentelor clubului.",
     "preferredLocale": "Limba în care vrei emailurile și declarația",
-    "preferredLocaleHelp": "Emailurile vin în ambele limbi; aceasta e prima. Declarația o semnezi în limba aleasă.",
+    "preferredLocaleHelp": "Emailurile vin în ambele limbi, aceasta prima.",
     "preferredLocaleOptions": {
       "ro": "Română",
       "en": "English"
@@ -5616,18 +5614,16 @@
       "open": "Deschide lista țărilor",
       "close": "Închide lista țărilor"
     },
-    "phoneHelp": "Numărul fără prefixul țării — de exemplu 0712 345 678.",
+    "phoneHelp": "Fără prefixul țării, de exemplu 0712 345 678.",
     "emergencyContactName": "Persoană de contact în caz de urgență",
     "emergencyContactPhone": "Telefonul persoanei de contact",
-    "emergencyContactHelp": "Spune-i persoanei că ne-ai dat numele și numărul ei: o sunăm doar dacă ți se întâmplă ceva la cursă. Le păstrăm cât înscrierea.",
+    "emergencyContactHelp": "Spune-i persoanei că ne-ai dat numărul ei: o sunăm doar dacă pățești ceva la cursă. Le ștergem la șapte zile după eveniment.",
     "tshirtSize": "Mărime tricou",
     "tshirtSizes": {
       "NONE": "Fără tricou"
     },
     "clubName": "Club sau echipă",
-    "optional": "Opțional",
     "healthNotes": "Afecțiuni, alergii sau medicație",
-    "healthNotesHelp": "Doar ce ar trebui să știe organizatorii dacă ai nevoie de ajutor în ziua cursei. Poți lăsa gol.",
     "healthConsent": "Sunt de acord ca organizatorii cursei să păstreze aceste informații medicale, doar pentru siguranța mea în ziua cursei. Le pot retrage oricând din „Înscrierile mele”.",
     "displayNameToggle": "Vrei să apari public sub alt nume?",
     "displayNamePlaceholder": "Ana P.",
@@ -5660,7 +5656,7 @@
       "termsAccepted": "Acceptarea termenilor și condițiilor",
       "fitnessAcknowledged": "Confirmarea despre declarația de sănătate a persoanei"
     },
-    "requiredLegend": "Câmpurile marcate cu * sunt obligatorii. Restul sunt opționale — lasă-le goale dacă preferi să nu răspunzi.",
+    "requiredLegend": "Câmpurile cu * sunt obligatorii.",
     "optionalSuffix": "opțional",
     "resend": {
       "title": "Retrimite linkul de înregistrare",
@@ -5686,9 +5682,9 @@
       },
       "declaration": {
         "title": "Semnezi declarația",
-        "body": "Din același email, citești declarația și îți scrii numele — online, sau pe hârtie la masa de înscrieri în ziua cursei. Înscrierea e completă doar cu declarația semnată. Locul e ținut {hold}; dacă se formează listă de așteptare, după acest termen trece la următorul.",
-        "bodyLater": "Locul e al tău, dar cursa e gratuită, așa că îți cerem o confirmare: cu {opens} înainte de start primești un email și semnezi declarația pe proprie răspundere — online, sau pe hârtie la masa de înscrieri în ziua cursei. Poți semna și mai devreme, din emailul de înscriere. Dacă se formează listă de așteptare, locul îți este ținut până {due}; după, trece la următorul.",
-        "bodyLaterAtStart": "Locul e al tău, dar cursa e gratuită, așa că îți cerem o confirmare: poți semna declarația pe proprie răspundere de acum, din emailul de înscriere, oricând până la start — online, sau pe hârtie la masa de înscrieri în ziua cursei. Cu {opens} înainte de start îți amintim printr-un email. Locul nu expiră înainte de start."
+        "body": "Din același email, o semnezi online sau pe hârtie, la masa de înscrieri în ziua cursei. Locul e ținut {hold}; dacă e listă de așteptare, apoi trece la următorul.",
+        "bodyLater": "Cursa e gratuită, așa că îți cerem o confirmare: cu {opens} înainte de start primești un email și semnezi declarația, online sau pe hârtie la masa de înscrieri. Poți semna și mai devreme. Dacă e listă de așteptare, locul e ținut până {due}.",
+        "bodyLaterAtStart": "Cursa e gratuită, așa că îți cerem o confirmare: semnezi declarația din emailul de înscriere oricând până la start, online sau pe hârtie la masa de înscrieri. Îți amintim cu {opens} înainte. Locul nu expiră înainte de start."
       },
       "confirmed": {
         "title": "Ești înscris",
@@ -5715,7 +5711,7 @@
         "declare": "Semnează declarația"
       },
       "now": {
-        "details": "Completează formularul. După trimitere îți scriem pe email ca să confirmi adresa.",
+        "details": "După trimitere îți scriem pe email ca să confirmi adresa.",
         "confirm": "Ți-am trimis un email cu un link de confirmare.",
         "declare": "Mai rămâne un pas: citește și semnează declarația — aici, sau pe hârtie la masa de înscrieri în ziua cursei. Locul tău este rezervat. După ce semnezi, îți trimitem pe email declarația semnată (PDF) și numărul de concurs — de obicei în câteva minute, cel târziu într-o oră.",
         "declareScheduled": "Mai rămâne un pas: citește și semnează declarația — aici, sau pe hârtie la masa de înscrieri în ziua cursei. Locul tău este rezervat. După ce semnezi, îți trimitem pe email declarația semnată (PDF) și numărul de concurs — pleacă la trecerea programată a platformei, în cel mult {wait}.",
@@ -5729,27 +5725,24 @@
       "guardian": "Înscriu un minor — părinte sau tutore legal"
     },
     "clubMemberDeclared": "Sunt membru al grupului {club}",
-    "clubNameFromMembership": "Completat automat, pentru că ai bifat că ești membru. Debifează ca să scrii alt club.",
+    "clubNameFromMembership": "Completat din bifa de membru. Debifează ca să scrii alt club.",
     "facts": {
       "details": "Detaliile evenimentului",
       "rules": "Regulamentul",
       "terms": "Termeni de concurs",
       "privacy": "Confidențialitate"
     },
-    "socialsHelp": "Opțional. Le folosim doar ca să te urmărim și să te etichetăm în postările clubului; o etichetă e publică pe acea rețea. Nu apar pe site. Le poți șterge oricând din „Înscrierile mele”.",
-    "socialsHelpList": "Opțional. Le folosim ca să te urmărim și să te etichetăm în postările clubului; eticheta e publică pe acea rețea. Pe site apar doar cu bifa de mai jos. Le ștergi oricând din „Înscrierile mele”.",
+    "socialsHelp": "Le folosim doar ca să te urmărim și să te etichetăm în postările clubului; eticheta e publică pe acea rețea. Nu apar pe site. Le ștergi oricând din „Înscrierile mele”.",
+    "socialsHelpList": "Le folosim ca să te urmărim și să te etichetăm în postările clubului; eticheta e publică pe acea rețea. Pe site apar doar cu bifa de mai jos. Le ștergi oricând din „Înscrierile mele”.",
     "stravaUrl": "Profilul tău de Strava (link)",
     "stravaUrlHelp": "Din aplicația Strava: Profil → Distribuie → copiază linkul.",
     "instagramHandle": "Instagram (numele de utilizator)",
-    "instagramHandleHelp": "Cu sau fără @.",
-    "guardianHelp": "Sub 18 ani înscrie părintele sau tutorele: semnează declarația, ridică kitul și dă acordurile de mai jos pentru copil. Emailul și telefonul pot fi ale tale.",
+    "guardianHelp": "Obligatoriu sub 18 ani. Tu, părintele sau tutorele, semnezi declarația și dai acordurile de mai jos pentru copil; emailul și telefonul pot fi ale tale.",
     "guardianName": "Numele complet al părintelui / tutorelui",
     "guardianNameHelp": "Obligatoriu sub 18 ani. Acest nume apare pe declarație ca semnatar.",
-    "privacyBanner": "Datele tale nu apar pe site. Le folosește clubul doar ca să organizeze cursa: le văd echipa de organizare și furnizorii care găzduiesc site-ul și trimit emailurile. Declarația semnată îți vine pe email, iar o copie, cu seria și numărul actului de identitate mascate (rămân cel mult primele două și ultimele două caractere), ajunge în arhiva clubului. Păstrăm înscrierea trei ani de la eveniment.",
-    "privacyBannerWithList": "Datele tale nu apar pe site — cu o singură excepție: la acest eveniment există o listă publică de participanți, iar acolo apar numele tău și clubul pe care l-ai scris, doar dacă bifezi tu, mai jos. Fără bifă, după confirmare ești doar numărat, ca „Participant (nume ascuns)”. Nimic altceva nu se publică: nici emailul, nici telefonul, nici data nașterii. Datele le folosește clubul doar ca să organizeze cursa: le văd echipa de organizare și furnizorii care găzduiesc site-ul și trimit emailurile. Declarația semnată îți vine pe email, iar o copie, cu seria și numărul actului de identitate mascate (rămân cel mult primele două și ultimele două caractere), ajunge în arhiva clubului. Păstrăm înscrierea trei ani de la eveniment.",
-    "confidentialNote": "Confidențial. Nu se publică.",
-    "contactNote": "Confidențial. Folosit doar ca să te anunțăm și ca să sunăm pe cineva dacă ți se întâmplă ceva în cursă.",
-    "healthIntro": "Opțional: doar ce ar trebui să știe organizatorii dacă ai nevoie de ajutor. O văd doar ei și se șterge la șapte zile după eveniment.",
+    "privacyBanner": "Datele tale nu apar pe site. Le folosim doar ca să organizăm cursa: le văd echipa de organizare și furnizorii care găzduiesc site-ul și trimit emailurile. Declarația semnată îți vine pe email, iar o copie, cu actul de identitate mascat, ajunge în arhiva clubului. Păstrăm înscrierea trei ani de la eveniment.",
+    "privacyBannerWithList": "Datele tale nu apar pe site, cu o excepție: numele tău și clubul apar pe lista publică a acestui eveniment doar dacă bifezi mai jos; fără bifă ești doar numărat. Le folosim doar ca să organizăm cursa: le văd echipa de organizare și furnizorii care găzduiesc site-ul și trimit emailurile. Declarația semnată îți vine pe email, iar o copie, cu actul de identitate mascat, ajunge în arhiva clubului. Păstrăm înscrierea trei ani de la eveniment.",
+    "healthIntro": "Doar ce ar trebui să știe organizatorii dacă ai nevoie de ajutor. O văd doar ei și se șterge la șapte zile după eveniment.",
     "fitnessDeclared": "Declar pe propria răspundere că sunt apt medical să particip.",
     "clubMemberHint": "Am fost la cel puțin 3 alergări de grup în ultimul an.",
     "rules": {
@@ -5775,7 +5768,6 @@
     "emailInvalid": "Asta nu pare o adresă de email. Verifică literele și semnul @.",
     "emailSuggestion": "Ai vrut să scrii {address}?",
     "emailUseSuggestion": "Da, corectează",
-    "emailHelp": "Aici îți trimitem linkul de confirmare. Scrie-o cu atenție.",
     "phoneTooShort": "Continuă — un număr are cel puțin 4 cifre.",
     "phoneValid": "Arată bine. Îl salvăm ca",
     "botCheckWait": "Se verifică… trimitem noi înscrierea imediat ce răspunde; nu mai apăsa.",
@@ -5965,9 +5957,8 @@
     },
     "mine": {
       "title": "Înscrierile mele",
-      "intro": "Scrie adresa cu care te-ai înscris și îți trimitem un singur link cu toate înscrierile tale active — starea fiecăreia, codul de acces și codul QR, și posibilitatea de a renunța.",
+      "intro": "Scrie adresa cu care te-ai înscris și îți trimitem un link cu toate înscrierile tale.",
       "email": "Adresa de email",
-      "emailHelp": "Adresa folosită la înscriere.",
       "submit": "Trimite-mi linkul",
       "sent": "Dacă există înscrieri pe această adresă, tocmai am trimis linkul acolo. Verifică inclusiv folderul de spam.",
       "listTitle": "Înscrierile tale",
@@ -5992,14 +5983,14 @@
       "closedTitle": "Înscrieri încheiate",
       "closedHelp": "Aceste înscrieri nu mai sunt active, dar păstrează informații pe care ni le-ai dat cu acordul tău; le poți șterge de aici.",
       "eventCancelledChip": "Eveniment anulat",
-      "eventCancelled": "Evenimentul a fost anulat. Înscrierea ta rămâne la noi ca înregistrare, cu starea de mai sus, și nu trebuie să faci nimic.",
+      "eventCancelled": "Nu trebuie să faci nimic: înscrierea rămâne la noi ca înregistrare, cu starea de mai sus.",
       "runner": "Înscris: {name}",
       "confirmBy": "Confirmă semnând declarația, din emailul de înscriere, până {due}. Sau pe hârtie, la masa de înscrieri, în ziua cursei.",
       "familySign": {
         "body": "La {event} așteaptă semnătura declarațiile pentru: {names}. Le poți semna aici pe toate, una după alta.",
         "action": "Semnează declarațiile"
       },
-      "sentScheduled": "Dacă există înscrieri pe această adresă, linkul pleacă acolo la următoarea trecere programată a platformei, în cel mult {wait}. Verifică inclusiv folderul de spam.",
+      "sentScheduled": "Dacă există înscrieri pe această adresă, linkul pleacă acolo în cel mult {wait}. Verifică inclusiv folderul de spam.",
       "declaration": {
         "signed": "Declarația: semnată — {when}",
         "toSign": "Declarația: de semnat",
@@ -6409,12 +6400,10 @@
   },
   "Contact": {
     "title": "Scrie-ne",
-    "intro": "O întrebare despre o alergare, o înscriere sau club? Scrie-ne aici — mesajul ajunge direct în căsuța clubului și îți răspundem pe e-mail.",
+    "intro": "O întrebare despre o alergare, o înscriere sau club? Îți răspundem pe e-mail.",
     "faqHint": "Poate găsești răspunsul la <faq>Întrebări frecvente</faq>.",
-    "requiredLegend": "Câmpurile marcate cu * sunt obligatorii.",
     "name": "Numele tău",
     "email": "Adresa ta de e-mail",
-    "emailHelp": "Îți răspundem pe această adresă.",
     "message": "Mesajul",
     "messageHelp": "Cel mult 2000 de caractere.",
     "privacy": "Mesajul ajunge ca e-mail în căsuța clubului, la Gmail (Google), unde îl citesc cei din echipă care răspund. Îl folosim doar ca să-ți răspundem și îl ștergem după cel mult 12 luni.",
@@ -6931,15 +6920,14 @@
       "RESULTS_PHOTOS": "Rezultatele și albumele de poze de după evenimente."
     },
     "heading": "Noutățile clubului pe email",
-    "intro": "Alege ce vrei să afli de la noi — evenimentele mari, testări de încălțăminte, alergările săptămânale, voluntariat — și îți scriem doar despre asta.",
+    "intro": "Alege temele care te interesează și îți scriem doar despre ele.",
     "open": "Abonează-te la noutăți",
     "dialogTitle": "Abonează-te la noutățile clubului",
     "dialogIntro": "Bifează ce te interesează. Îți trimitem un email cu un link de confirmare; până nu îl apeși, nu primești nimic altceva.",
     "close": "Închide",
     "email": "Adresa de email",
-    "emailHelp": "Aici îți trimitem linkul de confirmare și, după aceea, noutățile.",
     "topicsLegend": "Ce vrei să primești",
-    "topicsHelp": "Alege cel puțin o temă. Le poți schimba oricând din linkul din fiecare email.",
+    "topicsHelp": "Cel puțin o temă.",
     "privacy": "Păstrăm adresa și temele alese doar ca să îți trimitem aceste emailuri; te dezabonezi oricând din linkul din fiecare mesaj. Detalii în",
     "privacyLinkLabel": "nota de confidențialitate",
     "consent": "Am citit nota de confidențialitate și sunt de acord să primesc pe email noutățile clubului despre temele bifate.",
@@ -6948,7 +6936,7 @@
     "sent": {
       "title": "Verifică-ți căsuța de email",
       "body": "Dacă adresa e bună, în câteva minute primești un email cu un link. Abonarea începe doar după ce apeși linkul. Nu îl găsești? Uită-te și în dosarul Spam.",
-      "bodyScheduled": "Dacă adresa e bună, primești un email cu un link în cel mult {wait} — emailurile pleacă la trecerea programată a platformei. Abonarea începe doar după ce apeși linkul. Nu îl găsești? Uită-te și în dosarul Spam."
+      "bodyScheduled": "Dacă adresa e bună, primești un email cu un link în cel mult {wait}. Abonarea începe doar după ce apeși linkul. Nu îl găsești? Uită-te și în dosarul Spam."
     },
     "errors": {
       "title": "Abonarea nu a pornit încă",
@@ -7004,7 +6992,7 @@
   },
   "Faq": {
     "title": "Întrebări frecvente",
-    "lead": "Ce ne întreabă cei care vin prima dată la {club}: cum te înscrii, ce aduci, unde ne găsești. Apasă pe o întrebare ca să vezi răspunsul.",
+    "lead": "Ce ne întreabă cei care vin prima dată la {club}: cum te înscrii, ce aduci, unde ne găsești.",
     "empty": "Întrebările clubului apar aici în curând.",
     "listLabel": "Întrebările și răspunsurile clubului",
     "contact": "Nu găsești răspunsul? <contact>Scrie-ne</contact>."

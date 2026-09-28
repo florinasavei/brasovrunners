@@ -66,7 +66,7 @@ export default async function MyRegistrationsRequestPage({ params, searchParams 
               label={t("mine.email")}
               required
               autoComplete="email"
-              helperText={t("mine.emailHelp")}
+              // No helper (§NNN): the sentence above says which address.
             />
             <Button type="submit" variant="contained" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }}>
               <ForwardToInboxIcon aria-hidden="true" sx={glyphSx("medium")} />
