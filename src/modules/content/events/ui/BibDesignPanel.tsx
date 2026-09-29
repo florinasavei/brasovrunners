@@ -1,14 +1,14 @@
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import RecallField, { RecallRadio } from "@/shared/forms/recall";
+import RecallField from "@/shared/forms/recall";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import { getLocale, getTranslations } from "next-intl/server";
 import { getDb } from "@/db/client";
 import type { Locale } from "@/i18n/routing";
 import { shownContactAddressesOrDefault } from "@/modules/contact/shown-address";
+import { richTextEditorLabels } from "@/modules/content/rich-text/ui/labels";
 import { isStorageConfigured } from "@/modules/media/storage";
-import { listMediaAssetsForAdmin } from "@/modules/media/references";
 import {
   BIB_NAME_POSITIONS,
   BIB_NUMBER_SCALES,
@@ -17,9 +17,12 @@ import {
 } from "@/modules/registrations/bib-design";
 import { bibPreviewUrl } from "@/modules/registrations/bib-design-query";
 import { BIB_FOOTER_TEXT_MAX, bibWebsiteHost } from "@/modules/registrations/bib-footer";
+import { BIB_PICTURE_RATIO, type BibPictureSlot } from "@/modules/registrations/bib-picture-frame";
+import { readBibPictureFacts } from "@/modules/registrations/bib-pictures";
 import { env } from "@/shared/config/env";
 import Panel from "@/shared/ui/Panel";
 import BibDesignPreview from "./BibDesignPreview";
+import BibPictureField, { type BibPictureLabels } from "./BibPictureField";
 import BibFooterTextField from "./BibFooterTextField";
 
 /**
@@ -28,9 +31,10 @@ import BibFooterTextField from "./BibFooterTextField";
  *
  * A Server Component with ordinary inputs, folded away under the colour it extends — the bib's
  * colour has lived in this form since §173 and this is the rest of the same question. No
- * JavaScript decides anything: the checkboxes and the two selects post their own values, and
- * the pictures are radio buttons over the pictures already uploaded, so choosing one is a form
- * control rather than a widget.
+ * JavaScript decides the switches: the checkboxes and the two selects post their own values. The
+ * two pictures — the header strip and the sponsors' band — are the backoffice's own picture
+ * control since §NNN (`BibPictureField`): an upload or «Din galerie», then the crop box in the
+ * place's one shape, the address and the crop in hidden fields the save posts with the rest.
  *
  * The one client island is the preview at the top (`BibDesignPreview`; the owner: "la BID îmi
  * trebuie un preview aici"): the bib as the picture route draws it for a sample runner, with
@@ -75,12 +79,15 @@ export default async function BibDesignPanel({
   const locale = (await getLocale()) as Locale;
   const initialSrc = eventId ? bibPreviewUrl({ eventId, locale, number: String(bibStartNumber), colour: bibColour, design }) : null;
   /*
-    The pictures already uploaded, read here rather than fetched by the browser: this form is a
-    Server Component and the list is the same one the pictures page shows. Nothing is offered
-    when there is no store configured — a local machine without R2 — and the two choices then
-    read "the club's colour" and "no sponsors", which is what such a deployment can honour.
+    The two stored pictures' facts — the asset, its small file, its size for the crop box (§NNN) —
+    read here in one query; the gallery's list is asked for only when «Din galerie» opens (§485).
+    A picture that no longer exists reads as none, so the next save drops it from the design.
+    Nothing is offered when there is no store configured — a local machine without R2.
   */
-  const assets = isStorageConfigured() ? (await listMediaAssetsForAdmin(getDb(), locale)).slice(0, 60) : [];
+  const storage = isStorageConfigured();
+  const facts = storage ? await readBibPictureFacts(getDb(), [design.headerImageSrc, design.sponsorImageSrc]) : new Map<string, never>();
+  const rich = richTextEditorLabels(await getTranslations("Admin.richText"));
+  const ratioWords = new Intl.NumberFormat(locale, { maximumFractionDigits: 0 });
   // What the footer's two switches would print here: this deployment's own values, never a
   // literal — on QA the host is QA's, and the mailbox may not be set at all (§317).
   const siteHost = bibWebsiteHost(env.APP_BASE_URL);
@@ -107,60 +114,55 @@ export default async function BibDesignPanel({
     </CheckboxField>
   );
 
-  const picker = (field: "headerImageSrc" | "sponsorImageSrc") => (
-    <Box component="fieldset" sx={{ border: 0, p: 0, m: 0 }}>
-      <Typography component="legend" variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-        {t(`editor.bibDesign.${field}`)}
-      </Typography>
-      <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1 }}>
-        {t(`editor.bibDesign.${field}Help`)}
-      </Typography>
-      <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1, alignItems: "center" }}>
-        {/* A plain label with children rather than `FormControlLabel`'s element prop: the
-            defect `CheckboxField` documents. The radio comes back as ticked after a refused
-            submit (§315). */}
-        <Box component="label" sx={{ display: "inline-flex", alignItems: "center", gap: 1, mr: 2, cursor: "pointer" }}>
-          <RecallRadio
-            name={`event.bibDesign.${field}`}
-            value=""
-            defaultChecked={design[field] === null}
-            style={{ width: 20, height: 20 }}
-          />
-          <Typography component="span" variant="body2">
-            {t("editor.bibDesign.noPicture")}
-          </Typography>
-        </Box>
-        {assets.map((asset) => (
-          <Box
-            key={asset.id}
-            component="label"
-            title={asset.originalFilename}
-            sx={{
-              display: "inline-flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 0.5,
-              border: 1,
-              borderColor: "divider",
-              borderRadius: 1,
-              p: 0.5,
-              cursor: "pointer",
-              "&:has(input:checked)": { borderColor: "primary.main", borderWidth: 2, p: "3px" },
-            }}
-          >
-            <Box component="img" src={asset.thumbUrl} alt={asset.originalFilename} width={72} height={72} sx={{ display: "block", width: 72, height: 72, objectFit: "cover", borderRadius: 0.5 }} />
-            <RecallRadio
-              name={`event.bibDesign.${field}`}
-              value={asset.webUrl}
-              defaultChecked={design[field] === asset.webUrl}
-              aria-label={asset.originalFilename}
-              style={{ width: 20, height: 20 }}
-            />
-          </Box>
-        ))}
-      </Stack>
-    </Box>
-  );
+  /** One picture place (§NNN): the stored picture and its crop, and the words of the control. */
+  const picture = (slot: BibPictureSlot) => {
+    const field = slot === "header" ? "headerImageSrc" : "sponsorImageSrc";
+    const src = design[field];
+    const stored = src ? facts.get(src) : undefined;
+    const labels: BibPictureLabels = {
+      legend: t(`editor.bibDesign.${field}`),
+      help: t(`editor.bibDesign.${field}Help`),
+      none: t("editor.bibDesign.noPicture"),
+      choose: t("editor.bibDesign.picture.choose"),
+      replace: t("editor.bibDesign.picture.replace"),
+      remove: t("editor.bibDesign.noPicture"),
+      uploading: t("editor.bibDesign.picture.uploading"),
+      failed: t("editor.bibDesign.picture.failed"),
+      fromGallery: t("editor.bibDesign.picture.fromGallery"),
+      gallery: {
+        loading: rich.imageGalleryLoading,
+        empty: rich.imageGalleryEmpty,
+        close: rich.imageGalleryClose,
+        filter: rich.imageGalleryFilter,
+        noMatch: rich.imageGalleryNoMatch,
+        sourceLegend: rich.imageGallerySourceLegend,
+        sources: rich.imageGallerySources,
+        here: rich.imageGalleryHere.event,
+      },
+      quality: rich.imageQuality,
+      crop: {
+        title: t("editor.bibDesign.picture.cropTitle"),
+        help: t(`editor.bibDesign.picture.cropHelp.${slot}`),
+        reset: t(`editor.bibDesign.picture.cropReset.${slot}`),
+        position: rich.imageCropPosition,
+        ...rich.imageShapes,
+      },
+      // The place's shape in words: the paper's width to the strip's height (`bib-picture-frame.ts`).
+      shape: t(`editor.bibDesign.picture.shape.${slot}`, { ratio: ratioWords.format(BIB_PICTURE_RATIO[slot]) }),
+      chosen: rich.imageChosen,
+      stored: rich.imageStored,
+      picked: rich.imageFromGalleryPicked,
+    };
+    return (
+      <BibPictureField
+        slot={slot}
+        picture={stored ? { id: stored.id, src: stored.src, thumb: stored.thumb, width: stored.width, height: stored.height } : null}
+        crop={stored ? design[slot === "header" ? "headerImageCrop" : "sponsorImageCrop"] : null}
+        scope={eventId ? { kind: "event", id: eventId } : null}
+        labels={labels}
+      />
+    );
+  };
 
   return (
     <Panel glyph="bibDesign" collapsible level={4} id="box-bib-design" title={t("editor.bibDesign.title")} aside={summary} data-testid="bib-design">
@@ -179,7 +181,11 @@ export default async function BibDesignPanel({
             eventId={eventId}
             locale={locale}
             initialSrc={initialSrc}
-            labels={{ alt: t("editor.bibDesign.previewAlt"), caption: t("editor.bibDesign.previewCaption") }}
+            labels={{
+              alt: t("editor.bibDesign.previewAlt"),
+              caption: t("editor.bibDesign.previewCaption"),
+              pending: t("editor.bibDesign.previewPending"),
+            }}
           />
         )}
 
@@ -222,8 +228,8 @@ export default async function BibDesignPanel({
           </RecallField>
         </Stack>
 
-        {picker("headerImageSrc")}
-        {picker("sponsorImageSrc")}
+        {storage && picture("header")}
+        {storage && picture("sponsors")}
 
         {/* The small print, the club's to compose (§317), in the order it prints: the event,
             the partners, the club's own line, the website, the mailbox. */}

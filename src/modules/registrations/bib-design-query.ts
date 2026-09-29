@@ -27,6 +27,12 @@
 /** The panel's boxes, in the form's own vocabulary — the `name` attributes after the prefix. */
 export const BIB_DESIGN_FORM_PREFIX = "event.bibDesign.";
 
+/**
+ * A picture's crop (§NNN) as the form posts it and the address carries it — the JSON of §241's four
+ * fractions — or as a stored design holds it, the object itself. The schema reads either.
+ */
+export type BibCropValue = string | { x: number; y: number; w: number; h: number } | null;
+
 /** What the panel posts, before validation: the action's and the island's common reading. */
 export type BibDesignFormValues = {
   showName: boolean;
@@ -37,6 +43,9 @@ export type BibDesignFormValues = {
   namePosition: string;
   headerImageSrc: string | null;
   sponsorImageSrc: string | null;
+  /** The part of each picture the bib shows (§NNN), in the place's own shape. */
+  headerImageCrop: BibCropValue;
+  sponsorImageCrop: BibCropValue;
   cutMarks: boolean;
   /** The footer's switches and the club's own line (§317; `bib-footer.ts`). */
   showEmail: boolean;
@@ -60,6 +69,11 @@ const SWITCHES = [
 ] as const;
 const CHOICES = ["numberScale", "namePosition"] as const;
 const PICTURES = ["headerImageSrc", "sponsorImageSrc"] as const;
+/** Each picture's crop, beside the picture it belongs to: absent with no picture or no crop (§NNN). */
+const CROPS = [
+  ["headerImageCrop", "headerImageSrc"],
+  ["sponsorImageCrop", "sponsorImageSrc"],
+] as const;
 /** Free text: absent from the address when empty, so the platform's design has no such key. */
 const TEXTS = ["footerText"] as const;
 
@@ -82,6 +96,9 @@ export function readBibDesignForm(get: (name: string) => string | null): BibDesi
     namePosition: field("namePosition")?.trim() || "below",
     headerImageSrc: field("headerImageSrc")?.trim() || null,
     sponsorImageSrc: field("sponsorImageSrc")?.trim() || null,
+    // The crop box's hidden fields (§NNN): the JSON as it was written, or nothing for no crop.
+    headerImageCrop: field("headerImageCrop")?.trim() || null,
+    sponsorImageCrop: field("sponsorImageCrop")?.trim() || null,
     cutMarks: field("cutMarks") === "on",
     showEmail: field("showEmail") === "on",
     showPartners: field("showPartners") === "on",
@@ -110,6 +127,11 @@ export function bibDesignSearchParams(values: BibDesignFormValues, into = new UR
     const picture = values[key];
     if (picture) into.set(key, picture);
   }
+  for (const [key, picture] of CROPS) {
+    const crop = values[key];
+    if (!crop || !values[picture]) continue;
+    into.set(key, typeof crop === "string" ? crop : JSON.stringify({ x: crop.x, y: crop.y, w: crop.w, h: crop.h }));
+  }
   for (const key of TEXTS) {
     if (values[key].trim()) into.set(key, values[key]);
   }
@@ -137,6 +159,10 @@ export function bibDesignValuesFromQuery(params: URLSearchParams): Partial<BibDe
     if (raw) values[key] = raw;
   }
   for (const key of PICTURES) {
+    const raw = params.get(key);
+    values[key] = raw ? raw : null;
+  }
+  for (const [key] of CROPS) {
     const raw = params.get(key);
     values[key] = raw ? raw : null;
   }

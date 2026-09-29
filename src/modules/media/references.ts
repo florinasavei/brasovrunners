@@ -1,5 +1,5 @@
 import { and, desc, eq, inArray, isNotNull, lt, not, type SQL, sql } from "drizzle-orm";
-import { eventTranslations } from "@/db/schema/events";
+import { events, eventTranslations } from "@/db/schema/events";
 import { galleryAlbumTranslations, galleryAlbums, galleryItems, mediaAssets } from "@/db/schema/gallery";
 import { pageTranslations } from "@/db/schema/pages";
 import { platformSettings } from "@/db/schema/platform-settings";
@@ -23,7 +23,8 @@ import { bodyImageSrc, deleteAssetObjects, getStorage, objectKey } from "./stora
  * A `media_assets` row is referenced by a gallery item, an album cover, or a body — a page's
  * `body_json`, an event translation's `body_json`, `excerpt_json`, `rules_json`, `schedule_json` or
  * `route_description` (§387: the map is a picture in that text) — where the image node
- * carries the variant's address and that address contains the asset's opaque `key_prefix`. Drafts count: a picture in a draft is
+ * carries the variant's address and that address contains the asset's opaque `key_prefix` — and,
+ * the same way, by an event's bib design (§NNN). Drafts count: a picture in a draft is
  * a picture somebody is about to publish, and the sweep must never take it. The check is one
  * SQL predicate, used by the sweep, the media list and the delete, so the three cannot
  * disagree about what "in use" means.
@@ -77,6 +78,14 @@ const inEventTranslation = sql`(${names(sql`${eventTranslations.bodyJson}::text`
     OR ${names(sql`${eventTranslations.scheduleJson}::text`)}
     OR ${names(sql`${eventTranslations.routeDescriptionJson}::text`)})`;
 
+/**
+ * Whether an event's bib design names the asset (§NNN): the header strip's picture or the sponsors'
+ * band, by address like a text — so a picture printed on the race numbers is never swept, and a
+ * delete from the pictures page is refused while a design uses it. Drafts, series dates and past
+ * events count: a sheet is reprinted.
+ */
+const inBibDesign = names(sql`${events.bibDesign}::text`);
+
 /** Whether a card of «Echipa» carries the asset in the words about the person, either language (§474). */
 const inTeamBio = sql`(${names(sql`${teamMembers.bioRoJson}::text`)} OR ${names(sql`${teamMembers.bioEnJson}::text`)})`;
 
@@ -103,6 +112,8 @@ const referencedSomewhere = sql`(
   OR EXISTS (SELECT 1 FROM ${galleryAlbums} WHERE ${galleryAlbums.coverMediaAssetId} = ${mediaAssets.id})
   OR EXISTS (SELECT 1 FROM ${pageTranslations} WHERE ${names(sql`${pageTranslations.bodyJson}::text`)})
   OR EXISTS (SELECT 1 FROM ${eventTranslations} WHERE ${inEventTranslation})
+  -- A race number's header strip or sponsors' band (§NNN), by address in the event's bib design.
+  OR EXISTS (SELECT 1 FROM ${events} WHERE ${inBibDesign})
   -- No events.video_poster_url any more (§485): a film is a figure in the description, whose
   -- poster the event translation's own body names above (migration 0092 carried every stored
   -- poster there). The column is unread and leaves the database in BR-V2.11 (§491).
@@ -300,6 +311,13 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
     .from(mediaAssets)
     .innerJoin(eventTranslations, inEventTranslation);
 
+  // A picture on an event's race numbers (§NNN): the event, named in the reader's language.
+  const inBibDesigns = await db
+    .select({ assetId: mediaAssets.id, id: events.id, title: eventTranslations.title, locale: eventTranslations.locale })
+    .from(mediaAssets)
+    .innerJoin(events, inBibDesign)
+    .leftJoin(eventTranslations, eq(eventTranslations.eventId, events.id));
+
   const inTeam = await db
     .select({ assetId: teamMembers.photoMediaAssetId, id: teamMembers.id, title: teamMembers.name })
     .from(teamMembers)
@@ -347,7 +365,7 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
   for (const row of [...inPages].sort((a) => (a.locale === locale ? -1 : 1))) {
     add(row.assetId, { kind: "page", id: row.id, title: row.title });
   }
-  for (const row of [...inEvents].sort((a) => (a.locale === locale ? -1 : 1))) {
+  for (const row of [...inEvents, ...inBibDesigns].sort((a) => (a.locale === locale ? -1 : 1))) {
     add(row.assetId, { kind: "event", id: row.id, title: row.title });
   }
   for (const row of inTeam) if (row.assetId) add(row.assetId, { kind: "team", id: row.id, title: row.title });

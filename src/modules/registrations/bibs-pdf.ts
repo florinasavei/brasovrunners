@@ -10,6 +10,7 @@ import {
   numberScaleFactor,
 } from "./bib-design";
 import { bibFooterLines, bibFooterParts } from "./bib-footer";
+import { BIB_PICTURE_BOX, type BibPictureSlot, bibPictureDrawing } from "./bib-picture-frame";
 import { A4_PAGE, BIB_CARD, BIB_FOOTER_LINE, BIB_LAYOUT, BIB_MARGIN, BIB_PAPER, bibNumberPoints } from "./bib-geometry";
 import type { BibRow } from "./bibs";
 
@@ -200,6 +201,27 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
   // The club's own pictures, embedded once each for the same reason the lockup is (§249).
   const headerPicture = input.pictures?.header ? embed(input.pictures.header) : null;
   const sponsorPicture = input.pictures?.sponsors ? embed(input.pictures.sponsors) : null;
+  /**
+   * A place's picture through the one crop rule (`bib-picture-frame.ts`, §NNN), at the place's top
+   * left corner: the crop clipped to the place's box — the size pdfkit read from the file makes the
+   * crop exact — or, with none, the header covering its strip and the sponsors' picture fitted
+   * whole, as every sheet printed before crops existed.
+   */
+  const drawPicture = (slot: BibPictureSlot, picture: Buffer, x: number, y: number) => {
+    const box = BIB_PICTURE_BOX[slot];
+    const opened = picture as unknown as { width?: number; height?: number };
+    const size = opened.width && opened.height ? { width: opened.width, height: opened.height } : null;
+    const drawing = bibPictureDrawing(slot, slot === "header" ? design.headerImageCrop : design.sponsorImageCrop, size);
+    if (drawing.kind === "crop") {
+      doc.save();
+      doc.rect(x, y, box.width, box.height).clip();
+      doc.image(picture, x + drawing.left, y + drawing.top, { width: drawing.width, height: drawing.height });
+      doc.restore();
+      return;
+    }
+    const frame: [number, number] = [box.width, box.height];
+    doc.image(picture, x, y, { ...(drawing.kind === "cover" ? { cover: frame } : { fit: frame }), align: "center", valign: "center" });
+  };
   /** The strip of sponsors takes this much above the small print, when there is one. */
   const sponsorHeight = sponsorPicture ? L.sponsorHeight : 0;
   // The same on every bib of the sheet, so laid out once (§317), and told which header the sheet
@@ -225,10 +247,10 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
       The club's own picture across the top (§249), or the coloured band with the lockup and the
       race on it. The picture replaces the band whole — a band *and* a picture is two headers —
       and it is drawn to cover the strip, so a photograph of any proportion fills it without
-      being squashed: centred, and cropped to the strip's 9.02:1.
+      being squashed: the club's crop in the strip's 9.02:1 (§NNN), or centred and cut to it.
     */
     if (headerPicture) {
-      doc.image(headerPicture, left, top, { cover: [BIB_CARD.width, L.bandHeight], align: "center", valign: "center" });
+      drawPicture("header", headerPicture, left, top);
     } else {
       // The band first, across the card: it is what says which race this is before anybody is
       // close enough to read a word of it.
@@ -339,14 +361,9 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     // The name under the number, large enough to read at a finish line.
     if (design.showName && !nameAbove) drawName(sponsorTop - L.nameBlock);
 
-    // The sponsors' strip above the small print (§249), its own proportion kept.
-    if (sponsorPicture) {
-      doc.image(sponsorPicture, left + L.inset, sponsorTop + L.sponsorTop, {
-        fit: [BIB_CARD.width - 2 * L.inset, L.sponsorPicture],
-        align: "center",
-        valign: "center",
-      });
-    }
+    // The sponsors' strip above the small print (§249): the club's crop in the strip's shape, or
+    // the whole picture with its own proportion kept (§NNN).
+    if (sponsorPicture) drawPicture("sponsors", sponsorPicture, left + L.inset, sponsorTop + L.sponsorTop);
 
     /*
       The small print, as the club composed it (§317): one line, or two with the last where the
