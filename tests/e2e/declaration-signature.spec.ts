@@ -136,8 +136,13 @@ test.describe("BR-REQ-033-02 §314 the signature is the registered name", () => 
     */
     await page.goto(`/ro/inregistrari/gestionare/${await mintActionLink(registration, "MANAGE_REGISTRATION")}`);
     await hydrated(page);
-    // «Anulează înscrierea pentru <nume>», asking first (§547, over §384).
-    await page.getByRole("button", { name: /^Anulează înscrierea pentru / }).click();
+    // «Anulează înscrierea pentru <nume>», asking first (§547, over §384) — and why, before that (§NNN):
+    // without an answer the browser names the empty box and nothing is asked.
+    const personCancel = page.getByRole("button", { name: /^Anulează înscrierea pentru / });
+    await personCancel.click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await page.getByLabel("De ce anulezi?").selectOption("OTHER_PLANS");
+    await personCancel.click();
     await confirmDialog(page, /^Anulezi înscrierea pentru /);
     await expect(page).toHaveURL(/done=1/, { timeout: 30_000 });
     await expect(page.getByTestId("toast")).toHaveText("Gata: înscrierea ta e anulată.");

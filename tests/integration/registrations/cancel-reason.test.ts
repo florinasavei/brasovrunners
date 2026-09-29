@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { eq } from "drizzle-orm";
 import type { ReactElement, ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -8,6 +9,7 @@ import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
+import ro from "../../../messages/ro.json";
 
 /**
  * §NNN — a reason at every self-cancellation door (the owner, 2026-09-29: «when people cancel, they
@@ -63,7 +65,9 @@ const { cancelRegistrationAction } = await import("@/app/[locale]/registrations/
 const { cancelFromMyRegistrationsAction } = await import("@/app/[locale]/registrations/mine/[token]/actions");
 const { withdrawFamilyPersonAction } = await import("@/app/[locale]/registrations/declare/[token]/actions");
 const { default: ManageRegistrationPage } = await import("@/app/[locale]/registrations/manage/[token]/page");
-const { parseCancelReason } = await import("@/modules/registrations/domain/cancel-reason");
+const { cancelReasonCell, parseCancelReason } = await import("@/modules/registrations/domain/cancel-reason");
+const { findRegistrationDetailForAdmin, listRegistrationsForAdmin } = await import("@/modules/registrations/admin-repository");
+const { unregister } = await import("@/modules/registrations/service");
 
 let participantId: string;
 let registrationId: string;
@@ -213,5 +217,27 @@ describe("§NNN the reason for a participant's own cancellation", () => {
     const tooLong = await redirectOf(withdrawFamilyPersonAction(formOf({ locale: "ro", token: "any-link", registrationId, cancelReasonKind: "OTHER", cancelReason: TOO_LONG })));
     expect(tooLong).toContain("?reason=long#cancel-reason");
     expect((await statusOf()).status).toBe("CONFIRMED");
+  });
+
+  it("the club reads it: the registration's page and the list the export is built from carry it; a staff cancellation carries none", async () => {
+    const secret = await manageLink();
+    await redirectOf(cancelRegistrationAction(formOf({ locale: "ro", token: secret, registrationId, cancelReasonKind: "OTHER_PLANS" })));
+
+    const detail = await findRegistrationDetailForAdmin(db, registrationId);
+    expect(detail).toMatchObject({ cancellationSource: "PARTICIPANT", cancelReasonKind: "OTHER_PLANS", cancelReason: null });
+    const [listed] = await listRegistrationsForAdmin(db, {});
+    expect(cancelReasonCell(listed.cancelReasonKind, listed.cancelReason)).toBe("Other plans");
+
+    // The page's timeline line under «Anulată», worded from the catalogue in both languages.
+    const page = readFileSync("src/app/[locale]/admin/registrations/[id]/page.tsx", "utf8");
+    expect(page).toContain('tr("registrations.cancelReasonLabel")');
+    expect(ro.Admin.registrations.cancelReasonLabel).toBe("Motivul anulării");
+    expect(ro.Admin.registrations.cancelReasonKinds.OTHER_PLANS).toBe("Alt program");
+
+    // A staff cancellation asks nothing new and keeps both columns empty, even if a reason is handed in.
+    await db.update(registrations).set({ status: "CONFIRMED", cancelledAt: null, cancellationSource: null, cancelReasonKind: null }).where(eq(registrations.id, registrationId));
+    const [event] = await db.select().from(events).where(eq(events.id, (await statusOf()).eventId));
+    await unregister(db, event, registrationId, "ADMIN", new Date(), { reason: { kind: "OTHER", text: "nu" } });
+    expect(await statusOf()).toMatchObject({ status: "CANCELLED", cancellationSource: "ADMIN", cancelReasonKind: null, cancelReason: null });
   });
 });
