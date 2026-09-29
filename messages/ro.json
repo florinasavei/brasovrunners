@@ -5632,7 +5632,7 @@
     "phoneHelp": "Fără prefixul țării, de exemplu 0712 345 678.",
     "emergencyContactName": "Persoană de contact în caz de urgență",
     "emergencyContactPhone": "Telefonul persoanei de contact",
-    "emergencyContactHelp": "Spune-i persoanei că ne-ai dat numărul ei: o sunăm doar dacă pățești ceva la cursă. Le ștergem la șapte zile după eveniment.",
+    "emergencyContactHelp": "Spune-i persoanei că ne-ai dat numărul ei: o sunăm doar dacă pățești ceva la cursă. Ștergem numele și numărul la șapte zile după eveniment.",
     "tshirtSize": "Mărime tricou",
     "tshirtSizes": {
       "NONE": "Fără tricou"
@@ -5752,7 +5752,7 @@
     "stravaUrl": "Profilul tău de Strava (link)",
     "stravaUrlHelp": "Din aplicația Strava: Profil → Distribuie → copiază linkul.",
     "instagramHandle": "Instagram (numele de utilizator)",
-    "guardianHelp": "Obligatoriu sub 18 ani. Tu, părintele sau tutorele, semnezi declarația și dai acordurile de mai jos pentru copil; emailul și telefonul pot fi ale tale.",
+    "guardianHelp": "Obligatoriu sub 18 ani. Tu, părintele sau tutorele, semnezi declarația, ridici kitul și dai acordurile de mai jos pentru copil; emailul și telefonul pot fi ale tale.",
     "guardianName": "Numele complet al părintelui / tutorelui",
     "guardianNameHelp": "Obligatoriu sub 18 ani. Acest nume apare pe declarație ca semnatar.",
     "privacyBanner": "Datele tale nu apar pe site. Le folosim doar ca să organizăm cursa: le văd echipa de organizare și furnizorii care găzduiesc site-ul și trimit emailurile. Declarația semnată îți vine pe email, iar o copie, cu actul de identitate mascat, ajunge în arhiva clubului. Păstrăm înscrierea trei ani de la eveniment.",
@@ -5967,6 +5967,7 @@
         "withdrawHelp": "Locul se eliberează, iar adresa primește un email de confirmare.",
         "withdrawTitle": "Renunți la înscrierea pentru {name}?",
         "withdrawBody": "Înscrierea pentru {name} la {event} se anulează și locul se eliberează. Nu se poate reveni: pentru o înscriere nouă, trimiți formularul din nou.",
+        "withdrawBodyNoEvent": "Înscrierea pentru {name} se anulează și locul se eliberează. Nu se poate reveni: pentru o înscriere nouă, trimiți formularul din nou.",
         "withdrawConfirm": "Da, renunț",
         "withdrawBack": "Nu, înapoi"
       },

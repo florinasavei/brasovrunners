@@ -5,6 +5,7 @@ import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { PLACEHOLDER } from "../../../scripts/land-entry.mjs";
 import { todayIn } from "../../../scripts/land-tree.mjs";
+import { gitEnv } from "../../helpers/git-env";
 
 // An id SPECS.md does not define, built so docs:check does not read it as a reference.
 const UNKNOWN = ["BR", "REQ", "099", "09"].join("-");
@@ -17,8 +18,10 @@ const UNKNOWN = ["BR", "REQ", "099", "09"].join("-");
  */
 const LAND = path.resolve("scripts/land-batch.mjs");
 const MERGE = path.resolve("scripts/merge-branches.mjs");
-// The scripts commit (a merge); a CI runner has no git identity of its own.
-const ENV = { ...process.env, GIT_AUTHOR_NAME: "t", GIT_AUTHOR_EMAIL: "t@example.test", GIT_COMMITTER_NAME: "t", GIT_COMMITTER_EMAIL: "t@example.test" };
+// The scripts commit (a merge); a CI runner has no git identity of its own. Every git here, and every
+// script that runs one, gets an environment without git's own repository variables, or a run from
+// the pre-commit hook points the fixture's git at the repository being committed (§NNN).
+const ENV = gitEnv({ GIT_AUTHOR_NAME: "t", GIT_AUTHOR_EMAIL: "t@example.test", GIT_COMMITTER_NAME: "t", GIT_COMMITTER_EMAIL: "t@example.test" });
 const dirs: string[] = [];
 afterEach(() => {
   for (const dir of dirs.splice(0)) rmSync(dir, { recursive: true, force: true });
@@ -31,6 +34,7 @@ function repo() {
     execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.test", "-c", "core.autocrlf=false", "-c", "commit.gpgsign=false", ...args], {
       cwd: dir,
       encoding: "utf8",
+      env: ENV,
     });
   const put = (file: string, text: string) => {
     mkdirSync(path.dirname(path.join(dir, file)), { recursive: true });
@@ -72,12 +76,12 @@ describe("§535 yarn docs:land --tree lands the facts a branch carries", () => {
     git("commit", "-qm", "feat: the night pill");
 
     const output = path.join(dir, "gh-output.txt");
-    const dry = spawnSync("node", [LAND, "--tree"], { cwd: dir, encoding: "utf8" });
+    const dry = spawnSync("node", [LAND, "--tree"], { cwd: dir, encoding: "utf8", env: ENV });
     expect(dry.status, dry.stderr).toBe(0);
     expect(dry.stdout).toContain("§13 ← feat/night-pill: The night pill says «Noapte»");
     expect(read("CLAUDE.md")).toContain(from); // a dry run writes nothing
 
-    const run = spawnSync("node", [LAND, "--tree", "--apply"], { cwd: dir, encoding: "utf8", env: { ...process.env, GITHUB_OUTPUT: output } });
+    const run = spawnSync("node", [LAND, "--tree", "--apply"], { cwd: dir, encoding: "utf8", env: { ...ENV, GITHUB_OUTPUT: output } });
     expect(run.status, run.stderr).toBe(0);
     const today = todayIn();
     const to = `BR-V9.41-${today}`;
@@ -114,7 +118,7 @@ describe("§535 yarn docs:land --tree lands the facts a branch carries", () => {
       path.join(outside, "manifest.json"),
       JSON.stringify({ baseline: { from, to: "BR-V9.41-2031-01-02" }, date: "2031-01-02", items: [{ branch: "feat/a", chain: "a.json" }, { branch: "feat/b" }] }),
     );
-    const run = spawnSync("node", [LAND, path.join(outside, "manifest.json"), "--apply"], { cwd: dir, encoding: "utf8" });
+    const run = spawnSync("node", [LAND, path.join(outside, "manifest.json"), "--apply"], { cwd: dir, encoding: "utf8", env: ENV });
     expect(run.status, run.stderr).toBe(0);
     const decisions = read("DECISIONS.md");
     expect(decisions).toContain("## 13. A from the chain");
@@ -132,14 +136,14 @@ describe("§535 yarn docs:land --tree lands the facts a branch carries", () => {
     git("add", "-A");
     git("commit", "-qm", "base");
     git("update-ref", "refs/remotes/origin/qa", "HEAD");
-    const refused = spawnSync("node", [LAND, "--tree", "--to", "BR-V9.45", "--apply"], { cwd: dir, encoding: "utf8" });
+    const refused = spawnSync("node", [LAND, "--tree", "--to", "BR-V9.45", "--apply"], { cwd: dir, encoding: "utf8", env: ENV });
     expect(refused.status).toBe(1);
     expect(refused.stderr).toMatch(/"decisionsSection" is missing or blank/);
     expect(refused.stderr).toMatch(/named for another branch/);
     expect(read("CLAUDE.md")).toBe("**Baseline `BR-V9.40-2031-01-01`**\n");
 
     rmSync(path.join(dir, ".release"), { recursive: true });
-    const empty = spawnSync("node", [LAND, "--tree"], { cwd: dir, encoding: "utf8" });
+    const empty = spawnSync("node", [LAND, "--tree"], { cwd: dir, encoding: "utf8", env: ENV });
     expect(empty.status).toBe(1);
     expect(empty.stderr).toMatch(/no \.release\/\*\.json on this branch/);
   });
@@ -167,7 +171,7 @@ describe("§535 yarn docs:land --tree lands the facts a branch carries", () => {
     git("update-ref", "refs/remotes/origin/qa", "HEAD");
     const summary = path.join(dir, "summary.md");
     for (const args of [["--tree"], ["--tree", "--apply"]]) {
-      const run = spawnSync("node", [LAND, ...args], { cwd: dir, encoding: "utf8", env: { ...process.env, GITHUB_STEP_SUMMARY: summary } });
+      const run = spawnSync("node", [LAND, ...args], { cwd: dir, encoding: "utf8", env: { ...ENV, GITHUB_STEP_SUMMARY: summary } });
       expect(run.status, args.join(" ")).toBe(1);
       expect(run.stderr).toMatch(/--tree cannot land what needs a person/);
       expect(run.stderr).toMatch(/docsNotes left for a person .*SETUP\.md needs a paragraph/);

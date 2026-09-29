@@ -5632,7 +5632,7 @@
     "phoneHelp": "Without the country code, for example 0712 345 678.",
     "emergencyContactName": "Emergency contact",
     "emergencyContactPhone": "Emergency contact phone",
-    "emergencyContactHelp": "Tell this person you gave us their number: we call only if something happens to you at the race. We delete them seven days after the event.",
+    "emergencyContactHelp": "Tell this person you gave us their number: we call only if something happens to you at the race. We delete the name and number seven days after the event.",
     "tshirtSize": "T-shirt size",
     "tshirtSizes": {
       "NONE": "No t-shirt"
@@ -5752,7 +5752,7 @@
     "stravaUrl": "Your Strava profile (link)",
     "stravaUrlHelp": "From the Strava app: Profile → Share → copy the link.",
     "instagramHandle": "Instagram (username)",
-    "guardianHelp": "Required under 18. You, the parent or guardian, sign the declaration and give the choices below for the child; the email and phone may be yours.",
+    "guardianHelp": "Required under 18. You, the parent or guardian, sign the declaration, collect the kit and give the choices below for the child; the email and phone may be yours.",
     "guardianName": "Full name of the parent / guardian",
     "guardianNameHelp": "Required under 18. This name appears on the declaration as the signer.",
     "privacyBanner": "Nothing you write here appears on the site. We use it only to run the race: the organizing team and the providers that host the site and send the emails see it. The signed declaration is emailed to you, and a copy, with your identity document masked, goes to the club's archive. We keep the registration for three years after the event.",
@@ -5901,6 +5901,7 @@
         "withdrawHelp": "The place is released, and the address gets a confirmation email.",
         "withdrawTitle": "Withdraw the registration for {name}?",
         "withdrawBody": "The registration for {name} at {event} is cancelled and the place is released. It cannot be undone: to register again, send the form again.",
+        "withdrawBodyNoEvent": "The registration for {name} is cancelled and the place is released. It cannot be undone: to register again, send the form again.",
         "withdrawConfirm": "Yes, withdraw",
         "withdrawBack": "No, go back"
       },

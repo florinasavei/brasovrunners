@@ -18,6 +18,16 @@ import type { PublicContent } from "@/modules/public-cache/cache";
  * modules' exports, and records whether the function writes (a `.insert(`, `.update(`, `.delete(`
  * or `.execute(` anywhere it reaches, a hash's `.update(` aside) and which kinds it expires.
  * Comments are not code to the parser, so a sentence that names the call is not the call.
+ *
+ * **The `places` kind** (the free places, the public start list) is expired by the registrations and
+ * the jobs, not by the backoffice's content verbs, so it is pinned the other way round (§NNN, the
+ * review of §549): every verb of `src/modules/registrations`, `src/modules/jobs` and the deadline
+ * rebase that moves a place or changes the list is named in `PLACES_WRITES` and must reach
+ * `revalidatePublicContent("places")`. Those modules are not held to "classify every write" as the
+ * content modules are: they also write tokens, outbox rows, audit rows, rate-limit buckets and
+ * holds that no public page reads — hundreds of verbs a table of "nothing public" would only pad —
+ * and every change of a registration's state goes through the one statement that expires the kind
+ * (`repository.ts#transitionRegistration`), which is pinned first.
  */
 const ROOT = path.resolve(__dirname, "../../..");
 
@@ -126,6 +136,63 @@ const BULK_ACTIONS: Record<string, readonly PublicContent[]> = {
   bulkDeleteEventsAction: ["events"],
 };
 
+/**
+ * The registrations' writes behind a public page (§NNN): the free places and the start list. Each
+ * must reach `revalidatePublicContent("places")` — itself, through `transitionRegistration`, or
+ * through a sweep that tells the cache once.
+ */
+const PLACES_DIRECTORIES = ["src/modules/registrations", "src/modules/jobs"] as const;
+const PLACES_FILES = ["src/modules/notifications/deadline-rebase.ts"] as const;
+const PLACES_WRITES = [
+  // The one statement every change of state goes through.
+  "src/modules/registrations/repository.ts#transitionRegistration",
+  // The allocator: the form, the email link, the declaration, the waiting list, the participant's own cancel.
+  "src/modules/registrations/service.ts#submitRegistration",
+  "src/modules/registrations/service.ts#confirmEmail",
+  "src/modules/registrations/service.ts#signDeclaration",
+  "src/modules/registrations/service.ts#fillAvailableSpots",
+  "src/modules/registrations/service.ts#unregister",
+  "src/modules/registrations/service.ts#confirmByStaff",
+  "src/modules/registrations/service.ts#promoteFromWaitlistByStaff",
+  "src/modules/registrations/token-actions.ts#consumeAndConfirmEmail",
+  "src/modules/registrations/token-actions.ts#consumeAndSignDeclaration",
+  "src/modules/registrations/token-actions.ts#consumeAndSignFamilyDeclaration",
+  "src/modules/registrations/token-actions.ts#consumeAndCancel",
+  "src/modules/registrations/token-actions.ts#withdrawFromFamilyWizard",
+  "src/modules/registrations/my-registrations.ts#consumeAndCancelFromMyRegistrations",
+  // A family's places: the held sitting, one more person on the address.
+  "src/modules/registrations/family-confirm.ts#confirmFamilyEntry",
+  "src/modules/registrations/family-sitting-confirm.ts#confirmFamilySitting",
+  "src/modules/registrations/repository.ts#writeFamilyReservation",
+  "src/modules/registrations/repository.ts#writeFamilyPlaceHold",
+  "src/modules/registrations/repository.ts#releaseFamilyPlaceHolds",
+  // The staff's verbs: enter, confirm on paper, give a place, cancel, erase.
+  "src/modules/registrations/admin-service.ts#createRegistrationByStaff",
+  "src/modules/registrations/admin-service.ts#confirmRegistrationByStaff",
+  "src/modules/registrations/admin-service.ts#promoteRegistrationByStaff",
+  "src/modules/registrations/admin-service.ts#cancelRegistrationByStaff",
+  "src/modules/registrations/admin-service.ts#bulkCancelRegistrationsByStaff",
+  "src/modules/registrations/admin-service.ts#deleteRegistrationByStaff",
+  "src/modules/registrations/admin-service.ts#bulkDeleteRegistrationsByStaff",
+  "src/modules/registrations/admin-service.ts#eraseAllRegistrationsOfEvent",
+  // The start list's own facts: the tick to appear on it, the socials beside a name.
+  "src/modules/registrations/list-consent.ts#setListConsent",
+  "src/modules/registrations/list-consent.ts#setListConsentFromManageLink",
+  "src/modules/registrations/list-consent.ts#setListConsentFromMyRegistrations",
+  "src/modules/registrations/admin-service.ts#withdrawOptionalData",
+  "src/modules/registrations/consent-withdrawal.ts#clearOptionalData",
+  // Test registrations queue like real ones (`AGENTS.md` §12.6).
+  "src/modules/registrations/test-registrations.ts#addTestRegistrations",
+  "src/modules/registrations/test-registrations.ts#removeTestRegistrations",
+  // The jobs: the lapsed holds, links and offers, the closed waiting list, the retention sweep, a rebased deadline.
+  "src/modules/registrations/maintenance.ts#runRegistrationMaintenance",
+  "src/modules/registrations/repository.ts#expireStaleHolds",
+  "src/modules/registrations/repository.ts#expireStalePendingEmailConfirmations",
+  "src/modules/registrations/repository.ts#closeWaitlistForStartedEvent",
+  "src/modules/jobs/retention.ts#pruneExpiredRows",
+  "src/modules/notifications/deadline-rebase.ts#applyDeadlineRebase",
+] as const;
+
 const WRITE_CALLS = new Set(["insert", "update", "delete", "execute"]);
 
 type FunctionFacts = {
@@ -160,6 +227,15 @@ function isHashUpdate(callee: ts.PropertyAccessExpression): boolean {
 function functionsOf(file: string, text = readFileSync(path.join(ROOT, file), "utf8")): FunctionFacts[] {
   const tree = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
   const facts: FunctionFacts[] = [];
+  // `import * as repo from "./repository"`: `repo.x(…)` is a call to that file's `x`, recorded as its key.
+  const namespaces = new Map<string, string>();
+  for (const statement of tree.statements) {
+    const bindings = ts.isImportDeclaration(statement) ? statement.importClause?.namedBindings : undefined;
+    if (!bindings || !ts.isNamespaceImport(bindings) || !ts.isStringLiteral((statement as ts.ImportDeclaration).moduleSpecifier)) continue;
+    const specifier = ((statement as ts.ImportDeclaration).moduleSpecifier as ts.StringLiteral).text;
+    const target = specifier.startsWith("@/") ? `src/${specifier.slice(2)}` : specifier.startsWith(".") ? path.posix.join(path.posix.dirname(file), specifier) : null;
+    if (target) namespaces.set(bindings.name.text, `${target}.ts`);
+  }
 
   const read = (body: ts.Node, into: FunctionFacts) => {
     const visit = (node: ts.Node) => {
@@ -170,6 +246,8 @@ function functionsOf(file: string, text = readFileSync(path.join(ROOT, file), "u
           into.kinds.add(kind && ts.isStringLiteral(kind) ? kind.text : "<not a literal>");
         } else if (ts.isIdentifier(callee)) {
           into.calls.add(callee.text);
+        } else if (ts.isPropertyAccessExpression(callee) && ts.isIdentifier(callee.expression) && namespaces.has(callee.expression.text)) {
+          into.calls.add(`${namespaces.get(callee.expression.text)}#${callee.name.text}`);
         } else if (ts.isPropertyAccessExpression(callee) && WRITE_CALLS.has(callee.name.text) && !isHashUpdate(callee)) {
           into.writes = true;
         }
@@ -199,38 +277,47 @@ function functionsOf(file: string, text = readFileSync(path.join(ROOT, file), "u
   return facts;
 }
 
-const WALKED = [...WALKED_DIRECTORIES.flatMap((directory) => sourceFiles(path.join(ROOT, directory))), ACTIONS_FILE];
-const FUNCTIONS = new Map(WALKED.flatMap((file) => functionsOf(file)).map((facts) => [`${facts.file}#${facts.name}`, facts]));
+/** The functions of a set of files, and what each reaches through the calls it makes among them. */
+function walk(files: readonly string[]) {
+  const functions = new Map(files.flatMap((file) => functionsOf(file)).map((facts) => [`${facts.file}#${facts.name}`, facts]));
 
-/** Exported names defined once across the walked files — a call to one resolves to it. */
-const EXPORTED_BY_NAME = new Map<string, string[]>();
-for (const [key, facts] of FUNCTIONS) {
-  if (facts.exported) EXPORTED_BY_NAME.set(facts.name, [...(EXPORTED_BY_NAME.get(facts.name) ?? []), key]);
-}
-
-function resolveCall(from: FunctionFacts, name: string): string | undefined {
-  const local = `${from.file}#${name}`;
-  if (FUNCTIONS.has(local)) return local;
-  const exported = EXPORTED_BY_NAME.get(name);
-  return exported?.length === 1 ? exported[0] : undefined;
-}
-
-/** What a function reaches, through every call it makes into the walked files. */
-function reach(key: string, seen = new Set<string>()): { kinds: Set<string>; writes: boolean } {
-  const facts = FUNCTIONS.get(key);
-  if (!facts || seen.has(key)) return { kinds: new Set(), writes: false };
-  seen.add(key);
-  const kinds = new Set(facts.kinds);
-  let writes = facts.writes;
-  for (const call of facts.calls) {
-    const target = resolveCall(facts, call);
-    if (!target) continue;
-    const reached = reach(target, seen);
-    reached.kinds.forEach((kind) => kinds.add(kind));
-    writes ||= reached.writes;
+  /** Exported names defined once across the walked files — a call to one resolves to it. */
+  const exportedByName = new Map<string, string[]>();
+  for (const [key, facts] of functions) {
+    if (facts.exported) exportedByName.set(facts.name, [...(exportedByName.get(facts.name) ?? []), key]);
   }
-  return { kinds, writes };
+
+  const resolveCall = (from: FunctionFacts, name: string): string | undefined => {
+    if (name.includes("#")) return functions.has(name) ? name : undefined;
+    const local = `${from.file}#${name}`;
+    if (functions.has(local)) return local;
+    const exported = exportedByName.get(name);
+    return exported?.length === 1 ? exported[0] : undefined;
+  };
+
+  /** What a function reaches, through every call it makes into the walked files. */
+  const reach = (key: string, seen = new Set<string>()): { kinds: Set<string>; writes: boolean } => {
+    const facts = functions.get(key);
+    if (!facts || seen.has(key)) return { kinds: new Set(), writes: false };
+    seen.add(key);
+    const kinds = new Set(facts.kinds);
+    let writes = facts.writes;
+    for (const call of facts.calls) {
+      const target = resolveCall(facts, call);
+      if (!target) continue;
+      const reached = reach(target, seen);
+      reached.kinds.forEach((kind) => kinds.add(kind));
+      writes ||= reached.writes;
+    }
+    return { kinds, writes };
+  };
+
+  return { functions, reach };
 }
+
+const WALKED = [...WALKED_DIRECTORIES.flatMap((directory) => sourceFiles(path.join(ROOT, directory))), ACTIONS_FILE];
+const { functions: FUNCTIONS, reach } = walk(WALKED);
+
 
 const sorted = (values: Iterable<string>) => [...values].sort();
 
@@ -263,6 +350,26 @@ describe("§549 — every write behind a public page expires it through revalida
     const key = `${ACTIONS_FILE}#${name}`;
     expect(FUNCTIONS.get(key)?.exported, `${name} is no longer an exported action`).toBe(true);
     expect(sorted(reach(key).kinds)).toEqual(sorted(expected));
+  });
+
+  describe("§NNN the registrations' writes expire the free places and the start list", () => {
+    const places = walk([...PLACES_DIRECTORIES.flatMap((directory) => sourceFiles(path.join(ROOT, directory))), ...PLACES_FILES]);
+
+    it("walks the verbs the table names", () => {
+      const missing = PLACES_WRITES.filter((key) => !places.functions.get(key)?.exported);
+      expect(missing, "a verb in PLACES_WRITES that is no longer an exported function — rename or remove it here").toEqual([]);
+    });
+
+    it.each(PLACES_WRITES)("%s writes and expires `places`", (key) => {
+      const reached = places.reach(key);
+      expect(reached.writes, `${key} no longer writes; take it out of the table`).toBe(true);
+      expect(sorted(reached.kinds), `${key} moves a place or the start list: it must reach revalidatePublicContent("places")`).toContain("places");
+    });
+
+    it("follows a call through a namespace import, as `service.ts` calls `repo.transitionRegistration`", () => {
+      const [probe] = functionsOf("src/modules/registrations/probe.ts", 'import * as repo from "./repository";\nexport async function probe(db) { await repo.transitionRegistration(db, {}); }');
+      expect([...(probe?.calls ?? [])]).toEqual(["src/modules/registrations/repository.ts#transitionRegistration"]);
+    });
   });
 
   it("reads a write that forgets the call as one", () => {

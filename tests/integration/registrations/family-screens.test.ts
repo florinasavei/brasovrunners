@@ -3,6 +3,8 @@ import type { ReactElement, ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { auditLogs } from "@/db/schema/audit-logs";
+import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
+import { staffUsers } from "@/db/schema/staff-users";
 import { emailActionTokens } from "@/db/schema/email-action-tokens";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { events, eventTranslations } from "@/db/schema/events";
@@ -62,6 +64,7 @@ const { consumeAndCancel, consumeAndSignDeclaration, consumeAndSignFamilyDeclara
   "@/modules/registrations/token-actions"
 );
 const { setListConsentFromManageLink } = await import("@/modules/registrations/list-consent");
+const { confirmRegistrationByStaff } = await import("@/modules/registrations/admin-service");
 const { default: ManageRegistrationPage } = await import("@/app/[locale]/registrations/manage/[token]/page");
 
 type EventInput = Parameters<typeof submitRegistration>[1];
@@ -404,6 +407,36 @@ describe("§547 «Gestionează înscrierea» per person, and safe", () => {
     expect((await auditOf(maria.id)).some((row) => row.action === "registration.cancelled_by_participant")).toBe(false);
     expect((await rowsOf(event.id)).find((row) => row.id === maria.id)?.status).toBe("CANCELLED");
     expect((await readRaceDayContext(secret, at(27))).ok).toBe(true);
+  });
+
+  it("says per person how the declaration was accepted — sent by email, signed on paper at the desk, or nothing yet (§NNN)", async () => {
+    const people = await family();
+    const { ana, maria, ion } = people;
+    // Ana signs online, from the link; Maria signs the paper form at the desk; Ion has signed nothing.
+    vi.setSystemTime(at(20));
+    const secret = await declarationLink(ana.id, at(20));
+    vi.setSystemTime(at(21));
+    await consumeAndSignDeclaration(secret, await signing("Ana Pop"), at(21));
+    const [volunteer] = await db.insert(staffUsers).values({ email: "volunteer@dev.test", displayName: "Volunteer", role: "CONTRIBUTOR" }).returning();
+    expect((await confirmRegistrationByStaff(db, volunteer, maria.id, at(22))).status).toBe("CONFIRMED");
+    const [paper] = await db.select().from(declarationAcceptances).where(eq(declarationAcceptances.registrationId, maria.id));
+    expect(paper).toMatchObject({ method: "PAPER", attestedByStaffUserId: volunteer.id });
+
+    const manage = await issueActionToken(db, { participantId: ana.participantId, registrationId: ana.id, purpose: "MANAGE_REGISTRATION", expiresAt: at(60 * 24 * 7), now: at(23) });
+    vi.setSystemTime(at(24));
+    const html = await page(manage.secret);
+    const cards = html.split('data-testid="manage-person"').slice(1);
+    expect(cards).toHaveLength(3);
+    const card = (name: string) => cards.find((text) => text.includes(`Anulează înscrierea pentru ${name}`)) ?? "";
+    expect(card(ana.registeredName)).toContain('data-testid="manage-declaration-sent"');
+    expect(card(ana.registeredName)).not.toContain('data-testid="manage-declaration-paper"');
+    expect(card(maria.registeredName)).toContain('data-testid="manage-declaration-paper"');
+    expect(card(maria.registeredName)).toContain("Declarația a fost semnată pe hârtie.");
+    // A paper declaration had no email: the page never says one was sent.
+    expect(card(maria.registeredName)).not.toContain('data-testid="manage-declaration-sent"');
+    expect(card(ion.registeredName)).not.toMatch(/data-testid="manage-declaration-(sent|paper)"/);
+    expect(html.match(/Declarația semnată ți-a fost trimisă pe email\./g)).toHaveLength(1);
+    expect(html.match(/Declarația a fost semnată pe hârtie\./g)).toHaveLength(1);
   });
 
   it("keeps a one-person page for a single registration", async () => {

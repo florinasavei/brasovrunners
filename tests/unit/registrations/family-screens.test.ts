@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { createTranslator } from "next-intl";
@@ -62,7 +63,22 @@ describe("§547 the wizard's button says «… și treci la următoarea persoan�
       expect(body).toContain("Mihai Pop");
       expect(body).toContain("Crosul Tâmpei");
       expect(body.length).toBeLessThanOrEqual(200);
+      // An event with no row in this language (§NNN): the sentence names the person and no empty event.
+      const bare = words(locale)("declare.family.withdrawBodyNoEvent", { name: "Mihai Pop" });
+      expect(bare).toContain("Mihai Pop");
+      expect(bare).not.toMatch(/ (la|at)\s+(se|is) /);
+      expect(bare.length).toBeLessThanOrEqual(200);
     }
+    expect(words("ro")("declare.family.withdrawBodyNoEvent", { name: "Mihai Pop" })).toBe(
+      "Înscrierea pentru Mihai Pop se anulează și locul se eliberează. Nu se poate reveni: pentru o înscriere nouă, trimiți formularul din nou.",
+    );
+  });
+
+  it("asks without an event's name when the event has no row in the page's language", () => {
+    const page = readFileSync("src/app/[locale]/registrations/declare/[token]/page.tsx", "utf8");
+    const dialog = page.slice(page.indexOf('data-testid="family-signing-withdraw"'), page.indexOf("declare.family.withdrawConfirm"));
+    expect(dialog).toMatch(/ownLocale\s*\?\s*t\("declare\.family\.withdrawBody", \{ name: registration\.registeredName, event: ownLocale\.title \}\)\s*:\s*t\("declare\.family\.withdrawBodyNoEvent"/);
+    expect(dialog).not.toContain('ownLocale?.title ?? ""');
   });
 });
 

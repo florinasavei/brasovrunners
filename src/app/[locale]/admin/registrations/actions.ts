@@ -30,6 +30,7 @@ import { requireStaff, requireStaffCapability } from "@/modules/staff-identity/s
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
+import { wholeDigits } from "@/shared/forms/whole-digits";
 
 /**
  * The three administrative changes to a registration (BR-REQ-037-03, BR-REQ-037-05).
@@ -77,12 +78,11 @@ async function backTo(
 
 /**
  * The number typed into a desk box (§444): absent when the box was not on the form or was left
- * empty — the platform's own draw — and otherwise what was typed, as a number the service checks
- * (`Number("abc")` is NaN, which it refuses naming the box; `Number("")` would be 0 and a lie).
+ * empty — the platform's own draw — and otherwise what was typed, digits only (`wholeDigits`,
+ * §NNN): «12.7», «1e3» or «0x10» is NaN, which the service refuses naming the box.
  */
 function handedBibNumber(form: FormData): number | undefined {
-  const raw = text(form, "bibNumber").trim();
-  return raw === "" ? undefined : Number(raw);
+  return wholeDigits(text(form, "bibNumber")) ?? undefined;
 }
 
 function outcomeOf(error: unknown): { error: string } {
@@ -170,13 +170,12 @@ export async function promoteRegistrationAction(_previous: FormOutcome | null, f
 export async function setBibNumberAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const registrationId = text(form, "registrationId");
-  const raw = text(form, "bibNumber").trim();
 
   try {
     const actor = await requireStaff();
-    // An empty field clears the number; anything else must be a whole number, which the
-    // service checks — `Number("")` would be 0 and a lie.
-    const bibNumber = raw === "" ? null : Number(raw);
+    // An empty field clears the number; anything else must be digits only (`wholeDigits`, §NNN),
+    // and the service checks the range — `Number("")` would be 0 and a lie.
+    const bibNumber = wholeDigits(text(form, "bibNumber"));
     await setBibNumberByStaff(getDb(), actor, registrationId, bibNumber, new Date());
   } catch (error) {
     return refused(error, form, {
