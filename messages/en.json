@@ -6258,7 +6258,7 @@
     "membersAddressHelp": "You register with your account's address. One account registers one person.",
     "promo": {
       "label": "I want to receive offers and benefits from {club} and its partners.",
-      "help": "Optional. You can opt out any time from your registration page.",
+      "help": "You can opt out any time from your registration page.",
       "sharedData": "your first name, last name and email address",
       "shared": "The club may give its partners your first name, last name and address."
     }

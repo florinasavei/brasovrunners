@@ -15,6 +15,14 @@
  * - **A helper line** is a caption directly under its label — pulled up 8 of the label's 12 pixels
  *   below, indented to the label's own left edge (the box's 44 minus `FormControlLabel`'s −11).
  *
+ * - **A glyph leads every box's words** (round 2; the owner, 2026-09-29 19:33: «pentru fiecare bifă
+ *   ne trebuie și o iconiță la început», «e destul de importantă partea asta cu acordurile!»): a
+ *   20-pixel glyph in `text.secondary`, the size of the site's row glyphs, in its own column at the
+ *   label's left edge and on its first line, 6 pixels before the words; a line that wraps starts
+ *   under the words, never under the glyph. The caption under a box starts under the words too:
+ *   33 + 20 + 6 = 59 pixels. The words — the terms' version and clauses, the link, « — opțional»,
+ *   the required mark — stay one inline flow, so the mark follows the last word.
+ *
  * One constant, read by `CheckboxField`'s `dense`, by `ReadAndAgree` and by the density test
  * (`tests/unit/registrations/consents-density.test.ts`), so the numbers above cannot drift from the
  * page. The backoffice's boxes keep their own density; only the public form's consents read this.
@@ -35,6 +43,20 @@ export const CONSENT_DENSITY = {
     my: 0,
     "& .MuiFormControlLabel-label": { py: "12px" },
   },
-  /** A helper line: a caption under its label, 4 pixels below the words, at the label's left edge. */
-  helpSx: { display: "block", mt: "-8px", pl: "33px" },
+  /** A helper line: a caption under its label, 4 pixels below the words, at the words' left edge (after the glyph). */
+  helpSx: { display: "block", mt: "-8px", pl: "59px" },
+  /** The glyph's size and the gap after it, in pixels. */
+  glyphPx: 20,
+  glyphGapPx: 6,
+  /**
+   * The words beside the glyph: a block indented by the glyph's column, so every line starts under
+   * the words; the glyph (the label's first child, an `MuiSvgIcon`) sits in that column on the first
+   * line. One inline flow for the words, the link, « — opțional» and the required mark.
+   */
+  labelSx: {
+    display: "block",
+    position: "relative",
+    pl: "26px",
+    "& > .MuiSvgIcon-root:first-child": { position: "absolute", left: 0, top: 0, fontSize: 20, color: "text.secondary" },
+  },
 } as const;

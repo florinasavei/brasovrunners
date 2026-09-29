@@ -1,9 +1,13 @@
 import BadgeIcon from "@mui/icons-material/Badge";
 import CampaignIcon from "@mui/icons-material/Campaign";
+import DescriptionIcon from "@mui/icons-material/Description";
 import DirectionsRunIcon from "@mui/icons-material/DirectionsRun";
+import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import GroupsIcon from "@mui/icons-material/Groups";
 import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
+import MenuBookIcon from "@mui/icons-material/MenuBook";
 import ShareIcon from "@mui/icons-material/Share";
+import ShieldIcon from "@mui/icons-material/Shield";
 import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
 import Alert from "@mui/material/Alert";
 import AlertTitle from "@mui/material/AlertTitle";
@@ -1421,6 +1425,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 />
               ) : (
                 <CheckboxField id={fieldId("rulesAcknowledged")} name="rulesAcknowledged" required dense defaultChecked={prefill("rulesAcknowledged") === "on"}>
+                  <MenuBookIcon aria-hidden data-testid="consent-glyph" />
                   {t("rules.plainPage")}{" "}
                   <LegalLink href={{ pathname: "/events/[slug]", params: { slug } }} newTabLabel={t("opensInNewTab")}>
                     {t("rules.pageLink")}
@@ -1445,6 +1450,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 </Alert>
               )}
               <CheckboxField id={fieldId("termsAccepted")} name="termsAccepted" required dense defaultChecked={acceptance.ticked}>
+                <DescriptionIcon aria-hidden data-testid="consent-glyph" />
                 {t.rich("terms.accept", {
                   version: termsVersion ?? "—",
                   // The words as one string: `LegalLink` names itself from a string child.
@@ -1456,9 +1462,11 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 })}
               </CheckboxField>
               <CheckboxField id={fieldId("fitnessDeclared")} name="fitnessDeclared" required dense defaultChecked={prefill("fitnessDeclared") === "on"}>
+                <MedicalServicesIcon aria-hidden data-testid="consent-glyph" />
                 {t("fitnessDeclared")}
               </CheckboxField>
               <CheckboxField id={fieldId("privacyAcknowledged")} name="privacyAcknowledged" required dense defaultChecked={prefill("privacyAcknowledged") === "on"}>
+                <ShieldIcon aria-hidden data-testid="consent-glyph" />
                 {t("privacyPrefix")}{" "}
                 <LegalLink href="/legal/privacy" newTabLabel={t("opensInNewTab")}>
                   {t("privacyLinkLabel")}
@@ -1494,8 +1502,11 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                             : undefined
                         }
                         helpTestId="list-opt-in-states"
+                        optional={t("optionalSuffix")}
                       >
-                        {`${t("listOptIn")} — ${t("optionalSuffix")}`}
+                        {/* The trophy (round 2): the list and the results, one disclosure behind one tick. */}
+                        <EmojiEventsIcon aria-hidden data-testid="consent-glyph" />
+                        {t("listOptIn")}
                       </CheckboxField>
                       {/*
                         The socials beside the name (§500), behind the notice in force and asked as a
@@ -1513,8 +1524,9 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                             inputIds={[fieldId("stravaUrl"), fieldId("instagramHandle")]}
                             forceOpen={prefill("listSocials") === "on"}
                           >
-                            <CheckboxField name="listSocials" dense defaultChecked={prefill("listSocials") === "on"} help={t("listSocialsHelp")} helpTestId="list-socials-help">
-                              {`${t("listSocials")} — ${t("optionalSuffix")}`}
+                            <CheckboxField name="listSocials" dense defaultChecked={prefill("listSocials") === "on"} help={t("listSocialsHelp")} helpTestId="list-socials-help" optional={t("optionalSuffix")}>
+                              <ShareIcon aria-hidden data-testid="consent-glyph" />
+                              {t("listSocials")}
                             </CheckboxField>
                           </ShownWithSocial>
                         </HiddenForMinor>
@@ -1525,16 +1537,17 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 })()}
               {/*
                 «Oferte și beneficii» (§562): a consent of its own, under the list tick — the owner's
-                sentence as the label, ending in its full stop, the club named from `CLUB_NAME`, and
-                «Opțional.» leading the helper line rather than a suffix after that full stop;
+                sentence as the label, ending in its full stop, the club named from `CLUB_NAME`, then
+                « — opțional» like every optional box of the block (round 2 of §NNN, amending §562's
+                «Opțional.» at the head of the helper line);
                 optional, never pre-ticked, never required, never folded (§59). Asked only while the
                 notice in force describes it; the service keeps a tick only under a notice that
                 names it, never on another adult's family form (§421), never from staff. The glyph
                 leads the words, drawn here in the Server Component as the label's own child.
               */}
               {promoOn && (
-                <CheckboxField name="promoConsent" dense defaultChecked={prefill("promoConsent") === "on"} help={promoShared ? `${t("promo.help")} ${t("promo.shared")}` : t("promo.help")} helpTestId="promo-consent-help">
-                  <CampaignIcon aria-hidden data-testid="promo-consent-glyph" sx={{ fontSize: "1.15em", verticalAlign: "-0.2em", mr: 0.75, color: "text.secondary" }} />
+                <CheckboxField name="promoConsent" dense defaultChecked={prefill("promoConsent") === "on"} help={promoShared ? `${t("promo.help")} ${t("promo.shared")}` : t("promo.help")} helpTestId="promo-consent-help" optional={t("optionalSuffix")}>
+                  <CampaignIcon aria-hidden data-testid="promo-consent-glyph" />
                   {t("promo.label", { club: CLUB_NAME })}
                 </CheckboxField>
               )}

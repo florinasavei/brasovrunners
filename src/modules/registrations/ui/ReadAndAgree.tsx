@@ -211,16 +211,22 @@ export default function ReadAndAgree({
   if (!hydrated) {
     return (
       <FormControlLabel
-        control={<Checkbox id={fieldId} name={name} required defaultChecked={defaultAgreed} size={CONSENT_DENSITY.checkboxSize} sx={CHECKBOX_TAP_TARGET} />}
+        // Required through the input's slot, and the mark drawn after the words, as `CheckboxField`'s dense box does.
+        control={<Checkbox id={fieldId} name={name} slotProps={{ input: { required: true } }} defaultChecked={defaultAgreed} size={CONSENT_DENSITY.checkboxSize} sx={CHECKBOX_TAP_TARGET} />}
         slotProps={{ typography: { variant: CONSENT_DENSITY.labelVariant } }}
         sx={CONSENT_DENSITY.rowSx}
         label={
-          <span>
+          // The book glyph leads the words, as on every box of the block (§NNN round 2).
+          <Box component="span" sx={CONSENT_DENSITY.labelSx}>
+            <MenuBookIcon aria-hidden data-testid="consent-glyph" />
             {plainLabel}{" "}
             <a href={href} target="_blank" rel="noreferrer">
               {openLabel}
             </a>
-          </span>
+            <span aria-hidden="true" className="MuiFormControlLabel-asterisk">
+              {"\u2009*"}
+            </span>
+          </Box>
         }
       />
     );

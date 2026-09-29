@@ -123,8 +123,9 @@ describe("§562 the form's box", () => {
     // The owner's words (2026-09-29 16:12), the club by its name from `CLUB_NAME`.
     expect(ro.Registration.promo.label).toBe("Vreau să primesc oferte și beneficii de la {club} și partenerii săi.");
     expect(en.Registration.promo.label).toBe("I want to receive offers and benefits from {club} and its partners.");
-    expect(ro.Registration.promo.help).toBe("Opțional. Poți renunța oricând din pagina înscrierii tale.");
-    expect(en.Registration.promo.help).toBe("Optional. You can opt out any time from your registration page.");
+    // «— opțional» ends the label now, like every optional box of «Acorduri» (§NNN round 2), so the helper no longer opens with it.
+    expect(ro.Registration.promo.help).toBe("Poți renunța oricând din pagina înscrierii tale.");
+    expect(en.Registration.promo.help).toBe("You can opt out any time from your registration page.");
     // Two consents, two switches: the words on the person's page say so.
     expect(ro.Registrations.promo.help).toContain("newsletter");
     expect(en.Registrations.promo.help).toContain("newsletter");

@@ -6258,7 +6258,7 @@
     "membersAddressHelp": "Te înscrii cu adresa contului. Un cont înscrie o singură persoană.",
     "promo": {
       "label": "Vreau să primesc oferte și beneficii de la {club} și partenerii săi.",
-      "help": "Opțional. Poți renunța oricând din pagina înscrierii tale.",
+      "help": "Poți renunța oricând din pagina înscrierii tale.",
       "sharedData": "prenumele, numele și adresa ta de e-mail",
       "shared": "Clubul le poate da partenerilor prenumele, numele și adresa ta."
     }

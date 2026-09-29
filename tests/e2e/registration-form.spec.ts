@@ -530,6 +530,13 @@ test.describe("BR-REQ-031-01 the «Acorduri» block is compact, measured (§NNN)
     console.log(`consents-height ${width}: ${height}`);
     expect(height).toBeGreaterThan(0);
     expect(height).toBeLessThanOrEqual(width <= 320 ? 99999 : 99999);
+    // Every box of the block leads with a glyph (§NNN round 2: «pentru fiecare bifă ne trebuie și o iconiță la început»).
+    const labels = block.locator("label");
+    const labelCount = await labels.count();
+    expect(labelCount).toBeGreaterThanOrEqual(4);
+    for (let index = 0; index < labelCount; index += 1) {
+      await expect(labels.nth(index).locator('[data-testid="consent-glyph"], [data-testid="promo-consent-glyph"]'), `label ${index}`).toBeVisible();
+    }
     for (const name of ["termsAccepted", "fitnessDeclared", "privacyAcknowledged"]) {
       const box = await page.locator(`[name="${name}"]`).evaluate((input) => {
         const root = (input as HTMLElement).closest(".MuiCheckbox-root") as HTMLElement | null;
@@ -1437,11 +1444,12 @@ test.describe("BR-REQ-031-01 «Oferte și beneficii», behind the privacy notice
       await expect(box).toHaveCount(1);
       await expect(box).not.toBeChecked();
       await expect(box).not.toHaveAttribute("required", /.*/);
-      // The owner's sentence (2026-09-29 16:12), the club named from the one constant.
-      await expect(page.locator("label").filter({ has: box })).toHaveText(`Vreau să primesc oferte și beneficii de la ${CLUB_NAME} și partenerii săi.`);
-      // The glyph beside the words, decorative.
+      // The owner's sentence (2026-09-29 16:12), the club named from the one constant, then « — opțional»
+      // like every optional box of the block (§NNN round 2: the owner, 19:33).
+      await expect(page.locator("label").filter({ has: box })).toHaveText(`Vreau să primesc oferte și beneficii de la ${CLUB_NAME} și partenerii săi. — opțional`);
+      // The glyph leads the words, decorative, in its own column — nothing between it and the words.
       await expect(page.locator("label").filter({ has: box }).getByTestId("promo-consent-glyph")).toHaveCount(1);
-      await expect(page.getByTestId("promo-consent-help")).toHaveText("Opțional. Poți renunța oricând din pagina înscrierii tale.");
+      await expect(page.getByTestId("promo-consent-help")).toHaveText(/^Poți renunța oricând din pagina înscrierii tale\./);
       // A thumb's target (BR-REQ-041-01 criterion 6), measured as the required consent is.
       const target = await box.evaluate((input) => {
         let node: HTMLElement | null = input as HTMLElement;
