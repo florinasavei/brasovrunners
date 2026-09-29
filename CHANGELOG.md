@@ -8,6 +8,12 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.31-2026-09-27
+
+- **The health note only when the event asks it** — a «Condiții de participare» card in «Program, regulament și declarație» with one «Informații medicale» tick, off by default; the form asks the note, the server keeps it and the registration page and the emergency sheet show it only then; every existing event stops asking until the club ticks it. §557.
+## BR-V2.30-2026-09-27
+
+- **The declarations after the second review** — trail shoes «cu aderență corespunzătoare», the organiser's general safety instructions, a copy kept for a right and a disputed one until settled; «Reguli de siguranță» on every group run's page; every new signature keeps the SHA-256 of the exact text signed, printed on its PDF with the version and the second it was signed; an Administrator may hold a declaration for a complaint or a dispute, which no sweep or erase takes; the public participant list explains its words — «Confirmat», «Înscris, în așteptarea confirmării», «Pe lista de așteptare» — in a legend under it and a «?» beside each, with the event's own confirmation deadline in words, each in one sentence of at most 200 characters. §556.
 ## BR-V2.29-2026-09-27
 
 - **The backoffice events list opens on «Viitoare»** — with no state in the address it shows the dates to come and says «N din M evenimente»; «Toate» is its own choice (`state=ALL`). «Regenerează din șabloane (4 din 6)» on `/admin/legal` says the count out of every text, with one sentence explaining the rule. On the registration form «Sex» is a dropdown again, «Feminin» first, each answer with its glyph in the list and nothing chosen. §555.

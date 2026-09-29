@@ -33,7 +33,7 @@ import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { wakeJobs } from "@/modules/jobs/schedule-cache";
 import { findCurrentApprovedVersionId } from "@/modules/legal-documents/repository";
 import { groupRunDeclarationKeyFor } from "@/modules/legal-documents/domain/keys";
-import { deleteGroupRunDeclarationMessagesOfEvent, rehomeGroupRunDeclarationsOfEvent } from "@/modules/group-run-declarations/repository";
+import { deleteGroupRunDeclarationMessagesOfEvent, refuseHeldGroupRunDeclarationsOfEvent, rehomeGroupRunDeclarationsOfEvent } from "@/modules/group-run-declarations/repository";
 import { eraseAllRegistrationsOfEvent } from "@/modules/registrations/admin-service";
 import { computeOccupied } from "@/modules/registrations/domain/capacity";
 import { countOccupied, countRegistrationsForEvent, countTestRegistrationsForEvent, lockEventForCapacity } from "@/modules/registrations/repository";
@@ -589,6 +589,9 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
     // «Kit de participare» → «Tricou» (§554), by the same discipline: a caller that did not post the
     // card writes nothing, so no save takes the shirt off an event by not mentioning it.
     ...(fields.kitShirt === undefined ? {} : { kitShirt: fields.kitShirt }),
+    // «Informații medicale» (§557), by the same discipline: a caller that did not post the card
+    // writes nothing, so no save switches the health note on or off by not mentioning it.
+    ...(fields.askHealthNote === undefined ? {} : { askHealthNote: fields.askHealthNote }),
     // The race's band (§173): where its numbers start and what colour they print. Both were
     // parsed and validated by `fields.ts` from the day they were added and then dropped here,
     // so the editor's two controls posted into nothing — caught by review (§177).
@@ -1766,6 +1769,9 @@ const SERIES_COLUMNS = [
   // The race kit (§554), like the headlamp once did (§382): "from this date" gives every later date
   // of the series the same T-shirt question.
   "kitShirt",
+  // The health note (§557), like the kit: "from this date" asks it, or stops asking it, on every
+  // later date of the series.
+  "askHealthNote",
   // One race, one band: a series is the same event on several dates (§173, §177).
   "bibStartNumber",
   "bibColour",
@@ -2768,6 +2774,8 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     // The numbers themselves are the copy's own (the start number is not carried).
     bibColour: source.bibColour,
     bibDesign: source.bibDesign,
+    // And the health note's question (§557): a copy, and every date of a series, ask it as the source does.
+    askHealthNote: source.askHealthNote,
     confirmationOpensDaysBefore: source.confirmationOpensDaysBefore,
     confirmationDeadlineDaysBefore: source.confirmationDeadlineDaysBefore,
     // Who may enter is a property of the race, not of one edition (§329): a copy and every date
@@ -3215,6 +3223,8 @@ export async function deleteEvent<T extends Record<string, unknown>>(
   // A declaration covers the run's other dates too (§523): while the run has one, it moves there.
   await db.transaction(async (tx) => {
     await rehomeGroupRunDeclarationsOfEvent(tx, input.eventId);
+    // A held declaration (§556) left on this date refuses the delete, and the transaction with it.
+    await refuseHeldGroupRunDeclarationsOfEvent(tx, input.eventId);
     await deleteGroupRunDeclarationMessagesOfEvent(tx, input.eventId);
     await tx.delete(events).where(eq(events.id, input.eventId));
   });
@@ -3328,6 +3338,8 @@ export async function hardDeleteEvent<T extends Record<string, unknown>>(
     // without them, so they go first — unless the run has another date, which they cover too and
     // move to (§523): erasing one date's registrations is not erasing a runner's declaration.
     await rehomeGroupRunDeclarationsOfEvent(tx, plan.eventId);
+    // A held declaration (§556) left on this date refuses the erase, and the transaction with it.
+    await refuseHeldGroupRunDeclarationsOfEvent(tx, plan.eventId);
     await deleteGroupRunDeclarationMessagesOfEvent(tx, plan.eventId);
     await tx.delete(events).where(eq(events.id, plan.eventId));
 

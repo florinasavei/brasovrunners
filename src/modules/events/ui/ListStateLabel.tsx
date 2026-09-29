@@ -1,5 +1,6 @@
 import Box from "@mui/material/Box";
 import type { PublicListGroup } from "@/modules/registrations/domain/public-list-states";
+import QuietHelp from "@/shared/ui/QuietHelp";
 
 /**
  * Where a registration stands, beside a name on the public list (`DECISIONS.md` §396): "Confirmat",
@@ -13,8 +14,12 @@ import type { PublicListGroup } from "@/modules/registrations/domain/public-list
  *
  * Server-rendered, with no JavaScript: the word is given, never looked up here — the caller has
  * the page's translator.
+ *
+ * `help` is the word's sentence from the legend under the list (`list-state-legend.ts`), said again
+ * by the platform's one «?» (`QuietHelp`, a string handed to a client island, §370) — the owner,
+ * 2026-09-29: «trebuie să explic ce înseamnă „în așteptarea confirmării”».
  */
-export default function ListStateLabel({ group, label }: { group: PublicListGroup; label: string }) {
+export default function ListStateLabel({ group, label, help }: { group: PublicListGroup; label: string; help?: string }) {
   return (
     <Box
       component="span"
@@ -32,6 +37,7 @@ export default function ListStateLabel({ group, label }: { group: PublicListGrou
       }}
     >
       {label}
+      {help ? <QuietHelp text={help} size={14} testId="start-list-state-help" /> : null}
     </Box>
   );
 }

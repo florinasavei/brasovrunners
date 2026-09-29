@@ -13,6 +13,7 @@ import { startHeldBack } from "@/modules/events/domain/dated";
 import { registrationState } from "@/modules/events/domain/registration-window";
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { findCurrentApprovedDocument, findEventDeclaration } from "@/modules/legal-documents/repository";
+import { acceptanceTextHash } from "./signed-declaration";
 import { readClubNotices } from "@/modules/notifications/club-notices";
 import { confirmationNoticeRecipients, resolveDeclarationCopies } from "@/modules/notifications/domain/club-notices";
 import { startingDeadline } from "@/modules/notifications/domain/deadline-rebase";
@@ -20,6 +21,7 @@ import { enqueueEmail, type OutboxRow } from "@/modules/notifications/outbox";
 import { bibNumberInUse, isEventSpareNumber, pickBibNumber } from "./bibs";
 import { handsSpareAtConfirm } from "./domain/spare-bibs";
 import { shirtSizeKept } from "./domain/kit";
+import { healthNoteKept, withoutHealthNote } from "./domain/health-note";
 import { asksForIdDocument, asksForMinorSignature, describesListSocials } from "@/modules/legal-documents/domain/merge-fields";
 import { newCheckinCode } from "./checkin-code";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
@@ -146,6 +148,12 @@ export type EventForRegistration = {
    * Asked here before anything is spent and again under the event's lock. Absent on a partial row: false.
    */
   membersOnly?: boolean;
+  /**
+   * «Informații medicale» (§557): whether the form asks the health note. `false` drops a posted note
+   * before the schema reads it, so a stale form is not refused; what is stored is decided off the
+   * locked row whatever this says. Absent on a partial row: nothing dropped early, the lock decides.
+   */
+  askHealthNote?: boolean;
   /**
    * The event's own zone (`events.timezone`), for the day the minimum age is counted against
    * (§321). Absent on a partial row means the column's default, `EVENT_TIMEZONE_DEFAULT`.
@@ -1464,7 +1472,13 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     note, the socials, the public list, the first-person fitness statement — are dropped whatever
     was posted, before anything reads them. A minor's parent still consents for the child.
   */
-  const parsed = schema.safeParse(origin.anotherPerson ? withoutAnotherAdultsConsents(rawInput, now) : rawInput);
+  /*
+    An event that does not ask the health note (§557): a posted note and its tick are dropped before
+    the schema reads them, so a stale form is never refused for a note without its consent. Only
+    when the caller said so (`askHealthNote: false`); the lock below decides what is stored either way.
+  */
+  const posted = event.askHealthNote === false ? withoutHealthNote(rawInput) : rawInput;
+  const parsed = schema.safeParse(origin.anotherPerson ? withoutAnotherAdultsConsents(posted, now) : posted);
   if (!parsed.success) {
     throw new DomainError(
       "VALIDATION_ERROR",
@@ -1757,6 +1771,12 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       Every door passes here: the public form, the family forms, a staff entry, the desk's walk-in.
     */
     details.tshirtSize = shirtSizeKept(locked.kitShirt, input.tshirtSize);
+    /*
+      The health note (§557), by the same rule off the same locked row: kept only when the event
+      asks it («Condiții de participare» → «Informații medicale»); otherwise a posted note is
+      ignored, never refused, and the row stores null with no consent. Every door passes here.
+    */
+    Object.assign(details, healthNoteKept(locked.askHealthNote, { healthNotes: details.healthNotes, healthConsentVersion: details.healthConsentVersion, healthConsentAt: details.healthConsentAt }));
     // Asked again under the lock (§533): the date held back by a save that committed after the
     // caller read the row. The save counts registrations under this same lock, so a submission and
     // the switch cannot both pass — one waits for the other and finds it.
@@ -2692,6 +2712,8 @@ export async function signDeclaration<T extends Record<string, unknown>>(
       are stored only then. The minor's signature and document ride on the same row (§330): one
       acceptance, one instant, one text, signed by both.
     */
+    const idDocument = needsIdDocument ? (parsed.data.idDocument ?? null) : null;
+    const minorIdDocument = signedByMinorToo && needsIdDocument ? (parsed.data.minorIdDocument ?? null) : null;
     await repo.insertDeclarationAcceptance(tx, {
       registrationId: current.id,
       legalDocumentId: document.id,
@@ -2699,10 +2721,16 @@ export async function signDeclaration<T extends Record<string, unknown>>(
       contentSha256: document.contentSha256,
       locale: current.locale,
       typedName: parsed.data.typedName,
-      idDocument: needsIdDocument ? parsed.data.idDocument : null,
+      idDocument,
       minorTypedName: signedByMinorToo ? (parsed.data.minorTypedName ?? null) : null,
-      minorIdDocument: signedByMinorToo && needsIdDocument ? (parsed.data.minorIdDocument ?? null) : null,
+      minorIdDocument,
       acceptedAt: now,
+      // The proof of signing (§556): the exact text this signer's PDF prints, hashed in this transaction.
+      textHash: await acceptanceTextHash(tx, {
+        eventId: current.eventId,
+        document,
+        signer: { registeredName: current.registeredName, guardianName: current.guardianName, locale: current.locale, idDocument, minorIdDocument, acceptedAt: now },
+      }),
     });
 
     const confirmed = await repo.transitionRegistration(tx, {
@@ -2852,6 +2880,12 @@ async function acceptDeclarationOnPaper<T extends Record<string, unknown>>(
     acceptedAt: now,
     method: "PAPER",
     attestedByStaffUserId: actor.id,
+    // The text the paper's record prints (§556): the documents stay on the paper, so their blanks are dotted.
+    textHash: await acceptanceTextHash(tx, {
+      eventId: current.eventId,
+      document,
+      signer: { registeredName: current.registeredName, guardianName: current.guardianName, locale: current.locale, idDocument: null, minorIdDocument: null, acceptedAt: now },
+    }),
   });
   const confirmed = await repo.transitionRegistration(tx, {
     id: current.id,

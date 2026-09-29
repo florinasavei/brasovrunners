@@ -68,7 +68,7 @@ import { env } from "@/shared/config/env";
 import { readBibDesignForm } from "@/modules/registrations/bib-design-query";
 import { assignBibNumbers, reserveSpareBibs } from "@/modules/registrations/bibs";
 import { withdrawInterest } from "@/modules/registrations/interest";
-import { eraseGroupRunDeclaration, eraseGroupRunDeclarations } from "@/modules/group-run-declarations/service";
+import { eraseGroupRunDeclaration, eraseGroupRunDeclarations, setGroupRunDeclarationHold } from "@/modules/group-run-declarations/service";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
 
 /**
@@ -304,6 +304,8 @@ function eventFieldsFrom(form: FormData) {
     // «Kit de participare» → «Tricou» (§554): a checkbox, read only when the form carried its marker,
     // so a form without the card is "not editing it" rather than "no shirt".
     kitShirt: form.get("event.kitShirt.present") === "1" ? form.get("event.kitShirt") === "on" : undefined,
+    // «Condiții de participare» → «Informații medicale» (§557), by the same marker.
+    askHealthNote: form.get("event.askHealthNote.present") === "1" ? form.get("event.askHealthNote") === "on" : undefined,
     bibStartNumber: value("bibStartNumber"),
     bibColour: value("bibColour"),
     /*
@@ -1060,6 +1062,24 @@ export async function eraseGroupRunDeclarationAction(_previous: FormOutcome | nu
     return refused(error, form);
   }
   return backTo(path, { saved: "groupRunDeclarationErased" });
+}
+
+/**
+ * «Păstrează: reclamație / litigiu în curs» on one group-run declaration, or its release (§556): the
+ * Administrator's, with a reason; the service asks the role again and writes the audit row.
+ */
+export async function groupRunDeclarationHoldAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = toLocale(form.get("uiLocale"));
+  const eventId = text(form, "eventId");
+  const path = editorPath(locale, eventId);
+  const hold = text(form, "hold") === "1";
+  try {
+    const actor = await requireStaffCapability(canManageRegistrations);
+    await setGroupRunDeclarationHold(getDb(), actor, { eventId, id: text(form, "declarationId"), hold, reason: text(form, "reason") }, new Date());
+  } catch (error) {
+    return refused(error, form);
+  }
+  return backTo(path, { saved: hold ? "declarationHeld" : "declarationReleased" });
 }
 
 /**
