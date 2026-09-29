@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.26-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.27-2026-09-27 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V2.26-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.27-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -1517,6 +1517,7 @@ way through every step, and none of them is a way around the allocator.
 18. Beside every QR — the confirmed email's caption, «Gestionează înscrierea» and «Înscrierile mele» — the person's name and race number are written, «—» while no number is given and never a word that calls it provisional; the club's copy, which carries no QR, carries the same name-and-number line in its place (2026-09-28, `DECISIONS.md` §547).
 19. Each person of a family on one address gets their own number at their own confirmation, shown beside their own QR; a person still at the declaration shows none (2026-09-28, `DECISIONS.md` §548).
 20. Criteria 4, 12, 13, 14 and 15 above describe the provisional numbers of §214/§220/§444 and are superseded by this decision: a number exists only once the registration is confirmed (2026-09-28, `DECISIONS.md` §548).
+21. Given a race number typed at the desk, with a paper confirmation or on its own, when it is saved, then only digits count: «12.7», «1e3», «0x10» or «-5» is refused naming the box, never rounded and never read as another number, and «007» is 7 (2026-09-29, `DECISIONS.md` §553).
 
 **Verification:** integration `registrations/race-day.test.ts`; unit `registrations/checkin-code.test.ts`, `notifications/templates.test.ts`; e2e `race-day.spec.ts`; integration `registrations/void-bibs.test.ts` (4, 8); e2e `race-day.spec.ts` (8)
 
@@ -1585,6 +1586,7 @@ way through every step, and none of them is a way around the allocator.
 35. A preferential number is typed on a confirmed registration only, and replacing a number the registration already wears is the Administrator's — any other staff role is refused with FORBIDDEN and nothing written, while any desk role may still give a number to a confirmed registration that has none; the number it replaces is retired and never drawn again (2026-09-28, `DECISIONS.md` §548).
 36. A confirmed registration's number is never cleared; a clear is refused with nothing written (2026-09-28, `DECISIONS.md` §548).
 37. Criteria 11, 18, 22, 23, 24, 26 and 27 above, and criterion 7's clause that any staff role may type a confirmed registration's number or clear it and that clearing one sends nothing, describe the provisional numbers of §214/§220/§444, §173's lock on a confirmed number or a clear this decision refuses, and are superseded by it: a number exists only once the registration is confirmed, only an Administrator replaces one, and nobody clears it (2026-09-28, `DECISIONS.md` §548).
+38. Given the desk's single-bib picture, when it is asked for a registration that is not a confirmed real one — restarted with a number, unconfirmed, waiting, cancelled or a test — then it answers 404 and draws nothing (2026-09-29, `DECISIONS.md` §553).
 
 **Verification:** integration `registrations/bibs.test.ts`, `registrations/race-day.test.ts`, `cms/bib-design.test.ts`; unit `registrations/bibs-pdf.test.ts`, `registrations/bib-design.test.ts`; integration `registrations/void-bibs.test.ts` (16, 17); unit `registrations/race-number.test.ts` (16); unit `registrations/bib-footer.test.ts` (19); e2e `bib-design.spec.ts` (19)
 
@@ -2697,6 +2699,7 @@ When nothing needs changing, the page says "nothing to change" and no audit row 
 17. Given a branch's `.release/*.json` entries, when `yarn docs:check` runs, then an entry missing a required field, named for another branch, duplicated, or citing a requirement SPECS.md does not define fails the check; and when `yarn docs:land --tree` runs, it lands them with the next baseline (or a typed `--to` only when it comes after the current one), the batch line and the Released row, deletes them, and stops before writing anything on `docsNotes`, a requirement SPECS.md lacks, or a placeholder line no branch wrote. Verification: unit `scripts/land-tree.test.ts`, `scripts/release-from-branch.test.ts` (2026-09-27, `DECISIONS.md` §535).
 18. Given `yarn batch:merge`, when two branches collide in the migrations' journal, the message catalogues or a test file, then it resolves them by rule — one import per module carrying both sides' specifiers — runs `yarn install --immutable` when the merges changed `package.json` or `yarn.lock`, before the probe and the checks, and stops (exit 2) on any other conflict, on two branches with the same migration number, on a journal that moves a migration production or QA applied, or when `yarn migrations:check` or `yarn typecheck` fails on the merged tree. Verification: unit `scripts/merge-resolve.test.ts`, `scripts/release-from-branch.test.ts` (2026-09-27, `DECISIONS.md` §535).
 19. Given `.github/workflows/release.yml`, when a pull request into `qa` is labelled `ship` or the workflow is run by hand, then only a person with write access on a branch of this repository starts it, one release runs at a time with the concurrency group on the job, `qa` is merged in with `qa`'s own copy of the merge tool (a `qa` without it stops with a plain sentence), a dry run pushes and ships nothing and shows the landing's diff, every step's outcome and ship's timing are written to the run's summary, and ship is given production's baseline as the previous one. Verification: unit `scripts/release-workflow.test.ts` (2026-09-27, `DECISIONS.md` §535).
+20. Given `.githooks/pre-commit` or `.githooks/pre-push`, when it runs, then it unsets `GIT_DIR`, `GIT_INDEX_FILE`, `GIT_WORK_TREE` and `GIT_PREFIX` before any command, and every test that spawns git, or a script that runs git, passes an environment without git's repository variables (`tests/helpers/git-env.ts`), so a test's throwaway repository never reads or writes the repository being committed (2026-09-29, `DECISIONS.md` §553).
 
 **Verification:** repository settings audit; CI configuration; `.githooks/pre-commit` and `.github/workflows/docs-check.yml` compared
 

@@ -41,7 +41,7 @@ export function newsletterLeaveRefused(outcome: NewsletterLeaveOutcome | null): 
 }
 
 /**
- * Move the focus to a refusal drawn on arrival (§47, §NNN) — «Vreau să mă dezabonez»'s alert after a
+ * Move the focus to a refusal drawn on arrival (§47, §553) — «Vreau să mă dezabonez»'s alert after a
  * failed check or the hour's limit — opening the fold round it first, since an element inside a
  * closed `<details>` cannot take the focus. False when there is nothing to focus.
  */

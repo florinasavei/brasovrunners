@@ -31,7 +31,7 @@ afterAll(() => {
   for (const dir of scratch) rmSync(dir, { recursive: true, force: true });
 });
 
-/** The script reads git's config; started from a hook, git's own repository variables are dropped first (§NNN). */
+/** The script reads git's config; started from a hook, git's own repository variables are dropped first (§553). */
 function envWithout(...names: string[]): NodeJS.ProcessEnv {
   const env = gitEnv();
   for (const name of names) delete env[name];

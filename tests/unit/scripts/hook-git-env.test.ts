@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { GIT_REPOSITORY_VARIABLES, gitEnv } from "../../helpers/git-env";
 
 /**
- * §NNN — a hook strips git's own environment before it runs anything that may spawn git, and a test
+ * §553 — a hook strips git's own environment before it runs anything that may spawn git, and a test
  * that spawns git in a throwaway fixture strips it again.
  *
  * The incident, 2026-09-28: `.githooks/pre-commit` runs `yarn check`; git had exported `GIT_DIR`
@@ -15,7 +15,7 @@ import { GIT_REPOSITORY_VARIABLES, gitEnv } from "../../helpers/git-env";
  */
 const HOOK_VARIABLES = ["GIT_DIR", "GIT_INDEX_FILE", "GIT_WORK_TREE", "GIT_PREFIX"];
 
-describe("§NNN the hooks forget git's own environment first", () => {
+describe("§553 the hooks forget git's own environment first", () => {
   it.each(["pre-commit", "pre-push"])(".githooks/%s unsets the four variables before any command", (name) => {
     const hook = readFileSync(path.join(".githooks", name), "utf8");
     const lines = hook.split(/\r?\n/);
@@ -28,7 +28,7 @@ describe("§NNN the hooks forget git's own environment first", () => {
   });
 });
 
-describe("§NNN gitEnv — the environment for a git a test spawns", () => {
+describe("§553 gitEnv — the environment for a git a test spawns", () => {
   const polluted: Record<string, string | undefined> = {
     PATH: "/usr/bin",
     GIT_DIR: "/the/committing/repo/.git",

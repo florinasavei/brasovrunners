@@ -13,7 +13,7 @@
 # into a hook, and every process below inherits them. On 2026-09-28 a test's throwaway fixture
 # ran `git init`, `git add` and `git rm` with them set, so its git worked on the repository being
 # committed: 1 942 staged deletions in the committing worktree's index, and later `core.bare=true`
-# in the main checkout's config (§NNN). Without them every git below finds its repository from
+# in the main checkout's config (§553). Without them every git below finds its repository from
 # the current directory — the hook runs at the worktree's top, so the checks read the same one.
 unset GIT_DIR GIT_INDEX_FILE GIT_WORK_TREE GIT_PREFIX
 

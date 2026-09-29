@@ -1,5 +1,5 @@
 /**
- * The environment for a git process a test spawns in a throwaway fixture (§NNN).
+ * The environment for a git process a test spawns in a throwaway fixture (§553).
  *
  * A git hook runs with git's own variables exported: `GIT_DIR`, `GIT_INDEX_FILE` and, in some
  * commands, `GIT_WORK_TREE` and `GIT_PREFIX`. `.githooks/pre-commit` runs `yarn check`, so the

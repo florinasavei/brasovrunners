@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.26-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.27-2026-09-27 -->
 
 # Running this locally
 
-**Baseline `BR-V2.26-2026-09-27`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
+**Baseline `BR-V2.27-2026-09-27`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
 
 Everything here is a command that exists today. If a command is in this file it is in
 `package.json`; if it is not, it has not been built yet.
@@ -115,7 +115,7 @@ yarn release             versioned archive and share copies under dist/
 `yarn check` is the single gate. The pre-commit hook runs it and CI runs it, so they cannot
 drift. When a step is added to CI that a developer can run locally, it belongs inside `check`.
 
-**A hook forgets git's own environment first (§NNN).** git exports `GIT_DIR` and `GIT_INDEX_FILE`
+**A hook forgets git's own environment first (§553).** git exports `GIT_DIR` and `GIT_INDEX_FILE`
 into a hook, so everything `yarn check` starts inherits them: on 2026-09-28 a test's throwaway
 repository ran `git init`, `git add` and `git rm` against the repository being committed (1 942
 staged deletions, then `core.bare=true` in the main checkout). Both hooks in `.githooks/` begin

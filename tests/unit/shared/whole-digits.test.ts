@@ -3,11 +3,11 @@ import { describe, expect, it } from "vitest";
 import { wholeDigits } from "@/shared/forms/whole-digits";
 
 /**
- * §NNN (the review of §548) — a number typed into a plain text box counts only as digits: the race
+ * §553 (the review of §548) — a number typed into a plain text box counts only as digits: the race
  * number typed at the desk (a free number with the paper, or a number set by hand) reads by this one
  * rule, so «1e3» is never race number 1000 and «0x10» never 16. The service keeps the range.
  */
-describe("§NNN wholeDigits — digits only, never rounded, never read as another number", () => {
+describe("§553 wholeDigits — digits only, never rounded, never read as another number", () => {
   it("reads an empty box, or no box, as nothing typed", () => {
     expect(wholeDigits("")).toBeNull();
     expect(wholeDigits("   ")).toBeNull();

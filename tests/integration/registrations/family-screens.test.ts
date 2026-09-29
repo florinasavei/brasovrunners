@@ -409,7 +409,7 @@ describe("§547 «Gestionează înscrierea» per person, and safe", () => {
     expect((await readRaceDayContext(secret, at(27))).ok).toBe(true);
   });
 
-  it("says per person how the declaration was accepted — sent by email, signed on paper at the desk, or nothing yet (§NNN)", async () => {
+  it("says per person how the declaration was accepted — sent by email, signed on paper at the desk, or nothing yet (§553)", async () => {
     const people = await family();
     const { ana, maria, ion } = people;
     // Ana signs online, from the link; Maria signs the paper form at the desk; Ion has signed nothing.

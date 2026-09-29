@@ -152,7 +152,7 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     // The publish expired the cached 404: the first anonymous visit after it is the page.
     const first = await request.get(`/ro/evenimente/${slug}`);
     expect(first.status()).toBe(200);
-    // Polled like the 404 above (§NNN): another worker's save expires `public:events` between the
+    // Polled like the 404 above (§553): another worker's save expires `public:events` between the
     // two asks, and the ask after that expiry is a MISS that files the page again.
     const asked: { last?: APIResponse } = {};
     await expect

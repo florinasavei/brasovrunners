@@ -79,7 +79,7 @@ async function backTo(
 /**
  * The number typed into a desk box (§444): absent when the box was not on the form or was left
  * empty — the platform's own draw — and otherwise what was typed, digits only (`wholeDigits`,
- * §NNN): «12.7», «1e3» or «0x10» is NaN, which the service refuses naming the box.
+ * §553): «12.7», «1e3» or «0x10» is NaN, which the service refuses naming the box.
  */
 function handedBibNumber(form: FormData): number | undefined {
   return wholeDigits(text(form, "bibNumber")) ?? undefined;
@@ -173,7 +173,7 @@ export async function setBibNumberAction(_previous: FormOutcome | null, form: Fo
 
   try {
     const actor = await requireStaff();
-    // An empty field clears the number; anything else must be digits only (`wholeDigits`, §NNN),
+    // An empty field clears the number; anything else must be digits only (`wholeDigits`, §553),
     // and the service checks the range — `Number("")` would be 0 and a lie.
     const bibNumber = wholeDigits(text(form, "bibNumber"));
     await setBibNumberByStaff(getDb(), actor, registrationId, bibNumber, new Date());

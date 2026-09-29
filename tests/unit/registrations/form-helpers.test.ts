@@ -208,7 +208,7 @@ describe("§546 the registration form says only what a label cannot", () => {
     }
   });
 
-  it("says what is deleted in the emergency help, and who collects a minor's kit in the guardian's (§NNN)", () => {
+  it("says what is deleted in the emergency help, and who collects a minor's kit in the guardian's (§553)", () => {
     // «ne-ai dat numărul ei» then «Le ștergem…» was a plural for one number; the kit left the guardian's sentence in §546.
     expect(ro.Registration.emergencyContactHelp).toContain("Ștergem numele și numărul la șapte zile după eveniment.");
     expect(ro.Registration.emergencyContactHelp).not.toMatch(/\bLe ștergem\b/);

@@ -6,7 +6,7 @@ import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-038-01, §548 (and the review of it, §NNN) — the desk's single-bib picture,
+ * BR-REQ-038-01, §548 (and the review of it, §553) — the desk's single-bib picture,
  * `GET /api/admin/events/<id>/bibs/preview?registration=<id>`, draws a bib for a confirmed real
  * registration only: the sheet's own rule (`bibs.ts#bibScopeWhere`). A row that is not confirmed —
  * a restarted one still wearing its retired number, one on the waiting list, a cancelled one — and

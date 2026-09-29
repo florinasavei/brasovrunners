@@ -58,7 +58,7 @@ describe("§550 «Vreau să mă dezabonez»: the message", () => {
   });
 });
 
-describe("§NNN «Vreau să mă dezabonez»: a refusal takes the focus, as a §47 summary does", () => {
+describe("§553 «Vreau să mă dezabonez»: a refusal takes the focus, as a §47 summary does", () => {
   /** A stand-in for the page: one alert, inside a fold that may be closed. */
   function page(open: boolean) {
     const fold = { open };

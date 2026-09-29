@@ -23,7 +23,7 @@ import { focusRefusal } from "./newsletter-box";
  * the dialog open; a button drawn by the island would be a dead control for that second. The two
  * talk through ids, plain strings, never an element (§370).
  *
- * `focusOnArrival` is the id of a refusal to move the focus to (§47, §NNN): «Vreau să mă
+ * `focusOnArrival` is the id of a refusal to move the focus to (§47, §553): «Vreau să mă
  * dezabonez»'s alert after a failed check or the hour's limit, so a screen reader and a keyboard
  * land on the sentence that says what went wrong rather than at the top of the page. Its fold is
  * drawn open by the server; the focus is the one thing a page cannot do without a script.

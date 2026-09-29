@@ -20,7 +20,7 @@ import type { PublicContent } from "@/modules/public-cache/cache";
  * Comments are not code to the parser, so a sentence that names the call is not the call.
  *
  * **The `places` kind** (the free places, the public start list) is expired by the registrations and
- * the jobs, not by the backoffice's content verbs, so it is pinned the other way round (§NNN, the
+ * the jobs, not by the backoffice's content verbs, so it is pinned the other way round (§553, the
  * review of §549): every verb of `src/modules/registrations`, `src/modules/jobs` and the deadline
  * rebase that moves a place or changes the list is named in `PLACES_WRITES` and must reach
  * `revalidatePublicContent("places")`. Those modules are not held to "classify every write" as the
@@ -146,7 +146,7 @@ const BULK_ACTIONS: Record<string, readonly PublicContent[]> = {
 };
 
 /**
- * The registrations' writes behind a public page (§NNN): the free places and the start list. Each
+ * The registrations' writes behind a public page (§553): the free places and the start list. Each
  * must reach `revalidatePublicContent("places")` — itself, through `transitionRegistration`, or
  * through a sweep that tells the cache once.
  */
@@ -361,7 +361,7 @@ describe("§549 — every write behind a public page expires it through revalida
     expect(sorted(reach(key).kinds)).toEqual(sorted(expected));
   });
 
-  describe("§NNN the registrations' writes expire the free places and the start list", () => {
+  describe("§553 the registrations' writes expire the free places and the start list", () => {
     const places = walk([...PLACES_DIRECTORIES.flatMap((directory) => sourceFiles(path.join(ROOT, directory))), ...PLACES_FILES]);
 
     it("walks the verbs the table names", () => {

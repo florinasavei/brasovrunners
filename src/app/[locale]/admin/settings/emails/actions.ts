@@ -41,7 +41,7 @@ export async function updateEmailPlanAction(_previous: FormOutcome | null, form:
   const path = getPathname({ locale, href: "/admin/settings/emails" });
 
   // Plain text boxes: only a whole number of digits counts; "12.7", "1e3" and "0x10" are refused, never
-  // rounded — the desk's race-number rule, one function (`wholeDigits`, §NNN).
+  // rounded — the desk's race-number rule, one function (`wholeDigits`, §553).
   const number = (name: string): number | null => wholeDigits(form.get(name));
 
   try {

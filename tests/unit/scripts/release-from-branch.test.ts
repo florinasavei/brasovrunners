@@ -20,7 +20,7 @@ const LAND = path.resolve("scripts/land-batch.mjs");
 const MERGE = path.resolve("scripts/merge-branches.mjs");
 // The scripts commit (a merge); a CI runner has no git identity of its own. Every git here, and every
 // script that runs one, gets an environment without git's own repository variables, or a run from
-// the pre-commit hook points the fixture's git at the repository being committed (§NNN).
+// the pre-commit hook points the fixture's git at the repository being committed (§553).
 const ENV = gitEnv({ GIT_AUTHOR_NAME: "t", GIT_AUTHOR_EMAIL: "t@example.test", GIT_COMMITTER_NAME: "t", GIT_COMMITTER_EMAIL: "t@example.test" });
 const dirs: string[] = [];
 afterEach(() => {

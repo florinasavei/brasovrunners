@@ -63,7 +63,7 @@ describe("§547 the wizard's button says «… și treci la următoarea persoan�
       expect(body).toContain("Mihai Pop");
       expect(body).toContain("Crosul Tâmpei");
       expect(body.length).toBeLessThanOrEqual(200);
-      // An event with no row in this language (§NNN): the sentence names the person and no empty event.
+      // An event with no row in this language (§553): the sentence names the person and no empty event.
       const bare = words(locale)("declare.family.withdrawBodyNoEvent", { name: "Mihai Pop" });
       expect(bare).toContain("Mihai Pop");
       expect(bare).not.toMatch(/ (la|at)\s+(se|is) /);

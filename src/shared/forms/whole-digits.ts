@@ -1,5 +1,5 @@
 /**
- * A whole number typed into a plain text box, read by one rule (§NNN; the review of §548).
+ * A whole number typed into a plain text box, read by one rule (§553; the review of §548).
  *
  * Only digits count, once the spaces round them are trimmed: «12», « 12 », «007» (which is 7).
  * An empty box, or no box on the form, is null — the caller says what that means (the desk's own
