@@ -5745,6 +5745,7 @@
       "minimumOnly": "Minimum age: {age}."
     },
     "sex": "Sex",
+    "sexChoose": "Choose…",
     "sexOptions": {
       "FEMALE": "Female",
       "MALE": "Male"
