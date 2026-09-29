@@ -180,6 +180,62 @@ describe("§NNN a crop per picture place, saved with the bib's design", () => {
   });
 });
 
+describe("§NNN a deleted gallery picture drops out of the design", () => {
+  /**
+   * A design that names a picture no longer in the gallery: deleted from «Poze» while nothing
+   * counted the race numbers as a reference (before §NNN), so the design still names its address.
+   */
+  async function designNamingADeletedPicture() {
+    const gone = await stored(1600, 400);
+    await deleteMediaAsset(db, { actor: admin, assetId: gone.assetId });
+    const sponsors = await stored(2000, 200);
+    const event = await createEvent(db, { actor: admin, fields: { ...FIELDS, translations: TRANSLATIONS }, now: NOW });
+    await db
+      .update(events)
+      .set({
+        bibDesign: {
+          ...DEFAULT_BIB_DESIGN,
+          headerImageSrc: gone.src,
+          headerImageCrop: HEADER_CROP,
+          sponsorImageSrc: sponsors.src,
+          sponsorImageCrop: SPONSOR_CROP,
+        },
+      })
+      .where(eq(events.id, event.id));
+    return { gone, sponsors, event };
+  }
+
+  it("has no facts, so the editor shows its place empty, and the other place keeps its picture", async () => {
+    const { gone, sponsors } = await designNamingADeletedPicture();
+    const facts = await readBibPictureFacts(db, [gone.src, sponsors.src]);
+    expect(facts.has(gone.src)).toBe(false);
+    expect(facts.get(sponsors.src)).toMatchObject({ id: sponsors.assetId, src: sponsors.src, width: 2000, height: 200 });
+    expect(facts.size).toBe(1);
+  });
+
+  it("is dropped, with its crop, by the next save, and the other place's picture and crop are kept", async () => {
+    const { gone, sponsors, event } = await designNamingADeletedPicture();
+    const before = (await findEventForBibs(db, event.id, "ro"))?.design;
+    expect(before?.headerImageSrc).toBe(gone.src);
+
+    // What the panel posts: a place whose picture has no facts is rendered empty — no address, no
+    // crop (`BibDesignPanel`, `BibPictureField`) — and the other place posts what it holds.
+    const facts = await readBibPictureFacts(db, [before!.headerImageSrc, before!.sponsorImageSrc]);
+    const form = designForm(event.id, (await reloadEvent(event.id)).version, {
+      header: facts.get(gone.src)?.src ?? "",
+      sponsors: facts.get(sponsors.src)?.src ?? "",
+    });
+    form.set("event.bibDesign.headerImageCrop", "");
+    await postSave(form);
+
+    const after = (await findEventForBibs(db, event.id, "ro"))?.design;
+    expect(after?.headerImageSrc).toBeNull();
+    expect(after?.headerImageCrop).toBeNull();
+    expect(after?.sponsorImageSrc).toBe(sponsors.src);
+    expect(after?.sponsorImageCrop).toEqual(SPONSOR_CROP);
+  });
+});
+
 describe("§NNN the preview route draws the unsaved crop", () => {
   it("hands the renderer the crop from the address and each picture, read and made a PNG", async () => {
     const header = await stored(2000, 1000);
