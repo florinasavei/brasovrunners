@@ -120,6 +120,7 @@ const WRITES: Record<string, Expected> = {
   "src/modules/legal-documents/service.ts#approveVersion": ["legal"],
   "src/modules/legal-documents/service.ts#withdrawApprovedVersion": ["legal"],
   "src/modules/legal-documents/service.ts#deleteApprovedVersion": ["legal"],
+  "src/modules/legal-documents/service.ts#deleteReliedOnVersion": ["legal"],
   "src/modules/legal-documents/service.ts#approvePlatformTemplates": ["legal"],
   "src/modules/legal-documents/service.ts#approveDrafts": ["legal"],
   "src/modules/legal-documents/service.ts#deleteVersionsInBatch": ["legal"],
@@ -133,6 +134,8 @@ const WRITES: Record<string, Expected> = {
   // The settings a public page reads.
   "src/modules/contact/recipients.ts#updateContactRecipients": ["settings"],
   "src/modules/contact/shown-address.ts#updateShownContactAddress": ["settings"],
+  // «Telefon public» (§565): the footer's «Contact» on every page.
+  "src/modules/contact/public-phone.ts#updatePublicPhone": ["settings"],
   "src/modules/appearance/site-tint.ts#updateSiteTint": ["settings"],
   "src/modules/appearance/site-font-size.ts#updateSiteFontSize": ["settings"],
   "src/modules/deadlines/deadlines.ts#updateDeadlines": ["settings"],

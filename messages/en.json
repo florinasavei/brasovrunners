@@ -182,10 +182,11 @@
       "calendar": "{label}: {times}",
       "ics": "{label}: {times} — bring a headlamp"
     },
-    "difficultyLevelShort": "{band} {level}",
     "difficultyLevelSr": "Difficulty: {band} — level {level} of {levels} ({band}: {from}–{to})",
     "difficultyWithLevel": "{band}, level {level} of {levels}",
-    "difficultyLevelTooltip": "{band} — level {level} of {levels}\n{ladder}",
+    "difficultyLevelHead": "{band} — level {level} of {levels}",
+    "difficultyLevelTooltip": "{head}\n{ladder}",
+    "difficultyLevelRange": "{from}–{to}",
     "difficultyBandTitle": "{band}: levels {from}–{to} of {levels}",
     "difficultyBandRange": "{band} ({from}–{to})",
     "difficultyLadderItem": "{band} {from}–{to}",
@@ -1039,6 +1040,8 @@
       "olderPicturesBody": "The pictures in this batch get their smaller sizes; the old address keeps working. It takes about twenty seconds. An editor open on a page using them will ask for a reload.",
       "shownAddressTitle": "Change the contact address shown?",
       "shownAddressBody": "The site shows the chosen address from now on, and replies to the club's emails go to it. Approved legal texts keep their own address.",
+      "publicPhoneTitle": "Change the phone shown?",
+      "publicPhoneBody": "The site shows this number at the foot of every page from now on. An empty box takes it off.",
       "siteTintTitle": "Change the site's background?",
       "siteTintBody": "Every public page of the site opens with the chosen background from now on, for every visitor. The dark theme and the backoffice stay as they are. You can go back to “White” at any time.",
       "siteFontSizeTitle": "Change the text size?",
@@ -1096,7 +1099,12 @@
       "MEMBERS_ON_TEAM": "Already on the team: {addresses}. Take them off the list. Nobody was added.",
       "LEGAL_BATCH_CONFIRMATION_MISMATCH": "The typed confirmation is not the one asked for. Nothing was deleted — type exactly the text under the box, for example \"DELETE 2\".",
       "LEGAL_BATCH_VERSION_BLOCKED": "Nothing was deleted: meanwhile, {version} can no longer be deleted. Reload the page: it is listed under what stays, with the reason; the others go on the next press.",
-      "SEND_NOW_ALLOWANCE_SPENT": "Nothing was sent: the Mailgun plan's limit for today is reached. Choose «Queue it»; the email leaves after the reset."
+      "SEND_NOW_ALLOWANCE_SPENT": "Nothing was sent: the Mailgun plan's limit for today is reached. Choose «Queue it»; the email leaves after the reset.",
+      "LEGAL_NUMBER_MISMATCH": "The number you typed is not this version's. Nothing was deleted — type only the number, for example “6”.",
+      "LEGAL_RETIRE_NEEDS_REASON": "Type the reason, 3 to 200 characters. It stays beside the version, under “Deleted versions”.",
+      "LEGAL_NOTHING_DEPENDS": "Nothing was deleted: meanwhile nothing depends on this version any more. Reload the page and delete it permanently.",
+      "LEGAL_RETIRE_IN_FORCE": "Nothing was deleted: this is the version in force. Approve the next version first, then you can delete this one.",
+      "LEGAL_ALREADY_DELETED": "This version has already been deleted from the list. Its text stays in the archive."
     },
     "editor": {
       "startsAt": "Event start",
@@ -2140,7 +2148,7 @@
       "legalDraftCreated": "The draft was created.",
       "legalDraftSaved": "The draft was saved.",
       "legalVersionApproved": "The version is approved and now public.",
-      "referencedFull": "{signatures} signatures · {events} events · {acknowledgements} registrations",
+      "referencedFull": "{signatures} · {events} · {acknowledgements}",
       "termsRegistrations": "Registrations while it was in force: {count}",
       "termsRegistrationsSoFar": "Registrations since it took effect: {count}",
       "delete": "Delete the draft",
@@ -2148,7 +2156,7 @@
       "deleteTitle": "Delete the draft?",
       "deleteBody": "The draft and its text in both languages go permanently. Nobody has seen it: a draft is never public and nobody has signed it.",
       "deleteBlockedApproved": "Approved — cannot be deleted. What the club published stays on the record.",
-      "deleteBlockedReferenced": "Cannot be deleted: {signatures} signatures, {events} events and {acknowledgements} registrations depend on this version.",
+      "deleteBlockedReferenced": "Cannot be deleted: {signatures}, {events} and {acknowledgements} depend on this version.",
       "deleteBlockedTermsAccepted": "Cannot be deleted: registrations were submitted or declarations signed while it was in force, {window} ({count}), and neither records which version of the terms was accepted.",
       "legalVersionDeleted": "The draft has been deleted.",
       "newFromTemplateComplete": "Prefilled with the template's text and the club's facts, complete. Read it all, save the draft, then approve it from its page.",
@@ -2173,7 +2181,6 @@
       "withdrawTitle": "Withdraw this version?",
       "withdrawBody": "Nothing is deleted: the version stays on the record, with its number. It is only no longer offered: not public, not choosable on an event.",
       "withdrawBlockedCurrent": "In force right now — it cannot be withdrawn. Approve its successor first; then this one can go.",
-      "withdrawBlockedReferenced": "Cannot be withdrawn: {signatures} signatures, {events} events and {acknowledgements} registrations depend on this version.",
       "withdrawn": "Withdrawn",
       "withdrawnOn": "Withdrawn on {date}",
       "withdrawnNotice": "This version was withdrawn on {date}. Its text stays here, on the record, with its number, but it no longer appears publicly and can no longer be chosen on an event.",
@@ -2213,7 +2220,7 @@
         "seriesPlace": "Only in the group-run declarations: the series' usual starting place",
         "promotionalMaterials": "Only in the privacy notice: the optional box for offers and benefits from the club and its partners. Without it in the notice in force, the form does not offer it"
       },
-      "removeBlockedReferenced": "Can neither be withdrawn nor deleted: {signatures} signatures, {events} events and {acknowledgements} registrations depend on this version.",
+      "removeBlockedReferenced": "Can neither be withdrawn nor deleted permanently: {signatures}, {events} and {acknowledgements} depend on it. “Delete” on its row takes it off the list.",
       "removeBlockedCurrent": "In force right now — it can neither be withdrawn nor deleted. Approve its successor first; then this one can go.",
       "deletePermanently": "Delete permanently",
       "deleteMeans": "Deleting is permanent: the text goes entirely, and version number {version} stays retired for good.",
@@ -2235,11 +2242,7 @@
         "reasonHelp": "It stays in the audit log. It is the only thing that survives the deletion.",
         "action": "Delete this version permanently",
         "blockedDraft": "This is a draft, not an approved version. Delete it from the list with the button on its own row, with no typed confirmation: nobody has seen it and its number was never given to anyone.",
-        "blockedReferenced": "Cannot be deleted: {signatures} signatures, {events} events and {acknowledgements} registrations depend on this version. What people accepted stays.",
-        "blockedCurrent": "This is the version in force right now. Approve its successor first; then this one can be withdrawn or deleted.",
-        "blockedTermsAccepted": "Cannot be deleted: while it was in force ({window}), registrations were sent or declarations signed ({count}) that may have relied on it.",
-        "termsWithdrawInstead": "Withdrawal is what can be done: the version stays on the record, with its number, and is offered to nobody.",
-        "termsAlreadyWithdrawn": "You have already withdrawn it, so it is offered to nobody; it stays on the record, with its number, for whoever accepted it."
+        "blockedCurrent": "This is the version in force right now. Approve its successor first; then this one can be withdrawn or deleted."
       },
       "editor": {
         "heading": "Section heading",
@@ -2329,7 +2332,8 @@
       },
       "stateLabel": {
         "inForce": "In force",
-        "superseded": "Replaced"
+        "superseded": "Replaced",
+        "deleted": "Deleted from the list"
       },
       "groups": {
         "general": "General documents",
@@ -2369,7 +2373,58 @@
         "body": "The text in force stays on the site until you approve the draft. The four facts are the club's legal name, CIF, seat and contact address."
       },
       "tableCaptionOf": "The versions of {kind}, with their state and what depends on each",
-      "promoMissing": "The notice in force does not yet describe offers and benefits, so the form does not offer the box. Approve a new notice from the template."
+      "promoMissing": "The notice in force does not yet describe offers and benefits, so the form does not offer the box. Approve a new notice from the template.",
+      "counted": {
+        "signatures": {
+          "one": "{count} signature",
+          "few": "{count} signatures",
+          "other": "{count} signatures"
+        },
+        "events": {
+          "one": "{count} event",
+          "few": "{count} events",
+          "other": "{count} events"
+        },
+        "acknowledgements": {
+          "one": "{count} registration",
+          "few": "{count} registrations",
+          "other": "{count} registrations"
+        }
+      },
+      "deleteAction": "Delete",
+      "retireOffered": "Cannot be withdrawn: {signatures}, {events} and {acknowledgements} depend on it. “Delete” takes it off the list; the text stays for whoever signed it.",
+      "retireTermsOffered": "While it was in force ({window}) registrations were sent or declarations signed ({count}). “Delete” takes it off the list; the text stays.",
+      "legalVersionRetired": "{phrase} has been deleted from the list. Its text stays in the archive, for whoever signed it.",
+      "deletedNotice": "Deleted from the list on {date}. The reason: {reason}. The text stays here for whoever signed it; the version can no longer be put in force.",
+      "retire": {
+        "title": "Delete {document}, version {version}?",
+        "stepOne": "Step 1 of 2: what happens",
+        "consequence": "{signatures}, {events} and {acknowledgements} stay valid, and the text stays in the archive. The version leaves the list and can no longer be put in force.",
+        "termsKept": "The registrations from the time it was in force ({count}) keep what they accepted.",
+        "stillShown": "The registration's page, the race desk and the signed PDF still show this text. It cannot be undone.",
+        "reasonLabel": "The reason",
+        "reasonHelp": "Required, at most 200 characters. It stays beside the version, under “Deleted versions”.",
+        "continue": "Continue",
+        "stepTwo": "Step 2 of 2: confirm",
+        "numberLabel": "The version's number",
+        "numberHelp": "Type “{version}” to confirm. Any other number stops the deletion.",
+        "action": "Delete version {version}",
+        "back": "Back",
+        "alreadyDeleted": "This version was already deleted from the list, on {date}. Its text stays in the archive."
+      },
+      "deletedFold": {
+        "title": "Deleted versions",
+        "count": {
+          "one": "{count} version",
+          "few": "{count} versions",
+          "other": "{count} versions"
+        },
+        "intro": "Taken off the list, their text kept for whoever signed it. They cannot come back, so none returns to force by mistake; for the same text, make a new version.",
+        "row": "Version {version} · deleted on {date} by {who}",
+        "whoGone": "an account since removed",
+        "reason": "The reason: {reason}",
+        "read": "Read the text"
+      }
     },
     "tasks": {
       "title": "What is still to do",
@@ -4374,6 +4429,19 @@
         "saved": "The contact address shown was saved.",
         "sender": "Emails still leave from the Mailgun domain, or they would land in spam. Only the reply address changes."
       },
+      "publicPhone": {
+        "title": "Public phone",
+        "intro": "The number people see at the foot of every page, under «Contact». Empty, the site shows no number.",
+        "aside": "On the site: {phone}",
+        "asideNone": "No number on the site",
+        "field": "Phone",
+        "help": "As you want it to read, for example with the +40 prefix. Leave it empty to show none.",
+        "updatedAt": "Set {when}.",
+        "readOnly": "The Administrator sets the number; you see the one in force.",
+        "save": "Save the phone",
+        "saving": "Saving…",
+        "saved": "The public phone was saved."
+      },
       "perSendNewsletter": "The newsletter's text is written per send, on the backoffice's “Newsletter” page, so it has no words to edit here.",
       "newsletterLink": "Newsletter →",
       "newsletterLinkHelp": "The subscribers and the messages to them have their own page in the menu.",
@@ -4789,7 +4857,7 @@
               "title": "The club's difficulty scale",
               "steps": [
                 "«Events» → «Edit» → the «What kind of event» card: pick «Difficulty» (the band) and, beside it, «Level» — one of the band's three.",
-                "The scale has 15 levels, in order: easy 1–3, medium 4–6, fairly hard 7–9, hard 10–12, very hard 13–15. The site shows the band with its level, for example \"Medium 5\".",
+                "The scale has 15 levels, in order: easy 1–3, medium 4–6, fairly hard 7–9, hard 10–12, very hard 13–15. On the site the pill shows the band alone, \"Medium\"; the gauge's dots show the level within the band.",
                 "What each band and level means: press the question mark beside «Difficulty» or «Level».",
                 "The level in the other bands: the first when the route sits at the easy end of its band, the third when it is close to the next one (longer, steeper, at night, mud). Not sure? The middle one.",
                 "The site's filter ticks a whole band: «Hard» shows all three of its levels, 10–12, and writes them beside its name.",
@@ -5794,6 +5862,16 @@
       "or": "or"
     },
     "contactPage": "Write to us"
+  },
+  "Identity": {
+    "blockLabel": "The club's details",
+    "line": "{legalName} ({club}) · CIF {cif}",
+    "lineNoCif": "{legalName} ({club})",
+    "cif": "C.I.F. {cif}",
+    "country": "Romania",
+    "socialLabel": "Follow the club",
+    "contactHeading": "Contact",
+    "writeToUs": "Write to us"
   },
   "Legal": {
     "unavailable": "This document has not been published for this environment yet.",
@@ -7091,6 +7169,7 @@
       "legalVersionDeleted": "Draft deleted.",
       "legalVersionWithdrawn": "The version was withdrawn.",
       "legalVersionErased": "The version was erased.",
+      "legalVersionRetired": "The version has been deleted from the list; its text stays in the archive.",
       "albumCreated": "The album was created.",
       "album": "The album was saved.",
       "photoRemoved": "The photo was removed.",
@@ -7131,6 +7210,7 @@
       },
       "groupRunDeclarationErased": "The declaration was erased.",
       "shownContactAddress": "The contact address shown was saved.",
+      "publicPhone": "The public phone was saved.",
       "siteTint": "The site's background was saved.",
       "siteFontSize": "The site's text size was saved.",
       "clubTodoAdded": "Added to the list.",

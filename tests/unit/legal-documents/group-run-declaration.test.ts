@@ -26,7 +26,8 @@ import { signedOnPageWords } from "@/modules/group-run-declarations/pdf";
  *
  * The owner, 2026-09-25: "we need 'declarație pe propria răspundere (concurs)' and asfalt and trail
  * — 3 so far." The surface decides the text, because it decides the risks; the texts are informed
- * acceptance of risk and the runner's own obligations, never a waiver (Civil Code art. 1355, §357).
+ * acceptance of risk and the runner's own obligations, never an absolute waiver (Civil Code art. 1355,
+ * §357): since §568 they waive, within the law's limits, the claims for harm from the inherent risks.
  */
 
 const paragraphs = (body: LegalDocumentBody): string[] => body.sections.flatMap((section) => [...section.paragraphs]);
@@ -155,22 +156,25 @@ describe("§393 the two templates", () => {
     }
   });
 
-  it("is informed acceptance, never a waiver: every sentence that says the organiser does not answer carries the law's limit", () => {
+  it("is informed acceptance, never an absolute waiver: every disclaimer and every waiver carries the law's limit (§568)", () => {
     const limit = { ro: "în limitele permise de lege", en: "to the extent the law allows" } as const;
     const disclaimer = { ro: /nu (?:pot|poate) fi (?:tras|trasă)|nu răspunde\b/, en: /cannot be held liable|not responsible/ } as const;
-    // A waiver, or the organiser free "in any way" — never the Civil Code's own sentence that accepting the
-    // risks is *not* a waiver (art. 1355(4), §515), which the text now says in so many words.
-    const waiver = {
-      ro: /(?<!nu înseamnă, prin ea însăși, că )renunț|în niciun fel/i,
-      en: /(?<!not, by itself, a )waive|in any way/i,
-    } as const;
+    // Since §568 the runner waives the claims for harm arising from the inherent risks — always within the
+    // law's limits, in the very sentence that waives. The Civil Code's own sentence that accepting the risks
+    // is *not* by itself a waiver (art. 1355(4), §515) stays; the organiser free "in any way" never appears.
+    const waives = { ro: /(?<!nu înseamnă, prin ea însăși, că )(?<![\p{L}])renunț(?![\p{L}])|moștenitorii mei/iu, en: /(?<!not, by itself, a )\bwaive\b|binds my heirs/i } as const;
+    const unlimited = { ro: /în niciun fel/i, en: /in any way/i } as const;
+    const sentences = (paragraph: string) => paragraph.split(/(?<=\.)\s+(?=\p{Lu})/u);
     for (const surface of ["asphalt", "trail"] as const) {
       for (const locale of ["ro", "en"] as const) {
         const text = TEXTS[surface][locale];
         const disclaimers = text.filter((p) => disclaimer[locale].test(p));
         expect(disclaimers.length, `${surface} ${locale}`).toBeGreaterThanOrEqual(2);
         for (const p of disclaimers) expect(p, `${surface} ${locale}: ${p.slice(0, 40)}`).toContain(limit[locale]);
-        for (const p of text) expect(p, `${surface} ${locale}`).not.toMatch(waiver[locale]);
+        for (const p of text) expect(p, `${surface} ${locale}`).not.toMatch(unlimited[locale]);
+        const waivers = text.flatMap(sentences).filter((s) => waives[locale].test(s));
+        expect(waivers.length, `${surface} ${locale}`).toBe(2);
+        for (const s of waivers) expect(s, `${surface} ${locale}: ${s.slice(0, 40)}`).toContain(limit[locale]);
         // One text per language, the same shape.
         expect(TEXTS[surface].ro.length).toBe(TEXTS[surface].en.length);
       }

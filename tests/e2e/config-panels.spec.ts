@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { confirmDialog } from "./support/confirm";
 import { signIn } from "./support/featured-event";
 
 /**
@@ -105,10 +106,11 @@ test.describe("§265 the configuration panels", () => {
       await expect(row.getByRole("link", { name: entry.name, exact: true }), entry.name).toHaveAttribute("aria-current", "page");
     }
 
-    // The contact page is the same two cards it was on «Setări».
+    // The contact page is the same two cards it was on «Setări», and «Telefon public» (§565).
     await page.goto("/ro/admin/pages/contact");
     await expect(main.locator("#contact-recipients")).toBeVisible();
     await expect(main.locator("#shown-contact-address")).toBeVisible();
+    await expect(main.locator("#public-phone")).toBeVisible();
     await expect(main.getByRole("navigation", { name: "Setări" })).toHaveCount(0);
 
     // The old address, a fragment and a query with it, lands on the new one (a 308 from the proxy).
@@ -230,5 +232,38 @@ test.describe("§360 the sub-tabs on a phone", () => {
       expect(facts.squeezed, row.url).toEqual({ lines: 1, overflows: true });
       expect(facts.scrolled, row.url).toBe(true);
     }
+  });
+});
+
+/**
+ * §565 — «Telefon public» on «Pagini» → «Contact»: the Administrator types a number, it shows under
+ * «Contact» in the footer's identity block on every page, and an empty box takes it off again. The
+ * number is made up; the club's is a setting, never a value in the repository.
+ */
+test.describe("§565 the public phone", () => {
+  test.skip(() => test.info().project.name !== "desktop", "one viewport is enough: it writes a setting every page reads");
+
+  test("is shown in the footer's block once saved, and gone once cleared", async ({ page }) => {
+    await signIn(page, "Dev Administrator");
+    const main = page.locator("#main");
+    const save = async (value: string) => {
+      await page.goto("/ro/admin/pages/contact");
+      const card = main.getByTestId("public-phone");
+      await expect(card).toHaveAttribute("open", "");
+      await card.getByLabel("Telefon", { exact: true }).fill(value);
+      await card.getByRole("button", { name: "Salvează telefonul" }).click();
+      await confirmDialog(page);
+      await page.waitForURL(/saved=publicPhone/);
+    };
+
+    await save("+40 123 456 789");
+    await page.goto("/ro/evenimente", { waitUntil: "networkidle" });
+    const phone = page.getByTestId("club-identity-block").getByTestId("club-identity-phone");
+    await expect(phone).toHaveText("+40 123 456 789");
+    await expect(phone).toHaveAttribute("href", "tel:+40123456789");
+
+    await save("");
+    await page.goto("/ro/evenimente", { waitUntil: "networkidle" });
+    await expect(page.getByTestId("club-identity-block").getByTestId("club-identity-phone")).toHaveCount(0);
   });
 });

@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V2.38-2026-09-27`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V2.40-2026-09-27`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -701,6 +701,18 @@ is created from the platform's text with those facts written in and approved in 
 A document that already has an approved version is not touched. A missing variable shows in
 red and the button is withheld — set it in Vercel, redeploy, come back.
 
+### The same facts on the site (2026-09-29, `DECISIONS.md` §565)
+
+The legal name and the CIF also show on the site, from the same two variables: one line
+«<legal name> (<site name>) · CIF <CIF>» at the end of every club page, «Echipa» and the contact
+page, and the block under the footer's bar on every page (the legal name, «C.I.F.», «România»; the
+social marks; «Contact»). Nothing to do but set `CLUB_LEGAL_NAME` and `CLUB_REGISTRATION_NUMBER` on
+the Vercel project and redeploy; unset, the line and the block's first column are simply absent.
+The seat is not shown. The phone under «Contact» is a setting, not a variable: «Pagini» →
+«Contact» → «Telefon public», Administrator; an empty box shows no number. Never type any of these
+values into the repository: `yarn secrets:check` refuses a commit that carries one your
+`.env.local` holds.
+
 ### The short path: start from the platform's text (2026-09-18)
 
 `/admin/legal` → "Versiune nouă" → the link for the document under "Sau pornește de la
@@ -720,6 +732,25 @@ them; the PDF can be regenerated at any time until then. Each participant alread
 own copy, sent by email at signing. With `DECLARATIONS_ARCHIVE_TO` set to the club's mailbox
 (`SETUP.md` §35), the club's copy arrives there at signing too, one email per declaration,
 subject "Declarație semnată: <name> — <event>" — the archive builds itself (`DECISIONS.md` §99).
+
+### Deleting a version (2026-09-29, `DECISIONS.md` §567)
+
+`/admin/legal` → the version's row → «Șterge» (Administrator and above). What it does depends on
+what stands on the version, and the screen says which before anything is pressed:
+
+- **Nothing depends on it** — «Șterge definitiv»: the row and both texts go, the number is retired
+  for good (§203). Type the phrase shown (`GDPR 2`) and a reason.
+- **A signature, an event or a registration depends on it** — two steps: step 1 states what happens
+  («1 semnătură, 0 evenimente și 0 înscrieri rămân valabile…») and asks a reason (at most 200
+  characters); step 2 asks the version's number, typed by hand, then «Șterg versiunea N». The
+  version leaves the list and moves into the closed fold «Versiuni șterse» under its text's card;
+  it can never be put in force again. Its text is **kept**: the signatures still point at it, and
+  the registration's page, the race desk and the signed PDF still show it. Nothing is restored from
+  the fold — the same words again are a new version, approved like any other.
+- **The version in force** is refused either way: approve the next version first.
+
+Every deletion leaves an audit row (`legal_document.deleted` for the first kind,
+`legal_document_version.deleted` for the second) naming who, when and why.
 
 ### Sample versions, and why the first approved one is not version 1
 
