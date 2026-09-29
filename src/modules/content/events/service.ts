@@ -2769,6 +2769,11 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     waitlistCapacity: source.waitlistCapacity,
     // The race kit goes with the race (§554): a copy, and every date of a series, give the same shirt.
     kitShirt: source.kitShirt,
+    // What the race number looks like goes with the race (§560): the band's colour and the club's
+    // design — its pictures and their crops included — for a copy and for every date of a series.
+    // The numbers themselves are the copy's own (the start number is not carried).
+    bibColour: source.bibColour,
+    bibDesign: source.bibDesign,
     // And the health note's question (§557): a copy, and every date of a series, ask it as the source does.
     askHealthNote: source.askHealthNote,
     confirmationOpensDaysBefore: source.confirmationOpensDaysBefore,

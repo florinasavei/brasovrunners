@@ -1,4 +1,5 @@
 import { useCallback, useSyncExternalStore } from "react";
+import { readTypedDate } from "@/shared/forms/pickers/wall-values";
 import { isMinorOn } from "../domain/age";
 
 /**
@@ -8,17 +9,16 @@ import { isMinorOn } from "../domain/age";
  *
  * ## Why `useSyncExternalStore` and not an effect
  *
- * The date field is somebody else's DOM — a Server Component's MUI `TextField`, carrying native
- * validation (`min`, `max`, `required`) that lifting it into an island would trade for
- * hand-written validation on the one form that has to work everywhere. So the islands subscribe
- * to that input rather than owning it, which is exactly what `useSyncExternalStore` is for: React
+ * The date field is somebody else's DOM — `BirthDateField`, an island of its own since §561 (a
+ * typed, day-first box). So the islands subscribe to that input rather than owning it, which is
+ * exactly what `useSyncExternalStore` is for: React
  * reads the value during render instead of writing state from an effect, which is both correct
  * under concurrent rendering and what `react-hooks/set-state-in-effect` asks for.
  *
  * On the server there is no input and nothing typed, so this answers `false` there — an adult,
  * the case the server's markup is drawn for.
  */
-/** The birth-date box's current value: "" before anything is typed, and on the server. */
+/** The birth-date box's date, `YYYY-MM-DD` read day first (`readTypedDate`): "" before a whole day is typed, and on the server. */
 export function useBirthDateValue(birthDateId: string): string {
   const subscribe = useCallback(
     (onStoreChange: () => void) => {
@@ -39,7 +39,7 @@ export function useBirthDateValue(birthDateId: string): string {
     subscribe,
     () => {
       const input = document.getElementById(birthDateId);
-      return input instanceof HTMLInputElement ? input.value : "";
+      return input instanceof HTMLInputElement ? readTypedDate(input.value) : "";
     },
     () => "",
   );

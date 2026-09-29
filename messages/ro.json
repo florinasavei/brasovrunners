@@ -1442,8 +1442,28 @@
         "headerImageSrc": "Imagine în locul benzii colorate",
         "headerImageSrcHelp": "Se întinde pe toată lățimea, sus. Când alegi una, banda colorată, sigla și textul din bandă nu se mai tipăresc — imaginea e antetul.",
         "sponsorImageSrc": "Bandă cu sponsori",
-        "sponsorImageSrcHelp": "Deasupra rândului mic de jos. Se încadrează fără să fie deformată.",
+        "sponsorImageSrcHelp": "Deasupra rândului mic de jos. Alegi partea cu sponsorii sau pui toată imaginea în bandă.",
         "noPicture": "Fără imagine",
+        "picture": {
+          "choose": "Încarcă o imagine",
+          "replace": "Încarcă alta",
+          "uploading": "Se încarcă…",
+          "failed": "Imaginea nu s-a încărcat. Încearcă din nou.",
+          "fromGallery": "Din galerie",
+          "cropTitle": "Partea care se tipărește",
+          "cropHelp": {
+            "header": "Trage dreptunghiul peste partea care vrei să apară sus, pe toată lățimea numărului.",
+            "sponsors": "Trage dreptunghiul peste sponsori. „Toată imaginea” pune imaginea întreagă în bandă."
+          },
+          "cropReset": {
+            "header": "Înapoi la mijloc",
+            "sponsors": "Toată imaginea"
+          },
+          "shape": {
+            "header": "Forma: {ratio} la 1, cât banda de sus a numărului.",
+            "sponsors": "Forma: {ratio} la 1, cât banda cu sponsori."
+          }
+        },
         "footer": {
           "title": "Subsol",
           "intro": "Rândul mic de jos, în ordinea de mai jos. Ce nu încape pe un rând trece pe al doilea; ce nu încape nici acolo se taie cu „…” — previzualizarea arată exact unde.",
@@ -1457,8 +1477,9 @@
           "notConfigured": "nesetată pe acest mediu"
         },
         "previewCaption": "Previzualizare — așa se tipărește",
+        "previewPending": "Se redesenează…",
         "previewAlt": "Numărul de concurs, așa cum ar arăta cu alegerile de acum, pentru un alergător cu numele „Nume Prenume”",
-        "previewNote": "Pozele sunt cele încărcate deja (pagina „Poze”). Previzualizarea de mai sus se schimbă pe loc; pagina „Numere” și PDF-ul, după salvare."
+        "previewNote": "Previzualizarea de mai sus se schimbă pe loc; pagina „Numere” și PDF-ul, după salvare."
       },
       "bibColour": "Culoarea numerelor de concurs (BIB)",
       "bibColourHelp": "Banda de sus a numărului tipărit, cea cu logo-ul clubului și cursa pe ea. „Culoarea clubului” dacă nu vrei una anume.",
@@ -5826,6 +5847,8 @@
     "displayNameHelp": "Implicit, pe listă și în rezultate apare numele tău complet; dacă preferi altceva, de exemplu „Ana P.”, scrie-l aici.",
     "birthDate": "Data nașterii",
     "birthDateEcho": "{date} · {age} în ziua evenimentului",
+    "birthDatePlaceholder": "ZZ.LL.AAAA",
+    "birthDateUnreadable": "Scrie data ca zi, lună, an: 11.05.1990.",
     "ageRule": {
       "minimumAndGuardian": "Vârsta minimă: {age}. Sub 18 ani, înscrierea se face de un părinte sau tutore, cu acordul acestuia.",
       "minimumAndConsent": "Vârsta minimă: {age}. Sub 18 ani, participarea se face cu acordul unui părinte.",

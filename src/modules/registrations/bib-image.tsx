@@ -13,6 +13,7 @@ import {
   numberScaleFactor,
 } from "./bib-design";
 import { BIB_FOOTER_EMS, bibFooterLines, bibFooterParts } from "./bib-footer";
+import { BIB_PICTURE_BOX, type BibPictureSlot, bibPictureDrawing } from "./bib-picture-frame";
 import {
   BIB_CARD,
   BIB_FOOTER_LINE,
@@ -80,7 +81,47 @@ type BibImageInput = {
   design?: BibDesign;
   /** The small words under a desk spare's empty line (§444), as the sheet prints them. */
   blankMark?: string;
+  /**
+   * The club's pictures, already read by the route (§560, `bib-pictures.ts#loadBibPictures`): an
+   * address `next/og` can draw — an inline PNG, because it cannot read the WebP every stored
+   * picture is — and its size in pixels, which makes the crop exact. `null` for a place draws
+   * none there (the band, no sponsors' strip), as the sheet does with a picture it could not fetch.
+   * Absent, the design's own addresses are drawn as they are, with no size.
+   */
+  pictures?: Partial<Record<BibPictureSlot, BibImagePicture | null>>;
 };
+
+/** One picture as the renderer takes it: something `next/og` can load, and its size in pixels. */
+export type BibImagePicture = { src: string; width: number; height: number };
+
+/**
+ * A place's picture through the one crop rule (`bib-picture-frame.ts`, §560): a clipping box of
+ * the place's size with the picture scaled and shifted inside it, so exactly the cropped part
+ * fills it — the sheet draws the same numbers in points. With no crop, `object-fit` as before:
+ * the header covers its strip, the sponsors' strip fits the whole picture.
+ */
+function placedPicture(slot: BibPictureSlot, picture: BibImagePicture, design: BibDesign) {
+  const { src } = picture;
+  const size = picture.width > 0 && picture.height > 0 ? { width: picture.width, height: picture.height } : null;
+  const box = { width: px(BIB_PICTURE_BOX[slot].width), height: px(BIB_PICTURE_BOX[slot].height) };
+  const drawing = bibPictureDrawing(slot, slot === "header" ? design.headerImageCrop : design.sponsorImageCrop, size, box);
+  if (drawing.kind !== "crop") {
+    // eslint-disable-next-line @next/next/no-img-element -- Satori draws it
+    return <img src={src} alt="" width={box.width} height={box.height} style={{ flexShrink: 0, objectFit: drawing.kind === "cover" ? "cover" : "contain" }} />;
+  }
+  return (
+    <div style={{ display: "flex", flexShrink: 0, position: "relative", overflow: "hidden", width: box.width, height: box.height }}>
+      {/* eslint-disable-next-line @next/next/no-img-element -- Satori draws it */}
+      <img
+        src={src}
+        alt=""
+        width={drawing.width}
+        height={drawing.height}
+        style={{ position: "absolute", left: drawing.left, top: drawing.top, width: drawing.width, height: drawing.height }}
+      />
+    </div>
+  );
+}
 
 /**
  * The footer lines this picture draws, decided by `bib-footer.ts` from the club's design — the
@@ -124,10 +165,15 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
   const numberSize = px(bibNumberPoints(digits, numberScaleFactor(design)));
   const band = bibBandColour(input.bandColour);
   const bandText = bandTextColour(band);
-  // A picture the club uploaded, made absolute for the renderer (§249); the band when there is
-  // none. Satori fetches it itself, from this site's own store — nowhere else is accepted.
-  const header = bibPictureUrl(design.headerImageSrc, env.APP_BASE_URL);
-  const sponsors = bibPictureUrl(design.sponsorImageSrc, env.APP_BASE_URL);
+  // A picture the club uploaded (§249): the one the route read (§560), or — when the caller read
+  // none — the design's own address made absolute; the band when there is none.
+  const pictureOf = (slot: BibPictureSlot, src: string | null): BibImagePicture | null => {
+    if (input.pictures) return input.pictures[slot] ?? null;
+    const address = bibPictureUrl(src, env.APP_BASE_URL);
+    return address ? { src: address, width: 0, height: 0 } : null;
+  };
+  const header = pictureOf("header", design.headerImageSrc);
+  const sponsors = pictureOf("sponsors", design.sponsorImageSrc);
   // Told which header this picture draws, as the sheet is (§317).
   const footerLines = bibImageFooterLines(input, header !== null);
   const footerHeight = L.footerHeight + Math.max(0, footerLines.length - 1) * BIB_FOOTER_LINE.lineHeight;
@@ -197,16 +243,9 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
         {/* The club's own header picture across the top (§249), or the coloured band with the
             lockup and the race on it. The picture replaces the band whole: a band *and* a
             picture is two headers, and the club chose the picture. It covers the strip, centred,
-            exactly as the sheet crops it. */}
+            exactly as the sheet crops it — the club's crop when it drew one (§560). */}
         {header ? (
-          // eslint-disable-next-line @next/next/no-img-element -- Satori fetches it
-          <img
-            src={header}
-            alt=""
-            width={px(BIB_CARD.width)}
-            height={px(L.bandHeight)}
-            style={{ flexShrink: 0, objectFit: "cover" }}
-          />
+          placedPicture("header", header, design)
         ) : (
           <div
             style={{
@@ -290,17 +329,11 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
         </div>
         {design.namePosition === "below" ? name : null}
         {/* The sponsors' strip, when the club has one (§249): above the small print, across
-            the card less its inset, its own proportion kept. */}
+            the card less its inset: the club's crop in the strip's shape, or the whole picture
+            fitted with its own proportion kept (§560). */}
         {sponsors ? (
           <div style={{ display: "flex", flexShrink: 0, height: px(L.sponsorHeight), paddingTop: px(L.sponsorTop), justifyContent: "center" }}>
-            {/* eslint-disable-next-line @next/next/no-img-element -- Satori fetches it */}
-            <img
-              src={sponsors}
-              alt=""
-              width={px(BIB_CARD.width - 2 * L.inset)}
-              height={px(L.sponsorPicture)}
-              style={{ objectFit: "contain" }}
-            />
+            {placedPicture("sponsors", sponsors, design)}
           </div>
         ) : null}
         {/* The small print as the club composed it (§317), in the lines `bib-footer.ts` laid out

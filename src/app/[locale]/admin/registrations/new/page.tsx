@@ -15,7 +15,6 @@ import NationalityField from "@/modules/registrations/ui/NationalityField";
 import { countryOptions } from "@/modules/registrations/countries";
 import { countryName } from "@/modules/registrations/names";
 import {
-  StaffBirthDateEcho,
   StaffBirthDateField,
   StaffEventScope,
   StaffEventSelect,
@@ -187,8 +186,17 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
           {env.FEATURE_DISPLAY_NAME && <RecallField name="displayName" label={rt("displayName")} {...textFieldConstraints(staffRegistrationConstraints("displayName"))} />}
           {/* Optional here too, and when it is given the server counts it (§321): under the chosen event's own minimum (§329, the "N+" beside its name) on
               the race day is refused, so the field says so before the volunteer presses. */}
-          <StaffBirthDateField label={rt("birthDate")} helperText={t("registrations.birthDateMinimumAge")} />
-          <StaffBirthDateEcho locale={locale} template={rt("birthDateEcho", { date: "{date}", age: "{age}" })} />
+          <StaffBirthDateField
+            label={rt("birthDate")}
+            helperText={t("registrations.birthDateMinimumAge")}
+            locale={locale}
+            words={{
+              echoTemplate: rt("birthDateEcho", { date: "{date}", age: "{age}" }),
+              placeholder: rt("birthDatePlaceholder"),
+              unreadable: rt("birthDateUnreadable"),
+              tooYoung: rt("errors.tooYoung", { age: "{age}" }),
+            }}
+          />
           {/*
             The parent or guardian (§108), shown when the birth date says under eighteen today —
             the public form's own island and rule (§188), so a fourteen-to-seventeen-year-old can

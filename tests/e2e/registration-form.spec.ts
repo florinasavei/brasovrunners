@@ -27,7 +27,8 @@ async function fillRequired(page: Page, omit?: string) {
     firstName: "Ana",
     lastName: "Popescu",
     email: `e2e-form-${test.info().project.name}-${Date.now().toString(36)}@test.invalid`,
-    birthDate: "1990-05-17",
+    // Day first, as the box reads it (§561): 17 May 1990.
+    birthDate: "17.05.1990",
     city: "Brașov",
     phone: "+40711111111",
     emergencyContactName: "Ion Popescu",
@@ -146,9 +147,27 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
     // The city is required and asked right after the birth date (§467, reversing §322).
     await expect(page.locator('[name="city"]')).toBeVisible();
     await expect(page.locator('[name="city"]')).toHaveAttribute("required", "");
-    // The birth date is read back in words with the age on the event day (§467).
-    await page.locator('[name="birthDate"]').fill("1990-05-17");
-    await expect(page.getByText(/1990 · \d+ de ani în ziua evenimentului/)).toBeVisible();
+    // The birth date is typed day first and read back in words with the age on the event day,
+    // as the box's own helper — under its outline, never over it (§467, §561). «05/11/1990» is
+    // 5 November, whatever language the browser speaks; the box shows it as the backoffice does.
+    const birthDateBox = page.locator('[name="birthDate"]');
+    await expect(birthDateBox).toHaveAttribute("type", "text");
+    await expect(birthDateBox).toHaveAttribute("placeholder", "ZZ.LL.AAAA");
+    await birthDateBox.pressSequentially("05/11/1990");
+    const birthDateHelper = page.locator(`#${await birthDateBox.getAttribute("id")}-helper-text`);
+    await expect(birthDateHelper).toHaveText(/^Luni, 5 noiembrie 1990 · \d+ de ani în ziua evenimentului$/);
+    await birthDateBox.blur();
+    await expect(birthDateBox).toHaveValue("05.11.1990");
+    // The words sit under the box: the helper starts below the outline's bottom edge.
+    const outline = await birthDateBox.locator("xpath=..").boundingBox();
+    const helperBox = await birthDateHelper.boundingBox();
+    expect(outline && helperBox && helperBox.y >= outline.y + outline.height - 0.5, "the echo is under the box, not over it").toBe(true);
+    // A phone's numeric keypad has no dot: eight digits are read the same.
+    await birthDateBox.fill("");
+    await birthDateBox.pressSequentially("17051990");
+    await expect(birthDateHelper).toHaveText(/^Joi, 17 mai 1990 · \d+ de ani în ziua evenimentului$/);
+    await birthDateBox.blur();
+    await expect(birthDateBox).toHaveValue("17.05.1990");
     // "I want to appear on the participant list" is asked only on an event whose list is switched
     // on (`DECISIONS.md` §85, §143); the seeded events publish none, so the box is absent.
     await expect(page.locator('[name="listOptIn"]')).toHaveCount(0);
@@ -817,20 +836,33 @@ test.describe("BR-REQ-031-04 a rejected submission says what to fix, and goes th
     await expect(page.locator("#main")).not.toContainText("împliniți în ziua cursei");
 
     const birthDate = page.locator('[name="birthDate"]');
-    const max = await birthDate.getAttribute("max");
-    expect(max, "the picker carries the youngest birth date the race accepts").toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    const max = await birthDate.getAttribute("data-max");
+    expect(max, "the box carries the youngest birth date the race accepts").toMatch(/^\d{4}-\d{2}-\d{2}$/);
     const dayAfter = new Date(`${max}T00:00:00Z`);
     dayAfter.setUTCDate(dayAfter.getUTCDate() + 1);
     const thirteen = dayAfter.toISOString().slice(0, 10);
+    // Typed day first, as a person types it (§561).
+    const [year, month, day] = thirteen.split("-");
+    const thirteenTyped = `${day}.${month}.${year}`;
 
     await fillRequired(page);
-    await birthDate.fill(thirteen);
+    await birthDate.fill(thirteenTyped);
     // A minor: the parent's box opens from the date (§188), and is answered, so that the age is
     // the only thing wrong with this form.
     await page.locator('[name="guardianName"]').fill("Ion Popescu");
 
-    // The browser refuses first: the date is past the picker's upper bound.
-    expect(await birthDate.evaluate((node) => (node as HTMLInputElement).validity.rangeOverflow)).toBe(true);
+    // The browser refuses first: the date is past the box's upper bound, in the rule's own words.
+    expect(await birthDate.evaluate((node) => (node as HTMLInputElement).validity.customError)).toBe(true);
+    expect(await birthDate.evaluate((node) => (node as HTMLInputElement).validationMessage)).toContain("14 ani");
+    // And the box says it under itself, live, before any press (§561; the owner, 2026-09-29: the
+    // box went red with only the date in words under it): the rule first, then the age it gives.
+    const birthDateHelper = page.locator(`#${await birthDate.getAttribute("id")}-helper-text`);
+    await expect(birthDateHelper).toContainText("Vârsta minimă de participare la acest eveniment este 14 ani împliniți în ziua cursei");
+    await expect(birthDateHelper).toContainText(/13 ani în ziua evenimentului/);
+    await expect(birthDateHelper).toHaveClass(/Mui-error/);
+    await expect(birthDate).toHaveAttribute("aria-invalid", "true");
+    // The list above the button names the box (§422).
+    await expect(page.getByTestId("form-missing")).toContainText("Data nașterii");
     await page.waitForTimeout(HUMAN_PAUSE_MS);
     await page.getByRole("button", { name: "Trimite înscrierea" }).click();
     await expect(page.getByRole("heading", { name: /Aproape gata/ })).toHaveCount(0);
@@ -848,13 +880,16 @@ test.describe("BR-REQ-031-04 a rejected submission says what to fix, and goes th
     await expect(summary.getByRole("link", { name: "Data nașterii" })).toBeVisible();
     await expect(summary).toContainText("Vârsta minimă de participare la acest eveniment este 14 ani împliniți în ziua cursei");
     await expect(birthDate).toHaveAttribute("aria-invalid", "true");
+    // After the server's refusal the box says the same rule under itself, not «Completează acest câmp corect».
+    await expect(birthDateHelper).toContainText("Vârsta minimă de participare la acest eveniment este 14 ani împliniți în ziua cursei");
 
     // Nothing typed is lost — and nothing typed is in the address.
-    await expect(birthDate).toHaveValue(thirteen);
+    await expect(birthDate).toHaveValue(thirteenTyped);
     await expect(page.locator('[name="lastName"]')).toHaveValue("Popescu");
     await expect(page.locator('[name="guardianName"]')).toHaveValue("Ion Popescu");
     await expect(page.locator('[name="privacyAcknowledged"]')).toBeChecked();
     expect(page.url()).not.toContain(thirteen);
+    expect(page.url()).not.toContain(thirteenTyped);
   });
 
   test("takes the socials out of a minor's form, even with a bad Strava value typed first", async ({ page }) => {
@@ -982,7 +1017,7 @@ test.describe("BR-REQ-031-04 the minimum age is the event's own (§329)", () => 
       await expect(page.getByTestId("age-rule")).toHaveText(
         "Vârsta minimă: 16 ani. Sub 18 ani, înscrierea se face de un părinte sau tutore, cu acordul acestuia.",
       );
-      await expect(field("birthDate")).toHaveAttribute("max", "2011-05-03");
+      await expect(field("birthDate")).toHaveAttribute("data-max", "2011-05-03");
 
       // The event's page says the same sentence in «Condiții de participare» (§505), and its structured data "16-".
       await page.goto(`/ro/evenimente/${slug}`);
@@ -1007,7 +1042,7 @@ test.describe("BR-REQ-031-04 the minimum age is the event's own (§329)", () => 
       // last birth date that is eighteen on 3 May 2027, and the structured data says "18-".
       await page.goto(`/ro/evenimente/${slug}/inscriere`);
       await expect(page.getByTestId("age-rule")).toHaveText("Vârsta minimă: 18 ani.");
-      await expect(field("birthDate")).toHaveAttribute("max", "2009-05-03");
+      await expect(field("birthDate")).toHaveAttribute("data-max", "2009-05-03");
       await page.goto(`/ro/evenimente/${slug}`);
       expect(await typicalAgeRange()).toBe("18-");
     } finally {
