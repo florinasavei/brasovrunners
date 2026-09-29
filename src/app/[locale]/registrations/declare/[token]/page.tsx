@@ -54,6 +54,9 @@ import PublicFlash from "@/shared/feedback/PublicFlash";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { signDeclarationAction, skipFamilyDeclarationAction, withdrawFamilyPersonAction } from "./actions";
 import AskFirstButton from "@/modules/registrations/ui/AskFirstButton";
+import CancelReasonFields from "@/modules/registrations/ui/CancelReasonFields";
+import { cancelReasonWords } from "@/modules/registrations/ui/cancel-reason-words";
+import { cancelReasonProblemOf } from "@/modules/registrations/domain/cancel-reason";
 import { DENSITY } from "@/theme/density";
 import {
   currentFamilyStep,
@@ -119,7 +122,8 @@ async function familyDoneHref(eventId: string, locale: "ro" | "en"): Promise<str
 
 type Props = {
   params: Promise<{ locale: string; token: string }>;
-  searchParams: Promise<{ done?: string; invalid?: string; changed?: string; full?: string; reminder?: string }>;
+  /** `reason`: the box a «Renunț» without its reason named (§558) — `kind`, `text` or `long`. */
+  searchParams: Promise<{ done?: string; invalid?: string; changed?: string; full?: string; reminder?: string; reason?: string }>;
 };
 
 /**
@@ -161,10 +165,13 @@ export default async function DeclarePage({ params, searchParams }: Props) {
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
-  const { done, invalid, changed, full, reminder } = await searchParams;
+  const { done, invalid, changed, full, reminder, reason } = await searchParams;
   const t = await getTranslations("Registrations");
   // "Opens in a new tab", said once for every legal link, in the form's own catalogue.
   const formCopy = await getTranslations("Registration");
+  // The wizard's «Renunț» asks why, as every cancel does (§558): its words, and the box a refused press named.
+  const reasonWords = await cancelReasonWords();
+  const reasonProblem = cancelReasonProblemOf(reason);
   // The version line the terms and the privacy notice carry (§323), over the text being signed (§499).
   const legalCopy = await getTranslations("Legal");
   /*
@@ -875,6 +882,12 @@ export default async function DeclarePage({ params, searchParams }: Props) {
               <input type="hidden" name="locale" value={locale} />
               <input type="hidden" name="token" value={token} />
               <input type="hidden" name="registrationId" value={registration.id} />
+              {/* Why the person withdraws (§558), asked as at every other door; a refused press names the box here. */}
+              <CancelReasonFields
+                {...reasonWords.fields}
+                problem={reasonProblem}
+                problemText={reasonProblem ? reasonWords.problemText[reasonProblem] : undefined}
+              />
               <AskFirstButton
                 glyph="withdraw"
                 label={t("declare.family.withdraw", { name: registration.registeredName })}

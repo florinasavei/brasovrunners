@@ -136,8 +136,13 @@ test.describe("BR-REQ-033-02 §314 the signature is the registered name", () => 
     */
     await page.goto(`/ro/inregistrari/gestionare/${await mintActionLink(registration, "MANAGE_REGISTRATION")}`);
     await hydrated(page);
-    // «Anulează înscrierea pentru <nume>», asking first (§547, over §384).
-    await page.getByRole("button", { name: /^Anulează înscrierea pentru / }).click();
+    // «Anulează înscrierea pentru <nume>», asking first (§547, over §384) — and why, before that (§558):
+    // without an answer the browser names the empty box and nothing is asked.
+    const personCancel = page.getByRole("button", { name: /^Anulează înscrierea pentru / });
+    await personCancel.click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await page.getByLabel("De ce anulezi?").selectOption("OTHER_PLANS");
+    await personCancel.click();
     await confirmDialog(page, /^Anulezi înscrierea pentru /);
     await expect(page).toHaveURL(/done=1/, { timeout: 30_000 });
     await expect(page.getByTestId("toast")).toHaveText("Gata: înscrierea ta e anulată.");
@@ -197,7 +202,13 @@ test.describe("BR-REQ-033-02 §314 the signature is the registered name", () => 
     */
     await page.goto(`/ro/inscrieri/ale-mele/${await mintProfileLink(registration.participantId)}`);
     await hydrated(page);
+    // The reason first (§558): a press without one is refused, naming the box, and spends nothing.
     await page.getByRole("button", { name: "Renunț la această înscriere" }).click();
+    await expect(page).not.toHaveURL(/done=1/);
+    const cancel = page.getByTestId("mine-cancel").first();
+    await cancel.getByLabel("De ce anulezi?").selectOption("OTHER");
+    await cancel.getByLabel("Motivul, pe scurt").fill("Plec din oraș în weekendul cursei.");
+    await cancel.getByRole("button", { name: "Renunț la această înscriere" }).click();
     await expect(page).toHaveURL(/done=1/, { timeout: 30_000 });
     await expect(page.getByTestId("toast")).toHaveText("Gata: înscrierea ta e anulată.");
     expect(await registrationStatus(registration.id)).toBe("CANCELLED");

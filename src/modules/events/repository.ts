@@ -606,6 +606,8 @@ export async function findEventNotificationRows<T extends Record<string, unknown
       costAmount: events.costAmount,
       costUrl: events.costUrl,
       startsAt: events.startsAt,
+      // Whether the event will still run, for «Nu mai pot ajunge» (§558): read with the rest, never a second query per row.
+      eventStatus: events.eventStatus,
       // The event's own end (§394): the night line's span reads it before the programme's rows,
       // as the pill does — a run whose «Durata» carries it past dusk is a night run here too.
       endsAt: events.endsAt,

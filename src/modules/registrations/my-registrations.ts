@@ -17,6 +17,7 @@ import { consumeRateLimit } from "@/modules/rate-limit/service";
 import { DomainError } from "@/shared/errors/domain-error";
 import { findRegistrationById } from "./repository";
 import { checkIn, type EventForRegistration, unregister } from "./service";
+import type { CancelReason } from "./domain/cancel-reason";
 import { currentDeadlines } from "@/modules/deadlines/deadlines";
 import { selfCheckinOpensAt } from "@/modules/deadlines/domain/deadlines";
 
@@ -328,6 +329,7 @@ export async function consumeAndCancelFromMyRegistrations<T extends Record<strin
   secret: string,
   registrationId: string,
   now: Date,
+  reason: CancelReason,
 ) {
   if (!(await tokenAttemptAllowed(db, secret, now))) return TOKEN_NOT_FOUND;
 
@@ -341,7 +343,7 @@ export async function consumeAndCancelFromMyRegistrations<T extends Record<strin
     }
     const event = await loadEvent(tx, registration.eventId);
     // The audit row and the per-person cancellation email (§547) ride on `unregister`, whichever door.
-    const updated = await unregister(tx, event, registration.id, "PARTICIPANT", now, { via: "MY_REGISTRATIONS" });
+    const updated = await unregister(tx, event, registration.id, "PARTICIPANT", now, { via: "MY_REGISTRATIONS", reason });
     return { ok: true as const, registration: updated };
   });
 }

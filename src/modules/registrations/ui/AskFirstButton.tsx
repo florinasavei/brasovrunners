@@ -55,6 +55,8 @@ export default function AskFirstButton({ label, glyph, title, body, confirmLabel
         sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX, justifyContent: "flex-start", textAlign: "left" }}
         onClick={(event) => {
           event.preventDefault();
+          // A box of the form left empty — the cancel's reason (§558) — is named by the browser first, and nothing is asked.
+          if (anchor.current?.form && !anchor.current.form.reportValidity()) return;
           setOpen(true);
         }}
       >

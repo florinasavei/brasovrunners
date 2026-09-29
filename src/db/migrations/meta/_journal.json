@@ -764,6 +764,13 @@
       "when": 1790672957239,
       "tag": "0111_event_ask_health_note",
       "breakpoints": true
+    },
+    {
+      "idx": 109,
+      "version": "7",
+      "when": 1790678518517,
+      "tag": "0112_registration_cancel_reason",
+      "breakpoints": true
     }
   ]
 }
