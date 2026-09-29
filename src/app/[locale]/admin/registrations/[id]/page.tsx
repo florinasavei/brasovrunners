@@ -58,8 +58,12 @@ import {
   promoteRegistrationAction,
   setBibNumberAction,
   withdrawConsentAction,
+  declarationHoldAction,
 } from "../actions";
 import { resendRegistrationEmailAction } from "./actions";
+import DeclarationHoldForm from "@/modules/registrations/ui/DeclarationHoldForm";
+import TextHashTip from "@/modules/registrations/ui/TextHashTip";
+import { shortTextHash } from "@/modules/legal-documents/domain/signed-text";
 import { withSendNowChoice } from "@/modules/notifications/domain/send-at-once";
 import { sendNowChoiceFor } from "@/modules/notifications/send-now-choice";
 
@@ -889,7 +893,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           const twoSigners = Boolean(registration.guardianName) && acceptance.minorTypedName !== null;
           const hand = { fontFamily: "var(--font-signature), cursive", fontSize: "1.375rem" };
           return (
-          <Typography key={index} variant="body2">
+          <Box key={acceptance.id} data-testid="declaration-acceptance">
+          <Typography variant="body2">
             {tr("registrations.declaration")}: {dt(acceptance.acceptedAt)} —{" "}
             {twoSigners && (
               <>
@@ -922,7 +927,27 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
             )}
             {acceptance.method === "PAPER" &&
               ` — ${tr("registrations.declarationPaper", { who: acceptance.attestedByName ?? tr("registrations.auditActorRemoved") })}`}
+            {/* The proof of signing (§556): the signed text's fingerprint, twelve characters and the whole in a tooltip. */}
+            {acceptance.textHash && (
+              <>
+                {" — "}
+                <TextHashTip label={tr("declarationHold.textHash")} hash={acceptance.textHash} short={shortTextHash(acceptance.textHash)} />
+              </>
+            )}
           </Typography>
+          {/* «Păstrează: reclamație / litigiu în curs» (§556): the line for every reader, the form for the Administrator. */}
+          <DeclarationHoldForm
+            registrationAction={declarationHoldAction}
+            hidden={{ uiLocale: locale, registrationId: registration.id, acceptanceId: acceptance.id }}
+            held={
+              acceptance.retentionHold
+                ? { when: dtInline(acceptance.retentionHoldAt) ?? "—", who: acceptance.retentionHoldByName, reason: acceptance.retentionHoldReason ?? "" }
+                : null
+            }
+            mayManage={mayManage}
+            scope={`hold-${acceptance.id}`}
+          />
+          </Box>
           );
         })}
       </Stack>

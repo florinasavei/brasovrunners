@@ -31,6 +31,7 @@ import RichText from "@/modules/content/rich-text/ui/RichText";
 import EventDescription from "@/modules/events/ui/EventDescription";
 import RegistrationCta from "@/modules/events/ui/RegistrationCta";
 import DeclarationOffer from "@/modules/group-run-declarations/ui/DeclarationOffer";
+import GroupRunSafetyRules from "@/modules/group-run-declarations/ui/GroupRunSafetyRules";
 import ShareLinks from "@/modules/events/ui/ShareLinks";
 import { instagramFileName } from "@/modules/events/instagram-share";
 import { absoluteUrl, eventPageUrl } from "@/modules/events/share-links";
@@ -461,6 +462,10 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
               so it is read here with the rules rather than as a row of the facts. Nothing for no
               minimum where nobody registers here. */}
           <EventAgeRule event={event} />
+
+          {/* A group run's safety rules (§556): the essentials the optional declaration names, for
+              everybody who comes, signed or not — above the declaration. Nothing on any other type. */}
+          <GroupRunSafetyRules event={event} />
 
           {/* Photographs are a legitimate-interest processing, so every event page — not only the
               gallery — says how to object (§323; the photographs amendment's item 6). */}

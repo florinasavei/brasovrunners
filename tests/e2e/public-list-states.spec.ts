@@ -339,6 +339,23 @@ test.describe("BR-REQ-039-01 the public list's states, behind the privacy notice
         for (const never of ["Ascuns", "Retras Anulat", "Adresa Nedovedita"]) await expect(ro.list).not.toContainText(never);
       });
 
+      await test.step("with the marker: a legend says what each word means, and each word says it behind a «?» (§556)", async () => {
+        const ro = await readList(page, `/ro/evenimente/${event.slug}-ro`, tag);
+        const legend = ro.list.getByTestId("start-list-legend");
+        await expect(legend).toContainText("Ce înseamnă stadiile de pe listă");
+        const lines = legend.getByTestId("start-list-legend-line");
+        expect(await lines.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-state")))).toEqual(["CONFIRMED", "PENDING", "WAITLISTED"]);
+        // The seeded race is 60 days away, before its window opens, so the pending sentence says the window
+        // (the column defaults: asked a week before, owed two days before); inside it, the club's hold (unit test).
+        const pending = lines.filter({ hasText: "Înscris, în așteptarea confirmării" });
+        await expect(pending).toContainText("la înscriere și cu o săptămână înainte");
+        await expect(pending).toContainText("până cu 2 zile înainte de start");
+        // One «?» per state word, its name the legend's own sentence.
+        await expect(ro.list.getByTestId("start-list-state-help")).toHaveCount(6);
+        const carmenHelp = ro.list.locator("tbody tr").filter({ hasText: "Carmen Semneaza" }).getByTestId("start-list-state-help");
+        await expect(carmenHelp).toHaveAccessibleName((await pending.innerText()).trim());
+      });
+
       await test.step("with the marker: the socials of the runners who ticked them, beside the name, and nobody else's (§500)", async () => {
         // `readList` holds the page to the phone's width with the marks drawn (no sideways scroll).
         const ro = await readList(page, `/ro/evenimente/${event.slug}-ro`, tag);
@@ -391,6 +408,10 @@ test.describe("BR-REQ-039-01 the public list's states, behind the privacy notice
         expect(en.states).toEqual(["CONFIRMED", "CONFIRMED", "CONFIRMED", "PENDING", "WAITLISTED", "WAITLISTED"]);
         await expect(en.list).toContainText("Registered, awaiting confirmation");
         await expect(en.list).toContainText("On the waiting list");
+        await expect(en.list.getByTestId("start-list-legend")).toContainText("What the states on the list mean");
+        await expect(en.list.getByTestId("start-list-legend-line").filter({ hasText: "Registered, awaiting confirmation" })).toContainText(
+          "due by 2 days before the start",
+        );
         await expect(en.list.getByTestId("start-list-others-summary")).toHaveText(
           "Also listed by name: 1 registered, awaiting confirmation · 2 on the waiting list",
         );
@@ -465,6 +486,9 @@ test.describe("BR-REQ-039-01 the public list's states, behind the privacy notice
           expect.stringContaining("Participant (nume ascuns)"),
         ]);
         await expect(off.list).not.toContainText("Pe lista de așteptare");
+        // No state words, so nothing to explain (§556).
+        await expect(off.list.getByTestId("start-list-legend")).toHaveCount(0);
+        await expect(off.list.getByTestId("start-list-state-help")).toHaveCount(0);
         for (const never of ["Carmen", "Florin", "Elena", "Retras", "Adresa"]) await expect(off.list).not.toContainText(never);
         // Ana's tick stands, but no notice in force describes it: no link to Strava or Instagram at all.
         await expect(off.list.getByTestId("start-list-socials")).toHaveCount(0);

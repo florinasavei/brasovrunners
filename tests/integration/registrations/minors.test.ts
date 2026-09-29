@@ -54,6 +54,7 @@ const LABELS = {
   signedByLink: (when: string) => `Semnat electronic pe ${when}`,
   signedOnPaper: (who: string, when: string) => `Pe hârtie; ${who} ${when}`,
   attesterRemoved: "un membru al echipei",
+  proofLine: (version: number, when: string, hash: string | null) => `Versiunea ${version} · ${when}${hash ? ` · ${hash}` : ""}`,
 };
 
 /**
