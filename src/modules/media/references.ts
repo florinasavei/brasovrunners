@@ -5,6 +5,7 @@ import { pageTranslations } from "@/db/schema/pages";
 import { platformSettings } from "@/db/schema/platform-settings";
 import { staffUsers } from "@/db/schema/staff-users";
 import { faqQuestions } from "@/db/schema/faq";
+import { newsletterSends } from "@/db/schema/newsletter";
 import { teamMembers } from "@/db/schema/team";
 import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
@@ -118,6 +119,9 @@ const referencedSomewhere = sql`(
   OR EXISTS (SELECT 1 FROM ${platformSettings} WHERE ${inFaqIntro})
   -- A picture in the members' pages (§524), kept in their platform setting.
   OR EXISTS (SELECT 1 FROM ${platformSettings} WHERE ${inMembersPage})
+  -- A picture in a newsletter sent (§550): the letter is in the subscribers' inboxes, which load
+  -- it from this address for as long as they keep the message, so a send keeps its pictures.
+  OR EXISTS (SELECT 1 FROM ${newsletterSends} WHERE ${names(sql`${newsletterSends.body}::text`)})
 )`;
 
 const daysBefore = (now: Date, days: number) => new Date(now.getTime() - days * 24 * 60 * 60_000);
@@ -206,7 +210,7 @@ export async function countMediaAssets<T extends Record<string, unknown>>(
   return row ?? { total: 0, unreferenced: 0, sweepable: 0 };
 }
 
-export type MediaReference = { kind: "album" | "page" | "event" | "team" | "teamIntro" | "faq" | "membersPage"; id: string; title: string | null };
+export type MediaReference = { kind: "album" | "page" | "event" | "team" | "teamIntro" | "faq" | "membersPage" | "newsletter"; id: string; title: string | null };
 
 export type MediaAssetRow = {
   id: string;
@@ -320,6 +324,11 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
     .select({ assetId: mediaAssets.id })
     .from(mediaAssets)
     .innerJoin(platformSettings, inMembersPage);
+  // A picture in a newsletter sent (§550): one reference, the newsletter's page.
+  const inNewsletters = await db
+    .select({ assetId: mediaAssets.id })
+    .from(mediaAssets)
+    .where(sql`EXISTS (SELECT 1 FROM ${newsletterSends} WHERE ${names(sql`${newsletterSends.body}::text`)})`);
 
   const references = new Map<string, MediaReference[]>();
   const add = (assetId: string, reference: MediaReference) => {
@@ -346,6 +355,7 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
   for (const row of inTeamIntros) add(row.assetId, { kind: "teamIntro", id: TEAM_PAGE_SETTING_KEY, title: null });
   for (const row of inFaq) add(row.assetId, { kind: "faq", id: FAQ_PAGE_SETTING_KEY, title: null });
   for (const row of inMembersPages) add(row.assetId, { kind: "membersPage", id: MEMBERS_PAGE_SETTING_KEY, title: null });
+  for (const row of inNewsletters) add(row.assetId, { kind: "newsletter", id: "newsletter", title: null });
 
   return assets.map((asset) => ({
     ...asset,

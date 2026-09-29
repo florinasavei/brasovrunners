@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { confirmDialog } from "./support/confirm";
 import { HUMAN_PAUSE_MS, hydrated, signIn } from "./support/featured-event";
-import { mintNewsletterLink, newsletterMessagesTo, newsletterSubscription, seedConfirmedSubscriber } from "./support/newsletter";
+import { mintNewsletterLink, newsletterManageRequestsTo, newsletterMessagesTo, newsletterSubscription, seedConfirmedSubscriber } from "./support/newsletter";
 
 /**
  * §445 — the backoffice's «Newsletter» entry (the owner, 2026-09-26: "un meniu suplimentar în
@@ -36,10 +36,21 @@ test.describe("§445 the newsletter's own backoffice page", () => {
     await expect(compose.locator('input[name="topic"][value="DISCOUNTS"]')).toHaveCount(0);
     await compose.locator('input[name="topic"][value="GEAR_TESTING"]').check();
     const subject = `Testare de încălțăminte ${Date.now().toString(36)}`;
+    // One language per tab, the letter in the rich-text editor (§550): bold on the first line.
     await compose.getByLabel("Subiect (română)").fill(subject);
+    const bodyRo = compose.getByTestId("newsletter-body-ro");
+    await bodyRo.locator(".tiptap").click();
+    await page.keyboard.type("Sâmbătă, la start.");
+    // The toolbar's own button over the typed line: a shortcut pressed before the first letter did
+    // not reach the editor reliably on a production build.
+    await page.keyboard.press("ControlOrMeta+a");
+    await bodyRo.getByRole("button", { name: "Îngroșat" }).click();
+    await compose.getByRole("tab", { name: /English/ }).click();
     await compose.getByLabel("Subiect (engleză)").fill("A shoe test");
-    await compose.getByLabel("Textul (română)").fill("Sâmbătă, la start.");
-    await compose.getByLabel("Textul (engleză)").fill("Saturday, at the start.");
+    await compose.getByTestId("newsletter-body-en").locator(".tiptap").click();
+    await page.keyboard.type("Saturday, at the start.");
+    // The editor posts its document as JSON through its hidden box.
+    await expect(compose.locator('input[type="hidden"][name="newsletterBodyRo"]')).toHaveValue(/"bold"/);
     // The preview: the message as an English subscriber receives it, from the boxes as they stand.
     await compose.getByRole("button", { name: "Previzualizează în engleză" }).click();
     await expect(compose.getByTestId("newsletter-preview-subject")).toContainText(`A shoe test / ${subject}`);
@@ -50,6 +61,55 @@ test.describe("§445 the newsletter's own backoffice page", () => {
     await expect(page.getByTestId("newsletter-sent-banner")).toBeVisible();
     expect(await newsletterMessagesTo(email)).toBe(1);
     await expect(page.getByTestId("newsletter-history")).toContainText(subject);
+    // The history says the letter's first line of words (§550).
+    await expect(page.getByTestId("newsletter-history")).toContainText("Sâmbătă, la start.");
+  });
+
+  test("an Administrator opens «Abonați», searches an address, downloads the CSV and sees «Dezabonează» on the row", async ({ page }) => {
+    const stamp = Date.now().toString(36);
+    const email = `e2e-news-list-${stamp}@test.invalid`;
+    await seedConfirmedSubscriber(email, ["GEAR_TESTING"]);
+    await signIn(page, "Dev Administrator");
+    await page.goto("/ro/admin/newsletter");
+    await hydrated(page);
+
+    const card = page.locator("#main").getByTestId("newsletter-subscribers");
+    // A fold, closed by default (§336), its line saying the counts.
+    await expect(card.locator("summary")).toContainText("Abonați");
+    await expect(card.locator("summary")).toContainText(/abona(t|ți) confirma(t|ți)/);
+    await expect(card.getByTestId("newsletter-subscribers-filters")).toBeHidden();
+    await card.locator("summary").first().click();
+    await expect(card.getByTestId("newsletter-subscribers-filters")).toBeVisible();
+
+    // The search is a GET form: the state is the address, and the fold opens by itself.
+    await card.getByLabel("Caută adresa").fill(email.toUpperCase());
+    await card.getByRole("button", { name: "Filtrează" }).click();
+    await expect(page).toHaveURL(/\/ro\/admin\/newsletter\?q=[^#]+#newsletter-subscribers$/);
+    const table = card.getByTestId("newsletter-subscribers-table");
+    await expect(table.getByTestId("newsletter-subscriber-row")).toHaveCount(1);
+    await expect(table.getByTestId("newsletter-subscriber-email")).toHaveText(email);
+    await expect(table.getByTestId("newsletter-subscriber-state")).toContainText("Confirmat");
+    await expect(card.getByTestId("newsletter-subscribers-counts")).toContainText("1 abonat confirmat, 0 în așteptare");
+
+    // The CSV of the same filter, named with the date, with its BOM and the table's columns.
+    const [download] = await Promise.all([page.waitForEvent("download"), card.getByTestId("newsletter-subscribers-csv").click()]);
+    expect(download.suggestedFilename()).toMatch(/^newsletter-abonati-\d{4}-\d{2}-\d{2}\.csv$/);
+    const path = await download.path();
+    const { readFileSync } = await import("node:fs");
+    const csv = readFileSync(path, "utf8");
+    expect(csv.charCodeAt(0)).toBe(0xfeff);
+    expect(csv).toContain("Adresa,Limba,Teme,Starea,Abonat din,Confirmat la");
+    expect(csv).toContain(email);
+
+    // The Administrator's verb, 44 pixels tall, asking first (§384) with the address in its question.
+    const unsubscribe = table.getByRole("button", { name: "Dezabonează" });
+    await expect(unsubscribe).toBeVisible();
+    expect((await unsubscribe.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await unsubscribe.click();
+    await confirmDialog(page, new RegExp(`Dezabonezi ${email.replace(/[.]/g, "\\.")}`));
+    await expect(page).toHaveURL(/saved=newsletterUnsubscribed/, { timeout: 30_000 });
+    expect(await newsletterSubscription(email)).toBeNull();
+    await expect(card.getByTestId("newsletter-subscribers-empty")).toBeVisible();
   });
 
   for (const who of ["Dev Copywriter", "Dev Technical"] as const) {
@@ -62,12 +122,25 @@ test.describe("§445 the newsletter's own backoffice page", () => {
   }
 
   test("the Organizer opens «Newsletter» and finds the composer, without the Administrator's withdrawal", async ({ page }) => {
+    // A row of the Organizer's own to read, so «no Dezabonează» is said of a drawn row, not an empty table.
+    const email = `e2e-news-organizer-${Date.now().toString(36)}@test.invalid`;
+    await seedConfirmedSubscriber(email, ["BIG_EVENTS"]);
     await signIn(page, "Dev Moderator");
     await expect(page.getByRole("tab", { name: "Newsletter" })).toBeVisible();
     expect((await page.goto("/ro/admin/newsletter"))?.status()).toBe(200);
     await expect(page.locator("#main").getByTestId("newsletter-composer")).toBeVisible();
     // The Administrator's withdrawal is not the Organizer's.
     await expect(page.getByTestId("newsletter-withdraw")).toHaveCount(0);
+    // The Organizer reads «Abonați» and its CSV, and is offered no «Dezabonează» (§550).
+    await expect(page.locator("#main").getByTestId("newsletter-subscribers")).toBeVisible();
+    await expect(page.getByTestId("newsletter-subscribers-csv")).toHaveCount(1);
+    // The seeded address through the list's own search: the fold opens by itself on a filter.
+    await page.goto(`/ro/admin/newsletter?q=${encodeURIComponent(email)}#newsletter-subscribers`);
+    const table = page.locator("#main").getByTestId("newsletter-subscribers-table");
+    await expect(table.getByTestId("newsletter-subscriber-row")).toHaveCount(1);
+    await expect(table.getByTestId("newsletter-subscriber-email")).toHaveText(email);
+    await expect(table.getByTestId("newsletter-subscriber-unsubscribe")).toHaveCount(0);
+    await expect(table.getByRole("button", { name: "Dezabonează" })).toHaveCount(0);
   });
 });
 
@@ -119,6 +192,36 @@ test.describe("§445 the newsletter pop-up on the contact page", () => {
 
     await dialog.getByTestId("newsletter-close").click();
     await expect(dialog).toBeHidden();
+  });
+
+  test("«Vreau să mă dezabonez» opens a one-box form that answers one sentence whatever the address, and mails the link only to a subscriber (§550)", async ({ page }) => {
+    const subscriber = address();
+    const stranger = `stranger-${address()}`;
+    await seedConfirmedSubscriber(subscriber, ["BIG_EVENTS"]);
+
+    for (const email of [subscriber, stranger]) {
+      await page.goto("/ro/contact", { waitUntil: "networkidle" });
+      const fold = page.getByTestId("newsletter-leave");
+      const opener = fold.getByTestId("newsletter-leave-open");
+      // A quiet link with a glyph, a thumb's height, the form folded under it.
+      await expect(opener).toContainText("Vreau să mă dezabonez");
+      await expect(opener.locator("svg")).toHaveCount(1);
+      expect((await opener.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+      await expect(fold.locator('[name="newsletterLeaveEmail"]')).toBeHidden();
+      await opener.click();
+      await fold.locator('[name="newsletterLeaveEmail"]').fill(email);
+      await page.waitForTimeout(HUMAN_PAUSE_MS);
+      await fold.getByRole("button", { name: "Trimite-mi linkul" }).click();
+      await expect(page).toHaveURL(/nleave=sent/, { timeout: 30_000 });
+      // The same sentence for both: the page says nothing about whether an address is on the list.
+      await expect(page.getByTestId("newsletter-leave-sent")).toHaveText("Dacă adresa e abonată, ai primit un email cu linkul de gestionare.");
+    }
+    expect(await newsletterManageRequestsTo(subscriber)).toBe(1);
+    expect(await newsletterManageRequestsTo(stranger)).toBe(0);
+    // Nothing changed by the request: the subscriber leaves from the link's page, not from this form.
+    expect((await newsletterSubscription(subscriber))?.confirmed).toBe(true);
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(overflow).toBeLessThanOrEqual(0);
   });
 
   test("refuses no topic inside the pop-up, keeping the address; then says 'check your inbox'", async ({ page }) => {
