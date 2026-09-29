@@ -41,6 +41,7 @@ import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
+import LocaleTabPanels from "@/shared/ui/LocaleTabPanels";
 import { saveMembersTextAction, setMembersPagePublishedAction } from "./actions";
 import CodesCard from "./CodesCard";
 
@@ -52,6 +53,12 @@ type Props = {
 export const dynamic = "force-dynamic";
 
 type Words = Awaited<ReturnType<typeof getTranslations<"Admin">>>;
+
+/** The two editors of a text, in the site's order: the tab's code, the posted name's part (§NNN). */
+const LANGUAGES = [
+  { locale: "ro", code: "RO", suffix: "Ro" },
+  { locale: "en", code: "EN", suffix: "En" },
+] as const;
 
 /**
  * The members' pages in the backoffice (§524), «Membri» in the «Pagini standard» group of «Pagini»: «Beneficiile
@@ -209,9 +216,9 @@ function PublicPageCard({
 }
 
 /**
- * One of the two texts: its state on the line, and the two editors in a fold — Română and English,
- * both or neither (§352), the whole toolbar of a page's column (§474), the one «Copiază și tradu
- * tot» above them (§482). Closed until opened, like every backoffice fold (§336).
+ * One of the two texts: its state on the line, and the two editors in a fold — tabs «RO» | «EN»
+ * (§NNN), both or neither (§352), the whole toolbar of a page's column (§474), the one «Copiază și
+ * tradu tot» above them (§482). Closed until opened, like every backoffice fold (§336).
  */
 function TextCard({
   text,
@@ -259,25 +266,39 @@ function TextCard({
               <input type="hidden" name="uiLocale" value={locale} />
               <input type="hidden" name="text" value={text} />
               <Stack spacing={1.5}>
-                {/* «Copiază și tradu tot: RO → EN» (§464, §482): this text's English from its Romanian. */}
+                {/*
+                  «Copiază și tradu tot: RO → EN» (§464, §482): this text's English from its Romanian,
+                  above the tabs so it is there whichever language is on top; the English tab comes
+                  forward after it, marked «tradus — verifică» (§NNN).
+                */}
                 <TranslateAllButton />
-                <LazyRichTextEditor
-                  name={`${text}RoBody`}
-                  label={t(`members.${text}Ro`)}
-                  summary={t(`members.${text}Ro`)}
-                  emptyHint={t("members.textEmpty")}
-                  initialBody={docs.ro}
-                  accessibleSuffix="RO"
-                  labels={rich}
-                />
-                <LazyRichTextEditor
-                  name={`${text}EnBody`}
-                  label={t(`members.${text}En`)}
-                  summary={t(`members.${text}En`)}
-                  emptyHint={t("members.textEmpty")}
-                  initialBody={docs.en}
-                  accessibleSuffix="EN"
-                  labels={rich}
+                {/*
+                  The two languages as tabs «RO» | «EN» with the header's flags, one editor on screen
+                  at a time (§NNN; the owner, 2026-09-29: «partea bilingvă trebuie să fie per tabs»).
+                  The other language's editor stays in the form, hidden, so the save posts both
+                  (§352); a refusal naming the English brings its tab forward (§47).
+                */}
+                <LocaleTabPanels
+                  idPrefix={`members-${text}`}
+                  watch={{ names: [`${text}{Locale}Body`], rule: "required" }}
+                  markLabel={t("members.tabEmpty")}
+                  translatedMark={t("members.tabTranslated")}
+                  panels={LANGUAGES.map((language) => ({
+                    locale: language.locale,
+                    label: language.code,
+                    incompleteLabel: docs[language.locale] === null ? t("members.tabEmpty") : undefined,
+                    content: (
+                      <LazyRichTextEditor
+                        name={`${text}${language.suffix}Body`}
+                        label={t(`members.${text}${language.suffix}`)}
+                        summary={t(`members.${text}${language.suffix}`)}
+                        emptyHint={t("members.textEmpty")}
+                        initialBody={docs[language.locale]}
+                        accessibleSuffix={language.code}
+                        labels={rich}
+                      />
+                    ),
+                  }))}
                 />
                 <Typography variant="caption" color="text.secondary" sx={{ px: 1.75 }}>
                   {t("members.textHelp", { max: MEMBERS_TEXT_MAX })}

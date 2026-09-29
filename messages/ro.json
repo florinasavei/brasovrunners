@@ -5776,6 +5776,8 @@
       "zoneRo": "Zona membrilor (română)",
       "zoneEn": "Zona membrilor (engleză)",
       "textEmpty": "Nescris încă.",
+      "tabEmpty": "nescris încă",
+      "tabTranslated": "tradus — verifică",
       "textHelp": "În ambele limbi sau în niciuna, cel mult {max} de caractere în fiecare. Ca într-o pagină: titluri, liste, linkuri, poze, un tabel.",
       "codes": {
         "heading": "Coduri de reducere",

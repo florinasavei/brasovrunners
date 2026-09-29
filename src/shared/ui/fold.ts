@@ -90,11 +90,16 @@ export const REVEAL_EVENT = "br:reveal";
  * `translations.ro.body` and `translations.en.body` are both `translations.*.body` — so the key
  * needs nothing new from the caller, and a fold whose name carries no language (a field shared by
  * both, in the strip's own panels) is simply its own key.
+ *
+ * The forms that spell their pair `…RoBody` / `…EnBody` («Membri»'s two texts, «Echipa»'s words,
+ * a question's answer) lose the language the same way — `zoneRoBody` and `zoneEnBody` are both
+ * `zone*Body` — so the members' zone opened under «RO» is open under «EN» (§NNN).
  */
 export function twinFoldKey(name: string, locale: string): string {
+  const suffix = `${locale.charAt(0).toUpperCase()}${locale.slice(1)}Body`;
   return name
     .split(".")
-    .map((part) => (part === locale ? "*" : part))
+    .map((part) => (part === locale ? "*" : part.endsWith(suffix) && part.length > suffix.length ? `${part.slice(0, -suffix.length)}*Body` : part))
     .join(".");
 }
 

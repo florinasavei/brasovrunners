@@ -366,6 +366,43 @@ export default function LocaleTabPanels({
     return incomplete[index] && markWord ? markWord : null;
   };
 
+  /*
+    A translate press that filled a box of this strip's English panel (§NNN): «Copiază și tradu
+    tot» above the strip, or the card's own press at the end of its row. The English tab comes
+    forward — a translation behind the Romanian tab is one nobody reads before «Salvează» — and,
+    where the strip was given the word, wears «tradus — verifică» until the person types there.
+    Only the strip whose English panel holds a filled box answers, in the form that pressed.
+  */
+  useEffect(() => {
+    const english = englishPanelIndex(panels);
+    if (english < 0 || !live) return;
+    const onTranslated = (event: Event) => {
+      const panel = panelRefs.current[english];
+      if (!panel) return;
+      const find = (name: string) => panel.querySelector<HTMLInputElement | HTMLTextAreaElement>(`[name="${name}"]`);
+      if (!translatedInto((event as CustomEvent<TranslatedDetail>).detail, find)) return;
+      showOnly(panelRefs.current, english);
+      setActive(english);
+      setTranslated(true);
+    };
+    window.addEventListener(TRANSLATED_EVENT, onTranslated);
+    return () => window.removeEventListener(TRANSLATED_EVENT, onTranslated);
+  }, [panels, live]);
+
+  /*
+    The mark goes the moment the person edits the English (§NNN): `beforeinput` is the browser's
+    word for a person's own typing, pasting or deleting — the translation filling the box fires
+    `input` only, so it does not take its own mark away.
+  */
+  useEffect(() => {
+    if (!translated) return;
+    const panel = panelRefs.current[englishPanelIndex(panels)];
+    if (!panel) return;
+    const typed = () => setTranslated(false);
+    panel.addEventListener("beforeinput", typed);
+    return () => panel.removeEventListener("beforeinput", typed);
+  }, [translated, panels]);
+
   const withCardButton = translateCard && live && panels.some((panel) => panel.locale === "ro") && panels.some((panel) => panel.locale === "en");
   // After the card's press filled its English boxes (§514): the English tab on top, so the person
   // reads what was written rather than the Romanian they were already looking at.
@@ -417,29 +454,35 @@ export default function LocaleTabPanels({
           scrollButtons={false}
           sx={{ minHeight: 44, minWidth: 0, flex: "1 1 auto" }}
         >
-          {panels.map((panel, index) => (
-            <Tab
-              key={panel.locale}
-              /*
-                The language in its own words, and a mark when it is not finished. "Conținut (EN)"
-                said which panel this was and nothing about whether anybody had filled it in — so
-                the missing language was found at the moment publication was refused, which is the
-                worst moment to find it.
-              */
-              label={[
-                panel.label,
-                stateOf(index),
-                // The copying language's tab — every one after the first — says it (§354).
-                same && identical && index > 0 ? identical.mark : null,
-              ]
-                .filter((part): part is string => Boolean(part))
-                .join(" · ")}
-              id={`${idPrefix}-tab-${panel.locale}`}
-              aria-controls={`${idPrefix}-panel-${panel.locale}`}
-              value={index}
-              sx={{ minHeight: 44, textTransform: "none" }}
-            />
-          ))}
+          {panels.map((panel, index) => {
+            const flag = LANGUAGE_FLAG[panel.locale as keyof typeof LANGUAGE_FLAG];
+            return (
+              <Tab
+                key={panel.locale}
+                /*
+                  The language in its own words, and a mark when it is not finished. "Conținut (EN)"
+                  said which panel this was and nothing about whether anybody had filled it in — so
+                  the missing language was found at the moment publication was refused, which is the
+                  worst moment to find it.
+                */
+                label={tabLabel([
+                  panel.label,
+                  stateOf(index),
+                  // The copying language's tab — every one after the first — says it (§354).
+                  same && identical && index > 0 ? identical.mark : null,
+                  // Right after a translate press filled this panel, until typed into (§NNN).
+                  translated && translatedMark && panel.locale === "en" ? translatedMark : null,
+                ])}
+                // The header's flag for the language (§NNN, the glyph beside the word), never the label.
+                icon={flag ? <Flag code={flag} width={16} /> : undefined}
+                iconPosition="start"
+                id={`${idPrefix}-tab-${panel.locale}`}
+                aria-controls={`${idPrefix}-panel-${panel.locale}`}
+                value={index}
+                sx={{ minHeight: 44, textTransform: "none", px: { xs: 1.25, sm: 2 } }}
+              />
+            );
+          })}
         </Tabs>
         {withCardButton && <TranslateCardButton onTranslated={() => showEnglish()} />}
       </Box>

@@ -5776,6 +5776,8 @@
       "zoneRo": "Members' area (Romanian)",
       "zoneEn": "Members' area (English)",
       "textEmpty": "Not written yet.",
+      "tabEmpty": "not written yet",
+      "tabTranslated": "translated — check it",
       "textHelp": "In both languages or in neither, at most {max} characters each. As on a page: headings, lists, links, pictures, a table.",
       "codes": {
         "heading": "Discount codes",
