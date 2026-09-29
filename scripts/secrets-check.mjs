@@ -2,18 +2,10 @@
 /**
  * `yarn secrets:check` — refuse a commit that would put a credential into a public repository.
  *
- * The repository is public (`SETUP.md` § Contributing), so a key that lands in one commit is
- * a key to rotate, whatever happens to the commit afterwards. GitHub's own secret scanning
- * and push protection are switched on for the provider formats it knows; this is the local
- * half, which runs in `yarn check` — before the commit exists — and knows the shapes *this*
- * platform's providers use, including the ones GitHub does not scan for (Neon, Turnstile,
- * a `JOB_SECRET`). No network, no dependency, a second to run.
- *
- * What it looks at: every tracked file and every staged file, text only, `yarn.lock` and the
- * migrations excluded. What it refuses: the patterns below. `.env.example` is allowed to name
- * a variable and forbidden to give it a value. A false positive is escaped by writing the
- * example differently, never by an allowlist file — an allowlist is where the next real key
- * gets waved through.
+ * The local half beside GitHub's secret scanning (`SETUP.md` § Contributing): runs in `yarn check`,
+ * before the commit exists, and knows this platform's shapes GitHub does not (Neon, Turnstile, a
+ * `JOB_SECRET`). Scans tracked and staged text files. A false positive is escaped by rewriting the
+ * example, never by an allowlist file — that is where the next real key gets waved through.
  */
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";

@@ -13,36 +13,16 @@
  *                                                            both redirect to the canonical
  *   yarn domain:bind qa qa.example.com --apply
  *
- * `docs/RUNBOOKS.md` § Domain binding is the procedure; this is the half of it a machine can do.
- * The club will hold two domains over time (`DECISIONS.md` §55), so the same command also has to
- * make "which one is canonical" a switch: run it for the new canonical, then for the old one with
- * `--alias-of`, then redeploy. Nothing under `src/` changes either way (`AGENTS.md` §8).
+ * The machine half of `docs/RUNBOOKS.md` § Domain binding (`DECISIONS.md` §55, `AGENTS.md` §8):
+ *   1. adds the hostnames to the environment's Vercel project, `www` and alias domains redirecting
+ *      308 to the one canonical host (BR-REQ-101-02 criteria 4 and 5);
+ *   2. for a canonical domain, sets `APP_BASE_URL`; an alias touches no variable;
+ *   3. prints the DNS records and the consoles a machine must not touch.
+ * Dry run unless `--apply`. It does not redeploy; `APP_BASE_URL` takes effect on the next one.
  *
- * What it does, and only these three things:
- *
- *   1. adds the hostnames to the environment's own Vercel project — the apex and `www` for an
- *      apex, the one name for a subdomain. `www` redirects to the apex, and every hostname of an
- *      alias domain redirects to the canonical, permanently (308), set on the host: BR-REQ-101-02
- *      criteria 4 and 5 — exactly one canonical host serves the site;
- *   2. for a canonical domain, sets `APP_BASE_URL`, the single source of every absolute URL the
- *      application emits — the sitemap, the canonical tags and every email link follow from that
- *      one variable and nothing else needs editing. An alias touches no variable;
- *   3. prints the DNS records the registrar needs, and the consoles a machine must not touch on
- *      the club's behalf.
- *
- * **Dry run unless `--apply`.** The first time anybody runs this they are holding a domain they
- * have just paid for.
- *
- * It deliberately does NOT redeploy. `APP_BASE_URL` reaches a running application only on a new
- * deployment, and choosing when is the operator's call — the script says so at the end.
- *
- * Every Vercel call goes through `vercel api`, the CLI's authenticated passthrough, rather than
- * the token in the CLI's credentials file. That token is an OAuth access token with an expiry;
- * the CLI refreshes its copy in memory and never rewrites the file, and the REST API answers 403
- * to the stale one — which is how the first version of this script stopped working a day after
- * the login it relied on. The project is resolved by the environment's own name, never from
- * `.vercel/project.json`: that file links this checkout to the QA project, and the first version
- * would have bound the club's domain there for `production` too.
+ * Calls go through `vercel api`, not the token in the CLI's credentials file, which the CLI never
+ * refreshes on disk (403 a day after login). The project is chosen by environment name, never from
+ * `.vercel/project.json`, which links this checkout to QA.
  */
 
 import { spawnSync } from "node:child_process";
@@ -58,10 +38,8 @@ function fail(message) {
 }
 
 /**
- * One authenticated call through the CLI. `--raw` keeps the body machine-readable; the CLI still
- * prints its banner first, so the JSON is taken from the first brace or bracket. With `tolerate`
- * a non-JSON answer (a 404, a 400) comes back as `null` for the caller to decide about; without
- * it, it is fatal and quoted.
+ * One authenticated call through the CLI; the JSON starts at the first brace or bracket, after the
+ * CLI's banner. With `tolerate` a non-JSON answer returns null; without it, it is fatal.
  */
 function vercel(method, path, body, { tolerate = false } = {}) {
   const command = [
@@ -97,10 +75,7 @@ function vercel(method, path, body, { tolerate = false } = {}) {
   }
 }
 
-/**
- * The team the two projects belong to. `.vercel/project.json` records it whichever project this
- * checkout is linked to; the signed-in user's default team is the fallback on a fresh clone.
- */
+/** The team, from `.vercel/project.json`, else the signed-in user's default team. */
 function teamId() {
   try {
     const { orgId } = JSON.parse(readFileSync(".vercel/project.json", "utf8"));
@@ -189,7 +164,7 @@ function main() {
     return;
   }
 
-  // 1. The hostnames, each either serving or redirecting — decided here, once, on the host.
+  // 1. The hostnames, each serving or redirecting.
   const records = [];
   for (const { hostname, redirect } of plan) {
     const body = redirect ? { name: hostname, redirect, redirectStatusCode: REDIRECT_STATUS } : { name: hostname };
@@ -219,7 +194,7 @@ function main() {
   }
   console.log("\n  ✓ Hostnames on the project, redirects set\n");
 
-  // 2. The one variable every absolute URL comes from — canonical domains only.
+  // 2. APP_BASE_URL — canonical domains only.
   if (!aliasOf) {
     const baseUrl = `https://${domain}`;
     const envs = vercel("GET", `/v9/projects/${project.id}/env${query}`);
@@ -246,11 +221,7 @@ function main() {
     return;
   }
 
-  /**
-   * The consoles this script must not touch on the club's behalf. Each holds a credential or a
-   * policy in somebody else's system, and each fails silently from here: a redirect URI that does
-   * not match refuses every sign-in, and an unverified sending domain drops mail without a bounce.
-   */
+  // The consoles a script must not touch; each fails silently when wrong.
   const baseUrl = `https://${domain}`;
   console.log("  Then, by hand — none of these can be scripted safely\n");
   console.log("    Zitadel  add the redirect URI, or every sign-in is refused:");
