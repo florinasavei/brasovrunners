@@ -45,6 +45,7 @@ import {
   readFamilySittingLink,
 } from "./family-sitting-confirm";
 import {
+  type FamilyPassBase,
   familyPassHolds,
   type FamilySigningPass,
   familyStepsOfPass,
@@ -52,9 +53,12 @@ import {
   nextFamilyPass,
   passBase,
 } from "./family-signing";
+import { listManagedPeople, managedRegistration } from "./manage-family";
 import { currentFamilyStep, type FamilyStep, familySigningSteps, isFamilyWizard, isSignable } from "./domain/family-signing";
 import { readMyRegistrations } from "./my-registrations";
 import { isUuid } from "@/shared/ids";
+import { isActiveStatus } from "./domain/state-machine";
+import type { CancelReason } from "./domain/cancel-reason";
 import { familyOf } from "./family-marker";
 
 /**
@@ -526,6 +530,10 @@ export async function consumeAndDeclineFamilyEntry(secret: string, now: Date): P
  * What the participant's own page shows about race day (BR-REQ-037-08): the desk code and
  * whether the self check-in window is open. The manage token is read, never spent — the same
  * link still has to cancel — and this reads nothing else.
+ *
+ * Per person since §547: `people` is the link's registration and the address's other active ones
+ * at the event (`listManagedPeople`), each with whether "I am here" is open for them — the page
+ * draws one card each, the QR with the name and the number beside it.
  */
 export async function readRaceDayContext(secret: string, now: Date) {
   const db = getDb();
@@ -542,11 +550,13 @@ export async function readRaceDayContext(secret: string, now: Date) {
   const opensAt = selfCheckinOpensAt(event.startsAt, deadlines);
   // A cancelled race has no race day (§331): the page says so, and offers no desk code or "I am here".
   const eventCancelled = event.eventStatus === "CANCELLED";
+  const checkinOpenFor = (status: string) => status === "CONFIRMED" && !eventCancelled && now >= opensAt;
+  const people = (await listManagedPeople(db, registration)).map((person) => ({ ...person, selfCheckinOpen: checkinOpenFor(person.status) }));
   return {
     ok: true as const,
     registration,
     eventCancelled,
-    selfCheckinOpen: registration.status === "CONFIRMED" && !eventCancelled && now >= opensAt,
+    selfCheckinOpen: checkinOpenFor(registration.status),
     selfCheckinOpensAt: opensAt,
     /** How many hours before the start that is, for the sentence that says so (§377). */
     selfCheckinHours: deadlines.selfCheckinHours,
@@ -557,6 +567,8 @@ export async function readRaceDayContext(secret: string, now: Date) {
      * address's own link, the one place the names on it may be read (§389).
      */
     family: ((await familyOf(db, [registration])).get(registration.id) ?? []).map((member) => member.name),
+    /** Everybody the page manages, the link's own first in the family's order (§547). */
+    people,
   };
 }
 
@@ -565,18 +577,32 @@ export async function readRaceDayContext(secret: string, now: Date) {
  * token authorizes the person, check-in is idempotent, and spending the manage link on it
  * would cost them the ability to cancel. Only from the club's hours before the start (a day
  * unless changed, §377) — an "I am here" a week early is not information.
+ *
+ * `registrationId` (§547): another person of the page — the same address at the same event,
+ * checked on the server (`managedRegistration`); absent, the link's own.
  */
-export async function checkInSelf(secret: string, now: Date) {
+export async function checkInSelf(secret: string, now: Date, registrationId?: string) {
   const context = await readRaceDayContext(secret, now);
   if (!context.ok) return context;
-  if (!context.selfCheckinOpen) {
+  const person = registrationId ? context.people.find((candidate) => candidate.id === registrationId) : context.people.find((candidate) => candidate.own);
+  if (!person) throw new DomainError("NOT_FOUND", "not a registration this link manages");
+  if (!person.selfCheckinOpen) {
     throw new DomainError("VALIDATION_ERROR", "self check-in is not open yet: it opens the club's check-in lead before the start");
   }
-  const registration = await checkIn(getDb(), context.registration.id, null, now);
+  const registration = await checkIn(getDb(), person.id, null, now);
   return { ok: true as const, registration };
 }
 
-export async function consumeAndCancel(secret: string, now: Date) {
+/**
+ * «Anulează înscrierea» from the manage link (BR-REQ-036-01). Spends the link (§12.8: an action
+ * link is used once), as «Înscrierile mele» spends its own (§77) — whichever person it cancels.
+ *
+ * `registrationId` (§547): the person the press names, the link's own or another registration of
+ * the same address at the same event (`managedRegistration`). Anything else throws NOT_FOUND inside
+ * the transaction, so the link is not spent and nobody is cancelled. `family` says whether the page
+ * listed more than one person, for the outcome page's one extra sentence — never who.
+ */
+export async function consumeAndCancel(secret: string, now: Date, reason: CancelReason, registrationId?: string) {
   const db = getDb();
 
   if (!(await tokenAttemptAllowed(db, secret, now))) return TOKEN_NOT_FOUND;
@@ -585,11 +611,76 @@ export async function consumeAndCancel(secret: string, now: Date) {
     const consumed = await consumeActionToken(tx, { secret, purpose: "MANAGE_REGISTRATION", now });
     if (!consumed.ok) return consumed;
 
-    const registration = await findRegistrationById(tx, consumed.token.registrationId ?? "");
-    if (!registration) throw new DomainError("NOT_FOUND", "no such registration");
+    const own = await findRegistrationById(tx, consumed.token.registrationId ?? "");
+    if (!own) throw new DomainError("NOT_FOUND", "no such registration");
+    const registration = await managedRegistration(tx, own, registrationId);
+    if (!registration) throw new DomainError("NOT_FOUND", "not a registration this link manages");
+    // A sibling already cancelled is not on the page's list: refuse it rather than spend the link on a false «Gata».
+    if (registration.id !== own.id && !isActiveStatus(registration.status)) throw new DomainError("NOT_FOUND", "not an active registration of this family");
+    const family = (await listManagedPeople(tx, own)).length > 1;
     const event = await loadEventForRegistration(tx, registration.eventId);
 
-    const updated = await unregister(tx, event, registration.id, "PARTICIPANT", now);
-    return { ok: true as const, token: consumed.token, registration: updated };
+    const updated = await unregister(tx, event, registration.id, "PARTICIPANT", now, { via: "MANAGE_LINK", reason });
+    return { ok: true as const, token: consumed.token, registration: updated, family };
   });
+}
+
+/**
+ * «Renunț la înscrierea pentru <nume>» on a family's step of the declarations wizard (§547, amending
+ * §471; the owner, 2026-09-28: a person registered by mistake had no way out from the wizard). The
+ * step's person is cancelled — the place released through the allocator (`unregister`, under the
+ * event's lock, the waiting list served), the audit row with no staff actor, and the cancellation
+ * email to the address with its club copy (§320), as every cancellation queues it — and the wizard
+ * moves on: the person is put off in the pass like «Semnez mai târziu», so the list shows them as
+ * «înscriere anulată» and the next person, or the end, follows.
+ *
+ * Only the step the page is on, and only through what may sign it: the pass beside the link it is
+ * bound to (the person must be its current step), or, with no pass, the live declaration or offer
+ * link of that very person on a family's page — the same two roads `skipFamilyDeclaration` takes.
+ * The declaration link is not spent: it signs nobody any more, and the pass keeps walking beside it.
+ */
+export async function withdrawFromFamilyWizard(
+  secret: string,
+  pass: FamilySigningPass | null,
+  registrationId: string,
+  now: Date,
+  reason: CancelReason,
+): Promise<{ ok: true; pass: FamilySigningPass; steps: FamilyStep[] } | typeof TOKEN_NOT_FOUND> {
+  const db = getDb();
+  if (!isUuid(registrationId)) return TOKEN_NOT_FOUND;
+
+  let base: FamilyPassBase;
+  if (pass && !pass.done && (await familyPassHolds(db, secret, pass, now))) {
+    const current = currentFamilyStep(await familyStepsOfPass(db, pass));
+    if (!current || current.id !== registrationId) return TOKEN_NOT_FOUND;
+    base = { ...passBase(pass), skippedIds: [...pass.skippedIds, registrationId] };
+  } else {
+    const declaration = await readRegistrationTokenContext(secret, "COMPLETE_DECLARATION");
+    // The same secret, already presented in this request: no second attempt (§202).
+    const context = declaration.ok ? declaration : await readRegistrationTokenContext(secret, "WAITLIST_OFFER", { charge: false });
+    if (!context.ok || context.token.registrationId !== registrationId) return TOKEN_NOT_FOUND;
+    const registration = await findRegistrationById(db, registrationId);
+    if (!registration || registration.participantId !== context.token.participantId) return TOKEN_NOT_FOUND;
+    const fresh = familySigningSteps(await listFamilySigningRows(db, registration.participantId, registration.eventId), {
+      originId: registration.id,
+      originSignable: true,
+      signedIds: [],
+    });
+    if (!isFamilyWizard(fresh) || currentFamilyStep(fresh)?.id !== registration.id) return TOKEN_NOT_FOUND;
+    base = {
+      binding: "link",
+      participantId: registration.participantId,
+      eventId: registration.eventId,
+      originId: registration.id,
+      eligibleIds: fresh.map((step) => step.id),
+      signedIds: [],
+      skippedIds: [registration.id],
+    };
+  }
+
+  const registration = await findRegistrationById(db, registrationId);
+  if (!registration || !isSignable(registration.status)) return TOKEN_NOT_FOUND;
+  const event = await loadEventForRegistration(db, registration.eventId);
+  await unregister(db, event, registration.id, "PARTICIPANT", now, { via: "FAMILY_WIZARD", reason });
+  return { ok: true, ...(await nextFamilyPass(db, base, now)) };
 }

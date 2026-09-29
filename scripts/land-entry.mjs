@@ -1,29 +1,11 @@
 /**
  * What `yarn docs:land` makes of one item's saved results — its DECISIONS title and body, its
  * CHANGELOG bullet, its SPECS criteria — kept apart from `land-batch.mjs`, which writes files on
- * import, so the rules are testable (§426).
- *
- * The rules came from landings that went wrong (BR-V1.91's among them):
- *
- *   - a fix report with nothing in it — a fixer that returned no result, or one with no summary —
- *     is refused, never skipped in silence: the item would land as if the fix had happened;
- *   - the CHANGELOG bullet is the implementer's, or the manifest item's own `changelog` when the
- *     dispatcher rewrote it; a fixer's `changelogLine` is never taken, because a fixer writes it
- *     about its round ("fixed the reviewer's findings") rather than about what a person sees;
- *   - a blank `decisionsTitle` is refused: the fixer's when it has one, else the implementer's,
- *     else the manifest item's `title`, or nothing lands;
- *   - a fixer's housekeeping is never landed: a section or an addendum that only says the text was
- *     "carried forward", or a sentence saying no DECISIONS.md or CHANGELOG.md edit was made, is
- *     dropped — a whole sentence when it is nothing else, or just its clause when a ';' joins it
- *     to real substance — and every dropped piece is printed so the dry run shows it. The match is
- *     narrow — any tense of "carr(y/ies/ied/ying) forward" followed by "from the implementer/
- *     verbatim/unchanged", or "no … DECISIONS/CHANGELOG/SPECS … edit/change" in either order —
- *     never a bare "unchanged" or "did not change" on its own, nor "carries the place forward",
- *     which belong to the fix's substance as often as to its housekeeping;
- *   - a committed fix report with a blank `commitSha` is refused, naming the item and the round —
- *     "committed" with nothing to point at is the same defect as a blank summary;
- *   - a SPECS criterion whose `requirement` is not a full `BR-REQ-\d{3}-\d{2}` id is dropped, with
- *     a note, rather than landed under a heading `land-batch.mjs` cannot resolve.
+ * import, so the rules are testable (§426). Refused: a blank fix report, a committed one with a
+ * blank `commitSha`, a blank title or bullet. The bullet is the implementer's or the manifest's,
+ * never a fixer's (a fixer writes about its round, not what a person sees). A fixer's housekeeping
+ * ("carried forward", "no DECISIONS.md edit") is dropped and printed; a criterion without a full
+ * `BR-REQ-\d{3}-\d{2}` id is dropped with a note.
  */
 
 export const requirementOf = (c) => (c.requirement.match(/BR-REQ-\d{3}-\d{2}/) ?? [c.requirement])[0];
@@ -43,35 +25,26 @@ export function mergeCriteria(...lists) {
   return [...byRequirement.values()].flat();
 }
 
-/** The landing artifact's name, for the two housekeeping patterns below — never a bare "unchanged". */
-// "\.md" reads "_md" here — the caller replaces the dot so a filename never ends a sentence.
+// The landing artifact's name; "_md" because the caller replaces the dot so a filename never ends a sentence.
 const ARTIFACT = String.raw`(?:DECISIONS|CHANGELOG|SPECS)(?:[._]md)?`;
 const EDIT_WORD = String.raw`(?:edits?|changes?)`;
 /**
- * "No DECISIONS.md … edit was made" or "no changes … to DECISIONS.md were needed" — the subject
- * has to be the landing artifact itself, in either word order. Narrow on purpose: "the SPECS
- * criterion … did not change the allocator" and "… §31 is unchanged" are the fix's substance, not
- * housekeeping, and must not match — there is no "no"/"without" attached to the artifact there.
+ * "No DECISIONS.md … edit" in either word order. Narrow on purpose: "did not change the allocator"
+ * or "… is unchanged" is the fix's substance and must not match.
  */
 const NO_ARTIFACT_EDIT = new RegExp(
   String.raw`\b(no|without)\b[^.;]{0,90}\b${ARTIFACT}\b[^.;]{0,90}\b${EDIT_WORD}\b` + "|" + String.raw`\b(no|without)\b[^.;]{0,90}\b${EDIT_WORD}\b[^.;]{0,90}\b${ARTIFACT}\b`,
   "i",
 );
 /**
- * "Carried forward from the implementer", "carries forward unchanged", "carrying forward
- * verbatim", "carrying forward the implementer's section", "carry forward the text" — any
- * tense of "carry … forward" whose complement names the landing text itself (a qualifier, or
- * "the implementer's <noun>" / "the text", as the object *after* "forward"). A sentence like
- * "a declined offer carries the place forward to the next person", or "a waiting-list offer's
- * deadline is carried forward to the next day", is the fix's substance (a direct object
- * between "carr(y|ies|ied|ying)" and "forward", or an object after "forward" that names
- * something other than the document text) and must not match.
+ * Any tense of "carry forward" whose complement names the landing text ("from the implementer",
+ * "verbatim", "the text"). "Carries the place forward to the next person" is substance and must
+ * not match.
  */
 const CARRIED_FORWARD = /\bcarr(?:y|ies|ied|ying)\s+forward\b[^.;]{0,30}\b(from the implementer|verbatim|unchanged|the implementer's\s+\w+|the text)\b/i;
 /** A whole text that says nothing, including a bare "(carried forward)" with no qualifier. */
 const EMPTY_WORDS = /^[(\s]*(none|n\/a|unchanged|carried forward|no (changes?|edits?|addendum)|nothing( (new|to add))?|same( as (above|before))?|—|-+)[.)\s]*$/i;
 
-/** True when `clause` is on its own nothing but housekeeping — carried-forward or a no-edit note. */
 function isHousekeepingClause(clause) {
   // A file name's dot ("DECISIONS.md") is not the end of a clause for NO_ARTIFACT_EDIT.
   const plain = clause.replace(/\.(md|mjs|js|ts)\b/g, "_$1");
@@ -79,9 +52,8 @@ function isHousekeepingClause(clause) {
 }
 
 /**
- * A fixer's text without its housekeeping: the sentences — or, when housekeeping shares a
- * sentence with real substance across a ';', the clauses — that only say what was not written
- * or that the text was carried forward. Returns the text left and the pieces dropped.
+ * A fixer's text without its housekeeping sentences — or clauses, when a ';' joins housekeeping to
+ * substance. Returns the text left and the pieces dropped.
  */
 export function withoutHousekeeping(text) {
   const kept = [];
@@ -95,14 +67,11 @@ export function withoutHousekeeping(text) {
       const separator = parts[i + 1] ?? "";
       if (!sentence) continue;
       if (!sentence.includes(";")) {
-        // No ';' to hide substance behind — test the whole sentence, as before.
         if (isHousekeepingClause(sentence)) dropped.push(sentence.trim());
         else out += sentence + separator;
         continue;
       }
-      // A ';' may join a housekeeping clause to real substance in one sentence — test each
-      // clause on its own (never the whole sentence at once) so the substance is kept rather
-      // than lost with its housekeeping neighbour.
+      // Test each clause alone so substance is kept beside a housekeeping neighbour.
       const clauseParts = sentence.split(/(;\s*)/);
       const survivors = [];
       let sawHousekeeping = false;
@@ -142,12 +111,8 @@ export function isBlankFixReport(fixed) {
 }
 
 /**
- * One item's entry, from its br-chain result, its br-fix-round results in order, and the
- * manifest item's own overrides (`title`, `changelog`). Throws an Error naming `label` for a
- * blank fix report, a blank title, a blank section or a blank bullet.
- *
- * Returns { title, body, changelog, criteria, notes } — `notes` are lines for the dry run: what
- * was dropped, and a fixer's bullet that differs from the one landed.
+ * One item's entry from its br-chain result, its fix rounds in order and the manifest's overrides
+ * (`title`, `changelog`). Throws naming `label` on a blank. `notes` are lines for the dry run.
  */
 export function entryFromResults(chain, rounds = [], item = {}, label = "item") {
   const refuse = (message) => {
@@ -211,22 +176,14 @@ export function entryFromResults(chain, rounds = [], item = {}, label = "item") 
 }
 
 /**
- * The decision placeholder an implementer cites before its number exists. Spelled in two pieces
- * here, never as one literal: `yarn docs:land` numbers every literal placeholder in the tracked
- * files by the commit that wrote it, and this file is tracked — the landing of §426 turned this
- * function's own placeholder into "§426", so a guessed number landed as a citation of §426 (§535).
+ * The decision placeholder, spelled in two pieces: `yarn docs:land` numbers every literal one in
+ * tracked files, this file included (§535).
  */
 export const PLACEHOLDER = "§" + "NNN";
 
 /**
- * A literal `§N` a fixer or implementer typed instead of the placeholder — guessing at a
- * number `land-batch.mjs` has not assigned yet. Above `threshold` (the last number already in
- * DECISIONS.md, before this batch's own numbers are handed out) it cannot be a citation of an
- * existing decision, so it is rewritten to the placeholder before step 4's numbering gives it the
- * real one; `§N` at or below `threshold` is left alone, since it names a decision that already exists.
- *
- * Rewrites every one of `entry`'s landed fields (title, body, changelog, each criterion's text) in
- * place and returns the sentences changed, for the dry run to print.
+ * Rewrites, in place in every landed field, a literal `§N` above `threshold` (the last number in
+ * DECISIONS.md) to the placeholder: it is a guess, not a citation. Returns the rewrites.
  */
 export function rewriteFreeSectionRefs(entry, threshold) {
   const tooHigh = new RegExp(String.raw`§(\d+)`, "g");

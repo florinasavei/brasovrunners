@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { focusRefusal } from "./newsletter-box";
 
 /**
  * The contact page's one newsletter island (§445): it draws nothing. It gives the server-drawn
@@ -21,18 +22,29 @@ import { useEffect } from "react";
  * hydrated must still do something. A link drawn by the server simply navigates to the page with
  * the dialog open; a button drawn by the island would be a dead control for that second. The two
  * talk through ids, plain strings, never an element (§370).
+ *
+ * `focusOnArrival` is the id of a refusal to move the focus to (§47, §553): «Vreau să mă
+ * dezabonez»'s alert after a failed check or the hour's limit, so a screen reader and a keyboard
+ * land on the sentence that says what went wrong rather than at the top of the page. Its fold is
+ * drawn open by the server; the focus is the one thing a page cannot do without a script.
  */
 export default function NewsletterDialogButton({
   triggerId,
   dialogId,
   arrival,
   stamp,
+  focusOnArrival = null,
 }: {
   triggerId: string;
   dialogId: string;
   arrival: "modal" | "closed" | "none";
   stamp: string;
+  focusOnArrival?: string | null;
 }) {
+  useEffect(() => {
+    focusRefusal(document, focusOnArrival);
+  }, [focusOnArrival, stamp]);
+
   useEffect(() => {
     const dialog = document.getElementById(dialogId);
     if (!(dialog instanceof HTMLDialogElement) || typeof dialog.showModal !== "function") return;

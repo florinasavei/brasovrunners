@@ -1,8 +1,9 @@
 import { sql } from "drizzle-orm";
-import { check, index, integer, jsonb, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { boolean, check, index, integer, jsonb, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { events } from "./events";
 import { legalDocuments } from "./legal-documents";
 import { locale } from "./locale";
+import { staffUsers } from "./staff-users";
 
 /**
  * An optional self-declaration signed on a group run's page (§393; the owner, 2026-09-25: "people
@@ -24,7 +25,8 @@ import { locale } from "./locale";
  * document, which a text approved before §418 could still ask for, is cleared seven days after
  * the event's start (`jobs/retention.ts`): a runner's identity number has no business outliving
  * the run here. The signer keeps the PDF that was emailed; the club's archive copy leaves with the
- * document masked (§320). Insert-only apart from that clearing and the erase.
+ * document masked (§320). Insert-only apart from that clearing, the erase and an Administrator's
+ * hold for a complaint or a dispute (§556), which no erase passes while it is set.
  *
  * **One per person per series and text version (§523).** `event_id` is the date it was signed on;
  * `series_key` says the declaration covers every date of that run — §113's series, the same type and
@@ -83,6 +85,22 @@ export const groupRunDeclarations = pgTable(
     signedFacts: jsonb("signed_facts"),
     /** The SHA-256 of the signer's own link (§523), never the secret; null until their copy is sent. */
     viewTokenHash: text("view_token_hash"),
+
+    /**
+     * The SHA-256 of the exact text signed (§556): the version's text in the row's language with every
+     * blank filled as the signer's PDF prints it (`signedTextHash`), computed before the row is written,
+     * in the same transaction. Null on a row from before it — its PDF prints no hash, never a fake.
+     */
+    textHash: text("text_hash"),
+    /**
+     * «Păstrează: reclamație / litigiu în curs» (§556): an Administrator's hold, with why, when and who.
+     * While it is set no erase takes the row — the signer's request included, which GDPR art. 17(3)(e)
+     * lets the club answer later — and no event delete cascades it away; clearing it lifts that.
+     */
+    retentionHold: boolean("retention_hold").notNull().default(false),
+    retentionHoldReason: text("retention_hold_reason"),
+    retentionHoldAt: timestamp("retention_hold_at", { withTimezone: true }),
+    retentionHoldByStaffUserId: uuid("retention_hold_by_staff_user_id").references(() => staffUsers.id, { onDelete: "set null" }),
   },
   (t) => [
     // "Every declaration signed for this run, in order" — the backoffice's one question.
@@ -95,6 +113,7 @@ export const groupRunDeclarations = pgTable(
       .where(sql`${t.signerKey} IS NOT NULL`),
     uniqueIndex("group_run_declarations_view_token_hash_unique").on(t.viewTokenHash),
     check("group_run_declarations_view_token_is_sha256_hex", sql`${t.viewTokenHash} IS NULL OR ${t.viewTokenHash} ~ '^[0-9a-f]{64}$'`),
+    check("group_run_declarations_text_hash_is_sha256_hex", sql`${t.textHash} IS NULL OR ${t.textHash} ~ '^[0-9a-f]{64}$'`),
   ],
 );
 

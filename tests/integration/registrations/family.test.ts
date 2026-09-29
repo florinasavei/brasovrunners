@@ -78,10 +78,11 @@ async function approve() {
   await insertLegalDocumentVersion(db, { key: "EVENT_DECLARATION", version: 1, effectiveAt: new Date("2026-01-01T00:00:00Z"), isApproved: true, contentSha256: computeContentHash(declaration), translations: declaration, now: NOW });
 }
 
-async function createEvent(capacity: number | null = 20): Promise<EventInput> {
+async function createEvent(capacity: number | null = 20, askHealthNote = true): Promise<EventInput> {
   const [event] = await db
     .insert(events)
-    .values({ type: "RACE", startsAt: new Date("2026-10-11T07:00:00.000Z"), registrationMode: "INTERNAL", capacity, locationName: "Parcul Tractorul", editorialStatus: "PUBLISHED", publishedAt: NOW })
+    // It asks the health note (§557), so the kept forms' consents below have a note to keep or drop.
+    .values({ type: "RACE", startsAt: new Date("2026-10-11T07:00:00.000Z"), registrationMode: "INTERNAL", capacity, locationName: "Parcul Tractorul", editorialStatus: "PUBLISHED", publishedAt: NOW, askHealthNote })
     .returning();
   await db.insert(eventTranslations).values([
     { eventId: event.id, locale: "ro", title: "Crosul familiei", slug: "crosul-familiei" },
@@ -106,7 +107,7 @@ const submission = (firstName: string, at: Date = NOW, overrides: Record<string,
   firstName,
   lastName: "Pop",
   birthDate: BIRTH_DATES[firstName] ?? "1980-01-01",
-  sex: "UNSPECIFIED",
+  sex: "FEMALE",
   nationality: "RO",
   country: "RO",
   city: "Brașov",
@@ -344,12 +345,17 @@ describe("§446 the confirmation registers the person, and everybody signs alone
     // Each confirms and signs alone — her own name, her own signature, her own number and desk code.
     await confirmEmail(db, event, ana.id, at(10));
     await signFor(event, ana.id, "Ana Pop", at(11));
+    // Ana's confirmation gave Ana a number; Maria, still at her declaration, has none yet (§548).
+    const halfway = new Map((await rowsOf(event.id)).map((row) => [row.registeredName, row.bibNumber]));
+    expect([halfway.get("Ana Pop"), halfway.get("Maria Pop")]).toEqual([1, null]);
     expect(await refusal(signFor(event, maria.id, "Ana Pop", at(11)))).toEqual({ code: "VALIDATION_ERROR", fields: ["typedName"] });
     await signFor(event, maria.id, "Maria Pop", at(12));
     const [anaDone, mariaDone] = await rowsOf(event.id);
     expect([anaDone.status, mariaDone.status]).toEqual(["CONFIRMED", "CONFIRMED"]);
     expect(anaDone.checkinCode).not.toBe(mariaDone.checkinCode);
-    expect(anaDone.provisionalBibNumber ?? anaDone.bibNumber).not.toBe(mariaDone.provisionalBibNumber ?? mariaDone.bibNumber);
+    // Each gets their own number at their own confirmation (§548), in the order they signed.
+    const numberOf = new Map([anaDone, mariaDone].map((row) => [row.registeredName, row.bibNumber]));
+    expect([numberOf.get("Ana Pop"), numberOf.get("Maria Pop")]).toEqual([1, 2]);
 
     // "Înscrierile mele" lists both, each by name (§77).
     const mine = await listActiveRegistrationsForParticipant(db, ana.participantId, "ro", at(13));
@@ -508,6 +514,18 @@ describe("§421 the kept form and another adult's own consents", () => {
     expect(ioana.guardianName).toBe("Ana Pop");
     // A minor's socials are never kept (§323), on any form.
     expect(ioana.stravaUrl).toBeNull();
+  });
+
+  it("stores no note for a minor on an event that does not ask it, whatever the kept form carried (§557, BR-REQ-031-04)", async () => {
+    const event = await createEvent(20, false);
+    await submitRegistration(db, event, submission("Ana"), NOW);
+    const child = { birthDate: "2011-05-10", guardianName: "Ana Pop" };
+    const secret = await offer(event, "Ioana", 5, { ...everything, ...child });
+    expect(await press(secret, at(8), false)).toMatchObject({ ok: true });
+
+    const ioana = (await rowsOf(event.id)).find((row) => row.registeredName === "Ioana Pop")!;
+    expect(ioana).toMatchObject({ healthNotes: null, healthConsentVersion: null, healthConsentAt: null });
+    expect(ioana.guardianName).toBe("Ana Pop");
   });
 });
 

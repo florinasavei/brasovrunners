@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.22-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.35-2026-09-27 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V2.22-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.35-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1223,7 +1223,7 @@ Core invariants:
 6. Pending email and Waitlisted do not occupy capacity, but eligible Waitlisted entries have allocation priority over later registrations;
 7. no capacity-changing transaction may let a later registration bypass that queue;
 8. cancellation is idempotent;
-9. self-cancellation allowed before event start;
+9. self-cancellation allowed before event start, with the participant's reason — one of three answers, and a short text for «Alt motiv» — at every door (`DECISIONS.md` §558);
 10. email failure does not roll back committed state;
 11. locale/legal/declaration acceptance are historical facts;
 12. Admin corrections are explicit/audited;
@@ -1873,8 +1873,8 @@ registrations
 - results_consent_version integer NOT NULL
 - list_opt_out boolean NOT NULL DEFAULT false  -- §10.10; "keep my name off the public start list"
 - club_member_declared boolean NOT NULL DEFAULT false  -- BR-REQ-031-06; a claim, never verified
-- bib_number integer null              -- BR-REQ-038-01; the settled number: written when registration closes (§214), unique per event (partial index), never reissued or renumbered; per race across distances is M2
-- provisional_bib_number integer null  -- §214; held with the place from submission, unique per event (partial index), released the moment the place is, never printed and never emailed
+- bib_number integer null              -- BR-REQ-038-01; the race number: drawn when the registration is confirmed, in confirmation order from the event's first number (§548), unique per event (partial index), never reissued; kept, retired, by a cancelled row; per race across distances is M2
+- provisional_bib_number integer null  -- retired by §548 (was §214's held number); nothing writes it, the maintenance job empties it once, a contract release drops it
 - submitted_at
 - email_confirmed_at null
 - waitlisted_at null
@@ -1885,6 +1885,8 @@ registrations
 - expired_at null
 - expiry_reason EMAIL_CONFIRMATION_LAPSED|DECLARATION_HOLD_LAPSED|WAITLIST_OFFER_LAPSED|EVENT_STARTED null
 - cancellation_source PARTICIPANT|ADMIN null
+- cancel_reason_kind INJURY_OR_ILLNESS|OTHER_PLANS|OTHER null   -- a participant's own cancellation, required at every self-cancellation door (DECISIONS.md §558); null on a staff cancellation
+- cancel_reason text null            -- the words of «Alt motiv» (OTHER only), at most 200 characters; the audit row carries the kind alone
 - created_at
 - updated_at
 
@@ -2675,7 +2677,7 @@ Registration maintenance:
   nothing wants is kept, and its event is not even selected;
 - select scheduled events only: a `COMPLETED` event is over (§82), and a `CANCELLED` one is
   left as it was cancelled (§331) — no hold or offer expired, no waiting list closed, no place
-  offered, no number settled, nothing mailed;
+  offered, nothing mailed;
 - expire waiting-list offers;
 - queue the reminder two days before an event, and with it the declaration once more to
   whoever still owes a signature (`DECISIONS.md` §160);
@@ -2761,8 +2763,25 @@ when an organizer ticks "Anunță participanții despre schimbare" on a save tha
 the start or the programme, put a cancelled event back on, or carries a note; the second when a
 save cancels the event and "tell them" is left ticked, with the reason the organizer typed. Both
 go to every active registration of that event (`PENDING_DECLARATION`, `WAITLIST_OFFERED`,
-`CONFIRMED`, `WAITLISTED`) in its own language, carry no token, are queued in the save's
-transaction and audited with the count, never who.
+`CONFIRMED`, `WAITLISTED`) in its own language, are queued in the save's transaction and
+audited with the count, never who. `EVENT_CANCELLED` carries no token; `EVENT_UPDATE_NOTICE`
+carries one, minted at send time behind «Nu mai pot ajunge» (below).
+
+**«Nu mai pot ajunge» / "I can't make it any more" is on every message about a live
+registration** (`DECISIONS.md` §558, `notifications/domain/cannot-come.ts`): the address to
+confirm, the declaration to sign, the waiting list and its offer, the confirmation, the number,
+the reminder, the organizer's update notice and message, the manage link, the signed
+declaration and the family sitting's message. A full-width button under the action (the
+reminder's only one) to a cancel that asks why and then asks first. **It lands on the
+registration's own manage page, one tap**: the message's own `MANAGE_REGISTRATION` token where it
+mints one; a family's own «Toate înscrierile mele» on the two messages that list several people
+(the family's one confirmation, the family sitting's message); on every other message a manage
+token minted at send time, which supersedes the older manage link as every newer one does
+(BR-REQ-036-02 criterion 5) — the newest email's link is the live one, and its page carries the
+QR, self check-in and the list's switch the older one did. Never on the family link's kept-form shape (its «Nu înscriu această persoană» sits
+there), never after the fact (the cancellations,
+the thank-you), never on a club copy (`DECISIONS.md` §320), never to an address that is not the
+registration's, never once the event has started or will not run.
 
 `EVENT_REMINDER` goes from the maintenance job to every CONFIRMED registration of a SCHEDULED
 event before its start — the club's reminder lead or the event's own (§377; 48 hours by default) — once per registration (`registration:<id>:reminder`), with
@@ -2781,9 +2800,8 @@ line, the action button and the token behind it, the QR, the attachments, the li
 button, the sign-off and the layout — they carry tokens, files and addresses rather than words
 (§12.8, §14.5). The words may name a closed set of fields, written `{participantName}`; a
 placeholder outside that set, and any URL, is refused when it is saved rather than reaching a
-participant as literal braces. The two sentences the platform adds *around* a body — "you were
-already registered" (§235) and "this number is provisional" (§237) — are statements about the
-registration and survive a rewrite.
+participant as literal braces. The sentence the platform adds *around* a body — "you were
+already registered" (§235) — is a statement about the registration and survives a rewrite.
 
 `REGISTRATION_STATE_NOTICE` is the Admin resend for a cancelled or expired registration.
 It states the current status and, when rejoining is eligible, links to the ordinary

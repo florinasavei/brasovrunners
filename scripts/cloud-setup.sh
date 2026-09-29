@@ -1,32 +1,16 @@
 #!/usr/bin/env bash
 # Prepare a Claude Code cloud session (Claude Code on the web) to work on this repository (§501).
-#
-# A cloud session starts from a fresh clone: no node_modules, no .env.local, PostgreSQL 16
-# installed but not running. The SessionStart hook in .claude/settings.json runs this script on
-# every start and resume of a cloud session, so the agent finds a working checkout — the
-# dependencies installed, a local database migrated and seeded, and a .env.local with local
-# values only.
-#
-# Local values only, always. This script writes the throwaway local credentials that
-# docker-compose.yml already publishes (role brasov_runners, password local_only_not_a_secret)
-# and nothing else: no QA or production credential belongs in a cloud environment or in this
-# public repository, and the database steps refuse any DATABASE_URL that is not on localhost.
-# Deploys and production migrations still go through the qa → main pull request and the gated
-# migration workflow (DECISIONS.md §31).
-#
-# Idempotent: every step checks first and skips what is already done, so a second run in the
-# same session changes nothing and says so. An existing .env.local is never touched.
-#
-# Outside a cloud session (CLAUDE_CODE_REMOTE is not "true") it does nothing and prints nothing,
-# so a session on a developer's own machine never triggers it. `--force` runs it anyway — for a
-# Linux machine or container you want set up the same way.
+# Run by the SessionStart hook in .claude/settings.json: dependencies, a local PostgreSQL migrated
+# and seeded, a .env.local. Local values only — the credentials docker-compose.yml already
+# publishes; the database steps refuse a DATABASE_URL not on localhost (§31). Idempotent; an
+# existing .env.local is never touched. Outside a cloud session (CLAUDE_CODE_REMOTE != "true") it
+# does nothing unless given --force.
 #
 # Usage: bash scripts/cloud-setup.sh [--force]
 # Exit code 0 = ready (or nothing to do), 1 = a step failed; the log's last lines are printed.
 
-# No `-e`, on purpose: the probes below (listening, db_value, as_superuser inside `$( )`) are
-# meant to fail quietly and be compared, and every step that must succeed ends in `|| fail`,
-# which names the step and prints the log. A new step belongs behind `quiet … || fail "…"` too.
+# No `-e`: the probes below fail quietly and are compared; a step that must succeed ends in
+# `|| fail "…"`.
 set -uo pipefail
 
 if [ "${CLAUDE_CODE_REMOTE:-}" != "true" ] && [ "${1:-}" != "--force" ]; then
@@ -36,8 +20,7 @@ fi
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT" || exit 1
 
-# The local development database, exactly as docker-compose.yml defines it. Not a secret: it
-# only ever reaches a server listening on this machine.
+# The local database, as docker-compose.yml defines it; not a secret.
 DB_NAME="brasov_runners"
 DB_USER="brasov_runners"
 DB_PASSWORD="local_only_not_a_secret"
@@ -51,12 +34,10 @@ LOG="${TMPDIR:-/tmp}/brasovrunners-cloud-setup.log"
 
 # Corepack would otherwise stop and ask before downloading Yarn, and a hook has nobody to answer.
 export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
-# The cloud network policy refuses repo.yarnpkg.com, Corepack's default source for Yarn; the same
-# release is published on the npm registry, which the policy allows (found in a cloud session, #222).
+# The cloud network policy refuses repo.yarnpkg.com; the npm registry has the same release (#222).
 export COREPACK_NPM_REGISTRY="${COREPACK_NPM_REGISTRY:-https://registry.npmjs.org}"
-# CLAUDE_ENV_FILE carries variables into the session's later commands, so every `yarn` the agent
-# runs resolves the same way. Playwright's own browser download is refused there too; the image's
-# Chromium is named for playwright.config.ts, which every other machine leaves unset.
+# CLAUDE_ENV_FILE carries these into the session's later commands. Playwright's browser download
+# is refused too, so the image's Chromium is named for playwright.config.ts.
 if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
   {
     echo "export COREPACK_ENABLE_DOWNLOAD_PROMPT=0"
@@ -97,8 +78,7 @@ if [ "$(yarn --version 2>/dev/null)" != "$WANT_YARN" ]; then
   fi
 fi
 
-# node_modules/.yarn-state.yml is written at the end of every successful install, so it is newer
-# than yarn.lock and package.json exactly when nothing changed since.
+# .yarn-state.yml is written by every successful install: newer than both means nothing changed.
 if [ -f node_modules/.yarn-state.yml ] &&
   [ node_modules/.yarn-state.yml -nt yarn.lock ] &&
   [ node_modules/.yarn-state.yml -nt package.json ]; then
@@ -109,7 +89,7 @@ else
   did "dependencies installed"
 fi
 
-# The tracked git hooks: the pre-commit hook refuses a commit on qa or main and runs yarn check.
+# The tracked git hooks.
 if [ "$(git config --get core.hooksPath 2>/dev/null)" != ".githooks" ]; then
   quiet "${YARN[@]}" setup || fail "yarn setup"
   did "git hooks installed (yarn setup)"
@@ -121,7 +101,7 @@ fi
 
 listening() { (exec 3<>"/dev/tcp/127.0.0.1/${DB_PORT}") 2>/dev/null; }
 
-# First value of the first row of $2, run against the connection string $1; nothing on any error.
+# First value of the first row of query $2 on connection $1; nothing on any error.
 db_value() {
   DATABASE_URL="$1" node -e '
     const { Client } = require("pg");
@@ -175,8 +155,7 @@ if [ "$(db_value "$LOCAL_DATABASE_URL" "select 1")" != "1" ]; then
     did "role ${DB_USER} created"
   fi
   if [ "$(printf "select 1 from pg_database where datname = '%s';\n" "$DB_NAME" | as_superuser 2>>"$LOG")" != "1" ]; then
-    # C collation and UTF-8, as docker-compose.yml's POSTGRES_INITDB_ARGS: ordering must not
-    # depend on the host's locale.
+    # C collation and UTF-8, as docker-compose.yml: ordering must not depend on the host's locale.
     printf "create database %s owner %s template template0 encoding 'UTF8' lc_collate 'C' lc_ctype 'C';\n" \
       "$DB_NAME" "$DB_USER" | quiet as_superuser || fail "create database ${DB_NAME}"
     did "database ${DB_NAME} created"
@@ -190,8 +169,7 @@ fi
 # ---------------------------------------------------------------------------------------------
 
 if [ ! -f .env.local ]; then
-  # Every variable .env.example leaves empty is commented out: the configuration schema refuses
-  # an empty string where it accepts an absent variable (docs/DEVELOPMENT.md § No database yet?).
+  # Empty variables are commented out: the configuration schema refuses an empty string.
   sed \
     -e 's/\r$//' \
     -e "s|^APP_ENV=.*|APP_ENV=local|" \
@@ -208,8 +186,7 @@ fi
 # 4. Migrate and seed — the local database only
 # ---------------------------------------------------------------------------------------------
 
-# What the yarn scripts will see: a variable already in the environment wins over .env.local
-# (neither dotenv nor node --env-file overrides one), so read it the same way.
+# As the yarn scripts see it: the environment wins over .env.local.
 from_env_file() { sed -n "s/^$1=//p" .env.local | tail -n 1 | tr -d '\r' | sed -e 's/^"\(.*\)"$/\1/' -e "s/^'\(.*\)'$/\1/"; }
 EFFECTIVE_URL="${DATABASE_URL:-$(from_env_file DATABASE_URL)}"
 EFFECTIVE_APP_ENV="${APP_ENV:-$(from_env_file APP_ENV)}"
@@ -228,12 +205,9 @@ server_version="$(db_value "$EFFECTIVE_URL" "show server_version_num")"
 if [ "${server_version:-0}" -ge 170000 ]; then
   quiet "${YARN[@]}" db:migrate || fail "yarn db:migrate"
 else
-  # drizzle-kit applies every pending migration in ONE transaction. On an empty database that
-  # includes the migration creating an enum and a later one that adds a value to it and uses the
-  # value in an index — which PostgreSQL 17 (docker-compose.yml, CI) accepts and 16 (a cloud
-  # session's) refuses: "unsafe use of new value". One transaction per migration is how every
-  # deployed database received them; it records the same rows, so `yarn db:migrate` carries on
-  # from here as usual.
+  # drizzle-kit applies all pending migrations in ONE transaction; PostgreSQL 16 refuses using an
+  # enum value added in the same transaction ("unsafe use of new value"). One transaction per
+  # migration records the same rows, as every deployed database received them.
   DATABASE_URL="$EFFECTIVE_URL" quiet node --input-type=module -e '
     import { drizzle } from "drizzle-orm/node-postgres";
     import { readMigrationFiles } from "drizzle-orm/migrator";
@@ -253,10 +227,8 @@ if [ "${before:-0}" != "${after:-0}" ]; then
   did "migrations applied: $(( ${after:-0} - ${before:-0} )) (now ${after})"
 fi
 
-# yarn db:seed deletes the events before it writes the samples, so it runs only on an empty
-# events table: a resumed session keeps whatever the previous one made. To start over on
-# purpose, drop the database and run this script again (`su postgres -c "dropdb brasov_runners"`);
-# `yarn db:reset:local` migrates in one transaction and so needs PostgreSQL 17, as above.
+# yarn db:seed deletes the events first, so it runs only on an empty table. To start over, drop
+# the database and rerun this script; `yarn db:reset:local` needs PostgreSQL 17, as above.
 events="$(db_value "$EFFECTIVE_URL" "select count(*) from events")"
 if [ "$events" = "0" ]; then
   quiet "${YARN[@]}" db:seed || fail "yarn db:seed"

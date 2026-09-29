@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { dropsParagraph, mergeTextSegments, type MergeValues } from "@/modules/legal-documents/domain/merge-fields";
-import { plainInline } from "@/modules/legal-documents/domain/inline";
+import { runText } from "@/modules/legal-documents/domain/signed-text";
+import { formatSigningInstant } from "@/i18n/dates";
 import path from "node:path";
 import PDFDocument from "pdfkit";
 import type { LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
@@ -54,6 +55,8 @@ export type DeclarationEntry = {
     signedAt: string;
     /** The same instant inside a sentence — "joi, 24 sept. 2026, la 18:05" — for the footer's «semnată …» (§499). */
     signedAtInline: string;
+    /** The instant itself, from the row: the proof line prints it to the second (§556). */
+    acceptedAt: Date;
     /** "Signed electronically from the link sent by email" or "Signed on paper, recorded by X". */
     method: string;
   };
@@ -62,6 +65,12 @@ export type DeclarationEntry = {
    * identity-document lines. Only for the blank form — a signed entry says who signed by itself.
    */
   forMinor?: boolean;
+  /**
+   * The SHA-256 of the exact text signed (§556, `signedTextHash`), from the row; null on a row from
+   * before it, whose proof line then prints no hash — never one computed now, which would prove only
+   * what the text says today. Absent on the blank form, which nobody has signed.
+   */
+  textHash?: string | null;
 };
 
 export type DeclarationPdfInput = {
@@ -93,6 +102,12 @@ export type DeclarationPdfInput = {
     signedWhen: (when: string) => string;
     generatedOn: string;
     page: (n: number, total: number) => string;
+    /**
+     * «Versiunea 3 · Semnat la 24.09.2026, 18:05:12 (ora României) · Amprenta documentului (SHA-256): …»
+     * (§556): the version, the instant to the second and the signed text's hash, all from the row —
+     * the hash part left out when the row has none.
+     */
+    proofLine: (version: number, signedAt: string, textHash: string | null) => string;
   };
 };
 
@@ -118,16 +133,6 @@ export function maskIdDocument(value: string): string {
   return `${characters.slice(0, 2).join("")} ${ID_DOCUMENT_MASK}${characters.slice(-2).join("")}`;
 }
 
-/**
- * One run of a paragraph as the PDF draws it: the marks stripped (`plainInline`), and a space at
- * either end kept, because the run beside it is drawn straight after it and `plainInline` trims.
- * Exported for its test; the drawing is the only caller.
- */
-export function runText(raw: string): string {
-  const plain = plainInline(raw);
-  if (plain === "") return /\s/.test(raw) ? " " : "";
-  return `${/^\s/.test(raw) ? " " : ""}${plain}${/\s$/.test(raw) ? " " : ""}`;
-}
 
 const ASSETS = path.join(process.cwd(), "src", "theme", "pdf");
 /** Opened once per document (`doc.openImage`): pdfkit embeds a Buffer again on every `image()` call, and two hundred copies of the lockup are the difference between two megabytes and ten. */
@@ -172,6 +177,22 @@ export function declarationFooterLine(
   if (!entry) return `${labels.organization} · ${labels.generatedOn}`;
   const when = entry.signature ? labels.signedWhen(entry.signature.signedAtInline) : labels.generatedOn;
   return [labels.organization, labels.versionInForce(entry.version, entry.effectiveAt), when].join(" · ");
+}
+
+/**
+ * The proof of signing (§556; the second review of 2026-09-29: «the PDF should print the version, the
+ * signing instant and the document hash»): «Versiunea N · Semnat la ZZ.LL.AAAA, hh:mm:ss (ora
+ * României) · Amprenta documentului (SHA-256): <hex>». Under the signature, and again on every page
+ * of a signed entry under its footer line, so a loose page still carries it. The version and the
+ * instant come from the row, the hash from the row; a row from before the hash prints the line without
+ * it. Nothing for the blank form, which nobody signed. Pure, for its test.
+ */
+export function declarationProofLine(
+  entry: (Pick<DeclarationEntry, "version" | "textHash"> & { signature?: Pick<NonNullable<DeclarationEntry["signature"]>, "acceptedAt"> }) | undefined,
+  labels: Pick<DeclarationPdfInput["labels"], "proofLine">,
+): string | undefined {
+  if (!entry?.signature) return undefined;
+  return labels.proofLine(entry.version, formatSigningInstant(entry.signature.acceptedAt), entry.textHash ?? null);
 }
 
 /**
@@ -266,12 +287,22 @@ export async function renderDeclarationPdf(input: DeclarationPdfInput): Promise<
       .fillColor(COLOR.inkMuted)
       .text(declarationFooterLine(owners[i - range.start], input.labels), MARGIN.left, y, { width: TEXT_WIDTH - pageLabelWidth - 8, lineBreak: false })
       .text(pageLabel, MARGIN.left, y, { width: TEXT_WIDTH, align: "right", lineBreak: false });
+    let next = y + DECLARATION_FOOTER.size + 3;
+    // The page's own entry's proof of signing (§556), on one line: a 64-character hash is long, so the
+    // line is set a step smaller until it fits the width rather than wrapping into the notice below.
+    const proof = declarationProofLine(owners[i - range.start], input.labels);
+    if (proof) {
+      let size = DECLARATION_FOOTER.size - 1;
+      while (size > 5 && doc.font("body").fontSize(size).widthOfString(proof) > TEXT_WIDTH) size -= 0.5;
+      doc.font("body").fontSize(size).fillColor(COLOR.inkMuted).text(proof, MARGIN.left, next, { width: TEXT_WIDTH, lineBreak: false });
+      next += size + 3;
+    }
     if (idDocumentsNotice) {
       doc
         .font("bold")
         .fontSize(DECLARATION_FOOTER.size)
         .fillColor(COLOR.inkMuted)
-        .text(idDocumentsNotice, MARGIN.left, y + DECLARATION_FOOTER.size + 3, { width: TEXT_WIDTH, lineBreak: false });
+        .text(idDocumentsNotice, MARGIN.left, next, { width: TEXT_WIDTH, lineBreak: false });
     }
     doc.page.margins.bottom = bottom;
   }
@@ -411,7 +442,8 @@ function drawEntry(doc: PDFKit.PDFDocument, entry: DeclarationEntry, labels: Dec
     .fontSize(8.5)
     .fillColor(COLOR.inkMuted)
     .text(
-      [signature?.method, `${labels.version} ${entry.version} · sha256 ${entry.contentSha256}`].filter(Boolean).join("\n"),
+      // The proof of signing last (§556): the version, the instant to the second, the signed text's hash.
+      [signature?.method, `${labels.version} ${entry.version} · sha256 ${entry.contentSha256}`, declarationProofLine(entry, labels)].filter(Boolean).join("\n"),
       MARGIN.left,
       doc.y,
       { width: TEXT_WIDTH },

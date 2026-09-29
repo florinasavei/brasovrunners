@@ -373,10 +373,22 @@ test.describe("§372 §378 §385 one row on a phone, in both languages, fold clo
             // with the address, the credit, the stamp — 96px at 320, 360, 390 and 412. At 320 a
             // stamp carrying its environment ("local · ", "test · ") is wider than the panel and
             // its chip wraps onto a second line: 111px there, production's one-line chip 96.
+            //
+            // «Întrebări frecvente» (§525) is the first line's third link while the FAQ page is on the
+            // site with a question. In Romanian it does not fit beside the other two below 412px, so
+            // it takes a line of its own: one line of 24 more and the phone's gap above it, 28px at
+            // 320 and 30 from 360 (139 and 126 on CI, 2026-09-29; "FAQ" fits in English, and the
+            // Romanian fits at 412). Whether it is there is not this file's to decide: `faq.spec.ts`
+            // can run before it on the same server (right before it on CI's shard 2), leaves the page
+            // published, and the listing's cached render can still carry the link after that spec
+            // deletes its question. So that one line is allowed exactly when the link is drawn on a
+            // line of its own.
             if (width < SM) {
               const wrappedChip = chip.height > 30;
-              const bound = width >= 360 ? 100 : wrappedChip ? 112 : 104;
-              expect(panel.height, `the compact panel's height at ${width}px${wrappedChip ? ", its chip on two lines" : ""}`).toBeLessThanOrEqual(bound);
+              const faq = panelContent(fold).getByRole("link", { name: /^(Întrebări frecvente|FAQ)$/ });
+              const faqOwnLine = (await faq.count()) > 0 && (await boxOf(faq, "the FAQ link")).y - boxes[0]!.y > 1;
+              const bound = (width >= 360 ? 100 : wrappedChip ? 112 : 104) + (faqOwnLine ? 24 + phoneGapAt(width) : 0);
+              expect(panel.height, `the compact panel's height at ${width}px${wrappedChip ? ", its chip on two lines" : ""}${faqOwnLine ? ", the FAQ on a line of its own" : ""}`).toBeLessThanOrEqual(bound);
             } else {
               // From `sm` §385's one wrapping row, unchanged by the phone's lines (§480): 92px at
               // 768 on qa before this pass and after it, two 44-pixel lines and the 4 under them.

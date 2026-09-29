@@ -25,14 +25,10 @@ import { DomainError } from "@/shared/errors/domain-error";
 import { albumFieldsSchema, type AlbumFieldsInput } from "./fields";
 
 /**
- * Albums and their photos (BR-REQ-054-01, `DECISIONS.md` §66).
- *
- * The same shape as standing pages — create, save with a version, transition, delete — plus
- * the two things a gallery adds: a photo comes in as bytes and goes out as its ladder of objects (§414) and two
- * rows; and deleting anything that owns objects deletes the objects too, because a bucket
- * nobody sweeps fills with photos nobody can find (§17 "reference check before delete; orphan
- * cleanup"). Objects are removed *after* the rows commit: a row without objects is a broken
- * image somebody notices; an object without a row is a cost nobody does.
+ * Albums and their photos (BR-REQ-054-01, §66): the standing pages' shape, plus bytes in as a
+ * ladder of objects (§414), and objects deleted with what owns them (AGENTS.md §17). Objects go
+ * *after* the rows commit: a row without objects is a visible broken image, an orphan object an
+ * unseen cost.
  */
 
 type Actor = Pick<StaffUser, "id" | "role">;
@@ -146,15 +142,11 @@ export async function saveAlbum<T extends Record<string, unknown>>(
     }
     return album;
   });
-  // The gallery pages read albums from the public cache (§333); every write below says so.
   revalidatePublicContent("gallery");
   return saved;
 }
 
-/**
- * Publish, unpublish, archive — the editorial workflow of §11.2, with one gallery-specific
- * rule: an album with no photo cannot be published. An empty album page is a broken promise.
- */
+/** The editorial workflow (§11.2); an album with no photo cannot be published. */
 export async function transitionAlbum<T extends Record<string, unknown>>(
   db: Database<T>,
   input: { actor: Actor; albumId: string; expectedVersion: number; to: EditorialStatus; now?: Date },
@@ -200,18 +192,13 @@ export async function transitionAlbum<T extends Record<string, unknown>>(
     }
     return updated;
   });
-  // Published or taken down: the album, the gallery, "Galerie" in every page's navigation.
   revalidatePublicContent("gallery");
   return moved;
 }
 
 /**
- * A photo, from the bytes the uploader posted to its ladder of objects (§414) and two rows, at
- * the quality chosen beside the upload.
- *
- * Rows first, inside a transaction, then the objects — and if an object fails to store, the
- * rows are removed again rather than left pointing at nothing. The first photo of an album
- * becomes its cover, so a listing never shows an album as a blank.
+ * A photo from uploaded bytes to its ladder of objects (§414) and two rows. Rows first, then the
+ * objects; if storing fails the rows are removed again. The first photo becomes the cover.
  */
 export async function addPhoto<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -264,21 +251,15 @@ export async function addPhoto<T extends Record<string, unknown>>(
     await db.delete(mediaAssets).where(eq(mediaAssets.id, rows.assetId));
     throw error;
   }
-  // Only once the objects exist: a cached album pointing at a photo not yet stored is a broken
-  // picture on a published page.
+  // Only once the objects exist, or a cached album points at a missing picture.
   revalidatePublicContent("gallery");
   return { ...rows, stored: storedImageFacts(processed) };
 }
 
 /**
- * A picture the club already stored, into an album (§485, «Din galerie»): one `gallery_items`
- * row pointing at the existing `media_assets` row — no bytes, no new objects, the same picture
- * wherever else it is used. The first photo of an album becomes its cover, as an upload does.
- *
- * Twice the same picture in one album is one photo: the second press answers `added: false`
- * rather than refusing, because the table's own unique pair says so and the picker may be
- * pressed twice. A film's automatic poster (`yt-<id>`, §403) is YouTube's thumbnail, not a club
- * photograph, and is refused.
+ * An already-stored picture into an album (§485, «Din galerie»): one `gallery_items` row, no new
+ * objects; the first photo becomes the cover. The same picture twice answers `added: false`
+ * (unique pair). A film's automatic poster (`yt-<id>`, §403) is refused.
  */
 export async function addStoredPhoto<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -316,10 +297,8 @@ export async function addStoredPhoto<T extends Record<string, unknown>>(
 }
 
 /**
- * Remove one photo from its album: its item, then the picture itself only when nothing else
- * uses it (§485) — a picture chosen from the gallery for this album may be in a text, on a card
- * of «Echipa» or in another album, and taking it out of here must not take it from there. A
- * cover that was this photo moves on to the first remaining one.
+ * Remove one photo from its album; the picture itself goes only when nothing else uses it (§485).
+ * A cover that was this photo moves to the first remaining one.
  */
 export async function deletePhoto<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -337,8 +316,7 @@ export async function deletePhoto<T extends Record<string, unknown>>(
     if (!item) throw new DomainError("NOT_FOUND", "no such photo");
 
     await tx.delete(galleryItems).where(eq(galleryItems.id, input.itemId));
-    // The cover, when it was this photo, moves to the first remaining one — before the picture
-    // is weighed, because a cover is itself a use of it.
+    // Before the picture's uses are counted: a cover is itself a use.
     const [first] = await tx
       .select({ assetId: galleryItems.mediaAssetId })
       .from(galleryItems)
@@ -348,7 +326,7 @@ export async function deletePhoto<T extends Record<string, unknown>>(
     await tx
       .update(galleryAlbums)
       .set({ coverMediaAssetId: first?.assetId ?? null })
-      // Also an album with no cover at all, as before §485: any removal gives it the first photo.
+      // Also an album with no cover at all (pre-§485).
       .where(
         and(
           eq(galleryAlbums.id, item.albumId),
@@ -378,10 +356,7 @@ export async function setCover<T extends Record<string, unknown>>(
   revalidatePublicContent("gallery");
 }
 
-/**
- * The album, its translations, its items, and every picture of it nothing else uses — with
- * their objects. A picture that is also in a text, on a card or in another album stays (§485).
- */
+/** The album, its items, and every picture of it nothing else uses, with their objects (§485). */
 export async function deleteAlbum<T extends Record<string, unknown>>(
   db: Database<T>,
   input: { actor: Actor; albumId: string },
@@ -394,8 +369,7 @@ export async function deleteAlbum<T extends Record<string, unknown>>(
       .select({ assetId: galleryItems.mediaAssetId })
       .from(galleryItems)
       .where(eq(galleryItems.albumId, input.albumId));
-    // The album and its items (cascade) first; then each of its pictures that nothing else uses
-    // any more (§485) — one chosen from the gallery stays wherever else it is.
+    // The album and its items (cascade), then its pictures nothing else uses (§485).
     const [deleted] = await tx.delete(galleryAlbums).where(eq(galleryAlbums.id, input.albumId)).returning();
     if (!deleted) throw new DomainError("NOT_FOUND", "no such album");
     return deleteAssetsNoLongerReferenced(tx, items.map((item) => item.assetId));
@@ -407,9 +381,8 @@ export async function deleteAlbum<T extends Record<string, unknown>>(
 async function removeObjects(prefixes: readonly string[]): Promise<void> {
   const storage = getStorage();
   for (const prefix of prefixes) {
-    // Best effort, one by one: the rows are already gone, and a failed delete is a stray
-    // object to sweep, not a reason to report the removal as failed. Every file of the ladder
-    // too (§414).
+    // Best effort: the rows are gone; a failed delete leaves a stray object to sweep. The
+    // whole ladder (§414).
     await deleteAssetObjects(storage, prefix);
   }
 }

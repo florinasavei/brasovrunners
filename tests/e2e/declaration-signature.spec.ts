@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { latestAcceptance, mintActionLink, mintProfileLink, registrationByEmail, registrationStatus, type RegistrationRow } from "./support/action-link";
 import { ensureRegistrationIsOpen, FEATURED, HUMAN_PAUSE_MS, hydrated, signIn } from "./support/featured-event";
 import { chooseSex } from "./support/sex-choice";
+import { confirmDialog } from "./support/confirm";
 
 /**
  * BR-REQ-033-02 criterion 15, §314 — the signature on the declaration is the registered name.
@@ -101,7 +102,7 @@ test.describe("BR-REQ-033-02 §314 the signature is the registered name", () => 
     await fillTheRest(page);
     const signature = page.locator('[name="typedName"]');
     await signature.fill(`${registration.registeredName}2`);
-    await page.getByRole("button", { name: "Semnează și confirmă" }).click();
+    await page.getByRole("button", { name: "Semnează", exact: true }).click();
 
     /*
       Refused before the press reached the server: the box carries a custom validity naming the
@@ -121,7 +122,7 @@ test.describe("BR-REQ-033-02 §314 the signature is the registered name", () => 
     // The right name as a phone types it: lower case. The refusal clears, and it signs.
     await signature.fill(registration.registeredName.toLowerCase());
     expect(await signature.evaluate((input) => (input as HTMLInputElement).validity.valid)).toBe(true);
-    await page.getByRole("button", { name: "Semnează și confirmă" }).click();
+    await page.getByRole("button", { name: "Semnează", exact: true }).click();
     await expect(page).toHaveURL(/done=confirmed/, { timeout: 30_000 });
     expect(await registrationStatus(registration.id)).toBe("CONFIRMED");
     // §427: the participation confirmation is said in a toast too, once.
@@ -134,7 +135,15 @@ test.describe("BR-REQ-033-02 §314 the signature is the registered name", () => 
       flow. It also gives the place back, so a run of this spec leaves the sample race as it found it.
     */
     await page.goto(`/ro/inregistrari/gestionare/${await mintActionLink(registration, "MANAGE_REGISTRATION")}`);
-    await page.getByRole("button", { name: "Anulează înscrierea" }).click();
+    await hydrated(page);
+    // «Anulează înscrierea pentru <nume>», asking first (§547, over §384) — and why, before that (§558):
+    // without an answer the browser names the empty box and nothing is asked.
+    const personCancel = page.getByRole("button", { name: /^Anulează înscrierea pentru / });
+    await personCancel.click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await page.getByLabel("De ce anulezi?").selectOption("OTHER_PLANS");
+    await personCancel.click();
+    await confirmDialog(page, /^Anulezi înscrierea pentru /);
     await expect(page).toHaveURL(/done=1/, { timeout: 30_000 });
     await expect(page.getByTestId("toast")).toHaveText("Gata: înscrierea ta e anulată.");
     expect(await registrationStatus(registration.id)).toBe("CANCELLED");
@@ -149,7 +158,7 @@ test.describe("BR-REQ-033-02 §314 the signature is the registered name", () => 
       await plain.goto(registration.link);
       await fillTheRest(plain);
       await plain.locator('[name="typedName"]').fill("Munca Florin");
-      await plain.getByRole("button", { name: "Semnează și confirmă" }).click();
+      await plain.getByRole("button", { name: "Semnează", exact: true }).click();
 
       // Its own refusal — never "the link is no longer valid" — and what to do about it.
       await expect(plain).toHaveURL(/[?&]invalid=name#declaration-errors$/, { timeout: 30_000 });
@@ -180,7 +189,7 @@ test.describe("BR-REQ-033-02 §314 the signature is the registered name", () => 
       await expect(plain.locator('[name="typedName"]')).toHaveValue("Munca Florin");
 
       await plain.locator('[name="typedName"]').fill(registration.registeredName.toLowerCase());
-      await plain.getByRole("button", { name: "Semnează și confirmă" }).click();
+      await plain.getByRole("button", { name: "Semnează", exact: true }).click();
       await expect(plain).toHaveURL(/done=confirmed/, { timeout: 30_000 });
       expect(await registrationStatus(registration.id)).toBe("CONFIRMED");
     } finally {
@@ -193,7 +202,13 @@ test.describe("BR-REQ-033-02 §314 the signature is the registered name", () => 
     */
     await page.goto(`/ro/inscrieri/ale-mele/${await mintProfileLink(registration.participantId)}`);
     await hydrated(page);
+    // The reason first (§558): a press without one is refused, naming the box, and spends nothing.
     await page.getByRole("button", { name: "Renunț la această înscriere" }).click();
+    await expect(page).not.toHaveURL(/done=1/);
+    const cancel = page.getByTestId("mine-cancel").first();
+    await cancel.getByLabel("De ce anulezi?").selectOption("OTHER");
+    await cancel.getByLabel("Motivul, pe scurt").fill("Plec din oraș în weekendul cursei.");
+    await cancel.getByRole("button", { name: "Renunț la această înscriere" }).click();
     await expect(page).toHaveURL(/done=1/, { timeout: 30_000 });
     await expect(page.getByTestId("toast")).toHaveText("Gata: înscrierea ta e anulată.");
     expect(await registrationStatus(registration.id)).toBe("CANCELLED");
@@ -244,7 +259,7 @@ test.describe("BR-REQ-033-02 §314 the signature is the registered name", () => 
       await fillBothDocuments(plain);
       await plain.locator('[name="minorTypedName"]').fill(child);
       await plain.locator('[name="typedName"]').fill(child);
-      await plain.getByRole("button", { name: "Semnează și confirmă" }).click();
+      await plain.getByRole("button", { name: "Semnează", exact: true }).click();
       await expect(plain).toHaveURL(/[?&]invalid=name#declaration-errors$/, { timeout: 30_000 });
       let summary = plain.locator("#declaration-errors");
       // The parent's name, in bold, under the parent's box in its red state; the summary does not repeat it.
@@ -271,7 +286,7 @@ test.describe("BR-REQ-033-02 §314 the signature is the registered name", () => 
       // Now the parent's box right and the minor's wrong: the minor's box is the one named.
       await plain.locator('[name="typedName"]').fill(parent.toLowerCase());
       await plain.locator('[name="minorTypedName"]').fill(parent);
-      await plain.getByRole("button", { name: "Semnează și confirmă" }).click();
+      await plain.getByRole("button", { name: "Semnează", exact: true }).click();
       await expect(plain).toHaveURL(/[?&]invalid=name#declaration-errors$/, { timeout: 30_000 });
       summary = plain.locator("#declaration-errors");
       await expect(plain.locator("#minorTypedName-helper-text")).toContainText("Semnătura minorului trebuie să fie exact numele cu care a fost înscris");
@@ -283,7 +298,7 @@ test.describe("BR-REQ-033-02 §314 the signature is the registered name", () => 
 
       // Both right, as a phone types them: signed, and both recorded, each with its document.
       await plain.locator('[name="minorTypedName"]').fill(child.toLowerCase());
-      await plain.getByRole("button", { name: "Semnează și confirmă" }).click();
+      await plain.getByRole("button", { name: "Semnează", exact: true }).click();
       await expect(plain).toHaveURL(/done=confirmed/, { timeout: 30_000 });
       expect(await registrationStatus(registration.id)).toBe("CONFIRMED");
       const acceptance = await latestAcceptance(registration.id);
@@ -308,7 +323,7 @@ test.describe("BR-REQ-033-02 §314 the signature is the registered name", () => 
     const minorSignature = page.locator('[name="minorTypedName"]');
     await minorSignature.fill(parent);
     await page.locator('[name="typedName"]').fill(parent);
-    await page.getByRole("button", { name: "Semnează și confirmă" }).click();
+    await page.getByRole("button", { name: "Semnează", exact: true }).click();
 
     // Refused where the press happened: the minor's box, with its own sentence and the child's name in bold.
     const hint = page.locator("#minorTypedName-helper-text");
@@ -319,7 +334,7 @@ test.describe("BR-REQ-033-02 §314 the signature is the registered name", () => 
     expect(await registrationStatus(registration.id)).toBe("PENDING_DECLARATION");
 
     await minorSignature.fill(registration.registeredName);
-    await page.getByRole("button", { name: "Semnează și confirmă" }).click();
+    await page.getByRole("button", { name: "Semnează", exact: true }).click();
     await expect(page).toHaveURL(/done=confirmed/, { timeout: 30_000 });
     expect(await registrationStatus(registration.id)).toBe("CONFIRMED");
   });

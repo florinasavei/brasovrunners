@@ -1,47 +1,29 @@
 import { z } from "zod";
 
 /**
- * The links on a card of «Echipa» (§474, growing §459's one link; the owner, 2026-09-26: "trebuie
- * să pot pune mai multe link-uri").
- *
- * An ordered list in `team_members.links`, `[{ kind, url, labelRo, labelEn }]`, at most twelve: a
- * person's Strava, their Instagram, their Facebook, a site of their own, anything else. The shape
- * of an event's "Linkuri și fișiere" (§332) — a kind from a closed set, an https address, a label
- * in both languages or neither (§352) — with the kinds a person has rather than the kinds a race
- * has.
- *
- * This file is the one place that decides what a stored row means, so the page, the backoffice
- * and the save cannot disagree about it. It imports nothing but Zod, so the editor's client
- * island can read the kinds without pulling a database or a catalogue in with them.
+ * The links on a card of «Echipa» (§474): `team_members.links`, an ordered list of
+ * `{ kind, url, labelRo, labelEn }` shaped like an event's links (§332). The one reader of a
+ * stored row; imports only Zod so the client editor can use it.
  */
 
-/**
- * What a link is, so the card can wear the network's own mark and say its name without the club
- * typing a word. A seventh kind is a code change with a decision behind it, not free text.
- */
+/** Closed set, so the card shows the network's mark and name without typed words. */
 export const TEAM_LINK_KINDS = ["STRAVA", "INSTAGRAM", "FACEBOOK", "WEBSITE", "OTHER"] as const;
 export type TeamLinkKind = (typeof TEAM_LINK_KINDS)[number];
 
 /**
- * Twelve (§491, raised from §474's six): a person's networks, a site of their own, a club's page,
- * a race's results — an event's own ceiling (§332). The database's CHECK
- * `team_members_links_is_a_short_array_of_https_links` holds the same number (migration 0094,
- * after 0093 dropped the six-link one), and a test keeps the two equal.
+ * §491. The CHECK `team_members_links_is_a_short_array_of_https_links` (migration 0094) holds the
+ * same number; a test keeps them equal.
  */
 export const MAX_TEAM_LINKS = 12;
 /**
- * How many rows a save reads from `links[i].<box>` — indexes 0 to 11 (§483; the V2.06 review): the
- * editor never draws more than `MAX_TEAM_LINKS` rows (its «add» stops there), so a posted
- * `links[99999999]` is not a row of it — and gathered by index it would have become an array of a
- * hundred million holes. The same twelve as the cap: a thirteenth row would only be refused.
+ * The highest posted `links[i]` index read, so a posted `links[99999999]` cannot grow a sparse
+ * array of a hundred million holes (§483).
  */
 export const MAX_TEAM_LINK_ROWS = MAX_TEAM_LINKS;
 
 /**
- * The links' rows (§474), posted as `links[i].<box>` by `TeamLinkRowsEditor` — gathered by index,
- * blanks included; `fields.ts` drops the spare line and names a refused row by this same index.
- * The editor always posts `links.present`, so a card whose every row was removed saves "no links".
- * Here rather than in the Server Action's file so the bound is tested without a request (§483).
+ * The rows posted as `links[i].<box>`, by index, blanks included. `links.present` is always posted,
+ * so removing every row saves "no links"; absent means the caller posted no list (§474, §483).
  */
 export function teamLinkRowsOf(form: FormData): Array<Record<string, string>> | undefined {
   if (form.get("links.present") === null) return undefined;
@@ -50,7 +32,6 @@ export function teamLinkRowsOf(form: FormData): Array<Record<string, string>> | 
     const match = /^links\[(\d+)\]\.(kind|url|labelRo|labelEn)$/.exec(key);
     if (!match || typeof entry !== "string") continue;
     const index = Number(match[1]);
-    // Past the editor's own rows: not a row, and never an index to grow the array to (§483).
     if (index >= MAX_TEAM_LINK_ROWS) continue;
     rows[index] = { ...(rows[index] ?? {}), [match[2]]: entry };
   }
@@ -67,11 +48,7 @@ export const DEFAULT_TEAM_LINK_KIND: TeamLinkKind = "OTHER";
 
 export const isTeamLinkKind = (value: string): value is TeamLinkKind => (TEAM_LINK_KINDS as readonly string[]).includes(value);
 
-/**
- * An `https://` address with a host that has a dot in it, or not a link: `http:`, `javascript:`
- * and a bare word are refused, so the public card never renders an address the browser would run
- * or downgrade (§459's rule for the one link, kept for every row).
- */
+/** Only `https://` with a dotted host: no `javascript:`, `http:` or bare word on the public card (§459). */
 export function isTeamLinkUrl(value: string): boolean {
   if (value.length > MAX_TEAM_LINK_URL || /\s/.test(value)) return false;
   try {
@@ -93,11 +70,7 @@ export type TeamLink = {
   labelEn: string | null;
 };
 
-/**
- * The kind a bare address most likely is — how the one link a card carried before this list
- * (`team_members.link`) is read: a Strava profile wears Strava's mark, an Instagram page
- * Instagram's, anything else is the person's site.
- */
+/** The kind a bare address most likely is; reads the legacy `team_members.link`. */
 export function guessTeamLinkKind(url: string): TeamLinkKind {
   let host: string;
   try {
@@ -121,11 +94,7 @@ const storedLabel = z
   .transform((value) => (value ? value : null))
   .catch(null);
 
-/**
- * A stored link, read leniently on purpose — §332's discipline: a key a later release adds is
- * stripped, an unknown kind reads as "other", a label that cannot be read falls back to the
- * kind's word. Only the address is required.
- */
+/** Read leniently (§332): unknown keys stripped, unknown kind → OTHER, bad label → null. Only the address is required. */
 const storedLinkSchema = z.object({
   kind: z
     .string()
@@ -138,9 +107,8 @@ const storedLinkSchema = z.object({
 });
 
 /**
- * A card's links as stored: the list when the column holds one, else the one link from before the
- * list as a row of its guessed kind, else none. An entry that is not an https link is dropped;
- * a label in one language only reads as none on both pages (§352), the kind's word standing in.
+ * The stored list, else the legacy single link as a guessed row, else none. Non-https entries are
+ * dropped; a one-language label reads as none on both sides (§352).
  */
 export function readTeamLinks(stored: unknown, legacyLink: string | null = null): TeamLink[] {
   if (Array.isArray(stored)) {

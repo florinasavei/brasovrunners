@@ -8,31 +8,39 @@ import { getDb } from "@/db/client";
 import { countForm } from "@/i18n/count-form";
 import { routing } from "@/i18n/routing";
 import { noticeDescribesNewsletter } from "@/modules/legal-documents/repository";
+import { parseSubscriberListQuery } from "@/modules/newsletter/domain/subscriber-list";
 import { countNewsletterAudience, listNewsletterSends } from "@/modules/newsletter/service";
+import { listNewsletterSubscribers } from "@/modules/newsletter/subscribers";
 import NewsletterPanel from "@/modules/newsletter/ui/NewsletterPanel";
+import NewsletterSubscribers from "@/modules/newsletter/ui/NewsletterSubscribers";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { canManageRegistrations, canSendNewsletter } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 
 type Props = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ saved?: string; recipients?: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
 /** Reads the session and the counts, and is returned to straight after a send: never cached. */
 export const dynamic = "force-dynamic";
 
+const one = (value: string | string[] | undefined): string | undefined => (Array.isArray(value) ? value[0] : value);
+
 /**
  * «Newsletter» (§445): the backoffice's own entry, after «Emailuri» — the owner, 2026-09-26:
  * "pentru newsletter o să fie un meniu suplimentar în backoffice cu «Newsletter»". The subscribers
  * as numbers and the composer that writes to them, which `/admin/emails` held before; that page
- * keeps one line pointing here.
+ * keeps one line pointing here. Since §550 (the owner, 2026-09-28: «în newsletter vreau să și văd
+ * abonații și mailurile lor») also the list itself, «Abonați», with the addresses, searched and
+ * filtered through the address bar (`q`, `topic`, `state`) and downloadable as a CSV.
  *
  * For the roles that may send (`canSendNewsletter`: the Organizer, the Administrator, the
- * Superadministrator). Anybody else — a volunteer, the Redactor, the Tehnic — gets a 404, the
- * answer a route that does not exist gives (BR-REQ-060-01, §376), and the navigation never offers
- * it to them (`visibleAdminSections`). The refusal that matters is again in each action and in the
- * service behind it; withdrawing an address is the Administrator's alone (`canManageRegistrations`).
+ * Superadministrator) — they read the list too. Anybody else — a volunteer, the Redactor, the
+ * Tehnic, a member — gets a 404, the answer a route that does not exist gives (BR-REQ-060-01,
+ * §376), and the navigation never offers it to them (`visibleAdminSections`). The refusal that
+ * matters is again in each action, in the CSV route and in the service behind them; withdrawing an
+ * address and «Dezabonează» on a row are the Administrator's alone (`canManageRegistrations`).
  */
 export default async function NewsletterPage({ params, searchParams }: Props) {
   const { locale } = await params;
@@ -41,19 +49,24 @@ export default async function NewsletterPage({ params, searchParams }: Props) {
   const staff = await requireStaff();
   if (!canSendNewsletter(staff.role)) notFound();
 
-  const { saved, recipients } = await searchParams;
+  const search = await searchParams;
+  const saved = one(search.saved);
+  const recipients = one(search.recipients);
+  const query = parseSubscriberListQuery(search);
   const db = getDb();
   const now = new Date();
-  // Numbers only, never an address; the day's allowance for the composer's "how much leaves today";
-  // and whether the notice in force lets the contact page offer the pop-up.
-  const [audience, history, volume, offered] = await Promise.all([
+  // The day's allowance for the composer's "how much leaves today", and whether the notice in force
+  // lets the contact page offer the pop-up; the list under its filter.
+  const [audience, history, volume, offered, subscribers] = await Promise.all([
     countNewsletterAudience(db),
     listNewsletterSends(db),
     readEmailVolumeToday(db, now),
     noticeDescribesNewsletter(db, now),
+    listNewsletterSubscribers(db, query, now),
   ]);
   const sentCount = /^\d{1,9}$/.test(recipients ?? "") ? Number(recipients) : 0;
   const t = await getTranslations("Admin");
+  const mayManage = canManageRegistrations(staff.role);
 
   return (
     <Stack spacing={3}>
@@ -75,7 +88,16 @@ export default async function NewsletterPage({ params, searchParams }: Props) {
         history={history}
         volume={volume}
         offered={offered}
-        mayWithdraw={canManageRegistrations(staff.role)}
+        mayWithdraw={mayManage}
+        subscribers={
+          <NewsletterSubscribers
+            locale={locale}
+            query={query}
+            list={subscribers}
+            mayUnsubscribe={mayManage}
+            saved={saved === "newsletterUnsubscribed" || saved === "newsletterUnsubscribedGone"}
+          />
+        }
       />
     </Stack>
   );

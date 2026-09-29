@@ -2,16 +2,15 @@
 /**
  * Drop and rebuild the local development database.
  *
- * Why this is a script and not a one-line psql: dropping `public` is not enough. Drizzle
- * records which migrations it has applied in a table inside its own `drizzle` schema, which a
- * `DROP SCHEMA public CASCADE` leaves untouched. The next `db:migrate` then believes the
- * earlier migrations are already applied, tries only the newest one, and fails on an enum the
- * drop removed — leaving an empty database and a confusing error. Both schemas go, or neither.
+ * Both `public` and `drizzle` go: Drizzle's bookkeeping lives in its own schema, and keeping it
+ * makes the next `db:migrate` skip everything but the newest migration.
  *
  * Refuses to run against anything but a local database. Usage: yarn db:reset:local
  */
 
 import { spawnSync } from "node:child_process";
+import { rmSync } from "node:fs";
+import path from "node:path";
 import process from "node:process";
 
 const url = process.env.DATABASE_URL;
@@ -27,8 +26,7 @@ if (appEnv !== "local" && appEnv !== "test") {
   process.exit(1);
 }
 
-// A second, independent guard. APP_ENV is a variable someone can set wrongly; the host in the
-// connection string is what actually decides which database is destroyed.
+// A second guard: the host decides which database is destroyed, whatever APP_ENV says.
 const parsed = (() => {
   try {
     return new URL(url);
@@ -37,10 +35,8 @@ const parsed = (() => {
   }
 })();
 const host = parsed?.hostname ?? "";
-// The database and role the URL names — a worktree's own `brasov_runners_wf…` database, say. The
-// docker fallback below must reset exactly this one: it used to name `brasov_runners` outright, so
-// a worktree without psql on PATH dropped the MAIN checkout's database and then migrated and seeded
-// its own (reported 2026-09-24 by the payload-diet agent, which reset its database by hand instead).
+// The database and role the URL names (a worktree may have its own); the docker fallback must
+// reset exactly this one, never a hardcoded name.
 const database = parsed ? decodeURIComponent(parsed.pathname.replace(/^\//, "")) : "";
 const role = parsed ? decodeURIComponent(parsed.username) : "";
 
@@ -90,4 +86,15 @@ for (const [label, args] of [
   }
 }
 
-console.log("db:reset:local — done");
+/*
+  The public pages a production build made since it started (§549): `next start` keeps each static
+  page it renders under `.next/server/app/<locale>/`, and they outlive a restart — so after a reseed
+  they would still show the old seed's events and free places until a write expired them. They are
+  made again on their next visit; nothing the build itself wrote lives there (no public page is
+  prerendered at build). A running `next start` also holds them in memory: restart it, as before.
+*/
+for (const locale of ["ro", "en"]) {
+  rmSync(path.join(".next", "server", "app", locale), { recursive: true, force: true });
+}
+
+console.log("db:reset:local — done (restart a running `yarn start`: it keeps the pages it made in memory)");

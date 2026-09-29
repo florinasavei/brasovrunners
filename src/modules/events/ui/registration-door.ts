@@ -1,5 +1,7 @@
 import { unstable_rethrow } from "next/navigation";
+import { DEGRADED_PAGE_SECONDS, holdPageFor, holdPageUntil } from "@/modules/public-cache/page-lifetime";
 import { cachedPublicAvailability } from "@/modules/public-cache/reads";
+import { eventClockInstants } from "../domain/page-clock";
 import { registrationDoorOpen } from "../domain/listing-filter";
 import { type PublicFill, publicFill, registrationCta, type RegistrationCta } from "../domain/registration-cta";
 import { registrationState } from "../domain/registration-window";
@@ -41,6 +43,12 @@ export async function readRegistrationDoor(event: PublicEventPage, now: Date): P
   let capacity: number | null = null;
   let waitlistRoom: number | null = null;
   let waitlistCapacity: number | null = null;
+  /*
+    Every page that shows a door is kept no longer than the door's next change (§549): the window
+    opening or closing, the start, the confirmation window, the weather window — the page's card,
+    hero or button read differently from then on, and a static page must be made again then.
+  */
+  await holdPageUntil(eventClockInstants(event), now);
   if (event.registrationMode === "INTERNAL" && registrationState(event, now) === "OPEN") {
     try {
       const availability = await cachedPublicAvailability(event.id, now);
@@ -62,6 +70,8 @@ export async function readRegistrationDoor(event: PublicEventPage, now: Date): P
       */
       unstable_rethrow(error);
       console.error("[registration-door] could not read the availability", error);
+      // A static page without its count is kept a minute, never a day (§549).
+      await holdPageFor(DEGRADED_PAGE_SECONDS);
       return { kind: "UNKNOWN" };
     }
   }

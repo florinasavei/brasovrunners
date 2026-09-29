@@ -182,3 +182,83 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
     await expect(page.locator("#box-kind #box-cost")).toHaveCount(1);
   });
 });
+
+/*
+  §554 — «Kit de participare» in card 6 «Participanți și înscrieri»: a fold of its own, closed, its
+  line saying «Tricou: nu» until the box is ticked, and only for a type that takes registrations
+  with registration on the site — a group run takes none (§111).
+*/
+test.describe("§554 the race kit card", () => {
+  test("hidden on a group run, shown closed with «Tricou: nu» for a race registering on the site", async ({ page }) => {
+    await signIn(page, "Dev Administrator");
+    await page.goto("/ro/admin/events/new");
+    await hydrated(page);
+    const kit = page.locator("#box-kit");
+
+    // A new event is a group run: no registration here, and no kit card to see.
+    await openEditorBox(page, "Participare și înscrieri");
+    await expect(kit).toBeHidden();
+
+    await page.getByRole("combobox", { name: /Tip eveniment/ }).click();
+    await page.getByRole("option", { name: "Concurs" }).click();
+    await page.getByRole("combobox", { name: "Modul de înscriere" }).click();
+    await page.getByRole("option", { name: "Înscrieri pe site" }).click();
+
+    await expect(kit).toBeVisible();
+    await expect(kit).not.toHaveAttribute("open", "");
+    await expect(kit.locator(":scope > summary")).toContainText("Kit de participare");
+    await expect(kit.locator(":scope > summary")).toContainText("Tricou: nu");
+    // A glyph before the heading, like every fold (§521). By its element: a production build drops
+    // MUI's `data-testid` on icons (the unit test `kit-card.test.ts` names the glyph).
+    await expect(kit.locator(":scope > summary svg").first()).toBeVisible();
+
+    const box = await openEditorBox(page, "Kit de participare");
+    const shirt = box.locator('[name="event.kitShirt"]');
+    await expect(shirt).not.toBeChecked();
+    await expect(box).toContainText("Dacă e bifat, formularul cere mărimea tricoului.");
+    await expect(box.locator('input[type="hidden"][name="event.kitShirt.present"]')).toHaveValue("1");
+    await shirt.check();
+    await expect(shirt).toBeChecked();
+  });
+});
+
+/*
+  §557 — «Condiții de participare» inside «Program, regulament și declarație» (the owner, 2026-09-29:
+  «e mai bine să avem o bifă în backoffice la Condiții de participare»): a closed fold whose line says
+  «Informații medicale: nu» until the box is ticked, on a saved event registering on the site; the tick only for a type that registers on the
+  site, a group run getting a sentence in its place (§111).
+*/
+test.describe("§557 the participation conditions card", () => {
+  test("a sentence on a group run, the tick closed and unticked for a race registering on the site", async ({ page }) => {
+    await signIn(page, "Dev Administrator");
+    await page.goto("/ro/admin/events/new");
+    await hydrated(page);
+    const conditions = page.locator("#box-conditions");
+
+    // A new event is a group run: the card says there is no form to ask it on.
+    await openEditorBox(page, "Condiții de participare");
+    await expect(page.getByTestId("conditions-not-registering")).toBeVisible();
+    await expect(conditions.locator('[name="event.askHealthNote"]')).toBeHidden();
+    // Nor does its line name the note, as the outer card's does not: the line is drawn from the saved type.
+    await expect(conditions.locator(":scope > summary")).not.toContainText("Informații medicale");
+
+    await openEditorBox(page, "Participare și înscrieri");
+    await page.getByRole("combobox", { name: /Tip eveniment/ }).click();
+    await page.getByRole("option", { name: "Concurs" }).click();
+    await page.getByRole("combobox", { name: "Modul de înscriere" }).click();
+    await page.getByRole("option", { name: "Înscrieri pe site" }).click();
+
+    await expect(conditions.locator(":scope > summary")).toContainText("Condiții de participare");
+    // A glyph before the heading, like every fold (§521); by its element, as the kit card's.
+    await expect(conditions.locator(":scope > summary svg").first()).toBeVisible();
+
+    const box = await openEditorBox(page, "Condiții de participare");
+    const tick = box.locator('[name="event.askHealthNote"]');
+    await expect(tick).toBeVisible();
+    await expect(tick).not.toBeChecked();
+    await expect(box).toContainText("Dacă e bifat, formularul cere informații medicale (afecțiuni, alergii, medicație); se șterg la 7 zile după eveniment.");
+    await expect(box.locator('input[type="hidden"][name="event.askHealthNote.present"]')).toHaveValue("1");
+    await tick.check();
+    await expect(tick).toBeChecked();
+  });
+});

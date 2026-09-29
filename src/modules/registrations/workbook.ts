@@ -2,7 +2,12 @@ import writeExcelFile from "write-excel-file/node";
 import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
 import type { RegistrationCsvRow } from "./csv";
+import type { RegistrationStatus } from "@/db/schema/registrations";
+import type { WorkbookDetails } from "./admin-repository";
+import { ageOnRaceDay } from "./domain/age";
+import { shirtSizeShown } from "./domain/kit";
 import { raceNumberOf } from "./domain/race-number";
+import { sexCell } from "./domain/sex";
 
 /**
  * The start list as a spreadsheet the club can actually work in (§172; the owner: "CSV is
@@ -58,6 +63,25 @@ export type RegistrationSheetRow = Omit<
   tshirtSize?: string | null;
 };
 
+/**
+ * The spreadsheet's own columns for one row (§322), blank when the row has none: the export route's,
+ * here so a test reads what the file will say. The sex in words — an empty cell for no answer, the
+ * retired «Prefer să nu spun» included — and the T-shirt only for an event that gives one (§554).
+ */
+export function workbookExtras(
+  details: WorkbookDetails | undefined,
+): Pick<RegistrationSheetRow, "sex" | "ageOnRaceDay" | "nationality" | "country" | "city" | "tshirtSize"> {
+  if (!details) return {};
+  return {
+    sex: sexCell(details.sex),
+    ageOnRaceDay: ageOnRaceDay(details.birthDate, details.eventStartsAt, details.eventTimezone),
+    nationality: details.nationality,
+    country: details.country,
+    city: details.city,
+    tshirtSize: shirtSizeShown(details.eventKitShirt, details.tshirtSize),
+  };
+}
+
 const bold = (value: string) => ({ value, fontWeight: "bold" as const });
 
 /**
@@ -86,10 +110,8 @@ const COLUMNS: Array<{
   { header: "ID", width: 38, cell: (row) => ({ value: row.id, type: String }) },
   // Named as the backoffice names it (§180), and wide enough for the heading rather than the
   // number: a column headed by a truncated word is what makes somebody widen it by hand.
-  { header: "Race number (BIB)", width: 18, cell: (row) => ({ value: raceNumberOf({ bibNumber: row.bibNumber ?? null, provisionalBibNumber: row.provisionalBibNumber ?? null })?.value ?? null, type: Number }) },
-  // Whether that number is settled (§214): a provisional one is the club's planning figure
-  // and not the one to send to the printer, and a sheet has to say which it is looking at.
-  { header: "Number settled", width: 16, cell: (row) => ({ value: raceNumberOf({ bibNumber: row.bibNumber ?? null, provisionalBibNumber: row.provisionalBibNumber ?? null })?.settled ? "Yes" : "", type: String }) },
+  // Empty until the registration is confirmed (§548), as on every screen.
+  { header: "Race number (BIB)", width: 18, cell: (row) => ({ value: raceNumberOf({ status: row.status as RegistrationStatus, bibNumber: row.bibNumber ?? null }), type: Number }) },
   { header: "Name", width: 28, cell: (row) => ({ value: row.registeredName, type: String }) },
   { header: "First name", width: 18, cell: (row) => ({ value: row.firstName, type: String }) },
   { header: "Last name", width: 18, cell: (row) => ({ value: row.lastName, type: String }) },
@@ -137,6 +159,8 @@ const COLUMNS: Array<{
   { header: "Declaration signed", width: 18, cell: (row) => ({ value: onClubClock(row.declarationSignedAt ?? null), type: Date, format: STAMP_FORMAT }) },
   // The family marker (§543): the other people on the same address at the event, last like the CSV's.
   { header: "family", width: 30, cell: (row) => ({ value: row.family ?? "", type: String }) },
+  // Why the participant cancelled (§558), last like the CSV's: the answer, and the words of «Another reason».
+  { header: "Cancellation reason", width: 30, cell: (row) => ({ value: row.cancelReason ?? "", type: String }) },
 ];
 
 /** The header row, exactly as the export writes it — what a re-import matches its columns by. */

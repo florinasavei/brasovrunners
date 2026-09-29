@@ -1,10 +1,11 @@
 import Stack from "@mui/material/Stack";
 import { getTranslations } from "next-intl/server";
-import { hasProgramme } from "@/modules/events/domain/event-type";
+import { hasProgramme, takesRegistrations } from "@/modules/events/domain/event-type";
 import Panel from "@/shared/ui/Panel";
 import { effectiveMinimumAge } from "@/modules/registrations/domain/age";
-import { minAgeSummary, programmeSummary, rulesSummary, startListSummary } from "../box-summaries";
+import { healthNoteSummary, minAgeSummary, programmeSummary, rulesSummary, startListSummary } from "../box-summaries";
 import { type BoxProps, type LanguageEntry, summaryWords } from "./box-kit";
+import ConditionsBox from "./ConditionsBox";
 import DeclarationCard, { declarationLine } from "./DeclarationCard";
 import ProgrammeBox from "./ProgrammeBox";
 import type { DeclarationOption } from "./RegistrationBox";
@@ -22,6 +23,7 @@ import { RulesBox } from "./TextBoxes";
  * 2. «Regulamentul» (`#box-rules`): the rules, on their own tabs, and the minimum age — one box
  *    for every type since §505;
  * 3. «Declarația pe propria răspundere» (`#box-declaration`, §448): what the participant signs;
+ * 3b. «Condiții de participare» (`#box-conditions`, §557): whether the form asks the health note;
  * 4. «Lista publică a participanților» (`#box-start-list`, §32, §512): whether the page draws the
  *    list, which it does last, under the rules — so it is the last card here, not a card of its own.
  *
@@ -52,7 +54,10 @@ export default async function ProgrammeRulesBox({
   // The rules card holds the minimum age too, for every type (§505).
   const rules = await RulesBox({ languages, event, mayEditSettings });
   const declaration = await DeclarationCard({ event, mayEditSettings, groupRunDeclarations, declarations, words });
+  const conditions = await ConditionsBox({ event, mayEditSettings });
   const startList = await StartListBox({ event, mayEditSettings });
+  // The health note's line only where there is a form to ask it on (§557, §111).
+  const asksOnForm = takesRegistrations(initialType) && event?.registrationMode === "INTERNAL";
 
   return (
     <Panel glyph="rules"
@@ -66,6 +71,7 @@ export default async function ProgrammeRulesBox({
         // «vârsta minimă 14 ani» — the age is a box of «Regulamentul» since §505.
         minAgeSummary(words, effectiveMinimumAge(event?.minAge), locale),
         line.text,
+        asksOnForm ? healthNoteSummary(words, event?.askHealthNote ?? false) : null,
         // «lista publică: Ascunsă» — the public list's own line, named, last (§512).
         t("editor.boxes.programmeRules.startListLine", { state: startListSummary(words, event?.participantListVisibility) }),
       ]
@@ -78,6 +84,7 @@ export default async function ProgrammeRulesBox({
         {programme}
         {rules}
         {declaration}
+        {conditions}
         {startList}
       </Stack>
     </Panel>

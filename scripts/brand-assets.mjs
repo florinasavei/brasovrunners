@@ -3,22 +3,10 @@ import path from "node:path";
 import sharp from "sharp";
 
 /**
- * The club's lockup as the rasters the PDFs and the emails need (`DECISIONS.md` §174).
- *
- * The source of truth is `public/brand/logo.svg` and its white twin; SVG is what the site
- * serves and what a review can read. Two places cannot take it:
- *
- *   - **a PDF**, because pdfkit draws rasters, not vectors. The file it used carried an alpha
- *     channel, and an alpha PNG reaches a PDF as an image plus a soft mask — which some viewers
- *     and most printers composite badly, and which is how the club's filled blue lockup came out
- *     of the declaration as a thin outline (the owner: "logo-ul nu apare colorat frumos cu
- *     albastru în declarație"). Flattened onto white there is no mask at all, so nothing can
- *     get it wrong, and every page these are drawn on is white.
- *   - **an email**, because half the mail clients in use refuse SVG entirely.
- *
- * Run it after changing the source: `node scripts/brand-assets.mjs`. The outputs are committed,
- * because a build that rasterised on the fly would put a native dependency in the way of `next
- * build` for a file that changes once a year.
+ * The club's lockup as the rasters the PDFs and the emails need (`DECISIONS.md` §174): pdfkit
+ * draws no SVG and many mail clients refuse it. Flattened onto white, since an alpha PNG in a PDF
+ * composites badly on some viewers and printers. Run after changing the SVG source; the outputs
+ * are committed so `next build` needs no native dependency.
  */
 
 const OUTPUTS = [
@@ -33,26 +21,14 @@ const OUTPUTS = [
     source: "public/brand/logo-white.svg",
     target: "public/brand/logo-white-email.png",
     width: 720,
-    // Kept for any message that still wants a blue band; the card's own header is white
-    // since §189.
+    // For a message that still wants a blue band; the card's header is white since §189.
     background: "#1a1aff",
   },
   {
     source: "public/brand/logo.svg",
     target: "public/brand/logo-email.png",
     width: 720,
-    /*
-      The lockup in its own colours, on white — the email card's header since §189.
-
-      The band was the club's blue with the white lockup on it, and the owner, looking at a
-      confirmation: "nu îmi place headerul ăsta albastru, nu se potrivește cu logo-ul BVR". He is
-      right about what it looks like: the lockup already contains a blue field, so a blue band
-      around a blue field reads as a sticker stuck on a wall rather than as a letterhead. White is
-      what the site's own header does with the same lockup.
-
-      No alpha, like the PDF's above: several mail clients composite a transparent PNG onto
-      whatever they please, which on a dark theme is a dark field under a dark-blue logo.
-    */
+    // The lockup on white, the email card's header (§189); no alpha, which dark themes composite badly.
     background: "#ffffff",
   },
   {
@@ -61,23 +37,8 @@ const OUTPUTS = [
     width: 1200,
     background: "#ffffff",
     /*
-      The email's letterhead, edge to edge (§239; the owner: "the email banner must be
-      edge-to-edge").
-
-      The header used to be a white table cell with a 180-pixel logo centred in it, and in
-      Gmail's dark theme that is not what arrives: the client re-colours the cell and cannot
-      re-colour the raster, so the white band shrank to a white rectangle the size of the
-      picture — a sticker on a dark wall, which is the exact thing §189 and §218 each tried
-      to be rid of. The band cannot be defended with CSS in a client that ignores
-      `color-scheme`.
-
-      So the band *is* the picture. White canvas, lockup centred, the full width of the
-      600-pixel card at 2× for a retina screen. A client may invert everything around it;
-      it cannot invert the inside of a PNG, and there is no longer any edge between the two
-      whites for it to expose.
-
-      With images blocked the `alt` reads the club's name and the cell's own white
-      `bgcolor` is still underneath, which is where this started.
+      The email's letterhead, edge to edge (§239): the white band is the picture itself, the
+      600-pixel card at 2×, because a dark-theme client re-colours a cell but not a PNG.
     */
     canvas: { height: 340, inner: { width: 620, height: 210 } },
   },
@@ -86,19 +47,20 @@ const OUTPUTS = [
     target: "src/theme/pdf/logo-white.png",
     width: 720,
     /*
-      No background at all, which is the one output here that keeps an alpha channel.
-
-      A bib's header band is the **event's** colour (§173) — a race can be green or red — so
-      the lockup cannot be baked onto the club's blue the way the email's is. It has to arrive
-      transparent and be drawn over whatever the band is.
-
-      Which means the caveat at the top of this file applies, and the way round it is the
-      encoding: this one is written as 8-bit RGBA (`palette: false`), never indexed. An indexed
-      PNG carries its transparency in a `tRNS` chunk, and that is the shape pdfkit composites
-      badly — it is what turned the filled blue lockup into a thin outline in the declaration.
-      A straight RGBA image reaches a PDF as an image plus a soft mask, which is the ordinary,
-      well-trodden path, and it is also what `next/og` wants for the same picture.
+      The one output with alpha: a bib's band is the event's colour (§173). Written as 8-bit RGBA
+      (`palette: false`), never indexed: pdfkit composites an indexed PNG's `tRNS` badly.
     */
+    background: null,
+  },
+  {
+    source: "public/brand/email-cannot-come.svg",
+    target: "public/brand/email-cannot-come.png",
+    /*
+      The glyph before «Nu mai pot ajunge» in every email about a live registration (§558): the
+      manage page's cancel glyph (`EventBusy`) in the club's ink blue, drawn at 20 px, so 2× here.
+      With alpha, so it sits on the button's white and on a dark theme's re-coloured one alike.
+    */
+    width: 40,
     background: null,
   },
 ];
@@ -106,8 +68,7 @@ const OUTPUTS = [
 for (const { source, target, width, background, canvas } of OUTPUTS) {
   const svg = await readFile(source);
   const raster = canvas
-    ? // A banner: the lockup fitted inside its own box, then centred on the full canvas, so
-      // the white margin around it belongs to the image rather than to a mail client's CSS.
+    ? // A banner: the lockup fitted in its box, centred on the full canvas.
       sharp(
         await sharp(svg, { density: 600 })
           .resize({ width: canvas.inner.width, height: canvas.inner.height, fit: "inside" })

@@ -5,18 +5,9 @@
  * Usage: node scripts/smoke.mjs <base-url> [--allow-degraded]
  *        yarn smoke https://<host>
  *
- * The last step of every deployment (AGENTS.md §6.4 step 7, `docs/RUNBOOKS.md` § Deploy). It
- * exists because "the deploy went green" and "the site works" are different statements, and the
- * gap between them is where the schema-drift incident lived: Vercel reported a successful build
- * for a deployment whose every public page returned 500 (`DECISIONS.md` §31).
- *
- * `/api/health` already knows the answer — the database, the schema version against this build,
- * and each scheduled job's liveness. This turns it into an exit code, so a person running it by
- * hand and a workflow running it after a migration get the same verdict.
- *
- * `--allow-degraded` accepts a degraded answer, which is the honest setting immediately after a
- * deployment: the scheduled jobs run every five minutes, so a fresh environment reports them as
- * never-run until the first tick, and that is not a reason to fail a release.
+ * The last step of every deployment (AGENTS.md §6.4 step 7, `DECISIONS.md` §31): a green build is
+ * not a working site. Turns `/api/health` into an exit code. `--allow-degraded` suits the minutes
+ * right after a deployment, before the scheduled jobs' first tick.
  */
 
 import process from "node:process";
@@ -48,8 +39,7 @@ async function main() {
 
   const body = await response.json().catch(() => null);
   if (!body) {
-    // A protected preview deployment answers with Vercel's SSO page rather than JSON, and an
-    // unhelpful "unexpected token <" is worth translating.
+    // A protected preview answers with Vercel's SSO page rather than JSON.
     fail(
       `${url.host} did not return JSON (HTTP ${response.status}). If this is a protected preview ` +
         "deployment, smoke the environment's own hostname instead.",
@@ -68,8 +58,7 @@ async function main() {
     return;
   }
 
-  // Name the schema case explicitly: it is the one whose remedy is a command rather than an
-  // investigation, and it is the one that looks like a working deployment from the outside.
+  // The schema case is named: its remedy is a command, not an investigation.
   if (body.schema?.status === "behind") {
     fail(
       `${url.host} is running code newer than its database. It expects ` +

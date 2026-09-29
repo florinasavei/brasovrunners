@@ -63,6 +63,9 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   // A group run's self-declaration erased (§393), from its fold: handed to the panel as `eraseAction`.
   eraseGroupRunDeclarationAction: ["eraseAction"],
   eraseGroupRunDeclarationsAction: ["batchEraseAction"],
+  // «Păstrează: reclamație / litigiu în curs» (§556), from the shared hold form: a group run's and a registration's.
+  groupRunDeclarationHoldAction: ["groupRunAction"],
+  declarationHoldAction: ["registrationAction"],
   assignBibNumbersAction: ["assignAction"],
   // The desk's spares reserved by a print (§444): handed to the bib card's forms as `sparesAction`.
   reserveSpareBibsAction: ["sparesAction"],
@@ -72,6 +75,8 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   // address at someone's request asks too, and cannot be undone.
   sendNewsletterAction: [],
   withdrawNewsletterAddressAction: [],
+  // «Dezabonează» on a row of the «Abonați» list (§550): asks, naming the address.
+  unsubscribeSubscriberAction: [],
   // Asks only when the press faces outward: the notice ticked, the status set to cancelled.
   saveEventAndTranslationsAction: [],
   // Asks only for the publish submitter (`then=publish`); the plain create is a draft nobody sees.
@@ -112,6 +117,11 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   setTeamMemberVisibleAction: [],
   deleteTeamMemberAction: [],
   setTeamPagePublishedAction: [],
+  // «Coduri de reducere» (§552): every write the members see — a code added, written, hidden or shown, deleted.
+  createDiscountCodeAction: [],
+  saveDiscountCodeAction: [],
+  setDiscountCodeHiddenAction: [],
+  deleteDiscountCodeAction: [],
   // «Întrebări frecvente» (§525): the page's one save, which asks when a card is put on the site,
   // taken off or deleted (and nothing else), and the page's own publish switch.
   saveFaqPageAction: [],
@@ -177,6 +187,7 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   createTeamMemberAction: "adds a hidden card nobody sees until an Administrator shows it, which asks",
   saveTeamMemberAction: "an editorial save of a card's words and photo, like a page's; showing and deleting ask",
   moveTeamMemberAction: "reorders the team's cards, undone by moving back",
+  moveDiscountCodeAction: "reorders the members' discount codes (§552), undone by moving back",
   saveTeamPageIntroAction: "an editorial save of the page's introduction; publishing the page asks",
   saveMembersTextAction: "an editorial save of the members' pages' words (§524), like a page's; publishing the page asks",
   createLegalVersionAction: "a draft, never in force until approved, which asks",

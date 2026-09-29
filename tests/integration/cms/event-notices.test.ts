@@ -273,11 +273,19 @@ describe("§331 the participants hear about a change when the organizer asks", (
     expect(message.text).toContain("Locul de întâlnire este acum: Poiana Brașov, la telecabină.");
     expect(message.text).not.toContain("Parcul Tractorul");
     expect(message.text).toContain("Vezi pagina evenimentului");
-    // English first for the English registration, and no token minted for anybody.
+    // English first for the English registration. Since §558 each rendered notice mints one token, the
+    // registrant's own manage link behind «Nu mai pot ajunge», and nothing else.
     const english = await renderOutboxMessage(told.get(byName("bogdan").id)!, db, NOW);
     expect(english.subject.startsWith("Updated details for Autumn race")).toBe(true);
     expect(english.text).toContain("The meeting point is now: Poiana Brașov, la telecabină.");
-    expect(await db.select().from(emailActionTokens)).toHaveLength(0);
+    expect(english.text).toMatch(/I can't make it any more: \S+\/registrations\/manage\/[A-Za-z0-9_-]+#cancel/);
+    const tokens = await db.select().from(emailActionTokens);
+    expect(tokens.map((token) => [token.registrationId, token.purpose]).sort()).toEqual(
+      [
+        [byName("ana").id, "MANAGE_REGISTRATION"],
+        [byName("bogdan").id, "MANAGE_REGISTRATION"],
+      ].sort(),
+    );
 
     // Audited: who, what changed, how many — never who was told.
     const [audit] = await db.select().from(auditLogs).where(eq(auditLogs.action, "event.update_notice_sent"));
@@ -293,13 +301,15 @@ describe("§331 the participants hear about a change when the organizer asks", (
 
     await save(event.id, { fields: { locationName: "Poiana Brașov, la telecabină" }, notice: { notify: true } });
 
-    // The runner's own message: withdraw from "my registrations" by address — no token minted.
+    // The runner's own message: withdraw from "my registrations" by address — and, since §558, at once
+    // with «Nu mai pot ajunge», the one token the notice mints.
     const [ana] = (await queued("EVENT_UPDATE_NOTICE")).filter((row) => row.registrationId === rows.find((r) => r.registeredName === "ana")!.id);
     const message = await renderOutboxMessage(ana, db, NOW);
     expect(message.text).toContain("Dacă noua dată sau noul loc nu ți se potrivește, renunță la înscriere din „Înscrierile mele”");
     expect(message.text).toContain("If the new date or place does not suit you, withdraw from “My registrations”");
     expect(message.text).toMatch(/Înscrierile mele \(îți trimitem linkul pe email\): \S+/);
-    expect(await db.select().from(emailActionTokens)).toHaveLength(0);
+    expect(message.text).toMatch(/Nu mai pot ajunge: \S+\/inregistrari\/gestionare\/[A-Za-z0-9_-]+#cancel/);
+    expect((await db.select().from(emailActionTokens)).map((token) => token.purpose)).toEqual(["MANAGE_REGISTRATION"]);
 
     // One club copy for the save — four real registrations told, the test row not counted.
     const copies = await db
@@ -316,9 +326,9 @@ describe("§331 the participants hear about a change when the organizer asks", (
     expect(copy.text).toContain("Locul de întâlnire este acum: Poiana Brașov, la telecabină.");
     expect(copy.text.startsWith("Salut,\n")).toBe(true);
     for (const row of rows) expect(copy.text).not.toContain(`Salut, ${row.registeredName}`);
-    // Neither a manage link nor a token in the club's copy.
+    // Neither a manage link nor a token in the club's copy: still only Ana's own.
     expect(copy.html).not.toMatch(/\/(inregistrari|registrations)\/(gestionare|manage)\//);
-    expect(await db.select().from(emailActionTokens)).toHaveLength(0);
+    expect(await db.select().from(emailActionTokens)).toHaveLength(1);
   });
 
   it("unticked, the same change emails nobody", async () => {

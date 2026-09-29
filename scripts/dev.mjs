@@ -2,13 +2,8 @@
 /**
  * Start the development server on a predictable port, stepping up if it is taken.
  *
- * Why this exists: `next dev` only walks to the next free port when no port was specified.
- * Given an explicit `--port`, it fails with EADDRINUSE instead. We want both — the same URL
- * every day, and no collision when something else is already listening.
- *
- * It also exports APP_BASE_URL matching the port actually chosen. That variable is the single
- * source of every absolute URL the app emits (AGENTS.md §8, BR-REQ-101-02), so a hardcoded
- * value in .env.local would be wrong the moment the port stepped up.
+ * `next dev --port` fails with EADDRINUSE instead of stepping up. APP_BASE_URL is exported to
+ * match the port chosen (AGENTS.md §8, BR-REQ-101-02).
  *
  * Usage: yarn dev            start at the base port, or the next free one
  *        DEV_PORT=50000 yarn dev   start somewhere else
@@ -33,8 +28,7 @@ function isFree(port, host = "::") {
       else resolve(false);
     });
     probe.once("listening", () => probe.close(() => resolve(true)));
-    // Bind the same way Next does, so a port free on IPv4 but taken on IPv6 still counts
-    // as taken rather than failing later.
+    // Bind as Next does, so a port taken on IPv6 only counts as taken.
     probe.listen(port, host);
   });
 }
@@ -60,8 +54,7 @@ const child = spawn("next", ["dev", "--port", String(port)], {
   env: {
     ...process.env,
     PORT: String(port),
-    // Wins over .env.local: Next's loader does not overwrite variables already in the
-    // environment, so the chosen port and the base URL cannot disagree.
+    // Wins over .env.local: Next's loader does not overwrite the environment.
     APP_BASE_URL: `http://localhost:${port}`,
   },
 });

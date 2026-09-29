@@ -87,7 +87,7 @@ const submission = (firstName: string, at: Date, overrides: Record<string, unkno
   firstName,
   lastName: "Pop",
   birthDate: BIRTH_DATES[firstName] ?? "1980-01-01",
-  sex: "UNSPECIFIED",
+  sex: "FEMALE",
   nationality: "RO",
   country: "RO",
   city: "Brașov",
@@ -442,7 +442,7 @@ describe("§471 the brief's scenario: entered from B, A put off, the minor signe
       [c.id, "Ana Pop", "Ionut Pop"],
     ]);
     expect((await outbox("REGISTRATION_CONFIRMED")).map((row) => row.registrationId).sort()).toEqual([b.id, c.id].sort());
-    const numbered = (await rowsOf(event.id)).filter((row) => row.status === "CONFIRMED" && (row.bibNumber ?? row.provisionalBibNumber) !== null);
+    const numbered = (await rowsOf(event.id)).filter((row) => row.status === "CONFIRMED" && row.bibNumber !== null);
     expect(numbered.map((row) => row.id).sort()).toEqual([b.id, c.id].sort());
 
     // A done pass signs nobody, and puts nobody off.

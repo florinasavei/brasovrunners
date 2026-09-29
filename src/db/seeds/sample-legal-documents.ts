@@ -13,36 +13,12 @@ import {
 } from "@/modules/legal-documents/repository";
 
 /**
- * Sample privacy notice, terms and event declaration — complete in structure, blank in
- * substance (`DECISIONS.md` §29, superseding §27).
+ * Sample legal documents for every environment but production (§29, superseding §27), so the
+ * participant journey can be walked on QA; registration refuses without an approved privacy
+ * notice (BR-REQ-053-01). Production is refused hard (`tests/integration/legal/versions.test.ts`).
  *
- * §27 seeded a two-sentence PLACEHOLDER in local and test only, and refused every other
- * environment outright. That was the right rule for the machinery; it is the wrong rule for a
- * QA system nobody can register on, because registration correctly refuses when no approved
- * privacy notice exists (BR-REQ-053-01) and so the whole participant journey was unreachable
- * anywhere a colleague could look at it. **Production stays refused, hard**, and
- * `tests/integration/legal/versions.test.ts` is the test of that refusal.
- *
- * Three rules govern the text below, and they are the reason this file is long:
- *
- *   1. **Every document opens with a banner in its own rendered body, in both languages**,
- *      saying that this is sample text, not approved by the club, not legal advice, and that it
- *      must be replaced before a real participant registers. In the body, not a code comment and
- *      not a column nobody renders: the public page is where somebody has to be able to see it.
- *   2. **Complete in structure, blank in substance.** Every section such a document normally
- *      carries is here; every club-specific fact is an obvious `<ANGLE BRACKET>` placeholder
- *      rather than a plausible invention. AGENTS.md §1.2 forbids inventing legal wording, and a
- *      well-formed invention is far more dangerous than a visible gap — a lawyer edits a
- *      concrete draft in an afternoon and never notices a fabricated retention period.
- *   3. **The privacy notice describes what this application actually does**, read from the
- *      schema rather than guessed: `participants` holds a delivery email, a normalized and a
- *      canonical form of it and a name; `registrations` holds the lifecycle and its timestamps,
- *      the acknowledged privacy-notice version and the results-name consent;
- *      `declaration_acceptances` holds a typed name, a version and a hash; `email_outbox` holds
- *      the queued messages. Nothing else about a person exists, and §12.13 keeps it that way.
- *
- * Each language is written as its own complete text rather than translated sentence by sentence,
- * and both are marked as drafts awaiting one named reviewer.
+ * Each document opens with a not-approved banner in its rendered body, in both languages, and
+ * leaves every club fact as a visible `<PLACEHOLDER>` — never a plausible invention (AGENTS.md §1.2).
  */
 
 const SAMPLE_BANNER_RO = [
@@ -68,14 +44,9 @@ const REVIEW_NOTE_EN = [
 ];
 
 /**
- * The platform's text, wrapped: the banner first, the review note last (both tests).
- *
- * The template's sections go in **as they are** — never through `fillClubFacts`, never through
- * a merge. The owner, 2026-09-24: "when I seed a document I must have the placeholders as well!"
- * So every `{{field}}` the template carries is still a field in the seeded version (filled only
- * when the declaration is shown, signed or printed for one person at one event), and every club
- * fact is still its `<PLACEHOLDER>` (a sample must not look approved, §132).
- * `tests/integration/legal/sample-seed.test.ts` fails if either is ever lost (§357).
+ * The platform's template wrapped in the banner and the review note. Sections go in as they are,
+ * never through `fillClubFacts`: every `{{field}}` stays a field and every club fact stays its
+ * `<PLACEHOLDER>` (§132, §357; `tests/integration/legal/sample-seed.test.ts`).
  */
 function sample(key: LegalDocumentKey, locale: "ro" | "en"): LegalDocumentTranslationInput {
   const template = LEGAL_TEMPLATES[key][locale];
@@ -101,12 +72,9 @@ export const SAMPLE_DOCUMENTS: ReadonlyArray<{
 }));
 
 /**
- * Seed one approved version of each key, unless the same text is already the latest one.
- *
- * Never a delete-and-reinsert, unlike the event seed: a version an acceptance references is
- * immutable (AGENTS.md §12.5), and by the time QA has a registration on it there is acceptance
- * evidence pointing at these rows. Re-running with unchanged text does nothing; re-running after
- * the text here changes inserts the next version, which is exactly what a correction is.
+ * Seed one approved version of each key unless the same text is already the latest. Never a
+ * delete: a version an acceptance references is immutable (AGENTS.md §12.5), so changed text
+ * becomes the next version.
  */
 export async function seedSampleLegalDocuments(now: Date = new Date()): Promise<void> {
   assertSampleLegalDocumentsAllowed();
@@ -122,9 +90,7 @@ export async function seedSampleLegalDocuments(now: Date = new Date()): Promise<
       continue;
     }
 
-    // Through `nextVersionNumber`, not `latest.version + 1`: since §151 a number whose row was
-    // deleted stays retired, and the seed must step over it like every other writer. `latest` is
-    // still what answers "is this text already the newest one", which is a different question.
+    // `nextVersionNumber`, not `latest.version + 1`: a deleted number stays retired (§151).
     const version = await nextVersionNumber(db, document.key);
     await insertLegalDocumentVersion(db, {
       key: document.key,
@@ -140,14 +106,8 @@ export async function seedSampleLegalDocuments(now: Date = new Date()): Promise<
 }
 
 /**
- * Production is refused, and it is refused in kind rather than in degree.
- *
- * Everywhere else, sample text is a draft somebody is reviewing on a system no participant has
- * ever entered a race on. In production it would be the wording a real person is told they have
- * agreed to — text that says of itself that it has no legal effect, presented as the notice
- * under which their data is processed. There is no configuration that makes that acceptable, so
- * this throws rather than skipping quietly: a seed that silently did nothing would be indistinguishable
- * from one that worked, and the difference matters on exactly one deployment.
+ * Throws rather than skipping: in production, sample text would be what a real person is told
+ * they agreed to, and a silent no-op would look like success.
  */
 export function assertSampleLegalDocumentsAllowed(): void {
   const appEnv = process.env.APP_ENV ?? "local";

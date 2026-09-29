@@ -132,7 +132,7 @@ describe("§383 the upcoming automatic emails card", () => {
         expect(forecast.recipients[form]).toBeTruthy();
         expect(forecast.tests[form]).toBeTruthy();
       }
-      for (const send of ["reminder", "lastCall", "participation", "nextInLine", "bibs", "registrationOpened"] as const) {
+      for (const send of ["reminder", "lastCall", "participation", "nextInLine", "registrationOpened"] as const) {
         expect(forecast.sends[send], send).toBeTruthy();
       }
       expect(forecast.untitled).toBeTruthy();

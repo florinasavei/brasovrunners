@@ -121,7 +121,7 @@ async function registerPublicly(
     {
       ...names,
       birthDate: "1990-05-17",
-      sex: "UNSPECIFIED",
+      sex: "FEMALE",
       nationality: "RO",
       country: "RO",
       city: "Brașov",

@@ -209,7 +209,7 @@ describe("§333 writes expire the public cache", () => {
           firstName: "Ana",
           lastName: email.split("@")[0],
           birthDate: "1990-05-17",
-          sex: "UNSPECIFIED",
+          sex: "FEMALE",
           nationality: "RO",
           country: "RO",
           city: "Brașov",

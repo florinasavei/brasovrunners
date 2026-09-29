@@ -21,8 +21,8 @@ vi.mock("@/modules/notifications/delivery-timing", () => ({
   },
 }));
 vi.mock("@/modules/jobs/cadence", () => ({ readJobCadence: async () => ({ minutes: state.interval, updatedAt: null }) }));
-vi.mock("@/modules/diagnostics/neon-budget", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@/modules/diagnostics/neon-budget")>()),
+vi.mock("@/modules/diagnostics/budget-level", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/modules/diagnostics/budget-level")>()),
   peekNeonBudgetLevel: () => state.level,
 }));
 

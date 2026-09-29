@@ -34,6 +34,7 @@ import {
 import { seriesRhythmPhrase } from "@/modules/group-run-declarations/series";
 import { generateTokenSecret, hashTokenSecret } from "@/modules/action-tokens/domain/token-secret";
 import { bulkCopyRecipients, declarationPdfAudience, isClubCopy, isParticipantMessage } from "./domain/club-notices";
+import { CANNOT_COME_MESSAGES, cannotComeApplies, cannotComeUrlOf } from "./domain/cannot-come";
 import { declarationAsksMinorToSign } from "@/modules/legal-documents/repository";
 import { readOrganizerMessagePayload } from "./domain/organizer-message";
 import { registrationStatusWords } from "./domain/registration-status-words";
@@ -410,6 +411,22 @@ async function renderRow(
     const others = await awaitingSignatureOnAddress(db, registration.eventId, registration.participantId, registration.id);
     if (others.length > 0) data.familyToSign = others;
   }
+  /*
+    One cancellation email per person (§547): whether the person held a place or waited in line —
+    the state the registration left, written in the row's payload by `unregister` — and who the
+    address still holds at the event, with their states, read at send time. Only this address's own
+    rows (the participant is the address, §389), so nothing about another inbox is said (§39).
+  */
+  if (row.messageType === "REGISTRATION_CANCELLED" && registration) {
+    data.cancelledFromWaitlist = (row.payloadJson as { previousStatus?: unknown } | null)?.previousStatus === "WAITLISTED";
+    const others = await registeredOnAddressWithStates(db, registration.eventId, registration.participantId, [registration.id]);
+    if (others.length > 0) data.cancelledOthers = others;
+    // The participant's own reason (§558), read from the row; the template quotes it on the club's copy only.
+    if (registration.cancelReasonKind) {
+      data.cancelReasonKind = registration.cancelReasonKind;
+      if (registration.cancelReasonKind === "OTHER" && registration.cancelReason) data.cancelReasonText = registration.cancelReason;
+    }
+  }
   if (data.eventUrl && eventDetails?.hasRules) data.eventRulesUrl = `${data.eventUrl}#rules`;
   /*
     The hold's deadline on the declaration email (§104), and whether it is the window's — a
@@ -512,8 +529,7 @@ async function renderRow(
       data.organizerBody = words.body[locale];
       data.organizerBodyOther = words.body[other];
     }
-    // The settled number only (`ORGANIZER_MESSAGE_PLACEHOLDERS`): a provisional one would print
-    // without the line that says it can still move (§237).
+    // A confirmed registration's number only (`ORGANIZER_MESSAGE_PLACEHOLDERS`, §548).
     if (registration?.status === "CONFIRMED" && registration.bibNumber !== null) data.bibNumber = registration.bibNumber;
   }
   /*
@@ -649,7 +665,7 @@ async function renderRow(
   // The club's own notice (§245) needs the number and nothing else the runner's copy carries:
   // no check-in code and no QR, because neither means anything in a club mailbox.
   if (row.messageType === "CLUB_CONFIRMATION_NOTICE" && registration) {
-    data.bibNumber = registration.bibNumber ?? undefined;
+    data.bibNumber = raceNumberOf(registration) ?? undefined;
   }
 
   if (
@@ -669,27 +685,18 @@ async function renderRow(
       data.checkinQrUrl = `${env.APP_BASE_URL}/api/registrations/qr/${code}.png`;
     }
     /*
-      The number the runner has, settled or not (§237; the owner: "peste tot trebuie să
-      apară BID-ul!!").
-
-      §214 stopped writing `bib_number` until the window closes, and this line read only
-      that column — so the confirmation went out with a QR, a check-in code and no number,
-      for a runner who had been looking at number 2 on their own page since they
-      registered. Absent is worse than provisional: it reads as "you have not been given
-      one", and the desk is where they find out otherwise.
-
-      So it is sent, and it is **labelled** when it can still move — which is the condition
-      §214 attached to emailing it at all. The settle sends `BIB_ASSIGNED` with the final
-      one, so nobody is left holding only the provisional figure.
+      The number the confirmation gave (§548; the owner: "peste tot trebuie să apară BID-ul!!"):
+      drawn in the same transaction that confirmed the registration, so the confirmation carries
+      it, and it never moves afterwards. Only these messages of a confirmed registration carry a
+      number; the verification link and the declaration request say nothing about one.
     */
-    data.bibNumber = registration.bibNumber ?? registration.provisionalBibNumber ?? undefined;
-    data.bibProvisional = registration.bibNumber === null && registration.provisionalBibNumber !== null;
+    data.bibNumber = raceNumberOf(registration) ?? undefined;
   }
 
   /*
     A family's one confirmation (§519): one block per person, headed by the name — the QR code and the
     desk code the desk hands the number against, and the race number from the one helper the page and
-    the export read (`raceNumberOf`: settled, or provisional and said so, §237), or «încă fără număr».
+    the export read (`raceNumberOf`: the number each person's own confirmation gave, §548), or «încă fără număr».
     A code is given here to a person confirmed before codes existed, as above. The club's copy names
     the people and their numbers, never a code or a QR (§320).
   */
@@ -707,8 +714,7 @@ async function renderRow(
         // The greeting's word for this person (§519): the first word of the first name typed.
         ...(person.firstName?.trim() ? { firstName: person.firstName.trim().split(/\s+/)[0] } : {}),
         ...(clubCopy || !code ? {} : { checkinCode: code, qrUrl: `${env.APP_BASE_URL}/api/registrations/qr/${code}.png` }),
-        raceNumber: number?.value ?? null,
-        provisional: number !== null && !number.settled,
+        raceNumber: number,
       });
     }
     data.familyConfirmed = people;
@@ -982,6 +988,70 @@ async function renderRow(
     data.listed = !registration.listOptOut;
   }
 
+  /*
+    «Nu mai pot ajunge» (§558, amending §81 and §419; the owner, 2026-09-29: «în fiecare mail trebuie
+    să fie clar butonul de „Nu mai pot ajunge”»): every message about a live registration, at its own
+    address, carries a cancel that asks first, then cancels that person (§547). Never on a club copy
+    (§320), never after the start or on an event that will not run, never on a registration that is
+    no longer active — and on the family link only in the family sitting's shape (below).
+
+    Which link, in this order — always the registration's own manage page, one tap from the email:
+    1. the manage token this send already minted (the confirmation, the reminder, the number, the
+       signed declaration, the manage link) — today's «Nu mai pot veni», at `#cancel`;
+    2. a family's own «Toate înscrierile mele» this send minted, on the two messages that list several
+       people (the family's one confirmation, the family sitting's message): the page lists every
+       person of the address with their own cancel (§77, §547);
+    3. on every other message (the address to confirm, the declaration request, the waiting list and
+       its offer, the offer lapsed, the organizer's notice and message), a manage token minted here for
+       this send. It supersedes the registration's older manage link (BR-REQ-036-02 criterion 5), as
+       every newer manage link always did: the newest email about the registration is the one whose
+       link works, and its page carries everything the older one did — the QR, «Am ajuns», the public
+       list's switch, the cancel. A retry after a failed send mints again, and the retry's link wins.
+  */
+  const cannotComeFor = familyConfirmed?.[0] ?? registration;
+  const cannotComeShape = row.messageType !== "REGISTER_ANOTHER_PERSON" || familySitting !== undefined;
+  if (!clubCopy && row.participantId && cannotComeFor && cannotComeShape && CANNOT_COME_MESSAGES.has(row.messageType)) {
+    // The event as the batch's one read holds it (§489); a second read only for an event with no text in any language.
+    const known = cannotComeFor.eventId === eventId ? eventTexts[0] : undefined;
+    const eventState = known
+      ? { startsAt: known.startsAt, eventStatus: known.eventStatus }
+      : (
+          await db
+            .select({ startsAt: events.startsAt, eventStatus: events.eventStatus })
+            .from(events)
+            .where(eq(events.id, cannotComeFor.eventId))
+            .limit(1)
+        )[0];
+    if (
+      cannotComeApplies({
+        messageType: row.messageType,
+        clubCopy,
+        recipientParticipantId: row.participantId,
+        registration: cannotComeFor,
+        event: eventState,
+        now,
+      })
+    ) {
+      if (data.manageUrl && !familyConfirmed && cannotComeFor.id === row.registrationId) {
+        data.cannotComeUrl = cannotComeUrlOf(data.manageUrl);
+      } else if (familyConfirmed && actionUrl) {
+        data.cannotComeUrl = actionUrl;
+      } else if (familySitting && data.familyMineUrl) {
+        data.cannotComeUrl = data.familyMineUrl;
+      } else {
+        const issued = await issueActionToken(db, {
+          participantId: row.participantId,
+          registrationId: cannotComeFor.id,
+          purpose: "MANAGE_REGISTRATION",
+          expiresAt: new Date(now.getTime() + DEFAULT_TOKEN_HOURS * 60 * 60_000),
+          now,
+        });
+        const path = getPathname({ locale, href: { pathname: ROUTE_BY_PURPOSE.MANAGE_REGISTRATION, params: { token: issued.secret } } });
+        data.cannotComeUrl = cannotComeUrlOf(`${env.APP_BASE_URL}${path}`);
+      }
+    }
+  }
+
   // The signed declaration itself, rendered now from the rows and never stored as a file
   // (§95): a copy the participant keeps, in the language they signed in — on the confirmation
   // since §126, on the club's archive copy, and on the older message type for a resend.
@@ -1008,7 +1078,9 @@ async function renderRow(
     eventDetails?.slug
   ) {
     // Dated only: an event whose date is to be announced (§533) has no calendar entry to attach.
-    const found = await findPublishedEventBySlug(db, locale, eventDetails.slug);
+    // The members' audience (§552): this message is to somebody registered for the event, so an
+    // event for the members alone gets its calendar entry like any other — past the door already.
+    const found = await findPublishedEventBySlug(db, locale, eventDetails.slug, "members");
     const published = found ? datedOrNull(found) : null;
     if (published) {
       const ics = buildCalendar({
