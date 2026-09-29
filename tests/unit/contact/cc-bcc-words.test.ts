@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
@@ -25,7 +27,15 @@ describe("BR-REQ-070-04 the contact page's CC and BCC boxes", () => {
       // The closed card's line names the copies in force, not only the "to".
       expect(contacts(catalogue).aside).toContain("{cc}");
       expect(contacts(catalogue).aside).toContain("{bcc}");
+      // No copies at all is said in words, never «CC: 0 · BCC: 0» (§NNN).
+      expect(contacts(catalogue).asideNoCopies).toContain("{to}");
+      expect(contacts(catalogue).asideNoCopies).not.toMatch(/{cc}|{bcc}/);
     }
+    expect(contacts(ro).asideNoCopies).toBe("Acum ajung la: {to} · fără copii");
+    expect(contacts(en).asideNoCopies).toBe("They currently reach: {to} · no copies");
+    const panel = readFileSync(path.join(process.cwd(), "src/modules/contact/ui/ContactRecipientsPanel.tsx"), "utf8");
+    expect(panel).toContain("resolved.cc.length + resolved.bcc.length === 0");
+    expect(panel).toContain('t("emails.contacts.asideNoCopies"');
   });
 
   it("reads a box one address per line as well as with commas (§457)", () => {

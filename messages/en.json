@@ -3890,7 +3890,23 @@
         "readOnly": "Who receives the club’s copies is the Administrator’s to set; you see the lists in force.",
         "saving": "Saving…",
         "saved": "Saved who receives the club's copies.",
-        "participantsBccHelpMore": "Not the address check or the link for another person. A message to everybody registered gives one copy, with no names. Never for test registrations."
+        "participantsBccHelpMore": "Not the address check or the link for another person. A message to everybody registered gives one copy, with no names. Never for test registrations.",
+        "folds": {
+          "count": "Addresses: {count}",
+          "countNone": "No address",
+          "declarations": {
+            "title": "Signed declarations",
+            "aside": "They go to: {to} · Cc: {cc} · Bcc: {bcc}",
+            "asideNoCopies": "They go to: {to} · no copies",
+            "asideNone": "Not sent"
+          },
+          "confirmations": {
+            "title": "The confirmation notice"
+          },
+          "participants": {
+            "title": "The club's copy of the emails to participants"
+          }
+        }
       },
       "queue": {
         "title": "The sending queue",
@@ -4117,6 +4133,7 @@
       "contacts": {
         "title": "Who receives the contact messages",
         "aside": "They currently reach: {to} · CC: {cc} · BCC: {bcc}",
+        "asideNoCopies": "They currently reach: {to} · no copies",
         "asideNobody": "nobody",
         "intro": "Who receives the messages from “Write to us”; they leave through the club's Gmail, not Mailgun. Saved here, with no redeploy.",
         "source": {

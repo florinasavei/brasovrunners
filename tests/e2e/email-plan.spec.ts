@@ -298,6 +298,8 @@ test.describe("BR-REQ-070-04 who receives the contact messages", () => {
     await main.getByRole("button", { name: "Salvează destinatarii" }).click();
     await confirmDialog(page);
     await expect(main.getByText(/Nu le primește nimeni|din CONTACT_FORM_TO de pe server/)).toBeVisible();
+    // No copies left: the closed line says so in words, never two zeros (§NNN).
+    await expect(contacts.locator(":scope > summary")).toContainText("· fără copii");
     await expect(main.getByLabel("BCC", { exact: true })).toHaveValue("");
   });
 
@@ -440,6 +442,11 @@ test.describe("BR-REQ-033-02 criterion 12 the club's hidden copy of the emails t
     await expect(panel.locator(":scope > summary")).toContainText(/Adrese care primesc copii: \d+/);
     await openFold(main.getByTestId("email-plan"));
     await openFold(panel);
+    // The box sits in its own nested fold since §NNN, closed with the other two until opened.
+    const participants = panel.getByTestId("club-notices-participants");
+    await expect(panel.getByTestId("club-notices-declarations")).not.toHaveAttribute("open", "");
+    await expect(participants.locator(":scope > summary")).toContainText("Copia clubului la emailurile către participanți");
+    await openFold(participants);
 
     // Nothing hidden yet: the forecast prints the plain cost and no second sentence.
     await expect(forecast).toContainText(/costă circa [0-9]+ mesaje/);
@@ -454,6 +461,9 @@ test.describe("BR-REQ-033-02 criterion 12 the club's hidden copy of the emails t
     await confirmDialog(page, "Schimbi cine primește copiile clubului?");
 
     await expect(main.getByText("Am salvat cine primește copiile clubului.")).toBeVisible();
+    // The card's save opens its folds to show what was saved, and the fold's summary counts it.
+    await expect(participants).toHaveAttribute("open", "");
+    await expect(participants.locator(":scope > summary")).toContainText("Adrese: 1");
     await expect(panel.getByText("Copie ascunsă la emailurile către participanți: arhiva@example.org.")).toBeVisible();
     await expect(box).toHaveValue("arhiva@example.org");
     // One address on four of the runner's five messages (never the address-confirmation link,

@@ -55,12 +55,17 @@ export default async function ContactRecipientsPanel({ locale, recipients, resol
     <Panel glyph="contacts"
       title={t("emails.contacts.title")}
       intro={t("emails.contacts.intro")}
-      aside={t("emails.contacts.aside", {
-        to: formatAddressList(resolved.to) || t("emails.contacts.asideNobody"),
-        // Counted, not named: the summary is one line at 360 px (§336); the lists are in the sentence inside.
-        cc: resolved.cc.length,
-        bcc: resolved.bcc.length,
-      })}
+      aside={
+        // Counted, not named: the summary is one line at 360 px (§336); the lists are in the
+        // sentence inside. No copies at all reads «fără copii», never two zeros (§NNN).
+        resolved.cc.length + resolved.bcc.length === 0
+          ? t("emails.contacts.asideNoCopies", { to: formatAddressList(resolved.to) || t("emails.contacts.asideNobody") })
+          : t("emails.contacts.aside", {
+              to: formatAddressList(resolved.to) || t("emails.contacts.asideNobody"),
+              cc: resolved.cc.length,
+              bcc: resolved.bcc.length,
+            })
+      }
       collapsible
       openWhen={openWhen}
       id="contact-recipients"

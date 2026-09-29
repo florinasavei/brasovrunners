@@ -3890,7 +3890,23 @@
         "readOnly": "Cine primește copiile clubului stabilește Administratorul; tu vezi listele în vigoare.",
         "saving": "Se salvează…",
         "saved": "Am salvat cine primește copiile clubului.",
-        "participantsBccHelpMore": "Nu și verificarea adresei sau linkul pentru altă persoană. Un mesaj către toți înscrișii dă o singură copie, fără nume. Niciodată pentru înscrierile de test."
+        "participantsBccHelpMore": "Nu și verificarea adresei sau linkul pentru altă persoană. Un mesaj către toți înscrișii dă o singură copie, fără nume. Niciodată pentru înscrierile de test.",
+        "folds": {
+          "count": "Adrese: {count}",
+          "countNone": "Nicio adresă",
+          "declarations": {
+            "title": "Declarațiile semnate",
+            "aside": "Merg la: {to} · Cc: {cc} · Bcc: {bcc}",
+            "asideNoCopies": "Merg la: {to} · fără copii",
+            "asideNone": "Nu se trimit"
+          },
+          "confirmations": {
+            "title": "Anunțul de confirmare"
+          },
+          "participants": {
+            "title": "Copia clubului la emailurile către participanți"
+          }
+        }
       },
       "queue": {
         "title": "Coada de trimitere",
@@ -4117,6 +4133,7 @@
       "contacts": {
         "title": "Cine primește mesajele de contact",
         "aside": "Acum ajung la: {to} · CC: {cc} · BCC: {bcc}",
+        "asideNoCopies": "Acum ajung la: {to} · fără copii",
         "asideNobody": "nimeni",
         "intro": "Cine primește mesajele de pe „Scrie-ne”; ele pleacă prin Gmail-ul clubului, nu prin Mailgun. Se salvează aici, fără redeploy.",
         "source": {
