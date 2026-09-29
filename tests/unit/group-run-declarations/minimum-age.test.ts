@@ -101,7 +101,7 @@ describe("§440 the signed PDF with and without the sentence", () => {
               version: 1,
               contentSha256: "0".repeat(64),
               effectiveAt: new Date("2026-01-01T00:00:00Z"),
-              signature: { typedName: "Ana Popescu", idDocument: null, minor: null, signedAt: "1 octombrie 2026", signedAtInline: "1 octombrie 2026", method: "—" },
+              signature: { typedName: "Ana Popescu", idDocument: null, minor: null, signedAt: "1 octombrie 2026", signedAtInline: "1 octombrie 2026", acceptedAt: new Date("2026-10-01T09:00:00Z"), method: "—" },
             },
           ],
           locale,

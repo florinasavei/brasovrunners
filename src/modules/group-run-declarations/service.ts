@@ -17,12 +17,13 @@ import { canonicalizeEmail, InvalidEmailError } from "@/modules/participants/dom
 import { emailBucketKey } from "@/modules/rate-limit/domain/key";
 import { consumeRateLimit } from "@/modules/rate-limit/service";
 import { classifySubmission } from "@/modules/registrations/service";
+import { heldRefusal, holdReason } from "@/modules/registrations/declaration-hold";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { env } from "@/shared/config/env";
 import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 import { birthDateRefusal, ERASE_REASON_MAX, ID_DOCUMENT_MAX, keptSignature, signerIdentity, signingOpen, TYPED_NAME_MAX } from "./domain";
-import { groupRunMergeValues } from "./facts";
+import { groupRunMergeValues, groupRunTextHash } from "./facts";
 import { insertGroupRunDeclaration, listCoveringSignatures, listSeriesDatesOf } from "./repository";
 import { factsToKeep } from "./series";
 
@@ -230,20 +231,29 @@ export async function signGroupRunDeclaration<T extends Record<string, unknown>>
       return { outcome: "signed" as const, id: kept.id, kept: true };
     };
     if (existing) return resend(existing);
+    const signedFacts = facts ? factsToKeep(facts.values) : null;
+    const storedDocument = needsDocument ? idDocument : null;
     const row = await insertGroupRunDeclaration(txDb, {
+      // The proof of signing (§556): the exact text this signer's PDF prints, hashed before the row is written.
+      textHash: await groupRunTextHash(txDb, {
+        eventId: event.id,
+        document,
+        signedFacts,
+        signer: { typedName, idDocument: storedDocument, locale: input.locale, acceptedAt: now },
+      }),
       eventId: event.id,
       legalDocumentId: document.id,
       declarationVersion: document.version,
       contentSha256: document.contentSha256,
       locale: input.locale,
       typedName,
-      idDocument: needsDocument ? idDocument : null,
+      idDocument: storedDocument,
       email: input.email.trim(),
       acceptedAt: now,
       createdAt: now,
       seriesKey: facts?.seriesKey ?? null,
       signerKey,
-      signedFacts: facts ? factsToKeep(facts.values) : null,
+      signedFacts,
     });
     if (!row) {
       /*
@@ -355,6 +365,56 @@ export async function eraseGroupRunDeclarations<T extends Record<string, unknown
   });
 }
 
+/**
+ * «Păstrează: reclamație / litigiu în curs» on one group-run declaration (§556), or its release: an
+ * Administrator's, with a reason, the audit row in the same transaction — who, why, the event and the
+ * declaration's id, never who had signed. While it is set no erase takes the row and no delete of the
+ * run's last date cascades it away (`refuseHeldGroupRunDeclarationsOfEvent`). The retention sweep never
+ * deletes a group-run row (§503); the hold is what lets the club answer a withdrawal request with
+ * «not yet» while a complaint is open, as the declaration's own retention sentence says.
+ *
+ * `eventId` is the date whose backoffice page the press came from; the row must be the run's (§523).
+ */
+export async function setGroupRunDeclarationHold<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  input: { eventId: string; id: string; hold: boolean; reason: string },
+  now: Date,
+): Promise<{ eventId: string }> {
+  if (!canManageRegistrations(actor.role)) throw new DomainError("FORBIDDEN", "holding a declaration is an Administrator's");
+  const reason = holdReason(input.reason);
+  if (!isUuid(input.id) || !isUuid(input.eventId)) throw new DomainError("NOT_FOUND", "no such declaration");
+  return db.transaction(async (tx) => {
+    const dates = (await listSeriesDatesOf(tx, input.eventId)).map((date) => date.id);
+    const [row] = await tx
+      .select({ id: groupRunDeclarations.id, eventId: groupRunDeclarations.eventId, held: groupRunDeclarations.retentionHold })
+      .from(groupRunDeclarations)
+      .where(and(eq(groupRunDeclarations.id, input.id), inArray(groupRunDeclarations.eventId, dates.length > 0 ? dates : [input.eventId])))
+      .limit(1)
+      // Locked, as `eraseSignature` locks it: a hold and an erase at once run one after the other (§556).
+      .for("update");
+    if (!row) throw new DomainError("NOT_FOUND", "no such declaration");
+    if (!input.hold && !row.held) return { eventId: row.eventId };
+    await tx
+      .update(groupRunDeclarations)
+      .set(
+        input.hold
+          ? { retentionHold: true, retentionHoldReason: reason, retentionHoldAt: now, retentionHoldByStaffUserId: actor.id }
+          : { retentionHold: false, retentionHoldReason: null, retentionHoldAt: null, retentionHoldByStaffUserId: null },
+      )
+      .where(eq(groupRunDeclarations.id, row.id));
+    await recordAuditEvent(tx, {
+      actorStaffUserId: actor.id,
+      action: input.hold ? "event.group_run_declaration_hold_set" : "event.group_run_declaration_hold_cleared",
+      entityType: "event",
+      entityId: row.eventId,
+      metadata: { groupRunDeclarationId: row.id, reason },
+      now,
+    });
+    return { eventId: row.eventId };
+  });
+}
+
 /** The role and the reason every erase asks for (§393, §67): the trimmed reason, or a refusal. */
 function assertMayErase(actor: Pick<StaffUser, "role">, typed: string): string {
   if (!canManageRegistrations(actor.role)) throw new DomainError("FORBIDDEN", "erasing a declaration is an Administrator's");
@@ -376,6 +436,16 @@ async function eraseSignature<T extends Record<string, unknown>>(
   reason: string,
   now: Date,
 ): Promise<void> {
+  // Kept for a complaint or a dispute (§556): no erase — the signer's request included — until an
+  // Administrator clears the hold. The batch refuses whole, as it does for a set that changed. The
+  // row is locked until the delete commits, so a hold pressed meanwhile waits and then finds nothing.
+  const [locked] = await tx
+    .select({ held: groupRunDeclarations.retentionHold })
+    .from(groupRunDeclarations)
+    .where(eq(groupRunDeclarations.id, row.id))
+    .limit(1)
+    .for("update");
+  if (locked?.held) throw heldRefusal();
   await recordAuditEvent(tx, {
     actorStaffUserId: actor.id,
     action: "event.group_run_declaration_erased",

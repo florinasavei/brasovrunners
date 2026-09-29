@@ -44,7 +44,7 @@ function savedCodes(): string[] {
   // The transition codes travel as the status itself (`saved: text(form, "to")`).
   for (const status of ["DRAFT", "IN_REVIEW", "PUBLISHED", "ARCHIVED"]) codes.add(status);
   // What a ternary's variable name looks like to the regex above, and is not a code.
-  for (const notACode of ["active", "changed", "direction", "outcome", "printed", "publish", "removed", "result", "string", "text", "wanted"]) codes.delete(notACode);
+  for (const notACode of ["active", "changed", "direction", "hold", "outcome", "printed", "publish", "removed", "result", "string", "text", "wanted"]) codes.delete(notACode);
   return [...codes].sort();
 }
 
