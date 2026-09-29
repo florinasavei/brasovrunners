@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.30-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.31-2026-09-27 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V2.30-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.31-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -814,6 +814,7 @@ coffee is run on nothing.
 32. «Sex» on the public registration form is two required radio cards the server draws, «Masculin» and «Feminin» («Male» / «Female»), each with its glyph and none chosen. «Prefer să nu spun» is offered nowhere, and `UNSPECIFIED` is refused at every door: a public form without an answer, or with that one, is refused naming `sex`, and a staff entry may leave the sex out. A row stored with it earlier reads «—» on the backoffice registration page and has an empty cell in the spreadsheet (2026-09-29, `DECISIONS.md` §554).
 33. The public registration form asks the T-shirt size only when the event's «Kit de participare» gives a shirt (`events.kit_shirt`), and the optional fold's title names the shirt only then. A size posted for an event without one is stored as `NONE`, decided off the event row under its lock at every door. The spreadsheet and the backoffice registration page show a size only for an event with a shirt (2026-09-29, `DECISIONS.md` §554).
 34. Given the public registration form, when «Sex» renders, then it is a native required `<select name="sex">` whose options are an empty, disabled «Alege…» (chosen), «Feminin» and «Masculin» in that order, with no «Prefer să nu spun» and no radio input; with JavaScript a button over it opens a list of the two answers, each with its glyph, and a choice sets the select; a refusal marks the select `aria-invalid` and the summary's link lands on it (2026-09-29, `DECISIONS.md` §555).
+35. The family link's form and a family sitting's next form follow the event's «Informații medicale» tick exactly as the public form does — a minor's kept form carrying a note and its consent, confirmed from the inbox on an event that does not ask, stores no note, no consent version and no consent time — and a staff entry or the desk stores no health note for an event that does not ask it (2026-09-29, `DECISIONS.md` §557).
 
 **Verification:** integration `registrations/entry-details.test.ts`, `registrations/minors.test.ts` (9); unit `registrations/socials.test.ts` (8); e2e `registration-submit.spec.ts`; unit and integration `registrations/minimum-age.test.ts` (11); e2e `registration-form.spec.ts` (11)
 
@@ -839,6 +840,7 @@ its own absence from the export, and no public surface at all.
 7. Given a participant's manage link or their "My registrations" link, when they press "Delete my health note" (POST), then the note, its consent version and its consent timestamp are cleared (nulled, not flagged). The link is not spent, and status, place, number and messages are unchanged. One audit row names the fields and the door, never the text. A second press writes nothing, and two concurrent presses write one row.
 8. Given an Organizer, Administrator or Superadministrator, when they open a registration's emergency section or an event's emergency sheet, then the phone, emergency contact and health note are shown and each opening is audited without values. Every other role is refused on the server. The desk and every export never carry them.
 9. Given an Administrator or Superadministrator, when they withdraw a participant's optional consents on the registration's page — the ticked groups among the health note, the socials and the results name — with a reason, then those fields are cleared; status, place and number are untouched and no message is sent; the audit row records the field names and never their values; any other role is refused FORBIDDEN, and a request naming no group VALIDATION_ERROR (`DECISIONS.md` §322).
+10. The registration form draws the health note, its intro and its own consent only for an event whose «Condiții de participare» → «Informații medicale» is ticked (`events.ask_health_note`, false by default); criteria 1–3 apply to such an event. For any other event a posted note is ignored, never refused, and the row stores no note and no consent, decided off the event row under its lock at every door. The backoffice registration page and the emergency sheet show a note only for an event that asks it (2026-09-29, `DECISIONS.md` §557).
 
 **Verification:** integration `registrations/health-consent.test.ts`; privacy `public-surface.test.ts`
 
@@ -1804,6 +1806,7 @@ way through every step, and none of them is a way around the allocator.
 102. The event editor asks the difficulty in «Ce fel de eveniment»: the band select and «Treapta», a segmented 1 · 2 · 3 of native radios in 44-pixel segments each with a dots glyph, side by side from `sm`; a step outside 1–3 or a band outside the five is refused at save.
 103. Given the backoffice events list, when the address carries `q`, `state`, `sort` and `dir` (written by a GET form with native selects that works without JavaScript), then:
 104. Under «Pe site», the editor's «Participare și înscrieri» holds a closed «Kit de participare» card with a glyph, whose line says «Tricou: da» or «Tricou: nu», and one «Tricou» tick; a group run shows none. The tick is saved only by a form that carried the card. A series edit carries it by its scope, and every date a series makes and every duplicate keep it (2026-09-29, `DECISIONS.md` §554).
+105. «Program, regulament și declarație» holds a closed «Condiții de participare» card with a glyph, whose line says «Informații medicale: da» or «Informații medicale: nu» on an event registering on the site (and nothing about it otherwise), and one «Informații medicale» tick whose sentence names the days the note is kept from the retention constant; a group run shows a sentence in its place. The tick is saved only by a form that carried the card. A series edit carries it by its scope, and every date a series makes and every duplicate keep it (2026-09-29, `DECISIONS.md` §557).
 - only the lines with a date whose title, page address or place contains every typed word in either language (accents and case ignored) and whose state matches are listed;
 - the state is an editorial state, «Anulat» (the event's own status), «Viitoare» or «Trecute»;
 - a series is narrowed to its matching dates before it is grouped;

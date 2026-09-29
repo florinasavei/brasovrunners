@@ -157,7 +157,9 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
     // reversing DECISIONS.md §47): a runner's own club was the field people missed when it sat
     // behind a summary, and a field nobody sees is a field nobody fills.
     await expect(page.locator('[name="clubName"]')).toBeVisible();
-    // The medical note is the one exception (§171): folded, because asking for free text first
+    // The medical note is asked because the sample race asks it (§557, seeded and ticked by
+    // `ensureRegistrationIsOpen`); an event that does not draws no fold (`health-note-form.test.ts`).
+    // It is the one exception (§171): folded, because asking for free text first
     // read as "tell us your conditions" and buried the statement the club actually needs. It is
     // on the page and one press away — and what is required is the tick among the consents.
     await expect(page.locator('[name="healthNotes"]')).toBeHidden();

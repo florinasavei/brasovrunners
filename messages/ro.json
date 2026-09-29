@@ -693,6 +693,7 @@
       "emergency": {
         "title": "Urgențe și sănătate",
         "show": "Arată telefonul, persoana de contact și nota medicală",
+        "showNoHealth": "Arată telefonul și persoana de contact",
         "showHelp": "Se înregistrează în jurnal cine a deschis secțiunea și când.",
         "phone": "Telefon",
         "contact": "Persoană de contact",
@@ -1212,6 +1213,8 @@
       "registrationOpensSoonHelp": "Bifat, pagina spune „Înscrierile se deschid în curând” și formularul rămâne închis. Debifează când deschizi: cei de la „Anunță-mă” primesc emailul.",
       "kitShirt": "Tricou",
       "kitShirtHelp": "Dacă e bifat, formularul cere mărimea tricoului.",
+      "askHealthNote": "Informații medicale",
+      "askHealthNoteHelp": "Dacă e bifat, formularul cere informații medicale (afecțiuni, alergii, medicație); se șterg la {days} după eveniment.",
       "registrationClosesAt": "Înscrierile se închid",
       "registrationWindowHelp": "Lasă deschiderea goală și înscrierile pornesc la publicarea evenimentului; lasă închiderea goală și se opresc la startul evenimentului.",
       "declarationDocument": "Declarația pe care o semnează participantul",
@@ -1599,6 +1602,9 @@
           "earlierClose": "O închidere mai devreme oprește doar înscrierile noi."
         },
         "conditions": {
+          "title": "Condiții de participare",
+          "onlyHere": "Se cer doar când înscrierea e aici, pe site.",
+          "onlyRegisteringTypes": "Alergarea de grup nu are formular de înscriere, deci nu cere nimic.",
           "legalLink": "Documente legale — unde se aprobă o versiune nouă a declarației",
           "declarationUnderRules": "Vârsta minimă și declarația pe care o semnează participantul se aleg în «Program, regulament și declarație»: vârsta în «Regulamentul», declarația în «Declarația pe propria răspundere»."
         },
@@ -1755,6 +1761,10 @@
           "kit": {
             "shirtYes": "Tricou: da",
             "shirtNo": "Tricou: nu"
+          },
+          "health": {
+            "asked": "Informații medicale: da",
+            "notAsked": "Informații medicale: nu"
           },
           "bibs": {
             "from": "De la {number}",
@@ -3673,6 +3683,7 @@
       "backToEvent": "Înapoi la eveniment",
       "print": "Tipărește",
       "help": "Toți participanții confirmați, prezenți sau nu. Nota medicală se șterge singură la șapte zile după eveniment; după aceea coloana e goală. Deschiderea acestei pagini se înregistrează în jurnal.",
+      "helpNoHealth": "Toți participanții confirmați, prezenți sau nu. Deschiderea acestei pagini se înregistrează în jurnal.",
       "columnBib": "Nr.",
       "columnName": "Nume",
       "columnPhone": "Telefon",
