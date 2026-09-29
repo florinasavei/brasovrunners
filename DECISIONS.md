@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.28-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.29-2026-09-27 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.28-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.29-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -21268,3 +21268,17 @@ Baseline `BR-V2.27-2026-09-27`.
 - The privacy-notice template is unchanged, because counsel reviewed it (§418). It already lists the sex and, as optional data, the T-shirt size.
 
 Baseline `BR-V2.28-2026-09-27`.
+
+## 555. The events list opens on «Viitoare», «Regenerează din șabloane» says «N din 6», and «Sex» is a dropdown again, «Feminin» first
+
+**The owner, 2026-09-29, from two screenshots:** «by default aici ar trebui să fie filtrate evenimentele viitoare» (the backoffice events list), and, of `/admin/legal`'s «Regenerează din șabloane (4)», «nu trebuiau să fie 6?». Then, at 11:10, of the registration form: «in the next PR put the Female sex first, and make it a dropdown again, not radio».
+
+**Decision 1 (amending §527).** The backoffice events list opens on «Viitoare». An address with no `state` parameter means `UPCOMING`: the «Starea» select shows «Viitoare», and the count line says «N din M evenimente» on arrival, because the default narrows. «Toate» is now an explicit choice. It writes its own value, `state=ALL`, into the address. The empty value no longer means the whole list. A hand-edited value, such as `?state=Încheiate`, falls back to the default, now «Viitoare», never to an error. «Șterge filtrele» shows only when something differs from the plain list («Viitoare», nearest first) and leads back to it. Every link into the list was read. The main bar's «Evenimente», the tasks page's rows, the after-save and after-delete redirects, and «Publică automat de acum» from a series' draft line want what is still to come, so they keep the plain address. The actions' `back` field carries `state=ALL` when the list was on «Toate». The series panel's «Toate datele (N) în lista de evenimente» now links to `?state=ALL`, since its count names every date. The guide says the list opens on the upcoming events. For the thank-you after a race, the guide now says to choose «Încheiate» first. The empty-list sentence names «Toate» instead of «șterge filtrele», which does not show on the default.
+
+**Decision 2 (amending §539).** The button on `/admin/legal`'s «Toate textele deodată» still regenerates only the texts whose template moved since the version in force, the ones wearing «Șablon nou». Regenerating a text that already has its template's words would make a draft identical to what is in force. The button now says the count out of every text: «Regenerează din șabloane (4 din 6)» / "Regenerate from the templates (4 of 6)". One plain sentence under the list of texts gives the rule (§522): «Doar textele cu «Șablon nou» se regenerează; celelalte au deja cuvintele șablonului.» / "Only the texts marked «New template» are regenerated; the others already have the template's words." The confirm dialog's own button carries the same words. «Versiune nouă»'s «Regenerează toate (N)» is unchanged.
+
+**Decision 3 (amending §554).** «Sex» on the public registration form is a dropdown again, not two radio cards, and «Feminin» comes first, «Masculin» second (`SEX_CHOICES` is `FEMALE`, `MALE`). It keeps §554's two answers and nothing else: «Prefer să nu spun» stays retired. What posts is a native `<select name="sex" required>` the server draws, as the citizenship does (§463). Its first option is an empty, disabled «Alege…» / "Choose…", chosen while there is no draft, so nothing is pre-chosen (§510). A reader without JavaScript picks from the phone's own list, and the browser, the §422 list and the server refuse a form with no answer. The select carries the field's id, where the refusal summary's link lands (§47), and `aria-invalid` when the refusal named it. Once the island runs, a transparent button lies over the select and opens a list with each answer's glyph beside its word, since a native option cannot carry one. Each row is 44 pixels tall. A choice is written into the select with a real `change` event (`chooseInSelect`), so what is posted, a refused form's draft (§142) and the §422 list read what they read without JavaScript. The chosen answer's glyph then stands in front of its word in the closed field. When the summary's link lands on the select, the select hands the focus to the button, the one control in the tab order. Beside it, the citizenship box sits in the same row again, without the top padding the radio cards' legend needed.
+
+**Refused.** Remembering the last chosen state per person, in a cookie or in storage, was refused: the address stays the list's only state (§527). A «Toate» that regenerates all six was also refused, for the reason above.
+
+Baseline `BR-V2.29-2026-09-27`.

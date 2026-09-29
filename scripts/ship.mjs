@@ -3,35 +3,21 @@
  * Ship one small batch to production, end to end — the release step of `docs/DISPATCHER.md`.
  *
  * Usage: yarn ship <batch PR> <new baseline> <previous baseline> "<release title>"
- *        yarn ship 163 BR-V2.28-2026-09-27 BR-V1.81-2026-09-24 "the listing cards and the partner marker"
+ *        yarn ship 163 BR-V2.29-2026-09-27 BR-V1.81-2026-09-24 "the listing cards and the partner marker"
  *
- *   1. waits until production reports the previous baseline (or already the new one): one release at a time;
- *   2. waits for the batch PR's checks — until none is pending and the same set has been read twice
- *      in a row, so a check that registers late is not missed (§426) — stops unless every one is
- *      green, and merges it into `qa` — an already-merged batch PR is taken as done, and the run
- *      continues from step 3;
- *   3. waits for `qa`'s docs-check run on that merge, found by its commit, until its status says
- *      completed (§504). It is short when the batch PR's run tested the same tree: that run
- *      recorded the tree, and this one skips its heavy jobs;
- *   4. only then opens the `qa → main` release PR, or takes the one already open — so the release
- *      PR's run finds `qa`'s tree recorded and skips too, rather than testing it a third time;
- *   5. waits the same way for the release PR's checks, stops on a red one — a Vercel deployment
- *      check's red is reported and not stopped on, since the qa run has judged the code — and
- *      merges the release PR;
- *   6. if the release changes a migration, waits for the gated `migrate.yml` run on `main`, approves
- *      it (`DECISIONS.md` §31) and waits for it to complete; if it changes none, waits for nothing;
- *   7. waits until production's `/api/health` reports the new baseline — the same answer `yarn smoke` reads.
+ *   1. waits until production reports the previous baseline: one release at a time;
+ *   2. waits for the batch PR's checks to settle (§426), stops unless green, merges it into `qa`
+ *      (an already-merged PR continues from step 3);
+ *   3. waits for `qa`'s docs-check run on that merge to complete (§504);
+ *   4. only then opens (or takes) the `qa → main` release PR, so its run finds the tree tested;
+ *   5. waits for its checks — a Vercel deployment's red is reported, not stopped on — and merges it;
+ *   6. if the release changes a migration, approves the gated `migrate.yml` run (`DECISIONS.md` §31)
+ *      and waits for it;
+ *   7. waits until production's `/api/health` reports the new baseline.
  *
- * It measures itself (§504): each step's minutes and the total are printed at the end — and at a
- * stop, with the step it stopped in — and appended as one JSON line to `SHIP_TIMES_FILE`, by
- * default `brasovrunners-ship-times.jsonl` in the system's temporary directory.
- *
- * The owner authorised every one of these steps (merging into qa, the release PR, approving the production
- * migration); a person runs the same command. It needs `gh` signed in with the right to merge and to approve
- * the `production` environment, and `git` with the `origin` remote.
- *
- * Production's origin is `SHIP_PRODUCTION_URL`, from the environment or the git-ignored `.env.local`, never
- * from this file: the repository is public and the club's domain lives in `SETUP.md` §26 alone.
+ * Each step's time is printed and appended to `SHIP_TIMES_FILE` (§504). Needs `gh` with the right to
+ * merge and approve the `production` environment. Production's origin is `SHIP_PRODUCTION_URL`, never
+ * in this public file (the domain lives in `SETUP.md` §26 alone).
  */
 
 import { spawnSync } from "node:child_process";
@@ -41,7 +27,6 @@ import { join } from "node:path";
 import process from "node:process";
 import { createClock, formatDuration, judgeChecks, mergePullRequest, waitForRun, waitForSettledChecks, withoutWorkflow } from "./ship-checks.mjs";
 
-// Each step's time as it ends (m:ss), and the whole at the end or at a stop (§504).
 const clock = createClock(Date.now, (s) => console.log(`-- ${s.name}: ${formatDuration(s.ms)}`));
 const [PR, NEW, PREV, TITLE] = process.argv.slice(2);
 if (!PR || !NEW || !PREV || !TITLE) {
@@ -88,11 +73,7 @@ function run(command, args, { allowFail = false } = {}) {
 const gh = (...args) => run("gh", args);
 const ghMayFail = (...args) => run("gh", args, { allowFail: true });
 
-/**
- * `gh pr merge`, judged by the PR's state rather than by the exit alone (§520): «Merge already in
- * progress» is a merge still being written, not a failure — `mergePullRequest` waits up to a minute
- * for MERGED and `ship` continues.
- */
+/** `gh pr merge`, judged by the PR's state rather than the exit alone (§520). */
 async function merge(pr) {
   const outcome = await mergePullRequest(
     () => {
@@ -136,13 +117,9 @@ async function until(test, every, times) {
   return null;
 }
 
-/**
- * Waits until the PR's checks have settled — none pending, the same set on two readings in a row —
- * and only then judges them (§426, `ship-checks.mjs`). Stops on a red that `tolerate` does not name.
- */
+/** Waits until the PR's checks settle, then judges them (§426); stops on a red `tolerate` does not name. */
 async function settledChecks(pr, { tolerate } = {}) {
-  // Run from `.github/workflows/release.yml`, the release's own job is a check on the pull request
-  // it ships — still running while ship waits — so it is left out by its workflow's name (§535).
+  // Under release.yml, the release's own job is a pending check on the PR it ships (§535).
   const skip = process.env.SHIP_SKIP_WORKFLOW || "";
   const fields = skip ? "name,state,bucket,workflow" : "name,state,bucket";
   const read = () => withoutWorkflow(JSON.parse(ghMayFail("pr", "checks", pr, "--json", fields) || "[]"), skip);
@@ -173,9 +150,8 @@ function pushRunOf(workflow, sha) {
 }
 
 /**
- * Whether the release changes a migration — the same question `migrate.yml`'s `paths` filter asks
- * of the push to `main`: the files that differ between `main` and `qa`. Null when git cannot say,
- * and then the migration run is waited for as if it were expected.
+ * Whether `main..qa` touches `src/db/migrations`, as `migrate.yml`'s `paths` filter asks. Null when
+ * git cannot say; the migration run is then waited for anyway.
  */
 function releaseChangesMigrations() {
   const fetched = spawnSync("git", ["fetch", "--quiet", "origin", "main", "qa"], { encoding: "utf8" });
@@ -237,8 +213,7 @@ if (!release) {
 }
 console.log(`== release PR #${release}`);
 
-// The qa run above judged the code; a Vercel deployment check on the release PR can be red for
-// Hobby's daily deploy limit alone, so its red is reported and not stopped on.
+// A Vercel deployment check can be red for Hobby's daily deploy limit alone; the qa run judged the code.
 await settledChecks(release, { tolerate: /^Vercel\b/i });
 const migrationExpected = releaseChangesMigrations();
 await merge(release);

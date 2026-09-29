@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.29-2026-09-27
+
+- **The backoffice events list opens on «Viitoare»** — with no state in the address it shows the dates to come and says «N din M evenimente»; «Toate» is its own choice (`state=ALL`). «Regenerează din șabloane (4 din 6)» on `/admin/legal` says the count out of every text, with one sentence explaining the rule. On the registration form «Sex» is a dropdown again, «Feminin» first, each answer with its glyph in the list and nothing chosen. §555.
 ## BR-V2.28-2026-09-27
 
 - **«Sex» is «Masculin» or «Feminin», with their glyphs, and the T-shirt size only when the event gives one**: two radio cards replace the select, and «Prefer să nu spun» is gone (stored rows keep it and read «—»). A closed «Kit de participare» card in the editor's «Participare și înscrieri» holds one «Tricou» tick, which series and duplicates carry. Migration `0109`. §554.

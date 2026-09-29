@@ -967,15 +967,17 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 />
               </Stack>
 
-              {/* «Masculin» or «Feminin», each with its glyph (§554, amending §510): two radio cards
-                  the server draws, nothing pre-chosen, required by the browser, the §422 list and the
-                  server — «Prefer să nu spun» is no longer an answer. What it is for stays under it
-                  (§322, §546): a category ranking, which the label cannot say. */}
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "flex-start" } }}>
+              {/* «Feminin» or «Masculin», each with its glyph (§554, amending §510): a dropdown again
+                  (§555), «Feminin» first — a native select behind an empty «Alege…», nothing
+                  pre-chosen, required by the browser, the §422 list and the server; «Prefer să nu
+                  spun» is no longer an answer. What it is for stays under it (§322, §546): a
+                  category ranking, which the label cannot say. */}
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
                 <SexField
                   {...field("sex", t("sexHelp"))}
                   label={t("sex")}
-                  answers={{ MALE: t("sexOptions.MALE"), FEMALE: t("sexOptions.FEMALE") }}
+                  placeholder={t("sexChoose")}
+                  answers={{ FEMALE: t("sexOptions.FEMALE"), MALE: t("sexOptions.MALE") }}
                 />
                 {/*
                   Citizenship, required and pre-chosen on Romania (§432; the owner, 2026-09-26:
@@ -985,18 +987,14 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   server draws and the form posts, searchable once the island runs (§463): the
                   owner, "vreau searchbox să pot găsi țara".
                 */}
-                {/* Beside the two cards from `sm`, its box level with theirs: the legend above the
-                    cards is the height this top padding gives back. */}
-                <Box sx={{ width: "100%", minWidth: 0, pt: { sm: 3 } }}>
-                  <NationalityField
-                    {...field("nationality")}
-                    label={t("nationality")}
-                    // A blank from an older draft comes back as Romania too, never an empty select.
-                    defaultValue={prefill("nationality") || "RO"}
-                    countries={countries}
-                    words={countrySearchWords}
-                  />
-                </Box>
+                <NationalityField
+                  {...field("nationality")}
+                  label={t("nationality")}
+                  // A blank from an older draft comes back as Romania too, never an empty select.
+                  defaultValue={prefill("nationality") || "RO"}
+                  countries={countries}
+                  words={countrySearchWords}
+                />
               </Stack>
 
               <Typography component="h2" variant="h6" sx={{ mt: 2 }}>

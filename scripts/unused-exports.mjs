@@ -4,20 +4,10 @@
 //   node scripts/unused-exports.mjs --types    and types and interfaces nothing uses
 //   node scripts/unused-exports.mjs --local    and exports only their own file uses
 //
-// A grep walk, not a module graph, and deliberately so: no dependency (no knip), a few dozen
-// lines, and the answer a person checks by hand anyway. An export is listed when its name, as a
-// whole word, appears in no other file under src/, tests/, scripts/ or docs/ (nor a root config
-// file) and nowhere in its own file but its declaration — dead code, not merely an export that
-// could be private (`--local` lists those too). It errs towards silence: a name that is also a word
-// in a comment elsewhere is not listed. A listed name is a candidate, not a verdict — read it
-// before deleting it. Types are opt-in because a table's `$inferSelect` row type or a schema's
-// `z.infer` is the module's vocabulary whether or not anyone imports it yet.
-//
-// Not listed, because the framework or the reader is their user:
-//   - the names Next.js reads off a route file (a page's `generateMetadata`, a route's `GET`…);
-//   - ALLOWLIST and ALLOWLIST_PATTERNS below: exports kept on purpose, each with its reason.
-//
-// It prints the candidates and exits 0; it is not part of `yarn check`.
+// A grep walk, not a module graph (no dependency): an export is listed when its name, as a whole
+// word, appears in no other file under src/, tests/, scripts/ or docs/ and nowhere in its own file
+// but its declaration. It errs towards silence; a listed name is a candidate, not a verdict. Not
+// listed: Next.js route exports and the allowlist below. Exits 0; not part of `yarn check`.
 
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
@@ -40,8 +30,7 @@ const NEXT_ROUTE_EXPORTS = new Set([
 /** Exports kept on purpose although nothing names them. Each says why. */
 const ALLOWLIST = new Map([]);
 const ALLOWLIST_PATTERNS = [
-  // The day a provider's price or limit was last read off its site, kept beside the figure for the
-  // person who updates it (Costuri, §479): a record for a reader, not a value for the code.
+  // The day a provider's figure was last checked, a record for the reader (§479).
   [/_CHECKED_ON$/, "the date a figure was checked"],
 ];
 
@@ -68,7 +57,7 @@ for (const name of readdirSync(ROOT)) {
 
 const words = (text) => text.match(/[A-Za-z_$][\w$]*/g) ?? [];
 
-/** Every identifier-shaped word → the files it appears in; and each file's words, counted. */
+/** Every identifier-shaped word → the files it appears in. */
 const filesOfWord = new Map();
 const texts = new Map();
 for (const file of files) {

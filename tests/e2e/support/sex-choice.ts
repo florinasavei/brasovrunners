@@ -1,11 +1,12 @@
 import type { Page } from "@playwright/test";
 
 /**
- * Answers the registration form's «Sex»: two radio cards the server draws, «Masculin» and «Feminin»
- * (§554, amending §510), nothing pre-chosen — the browser, the §422 list and the server refuse a
- * form without an answer. Real `<input type="radio" name="sex">`, so the answer is chosen by its
- * value, the same in either language, and it answers without JavaScript.
+ * Answers the registration form's «Sex»: a dropdown again (§555, amending §554), «Feminin» first and
+ * «Masculin» second behind an empty «Alege…», nothing pre-chosen — the browser, the §422 list and the
+ * server refuse a form without an answer. What posts is a native `<select name="sex">` the server
+ * draws, so the answer is chosen by its value, the same in either language, with JavaScript or
+ * without; the island's glyph list writes into the same select.
  */
 export async function chooseSex(page: Page, value: "FEMALE" | "MALE" = "FEMALE") {
-  await page.locator(`input[type="radio"][name="sex"][value="${value}"]`).check();
+  await page.locator('select[name="sex"]').selectOption(value);
 }

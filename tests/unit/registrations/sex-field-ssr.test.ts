@@ -11,85 +11,103 @@ import SexField from "@/modules/registrations/ui/SexField";
 import { fieldId } from "@/shared/forms/outcome";
 
 /**
- * §554 (amending §510) — «Sex» on the public registration form is two answers, «Masculin» and
- * «Feminin», each with its glyph, as two radio cards the server draws: real `<input type="radio"
- * name="sex" required>`, nothing pre-chosen, so a reader without JavaScript answers and the browser
- * refuses a form without an answer. «Prefer să nu spun» is gone from the form, the catalogues and
- * every schema; the enum keeps it for the rows stored with it.
+ * §555 (amending §554, which amended §510) — «Sex» on the public registration form is a dropdown
+ * again, «Feminin» first and «Masculin» second: a native `<select name="sex" required>` the server
+ * draws behind an empty, disabled «Alege…», nothing pre-chosen, so a reader without JavaScript
+ * answers from the phone's own list and the browser refuses a form without an answer. The glyphs
+ * live in the island's list and in front of the chosen answer, never in a native option. «Prefer
+ * să nu spun» stays gone from the form, the catalogues and every schema (§554); the enum keeps it
+ * for the rows stored with it.
  */
-const answers = { MALE: "Masculin", FEMALE: "Feminin" } as const;
+const answers = { FEMALE: "Feminin", MALE: "Masculin" } as const;
 
 function render(defaultValue?: string, error = false) {
   return renderToStaticMarkup(
-    createElement(SexField, { id: fieldId("sex"), name: "sex", label: "Sex", answers, defaultValue, error, helperText: "Pentru clasamentele pe categorii." }),
+    createElement(SexField, {
+      id: fieldId("sex"),
+      name: "sex",
+      label: "Sex",
+      placeholder: "Alege…",
+      answers,
+      defaultValue,
+      error,
+      helperText: "Pentru clasamentele pe categorii.",
+    }),
   );
 }
 
-/** Each radio `<input …>` with its value, id and whether it is checked. */
-function radios(html: string) {
-  return [...html.matchAll(/<input([^>]*)>/g)]
-    .map(([, attributes]) => attributes)
-    .filter((attributes) => attributes.includes('type="radio"'))
-    .map((attributes) => ({
-      value: /value="([^"]*)"/.exec(attributes)?.[1],
-      id: /id="([^"]*)"/.exec(attributes)?.[1],
-      name: /name="([^"]*)"/.exec(attributes)?.[1],
-      required: /\srequired(=""|\s|$)/.test(attributes),
-      checked: /\schecked(=""|\s|$)/.test(attributes),
-    }));
+/** The opening `<select …>` tag of the field. */
+function selectTag(html: string): string {
+  const match = html.match(/<select[^>]*name="sex"[^>]*>/);
+  expect(match, 'a native <select name="sex">').not.toBeNull();
+  return match![0];
 }
 
-describe("§554 «Sex»: two answers with their glyphs", () => {
-  it("offers exactly two answers, Masculin then Feminin — never «Prefer să nu spun»", () => {
-    expect(SEX_CHOICES).toEqual(["MALE", "FEMALE"]);
+/** Each `<option …>` with its value, words and whether it is chosen or disabled. */
+function options(html: string) {
+  return [...html.matchAll(/<option([^>]*)>([^<]*)<\/option>/g)].map(([, attributes, words]) => ({
+    value: /value="([^"]*)"/.exec(attributes)?.[1],
+    words,
+    selected: /\sselected(=""|\s|$)/.test(attributes),
+    disabled: /\sdisabled(=""|\s|$)/.test(attributes),
+  }));
+}
+
+describe("§555 «Sex»: a dropdown, Feminin first", () => {
+  it("offers an empty «Alege…», then Feminin, then Masculin — never «Prefer să nu spun»", () => {
+    expect(SEX_CHOICES).toEqual(["FEMALE", "MALE"]);
     const html = render();
-    const list = radios(html);
-    expect(list.map((radio) => radio.value)).toEqual(["MALE", "FEMALE"]);
-    expect(list.every((radio) => radio.name === "sex" && radio.required)).toBe(true);
-    // Nothing pre-chosen (§510), and nothing a reader without JavaScript cannot reach.
-    expect(list.some((radio) => radio.checked)).toBe(false);
-    expect(html).not.toContain('type="hidden"');
-    expect(html).not.toContain("<select");
+    const list = options(html);
+    expect(list.map((option) => option.value)).toEqual(["", "FEMALE", "MALE"]);
+    expect(list.map((option) => option.words)).toEqual(["Alege…", "Feminin", "Masculin"]);
+    // The placeholder is chosen and cannot be chosen back: nothing pre-chosen (§510).
+    expect(list[0]).toMatchObject({ selected: true, disabled: true });
+    expect(list.slice(1).some((option) => option.selected)).toBe(false);
     expect(html).not.toContain("UNSPECIFIED");
-    // The refusal summary's link lands on the first answer (§47).
-    expect(list[0].id).toBe(fieldId("sex"));
-    expect(new Set(list.map((radio) => radio.id)).size).toBe(2);
+    expect(html).not.toContain('type="radio"');
   });
 
-  it("draws each answer's own glyph beside its word", () => {
+  it("is a native required select carrying the field's id, where the refusal summary's link lands (§47)", () => {
+    const tag = selectTag(render());
+    expect(tag).toContain(`id="${fieldId("sex")}"`);
+    expect(tag).toMatch(/\srequired(=""|\s|>)/);
+    // Nothing a reader without JavaScript cannot reach: no hidden input, no overlay button yet.
     const html = render();
-    const cards = [...html.matchAll(/<label[^>]*>(.*?)<\/label>/g)].map(([, inner]) => inner);
-    expect(cards).toHaveLength(2);
-    expect(cards[0]).toContain('data-testid="MaleIcon"');
-    expect(cards[0]).toContain("Masculin");
-    expect(cards[1]).toContain('data-testid="FemaleIcon"');
-    expect(cards[1]).toContain("Feminin");
-    // Decoration: the word is the answer's name.
-    expect(cards.every((card) => /<svg[^>]*aria-hidden="true"/.test(card))).toBe(true);
-  });
-
-  it("is a fieldset named by its legend, with the helper under it (§546)", () => {
-    const html = render();
-    expect(html).toMatch(/<fieldset[^>]*data-testid="sex-field"/);
-    expect(html).toMatch(/<legend[^>]*>Sex/);
-    expect(html).toContain(`id="${fieldId("sex")}-helper-text"`);
-    expect(html).toContain(`aria-describedby="${fieldId("sex")}-helper-text"`);
+    expect(html).not.toContain('type="hidden"');
+    expect(html).not.toContain("aria-haspopup");
+    expect(tag).not.toContain("aria-hidden");
+    expect(tag).not.toContain("tabindex");
   });
 
   it("keeps a refused submission's answer (§142), and ignores anything that is not one — the retired answer included", () => {
-    expect(radios(render("FEMALE")).filter((radio) => radio.checked).map((radio) => radio.value)).toEqual(["FEMALE"]);
+    expect(options(render("FEMALE")).filter((option) => option.selected).map((option) => option.value)).toEqual(["FEMALE"]);
+    expect(options(render("MALE")).filter((option) => option.selected).map((option) => option.value)).toEqual(["MALE"]);
     for (const stray of ["", "OTHER", "UNSPECIFIED", undefined]) {
-      expect(radios(render(stray)).some((radio) => radio.checked)).toBe(false);
+      expect(options(render(stray)).filter((option) => option.selected).map((option) => option.value)).toEqual([""]);
     }
-    // A refusal says so under the answers, in the error's colour, as the summary names the one field.
+  });
+
+  it("wears the chosen answer's glyph in the closed field, and none while unanswered", () => {
+    expect(render("FEMALE")).toContain('data-testid="FemaleIcon"');
+    expect(render("FEMALE")).not.toContain('data-testid="MaleIcon"');
+    expect(render("MALE")).toContain('data-testid="MaleIcon"');
+    expect(render()).not.toMatch(/data-testid="(Female|Male)Icon"/);
+    // Decoration: the word is the answer's name.
+    expect(render("FEMALE")).toMatch(/<svg[^>]*aria-hidden="true"[^>]*data-testid="FemaleIcon"|<svg[^>]*data-testid="FemaleIcon"[^>]*aria-hidden="true"/);
+  });
+
+  it("marks a refusal on the select — aria-invalid, and the helper under it in the error's colour", () => {
+    expect(selectTag(render(undefined, true))).toContain('aria-invalid="true"');
+    expect(selectTag(render())).toContain('aria-invalid="false"');
     expect(render(undefined, true)).toMatch(/<p[^>]*class="[^"]*Mui-error[^"]*"[^>]*id="field-sex-helper-text"/);
+    expect(selectTag(render())).toContain(`aria-describedby="${fieldId("sex")}-helper-text"`);
     expect(render()).not.toMatch(/class="[^"]*Mui-error/);
   });
 
   it("is refused by the domain rule at every door, and a missing answer on the public form", () => {
-    const base = { sex: "UNSPECIFIED" };
-    expect(registrationSubmissionSchema.shape.sex.safeParse(base.sex).success).toBe(false);
+    expect(registrationSubmissionSchema.shape.sex.safeParse("UNSPECIFIED").success).toBe(false);
     expect(registrationSubmissionSchema.shape.sex.safeParse(undefined).success).toBe(false);
+    expect(registrationSubmissionSchema.shape.sex.safeParse("").success).toBe(false);
     for (const answer of SEX_CHOICES) expect(registrationSubmissionSchema.shape.sex.safeParse(answer).success).toBe(true);
     // A staff entry may leave it out (a paper entry, §510), never give the retired answer.
     const staffSex = staffRegistrationSubmissionSchema.shape.sex;
@@ -109,22 +127,34 @@ describe("§554 «Sex»: two answers with their glyphs", () => {
     expect(withoutRetiredSex({ sex: "MALE", city: "Brașov" })).toEqual({ sex: "MALE", city: "Brașov" });
   });
 
-  it("has the two words in both catalogues, and no word left for the retired answer", () => {
+  it("has the placeholder and the two words in both catalogues, and no word left for the retired answer", () => {
     expect(ro.Registration.sexOptions).toEqual({ FEMALE: "Feminin", MALE: "Masculin" });
     expect(en.Registration.sexOptions).toEqual({ FEMALE: "Female", MALE: "Male" });
+    expect(ro.Registration.sexChoose).toBe("Alege…");
+    expect(en.Registration.sexChoose).toBe("Choose…");
     expect(ro.Admin.registrations.sexOptions).toEqual({ MALE: "Masculin", FEMALE: "Feminin" });
     expect(en.Admin.registrations.sexOptions).toEqual({ MALE: "Male", FEMALE: "Female" });
     for (const catalogue of [ro, en]) {
       expect(JSON.stringify(catalogue)).not.toContain("UNSPECIFIED");
       expect("sexMissing" in catalogue.Registration).toBe(false);
-      expect("sexChoose" in catalogue.Registration).toBe(false);
     }
   });
 
-  it("is what the form draws, and the §47 summary and the §422 list name it «Sex» like any field", () => {
+  it("is what the form draws, Feminin first, and the §47 summary and the §422 list name it «Sex» like any field", () => {
     const page = readFileSync(path.join(process.cwd(), "src/app/[locale]/events/[slug]/register/page.tsx"), "utf8");
     expect(page).toContain("<SexField");
+    expect(page).toContain('placeholder={t("sexChoose")}');
+    expect(page).toMatch(/answers=\{\{ FEMALE: t\("sexOptions\.FEMALE"\), MALE: t\("sexOptions\.MALE"\) \}\}/);
     expect(page).not.toContain("sexMissing");
     expect(page).not.toContain("UNSPECIFIED");
+  });
+
+  it("is a client island over the native select, its list drawing each answer's glyph in the form's order", () => {
+    const source = readFileSync(path.join(process.cwd(), "src/modules/registrations/ui/SexField.tsx"), "utf8");
+    expect(source.startsWith('"use client";')).toBe(true);
+    expect(source).toContain("select: { native: true }");
+    // A choice goes through the select the form posts, with a real change event (§463).
+    expect(source).toContain("chooseInSelect(selectRef.current, answer)");
+    expect(source).toMatch(/SEX_CHOICES\.map\(\(answer\) => \{\s*const Option = SEX_GLYPHS\[answer\]/);
   });
 });
