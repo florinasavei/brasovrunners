@@ -1,4 +1,5 @@
 import GroupsIcon from "@mui/icons-material/Groups";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutlineOutlined";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
@@ -356,7 +357,8 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
           {/* The legend (§NNN): one plain sentence per state the list shows, only behind the gate. */}
           {legend.length > 0 && (
             <Box data-testid="start-list-legend" sx={{ mt: 2 }}>
-              <Typography variant="body2" sx={{ fontWeight: 600 }}>
+              <Typography variant="body2" sx={{ fontWeight: 600, display: "flex", alignItems: "center", gap: 0.75 }}>
+                <HelpOutlineIcon fontSize="small" aria-hidden="true" />
                 {t("startList.legend.title")}
               </Typography>
               <Box component="ul" sx={{ m: 0, mt: 0.5, pl: 2.5 }}>

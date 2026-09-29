@@ -38,10 +38,10 @@ export function listStateLegend(
     if (group === "CONFIRMED") return say("startList.legend.confirmed");
     if (group === "WAITLISTED") return say("startList.legend.waitlisted", { offer });
     if (!window) return say("startList.legend.pendingHold", { hold });
-    return `${say("startList.legend.pendingWindow", {
+    return say("startList.legend.pendingWindow", {
       opens: daysPhrase(locale, params.event.confirmationOpensDaysBefore ?? 0),
       due: confirmationDueWords(locale, params.event.confirmationDeadlineDaysBefore ?? 0),
-    })} ${say("startList.legend.pendingWindowLate", { hold })}`;
+    });
   };
   return PUBLIC_LIST_GROUPS.filter((group) => params.groups.includes(group)).map((group) => ({
     group,

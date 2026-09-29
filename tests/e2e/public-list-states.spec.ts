@@ -347,7 +347,7 @@ test.describe("BR-REQ-039-01 the public list's states, behind the privacy notice
         expect(await lines.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-state")))).toEqual(["CONFIRMED", "PENDING", "WAITLISTED"]);
         // The seeded race keeps the column defaults of its participation window: asked a week before, owed two days before.
         const pending = lines.filter({ hasText: "Înscris, în așteptarea confirmării" });
-        await expect(pending).toContainText("cu o săptămână înainte de start");
+        await expect(pending).toContainText("la înscriere și cu o săptămână înainte");
         await expect(pending).toContainText("până cu 2 zile înainte de start");
         // One «?» per state word, its name the legend's own sentence.
         await expect(ro.list.getByTestId("start-list-state-help")).toHaveCount(6);
