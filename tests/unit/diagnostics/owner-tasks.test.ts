@@ -26,6 +26,7 @@ const LAUNCHED: OwnerTaskInputs = {
   hasApprovedPrivacyNotice: true,
   listStatesDescribed: true,
   listSocialsDescribed: true,
+  promoDescribed: true,
   newsletterDescribed: true,
   teamPageDescribed: true,
   raceDeclarationsCurrent: true,
@@ -96,6 +97,18 @@ describe("owner tasks", () => {
     expect(ownerTasks({ ...LAUNCHED, hasApprovedPrivacyNotice: false }).some((task) => task.id === "listSocialsNotice")).toBe(false);
     for (const catalogue of [ro, en]) {
       const item = catalogue.Admin.tasks.items.listSocialsNotice;
+      expect(item.title && item.todo && item.done && item.how.length > 0).toBeTruthy();
+      expect(item.how.join("\n")).toContain("/admin/legal");
+    }
+  });
+
+  /** §NNN — the offers-and-benefits box waits on the club's notice, like the socials; open, never blocking. */
+  it("keeps the offers-and-benefits row open while the notice in force does not describe them, and never blocking", () => {
+    expect(stateOf({ ...LAUNCHED, promoDescribed: false }, "promoNotice")).toBe("open");
+    expect(stateOf(LAUNCHED, "promoNotice")).toBe("done");
+    expect(ownerTasks({ ...LAUNCHED, hasApprovedPrivacyNotice: false }).some((task) => task.id === "promoNotice")).toBe(false);
+    for (const catalogue of [ro, en]) {
+      const item = catalogue.Admin.tasks.items.promoNotice;
       expect(item.title && item.todo && item.done && item.how.length > 0).toBeTruthy();
       expect(item.how.join("\n")).toContain("/admin/legal");
     }
@@ -257,6 +270,7 @@ describe("owner tasks", () => {
       "approveLegalText",
       "listStatesNotice",
       "listSocialsNotice",
+      "promoNotice",
       "newsletterNotice",
       "teamPageNotice",
       "raceDeclarations",

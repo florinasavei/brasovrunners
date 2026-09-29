@@ -18,6 +18,7 @@ import {
   describesListSocials,
   describesListStates,
   describesNewsletter,
+  describesPromotionalMaterials,
   describesTeamPage,
   MINIMUM_AGE_MERGE_FIELD,
   mergeFieldsIn,
@@ -243,6 +244,17 @@ export async function noticeDescribesListStates<T extends Record<string, unknown
 export async function noticeDescribesListSocials<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
   const notices = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now)));
   return notices.every((notice) => notice !== undefined && describesListSocials(notice.body));
+}
+
+/**
+ * Whether the privacy notice in force describes the offers and benefits (§NNN,
+ * `describesPromotionalMaterials`) — in every language, like `noticeDescribesListSocials`. For
+ * `/admin/tasks`, `/admin/legal` and the switch on a person's own page; a public page asks through
+ * the public cache (`cachedPromotionalMaterialsOffered`).
+ */
+export async function noticeDescribesPromotionalMaterials<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesPromotionalMaterials(notice.body));
 }
 
 /**

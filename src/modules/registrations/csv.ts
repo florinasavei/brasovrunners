@@ -95,6 +95,11 @@ export type RegistrationCsvRow = {
    * (`cancelReasonCell`). Empty for a staff cancellation and every row that is not cancelled.
    */
   cancelReason?: string;
+  /**
+   * «Oferte și beneficii» (§NNN): the moment the person said yes (ISO 8601), or empty — never
+   * asked, said no, or withdrawn. One cell says both whether and since when.
+   */
+  promoConsentAt?: string;
 };
 
 const HEADER = [
@@ -131,6 +136,8 @@ const HEADER = [
   "family",
   // Last (§558), for the same reason: the participant's own reason for cancelling.
   "Cancellation reason",
+  // Last (§NNN), for the same reason: the consent to offers and benefits, its moment or empty.
+  "Offers and benefits",
 ];
 
 export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[]): string {
@@ -166,6 +173,7 @@ export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[]): stri
         row.declarationSignedAt ?? "",
         row.family ?? "",
         row.cancelReason ?? "",
+        row.promoConsentAt ?? "",
       ]
         .map(csvCell)
         .join(","),

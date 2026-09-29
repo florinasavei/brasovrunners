@@ -57,6 +57,7 @@ export type TaskId =
   | "approveLegalText"
   | "listStatesNotice"
   | "listSocialsNotice"
+  | "promoNotice"
   | "newsletterNotice"
   | "teamPageNotice"
   | "raceDeclarations"
@@ -85,6 +86,7 @@ export const TASK_KIND: Record<TaskId, TaskKind> = {
   approveLegalText: "text",
   listStatesNotice: "text",
   listSocialsNotice: "text",
+  promoNotice: "text",
   newsletterNotice: "text",
   teamPageNotice: "text",
   raceDeclarations: "text",
@@ -167,6 +169,11 @@ export type OwnerTaskInputs = {
    * the tick and the list prints them for nobody.
    */
   listSocialsDescribed: boolean;
+  /**
+   * Does the notice in force, in every language, describe the offers and benefits (§NNN,
+   * `noticeDescribesPromotionalMaterials`)? Until it does, no form offers the box and nothing is kept.
+   */
+  promoDescribed: boolean;
   /**
    * Does the notice in force, in every language, describe the newsletter (§445,
    * `noticeDescribesNewsletter`)? Until it does, the contact page offers no subscription.
@@ -337,6 +344,15 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
     push("listSocialsNotice", {
       owner: "club",
       state: input.listSocialsDescribed ? "done" : "open",
+    });
+    /*
+      The offers and benefits (§NNN), the same shape: open, never blocking — nothing is refused,
+      the form simply does not offer the box — and done by itself the day a notice naming
+      `{{promotionalMaterials}}` takes effect.
+    */
+    push("promoNotice", {
+      owner: "club",
+      state: input.promoDescribed ? "done" : "open",
     });
     /*
       The newsletter (§445), the same shape: open, never blocking — nothing is refused, the contact

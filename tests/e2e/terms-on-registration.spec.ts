@@ -112,14 +112,15 @@ test.describe("§425 the accepted terms on the registration's page and in the ex
       expect(response.status()).toBe(200);
       const [header, ...lines] = (await response.text()).split("\r\n");
       // The terms' two columns, then the declaration's two (§499), then the family column (§543),
-      // then the participant's reason for cancelling (§558), the last.
-      expect(header.split(",").slice(-6, -2)).toEqual(["Terms version", "Terms accepted", "Declaration version", "Declaration signed"]);
-      expect(header.split(",").at(-2)).toBe("family");
-      expect(header.split(",").at(-1)).toBe("Cancellation reason");
+      // then the participant's reason for cancelling (§558), then the offers and benefits (§NNN), the last.
+      expect(header.split(",").slice(-7, -3)).toEqual(["Terms version", "Terms accepted", "Declaration version", "Declaration signed"]);
+      expect(header.split(",").at(-3)).toBe("family");
+      expect(header.split(",").at(-2)).toBe("Cancellation reason");
+      expect(header.split(",").at(-1)).toBe("Offers and benefits");
       const publicLine = lines.find((line) => line.includes("Termeni public"));
       const staffLine = lines.find((line) => line.includes("Termeni staff"));
-      expect(publicLine?.split(",").slice(-6, -4)).toEqual(["1", ACCEPTED_AT]);
-      expect(staffLine?.split(",").slice(-6, -4)).toEqual(["", ""]);
+      expect(publicLine?.split(",").slice(-7, -5)).toEqual(["1", ACCEPTED_AT]);
+      expect(staffLine?.split(",").slice(-7, -5)).toEqual(["", ""]);
     } finally {
       await cleanup(seeded);
     }

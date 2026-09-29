@@ -388,6 +388,24 @@ export const registrations = pgTable(
     listSocials: boolean("list_socials").notNull().default(false),
 
     /**
+     * «Vreau să primesc oferte și beneficii de la <club> și partenerii săi.» (§NNN): the
+     * person's own consent (art. 6(1)(a) GDPR), optional and never pre-ticked, separate from the
+     * list tick above and from the newsletter (two consents, two switches — an unsubscribe from the
+     * newsletter leaves this alone, and withdrawing this leaves the newsletter alone).
+     *
+     * True only when the person ticked it on a public form whose privacy notice — the one this row
+     * records in `privacy_notice_version` — names `{{promotionalMaterials}}`, or switched it on
+     * later from their own page while the notice in force names it. Never set by a staff entry or
+     * the desk: staff cannot consent for a person. Another adult's family form keeps none (§421).
+     *
+     * `promo_consent_at` is the moment of the tick, or of the last change through a switch —
+     * null while it was never given. The partners never receive the address: the club sends.
+     * Defaults to false, the direction a consent has to fail in.
+     */
+    promoConsent: boolean("promo_consent").notNull().default(false),
+    promoConsentAt: timestamp("promo_consent_at", { withTimezone: true }),
+
+    /**
      * The race number on the participant's chest (BR-REQ-038-01, `DECISIONS.md` §65).
      *
      * Assigned by `modules/registrations/bibs.ts` to confirmed, real registrations, in order
