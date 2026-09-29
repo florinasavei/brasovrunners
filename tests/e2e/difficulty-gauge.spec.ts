@@ -17,7 +17,8 @@ import { cardOnListing, openEditorBox } from "./support/fold";
  * the level of fifteen, the dots are the step (§NNN — the owner, 2026-09-29: «ușor: 1,2,3, mediu
  * 4,5,6 și tot așa, în ordine»).
  *
- * The pill shows «Mediu 4», hidden from a screen reader, and carries «Dificultate: mediu — nivelul
+ * The pill shows the band alone, «Mediu» (the owner, 2026-09-29 19:08: «the sub indicator is
+ * enough»), hidden from a screen reader, and carries «Dificultate: mediu — nivelul
  * 4 din 15 (mediu: 4–6)» in a visually-hidden span in its place. A plain, roleless `<div>` (MUI's `Chip` when it is
  * not `clickable`) has no computed accessible name, so the check is the real text —
  * `toContainText` — and the visible span's `aria-hidden`.
@@ -51,10 +52,10 @@ test.describe("BR-REQ-041-01 the difficulty pill names its level of fifteen on a
   // The level, then every band's levels on a second line (§NNN; the owner, 2026-09-29 14:18).
   const SENTENCE = /^Mediu — nivelul 4 din 15\s+ușor 1–3 · mediu 4–6 · greuț 7–9 · greu 10–12 · foarte greu 13–15$/;
 
-  test("on the event page, a tap on «Mediu 4» opens the tooltip", async ({ page }) => {
+  test("on the event page, a tap on the «Mediu» pill opens the tooltip", async ({ page }) => {
     await page.goto("/ro/evenimente/tura-pe-tampa");
     await hydrated(page);
-    const pill = page.getByTestId("event-facts").locator(".MuiChip-root", { hasText: "Mediu 4" });
+    const pill = page.getByTestId("event-facts").locator(".MuiChip-root", { hasText: "nivelul 4 din 15" });
     await pill.tap();
     await expect(page.getByRole("tooltip")).toHaveText(SENTENCE);
   });
@@ -63,7 +64,7 @@ test.describe("BR-REQ-041-01 the difficulty pill names its level of fifteen on a
     await page.goto("/ro/evenimente");
     await hydrated(page);
     const card = (await cardOnListing(page, "Tură pe Tâmpa")).first();
-    const pill = card.locator('[data-fact="pills"] .MuiChip-root', { hasText: "Mediu 4" });
+    const pill = card.locator('[data-fact="pills"] .MuiChip-root', { hasText: "nivelul 4 din 15" });
     await expect(pill).toHaveAttribute("data-has-tooltip", "true");
     const before = page.url();
     await pill.tap();
@@ -73,20 +74,20 @@ test.describe("BR-REQ-041-01 the difficulty pill names its level of fifteen on a
 });
 
 test.describe("BR-REQ-041-01 the difficulty gauge (§412)", () => {
-  test("the event page's route row shows «Mediu 4» beside the gauge and is heard as «Dificultate: mediu — nivelul 4 din 15 (mediu: 4–6)»", async ({ page }) => {
+  test("the event page's route row shows «Mediu» beside the gauge and is heard as «Dificultate: mediu — nivelul 4 din 15 (mediu: 4–6)»", async ({ page }) => {
     await page.goto("/ro/evenimente/tura-pe-tampa");
     const traseu = page.getByTestId("event-facts").locator("dt", { hasText: /^Traseu$/ }).locator("xpath=following-sibling::dd[1]");
-    const difficultyPill = traseu.locator(".MuiChip-root", { hasText: "Mediu 4" });
+    const difficultyPill = traseu.locator(".MuiChip-root", { hasText: "nivelul 4 din 15" });
     await expect(difficultyPill).toBeVisible();
     await expect(difficultyPill.locator("svg.MuiChip-icon")).toHaveAttribute("aria-hidden", "true");
-    await expectWords(difficultyPill, "Mediu 4", "Dificultate: mediu — nivelul 4 din 15 (mediu: 4–6)");
+    await expectWords(difficultyPill, "Mediu", "Dificultate: mediu — nivelul 4 din 15 (mediu: 4–6)");
     await expectGauge(difficultyPill, 2, 1);
   });
 
-  test("the English page says the band and the level in English", async ({ page }) => {
+  test("the English page says the band in English and the level to a screen reader", async ({ page }) => {
     await page.goto("/en/events/tampa-trail");
-    const pill = page.getByTestId("event-facts").locator(".MuiChip-root", { hasText: "Medium 4" });
-    await expectWords(pill, "Medium 4", "Difficulty: medium — level 4 of 15 (medium: 4–6)");
+    const pill = page.getByTestId("event-facts").locator(".MuiChip-root", { hasText: "level 4 of 15" });
+    await expectWords(pill, "Medium", "Difficulty: medium — level 4 of 15 (medium: 4–6)");
     await expectGauge(pill, 2, 1);
   });
 
@@ -96,13 +97,13 @@ test.describe("BR-REQ-041-01 the difficulty gauge (§412)", () => {
       await page.goto("/ro/evenimente");
       // The "other events" fold opens by itself only up to four cards (§89): `cardOnListing` opens it (the fix origin/qa gave the old spec).
       const card = (await cardOnListing(page, "Tură pe Tâmpa")).first();
-      const pill = card.locator('[data-fact="pills"] .MuiChip-root', { hasText: "Mediu 4" });
+      const pill = card.locator('[data-fact="pills"] .MuiChip-root', { hasText: "nivelul 4 din 15" });
       await expect(pill).toBeVisible();
-      await expectWords(pill, "Mediu 4", "Dificultate: mediu — nivelul 4 din 15 (mediu: 4–6)");
+      await expectWords(pill, "Mediu", "Dificultate: mediu — nivelul 4 din 15 (mediu: 4–6)");
       await expectGauge(pill, 2, 1);
       // The hardest end of the scale, on the seeded interval session (§526's seed).
-      const hardest = page.locator("li", { hasText: "Antrenament de intervale" }).first().locator('[data-fact="pills"] .MuiChip-root', { hasText: "Foarte greu 15" });
-      await expectWords(hardest, "Foarte greu 15", "Dificultate: foarte greu — nivelul 15 din 15 (foarte greu: 13–15)");
+      const hardest = page.locator("li", { hasText: "Antrenament de intervale" }).first().locator('[data-fact="pills"] .MuiChip-root', { hasText: "nivelul 15 din 15" });
+      await expectWords(hardest, "Foarte greu", "Dificultate: foarte greu — nivelul 15 din 15 (foarte greu: 13–15)");
       await expectGauge(hardest, 5, 3);
       // Nothing wider than the phone (§375's 320px lead).
       expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
@@ -127,10 +128,10 @@ test.describe("BR-REQ-041-01 the difficulty gauge (§412)", () => {
     await signIn(page, "Dev Superadministrator");
     await page.goto("/ro/admin");
     await hydrated(page);
-    const pill = page.locator(".MuiChip-root:visible", { hasText: "Mediu 4" }).first();
+    const pill = page.locator(".MuiChip-root:visible", { hasText: "nivelul 4 din 15" }).first();
     await expect(pill).toBeVisible();
     await expect(pill.locator("svg.MuiChip-icon")).toHaveAttribute("aria-hidden", "true");
-    await expectWords(pill, "Mediu 4", "Dificultate: mediu — nivelul 4 din 15 (mediu: 4–6)");
+    await expectWords(pill, "Mediu", "Dificultate: mediu — nivelul 4 din 15 (mediu: 4–6)");
     await expectGauge(pill, 2, 1);
   });
 

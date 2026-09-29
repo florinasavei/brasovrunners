@@ -190,9 +190,8 @@ describe("BR-REQ-040-04 every key used in src/ resolves", () => {
     // editor's select `Admin.editor.difficultyValues` — both, in both locales, for every band. And
     // the three steps inside a band (§526): the editor's «Nivelul» (§NNN) reads `Admin.editor.difficultySteps`
     // while no band is chosen, and `difficultyLevelChoice` once one is; every surface's words come from
-    // `Event.difficultyLevelShort`, `difficultyWithLevel`, `difficultyLevelTooltip`, `difficultyLadderItem`.
+    // `Event.difficultyValues` (the pill, the band alone), `difficultyWithLevel`, `difficultyLevelTooltip`, `difficultyLadderItem`.
     for (const key of [
-      "Event.difficultyLevelShort",
       "Event.difficultyWithLevel",
       "Event.difficultyLevelTooltip",
       "Event.difficultyLevelSr",

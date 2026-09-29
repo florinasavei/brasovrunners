@@ -157,7 +157,7 @@ describe("§528, §NNN the pill's tooltip names the level of fifteen, then every
     const pill = await difficultyPill(5);
     const html = renderToStaticMarkup(RoutePills({ pills: [pill] }));
     expect(html).toContain('data-has-tooltip="true"');
-    expect(html).toContain(`<span aria-hidden="true">Mediu 5</span>`);
+    expect(html).toContain(`<span aria-hidden="true">Mediu</span>`);
     expect(html).toContain(">Dificultate: mediu — nivelul 5 din 15 (mediu: 4–6)<");
     expect(html.match(/nivelul 5 din 15/g)).toHaveLength(1);
     expect(html).not.toMatch(/aria-label=/);

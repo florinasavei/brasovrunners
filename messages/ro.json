@@ -182,7 +182,6 @@
       "calendar": "{label}: {times}",
       "ics": "{label}: {times} — ia o frontală"
     },
-    "difficultyLevelShort": "{band} {level}",
     "difficultyLevelSr": "Dificultate: {band} — nivelul {level} din {levels} ({band}: {from}–{to})",
     "difficultyWithLevel": "{band}, nivelul {level} din {levels}",
     "difficultyLevelTooltip": "{band} — nivelul {level} din {levels}\n{ladder}",
@@ -4723,7 +4722,7 @@
               "title": "Scara de dificultate a clubului",
               "steps": [
                 "«Evenimente» → «Editează» → cardul «Ce fel de eveniment»: alegi «Dificultate» (categoria) și, alături, «Nivelul» — unul din cele trei ale categoriei.",
-                "Scara are 15 niveluri, în ordine: ușor 1–3, mediu 4–6, greuț 7–9, greu 10–12, foarte greu 13–15. Pe site apare categoria cu nivelul ei, de exemplu „Mediu 5”.",
+                "Scara are 15 niveluri, în ordine: ușor 1–3, mediu 4–6, greuț 7–9, greu 10–12, foarte greu 13–15. Pe site, pastila arată doar categoria, „Mediu”; punctele indicatorului arată nivelul din categorie.",
                 "Ce înseamnă fiecare categorie și nivel: apasă semnul de întrebare de lângă «Dificultate» sau «Nivelul».",
                 "Nivelul în celelalte categorii: primul când traseul e la capătul ușor al categoriei, al treilea când e aproape de următoarea (mai lung, mai abrupt, noaptea, noroi). Nu știi? Cel din mijloc.",
                 "Filtrul de pe site bifează o categorie întreagă: «Greu» arată toate cele trei niveluri ale ei, 10–12, și le scrie lângă nume.",

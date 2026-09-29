@@ -83,7 +83,7 @@ export default function GlyphChip({
   srSuffix?: string;
   /**
    * What a screen reader hears in place of `label` (§526): the visible words are hidden from it
-   * and these, visually hidden, stand for them — the difficulty pill shows «Mediu 5» and is heard
+   * and these, visually hidden, stand for them — the difficulty pill shows «Mediu» and is heard
    * as «Dificultate: mediu — nivelul 5 din 15 (mediu: 4–6)» (§NNN).
    */
   srLabel?: string;

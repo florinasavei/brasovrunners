@@ -182,7 +182,6 @@
       "calendar": "{label}: {times}",
       "ics": "{label}: {times} — bring a headlamp"
     },
-    "difficultyLevelShort": "{band} {level}",
     "difficultyLevelSr": "Difficulty: {band} — level {level} of {levels} ({band}: {from}–{to})",
     "difficultyWithLevel": "{band}, level {level} of {levels}",
     "difficultyLevelTooltip": "{band} — level {level} of {levels}\n{ladder}",
@@ -4723,7 +4722,7 @@
               "title": "The club's difficulty scale",
               "steps": [
                 "«Events» → «Edit» → the «What kind of event» card: pick «Difficulty» (the band) and, beside it, «Level» — one of the band's three.",
-                "The scale has 15 levels, in order: easy 1–3, medium 4–6, fairly hard 7–9, hard 10–12, very hard 13–15. The site shows the band with its level, for example \"Medium 5\".",
+                "The scale has 15 levels, in order: easy 1–3, medium 4–6, fairly hard 7–9, hard 10–12, very hard 13–15. On the site the pill shows the band alone, \"Medium\"; the gauge's dots show the level within the band.",
                 "What each band and level means: press the question mark beside «Difficulty» or «Level».",
                 "The level in the other bands: the first when the route sits at the easy end of its band, the third when it is close to the next one (longer, steeper, at night, mud). Not sure? The middle one.",
                 "The site's filter ticks a whole band: «Hard» shows all three of its levels, 10–12, and writes them beside its name.",

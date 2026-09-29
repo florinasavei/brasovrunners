@@ -151,12 +151,12 @@ describe("§412/§526 one glyph, drawn in the chip's ink", () => {
 
   it("draws the level's gauge inside a difficulty pill, beside the words, and gives a screen reader its own words (§526)", () => {
     const html = renderToStaticMarkup(
-      createElement(GlyphChip, { glyph: "difficulty:VERY_HARD-3", label: "Foarte greu 15", srLabel: "Dificultate: foarte greu — nivelul 15 din 15 (foarte greu: 13–15)" }),
+      createElement(GlyphChip, { glyph: "difficulty:VERY_HARD-3", label: "Foarte greu", srLabel: "Dificultate: foarte greu — nivelul 15 din 15 (foarte greu: 13–15)" }),
     );
     expect(html).toContain('data-testid="difficulty-gauge"');
     expect(html).toContain('data-level="15"');
     expect(html).toMatch(/<svg\b[^>]*MuiChip-icon/);
-    expect(html).toContain('<span aria-hidden="true">Foarte greu 15</span>');
+    expect(html).toContain('<span aria-hidden="true">Foarte greu</span>');
     expect(html).toContain(">Dificultate: foarte greu — nivelul 15 din 15 (foarte greu: 13–15)<");
   });
 

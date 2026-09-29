@@ -79,11 +79,13 @@ type DifficultyTranslate = (key: string, values?: Record<string, string | number
 /**
  * Every word a surface says of a level (§NNN, amending §526 and §528 — the owner, 2026-09-29:
  * «nu are cum și una grea și una ușoară să fie nivelul 2 … adică ușor: 1,2,3, mediu 4,5,6 și tot
- * așa, în ordine»): **the number is the level, the dots are the step.** The pill says the band and
- * the level of fifteen — «Mediu 5», never «Mediu 2» — and the gauge's dots alone still show where
- * in its band the level stands.
+ * așa, în ordine»): **the number is the level, the dots are the step.** Every surface without a
+ * gauge says the band and the level of fifteen — «Mediu, nivelul 5 din 15», never «Mediu 2». The
+ * pill says the band alone (the owner, 2026-09-29 19:08: «don't put "Mediu 2" and "Ușor 2" on the
+ * pill, the sub indicator is enough»): the gauge beside it draws the step in its dots, and its
+ * tooltip says the level.
  *
- * - `short` — the pill, the editor's closed line: «Mediu 5»;
+ * - `short` — the pill's visible word, beside the gauge: «Mediu»;
  * - `plain` — where no gauge is drawn (the emails' facts, the calendar entry, the `.ics`): «Mediu, nivelul 5 din 15»;
  * - `tooltip` — the pill's tooltip, two lines (the owner, 2026-09-29 14:18: the tooltip explains
  *   every level, not only its own band's): the level, then the whole ladder —
@@ -100,7 +102,7 @@ export function difficultyWords(level: number, t: DifficultyTranslate): { short:
   const title = t(`difficultyValues.${band}`);
   const word = t(`difficultyBandWords.${band}`);
   return {
-    short: t("difficultyLevelShort", { band: title, level }),
+    short: title,
     plain: t("difficultyWithLevel", { band: title, ...numbers }),
     tooltip: t("difficultyLevelTooltip", { band: title, ladder: difficultyLadder(t).join(" · "), ...numbers }),
     sr: t("difficultyLevelSr", { band: word, ...numbers }),

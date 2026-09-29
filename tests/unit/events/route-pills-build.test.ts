@@ -71,7 +71,7 @@ describe("§388 buildRoutePills — surface, difficulty, distance, elevation, ni
     const t = await getTranslations("Event");
     const format = await getFormatter();
     const pills = buildRoutePills(FULL_ROUTE, t, format);
-    expect(pills.map((pill) => pill.label)).toEqual(["Asfalt", "Ușor 2", "10 km", "300 m D+", "Noapte", "Gratuit"]);
+    expect(pills.map((pill) => pill.label)).toEqual(["Asfalt", "Ușor", "10 km", "300 m D+", "Noapte", "Gratuit"]);
     // A row with a band and no level — one the data cache kept from before §526 — is at the band's middle.
     expect(pills.map((pill) => pill.glyph)).toEqual(["surface:ASPHALT", "difficulty:EASY-2", "distance", "elevation", "night", "cost:FREE"]);
   });
@@ -80,7 +80,7 @@ describe("§388 buildRoutePills — surface, difficulty, distance, elevation, ni
     currentLocale = "en";
     const t = await getTranslations("Event");
     const format = await getFormatter();
-    expect(buildRoutePills(FULL_ROUTE, t, format).map((pill) => pill.label)).toEqual(["Asphalt", "Easy 2", "10 km", "300 m climb", "Night", "Free"]);
+    expect(buildRoutePills(FULL_ROUTE, t, format).map((pill) => pill.label)).toEqual(["Asphalt", "Easy", "10 km", "300 m climb", "Night", "Free"]);
   });
 
   it("gives a pill only to what the club stated, and none at all when it stated nothing", async () => {
@@ -134,21 +134,21 @@ describe("§388 buildRoutePills — surface, difficulty, distance, elevation, ni
   });
 
   // Through `buildRoutePills` and `RoutePills` for levels in every band and both locales, asserting
-  // what the eye and a screen reader are given — the visible «Mediu 5», hidden from the reader, and
+  // what the eye and a screen reader are given — the visible band alone, «Mediu» (the owner, 2026-09-29 19:08: «the sub indicator is enough»), hidden from the reader, and
   // the visually-hidden «Dificultate: mediu — nivelul 5 din 15 (mediu: 4–6)» in its place (§526,
-  // §528; §NNN: the number is the level, the dots are the step — the glyph still carries the step).
+  // §528; §NNN: the number is the level, the dots are the step — the glyph carries the step, the words the level).
   it.each([
     // The owner's five bands (§526): ușor, mediu, greuț, greu, foarte greu — three levels each.
-    ["ro", "EASY", 1, "Ușor 1", "Dificultate: ușor — nivelul 1 din 15 (ușor: 1–3)", "Ușor, nivelul 1 din 15"],
-    ["ro", "MEDIUM", 5, "Mediu 5", "Dificultate: mediu — nivelul 5 din 15 (mediu: 4–6)", "Mediu, nivelul 5 din 15"],
-    ["ro", "FAIRLY_HARD", 9, "Greuț 9", "Dificultate: greuț — nivelul 9 din 15 (greuț: 7–9)", "Greuț, nivelul 9 din 15"],
-    ["ro", "HARD", 10, "Greu 10", "Dificultate: greu — nivelul 10 din 15 (greu: 10–12)", "Greu, nivelul 10 din 15"],
-    ["ro", "VERY_HARD", 15, "Foarte greu 15", "Dificultate: foarte greu — nivelul 15 din 15 (foarte greu: 13–15)", "Foarte greu, nivelul 15 din 15"],
-    ["en", "EASY", 2, "Easy 2", "Difficulty: easy — level 2 of 15 (easy: 1–3)", "Easy, level 2 of 15"],
-    ["en", "MEDIUM", 4, "Medium 4", "Difficulty: medium — level 4 of 15 (medium: 4–6)", "Medium, level 4 of 15"],
-    ["en", "FAIRLY_HARD", 8, "Fairly hard 8", "Difficulty: fairly hard — level 8 of 15 (fairly hard: 7–9)", "Fairly hard, level 8 of 15"],
-    ["en", "HARD", 12, "Hard 12", "Difficulty: hard — level 12 of 15 (hard: 10–12)", "Hard, level 12 of 15"],
-    ["en", "VERY_HARD", 13, "Very hard 13", "Difficulty: very hard — level 13 of 15 (very hard: 13–15)", "Very hard, level 13 of 15"],
+    ["ro", "EASY", 1, "Ușor", "Dificultate: ușor — nivelul 1 din 15 (ușor: 1–3)", "Ușor, nivelul 1 din 15"],
+    ["ro", "MEDIUM", 5, "Mediu", "Dificultate: mediu — nivelul 5 din 15 (mediu: 4–6)", "Mediu, nivelul 5 din 15"],
+    ["ro", "FAIRLY_HARD", 9, "Greuț", "Dificultate: greuț — nivelul 9 din 15 (greuț: 7–9)", "Greuț, nivelul 9 din 15"],
+    ["ro", "HARD", 10, "Greu", "Dificultate: greu — nivelul 10 din 15 (greu: 10–12)", "Greu, nivelul 10 din 15"],
+    ["ro", "VERY_HARD", 15, "Foarte greu", "Dificultate: foarte greu — nivelul 15 din 15 (foarte greu: 13–15)", "Foarte greu, nivelul 15 din 15"],
+    ["en", "EASY", 2, "Easy", "Difficulty: easy — level 2 of 15 (easy: 1–3)", "Easy, level 2 of 15"],
+    ["en", "MEDIUM", 4, "Medium", "Difficulty: medium — level 4 of 15 (medium: 4–6)", "Medium, level 4 of 15"],
+    ["en", "FAIRLY_HARD", 8, "Fairly hard", "Difficulty: fairly hard — level 8 of 15 (fairly hard: 7–9)", "Fairly hard, level 8 of 15"],
+    ["en", "HARD", 12, "Hard", "Difficulty: hard — level 12 of 15 (hard: 10–12)", "Hard, level 12 of 15"],
+    ["en", "VERY_HARD", 13, "Very hard", "Difficulty: very hard — level 13 of 15 (very hard: 13–15)", "Very hard, level 13 of 15"],
   ] as const)("in %s, %s at level %i shows «%s» and is heard as «%s»", async (locale, band, level, shown, heard, plain) => {
     currentLocale = locale;
     const t = await getTranslations("Event");
@@ -175,7 +175,7 @@ describe("§388 RoutePills — one small outlined chip per pill, its glyph, noth
     const format = await getFormatter();
     const html = renderToStaticMarkup(RoutePills({ pills: buildRoutePills(FULL_ROUTE, t, format) }));
     const drawn = chips(html);
-    expect(drawn.map((pill) => pill.label)).toEqual(["Asfalt", "Ușor 2", "10 km", "300 m D+", "Noapte", "Gratuit"]);
+    expect(drawn.map((pill) => pill.label)).toEqual(["Asfalt", "Ușor", "10 km", "300 m D+", "Noapte", "Gratuit"]);
     for (const pill of drawn) {
       expect(pill.outlined, pill.label).toBe(true);
       expect(pill.small, pill.label).toBe(true);
