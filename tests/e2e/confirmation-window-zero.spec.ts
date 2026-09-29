@@ -85,7 +85,9 @@ test.describe("BR-REQ-050-02 a confirmation deadline of zero is «la start»", (
     await expect(dates).not.toContainText("0 zile");
 
     // Published, the folded steps on the public page must answer «când pot confirma» without
-    // reading like the reminder email is the deadline: «până la start», never «până atunci».
+    // reading like the reminder email is the deadline: «oricând până la start», never «până
+    // atunci». The lighter sentence of §546 says it in fewer words — the declaration is signed
+    // from the registration email any time before the start, the reminder only a reminder.
     await page.getByRole("button", { name: "Trimite spre verificare" }).click();
     await expect(page.getByText("În verificare", { exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Publică" }).click();
@@ -96,16 +98,18 @@ test.describe("BR-REQ-050-02 a confirmation deadline of zero is «la start»", (
     const enSlug = `cross-until-the-start-${suffix}`;
     await page.goto(`/ro/evenimente/${roSlug}`);
     await page.locator("summary").filter({ hasText: "Cum funcționează înscrierea" }).click();
-    const roSteps = page.getByText(/poți semna declarația pe proprie răspundere de acum/);
+    const roSteps = page.getByText(/semnezi declarația din emailul de înscriere oricând până la start/);
     await expect(roSteps).toBeVisible();
     await expect(roSteps).toContainText("oricând până la start");
+    await expect(roSteps).toContainText("Locul nu expiră înainte de start.");
     await expect(roSteps).not.toContainText("până atunci");
 
     await page.goto(`/en/events/${enSlug}`);
     await page.locator("summary").filter({ hasText: "How registration works" }).click();
-    const enSteps = page.getByText(/you can sign the declaration of own responsibility from now/);
+    const enSteps = page.getByText(/sign the declaration from the registration email any time before the start/);
     await expect(enSteps).toBeVisible();
-    await expect(enSteps).toContainText("any time until the start");
+    await expect(enSteps).toContainText("any time before the start");
+    await expect(enSteps).toContainText("The place does not lapse before the start.");
     await expect(enSteps).not.toContainText("until then");
 
     // Back to the editor for the last case: 0 and 0 is the weekly run's rule, no window.

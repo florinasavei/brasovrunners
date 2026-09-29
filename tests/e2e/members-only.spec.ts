@@ -8,7 +8,8 @@ import { createMembersOnlyFixture, membersFixture, removeMembersOnlyFixture } fr
  * A stranger: the listing, the calendar feed and the sitemap never name the members' event, and its
  * page and `.ics` answer 404. A member signed in through the development switcher's «Dev Member»:
  * the zone lists the event on the listing's own card and shows the partner's code with «Copiază
- * codul», and the event's page opens, `noindex`, with no share buttons. The fixtures are written
+ * codul», and the event's page opens — the live twin, `private, no-store` (§549) — `noindex`, with
+ * no share buttons, its `.ics` the twin's own file. The fixtures are written
  * straight into the database, one set per project, and removed after (`support/members-only.ts`).
  */
 test.describe.configure({ mode: "serial" });
@@ -37,6 +38,10 @@ test.describe("§NNN events and codes for the members alone", () => {
     expect((await request.get(`/ro/evenimente/${fixture.ro}`)).status()).toBe(404);
     // The file routes keep the internal segment, as the page's own link does (`events/[slug]/page.tsx`).
     expect((await request.get(`/ro/events/${fixture.ro}/calendar.ics`)).status()).toBe(404);
+    // The members' own file, the live twin's (§549): 404 to a stranger too, and kept by nobody.
+    const twinIcs = await request.get(`/ro/live/events/${fixture.ro}/calendar.ics`);
+    expect(twinIcs.status()).toBe(404);
+    expect(twinIcs.headers()["cache-control"]).toContain("no-store");
   });
 
   test("a member sees the event and the code in the zone, and opens the event's page", async ({ page }) => {
@@ -67,6 +72,19 @@ test.describe("§NNN events and codes for the members alone", () => {
     await expect(page.locator('link[rel="canonical"]')).toHaveCount(0);
     // No share buttons on the page itself (the footer keeps the club's own Facebook link).
     await expect(page.locator("main").getByRole("link", { name: /Facebook|WhatsApp/ })).toHaveCount(0);
+    // The page is the live twin's, per request (§549): no shared cache or browser keeps a member's page.
+    const pageAnswer = await page.request.get(`/ro/evenimente/${fixture.ro}`);
+    expect(pageAnswer.status()).toBe(200);
+    expect(pageAnswer.headers()["cache-control"]).toContain("no-store");
+    expect(pageAnswer.headers()["cache-control"]).toContain("private");
+    // Its calendar file is the twin's too; the static one stays a 404 whoever asks.
+    const icsLink = page.locator("main").getByRole("link", { name: "Fișier .ics" });
+    await expect(icsLink).toHaveAttribute("href", `/ro/live/events/${fixture.ro}/calendar.ics`);
+    const ics = await page.request.get(`/ro/live/events/${fixture.ro}/calendar.ics`);
+    expect(ics.status()).toBe(200);
+    expect(ics.headers()["cache-control"]).toBe("private, no-store, max-age=0");
+    expect(await ics.text()).toContain(fixture.title);
+    expect((await page.request.get(`/ro/events/${fixture.ro}/calendar.ics`)).status()).toBe(404);
     // No sideways scroll at any width the project runs at.
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(0);

@@ -23,17 +23,9 @@ import {
 import { readTeamPhotoCrop } from "./photo-crop";
 
 /**
- * What the club types for one card of «Echipa» (§459, grown by §474).
- *
- * A name, required. What the person does for the club — Romanian **and** English, or neither
- * (§352). The words about them, written in the rich-text editor since §474 (paragraphs, a list, a
- * link in the text, a picture), the same pair rule, read as "written" by `hasRichTextContent` — a
- * picture with no words is something written. Up to twelve links (§491), each a kind, an https address and
- * a label in both languages or neither (§332's shape). A photograph, by the id of the picture the
- * upload stored (`/api/admin/media`), or none — and since §541 the part of it the card shows, the
- * crop box's four fractions, kept only with a photograph.
- *
- * One side written and the other empty is refused on the empty box, every other box kept (§315).
+ * One card of «Echipa» (§459, §474): a name; role and rich-text bio in both languages or neither
+ * (§352); up to twelve links (§491); an optional photo and its crop (§541). A one-sided pair is
+ * refused on the empty box (§315).
  */
 
 export const TEAM_NAME_MAX = 80;
@@ -44,10 +36,8 @@ export const TEAM_BIO_MAX = 1500;
 export const TEAM_RICH_TEXT_JSON_MAX = 200_000;
 
 /**
- * A box's text as the card keeps it: trimmed, Windows line breaks made one, and never more than
- * one empty line in a row — a short paragraph or two, not a layout. Done before the limit is
- * counted, so a textarea the browser allowed at `maxLength` (it counts a line break as one
- * character, and posts two) is never refused over the difference (§352's reasoning).
+ * Trimmed, CRLF made LF, at most one empty line in a row. Runs before the length check, since a
+ * textarea's `maxLength` counts a line break as one character but posts two (§352).
  */
 export function normalizeTeamText(value: string): string {
   return value
@@ -59,10 +49,7 @@ export function normalizeTeamText(value: string): string {
     .trim();
 }
 
-/**
- * Plain words as a document: one paragraph per line. How a text written before the editor
- * (§459's textarea, the sample seed) reads on the page and opens in the editor (§474).
- */
+/** Plain words as a document, one paragraph per line — for text from before the editor (§474). */
 export function teamDocFromPlain(text: string | null | undefined): RichTextDoc {
   const lines = normalizeTeamText(text ?? "")
     .split("\n")
@@ -114,20 +101,13 @@ export const richTextBox = z
 /** One language of a rich pair as the save keeps it: the document and its plain words, or nulls. */
 export type TeamRichText = { doc: RichTextDoc | null; plain: string | null };
 
-/**
- * One language of a rich pair: the posted document when the editor posted one, else the plain
- * box read as paragraphs. `fromBody` says which, so a refusal names the box that was posted.
- */
+/** The posted document, else the plain box as paragraphs; `fromBody` names the box for a refusal. */
 function resolveRich(plain: string, body: RichTextDoc | undefined): { doc: RichTextDoc; plainWords: string; fromBody: boolean } {
   if (body !== undefined) return { doc: body, plainWords: richTextToPlainText(body).trim(), fromBody: true };
   return { doc: teamDocFromPlain(plain), plainWords: plain, fromBody: false };
 }
 
-/**
- * Both languages of a rich text, checked and resolved: each side's document within `max` words
- * and without a table where `tables` is false, then both or neither (§352) — refused on the box
- * that was posted for the empty side. Returns what the save writes.
- */
+/** Both languages of a rich text checked (length, tables, both or neither §352) and resolved for the save. */
 export function resolveRichPair(
   ctx: z.RefinementCtx,
   input: Readonly<Record<TextLanguage, { plain: string; body: RichTextDoc | undefined }>>,
@@ -190,10 +170,8 @@ type TeamLinkRowInput = z.infer<typeof teamLinkRowSchema>;
 const isBlankRow = (row: TeamLinkRowInput) => row.url === "" && row.labelRo === "" && row.labelEn === "";
 
 /**
- * The links as the editor posts them. Every refusal names the row as the editor numbered it —
- * the posted index, before the spare lines are dropped — so "link 2" is the second row on the
- * screen and the summary's link lands on its box. A row with a label and no address is refused
- * rather than dropped: somebody meant a link there. §332's rules, for a person.
+ * The links as posted (§332's rules). Refusals use the posted index, before blanks are dropped,
+ * so "link 2" is the second row on screen. A label without an address is refused, not dropped.
  */
 const teamLinksField = z
   .array(teamLinkRowSchema)
@@ -234,34 +212,25 @@ export const teamMemberFieldsSchema = z
     name: z.string().transform(normalizeTeamText).pipe(z.string().min(1).max(TEAM_NAME_MAX).regex(/^[^\n]*$/)),
     roleRo: optionalText(TEAM_ROLE_MAX),
     roleEn: optionalText(TEAM_ROLE_MAX),
-    /** The words about them as a plain box — §459's form, a fixture, the seed. */
+    /** Plain-box bio (§459's form, fixtures, the seed). */
     bioRo: plainBox(TEAM_BIO_MAX),
     bioEn: plainBox(TEAM_BIO_MAX),
-    /** The words about them as the rich-text editor posts them (§474); wins over the plain box. */
+    /** Rich-text bio (§474); wins over the plain box. */
     bioRoBody: richTextBox,
     bioEnBody: richTextBox,
-    /**
-     * §459's one link, for a caller that posts no list: read as a row of its guessed kind. The
-     * editor posts `links` instead, which wins.
-     */
+    /** §459's single link, read as a row of its guessed kind; `links` wins. */
     link: z
       .string()
-      // Absent reads as empty: a form that predates the box, or a test, posts no link at all.
       .default("")
       .transform((value) => value.trim())
       .pipe(z.string().max(MAX_TEAM_LINK_URL).refine((value) => value === "" || isTeamLinkUrl(value), "not an https link")),
-    /** The links' rows (§474), or absent for a caller that posts only `link`. */
     links: teamLinksField.optional(),
-    /** The stored picture's id, or empty for a card without a photo. */
     photoAssetId: z
       .string()
       .trim()
       .refine((value) => value === "" || isUuid(value), "not a picture id")
       .transform((value) => (value === "" ? null : value.toLowerCase())),
-    /**
-     * The part of the photograph the card shows (§541): the crop box's four fractions as the field
-     * posts them (JSON), or an object from a fixture or the seed. Absent or empty is no crop.
-     */
+    /** The crop's four fractions (§541): JSON from the field, or an object from a fixture. */
     photoCrop: z.union([z.string(), z.record(z.string(), z.unknown()), z.null()]).optional(),
   })
   .transform((fields, ctx) => {
@@ -286,20 +255,16 @@ export const teamMemberFieldsSchema = z
       bioRoJson: bio.ro.doc,
       bioEnJson: bio.en.doc,
       links,
-      /** The first link, written to §459's column for the code still serving during a rollout. */
+      /** The first link, kept in §459's column for code still serving during a rollout. */
       link: links[0]?.url ?? null,
       photoAssetId: fields.photoAssetId,
-      /** Only with a photograph: a crop means nothing on a card without one. */
       photoCrop: fields.photoAssetId && crop !== "invalid" ? crop : null,
     };
   });
 
 export type TeamMemberFields = z.output<typeof teamMemberFieldsSchema>;
 
-/**
- * A refusal's path as the form's box name: `links.1.url` is the box `links[1].url` the editor
- * posted, every other path its own name.
- */
+/** A refusal's path as the form's box name: `links.1.url` → `links[1].url`. */
 export function teamFieldName(path: readonly PropertyKey[]): string {
   if (path[0] === "links" && typeof path[1] === "number" && typeof path[2] === "string") return `links[${path[1]}].${path[2]}`;
   if (path[0] === "links") return "links";

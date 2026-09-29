@@ -506,8 +506,7 @@ export const events = pgTable(
      * **Written only by the print** (`bibs.ts#reserveSpareBibs`), never by the editor's save: the
      * club types how many and the platform reserves them after the highest number anybody has, or
      * extends the reservation by the next free numbers — so it can never land on a number
-     * somebody holds. **The allocator never draws from it**: not the provisional number at
-     * submission, not the recompaction at the close, not a confirmation after it, not the batch.
+     * somebody holds. **The allocator never draws from it**: not a confirmation, not the batch.
      */
     walkInBibStart: integer("walk_in_bib_start"),
     walkInBibCount: integer("walk_in_bib_count"),
@@ -527,16 +526,9 @@ export const events = pgTable(
     bibDesign: jsonb("bib_design"),
 
     /**
-     * When this event's race numbers were settled (`DECISIONS.md` §214).
-     *
-     * Registration closes, the entry list stops moving, and the maintenance job turns every
-     * provisional number into a final one in a single dense sequence — then writes this. It is
-     * the idempotency marker and nothing else: the job runs every few minutes and must do that
-     * work exactly once, because a second pass would renumber people who have already been
-     * told their number.
-     *
-     * Null means "not settled yet", which is every event before its window shuts and every
-     * event written before this existed.
+     * When this event's race numbers were settled at the close (`DECISIONS.md` §214). **Retired
+     * since §548; nothing reads or writes it**: a number is drawn by each confirmation, so there is
+     * no settle. It stays, expand-only, until a contract release drops it.
      */
     bibsSettledAt: timestamp("bibs_settled_at", { withTimezone: true }),
 

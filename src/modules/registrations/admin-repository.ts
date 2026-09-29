@@ -70,10 +70,8 @@ export type RegistrationListRow = {
   listSocials: boolean;
   submittedAt: Date;
   confirmedAt: Date | null;
-  /** The race number, once assigned (BR-REQ-038-01). */
+  /** The race number, drawn at the confirmation (BR-REQ-038-01, §548); shown through `raceNumberOf`. */
   bibNumber: number | null;
-  /** The number held while it can still change (§214); null once a final one is settled. */
-  provisionalBibNumber: number | null;
   /** When the club last said this bib is on paper (§264); null while it is not. */
   bibPrintedAt: Date | null;
   checkedInAt: Date | null;
@@ -276,11 +274,7 @@ function registrationOrderBy(sort: RegistrationSortKey, dir: "asc" | "desc") {
     // Race morning sorts by this (§173). Nulls last either way: a row with no number yet is
     // not "before 1", it is not in the list the sort is about.
     case "bib":
-      // Whichever number the runner actually has (§214): sorting by the final column alone
-      // would put everybody still provisional in one undifferentiated block at the end.
-      return dir === "asc"
-        ? sql`coalesce(${registrations.bibNumber}, ${registrations.provisionalBibNumber}) asc nulls last`
-        : sql`coalesce(${registrations.bibNumber}, ${registrations.provisionalBibNumber}) desc nulls last`;
+      return dir === "asc" ? sql`${registrations.bibNumber} asc nulls last` : sql`${registrations.bibNumber} desc nulls last`;
   }
 }
 
@@ -333,7 +327,6 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       submittedAt: registrations.submittedAt,
       confirmedAt: registrations.confirmedAt,
       bibNumber: registrations.bibNumber,
-      provisionalBibNumber: registrations.provisionalBibNumber,
       bibPrintedAt: registrations.bibPrintedAt,
       checkedInAt: registrations.checkedInAt,
       emailRejectedReason,
@@ -539,8 +532,6 @@ export type RegistrationDetail = {
   expiryReason: string | null;
   /** Race day (BR-REQ-037-07, BR-REQ-037-08, BR-REQ-038-01). */
   bibNumber: number | null;
-  /** The number held while it can still change (§214); null once a final one is settled. */
-  provisionalBibNumber: number | null;
   /** Whether the settled number is on paper (§264): what the cancel confirmation warns about, and what a cancelled row's chip says (§311). */
   bibPrintedAt: Date | null;
   checkinCode: string | null;
@@ -592,7 +583,6 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
   const [row] = await db
     .select({
       bibNumber: registrations.bibNumber,
-      provisionalBibNumber: registrations.provisionalBibNumber,
       bibPrintedAt: registrations.bibPrintedAt,
       checkinCode: registrations.checkinCode,
   idDocument: latestIdDocument,
@@ -708,7 +698,6 @@ export type EmergencySheetRow = EmergencyDetails & {
   id: string;
   registeredName: string;
   bibNumber: number | null;
-  provisionalBibNumber: number | null;
   checkedInAt: Date | null;
 };
 
@@ -721,7 +710,6 @@ export async function listEmergencySheet<T extends Record<string, unknown>>(
       id: registrations.id,
       registeredName: registrations.registeredName,
       bibNumber: registrations.bibNumber,
-      provisionalBibNumber: registrations.provisionalBibNumber,
       checkedInAt: registrations.checkedInAt,
       phone: registrations.phone,
       emergencyContactName: registrations.emergencyContactName,
@@ -732,7 +720,7 @@ export async function listEmergencySheet<T extends Record<string, unknown>>(
     .from(registrations)
     .where(and(eq(registrations.eventId, eventId), eq(registrations.status, "CONFIRMED"), eq(registrations.kind, "REAL")))
     .orderBy(
-      sql`coalesce(${registrations.bibNumber}, ${registrations.provisionalBibNumber}) asc nulls last`,
+      sql`${registrations.bibNumber} asc nulls last`,
       asc(registrations.registeredName),
       asc(registrations.id),
     );
@@ -835,8 +823,6 @@ export type DeskRegistration = {
   /** The event's own zone, which the desk reads its date in (§349). */
   eventTimezone: string;
   bibNumber: number | null;
-  /** The number held while it can still change (§214); null once a final one is settled. */
-  provisionalBibNumber: number | null;
   /**
    * Whether the settled number is on paper (§264), and when the row left the live states
    * (§311). Together they are what the desk says in red about a cancelled or expired runner
@@ -845,11 +831,6 @@ export type DeskRegistration = {
    * address (`AGENTS.md` §15.11).
    */
   bibPrintedAt: Date | null;
-  /**
-   * Who entered the row (§444): a staff entry is a walk-in the desk may hand a spare bib with the
-   * paper (`handsSpareAtConfirm`). Where it came from, never who or how to reach them.
-   */
-  source: "PUBLIC" | "STAFF";
   cancelledAt: Date | null;
   expiredAt: Date | null;
   /** Null until confirmed. */
@@ -876,9 +857,7 @@ const DESK_COLUMNS = {
   eventStartsAt: events.startsAt,
   eventTimezone: events.timezone,
   bibNumber: registrations.bibNumber,
-  provisionalBibNumber: registrations.provisionalBibNumber,
   bibPrintedAt: registrations.bibPrintedAt,
-  source: registrations.source,
   cancelledAt: registrations.cancelledAt,
   expiredAt: registrations.expiredAt,
   checkinCode: registrations.checkinCode,
@@ -926,26 +905,17 @@ export async function listDeskRegistrations<T extends Record<string, unknown>>(
   const conditions: SQL[] = [eq(registrations.eventId, input.eventId)];
   if (/^\d{1,5}$/.test(q)) {
     /*
-      Either column: on race morning the desk types the number printed on the sheet, and
-      before the settle that number lives in the provisional column (§214).
-
-      A **settled** number in any status, and that is the one place the desk's search reads a
-      cancelled or expired row (§311, the exception BR-REQ-037-08 criterion 4 names). A settled
-      number is never reused (§173), so "who is 27" has exactly one answer at this event even
-      after 27 cancelled — and a volunteer holding the bib that somebody just handed over,
-      typing its number and being told "nobody matches", is the surprise this exists to
-      prevent. The row they get says, in red, why nothing is to be handed out.
-
-      A provisional number only on a live row. It is printed nowhere and may already be
-      somebody else's once the place is gone, so a row that is over never answers to it — and
-      that is said here rather than left to the transitions. Every sweep clears the column now
-      (the lapsed-declaration one since §420, with a migration for the rows it had left set), and
-      the status filter stays as the belt to those braces: `coalesce` over any status would find
-      a row by a number it never wore on paper the day any sweep forgot again.
+      The number a runner wears — confirmed, and that is the one place the desk's search reads a
+      cancelled or expired row too (§311, the exception BR-REQ-037-08 criterion 4 names). A number
+      is never reused (§173), so "who is 27" has exactly one answer at this event even after 27
+      cancelled — and a volunteer holding the bib that somebody just handed over, typing its number
+      and being told "nobody matches", is the surprise this exists to prevent. The row they get
+      says, in red, why nothing is to be handed out. A row not confirmed shows no number (§548,
+      `raceNumberOf`), so it never answers to one either.
     */
     const number = Number(q);
     conditions.push(
-      sql`(${registrations.bibNumber} = ${number} OR (${registrations.bibNumber} IS NULL AND ${registrations.provisionalBibNumber} = ${number} AND ${registrations.status} NOT IN ('CANCELLED', 'EXPIRED')))`,
+      sql`(${registrations.bibNumber} = ${number} AND ${registrations.status} IN ('CONFIRMED', 'CANCELLED', 'EXPIRED'))`,
     );
   } else {
     conditions.push(sql`${registrations.status} NOT IN ('CANCELLED', 'EXPIRED')`);
@@ -971,8 +941,8 @@ export async function countDesk<T extends Record<string, unknown>>(
     .select({
       confirmed: sql<number>`count(*) FILTER (WHERE ${registrations.status} = 'CONFIRMED')`.mapWith(Number),
       checkedIn: sql<number>`count(*) FILTER (WHERE ${registrations.checkedInAt} IS NOT NULL)`.mapWith(Number),
-      // Nobody to hand a bib to: neither number (§214).
-      withoutBib: sql<number>`count(*) FILTER (WHERE ${registrations.status} = 'CONFIRMED' AND ${registrations.bibNumber} IS NULL AND ${registrations.provisionalBibNumber} IS NULL)`.mapWith(Number),
+      // Confirmed and wearing no number: a gap «Alocă numerele» fills (§548).
+      withoutBib: sql<number>`count(*) FILTER (WHERE ${registrations.status} = 'CONFIRMED' AND ${registrations.bibNumber} IS NULL)`.mapWith(Number),
       pending: sql<number>`count(*) FILTER (WHERE ${registrations.status} NOT IN ('CONFIRMED', 'CANCELLED', 'EXPIRED'))`.mapWith(Number),
     })
     .from(registrations)

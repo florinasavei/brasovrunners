@@ -12,9 +12,8 @@ import type { Locale } from "@/i18n/routing";
 import { getStorage, objectKey } from "@/modules/media/storage";
 
 /**
- * Reads for the gallery, public and backoffice. Public queries name their columns and never
- * `select()` a whole row (BR-REQ-070-01), and read only PUBLISHED albums in the requested
- * locale — no translation row is a 404, never the other language (BR-REQ-040-02).
+ * Reads for the gallery. Public queries name their columns (BR-REQ-070-01) and read only
+ * PUBLISHED albums in the requested locale — no translation is a 404 (BR-REQ-040-02).
  */
 
 export type PublicPhoto = {
@@ -32,22 +31,15 @@ export type PublicAlbumSummary = {
   title: string;
   description: string | null;
   takenOn: Date;
-  /** When the album row last changed — the sitemap's `lastModified` (§342). */
+  /** The sitemap's `lastModified` (§342). */
   updatedAt: Date;
   photoCount: number;
   coverThumbUrl: string | null;
-  /**
-   * The cover's master and size, for its `srcset` (§414): the listing draws a cover across a
-   * phone, which is wider than the thumbnail it used to be given.
-   */
+  /** The cover's master and size, for its `srcset` (§414). */
   coverWebUrl: string | null;
   coverWidth: number | null;
   coverHeight: number | null;
-  /**
-   * The event the photos are from, titled in this locale, when the album is linked to one and
-   * that event is published here; null for a free album (§434) — which the listing names by
-   * its date alone.
-   */
+  /** The linked event's title in this locale while published there; null for a free album (§434). */
   eventTitle: string | null;
 };
 
@@ -94,9 +86,7 @@ export async function listPublishedAlbums<T extends Record<string, unknown>>(
     )
     .leftJoin(mediaAssets, eq(mediaAssets.id, galleryAlbums.coverMediaAssetId))
     .where(eq(galleryAlbums.editorialStatus, "PUBLISHED"))
-    // Newest first, both kinds in one list (§434): an event's album and a free one are ordered
-    // by the day the photos were taken, never grouped apart; the id breaks a same-day tie so
-    // the order does not change between two reads.
+    // Newest first, both kinds in one list (§434); the id makes the order stable.
     .orderBy(desc(galleryAlbums.takenOn), desc(galleryAlbums.publishedAt), asc(galleryAlbums.id));
 
   return rows.map((row) => ({
@@ -112,11 +102,7 @@ export async function listPublishedAlbums<T extends Record<string, unknown>>(
   }));
 }
 
-/**
- * The linked event's title in `locale`, only while that event is published there — a draft
- * event's name never reaches a public page through its album (BR-REQ-040-02). Null for a free
- * album (§434).
- */
+/** The linked event's title in `locale`, only while published there (BR-REQ-040-02); null for a free album (§434). */
 function publishedEventTitle(locale: Locale) {
   return sql<string | null>`(
     select ${eventTranslations.title} from ${eventTranslations}
@@ -214,18 +200,18 @@ export async function listPhotos<T extends Record<string, unknown>>(
 export type AlbumListRow = {
   id: string;
   editorialStatus: GalleryAlbum["editorialStatus"];
-  /** The optimistic version, so the list can publish and unpublish a row (§256). */
+  /** For publish/unpublish from the list (§256). */
   version: number;
   takenOn: Date;
   title: string;
   photoCount: number;
-  /** The linked event, or null for a free album (§434). */
+  /** Null for a free album (§434). */
   eventId: string | null;
   /** That event's title in the backoffice's locale, whatever its status; null when it has none there. */
   eventTitle: string | null;
 };
 
-/** Which of the backoffice list's two groups an album sits in (§434): linked to an event, or free. */
+/** The backoffice list's two groups (§434). */
 export type AlbumKind = "event" | "free";
 
 export function albumKind(row: { eventId: string | null }): AlbumKind {
@@ -286,10 +272,7 @@ export async function findAlbumForEditor<T extends Record<string, unknown>>(
   return { album, translations, photos: await listPhotos(db, id) };
 }
 
-/**
- * Every locale one published album lives in, with that locale's own slug — its `hreflang`
- * alternates (§342). An album that is not published yields nothing.
- */
+/** A published album's locales and slugs, for `hreflang` (§342); nothing for an unpublished one. */
 export async function findPublishedAlbumTranslations<T extends Record<string, unknown>>(
   db: Database<T>,
   albumId: string,
@@ -301,10 +284,7 @@ export async function findPublishedAlbumTranslations<T extends Record<string, un
     .where(and(eq(galleryAlbumTranslations.albumId, albumId), eq(galleryAlbums.editorialStatus, "PUBLISHED")));
 }
 
-/**
- * The same, for every album in `albumIds` at once — the sitemap's own twin of the single-album
- * version above (§342), one query for the whole list rather than one per row.
- */
+/** The same for many albums in one query — the sitemap's (§342). */
 export async function findPublishedAlbumTranslationsForAlbums<T extends Record<string, unknown>>(
   db: Database<T>,
   albumIds: readonly string[],

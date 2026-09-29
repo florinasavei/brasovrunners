@@ -20,9 +20,16 @@ type Props = { params: Promise<{ locale: string; slug: string }> };
 
 /**
  * A page's text changes when the club saves it, with no deploy in between — and the save expires
- * the public cache the text is read from (§333), so the next visitor gets the new words.
+ * the public cache the text is read from (§333), and with it this static page (§549, amending
+ * §333): made on its first visit, kept by the CDN, made again after a save, a day at most. A
+ * literal, as Next requires: it equals `PUBLIC_PAGE_CEILING_SECONDS` (a test holds them together).
  */
-export const dynamic = "force-dynamic";
+export const revalidate = 86400;
+
+/** Made on its first visit, never at build: no page is known before the database is asked (§549). */
+export function generateStaticParams(): { slug: string }[] {
+  return [];
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, slug } = await params;

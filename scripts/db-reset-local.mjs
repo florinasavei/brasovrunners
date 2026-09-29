@@ -12,6 +12,8 @@
  */
 
 import { spawnSync } from "node:child_process";
+import { rmSync } from "node:fs";
+import path from "node:path";
 import process from "node:process";
 
 const url = process.env.DATABASE_URL;
@@ -90,4 +92,15 @@ for (const [label, args] of [
   }
 }
 
-console.log("db:reset:local — done");
+/*
+  The public pages a production build made since it started (§549): `next start` keeps each static
+  page it renders under `.next/server/app/<locale>/`, and they outlive a restart — so after a reseed
+  they would still show the old seed's events and free places until a write expired them. They are
+  made again on their next visit; nothing the build itself wrote lives there (no public page is
+  prerendered at build). A running `next start` also holds them in memory: restart it, as before.
+*/
+for (const locale of ["ro", "en"]) {
+  rmSync(path.join(".next", "server", "app", locale), { recursive: true, force: true });
+}
+
+console.log("db:reset:local — done (restart a running `yarn start`: it keeps the pages it made in memory)");

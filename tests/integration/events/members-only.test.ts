@@ -20,6 +20,10 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * The session is the real one (`session.ts`, the development switcher's cookie in tests), over a real
  * database. Each public read is asked for the event by its own function, the way §533's test asks for
  * the undated one; the members' reads are asked with and without a session.
+ *
+ * Since §549 the event page is static for a stranger and the proxy sends a signed-in visitor to its
+ * live twin: the static page and its `force-static` `.ics` never ask the account (a members' event
+ * is a 404 there, whoever asks), and the twin and the twin's `.ics` are the members' door.
  */
 const state = vi.hoisted(() => ({ db: undefined as unknown, cookie: undefined as string | undefined }));
 
@@ -49,7 +53,9 @@ const { membersEventBySlug, membersOnlyEventsFor } = await import("@/modules/eve
 const { queueNewEventAlerts } = await import("@/modules/newsletter/service");
 const { submitRegistration } = await import("@/modules/registrations/service");
 const { GET: eventIcs } = await import("@/app/[locale]/events/[slug]/calendar.ics/route");
+const { GET: membersIcs } = await import("@/app/[locale]/live/events/[slug]/calendar.ics/route");
 const { generateMetadata, default: EventDetailPage } = await import("@/app/[locale]/events/[slug]/page");
+const { generateMetadata: twinMetadata, default: LiveEventDetailPage } = await import("@/app/[locale]/live/events/[slug]/page");
 const { submitRegistrationAction } = await import("@/app/[locale]/events/[slug]/register/actions");
 const { default: RegisterPage } = await import("@/app/[locale]/events/[slug]/register/page");
 const { default: GroupRunDeclarationPage } = await import("@/app/[locale]/events/[slug]/declaration/page");
@@ -152,6 +158,15 @@ function textsOf(node: unknown): string[] {
   if (typeof node !== "object" || node === null || !("props" in node)) return [];
   const props = (node as { props: Record<string, unknown> }).props;
   return [...(typeof props.value === "string" ? [props.value] : []), ...textsOf(props.children)];
+}
+
+/**
+ * The live twin rendered one level down: it returns the event page as an element with the props it
+ * chose (the members' read, the edit flag), and the page itself is what reads the event.
+ */
+async function throughTwin(props: Parameters<typeof LiveEventDetailPage>[0]): Promise<unknown> {
+  const element = (await LiveEventDetailPage(props)) as { type: (props: unknown) => Promise<unknown>; props: unknown };
+  return element.type(element.props);
 }
 
 /** Whether a page's call threw Next's 404. */
@@ -304,31 +319,51 @@ describe("§NNN events for the members alone", () => {
 
   describe("the page and the .ics: 404 to a stranger, open to a member and to staff", () => {
     const params = () => Promise.resolve({ locale: "ro", slug: "crosul-membrilor" });
-    const ics = () => eventIcs(new Request("http://localhost/ro/events/crosul-membrilor/calendar.ics"), { params: params() });
+    const staticIcs = () => eventIcs(new Request("http://localhost/ro/events/crosul-membrilor/calendar.ics"), { params: params() });
+    const ics = () => membersIcs(new Request("http://localhost/ro/live/events/crosul-membrilor/calendar.ics"), { params: params() });
+    const twin = () => throughTwin({ params: params(), searchParams: Promise.resolve({}) });
 
-    it("answers a stranger 404 on the page, the metadata and the .ics", async () => {
+    it("answers a stranger 404 on the twin, its metadata and the members' .ics", async () => {
       expect(await membersEventBySlug("ro", "crosul-membrilor")).toBeUndefined();
-      expect(await generateMetadata({ params: params(), searchParams: Promise.resolve({}) })).toEqual({});
-      expect(await isNotFound(EventDetailPage({ params: params(), searchParams: Promise.resolve({}) }))).toBe(true);
-      expect((await ics()).status).toBe(404);
+      expect(await twinMetadata({ params: params() })).toEqual({});
+      expect(await isNotFound(twin())).toBe(true);
+      const response = await ics();
+      expect(response.status).toBe(404);
+      expect(response.headers.get("Cache-Control")).toContain("no-store");
     });
 
-    it("opens for a member: the page, noindex metadata and a private .ics", async () => {
+    it("the static page and its .ics answer 404 even with a member's session: they never ask the account (§549)", async () => {
+      state.cookie = member.id;
+      expect(await generateMetadata({ params: params() })).toEqual({});
+      expect(await isNotFound(EventDetailPage({ params: params() }))).toBe(true);
+      expect((await staticIcs()).status).toBe(404);
+    });
+
+    it("opens for a member on the twin: the page, noindex metadata and a private .ics", async () => {
       state.cookie = member.id;
       expect(await membersEventBySlug("ro", "crosul-membrilor")).toMatchObject({ membersOnly: true });
-      const metadata = await generateMetadata({ params: params(), searchParams: Promise.resolve({}) });
+      const metadata = await twinMetadata({ params: params() });
       expect(metadata).toMatchObject({ title: "Crosul membrilor", robots: { index: false, follow: false } });
       expect(metadata).not.toHaveProperty("alternates");
-      expect(await isNotFound(EventDetailPage({ params: params(), searchParams: Promise.resolve({}) }))).toBe(false);
+      expect(metadata).not.toHaveProperty("openGraph");
+      expect(await isNotFound(twin())).toBe(false);
       const response = await ics();
       expect(response.status).toBe(200);
-      expect(response.headers.get("Cache-Control")).toContain("no-store");
+      expect(response.headers.get("Cache-Control")).toBe("private, no-store, max-age=0");
+      expect(response.headers.get("X-Robots-Tag")).toBe("noindex, nofollow");
     });
 
     it("opens for an Administrator", async () => {
       state.cookie = admin.id;
-      expect(await isNotFound(EventDetailPage({ params: params(), searchParams: Promise.resolve({}) }))).toBe(false);
+      expect(await isNotFound(twin())).toBe(false);
       expect((await ics()).status).toBe(200);
+    });
+
+    it("the members' .ics serves no public event: that file is the static one's", async () => {
+      await createEventAndPublish(db, { actor: admin, fields: { ...fields(), translations: PUBLIC }, publish: true, now: NOW });
+      state.cookie = member.id;
+      const publicParams = Promise.resolve({ locale: "ro", slug: "crosul-public" });
+      expect((await membersIcs(new Request("http://localhost/ro/live/events/crosul-public/calendar.ics"), { params: publicParams })).status).toBe(404);
     });
 
     it("the zone lists it for a member and for nobody else", async () => {
@@ -366,7 +401,7 @@ describe("§NNN events for the members alone", () => {
       await createEventAndPublish(db, { actor: admin, fields: { ...fields(), translations: PUBLIC }, publish: true, now: NOW });
       state.cookie = member.id;
       const onPage = async (slug: string) =>
-        elementsOf(await EventDetailPage({ params: Promise.resolve({ locale: "ro", slug }), searchParams: Promise.resolve({}) }), StartList);
+        elementsOf(await throughTwin({ params: Promise.resolve({ locale: "ro", slug }), searchParams: Promise.resolve({}) }), StartList);
       expect(await onPage("crosul-membrilor")).toHaveLength(0);
       expect(await onPage("crosul-public")).toHaveLength(1);
     });

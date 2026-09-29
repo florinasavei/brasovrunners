@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, isNotNull, isNull, lte, not, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNotNull, lte, not, sql } from "drizzle-orm";
 import { emailOutbox, type EmailMessageType } from "@/db/schema/email-outbox";
 import { eventTranslations, events } from "@/db/schema/events";
 import { newsletterSends } from "@/db/schema/newsletter";
@@ -8,11 +8,9 @@ import type { Database } from "@/db/types";
 import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import type { Deadlines } from "@/modules/deadlines/domain/deadlines";
 import { readNewsletterWords } from "@/modules/newsletter/domain/message";
-import { awaitingSettledNumber } from "@/modules/registrations/bibs";
 import { holdAwaitingItsFirstEmail } from "@/modules/registrations/repository";
 import {
   AUTOMATIC_SEND_KEYS,
-  bibsSettleAt,
   declarationLastCallDueAt,
   eventReminderDueAt,
   isDeclarationLastCallDue,
@@ -35,17 +33,16 @@ import { selectDeclarationCandidates, selectReminderCandidates } from "./event-m
  * moment it becomes due and how many people it would reach if it were due now.
  *
  * **One formula.** Each send is decided by the function the maintenance job itself asks
- * (`domain/automatic-sends.ts`), over the candidates the job itself selects (`event-mail.ts`,
- * `bibs.ts#awaitingSettledNumber`) — evaluated at the future instant instead of at `now`. A
+ * (`domain/automatic-sends.ts`), over the candidates the job itself selects (`event-mail.ts`) —
+ * evaluated at the future instant instead of at `now`. A
  * registration whose key is already in the outbox is left out, as `enqueueEmail` would leave it.
  *
  * **What is listed:** the reminder before the start (the event's own lead or the club's, §377 —
  * nothing for an event that sends none), the participation confirmation when the window opens
  * (§104), the last call to sign at the reminder's lead (§160), the offer to the next in line when
  * a waiting-list offer or a declaration hold lapses with somebody waiting, before registration
- * closes (§160, AGENTS.md §10.5, §420),
- * "here is your race number" when registration closes (§214), and "registration is open" to the
- * addresses left on the event's page (§146).
+ * closes (§160, AGENTS.md §10.5, §420), and "registration is open" to the addresses left on the
+ * event's page (§146). No race number is sent on its own since §548: it rides on the confirmation.
  *
  * **And what already waits for the subscribers** (§445): a newsletter or a new-event alert that
  * is queued and not yet sent — the reserve (`domain/bulk.ts`) may hold it until the allowance
@@ -70,7 +67,6 @@ export type AutomaticSend =
   | "lastCall"
   | "participation"
   | "nextInLine"
-  | "bibs"
   | "registrationOpened"
   // The subscribers' sends, already queued (§445).
   | "newsletter"
@@ -110,7 +106,6 @@ const TYPE_OF: Record<AutomaticSend, EmailMessageType> = {
   lastCall: "COMPLETE_DECLARATION",
   participation: "COMPLETE_DECLARATION",
   nextInLine: "WAITLIST_SPOT_OFFER",
-  bibs: "BIB_ASSIGNED",
   registrationOpened: "REGISTRATION_OPENED",
   newsletter: "NEWSLETTER",
   newEventAlert: "NEW_EVENT_ALERT",
@@ -119,7 +114,6 @@ const TYPE_OF: Record<AutomaticSend, EmailMessageType> = {
 /** The order of sends due at one instant: the order a run of the job queues them in — the subscribers' last (`domain/bulk.ts`). */
 const RUN_ORDER: AutomaticSend[] = [
   "nextInLine",
-  "bibs",
   "reminder",
   "lastCall",
   "participation",
@@ -264,28 +258,6 @@ export async function forecastAutomaticEmails<T extends Record<string, unknown>>
   }
   const pending: Due[] = keyed.filter((item) => !queued.has(keyOf(item)));
   pending.push(...nextInLinePending);
-
-  // "Here is your race number" (§214): at the close, to everybody a close numbers — real only.
-  const settling = await db
-    .select({
-      eventId: events.id,
-      startsAt: events.startsAt,
-      registrationClosesAt: events.registrationClosesAt,
-      registrationId: registrations.id,
-    })
-    .from(registrations)
-    .innerJoin(events, eq(events.id, registrations.eventId))
-    .where(
-      and(
-        eq(events.eventStatus, "SCHEDULED"),
-        isNull(events.bibsSettledAt),
-        sql`coalesce(${events.registrationClosesAt}, ${events.startsAt}) <= ${until.toISOString()}::timestamptz`,
-        awaitingSettledNumber(),
-      ),
-    );
-  for (const row of settling) {
-    pending.push({ at: notBeforeNow(bibsSettleAt(row)), eventId: row.eventId, send: "bibs", registrationId: row.registrationId, kind: "REAL" });
-  }
 
   // "Registration is open" (§146), to the addresses left on the event's page — no registration yet.
   const interested = await db

@@ -167,12 +167,16 @@ describe("§NNN no public read path meets a members' row or a code (source walk)
 
   it("every page that opens a members' event asks the session first", () => {
     for (const path of [
-      "src/app/[locale]/events/[slug]/page.tsx",
+      "src/app/[locale]/live/events/[slug]/page.tsx",
+      "src/app/[locale]/live/events/[slug]/calendar.ics/route.ts",
       "src/app/[locale]/events/[slug]/register/page.tsx",
-      "src/app/[locale]/events/[slug]/calendar.ics/route.ts",
       "src/app/[locale]/events/[slug]/declaration/page.tsx",
     ]) {
       expect(SOURCES.find((file) => file.path === path)!.text, path).toMatch(/membersEventBySlug/);
+    }
+    // The static page and its static .ics never ask (§549): a members' event is a 404 there, and the CDN keeps that.
+    for (const path of ["src/app/[locale]/events/[slug]/page.tsx", "src/app/[locale]/events/[slug]/calendar.ics/route.ts"]) {
+      expect(SOURCES.find((file) => file.path === path)!.text, path).not.toMatch(/members-only"|membersEventBySlug\(|membersViewer/);
     }
     const door = SOURCES.find((file) => file.path === "src/modules/events/members-only.ts")!.text;
     expect(door).toMatch(/const viewer = await membersViewer\(\);\s*if \(!viewer\) return undefined;/);

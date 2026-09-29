@@ -14,6 +14,7 @@ import { RETENTION_PERIODS } from "@/modules/jobs/domain/retention-periods";
 import { getPathname } from "@/i18n/navigation";
 import { countForm } from "@/i18n/count-form";
 import { ADDRESS_CAP_RULE } from "@/modules/registrations/domain/address-cap";
+import { NO_RACE_NUMBER } from "@/modules/registrations/domain/qr-identity";
 import { env } from "@/shared/config/env";
 import { CLUB_LOCALITY } from "@/modules/events/domain/place";
 import { type EventForecast, forecastPlaceName } from "@/modules/weather/domain/forecast";
@@ -158,7 +159,7 @@ function familyFactsPart(facts: readonly FamilyFact[]): EmailBodyPart {
 }
 
 /** A family confirmation's words for its blocks (§519), one language's. */
-type FamilyConfirmedWords = { number: string; provisional: string; noNumber: string; code: string; qr: string };
+type FamilyConfirmedWords = { number: string; noNumber: string; code: string; qr: string };
 
 /**
  * Names as one phrase in the email's language (§519, the owner's answer of 2026-09-27): commas, and
@@ -169,6 +170,33 @@ export function joinNames(locale: EmailLocale, names: readonly string[]): string
   if (names.length <= 1) return names[0] ?? "";
   return `${names.slice(0, -1).join(", ")} ${locale === "ro" ? "și" : "and"} ${names.at(-1)}`;
 }
+
+/**
+ * Whose QR this is (§547; the owner, 2026-09-28: a family's codes looked the same): the person's name
+ * and their race number, «—» while none is given — the number this message carries, which the
+ * renderer decided through `raceNumberOf` (§173, §NNN). Beside the QR in the confirmation, the
+ * reminder and the number's own message; alone, in the QR's place, on the club's copy, which carries
+ * no QR (§320).
+ */
+export function qrIdentityLine(locale: EmailLocale, d: Pick<TemplateData, "participantName" | "bibNumber">): string {
+  const number = d.bibNumber !== undefined ? String(d.bibNumber) : NO_RACE_NUMBER;
+  const name = d.participantName.trim();
+  const words = locale === "ro" ? `Număr de concurs: ${number}` : `Race number: ${number}`;
+  return name ? `${name} · ${words}` : words;
+}
+
+/** The QR picture with its name, number and code (§547), or nothing when the message carries no code. */
+function qrImage(locale: EmailLocale, d: TemplateData): TemplateContent["image"] {
+  if (!d.checkinQrUrl) return undefined;
+  const code = d.checkinCode ?? "";
+  const name = d.participantName.trim();
+  return locale === "ro"
+    ? { url: d.checkinQrUrl, alt: `Cod QR ${code}${name ? ` — ${name}` : ""}`, caption: `${qrIdentityLine("ro", d)} · Codul tău: ${code}` }
+    : { url: d.checkinQrUrl, alt: `QR code ${code}${name ? ` — ${name}` : ""}`, caption: `${qrIdentityLine("en", d)} · Your code: ${code}` };
+}
+
+/** The messages that draw the QR (§547): the club's copy of these says whose it was, without it (§320). */
+const QR_MESSAGES: ReadonlySet<EmailMessageType> = new Set(["REGISTRATION_CONFIRMED", "EVENT_REMINDER", "BIB_ASSIGNED"]);
 
 /** A name's first word, for the family marker's list (§543): «Ana, Mihai și Ioana». */
 function firstNameOf(name: string): string {
@@ -193,13 +221,9 @@ function familyFirstNames(people: NonNullable<TemplateData["familyConfirmed"]>):
  * (`renderBilingual`), as for one person's QR. The plain-text half reads one line per fact.
  */
 function familyConfirmedPart(people: NonNullable<TemplateData["familyConfirmed"]>, words: FamilyConfirmedWords): EmailBodyPart {
-  const numberText = (person: (typeof people)[number]) =>
-    person.raceNumber === null ? words.noNumber : person.provisional ? `${person.raceNumber} ${words.provisional}` : String(person.raceNumber);
+  const numberText = (person: (typeof people)[number]) => (person.raceNumber === null ? words.noNumber : String(person.raceNumber));
   const blocks = people.map((person) => {
-    const number =
-      person.raceNumber === null
-        ? escapeHtml(words.noNumber)
-        : `<strong style="font-size:20px">${person.raceNumber}</strong>${person.provisional ? ` ${escapeHtml(words.provisional)}` : ""}`;
+    const number = person.raceNumber === null ? escapeHtml(words.noNumber) : `<strong style="font-size:20px">${person.raceNumber}</strong>`;
     return [
       `<div data-email-part="family-person" style="margin:0 0 14px;padding:14px 16px;border:1px solid ${COLOR.line};border-radius:10px">`,
       `<p style="margin:0 0 8px;font-size:17px;line-height:1.4"><strong>${escapeHtml(person.name)}</strong></p>`,
@@ -508,12 +532,6 @@ export type TemplateData = {
    * already registered (§199, §235). One sentence goes in front of the body saying so.
    */
   alreadyRegistered?: boolean;
-  /**
-   * The race number in this message is the provisional one (§214, §237): it is shown so
-   * the runner has it, and said to be provisional because the settle at the close may
-   * move it.
-   */
-  bibProvisional?: boolean;
   eventTitle?: string;
   /** The event's title in the other language, for the bilingual message's second half (§373, email follow-up). */
   eventTitleOther?: string;
@@ -536,7 +554,7 @@ export type TemplateData = {
   /** The desk code and the address of its QR image, on the confirmation and the reminder (BR-REQ-037-08). */
   checkinCode?: string;
   checkinQrUrl?: string;
-  /** The race number, once given (§87) — on the confirmation and the reminder. */
+  /** The race number, given at the confirmation (§87, §548) — on the confirmation and the reminder, never before. */
   bibNumber?: number;
   /** The event's map link and Strava event link, when set (§81). */
   eventMapUrl?: string;
@@ -787,8 +805,8 @@ export type TemplateData = {
   /**
    * A family's one confirmation (§519; the owner: «în mail trebuie să vină toate QR-urile pentru toată
    * familia»): everybody confirmed by the family's one button, in the order the forms were sent — the
-   * name, the desk code and its QR (never on a club copy, §320), and the race number (`raceNumberOf`),
-   * provisional or not, or null while there is none. Set, the confirmation is the family's, and it
+   * name, the desk code and its QR (never on a club copy, §320), and the race number each person's
+   * own confirmation gave (`raceNumberOf`, §548), or null while there is none. Set, the confirmation is the family's, and it
    * greets everybody by `firstName` (the name's first word when absent), in that order (§519).
    */
   familyConfirmed?: ReadonlyArray<{
@@ -797,7 +815,6 @@ export type TemplateData = {
     checkinCode?: string;
     qrUrl?: string;
     raceNumber: number | null;
-    provisional: boolean;
   }>;
   /**
    * A message re-sent because the form came back with a registration's name or birth date but not
@@ -821,6 +838,13 @@ export type TemplateData = {
    * them all, one after the other. Absent for a person alone, and on a club copy.
    */
   familyToSign?: string[];
+  /**
+   * A cancellation (§547): whether the person was on the waiting list rather than holding a place,
+   * from the state the registration left (the row's payload), and who else the address still holds
+   * at the event, each with their state — read at send time, the address's own rows only (§39).
+   */
+  cancelledFromWaitlist?: boolean;
+  cancelledOthers?: ReadonlyArray<{ name: string; state: FamilyEarlierState }>;
   /**
    * A minor's registration (§108): the parent's or guardian's name, as typed on the form. The
    * message greets them and says whose registration it is about (§419) — the address is theirs.
@@ -1046,7 +1070,7 @@ const T = {
         "Mai jos: înscrierea ta, „nu mai pot veni” și pagina evenimentului.",
       ],
       action: "Vezi înscrierea",
-      image: (d: TemplateData) => (d.checkinQrUrl ? { url: d.checkinQrUrl, alt: `Cod QR ${d.checkinCode ?? ""}`, caption: `Codul tău: ${d.checkinCode ?? ""}` } : undefined),
+      image: (d: TemplateData) => qrImage("ro", d),
       links: (d: TemplateData) => [
         ...(d.manageUrl ? [{ label: "Nu mai pot veni — anulez înscrierea", url: `${d.manageUrl}#cancel` }] : []),
         // The list switch, worded by the row (§143): the answer given on the form, reversible here.
@@ -1076,7 +1100,7 @@ const T = {
         "Nu poți veni? Anulează înscrierea cu linkul de mai jos — locul tău merge la cineva de pe lista de așteptare.",
       ],
       action: "Nu pot veni — anulez înscrierea",
-      image: (d: TemplateData) => (d.checkinQrUrl ? { url: d.checkinQrUrl, alt: `Cod QR ${d.checkinCode ?? ""}`, caption: `Codul tău: ${d.checkinCode ?? ""}` } : undefined),
+      image: (d: TemplateData) => qrImage("ro", d),
       links: (d: TemplateData) => [
         ...(d.eventUrl ? [{ label: "Pagina evenimentului", url: d.eventUrl }] : []),
         ...(d.eventScheduleUrl ? [{ label: "Programul evenimentului", url: d.eventScheduleUrl }] : []),
@@ -1111,7 +1135,7 @@ const T = {
         "Dacă ai primit deja un alt număr prin email, acesta îl înlocuiește.",
       ],
       action: "Vezi înscrierea",
-      image: (d: TemplateData) => (d.checkinQrUrl ? { url: d.checkinQrUrl, alt: `Cod QR ${d.checkinCode ?? ""}`, caption: `Codul tău: ${d.checkinCode ?? ""}` } : undefined),
+      image: (d: TemplateData) => qrImage("ro", d),
       links: (d: TemplateData) => [
         ...(d.manageUrl ? [{ label: "Nu mai pot veni — anulează-mi înscrierea", url: `${d.manageUrl}#cancel` }] : []),
         ...(d.eventUrl ? [{ label: "Pagina evenimentului", url: d.eventUrl }] : []),
@@ -1213,9 +1237,17 @@ const T = {
         ...(d.eventRulesUrl ? [{ label: "Regulamentul evenimentului", url: d.eventRulesUrl }] : []),
       ],
     },
+    /*
+      One message per cancelled person (§547; the owner, 2026-09-28: «vreau mail de confirmare că
+      participarea a fost anulată pentru persoana X»): the person, the event and its date. What the
+      person held and who else the address still holds are the platform's lines after the body
+      (`cancelledReleased`, `cancelledOthers`), facts of this send whoever wrote the words.
+    */
     registrationCancelled: {
-      subject: "Înscrierea a fost anulată",
-      body: (d: TemplateData) => [`Înscrierea ta la ${d.eventTitle ?? "eveniment"} a fost anulată.`],
+      subject: (d: TemplateData) => `Înscrierea${d.participantName ? ` pentru ${d.participantName}` : ""} la ${d.eventTitle ?? "eveniment"} a fost anulată`,
+      body: (d: TemplateData) => [
+        `Înscrierea${d.participantName ? ` pentru ${d.participantName}` : ""} la ${d.eventTitle ?? "eveniment"}${d.eventStartsAtFormatted ? `, ${d.eventStartsAtFormatted},` : ""} a fost anulată.`,
+      ],
     },
     waitlistOfferExpired: {
       subject: "Timpul pentru confirmarea locului a expirat",
@@ -1387,9 +1419,6 @@ const T = {
       bib
         ? `Ne bucurăm că ești nerăbdător! __Ești deja înscris__ la acest eveniment, cu numărul ${bib} — nu s-a creat o a doua înscriere. Mai jos este înscrierea pe care o ai.`
         : "Ne bucurăm că ești nerăbdător! __Ești deja înscris__ la acest eveniment, așa că nu s-a creat o a doua înscriere — mai jos este înscrierea pe care o ai deja.",
-    /** Appended when the number in this message can still change (§237). */
-    bibProvisional: (n: number) =>
-      `Numărul ${n} este provizoriu — îl confirmăm când se închid înscrierile și îți trimitem numărul final.`,
     /**
      * The reminder of a night event (§394), after the body whoever wrote it — «Alergare de
      * noapte» on a group run (the owner calls a run a run, not an "event"), «Eveniment de
@@ -1520,7 +1549,6 @@ const T = {
       ],
       words: {
         number: "Număr de concurs",
-        provisional: "(provizoriu: se stabilește la închiderea înscrierilor)",
         noNumber: "încă fără număr",
         code: "Codul pentru masă",
         qr: "Cod QR",
@@ -1537,6 +1565,11 @@ const T = {
     /** After the body of a declaration request, on an address with more to sign (§471): the one link signs them all. */
     familyToSign: (names: readonly string[]) =>
       `Pe această adresă mai așteaptă semnătura declarațiile pentru: ${names.join(", ")}. Le poți semna pe toate din acest link, una după alta: câte o persoană la fiecare pas.`,
+    // A cancellation (§547): what the cancelled person held, and who else the address still holds.
+    cancelledReleased: (name: string, fromWaitlist: boolean) =>
+      fromWaitlist ? `${name || "Persoana"} nu mai este pe lista de așteptare.` : "Locul a fost eliberat.",
+    cancelledOthers: (others: ReadonlyArray<{ name: string; state: FamilyEarlierState }>) =>
+      `Pe această adresă rămân înscriși: ${others.map((other) => `${other.name} (${EARLIER_STATE_WORDS.ro[other.state]})`).join(", ")}.`,
     footer: "Răspunde la acest email pentru întrebări.",
     /** The club's copy of a participant's message (§320): in front of the subject, and the first line. */
     clubCopy: {
@@ -1638,7 +1671,7 @@ const T = {
         "Can't come? Cancel with the link below — your place goes to somebody on the waiting list.",
       ],
       action: "I can't come — cancel my registration",
-      image: (d: TemplateData) => (d.checkinQrUrl ? { url: d.checkinQrUrl, alt: `QR code ${d.checkinCode ?? ""}`, caption: `Your code: ${d.checkinCode ?? ""}` } : undefined),
+      image: (d: TemplateData) => qrImage("en", d),
       links: (d: TemplateData) => [
         ...(d.eventUrl ? [{ label: "The event's page", url: d.eventUrl }] : []),
         ...(d.eventScheduleUrl ? [{ label: "The event's programme", url: d.eventScheduleUrl }] : []),
@@ -1673,7 +1706,7 @@ const T = {
         "If an earlier email gave you a different number, this one replaces it.",
       ],
       action: "See your registration",
-      image: (d: TemplateData) => (d.checkinQrUrl ? { url: d.checkinQrUrl, alt: `QR code ${d.checkinCode ?? ""}`, caption: `Your code: ${d.checkinCode ?? ""}` } : undefined),
+      image: (d: TemplateData) => qrImage("en", d),
       links: (d: TemplateData) => [
         ...(d.manageUrl ? [{ label: "I can't make it any more — cancel my registration", url: `${d.manageUrl}#cancel` }] : []),
         ...(d.eventUrl ? [{ label: "The event's page", url: d.eventUrl }] : []),
@@ -1766,7 +1799,7 @@ const T = {
         "Below: your registration, “I can't make it any more” and the event's page.",
       ],
       action: "See your registration",
-      image: (d: TemplateData) => (d.checkinQrUrl ? { url: d.checkinQrUrl, alt: `QR code ${d.checkinCode ?? ""}`, caption: `Your code: ${d.checkinCode ?? ""}` } : undefined),
+      image: (d: TemplateData) => qrImage("en", d),
       links: (d: TemplateData) => [
         ...(d.manageUrl ? [{ label: "I can't make it any more — cancel my registration", url: `${d.manageUrl}#cancel` }] : []),
         // The list switch, worded by the row (§143): the answer given on the form, reversible here.
@@ -1781,8 +1814,10 @@ const T = {
       ],
     },
     registrationCancelled: {
-      subject: "Your registration has been cancelled",
-      body: (d: TemplateData) => [`Your registration for ${d.eventTitle ?? "the event"} has been cancelled.`],
+      subject: (d: TemplateData) => `The registration${d.participantName ? ` for ${d.participantName}` : ""} at ${d.eventTitle ?? "the event"} has been cancelled`,
+      body: (d: TemplateData) => [
+        `The registration${d.participantName ? ` for ${d.participantName}` : ""} at ${d.eventTitle ?? "the event"}${d.eventStartsAtFormatted ? `, ${d.eventStartsAtFormatted},` : ""} has been cancelled.`,
+      ],
     },
     waitlistOfferExpired: {
       subject: "The time to confirm your place has expired",
@@ -1926,9 +1961,6 @@ const T = {
       bib
         ? `We are glad you are keen! __You are already registered__ for this event, with number ${bib} — no second registration was created. Below is the one you have.`
         : "We are glad you are keen! __You are already registered__ for this event, so no second registration was created — below is the registration you already have.",
-    /** Appended when the number in this message can still change (§237). */
-    bibProvisional: (n: number) =>
-      `Number ${n} is provisional — we settle it when registration closes and send you the final one.`,
     /** «Night run» on a group run (the owner calls a run a run, not an "event"), «Night event» otherwise. */
     nightEvent: (night: NightReminderLine) => {
       const label = night.isGroupRun ? "Night run" : "Night event";
@@ -2019,7 +2051,6 @@ const T = {
       ],
       words: {
         number: "Race number",
-        provisional: "(provisional: settled when registration closes)",
         noNumber: "no number yet",
         code: "Desk code",
         qr: "QR code",
@@ -2033,6 +2064,10 @@ const T = {
     /** After the body of a declaration request, on an address with more to sign (§471): the one link signs them all. */
     familyToSign: (names: readonly string[]) =>
       `The declarations of ${names.join(", ")} on this address are waiting for a signature too. You can sign them all from this link, one after the other: one person per step.`,
+    cancelledReleased: (name: string, fromWaitlist: boolean) =>
+      fromWaitlist ? `${name || "The person"} is no longer on the waiting list.` : "The place has been released.",
+    cancelledOthers: (others: ReadonlyArray<{ name: string; state: FamilyEarlierState }>) =>
+      `Still registered on this address: ${others.map((other) => `${other.name} (${EARLIER_STATE_WORDS.en[other.state]})`).join(", ")}.`,
     footer: "Reply to this email with questions.",
     clubCopy: {
       subject: "[Club copy] ",
@@ -2151,8 +2186,7 @@ function subscribersPhrase(locale: EmailLocale, count: number): string {
 }
 
 /**
- * The sentences the update and the cancellation add after the body (§331) — machinery, like the
- * provisional-number line (§237), so a club that rewrote the message's words (§247) still sends
+ * The sentences the update and the cancellation add after the body (§331) — machinery, so a club that rewrote the message's words (§247) still sends
  * the new place and the reason: they are statements about the event, not about how the club
  * likes to write. One line per kind the save changed, in the order a runner reads a morning — on
  * again, where, when, the programme — then the organizer's note, or the reason.
@@ -2177,7 +2211,7 @@ function noticeParts(messageType: EmailMessageType, locale: EmailLocale, data: T
  * The part of one message the club may rewrite (§247), as the platform writes it: the subject and
  * the body, and nothing the platform adds around a body — not the club copy's first line (§320),
  * not "you were already registered" (§235), not the update's new place or the cancellation's
- * reason (§331), not "this number is provisional" (§237). Those are sent whoever wrote the words,
+ * reason (§331). Those are sent whoever wrote the words,
  * so a club text that repeated them would say them twice.
  *
  * The editor's starting text is built from this (§359, `email-copy-fields.ts`), with every field of
@@ -2242,7 +2276,6 @@ export function buildTemplateContent(
         name: person.name,
         firstName: person.firstName,
         raceNumber: person.raceNumber,
-        provisional: person.provisional,
       })),
     };
     actionUrl = undefined;
@@ -2265,10 +2298,10 @@ export function buildTemplateContent(
 
     Only the subject and the body. The greeting, the facts line, the action button and its
     token, the QR, the links and the sign-off are the message's machinery and stay in code —
-    and so do the two sentences below that the platform adds *around* a body: "you were already
-    registered" (§235) and "this number is provisional" (§237). Both are statements about the
-    state of a registration rather than about how the club likes to write, and a club that
-    rewrote the confirmation would otherwise silently lose them.
+    and so does the sentence below that the platform adds *around* a body: "you were already
+    registered" (§235). It is a statement about the state of a registration rather than about
+    how the club likes to write, and a club that rewrote the confirmation would otherwise
+    silently lose it.
   */
   // The organizer's message is written per send (§364): there is no stored wording to apply, and a
   // hand-made entry for it in the setting must not replace what the organizer wrote this time.
@@ -2417,8 +2450,7 @@ export function buildTemplateContent(
         : []),
       // Whose registration this is, under the parent's greeting (§419).
       ...(guardianName ? [copy.guardianIntro(data.participantName)] : []),
-      // The number when the message carries one: a settled number, or the provisional one the
-      // desk gave, whichever this registration actually has (§286).
+      // The number when the message carries one: a confirmed registration's (§286, §548).
       ...(data.alreadyRegistered ? [copy.alreadyRegistered(data.bibNumber ?? null)] : []),
       // …and, on a re-send for a slip (§446), how to register somebody else — the inbox's alone.
       ...(data.anotherPersonHint ? [data.sameBirthDateHint ? copy.sameBirthDateHint : copy.anotherPersonHint] : []),
@@ -2493,7 +2525,7 @@ export function buildTemplateContent(
               : entry.body(data)),
       /*
         Who signs a minor's declaration (§419, §330), after the body whoever wrote it — a fact about
-        this registration and the text in force, like the provisional number (§237): on the request
+        this registration and the text in force: on the request
         to sign and on the freed place, which asks the same signature.
       */
       ...(guardianName && (messageType === "COMPLETE_DECLARATION" || messageType === "WAITLIST_SPOT_OFFER")
@@ -2507,6 +2539,14 @@ export function buildTemplateContent(
         ? [copy.familyToSign(data.familyToSign)]
         : []),
       /*
+        A cancellation's facts (§547), after the body whoever wrote it: the place released — or the
+        waiting list left — and who the address still holds at the event, with their states.
+      */
+      ...(messageType === "REGISTRATION_CANCELLED" ? [copy.cancelledReleased(data.participantName, data.cancelledFromWaitlist === true)] : []),
+      ...(messageType === "REGISTRATION_CANCELLED" && data.cancelledOthers && data.cancelledOthers.length > 0
+        ? [copy.cancelledOthers(data.cancelledOthers)]
+        : []),
+      /*
         A group run's signer's copy (§419): that the document is masked in it, when the text asked
         for one, and always how to have a declaration one did not sign deleted — the address was
         never confirmed, so the message may have reached somebody who signed nothing.
@@ -2516,8 +2556,7 @@ export function buildTemplateContent(
         : []),
       /*
         A night event (§394, the question §382 left open): the reminder of a date that starts after
-        dusk says the sunset and to bring a light. After the body, like the provisional number below
-        — a fact about this date, not a matter of how the club writes — so a reminder the club
+        dusk says the sunset and to bring a light. After the body — a fact about this date, not a matter of how the club writes — so a reminder the club
         reworded still says it. Only when the renderer set it, and it sets it only on the reminder.
       */
       ...(messageType === "EVENT_REMINDER" && data.nightEventSunset !== undefined
@@ -2540,11 +2579,12 @@ export function buildTemplateContent(
       // A newsletter's own words, and what the platform says around every newsletter message (§445).
       ...newsletterParts(messageType, data),
       ...newsletterLines(messageType, locale, data),
-      // After the body, not before it: the number is in the body already, and this only
-      // qualifies it (§237).
-      ...(data.bibProvisional && data.bibNumber !== undefined
-        ? [copy.bibProvisional(data.bibNumber)]
-        : []),
+      /*
+        The club's copy carries no QR (§320), so it says whose the QR was, in its place (§547): the
+        person's name and race number, «—» before one is given — the line the runner's copy draws
+        beside the code. Not a family's one confirmation, whose blocks already name everybody.
+      */
+      ...(clubCopy && !bulkCopy && QR_MESSAGES.has(messageType) && !familyConfirmedShape ? [qrIdentityLine(locale, data)] : []),
       // The club's limit under the link for another person (§389), whoever wrote the words above:
       // the number is the setting's, from the row, and a club text needs no field to state it.
       // In the facts box instead when the kept form is in hand (§468).

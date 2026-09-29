@@ -85,10 +85,8 @@ export type MyRegistration = {
    * page can say by when to confirm, "până la start" when it is the start itself (§407).
    */
   holdExpiresAt: Date | null;
-  /** The race number, once given (§87). */
+  /** The race number, given at the confirmation (§87, §548); shown through `raceNumberOf`. */
   bibNumber: number | null;
-  /** The number held before the settle (§214); what the runner is shown until then. */
-  provisionalBibNumber: number | null;
   /** "I am here" is offered from the club's check-in lead before the start ("Termene", §377), confirmed registrations only — never at a cancelled event. */
   selfCheckinOpen: boolean;
   /**
@@ -140,7 +138,6 @@ export async function listActiveRegistrationsForParticipant<T extends Record<str
       checkedInAt: registrations.checkedInAt,
       holdExpiresAt: registrations.holdExpiresAt,
       bibNumber: registrations.bibNumber,
-      provisionalBibNumber: registrations.provisionalBibNumber,
       listOptOut: registrations.listOptOut,
       // Whether each is set, computed in SQL so the values never leave the database (§322).
       holdsHealthNote: sql<boolean>`(${registrations.healthNotes} IS NOT NULL OR ${registrations.healthConsentAt} IS NOT NULL)`.mapWith(Boolean),
@@ -343,7 +340,8 @@ export async function consumeAndCancelFromMyRegistrations<T extends Record<strin
       throw new DomainError("NOT_FOUND", "not one of this participant's registrations");
     }
     const event = await loadEvent(tx, registration.eventId);
-    const updated = await unregister(tx, event, registration.id, "PARTICIPANT", now);
+    // The audit row and the per-person cancellation email (§547) ride on `unregister`, whichever door.
+    const updated = await unregister(tx, event, registration.id, "PARTICIPANT", now, { via: "MY_REGISTRATIONS" });
     return { ok: true as const, registration: updated };
   });
 }
