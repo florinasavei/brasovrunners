@@ -278,7 +278,9 @@ describe("BR-REQ-039-01 the participant's own switch for the public list", () =>
 
     const listed = await renderOutboxMessage(confirmationRow(id), db, NOW);
     expect(listed.html).toMatch(/\/inregistrari\/lista\//);
-    expect(listed.html).toContain("Nu vreau să apar pe lista publică de participanți");
+    // The tick's words since §NNN: one list for the participants and the results.
+    expect(listed.text).toContain("Nu vreau să apar pe lista de participanți & rezultate");
+    expect(listed.html).toContain("Nu vreau să apar pe lista de participanți &amp; rezultate");
     const tokens = await db.select().from(emailActionTokens).where(eq(emailActionTokens.purpose, "LIST_CONSENT"));
     expect(tokens).toHaveLength(1);
     expect(tokens[0].registrationId).toBe(id);
@@ -286,7 +288,7 @@ describe("BR-REQ-039-01 the participant's own switch for the public list", () =>
 
     await setListConsent(db, id, false, "LIST_LINK", NOW);
     const notListed = await renderOutboxMessage(confirmationRow(id), db, NOW);
-    expect(notListed.html).toContain("Vreau să apar pe lista publică de participanți");
+    expect(notListed.text).toContain("Vreau să apar pe lista de participanți & rezultate");
     expect(notListed.html).not.toContain("Nu vreau să apar");
 
     // The resent confirmation supersedes the earlier link: one live token per registration.

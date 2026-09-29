@@ -171,9 +171,12 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
     await expect(birthDateHelper).toHaveText(/^Joi, 17 mai 1990 · \d+ de ani în ziua evenimentului$/);
     await birthDateBox.blur();
     await expect(birthDateBox).toHaveValue("17.05.1990");
-    // "I want to appear on the participant list" is asked only on an event whose list is switched
-    // on (`DECISIONS.md` §85, §143); the seeded events publish none, so the box is absent.
+    // «Vreau să apar pe lista de participanți & rezultate — opțional» (§NNN: one tick for the list and
+    // the results) is asked only on an event whose list is switched on (`DECISIONS.md` §85, §143); the
+    // seeded events publish none, so the box is absent — and so are its words, old or new.
     await expect(page.locator('[name="listOptIn"]')).toHaveCount(0);
+    await expect(page.getByText("Vreau să apar pe lista de participanți & rezultate")).toHaveCount(0);
+    await expect(page.getByText("Vreau să apar pe lista de participanți —")).toHaveCount(0);
 
     // The optional groups are open as the page loads (the owner's instruction of 2026-09-17,
     // reversing DECISIONS.md §47): a runner's own club was the field people missed when it sat

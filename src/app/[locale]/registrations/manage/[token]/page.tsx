@@ -28,6 +28,8 @@ import { getDb } from "@/db/client";
 import { holdsOptionalData } from "@/modules/registrations/consent-withdrawal";
 import { isActiveStatus } from "@/modules/registrations/domain/state-machine";
 import { cachedPromotionalMaterialsOffered } from "@/modules/public-cache/reads";
+import { sharedWithSponsors } from "@/modules/registrations/domain/sponsor-share";
+import { readSponsorShareGate } from "@/modules/registrations/sponsor-list";
 import ActionLinkNotice from "@/modules/registrations/ui/ActionLinkNotice";
 import AskFirstButton from "@/modules/registrations/ui/AskFirstButton";
 import CancelReasonFields from "@/modules/registrations/ui/CancelReasonFields";
@@ -158,6 +160,10 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
   // «Vreau oferte și beneficii» is offered only while the notice in force describes it (§562);
   // a person who said yes is always offered the way out, whatever the notice says today.
   const promoOn = live ? await cachedPromotionalMaterialsOffered(new Date()) : false;
+  // Which yes may reach a partner (§NNN): read only when some row on the page says yes.
+  const shareGate = live && people.some((one) => one.promoConsent) ? await readSponsorShareGate(getDb()) : null;
+  const promoYes = (one: { promoConsent: boolean; promoConsentAt: Date | null; privacyNoticeVersion: number }) =>
+    shareGate && sharedWithSponsors(one, shareGate) ? t("promo.yesShared") : t("promo.yes");
 
   return (
     <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
@@ -348,7 +354,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                       </Alert>
                     )}
                     <Typography sx={{ mb: 1 }} data-testid="manage-promo-state">
-                      {one.promoConsent ? t("promo.yes") : t("promo.no")}
+                      {one.promoConsent ? promoYes(one) : t("promo.no")}
                     </Typography>
                     {/* Another adult's row (§421): only the way out; their yes is their own (§562 fix round). */}
                     {(one.promoConsent || !one.anotherAdult) && (

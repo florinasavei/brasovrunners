@@ -105,6 +105,9 @@ export type MyRegistration = {
   holdsSocials: boolean;
   /** «Vreau să primesc oferte și beneficii» (§562): the person's own answer, and the switch's side. */
   promoConsent: boolean;
+  /** When the yes was given, and the notice the registration recorded: whether it may reach a partner (§NNN). */
+  promoConsentAt: Date | null;
+  privacyNoticeVersion: number;
   /**
    * When this person's declaration was signed — on a link, in the family wizard or on paper at the
    * desk (§67) — or null while it is not (§519: «Toate înscrierile mele» says each person's
@@ -146,6 +149,8 @@ export async function listActiveRegistrationsForParticipant<T extends Record<str
       holdsHealthNote: sql<boolean>`(${registrations.healthNotes} IS NOT NULL OR ${registrations.healthConsentAt} IS NOT NULL)`.mapWith(Boolean),
       holdsSocials: sql<boolean>`(${registrations.stravaUrl} IS NOT NULL OR ${registrations.instagramHandle} IS NOT NULL)`.mapWith(Boolean),
       promoConsent: registrations.promoConsent,
+      promoConsentAt: registrations.promoConsentAt,
+      privacyNoticeVersion: registrations.privacyNoticeVersion,
       // The latest acceptance's instant, qualified by hand: a bare "id" in the subquery would be the acceptance's own.
       declarationSignedAt: sql<Date | null>`(select max(${declarationAcceptances}."accepted_at") from ${declarationAcceptances} where ${declarationAcceptances}."registration_id" = ${registrations}."id")`.mapWith(
         (value: unknown) => (value === null || value === undefined ? null : value instanceof Date ? value : new Date(String(value))),

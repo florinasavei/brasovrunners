@@ -1,9 +1,12 @@
 "use client";
 
+import Box from "@mui/material/Box";
 import Checkbox from "@mui/material/Checkbox";
 import FormControlLabel from "@mui/material/FormControlLabel";
-import type { ReactNode } from "react";
+import Typography from "@mui/material/Typography";
+import { useId, type ReactNode } from "react";
 import { useRecall } from "@/shared/forms/recall";
+import { CONSENT_DENSITY } from "./consent-density";
 import { CHECKBOX_TAP_TARGET } from "./tap-target";
 
 /**
@@ -42,6 +45,9 @@ export default function CheckboxField({
   required,
   defaultChecked,
   disabled,
+  dense = false,
+  help,
+  helpTestId,
   children,
 }: {
   name: string;
@@ -52,10 +58,20 @@ export default function CheckboxField({
   defaultChecked?: boolean;
   /** Shown but not changeable — and not posted: a disabled input leaves the form, so the caller carries the value. */
   disabled?: boolean;
+  /**
+   * The registration form's «Acorduri» density (§NNN, `CONSENT_DENSITY`): a small box still 44 px to
+   * the thumb, the label in `body2` beside it, no margin between rows, and `help` as a caption
+   * directly under the label.
+   */
+  dense?: boolean;
+  /** One helper line under the label, a caption, and the box's description for a screen reader. */
+  help?: string;
+  helpTestId?: string;
   /** The label, which may contain a link. */
   children: ReactNode;
 }) {
   const recall = useRecall();
+  const helpId = useId();
   const checked =
     recall.has && !disabled ? (recall.all(name)?.includes(value ?? "on") ?? false) : defaultChecked;
   // A single box the refusal named carries the id its summary links to (§47, §315) — "confirm
@@ -63,7 +79,7 @@ export default function CheckboxField({
   // with one id would be one label for many.
   const namedId = value === undefined && recall.named(name) ? recall.idOf(name) : undefined;
 
-  return (
+  const field = (
     <FormControlLabel
       control={
         <Checkbox
@@ -74,10 +90,23 @@ export default function CheckboxField({
           required={required}
           defaultChecked={checked}
           disabled={disabled}
+          size={dense ? CONSENT_DENSITY.checkboxSize : undefined}
+          slotProps={help ? { input: { "aria-describedby": helpId } } : undefined}
           sx={CHECKBOX_TAP_TARGET}
         />
       }
       label={children}
+      slotProps={dense ? { typography: { variant: CONSENT_DENSITY.labelVariant } } : undefined}
+      sx={dense ? CONSENT_DENSITY.rowSx : undefined}
     />
+  );
+  if (!help) return field;
+  return (
+    <Box>
+      {field}
+      <Typography id={helpId} variant="caption" color="text.secondary" data-testid={helpTestId} sx={dense ? CONSENT_DENSITY.helpSx : { display: "block" }}>
+        {help}
+      </Typography>
+    </Box>
   );
 }

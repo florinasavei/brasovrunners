@@ -2,6 +2,7 @@
 
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
+import MenuBookIcon from "@mui/icons-material/MenuBook";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
@@ -14,7 +15,8 @@ import Typography from "@mui/material/Typography";
 import { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 import RichText from "@/modules/content/rich-text/ui/RichText";
 import { hasReachedEnd, SCROLL_END_TOLERANCE_PX } from "../domain/read-gate";
-import { CHECKBOX_TAP_TARGET } from "@/shared/ui/tap-target";
+import { CONSENT_DENSITY } from "@/shared/ui/consent-density";
+import { CHECKBOX_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
 
 /**
  * "I have read the race's conditions", behind actually opening them (`DECISIONS.md` §195, §422).
@@ -209,7 +211,9 @@ export default function ReadAndAgree({
   if (!hydrated) {
     return (
       <FormControlLabel
-        control={<Checkbox id={fieldId} name={name} required defaultChecked={defaultAgreed} sx={CHECKBOX_TAP_TARGET} />}
+        control={<Checkbox id={fieldId} name={name} required defaultChecked={defaultAgreed} size={CONSENT_DENSITY.checkboxSize} sx={CHECKBOX_TAP_TARGET} />}
+        slotProps={{ typography: { variant: CONSENT_DENSITY.labelVariant } }}
+        sx={CONSENT_DENSITY.rowSx}
         label={
           <span>
             {plainLabel}{" "}
@@ -230,13 +234,18 @@ export default function ReadAndAgree({
         invalid HTML, and the press would belong to one of them at random). Drawn as one — the
         button's colour, the button's corners — so it reads as the button with its box inside.
       */}
+      {/*
+        A regular-height button with its glyph, as wide as its words (§NNN, the «Acorduri» block
+        compacted): it was a full-width bar 48 pixels tall. The box inside it is the small one, still
+        44 to the thumb (`CONSENT_DENSITY`), and the gate is unchanged — the box waits for the reading.
+      */}
       <Box
         sx={{
-          display: "flex",
+          display: "inline-flex",
+          maxWidth: "100%",
           alignItems: "center",
           borderRadius: 1,
           border: 1,
-          pl: 0.5,
           ...(agreed
             ? { borderColor: "success.main", color: "text.primary" }
             : { borderColor: "primary.main", bgcolor: "primary.main", color: "primary.contrastText" }),
@@ -256,6 +265,7 @@ export default function ReadAndAgree({
             setAgreed(event.target.checked);
           }}
           slotProps={{ input: { ref: tickRef, "aria-label": tickLabel, "aria-describedby": agreed || readToEnd ? undefined : hintId } }}
+          size={CONSENT_DENSITY.checkboxSize}
           sx={{
             ...CHECKBOX_TAP_TARGET,
             color: "inherit",
@@ -266,13 +276,15 @@ export default function ReadAndAgree({
           type="button"
           color="inherit"
           onClick={() => setOpen(true)}
+          startIcon={<MenuBookIcon fontSize="small" />}
+          data-testid="rules-open"
           sx={{
-            flex: 1,
-            minHeight: 48,
+            ...TAP_TARGET,
+            minWidth: 0,
             justifyContent: "flex-start",
             textAlign: "left",
-            fontSize: "1rem",
-            pl: 0.5,
+            pl: 0,
+            pr: 1.5,
           }}
         >
           <span>
@@ -288,7 +300,7 @@ export default function ReadAndAgree({
         happens (§422).
       */}
       {!agreed && !readToEnd && (
-        <Typography id={hintId} variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+        <Typography id={hintId} variant="caption" color="text.secondary" data-testid="rules-hint" sx={{ display: "block", mt: 0.25 }}>
           {readingLabel}
         </Typography>
       )}

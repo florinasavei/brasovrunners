@@ -44,6 +44,9 @@ export type ManagedPerson = {
   listOptOut: boolean;
   /** «Oferte și beneficii» (§562): the answer on this registration, per registration. */
   promoConsent: boolean;
+  /** When the yes was given, and the notice the registration recorded: whether it may reach a partner (§NNN). */
+  promoConsentAt: Date | null;
+  privacyNoticeVersion: number;
   /**
    * Another adult on the address (§421, §562 fix round): not the link's own registration and not
    * a minor today (`anotherAdultOnTheLink`). On this page such a row offers only the way out of
@@ -73,6 +76,8 @@ export async function listManagedPeople<T extends Record<string, unknown>>(db: D
       bibNumber: registrations.bibNumber,
       listOptOut: registrations.listOptOut,
       promoConsent: registrations.promoConsent,
+      promoConsentAt: registrations.promoConsentAt,
+      privacyNoticeVersion: registrations.privacyNoticeVersion,
       birthDate: registrations.birthDate,
     })
     .from(registrations)
@@ -103,6 +108,8 @@ export async function listManagedPeople<T extends Record<string, unknown>>(db: D
     bibNumber: row.bibNumber,
     listOptOut: row.listOptOut,
     promoConsent: row.promoConsent,
+    promoConsentAt: row.promoConsentAt,
+    privacyNoticeVersion: row.privacyNoticeVersion,
     anotherAdult: anotherAdultOnTheLink(own, row, now),
     declarationMethod: methods.get(row.id) ?? null,
     own: row.id === own.id,

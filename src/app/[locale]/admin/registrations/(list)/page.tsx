@@ -35,7 +35,9 @@ import StaffJourney from "@/modules/registrations/ui/StaffJourney";
 import FamilyChip from "@/modules/registrations/ui/FamilyChip";
 import GlyphChip from "@/modules/events/ui/GlyphChip";
 import { familyOf } from "@/modules/registrations/family-marker";
-import { canManageRegistrations, canMessageParticipants, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
+import { canExportSponsorList, canManageRegistrations, canMessageParticipants, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
+import { sponsorList } from "@/modules/registrations/sponsor-list";
+import SponsorListButton from "@/modules/registrations/ui/SponsorListButton";
 import { REGISTRATION_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
 import {
@@ -222,6 +224,9 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   ]);
   // Every verb that writes asks first and says who is emailed (§384).
   const words = await confirmWords();
+  // «Descarcă lista pentru sponsori» for the chosen event (§NNN), for the roles that may take it.
+  const sponsors =
+    filters.eventId && canExportSponsorList(actor.role) ? await sponsorList(db, actor, { eventId: filters.eventId, locale, now: new Date() }) : null;
 
   const basePath = getPathname({ locale, href: "/admin/registrations" });
   /** Only the list-shaping keys travel with a sort link or a page link. */
@@ -720,6 +725,14 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           )}
         </Stack>
       </Stack>
+
+      {/*
+        The list for sponsors (§NNN; the owner: "export the participants list but filter out just
+        the ones who agreed to receive marketing emails so we can share it with our sponsors"): its
+        own minimal file, never columns of the export beside it. For one chosen event; every event's
+        list is on «Newsletter». The role is asserted in the read and in the route.
+      */}
+      {sponsors && filters.eventId && <SponsorListButton locale={locale} eventId={filters.eventId} list={sponsors} />}
 
       {/*
         The bibs of this event, as a batch (§264; the owner: "ar trebui să pot descărca BID-urile

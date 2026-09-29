@@ -190,6 +190,12 @@ export type AuditAction =
   /** Who said yes to offers and benefits, downloaded as a CSV (§562): who and how many rows — never a row. */
   | "newsletter.promo_consenters_exported"
   /**
+   * «Descarcă lista pentru sponsori» (§NNN): the minimal CSV a partner receives — the event, or
+   * null for every event, and how many rows. Never a row: the file is the one copy a withdrawal
+   * cannot reach, so the trail says it was made, and the guide says to note who received it.
+   */
+  | "registrations.sponsor_list_exported"
+  /**
    * An event erased outright, with everyone registered for it (BR-REQ-037-06). Like
    * `registration.deleted_by_staff` it outlives what it describes, and like it, it names the
    * thing and never the people: the event's title and date, how many registrations went with

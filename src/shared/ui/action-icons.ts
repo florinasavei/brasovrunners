@@ -20,6 +20,7 @@ import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import FilterAltOffIcon from "@mui/icons-material/FilterAltOff";
 import ForwardToInboxIcon from "@mui/icons-material/ForwardToInbox";
 import GridOnIcon from "@mui/icons-material/GridOn";
+import HandshakeIcon from "@mui/icons-material/Handshake";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
 import ImageIcon from "@mui/icons-material/Image";
 import ListAltIcon from "@mui/icons-material/ListAlt";
@@ -162,6 +163,8 @@ export type ActionIconName =
   // reset — is one verb and one glyph, the envelope going back out (§318).
   | "spreadsheet"
   | "download"
+  // «Descarcă lista pentru sponsori» (§NNN): the handshake, the partners' glyph on «Newsletter» too.
+  | "sponsors"
   | "send"
   | "resend"
   // Writing to an event's participants in the club's own words (§364): the loudspeaker, because
@@ -237,6 +240,7 @@ export const ACTION_ICONS: Record<ActionIconName, ComponentType<SvgIconProps>> =
 
   spreadsheet: GridOnIcon,
   download: DownloadIcon,
+  sponsors: HandshakeIcon,
   send: SendIcon,
   resend: ForwardToInboxIcon,
   announce: CampaignIcon,

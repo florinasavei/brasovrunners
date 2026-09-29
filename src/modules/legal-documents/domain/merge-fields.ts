@@ -220,6 +220,20 @@ export const TEAM_PAGE_MERGE_FIELD = "teamPage";
 export const PROMOTIONAL_MATERIALS_MERGE_FIELD = "promotionalMaterials";
 
 /**
+ * The privacy notice's marker for the sponsor list (§NNN, amending §562): a notice that names it
+ * says the club may give its partners — the club's sponsors and the partners of its events, named
+ * as a category — the first name, the last name and the email address of whoever ticked «oferte și
+ * beneficii», so they send their own offers. Filled with those three data, in words, from the
+ * catalogue the sponsor list's columns come from (`registrations/promo-consent-words.ts`), and the
+ * switch: «Descarcă lista pentru sponsori» is offered only while the notice in force names it in
+ * every language (`describesPromotionalMaterialsShared`), and the list holds only the registrations
+ * whose consent was given under a version that names it — a yes given under a text that promised
+ * «partenerii nu primesc adresa ta» never reaches a partner (AGENTS.md §10.8).
+ * `{{promotionalMaterials}}` stays the box itself, exactly as §562 reads it.
+ */
+export const PROMOTIONAL_MATERIALS_SHARED_MERGE_FIELD = "promotionalMaterialsShared";
+
+/**
  * The blanks in a declaration (`DECISIONS.md` §95).
  *
  * The club's own paper declaration reads "Subsemnatul/a …………, posesor al CI seria …… nr.
@@ -261,6 +275,7 @@ export const MERGE_FIELDS = [
   NEWSLETTER_MERGE_FIELD,
   TEAM_PAGE_MERGE_FIELD,
   PROMOTIONAL_MATERIALS_MERGE_FIELD,
+  PROMOTIONAL_MATERIALS_SHARED_MERGE_FIELD,
 ] as const;
 
 /**
@@ -425,6 +440,17 @@ export function describesTeamPage(body: unknown): boolean {
  */
 export function describesPromotionalMaterials(body: unknown): boolean {
   return mergeFieldsIn(body).has(PROMOTIONAL_MATERIALS_MERGE_FIELD);
+}
+
+/**
+ * Whether a privacy notice describes the sponsor list (§NNN): it names
+ * `{{promotionalMaterialsShared}}` — that the club may give its partners the first name, the last
+ * name and the email address of whoever said yes to «oferte și beneficii». The gate for offering
+ * «Descarcă lista pentru sponsori», and, asked of every approved version, for which registrations
+ * the list may hold (`findSponsorShareVersions`). Pure.
+ */
+export function describesPromotionalMaterialsShared(body: unknown): boolean {
+  return mergeFieldsIn(body).has(PROMOTIONAL_MATERIALS_SHARED_MERGE_FIELD);
 }
 
 export function isMergeField(name: string): name is MergeField {
