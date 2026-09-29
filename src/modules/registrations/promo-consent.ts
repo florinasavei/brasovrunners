@@ -26,7 +26,9 @@ import { findRegistrationById } from "./repository";
  *   - the registration's own manage page, under its `MANAGE_REGISTRATION` link, per person (§547) —
  *     on another adult's row of that page only the way out: the link may withdraw their yes, never
  *     give it (`anotherAdultOnTheLink`, refused FORBIDDEN on the server);
- *   - «Înscrierile mele» (§77), a button per registration under the `MANAGE_PROFILE` link;
+ *   - «Înscrierile mele» (§77), under the `MANAGE_PROFILE` link — the way out only (second fix
+ *     round): the address link cannot tell the holder from another adult on the address, and the
+ *     notice names this page as a way to withdraw; a yes from here is refused FORBIDDEN;
  *   - the declaration page (and each step of the family's wizard, §471), a box of its own — the
  *     only place another adult on a family's address gives it, since the address holder cannot
  *     (§421); it can only say yes, never withdraw (the two doors above do that);
@@ -86,7 +88,7 @@ export async function recordFormPromoConsent<T extends Record<string, unknown>>(
   });
 }
 
-/** The refusal of a yes while the notice in force does not describe the promotional materials. */
+/** The refusal of a yes while the notice in force does not describe the offers and benefits. */
 export const PROMO_NOT_DESCRIBED = "promoConsent";
 
 export async function setPromoConsent<T extends Record<string, unknown>>(
@@ -104,11 +106,11 @@ export async function setPromoConsent<T extends Record<string, unknown>>(
 ): Promise<{ consent: boolean; changed: boolean }> {
   // Staff cannot consent for a person: the staff door only ever withdraws.
   if (input.via === "STAFF" && input.consent) {
-    throw new DomainError("FORBIDDEN", "staff may withdraw a consent to promotional materials, never give one");
+    throw new DomainError("FORBIDDEN", "staff may withdraw a consent to offers and benefits, never give one");
   }
   // A yes only under a notice that describes it; a no always.
   if (input.consent && !(await noticeDescribesPromotionalMaterials(db, input.now))) {
-    throw new DomainError("VALIDATION_ERROR", "the privacy notice in force does not describe promotional materials", [PROMO_NOT_DESCRIBED]);
+    throw new DomainError("VALIDATION_ERROR", "the privacy notice in force does not describe offers and benefits", [PROMO_NOT_DESCRIBED]);
   }
 
   return db.transaction(async (tx) => {
@@ -173,7 +175,10 @@ export async function setPromoConsentFromManageLink<T extends Record<string, unk
 
 /**
  * From «Înscrierile mele» (§77). The `MANAGE_PROFILE` token is read, never spent, and the
- * registration must be the holder's own; a stranger's id gets NOT_FOUND, never a hint.
+ * registration must be the holder's own; a stranger's id gets NOT_FOUND, never a hint. A withdrawal
+ * only (§NNN, second fix round): the address link cannot tell the holder from another adult on the
+ * same address, so a yes from here is FORBIDDEN for every row — the yes is given on the
+ * registration's own manage link or on the declaration.
  */
 export async function setPromoConsentFromMyRegistrations<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -185,6 +190,9 @@ export async function setPromoConsentFromMyRegistrations<T extends Record<string
   if (!(await tokenAttemptAllowed(db, secret, now))) return TOKEN_NOT_FOUND;
   const context = await readActionTokenContext(db, { secret, purpose: "MANAGE_PROFILE", now });
   if (!context.ok) return context;
+  if (consent) {
+    throw new DomainError("FORBIDDEN", "«Înscrierile mele» only withdraws a consent to offers and benefits; it is given on the registration's own link or the declaration");
+  }
 
   // The id comes from a form field: anything but a uuid is nobody's (§324).
   if (!isUuid(registrationId)) throw new DomainError("NOT_FOUND", "not one of this participant's registrations");

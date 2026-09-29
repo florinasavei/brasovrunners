@@ -161,7 +161,7 @@ const COLUMNS: Array<{
   { header: "Declaration signed", width: 18, cell: (row) => ({ value: onClubClock(row.declarationSignedAt ?? null), type: Date, format: STAMP_FORMAT }) },
   // The family marker (§543): the other people on the same address at the event, last like the CSV's.
   { header: "family", width: 30, cell: (row) => ({ value: row.family ?? "", type: String }) },
-  // The consent to promotional materials (§NNN), last like the CSV's: its moment, blank for no.
+  // The consent to offers and benefits (§NNN), last like the CSV's: its moment, blank for no.
   { header: "Offers and benefits", width: 18, cell: (row) => ({ value: onClubClock(row.promoConsentAt ?? null), type: Date, format: STAMP_FORMAT }) },
 ];
 

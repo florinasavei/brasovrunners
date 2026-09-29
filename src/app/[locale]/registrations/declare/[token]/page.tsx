@@ -834,7 +834,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                 </>
               )}
               {/*
-                The promotional materials (§NNN): optional, never pre-ticked, never required; a tick
+                The offers and benefits (§NNN): optional, never pre-ticked, never required; a tick
                 the notice in force does not cover is ignored and the signature goes on.
               */}
               {offerPromo && (

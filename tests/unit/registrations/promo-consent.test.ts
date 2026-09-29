@@ -21,7 +21,7 @@ import { CLUB_NAME } from "@/theme/brand";
 const text = (paragraph: string) => ({ sections: [{ paragraphs: [paragraph] }] });
 const paragraphs = (body: typeof privacyNoticeRo) => body.sections.flatMap((section) => section.paragraphs);
 
-describe("§NNN the privacy notice's marker for promotional materials", () => {
+describe("§NNN the privacy notice's marker for offers and benefits", () => {
   it("is a merge field the platform's notice carries in both languages, and the legend lists", () => {
     expect(isMergeField("promotionalMaterials")).toBe(true);
     expect(describesPromotionalMaterials(privacyNoticeRo)).toBe(true);
@@ -165,6 +165,26 @@ describe("§NNN the same words on every surface, scoped to the registration", ()
   });
 });
 
+describe("§NNN «Înscrierile mele» is a door out only (second fix round)", () => {
+  it("draws only «Nu mai vreau», posts only a no, and says where the yes is given", () => {
+    const source = readFileSync(path.join(process.cwd(), "src/app/[locale]/registrations/mine/[token]/page.tsx"), "utf8");
+    expect(source).not.toContain('t("promo.optIn")');
+    expect(source).toContain('t("promo.optOut")');
+    expect(source).toContain('name="consent" value="0"');
+    expect(source).not.toContain('name="consent" value={');
+    expect(source).toContain('t("promo.whereToSayYes")');
+  });
+
+  it("the pointer sentence names the registration's own page and the declaration, in both languages", () => {
+    expect(ro.Registrations.promo.whereToSayYes).toBe(
+      "Acordul pentru oferte și beneficii se dă din pagina înscrierii (linkul din emailul ei) sau din declarație. De aici îl poți doar retrage.",
+    );
+    expect(en.Registrations.promo.whereToSayYes).toBe(
+      "The consent to offers and benefits is given on the registration's own page (the link in its email) or on the declaration. From here you can only withdraw it.",
+    );
+  });
+});
+
 describe("§NNN the exports", () => {
   const row = (promoConsentAt: string): RegistrationCsvRow => ({
     eventTitle: "Crosul",
@@ -195,7 +215,7 @@ describe("§NNN the exports", () => {
     expect(REGISTRATION_SHEET_HEADERS.at(-1)).toBe("Offers and benefits");
   });
 
-  it("the promotional-materials CSV neutralizes formulas, carries a BOM and CRLF", () => {
+  it("the offers-and-benefits CSV neutralizes formulas, carries a BOM and CRLF", () => {
     const csv = buildPromoConsentersCsv({ name: "Nume", email: "Adresa de email", event: "Evenimentul", consentedAt: "Bifat pe" }, [
       { registrationId: "x", name: "=HYPERLINK(1)", email: "ana@example.ro", eventTitle: "Crosul, toamna", consentedAt: new Date("2026-09-29T10:00:00.000Z") },
     ]);
@@ -223,7 +243,8 @@ describe("§NNN no public page imports the backoffice glyph table (§318)", () =
     ];
     for (const file of files) {
       const source = readFileSync(path.join(root, file), "utf8");
-      expect(source).toContain('from "@mui/icons-material/Campaign"');
+      // «Înscrierile mele» only withdraws (second fix round): its one button carries the way-out glyph.
+      expect(source).toContain(file.includes("/mine/") ? 'from "@mui/icons-material/Unsubscribe"' : 'from "@mui/icons-material/Campaign"');
       expect(source).not.toContain("action-icons");
       expect(source).not.toMatch(/from "@mui\/icons-material"/);
     }

@@ -86,7 +86,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
   const now = new Date();
   // §396: whether the public lists show each runner's stage — the list tick's help says so then.
   const listStatesOn = await noticeDescribesListStates(getDb(), now);
-  // §NNN: the promotional materials exist only while the notice in force describes them.
+  // §NNN: the offers and benefits exist only while the notice in force describes them.
   const promoOn = await noticeDescribesPromotionalMaterials(getDb(), now);
   const eventDays = Object.fromEntries(events.map((event) => [event.id, dayIn(event.startsAt, event.timezone)]));
   // Each event's own minimum age (§329), so the date's bound follows the event chosen.
@@ -261,7 +261,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
               )}
             </Box>
 
-            {/* The promotional materials (§NNN): never asked here — staff cannot consent for a person,
+            {/* The offers and benefits (§NNN): never asked here — staff cannot consent for a person,
                 so a staff entry always stores «nu». The person says yes from their own page. */}
             {promoOn && (
               <Typography variant="body2" color="text.secondary" data-testid="staff-promo-consent-no">

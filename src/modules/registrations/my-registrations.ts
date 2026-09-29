@@ -211,7 +211,7 @@ export async function listClosedRegistrationsHoldingConsentData<T extends Record
       eventTimezone: events.timezone,
       holdsHealthNote: holdsHealthNote.mapWith(Boolean),
       holdsSocials: holdsSocials.mapWith(Boolean),
-      // A consent to promotional materials outlives the place (§NNN): withdrawn from here too.
+      // A consent to offers and benefits outlives the place (§NNN): withdrawn from here too.
       promoConsent: registrations.promoConsent,
     })
     .from(registrations)

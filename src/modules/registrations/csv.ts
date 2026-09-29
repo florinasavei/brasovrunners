@@ -129,7 +129,7 @@ const HEADER = [
   "Declaration signed",
   // Last (§543), for the same reason: the other people on the same address.
   "family",
-  // Last (§NNN), for the same reason: the consent to promotional materials, its moment or empty.
+  // Last (§NNN), for the same reason: the consent to offers and benefits, its moment or empty.
   "Offers and benefits",
 ];
 

@@ -164,7 +164,7 @@ export async function GET(request: Request): Promise<Response> {
         declarationVersion: declarations.get(row.id)?.version ?? null,
         declarationSignedAt: declarations.get(row.id)?.acceptedAt ?? null,
         family: familyColumn(family.get(row.id)),
-        // The consent to promotional materials (§NNN): its moment, blank for no.
+        // The consent to offers and benefits (§NNN): its moment, blank for no.
         promoConsentAt: row.promoConsent ? row.promoConsentAt : null,
       })),
       eventTitle ?? "Participants",

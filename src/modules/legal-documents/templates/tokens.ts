@@ -145,7 +145,7 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     messageKey: TEAM_PAGE_MERGE_FIELD,
     example: inBoth((locale) => teamPageClause(locale)),
   },
-  // The privacy notice's marker for the promotional materials (§NNN): the form's own box, and the
+  // The privacy notice's marker for the offers and benefits (§NNN): the form's own box, and the
   // switch that lets the form offer it and a person's page switch it on (`describesPromotionalMaterials`).
   {
     token: `{{${PROMOTIONAL_MATERIALS_MERGE_FIELD}}}`,

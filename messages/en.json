@@ -6404,6 +6404,7 @@
       "no": "You did not tick offers and benefits on this registration.",
       "optIn": "I want offers and benefits for this registration",
       "optOut": "I no longer want offers and benefits for this registration",
+      "whereToSayYes": "The consent to offers and benefits is given on the registration's own page (the link in its email) or on the declaration. From here you can only withdraw it.",
       "help": "It is separate from the newsletter: unsubscribing from the newsletter does not change this, and this does not change the newsletter.",
       "changed": "Your choice about offers and benefits for this registration is saved.",
       "failed": "We could not save your choice. Try again.",

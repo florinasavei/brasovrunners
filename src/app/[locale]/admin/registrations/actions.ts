@@ -386,7 +386,7 @@ export async function withdrawConsentAction(_previous: FormOutcome | null, form:
       ...(form.get("health") === "on" ? { health: true as const } : {}),
       ...(form.get("socials") === "on" ? { socials: true as const } : {}),
       ...(form.get("results") === "on" ? { results: true as const } : {}),
-      // The promotional materials (§NNN): a withdrawal only — staff never give the consent.
+      // The offers and benefits (§NNN): a withdrawal only — staff never give the consent.
       ...(form.get("promo") === "on" ? { promo: true as const } : {}),
     };
     await withdrawOptionalData(getDb(), actor, registrationId, fields, text(form, "reason"), new Date());

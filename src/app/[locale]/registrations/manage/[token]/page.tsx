@@ -53,7 +53,7 @@ type Props = {
     here?: string;
     list?: string;
     withdrawn?: string;
-    /** The promotional-materials switch's outcome (§NNN): 1 saved, 0 refused. */
+    /** The offers-and-benefits switch's outcome (§NNN): 1 saved, 0 refused. */
     promo?: string;
     /** Which person a check-in or a list answer was about (§547): an id the page already lists, never a name. */
     person?: string;

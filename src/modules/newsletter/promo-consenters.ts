@@ -55,7 +55,7 @@ export type PromoConsenterList = { rows: PromoConsenterRow[]; total: number; tru
 
 function assertMayRead(actor: Pick<StaffUser, "role">): void {
   if (!canSendNewsletter(actor.role)) {
-    throw new DomainError("FORBIDDEN", `role ${actor.role} may not read who consented to promotional materials; §550 keeps it to the Organizer and the Administrator`);
+    throw new DomainError("FORBIDDEN", `role ${actor.role} may not read who consented to offers and benefits; §550 keeps it to the Organizer and the Administrator`);
   }
 }
 

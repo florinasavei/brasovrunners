@@ -327,23 +327,36 @@ describe("§NNN the person's own switch: the manage link and «Înscrierile mele
     expect((await listManagedPeople(db, after)).map((person) => person.promoConsent)).toEqual([false]);
   });
 
-  it("switches it on from «Înscrierile mele» while the notice describes it, and refuses a stranger's id", async () => {
+  it("«Înscrierile mele» refuses a yes for any row — its own included — and withdraws; the manage link's yes still works (second fix round)", async () => {
     await texts();
     const { row } = await registered({ promoConsent: false });
     const secret = await token(row, "MANAGE_PROFILE");
 
-    expect(await setPromoConsentFromMyRegistrations(db, secret, row.id, true, LATER)).toEqual({ ok: true, consent: true, changed: true });
-    expect(await promoAudit(row.id)).toEqual([{ actor: null, metadata: { to: true, via: "MY_REGISTRATIONS" } }]);
+    // The holder's own row: a yes from the address link is refused, nothing written.
+    expect(await refusal(setPromoConsentFromMyRegistrations(db, secret, row.id, true, LATER))).toBe("FORBIDDEN");
+    expect((await rowById(row.id)).promoConsent).toBe(false);
+    expect(await promoAudit(row.id)).toEqual([]);
+
+    // The yes is given on the registration's own manage link.
+    expect(await setPromoConsentFromManageLink(db, await token(row, "MANAGE_REGISTRATION"), true, LATER)).toEqual({ ok: true, consent: true, changed: true });
     const [mine] = await listActiveRegistrationsForParticipant(db, row.participantId, "ro", LATER);
     expect(mine.promoConsent).toBe(true);
 
-    // Somebody else's registration, through this link: refused, nothing written.
+    // «Înscrierile mele» takes it back.
+    expect(await setPromoConsentFromMyRegistrations(db, secret, row.id, false, LATER)).toEqual({ ok: true, consent: false, changed: true });
+    expect(await promoAudit(row.id)).toEqual([
+      { actor: null, metadata: { to: true, via: "MANAGE_LINK" } },
+      { actor: null, metadata: { to: false, via: "MY_REGISTRATIONS" } },
+    ]);
+
+    // Somebody else's registration, through this link: a yes refused before any row is read, a no NOT_FOUND.
     const other = await createEvent();
-    await submitRegistration(db, other, submission("Ana", NOW, { email: "alt@example.ro", promoConsent: false }), NOW);
+    await submitRegistration(db, other, submission("Ana", NOW, { email: "alt@example.ro" }), NOW);
     const stranger = await onlyRow(other.id);
-    expect(await refusal(setPromoConsentFromMyRegistrations(db, secret, stranger.id, true, LATER))).toBe("NOT_FOUND");
-    expect(await refusal(setPromoConsentFromMyRegistrations(db, secret, "not-a-uuid", true, LATER))).toBe("NOT_FOUND");
-    expect((await rowById(stranger.id)).promoConsent).toBe(false);
+    expect(await refusal(setPromoConsentFromMyRegistrations(db, secret, stranger.id, true, LATER))).toBe("FORBIDDEN");
+    expect(await refusal(setPromoConsentFromMyRegistrations(db, secret, stranger.id, false, LATER))).toBe("NOT_FOUND");
+    expect(await refusal(setPromoConsentFromMyRegistrations(db, secret, "not-a-uuid", false, LATER))).toBe("NOT_FOUND");
+    expect((await rowById(stranger.id)).promoConsent).toBe(true);
   });
 
   it("refuses a yes while the notice in force does not describe the materials, and always accepts a no", async () => {
@@ -422,10 +435,10 @@ describe("§NNN fix round: the form's moment, per registration, and another adul
     const b = await onlyRow(second.id);
     expect(a.participantId).toBe(b.participantId);
 
-    // On B's own manage link: yes, then no, then yes from «Înscrierile mele» — A never moves.
+    // On B's own manage link: yes, then no from «Înscrierile mele», then yes again — A never moves.
     expect(await setPromoConsentFromManageLink(db, await token(b, "MANAGE_REGISTRATION"), true, LATER)).toMatchObject({ ok: true, changed: true });
-    expect(await setPromoConsentFromManageLink(db, await token(b, "MANAGE_REGISTRATION"), false, LATER)).toMatchObject({ ok: true, changed: true });
-    expect(await setPromoConsentFromMyRegistrations(db, await token(b, "MANAGE_PROFILE"), b.id, true, LATER)).toMatchObject({ ok: true, changed: true });
+    expect(await setPromoConsentFromMyRegistrations(db, await token(b, "MANAGE_PROFILE"), b.id, false, LATER)).toMatchObject({ ok: true, changed: true });
+    expect(await setPromoConsentFromManageLink(db, await token(b, "MANAGE_REGISTRATION"), true, LATER)).toMatchObject({ ok: true, changed: true });
     expect((await rowById(b.id)).promoConsent).toBe(true);
 
     const untouched = await rowById(a.id);
@@ -471,6 +484,13 @@ describe("§NNN fix round: the form's moment, per registration, and another adul
     expect(await refusal(setPromoConsentFromManageLink(db, holder, true, LATER, byName.Mihai.id))).toBe("FORBIDDEN");
     expect((await rowById(byName.Mihai.id)).promoConsent).toBe(false);
     expect(await promoAudit(byName.Mihai.id)).toEqual([]);
+    // «Înscrierile mele» (the address link) cannot tell the holder from Mihai: a yes for any row is refused (second fix round).
+    const address = await token(byName.Ana, "MANAGE_PROFILE");
+    for (const person of [byName.Ana, byName.Mihai, byName.Ioana]) {
+      expect(await refusal(setPromoConsentFromMyRegistrations(db, address, person.id, true, LATER))).toBe("FORBIDDEN");
+    }
+    expect((await rowById(byName.Mihai.id)).promoConsent).toBe(false);
+    expect(await promoAudit(byName.Mihai.id)).toEqual([]);
     // The minor's parent may say yes for the child, as on the form.
     expect(await setPromoConsentFromManageLink(db, holder, true, LATER, byName.Ioana.id)).toMatchObject({ ok: true, changed: true });
 
@@ -483,7 +503,7 @@ describe("§NNN fix round: the form's moment, per registration, and another adul
 });
 
 describe("§NNN two consents, two switches", () => {
-  it("a newsletter unsubscribe leaves the promotional-materials consent alone", async () => {
+  it("a newsletter unsubscribe leaves the offers-and-benefits consent alone", async () => {
     await texts();
     const event = await createEvent();
     await submitRegistration(db, event, submission("Ana", NOW), NOW);
@@ -511,7 +531,7 @@ describe("§NNN two consents, two switches", () => {
     expect(await promoAudit(row.id)).toEqual([{ actor: null, metadata: { to: true, via: "FORM" } }]);
   });
 
-  it("withdrawing the promotional materials leaves the newsletter alone", async () => {
+  it("withdrawing the offers and benefits leaves the newsletter alone", async () => {
     await texts();
     const event = await createEvent();
     await submitRegistration(db, event, submission("Ana", NOW), NOW);

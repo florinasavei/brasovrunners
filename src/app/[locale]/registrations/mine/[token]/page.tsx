@@ -1,4 +1,3 @@
-import CampaignIcon from "@mui/icons-material/Campaign";
 import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import DrawIcon from "@mui/icons-material/Draw";
 import EventBusyIcon from "@mui/icons-material/EventBusy";
@@ -54,7 +53,7 @@ type Props = {
     withdrawn?: string;
     field?: string;
     withdrawFailed?: string;
-    /** The promotional-materials switch (§NNN): the registration it saved, or refused. */
+    /** The offers-and-benefits switch (§NNN): the registration it saved, or refused. */
     promo?: string;
     promoFailed?: string;
   }>;
@@ -109,9 +108,16 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
   // One token read for the page — throttled per presented token.
   const now = new Date();
   const context = invalid ? { ok: false as const } : await readMyRegistrations(getDb(), token, locale, now);
-  // «Vreau oferte și beneficii» only while the notice in force describes them (§NNN); «Nu mai vreau» always.
+  /*
+    Offers and benefits (§NNN, second fix round): «Înscrierile mele» is a door out only. The address
+    link cannot tell the holder from another adult on the same address, and the notice names this
+    page as a way to withdraw, never to give — so a row that says yes gets «Nu mai vreau», and a row
+    that says no gets one sentence pointing to where the yes is given: the registration's own page
+    (the link in its email) or the declaration. The server refuses a yes from here (FORBIDDEN).
+    The sentence only while the notice in force describes the offers; «Nu mai vreau» always.
+  */
   const promoOn = context.ok ? await cachedPromotionalMaterialsOffered(now) : false;
-  /** The promotional-materials switch for one registration (§NNN): the answer as it stands, and the other one. */
+  /** The offers-and-benefits line for one registration (§NNN): its answer, and the way out when it is yes. */
   const promoSwitch = (item: { id: string; promoConsent: boolean }, closed = false) => (
     <Stack spacing={1} sx={{ mt: 1.5 }} data-testid="my-promo">
       {promo === item.id && (
@@ -128,19 +134,21 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
         <Typography variant="body2" color="text.secondary" data-testid="my-promo-state">
           {item.promoConsent ? t(closed ? "promo.closedYes" : "promo.yes") : t("promo.no")}
         </Typography>
-        <form action={setPromoConsentFromMyRegistrationsAction}>
-          <input type="hidden" name="locale" value={locale} />
-          <input type="hidden" name="token" value={token} />
-          <input type="hidden" name="registrationId" value={item.id} />
-          <input type="hidden" name="consent" value={item.promoConsent ? "0" : "1"} />
-          <Button type="submit" variant="text" size="small" sx={{ minHeight: 44, ...WITH_GLYPH_SX }}>
-            {item.promoConsent ? <UnsubscribeIcon aria-hidden="true" sx={glyphSx("small")} /> : <CampaignIcon aria-hidden="true" sx={glyphSx("small")} />}
-            {item.promoConsent ? t("promo.optOut") : t("promo.optIn")}
-          </Button>
-        </form>
+        {item.promoConsent && (
+          <form action={setPromoConsentFromMyRegistrationsAction}>
+            <input type="hidden" name="locale" value={locale} />
+            <input type="hidden" name="token" value={token} />
+            <input type="hidden" name="registrationId" value={item.id} />
+            <input type="hidden" name="consent" value="0" />
+            <Button type="submit" variant="text" size="small" sx={{ minHeight: 44, ...WITH_GLYPH_SX }}>
+              <UnsubscribeIcon aria-hidden="true" sx={glyphSx("small")} />
+              {t("promo.optOut")}
+            </Button>
+          </form>
+        )}
       </Stack>
-      <Typography variant="body2" color="text.secondary">
-        {t("promo.help")}
+      <Typography variant="body2" color="text.secondary" data-testid={item.promoConsent ? undefined : "my-promo-where"}>
+        {item.promoConsent ? t("promo.help") : t("promo.whereToSayYes")}
       </Typography>
     </Stack>
   );
@@ -429,8 +437,8 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
               </Stack>
 
               {/*
-                The promotional materials (§NNN), the person's own switch: «Vreau» only while the notice
-                in force describes them, «Nu mai vreau» whenever the row says yes. The link is read, never
+                The offers and benefits (§NNN): «Nu mai vreau» whenever the row says yes; a no only says
+                where the yes is given, while the notice in force describes them. The link is read, never
                 spent, as the list switch above. Separate from the newsletter, and the words say so.
               */}
               {(item.promoConsent || promoOn) && promoSwitch(item)}
@@ -551,7 +559,7 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
                     </form>
                   )}
                 </Stack>
-                {/* A consent to promotional materials outlives the place (§NNN): only the way out here. */}
+                {/* A consent to offers and benefits outlives the place (§NNN): only the way out here. */}
                 {item.promoConsent && promoSwitch(item, true)}
                 {/* Withdrawn just now, while the card stays for its other data: the answer, and no way back in here. */}
                 {!item.promoConsent && promo === item.id && (

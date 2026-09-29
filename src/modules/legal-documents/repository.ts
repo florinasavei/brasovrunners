@@ -247,7 +247,7 @@ export async function noticeDescribesListSocials<T extends Record<string, unknow
 }
 
 /**
- * Whether the privacy notice in force describes the promotional materials (§NNN,
+ * Whether the privacy notice in force describes the offers and benefits (§NNN,
  * `describesPromotionalMaterials`) — in every language, like `noticeDescribesListSocials`. For
  * `/admin/tasks`, `/admin/legal` and the switch on a person's own page; a public page asks through
  * the public cache (`cachedPromotionalMaterialsOffered`).

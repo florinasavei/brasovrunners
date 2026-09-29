@@ -1309,7 +1309,8 @@ test.describe("BR-REQ-041-01 the race's conditions: the box is inside the read b
 });
 
 /**
- * §NNN — «Vreau să primesc materiale promoționale de la club și de la partenerii lui»: one optional
+ * §NNN — «Vreau să primesc oferte și beneficii de la <club> și partenerii săi.» (the owner's words,
+ * 2026-09-29 16:12, the club named from `CLUB_NAME`): one optional
  * box, unticked, never required, under the list tick, with the glyph and one helper sentence — and
  * only while the privacy notice in force names `{{promotionalMaterials}}` (AGENTS.md §10.8). Which
  * face the page shows is read from the database the server uses, under the advisory lock

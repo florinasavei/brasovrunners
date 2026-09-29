@@ -553,7 +553,7 @@ export function withoutAnotherAdultsConsents(raw: unknown, now: Date): unknown {
     instagramHandle: undefined,
     listOptOut: true,
     listSocials: false,
-    // Another adult's own consent to promotional materials (§NNN): theirs to give, not the address holder's.
+    // Another adult's own consent to offers and benefits (§NNN): theirs to give, not the address holder's.
     promoConsent: false,
     fitnessDeclared: undefined,
   };

@@ -6404,6 +6404,7 @@
       "no": "La această înscriere nu ai bifat oferte și beneficii.",
       "optIn": "Vreau oferte și beneficii pentru această înscriere",
       "optOut": "Nu mai vreau oferte și beneficii pentru această înscriere",
+      "whereToSayYes": "Acordul pentru oferte și beneficii se dă din pagina înscrierii (linkul din emailul ei) sau din declarație. De aici îl poți doar retrage.",
       "help": "E separat de newsletter: dezabonarea de la newsletter nu schimbă asta, iar asta nu schimbă newsletterul.",
       "changed": "Am salvat alegerea ta despre oferte și beneficii pentru această înscriere.",
       "failed": "Nu am putut salva alegerea. Încearcă din nou.",

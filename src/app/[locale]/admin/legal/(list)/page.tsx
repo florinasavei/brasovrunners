@@ -212,7 +212,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
   // The same for the socials beside a name (§500): the form offers the tick only while the notice
   // in force names `{{participantListSocials}}`, and this is where that notice is approved.
   const listSocialsMissing = !missingKeys.includes("PRIVACY_NOTICE") && !(await noticeDescribesListSocials(getDb(), now));
-  // The same for the promotional materials (§NNN): no form offers the box, and nothing is kept,
+  // The same for the offers and benefits (§NNN): no form offers the box, and nothing is kept,
   // until the notice in force names `{{promotionalMaterials}}`.
   const promoMissing = !missingKeys.includes("PRIVACY_NOTICE") && !(await noticeDescribesPromotionalMaterials(getDb(), now));
   /*

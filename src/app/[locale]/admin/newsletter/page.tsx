@@ -59,7 +59,7 @@ export default async function NewsletterPage({ params, searchParams }: Props) {
   const now = new Date();
   // The day's allowance for the composer's "how much leaves today", and whether the notice in force
   // lets the contact page offer the pop-up; the list under its filter.
-  // And, since §NNN, who said yes to promotional materials on a registration — the same readers (§550).
+  // And, since §NNN, who said yes to offers and benefits on a registration — the same readers (§550).
   const [audience, history, volume, offered, subscribers, promo] = await Promise.all([
     countNewsletterAudience(db),
     listNewsletterSends(db),

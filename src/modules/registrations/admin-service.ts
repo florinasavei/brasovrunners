@@ -1279,8 +1279,8 @@ export async function withdrawOptionalData<T extends Record<string, unknown>>(
   }
   /*
     One transaction for both writes, so a withdrawal of the optional data together with the
-    promotional materials is whole or nothing — never the first committed and the second refused.
-    The promotional materials (§NNN), for the person who wrote to the club: the one write of
+    consent to offers and benefits is whole or nothing — never the first committed and the second refused.
+    The offers and benefits (§NNN), for the person who wrote to the club: the one write of
     `promo-consent.ts`, with its own audit row naming the Administrator and the reason. A
     withdrawal only — staff never consent for a person, and the module refuses a yes from here.
   */

@@ -208,7 +208,7 @@ export const NEWSLETTER_MERGE_FIELD = "newsletterTopics";
 export const TEAM_PAGE_MERGE_FIELD = "teamPage";
 
 /**
- * The privacy notice's marker for the promotional materials (§NNN): the register form's optional
+ * The privacy notice's marker for the offers and benefits (§NNN): the register form's optional
  * «Vreau să primesc oferte și beneficii de la <club> și partenerii săi.». The same two-in-one
  * as the list's socials above: filled, when the notice is shown, with the box's own words, quoted
  * (`registrations/promo-consent-words.ts`), and the switch — the form offers the box, the service
@@ -418,7 +418,7 @@ export function describesTeamPage(body: unknown): boolean {
 }
 
 /**
- * Whether a privacy notice describes the promotional materials (§NNN): it names
+ * Whether a privacy notice describes the offers and benefits (§NNN): it names
  * `{{promotionalMaterials}}`. The gate for the form's box, for keeping a tick, and for the switch on
  * a person's own page — the club's approval of such a text is the switch, as for the list's states
  * (§396). Pure; the caller asks it of the notice in force, or of the one a registration records.

@@ -213,7 +213,7 @@ describe("CSV formula neutralization", () => {
     ]);
     const [header, accepted, staff, older] = csv.split("\r\n");
     const columns = header.split(",");
-    // §425's two, now followed by the declaration's two (§499), the family column (§543) and the promotional materials (§NNN).
+    // §425's two, now followed by the declaration's two (§499), the family column (§543) and the offers and benefits (§NNN).
     expect(columns.slice(-6, -4)).toEqual(["Terms version", "Terms accepted"]);
     expect(accepted.split(",").slice(-6, -4)).toEqual(["3", "2026-09-25T10:00:00.000Z"]);
     expect(staff.split(",").slice(-6, -4)).toEqual(["", ""]);
@@ -251,7 +251,7 @@ describe("CSV formula neutralization", () => {
       base,
     ]);
     const [header, signed, unsigned, older] = csv.split("\r\n");
-    // Before the family column (§543) and the promotional materials (§NNN), which is last.
+    // Before the family column (§543) and the offers and benefits (§NNN), which is last.
     expect(header.split(",").slice(-4, -2)).toEqual(["Declaration version", "Declaration signed"]);
     expect(signed.split(",").slice(-6, -2)).toEqual(["3", "2026-09-25T10:00:00.000Z", "2", "2026-09-26T08:30:00.000Z"]);
     expect(unsigned.split(",").slice(-4, -2)).toEqual(["", ""]);
@@ -285,7 +285,7 @@ describe("CSV formula neutralization", () => {
     expect(shown.split(",").slice(at - 1, at + 1)).toEqual(["ana.pop", "Yes"]);
     expect(kept.split(",")[at]).toBe("");
     expect(older.split(",")[at]).toBe("");
-    // The declaration's pair stays after the terms (§499), then the family column (§543) and the promotional materials, last (§NNN).
+    // The declaration's pair stays after the terms (§499), then the family column (§543) and the offers and benefits, last (§NNN).
     expect(header.split(",").slice(-4)).toEqual(["Declaration version", "Declaration signed", "family", "Offers and benefits"]);
   });
 
@@ -311,7 +311,7 @@ describe("CSV formula neutralization", () => {
       emailBounced: false,
     };
     const [header, family, alone] = buildRegistrationsCsv([{ ...base, family: "Mihai Pop; Ioana Pop" }, base]).split("\r\n");
-    // Just before the promotional materials, which came last with §NNN.
+    // Just before the offers and benefits, which came last with §NNN.
     expect(header.split(",").at(-2)).toBe("family");
     expect(family.split(",").at(-2)).toBe("Mihai Pop; Ioana Pop");
     expect(alone.split(",").at(-2)).toBe("");
