@@ -3,7 +3,7 @@ import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
 import { teamPageClause } from "@/modules/content/team/notice-words";
 import { listStatesClause } from "@/modules/registrations/list-state-words";
 import { listSocialsClause } from "@/modules/registrations/list-socials-words";
-import { promotionalMaterialsClause } from "@/modules/registrations/promo-consent-words";
+import { promotionalMaterialsClause, promotionalMaterialsSharedClause } from "@/modules/registrations/promo-consent-words";
 import { yearsPhrase } from "@/modules/registrations/domain/age";
 import {
   DEADLINE_MERGE_FIELDS,
@@ -13,6 +13,7 @@ import {
   MINIMUM_AGE_MERGE_FIELD,
   NEWSLETTER_MERGE_FIELD,
   PROMOTIONAL_MATERIALS_MERGE_FIELD,
+  PROMOTIONAL_MATERIALS_SHARED_MERGE_FIELD,
   TEAM_PAGE_MERGE_FIELD,
 } from "../domain/merge-fields";
 import { seriesRhythmPhrase } from "@/modules/group-run-declarations/series";
@@ -152,6 +153,13 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     messageKey: PROMOTIONAL_MATERIALS_MERGE_FIELD,
     // Never the club's name in the legend (§369): the sentence as the box reads, with a plain «club».
     example: inBoth((locale) => promotionalMaterialsClause(locale, locale === "en" ? "the club" : "club")),
+  },
+  // The privacy notice's marker for the sponsor list (§NNN): the three data a partner may receive,
+  // and the switch for «Descarcă lista pentru sponsori» (`describesPromotionalMaterialsShared`).
+  {
+    token: `{{${PROMOTIONAL_MATERIALS_SHARED_MERGE_FIELD}}}`,
+    messageKey: PROMOTIONAL_MATERIALS_SHARED_MERGE_FIELD,
+    example: inBoth((locale) => promotionalMaterialsSharedClause(locale)),
   },
 ];
 

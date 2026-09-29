@@ -16,7 +16,8 @@ import PromoConsenters from "@/modules/newsletter/ui/PromoConsenters";
 import NewsletterPanel from "@/modules/newsletter/ui/NewsletterPanel";
 import NewsletterSubscribers from "@/modules/newsletter/ui/NewsletterSubscribers";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
-import { canManageRegistrations, canSendNewsletter } from "@/modules/staff-identity/domain/roles";
+import { canExportSponsorList, canManageRegistrations, canSendNewsletter } from "@/modules/staff-identity/domain/roles";
+import { sponsorListSummary } from "@/modules/registrations/sponsor-list";
 import { requireStaff } from "@/modules/staff-identity/session";
 
 type Props = {
@@ -60,13 +61,15 @@ export default async function NewsletterPage({ params, searchParams }: Props) {
   // The day's allowance for the composer's "how much leaves today", and whether the notice in force
   // lets the contact page offer the pop-up; the list under its filter.
   // And, since §562, who said yes to offers and benefits on a registration — the same readers (§550).
-  const [audience, history, volume, offered, subscribers, promo] = await Promise.all([
+  // And, since §NNN, the list for sponsors across every event — the same query as an event's page.
+  const [audience, history, volume, offered, subscribers, promo, sponsors] = await Promise.all([
     countNewsletterAudience(db),
     listNewsletterSends(db),
     readEmailVolumeToday(db, now),
     noticeDescribesNewsletter(db, now),
     listNewsletterSubscribers(db, query, now),
     listPromoConsenters(db, staff, locale),
+    canExportSponsorList(staff.role) ? sponsorListSummary(db, staff, { now }) : Promise.resolve(null),
   ]);
   const sentCount = /^\d{1,9}$/.test(recipients ?? "") ? Number(recipients) : 0;
   const t = await getTranslations("Admin");
@@ -103,7 +106,7 @@ export default async function NewsletterPage({ params, searchParams }: Props) {
               saved={saved === "newsletterUnsubscribed" || saved === "newsletterUnsubscribedGone"}
             />
             {/* The second fold (§562): a consent on a registration, not a subscription — its own list and its own CSV. */}
-            <PromoConsenters locale={locale} list={promo} />
+            <PromoConsenters locale={locale} list={promo} sponsors={sponsors} />
           </>
         }
       />

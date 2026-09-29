@@ -1,9 +1,13 @@
 import BadgeIcon from "@mui/icons-material/Badge";
 import CampaignIcon from "@mui/icons-material/Campaign";
+import DescriptionIcon from "@mui/icons-material/Description";
 import DirectionsRunIcon from "@mui/icons-material/DirectionsRun";
+import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import GroupsIcon from "@mui/icons-material/Groups";
 import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
+import MenuBookIcon from "@mui/icons-material/MenuBook";
 import ShareIcon from "@mui/icons-material/Share";
+import ShieldIcon from "@mui/icons-material/Shield";
 import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
 import Alert from "@mui/material/Alert";
 import AlertTitle from "@mui/material/AlertTitle";
@@ -26,6 +30,7 @@ import {
   cachedListSocialsDisclosed,
   cachedListStatesDisclosed,
   cachedPromotionalMaterialsOffered,
+  cachedPromotionalMaterialsShared,
   cachedPublicAvailability,
 } from "@/modules/public-cache/reads";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
@@ -57,6 +62,7 @@ import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney"
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import CheckboxField from "@/shared/ui/CheckboxField";
+import { CONSENT_DENSITY } from "@/shared/ui/consent-density";
 import GuardianForMinor from "@/modules/registrations/ui/GuardianForMinor";
 import BirthDateField from "@/modules/registrations/ui/BirthDateField";
 import HiddenForMinor from "@/modules/registrations/ui/HiddenForMinor";
@@ -340,9 +346,12 @@ export default async function RegisterPage({ params, searchParams }: Props) {
     not it publishes a list. Off (or unread), the form has no box and the service keeps nothing.
   */
   let promoOn = false;
+  // And, while the notice in force says the partners may receive the list (§NNN), the box's caption
+  // says so where the yes is given — the box's words stay §562's.
+  let promoShared = false;
   if (!resting) {
     try {
-      promoOn = await cachedPromotionalMaterialsOffered(now);
+      [promoOn, promoShared] = await Promise.all([cachedPromotionalMaterialsOffered(now), cachedPromotionalMaterialsShared(now)]);
     } catch (failure) {
       unstable_rethrow(failure);
     }
@@ -1363,6 +1372,14 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               </Typography>
 
               {/*
+                «Acorduri», compacted (§NNN; the owner: "Also these need to be more compacted!"): its
+                own Stack with no gap between rows, the boxes small and still 44 to the thumb, the
+                labels in body2, each helper a caption under its label (`CONSENT_DENSITY`). Every
+                word the legal reviews fixed (§425, §556) is unchanged.
+              */}
+              <Stack spacing={0} sx={{ gap: `${CONSENT_DENSITY.rowGapPx}px`, minWidth: 0 }} data-testid="registration-consents">
+
+              {/*
                 The one consent that is required, and the only one — BR-REQ-031-02.
 
                 The asterisk comes from `FormControlLabel`, which reads `required` off the
@@ -1407,7 +1424,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   document={event.rulesJson}
                 />
               ) : (
-                <CheckboxField id={fieldId("rulesAcknowledged")} name="rulesAcknowledged" required defaultChecked={prefill("rulesAcknowledged") === "on"}>
+                <CheckboxField id={fieldId("rulesAcknowledged")} name="rulesAcknowledged" required dense defaultChecked={prefill("rulesAcknowledged") === "on"}>
+                  <MenuBookIcon aria-hidden data-testid="consent-glyph" />
                   {t("rules.plainPage")}{" "}
                   <LegalLink href={{ pathname: "/events/[slug]", params: { slug } }} newTabLabel={t("opensInNewTab")}>
                     {t("rules.pageLink")}
@@ -1431,7 +1449,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   {t("terms.changed")}
                 </Alert>
               )}
-              <CheckboxField id={fieldId("termsAccepted")} name="termsAccepted" required defaultChecked={acceptance.ticked}>
+              <CheckboxField id={fieldId("termsAccepted")} name="termsAccepted" required dense defaultChecked={acceptance.ticked}>
+                <DescriptionIcon aria-hidden data-testid="consent-glyph" />
                 {t.rich("terms.accept", {
                   version: termsVersion ?? "—",
                   // The words as one string: `LegalLink` names itself from a string child.
@@ -1442,10 +1461,12 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   ),
                 })}
               </CheckboxField>
-              <CheckboxField id={fieldId("fitnessDeclared")} name="fitnessDeclared" required defaultChecked={prefill("fitnessDeclared") === "on"}>
+              <CheckboxField id={fieldId("fitnessDeclared")} name="fitnessDeclared" required dense defaultChecked={prefill("fitnessDeclared") === "on"}>
+                <MedicalServicesIcon aria-hidden data-testid="consent-glyph" />
                 {t("fitnessDeclared")}
               </CheckboxField>
-              <CheckboxField id={fieldId("privacyAcknowledged")} name="privacyAcknowledged" required defaultChecked={prefill("privacyAcknowledged") === "on"}>
+              <CheckboxField id={fieldId("privacyAcknowledged")} name="privacyAcknowledged" required dense defaultChecked={prefill("privacyAcknowledged") === "on"}>
+                <ShieldIcon aria-hidden data-testid="consent-glyph" />
                 {t("privacyPrefix")}{" "}
                 <LegalLink href="/legal/privacy" newTabLabel={t("opensInNewTab")}>
                   {t("privacyLinkLabel")}
@@ -1463,20 +1484,30 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 (() => {
                   const listQuestion = (
                     <>
-                      <CheckboxField name="listOptIn" defaultChecked={prefill("listOptIn") === "on"}>
-                        {`${t("listOptIn")} — ${t("optionalSuffix")}`}
-                      </CheckboxField>
                       {/* What the list shows beside the name, once the notice in force says so (§396) —
-                          the same three words the list prints, from its own catalogue keys. */}
-                      {listStatesOn && (
-                        <Typography variant="body2" color="text.secondary" data-testid="list-opt-in-states" sx={{ mt: -0.5 }}>
-                          {t("listOptInStates", {
-                            pending: tEvent("startList.states.pending"),
-                            waitlisted: tEvent("startList.states.waitlisted"),
-                            confirmed: tEvent("startList.states.confirmed"),
-                          })}
-                        </Typography>
-                      )}
+                          the same three words the list prints, from its own catalogue keys; the
+                          caption under the tick (§NNN). The tick names the list and the results as one
+                          disclosure: «… pe lista de participanți & rezultate» (the owner, 2026-09-29). */}
+                      <CheckboxField
+                        name="listOptIn"
+                        dense
+                        defaultChecked={prefill("listOptIn") === "on"}
+                        help={
+                          listStatesOn
+                            ? t("listOptInStates", {
+                                pending: tEvent("startList.states.pending"),
+                                waitlisted: tEvent("startList.states.waitlisted"),
+                                confirmed: tEvent("startList.states.confirmed"),
+                              })
+                            : undefined
+                        }
+                        helpTestId="list-opt-in-states"
+                        optional={t("optionalSuffix")}
+                      >
+                        {/* The trophy (round 2): the list and the results, one disclosure behind one tick. */}
+                        <EmojiEventsIcon aria-hidden data-testid="consent-glyph" />
+                        {t("listOptIn")}
+                      </CheckboxField>
                       {/*
                         The socials beside the name (§500), behind the notice in force and asked as a
                         consent of its own: never folded (§59), never pre-ticked, and meaningless
@@ -1493,12 +1524,10 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                             inputIds={[fieldId("stravaUrl"), fieldId("instagramHandle")]}
                             forceOpen={prefill("listSocials") === "on"}
                           >
-                            <CheckboxField name="listSocials" defaultChecked={prefill("listSocials") === "on"}>
-                              {`${t("listSocials")} — ${t("optionalSuffix")}`}
+                            <CheckboxField name="listSocials" dense defaultChecked={prefill("listSocials") === "on"} help={t("listSocialsHelp")} helpTestId="list-socials-help" optional={t("optionalSuffix")}>
+                              <ShareIcon aria-hidden data-testid="consent-glyph" />
+                              {t("listSocials")}
                             </CheckboxField>
-                            <Typography variant="body2" color="text.secondary" data-testid="list-socials-help" sx={{ mt: -0.5 }}>
-                              {t("listSocialsHelp")}
-                            </Typography>
                           </ShownWithSocial>
                         </HiddenForMinor>
                       )}
@@ -1508,24 +1537,21 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 })()}
               {/*
                 «Oferte și beneficii» (§562): a consent of its own, under the list tick — the owner's
-                sentence as the label, ending in its full stop, the club named from `CLUB_NAME`, and
-                «Opțional.» leading the helper line rather than a suffix after that full stop;
+                sentence as the label, ending in its full stop, the club named from `CLUB_NAME`, then
+                « — opțional» like every optional box of the block (round 2 of §NNN, amending §562's
+                «Opțional.» at the head of the helper line);
                 optional, never pre-ticked, never required, never folded (§59). Asked only while the
                 notice in force describes it; the service keeps a tick only under a notice that
                 names it, never on another adult's family form (§421), never from staff. The glyph
                 leads the words, drawn here in the Server Component as the label's own child.
               */}
               {promoOn && (
-                <>
-                  <CheckboxField name="promoConsent" defaultChecked={prefill("promoConsent") === "on"}>
-                    <CampaignIcon aria-hidden data-testid="promo-consent-glyph" sx={{ fontSize: "1.15em", verticalAlign: "-0.2em", mr: 0.75, color: "text.secondary" }} />
-                    {t("promo.label", { club: CLUB_NAME })}
-                  </CheckboxField>
-                  <Typography variant="body2" color="text.secondary" data-testid="promo-consent-help" sx={{ mt: -0.5 }}>
-                    {t("promo.help")}
-                  </Typography>
-                </>
+                <CheckboxField name="promoConsent" dense defaultChecked={prefill("promoConsent") === "on"} help={promoShared ? `${t("promo.help")} ${t("promo.shared")}` : t("promo.help")} helpTestId="promo-consent-help" optional={t("optionalSuffix")}>
+                  <CampaignIcon aria-hidden data-testid="promo-consent-glyph" />
+                  {t("promo.label", { club: CLUB_NAME })}
+                </CheckboxField>
               )}
+              </Stack>
 
               {/*
                 Pressable, always, and deliberately — and, since 2026-09-17, honest about it.

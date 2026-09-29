@@ -31,7 +31,7 @@ import { readOrWhileAway } from "@/modules/resilience/optional-read";
 /**
  * Who is coming (BR-REQ-039-01, BR-REQ-039-02; `DECISIONS.md` §32, §85, §186, §250, §346): every
  * confirmed, real participant of an event whose organizer switched the list on — by name for
- * those who ticked "Vreau să apar pe lista de participanți", and as "Participant (nume ascuns)"
+ * those who ticked "Vreau să apar pe lista de participanți & rezultate", and as "Participant (nume ascuns)"
  * for everybody else.
  *
  * A native disclosure, closed, with the count in its summary: a page whose bottom third is a

@@ -56,18 +56,23 @@ describe("§562 the privacy notice's marker for offers and benefits", () => {
     const [en5] = paragraphs(privacyNoticeEn).filter((paragraph) => paragraph.includes("{{promotionalMaterials}}"));
     expect(privacyNoticeRo.sections.find((section) => section.paragraphs.includes(ro5))?.heading).toBe("5. E-mailurile");
     expect(privacyNoticeEn.sections.find((section) => section.paragraphs.includes(en5))?.heading).toBe("5. Emails");
-    for (const words of ["partenerii nu primesc adresa", "6(1)(a)", "opțională", "nu e bifată dinainte", "pagina înscrierii", "<EMAIL DE CONTACT>", "newsletter"]) {
+    // §NNN took «partenerii nu primesc adresa» out: the next paragraph says what a partner may receive.
+    expect(ro5).not.toContain("partenerii nu primesc adresa");
+    expect(en5).not.toContain("partners never receive your address");
+    for (const words of ["6(1)(a)", "opțională", "nu e bifată dinainte", "pagina înscrierii", "<EMAIL DE CONTACT>", "newsletter"]) {
       expect(ro5).toContain(words);
     }
-    for (const words of ["partners never receive your address", "6(1)(a)", "optional", "never ticked in advance", "registration's page", "<CONTACT EMAIL>", "Romanian Law no. 506/2004", "newsletter"]) {
+    for (const words of ["6(1)(a)", "optional", "never ticked in advance", "registration's page", "<CONTACT EMAIL>", "Romanian Law no. 506/2004", "newsletter"]) {
       expect(en5).toContain(words);
     }
   });
 
-  it("names the partners in section 6 as receiving nothing, and the retention in section 7", () => {
+  it("names the partners in section 6 as the one exception, behind the sharing marker (§NNN), and the retention in section 7", () => {
     const section = (body: typeof privacyNoticeRo, number: string) => body.sections.find((entry) => entry.heading?.startsWith(number))!.paragraphs.join(" ");
-    expect(section(privacyNoticeRo, "6.")).toContain("nici partenerilor clubului");
-    expect(section(privacyNoticeEn, "6.")).toContain("not to the club's partners either");
+    expect(section(privacyNoticeRo, "6.")).toContain("cu o singură excepție: dacă ai bifat ofertele și beneficiile, partenerilor clubului");
+    expect(section(privacyNoticeRo, "6.")).toContain("{{promotionalMaterialsShared}}");
+    expect(section(privacyNoticeEn, "6.")).toContain("with one exception: if you ticked offers and benefits, we may give the club's partners");
+    expect(section(privacyNoticeEn, "6.")).toContain("{{promotionalMaterialsShared}}");
     expect(section(privacyNoticeRo, "7.")).toContain("Acordul pentru oferte și beneficii: până îl retragi");
     expect(section(privacyNoticeEn, "7.")).toContain("The consent to offers and benefits: until you withdraw it");
   });
@@ -118,8 +123,9 @@ describe("§562 the form's box", () => {
     // The owner's words (2026-09-29 16:12), the club by its name from `CLUB_NAME`.
     expect(ro.Registration.promo.label).toBe("Vreau să primesc oferte și beneficii de la {club} și partenerii săi.");
     expect(en.Registration.promo.label).toBe("I want to receive offers and benefits from {club} and its partners.");
-    expect(ro.Registration.promo.help).toBe("Opțional. Poți renunța oricând din pagina înscrierii tale.");
-    expect(en.Registration.promo.help).toBe("Optional. You can opt out any time from your registration page.");
+    // «— opțional» ends the label now, like every optional box of «Acorduri» (§NNN round 2), so the helper no longer opens with it.
+    expect(ro.Registration.promo.help).toBe("Poți renunța oricând din pagina înscrierii tale.");
+    expect(en.Registration.promo.help).toBe("You can opt out any time from your registration page.");
     // Two consents, two switches: the words on the person's page say so.
     expect(ro.Registrations.promo.help).toContain("newsletter");
     expect(en.Registrations.promo.help).toContain("newsletter");
@@ -215,11 +221,22 @@ describe("§562 the exports", () => {
     expect(REGISTRATION_SHEET_HEADERS.at(-1)).toBe("Offers and benefits");
   });
 
-  it("the offers-and-benefits CSV neutralizes formulas, carries a BOM and CRLF", () => {
-    const csv = buildPromoConsentersCsv({ name: "Nume", email: "Adresa de email", event: "Evenimentul", consentedAt: "Bifat pe" }, [
-      { registrationId: "x", name: "=HYPERLINK(1)", email: "ana@example.ro", eventTitle: "Crosul, toamna", consentedAt: new Date("2026-09-29T10:00:00.000Z") },
+  it("the offers-and-benefits CSV neutralizes formulas, carries a BOM and CRLF — the sponsor list's five columns since §NNN", () => {
+    const csv = buildPromoConsentersCsv({ firstName: "Prenume", lastName: "Nume", email: "Email", event: "Eveniment", consentedAt: "Data acordului" }, [
+      {
+        registrationId: "x",
+        eventId: "e",
+        name: "=HYPERLINK(1) Pop",
+        firstName: "=HYPERLINK(1)",
+        lastName: "Pop",
+        email: "ana@example.ro",
+        eventTitle: "Crosul, toamna",
+        consentedAt: new Date("2026-09-29T10:00:00.000Z"),
+        privacyNoticeVersion: 1,
+        birthDate: "1990-01-01",
+      },
     ]);
-    expect(csv.startsWith("﻿Nume,Adresa de email,Evenimentul,Bifat pe\r\n")).toBe(true);
+    expect(csv.startsWith("﻿Prenume,Nume,Email,Eveniment,Data acordului\r\n")).toBe(true);
     expect(csv).toContain("'=HYPERLINK(1)");
     expect(csv).toContain('"Crosul, toamna"');
     expect(csv).toContain("2026-09-29T10:00:00.000Z");

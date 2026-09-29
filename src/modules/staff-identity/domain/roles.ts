@@ -509,6 +509,18 @@ export function canSendNewsletter(role: StaffRole): boolean {
 }
 
 /**
+ * **«Descarcă lista pentru sponsori» (§NNN)** — the minimal file the club gives its partners: the
+ * first name, the last name, the address, the event and the moment of the yes to «oferte și
+ * beneficii». Whoever reads the participant list (`canReadRegistrations`): the Organizer, the
+ * Administrator and the Superadministrator — the owner's "Organizer and Administrator only". The
+ * Tehnic role is out, as it is out of the list itself (§289); the volunteer, the Redactor and a
+ * member likewise. Asserted in the route and in the read, never by hiding the button.
+ */
+export function canExportSponsorList(role: StaffRole): boolean {
+  return canReadRegistrations(role);
+}
+
+/**
  * «Tradu din română» (§464): whoever writes words the club publishes or sends — the Redactor's
  * texts (`canEditTexts`) and the Organizer's notes, reasons and messages to the participants
  * (`canMessageParticipants`). So the Redactor, the Organizer, the Administrator and the

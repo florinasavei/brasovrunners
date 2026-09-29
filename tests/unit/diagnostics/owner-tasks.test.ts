@@ -27,6 +27,7 @@ const LAUNCHED: OwnerTaskInputs = {
   listStatesDescribed: true,
   listSocialsDescribed: true,
   promoDescribed: true,
+  sponsorShareDescribed: true,
   newsletterDescribed: true,
   teamPageDescribed: true,
   raceDeclarationsCurrent: true,
@@ -109,6 +110,19 @@ describe("owner tasks", () => {
     expect(ownerTasks({ ...LAUNCHED, hasApprovedPrivacyNotice: false }).some((task) => task.id === "promoNotice")).toBe(false);
     for (const catalogue of [ro, en]) {
       const item = catalogue.Admin.tasks.items.promoNotice;
+      expect(item.title && item.todo && item.done && item.how.length > 0).toBeTruthy();
+      expect(item.how.join("\n")).toContain("/admin/legal");
+    }
+  });
+
+  /** §NNN — the list for sponsors waits on a notice that says partners may receive it; open, never blocking. */
+  it("keeps the sponsor-list row open while the notice in force does not describe the sharing, and never blocking", () => {
+    expect(stateOf({ ...LAUNCHED, sponsorShareDescribed: false }, "sponsorNotice")).toBe("open");
+    expect(stateOf(LAUNCHED, "sponsorNotice")).toBe("done");
+    expect(ownerTasks({ ...LAUNCHED, hasApprovedPrivacyNotice: false }).some((task) => task.id === "sponsorNotice")).toBe(false);
+    expect(ownerTasks({ ...LAUNCHED, sponsorShareDescribed: false }).find((task) => task.id === "sponsorNotice")).toMatchObject({ owner: "club", kind: "text" });
+    for (const catalogue of [ro, en]) {
+      const item = catalogue.Admin.tasks.items.sponsorNotice;
       expect(item.title && item.todo && item.done && item.how.length > 0).toBeTruthy();
       expect(item.how.join("\n")).toContain("/admin/legal");
     }
@@ -271,6 +285,7 @@ describe("owner tasks", () => {
       "listStatesNotice",
       "listSocialsNotice",
       "promoNotice",
+      "sponsorNotice",
       "newsletterNotice",
       "teamPageNotice",
       "raceDeclarations",

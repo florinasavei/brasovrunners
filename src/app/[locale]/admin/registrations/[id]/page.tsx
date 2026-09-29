@@ -20,7 +20,7 @@ import { emailMessageType } from "@/db/schema/email-outbox";
 import { registrationStatus } from "@/db/schema/registrations";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
-import { listAuditTrail } from "@/modules/audit/repository";
+import { listAuditTrail, listPartnerShares } from "@/modules/audit/repository";
 import { declarationAsksMinorToSign, noticeDescribesPromotionalMaterials } from "@/modules/legal-documents/repository";
 import {
   findRegistrationDetailForAdmin,
@@ -96,7 +96,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   const registration = await findRegistrationDetailForAdmin(db, id);
   if (!registration) notFound();
 
-  const [acceptances, outboxHistory, auditTrail, freeBibs, minorSigns, family] = await Promise.all([
+  const [acceptances, outboxHistory, auditTrail, freeBibs, minorSigns, family, partnerShares] = await Promise.all([
     listDeclarationAcceptances(db, id),
     listOutboxHistory(db, id),
     listAuditTrail(db, "registration", id),
@@ -110,6 +110,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
     registration.guardianName ? declarationAsksMinorToSign(db, registration.locale, new Date(), registration.eventId) : false,
     // The family marker (§543): the other people on this address at the event, each a link to their page.
     familyOf(db, [registration]).then((members) => members.get(registration.id) ?? []),
+    // Every list for sponsors this registration was in (§NNN): which partner received it, and when.
+    listPartnerShares(db, id),
   ]);
 
   const { resent, saved, error, health } = await searchParams;
@@ -997,6 +999,25 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                   never a copy of what the change was about (AGENTS.md 12.12). */}
               {Object.keys(entry.metadataJson as object).length > 0 &&
                 ` · ${JSON.stringify(entry.metadataJson)}`}
+            </Typography>
+          ))}
+        </Stack>
+      )}
+
+      {/*
+        «Dată partenerilor» (§NNN, review finding): the lists for sponsors that held this registration,
+        from their audit rows — so a withdrawal or an access request is answered with which partner
+        received the data and when, long after the club's own copy of the file is deleted.
+      */}
+      {partnerShares.length > 0 && (
+        <Stack spacing={1} data-testid="partner-shares">
+          <Typography variant="h3" sx={{ fontSize: "1rem" }}>
+            {tr("registrations.partnerShares.title")}
+          </Typography>
+          {partnerShares.map((share, index) => (
+            <Typography key={index} variant="body2">
+              {dt(share.createdAt)} · {share.recipient ?? tr("registrations.partnerShares.noRecipient")} ·{" "}
+              {share.actorName ?? tr("registrations.auditActorRemoved")}
             </Typography>
           ))}
         </Stack>

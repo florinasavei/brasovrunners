@@ -20,6 +20,7 @@ import {
   describesListStates,
   describesNewsletter,
   describesPromotionalMaterials,
+  describesPromotionalMaterialsShared,
   describesTeamPage,
   MINIMUM_AGE_MERGE_FIELD,
   mergeFieldsIn,
@@ -256,6 +257,52 @@ export async function noticeDescribesListSocials<T extends Record<string, unknow
 export async function noticeDescribesPromotionalMaterials<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
   const notices = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now)));
   return notices.every((notice) => notice !== undefined && describesPromotionalMaterials(notice.body));
+}
+
+/**
+ * Whether the privacy notice in force describes the sponsor list (§NNN,
+ * `describesPromotionalMaterialsShared`) — in every language, like the offers themselves. The gate
+ * for «Descarcă lista pentru sponsori», on the page and in the route; `/admin/tasks` reads it for
+ * the `sponsorNotice` row.
+ */
+export async function noticeDescribesPromotionalMaterialsShared<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesPromotionalMaterialsShared(notice.body));
+}
+
+/**
+ * The approved, not withdrawn privacy notices, each with its effective date and whether it
+ * describes the sponsor list in **every** language (§NNN) — the facts the sponsor list's row gate
+ * reads (`registrations/domain/sponsor-share.ts`).
+ *
+ * A set, not a lower bound: §421 warned that a single "first version that names it" is only right
+ * while no later version drops the marker. Here that would hand a partner the address of someone
+ * who consented under a text that promised the opposite, so the exact set is used.
+ */
+export async function findSponsorShareVersions<T extends Record<string, unknown>>(db: Database<T>): Promise<{ version: number; effectiveAt: Date; shares: boolean }[]> {
+  const rows = await db
+    .select({
+      version: legalDocuments.version,
+      effectiveAt: legalDocuments.effectiveAt,
+      locale: legalDocumentTranslations.locale,
+      body: legalDocumentTranslations.bodyJson,
+    })
+    .from(legalDocuments)
+    .innerJoin(legalDocumentTranslations, eq(legalDocumentTranslations.legalDocumentId, legalDocuments.id))
+    .where(and(eq(legalDocuments.key, "PRIVACY_NOTICE"), eq(legalDocuments.isApproved, true), isNull(legalDocuments.withdrawnAt)));
+  const byVersion = new Map<number, { effectiveAt: Date; bodies: Map<string, unknown> }>();
+  for (const row of rows) {
+    const entry = byVersion.get(row.version) ?? { effectiveAt: row.effectiveAt, bodies: new Map<string, unknown>() };
+    entry.bodies.set(row.locale, row.body);
+    byVersion.set(row.version, entry);
+  }
+  return [...byVersion.entries()]
+    .sort(([a], [b]) => a - b)
+    .map(([version, entry]) => ({
+      version,
+      effectiveAt: entry.effectiveAt,
+      shares: routing.locales.every((locale) => entry.bodies.has(locale) && describesPromotionalMaterialsShared(entry.bodies.get(locale))),
+    }));
 }
 
 /**

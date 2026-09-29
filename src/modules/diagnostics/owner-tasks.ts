@@ -58,6 +58,7 @@ export type TaskId =
   | "listStatesNotice"
   | "listSocialsNotice"
   | "promoNotice"
+  | "sponsorNotice"
   | "newsletterNotice"
   | "teamPageNotice"
   | "raceDeclarations"
@@ -87,6 +88,7 @@ export const TASK_KIND: Record<TaskId, TaskKind> = {
   listStatesNotice: "text",
   listSocialsNotice: "text",
   promoNotice: "text",
+  sponsorNotice: "text",
   newsletterNotice: "text",
   teamPageNotice: "text",
   raceDeclarations: "text",
@@ -174,6 +176,12 @@ export type OwnerTaskInputs = {
    * `noticeDescribesPromotionalMaterials`)? Until it does, no form offers the box and nothing is kept.
    */
   promoDescribed: boolean;
+  /**
+   * Does the notice in force, in every language, say the club may give its partners the list for
+   * sponsors (§NNN, `noticeDescribesPromotionalMaterialsShared`)? Until it does, «Descarcă lista
+   * pentru sponsori» is off and the route refuses it.
+   */
+  sponsorShareDescribed: boolean;
   /**
    * Does the notice in force, in every language, describe the newsletter (§445,
    * `noticeDescribesNewsletter`)? Until it does, the contact page offers no subscription.
@@ -353,6 +361,15 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
     push("promoNotice", {
       owner: "club",
       state: input.promoDescribed ? "done" : "open",
+    });
+    /*
+      The list for sponsors (§NNN), the same shape: open, never blocking — nothing is refused but the
+      file itself — and done by itself the day a notice naming `{{promotionalMaterialsShared}}` takes
+      effect.
+    */
+    push("sponsorNotice", {
+      owner: "club",
+      state: input.sponsorShareDescribed ? "done" : "open",
     });
     /*
       The newsletter (§445), the same shape: open, never blocking — nothing is refused, the contact

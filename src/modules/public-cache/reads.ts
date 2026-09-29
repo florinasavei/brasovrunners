@@ -50,7 +50,13 @@ import { pingerCadenceMinutes } from "@/modules/jobs/quiet-hours";
 import { readDeliveryTiming } from "@/modules/notifications/delivery-timing";
 import { type DeliveryTiming, defaultDeliveryTiming } from "@/modules/notifications/domain/delivery-timing";
 import { emailLeavesAt, emailWaitMinutes } from "@/modules/notifications/domain/email-wait";
-import { describesListSocials, describesListStates, describesNewsletter, describesPromotionalMaterials } from "@/modules/legal-documents/domain/merge-fields";
+import {
+  describesListSocials,
+  describesListStates,
+  describesNewsletter,
+  describesPromotionalMaterials,
+  describesPromotionalMaterialsShared,
+} from "@/modules/legal-documents/domain/merge-fields";
 import { findCurrentApprovedDocument, findFirstStatesNoticeVersion, listEffectiveDates } from "@/modules/legal-documents/repository";
 import { DEFAULT_BOT_CHECK, readBotCheck } from "@/modules/registrations/bot-check";
 import {
@@ -384,6 +390,17 @@ export async function cachedListSocialsDisclosed(now: Date): Promise<boolean> {
 export async function cachedPromotionalMaterialsOffered(now: Date): Promise<boolean> {
   const notices = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now)));
   return notices.every((notice) => notice !== undefined && describesPromotionalMaterials(notice.body));
+}
+
+/**
+ * Whether the box «oferte și beneficii» also says, where the yes is given, that the club may give
+ * the partners the person's name and address (§NNN, review finding — art. 7(2) GDPR): the privacy
+ * notice in force names `{{promotionalMaterialsShared}}` in every language, the same reading as
+ * `noticeDescribesPromotionalMaterialsShared`, which gates the list for sponsors itself.
+ */
+export async function cachedPromotionalMaterialsShared(now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesPromotionalMaterialsShared(notice.body));
 }
 
 /**

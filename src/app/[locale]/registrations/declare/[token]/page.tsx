@@ -1,6 +1,7 @@
 import CampaignIcon from "@mui/icons-material/Campaign";
 import DoneIcon from "@mui/icons-material/Done";
 import DrawIcon from "@mui/icons-material/Draw";
+import HistoryEduIcon from "@mui/icons-material/HistoryEdu";
 import SkipNextIcon from "@mui/icons-material/SkipNext";
 import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
 import Alert from "@mui/material/Alert";
@@ -26,7 +27,7 @@ import { findEventNotificationDetails } from "@/modules/events/repository";
 import { findEventDeclaration } from "@/modules/legal-documents/repository";
 import { DEADLINE_RULES, type Deadlines } from "@/modules/deadlines/domain/deadlines";
 import { leadPhrase } from "@/modules/deadlines/domain/duration-words";
-import { cachedDeadlines, cachedPromotionalMaterialsOffered, cachedShownContactAddresses } from "@/modules/public-cache/reads";
+import { cachedDeadlines, cachedPromotionalMaterialsOffered, cachedPromotionalMaterialsShared, cachedShownContactAddresses } from "@/modules/public-cache/reads";
 import { fillIn } from "@/shared/forms/fill-in";
 import { asksForIdDocument, asksForMinorSignature, deadlineMergeValues, minimumAgeMergeValue } from "@/modules/legal-documents/domain/merge-fields";
 import { effectiveMinimumAge } from "@/modules/registrations/domain/age";
@@ -352,6 +353,8 @@ export default async function DeclarePage({ params, searchParams }: Props) {
     the materials and only to a registration that has not said yes already.
   */
   const offerPromo = Boolean(signing && registration && !registration.promoConsent && (await cachedPromotionalMaterialsOffered(now)));
+  // The partners may receive the list (§NNN): the box's caption says so where the yes is given.
+  const promoShared = offerPromo && (await cachedPromotionalMaterialsShared(now));
   /*
     The family's stepper (§471), from the opened link: everybody on the address at the event whose
     declaration waits, this person first. One person alone gets the page they always had.
@@ -701,7 +704,9 @@ export default async function DeclarePage({ params, searchParams }: Props) {
               <input type="hidden" name="documentId" value={declaration?.id ?? ""} />
               <input type="hidden" name="contentSha256" value={declaration?.contentSha256 ?? ""} />
               {/* The box names the liability paragraph, so its limits are accepted expressly (§418, Civil Code art. 1203). */}
-              <CheckboxField name="accepted" required defaultChecked={draft?.accepted === "on"}>
+              {/* The glyph leads the words, as on every box of the form's «Acorduri» (§NNN round 2). */}
+              <CheckboxField name="accepted" required dense defaultChecked={draft?.accepted === "on"}>
+                <HistoryEduIcon aria-hidden data-testid="consent-glyph" />
                 {t("declare.accept")}
               </CheckboxField>
               {/*
@@ -844,16 +849,19 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                 The offers and benefits (§562): optional, never pre-ticked, never required; a tick
                 the notice in force does not cover is ignored and the signature goes on.
               */}
+              {/* The form's box, drawn the same way: the glyph, « — opțional», the helper a caption under it (§NNN round 2). */}
               {offerPromo && (
-                <Box>
-                  <CheckboxField name="promoConsent" defaultChecked={draft?.promoConsent === "on"}>
-                    <CampaignIcon aria-hidden sx={{ fontSize: "1.15em", verticalAlign: "-0.2em", mr: 0.75, color: "text.secondary" }} />
-                    {formCopy("promo.label", { club: CLUB_NAME })}
-                  </CheckboxField>
-                  <Typography variant="body2" color="text.secondary" data-testid="declare-promo-help">
-                    {formCopy("promo.help")}
-                  </Typography>
-                </Box>
+                <CheckboxField
+                  name="promoConsent"
+                  dense
+                  defaultChecked={draft?.promoConsent === "on"}
+                  optional={formCopy("optionalSuffix")}
+                  help={promoShared ? `${formCopy("promo.help")} ${formCopy("promo.shared")}` : formCopy("promo.help")}
+                  helpTestId="declare-promo-help"
+                >
+                  <CampaignIcon aria-hidden data-testid="promo-consent-glyph" />
+                  {formCopy("promo.label", { club: CLUB_NAME })}
+                </CheckboxField>
               )}
               {/*
                 «Semnează și treci la următoarea persoană» only while another person's declaration

@@ -14,11 +14,15 @@ import type { Locale } from "@/i18n/routing";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import Panel from "@/shared/ui/Panel";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
+import type { SponsorListSummary } from "@/modules/registrations/sponsor-list";
+import SponsorListButton from "@/modules/registrations/ui/SponsorListButton";
 import { PROMO_TABLE_LIMIT, type PromoConsenterList, type PromoConsenterRow } from "../promo-consenters";
 
 type Props = {
   locale: Locale;
   list: PromoConsenterList;
+  /** The list for sponsors across every event (§NNN), or null for a role that may not take it. */
+  sponsors?: SponsorListSummary | null;
 };
 
 /** The fold's own anchor, beside «Abonați»'s. */
@@ -66,9 +70,10 @@ const HEAD_RULE = { borderBottom: 2, borderColor: "text.secondary", fontWeight: 
  *
  * A Server Component with no form of its own: the page reads the list (`listPromoConsenters`, which
  * asserts the role) and hands it here. The words say the two consents apart: this is not the
- * newsletter, and the partners never receive the list.
+ * newsletter, and the partners receive only the list for sponsors (§NNN) — the button under the
+ * club's own, for every event, the same query and the same file as an event's registrations page.
  */
-export default async function PromoConsenters({ locale, list }: Props) {
+export default async function PromoConsenters({ locale, list, sponsors = null }: Props) {
   const t = await getTranslations("Admin");
   const csvHref = `/api/admin/newsletter/promo?${new URLSearchParams({ lang: locale }).toString()}`;
   const dayTime = (at: Date) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" });
@@ -108,6 +113,7 @@ export default async function PromoConsenters({ locale, list }: Props) {
             {t("newsletter.promo.csv")}
           </GlyphButton>
         </Stack>
+        {sponsors && <SponsorListButton locale={locale} eventId={null} list={sponsors} />}
         {list.truncated && (
           <Typography variant="body2" color="text.secondary">
             {t("newsletter.promo.truncated", { count: String(PROMO_TABLE_LIMIT) })}
