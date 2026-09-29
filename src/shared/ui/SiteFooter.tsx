@@ -7,7 +7,8 @@ import { Link } from "@/i18n/navigation";
 import { faqOnSite } from "@/modules/content/faq/on-site";
 import { OPEN_METEO_SITE } from "@/modules/weather/domain/credit";
 import { weatherListWords } from "@/modules/weather/words";
-import { cachedShownContactAddresses } from "@/modules/public-cache/reads";
+import { telHref } from "@/modules/contact/domain/public-phone";
+import { cachedPublicPhone, cachedShownContactAddresses } from "@/modules/public-cache/reads";
 import { DENSITY } from "@/theme/density";
 import BuildBadge from "./BuildBadge";
 import ClubIdentity from "./ClubIdentity";
@@ -174,15 +175,14 @@ const BAR_HEIGHT = 44;
  * is said twice, the hero's and this one; the owner objected to the strip under the cards, not to
  * the hero's line.
  *
- * ## The club's identity, under the bar (§565)
+ * ## The club's identity, inside the fold (§565, §NNN)
  *
- * The owner, 2026-09-29: the club's legal name and CIF «also in the footer, more clearly», after
- * another running club's footer. `ClubIdentity`'s `block` follows the `<footer>` as its sibling:
- * the legal name, «C.I.F.» and the country; the marks (the list above, `clubSocialLinks`); and
- * «Contact». A sibling and not a child, because the bar is sticky and one row at every scroll
- * position (§372): inside it the block would ride along on every screen. So the bar's box, its
- * height and its fold are exactly what they were, and the block is what the page ends on — in sight
- * at the end of every page without opening anything, never inside «Despre club».
+ * The owner, 2026-09-29: the club's legal name and CIF «also in the footer, more clearly». §565
+ * drew a block under the bar for it — the name, the marks again, «Contact» with the address and
+ * «Scrie-ne» again — and the owner, the same evening: «ai duplicat footerul, arată oribil!! partea
+ * asta trebuie să fie în footerul colapsat!». So the block is gone, and what it added that the
+ * footer did not already have is two items of the fold: the identity line (`ClubIdentity`'s
+ * `fold`) after the links, and the public phone beside «Scrie-ne». The marks stay on the bar, once.
  */
 export default async function SiteFooter() {
   const legal = await getTranslations("Legal");
@@ -192,11 +192,12 @@ export default async function SiteFooter() {
   const contacts = await cachedShownContactAddresses();
   // «Întrebări frecvente» in the fold (§525) while the page is on the site — the header's own rule.
   const showFaq = await faqOnSite(locale);
-  // The one list the bar's marks and the identity block's middle column both read (§565).
+  // The bar's marks (`clubSocialLinks`, one list since §565).
   const social = await clubSocialLinks();
+  // «Telefon public» (§565): beside «Scrie-ne» in the fold while one is set (§NNN).
+  const phone = await cachedPublicPhone();
 
   return (
-    <>
     <Box
       component="footer"
       sx={{
@@ -404,7 +405,20 @@ export default async function SiteFooter() {
                     </Box>
                   </Box>
                 ))}
+                {/* «Telefon public» (§565), while the club has set one: one more item beside «Scrie-ne»
+                    (§NNN), shown as typed and dialled by its digits. */}
+                {phone && (
+                  <Box component="span" sx={{ display: "inline-flex", columnGap: 0.5, minWidth: 0 }}>
+                    <span aria-hidden="true">·</span>
+                    <Box component="a" href={telHref(phone)} data-testid="footer-phone" sx={{ whiteSpace: "nowrap" }}>
+                      {phone}
+                    </Box>
+                  </Box>
+                )}
               </Box>
+              {/* The club's legal name and CIF (§565), inside the fold after its links (§NNN): one
+                  line of the panel, nothing while the legal name is unset. */}
+              <ClubIdentity shape="fold" />
               {/* The last line (§480, amending §385): Open-Meteo's credit and the stamp, side by side
                   from `sm` and one under the other on a phone, at the panel's 14 pixels. */}
               <Box
@@ -551,11 +565,5 @@ export default async function SiteFooter() {
         <BuildBadge />
       </Box>
     </Box>
-
-    {/* The club's identity under the bar, on every page and never in the fold (§565): a sibling of
-        the sticky `<footer>` rather than its child, so the bar keeps its one row at every scroll
-        position and its own height, and the block is what the page ends on. */}
-    <ClubIdentity shape="block" social={social} />
-    </>
   );
 }
