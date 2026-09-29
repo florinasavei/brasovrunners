@@ -235,7 +235,8 @@ describe("§336 the page hands every message to the card, and the panels fold", 
     expect(page).not.toContain("<ContactRecipientsPanel");
     expect(page).not.toContain("<ShownAddressPanel");
     expect(page).not.toContain("<DeadlinesPanel");
-    expect(panel).toMatch(/aside=\{t\("emails\.contacts\.aside"/);
+    // The closed line names where the messages go, and «fără copii» when there is none (§NNN).
+    expect(panel).toMatch(/aside=\{[\s\S]*?t\("emails\.contacts\.asideNoCopies"[\s\S]*?t\("emails\.contacts\.aside",/);
   });
 
   it("names where each save lands, so its own panel opens and no other", () => {

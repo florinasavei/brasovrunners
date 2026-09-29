@@ -2705,8 +2705,8 @@
             "Vercel → the production project (and QA) → Settings → Environment Variables: CONTACT_SMTP_USER = the club's Gmail address; CONTACT_SMTP_PASSWORD = the 16 characters.",
             "(CONTACT_FORM_TO is no longer required — it is only the fallback for the recipients.)",
             "Redeploy both projects.",
-            "In the app: Pages → Contact → “Who receives the contact messages” → write the addresses under “To” and, if you like, a copy under “Copy (Cc)”.",
-            "A copy nobody on the message sees goes under “Hidden copy (Bcc)” → Save.",
+            "In the app: «Pages» → «Contact» → «Who receives the contact messages» → write the addresses under «To» and, if you like, under «CC» (they show in the email).",
+            "A copy nobody on the message sees goes under «BCC» → «Save the recipients».",
             "Changed here at any time, with no redeploy.",
             "Open {baseUrl}/en/contact and send a test message: “Your message is on its way.” on the page and the email in the mailbox, with “Reply” addressed to whoever wrote. This row turns green."
           ]
@@ -3931,7 +3931,22 @@
         "readOnly": "Who receives the club’s copies is the Administrator’s to set; you see the lists in force.",
         "saving": "Saving…",
         "saved": "Saved who receives the club's copies.",
-        "participantsBccHelpMore": "Not the address check or the link for another person. A message to everybody registered gives one copy, with no names. Never for test registrations."
+        "participantsBccHelpMore": "Not the address check or the link for another person. A message to everybody registered gives one copy, with no names. Never for test registrations.",
+        "folds": {
+          "addresses": "Addresses: {addresses}",
+          "declarations": {
+            "title": "Signed declarations",
+            "aside": "They go to: {to} · Cc: {cc} · Bcc: {bcc}",
+            "asideNoCopies": "They go to: {to} · no copies",
+            "asideNone": "Not sent"
+          },
+          "confirmations": {
+            "title": "The confirmation notice"
+          },
+          "participants": {
+            "title": "The club's copy of the emails to participants"
+          }
+        }
       },
       "queue": {
         "title": "The sending queue",
@@ -4157,21 +4172,24 @@
       },
       "contacts": {
         "title": "Who receives the contact messages",
-        "aside": "They currently reach: {to}",
+        "aside": "They currently reach: {to} · CC: {cc} · BCC: {bcc}",
+        "asideNoCopies": "They currently reach: {to} · no copies",
         "asideNobody": "nobody",
         "intro": "Who receives the messages from “Write to us”; they leave through the club's Gmail, not Mailgun. Saved here, with no redeploy.",
         "source": {
-          "setting": "They currently reach: {to}. Copy: {cc}. Hidden copy: {bcc}. Set here, in the app.",
-          "environment": "They currently reach: {to} — from the CONTACT_FORM_TO variable on the server, because the list below is empty. Copy: {cc}. Hidden copy: {bcc}.",
+          "setting": "They currently reach: {to}. CC: {cc}. BCC: {bcc}. Set here, in the app.",
+          "environment": "They currently reach: {to}, from CONTACT_FORM_TO on the server, because “To” is empty. CC: {cc}. BCC: {bcc}.",
           "none": "Nobody receives them: the “Write to us” page shows the club's address instead of the form. Write at least one address under “To”."
         },
         "updatedAt": "Set on {when}.",
-        "to": "To (addresses separated by commas)",
-        "toHelp": "Who receives the message. Empty means CONTACT_FORM_TO on the server is used instead.",
-        "cc": "Copy – Cc (addresses separated by commas)",
-        "ccHelp": "They get a copy of every message the form sends, on “Cc”, so they can see one another. Empty means no copies.",
-        "bcc": "Hidden copy – Bcc (addresses separated by commas)",
-        "bccHelp": "They get a copy of every message from the form without appearing in it. Empty means no hidden copies.",
+        "to": "To",
+        "toHelp": "Addresses separated by commas, spaces or on separate lines. Empty: CONTACT_FORM_TO on the server is used.",
+        "cc": "CC",
+        "ccHelp": "Addresses separated by commas, spaces or on separate lines. Empty: no CC.",
+        "bcc": "BCC",
+        "bccHelp": "Addresses separated by commas, spaces or on separate lines. Empty: no BCC.",
+        "copiesHelp": "CC: the addresses appear in the email; BCC: they get a copy without appearing.",
+        "repeats": "An address typed twice, or already under “To”, is kept once.",
         "save": "Save the recipients",
         "readOnly": "Who receives the contact messages is the Administrator’s to set; you see the list in force.",
         "saving": "Saving…",
@@ -4887,6 +4905,14 @@
                 "An album: «Gallery» → «New album» → the date, the event, the title in both languages → «New album».",
                 "On the album's page: «Upload photos», with «Quality» «Medium (recommended)»; pick a «Cover».",
                 "On the albums list, the ⋮ menu on its row → «Publish the album». An album with no photos is not published."
+              ]
+            },
+            {
+              "title": "Who receives the messages from the contact page",
+              "steps": [
+                "«Pages» → «Contact» → «Who receives the contact messages».",
+                "Under «To» write who receives the message. Under «CC», who gets a visible copy. Under «BCC», who gets a copy without appearing.",
+                "Addresses separated by commas, spaces or on separate lines. Press «Save the recipients» and confirm; the saved list shows on the card."
               ]
             },
             {

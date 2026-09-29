@@ -2705,8 +2705,8 @@
             "Vercel → proiectul de producție (și QA) → Settings → Environment Variables: CONTACT_SMTP_USER = adresa Gmail a clubului; CONTACT_SMTP_PASSWORD = cele 16 caractere.",
             "(CONTACT_FORM_TO nu mai e obligatorie — e doar rezerva pentru destinatari.)",
             "Redeploy pe ambele proiecte.",
-            "În aplicație: Pagini → Contact → „Cine primește mesajele de contact” → scrie adresele la „Către” și, dacă vrei, o copie la „Copie (Cc)”.",
-            "O copie pe care nimeni din mesaj nu o vede merge la „Copie ascunsă (Bcc)” → Salvează.",
+            "În aplicație: «Pagini» → «Contact» → «Cine primește mesajele de contact» → scrie adresele la «Către» și, dacă vrei, la «CC» (se văd în email).",
+            "O copie pe care nimeni din mesaj nu o vede merge la «BCC» → «Salvează destinatarii».",
             "De aici se schimbă oricând, fără redeploy.",
             "Deschide {baseUrl}/ro/contact și trimite un mesaj de probă: „Mesajul a plecat.” pe pagină și e-mailul în căsuță, cu „Reply” către cine a scris. Rândul acesta devine verde."
           ]
@@ -3931,7 +3931,22 @@
         "readOnly": "Cine primește copiile clubului stabilește Administratorul; tu vezi listele în vigoare.",
         "saving": "Se salvează…",
         "saved": "Am salvat cine primește copiile clubului.",
-        "participantsBccHelpMore": "Nu și verificarea adresei sau linkul pentru altă persoană. Un mesaj către toți înscrișii dă o singură copie, fără nume. Niciodată pentru înscrierile de test."
+        "participantsBccHelpMore": "Nu și verificarea adresei sau linkul pentru altă persoană. Un mesaj către toți înscrișii dă o singură copie, fără nume. Niciodată pentru înscrierile de test.",
+        "folds": {
+          "addresses": "Adrese: {addresses}",
+          "declarations": {
+            "title": "Declarațiile semnate",
+            "aside": "Merg la: {to} · Cc: {cc} · Bcc: {bcc}",
+            "asideNoCopies": "Merg la: {to} · fără copii",
+            "asideNone": "Nu se trimit"
+          },
+          "confirmations": {
+            "title": "Anunțul de confirmare"
+          },
+          "participants": {
+            "title": "Copia clubului la emailurile către participanți"
+          }
+        }
       },
       "queue": {
         "title": "Coada de trimitere",
@@ -4157,21 +4172,24 @@
       },
       "contacts": {
         "title": "Cine primește mesajele de contact",
-        "aside": "Acum ajung la: {to}",
+        "aside": "Acum ajung la: {to} · CC: {cc} · BCC: {bcc}",
+        "asideNoCopies": "Acum ajung la: {to} · fără copii",
         "asideNobody": "nimeni",
         "intro": "Cine primește mesajele de pe „Scrie-ne”; ele pleacă prin Gmail-ul clubului, nu prin Mailgun. Se salvează aici, fără redeploy.",
         "source": {
-          "setting": "Acum ajung la: {to}. Copie: {cc}. Copie ascunsă: {bcc}. Scrise aici, în aplicație.",
-          "environment": "Acum ajung la: {to} — din variabila CONTACT_FORM_TO de pe server, pentru că lista de mai jos e goală. Copie: {cc}. Copie ascunsă: {bcc}.",
+          "setting": "Acum ajung la: {to}. CC: {cc}. BCC: {bcc}. Scrise aici, în aplicație.",
+          "environment": "Acum ajung la: {to}, din CONTACT_FORM_TO de pe server, pentru că „Către” e gol. CC: {cc}. BCC: {bcc}.",
           "none": "Nu le primește nimeni: pagina „Scrie-ne” arată adresa clubului în loc de formular. Scrie cel puțin o adresă la „Către”."
         },
         "updatedAt": "Setat {when}.",
-        "to": "Către (adrese despărțite prin virgulă)",
-        "toHelp": "Cine primește mesajul. Gol înseamnă că se folosește CONTACT_FORM_TO de pe server.",
-        "cc": "Copie – Cc (adrese despărțite prin virgulă)",
-        "ccHelp": "Primesc o copie la fiecare mesaj trimis din formular, pe „Cc”, deci se văd unul pe altul. Gol înseamnă fără copii.",
-        "bcc": "Copie ascunsă – Bcc (adrese despărțite prin virgulă)",
-        "bccHelp": "Primesc o copie a fiecărui mesaj din formular, fără să apară în el. Gol înseamnă fără copii ascunse.",
+        "to": "Către",
+        "toHelp": "Adrese despărțite prin virgulă, spațiu sau pe rânduri. Gol: se folosește CONTACT_FORM_TO de pe server.",
+        "cc": "CC",
+        "ccHelp": "Adrese despărțite prin virgulă, spațiu sau pe rânduri. Gol: fără CC.",
+        "bcc": "BCC",
+        "bccHelp": "Adrese despărțite prin virgulă, spațiu sau pe rânduri. Gol: fără BCC.",
+        "copiesHelp": "CC: adresele apar în email; BCC: primesc o copie fără să apară.",
+        "repeats": "O adresă scrisă de două ori, sau deja la „Către”, se păstrează o singură dată.",
         "save": "Salvează destinatarii",
         "readOnly": "Cine primește mesajele de contact stabilește Administratorul; tu vezi lista în vigoare.",
         "saving": "Se salvează…",
@@ -4887,6 +4905,14 @@
                 "Un album: «Galerie» → «Album nou» → data, evenimentul, titlul în ambele limbi → «Album nou».",
                 "Pe pagina albumului: «Încarcă fotografii», cu «Calitate» «Medie (recomandat)»; alege o «Copertă».",
                 "Pe lista albumelor, meniul ⋮ de pe rândul lui → «Publică albumul». Un album fără fotografii nu se publică."
+              ]
+            },
+            {
+              "title": "Cine primește mesajele de pe pagina de contact",
+              "steps": [
+                "«Pagini» → «Contact» → «Cine primește mesajele de contact».",
+                "La «Către» scrie cine primește mesajul. La «CC», cine primește o copie la vedere. La «BCC», cine primește o copie fără să apară.",
+                "Adrese despărțite prin virgulă, spațiu sau pe rânduri. Apasă «Salvează destinatarii» și confirmă; lista salvată se vede pe card."
               ]
             },
             {
