@@ -210,6 +210,8 @@ describe("§369 the club's name leaves the platform only through the constant", 
           "Registration.disclosure.race",
           // The same fold's title for an event without a T-shirt (§554).
           "Registration.disclosure.raceNoShirt",
+          // «Vreau să primesc oferte și beneficii de la {club} și partenerii săi.» (§562).
+          "Registration.promo.label",
           "Team.lead",
           // «Întrebări frecvente» (§525): the page's lead and its description.
           "Faq.lead",
@@ -232,6 +234,8 @@ describe("§369 the club's name leaves the platform only through the constant", 
       lead: 6,
       "safetyRules.intro": 1,
       "safetyRules.introMountain": 1,
+      // The register form's box (§562); the declaration page reads it as `formCopy`, the notice through `promo-consent-words.ts`.
+      "promo.label": 1,
     };
     const sources = sourceFiles(path.join(process.cwd(), "src")).map((file) => readFileSync(file, "utf8"));
     for (const [key, expected] of Object.entries(calls)) {

@@ -3,6 +3,7 @@ import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { ACTIVE_REGISTRATION_STATUSES, type Registration, registrations, type RegistrationStatus } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
 import { isUuid } from "@/shared/ids";
+import { isMinorOn } from "./domain/age";
 import { compareFamilyOrder, withFamilyRank } from "./domain/family-sitting";
 import { sittingOrderFor } from "./family-sitting";
 import { findRegistrationById } from "./repository";
@@ -41,6 +42,14 @@ export type ManagedPerson = {
   bibNumber: number | null;
   /** Off the public list (§143): the participant's own answer, per person. */
   listOptOut: boolean;
+  /** «Oferte și beneficii» (§562): the answer on this registration, per registration. */
+  promoConsent: boolean;
+  /**
+   * Another adult on the address (§421, §562 fix round): not the link's own registration and not
+   * a minor today (`anotherAdultOnTheLink`). On this page such a row offers only the way out of
+   * «Oferte și beneficii»; the yes is that adult's own, on their declaration or their own link.
+   */
+  anotherAdult: boolean;
   /** How the latest declaration was accepted — online (a signed PDF was emailed) or on paper at the desk (§67); null when none. */
   declarationMethod: "EMAIL_LINK" | "PAPER" | null;
   /** The registration the link itself names. */
@@ -52,7 +61,7 @@ export type ManagedPerson = {
  * family's forms were sent (§519, `compareFamilyOrder`). The link's own row is always listed, even
  * when it is no longer active — its page still says where it stands.
  */
-export async function listManagedPeople<T extends Record<string, unknown>>(db: Database<T>, own: Registration): Promise<ManagedPerson[]> {
+export async function listManagedPeople<T extends Record<string, unknown>>(db: Database<T>, own: Registration, now: Date = new Date()): Promise<ManagedPerson[]> {
   const rows = await db
     .select({
       id: registrations.id,
@@ -63,6 +72,8 @@ export async function listManagedPeople<T extends Record<string, unknown>>(db: D
       checkedInAt: registrations.checkedInAt,
       bibNumber: registrations.bibNumber,
       listOptOut: registrations.listOptOut,
+      promoConsent: registrations.promoConsent,
+      birthDate: registrations.birthDate,
     })
     .from(registrations)
     .where(
@@ -91,6 +102,8 @@ export async function listManagedPeople<T extends Record<string, unknown>>(db: D
     checkedInAt: row.checkedInAt,
     bibNumber: row.bibNumber,
     listOptOut: row.listOptOut,
+    promoConsent: row.promoConsent,
+    anotherAdult: anotherAdultOnTheLink(own, row, now),
     declarationMethod: methods.get(row.id) ?? null,
     own: row.id === own.id,
   }));
@@ -111,4 +124,21 @@ export async function managedRegistration<T extends Record<string, unknown>>(
   const other = await findRegistrationById(db, registrationId);
   if (!other || other.participantId !== own.participantId || other.eventId !== own.eventId) return null;
   return other;
+}
+
+/**
+ * Whether `person`, reached through `own`'s manage link, is another adult on the address (§421;
+ * §562, the fix round of 2026-09-29): not the link's own registration, and not a minor today by the
+ * guardian rule's calendar (`isMinorOn`). A missing or unreadable birth date counts as an adult —
+ * the safe side, since the consequence is only that the link cannot say yes for them.
+ *
+ * The address holder's link may say yes to «Oferte și beneficii» for itself and for a minor it
+ * registered (the parent consents for the child, as on the form), never for another adult: that
+ * yes is the adult's own, given on their declaration or through their own registration's link. The
+ * way out stays open on every row (art. 7(3) GDPR), as the list switch's does (§547).
+ */
+export function anotherAdultOnTheLink(own: { id: string }, person: { id: string; birthDate: string | null }, now: Date): boolean {
+  if (person.id === own.id) return false;
+  const readable = person.birthDate !== null && /^\d{4}-\d{2}-\d{2}$/.test(person.birthDate) && !Number.isNaN(Date.parse(`${person.birthDate}T00:00:00Z`));
+  return !(readable && isMinorOn(person.birthDate as string, now));
 }

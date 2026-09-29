@@ -1,4 +1,7 @@
+import { existsSync } from "node:fs";
 import { expect, type Locator, test, type Page } from "@playwright/test";
+import pg from "pg";
+import { CLUB_NAME } from "../../src/theme/brand";
 import { confirmDialog } from "./support/confirm";
 import { registrationByEmail, registrationPhones } from "./support/action-link";
 import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
@@ -1338,6 +1341,103 @@ test.describe("BR-REQ-041-01 the race's conditions: the box is inside the read b
       await readAndAgree(page, { scroll: true });
     } finally {
       await retireRulesEvent(page, editorUrl);
+    }
+  });
+});
+
+/**
+ * §562 — «Vreau să primesc oferte și beneficii de la <club> și partenerii săi.» (the owner's words,
+ * 2026-09-29 16:12, the club named from `CLUB_NAME`): one optional
+ * box, unticked, never required, under the list tick, with the glyph and one helper sentence — and
+ * only while the privacy notice in force names `{{promotionalMaterials}}` (AGENTS.md §10.8). Which
+ * face the page shows is read from the database the server uses, under the advisory lock
+ * `public-list-states.spec.ts` holds while it flips the notice, so the two never race on it.
+ */
+const NOTICE_LOCK_KEY = 390_039_001;
+
+function noticeDatabaseUrl(): string {
+  if (!process.env.DATABASE_URL && existsSync(".env.local")) process.loadEnvFile(".env.local");
+  const url = process.env.DATABASE_URL;
+  if (!url) throw new Error("DATABASE_URL is not set: this spec needs the database the server uses");
+  return url;
+}
+
+/** Whether the notice in force names the marker in every language, as the site reads it. */
+async function noticeNamesPromo(client: pg.Client): Promise<boolean> {
+  const { rows } = await client.query<{ id: string }>(
+    `SELECT id FROM legal_documents
+      WHERE key = 'PRIVACY_NOTICE' AND is_approved AND withdrawn_at IS NULL AND effective_at <= now()
+      ORDER BY version DESC LIMIT 1`,
+  );
+  if (!rows[0]) return false;
+  const { rows: translations } = await client.query<{ body: string }>(
+    "SELECT body_json::text AS body FROM legal_document_translations WHERE legal_document_id = $1",
+    [rows[0].id],
+  );
+  return translations.length >= 2 && translations.every((translation) => translation.body.includes("{{promotionalMaterials}}"));
+}
+
+test.describe("BR-REQ-031-01 «Oferte și beneficii», behind the privacy notice (§562)", () => {
+  test("an optional, unticked box while the notice describes it — stored with its moment when ticked; absent otherwise", async ({ page }) => {
+    test.setTimeout(test.info().timeout + 300_000);
+    const client = new pg.Client({ connectionString: noticeDatabaseUrl() });
+    await client.connect();
+    await client.query("SELECT pg_advisory_lock($1)", [NOTICE_LOCK_KEY]);
+    try {
+      const described = await noticeNamesPromo(client);
+      await signIn(page, "Dev Administrator");
+      await ensureRegistrationIsOpen(page);
+      await page.goto(registerPath);
+      await hydrated(page);
+
+      const box = page.locator('[name="promoConsent"]');
+      if (!described) {
+        // Never collected under a notice that does not describe it: no box, no helper line.
+        await expect(box).toHaveCount(0);
+        await expect(page.getByTestId("promo-consent-help")).toHaveCount(0);
+        return;
+      }
+
+      await expect(box).toHaveCount(1);
+      await expect(box).not.toBeChecked();
+      await expect(box).not.toHaveAttribute("required", /.*/);
+      // The owner's sentence (2026-09-29 16:12), the club named from the one constant.
+      await expect(page.locator("label").filter({ has: box })).toHaveText(`Vreau să primesc oferte și beneficii de la ${CLUB_NAME} și partenerii săi.`);
+      // The glyph beside the words, decorative.
+      await expect(page.locator("label").filter({ has: box }).getByTestId("promo-consent-glyph")).toHaveCount(1);
+      await expect(page.getByTestId("promo-consent-help")).toHaveText("Opțional. Poți renunța oricând din pagina înscrierii tale.");
+      // A thumb's target (BR-REQ-041-01 criterion 6), measured as the required consent is.
+      const target = await box.evaluate((input) => {
+        let node: HTMLElement | null = input as HTMLElement;
+        let best = { width: 0, height: 0 };
+        for (let step = 0; step < 4 && node; step += 1) {
+          const rect = node.getBoundingClientRect();
+          if (rect.width * rect.height > best.width * best.height) best = { width: rect.width, height: rect.height };
+          if (node.tagName === "LABEL") break;
+          node = node.parentElement;
+        }
+        return best;
+      });
+      expect(target.height).toBeGreaterThanOrEqual(44);
+      expect(target.width).toBeGreaterThanOrEqual(44);
+
+      // Left unticked, it blocks nothing; ticked, the registration keeps it with its moment.
+      await fillRequired(page);
+      await box.check();
+      const email = await page.locator('[name="email"]').inputValue();
+      await page.waitForTimeout(HUMAN_PAUSE_MS);
+      await page.getByRole("button", { name: "Trimite înscrierea" }).click();
+      await expect(page.getByRole("heading", { name: "Aproape gata!", exact: true })).toBeVisible();
+      const registration = await registrationByEmail(email);
+      const { rows } = await client.query<{ promo: boolean; at: Date | null }>(
+        'SELECT promo_consent AS promo, promo_consent_at AS at FROM registrations WHERE id = $1',
+        [registration.id],
+      );
+      expect(rows[0]?.promo).toBe(true);
+      expect(rows[0]?.at).not.toBeNull();
+    } finally {
+      await client.query("SELECT pg_advisory_unlock($1)", [NOTICE_LOCK_KEY]);
+      await client.end();
     }
   });
 });

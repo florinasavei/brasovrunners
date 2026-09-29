@@ -52,7 +52,7 @@ export default function RaceDeclarationSelect({
     label: string;
     help: string;
     unset: string;
-    /** «Traseul e pe «Asfalt», iar varianta aleasă e «Trail»: …» — by the surface, then the kind it wants. */
+    /** «Traseul e pe «Asfalt», iar varianta aleasă e «Eveniment montan»: …» — by the surface, then the kind it wants. */
     mismatch: Record<string, Partial<Record<RaceDeclarationKey, string>>>;
   };
 }) {

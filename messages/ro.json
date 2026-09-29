@@ -182,11 +182,13 @@
       "calendar": "{label}: {times}",
       "ics": "{label}: {times} — ia o frontală"
     },
-    "difficultyLevelShort": "{band} {step}",
-    "difficultyLevelSr": "Dificultate: {band} {step} — nivelul {level} din {levels}",
-    "difficultyWithStep": "{band}, treapta {step} din {steps}",
-    "difficultyLevelTooltip": "{band} {step} — nivelul {level} din {levels}",
+    "difficultyLevelShort": "{band} {level}",
+    "difficultyLevelSr": "Dificultate: {band} — nivelul {level} din {levels} ({band}: {from}–{to})",
+    "difficultyWithLevel": "{band}, nivelul {level} din {levels}",
+    "difficultyLevelTooltip": "{band} — nivelul {level} din {levels}\n{ladder}",
     "difficultyBandTitle": "{band}: nivelurile {from}–{to} din {levels}",
+    "difficultyBandRange": "{band} ({from}–{to})",
+    "difficultyLadderItem": "{band} {from}–{to}",
     "cost": "Cost",
     "registration": "Înscriere",
     "cancelled": "Anulat",
@@ -619,7 +621,8 @@
         "results": "Acordul pentru rezultatele publice",
         "reason": "Motivul",
         "action": "Retrage",
-        "nothing": "Nu mai este nimic de retras: nota medicală, rețelele și acordul pentru rezultate sunt deja goale."
+        "nothing": "Nu mai este nimic de retras: nota medicală, rețelele, acordul pentru rezultate și cel pentru oferte și beneficii sunt deja goale.",
+        "promo": "Acordul pentru oferte și beneficii"
       },
       "auditTrail": "Ce a făcut echipa",
       "auditActorRemoved": "cont șters",
@@ -645,7 +648,8 @@
           "sent_now": "Trimis acum, ocolind trecerea programată",
           "cancelled_by_participant": "Anulată de participant, din linkul propriu",
           "declaration_hold_set": "Declarație păstrată pentru o reclamație sau un litigiu",
-          "declaration_hold_cleared": "Păstrarea declarației a fost scoasă"
+          "declaration_hold_cleared": "Păstrarea declarației a fost scoasă",
+          "promo_consent_changed": "Acordul pentru oferte și beneficii schimbat"
         }
       },
       "locale": {
@@ -795,7 +799,12 @@
       "resubmittedHeld": "S-a înscris din nou cu aceeași adresă: {date} ({state}) — „{message}” așteaptă deja să plece și pleacă o singură dată",
       "familyChip": "Familie",
       "resendSentNow": "Emailul pleacă acum, fără să aștepte trecerea programată.",
-      "filterMembersOnly": "{title} · Membri"
+      "filterMembersOnly": "{title} · Membri",
+      "promo": {
+        "yes": "Oferte și beneficii: da, din {date}",
+        "no": "Oferte și beneficii: nu",
+        "staffNo": "Oferte și beneficii: nu. Echipa nu poate da acordul în locul persoanei; îl dă ea, din pagina înscrierii ei."
+      }
     },
     "events": {
       "empty": "Nu există niciun eveniment în baza de date.",
@@ -1147,7 +1156,7 @@
         "seoTitle": "Titlu pentru motoarele de căutare",
         "seoDescription": "Descriere pentru motoarele de căutare",
         "difficulty": "Dificultate",
-        "difficultyStep": "Treapta",
+        "difficultyStep": "Nivelul",
         "costType": "Cost",
         "checklist": "Ce să aduci — o linie, în emailuri și în calendar",
         "body": "Conținut — apare pe pagina evenimentului, sub titlu",
@@ -1224,7 +1233,7 @@
       "registrationClosesAt": "Înscrierile se închid",
       "registrationWindowHelp": "Lasă deschiderea goală și înscrierile pornesc la publicarea evenimentului; lasă închiderea goală și se opresc la startul evenimentului.",
       "declarationDocument": "Declarația pe care o semnează participantul",
-      "declarationDocumentHelp": "Trail pentru munte sau pădure, șosea sau parc pentru asfalt, beton, tartan sau pavele. Căsuța pornește de la suprafața din «Traseul»; o poți schimba. Textul se aprobă în Documente legale.",
+      "declarationDocumentHelp": "Eveniment montan pentru munte sau pădure; pe șosea sau în parc pentru asfalt, beton, tartan, pavele. Pornește de la suprafața din «Traseul»; o poți schimba. Textul se aprobă în Documente legale.",
       "declarationNone": "Nu există nicio declarație aprobată în acest mediu, deci niciun eveniment nu poate primi înscrieri încă.",
       "declarationUnset": "Niciuna",
       "participantList": "Publică lista participanților pe pagina evenimentului",
@@ -1243,21 +1252,22 @@
         "VERY_HARD": "Foarte greu"
       },
       "difficultySteps": {
-        "step1": "Treapta 1, cea mai ușoară din categorie",
-        "step2": "Treapta 2, la mijlocul categoriei",
-        "step3": "Treapta 3, cea mai grea din categorie"
+        "step1": "Primul nivel din categorie, cel mai ușor",
+        "step2": "Nivelul din mijlocul categoriei",
+        "step3": "Ultimul nivel din categorie, cel mai greu"
       },
-      "difficultySummary": "{band} {step}",
-      "difficultyStepHelp": "1 = cel mai ușor din categorie, 3 = cel mai greu",
+      "difficultyLevelChoice": "Nivelul {level} din {levels}",
+      "difficultySummary": "{band} {level}",
+      "difficultyStepHelp": "Nivelul e de la {lowest} ({lowestBand}) la {highest} ({highestBand}): fiecare categorie are trei niveluri — {ranges}.",
       "difficultyScale": {
-        "EASY": "ușor: scurt, plat, pentru oricine",
-        "MEDIUM1": "mediu 1: alergarea de pe Tâmpa",
-        "MEDIUM2": "mediu 2: alergările mai lungi",
-        "MEDIUM3": "mediu 3: lungi și tehnice",
-        "FAIRLY_HARD": "greuț: de la semimaraton în sus",
-        "HARD": "greu: maratoane",
-        "VERY_HARD": "foarte greu: ultramaratoane și mai sus",
-        "steps": "în fiecare categorie 1 = cel mai ușor, 3 = cel mai greu"
+        "EASY": "ușor {from}–{to}: scurt, plat, pentru oricine",
+        "MEDIUM1": "mediu {level}: alergarea de pe Tâmpa",
+        "MEDIUM2": "mediu {level}: alergările mai lungi",
+        "MEDIUM3": "mediu {level}: lungi și tehnice",
+        "FAIRLY_HARD": "greuț {from}–{to}: de la semimaraton în sus",
+        "HARD": "greu {from}–{to}: maratoane",
+        "VERY_HARD": "foarte greu {from}–{to}: ultramaratoane și mai sus",
+        "steps": "în fiecare categorie, primul nivel e cel mai ușor, al treilea cel mai greu"
       },
       "costValues": {
         "FREE": "Gratuit",
@@ -1855,7 +1865,7 @@
           "title": "Declarația pe propria răspundere",
           "newest": "{kind}: cea mai nouă versiune aprobată e v{version} · {title}. Participantul o semnează la confirmarea înscrierii.",
           "notOnSite": "Nu se cere nicio declarație: evenimentul nu primește înscrieri pe site. Alege «Înscrieri pe site» în «Participare și înscrieri» ca să alegi declarația.",
-          "roadFallback": "{kind}: nicio versiune aprobată încă, așa că un concurs pe șosea sau în parc semnează declarația de trail. Aprob-o în Documente legale → Versiune nouă → Pornește de la șablon.",
+          "roadFallback": "{kind}: nicio versiune aprobată încă, așa că un concurs pe șosea sau în parc semnează declarația pentru eveniment montan. Aprob-o în Documente legale → Versiune nouă → Pornește de la șablon.",
           "mismatch": "Traseul e pe «{surface}», iar varianta aleasă e «{chosen}»: pentru el se potrivește «{wanted}». Alege-o mai sus, dacă traseul e cel corect."
         }
       },
@@ -1868,7 +1878,7 @@
       "groupRunDeclaration": {
         "label": "Declarație opțională pe propria răspundere",
         "help": "Opțională, o dată pentru toate datele; semnatarul și clubul primesc o copie. Cere nota GDPR aprobată. Declarația de la alergări se semnează de la 18 ani, oricare ar fi vârsta minimă a alergării.",
-        "notGroupSurface": "Doar pentru o alergare de grup pe asfalt sau pe trail: alege suprafața în cardul «Traseul».",
+        "notGroupSurface": "Doar pentru o alergare de grup pe asfalt sau pe teren accidentat: alege suprafața în cardul «Traseul».",
         "missing": "Clubul nu are încă o versiune aprobată pentru „{document}”. Aprob-o în Documente legale, împreună cu o notă de confidențialitate nouă, apoi bifează aici.",
         "minAgeHelp": "Împlinită în ziua alergării, cel puțin 18 ani: declarația nu acoperă minorii, chiar dacă aici e mai puțin. Peste 18, de exemplu 21, pagina de semnare cere data nașterii.",
         "surface": "Suprafața, din cardul «Traseul»: {surface}",
@@ -1913,8 +1923,8 @@
       "participantListHelpMore": "Ceilalți apar ca „Participant (nume ascuns)”. Salvarea e refuzată cât timp nu e în vigoare o notă de confidențialitate aprobată care descrie lista.",
       "confirmationWindowHelpMore": "După termen, locul trece la următorul doar dacă așteaptă cineva. Cine se înscrie după deschiderea ferestrei, sau când prima cifră e 0, are {hold} să semneze.",
       "declarationKinds": {
-        "EVENT_DECLARATION": "Trail",
-        "EVENT_DECLARATION_ROAD": "Șosea sau parc"
+        "EVENT_DECLARATION": "Eveniment montan",
+        "EVENT_DECLARATION_ROAD": "Eveniment pe șosea sau în parc"
       },
       "membersOnly": "Doar pentru membrii BVR",
       "membersOnlyHelp": "Îl văd doar membrii autentificați, nu apare pe site. Înscrierile făcute rămân.",
@@ -2069,14 +2079,14 @@
     },
     "legal": {
       "title": "Documente legale",
-      "intro": "Nota de confidențialitate, termenii, declarația de concurs (trail și șosea sau parc) și cele două declarații ale alergărilor de grup: {count} texte. O corectură e o versiune nouă.",
+      "intro": "Nota de confidențialitate, termenii, declarațiile de concurs pentru eveniment montan și pentru șosea sau parc, cele două declarații ale alergărilor de grup: {count} texte. O corectură e o versiune nouă.",
       "whatIs": {
         "PRIVACY_NOTICE": "GDPR: ce date luăm de la participanți, de ce și cât le ținem. Se bifează la înscriere.",
         "TERMS": "Regulile site-ului și ale înscrierii, nu regulamentul cursei — acela e pe pagina evenimentului. Se bifează la înscriere.",
-        "EVENT_DECLARATION": "Declarația unui concurs pe trasee montane sau de pădure: vârsta, minorii, riscurile traseului, sănătatea. Se semnează la confirmarea locului.",
+        "EVENT_DECLARATION": "Declarația unui eveniment montan, pe trasee de munte sau de pădure: vârsta, minorii, riscurile traseului, sănătatea. Se semnează la confirmarea locului.",
         "GROUP_RUN_DECLARATION_ASPHALT": "Opțională, pentru o alergare de grup pe asfalt; se semnează pe pagina alergării, o dată pentru toate datele ei. Aprob-o împreună cu o notă de confidențialitate nouă.",
-        "GROUP_RUN_DECLARATION_TRAIL": "Opțională, pentru o alergare de grup pe trail; se semnează pe pagina alergării, o dată pentru toate datele ei. Aprob-o împreună cu o notă de confidențialitate nouă.",
-        "EVENT_DECLARATION_ROAD": "Declarația unui concurs pe șosea sau în parc, cu riscurile asfaltului și ale traficului. Până o aprobi, aceste concursuri semnează declarația de trail."
+        "GROUP_RUN_DECLARATION_TRAIL": "Opțională, pentru o alergare de grup pe teren accidentat; se semnează pe pagina alergării, o dată pentru toate datele ei. Aprob-o împreună cu o notă de confidențialitate nouă.",
+        "EVENT_DECLARATION_ROAD": "Declarația unui eveniment pe șosea sau în parc, cu riscurile asfaltului și ale traficului. Până o aprobi, aceste evenimente semnează declarația pentru eveniment montan."
       },
       "empty": "Nu există niciun document legal. Înscrierile sunt refuzate până când există o notă de confidențialitate aprobată.",
       "emptyCanCreate": "Nu există încă niciun document legal, așa că înscrierile sunt refuzate. Începe cu nota de confidențialitate: Versiune nouă.",
@@ -2091,10 +2101,10 @@
       "keys": {
         "PRIVACY_NOTICE": "GDPR",
         "TERMS": "Termeni de concurs",
-        "EVENT_DECLARATION": "Declarație pe propria răspundere — cursă trail",
+        "EVENT_DECLARATION": "Declarație pe propria răspundere — eveniment montan",
         "GROUP_RUN_DECLARATION_ASPHALT": "Declarație pe propria răspundere (alergare de grup, asfalt)",
-        "GROUP_RUN_DECLARATION_TRAIL": "Declarație pe propria răspundere (alergare de grup, trail)",
-        "EVENT_DECLARATION_ROAD": "Declarație pe propria răspundere — cursă pe asfalt / în parc"
+        "GROUP_RUN_DECLARATION_TRAIL": "Declarație pe propria răspundere (alergare de grup, teren accidentat)",
+        "EVENT_DECLARATION_ROAD": "Declarație pe propria răspundere — eveniment pe asfalt / în parc"
       },
       "referenced": "{signatures} semnături · {events} evenimente",
       "unreferenced": "Nefolosit încă",
@@ -2200,7 +2210,8 @@
         "teamPage": "Doar în nota de confidențialitate: numele paginii Echipa, între ghilimele. Cu el în nota în vigoare, /admin/tasks consideră pagina descrisă",
         "series": "Doar în declarațiile alergărilor de grup: numele seriei, când alergarea se repetă. Propoziția care îl conține apare doar la o serie; la o alergare de o zi rămâne propoziția cu '{{event}}' și '{{eventDate}}'",
         "seriesRhythm": "Doar în declarațiile alergărilor de grup: cât de des se repetă seria, citit din datele ei („în fiecare marți, la 18:30”)",
-        "seriesPlace": "Doar în declarațiile alergărilor de grup: locul de plecare obișnuit al seriei"
+        "seriesPlace": "Doar în declarațiile alergărilor de grup: locul de plecare obișnuit al seriei",
+        "promotionalMaterials": "Doar în nota de confidențialitate: bifa opțională pentru oferte și beneficii de la club și de la partenerii săi. Fără el în nota în vigoare, formularul nu o oferă"
       },
       "removeBlockedReferenced": "Nu se poate nici retrage, nici șterge: {signatures} semnături, {events} evenimente și {acknowledgements} înscrieri depind de această versiune.",
       "removeBlockedCurrent": "În vigoare acum — nu se poate nici retrage, nici șterge. Aprobă întâi versiunea următoare; apoi aceasta se poate scoate.",
@@ -2328,10 +2339,10 @@
       "shortKeys": {
         "PRIVACY_NOTICE": "GDPR",
         "TERMS": "Termeni",
-        "EVENT_DECLARATION": "Cursă trail",
-        "EVENT_DECLARATION_ROAD": "Cursă asfalt / parc",
+        "EVENT_DECLARATION": "Eveniment montan",
+        "EVENT_DECLARATION_ROAD": "Eveniment asfalt / parc",
         "GROUP_RUN_DECLARATION_ASPHALT": "Grup asfalt",
-        "GROUP_RUN_DECLARATION_TRAIL": "Grup trail"
+        "GROUP_RUN_DECLARATION_TRAIL": "Grup teren accidentat"
       },
       "filter": {
         "label": "Filtrează versiunile",
@@ -2357,7 +2368,8 @@
         "title": "1. Regenerează (ciornă din șablon) · 2. Citește ciorna și completează ce a rămas de forma '<'…>, apoi «Salvează ciorna» · 3. Aprobă — abia atunci intră în vigoare",
         "body": "Textul în vigoare rămâne pe site până aprobi ciorna. Cele patru fapte sunt denumirea clubului, CIF-ul, sediul și adresa de contact."
       },
-      "tableCaptionOf": "Versiunile textului {kind}, cu starea și ce depinde de fiecare"
+      "tableCaptionOf": "Versiunile textului {kind}, cu starea și ce depinde de fiecare",
+      "promoMissing": "Nota în vigoare nu descrie încă ofertele și beneficiile, deci formularul nu oferă bifa. Aprobă o notă nouă din șablon."
     },
     "tasks": {
       "title": "Ce mai este de făcut",
@@ -2521,7 +2533,7 @@
           "done": "Textele aprobate de club sunt publicate.",
           "how": [
             "Calea scurtă: /admin/legal → caseta „Într-un pas” → verifică denumirea, CIF-ul, sediul și emailul afișate → butonul de aprobare din casetă.",
-            "Nota, termenii și cele două declarații de concurs, trail și șosea sau parc, intră în vigoare cu datele clubului în ele.",
+            "Nota, termenii și cele două declarații de concurs, eveniment montan și eveniment pe șosea sau în parc, intră în vigoare cu datele clubului în ele.",
             "Ca să citești întâi: pe cardul textului, „Regenerează din șablon” → citește ciorna, completează → „Salvează ciorna” → „Aprobă și publică”. Toate deodată: „Versiune nouă” → „Regenerează toate”.",
             "Calea lungă, pentru o modificare: „Versiune nouă” → alege șablonul → „Salvează ciorna” → PDF → „Aprobă și publică”. Un text aprobat nu se mai schimbă; corectarea e versiunea următoare.",
             "Pe fiecare eveniment, la Înscrieri, se alege declarația aprobată (dacă nu e deja)."
@@ -2812,14 +2824,14 @@
           ]
         },
         "raceDeclarations": {
-          "title": "Declarațiile de concurs: trail și șosea sau parc",
-          "todo": "Cel puțin o declarație de concurs (trail, șosea sau parc) nu are încă o versiune din șablon. Până e aprobată cea de șosea, asfaltul semnează trail.",
-          "done": "Ambele declarații de concurs, trail și șosea sau parc, sunt în vigoare din șablon: fiecare concurs semnează declarația potrivită traseului lui.",
+          "title": "Declarațiile de concurs: eveniment montan și eveniment pe șosea sau în parc",
+          "todo": "Una dintre cele două declarații de concurs nu are încă o versiune din șablon. Până e aprobată cea de șosea, asfaltul semnează declarația pentru eveniment montan.",
+          "done": "Ambele declarații de concurs, eveniment montan și eveniment pe șosea sau în parc, sunt în vigoare din șablon: fiecare concurs semnează declarația potrivită traseului lui.",
           "how": [
-            "/admin/legal → cardul „Declarație pe propria răspundere — cursă trail” → „Regenerează din șablon”. Apoi ciorna: citește, completează, „Salvează ciorna”, apoi „Aprobă și publică”.",
-            "La fel pentru „Declarație pe propria răspundere — cursă pe asfalt / în parc”.",
+            "/admin/legal → cardul „Declarație pe propria răspundere — eveniment montan” → „Regenerează din șablon”. Apoi ciorna: citește, completează, „Salvează ciorna”, apoi „Aprobă și publică”.",
+            "La fel pentru „Declarație pe propria răspundere — eveniment pe asfalt / în parc”.",
             "Un concurs nou pornește singur de la varianta potrivită traseului. Un concurs salvat înainte păstrează declarația aleasă atunci.",
-            "Cea de trail, pentru unul pe asfalt: deschide-l, iar cardul «Declarația pe propria răspundere» spune când varianta nu se potrivește traseului. Alege-o pe cea de șosea sau parc și salvează."
+            "Unul pe asfalt, cu declarația pentru eveniment montan: deschide-l; cardul «Declarația pe propria răspundere» spune când nu se potrivește traseului. Alege-o pe cea de șosea sau parc și salvează."
           ]
         },
         "groupRunSeriesTexts": {
@@ -2828,9 +2840,19 @@
           "done": "Declarațiile alergărilor de grup în vigoare spun ce acoperă: un alergător semnează o dată pentru toată seria.",
           "how": [
             "/admin/legal → cardul „Declarație pe propria răspundere (alergare de grup, asfalt)” → „Regenerează din șablon”. Apoi ciorna: citește, completează, „Salvează ciorna”, apoi „Aprobă și publică”.",
-            "La fel pentru „Declarație pe propria răspundere (alergare de grup, trail)”.",
+            "La fel pentru „Declarație pe propria răspundere (alergare de grup, teren accidentat)”.",
             "Aprobă și o versiune nouă a notei de confidențialitate din șablon: ea spune că declarația unei serii se păstrează cât timp este activă, iar după retragere cel mult trei ani.",
             "Cine a semnat versiunea veche vede pe pagina alergării, din linkul din emailul lui, că i se cere versiunea nouă; semnătura veche rămâne în listă."
+          ]
+        },
+        "promoNotice": {
+          "title": "Nota de confidențialitate: oferte și beneficii",
+          "todo": "Nota în vigoare nu descrie încă ofertele și beneficiile, deci formularul nu oferă bifa și nu se păstrează niciun acord până clubul aprobă o notă nouă.",
+          "done": "Nota în vigoare descrie ofertele și beneficiile: formularul oferă bifa, iar fiecare își schimbă alegerea din pagina înscrierii.",
+          "how": [
+            "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Secțiunea 5 descrie ofertele și beneficiile de la club și de la partenerii săi.",
+            "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”.",
+            "Din momentul în care intră în vigoare, formularul oferă bifa, fără altă setare. Cine a bifat apare în «Newsletter», în cardul lui."
           ]
         }
       },
@@ -4691,6 +4713,7 @@
               "steps": [
                 "«Newsletter» → deschide cardul «Abonați». Linia lui spune câți sunt confirmați și câți în așteptare.",
                 "Caută la «Caută adresa» sau alege «Tema» și «Starea», apoi apasă «Filtrează». «Descarcă CSV» ia lista așa cum e filtrată.",
+                "Cardul «Participanți care au bifat oferte și beneficii»: cine a bifat asta la înscriere, cu adresa, evenimentul și data. «Descarcă CSV» îl ia întreg. Nu e newsletterul; partenerii nu primesc lista.",
                 "Scoaterea unei adrese e a Administratorului: scrie-i cine a cerut-o."
               ]
             },
@@ -4765,12 +4788,13 @@
             {
               "title": "Scara de dificultate a clubului",
               "steps": [
-                "«Evenimente» → «Editează» → cardul «Ce fel de eveniment»: alegi «Dificultate» (categoria) și, alături, «Treapta» — 1, 2 sau 3.",
-                "Scara are 15 trepte: 5 categorii × 3 trepte. Treapta 1 e cea mai ușoară din categorie, 3 cea mai grea. Pe site apare categoria cu treapta ei, de exemplu „Mediu 2”.",
-                "Ce înseamnă fiecare categorie și treaptă: apasă semnul de întrebare de lângă «Dificultate» sau «Treapta».",
-                "Treapta în celelalte categorii: 1 când traseul e la capătul ușor al categoriei, 3 când e aproape de următoarea (mai lung, mai abrupt, noaptea, noroi). Nu știi? 2.",
-                "Filtrul de pe site bifează o categorie întreagă: «Greu» arată toate cele trei trepte ale ei.",
-                "Nu-ți amintești scara? Semnul de întrebare de lângă «Treapta» o arată toată. Pe site, pastila dificultății spune la atingere nivelul din 15, de exemplu „Mediu 2 — nivelul 5 din 15”."
+                "«Evenimente» → «Editează» → cardul «Ce fel de eveniment»: alegi «Dificultate» (categoria) și, alături, «Nivelul» — unul din cele trei ale categoriei.",
+                "Scara are 15 niveluri, în ordine: ușor 1–3, mediu 4–6, greuț 7–9, greu 10–12, foarte greu 13–15. Pe site apare categoria cu nivelul ei, de exemplu „Mediu 5”.",
+                "Ce înseamnă fiecare categorie și nivel: apasă semnul de întrebare de lângă «Dificultate» sau «Nivelul».",
+                "Nivelul în celelalte categorii: primul când traseul e la capătul ușor al categoriei, al treilea când e aproape de următoarea (mai lung, mai abrupt, noaptea, noroi). Nu știi? Cel din mijloc.",
+                "Filtrul de pe site bifează o categorie întreagă: «Greu» arată toate cele trei niveluri ale ei, 10–12, și le scrie lângă nume.",
+                "Nu-ți amintești scara? Semnul de întrebare de lângă «Nivelul» o arată toată.",
+                "Pe site, pastila dificultății spune la atingere nivelul, de exemplu „Mediu — nivelul 5 din 15”, și sub el toată scara: ușor 1–3 · mediu 4–6 · greuț 7–9 · greu 10–12 · foarte greu 13–15."
               ]
             },
             {
@@ -4900,7 +4924,8 @@
                 "Scrie adresa, întreagă sau o parte din ea, la «Caută adresa». Alege, dacă vrei, «Tema» și «Starea», apoi apasă «Filtrează». «Șterge filtrele» arată iar toată lista.",
                 "La «În așteptare», rândul spune până când merge linkul de confirmare, sau «Linkul a expirat.» O adresă neconfirmată se șterge singură.",
                 "«Descarcă CSV» ia lista așa cum e filtrată, cu aceleași coloane. Păstrează fișierul doar cât îți trebuie, apoi șterge-l.",
-                "Ca să scoți pe cineva, la cererea lui: «Dezabonează» pe rândul lui, apoi confirmă. Adresa se șterge cu temele ei, ca atunci când se dezabonează singură."
+                "Ca să scoți pe cineva, la cererea lui: «Dezabonează» pe rândul lui, apoi confirmă. Adresa se șterge cu temele ei, ca atunci când se dezabonează singură.",
+                "Cardul «Participanți care au bifat oferte și beneficii»: cine a bifat asta la înscriere, cu adresa, evenimentul și data. «Descarcă CSV» îl ia întreg. Nu e newsletterul; partenerii nu primesc lista."
               ]
             },
             {
@@ -5041,7 +5066,7 @@
                 "Deschide fiecare ciornă (filtrul «Ciorne» le arată pe toate), citește-o și completează ce a rămas de forma <…>, în română și în engleză; «Salvează ciorna».",
                 "Înapoi pe «Documente legale»: «Aprobă ciornele» și confirmă. Ciornele gata de aprobat intră în vigoare împreună; ce nu se poate aproba deodată e scris sub buton, cu motivul.",
                 "Ce e în vigoare la fiecare text: capul cardului spune «În vigoare: versiunea…» sau «Nicio versiune în vigoare»; filtrele «În vigoare», «Înlocuite» și «Retrase» arată restul.",
-                "Fără termeni, notă și o declarație de cursă aprobate nu se poate înscrie nimeni. Pentru o cursă pe asfalt editorul alege declarația de asfalt, dacă e aprobată, altfel pe cea de trail. O alergare de grup oferă declarația doar dacă o bifează și dacă textul ei (asfalt sau trail) e aprobat.",
+                "Fără termeni, notă și o declarație de cursă aprobate nu se poate înscrie nimeni. Pentru o cursă pe asfalt editorul alege declarația de asfalt, dacă e aprobată, altfel pe cea pentru eveniment montan. O alergare de grup oferă declarația doar dacă o bifează și dacă textul ei (asfalt sau teren accidentat) e aprobat.",
                 "Până aprobi nota nouă, lista publică de participanți arată doar confirmații.",
                 "Ciorne sau versiuni de care nu mai ai nevoie: bifează-le în tabel, apasă «Șterge versiunile bifate» și verifică lista. Doar ciorne: «Șterge ciornele» și confirmă. Cu o versiune aprobată în listă: la «Confirmarea» scrii textul cerut (de exemplu „DELETE 2”), la «Motivul» de ce, apoi «Șterge versiunile».",
                 "Declarațiile semnate la o alergare de grup, când semnatarul cere ștergerea: «Evenimente» → «Editează» la alergare → «Declarații semnate (alergare de grup)» → «Șterge mai multe deodată»: bifează-le, completează o dată «Motivul ștergerii», apasă «Șterge cele bifate» și confirmă. În jurnal rămân numele tău și motivul, nu și al celui care a semnat."
@@ -5080,7 +5105,7 @@
               "steps": [
                 "«Înscrieri» → caută persoana → deschide înscrierea.",
                 "Ce știm despre ea: «Toate datele acestei persoane».",
-                "Retrage un acord (nota medicală, rețelele, rezultatele publice): «Retrage consimțământul» → bifează ce retrage → «Motivul» → «Retrage».",
+                "Retrage un acord (nota medicală, rețelele, rezultatele publice, ofertele și beneficiile): «Retrage consimțământul» → bifează ce retrage → «Motivul» → «Retrage».",
                 "Ștergere: «Șterge definitiv» (vezi „Corectează, anulează sau șterge o înscriere”). În istoric rămâne cine a șters și de ce, nu și datele persoanei."
               ]
             }
@@ -5484,6 +5509,24 @@
         "unsubscribing": "Se dezabonează…",
         "unsubscribeTitle": "Dezabonezi {email}?",
         "unsubscribeBody": "Adresa iese din newsletter, cu temele ei, ca atunci când se dezabonează singură. Se poate abona din nou de pe pagina de contact."
+      },
+      "promo": {
+        "title": "Participanți care au bifat oferte și beneficii",
+        "intro": "Cine a bifat la înscriere că vrea oferte și beneficii de la club și de la partenerii săi. Nu e newsletterul, iar partenerii nu primesc lista.",
+        "count": {
+          "one": "{count} înscriere cu acord",
+          "few": "{count} înscrieri cu acord",
+          "other": "{count} de înscrieri cu acord"
+        },
+        "csv": "Descarcă CSV",
+        "truncated": "Tabelul arată primele {count}; «Descarcă CSV» le ia pe toate.",
+        "empty": "Nimeni nu a bifat încă ofertele și beneficiile.",
+        "columns": {
+          "name": "Nume",
+          "email": "Adresa de email",
+          "event": "Evenimentul",
+          "since": "Bifat pe"
+        }
       }
     },
     "team": {
@@ -6098,7 +6141,11 @@
       "addLink": "Înscriu încă o persoană cu această adresă"
     },
     "membersAddressLabel": "Adresa contului tău de membru",
-    "membersAddressHelp": "Te înscrii cu adresa contului. Un cont înscrie o singură persoană."
+    "membersAddressHelp": "Te înscrii cu adresa contului. Un cont înscrie o singură persoană.",
+    "promo": {
+      "label": "Vreau să primesc oferte și beneficii de la {club} și partenerii săi.",
+      "help": "Opțional. Poți renunța oricând din pagina înscrierii tale."
+    }
   },
   "Registrations": {
     "invalidOrExpired": "Acest link nu mai este valabil. Îți putem trimite unul nou, pe aceeași adresă de email.",
@@ -6437,6 +6484,19 @@
     "qr": {
       "number": "Număr de concurs: {number}",
       "code": "Cod de acces: {code}"
+    },
+    "promo": {
+      "title": "Oferte și beneficii",
+      "closedYes": "Ai bifat oferte și beneficii la această înscriere. Cât timp e închisă, clubul nu îți trimite nimic pentru ea; poți retrage acordul oricând.",
+      "yes": "La această înscriere primești oferte și beneficii. Le trimite doar clubul, la adresa acestei înscrieri; partenerii nu primesc adresa ta.",
+      "no": "La această înscriere nu ai bifat oferte și beneficii.",
+      "optIn": "Vreau oferte și beneficii pentru această înscriere",
+      "optOut": "Nu mai vreau oferte și beneficii pentru această înscriere",
+      "whereToSayYes": "Acordul pentru oferte și beneficii se dă din pagina înscrierii (linkul din emailul ei) sau din declarație. De aici îl poți doar retrage.",
+      "help": "E separat de newsletter: dezabonarea de la newsletter nu schimbă asta, iar asta nu schimbă newsletterul.",
+      "changed": "Am salvat alegerea ta despre oferte și beneficii pentru această înscriere.",
+      "failed": "Nu am putut salva alegerea. Încearcă din nou.",
+      "otherAdult": "Acordul pentru oferte și beneficii îl dă doar persoana, din declarația ei sau din linkul înscrierii ei. De aici îl poți doar retrage."
     }
   },
   "Devs": {

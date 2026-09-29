@@ -124,7 +124,7 @@ describe("§448 the declaration card sits with «Regulamentul» (in one card sin
     const html = await rules(TRAIL_RUN);
     expect(html).toContain('name="event.offersGroupRunDeclaration"');
     expect(html).toContain("Suprafața, din cardul «Traseul»: Trail");
-    expect(html).toContain("Textul în vigoare pentru Trail: „Declarație pe propria răspundere (alergare de grup, trail)”, v2.");
+    expect(html).toContain("Textul în vigoare pentru Trail: „Declarație pe propria răspundere (alergare de grup, teren accidentat)”, v2.");
     expect(summaryOf(html)).toContain("declarație pentru Trail");
   });
 
@@ -138,7 +138,7 @@ describe("§448 the declaration card sits with «Regulamentul» (in one card sin
   it("holds a race's declaration select, the newest approved version named, and says the chosen one on the rules line", async () => {
     const html = await rules(RACE);
     expect(html).toContain('name="event.declarationDocumentId"');
-    expect(html).toContain("Trail: cea mai nouă versiune aprobată e v3 · Declarația concursului.");
+    expect(html).toContain("Eveniment montan: cea mai nouă versiune aprobată e v3 · Declarația concursului.");
     expect(summaryOf(html)).toContain("declarația v3");
     expect(html).not.toContain('name="event.offersGroupRunDeclaration"');
   });
@@ -147,9 +147,11 @@ describe("§448 the declaration card sits with «Regulamentul» (in one card sin
   // club approved no road text the card says a road race signs the trail one.
   it("names each option's kind, the newest of each kind, and the road race's fallback to the trail text", async () => {
     const html = await rules(RACE);
-    expect(html).toContain("Trail · v3 · Declarația concursului");
+    // The kinds in Romanian words since §564, «eveniment» for both because the select pairs them.
+    expect(html).toContain("Eveniment montan · v3 · Declarația concursului");
     expect(html).toContain('data-testid="race-declaration-road-fallback"');
-    expect(html).toContain("Șosea sau parc: nicio versiune aprobată încă");
+    expect(html).toContain("Eveniment pe șosea sau în parc: nicio versiune aprobată încă");
+    expect(html).toContain("semnează declarația pentru eveniment montan");
     currentLocale = "ro";
     const both = markup(
       renderToStaticMarkup(
@@ -162,7 +164,7 @@ describe("§448 the declaration card sits with «Regulamentul» (in one card sin
         })) as ReactElement,
       ),
     );
-    expect(both).toContain("Șosea sau parc: cea mai nouă versiune aprobată e v1 · Declarația de șosea.");
+    expect(both).toContain("Eveniment pe șosea sau în parc: cea mai nouă versiune aprobată e v1 · Declarația de șosea.");
     expect(both).not.toContain('data-testid="race-declaration-road-fallback"');
   });
 

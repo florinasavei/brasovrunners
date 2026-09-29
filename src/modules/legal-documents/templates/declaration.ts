@@ -38,8 +38,9 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  *    permise de lege" / "to the extent the law allows".
  * 4. **Wild animals in general words** (the trail only), the owner's own sentence: keep the distance,
  *    neither provoke nor feed, follow the organiser's general safety instructions (§556, the second
- *    review of 2026-09-29, which also asked the trail shoes as grip «de preferat pantofi de trail» and
- *    the dispute sentence after the three years), 112 in an emergency.
+ *    review of 2026-09-29, which also asked the trail shoes as grip and the dispute sentence after
+ *    the three years), 112 in an emergency. The shoes read «de preferat încălțăminte pentru teren
+ *    accidentat» since §564.
  * 5. **Substances**, the owner's sentence: alcohol, drugs "or other substances that impair my ability
  *    to take part safely" — not "medicines that lower my attention".
  * 6. **Mandatory against recommended equipment**: the start may be refused only for lacking what the
@@ -49,6 +50,11 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  *    event, the archive copies with the documents masked, the text's fingerprint, the moment and the
  *    signer's name, a simple electronic signature, an adult signing personally, and for 14–17 the
  *    minor with the parent's or guardian's approval and signature.
+ * 8. **Romanian words, not «romgleză» (§564, the owner, 2026-09-29).** The mountain race is an
+ *    «eveniment montan», never a «cursă montană» or a «cursă trail», and the ground is «teren
+ *    accidentat»: not one «trail» in a Romanian text or title. The code keeps its names
+ *    (`EVENT_DECLARATION`, `declarationTrailRo`, the surface `TRAIL`); English keeps "trail" for the
+ *    ground, and its title says "mountain event".
  *
  * **A Romanian lawyer should read both before the club approves them.** These notes are the
  * platform's reading of the Civil Code, not legal advice; the club approves and relies on the texts in
@@ -89,7 +95,7 @@ const trailRisksRo = [
   "• Știu că traseul poate avea porțiuni abrupte, rădăcini, pietre, noroi, frunze ude, gheață sau zăpadă și accept riscul de cădere, alunecare, entorsă, tăieturi sau lovituri; îmi adaptez ritmul la teren și la condiții;",
   "• Știu că traseul poate traversa habitatul animalelor sălbatice și că pot întâlni animale domestice sau câini de stână. Mă oblig să păstrez distanța, să nu provoc sau hrănesc animalele, să respect indicațiile generale de siguranță comunicate de organizator și, în caz de urgență, să apelez 112;",
   "• Știu că vremea la munte se poate schimba repede, inclusiv cu ceață, și că pe unele porțiuni ajutorul poate ajunge greu și târziu: am telefonul la mine și nu părăsesc traseul fără să anunț organizatorul;",
-  "• Știu că pe traseele montane am nevoie de încălțăminte adecvată terenului, cu aderență corespunzătoare (de preferat pantofi de trail) și, la alergările care se desfășoară sau se termină după lăsarea întunericului, de o lanternă frontală funcțională, cu bateriile încărcate;",
+  "• Știu că pe traseele montane am nevoie de încălțăminte adecvată terenului, cu aderență corespunzătoare (de preferat încălțăminte pentru teren accidentat) și, la alergările care se desfășoară sau se termină după lăsarea întunericului, de o lanternă frontală funcțională, cu bateriile încărcate;",
   "• Unde traseul traversează sau folosește drumuri deschise circulației, respect regulile de circulație și indicațiile poliției, ale organizatorului și ale voluntarilor; știu că drumul nu este închis traficului decât dacă pagina evenimentului o spune;",
   "• În ariile naturale protejate rămân pe traseele marcate și nu las în urmă niciun deșeu;",
 ];

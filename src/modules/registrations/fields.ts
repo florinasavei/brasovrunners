@@ -232,6 +232,13 @@ const submissionFields = z.object({
    */
   listSocials: z.boolean().default(false),
   /**
+   * «Vreau să primesc oferte și beneficii de la <club> și partenerii săi.» (§562): optional,
+   * never pre-ticked, never required. What the box says is what is posted; whether it is kept — a
+   * public form, a notice naming `{{promotionalMaterials}}`, not another adult's family form — is
+   * the service's decision, never the form's.
+   */
+  promoConsent: z.boolean().default(false),
+  /**
   * Deliberately not `.max(0)`: a bot filling the honeypot must get the same generic success
   * response as everyone else, never a distinct validation error that would tell it which
   * defense it tripped. The runtime check in `service.ts` treats any non-empty value as spam.
@@ -546,6 +553,8 @@ export function withoutAnotherAdultsConsents(raw: unknown, now: Date): unknown {
     instagramHandle: undefined,
     listOptOut: true,
     listSocials: false,
+    // Another adult's own consent to offers and benefits (§562): theirs to give, not the address holder's.
+    promoConsent: false,
     fitnessDeclared: undefined,
   };
 }
@@ -582,6 +591,13 @@ export const declarationSigningSchema = z.object({
    */
   documentId: z.uuid(),
   contentSha256: z.string().regex(/^[0-9a-f]{64}$/),
+  /**
+   * «Vreau să primesc oferte și beneficii» ticked while signing (§562): the signer's own yes —
+   * the one door another adult on a family's address has (§421). Optional, never required; kept
+   * only while the notice in force describes the materials, and never refused: a box the notice
+   * does not cover is ignored, the signature goes on.
+   */
+  promoConsent: z.boolean().default(false),
 });
 
 export type DeclarationSigningInput = z.infer<typeof declarationSigningSchema>;

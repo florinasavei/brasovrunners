@@ -11,6 +11,8 @@ import { noticeDescribesNewsletter } from "@/modules/legal-documents/repository"
 import { parseSubscriberListQuery } from "@/modules/newsletter/domain/subscriber-list";
 import { countNewsletterAudience, listNewsletterSends } from "@/modules/newsletter/service";
 import { listNewsletterSubscribers } from "@/modules/newsletter/subscribers";
+import { listPromoConsenters } from "@/modules/newsletter/promo-consenters";
+import PromoConsenters from "@/modules/newsletter/ui/PromoConsenters";
 import NewsletterPanel from "@/modules/newsletter/ui/NewsletterPanel";
 import NewsletterSubscribers from "@/modules/newsletter/ui/NewsletterSubscribers";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
@@ -57,12 +59,14 @@ export default async function NewsletterPage({ params, searchParams }: Props) {
   const now = new Date();
   // The day's allowance for the composer's "how much leaves today", and whether the notice in force
   // lets the contact page offer the pop-up; the list under its filter.
-  const [audience, history, volume, offered, subscribers] = await Promise.all([
+  // And, since §562, who said yes to offers and benefits on a registration — the same readers (§550).
+  const [audience, history, volume, offered, subscribers, promo] = await Promise.all([
     countNewsletterAudience(db),
     listNewsletterSends(db),
     readEmailVolumeToday(db, now),
     noticeDescribesNewsletter(db, now),
     listNewsletterSubscribers(db, query, now),
+    listPromoConsenters(db, staff, locale),
   ]);
   const sentCount = /^\d{1,9}$/.test(recipients ?? "") ? Number(recipients) : 0;
   const t = await getTranslations("Admin");
@@ -90,13 +94,17 @@ export default async function NewsletterPage({ params, searchParams }: Props) {
         offered={offered}
         mayWithdraw={mayManage}
         subscribers={
-          <NewsletterSubscribers
-            locale={locale}
-            query={query}
-            list={subscribers}
-            mayUnsubscribe={mayManage}
-            saved={saved === "newsletterUnsubscribed" || saved === "newsletterUnsubscribedGone"}
-          />
+          <>
+            <NewsletterSubscribers
+              locale={locale}
+              query={query}
+              list={subscribers}
+              mayUnsubscribe={mayManage}
+              saved={saved === "newsletterUnsubscribed" || saved === "newsletterUnsubscribedGone"}
+            />
+            {/* The second fold (§562): a consent on a registration, not a subscription — its own list and its own CSV. */}
+            <PromoConsenters locale={locale} list={promo} />
+          </>
         }
       />
     </Stack>

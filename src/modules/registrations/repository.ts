@@ -285,6 +285,9 @@ export async function insertPendingEmailRegistration<T extends Record<string, un
       instagramHandle: input.details?.instagramHandle ?? null,
       // The socials beside the name on the public list (§500): decided by the service, false unless said.
       listSocials: input.details?.listSocials ?? false,
+      // The offers and benefits (§562): decided by the service, false and never dated unless said.
+      promoConsent: input.details?.promoConsent ?? false,
+      promoConsentAt: input.details?.promoConsentAt ?? null,
       // NOT NULL with a default of false: "did not say" and "said no" are the same answer to
       // a question that grants nothing, unlike the two consents above it, where they are not.
       clubMemberDeclared: input.details?.clubMemberDeclared ?? false,

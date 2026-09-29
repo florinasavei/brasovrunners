@@ -20,6 +20,7 @@ import { checkEmailHealth } from "@/modules/notifications/health";
 import {
   findCurrentApprovedDocument,
   noticeDescribesListSocials,
+  noticeDescribesPromotionalMaterials,
   noticeDescribesListStates,
   noticeDescribesNewsletter,
   noticeDescribesTeamPage,
@@ -413,6 +414,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       listStatesDescribed: await noticeDescribesListStates(db, now),
       // §500: the same switch for Strava and Instagram beside a name on the public list.
       listSocialsDescribed: await noticeDescribesListSocials(db, now),
+      promoDescribed: await noticeDescribesPromotionalMaterials(db, now),
       // §445: the same switch for the newsletter's pop-up on the contact page.
       newsletterDescribed: await noticeDescribesNewsletter(db, now),
       // §459: the team page's names and photographs, described by the notice in force.

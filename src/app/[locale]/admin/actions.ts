@@ -271,7 +271,7 @@ function eventFieldsFrom(form: FormData) {
     // Closed sets since migration `0018`. An unselected dropdown posts "", which `fields.ts`
     // reads as "the club has not said" rather than as an invalid value.
     difficulty: value("difficulty") || null,
-    // «Treapta» inside the band (§526), "1" … "3"; `fields.ts` reads "" or absent as the middle.
+    // The step inside the band (§526), "1" … "3" — «Nivelul»'s segment, which shows the level (§563); `fields.ts` reads "" or absent as the middle.
     difficultyStep: value("difficultyStep"),
     costType: value("costType") || null,
     costAmount: value("costAmount"),

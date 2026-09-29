@@ -43,6 +43,13 @@ export type RegistrationEntryDetails = {
    */
   listSocials?: boolean;
   /**
+   * «Vreau să primesc oferte și beneficii» (§562) and the moment it was given — kept only where
+   * `service.ts` allows it (a public form, a notice naming `{{promotionalMaterials}}`, never another
+   * adult's family form). A NOT NULL column with a default of false, like `listSocials`.
+   */
+  promoConsent?: boolean;
+  promoConsentAt?: Date | null;
+  /**
    * "I am a Brașov Runners team member", as claimed. Never verified — see the schema.
    *
    * `boolean | undefined` and not `| null` like its neighbours: the column is NOT NULL with a

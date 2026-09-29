@@ -182,11 +182,13 @@
       "calendar": "{label}: {times}",
       "ics": "{label}: {times} — bring a headlamp"
     },
-    "difficultyLevelShort": "{band} {step}",
-    "difficultyLevelSr": "Difficulty: {band} {step} — level {level} of {levels}",
-    "difficultyWithStep": "{band}, step {step} of {steps}",
-    "difficultyLevelTooltip": "{band} {step} — level {level} of {levels}",
+    "difficultyLevelShort": "{band} {level}",
+    "difficultyLevelSr": "Difficulty: {band} — level {level} of {levels} ({band}: {from}–{to})",
+    "difficultyWithLevel": "{band}, level {level} of {levels}",
+    "difficultyLevelTooltip": "{band} — level {level} of {levels}\n{ladder}",
     "difficultyBandTitle": "{band}: levels {from}–{to} of {levels}",
+    "difficultyBandRange": "{band} ({from}–{to})",
+    "difficultyLadderItem": "{band} {from}–{to}",
     "cost": "Cost",
     "registration": "Registration",
     "cancelled": "Cancelled",
@@ -619,7 +621,8 @@
         "results": "The public-results consent",
         "reason": "Reason",
         "action": "Withdraw",
-        "nothing": "There is nothing left to withdraw: the health note, the socials and the results consent are already empty."
+        "nothing": "There is nothing left to withdraw: the health note, the socials, the results consent and the offers-and-benefits consent are already empty.",
+        "promo": "The consent to offers and benefits"
       },
       "auditTrail": "What staff did",
       "auditActorRemoved": "account removed",
@@ -645,7 +648,8 @@
           "sent_now": "Sent now, past the scheduled round",
           "cancelled_by_participant": "Cancelled by the participant, from their own link",
           "declaration_hold_set": "Declaration kept for a complaint or a dispute",
-          "declaration_hold_cleared": "Keep removed from the declaration"
+          "declaration_hold_cleared": "Keep removed from the declaration",
+          "promo_consent_changed": "Consent to offers and benefits changed"
         }
       },
       "locale": {
@@ -795,7 +799,12 @@
       "resubmittedHeld": "Registered again with the same address: {date} ({state}) — “{message}” is already waiting to leave, and leaves only once",
       "familyChip": "Family",
       "resendSentNow": "The email is leaving now, without waiting for the scheduled round.",
-      "filterMembersOnly": "{title} · Members"
+      "filterMembersOnly": "{title} · Members",
+      "promo": {
+        "yes": "Offers and benefits: yes, since {date}",
+        "no": "Offers and benefits: no",
+        "staffNo": "Offers and benefits: no. The team cannot consent for the person; they give it themselves, from their registration's page."
+      }
     },
     "events": {
       "empty": "There is no event in the database.",
@@ -1147,7 +1156,7 @@
         "seoTitle": "Search engine title",
         "seoDescription": "Search engine description",
         "difficulty": "Difficulty",
-        "difficultyStep": "Step",
+        "difficultyStep": "Level",
         "costType": "Cost",
         "checklist": "What to bring — one line, in the emails and the calendar",
         "body": "Content — shown on the event page, under the title",
@@ -1224,7 +1233,7 @@
       "registrationClosesAt": "Registration closes",
       "registrationWindowHelp": "Leave the opening empty and registration opens when the event is published; leave the closing empty and it closes when the event starts.",
       "declarationDocument": "Declaration a participant signs",
-      "declarationDocumentHelp": "Trail for mountain or forest, road or park for asphalt, concrete, tartan or paving. The box starts from the surface in “The course”; you can change it. The text is approved under Legal documents.",
+      "declarationDocumentHelp": "Mountain event for mountain or forest; road or park event for asphalt, concrete, tartan, paving. It starts from the surface in “The course”; you can change it. Approved under Legal documents.",
       "declarationNone": "No approved declaration exists in this environment, so no event can take registrations here yet.",
       "declarationUnset": "None",
       "participantList": "Publish the participant list on the event page",
@@ -1243,21 +1252,22 @@
         "VERY_HARD": "Very hard"
       },
       "difficultySteps": {
-        "step1": "Step 1, the easiest in the band",
-        "step2": "Step 2, the middle of the band",
-        "step3": "Step 3, the hardest in the band"
+        "step1": "The band's first level, the easiest",
+        "step2": "The band's middle level",
+        "step3": "The band's last level, the hardest"
       },
-      "difficultySummary": "{band} {step}",
-      "difficultyStepHelp": "1 = the easiest in the band, 3 = the hardest",
+      "difficultyLevelChoice": "Level {level} of {levels}",
+      "difficultySummary": "{band} {level}",
+      "difficultyStepHelp": "The level runs from {lowest} ({lowestBand}) to {highest} ({highestBand}): every band has three levels — {ranges}.",
       "difficultyScale": {
-        "EASY": "easy: short, flat, for anyone",
-        "MEDIUM1": "medium 1: the run up Tâmpa",
-        "MEDIUM2": "medium 2: the longer runs",
-        "MEDIUM3": "medium 3: long and technical",
-        "FAIRLY_HARD": "fairly hard: from a half marathon up",
-        "HARD": "hard: marathons",
-        "VERY_HARD": "very hard: ultramarathons and beyond",
-        "steps": "in every band 1 = the easiest, 3 = the hardest"
+        "EASY": "easy {from}–{to}: short, flat, for anyone",
+        "MEDIUM1": "medium {level}: the run up Tâmpa",
+        "MEDIUM2": "medium {level}: the longer runs",
+        "MEDIUM3": "medium {level}: long and technical",
+        "FAIRLY_HARD": "fairly hard {from}–{to}: from a half marathon up",
+        "HARD": "hard {from}–{to}: marathons",
+        "VERY_HARD": "very hard {from}–{to}: ultramarathons and beyond",
+        "steps": "in every band, the first level is the easiest, the third the hardest"
       },
       "costValues": {
         "FREE": "Free",
@@ -1855,7 +1865,7 @@
           "title": "Self-declaration",
           "newest": "{kind}: the newest approved version is v{version} · {title}. The participant signs it when confirming the registration.",
           "notOnSite": "No declaration is asked: the event takes no registrations on the site. Choose “Înscrieri pe site” under “Taking part and registration” to choose the declaration.",
-          "roadFallback": "{kind}: no approved version yet, so a road or park race signs the trail declaration. Approve one under Legal documents → New version → Start from the template.",
+          "roadFallback": "{kind}: no approved version yet, so a road or park race signs the mountain event declaration. Approve one under Legal documents → New version → Start from the template.",
           "mismatch": "The course is on “{surface}” and the kind chosen is “{chosen}”: “{wanted}” fits it. Choose it above, if the course is right."
         }
       },
@@ -1913,8 +1923,8 @@
       "participantListHelpMore": "Everyone else shows as “Participant (name hidden)”. The save is refused while no approved privacy notice that describes the list is in force.",
       "confirmationWindowHelpMore": "After the deadline, the place goes to the next in line only if someone is waiting. Whoever registers after the window opens, or when the first number is 0, has {hold} to sign.",
       "declarationKinds": {
-        "EVENT_DECLARATION": "Trail",
-        "EVENT_DECLARATION_ROAD": "Road or park"
+        "EVENT_DECLARATION": "Mountain event",
+        "EVENT_DECLARATION_ROAD": "Road or park event"
       },
       "membersOnly": "BVR members only",
       "membersOnlyHelp": "Only signed-in members see it; it is not on the public site. Existing registrations stay.",
@@ -2069,14 +2079,14 @@
     },
     "legal": {
       "title": "Legal documents",
-      "intro": "The privacy notice, the terms, the race declaration (trail and road or park) and the two group-run declarations: {count} texts. A correction is a new version.",
+      "intro": "The privacy notice, the terms, the race declarations for a mountain event and for a road or park event, the two group-run declarations: {count} texts. A correction is a new version.",
       "whatIs": {
         "PRIVACY_NOTICE": "GDPR: what data we take from participants, why and for how long. Ticked at registration.",
         "TERMS": "The rules of the site and of registering, not the race rules — those are on the event's page. Ticked at registration.",
-        "EVENT_DECLARATION": "The declaration of a race on mountain or forest trails: age, minors, the course's risks, health. Signed when the place is confirmed.",
+        "EVENT_DECLARATION": "The declaration of a mountain event, on mountain or forest trails: age, minors, the course's risks, health. Signed when the place is confirmed.",
         "GROUP_RUN_DECLARATION_ASPHALT": "Optional, for a group run on asphalt; signed on the run's page, once for every date of it. Approve it together with a new privacy notice.",
         "GROUP_RUN_DECLARATION_TRAIL": "Optional, for a group run on a trail; signed on the run's page, once for every date of it. Approve it together with a new privacy notice.",
-        "EVENT_DECLARATION_ROAD": "The declaration of a road or park race, with the risks of asphalt and traffic. Until you approve it, these races sign the trail declaration."
+        "EVENT_DECLARATION_ROAD": "The declaration of a road or park event, with the risks of asphalt and traffic. Until you approve it, these events sign the mountain event declaration."
       },
       "empty": "No legal document exists. Registration is refused until an approved privacy notice exists.",
       "emptyCanCreate": "No legal document exists yet, so registration is refused. Start with the privacy notice: New version.",
@@ -2091,10 +2101,10 @@
       "keys": {
         "PRIVACY_NOTICE": "GDPR",
         "TERMS": "Racing TOS",
-        "EVENT_DECLARATION": "Self-declaration — trail race",
+        "EVENT_DECLARATION": "Self-declaration — mountain event",
         "GROUP_RUN_DECLARATION_ASPHALT": "Self-declaration (group run, asphalt)",
         "GROUP_RUN_DECLARATION_TRAIL": "Self-declaration (group run, trail)",
-        "EVENT_DECLARATION_ROAD": "Self-declaration — road / park race"
+        "EVENT_DECLARATION_ROAD": "Self-declaration — road / park event"
       },
       "referenced": "{signatures} signatures · {events} events",
       "unreferenced": "Not yet used",
@@ -2200,7 +2210,8 @@
         "teamPage": "Privacy notice only: the team page's name, in quotation marks. With it in the notice in force, /admin/tasks counts the page as described",
         "series": "Only in the group-run declarations: the series' name, when the run repeats. The sentence that names it shows only for a series; a one-day run keeps the sentence with '{{event}}' and '{{eventDate}}'",
         "seriesRhythm": "Only in the group-run declarations: how often the series repeats, read off its dates (“every Tuesday at 18:30”)",
-        "seriesPlace": "Only in the group-run declarations: the series' usual starting place"
+        "seriesPlace": "Only in the group-run declarations: the series' usual starting place",
+        "promotionalMaterials": "Only in the privacy notice: the optional box for offers and benefits from the club and its partners. Without it in the notice in force, the form does not offer it"
       },
       "removeBlockedReferenced": "Can neither be withdrawn nor deleted: {signatures} signatures, {events} events and {acknowledgements} registrations depend on this version.",
       "removeBlockedCurrent": "In force right now — it can neither be withdrawn nor deleted. Approve its successor first; then this one can go.",
@@ -2328,8 +2339,8 @@
       "shortKeys": {
         "PRIVACY_NOTICE": "GDPR",
         "TERMS": "Terms",
-        "EVENT_DECLARATION": "Trail race",
-        "EVENT_DECLARATION_ROAD": "Road / park race",
+        "EVENT_DECLARATION": "Mountain event",
+        "EVENT_DECLARATION_ROAD": "Road / park event",
         "GROUP_RUN_DECLARATION_ASPHALT": "Group asphalt",
         "GROUP_RUN_DECLARATION_TRAIL": "Group trail"
       },
@@ -2357,7 +2368,8 @@
         "title": "1. Regenerate (a draft from the template) · 2. Read the draft and fill in whatever is left written '<'…>, then “Save draft” · 3. Approve — only then is it in force",
         "body": "The text in force stays on the site until you approve the draft. The four facts are the club's legal name, CIF, seat and contact address."
       },
-      "tableCaptionOf": "The versions of {kind}, with their state and what depends on each"
+      "tableCaptionOf": "The versions of {kind}, with their state and what depends on each",
+      "promoMissing": "The notice in force does not yet describe offers and benefits, so the form does not offer the box. Approve a new notice from the template."
     },
     "tasks": {
       "title": "What is still to do",
@@ -2521,7 +2533,7 @@
           "done": "The club’s approved wording is published.",
           "how": [
             "The short way: /admin/legal → the “One step” box → check the legal name, CIF, seat and email shown → the approval button in the box.",
-            "The notice, the terms and both race declarations, trail and road or park, come into force with the club's facts in them.",
+            "The notice, the terms and both race declarations, mountain event and road or park event, come into force with the club's facts in them.",
             "To read first: on each text's card, “Regenerate from the template” → open the draft, read, fill in → “Save draft” → “Approve and publish”. All at once: “New version” → “Regenerate all”.",
             "The long way, for a change: “New version” → pick the template → “Save draft” → PDF → “Approve and publish”. An approved text never changes; a correction is the next version.",
             "On each event, under Registration, pick the approved declaration (if not already)."
@@ -2812,14 +2824,14 @@
           ]
         },
         "raceDeclarations": {
-          "title": "The race declarations: trail, and road or park",
-          "todo": "At least one race declaration (trail, road or park) has no version from the template yet. Until the road one is approved, asphalt races sign trail.",
-          "done": "Both race declarations, trail and road or park, are in force from the template: every race signs the declaration that fits its course.",
+          "title": "The race declarations: mountain event, and road or park event",
+          "todo": "One of the two race declarations has no version from the template yet. Until the road one is approved, asphalt races sign the mountain event one.",
+          "done": "Both race declarations, mountain event and road or park event, are in force from the template: every race signs the declaration that fits its course.",
           "how": [
-            "/admin/legal → the “Self-declaration — trail race” card → “Regenerate from the template”. Then the draft: read, fill in, “Save draft”, then “Approve and publish”.",
-            "The same for “Self-declaration — road / park race”.",
+            "/admin/legal → the “Self-declaration — mountain event” card → “Regenerate from the template”. Then the draft: read, fill in, “Save draft”, then “Approve and publish”.",
+            "The same for “Self-declaration — road / park event”.",
             "A new race starts on the kind that fits its course by itself. A race saved earlier keeps the declaration chosen then.",
-            "The trail one, for an asphalt race: open it, and the “Self-declaration” card says when the kind does not fit the course. Choose the road or park one and save."
+            "An asphalt race on the mountain event one: open it, and the “Self-declaration” card says when the kind does not fit the course. Choose the road or park one and save."
           ]
         },
         "groupRunSeriesTexts": {
@@ -2831,6 +2843,16 @@
             "The same for “Self-declaration (group run, trail)”.",
             "Approve a new version of the privacy notice from the template too: it says a series' declaration is kept while it is active, and after a withdrawal for at most three years.",
             "Whoever signed the old version sees on the run's page, from the link in their email, that the new version is asked for; the old signature stays in the list."
+          ]
+        },
+        "promoNotice": {
+          "title": "Privacy notice: offers and benefits",
+          "todo": "The notice in force does not yet describe offers and benefits, so the form does not offer the box and no consent is kept until the club approves a new notice.",
+          "done": "The notice in force describes offers and benefits: the form offers the box, and everyone changes their answer from their registration's page.",
+          "how": [
+            "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. Section 5 describes the offers and benefits from the club and its partners.",
+            "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish”.",
+            "From the moment it takes effect, the form offers the box, with no other setting. Whoever ticks it appears in «Newsletter», in its own card."
           ]
         }
       },
@@ -4691,6 +4713,7 @@
               "steps": [
                 "«Newsletter» → open the «Subscribers» card. Its line says how many are confirmed and how many pending.",
                 "Search under «Search the address» or choose «Topic» and «State», then press «Filter». «Download CSV» takes the list as filtered.",
+                "The «Participants who ticked offers and benefits» card: who ticked it when registering, with the address, the event and the date. «Download CSV» takes all of it. It is not the newsletter; partners never get the list.",
                 "Removing an address is the Administrator's: tell them who asked."
               ]
             },
@@ -4765,12 +4788,13 @@
             {
               "title": "The club's difficulty scale",
               "steps": [
-                "«Events» → «Edit» → the «What kind of event» card: pick «Difficulty» (the band) and, beside it, «Step» — 1, 2 or 3.",
-                "The scale has 15 steps: 5 bands × 3 steps. Step 1 is the easiest in its band, 3 the hardest. The site shows the band with its step, for example \"Medium 2\".",
-                "What each band and step means: press the question mark beside «Difficulty» or «Step».",
-                "The step in the other bands: 1 when the route sits at the easy end of its band, 3 when it is close to the next one (longer, steeper, at night, mud). Not sure? 2.",
-                "The site's filter ticks a whole band: «Hard» shows all three of its steps.",
-                "Forgot the scale? The question mark beside «Step» shows all of it. On the site, the difficulty pill says its level of 15 on a tap, for example \"Medium 2 — level 5 of 15\"."
+                "«Events» → «Edit» → the «What kind of event» card: pick «Difficulty» (the band) and, beside it, «Level» — one of the band's three.",
+                "The scale has 15 levels, in order: easy 1–3, medium 4–6, fairly hard 7–9, hard 10–12, very hard 13–15. The site shows the band with its level, for example \"Medium 5\".",
+                "What each band and level means: press the question mark beside «Difficulty» or «Level».",
+                "The level in the other bands: the first when the route sits at the easy end of its band, the third when it is close to the next one (longer, steeper, at night, mud). Not sure? The middle one.",
+                "The site's filter ticks a whole band: «Hard» shows all three of its levels, 10–12, and writes them beside its name.",
+                "Forgot the scale? The question mark beside «Level» shows all of it.",
+                "On the site, the difficulty pill says the level on a tap, for example \"Medium — level 5 of 15\", and under it the whole scale: easy 1–3 · medium 4–6 · fairly hard 7–9 · hard 10–12 · very hard 13–15."
               ]
             },
             {
@@ -4900,7 +4924,8 @@
                 "Type the address, whole or part of it, under «Search the address». Choose «Topic» and «State» if you like, then press «Filter». «Clear the filters» shows the whole list again.",
                 "Under «Pending», the row says until when the confirmation link works, or «The link has expired.» An address never confirmed is deleted by itself.",
                 "«Download CSV» takes the list as filtered, with the same columns. Keep the file only as long as you need it, then delete it.",
-                "To remove someone, at their request: «Unsubscribe» on their row, then confirm. The address is deleted with its topics, as when the person unsubscribes."
+                "To remove someone, at their request: «Unsubscribe» on their row, then confirm. The address is deleted with its topics, as when the person unsubscribes.",
+                "The «Participants who ticked offers and benefits» card: who ticked it when registering, with the address, the event and the date. «Download CSV» takes all of it. It is not the newsletter; partners never get the list."
               ]
             },
             {
@@ -5041,7 +5066,7 @@
                 "Open each draft (the «Drafts» filter shows them all), read it and fill in what is left written <…>, in Romanian and in English; «Save draft».",
                 "Back on «Legal documents»: «Approve the drafts» and confirm. The drafts ready to approve take effect together; what cannot be approved at once is written under the button, with the reason.",
                 "What is in force for each text: the card's head says «In force: version…» or «No version in force»; the filters «In force», «Replaced» and «Withdrawn» show the rest.",
-                "Without approved terms, notice and a race declaration nobody can register. For a road race the editor picks the road declaration once it is approved, the trail one until then. A group run offers its declaration only when it ticks it and its text (asphalt or trail) is approved.",
+                "Without approved terms, notice and a race declaration nobody can register. For a road race the editor picks the road declaration once it is approved, the mountain event one until then. A group run offers its declaration only when it ticks it and its text (asphalt or trail) is approved.",
                 "Until you approve the new notice, the public participant list shows the confirmed only.",
                 "Drafts or versions you no longer need: tick them in the table, press «Delete the ticked versions» and check the list. Drafts only: «Delete the drafts» and confirm. With an approved version in the list: under «Confirmation» type the text asked for (for example “DELETE 2”), under «Reason» why, then «Delete the versions».",
                 "The signed declarations of a group run, when the signer asks for them to be erased: «Events» → «Edit» on the run → «Signed declarations (group run)» → «Erase several at once»: tick them, fill in «Why it is erased» once, press «Erase the ticked ones» and confirm. The log keeps your name and the reason, not the signer's."
@@ -5080,7 +5105,7 @@
               "steps": [
                 "«Registrations» → find the person → open the registration.",
                 "What we hold about them: «Everything held about this person».",
-                "Withdraw a consent (the health note, the socials, the public results): «Withdraw consent» → tick what they withdraw → «Reason» → «Withdraw».",
+                "Withdraw a consent (the health note, the socials, the public results, the offers and benefits): «Withdraw consent» → tick what they withdraw → «Reason» → «Withdraw».",
                 "Erasure: «Delete permanently» (see “Correct, cancel or erase a registration”). The history keeps who erased and why, never the person's data."
               ]
             }
@@ -5484,6 +5509,24 @@
         "unsubscribing": "Unsubscribing…",
         "unsubscribeTitle": "Unsubscribe {email}?",
         "unsubscribeBody": "The address leaves the newsletter, with its topics, as when the person unsubscribes. They can subscribe again from the contact page."
+      },
+      "promo": {
+        "title": "Participants who ticked offers and benefits",
+        "intro": "Who ticked, when registering, that they want offers and benefits from the club and its partners. It is not the newsletter, and the partners never get the list.",
+        "count": {
+          "one": "{count} registration with consent",
+          "few": "{count} registrations with consent",
+          "other": "{count} registrations with consent"
+        },
+        "csv": "Download CSV",
+        "truncated": "The table shows the first {count}; «Download CSV» takes them all.",
+        "empty": "Nobody has ticked offers and benefits yet.",
+        "columns": {
+          "name": "Name",
+          "email": "Email address",
+          "event": "Event",
+          "since": "Ticked on"
+        }
       }
     },
     "team": {
@@ -6098,7 +6141,11 @@
       "addLink": "Register one more person with this address"
     },
     "membersAddressLabel": "Your member account's address",
-    "membersAddressHelp": "You register with your account's address. One account registers one person."
+    "membersAddressHelp": "You register with your account's address. One account registers one person.",
+    "promo": {
+      "label": "I want to receive offers and benefits from {club} and its partners.",
+      "help": "Optional. You can opt out any time from your registration page."
+    }
   },
   "Registrations": {
     "invalidOrExpired": "This link is no longer valid. We can send you a new one, to the same email address.",
@@ -6437,6 +6484,19 @@
     "qr": {
       "number": "Race number: {number}",
       "code": "Access code: {code}"
+    },
+    "promo": {
+      "title": "Offers and benefits",
+      "closedYes": "You ticked offers and benefits on this registration. While it is closed the club sends you nothing for it; you can withdraw your consent at any time.",
+      "yes": "On this registration you receive offers and benefits. Only the club sends them, to this registration's address; the partners never get your address.",
+      "no": "You did not tick offers and benefits on this registration.",
+      "optIn": "I want offers and benefits for this registration",
+      "optOut": "I no longer want offers and benefits for this registration",
+      "whereToSayYes": "The consent to offers and benefits is given on the registration's own page (the link in its email) or on the declaration. From here you can only withdraw it.",
+      "help": "It is separate from the newsletter: unsubscribing from the newsletter does not change this, and this does not change the newsletter.",
+      "changed": "Your choice about offers and benefits for this registration is saved.",
+      "failed": "We could not save your choice. Try again.",
+      "otherAdult": "Only the person gives the consent to offers and benefits, on their own declaration or from their own registration's link. From here you can only withdraw it."
     }
   },
   "Devs": {

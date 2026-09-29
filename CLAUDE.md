@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.35-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.38-2026-09-27 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V2.35-2026-09-27`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V2.38-2026-09-27`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -220,8 +220,13 @@ it is the authority, this is the summary):
     Since §550 the notice's template also says that only the club's organizers and administrators see the newsletter's
     subscriber list with the addresses and may download it — approve that notice before an Organizer reads the addresses
     on production.
+    Since §562 its section 5 also describes the optional «Vreau să primesc oferte și beneficii de la Brașov Runners și partenerii
+    săi.» (`{{promotionalMaterials}}`): until a notice from that template is approved, the form shows no such box and nothing is
+    kept (`/admin/tasks` carries the row `promoNotice`).
+    Since §564 the four declarations' templates speak Romanian: «eveniment montan» for the mountain race, «teren accidentat»
+    for the ground, not one «trail» — «Regenerează din șabloane» makes the drafts; the texts in force keep their words until approved.
 17. **Re-grade every event's difficulty** — migration `0104` put each event in the middle step of its old band (§526). Open each
-    event in `/admin/events` and choose the band and «Treapta» on the fifteen-step scale; the guide («Ghid») explains the scale.
+    event in `/admin/events` and choose the band and «Nivelul» (one of the band's three levels, 1–15 in order); the guide («Ghid») explains the scale.
 18. **Open the members' zone and the FAQ** — approve the members' zone address, `/ro/zona-membri` (it sits outside the backoffice,
     which departs from the brief: §524); add the first members on «Echipa» → «Adaugă mai mulți membri» (after the notice of item 16);
     write «Pagini» → «Pagini standard» → «Membri» and «Întrebări frecvente» (§525) in both languages, then publish them;

@@ -43,10 +43,11 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  * still covered by it.
  *
  * **The second review (§556, 2026-09-29), three sentences.** The shoes name the safety outcome —
- * «adecvată terenului, cu aderență corespunzătoare (de preferat pantofi de trail)» — not a shoe
- * category; the animals clause asks for «indicațiile generale de siguranță comunicate de organizator»,
- * never «recomandările autorităților», as a run with no individual supervision and no mountain guide
- * can promise; and the retention sentence above.
+ * «adecvată terenului, cu aderență corespunzătoare (de preferat încălțăminte pentru teren
+ * accidentat)», in Romanian words since §564 — not a shoe category; the animals clause asks for
+ * «indicațiile generale de siguranță comunicate de organizator», never «recomandările
+ * autorităților», as a run with no individual supervision and no mountain guide can promise; and the
+ * retention sentence above.
  *
  * **The counsel's second pass (§534, 2026-09-28), in the text's own words.** Valid for the whole
  * series and signed once, «until it is withdrawn or replaced by a new version» — never «fără termen de
@@ -220,7 +221,7 @@ const trailRisksRo = [
   // The owner's own sentence of §515, the race's trail text word for word.
   "• Știu că traseul poate traversa habitatul animalelor sălbatice și că pot întâlni animale domestice sau câini de stână. Mă oblig să păstrez distanța, să nu provoc sau hrănesc animalele, să respect indicațiile generale de siguranță comunicate de organizator și, în caz de urgență, să apelez 112;",
   "• Știu că vremea la munte se poate schimba repede — căldură, frig, ploaie, furtună, fulgere, ceață — și că după lăsarea întunericului vizibilitatea scade; accept că organizatorul poate schimba, scurta sau opri alergarea pentru siguranța celor care aleargă;",
-  "• Echipamentul este responsabilitatea mea: încălțăminte adecvată terenului, cu aderență corespunzătoare (de preferat pantofi de trail), îmbrăcăminte potrivită vremii, apă și un telefon mobil încărcat; la alergările care se desfășoară sau se termină după lăsarea întunericului, o lanternă frontală funcțională, cu bateriile încărcate;",
+  "• Echipamentul este responsabilitatea mea: încălțăminte adecvată terenului, cu aderență corespunzătoare (de preferat încălțăminte pentru teren accidentat), îmbrăcăminte potrivită vremii, apă și un telefon mobil încărcat; la alergările care se desfășoară sau se termină după lăsarea întunericului, o lanternă frontală funcțională, cu bateriile încărcate;",
   // Not guided is said once, in the opening (§534, point 9); stopping when unwell is the health bullet's.
   "• Alerg în ritmul meu și îmi cunosc limitele: rămân pe traseul marcat și anunț organizatorul dacă mă despart de grup sau abandonez;",
   "• Știu că pe munte ajutorul poate ajunge greu și târziu: am telefonul la mine, cunosc numărul de urgență 112 și nu plec de pe traseu fără să anunț pe cineva din grup;",

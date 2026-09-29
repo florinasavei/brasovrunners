@@ -1,4 +1,5 @@
 import BadgeIcon from "@mui/icons-material/Badge";
+import CampaignIcon from "@mui/icons-material/Campaign";
 import DirectionsRunIcon from "@mui/icons-material/DirectionsRun";
 import GroupsIcon from "@mui/icons-material/Groups";
 import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
@@ -24,6 +25,7 @@ import {
   cachedCurrentApprovedDocument,
   cachedListSocialsDisclosed,
   cachedListStatesDisclosed,
+  cachedPromotionalMaterialsOffered,
   cachedPublicAvailability,
 } from "@/modules/public-cache/reads";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
@@ -328,6 +330,19 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   if (event.participantListVisibility === "NAMES" && !resting) {
     try {
       [listStatesOn, listSocialsOn] = await Promise.all([cachedListStatesDisclosed(now), cachedListSocialsDisclosed(now)]);
+    } catch (failure) {
+      unstable_rethrow(failure);
+    }
+  }
+  /*
+    §562: «Vreau să primesc oferte și beneficii» is offered only while the privacy notice in
+    force describes it (`{{promotionalMaterials}}`, every language) — on every event, whether or
+    not it publishes a list. Off (or unread), the form has no box and the service keeps nothing.
+  */
+  let promoOn = false;
+  if (!resting) {
+    try {
+      promoOn = await cachedPromotionalMaterialsOffered(now);
     } catch (failure) {
       unstable_rethrow(failure);
     }
@@ -1491,6 +1506,26 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   );
                   return listQuestion;
                 })()}
+              {/*
+                «Oferte și beneficii» (§562): a consent of its own, under the list tick — the owner's
+                sentence as the label, ending in its full stop, the club named from `CLUB_NAME`, and
+                «Opțional.» leading the helper line rather than a suffix after that full stop;
+                optional, never pre-ticked, never required, never folded (§59). Asked only while the
+                notice in force describes it; the service keeps a tick only under a notice that
+                names it, never on another adult's family form (§421), never from staff. The glyph
+                leads the words, drawn here in the Server Component as the label's own child.
+              */}
+              {promoOn && (
+                <>
+                  <CheckboxField name="promoConsent" defaultChecked={prefill("promoConsent") === "on"}>
+                    <CampaignIcon aria-hidden data-testid="promo-consent-glyph" sx={{ fontSize: "1.15em", verticalAlign: "-0.2em", mr: 0.75, color: "text.secondary" }} />
+                    {t("promo.label", { club: CLUB_NAME })}
+                  </CheckboxField>
+                  <Typography variant="body2" color="text.secondary" data-testid="promo-consent-help" sx={{ mt: -0.5 }}>
+                    {t("promo.help")}
+                  </Typography>
+                </>
+              )}
 
               {/*
                 Pressable, always, and deliberately — and, since 2026-09-17, honest about it.

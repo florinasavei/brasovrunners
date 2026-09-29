@@ -1,6 +1,8 @@
+import CampaignIcon from "@mui/icons-material/Campaign";
 import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import FamilyRestroomIcon from "@mui/icons-material/FamilyRestroom";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
+import UnsubscribeIcon from "@mui/icons-material/Unsubscribe";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
@@ -25,6 +27,7 @@ import { findEventNotificationDetails } from "@/modules/events/repository";
 import { getDb } from "@/db/client";
 import { holdsOptionalData } from "@/modules/registrations/consent-withdrawal";
 import { isActiveStatus } from "@/modules/registrations/domain/state-machine";
+import { cachedPromotionalMaterialsOffered } from "@/modules/public-cache/reads";
 import ActionLinkNotice from "@/modules/registrations/ui/ActionLinkNotice";
 import AskFirstButton from "@/modules/registrations/ui/AskFirstButton";
 import CancelReasonFields from "@/modules/registrations/ui/CancelReasonFields";
@@ -38,6 +41,7 @@ import {
   cancelRegistrationAction,
   selfCheckInAction,
   setListConsentFromManageAction,
+  setPromoConsentFromManageAction,
   withdrawFromManageAction,
 } from "./actions";
 import { DENSITY } from "@/theme/density";
@@ -52,6 +56,8 @@ type Props = {
     here?: string;
     list?: string;
     withdrawn?: string;
+    /** The offers-and-benefits switch's outcome (§562): 1 saved, 0 refused. */
+    promo?: string;
     /** Which person a check-in or a list answer was about (§547): an id the page already lists, never a name. */
     person?: string;
     /** The box a cancel without its reason named (§558): `kind`, `text` or `long`, under `person`'s cancel. */
@@ -84,7 +90,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
-  const { done, invalid, started, here, list, withdrawn, person, reason } = await searchParams;
+  const { done, invalid, started, here, list, withdrawn, promo, person, reason } = await searchParams;
   const t = await getTranslations("Registrations");
   // The words beside every QR (§547): whose it is, their number, the code.
   const qrWords: QrWords = {
@@ -149,6 +155,9 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
   // Why the person cancels (§558): the words once, and the box a refused press named, under that person.
   const reasonWords = live ? await cancelReasonWords() : null;
   const reasonProblem = cancelReasonProblemOf(reason);
+  // «Vreau oferte și beneficii» is offered only while the notice in force describes it (§562);
+  // a person who said yes is always offered the way out, whatever the notice says today.
+  const promoOn = live ? await cachedPromotionalMaterialsOffered(new Date()) : false;
 
   return (
     <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
@@ -309,6 +318,63 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                     {!family && (
                       <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
                         {t("list.help")}
+                      </Typography>
+                    )}
+                    {!family && <Divider sx={{ mt: 3 }} />}
+                  </Box>
+                )}
+
+                {/*
+                  «Oferte și beneficii» (§562), per registration — the same pattern as the
+                  list's above: the token read, never spent; one write and an audit row. «Vreau» only
+                  while the notice in force describes them; «Nu mai vreau» whenever the row says yes,
+                  even on a cancelled registration. Separate from the newsletter, and the words say so.
+                */}
+                {(one.promoConsent || (active && promoOn)) && (
+                  <Box id={one.own ? "promo" : undefined} sx={{ mb: 2 }} data-testid="manage-promo">
+                    {!family && (
+                      <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
+                        {t("promo.title")}
+                      </Typography>
+                    )}
+                    {answered && promo === "1" && (
+                      <Alert severity="success" sx={{ mb: 2 }}>
+                        {t("promo.changed")}
+                      </Alert>
+                    )}
+                    {answered && promo === "0" && (
+                      <Alert severity="warning" sx={{ mb: 2 }}>
+                        {t("promo.failed")}
+                      </Alert>
+                    )}
+                    <Typography sx={{ mb: 1 }} data-testid="manage-promo-state">
+                      {one.promoConsent ? t("promo.yes") : t("promo.no")}
+                    </Typography>
+                    {/* Another adult's row (§421): only the way out; their yes is their own (§562 fix round). */}
+                    {(one.promoConsent || !one.anotherAdult) && (
+                      <form action={setPromoConsentFromManageAction}>
+                        <input type="hidden" name="locale" value={locale} />
+                        <input type="hidden" name="token" value={token} />
+                        <input type="hidden" name="registrationId" value={one.id} />
+                        <input type="hidden" name="consent" value={one.promoConsent ? "0" : "1"} />
+                        <Button type="submit" variant="outlined" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }}>
+                          {one.promoConsent ? (
+                            <UnsubscribeIcon aria-hidden="true" sx={glyphSx("medium")} />
+                          ) : (
+                            <CampaignIcon aria-hidden="true" sx={glyphSx("medium")} />
+                          )}
+                          {one.promoConsent ? t("promo.optOut") : t("promo.optIn")}
+                        </Button>
+                      </form>
+                    )}
+                    {one.anotherAdult && (
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }} data-testid="manage-promo-other-adult">
+                        {t("promo.otherAdult")}
+                      </Typography>
+                    )}
+                    {!family && (
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                        {t("promo.help")}
                       </Typography>
                     )}
                     {!family && <Divider sx={{ mt: 3 }} />}

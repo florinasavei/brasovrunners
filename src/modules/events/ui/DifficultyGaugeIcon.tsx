@@ -23,8 +23,8 @@ import { DIFFICULTY_BANDS, DIFFICULTY_STEPS } from "../domain/difficulty";
  *
  * **Fifteen levels since §526** — five bands of three steps. `band` lights the segments; `step`
  * places the needle inside the band's own segment (its easier end, its middle, its harder end) and
- * lights that many of three dots under the hub — «Mediu, treapta 3» is three lit segments, the
- * needle at the right of the third, and three lit dots. Without a `step` (a filter box, the
+ * lights that many of three dots under the hub — «Mediu 6» (step 3; the number is the level, §563) is two lit
+ * segments, the needle at the right of the second, and three lit dots. Without a `step` (a filter box, the
  * editor's band select — a band, not a level) there are no dots and the needle stands at the
  * band's middle, where step 2 puts it.
  *

@@ -8,6 +8,11 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.38-2026-09-27
+
+- **«Vreau să primesc oferte și beneficii de la Brașov Runners și partenerii săi.»** — one optional, unticked box per person on the registration form (and on the declaration page), shown only once the club approves a privacy notice from the new template; switched off or on again for each registration from its own page and off from «Înscrierile mele», another adult on the address saying yes only for themselves; «Oferte și beneficii: da/nu» on the registration's page, a column in the export, and a second fold on «Newsletter» with its own CSV for the Organizer and the Administrator. §562.
+- **The difficulty's number is its level of fifteen** — «Mediu 5», not «Mediu 2»: ușor 1–3, mediu 4–6, greuț 7–9, greu 10–12, foarte greu 13–15, in order, on every pill, email, calendar entry and on the editor's closed line; the editor's «Nivelul» (was «Treapta») offers the chosen band's own three levels, the pill's tooltip lists the whole ladder, the filter says «Mediu (4–6)», and the gauge's dots still show the step. §563.
+- **The declarations speak Romanian: «eveniment montan» and «teren accidentat»** — the race's mountain declaration is «Declarație pe propria răspundere — eveniment montan» (the road one «— eveniment pe asfalt / în parc»), the group run's «(alergare de grup, teren accidentat)», the shoes «încălțăminte pentru teren accidentat»; no «trail» left in a Romanian template, title or sentence about a document. The texts in force change when the club regenerates and approves them. §564.
 ## BR-V2.35-2026-09-27
 
 - **The bib's header strip and sponsors' band take an upload or a gallery picture, cropped to the strip's own shape** — «Încarcă o imagine», «Din galerie», the crop box at about 9 : 1 for the header and 22 : 1 for the sponsors (or «Toată imaginea»), the preview redrawn at once and the sheet printing the same crop; a picture on the race numbers is never swept. §560.
