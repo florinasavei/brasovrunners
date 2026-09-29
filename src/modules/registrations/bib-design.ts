@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { imageCropSchema, meaningfulCrop } from "@/modules/content/rich-text/domain/schema";
 import { COLOR } from "@/theme/brand";
 import { bibDesignValuesFromQuery } from "./bib-design-query";
 import { bibFooterText } from "./bib-footer";
@@ -90,6 +91,26 @@ const storedPicture = z
   .nullable()
   .catch(null);
 
+/**
+ * The part of a picture a place shows (§NNN): §241's four fractions of the photograph — the same
+ * crop a picture in a text and a card of «Echipa» store — or null for none. Stored as an object;
+ * posted by the form and carried by the preview's address as its JSON, read the same here. The
+ * whole photograph is no crop (`meaningfulCrop`), and anything malformed reads as none, never a
+ * bib that fails to print.
+ */
+const storedCrop = z
+  .preprocess((value) => {
+    if (typeof value !== "string") return value;
+    if (value.trim() === "") return null;
+    try {
+      return JSON.parse(value) as unknown;
+    } catch {
+      return null;
+    }
+  }, imageCropSchema.nullable())
+  .transform((crop) => meaningfulCrop(crop))
+  .catch(null);
+
 export const bibDesignSchema = z
   .object({
     showName: z.boolean().catch(true),
@@ -102,6 +123,12 @@ export const bibDesignSchema = z
     headerImageSrc: storedPicture,
     /** A strip of sponsors above the small print, or null. */
     sponsorImageSrc: storedPicture,
+    /**
+     * The part of each picture the bib shows (§NNN), drawn in the place's own shape by
+     * `bib-picture-frame.ts`; null draws the picture as every bib did before crops existed.
+     */
+    headerImageCrop: storedCrop,
+    sponsorImageCrop: storedCrop,
     /** Solid guide rules at each end of the cut line, for a club that takes the sheet to a printer. */
     cutMarks: z.boolean().catch(false),
     /*
@@ -123,7 +150,13 @@ export const bibDesignSchema = z
      */
     footerText: z.string().transform(bibFooterText).catch(""),
   })
-  .strict();
+  .strict()
+  // A crop belongs to its picture: none without one (§NNN), whether saved or read.
+  .transform((design) => ({
+    ...design,
+    headerImageCrop: design.headerImageSrc ? design.headerImageCrop : null,
+    sponsorImageCrop: design.sponsorImageSrc ? design.sponsorImageCrop : null,
+  }));
 
 export type BibDesign = z.infer<typeof bibDesignSchema>;
 
@@ -136,6 +169,8 @@ export const DEFAULT_BIB_DESIGN: BibDesign = {
   namePosition: "below",
   headerImageSrc: null,
   sponsorImageSrc: null,
+  headerImageCrop: null,
+  sponsorImageCrop: null,
   cutMarks: false,
   showEmail: true,
   showPartners: true,

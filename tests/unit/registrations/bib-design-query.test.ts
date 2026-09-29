@@ -32,6 +32,9 @@ const EVERYTHING_OFF: BibDesign = {
   namePosition: "above",
   headerImageSrc: OURS,
   sponsorImageSrc: LOCAL,
+  // Each picture's crop (§NNN), carried as its JSON and read back as the same four fractions.
+  headerImageCrop: { x: 0, y: 0.3125, w: 1, h: 0.1478 },
+  sponsorImageCrop: { x: 0.1, y: 0.4, w: 0.8, h: 0.05 },
   cutMarks: true,
   // The footer (§317): every switch the other way, and a line with the characters a URL must
   // escape — the separator's dot, a colon, an ampersand, a plus, diacritics.
@@ -135,6 +138,8 @@ describe("§249 the design on the wire: encode, then parse", () => {
       showName: true,
       headerImageSrc: null,
       sponsorImageSrc: null,
+      headerImageCrop: null,
+      sponsorImageCrop: null,
     });
   });
 });
@@ -176,6 +181,9 @@ describe("§249 the form, read the same way for the save and for the preview", (
       namePosition: "above",
       headerImageSrc: null,
       sponsorImageSrc: OURS,
+      // No crop posted (§NNN): each picture as the bib drew it before crops.
+      headerImageCrop: null,
+      sponsorImageCrop: null,
       cutMarks: true,
       // The email box was unticked: the footer prints no address (§317).
       showEmail: false,

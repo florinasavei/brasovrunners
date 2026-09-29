@@ -1442,8 +1442,28 @@
         "headerImageSrc": "A picture instead of the coloured band",
         "headerImageSrcHelp": "It runs the full width across the top. With one chosen, the band, the logo and the text on it are not printed — the picture is the header.",
         "sponsorImageSrc": "A sponsors' strip",
-        "sponsorImageSrcHelp": "Above the small print at the foot. Fitted without being stretched.",
+        "sponsorImageSrcHelp": "Above the small print at the foot. Pick the part with the sponsors, or put the whole picture in the strip.",
         "noPicture": "No picture",
+        "picture": {
+          "choose": "Upload a picture",
+          "replace": "Upload another",
+          "uploading": "Uploading…",
+          "failed": "The picture did not upload. Try again.",
+          "fromGallery": "From the gallery",
+          "cropTitle": "The part that prints",
+          "cropHelp": {
+            "header": "Drag the rectangle over the part you want across the top of the number.",
+            "sponsors": "Drag the rectangle over the sponsors. “The whole picture” puts all of it in the strip."
+          },
+          "cropReset": {
+            "header": "Back to the middle",
+            "sponsors": "The whole picture"
+          },
+          "shape": {
+            "header": "Shape: {ratio} to 1, the size of the number's top strip.",
+            "sponsors": "Shape: {ratio} to 1, the size of the sponsors' strip."
+          }
+        },
         "footer": {
           "title": "Footer",
           "intro": "The small print at the foot, in the order below. What does not fit on one line goes onto a second; what does not fit there either is cut with “…” — the preview shows exactly where.",
@@ -1457,8 +1477,9 @@
           "notConfigured": "not set on this environment"
         },
         "previewCaption": "Preview — this is how it prints",
+        "previewPending": "Redrawing…",
         "previewAlt": "The race number as it would look with the current choices, for a runner named “Nume Prenume”",
-        "previewNote": "The pictures are the ones already uploaded (the “Pictures” page). The preview above changes at once; the “Numbers” page and the PDF follow a save."
+        "previewNote": "The preview above changes at once; the “Numbers” page and the PDF follow a save."
       },
       "bibColour": "Colour of the race numbers (BIB)",
       "bibColourHelp": "The band across the top of the printed number, the one carrying the club's logo and the race. “The club's colour” unless you want a specific one.",

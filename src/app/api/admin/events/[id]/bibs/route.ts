@@ -8,14 +8,10 @@ import { type BibSheetRow, renderBibSheet } from "@/modules/registrations/bibs-p
 import { bibEventDate, findEventForBibs, freeSpareBibNumbers, listBibs } from "@/modules/registrations/bibs";
 import { canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
-import { bibPictureUrl } from "@/modules/registrations/bib-design";
+import { BIB_PICTURE_WIDTH, loadBibPictures } from "@/modules/registrations/bib-pictures";
 import { env } from "@/shared/config/env";
-import { isUuid } from "@/shared/ids";
-
-/** A club's header or sponsors' strip: one of this site's own WebP variants, so both are small. */
-const PICTURE_MAX_BYTES = 4 * 1024 * 1024;
-const PICTURE_TIMEOUT_MS = 5_000;
 import { isDomainError } from "@/shared/errors/domain-error";
+import { isUuid } from "@/shared/ids";
 
 /**
  * The race numbers of one event as a printable sheet (BR-REQ-038-01).
@@ -97,24 +93,13 @@ export async function GET(
     pdfkit takes bytes, and the sheet must print whatever happens: a store that is slow, a
     picture that was deleted, a variant that is not an image any more. So each is fetched with
     a deadline and a ceiling, and anything that fails is `null` — which prints the coloured
-    band and no sponsors' strip, exactly as every sheet printed before this existed.
+    band and no sponsors' strip, exactly as every sheet printed before this existed. And each is
+    handed over as PNG (§NNN, `bib-pictures.ts`): pdfkit embeds no WebP, which every stored
+    picture is, and a design with a picture failed the whole sheet with "Unknown image format.".
   */
-  const picture = async (src: string | null): Promise<Buffer | null> => {
-    const address = bibPictureUrl(src, env.APP_BASE_URL);
-    if (!address) return null;
-    try {
-      const response = await fetch(address, { signal: AbortSignal.timeout(PICTURE_TIMEOUT_MS) });
-      if (!response.ok) return null;
-      const bytes = await response.arrayBuffer();
-      return bytes.byteLength > PICTURE_MAX_BYTES ? null : Buffer.from(bytes);
-    } catch {
-      return null;
-    }
-  };
-  const [header, sponsors] = await Promise.all([
-    picture(event.design.headerImageSrc),
-    picture(event.design.sponsorImageSrc),
-  ]);
+  const loaded = await loadBibPictures(event.design, BIB_PICTURE_WIDTH.sheet);
+  const header = loaded.header?.png ?? null;
+  const sponsors = loaded.sponsors?.png ?? null;
 
   const pdf = await renderBibSheet({
     rows,
