@@ -34,7 +34,8 @@ const EVERY_MESSAGE: Record<EmailMessageType, { button: boolean; why: string }> 
   ORGANIZER_MESSAGE: { button: true, why: "the organizer's message" },
   GROUP_RUN_DECLARATION_SIGNED: { button: false, why: "a declaration that registers nobody" },
   GROUP_RUN_DECLARATION_ARCHIVE: { button: false, why: "the club's archive" },
-  REGISTER_ANOTHER_PERSON: { button: true, why: "the family's link: the page lists the address's people" },
+  // On the family sitting's shape only (§NNN): the sample is the kept form's, which carries none — see below.
+  REGISTER_ANOTHER_PERSON: { button: true, why: "the family sitting's message: «Toate înscrierile mele» lists the address's people" },
   NEWSLETTER_CONFIRM: { button: false, why: "the newsletter" },
   NEWSLETTER: { button: false, why: "the newsletter" },
   NEW_EVENT_ALERT: { button: false, why: "the newsletter" },
@@ -57,7 +58,8 @@ describe("§NNN the «Nu mai pot ajunge» button, message type by message type",
 
   it.each(TYPES)("%s", (messageType) => {
     const { html, text } = rendered(messageType);
-    const expected = EVERY_MESSAGE[messageType].button;
+    // The family link's sample is the kept form (§446), which never carries it; its sitting shape is tested below.
+    const expected = EVERY_MESSAGE[messageType].button && messageType !== "REGISTER_ANOTHER_PERSON";
     // Both halves, or neither.
     expect(html.match(/data-email-part="cannot-come"/g)?.length ?? 0, EVERY_MESSAGE[messageType].why).toBe(expected ? 2 : 0);
     expect(text.includes(`Nu mai pot ajunge: ${LINK}`)).toBe(expected);
@@ -84,6 +86,45 @@ describe("§NNN the «Nu mai pot ajunge» button, message type by message type",
   it("on a family's one confirmation too, whose page lists every person", () => {
     const { html } = rendered("REGISTRATION_CONFIRMED", { familyConfirmed: emailSampleFamilyConfirmed() });
     expect(html.match(/data-email-part="cannot-come"/g)).toHaveLength(2);
+  });
+
+  it("on the family link only in the family sitting's shape — never beside «Nu înscriu această persoană», at the limit or once the form is gone", () => {
+    const shapes: Record<string, Record<string, unknown>> = {
+      keptForm: {},
+      atCap: { addressAtCap: true },
+      gone: { familyEntryGone: true },
+    };
+    for (const [shape, extra] of Object.entries(shapes)) {
+      const { html, text } = rendered("REGISTER_ANOTHER_PERSON", extra);
+      expect(html.includes('data-email-part="cannot-come"'), shape).toBe(false);
+      expect(text.includes("Nu mai pot ajunge"), shape).toBe(false);
+    }
+    const sitting = rendered("REGISTER_ANOTHER_PERSON", {
+      familySittingPeople: [
+        { name: "Ana Pop", birthDate: "2010-05-01" },
+        { name: "Ion Pop", birthDate: "2012-07-02" },
+      ],
+    });
+    expect(sitting.html.match(/data-email-part="cannot-come"/g)).toHaveLength(2);
+  });
+
+  it("says a link is sent on request when the button opens «Înscrierile mele» by address", () => {
+    const content = buildTemplateContent(
+      "ORGANIZER_MESSAGE",
+      "ro",
+      { ...emailSampleFor("ORGANIZER_MESSAGE", "ro"), cannotComeUrl: "https://example.test/ro/inscrieri/ale-mele", cannotComeByRequest: true },
+      emailSampleActionUrl("ro"),
+    );
+    expect(content.cannotCome?.note).toBe("Scrie adresa și îți trimitem linkul de anulare. Locul se eliberează pentru altcineva.");
+  });
+
+  it("the reminder's words name no link below: the button and its sentence carry it, and a late send has neither", () => {
+    const without = buildTemplateContent("EVENT_REMINDER", "ro", { ...emailSampleFor("EVENT_REMINDER", "ro"), cannotComeUrl: undefined }, emailSampleActionUrl("ro"));
+    expect(without.cannotCome).toBeUndefined();
+    expect(JSON.stringify(without.paragraphs)).not.toContain("linkul de mai jos");
+    const withIt = buildTemplateContent("EVENT_REMINDER", "en", { ...emailSampleFor("EVENT_REMINDER", "en"), cannotComeUrl: LINK }, emailSampleActionUrl("en"));
+    expect(JSON.stringify(withIt.paragraphs)).not.toContain("link below");
+    expect(withIt.cannotCome?.url).toBe(LINK);
   });
 
   it("is a full-width button of at least 44 pixels (BR-REQ-041-01 criterion 6)", () => {

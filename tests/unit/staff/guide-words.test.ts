@@ -54,7 +54,7 @@ const sourceLabels = (() => {
     ...[...staffLabels.matchAll(/^\s+[A-Z_]+: "([^"]+)",\r?$/gm)].map((match) => match[1]),
     ...[...templates.matchAll(/^\s+action: "([^"]+)",\r?$/gm)].map((match) => match[1]),
     // «Nu mai pot ajunge», the button of every email about a live registration (§NNN).
-    ...[...templates.matchAll(/^\s+cannotCome: \{ label: "([^"]+)"/gm)].map((match) => match[1]),
+    ...[...templates.matchAll(/^\s+cannotCome: \{\s+label: "([^"]+)"/gm)].map((match) => match[1]),
   ];
 })();
 

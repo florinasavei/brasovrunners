@@ -43,6 +43,7 @@ vi.mock("@/i18n/navigation", async (importOriginal) => {
 });
 
 const { renderOutboxMessage } = await import("@/modules/notifications/render");
+const { readActionTokenContext } = await import("@/modules/action-tokens/repository");
 const { consumeAndCancel } = await import("@/modules/registrations/token-actions");
 const { default: ManageRegistrationPage } = await import("@/app/[locale]/registrations/manage/[token]/page");
 
@@ -206,6 +207,46 @@ describe("§NNN «Nu mai pot ajunge» from the email to the cancelled registrati
       expect(CANNOT_COME_LINK.exec(message.text), messageType).not.toBeNull();
       expect(await manageTokens(ana.id), messageType).toHaveLength(1);
     }
+  });
+
+  it("an organizer's message after the confirmation supersedes nothing: the confirmation's manage link, its PDF and the reminder's check-in door keep working", async () => {
+    const ana = await registration("CONFIRMED");
+    const confirmation = await renderOutboxMessage(row("REGISTRATION_CONFIRMED", ana.id), db, NOW);
+    const confirmationSecret = CANNOT_COME_LINK.exec(confirmation.text)![2];
+    // The PDF rides on the same secret (§95).
+    expect(confirmation.text).toContain(`/api/registrations/declaration/${confirmationSecret}`);
+
+    // Race morning: «Parcarea e la intrare» to every participant.
+    const message = await renderOutboxMessage(
+      row("ORGANIZER_MESSAGE", ana.id, { subject: { ro: "Parcare", en: "Parking" }, body: { ro: "Parcarea e la intrare.", en: "Parking is at the gate." } }),
+      db,
+      NOW,
+    );
+    // The button is there, and opens «Înscrierile mele» by address instead of minting a superseding link.
+    expect(message.text).toMatch(/Nu mai pot ajunge: https?:\/\/\S+\/ro\/inscrieri\/ale-mele\s/);
+    expect(message.text).toContain("Scrie adresa și îți trimitem linkul de anulare.");
+    expect(CANNOT_COME_LINK.exec(message.text)).toBeNull();
+
+    // Still one manage token, the confirmation's, live: «Vezi înscrierea», the PDF and self check-in open.
+    const tokens = await manageTokens(ana.id);
+    expect(tokens).toHaveLength(1);
+    expect(tokens[0].invalidatedAt).toBeNull();
+    const read = await readActionTokenContext(db, { secret: confirmationSecret, purpose: "MANAGE_REGISTRATION", now: NOW });
+    expect(read.ok).toBe(true);
+
+    // The same for the organizer's update notice.
+    await renderOutboxMessage(row("EVENT_UPDATE_NOTICE", ana.id, { changes: ["time"] }), db, NOW);
+    expect((await readActionTokenContext(db, { secret: confirmationSecret, purpose: "MANAGE_REGISTRATION", now: NOW })).ok).toBe(true);
+  });
+
+  it("the family link: no button beside «Nu înscriu această persoană», at the limit or once the form is gone — and no manage link minted", async () => {
+    const ana = await registration("CONFIRMED");
+    for (const payload of [{ atCap: true, registrationsPerAddress: 4 }, { familyEntryId: "00000000-0000-4000-8000-000000000000" }]) {
+      const message = await renderOutboxMessage(row("REGISTER_ANOTHER_PERSON", ana.id, payload), db, NOW);
+      expect(message.text, JSON.stringify(payload)).not.toContain("Nu mai pot ajunge");
+      expect(message.html).not.toContain('data-email-part="cannot-come"');
+    }
+    expect(await manageTokens(ana.id)).toHaveLength(0);
   });
 
   it("never on a club copy, never after the fact, never after the start, never to another address", async () => {

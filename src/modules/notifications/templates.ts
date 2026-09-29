@@ -729,6 +729,12 @@ export type TemplateData = {
    */
   cannotComeUrl?: string;
   /**
+   * The button lands on «Înscrierile mele» by address instead (§NNN): the registration already holds a
+   * live manage link in the inbox, which a new one would supersede (BR-REQ-036-02 criterion 5). Its
+   * sentence then says a link is sent on request.
+   */
+  cannotComeByRequest?: boolean;
+  /**
    * The public participant list's own switch, on the confirmation (BR-REQ-039-01; `DECISIONS.md`
    * §143): its own token, read at send time. `listed` is whether the name is on the list today,
    * so the link reads the right way round — "take me off" or "show my name".
@@ -1140,7 +1146,11 @@ const T = {
         ...(d.checkinCode
           ? [`La masă arată codul QR de mai jos sau spune codul ${d.checkinCode}.`]
           : []),
-        "Nu poți veni? Anulează înscrierea cu linkul de mai jos — locul tău merge la cineva de pe lista de așteptare.",
+        /*
+          «Nu poți veni? Anulează înscrierea cu linkul de mai jos» is gone (§NNN): the button says it, with
+          its own sentence under it, and a reminder sent after the start or for an event cancelled
+          meanwhile carries no button — a body line would point at a link that is not there.
+        */
       ],
       // No action of its own (§NNN): «Nu mai pot ajunge» is the reminder's one button, its cancel.
       image: (d: TemplateData) => qrImage("ro", d),
@@ -1603,7 +1613,12 @@ const T = {
     /** The family link's second button (§468): the kept form deleted, nobody registered. */
     familyDecline: "Nu înscriu această persoană",
     /** «Nu mai pot ajunge» (§NNN; the owner's words), and its one sentence under the button. */
-    cannotCome: { label: "Nu mai pot ajunge", note: "Locul se eliberează pentru altcineva." },
+    cannotCome: {
+      label: "Nu mai pot ajunge",
+      note: "Locul se eliberează pentru altcineva.",
+      // When the button opens «Înscrierile mele» by address (§NNN): the link comes by email, on request.
+      noteByRequest: "Scrie adresa și îți trimitem linkul de anulare. Locul se eliberează pentru altcineva.",
+    },
     /** Under "you are already registered", on a re-send for a slip (§446): the one way to register somebody else. */
     anotherPersonHint: "Dacă vrei să înscrii pe altcineva, trimite formularul cu numele complet și data de naștere a acelei persoane.",
     /** In its place when the slip was another name on a registered birth date (§493): how twins are registered. */
@@ -1715,7 +1730,7 @@ const T = {
         ...(d.bibNumber ? [`Your race number: **${d.bibNumber}**.`] : []),
         ...(d.eventChecklist ? [`What to bring: ${d.eventChecklist}`] : []),
         ...(d.checkinCode ? [`At the desk show the QR code below or say the code ${d.checkinCode}.`] : []),
-        "Can't come? Cancel with the link below — your place goes to somebody on the waiting list.",
+        // "Can't come? Cancel with the link below" is gone (§NNN): the button and its sentence say it.
       ],
       // No action of its own (§NNN): "I can't make it any more" is the reminder's one button, its cancel.
       image: (d: TemplateData) => qrImage("en", d),
@@ -2107,7 +2122,11 @@ const T = {
       action: "All my registrations",
     },
     familyDecline: "I am not registering this person",
-    cannotCome: { label: "I can't make it any more", note: "Your place goes to someone else." },
+    cannotCome: {
+      label: "I can't make it any more",
+      note: "Your place goes to someone else.",
+      noteByRequest: "Type your address and we email you the cancel link. Your place goes to someone else.",
+    },
     anotherPersonHint: "If you want to register someone else, send the form with that person's full name and birth date.",
     sameBirthDateHint:
       "Two people born on the same day cannot both be registered from one email address through the form. For a twin, send the form from another email address, or reply to this email and we will register them.",
@@ -2321,6 +2340,7 @@ export function buildTemplateContent(
       manageUrl: undefined,
       // «Nu mai pot ajunge» is the participant's own cancel (§NNN): never in a club mailbox.
       cannotComeUrl: undefined,
+      cannotComeByRequest: undefined,
       listConsentUrl: undefined,
       declarationPdfUrl: undefined,
       checkinCode: undefined,
@@ -2672,8 +2692,13 @@ export function buildTemplateContent(
       the renderer minted for this send — never on a club copy, whose data lost it above (§320).
     */
     cannotCome:
-      !clubCopy && CANNOT_COME_MESSAGES.has(messageType) && data.cannotComeUrl
-        ? { label: copy.cannotCome.label, url: data.cannotComeUrl, note: copy.cannotCome.note }
+      !clubCopy &&
+      CANNOT_COME_MESSAGES.has(messageType) &&
+      data.cannotComeUrl &&
+      // The family link only in the family sitting's shape (§NNN): the kept form's «Nu înscriu această
+      // persoană» sits beside it, and a second "no" there would cancel the person already registered.
+      (messageType !== "REGISTER_ANOTHER_PERSON" || familySittingShape)
+        ? { label: copy.cannotCome.label, url: data.cannotComeUrl, note: data.cannotComeByRequest ? copy.cannotCome.noteByRequest : copy.cannotCome.note }
         : undefined,
     image: entry.image?.(data),
     eventFacts: factsBlock,

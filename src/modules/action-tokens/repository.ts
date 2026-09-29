@@ -136,6 +136,32 @@ export async function issueActionToken<T extends Record<string, unknown>>(
 }
 
 /**
+ * Whether a registration already holds a working link of this purpose — unspent, not superseded and
+ * not expired — in somebody's inbox. «Nu mai pot ajunge» (§NNN) asks before minting on a message that
+ * never minted one: issuing would supersede that link (criterion 5 above), and with it the reminder's
+ * self check-in and the confirmation's PDF. Never the secret, which is unrecoverable (§14.5).
+ */
+export async function hasLiveActionToken<T extends Record<string, unknown>>(
+  db: Database<T>,
+  params: { registrationId: string; purpose: EmailActionTokenPurpose; now: Date },
+): Promise<boolean> {
+  const [row] = await db
+    .select({ id: emailActionTokens.id })
+    .from(emailActionTokens)
+    .where(
+      and(
+        eq(emailActionTokens.registrationId, params.registrationId),
+        eq(emailActionTokens.purpose, params.purpose),
+        isNull(emailActionTokens.usedAt),
+        isNull(emailActionTokens.invalidatedAt),
+        gt(emailActionTokens.expiresAt, params.now),
+      ),
+    )
+    .limit(1);
+  return row !== undefined;
+}
+
+/**
  * What a GET handler may know, without changing anything (BR-REQ-036-02 criterion 4). Mail
  * providers and link scanners fetch links before a human does, so a GET must never spend or act
  * on a token. The read-only transaction makes that structural (`src/db/read-only.ts`).
