@@ -133,7 +133,8 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
       return at.toISOString().slice(0, 10);
     };
     const birthDate = page.locator('[name="birthDate"]');
-    const max = (await birthDate.getAttribute("max")) as string;
+    // The typed, day-first box (§561) carries the bound as data; the island refuses past it.
+    const max = (await birthDate.getAttribute("data-max")) as string;
     expect(max).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     expect(max >= shift(14)).toBe(true);
     expect(max <= shift(14, 60)).toBe(true);

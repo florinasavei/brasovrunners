@@ -9,6 +9,7 @@ import { shownContactAddresses } from "@/modules/contact/shown-address";
 import { bibDesignFromQuery } from "@/modules/registrations/bib-design";
 import { bibNumberFromQuery } from "@/modules/registrations/bib-design-query";
 import { renderBibImage } from "@/modules/registrations/bib-image";
+import { BIB_PICTURE_WIDTH, bibPictureForImage, loadBibPictures } from "@/modules/registrations/bib-pictures";
 import { bibEventDate, findEventForBibs } from "@/modules/registrations/bibs";
 import { raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
@@ -41,7 +42,9 @@ const SAMPLE_NAME = "Nume Prenume";
  * read from the query string rather than from the row (the owner: "la BID îmi trebuie un
  * preview aici"). That is how the panel shows the bib as the boxes change, before a save:
  * `bibDesignFromQuery` validates the unsaved design with the same schema the save uses, and
- * `colour=` is the band's colour as the form's select holds it, empty for the club's. The
+ * `colour=` is the band's colour as the form's select holds it, empty for the club's; each
+ * picture's crop travels beside it (`headerImageCrop=`, `sponsorImageCrop=`, §560) and is drawn
+ * through the same crop rule as the sheet (`bib-picture-frame.ts`). The
  * design parameters are read in sample mode only; with a registration named, the stored design
  * is what is drawn, because that is what will print.
  *
@@ -49,6 +52,12 @@ const SAMPLE_NAME = "Nume Prenume";
  * chose — so the gate is the one every staff role already passes for a real bib. The same
  * renderer as the paper, never a second drawing (§180): the preview is a preview of the print.
  */
+/** The design's two pictures, read and turned into what `next/og` draws (`bib-pictures.ts`). */
+async function imagePictures(design: { headerImageSrc: string | null; sponsorImageSrc: string | null }) {
+  const loaded = await loadBibPictures(design, BIB_PICTURE_WIDTH.preview);
+  return { header: bibPictureForImage(loaded.header), sponsors: bibPictureForImage(loaded.sponsors) };
+}
+
 export async function GET(request: Request, context: { params: Promise<{ id: string }> }): Promise<Response> {
   let actor;
   try {
@@ -82,6 +91,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   const partners = event.coHosts.map((host) => host.name);
 
   if (sample) {
+    const design = bibDesignFromQuery(url.searchParams);
     const image = await renderBibImage({
       bibNumber: bibNumberFromQuery(url.searchParams.get("number")) ?? event.bibStartNumber,
       // `blank=1` draws a desk spare (§444): the empty line the name is written on at the desk.
@@ -94,7 +104,10 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       partners,
       replyTo,
       siteUrl: env.APP_BASE_URL,
-      design: bibDesignFromQuery(url.searchParams),
+      design,
+      // The pictures read here (§560): `next/og` cannot read the stored WebP, and their size makes
+      // the unsaved crop exact — the same rule the sheet prints with.
+      pictures: await imagePictures(design),
     });
     // The design is in the address, so a browser cache would be correct — but the event's
     // title and date are not, and a preview that lags a save is a preview of the wrong thing.
@@ -129,6 +142,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     siteUrl: env.APP_BASE_URL,
     // The club's own design (§249), or the preview stops being a preview of the paper.
     design: event.design,
+    pictures: await imagePictures(event.design),
   });
   // A number and a name change rarely; the browser may keep the picture for an hour.
   image.headers.set("Cache-Control", "private, max-age=3600");
