@@ -88,7 +88,7 @@ describe("AGENTS.md §19.4 throttle keys for an email identity", () => {
         firstName: "Ana",
         lastName: "Pop",
         birthDate: "1990-05-17",
-        sex: "UNSPECIFIED",
+        sex: "FEMALE",
         phone: "+40711111111",
         emergencyContactName: "Ion Pop",
         emergencyContactPhone: "+40722222222",

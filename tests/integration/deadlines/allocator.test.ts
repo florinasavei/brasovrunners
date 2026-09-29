@@ -62,7 +62,7 @@ function submission(email: string, at: Date, firstName = "Ana") {
     firstName,
     lastName: "Pop",
     birthDate: "1990-05-17",
-    sex: "UNSPECIFIED",
+    sex: "FEMALE",
     nationality: "RO",
     country: "RO",
     city: "Brașov",

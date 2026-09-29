@@ -100,7 +100,7 @@ function form(firstName: string, birthDate?: string): FormData {
     lastName: "Pop",
     // Each person their own birth date (§446): a different person differs in both.
     birthDate: birthDate ?? BIRTH_DATES[firstName] ?? "1980-01-01",
-    sex: "UNSPECIFIED",
+    sex: "FEMALE",
     email: EMAIL,
     emailConfirm: EMAIL,
     phone: "0711111111",
