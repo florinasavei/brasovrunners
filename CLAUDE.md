@@ -223,6 +223,8 @@ it is the authority, this is the summary):
     Since §NNN its section 5 also describes the optional «Vreau să primesc oferte și beneficii de la Brașov Runners și partenerii
     săi.» (`{{promotionalMaterials}}`): until a notice from that template is approved, the form shows no such box and nothing is
     kept (`/admin/tasks` carries the row `promoNotice`).
+    Since §NNN the four declarations' templates speak Romanian: «eveniment montan» for the mountain race, «teren accidentat»
+    for the ground, not one «trail» — «Regenerează din șabloane» makes the drafts; the texts in force keep their words until approved.
 17. **Re-grade every event's difficulty** — migration `0104` put each event in the middle step of its old band (§526). Open each
     event in `/admin/events` and choose the band and «Nivelul» (one of the band's three levels, 1–15 in order); the guide («Ghid») explains the scale.
 18. **Open the members' zone and the FAQ** — approve the members' zone address, `/ro/zona-membri` (it sits outside the backoffice,

@@ -29,23 +29,26 @@ export const LEGAL_TEMPLATES: Record<LegalDocumentKey, Record<Locale, { title: s
     ro: { title: "Termeni și condiții", body: termsRo },
     en: { title: "Terms and conditions", body: termsEn },
   },
-  // The race's two declarations, one body with a risk section per course (§515): the trail one keeps
-  // the key every signature so far was recorded under.
+  // The race's two declarations, one body with a risk section per course (§515): the mountain one keeps
+  // the key every signature so far was recorded under. Titled in Romanian words (§NNN): «eveniment
+  // montan», never «cursă trail», and «eveniment» for the road one too, because the two are named side
+  // by side — on `/admin/legal`, in the editor's select and in «Sarcini»'s steps.
   EVENT_DECLARATION: {
-    ro: { title: "Declarație pe propria răspundere — cursă trail", body: declarationTrailRo },
-    en: { title: "Self-declaration — trail race", body: declarationTrailEn },
+    ro: { title: "Declarație pe propria răspundere — eveniment montan", body: declarationTrailRo },
+    en: { title: "Self-declaration — mountain event", body: declarationTrailEn },
   },
   EVENT_DECLARATION_ROAD: {
-    ro: { title: "Declarație pe propria răspundere — cursă pe asfalt / în parc", body: declarationRoadRo },
-    en: { title: "Self-declaration — road / park race", body: declarationRoadEn },
+    ro: { title: "Declarație pe propria răspundere — eveniment pe asfalt / în parc", body: declarationRoadRo },
+    en: { title: "Self-declaration — road / park event", body: declarationRoadEn },
   },
-  // The group runs' optional self-declarations, one per surface (§393).
+  // The group runs' optional self-declarations, one per surface (§393): «asfalt» and «teren
+  // accidentat» (§NNN); English keeps "trail", its word for the ground.
   GROUP_RUN_DECLARATION_ASPHALT: {
     ro: { title: "Declarație pe propria răspundere (alergare de grup, asfalt)", body: groupRunAsphaltRo },
     en: { title: "Self-declaration (group run, asphalt)", body: groupRunAsphaltEn },
   },
   GROUP_RUN_DECLARATION_TRAIL: {
-    ro: { title: "Declarație pe propria răspundere (alergare de grup, trail)", body: groupRunTrailRo },
+    ro: { title: "Declarație pe propria răspundere (alergare de grup, teren accidentat)", body: groupRunTrailRo },
     en: { title: "Self-declaration (group run, trail)", body: groupRunTrailEn },
   },
 };

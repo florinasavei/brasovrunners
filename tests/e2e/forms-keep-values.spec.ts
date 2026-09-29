@@ -167,7 +167,7 @@ test.describe("§315 a refusal inside a closed card opens it", () => {
     const programme = await openEditorBox(page, "Program, regulament și declarație");
     const declarationCard = await openEditorBox(page, "Declarația pe propria răspundere");
     const declaration = page.getByRole("combobox", { name: "Declarația pe care o semnează participantul" });
-    await expect(declaration).toContainText("Trail");
+    await expect(declaration).toContainText("Eveniment montan");
     await declaration.click();
     await page.getByRole("option", { name: "Niciuna" }).click();
     await expect(field("event.declarationDocumentId")).toHaveValue("");
@@ -208,20 +208,21 @@ test.describe("§515 the race's declaration follows the course", () => {
 
     await openEditorBox(page, "Declarația pe propria răspundere");
     const declaration = page.getByRole("combobox", { name: "Declarația pe care o semnează participantul" });
-    await expect(declaration).toContainText("Trail");
+    // The kinds in Romanian words since §NNN: «Eveniment montan», «Eveniment pe șosea sau în parc».
+    await expect(declaration).toContainText("Eveniment montan");
     const trailId = await field("event.declarationDocumentId").inputValue();
     expect(trailId).not.toBe("");
 
     await openEditorBox(page, "Traseul");
     await page.getByRole("combobox", { name: "Suprafață" }).click();
     await page.getByRole("option", { name: "Asfalt" }).click();
-    await expect(declaration).toContainText("Șosea sau parc");
+    await expect(declaration).toContainText("Eveniment pe șosea sau în parc");
     await expect(page.getByTestId("race-declaration-mismatch")).toHaveCount(0);
 
     await declaration.click();
-    await page.getByRole("option", { name: /^Trail · / }).first().click();
+    await page.getByRole("option", { name: /^Eveniment montan · / }).first().click();
     await expect(field("event.declarationDocumentId")).toHaveValue(trailId);
-    await expect(page.getByTestId("race-declaration-mismatch")).toContainText("Traseul e pe «Asfalt», iar varianta aleasă e «Trail»");
+    await expect(page.getByTestId("race-declaration-mismatch")).toContainText("Traseul e pe «Asfalt», iar varianta aleasă e «Eveniment montan»");
 
     // Picked by hand: the select keeps it when the surface changes again.
     await page.getByRole("combobox", { name: "Suprafață" }).click();
