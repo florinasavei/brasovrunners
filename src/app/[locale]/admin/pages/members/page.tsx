@@ -282,7 +282,6 @@ function TextCard({
                   idPrefix={`members-${text}`}
                   watch={{ names: [`${text}{Locale}Body`], rule: "required" }}
                   markLabel={t("members.tabEmpty")}
-                  translatedMark={t("members.tabTranslated")}
                   panels={LANGUAGES.map((language) => ({
                     locale: language.locale,
                     label: language.code,

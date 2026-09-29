@@ -1,4 +1,5 @@
-import { createElement } from "react";
+import { NextIntlClientProvider } from "next-intl";
+import { createElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { RichTextDoc } from "@/modules/content/rich-text/domain/schema";
@@ -8,7 +9,7 @@ import { englishBoxesToTranslate, planTranslateAll, translateBoxes } from "@/mod
 import type { TranslateAction } from "@/modules/translate/ui/TranslateProvider";
 import { TRANSLATED_EVENT, type TranslatedDetail, translatedInto } from "@/modules/translate/ui/translated-event";
 import { twinFoldKey } from "@/shared/ui/fold";
-import LocaleTabPanels, { tabLabel, watchedBoxName } from "@/shared/ui/LocaleTabPanels";
+import LocaleTabPanels, { TranslatedTabWord, tabLabel, watchedBoxName } from "@/shared/ui/LocaleTabPanels";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
@@ -25,7 +26,7 @@ import ro from "../../../messages/ro.json";
  * - the screenshot's form: the plan names `zoneEnBody`, and the press fills the English editor
  *   (the fill event, which the editor takes as content) and announces the English it filled;
  * - an empty Romanian editor is still «nimic de tradus»;
- * - the tabs «RO» | «EN»: the flags, the English tab's «nescris încă» while empty and «tradus —
+ * - the tabs «RO» | «EN»: the flags, the English tab's «gol» while empty and «tradus —
  *   verifică» after a press, the watched names the members' form posts, the folds twinned across
  *   the tabs, and only the strip holding the filled box answering the press.
  *
@@ -165,6 +166,28 @@ describe("§NNN «Copiază și tradu tot» on «Membri»", () => {
     expect(announced.seen).toEqual([{ names: ["zoneEnBody"], form }]);
   });
 
+  it("announces only the boxes it filled: an answer for a box the form lacks moves no tab", async () => {
+    const form = zoneForm();
+    const action: TranslateAction = async () => ({
+      ok: true,
+      characters: 0,
+      remainingToday: 0,
+      items: [
+        { field: "zoneEnBody", kind: "rich" as const, doc: doc("Hello, colleagues!") },
+        // «Beneficiile» is another form: no box of that name here, so nothing is filled or announced.
+        { field: "benefitsEnBody", kind: "rich" as const, doc: doc("Benefits") },
+        { field: "translations.en.title", kind: "text" as const, text: "Title" },
+      ],
+    });
+    const fills = capture<RichTextFillDetail>(RICH_TEXT_FILL_EVENT);
+    const announced = capture<TranslatedDetail>(TRANSLATED_EVENT);
+    await translateBoxes(asForm(form), ["zoneEnBody"], action);
+    fills.stop();
+    announced.stop();
+    expect(fills.seen.map((fill) => fill.name)).toEqual(["zoneEnBody"]);
+    expect(announced.seen).toEqual([{ names: ["zoneEnBody"], form }]);
+  });
+
   it("an empty Romanian editor is still nothing to translate, and nothing is asked", async () => {
     const form = zoneForm(null);
     const { action, calls } = fakeAction();
@@ -189,7 +212,6 @@ describe("§NNN the tabs «RO» | «EN» of a bilingual text", () => {
         idPrefix: "members-zone",
         watch: { names: ["zone{Locale}Body"], rule: "required" },
         markLabel: ro.Admin.members.tabEmpty,
-        translatedMark: ro.Admin.members.tabTranslated,
         panels: panels(enWritten),
       }),
     );
@@ -210,18 +232,31 @@ describe("§NNN the tabs «RO» | «EN» of a bilingual text", () => {
     expect(html).toContain('name="zoneEnBody"');
   });
 
-  it("marks the English tab «nescris încă» while the English is empty", () => {
+  it("marks the English tab «gol» while the English is empty — short, so «RO · gol» | «EN · gol» fits at 320 px", () => {
     expect(tab(strip(false), "en")).toContain(`EN · ${ro.Admin.members.tabEmpty}`);
     expect(tab(strip(true), "en")).not.toContain(ro.Admin.members.tabEmpty);
   });
 
   it("says each mark in both languages, «tradus — verifică» after a press", () => {
-    expect(ro.Admin.members.tabEmpty).toBe("nescris încă");
-    expect(en.Admin.members.tabEmpty).toBe("not written yet");
-    expect(ro.Admin.members.tabTranslated).toBe("tradus — verifică");
-    expect(en.Admin.members.tabTranslated).toBe("translated — check it");
-    expect(tabLabel(["EN", null, false, ro.Admin.members.tabTranslated])).toBe("EN · tradus — verifică");
-    expect(tabLabel(["EN", ro.Admin.members.tabEmpty])).toBe("EN · nescris încă");
+    expect(ro.Admin.members.tabEmpty).toBe("gol");
+    expect(en.Admin.members.tabEmpty).toBe("empty");
+    // The translated mark is the strip's own, one word for every strip (the event editor, a page, the FAQ…).
+    expect(ro.Translate.tabTranslated).toBe("tradus — verifică");
+    expect(en.Translate.tabTranslated).toBe("translated — check it");
+    expect("tabTranslated" in ro.Admin.members).toBe(false);
+    expect(tabLabel(["EN", null, false, ro.Translate.tabTranslated])).toBe("EN · tradus — verifică");
+    expect(tabLabel(["EN", ro.Admin.members.tabEmpty])).toBe("EN · gol");
+  });
+
+  it("draws «tradus — verifică» from the catalogue on a strip given no word of its own", () => {
+    // The provider's props with `children` optional, so the child goes in as `createElement`'s third argument.
+    const Provider = NextIntlClientProvider as unknown as (props: { locale: string; messages: object; children?: ReactNode }) => ReactNode;
+    for (const [locale, messages] of [["ro", ro], ["en", en]] as const) {
+      const html = renderToStaticMarkup(
+        createElement(Provider, { locale, messages: { Translate: messages.Translate } }, createElement(TranslatedTabWord)),
+      );
+      expect(html).toBe(messages.Translate.tabTranslated);
+    }
   });
 
   it("watches the names the members' form posts, and the event editor's as before", () => {

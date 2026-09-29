@@ -5,7 +5,7 @@ import { openFold } from "./support/fold";
 /**
  * §NNN (amending §482, §524) — «Pagini» → «Membri» → «Scrie zona membrilor»: the two languages are
  * tabs «RO» | «EN» in the fold, one editor on screen at a time, with «Copiază și tradu tot» above
- * them; the English tab says «nescris încă» while its editor is empty; a save with the Romanian alone
+ * them; the English tab says «gol» while its editor is empty; a save with the Romanian alone
  * is refused naming the English, and the English tab comes forward with the box it names; both
  * languages written, the save goes through. The spec empties the zone at the end (both or neither,
  * §352), so the members' zone reads as it found it.
@@ -14,8 +14,9 @@ import { openFold } from "./support/fold";
  * fill are `tests/unit/translate/members-zone-press.test.ts`.
  */
 
-async function zoneEditor(page: Page): Promise<Locator> {
-  await signIn(page, "Dev Administrator");
+/** The zone's editor, its fold open; `signedIn` for a second visit in the same test (the sign-in page then redirects). */
+async function zoneEditor(page: Page, signedIn = false): Promise<Locator> {
+  if (!signedIn) await signIn(page, "Dev Administrator");
   await page.goto("/ro/admin/pages/members");
   await hydrated(page);
   const card = page.locator("#members-zone");
@@ -53,7 +54,7 @@ test.describe.serial("§NNN the members' zone editor: tabs RO | EN", () => {
     // The English emptied: its tab says so, as soon as the editor is empty.
     await enTab.click();
     await write(card, "En", "");
-    await expect(enTab).toContainText("nescris încă");
+    await expect(enTab).toContainText("gol");
 
     await roTab.click();
     await write(card, "Ro", "Salutare colegii!");
@@ -74,17 +75,29 @@ test.describe.serial("§NNN the members' zone editor: tabs RO | EN", () => {
     await write(card, "Ro", "Salutare colegii!");
     await form.getByRole("tab", { name: /^EN/ }).click();
     await write(card, "En", "Hello, colleagues!");
-    await expect(form.getByRole("tab", { name: /^EN/ })).not.toContainText("nescris încă");
+    await expect(form.getByRole("tab", { name: /^EN/ })).not.toContainText("gol");
     await form.getByRole("button", { name: "Salvează" }).click();
     await expect(page).toHaveURL(/saved=/, { timeout: 20_000 });
 
     // Neither language: the zone's default words again (§352 allows neither).
-    card = await zoneEditor(page);
+    card = await zoneEditor(page, true);
     form = card.getByTestId("members-zone-form");
     await write(card, "Ro", "");
     await form.getByRole("tab", { name: /^EN/ }).click();
     await write(card, "En", "");
     await form.getByRole("button", { name: "Salvează" }).click();
     await expect(page).toHaveURL(/saved=/, { timeout: 20_000 });
+
+    // Both languages empty: «RO · gol» | «EN · gol» with their flags fit the row, at 320 px too.
+    card = await zoneEditor(page, true);
+    form = card.getByTestId("members-zone-form");
+    await expect(form.getByRole("tab", { name: /^RO/ })).toContainText("gol");
+    await expect(form.getByRole("tab", { name: /^EN/ })).toContainText("gol");
+    const row = form.getByRole("tablist");
+    const overflow = await row.evaluate((element) => {
+      const scroller = element.parentElement ?? element;
+      return scroller.scrollWidth - scroller.clientWidth;
+    });
+    expect(overflow).toBeLessThanOrEqual(0);
   });
 });

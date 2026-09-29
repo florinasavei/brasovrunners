@@ -5776,8 +5776,7 @@
       "zoneRo": "Zona membrilor (română)",
       "zoneEn": "Zona membrilor (engleză)",
       "textEmpty": "Nescris încă.",
-      "tabEmpty": "nescris încă",
-      "tabTranslated": "tradus — verifică",
+      "tabEmpty": "gol",
       "textHelp": "În ambele limbi sau în niciuna, cel mult {max} de caractere în fiecare. Ca într-o pagină: titluri, liste, linkuri, poze, un tabel.",
       "codes": {
         "heading": "Coduri de reducere",
@@ -7483,6 +7482,7 @@
   },
   "Translate": {
     "button": "Tradu din română",
+    "tabTranslated": "tradus — verifică",
     "pending": "Se traduce…",
     "all": "Copiază și tradu tot: RO → EN",
     "allHelp": "Fiecare text scris în română ajunge tradus automat (DeepL) în câmpul lui din engleză, cu aceeași așezare. Citește, corectează, apoi apasă Salvează.",

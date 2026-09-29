@@ -79,19 +79,23 @@ export function writePlainBox(box: Box, text: string): void {
 /**
  * One translated answer, put in its English box. English often runs longer than Romanian: an
  * answer past the box's `maxLength` is cut to it (the box could not hold more, and the save's own
- * ceiling is the same), and the answer is `true` so the press can say which box lost its ending.
+ * ceiling is the same), and `cut` says so, so the press can say which box lost its ending.
+ * `filled` says whether a box of that name was there to take the answer at all — only those are
+ * announced to the language tabs (§NNN), so a strip never comes forward for a box nobody filled.
  */
-export function fillBox(form: HTMLFormElement | null, name: string, value: BoxValue): boolean {
+export function fillBox(form: HTMLFormElement | null, name: string, value: BoxValue): { filled: boolean; cut: boolean } {
+  const box = boxNamed(form, name);
   if (value.kind === "rich") {
+    // The editor's hidden box is what takes the fill; without it no editor answers the event.
+    if (!box) return { filled: false, cut: false };
     // In this form only: «Echipa» has a `bioEnBody` in every card's form (§482).
     fillRichText(name, value.doc, form);
-    return false;
+    return { filled: true, cut: false };
   }
-  const box = boxNamed(form, name);
-  if (!box) return false;
+  if (!box) return { filled: false, cut: false };
   const cut = box.maxLength > 0 && value.text.length > box.maxLength;
   writePlainBox(box, cut ? value.text.slice(0, box.maxLength) : value.text);
-  return cut;
+  return { filled: true, cut };
 }
 
 /**
@@ -220,12 +224,15 @@ export async function translateBoxes(form: HTMLFormElement | null, englishNames:
   const outcome = await action({ items });
   if (!outcome.ok) return { kind: "refused", reason: outcome.reason, remainingToday: outcome.remainingToday, remainingCredit: outcome.remainingCredit };
   const cut: string[] = [];
+  const filled: string[] = [];
   for (const item of outcome.items) {
     const value: BoxValue = item.kind === "text" ? { kind: "text", text: item.text } : { kind: "rich", doc: item.doc };
-    if (fillBox(form, item.field, value)) cut.push(labelOfBox(form, item.field));
+    const fill = fillBox(form, item.field, value);
+    if (fill.filled) filled.push(item.field);
+    if (fill.cut) cut.push(labelOfBox(form, item.field));
   }
-  // The language tabs holding these boxes bring their English forward, marked (§NNN).
-  announceTranslated(outcome.items.map((item) => item.field), form);
+  // The language tabs holding the boxes it filled bring their English forward, marked (§NNN).
+  announceTranslated(filled, form);
   return { kind: "done", count: items.length, cut };
 }
 

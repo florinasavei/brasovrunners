@@ -18,6 +18,7 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
+import { useTranslations } from "next-intl";
 import { countForm } from "@/i18n/count-form";
 import { missingForPublish, missingInLanguage, type PublishGapBox } from "@/modules/content/events/ui/publish-check";
 import TranslateCardButton from "@/modules/translate/ui/TranslateCardButton";
@@ -116,6 +117,16 @@ export function tabLabel(parts: readonly (string | null | undefined | false)[]):
 }
 
 /**
+ * The default «tradus — verifică» on an English tab (§NNN), from `Translate` — a namespace every
+ * backoffice page already hands its client islands. Drawn only after a press, in the browser, so a
+ * strip rendered without a translator (a test's static render) never reaches it.
+ */
+export function TranslatedTabWord() {
+  const words = useTranslations("Translate");
+  return <>{words("tabTranslated")}</>;
+}
+
+/**
  * The same words in both languages (§354, bilingual everywhere): which of the panel's boxes to
  * compare across languages, what the amber line above the panels says, and the word each copying
  * tab wears — every tab after the first, compared with the first (`routing.locales` order). A
@@ -192,9 +203,11 @@ export default function LocaleTabPanels({
    */
   translateCard?: boolean;
   /**
-   * The English tab's word right after a translate press filled a box in it (§NNN): «tradus —
-   * verifică», until the person types there. Whatever the word, a press that filled a box of this
-   * strip brings the English tab forward (`TRANSLATED_EVENT`); the word is drawn only where given.
+   * The English tab's word right after a translate press filled a box in it (§NNN), until the
+   * person types there. Left out, every strip says the catalogue's `Translate.tabTranslated` —
+   * «tradus — verifică» — so the event editor, a standing page, an album, the FAQ and the
+   * newsletter wear the same mark as «Membri» without a word passed. A press that filled a box of
+   * this strip also brings the English tab forward (`TRANSLATED_EVENT`).
    */
   translatedMark?: string;
 }) {
@@ -465,14 +478,23 @@ export default function LocaleTabPanels({
                   the missing language was found at the moment publication was refused, which is the
                   worst moment to find it.
                 */
-                label={tabLabel([
-                  panel.label,
-                  stateOf(index),
-                  // The copying language's tab — every one after the first — says it (§354).
-                  same && identical && index > 0 ? identical.mark : null,
-                  // Right after a translate press filled this panel, until typed into (§NNN).
-                  translated && translatedMark && panel.locale === "en" ? translatedMark : null,
-                ])}
+                label={
+                  <>
+                    {tabLabel([
+                      panel.label,
+                      stateOf(index),
+                      // The copying language's tab — every one after the first — says it (§354).
+                      same && identical && index > 0 ? identical.mark : null,
+                    ])}
+                    {/* Right after a translate press filled this panel, until typed into (§NNN). */}
+                    {translated && panel.locale === "en" && (
+                      <>
+                        {" · "}
+                        {translatedMark ?? <TranslatedTabWord />}
+                      </>
+                    )}
+                  </>
+                }
                 // The header's flag for the language (§NNN, the glyph beside the word), never the label.
                 icon={flag ? <Flag code={flag} width={16} /> : undefined}
                 iconPosition="start"
