@@ -115,6 +115,14 @@ yarn release             versioned archive and share copies under dist/
 `yarn check` is the single gate. The pre-commit hook runs it and CI runs it, so they cannot
 drift. When a step is added to CI that a developer can run locally, it belongs inside `check`.
 
+**A hook forgets git's own environment first (§NNN).** git exports `GIT_DIR` and `GIT_INDEX_FILE`
+into a hook, so everything `yarn check` starts inherits them: on 2026-09-28 a test's throwaway
+repository ran `git init`, `git add` and `git rm` against the repository being committed (1 942
+staged deletions, then `core.bare=true` in the main checkout). Both hooks in `.githooks/` begin
+with `unset GIT_DIR GIT_INDEX_FILE GIT_WORK_TREE GIT_PREFIX`, and a test that spawns git — or a
+script that runs git — passes `env: gitEnv(…)` from `tests/helpers/git-env.ts`, never
+`process.env` as it is; `tests/unit/scripts/hook-git-env.test.ts` holds both ends.
+
 **Dead code.** `node scripts/unused-exports.mjs` lists the exports under `src/` that no other file
 under `src/`, `tests/`, `scripts/` or `docs/` names and their own file does not use — a grep walk,
 no dependency; `--types` adds types and interfaces, `--local` adds exports only their own file uses.

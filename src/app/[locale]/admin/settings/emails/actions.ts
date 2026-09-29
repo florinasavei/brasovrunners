@@ -21,6 +21,7 @@ import { canManageClubSettings, canManageRegistrations } from "@/modules/staff-i
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
 import { flashOutcome } from "@/shared/feedback/flash";
 import { type FormOutcome, keptValuesOf, refused } from "@/shared/forms/outcome";
+import { wholeDigits } from "@/shared/forms/whole-digits";
 import { emailBodyToParagraphs, readEmailBody } from "@/modules/notifications/domain/email-rich-text";
 
 /** Which language to land back in: the form carries it, because an action has no request locale. */
@@ -39,13 +40,9 @@ export async function updateEmailPlanAction(_previous: FormOutcome | null, form:
   const locale = localeOf(form);
   const path = getPathname({ locale, href: "/admin/settings/emails" });
 
-  const number = (name: string): number | null => {
-    const value = form.get(name);
-    if (typeof value !== "string" || value.trim() === "") return null;
-    // Plain text boxes: only a whole number of digits counts; "12.7", "1e3" and "0x10" are refused, never rounded.
-    const trimmed = value.trim();
-    return /^\d+$/.test(trimmed) ? Number(trimmed) : Number.NaN;
-  };
+  // Plain text boxes: only a whole number of digits counts; "12.7", "1e3" and "0x10" are refused, never
+  // rounded — the desk's race-number rule, one function (`wholeDigits`, §NNN).
+  const number = (name: string): number | null => wholeDigits(form.get(name));
 
   try {
     const actor = await requireStaffCapability(canManageClubSettings);

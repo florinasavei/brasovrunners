@@ -208,6 +208,19 @@ describe("§546 the registration form says only what a label cannot", () => {
     }
   });
 
+  it("says what is deleted in the emergency help, and who collects a minor's kit in the guardian's (§NNN)", () => {
+    // «ne-ai dat numărul ei» then «Le ștergem…» was a plural for one number; the kit left the guardian's sentence in §546.
+    expect(ro.Registration.emergencyContactHelp).toContain("Ștergem numele și numărul la șapte zile după eveniment.");
+    expect(ro.Registration.emergencyContactHelp).not.toMatch(/\bLe ștergem\b/);
+    expect(en.Registration.emergencyContactHelp).toContain("We delete the name and number seven days after the event.");
+    expect(ro.Registration.guardianHelp).toContain("ridici kitul");
+    expect(en.Registration.guardianHelp).toContain("collect the kit");
+    for (const catalogue of [ro, en]) {
+      expect(catalogue.Registration.emergencyContactHelp.length).toBeLessThanOrEqual(200);
+      expect(catalogue.Registration.guardianHelp.length).toBeLessThanOrEqual(200);
+    }
+  });
+
   it("never hedges or begs in a text the form draws", () => {
     for (const [locale, catalogue] of [["ro", ro], ["en", en]] as const) {
       const registration = catalogue.Registration as Record<string, unknown>;

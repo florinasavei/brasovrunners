@@ -10,6 +10,10 @@
 # Installed by `yarn setup`, which sets core.hooksPath to .githooks.
 # Deliberate exception — a release merge you really do mean: git push --no-verify.
 
+# git's own environment first, as in pre-commit (§NNN): a git this hook grows to run must find its
+# repository from the current directory, never from variables git exported for the push.
+unset GIT_DIR GIT_INDEX_FILE GIT_WORK_TREE GIT_PREFIX
+
 blocked=""
 
 while read -r _local_ref _local_sha remote_ref _remote_sha; do
