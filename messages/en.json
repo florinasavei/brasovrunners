@@ -556,6 +556,12 @@
       "testKind": "Test",
       "enteredByStaff": "Entered by staff",
       "livesIn": "Lives in: {place}",
+      "sexLine": "Sex: {sex}",
+      "sexOptions": {
+        "MALE": "Male",
+        "FEMALE": "Female"
+      },
+      "shirtLine": "T-shirt: {size}",
       "new": "Add a registration",
       "newTitle": "Add a registration",
       "newExplanation": "For somebody who asked in person. It enters like any registration; the person gets the confirmation email and signs the declaration themselves.",
@@ -1181,6 +1187,8 @@
       "registrationOpensAt": "Registration opens",
       "registrationOpensSoon": "Registration opens soon (no date yet)",
       "registrationOpensSoonHelp": "Ticked, the page says “Registration opens soon” and the form stays closed. Untick it to open: the people who asked to be told get the email.",
+      "kitShirt": "T-shirt",
+      "kitShirtHelp": "When ticked, the form asks for the T-shirt size.",
       "registrationClosesAt": "Registration closes",
       "registrationWindowHelp": "Leave the opening empty and registration opens when the event is published; leave the closing empty and it closes when the event starts.",
       "declarationDocument": "Declaration a participant signs",
@@ -1572,6 +1580,9 @@
         "reminder": {
           "title": "The reminder before the start"
         },
+        "kit": {
+          "title": "Race kit"
+        },
         "confirmation": {
           "title": "Confirmation window",
           "dates": "For {date}: asked from {opens}, due {due}.",
@@ -1715,6 +1726,10 @@
             "sentence": "Asked {opens} days before, due {due} days before",
             "atStart": "Asked {opens} days before, due at the start",
             "off": "No window — the signature is asked at registration"
+          },
+          "kit": {
+            "shirtYes": "T-shirt: yes",
+            "shirtNo": "T-shirt: no"
           },
           "bibs": {
             "from": "From {number}",
@@ -5731,12 +5746,9 @@
     "sex": "Sex",
     "sexOptions": {
       "FEMALE": "Female",
-      "MALE": "Male",
-      "UNSPECIFIED": "Prefer not to say"
+      "MALE": "Male"
     },
     "sexHelp": "For the category rankings.",
-    "sexChoose": "Choose…",
-    "sexMissing": "Choose your sex — you may pick “Prefer not to say”",
     "nationality": "Citizenship",
     "country": "Country of residence",
     "city": "City",
@@ -5860,6 +5872,7 @@
     },
     "disclosure": {
       "race": "{club} member, club and t-shirt — optional",
+      "raceNoShirt": "{club} member and club — optional",
       "health": "Health information — optional",
       "socials": "Socials — optional",
       "guardian": "Registering a minor — parent or legal guardian"

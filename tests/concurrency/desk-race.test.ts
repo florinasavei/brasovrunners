@@ -129,7 +129,7 @@ describe("§420 BR-REQ-037-05 BR-REQ-037-07 a desk entry racing a public submiss
     lastName: "Pop",
     birthDate: "1985-03-02",
     city: "Brașov",
-    sex: "UNSPECIFIED",
+    sex: "FEMALE",
     phone: "+40711111111",
     emergencyContactName: "Ion Vecinul",
     emergencyContactPhone: "+40722222222",

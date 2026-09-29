@@ -84,7 +84,7 @@ async function signedRegistration(event: EventForRegistration): Promise<string> 
       firstName: "Ana",
       lastName: "Popescu",
       birthDate: "1990-05-17",
-      sex: "UNSPECIFIED",
+      sex: "FEMALE",
       phone: "+40711111111",
       emergencyContactName: "Ion Popescu",
       emergencyContactPhone: "+40722222222",

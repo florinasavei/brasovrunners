@@ -588,6 +588,15 @@ export const events = pgTable(
     registrationOpensSoon: boolean("registration_opens_soon").notNull().default(false),
     registrationClosesAt: timestamp("registration_closes_at", { withTimezone: true }),
 
+    /**
+     * «Kit de participare» → «Tricou» (§554; the owner, 2026-09-29: «doar dacă e bifat tricoul să
+     * avem alegerea mărimii în formular»): the event gives its runners a T-shirt, so the registration
+     * form asks the size. False by default — every event before this column asks none — and a size
+     * posted for an event without one is stored as NONE under the lock (`domain/kit.ts`). A series
+     * carries it by scope and a duplicate keeps it, like the rest of the registration block.
+     */
+    kitShirt: boolean("kit_shirt").notNull().default(false),
+
     // The EVENT_DECLARATION document version an internal registration must accept.
     declarationDocumentId: uuid("declaration_document_id").references(() => legalDocuments.id),
 

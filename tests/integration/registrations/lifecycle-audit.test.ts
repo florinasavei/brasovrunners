@@ -144,7 +144,7 @@ const submission = (firstName: string, email: string, when: Date = NOW) => ({
   firstName,
   lastName: "Pop",
   birthDate: BIRTH_DATES[firstName] ?? "1985-03-02",
-  sex: "UNSPECIFIED",
+  sex: "FEMALE",
   nationality: "RO",
   country: "RO",
   city: "Brașov",
