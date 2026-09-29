@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { check, index, integer, pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { boolean, check, index, integer, pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { legalDocuments } from "./legal-documents";
 import { locale } from "./locale";
 import { registrations } from "./registrations";
@@ -84,6 +84,26 @@ export const declarationAcceptances = pgTable(
 
     acceptedAt: timestamp("accepted_at", { withTimezone: true }).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+
+    /**
+     * The proof of signing (§NNN, the second review of 2026-09-29: «the database must not keep only
+     * accepted = true»). `content_sha256` above is the approved version's hash, both languages
+     * together; this is the SHA-256 of **the exact text this person signed** — the version's text in
+     * the row's language with every blank filled as their PDF prints it (`signedTextHash`,
+     * `legal-documents/domain/signed-text.ts`), computed in the transaction that writes the row.
+     * Null on a row from before it: the PDF then prints its proof line without a hash, never a fake.
+     */
+    textHash: text("text_hash"),
+    /**
+     * «Păstrează: reclamație / litigiu în curs» (§NNN): an Administrator's hold, with why, when and
+     * who. While it is set the retention sweep skips the registration this row belongs to and no
+     * erase takes it; clearing it puts the row back on its ordinary schedule. The audit trail keeps
+     * each set and each clear (who, why, the row id — never the person).
+     */
+    retentionHold: boolean("retention_hold").notNull().default(false),
+    retentionHoldReason: text("retention_hold_reason"),
+    retentionHoldAt: timestamp("retention_hold_at", { withTimezone: true }),
+    retentionHoldByStaffUserId: uuid("retention_hold_by_staff_user_id").references(() => staffUsers.id, { onDelete: "set null" }),
   },
   (t) => [
     index("declaration_acceptances_registration_accepted_at_idx").on(t.registrationId, t.acceptedAt),
@@ -92,6 +112,7 @@ export const declarationAcceptances = pgTable(
       "declaration_acceptances_hash_is_sha256_hex",
       sql`${t.contentSha256} ~ '^[0-9a-f]{64}$'`,
     ),
+    check("declaration_acceptances_text_hash_is_sha256_hex", sql`${t.textHash} IS NULL OR ${t.textHash} ~ '^[0-9a-f]{64}$'`),
     // A paper signature is recorded by somebody; an email-link one is recorded by nobody.
     check(
       "declaration_acceptances_paper_is_attested",

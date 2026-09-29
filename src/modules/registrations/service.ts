@@ -13,6 +13,7 @@ import { startHeldBack } from "@/modules/events/domain/dated";
 import { registrationState } from "@/modules/events/domain/registration-window";
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { findCurrentApprovedDocument, findEventDeclaration } from "@/modules/legal-documents/repository";
+import { acceptanceTextHash } from "./signed-declaration";
 import { readClubNotices } from "@/modules/notifications/club-notices";
 import { confirmationNoticeRecipients, resolveDeclarationCopies } from "@/modules/notifications/domain/club-notices";
 import { startingDeadline } from "@/modules/notifications/domain/deadline-rebase";
@@ -2683,6 +2684,8 @@ export async function signDeclaration<T extends Record<string, unknown>>(
       are stored only then. The minor's signature and document ride on the same row (§330): one
       acceptance, one instant, one text, signed by both.
     */
+    const idDocument = needsIdDocument ? (parsed.data.idDocument ?? null) : null;
+    const minorIdDocument = signedByMinorToo && needsIdDocument ? (parsed.data.minorIdDocument ?? null) : null;
     await repo.insertDeclarationAcceptance(tx, {
       registrationId: current.id,
       legalDocumentId: document.id,
@@ -2690,10 +2693,16 @@ export async function signDeclaration<T extends Record<string, unknown>>(
       contentSha256: document.contentSha256,
       locale: current.locale,
       typedName: parsed.data.typedName,
-      idDocument: needsIdDocument ? parsed.data.idDocument : null,
+      idDocument,
       minorTypedName: signedByMinorToo ? (parsed.data.minorTypedName ?? null) : null,
-      minorIdDocument: signedByMinorToo && needsIdDocument ? (parsed.data.minorIdDocument ?? null) : null,
+      minorIdDocument,
       acceptedAt: now,
+      // The proof of signing (§NNN): the exact text this signer's PDF prints, hashed in this transaction.
+      textHash: await acceptanceTextHash(tx, {
+        eventId: current.eventId,
+        document,
+        signer: { registeredName: current.registeredName, guardianName: current.guardianName, locale: current.locale, idDocument, minorIdDocument, acceptedAt: now },
+      }),
     });
 
     const confirmed = await repo.transitionRegistration(tx, {
@@ -2843,6 +2852,12 @@ async function acceptDeclarationOnPaper<T extends Record<string, unknown>>(
     acceptedAt: now,
     method: "PAPER",
     attestedByStaffUserId: actor.id,
+    // The text the paper's record prints (§NNN): the documents stay on the paper, so their blanks are dotted.
+    textHash: await acceptanceTextHash(tx, {
+      eventId: current.eventId,
+      document,
+      signer: { registeredName: current.registeredName, guardianName: current.guardianName, locale: current.locale, idDocument: null, minorIdDocument: null, acceptedAt: now },
+    }),
   });
   const confirmed = await repo.transitionRegistration(tx, {
     id: current.id,

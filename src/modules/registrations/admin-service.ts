@@ -25,6 +25,7 @@ import {
 } from "./admin-repository";
 import { clearOptionalData, OPTIONAL_DATA_FIELDS, type OptionalDataField } from "./consent-withdrawal";
 import { eraseConfirmationMatches } from "./domain/erase-confirmation";
+import { heldRefusal, registrationIsHeld } from "./declaration-hold";
 import { bibNumberInUse, isEventSpareNumber, retiredBibNumbers } from "./bibs";
 import { BIB_NUMBER_MAX, handsSpareAtConfirm } from "./domain/spare-bibs";
 import { canResendReminder, deriveAllowedResendMessageType } from "./domain/resend";
@@ -1091,6 +1092,10 @@ async function eraseRegistration<T extends Record<string, unknown>>(
   reason: string,
   now: Date,
 ): Promise<void> {
+  // A declaration held for a complaint or a dispute (§NNN) is kept, the registration with it: every
+  // erase — one, the batch, an event's — meets the refusal until an Administrator clears the hold.
+  if (await registrationIsHeld(db, current.id)) throw heldRefusal();
+
   // Releasing the place is a capacity decision, so it goes through `unregister` and takes the
   // event lock the same way every other one does (§10.6). Only for a row that holds a place:
   // a lapsed or already-cancelled registration holds nothing to give back.

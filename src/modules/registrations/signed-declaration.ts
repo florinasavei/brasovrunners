@@ -13,6 +13,7 @@ import { currentDeadlines } from "@/modules/deadlines/deadlines";
 import { asksForMinorSignature, deadlineMergeValues, type MergeValues, minimumAgeMergeValue } from "@/modules/legal-documents/domain/merge-fields";
 import { isLegalDocumentBody, type LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
 import { findEventDeclaration } from "@/modules/legal-documents/repository";
+import { signedTextHash } from "@/modules/legal-documents/domain/signed-text";
 import { effectiveMinimumAge } from "./domain/age";
 import { listStatesMergeValues } from "./list-state-words";
 import { listSocialsMergeValues } from "./list-socials-words";
@@ -73,6 +74,8 @@ export type SignedDeclaration = {
   attestedByName: string | null;
   version: number;
   contentSha256: string;
+  /** The SHA-256 of the exact text signed (§NNN); null on a row from before it. */
+  textHash: string | null;
   /** The day the signed version took effect (§499), for the PDF's version line. */
   effectiveAt: Date;
   locale: Locale;
@@ -136,6 +139,7 @@ function signedDeclarationQuery<T extends Record<string, unknown>>(db: Database<
       attestedByName: staffUsers.displayName,
       version: declarationAcceptances.declarationVersion,
       contentSha256: declarationAcceptances.contentSha256,
+      textHash: declarationAcceptances.textHash,
       effectiveAt: legalDocuments.effectiveAt,
       locale: declarationAcceptances.locale,
       title: legalDocumentTranslations.title,
@@ -228,6 +232,46 @@ export async function signedDeclarationEntry<T extends Record<string, unknown>>(
   return signedEntry(signed, await eventMergeValues(db, eventId, signed.locale), labels, audience);
 }
 
+/**
+ * The blanks of a signed race declaration, as its PDF fills them (§95, §108, §330) — and, at the
+ * signing, as the fingerprint of the signed text is taken over them (§NNN): the event's facts, the
+ * runner and who declares, the identity documents as the caller passes them (the club's copy masks
+ * them first, §320; the fingerprint takes them as the signer's own copy prints them), and the moment
+ * of signing inside its sentence, in the event's zone.
+ */
+export function signedDeclarationValues(
+  signed: Pick<SignedDeclaration, "registeredName" | "guardianName" | "locale" | "idDocument" | "minorIdDocument" | "acceptedAt">,
+  event: { values: MergeValues; timezone: string },
+): MergeValues {
+  return {
+    ...event.values,
+    // The runner's name, and who declares (§108): the guardian for a minor, the runner otherwise.
+    participant: signed.registeredName,
+    ...declarantValues(signed.registeredName, signed.guardianName, signed.locale),
+    ...identityDocumentValues(signed.guardianName, { idDocument: signed.idDocument, minorIdDocument: signed.minorIdDocument }),
+    signedAt: formatDay(signed.acceptedAt, { locale: signed.locale, timeZone: event.timezone, style: "long", withTime: true, position: "inline" }),
+  };
+}
+
+/**
+ * The fingerprint of a race declaration as it is signed (§NNN), taken in the transaction that writes
+ * the acceptance: the version's text in the registration's language, filled as the signer's own PDF
+ * fills it — the event's facts read now, the documents as they will be stored, the moment of signing.
+ * Undefined only when the event is gone, which the signing's own lock has already ruled out.
+ */
+export async function acceptanceTextHash<T extends Record<string, unknown>>(
+  db: Database<T>,
+  input: {
+    eventId: string;
+    document: { title: string; body: unknown };
+    signer: Pick<SignedDeclaration, "registeredName" | "guardianName" | "locale" | "idDocument" | "minorIdDocument" | "acceptedAt">;
+  },
+): Promise<string | null> {
+  const event = await eventMergeValues(db, input.eventId, input.signer.locale);
+  if (!event) return null;
+  return signedTextHash({ title: input.document.title, body: asLegalBody(input.document.body), values: signedDeclarationValues(input.signer, event) });
+}
+
 function signedEntry(
   signed: SignedDeclaration,
   event: Awaited<ReturnType<typeof eventMergeValues>>,
@@ -255,24 +299,20 @@ function signedEntry(
     title: signed.title,
     // The template and its values, kept apart so the PDF can set the fill-ins in bold (§225).
     body: asLegalBody(signed.body),
-    values: {
-      ...event.values,
-      // The runner's name, and who declares (§108): the guardian for a minor, the runner otherwise.
-      participant: signed.registeredName,
-      ...declarantValues(signed.registeredName, signed.guardianName, signed.locale),
-      ...identityDocumentValues(signed.guardianName, { idDocument, minorIdDocument }),
-      signedAt: when,
-    },
+    values: signedDeclarationValues({ ...signed, idDocument, minorIdDocument }, event),
     eventTitle: event.title,
     version: signed.version,
     contentSha256: signed.contentSha256,
     effectiveAt: signed.effectiveAt,
+    // The row's own fingerprint of what was signed (§NNN), never one computed now.
+    textHash: signed.textHash,
     signature: {
       typedName: signed.typedName,
       idDocument,
       minor,
       signedAt: whenStart,
       signedAtInline: when,
+      acceptedAt: signed.acceptedAt,
       method:
         signed.method === "PAPER"
           ? labels.signedOnPaper(signed.attestedByName ?? labels.attesterRemoved, when)

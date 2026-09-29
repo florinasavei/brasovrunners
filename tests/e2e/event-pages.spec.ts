@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { openFold } from "./support/fold";
 
 /**
  * BR-REQ-041-01 — mobile-first journeys.
@@ -323,6 +324,32 @@ test.describe("BR-REQ-041-01 the event detail page on a phone", () => {
 
     // Still nothing wider than the phone.
     expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
+  });
+
+  /**
+   * §NNN — the second review of 2026-09-29: every group run's page says the essential safety rules
+   * the optional declaration names, inside «Condiții de participare», in both languages; a race's
+   * page keeps its own rules and shows none of them.
+   */
+  test("says a group run's safety rules inside «Condiții de participare», and none on a race", async ({ page }) => {
+    await page.goto("/ro/evenimente/tura-pe-tampa");
+    const conditions = page.getByTestId("conditions-fold");
+    const rules = conditions.getByTestId("group-run-safety-rules");
+    await expect(rules).toBeHidden();
+    await openFold(conditions);
+    await expect(rules.getByRole("heading", { level: 3, name: "Reguli de siguranță", exact: true })).toBeVisible();
+    await expect(rules.locator("li")).toHaveCount(7);
+    await expect(rules).toContainText("nu este un serviciu de ghidaj montan");
+    await expect(rules).toContainText("Alergi doar dacă, din câte știi, sănătatea ta îți permite.");
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
+
+    await page.goto("/en/events/tampa-trail");
+    await openFold(page.getByTestId("conditions-fold"));
+    await expect(page.getByTestId("group-run-safety-rules").getByRole("heading", { level: 3, name: "Safety rules", exact: true })).toBeVisible();
+
+    await page.goto("/ro/evenimente/crosul-aniversar-brasov-runners");
+    await expect(page.getByTestId("conditions-fold")).toBeAttached();
+    await expect(page.getByTestId("group-run-safety-rules")).toHaveCount(0);
   });
 
   test("carries a parseable SportsEvent block naming the club as organizer", async ({ page }) => {

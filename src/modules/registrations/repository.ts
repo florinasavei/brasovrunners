@@ -1213,6 +1213,8 @@ export async function insertDeclarationAcceptance<T extends Record<string, unkno
     /** `PAPER` with the staff id that recorded it; omitted for the email link (BR-REQ-037-07). */
     method?: "EMAIL_LINK" | "PAPER";
     attestedByStaffUserId?: string | null;
+    /** The SHA-256 of the exact text signed (§NNN, `acceptanceTextHash`), computed in the caller's transaction. */
+    textHash: string | null;
   },
 ): Promise<void> {
   await db.insert(declarationAcceptances).values({
@@ -1228,5 +1230,6 @@ export async function insertDeclarationAcceptance<T extends Record<string, unkno
     acceptedAt: input.acceptedAt,
     method: input.method ?? "EMAIL_LINK",
     attestedByStaffUserId: input.attestedByStaffUserId ?? null,
+    textHash: input.textHash,
   });
 }

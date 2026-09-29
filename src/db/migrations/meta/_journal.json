@@ -743,6 +743,13 @@
       "when": 1790627988251,
       "tag": "0108_members_only_and_discount_codes",
       "breakpoints": true
+    },
+    {
+      "idx": 106,
+      "version": "7",
+      "when": 1790665518907,
+      "tag": "0110_declaration_proof_and_hold",
+      "breakpoints": true
     }
   ]
 }

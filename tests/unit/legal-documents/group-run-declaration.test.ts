@@ -180,7 +180,8 @@ describe("§393 the two templates", () => {
     §534, the counsel's second pass (point 6): kept by its purpose, never by a count from the signing.
     The active declaration while it is needed for the runs it covers; withdrawn at the signer's request,
     used for no later run, a copy kept only as long as a legal claim needs it, the three-year limitation
-    period in view, then deleted. «Three years from the signing» was untrue of a declaration still active.
+    period in view, and while a complaint or a dispute is under way until it is settled (§NNN, the second
+    review). «Three years from the signing» was untrue of a declaration still active.
   */
   it("says it is optional, that it registers nobody, and keeps it by its purpose, never three years from the signing (§534)", () => {
     for (const surface of ["asphalt", "trail"] as const) {
@@ -189,12 +190,12 @@ describe("§393 the two templates", () => {
       expect(roText).toMatch(/este opțională și nu este o condiție/);
       expect(roText).toContain("Declarația activă se păstrează cât timp este necesară pentru gestionarea participării mele la alergările la care se aplică.");
       expect(roText).toContain(
-        "Dacă cer retragerea ei, la adresa de contact a clubului, nu mai este folosită pentru participările viitoare; o copie poate fi păstrată și după aceea, doar pe perioada necesară constatării, exercitării sau apărării unor drepturi, ținând seama de termenul general de prescripție de trei ani (art. 2517 din Codul civil); după expirarea acestei perioade, copia se șterge.",
+        "Dacă cer retragerea ei, la adresa de contact a clubului, nu mai este folosită pentru participările viitoare. O copie poate fi păstrată și după aceea, pe durata necesară constatării, exercitării sau apărării unor drepturi, inclusiv ținând seama de termenul general de prescripție de trei ani prevăzut de art. 2517 din Codul civil. Dacă există o reclamație, un litigiu sau o procedură în curs, documentul poate fi păstrat până la soluționarea definitivă a acesteia.",
       );
       expect(enText).toMatch(/optional and is not a condition/);
       expect(enText).toContain("The active declaration is kept as long as it is needed to manage my taking part in the runs it applies to.");
-      expect(enText).toContain("If I ask for its withdrawal, at the club's contact address, it is no longer used for any later run;");
-      expect(enText).toContain("with the general three-year limitation period in view (art. 2517 of the Romanian Civil Code); at the end of that period, the copy is deleted.");
+      expect(enText).toContain("If I ask for its withdrawal, at the club's contact address, it is no longer used for any later run.");
+      expect(enText).toContain("including with regard to the general three-year limitation period set by art. 2517 of the Romanian Civil Code. If a complaint, a dispute or proceedings are under way, the document may be kept until they are finally settled.");
       for (const locale of ["ro", "en"] as const) {
         expect(TEXTS[surface][locale].join(" "), `${surface} ${locale}`).not.toMatch(
           /trei ani de la (alergare|semnare)|three years from the (run|signing)|fără termen de încetare|with no end date/,

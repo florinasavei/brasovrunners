@@ -964,7 +964,18 @@ export type DeclarationAcceptanceRow = {
   minorTypedName: string | null;
   minorIdDocument: string | null;
   declarationVersion: number;
+  /** The row's id: what the hold's form names (§NNN). */
+  id: string;
+  /** The SHA-256 of the exact text signed (§NNN); null on a row from before it. */
+  textHash: string | null;
+  /** «Păstrează: reclamație / litigiu în curs» (§NNN): whether, why, when and by whom. */
+  retentionHold: boolean;
+  retentionHoldReason: string | null;
+  retentionHoldAt: Date | null;
+  retentionHoldByName: string | null;
 };
+
+const holdBy = alias(staffUsers, "retention_hold_by");
 
 export async function listDeclarationAcceptances<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -972,6 +983,12 @@ export async function listDeclarationAcceptances<T extends Record<string, unknow
 ): Promise<DeclarationAcceptanceRow[]> {
   return db
     .select({
+      id: declarationAcceptances.id,
+      textHash: declarationAcceptances.textHash,
+      retentionHold: declarationAcceptances.retentionHold,
+      retentionHoldReason: declarationAcceptances.retentionHoldReason,
+      retentionHoldAt: declarationAcceptances.retentionHoldAt,
+      retentionHoldByName: holdBy.displayName,
       acceptedAt: declarationAcceptances.acceptedAt,
       typedName: declarationAcceptances.typedName,
       idDocument: declarationAcceptances.idDocument,
@@ -983,6 +1000,7 @@ export async function listDeclarationAcceptances<T extends Record<string, unknow
     })
     .from(declarationAcceptances)
     .leftJoin(staffUsers, eq(staffUsers.id, declarationAcceptances.attestedByStaffUserId))
+    .leftJoin(holdBy, eq(holdBy.id, declarationAcceptances.retentionHoldByStaffUserId))
     .where(eq(declarationAcceptances.registrationId, registrationId))
     .orderBy(desc(declarationAcceptances.acceptedAt));
 }

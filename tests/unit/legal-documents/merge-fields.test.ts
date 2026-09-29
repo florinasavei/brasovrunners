@@ -144,8 +144,10 @@ describe("the declaration's merge fields", () => {
         // both the link and the paper. The notice's moved once more, by a paragraph each, for the
         // newsletter (§445) and the team page's names and photographs (§459), by two sentences for
         // a group run's declaration signed once per series, the older version kept as evidence (§523),
-        // and once more for the club members' accounts and their zone (§524).
-        const ceiling = key === "EVENT_DECLARATION" ? 9000 : key === "PRIVACY_NOTICE" ? 26500 : 11000;
+        // and once more for the club members' accounts and their zone (§524), and by the second
+        // review's retention sentence for a group run's declaration (§NNN).
+        // The race declaration grew by the second review's dispute sentence (§NNN).
+        const ceiling = key === "EVENT_DECLARATION" ? 9300 : key === "PRIVACY_NOTICE" ? 26800 : 11000;
         expect(text.length, `${key} ${locale}`).toBeGreaterThan(key === "EVENT_DECLARATION" ? 1500 : 2500);
         expect(text.length, `${key} ${locale}`).toBeLessThan(ceiling);
       }

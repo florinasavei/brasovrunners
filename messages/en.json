@@ -435,7 +435,18 @@
         "action": "Sign the declaration"
       }
     },
-    "membersOnly": "Members only"
+    "membersOnly": "Members only",
+    "safetyRules": {
+      "heading": "Safety rules",
+      "intro": "This is a {club} group run: nobody supervises each participant individually, and it is not a guiding service.",
+      "introMountain": "This is a {club} group run: nobody supervises each participant individually, and it is not a mountain guiding service.",
+      "pace": "Each runner chooses their own pace and way, within the group.",
+      "gear": "Shoes and clothing suited to the ground and the weather; on a night run, a headlamp.",
+      "supplies": "Bring your own water and food.",
+      "health": "Run only if, as far as you know, your health allows it.",
+      "wildlife": "Animals and weather: follow the organiser's general safety instructions.",
+      "leaving": "If you leave the group, tell the organiser."
+    }
   },
   "Admin": {
     "botCheck": {
@@ -611,7 +622,9 @@
           "consent_withdrawn": "Consent withdrawn",
           "declaration_downloaded": "Signed declaration downloaded (PDF)",
           "sent_now": "Sent now, past the scheduled round",
-          "cancelled_by_participant": "Cancelled by the participant, from their own link"
+          "cancelled_by_participant": "Cancelled by the participant, from their own link",
+          "declaration_hold_set": "declaration kept for a complaint or a dispute",
+          "declaration_hold_cleared": "declaration keep removed"
         }
       },
       "locale": {
@@ -4951,7 +4964,8 @@
                 "A minor aged 14 to 17 signs beside the parent or guardian, each with their own identity document; nobody under 14 can register for any event.",
                 "Kept: the names, the documents, the text's version, its fingerprint, the moment and the method. It is a simple electronic signature.",
                 "Then they get the signed declaration by email, as a PDF, through the email queue (by «Deadlines» → «When emails leave»). At the desk, the kit is handed over against the document written in the declaration.",
-                "Whoever cannot sign online signs on paper at the desk, and the volunteer presses «Confirm on paper». The club keeps the signed original."
+                "Whoever cannot sign online signs on paper at the desk, and the volunteer presses «Confirm on paper». The club keeps the signed original.",
+                "Every new signature keeps the SHA-256 fingerprint of the text signed. The PDF prints it with the version and the second of signing; the registration shows its first 12 characters."
               ]
             },
             {
@@ -4967,7 +4981,8 @@
                 "Declarations are records in the database, not files; the PDF is made on request, identically.",
                 "Registrations and declarations are kept 3 years from the event, then deleted by themselves. The emergency contact and the health note are deleted 7 days after the event.",
                 "Downloaded exports and PDFs that carry identity documents are yours to delete, within 7 days of the event.",
-                "The privacy notice says exactly this."
+                "The privacy notice says exactly this.",
+                "A complaint or dispute in progress: on the registration or under «Signed declarations (group run)», «Keep: a complaint or dispute in progress». Nothing deletes it until «Remove the keep»."
               ]
             },
             {
@@ -5255,7 +5270,7 @@
         "few": "Erase {count} signed declarations for “{run}”? They cannot be recovered.",
         "other": "Erase {count} signed declarations for “{run}”? They cannot be recovered."
       },
-      "batchChanged": "The ticked declarations changed meanwhile — at least one was already erased. Nothing was erased: reload the page and tick again.",
+      "batchChanged": "The ticked declarations changed meanwhile, or one is kept for a complaint. Nothing was erased: reload the page and tick again.",
       "batchErased": {
         "one": "{count} signed declaration was erased. The log keeps your name and the reason.",
         "few": "{count} signed declarations were erased. The log keeps your name and the reason.",
@@ -5607,6 +5622,25 @@
         "createTitle": "Add the code?",
         "createBody": "Members see it in their area as soon as you add it."
       }
+    },
+    "declarationHold": {
+      "textHash": "Fingerprint",
+      "title": "Keep for a complaint or a dispute",
+      "releaseFold": "Remove the keep",
+      "help": "Use it only while a complaint, a dispute or proceedings are under way. While it is set, the declaration is not deleted.",
+      "releaseHelp": "When the case is over, remove the keep. The declaration then goes back to its usual period.",
+      "reason": "Reason",
+      "reasonHelp": "Say what it is about, without the person's name.",
+      "releaseReasonHelp": "Say why it ends, without the person's name.",
+      "hold": "Keep: a complaint or dispute in progress",
+      "release": "Remove the keep",
+      "holdTitle": "Keep the declaration?",
+      "holdBody": "It is no longer deleted automatically, and nobody can delete it until you remove the keep.",
+      "releaseTitle": "Remove the keep?",
+      "releaseBody": "The declaration goes back to its usual period and can be deleted again.",
+      "heldLine": "Kept {when}, by {who}: {reason}",
+      "whoRemoved": "a team member (account removed)",
+      "eraseRefused": "Nothing was erased: the declaration is kept for a complaint or a dispute, or it changed meanwhile. Reload the page."
     }
   },
   "NotFound": {
@@ -7030,7 +7064,9 @@
       "memberCodeHidden": "The code was hidden.",
       "memberCodeShown": "The code is shown to members again.",
       "memberCodeMoved": "The order of the codes was changed.",
-      "memberCodeDeleted": "The code was deleted."
+      "memberCodeDeleted": "The code was deleted.",
+      "declarationHeld": "The declaration is kept. It is not deleted until you remove the keep.",
+      "declarationReleased": "The keep was removed."
     }
   },
   "Network": {

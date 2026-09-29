@@ -211,6 +211,9 @@ describe("§369 the club's name leaves the platform only through the constant", 
           "Team.lead",
           // «Întrebări frecvente» (§525): the page's lead and its description.
           "Faq.lead",
+          // A group run's safety rules (§NNN): the first line names the club's run, by surface.
+          "Event.safetyRules.intro",
+          "Event.safetyRules.introMountain",
         ].sort(),
       );
     }
@@ -224,6 +227,8 @@ describe("§369 the club's name leaves the platform only through the constant", 
       "page.report.heading": 1,
       // «Echipa» (§459), «Întrebări frecvente» (§525) and «Beneficiile membrilor» (§524): each page and its description for search engines.
       lead: 6,
+      "safetyRules.intro": 1,
+      "safetyRules.introMountain": 1,
     };
     const sources = sourceFiles(path.join(process.cwd(), "src")).map((file) => readFileSync(file, "utf8"));
     for (const [key, expected] of Object.entries(calls)) {
