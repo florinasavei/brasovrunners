@@ -195,7 +195,8 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
       label: t("pages.columnOrder"),
       align: "right",
       hideBelow: "sm",
-      render: (row) => row.navOrder,
+      // Its place in «Ordinea meniului» (§NNN), counting every entry of the menu, not only the pages.
+      render: (row) => placeInMenu(row.id),
     },
   ];
 
@@ -245,6 +246,15 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
         </Stack>
       </Stack>
 
+      {/* «Ordinea meniului» (§NNN): every entry of the site menu, the standard and the custom pages together. */}
+      <MenuOrderPanel
+        locale={locale}
+        order={menuOrder}
+        pages={pageRows.map((row) => ({ id: row.id, title: row.title, editorialStatus: row.editorialStatus }))}
+        mayEdit={mayOrderMenu}
+        openWhen={{ saved: saved === "menuOrder" }}
+      />
+
       <Stack
         direction="row"
         sx={{ justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 1 }}
@@ -286,41 +296,9 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
         }}
         empty={<Typography variant="body1">{t("pages.empty")}</Typography>}
         rowActions={(row) => {
-          const index = rows.findIndex((candidate) => candidate.id === row.id);
-
           return (
             <Stack direction="row" spacing={0.5} sx={{ justifyContent: "flex-end", gap: 0.5 }}>
-              {/* The ends have no button rather than a disabled one: there is nothing to
-                  explain about an arrow that would move the first page above itself, and a
-                  control that never does anything is worse than one that is not there. */}
-              {/* The arrows only for a role `movePageInNav` accepts (`isEditorial`): a Redactor reads
-                  the list since its layout asks `canReadContent`, and an arrow it would be refused on is noise. */}
-              {mayMove && index > 0 && (
-                <Box component="form" action={movePageAction} data-action-key={actionKeyOf(movePageAction)}>
-                  <input type="hidden" name="uiLocale" value={locale} />
-                  <input type="hidden" name="pageId" value={row.id} />
-                  <input type="hidden" name="direction" value="up" />
-                  <SubmitButton
-                    label="↑"
-                    pendingLabel="↑"
-                    variant="outlined"
-                    ariaLabel={t("pages.moveUpNamed", { title: row.title ?? t("pages.untitled") })}
-                  />
-                </Box>
-              )}
-              {mayMove && index < rows.length - 1 && (
-                <Box component="form" action={movePageAction} data-action-key={actionKeyOf(movePageAction)}>
-                  <input type="hidden" name="uiLocale" value={locale} />
-                  <input type="hidden" name="pageId" value={row.id} />
-                  <input type="hidden" name="direction" value="down" />
-                  <SubmitButton
-                    label="↓"
-                    pendingLabel="↓"
-                    variant="outlined"
-                    ariaLabel={t("pages.moveDownNamed", { title: row.title ?? t("pages.untitled") })}
-                  />
-                </Box>
-              )}
+              {/* The ↑ / ↓ that stood here went with §NNN: a page moves in «Ordinea meniului», above. */}
               {/*
                 The verbs, in the same ⋮ every other list uses (§256). The two forms beside it
                 are the Server Actions the menu submits — hidden, because the menu is the

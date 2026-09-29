@@ -9,14 +9,16 @@ import { menuOrderOnSite } from "@/modules/content/menu/on-site";
 import { sortByMenuOrder } from "@/modules/content/menu/order";
 import { OPEN_METEO_SITE } from "@/modules/weather/domain/credit";
 import { weatherListWords } from "@/modules/weather/words";
-import { cachedShownContactAddresses } from "@/modules/public-cache/reads";
-import { env } from "@/shared/config/env";
+import { telHref } from "@/modules/contact/domain/public-phone";
+import { cachedPublicPhone, cachedShownContactAddresses } from "@/modules/public-cache/reads";
 import { DENSITY } from "@/theme/density";
 import BuildBadge from "./BuildBadge";
+import ClubIdentity from "./ClubIdentity";
+import { clubSocialLinks } from "./club-socials";
 import { DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_SX } from "./disclosure";
 import { foldLineSx, footerGapSx, footerTargetSx, PHONE_WIDE } from "./footer-target";
 import LocaleSwitcher from "./LocaleSwitcher";
-import SocialIcon, { type SocialNetwork } from "./SocialIcon";
+import SocialIcon from "./SocialIcon";
 import ThemeModeToggle from "./ThemeModeToggle";
 
 /**
@@ -174,6 +176,15 @@ const BAR_HEIGHT = 44;
  * «Vremea» line (`EventFacts`, BR-REQ-041-01) — on the listing with a featured forecast the credit
  * is said twice, the hero's and this one; the owner objected to the strip under the cards, not to
  * the hero's line.
+ *
+ * ## The club's identity, inside the fold (§565, §NNN)
+ *
+ * The owner, 2026-09-29: the club's legal name and CIF «also in the footer, more clearly». §565
+ * drew a block under the bar for it — the name, the marks again, «Contact» with the address and
+ * «Scrie-ne» again — and the owner, the same evening: «ai duplicat footerul, arată oribil!! partea
+ * asta trebuie să fie în footerul colapsat!». So the block is gone, and what it added that the
+ * footer did not already have is two items of the fold: the identity line (`ClubIdentity`'s
+ * `fold`) after the links, and the public phone beside «Scrie-ne». The marks stay on the bar, once.
  */
 export default async function SiteFooter() {
   const legal = await getTranslations("Legal");
@@ -190,11 +201,10 @@ export default async function SiteFooter() {
     the contact line instead. The rest of the fold is not the menu and keeps its place.
   */
   const faqAfterContact = showFaq && sortByMenuOrder(["faq", "contact"], (key) => key, await menuOrderOnSite())[0] === "contact";
-  const social = [
-    { network: "facebook" as SocialNetwork, href: env.CLUB_FACEBOOK_URL, label: footer("about.facebook") },
-    { network: "instagram" as SocialNetwork, href: env.CLUB_INSTAGRAM_URL, label: footer("about.instagram") },
-    { network: "strava" as SocialNetwork, href: env.CLUB_STRAVA_URL, label: footer("about.strava") },
-  ].filter((entry): entry is typeof entry & { href: string } => Boolean(entry.href));
+  // The bar's marks (`clubSocialLinks`, one list since §565).
+  const social = await clubSocialLinks();
+  // «Telefon public» (§565): beside «Scrie-ne» in the fold while one is set (§NNN).
+  const phone = await cachedPublicPhone();
 
   return (
     <Box
@@ -404,9 +414,22 @@ export default async function SiteFooter() {
                     </Box>
                   </Box>
                 ))}
+                {/* «Telefon public» (§565), while the club has set one: one more item beside «Scrie-ne»
+                    (§NNN), shown as typed and dialled by its digits. */}
+                {phone && (
+                  <Box component="span" sx={{ display: "inline-flex", columnGap: 0.5, minWidth: 0 }}>
+                    <span aria-hidden="true">·</span>
+                    <Box component="a" href={telHref(phone)} data-testid="footer-phone" sx={{ whiteSpace: "nowrap" }}>
+                      {phone}
+                    </Box>
+                  </Box>
+                )}
               </Box>
               {/* «Întrebări frecvente» after «Contact», where the club's menu order puts it (§NNN): a line of its own on a phone, the next item of the row from `sm`. */}
               {faqAfterContact && <Link href="/faq" data-testid="footer-faq">{footer("faq")}</Link>}
+              {/* The club's legal name and CIF (§565), inside the fold after its links (§NNN): one
+                  line of the panel, nothing while the legal name is unset. */}
+              <ClubIdentity shape="fold" />
               {/* The last line (§480, amending §385): Open-Meteo's credit and the stamp, side by side
                   from `sm` and one under the other on a phone, at the panel's 14 pixels. */}
               <Box

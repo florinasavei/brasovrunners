@@ -383,12 +383,21 @@ test.describe("§372 §378 §385 one row on a phone, in both languages, fold clo
             // published, and the listing's cached render can still carry the link after that spec
             // deletes its question. So that one line is allowed exactly when the link is drawn on a
             // line of its own.
+            //
+            // The club's legal identity (§565; inside the fold since the hotfix, #293) is one line
+            // more, after «Scrie-ne», exactly when the environment holds the legal name — CI's server
+            // sets none, a developer's `.env.local` may. It is words, not a link, with no gap or margin
+            // of its own: 21 pixels a line of the panel's 14-pixel words, and a legal name is long
+            // enough to wrap onto a second at 320 and 360. So the bound grows by that one line's own
+            // measured height, and by nothing when it is not drawn.
             if (width < SM) {
               const wrappedChip = chip.height > 30;
               const faq = panelContent(fold).getByRole("link", { name: /^(Întrebări frecvente|FAQ)$/ });
               const faqOwnLine = (await faq.count()) > 0 && (await boxOf(faq, "the FAQ link")).y - boxes[0]!.y > 1;
-              const bound = (width >= 360 ? 100 : wrappedChip ? 112 : 104) + (faqOwnLine ? 24 + phoneGapAt(width) : 0);
-              expect(panel.height, `the compact panel's height at ${width}px${wrappedChip ? ", its chip on two lines" : ""}${faqOwnLine ? ", the FAQ on a line of its own" : ""}`).toBeLessThanOrEqual(bound);
+              const identity = panelContent(fold).getByTestId("footer-club-identity");
+              const identityLine = (await identity.count()) > 0 ? (await boxOf(identity, "the identity line")).height : 0;
+              const bound = (width >= 360 ? 100 : wrappedChip ? 112 : 104) + (faqOwnLine ? 24 + phoneGapAt(width) : 0) + identityLine;
+              expect(panel.height, `the compact panel's height at ${width}px${wrappedChip ? ", its chip on two lines" : ""}${faqOwnLine ? ", the FAQ on a line of its own" : ""}${identityLine ? ", the club's identity line" : ""}`).toBeLessThanOrEqual(bound);
             } else {
               // From `sm` §385's one wrapping row, unchanged by the phone's lines (§480): 92px at
               // 768 on qa before this pass and after it, two 44-pixel lines and the 4 under them.
@@ -450,7 +459,8 @@ test.describe("§372 §378 §385 one row on a phone, in both languages, fold clo
         await expect(panelBadge).toBeHidden();
       }
 
-      // At the end of the page: the same one row, nothing under it.
+      // At the end of the page: the same one row, nothing under it — the block §565 drew under the
+      // bar is gone since the hotfix (#293), and the club's identity is a line inside the fold.
       await restAtTheEnd(page);
       const chrome = await page.evaluate(() => {
         const bar = document.querySelector("footer")!.getBoundingClientRect();
@@ -495,4 +505,52 @@ test.describe("§372 the desktop build stamp, pinned to the bar's own corner", (
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(0);
   });
+});
+
+/**
+ * §565, as the hotfix (#293) left it — the club's legal identity is one line inside «Despre club,
+ * contact și termeni», after «Scrie-ne»: «<legal name> (<site name>) · CIF <CIF>» (the owner,
+ * 2026-09-29: «partea asta trebuie să fie în footerul colapsat!»), and nothing is under the bar any
+ * more — the block §565 drew there repeated the bar's marks and the fold's «Scrie-ne». The legal
+ * facts come from the environment and the suite's server sets none (CI) — a developer's
+ * `.env.local` may — so the line is checked when it is drawn and its absence when it is not; its
+ * words are never compared with a value, which the repository does not hold.
+ */
+test.describe("§565 the club's identity, a line of the fold", () => {
+  for (const width of [320, 360, 768, 1280] as const) {
+    test(`at ${width}px it is a line of the open fold after «Scrie-ne», nothing under the bar, nothing wider than the page`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 720 });
+      await page.goto("/ro/evenimente", { waitUntil: "networkidle" });
+      const { fold, summary } = controls(page);
+      const identity = page.getByTestId("footer-club-identity");
+      // Once at most, and wherever it is drawn it is the fold's.
+      const drawn = await identity.count();
+      expect(drawn).toBeLessThanOrEqual(1);
+      await expect(fold.getByTestId("footer-club-identity")).toHaveCount(drawn);
+      await summary.click();
+      await expect(fold).toHaveAttribute("open", "");
+      await restAtTheEnd(page);
+
+      // The document ends where the footer does, the fold open: nothing under the bar.
+      const under = await page.evaluate(() => document.documentElement.scrollHeight - (document.querySelector("footer")!.getBoundingClientRect().bottom + window.scrollY));
+      expect(Math.abs(under), `nothing under the bar at ${width}px`).toBeLessThanOrEqual(1);
+
+      if (drawn > 0) {
+        await expect(identity).toBeVisible();
+        await expect(identity).toContainText("(");
+        // A line of its own: under «Scrie-ne», above Open-Meteo's credit, inside the screen.
+        const contact = await boxOf(fold.getByTestId("footer-contact"), "«Scrie-ne»");
+        const line = await boxOf(identity, "the identity line");
+        const credit = await boxOf(fold.getByTestId("footer-weather-credit"), "the weather credit");
+        expect(line.y, `the identity is under «Scrie-ne» at ${width}px`).toBeGreaterThanOrEqual(contact.y + contact.height - 0.5);
+        expect(credit.y, `the credit is under the identity at ${width}px`).toBeGreaterThanOrEqual(line.y + line.height - 0.5);
+        expect(line.x + line.width, `the identity ends inside ${width}px`).toBeLessThanOrEqual(width + 0.5);
+      } else {
+        await expect(fold).not.toContainText("· CIF");
+      }
+
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+      expect(overflow).toBeLessThanOrEqual(0);
+    });
+  }
 });

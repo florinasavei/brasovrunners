@@ -76,7 +76,7 @@ addEventListener("message", (event) => {
 
 type PlayerWindow = { playerMessages?: string[] };
 
-/* Serial: all four tests act on the one page the first creates. */
+/* Serial: every test acts on the one page the first creates. */
 test.describe.serial("BR-REQ-050-03 standing pages", () => {
   test("is created, published, and reachable in both languages", async ({ page }) => {
     const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
@@ -91,7 +91,6 @@ test.describe.serial("BR-REQ-050-03 standing pages", () => {
     /* The two languages are tabs since §259: the English panel is `hidden` until its tab is
        pressed, which is also how an organizer reaches it. */
     const language = (name: RegExp) => page.getByRole("tab", { name });
-    await field("navOrder").fill("5");
     await field("translations.ro.title").fill(title);
     await field("translations.ro.slug").fill(slug);
 
@@ -237,6 +236,40 @@ test.describe.serial("BR-REQ-050-03 standing pages", () => {
     await expect(page).toHaveURL(new RegExp(`/en/pages/${englishSlug}$`));
   });
 
+  test("takes its place in «Ordinea meniului», first in the menu when moved there, and back to the end", async ({ page }) => {
+    // §NNN: one order for every entry of the menu, the Administrator's, on «Pagini» → «Paginile clubului».
+    await signIn(page, "Dev Administrator");
+    await page.goto("/ro/admin/pages");
+    const card = page.getByTestId("menu-order");
+    await card.locator("summary").first().click();
+    const entry = card.getByTestId("menu-order-list").locator("li").filter({ hasText: title });
+    await expect(entry).toBeVisible();
+
+    // «Sus» until it is first: the button goes disabled at the top.
+    const up = entry.getByRole("button", { name: `Mută „${title}” mai sus` });
+    for (let presses = 0; presses < 60 && (await up.isEnabled()); presses += 1) await up.click();
+    await expect(up).toBeDisabled();
+    await expect(card.getByTestId("menu-order-unsaved")).toBeVisible();
+    await card.getByRole("button", { name: "Salvează ordinea" }).click();
+    await confirmDialog(page, "Schimbi ordinea meniului?");
+    await expect(page).toHaveURL(/saved=menuOrder/);
+
+    // The public menu's first entry is the page now, before «Evenimente»; no rule between the groups.
+    await page.goto(`/ro/pagini/${slug}`, { waitUntil: "networkidle" });
+    const nav = page.getByRole("navigation", { name: "Navigare principală" });
+    await expect(nav.getByRole("link").first()).toHaveText(title);
+
+    // Back to the end, so the other specs meet the menu they expect.
+    await page.goto("/ro/admin/pages");
+    await card.locator("summary").first().click();
+    const down = entry.getByRole("button", { name: `Mută „${title}” mai jos` });
+    for (let presses = 0; presses < 60 && (await down.isEnabled()); presses += 1) await down.click();
+    await expect(down).toBeDisabled();
+    await card.getByRole("button", { name: "Salvează ordinea" }).click();
+    await confirmDialog(page, "Schimbi ordinea meniului?");
+    await expect(page).toHaveURL(/saved=menuOrder/);
+  });
+
   test("refuses to publish a page whose other language is empty", async ({ page }) => {
     const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
 
@@ -273,5 +306,29 @@ test.describe.serial("BR-REQ-050-03 standing pages", () => {
       viewportWidth: document.documentElement.clientWidth,
     }));
     expect(overflow.documentWidth).toBeLessThanOrEqual(overflow.viewportWidth);
+  });
+
+  /**
+   * §565 — a standing page is the club talking about itself, so it ends with the club's legal name
+   * and CIF: «<legal name> (<site name>) · CIF <CIF>», composed from the environment. The suite's
+   * server sets no legal fact (CI) — a developer's `.env.local` may — so the line is checked when it
+   * is drawn and its absence when it is not; its words are never compared with a value.
+   */
+  test("ends with the club's legal identity line when the facts are set, and with nothing otherwise", async ({ page }) => {
+    await page.goto(`/ro/pagini/${slug}`);
+    const main = page.locator("main");
+    const line = main.getByTestId("club-identity-line");
+    const lines = await line.count();
+    expect(lines).toBeLessThanOrEqual(1);
+    if (lines === 0) {
+      await expect(main).not.toContainText("· CIF");
+      return;
+    }
+    await expect(line).toContainText("(");
+    // Under the page's own words, and never wider than the screen.
+    const heading = await main.getByRole("heading", { level: 1 }).boundingBox();
+    const box = await line.boundingBox();
+    expect(box!.y).toBeGreaterThan(heading!.y);
+    expect(box!.x + box!.width).toBeLessThanOrEqual(page.viewportSize()!.width);
   });
 });

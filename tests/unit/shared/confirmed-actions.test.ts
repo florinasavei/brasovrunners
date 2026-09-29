@@ -112,6 +112,8 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   deleteAlbumAction: [],
   deletePictureAction: [],
   transitionPageAction: [],
+  // «Ordinea meniului» (§NNN): every visitor's menu and footer change from the next page view.
+  saveMenuOrderAction: [],
   deletePageAction: [],
   // «Echipa» (§459): a card put on the site or taken off it, and a card deleted.
   setTeamMemberVisibleAction: [],
@@ -144,6 +146,8 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   updateContactRecipientsAction: [],
   // What the site shows and every email's Reply-To (§442).
   updateShownContactAddressAction: [],
+  // «Telefon public» (§565): the number every page's footer shows from the next page view.
+  updatePublicPhoneAction: [],
   // The public pages' background tint (§488): every visitor sees the new colour from the next page view.
   updateSiteTintAction: [],
   // The public pages' text size (§530): every visitor reads at the new size from the next page view.
@@ -183,7 +187,6 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   setCoverAction: "picks the album's cover, undone by picking another",
   createPageAction: "an editorial save: a draft page nobody sees until its own publish, which asks",
   savePageAction: "an editorial save, like the event's without a notice; publishing and deleting ask",
-  movePageAction: "reorders the pages, undone by moving back",
   createTeamMemberAction: "adds a hidden card nobody sees until an Administrator shows it, which asks",
   saveTeamMemberAction: "an editorial save of a card's words and photo, like a page's; showing and deleting ask",
   moveTeamMemberAction: "reorders the team's cards, undone by moving back",
@@ -198,6 +201,8 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   hardDeleteEventAction: "guarded by the event's title, typed: the typing is the question",
   eraseRegistrationFromListAction: "guarded by the registered name, typed: the typing is the question",
   deleteApprovedLegalVersionAction: "guarded by a typed phrase: the typing is the question",
+  deleteReliedOnLegalVersionAction:
+    "two steps on its own screen: the consequences and a reason, then the version's number typed by hand — the typing is the question (§567)",
   deleteLegalVersionsAction:
     "guarded by a typed phrase (DELETE <n>) when an approved version is ticked, the typing is the question; drafts alone ask in the §384 dialog (§532)",
   previewParticipantMessageAction: "a preview; sends nothing",

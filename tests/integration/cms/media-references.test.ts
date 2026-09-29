@@ -52,7 +52,6 @@ describe("§17 the orphan picture sweep and the pictures list", () => {
     uploadBodyImage(db, { actorId: editor.id, file: await picture(), originalFilename: name, now });
 
   const pageWith = (src: string) => ({
-    navOrder: "10",
     translations: {
       ro: {
         slug: "despre",

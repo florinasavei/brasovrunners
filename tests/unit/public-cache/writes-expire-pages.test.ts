@@ -82,7 +82,8 @@ const WRITES: Record<string, Expected> = {
   "src/modules/content/pages/service.ts#savePage": ["pages"],
   "src/modules/content/pages/service.ts#transitionPage": ["pages"],
   "src/modules/content/pages/service.ts#deletePage": ["pages"],
-  "src/modules/content/pages/service.ts#movePageInNav": ["pages"],
+  // «Ordinea meniului» (§NNN): the header and the footer on every public page read it from `settings`.
+  "src/modules/content/menu/menu-order.ts#saveMenuOrder": ["settings"],
   "src/modules/content/team/service.ts#createTeamMember": ["pages"],
   "src/modules/content/team/service.ts#saveTeamMember": ["pages"],
   "src/modules/content/team/service.ts#setTeamMemberVisible": ["pages"],
@@ -120,6 +121,7 @@ const WRITES: Record<string, Expected> = {
   "src/modules/legal-documents/service.ts#approveVersion": ["legal"],
   "src/modules/legal-documents/service.ts#withdrawApprovedVersion": ["legal"],
   "src/modules/legal-documents/service.ts#deleteApprovedVersion": ["legal"],
+  "src/modules/legal-documents/service.ts#deleteReliedOnVersion": ["legal"],
   "src/modules/legal-documents/service.ts#approvePlatformTemplates": ["legal"],
   "src/modules/legal-documents/service.ts#approveDrafts": ["legal"],
   "src/modules/legal-documents/service.ts#deleteVersionsInBatch": ["legal"],
@@ -133,6 +135,8 @@ const WRITES: Record<string, Expected> = {
   // The settings a public page reads.
   "src/modules/contact/recipients.ts#updateContactRecipients": ["settings"],
   "src/modules/contact/shown-address.ts#updateShownContactAddress": ["settings"],
+  // «Telefon public» (§565): the footer's «Contact» on every page.
+  "src/modules/contact/public-phone.ts#updatePublicPhone": ["settings"],
   "src/modules/appearance/site-tint.ts#updateSiteTint": ["settings"],
   "src/modules/appearance/site-font-size.ts#updateSiteFontSize": ["settings"],
   "src/modules/deadlines/deadlines.ts#updateDeadlines": ["settings"],
