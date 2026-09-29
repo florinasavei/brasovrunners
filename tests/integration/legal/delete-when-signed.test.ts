@@ -3,6 +3,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { events, eventTranslations } from "@/db/schema/events";
+import { groupRunDeclarations } from "@/db/schema/group-run-declarations";
 import { legalDocumentNumbering, legalDocumentTranslations, legalDocuments } from "@/db/schema/legal-documents";
 import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
@@ -29,12 +30,13 @@ import {
   readDeletionFacts,
   withdrawApprovedVersion,
 } from "@/modules/legal-documents/service";
+import { findSignedGroupRunDeclaration } from "@/modules/group-run-declarations/repository";
 import { findSignedDeclaration, renderSignedDeclarationPdf } from "@/modules/registrations/signed-declaration";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-053-02 — «Șterge» on a version somebody signed (`DECISIONS.md` §NNN, amending §151 and
+ * BR-REQ-053-02 — «Șterge» on a version somebody signed (`DECISIONS.md` §NNN, amending §203 and
  * §556). The owner, 2026-09-29, of a group-run declaration whose version 1 read «1 semnături · 0
  * evenimente · 0 înscrieri» and «Nu se poate nici retrage, nici șterge»: «aș vrea să pot șterge
  * (cu dublă confirmare) chiar și documentele care sunt deja semnate».
@@ -42,7 +44,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * The rule that binds: a signed version is the club's proof of what a person accepted, so its text
  * is never destroyed while anything depends on it. «Șterge» on it is retire-and-hide — off the
  * list, never in force again, the row and the text kept — and a version nothing depends on keeps
- * §151's real delete.
+ * §203's real delete.
  */
 const NOW = new Date("2026-09-06T12:00:00.000Z");
 const LATER = new Date("2026-09-07T09:30:00.000Z");
@@ -209,6 +211,40 @@ describe("BR-REQ-053-02 «Șterge» on a version somebody relied on (§NNN)", ()
     expect(JSON.stringify(entry.metadataJson)).not.toContain("Particip pe propria răspundere");
   });
 
+  it("deletes a group-run declaration with one signature — the owner's own case — and its signature still reads v1", async () => {
+    const { first, second } = await twoApproved("GROUP_RUN_DECLARATION_TRAIL");
+    const [run] = await db
+      .insert(events)
+      .values({ type: "GROUP_RUN", startsAt: new Date("2026-10-13T15:30:00.000Z"), registrationMode: "INTERNAL", locationName: "Poiana Brașov" })
+      .returning();
+    const [document] = await db.select().from(legalDocuments).where(eq(legalDocuments.id, first));
+    const [signature] = await db
+      .insert(groupRunDeclarations)
+      .values({
+        eventId: run.id,
+        legalDocumentId: first,
+        declarationVersion: 1,
+        contentSha256: document.contentSha256,
+        locale: "ro",
+        typedName: "Ana Pop",
+        email: "ana@example.test",
+        acceptedAt: NOW,
+      })
+      .returning();
+
+    await expect(retire(first, "1")).resolves.toEqual({ key: "GROUP_RUN_DECLARATION_TRAIL", version: 1 });
+
+    const [entry] = await db.select().from(auditLogs).where(eq(auditLogs.entityId, first));
+    expect(entry.action).toBe("legal_document_version.deleted");
+    expect(entry.metadataJson).toMatchObject({ documentKey: "GROUP_RUN_DECLARATION_TRAIL", version: 1, signatures: 1, textKept: true });
+
+    // The signature is read by id, withdrawn or not: its PDF still has version 1's words.
+    const signedRun = await findSignedGroupRunDeclaration(db, signature.id);
+    expect(signedRun?.title).toBe("Declarație v1");
+    expect(signedRun?.version).toBe(1);
+    expect((await findCurrentApprovedDocument(db, "GROUP_RUN_DECLARATION_TRAIL", "ro", LATER))?.id).toBe(second);
+  });
+
   it("never lists, offers or counts a deleted version, and never lets it be put in force", async () => {
     const { first, second } = await twoApproved("GROUP_RUN_DECLARATION_TRAIL");
     await signed(first, 1);
@@ -282,7 +318,7 @@ describe("BR-REQ-053-02 «Șterge» on a version somebody relied on (§NNN)", ()
     expect(await db.select().from(legalDocumentNumbering)).toHaveLength(0);
   });
 
-  it("keeps §151's real delete for a version nothing depends on, and refuses to hide it instead", async () => {
+  it("keeps §203's real delete for a version nothing depends on, and refuses to hide it instead", async () => {
     const { first } = await twoApproved();
 
     await expect(retire(first, "1")).rejects.toSatisfy(

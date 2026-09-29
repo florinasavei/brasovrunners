@@ -2178,7 +2178,6 @@
       "withdrawTitle": "Retragi versiunea?",
       "withdrawBody": "Nu se șterge nimic: versiunea rămâne în evidență, cu numărul ei. Doar nu mai e oferită: nu mai apare public și nu se mai alege pe un eveniment.",
       "withdrawBlockedCurrent": "În vigoare acum — nu se poate retrage. Aprobă întâi versiunea următoare; apoi aceasta se poate retrage.",
-      "withdrawBlockedReferenced": "Nu se poate retrage: {signatures}, {events} și {acknowledgements} depind de această versiune.",
       "withdrawn": "Retrasă",
       "withdrawnOn": "Retrasă {date}",
       "withdrawnNotice": "Versiunea a fost retrasă {date}. Textul rămâne aici, în evidență, cu numărul lui, dar nu mai apare public și nu se mai poate alege pe un eveniment.",
@@ -2240,11 +2239,7 @@
         "reasonHelp": "Rămâne în jurnal. Este singurul lucru care supraviețuiește ștergerii.",
         "action": "Șterge definitiv versiunea",
         "blockedDraft": "Aceasta este o ciornă, nu o versiune aprobată. Se șterge din listă, cu butonul de pe rândul ei, fără confirmare scrisă: nimeni nu a văzut-o și numărul ei nu a fost dat nimănui.",
-        "blockedReferenced": "Nu se poate șterge definitiv: {signatures}, {events} și {acknowledgements} depind de această versiune. Ce au acceptat oamenii rămâne.",
-        "blockedCurrent": "Aceasta este versiunea în vigoare acum. Aprobă întâi versiunea următoare; apoi aceasta se poate retrage sau șterge.",
-        "blockedTermsAccepted": "Nu se poate șterge: cât a fost în vigoare ({window}) s-au trimis înscrieri sau s-au semnat declarații ({count}), care s-ar fi putut baza pe ea.",
-        "termsWithdrawInstead": "Retragerea este ce se poate face: versiunea rămâne în evidență, cu numărul ei, și nu se mai oferă nimănui.",
-        "termsAlreadyWithdrawn": "Ai retras-o deja, așa că nu se mai oferă nimănui; rămâne în evidență, cu numărul ei, pentru cine a acceptat-o."
+        "blockedCurrent": "Aceasta este versiunea în vigoare acum. Aprobă întâi versiunea următoare; apoi aceasta se poate retrage sau șterge."
       },
       "editor": {
         "heading": "Titlu de secțiune",

@@ -2178,7 +2178,6 @@
       "withdrawTitle": "Withdraw this version?",
       "withdrawBody": "Nothing is deleted: the version stays on the record, with its number. It is only no longer offered: not public, not choosable on an event.",
       "withdrawBlockedCurrent": "In force right now — it cannot be withdrawn. Approve its successor first; then this one can go.",
-      "withdrawBlockedReferenced": "Cannot be withdrawn: {signatures}, {events} and {acknowledgements} depend on this version.",
       "withdrawn": "Withdrawn",
       "withdrawnOn": "Withdrawn on {date}",
       "withdrawnNotice": "This version was withdrawn on {date}. Its text stays here, on the record, with its number, but it no longer appears publicly and can no longer be chosen on an event.",
@@ -2240,11 +2239,7 @@
         "reasonHelp": "It stays in the audit log. It is the only thing that survives the deletion.",
         "action": "Delete this version permanently",
         "blockedDraft": "This is a draft, not an approved version. Delete it from the list with the button on its own row, with no typed confirmation: nobody has seen it and its number was never given to anyone.",
-        "blockedReferenced": "Cannot be deleted permanently: {signatures}, {events} and {acknowledgements} depend on this version. What people accepted stays.",
-        "blockedCurrent": "This is the version in force right now. Approve its successor first; then this one can be withdrawn or deleted.",
-        "blockedTermsAccepted": "Cannot be deleted: while it was in force ({window}), registrations were sent or declarations signed ({count}) that may have relied on it.",
-        "termsWithdrawInstead": "Withdrawal is what can be done: the version stays on the record, with its number, and is offered to nobody.",
-        "termsAlreadyWithdrawn": "You have already withdrawn it, so it is offered to nobody; it stays on the record, with its number, for whoever accepted it."
+        "blockedCurrent": "This is the version in force right now. Approve its successor first; then this one can be withdrawn or deleted."
       },
       "editor": {
         "heading": "Section heading",

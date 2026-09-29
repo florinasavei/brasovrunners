@@ -1799,7 +1799,7 @@ Writing, and what may be undone (`DECISIONS.md` §46 and §53, BR-REQ-053-02):
 - an **approved version is never edited**, whatever its reference counts say. Approval is the club
   publishing words as its own, and the record of what it published outlives whether anybody acted
   on it. Its **text is never destroyed while anything relies on it**: one nothing relies on may be
-  deleted outright, its number retired (`DECISIONS.md` §151); «Șterge» on one a signature, an event
+  deleted outright, its number retired (`DECISIONS.md` §203); «Șterge» on one a signature, an event
   or a registration relies on retires and hides it — off the list, withdrawn, never in force again
   — and keeps its row, its number and its words, which the acceptances, the signed PDF and the
   desk still read (§NNN). The version in force is never deleted;

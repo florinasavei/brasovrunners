@@ -727,7 +727,7 @@ subject "Declarație semnată: <name> — <event>" — the archive builds itself
 what stands on the version, and the screen says which before anything is pressed:
 
 - **Nothing depends on it** — «Șterge definitiv»: the row and both texts go, the number is retired
-  for good (§151). Type the phrase shown (`GDPR 2`) and a reason.
+  for good (§203). Type the phrase shown (`GDPR 2`) and a reason.
 - **A signature, an event or a registration depends on it** — two steps: step 1 states what happens
   («1 semnătură, 0 evenimente și 0 înscrieri rămân valabile…») and asks a reason (at most 200
   characters); step 2 asks the version's number, typed by hand, then «Șterg versiunea N». The
