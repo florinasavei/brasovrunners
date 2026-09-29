@@ -238,6 +238,8 @@ export type AuditAction =
   | "site_tint.changed"
   /** «Mărimea textului»: the public pages' text size, one of four steps (§530). */
   | "site_font_size.changed"
+  /** «Ordinea meniului»: the site menu's one order, every entry's key from first to last (§NNN). */
+  | "menu_order.changed"
   /** The anti-bot challenge switched on or off from the backoffice (§254). */
   | "bot_check.changed"
   /**

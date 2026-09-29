@@ -5,6 +5,8 @@ import Stack from "@mui/material/Stack";
 import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { faqOnSite } from "@/modules/content/faq/on-site";
+import { menuOrderOnSite } from "@/modules/content/menu/on-site";
+import { sortByMenuOrder } from "@/modules/content/menu/order";
 import { OPEN_METEO_SITE } from "@/modules/weather/domain/credit";
 import { weatherListWords } from "@/modules/weather/words";
 import { cachedShownContactAddresses } from "@/modules/public-cache/reads";
@@ -181,6 +183,13 @@ export default async function SiteFooter() {
   const contacts = await cachedShownContactAddresses();
   // «Întrebări frecvente» in the fold (§525) while the page is on the site — the header's own rule.
   const showFaq = await faqOnSite(locale);
+  /*
+    The menu's entries the fold carries — «Întrebări frecvente» and «Contact» — in the club's one
+    order (§NNN), the header's. «Întrebări frecvente» stays on the first line after the terms and
+    «Înscrierile mele» while it comes first, as it always did; placed after «Contact», it follows
+    the contact line instead. The rest of the fold is not the menu and keeps its place.
+  */
+  const faqAfterContact = showFaq && sortByMenuOrder(["faq", "contact"], (key) => key, await menuOrderOnSite())[0] === "contact";
   const social = [
     { network: "facebook" as SocialNetwork, href: env.CLUB_FACEBOOK_URL, label: footer("about.facebook") },
     { network: "instagram" as SocialNetwork, href: env.CLUB_INSTAGRAM_URL, label: footer("about.instagram") },
@@ -372,7 +381,7 @@ export default async function SiteFooter() {
                 <Link href="/legal/terms">{legal("termsLinkLabel")}</Link>
                 {/* "My registrations" (BR-REQ-036-04): the one place a runner finds it without an email. A form rendered per request: never prefetched (§549). */}
                 <Link href="/registrations/mine" prefetch={false}>{footer("myRegistrations")}</Link>
-                {showFaq && <Link href="/faq">{footer("faq")}</Link>}
+                {showFaq && !faqAfterContact && <Link href="/faq" data-testid="footer-faq">{footer("faq")}</Link>}
               </Box>
               {/* "Scrie-ne" once (BR-REQ-070-04; the form is rendered per request, so never prefetched, §549): the form, and — when the club's mailbox is
                   configured (§8; nothing here invents an address) — the address beside it as the
@@ -396,6 +405,8 @@ export default async function SiteFooter() {
                   </Box>
                 ))}
               </Box>
+              {/* «Întrebări frecvente» after «Contact», where the club's menu order puts it (§NNN): a line of its own on a phone, the next item of the row from `sm`. */}
+              {faqAfterContact && <Link href="/faq" data-testid="footer-faq">{footer("faq")}</Link>}
               {/* The last line (§480, amending §385): Open-Meteo's credit and the stamp, side by side
                   from `sm` and one under the other on a phone, at the panel's 14 pixels. */}
               <Box

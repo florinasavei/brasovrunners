@@ -44,6 +44,7 @@ import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import PlaceIcon from "@mui/icons-material/Place";
 import PrintIcon from "@mui/icons-material/Print";
 import PublicIcon from "@mui/icons-material/Public";
+import ReorderIcon from "@mui/icons-material/Reorder";
 import RouteIcon from "@mui/icons-material/Route";
 import RuleIcon from "@mui/icons-material/Rule";
 import SaveIcon from "@mui/icons-material/Save";
@@ -145,6 +146,8 @@ export const PANEL_GLYPHS = {
   jobs: UpdateIcon,
   pictures: ImageIcon,
   translation: TranslateIcon,
+  // «Ordinea meniului» (§NNN): the site menu's entries, one under the other, in the club's order.
+  menuOrder: ReorderIcon,
 } satisfies Record<string, ComponentType<SvgIconProps>>;
 
 export type PanelGlyphName = keyof typeof PANEL_GLYPHS;

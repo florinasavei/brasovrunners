@@ -1053,7 +1053,9 @@
         "now": "Trimite acum, fără să aștepte trecerea programată",
         "queue": "Pune la coadă pentru trecerea programată",
         "note": "Deocamdată, emailurile automate pleacă la trecerea programată, în cel mult {wait}. Alege dacă acesta pleacă acum sau o așteaptă."
-      }
+      },
+      "menuOrderTitle": "Schimbi ordinea meniului?",
+      "menuOrderBody": "Meniul site-ului și subsolul arată paginile în ordinea nouă, pentru toți vizitatorii, de la următoarea pagină deschisă."
     },
     "errors": {
       "PICTURE_IN_USE": "Imaginea este folosită într-o pagină, într-un eveniment sau într-un album. Scoate-o de acolo mai întâi.",
@@ -3442,15 +3444,9 @@
       "columnTitle": "Titlu",
       "columnStatus": "Stare",
       "columnAddress": "Adresa",
-      "columnOrder": "Ordinea",
-      "tableCaption": "Paginile clubului, cu starea și ordinea în meniu",
-      "moveUp": "Mută mai sus",
-      "moveDown": "Mută mai jos",
-      "moveUpNamed": "Mută „{title}” mai sus în meniu",
-      "moveDownNamed": "Mută „{title}” mai jos în meniu",
-      "moveHelp": "Ordinea de aici este ordinea din meniul site-ului.",
-      "navOrder": "Ordinea în meniu",
-      "navOrderHelp": "Numărul mai mic apare primul. Lasă 0 dacă nu contează.",
+      "columnOrder": "Locul în meniu",
+      "tableCaption": "Paginile clubului, cu starea și locul în meniu",
+      "moveHelp": "Locul în meniu se schimbă din «Ordinea meniului», mai sus.",
       "slugHelp": "Adresa paginii: litere mici, cifre și cratime.",
       "slugLocked": "Adresa nu se mai schimbă după publicare — linkurile deja trimise trebuie să funcționeze.",
       "bodyHelp": "Un rând gol separă paragrafele. Un rând care începe cu ## este un titlu de secțiune.",
@@ -3482,6 +3478,32 @@
       "groupStandard": "Pagini standard",
       "groupCustom": "Pagini personalizate",
       "tabMembers": "Membri"
+    },
+    "menuOrder": {
+      "title": "Ordinea meniului",
+      "intro": "Ordinea paginilor în meniul site-ului, de sus în jos. Mută-le cu «Sus» și «Jos», apoi apasă «Salvează ordinea».",
+      "introMore": "O pagină care nu e publicată își păstrează locul și apare acolo când o publici. O pagină nouă apare la sfârșit, până o muți.",
+      "listLabel": "Meniul site-ului, de sus în jos",
+      "up": "Sus",
+      "down": "Jos",
+      "upNamed": "Mută „{name}” mai sus",
+      "downNamed": "Mută „{name}” mai jos",
+      "notYet": "nu apare încă",
+      "custom": "pagină personalizată",
+      "movedTo": "„{name}” e acum pe locul {position}.",
+      "unsaved": "Ordinea nouă nu e salvată încă.",
+      "save": "Salvează ordinea",
+      "saving": "Se salvează…",
+      "readOnly": "Ordinea o alege Administratorul; aici vezi ordinea din meniu.",
+      "entries": {
+        "events": "Evenimente",
+        "calendar": "Calendar",
+        "contact": "Contact",
+        "gallery": "Galerie",
+        "team": "Echipa",
+        "faq": "Întrebări frecvente",
+        "members": "Membri"
+      }
     },
     "fontSize": {
       "title": "Mărimea textului",
@@ -7233,7 +7255,8 @@
       "memberCodeMoved": "Ordinea codurilor a fost schimbată.",
       "memberCodeDeleted": "Codul a fost șters.",
       "declarationHeld": "Declarația e păstrată. Nu se mai șterge până scoți păstrarea.",
-      "declarationReleased": "Păstrarea a fost scoasă."
+      "declarationReleased": "Păstrarea a fost scoasă.",
+      "menuOrder": "Ordinea meniului a fost salvată."
     }
   },
   "Network": {
