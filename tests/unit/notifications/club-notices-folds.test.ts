@@ -39,17 +39,26 @@ describe("§NNN the club's copies as three nested folds", () => {
     expect(form.indexOf("{participantsFold}")).toBeLessThan(form.indexOf("<GlyphSubmitButton"));
   });
 
-  it("opens a fold for the card's save and a refusal, the declarations one for idle copies too", () => {
-    expect(panel).toContain("openWhen={{ saved, refused, attention: idleDeclarationCopies }}");
-    expect(panel.match(/openWhen=\{\{ saved, refused \}\}/g)).toHaveLength(2);
+  it("opens a fold for the card's save, the declarations one for idle copies too", () => {
+    expect(panel).toContain("openWhen={{ saved, attention: idleDeclarationCopies }}");
+    expect(panel.match(/openWhen=\{\{ saved \}\}/g)).toHaveLength(2);
+    // A refusal is the kept form's state (§315), never `?error=`: the page has none to pass, and
+    // `ActionFormIsland` opens the fold around the box it names — `email-plan.spec.ts` proves it.
+    expect(panel).not.toMatch(/openWhen\?\.refused/);
+  });
+
+  it("names the addresses in each fold's closed line, or «—» for none (§457)", () => {
+    expect(panel).toContain('t("emails.clubNotices.folds.addresses", { addresses: formatAddressList(addresses) || "—" })');
+    expect(panel).toContain("aside={namesOf(notices.confirmations.to)}");
+    expect(panel).toContain("aside={namesOf(notices.participants.bcc)}");
+    expect(panel).not.toContain("folds.count");
   });
 
   it("says each fold's title and summary in both languages, with the same placeholders", () => {
     for (const catalogue of [ro, en]) {
       const words = folds(catalogue);
       for (const text of [
-        words.count,
-        words.countNone,
+        words.addresses,
         words.declarations.title,
         words.declarations.aside,
         words.declarations.asideNoCopies,
@@ -63,7 +72,8 @@ describe("§NNN the club's copies as three nested folds", () => {
     }
     expect(placeholders(folds(ro).declarations.aside)).toEqual(placeholders(folds(en).declarations.aside));
     expect(placeholders(folds(ro).declarations.asideNoCopies)).toEqual(["to"]);
-    expect(placeholders(folds(ro).count)).toEqual(placeholders(folds(en).count));
+    expect(placeholders(folds(ro).addresses)).toEqual(["addresses"]);
+    expect(placeholders(folds(en).addresses)).toEqual(["addresses"]);
     expect(folds(ro).declarations.title).toBe("Declarațiile semnate");
     expect(folds(ro).confirmations.title).toBe("Anunțul de confirmare");
     expect(folds(ro).participants.title).toBe("Copia clubului la emailurile către participanți");

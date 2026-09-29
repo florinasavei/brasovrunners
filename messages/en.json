@@ -3892,8 +3892,7 @@
         "saved": "Saved who receives the club's copies.",
         "participantsBccHelpMore": "Not the address check or the link for another person. A message to everybody registered gives one copy, with no names. Never for test registrations.",
         "folds": {
-          "count": "Addresses: {count}",
-          "countNone": "No address",
+          "addresses": "Addresses: {addresses}",
           "declarations": {
             "title": "Signed declarations",
             "aside": "They go to: {to} · Cc: {cc} · Bcc: {bcc}",

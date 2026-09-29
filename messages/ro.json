@@ -3892,8 +3892,7 @@
         "saved": "Am salvat cine primește copiile clubului.",
         "participantsBccHelpMore": "Nu și verificarea adresei sau linkul pentru altă persoană. Un mesaj către toți înscrișii dă o singură copie, fără nume. Niciodată pentru înscrierile de test.",
         "folds": {
-          "count": "Adrese: {count}",
-          "countNone": "Nicio adresă",
+          "addresses": "Adrese: {addresses}",
           "declarations": {
             "title": "Declarațiile semnate",
             "aside": "Merg la: {to} · Cc: {cc} · Bcc: {bcc}",

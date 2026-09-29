@@ -62,8 +62,9 @@ export default async function ClubNoticesPanel({ locale, notices, declarations, 
   const idleDeclarationCopies = declarations.to === null && declarations.cc.length + declarations.bcc.length > 0;
   // A list box grows with what it holds, so every address typed into it is in view (§457).
   const listBox = { multiline: true, minRows: 1, maxRows: 6 } as const;
-  const countOf = (addresses: readonly string[]) =>
-    addresses.length > 0 ? t("emails.clubNotices.folds.count", { count: addresses.length }) : t("emails.clubNotices.folds.countNone");
+  // A fold's closed line names its mailboxes, as the card's own line does (§457), or «—» for none.
+  const namesOf = (addresses: readonly string[]) =>
+    t("emails.clubNotices.folds.addresses", { addresses: formatAddressList(addresses) || "—" });
   const declarationsAside =
     declarations.to === null
       ? t("emails.clubNotices.folds.declarations.asideNone")
@@ -74,12 +75,13 @@ export default async function ClubNoticesPanel({ locale, notices, declarations, 
     The three folds inside the card (§NNN; the owner, 2026-09-29, on the one long form: «și aici
     trebuie să fie mai multe acordeoane nested»): one per thing the club sends itself, each closed
     with its summary line (§336). They open for the card's own save — the one Save stores all three
-    lists, so each shows its result — and a refusal opens the one around the box it names
-    (`revealField` in `ActionFormIsland`; with JavaScript off `BOXED_DISCLOSURE_SX` shows it). The
-    idle declaration copies are something to act on, so that fold opens for them too.
+    lists, so each shows its result. A refusal is not a page parameter here: the action returns it
+    as the kept form's state (§315) and never redirects with `?error=`, so the page has nothing to
+    pass; `ActionFormIsland` opens the fold around each box the refusal names (`revealField` →
+    `openFoldsAround`) and with JavaScript off `BOXED_DISCLOSURE_SX` shows it. The idle declaration
+    copies are something to act on, so that fold opens for them too.
   */
   const saved = Boolean(openWhen?.saved);
-  const refused = Boolean(openWhen?.refused);
 
   const declarationsFold = (
     <Panel glyph="declaration"
@@ -87,7 +89,7 @@ export default async function ClubNoticesPanel({ locale, notices, declarations, 
       title={t("emails.clubNotices.folds.declarations.title")}
       aside={declarationsAside}
       collapsible
-      openWhen={{ saved, refused, attention: idleDeclarationCopies }}
+      openWhen={{ saved, attention: idleDeclarationCopies }}
       id="club-notices-declarations"
       data-testid="club-notices-declarations"
     >
@@ -147,9 +149,9 @@ export default async function ClubNoticesPanel({ locale, notices, declarations, 
     <Panel glyph="confirmation"
       level={3}
       title={t("emails.clubNotices.folds.confirmations.title")}
-      aside={countOf(notices.confirmations.to)}
+      aside={namesOf(notices.confirmations.to)}
       collapsible
-      openWhen={{ saved, refused }}
+      openWhen={{ saved }}
       id="club-notices-confirmations"
       data-testid="club-notices-confirmations"
     >
@@ -179,9 +181,9 @@ export default async function ClubNoticesPanel({ locale, notices, declarations, 
     <Panel glyph="copy"
       level={3}
       title={t("emails.clubNotices.folds.participants.title")}
-      aside={countOf(notices.participants.bcc)}
+      aside={namesOf(notices.participants.bcc)}
       collapsible
-      openWhen={{ saved, refused }}
+      openWhen={{ saved }}
       id="club-notices-participants"
       data-testid="club-notices-participants"
     >

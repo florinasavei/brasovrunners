@@ -1,7 +1,19 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Locator, test } from "@playwright/test";
 import { confirmDialog } from "./support/confirm";
 import { signIn, hydrated } from "./support/featured-event";
 import { openFold } from "./support/fold";
+
+/*
+  Empties a multiline box the way a person does — focused first, then cleared. After a kept
+  form's refusal the boxes are drawn again (`RecallField`'s key), and Playwright's `fill("")` on a
+  textarea it has not focused yet deleted one character only ("nope" → "ope"); a click or Tab,
+  which is what a person does, clears it whole (measured 2026-09-29 on this spec).
+*/
+async function emptyBox(box: Locator) {
+  await box.focus();
+  await box.fill("");
+  await expect(box).toHaveValue("");
+}
 
 /**
  * BR-REQ-080-02 criterion 7 (`DECISIONS.md` §100) — the Mailgun plan is set from the
@@ -292,9 +304,9 @@ test.describe("BR-REQ-070-04 who receives the contact messages", () => {
     // And back to nobody in the app, which hands the question to `CONTACT_FORM_TO`: this
     // deployment sets none, so the page says so — a machine that sets one reads the other
     // half of the sentence, and both are the same answer to "the boxes are empty now".
-    await main.getByLabel("Către", { exact: true }).fill("");
-    await main.getByLabel("CC", { exact: true }).fill("");
-    await main.getByLabel("BCC", { exact: true }).fill("");
+    await emptyBox(main.getByLabel("Către", { exact: true }));
+    await emptyBox(main.getByLabel("CC", { exact: true }));
+    await emptyBox(main.getByLabel("BCC", { exact: true }));
     await main.getByRole("button", { name: "Salvează destinatarii" }).click();
     await confirmDialog(page);
     await expect(main.getByText(/Nu le primește nimeni|din CONTACT_FORM_TO de pe server/)).toBeVisible();
@@ -314,11 +326,12 @@ test.describe("BR-REQ-070-04 who receives the contact messages", () => {
     await page.goto("/ro/admin/pages/contact");
     await hydrated(page);
     const contacts = page.locator("#main").getByTestId("contact-recipients");
-    const to = "Către (adrese despărțite prin virgulă)";
+    // «Către», exact: «CC» and «BCC» sit beside it since §NNN, and their labels hold no «Către».
+    const to = "Către";
 
     // With JavaScript on: the fold opened to press stays open, the refusal inside it.
     await openFold(contacts);
-    await contacts.getByLabel(to).fill("nope");
+    await contacts.getByLabel(to, { exact: true }).fill("nope");
     await contacts.getByRole("button", { name: "Salvează destinatarii" }).click();
     await confirmDialog(page);
     await expect(contacts.getByTestId("form-refusal")).toBeVisible();
@@ -338,13 +351,13 @@ test.describe("BR-REQ-070-04 who receives the contact messages", () => {
     await bare.goto("/ro/admin/pages/contact");
     const fold = bare.locator("#main").getByTestId("contact-recipients");
     await openFold(fold);
-    await fold.getByLabel(to).fill("nope");
+    await fold.getByLabel(to, { exact: true }).fill("nope");
     const posted = bare.waitForResponse((response) => response.request().method() === "POST");
     await fold.getByRole("button", { name: "Salvează destinatarii" }).click();
     await posted;
     await expect(fold).toHaveAttribute("open", "");
     await expect(fold.getByTestId("form-refusal")).toBeVisible();
-    await expect(fold.getByLabel(to)).toHaveValue("nope");
+    await expect(fold.getByLabel(to, { exact: true })).toHaveValue("nope");
     await scriptless.close();
   });
 });
@@ -461,9 +474,9 @@ test.describe("BR-REQ-033-02 criterion 12 the club's hidden copy of the emails t
     await confirmDialog(page, "Schimbi cine primește copiile clubului?");
 
     await expect(main.getByText("Am salvat cine primește copiile clubului.")).toBeVisible();
-    // The card's save opens its folds to show what was saved, and the fold's summary counts it.
+    // The card's save opens its folds to show what was saved, and the fold's summary names it.
     await expect(participants).toHaveAttribute("open", "");
-    await expect(participants.locator(":scope > summary")).toContainText("Adrese: 1");
+    await expect(participants.locator(":scope > summary")).toContainText("Adrese: arhiva@example.org");
     await expect(panel.getByText("Copie ascunsă la emailurile către participanți: arhiva@example.org.")).toBeVisible();
     await expect(box).toHaveValue("arhiva@example.org");
     // One address on four of the runner's five messages (never the address-confirmation link,
@@ -472,11 +485,27 @@ test.describe("BR-REQ-033-02 criterion 12 the club's hidden copy of the emails t
     await expect(forecast).toContainText(`costă circa ${before + 4} mesaje`);
     await expect(forecast).toContainText("Din ele, 4 sunt copiile ascunse");
 
+    // A refusal opens the fold around the box it names, and only that one: the Administrator
+    // types a wrong entry, closes the fold, presses Save — the refusal is the kept form's state
+    // (§315), and `ActionFormIsland` reopens the participants' fold, the declarations' stays shut.
+    await expect(panel.getByTestId("club-notices-declarations")).toHaveAttribute("open", "");
+    await panel.getByTestId("club-notices-declarations").locator(":scope > summary").click();
+    await box.fill("nu-e-adresa");
+    await participants.locator(":scope > summary").click();
+    await expect(participants).not.toHaveAttribute("open", "");
+    await panel.getByRole("button", { name: "Salvează", exact: true }).click();
+    await confirmDialog(page, "Schimbi cine primește copiile clubului?");
+    await expect(panel.getByTestId("form-refusal")).toBeVisible();
+    await expect(participants).toHaveAttribute("open", "");
+    await expect(panel.getByTestId("club-notices-declarations")).not.toHaveAttribute("open", "");
+    await expect(box).toHaveValue("nu-e-adresa");
+
     // And back to none: the sentence in force says so, and the forecast is what it was.
-    await box.fill("");
+    await emptyBox(box);
     await panel.getByRole("button", { name: "Salvează", exact: true }).click();
     await confirmDialog(page, "Schimbi cine primește copiile clubului?");
     await expect(panel.getByText("Copie ascunsă la emailurile către participanți: —.")).toBeVisible();
+    await expect(participants.locator(":scope > summary")).toContainText("Adrese: —");
     await expect(forecast).toContainText(`costă circa ${before} mesaje`);
     await expect(forecast).not.toContainText("copiile ascunse");
   });
