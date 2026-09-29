@@ -7,6 +7,8 @@ import type { SxProps, Theme } from "@mui/material/styles";
 import Tooltip from "@mui/material/Tooltip";
 import { useState } from "react";
 import { readingTimeMs } from "@/shared/ui/tooltip-text";
+import type { DifficultyTooltipBlock as TooltipBlock } from "../domain/difficulty";
+import DifficultyTooltipBlock from "./DifficultyTooltipBlock";
 import { GLYPHS, type GlyphName } from "./glyphs";
 
 /**
@@ -51,6 +53,7 @@ export default function GlyphChip({
   variant = "filled",
   href,
   tooltip,
+  tooltipBlock,
   sx,
   srSuffix,
   srLabel,
@@ -64,6 +67,13 @@ export default function GlyphChip({
    * stay what a screen reader announces first.
    */
   tooltip?: string;
+  /**
+   * The difficulty's tooltip as data (§NNN): drawn as a block — the level in bold, then the ladder
+   * in aligned rows with the level's band marked (`DifficultyTooltipBlock`) — in place of `tooltip`'s
+   * text, which still sets how long a tap keeps it open. Data, never an element, so a Server
+   * Component may hand it over.
+   */
+  tooltipBlock?: TooltipBlock;
   /**
    * The club's blue for the one event the site leads with, the club's orange for a special
    * edition (§168) — two claims side by side on the same hero, each with its own colour and
@@ -83,7 +93,7 @@ export default function GlyphChip({
   srSuffix?: string;
   /**
    * What a screen reader hears in place of `label` (§526): the visible words are hidden from it
-   * and these, visually hidden, stand for them — the difficulty pill shows «Mediu 5» and is heard
+   * and these, visually hidden, stand for them — the difficulty pill shows «Mediu» and is heard
    * as «Dificultate: mediu — nivelul 5 din 15 (mediu: 4–6)» (§563).
    */
   srLabel?: string;
@@ -156,7 +166,16 @@ export default function GlyphChip({
   // A chip with its own `srLabel` (the difficulty's, §528) already says the tooltip's sentence in
   // its accessible name, so it takes the same path.
   const describeChild = srSuffix !== tooltip && !srLabel;
-  const tooltipTitle = describeChild ? tooltip : tooltip != null ? <>{tooltip}</> : tooltip;
+  // The difficulty's block (§NNN) is a node too, so it takes the same branch as the fragment.
+  const tooltipTitle = tooltipBlock ? (
+    <DifficultyTooltipBlock block={tooltipBlock} />
+  ) : describeChild ? (
+    tooltip
+  ) : tooltip != null ? (
+    <>{tooltip}</>
+  ) : (
+    tooltip
+  );
   return tooltip ? (
     <Tooltip
       title={tooltipTitle}
@@ -167,9 +186,9 @@ export default function GlyphChip({
       onClose={() => setOpen(false)}
       enterTouchDelay={0}
       leaveTouchDelay={readingTimeMs(tooltip)}
-      // A `\n` is a line (§257): the difficulty's tooltip says its level, then the whole ladder
-      // under it (§563). Every other chip's tooltip is one line and reads the same.
-      slotProps={{ tooltip: { sx: { whiteSpace: "pre-line" } } }}
+      // A `\n` is a line (§257) in a text tooltip. The difficulty's is a block (§NNN) that sets its
+      // own lines, and its bubble grows to the block's width rather than MUI's 300 px, so no row wraps.
+      slotProps={{ tooltip: { sx: tooltipBlock ? { maxWidth: "none" } : { whiteSpace: "pre-line" } } }}
     >
       {chip}
     </Tooltip>

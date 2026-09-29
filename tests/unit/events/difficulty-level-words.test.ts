@@ -46,28 +46,38 @@ afterEach(() => {
   currentLocale = "ro";
 });
 
-/** Every level of fifteen, as the pill says it and as an email or a calendar entry says it. */
+/**
+ * Every level of fifteen, as the pill says it beside its gauge — the band alone (the owner,
+ * 2026-09-29 19:08: «the sub indicator is enough») — and as an email or a calendar entry says it.
+ */
 const WORDS = {
   ro: {
-    short: ["Ușor 1", "Ușor 2", "Ușor 3", "Mediu 4", "Mediu 5", "Mediu 6", "Greuț 7", "Greuț 8", "Greuț 9", "Greu 10", "Greu 11", "Greu 12", "Foarte greu 13", "Foarte greu 14", "Foarte greu 15"],
-    plain: (short: string) => short.replace(/ (\d+)$/, ", nivelul $1 din 15"),
+    short: ["Ușor", "Ușor", "Ușor", "Mediu", "Mediu", "Mediu", "Greuț", "Greuț", "Greuț", "Greu", "Greu", "Greu", "Foarte greu", "Foarte greu", "Foarte greu"],
+    plain: (short: string, index: number) => `${short}, nivelul ${index + 1} din 15`,
   },
   en: {
-    short: ["Easy 1", "Easy 2", "Easy 3", "Medium 4", "Medium 5", "Medium 6", "Fairly hard 7", "Fairly hard 8", "Fairly hard 9", "Hard 10", "Hard 11", "Hard 12", "Very hard 13", "Very hard 14", "Very hard 15"],
-    plain: (short: string) => short.replace(/ (\d+)$/, ", level $1 of 15"),
+    short: ["Easy", "Easy", "Easy", "Medium", "Medium", "Medium", "Fairly hard", "Fairly hard", "Fairly hard", "Hard", "Hard", "Hard", "Very hard", "Very hard", "Very hard"],
+    plain: (short: string, index: number) => `${short}, level ${index + 1} of 15`,
   },
 } as const;
 
 describe("§563 the number is the level of fifteen, in order across the bands", () => {
-  it.each(["ro", "en"] as const)("in %s, every level's pill word and plain word", (locale) => {
+  it.each(["ro", "en"] as const)("in %s, every level's pill word (the band alone, no number) and plain word", (locale) => {
     const t = tEvent(locale);
     const levels = Array.from({ length: DIFFICULTY_LEVEL_COUNT }, (_, index) => index + 1);
     expect(levels.map((level) => difficultyWords(level, t).short)).toEqual([...WORDS[locale].short]);
     expect(levels.map((level) => difficultyWords(level, t).plain)).toEqual(WORDS[locale].short.map(WORDS[locale].plain));
+    // The pill carries no number: the gauge's dots say the step, the tooltip the level.
+    for (const level of levels) expect(difficultyWords(level, t).short).not.toMatch(/\d/);
     // No surface says the step within the band in words any more.
     for (const level of levels) {
       const words = difficultyWords(level, t);
-      for (const said of Object.values(words)) {
+      const { block, ...strings } = words;
+      // The block (§NNN) says the same as the tooltip's string: its first line and one row per band.
+      expect(block.head).toBe(words.tooltip.split("\n")[0]);
+      expect(block.rows.filter((row) => row.current)).toHaveLength(1);
+      const blockWords = [block.head, ...block.rows.flatMap((row) => [row.word, row.range])];
+      for (const said of [...Object.values(strings), ...blockWords]) {
         expect(said).not.toMatch(/treapt|step \d|din 3\b|of 3\b/i);
         for (const line of said.split("\n")) expect(line.length, said).toBeLessThanOrEqual(200);
       }

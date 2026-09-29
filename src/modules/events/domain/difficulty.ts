@@ -79,33 +79,53 @@ type DifficultyTranslate = (key: string, values?: Record<string, string | number
 /**
  * Every word a surface says of a level (§563, amending §526 and §528 — the owner, 2026-09-29:
  * «nu are cum și una grea și una ușoară să fie nivelul 2 … adică ușor: 1,2,3, mediu 4,5,6 și tot
- * așa, în ordine»): **the number is the level, the dots are the step.** The pill says the band and
- * the level of fifteen — «Mediu 5», never «Mediu 2» — and the gauge's dots alone still show where
- * in its band the level stands.
+ * așa, în ordine»): **the number is the level, the dots are the step.** Every surface without a
+ * gauge says the band and the level of fifteen — «Mediu, nivelul 5 din 15», never «Mediu 2». The
+ * pill says the band alone (the owner, 2026-09-29 19:08: «don't put "Mediu 2" and "Ușor 2" on the
+ * pill, the sub indicator is enough»): the gauge beside it draws the step in its dots, and its
+ * tooltip says the level.
  *
- * - `short` — the pill, the editor's closed line: «Mediu 5»;
+ * - `short` — the pill's visible word, beside the gauge: «Mediu»;
  * - `plain` — where no gauge is drawn (the emails' facts, the calendar entry, the `.ics`): «Mediu, nivelul 5 din 15»;
  * - `tooltip` — the pill's tooltip, two lines (the owner, 2026-09-29 14:18: the tooltip explains
  *   every level, not only its own band's): the level, then the whole ladder —
  *   «Mediu — nivelul 5 din 15» / «ușor 1–3 · mediu 4–6 · greuț 7–9 · greu 10–12 · foarte greu 13–15»;
  * - `sr` — what a screen reader hears in place of `short`, the shorter form with the level and its
  *   band's range, once per card: «Dificultate: mediu — nivelul 5 din 15 (mediu: 4–6)».
+ * - `block` — the same tooltip's words as the pill draws them (the owner, 2026-09-29 19:48: «vreau
+ *   ca acest tooltip să fie formatat mai frumos»): `head`, the first line, and `rows`, the ladder
+ *   one band per row with its range apart, the level's own band marked `current`. Plain data, so it
+ *   crosses to the client chip (`DifficultyTooltipBlock`); `tooltip` stays the string form, for the
+ *   reading time and every reader of text.
  *
  * The one function every surface reads (the route pills, the calendar's lines): the words from the
  * `Event` catalogue (`difficultyValues`, `difficultyBandWords`, `difficultyLevel*`), the numbers from here.
  */
-export function difficultyWords(level: number, t: DifficultyTranslate): { short: string; plain: string; tooltip: string; sr: string } {
+export function difficultyWords(
+  level: number,
+  t: DifficultyTranslate,
+): { short: string; plain: string; tooltip: string; sr: string; block: DifficultyTooltipBlock } {
   const band = difficultyBandOf(level);
   const numbers = { level, levels: DIFFICULTY_LEVEL_COUNT, ...difficultyBandLevels(band) };
   const title = t(`difficultyValues.${band}`);
   const word = t(`difficultyBandWords.${band}`);
+  const head = t("difficultyLevelHead", { band: title, ...numbers });
+  const rows = DIFFICULTY_BANDS.map((each) => ({
+    word: t(`difficultyBandWords.${each}`),
+    range: t("difficultyLevelRange", difficultyBandLevels(each)),
+    current: each === band,
+  }));
   return {
-    short: t("difficultyLevelShort", { band: title, level }),
+    short: title,
     plain: t("difficultyWithLevel", { band: title, ...numbers }),
-    tooltip: t("difficultyLevelTooltip", { band: title, ladder: difficultyLadder(t).join(" · "), ...numbers }),
+    tooltip: t("difficultyLevelTooltip", { head, ladder: difficultyLadder(t).join(" · ") }),
     sr: t("difficultyLevelSr", { band: word, ...numbers }),
+    block: { head, rows },
   };
 }
+
+/** The difficulty tooltip as the pill draws it (§NNN): the first line, then one row per band. */
+export type DifficultyTooltipBlock = { head: string; rows: { word: string; range: string; current: boolean }[] };
 
 /**
  * The club's whole scale, one item per band in order, each with its three levels (§563) —

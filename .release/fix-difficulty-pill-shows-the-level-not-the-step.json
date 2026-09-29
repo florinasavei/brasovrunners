@@ -1,0 +1,18 @@
+{
+  "branch": "fix/difficulty-pill-shows-the-level-not-the-step",
+  "decisionsTitle": "The difficulty pill says the band alone beside its gauge, and its tooltip is a block (amends §563)",
+  "decisionsSection": "**The owner, 2026-09-29 19:08**, of the pill reading «Mediu 5» beside its gauge: «don't put \"Mediu 2\" and \"Ușor 2\" on the pill, the sub indicator is enough». **The pill says the band alone** — «Ușor», «Mediu», «Greuț», «Greu», «Foarte greu» / «Easy» … «Very hard» — because the gauge beside it already draws the step in its dots and the tooltip says the level: a number beside them said it a third time. `difficultyWords(level, t).short` is `Event.difficultyValues.<band>`, and `Event.difficultyLevelShort` is gone from both catalogues. Nothing else moves: the tooltip («Mediu — nivelul 5 din 15» and the ladder), the screen reader's `srLabel` («Dificultate: mediu — nivelul 5 din 15 (mediu: 4–6)»), the words where no gauge is drawn (the emails, the calendar, the `.ics`: «Mediu, nivelul 5 din 15»), the editor's closed line («Mediu 5»), the filter's «Mediu (4–6)». «Ghid» says it: on the site the pill shows the band alone and the gauge's dots show the level within the band.\n\n**The tooltip, set as a block** (the owner, 19:48: «vreau ca acest tooltip să fie formatat mai frumos», of «foarte / greu 13–15» split wherever the bubble ended): the level in bold on the first line, «Mediu — nivelul 5 din 15», then the ladder one band per row — the band's word on the left, its levels in an aligned column on the right, the level's own band bold, tinted and marked by a dot drawn in CSS — with no line that wraps; the same words and facts as before (`difficultyWords(...).block`, from the new `Event.difficultyLevelHead` and `Event.difficultyLevelRange`), handed to the client chip as data (`DifficultyTooltipBlock`), while the string form still times the tap and a screen reader still hears only `srLabel`.\n\n**Amends §563**, whose pill said the band and the level, «Mediu 5»; everything else §563 decided stands.\n\n**Refused:** keeping the number on the pill — the gauge and the tooltip already say it.",
+  "changelogLine": "- **The difficulty pill says the band alone** — «Mediu» / «Medium» beside its gauge, whose dots show the step; its tooltip is now a small block, the level of fifteen in bold and then the five bands in aligned rows with the event's own marked; the editor's closed line keeps «Mediu 5» (amends §563). §NNN.",
+  "specsCriteria": [
+    {
+      "requirement": "BR-REQ-041-01",
+      "text": "The difficulty pill on the listing card, the event page and the backoffice list says the band alone beside its gauge — «Ușor», «Mediu», «Foarte greu» / «Easy», «Medium», «Very hard» — with no number, while the gauge's dots show the step and the tooltip the level; the editor's closed line, which draws no gauge, still says «Mediu 5» (2026-09-29, `DECISIONS.md` §NNN)."
+    },
+    {
+      "requirement": "BR-REQ-041-01",
+      "text": "The difficulty pill's tooltip is a block: the level of fifteen in bold on its first line («Mediu — nivelul 5 din 15» / «Medium — level 5 of 15»), then the five bands one per row, the band's word and its levels in aligned columns, the event's own band marked; no row wraps at 320 px, and a screen reader hears the pill's own words alone (2026-09-29, `DECISIONS.md` §NNN)."
+    }
+  ],
+  "docsNotes": "",
+  "batchLine": "the difficulty pill says the band alone beside its gauge"
+}

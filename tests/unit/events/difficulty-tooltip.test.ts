@@ -37,6 +37,7 @@ const { createTranslator } = await import("next-intl");
 const { getFormatter, getTranslations } = await import("next-intl/server");
 const { buildRoutePills } = await import("@/modules/events/ui/route-pills");
 const { default: RoutePills } = await import("@/modules/events/ui/RoutePills");
+const { default: DifficultyTooltipBlock } = await import("@/modules/events/ui/DifficultyTooltipBlock");
 const { DIFFICULTY_BANDS, DIFFICULTY_LEVEL_COUNT, difficultyBandLevels } = await import("@/modules/events/domain/difficulty");
 const { default: DifficultyStepField } = await import("@/modules/content/events/ui/DifficultyStepField");
 const { difficultyScaleText, difficultyStepWords } = await import("@/modules/content/events/ui/difficulty-words");
@@ -153,11 +154,36 @@ describe("§528, §563 the pill's tooltip names the level of fifteen, then every
     }
   });
 
+  it.each([
+    ["ro", 5, "Mediu — nivelul 5 din 15", 1],
+    ["ro", 14, "Foarte greu — nivelul 14 din 15", 4],
+    ["en", 8, "Fairly hard — level 8 of 15", 2],
+  ] as const)("§NNN in %s, level %i's tooltip is a block: the level in bold, then five aligned rows with its band marked", async (locale, level, head, current) => {
+    currentLocale = locale;
+    const pill = await difficultyPill(level);
+    const block = pill.tooltipBlock!;
+    // The same words and facts as the string form, only set apart.
+    expect(block.head).toBe(head);
+    expect(pill.tooltip).toBe(`${head}\n${block.rows.map((row) => `${row.word} ${row.range}`).join(" · ")}`);
+    expect(block.rows.map((row) => row.current)).toEqual([0, 1, 2, 3, 4].map((index) => index === current));
+
+    // No DOM in this suite (node): the markup is read by its parts, in order.
+    // Emotion's server render interleaves its <style> tags; the structure is what is left.
+    const html = renderToStaticMarkup(createElement(DifficultyTooltipBlock, { block })).replace(/<style[^>]*>[^<]*<\/style>/g, "");
+    expect(html).toMatch(/^<span [^>]*data-testid="difficulty-tooltip"/);
+    expect([...html.matchAll(/data-part="(\w+)"/g)].map((match) => match[1])).toEqual(["head", "ladder", "row", "row", "row", "row", "row"]);
+    expect(html).toMatch(new RegExp(`data-part="head"[^>]*>${head}</span>`));
+    // Each row: the drawn marker (hidden, empty), the band's word, then its levels in a cell apart.
+    const rows = [...html.matchAll(/data-part="row"( data-current="true")?><span[^>]*><span [^>]*aria-hidden="true"><\/span>([^<]+)<\/span><span[^>]*>([^<]+)<\/span><\/span>/g)];
+    expect(rows.map((match) => [match[2], match[3]])).toEqual(block.rows.map((row) => [row.word, row.range]));
+    expect(rows.map((match) => Boolean(match[1]))).toEqual(block.rows.map((row) => row.current));
+  });
+
   it("the drawn chip carries the tooltip mark and the level once in its accessible name, never an aria-label", async () => {
     const pill = await difficultyPill(5);
     const html = renderToStaticMarkup(RoutePills({ pills: [pill] }));
     expect(html).toContain('data-has-tooltip="true"');
-    expect(html).toContain(`<span aria-hidden="true">Mediu 5</span>`);
+    expect(html).toContain(`<span aria-hidden="true">Mediu</span>`);
     expect(html).toContain(">Dificultate: mediu — nivelul 5 din 15 (mediu: 4–6)<");
     expect(html.match(/nivelul 5 din 15/g)).toHaveLength(1);
     expect(html).not.toMatch(/aria-label=/);

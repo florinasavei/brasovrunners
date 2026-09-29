@@ -11,7 +11,7 @@ import { orderRoutePills, type Pill } from "@/modules/events/ui/route-pills";
  */
 
 const surface: Pill = { glyph: "surface:TRAIL", label: "Trail" };
-const difficulty: Pill = { glyph: "difficulty:MEDIUM-2", label: "Mediu 5" };
+const difficulty: Pill = { glyph: "difficulty:MEDIUM-2", label: "Mediu" };
 const distance: Pill = { glyph: "distance", label: "8 km" };
 const elevation: Pill = { glyph: "elevation", label: "250 m D+" };
 
