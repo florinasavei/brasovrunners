@@ -182,7 +182,7 @@ export default async function ContactPage({ params, searchParams }: Props) {
           client island — the button. */}
       <Wordmark />
 
-      <Typography variant="h1" gutterBottom sx={{ mt: 1 }}>
+      <Typography variant="h1" gutterBottom sx={{ mt: { xs: DENSITY.headGap, sm: 1 } }}>
         {t("title")}
       </Typography>
       <Typography variant="body1" color="text.secondary" sx={{ mb: { xs: DENSITY.sectionGap, sm: 3 } }}>

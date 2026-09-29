@@ -87,6 +87,10 @@ export const accentOnHover = {
  * Purely decorative — no text sits on it, so it is the one gradient free to be saturated. It
  * is what makes a heading read as the start of a section on a page that is otherwise a column
  * of cards.
+ *
+ * It is the page title's one mark of identity, and it stays at every width (§NNN): the compact
+ * page head keeps the bar and only halves the room above it on a phone, four pixels under the
+ * title's words where `sm` and up keep eight. Only the page H1s carry it.
  */
 export const headingRule = {
   "&::after": {
@@ -98,6 +102,7 @@ export const headingRule = {
     borderRadius: 2,
     background: SURFACE_GRADIENT.rule,
   },
+  "@media (max-width:599.95px)": { "&::after": { marginTop: "0.25rem" } },
   "[data-dark] &::after": { background: SURFACE_GRADIENT.ruleDark },
 } as const;
 

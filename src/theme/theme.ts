@@ -63,7 +63,20 @@ export const buildTheme = (options: ThemeOptions) => createTheme({
     fontFamily: `${options.body}, ${FONT.fallback}`,
     // Headings take the display role, so an arriving club typeface changes these and leaves
     // body text alone. Both resolve to Roboto until one arrives — see brand.ts.
-    h1: { fontFamily: `${options.display}, ${FONT.fallback}`, fontSize: "2rem", fontWeight: 500 },
+    /*
+      A page's title, compact (§NNN; the owner, 2026-09-29: «Textul ăsta de „Evenimente” e mult
+      prea mare, pe mobil ia prea mult spațiu, la fel și la „Calendar”»): 1.5rem on a phone —
+      24px, MUI's h5 step — and one step down from the old 2rem, 1.75rem (28px), from `sm`. Here
+      rather than on each page, so every public H1 that takes the theme's size follows at once:
+      the listing, the calendar, an event page, the team, contact, the standing pages, the FAQ,
+      the gallery and the members' zone. A page that states its own size keeps it.
+    */
+    h1: {
+      fontFamily: `${options.display}, ${FONT.fallback}`,
+      fontSize: "1.5rem",
+      fontWeight: 500,
+      "@media (min-width:600px)": { fontSize: "1.75rem" },
+    },
     h2: { fontFamily: `${options.display}, ${FONT.fallback}`, fontSize: "1.5rem", fontWeight: 500 },
   },
   shape: { borderRadius: options.radius },

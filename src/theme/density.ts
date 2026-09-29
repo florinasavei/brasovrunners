@@ -6,7 +6,7 @@
  * "There is a bit too much padding and whitespace on mobile, the space could be used more
  * efficiently").
  *
- * Seven named steps (eight until §470 took the hero's), each an MUI spacing unit (1 = 8px), used only for the **xs** side of a
+ * Eight named steps (eight until §470 took the hero's, seven until §NNN added the page head's), each an MUI spacing unit (1 = 8px), used only for the **xs** side of a
  * breakpoint object (`{ xs: DENSITY.x, sm: <the value the page already had> }`). `sm` and up
  * are never touched — a tablet or a desktop had no complaint — so every place this is used
  * keeps its wider value from `sm` unchanged; `tests/unit/theme/density.test.ts` holds a table of
@@ -57,6 +57,13 @@ export const DENSITY = {
    * margin, was 1, 8px). Six pixels.
    */
   gapXs: 0.75,
+  /**
+   * Above a page's H1, on a phone (§NNN): the room between the page's top padding and its title on
+   * the listing, the calendar and the contact page, halved from 1 (8px) to four pixels once the
+   * wordmark above the title is no longer drawn below `sm` — the phone's first screen is for the
+   * events, not for the page's head.
+   */
+  headGap: 0.5,
   /**
    * A short gap between one element and the next below it — a "back to events" row, a folded
    * step, a share row, a calendar day or month box, one partner card under another — on a
