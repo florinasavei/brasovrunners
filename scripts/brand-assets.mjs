@@ -52,6 +52,17 @@ const OUTPUTS = [
     */
     background: null,
   },
+  {
+    source: "public/brand/email-cannot-come.svg",
+    target: "public/brand/email-cannot-come.png",
+    /*
+      The glyph before «Nu mai pot ajunge» in every email about a live registration (§NNN): the
+      manage page's cancel glyph (`EventBusy`) in the club's ink blue, drawn at 20 px, so 2× here.
+      With alpha, so it sits on the button's white and on a dark theme's re-coloured one alike.
+    */
+    width: 40,
+    background: null,
+  },
 ];
 
 for (const { source, target, width, background, canvas } of OUTPUTS) {

@@ -5032,7 +5032,7 @@
               "title": "They withdraw or cannot come any more",
               "steps": [
                 "From the confirmation email: «Manage your registration» → «Cancel the registration for…» (with the person's name) → «Yes, cancel».",
-                "From the reminder: «I can't come — cancel my registration».",
+                "From any email about their registration: «I can't make it any more» → «Cancel the registration for…» → «Yes, cancel».",
                 "Any time: «My registrations», on the site, with their address. The place goes to the waiting list at once."
               ]
             },

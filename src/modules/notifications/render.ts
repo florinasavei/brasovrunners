@@ -34,6 +34,7 @@ import {
 import { seriesRhythmPhrase } from "@/modules/group-run-declarations/series";
 import { generateTokenSecret, hashTokenSecret } from "@/modules/action-tokens/domain/token-secret";
 import { bulkCopyRecipients, declarationPdfAudience, isClubCopy, isParticipantMessage } from "./domain/club-notices";
+import { CANNOT_COME_MESSAGES, cannotComeApplies, cannotComeUrlOf } from "./domain/cannot-come";
 import { declarationAsksMinorToSign } from "@/modules/legal-documents/repository";
 import { readOrganizerMessagePayload } from "./domain/organizer-message";
 import { registrationStatusWords } from "./domain/registration-status-words";
@@ -980,6 +981,54 @@ async function renderRow(
     const path = getPathname({ locale, href: { pathname: ROUTE_BY_PURPOSE.LIST_CONSENT, params: { token: issued.secret } } });
     data.listConsentUrl = `${env.APP_BASE_URL}${path}`;
     data.listed = !registration.listOptOut;
+  }
+
+  /*
+    «Nu mai pot ajunge» (§NNN, amending §81 and §419; the owner, 2026-09-29: «în fiecare mail trebuie
+    să fie clar butonul de „Nu mai pot ajunge”»): every message about a live registration, at its own
+    address, carries the manage page's cancel — which asks first, then cancels that person (§547). A
+    family's one confirmation lands on its first person's page, which lists every person of the
+    address with their own cancel. Never on a club copy (§320), never after the start or on an event
+    that will not run, never on a registration that is no longer active.
+
+    The link is the message's own: the manage token this send already minted (the confirmation, the
+    reminder, the number, the signed declaration, the manage link) — today's «Nu mai pot veni» — or,
+    on a message that carried none, one minted here the same way, at send time, hashed at rest,
+    single use (§12.8, §14.5), and living the manage link's own fortnight (`DEFAULT_TOKEN_HOURS`).
+    Like every newer manage link it supersedes the older one: the newest email's button is the one
+    that works, as the reminder's already did.
+  */
+  const cannotComeFor = familyConfirmed?.[0] ?? registration;
+  if (!clubCopy && row.participantId && cannotComeFor && CANNOT_COME_MESSAGES.has(row.messageType)) {
+    const [eventState] = await db
+      .select({ startsAt: events.startsAt, eventStatus: events.eventStatus })
+      .from(events)
+      .where(eq(events.id, cannotComeFor.eventId))
+      .limit(1);
+    if (
+      cannotComeApplies({
+        messageType: row.messageType,
+        clubCopy,
+        recipientParticipantId: row.participantId,
+        registration: cannotComeFor,
+        event: eventState,
+        now,
+      })
+    ) {
+      if (data.manageUrl && !familyConfirmed && cannotComeFor.id === row.registrationId) {
+        data.cannotComeUrl = cannotComeUrlOf(data.manageUrl);
+      } else {
+        const issued = await issueActionToken(db, {
+          participantId: row.participantId,
+          registrationId: cannotComeFor.id,
+          purpose: "MANAGE_REGISTRATION",
+          expiresAt: new Date(now.getTime() + DEFAULT_TOKEN_HOURS * 60 * 60_000),
+          now,
+        });
+        const path = getPathname({ locale, href: { pathname: ROUTE_BY_PURPOSE.MANAGE_REGISTRATION, params: { token: issued.secret } } });
+        data.cannotComeUrl = cannotComeUrlOf(`${env.APP_BASE_URL}${path}`);
+      }
+    }
   }
 
   // The signed declaration itself, rendered now from the rows and never stored as a file

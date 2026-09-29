@@ -5032,7 +5032,7 @@
               "title": "Se retrage sau nu mai poate veni",
               "steps": [
                 "Din emailul de confirmare: «Gestionează înscrierea» → «Anulează înscrierea pentru…» (cu numele persoanei) → «Da, anulează».",
-                "Din reminder: «Nu pot veni — anulez înscrierea».",
+                "Din orice email despre înscrierea lui: «Nu mai pot ajunge» → «Anulează înscrierea pentru…» → «Da, anulează».",
                 "Oricând: «Înscrierile mele», pe site, cu adresa lui. Locul trece imediat la lista de așteptare."
               ]
             },

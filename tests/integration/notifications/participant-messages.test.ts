@@ -303,15 +303,23 @@ describe("§364 the organizer's message to an event's participants", () => {
     expect(english).toContain("A message from the organizers of The autumn cross");
     expect(english).toContain("Tractorul Park");
     expect(english).not.toContain("Startul se mută");
-    // The button is the event's page, "my registrations" by address, and no token anywhere.
+    // The button is the event's page, "my registrations" by address — and, since §NNN, «Nu mai pot
+    // ajunge» under it: each registrant's own manage link, the one token the message mints.
     expect(ana.html).toContain(`/ro/evenimente/crosul-${event.id.slice(0, 8)}`);
     expect(ana.text).toContain("/ro/inscrieri/ale-mele");
+    expect(ana.text).toMatch(/Nu mai pot ajunge: \S+\/inregistrari\/gestionare\/[A-Za-z0-9_-]+#cancel/);
     expect(ana.attachments).toBeUndefined();
 
     const bogdan = await renderOutboxMessage(told.find((row) => row.registrationId === byName("bogdan").id)!, db, NOW);
     expect(bogdan.subject).toBe("Bad weather at The autumn cross / Vreme rea la Crosul de toamnă");
     expect(bogdan.text.indexOf("Hi, bogdan!")).toBeLessThan(bogdan.text.indexOf("Salut, bogdan!"));
-    expect(await db.select().from(emailActionTokens)).toHaveLength(0);
+    const tokens = await db.select().from(emailActionTokens);
+    expect(tokens.map((token) => [token.registrationId, token.purpose]).sort()).toEqual(
+      [
+        [byName("ana").id, "MANAGE_REGISTRATION"],
+        [byName("bogdan").id, "MANAGE_REGISTRATION"],
+      ].sort(),
+    );
   });
 
   it("fills {bibNumber} with the settled number only, and leaves it out for whoever has none", async () => {

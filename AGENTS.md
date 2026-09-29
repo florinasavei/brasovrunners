@@ -2761,8 +2761,19 @@ when an organizer ticks "Anunță participanții despre schimbare" on a save tha
 the start or the programme, put a cancelled event back on, or carries a note; the second when a
 save cancels the event and "tell them" is left ticked, with the reason the organizer typed. Both
 go to every active registration of that event (`PENDING_DECLARATION`, `WAITLIST_OFFERED`,
-`CONFIRMED`, `WAITLISTED`) in its own language, carry no token, are queued in the save's
-transaction and audited with the count, never who.
+`CONFIRMED`, `WAITLISTED`) in its own language, are queued in the save's transaction and
+audited with the count, never who. `EVENT_CANCELLED` carries no token; `EVENT_UPDATE_NOTICE`
+carries one, minted at send time: the registration's manage link behind «Nu mai pot ajunge».
+
+**«Nu mai pot ajunge» / "I can't make it any more" is on every message about a live
+registration** (`DECISIONS.md` §NNN, `notifications/domain/cannot-come.ts`): the address to
+confirm, the declaration to sign, the waiting list and its offer, the confirmation, the number,
+the reminder, the organizer's update notice and message, the manage link, the signed
+declaration and the family's links. A full-width button under the action (the reminder's only
+one) to the manage page's cancel, which asks first; the message's own `MANAGE_REGISTRATION`
+token, minted at send time where the message had none. Never after the fact (the cancellations,
+the thank-you), never on a club copy (`DECISIONS.md` §320), never to an address that is not the
+registration's, never once the event has started or will not run.
 
 `EVENT_REMINDER` goes from the maintenance job to every CONFIRMED registration of a SCHEDULED
 event before its start — the club's reminder lead or the event's own (§377; 48 hours by default) — once per registration (`registration:<id>:reminder`), with
