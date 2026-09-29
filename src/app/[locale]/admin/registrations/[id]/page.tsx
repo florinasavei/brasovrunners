@@ -874,6 +874,18 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
               ? `${dt(registration.cancelledAt)} (${registration.cancellationSource})${registration.status === "CANCELLED" ? voidSuffix : ""}`
               : null,
           ],
+          // Why the participant cancelled (§558), right under when: their answer, and the words of «Alt motiv».
+          [
+            tr("registrations.cancelReasonLabel"),
+            registration.cancelReasonKind
+              ? registration.cancelReasonKind === "OTHER" && registration.cancelReason
+                ? tr("registrations.cancelReasonOther", {
+                    kind: tr(`registrations.cancelReasonKinds.${registration.cancelReasonKind}`),
+                    text: registration.cancelReason,
+                  })
+                : tr(`registrations.cancelReasonKinds.${registration.cancelReasonKind}`)
+              : null,
+          ],
           [
             tr("registrations.expired"),
             registration.expiredAt

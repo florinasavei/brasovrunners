@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.31-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.33-2026-09-27 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.31-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.33-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -21328,3 +21328,93 @@ Baseline `BR-V2.30-2026-09-27`.
 **8. Left as it is.** The event page's «Condiții de participare» fold says nothing new, because the note is a form matter. The privacy-notice template is unchanged. Its health sentence describes the note and its consent; it does not say every form asks it, so it stays true, and counsel reviewed it (§418). The club does not need to approve the notice again for this change. The sample race in the seed asks the note, so the fold can be walked on a local database.
 
 Baseline `BR-V2.31-2026-09-27`.
+
+## 558. «Nu mai pot ajunge» is a clear button in every email about a live registration, and a participant's cancellation says why (amending §81 and §419)
+
+**The owner, 2026-09-29, 12:05:** «de asemenea, în fiecare mail trebuie să fie clar butonul de „Nu mai pot ajunge”».
+
+Until now the way out was a line in a list: «Nu mai pot veni — anulez înscrierea» under the confirmation's and the number's button, the reminder's own button, and nothing at all on the address to confirm, the declaration request, the waiting list, the offer, the organizer's update notice (§419 pointed it at «Înscrierile mele», one more email away) or the organizer's message. A runner who cannot come should find the door in whichever email is open, and a place given up early goes to the waiting list in time.
+
+**Decision.** Every email a participant receives about a live registration, at that registration's own address, carries one button «Nu mai pot ajunge» / “I can't make it any more”, with one sentence under it: «Locul se eliberează pentru altcineva.» / “Your place goes to someone else.”
+
+- **Where it sits.** Under the message's own button, or as the one button when the message has none: the reminder's «Nu pot veni — anulez înscrierea» is replaced by it, and the old «Nu mai pot veni — anulez înscrierea» lines under the confirmation's and the number's button are gone, so a message has one cancel. The confirmation's sentence «Mai jos: înscrierea ta, „nu mai pot veni” …» names the button by its new words. The reminder's sentence «Nu poți veni? Anulează înscrierea cu linkul de mai jos …» / “Can't come? Cancel with the link below …” is gone: the button and its sentence say it, and a reminder the outbox or the budget governor delays past the start, or one for an event cancelled meanwhile, carries no button, so the line would point at nothing. A reminder text the club saved in the editor keeps whatever words it saved (§247). No other word of any message changed.
+- **How it looks.** The card's whole width, outlined in the club's ink blue on white like the family link's second button (§468), 52 pixels tall (BR-REQ-041-01 criterion 6), the manage page's own cancel glyph (`EventBusy`) before the words (§521) as a hosted 20-pixel PNG (`public/brand/email-cannot-come.png`, rasterised by `scripts/brand-assets.mjs`: many mail clients refuse an SVG), decorative (`alt=""`), so a client that blocks pictures shows the words alone. In both halves of the bilingual message, each in its own words; the plain-text part reads «Nu mai pot ajunge: <link>» and the sentence.
+- **Where it lands.** The registration's manage page at its own person's cancel (`…/gestionare/<token>#cancel`), which asks first and then cancels that person through the allocator, the audit row and the §547 cancellation email as every participant's cancellation does. A family's email lands on the page that lists every person of the address at the event, each with their own cancel (§547): the family's one confirmation on its first person's page, the family sitting's message and the family link's on the registration the row names.
+- **The link: the registration's own manage page, one tap from every email** (the review of 2026-09-29, over the first cut of this decision). In order:
+  1. **The message's own manage token**, as today's «Nu mai pot veni» was: the confirmation, the reminder, the number, the signed declaration and the manage link already mint one, and the button is that link at `#cancel` — no second token.
+  2. **A family's own «Toate înscrierile mele»** on the two messages that list several people and already mint it (`MANAGE_PROFILE`): the family's one confirmation and the family sitting's message. The page lists every person of the address with their own cancel (§77, §547). This is the only case the button opens a page of the address rather than of one registration.
+  3. **On every other message** — the address to confirm, the declaration request, the waiting list and its offer, the offer lapsed, the organizer's update notice and message — a `MANAGE_REGISTRATION` token minted in the renderer at send time, hashed at rest, single use (AGENTS.md §12.8, §14.5), living the manage link's own fortnight (`DEFAULT_TOKEN_HOURS`).
+  A new manage token supersedes the registration's older one (BR-REQ-036-02 criterion 5), as every newer manage link always did: **the newest email about the registration is the one whose link works**, and its page carries everything the older one did — the QR, «Am ajuns» (self check-in), the public list's switch, the cancel. The older email's «Vezi înscrierea» and the confirmation's PDF link (the same secret, §95) then say the link was replaced; the PDF itself is attached to the confirmation. A send that failed and is retried mints again, and the retry's link wins. No new purpose. The event's state the rule reads (`eventStatus`, `startsAt`) comes with the batch's one read of the event (`findEventNotificationRows`, §489), never a query per row.
+- **When.** Only on a message of the list below, to the registration's own address (the row's participant), while the registration is active (`PENDING_EMAIL_CONFIRMATION`, `PENDING_DECLARATION`, `WAITLISTED`, `WAITLIST_OFFERED`, `CONFIRMED`) and its event is `SCHEDULED` and not started: after the start the page refuses a participant's cancel (AGENTS.md §10.5 rule 9), so a button then would promise what the page cannot do. Never on a club copy (§320): the renderer mints nothing for one and the template drops the link again. One list, `CANNOT_COME_MESSAGES` in `notifications/domain/cannot-come.ts`, read by the renderer, the template and the preview on «Setări» → «Emailuri», which shows the button on every message of the list.
+
+**Every message type**
+
+| Message | Button | Why |
+| --- | --- | --- |
+| `VERIFY_REGISTRATION_EMAIL` | yes | the address to confirm, a place held |
+| `COMPLETE_DECLARATION` | yes | the declaration to sign, and the participation confirmation (§104) |
+| `WAITLIST_JOINED` | yes | on the waiting list: leaving it is the same cancel |
+| `WAITLIST_SPOT_OFFER` | yes | a freed place offered |
+| `REGISTRATION_CONFIRMED` | yes | the confirmation, one person's or a family's (§519) |
+| `WAITLIST_OFFER_EXPIRED` | yes | back on the waiting list |
+| `REGISTRATION_MANAGE_LINK` | yes | the manage link |
+| `EVENT_REMINDER` | yes | its one button |
+| `DECLARATION_SIGNED` | yes | the signed declaration of a confirmed registration |
+| `BIB_ASSIGNED` | yes | the number given by hand (§105) |
+| `EVENT_UPDATE_NOTICE` | yes | the organizer's update notice (amending §419 and AGENTS.md §16.3, which said it carries no token) |
+| `ORGANIZER_MESSAGE` | yes | the organizer's message (§364) |
+| `REGISTER_ANOTHER_PERSON` | the family sitting's shape only | the family sitting's message (§519), on its «Toate înscrierile mele», which lists the address's people. Never on the kept form's shape (§446): it asks «Confirm că înscriu altă persoană» / «Nu înscriu această persoană» about a new person, and a second “no” there would cancel the person the address already holds; never at the limit or once the form is gone, which offer nothing to decide |
+| `REGISTRATION_CANCELLED` | no | after the fact (§547) |
+| `EVENT_THANKS` | no | after the fact (§82) |
+| `EVENT_CANCELLED` | no | the event will not run (§331) |
+| `REGISTRATION_STATE_NOTICE` | no | the resend for a cancelled or expired registration, which creates no token (AGENTS.md §16.3) |
+| `PROFILE_MANAGE_LINK` | no | «Înscrierile mele»: its own button lists every person's cancel (§77) |
+| `DECLARATION_ARCHIVE`, `CLUB_CONFIRMATION_NOTICE`, `GROUP_RUN_DECLARATION_ARCHIVE` | no | to the club's mailboxes (§244, §245) |
+| `GROUP_RUN_DECLARATION_SIGNED` | no | a declaration that registers nobody (§393) |
+| `REGISTRATION_OPENED`, `NEWSLETTER_CONFIRM`, `NEWSLETTER`, `NEW_EVENT_ALERT` | no | about no registration (§146, §445) |
+| `STAFF_INVITATION`, `MEMBER_INVITATION` | no | about no registration (§141, §524) |
+
+**Refused, for the link.** «Înscrierile mele» by address whenever the registration already held a live manage link, so no email superseded another (this decision's first cut): after the address was confirmed every later email — the declaration request, the waiting list, the offer — held a live link from the one before, so the button most runners met was the two-step page «Scrie adresa și îți trimitem linkul», exactly when a hesitant runner is likeliest to cancel. Guarding only a confirmed registration: its later emails are the organizer's message and notice, and a two-step cancel there is the same failure. Reusing the live token: it is hashed at rest and its secret unrecoverable (§14.5). A second, longer-lived token purpose for the button: a second secret to the same cancel in every inbox (§12.8). A button per person on a family's email: the page it lands on lists every person with their own cancel (§547). The button on the club's copy «for completeness»: it is a secret handed to a club mailbox (§320). A button after the start, pointing at a page that refuses: a promise the page cannot keep. The words as club-editable copy: the button and its token are the message's machinery, which stays in code (AGENTS.md §16.3, §247).
+
+**The reason for cancelling.** The owner, 2026-09-29, 12:25: «when people cancel, they need to provide a reason».
+
+- **Where it is asked.** At every door a participant cancels through: the manage page's «Anulează înscrierea pentru …» (the button's landing), «Înscrierile mele»'s «Renunț la această înscriere», and the family wizard's «Renunț la înscrierea pentru …» (§547). A staff cancellation asks nothing new.
+- **What is asked.** «De ce anulezi?» / “Why are you cancelling?” — a native select of three answers: «Accidentare sau boală» / “Injury or illness”, «Alt program» / “Other plans”, «Alt motiv» / “Another reason”; for «Alt motiv» a short text of the person's own, «Motivul, pe scurt», at most 200 characters (counted as a person counts them, runs of spaces folded), required. The text box shows only while «Alt motiv» is chosen — by CSS alone (`:has`), so it works before hydration and without JavaScript, and a browser without `:has` simply shows it; its help line says only the club reads it. With JavaScript the empty select, or the empty text for «Alt motiv», is named by the browser before the question «Anulezi …?» opens (`AskFirstButton` asks the form to report first).
+- **Refused naming the box.** On the server, whatever the browser did (`parseCancelReason`): no answer, «Alt motiv» with no words, or more than 200 characters sends the person back to the same page with `?reason=kind|text|long` (and the person's id on a page of several), and that person's form shows one red line at `#cancel-reason` — «Alege de ce anulezi, apoi apasă din nou.», «Ai ales «Alt motiv»: scrie motivul, pe scurt.», «Motivul are cel mult 200 de caractere.» Refused before anything is read: the link is not spent and nobody is cancelled.
+- **Where it is kept.** On the registration: `cancel_reason_kind` (a new enum, `registration_cancel_reason_kind`) and `cancel_reason` (the words, `OTHER` only), written by `unregister` in the cancellation's own transaction. Migration `0112_registration_cancel_reason`, expand-only: one type, two nullable columns; every older row and every staff cancellation keeps both null — `unregister` stores a reason for a `PARTICIPANT` cancellation only, whatever a caller hands it. The audit row `registration.cancelled_by_participant` carries the answer (`reasonKind`) beside the state it left and the door, never the words, which are the person's own and may name them (AGENTS.md §12.12). An erasure deletes the row, and the reason with it.
+- **Where the club reads it.** The backoffice registration page, in the timeline under «Anulată»: «Motivul anulării: Alt motiv — „…”». The export's last column, «Cancellation reason» in the CSV and the spreadsheet, in the export's English like its other words — “Injury or illness”, “Other plans”, “Another reason: …” — neutralised like every typed cell. The club's copy of the cancellation email (§320, §547) quotes it after the platform's lines, each half in its own language: «Motivul anulării: Accidentare sau boală.» / “Cancellation reason: Injury or illness.”; the participant's own copy does not repeat it.
+
+**Refused, for the reason.** A free text for every answer: a sentence box beside three plain choices reads as homework, and the owner asked for a reason, not a letter. A reason left optional: the owner said they need to provide one, and three taps is the whole cost. The words in the audit row: the trail names no person (AGENTS.md §12.12). The reason in the participant's own email: they know it. Asking it inside the confirm dialog instead of the form: the dialog is a courtesy that does not exist without JavaScript (§384), and the reason must reach the server either way.
+
+Baseline `BR-V2.33-2026-09-27`.
+
+## 559. «CC» and «BCC» for the contact page's messages, named as such on «Pagini» → «Contact», and «Copiile clubului» as three nested folds (amending §442 and §457)
+
+The owner, 2026-09-29: «trebuie să am o setare de CC și BCC și pentru mailurile trimise de pe pagina de contact».
+
+**What was there already.** The setting existed. §164 gave «Cine primește mesajele de contact» a Cc list and, on 2026-09-22, a Bcc list, stored in the one `platform_settings.contactRecipients` row, validated by the canonicalizer, audited under its own id (…e002) and sent by the contact form as real `Cc` and hidden `Bcc` recipients. But the boxes were labelled «Copie – Cc (adrese despărțite prin virgulă)» and «Copie ascunsă – Bcc (…)», they took one line each, and the card's closed line said only «Acum ajung la: {to}». The owner looked for «CC» and «BCC» and did not find them.
+
+**Decided.**
+- The boxes are labelled «CC» / "CC" and «BCC» / "BCC", in the owner's words. «Către» loses its parenthesis too.
+- One sentence above the boxes says what they do: «CC: adresele apar în email; BCC: primesc o copie fără să apară.» Each box's help says the separators: «Adrese despărțite prin virgulă, spațiu sau pe rânduri.»
+- The three boxes grow with what they hold (multiline, up to six rows), as §457's boxes on «Setări» → «Emailuri» do. The parser is §457's `parseAddressList`, so one address per line works.
+- The card's closed line counts the copies in force — «Acum ajung la: {to} · CC: 2 · BCC: 1» — so it stays one line at 360 px (§336); the sentence inside the card names every address. With no copy at all it says «Acum ajung la: {to} · fără copii» / "They currently reach: {to} · no copies", never «CC: 0 · BCC: 0» (the review, 2026-09-29). The sentence inside says «CC» and «BCC» in place of «Copie» and «Copie ascunsă».
+- A refused save names the entry that is not an address, or the list over ten, with §457's `addressListRefusal`.
+- A repeat is **dropped, not refused**: an address typed twice, or one already under «Către», is kept once (the §164 rule). A line under the boxes says so, and the saved lists are shown back after the save.
+- The guide gains the Administrator's task «Cine primește mesajele de pe pagina de contact», with the exact button words. The tasks row's steps now say «CC» and «BCC».
+
+**«Copiile clubului» on «Setări» → «Emailuri» as three nested folds.** The owner, 2026-09-29 12:15, with a screenshot of that card — one long form with the archive address for the signed declarations and its Cc and Bcc, the confirmation-notice addresses, the Bcc of the participants' emails, two warnings and one «Salvează»: «și aici trebuie să fie mai multe acordeoane nested». The card's body is now three level-3 folds, in this order, each closed by default with a glyph and a summary line (§336, §521):
+- «Declarațiile semnate» / "Signed declarations" — the list in force, the idle-copies warning, the archive address, Cc, the Bcc warning and Bcc; its line «Merg la: {to} · Cc: n · Bcc: n», «Merg la: {to} · fără copii», or «Nu se trimit» with no archive address.
+- «Anunțul de confirmare» / "The confirmation notice" — its list in force and its box; its line names the addresses — «Adrese: ana@…, radu@…» / "Addresses: …" — or «Adrese: —» with none, as the card's own line names its mailboxes (§457).
+- «Copia clubului la emailurile către participanți» / "The club's copy of the emails to participants" — its list in force, its warning and the Bcc box; the same line, naming the addresses or «—».
+
+The card keeps its own summary (the mailboxes that receive something, §457) and the «Modificat …» line. **One form, one confirm, one toast, one «Salvează»**, under the three folds: the lists are stored in one `clubNotices` row by one audited action, and three saves would be three confirmations for one setting. Every fold opens for the card's save (it stored all three lists, so each shows its result), a refusal opens the fold around the box it names and no other. The refusal is the kept form's state (§315) and never a `?error=` redirect, so the page has nothing to pass the folds: `ActionFormIsland` opens every fold around each box the refusal names (`revealField` → `openFoldsAround`), and with JavaScript off the boxed fold shows its body while a refusal is inside it. The folds take no `refused` reason, and «Declarațiile semnate» opens by itself while its Cc or Bcc is saved with no archive address to send them. A reader who may not edit sees the same three folds with the lists in force and no boxes. No new setting, no migration, no audit id.
+
+**Not changed.**
+- No new setting key, no migration and no new audit id. CC and BCC stay in the `contactRecipients` row beside «Către». Its audit row already records all three lists from and to, so one setting keeps one audit trail (§483).
+- The role is unchanged: the Administrator writes (`canManageClubSettings`, asserted in the action and the service); every reader of «Pagini» sees the lists in force.
+- The transport is unchanged. The contact form sends by SMTP through the club's Gmail (§149) and never through the outbox, so §443's per-group road does not apply to it and there is no Mailgun path to carry the headers. The message marked «[posibil spam]» (§310) is the same message and carries the same CC and BCC. The visitor gets no copy of any kind: the form sends one message, to the club, with the visitor as Reply-To.
+
+**Proof.** `tests/unit/contact/cc-bcc-words.test.ts` covers the labels, the sentence in both languages, the lengths, the line-separated parsing and the refusal naming the entry. `tests/integration/contact/cc-bcc-settings.test.ts` (PGlite) covers: saved and read back; a repeat kept once; a refused save naming the entry and changing nothing; the Organizer refused; the captured message carrying `cc` and `bcc`, the marked one too, with nothing to the visitor. `tests/unit/notifications/club-notices-folds.test.ts` holds the three folds — their order, glyphs, test ids, which box sits in which, one form and one Save under them, when each opens, and the words in both languages. `tests/e2e/email-plan.spec.ts` reads the new labels, the summary, «fără copii» once the copies are cleared, and the sentence, and opens the participants' fold to set the club's hidden copy: the fold open after the save with its line naming the address, a refusal typed there reopening that fold after it was closed while «Declarațiile semnate» stays shut, and «Adrese: —» once cleared. Its boxes are emptied focused first: after a refusal the boxes are drawn again (`RecallField`'s key), and Playwright's `fill("")` on a textarea it had not focused deleted one character only; a person's click or Tab clears it whole.
+
+Baseline `BR-V2.33-2026-09-27`.

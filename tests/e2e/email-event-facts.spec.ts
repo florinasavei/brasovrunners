@@ -65,3 +65,46 @@ test.describe("the event's facts in the confirmed email's preview", () => {
     expect(overflow.documentWidth).toBeLessThanOrEqual(overflow.viewportWidth);
   });
 });
+
+/**
+ * §558 (the owner, 2026-09-29: «în fiecare mail trebuie să fie clar butonul de „Nu mai pot
+ * ajunge”») — the preview of every message about a live registration shows «Nu mai pot ajunge»
+ * under its button, in both halves, full width and a thumb's height, with its one sentence; a
+ * message after the fact shows none. It reads nothing but the page, so both projects run it.
+ */
+test.describe("«Nu mai pot ajunge» in the emails' preview", () => {
+  test("under the confirmation's button and as the reminder's one button, never on the cancellation", async ({ page }) => {
+    await signIn(page, "Dev Copywriter");
+    await page.goto("/ro/admin/settings/emails?lang=ro");
+
+    const confirmed = page.locator("#main").locator("#email-REGISTRATION_CONFIRMED");
+    await openFold(confirmed);
+    const buttons = confirmed.frameLocator("iframe").locator('[data-email-part="cannot-come"]');
+    await expect(buttons).toHaveCount(2);
+    const ro = buttons.nth(0).getByRole("link", { name: "Nu mai pot ajunge" });
+    await expect(ro).toHaveAttribute("href", /#cancel$/);
+    await expect(buttons.nth(0)).toContainText("Locul se eliberează pentru altcineva.");
+    await expect(buttons.nth(1).getByRole("link", { name: "I can't make it any more" })).toHaveAttribute("href", /#cancel$/);
+    await expect(buttons.nth(1)).toContainText("Your place goes to someone else.");
+    // A thumb's target (BR-REQ-041-01 criterion 6), the card's whole width.
+    const box = await ro.boundingBox();
+    const card = await buttons.nth(0).boundingBox();
+    expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
+    expect(Math.round(box?.width ?? 0)).toBe(Math.round(card?.width ?? -1));
+    // Under the message's own button.
+    const order = await confirmed.frameLocator("iframe").locator("body").evaluate((body) => ({
+      button: body.innerHTML.indexOf("Vezi înscrierea"),
+      cannotCome: body.innerHTML.indexOf('data-email-part="cannot-come"'),
+    }));
+    expect(order.cannotCome).toBeGreaterThan(order.button);
+
+    const reminder = page.locator("#main").locator("#email-EVENT_REMINDER");
+    await openFold(reminder);
+    await expect(reminder.frameLocator("iframe").locator('[data-email-part="cannot-come"]')).toHaveCount(2);
+
+    const cancelled = page.locator("#main").locator("#email-REGISTRATION_CANCELLED");
+    await openFold(cancelled);
+    await expect(cancelled.frameLocator("iframe").locator("body")).toContainText("a fost anulată");
+    await expect(cancelled.frameLocator("iframe").locator('[data-email-part="cannot-come"]')).toHaveCount(0);
+  });
+});

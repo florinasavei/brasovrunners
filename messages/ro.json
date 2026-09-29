@@ -563,6 +563,13 @@
       "holdExpires": "Rezervarea expiră",
       "confirmed": "Confirmată",
       "cancelled": "Anulată",
+      "cancelReasonLabel": "Motivul anulării",
+      "cancelReasonOther": "{kind} — „{text}”",
+      "cancelReasonKinds": {
+        "INJURY_OR_ILLNESS": "Accidentare sau boală",
+        "OTHER_PLANS": "Alt program",
+        "OTHER": "Alt motiv"
+      },
       "expired": "Expirată",
       "declaration": "Declarație semnată",
       "privacyNoticeLine": "Nota de informare luată la cunoștință (v{version}): {date}",
@@ -2698,8 +2705,8 @@
             "Vercel → proiectul de producție (și QA) → Settings → Environment Variables: CONTACT_SMTP_USER = adresa Gmail a clubului; CONTACT_SMTP_PASSWORD = cele 16 caractere.",
             "(CONTACT_FORM_TO nu mai e obligatorie — e doar rezerva pentru destinatari.)",
             "Redeploy pe ambele proiecte.",
-            "În aplicație: Pagini → Contact → „Cine primește mesajele de contact” → scrie adresele la „Către” și, dacă vrei, o copie la „Copie (Cc)”.",
-            "O copie pe care nimeni din mesaj nu o vede merge la „Copie ascunsă (Bcc)” → Salvează.",
+            "În aplicație: «Pagini» → «Contact» → «Cine primește mesajele de contact» → scrie adresele la «Către» și, dacă vrei, la «CC» (se văd în email).",
+            "O copie pe care nimeni din mesaj nu o vede merge la «BCC» → «Salvează destinatarii».",
             "De aici se schimbă oricând, fără redeploy.",
             "Deschide {baseUrl}/ro/contact și trimite un mesaj de probă: „Mesajul a plecat.” pe pagină și e-mailul în căsuță, cu „Reply” către cine a scris. Rândul acesta devine verde."
           ]
@@ -3924,7 +3931,22 @@
         "readOnly": "Cine primește copiile clubului stabilește Administratorul; tu vezi listele în vigoare.",
         "saving": "Se salvează…",
         "saved": "Am salvat cine primește copiile clubului.",
-        "participantsBccHelpMore": "Nu și verificarea adresei sau linkul pentru altă persoană. Un mesaj către toți înscrișii dă o singură copie, fără nume. Niciodată pentru înscrierile de test."
+        "participantsBccHelpMore": "Nu și verificarea adresei sau linkul pentru altă persoană. Un mesaj către toți înscrișii dă o singură copie, fără nume. Niciodată pentru înscrierile de test.",
+        "folds": {
+          "addresses": "Adrese: {addresses}",
+          "declarations": {
+            "title": "Declarațiile semnate",
+            "aside": "Merg la: {to} · Cc: {cc} · Bcc: {bcc}",
+            "asideNoCopies": "Merg la: {to} · fără copii",
+            "asideNone": "Nu se trimit"
+          },
+          "confirmations": {
+            "title": "Anunțul de confirmare"
+          },
+          "participants": {
+            "title": "Copia clubului la emailurile către participanți"
+          }
+        }
       },
       "queue": {
         "title": "Coada de trimitere",
@@ -4150,21 +4172,24 @@
       },
       "contacts": {
         "title": "Cine primește mesajele de contact",
-        "aside": "Acum ajung la: {to}",
+        "aside": "Acum ajung la: {to} · CC: {cc} · BCC: {bcc}",
+        "asideNoCopies": "Acum ajung la: {to} · fără copii",
         "asideNobody": "nimeni",
         "intro": "Cine primește mesajele de pe „Scrie-ne”; ele pleacă prin Gmail-ul clubului, nu prin Mailgun. Se salvează aici, fără redeploy.",
         "source": {
-          "setting": "Acum ajung la: {to}. Copie: {cc}. Copie ascunsă: {bcc}. Scrise aici, în aplicație.",
-          "environment": "Acum ajung la: {to} — din variabila CONTACT_FORM_TO de pe server, pentru că lista de mai jos e goală. Copie: {cc}. Copie ascunsă: {bcc}.",
+          "setting": "Acum ajung la: {to}. CC: {cc}. BCC: {bcc}. Scrise aici, în aplicație.",
+          "environment": "Acum ajung la: {to}, din CONTACT_FORM_TO de pe server, pentru că „Către” e gol. CC: {cc}. BCC: {bcc}.",
           "none": "Nu le primește nimeni: pagina „Scrie-ne” arată adresa clubului în loc de formular. Scrie cel puțin o adresă la „Către”."
         },
         "updatedAt": "Setat {when}.",
-        "to": "Către (adrese despărțite prin virgulă)",
-        "toHelp": "Cine primește mesajul. Gol înseamnă că se folosește CONTACT_FORM_TO de pe server.",
-        "cc": "Copie – Cc (adrese despărțite prin virgulă)",
-        "ccHelp": "Primesc o copie la fiecare mesaj trimis din formular, pe „Cc”, deci se văd unul pe altul. Gol înseamnă fără copii.",
-        "bcc": "Copie ascunsă – Bcc (adrese despărțite prin virgulă)",
-        "bccHelp": "Primesc o copie a fiecărui mesaj din formular, fără să apară în el. Gol înseamnă fără copii ascunse.",
+        "to": "Către",
+        "toHelp": "Adrese despărțite prin virgulă, spațiu sau pe rânduri. Gol: se folosește CONTACT_FORM_TO de pe server.",
+        "cc": "CC",
+        "ccHelp": "Adrese despărțite prin virgulă, spațiu sau pe rânduri. Gol: fără CC.",
+        "bcc": "BCC",
+        "bccHelp": "Adrese despărțite prin virgulă, spațiu sau pe rânduri. Gol: fără BCC.",
+        "copiesHelp": "CC: adresele apar în email; BCC: primesc o copie fără să apară.",
+        "repeats": "O adresă scrisă de două ori, sau deja la „Către”, se păstrează o singură dată.",
         "save": "Salvează destinatarii",
         "readOnly": "Cine primește mesajele de contact stabilește Administratorul; tu vezi lista în vigoare.",
         "saving": "Se salvează…",
@@ -4883,6 +4908,14 @@
               ]
             },
             {
+              "title": "Cine primește mesajele de pe pagina de contact",
+              "steps": [
+                "«Pagini» → «Contact» → «Cine primește mesajele de contact».",
+                "La «Către» scrie cine primește mesajul. La «CC», cine primește o copie la vedere. La «BCC», cine primește o copie fără să apară.",
+                "Adrese despărțite prin virgulă, spațiu sau pe rânduri. Apasă «Salvează destinatarii» și confirmă; lista salvată se vede pe card."
+              ]
+            },
+            {
               "title": "Ce mai are clubul de făcut",
               "steps": [
                 "«Sarcini» → tabul «Club»: fiecare rând e citit din sistem, cu pașii sub el. Un rând verde s-a rezolvat.",
@@ -5067,9 +5100,10 @@
             {
               "title": "Se retrage sau nu mai poate veni",
               "steps": [
-                "Din emailul de confirmare: «Gestionează înscrierea» → «Anulează înscrierea pentru…» (cu numele persoanei) → «Da, anulează».",
-                "Din reminder: «Nu pot veni — anulez înscrierea».",
-                "Oricând: «Înscrierile mele», pe site, cu adresa lui. Locul trece imediat la lista de așteptare."
+                "Din orice email despre înscrierea lui: «Nu mai pot ajunge» → la «De ce anulezi?» alege motivul (pentru «Alt motiv» îl scrie pe scurt) → «Anulează înscrierea pentru…» (cu numele persoanei) → «Da, anulează».",
+                "Pe emailul unei familii, butonul deschide «Înscrierile mele», cu fiecare persoană: «Renunț la această înscriere», tot cu motivul ales. Tot așa oricând, de pe site, cu adresa lui.",
+                "În declarațiile unei familii: «Renunț la înscrierea pentru…», tot cu motivul ales. Locul trece imediat la lista de așteptare.",
+                "Motivul apare pe pagina înscrierii, în export și în copia clubului a emailului de anulare."
               ]
             },
             {
@@ -6046,6 +6080,22 @@
   "Registrations": {
     "invalidOrExpired": "Acest link nu mai este valabil. Îți putem trimite unul nou, pe aceeași adresă de email.",
     "cancelKeepsRecord": "Renunțarea eliberează locul; înscrierea o păstrăm trei ani, ca dovadă. Vrei să-ți vezi, corectezi sau ștergi datele? <contact>Scrie-ne</contact>.",
+    "cancelReason": {
+      "label": "De ce anulezi?",
+      "choose": "Alege motivul",
+      "kinds": {
+        "INJURY_OR_ILLNESS": "Accidentare sau boală",
+        "OTHER_PLANS": "Alt program",
+        "OTHER": "Alt motiv"
+      },
+      "textLabel": "Motivul, pe scurt",
+      "textHelp": "Doar pentru «Alt motiv». Cel mult 200 de caractere. Îl citește doar clubul.",
+      "problem": {
+        "kind": "Alege de ce anulezi, apoi apasă din nou.",
+        "text": "Ai ales «Alt motiv»: scrie motivul, pe scurt.",
+        "long": "Motivul are cel mult 200 de caractere."
+      }
+    },
     "confirm": {
       "title": "Confirmă adresa de email",
       "prompt": "Îți confirmăm adresa de email. Dacă nu se întâmplă nimic în câteva secunde, apasă butonul.",

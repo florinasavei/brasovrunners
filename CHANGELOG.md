@@ -8,6 +8,10 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.33-2026-09-27
+
+- **«Nu mai pot ajunge» in every email about a live registration, and a reason for every cancellation** — a full-width button with the cancel glyph under the message's own button (the reminder's only one), «Locul se eliberează pentru altcineva.» under it, one tap to the registration's own manage page on every message (a family's email to «Înscrierile mele»); never after the fact, on a club copy or after the start. Every self-cancellation door — the manage page, «Înscrierile mele», the family wizard — asks «De ce anulezi?»: «Accidentare sau boală», «Alt program» or «Alt motiv» with a short text, refused naming the box; the club reads it on the registration's page, in the export's «Cancellation reason» column and in its copy of the cancellation email; migration `0112`. §558.
+- **«CC» and «BCC» on «Pagini» → «Contact», and «Copiile clubului» in three folds** — the contact form's copies are labelled as the owner calls them, one sentence says what each does, the boxes take one address per line, the card's closed line counts the copies in force (or says «fără copii»); on «Setări» → «Emailuri» the club's copies are three nested folds — the signed declarations, the confirmation notice, the copy of the participants' emails — each naming its addresses when closed, under one «Salvează», a refusal opening the fold it names. §559.
 ## BR-V2.31-2026-09-27
 
 - **The health note only when the event asks it** — a «Condiții de participare» card in «Program, regulament și declarație» with one «Informații medicale» tick, off by default; the form asks the note, the server keeps it and the registration page and the emergency sheet show it only then; every existing event stops asking until the club ticks it. §557.

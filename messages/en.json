@@ -563,6 +563,13 @@
       "holdExpires": "Hold expires",
       "confirmed": "Confirmed",
       "cancelled": "Cancelled",
+      "cancelReasonLabel": "Cancellation reason",
+      "cancelReasonOther": "{kind} — “{text}”",
+      "cancelReasonKinds": {
+        "INJURY_OR_ILLNESS": "Injury or illness",
+        "OTHER_PLANS": "Other plans",
+        "OTHER": "Another reason"
+      },
       "expired": "Expired",
       "declaration": "Declaration signed",
       "privacyNoticeLine": "Privacy notice acknowledged (v{version}): {date}",
@@ -2698,8 +2705,8 @@
             "Vercel → the production project (and QA) → Settings → Environment Variables: CONTACT_SMTP_USER = the club's Gmail address; CONTACT_SMTP_PASSWORD = the 16 characters.",
             "(CONTACT_FORM_TO is no longer required — it is only the fallback for the recipients.)",
             "Redeploy both projects.",
-            "In the app: Pages → Contact → “Who receives the contact messages” → write the addresses under “To” and, if you like, a copy under “Copy (Cc)”.",
-            "A copy nobody on the message sees goes under “Hidden copy (Bcc)” → Save.",
+            "In the app: «Pages» → «Contact» → «Who receives the contact messages» → write the addresses under «To» and, if you like, under «CC» (they show in the email).",
+            "A copy nobody on the message sees goes under «BCC» → «Save the recipients».",
             "Changed here at any time, with no redeploy.",
             "Open {baseUrl}/en/contact and send a test message: “Your message is on its way.” on the page and the email in the mailbox, with “Reply” addressed to whoever wrote. This row turns green."
           ]
@@ -3924,7 +3931,22 @@
         "readOnly": "Who receives the club’s copies is the Administrator’s to set; you see the lists in force.",
         "saving": "Saving…",
         "saved": "Saved who receives the club's copies.",
-        "participantsBccHelpMore": "Not the address check or the link for another person. A message to everybody registered gives one copy, with no names. Never for test registrations."
+        "participantsBccHelpMore": "Not the address check or the link for another person. A message to everybody registered gives one copy, with no names. Never for test registrations.",
+        "folds": {
+          "addresses": "Addresses: {addresses}",
+          "declarations": {
+            "title": "Signed declarations",
+            "aside": "They go to: {to} · Cc: {cc} · Bcc: {bcc}",
+            "asideNoCopies": "They go to: {to} · no copies",
+            "asideNone": "Not sent"
+          },
+          "confirmations": {
+            "title": "The confirmation notice"
+          },
+          "participants": {
+            "title": "The club's copy of the emails to participants"
+          }
+        }
       },
       "queue": {
         "title": "The sending queue",
@@ -4150,21 +4172,24 @@
       },
       "contacts": {
         "title": "Who receives the contact messages",
-        "aside": "They currently reach: {to}",
+        "aside": "They currently reach: {to} · CC: {cc} · BCC: {bcc}",
+        "asideNoCopies": "They currently reach: {to} · no copies",
         "asideNobody": "nobody",
         "intro": "Who receives the messages from “Write to us”; they leave through the club's Gmail, not Mailgun. Saved here, with no redeploy.",
         "source": {
-          "setting": "They currently reach: {to}. Copy: {cc}. Hidden copy: {bcc}. Set here, in the app.",
-          "environment": "They currently reach: {to} — from the CONTACT_FORM_TO variable on the server, because the list below is empty. Copy: {cc}. Hidden copy: {bcc}.",
+          "setting": "They currently reach: {to}. CC: {cc}. BCC: {bcc}. Set here, in the app.",
+          "environment": "They currently reach: {to}, from CONTACT_FORM_TO on the server, because “To” is empty. CC: {cc}. BCC: {bcc}.",
           "none": "Nobody receives them: the “Write to us” page shows the club's address instead of the form. Write at least one address under “To”."
         },
         "updatedAt": "Set on {when}.",
-        "to": "To (addresses separated by commas)",
-        "toHelp": "Who receives the message. Empty means CONTACT_FORM_TO on the server is used instead.",
-        "cc": "Copy – Cc (addresses separated by commas)",
-        "ccHelp": "They get a copy of every message the form sends, on “Cc”, so they can see one another. Empty means no copies.",
-        "bcc": "Hidden copy – Bcc (addresses separated by commas)",
-        "bccHelp": "They get a copy of every message from the form without appearing in it. Empty means no hidden copies.",
+        "to": "To",
+        "toHelp": "Addresses separated by commas, spaces or on separate lines. Empty: CONTACT_FORM_TO on the server is used.",
+        "cc": "CC",
+        "ccHelp": "Addresses separated by commas, spaces or on separate lines. Empty: no CC.",
+        "bcc": "BCC",
+        "bccHelp": "Addresses separated by commas, spaces or on separate lines. Empty: no BCC.",
+        "copiesHelp": "CC: the addresses appear in the email; BCC: they get a copy without appearing.",
+        "repeats": "An address typed twice, or already under “To”, is kept once.",
         "save": "Save the recipients",
         "readOnly": "Who receives the contact messages is the Administrator’s to set; you see the list in force.",
         "saving": "Saving…",
@@ -4883,6 +4908,14 @@
               ]
             },
             {
+              "title": "Who receives the messages from the contact page",
+              "steps": [
+                "«Pages» → «Contact» → «Who receives the contact messages».",
+                "Under «To» write who receives the message. Under «CC», who gets a visible copy. Under «BCC», who gets a copy without appearing.",
+                "Addresses separated by commas, spaces or on separate lines. Press «Save the recipients» and confirm; the saved list shows on the card."
+              ]
+            },
+            {
               "title": "What the club still has to do",
               "steps": [
                 "«Tasks» → the «Club» tab: every row is read from the system, with the steps under it. A green row is done.",
@@ -5067,9 +5100,10 @@
             {
               "title": "They withdraw or cannot come any more",
               "steps": [
-                "From the confirmation email: «Manage your registration» → «Cancel the registration for…» (with the person's name) → «Yes, cancel».",
-                "From the reminder: «I can't come — cancel my registration».",
-                "Any time: «My registrations», on the site, with their address. The place goes to the waiting list at once."
+                "From any email about their registration: «I can't make it any more» → at «Why are you cancelling?» choose the reason (for «Another reason» they write it in short) → «Cancel the registration for…» (with the person's name) → «Yes, cancel».",
+                "On a family's email, the button opens «My registrations», with each person: «Withdraw from this registration», with the reason chosen too. The same any time, from the site, with their address.",
+                "In a family's declarations: «Withdraw the registration for…», with the reason chosen too. The place goes to the waiting list at once.",
+                "The reason shows on the registration's page, in the export and in the club's copy of the cancellation email."
               ]
             },
             {
@@ -6046,6 +6080,22 @@
   "Registrations": {
     "invalidOrExpired": "This link is no longer valid. We can send you a new one, to the same email address.",
     "cancelKeepsRecord": "Cancelling frees your place; we keep the registration for three years as a record. Want to see, correct or erase your data? <contact>Write to us</contact>.",
+    "cancelReason": {
+      "label": "Why are you cancelling?",
+      "choose": "Choose a reason",
+      "kinds": {
+        "INJURY_OR_ILLNESS": "Injury or illness",
+        "OTHER_PLANS": "Other plans",
+        "OTHER": "Another reason"
+      },
+      "textLabel": "The reason, in short",
+      "textHelp": "Only for «Another reason». At most 200 characters. Only the club reads it.",
+      "problem": {
+        "kind": "Choose why you are cancelling, then press again.",
+        "text": "You chose «Another reason»: write it, in short.",
+        "long": "The reason is at most 200 characters."
+      }
+    },
     "confirm": {
       "title": "Confirm your email address",
       "prompt": "We are confirming your email address. If nothing happens in a few seconds, press the button.",

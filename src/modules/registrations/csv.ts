@@ -90,6 +90,11 @@ export type RegistrationCsvRow = {
    * «; »-joined, or empty — so a spreadsheet shows who came together.
    */
   family?: string;
+  /**
+   * Why the participant cancelled (§558): the answer, and after «Another reason» their own words
+   * (`cancelReasonCell`). Empty for a staff cancellation and every row that is not cancelled.
+   */
+  cancelReason?: string;
 };
 
 const HEADER = [
@@ -124,6 +129,8 @@ const HEADER = [
   "Declaration signed",
   // Last (§543), for the same reason: the other people on the same address.
   "family",
+  // Last (§558), for the same reason: the participant's own reason for cancelling.
+  "Cancellation reason",
 ];
 
 export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[]): string {
@@ -158,6 +165,7 @@ export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[]): stri
         String(row.declarationVersion ?? ""),
         row.declarationSignedAt ?? "",
         row.family ?? "",
+        row.cancelReason ?? "",
       ]
         .map(csvCell)
         .join(","),
