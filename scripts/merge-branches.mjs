@@ -7,37 +7,18 @@
  *        yarn batch:merge origin/qa                       bring a branch up to date with qa
  *        yarn batch:merge feat/a feat/b feat/c            integrate a batch, in that order
  *
- * Each ref is merged with `--no-ff`; one already merged is skipped. A conflict is resolved by the
- * rules in `merge-resolve.mjs` when every conflicted path is one of:
+ * Each ref is merged `--no-ff`; one already merged is skipped. Conflicts in the journal, the message
+ * catalogues and `tests/…` are resolved by `merge-resolve.mjs`; any other stops the run (exit 2) with
+ * the merge in progress — resolve, commit and run it again.
  *
- *   - `src/db/migrations/meta/_journal.json` — rebuilt from every side's entries, in file order;
- *   - `messages/ro.json`, `messages/en.json` — a three-way merge by key, theirs winning a leaf both changed;
- *   - `tests/…` — the union of both sides' lines;
+ * Afterwards: duplicate catalogue keys dropped; `yarn install --immutable` when package.json or
+ * yarn.lock changed (a typecheck against the pre-merge modules fails); on a rebuilt journal the
+ * snapshots re-linked and the newest refreshed by a throwaway `drizzle-kit generate` (`--no-probe`
+ * skips it); the migrations production and QA applied must be unchanged; `yarn migrations:check`
+ * and `yarn typecheck` must pass (`--no-checks` skips them). A failure stops with the merges committed.
  *
- * and the merge is committed. Any other conflicted path stops the run (exit 2) with the merge left in
- * progress and the paths named: a person or a merge agent resolves it, commits, and runs the same
- * command again — merged refs are skipped, and a merge left with only rule-resolvable paths is
- * finished first.
- *
- * After the merges: the catalogues lose any key git's line merge left twice; when the merges changed
- * `package.json` or `yarn.lock` (the ref added or upgraded a dependency), `yarn install --immutable`
- * runs before anything below needs the dependencies — the installed ones are the pre-merge tree's,
- * and a typecheck against them fails with «Cannot find module» although the code is fine (skipped
- * only with both `--no-checks` and `--no-probe`, which then need no dependency); when the journal was
- * rebuilt, the snapshots are re-linked in journal order and the newest one's content refreshed from
- * the merged schema by a throwaway `drizzle-kit generate` (skipped with `--no-probe`); every
- * migration production (`origin/main`) and QA (`origin/qa`) already applied must be unchanged in
- * this tree, each database's newer ones sorting after it; and, in a checkout with the repository's
- * `package.json`, `yarn migrations:check` and `yarn typecheck` must pass (skipped with
- * `--no-checks`) — a union-resolved test that no longer compiles stops here, not after the push.
- * Any of these failing stops the run (exit 2) with the merges committed, for a person to fix.
- *
- * Two siblings that picked the same migration number both add `meta/NNNN_snapshot.json`: that
- * add/add conflict has no rule, and the stop says so — renumber one branch's migration by hand
- * (its SQL file, its snapshot and its journal tag) before merging again.
- *
- * Unlike the dispatcher's manual integration, it does not cut the `batch/<date>-<letter>` branch:
- * check that branch out from `origin/qa` first and run this in it.
+ * Two siblings with the same migration number have no rule: renumber one by hand. It does not cut
+ * the batch branch; check that out from `origin/qa` first.
  */
 
 import { execFileSync, spawnSync } from "node:child_process";
@@ -84,10 +65,9 @@ function sameNumberHint(paths) {
     : "";
 }
 
-/** The conflicted paths of the merge in progress. */
 const conflicted = () => git("diff", "--name-only", "--diff-filter=U").trim().split("\n").filter(Boolean);
 
-/** Resolves every conflicted path by its rule; true when all were, false (nothing written) when one has no rule. */
+/** Resolves every conflicted path by its rule; not ok, with nothing written, when one has no rule. */
 function resolveAll(paths) {
   const without = paths.filter((p) => !conflictKind(p));
   if (without.length) return { ok: false, without };
@@ -196,9 +176,8 @@ if (journalRebuilt) {
 }
 
 /**
- * The newest snapshot's content from the merged schema: a throwaway `drizzle-kit generate` whose
- * files are discarded. drizzle-kit names its file by the journal's entry count, not the newest
- * number, so whatever it would overwrite is saved first and put back.
+ * The newest snapshot's content from the merged schema, by a throwaway `drizzle-kit generate`.
+ * drizzle-kit names its file by the journal's entry count, so what it would overwrite is saved and put back.
  */
 function refreshNewestSnapshot(journal, journalText, snapFile) {
   const prefix = String(journal.entries.length).padStart(4, "0");
@@ -230,9 +209,7 @@ function refreshNewestSnapshot(journal, journalText, snapFile) {
   console.log(`  snapshots: ${newest} refreshed from the merged schema; what the siblings' SQL already applies:\n${sqlText.trim().split("\n").slice(0, 14).join("\n")}`);
 }
 
-// The migrations each deployed database already applied, unchanged: production's (main) and QA's
-// (qa, which migrates on every push). A rebuilt journal that moved one of their `when`s would be
-// skipped there without an error.
+// The migrations each deployed database applied, unchanged: a moved `when` is silently skipped there.
 for (const [ref, where] of [["origin/main", "production"], ["origin/qa", "QA"]]) {
   if (gitMay("rev-parse", "--verify", "--quiet", `${ref}^{commit}`).status !== 0 || !existsSync(JOURNAL)) continue;
   const shipped = gitMay("show", `${ref}:${JOURNAL}`);

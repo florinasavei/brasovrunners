@@ -15,6 +15,7 @@ import {
   consumeAndSignDeclaration,
   consumeAndSignFamilyDeclaration,
   skipFamilyDeclaration,
+  withdrawFromFamilyWizard,
 } from "@/modules/registrations/token-actions";
 import { currentFamilyStep, familySigningSteps, isFamilyWizard } from "@/modules/registrations/domain/family-signing";
 import {
@@ -227,6 +228,33 @@ export async function skipFamilyDeclarationAction(form: FormData): Promise<void>
   const result = await skipFamilyDeclaration(token, await readFamilySigningPass(now), String(form.get("registrationId") ?? ""), now);
   if (!result.ok) redirect(`${path}?invalid=1`);
   await writeFamilySigningPass(result.pass, token, now);
+  redirect(path);
+}
+
+/**
+ * «Renunț la înscrierea pentru <nume>» on a family's step (§547, amending §471): the step's person is
+ * cancelled — through the allocator, with the audit row and the cancellation email to the address —
+ * and the page moves on to the next person, or to the end. Only the step the pass (or the person's
+ * own live link) may sign; anything else is the link's generic refusal. After the event's start the
+ * cancellation is refused as every participant's is (§10.5 rule 9), and the page says the press failed.
+ */
+export async function withdrawFamilyPersonAction(form: FormData): Promise<void> {
+  const locale = (form.get("locale") === "en" ? "en" : "ro") as Locale;
+  const token = String(form.get("token") ?? "");
+  const path = getPathname({ locale, href: { pathname: "/registrations/declare/[token]", params: { token } } });
+  const now = new Date();
+
+  let result: Awaited<ReturnType<typeof withdrawFromFamilyWizard>>;
+  try {
+    result = await withdrawFromFamilyWizard(token, await readFamilySigningPass(now), String(form.get("registrationId") ?? ""), now);
+  } catch (error) {
+    if (isDomainError(error)) redirect(`${path}?invalid=1`);
+    throw error;
+  }
+  if (!result.ok) redirect(`${path}?invalid=1`);
+  await writeFamilySigningPass(result.pass, token, now);
+  // The outcome in a toast on the step it lands on (§427): the next person's, or the family's last screen.
+  await flashPublic("familyWithdrawn");
   redirect(path);
 }
 

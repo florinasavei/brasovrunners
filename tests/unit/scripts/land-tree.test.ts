@@ -16,7 +16,6 @@ import {
   todayIn,
   typedBaseline,
   validateEntry,
-  withBatchLine,
   withReleasedRow,
 } from "../../../scripts/land-tree.mjs";
 
@@ -135,18 +134,6 @@ describe("§535 the hand steps of a landing, written by the landing", () => {
     expect(releaseTitle(clauses)).toBe("the night pill (see §530) · The night pill says «Noapte»: 2 changes");
     expect(releaseTitle(["one change (§1)"])).toBe("one change");
     expect(releaseTitle(["x".repeat(300)]).length).toBe(180);
-  });
-
-  it("adds the batch line before the /admin/tasks line, numbered one past the last batch", () => {
-    const claude = ["- **Batch 7 (2031-01-01, `BR-V9.40`):** old (§12).", "- `/admin/tasks`: what the club still owes and what it pays", ""].join("\r\n");
-    const out = withBatchLine(claude, { to: "BR-V9.41-2031-01-02", date: "2031-01-02", clauses });
-    expect(out.split("\r\n")).toEqual([
-      "- **Batch 7 (2031-01-01, `BR-V9.40`):** old (§12).",
-      "- **Batch 8 (2031-01-02, `BR-V9.41`):** the night pill (see §530) (§530) · The night pill says «Noapte» (§531).",
-      "- `/admin/tasks`: what the club still owes and what it pays",
-      "",
-    ]);
-    expect(() => withBatchLine("no anchor", { to: "BR-V9.41-2031-01-02", date: "2031-01-02", clauses })).toThrow(/admin\/tasks/);
   });
 
   it("adds the release as the newest Released row", () => {

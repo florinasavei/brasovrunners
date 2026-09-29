@@ -1,27 +1,8 @@
-// Hold a deployment's build until the database it will serve has every migration the build
-// expects — the ordering half of "a deployment never runs against the wrong schema"
-// (AGENTS.md §7.6, DECISIONS.md §62).
-//
-// The failure this closes: a push to `qa` starts the Vercel build and the migrate workflow at
-// the same moment, and whichever finishes second decides what the site does in between. On
-// 2026-09-17 the migration finished first, the old code selected a column that no longer
-// existed, and the QA landing page answered 500 for the length of a build. The other order is
-// no better: new code live against an old schema until the migration lands.
-//
-// This script runs first in `yarn build`, on Vercel, and does one thing: it compares the
-// journal head this build was compiled against with Drizzle's bookkeeping table in the
-// environment's own database, and waits — polling — until they agree. It never applies
-// anything: §7.6's "no migration from a build" still holds, and the runbook's "must never
-// happen" list is untouched. A migration that never arrives fails the build, and a failed build
-// leaves the previous deployment serving, which is the safe state.
-//
-// Where it does nothing: locally (`yarn build` on a laptop has no `VERCEL`), on preview
-// deployments (they build a branch against no database of their own), and when the database
-// is already there — the common case, a build with no migration in it, costs one query.
-//
-// Production needs the required reviewer to approve the migrate run (`migrate.yml`), so its
-// build waits for that click; MIGRATION_WAIT_MINUTES bounds it and the runbook says what to do
-// when the wait runs out.
+// Hold a deployment's build until its database has every migration the build expects, so new
+// code never meets an old schema (AGENTS.md §7.6, DECISIONS.md §62). Runs first in `yarn build`
+// on Vercel production builds only; it never applies anything. A migration that never arrives
+// (production's waits for the reviewer's approval) fails the build after MIGRATION_WAIT_MINUTES,
+// leaving the previous deployment serving.
 
 import { readFile } from "node:fs/promises";
 import path from "node:path";
@@ -60,8 +41,7 @@ export function compare(expectedWhen, appliedWhen) {
 }
 
 async function main() {
-  // Vercel sets VERCEL=1 on every build and VERCEL_ENV to `production` for the project's
-  // production branch — `qa` on the QA project, `main` on the production project.
+  // VERCEL_ENV is `production` for each project's production branch: `qa` on QA, `main` on production.
   if (!process.env.VERCEL) {
     log("not a Vercel build; nothing to wait for");
     return;
@@ -72,8 +52,7 @@ async function main() {
   }
   const url = process.env.DATABASE_URL;
   if (!url) {
-    // A production deployment with no database is misconfigured, and `env.ts` will say so at
-    // runtime. This script's job is ordering, not configuration.
+    // Misconfigured; `env.ts` says so at runtime.
     log("DATABASE_URL is not set; nothing to compare against");
     return;
   }

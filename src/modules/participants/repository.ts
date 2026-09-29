@@ -4,17 +4,9 @@ import type { Database } from "@/db/types";
 import type { CanonicalEmail } from "./domain/canonical-email";
 
 /**
- * Reading and writing `participants` (AGENTS.md §10.3, §10.4, §12.2).
- *
- * The canonical email is immutable in V1 (§10.3): there is no function here that changes one,
- * only `findOrCreateByCanonicalEmail`, which never overwrites an existing row's identity —
- * it may update the mutable display fields (name, locale), and only when the participant has
- * not yet verified, so a typo cannot silently rewrite a verified identity's delivery address.
- *
- * Generic over the caller's schema, like `modules/content/events/repository.ts`: registration
- * (`modules/registrations/service.ts`) calls these from inside a transaction that also touches
- * `registrations` and `events`, so one shared type parameter is what lets that single open
- * transaction satisfy this module's requirements too.
+ * Reading and writing `participants` (AGENTS.md §10.3, §10.4, §12.2). The canonical email is
+ * immutable (§10.3): nothing here changes one. Generic over the caller's schema so registration
+ * can call these inside its own transaction.
  */
 
 export async function findParticipantByCanonicalEmail<T extends Record<string, unknown>>(
@@ -29,7 +21,7 @@ export async function findParticipantByCanonicalEmail<T extends Record<string, u
   return row;
 }
 
-/** The participant a token or a registration names (§389: the address the link for another person is fixed to). */
+/** The participant a token or a registration names (§389). */
 export async function findParticipantById<T extends Record<string, unknown>>(
   db: Database<T>,
   id: string,
@@ -39,13 +31,9 @@ export async function findParticipantById<T extends Record<string, unknown>>(
 }
 
 /**
- * Find the participant this canonical email already identifies, or create one.
- *
- * AGENTS.md §15.1 step 6: "upsert/find participant by canonical email without overwriting
- * verified identity silently." An existing, verified participant is returned exactly as
- * stored — a second registration under a slightly different display name does not rename
- * them. An existing, unverified participant may have its default name refreshed: nothing has
- * proven that identity yet, so there is nothing established to protect.
+ * Find or create the participant for a canonical email (AGENTS.md §15.1 step 6). A verified
+ * participant is returned as stored; an unverified one may have its name and locale refreshed,
+ * since nothing has proven that identity yet.
  */
 export async function findOrCreateParticipant<T extends Record<string, unknown>>(
   db: Database<T>,

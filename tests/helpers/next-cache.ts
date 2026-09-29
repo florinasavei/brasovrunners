@@ -12,7 +12,7 @@
  *
  *   vi.mock("next/cache", async () => (await import("../../helpers/next-cache")).fakeNextCache.module);
  */
-type Entry = { value: string; tags: readonly string[] };
+type Entry = { value: string | undefined; tags: readonly string[] };
 
 function createFakeNextCache() {
   const entries = new Map<string, Entry>();
@@ -29,7 +29,9 @@ function createFakeNextCache() {
         counts.reads += 1;
         const key = JSON.stringify([keyParts, args]);
         const hit = entries.get(key);
-        if (hit) return JSON.parse(hit.value) as R;
+        // A stored `undefined` ("no such row") is a hit that answers `undefined`, as Next's own
+        // `unstable_cache` answers it (`body !== undefined ? JSON.parse(body) : undefined`).
+        if (hit) return (hit.value === undefined ? undefined : JSON.parse(hit.value)) as R;
         const result = await callback(...args);
         counts.writes += 1;
         entries.set(key, { value: JSON.stringify(result), tags: options.tags ?? [] });

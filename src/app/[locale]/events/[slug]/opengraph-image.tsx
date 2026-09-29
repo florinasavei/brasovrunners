@@ -9,12 +9,15 @@ import { eventBySlugWithLastGood } from "@/modules/resilience/event-copy";
  * file; the picture itself is drawn in `modules/events/share-image.tsx`, shared with the
  * square one for Instagram.
  *
- * Drawn per request from the cached row (§333): every link preview a crawler fetches is a
- * visitor that must not wake the database, and an event save expires the row.
+ * Drawn from the cached row (§333), once (§549, amending §333): static, made on its first request
+ * and kept by the CDN, so every link preview a crawler fetches is neither a database wake nor a
+ * function run; an event save expires the row and, through its tag, the picture. A literal, as Next
+ * requires: `PUBLIC_PAGE_CEILING_SECONDS` (a test holds them together).
  */
 export const size = SHARE_SHAPES.og;
 export const contentType = "image/png";
-export const dynamic = "force-dynamic";
+export const dynamic = "force-static";
+export const revalidate = 86400;
 
 export default async function Image({ params }: { params: Promise<{ locale: string; slug: string }> }): Promise<Response> {
   const { locale, slug } = await params;

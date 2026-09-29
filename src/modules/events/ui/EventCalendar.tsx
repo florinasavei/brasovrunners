@@ -190,7 +190,8 @@ export default async function EventCalendar({
                 >
                   <Stack direction="row" spacing={1} sx={{ alignItems: "center", px: 1.5, bgcolor: "action.hover", borderBottom: 1, borderColor: "divider" }}>
                     <Typography component="h3" variant="h3" sx={{ fontSize: "1rem", fontWeight: 600, textTransform: "capitalize" }}>
-                      <Link href={{ pathname, query: { ...query, month: monthParam(ym) } }} style={{ color: "inherit", textDecoration: "none", minHeight: 44, display: "inline-flex", alignItems: "center" }}>
+                      {/* `?month=` is the calendar's live twin, rendered per request: twelve prefetches here would be twelve functions (§549). */}
+                      <Link href={{ pathname, query: { ...query, month: monthParam(ym) } }} prefetch={false} style={{ color: "inherit", textDecoration: "none", minHeight: 44, display: "inline-flex", alignItems: "center" }}>
                         {monthNames[ym.month - 1]}
                       </Link>
                     </Typography>

@@ -582,6 +582,12 @@ export const eventFieldsSchema = z
     featured: z.boolean(),
     /** A special edition (§168): any number may carry it. Absent means an ordinary event. */
     isSpecial: z.boolean().optional().default(false),
+    /**
+     * «Doar pentru membrii BVR» (§552): the event exists only for a signed-in member and the
+     * backoffice. Absent means this caller is not editing it — the partners' discipline — so a
+     * fixture or an older form never turns a members' event public by not mentioning it.
+     */
+    membersOnly: z.boolean().optional(),
 
     // The database also refuses what this does not: capacity and a declaration only on INTERNAL,
     // the external fields only on EXTERNAL.
@@ -593,8 +599,15 @@ export const eventFieldsSchema = z
      */
     waitlistCapacity: optionalWholeNumber({ min: 0, max: 100_000 }).optional(),
     /**
-     * The race's band (§173): where its numbers start and the colour behind them, so envelopes for
-     * different distances are told apart at a glance.
+     * «Kit de participare» → «Tricou» (§554): the event gives a T-shirt, so the form asks the size.
+     * Absent means this caller is not editing it — the partners' discipline, as «Se deschid în
+     * curând» — so a fixture or an older form never switches a shirt off by not mentioning it.
+     */
+    kitShirt: z.boolean().optional(),
+    /**
+     * The race's own band (§173): where its numbers start, and the colour the sheet prints
+     * behind them. The 5 km starts at 100 and prints green; the 10 km starts at 500 and prints
+     * blue, and a volunteer sorting envelopes can tell them apart across a table.
      */
     bibStartNumber: wholeNumberWithDefault(1, { min: 1, max: 99_000 }),
     bibColour: z

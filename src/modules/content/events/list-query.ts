@@ -2,9 +2,16 @@ import { groupSeries } from "@/modules/events/domain/series";
 import { foldForSearch } from "@/modules/registrations/country-search";
 
 /**
- * The backoffice events list's state (§527): a search, a state and an order, read from and written
- * to the address only, like the public listing's filters (§413). A hand-edited value falls back
- * rather than refusing (`admin-list-query.ts`'s rule). Pure — the clock is the caller's `now`.
+ * The backoffice events list's own state (§527): a search, a state and an order, read from the
+ * address and written back to it, and nowhere else — the model is the public listing's filters
+ * (§413, `events/domain/listing-filter.ts`): a GET form with no script writes these parameters,
+ * every link the server builds carries them, and a hand-edited value falls back rather than
+ * refusing (`admin-list-query.ts`'s rule) — `?state=Încheiate`, the label typed for the key, is
+ * the default list, never an error. Pure — the clock is the caller's `now`.
+ *
+ * The list opens on «Viitoare» (§555, amending §527 — the owner, 2026-09-29: «by default aici
+ * ar trebui să fie filtrate evenimentele viitoare»): an address with no `state` is `UPCOMING`,
+ * and the whole list is an explicit choice, «Toate», which writes `state=ALL` into the address.
  *
  * - `q`: every word must appear, accents and case ignored (`foldForSearch`, §463), in a title,
  *   page address or place name in either language.
@@ -22,6 +29,13 @@ import { foldForSearch } from "@/modules/registrations/country-search";
 export const EVENT_LIST_STATES = ["UPCOMING", "PAST", "DRAFT", "IN_REVIEW", "PUBLISHED", "ARCHIVED", "CANCELLED"] as const;
 export type EventListState = (typeof EVENT_LIST_STATES)[number];
 
+/** «Toate»: nothing narrows the dates. Its own value, since the empty address means «Viitoare» (§555). */
+export const EVENT_LIST_ALL = "ALL";
+export type EventListStateChoice = EventListState | typeof EVENT_LIST_ALL;
+
+/** What the list shows with no `state` in the address (§555): the dates still to come. */
+export const DEFAULT_EVENT_LIST_STATE: EventListStateChoice = "UPCOMING";
+
 export const EVENT_LIST_SORTS = ["date-near", "date-old", "title-asc", "title-desc", "state"] as const;
 export type EventListSort = (typeof EVENT_LIST_SORTS)[number];
 
@@ -33,7 +47,7 @@ export const MAX_EVENT_LIST_QUERY_LENGTH = 100;
 export type EventListQuery = {
   /** As typed, trimmed and cut — what the search box shows back. */
   q: string;
-  state: EventListState | null;
+  state: EventListStateChoice;
   sort: EventListSort;
 };
 
@@ -47,20 +61,24 @@ function first(value: Raw): string | undefined {
 export function parseEventListQuery(params: Record<string, Raw>): EventListQuery {
   const q = (first(params.q) ?? "").trim().slice(0, MAX_EVENT_LIST_QUERY_LENGTH);
   const stateRaw = first(params.state);
-  const state = EVENT_LIST_STATES.find((value) => value === stateRaw) ?? null;
+  const state: EventListStateChoice =
+    stateRaw === EVENT_LIST_ALL ? EVENT_LIST_ALL : (EVENT_LIST_STATES.find((value) => value === stateRaw) ?? DEFAULT_EVENT_LIST_STATE);
   const sortRaw = first(params.sort);
   const sort = EVENT_LIST_SORTS.find((value) => value === sortRaw) ?? DEFAULT_EVENT_LIST_SORT;
   return { q, state, sort };
 }
 
-/** Whether a search or a state narrows the list — the count line «N din M evenimente» shows. */
+/**
+ * Whether a search or a state narrows the list — the count line «N din M evenimente» shows. The
+ * default «Viitoare» narrows it too, so the plain list says «3 din 5 evenimente» (§555).
+ */
 export function eventListNarrowed(query: EventListQuery): boolean {
-  return query.q !== "" || query.state !== null;
+  return query.q !== "" || query.state !== EVENT_LIST_ALL;
 }
 
-/** Whether anything narrows or reorders the list — «Șterge filtrele» shows. */
+/** Whether anything differs from the plain list («Viitoare», nearest first) — «Șterge filtrele» shows. */
 export function eventListQueryInUse(query: EventListQuery): boolean {
-  return eventListNarrowed(query) || query.sort !== DEFAULT_EVENT_LIST_SORT;
+  return query.q !== "" || query.state !== DEFAULT_EVENT_LIST_STATE || query.sort !== DEFAULT_EVENT_LIST_SORT;
 }
 
 /**
@@ -70,7 +88,7 @@ export function eventListQueryInUse(query: EventListQuery): boolean {
 export function eventListParams(query: EventListQuery): Record<string, string | undefined> {
   return {
     q: query.q || undefined,
-    state: query.state ?? undefined,
+    state: query.state === DEFAULT_EVENT_LIST_STATE ? undefined : query.state,
     sort: query.sort === DEFAULT_EVENT_LIST_SORT ? undefined : query.sort,
   };
 }
@@ -129,10 +147,10 @@ export function matchesEventList(
   return words.every((word) => haystack.includes(word));
 }
 
-function matchesState(event: ListedEvent, state: EventListState | null, now: Date): boolean {
+function matchesState(event: ListedEvent, state: EventListStateChoice, now: Date): boolean {
   const started = event.startsAt.getTime() < now.getTime();
   switch (state) {
-    case null:
+    case EVENT_LIST_ALL:
       return true;
     case "CANCELLED":
       return event.eventStatus === "CANCELLED";

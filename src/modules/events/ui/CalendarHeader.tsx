@@ -132,7 +132,7 @@ export default async function CalendarHeader({
         />
         <Stack direction="row" spacing={{ xs: 0, sm: 0.5 }} sx={{ alignItems: "center", flexShrink: 0 }}>
           <CalendarStepLink href={previousHref} label={view.kind === "month" ? t("calendar.previous") : t("calendar.previousYear")} direction="previous" />
-          <Link href={{ pathname, query }} style={{ fontSize: "0.875rem", minHeight: 44, display: "inline-flex", alignItems: "center" }}>
+          <Link href={{ pathname, query }} prefetch={false} style={{ fontSize: "0.875rem", minHeight: 44, display: "inline-flex", alignItems: "center" }}>
             {t("calendar.today")}
           </Link>
           <CalendarStepLink href={nextHref} label={view.kind === "month" ? t("calendar.next") : t("calendar.nextYear")} direction="next" />

@@ -4,13 +4,9 @@ import SocialIcon from "@/shared/ui/SocialIcon";
 import type { TeamLinkKind } from "../links";
 
 /**
- * One glyph per kind of a person's link (§474): the network's own mark for Strava, Instagram and
- * Facebook — the footer's marks (`SocialIcon`, §90, §112), in the networks' colours — the globe
- * for a site of their own, the chain link for anything else.
- *
- * No hooks and no catalogue, so the public card (a Server Component) and the editor's kind select
- * (a client island) draw the same picture. Never the backoffice's `action-icons.ts` (§318).
- * Decorative: the link's accessible name is its label.
+ * One glyph per link kind (§474): the footer's network marks (`SocialIcon`, §90, §112), a globe
+ * for a website, a chain for anything else. No hooks, so server and client draw the same; never
+ * `action-icons.ts` (§318). Decorative: the link's accessible name is its label.
  */
 export default function TeamLinkGlyph({ kind, size = 20 }: { kind: TeamLinkKind; size?: number }) {
   switch (kind) {

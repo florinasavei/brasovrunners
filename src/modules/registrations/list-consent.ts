@@ -10,6 +10,7 @@ import { recordAuditEvent } from "@/modules/audit/repository";
 import { findEventNotificationDetails } from "@/modules/events/repository";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { DomainError } from "@/shared/errors/domain-error";
+import { managedRegistration } from "./manage-family";
 import { findRegistrationById } from "./repository";
 
 /**
@@ -192,18 +193,27 @@ export async function consumeAndSetListConsent<T extends Record<string, unknown>
  * The same choice from the registration's own manage page. The `MANAGE_REGISTRATION` token is
  * read, never spent — the page must still be able to cancel — and it is the token that says
  * which registration this is; nothing is trusted from the form.
+ *
+ * Per person since §547: `registrationId` names another person the page lists — a registration of
+ * the same address at the same event, checked here (`managedRegistration`); a stranger's id, or one
+ * at another event, gets NOT_FOUND. Absent, the link's own.
  */
 export async function setListConsentFromManageLink<T extends Record<string, unknown>>(
   db: Database<T>,
   secret: string,
   listed: boolean,
   now: Date,
+  registrationId?: string,
 ): Promise<{ ok: true; listed: boolean; changed: boolean } | TokenRejection> {
   if (!(await tokenAttemptAllowed(db, secret, now))) return TOKEN_NOT_FOUND;
   const context = await readActionTokenContext(db, { secret, purpose: "MANAGE_REGISTRATION", now });
   if (!context.ok) return context;
 
-  const result = await setListConsent(db, context.token.registrationId ?? "", listed, "MANAGE_LINK", now);
+  const own = await findRegistrationById(db, context.token.registrationId ?? "");
+  const target = own ? await managedRegistration(db, own, registrationId) : null;
+  if (!target) throw new DomainError("NOT_FOUND", "not a registration this link manages");
+
+  const result = await setListConsent(db, target.id, listed, "MANAGE_LINK", now);
   return { ok: true as const, ...result };
 }
 

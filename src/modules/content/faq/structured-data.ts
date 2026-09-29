@@ -1,14 +1,9 @@
 import type { PublicFaqItem } from "./repository";
 
 /**
- * The page's `FAQPage` (§525, schema.org): every question on it as a `Question` whose
- * `acceptedAnswer` is an `Answer` with the answer's words — the same questions, in the same order
- * and the same language, as the folds a visitor opens, which is what a search engine asks of it
- * (the markup must describe what the page shows). Plain words rather than the answer's markup:
- * `text` may carry a few HTML tags, but words are what every reader of it understands, and the
- * page's own renderer stays the one place the club's markup is drawn (§11.3).
- *
- * Null for a page with no question: an empty `mainEntity` is not an `FAQPage`.
+ * The page's `FAQPage` (§525): the same questions, order and language as the folds a visitor
+ * sees, as schema.org requires. Answers as plain words; the page's renderer stays the one place
+ * the club's markup is drawn (§11.3). Null with no question: an empty `mainEntity` is invalid.
  */
 export function faqPageJsonLd(items: readonly PublicFaqItem[], url: string, inLanguage: string): Record<string, unknown> | null {
   if (items.length === 0) return null;

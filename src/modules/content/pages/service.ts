@@ -19,26 +19,8 @@ import { pageFieldsSchema, type PageFieldsInput } from "./fields";
 
 /**
  * Standing pages: create, save, publish, delete (BR-REQ-050-03, `DECISIONS.md` §51).
- *
- * ## What it borrows, and why that is not laziness
- *
- * The editorial machinery is `events`': the same `editorial_status` enum, the same
- * `allowedTransitions` and `canTransition`, the same role predicates. "May this person publish"
- * has one answer in this product, and a second copy of that answer for pages is a second place
- * for it to be wrong. `canCreateEvent` is named for events and reads
- * oddly here (its settings gate is `isEditorial` since §542 made `canEditEventFields` the
- * Administrator's); renaming it is a change to code that is about to run a real registration window,
- * so it is noted and deliberately not done today.
- *
- * The body converter is the legal-document editor's (`domain/body-text.ts`). Second occurrence,
- * so it is imported rather than generalised — `AGENTS.md` §1.5 abstracts on the third.
- *
- * ## What it does not borrow
- *
- * An event has capacity, a registration block, times and a featured flag, and `saveEventFields`
- * is long because of them. A page has a title, an address and a body in two languages. This
- * file stays short because the thing it manages is small, and it should stay that way: an
- * article type with a cover image and a gallery is M5 and is not this.
+ * Reuses the events' editorial status, transitions and role predicates, so "may this person
+ * publish" has one answer.
  */
 
 type Actor = Pick<StaffUser, "id" | "role">;
@@ -56,11 +38,8 @@ function parseOrThrow(value: unknown): PageFieldsInput {
 }
 
 /**
- * A slug already taken by another page in that locale, reported as a field error.
- *
- * The unique index is the guard; this exists so an organizer gets "that address is taken" naming
- * the field, rather than a driver error. Checked inside the caller's transaction, so a
- * concurrent create still fails on the index rather than slipping past a stale read.
+ * A slug taken by another page in that locale, as a field error. The unique index is the real
+ * guard; this only names the field instead of surfacing a driver error.
  */
 async function assertSlugsAreFree<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -97,8 +76,7 @@ export async function createPage<T extends Record<string, unknown>>(
 
   const fields = parseOrThrow(input.fields);
   const now = input.now ?? new Date();
-  // A film in the body gets the club's own copy of its thumbnail (`DECISIONS.md` §403), before
-  // the transaction opens (a network fetch, never a DB write).
+  // Film posters (§403) are fetched before the transaction opens: a network call.
   for (const locale of routing.locales) {
     fields.translations[locale].body = await attachYoutubePosters(db, fields.translations[locale].body);
   }
@@ -117,8 +95,7 @@ export async function createPage<T extends Record<string, unknown>>(
       })
       .returning();
 
-    // Both languages from the start: publication requires every locale to be complete, and a
-    // page created in one is a page that discovers that rule at the worst moment.
+    // Both languages from the start: publication requires every locale (§28).
     await tx.insert(pageTranslations).values(
       routing.locales.map((locale) => ({
         pageId: page.id,
@@ -139,11 +116,8 @@ export async function createPage<T extends Record<string, unknown>>(
 }
 
 /**
- * One form, one button, one transaction (the rule `DECISIONS.md` §36 established for events).
- *
- * The page row and both translations are written together or not at all, and a stale version on
- * *either* fails the whole save. Two organizers editing one page get a CONFLICT rather than one
- * of them silently losing the English half.
+ * The page row and both translations in one transaction; a stale version fails the whole save
+ * with CONFLICT (§36).
  */
 export async function savePage<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -200,17 +174,13 @@ export async function savePage<T extends Record<string, unknown>>(
 
     return page;
   });
-  // A live page's words and its place in the navigation are read from the public cache (§333).
   revalidatePublicContent("pages");
   return saved;
 }
 
 /**
- * Which locales are not ready to be published, and what each is missing.
- *
- * A title and an address are the two a CHECK already guarantees are non-empty; a body is not,
- * because a page may legitimately be drafted title-first. Publishing an empty one, however, puts
- * a blank page on the public site, so the body counts here and not in the column.
+ * Which locales are not ready to be published, and what each is missing. The body may be empty
+ * in a draft (no CHECK), but not on publish.
  */
 export function describeIncompletePageLocales(
   translations: readonly { locale: string; title: string; bodyJson: unknown }[],
@@ -222,8 +192,7 @@ export function describeIncompletePageLocales(
 
       const missing: string[] = [];
       if (translation.title.trim() === "") missing.push("title");
-      // Through the same reader the page renders with, so "complete" and "shows something"
-      // cannot disagree — including for a body written before the editor existed.
+      // The same reader the page renders with, so "complete" means "shows something".
       if (isRichTextEmpty(readRichText(translation.bodyJson))) missing.push("body");
       return { locale, missing };
     })
@@ -253,8 +222,7 @@ export async function transitionPage<T extends Record<string, unknown>>(
       );
     }
 
-    // AGENTS.md §11.2: both languages go live together, and PUBLISHED is refused while either
-    // is incomplete. A page that 404s in English is what BR-REQ-040-02 exists to prevent.
+    // Both languages go live together (AGENTS.md §11.2, BR-REQ-040-02).
     if (input.to === "PUBLISHED") {
       const incomplete = describeIncompletePageLocales(translations);
       if (incomplete.length > 0) {
@@ -271,8 +239,7 @@ export async function transitionPage<T extends Record<string, unknown>>(
       .update(pages)
       .set({
         editorialStatus: input.to,
-        // First publication stamps the date; later ones leave it, because it is what slug
-        // stability dates from.
+        // Only the first publication stamps the date.
         publishedAt: input.to === "PUBLISHED" ? (current.publishedAt ?? now) : current.publishedAt,
         updatedByStaffUserId: input.actor.id,
         version: input.expectedVersion + 1,
@@ -290,19 +257,13 @@ export async function transitionPage<T extends Record<string, unknown>>(
 
     return updated;
   });
-  // Published or taken down: the page, the navigation on every page and the sitemap.
   revalidatePublicContent("pages");
   return moved;
 }
 
 /**
- * Delete a page outright.
- *
- * Permitted where deleting an event is not, and the difference is what is attached: an event
- * with a registration against it is refused because somebody's entry hangs off it (§15.11).
- * Nothing hangs off a page — no registration, no acceptance, no audit subject — so deleting one
- * made by mistake loses only what its author typed. Archiving remains the answer for a page that
- * was real and is now over.
+ * Delete a page outright. Unlike an event, nothing (registration, acceptance, audit subject)
+ * hangs off a page.
  */
 export async function deletePage<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -318,21 +279,9 @@ export async function deletePage<T extends Record<string, unknown>>(
 }
 
 /**
- * Move one page up or down the site navigation (BR-REQ-050-03).
- *
- * The order was a number field on the editor, which is the wrong shape for the question. Nobody
- * wants page four to have `nav_order = 40`; they want it above page three, and answering that
- * through a number means opening two pages, reading both numbers, inventing a third, and hoping
- * nothing else shares it — `nav_order` is not unique and every page starts at the same `0`.
- *
- * So a move **renumbers the whole list** rather than swapping two rows. Swapping is the obvious
- * implementation and it is wrong here: with the default `0` on every page, two rows can share a
- * number, and swapping equal numbers changes nothing while appearing to work. Rewriting the
- * sequence from the order the club is actually looking at is idempotent, repairs duplicates and
- * gaps as a side effect, and cannot leave the list in a state a later move reads differently.
- *
- * It is one transaction because a half-renumbered navigation is a navigation with two page
- * threes in it.
+ * Move one page up or down the site navigation (BR-REQ-050-03). Renumbers the whole list in one
+ * transaction rather than swapping two rows: `nav_order` is not unique (every page starts at 0),
+ * and swapping equal numbers changes nothing.
  */
 export async function movePageInNav<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -353,8 +302,7 @@ export async function movePageInNav<T extends Record<string, unknown>>(
     if (index === -1) throw new DomainError("NOT_FOUND", "no such page");
 
     const target = input.direction === "up" ? index - 1 : index + 1;
-    // Already at the end it is being moved towards. Not an error: the button is simply not
-    // offered there, and a replayed POST should do nothing rather than fail.
+    // Already at that end: a replayed POST does nothing rather than fail.
     if (target < 0 || target >= ordered.length) return;
 
     const moved = [...ordered];
@@ -363,12 +311,10 @@ export async function movePageInNav<T extends Record<string, unknown>>(
     for (const [position, row] of moved.entries()) {
       await tx
         .update(pages)
-        // One-based, so the numbers read the way the list does.
         .set({ navOrder: position + 1 })
         .where(eq(pages.id, row.id));
     }
   });
-  // The navigation every public page carries, in its new order (§333).
   revalidatePublicContent("pages");
 }
 

@@ -28,6 +28,12 @@ export type AuditAction =
   | "registration.name_corrected"
   | "registration.cancelled_by_staff"
   /**
+   * A participant cancelled their own registration (§547): from their manage link, «Înscrierile
+   * mele» or the family's declarations wizard. No staff actor; the metadata is the state it left and
+   * the door (`{ from, via }`), never the name.
+   */
+  | "registration.cancelled_by_participant"
+  /**
    * Erasure (BR-REQ-037-06). The one action whose audit row outlives the thing it describes:
    * `entity_id` carries no foreign key, so this survives the delete and is the only remaining
    * evidence that the registration existed and who authorised its removal.
@@ -156,6 +162,13 @@ export type AuditAction =
   /** A subscription removed by an Administrator at the person's written request (§445) — never the address. */
   | "newsletter.address_withdrawn"
   /**
+   * A subscription removed from the «Abonați» list's row (§550): who, why (the list, at the club's
+   * hand) and whether it had confirmed; the subscriber's id, which no longer names a row — never the address.
+   */
+  | "newsletter.subscriber_unsubscribed"
+  /** The «Abonați» list downloaded as a CSV (§550): who, the filter's shape and how many rows — never a row. */
+  | "newsletter.subscribers_exported"
+  /**
    * An event erased outright, with everyone registered for it (BR-REQ-037-06). Like
    * `registration.deleted_by_staff` it outlives what it describes, and like it, it names the
    * thing and never the people: the event's title and date, how many registrations went with
@@ -283,6 +296,16 @@ export type AuditAction =
   | "members_page.unpublished"
   | "members_page.text_saved"
   /**
+   * The members' discount codes (§552): a code added, written, hidden or shown again, moved, or
+   * deleted. The code's row id and the shape of the change — never the code, the partner or the words.
+   */
+  | "member_code.created"
+  | "member_code.saved"
+  | "member_code.hidden"
+  | "member_code.shown"
+  | "member_code.moved"
+  | "member_code.deleted"
+  /**
    * «Adaugă mai mulți membri» (§524): one row per press — how many were added, how many were
    * already members, and each member's sign-in account by row id (created, invited, failed with
    * the provider's words, unconfigured). Never an address or a name: the ids are the staff rows.
@@ -326,7 +349,9 @@ export type RecordAuditInput = {
     | "newsletter"
     | "team_member"
     | "content"
-    | "staff_user";
+    | "staff_user"
+    // `member_discount_code` for a code of the members' zone (§552).
+    | "member_discount_code";
   /** Null only for an act about no single row — an export of every event's registrations (§322). */
   entityId: string | null;
   /**

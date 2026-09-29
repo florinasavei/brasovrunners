@@ -1,11 +1,12 @@
 import { randomUUID } from "node:crypto";
 import { revalidateTag, unstable_cache } from "next/cache";
 import { governorEffects } from "@/modules/diagnostics/domain/neon-budget";
-import { peekNeonBudgetLevel } from "@/modules/diagnostics/neon-budget";
+import { peekNeonBudgetLevel } from "@/modules/diagnostics/budget-level";
 import { ColdMissError, isColdMiss, throughBreaker } from "@/modules/resilience/breaker";
 import { tagDates, untagDates } from "@/modules/resilience/domain/envelope";
 import { copyOf, keepCopy, noteSavedCopyServed } from "@/modules/resilience/last-good";
 import { allowRefreshNow, computeAwakeFromWrite, flushMissRefreshes, scheduleMissRefresh } from "./miss-refresh";
+import { DEGRADED_PAGE_SECONDS, holdPageFor } from "./page-lifetime";
 import { thisRequestsReads } from "./request-memo";
 import { buildInfo } from "@/shared/config/build-info";
 
@@ -23,12 +24,15 @@ import { buildInfo } from "@/shared/config/build-info";
  *
  * ## What is cached, and what is not
  *
- * **The rows, not the pages.** The public pages still render per request (`force-dynamic`), and
- * that is deliberate: they read the address (`?type=`, `?month=`, `?lista=`, `?interest=`), the
- * clock (registration opens and closes, "in three days", past and upcoming), and — on an event
- * page — whether a staff member is signed in, for the "edit" button. Caching the HTML would have
- * meant moving all of that into the browser or freezing it; caching the rows keeps every page
- * exactly as it was and takes the database out of the request.
+ * **The rows, and since §549 the pages too.** §333 cached only the rows and left every public page
+ * rendering per request, because the pages read the address (`?type=`, `?month=`, `?lista=`,
+ * `?interest=`), the clock and — on an event page — the session, for the "edit" button. Since
+ * §549 (amending §333) the bare listing, calendar, event page and standing pages are static (ISR):
+ * a read here, made while a page is prerendered, files the page under the same `public:<kind>`
+ * tags, so the write that expires the rows expires the pages that showed them, in the CDN too;
+ * the clock-keyed reads hold the page to their next instant (`page-lifetime.ts`); and a request
+ * that asks something of the address or carries a session is the page's live twin, rendered per
+ * request as before (`i18n/live-twin.ts`).
  *
  * Only what is **public and the same for everyone** goes through here: published events, free
  * places, the public start list, standing pages, albums, the legal texts in force, two settings.
@@ -229,6 +233,8 @@ export async function publicRead<T>(
     if (copy) {
       // The page says it shows a saved copy, and from when (§493): nothing failed, but the database was not asked.
       noteSavedCopyServed(copy.takenAt);
+      // A static page made from a copy is kept a minute, never a day (§549).
+      await holdPageFor(DEGRADED_PAGE_SECONDS);
       return copy.value;
     }
     throw error;

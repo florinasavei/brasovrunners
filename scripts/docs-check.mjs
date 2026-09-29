@@ -42,18 +42,13 @@ const SCAN_IGNORE = new Set([
   "docs/history",
 ]);
 
-// The club's own hostname, in any subdomain and any TLD. Case-insensitive because DNS is:
-// a camel-cased spelling resolves to the same host, and prose camel-cases a domain readily.
-// A dotted suffix is required, so a bare repository path and the GoDaddy application names
-// do not match. Clone URLs ending in ".git" are excluded below: that suffix is git's, not a
-// TLD. Keep this file free of the literal hostname — the check scans itself.
+// The club's own hostname, any subdomain and TLD, case-insensitive as DNS is. A dotted suffix is
+// required so a bare repository name does not match. Keep this file free of the literal hostname
+// — the check scans itself.
 const OWN_HOST =
   /(?<![A-Za-z0-9.-])(?:[A-Za-z0-9-]+\.)*(?:brasovrunners|brasov-runners)(?:\.[A-Za-z0-9-]+)+(?![A-Za-z0-9-])/gi;
 
 const BINARY_FILE = /\.(png|jpe?g|webp|gif|ico|pdf|woff2?|ttf|eot|zip|gz|mp4|mp3)$/i;
-
-// docs/history is excluded from requirement scanning (it is non-authoritative) but must
-// still be indexed by the README, so it is listed there explicitly.
 
 const failures = [];
 const warnings = [];
@@ -83,9 +78,7 @@ function matchAll(text, pattern) {
   return [...text.matchAll(new RegExp(pattern.source, pattern.flags))];
 }
 
-// Repository paths are compared against Markdown links and against SCAN_IGNORE, both of
-// which use "/". path.relative yields "\" on Windows, so every comparison must go through
-// this first or the check passes on CI and fails on a Windows machine.
+// "/"-separated, as Markdown links and SCAN_IGNORE are; path.relative yields "\" on Windows.
 function repoPath(absolute) {
   return path.relative(ROOT, absolute).split(path.sep).join("/");
 }
@@ -131,8 +124,7 @@ async function checkBaseline(docs) {
     );
   }
 
-  // Visible version: the baseline must appear in rendered text, not only inside the
-  // HTML comment marker, in every root document and the two consolidated docs.
+  // The baseline must also appear in rendered text, not only inside the HTML comment marker.
   if (distinct.length === 1) {
     const current = distinct[0];
     const visibleTargets = [...docs, ...(await readOptional(["docs/PRACTICES.md", "docs/RUNBOOKS.md", "docs/DEVELOPMENT.md", "docs/VIBECODING.md", "CLAUDE.md", "WEEKEND.md"]))];
@@ -256,25 +248,16 @@ async function collectFiles(dir, acc = []) {
 }
 
 /**
- * 7. Hostname literals must not leak into application source.
- *
- * The rule exists so every URL the application *emits about itself* derives from
- * APP_BASE_URL, and binding a domain stays a configuration change (BR-REQ-101-02).
- *
- * Vocabulary namespaces are the one exception. A JSON-LD `@context` of
- * "https://schema.org" is a standard identifier, not an address the application serves: it
- * is identical in every environment, and deriving it from APP_BASE_URL would emit a
- * meaningless context that no consumer understands. Keep this list to namespaces defined by
- * a published standard — never a provider, a CDN, or anything the club could plausibly host.
+ * 7. No hostname literal in src/: every URL the application emits about itself derives from
+ * APP_BASE_URL (BR-REQ-101-02). Exception one: vocabulary namespaces of a published standard
+ * (a JSON-LD `@context`) — never a provider, a CDN or anything the club could host.
  */
 const VOCABULARY_HOSTS = ["schema.org", "www.w3.org"];
 
 /**
- * The second exception, added 2026-09-18: a third party's own fixed address that the
- * application embeds or calls, named in DECISIONS.md, which no configuration could sensibly
- * vary — YouTube's no-cookie player host (§69) and Neon's API (§68). Not a CDN, not anything
- * the club could host, and never a host of the club's own: those remain the rule's whole point.
- * A provider whose address *does* vary by account or region (Mailgun) stays in configuration.
+ * Exception two: a third party's fixed address the application embeds or calls, named in
+ * DECISIONS.md (§68, §69). A provider whose address varies by account or region (Mailgun)
+ * stays in configuration.
  */
 const PROVIDER_HOSTS = [
   "www.youtube-nocookie.com",
@@ -300,11 +283,9 @@ const PROVIDER_HOSTS = [
   "challenges.cloudflare.com",
   // Google's SMTP submission host, the default of CONTACT_SMTP_HOST (§149): Google's own, fixed, and overridable by the variable.
   "smtp.gmail.com",
-  // Open-Meteo's site, which the forecast's credit links to; the server asks its `api.` subdomain,
-  // derived from it (§402, the weather on the event page): public, keyless, fixed, theirs.
+  // Open-Meteo's site, credited on the page; the server derives its `api.` subdomain (§402).
   "open-meteo.com",
-  // DeepL's text API (§464, «Tradu din română»): the free plan's host and the paid one, fixed by
-  // DeepL and chosen by the key's own `:fx` suffix; only the club's content texts are sent.
+  // DeepL's free and paid API hosts, chosen by the key's `:fx` suffix (§464).
   "api-free.deepl.com",
   "api.deepl.com",
 ];
@@ -329,12 +310,8 @@ async function checkHostnameLiterals() {
 }
 
 /**
- * 7b. The club's own hostname appears only in SETUP.md §26.
- *
- * Every other document writes <domain>. Until the domain is registered and bound at the end
- * of M1, a real hostname anywhere else publishes a name nobody owns yet — cheap to squat,
- * and the domain gates Mailgun sending-domain verification, so losing it blocks the launch.
- * checkHostnameLiterals cannot catch this: it only walks src/, which does not exist yet.
+ * 7b. The club's own hostname appears only in SETUP.md §26; every other file, not only src/,
+ * writes <domain>.
  */
 async function checkOwnDomainLiterals() {
   let listing;
@@ -358,9 +335,8 @@ async function checkOwnDomainLiterals() {
     if (buffer === null) continue; // listed but gone
 
     const folded = foldHomoglyphs(decodeText(buffer));
-    // A hard wrap at 100 columns splits a hostname across lines without anyone intending it,
-    // so scan a de-wrapped copy too. Only word-character breaks are joined, which leaves
-    // ordinary sentence boundaries alone.
+    // A hard wrap can split a hostname across lines, so scan a de-wrapped copy too; only
+    // word-character breaks are joined.
     const dewrapped = folded.replace(/([A-Za-z0-9-])[ \t]*\r?\n[ \t>*#-]*([A-Za-z0-9-])/g, "$1$2");
 
     const reported = new Set();
@@ -400,10 +376,8 @@ function decodeText(buffer) {
 }
 
 /**
- * Fold the spellings a browser still resolves to the same host: fullwidth and ideographic
- * dots (the WHATWG URL parser maps them to "."), zero-width characters, and percent-escapes.
- * Without this, a hostname written with a fullwidth dot stays a live clickable link while
- * reading as absent to a plain substring search.
+ * Fold the spellings a browser still resolves to the same host: fullwidth and ideographic dots
+ * (WHATWG maps them to "."), zero-width characters and percent-escapes.
  */
 function foldHomoglyphs(text) {
   let folded = text.normalize("NFKC").replace(/[​-‍⁠﻿­]/g, "");
@@ -412,8 +386,7 @@ function foldHomoglyphs(text) {
   } catch {
     // An invalid escape somewhere in the document; scan the un-decoded form instead.
   }
-  // Source-code escapes for "." and "-": what a minifier or JSON serializer emits, and what
-  // evaluates back to the real hostname at runtime once application code exists.
+  // Source-code escapes for "." and "-", which evaluate back to the real hostname.
   folded = folded.replace(/\\u002[eE]|\\x2[eE]/g, ".").replace(/\\u002[dD]|\\x2[dD]/g, "-");
   return folded.replace(/[。．｡]/g, ".");
 }
@@ -448,8 +421,7 @@ async function checkReadmeCoverage() {
   seen.delete("README.md");
   seen.delete("package-lock.json");
 
-  // Files git ignores are on disk but never published, so they need no README row:
-  // next-env.d.ts, a developer's .env.local, and similar.
+  // Files git ignores are never published, so they need no README row.
   let ignored = new Set();
   try {
     const out = execFileSync(
@@ -471,11 +443,8 @@ async function checkReadmeCoverage() {
 }
 
 /**
- * 9. Every release entry a branch carries (`.release/*.json`, `.release/README.md`) can land:
- * the required fields, full requirement ids that SPECS.md defines, the file named for its branch,
- * one entry per branch. Checked on the pull request, so a bad entry fails there and not at release
- * time on GitHub Actions. An entry's `docsNotes` is a warning: a PC landing prints it for a person,
- * and the release from GitHub refuses it.
+ * 9. Every release entry (`.release/*.json`) can land, checked on the pull request rather than at
+ * release time. `docsNotes` only warns: a PC landing prints it, the GitHub release refuses it.
  */
 async function checkReleaseEntries(specs) {
   const dir = path.join(ROOT, ENTRY_DIR);

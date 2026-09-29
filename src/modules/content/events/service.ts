@@ -321,11 +321,28 @@ function resolveTimes(fields: EventFieldsInput, switches: StartSwitches): Resolv
  * Checked only when the switch goes on; the series here, the registrations under the lock
  * (`assertNobodyRegisteredForUndated`).
  */
+/**
+ * «Doar pentru membrii BVR» (§552) and «Evenimentul principal» do not go together: the listing leads
+ * with its featured event (§470), a members' event is on no public list, and marking it would clear
+ * the mark from the event that does lead (`clearFeaturedExcept`). Refused on the featured box.
+ */
+function assertMembersOnlyAllowed(
+  fields: Pick<EventFieldsInput, "membersOnly" | "featured">,
+  current: Pick<EditableEvent, "membersOnly"> | null,
+): void {
+  // A save that does not post the switch keeps the stored one (§552), so the stored one is asked.
+  const membersOnly = fields.membersOnly ?? current?.membersOnly ?? false;
+  if (membersOnly && fields.featured) {
+    throw new DomainError("VALIDATION_ERROR", "featured: an event for the members alone cannot lead the public listing", ["featured"]);
+  }
+}
+
 async function assertDateToBeAnnouncedAllowed<T extends Record<string, unknown>>(
   db: Database<T>,
   fields: EventFieldsInput,
-  current: Pick<EditableEvent, "id" | "dateToBeAnnounced" | "timeToBeAnnounced" | "repeatRule" | "repeatOf"> | null,
+  current: Pick<EditableEvent, "id" | "dateToBeAnnounced" | "timeToBeAnnounced" | "repeatRule" | "repeatOf" | "membersOnly"> | null,
 ): Promise<void> {
+  assertMembersOnlyAllowed(fields, current);
   if (!startHeldBack(fields)) return;
   // The refusal names the date's box when it is ticked, else the time's.
   const box = fields.dateToBeAnnounced === true ? "dateToBeAnnounced" : "timeToBeAnnounced";
@@ -482,11 +499,20 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
     offersGroupRunDeclaration: fields.offersGroupRunDeclaration === true && groupRunDeclarationKeyFor(fields) !== null,
     featured: fields.featured,
     isSpecial: fields.isSpecial,
+    // «Doar pentru membrii BVR» (§552), by the partners' discipline: a caller that said nothing
+    // writes nothing. Turned on, it withdraws the event from every public read at once and cancels
+    // nothing; turned off, the save's cache expiry puts it everywhere at once (§333).
+    ...(fields.membersOnly === undefined ? {} : { membersOnly: fields.membersOnly }),
     registrationMode: fields.registrationMode,
     capacity: fields.capacity,
     // Waiting-list cap (§348): a caller silent about it writes nothing, so no save lifts the limit.
     ...(fields.waitlistCapacity === undefined ? {} : { waitlistCapacity: fields.waitlistCapacity }),
-    // The race's band (§173): where numbers start and their colour (§177).
+    // «Kit de participare» → «Tricou» (§554), by the same discipline: a caller that did not post the
+    // card writes nothing, so no save takes the shirt off an event by not mentioning it.
+    ...(fields.kitShirt === undefined ? {} : { kitShirt: fields.kitShirt }),
+    // The race's band (§173): where its numbers start and what colour they print. Both were
+    // parsed and validated by `fields.ts` from the day they were added and then dropped here,
+    // so the editor's two controls posted into nothing — caught by review (§177).
     bibStartNumber: fields.bibStartNumber,
     bibColour: fields.bibColour,
     /*
@@ -1473,6 +1499,8 @@ const SERIES_COLUMNS = [
   "nightOverride",
   // The run's self-declaration offer (§393), like the night override.
   "offersGroupRunDeclaration",
+  // Who sees the event (§552): "from this date" makes a weekly run the members' on every later date.
+  "membersOnly",
   "registrationMode",
   // «Se deschid în curând» (§451) travels with the opening date it stands in for.
   "registrationOpensSoon",
@@ -1480,7 +1508,10 @@ const SERIES_COLUMNS = [
   // The waiting-list cap (§348). No lock or allocation: raising it offers nothing, lowering it
   // removes nobody already waiting.
   "waitlistCapacity",
-  // One race, one band (§173, §177).
+  // The race kit (§554), like the headlamp once did (§382): "from this date" gives every later date
+  // of the series the same T-shirt question.
+  "kitShirt",
+  // One race, one band: a series is the same event on several dates (§173, §177).
   "bibStartNumber",
   "bibColour",
   "bibDesign",
@@ -2336,12 +2367,17 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     nightOverride: source.nightOverride,
     // The self-declaration offer travels with the route too (§393).
     offersGroupRunDeclaration: source.offersGroupRunDeclaration,
+    // A copy of a members' event is the members' too (§552), and so is every date its series makes:
+    // nothing becomes public by being copied.
+    membersOnly: source.membersOnly,
     featured: false,
     // Nor the special mark (§168): it belongs to one edition.
     isSpecial: false,
     capacity: source.capacity,
     // The waiting-list cap goes with the places (§348).
     waitlistCapacity: source.waitlistCapacity,
+    // The race kit goes with the race (§554): a copy, and every date of a series, give the same shirt.
+    kitShirt: source.kitShirt,
     confirmationOpensDaysBefore: source.confirmationOpensDaysBefore,
     confirmationDeadlineDaysBefore: source.confirmationDeadlineDaysBefore,
     // The minimum age belongs to the race (§329), as it binds (§515): an older source below

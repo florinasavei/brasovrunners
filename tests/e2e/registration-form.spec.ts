@@ -115,10 +115,34 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
     // posts, and on Romania unless the runner says otherwise.
     await expect(page.locator('select[name="country"]')).toHaveValue("RO");
     await expect(page.locator('select[name="country"]')).toHaveAttribute("required", "");
-    // «Sex» forces a choice (§510): a native, required select on its empty «Alege…», nothing pre-chosen.
-    await expect(page.locator('select[name="sex"]')).toHaveValue("");
-    await expect(page.locator('select[name="sex"]')).toHaveAttribute("required", "");
-    await expect(page.locator('select[name="sex"] option').first()).toHaveText("Alege…");
+    // «Sex» forces a choice (§510): a dropdown again (§555), a native required select behind an
+    // empty «Alege…», «Feminin» first and «Masculin» second, and no «Prefer să nu spun» (§554).
+    const sexSelect = page.locator('select[name="sex"]');
+    await expect(sexSelect).toHaveValue("");
+    await expect(sexSelect).toHaveAttribute("required", "");
+    expect(await sexSelect.locator("option").allTextContents()).toEqual(["Alege…", "Feminin", "Masculin"]);
+    await expect(page.locator('input[type="radio"][name="sex"]')).toHaveCount(0);
+    // Once the island runs, the button over it opens a list with each answer's glyph beside its word.
+    const sexButton = page.getByRole("button", { name: /^Sex: / });
+    await expect(sexButton).toHaveAccessibleName("Sex: Alege…");
+    await sexButton.click();
+    const sexList = page.getByRole("listbox", { name: "Sex" });
+    const sexOptions = sexList.getByRole("option");
+    await expect(sexOptions).toHaveText(["Feminin", "Masculin"]);
+    for (const option of await sexOptions.all()) {
+      // One glyph each, by its element: a production build drops MUI's `data-testid` on icons.
+      await expect(option.locator("svg")).toHaveCount(1);
+      // Measured once the menu has grown in: its opening transition scales the rows.
+      await expect.poll(async () => (await option.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    }
+    await sexOptions.first().click();
+    await expect(sexList).toBeHidden();
+    await expect(sexSelect).toHaveValue("FEMALE");
+    await expect(sexButton).toHaveAccessibleName("Sex: Feminin");
+    await expect(sexButton).toBeFocused();
+    // The event gives no T-shirt (§554): no size box, and the fold's title says no «tricou».
+    await expect(page.locator('[name="tshirtSize"]')).toHaveCount(0);
+    await expect(page.locator("summary").filter({ hasText: "tricou" })).toHaveCount(0);
     // The city is required and asked right after the birth date (§467, reversing §322).
     await expect(page.locator('[name="city"]')).toBeVisible();
     await expect(page.locator('[name="city"]')).toHaveAttribute("required", "");
@@ -594,17 +618,21 @@ test.describe("BR-REQ-031-04 criterion 16 the telephone is one box with a flag a
       await expect(box.locator('img[src="/flags/ro.svg"]')).toBeHidden();
       // Citizenship too is the server's native select, Romania chosen (§432, §463).
       await expect(noScript.locator('select[name="nationality"]')).toHaveValue("RO");
-      // So is the country of residence (§510), and «Sex»: a native select on «Alege…», required,
-      // that a reader without JavaScript answers from the phone's own list — the form can be sent.
+      // So is the country of residence (§510). «Sex» is the server's native select too (§555):
+      // «Alege…» chosen, then «Feminin» and «Masculin», required — a reader without JavaScript
+      // answers from the phone's own list, and the form can be sent.
       await expect(noScript.locator('select[name="country"]')).toHaveValue("RO");
       const sex = noScript.locator('select[name="sex"]');
       await expect(sex).toHaveValue("");
-      await expect(sex).toHaveAttribute("required", "");
-      await expect(noScript.locator('input[name="sex"]')).toHaveCount(0);
-      expect(await sex.evaluate((select: HTMLSelectElement) => select.validity.valueMissing)).toBe(true);
-      await sex.selectOption("UNSPECIFIED");
-      await expect(sex).toHaveValue("UNSPECIFIED");
+      expect(await sex.locator("option").evaluateAll((options) => options.map((option) => (option as HTMLOptionElement).value))).toEqual([
+        "",
+        "FEMALE",
+        "MALE",
+      ]);
+      expect(await sex.evaluate((select: HTMLSelectElement) => select.required && select.validity.valueMissing)).toBe(true);
+      await sex.selectOption("MALE");
       expect(await sex.evaluate((select: HTMLSelectElement) => select.validity.valid)).toBe(true);
+      await expect(noScript.getByRole("button", { name: /^Sex: / })).toHaveCount(0);
       await expect(noScript.getByRole("button", { name: /^Cetățenie/ })).toHaveCount(0);
       // The mask's placeholder is in the server's HTML; the grouping itself needs the script.
       await expect(phone).toHaveAttribute("placeholder", "0712 345 678");
@@ -717,7 +745,7 @@ test.describe("BR-REQ-031-04 a rejected submission says what to fix, and goes th
     expect(page.url()).not.toContain("Popescu");
   });
 
-  test("names an unanswered «Sex» by what to do, and that «Prefer să nu spun» is an answer (§510)", async ({ page }) => {
+  test("names an unanswered «Sex» in the refusal summary, and the link lands on its dropdown (§510, §555)", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);
     await page.goto(registerPath);
@@ -734,8 +762,10 @@ test.describe("BR-REQ-031-04 a rejected submission says what to fix, and goes th
     expect(page.url()).toContain("fields=sex");
     const link = page.locator("#registration-errors").getByRole("link", { name: SEX_MISSING, exact: true });
     await expect(link).toBeVisible();
+    // The select is marked invalid, and once the island runs its button takes the focus the link gave it.
+    await expect(page.locator('select[name="sex"]')).toHaveAttribute("aria-invalid", "true");
     await link.click();
-    await expect(page.locator('select[name="sex"]')).toBeFocused();
+    await expect(page.getByRole("button", { name: /^Sex: / })).toBeFocused();
   });
 
   test("keeps a chosen option and says a phone number is not valid", async ({ page }) => {
@@ -748,7 +778,7 @@ test.describe("BR-REQ-031-04 a rejected submission says what to fix, and goes th
     await fillRequired(page);
     await page.locator('[name="phone"]').fill("12");
     // A choice the redirect would lose unless the draft brings it back (§142).
-    await page.locator('select[name="sex"]').selectOption("FEMALE");
+    await chooseSex(page, "FEMALE");
     // Behind the fold since §171; the point of the test is that what was typed comes back.
     await page.evaluate(() => document.querySelectorAll("details").forEach((details) => (details.open = true)));
     await page.locator('[name="healthNotes"]').fill("Astm");
@@ -780,9 +810,9 @@ test.describe("BR-REQ-031-04 a rejected submission says what to fix, and goes th
     await page.goto(registerPath);
     await hydrated(page);
 
-    // Said before the first field, and again under the birth date.
+    // Said once, before the first field (§546): the birth date's own help that repeated it is gone.
     await expect(page.locator("#main")).toContainText("Vârsta minimă: 14 ani");
-    await expect(page.locator("#main")).toContainText("Vârsta minimă este 14 ani împliniți în ziua cursei");
+    await expect(page.locator("#main")).not.toContainText("împliniți în ziua cursei");
 
     const birthDate = page.locator('[name="birthDate"]');
     const max = await birthDate.getAttribute("max");
@@ -944,13 +974,12 @@ test.describe("BR-REQ-031-04 the minimum age is the event's own (§329)", () => 
     const editorUrl = page.url().split("?")[0];
 
     try {
-      // The form: the line before the first field, the birth date's help, and the picker's
-      // bound — the last birth date that is sixteen on 3 May 2027.
+      // The form: the line before the first field — said once (§546) — and the picker's bound,
+      // the last birth date that is sixteen on 3 May 2027.
       await page.goto(`/ro/evenimente/${slug}/inscriere`);
       await expect(page.getByTestId("age-rule")).toHaveText(
         "Vârsta minimă: 16 ani. Sub 18 ani, înscrierea se face de un părinte sau tutore, cu acordul acestuia.",
       );
-      await expect(page.locator("#main")).toContainText("Vârsta minimă este 16 ani împliniți în ziua cursei");
       await expect(field("birthDate")).toHaveAttribute("max", "2011-05-03");
 
       // The event's page says the same sentence in «Condiții de participare» (§505), and its structured data "16-".
@@ -976,7 +1005,6 @@ test.describe("BR-REQ-031-04 the minimum age is the event's own (§329)", () => 
       // last birth date that is eighteen on 3 May 2027, and the structured data says "18-".
       await page.goto(`/ro/evenimente/${slug}/inscriere`);
       await expect(page.getByTestId("age-rule")).toHaveText("Vârsta minimă: 18 ani.");
-      await expect(page.locator("#main")).toContainText("Vârsta minimă este 18 ani împliniți în ziua cursei");
       await expect(field("birthDate")).toHaveAttribute("max", "2009-05-03");
       await page.goto(`/ro/evenimente/${slug}`);
       expect(await typicalAgeRange()).toBe("18-");
@@ -1032,7 +1060,7 @@ test.describe("BR-REQ-041-01 what is still missing is listed above the send butt
       "Prenume",
       "Nume de familie",
       "Data nașterii",
-      // «Sex» starts on «Alege…» (§510), named by what to do about it.
+      // «Sex» starts unanswered (§510), named like any field since §554.
       SEX_MISSING,
       "Adresa scrisă a doua oară",
       "Declarația că ești apt medical",
@@ -1065,8 +1093,8 @@ test.describe("BR-REQ-041-01 what is still missing is listed above the send butt
   });
 });
 
-/** How the summary and the list above the send button name an unanswered «Sex» (§510). */
-const SEX_MISSING = "Alege sexul — poți alege „Prefer să nu spun”";
+/** How the summary and the list above the send button name an unanswered «Sex» (§510): its field name since §554. */
+const SEX_MISSING = "Sex";
 
 /** How the list above the send button names the race's conditions: what is missing and what to do (§422). */
 const RULES_MISSING = "Condițiile concursului — deschide-le și citește-le până la capăt";

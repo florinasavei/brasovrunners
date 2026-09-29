@@ -91,11 +91,17 @@ describe("§527 the backoffice events list over seeded events and a series", () 
 
   it("groups the series into one line each and counts the unfiltered lines", async () => {
     expect(countEventLines(await listEventsForBackoffice(db))).toBe(7);
-    expect(await titles({})).toHaveLength(7);
+    expect(await titles({ state: "ALL" })).toHaveLength(7);
+  });
+
+  it("opens on «Viitoare» with no state in the address; «Toate» is its own choice (§555)", async () => {
+    expect(await titles({})).toEqual(await titles({ state: "UPCOMING" }));
+    expect(await titles({})).toHaveLength(3);
+    expect(await titles({ state: "ALL" })).toHaveLength(7);
   });
 
   it("orders by the nearest date by default, a series by its next date, a finished one by its last", async () => {
-    expect(await titles({})).toEqual([
+    expect(await titles({ state: "ALL" })).toEqual([
       "Semimaratonul",
       "Tură pe Tâmpa",
       "Alergare de marți ×4",
@@ -107,7 +113,7 @@ describe("§527 the backoffice events list over seeded events and a series", () 
   });
 
   it("orders the oldest first, by name both ways, and by state", async () => {
-    expect(await titles({ sort: "date-old" })).toEqual([
+    expect(await titles({ state: "ALL", sort: "date-old" })).toEqual([
       "Crosul de primăvară",
       "Ștafeta de vară ×2",
       "Semimaratonul",
@@ -116,7 +122,7 @@ describe("§527 the backoffice events list over seeded events and a series", () 
       "Maratonul",
       "Crosul de toamnă",
     ]);
-    expect(await titles({ sort: "title-asc" })).toEqual([
+    expect(await titles({ state: "ALL", sort: "title-asc" })).toEqual([
       "Alergare de marți ×4",
       "Crosul de primăvară",
       "Crosul de toamnă",
@@ -125,8 +131,8 @@ describe("§527 the backoffice events list over seeded events and a series", () 
       "Ștafeta de vară ×2",
       "Tură pe Tâmpa",
     ]);
-    expect((await titles({ sort: "title-desc" }))[0]).toBe("Tură pe Tâmpa");
-    expect(await titles({ sort: "state" })).toEqual([
+    expect((await titles({ state: "ALL", sort: "title-desc" }))[0]).toBe("Tură pe Tâmpa");
+    expect(await titles({ state: "ALL", sort: "state" })).toEqual([
       "Crosul de toamnă",
       "Tură pe Tâmpa",
       "Alergare de marți ×4",
@@ -145,14 +151,14 @@ describe("§527 the backoffice events list over seeded events and a series", () 
     expect(await titles({ state: "ARCHIVED" })).toEqual(["Crosul de primăvară"]);
     expect(await titles({ state: "CANCELLED" })).toEqual(["Maratonul"]);
     expect(await titles({ state: "PUBLISHED" })).toHaveLength(4);
-    // The label typed for the key is the whole list, never an error.
-    expect(await titles({ state: "Încheiate" })).toHaveLength(7);
+    // The label typed for the key is the default list, «Viitoare», never an error (§555).
+    expect(await titles({ state: "Încheiate" })).toEqual(["Tură pe Tâmpa", "Alergare de marți ×2", "Crosul de toamnă"]);
   });
 
   it("searches either language, the address and the place, accents ignored", async () => {
     expect(await titles({ q: "tampa" })).toEqual(["Tură pe Tâmpa"]);
     expect(await titles({ q: "telecabina" })).toEqual(["Tură pe Tâmpa"]);
-    expect(await titles({ q: "relay" })).toEqual(["Ștafeta de vară ×2"]);
+    expect(await titles({ q: "relay", state: "ALL" })).toEqual(["Ștafeta de vară ×2"]);
     expect(await titles({ q: "cros", state: "DRAFT" })).toEqual(["Crosul de toamnă"]);
   });
 });

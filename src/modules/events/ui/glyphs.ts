@@ -1,6 +1,7 @@
 import AltRouteIcon from "@mui/icons-material/AltRoute";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
+import CardMembershipIcon from "@mui/icons-material/CardMembership";
 import DirectionsRunIcon from "@mui/icons-material/DirectionsRun";
 import EventAvailableIcon from "@mui/icons-material/EventAvailable";
 import EventRepeatIcon from "@mui/icons-material/EventRepeat";
@@ -135,6 +136,9 @@ export const GLYPHS = {
   // The club's discount on an external event's own fee (§394): a price tag, under the cost row.
   discount: LocalOfferIcon,
   partner: HandshakeIcon,
+  // «Doar pentru membrii BVR» (§552): the members' card, the glyph «Pagini» → «Membri» already wears
+  // (§524) — only on the members' own page, the zone and the backoffice, never on a public surface.
+  membersOnly: CardMembershipIcon,
   // The filter button's own glyph (§413) — a tuning icon, not the funnel `FilterListIcon`, and
   // "registration open" among the filter's boxes (§413): a calendar with a tick, the same
   // metaphor a confirmed place gets elsewhere.

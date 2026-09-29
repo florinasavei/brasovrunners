@@ -1,6 +1,5 @@
 import { type Deadlines, reminderHoursFor, reminderOpensAt } from "@/modules/deadlines/domain/deadlines";
 import {
-  registrationClosingInstant,
   registrationState,
   type RegistrationWindowInput,
 } from "@/modules/events/domain/registration-window";
@@ -30,6 +29,7 @@ export const AUTOMATIC_SEND_KEYS = {
   reminder: (registrationId: string) => `registration:${registrationId}:reminder`,
   lastCall: (registrationId: string) => `registration:${registrationId}:sign-reminder`,
   participation: (registrationId: string) => `registration:${registrationId}:confirm-participation`,
+  // The number a confirmation before §548 was shown as «provizoriu», told once when it was kept (`bibs.ts#releaseLegacyHeldNumbers`).
   bibs: (registrationId: string) => `registration:${registrationId}:bib-settled`,
 } as const;
 
@@ -111,7 +111,14 @@ export function participationConfirmationDueAt(candidate: ParticipationCandidate
 
 // --- "Registration is open" (§146) --------------------------------------------------------------
 
-export type InterestEvent = RegistrationWindowInput & { editorialStatus: string };
+export type InterestEvent = RegistrationWindowInput & {
+  editorialStatus: string;
+  /**
+   * «Doar pentru membrii BVR» (§552): the addresses were left on a public page, and the page is the
+   * members' alone now — they wait, as for a page taken off the site, and are told if it comes back.
+   */
+  membersOnly?: boolean;
+};
 
 /**
  * What the job does with the addresses left on an event's page, at `now`: `wait` while the window
@@ -121,7 +128,7 @@ export type InterestEvent = RegistrationWindowInput & { editorialStatus: string 
 export function interestAction(event: InterestEvent, now: Date): "wait" | "announce" | "drop" {
   const state = registrationState(event, now);
   if (state === "NOT_YET_OPEN") return "wait";
-  if (state === "OPEN") return event.editorialStatus === "PUBLISHED" ? "announce" : "wait";
+  if (state === "OPEN") return event.editorialStatus === "PUBLISHED" && event.membersOnly !== true ? "announce" : "wait";
   return "drop";
 }
 
@@ -189,10 +196,3 @@ export function nextInLineOffers(input: {
   return nextInLineReleases(input).filter((release) => release.at.getTime() < lastOfferBefore);
 }
 
-// --- Race numbers settle (§214) -----------------------------------------------------------------
-
-/**
- * The instant an event's numbers settle and "here is your race number" goes — the instant
- * `registrationHasClosed`, which the job asks, turns true.
- */
-export const bibsSettleAt = registrationClosingInstant;

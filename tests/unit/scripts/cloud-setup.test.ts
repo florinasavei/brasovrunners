@@ -3,6 +3,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
+import { gitEnv } from "../../helpers/git-env";
 
 /**
  * §501 — a cloud session (Claude Code on the web) prepares itself; a session on a developer's
@@ -30,8 +31,9 @@ afterAll(() => {
   for (const dir of scratch) rmSync(dir, { recursive: true, force: true });
 });
 
+/** The script reads git's config; started from a hook, git's own repository variables are dropped first (§553). */
 function envWithout(...names: string[]): NodeJS.ProcessEnv {
-  const env = { ...process.env };
+  const env = gitEnv();
   for (const name of names) delete env[name];
   return env;
 }
