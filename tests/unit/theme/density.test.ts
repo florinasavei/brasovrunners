@@ -147,7 +147,7 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   // The 360-px density pass (§480): the flat values the first pass left on the contact page, the
   // gallery, «Echipa» and the two legal texts, each onto the step its neighbours already use.
   { file: "src/app/[locale]/contact/page.tsx", prop: "mb", step: "sectionGap", sm: 3, xsBefore: 3 },
-  { file: "src/app/[locale]/contact/page.tsx", prop: "mb", step: "gapSm", sm: 2, xsBefore: 2 },
+  // The asterisk legend's `mb` (gapSm) went with the legend (§546): every box on the form is required.
   // Not the address line's `mt: 3`: it stays 24 at every width, room for its link's reach (§480).
   { file: "src/app/[locale]/gallery/page.tsx", prop: "mb", step: "sectionGap", sm: 4, xsBefore: 4 },
   { file: "src/app/[locale]/gallery/[slug]/page.tsx", prop: "mb", step: "gapSm", sm: 2, xsBefore: 2 },
@@ -168,7 +168,7 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   { file: "src/app/[locale]/members/page.tsx", prop: "mb", step: "sectionGap", sm: 3, xsBefore: 3, count: 2 },
   { file: "src/app/[locale]/members/page.tsx", prop: "p", step: "cardPadTop", sm: 2, xsBefore: 2 },
   { file: "src/app/[locale]/members-area/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2, count: 2 },
-  { file: "src/app/[locale]/members-area/page.tsx", prop: "mb", step: "sectionGap", sm: 3, xsBefore: 3, count: 4 },
+  { file: "src/app/[locale]/members-area/page.tsx", prop: "mb", step: "sectionGap", sm: 3, xsBefore: 3, count: 5 },
   { file: "src/app/[locale]/legal/privacy/page.tsx", prop: "mb", step: "gapSm", sm: 2, xsBefore: 2 },
   { file: "src/app/[locale]/legal/terms/page.tsx", prop: "mb", step: "gapSm", sm: 2, xsBefore: 2 },
   { file: "src/app/[locale]/gallery/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },

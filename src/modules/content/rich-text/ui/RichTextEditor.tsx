@@ -157,8 +157,11 @@ function RichTextEditorIsland({
    * Toolbar halves this body may use (§270): emails have no media or tables
    * (`email-rich-text.ts`). Not the guard, which is the server; it hides buttons a save would reject.
    */
-  features?: { media?: boolean; tables?: boolean };
-  /** An event's short description: the picture panel shows the card's 16∶9 frame (§454). */
+  features?: { media?: boolean; tables?: boolean; video?: boolean };
+  /**
+   * The body is an event's short description, whose pictures every listing card draws in one
+   * 16∶9 frame (§454): the picture's panel then shows that frame and offers the card's centre.
+   */
   cardPictures?: boolean;
   /** The stored owner of this text, so «Din galerie» opens on its pictures (§485). Plain data (§370). */
   pictureScope?: PickerScope;
@@ -780,6 +783,8 @@ function RichTextEditorIsland({
             active={galleryOpen}
             onClick={() => setGalleryOpen((open) => !open)}
           />
+          {/* A newsletter takes pictures and no film (§550): an inbox plays nothing (§270). */}
+          {features.video !== false && (
           <ToolbarButton
             label={labels.youtube}
             icon={SmartDisplayIcon}
@@ -789,6 +794,7 @@ function RichTextEditorIsland({
               setYoutubeDraft((open) => (open === null ? "" : null));
             }}
           />
+          )}
           </>
           )}
           <ToolbarButton

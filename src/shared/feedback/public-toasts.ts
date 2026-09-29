@@ -23,6 +23,8 @@ export const PUBLIC_TOAST_KEYS = [
   "declarationWaitlisted",
   "familySignNothingLeft",
   "familySignOneLeft",
+  // «Renunț la înscrierea pentru …» in the family's declarations wizard (§547).
+  "familyWithdrawn",
 ] as const;
 
 export type PublicToastKey = (typeof PUBLIC_TOAST_KEYS)[number];

@@ -1,33 +1,25 @@
 import type { RegistrationStatus } from "@/db/schema/registrations";
-import { canTransition } from "./state-machine";
+import { canTransition, isTerminalStatus } from "./state-machine";
 
 /**
- * Which number a runner actually has, and whether it can still move (`DECISIONS.md` §214).
+ * The race number a screen, an email or an export shows for a registration (`DECISIONS.md` §548,
+ * amending §214): the number it wears once it is **confirmed**, and nothing before.
  *
- * Two columns hold one fact. `bib_number` is settled — printed, emailed, never reissued — and
- * `provisional_bib_number` is the number held with the place until the registration window
- * closes. Every screen that shows "the race number" has to answer the same two questions, and
- * answering them in eight places is how one of them ends up showing a dash on race morning
- * because it only ever looked at the settled column.
+ * A number is drawn at the moment of confirmation and never moves (§173), so there is one column
+ * and one question: has this registration been confirmed? Before that — an address not proved, a
+ * declaration not signed, an offer, the waiting list — nothing is shown anywhere, «—» in the
+ * backoffice. A registration that is over keeps its number retired (a cancelled confirmed runner's
+ * 27 is never given again), and the backoffice and the desk still show it, struck through, so a
+ * printed bib can be pulled (§311). A row not confirmed yet that wears a number anyway — a
+ * cancelled confirmed registration that restarted, or a number settled before §548 — shows none
+ * until it is confirmed again, and keeps that same number then.
  *
- * Pure, and over the two columns alone, so a list row, a desk row, a detail page and an export
- * can all ask it without any of them knowing how the numbering works.
+ * Pure, and over the row alone, so a list row, a desk row, a detail page and an export all ask it
+ * the same way.
  */
-
-export type RaceNumber = {
-  value: number;
-  /** True once it is final: emailed, printable, and refused to any further change. */
-  settled: boolean;
-};
-
-export function raceNumberOf(row: {
-  bibNumber: number | null;
-  provisionalBibNumber: number | null;
-}): RaceNumber | null {
-  // The settled one wins wherever both somehow exist: it is the one that has been sent out.
-  if (row.bibNumber !== null) return { value: row.bibNumber, settled: true };
-  if (row.provisionalBibNumber !== null) return { value: row.provisionalBibNumber, settled: false };
-  return null;
+export function raceNumberOf(row: { status: RegistrationStatus; bibNumber: number | null }): number | null {
+  if (row.bibNumber === null) return null;
+  return row.status === "CONFIRMED" || isTerminalStatus(row.status) ? row.bibNumber : null;
 }
 
 /**

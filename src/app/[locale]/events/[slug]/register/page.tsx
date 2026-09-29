@@ -40,6 +40,7 @@ import { registrationState } from "@/modules/events/domain/registration-window";
 import { datedOrNull } from "@/modules/events/domain/dated";
 import { confirmationWindow } from "@/modules/registrations/domain/hold-deadlines";
 import { registrationEventWithLastGood } from "@/modules/resilience/event-copy";
+import { membersEventBySlug, membersViewer } from "@/modules/events/members-only";
 import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
 import { countryOptions } from "@/modules/registrations/countries";
 import { phoneCountryLabels, phoneCountryOrder } from "@/modules/registrations/phone";
@@ -64,6 +65,7 @@ import Hint from "@/shared/ui/Hint";
 import PhoneField from "@/modules/registrations/ui/PhoneField";
 import NationalityField from "@/modules/registrations/ui/NationalityField";
 import SexField from "@/modules/registrations/ui/SexField";
+import { SHIRT_SIZES } from "@/modules/registrations/domain/kit";
 import RegistrationSteps from "@/modules/registrations/ui/RegistrationSteps";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { activeBotCheckSiteKey } from "@/modules/registrations/bot-check";
@@ -149,9 +151,17 @@ export default async function RegisterPage({ params, searchParams }: Props) {
     skipped then; the ones the public cache answers are tried and may say nothing.
   */
   const eventRead = await registrationEventWithLastGood(locale, slug, now);
+  /*
+    An event for the members alone (§552): the public read never meets one, so a slug it did not
+    find is asked once more for a members' session only, live, never from a copy. Anybody else gets
+    the page's 404. The member registers themselves, with the account's own address (`member`).
+  */
+  const membersRow = eventRead.value ? undefined : await membersEventBySlug(locale, slug);
+  const member = membersRow ? await membersViewer() : null;
+  const found = eventRead.value ?? membersRow ?? null;
   // No form while the date is to be announced (§533): registration is «în curând» until it is,
   // and the state below would say so anyway — this says it before a date is read.
-  const event = eventRead.value ? datedOrNull(eventRead.value) : null;
+  const event = found ? datedOrNull(found) : null;
   if (!event) notFound();
   const resting = eventRead.freshness === "stale";
 
@@ -181,7 +191,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
     on, the sitting's own screen, with «Gata»; with `?family=1` it is the next form, the address
     fixed. Everything it shows was typed on this browser (§39).
   */
-  const sittingCookie = resting ? null : await readFamilySittingCookie();
+  // One person per account on a members' event (§552): no family sitting, no «Mai înscrii pe cineva».
+  const sittingCookie = resting || member ? null : await readFamilySittingCookie();
   const sitting = sittingCookieLive(sittingCookie, event.id, now) ? sittingCookie : null;
   const afterForm = Boolean(submitted) && sent !== "1" ? afterFormScreen(sitting) : null;
   const sittingScreen = afterForm === "sitting";
@@ -413,6 +424,9 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   const whenLabel = formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long", withTime: true });
   const whenInSentence = formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long", withTime: true, position: "inline" });
   const hasRules = !isRichTextEmpty(readRichText(event.rulesJson));
+  // «Kit de participare» → «Tricou» (§554): the size is asked only when the event gives a shirt. A
+  // copy saved before the column existed has none, and asks nothing.
+  const askShirt = event.kitShirt === true;
   /*
     What is being paid for, and where (§343), the same short phrase the event page's facts say
     (`EventFacts`) — never a raw URL, only the host a runner recognises ("Linkuri și fișiere",
@@ -702,8 +716,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                     {rejected.map((name) => (
                       <li key={name}>
                         <MuiLink href={`#${fieldId(name)}`}>
-                          {/* «Sex» says what to do, and that "prefer not to say" is an answer (§510). */}
-                          {name === "sex" ? t("sexMissing") : t(`fieldNames.${name}`)}
+                          {t(`fieldNames.${name}`)}
                         </MuiLink>
                         {/* The rule, where the browser lands (§321): a birth date refused for age
                             is not a typo to hunt for, and the sentence says what would be accepted. */}
@@ -758,7 +771,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
             owes the person reading it one sentence about where any of that goes — and the
             answer here is unusually good, so it is worth saying: nothing is published unless
             the event has a start list *and* the box below is ticked, and then only the name.
-            The two section markers repeat it where each block of fields is.
+            Said once (§546): the two section markers that repeated it are gone.
           */}
           <Alert severity="info" icon={false} sx={{ mb: 2 }}>
             {event.participantListVisibility === "NAMES" ? t("privacyBannerWithList") : t("privacyBanner")}
@@ -868,12 +881,10 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 }}
               >
               <Stack spacing={2} sx={{ minWidth: 0 }}>
+              {/* No «Confidențial» marker under the heading any more (§546): the banner above the
+                  form says where every answer goes, once. */}
               <Typography component="h2" variant="h6" sx={{ mt: 1 }}>
                 {t("sections.about")}
-              </Typography>
-              {/* The marker under each block (§171): where these answers go. */}
-              <Typography variant="caption" color="text.secondary">
-                {t("confidentialNote")}
               </Typography>
 
               {/*
@@ -901,18 +912,14 @@ export default async function RegisterPage({ params, searchParams }: Props) {
 
               <TextField
                 {...field("birthDate")}
-                /* The event's minimum age and the categories, in the help (§321, §329; never under
-                   fourteen since §515); a refusal for age says the rule again
-                   rather than "complete this field correctly". Left native, not the backoffice's
-                   MUI picker (`shared/forms/pickers`, `DECISIONS.md` §345): a runner's own birth
-                   date is decades back, faster typed than paged through a calendar month by
-                   month, and this box is public — the picker never ships here anyway. */
+                /* No help at rest (§546): the minimum age is the line above the form, and the
+                   words under the box (§467) say the age on race day. A refusal for age says the
+                   rule (§321, §329) rather than "complete this field correctly". Left native, not
+                   the backoffice's MUI picker (`shared/forms/pickers`, `DECISIONS.md` §345): a
+                   runner's own birth date is decades back, faster typed than paged through a
+                   calendar month by month, and this box is public. */
                 helperText={
-                  invalid.has("birthDate")
-                    ? tooYoung
-                      ? t("errors.tooYoung", minimumAge)
-                      : t("errors.field")
-                    : t("birthDateHelp", minimumAge)
+                  invalid.has("birthDate") ? (tooYoung ? t("errors.tooYoung", minimumAge) : t("errors.field")) : undefined
                 }
                 type="date"
                 label={t("birthDate")}
@@ -952,7 +959,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   words={countrySearchWords}
                 />
                 <TextField
-                  {...field("city", t("originHelp"))}
+                  {...field("city")}
                   label={t("city")}
                   required
                   fullWidth
@@ -960,23 +967,17 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 />
               </Stack>
 
-              {/* What the answer is for, under the field (§322): a category ranking, and "prefer
-                  not to say" is an answer. It starts empty (§510): pre-chosen on «Prefer să nu
-                  spun», a runner who never looked at it sent an answer they did not give, and the
-                  category ranking could not tell the two apart. Now the browser, the §422 list
-                  and the server (the enum has no blank) refuse a form with no answer, and "prefer
-                  not to say" stays one press away. A native select behind an «Alege…» placeholder,
-                  so it answers without JavaScript as the citizenship does (§463). */}
+              {/* «Feminin» or «Masculin», each with its glyph (§554, amending §510): a dropdown again
+                  (§555), «Feminin» first — a native select behind an empty «Alege…», nothing
+                  pre-chosen, required by the browser, the §422 list and the server; «Prefer să nu
+                  spun» is no longer an answer. What it is for stays under it (§322, §546): a
+                  category ranking, which the label cannot say. */}
               <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
                 <SexField
                   {...field("sex", t("sexHelp"))}
                   label={t("sex")}
                   placeholder={t("sexChoose")}
-                  answers={{
-                    FEMALE: t("sexOptions.FEMALE"),
-                    MALE: t("sexOptions.MALE"),
-                    UNSPECIFIED: t("sexOptions.UNSPECIFIED"),
-                  }}
+                  answers={{ FEMALE: t("sexOptions.FEMALE"), MALE: t("sexOptions.MALE") }}
                 />
                 {/*
                   Citizenship, required and pre-chosen on Romania (§432; the owner, 2026-09-26:
@@ -999,9 +1000,6 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               <Typography component="h2" variant="h6" sx={{ mt: 2 }}>
                 {t("sections.contact")}
               </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {t("contactNote")}
-              </Typography>
 
               {/*
                 The address, twice, typed by hand (§206). QA's outbox holds three bounced
@@ -1012,7 +1010,23 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 The next form of a family sitting (§519): the address is the sitting's, said back in
                 bold and not asked again — the server takes it from the browser's sealed half.
               */}
-              {familyForm && sitting ? (
+              {member ? (
+                /*
+                  A members' event (§552): the account's own address, said back in bold and not asked —
+                  the server takes it from the session, whatever is posted. One person per account.
+                */
+                <Box data-testid="members-address">
+                  <input type="hidden" name="email" value={member.email} />
+                  <input type="hidden" name="emailConfirm" value={member.email} />
+                  <Typography variant="body2" color="text.secondary">
+                    {t("membersAddressLabel")}
+                  </Typography>
+                  <Typography sx={{ fontWeight: 700, wordBreak: "break-all" }}>{member.email}</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {t("membersAddressHelp")}
+                  </Typography>
+                </Box>
+              ) : familyForm && sitting ? (
                 <Box data-testid="family-sitting-address">
                   <input type="hidden" name={FAMILY_SITTING_FIELD} value="1" />
                   <Typography variant="body2" color="text.secondary">
@@ -1037,7 +1051,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 invalidLabel={t("emailInvalid")}
                 suggestionLabel={t.raw("emailSuggestion") as string}
                 useSuggestionLabel={t("emailUseSuggestion")}
-                help={t("emailHelp")}
+                // No help at rest (§546): the address is typed twice, and the line above the form
+                // already says the email comes to confirm it.
                 defaultValue={prefill("email")}
                 defaultConfirmValue={prefill("emailConfirm")}
                 error={invalid.has("email") || invalid.has("emailConfirm")}
@@ -1070,7 +1085,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               */}
               <Stack spacing={2}>
                 {/* A third person's name and number (§322): the runner is the one who can tell
-                    them, so the form says to, and says when they would be rung. */}
+                    them, so the form says to, when they would be rung, and that both are deleted
+                    seven days after the event (§421). */}
                 <TextField
                   {...field("emergencyContactName", t("emergencyContactHelp"))}
                   label={t("emergencyContactName")}
@@ -1149,7 +1165,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               <Box component="details" open sx={disclosureSx}>
                 <Typography component="summary" variant="body2">
                   <GroupsIcon aria-hidden sx={FOLD_GLYPH_SX} />
-                  {t("disclosure.race", { club: CLUB_NAME })}
+                  {/* «tricou» only when the event gives one (§554): the kit card's tick. */}
+                  {askShirt ? t("disclosure.race", { club: CLUB_NAME }) : t("disclosure.raceNoShirt", { club: CLUB_NAME })}
                 </Typography>
                 <Stack spacing={2} sx={{ pb: 2 }}>
                   {/*
@@ -1170,19 +1187,23 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                     <Hint text={t("clubMemberHint")} />
                   </CheckboxField>
 
-                  <TextField
-                    {...field("tshirtSize")}
-                    label={t("tshirtSize")}
-                    select
-                    defaultValue={prefill("tshirtSize", "NONE")}
-                  >
-                    <MenuItem value="NONE">{t("tshirtSizes.NONE")}</MenuItem>
-                    {["XS", "S", "M", "L", "XL", "XXL"].map((size) => (
-                      <MenuItem key={size} value={size}>
-                        {size}
-                      </MenuItem>
-                    ))}
-                  </TextField>
+                  {/* The T-shirt's size, only for an event that gives one (§554, «Kit de participare»):
+                      otherwise no box at all, and the server stores NONE whatever a stale form posts. */}
+                  {askShirt && (
+                    <TextField
+                      {...field("tshirtSize")}
+                      label={t("tshirtSize")}
+                      select
+                      defaultValue={prefill("tshirtSize", "NONE")}
+                    >
+                      <MenuItem value="NONE">{t("tshirtSizes.NONE")}</MenuItem>
+                      {SHIRT_SIZES.map((size) => (
+                        <MenuItem key={size} value={size}>
+                          {size}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  )}
 
                   {/*
                     The club, filled in and locked while the tick above is on (§215; the owner:
@@ -1193,7 +1214,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                     whatever the browser did, so a form filled with JavaScript off records it too.
                   */}
                   <ClubForMember
-                    {...field("clubName", t("optional"))}
+                    {...field("clubName")}
                     label={t("clubName")}
                     memberCheckboxId={fieldId("clubMemberDeclared")}
                     clubName={CLUB_NAME}
@@ -1219,11 +1240,10 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               */}
               <GuardianForMinor birthDateId={fieldId("birthDate")} forceOpen={invalid.has("guardianName")}>
                 <Stack spacing={2}>
-                  <Typography variant="body2" color="text.secondary">
-                    {t("guardianHelp")}
-                  </Typography>
+                  {/* One helper, under the name (§546): required under eighteen — the box carries no
+                      asterisk, because it is shown by the birth date — who signs, and whose email. */}
                   <TextField
-                    {...field("guardianName", t("guardianNameHelp"))}
+                    {...field("guardianName", t("guardianHelp"))}
                     label={t("guardianName")}
                     autoComplete="off"
                     slotProps={{ htmlInput: { maxLength: 200 } }}
@@ -1263,7 +1283,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                     slotProps={{ htmlInput: { maxLength: 200 } }}
                   />
                   <TextField
-                    {...field("instagramHandle", t("instagramHandleHelp"))}
+                    {...field("instagramHandle")}
                     label={t("instagramHandle")}
                     placeholder="@numele.tau"
                     autoComplete="off"
@@ -1302,7 +1322,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                     {t("healthIntro")}
                   </Typography>
                   <TextField
-                    {...field("healthNotes", t("healthNotesHelp"))}
+                    {...field("healthNotes")}
                     label={t("healthNotes")}
                     multiline
                     minRows={2}
@@ -1485,6 +1505,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               */}
               {/* The language of the emails and the declaration (§97): the page's, unless said otherwise. */}
               <TextField
+                id={fieldId("preferredLocale")}
                 name="preferredLocale"
                 label={t("preferredLocale")}
                 helperText={t("preferredLocaleHelp")}
@@ -1550,8 +1571,6 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   // rules of its own shows a plain box linking to its page, where the field's
                   // own name is the right thing to list (review finding 1).
                   ...(hasRules ? { rulesAcknowledged: t("rules.missing") } : {}),
-                  // «Sex» likewise: it starts empty, and "prefer not to say" is an answer (§510).
-                  sex: t("sexMissing"),
                 }}
                 /*
                   Only when a widget is actually on the page (§285). With no keys, or with the

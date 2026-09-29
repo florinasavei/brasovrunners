@@ -262,8 +262,8 @@ export const EMAIL_SAMPLE_FAMILY = {
  * persoane». Made-up like the rest of the sample; the preview gives each one the sample's QR address.
  */
 export const EMAIL_SAMPLE_FAMILY_CONFIRMED = [
-  { name: "Ana Popescu", firstName: "Ana", checkinCode: "EXAMPL", raceNumber: 42, provisional: false },
-  { name: EMAIL_SAMPLE_FAMILY.personName, firstName: "Mihai", checkinCode: "EXAMP2", raceNumber: 43, provisional: false },
+  { name: "Ana Popescu", firstName: "Ana", checkinCode: "EXAMPL", raceNumber: 42 },
+  { name: EMAIL_SAMPLE_FAMILY.personName, firstName: "Mihai", checkinCode: "EXAMP2", raceNumber: 43 },
 ] as const;
 
 /**

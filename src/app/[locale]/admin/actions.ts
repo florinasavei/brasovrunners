@@ -293,11 +293,17 @@ function eventFieldsFrom(form: FormData) {
     // A checkbox like the one above it, and unlike it in every other way: any number of
     // events may be special (§168), so nothing is cleared when one is ticked.
     isSpecial: form.get("event.isSpecial") === "on",
+    // «Doar pentru membrii BVR» (§552): read only when the form carried its marker, as §451's box —
+    // a form without it is "not editing it", never "public".
+    membersOnly: form.get("event.membersOnly.present") === "1" ? form.get("event.membersOnly") === "on" : undefined,
     registrationMode: value("registrationMode"),
     capacity: value("capacity"),
     // The waiting list's length (§348), only when the form carried its box: an empty box is "no
     // limit", and a form without the box is "not editing it" — `fields.ts` tells the two apart.
     waitlistCapacity: form.has("event.waitlistCapacity") ? value("waitlistCapacity") : undefined,
+    // «Kit de participare» → «Tricou» (§554): a checkbox, read only when the form carried its marker,
+    // so a form without the card is "not editing it" rather than "no shirt".
+    kitShirt: form.get("event.kitShirt.present") === "1" ? form.get("event.kitShirt") === "on" : undefined,
     bibStartNumber: value("bibStartNumber"),
     bibColour: value("bibColour"),
     /*

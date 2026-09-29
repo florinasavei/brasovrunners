@@ -131,7 +131,7 @@ async function confirmedRunner(email = "ana@example.ro", existing?: typeof event
       firstName: "Ana",
       lastName: "Pop",
       birthDate: "1990-05-17",
-      sex: "UNSPECIFIED",
+      sex: "FEMALE",
       nationality: "RO",
       country: "RO",
       city: "Brașov",

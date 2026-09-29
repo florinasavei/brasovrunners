@@ -194,6 +194,8 @@ describe("§444 BR-REQ-037-07 two volunteers handing one spare, on two connectio
           locale: "ro",
           listOptOut: false,
           relayedByParticipantRequest: true,
+          // Confirmed at once: a number is drawn only at a confirmation since §548.
+          fastTrack: true,
         },
         NOW,
       );
@@ -222,7 +224,7 @@ describe("§444 BR-REQ-037-07 two volunteers handing one spare, on two connectio
     expect(row.walkInBibCount).toBe(5);
     const reserved = new Set(Array.from({ length: 5 }, (_, index) => (row.walkInBibStart as number) + index));
     const numbers = (await db.select().from(registrations).where(eq(registrations.eventId, event.id))).flatMap((registration) =>
-      [registration.bibNumber, registration.provisionalBibNumber].filter((number): number is number => number !== null),
+      [registration.bibNumber].filter((number): number is number => number !== null),
     );
     expect(numbers).toHaveLength(2);
     expect(new Set(numbers).size).toBe(2);

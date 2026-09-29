@@ -68,7 +68,7 @@ function submission(email: string, at: Date, person: { firstName?: string; birth
     firstName: person.firstName ?? "Ana",
     lastName: "Pop",
     birthDate: person.birthDate ?? "1990-05-17",
-    sex: "UNSPECIFIED",
+    sex: "FEMALE",
     nationality: "RO",
     country: "RO",
     city: "Brașov",

@@ -370,11 +370,11 @@ export default async function SiteFooter() {
               >
                 {/* The privacy notice is on the bar (§323); the terms stay in the fold. */}
                 <Link href="/legal/terms">{legal("termsLinkLabel")}</Link>
-                {/* "My registrations" (BR-REQ-036-04): the one place a runner finds it without an email. */}
-                <Link href="/registrations/mine">{footer("myRegistrations")}</Link>
+                {/* "My registrations" (BR-REQ-036-04): the one place a runner finds it without an email. A form rendered per request: never prefetched (§549). */}
+                <Link href="/registrations/mine" prefetch={false}>{footer("myRegistrations")}</Link>
                 {showFaq && <Link href="/faq">{footer("faq")}</Link>}
               </Box>
-              {/* "Scrie-ne" once (BR-REQ-070-04): the form, and — when the club's mailbox is
+              {/* "Scrie-ne" once (BR-REQ-070-04; the form is rendered per request, so never prefetched, §549): the form, and — when the club's mailbox is
                   configured (§8; nothing here invents an address) — the address beside it as the
                   mail link, "Scrie-ne: <address>". One item, so the address wraps under its own
                   lead rather than onto a line of its own somewhere else. The club's description
@@ -385,7 +385,7 @@ export default async function SiteFooter() {
                 data-testid="footer-contact"
                 sx={{ display: "inline-flex", flexWrap: "wrap", alignItems: "center", columnGap: 0.5, ...footerGapSx(["rowGap"], 0), minWidth: 0, maxWidth: "100%" }}
               >
-                <Link href="/contact">{contacts.length > 0 ? footer("about.contact") : footer("contactPage")}</Link>
+                <Link href="/contact" prefetch={false}>{contacts.length > 0 ? footer("about.contact") : footer("contactPage")}</Link>
                 {/* The address the club chose to show (§442): the mailbox, its Gmail, or both, «… sau …». */}
                 {contacts.map((address, index) => (
                   <Box key={address} component="span" sx={{ display: "inline-flex", columnGap: 0.5, minWidth: 0 }}>

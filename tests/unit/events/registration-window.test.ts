@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   openRegistrationClosing,
+  registrationClosesOrStarts,
   registrationState,
   type RegistrationWindowInput,
   upcomingRegistrationOpening,
@@ -12,6 +13,7 @@ import {
  * BR-REQ-030-01 criterion 1 — mode NONE offers no registration action.
  * BR-REQ-011-01 criterion 13 — the opening date, while it is still ahead and only then.
  * BR-REQ-011-01 criterion 18 — the closing date, while registration is open and only then.
+ * BR-REQ-011-01 criterion 3 — the closing instant itself, in every state (the page clock's).
  */
 const START = new Date("2026-10-04T07:00:00Z");
 const PUBLISHED = new Date("2026-09-01T10:00:00Z");
@@ -161,5 +163,22 @@ describe("BR-REQ-011-01 criterion 18 — openRegistrationClosing", () => {
     expect(openRegistrationClosing(event({ registrationClosesAt: closes, registrationMode: "NONE" }), open)).toBeNull();
     expect(openRegistrationClosing(event({ registrationClosesAt: closes, eventStatus: "CANCELLED" }), open)).toBeNull();
     expect(openRegistrationClosing(event({ registrationClosesAt: closes, eventStatus: "COMPLETED" }), open)).toBeNull();
+  });
+});
+
+describe("BR-REQ-011-01 criterion 3 — registrationClosesOrStarts", () => {
+  const closes = new Date("2026-10-01T20:59:00Z");
+
+  it("is the stated closing, or the start when none is stated", () => {
+    expect(registrationClosesOrStarts({ registrationClosesAt: closes, startsAt: START })).toEqual(closes);
+    expect(registrationClosesOrStarts({ registrationClosesAt: null, startsAt: START })).toEqual(START);
+  });
+
+  it("is the instant registrationState turns CLOSED, for a window open or «în curând» (§451)", () => {
+    for (const e of [event({ registrationClosesAt: closes }), event({ registrationClosesAt: closes, registrationOpensSoon: true }), event()]) {
+      const at = registrationClosesOrStarts({ ...e, startsAt: START });
+      expect(registrationState(e, new Date(at.getTime() - 1000))).not.toBe("CLOSED");
+      expect(registrationState(e, at)).toBe("CLOSED");
+    }
   });
 });

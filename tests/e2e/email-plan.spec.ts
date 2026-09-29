@@ -33,7 +33,27 @@ test.describe("BR-REQ-080-02 the Mailgun plan on «Setări» → «Emailuri»", 
     // Criterion 8: and the figure says whose allowance it is — one account, two deployments.
     await expect(main.getByText(/unui cont Mailgun folosit de QA și de producție/)).toBeVisible();
 
-    await main.getByLabel("Planul pe care e contul Mailgun").selectOption("BASIC");
+    // §551 (amending §100): the typed limits show only while «Altceva» is chosen — hidden on
+    // Free, shown the moment the select changes, and what was typed survives a switch away and back.
+    const select = main.getByLabel("Planul pe care e contul Mailgun");
+    const typed = main.getByTestId("email-plan-typed-ceilings");
+    const monthly = main.getByLabel("Limita lunară");
+    await expect(main.getByText("Căsuțele de limite apar doar când alegi „Altceva”", { exact: false })).toBeVisible();
+    await expect(typed).toBeHidden();
+    for (const id of ["BASIC", "FOUNDATION", "SCALE"]) {
+      await select.selectOption(id);
+      await expect(typed).toBeHidden();
+    }
+    await select.selectOption("CUSTOM");
+    await expect(typed).toBeVisible();
+    await monthly.fill("12345");
+    await select.selectOption("FREE");
+    await expect(typed).toBeHidden();
+    await select.selectOption("CUSTOM");
+    await expect(monthly).toHaveValue("12345");
+
+    // Saved on a catalogue plan, the hidden box's number is ignored (§100): Basic's own ceiling holds.
+    await select.selectOption("BASIC");
     await main.getByLabel("Notă (de ce, până când)").fill("Basic pentru cursa din octombrie");
     await main.getByRole("button", { name: "Salvează planul" }).click();
     await confirmDialog(page);
@@ -49,6 +69,24 @@ test.describe("BR-REQ-080-02 the Mailgun plan on «Setări» → «Emailuri»", 
     await main.getByRole("button", { name: "Salvează planul" }).click();
     await confirmDialog(page);
     await expect(main.getByText(/Planul Free: \d+ din 100 mesaje trimise azi/)).toBeVisible();
+
+    // Without JavaScript the rule is the same CSS: the saved plan is Free, so the boxes are hidden
+    // until the select says «Altceva».
+    const { baseURL, viewport } = test.info().project.use;
+    const scriptless = await page.context().browser()!.newContext({
+      baseURL,
+      viewport,
+      javaScriptEnabled: false,
+      storageState: await page.context().storageState(),
+    });
+    const bare = await scriptless.newPage();
+    await bare.goto("/ro/admin/settings/emails");
+    const barePlan = bare.locator("#main").getByTestId("email-plan");
+    await openFold(barePlan);
+    await expect(barePlan.getByTestId("email-plan-typed-ceilings")).toBeHidden();
+    await barePlan.getByLabel("Planul pe care e contul Mailgun").selectOption("CUSTOM");
+    await expect(barePlan.getByTestId("email-plan-typed-ceilings")).toBeVisible();
+    await scriptless.close();
   });
 
   test("an Organizer reads the figures and the queue, and is offered no form (§291)", async ({ page }) => {

@@ -62,7 +62,7 @@ const submission = {
   firstName: "Florin",
   lastName: "Munca",
   birthDate: "1990-05-17",
-  sex: "UNSPECIFIED",
+  sex: "FEMALE",
   nationality: "RO",
   country: "RO",
   city: "Brașov",
