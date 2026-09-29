@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.27-2026-09-27
+
+- **The git hooks no longer let a test touch the repository being committed** — both hooks unset `GIT_DIR`, `GIT_INDEX_FILE`, `GIT_WORK_TREE` and `GIT_PREFIX` first and every test that spawns git passes a clean environment; a race number typed at the desk and the Mailgun plan's typed limits count only as digits («1e3» is refused, not 1000), the unsubscribe form's refusal takes the focus, the family's withdraw dialog names no empty event, and the emergency-contact and guardian help sentences read right again. §553.
 ## BR-V2.26-2026-09-27
 
 - **Discount codes and members-only events in the members' zone** — the club keeps its partners' codes on «Pagini» → «Membri» and a signed-in member reads and copies them in the zone; an event ticked «Doar pentru membrii BVR» is on no public page, list, feed, sitemap or alert, opens only for a member, who registers with the account's own address, one person per account; migration `0108`. §552.
