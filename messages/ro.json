@@ -6399,6 +6399,7 @@
     },
     "promo": {
       "title": "Materiale promoționale",
+      "closedYes": "Ai bifat materialele promoționale la această înscriere. Cât timp e închisă, clubul nu îți trimite nimic pentru ea; poți retrage acordul oricând.",
       "yes": "Primești materiale promoționale de la club și de la partenerii lui, la adresa acestei înscrieri. Le trimite doar clubul; partenerii nu primesc adresa ta.",
       "no": "Nu primești materiale promoționale.",
       "optIn": "Vreau materiale promoționale",

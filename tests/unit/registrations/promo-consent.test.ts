@@ -55,7 +55,7 @@ describe("§NNN the privacy notice's marker for promotional materials", () => {
     for (const words of ["partenerii nu primesc adresa", "6(1)(a)", "opțională", "nu e bifată dinainte", "pagina înscrierii", "<EMAIL DE CONTACT>", "newsletter"]) {
       expect(ro5).toContain(words);
     }
-    for (const words of ["partners never receive your address", "6(1)(a)", "optional", "never ticked in advance", "registration's page", "<EMAIL DE CONTACT>", "newsletter"]) {
+    for (const words of ["partners never receive your address", "6(1)(a)", "optional", "never ticked in advance", "registration's page", "<CONTACT EMAIL>", "Romanian Law no. 506/2004", "newsletter"]) {
       expect(en5).toContain(words);
     }
   });

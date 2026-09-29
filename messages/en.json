@@ -6399,6 +6399,7 @@
     },
     "promo": {
       "title": "Promotional materials",
+      "closedYes": "You ticked promotional materials on this registration. While it is closed the club sends you nothing for it; you can withdraw your consent at any time.",
       "yes": "You receive promotional materials from the club and its partners at this registration's address. Only the club sends them; the partners never get your address.",
       "no": "You do not receive promotional materials.",
       "optIn": "I want promotional materials",

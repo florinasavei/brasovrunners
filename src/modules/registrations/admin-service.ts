@@ -1277,29 +1277,33 @@ export async function withdrawOptionalData<T extends Record<string, unknown>>(
   if (named.length === 0 && fields.promo !== true) {
     throw new DomainError("VALIDATION_ERROR", "choose what to withdraw", ["fields"]);
   }
-  const cleared: (OptionalDataField | "promo")[] =
-    named.length > 0
-      ? (
-          await clearOptionalData(db, {
-            registrationId,
-            fields: named,
-            via: "STAFF",
-            actorStaffUserId: actor.id,
-            reason,
-            now,
-          })
-        ).cleared
-      : [];
   /*
+    One transaction for both writes, so a withdrawal of the optional data together with the
+    promotional materials is whole or nothing — never the first committed and the second refused.
     The promotional materials (§NNN), for the person who wrote to the club: the one write of
     `promo-consent.ts`, with its own audit row naming the Administrator and the reason. A
     withdrawal only — staff never consent for a person, and the module refuses a yes from here.
   */
-  if (fields.promo === true) {
-    const promo = await setPromoConsent(db, { registrationId, consent: false, via: "STAFF", actorStaffUserId: actor.id, reason, now });
-    if (promo.changed) cleared.push("promo");
-  }
-  return { cleared };
+  return db.transaction(async (tx) => {
+    const cleared: (OptionalDataField | "promo")[] =
+      named.length > 0
+        ? (
+            await clearOptionalData(tx, {
+              registrationId,
+              fields: named,
+              via: "STAFF",
+              actorStaffUserId: actor.id,
+              reason,
+              now,
+            })
+          ).cleared
+        : [];
+    if (fields.promo === true) {
+      const promo = await setPromoConsent(tx, { registrationId, consent: false, via: "STAFF", actorStaffUserId: actor.id, reason, now });
+      if (promo.changed) cleared.push("promo");
+    }
+    return { cleared };
+  });
 }
 
 /**

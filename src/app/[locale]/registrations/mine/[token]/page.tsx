@@ -112,7 +112,7 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
   // «Vreau materiale promoționale» only while the notice in force describes them (§NNN); «Nu mai vreau» always.
   const promoOn = context.ok ? await cachedPromotionalMaterialsOffered(now) : false;
   /** The promotional-materials switch for one registration (§NNN): the answer as it stands, and the other one. */
-  const promoSwitch = (item: { id: string; promoConsent: boolean }) => (
+  const promoSwitch = (item: { id: string; promoConsent: boolean }, closed = false) => (
     <Stack spacing={1} sx={{ mt: 1.5 }} data-testid="my-promo">
       {promo === item.id && (
         <Alert severity="success" sx={{ py: 0 }}>
@@ -126,7 +126,7 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
       )}
       <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1, alignItems: "center" }}>
         <Typography variant="body2" color="text.secondary" data-testid="my-promo-state">
-          {item.promoConsent ? t("promo.yes") : t("promo.no")}
+          {item.promoConsent ? t(closed ? "promo.closedYes" : "promo.yes") : t("promo.no")}
         </Typography>
         <form action={setPromoConsentFromMyRegistrationsAction}>
           <input type="hidden" name="locale" value={locale} />
@@ -552,7 +552,7 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
                   )}
                 </Stack>
                 {/* A consent to promotional materials outlives the place (§NNN): only the way out here. */}
-                {item.promoConsent && promoSwitch(item)}
+                {item.promoConsent && promoSwitch(item, true)}
                 {/* Withdrawn just now, while the card stays for its other data: the answer, and no way back in here. */}
                 {!item.promoConsent && promo === item.id && (
                   <Alert severity="success" sx={{ py: 0, mt: 1.5 }}>
