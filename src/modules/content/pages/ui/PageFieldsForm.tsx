@@ -21,7 +21,7 @@ export type EditablePageTranslation = {
 
 /**
  * The page editor's fields: one tab per language (§259). Every box comes back as typed after a
- * refused submit, rich text included (§315). The page's place in the menu is not here since §NNN:
+ * refused submit, rich text included (§315). The page's place in the menu is not here since §571:
  * «Pagini» → «Ordinea meniului» orders every entry of the menu in one list.
  */
 export default async function PageFieldsForm({

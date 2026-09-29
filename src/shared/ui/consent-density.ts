@@ -1,5 +1,5 @@
 /**
- * The registration form's «Acorduri» block, compacted (§NNN; the owner, 2026-09-29 19:03, of a
+ * The registration form's «Acorduri» block, compacted (§570; the owner, 2026-09-29 19:03, of a
  * screenshot of the block: "Also these need to be more compacted!").
  *
  * The block was a full-width blue bar for the race's conditions, a helper line under it, then the

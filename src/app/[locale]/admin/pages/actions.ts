@@ -48,7 +48,7 @@ async function backTo(path: string, outcome: { error?: string; saved?: string })
 }
 
 /**
- * Both languages, read from the one form the editor renders. No `navOrder` since §NNN: a page's
+ * Both languages, read from the one form the editor renders. No `navOrder` since §571: a page's
  * place in the menu is «Ordinea meniului»'s, one order for every entry.
  */
 function readFields(form: FormData) {
@@ -132,7 +132,7 @@ export async function transitionPageAction(_previous: FormOutcome | null, form: 
 }
 
 /**
- * «Ordinea meniului» (§NNN): the site menu's one order, every entry first to last — the sections
+ * «Ordinea meniului» (§571): the site menu's one order, every entry first to last — the sections
  * and the custom pages together, which replaced the custom pages' own ↑ / ↓. A club setting
  * (§450): the Administrator's at the door, and the service asserts it again. Asked first (§384):
  * every visitor's menu changes from the next page view. A refusal keeps the order as moved (§315).

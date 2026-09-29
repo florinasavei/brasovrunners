@@ -396,7 +396,7 @@ export async function cachedPromotionalMaterialsOffered(now: Date): Promise<bool
 
 /**
  * Whether the box «oferte și beneficii» also says, where the yes is given, that the club may give
- * the partners the person's name and address (§NNN, review finding — art. 7(2) GDPR): the privacy
+ * the partners the person's name and address (§570, review finding — art. 7(2) GDPR): the privacy
  * notice in force names `{{promotionalMaterialsShared}}` in every language, the same reading as
  * `noticeDescribesPromotionalMaterialsShared`, which gates the list for sponsors itself.
  */
@@ -609,7 +609,7 @@ export async function cachedSiteFontSize(): Promise<SiteFontSizeSetting> {
 }
 
 /**
- * «Ordinea meniului» (§NNN): the site menu's stored order, a list of keys, for the header and the
+ * «Ordinea meniului» (§571): the site menu's stored order, a list of keys, for the header and the
  * footer on every public page — so it is cached, filed under `settings`, which a save expires
  * (`saveMenuOrder`). When the database cannot answer, the last good copy (§447), then no list at
  * all, which is today's default order: never a page that fails over its menu.

@@ -9,7 +9,7 @@ import { describe, expect, it, vi } from "vitest";
  * (`SECTIONS` in `SiteNav`) decides the row and the ☰ menu alike, so the rendered anchors' order is
  * the menu's order.
  *
- * Since §NNN that order is only the default: the club's one stored order («Pagini» → «Ordinea
+ * Since §571 that order is only the default: the club's one stored order («Pagini» → «Ordinea
  * meniului», the `order` prop) sorts the sections and the pages together, and the rule that stood
  * between the two groups is gone.
  */
@@ -76,7 +76,7 @@ describe("§537 the public menu's order", () => {
   });
 });
 
-describe("§NNN the club's one menu order", () => {
+describe("§571 the club's one menu order", () => {
   const pages = [
     { id: DESPRE, slug: "despre", title: "Despre" },
     { id: ISTORIC, slug: "istoric", title: "Istoric" },

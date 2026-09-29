@@ -50,7 +50,7 @@ export const dynamic = "force-dynamic";
 /**
  * The club's standing pages (BR-REQ-050-03).
  *
- * ## The order is edited here, in one list for the whole menu (§NNN)
+ * ## The order is edited here, in one list for the whole menu (§571)
  *
  * `nav_order` was a number on the page editor, which asks the wrong question; then two arrows on
  * each custom page's row, which ordered the club's pages among themselves and left «Evenimente»,
@@ -90,7 +90,7 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
     cachedContactFormReaches(),
     cachedShownContactAddresses(),
   ]);
-  // The menu's one order (§NNN): every entry, the custom pages among them; the table follows it.
+  // The menu's one order (§571): every entry, the custom pages among them; the table follows it.
   const menuOrder = resolveMenuOrder(menuState.stored, pageRows.map((row) => row.id));
   const rows = sortByMenuOrder(pageRows, (row) => pageMenuKey(row.id), menuOrder);
   const placeInMenu = (id: string) => menuOrder.indexOf(pageMenuKey(id)) + 1;
@@ -195,7 +195,7 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
       label: t("pages.columnOrder"),
       align: "right",
       hideBelow: "sm",
-      // Its place in «Ordinea meniului» (§NNN), counting every entry of the menu, not only the pages.
+      // Its place in «Ordinea meniului» (§571), counting every entry of the menu, not only the pages.
       render: (row) => placeInMenu(row.id),
     },
   ];
@@ -246,7 +246,7 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
         </Stack>
       </Stack>
 
-      {/* «Ordinea meniului» (§NNN): every entry of the site menu, the standard and the custom pages together. */}
+      {/* «Ordinea meniului» (§571): every entry of the site menu, the standard and the custom pages together. */}
       <MenuOrderPanel
         locale={locale}
         order={menuOrder}
@@ -298,7 +298,7 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
         rowActions={(row) => {
           return (
             <Stack direction="row" spacing={0.5} sx={{ justifyContent: "flex-end", gap: 0.5 }}>
-              {/* The ↑ / ↓ that stood here went with §NNN: a page moves in «Ordinea meniului», above. */}
+              {/* The ↑ / ↓ that stood here went with §571: a page moves in «Ordinea meniului», above. */}
               {/*
                 The verbs, in the same ⋮ every other list uses (§256). The two forms beside it
                 are the Server Actions the menu submits — hidden, because the menu is the

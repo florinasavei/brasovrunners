@@ -1,7 +1,7 @@
 import { isMinorOn } from "./age";
 
 /**
- * Which yes to «oferte și beneficii» may reach a partner (§NNN, amending §562). Pure: the caller
+ * Which yes to «oferte și beneficii» may reach a partner (§570, amending §562). Pure: the caller
  * reads the approved notices once (`legal-documents/repository.ts#findSponsorShareVersions`) and
  * asks this of each row.
  *

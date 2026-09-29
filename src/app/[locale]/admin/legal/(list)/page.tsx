@@ -227,7 +227,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
   // The same for the offers and benefits (§562): no form offers the box, and nothing is kept,
   // until the notice in force names `{{promotionalMaterials}}`.
   const promoMissing = !missingKeys.includes("PRIVACY_NOTICE") && !(await noticeDescribesPromotionalMaterials(getDb(), now));
-  // §NNN: the list for sponsors, off until the notice in force names `{{promotionalMaterialsShared}}`.
+  // §570: the list for sponsors, off until the notice in force names `{{promotionalMaterialsShared}}`.
   const sponsorMissing = !missingKeys.includes("PRIVACY_NOTICE") && !(await noticeDescribesPromotionalMaterialsShared(getDb(), now));
   /*
     What the service would answer about each row, asked of the service before anything is drawn

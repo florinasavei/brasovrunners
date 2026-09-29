@@ -110,7 +110,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
     registration.guardianName ? declarationAsksMinorToSign(db, registration.locale, new Date(), registration.eventId) : false,
     // The family marker (§543): the other people on this address at the event, each a link to their page.
     familyOf(db, [registration]).then((members) => members.get(registration.id) ?? []),
-    // Every list for sponsors this registration was in (§NNN): which partner received it, and when.
+    // Every list for sponsors this registration was in (§570): which partner received it, and when.
     listPartnerShares(db, id),
   ]);
 
@@ -1005,7 +1005,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       )}
 
       {/*
-        «Dată partenerilor» (§NNN, review finding): the lists for sponsors that held this registration,
+        «Dată partenerilor» (§570, review finding): the lists for sponsors that held this registration,
         from their audit rows — so a withdrawal or an access request is answered with which partner
         received the data and when, long after the club's own copy of the file is deleted.
       */}

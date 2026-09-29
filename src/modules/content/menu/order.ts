@@ -1,5 +1,5 @@
 /**
- * The site menu's one order (§NNN, amending §406's list and the header's fixed sections).
+ * The site menu's one order (§571, amending §406's list and the header's fixed sections).
  *
  * The owner, 2026-09-29, on «Pagini» → «Paginile clubului»: «vreau să pot seta ordinea la orice
  * pagină, inclusiv cea de evenimente, calendar, contact». Every entry the menu can carry has a

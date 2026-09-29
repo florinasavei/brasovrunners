@@ -27,9 +27,9 @@ import { DomainError } from "@/shared/errors/domain-error";
  *
  * **Two consents, two lists.** The newsletter's subscribers are the fold above; this is not a
  * subscription and an unsubscribe there changes nothing here. The club sends the materials itself;
- * the partners never receive this list — only the sponsor list (§NNN), from the same read.
+ * the partners never receive this list — only the sponsor list (§570), from the same read.
  *
- * **One query (§NNN).** The rows come from `readPromoConsentRows`, the read the sponsor list narrows,
+ * **One query (§570).** The rows come from `readPromoConsentRows`, the read the sponsor list narrows,
  * and the file is `buildSponsorListCsv`'s five columns — one shape for every download of the yes.
  */
 
@@ -82,7 +82,7 @@ export async function exportPromoConsenters<T extends Record<string, unknown>>(
 export type PromoConsenterCsvHeader = SponsorListCsvHeader;
 
 /**
- * The file (§562): since §NNN the sponsor list's own shape — Prenume, Nume, Email, Eveniment, Data
+ * The file (§562): since §570 the sponsor list's own shape — Prenume, Nume, Email, Eveniment, Data
  * acordului — through the one writer (`buildSponsorListCsv`: `csvCell`, CRLF, a BOM, ISO 8601), so
  * the club's list and the partners' read alike.
  */

@@ -56,7 +56,7 @@ describe("§562 the privacy notice's marker for offers and benefits", () => {
     const [en5] = paragraphs(privacyNoticeEn).filter((paragraph) => paragraph.includes("{{promotionalMaterials}}"));
     expect(privacyNoticeRo.sections.find((section) => section.paragraphs.includes(ro5))?.heading).toBe("5. E-mailurile");
     expect(privacyNoticeEn.sections.find((section) => section.paragraphs.includes(en5))?.heading).toBe("5. Emails");
-    // §NNN took «partenerii nu primesc adresa» out: the next paragraph says what a partner may receive.
+    // §570 took «partenerii nu primesc adresa» out: the next paragraph says what a partner may receive.
     expect(ro5).not.toContain("partenerii nu primesc adresa");
     expect(en5).not.toContain("partners never receive your address");
     for (const words of ["6(1)(a)", "opțională", "nu e bifată dinainte", "pagina înscrierii", "<EMAIL DE CONTACT>", "newsletter"]) {
@@ -67,7 +67,7 @@ describe("§562 the privacy notice's marker for offers and benefits", () => {
     }
   });
 
-  it("names the partners in section 6 as the one exception, behind the sharing marker (§NNN), and the retention in section 7", () => {
+  it("names the partners in section 6 as the one exception, behind the sharing marker (§570), and the retention in section 7", () => {
     const section = (body: typeof privacyNoticeRo, number: string) => body.sections.find((entry) => entry.heading?.startsWith(number))!.paragraphs.join(" ");
     expect(section(privacyNoticeRo, "6.")).toContain("cu o singură excepție: dacă ai bifat ofertele și beneficiile, partenerilor clubului");
     expect(section(privacyNoticeRo, "6.")).toContain("{{promotionalMaterialsShared}}");
@@ -123,7 +123,7 @@ describe("§562 the form's box", () => {
     // The owner's words (2026-09-29 16:12), the club by its name from `CLUB_NAME`.
     expect(ro.Registration.promo.label).toBe("Vreau să primesc oferte și beneficii de la {club} și partenerii săi.");
     expect(en.Registration.promo.label).toBe("I want to receive offers and benefits from {club} and its partners.");
-    // «— opțional» ends the label now, like every optional box of «Acorduri» (§NNN round 2), so the helper no longer opens with it.
+    // «— opțional» ends the label now, like every optional box of «Acorduri» (§570 round 2), so the helper no longer opens with it.
     expect(ro.Registration.promo.help).toBe("Poți renunța oricând din pagina înscrierii tale.");
     expect(en.Registration.promo.help).toBe("You can opt out any time from your registration page.");
     // Two consents, two switches: the words on the person's page say so.
@@ -221,7 +221,7 @@ describe("§562 the exports", () => {
     expect(REGISTRATION_SHEET_HEADERS.at(-1)).toBe("Offers and benefits");
   });
 
-  it("the offers-and-benefits CSV neutralizes formulas, carries a BOM and CRLF — the sponsor list's five columns since §NNN", () => {
+  it("the offers-and-benefits CSV neutralizes formulas, carries a BOM and CRLF — the sponsor list's five columns since §570", () => {
     const csv = buildPromoConsentersCsv({ firstName: "Prenume", lastName: "Nume", email: "Email", event: "Eveniment", consentedAt: "Data acordului" }, [
       {
         registrationId: "x",

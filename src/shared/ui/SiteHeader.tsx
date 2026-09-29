@@ -93,7 +93,7 @@ export default async function SiteHeader() {
   /**
    * Which of the platform's sections are offered — the gallery, «Echipa», «Întrebări frecvente»,
    * «Membri» and «Contact» each only while there is something behind it — and the club's one
-   * order for every entry (§NNN), both asked where the backoffice's «Ordinea meniului» card asks
+   * order for every entry (§571), both asked where the backoffice's «Ordinea meniului» card asks
    * them (`modules/content/menu/on-site.ts`), so the card greys exactly what the menu leaves out.
    */
   const [sections, order] = await Promise.all([menuSectionsOnSite(locale as Locale), menuOrderOnSite()]);

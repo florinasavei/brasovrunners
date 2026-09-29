@@ -260,7 +260,7 @@ export async function noticeDescribesPromotionalMaterials<T extends Record<strin
 }
 
 /**
- * Whether the privacy notice in force describes the sponsor list (§NNN,
+ * Whether the privacy notice in force describes the sponsor list (§570,
  * `describesPromotionalMaterialsShared`) — in every language, like the offers themselves. The gate
  * for «Descarcă lista pentru sponsori», on the page and in the route; `/admin/tasks` reads it for
  * the `sponsorNotice` row.
@@ -272,7 +272,7 @@ export async function noticeDescribesPromotionalMaterialsShared<T extends Record
 
 /**
  * The approved, not withdrawn privacy notices, each with its effective date and whether it
- * describes the sponsor list in **every** language (§NNN) — the facts the sponsor list's row gate
+ * describes the sponsor list in **every** language (§570) — the facts the sponsor list's row gate
  * reads (`registrations/domain/sponsor-share.ts`).
  *
  * A set, not a lower bound: §421 warned that a single "first version that names it" is only right

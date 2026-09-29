@@ -198,7 +198,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       the rule this list is the other half of.
     */
     filters.eventId ? voidBibsFor(db, filters.eventId) : Promise.resolve([]),
-    // «Descarcă lista pentru sponsori» for the chosen event (§NNN): the count only, for the roles that may take it.
+    // «Descarcă lista pentru sponsori» for the chosen event (§570): the count only, for the roles that may take it.
     filters.eventId && canExportSponsorList(actor.role) ? sponsorListSummary(db, actor, { eventId: filters.eventId, now: new Date() }) : Promise.resolve(null),
   ]);
 
@@ -726,7 +726,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       </Stack>
 
       {/*
-        The list for sponsors (§NNN; the owner: "export the participants list but filter out just
+        The list for sponsors (§570; the owner: "export the participants list but filter out just
         the ones who agreed to receive marketing emails so we can share it with our sponsors"): its
         own minimal file, never columns of the export beside it. For one chosen event; every event's
         list is on «Newsletter». The role is asserted in the read and in the route.

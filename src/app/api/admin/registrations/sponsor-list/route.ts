@@ -14,7 +14,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
- * «Descarcă lista pentru sponsori» (§NNN): `GET /api/admin/registrations/sponsor-list?event=<id>`
+ * «Descarcă lista pentru sponsori» (§570): `GET /api/admin/registrations/sponsor-list?event=<id>`
  * for one event, no `event` for every event — the same query and the same five columns either way
  * (`registrations/sponsor-list.ts`), in the reader's language (`lang`), as a UTF-8 file with a BOM.
  *

@@ -14,7 +14,7 @@ import { DURATION, EASE, HOVER_OK } from "@/theme/motion";
 
 /**
  * The platform's own sections, in the default order — «Evenimente · Calendar · Contact · Echipa ·
- * Întrebări frecvente» (§537, after §251), then the club's own pages. Since §NNN that is only the
+ * Întrebări frecvente» (§537, after §251), then the club's own pages. Since §571 that is only the
  * order of an entry the club has not placed: the club's one order (`order`, «Pagini» → «Ordinea
  * meniului») sorts the sections and the pages together, the row and the ☰ menu alike, and the rule
  * that stood between the two groups is gone — the menu is one list.
@@ -51,7 +51,7 @@ export type NavPage = { id: string; slug: string; title: string };
 type Href = ComponentProps<typeof Link>["href"];
 /**
  * A row entry, keyed as the club's order names it: a section by its name, a page as `page:<id>`.
- * The rule between the sections and the pages (§251) went with §NNN: one order, one list.
+ * The rule between the sections and the pages (§251) went with §571: one order, one list.
  */
 type Item = { key: string; href: Href; label: string; current: boolean };
 
@@ -122,7 +122,7 @@ export default function SiteNav({
   showFaq?: boolean;
   showMembers?: boolean;
   showContact?: boolean;
-  /** The club's stored order, keys first to last (§NNN); an entry it does not name keeps its default place after them. */
+  /** The club's stored order, keys first to last (§571); an entry it does not name keeps its default place after them. */
   order?: readonly string[];
 }) {
   const t = useTranslations("Site.nav");
@@ -150,7 +150,7 @@ export default function SiteNav({
       current: selected === "pages" && segments[1] === page.slug,
     })),
   ];
-  // The club's order (§NNN): the one merge rule the backoffice card shows, so the card is the menu.
+  // The club's order (§571): the one merge rule the backoffice card shows, so the card is the menu.
   const items = sortByMenuOrder(defaultOrder, (item) => item.key, order);
 
   const navRef = useRef<HTMLElement>(null);

@@ -21,7 +21,7 @@ import { PROMO_TABLE_LIMIT, type PromoConsenterList, type PromoConsenterRow } fr
 type Props = {
   locale: Locale;
   list: PromoConsenterList;
-  /** The list for sponsors across every event (§NNN), or null for a role that may not take it. */
+  /** The list for sponsors across every event (§570), or null for a role that may not take it. */
   sponsors?: SponsorListSummary | null;
 };
 
@@ -70,7 +70,7 @@ const HEAD_RULE = { borderBottom: 2, borderColor: "text.secondary", fontWeight: 
  *
  * A Server Component with no form of its own: the page reads the list (`listPromoConsenters`, which
  * asserts the role) and hands it here. The words say the two consents apart: this is not the
- * newsletter, and the partners receive only the list for sponsors (§NNN) — the button under the
+ * newsletter, and the partners receive only the list for sponsors (§570) — the button under the
  * club's own, for every event, the same query and the same file as an event's registrations page.
  */
 export default async function PromoConsenters({ locale, list, sponsors = null }: Props) {

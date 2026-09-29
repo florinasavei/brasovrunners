@@ -41,7 +41,7 @@ export async function GET(request: Request): Promise<Response> {
   const rows = await exportPromoConsenters(db, actor, locale, CSV_LIMIT);
 
   const t = await getTranslations({ locale, namespace: "Admin" });
-  // The sponsor list's five columns (§NNN): one shape for every download of the yes.
+  // The sponsor list's five columns (§570): one shape for every download of the yes.
   const csv = buildPromoConsentersCsv(
     {
       firstName: t("sponsors.columns.firstName"),

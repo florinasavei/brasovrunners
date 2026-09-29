@@ -171,7 +171,7 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
     await expect(birthDateHelper).toHaveText(/^Joi, 17 mai 1990 · \d+ de ani în ziua evenimentului$/);
     await birthDateBox.blur();
     await expect(birthDateBox).toHaveValue("17.05.1990");
-    // «Vreau să apar pe lista de participanți & rezultate — opțional» (§NNN: one tick for the list and
+    // «Vreau să apar pe lista de participanți & rezultate — opțional» (§570: one tick for the list and
     // the results) is asked only on an event whose list is switched on (`DECISIONS.md` §85, §143); the
     // seeded events publish none, so the box is absent — and so are its words, old or new.
     await expect(page.locator('[name="listOptIn"]')).toHaveCount(0);
@@ -509,7 +509,7 @@ test.describe("BR-REQ-041-01 criterion 6 the controls are big enough for a thumb
   });
 });
 
-test.describe("BR-REQ-031-01 the «Acorduri» block is compact, measured (§NNN)", () => {
+test.describe("BR-REQ-031-01 the «Acorduri» block is compact, measured (§570)", () => {
   /*
     The owner, 2026-09-29 19:03: "Also these need to be more compacted!". The density test pins the
     constants; this measures what they draw, on the seeded race (six boxes with the offers box and
@@ -530,7 +530,7 @@ test.describe("BR-REQ-031-01 the «Acorduri» block is compact, measured (§NNN)
     test.info().annotations.push({ type: "consents-height", description: `${width}px wide: ${Math.round(height)}px` });
     expect(height).toBeGreaterThan(0);
     expect(height).toBeLessThanOrEqual(width <= 320 ? 580 : 280);
-    // Every box of the block leads with a glyph (§NNN round 2: «pentru fiecare bifă ne trebuie și o iconiță la început»).
+    // Every box of the block leads with a glyph (§570 round 2: «pentru fiecare bifă ne trebuie și o iconiță la început»).
     const labels = block.locator("label");
     const labelCount = await labels.count();
     expect(labelCount).toBeGreaterThanOrEqual(4);
@@ -1445,7 +1445,7 @@ test.describe("BR-REQ-031-01 «Oferte și beneficii», behind the privacy notice
       await expect(box).not.toBeChecked();
       await expect(box).not.toHaveAttribute("required", /.*/);
       // The owner's sentence (2026-09-29 16:12), the club named from the one constant, then « — opțional»
-      // like every optional box of the block (§NNN round 2: the owner, 19:33).
+      // like every optional box of the block (§570 round 2: the owner, 19:33).
       await expect(page.locator("label").filter({ has: box })).toHaveText(`Vreau să primesc oferte și beneficii de la ${CLUB_NAME} și partenerii săi. — opțional`);
       // The glyph leads the words, decorative, in its own column — nothing between it and the words.
       await expect(page.locator("label").filter({ has: box }).getByTestId("promo-consent-glyph")).toHaveCount(1);

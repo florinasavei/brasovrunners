@@ -3,7 +3,7 @@ import { renderToReadableStream } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 /**
- * §NNN (amending §406, §525) — the footer's fold carries two of the menu's entries, «Întrebări
+ * §571 (amending §406, §525) — the footer's fold carries two of the menu's entries, «Întrebări
  * frecvente» and «Contact», and draws them in the club's one order («Pagini» → «Ordinea
  * meniului»), the header's: «Întrebări frecvente» on the first line after the terms and «Înscrierile
  * mele» while it comes first, as before; placed after «Contact», it follows the contact line.
@@ -52,7 +52,7 @@ function menuLinks(markup: string): string[] {
   return [...markup.matchAll(/<a[^>]*href="\/ro\/(faq|contact)"/g)].map((match) => match[1]!);
 }
 
-describe("§NNN the footer's menu entries follow the club's one order", () => {
+describe("§571 the footer's menu entries follow the club's one order", () => {
   it("keeps «Întrebări frecvente» before «Contact» with no stored order, as it always was", async () => {
     storedOrder = [];
     const markup = await renderFooter();

@@ -196,7 +196,7 @@ export default async function SiteFooter() {
   const showFaq = await faqOnSite(locale);
   /*
     The menu's entries the fold carries — «Întrebări frecvente» and «Contact» — in the club's one
-    order (§NNN), the header's. «Întrebări frecvente» stays on the first line after the terms and
+    order (§571), the header's. «Întrebări frecvente» stays on the first line after the terms and
     «Înscrierile mele» while it comes first, as it always did; placed after «Contact», it follows
     the contact line instead. The rest of the fold is not the menu and keeps its place.
   */
@@ -425,7 +425,7 @@ export default async function SiteFooter() {
                   </Box>
                 )}
               </Box>
-              {/* «Întrebări frecvente» after «Contact», where the club's menu order puts it (§NNN): a line of its own on a phone, the next item of the row from `sm`. */}
+              {/* «Întrebări frecvente» after «Contact», where the club's menu order puts it (§571): a line of its own on a phone, the next item of the row from `sm`. */}
               {faqAfterContact && <Link href="/faq" data-testid="footer-faq">{footer("faq")}</Link>}
               {/* The club's legal name and CIF (§565), inside the fold after its links (§NNN): one
                   line of the panel, nothing while the legal name is unset. */}

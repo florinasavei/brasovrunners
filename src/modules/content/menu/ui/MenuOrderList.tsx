@@ -59,7 +59,7 @@ function glyphOf(entry: MenuOrderEntry): ComponentType<SvgIconProps> {
 }
 
 /**
- * «Ordinea meniului» (§NNN): every entry of the site menu in the club's order, with «Sus» and
+ * «Ordinea meniului» (§571): every entry of the site menu in the club's order, with «Sus» and
  * «Jos» on each. The island only moves entries; the order is posted as one hidden `order` field
  * (the keys, comma-separated) by the form the Server Component draws around it, behind its
  * «Salvează ordinea» and its question (§384). The buttons are the way to reorder — a keyboard and

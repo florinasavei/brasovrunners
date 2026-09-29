@@ -163,7 +163,7 @@ export type ActionIconName =
   // reset — is one verb and one glyph, the envelope going back out (§318).
   | "spreadsheet"
   | "download"
-  // «Descarcă lista pentru sponsori» (§NNN): the handshake, the partners' glyph on «Newsletter» too.
+  // «Descarcă lista pentru sponsori» (§570): the handshake, the partners' glyph on «Newsletter» too.
   | "sponsors"
   | "send"
   | "resend"

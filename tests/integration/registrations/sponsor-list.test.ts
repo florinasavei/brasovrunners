@@ -19,7 +19,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Descarcă lista pentru sponsori»: the owner, 2026-09-29, "I need to be able to export the
+ * §570 — «Descarcă lista pentru sponsori»: the owner, 2026-09-29, "I need to be able to export the
  * participants list but filter out just the ones who agreed to receive marketing emails so we can
  * share it with our sponsors", on real PostgreSQL.
  *
@@ -159,7 +159,7 @@ beforeEach(async () => {
   state.cookie = undefined;
 });
 
-describe("§NNN who is on the sponsor list", () => {
+describe("§570 who is on the sponsor list", () => {
   it("lists a yes on a real, proved, standing registration given under a sharing notice — and nothing else", async () => {
     await approveNotice(1, boxOnly, V1_AT);
     await approveNotice(2, sharing, V2_AT);
@@ -255,7 +255,7 @@ describe("§NNN who is on the sponsor list", () => {
   });
 });
 
-describe("§NNN the route: the role on the server, the notice, the file and its audit row", () => {
+describe("§570 the route: the role on the server, the notice, the file and its audit row", () => {
   it("serves the Organizer, the Administrator and the Superadministrator; refuses Tehnic, a volunteer and a signed-out request", async () => {
     await approveNotice(2, sharing, V1_AT);
     const event = await createEvent("crosul-toamnei", "Crosul toamnei");

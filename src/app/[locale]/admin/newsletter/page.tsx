@@ -61,7 +61,7 @@ export default async function NewsletterPage({ params, searchParams }: Props) {
   // The day's allowance for the composer's "how much leaves today", and whether the notice in force
   // lets the contact page offer the pop-up; the list under its filter.
   // And, since §562, who said yes to offers and benefits on a registration — the same readers (§550).
-  // And, since §NNN, the list for sponsors across every event — the same query as an event's page.
+  // And, since §570, the list for sponsors across every event — the same query as an event's page.
   const [audience, history, volume, offered, subscribers, promo, sponsors] = await Promise.all([
     countNewsletterAudience(db),
     listNewsletterSends(db),

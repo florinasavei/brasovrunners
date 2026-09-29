@@ -27,7 +27,7 @@ export function promotionalMaterialsClause(locale: string, club: string = CLUB_N
 }
 
 /**
- * What the privacy notice's `{{promotionalMaterialsShared}}` becomes (§NNN): the three data the
+ * What the privacy notice's `{{promotionalMaterialsShared}}` becomes (§570): the three data the
  * sponsor list gives a partner, in words — «prenumele, numele și adresa ta de e-mail» / “your first
  * name, last name and email address” — read from the catalogue beside the list's own columns
  * (`Registration.promo.sharedData`), so the approved sentence names exactly what the file carries.

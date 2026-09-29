@@ -353,7 +353,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
     the materials and only to a registration that has not said yes already.
   */
   const offerPromo = Boolean(signing && registration && !registration.promoConsent && (await cachedPromotionalMaterialsOffered(now)));
-  // The partners may receive the list (§NNN): the box's caption says so where the yes is given.
+  // The partners may receive the list (§570): the box's caption says so where the yes is given.
   const promoShared = offerPromo && (await cachedPromotionalMaterialsShared(now));
   /*
     The family's stepper (§471), from the opened link: everybody on the address at the event whose
@@ -704,7 +704,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
               <input type="hidden" name="documentId" value={declaration?.id ?? ""} />
               <input type="hidden" name="contentSha256" value={declaration?.contentSha256 ?? ""} />
               {/* The box names the liability paragraph, so its limits are accepted expressly (§418, Civil Code art. 1203). */}
-              {/* The glyph leads the words, as on every box of the form's «Acorduri» (§NNN round 2). */}
+              {/* The glyph leads the words, as on every box of the form's «Acorduri» (§570 round 2). */}
               <CheckboxField name="accepted" required dense defaultChecked={draft?.accepted === "on"}>
                 <HistoryEduIcon aria-hidden data-testid="consent-glyph" />
                 {t("declare.accept")}
@@ -849,7 +849,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                 The offers and benefits (§562): optional, never pre-ticked, never required; a tick
                 the notice in force does not cover is ignored and the signature goes on.
               */}
-              {/* The form's box, drawn the same way: the glyph, « — opțional», the helper a caption under it (§NNN round 2). */}
+              {/* The form's box, drawn the same way: the glyph, « — opțional», the helper a caption under it (§570 round 2). */}
               {offerPromo && (
                 <CheckboxField
                   name="promoConsent"

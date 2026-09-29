@@ -346,7 +346,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
     not it publishes a list. Off (or unread), the form has no box and the service keeps nothing.
   */
   let promoOn = false;
-  // And, while the notice in force says the partners may receive the list (§NNN), the box's caption
+  // And, while the notice in force says the partners may receive the list (§570), the box's caption
   // says so where the yes is given — the box's words stay §562's.
   let promoShared = false;
   if (!resting) {
@@ -1372,7 +1372,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               </Typography>
 
               {/*
-                «Acorduri», compacted (§NNN; the owner: "Also these need to be more compacted!"): its
+                «Acorduri», compacted (§570; the owner: "Also these need to be more compacted!"): its
                 own Stack with no gap between rows, the boxes small and still 44 to the thumb, the
                 labels in body2, each helper a caption under its label (`CONSENT_DENSITY`). Every
                 word the legal reviews fixed (§425, §556) is unchanged.
@@ -1486,7 +1486,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                     <>
                       {/* What the list shows beside the name, once the notice in force says so (§396) —
                           the same three words the list prints, from its own catalogue keys; the
-                          caption under the tick (§NNN). The tick names the list and the results as one
+                          caption under the tick (§570). The tick names the list and the results as one
                           disclosure: «… pe lista de participanți & rezultate» (the owner, 2026-09-29). */}
                       <CheckboxField
                         name="listOptIn"
@@ -1538,7 +1538,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               {/*
                 «Oferte și beneficii» (§562): a consent of its own, under the list tick — the owner's
                 sentence as the label, ending in its full stop, the club named from `CLUB_NAME`, then
-                « — opțional» like every optional box of the block (round 2 of §NNN, amending §562's
+                « — opțional» like every optional box of the block (round 2 of §570, amending §562's
                 «Opțional.» at the head of the helper line);
                 optional, never pre-ticked, never required, never folded (§59). Asked only while the
                 notice in force describes it; the service keeps a tick only under a notice that

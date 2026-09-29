@@ -52,7 +52,7 @@
  * the notice that registration records names it. Section 7 carries its retention. Withdrawal is
  * always offered.
  *
- * `{{promotionalMaterialsShared}}` in sections 5 and 6 (§NNN, amending §562; the owner, 2026-09-29:
+ * `{{promotionalMaterialsShared}}` in sections 5 and 6 (§570, amending §562; the owner, 2026-09-29:
  * "export the participants list … who agreed to receive marketing emails so we can share it with
  * our sponsors") replaces §562's «partenerii nu primesc adresa ta»: the club may give its partners —
  * the sponsors and the events' partners, named as a category, never sold — the first name, the last

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.40-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.42-2026-09-27 -->
 
 # Brașov Runners — Business Guide
 
-**Baseline `BR-V2.40-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.42-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Club organizers, event coordinators, content contributors, sponsors, and other non-technical stakeholders.
@@ -483,7 +483,7 @@ Rules:
 - **a participant is on it only because they asked to be.** The registration form of an event
   with a list offers, in plain words, "I want to appear on the participants & results list"
   («Vreau să apar pe lista de participanți & rezultate»), unticked; no tick, no listing
-  (`DECISIONS.md` §143, §NNN — one tick for the list and, once they are published, the results). A list switched on later means asking the people already
+  (`DECISIONS.md` §143, §570 — one tick for the list and, once they are published, the results). A list switched on later means asking the people already
   registered, because a question nobody was asked cannot be answered on their behalf. A
   participant may withdraw afterwards, by writing to the club;
 - **it may not be switched on until the approved privacy notice describes it.** The sample

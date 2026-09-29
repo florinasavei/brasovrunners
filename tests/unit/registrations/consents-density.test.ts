@@ -10,7 +10,7 @@ import { CONSENT_DENSITY } from "@/shared/ui/consent-density";
 import { CHECKBOX_TAP_TARGET } from "@/shared/ui/tap-target";
 
 /**
- * §NNN — the registration form's «Acorduri» block, compacted (the owner, 2026-09-29 19:03: "Also
+ * §570 — the registration form's «Acorduri» block, compacted (the owner, 2026-09-29 19:03: "Also
  * these need to be more compacted!"), with every word the legal reviews fixed (§425, §556).
  *
  * The heights, pinned as the numbers `CONSENT_DENSITY` documents: a row is `max(44, 24 + 20 × lines)`
@@ -26,7 +26,7 @@ const BLOCK = PAGE.slice(PAGE.indexOf('t("sections.consents")'), PAGE.indexOf("<
 
 const rowHeight = (lines: number) => Math.max(CONSENT_DENSITY.rowMinHeightPx, 24 + 20 * lines) + CONSENT_DENSITY.rowGapPx;
 
-describe("§NNN the «Acorduri» block's density", () => {
+describe("§570 the «Acorduri» block's density", () => {
   it("pins the numbers: a 44-pixel small box, body2 labels, no gap between rows", () => {
     expect(CONSENT_DENSITY).toMatchObject({ checkboxSize: "small", rowMinHeightPx: 44, labelVariant: "body2", rowGapPx: 0 });
     // The small glyph is 20 px; the tap target's 12 on each side make it 44 — never under the thumb's rule.
@@ -92,12 +92,12 @@ describe("§NNN the «Acorduri» block's density", () => {
 });
 
 /**
- * §NNN round 2 — the owner, 2026-09-29 19:33, of «Acorduri» on QA: «trebuie să scriem tot „— opțional”
+ * §570 round 2 — the owner, 2026-09-29 19:33, of «Acorduri» on QA: «trebuie să scriem tot „— opțional”
  * la „Vreau să primesc oferte” și la lista de participanți & rezultate trebuie să punem un trofeu ca
  * iconiță pentru consistență; de fapt pentru fiecare bifă ne trebuie și o iconiță la început», and «e
  * destul de importantă partea asta cu acordurile!».
  */
-describe("§NNN round 2 every box of «Acorduri» leads with its glyph, and the optional ones say so", () => {
+describe("§570 round 2 every box of «Acorduri» leads with its glyph, and the optional ones say so", () => {
   /** Every `<CheckboxField …>…</CheckboxField>` in a source, whole. */
   const boxesIn = (source: string) => source.match(/<CheckboxField\b[\s\S]*?<\/CheckboxField>/g) ?? [];
   /** The first thing inside a box, past its comments. */

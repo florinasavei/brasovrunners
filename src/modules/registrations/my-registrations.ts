@@ -105,10 +105,10 @@ export type MyRegistration = {
   holdsSocials: boolean;
   /** «Vreau să primesc oferte și beneficii» (§562): the person's own answer, and the switch's side. */
   promoConsent: boolean;
-  /** When the yes was given, and the notice the registration recorded: whether it may reach a partner (§NNN). */
+  /** When the yes was given, and the notice the registration recorded: whether it may reach a partner (§570). */
   promoConsentAt: Date | null;
   privacyNoticeVersion: number;
-  /** The birth date, read only so a minor's row never says a partner may receive it (§NNN). */
+  /** The birth date, read only so a minor's row never says a partner may receive it (§570). */
   birthDate: string | null;
   /**
    * When this person's declaration was signed — on a link, in the family wizard or on paper at the

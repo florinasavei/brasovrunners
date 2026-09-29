@@ -98,7 +98,7 @@ describe("BR-REQ-050-03 standing pages", () => {
 
     expect(page.editorialStatus).toBe("DRAFT");
     expect(page.publishedAt).toBeNull();
-    // No box for it since §NNN: a page is placed after every page there is, so a page «Ordinea
+    // No box for it since §571: a page is placed after every page there is, so a page «Ordinea
     // meniului» does not name yet falls to the end of the menu rather than to its start.
     expect(page.navOrder).toBe(1);
     const second = await createPage(db, {
@@ -312,7 +312,7 @@ describe("BR-REQ-050-03 standing pages", () => {
       const editor = await seedStaff(db, "ADMIN");
       const page = await createPage(db, { actor: editor, fields: fields(), now: NOW });
 
-      // A posted `navOrder` is ignored since §NNN: the page's place is «Ordinea meniului»'s.
+      // A posted `navOrder` is ignored since §571: the page's place is «Ordinea meniului»'s.
       const input = fields({ navOrder: "3" });
       input.translations.ro.title = "Despre noi";
       const saved = await savePage(db, {

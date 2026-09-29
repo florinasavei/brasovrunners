@@ -128,7 +128,7 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
     The sentence only while the notice in force describes the offers; «Nu mai vreau» always.
   */
   const promoOn = context.ok ? await cachedPromotionalMaterialsOffered(now) : false;
-  // Which yes may reach a partner (§NNN): «Clubul le poate da partenerilor…» only on such a row —
+  // Which yes may reach a partner (§570): «Clubul le poate da partenerilor…» only on such a row —
   // read only when some row on the page says yes, as the manage page does.
   const shareGate = context.ok && context.items.some((item) => item.promoConsent) ? await readSponsorShareGate(getDb()) : null;
   const promoYes = (item: { promoConsent: boolean; promoConsentAt?: Date | null; privacyNoticeVersion?: number; birthDate?: string | null }) =>

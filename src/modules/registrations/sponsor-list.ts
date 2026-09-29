@@ -13,7 +13,7 @@ import { csvCell } from "./csv";
 import { reachesPartner, sponsorShareGate, type SponsorShareGate } from "./domain/sponsor-share";
 
 /**
- * «Descarcă lista pentru sponsori» (§NNN, amending §562 and §550). The owner, 2026-09-29: "I need to
+ * «Descarcă lista pentru sponsori» (§570, amending §562 and §550). The owner, 2026-09-29: "I need to
  * be able to export the participants list but filter out just the ones who agreed to receive
  * marketing emails so we can share it with our sponsors."
  *
@@ -147,7 +147,7 @@ function mayReachPartner(row: { consentedAt: Date | null; privacyNoticeVersion: 
 
 function assertMayExport(actor: Pick<StaffUser, "role">): void {
   if (!canExportSponsorList(actor.role)) {
-    throw new DomainError("FORBIDDEN", `role ${actor.role} may not take the sponsor list; §NNN keeps it to the Organizer and the Administrator`);
+    throw new DomainError("FORBIDDEN", `role ${actor.role} may not take the sponsor list; §570 keeps it to the Organizer and the Administrator`);
   }
 }
 
@@ -170,7 +170,7 @@ export async function sponsorList<T extends Record<string, unknown>>(
 }
 
 /**
- * The count beside the button, for the registrations page and «Newsletter» (§NNN, review nit): the
+ * The count beside the button, for the registrations page and «Newsletter» (§570, review nit): the
  * same rule as the file, over three columns and no join, and no count at all while the notice in
  * force does not describe the sharing — the page shows none then.
  */
@@ -194,7 +194,7 @@ export async function sponsorListSummary<T extends Record<string, unknown>>(
 export type SponsorListCsvHeader = { firstName: string; lastName: string; email: string; event: string; consentedAt: string };
 
 /**
- * The file (§NNN): five columns and nothing else, the subscribers CSV's rules (§550) — every cell
+ * The file (§570): five columns and nothing else, the subscribers CSV's rules (§550) — every cell
  * through `csvCell` (formula characters neutralized, quotes doubled), CRLF, a BOM first for Excel on
  * Windows, the moment in ISO 8601 — with the headers in the reader's language. The newsletter's
  * club list downloads the same shape (§562's «Descarcă CSV»).

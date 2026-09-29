@@ -34,7 +34,7 @@ vi.mock("@/i18n/navigation", () => ({
 }));
 
 /**
- * §NNN (amending §406) — «Ordinea meniului»: one `platform_settings` row holding the site menu's
+ * §571 (amending §406) — «Ordinea meniului»: one `platform_settings` row holding the site menu's
  * order, every entry's key first to last. The Administrator's (§450), audited, and the public
  * pages' `settings` expired on every save; read back by the header in the saved order.
  */

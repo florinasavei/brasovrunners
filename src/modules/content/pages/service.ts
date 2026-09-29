@@ -85,7 +85,7 @@ export async function createPage<T extends Record<string, unknown>>(
     await assertSlugsAreFree(tx, fields, null);
 
     /*
-      After every page there is (§NNN). The menu's place is «Ordinea meniului»'s, where a page the
+      After every page there is (§571). The menu's place is «Ordinea meniului»'s, where a page the
       stored order does not name yet falls to the end, by this number and then its date: so a new
       page is last until the club moves it, never first because it started at 0.
     */

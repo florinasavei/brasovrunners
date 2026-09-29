@@ -220,7 +220,7 @@ export const TEAM_PAGE_MERGE_FIELD = "teamPage";
 export const PROMOTIONAL_MATERIALS_MERGE_FIELD = "promotionalMaterials";
 
 /**
- * The privacy notice's marker for the sponsor list (§NNN, amending §562): a notice that names it
+ * The privacy notice's marker for the sponsor list (§570, amending §562): a notice that names it
  * says the club may give its partners — the club's sponsors and the partners of its events, named
  * as a category — the first name, the last name and the email address of whoever ticked «oferte și
  * beneficii», so they send their own offers. Filled with those three data, in words, from the
@@ -443,7 +443,7 @@ export function describesPromotionalMaterials(body: unknown): boolean {
 }
 
 /**
- * Whether a privacy notice describes the sponsor list (§NNN): it names
+ * Whether a privacy notice describes the sponsor list (§570): it names
  * `{{promotionalMaterialsShared}}` — that the club may give its partners the first name, the last
  * name and the email address of whoever said yes to «oferte și beneficii». The gate for offering
  * «Descarcă lista pentru sponsori», and, asked of every approved version, for which registrations

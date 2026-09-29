@@ -18,7 +18,7 @@ import type { MenuSectionKey } from "./order";
 /**
  * Which of the platform's sections the site menu offers right now, and in what order — the header's
  * questions, asked in one place so the backoffice's «Ordinea meniului» card greys exactly the
- * entries the header leaves out (§NNN). Every read is the public cache's (§333), each guarded: a
+ * entries the header leaves out (§571). Every read is the public cache's (§333), each guarded: a
  * failure is an entry not offered, never an error page — a header that throws is a site with no
  * way out of any page.
  */
@@ -87,7 +87,7 @@ export async function menuSectionsOnSite(locale: Locale): Promise<Record<MenuSec
 }
 
 /**
- * The club's stored order for the public menu (§NNN), or no list — today's default order —
+ * The club's stored order for the public menu (§571), or no list — today's default order —
  * whatever goes wrong. The header and the footer both read it; the merge rule is `order.ts`'s.
  */
 export async function menuOrderOnSite(): Promise<string[]> {

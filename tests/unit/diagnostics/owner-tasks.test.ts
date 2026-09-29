@@ -115,7 +115,7 @@ describe("owner tasks", () => {
     }
   });
 
-  /** §NNN — the list for sponsors waits on a notice that says partners may receive it; open, never blocking. */
+  /** §570 — the list for sponsors waits on a notice that says partners may receive it; open, never blocking. */
   it("keeps the sponsor-list row open while the notice in force does not describe the sharing, and never blocking", () => {
     expect(stateOf({ ...LAUNCHED, sponsorShareDescribed: false }, "sponsorNotice")).toBe("open");
     expect(stateOf(LAUNCHED, "sponsorNotice")).toBe("done");

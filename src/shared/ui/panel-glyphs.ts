@@ -151,7 +151,7 @@ export const PANEL_GLYPHS = {
   jobs: UpdateIcon,
   pictures: ImageIcon,
   translation: TranslateIcon,
-  // «Ordinea meniului» (§NNN): the site menu's entries, one under the other, in the club's order.
+  // «Ordinea meniului» (§571): the site menu's entries, one under the other, in the club's order.
   menuOrder: ReorderIcon,
 } satisfies Record<string, ComponentType<SvgIconProps>>;
 

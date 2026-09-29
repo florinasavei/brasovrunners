@@ -9,7 +9,7 @@ import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { SPONSOR_RECIPIENT_MAX, type SponsorListSummary } from "../sponsor-list";
 
 /**
- * «Descarcă lista pentru sponsori» with «N persoane» beside it (§NNN) — on an event's registrations
+ * «Descarcă lista pentru sponsori» with «N persoane» beside it (§570) — on an event's registrations
  * page for that event, and in the «Newsletter» fold for every event: one button, one route, one
  * file. A Server Component; the caller reads the count (`sponsorListSummary`, which asserts the
  * role) and passes it. While the notice in force does not describe the sharing the button is a

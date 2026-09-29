@@ -10,7 +10,7 @@ import { DomainError } from "@/shared/errors/domain-error";
 import { type MenuKey, parseStoredMenuOrder, resolveMenuOrder } from "./order";
 
 /**
- * «Ordinea meniului» (§NNN): the site menu's one order, one `platform_settings` row — a JSON list
+ * «Ordinea meniului» (§571): the site menu's one order, one `platform_settings` row — a JSON list
  * of keys, first to last. No migration: the settings table takes any key (§100). Written by an
  * Administrator on «Pagini» → «Paginile clubului», audited, read by the header and the footer
  * through the public cache (§333), which a save expires (`settings`).

@@ -9,7 +9,7 @@ import { promotionalMaterialsMergeValues, promotionalMaterialsSharedClause } fro
 import { buildSponsorListCsv, sponsorListFileName } from "@/modules/registrations/sponsor-list";
 
 /**
- * §NNN — the list for sponsors (amending §562) and the public-list tick's words (amending §143):
+ * §570 — the list for sponsors (amending §562) and the public-list tick's words (amending §143):
  * the new merge field and its gate, the template's sections 4–7, the words in both languages, the
  * CSV's shape and its file name.
  */
@@ -17,7 +17,7 @@ const text = (...paragraphs: string[]) => ({ sections: [{ paragraphs }] });
 const all = (body: typeof privacyNoticeRo) => body.sections.flatMap((section) => section.paragraphs);
 const section = (body: typeof privacyNoticeRo, number: string) => body.sections.find((entry) => entry.heading?.startsWith(number))!.paragraphs.join(" ");
 
-describe("§NNN the privacy notice's marker for the sponsor list", () => {
+describe("§570 the privacy notice's marker for the sponsor list", () => {
   it("is a merge field of its own, beside the box's — the box keeps {{promotionalMaterials}} exactly", () => {
     expect(isMergeField("promotionalMaterialsShared")).toBe(true);
     expect(describesPromotionalMaterialsShared(text("Bifa {{promotionalMaterials}}."))).toBe(false);
@@ -73,7 +73,7 @@ describe("§NNN the privacy notice's marker for the sponsor list", () => {
   });
 });
 
-describe("§NNN which yes may reach a partner", () => {
+describe("§570 which yes may reach a partner", () => {
   const versions = [
     { version: 1, effectiveAt: new Date("2026-01-01T00:00:00Z"), shares: false },
     { version: 2, effectiveAt: new Date("2026-06-01T00:00:00Z"), shares: true },
@@ -101,7 +101,7 @@ describe("§NNN which yes may reach a partner", () => {
   });
 });
 
-describe("§NNN the sponsor list's file", () => {
+describe("§570 the sponsor list's file", () => {
   const header = { firstName: "Prenume", lastName: "Nume", email: "Email", event: "Eveniment", consentedAt: "Data acordului" };
   const row = { firstName: "Ana", lastName: "Pop", email: "ana@example.ro", eventTitle: "Crosul, toamna", consentedAt: new Date("2026-09-29T10:00:00.000Z") };
 
@@ -135,7 +135,7 @@ describe("§NNN the sponsor list's file", () => {
   });
 });
 
-describe("§NNN the public-list tick names the list and the results", () => {
+describe("§570 the public-list tick names the list and the results", () => {
   it("reads «… & rezultate» on the form, the switches, the backoffice and the list's own note", () => {
     expect(ro.Registration.listOptIn).toBe("Vreau să apar pe lista de participanți & rezultate");
     expect(en.Registration.listOptIn).toBe("I want to appear on the participants & results list");

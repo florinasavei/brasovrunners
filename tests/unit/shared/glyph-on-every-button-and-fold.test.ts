@@ -192,7 +192,7 @@ describe("§521 a glyph on every button", () => {
       expect(read(allowed.file), `${allowed.file}: ${allowed.words}`).toContain(allowed.words);
     }
     // The arrows still carry the row's name as their accessible name.
-    // The custom pages' own ↑ / ↓ went with §NNN: «Ordinea meniului»'s «Sus» / «Jos» carry a glyph and the entry's name.
+    // The custom pages' own ↑ / ↓ went with §571: «Ordinea meniului»'s «Sus» / «Jos» carry a glyph and the entry's name.
     for (const file of ["src/app/[locale]/admin/pages/team/page.tsx", "src/modules/club-todo/ui/ClubTodoPanel.tsx"]) {
       const text = read(file);
       expect(text, file).toMatch(/label="↑"[\s\S]*?ariaLabel=/);

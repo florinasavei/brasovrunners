@@ -28,7 +28,7 @@ type Props = {
 const ASIDE_NAMES = 4;
 
 /**
- * «Ordinea meniului» (§NNN) on «Pagini» → «Paginile clubului»: every entry the site menu can carry
+ * «Ordinea meniului» (§571) on «Pagini» → «Paginile clubului»: every entry the site menu can carry
  * — «Evenimente», «Calendar», «Contact», «Galerie», «Echipa», «Întrebări frecvente», «Membri» and
  * the club's own pages — in one list, the order the header and the footer draw. An entry the menu
  * leaves out today (a draft, a page with nothing on it yet) keeps its place, greyed, «nu apare

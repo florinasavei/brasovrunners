@@ -139,7 +139,7 @@ describe("«Pagini»'s row on the club's own pages' editors, and the list's gate
     expect(isEditorial("COPYWRITER")).toBe(false);
     // Refused before the database is asked, so no database is needed to prove it.
     const db = {} as Parameters<typeof deletePage>[0];
-    // «Ordinea meniului» (§NNN) is a club setting, the Administrator's (§450): a Redactor and an
+    // «Ordinea meniului» (§571) is a club setting, the Administrator's (§450): a Redactor and an
     // Organizer are refused by the service itself, before the database is asked.
     expect(canManageClubSettings("COPYWRITER")).toBe(false);
     expect(canManageClubSettings("MODERATOR")).toBe(false);

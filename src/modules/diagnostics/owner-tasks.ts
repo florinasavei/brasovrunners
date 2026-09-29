@@ -178,7 +178,7 @@ export type OwnerTaskInputs = {
   promoDescribed: boolean;
   /**
    * Does the notice in force, in every language, say the club may give its partners the list for
-   * sponsors (§NNN, `noticeDescribesPromotionalMaterialsShared`)? Until it does, «Descarcă lista
+   * sponsors (§570, `noticeDescribesPromotionalMaterialsShared`)? Until it does, «Descarcă lista
    * pentru sponsori» is off and the route refuses it.
    */
   sponsorShareDescribed: boolean;
@@ -363,7 +363,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
       state: input.promoDescribed ? "done" : "open",
     });
     /*
-      The list for sponsors (§NNN), the same shape: open, never blocking — nothing is refused but the
+      The list for sponsors (§570), the same shape: open, never blocking — nothing is refused but the
       file itself — and done by itself the day a notice naming `{{promotionalMaterialsShared}}` takes
       effect.
     */

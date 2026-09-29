@@ -82,7 +82,7 @@ const WRITES: Record<string, Expected> = {
   "src/modules/content/pages/service.ts#savePage": ["pages"],
   "src/modules/content/pages/service.ts#transitionPage": ["pages"],
   "src/modules/content/pages/service.ts#deletePage": ["pages"],
-  // «Ordinea meniului» (§NNN): the header and the footer on every public page read it from `settings`.
+  // «Ordinea meniului» (§571): the header and the footer on every public page read it from `settings`.
   "src/modules/content/menu/menu-order.ts#saveMenuOrder": ["settings"],
   "src/modules/content/team/service.ts#createTeamMember": ["pages"],
   "src/modules/content/team/service.ts#saveTeamMember": ["pages"],

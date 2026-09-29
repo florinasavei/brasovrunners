@@ -509,7 +509,7 @@ export function canSendNewsletter(role: StaffRole): boolean {
 }
 
 /**
- * **«Descarcă lista pentru sponsori» (§NNN)** — the minimal file the club gives its partners: the
+ * **«Descarcă lista pentru sponsori» (§570)** — the minimal file the club gives its partners: the
  * first name, the last name, the address, the event and the moment of the yes to «oferte și
  * beneficii». Whoever reads the participant list (`canReadRegistrations`): the Organizer, the
  * Administrator and the Superadministrator — the owner's "Organizer and Administrator only". The

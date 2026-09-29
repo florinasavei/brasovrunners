@@ -11,7 +11,7 @@ import {
 } from "@/modules/content/menu/order";
 
 /**
- * §NNN (amending §406 and §537) — «Ordinea meniului»: one order for every entry the site menu can
+ * §571 (amending §406 and §537) — «Ordinea meniului»: one order for every entry the site menu can
  * carry, stored as one list of keys. The owner, 2026-09-29: «vreau să pot seta ordinea la orice
  * pagină, inclusiv cea de evenimente, calendar, contact».
  *
@@ -24,7 +24,7 @@ const A = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const B = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
 const C = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
 
-describe("§NNN the menu's keys", () => {
+describe("§571 the menu's keys", () => {
   it("names every section the header offers, in today's default order", () => {
     expect([...MENU_SECTION_KEYS]).toEqual(["events", "calendar", "contact", "gallery", "team", "faq", "members"]);
     expect(isMenuSectionKey("faq")).toBe(true);
@@ -39,7 +39,7 @@ describe("§NNN the menu's keys", () => {
   });
 });
 
-describe("§NNN reading the stored value", () => {
+describe("§571 reading the stored value", () => {
   it("keeps a list of strings, each once, and reads anything else as no list", () => {
     expect(parseStoredMenuOrder(["contact", "events", "contact"])).toEqual(["contact", "events"]);
     expect(parseStoredMenuOrder(["events", 3, null, "", "calendar"])).toEqual(["events", "calendar"]);
@@ -49,7 +49,7 @@ describe("§NNN reading the stored value", () => {
   });
 });
 
-describe("§NNN the merge rule", () => {
+describe("§571 the merge rule", () => {
   it("is today's menu with no stored list: the sections, then the pages in the old column's order", () => {
     expect(resolveMenuOrder([], [B, A])).toEqual([...MENU_SECTION_KEYS, `page:${B}`, `page:${A}`]);
   });
@@ -97,7 +97,7 @@ describe("§NNN the merge rule", () => {
   });
 });
 
-describe("§NNN «Sus» and «Jos»", () => {
+describe("§571 «Sus» and «Jos»", () => {
   const order = ["events", "calendar", "contact"];
 
   it("moves one entry one place, and leaves the list as it was at an end", () => {

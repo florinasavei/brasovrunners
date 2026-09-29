@@ -44,10 +44,10 @@ export type ManagedPerson = {
   listOptOut: boolean;
   /** «Oferte și beneficii» (§562): the answer on this registration, per registration. */
   promoConsent: boolean;
-  /** When the yes was given, and the notice the registration recorded: whether it may reach a partner (§NNN). */
+  /** When the yes was given, and the notice the registration recorded: whether it may reach a partner (§570). */
   promoConsentAt: Date | null;
   privacyNoticeVersion: number;
-  /** The birth date, read only so a minor's row never says a partner may receive it (§NNN). */
+  /** The birth date, read only so a minor's row never says a partner may receive it (§570). */
   birthDate: string | null;
   /**
    * Another adult on the address (§421, §562 fix round): not the link's own registration and not

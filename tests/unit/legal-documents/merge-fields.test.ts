@@ -149,7 +149,7 @@ describe("the declaration's merge fields", () => {
         // The race declaration grew by the second review's dispute sentence (§556). The notice grew by a
         // paragraph for the offers and benefits, and a clause each in sections 6 and 7 (§562). The race
         // declaration grew once more, by seven sentences, when the inherent risks came to name death and the
-        // claims for them were waived within the law's limits, the heirs and the minor's guardian included (§568). And once more by the list for partners (§NNN): a paragraph in section 5, the exception in 6, the retention in 7.
+        // claims for them were waived within the law's limits, the heirs and the minor's guardian included (§568). And once more by the list for partners (§570): a paragraph in section 5, the exception in 6, the retention in 7.
         const ceiling = key === "EVENT_DECLARATION" ? 10300 : key === "PRIVACY_NOTICE" ? 31000 : 11000;
         expect(text.length, `${key} ${locale}`).toBeGreaterThan(key === "EVENT_DECLARATION" ? 1500 : 2500);
         expect(text.length, `${key} ${locale}`).toBeLessThan(ceiling);

@@ -216,7 +216,7 @@ export default function ReadAndAgree({
         slotProps={{ typography: { variant: CONSENT_DENSITY.labelVariant } }}
         sx={CONSENT_DENSITY.rowSx}
         label={
-          // The book glyph leads the words, as on every box of the block (§NNN round 2).
+          // The book glyph leads the words, as on every box of the block (§570 round 2).
           <Box component="span" sx={CONSENT_DENSITY.labelSx}>
             <MenuBookIcon aria-hidden data-testid="consent-glyph" />
             {plainLabel}{" "}
@@ -241,7 +241,7 @@ export default function ReadAndAgree({
         button's colour, the button's corners — so it reads as the button with its box inside.
       */}
       {/*
-        A regular-height button with its glyph, as wide as its words (§NNN, the «Acorduri» block
+        A regular-height button with its glyph, as wide as its words (§570, the «Acorduri» block
         compacted): it was a full-width bar 48 pixels tall. The box inside it is the small one, still
         44 to the thumb (`CONSENT_DENSITY`), and the gate is unchanged — the box waits for the reading.
       */}

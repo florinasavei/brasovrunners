@@ -60,7 +60,7 @@ export async function findPublishedPageBySlug<T extends Record<string, unknown>>
 
 /**
  * Every published page in this locale, in the old «Ordinea» column's order — the fallback the
- * menu's one order (§NNN) gives a page it does not name yet, and the backoffice list's own order
+ * menu's one order (§571) gives a page it does not name yet, and the backoffice list's own order
  * (`listPagesForAdmin`): the number, then the date it was written. It was the title after the
  * number, which sorted two equal numbers differently in each language. For nav and sitemap.
  */

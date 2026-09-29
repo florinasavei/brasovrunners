@@ -60,7 +60,7 @@ export default function CheckboxField({
   /** Shown but not changeable — and not posted: a disabled input leaves the form, so the caller carries the value. */
   disabled?: boolean;
   /**
-   * The registration form's «Acorduri» density (§NNN, `CONSENT_DENSITY`): a small box still 44 px to
+   * The registration form's «Acorduri» density (§570, `CONSENT_DENSITY`): a small box still 44 px to
    * the thumb, the label in `body2` beside it, no margin between rows, and `help` as a caption
    * directly under the label.
    */
@@ -70,7 +70,7 @@ export default function CheckboxField({
   helpTestId?: string;
   /**
    * An optional box's word (`Registration.optionalSuffix`), written after the label as « — opțional»
-   * in the label's own flow (round 2 of §NNN): the same words on every optional box of the block.
+   * in the label's own flow (round 2 of §570): the same words on every optional box of the block.
    */
   optional?: string;
   /**
@@ -89,7 +89,7 @@ export default function CheckboxField({
   // with one id would be one label for many.
   const namedId = value === undefined && recall.named(name) ? recall.idOf(name) : undefined;
   /*
-    The dense label (§NNN round 2): the glyph in its column, then one inline flow of the words,
+    The dense label (§570 round 2): the glyph in its column, then one inline flow of the words,
     « — opțional» and the required mark. The mark is drawn here rather than by `FormControlLabel`,
     which would wrap the label and its mark in a `<div>` of its own — an inline label there loses
     its padding and a flowing mark lands on a line of its own. So the input is required through its

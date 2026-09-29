@@ -160,9 +160,9 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
   // «Vreau oferte și beneficii» is offered only while the notice in force describes it (§562);
   // a person who said yes is always offered the way out, whatever the notice says today.
   const promoOn = live ? await cachedPromotionalMaterialsOffered(new Date()) : false;
-  // While the partners may receive the list (§NNN), a yes given here is told so beside its button.
+  // While the partners may receive the list (§570), a yes given here is told so beside its button.
   const promoShared = promoOn && people.some((one) => !one.promoConsent && !one.anotherAdult) ? await cachedPromotionalMaterialsShared(new Date()) : false;
-  // Which yes may reach a partner (§NNN): read only when some row on the page says yes.
+  // Which yes may reach a partner (§570): read only when some row on the page says yes.
   const shareGate = live && people.some((one) => one.promoConsent) ? await readSponsorShareGate(getDb()) : null;
   const promoYes = (one: { promoConsent: boolean; promoConsentAt: Date | null; privacyNoticeVersion: number; birthDate: string | null }) =>
     shareGate && reachesPartner(one, shareGate, new Date()) ? t("promo.yesShared") : t("promo.yes");

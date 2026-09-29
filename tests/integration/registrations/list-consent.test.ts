@@ -278,7 +278,7 @@ describe("BR-REQ-039-01 the participant's own switch for the public list", () =>
 
     const listed = await renderOutboxMessage(confirmationRow(id), db, NOW);
     expect(listed.html).toMatch(/\/inregistrari\/lista\//);
-    // The tick's words since §NNN: one list for the participants and the results.
+    // The tick's words since §570: one list for the participants and the results.
     expect(listed.text).toContain("Nu vreau să apar pe lista de participanți & rezultate");
     expect(listed.html).toContain("Nu vreau să apar pe lista de participanți &amp; rezultate");
     const tokens = await db.select().from(emailActionTokens).where(eq(emailActionTokens.purpose, "LIST_CONSENT"));

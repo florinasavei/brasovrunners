@@ -112,7 +112,7 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   deleteAlbumAction: [],
   deletePictureAction: [],
   transitionPageAction: [],
-  // «Ordinea meniului» (§NNN): every visitor's menu and footer change from the next page view.
+  // «Ordinea meniului» (§571): every visitor's menu and footer change from the next page view.
   saveMenuOrderAction: [],
   deletePageAction: [],
   // «Echipa» (§459): a card put on the site or taken off it, and a card deleted.

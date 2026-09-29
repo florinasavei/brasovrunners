@@ -416,7 +416,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       // §500: the same switch for Strava and Instagram beside a name on the public list.
       listSocialsDescribed: await noticeDescribesListSocials(db, now),
       promoDescribed: await noticeDescribesPromotionalMaterials(db, now),
-      // §NNN: the same switch for the list the club gives its partners.
+      // §570: the same switch for the list the club gives its partners.
       sponsorShareDescribed: await noticeDescribesPromotionalMaterialsShared(db, now),
       // §445: the same switch for the newsletter's pop-up on the contact page.
       newsletterDescribed: await noticeDescribesNewsletter(db, now),

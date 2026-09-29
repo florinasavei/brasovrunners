@@ -154,7 +154,7 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     // Never the club's name in the legend (§369): the sentence as the box reads, with a plain «club».
     example: inBoth((locale) => promotionalMaterialsClause(locale, locale === "en" ? "the club" : "club")),
   },
-  // The privacy notice's marker for the sponsor list (§NNN): the three data a partner may receive,
+  // The privacy notice's marker for the sponsor list (§570): the three data a partner may receive,
   // and the switch for «Descarcă lista pentru sponsori» (`describesPromotionalMaterialsShared`).
   {
     token: `{{${PROMOTIONAL_MATERIALS_SHARED_MERGE_FIELD}}}`,

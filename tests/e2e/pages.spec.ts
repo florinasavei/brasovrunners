@@ -237,7 +237,7 @@ test.describe.serial("BR-REQ-050-03 standing pages", () => {
   });
 
   test("takes its place in «Ordinea meniului», first in the menu when moved there, and back to the end", async ({ page }) => {
-    // §NNN: one order for every entry of the menu, the Administrator's, on «Pagini» → «Paginile clubului».
+    // §571: one order for every entry of the menu, the Administrator's, on «Pagini» → «Paginile clubului».
     await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin/pages");
     const card = page.getByTestId("menu-order");
