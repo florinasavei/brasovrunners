@@ -852,6 +852,15 @@ test.describe("BR-REQ-031-04 a rejected submission says what to fix, and goes th
     // The browser refuses first: the date is past the box's upper bound, in the rule's own words.
     expect(await birthDate.evaluate((node) => (node as HTMLInputElement).validity.customError)).toBe(true);
     expect(await birthDate.evaluate((node) => (node as HTMLInputElement).validationMessage)).toContain("14 ani");
+    // And the box says it under itself, live, before any press (§NNN; the owner, 2026-09-29: the
+    // box went red with only the date in words under it): the rule first, then the age it gives.
+    const birthDateHelper = page.locator(`#${await birthDate.getAttribute("id")}-helper-text`);
+    await expect(birthDateHelper).toContainText("Vârsta minimă de participare la acest eveniment este 14 ani împliniți în ziua cursei");
+    await expect(birthDateHelper).toContainText(/13 ani în ziua evenimentului/);
+    await expect(birthDateHelper).toHaveClass(/Mui-error/);
+    await expect(birthDate).toHaveAttribute("aria-invalid", "true");
+    // The list above the button names the box (§422).
+    await expect(page.getByTestId("form-missing")).toContainText("Data nașterii");
     await page.waitForTimeout(HUMAN_PAUSE_MS);
     await page.getByRole("button", { name: "Trimite înscrierea" }).click();
     await expect(page.getByRole("heading", { name: /Aproape gata/ })).toHaveCount(0);
@@ -869,6 +878,8 @@ test.describe("BR-REQ-031-04 a rejected submission says what to fix, and goes th
     await expect(summary.getByRole("link", { name: "Data nașterii" })).toBeVisible();
     await expect(summary).toContainText("Vârsta minimă de participare la acest eveniment este 14 ani împliniți în ziua cursei");
     await expect(birthDate).toHaveAttribute("aria-invalid", "true");
+    // After the server's refusal the box says the same rule under itself, not «Completează acest câmp corect».
+    await expect(birthDateHelper).toContainText("Vârsta minimă de participare la acest eveniment este 14 ani împliniți în ziua cursei");
 
     // Nothing typed is lost — and nothing typed is in the address.
     await expect(birthDate).toHaveValue(thirteenTyped);

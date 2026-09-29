@@ -7,7 +7,8 @@ import { describe, expect, it } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import { readRegistrationForm } from "@/modules/registrations/form-mapping";
-import BirthDateField, { birthDateValidity } from "@/modules/registrations/ui/BirthDateField";
+import BirthDateField, { birthDateHelper, birthDateValidity } from "@/modules/registrations/ui/BirthDateField";
+import { missingControls } from "@/shared/ui/missing-controls";
 import { birthDateEchoText } from "@/modules/registrations/ui/birth-date-echo";
 import {
   DATE_DISPLAY_FORMAT,
@@ -162,11 +163,11 @@ describe("§NNN the box, rendered: day first, and the echo is its helper", () =>
     expect(html).toMatch(new RegExp(`aria-describedby="${fieldId("birthDate")}-helper-text"`));
   });
 
-  it("says nothing under the box at rest, and the refusal alone when the server named it", () => {
+  it("says nothing under the box at rest, and the server's refusal first, the date in words under it", () => {
     expect(render()).not.toContain("MuiFormHelperText-root");
-    const refused = render({ defaultValue: "2020-01-01", error: true, errorText: "Vârsta minimă…" });
-    expect(refused).toContain(">Vârsta minimă…</p>");
-    expect(refused).not.toContain("în ziua evenimentului");
+    const refused = render({ defaultValue: "1990-05-11", error: true, errorText: "Completează acest câmp corect." });
+    expect(refused).toMatch(/Mui-error[^>]*>.*Completează acest câmp corect\..*Vineri, 11 mai 1990 · 36 de ani în ziua evenimentului/);
+    expect(refused).toContain('aria-invalid="true"');
   });
 
   it("keeps the desk's rule and adds the date in words under it", () => {
@@ -186,5 +187,85 @@ describe("§NNN the box, rendered: day first, and the echo is its helper", () =>
     expect(desk).not.toContain('type="date"');
     const field = read("src/modules/registrations/ui/BirthDateField.tsx");
     expect(field).not.toMatch(/mt:\s*-/);
+  });
+});
+
+/**
+ * Round 2 (the owner, 2026-09-29 13:50): a birth date under the event's minimum age turned the box
+ * red and said only «Luni, 11 mai 2020 · 6 ani în ziua evenimentului» — «ar trebui să văd și
+ * mesajul de eroare că nu am vârsta minimă». The rule's sentence, the summary's own for this box
+ * (§47, §329), now comes first under it, live, with the event's own minimum.
+ */
+describe("§NNN under the minimum age, the box says the rule", () => {
+  const words = {
+    ro: { catalogue: ro.Registration, years: "14 ani", echo: "Luni, 11 mai 2020 · 6 ani în ziua evenimentului" },
+    en: { catalogue: en.Registration, years: "14 years", echo: "Monday, 11 May 2020 · 6 years on the event day" },
+  } as const;
+
+  for (const locale of ["ro", "en"] as const) {
+    const { catalogue, years, echo } = words[locale];
+    const tooYoung = catalogue.errors.tooYoung.replace("{age}", years);
+
+    it(`${locale}: a whole date under the minimum shows the rule in red, then the date in words`, () => {
+      const html = renderToStaticMarkup(
+        createElement(BirthDateField, {
+          id: fieldId("birthDate"),
+          name: "birthDate",
+          label: catalogue.birthDate,
+          required: true,
+          defaultValue: "11.05.2020",
+          min: "1906-09-29",
+          max: "2012-11-21",
+          eventDay: "2026-11-21",
+          locale,
+          echoTemplate: catalogue.birthDateEcho,
+          placeholder: catalogue.birthDatePlaceholder,
+          unreadable: catalogue.birthDateUnreadable,
+          tooYoung,
+        }),
+      ).replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
+      const helper = html.match(/<p[^>]*MuiFormHelperText-root[^>]*>([\s\S]*?)<\/p>/);
+      expect(helper, "the helper is drawn").not.toBeNull();
+      expect(helper?.[0]).toContain("Mui-error");
+      const text = (helper?.[1] ?? "").replace(/<[^>]+>/g, "|");
+      expect(text.indexOf(tooYoung), "the rule first").toBeGreaterThanOrEqual(0);
+      expect(text.indexOf(echo)).toBeGreaterThan(text.indexOf(tooYoung));
+      expect(tooYoung).toContain(years);
+      expect(html).toContain('aria-invalid="true"');
+    });
+  }
+
+  it("says it only once a whole date is typed, and yields the server's refusal to what is typed again", () => {
+    const base = { max: "2012-11-21", error: false, echo: "", tooYoung: "too young" };
+    expect(birthDateHelper({ ...base, text: "11.05", typedAgain: true })).toEqual({ lines: [], error: false });
+    expect(birthDateHelper({ ...base, text: "11.05.2020", typedAgain: true, echo: "six" })).toEqual({ lines: ["too young", "six"], error: true });
+    // The last allowed day is no refusal.
+    expect(birthDateHelper({ ...base, text: "21.11.2012", typedAgain: true, echo: "fourteen" })).toEqual({ lines: ["fourteen"], error: false });
+    // The server's refusal stands on the drawn value, and gives way once the person types a good date.
+    const server = { ...base, error: true, errorText: "server says", echo: "age" };
+    expect(birthDateHelper({ ...server, text: "11.05.1990", typedAgain: false })).toEqual({ lines: ["server says", "age"], error: true });
+    expect(birthDateHelper({ ...server, text: "12.05.1990", typedAgain: true })).toEqual({ lines: ["age"], error: false });
+    // The desk's help line steps aside for the refusal.
+    expect(birthDateHelper({ ...base, text: "11.05.2020", typedAgain: true, help: "help", echo: "six" }).lines).toEqual(["too young", "six"]);
+  });
+
+  it("the «Mai lipsesc:» list (§422) names the box the browser refuses for age", () => {
+    const control = {
+      id: fieldId("birthDate"),
+      willValidate: true,
+      validity: { valid: false, customError: true } as ValidityState,
+      labels: [{ textContent: `${ro.Registration.birthDate} *` }],
+      getAttribute: (name: string) => (name === "name" ? "birthDate" : null),
+      closest: () => null,
+    };
+    expect(missingControls([control], {})).toEqual([{ key: "birthDate", label: ro.Registration.birthDate, id: fieldId("birthDate") }]);
+    expect(birthDateValidity("11.05.2020", "1906-09-29", "2012-11-21", { unreadable: "u", tooYoung: "t" })).toBe("t");
+  });
+
+  it("the public form hands the box the summary's own sentence, with this event's minimum", () => {
+    const page = read("src/app/[locale]/events/[slug]/register/page.tsx");
+    expect(page).toMatch(/tooYoung=\{t\("errors\.tooYoung", minimumAge\)\}/);
+    const desk = read("src/modules/registrations/ui/StaffEventBirthDate.tsx");
+    expect(desk).toMatch(/tooYoung=\{words\.tooYoung\.replace\("\{age\}", yearsPhrase\(minAge, locale\)\)\}/);
   });
 });
