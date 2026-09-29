@@ -968,7 +968,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               </Stack>
 
               {/* «Feminin» or «Masculin», each with its glyph (§554, amending §510): a dropdown again
-                  (§NNN), «Feminin» first — a native select behind an empty «Alege…», nothing
+                  (§555), «Feminin» first — a native select behind an empty «Alege…», nothing
                   pre-chosen, required by the browser, the §422 list and the server; «Prefer să nu
                   spun» is no longer an answer. What it is for stays under it (§322, §546): a
                   category ranking, which the label cannot say. */}

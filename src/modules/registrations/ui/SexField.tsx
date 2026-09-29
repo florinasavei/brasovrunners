@@ -22,7 +22,7 @@ const ROW_PX = 44;
 
 /**
  * «Sex» on the public registration form: a dropdown, «Feminin» first and «Masculin» second, each
- * with its glyph (§NNN, amending §554; the owner, 2026-09-29: «put the Female sex first, and make
+ * with its glyph (§555, amending §554; the owner, 2026-09-29: «put the Female sex first, and make
  * it a dropdown again, not radio»). Only the two answers of §554 — no «Prefer să nu spun».
  *
  * **What posts is a native `<select name="sex" required>`** the server draws, as the citizenship

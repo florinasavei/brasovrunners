@@ -125,7 +125,7 @@ export default async function RecurrenceSeriesPanel(props: Props) {
                 </li>
               ))}
             </Box>
-            {/* «Toate datele»: the list's «Toate», since the plain list shows only the dates to come (§NNN). */}
+            {/* «Toate datele»: the list's «Toate», since the plain list shows only the dates to come (§555). */}
             <Link href={{ pathname: "/admin", query: { state: EVENT_LIST_ALL } }} style={{ display: "inline-flex", alignItems: "center", minHeight: 44 }}>
               {t("editor.repeatAllInList", { count })}
             </Link>

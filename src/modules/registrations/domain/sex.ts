@@ -14,7 +14,7 @@ import type { RegistrationSex } from "@/db/schema/registrations";
  * migration, nothing rewritten — and every screen and file shows them as having no answer
  * (`sexShown`), as it shows a staff entry that never had one.
  *
- * **The order is the form's**: «Feminin» first, «Masculin» second (§NNN; the owner, 2026-09-29:
+ * **The order is the form's**: «Feminin» first, «Masculin» second (§555; the owner, 2026-09-29:
  * «put the Female sex first»).
  */
 export const SEX_CHOICES = ["FEMALE", "MALE"] as const satisfies readonly RegistrationSex[];

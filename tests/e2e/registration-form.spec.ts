@@ -115,7 +115,7 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
     // posts, and on Romania unless the runner says otherwise.
     await expect(page.locator('select[name="country"]')).toHaveValue("RO");
     await expect(page.locator('select[name="country"]')).toHaveAttribute("required", "");
-    // «Sex» forces a choice (§510): a dropdown again (§NNN), a native required select behind an
+    // «Sex» forces a choice (§510): a dropdown again (§555), a native required select behind an
     // empty «Alege…», «Feminin» first and «Masculin» second, and no «Prefer să nu spun» (§554).
     const sexSelect = page.locator('select[name="sex"]');
     await expect(sexSelect).toHaveValue("");
@@ -618,7 +618,7 @@ test.describe("BR-REQ-031-04 criterion 16 the telephone is one box with a flag a
       await expect(box.locator('img[src="/flags/ro.svg"]')).toBeHidden();
       // Citizenship too is the server's native select, Romania chosen (§432, §463).
       await expect(noScript.locator('select[name="nationality"]')).toHaveValue("RO");
-      // So is the country of residence (§510). «Sex» is the server's native select too (§NNN):
+      // So is the country of residence (§510). «Sex» is the server's native select too (§555):
       // «Alege…» chosen, then «Feminin» and «Masculin», required — a reader without JavaScript
       // answers from the phone's own list, and the form can be sent.
       await expect(noScript.locator('select[name="country"]')).toHaveValue("RO");
@@ -745,7 +745,7 @@ test.describe("BR-REQ-031-04 a rejected submission says what to fix, and goes th
     expect(page.url()).not.toContain("Popescu");
   });
 
-  test("names an unanswered «Sex» in the refusal summary, and the link lands on its dropdown (§510, §NNN)", async ({ page }) => {
+  test("names an unanswered «Sex» in the refusal summary, and the link lands on its dropdown (§510, §555)", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);
     await page.goto(registerPath);

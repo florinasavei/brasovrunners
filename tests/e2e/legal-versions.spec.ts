@@ -284,7 +284,7 @@ test.describe("legal documents: every text at once", () => {
     // Regenerate the rest: the dialog names the texts, nothing is in force, the toast counts the drafts.
     const regenerateRest = tools.getByRole("button", { name: /^Regenerează din șabloane \(\d+ din 6\)$/ });
     if ((await regenerateRest.count()) > 0) {
-      // «N din 6» and the rule beside it (§NNN): only the texts wearing «Șablon nou» are regenerated.
+      // «N din 6» and the rule beside it (§555): only the texts wearing «Șablon nou» are regenerated.
       await expect(tools.getByTestId("legal-regenerate-rule")).toHaveText(
         "Doar textele cu «Șablon nou» se regenerează; celelalte au deja cuvintele șablonului.",
       );

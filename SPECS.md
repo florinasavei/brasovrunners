@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.28-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.29-2026-09-27 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V2.28-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.29-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -812,6 +812,7 @@ coffee is run on nothing.
 31. The shared country picker (citizenship and telephone prefix) opens with at least eight whole 44-pixel rows in view on a desktop and, below `sm` or on a screen under 520 px tall, as a full-width sheet at the screen's bottom with the search box above the list; the chosen country is in view as it opens (2026-09-28, `DECISIONS.md` §544).
 32. «Sex» on the public registration form is two required radio cards the server draws, «Masculin» and «Feminin» («Male» / «Female»), each with its glyph and none chosen. «Prefer să nu spun» is offered nowhere, and `UNSPECIFIED` is refused at every door: a public form without an answer, or with that one, is refused naming `sex`, and a staff entry may leave the sex out. A row stored with it earlier reads «—» on the backoffice registration page and has an empty cell in the spreadsheet (2026-09-29, `DECISIONS.md` §554).
 33. The public registration form asks the T-shirt size only when the event's «Kit de participare» gives a shirt (`events.kit_shirt`), and the optional fold's title names the shirt only then. A size posted for an event without one is stored as `NONE`, decided off the event row under its lock at every door. The spreadsheet and the backoffice registration page show a size only for an event with a shirt (2026-09-29, `DECISIONS.md` §554).
+34. Given the public registration form, when «Sex» renders, then it is a native required `<select name="sex">` whose options are an empty, disabled «Alege…» (chosen), «Feminin» and «Masculin» in that order, with no «Prefer să nu spun» and no radio input; with JavaScript a button over it opens a list of the two answers, each with its glyph, and a choice sets the select; a refusal marks the select `aria-invalid` and the summary's link lands on it (2026-09-29, `DECISIONS.md` §555).
 
 **Verification:** integration `registrations/entry-details.test.ts`, `registrations/minors.test.ts` (9); unit `registrations/socials.test.ts` (8); e2e `registration-submit.spec.ts`; unit and integration `registrations/minimum-age.test.ts` (11); e2e `registration-form.spec.ts` (11)
 
@@ -1940,6 +1941,7 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 16. Given a translation press within the day's budget, when DeepL's credit as last read is spent, then the press is refused as `quota` and nothing is sent. When the credit is smaller than the press's characters, it is refused as `credit`, naming the characters left, and nothing is sent or metered. When the credit could not be read, the press goes to DeepL as before (2026-09-27, `DECISIONS.md` §497). Verification: integration `translate/translate.test.ts`.
 17. The backoffice events list reads its search, state and order from the address, applies them with one «Aplică» / "Apply" button, and shows «N din M evenimente» while it is narrowed (2026-09-27, `DECISIONS.md` §527).
 18. A bulk or row action taken from the events list redirects back to the same search, state, order and page. The `back` field is re-parsed so that only the list's own keys survive (2026-09-27, `DECISIONS.md` §527).
+19. Given the backoffice events list with no `state` in the address, when it renders, then it shows only the dates still to come («Viitoare» selected in «Starea») and the count line «N din M evenimente»; «Toate» posts `state=ALL` and shows every date; an unknown value falls back to «Viitoare» (2026-09-29, `DECISIONS.md` §555).
 
 **Verification:** integration `cms/workflow.test.ts`; concurrency `cms-conflict.test.ts` (`yarn test:concurrency`); e2e `cms-publish.spec.ts`
 
@@ -2132,6 +2134,7 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 35. The platform's group-run self-declaration templates (asphalt and trail, Romanian and English) are valid for the whole series and signed once. They apply from the date of signing and stay valid until withdrawn or replaced by a new version, and never say «fără termen de încetare» / "with no end date". The health statement is the runner's own assessment («din câte cunosc» / "to the best of my knowledge"), followed at once by a bullet saying the organiser does not and cannot assess participants medically. No text asks about a diagnosis, a treatment or a medical history. They say once, in the opening, that the run is a group run and not a (mountain) guiding service with individual supervision. The signature names «momentul semnării» / "the moment of signing" and never a time stamp. Retention is stated by purpose, never as three years from the signing, in the templates and in the privacy notice's sections 3 and 7 (2026-09-27, `DECISIONS.md` §534).
 36. Given `/admin/legal`, when it renders, then it is one card per legal text in the catalogue's order. The card's header says «În vigoare: versiunea N din <data>», with the whole date in words, or «Nicio versiune în vigoare», and «O ciornă așteaptă aprobarea: versiunea N» while a draft numbered above every approved version still offered waits. The card offers «Regenerează din șablon» for that text alone, behind a confirmation that names the version it makes, or says why there is nothing to make. Its versions fold under it and open only for a waiting draft, for nothing in force, or for a filter that keeps rows in them. The chip row filters by state (Toate, În vigoare, Ciorne, Înlocuite, Retrase) and by text through the address, without JavaScript. «Toate» never lists a withdrawn version, and `?withdrawn=1` still means «Retrase». A regenerate from a card, from the list's tools or from «Versiune nouă» makes drafts only, writes one `legal_document.regenerated` audit row per draft, and lands on the list filtered to «Ciorne» (2026-09-27, `DECISIONS.md` §539).
 37. Given «Versiune nouă», when nothing has been chosen yet, then the six templates are grouped in three labelled rows, each button with its text's state line under it. A «Șablon nou» chip shows when the text in force does not have the template's words, the club's facts written in, and «Regenerează toate (N)» sits beside them (2026-09-27, `DECISIONS.md` §539).
+38. Given `/admin/legal` with texts whose template moved, when «Toate textele deodată» renders, then its button reads «Regenerează din șabloane (N din 6)» / "Regenerate from the templates (N of 6)", and one sentence says that only the texts marked «Șablon nou» are regenerated (2026-09-29, `DECISIONS.md` §555).
 
 **Verification:** integration `legal/editor.test.ts`, `legal/deletion.test.ts`, `legal/withdrawal.test.ts`
 

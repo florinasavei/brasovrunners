@@ -11,7 +11,7 @@ import SexField from "@/modules/registrations/ui/SexField";
 import { fieldId } from "@/shared/forms/outcome";
 
 /**
- * §NNN (amending §554, which amended §510) — «Sex» on the public registration form is a dropdown
+ * §555 (amending §554, which amended §510) — «Sex» on the public registration form is a dropdown
  * again, «Feminin» first and «Masculin» second: a native `<select name="sex" required>` the server
  * draws behind an empty, disabled «Alege…», nothing pre-chosen, so a reader without JavaScript
  * answers from the phone's own list and the browser refuses a form without an answer. The glyphs
@@ -53,7 +53,7 @@ function options(html: string) {
   }));
 }
 
-describe("§NNN «Sex»: a dropdown, Feminin first", () => {
+describe("§555 «Sex»: a dropdown, Feminin first", () => {
   it("offers an empty «Alege…», then Feminin, then Masculin — never «Prefer să nu spun»", () => {
     expect(SEX_CHOICES).toEqual(["FEMALE", "MALE"]);
     const html = render();

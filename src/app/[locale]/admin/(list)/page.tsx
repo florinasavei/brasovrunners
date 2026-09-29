@@ -648,7 +648,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
             }}
             state={{
               label: t("events.listState"),
-              // «Viitoare» with nothing in the address; «Toate» posts its own value (§NNN).
+              // «Viitoare» with nothing in the address; «Toate» posts its own value (§555).
               value: listQuery.state,
               options: [
                 { value: EVENT_LIST_ALL, label: t("events.listStateAll") },

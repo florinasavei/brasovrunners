@@ -9,7 +9,7 @@ import { foldForSearch } from "@/modules/registrations/country-search";
  * refusing (`admin-list-query.ts`'s rule) — `?state=Încheiate`, the label typed for the key, is
  * the default list, never an error. Pure — the clock is the caller's `now`.
  *
- * The list opens on «Viitoare» (§NNN, amending §527 — the owner, 2026-09-29: «by default aici
+ * The list opens on «Viitoare» (§555, amending §527 — the owner, 2026-09-29: «by default aici
  * ar trebui să fie filtrate evenimentele viitoare»): an address with no `state` is `UPCOMING`,
  * and the whole list is an explicit choice, «Toate», which writes `state=ALL` into the address.
  *
@@ -47,11 +47,11 @@ import { foldForSearch } from "@/modules/registrations/country-search";
 export const EVENT_LIST_STATES = ["UPCOMING", "PAST", "DRAFT", "IN_REVIEW", "PUBLISHED", "ARCHIVED", "CANCELLED"] as const;
 export type EventListState = (typeof EVENT_LIST_STATES)[number];
 
-/** «Toate»: nothing narrows the dates. Its own value, since the empty address means «Viitoare» (§NNN). */
+/** «Toate»: nothing narrows the dates. Its own value, since the empty address means «Viitoare» (§555). */
 export const EVENT_LIST_ALL = "ALL";
 export type EventListStateChoice = EventListState | typeof EVENT_LIST_ALL;
 
-/** What the list shows with no `state` in the address (§NNN): the dates still to come. */
+/** What the list shows with no `state` in the address (§555): the dates still to come. */
 export const DEFAULT_EVENT_LIST_STATE: EventListStateChoice = "UPCOMING";
 
 export const EVENT_LIST_SORTS = ["date-near", "date-old", "title-asc", "title-desc", "state"] as const;
@@ -88,7 +88,7 @@ export function parseEventListQuery(params: Record<string, Raw>): EventListQuery
 
 /**
  * Whether a search or a state narrows the list — the count line «N din M evenimente» shows. The
- * default «Viitoare» narrows it too, so the plain list says «3 din 5 evenimente» (§NNN).
+ * default «Viitoare» narrows it too, so the plain list says «3 din 5 evenimente» (§555).
  */
 export function eventListNarrowed(query: EventListQuery): boolean {
   return query.q !== "" || query.state !== EVENT_LIST_ALL;

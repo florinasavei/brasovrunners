@@ -178,7 +178,7 @@ describe("a text's card", () => {
         pending: t("legal.kinds.draftPending", { version: 4 }),
         dialog: t("legal.kinds.regenerateBody", { kind: "GDPR", version: 4 }),
         count: t("legal.filter.count.few", { count: 4, total: 11 }),
-        // «4 din 6» and the rule beside it (§NNN, amending §539): the owner read «(4)» as a bug.
+        // «4 din 6» and the rule beside it (§555, amending §539): the owner read «(4)» as a bug.
         regenerate: t("legal.batch.regenerate", { count: 4, total: LEGAL_DOCUMENT_KEYS.length }),
         rule: t("legal.batch.regenerateRule"),
       };

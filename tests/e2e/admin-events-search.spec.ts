@@ -32,7 +32,7 @@ test.describe("§527 the backoffice events list: search, state, order", () => {
       expect(glyphBox && controlBox && glyphBox.x + glyphBox.width <= controlBox.x + 1).toBe(true);
     }
     await expect(sort).toHaveValue("date-near");
-    // The plain address opens on «Viitoare» (§NNN, amending §527), and says it narrows.
+    // The plain address opens on «Viitoare» (§555, amending §527), and says it narrows.
     await expect(state).toHaveValue("UPCOMING");
     await expect(page.getByTestId("events-list-count").filter({ visible: true })).toHaveText(/^\d+ din \d+ evenimente$/);
 

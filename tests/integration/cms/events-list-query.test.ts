@@ -94,7 +94,7 @@ describe("§527 the backoffice events list over seeded events and a series", () 
     expect(await titles({ state: "ALL" })).toHaveLength(7);
   });
 
-  it("opens on «Viitoare» with no state in the address; «Toate» is its own choice (§NNN)", async () => {
+  it("opens on «Viitoare» with no state in the address; «Toate» is its own choice (§555)", async () => {
     expect(await titles({})).toEqual(await titles({ state: "UPCOMING" }));
     expect(await titles({})).toHaveLength(3);
     expect(await titles({ state: "ALL" })).toHaveLength(7);
@@ -151,7 +151,7 @@ describe("§527 the backoffice events list over seeded events and a series", () 
     expect(await titles({ state: "ARCHIVED" })).toEqual(["Crosul de primăvară"]);
     expect(await titles({ state: "CANCELLED" })).toEqual(["Maratonul"]);
     expect(await titles({ state: "PUBLISHED" })).toHaveLength(4);
-    // The label typed for the key is the default list, «Viitoare», never an error (§NNN).
+    // The label typed for the key is the default list, «Viitoare», never an error (§555).
     expect(await titles({ state: "Încheiate" })).toEqual(["Tură pe Tâmpa", "Alergare de marți ×2", "Crosul de toamnă"]);
   });
 

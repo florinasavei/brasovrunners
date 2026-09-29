@@ -38,7 +38,7 @@ const tr = (title: string, slug = "x", locationName: string | null = null, local
 const TRANSLATIONS = [tr("Crosul Brașovului", "crosul-brasovului", "Poiana"), tr("Brașov Cross", "brasov-cross")];
 
 describe("parseEventListQuery", () => {
-  it("defaults to no search, «Viitoare» and the nearest date first (§NNN, amending §527)", () => {
+  it("defaults to no search, «Viitoare» and the nearest date first (§555, amending §527)", () => {
     expect(parseEventListQuery({})).toEqual({ q: "", state: "UPCOMING", sort: "date-near" });
   });
 
@@ -195,7 +195,7 @@ describe("arrangeEventList — a series is one line, sorted by its next date", (
     // One race, the soonest single date.
     row("Crosul", "2026-10-03T08:00:00Z"),
   ];
-  // «Toate» unless the test names a state: the plain address is «Viitoare» (§NNN), tested below.
+  // «Toate» unless the test names a state: the plain address is «Viitoare» (§555), tested below.
   const arrange = (params: Record<string, string>) => arrangeEventList(rows, parseEventListQuery({ state: "ALL", ...params }), NOW, "ro");
   const titles = (params: Record<string, string>) => arrange(params).map((line) => line.next.translations[0].title);
 
@@ -224,7 +224,7 @@ describe("arrangeEventList — a series is one line, sorted by its next date", (
     ]);
   });
 
-  it("opens on «Viitoare»: the plain address folds only the dates to come (§NNN)", () => {
+  it("opens on «Viitoare»: the plain address folds only the dates to come (§555)", () => {
     const lines = arrangeEventList(rows, parseEventListQuery({}), NOW, "ro");
     expect(lines.map((line) => [line.next.translations[0].title, line.members.length])).toEqual([
       ["Crosul", 1],
