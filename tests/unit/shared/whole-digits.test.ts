@@ -31,4 +31,10 @@ describe("§NNN wholeDigits — digits only, never rounded, never read as anothe
     expect(actions.match(/wholeDigits\(text\(form, "bibNumber"\)\)/g)).toHaveLength(2);
     expect(actions).not.toMatch(/Number\(raw\)/);
   });
+
+  it("is the rule the Mailgun plan's typed ceilings read, one function and not a second regex", () => {
+    const actions = readFileSync("src/app/[locale]/admin/settings/emails/actions.ts", "utf8");
+    expect(actions).toContain("const number = (name: string): number | null => wholeDigits(form.get(name));");
+    expect(actions).not.toContain("/^\\d+$/");
+  });
 });
