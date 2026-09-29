@@ -33,7 +33,7 @@ import BibFooterTextField from "./BibFooterTextField";
  * colour has lived in this form since §173 and this is the rest of the same question. No
  * JavaScript decides the switches: the checkboxes and the two selects post their own values. The
  * two pictures — the header strip and the sponsors' band — are the backoffice's own picture
- * control since §NNN (`BibPictureField`): an upload or «Din galerie», then the crop box in the
+ * control since §560 (`BibPictureField`): an upload or «Din galerie», then the crop box in the
  * place's one shape, the address and the crop in hidden fields the save posts with the rest.
  *
  * The one client island is the preview at the top (`BibDesignPreview`; the owner: "la BID îmi
@@ -79,7 +79,7 @@ export default async function BibDesignPanel({
   const locale = (await getLocale()) as Locale;
   const initialSrc = eventId ? bibPreviewUrl({ eventId, locale, number: String(bibStartNumber), colour: bibColour, design }) : null;
   /*
-    The two stored pictures' facts — the asset, its small file, its size for the crop box (§NNN) —
+    The two stored pictures' facts — the asset, its small file, its size for the crop box (§560) —
     read here in one query; the gallery's list is asked for only when «Din galerie» opens (§485).
     A picture that no longer exists reads as none, so the next save drops it from the design.
     Nothing is offered when there is no store configured — a local machine without R2.
@@ -114,7 +114,7 @@ export default async function BibDesignPanel({
     </CheckboxField>
   );
 
-  /** One picture place (§NNN): the stored picture and its crop, and the words of the control. */
+  /** One picture place (§560): the stored picture and its crop, and the words of the control. */
   const picture = (slot: BibPictureSlot) => {
     const field = slot === "header" ? "headerImageSrc" : "sponsorImageSrc";
     const src = design[field];

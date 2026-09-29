@@ -82,7 +82,7 @@ type BibImageInput = {
   /** The small words under a desk spare's empty line (§444), as the sheet prints them. */
   blankMark?: string;
   /**
-   * The club's pictures, already read by the route (§NNN, `bib-pictures.ts#loadBibPictures`): an
+   * The club's pictures, already read by the route (§560, `bib-pictures.ts#loadBibPictures`): an
    * address `next/og` can draw — an inline PNG, because it cannot read the WebP every stored
    * picture is — and its size in pixels, which makes the crop exact. `null` for a place draws
    * none there (the band, no sponsors' strip), as the sheet does with a picture it could not fetch.
@@ -95,7 +95,7 @@ type BibImageInput = {
 export type BibImagePicture = { src: string; width: number; height: number };
 
 /**
- * A place's picture through the one crop rule (`bib-picture-frame.ts`, §NNN): a clipping box of
+ * A place's picture through the one crop rule (`bib-picture-frame.ts`, §560): a clipping box of
  * the place's size with the picture scaled and shifted inside it, so exactly the cropped part
  * fills it — the sheet draws the same numbers in points. With no crop, `object-fit` as before:
  * the header covers its strip, the sponsors' strip fits the whole picture.
@@ -165,7 +165,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
   const numberSize = px(bibNumberPoints(digits, numberScaleFactor(design)));
   const band = bibBandColour(input.bandColour);
   const bandText = bandTextColour(band);
-  // A picture the club uploaded (§249): the one the route read (§NNN), or — when the caller read
+  // A picture the club uploaded (§249): the one the route read (§560), or — when the caller read
   // none — the design's own address made absolute; the band when there is none.
   const pictureOf = (slot: BibPictureSlot, src: string | null): BibImagePicture | null => {
     if (input.pictures) return input.pictures[slot] ?? null;
@@ -243,7 +243,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
         {/* The club's own header picture across the top (§249), or the coloured band with the
             lockup and the race on it. The picture replaces the band whole: a band *and* a
             picture is two headers, and the club chose the picture. It covers the strip, centred,
-            exactly as the sheet crops it — the club's crop when it drew one (§NNN). */}
+            exactly as the sheet crops it — the club's crop when it drew one (§560). */}
         {header ? (
           placedPicture("header", header, design)
         ) : (
@@ -330,7 +330,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
         {design.namePosition === "below" ? name : null}
         {/* The sponsors' strip, when the club has one (§249): above the small print, across
             the card less its inset: the club's crop in the strip's shape, or the whole picture
-            fitted with its own proportion kept (§NNN). */}
+            fitted with its own proportion kept (§560). */}
         {sponsors ? (
           <div style={{ display: "flex", flexShrink: 0, height: px(L.sponsorHeight), paddingTop: px(L.sponsorTop), justifyContent: "center" }}>
             {placedPicture("sponsors", sponsors, design)}

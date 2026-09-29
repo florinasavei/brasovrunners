@@ -20,7 +20,7 @@ import {
 import { fieldId } from "@/shared/forms/outcome";
 
 /**
- * §NNN (amending §467, applying §345's order to the public form) — the registration form's birth
+ * §561 (amending §467, applying §345's order to the public form) — the registration form's birth
  * date is typed and shown DAY FIRST, «11.05.1990», whatever language the browser speaks. The
  * owner's screenshot of 2026-09-29 showed the browser's own date box drawing «05/11/1990» for
  * 11 May, under a line that said «Vineri, 11 mai 1990», and that line drawn over the box's
@@ -29,7 +29,7 @@ import { fieldId } from "@/shared/forms/outcome";
 const ROOT = path.resolve(__dirname, "../../..");
 const read = (relative: string) => readFileSync(path.join(ROOT, relative), "utf8").replace(/\r\n/g, "\n");
 
-describe("§NNN a typed birth date is read day first", () => {
+describe("§561 a typed birth date is read day first", () => {
   it("reads «05/11/1990» as 5 November, whatever the separator", () => {
     for (const typed of ["05/11/1990", "05.11.1990", "5.11.1990", "05-11-1990", "05 11 1990", "5/11/1990", "05,11,1990", " 05.11.1990 "]) {
       expect(readTypedDate(typed), typed).toBe("1990-11-05");
@@ -84,7 +84,7 @@ describe("§NNN a typed birth date is read day first", () => {
   });
 });
 
-describe("§NNN the words under the box always name the day the box holds", () => {
+describe("§561 the words under the box always name the day the box holds", () => {
   const template = ro.Registration.birthDateEcho;
 
   it("a day-first date echoes the same day, with the age on the event's day", () => {
@@ -115,7 +115,7 @@ describe("§NNN the words under the box always name the day the box holds", () =
   });
 });
 
-describe("§NNN the box, rendered: day first, and the echo is its helper", () => {
+describe("§561 the box, rendered: day first, and the echo is its helper", () => {
   function render(props: Partial<Parameters<typeof BirthDateField>[0]> = {}) {
     return renderToStaticMarkup(
       createElement(BirthDateField, {
@@ -196,7 +196,7 @@ describe("§NNN the box, rendered: day first, and the echo is its helper", () =>
  * mesajul de eroare că nu am vârsta minimă». The rule's sentence, the summary's own for this box
  * (§47, §329), now comes first under it, live, with the event's own minimum.
  */
-describe("§NNN under the minimum age, the box says the rule", () => {
+describe("§561 under the minimum age, the box says the rule", () => {
   const words = {
     ro: { catalogue: ro.Registration, years: "14 ani", echo: "Luni, 11 mai 2020 · 6 ani în ziua evenimentului" },
     en: { catalogue: en.Registration, years: "14 years", echo: "Monday, 11 May 2020 · 6 years on the event day" },

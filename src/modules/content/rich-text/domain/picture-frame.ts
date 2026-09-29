@@ -95,7 +95,7 @@ export function presetCrop(preset: FixedPreset, intrinsic: Intrinsic, around: Im
 
 /**
  * The same for a shape that is not one of the five: a place with a shape of its own — a bib's
- * header strip or its sponsors' band (§NNN), each the paper's own width to its height.
+ * header strip or its sponsors' band (§560), each the paper's own width to its height.
  */
 export function ratioCrop(ratio: number, intrinsic: Intrinsic, around: ImageCrop | null = null): ImageCrop | null {
   const frame = rounded(largestInside(WHOLE, ratio, intrinsic, middleOf(around ?? WHOLE)));

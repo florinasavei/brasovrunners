@@ -238,7 +238,7 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
         // an empty string it would have to reject.
         details: {
           displayName: optional(form, "displayName"),
-          // Typed day first, «11.05.1990», as the public form's box (§NNN): read into `YYYY-MM-DD` here.
+          // Typed day first, «11.05.1990», as the public form's box (§561): read into `YYYY-MM-DD` here.
           birthDate: normalizeTypedDate(optional(form, "birthDate") ?? "") || undefined,
           // Any other value, the retired «Prefer să nu spun» included, is refused by the schema (§554).
           sex: optional(form, "sex") as SexChoice | undefined,

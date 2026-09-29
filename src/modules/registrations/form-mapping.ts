@@ -75,7 +75,7 @@ export function readRegistrationForm(
     */
     emailConfirm: text(form, "emailConfirm") || undefined,
 
-    // Typed day first — «11.05.1990», «11/5/1990», «11051990» — or posted as `YYYY-MM-DD` (§NNN):
+    // Typed day first — «11.05.1990», «11/5/1990», «11051990» — or posted as `YYYY-MM-DD` (§561):
     // the schema reads the one shape; anything else goes through as typed for it to refuse.
     birthDate: normalizeTypedDate(text(form, "birthDate")),
     sex: text(form, "sex"),

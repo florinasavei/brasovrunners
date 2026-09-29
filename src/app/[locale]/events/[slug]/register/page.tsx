@@ -914,10 +914,10 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               </Stack>
 
               {/* No help at rest (§546): the minimum age is the line above the form, and the date in
-                  words under the box (§467), its helper since §NNN, says the age on race day. A
+                  words under the box (§467), its helper since §561, says the age on race day. A
                   refusal for age says the rule (§321, §329) rather than "complete this field
                   correctly". Typed day first — «11.05.1990» — never the browser's own date box,
-                  which drew the digits in the browser's order (§NNN), nor the backoffice's MUI
+                  which drew the digits in the browser's order (§561), nor the backoffice's MUI
                   picker (§345): a birth date decades back is faster typed than paged to, and this
                   page stays free of the picker's library. The bounds are the server's: a date in
                   the future, or one under this event's minimum age on the race day, is refused

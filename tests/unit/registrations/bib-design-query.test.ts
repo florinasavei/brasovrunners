@@ -32,7 +32,7 @@ const EVERYTHING_OFF: BibDesign = {
   namePosition: "above",
   headerImageSrc: OURS,
   sponsorImageSrc: LOCAL,
-  // Each picture's crop (§NNN), carried as its JSON and read back as the same four fractions.
+  // Each picture's crop (§560), carried as its JSON and read back as the same four fractions.
   headerImageCrop: { x: 0, y: 0.3125, w: 1, h: 0.1478 },
   sponsorImageCrop: { x: 0.1, y: 0.4, w: 0.8, h: 0.05 },
   cutMarks: true,
@@ -181,7 +181,7 @@ describe("§249 the form, read the same way for the save and for the preview", (
       namePosition: "above",
       headerImageSrc: null,
       sponsorImageSrc: OURS,
-      // No crop posted (§NNN): each picture as the bib drew it before crops.
+      // No crop posted (§560): each picture as the bib drew it before crops.
       headerImageCrop: null,
       sponsorImageCrop: null,
       cutMarks: true,

@@ -101,7 +101,7 @@ export function StaffEventSelect({
 }
 
 /**
- * The public form's own box (`BirthDateField`, §NNN): typed day first, «11.05.1990», never the
+ * The public form's own box (`BirthDateField`, §561): typed day first, «11.05.1990», never the
  * backoffice's MUI picker (`shared/forms/pickers`, `DECISIONS.md` §345) — a birth date is decades
  * back, and paging a calendar month by month to reach 1985 is slower than typing it. Its helper
  * is the desk's rule and, once a date and an event are chosen, the date in words with the age on

@@ -34,7 +34,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Item | Branch |
 | --- | --- |
-| — | nothing waiting: the last ready items shipped in `BR-V2.33` |
+| — | nothing waiting: the last ready items shipped in `BR-V2.35` |
 
 ## Next, queued
 
@@ -67,6 +67,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Baseline | What |
 | --- | --- |
+| `BR-V2.35` | the bib designer’s header strip and sponsors band take a new upload or a gallery picture through the platform’s one picture control, with the crop box at each band’s own shape, the crop saved with the event’s bib design and drawn by one rule on the preview, the single bib and the A4 sheet (§560) · the registration form’s birth-date picker shows and takes the date day-first (it showed month-first) through the same wrapper the backoffice picker uses, the echo line sits under the box as its helper instead of over the outline, and a date under the event’s minimum age shows the refusal with the event’s own number under the box (§561) |
 | `BR-V2.33` | every email about a live registration carries a clear «Nu mai pot ajunge» button — the message’s own single-use link to the registration’s page, which asks first and then cancels that person and emails the address (§547) — never in a message after the fact nor in the club’s copy, the inventory of message types pinned by a test; a participant’s own cancellation asks a reason (a choice of three, a short text for «alt motiv»), kept on the registration, shown in the backoffice and the export (§558) · the contact form’s copies are named «CC» and «BCC» on «Pagini» → «Contact» (the setting of §164 found again: one sentence each, one address per line, the closed line naming the copies in force); the «Copiile clubului» card on «Setări» → «Emailuri» is three nested folds — the signed declarations’ archive with its Cc and Bcc, the confirmation notice, the club’s copy of the participants’ emails — under one «Salvează» (§559) |
 | `BR-V2.31` | the registration form asks medical information only when the event’s «Informații medicale» checkbox in the editor’s conditions is ticked (default off — sensitive data the club may not need); a posted value for an event that does not ask is ignored; the backoffice page, the desk, the export and the emergency sheet show it only then; the emergency contact unchanged; migration 0111 (§557) |
 | `BR-V2.30` | the declarations after the second review — three sentences of the templates (shoes as a safety outcome, «indicațiile generale de siguranță comunicate de organizator», the retention clause with the three-year prescription and a dispute hold), the «Reguli de siguranță» block on every group run’s page, the proof of signing (the signed text’s SHA-256, the version and the instant to the second in the PDF, the club’s copy and the database) and an Administrator’s «Păstrează: reclamație / litigiu» the purge respects; migration 0110; the club approves the new template versions (§556) |

@@ -8,7 +8,7 @@ import { bibPictureUrl } from "./bib-design";
 import type { BibPictureSlot } from "./bib-picture-frame";
 
 /**
- * The pictures a bib design names (§NNN): their stored facts for the editor, and their pixels for
+ * The pictures a bib design names (§560): their stored facts for the editor, and their pixels for
  * the two renderers.
  *
  * ## The facts

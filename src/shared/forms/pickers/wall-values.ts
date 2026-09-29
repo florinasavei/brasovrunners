@@ -49,7 +49,7 @@ export function isDateValue(value: string): boolean {
 }
 
 /*
-  The birth-date box (§NNN, applying §345's day-first order to the public registration form): a
+  The birth-date box (§561, applying §345's day-first order to the public registration form): a
   typed text box, not the picker — the picker is kept off every public page
   (`pickers-backoffice-only.test.ts`), and a birth date decades back is faster typed than paged
   to. It shows what the backoffice's picker shows, `DATE_DISPLAY_FORMAT`, and reads what it is

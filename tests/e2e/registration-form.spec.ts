@@ -27,7 +27,7 @@ async function fillRequired(page: Page, omit?: string) {
     firstName: "Ana",
     lastName: "Popescu",
     email: `e2e-form-${test.info().project.name}-${Date.now().toString(36)}@test.invalid`,
-    // Day first, as the box reads it (§NNN): 17 May 1990.
+    // Day first, as the box reads it (§561): 17 May 1990.
     birthDate: "17.05.1990",
     city: "Brașov",
     phone: "+40711111111",
@@ -148,7 +148,7 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
     await expect(page.locator('[name="city"]')).toBeVisible();
     await expect(page.locator('[name="city"]')).toHaveAttribute("required", "");
     // The birth date is typed day first and read back in words with the age on the event day,
-    // as the box's own helper — under its outline, never over it (§467, §NNN). «05/11/1990» is
+    // as the box's own helper — under its outline, never over it (§467, §561). «05/11/1990» is
     // 5 November, whatever language the browser speaks; the box shows it as the backoffice does.
     const birthDateBox = page.locator('[name="birthDate"]');
     await expect(birthDateBox).toHaveAttribute("type", "text");
@@ -841,7 +841,7 @@ test.describe("BR-REQ-031-04 a rejected submission says what to fix, and goes th
     const dayAfter = new Date(`${max}T00:00:00Z`);
     dayAfter.setUTCDate(dayAfter.getUTCDate() + 1);
     const thirteen = dayAfter.toISOString().slice(0, 10);
-    // Typed day first, as a person types it (§NNN).
+    // Typed day first, as a person types it (§561).
     const [year, month, day] = thirteen.split("-");
     const thirteenTyped = `${day}.${month}.${year}`;
 
@@ -854,7 +854,7 @@ test.describe("BR-REQ-031-04 a rejected submission says what to fix, and goes th
     // The browser refuses first: the date is past the box's upper bound, in the rule's own words.
     expect(await birthDate.evaluate((node) => (node as HTMLInputElement).validity.customError)).toBe(true);
     expect(await birthDate.evaluate((node) => (node as HTMLInputElement).validationMessage)).toContain("14 ani");
-    // And the box says it under itself, live, before any press (§NNN; the owner, 2026-09-29: the
+    // And the box says it under itself, live, before any press (§561; the owner, 2026-09-29: the
     // box went red with only the date in words under it): the rule first, then the age it gives.
     const birthDateHelper = page.locator(`#${await birthDate.getAttribute("id")}-helper-text`);
     await expect(birthDateHelper).toContainText("Vârsta minimă de participare la acest eveniment este 14 ani împliniți în ziua cursei");

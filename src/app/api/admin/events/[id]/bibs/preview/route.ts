@@ -43,7 +43,7 @@ const SAMPLE_NAME = "Nume Prenume";
  * preview aici"). That is how the panel shows the bib as the boxes change, before a save:
  * `bibDesignFromQuery` validates the unsaved design with the same schema the save uses, and
  * `colour=` is the band's colour as the form's select holds it, empty for the club's; each
- * picture's crop travels beside it (`headerImageCrop=`, `sponsorImageCrop=`, §NNN) and is drawn
+ * picture's crop travels beside it (`headerImageCrop=`, `sponsorImageCrop=`, §560) and is drawn
  * through the same crop rule as the sheet (`bib-picture-frame.ts`). The
  * design parameters are read in sample mode only; with a registration named, the stored design
  * is what is drawn, because that is what will print.
@@ -105,7 +105,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       replyTo,
       siteUrl: env.APP_BASE_URL,
       design,
-      // The pictures read here (§NNN): `next/og` cannot read the stored WebP, and their size makes
+      // The pictures read here (§560): `next/og` cannot read the stored WebP, and their size makes
       // the unsaved crop exact — the same rule the sheet prints with.
       pictures: await imagePictures(design),
     });

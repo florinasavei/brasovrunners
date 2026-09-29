@@ -202,7 +202,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
   const headerPicture = input.pictures?.header ? embed(input.pictures.header) : null;
   const sponsorPicture = input.pictures?.sponsors ? embed(input.pictures.sponsors) : null;
   /**
-   * A place's picture through the one crop rule (`bib-picture-frame.ts`, §NNN), at the place's top
+   * A place's picture through the one crop rule (`bib-picture-frame.ts`, §560), at the place's top
    * left corner: the crop clipped to the place's box — the size pdfkit read from the file makes the
    * crop exact — or, with none, the header covering its strip and the sponsors' picture fitted
    * whole, as every sheet printed before crops existed.
@@ -247,7 +247,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
       The club's own picture across the top (§249), or the coloured band with the lockup and the
       race on it. The picture replaces the band whole — a band *and* a picture is two headers —
       and it is drawn to cover the strip, so a photograph of any proportion fills it without
-      being squashed: the club's crop in the strip's 9.02:1 (§NNN), or centred and cut to it.
+      being squashed: the club's crop in the strip's 9.02:1 (§560), or centred and cut to it.
     */
     if (headerPicture) {
       drawPicture("header", headerPicture, left, top);
@@ -362,7 +362,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     if (design.showName && !nameAbove) drawName(sponsorTop - L.nameBlock);
 
     // The sponsors' strip above the small print (§249): the club's crop in the strip's shape, or
-    // the whole picture with its own proportion kept (§NNN).
+    // the whole picture with its own proportion kept (§560).
     if (sponsorPicture) drawPicture("sponsors", sponsorPicture, left + L.inset, sponsorTop + L.sponsorTop);
 
     /*

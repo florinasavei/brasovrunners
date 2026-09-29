@@ -94,7 +94,7 @@ export async function GET(
     picture that was deleted, a variant that is not an image any more. So each is fetched with
     a deadline and a ceiling, and anything that fails is `null` — which prints the coloured
     band and no sponsors' strip, exactly as every sheet printed before this existed. And each is
-    handed over as PNG (§NNN, `bib-pictures.ts`): pdfkit embeds no WebP, which every stored
+    handed over as PNG (§560, `bib-pictures.ts`): pdfkit embeds no WebP, which every stored
     picture is, and a design with a picture failed the whole sheet with "Unknown image format.".
   */
   const loaded = await loadBibPictures(event.design, BIB_PICTURE_WIDTH.sheet);

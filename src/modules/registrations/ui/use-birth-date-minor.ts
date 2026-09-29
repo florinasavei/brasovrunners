@@ -9,7 +9,7 @@ import { isMinorOn } from "../domain/age";
  *
  * ## Why `useSyncExternalStore` and not an effect
  *
- * The date field is somebody else's DOM — `BirthDateField`, an island of its own since §NNN (a
+ * The date field is somebody else's DOM — `BirthDateField`, an island of its own since §561 (a
  * typed, day-first box). So the islands subscribe to that input rather than owning it, which is
  * exactly what `useSyncExternalStore` is for: React
  * reads the value during render instead of writing state from an effect, which is both correct

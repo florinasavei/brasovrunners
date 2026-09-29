@@ -16,14 +16,14 @@ import { bibPictureForImage, loadBibPictures } from "@/modules/registrations/bib
 import { renderBibSheet } from "@/modules/registrations/bibs-pdf";
 
 /**
- * BR-REQ-038-01, §NNN (amending §249 and §485) — the bib designer's two picture places, each with
+ * BR-REQ-038-01, §560 (amending §249 and §485) — the bib designer's two picture places, each with
  * one fixed shape, and the one crop rule the sheet, the picture of one bib and the editor's
  * preview draw through.
  */
 
 const OURS = "https://pub-example.r2.dev/qa/3f2a1b4c-0000-4000-8000-000000000000/web.webp";
 
-describe("§NNN the two places' fixed shapes", () => {
+describe("§560 the two places' fixed shapes", () => {
   it("are the paper's own boxes: the card's width by the band, the card less its inset by the sponsors' picture", () => {
     expect(BIB_PICTURE_BOX.header).toEqual({ width: BIB_CARD.width, height: BIB_LAYOUT.bandHeight });
     expect(BIB_PICTURE_BOX.sponsors).toEqual({ width: BIB_CARD.width - 2 * BIB_LAYOUT.inset, height: BIB_LAYOUT.sponsorPicture });
@@ -63,7 +63,7 @@ describe("§NNN the two places' fixed shapes", () => {
   });
 });
 
-describe("§NNN the one crop rule", () => {
+describe("§560 the one crop rule", () => {
   it("fills the place's box with exactly the cropped part, undistorted", () => {
     const photo = { width: 2000, height: 1000 };
     const crop = ratioCrop(BIB_PICTURE_RATIO.header, photo)!;
@@ -111,7 +111,7 @@ describe("§NNN the one crop rule", () => {
   });
 });
 
-describe("§NNN the crop in the design", () => {
+describe("§560 the crop in the design", () => {
   it("reads a crop posted as JSON, stored as an object, and drops one that is malformed or whole", () => {
     const crop = { x: 0, y: 0.3, w: 1, h: 0.2 };
     expect(readBibDesign({ headerImageSrc: OURS, headerImageCrop: JSON.stringify(crop) }).headerImageCrop).toEqual(crop);
@@ -173,7 +173,7 @@ const bib = (design: BibDesign, sizes: { header?: Size; sponsors?: Size }) =>
     },
   });
 
-describe("§NNN the preview draws the crop (pixels of the PNG)", () => {
+describe("§560 the preview draws the crop (pixels of the PNG)", () => {
   const px = (points: number) => points * BIB_IMAGE_SCALE;
   // The middle of the header strip, a quarter and three quarters across the card.
   const headerY = px(BIB_MARGIN + BIB_LAYOUT.bandHeight / 2);
@@ -238,7 +238,7 @@ function contentOf(pdf: Buffer): string {
   return text;
 }
 
-describe("§NNN the sheet prints the same crop", () => {
+describe("§560 the sheet prints the same crop", () => {
   it("clips the header's box and draws the picture scaled so the crop fills it", async () => {
     const png = Buffer.from((await halves(1000, 200)).split(",")[1], "base64");
     const h = 500 / (200 * BIB_PICTURE_RATIO.header);
@@ -272,7 +272,7 @@ describe("§NNN the sheet prints the same crop", () => {
   });
 });
 
-describe("§NNN the stored WebP reaches both renderers as PNG", () => {
+describe("§560 the stored WebP reaches both renderers as PNG", () => {
   /** A stored picture is WebP (§414): the left half red, the right half blue, 1000 × 200. */
   const webp = async () => {
     const png = Buffer.from((await halves(1000, 200)).split(",")[1], "base64");

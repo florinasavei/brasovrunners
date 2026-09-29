@@ -43,7 +43,7 @@ export function birthDateValidity(text: string, min: string, max: string, words:
 }
 
 /**
- * What the box says under it, and whether it is red (§NNN; the owner, 2026-09-29: «ar trebui să
+ * What the box says under it, and whether it is red (§561; the owner, 2026-09-29: «ar trebui să
  * văd și mesajul de eroare că nu am vârsta minimă»). A whole date under the event's minimum age
  * on the race day is refused live, as it is typed: the rule's own sentence — the one the summary
  * above the form says for this box (§47, §329) — first, in the error colour, and the date in
@@ -80,7 +80,7 @@ export function birthDateHelper({
 }
 
 /**
- * The birth date, typed day first (§NNN, amending §467 and applying §345's order to the public
+ * The birth date, typed day first (§561, amending §467 and applying §345's order to the public
  * form): «11.05.1990», whatever language the browser speaks. A native `<input type="date">`
  * drew the digits in the *browser's* order — «05/11/1990» on the owner's phone for 11 May, with
  * the line under it saying «Vineri, 11 mai 1990» — and nothing a page does changes that (§70),

@@ -63,7 +63,7 @@ const ResetGlyph = ACTION_ICONS.reset;
  * card's picture underneath, drawn by the card's own function — and offers «Centrul pe card»: tap
  * where the subject is, and the card's frame is centred there.
  *
- * ## A place with one shape of its own (§NNN)
+ * ## A place with one shape of its own (§560)
  *
  * A race number's header strip and its sponsors' band are each one shape — the paper's width to
  * the strip's height, about 9∶1 and 22∶1 — that none of the five buttons is. `shape` holds the box
@@ -150,7 +150,7 @@ export default function ImageCropBox({
    */
   resting?: CropPreset;
   /**
-   * One fixed shape of the place's own (§NNN), width over height, in place of the presets: `label`
+   * One fixed shape of the place's own (§560), width over height, in place of the presets: `label`
    * says it above the photograph; the reset goes back to the shape's `centre`, or to the `whole`
    * picture (no crop) where the place draws an uncropped picture whole.
    */
@@ -244,7 +244,7 @@ export default function ImageCropBox({
       <Typography component="span" variant="body2" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
         {labels.title}
       </Typography>
-      {/* A place's own shape (§NNN), said in words: there is nothing to choose. */}
+      {/* A place's own shape (§560), said in words: there is nothing to choose. */}
       {shape && (
         <Typography variant="caption" color="text.secondary" component="p" sx={{ mb: 1 }} data-testid={`${testId}-shape`}>
           {shape.label}

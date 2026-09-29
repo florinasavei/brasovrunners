@@ -92,7 +92,7 @@ const storedPicture = z
   .catch(null);
 
 /**
- * The part of a picture a place shows (§NNN): §241's four fractions of the photograph — the same
+ * The part of a picture a place shows (§560): §241's four fractions of the photograph — the same
  * crop a picture in a text and a card of «Echipa» store — or null for none. Stored as an object;
  * posted by the form and carried by the preview's address as its JSON, read the same here. The
  * whole photograph is no crop (`meaningfulCrop`), and anything malformed reads as none, never a
@@ -124,7 +124,7 @@ export const bibDesignSchema = z
     /** A strip of sponsors above the small print, or null. */
     sponsorImageSrc: storedPicture,
     /**
-     * The part of each picture the bib shows (§NNN), drawn in the place's own shape by
+     * The part of each picture the bib shows (§560), drawn in the place's own shape by
      * `bib-picture-frame.ts`; null draws the picture as every bib did before crops existed.
      */
     headerImageCrop: storedCrop,
@@ -151,7 +151,7 @@ export const bibDesignSchema = z
     footerText: z.string().transform(bibFooterText).catch(""),
   })
   .strict()
-  // A crop belongs to its picture: none without one (§NNN), whether saved or read.
+  // A crop belongs to its picture: none without one (§560), whether saved or read.
   .transform((design) => ({
     ...design,
     headerImageCrop: design.headerImageSrc ? design.headerImageCrop : null,

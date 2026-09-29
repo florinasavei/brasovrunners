@@ -26,7 +26,7 @@ const SETTLE_MS = 300;
  * keystroke in the title changes no bib and asks for no picture. Native `input` and `change`
  * bubble from every one of those controls (checkboxes, native selects, radios and a number
  * box), so one listener on the form is the subscription, and no global state is kept anywhere.
- * The two picture places (`BibPictureField`, §NNN) fire `change` on their hidden fields when a
+ * The two picture places (`BibPictureField`, §560) fire `change` on their hidden fields when a
  * picture or its crop changes, so they join the same listener.
  *
  * **The press paints first (§371).** The moment a box changes the picture dims and says it is

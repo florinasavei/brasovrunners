@@ -3,7 +3,7 @@ import type { ImageCrop } from "@/modules/content/rich-text/domain/schema";
 import { BIB_CARD, BIB_LAYOUT } from "./bib-geometry";
 
 /**
- * The bib's two picture places and the one rule that draws a crop in them (§NNN, amending §249
+ * The bib's two picture places and the one rule that draws a crop in them (§560, amending §249
  * and §485; the owner, 2026-09-29: «la bib designer, la partea cu sponsori, trebuie să pot încărca
  * imagine, și face crop și previzualizare»).
  *

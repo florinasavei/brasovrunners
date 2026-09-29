@@ -16,7 +16,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-038-01, §NNN (amending §249 and §485) — the bib designer's two pictures with a crop each:
+ * BR-REQ-038-01, §560 (amending §249 and §485) — the bib designer's two pictures with a crop each:
  * saved with the event's design through the editor's own action, drawn by the preview route with
  * the crop and the picture read as a PNG with its size, counted as in use by the pictures' references (so the
  * sweep never takes one and a delete is refused), carried by a series and kept by a duplicate.
@@ -150,7 +150,7 @@ async function postSave(form: FormData) {
   expect(outcome, JSON.stringify(outcome)).toBe("redirected");
 }
 
-describe("§NNN a crop per picture place, saved with the bib's design", () => {
+describe("§560 a crop per picture place, saved with the bib's design", () => {
   it("is saved by the editor's action with the rest of the design, and read back by what both renderers call", async () => {
     const header = await stored(2000, 1000);
     const sponsors = await stored(2000, 200);
@@ -180,10 +180,10 @@ describe("§NNN a crop per picture place, saved with the bib's design", () => {
   });
 });
 
-describe("§NNN a deleted gallery picture drops out of the design", () => {
+describe("§560 a deleted gallery picture drops out of the design", () => {
   /**
    * A design that names a picture no longer in the gallery: deleted from «Poze» while nothing
-   * counted the race numbers as a reference (before §NNN), so the design still names its address.
+   * counted the race numbers as a reference (before §560), so the design still names its address.
    */
   async function designNamingADeletedPicture() {
     const gone = await stored(1600, 400);
@@ -236,7 +236,7 @@ describe("§NNN a deleted gallery picture drops out of the design", () => {
   });
 });
 
-describe("§NNN the preview route draws the unsaved crop", () => {
+describe("§560 the preview route draws the unsaved crop", () => {
   it("hands the renderer the crop from the address and each picture, read and made a PNG", async () => {
     const header = await stored(2000, 1000);
     const sponsors = await stored(2000, 200);
@@ -290,7 +290,7 @@ describe("§NNN the preview route draws the unsaved crop", () => {
   });
 });
 
-describe("§NNN a picture on the race numbers is in use", () => {
+describe("§560 a picture on the race numbers is in use", () => {
   const later = (days: number) => new Date(NOW.getTime() + days * 24 * 60 * 60_000);
 
   it("is never swept, is refused a delete, and the pictures page names the event", async () => {
@@ -331,7 +331,7 @@ describe("§NNN a picture on the race numbers is in use", () => {
   });
 });
 
-describe("§NNN the design, crops included, goes with the race", () => {
+describe("§560 the design, crops included, goes with the race", () => {
   const cropped = (src: string): BibDesign => ({ ...DEFAULT_BIB_DESIGN, sponsorImageSrc: src, sponsorImageCrop: SPONSOR_CROP });
 
   it("is carried to every date a series makes and kept by a duplicate", async () => {

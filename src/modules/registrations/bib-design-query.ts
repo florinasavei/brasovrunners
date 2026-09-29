@@ -28,7 +28,7 @@
 export const BIB_DESIGN_FORM_PREFIX = "event.bibDesign.";
 
 /**
- * A picture's crop (§NNN) as the form posts it and the address carries it — the JSON of §241's four
+ * A picture's crop (§560) as the form posts it and the address carries it — the JSON of §241's four
  * fractions — or as a stored design holds it, the object itself. The schema reads either.
  */
 export type BibCropValue = string | { x: number; y: number; w: number; h: number } | null;
@@ -43,7 +43,7 @@ export type BibDesignFormValues = {
   namePosition: string;
   headerImageSrc: string | null;
   sponsorImageSrc: string | null;
-  /** The part of each picture the bib shows (§NNN), in the place's own shape. */
+  /** The part of each picture the bib shows (§560), in the place's own shape. */
   headerImageCrop: BibCropValue;
   sponsorImageCrop: BibCropValue;
   cutMarks: boolean;
@@ -69,7 +69,7 @@ const SWITCHES = [
 ] as const;
 const CHOICES = ["numberScale", "namePosition"] as const;
 const PICTURES = ["headerImageSrc", "sponsorImageSrc"] as const;
-/** Each picture's crop, beside the picture it belongs to: absent with no picture or no crop (§NNN). */
+/** Each picture's crop, beside the picture it belongs to: absent with no picture or no crop (§560). */
 const CROPS = [
   ["headerImageCrop", "headerImageSrc"],
   ["sponsorImageCrop", "sponsorImageSrc"],
@@ -96,7 +96,7 @@ export function readBibDesignForm(get: (name: string) => string | null): BibDesi
     namePosition: field("namePosition")?.trim() || "below",
     headerImageSrc: field("headerImageSrc")?.trim() || null,
     sponsorImageSrc: field("sponsorImageSrc")?.trim() || null,
-    // The crop box's hidden fields (§NNN): the JSON as it was written, or nothing for no crop.
+    // The crop box's hidden fields (§560): the JSON as it was written, or nothing for no crop.
     headerImageCrop: field("headerImageCrop")?.trim() || null,
     sponsorImageCrop: field("sponsorImageCrop")?.trim() || null,
     cutMarks: field("cutMarks") === "on",

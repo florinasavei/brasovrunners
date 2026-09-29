@@ -76,7 +76,7 @@ export function initialBibCrop(slot: BibPictureSlot, intrinsic: { width: number;
 }
 
 /**
- * One picture place of the bib designer (§NNN, amending §249 and §485): the platform's own picture
+ * One picture place of the bib designer (§560, amending §249 and §485): the platform's own picture
  * control — «Încarcă o imagine» through the shared `uploadPicture` with the quality choice and the
  * facts it shows (§414, §437), «Din galerie» (§485), «Fără imagine» — then the crop box held to the
  * place's one shape (`bib-picture-frame.ts`). The address and the crop go in hidden fields that the
@@ -272,7 +272,7 @@ function PictureField({ slot, picture: initial, crop: initialCrop, scope, labels
           {labels.failed}
         </Typography>
       )}
-      {/* The crop box in the place's one shape (§NNN): the part the bib prints. */}
+      {/* The crop box in the place's one shape (§560): the part the bib prints. */}
       {sized && (
         <Box sx={{ mt: 1.5, maxWidth: 480 }} data-testid={`${inputId}-crop`}>
           <ImageCropBox
