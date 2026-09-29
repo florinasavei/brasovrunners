@@ -18,6 +18,10 @@
     },
     {
       "requirement": "BR-REQ-050-03",
+      "text": "The bib designer's two picture places join the places that take a picture «Din galerie»: a picture chosen there, or uploaded there with the quality choice and its shown dimensions, opens the same crop box, held to the place's one shape with no row of shapes to choose from (2026-09-29, `DECISIONS.md` §NNN)."
+    },
+    {
+      "requirement": "BR-REQ-050-03",
       "text": "A picture named by an event's bib design counts as in use: the orphan sweep never takes it, a delete from «Poze» is refused, and the pictures page names the event (2026-09-29, `DECISIONS.md` §NNN)."
     }
   ],
