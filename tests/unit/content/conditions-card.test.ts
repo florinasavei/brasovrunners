@@ -75,6 +75,14 @@ describe("§NNN the «Condiții de participare» card", () => {
     const html = await render({ ...RACE, type: "GROUP_RUN", registrationMode: "NONE" } as EditableEvent);
     expect(html).toContain('name="event.askHealthNote"');
     expect(html).toContain('data-testid="conditions-not-registering"');
+    // Its line leaves the note out, as the outer card's does: there is no form to ask it on.
+    expect(html).not.toContain("Informații medicale: ");
+  });
+
+  it("leaves the note out of its line on an event registering elsewhere (§111)", async () => {
+    const html = await render({ ...RACE, registrationMode: "EXTERNAL", askHealthNote: true } as EditableEvent);
+    expect(html).not.toContain("Informații medicale: ");
+    expect(html).toContain('data-testid="conditions-not-here"');
   });
 
   it("is its heading and its line alone for a reader who may not change the event (§542)", async () => {

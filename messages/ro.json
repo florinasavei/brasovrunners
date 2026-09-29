@@ -671,6 +671,7 @@
       "emergency": {
         "title": "Urgențe și sănătate",
         "show": "Arată telefonul, persoana de contact și nota medicală",
+        "showNoHealth": "Arată telefonul și persoana de contact",
         "showHelp": "Se înregistrează în jurnal cine a deschis secțiunea și când.",
         "phone": "Telefon",
         "contact": "Persoană de contact",

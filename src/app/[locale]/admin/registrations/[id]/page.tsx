@@ -407,7 +407,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         ) : (
           <Stack spacing={0.5} sx={{ alignItems: "flex-start" }}>
             <GlyphButton icon="emergency" href={`${detailPath}?health=1#emergency`} variant="outlined" sx={{ minHeight: 44 }}>
-              {tr("registrations.emergency.show")}
+              {tr(registration.eventAsksHealthNote ? "registrations.emergency.show" : "registrations.emergency.showNoHealth")}
             </GlyphButton>
             <Typography variant="caption" color="text.secondary">
               {tr("registrations.emergency.showHelp")}

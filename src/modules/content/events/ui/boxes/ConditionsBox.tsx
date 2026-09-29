@@ -32,12 +32,14 @@ export default async function ConditionsBox({ event, mayEditSettings }: Pick<Box
   const { words } = await summaryWords();
   const initialType = event?.type ?? "GROUP_RUN";
   const initialMode = event?.registrationMode ?? "NONE";
+  // The line only where there is a form to ask it on, as the outer card's line says it (§111).
+  const asksOnForm = takesRegistrations(initialType) && initialMode === "INTERNAL";
   const card = {
     id: "box-conditions",
     glyph: "conditions",
     level: 3,
     title: t("editor.boxes.conditions.title"),
-    aside: healthNoteSummary(words, event?.askHealthNote ?? false),
+    aside: asksOnForm ? healthNoteSummary(words, event?.askHealthNote ?? false) : undefined,
   } as const;
   if (!mayEditSettings) return <Panel {...card} />;
   const days = durationPhrase(locale, RETENTION_PERIODS.identityAndHealthDaysAfterEvent, "days");

@@ -671,6 +671,7 @@
       "emergency": {
         "title": "Emergency and health",
         "show": "Show the phone, the emergency contact and the health note",
+        "showNoHealth": "Show the phone and the emergency contact",
         "showHelp": "Who opened this section, and when, is recorded in the audit trail.",
         "phone": "Phone",
         "contact": "Emergency contact",

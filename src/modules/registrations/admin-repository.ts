@@ -523,6 +523,8 @@ export type RegistrationDetail = {
   /** The T-shirt size as stored, and whether the event gives one (§554): the page shows it only then. */
   tshirtSize: RegistrationTshirtSize | null;
   eventKitShirt: boolean;
+  /** Whether the event asks the health note (§NNN): the emergency section's button names the note only then. */
+  eventAsksHealthNote: boolean;
   /** The registration's language, as on the list row: the declaration translation it signs (§330). */
   locale: Locale;
   participantEmail: string;
@@ -622,6 +624,7 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       sex: registrations.sex,
       tshirtSize: registrations.tshirtSize,
       eventKitShirt: events.kitShirt,
+      eventAsksHealthNote: events.askHealthNote,
       locale: registrations.locale,
       submittedAt: registrations.submittedAt,
       emailConfirmedAt: registrations.emailConfirmedAt,

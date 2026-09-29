@@ -7,7 +7,7 @@ import ro from "../../../messages/ro.json";
 import { healthNoteKept, healthNoteShown, withoutHealthNote } from "@/modules/registrations/domain/health-note";
 
 /**
- * §NNN (amending §85 by §554's pattern) — the registration form asks the health note only when the
+ * §NNN (amending §47 and §171 on the form, §322 on where it shows; §554's pattern) — the registration form asks the health note only when the
  * event's «Condiții de participare» → «Informații medicale» is ticked (`events.ask_health_note`):
  * otherwise no fold, no field, no consent, in both languages. The page is rendered on the server as a
  * visitor meets it, with the database and the async parts not about the form stood in for —

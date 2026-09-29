@@ -225,7 +225,7 @@ test.describe("§554 the race kit card", () => {
 /*
   §NNN — «Condiții de participare» inside «Program, regulament și declarație» (the owner, 2026-09-29:
   «e mai bine să avem o bifă în backoffice la Condiții de participare»): a closed fold whose line says
-  «Informații medicale: nu» until the box is ticked; the tick only for a type that registers on the
+  «Informații medicale: nu» until the box is ticked, on a saved event registering on the site; the tick only for a type that registers on the
   site, a group run getting a sentence in its place (§111).
 */
 test.describe("§NNN the participation conditions card", () => {
@@ -239,6 +239,8 @@ test.describe("§NNN the participation conditions card", () => {
     await openEditorBox(page, "Condiții de participare");
     await expect(page.getByTestId("conditions-not-registering")).toBeVisible();
     await expect(conditions.locator('[name="event.askHealthNote"]')).toBeHidden();
+    // Nor does its line name the note, as the outer card's does not: the line is drawn from the saved type.
+    await expect(conditions.locator(":scope > summary")).not.toContainText("Informații medicale");
 
     await openEditorBox(page, "Participare și înscrieri");
     await page.getByRole("combobox", { name: /Tip eveniment/ }).click();
@@ -247,7 +249,6 @@ test.describe("§NNN the participation conditions card", () => {
     await page.getByRole("option", { name: "Înscrieri pe site" }).click();
 
     await expect(conditions.locator(":scope > summary")).toContainText("Condiții de participare");
-    await expect(conditions.locator(":scope > summary")).toContainText("Informații medicale: nu");
     // A glyph before the heading, like every fold (§521); by its element, as the kit card's.
     await expect(conditions.locator(":scope > summary svg").first()).toBeVisible();
 
