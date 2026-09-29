@@ -345,7 +345,8 @@ test.describe("BR-REQ-039-01 the public list's states, behind the privacy notice
         await expect(legend).toContainText("Ce înseamnă stadiile de pe listă");
         const lines = legend.getByTestId("start-list-legend-line");
         expect(await lines.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-state")))).toEqual(["CONFIRMED", "PENDING", "WAITLISTED"]);
-        // The seeded race keeps the column defaults of its participation window: asked a week before, owed two days before.
+        // The seeded race is 60 days away, before its window opens, so the pending sentence says the window
+        // (the column defaults: asked a week before, owed two days before); inside it, the club's hold (unit test).
         const pending = lines.filter({ hasText: "Înscris, în așteptarea confirmării" });
         await expect(pending).toContainText("la înscriere și cu o săptămână înainte");
         await expect(pending).toContainText("până cu 2 zile înainte de start");

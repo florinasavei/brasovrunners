@@ -259,7 +259,7 @@
         "line": "“{word}”: {explanation}",
         "confirmed": "signed the declaration (online or on paper at the registration desk) and has the place.",
         "pendingWindow": "holds a place, declaration not signed. It is emailed at registration and {opens} before; it is due by {due}, or the place is freed.",
-        "pendingHold": "holds a place for {hold} to sign the declaration; otherwise the place is freed.",
+        "pendingHold": "holds a place for {hold} from registration until the declaration is signed; otherwise the place is freed.",
         "waitlisted": "has no place yet. When one is freed, the first gets an offer by email and has {offer} to sign the declaration."
       }
     },

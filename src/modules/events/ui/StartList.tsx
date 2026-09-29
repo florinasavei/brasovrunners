@@ -180,6 +180,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
         ],
         event,
         deadlines,
+        now: new Date(),
       })
     : [];
   const helpOf = (group: PublicListGroup) => legend.find((line) => line.group === group)?.sentence;

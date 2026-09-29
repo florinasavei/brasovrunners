@@ -1,6 +1,6 @@
 import type { Deadlines } from "@/modules/deadlines/domain/deadlines";
 import { daysPhrase, hoursPhrase, minutesPhrase } from "@/modules/deadlines/domain/duration-words";
-import { confirmationDueWords, confirmationWindow } from "@/modules/registrations/domain/hold-deadlines";
+import { confirmationDueWords, confirmationWindow, participationWindowOpen } from "@/modules/registrations/domain/hold-deadlines";
 import { LIST_STATE_KEYS, PUBLIC_LIST_GROUPS, type PublicListGroup } from "@/modules/registrations/domain/public-list-states";
 
 /**
@@ -10,9 +10,10 @@ import { LIST_STATE_KEYS, PUBLIC_LIST_GROUPS, type PublicListGroup } from "@/mod
  * as the legend under the list and as the «?» beside each word.
  *
  * **The deadlines are the event's and the club's, never a number of this file.** The pending
- * sentence says the event's own participation window (§104, §407) — «cu o săptămână» and «cu 2
- * zile înainte de start», or «la start» — when the event has one, and the club's declaration hold
- * («Termene», §377) when it does not; the waiting list's sentence says the club's offer window. So
+ * sentence follows the event's phase at render time, as `computeDeclarationHoldExpiry` does: before
+ * the event's participation window opens (§104, §407) it says the window — «cu o săptămână» and
+ * «cu 2 zile înainte de start», or «la start»; inside the window, or on an event with none, it says
+ * the club's declaration hold («Termene», §377), which is what a late registration gets; the waiting list's sentence says the club's offer window. So
  * the sentence and what the allocator does cannot disagree.
  *
  * `say` is the page's translator under `Event`, as in `counted-phrases.ts`.
@@ -29,6 +30,8 @@ export function listStateLegend(
     groups: readonly PublicListGroup[];
     event: { startsAt: Date; confirmationOpensDaysBefore?: number | null; confirmationDeadlineDaysBefore?: number | null };
     deadlines: Pick<Deadlines, "holdMinutes" | "offerHours">;
+    /** The render's moment: which phase the event is in. */
+    now: Date;
   },
 ): ListStateLegendLine[] {
   const hold = minutesPhrase(locale, params.deadlines.holdMinutes);
@@ -37,7 +40,9 @@ export function listStateLegend(
   const explanation = (group: PublicListGroup): string => {
     if (group === "CONFIRMED") return say("startList.legend.confirmed");
     if (group === "WAITLISTED") return say("startList.legend.waitlisted", { offer });
-    if (!window) return say("startList.legend.pendingHold", { hold });
+    const beforeWindow =
+      window !== null && !participationWindowOpen(params.event.startsAt, params.event.confirmationOpensDaysBefore, params.now);
+    if (!beforeWindow) return say("startList.legend.pendingHold", { hold });
     return say("startList.legend.pendingWindow", {
       opens: daysPhrase(locale, params.event.confirmationOpensDaysBefore ?? 0),
       due: confirmationDueWords(locale, params.event.confirmationDeadlineDaysBefore ?? 0),
