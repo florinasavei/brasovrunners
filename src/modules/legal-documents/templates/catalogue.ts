@@ -32,7 +32,10 @@ export const LEGAL_TEMPLATES: Record<LegalDocumentKey, Record<Locale, { title: s
   // The race's two declarations, one body with a risk section per course (§515): the mountain one keeps
   // the key every signature so far was recorded under. Titled in Romanian words (§564): «eveniment
   // montan», never «cursă trail», and «eveniment» for the road one too, because the two are named side
-  // by side — on `/admin/legal`, in the editor's select and in «Sarcini»'s steps.
+  // by side — on `/admin/legal`, in the editor's select and in «Sarcini»'s steps. Since §NNN all four
+  // declarations name serious injury and death among the inherent risks and waive the claims for them
+  // «în limitele permise de lege», never for harm the club causes (art. 1355); a text in effect changes
+  // only when the club starts a new version from the template and approves it («Șablon nou», §418).
   EVENT_DECLARATION: {
     ro: { title: "Declarație pe propria răspundere — eveniment montan", body: declarationTrailRo },
     en: { title: "Self-declaration — mountain event", body: declarationTrailEn },
