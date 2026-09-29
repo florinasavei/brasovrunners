@@ -69,8 +69,8 @@ const UNSET = {
   CLUB_STRAVA_URL: undefined,
 };
 
-async function render(shape: "line" | "block"): Promise<string> {
-  const element = shape === "line" ? await ClubIdentity({ shape: "line" }) : await ClubIdentity({ shape: "block" });
+async function render(shape: "line" | "fold"): Promise<string> {
+  const element = shape === "line" ? await ClubIdentity({ shape: "line" }) : await ClubIdentity({ shape: "fold" });
   return element ? renderToStaticMarkup(element) : "";
 }
 
@@ -108,8 +108,8 @@ describe("§565 the identity line", () => {
   it("writes the label once when the variable carries its own («CIF …», as the legal texts read it)", async () => {
     state.env.CLUB_REGISTRATION_NUMBER = `CIF ${CIF}`;
     expect(text(await render("line"))).toBe(`${LEGAL_NAME} (${CLUB_NAME}) · CIF ${CIF}`);
-    expect(text(await render("block"))).toContain(`C.I.F. ${CIF}`);
-    expect(text(await render("block"))).not.toContain("CIF CIF");
+    expect(text(await render("fold"))).toContain(`C.I.F. ${CIF}`);
+    expect(text(await render("fold"))).not.toContain("CIF CIF");
   });
 
   it("never shows the seat", async () => {
@@ -119,7 +119,7 @@ describe("§565 the identity line", () => {
 
 describe("§565 the footer's identity block", () => {
   it("has the three columns: the legal name with the site's name, C.I.F. and the country; the marks; Contact", async () => {
-    const html = await render("block");
+    const html = await render("fold");
     const words = text(html);
     expect(html).toContain('aria-label="Datele clubului"');
     expect(html).toContain('data-testid="club-identity-name"');
@@ -147,7 +147,7 @@ describe("§565 the footer's identity block", () => {
   });
 
   it("shows neither the seat nor who receives the form's messages", async () => {
-    const html = await render("block");
+    const html = await render("fold");
     expect(html).not.toContain(SEAT);
     expect(html).not.toContain(RECEIVES);
   });
@@ -156,7 +156,7 @@ describe("§565 the footer's identity block", () => {
     state.env = { ...UNSET };
     state.addresses = [];
     state.phone = null;
-    const html = await render("block");
+    const html = await render("fold");
     expect(html).not.toContain('data-testid="club-identity-name"');
     expect(html).not.toContain('data-testid="club-identity-social"');
     expect(html).not.toContain('data-testid="club-identity-phone"');
@@ -168,7 +168,7 @@ describe("§565 the footer's identity block", () => {
 
   it("speaks English on the English site", async () => {
     state.locale = "en";
-    const html = await render("block");
+    const html = await render("fold");
     const words = text(html);
     expect(html).toContain(`aria-label="The club's details"`.replace("'", "&#x27;"));
     expect(words).toContain("Romania");
