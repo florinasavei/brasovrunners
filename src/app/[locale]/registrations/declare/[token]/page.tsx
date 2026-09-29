@@ -879,7 +879,12 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                 glyph="withdraw"
                 label={t("declare.family.withdraw", { name: registration.registeredName })}
                 title={t("declare.family.withdrawTitle", { name: registration.registeredName })}
-                body={t("declare.family.withdrawBody", { name: registration.registeredName, event: ownLocale?.title ?? "" })}
+                body={
+                  // An event with no row in this language names none, rather than «… la  se anulează» (§553).
+                  ownLocale
+                    ? t("declare.family.withdrawBody", { name: registration.registeredName, event: ownLocale.title })
+                    : t("declare.family.withdrawBodyNoEvent", { name: registration.registeredName })
+                }
                 confirmLabel={t("declare.family.withdrawConfirm")}
                 cancelLabel={t("declare.family.withdrawBack")}
               />

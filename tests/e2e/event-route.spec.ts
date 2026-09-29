@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { type APIResponse, expect, test } from "@playwright/test";
 import { confirmDialog } from "./support/confirm";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
@@ -152,8 +152,18 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     // The publish expired the cached 404: the first anonymous visit after it is the page.
     const first = await request.get(`/ro/evenimente/${slug}`);
     expect(first.status()).toBe(200);
-    const again = await request.get(`/ro/evenimente/${slug}`);
-    expect(again.headers()["x-nextjs-cache"]).toBe("HIT");
+    // Polled like the 404 above (§553): another worker's save expires `public:events` between the
+    // two asks, and the ask after that expiry is a MISS that files the page again.
+    const asked: { last?: APIResponse } = {};
+    await expect
+      .poll(async () => {
+        const response = await request.get(`/ro/evenimente/${slug}`);
+        asked.last = response;
+        return `${response.status()} ${response.headers()["x-nextjs-cache"]}`;
+      })
+      .toBe("200 HIT");
+    const again = asked.last;
+    if (!again) throw new Error("the page was never asked for");
     // The browser is told what Vercel's CDN tells it — keep it, but ask again before every use —
     // never Next's `stale-while-revalidate`, which would show it a page from before the save (§549).
     expect(again.headers()["cache-control"]).toBe("public, max-age=0, must-revalidate");

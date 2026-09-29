@@ -160,6 +160,8 @@ export default async function NewsletterSignup({ locale, outcome, refused, typed
         dialogId={NEWSLETTER_DIALOG_ID}
         arrival={open ? "modal" : outcome === "sent" || outcome === "unavailable" ? "closed" : "none"}
         stamp={attempt}
+        // The leave form's refusal takes the focus, as a §47 summary does (§553).
+        focusOnArrival={leaveErrorText ? NEWSLETTER_LEAVE_ERROR_ID : null}
       />
 
       <Box
