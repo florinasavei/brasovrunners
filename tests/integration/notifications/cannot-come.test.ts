@@ -175,13 +175,16 @@ describe("§NNN «Nu mai pot ajunge» from the email to the cancelled registrati
     expect(html).toContain("Anulează înscrierea pentru Ana Pop");
     expect((await db.select().from(registrations).where(eq(registrations.id, ana.id)))[0].status).toBe("CONFIRMED");
 
+    // The page asks why, before the cancel (§NNN).
+    expect(html).toContain('name="cancelReasonKind"');
+
     // The confirm press (the POST): cancelled through the allocator, the §547 email queued.
-    const cancelled = await consumeAndCancel(secret, NOW);
-    expect(cancelled).toMatchObject({ ok: true, registration: { id: ana.id, status: "CANCELLED" } });
+    const cancelled = await consumeAndCancel(secret, NOW, { kind: "OTHER_PLANS", text: null });
+    expect(cancelled).toMatchObject({ ok: true, registration: { id: ana.id, status: "CANCELLED", cancelReasonKind: "OTHER_PLANS" } });
     const queued = await db.select().from(emailOutbox).where(and(eq(emailOutbox.registrationId, ana.id), eq(emailOutbox.messageType, "REGISTRATION_CANCELLED")));
     expect(queued.filter((entry) => entry.participantId === participantId)).toHaveLength(1);
     // Single use (§12.8): the same link cancels nothing twice.
-    expect((await consumeAndCancel(secret, NOW)).ok).toBe(false);
+    expect((await consumeAndCancel(secret, NOW, { kind: "OTHER_PLANS", text: null })).ok).toBe(false);
   });
 
   it("reuses the reminder's own manage link — one token, and the reminder's one button is the cancel", async () => {
@@ -209,34 +212,71 @@ describe("§NNN «Nu mai pot ajunge» from the email to the cancelled registrati
     }
   });
 
-  it("an organizer's message after the confirmation supersedes nothing: the confirmation's manage link, its PDF and the reminder's check-in door keep working", async () => {
+  it("the real chain: the address to confirm, then the declaration request on the same registration — each email's button is its own manage page, the newest link the live one", async () => {
+    const ana = await registration("PENDING_EMAIL_CONFIRMATION");
+    const verify = await renderOutboxMessage(row("VERIFY_REGISTRATION_EMAIL", ana.id), db, NOW);
+    const first = CANNOT_COME_LINK.exec(verify.text)![2];
+
+    // The address confirmed: the declaration to sign, on the same registration, with no deletion between.
+    await db.update(registrations).set({ status: "PENDING_DECLARATION", emailConfirmedAt: NOW, holdExpiresAt: new Date(NOW.getTime() + 30 * 60_000) }).where(eq(registrations.id, ana.id));
+    const declaration = await renderOutboxMessage(row("COMPLETE_DECLARATION", ana.id), db, NOW);
+    const found = CANNOT_COME_LINK.exec(declaration.text);
+    expect(found, "the declaration request lands on the manage page, never «Înscrierile mele» by address").not.toBeNull();
+    expect(declaration.text).not.toMatch(/Nu mai pot ajunge: \S+\/inscrieri\/ale-mele/);
+    const second = found![2];
+    expect(second).not.toBe(first);
+    // The newer link supersedes the older (BR-REQ-036-02 criterion 5): one live manage link, the newest email's.
+    expect((await readActionTokenContext(db, { secret: second, purpose: "MANAGE_REGISTRATION", now: NOW })).ok).toBe(true);
+    expect((await readActionTokenContext(db, { secret: first, purpose: "MANAGE_REGISTRATION", now: NOW })).ok).toBe(false);
+
+    // The waiting list's messages the same way, one after the other on one registration.
+    await db.update(registrations).set({ status: "WAITLISTED", holdExpiresAt: null, waitlistedAt: NOW }).where(eq(registrations.id, ana.id));
+    const joined = await renderOutboxMessage(row("WAITLIST_JOINED", ana.id), db, NOW);
+    expect(CANNOT_COME_LINK.exec(joined.text), "WAITLIST_JOINED").not.toBeNull();
+    const expired = await renderOutboxMessage(row("WAITLIST_OFFER_EXPIRED", ana.id), db, NOW);
+    expect(CANNOT_COME_LINK.exec(expired.text), "WAITLIST_OFFER_EXPIRED").not.toBeNull();
+  });
+
+  it("a retry after a failed send mints again, and the retry's link is the one that works", async () => {
+    const ana = await registration("PENDING_DECLARATION");
+    const failed = await renderOutboxMessage(row("COMPLETE_DECLARATION", ana.id), db, NOW);
+    const retried = await renderOutboxMessage(row("COMPLETE_DECLARATION", ana.id), db, NOW);
+    const failedSecret = CANNOT_COME_LINK.exec(failed.text)![2];
+    const retriedSecret = CANNOT_COME_LINK.exec(retried.text)?.[2];
+    expect(retriedSecret, "the retry carries the manage page too").toBeDefined();
+    expect((await readActionTokenContext(db, { secret: retriedSecret!, purpose: "MANAGE_REGISTRATION", now: NOW })).ok).toBe(true);
+    expect((await readActionTokenContext(db, { secret: failedSecret, purpose: "MANAGE_REGISTRATION", now: NOW })).ok).toBe(false);
+  });
+
+  it("an organizer's message after the confirmation lands on the registration's own manage page: its link is the live one, with the QR and «Am ajuns»", async () => {
     const ana = await registration("CONFIRMED");
     const confirmation = await renderOutboxMessage(row("REGISTRATION_CONFIRMED", ana.id), db, NOW);
     const confirmationSecret = CANNOT_COME_LINK.exec(confirmation.text)![2];
-    // The PDF rides on the same secret (§95).
-    expect(confirmation.text).toContain(`/api/registrations/declaration/${confirmationSecret}`);
 
-    // Race morning: «Parcarea e la intrare» to every participant.
+    // Race week: «Parcarea e la intrare» to every participant.
     const message = await renderOutboxMessage(
       row("ORGANIZER_MESSAGE", ana.id, { subject: { ro: "Parcare", en: "Parking" }, body: { ro: "Parcarea e la intrare.", en: "Parking is at the gate." } }),
       db,
       NOW,
     );
-    // The button is there, and opens «Înscrierile mele» by address instead of minting a superseding link.
-    expect(message.text).toMatch(/Nu mai pot ajunge: https?:\/\/\S+\/ro\/inscrieri\/ale-mele\s/);
-    expect(message.text).toContain("Scrie adresa și îți trimitem linkul de anulare.");
-    expect(CANNOT_COME_LINK.exec(message.text)).toBeNull();
+    const found = CANNOT_COME_LINK.exec(message.text);
+    expect(found, "the organizer's message lands on the manage page, never «Înscrierile mele» by address").not.toBeNull();
+    expect(message.text).not.toMatch(/Nu mai pot ajunge: \S+\/inscrieri\/ale-mele/);
+    const newest = found![2];
 
-    // Still one manage token, the confirmation's, live: «Vezi înscrierea», the PDF and self check-in open.
-    const tokens = await manageTokens(ana.id);
-    expect(tokens).toHaveLength(1);
-    expect(tokens[0].invalidatedAt).toBeNull();
-    const read = await readActionTokenContext(db, { secret: confirmationSecret, purpose: "MANAGE_REGISTRATION", now: NOW });
-    expect(read.ok).toBe(true);
+    // The newest email's link is live and opens the registration's page — the QR and the check-in are there.
+    expect((await readActionTokenContext(db, { secret: newest, purpose: "MANAGE_REGISTRATION", now: NOW })).ok).toBe(true);
+    const html = renderToStaticMarkup(
+      (await ManageRegistrationPage({ params: Promise.resolve({ locale: "ro", token: newest }), searchParams: Promise.resolve({}) })) as ReactElement,
+    );
+    expect(html).toContain("ABC123");
+    expect(html).toContain('id="cancel"');
+    // The confirmation's older link is superseded, as every newer manage link supersedes it.
+    expect((await readActionTokenContext(db, { secret: confirmationSecret, purpose: "MANAGE_REGISTRATION", now: NOW })).ok).toBe(false);
 
-    // The same for the organizer's update notice.
-    await renderOutboxMessage(row("EVENT_UPDATE_NOTICE", ana.id, { changes: ["time"] }), db, NOW);
-    expect((await readActionTokenContext(db, { secret: confirmationSecret, purpose: "MANAGE_REGISTRATION", now: NOW })).ok).toBe(true);
+    // The organizer's update notice the same way.
+    const update = await renderOutboxMessage(row("EVENT_UPDATE_NOTICE", ana.id, { changes: ["time"] }), db, NOW);
+    expect(CANNOT_COME_LINK.exec(update.text)).not.toBeNull();
   });
 
   it("the family link: no button beside «Nu înscriu această persoană», at the limit or once the form is gone — and no manage link minted", async () => {

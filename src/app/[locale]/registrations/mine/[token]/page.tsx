@@ -36,6 +36,9 @@ import { declarationStateKey, isSignable } from "@/modules/registrations/domain/
 import { DENSITY } from "@/theme/density";
 import FamilyChip from "@/modules/registrations/ui/FamilyChip";
 import QrWithName, { type QrWords } from "@/modules/registrations/ui/QrWithName";
+import CancelReasonFields from "@/modules/registrations/ui/CancelReasonFields";
+import { cancelReasonWords } from "@/modules/registrations/ui/cancel-reason-words";
+import { cancelReasonProblemOf } from "@/modules/registrations/domain/cancel-reason";
 
 type Props = {
   params: Promise<{ locale: string; token: string }>;
@@ -50,6 +53,9 @@ type Props = {
     withdrawn?: string;
     field?: string;
     withdrawFailed?: string;
+    /** The box a cancel without its reason named (§NNN), under `person`'s cancel — an id the page lists, never a name. */
+    reason?: string;
+    person?: string;
   }>;
 };
 
@@ -68,8 +74,11 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
-  const { done, invalid, started, here, hereFailed, list, listFailed, withdrawn, field, withdrawFailed } = await searchParams;
+  const { done, invalid, started, here, hereFailed, list, listFailed, withdrawn, field, withdrawFailed, reason, person } = await searchParams;
   const t = await getTranslations("Registrations");
+  // Why the person cancels (§NNN): the words once, and the box a refused press named, under that person.
+  const reasonWords = await cancelReasonWords();
+  const reasonProblem = cancelReasonProblemOf(reason);
   // The words beside every QR (§547): whose it is, their number, the code.
   const qrWords: QrWords = {
     alt: (name) => t("manage.qrTitle", { name }),
@@ -329,15 +338,21 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
                       </Button>
                     </form>
                   ) : null)}
-                <form action={cancelFromMyRegistrationsAction}>
+                {/* The cancel with its reason (§NNN), on a line of its own under the race-day buttons. */}
+                <Box component="form" action={cancelFromMyRegistrationsAction} sx={{ flexBasis: "100%" }} data-testid="mine-cancel">
                   <input type="hidden" name="locale" value={locale} />
                   <input type="hidden" name="token" value={token} />
                   <input type="hidden" name="registrationId" value={item.id} />
+                  <CancelReasonFields
+                    {...reasonWords.fields}
+                    problem={person === item.id ? reasonProblem : undefined}
+                    problemText={person === item.id && reasonProblem ? reasonWords.problemText[reasonProblem] : undefined}
+                  />
                   <Button type="submit" variant="outlined" color="error" size="small" sx={{ minHeight: 44, ...WITH_GLYPH_SX }}>
                     <EventBusyIcon aria-hidden="true" sx={glyphSx("small")} />
                     {t("mine.cancel")}
                   </Button>
-                </form>
+                </Box>
               </Stack>
               {/* What cancelling does not do, where it is done (§323): the place goes, the record stays. */}
               <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>

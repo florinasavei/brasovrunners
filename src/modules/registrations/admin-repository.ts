@@ -5,6 +5,7 @@ import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventTranslations, events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import {
+  type RegistrationCancelReasonKind,
   type RegistrationKind,
   type RegistrationSex,
   type RegistrationSource,
@@ -99,6 +100,9 @@ export type RegistrationListRow = {
   holdExpiresAt: Date | null;
   declarationAcceptedAt: Date | null;
   cancelledAt: Date | null;
+  /** The participant's own reason for cancelling (§NNN): the export's «Cancellation reason». Null on a staff cancellation. */
+  cancelReasonKind: RegistrationCancelReasonKind | null;
+  cancelReason: string | null;
   expiredAt: Date | null;
   expiryReason: string | null;
 };
@@ -342,6 +346,8 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       holdExpiresAt: registrations.holdExpiresAt,
       declarationAcceptedAt: latestDeclarationAcceptedAt,
       cancelledAt: registrations.cancelledAt,
+      cancelReasonKind: registrations.cancelReasonKind,
+      cancelReason: registrations.cancelReason,
       expiredAt: registrations.expiredAt,
       expiryReason: registrations.expiryReason,
     })
@@ -538,6 +544,9 @@ export type RegistrationDetail = {
   confirmedAt: Date | null;
   cancelledAt: Date | null;
   cancellationSource: string | null;
+  /** Why the participant cancelled (§NNN): the timeline's line under «Anulată». Null on a staff cancellation. */
+  cancelReasonKind: RegistrationCancelReasonKind | null;
+  cancelReason: string | null;
   expiredAt: Date | null;
   expiryReason: string | null;
   /** Race day (BR-REQ-037-07, BR-REQ-037-08, BR-REQ-038-01). */
@@ -630,6 +639,8 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       confirmedAt: registrations.confirmedAt,
       cancelledAt: registrations.cancelledAt,
       cancellationSource: registrations.cancellationSource,
+      cancelReasonKind: registrations.cancelReasonKind,
+      cancelReason: registrations.cancelReason,
       expiredAt: registrations.expiredAt,
       expiryReason: registrations.expiryReason,
       cycleStartedAt: registrations.privacyAcknowledgedAt,

@@ -1223,7 +1223,7 @@ Core invariants:
 6. Pending email and Waitlisted do not occupy capacity, but eligible Waitlisted entries have allocation priority over later registrations;
 7. no capacity-changing transaction may let a later registration bypass that queue;
 8. cancellation is idempotent;
-9. self-cancellation allowed before event start;
+9. self-cancellation allowed before event start, with the participant's reason — one of three answers, and a short text for «Alt motiv» — at every door (`DECISIONS.md` §NNN);
 10. email failure does not roll back committed state;
 11. locale/legal/declaration acceptance are historical facts;
 12. Admin corrections are explicit/audited;
@@ -1885,6 +1885,8 @@ registrations
 - expired_at null
 - expiry_reason EMAIL_CONFIRMATION_LAPSED|DECLARATION_HOLD_LAPSED|WAITLIST_OFFER_LAPSED|EVENT_STARTED null
 - cancellation_source PARTICIPANT|ADMIN null
+- cancel_reason_kind INJURY_OR_ILLNESS|OTHER_PLANS|OTHER null   -- a participant's own cancellation, required at every self-cancellation door (DECISIONS.md §NNN); null on a staff cancellation
+- cancel_reason text null            -- the words of «Alt motiv» (OTHER only), at most 200 characters; the audit row carries the kind alone
 - created_at
 - updated_at
 
@@ -2763,20 +2765,20 @@ save cancels the event and "tell them" is left ticked, with the reason the organ
 go to every active registration of that event (`PENDING_DECLARATION`, `WAITLIST_OFFERED`,
 `CONFIRMED`, `WAITLISTED`) in its own language, are queued in the save's transaction and
 audited with the count, never who. `EVENT_CANCELLED` carries no token; `EVENT_UPDATE_NOTICE`
-may carry one, minted at send time behind «Nu mai pot ajunge», only while the registration holds
-no live manage link (below).
+carries one, minted at send time behind «Nu mai pot ajunge» (below).
 
 **«Nu mai pot ajunge» / "I can't make it any more" is on every message about a live
 registration** (`DECISIONS.md` §NNN, `notifications/domain/cannot-come.ts`): the address to
 confirm, the declaration to sign, the waiting list and its offer, the confirmation, the number,
 the reminder, the organizer's update notice and message, the manage link, the signed
 declaration and the family sitting's message. A full-width button under the action (the
-reminder's only one) to a cancel that asks first. **It never supersedes a link in the inbox**:
-the message's own `MANAGE_REGISTRATION` token where it mints one; a family's own «Toate
-înscrierile mele» where it mints that; elsewhere a manage token minted at send time only while
-the registration holds no live one; otherwise «Înscrierile mele» by address — because a new
-manage token kills the older one, and with it the confirmation's PDF and the reminder's self
-check-in. Never on the family link's kept-form shape (its «Nu înscriu această persoană» sits
+reminder's only one) to a cancel that asks why and then asks first. **It lands on the
+registration's own manage page, one tap**: the message's own `MANAGE_REGISTRATION` token where it
+mints one; a family's own «Toate înscrierile mele» on the two messages that list several people
+(the family's one confirmation, the family sitting's message); on every other message a manage
+token minted at send time, which supersedes the older manage link as every newer one does
+(BR-REQ-036-02 criterion 5) — the newest email's link is the live one, and its page carries the
+QR, self check-in and the list's switch the older one did. Never on the family link's kept-form shape (its «Nu înscriu această persoană» sits
 there), never after the fact (the cancellations,
 the thank-you), never on a club copy (`DECISIONS.md` §320), never to an address that is not the
 registration's, never once the event has started or will not run.

@@ -11,6 +11,7 @@ import {
   consumeAndCancelFromMyRegistrations,
 } from "@/modules/registrations/my-registrations";
 import { writeFamilySigningPass } from "@/modules/registrations/family-signing";
+import { parseCancelReason } from "@/modules/registrations/domain/cancel-reason";
 import { startFamilySigningFromMine } from "@/modules/registrations/token-actions";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { flashPublic } from "@/shared/feedback/flash";
@@ -26,8 +27,12 @@ export async function cancelFromMyRegistrationsAction(form: FormData): Promise<v
   const registrationId = String(form.get("registrationId") ?? "");
   const path = pagePath(locale, token);
 
+  // The reason, required (§NNN): refused before the link is spent, the box named under that person.
+  const reason = parseCancelReason(form);
+  if (!reason.ok) redirect(`${path}?reason=${reason.problem}&person=${encodeURIComponent(registrationId)}#cancel-reason`);
+
   try {
-    const result = await consumeAndCancelFromMyRegistrations(getDb(), token, registrationId, new Date());
+    const result = await consumeAndCancelFromMyRegistrations(getDb(), token, registrationId, new Date(), reason.reason);
     // The toast on the page it lands on (§427); a refused link says so on the page, never in a toast.
     if (result.ok) await flashPublic("unregistered");
     redirect(result.ok ? `${path}?done=1` : `${path}?invalid=1`);

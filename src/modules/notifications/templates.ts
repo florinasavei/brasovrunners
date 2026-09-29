@@ -1,5 +1,6 @@
 import type { EmailLocale, OutgoingEmail } from "@/infrastructure/email/adapter";
 import type { EmailMessageType } from "@/db/schema/email-outbox";
+import type { RegistrationCancelReasonKind } from "@/db/schema/registrations";
 import { emailBodyParts, newsletterBodyParts, readEmailBody, type EmailBodyPart } from "./domain/email-rich-text";
 import type { RichTextDoc } from "@/modules/content/rich-text/domain/schema";
 import { copyFor, onlyMissingFacts, type EmailCopy, fillPlaceholders } from "./domain/email-copy";
@@ -216,6 +217,12 @@ function firstNameOf(name: string): string {
 const EARLIER_STATE_WORDS: Record<EmailLocale, Record<FamilyEarlierState, string>> = {
   ro: { confirmed: "confirmat", declaration: "semnează declarația", waitlist: "pe lista de așteptare", email: "așteaptă confirmarea adresei" },
   en: { confirmed: "confirmed", declaration: "signing the declaration", waitlist: "on the waiting list", email: "waiting for the address to be confirmed" },
+};
+
+/** The participant's reason for cancelling (§NNN), as the cancel form offered it, for the club's copy. */
+const CANCEL_REASON_WORDS: Record<EmailLocale, Record<RegistrationCancelReasonKind, string>> = {
+  ro: { INJURY_OR_ILLNESS: "Accidentare sau boală", OTHER_PLANS: "Alt program", OTHER: "Alt motiv" },
+  en: { INJURY_OR_ILLNESS: "Injury or illness", OTHER_PLANS: "Other plans", OTHER: "Another reason" },
 };
 
 /** The family's greeting (§519): every confirmed person's first name, in the order the forms were sent. */
@@ -729,12 +736,6 @@ export type TemplateData = {
    */
   cannotComeUrl?: string;
   /**
-   * The button lands on «Înscrierile mele» by address instead (§NNN): the registration already holds a
-   * live manage link in the inbox, which a new one would supersede (BR-REQ-036-02 criterion 5). Its
-   * sentence then says a link is sent on request.
-   */
-  cannotComeByRequest?: boolean;
-  /**
    * The public participant list's own switch, on the confirmation (BR-REQ-039-01; `DECISIONS.md`
    * §143): its own token, read at send time. `listed` is whether the name is on the list today,
    * so the link reads the right way round — "take me off" or "show my name".
@@ -886,6 +887,12 @@ export type TemplateData = {
    */
   cancelledFromWaitlist?: boolean;
   cancelledOthers?: ReadonlyArray<{ name: string; state: FamilyEarlierState }>;
+  /**
+   * Why the participant cancelled (§NNN), from the row: the answer, and the words of «Alt motiv».
+   * Quoted on the club's copy of the cancellation only — the person knows why.
+   */
+  cancelReasonKind?: RegistrationCancelReasonKind;
+  cancelReasonText?: string;
   /**
    * A minor's registration (§108): the parent's or guardian's name, as typed on the form. The
    * message greets them and says whose registration it is about (§419) — the address is theirs.
@@ -1616,8 +1623,6 @@ const T = {
     cannotCome: {
       label: "Nu mai pot ajunge",
       note: "Locul se eliberează pentru altcineva.",
-      // When the button opens «Înscrierile mele» by address (§NNN): the link comes by email, on request.
-      noteByRequest: "Scrie adresa și îți trimitem linkul de anulare. Locul se eliberează pentru altcineva.",
     },
     /** Under "you are already registered", on a re-send for a slip (§446): the one way to register somebody else. */
     anotherPersonHint: "Dacă vrei să înscrii pe altcineva, trimite formularul cu numele complet și data de naștere a acelei persoane.",
@@ -1632,6 +1637,9 @@ const T = {
       fromWaitlist ? `${name || "Persoana"} nu mai este pe lista de așteptare.` : "Locul a fost eliberat.",
     cancelledOthers: (others: ReadonlyArray<{ name: string; state: FamilyEarlierState }>) =>
       `Pe această adresă rămân înscriși: ${others.map((other) => `${other.name} (${EARLIER_STATE_WORDS.ro[other.state]})`).join(", ")}.`,
+    /** The club's copy of a cancellation (§NNN): the reason the participant gave, their words quoted. */
+    cancelReason: (kind: RegistrationCancelReasonKind, text: string | undefined) =>
+      `Motivul anulării: ${CANCEL_REASON_WORDS.ro[kind]}${kind === "OTHER" && text ? ` — „${text}”` : ""}.`,
     footer: "Răspunde la acest email pentru întrebări.",
     /** The club's copy of a participant's message (§320): in front of the subject, and the first line. */
     clubCopy: {
@@ -2125,7 +2133,6 @@ const T = {
     cannotCome: {
       label: "I can't make it any more",
       note: "Your place goes to someone else.",
-      noteByRequest: "Type your address and we email you the cancel link. Your place goes to someone else.",
     },
     anotherPersonHint: "If you want to register someone else, send the form with that person's full name and birth date.",
     sameBirthDateHint:
@@ -2137,6 +2144,8 @@ const T = {
       fromWaitlist ? `${name || "The person"} is no longer on the waiting list.` : "The place has been released.",
     cancelledOthers: (others: ReadonlyArray<{ name: string; state: FamilyEarlierState }>) =>
       `Still registered on this address: ${others.map((other) => `${other.name} (${EARLIER_STATE_WORDS.en[other.state]})`).join(", ")}.`,
+    cancelReason: (kind: RegistrationCancelReasonKind, text: string | undefined) =>
+      `Cancellation reason: ${CANCEL_REASON_WORDS.en[kind]}${kind === "OTHER" && text ? ` — “${text}”` : ""}.`,
     footer: "Reply to this email with questions.",
     clubCopy: {
       subject: "[Club copy] ",
@@ -2340,7 +2349,6 @@ export function buildTemplateContent(
       manageUrl: undefined,
       // «Nu mai pot ajunge» is the participant's own cancel (§NNN): never in a club mailbox.
       cannotComeUrl: undefined,
-      cannotComeByRequest: undefined,
       listConsentUrl: undefined,
       declarationPdfUrl: undefined,
       checkinCode: undefined,
@@ -2621,6 +2629,10 @@ export function buildTemplateContent(
       ...(messageType === "REGISTRATION_CANCELLED" && data.cancelledOthers && data.cancelledOthers.length > 0
         ? [copy.cancelledOthers(data.cancelledOthers)]
         : []),
+      // The participant's reason (§NNN), on the club's copy only: the club asked for it, the person knows it.
+      ...(messageType === "REGISTRATION_CANCELLED" && clubCopy && data.cancelReasonKind
+        ? [copy.cancelReason(data.cancelReasonKind, data.cancelReasonText)]
+        : []),
       /*
         A group run's signer's copy (§419): that the document is masked in it, when the text asked
         for one, and always how to have a declaration one did not sign deleted — the address was
@@ -2698,7 +2710,7 @@ export function buildTemplateContent(
       // The family link only in the family sitting's shape (§NNN): the kept form's «Nu înscriu această
       // persoană» sits beside it, and a second "no" there would cancel the person already registered.
       (messageType !== "REGISTER_ANOTHER_PERSON" || familySittingShape)
-        ? { label: copy.cannotCome.label, url: data.cannotComeUrl, note: data.cannotComeByRequest ? copy.cannotCome.noteByRequest : copy.cannotCome.note }
+        ? { label: copy.cannotCome.label, url: data.cannotComeUrl, note: copy.cannotCome.note }
         : undefined,
     image: entry.image?.(data),
     eventFacts: factsBlock,

@@ -6,7 +6,7 @@ import { type Registration, registrations } from "@/db/schema/registrations";
 import { CLUB_TIME_ZONE, formatDay, formatTime } from "@/i18n/dates";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
-import { hasLiveActionToken, issueActionToken } from "@/modules/action-tokens/repository";
+import { issueActionToken } from "@/modules/action-tokens/repository";
 import { readEventChanges, readEventNoticeWords } from "@/modules/events/domain/event-changes";
 import { hasRouteDescription, partitionEventLinks } from "@/modules/events/domain/route-section";
 import { localizedSchedule, programmeLines, readScheduleItems } from "@/modules/events/domain/schedule";
@@ -421,6 +421,11 @@ async function renderRow(
     data.cancelledFromWaitlist = (row.payloadJson as { previousStatus?: unknown } | null)?.previousStatus === "WAITLISTED";
     const others = await registeredOnAddressWithStates(db, registration.eventId, registration.participantId, [registration.id]);
     if (others.length > 0) data.cancelledOthers = others;
+    // The participant's own reason (§NNN), read from the row; the template quotes it on the club's copy only.
+    if (registration.cancelReasonKind) {
+      data.cancelReasonKind = registration.cancelReasonKind;
+      if (registration.cancelReasonKind === "OTHER" && registration.cancelReason) data.cancelReasonText = registration.cancelReason;
+    }
   }
   if (data.eventUrl && eventDetails?.hasRules) data.eventRulesUrl = `${data.eventUrl}#rules`;
   /*
@@ -990,19 +995,18 @@ async function renderRow(
     (§320), never after the start or on an event that will not run, never on a registration that is
     no longer active — and on the family link only in the family sitting's shape (below).
 
-    Which link, in this order — and never one that supersedes a link already in the runner's inbox:
+    Which link, in this order — always the registration's own manage page, one tap from the email:
     1. the manage token this send already minted (the confirmation, the reminder, the number, the
        signed declaration, the manage link) — today's «Nu mai pot veni», at `#cancel`;
-    2. a family's own «Toate înscrierile mele» this send minted (the family's confirmation, the family
-       sitting's message): the page lists every person of the address with their own cancel (§77, §547);
-    3. on a message that minted no manage token (the address to confirm, the declaration request, the
-       waiting list and its offer, the organizer's notice and message), a manage token minted here —
-       only while the registration holds no live one. Minting supersedes (BR-REQ-036-02 criterion 5):
-       one organizer message to every participant on race morning would otherwise kill each runner's
-       «Vezi înscrierea», the confirmation's PDF and the reminder's link, which is the door to self
-       check-in (`checkInSelf`);
-    4. otherwise «Înscrierile mele» by address (§77), which sends a fresh link on request and supersedes
-       nothing a runner holds — the button still there, one step longer, and its sentence says so.
+    2. a family's own «Toate înscrierile mele» this send minted, on the two messages that list several
+       people (the family's one confirmation, the family sitting's message): the page lists every
+       person of the address with their own cancel (§77, §547);
+    3. on every other message (the address to confirm, the declaration request, the waiting list and
+       its offer, the offer lapsed, the organizer's notice and message), a manage token minted here for
+       this send. It supersedes the registration's older manage link (BR-REQ-036-02 criterion 5), as
+       every newer manage link always did: the newest email about the registration is the one whose
+       link works, and its page carries everything the older one did — the QR, «Am ajuns», the public
+       list's switch, the cancel. A retry after a failed send mints again, and the retry's link wins.
   */
   const cannotComeFor = familyConfirmed?.[0] ?? registration;
   const cannotComeShape = row.messageType !== "REGISTER_ANOTHER_PERSON" || familySitting !== undefined;
@@ -1034,7 +1038,7 @@ async function renderRow(
         data.cannotComeUrl = actionUrl;
       } else if (familySitting && data.familyMineUrl) {
         data.cannotComeUrl = data.familyMineUrl;
-      } else if (!(await hasLiveActionToken(db, { registrationId: cannotComeFor.id, purpose: "MANAGE_REGISTRATION", now }))) {
+      } else {
         const issued = await issueActionToken(db, {
           participantId: row.participantId,
           registrationId: cannotComeFor.id,
@@ -1044,9 +1048,6 @@ async function renderRow(
         });
         const path = getPathname({ locale, href: { pathname: ROUTE_BY_PURPOSE.MANAGE_REGISTRATION, params: { token: issued.secret } } });
         data.cannotComeUrl = cannotComeUrlOf(`${env.APP_BASE_URL}${path}`);
-      } else {
-        data.cannotComeUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: "/registrations/mine" })}`;
-        data.cannotComeByRequest = true;
       }
     }
   }

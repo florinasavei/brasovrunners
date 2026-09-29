@@ -340,6 +340,10 @@ test.describe("§389 §446 a family on one address", () => {
     await hydrated(page);
     const withdraw = page.getByTestId("family-signing-withdraw").getByRole("button", { name: `Renunț la înscrierea pentru Maria ${lastName}` });
     expect((await withdraw.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    // Why, first (§NNN): the browser names the empty box and asks nothing until a reason is chosen.
+    await withdraw.click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await page.getByTestId("family-signing-withdraw").getByLabel("De ce anulezi?").selectOption("INJURY_OR_ILLNESS");
     await withdraw.click();
     await confirmDialog(page, `Renunți la înscrierea pentru Maria ${lastName}?`);
     await expect(page.getByText(`Declarația 3 din 3 — Ion ${lastName}`)).toBeVisible({ timeout: 30_000 });

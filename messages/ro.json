@@ -544,6 +544,13 @@
       "holdExpires": "Rezervarea expiră",
       "confirmed": "Confirmată",
       "cancelled": "Anulată",
+      "cancelReasonLabel": "Motivul anulării",
+      "cancelReasonOther": "{kind} — „{text}”",
+      "cancelReasonKinds": {
+        "INJURY_OR_ILLNESS": "Accidentare sau boală",
+        "OTHER_PLANS": "Alt program",
+        "OTHER": "Alt motiv"
+      },
       "expired": "Expirată",
       "declaration": "Declarație semnată",
       "privacyNoticeLine": "Nota de informare luată la cunoștință (v{version}): {date}",
@@ -5031,9 +5038,10 @@
             {
               "title": "Se retrage sau nu mai poate veni",
               "steps": [
-                "Din emailul de confirmare: «Gestionează înscrierea» → «Anulează înscrierea pentru…» (cu numele persoanei) → «Da, anulează».",
-                "Din orice email despre înscrierea lui: «Nu mai pot ajunge» → «Anulează înscrierea pentru…» → «Da, anulează».",
-                "Oricând: «Înscrierile mele», pe site, cu adresa lui. Locul trece imediat la lista de așteptare."
+                "Din orice email despre înscrierea lui: «Nu mai pot ajunge» → la «De ce anulezi?» alege motivul (pentru «Alt motiv» îl scrie pe scurt) → «Anulează înscrierea pentru…» (cu numele persoanei) → «Da, anulează».",
+                "Pe emailul unei familii, butonul deschide «Înscrierile mele», cu fiecare persoană: «Renunț la această înscriere», tot cu motivul ales. Tot așa oricând, de pe site, cu adresa lui.",
+                "În declarațiile unei familii: «Renunț la înscrierea pentru…», tot cu motivul ales. Locul trece imediat la lista de așteptare.",
+                "Motivul apare pe pagina înscrierii, în export și în copia clubului a emailului de anulare."
               ]
             },
             {
@@ -5991,6 +5999,22 @@
   "Registrations": {
     "invalidOrExpired": "Acest link nu mai este valabil. Îți putem trimite unul nou, pe aceeași adresă de email.",
     "cancelKeepsRecord": "Renunțarea eliberează locul; înscrierea o păstrăm trei ani, ca dovadă. Vrei să-ți vezi, corectezi sau ștergi datele? <contact>Scrie-ne</contact>.",
+    "cancelReason": {
+      "label": "De ce anulezi?",
+      "choose": "Alege motivul",
+      "kinds": {
+        "INJURY_OR_ILLNESS": "Accidentare sau boală",
+        "OTHER_PLANS": "Alt program",
+        "OTHER": "Alt motiv"
+      },
+      "textLabel": "Motivul, pe scurt",
+      "textHelp": "Doar pentru «Alt motiv». Cel mult 200 de caractere. Îl citește doar clubul.",
+      "problem": {
+        "kind": "Alege de ce anulezi, apoi apasă din nou.",
+        "text": "Ai ales «Alt motiv»: scrie motivul, pe scurt.",
+        "long": "Motivul are cel mult 200 de caractere."
+      }
+    },
     "confirm": {
       "title": "Confirmă adresa de email",
       "prompt": "Îți confirmăm adresa de email. Dacă nu se întâmplă nimic în câteva secunde, apasă butonul.",

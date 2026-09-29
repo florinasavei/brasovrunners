@@ -544,6 +544,13 @@
       "holdExpires": "Hold expires",
       "confirmed": "Confirmed",
       "cancelled": "Cancelled",
+      "cancelReasonLabel": "Cancellation reason",
+      "cancelReasonOther": "{kind} — “{text}”",
+      "cancelReasonKinds": {
+        "INJURY_OR_ILLNESS": "Injury or illness",
+        "OTHER_PLANS": "Other plans",
+        "OTHER": "Another reason"
+      },
       "expired": "Expired",
       "declaration": "Declaration signed",
       "privacyNoticeLine": "Privacy notice acknowledged (v{version}): {date}",
@@ -5031,9 +5038,10 @@
             {
               "title": "They withdraw or cannot come any more",
               "steps": [
-                "From the confirmation email: «Manage your registration» → «Cancel the registration for…» (with the person's name) → «Yes, cancel».",
-                "From any email about their registration: «I can't make it any more» → «Cancel the registration for…» → «Yes, cancel».",
-                "Any time: «My registrations», on the site, with their address. The place goes to the waiting list at once."
+                "From any email about their registration: «I can't make it any more» → at «Why are you cancelling?» choose the reason (for «Another reason» they write it in short) → «Cancel the registration for…» (with the person's name) → «Yes, cancel».",
+                "On a family's email, the button opens «My registrations», with each person: «Withdraw from this registration», with the reason chosen too. The same any time, from the site, with their address.",
+                "In a family's declarations: «Withdraw the registration for…», with the reason chosen too. The place goes to the waiting list at once.",
+                "The reason shows on the registration's page, in the export and in the club's copy of the cancellation email."
               ]
             },
             {
@@ -5991,6 +5999,22 @@
   "Registrations": {
     "invalidOrExpired": "This link is no longer valid. We can send you a new one, to the same email address.",
     "cancelKeepsRecord": "Cancelling frees your place; we keep the registration for three years as a record. Want to see, correct or erase your data? <contact>Write to us</contact>.",
+    "cancelReason": {
+      "label": "Why are you cancelling?",
+      "choose": "Choose a reason",
+      "kinds": {
+        "INJURY_OR_ILLNESS": "Injury or illness",
+        "OTHER_PLANS": "Other plans",
+        "OTHER": "Another reason"
+      },
+      "textLabel": "The reason, in short",
+      "textHelp": "Only for «Another reason». At most 200 characters. Only the club reads it.",
+      "problem": {
+        "kind": "Choose why you are cancelling, then press again.",
+        "text": "You chose «Another reason»: write it, in short.",
+        "long": "The reason is at most 200 characters."
+      }
+    },
     "confirm": {
       "title": "Confirm your email address",
       "prompt": "We are confirming your email address. If nothing happens in a few seconds, press the button.",

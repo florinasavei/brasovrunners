@@ -108,16 +108,6 @@ describe("§NNN the «Nu mai pot ajunge» button, message type by message type",
     expect(sitting.html.match(/data-email-part="cannot-come"/g)).toHaveLength(2);
   });
 
-  it("says a link is sent on request when the button opens «Înscrierile mele» by address", () => {
-    const content = buildTemplateContent(
-      "ORGANIZER_MESSAGE",
-      "ro",
-      { ...emailSampleFor("ORGANIZER_MESSAGE", "ro"), cannotComeUrl: "https://example.test/ro/inscrieri/ale-mele", cannotComeByRequest: true },
-      emailSampleActionUrl("ro"),
-    );
-    expect(content.cannotCome?.note).toBe("Scrie adresa și îți trimitem linkul de anulare. Locul se eliberează pentru altcineva.");
-  });
-
   it("the reminder's words name no link below: the button and its sentence carry it, and a late send has neither", () => {
     const without = buildTemplateContent("EVENT_REMINDER", "ro", { ...emailSampleFor("EVENT_REMINDER", "ro"), cannotComeUrl: undefined }, emailSampleActionUrl("ro"));
     expect(without.cannotCome).toBeUndefined();

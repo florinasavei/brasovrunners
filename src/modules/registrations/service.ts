@@ -19,6 +19,7 @@ import { startingDeadline } from "@/modules/notifications/domain/deadline-rebase
 import { enqueueEmail, type OutboxRow } from "@/modules/notifications/outbox";
 import { bibNumberInUse, isEventSpareNumber, pickBibNumber } from "./bibs";
 import { handsSpareAtConfirm } from "./domain/spare-bibs";
+import type { CancelReason } from "./domain/cancel-reason";
 import { shirtSizeKept } from "./domain/kit";
 import { asksForIdDocument, asksForMinorSignature, describesListSocials } from "@/modules/legal-documents/domain/merge-fields";
 import { newCheckinCode } from "./checkin-code";
@@ -3073,6 +3074,12 @@ export async function unregister<T extends Record<string, unknown>>(
      * the club's timeline says the person withdrew themselves, as it says a staff cancellation.
      */
     via?: ParticipantCancelDoor;
+    /**
+     * The participant's own reason (§NNN), asked at every door above and required there: stored on
+     * the row (the answer, and the words of «Alt motiv»), the answer alone in the audit row — never
+     * the words, which are the person's own and may name them.
+     */
+    reason?: CancelReason;
   } = {},
 ): Promise<Registration> {
   // The club's hold and offer lengths (§377), before the lock and from the memo when it is fresh.
@@ -3095,7 +3102,13 @@ export async function unregister<T extends Record<string, unknown>>(
       id: registrationId,
       to: "CANCELLED",
       fromStatuses: allowedFromStatuses("CANCELLED"),
-      changes: { cancelledAt: now, cancellationSource: source },
+      changes: {
+        cancelledAt: now,
+        cancellationSource: source,
+        ...(source === "PARTICIPANT" && options.reason
+          ? { cancelReasonKind: options.reason.kind, cancelReason: options.reason.text }
+          : {}),
+      },
       now,
     });
     if (!cancelled) {
@@ -3109,7 +3122,7 @@ export async function unregister<T extends Record<string, unknown>>(
         action: "registration.cancelled_by_participant",
         entityType: "registration",
         entityId: cancelled.id,
-        metadata: { from: current.status, via: options.via },
+        metadata: { from: current.status, via: options.via, ...(options.reason ? { reasonKind: options.reason.kind } : {}) },
         now,
       });
     }
