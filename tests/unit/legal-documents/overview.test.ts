@@ -178,6 +178,9 @@ describe("a text's card", () => {
         pending: t("legal.kinds.draftPending", { version: 4 }),
         dialog: t("legal.kinds.regenerateBody", { kind: "GDPR", version: 4 }),
         count: t("legal.filter.count.few", { count: 4, total: 11 }),
+        // «4 din 6» and the rule beside it (§555, amending §539): the owner read «(4)» as a bug.
+        regenerate: t("legal.batch.regenerate", { count: 4, total: LEGAL_DOCUMENT_KEYS.length }),
+        rule: t("legal.batch.regenerateRule"),
       };
     };
     expect(format("ro")).toEqual({
@@ -187,6 +190,8 @@ describe("a text's card", () => {
       pending: "Ciornă în așteptare: versiunea 4",
       dialog: "O ciornă nouă pentru GDPR, din șablon, versiunea 4; textul în vigoare nu se schimbă până nu o aprobi.",
       count: "4 versiuni din 11",
+      regenerate: "Regenerează din șabloane (4 din 6)",
+      rule: "Doar textele cu «Șablon nou» se regenerează; celelalte au deja cuvintele șablonului.",
     });
     expect(format("en")).toEqual({
       inForce: "In force: version 3 since 4 September 2026",
@@ -195,6 +200,8 @@ describe("a text's card", () => {
       pending: "Draft waiting: version 4",
       dialog: "A new draft of GDPR, from the template, version 4; the text in force does not change until you approve it.",
       count: "4 versions of 11",
+      regenerate: "Regenerate from the templates (4 of 6)",
+      rule: "Only the texts marked «New template» are regenerated; the others already have the template's words.",
     });
   });
 

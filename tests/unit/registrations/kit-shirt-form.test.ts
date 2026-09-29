@@ -137,12 +137,13 @@ describe("§554 the T-shirt size is asked only when the event gives a shirt", ()
     expect(clubFoldTitle(english)).toBe("Brașov Runners member, club and t-shirt — optional");
   });
 
-  it("draws «Sex» as the two answers with their glyphs on the form itself", async () => {
+  it("draws «Sex» on the form itself as a dropdown, «Alege…» then Feminin then Masculin (§555)", async () => {
     const html = await render();
-    const radios = [...html.matchAll(/<input[^>]*type="radio"[^>]*name="sex"[^>]*value="([A-Z]+)"/g)].map(([, value]) => value);
-    expect(radios).toEqual(["MALE", "FEMALE"]);
-    expect(html).toContain('data-testid="MaleIcon"');
-    expect(html).toContain('data-testid="FemaleIcon"');
+    const select = /<select[^>]*name="sex"[^>]*>([\s\S]*?)<\/select>/.exec(html)?.[1] ?? "";
+    const values = [...select.matchAll(/<option[^>]*value="([A-Z]*)"/g)].map(([, value]) => value);
+    expect(values).toEqual(["", "FEMALE", "MALE"]);
+    expect(select).toContain("Alege…");
+    expect(html).not.toMatch(/<input[^>]*type="radio"[^>]*name="sex"/);
     expect(html).not.toContain("Prefer să nu spun");
   });
 

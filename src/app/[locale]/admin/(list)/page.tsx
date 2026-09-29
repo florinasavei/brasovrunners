@@ -53,6 +53,7 @@ import { CHECKBOX_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
 import {
   arrangeEventList,
   countEventLines,
+  EVENT_LIST_ALL,
   EVENT_LIST_SORTS,
   EVENT_LIST_STATES,
   eventListBack,
@@ -647,9 +648,10 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
             }}
             state={{
               label: t("events.listState"),
-              value: listQuery.state ?? "",
+              // «Viitoare» with nothing in the address; «Toate» posts its own value (§555).
+              value: listQuery.state,
               options: [
-                { value: "", label: t("events.listStateAll") },
+                { value: EVENT_LIST_ALL, label: t("events.listStateAll") },
                 ...EVENT_LIST_STATES.map((state) => ({ value: state, label: t(`events.listStates.${state}`) })),
               ],
             }}

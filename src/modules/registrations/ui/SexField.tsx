@@ -1,27 +1,43 @@
+"use client";
+
 import FemaleIcon from "@mui/icons-material/Female";
 import MaleIcon from "@mui/icons-material/Male";
 import Box from "@mui/material/Box";
-import FormHelperText from "@mui/material/FormHelperText";
+import InputAdornment from "@mui/material/InputAdornment";
+import ListItemIcon from "@mui/material/ListItemIcon";
+import ListItemText from "@mui/material/ListItemText";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
+import TextField from "@mui/material/TextField";
+import { useCallback, useRef, useState, useSyncExternalStore } from "react";
+import { OPTION_GLYPH_SX } from "@/shared/ui/select-option";
 import { SEX_CHOICES, type SexChoice } from "../domain/sex";
+import { chooseInSelect, PICKER_BUTTON_SX } from "./CountryPicker";
 
 /** Each answer's glyph beside its word (§171, §554; the owner: «trebuie să afișăm și iconițele»). */
-const SEX_GLYPHS = { MALE: MaleIcon, FEMALE: FemaleIcon } as const satisfies Record<SexChoice, unknown>;
+const SEX_GLYPHS = { FEMALE: FemaleIcon, MALE: MaleIcon } as const satisfies Record<SexChoice, unknown>;
+
+/** 44 pixels a row: a thumb picks an answer (BR-REQ-041-01 criterion 6). */
+const ROW_PX = 44;
 
 /**
- * «Sex» on the public registration form: two answers side by side, «Masculin» and «Feminin», each
- * with its glyph (§554, amending §510; the owner, 2026-09-29: «sexul e doar masculin și feminin și
- * trebuie să afișăm și iconițele, nu avem opțiunea de a prefera să nu zică»).
+ * «Sex» on the public registration form: a dropdown, «Feminin» first and «Masculin» second, each
+ * with its glyph (§555, amending §554; the owner, 2026-09-29: «put the Female sex first, and make
+ * it a dropdown again, not radio»). Only the two answers of §554 — no «Prefer să nu spun».
  *
- * **Two radio cards, native inputs, no island.** A `<fieldset>` whose legend is the label, and two
- * `<label>` cards each holding a real `<input type="radio" name="sex" required>`: the browser posts
- * the answer and refuses a form without one with JavaScript off, and the §422 list reads the group's
- * own `validity` (one entry for the name). Nothing is pre-chosen — §510's reason stands: an answer
- * the runner never gave is worse than a refused press. Rendered by the server alone; the glyphs are
- * children here, never a prop handed to a client component.
+ * **What posts is a native `<select name="sex" required>`** the server draws, as the citizenship
+ * does (§463): its first option is an empty, disabled «Alege…», chosen while there is no draft
+ * (nothing pre-chosen, §510), then the two answers. A reader without JavaScript, or before
+ * hydration, picks from the phone's own list; the browser, the §422 list and the server refuse a
+ * form with no answer. The select carries the field's id, where the refusal summary's link lands
+ * (§47), and `aria-invalid` when the refusal named it.
  *
- * The card is 56 pixels tall — the outlined boxes' height — over the 44 a thumb needs (BR-REQ-041-01 criterion 6), and the whole
- * card is the input's label, so a press anywhere on it answers. The first input carries the field's
- * id, where the refusal summary's link lands (§47).
+ * **Once the island runs**, a transparent button lies over the select and opens a list with each
+ * answer's glyph beside its word — a native `<option>` cannot carry one — and a choice is written
+ * into the select with a real `change` event (`chooseInSelect`), so what is posted, a refusal's
+ * draft (§142) and the §422 list read exactly what they read without it. The chosen answer's glyph
+ * then stands in front of its word in the closed field. The summary's link still lands on the
+ * select; the select hands its focus to the button, the one control in the tab order.
  */
 export default function SexField({
   id,
@@ -30,6 +46,7 @@ export default function SexField({
   error,
   helperText,
   defaultValue,
+  placeholder,
   answers,
 }: {
   id: string;
@@ -37,69 +54,125 @@ export default function SexField({
   label: string;
   error?: boolean;
   helperText?: string;
-  /** A refused submission's answer (§142); anything else — the retired one included — starts unanswered. */
+  /** A refused submission's answer (§142); anything else — the retired one included — starts on the placeholder. */
   defaultValue?: string;
+  /** «Alege…» / «Choose…», the empty first option. */
+  placeholder: string;
   /** Each answer's word, in the reader's language. */
   answers: Readonly<Record<SexChoice, string>>;
 }) {
-  const helperId = `${id}-helper-text`;
+  const initial = (SEX_CHOICES as readonly string[]).includes(defaultValue ?? "") ? (defaultValue as SexChoice) : "";
+  const [value, setValue] = useState<SexChoice | "">(initial);
+  const hydrated = useSyncExternalStore(
+    useCallback(() => () => {}, []),
+    () => true,
+    () => false,
+  );
+  const selectRef = useRef<HTMLSelectElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [anchor, setAnchor] = useState<HTMLElement | null>(null);
+  const Glyph = value ? SEX_GLYPHS[value] : null;
+  const listId = `${id}-list`;
+
   return (
-    <Box
-      component="fieldset"
-      data-testid="sex-field"
-      aria-describedby={helperText ? helperId : undefined}
-      sx={{ border: 0, m: 0, p: 0, minWidth: 0, width: "100%" }}
-    >
-      <Box component="legend" sx={{ p: 0, mb: 0.5, typography: "body2", color: error ? "error.main" : "text.secondary" }}>
-        {label}
-        <Box component="span" aria-hidden="true">
-          {" *"}
-        </Box>
-      </Box>
-      <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1 }}>
-        {SEX_CHOICES.map((answer, index) => {
-          const Glyph = SEX_GLYPHS[answer];
-          return (
-            <Box
-              key={answer}
-              component="label"
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 1,
-                // The outlined boxes' own height beside it, and over the 44 a thumb needs.
-                minHeight: 56,
-                px: 1.5,
-                border: 1,
-                borderColor: error ? "error.main" : "divider",
-                borderRadius: 1,
-                cursor: "pointer",
-                typography: "body1",
-                "&:hover": { borderColor: "text.primary" },
-                "&:has(input:checked)": { borderColor: "primary.main", bgcolor: "action.selected" },
-                "&:has(input:focus-visible)": { outline: 2, outlineColor: "primary.main", outlineOffset: 2 },
-                "& input": { m: 0, width: 20, height: 20, flex: "0 0 auto", accentColor: "var(--mui-palette-primary-main)", cursor: "pointer" },
-              }}
-            >
-              <input
-                type="radio"
-                id={index === 0 ? id : `${id}-${answer.toLowerCase()}`}
-                name={name}
-                value={answer}
-                required
-                defaultChecked={defaultValue === answer}
+    <TextField
+      id={id}
+      name={name}
+      label={label}
+      select
+      required
+      fullWidth
+      error={error}
+      helperText={helperText}
+      defaultValue={initial}
+      onChange={(event) => setValue(event.target.value as SexChoice | "")}
+      sx={{
+        "& .MuiInputBase-root:has(> button:focus-visible)": {
+          outline: "2px solid",
+          outlineColor: "primary.main",
+          outlineOffset: "-3px",
+        },
+      }}
+      slotProps={{
+        select: { native: true },
+        inputLabel: { shrink: true },
+        htmlInput: {
+          ref: selectRef,
+          // Under the button once it is there: one control in the tab order, not two. The refusal
+          // summary's link still lands here, and the focus goes on to the button.
+          tabIndex: hydrated ? -1 : undefined,
+          "aria-hidden": hydrated ? true : undefined,
+          onFocus: hydrated ? () => buttonRef.current?.focus() : undefined,
+        },
+        input: {
+          startAdornment: Glyph ? (
+            <InputAdornment position="start">
+              <Box component="span" sx={OPTION_GLYPH_SX}>
+                <Glyph fontSize="small" aria-hidden="true" />
+              </Box>
+            </InputAdornment>
+          ) : undefined,
+          endAdornment: hydrated ? (
+            <>
+              <Box
+                component="button"
+                ref={buttonRef}
+                type="button"
+                aria-label={`${label}: ${value ? answers[value] : placeholder}`}
+                aria-haspopup="listbox"
+                aria-expanded={Boolean(anchor)}
+                aria-controls={anchor ? listId : undefined}
+                aria-invalid={error || undefined}
+                aria-describedby={helperText ? `${id}-helper-text` : undefined}
+                onClick={(event) => setAnchor(event.currentTarget)}
+                sx={PICKER_BUTTON_SX}
               />
-              <Glyph fontSize="small" aria-hidden="true" />
-              <span>{answers[answer]}</span>
-            </Box>
-          );
-        })}
-      </Box>
-      {helperText && (
-        <FormHelperText id={helperId} error={error} sx={{ mx: 1.75 }}>
-          {helperText}
-        </FormHelperText>
-      )}
-    </Box>
+              <Menu
+                open={Boolean(anchor)}
+                anchorEl={anchor}
+                onClose={() => setAnchor(null)}
+                anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+                transformOrigin={{ vertical: "top", horizontal: "left" }}
+                slotProps={{
+                  paper: { sx: { minWidth: anchor?.clientWidth } },
+                  list: { id: listId, role: "listbox", "aria-label": label },
+                }}
+              >
+                {SEX_CHOICES.map((answer) => {
+                  const Option = SEX_GLYPHS[answer];
+                  return (
+                    <MenuItem
+                      key={answer}
+                      role="option"
+                      selected={value === answer}
+                      aria-selected={value === answer}
+                      sx={{ minHeight: ROW_PX }}
+                      onClick={() => {
+                        chooseInSelect(selectRef.current, answer);
+                        setAnchor(null);
+                      }}
+                    >
+                      <ListItemIcon>
+                        <Option fontSize="small" aria-hidden="true" />
+                      </ListItemIcon>
+                      <ListItemText>{answers[answer]}</ListItemText>
+                    </MenuItem>
+                  );
+                })}
+              </Menu>
+            </>
+          ) : null,
+        },
+      }}
+    >
+      <option value="" disabled>
+        {placeholder}
+      </option>
+      {SEX_CHOICES.map((answer) => (
+        <option key={answer} value={answer}>
+          {answers[answer]}
+        </option>
+      ))}
+    </TextField>
   );
 }
