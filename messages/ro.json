@@ -881,7 +881,7 @@
       },
       "listApply": "Aplică",
       "listCount": "{shown} din {total} evenimente",
-      "listEmpty": "Niciun eveniment nu se potrivește. Schimbă căutarea sau starea, ori șterge filtrele.",
+      "listEmpty": "Niciun eveniment nu se potrivește. Alege altă stare, de exemplu «Toate», sau schimbă căutarea.",
       "membersOnlyChip": "Membri"
     },
     "confirm": {
@@ -2179,7 +2179,8 @@
         "toolsTitle": "Toate textele deodată",
         "regenerateIntro": "Șablonul s-a schimbat pentru: {texts}. Butonul face câte o ciornă nouă, cu datele clubului; nimic nu intră în vigoare până nu o aprobi.",
         "regenerateBlanks": "În {texts} rămân câmpuri de completat, de forma '<'…>: scrie-le în ciornă înainte de aprobare.",
-        "regenerate": "Regenerează din șabloane ({count})",
+        "regenerateRule": "Doar textele cu «Șablon nou» se regenerează; celelalte au deja cuvintele șablonului.",
+        "regenerate": "Regenerează din șabloane ({count} din {total})",
         "regeneratePending": "Se fac ciornele…",
         "regenerateTitle": "Faci ciorne noi din șabloane ({count})?",
         "regenerateBody": "Se face câte o ciornă nouă pentru: {texts}. Textele în vigoare rămân neschimbate până aprobi ciornele.",
@@ -4315,7 +4316,7 @@
               "title": "Bara de sus: ce găsești în fiecare tab",
               "steps": [
                 "Vezi doar taburile rolului tău; restul nu există pentru tine, și e în regulă.",
-                "«Evenimente»: toate evenimentele clubului; «Eveniment nou» și «Editează» sunt aici; un rol care doar citește vede «Deschide».",
+                "«Evenimente»: se deschide pe cele viitoare; la «Starea» alegi «Toate» sau alta. «Eveniment nou» și «Editează» sunt aici; un rol care doar citește vede «Deschide».",
                 "«Înscrieri»: cine s-a înscris, cu filtre, export și pagina fiecărei înscrieri.",
                 "«Ziua cursei»: masa de ridicare a numerelor, pe telefon.",
                 "«Galerie» și «Pagini» (paginile standard — «Contact», «Echipa», «Întrebări frecvente», «Membri» — și paginile clubului).",
@@ -4819,7 +4820,7 @@
             {
               "title": "Mulțumiri după cursă",
               "steps": [
-                "«Evenimente» → «Editează» → «Înscrierile primite» → «Mulțumiri după cursă».",
+                "«Evenimente» → la «Starea» alege «Încheiate» și «Aplică» → «Editează» → «Înscrierile primite» → «Mulțumiri după cursă».",
                 "La «Link (opțional)» pune adresa pozelor sau a rezultatelor.",
                 "Apasă «Trimite mulțumirile» și confirmă. Pleacă o singură dată, la toți cei marcați prezenți."
               ]

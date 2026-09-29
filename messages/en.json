@@ -881,7 +881,7 @@
       },
       "listApply": "Apply",
       "listCount": "{shown} of {total} events",
-      "listEmpty": "No event matches. Change the search or the state, or clear the filters.",
+      "listEmpty": "No event matches. Choose another state, «All» for instance, or change the search.",
       "membersOnlyChip": "Members"
     },
     "confirm": {
@@ -2179,7 +2179,8 @@
         "toolsTitle": "Every text at once",
         "regenerateIntro": "The template changed for: {texts}. The button makes a new draft of each, with the club's facts; nothing takes effect until you approve it.",
         "regenerateBlanks": "In {texts} some fields are left to fill in, written '<'…>: type them into the draft before approving.",
-        "regenerate": "Regenerate from the templates ({count})",
+        "regenerateRule": "Only the texts marked «New template» are regenerated; the others already have the template's words.",
+        "regenerate": "Regenerate from the templates ({count} of {total})",
         "regeneratePending": "Making the drafts…",
         "regenerateTitle": "Make new drafts from the templates ({count})?",
         "regenerateBody": "A new draft is made for: {texts}. The texts in force stay as they are until you approve the drafts.",
@@ -4315,7 +4316,7 @@
               "title": "The top bar: what each tab holds",
               "steps": [
                 "You see only your role's tabs; the rest do not exist for you, and that is fine.",
-                "«Events»: every club event; «New event» and «Edit» are here; a role that only reads sees «Open».",
+                "«Events»: opens on the upcoming ones; under «State» choose «All» or another. «New event» and «Edit» are here; a role that only reads sees «Open».",
                 "«Registrations»: who signed up, with filters, the export and each registration's page.",
                 "«Race day»: the number pickup desk, on a phone.",
                 "«Gallery» and «Pages» (the standard pages — «Contact», «The team», «FAQ», «Members» — and the club's own pages).",
@@ -4819,7 +4820,7 @@
             {
               "title": "The thank-you after a race",
               "steps": [
-                "«Events» → «Edit» → «Registrations received» → «Thank-you after the race».",
+                "«Events» → under «State» choose «Ended» and «Apply» → «Edit» → «Registrations received» → «Thank-you after the race».",
                 "Under «Link (optional)» put the address of the photos or the results.",
                 "Press «Send the thank-you» and confirm. It goes once, to everyone marked present."
               ]
