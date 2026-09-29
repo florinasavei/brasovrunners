@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.29-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.35-2026-09-27 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V2.29-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.35-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1223,7 +1223,7 @@ Core invariants:
 6. Pending email and Waitlisted do not occupy capacity, but eligible Waitlisted entries have allocation priority over later registrations;
 7. no capacity-changing transaction may let a later registration bypass that queue;
 8. cancellation is idempotent;
-9. self-cancellation allowed before event start;
+9. self-cancellation allowed before event start, with the participant's reason — one of three answers, and a short text for «Alt motiv» — at every door (`DECISIONS.md` §558);
 10. email failure does not roll back committed state;
 11. locale/legal/declaration acceptance are historical facts;
 12. Admin corrections are explicit/audited;
@@ -1885,6 +1885,8 @@ registrations
 - expired_at null
 - expiry_reason EMAIL_CONFIRMATION_LAPSED|DECLARATION_HOLD_LAPSED|WAITLIST_OFFER_LAPSED|EVENT_STARTED null
 - cancellation_source PARTICIPANT|ADMIN null
+- cancel_reason_kind INJURY_OR_ILLNESS|OTHER_PLANS|OTHER null   -- a participant's own cancellation, required at every self-cancellation door (DECISIONS.md §558); null on a staff cancellation
+- cancel_reason text null            -- the words of «Alt motiv» (OTHER only), at most 200 characters; the audit row carries the kind alone
 - created_at
 - updated_at
 
@@ -2761,8 +2763,25 @@ when an organizer ticks "Anunță participanții despre schimbare" on a save tha
 the start or the programme, put a cancelled event back on, or carries a note; the second when a
 save cancels the event and "tell them" is left ticked, with the reason the organizer typed. Both
 go to every active registration of that event (`PENDING_DECLARATION`, `WAITLIST_OFFERED`,
-`CONFIRMED`, `WAITLISTED`) in its own language, carry no token, are queued in the save's
-transaction and audited with the count, never who.
+`CONFIRMED`, `WAITLISTED`) in its own language, are queued in the save's transaction and
+audited with the count, never who. `EVENT_CANCELLED` carries no token; `EVENT_UPDATE_NOTICE`
+carries one, minted at send time behind «Nu mai pot ajunge» (below).
+
+**«Nu mai pot ajunge» / "I can't make it any more" is on every message about a live
+registration** (`DECISIONS.md` §558, `notifications/domain/cannot-come.ts`): the address to
+confirm, the declaration to sign, the waiting list and its offer, the confirmation, the number,
+the reminder, the organizer's update notice and message, the manage link, the signed
+declaration and the family sitting's message. A full-width button under the action (the
+reminder's only one) to a cancel that asks why and then asks first. **It lands on the
+registration's own manage page, one tap**: the message's own `MANAGE_REGISTRATION` token where it
+mints one; a family's own «Toate înscrierile mele» on the two messages that list several people
+(the family's one confirmation, the family sitting's message); on every other message a manage
+token minted at send time, which supersedes the older manage link as every newer one does
+(BR-REQ-036-02 criterion 5) — the newest email's link is the live one, and its page carries the
+QR, self check-in and the list's switch the older one did. Never on the family link's kept-form shape (its «Nu înscriu această persoană» sits
+there), never after the fact (the cancellations,
+the thank-you), never on a club copy (`DECISIONS.md` §320), never to an address that is not the
+registration's, never once the event has started or will not run.
 
 `EVENT_REMINDER` goes from the maintenance job to every CONFIRMED registration of a SCHEDULED
 event before its start — the club's reminder lead or the event's own (§377; 48 hours by default) — once per registration (`registration:<id>:reminder`), with

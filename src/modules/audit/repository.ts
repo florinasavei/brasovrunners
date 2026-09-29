@@ -114,6 +114,12 @@ export type AuditAction =
    * The reader as the actor, `{ format: "pdf" }` as the metadata — never a value.
    */
   | "registration.declaration_downloaded"
+  /**
+   * A declaration held for a complaint or a dispute, or released (§556): the Administrator (the
+   * actor), the typed reason and the acceptance's id on the registration's trail — never the person.
+   */
+  | "registration.declaration_hold_set"
+  | "registration.declaration_hold_cleared"
   /** Every signed declaration of one event downloaded as one PDF (§324): the event and how many, never who. */
   | "event.declarations_downloaded"
   /**
@@ -127,6 +133,12 @@ export type AuditAction =
    * (the reason typed) and the event — never who had signed: the row it would name is gone.
    */
   | "event.group_run_declaration_erased"
+  /**
+   * A group-run declaration held for a complaint or a dispute, or released (§556): the Administrator,
+   * the typed reason, the event and the declaration's id — never who had signed.
+   */
+  | "event.group_run_declaration_hold_set"
+  | "event.group_run_declaration_hold_cleared"
   /** One event's emergency sheet rendered (§322): the event and the row count, never a value. */
   | "event.emergency_sheet_viewed"
   /**

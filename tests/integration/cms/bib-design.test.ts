@@ -169,8 +169,9 @@ describe("§249 the bib's design, saved and read back", () => {
 
   it("reads a design stored before the footer existed as the footer it always printed", async () => {
     const event = await existingEvent();
-    // What a save from the previous release wrote: every key but the footer's.
-    const footerKeys = ["showEmail", "showPartners", "showEventInFooter", "showWebsite", "footerText"];
+    // What a save from the previous release wrote: every key but the footer's — and, older still
+    // than the crops (§560), none of theirs either.
+    const footerKeys = ["showEmail", "showPartners", "showEventInFooter", "showWebsite", "footerText", "headerImageCrop", "sponsorImageCrop"];
     const before = Object.fromEntries(
       Object.entries({ ...DEFAULT_BIB_DESIGN, numberScale: "large" }).filter(([key]) => !footerKeys.includes(key)),
     );

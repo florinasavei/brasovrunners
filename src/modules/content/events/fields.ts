@@ -605,6 +605,11 @@ export const eventFieldsSchema = z
      */
     kitShirt: z.boolean().optional(),
     /**
+     * «Condiții de participare» → «Informații medicale» (§557): the form asks the optional health
+     * note. Absent means this caller is not editing it, by the kit's discipline (§554).
+     */
+    askHealthNote: z.boolean().optional(),
+    /**
      * The race's own band (§173): where its numbers start, and the colour the sheet prints
      * behind them. The 5 km starts at 100 and prints green; the 10 km starts at 500 and prints
      * blue, and a volunteer sorting envelopes can tell them apart across a table.

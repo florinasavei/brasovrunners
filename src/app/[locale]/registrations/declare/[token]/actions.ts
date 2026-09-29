@@ -11,6 +11,7 @@ import { findEventForRegistrationById } from "@/modules/events/repository";
 import { clearFormDraft, stashDraftValues } from "@/modules/registrations/form-draft";
 import { DECLARATION_ERROR_SUMMARY_ID } from "@/modules/registrations/form-errors";
 import { NO_WAITLIST, waitlistRefusalOf } from "@/modules/registrations/domain/waitlist";
+import { parseCancelReason } from "@/modules/registrations/domain/cancel-reason";
 import {
   consumeAndSignDeclaration,
   consumeAndSignFamilyDeclaration,
@@ -244,9 +245,13 @@ export async function withdrawFamilyPersonAction(form: FormData): Promise<void> 
   const path = getPathname({ locale, href: { pathname: "/registrations/declare/[token]", params: { token } } });
   const now = new Date();
 
+  // The reason, required (§558): refused before anything changes, the box named on the same step.
+  const reason = parseCancelReason(form);
+  if (!reason.ok) redirect(`${path}?reason=${reason.problem}#cancel-reason`);
+
   let result: Awaited<ReturnType<typeof withdrawFromFamilyWizard>>;
   try {
-    result = await withdrawFromFamilyWizard(token, await readFamilySigningPass(now), String(form.get("registrationId") ?? ""), now);
+    result = await withdrawFromFamilyWizard(token, await readFamilySigningPass(now), String(form.get("registrationId") ?? ""), now, reason.reason);
   } catch (error) {
     if (isDomainError(error)) redirect(`${path}?invalid=1`);
     throw error;

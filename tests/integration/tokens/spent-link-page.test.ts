@@ -173,7 +173,7 @@ describe("BR-REQ-036-02 a spent action link", () => {
     await consumeAndConfirmEmail(await mint("VERIFY_REGISTRATION_EMAIL"), NOW);
     const manage = await mint("MANAGE_REGISTRATION");
 
-    const cancelled = await consumeAndCancel(manage, LATER);
+    const cancelled = await consumeAndCancel(manage, LATER, { kind: "OTHER_PLANS", text: null });
     expect(cancelled.ok).toBe(true);
     const after = await snapshot();
     expect(after.status).toBe("CANCELLED");
@@ -251,7 +251,7 @@ describe("BR-REQ-036-02 a spent action link", () => {
   it("keeps a spent link for another purpose indistinguishable from nothing", async () => {
     await consumeAndConfirmEmail(await mint("VERIFY_REGISTRATION_EMAIL"), NOW);
     const manage = await mint("MANAGE_REGISTRATION");
-    await consumeAndCancel(manage, LATER);
+    await consumeAndCancel(manage, LATER, { kind: "OTHER_PLANS", text: null });
 
     expect(
       await readSpentRegistrationLink(

@@ -154,7 +154,7 @@ describe("§515 the race's two declarations, one shared body", () => {
 
   it("words wild animals as the owner did, with no species list and no bear drill", () => {
     expect(all("trail", "ro")).toContain(
-      "Știu că traseul poate traversa habitatul animalelor sălbatice și că pot întâlni animale domestice sau câini de stână. Mă oblig să păstrez distanța, să nu provoc sau hrănesc animalele, să respect indicațiile organizatorului și recomandările autorităților și, în caz de urgență, să apelez 112",
+      "Știu că traseul poate traversa habitatul animalelor sălbatice și că pot întâlni animale domestice sau câini de stână. Mă oblig să păstrez distanța, să nu provoc sau hrănesc animalele, să respect indicațiile generale de siguranță comunicate de organizator și, în caz de urgență, să apelez 112",
     );
     for (const course of COURSES) {
       expect(all(course, "ro")).not.toMatch(/urși|mistreți|vipere|nu fug de un urs/);

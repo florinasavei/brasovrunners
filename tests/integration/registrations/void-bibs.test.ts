@@ -130,7 +130,7 @@ describe("§311 the printed bibs of cancelled registrations", () => {
       })
     ).secret;
 
-    const result = await consumeAndCancelFromMyRegistrations(db, secret, gone.id, NOW);
+    const result = await consumeAndCancelFromMyRegistrations(db, secret, gone.id, NOW, { kind: "OTHER_PLANS", text: null });
     expect(result.ok && result.registration).toMatchObject({ status: "CANCELLED", cancellationSource: "PARTICIPANT", bibNumber: 27 });
     expect(result.ok && result.registration.bibPrintedAt).toEqual(printed);
 

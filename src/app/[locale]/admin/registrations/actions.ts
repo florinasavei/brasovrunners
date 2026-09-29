@@ -20,6 +20,7 @@ import {
   withdrawOptionalData,
 } from "@/modules/registrations/admin-service";
 import { markBibsPrinted, setBibPrinted } from "@/modules/registrations/bibs";
+import { holdDeclarationAcceptance, releaseDeclarationAcceptance } from "@/modules/registrations/declaration-hold";
 import { findEventForRegistrationById } from "@/modules/events/repository";
 import { effectiveMinimumAge, yearsPhrase } from "@/modules/registrations/domain/age";
 import { UNDER_MINIMUM_AGE } from "@/modules/registrations/fields";
@@ -31,6 +32,7 @@ import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
 import { wholeDigits } from "@/shared/forms/whole-digits";
+import { normalizeTypedDate } from "@/shared/forms/pickers/wall-values";
 import type { SexChoice } from "@/modules/registrations/domain/sex";
 
 /**
@@ -236,7 +238,8 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
         // an empty string it would have to reject.
         details: {
           displayName: optional(form, "displayName"),
-          birthDate: optional(form, "birthDate"),
+          // Typed day first, «11.05.1990», as the public form's box (§561): read into `YYYY-MM-DD` here.
+          birthDate: normalizeTypedDate(optional(form, "birthDate") ?? "") || undefined,
           // Any other value, the retired «Prefer să nu spun» included, is refused by the schema (§554).
           sex: optional(form, "sex") as SexChoice | undefined,
           nationality: optional(form, "nationality"),
@@ -580,6 +583,28 @@ export async function deleteRegistrationAction(_previous: FormOutcome | null, fo
   // Always back to the list, never to the detail page: on success that page describes a row
   // that no longer exists, and a 404 is a poor way to learn a deletion worked.
   return backTo(getPathname({ locale, href: "/admin/registrations" }), { saved: "registrationDeleted" });
+}
+
+/**
+ * «Păstrează: reclamație / litigiu în curs» on one signed declaration, or its release (§556): the
+ * Administrator's, with a reason. The coarse gate here and the service's own, which is the one that
+ * holds (BR-REQ-060-01); a reason left empty comes back in its box (§315). `hold` is the form's own
+ * hidden choice — the service decides what it means for this row, and a release of a row not held
+ * changes nothing.
+ */
+export async function declarationHoldAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = toLocale(form.get("uiLocale"));
+  const registrationId = text(form, "registrationId");
+  const hold = text(form, "hold") === "1";
+  try {
+    const actor = await requireStaffCapability(canManageRegistrations);
+    const input = { registrationId, acceptanceId: text(form, "acceptanceId"), reason: text(form, "reason") };
+    if (hold) await holdDeclarationAcceptance(getDb(), actor, input, new Date());
+    else await releaseDeclarationAcceptance(getDb(), actor, input, new Date());
+  } catch (error) {
+    return refused(error, form);
+  }
+  return backTo(detailPath(locale, registrationId), { saved: hold ? "declarationHeld" : "declarationReleased" });
 }
 
 /**
