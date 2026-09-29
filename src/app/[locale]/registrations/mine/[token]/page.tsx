@@ -21,9 +21,7 @@ import { getDb } from "@/db/client";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { confirmationDueMoment } from "@/modules/registrations/domain/hold-deadlines";
-import { raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { readMyRegistrations } from "@/modules/registrations/my-registrations";
-import { env } from "@/shared/config/env";
 import PublicFlash from "@/shared/feedback/PublicFlash";
 import ContactLink from "@/shared/ui/ContactLink";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
@@ -37,6 +35,10 @@ import {
 import { declarationStateKey, isSignable } from "@/modules/registrations/domain/family-signing";
 import { DENSITY } from "@/theme/density";
 import FamilyChip from "@/modules/registrations/ui/FamilyChip";
+import QrWithName, { type QrWords } from "@/modules/registrations/ui/QrWithName";
+import CancelReasonFields from "@/modules/registrations/ui/CancelReasonFields";
+import { cancelReasonWords } from "@/modules/registrations/ui/cancel-reason-words";
+import { cancelReasonProblemOf } from "@/modules/registrations/domain/cancel-reason";
 
 type Props = {
   params: Promise<{ locale: string; token: string }>;
@@ -51,6 +53,9 @@ type Props = {
     withdrawn?: string;
     field?: string;
     withdrawFailed?: string;
+    /** The box a cancel without its reason named (§558), under `person`'s cancel — an id the page lists, never a name. */
+    reason?: string;
+    person?: string;
   }>;
 };
 
@@ -69,8 +74,17 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
-  const { done, invalid, started, here, hereFailed, list, listFailed, withdrawn, field, withdrawFailed } = await searchParams;
+  const { done, invalid, started, here, hereFailed, list, listFailed, withdrawn, field, withdrawFailed, reason, person } = await searchParams;
   const t = await getTranslations("Registrations");
+  // Why the person cancels (§558): the words once, and the box a refused press named, under that person.
+  const reasonWords = await cancelReasonWords();
+  const reasonProblem = cancelReasonProblemOf(reason);
+  // The words beside every QR (§547): whose it is, their number, the code.
+  const qrWords: QrWords = {
+    alt: (name) => t("manage.qrTitle", { name }),
+    number: (number) => t("qr.number", { number }),
+    code: (code) => t("qr.code", { code }),
+  };
   /*
     The page's one toast slot (§427): the cancel's, on its own outcome page, and «Semnează
     declarațiile» refused for an address with nobody left to walk (§471, nit found in review), on
@@ -292,46 +306,15 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
                 )}
 
               {/* No desk code or QR for a race that will not run: the desk is closed (§331). */}
+              {/*
+                The QR with the person's name and race number beside it (§547): a family's codes
+                told apart at a glance. The number is the one rule's (`raceNumberOf`), «—» while none
+                is given; it exists once the registration is confirmed, and nothing qualifies it.
+              */}
               {item.status === "CONFIRMED" && item.checkinCode && !item.eventCancelled && (
-                <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { xs: "flex-start", sm: "center" }, mb: 1.5 }}>
-                  <Box
-                    component="img"
-                    src={`${env.APP_BASE_URL}/api/registrations/qr/${item.checkinCode}.png`}
-                    alt={t("manage.qrAlt", { code: item.checkinCode })}
-                    width={160}
-                    height={160}
-                    sx={{ width: 160, height: 160, border: 1, borderColor: "divider", borderRadius: 1 }}
-                  />
-                  <Box>
-                    {/*
-                      The number the runner has (§214). Before registration closes it is the
-                      provisional one, and it is said so in a sentence beneath rather than left
-                      to look final: this is the number they will quote to a volunteer, and the
-                      one thing worse than not showing it is showing it as settled when it is not.
-                    */}
-                    {raceNumberOf(item) && (
-                      <>
-                        <Typography variant="body2" color="text.secondary">
-                          {t("mine.bib")}
-                        </Typography>
-                        <Typography sx={{ fontWeight: 700, fontSize: "1.75rem", color: "primary.main" }}>
-                          {raceNumberOf(item)?.value}
-                        </Typography>
-                        {!raceNumberOf(item)?.settled && (
-                          <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
-                            {t("mine.bibProvisional")}
-                          </Typography>
-                        )}
-                      </>
-                    )}
-                    <Typography variant="body2" color="text.secondary">
-                      {t("mine.code")}
-                    </Typography>
-                    <Typography sx={{ fontFamily: "monospace", fontWeight: 700, fontSize: "1.375rem", letterSpacing: 2 }}>
-                      {item.checkinCode}
-                    </Typography>
-                  </Box>
-                </Stack>
+                <Box sx={{ mb: 1.5 }}>
+                  <QrWithName checkinCode={item.checkinCode} registeredName={item.registeredName} status={item.status} bibNumber={item.bibNumber} size={160} words={qrWords} />
+                </Box>
               )}
 
               <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1, alignItems: "center" }}>
@@ -355,15 +338,21 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
                       </Button>
                     </form>
                   ) : null)}
-                <form action={cancelFromMyRegistrationsAction}>
+                {/* The cancel with its reason (§558), on a line of its own under the race-day buttons. */}
+                <Box component="form" action={cancelFromMyRegistrationsAction} sx={{ flexBasis: "100%" }} data-testid="mine-cancel">
                   <input type="hidden" name="locale" value={locale} />
                   <input type="hidden" name="token" value={token} />
                   <input type="hidden" name="registrationId" value={item.id} />
+                  <CancelReasonFields
+                    {...reasonWords.fields}
+                    problem={person === item.id ? reasonProblem : undefined}
+                    problemText={person === item.id && reasonProblem ? reasonWords.problemText[reasonProblem] : undefined}
+                  />
                   <Button type="submit" variant="outlined" color="error" size="small" sx={{ minHeight: 44, ...WITH_GLYPH_SX }}>
                     <EventBusyIcon aria-hidden="true" sx={glyphSx("small")} />
                     {t("mine.cancel")}
                   </Button>
-                </form>
+                </Box>
               </Stack>
               {/* What cancelling does not do, where it is done (§323): the place goes, the record stays. */}
               <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>

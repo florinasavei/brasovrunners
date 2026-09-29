@@ -103,8 +103,7 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
 
   /*
     The instants of each event still ahead that has anybody on it: its start (holds end, the
-    waiting list closes — `closeWaitlistForStartedEvent`), its registration close (the numbers
-    settle, §214), the reminder lead before the start — the event's own or the club's, none when
+    waiting list closes — `closeWaitlistForStartedEvent`), the reminder lead before the start — the event's own or the club's, none when
     it is zero (the reminders, §81, and the last call to sign, §160; §377) — and the participation
     window's opening (the confirmation asked again, §104).
   */
@@ -114,21 +113,19 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
       registrationMode: events.registrationMode,
       startsAt: events.startsAt,
       registrationClosesAt: events.registrationClosesAt,
-      bibsSettledAt: events.bibsSettledAt,
       opensDays: events.confirmationOpensDaysBefore,
       deadlineDays: events.confirmationDeadlineDaysBefore,
       reminderHoursBefore: events.reminderHoursBefore,
       waitingOrPending: sql<boolean>`bool_or(${registrations.status} in ('PENDING_DECLARATION', 'WAITLISTED'))`,
       pendingDeclaration: sql<boolean>`bool_or(${registrations.status} = 'PENDING_DECLARATION')`,
       confirmed: sql<boolean>`bool_or(${registrations.status} = 'CONFIRMED')`,
-      holdingPlace: sql<boolean>`bool_or(${inArray(registrations.status, [...PLACE_HOLDING_STATUSES])})`,
     })
     .from(registrations)
     .innerJoin(events, eq(events.id, registrations.eventId))
     .where(
       and(
-        // Scheduled only, for the reason above (§331): a cancelled race closes no list, settles
-        // no number and reminds nobody.
+        // Scheduled only, for the reason above (§331): a cancelled race closes no list and
+        // reminds nobody.
         eq(events.eventStatus, "SCHEDULED"),
         inArray(registrations.status, [...PLACE_HOLDING_STATUSES, "WAITLISTED"]),
         or(gt(events.startsAt, now), gt(events.registrationClosesAt, now)),
@@ -140,7 +137,6 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
       events.registrationMode,
       events.startsAt,
       events.registrationClosesAt,
-      events.bibsSettledAt,
       events.confirmationOpensDaysBefore,
       events.confirmationDeadlineDaysBefore,
       events.reminderHoursBefore,
@@ -153,9 +149,6 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
     if (!startsAt) continue;
     const start = startsAt.getTime();
     if (event.waitingOrPending) eventInstants.push(ahead(start));
-    if (event.holdingPlace && event.bibsSettledAt === null) {
-      eventInstants.push(ahead((toDate(event.registrationClosesAt) ?? startsAt).getTime()));
-    }
     const mailed = event.eventStatus === "SCHEDULED" && event.registrationMode === "INTERNAL";
     // The reminder's lead is the last call's too (`domain/automatic-sends.ts`, one formula with the job, §383).
     const reminderAt = declarationLastCallDueAt({ startsAt, reminderHoursBefore: toCount(event.reminderHoursBefore) }, settings);

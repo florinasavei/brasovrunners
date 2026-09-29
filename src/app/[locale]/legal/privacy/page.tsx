@@ -23,10 +23,13 @@ import { DENSITY } from "@/theme/density";
 type Props = { params: Promise<{ locale: string }> };
 
 // The current approved version can change without a deploy (a new version becoming
-// effective), so this renders per request rather than at build time. The text comes from the
-// public cache (§333), which an approval expires and whose key is the stretch between effective
-// dates — so a version approved ahead of time takes over on its day with nobody saving anything.
-export const dynamic = "force-dynamic";
+// effective), so this is never made at build time. The text comes from the public cache (§333),
+// which an approval expires and whose key is the stretch between effective dates; the page is
+// static and kept by the CDN (§549, amending §333), made again after an approval, when the next
+// version takes effect (the read holds it to that instant) and a day at most — so a version
+// approved ahead of time takes over on its day with nobody saving anything. A literal, as Next
+// requires: it equals `PUBLIC_PAGE_CEILING_SECONDS` (a test holds them together).
+export const revalidate = 86400;
 
 /**
  * Its own title, and indexed only while a notice is in force in this language — with a

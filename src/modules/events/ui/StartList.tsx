@@ -1,9 +1,11 @@
 import GroupsIcon from "@mui/icons-material/Groups";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutlineOutlined";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getLocale, getTranslations } from "next-intl/server";
-import { publicListStillOpen } from "@/modules/deadlines/domain/deadlines";
+import { publicListClosesAt, publicListStillOpen } from "@/modules/deadlines/domain/deadlines";
+import { holdPageUntil } from "@/modules/public-cache/page-lifetime";
 import {
   cachedDeadlines,
   cachedFirstStatesNoticeVersion,
@@ -21,6 +23,7 @@ import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { DENSITY } from "@/theme/density";
 import type { PublicEvent } from "../repository";
 import { confirmedPhrase, othersPhrases } from "./counted-phrases";
+import { listStateLegend } from "./list-state-legend";
 import ListStateLabel from "./ListStateLabel";
 import StartListSocials from "./StartListSocials";
 import { readOrWhileAway } from "@/modules/resilience/optional-read";
@@ -77,6 +80,15 @@ import { readOrWhileAway } from "@/modules/resilience/optional-read";
  * exactly what it was: confirmed names, no words, no other rows — the same component, one
  * boolean.
  *
+ * ## What the words mean (§556)
+ *
+ * The owner, 2026-09-29, of a list reading «Confirmat» and «Înscris, în așteptarea confirmării»:
+ * «Acum trebuie să explic ce înseamnă „în așteptarea confirmării”». Behind the same gate, a legend
+ * under the table says one sentence per state the list shows — only those present — and each
+ * word carries the same sentence behind a «?». The pending sentence names this event's own
+ * participation window, or the club's hold, and the waiting list's the club's offer window, all
+ * from their values (`list-state-legend.ts`): never a number of the page's own.
+ *
  * ## Strava and Instagram, behind the notice and the runner's own tick (§500)
  *
  * The owner: "on the who's coming I want to show people's social as well, if they put that, like
@@ -111,7 +123,10 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
     same component draws every `?lista=` page, so a page link past the date shows nothing either.
   */
   const now = new Date();
-  if (!publicListStillOpen(event, now, await cachedDeadlines())) return null;
+  const deadlines = await cachedDeadlines();
+  // A static event page is made again when the list closes (§549), or the CDN would keep the names.
+  await holdPageUntil([publicListClosesAt(event, deadlines)], now);
+  if (!publicListStillOpen(event, now, deadlines)) return null;
 
   const t = await getTranslations("Event");
   const locale = await getLocale();
@@ -152,9 +167,26 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
       />
     ) : null;
   const extra = statesOn ? othersPhrases(t, locale, others) : [];
+  /*
+    What each word means (§556), for the states this list shows — a confirmed row, named or hidden,
+    and the pending and waiting rows it reads — from the event's own window and the club's deadlines.
+  */
+  const legend = statesOn
+    ? listStateLegend(t, locale, {
+        groups: [
+          ...(view.confirmed > 0 ? (["CONFIRMED"] as const) : []),
+          ...(others.pending > 0 ? (["PENDING"] as const) : []),
+          ...(others.waitlisted > 0 ? (["WAITLISTED"] as const) : []),
+        ],
+        event,
+        deadlines,
+        now: new Date(),
+      })
+    : [];
+  const helpOf = (group: PublicListGroup) => legend.find((line) => line.group === group)?.sentence;
   /** The word beside a name — only behind the gate; without it a row carries no state. */
   const stateOf = (group: PublicListGroup) =>
-    statesOn ? <ListStateLabel group={group} label={t(`startList.states.${LIST_STATE_KEYS[group]}`)} /> : null;
+    statesOn ? <ListStateLabel group={group} label={t(`startList.states.${LIST_STATE_KEYS[group]}`)} help={helpOf(group)} /> : null;
 
   /** A relative query, so the link stays on this event whatever its address is (§8). */
   const pageHref = (page: number) => `?lista=${page}#start-list-title`;
@@ -321,6 +353,23 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
                 </Box>
               ) : null}
             </Stack>
+          )}
+
+          {/* The legend (§556): one plain sentence per state the list shows, only behind the gate. */}
+          {legend.length > 0 && (
+            <Box data-testid="start-list-legend" sx={{ mt: 2 }}>
+              <Typography variant="body2" sx={{ fontWeight: 600, display: "flex", alignItems: "center", gap: 0.75 }}>
+                <HelpOutlineIcon fontSize="small" aria-hidden="true" />
+                {t("startList.legend.title")}
+              </Typography>
+              <Box component="ul" sx={{ m: 0, mt: 0.5, pl: 2.5 }}>
+                {legend.map((line) => (
+                  <Typography component="li" variant="body2" key={line.group} data-testid="start-list-legend-line" data-state={line.group}>
+                    {line.sentence}
+                  </Typography>
+                ))}
+              </Box>
+            </Box>
           )}
 
           {/* Said on the page rather than only in the privacy notice: somebody reading their own

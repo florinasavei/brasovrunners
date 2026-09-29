@@ -11,6 +11,7 @@
  * treats as "the rest of this is literal text" and does not print.
  */
 
+import type { RegistrationStatus } from "@/db/schema/registrations";
 import { raceNumberOf } from "./domain/race-number";
 
 const FORMULA_PREFIXES = ["=", "+", "-", "@"];
@@ -19,7 +20,8 @@ export function neutralizeCsvValue(value: string): string {
   return FORMULA_PREFIXES.some((prefix) => value.startsWith(prefix)) ? `'${value}` : value;
 }
 
-function csvCell(value: string): string {
+/** One cell, neutralized and quoted — the rule every CSV the backoffice hands out follows (the newsletter's list too, §550). */
+export function csvCell(value: string): string {
   const neutralized = neutralizeCsvValue(value);
   const needsQuoting = /[",\n\r]/.test(neutralized);
   const escaped = neutralized.replaceAll('"', '""');
@@ -60,10 +62,8 @@ export type RegistrationCsvRow = {
   guardianIdDocument: string;
   submittedAt: string;
   confirmedAt: string;
-  /** The race number, once assigned (BR-REQ-038-01); empty until then, never 0. */
+  /** The race number, drawn at the confirmation (BR-REQ-038-01, §548); empty before it, never 0. */
   bibNumber?: number | null;
-  /** The number held before the settle (§214). */
-  provisionalBibNumber?: number | null;
   /** Race day and the provider's verdict, the two columns an organizer sorts by afterwards (§83). */
   checkedInAt: string;
   emailBounced: boolean;
@@ -90,6 +90,11 @@ export type RegistrationCsvRow = {
    * «; »-joined, or empty — so a spreadsheet shows who came together.
    */
   family?: string;
+  /**
+   * Why the participant cancelled (§558): the answer, and after «Another reason» their own words
+   * (`cancelReasonCell`). Empty for a staff cancellation and every row that is not cancelled.
+   */
+  cancelReason?: string;
 };
 
 const HEADER = [
@@ -114,9 +119,6 @@ const HEADER = [
   // "Race number (BIB)", not "Bib": the club calls it that everywhere else in the backoffice
   // (§180), and a spreadsheet column is the one place a volunteer meets the word cold.
   "Race number (BIB)",
-  // Whether that number is the settled one (§214). Its own column rather than a marker
-  // inside the number, because the number column is read as a number by every spreadsheet.
-  "Number settled",
   "Checked in",
   "Email bounced",
   // Last (§425), so a script that reads the columns by position still finds every earlier one.
@@ -127,6 +129,8 @@ const HEADER = [
   "Declaration signed",
   // Last (§543), for the same reason: the other people on the same address.
   "family",
+  // Last (§558), for the same reason: the participant's own reason for cancelling.
+  "Cancellation reason",
 ];
 
 export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[]): string {
@@ -152,8 +156,8 @@ export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[]): stri
         row.guardianIdDocument,
         row.submittedAt,
         row.confirmedAt,
-        String(raceNumberOf({ bibNumber: row.bibNumber ?? null, provisionalBibNumber: row.provisionalBibNumber ?? null })?.value ?? ""),
-        raceNumberOf({ bibNumber: row.bibNumber ?? null, provisionalBibNumber: row.provisionalBibNumber ?? null })?.settled ? "Yes" : "",
+        // Empty until the registration is confirmed (§548): the one helper every screen reads.
+        String(raceNumberOf({ status: row.status as RegistrationStatus, bibNumber: row.bibNumber ?? null }) ?? ""),
         row.checkedInAt,
         row.emailBounced ? "Yes" : "",
         String(row.termsVersion ?? ""),
@@ -161,6 +165,7 @@ export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[]): stri
         String(row.declarationVersion ?? ""),
         row.declarationSignedAt ?? "",
         row.family ?? "",
+        row.cancelReason ?? "",
       ]
         .map(csvCell)
         .join(","),

@@ -258,6 +258,11 @@ export async function ensureRegistrationIsOpen(page: Page) {
     await page.getByRole("combobox", { name: "Declarația pe care o semnează participantul" }).click();
     await page.getByRole("option").nth(1).click();
 
+    // The form asks the health note only when the event does (§557): the seed ticks it on the sample
+    // race, and this ticks it on a database seeded before the column, so the medical fold is there.
+    const health = (await openEditorBox(page, "Condiții de participare")).locator('[name="event.askHealthNote"]');
+    if (!(await health.isChecked())) await health.check();
+
     // The event is published, so the one save carries the live-edit acknowledgement for the
     // whole form (BR-REQ-051-01 criterion 4) — settings included, now that settings and content
     // are saved together. The service refuses the save without it.

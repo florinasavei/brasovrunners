@@ -23,8 +23,12 @@ import { headingRule } from "@/theme/surfaces";
 
 type Props = { params: Promise<{ locale: string }> };
 
-/** Per request, like every public page; the page and its questions come from the public cache (§333). */
-export const dynamic = "force-dynamic";
+/**
+ * Static, made on its first visit and kept by the CDN (§549, amending §333); a save of the page or
+ * its questions expires it through the rows' own tag, and a day is the ceiling. A literal, as Next
+ * requires: it equals `PUBLIC_PAGE_CEILING_SECONDS` (a test holds them together).
+ */
+export const revalidate = 86400;
 
 /** The answer under its question: the renderer's own type, the fold's body indented under the arrow. */
 const ANSWER_SX = { pl: { xs: DENSITY.sectionGap, sm: 3 }, pb: { xs: DENSITY.gapSm, sm: 2 }, "& > :last-child": { mb: 0 } } as const;

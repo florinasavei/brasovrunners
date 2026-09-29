@@ -10,23 +10,10 @@ import { type TeamMemberFields, teamFieldName, teamMemberFieldsSchema } from "./
 import { mediaAssetKeyPrefix } from "./repository";
 
 /**
- * «Echipa» — the team page's cards (§459): add, write, show or hide, move, delete.
- *
- * The page is the platform's, like the contact form: its title and its introduction are in the
- * catalogue, and what the club keeps is the list of people. Every write is asserted here, on the
- * server, whatever the screen offered (BR-REQ-060-01):
- *
- * - adding, writing, moving, and deleting a card that is not on the site — `canEditTeamPage`,
- *   the Redactor's and the Administrator's, because a card is words and a photograph;
- * - showing a card, taking it off, and deleting one that is on the site — `canShowTeamMember`,
- *   the Administrator's, because that is what crossing public view is since §201.
- *
- * Every write leaves an `audit_logs` row in its own transaction, naming the card by id and the
- * staff member who acted — never the person's name or words (§12.12): whoever put a photograph on
- * the site, or deleted a card, can be told months later.
- *
- * The cards are read from the public cache under `pages` (§333): «Echipa» is a standing page and
- * sits in the navigation, and every write here expires that kind, as a page's save does.
+ * «Echipa» — the team page's cards (§459). Asserted on the server (BR-REQ-060-01): writing a card
+ * is `canEditTeamPage`; showing, hiding or deleting a shown card is `canShowTeamMember` (§201).
+ * Every write audits the card id and the actor, never the person's name or words (§12.12), and
+ * expires the `pages` cache (§333).
  */
 
 type Actor = Pick<StaffUser, "id" | "role">;
@@ -37,7 +24,6 @@ function parseOrThrow(value: unknown): TeamMemberFields {
     throw new DomainError(
       "VALIDATION_ERROR",
       parsed.error.issues.map((issue) => `${teamFieldName(issue.path)}: ${issue.message}`).join("; "),
-      // The boxes' own names — `links[1].url` for the second link's address — so the summary lands on them.
       [...new Set(parsed.error.issues.map((issue) => teamFieldName(issue.path)))],
     );
   }
@@ -51,8 +37,7 @@ async function assertPhotoExists<T extends Record<string, unknown>>(db: Database
   if (keyPrefix === null) {
     throw new DomainError("VALIDATION_ERROR", "the photo is not a stored picture", ["photoAssetId"]);
   }
-  // A film's automatic poster is YouTube's 480-pixel thumbnail, not a person's photo (§485) — the
-  // same refusal an album gives it (`addStoredPhoto`), held here and not only in the picker.
+  // A film's automatic poster is not a person's photo (§485); also refused by the picker.
   if (keyPrefix.startsWith("yt-")) {
     throw new DomainError("VALIDATION_ERROR", "a film's poster is not a card's photo", ["photoAssetId"]);
   }
@@ -91,7 +76,7 @@ export async function createTeamMember<T extends Record<string, unknown>>(
         link: fields.link,
         links: fields.links.length > 0 ? fields.links : null,
         photoMediaAssetId: fields.photoAssetId,
-        // The part the card shows (§541); null is the whole photograph, as before.
+        // §541; null is the whole photograph.
         photoCrop: fields.photoCrop,
         position: (last?.position ?? 0) + 1,
         visible: false,
@@ -111,17 +96,14 @@ export async function createTeamMember<T extends Record<string, unknown>>(
     });
     return row;
   });
-  // Hidden, so nothing public changed — but the count the header reads is cheap to expire, and a
-  // rule that every write expires is one nobody has to remember the exceptions of.
+  // Hidden, but every write expires the cache: no exceptions to remember.
   revalidatePublicContent("pages");
   return created;
 }
 
 /**
- * Save a card's words and photo, against the version it was loaded with: a colleague's save in
- * between is a CONFLICT, never an overwrite (AGENTS.md §11.5). Writing a card that is on the site
- * is allowed to the Redactor as a page's live text is (§103) — the words change, the card's being
- * there does not.
+ * Save a card's words and photo against its loaded version; CONFLICT otherwise (AGENTS.md §11.5).
+ * The Redactor may write a shown card, as a live page's text (§103).
  */
 export async function saveTeamMember<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -146,7 +128,7 @@ export async function saveTeamMember<T extends Record<string, unknown>>(
         link: fields.link,
         links: fields.links.length > 0 ? fields.links : null,
         photoMediaAssetId: fields.photoAssetId,
-        // The part the card shows (§541); null is the whole photograph, as before.
+        // §541; null is the whole photograph.
         photoCrop: fields.photoCrop,
         updatedByStaffUserId: input.actor.id,
         version: input.expectedVersion + 1,
@@ -210,11 +192,7 @@ export async function setTeamMemberVisible<T extends Record<string, unknown>>(
   return row;
 }
 
-/**
- * Move a card one place up or down. The whole list is renumbered from the order on screen, as
- * `movePageInNav` does and for its reasons: duplicates and gaps heal, and a replayed press at an
- * end does nothing rather than fail.
- */
+/** Move a card one place up or down, renumbering the whole list (as `movePageInNav`). */
 export async function moveTeamMember<T extends Record<string, unknown>>(
   db: Database<T>,
   input: { actor: Actor; memberId: string; direction: "up" | "down"; now?: Date },
@@ -248,9 +226,8 @@ export async function moveTeamMember<T extends Record<string, unknown>>(
 }
 
 /**
- * Delete a card. One that is on the site is the Administrator's to remove (§201); a hidden one,
- * whoever may write cards. The photo stays in the store and is swept a week after nothing uses it
- * (§73), so a card deleted by mistake can be made again with the same picture.
+ * Delete a card; a shown one is the Administrator's (§201). The photo is swept a week after
+ * nothing uses it (§73).
  */
 export async function deleteTeamMember<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -267,8 +244,7 @@ export async function deleteTeamMember<T extends Record<string, unknown>>(
   if (current.visible && !canShowTeamMember(input.actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not delete a card that is on the site`);
   }
-  // The visibility is asked again in the delete itself, so a card shown a moment ago by a
-  // colleague is not taken off the site by somebody who may not.
+  // Visibility is re-checked in the delete itself, against a colleague showing it meanwhile.
   const mayRemoveShown = canShowTeamMember(input.actor.role);
   const deleted = await db.transaction(async (tx) => {
     const gone = await tx
@@ -276,7 +252,7 @@ export async function deleteTeamMember<T extends Record<string, unknown>>(
       .where(and(eq(teamMembers.id, input.memberId), mayRemoveShown ? undefined : eq(teamMembers.visible, false)))
       .returning({ id: teamMembers.id, visible: teamMembers.visible });
     if (gone.length > 0) {
-      // The row outlives the card: the id and whether it was on the site, never the name (§12.12).
+      // The id and whether it was shown, never the name (§12.12).
       await recordAuditEvent(tx, {
         actorStaffUserId: input.actor.id,
         action: "team_member.deleted",

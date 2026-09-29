@@ -18,9 +18,7 @@ import {
   listBibs,
   markBibsPrinted,
   pickBibNumber,
-  pickProvisionalBibNumber,
   setBibPrinted,
-  settleBibNumbers,
   suggestFreeBibNumbers,
   voidBibsFor,
 } from "@/modules/registrations/bibs";
@@ -67,7 +65,7 @@ describe("§311 the printed bibs of cancelled registrations", () => {
 
   async function register(
     name: string,
-    options: { status?: RegistrationStatus; kind?: RegistrationKind; bib?: number; printedAt?: Date; provisional?: number } = {},
+    options: { status?: RegistrationStatus; kind?: RegistrationKind; bib?: number; printedAt?: Date } = {},
   ) {
     counter += 1;
     const email = `${counter}@example.test`;
@@ -87,7 +85,6 @@ describe("§311 the printed bibs of cancelled registrations", () => {
         registeredName: name,
         displayName: name,
         bibNumber: options.bib ?? null,
-        provisionalBibNumber: options.provisional ?? null,
         bibPrintedAt: options.printedAt ?? null,
         privacyNoticeVersion: 1,
         privacyAcknowledgedAt: new Date("2026-09-01T00:00:00Z"),
@@ -133,7 +130,7 @@ describe("§311 the printed bibs of cancelled registrations", () => {
       })
     ).secret;
 
-    const result = await consumeAndCancelFromMyRegistrations(db, secret, gone.id, NOW);
+    const result = await consumeAndCancelFromMyRegistrations(db, secret, gone.id, NOW, { kind: "OTHER_PLANS", text: null });
     expect(result.ok && result.registration).toMatchObject({ status: "CANCELLED", cancellationSource: "PARTICIPANT", bibNumber: 27 });
     expect(result.ok && result.registration.bibPrintedAt).toEqual(printed);
 
@@ -149,9 +146,6 @@ describe("§311 the printed bibs of cancelled registrations", () => {
     await register("De probă", { status: "CANCELLED", kind: "TEST", bib: 6, printedAt: NOW });
     // Confirmed and printed: the bib is right, the runner is coming.
     await register("Vine", { bib: 7, printedAt: NOW });
-    // A provisional number is printed nowhere (§214), so a cancelled row cannot be void by it —
-    // and the transition releases it anyway. Planted here to show the reader ignores it.
-    await register("Provizoriu", { status: "CANCELLED", provisional: 8, printedAt: NOW });
 
     expect(await voidBibsFor(db, eventId)).toEqual([]);
   });
@@ -168,20 +162,16 @@ describe("§311 the printed bibs of cancelled registrations", () => {
   });
 
   /**
-   * What "the number was later changed by hand" means here (§173, §286): a confirmed runner's
-   * settled number cannot be changed at all, so the only hand-given number that can be void is
-   * one typed **before** confirmation and then carried through. The desk's provisional number is
-   * the other case, and it is not void because it is never printed and is released with the
-   * place (§214).
+   * What "the number was later changed by hand" means here (§105, §548): a preferential number
+   * replaces the one a confirmation gave, before anything is printed; once printed it stays.
    */
-  it("a number typed by hand is settled, and once printed and cancelled it is void under that number", async () => {
-    const typed = await register("Preferențial", { status: "PENDING_DECLARATION" });
+  it("a number typed by hand replaces the confirmation's, and once printed and cancelled it is void under that number", async () => {
+    const typed = await register("Preferențial", { bib: 5 });
     await setBibNumberByStaff(db, admin, typed.id, 900, NOW);
-    await db.update(registrations).set({ status: "CONFIRMED" }).where(eq(registrations.id, typed.id));
     await setBibPrinted(db, { actor: admin, registrationId: typed.id, printed: true, now: NOW });
 
-    // Refused: a confirmed runner with a number keeps it, so nothing can move 900 to somebody
-    // else and leave the printed bib pointing at nobody (§173).
+    // Refused: a printed number stays, so nothing can move 900 to somebody else and leave the
+    // printed bib pointing at nobody (§311).
     await expect(setBibNumberByStaff(db, admin, typed.id, 901, NOW)).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
 
     await cancelRegistrationByStaff(db, admin, typed.id, "accidentare", NOW);
@@ -239,8 +229,11 @@ describe("§311 the printed bibs of cancelled registrations", () => {
     const restarted = await register("Revenită", { status: "PENDING_DECLARATION", bib: 12, printedAt: NOW });
     await expect(setBibNumberByStaff(db, admin, restarted.id, 13, NOW)).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
     await expect(setBibNumberByStaff(db, admin, restarted.id, null, NOW)).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
-    // Before anything is printed the preferential number is still the organizer's to give (§105).
-    const fresh = await register("Nouă", { status: "PENDING_DECLARATION", bib: 14 });
+    // Not confirmed, so no number to change (§548); confirmed and not printed, the preferential
+    // number is still the organizer's to give (§105).
+    const pending = await register("În așteptare", { status: "PENDING_DECLARATION" });
+    await expect(setBibNumberByStaff(db, admin, pending.id, 16, NOW)).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+    const fresh = await register("Nouă", { bib: 14 });
     expect((await setBibNumberByStaff(db, admin, fresh.id, 15, NOW)).bibNumber).toBe(15);
   });
 
@@ -337,16 +330,11 @@ describe("§311 the printed bibs of cancelled registrations", () => {
     for (let i = 0; i < 30; i += 1) drawn.push(await pickBibNumber(db, eventId, final));
     expect(drawn).not.toContain(27);
     expect(drawn.slice(25, 27)).toEqual([26, 28]);
-    // The provisional draw, which would otherwise promote a provisional 27 to a final one.
-    const provisional = new Set<number>();
-    const held: number[] = [];
-    for (let i = 0; i < 30; i += 1) held.push(await pickProvisionalBibNumber(db, eventId, provisional));
-    expect(held).not.toContain(27);
     // The free-number hints beside the hand-typed field.
     expect(await suggestFreeBibNumbers(db, eventId, 25, 4)).toEqual([25, 26, 28, 29]);
 
     // Typed by hand, it is refused and nothing is written.
-    const typing = await register("Preferențial", { status: "PENDING_DECLARATION" });
+    const typing = await register("Preferențial");
     await expect(setBibNumberByStaff(db, admin, typing.id, 27, NOW)).rejects.toMatchObject({ code: "CONFLICT" });
     const [still] = await db.select({ bibNumber: registrations.bibNumber }).from(registrations).where(eq(registrations.id, typing.id));
     expect(still.bibNumber).toBeNull();
@@ -358,21 +346,19 @@ describe("§311 the printed bibs of cancelled registrations", () => {
   });
 
   /**
-   * The recompaction at the close runs from the band's start (§214), so it is the pass certain to
-   * reach an erased number — and an unprinted one is retired as firmly as a printed one: the
-   * runner was emailed it either way.
+   * Every confirmation draws from the band's start (§173, §548), so it is certain to reach an
+   * erased number — and an unprinted one is retired as firmly as a printed one: the runner was
+   * emailed it either way.
    */
-  it("closes the settle around an erased number, printed or not", async () => {
+  it("draws around an erased number, printed or not", async () => {
     const printed = await register("Tipărită", { status: "CANCELLED", bib: 2, printedAt: NOW });
     const emailed = await register("Doar pe email", { status: "CANCELLED", bib: 4 });
     await deleteRegistrationByStaff(db, admin, printed.id, "ștergere", NOW);
     await deleteRegistrationByStaff(db, admin, emailed.id, "ștergere", NOW);
-    for (const provisional of [1, 2, 3]) {
-      await register(`Așteaptă ${provisional}`, { status: "PENDING_DECLARATION", provisional });
-    }
 
-    const settled = await settleBibNumbers(db, { eventId, bibStartNumber: 1, bibsSettledAt: null, now: NOW });
-    expect(settled.map((bib) => bib.bibNumber)).toEqual([1, 3, 5]);
+    const taken = new Set<number>();
+    const drawn = [await pickBibNumber(db, eventId, taken), await pickBibNumber(db, eventId, taken), await pickBibNumber(db, eventId, taken)];
+    expect(drawn).toEqual([1, 3, 5]);
   });
 
   it("reads an erased number for its own event only", async () => {

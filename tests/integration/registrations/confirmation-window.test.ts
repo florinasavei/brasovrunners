@@ -71,7 +71,7 @@ const submission = (email: string) => ({
   firstName: "Ana",
   lastName: "Popescu",
   birthDate: "1990-05-17",
-  sex: "UNSPECIFIED",
+  sex: "FEMALE",
   nationality: "RO",
   country: "RO",
   city: "Brașov",

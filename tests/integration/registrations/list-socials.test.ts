@@ -52,7 +52,7 @@ const submission = (overrides: Record<string, unknown> = {}) => ({
   firstName: "Ana",
   lastName: "Pop",
   birthDate: "1990-05-17",
-  sex: "UNSPECIFIED",
+  sex: "FEMALE",
   phone: "+40711111111",
   emergencyContactName: "Ion Vecinul",
   emergencyContactPhone: "+40722222222",

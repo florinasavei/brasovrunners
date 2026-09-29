@@ -10,11 +10,8 @@
  *   share/<NAME>-<baseline>.md         each document as a standalone, versioned file,
  *                                      for sending to people who do not use git
  *
- * Filenames inside the repository stay stable on purpose: links, CODEOWNERS, GitHub's
- * README rendering, and docs-check all key on them. The version lives in the folder
- * name, the archive name, the share copies, and the visible header of every document.
- *
- * Refuses to run when docs-check fails, so a release is always internally consistent.
+ * Filenames inside the repository stay stable (links and docs-check key on them); the version
+ * lives in the folder, archive and share names. Refuses to run when docs-check fails.
  */
 
 import { readFile, mkdir, rm, cp, readdir, writeFile } from "node:fs/promises";
@@ -85,9 +82,7 @@ async function main() {
     await cp(src, path.join(share, `${stem}-${version}${ext}`));
   }
 
-  // Both commands run with cwd DIST, so the archive is named relative to it. An absolute
-  // Windows path here reaches bsdtar as "D:\..." and is parsed as host:path, which fails
-  // with "Cannot connect to D:" and silently produces no archive.
+  // Relative to cwd DIST: bsdtar parses an absolute Windows path "D:\..." as host:path.
   const zipName = `${folderName}.zip`;
   const zipped =
     run("zip", ["-qr", zipName, folderName], { cwd: DIST }) ||

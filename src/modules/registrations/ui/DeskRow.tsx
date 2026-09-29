@@ -106,8 +106,7 @@ export default async function DeskRow({
     row.status === "PENDING_DECLARATION" ||
     row.status === "WAITLIST_OFFERED";
 
-  // Whichever number this runner has, and whether it is the settled one (§214). On race
-  // morning most of them are provisional, and the desk has to show those or it shows a dash.
+  // The number once the registration is confirmed (§548), a dash before; a row that is over keeps its own, retired.
   const number = raceNumberOf(row);
 
   /*
@@ -169,29 +168,23 @@ export default async function DeskRow({
           <Stack direction="row" spacing={1} sx={{ alignItems: "center", flexWrap: "wrap", gap: 0.5 }}>
             {/*
               The number first and large: it is what the volunteer reaches for on the table.
-
-              Digits alone, with no marker for a provisional one (§214) — unlike the
-              registrations list, which is a planning screen and marks it. A volunteer at a desk
-              with a queue in front of them reads a number off a screen and matches it to a
-              number on a bib, and anything else in that field is something to decode. What
-              tells them a number is not settled is the absence of the bib picture below, which
-              is only ever drawn for a settled one; the tooltip says it in words.
+              Digits alone, and «—» until the registration is confirmed (§548): the confirmation
+              — online, or here on paper — is what gives it one.
 
               Struck through and dimmed on a row that is over (§311): the number is still this
               person's — it is never reused — and it is not a number to reach for.
             */}
             <Typography
               component="span"
-              title={number && !number.settled ? t("desk.bibProvisional") : undefined}
               sx={{
                 fontWeight: 700,
                 fontSize: "1.25rem",
                 minWidth: 48,
-                color: number && !terminal ? "text.primary" : "text.disabled",
-                textDecoration: terminal && number ? "line-through" : "none",
+                color: number !== null && !terminal ? "text.primary" : "text.disabled",
+                textDecoration: terminal && number !== null ? "line-through" : "none",
               }}
             >
-              {number ? number.value : "—"}
+              {number ?? "—"}
             </Typography>
             <Typography component="span" sx={{ fontWeight: 600, fontSize: "1.05rem" }}>
               {row.registeredName}
@@ -251,7 +244,7 @@ export default async function DeskRow({
             Not on a row that is over (§311): the picture is for matching a bib to a runner, and
             this runner gets none. The red line above already names the number to pull.
           */}
-          {number !== null && number.settled && row.kind === "REAL" && !terminal && (
+          {number !== null && row.kind === "REAL" && !terminal && (
             <Box component="details" sx={{ ...BOXED_DISCLOSURE_SX, mt: 1 }}>
               <Typography component="summary" variant="body2" color="text.secondary">
                 <ConfirmationNumberIcon aria-hidden sx={FOLD_GLYPH_SX} />
@@ -261,7 +254,7 @@ export default async function DeskRow({
               {/* eslint-disable-next-line @next/next/no-img-element -- our own PNG, drawn at a fixed size */}
               <img
                 src={`/api/admin/events/${row.eventId}/bibs/preview?registration=${row.id}&locale=${locale}`}
-                alt={t("desk.bibAlt", { number: number.value })}
+                alt={t("desk.bibAlt", { number })}
                 width={BIB_IMAGE.width}
                 height={BIB_IMAGE.height}
                 loading="lazy"
@@ -319,12 +312,11 @@ export default async function DeskRow({
               {hidden}
               <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
                 {/*
-                  The bib handed with the paper (§444): the next desk spare, suggested, for a walk-in —
-                  a staff entry with no settled number and no printed bib (`handsSpareAtConfirm`) —
-                  so they get a pre-printed spare, never a number nobody printed. An online runner's
-                  provisional number, shown at the head of the row, stays theirs: no box, and the
-                  confirmation adopts it (§220); the server refuses a handed number there too.
-                  Emptied, the platform draws one as before. Only where the club set spares.
+                  The bib handed with the paper (§444, §548): the next desk spare, suggested, for a
+                  row that wears no number yet (`handsSpareAtConfirm`) — which is everybody not
+                  confirmed, since a number comes only with the confirmation — so the runner gets a
+                  pre-printed spare, never a number nobody printed. Emptied, the confirmation draws
+                  the next number in order. Only where the club set spares.
                 */}
                 {spare.kind !== "none" && handsSpareAtConfirm(row) && (
                   <RecallField
@@ -389,16 +381,10 @@ export default async function DeskRow({
           {!readOnly && row.status === "CONFIRMED" && (
             <>
               {/*
-                The field only where there is a number to give (§173; the owner: "nu ar trebui
-                să mai pot schimba numărul de concurs odată confirmat!").
-
-                A confirmed runner has the number in their inbox and possibly on a bib in an
-                envelope, so the service refuses a change — and a box that always refuses is
-                worse than no box: it invites the press, and the desk is the one screen where
-                being told "ceva nu este valid" in front of a queue is expensive. What stays is
-                filling a gap, which is the one case that still arises: a row confirmed before
-                a number was drawn automatically. The number itself is already shown large at
-                the head of the row.
+                The field only where there is a number to give (§173): a confirmed runner got their
+                number with the confirmation (§548) and has it in their inbox, so the desk offers no
+                change — a preferential number is the registration page's, away from a queue. What
+                stays is filling a gap: a row confirmed before a number was drawn automatically.
               */}
               {/* A refused number — taken, retired, out of the band — is answered in this row with
                   the number still in its box (§315), not at the head of a page the volunteer has

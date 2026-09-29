@@ -1,9 +1,11 @@
+import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { DEFAULT_DIFFICULTY_STEP, DIFFICULTY_BANDS, difficultyBandOf, difficultyLevelOf, difficultyStepOf } from "@/modules/events/domain/difficulty";
 import { EVENT_TYPES } from "@/modules/events/domain/event-type";
 import { EVENT_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
+import CheckboxField from "@/shared/ui/CheckboxField";
 import Panel from "@/shared/ui/Panel";
 import QuietHelp from "@/shared/ui/QuietHelp";
 import { eventInputConstraints } from "../../constraints";
@@ -11,7 +13,7 @@ import DifficultyRow from "../DifficultyRow";
 import DifficultyStepField from "../DifficultyStepField";
 import GlyphSelect from "../GlyphSelect";
 import TypeNote from "../TypeNote";
-import { type BoxProps, type LanguageEntry, SettingsReadOnly } from "./box-kit";
+import { BoxNote, type BoxProps, type LanguageEntry, SettingsReadOnly } from "./box-kit";
 import CostBox, { costLine } from "./CostBox";
 import StatusCard, { type StatusNotice } from "./StatusBox";
 
@@ -79,7 +81,9 @@ export default async function KindBox({
   const step = level === null ? DEFAULT_DIFFICULTY_STEP : difficultyStepOf(level);
   const difficultyLine = band ? t("editor.difficultySummary", { band: t(`editor.difficultyValues.${band}`), step }) : null;
   // The type, the status and the cost (§466), and the difficulty when stated (§526): what this box asks, on its closed line.
-  const aside = [tEvent(`type.${initialType}`), EVENT_STATUS_LABEL[event?.eventStatus ?? "SCHEDULED"], await costLine(event, languages), difficultyLine]
+  // For the members alone (§552), said on the closed line too: it decides who sees the event at all.
+  const membersLine = event?.membersOnly ? t("editor.membersOnlyShort") : null;
+  const aside = [tEvent(`type.${initialType}`), EVENT_STATUS_LABEL[event?.eventStatus ?? "SCHEDULED"], await costLine(event, languages), difficultyLine, membersLine]
     .filter((part): part is string => Boolean(part))
     .join(separator);
   // Awaited here rather than nested, so the element is ready when the box is (a string renderer
@@ -165,6 +169,18 @@ export default async function KindBox({
               {t("editor.typeHelp")}
             </Typography>
           </Panel>
+          {/*
+            «Doar pentru membrii BVR» (§552): who sees the event at all — beside what kind it is. The
+            marker says the form carried the box, so a form without it never makes an event public.
+            A series carries it by scope, like the night override (§382, §394).
+          */}
+          <Box>
+            <input type="hidden" name="event.membersOnly.present" value="1" />
+            <CheckboxField name="event.membersOnly" defaultChecked={event?.membersOnly ?? false}>
+              {t("editor.membersOnly")}
+            </CheckboxField>
+            <BoxNote>{t("editor.membersOnlyHelp")}</BoxNote>
+          </Box>
           {/* 1.1 — the status (§448): the same select on the create page, starting at "Programat". */}
           {status}
           {/* 1.2 — the cost (§466): the page draws it after the course; the editor asks it here. */}

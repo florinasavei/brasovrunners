@@ -85,15 +85,15 @@ export async function setRegistrationStatus(id: string, status: string): Promise
  * Gives back the places a spec's own registrations hold on a shared event, by the address prefix
  * the spec writes them with — so a spec that registers on the sample race does not fill it for the
  * specs after it (the e2e memory: two local runs fill the race). Cleanup, not a subject: the rows
- * are marked cancelled by an Administrator with their provisional numbers released, as the
- * allocator's own cancel would leave them; nobody on a waiting list is offered anything, which a
- * run's leftovers never deserved.
+ * are marked cancelled by an Administrator, a confirmed one keeping its number retired, as the
+ * allocator's own cancel would leave them (§548); nobody on a waiting list is offered anything,
+ * which a run's leftovers never deserved.
  */
 export async function cancelRegistrationsByEmailPrefix(prefix: string): Promise<void> {
   await withDatabase((client) =>
     client.query(
       `UPDATE registrations r
-          SET status = 'CANCELLED', cancelled_at = now(), cancellation_source = 'ADMIN', provisional_bib_number = NULL
+          SET status = 'CANCELLED', cancelled_at = now(), cancellation_source = 'ADMIN'
          FROM participants p
         WHERE p.id = r.participant_id
           AND lower(p.delivery_email) LIKE lower($1) || '%'

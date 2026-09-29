@@ -40,7 +40,8 @@ function strings(value: unknown, out: string[] = []): string[] {
 function shapes(label: string): string[] {
   const whole = label.trim();
   const beforePlaceholder = whole.split("{")[0].trim();
-  const withoutCount = whole.replace(/\s*\(\{[^}]*\}\)/g, "").trim();
+  // «(…{count})» or «({count} din {total})» (§555): the count in brackets, whatever words hold it.
+  const withoutCount = whole.replace(/\s*\(\{[^)]*\)/g, "").trim();
   return [whole, beforePlaceholder, withoutCount]
     .flatMap((shape) => [shape, shape.replace(/^←\s*/, "").replace(/\s*→$/, "").replace(/…$/, "").trim()])
     .filter((shape) => shape.length > 0);
@@ -53,6 +54,8 @@ const sourceLabels = (() => {
     // The repository is CRLF on Windows and LF on CI: `\r?` before the line's end.
     ...[...staffLabels.matchAll(/^\s+[A-Z_]+: "([^"]+)",\r?$/gm)].map((match) => match[1]),
     ...[...templates.matchAll(/^\s+action: "([^"]+)",\r?$/gm)].map((match) => match[1]),
+    // «Nu mai pot ajunge», the button of every email about a live registration (§558).
+    ...[...templates.matchAll(/^\s+cannotCome: \{\s+label: "([^"]+)"/gm)].map((match) => match[1]),
   ];
 })();
 

@@ -36,7 +36,9 @@ export function publicFormEvent(
     | "confirmationOpensDaysBefore"
     | "confirmationDeadlineDaysBefore"
     | "reminderHoursBefore"
-  >,
+  > &
+    // Optional on a partial row — a fixture — which reads as the column's default, false (§552).
+    Partial<Pick<Event, "membersOnly" | "askHealthNote">>,
   publishedAt: Date | null,
 ): EventForRegistration {
   return {
@@ -61,5 +63,10 @@ export function publicFormEvent(
     confirmationDeadlineDaysBefore: row.confirmationDeadlineDaysBefore,
     // The event's own reminder lead (§377), for when the job next has work (§334).
     reminderHoursBefore: row.reminderHoursBefore,
+    // For the members alone (§552): the public form takes it only behind a members' session.
+    membersOnly: row.membersOnly ?? false,
+    // Whether the form asks the health note (§557): a note posted to an event that does not is
+    // dropped before the schema, never refused. Absent on a partial row: the lock decides alone.
+    askHealthNote: row.askHealthNote,
   };
 }

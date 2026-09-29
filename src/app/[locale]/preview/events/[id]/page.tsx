@@ -18,6 +18,7 @@ import { datedOrNull } from "@/modules/events/domain/dated";
 import { dayIn } from "@/modules/registrations/domain/age";
 import { EVENT_LINK_KINDS, type EventLinkKind } from "@/modules/events/domain/links";
 import EventAgeRule from "@/modules/events/ui/EventAgeRule";
+import GroupRunSafetyRules from "@/modules/group-run-declarations/ui/GroupRunSafetyRules";
 import EventFacts from "@/modules/events/ui/EventFacts";
 import EventLinks from "@/modules/events/ui/EventLinks";
 import EventRoute from "@/modules/events/ui/EventRoute";
@@ -130,6 +131,8 @@ export default async function PreviewEventPage({ params }: Props) {
     registrationOpensAt: event.registrationOpensAt,
     registrationOpensSoon: event.registrationOpensSoon,
     registrationClosesAt: event.registrationClosesAt,
+    kitShirt: event.kitShirt,
+    askHealthNote: event.askHealthNote,
     confirmationOpensDaysBefore: event.confirmationOpensDaysBefore,
     confirmationDeadlineDaysBefore: event.confirmationDeadlineDaysBefore,
     minAge: event.minAge,
@@ -164,6 +167,8 @@ export default async function PreviewEventPage({ params }: Props) {
     coHostUrl: event.coHostUrl,
     links: event.links,
     isSpecial: event.isSpecial,
+    // For the members alone (§552): the staff preview shows it as a member will see it.
+    membersOnly: event.membersOnly,
     seoTitle: translation.seoTitle,
     seoDescription: translation.seoDescription,
     publishedAt: event.publishedAt,
@@ -238,6 +243,8 @@ export default async function PreviewEventPage({ params }: Props) {
       {/* The minimum age after the rules, as the public page's «Condiții de participare» says it —
           the same component and the same rule (`publicAgeRule`), so the preview says what the page says. */}
       <EventAgeRule event={preview} />
+      {/* A group run's safety rules (§556), as the public page says them under the age. */}
+      <GroupRunSafetyRules event={preview} />
 
       {/* The address is the second line of "Unde" in the facts above (§356), as on the public page. */}
     </Container>

@@ -26,6 +26,11 @@ const SETTLE_MS = 300;
  * keystroke in the title changes no bib and asks for no picture. Native `input` and `change`
  * bubble from every one of those controls (checkboxes, native selects, radios and a number
  * box), so one listener on the form is the subscription, and no global state is kept anywhere.
+ * The two picture places (`BibPictureField`, §560) fire `change` on their hidden fields when a
+ * picture or its crop changes, so they join the same listener.
+ *
+ * **The press paints first (§371).** The moment a box changes the picture dims and says it is
+ * being redrawn — before the settle and the request — and comes back when the new one has loaded.
  */
 export default function BibDesignPreview({
   eventId,
@@ -37,10 +42,13 @@ export default function BibDesignPreview({
   locale: string;
   /** The address of the bib as stored, computed on the server. */
   initialSrc: string;
-  labels: { alt: string; caption: string };
+  labels: { alt: string; caption: string; pending: string };
 }) {
   const root = useRef<HTMLElement>(null);
   const [src, setSrc] = useState(initialSrc);
+  /** A change is on its way: dimmed until the new picture loads (or the address did not move). */
+  const [pending, setPending] = useState(false);
+  const shown = useRef(initialSrc);
 
   useEffect(() => {
     const form = root.current?.closest("form");
@@ -52,20 +60,23 @@ export default function BibDesignPreview({
         const value = data.get(name);
         return typeof value === "string" ? value : null;
       };
-      setSrc(
-        bibPreviewUrl({
-          eventId,
-          locale,
-          number: get("event.bibStartNumber"),
-          colour: get("event.bibColour"),
-          design: readBibDesignForm(get),
-        }),
-      );
+      const next = bibPreviewUrl({
+        eventId,
+        locale,
+        number: get("event.bibStartNumber"),
+        colour: get("event.bibColour"),
+        design: readBibDesignForm(get),
+      });
+      // The same address loads nothing, so nothing would ever say it arrived.
+      if (next === shown.current) setPending(false);
+      shown.current = next;
+      setSrc(next);
     };
     const onChange = (event: Event) => {
       const target = event.target;
       if (!(target instanceof HTMLInputElement || target instanceof HTMLSelectElement)) return;
       if (!isBibDesignInput(target.name)) return;
+      setPending(true);
       clearTimeout(timer);
       timer = setTimeout(redraw, SETTLE_MS);
     };
@@ -79,7 +90,7 @@ export default function BibDesignPreview({
   }, [eventId, locale]);
 
   return (
-    <Box ref={root} component="figure" sx={{ m: 0, maxWidth: 320 }} data-testid="bib-design-preview">
+    <Box ref={root} component="figure" sx={{ m: 0, maxWidth: 320 }} data-testid="bib-design-preview" aria-busy={pending || undefined}>
       {/* The paper's own proportion (A5, 990×700, §338) is declared, so the box keeps its height
           while a fresh picture is on its way and the panel below does not jump. No border and no
           rounded corner of its own: the picture draws the paper's edge itself (`bib-image.tsx`,
@@ -93,10 +104,12 @@ export default function BibDesignPreview({
         height={BIB_IMAGE.height}
         loading="lazy"
         decoding="async"
-        sx={{ display: "block", width: "100%", height: "auto" }}
+        onLoad={() => setPending(false)}
+        onError={() => setPending(false)}
+        sx={{ display: "block", width: "100%", height: "auto", opacity: pending ? 0.55 : 1, transition: "opacity 120ms" }}
       />
-      <Typography component="figcaption" variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
-        {labels.caption}
+      <Typography component="figcaption" variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }} aria-live="polite">
+        {pending ? labels.pending : labels.caption}
       </Typography>
     </Box>
   );

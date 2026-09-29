@@ -6,12 +6,8 @@ import type { Locale } from "@/i18n/routing";
 export type { Database };
 
 /**
- * Reading and writing standing pages (BR-REQ-050-03).
- *
- * The public reads go through `PUBLIC_COLUMNS` and a `PUBLISHED` filter, exactly as
- * `modules/events/repository.ts` does — a draft is not a page a visitor can reach by guessing
- * its address, and the filter lives here rather than in a route so it cannot be forgotten by
- * the next route that needs a page.
+ * Standing pages (BR-REQ-050-03). Public reads use `PUBLIC_COLUMNS` and a `PUBLISHED` filter here,
+ * so no route can forget it.
  */
 
 const PUBLIC_COLUMNS = {
@@ -40,12 +36,7 @@ export type PublicPage = {
   updatedAt: Date;
 };
 
-/**
- * One published page by its locale-scoped slug, or undefined when it should 404.
- *
- * BR-REQ-040-02: a locale with no translation is a 404 and never the other language's text, so
- * the join is on this locale's row and nothing falls back.
- */
+/** One published page by its locale's slug; no fallback to the other language (BR-REQ-040-02). */
 export async function findPublishedPageBySlug<T extends Record<string, unknown>>(
   db: Database<T>,
   locale: Locale,
@@ -83,7 +74,7 @@ export async function listPublishedPages<T extends Record<string, unknown>>(
 export type PageListRow = {
   id: string;
   editorialStatus: string;
-  /** The optimistic version, so the list can publish and unpublish a row (§256). */
+  /** For publish/unpublish from the list (§256). */
   version: number;
   navOrder: number;
   title: string | null;
@@ -100,8 +91,7 @@ export async function listPagesForAdmin<T extends Record<string, unknown>>(
     .select({
       id: pages.id,
       editorialStatus: pages.editorialStatus,
-      // The optimistic version, because the list publishes and unpublishes now (§256): the
-      // transition refuses a stale one, which is what keeps two open tabs from fighting.
+      // The transition refuses a stale version (§256).
       version: pages.version,
       navOrder: pages.navOrder,
       title: pageTranslations.title,
@@ -129,11 +119,7 @@ export async function findPageForEditor<T extends Record<string, unknown>>(db: D
   return { page, translations };
 }
 
-/**
- * Every locale one published page lives in, with that locale's own slug — its `hreflang`
- * alternates (§342), the pages' twin of `findPublishedTranslations` for events. A page that is
- * not published yields nothing, so no draft is ever advertised.
- */
+/** A published page's locales and slugs, for `hreflang` (§342); nothing for a draft. */
 export async function findPublishedPageTranslations<T extends Record<string, unknown>>(
   db: Database<T>,
   pageId: string,
@@ -145,10 +131,7 @@ export async function findPublishedPageTranslations<T extends Record<string, unk
     .where(and(eq(pageTranslations.pageId, pageId), eq(pages.editorialStatus, "PUBLISHED")));
 }
 
-/**
- * The same, for every page in `pageIds` at once — the sitemap's own twin of the single-page
- * version above (§342), one query for the whole list rather than one per row.
- */
+/** The same for many pages in one query — the sitemap's (§342). */
 export async function findPublishedPageTranslationsForPages<T extends Record<string, unknown>>(
   db: Database<T>,
   pageIds: readonly string[],
@@ -161,12 +144,7 @@ export async function findPublishedPageTranslationsForPages<T extends Record<str
     .where(and(inArray(pageTranslations.pageId, pageIds as string[]), eq(pages.editorialStatus, "PUBLISHED")));
 }
 
-/**
- * The same page's address in the other language (BR-REQ-040-01 criterion 5).
- *
- * Published only: switching language must not reveal a draft, and a page whose other locale is
- * unpublished cannot happen while publication requires both — but this does not rely on that.
- */
+/** The page's slug in the other language, published only (BR-REQ-040-01 criterion 5). */
 export async function findPublishedPageSiblingSlug<T extends Record<string, unknown>>(
   db: Database<T>,
   pageId: string,

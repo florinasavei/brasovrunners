@@ -103,6 +103,7 @@ import {
   duplicateEventAction,
   eraseGroupRunDeclarationAction,
   eraseGroupRunDeclarationsAction,
+  groupRunDeclarationHoldAction,
   repeatEventAction,
   removeTestRegistrationsAction,
   saveEventAndTranslationsAction,
@@ -923,6 +924,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   mayErase={canManageRegistrations(staffUser.role)}
                   eraseAction={eraseGroupRunDeclarationAction}
                   batchEraseAction={eraseGroupRunDeclarationsAction}
+                  holdAction={groupRunDeclarationHoldAction}
                   runTitle={heading}
                 />
               )}

@@ -274,7 +274,8 @@ describe("§471 the stepper's words, in both languages (found in review)", () =>
     const family = (locale: keyof typeof catalogues) =>
       (catalogues[locale] as unknown as { Registrations: { declare: { family: Family } } }).Registrations.declare.family;
     expect(Object.keys(family("en").state).sort()).toEqual(Object.keys(family("ro").state).sort());
-    expect(Object.keys(family("ro").state).sort()).toEqual(["closed", "current", "later", "next", "signed", "waitlisted"]);
+    // «înscriere anulată» for a person withdrawn from the wizard (§547).
+    expect(Object.keys(family("ro").state).sort()).toEqual(["cancelled", "closed", "current", "later", "next", "signed", "waitlisted"]);
     for (const key of Object.keys(family("ro").state)) expect(family("en").state[key], key).not.toBe(family("ro").state[key]);
   });
 
