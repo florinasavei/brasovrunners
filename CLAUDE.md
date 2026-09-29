@@ -466,7 +466,8 @@ it is the authority, this is the summary):
     event in `/admin/events` and choose the band and «Treapta» on the fifteen-step scale; the guide («Ghid») explains the scale.
 18. **Open the members' zone and the FAQ** — approve the members' zone address, `/ro/zona-membri` (it sits outside the backoffice,
     which departs from the brief: §524); add the first members on «Echipa» → «Adaugă mai mulți membri» (after the notice of item 16);
-    write «Pagini» → «Pagini standard» → «Membri» and «Întrebări frecvente» (§525) in both languages, then publish them.
+    write «Pagini» → «Pagini standard» → «Membri» and «Întrebări frecvente» (§525) in both languages, then publish them;
+    add the partners' codes in «Membri» → «Coduri de reducere» → «Adaugă un cod».
 
 **The values behind items 10 and 11 are in `.env.local` and on both Vercel projects**, never in
 this repository — it is public, and `yarn secrets:check` blocks a commit that carries one. The

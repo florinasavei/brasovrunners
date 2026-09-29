@@ -524,6 +524,9 @@ describe("BR-REQ-060-01 every capability × every role", () => {
     canOpenMembersZone: /*    */ [true, true, true, true, true, true, true],
     canEditMembersPage: /*    */ [false, false, true, false, false, true, true],
     canPublishMembersPage: /* */ [false, false, false, false, false, true, true],
+    // §NNN: the members' discount codes are the Administrator's; their words the Membri texts' rule.
+    canManageDiscountCodes: /**/ [false, false, false, false, false, true, true],
+    canEditDiscountCodeWords: [false, false, true, false, false, true, true],
   };
   // Exported functions of one argument that are not about a role.
   const NOT_A_ROLE_CAPABILITY = new Set(["isLiveContent", "assignableRoles", "visibleAdminSections", "atLeast"]);

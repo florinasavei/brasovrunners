@@ -1019,9 +1019,10 @@ export async function listOutboxHistory<T extends Record<string, unknown>>(
  * see events nobody has registered for on this screen; the CMS already lists all of them. */
 export async function listEventsWithRegistrations<T extends Record<string, unknown>>(
   db: Database<T>,
-): Promise<Array<{ id: string; title: string | null; featured: boolean }>> {
+): Promise<Array<{ id: string; title: string | null; featured: boolean; membersOnly: boolean }>> {
   return db
-    .selectDistinct({ id: events.id, title: eventTranslations.title, featured: events.featured })
+    // `membersOnly` (§NNN): the list's «Membri» chip on an event for the members alone.
+    .selectDistinct({ id: events.id, title: eventTranslations.title, featured: events.featured, membersOnly: events.membersOnly })
     .from(events)
     .innerJoin(registrations, eq(registrations.eventId, events.id))
     .leftJoin(

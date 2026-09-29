@@ -113,6 +113,23 @@ export function canPublishMembersPage(role: StaffRole): boolean {
   return atLeast(role, "ADMIN");
 }
 
+/**
+ * The members' discount codes (§NNN): adding one, the code itself, its link and its last day, hiding
+ * it, moving it and deleting it — the Administrator's (and the Superadministrator's), who runs the
+ * club (§450): a code is the club's word to a partner, not words on a page.
+ */
+export function canManageDiscountCodes(role: StaffRole): boolean {
+  return atLeast(role, "ADMIN");
+}
+
+/**
+ * The words around a code (§NNN) — the partner's name and the description in both languages — the
+ * rule of the Membri texts (`canEditMembersPage`, §524): the Redactor's and the Administrator's.
+ */
+export function canEditDiscountCodeWords(role: StaffRole): boolean {
+  return canEditMembersPage(role);
+}
+
 export const EDITORIAL_STATUSES = ["DRAFT", "IN_REVIEW", "PUBLISHED", "ARCHIVED"] as const;
 export type EditorialStatus = (typeof EDITORIAL_STATUSES)[number];
 

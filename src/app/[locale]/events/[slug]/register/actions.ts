@@ -43,6 +43,7 @@ import { releaseFamilySitting } from "@/modules/registrations/family-sitting";
 import type { SittingSeed } from "@/modules/registrations/domain/family-sitting";
 import { familySittingHeldUntil } from "@/modules/deadlines/domain/deadlines";
 import { cachedEmailLeavesAt } from "@/modules/public-cache/reads";
+import { membersEventBySlug, membersViewer } from "@/modules/events/members-only";
 
 function toLocale(value: FormDataEntryValue | null): Locale {
   return value === "en" ? "en" : "ro";
@@ -88,8 +89,15 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
   const path = getPathname({ locale, href: { pathname: "/events/[slug]/register", params: { slug } } });
 
   const db = getDb();
-  const publicEvent = await findPublishedEventBySlug(db, locale, slug);
+  /*
+    An event for the members alone (§NNN): read for a members' session only, live. Anybody else is
+    answered as for an event that does not exist — sent to the listing — and the service asks again
+    for the session under the event's lock (`submitRegistration`, `origin.member`).
+  */
+  const publicEvent = (await findPublishedEventBySlug(db, locale, slug)) ?? (await membersEventBySlug(locale, slug));
   if (!publicEvent) redirect(getPathname({ locale, href: "/events" }));
+  const member = publicEvent.membersOnly ? await membersViewer() : null;
+  if (publicEvent.membersOnly && !member) redirect(getPathname({ locale, href: "/events" }));
 
   /*
     The bot check, when configured (§97, §216).
@@ -121,11 +129,20 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
     refused on that box, with what was typed kept, like any other refusal.
   */
   const now = new Date();
-  const priorSitting = await readFamilySittingCookie();
+  // One person per account on a members' event (§NNN): no family sitting, whatever this browser holds.
+  const priorSitting = member ? null : await readFamilySittingCookie();
   const liveSitting = sittingCookieLive(priorSitting, publicEvent.id, now) ? priorSitting : null;
   const familyMode = text(form, FAMILY_SITTING_FIELD) === "1" && liveSitting !== null;
   const typed = readRegistrationForm(form, locale);
-  const input = familyMode && liveSitting ? { ...typed, email: liveSitting.email, emailConfirm: undefined } : typed;
+  /*
+    The address: the account's own on a members' event (§NNN), whatever was posted — the form shows
+    it and asks nothing; the sitting's on a family sitting's next form (§519); else what was typed twice.
+  */
+  const input = member
+    ? { ...typed, email: member.email, emailConfirm: member.email }
+    : familyMode && liveSitting
+      ? { ...typed, email: liveSitting.email, emailConfirm: undefined }
+      : typed;
   /*
     The same address as the sitting on this browser continues it, and only on the form «Da, încă o
     persoană» opened (§536: no sitting without a press). A second plain form from the same browser
@@ -186,17 +203,21 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
         turnstile: verdict,
         secondAttempt: String(form.get(SECOND_ATTEMPT_FIELD) ?? "") === "1",
         honeypotOn: await honeypotIsOn(getDb(), new Date()),
+        // The members' session (§NNN): the only door to an event for the members alone.
+        ...(member ? { member: { email: member.email } } : {}),
         /*
           Every public form may begin a sitting (§519). Before «Da» it is an ordinary form that only
           hands back what «Da» would take in (§536); after it, its messages wait for «Gata» or the window.
         */
-        sitting: {
-          id: continuing ? (liveSitting?.sittingId ?? null) : null,
-          joined: continuing,
-          newPerson,
-          people: priorPeople.length,
-          reservedUntil: continuing && !lapsed ? (liveSitting?.reservedUntil ?? null) : null,
-        },
+        sitting: member
+          ? undefined
+          : {
+              id: continuing ? (liveSitting?.sittingId ?? null) : null,
+              joined: continuing,
+              newPerson,
+              people: priorPeople.length,
+              reservedUntil: continuing && !lapsed ? (liveSitting?.reservedUntil ?? null) : null,
+            },
       },
     );
     sittingId = result.sittingId ?? (continuing ? (liveSitting?.sittingId ?? null) : null);

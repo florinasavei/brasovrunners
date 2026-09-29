@@ -3,9 +3,13 @@ import type { Metadata } from "next";
 import EventDetailPage, { generateMetadata as eventMetadata } from "../../../events/[slug]/page";
 import { absoluteUrl } from "@/modules/events/share-links";
 import { SHARE_SHAPES } from "@/modules/events/share-image";
+import { membersEventBySlug } from "@/modules/events/members-only";
+import { routing } from "@/i18n/routing";
+import { readOrWhileAway } from "@/modules/resilience/optional-read";
 import { canEditTexts } from "@/modules/staff-identity/domain/roles";
 import { getCurrentStaffUser } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
+import { hasLocale } from "next-intl";
 
 /**
  * An event page's live twin (§549, amending §333): the same page, rendered per request, for a
@@ -13,6 +17,12 @@ import { env } from "@/shared/config/env";
  * `?declaratie=…`) or a reader with a session cookie, who may be staff and get the "edit in the
  * backoffice" button (§135). The proxy rewrites such a visit here; the address is unchanged
  * (`i18n/live-twin.ts`). Its metadata is the event page's own, canonical to the bare address (§342).
+ *
+ * It is also the only door to an event for the members alone (§NNN): a member is signed in, so the
+ * proxy sends every visit of theirs here, and this twin — never the static copy, which reads no
+ * session and whose public read never meets such a row — asks the account and reads the event live.
+ * Next answers a `force-dynamic` render `private, no-cache, no-store`, so no shared cache and no
+ * browser keeps a member's page.
  */
 export const dynamic = "force-dynamic";
 
@@ -24,8 +34,8 @@ export const dynamic = "force-dynamic";
  */
 export async function generateMetadata(props: MetadataProps): Promise<Metadata> {
   const metadata = await eventMetadata(props);
-  if (!metadata.openGraph) return metadata;
   const { locale, slug } = await props.params;
+  if (!metadata.openGraph) return hasLocale(routing.locales, locale) ? membersMetadata(locale, slug, metadata) : metadata;
   return {
     ...metadata,
     openGraph: {
@@ -37,6 +47,18 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
 
 type MetadataProps = Parameters<typeof eventMetadata>[0];
 
+/**
+ * A members' event's head (§NNN), when the public read found nothing and a members' session reads
+ * this: its title and nothing a search engine or a link preview could use — `noindex`, no
+ * canonical, no hreflang (§342), no Open Graph card, whose picture answers 404 to everybody anyway.
+ * Anybody else: the event page's own empty head, as for any unknown slug.
+ */
+async function membersMetadata(locale: (typeof routing.locales)[number], slug: string, fallback: Metadata): Promise<Metadata> {
+  const members = await readOrWhileAway(() => membersEventBySlug(locale, slug), undefined);
+  if (!members) return fallback;
+  return { title: members.seoTitle ?? members.title, robots: { index: false, follow: false } };
+}
+
 type Props = {
   params: Promise<{ locale: string; slug: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -44,7 +66,12 @@ type Props = {
 
 export default async function LiveEventDetailPage({ params, searchParams }: Props) {
   const staffUser = env.STAFF_AUTH_MODE === "disabled" ? null : await readStaffUserOrNone();
-  return <EventDetailPage params={params} query={searchParams} canEdit={staffUser !== null && canEditTexts(staffUser.role)} />;
+  const { locale, slug } = await params;
+  // A members' event, for a members' session only (§NNN); asked by the page only when the public read found nothing.
+  const membersRead = hasLocale(routing.locales, locale) ? () => membersEventBySlug(locale, slug) : undefined;
+  return (
+    <EventDetailPage params={params} query={searchParams} canEdit={staffUser !== null && canEditTexts(staffUser.role)} membersRead={membersRead} />
+  );
 }
 
 /**

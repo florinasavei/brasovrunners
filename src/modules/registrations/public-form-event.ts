@@ -36,7 +36,9 @@ export function publicFormEvent(
     | "confirmationOpensDaysBefore"
     | "confirmationDeadlineDaysBefore"
     | "reminderHoursBefore"
-  >,
+  > &
+    // Optional on a partial row — a fixture — which reads as the column's default, false (§NNN).
+    Partial<Pick<Event, "membersOnly">>,
   publishedAt: Date | null,
 ): EventForRegistration {
   return {
@@ -61,5 +63,7 @@ export function publicFormEvent(
     confirmationDeadlineDaysBefore: row.confirmationDeadlineDaysBefore,
     // The event's own reminder lead (§377), for when the job next has work (§334).
     reminderHoursBefore: row.reminderHoursBefore,
+    // For the members alone (§NNN): the public form takes it only behind a members' session.
+    membersOnly: row.membersOnly ?? false,
   };
 }

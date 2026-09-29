@@ -434,7 +434,8 @@
         "captcha": "Verificarea anti-bot nu a trecut. Încearcă din nou.",
         "action": "Semnează declarația"
       }
-    }
+    },
+    "membersOnly": "Doar pentru membri"
   },
   "Admin": {
     "botCheck": {
@@ -758,7 +759,8 @@
       "socialsOnList": "și pe lista publică, lângă nume",
       "resubmittedHeld": "S-a înscris din nou cu aceeași adresă: {date} ({state}) — „{message}” așteaptă deja să plece și pleacă o singură dată",
       "familyChip": "Familie",
-      "resendSentNow": "Emailul pleacă acum, fără să aștepte trecerea programată."
+      "resendSentNow": "Emailul pleacă acum, fără să aștepte trecerea programată.",
+      "filterMembersOnly": "{title} · Membri"
     },
     "events": {
       "empty": "Nu există niciun eveniment în baza de date.",
@@ -879,7 +881,8 @@
       },
       "listApply": "Aplică",
       "listCount": "{shown} din {total} evenimente",
-      "listEmpty": "Niciun eveniment nu se potrivește. Schimbă căutarea sau starea, ori șterge filtrele."
+      "listEmpty": "Niciun eveniment nu se potrivește. Schimbă căutarea sau starea, ori șterge filtrele.",
+      "membersOnlyChip": "Membri"
     },
     "confirm": {
       "cancel": "Renunță",
@@ -1837,7 +1840,10 @@
       "declarationKinds": {
         "EVENT_DECLARATION": "Trail",
         "EVENT_DECLARATION_ROAD": "Șosea sau parc"
-      }
+      },
+      "membersOnly": "Doar pentru membrii BVR",
+      "membersOnlyHelp": "Îl văd doar membrii autentificați, nu apare pe site. Înscrierile făcute rămân.",
+      "membersOnlyShort": "Doar membri"
     },
     "preview": {
       "notice": "Previzualizare pentru echipă. Starea acestui text este: {status}. Pagina nu este publică și nu este indexată.",
@@ -5553,7 +5559,54 @@
       "zoneRo": "Zona membrilor (română)",
       "zoneEn": "Zona membrilor (engleză)",
       "textEmpty": "Nescris încă.",
-      "textHelp": "În ambele limbi sau în niciuna, cel mult {max} de caractere în fiecare. Ca într-o pagină: titluri, liste, linkuri, poze, un tabel."
+      "textHelp": "În ambele limbi sau în niciuna, cel mult {max} de caractere în fiecare. Ca într-o pagină: titluri, liste, linkuri, poze, un tabel.",
+      "codes": {
+        "heading": "Coduri de reducere",
+        "count": {
+          "one": "{count} cod",
+          "few": "{count} coduri",
+          "other": "{count} de coduri"
+        },
+        "help": "Codurile apar doar în zona membrilor, după autentificare. Nu apar pe site, în emailuri sau în newsletter.",
+        "wordsOnly": "Poți scrie partenerul și descrierea. Codul, linkul și data le schimbă un administrator.",
+        "add": "Adaugă un cod",
+        "create": "Adaugă codul",
+        "empty": "Nu este încă niciun cod.",
+        "listLabel": "Codurile de reducere, în ordinea din zona membrilor",
+        "shown": "Vizibil membrilor",
+        "hidden": "Ascuns",
+        "expired": "Expirat",
+        "until": "Până {day}",
+        "oneLanguage": "Descriere într-o singură limbă",
+        "moveUp": "Mută codul {partner} mai sus",
+        "moveDown": "Mută codul {partner} mai jos",
+        "showTitle": "Arăți din nou codul {partner}?",
+        "showBody": "Membrii îl vor vedea în zona lor.",
+        "show": "Arată",
+        "hideTitle": "Ascunzi codul {partner}?",
+        "hideBody": "Membrii nu îl mai văd. Codul rămâne aici și îl poți arăta oricând.",
+        "hide": "Ascunde",
+        "deleteTitle": "Ștergi codul {partner}?",
+        "deleteBody": "Codul dispare de tot, pentru toți membrii.",
+        "delete": "Șterge",
+        "edit": "Modifică",
+        "saveTitle": "Salvezi codul {partner}?",
+        "saveBody": "Membrii văd noul text de îndată ce salvezi.",
+        "partner": "Partener",
+        "partnerHelp": "Cine oferă reducerea, de exemplu numele magazinului.",
+        "code": "Codul",
+        "codeHelp": "Exact cum îl scrie membrul la partener.",
+        "descriptionRo": "Descriere (Română)",
+        "descriptionEn": "Descriere (English)",
+        "descriptionHelp": "Ce oferă și cum se folosește, pe scurt.",
+        "bothOrNeither": "În ambele limbi sau în niciuna.",
+        "link": "Link (opțional)",
+        "linkHelp": "Unde se folosește codul, cu https://.",
+        "validUntil": "Valabil până la (opțional)",
+        "validUntilHelp": "Ultima zi în care membrii îl văd. Gol: fără termen.",
+        "createTitle": "Adaugi codul?",
+        "createBody": "Membrii îl văd în zona lor de îndată ce îl adaugi."
+      }
     }
   },
   "NotFound": {
@@ -5918,7 +5971,9 @@
       "reservedHelp": "Fiecare loc e rezervat din clipa în care trimiți formularul. Butonul din email le confirmă pe toate.",
       "reservationLapsed": "Locurile nu mai sunt rezervate. Confirmă adresa din email; dacă mai e loc, îl primești atunci.",
       "addLink": "Înscriu încă o persoană cu această adresă"
-    }
+    },
+    "membersAddressLabel": "Adresa contului tău de membru",
+    "membersAddressHelp": "Te înscrii cu adresa contului. Un cont înscrie o singură persoană."
   },
   "Registrations": {
     "invalidOrExpired": "Acest link nu mai este valabil. Îți putem trimite unul nou, pe aceeași adresă de email.",
@@ -6968,7 +7023,13 @@
         "other": "Emailul pleacă acum către primii {count} de participanți; ceilalți {later} pleacă la trecerea programată."
       },
       "newsletterUnsubscribed": "Adresa a fost dezabonată.",
-      "newsletterUnsubscribedGone": "Adresa nu mai era pe listă; nu s-a schimbat nimic."
+      "newsletterUnsubscribedGone": "Adresa nu mai era pe listă; nu s-a schimbat nimic.",
+      "memberCodeCreated": "Codul a fost adăugat. Membrii îl văd.",
+      "memberCodeSaved": "Codul a fost salvat.",
+      "memberCodeHidden": "Codul a fost ascuns.",
+      "memberCodeShown": "Codul este din nou vizibil membrilor.",
+      "memberCodeMoved": "Ordinea codurilor a fost schimbată.",
+      "memberCodeDeleted": "Codul a fost șters."
     }
   },
   "Network": {
@@ -7221,6 +7282,12 @@
     "signOut": "Ieși din cont",
     "upcomingTitle": "Următoarele alergări",
     "upcomingEmpty": "Nicio alergare anunțată acum.",
-    "upcomingAll": "Toate evenimentele"
+    "upcomingAll": "Toate evenimentele",
+    "eventsTitle": "Evenimente pentru membri",
+    "codesTitle": "Coduri de reducere",
+    "copyCode": "Copiază codul",
+    "codeCopied": "Copiat",
+    "codeValidUntil": "Valabil până {day}, inclusiv.",
+    "codeLink": "Deschide pagina partenerului"
   }
 }

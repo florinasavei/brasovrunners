@@ -15,7 +15,7 @@ import { LEGAL_TEMPLATES } from "@/modules/legal-documents/templates/catalogue";
 import { updateClubNotices } from "@/modules/notifications/club-notices";
 import type { OutboxRow } from "@/modules/notifications/outbox";
 import { renderOutboxMessage } from "@/modules/notifications/render";
-import { findSignatureByViewToken, findSignedGroupRunDeclaration, insertGroupRunDeclaration, listCoveringSignatures, listGroupRunDeclarations, listSeriesDatesOf } from "@/modules/group-run-declarations/repository";
+import { findSignatureByViewToken, findSignedGroupRunDeclaration, insertGroupRunDeclaration, listCoveringSignatures, listGroupRunDeclarations, listSeriesDatesOf, nextDateOfRun } from "@/modules/group-run-declarations/repository";
 import { groupRunMergeValues } from "@/modules/group-run-declarations/facts";
 import { signedStateFor } from "@/modules/group-run-declarations/domain";
 import { hashTokenSecret } from "@/modules/action-tokens/domain/token-secret";
@@ -1083,5 +1083,27 @@ describe("§532 erasing the ticked ones in one press", () => {
     await expect(eraseGroupRunDeclarations(db, actor, { eventId: event.id, ids: [], reason: "asked" }, NOW)).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["declarationIds"] });
     expect(await db.select().from(groupRunDeclarations)).toHaveLength(3);
     expect(await db.select().from(auditLogs).where(eq(auditLogs.action, "event.group_run_declaration_erased"))).toHaveLength(0);
+  });
+});
+
+describe("§NNN a run for the members alone", () => {
+  it("takes a signature only from a members' session", async () => {
+    await approveTemplate("GROUP_RUN_DECLARATION_TRAIL");
+    const event = await trailRun({ membersOnly: true });
+    await expect(signGroupRunDeclaration(db, await input(event.id), NOW)).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await expect(signGroupRunDeclaration(db, await input(event.id, { membersSession: async () => false }), NOW)).rejects.toMatchObject({ code: "NOT_FOUND" });
+    expect(await db.select().from(groupRunDeclarations)).toHaveLength(0);
+    const outcome = await signGroupRunDeclaration(db, await input(event.id, { membersSession: async () => true }), NOW);
+    expect(outcome.outcome).toBe("signed");
+  });
+
+  it("never sends a public signer's link to a date the club made the members'", async () => {
+    const first = await trailRun();
+    const members = await trailRun({ membersOnly: true, startsAt: new Date("2026-10-14T16:00:00.000Z") });
+    const later = await trailRun({ startsAt: new Date("2026-10-21T16:00:00.000Z") });
+    const after = new Date("2026-10-08T08:00:00.000Z");
+    expect(await nextDateOfRun(db, first.id, after)).toBe(later.id);
+    // A member who signed on the members' date may be sent to any date of the run.
+    expect(await nextDateOfRun(db, members.id, after)).toBe(members.id);
   });
 });

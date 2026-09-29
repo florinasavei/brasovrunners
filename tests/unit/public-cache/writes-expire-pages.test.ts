@@ -37,6 +37,8 @@ type Expected = readonly PublicContent[] | { readonly nothingPublic: string };
 
 const DRAFT = { nothingPublic: "creates a draft, which is on no public page until a publish (which expires)" } as const;
 
+const MEMBERS_ZONE_ONLY = { nothingPublic: "a discount code is read only in the members' zone, per request behind the account; no public page or public read carries one" } as const;
+
 /**
  * Every exported write, `file#name` → the kinds it must expire, or why it changes nothing a public
  * page reads. The kinds a page reads: `events` (the listing, the calendar, an event page, the
@@ -82,6 +84,13 @@ const WRITES: Record<string, Expected> = {
   "src/modules/content/faq/page-settings.ts#setFaqPagePublished": ["pages"],
   "src/modules/content/members/page-settings.ts#saveMembersText": ["pages"],
   "src/modules/content/members/page-settings.ts#setMembersPagePublished": ["pages"],
+  // The members' discount codes (§NNN): read only in the members' zone, behind the account and per request
+  // (§524, §549's per-request list), never through the public cache — so no public page shows one.
+  "src/modules/content/member-codes/service.ts#createDiscountCode": MEMBERS_ZONE_ONLY,
+  "src/modules/content/member-codes/service.ts#saveDiscountCode": MEMBERS_ZONE_ONLY,
+  "src/modules/content/member-codes/service.ts#setDiscountCodeHidden": MEMBERS_ZONE_ONLY,
+  "src/modules/content/member-codes/service.ts#moveDiscountCode": MEMBERS_ZONE_ONLY,
+  "src/modules/content/member-codes/service.ts#deleteDiscountCode": MEMBERS_ZONE_ONLY,
 
   // The gallery.
   "src/modules/content/gallery/service.ts#createAlbum": DRAFT,
