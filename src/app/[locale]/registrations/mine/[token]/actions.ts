@@ -74,7 +74,7 @@ export async function setListConsentFromMyRegistrationsAction(form: FormData): P
 }
 
 /**
- * «Vreau materiale promoționale» / «Nu mai vreau materiale promoționale» for one registration (§NNN).
+ * «Vreau oferte și beneficii» / «Nu mai vreau oferte și beneficii» for one registration (§NNN).
  * The link stays valid; the registration must be the link holder's own, checked in the module, and
  * a yes while the notice in force does not describe the materials is refused there.
  */

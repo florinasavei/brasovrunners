@@ -612,8 +612,8 @@
         "results": "Acordul pentru rezultatele publice",
         "reason": "Motivul",
         "action": "Retrage",
-        "nothing": "Nu mai este nimic de retras: nota medicală, rețelele, acordul pentru rezultate și cel pentru materiale promoționale sunt deja goale.",
-        "promo": "Acordul pentru materiale promoționale"
+        "nothing": "Nu mai este nimic de retras: nota medicală, rețelele, acordul pentru rezultate și cel pentru oferte și beneficii sunt deja goale.",
+        "promo": "Acordul pentru oferte și beneficii"
       },
       "auditTrail": "Ce a făcut echipa",
       "auditActorRemoved": "cont șters",
@@ -640,7 +640,7 @@
           "cancelled_by_participant": "Anulată de participant, din linkul propriu",
           "declaration_hold_set": "Declarație păstrată pentru o reclamație sau un litigiu",
           "declaration_hold_cleared": "Păstrarea declarației a fost scoasă",
-          "promo_consent_changed": "Acordul pentru materiale promoționale schimbat"
+          "promo_consent_changed": "Acordul pentru oferte și beneficii schimbat"
         }
       },
       "locale": {
@@ -791,9 +791,9 @@
       "resendSentNow": "Emailul pleacă acum, fără să aștepte trecerea programată.",
       "filterMembersOnly": "{title} · Membri",
       "promo": {
-        "yes": "Materiale promoționale: da, din {date}",
-        "no": "Materiale promoționale: nu",
-        "staffNo": "Materiale promoționale: nu. Echipa nu poate da acordul în locul persoanei; îl dă ea, din pagina înscrierii ei."
+        "yes": "Oferte și beneficii: da, din {date}",
+        "no": "Oferte și beneficii: nu",
+        "staffNo": "Oferte și beneficii: nu. Echipa nu poate da acordul în locul persoanei; îl dă ea, din pagina înscrierii ei."
       }
     },
     "events": {
@@ -2170,7 +2170,7 @@
         "series": "Doar în declarațiile alergărilor de grup: numele seriei, când alergarea se repetă. Propoziția care îl conține apare doar la o serie; la o alergare de o zi rămâne propoziția cu '{{event}}' și '{{eventDate}}'",
         "seriesRhythm": "Doar în declarațiile alergărilor de grup: cât de des se repetă seria, citit din datele ei („în fiecare marți, la 18:30”)",
         "seriesPlace": "Doar în declarațiile alergărilor de grup: locul de plecare obișnuit al seriei",
-        "promotionalMaterials": "Doar în nota de confidențialitate: bifa opțională pentru materiale promoționale de la club și de la parteneri. Fără el în nota în vigoare, formularul nu o oferă"
+        "promotionalMaterials": "Doar în nota de confidențialitate: bifa opțională pentru oferte și beneficii de la club și de la partenerii săi. Fără el în nota în vigoare, formularul nu o oferă"
       },
       "removeBlockedReferenced": "Nu se poate nici retrage, nici șterge: {signatures} semnături, {events} evenimente și {acknowledgements} înscrieri depind de această versiune.",
       "removeBlockedCurrent": "În vigoare acum — nu se poate nici retrage, nici șterge. Aprobă întâi versiunea următoare; apoi aceasta se poate scoate.",
@@ -2328,7 +2328,7 @@
         "body": "Textul în vigoare rămâne pe site până aprobi ciorna. Cele patru fapte sunt denumirea clubului, CIF-ul, sediul și adresa de contact."
       },
       "tableCaptionOf": "Versiunile textului {kind}, cu starea și ce depinde de fiecare",
-      "promoMissing": "Nota în vigoare nu descrie încă materialele promoționale, deci formularul nu oferă bifa. Aprobă o notă nouă din șablon."
+      "promoMissing": "Nota în vigoare nu descrie încă ofertele și beneficiile, deci formularul nu oferă bifa. Aprobă o notă nouă din șablon."
     },
     "tasks": {
       "title": "Ce mai este de făcut",
@@ -2805,11 +2805,11 @@
           ]
         },
         "promoNotice": {
-          "title": "Nota de confidențialitate: materialele promoționale",
-          "todo": "Nota în vigoare nu descrie încă materialele promoționale, deci formularul nu oferă bifa și nu se păstrează niciun acord până clubul aprobă o notă nouă.",
-          "done": "Nota în vigoare descrie materialele promoționale: formularul oferă bifa, iar fiecare își schimbă alegerea din pagina înscrierii.",
+          "title": "Nota de confidențialitate: oferte și beneficii",
+          "todo": "Nota în vigoare nu descrie încă ofertele și beneficiile, deci formularul nu oferă bifa și nu se păstrează niciun acord până clubul aprobă o notă nouă.",
+          "done": "Nota în vigoare descrie ofertele și beneficiile: formularul oferă bifa, iar fiecare își schimbă alegerea din pagina înscrierii.",
           "how": [
-            "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Secțiunea 5 descrie materialele promoționale de la club și de la parteneri.",
+            "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Secțiunea 5 descrie ofertele și beneficiile de la club și de la partenerii săi.",
             "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”.",
             "Din momentul în care intră în vigoare, formularul oferă bifa, fără altă setare. Cine a bifat apare în «Newsletter», în cardul lui."
           ]
@@ -4653,7 +4653,7 @@
               "steps": [
                 "«Newsletter» → deschide cardul «Abonați». Linia lui spune câți sunt confirmați și câți în așteptare.",
                 "Caută la «Caută adresa» sau alege «Tema» și «Starea», apoi apasă «Filtrează». «Descarcă CSV» ia lista așa cum e filtrată.",
-                "Cardul «Participanți care au bifat materiale promoționale»: cine a bifat asta la înscriere, cu adresa, evenimentul și data. «Descarcă CSV» îl ia întreg. Nu e newsletterul; partenerii nu primesc lista.",
+                "Cardul «Participanți care au bifat oferte și beneficii»: cine a bifat asta la înscriere, cu adresa, evenimentul și data. «Descarcă CSV» îl ia întreg. Nu e newsletterul; partenerii nu primesc lista.",
                 "Scoaterea unei adrese e a Administratorului: scrie-i cine a cerut-o."
               ]
             },
@@ -4864,7 +4864,7 @@
                 "La «În așteptare», rândul spune până când merge linkul de confirmare, sau «Linkul a expirat.» O adresă neconfirmată se șterge singură.",
                 "«Descarcă CSV» ia lista așa cum e filtrată, cu aceleași coloane. Păstrează fișierul doar cât îți trebuie, apoi șterge-l.",
                 "Ca să scoți pe cineva, la cererea lui: «Dezabonează» pe rândul lui, apoi confirmă. Adresa se șterge cu temele ei, ca atunci când se dezabonează singură.",
-                "Cardul «Participanți care au bifat materiale promoționale»: cine a bifat asta la înscriere, cu adresa, evenimentul și data. «Descarcă CSV» îl ia întreg. Nu e newsletterul; partenerii nu primesc lista."
+                "Cardul «Participanți care au bifat oferte și beneficii»: cine a bifat asta la înscriere, cu adresa, evenimentul și data. «Descarcă CSV» îl ia întreg. Nu e newsletterul; partenerii nu primesc lista."
               ]
             },
             {
@@ -5036,7 +5036,7 @@
               "steps": [
                 "«Înscrieri» → caută persoana → deschide înscrierea.",
                 "Ce știm despre ea: «Toate datele acestei persoane».",
-                "Retrage un acord (nota medicală, rețelele, rezultatele publice, materialele promoționale): «Retrage consimțământul» → bifează ce retrage → «Motivul» → «Retrage».",
+                "Retrage un acord (nota medicală, rețelele, rezultatele publice, ofertele și beneficiile): «Retrage consimțământul» → bifează ce retrage → «Motivul» → «Retrage».",
                 "Ștergere: «Șterge definitiv» (vezi „Corectează, anulează sau șterge o înscriere”). În istoric rămâne cine a șters și de ce, nu și datele persoanei."
               ]
             }
@@ -5441,8 +5441,8 @@
         "unsubscribeBody": "Adresa iese din newsletter, cu temele ei, ca atunci când se dezabonează singură. Se poate abona din nou de pe pagina de contact."
       },
       "promo": {
-        "title": "Participanți care au bifat materiale promoționale",
-        "intro": "Cine a bifat la înscriere că vrea materiale promoționale de la club și de la parteneri. Nu e newsletterul, iar partenerii nu primesc lista.",
+        "title": "Participanți care au bifat oferte și beneficii",
+        "intro": "Cine a bifat la înscriere că vrea oferte și beneficii de la club și de la partenerii săi. Nu e newsletterul, iar partenerii nu primesc lista.",
         "count": {
           "one": "{count} înscriere cu acord",
           "few": "{count} înscrieri cu acord",
@@ -5450,7 +5450,7 @@
         },
         "csv": "Descarcă CSV",
         "truncated": "Tabelul arată primele {count}; «Descarcă CSV» le ia pe toate.",
-        "empty": "Nimeni nu a bifat încă materialele promoționale.",
+        "empty": "Nimeni nu a bifat încă ofertele și beneficiile.",
         "columns": {
           "name": "Nume",
           "email": "Adresa de email",
@@ -6071,8 +6071,8 @@
     "membersAddressLabel": "Adresa contului tău de membru",
     "membersAddressHelp": "Te înscrii cu adresa contului. Un cont înscrie o singură persoană.",
     "promo": {
-      "label": "Vreau să primesc materiale promoționale de la club și de la partenerii lui",
-      "help": "Poți renunța oricând din pagina înscrierii tale."
+      "label": "Vreau să primesc oferte și beneficii de la {club} și partenerii săi.",
+      "help": "Opțional. Poți renunța oricând din pagina înscrierii tale."
     }
   },
   "Registrations": {
@@ -6398,15 +6398,16 @@
       "code": "Cod de acces: {code}"
     },
     "promo": {
-      "title": "Materiale promoționale",
-      "closedYes": "Ai bifat materialele promoționale la această înscriere. Cât timp e închisă, clubul nu îți trimite nimic pentru ea; poți retrage acordul oricând.",
-      "yes": "Primești materiale promoționale de la club și de la partenerii lui, la adresa acestei înscrieri. Le trimite doar clubul; partenerii nu primesc adresa ta.",
-      "no": "Nu primești materiale promoționale.",
-      "optIn": "Vreau materiale promoționale",
-      "optOut": "Nu mai vreau materiale promoționale",
+      "title": "Oferte și beneficii",
+      "closedYes": "Ai bifat oferte și beneficii la această înscriere. Cât timp e închisă, clubul nu îți trimite nimic pentru ea; poți retrage acordul oricând.",
+      "yes": "La această înscriere primești oferte și beneficii. Le trimite doar clubul, la adresa acestei înscrieri; partenerii nu primesc adresa ta.",
+      "no": "La această înscriere nu ai bifat oferte și beneficii.",
+      "optIn": "Vreau oferte și beneficii pentru această înscriere",
+      "optOut": "Nu mai vreau oferte și beneficii pentru această înscriere",
       "help": "E separat de newsletter: dezabonarea de la newsletter nu schimbă asta, iar asta nu schimbă newsletterul.",
-      "changed": "Am salvat alegerea ta despre materialele promoționale.",
-      "failed": "Nu am putut salva alegerea. Încearcă din nou."
+      "changed": "Am salvat alegerea ta despre oferte și beneficii pentru această înscriere.",
+      "failed": "Nu am putut salva alegerea. Încearcă din nou.",
+      "otherAdult": "Acordul pentru oferte și beneficii îl dă doar persoana, din declarația ei sau din linkul înscrierii ei. De aici îl poți doar retrage."
     }
   },
   "Devs": {

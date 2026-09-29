@@ -232,7 +232,7 @@ const submissionFields = z.object({
    */
   listSocials: z.boolean().default(false),
   /**
-   * «Vreau să primesc materiale promoționale de la club și de la partenerii lui» (§NNN): optional,
+   * «Vreau să primesc oferte și beneficii de la <club> și partenerii săi.» (§NNN): optional,
    * never pre-ticked, never required. What the box says is what is posted; whether it is kept — a
    * public form, a notice naming `{{promotionalMaterials}}`, not another adult's family form — is
    * the service's decision, never the form's.
@@ -592,7 +592,7 @@ export const declarationSigningSchema = z.object({
   documentId: z.uuid(),
   contentSha256: z.string().regex(/^[0-9a-f]{64}$/),
   /**
-   * «Vreau să primesc materiale promoționale» ticked while signing (§NNN): the signer's own yes —
+   * «Vreau să primesc oferte și beneficii» ticked while signing (§NNN): the signer's own yes —
    * the one door another adult on a family's address has (§421). Optional, never required; kept
    * only while the notice in force describes the materials, and never refused: a box the notice
    * does not cover is ignored, the signature goes on.

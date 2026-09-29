@@ -102,7 +102,7 @@ export type MyRegistration = {
    */
   holdsHealthNote: boolean;
   holdsSocials: boolean;
-  /** «Vreau să primesc materiale promoționale» (§NNN): the person's own answer, and the switch's side. */
+  /** «Vreau să primesc oferte și beneficii» (§NNN): the person's own answer, and the switch's side. */
   promoConsent: boolean;
   /**
    * When this person's declaration was signed — on a link, in the family wizard or on paper at the

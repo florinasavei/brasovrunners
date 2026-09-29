@@ -211,7 +211,7 @@ export async function GET(request: Request): Promise<Response> {
       declarationVersion: declarations.get(row.id)?.version ?? null,
       declarationSignedAt: declarations.get(row.id)?.acceptedAt.toISOString() ?? "",
       family: familyColumn(family.get(row.id)),
-      // «Materiale promoționale» (§NNN): the moment of the yes, empty for no — last, like the family.
+      // «Oferte și beneficii» (§NNN): the moment of the yes, empty for no — last, like the family.
       promoConsentAt: row.promoConsent ? (row.promoConsentAt?.toISOString() ?? "") : "",
     })),
   );

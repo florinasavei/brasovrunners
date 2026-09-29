@@ -147,7 +147,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
   const eventTitle = details?.locale === locale ? details.title : "";
   // Which person a check-in or list answer was about: the one the press named, else the link's own.
   const answeredFor = person ?? live?.registration.id;
-  // «Vreau materiale promoționale» is offered only while the notice in force describes it (§NNN);
+  // «Vreau oferte și beneficii» is offered only while the notice in force describes it (§NNN);
   // a person who said yes is always offered the way out, whatever the notice says today.
   const promoOn = live ? await cachedPromotionalMaterialsOffered(new Date()) : false;
 
@@ -317,7 +317,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                 )}
 
                 {/*
-                  The promotional materials (§NNN), each person's own switch — the same pattern as the
+                  «Oferte și beneficii» (§NNN), per registration — the same pattern as the
                   list's above: the token read, never spent; one write and an audit row. «Vreau» only
                   while the notice in force describes them; «Nu mai vreau» whenever the row says yes,
                   even on a cancelled registration. Separate from the newsletter, and the words say so.
@@ -342,20 +342,28 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                     <Typography sx={{ mb: 1 }} data-testid="manage-promo-state">
                       {one.promoConsent ? t("promo.yes") : t("promo.no")}
                     </Typography>
-                    <form action={setPromoConsentFromManageAction}>
-                      <input type="hidden" name="locale" value={locale} />
-                      <input type="hidden" name="token" value={token} />
-                      <input type="hidden" name="registrationId" value={one.id} />
-                      <input type="hidden" name="consent" value={one.promoConsent ? "0" : "1"} />
-                      <Button type="submit" variant="outlined" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }}>
-                        {one.promoConsent ? (
-                          <UnsubscribeIcon aria-hidden="true" sx={glyphSx("medium")} />
-                        ) : (
-                          <CampaignIcon aria-hidden="true" sx={glyphSx("medium")} />
-                        )}
-                        {one.promoConsent ? t("promo.optOut") : t("promo.optIn")}
-                      </Button>
-                    </form>
+                    {/* Another adult's row (§421): only the way out; their yes is their own (§NNN fix round). */}
+                    {(one.promoConsent || !one.anotherAdult) && (
+                      <form action={setPromoConsentFromManageAction}>
+                        <input type="hidden" name="locale" value={locale} />
+                        <input type="hidden" name="token" value={token} />
+                        <input type="hidden" name="registrationId" value={one.id} />
+                        <input type="hidden" name="consent" value={one.promoConsent ? "0" : "1"} />
+                        <Button type="submit" variant="outlined" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }}>
+                          {one.promoConsent ? (
+                            <UnsubscribeIcon aria-hidden="true" sx={glyphSx("medium")} />
+                          ) : (
+                            <CampaignIcon aria-hidden="true" sx={glyphSx("medium")} />
+                          )}
+                          {one.promoConsent ? t("promo.optOut") : t("promo.optIn")}
+                        </Button>
+                      </form>
+                    )}
+                    {one.anotherAdult && (
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }} data-testid="manage-promo-other-adult">
+                        {t("promo.otherAdult")}
+                      </Typography>
+                    )}
                     {!family && (
                       <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
                         {t("promo.help")}

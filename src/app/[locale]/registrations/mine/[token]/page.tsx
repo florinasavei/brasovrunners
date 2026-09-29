@@ -109,7 +109,7 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
   // One token read for the page — throttled per presented token.
   const now = new Date();
   const context = invalid ? { ok: false as const } : await readMyRegistrations(getDb(), token, locale, now);
-  // «Vreau materiale promoționale» only while the notice in force describes them (§NNN); «Nu mai vreau» always.
+  // «Vreau oferte și beneficii» only while the notice in force describes them (§NNN); «Nu mai vreau» always.
   const promoOn = context.ok ? await cachedPromotionalMaterialsOffered(now) : false;
   /** The promotional-materials switch for one registration (§NNN): the answer as it stands, and the other one. */
   const promoSwitch = (item: { id: string; promoConsent: boolean }, closed = false) => (

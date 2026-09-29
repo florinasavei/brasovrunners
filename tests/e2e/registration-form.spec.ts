@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import { expect, type Locator, test, type Page } from "@playwright/test";
 import pg from "pg";
+import { CLUB_NAME } from "../../src/theme/brand";
 import { confirmDialog } from "./support/confirm";
 import { registrationByEmail, registrationPhones } from "./support/action-link";
 import { languagePanel, languageTab, openEditorBox, openFold } from "./support/fold";
@@ -1338,7 +1339,7 @@ async function noticeNamesPromo(client: pg.Client): Promise<boolean> {
   return translations.length >= 2 && translations.every((translation) => translation.body.includes("{{promotionalMaterials}}"));
 }
 
-test.describe("BR-REQ-031-01 the promotional materials, behind the privacy notice (§NNN)", () => {
+test.describe("BR-REQ-031-01 «Oferte și beneficii», behind the privacy notice (§NNN)", () => {
   test("an optional, unticked box while the notice describes it — stored with its moment when ticked; absent otherwise", async ({ page }) => {
     test.setTimeout(test.info().timeout + 300_000);
     const client = new pg.Client({ connectionString: noticeDatabaseUrl() });
@@ -1362,10 +1363,11 @@ test.describe("BR-REQ-031-01 the promotional materials, behind the privacy notic
       await expect(box).toHaveCount(1);
       await expect(box).not.toBeChecked();
       await expect(box).not.toHaveAttribute("required", /.*/);
-      await expect(page.locator("label").filter({ has: box })).toContainText("Vreau să primesc materiale promoționale de la club și de la partenerii lui — opțional");
+      // The owner's sentence (2026-09-29 16:12), the club named from the one constant.
+      await expect(page.locator("label").filter({ has: box })).toHaveText(`Vreau să primesc oferte și beneficii de la ${CLUB_NAME} și partenerii săi.`);
       // The glyph beside the words, decorative.
       await expect(page.locator("label").filter({ has: box }).getByTestId("promo-consent-glyph")).toHaveCount(1);
-      await expect(page.getByTestId("promo-consent-help")).toHaveText("Poți renunța oricând din pagina înscrierii tale.");
+      await expect(page.getByTestId("promo-consent-help")).toHaveText("Opțional. Poți renunța oricând din pagina înscrierii tale.");
       // A thumb's target (BR-REQ-041-01 criterion 6), measured as the required consent is.
       const target = await box.evaluate((input) => {
         let node: HTMLElement | null = input as HTMLElement;

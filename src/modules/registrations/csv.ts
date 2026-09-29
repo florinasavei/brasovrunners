@@ -91,7 +91,7 @@ export type RegistrationCsvRow = {
    */
   family?: string;
   /**
-   * «Materiale promoționale» (§NNN): the moment the person said yes (ISO 8601), or empty — never
+   * «Oferte și beneficii» (§NNN): the moment the person said yes (ISO 8601), or empty — never
    * asked, said no, or withdrawn. One cell says both whether and since when.
    */
   promoConsentAt?: string;
@@ -130,7 +130,7 @@ const HEADER = [
   // Last (§543), for the same reason: the other people on the same address.
   "family",
   // Last (§NNN), for the same reason: the consent to promotional materials, its moment or empty.
-  "Promotional materials",
+  "Offers and benefits",
 ];
 
 export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[]): string {

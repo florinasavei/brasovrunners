@@ -71,7 +71,7 @@ describe("CSV formula neutralization", () => {
 
   it("includes the header row and uses CRLF line endings", () => {
     const csv = buildRegistrationsCsv([]);
-    expect(csv).toBe("Event,Name,First name,Last name,Identity document,Email,Status,Club member (declared),Medically fit (declared),Strava,Instagram,Socials on the public list,Guardian,Guardian identity document,Submitted,Confirmed,Race number (BIB),Checked in,Email bounced,Terms version,Terms accepted,Declaration version,Declaration signed,family,Promotional materials");
+    expect(csv).toBe("Event,Name,First name,Last name,Identity document,Email,Status,Club member (declared),Medically fit (declared),Strava,Instagram,Socials on the public list,Guardian,Guardian identity document,Submitted,Confirmed,Race number (BIB),Checked in,Email bounced,Terms version,Terms accepted,Declaration version,Declaration signed,family,Offers and benefits");
 
     const withRow = buildRegistrationsCsv([
       {
@@ -286,7 +286,7 @@ describe("CSV formula neutralization", () => {
     expect(kept.split(",")[at]).toBe("");
     expect(older.split(",")[at]).toBe("");
     // The declaration's pair stays after the terms (§499), then the family column (§543) and the promotional materials, last (§NNN).
-    expect(header.split(",").slice(-4)).toEqual(["Declaration version", "Declaration signed", "family", "Promotional materials"]);
+    expect(header.split(",").slice(-4)).toEqual(["Declaration version", "Declaration signed", "family", "Offers and benefits"]);
   });
 
   // §543 — the family marker in the export: the other people on the same address at the event, last, «; »-joined.

@@ -148,7 +148,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
     // The promotional materials (§NNN): withdrawn for a person who wrote; never given by staff.
     promo: registration.promoConsent,
   };
-  // «Materiale promoționale» is a line of the page while the notice in force describes it, or while the row says yes (§NNN).
+  // «Oferte și beneficii» is a line of the page while the notice in force describes it, or while the row says yes (§NNN).
   const promoShown = registration.promoConsent || (await noticeDescribesPromotionalMaterials(db, new Date()));
 
   /*

@@ -12,9 +12,10 @@ import { declarationSigningSchema, withoutAnotherAdultsConsents } from "@/module
 import { readRegistrationForm } from "@/modules/registrations/form-mapping";
 import { promotionalMaterialsClause, promotionalMaterialsMergeValues } from "@/modules/registrations/promo-consent-words";
 import { REGISTRATION_SHEET_HEADERS } from "@/modules/registrations/workbook";
+import { CLUB_NAME } from "@/theme/brand";
 
 /**
- * §NNN — «Vreau să primesc materiale promoționale de la club și de la partenerii lui»: the privacy
+ * §NNN — «Vreau să primesc oferte și beneficii de la <club> și partenerii săi.»: the privacy
  * notice's marker that switches the box on, the words, the form's reading, and the export's column.
  */
 const text = (paragraph: string) => ({ sections: [{ paragraphs: [paragraph] }] });
@@ -26,7 +27,9 @@ describe("§NNN the privacy notice's marker for promotional materials", () => {
     expect(describesPromotionalMaterials(privacyNoticeRo)).toBe(true);
     expect(describesPromotionalMaterials(privacyNoticeEn)).toBe(true);
     const legend = DECLARATION_TOKENS.find((entry) => entry.token === "{{promotionalMaterials}}");
-    expect(legend?.example).toEqual({ ro: promotionalMaterialsClause("ro"), en: promotionalMaterialsClause("en") });
+    // The legend never names the club (§369): the same sentence with a plain «club».
+    expect(legend?.example).toEqual({ ro: promotionalMaterialsClause("ro", "club"), en: promotionalMaterialsClause("en", "the club") });
+    expect(legend?.example.ro).toBe("„Vreau să primesc oferte și beneficii de la club și partenerii săi.”");
   });
 
   it("is off for a text that does not name it — the gate for the box, the tick and the switch", () => {
@@ -38,8 +41,9 @@ describe("§NNN the privacy notice's marker for promotional materials", () => {
   });
 
   it("is filled with the form's own box, quoted, so the approved text names the box a person ticks", () => {
-    expect(promotionalMaterialsClause("ro")).toBe(`„${ro.Registration.promo.label}”`);
-    expect(promotionalMaterialsClause("en")).toBe(`“${en.Registration.promo.label}”`);
+    // The club named from the one constant (§215), never a second literal in the catalogue.
+    expect(promotionalMaterialsClause("ro")).toBe(`„Vreau să primesc oferte și beneficii de la ${CLUB_NAME} și partenerii săi.”`);
+    expect(promotionalMaterialsClause("en")).toBe(`“I want to receive offers and benefits from ${CLUB_NAME} and its partners.”`);
     for (const [locale, body] of [["ro", privacyNoticeRo], ["en", privacyNoticeEn]] as const) {
       const all = paragraphs(body).map((paragraph) => mergeText(paragraph, promotionalMaterialsMergeValues(locale))).join(" ");
       expect(all).toContain(promotionalMaterialsClause(locale));
@@ -64,8 +68,8 @@ describe("§NNN the privacy notice's marker for promotional materials", () => {
     const section = (body: typeof privacyNoticeRo, number: string) => body.sections.find((entry) => entry.heading?.startsWith(number))!.paragraphs.join(" ");
     expect(section(privacyNoticeRo, "6.")).toContain("nici partenerilor clubului");
     expect(section(privacyNoticeEn, "6.")).toContain("not to the club's partners either");
-    expect(section(privacyNoticeRo, "7.")).toContain("Acordul pentru materiale promoționale: până îl retragi");
-    expect(section(privacyNoticeEn, "7.")).toContain("The consent to promotional materials: until you withdraw it");
+    expect(section(privacyNoticeRo, "7.")).toContain("Acordul pentru oferte și beneficii: până îl retragi");
+    expect(section(privacyNoticeEn, "7.")).toContain("The consent to offers and benefits: until you withdraw it");
   });
 
   it("keeps the twelve sections the code and the guide cite", () => {
@@ -111,13 +115,53 @@ describe("§NNN the form's box", () => {
         expect(words).not.toMatch(/platforma|de obicei/i);
       }
     }
-    expect(ro.Registration.promo.label).toBe("Vreau să primesc materiale promoționale de la club și de la partenerii lui");
-    expect(en.Registration.promo.label).toBe("I want to receive promotional materials from the club and its partners");
-    expect(ro.Registration.promo.help).toBe("Poți renunța oricând din pagina înscrierii tale.");
-    expect(en.Registration.promo.help).toBe("You can opt out any time from your registration page.");
+    // The owner's words (2026-09-29 16:12), the club by its name from `CLUB_NAME`.
+    expect(ro.Registration.promo.label).toBe("Vreau să primesc oferte și beneficii de la {club} și partenerii săi.");
+    expect(en.Registration.promo.label).toBe("I want to receive offers and benefits from {club} and its partners.");
+    expect(ro.Registration.promo.help).toBe("Opțional. Poți renunța oricând din pagina înscrierii tale.");
+    expect(en.Registration.promo.help).toBe("Optional. You can opt out any time from your registration page.");
     // Two consents, two switches: the words on the person's page say so.
     expect(ro.Registrations.promo.help).toContain("newsletter");
     expect(en.Registrations.promo.help).toContain("newsletter");
+  });
+});
+
+describe("§NNN the same words on every surface, scoped to the registration", () => {
+  const values = (node: unknown): string[] =>
+    typeof node === "string" ? [node] : node && typeof node === "object" ? Object.values(node).flatMap(values) : [];
+
+  it("no message in either catalogue still says «materiale promoționale» / “promotional materials”", () => {
+    expect(values(ro).filter((words) => /materiale promo[țt]ionale/i.test(words))).toEqual([]);
+    expect(values(en).filter((words) => /promotional materials?/i.test(words))).toEqual([]);
+  });
+
+  it("every surface that names the consent says «oferte și beneficii» / “offers and benefits”", () => {
+    const surfaces = (catalogue: typeof ro) => [
+      catalogue.Registration.promo.label,
+      catalogue.Registrations.promo.title,
+      catalogue.Registrations.promo.optIn,
+      catalogue.Registrations.promo.optOut,
+      catalogue.Admin.registrations.promo.yes,
+      catalogue.Admin.registrations.promo.no,
+      catalogue.Admin.registrations.withdraw.promo,
+      catalogue.Admin.newsletter.promo.title,
+      catalogue.Admin.tasks.items.promoNotice.title,
+    ];
+    for (const words of surfaces(ro)) expect(words.toLowerCase()).toContain("oferte și beneficii");
+    for (const words of surfaces(en as unknown as typeof ro)) expect(words.toLowerCase()).toContain("offers and benefits");
+  });
+
+  it("the person's page speaks of this registration, never of the person at large (a consent is per registration)", () => {
+    expect(ro.Registrations.promo.no).toBe("La această înscriere nu ai bifat oferte și beneficii.");
+    expect(en.Registrations.promo.no).toBe("You did not tick offers and benefits on this registration.");
+    expect(ro.Registrations.promo.yes.startsWith("La această înscriere primești oferte și beneficii.")).toBe(true);
+    expect(en.Registrations.promo.yes.startsWith("On this registration you receive offers and benefits.")).toBe(true);
+    expect(ro.Registrations.promo.optIn).toBe("Vreau oferte și beneficii pentru această înscriere");
+    expect(ro.Registrations.promo.optOut).toBe("Nu mai vreau oferte și beneficii pentru această înscriere");
+    expect(en.Registrations.promo.optIn).toBe("I want offers and benefits for this registration");
+    expect(en.Registrations.promo.optOut).toBe("I no longer want offers and benefits for this registration");
+    expect(ro.Registrations.promo.changed).toContain("pentru această înscriere");
+    expect(en.Registrations.promo.changed).toContain("for this registration");
   });
 });
 
@@ -143,12 +187,12 @@ describe("§NNN the exports", () => {
     promoConsentAt,
   });
 
-  it("the registrations CSV ends with «Promotional materials»: the moment of the yes, or empty", () => {
+  it("the registrations CSV ends with «Offers and benefits»: the moment of the yes, or empty", () => {
     const [header, yes, no] = buildRegistrationsCsv([row("2026-09-29T10:00:00.000Z"), row("")]).split("\r\n");
-    expect(header.split(",").at(-1)).toBe("Promotional materials");
+    expect(header.split(",").at(-1)).toBe("Offers and benefits");
     expect(yes.split(",").at(-1)).toBe("2026-09-29T10:00:00.000Z");
     expect(no.split(",").at(-1)).toBe("");
-    expect(REGISTRATION_SHEET_HEADERS.at(-1)).toBe("Promotional materials");
+    expect(REGISTRATION_SHEET_HEADERS.at(-1)).toBe("Offers and benefits");
   });
 
   it("the promotional-materials CSV neutralizes formulas, carries a BOM and CRLF", () => {

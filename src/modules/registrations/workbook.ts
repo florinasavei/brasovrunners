@@ -36,7 +36,7 @@ export type RegistrationSheetRow = Omit<
   RegistrationCsvRow,
   "submittedAt" | "confirmedAt" | "checkedInAt" | "fitnessDeclaredAt" | "termsAcceptedAt" | "declarationSignedAt" | "promoConsentAt"
 > & {
-  /** «Materiale promoționale» (§NNN): the moment of the yes, a date like the others; null for no. */
+  /** «Oferte și beneficii» (§NNN): the moment of the yes, a date like the others; null for no. */
   promoConsentAt?: Date | null;
   /** The moment the terms were accepted (§421, §425), a date like the others; null when not recorded. */
   termsAcceptedAt?: Date | null;
@@ -162,7 +162,7 @@ const COLUMNS: Array<{
   // The family marker (§543): the other people on the same address at the event, last like the CSV's.
   { header: "family", width: 30, cell: (row) => ({ value: row.family ?? "", type: String }) },
   // The consent to promotional materials (§NNN), last like the CSV's: its moment, blank for no.
-  { header: "Promotional materials", width: 18, cell: (row) => ({ value: onClubClock(row.promoConsentAt ?? null), type: Date, format: STAMP_FORMAT }) },
+  { header: "Offers and benefits", width: 18, cell: (row) => ({ value: onClubClock(row.promoConsentAt ?? null), type: Date, format: STAMP_FORMAT }) },
 ];
 
 /** The header row, exactly as the export writes it — what a re-import matches its columns by. */

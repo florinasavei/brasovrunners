@@ -8,19 +8,24 @@ import { recordAuditEvent } from "@/modules/audit/repository";
 import { noticeDescribesPromotionalMaterials } from "@/modules/legal-documents/repository";
 import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
-import { managedRegistration } from "./manage-family";
+import { anotherAdultOnTheLink, managedRegistration } from "./manage-family";
 import { findRegistrationById } from "./repository";
 
 /**
- * «Vreau să primesc materiale promoționale de la club și de la partenerii lui» after registration
- * (§NNN; the owner, 2026-09-29: «I need an extra check on the registration for participants to
- * optionally receive promotional materials from us and from clients»).
+ * «Vreau să primesc oferte și beneficii de la <club> și partenerii săi.» after registration (§NNN;
+ * the owner, 2026-09-29: «I need an extra check on the registration for participants to optionally
+ * receive promotional materials from us and from clients»; the words are his of 16:12 the same day).
+ * The column keeps its first name, `promo_consent`; every word a person or the club reads says
+ * «oferte și beneficii». The consent is per registration, and every door's words say «această
+ * înscriere», never «you» at large: a yes at one event says nothing about another.
  *
  * The form asks once; art. 7(3) GDPR says withdrawing must be as easy as giving, so the person has
  * a switch of their own — the shape of `list-consent.ts` and `consent-withdrawal.ts`: several doors,
  * one write.
  *
- *   - the registration's own manage page, under its `MANAGE_REGISTRATION` link, per person (§547);
+ *   - the registration's own manage page, under its `MANAGE_REGISTRATION` link, per person (§547) —
+ *     on another adult's row of that page only the way out: the link may withdraw their yes, never
+ *     give it (`anotherAdultOnTheLink`, refused FORBIDDEN on the server);
  *   - «Înscrierile mele» (§77), a button per registration under the `MANAGE_PROFILE` link;
  *   - the declaration page (and each step of the family's wizard, §471), a box of its own — the
  *     only place another adult on a family's address gives it, since the address holder cannot
@@ -50,8 +55,36 @@ import { findRegistrationById } from "./repository";
  * no change and writes nothing.
  */
 
-/** Which door the change came through; audit metadata, never a name. */
-export type PromoConsentSurface = "MANAGE_LINK" | "MY_REGISTRATIONS" | "DECLARATION" | "STAFF";
+/**
+ * Which door the change came through; audit metadata, never a name. `FORM` is the register form's
+ * own tick, written by `submitRegistration` beside the row (`recordFormPromoConsent`), so the moment
+ * a consent was first given survives a later withdrawal that rewrites `promo_consent_at` (art. 7(1)
+ * GDPR: the club must be able to show the consent was given, and when).
+ */
+export type PromoConsentSurface = "FORM" | "MANAGE_LINK" | "MY_REGISTRATIONS" | "DECLARATION" | "STAFF";
+
+/**
+ * The register form's answer, on the audit trail (§NNN, fix round): one row
+ * `registration.promo_consent_changed` `{ to: true, via: "FORM" }` whenever a form keeps a tick, and
+ * `{ to: false, via: "FORM" }` when a restarted or corrected form takes back a yes the row held. No
+ * row for an unticked box on a row that never said yes: nothing changed. In the caller's
+ * transaction, so the row and its record cannot disagree. Never the name or the address (§12.12).
+ */
+export async function recordFormPromoConsent<T extends Record<string, unknown>>(
+  tx: Database<T>,
+  input: { registrationId: string; participantId: string; kept: boolean; before: boolean; now: Date },
+): Promise<void> {
+  if (!input.kept && !input.before) return;
+  await recordAuditEvent(tx, {
+    actorStaffUserId: null,
+    participantId: input.participantId,
+    action: "registration.promo_consent_changed",
+    entityType: "registration",
+    entityId: input.registrationId,
+    metadata: { to: input.kept, via: "FORM" },
+    now: input.now,
+  });
+}
 
 /** The refusal of a yes while the notice in force does not describe the promotional materials. */
 export const PROMO_NOT_DESCRIBED = "promoConsent";
@@ -129,6 +162,10 @@ export async function setPromoConsentFromManageLink<T extends Record<string, unk
   const own = await findRegistrationById(db, context.token.registrationId);
   const target = own ? await managedRegistration(db, own, registrationId) : null;
   if (!target) throw new DomainError("NOT_FOUND", "not a registration this link manages");
+  // Another adult on the address (§421): this link may take their yes back, never give it (§NNN fix round).
+  if (consent && own && anotherAdultOnTheLink(own, target, now)) {
+    throw new DomainError("FORBIDDEN", "another adult on the address gives their own consent to offers and benefits");
+  }
 
   const result = await setPromoConsent(db, { registrationId: target.id, consent, via: "MANAGE_LINK", now });
   return { ok: true as const, ...result };

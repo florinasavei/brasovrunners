@@ -56,6 +56,7 @@ import PublicFlash from "@/shared/feedback/PublicFlash";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { signDeclarationAction, skipFamilyDeclarationAction, withdrawFamilyPersonAction } from "./actions";
 import AskFirstButton from "@/modules/registrations/ui/AskFirstButton";
+import { CLUB_NAME } from "@/theme/brand";
 import { DENSITY } from "@/theme/density";
 import {
   currentFamilyStep,
@@ -339,7 +340,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
   // the text `signDeclaration` binds, read for the same event.
   const declaration = signing && registration ? await findEventDeclaration(db, registration.eventId, locale, now) : undefined;
   /*
-    «Vreau să primesc materiale promoționale» (§NNN) while signing: the signer's own yes — the one door
+    «Vreau să primesc oferte și beneficii» (§NNN) while signing: the signer's own yes — the one door
     another adult on a family's address has (§421) — offered only while the notice in force describes
     the materials and only to a registration that has not said yes already.
   */
@@ -840,7 +841,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                 <Box>
                   <CheckboxField name="promoConsent" defaultChecked={draft?.promoConsent === "on"}>
                     <CampaignIcon aria-hidden sx={{ fontSize: "1.15em", verticalAlign: "-0.2em", mr: 0.75, color: "text.secondary" }} />
-                    {`${formCopy("promo.label")} — ${formCopy("optionalSuffix")}`}
+                    {formCopy("promo.label", { club: CLUB_NAME })}
                   </CheckboxField>
                   <Typography variant="body2" color="text.secondary" data-testid="declare-promo-help">
                     {formCopy("promo.help")}

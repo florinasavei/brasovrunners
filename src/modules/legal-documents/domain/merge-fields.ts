@@ -209,7 +209,7 @@ export const TEAM_PAGE_MERGE_FIELD = "teamPage";
 
 /**
  * The privacy notice's marker for the promotional materials (§NNN): the register form's optional
- * «Vreau să primesc materiale promoționale de la club și de la partenerii lui». The same two-in-one
+ * «Vreau să primesc oferte și beneficii de la <club> și partenerii săi.». The same two-in-one
  * as the list's socials above: filled, when the notice is shown, with the box's own words, quoted
  * (`registrations/promo-consent-words.ts`), and the switch — the form offers the box, the service
  * keeps a tick, and a person's own page offers to switch it on, only while the notice in force names

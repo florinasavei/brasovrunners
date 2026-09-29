@@ -11,9 +11,9 @@ import { DomainError } from "@/shared/errors/domain-error";
 import { CSV_BOM } from "./subscribers-csv";
 
 /**
- * «Participanți care au bifat materiale promoționale» (§NNN, amending §550): the second fold of the
+ * «Participanți care au bifat oferte și beneficii» (§NNN, amending §550): the second fold of the
  * newsletter's «Abonați» page — every registration whose person said yes to «Vreau să primesc
- * materiale promoționale de la club și de la partenerii lui», with the name, the address, the event
+ * oferte și beneficii de la <club> și partenerii săi.», with the name, the address, the event
  * and the moment, newest first, and its own CSV.
  *
  * **Who reads it.** The newsletter's own readers (`canSendNewsletter`: the Organizer, the
@@ -118,7 +118,7 @@ export function buildPromoConsentersCsv(header: PromoConsenterCsvHeader, rows: r
   return `${CSV_BOM}${lines.join("\r\n")}`;
 }
 
-/** The file's name, with the club's date: `materiale-promotionale-2026-09-29.csv`. */
+/** The file's name, with the club's date: `oferte-si-beneficii-2026-09-29.csv`. */
 export function promoConsentersCsvFileName(day: string): string {
-  return `materiale-promotionale-${day}.csv`;
+  return `oferte-si-beneficii-${day}.csv`;
 }

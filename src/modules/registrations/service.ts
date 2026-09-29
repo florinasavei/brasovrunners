@@ -13,7 +13,7 @@ import { startHeldBack } from "@/modules/events/domain/dated";
 import { registrationState } from "@/modules/events/domain/registration-window";
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { findCurrentApprovedDocument, findEventDeclaration, noticeDescribesPromotionalMaterials } from "@/modules/legal-documents/repository";
-import { setPromoConsent } from "./promo-consent";
+import { recordFormPromoConsent, setPromoConsent } from "./promo-consent";
 import { acceptanceTextHash } from "./signed-declaration";
 import { readClubNotices } from "@/modules/notifications/club-notices";
 import { confirmationNoticeRecipients, resolveDeclarationCopies } from "@/modules/notifications/domain/club-notices";
@@ -1640,7 +1640,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
   const listSocials =
     input.listSocials && !input.listOptOut && (stravaUrl !== null || instagramHandle !== null) && describesListSocials(privacyNotice.body);
   /*
-    «Vreau să primesc materiale promoționale» (§NNN), kept only when every condition holds: the
+    «Vreau să primesc oferte și beneficii» (§NNN), kept only when every condition holds: the
     person ticked it; on a public form — a staff entry or the desk never sets it, because staff
     cannot consent for a person (the staff form has no box; a posted one is ignored here); and the
     privacy notice this registration records — the one they were just given, in their language —
@@ -2151,6 +2151,8 @@ export async function submitRegistration<T extends Record<string, unknown>>(
             updatedAt: now,
           })
           .where(eq(registrations.id, existing.id));
+        // The form's answer on «Oferte și beneficii», on the trail with its moment (§NNN).
+        await recordFormPromoConsent(tx, { registrationId: existing.id, participantId: participant.id, kept: corrected.promoConsent === true, before: existing.promoConsent, now });
       }
       /*
         A correction keeps the person's place (§543): reserved while it holds, the waiting list otherwise.
@@ -2368,6 +2370,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
         // Not for another person confirmed from the email (§446): the caller confirms the address itself.
         // The link of this cycle starts with this message (§513): its send re-bases it, once.
         if (restarted && !atTheDesk && !origin.anotherPerson) await holdVerification(restarted);
+        if (restarted) await recordFormPromoConsent(tx, { registrationId: restarted.id, participantId: participant.id, kept: rowDetails.promoConsent === true, before: existing.promoConsent, now });
         createdDeadlines = [linkExpiresAt];
         written = restarted?.id;
         await finishSitting();
@@ -2378,6 +2381,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
         .update(registrations)
         .set({ ...carriedFields, updatedAt: now })
         .where(eq(registrations.id, existing.id));
+      await recordFormPromoConsent(tx, { registrationId: existing.id, participantId: participant.id, kept: rowDetails.promoConsent === true, before: existing.promoConsent, now });
 
       // The event row first, like every other allocation (rule 1 above, §10.6): a verified
       // participant's restart used to allocate against the capacity the page had read, with
@@ -2416,6 +2420,8 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       now,
     });
     // No race number at the form: it is drawn when the registration is confirmed (§548).
+    // A tick the form kept, on the trail with its moment (§NNN): it outlives a later withdrawal.
+    await recordFormPromoConsent(tx, { registrationId: created.id, participantId: participant.id, kept: rowDetails.promoConsent === true, before: false, now });
 
     // At the desk the address is about to be vouched for by the person typing it
     // (BR-REQ-037-07); a verification email to somebody standing in front of them is noise.
@@ -2614,7 +2620,7 @@ export async function signDeclaration<T extends Record<string, unknown>>(
     }
 
     /*
-      «Vreau să primesc materiale promoționale», ticked while signing (§NNN): the signer's own yes, in
+      «Vreau să primesc oferte și beneficii», ticked while signing (§NNN): the signer's own yes, in
       this transaction — a signature refused below rolls it back with everything else. Kept only while
       the notice in force describes the materials; otherwise ignored, never a refusal of the signature.
       A no here changes nothing: the page offers only the yes, and the way out is the person's own page.

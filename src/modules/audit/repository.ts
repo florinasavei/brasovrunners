@@ -107,7 +107,7 @@ export type AuditAction =
    */
   | "registration.consent_withdrawn"
   /**
-   * «Vreau să primesc materiale promoționale» switched (§NNN, `registrations/promo-consent.ts`): the
+   * «Vreau să primesc oferte și beneficii» switched (§NNN, `registrations/promo-consent.ts`): the
    * new value (`to: true | false`) and the door — the manage link, «Înscrierile mele», the
    * declaration page, or an Administrator withdrawing it for a person who wrote (the actor and the
    * reason then). Never the name or the address.

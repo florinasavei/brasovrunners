@@ -13,7 +13,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 const CSV_LIMIT = 100_000;
 
 /**
- * «Descarcă CSV» on the newsletter page's «Participanți care au bifat materiale promoționale» fold
+ * «Descarcă CSV» on the newsletter page's «Participanți care au bifat oferte și beneficii» fold
  * (§NNN, amending §550): the name, the address, the event and the moment, in the reader's language
  * (`lang`), as a UTF-8 file with a BOM.
  *

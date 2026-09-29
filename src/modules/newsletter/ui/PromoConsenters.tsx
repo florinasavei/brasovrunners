@@ -59,8 +59,8 @@ const ROW = (last: boolean) =>
 const HEAD_RULE = { borderBottom: 2, borderColor: "text.secondary", fontWeight: 700, whiteSpace: "nowrap" } as const;
 
 /**
- * «Participanți care au bifat materiale promoționale» / "Participants who ticked promotional
- * materials" (§NNN, amending §550): the newsletter page's second fold, under «Abonați». Every
+ * «Participanți care au bifat oferte și beneficii» / "Participants who ticked offers and
+ * benefits" (§NNN, amending §550): the newsletter page's second fold, under «Abonați». Every
  * registration whose person said yes — the name, the address, the event and the moment — newest
  * first, with its own «Descarcă CSV». Closed by default (§336); its closed line says how many.
  *

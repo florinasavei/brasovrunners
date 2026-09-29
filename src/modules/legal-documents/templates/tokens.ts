@@ -150,7 +150,8 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
   {
     token: `{{${PROMOTIONAL_MATERIALS_MERGE_FIELD}}}`,
     messageKey: PROMOTIONAL_MATERIALS_MERGE_FIELD,
-    example: inBoth((locale) => promotionalMaterialsClause(locale)),
+    // Never the club's name in the legend (§369): the sentence as the box reads, with a plain «club».
+    example: inBoth((locale) => promotionalMaterialsClause(locale, locale === "en" ? "the club" : "club")),
   },
 ];
 
