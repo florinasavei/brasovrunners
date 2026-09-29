@@ -327,7 +327,7 @@ test.describe("BR-REQ-041-01 the event detail page on a phone", () => {
   });
 
   /**
-   * §NNN — the second review of 2026-09-29: every group run's page says the essential safety rules
+   * §556 — the second review of 2026-09-29: every group run's page says the essential safety rules
    * the optional declaration names, inside «Condiții de participare», in both languages; a race's
    * page keeps its own rules and shows none of them.
    */

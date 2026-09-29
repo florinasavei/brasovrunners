@@ -5,7 +5,7 @@ import { CLUB_NAME } from "@/theme/brand";
 import { DENSITY } from "@/theme/density";
 
 /**
- * «Reguli de siguranță» / "Safety rules" on every group run's page (§NNN, amending §393 and §498; the
+ * «Reguli de siguranță» / "Safety rules" on every group run's page (§556, amending §393 and §498; the
  * second review of 2026-09-29).
  *
  * The self-declaration stays optional — «Semnarea acestei declarații este opțională…», and a group

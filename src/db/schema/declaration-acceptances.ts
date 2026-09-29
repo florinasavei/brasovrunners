@@ -86,7 +86,7 @@ export const declarationAcceptances = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 
     /**
-     * The proof of signing (§NNN, the second review of 2026-09-29: «the database must not keep only
+     * The proof of signing (§556, the second review of 2026-09-29: «the database must not keep only
      * accepted = true»). `content_sha256` above is the approved version's hash, both languages
      * together; this is the SHA-256 of **the exact text this person signed** — the version's text in
      * the row's language with every blank filled as their PDF prints it (`signedTextHash`,
@@ -95,7 +95,7 @@ export const declarationAcceptances = pgTable(
      */
     textHash: text("text_hash"),
     /**
-     * «Păstrează: reclamație / litigiu în curs» (§NNN): an Administrator's hold, with why, when and
+     * «Păstrează: reclamație / litigiu în curs» (§556): an Administrator's hold, with why, when and
      * who. While it is set the retention sweep skips the registration this row belongs to and no
      * erase takes it; clearing it puts the row back on its ordinary schedule. The audit trail keeps
      * each set and each clear (who, why, the row id — never the person).

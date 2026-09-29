@@ -213,7 +213,7 @@ describe("§369 the club's name leaves the platform only through the constant", 
           "Team.lead",
           // «Întrebări frecvente» (§525): the page's lead and its description.
           "Faq.lead",
-          // A group run's safety rules (§NNN): the first line names the club's run, by surface.
+          // A group run's safety rules (§556): the first line names the club's run, by surface.
           "Event.safetyRules.intro",
           "Event.safetyRules.introMountain",
         ].sort(),

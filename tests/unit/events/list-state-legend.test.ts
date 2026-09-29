@@ -5,7 +5,7 @@ import ro from "../../../messages/ro.json";
 import { listStateLegend } from "@/modules/events/ui/list-state-legend";
 
 /**
- * BR-REQ-039-01, `DECISIONS.md` §NNN (the owner, 2026-09-29: «Acum trebuie să explic ce înseamnă
+ * BR-REQ-039-01, `DECISIONS.md` §556 (the owner, 2026-09-29: «Acum trebuie să explic ce înseamnă
  * „în așteptarea confirmării”») — the public list's legend: one sentence per state the list
  * shows, from the real catalogues, with the event's own confirmation window or the club's hold
  * and offer said in words from their values.
@@ -27,7 +27,7 @@ const now = new Date("2026-09-29T09:00:00Z");
 const raceWeek = new Date("2026-11-17T09:00:00Z");
 const ALL = ["CONFIRMED", "PENDING", "WAITLISTED"] as const;
 
-describe("§NNN listStateLegend — what each state on the public list means", () => {
+describe("§556 listStateLegend — what each state on the public list means", () => {
   it("says the event's own window and the club's hold and offer, in Romanian", () => {
     const lines = listStateLegend(translator("ro"), "ro", { groups: ALL, event: race, deadlines, now });
     expect(lines.map((line) => line.group)).toEqual(["CONFIRMED", "PENDING", "WAITLISTED"]);

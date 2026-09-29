@@ -18,7 +18,7 @@ import type { DeclarationPdfInput } from "@/modules/registrations/declaration-pd
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-036-02, the group-run declaration (§NNN, amending §393, §503, §523) — the
+ * BR-REQ-036-02, the group-run declaration (§556, amending §393, §503, §523) — the
  * proof of signing on a group run's self-declaration, and the hold. The row keeps the SHA-256 of the
  * exact text signed, the text its PDF prints; the PDF's proof line carries it on the signer's copy and
  * the club's archive copy alike. «Păstrează: reclamație / litigiu în curs» keeps the row through the
@@ -106,7 +106,7 @@ async function sign(locale: "ro" | "en" = "ro") {
   return { run, row };
 }
 
-describe("the proof of signing on a group run's declaration (§NNN)", () => {
+describe("the proof of signing on a group run's declaration (§556)", () => {
   it("keeps the SHA-256 of the exact text signed — the text its PDF prints — in both languages", async () => {
     for (const locale of ["ro", "en"] as const) {
       await resetTables(db);
@@ -143,7 +143,7 @@ describe("the proof of signing on a group run's declaration (§NNN)", () => {
   });
 });
 
-describe("«Păstrează: reclamație / litigiu în curs» on a group run's declaration (§NNN)", () => {
+describe("«Păstrează: reclamație / litigiu în curs» on a group run's declaration (§556)", () => {
   it("survives the sweep and every erase while held; once cleared, the signer's erase goes through", async () => {
     const { run, row } = await sign();
     const administrator = await staff("ADMIN");

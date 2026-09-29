@@ -115,7 +115,7 @@ export type AuditAction =
    */
   | "registration.declaration_downloaded"
   /**
-   * A declaration held for a complaint or a dispute, or released (§NNN): the Administrator (the
+   * A declaration held for a complaint or a dispute, or released (§556): the Administrator (the
    * actor), the typed reason and the acceptance's id on the registration's trail — never the person.
    */
   | "registration.declaration_hold_set"
@@ -134,7 +134,7 @@ export type AuditAction =
    */
   | "event.group_run_declaration_erased"
   /**
-   * A group-run declaration held for a complaint or a dispute, or released (§NNN): the Administrator,
+   * A group-run declaration held for a complaint or a dispute, or released (§556): the Administrator,
    * the typed reason, the event and the declaration's id — never who had signed.
    */
   | "event.group_run_declaration_hold_set"

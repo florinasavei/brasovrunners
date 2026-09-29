@@ -1063,7 +1063,7 @@ export async function eraseGroupRunDeclarationAction(_previous: FormOutcome | nu
 }
 
 /**
- * «Păstrează: reclamație / litigiu în curs» on one group-run declaration, or its release (§NNN): the
+ * «Păstrează: reclamație / litigiu în curs» on one group-run declaration, or its release (§556): the
  * Administrator's, with a reason; the service asks the role again and writes the audit row.
  */
 export async function groupRunDeclarationHoldAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {

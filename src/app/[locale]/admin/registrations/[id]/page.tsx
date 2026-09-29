@@ -927,7 +927,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
             )}
             {acceptance.method === "PAPER" &&
               ` — ${tr("registrations.declarationPaper", { who: acceptance.attestedByName ?? tr("registrations.auditActorRemoved") })}`}
-            {/* The proof of signing (§NNN): the signed text's fingerprint, twelve characters and the whole in a tooltip. */}
+            {/* The proof of signing (§556): the signed text's fingerprint, twelve characters and the whole in a tooltip. */}
             {acceptance.textHash && (
               <>
                 {" — "}
@@ -935,7 +935,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
               </>
             )}
           </Typography>
-          {/* «Păstrează: reclamație / litigiu în curs» (§NNN): the line for every reader, the form for the Administrator. */}
+          {/* «Păstrează: reclamație / litigiu în curs» (§556): the line for every reader, the form for the Administrator. */}
           <DeclarationHoldForm
             registrationAction={declarationHoldAction}
             hidden={{ uiLocale: locale, registrationId: registration.id, acceptanceId: acceptance.id }}

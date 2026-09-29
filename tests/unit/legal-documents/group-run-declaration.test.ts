@@ -180,7 +180,7 @@ describe("§393 the two templates", () => {
     §534, the counsel's second pass (point 6): kept by its purpose, never by a count from the signing.
     The active declaration while it is needed for the runs it covers; withdrawn at the signer's request,
     used for no later run, a copy kept only as long as a legal claim needs it, the three-year limitation
-    period in view, and while a complaint or a dispute is under way until it is settled (§NNN, the second
+    period in view, and while a complaint or a dispute is under way until it is settled (§556, the second
     review). «Three years from the signing» was untrue of a declaration still active.
   */
   it("says it is optional, that it registers nobody, and keeps it by its purpose, never three years from the signing (§534)", () => {

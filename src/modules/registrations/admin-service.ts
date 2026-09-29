@@ -1093,7 +1093,7 @@ async function eraseRegistration<T extends Record<string, unknown>>(
   reason: string,
   now: Date,
 ): Promise<void> {
-  // A declaration held for a complaint or a dispute (§NNN) is kept, the registration with it: every
+  // A declaration held for a complaint or a dispute (§556) is kept, the registration with it: every
   // erase — one, the batch, an event's — meets the refusal until an Administrator clears the hold.
   if (await registrationIsHeld(db, current.id)) throw heldRefusal();
 
@@ -1145,7 +1145,7 @@ async function eraseRegistration<T extends Record<string, unknown>>(
       correction its before and after. The deletion's own row above keeps its reason — its
       `from` is a status and its reason and number name nobody (§311).
     */
-    // The hold asked again under a lock (§NNN): the check above is the cheap refusal before any
+    // The hold asked again under a lock (§556): the check above is the cheap refusal before any
     // write; this one closes the moment between it and the delete.
     await refuseIfRegistrationHeld(tx, current.id);
     await scrubRegistrationFromAudit(tx, current.id);

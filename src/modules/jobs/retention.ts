@@ -199,7 +199,7 @@ function yearsBefore(now: Date, years: number): Date {
  * and the name are kept "with the last registration" and not a day longer.
  */
 /**
- * «No declaration of this registration is held» (§NNN): the condition every sweep that deletes a
+ * «No declaration of this registration is held» (§556): the condition every sweep that deletes a
  * registration adds, so a declaration an Administrator marked «Păstrează: reclamație / litigiu în
  * curs» — and the registration it belongs to — outlives its period until the hold is cleared. The
  * privacy notice's retention sentence («Dacă există o reclamație, un litigiu sau o procedură în curs,
@@ -458,7 +458,7 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
    */
   await step("registrations-after-event", async (tx) => {
     const eventCutoff = yearsBefore(now, RETENTION.registrationsYearsAfterEvent);
-    // A registration whose declaration an Administrator holds for a complaint or a dispute (§NNN) is
+    // A registration whose declaration an Administrator holds for a complaint or a dispute (§556) is
     // skipped — the row and its declaration — until the hold is cleared, and then goes on the next run.
     const stale = tx
       .select({ id: registrations.id })

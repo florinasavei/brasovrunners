@@ -1,6 +1,6 @@
 {
   "id": "cae71d2f-2bf1-470d-808f-9e5b86fcad25",
-  "prevId": "d165f909-3857-4e35-ac1e-019c92d93884",
+  "prevId": "7990dcd4-6108-497a-ba0c-b02202d265e1",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1452,6 +1452,13 @@
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
+        },
+        "kit_shirt": {
+          "name": "kit_shirt",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         },
         "declaration_document_id": {
           "name": "declaration_document_id",

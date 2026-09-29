@@ -55,7 +55,7 @@ export type DeclarationEntry = {
     signedAt: string;
     /** The same instant inside a sentence — "joi, 24 sept. 2026, la 18:05" — for the footer's «semnată …» (§499). */
     signedAtInline: string;
-    /** The instant itself, from the row: the proof line prints it to the second (§NNN). */
+    /** The instant itself, from the row: the proof line prints it to the second (§556). */
     acceptedAt: Date;
     /** "Signed electronically from the link sent by email" or "Signed on paper, recorded by X". */
     method: string;
@@ -66,7 +66,7 @@ export type DeclarationEntry = {
    */
   forMinor?: boolean;
   /**
-   * The SHA-256 of the exact text signed (§NNN, `signedTextHash`), from the row; null on a row from
+   * The SHA-256 of the exact text signed (§556, `signedTextHash`), from the row; null on a row from
    * before it, whose proof line then prints no hash — never one computed now, which would prove only
    * what the text says today. Absent on the blank form, which nobody has signed.
    */
@@ -104,7 +104,7 @@ export type DeclarationPdfInput = {
     page: (n: number, total: number) => string;
     /**
      * «Versiunea 3 · Semnat la 24.09.2026, 18:05:12 (ora României) · Amprenta documentului (SHA-256): …»
-     * (§NNN): the version, the instant to the second and the signed text's hash, all from the row —
+     * (§556): the version, the instant to the second and the signed text's hash, all from the row —
      * the hash part left out when the row has none.
      */
     proofLine: (version: number, signedAt: string, textHash: string | null) => string;
@@ -180,7 +180,7 @@ export function declarationFooterLine(
 }
 
 /**
- * The proof of signing (§NNN; the second review of 2026-09-29: «the PDF should print the version, the
+ * The proof of signing (§556; the second review of 2026-09-29: «the PDF should print the version, the
  * signing instant and the document hash»): «Versiunea N · Semnat la ZZ.LL.AAAA, hh:mm:ss (ora
  * României) · Amprenta documentului (SHA-256): <hex>». Under the signature, and again on every page
  * of a signed entry under its footer line, so a loose page still carries it. The version and the
@@ -288,7 +288,7 @@ export async function renderDeclarationPdf(input: DeclarationPdfInput): Promise<
       .text(declarationFooterLine(owners[i - range.start], input.labels), MARGIN.left, y, { width: TEXT_WIDTH - pageLabelWidth - 8, lineBreak: false })
       .text(pageLabel, MARGIN.left, y, { width: TEXT_WIDTH, align: "right", lineBreak: false });
     let next = y + DECLARATION_FOOTER.size + 3;
-    // The page's own entry's proof of signing (§NNN), on one line: a 64-character hash is long, so the
+    // The page's own entry's proof of signing (§556), on one line: a 64-character hash is long, so the
     // line is set a step smaller until it fits the width rather than wrapping into the notice below.
     const proof = declarationProofLine(owners[i - range.start], input.labels);
     if (proof) {
@@ -442,7 +442,7 @@ function drawEntry(doc: PDFKit.PDFDocument, entry: DeclarationEntry, labels: Dec
     .fontSize(8.5)
     .fillColor(COLOR.inkMuted)
     .text(
-      // The proof of signing last (§NNN): the version, the instant to the second, the signed text's hash.
+      // The proof of signing last (§556): the version, the instant to the second, the signed text's hash.
       [signature?.method, `${labels.version} ${entry.version} · sha256 ${entry.contentSha256}`, declarationProofLine(entry, labels)].filter(Boolean).join("\n"),
       MARGIN.left,
       doc.y,

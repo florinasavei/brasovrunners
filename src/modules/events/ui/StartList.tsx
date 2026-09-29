@@ -80,7 +80,7 @@ import { readOrWhileAway } from "@/modules/resilience/optional-read";
  * exactly what it was: confirmed names, no words, no other rows — the same component, one
  * boolean.
  *
- * ## What the words mean (§NNN)
+ * ## What the words mean (§556)
  *
  * The owner, 2026-09-29, of a list reading «Confirmat» and «Înscris, în așteptarea confirmării»:
  * «Acum trebuie să explic ce înseamnă „în așteptarea confirmării”». Behind the same gate, a legend
@@ -168,7 +168,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
     ) : null;
   const extra = statesOn ? othersPhrases(t, locale, others) : [];
   /*
-    What each word means (§NNN), for the states this list shows — a confirmed row, named or hidden,
+    What each word means (§556), for the states this list shows — a confirmed row, named or hidden,
     and the pending and waiting rows it reads — from the event's own window and the club's deadlines.
   */
   const legend = statesOn
@@ -355,7 +355,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
             </Stack>
           )}
 
-          {/* The legend (§NNN): one plain sentence per state the list shows, only behind the gate. */}
+          {/* The legend (§556): one plain sentence per state the list shows, only behind the gate. */}
           {legend.length > 0 && (
             <Box data-testid="start-list-legend" sx={{ mt: 2 }}>
               <Typography variant="body2" sx={{ fontWeight: 600, display: "flex", alignItems: "center", gap: 0.75 }}>

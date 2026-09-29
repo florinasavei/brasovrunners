@@ -5,7 +5,7 @@ import Tooltip from "@mui/material/Tooltip";
 import { readingTimeMs, TOOLTIP_TEXT_SX } from "@/shared/ui/tooltip-text";
 
 /**
- * A signed declaration's fingerprint in the backoffice (§NNN): the first twelve characters of the
+ * A signed declaration's fingerprint in the backoffice (§556): the first twelve characters of the
  * SHA-256 of the exact text signed, the whole one in a tooltip — on hover, on focus and on a tap, as
  * `Hint` opens (a `title` attribute never shows on a touch screen). The same whole hash is the
  * element's accessible name, so a screen reader hears it without the tooltip.

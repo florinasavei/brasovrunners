@@ -53,7 +53,7 @@ const LABELS = {
   signedByLink: (when: string) => `Semnat electronic pe ${when}`,
   signedOnPaper: (who: string, when: string) => `Semnat pe hârtie; înregistrat de ${who} pe ${when}`,
   attesterRemoved: "un membru al echipei",
-  // The proof of signing (§NNN), plain so a test reads it.
+  // The proof of signing (§556), plain so a test reads it.
   proofLine: (version: number, when: string, hash: string | null) => `Versiunea ${version} · Semnat la ${when}${hash ? ` · SHA-256 ${hash}` : ""}`,
 };
 
@@ -303,7 +303,7 @@ describe("the club's declaration (§95)", () => {
     for (const page of textLinesByPage(pdf)) {
       const footer = page.filter(([, y]) => y < FOOTER_TOP);
       const distinctY = new Set(footer.map(([, y]) => y));
-      // Four since §NNN: the signed entry's proof line sits between the main line and the notice.
+      // Four since §556: the signed entry's proof line sits between the main line and the notice.
       expect(footer.length, "four footer runs: two on the main line, the proof of signing, the notice").toBe(4);
       expect(distinctY.size, "the proof and the notice each on their own, lower line").toBe(3);
       expect(Math.min(...footer.map(([, y]) => y)), "the notice's line is below the footer's top").toBeLessThan(FOOTER_TOP);
@@ -429,7 +429,7 @@ describe("the club's declaration (§95)", () => {
         const body = lines.filter(([, y]) => y >= FOOTER_TOP);
         const footer = lines.filter(([, y]) => y < FOOTER_TOP);
         // The footer: the club and the date, and the page count, on one baseline under the footer's
-        // top and on the paper — and on a signed entry's page the proof of signing (§NNN), one line
+        // top and on the paper — and on a signed entry's page the proof of signing (§556), one line
         // under it, still on the paper. Nothing else down there; the blank form has no proof.
         const signedPage = name.startsWith("signed");
         expect(footer.length, `${page} footer`).toBe(signedPage ? 3 : 2);

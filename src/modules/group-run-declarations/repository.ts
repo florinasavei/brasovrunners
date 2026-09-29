@@ -111,9 +111,9 @@ export type GroupRunDeclarationListRow = {
   locale: Locale;
   version: number;
   series: boolean;
-  /** The SHA-256 of the exact text signed (§NNN); null on a row from before it. */
+  /** The SHA-256 of the exact text signed (§556); null on a row from before it. */
   textHash: string | null;
-  /** «Păstrează: reclamație / litigiu în curs» (§NNN): whether, why, when and by whom. */
+  /** «Păstrează: reclamație / litigiu în curs» (§556): whether, why, when and by whom. */
   retentionHold: boolean;
   retentionHoldReason: string | null;
   retentionHoldAt: Date | null;
@@ -216,7 +216,7 @@ export async function findSignedGroupRunDeclaration<T extends Record<string, unk
       key: legalDocuments.key,
       version: groupRunDeclarations.declarationVersion,
       contentSha256: groupRunDeclarations.contentSha256,
-      // The fingerprint of the exact text signed (§NNN); null on a row from before it.
+      // The fingerprint of the exact text signed (§556); null on a row from before it.
       textHash: groupRunDeclarations.textHash,
       // The day the signed version took effect, for the PDF's version line (§499).
       effectiveAt: legalDocuments.effectiveAt,
@@ -333,7 +333,7 @@ export async function deleteGroupRunDeclarationMessagesOfEvent<T extends Record<
 }
 
 /**
- * Before a date of a run is deleted (§NNN): a held declaration still on it — a one-off's, or a
+ * Before a date of a run is deleted (§556): a held declaration still on it — a one-off's, or a
  * series' with no other date to move to (`rehomeGroupRunDeclarationsOfEvent` runs first) — would
  * cascade away with the date, so the delete is refused until an Administrator clears the hold.
  */

@@ -8,7 +8,7 @@ import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 
 /**
- * «Păstrează: reclamație / litigiu în curs» (§NNN, amending §85 and §95): an Administrator's hold on a
+ * «Păstrează: reclamație / litigiu în curs» (§556, amending §85 and §95): an Administrator's hold on a
  * signed declaration, which the retention sweep skips — the declaration and the registration it
  * belongs to — and no erase takes, until the hold is cleared.
  *
@@ -35,7 +35,7 @@ export function holdReason(typed: string): string {
 }
 
 /**
- * The refusal an erase meets while a hold is set (§NNN): the Administrator clears it first. Its own
+ * The refusal an erase meets while a hold is set (§556): the Administrator clears it first. Its own
  * code, `DECLARATION_HELD`, so the list's erase, an event's erase, an event's delete and every other
  * form reading `Admin.errors` say the declaration is kept — never the generic CONFLICT sentence.
  */
@@ -115,7 +115,7 @@ export async function releaseDeclarationAcceptance<T extends Record<string, unkn
   });
 }
 
-/** Whether any declaration of a registration is held (§NNN): what every erase asks before it deletes. */
+/** Whether any declaration of a registration is held (§556): what every erase asks before it deletes. */
 export async function registrationIsHeld<T extends Record<string, unknown>>(db: Database<T>, registrationId: string): Promise<boolean> {
   const [row] = await db
     .select({ id: declarationAcceptances.id })
@@ -127,7 +127,7 @@ export async function registrationIsHeld<T extends Record<string, unknown>>(db: 
 
 /**
  * The same question inside the erase's own transaction, with every acceptance of the registration
- * locked `FOR UPDATE` until it commits (§NNN): a hold set after the early check and before the delete
+ * locked `FOR UPDATE` until it commits (§556): a hold set after the early check and before the delete
  * is seen here, and a hold pressed while the erase runs waits for it and then finds no row.
  */
 export async function refuseIfRegistrationHeld<T extends Record<string, unknown>>(tx: Database<T>, registrationId: string): Promise<void> {

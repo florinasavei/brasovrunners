@@ -463,7 +463,7 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
               minimum where nobody registers here. */}
           <EventAgeRule event={event} />
 
-          {/* A group run's safety rules (§NNN): the essentials the optional declaration names, for
+          {/* A group run's safety rules (§556): the essentials the optional declaration names, for
               everybody who comes, signed or not — above the declaration. Nothing on any other type. */}
           <GroupRunSafetyRules event={event} />
 

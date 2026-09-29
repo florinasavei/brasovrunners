@@ -57,20 +57,20 @@ export default async function GroupRunDeclarationsPanel({
   mayErase: boolean;
   eraseAction: ActionFormAction;
   batchEraseAction: ActionFormAction;
-  /** «Păstrează: reclamație / litigiu în curs» and its release (§NNN), the Administrator's. */
+  /** «Păstrează: reclamație / litigiu în curs» and its release (§556), the Administrator's. */
   holdAction: ActionFormAction;
   /** The run's name, for the batch dialog: «… pentru «Alergarea de joi»?». */
   runTitle: string;
 }) {
   const t = await getTranslations("Admin");
-  // A held declaration refuses the erase with its own code, DECLARATION_HELD (§NNN), which `Admin.errors` words.
+  // A held declaration refuses the erase with its own code, DECLARATION_HELD (§556), which `Admin.errors` words.
   const messages = mayErase ? await refusalMessages({ reason: t("groupRunDeclarations.reason") }) : null;
   // The batch form's refusals: a set that changed meanwhile says so, not "somebody else saved".
   const batchMessages =
     mayErase && rows.length > 0
       ? await refusalMessages({ reason: t("groupRunDeclarations.reason"), declarationIds: t("groupRunDeclarations.ticked") }).then((words) => ({
           ...words,
-          // A set that changed meanwhile: nothing was erased. A held one among the ticked is DECLARATION_HELD (§NNN).
+          // A set that changed meanwhile: nothing was erased. A held one among the ticked is DECLARATION_HELD (§556).
           errors: { ...words.errors, CONFLICT: t("groupRunDeclarations.batchChanged") },
         }))
       : null;
@@ -121,7 +121,7 @@ export default async function GroupRunDeclarationsPanel({
                     version: row.version,
                   })}
                 </Typography>
-                {/* The proof of signing (§NNN): the signed text's fingerprint, twelve characters and the whole in a tooltip. */}
+                {/* The proof of signing (§556): the signed text's fingerprint, twelve characters and the whole in a tooltip. */}
                 {row.textHash && (
                   <Typography variant="body2" color="text.secondary">
                     <TextHashTip label={t("declarationHold.textHash")} hash={row.textHash} short={shortTextHash(row.textHash)} />
@@ -138,7 +138,7 @@ export default async function GroupRunDeclarationsPanel({
                   {t("groupRunDeclarations.pdf")}
                 </GlyphButton>
               </Stack>
-              {/* «Păstrează: reclamație / litigiu în curs» (§NNN): the line for every reader, the form for the Administrator. */}
+              {/* «Păstrează: reclamație / litigiu în curs» (§556): the line for every reader, the form for the Administrator. */}
               <DeclarationHoldForm
                 groupRunAction={holdAction}
                 hidden={{ uiLocale: locale, eventId, declarationId: row.id }}

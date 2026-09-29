@@ -12,7 +12,7 @@ import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import { HOLD_REASON_MAX } from "../declaration-hold";
 
 /**
- * «Păstrează: reclamație / litigiu în curs» on one signed declaration (§NNN): the line that says it is
+ * «Păstrează: reclamație / litigiu în curs» on one signed declaration (§556): the line that says it is
  * held — since when, by whom, why — for everybody who reads the declarations (the Organizer too), and,
  * for the Administrator, a closed fold (§336) with the reason and the one button that sets or clears
  * the hold, asking first (§384). The service decides; this screen only draws what it may.

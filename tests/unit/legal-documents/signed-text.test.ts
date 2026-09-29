@@ -6,7 +6,7 @@ import { declarationWords } from "@/modules/registrations/declaration-labels";
 import { declarationProofLine } from "@/modules/registrations/declaration-pdf";
 
 /**
- * BR-REQ-033-02 (§NNN, the second review of 2026-09-29) — the proof of signing: the SHA-256 of the
+ * BR-REQ-033-02 (§556, the second review of 2026-09-29) — the proof of signing: the SHA-256 of the
  * exact text signed, and the PDF's line «Versiunea N · Semnat la ZZ.LL.AAAA, hh:mm:ss (ora
  * României) · Amprenta documentului (SHA-256): <hex>».
  *
@@ -29,7 +29,7 @@ const BODY = {
 const VALUES = { participant: "Ana Pop", signedAt: "vineri, 4 sept. 2026, la 13:00", minimumAge: "" };
 const KNOWN = "8bc4017ad13d913aaaa2d673420e0dac4f4c3a71d420e4d7489fb4fd272a4d85";
 
-describe("the signed text and its fingerprint (§NNN)", () => {
+describe("the signed text and its fingerprint (§556)", () => {
   it("is the title and every paragraph the PDF keeps, filled and stripped of marks, one line each", () => {
     expect(signedTextLines({ title: "Declarație", body: BODY, values: VALUES })).toEqual([
       "Declarație",
@@ -57,7 +57,7 @@ describe("the signed text and its fingerprint (§NNN)", () => {
   });
 });
 
-describe("the PDF's proof line (§NNN)", () => {
+describe("the PDF's proof line (§556)", () => {
   const NOW = new Date("2026-09-04T10:00:00.000Z");
   const signature = { acceptedAt: new Date("2026-09-24T15:05:12.345Z") };
 

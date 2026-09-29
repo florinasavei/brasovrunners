@@ -3210,7 +3210,7 @@ export async function deleteEvent<T extends Record<string, unknown>>(
   // A declaration covers the run's other dates too (§523): while the run has one, it moves there.
   await db.transaction(async (tx) => {
     await rehomeGroupRunDeclarationsOfEvent(tx, input.eventId);
-    // A held declaration (§NNN) left on this date refuses the delete, and the transaction with it.
+    // A held declaration (§556) left on this date refuses the delete, and the transaction with it.
     await refuseHeldGroupRunDeclarationsOfEvent(tx, input.eventId);
     await deleteGroupRunDeclarationMessagesOfEvent(tx, input.eventId);
     await tx.delete(events).where(eq(events.id, input.eventId));
@@ -3325,7 +3325,7 @@ export async function hardDeleteEvent<T extends Record<string, unknown>>(
     // without them, so they go first — unless the run has another date, which they cover too and
     // move to (§523): erasing one date's registrations is not erasing a runner's declaration.
     await rehomeGroupRunDeclarationsOfEvent(tx, plan.eventId);
-    // A held declaration (§NNN) left on this date refuses the erase, and the transaction with it.
+    // A held declaration (§556) left on this date refuses the erase, and the transaction with it.
     await refuseHeldGroupRunDeclarationsOfEvent(tx, plan.eventId);
     await deleteGroupRunDeclarationMessagesOfEvent(tx, plan.eventId);
     await tx.delete(events).where(eq(events.id, plan.eventId));

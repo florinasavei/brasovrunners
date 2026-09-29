@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 /**
- * BR-REQ-036-02 (§NNN, the second review of 2026-09-29) — «Reguli de siguranță» on every group run's
+ * BR-REQ-036-02 (§556, the second review of 2026-09-29) — «Reguli de siguranță» on every group run's
  * page: the essentials the optional declaration names, for everybody, inside «Condiții de
  * participare» — and nothing on a race's, which keeps its own rules section.
  *
@@ -34,7 +34,7 @@ async function render(event: { type: string; surface: string | null }): Promise<
   return element === null ? "" : renderToStaticMarkup(element);
 }
 
-describe("the safety rules on a group run's page (§NNN)", () => {
+describe("the safety rules on a group run's page (§556)", () => {
   it("renders on a group run, with the club's name, in Romanian and in English", async () => {
     const html = await render({ type: "GROUP_RUN", surface: "TRAIL" });
     expect(html).toContain('data-testid="group-run-safety-rules"');

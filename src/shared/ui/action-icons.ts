@@ -148,7 +148,7 @@ export type ActionIconName =
   | "emergency"
   // Everything held about one address (§322), the Administrator's page for an access request.
   | "personData"
-  // A signed declaration kept for a complaint or a dispute (§NNN): the padlock, and opened, its release.
+  // A signed declaration kept for a complaint or a dispute (§556): the padlock, and opened, its release.
   | "hold"
   | "release"
   // The bibs (§264): a PDF to keep is the PDF; the batch that goes to the printer now — only the

@@ -49,7 +49,7 @@ export async function renderGroupRunDeclarationPdf<T extends Record<string, unkn
     What the blanks said at the signing (§523, `signed_facts`): a date moved or renamed since never
     changes what a signed declaration says (§57). A row from before §523 kept none, and reads the
     event as it is — its text names no series field, so nothing of the series is filled or dropped.
-    The signing's own reading (`groupRunSignedFacts`, §NNN), so the fingerprint is over this text.
+    The signing's own reading (`groupRunSignedFacts`, §556), so the fingerprint is over this text.
   */
   const event = await groupRunSignedFacts(db, signed);
   if (!event) return undefined;
@@ -69,7 +69,7 @@ export async function renderGroupRunDeclarationPdf<T extends Record<string, unkn
         version: signed.version,
         contentSha256: signed.contentSha256,
         effectiveAt: signed.effectiveAt,
-        // The row's own fingerprint of what was signed (§NNN), never one computed now.
+        // The row's own fingerprint of what was signed (§556), never one computed now.
         textHash: signed.textHash,
         signature: { typedName: signed.typedName, idDocument, minor: null, signedAt: whenStart, signedAtInline: when, acceptedAt: signed.acceptedAt, method: signedOnPageWords(signed.locale, when) },
       },

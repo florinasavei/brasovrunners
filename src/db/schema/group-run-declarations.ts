@@ -26,7 +26,7 @@ import { staffUsers } from "./staff-users";
  * the event's start (`jobs/retention.ts`): a runner's identity number has no business outliving
  * the run here. The signer keeps the PDF that was emailed; the club's archive copy leaves with the
  * document masked (§320). Insert-only apart from that clearing, the erase and an Administrator's
- * hold for a complaint or a dispute (§NNN), which no erase passes while it is set.
+ * hold for a complaint or a dispute (§556), which no erase passes while it is set.
  *
  * **One per person per series and text version (§523).** `event_id` is the date it was signed on;
  * `series_key` says the declaration covers every date of that run — §113's series, the same type and
@@ -87,13 +87,13 @@ export const groupRunDeclarations = pgTable(
     viewTokenHash: text("view_token_hash"),
 
     /**
-     * The SHA-256 of the exact text signed (§NNN): the version's text in the row's language with every
+     * The SHA-256 of the exact text signed (§556): the version's text in the row's language with every
      * blank filled as the signer's PDF prints it (`signedTextHash`), computed before the row is written,
      * in the same transaction. Null on a row from before it — its PDF prints no hash, never a fake.
      */
     textHash: text("text_hash"),
     /**
-     * «Păstrează: reclamație / litigiu în curs» (§NNN): an Administrator's hold, with why, when and who.
+     * «Păstrează: reclamație / litigiu în curs» (§556): an Administrator's hold, with why, when and who.
      * While it is set no erase takes the row — the signer's request included, which GDPR art. 17(3)(e)
      * lets the club answer later — and no event delete cascades it away; clearing it lifts that.
      */

@@ -72,7 +72,7 @@ describe("§503 a group run's self-declaration is kept until the signer asks", (
       expect(text(key, "en")).not.toMatch(/deletes the declaration|three years from the signing/);
     }
     expect(text("PRIVACY_NOTICE", "ro")).toMatch(/O păstrăm cât timp este necesară pentru participarea ta la alergările la care se aplică\. Dacă ne ceri să o retragem \(secțiunea 8\), nu o mai folosim pentru alergările următoare/);
-    // The second review's retention sentence (§NNN): a copy as long as a right needs it, a dispute until settled.
+    // The second review's retention sentence (§556): a copy as long as a right needs it, a dispute until settled.
     expect(text("PRIVACY_NOTICE", "ro")).toMatch(/O declarație semnată pe o alergare de grup: cât timp este necesară pentru alergările la care se aplică; după ce ne ceri să o retragem, nu mai este folosită pentru alergările următoare\. O copie poate fi păstrată și după aceea, pe durata necesară constatării, exercitării sau apărării unor drepturi/);
     expect(text("PRIVACY_NOTICE", "en")).toMatch(/We keep it as long as it is needed for your taking part in the runs it applies to\. If you ask us to withdraw it \(section 8\), we no longer use it for later runs/);
     expect(text("PRIVACY_NOTICE", "en")).toMatch(/A self-declaration signed on a group run: as long as it is needed for the runs it applies to; once you ask us to withdraw it, it is no longer used for later runs\. A copy may be kept after that, for as long as needed to establish, exercise or defend rights/);

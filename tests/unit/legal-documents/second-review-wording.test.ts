@@ -5,7 +5,7 @@ import { LEGAL_TEMPLATES } from "@/modules/legal-documents/templates/catalogue";
 import type { LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
 
 /**
- * BR-REQ-053-01 (§NNN, the second review of 2026-09-29) — three sentences of the counsel-reviewed
+ * BR-REQ-053-01 (§556, the second review of 2026-09-29) — three sentences of the counsel-reviewed
  * templates, and nothing else: the trail shoes as grip, «de preferat pantofi de trail»; the organiser's
  * general safety instructions in place of «indicațiile organizatorului și recomandările
  * autorităților»; and the retention sentence that keeps a copy for as long as a right needs it, and
@@ -28,7 +28,7 @@ const AFTER = {
   en: "A copy may be kept after that, for as long as needed to establish, exercise or defend rights, including with regard to the general three-year limitation period set by art. 2517 of the Romanian Civil Code.",
 };
 
-describe("the second review's three sentences (§NNN)", () => {
+describe("the second review's three sentences (§556)", () => {
   it("asks for grip on a trail, trail shoes preferred — the outcome, not a shoe category", () => {
     for (const body of TRAIL_TEXTS.ro) {
       expect(text(body)).toContain("încălțăminte adecvată terenului, cu aderență corespunzătoare (de preferat pantofi de trail)");

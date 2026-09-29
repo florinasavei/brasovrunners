@@ -47,7 +47,7 @@ export async function groupRunMergeValues<T extends Record<string, unknown>>(
  * The run's blanks for one signature (§523): what the blanks said at the signing (`signed_facts`)
  * over the event as it is — a date moved or renamed since never changes what a signed declaration
  * says (§57). A row from before §523 kept none, and reads the event as it is. The PDF's and the
- * signing's one reading of them (§NNN), so the fingerprint taken at the press is over the text the
+ * signing's one reading of them (§556), so the fingerprint taken at the press is over the text the
  * PDF prints.
  */
 export async function groupRunSignedFacts<T extends Record<string, unknown>>(
@@ -87,7 +87,7 @@ export function groupRunSignedValues(
 }
 
 /**
- * The fingerprint of a group-run declaration as it is signed (§NNN): the version's text in the
+ * The fingerprint of a group-run declaration as it is signed (§556): the version's text in the
  * signer's language, filled as their own PDF fills it — the facts the row will keep, the document as
  * typed, the moment of signing — hashed before the row is written, in the same transaction.
  */

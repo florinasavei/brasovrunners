@@ -2706,7 +2706,7 @@ export async function signDeclaration<T extends Record<string, unknown>>(
       minorTypedName: signedByMinorToo ? (parsed.data.minorTypedName ?? null) : null,
       minorIdDocument,
       acceptedAt: now,
-      // The proof of signing (§NNN): the exact text this signer's PDF prints, hashed in this transaction.
+      // The proof of signing (§556): the exact text this signer's PDF prints, hashed in this transaction.
       textHash: await acceptanceTextHash(tx, {
         eventId: current.eventId,
         document,
@@ -2861,7 +2861,7 @@ async function acceptDeclarationOnPaper<T extends Record<string, unknown>>(
     acceptedAt: now,
     method: "PAPER",
     attestedByStaffUserId: actor.id,
-    // The text the paper's record prints (§NNN): the documents stay on the paper, so their blanks are dotted.
+    // The text the paper's record prints (§556): the documents stay on the paper, so their blanks are dotted.
     textHash: await acceptanceTextHash(tx, {
       eventId: current.eventId,
       document,

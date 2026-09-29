@@ -584,7 +584,7 @@ export async function deleteRegistrationAction(_previous: FormOutcome | null, fo
 }
 
 /**
- * «Păstrează: reclamație / litigiu în curs» on one signed declaration, or its release (§NNN): the
+ * «Păstrează: reclamație / litigiu în curs» on one signed declaration, or its release (§556): the
  * Administrator's, with a reason. The coarse gate here and the service's own, which is the one that
  * holds (BR-REQ-060-01); a reason left empty comes back in its box (§315). `hold` is the form's own
  * hidden choice — the service decides what it means for this row, and a release of a row not held

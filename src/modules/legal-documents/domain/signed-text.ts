@@ -4,7 +4,7 @@ import { plainInline } from "./inline";
 import { dropsParagraph, mergeTextSegments, type MergeValues } from "./merge-fields";
 
 /**
- * The exact text a person signed, and its fingerprint (§NNN, amending §85 and §499; the second
+ * The exact text a person signed, and its fingerprint (§556, amending §85 and §499; the second
  * review of 2026-09-29: «the paragraph on the electronic signature is good only if the platform
  * keeps what it says: name + email + timestamp + the declaration's version + the exact text's hash
  * + the acceptance»).

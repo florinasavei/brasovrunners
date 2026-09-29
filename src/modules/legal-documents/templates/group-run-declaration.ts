@@ -37,12 +37,12 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  * withdrawal it is used for no later run, and a copy may be kept only as long as establishing,
  * exercising or defending a right needs it — with the general three-year limitation period in view
  * (art. 2517 Codul civil) — and, while a complaint, a dispute or proceedings are under way, until they
- * are finally settled (§NNN, the second review of 2026-09-29: the hold an Administrator sets on the
+ * are finally settled (§556, the second review of 2026-09-29: the hold an Administrator sets on the
  * signature, `retention_hold`, is what that sentence promises). «Three years from the signing» was
  * untrue of a declaration still in force: a runner who signed in 2026 and still comes in 2030 is
  * still covered by it.
  *
- * **The second review (§NNN, 2026-09-29), three sentences.** The shoes name the safety outcome —
+ * **The second review (§556, 2026-09-29), three sentences.** The shoes name the safety outcome —
  * «adecvată terenului, cu aderență corespunzătoare (de preferat pantofi de trail)» — not a shoe
  * category; the animals clause asks for «indicațiile generale de siguranță comunicate de organizator»,
  * never «recomandările autorităților», as a run with no individual supervision and no mountain guide

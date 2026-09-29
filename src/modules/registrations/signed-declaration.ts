@@ -74,7 +74,7 @@ export type SignedDeclaration = {
   attestedByName: string | null;
   version: number;
   contentSha256: string;
-  /** The SHA-256 of the exact text signed (§NNN); null on a row from before it. */
+  /** The SHA-256 of the exact text signed (§556); null on a row from before it. */
   textHash: string | null;
   /** The day the signed version took effect (§499), for the PDF's version line. */
   effectiveAt: Date;
@@ -234,7 +234,7 @@ export async function signedDeclarationEntry<T extends Record<string, unknown>>(
 
 /**
  * The blanks of a signed race declaration, as its PDF fills them (§95, §108, §330) — and, at the
- * signing, as the fingerprint of the signed text is taken over them (§NNN): the event's facts, the
+ * signing, as the fingerprint of the signed text is taken over them (§556): the event's facts, the
  * runner and who declares, the identity documents as the caller passes them (the club's copy masks
  * them first, §320; the fingerprint takes them as the signer's own copy prints them), and the moment
  * of signing inside its sentence, in the event's zone.
@@ -254,7 +254,7 @@ export function signedDeclarationValues(
 }
 
 /**
- * The fingerprint of a race declaration as it is signed (§NNN), taken in the transaction that writes
+ * The fingerprint of a race declaration as it is signed (§556), taken in the transaction that writes
  * the acceptance: the version's text in the registration's language, filled as the signer's own PDF
  * fills it — the event's facts read now, the documents as they will be stored, the moment of signing.
  * Undefined only when the event is gone, which the signing's own lock has already ruled out.
@@ -304,7 +304,7 @@ function signedEntry(
     version: signed.version,
     contentSha256: signed.contentSha256,
     effectiveAt: signed.effectiveAt,
-    // The row's own fingerprint of what was signed (§NNN), never one computed now.
+    // The row's own fingerprint of what was signed (§556), never one computed now.
     textHash: signed.textHash,
     signature: {
       typedName: signed.typedName,

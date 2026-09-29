@@ -44,7 +44,7 @@ const WORDS: Record<Locale, Omit<DeclarationLabels, "generatedOn" | "page" | "si
     attesterRemoved: "un membru al echipei (cont șters)",
     // The event's bundle, while it carries whole identity documents (§418; privacy notice §7).
     idDocumentsNotice: "Conține seria și numărul actelor de identitate — ștergeți fișierul în cel mult șapte zile de la eveniment.",
-    // The proof of signing (§NNN): the version, the instant to the second on the club's clock, the signed text's hash.
+    // The proof of signing (§556): the version, the instant to the second on the club's clock, the signed text's hash.
     proofLine: "Versiunea {version} · Semnat la {when} (ora României)",
     proofHash: " · Amprenta documentului (SHA-256): {hash}",
   },
@@ -99,7 +99,7 @@ export function declarationWords(locale: Locale, now: Date): DeclarationLabels {
     signedOnPaper: (who, when) => words.signedOnPaper.replace("{who}", who).replace("{when}", when),
     attesterRemoved: words.attesterRemoved,
     idDocumentsNotice: words.idDocumentsNotice,
-    // A row from before the hash prints the line without its hash part (§NNN), never a made-up one.
+    // A row from before the hash prints the line without its hash part (§556), never a made-up one.
     proofLine: (version, when, hash) =>
       words.proofLine.replace("{version}", String(version)).replace("{when}", when) + (hash ? words.proofHash.replace("{hash}", hash) : ""),
   };

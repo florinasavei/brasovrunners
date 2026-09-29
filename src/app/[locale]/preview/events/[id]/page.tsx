@@ -242,7 +242,7 @@ export default async function PreviewEventPage({ params }: Props) {
       {/* The minimum age after the rules, as the public page's «Condiții de participare» says it —
           the same component and the same rule (`publicAgeRule`), so the preview says what the page says. */}
       <EventAgeRule event={preview} />
-      {/* A group run's safety rules (§NNN), as the public page says them under the age. */}
+      {/* A group run's safety rules (§556), as the public page says them under the age. */}
       <GroupRunSafetyRules event={preview} />
 
       {/* The address is the second line of "Unde" in the facts above (§356), as on the public page. */}

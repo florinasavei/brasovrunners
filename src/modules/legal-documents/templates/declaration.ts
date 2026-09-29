@@ -37,7 +37,7 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  *    Every sentence that says the organiser does not answer for something carries "în limitele
  *    permise de lege" / "to the extent the law allows".
  * 4. **Wild animals in general words** (the trail only), the owner's own sentence: keep the distance,
- *    neither provoke nor feed, follow the organiser's general safety instructions (§NNN, the second
+ *    neither provoke nor feed, follow the organiser's general safety instructions (§556, the second
  *    review of 2026-09-29, which also asked the trail shoes as grip «de preferat pantofi de trail» and
  *    the dispute sentence after the three years), 112 in an emergency.
  * 5. **Substances**, the owner's sentence: alcohol, drugs "or other substances that impair my ability

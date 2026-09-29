@@ -262,7 +262,7 @@ export function durationShort(totalMinutes: number): string {
 }
 
 /**
- * The moment a declaration was signed, to the second, in the club's zone (§NNN, the proof line of a
+ * The moment a declaration was signed, to the second, in the club's zone (§556, the proof line of a
  * signed PDF): "24.09.2026, 18:05:12". Digits only, day first, 24-hour — the same in both languages,
  * which say the zone in words beside it («ora României» / "Romania time"). Built from the parts, so
  * no engine's punctuation for a locale changes a line a signer may compare with another copy.

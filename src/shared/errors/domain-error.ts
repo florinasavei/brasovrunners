@@ -15,7 +15,7 @@ export type DomainErrorCode =
   | "NOT_FOUND"
   | "VALIDATION_ERROR"
   | "CONFLICT"
-  // An erase refused because a declaration is held for a complaint or a dispute (§NNN): its own
+  // An erase refused because a declaration is held for a complaint or a dispute (§556): its own
   // code, so every form that shows `Admin.errors` says so rather than "somebody else saved".
   | "DECLARATION_HELD";
 

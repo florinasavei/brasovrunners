@@ -234,7 +234,7 @@ export async function signGroupRunDeclaration<T extends Record<string, unknown>>
     const signedFacts = facts ? factsToKeep(facts.values) : null;
     const storedDocument = needsDocument ? idDocument : null;
     const row = await insertGroupRunDeclaration(txDb, {
-      // The proof of signing (§NNN): the exact text this signer's PDF prints, hashed before the row is written.
+      // The proof of signing (§556): the exact text this signer's PDF prints, hashed before the row is written.
       textHash: await groupRunTextHash(txDb, {
         eventId: event.id,
         document,
@@ -366,7 +366,7 @@ export async function eraseGroupRunDeclarations<T extends Record<string, unknown
 }
 
 /**
- * «Păstrează: reclamație / litigiu în curs» on one group-run declaration (§NNN), or its release: an
+ * «Păstrează: reclamație / litigiu în curs» on one group-run declaration (§556), or its release: an
  * Administrator's, with a reason, the audit row in the same transaction — who, why, the event and the
  * declaration's id, never who had signed. While it is set no erase takes the row and no delete of the
  * run's last date cascades it away (`refuseHeldGroupRunDeclarationsOfEvent`). The retention sweep never
@@ -391,7 +391,7 @@ export async function setGroupRunDeclarationHold<T extends Record<string, unknow
       .from(groupRunDeclarations)
       .where(and(eq(groupRunDeclarations.id, input.id), inArray(groupRunDeclarations.eventId, dates.length > 0 ? dates : [input.eventId])))
       .limit(1)
-      // Locked, as `eraseSignature` locks it: a hold and an erase at once run one after the other (§NNN).
+      // Locked, as `eraseSignature` locks it: a hold and an erase at once run one after the other (§556).
       .for("update");
     if (!row) throw new DomainError("NOT_FOUND", "no such declaration");
     if (!input.hold && !row.held) return { eventId: row.eventId };
@@ -436,7 +436,7 @@ async function eraseSignature<T extends Record<string, unknown>>(
   reason: string,
   now: Date,
 ): Promise<void> {
-  // Kept for a complaint or a dispute (§NNN): no erase — the signer's request included — until an
+  // Kept for a complaint or a dispute (§556): no erase — the signer's request included — until an
   // Administrator clears the hold. The batch refuses whole, as it does for a set that changed. The
   // row is locked until the delete commits, so a hold pressed meanwhile waits and then finds nothing.
   const [locked] = await tx

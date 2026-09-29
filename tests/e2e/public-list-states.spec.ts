@@ -339,7 +339,7 @@ test.describe("BR-REQ-039-01 the public list's states, behind the privacy notice
         for (const never of ["Ascuns", "Retras Anulat", "Adresa Nedovedita"]) await expect(ro.list).not.toContainText(never);
       });
 
-      await test.step("with the marker: a legend says what each word means, and each word says it behind a «?» (§NNN)", async () => {
+      await test.step("with the marker: a legend says what each word means, and each word says it behind a «?» (§556)", async () => {
         const ro = await readList(page, `/ro/evenimente/${event.slug}-ro`, tag);
         const legend = ro.list.getByTestId("start-list-legend");
         await expect(legend).toContainText("Ce înseamnă stadiile de pe listă");
@@ -486,7 +486,7 @@ test.describe("BR-REQ-039-01 the public list's states, behind the privacy notice
           expect.stringContaining("Participant (nume ascuns)"),
         ]);
         await expect(off.list).not.toContainText("Pe lista de așteptare");
-        // No state words, so nothing to explain (§NNN).
+        // No state words, so nothing to explain (§556).
         await expect(off.list.getByTestId("start-list-legend")).toHaveCount(0);
         await expect(off.list.getByTestId("start-list-state-help")).toHaveCount(0);
         for (const never of ["Carmen", "Florin", "Elena", "Retras", "Adresa"]) await expect(off.list).not.toContainText(never);

@@ -307,7 +307,7 @@ test.describe.serial("§393 a group run's optional self-declaration", () => {
         return Boolean(notice && declaration && notice.compareDocumentPosition(declaration) & Node.DOCUMENT_POSITION_FOLLOWING);
       }),
     ).toBe(true);
-    // The run's safety rules (§NNN) come before the optional declaration, for everybody who reads the fold.
+    // The run's safety rules (§556) come before the optional declaration, for everybody who reads the fold.
     expect(
       await conditions.evaluate((fold) => {
         const rules = fold.querySelector("[data-testid='group-run-safety-rules']");
@@ -416,12 +416,12 @@ test.describe.serial("§393 a group run's optional self-declaration", () => {
     expect(pdf.status()).toBe(200);
     expect(pdf.headers()["content-type"]).toContain("application/pdf");
 
-    // The proof of signing (§NNN): the signed text's fingerprint, twelve characters, the whole in its name.
+    // The proof of signing (§556): the signed text's fingerprint, twelve characters, the whole in its name.
     const hash = rows.first().getByTestId("declaration-text-hash");
     await expect(hash).toHaveText(/^Amprenta: [0-9a-f]{12}…$/);
     await expect(hash).toHaveAttribute("aria-label", /^Amprenta: [0-9a-f]{64}$/);
 
-    // «Păstrează: reclamație / litigiu în curs» (§NNN): set, which the erase then meets as a refusal, and cleared.
+    // «Păstrează: reclamație / litigiu în curs» (§556): set, which the erase then meets as a refusal, and cleared.
     const hold = rows.first().getByTestId("declaration-hold-form");
     await hold.locator("summary").click();
     await hold.getByRole("textbox", { name: "Motivul", exact: true }).fill("Reclamație deschisă");

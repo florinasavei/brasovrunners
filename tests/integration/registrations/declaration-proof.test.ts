@@ -21,7 +21,7 @@ import { signingInput } from "../../helpers/declaration-signing";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-033-02 (§NNN, amending §85 and §499; the second review of 2026-09-29) — the proof of signing
+ * BR-REQ-033-02 (§556, amending §85 and §499; the second review of 2026-09-29) — the proof of signing
  * on a race declaration: the row keeps the SHA-256 of the exact text signed, computed in the signing's
  * transaction from the same fill-ins the PDF prints; the PDF's proof line prints the version, the
  * instant and that hash from the row, and the club's archive copy prints the same line. And the hold:
@@ -136,7 +136,7 @@ async function signed() {
   return { event, registrationId: row.id, acceptance };
 }
 
-describe("the proof of signing on a race declaration (§NNN)", () => {
+describe("the proof of signing on a race declaration (§556)", () => {
   it("keeps the SHA-256 of the exact text signed — the text the signer's PDF prints — on the row", async () => {
     const { event, registrationId, acceptance } = await signed();
     expect(acceptance.textHash).toMatch(/^[0-9a-f]{64}$/);
@@ -190,7 +190,7 @@ describe("the proof of signing on a race declaration (§NNN)", () => {
   });
 });
 
-describe("«Păstrează: reclamație / litigiu în curs» on a race declaration (§NNN)", () => {
+describe("«Păstrează: reclamație / litigiu în curs» on a race declaration (§556)", () => {
   it("keeps a held registration past the three-year sweep, and lets the sweep take it once cleared", async () => {
     const { registrationId, acceptance } = await signed();
     const administrator = await staff("ADMIN");
