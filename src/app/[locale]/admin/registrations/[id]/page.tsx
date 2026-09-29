@@ -375,6 +375,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                 ? [emergency.emergencyContactName, emergency.emergencyContactPhone].filter(Boolean).join(" · ")
                 : tr("registrations.emergency.none")}
             </Typography>
+            {/* The health line only for an event that asks the note (§NNN, «Informații medicale»). */}
+            {emergency.eventAsksHealthNote && (
             <Typography variant="body2" component="div">
               {tr("registrations.emergency.health")}:{" "}
               {emergency.healthNotes ? (
@@ -392,6 +394,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                 tr("registrations.emergency.healthNone")
               )}
             </Typography>
+            )}
             <Typography variant="caption" color="text.secondary">
               {tr("registrations.emergency.viewed")}
             </Typography>

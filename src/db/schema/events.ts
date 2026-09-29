@@ -597,6 +597,16 @@ export const events = pgTable(
      */
     kitShirt: boolean("kit_shirt").notNull().default(false),
 
+    /**
+     * «Condiții de participare» → «Informații medicale» (§NNN; the owner, 2026-09-29: «trebuie să am
+     * o bifă și pentru acele informații medicale, pentru că nu știu ce să fac cu ele»): the event asks
+     * the optional health note (BR-REQ-031-05), GDPR art. 9 data the club collects only when it
+     * decides to. False by default — every event before this column stops asking — and a note posted
+     * for an event that does not ask is stored as null under the lock. A series carries it by scope
+     * and a duplicate keeps it, as `kit_shirt` (§554).
+     */
+    askHealthNote: boolean("ask_health_note").notNull().default(false),
+
     // The EVENT_DECLARATION document version an internal registration must accept.
     declarationDocumentId: uuid("declaration_document_id").references(() => legalDocuments.id),
 

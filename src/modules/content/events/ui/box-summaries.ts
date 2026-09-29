@@ -76,6 +76,8 @@ export type SummaryWords = {
   confirmation: { sentence: string; atStart: string; off: string };
   /** «Kit de participare»'s closed line (§554): "Tricou: da" / "Tricou: nu". */
   kit: { shirtYes: string; shirtNo: string };
+  /** «Condiții de participare»'s closed line (§NNN): "Informații medicale: da" / "Informații medicale: nu". */
+  health: { asked: string; notAsked: string };
   bibs: { from: string; clubColour: string; allocated: string; toPrint: string; spares: string };
   bibDesign: { parts: string; footer: string };
   startList: { hidden: string; shown: string };
@@ -458,6 +460,11 @@ export function confirmationSummary(words: SummaryWords, opens: number, due: num
 /** «Kit de participare» (§554): whether the event gives a T-shirt — the one thing the card holds for now. */
 export function kitSummary(words: SummaryWords, kitShirt: boolean): string {
   return kitShirt ? words.kit.shirtYes : words.kit.shirtNo;
+}
+
+/** «Condiții de participare» (§NNN): whether the form asks the health note — the card's one tick for now. */
+export function healthNoteSummary(words: SummaryWords, askHealthNote: boolean): string {
+  return askHealthNote ? words.health.asked : words.health.notAsked;
 }
 
 /** Sub-card 8.4: `De la 100 · verde · rezervă 900–949 · 42 alocate, 2 de tipărit`. */

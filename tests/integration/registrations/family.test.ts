@@ -81,7 +81,8 @@ async function approve() {
 async function createEvent(capacity: number | null = 20): Promise<EventInput> {
   const [event] = await db
     .insert(events)
-    .values({ type: "RACE", startsAt: new Date("2026-10-11T07:00:00.000Z"), registrationMode: "INTERNAL", capacity, locationName: "Parcul Tractorul", editorialStatus: "PUBLISHED", publishedAt: NOW })
+    // It asks the health note (§NNN), so the kept forms' consents below have a note to keep or drop.
+    .values({ type: "RACE", startsAt: new Date("2026-10-11T07:00:00.000Z"), registrationMode: "INTERNAL", capacity, locationName: "Parcul Tractorul", editorialStatus: "PUBLISHED", publishedAt: NOW, askHealthNote: true })
     .returning();
   await db.insert(eventTranslations).values([
     { eventId: event.id, locale: "ro", title: "Crosul familiei", slug: "crosul-familiei" },

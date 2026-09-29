@@ -17,6 +17,7 @@ import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
 import { alias } from "drizzle-orm/pg-core";
 import { familyEmailQueued, familyReservationHolds, offerAwaitingItsFirstEmail } from "./repository";
+import { healthNoteShown } from "./domain/health-note";
 
 /**
  * Read queries for the Administrator-only backoffice (AGENTS.md §15.8, §15.10; BR-REQ-060-01,
@@ -675,10 +676,22 @@ export type EmergencyDetails = {
   phone: string | null;
   emergencyContactName: string | null;
   emergencyContactPhone: string | null;
+  /** The note, only when the event asks it (§NNN): null for any other event, whatever the row holds. */
   healthNotes: string | null;
   /** When the health consent was given — shown beside the note, so it reads as consented. */
   healthConsentAt: Date | null;
+  /** Whether the event asks the health note (§NNN, «Informații medicale»): the page shows the line only then. */
+  eventAsksHealthNote: boolean;
 };
+
+/**
+ * The health note as a screen may show it (§NNN): only for an event that asks it. A note stored
+ * before the tick came off stays on the row until the seven-day purge, and no screen reads it.
+ */
+function gatedHealth<R extends { healthNotes: string | null; healthConsentAt: Date | null; eventAsksHealthNote: boolean }>(row: R): R {
+  const healthNotes = healthNoteShown(row.eventAsksHealthNote, row.healthNotes);
+  return { ...row, healthNotes, healthConsentAt: healthNotes ? row.healthConsentAt : null };
+}
 
 export async function findEmergencyDetails<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -691,11 +704,13 @@ export async function findEmergencyDetails<T extends Record<string, unknown>>(
       emergencyContactPhone: registrations.emergencyContactPhone,
       healthNotes: registrations.healthNotes,
       healthConsentAt: registrations.healthConsentAt,
+      eventAsksHealthNote: events.askHealthNote,
     })
     .from(registrations)
+    .innerJoin(events, eq(events.id, registrations.eventId))
     .where(eq(registrations.id, registrationId))
     .limit(1);
-  return row;
+  return row ? gatedHealth(row) : undefined;
 }
 
 /**
@@ -718,7 +733,7 @@ export async function listEmergencySheet<T extends Record<string, unknown>>(
   db: Database<T>,
   eventId: string,
 ): Promise<EmergencySheetRow[]> {
-  return db
+  const rows = await db
     .select({
       id: registrations.id,
       registeredName: registrations.registeredName,
@@ -729,14 +744,17 @@ export async function listEmergencySheet<T extends Record<string, unknown>>(
       emergencyContactPhone: registrations.emergencyContactPhone,
       healthNotes: registrations.healthNotes,
       healthConsentAt: registrations.healthConsentAt,
+      eventAsksHealthNote: events.askHealthNote,
     })
     .from(registrations)
+    .innerJoin(events, eq(events.id, registrations.eventId))
     .where(and(eq(registrations.eventId, eventId), eq(registrations.status, "CONFIRMED"), eq(registrations.kind, "REAL")))
     .orderBy(
       sql`${registrations.bibNumber} asc nulls last`,
       asc(registrations.registeredName),
       asc(registrations.id),
     );
+  return rows.map(gatedHealth);
 }
 
 /**

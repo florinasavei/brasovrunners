@@ -40,7 +40,8 @@ describe("BR-REQ-031-05 the emergency details, for the people they are for", () 
     await resetTables(db);
     const [event] = await db
       .insert(events)
-      .values({ type: "RACE", startsAt: RACE_DAY, registrationMode: "INTERNAL", capacity: 10 })
+      // The event asks the health note (§NNN): these cases read it; the ones below switch it off.
+      .values({ type: "RACE", startsAt: RACE_DAY, registrationMode: "INTERNAL", capacity: 10, askHealthNote: true })
       .returning();
     eventId = event.id;
   });
@@ -126,6 +127,17 @@ describe("BR-REQ-031-05 the emergency details, for the people they are for", () 
       expect(JSON.stringify(trail)).not.toMatch(/penicilin|\+407/);
     });
 
+    it("shows no health note for an event that does not ask it, and says the event does not (§NNN)", async () => {
+      const reader = await staff("MODERATOR");
+      const id = await seed({ email: "ana@example.ro", name: "Ana Pop" });
+      await db.update(events).set({ askHealthNote: false }).where(eq(events.id, eventId));
+
+      const details = await readEmergencyDetails(db, reader, id, NOW);
+
+      expect(details).toMatchObject({ healthNotes: null, healthConsentAt: null, eventAsksHealthNote: false, emergencyContactName: "Ion Popescu" });
+      expect(JSON.stringify(details)).not.toMatch(/penicilin/);
+    });
+
     it.each(["CONTRIBUTOR", "COPYWRITER", "DEV"] as const)("is refused to a %s, who learns nothing and leaves no read", async (role) => {
       const reader = await staff(role);
       const id = await seed({ email: "ana@example.ro", name: "Ana Pop" });
@@ -162,8 +174,9 @@ describe("BR-REQ-031-05 the emergency details, for the people they are for", () 
       await seed({ email: "c@example.ro", name: "Cancelled", status: "CANCELLED" });
       await seed({ email: "t@example.ro", name: "Synthetic", kind: "TEST", bibNumber: 1 });
 
-      const rows = await readEmergencySheet(db, organizer, eventId, NOW);
+      const { rows, asksHealthNote } = await readEmergencySheet(db, organizer, eventId, NOW);
 
+      expect(asksHealthNote).toBe(true);
       expect(rows.map((row) => [row.bibNumber, row.registeredName, row.healthNotes])).toEqual([
         [3, "Ana", "alergie la penicilină"],
         [12, "Bogdan", null],
@@ -188,6 +201,23 @@ describe("BR-REQ-031-05 the emergency details, for the people they are for", () 
         (error: unknown) => isDomainError(error) && error.code === "FORBIDDEN",
       );
       expect(await db.select().from(auditLogs)).toHaveLength(0);
+    });
+
+    it("prints no health note for an event that does not ask it, even one stored before the tick came off (§NNN)", async () => {
+      const organizer = await staff("MODERATOR");
+      await seed({ email: "a@example.ro", name: "Ana", bibNumber: 3 });
+      await db.update(events).set({ askHealthNote: false }).where(eq(events.id, eventId));
+
+      const { rows, asksHealthNote } = await readEmergencySheet(db, organizer, eventId, NOW);
+
+      expect(asksHealthNote).toBe(false);
+      expect(rows.map((row) => [row.registeredName, row.healthNotes, row.healthConsentAt])).toEqual([["Ana", null, null]]);
+      // The phone and the emergency contact are not part of the switch: they stay as they are.
+      expect(rows[0]).toMatchObject({ phone: "+40711111111", emergencyContactName: "Ion Popescu", emergencyContactPhone: "+40722222222" });
+      expect(JSON.stringify(rows)).not.toMatch(/penicilin/);
+      // The row itself keeps the note until the seven-day purge, as it always did.
+      const [stored] = await db.select({ healthNotes: registrations.healthNotes }).from(registrations);
+      expect(stored.healthNotes).toBe("alergie la penicilină");
     });
 
     it("answers an unknown event with NOT_FOUND and records nothing", async () => {

@@ -1189,6 +1189,8 @@
       "registrationOpensSoonHelp": "Ticked, the page says “Registration opens soon” and the form stays closed. Untick it to open: the people who asked to be told get the email.",
       "kitShirt": "T-shirt",
       "kitShirtHelp": "When ticked, the form asks for the T-shirt size.",
+      "askHealthNote": "Medical information",
+      "askHealthNoteHelp": "When ticked, the form asks for medical information (conditions, allergies, medication); it is deleted {days} after the event.",
       "registrationClosesAt": "Registration closes",
       "registrationWindowHelp": "Leave the opening empty and registration opens when the event is published; leave the closing empty and it closes when the event starts.",
       "declarationDocument": "Declaration a participant signs",
@@ -1574,6 +1576,9 @@
           "earlierClose": "An earlier close stops only new registrations."
         },
         "conditions": {
+          "title": "Participation conditions",
+          "onlyHere": "Asked only when registration is here, on the site.",
+          "onlyRegisteringTypes": "A group run has no registration form, so it asks nothing.",
           "legalLink": "Legal documents — where a new version of the declaration is approved",
           "declarationUnderRules": "The minimum age and the declaration a participant signs are chosen under “Programme, rules and declaration”: the age in “Rules”, the declaration in “Self-declaration”."
         },
@@ -1730,6 +1735,10 @@
           "kit": {
             "shirtYes": "T-shirt: yes",
             "shirtNo": "T-shirt: no"
+          },
+          "health": {
+            "asked": "Medical information: yes",
+            "notAsked": "Medical information: no"
           },
           "bibs": {
             "from": "From {number}",
@@ -3647,6 +3656,7 @@
       "backToEvent": "Back to the event",
       "print": "Print",
       "help": "Every confirmed participant, checked in or not. The health note deletes itself seven days after the event; after that the column is empty. Opening this page is recorded in the audit trail.",
+      "helpNoHealth": "Every confirmed participant, checked in or not. Opening this page is recorded in the audit trail.",
       "columnBib": "No.",
       "columnName": "Name",
       "columnPhone": "Phone",

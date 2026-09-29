@@ -46,6 +46,8 @@ async function seedRunner(tag: string): Promise<Seeded> {
       [FEATURED.slug],
     );
     const eventId = eventRows[0].id;
+    // The event asks the health note (§NNN), or no screen would show the one written below.
+    await client.query("UPDATE events SET ask_health_note = true WHERE id = $1", [eventId]);
     const email = `gdpr-${tag}@test.invalid`;
     const name = `Gdpr ${tag}`;
     const { rows: participantRows } = await client.query<{ id: string }>(
