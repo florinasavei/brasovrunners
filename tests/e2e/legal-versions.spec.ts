@@ -391,3 +391,121 @@ test.describe("legal documents: one card per text, filtered, and the templates' 
     await expect(page.locator('[name="roTitle"]')).not.toHaveValue("");
   });
 });
+
+/**
+ * §567 — «Șterge» on a version somebody relied on (the owner, 2026-09-29: «aș vrea să pot șterge
+ * (cu dublă confirmare) chiar și documentele care sunt deja semnate»): two steps on the version's
+ * own screen — the consequences with the counts in words and a reason, then the number typed by
+ * hand — and the version moves into the closed «Versiuni șterse» fold, its text still readable.
+ *
+ * The version is made here, by SQL, so no sample the other specs read is touched: an approved
+ * asphalt group-run declaration dated in 2099 — never in force during the run — with one event
+ * choosing it, the dependant that stops withdrawal. Both rows are removed afterwards (the audit
+ * row stays; it has no foreign key). Desktop only: one database, and the phone draws the same rows.
+ */
+async function withDatabase<T>(work: (client: pg.Client) => Promise<T>): Promise<T> {
+  if (!process.env.DATABASE_URL && existsSync(".env.local")) process.loadEnvFile(".env.local");
+  const client = new pg.Client({ connectionString: process.env.DATABASE_URL });
+  await client.connect();
+  try {
+    return await work(client);
+  } finally {
+    await client.end();
+  }
+}
+
+test.describe("legal documents: «Șterge» on a version somebody relied on", () => {
+  test("asks the reason, then the number, and keeps the text in «Versiuni șterse»", async ({ page }) => {
+    test.skip(test.info().project.name !== "desktop", "one database: the version is made and deleted once");
+    test.setTimeout(90_000);
+
+    const made = await withDatabase(async (client) => {
+      const next = await client.query<{ version: number }>(
+        `SELECT greatest(
+            coalesce((SELECT max(version) FROM legal_documents WHERE key = 'GROUP_RUN_DECLARATION_ASPHALT'), 0),
+            coalesce((SELECT highest_retired_version FROM legal_document_numbering WHERE key = 'GROUP_RUN_DECLARATION_ASPHALT'), 0)
+          ) + 1 AS version`,
+      );
+      const version = next.rows[0].version;
+      const document = await client.query<{ id: string }>(
+        `INSERT INTO legal_documents (key, version, effective_at, is_approved, content_sha256)
+         VALUES ('GROUP_RUN_DECLARATION_ASPHALT', $1, '2099-01-01T00:00:00Z', true, repeat('a', 64)) RETURNING id`,
+        [version],
+      );
+      const id = document.rows[0].id;
+      await client.query(
+        `INSERT INTO legal_document_translations (legal_document_id, locale, title, body_json) VALUES
+           ($1, 'ro', 'Declarație e2e', '{"sections":[{"paragraphs":["Text păstrat pentru cine l-a semnat."]}]}'),
+           ($1, 'en', 'Declaration e2e', '{"sections":[{"paragraphs":["Text kept for whoever signed it."]}]}')`,
+        [id],
+      );
+      const event = await client.query<{ id: string }>(
+        `INSERT INTO events (type, starts_at, registration_mode, declaration_document_id)
+         VALUES ('RACE', '2099-01-02T07:00:00Z', 'INTERNAL', $1) RETURNING id`,
+        [id],
+      );
+      return { id, version, eventId: event.rows[0].id };
+    });
+
+    try {
+      await signIn(page, "Dev Administrator");
+      await page.goto("/ro/admin/legal?kind=GROUP_RUN_DECLARATION_ASPHALT&state=superseded");
+      await hydrated(page);
+      const main = page.locator("#main");
+      const versions = main.getByTestId("legal-versions-GROUP_RUN_DECLARATION_ASPHALT");
+      // The counts in words (§341's rule): «1 eveniment», never «1 evenimente».
+      await expect(versions).toContainText("0 semnături · 1 eveniment · 0 înscrieri");
+      await expect(versions).toContainText("Nu se poate retrage: 0 semnături, 1 eveniment și 0 înscrieri depind de ea.");
+      await versions.getByTestId("legal-retire-link").first().click();
+      await expect(page).toHaveURL(new RegExp(`/admin/legal/${made.id}/delete$`));
+      await hydrated(page);
+
+      // Step one: the consequences and the reason; step two is not shown yet.
+      const stepOne = main.getByTestId("legal-retire-step-one");
+      const stepTwo = main.getByTestId("legal-retire-step-two");
+      await expect(stepOne).toContainText("Pasul 1 din 2: ce se întâmplă");
+      await expect(stepOne).toContainText("0 semnături, 1 eveniment și 0 înscrieri rămân valabile, iar textul rămâne în arhivă.");
+      await expect(stepTwo).toBeHidden();
+      // Too short a reason keeps step one.
+      await stepOne.getByLabel("Motivul").fill("ok");
+      await main.getByTestId("legal-retire-continue").click();
+      await expect(stepTwo).toBeHidden();
+      await stepOne.getByLabel("Motivul").fill("versiune de test pentru e2e");
+      await main.getByTestId("legal-retire-continue").click();
+      await expect(stepTwo).toBeVisible();
+      await expect(stepOne).toBeHidden();
+
+      // Step two: a wrong number is refused, the reason kept, the number asked again.
+      await stepTwo.getByLabel("Numărul versiunii").fill(String(made.version + 1));
+      await stepTwo.getByRole("button", { name: `Șterg versiunea ${made.version}` }).click();
+      await expect(main.getByTestId("form-refusal")).toContainText("Numărul scris nu este al acestei versiuni.");
+      await expect(stepTwo).toBeVisible();
+      await expect(stepTwo.getByLabel("Numărul versiunii")).toHaveValue("");
+      await expect(page.locator('[name="reason"]')).toHaveValue("versiune de test pentru e2e");
+      await stepTwo.getByLabel("Numărul versiunii").fill(String(made.version));
+      await stepTwo.getByRole("button", { name: `Șterg versiunea ${made.version}` }).click();
+
+      // Back on the list: the toast, the row gone from the versions, and the closed fold holding it.
+      await expect(page).toHaveURL(/\/admin\/legal(\?|#|$)/);
+      await expect(page.getByTestId("toast")).toContainText("Versiunea a fost ștearsă din listă; textul rămâne în arhivă.", { timeout: 30_000 });
+      await page.goto("/ro/admin/legal?kind=GROUP_RUN_DECLARATION_ASPHALT");
+      await hydrated(page);
+      const fold = main.getByTestId("legal-deleted-GROUP_RUN_DECLARATION_ASPHALT");
+      await expect(fold).not.toHaveAttribute("open", "");
+      await fold.locator("summary").click();
+      const row = fold.getByTestId("legal-deleted-row").filter({ hasText: `Versiunea ${made.version} ·` });
+      await expect(row).toContainText("Motivul: versiune de test pentru e2e");
+      await expect(row).toContainText("0 semnături · 1 eveniment · 0 înscrieri");
+      // Its text is still there to read, and the page says why nothing offers it any more.
+      await row.getByRole("link", { name: "Citește textul" }).click();
+      await expect(page).toHaveURL(new RegExp(`/admin/legal/${made.id}$`));
+      await expect(main.getByTestId("legal-deleted-notice")).toContainText("Motivul: versiune de test pentru e2e");
+      await expect(main).toContainText("Text păstrat pentru cine l-a semnat.");
+    } finally {
+      await withDatabase(async (client) => {
+        await client.query("DELETE FROM events WHERE id = $1", [made.eventId]);
+        await client.query("DELETE FROM legal_documents WHERE id = $1", [made.id]);
+      });
+    }
+  });
+});

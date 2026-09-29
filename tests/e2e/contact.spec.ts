@@ -64,6 +64,44 @@ test.describe("BR-REQ-070-04 the contact form", () => {
     expect((await inFooter.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(target - 0.5);
   });
 
+  /**
+   * §565 — the page names who is written to: «<legal name> (<site name>) · CIF <CIF>» under the form
+   * (or the address), composed from the environment. The suite's server sets no legal fact (CI) —
+   * a developer's `.env.local` may — so the line is checked when it is drawn and its absence when
+   * it is not; its words are never compared with a value.
+   */
+  test("names the club by its legal name and CIF under the form, when the facts are set", async ({ page }) => {
+    await page.goto("/ro/contact");
+    const main = page.locator("main");
+    const line = main.getByTestId("club-identity-line");
+    if ((await line.count()) === 0) {
+      await expect(main).not.toContainText("· CIF");
+      return;
+    }
+    await expect(line).toBeVisible();
+    await expect(line).toContainText("(");
+    // The page's last line: under the contact form and under the newsletter's box alike.
+    // One snapshot of the layout per try, polled: the form grows as it hydrates (the anti-bot box),
+    // and a line measured before that growth and the form after it would lie. The newsletter's own
+    // forms live in a pop-up (`<dialog>`), so its section is what the line must follow, not they.
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() => {
+            const lineTop = document.querySelector('main [data-testid="club-identity-line"]')!.getBoundingClientRect().top;
+            const above = [
+              ...[...document.querySelectorAll("main form")].filter((form) => !form.closest("dialog, [data-testid='newsletter-section']")),
+              ...document.querySelectorAll('main [data-testid="newsletter-section"]'),
+            ];
+            return lineTop - Math.max(-Infinity, ...above.map((element) => element.getBoundingClientRect().bottom));
+          }),
+        { message: "the line is under every form" },
+      )
+      .toBeGreaterThanOrEqual(0);
+    const box = await line.boundingBox();
+    expect(box!.x + box!.width).toBeLessThanOrEqual(page.viewportSize()!.width);
+  });
+
   test("sends a message and says so, naming where the answer goes", async ({ page }) => {
     await page.goto("/ro/contact");
     const email = `e2e-contact-${test.info().project.name}-${Date.now().toString(36)}@test.invalid`;

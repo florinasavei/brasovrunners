@@ -35,7 +35,7 @@ export default function RoutePills({ pills, trailing }: { pills: Pill[]; trailin
   return (
     <Box sx={{ display: "flex", flexWrap: "wrap", gap: { xs: DENSITY.gapXs, sm: 1 } }}>
       {pills.map((item) => (
-        <GlyphChip key={item.glyph} glyph={item.glyph} label={item.label} tooltip={item.tooltip} srSuffix={item.srSuffix} srLabel={item.srLabel} variant="outlined" sx={PILL_SX} />
+        <GlyphChip key={item.glyph} glyph={item.glyph} label={item.label} tooltip={item.tooltip} tooltipBlock={item.tooltipBlock} srSuffix={item.srSuffix} srLabel={item.srLabel} variant="outlined" sx={PILL_SX} />
       ))}
       {trailing}
     </Box>

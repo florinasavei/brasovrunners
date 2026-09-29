@@ -20,6 +20,7 @@ import {
   createDraftVersion,
   deleteApprovedVersion,
   deleteDraftVersion,
+  deleteReliedOnVersion,
   deleteVersionsInBatch,
   regenerateFromTemplates,
   updateDraftVersion,
@@ -363,6 +364,57 @@ export async function deleteApprovedLegalVersionAction(_previous: FormOutcome | 
   */
   return backTo(getPathname({ locale, href: "/admin/legal" }), {
     saved: "legalVersionErased",
+    phrase: confirmationPhrase(deleted.key, deleted.version),
+  });
+}
+
+/**
+ * «Șterg versiunea N» — a version somebody relied on, retired and hidden with its text kept
+ * (`DECISIONS.md` §567). The two steps' answers — the reason, the typed number — are checked by
+ * `deleteReliedOnVersion`, after the role (here and in the service, BR-REQ-060-01).
+ *
+ * A refusal stays on the screen with the reason kept in its box and the number emptied (the typed
+ * number is the guard, `NEVER_KEPT`-like: it is posted as `typedConfirmation`); the sentences name
+ * which of the two boxes, or which rule, stopped it. On success, the list, where the version now
+ * sits in «Versiuni șterse».
+ */
+export async function deleteReliedOnLegalVersionAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = toLocale(form.get("uiLocale"));
+
+  let deleted: { key: LegalDocumentKey; version: number };
+  try {
+    const actor = await requireStaffCapability(canWriteLegalTexts);
+    deleted = await deleteReliedOnVersion(getDb(), actor, {
+      versionId: text(form, "versionId"),
+      reason: text(form, "reason"),
+      typedNumber: text(form, "typedConfirmation"),
+      now: new Date(),
+    });
+  } catch (error) {
+    const failure = refused(error, form);
+    const named = (field: string) => isDomainError(error) && error.fields.includes(field);
+    // The rule the version met, as its own sentence — a bare CONFLICT reads "somebody else saved".
+    const code = named("typedNumber")
+      ? "LEGAL_NUMBER_MISMATCH"
+      : named("reason")
+        ? "LEGAL_RETIRE_NEEDS_REASON"
+        : named("nothingDepends")
+          ? "LEGAL_NOTHING_DEPENDS"
+          : named("inForce")
+            ? "LEGAL_RETIRE_IN_FORCE"
+            : named("alreadyDeleted")
+              ? "LEGAL_ALREADY_DELETED"
+              : failure.error;
+    return {
+      ...failure,
+      error: code,
+      // The box the number is typed in posts as `typedConfirmation`, so it is never kept (§315).
+      fields: failure.fields.flatMap((field) => (field === "typedNumber" ? ["typedConfirmation"] : field === "reason" ? [field] : [])),
+    };
+  }
+
+  return backTo(getPathname({ locale, href: "/admin/legal" }), {
+    saved: "legalVersionRetired",
     phrase: confirmationPhrase(deleted.key, deleted.version),
   });
 }
