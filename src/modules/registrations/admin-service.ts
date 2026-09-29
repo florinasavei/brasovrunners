@@ -1224,6 +1224,12 @@ export async function readEmergencyDetails<T extends Record<string, unknown>>(
 }
 
 /**
+ * One event's emergency sheet: its rows, and whether the event asks the health note (§NNN) — the
+ * sheet prints the health column only then, and each row's note is null for any other event.
+ */
+export type EmergencySheet = { asksHealthNote: boolean; rows: EmergencySheetRow[] };
+
+/**
  * One event's emergency sheet (§322), under the same gate and with the same audit, once per
  * render — `event.emergency_sheet_viewed`, the event and the row count, never a value or a name.
  */
@@ -1232,9 +1238,9 @@ export async function readEmergencySheet<T extends Record<string, unknown>>(
   actor: Pick<StaffUser, "id" | "role">,
   eventId: string,
   now: Date,
-): Promise<EmergencySheetRow[]> {
+): Promise<EmergencySheet> {
   assertMayRead(actor);
-  const [event] = await db.select({ id: events.id }).from(events).where(eq(events.id, eventId)).limit(1);
+  const [event] = await db.select({ id: events.id, askHealthNote: events.askHealthNote }).from(events).where(eq(events.id, eventId)).limit(1);
   if (!event) throw new DomainError("NOT_FOUND", "no such event");
 
   const rows = await listEmergencySheet(db, event.id);
@@ -1246,7 +1252,7 @@ export async function readEmergencySheet<T extends Record<string, unknown>>(
     metadata: { rowCount: rows.length },
     now,
   });
-  return rows;
+  return { asksHealthNote: event.askHealthNote, rows };
 }
 
 /**

@@ -78,10 +78,11 @@ async function approve() {
   await insertLegalDocumentVersion(db, { key: "EVENT_DECLARATION", version: 1, effectiveAt: new Date("2026-01-01T00:00:00Z"), isApproved: true, contentSha256: computeContentHash(declaration), translations: declaration, now: NOW });
 }
 
-async function createEvent(capacity: number | null = 20): Promise<EventInput> {
+async function createEvent(capacity: number | null = 20, askHealthNote = true): Promise<EventInput> {
   const [event] = await db
     .insert(events)
-    .values({ type: "RACE", startsAt: new Date("2026-10-11T07:00:00.000Z"), registrationMode: "INTERNAL", capacity, locationName: "Parcul Tractorul", editorialStatus: "PUBLISHED", publishedAt: NOW })
+    // It asks the health note (§NNN), so the kept forms' consents below have a note to keep or drop.
+    .values({ type: "RACE", startsAt: new Date("2026-10-11T07:00:00.000Z"), registrationMode: "INTERNAL", capacity, locationName: "Parcul Tractorul", editorialStatus: "PUBLISHED", publishedAt: NOW, askHealthNote })
     .returning();
   await db.insert(eventTranslations).values([
     { eventId: event.id, locale: "ro", title: "Crosul familiei", slug: "crosul-familiei" },
@@ -513,6 +514,18 @@ describe("§421 the kept form and another adult's own consents", () => {
     expect(ioana.guardianName).toBe("Ana Pop");
     // A minor's socials are never kept (§323), on any form.
     expect(ioana.stravaUrl).toBeNull();
+  });
+
+  it("stores no note for a minor on an event that does not ask it, whatever the kept form carried (§NNN, BR-REQ-031-04)", async () => {
+    const event = await createEvent(20, false);
+    await submitRegistration(db, event, submission("Ana"), NOW);
+    const child = { birthDate: "2011-05-10", guardianName: "Ana Pop" };
+    const secret = await offer(event, "Ioana", 5, { ...everything, ...child });
+    expect(await press(secret, at(8), false)).toMatchObject({ ok: true });
+
+    const ioana = (await rowsOf(event.id)).find((row) => row.registeredName === "Ioana Pop")!;
+    expect(ioana).toMatchObject({ healthNotes: null, healthConsentVersion: null, healthConsentAt: null });
+    expect(ioana.guardianName).toBe("Ana Pop");
   });
 });
 

@@ -304,6 +304,8 @@ function eventFieldsFrom(form: FormData) {
     // «Kit de participare» → «Tricou» (§554): a checkbox, read only when the form carried its marker,
     // so a form without the card is "not editing it" rather than "no shirt".
     kitShirt: form.get("event.kitShirt.present") === "1" ? form.get("event.kitShirt") === "on" : undefined,
+    // «Condiții de participare» → «Informații medicale» (§NNN), by the same marker.
+    askHealthNote: form.get("event.askHealthNote.present") === "1" ? form.get("event.askHealthNote") === "on" : undefined,
     bibStartNumber: value("bibStartNumber"),
     bibColour: value("bibColour"),
     /*

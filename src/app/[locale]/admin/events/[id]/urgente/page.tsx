@@ -42,7 +42,8 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
  * heading says to destroy it after the event.
  *
  * The health column empties itself: seven days after the event the sweep clears the notes
- * (`jobs/retention.ts`), and a sheet printed afterwards simply has none.
+ * (`jobs/retention.ts`), and a sheet printed afterwards simply has none. It is printed at all only
+ * for an event that asks the note (§NNN, the editor's «Informații medicale»).
  */
 export default async function EmergencySheetPage({ params }: Props) {
   const { locale, id } = await params;
@@ -55,13 +56,15 @@ export default async function EmergencySheetPage({ params }: Props) {
   if (!isUuid(id)) notFound();
 
   const db = getDb();
-  let rows;
+  let sheet;
   try {
-    rows = await readEmergencySheet(db, actor, id, new Date());
+    sheet = await readEmergencySheet(db, actor, id, new Date());
   } catch (error) {
     if (isDomainError(error) && (error.code === "NOT_FOUND" || error.code === "FORBIDDEN")) notFound();
     throw error;
   }
+  // The health column only for an event that asks the note (§NNN, «Informații medicale»).
+  const { rows, asksHealthNote } = sheet;
   const event = await findEventForBibs(db, id, locale);
   const t = await getTranslations("Admin");
   // The day in words, or «Data se anunță mai târziu» while it is left blank (§545).
@@ -82,7 +85,7 @@ export default async function EmergencySheetPage({ params }: Props) {
         </Typography>
       )}
       <Typography variant="body2" color="text.secondary">
-        {t("emergency.help")}
+        {asksHealthNote ? t("emergency.help") : t("emergency.helpNoHealth")}
       </Typography>
       <Box>
         <PrintButton label={t("emergency.print")} />
@@ -103,7 +106,7 @@ export default async function EmergencySheetPage({ params }: Props) {
                   <TableCell>{t("emergency.columnName")}</TableCell>
                   <TableCell>{t("emergency.columnPhone")}</TableCell>
                   <TableCell>{t("emergency.columnContact")}</TableCell>
-                  <TableCell>{t("emergency.columnHealth")}</TableCell>
+                  {asksHealthNote && <TableCell>{t("emergency.columnHealth")}</TableCell>}
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -127,7 +130,7 @@ export default async function EmergencySheetPage({ params }: Props) {
                         </Typography>
                       )}
                     </TableCell>
-                    <TableCell sx={{ whiteSpace: "pre-wrap" }}>{row.healthNotes ?? ""}</TableCell>
+                    {asksHealthNote && <TableCell sx={{ whiteSpace: "pre-wrap" }}>{row.healthNotes ?? ""}</TableCell>}
                   </TableRow>
                 ))}
               </TableBody>

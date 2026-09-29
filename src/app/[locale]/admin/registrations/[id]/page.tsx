@@ -379,6 +379,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                 ? [emergency.emergencyContactName, emergency.emergencyContactPhone].filter(Boolean).join(" · ")
                 : tr("registrations.emergency.none")}
             </Typography>
+            {/* The health line only for an event that asks the note (§NNN, «Informații medicale»). */}
+            {emergency.eventAsksHealthNote && (
             <Typography variant="body2" component="div">
               {tr("registrations.emergency.health")}:{" "}
               {emergency.healthNotes ? (
@@ -396,6 +398,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                 tr("registrations.emergency.healthNone")
               )}
             </Typography>
+            )}
             <Typography variant="caption" color="text.secondary">
               {tr("registrations.emergency.viewed")}
             </Typography>
@@ -408,7 +411,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         ) : (
           <Stack spacing={0.5} sx={{ alignItems: "flex-start" }}>
             <GlyphButton icon="emergency" href={`${detailPath}?health=1#emergency`} variant="outlined" sx={{ minHeight: 44 }}>
-              {tr("registrations.emergency.show")}
+              {tr(registration.eventAsksHealthNote ? "registrations.emergency.show" : "registrations.emergency.showNoHealth")}
             </GlyphButton>
             <Typography variant="caption" color="text.secondary">
               {tr("registrations.emergency.showHelp")}
