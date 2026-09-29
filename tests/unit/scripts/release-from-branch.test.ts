@@ -86,7 +86,7 @@ describe("§535 yarn docs:land --tree lands the facts a branch carries", () => {
     const today = todayIn();
     const to = `BR-V9.41-${today}`;
     expect(read("CLAUDE.md")).toContain(`**Baseline \`${to}\`**`);
-    expect(read("CLAUDE.md")).toContain(`- **Batch 8 (${today}, \`BR-V9.41\`):** the night pill says «Noapte» (§13).`);
+    expect(read("CLAUDE.md")).not.toContain("Batch 8"); // CLAUDE.md keeps no batch lines
     expect(read("DECISIONS.md")).toContain(`<!-- PROJECT_BASELINE: ${to} -->`);
     expect(read("DECISIONS.md")).toContain(`## 13. The night pill says «Noapte»\n\n**Decision.** A crescent and one word.\n\nBaseline \`${to}\`.`);
     expect(read("DECISIONS.md")).toContain(`Old body.\n\nBaseline \`${from}\`.`); // a shipped section keeps its footer
