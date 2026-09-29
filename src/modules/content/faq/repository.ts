@@ -6,29 +6,22 @@ import { parseRichText, type RichTextDoc } from "@/modules/content/rich-text/dom
 import { faqIntroFor, readFaqPageSettings } from "./page-settings";
 
 /**
- * Reads for «Întrebări frecvente» (§525), public and backoffice.
- *
- * The public read names its columns (BR-REQ-070-01), reads only the questions shown on the site,
- * and gives each the words of the page's own language alone — never the other language's (§28).
- * A stored document this code cannot read (only a hand-made row can hold one) drops the question
- * from the page rather than failing the page.
+ * Reads for «Întrebări frecvente» (§525). The public read names its columns (BR-REQ-070-01),
+ * returns shown questions in the page's language only (§28), and drops a question whose stored
+ * document cannot be read rather than failing the page.
  */
 
 export type PublicFaqItem = {
   id: string;
   question: string;
-  /** «Categorie» in this language, or null for a question under no heading. */
+  /** Null for a question under no heading. */
   category: string | null;
-  /** The answer as a document, for the page's renderer. */
   answer: RichTextDoc;
   /** The answer's words, for the `FAQPage` JSON-LD. */
   answerText: string;
 };
 
-/**
- * What the public page, the header, the footer and the sitemap need: the page's state, the club's
- * introduction in this language (null unless written in both), and its questions.
- */
+/** The page's state, the introduction (null unless written in both languages) and its questions. */
 export type PublicFaqPage = {
   published: boolean;
   intro: RichTextDoc | null;
@@ -62,10 +55,8 @@ function docOrNull(value: unknown): RichTextDoc | null {
 }
 
 /**
- * The page's questions grouped under their «Categorie» (§525), each group where its first question
- * sits in the club's order, the questions keeping that order inside it. The questions with no
- * category come first, under no heading: a heading-less group after a headed one would read as
- * part of it.
+ * Questions grouped by «Categorie» (§525), groups placed at their first question, order kept. The
+ * uncategorised group comes first, or it would read as part of the heading above it.
  */
 export function groupFaqItems(items: readonly PublicFaqItem[]): FaqGroup[] {
   const loose: PublicFaqItem[] = [];
@@ -104,10 +95,7 @@ export async function listVisibleFaqItems<T extends Record<string, unknown>>(db:
   });
 }
 
-/**
- * The page as a visitor may see it: a DRAFT page shows nothing, whatever the questions say — the
- * page's switch is the first gate, each question's own the second.
- */
+/** A DRAFT page shows nothing: the page's switch is the first gate, each question's the second. */
 export async function readPublicFaqPage<T extends Record<string, unknown>>(db: Database<T>, locale: Locale): Promise<PublicFaqPage> {
   const settings = await readFaqPageSettings(db);
   if (settings.status !== "PUBLISHED") return { published: false, intro: null, introText: null, items: [] };
@@ -115,7 +103,7 @@ export async function readPublicFaqPage<T extends Record<string, unknown>>(db: D
   return { published: true, intro: intro.doc, introText: intro.text, items: await listVisibleFaqItems(db, locale) };
 }
 
-/** Whether the page is on the site with a question on it — the header's entry, the footer's, the contact page's and the sitemap's. */
+/** Whether the page is on the site with a question on it — gates its menu, footer and sitemap entries. */
 export function faqPageOnSite(page: PublicFaqPage): boolean {
   return page.published && page.items.length > 0;
 }

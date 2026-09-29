@@ -16,7 +16,6 @@ import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { readEmergencySheet } from "@/modules/registrations/admin-service";
 import { bibEventDate, findEventForBibs } from "@/modules/registrations/bibs";
-import { raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
@@ -110,7 +109,7 @@ export default async function EmergencySheetPage({ params }: Props) {
               <TableBody>
                 {rows.map((row) => (
                   <TableRow key={row.id} data-testid="emergency-row">
-                    <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap" }}>{raceNumberOf(row)?.value ?? ""}</TableCell>
+                    <TableCell sx={{ fontWeight: 700, whiteSpace: "nowrap" }}>{row.bibNumber ?? ""}</TableCell>
                     <TableCell>
                       {row.registeredName}
                       {row.checkedInAt && (

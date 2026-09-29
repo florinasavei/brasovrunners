@@ -1,13 +1,7 @@
 #!/usr/bin/env node
 /**
- * Brasov Runners local development setup.
- *
- * Configures this clone's git: the tracked hooks in .githooks so `yarn check` runs before
- * every commit exactly as CI runs it, and a `git gone` alias for tidying merged branches.
- * Both are repository-local, so nothing here touches the machine's global git config.
- *
- * Tracked hooks need no dependency: git supports core.hooksPath natively, so husky and
- * lint-staged are not installed.
+ * Configures this clone's git (repository-local only): core.hooksPath → .githooks, so `yarn check`
+ * runs before every commit, and a `git gone` alias.
  *
  * Safe to re-run. Usage: yarn setup
  * Exit code 0 = configured, 1 = failure.
@@ -22,20 +16,9 @@ const HOOKS_PATH = ".githooks";
 const ROOT = process.cwd();
 
 /**
- * `git gone` — delete local branches whose remote branch has been deleted.
- *
- * After a pull request merges, GitHub deletes the head branch; the local copy stays behind
- * with an upstream that no longer exists, which git reports as `[gone]`. This removes exactly
- * those.
- *
- * `-D` rather than `-d` is required, not careless: this repository squash-merges into `qa`
- * (AGENTS.md §6.3), so the squashed commit differs from the branch's own commits and `-d`
- * refuses every time. The safety comes from the `[gone]` filter instead — a branch only
- * reaches that state after its remote was deleted, which happens on merge. A branch never
- * pushed has no upstream, is not `[gone]`, and is never touched.
- *
- * Written as one shell line because git runs `!`-aliases through its bundled shell, which
- * exists on Windows too, so this works from PowerShell as well as from a bash prompt.
+ * `git gone` — delete local branches whose upstream is `[gone]`. `-D` because squash merges
+ * (AGENTS.md §6.3) make `-d` refuse; the `[gone]` filter is the safety. One shell line, so it
+ * runs through git's bundled shell on Windows too.
  */
 const GONE_ALIAS =
   '!git fetch --prune && ' +

@@ -113,6 +113,23 @@ export function canPublishMembersPage(role: StaffRole): boolean {
   return atLeast(role, "ADMIN");
 }
 
+/**
+ * The members' discount codes (§552): adding one, the code itself, its link and its last day, hiding
+ * it, moving it and deleting it — the Administrator's (and the Superadministrator's), who runs the
+ * club (§450): a code is the club's word to a partner, not words on a page.
+ */
+export function canManageDiscountCodes(role: StaffRole): boolean {
+  return atLeast(role, "ADMIN");
+}
+
+/**
+ * The words around a code (§552) — the partner's name and the description in both languages — the
+ * rule of the Membri texts (`canEditMembersPage`, §524): the Redactor's and the Administrator's.
+ */
+export function canEditDiscountCodeWords(role: StaffRole): boolean {
+  return canEditMembersPage(role);
+}
+
 export const EDITORIAL_STATUSES = ["DRAFT", "IN_REVIEW", "PUBLISHED", "ARCHIVED"] as const;
 export type EditorialStatus = (typeof EDITORIAL_STATUSES)[number];
 
@@ -482,9 +499,10 @@ export function canMessageParticipants(role: StaffRole): boolean {
  * **Sending the newsletter (§445)** — a message the club writes to every subscriber of one topic.
  * The same people who may write to an event's participants (§364): the Organizer, the
  * Administrator and the Superadministrator — it is the club speaking to people who asked to hear
- * from it, the organizer's own kind of act. Nobody reads an address on the way: the page shows
- * counts. Removing an address by hand (the notice's "or by writing to us") is the Administrator's,
- * as the "Anunță-mă" list's withdrawal is (§146), through `canManageRegistrations`.
+ * from it, the organizer's own kind of act. Since §550 these roles also read the «Abonați» list —
+ * every address — and download its CSV. Removing an address — «Dezabonează» on a row, and the
+ * typed-address withdrawal (the notice's "or by writing to us") — is the Administrator's, as the
+ * "Anunță-mă" list's withdrawal is (§146), through `canManageRegistrations`.
  */
 export function canSendNewsletter(role: StaffRole): boolean {
   return canMessageParticipants(role);

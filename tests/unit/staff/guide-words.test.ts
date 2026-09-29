@@ -40,7 +40,8 @@ function strings(value: unknown, out: string[] = []): string[] {
 function shapes(label: string): string[] {
   const whole = label.trim();
   const beforePlaceholder = whole.split("{")[0].trim();
-  const withoutCount = whole.replace(/\s*\(\{[^}]*\}\)/g, "").trim();
+  // «(…{count})» or «({count} din {total})» (§555): the count in brackets, whatever words hold it.
+  const withoutCount = whole.replace(/\s*\(\{[^)]*\)/g, "").trim();
   return [whole, beforePlaceholder, withoutCount]
     .flatMap((shape) => [shape, shape.replace(/^←\s*/, "").replace(/\s*→$/, "").replace(/…$/, "").trim()])
     .filter((shape) => shape.length > 0);

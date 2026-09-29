@@ -100,7 +100,7 @@ const submission = (at: Date, email = "ioana.pop@example.ro", firstName = "Ioana
   firstName,
   lastName,
   birthDate: "1990-05-17",
-  sex: "UNSPECIFIED",
+  sex: "FEMALE",
   nationality: "RO",
   country: "RO",
   city: "Brașov",

@@ -25,6 +25,8 @@ export type AlertCandidate = {
   repeatOf: string | null;
   /** Held with other organizers: the event names at least one partner (§344). */
   partnered: boolean;
+  /** «Doar pentru membrii BVR» (§552): a members' event alerts nobody. Absent on a fixture: false. */
+  membersOnly?: boolean;
 };
 
 /**
@@ -38,6 +40,8 @@ export type AlertCandidate = {
  */
 export function eventAlertWanted(event: AlertCandidate, now: Date): boolean {
   if (event.editorialStatus !== "PUBLISHED" || event.eventStatus !== "SCHEDULED") return false;
+  // A subscriber is anybody with an address (§445): an event for the members alone is news to none of them (§552).
+  if (event.membersOnly === true) return false;
   if (event.repeatOf !== null && !event.isSpecial) return false;
   if (event.startsAt.getTime() <= now.getTime() || event.publishedAt === null) return false;
   return now.getTime() - event.publishedAt.getTime() <= EVENT_ALERT_WINDOW_DAYS * 24 * 60 * 60_000;

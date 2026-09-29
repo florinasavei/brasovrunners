@@ -7,6 +7,7 @@ import { env } from "@/shared/config/env";
 import { isDevStaffSwitcherEnabled } from "./dev-switcher";
 import { isBackofficeRole, type StaffRole } from "./domain/roles";
 import { findStaffUserById } from "./repository";
+import { DEV_STAFF_COOKIE } from "./dev-staff-cookie";
 
 /**
  * Who is signing this request, and the three helpers AGENTS.md §13.1 names.
@@ -33,16 +34,8 @@ import { findStaffUserById } from "./repository";
  * closed to a member without any of them naming the role.
  */
 
-/**
- * The development switcher's cookie. Holds a `staff_users.id`, nothing else, and is read only
- * while the switcher is enabled.
- *
- * It is not signed, and that is not an oversight: a value that only means anything in local
- * and test cannot be forged into authority anywhere it would matter, because the mode that
- * reads it fails at startup in qa and production. The real session arrives with Auth.js and
- * will be signed by it — hand-rolling one now is exactly what §13.1 forbids.
- */
-export const DEV_STAFF_COOKIE = "br_dev_staff";
+/** The development switcher's cookie, from a module with no request in it: the proxy reads its name too (§549). */
+export { DEV_STAFF_COOKIE };
 
 /**
  * Whoever is signed in — a member or a colleague — or null (§524). For the members' zone and the

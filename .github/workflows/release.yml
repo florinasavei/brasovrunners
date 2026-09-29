@@ -10,7 +10,7 @@ name: release
 #      installed again when qa changed them; any other conflict stops the run and names it);
 #   2. lands the release facts the branch carries in `.release/*.json` (`yarn docs:land --tree`):
 #      the next baseline after `qa`'s, DECISIONS, CHANGELOG, SPECS, every decision placeholder
-#      numbered, the CLAUDE.md batch line, the queue's Released row; `yarn docs:check`; one commit,
+#      numbered, the queue's Released row; `yarn docs:check`; one commit,
 #      pushed to the branch — which starts the pull request's own `docs-check` run on the landed tree.
 #      A branch with no entry that already carries a baseline newer than `qa`'s was landed by hand
 #      and goes on to step 3 as it is;
@@ -248,7 +248,7 @@ jobs:
 
           Lands the release facts this branch carried in .release/: the baseline bump, the CHANGELOG
           section, the DECISIONS sections with their SPECS criteria, every decision placeholder
-          numbered, the CLAUDE.md batch line and the queue's Released row. Written by the release
+          numbered and the queue's Released row. Written by the release
           workflow; CI runs the full yarn check on the pull request.
           EOF
             echo "- Landed \`$to\`: $title." >> "$GITHUB_STEP_SUMMARY"

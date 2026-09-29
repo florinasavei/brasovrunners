@@ -1,15 +1,7 @@
 /**
- * Release facts that travel with the branch (§535) — the pure half of `yarn docs:land --tree`.
- *
- * Until now a change's DECISIONS section, CHANGELOG bullet and SPECS criteria lived in the
- * dispatcher's scratchpad as a workflow's saved result, and only the machine that ran the chain
- * could land them. A branch now carries them itself: one JSON file per change in `.release/`,
- * the same fields an implementer returns (`.claude/workflows/br-chain.js`), committed with the
- * code. Whoever lands the branch — the dispatcher on the PC, or `.github/workflows/release.yml`
- * started from a phone — reads them from the tree, numbers them, and deletes them in the landing
- * commit, so no file is landed twice.
- *
- * Kept apart from `land-batch.mjs`, which writes files on import, so these rules are testable.
+ * Release facts that travel with the branch (§535) — the pure, testable half of
+ * `yarn docs:land --tree`. One `.release/<branch>.json` per change carries the fields an
+ * implementer returns; the landing numbers them and deletes them in the landing commit.
  */
 
 import { PLACEHOLDER } from "./land-entry.mjs";
@@ -20,7 +12,6 @@ export const ENTRY_DIR = ".release";
 const REQUIREMENT = /^BR-REQ-\d{3}-\d{2}$/;
 const BASELINE = /^BR-V(\d+)\.(\d+)-(\d{4}-\d{2}-\d{2})$/;
 
-/** A branch name as a file name: `feat/x` → `feat-x`. */
 export function slugOf(branch) {
   return String(branch ?? "")
     .trim()
@@ -28,7 +19,6 @@ export function slugOf(branch) {
     .replace(/^[-.]+|-+$/g, "");
 }
 
-/** The entry file a branch writes: `.release/feat-x.json`. */
 export function entryPathOf(branch) {
   return `${ENTRY_DIR}/${slugOf(branch)}.json`;
 }
@@ -36,15 +26,9 @@ export function entryPathOf(branch) {
 const blank = (value) => typeof value !== "string" || !value.trim();
 
 /**
- * What is wrong with one entry, as sentences naming `label` — empty when it can land. An entry
- * holds `branch`, `decisionsTitle`, `decisionsSection` and `changelogLine`, and may hold
- * `specsCriteria` (each a full `BR-REQ-NNN-NN` id and a text), `docsNotes` and `batchLine` —
- * the short clause for the CLAUDE.md batch line and the queue's Released row.
- *
- * With `requirements` (the ids SPECS.md defines), a criterion naming one SPECS.md does not have
- * is a problem too — `yarn docs:check` passes them, so a bad entry fails on its pull request,
- * not at release time. `docsNotes` is allowed here (a PC landing prints it for a person);
- * `handWork` says whether an unattended landing can take the entry.
+ * What is wrong with one entry, as sentences naming `label`; empty when it can land. With
+ * `requirements` (SPECS.md's ids, from `yarn docs:check`) an unknown requirement fails on the
+ * pull request rather than at release time.
  */
 export function validateEntry(entry, label = "entry", { requirements } = {}) {
   if (!entry || typeof entry !== "object" || Array.isArray(entry)) return [`${label}: not a JSON object`];
@@ -73,10 +57,8 @@ export function validateEntry(entry, label = "entry", { requirements } = {}) {
 }
 
 /**
- * What an unattended landing (`--tree`, on GitHub Actions) cannot do and must refuse: text an
- * entry leaves for a person in `docsNotes`, requirements SPECS.md lacks, and decision-placeholder
- * lines no branch wrote. Each is a sentence; empty means the landing needs nobody. A branch writes the
- * README, SETUP and docs text itself (`.release/README.md`), so `docsNotes` stays empty.
+ * What an unattended landing (`--tree`) must refuse: `docsNotes`, requirements SPECS.md lacks and
+ * placeholder lines no branch wrote. Empty means the landing needs nobody.
  *
  * @param {{ docsNotes?: string[], missing?: string[], manual?: string[] }} work
  * @returns {string[]}
@@ -122,10 +104,7 @@ export function nextBaseline(current, date) {
   return b.minor >= 99 ? format(b.major + 1, 0, date) : format(b.major, b.minor + 1, date);
 }
 
-/**
- * A baseline typed by a person — `BR-V2.18`, `V2.18`, `2.18` or the whole `BR-V2.18-<date>` —
- * as the whole baseline, dated `date` unless it carries its own date. Throws on anything else.
- */
+/** `BR-V2.18`, `V2.18`, `2.18` or a whole baseline, as a whole baseline dated `date` unless it has one. */
 export function normalizeBaseline(input, date) {
   const raw = String(input ?? "").trim();
   if (parseBaseline(raw)) return raw;
@@ -134,11 +113,7 @@ export function normalizeBaseline(input, date) {
   return format(Number(m[1]), Number(m[2]), date);
 }
 
-/**
- * The baseline a person typed (`--to`, the release workflow's `baseline` input), normalized, and
- * refused unless it comes after `current` — a typo on a phone such as `2.1` would otherwise land a
- * baseline that goes backwards. Throws with a sentence to show.
- */
+/** A typed baseline, normalized and refused unless it comes after `current` (a typo like `2.1`). */
 export function typedBaseline(input, current, date) {
   const to = normalizeBaseline(input, date);
   const a = parseBaseline(to);
@@ -150,22 +125,21 @@ export function typedBaseline(input, current, date) {
   return to;
 }
 
-/** The baseline without its date, as the batch line and the queue write it: `BR-V2.17`. */
+/** The baseline without its date, as the queue writes it: `BR-V2.17`. */
 export const shortBaseline = (baseline) => String(baseline).replace(/-\d{4}-\d{2}-\d{2}$/, "");
 
-/** Today's date where the club is, `YYYY-MM-DD` — a landing at 01:00 in Brașov is dated that day, not UTC's. */
+/** Today's date in the club's zone, `YYYY-MM-DD`, not UTC's. */
 export function todayIn(timeZone = "Europe/Bucharest", now = new Date()) {
   return new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
 }
 
-/** The baseline CLAUDE.md shows, from its `**Baseline `…`**` line. */
 export function currentBaseline(claudeText) {
   const m = String(claudeText ?? "").match(/\*\*Baseline `(BR-V\d+\.\d+-\d{4}-\d{2}-\d{2})`\*\*/);
   if (!m) throw new Error("CLAUDE.md shows no **Baseline `BR-V…`** line");
   return m[1];
 }
 
-/** One entry's clause for the batch line and the queue: its `batchLine`, else its title, as written, and its number. */
+/** One entry's clause for the queue: its `batchLine`, else its title, as written, and its number. */
 export function clauseOf(entry, n) {
   const words = (blank(entry.batchLine) ? entry.decisionsTitle : entry.batchLine).trim().replace(/\.$/, "");
   return `${words.replaceAll(PLACEHOLDER, `§${n}`)} (§${n})`;
@@ -176,23 +150,6 @@ export function releaseTitle(clauses, max = 180) {
   const joined = clauses.map((c) => c.replace(/ \(§\d+\)$/, "")).join(" · ");
   const counted = clauses.length > 1 ? `${joined}: ${clauses.length} changes` : joined;
   return counted.length <= max ? counted : `${counted.slice(0, max - 1).trimEnd()}…`;
-}
-
-/**
- * CLAUDE.md with one more batch line, `- **Batch N (<date>, `BR-V2.NN`):** a · b.`, placed before
- * the `/admin/tasks` line that closes the list, N one past the highest batch already there.
- * Throws when the anchor is gone, so a landing never writes the line somewhere else.
- */
-export function withBatchLine(text, { to, date, clauses }) {
-  const eol = text.includes("\r\n") ? "\r\n" : "\n";
-  const lines = text.split(/\r?\n/);
-  const anchor = lines.findIndex((l) => l.startsWith("- `/admin/tasks`: what the club still owes"));
-  if (anchor < 0) throw new Error("CLAUDE.md: the `/admin/tasks` line the batch lines end before is gone");
-  const numbers = lines.map((l) => l.match(/^- \*\*Batch (\d+) \(/)).filter(Boolean).map((m) => Number(m[1]));
-  const n = numbers.length ? Math.max(...numbers) + 1 : 1;
-  const line = `- **Batch ${n} (${date}, \`${shortBaseline(to)}\`):** ${clauses.join(" · ")}.`;
-  lines.splice(anchor, 0, line);
-  return lines.join(eol);
 }
 
 /** docs/QUEUE.md with the release as the newest row of its Released table. Throws when that table is gone. */
@@ -207,10 +164,8 @@ export function withReleasedRow(text, { to, clauses }) {
 }
 
 /**
- * Which item numbers a line holding the placeholder: the item whose commits include the line's
- * commit; when the batch holds one item, every line this batch wrote is that item's — the phone's
- * release of one branch, whose merge with `qa` is a commit no branch list names. Null when the
- * line is not this batch's (it mentions the placeholder on purpose) or cannot be told apart.
+ * The item number for a placeholder line: the item whose commits include the line's commit; with
+ * one item, every line this batch wrote (its merge with `qa` included). Null when not this batch's.
  */
 export function numberForLine({ sha, numberOf, inBatch, uncommitted, onlyNumber }) {
   if (sha && numberOf.has(sha)) return numberOf.get(sha);

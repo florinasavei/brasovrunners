@@ -162,7 +162,7 @@ describe("BR-REQ-034-02 criterion 5 a raised capacity offers places to the waiti
         firstName: name,
         lastName: "Pop",
         birthDate: "1990-05-17",
-        sex: "UNSPECIFIED",
+        sex: "FEMALE",
         nationality: "RO",
         country: "RO",
         city: "Brașov",

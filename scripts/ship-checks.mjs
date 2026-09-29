@@ -1,18 +1,8 @@
 /**
- * How `yarn ship` reads a pull request's checks (§426) — kept apart from `ship.mjs`, which runs
- * `gh` on import, so the rule is testable without GitHub.
- *
- * The defect this answers: `ship` judged a pull request the moment `gh pr checks --watch`
- * returned, and `--watch` returns as soon as nothing it can see is running — before a workflow
- * has registered its checks at all ("no checks reported"), or between one job finishing and the
- * next one (the e2e job, a Vercel deployment) appearing. A batch PR could be stopped as "not
- * green" with nothing red on it, and the release PR could be merged with its checks still running.
- * Now nothing is judged until the same set of checks has been seen twice in a row with none of
- * them pending.
- *
- * Since §504 it also holds how `ship` waits on one workflow run — by reading the run's status
- * until it says "completed", never by `gh run watch`, whose exit says nothing about the run —
- * and the clock `ship` keeps of its own steps.
+ * How `yarn ship` reads a pull request's checks, waits on a workflow run and times its steps
+ * (§426, §504) — apart from `ship.mjs`, which runs `gh` on import, so it is testable offline.
+ * `gh pr checks --watch` returns before late checks register, so nothing is judged until the
+ * same checks are seen twice in a row with none pending.
  */
 
 /** `gh pr checks --json bucket` sorts every state into one of these five. */
@@ -36,16 +26,9 @@ export function bucketOf(check) {
 }
 
 /**
- * The verdict on one reading of the checks.
- *
- *   none     — no check registered yet; not a verdict, a reason to wait;
- *   pending  — at least one check has not finished;
- *   green    — every check passed or was skipped (a job whose `if:` was false);
- *   red      — at least one failed or was cancelled, other than those `tolerate` names.
- *
- * `tolerate` is a RegExp of check names whose red is reported but does not stop the release —
- * the release PR's Vercel deployment checks, which go red on Hobby's daily deploy limit rather
- * than on the code (the qa run has already judged the code by then).
+ * The verdict on one reading: none (nothing registered yet), pending, green (passed or skipped),
+ * or red. `tolerate` names checks whose red is reported but does not stop the release — Vercel's
+ * deployment checks, red on Hobby's daily deploy limit rather than on the code.
  */
 export function judgeChecks(checks, { tolerate } = {}) {
   const verdict = (v, rest = {}) => ({ verdict: v, pending: [], red: [], tolerated: [], ...rest });
@@ -60,9 +43,8 @@ export function judgeChecks(checks, { tolerate } = {}) {
 }
 
 /**
- * The checks without those of the workflow named `workflow` (§535): a release run by
- * `.github/workflows/release.yml` is itself a check on the pull requests it ships, pending for as
- * long as it waits — judging it would wait for ever. Nothing is left out when `workflow` is empty.
+ * The checks without those of `workflow` (§535): the release workflow is itself a pending check
+ * on the PRs it ships, so judging it would wait for ever.
  *
  * @param {Array<{ name: string, workflow?: string }>} checks
  * @param {string} workflow
@@ -81,14 +63,9 @@ function fingerprint(checks) {
 }
 
 /**
- * Reads the checks until they settle: none pending, and the same checks in the same buckets on two
- * readings `every` seconds apart — so a check that registers late (the next job, a deployment) is
- * waited for rather than missed.
- *
- *   read()  → the checks now, as `gh pr checks --json name,state,bucket` gives them ([] for none);
- *   sleep(seconds) → a promise;
- *   polls   → the most readings before giving up;
- *   maxEmpty → the most readings in a row with no check at all before giving up.
+ * Reads the checks until they settle: none pending and the same checks in the same buckets on two
+ * readings `every` seconds apart, so a late-registering check is not missed. `maxEmpty` caps the
+ * readings in a row with no check at all.
  *
  * Returns { status: "settled", checks } | { status: "no-checks" } | { status: "timeout", pending }.
  *
@@ -127,17 +104,10 @@ export async function waitForSettledChecks(read, { sleep, every = 30, polls = 18
 }
 
 /**
- * Waits for one workflow run to complete, reading its status every `every` seconds (§504).
- *
- * `ship` used `gh run watch`, then read the conclusion once. `watch` returns on its own errors (a
- * dropped connection, a rate limit) as readily as on the run's end, and a run just rerun reads
- * its old conclusion for a moment — so a run still going could be judged by an empty or a stale
- * conclusion. Now only a reading whose status is "completed" ends the wait.
- *
- *   read()  → the run now, `{ status, conclusion }` as `gh run view/list --json` gives it, or null
- *             while it has not appeared;
- *   onRead(run, reading) → called on every reading of a run that exists (the migration's approval);
- *   maxMissing → the most readings in a row without the run before giving up.
+ * Waits for one workflow run until its status reads "completed" (§504). Not `gh run watch`: it
+ * returns on its own errors too, and a just-rerun run briefly shows its old conclusion.
+ * `read()` returns null while the run has not appeared; `onRead` sees every reading (the
+ * migration's approval).
  *
  * Returns { status: "completed", conclusion, run } | { status: "missing" } | { status: "timeout", run }.
  *
@@ -166,19 +136,9 @@ export async function waitForRun(read, { sleep, every = 15, polls = 240, maxMiss
 }
 
 /**
- * Merges one pull request and says whether it is merged (§520).
- *
- * `gh pr merge` can exit non-zero on a merge that happens all the same: GitHub answers «Merge
- * already in progress» when the merge it was asked for is still being written — the V2.12 release
- * stopped on exactly that while its PR merged. So an exit that is not 0 is never the verdict alone:
- *
- * - «Merge already in progress»: the PR's state is read every `every` seconds, for at most
- *   `capSeconds`, until it says MERGED;
- * - any other failure: the state is read once — a merge that went through is a merge — and
- *   otherwise it is the failure it says it is.
- *
- *   merge()  → `{ status, stderr }` of the `gh pr merge` call;
- *   state()  → the PR's state now ("OPEN", "MERGED", "CLOSED"), or "" when it cannot be read.
+ * Merges one pull request and says whether it is merged (§520). `gh pr merge` may exit non-zero on
+ * a merge that goes through («Merge already in progress»), so a failure is checked against the
+ * PR's state: polled up to `capSeconds` for that message, read once for any other.
  *
  * Returns { status: "merged", waited } | { status: "failed", error }.
  *
@@ -210,8 +170,7 @@ export function formatDuration(ms) {
 }
 
 /**
- * The last release in a `SHIP_TIMES_FILE` as a Markdown table (§535) — what the release workflow
- * writes to its run's summary page, so the owner reads ship's steps on a phone. Empty for no line.
+ * The last release in a `SHIP_TIMES_FILE` as a Markdown table for the run's summary page (§535).
  *
  * @param {string} jsonl  the times file's text: one JSON record per line, the newest last
  */
@@ -233,9 +192,8 @@ export function timesTable(jsonl) {
 }
 
 /**
- * The clock `ship` keeps of itself (§504): each step from its start to the next one's, and the
- * whole. `report()` counts a step still open up to now, so a stop says where the time went too;
- * `onStepEnd` hears each step the moment it ends, so a long release shows its times as it goes.
+ * The clock `ship` keeps of its steps (§504). `report()` counts an open step up to now, so a stop
+ * says where the time went.
  *
  * @param {() => number} [now]
  * @param {(step: { name: string, ms: number }) => void} [onStepEnd]
@@ -262,12 +220,10 @@ export function createClock(now = Date.now, onStepEnd) {
       close();
       open = { name, at: now() };
     },
-    /** Ends the step running. */
     end() {
       close();
     },
     summary,
-    /** The steps and the total as aligned lines; an open step is marked where it stopped. */
     report() {
       const { steps, totalMs } = summary();
       const width = Math.max(5, ...steps.map((s) => s.name.length));

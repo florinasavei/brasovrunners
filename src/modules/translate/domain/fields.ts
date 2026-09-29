@@ -40,9 +40,17 @@ const ENGLISH_FIELD_PATTERNS: readonly RegExp[] = [
   // «Întrebări frecvente» (§525).
   /^faq\[\d{1,3}\]\.(question|category)En$/,
   /^faq\[\d{1,3}\]\.answerEnBody$/,
+  // The newsletter's body, written in the editor (§550); its subject is `subjectEn` above.
+  /^newsletterBodyEn$/,
 ];
 
-/** Rich texts named `…RoBody` / `…EnBody` (§474, §525). */
+/** The newsletter composer's body (§550): a rich text posting as `newsletterBodyRo` / `newsletterBodyEn`. */
+const NEWSLETTER_RICH_TEXT = /^newsletterBodyEn$/;
+
+/**
+ * The rich texts that spell their pair `…RoBody` / `…EnBody`: «Echipa»'s bio and introduction
+ * (§474), and a question's answer on «Întrebări frecvente» (§525).
+ */
 const TEAM_RICH_TEXT = /^(?:bio|intro|faq\[\d{1,3}\]\.answer)EnBody$/;
 
 export function isTranslatableEnglishField(name: string): boolean {
@@ -50,7 +58,7 @@ export function isTranslatableEnglishField(name: string): boolean {
 }
 
 export function isRichTextField(name: string): boolean {
-  if (TEAM_RICH_TEXT.test(name)) return true;
+  if (TEAM_RICH_TEXT.test(name) || NEWSLETTER_RICH_TEXT.test(name)) return true;
   const translation = /^translations\.en\.(\w+)$/.exec(name);
   return translation !== null && RICH_TEXT_FIELDS.has(translation[1] ?? "");
 }

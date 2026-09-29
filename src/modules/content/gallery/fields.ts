@@ -3,11 +3,8 @@ import { routing } from "@/i18n/routing";
 import { refuseOneLanguage } from "@/shared/forms/both-languages";
 
 /**
- * Exactly which fields the backoffice may write on an album (BR-REQ-054-01).
- *
- * The same allowlist shape as pages and events: `.strict()` objects, "" meaning "not stated",
- * one translation per locale required from the first save so a second language is never an
- * afterthought. Photos are not fields — they arrive through the uploader, one request each.
+ * The album fields the backoffice may write (BR-REQ-054-01): `.strict()`, "" meaning "not stated",
+ * one translation per locale from the first save.
  */
 
 const slug = z
@@ -34,7 +31,7 @@ export const albumTranslationSchema = z
 
 export const albumFieldsSchema = z
   .object({
-    /** `YYYY-MM-DD` from a date input: when the photos were taken. */
+    /** `YYYY-MM-DD`: when the photos were taken. */
     takenOn: z
       .string()
       .trim()
@@ -49,12 +46,7 @@ export const albumFieldsSchema = z
         (value) => value === null || /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value),
         "the event must be chosen from the list",
       ),
-    /*
-      Both languages in one save — and the description, optional, is both or neither (§354,
-      bilingual everywhere): one language written and the other empty is refused on the empty
-      box, the rest kept (§315), so the English album page never goes without the words the
-      Romanian one carries.
-    */
+    /* Both languages in one save; the optional description is both or neither (§354, §315). */
     translations: z
       .object(
         Object.fromEntries(routing.locales.map((locale) => [locale, albumTranslationSchema])) as Record<

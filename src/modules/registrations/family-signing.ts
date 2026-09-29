@@ -45,7 +45,14 @@ import { openFormDraft, purposeSecret, sealFormDraft } from "./form-draft";
  * signed or put off on this device, and the page reads the rest from the rows.
  */
 
+/**
+ * One cookie per language, each on its own page's path (§547, found walking the family on a
+ * production build): a response keeps one cookie per name, so two writes of one name on two paths
+ * left only the last — the English page's — and the Romanian wizard's second press arrived with no
+ * pass. The same sealed value under a name per locale; a request only ever carries its own page's.
+ */
 const COOKIE = "br_family_sign";
+const cookieName = (locale: string) => `${COOKIE}_${locale}`;
 const PURPOSE = "family-signing";
 
 /**
@@ -113,16 +120,23 @@ export function openFamilyPass(sealed: string, now: Date, secret = purposeSecret
   };
 }
 
-/** The pass's own page, in every language: where it travels, and nowhere else. */
-function passPaths(token: string): string[] {
-  return routing.locales.map((locale) =>
-    getPathname({ locale, href: { pathname: "/registrations/declare/[token]", params: { token } } }),
-  );
+/** The pass's own page, in every language: where it travels, and nowhere else — one cookie name per page. */
+function passCookies(token: string): { name: string; path: string }[] {
+  return routing.locales.map((locale) => ({
+    name: cookieName(locale),
+    path: getPathname({ locale, href: { pathname: "/registrations/declare/[token]", params: { token } } }),
+  }));
 }
 
 export async function readFamilySigningPass(now: Date): Promise<FamilySigningPass | null> {
-  const sealed = (await cookies()).get(COOKIE)?.value;
-  return sealed ? openFamilyPass(sealed, now) : null;
+  const jar = await cookies();
+  // The request carries only its own page's cookie (its path), whichever language that is.
+  for (const locale of routing.locales) {
+    const sealed = jar.get(cookieName(locale))?.value;
+    const pass = sealed ? openFamilyPass(sealed, now) : null;
+    if (pass) return pass;
+  }
+  return null;
 }
 
 /** Give the browser the pass, or its next state after a press. */
@@ -131,8 +145,8 @@ export async function writeFamilySigningPass(pass: FamilySigningPass, token: str
   if (!sealed) return;
   const maxAge = Math.max(1, Math.ceil((pass.expiresAt.getTime() - now.getTime()) / 1000));
   const jar = await cookies();
-  for (const path of passPaths(token)) {
-    jar.set(COOKIE, sealed, {
+  for (const { name, path } of passCookies(token)) {
+    jar.set(name, sealed, {
       httpOnly: true,
       sameSite: "lax",
       secure: env.APP_BASE_URL.startsWith("https://"),
@@ -150,8 +164,8 @@ export async function writeFamilySigningPass(pass: FamilySigningPass, token: str
  */
 export async function clearFamilySigningPass(token: string): Promise<void> {
   const jar = await cookies();
-  for (const path of passPaths(token)) {
-    jar.set(COOKIE, "", {
+  for (const { name, path } of passCookies(token)) {
+    jar.set(name, "", {
       httpOnly: true,
       sameSite: "lax",
       secure: env.APP_BASE_URL.startsWith("https://"),
@@ -307,7 +321,6 @@ export async function listFamilySigningRows<T extends Record<string, unknown>>(
       checkinCode: registrations.checkinCode,
       // The race number beside the desk code (§87, §94, §173; the owner: «aici vreau să văd și BIB-urile»).
       bibNumber: registrations.bibNumber,
-      provisionalBibNumber: registrations.provisionalBibNumber,
       // Qualified by hand: inside a one-table select Drizzle prints a column bare, and a bare "id"
       // in the subquery would be the acceptance's own.
       declared: sql<boolean>`exists (select 1 from ${declarationAcceptances} where ${declarationAcceptances}."registration_id" = ${registrations}."id")`,

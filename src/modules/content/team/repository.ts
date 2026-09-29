@@ -11,16 +11,10 @@ import { readTeamLinks, type TeamLink, type TeamLinkKind, teamLinkLabel } from "
 import { readTeamPageSettings, teamIntroFor } from "./page-settings";
 
 /**
- * Reads for «Echipa» (§459, grown by §474), public and backoffice.
- *
- * The public read names its columns (BR-REQ-070-01), reads only the cards shown on the site, and
- * gives each card the words of the page's own language alone: what the person does and the words
- * about them are a pair written in both languages or in neither (§352), and a stored half pair —
- * only a hand-made row can hold one — reads as none on both pages, never the other language's text.
- *
- * The words about a person are a rich-text document since §474 (`bio_*_json`); a row from before
- * reads its plain `bio_*` as paragraphs (`storedTeamDoc`). The links are a list since §474
- * (`links`); a row from before reads its one `link` as a row of its guessed kind (`readTeamLinks`).
+ * Reads for «Echipa» (§459, §474), public and backoffice. The public read names its columns
+ * (BR-REQ-070-01), returns shown cards only, and a half-written pair reads as none on both pages
+ * (§352). Rows from before §474 read their plain `bio_*` and single `link` (`storedTeamDoc`,
+ * `readTeamLinks`).
  */
 
 export type TeamPhoto = {
@@ -29,10 +23,7 @@ export type TeamPhoto = {
   thumbUrl: string;
   width: number;
   height: number;
-  /**
-   * The part the card shows (§541), four fractions of the stored picture; null for the whole
-   * photograph, drawn as before — a square with the face near the top.
-   */
+  /** §541: four fractions of the stored picture; null draws the whole photo, a square face-top. */
   crop: ImageCrop | null;
 };
 
@@ -43,19 +34,17 @@ export type PublicTeamMember = {
   id: string;
   name: string;
   role: string | null;
-  /** The words about them in this language, as a document, or null. */
   bio: RichTextDoc | null;
-  /** The person's links, in the club's order — none, one or up to twelve. */
+  /** In the club's order, up to twelve. */
   links: PublicTeamLink[];
   photo: TeamPhoto | null;
 };
 
-/** What the public page, the header and the sitemap need: the page's state, its words, its cards. */
 export type PublicTeamPage = {
   published: boolean;
   /** The club's introduction in this language as a document, or null for the platform's sentence. */
   intro: RichTextDoc | null;
-  /** The same introduction's words, for the page's description to search engines; null with it. */
+  /** The introduction's words, for the page's meta description. */
   introText: string | null;
   members: PublicTeamMember[];
 };
@@ -65,7 +54,7 @@ export type AdminTeamMember = {
   name: string;
   roleRo: string | null;
   roleEn: string | null;
-  /** The words about them as the editor opens them: the stored document, or the plain words as paragraphs. */
+  /** The stored document, or the plain words as paragraphs. */
   bioRo: RichTextDoc | null;
   bioEn: RichTextDoc | null;
   links: TeamLink[];
@@ -151,10 +140,7 @@ export async function listVisibleTeamMembers<T extends Record<string, unknown>>(
   }));
 }
 
-/**
- * The page as a visitor may see it: a DRAFT page shows nobody, whatever the cards say — the page's
- * switch is the first gate, each card's own the second (`page-settings.ts`).
- */
+/** A DRAFT page shows nobody: the page's switch is the first gate, each card's the second. */
 export async function readPublicTeamPage<T extends Record<string, unknown>>(db: Database<T>, locale: Locale): Promise<PublicTeamPage> {
   const settings = await readTeamPageSettings(db);
   if (settings.status !== "PUBLISHED") return { published: false, intro: null, introText: null, members: [] };
@@ -184,10 +170,7 @@ export async function listTeamMembersForAdmin<T extends Record<string, unknown>>
   }));
 }
 
-/**
- * A stored picture's key prefix, or `null` when the id names none — the save refuses one that
- * does not, and one whose prefix says it is a film's automatic poster (`yt-<id>`, §403, §485).
- */
+/** A stored picture's key prefix, or `null` when the id names none (the save refuses `yt-` posters, §485). */
 export async function mediaAssetKeyPrefix<T extends Record<string, unknown>>(db: Database<T>, assetId: string): Promise<string | null> {
   const [row] = await db.select({ keyPrefix: mediaAssets.keyPrefix }).from(mediaAssets).where(eq(mediaAssets.id, assetId)).limit(1);
   return row?.keyPrefix ?? null;
