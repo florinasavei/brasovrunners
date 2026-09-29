@@ -9,6 +9,7 @@
  */
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
+import { knownClubFactValues } from "./club-facts-values.mjs";
 
 /** [name, pattern]. Each pattern matches the credential itself, not the variable name. */
 const PATTERNS = [
@@ -34,6 +35,12 @@ function git(...args) {
 
 const files = new Set([...git("ls-files"), ...git("diff", "--cached", "--name-only", "--diff-filter=ACMR")]);
 const findings = [];
+/**
+ * The club's legal facts (§NNN, §132): not credentials, but the repository is public and a seat is
+ * somebody's address. Their values are known only where they are set — this machine's environment
+ * and `.env.local` — so a commit from there that carries one is refused, by the variable's name.
+ */
+const clubFacts = knownClubFactValues(".env.local");
 
 for (const file of files) {
   if (SKIP.test(file) || file === "scripts/secrets-check.mjs") continue;
@@ -49,6 +56,9 @@ for (const file of files) {
   lines.forEach((line, index) => {
     for (const [name, pattern] of PATTERNS) {
       if (pattern.test(line)) findings.push(`${file}:${index + 1}  ${name}`);
+    }
+    for (const [name, value] of clubFacts) {
+      if (line.includes(value)) findings.push(`${file}:${index + 1}  the value of ${name}`);
     }
   });
 }

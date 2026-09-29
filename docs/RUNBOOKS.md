@@ -701,6 +701,18 @@ is created from the platform's text with those facts written in and approved in 
 A document that already has an approved version is not touched. A missing variable shows in
 red and the button is withheld — set it in Vercel, redeploy, come back.
 
+### The same facts on the site (2026-09-29, `DECISIONS.md` §NNN)
+
+The legal name and the CIF also show on the site, from the same two variables: one line
+«<legal name> (<site name>) · CIF <CIF>» at the end of every club page, «Echipa» and the contact
+page, and the block under the footer's bar on every page (the legal name, «C.I.F.», «România»; the
+social marks; «Contact»). Nothing to do but set `CLUB_LEGAL_NAME` and `CLUB_REGISTRATION_NUMBER` on
+the Vercel project and redeploy; unset, the line and the block's first column are simply absent.
+The seat is not shown. The phone under «Contact» is a setting, not a variable: «Pagini» →
+«Contact» → «Telefon public», Administrator; an empty box shows no number. Never type any of these
+values into the repository: `yarn secrets:check` refuses a commit that carries one your
+`.env.local` holds.
+
 ### The short path: start from the platform's text (2026-09-18)
 
 `/admin/legal` → "Versiune nouă" → the link for the document under "Sau pornește de la

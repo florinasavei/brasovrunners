@@ -8,13 +8,14 @@ import { faqOnSite } from "@/modules/content/faq/on-site";
 import { OPEN_METEO_SITE } from "@/modules/weather/domain/credit";
 import { weatherListWords } from "@/modules/weather/words";
 import { cachedShownContactAddresses } from "@/modules/public-cache/reads";
-import { env } from "@/shared/config/env";
 import { DENSITY } from "@/theme/density";
 import BuildBadge from "./BuildBadge";
+import ClubIdentity from "./ClubIdentity";
+import { clubSocialLinks } from "./club-socials";
 import { DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_SX } from "./disclosure";
 import { foldLineSx, footerGapSx, footerTargetSx, PHONE_WIDE } from "./footer-target";
 import LocaleSwitcher from "./LocaleSwitcher";
-import SocialIcon, { type SocialNetwork } from "./SocialIcon";
+import SocialIcon from "./SocialIcon";
 import ThemeModeToggle from "./ThemeModeToggle";
 
 /**
@@ -172,6 +173,16 @@ const BAR_HEIGHT = 44;
  * «Vremea» line (`EventFacts`, BR-REQ-041-01) — on the listing with a featured forecast the credit
  * is said twice, the hero's and this one; the owner objected to the strip under the cards, not to
  * the hero's line.
+ *
+ * ## The club's identity, under the bar (§NNN)
+ *
+ * The owner, 2026-09-29: the club's legal name and CIF «also in the footer, more clearly», after
+ * another running club's footer. `ClubIdentity`'s `block` follows the `<footer>` as its sibling:
+ * the legal name, «C.I.F.» and the country; the marks (the list above, `clubSocialLinks`); and
+ * «Contact». A sibling and not a child, because the bar is sticky and one row at every scroll
+ * position (§372): inside it the block would ride along on every screen. So the bar's box, its
+ * height and its fold are exactly what they were, and the block is what the page ends on — in sight
+ * at the end of every page without opening anything, never inside «Despre club».
  */
 export default async function SiteFooter() {
   const legal = await getTranslations("Legal");
@@ -181,13 +192,11 @@ export default async function SiteFooter() {
   const contacts = await cachedShownContactAddresses();
   // «Întrebări frecvente» in the fold (§525) while the page is on the site — the header's own rule.
   const showFaq = await faqOnSite(locale);
-  const social = [
-    { network: "facebook" as SocialNetwork, href: env.CLUB_FACEBOOK_URL, label: footer("about.facebook") },
-    { network: "instagram" as SocialNetwork, href: env.CLUB_INSTAGRAM_URL, label: footer("about.instagram") },
-    { network: "strava" as SocialNetwork, href: env.CLUB_STRAVA_URL, label: footer("about.strava") },
-  ].filter((entry): entry is typeof entry & { href: string } => Boolean(entry.href));
+  // The one list the bar's marks and the identity block's middle column both read (§NNN).
+  const social = await clubSocialLinks();
 
   return (
+    <>
     <Box
       component="footer"
       sx={{
@@ -542,5 +551,11 @@ export default async function SiteFooter() {
         <BuildBadge />
       </Box>
     </Box>
+
+    {/* The club's identity under the bar, on every page and never in the fold (§NNN): a sibling of
+        the sticky `<footer>` rather than its child, so the bar keeps its one row at every scroll
+        position and its own height, and the block is what the page ends on. */}
+    <ClubIdentity shape="block" social={social} />
+    </>
   );
 }

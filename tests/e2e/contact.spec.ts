@@ -62,6 +62,33 @@ test.describe("BR-REQ-070-04 the contact form", () => {
     const width = page.viewportSize()?.width ?? 1280;
     const target = width >= 600 ? FOLD_LINE.sm : FOLD_LINE.xs;
     expect((await inFooter.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(target - 0.5);
+
+    // And under the bar, in the club's identity block, always in sight at the page's end (§NNN).
+    const block = page.getByTestId("club-identity-block");
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    await expect(block.getByTestId("club-identity-write")).toHaveAttribute("href", "/ro/contact");
+  });
+
+  /**
+   * §NNN — the page names who is written to: «<legal name> (<site name>) · CIF <CIF>» under the form
+   * (or the address), composed from the environment. The suite's server sets no legal fact (CI) —
+   * a developer's `.env.local` may — so the line is checked when it is drawn and its absence when
+   * it is not; its words are never compared with a value.
+   */
+  test("names the club by its legal name and CIF under the form, when the facts are set", async ({ page }) => {
+    await page.goto("/ro/contact");
+    const main = page.locator("main");
+    const line = main.getByTestId("club-identity-line");
+    if ((await line.count()) === 0) {
+      await expect(main).not.toContainText("· CIF");
+      return;
+    }
+    await expect(line).toBeVisible();
+    await expect(line).toContainText("(");
+    const form = await main.locator("form").first().boundingBox();
+    const box = await line.boundingBox();
+    if (form) expect(box!.y, "the line is under the form").toBeGreaterThanOrEqual(form.y + form.height);
+    expect(box!.x + box!.width).toBeLessThanOrEqual(page.viewportSize()!.width);
   });
 
   test("sends a message and says so, naming where the answer goes", async ({ page }) => {

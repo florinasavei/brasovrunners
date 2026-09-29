@@ -9,8 +9,10 @@ import { routing } from "@/i18n/routing";
 import { resolveContactRecipients } from "@/modules/contact/domain/recipients";
 import { configuredGmailAddress, resolveShownContactAddresses } from "@/modules/contact/domain/shown-address";
 import { readContactRecipients } from "@/modules/contact/recipients";
+import { readPublicPhone } from "@/modules/contact/public-phone";
 import { readShownContactAddress } from "@/modules/contact/shown-address";
 import ContactRecipientsPanel from "@/modules/contact/ui/ContactRecipientsPanel";
+import PublicPhonePanel from "@/modules/contact/ui/PublicPhonePanel";
 import ShownAddressPanel from "@/modules/contact/ui/ShownAddressPanel";
 import PagesSubNav from "@/modules/content/pages/ui/PagesSubNav";
 import { canManageClubSettings, canReadContent } from "@/modules/staff-identity/domain/roles";
@@ -50,7 +52,7 @@ export default async function AdminContactSettingsPage({ params, searchParams }:
   const { saved } = await searchParams;
   const t = await getTranslations("Admin");
   const db = getDb();
-  const [recipients, shownAddress] = await Promise.all([readContactRecipients(db), readShownContactAddress(db)]);
+  const [recipients, shownAddress, publicPhone] = await Promise.all([readContactRecipients(db), readShownContactAddress(db), readPublicPhone(db)]);
   const mayEdit = canManageClubSettings(actor.role);
 
   return (
@@ -60,6 +62,7 @@ export default async function AdminContactSettingsPage({ params, searchParams }:
       <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
         {saved === "contactRecipients" && <Alert severity="success">{t("emails.contacts.saved")}</Alert>}
         {saved === "shownContactAddress" && <Alert severity="success">{t("emails.shownAddress.saved")}</Alert>}
+        {saved === "publicPhone" && <Alert severity="success">{t("emails.publicPhone.saved")}</Alert>}
       </Box>
 
       {/* The page is these two cards alone, so they open on arrival (§336's `primary`, §516). */}
@@ -81,6 +84,9 @@ export default async function AdminContactSettingsPage({ params, searchParams }:
         mayEdit={mayEdit}
         openWhen={{ primary: true, saved: saved === "shownContactAddress" }}
       />
+
+      {/* «Telefon public» (§NNN): optional; the footer's «Contact» shows it only when set. */}
+      <PublicPhonePanel locale={locale} state={publicPhone} mayEdit={mayEdit} openWhen={{ primary: true, saved: saved === "publicPhone" }} />
     </Stack>
   );
 }

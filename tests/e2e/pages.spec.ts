@@ -274,4 +274,28 @@ test.describe.serial("BR-REQ-050-03 standing pages", () => {
     }));
     expect(overflow.documentWidth).toBeLessThanOrEqual(overflow.viewportWidth);
   });
+
+  /**
+   * §NNN — a standing page is the club talking about itself, so it ends with the club's legal name
+   * and CIF: «<legal name> (<site name>) · CIF <CIF>», composed from the environment. The suite's
+   * server sets no legal fact (CI) — a developer's `.env.local` may — so the line is checked when it
+   * is drawn and its absence when it is not; its words are never compared with a value.
+   */
+  test("ends with the club's legal identity line when the facts are set, and with nothing otherwise", async ({ page }) => {
+    await page.goto(`/ro/pagini/${slug}`);
+    const main = page.locator("main");
+    const line = main.getByTestId("club-identity-line");
+    const lines = await line.count();
+    expect(lines).toBeLessThanOrEqual(1);
+    if (lines === 0) {
+      await expect(main).not.toContainText("· CIF");
+      return;
+    }
+    await expect(line).toContainText("(");
+    // Under the page's own words, and never wider than the screen.
+    const heading = await main.getByRole("heading", { level: 1 }).boundingBox();
+    const box = await line.boundingBox();
+    expect(box!.y).toBeGreaterThan(heading!.y);
+    expect(box!.x + box!.width).toBeLessThanOrEqual(page.viewportSize()!.width);
+  });
 });

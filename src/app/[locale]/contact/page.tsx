@@ -40,6 +40,7 @@ import BotCheck from "@/modules/registrations/ui/BotCheck";
 import { pageAlternates, staticRouteUrls } from "@/modules/seo/alternates";
 import { env } from "@/shared/config/env";
 import PublicFlash from "@/shared/feedback/PublicFlash";
+import ClubIdentity from "@/shared/ui/ClubIdentity";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import Wordmark from "@/shared/ui/Wordmark";
 import { INLINE_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
@@ -339,6 +340,10 @@ export default async function ContactPage({ params, searchParams }: Props) {
           )}
         </>
       )}
+
+      {/* Who is written to, by its legal name and CIF (§NNN): under the form, or under the address
+          where there is no form; nothing while the facts are unset. */}
+      <ClubIdentity shape="line" />
 
       {newsletterOffered && (
         <NewsletterSignup

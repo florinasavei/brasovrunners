@@ -21,6 +21,7 @@ import { pictureSizes, pictureSrcSet } from "@/modules/media/ladder";
 import { cachedTeamPage } from "@/modules/public-cache/reads";
 import { pageAlternates, staticRouteUrls } from "@/modules/seo/alternates";
 import { env } from "@/shared/config/env";
+import ClubIdentity from "@/shared/ui/ClubIdentity";
 import ContactLink from "@/shared/ui/ContactLink";
 import { CLUB_NAME, PAGE_WIDTH } from "@/theme/brand";
 import { DENSITY } from "@/theme/density";
@@ -185,6 +186,8 @@ export default async function TeamPage({ params }: Props) {
       <Typography variant="body2" color="text.secondary" sx={{ mt: { xs: DENSITY.sectionGapLg, sm: 4 } }}>
         {t.rich("contact", { contact: (chunks) => <ContactLink>{chunks}</ContactLink> })}
       </Typography>
+      {/* «Echipa» is an «about» page: the club's legal name and CIF at its end (§NNN). */}
+      <ClubIdentity shape="line" />
     </Container>
   );
 }

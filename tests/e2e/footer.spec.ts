@@ -450,13 +450,20 @@ test.describe("§372 §378 §385 one row on a phone, in both languages, fold clo
         await expect(panelBadge).toBeHidden();
       }
 
-      // At the end of the page: the same one row, nothing under it.
+      // At the end of the page: the same one row, and under it only the club's identity block
+      // (§NNN) — the bar is measured without it: from the bar's top to the block's top is the one
+      // row, and the block is what the document ends on.
       await restAtTheEnd(page);
       const chrome = await page.evaluate(() => {
         const bar = document.querySelector("footer")!.getBoundingClientRect();
-        return document.documentElement.scrollHeight - (bar.top + window.scrollY);
+        const block = document.querySelector("[data-testid='club-identity-block']")!.getBoundingClientRect();
+        return {
+          row: block.top - bar.top,
+          after: document.documentElement.scrollHeight - (block.bottom + window.scrollY),
+        };
       });
-      expect(chrome, `from the bar's top to the document's end at ${width}px`).toBeLessThanOrEqual(target + 2);
+      expect(chrome.row, `from the bar's top to the identity block at ${width}px`).toBeLessThanOrEqual(target + 2);
+      expect(Math.abs(chrome.after), `nothing under the identity block at ${width}px`).toBeLessThanOrEqual(1);
     });
   }
 
@@ -494,5 +501,102 @@ test.describe("§372 the desktop build stamp, pinned to the bar's own corner", (
 
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(0);
+  });
+});
+
+/**
+ * §NNN — the club's identity block under the bar (the owner, 2026-09-29: the legal name and the CIF
+ * «also in the footer, more clearly», after another running club's footer). Always visible at the
+ * page's end, never inside «Despre club»; three columns from `sm`, stacked on a phone; every link a
+ * 44-pixel target; the marks the bar's own; «Contact» with «Scrie-ne». The legal facts come from
+ * the environment and the suite's server sets none (CI) — a developer's `.env.local` may — so the
+ * first column is checked when it is there and its absence is checked when it is not; the words
+ * are never compared with a value, which the repository does not hold.
+ */
+test.describe("§NNN the club's identity block under the bar", () => {
+  for (const width of [320, 360, 768, 1280] as const) {
+    test(`at ${width}px it follows the bar, outside the fold, its links 44px, nothing wider than the page`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 720 });
+      await page.goto("/ro/evenimente", { waitUntil: "networkidle" });
+      const { footer, fold, marks } = controls(page);
+      const block = page.getByTestId("club-identity-block");
+      await restAtTheEnd(page);
+      await expect(block).toBeVisible();
+      await expect(fold.getByTestId("club-identity-block")).toHaveCount(0);
+      await expect(footer.getByTestId("club-identity-block")).toHaveCount(0);
+
+      // Under the bar, which keeps its one row (the bar is measured without the block, above).
+      const bar = await boxOf(footer, "the footer");
+      const box = await boxOf(block, "the identity block");
+      expect(box.y, `the block starts under the bar at ${width}px`).toBeGreaterThanOrEqual(bar.y + bar.height - 1);
+      expect(bar.height, `the bar is still one row at ${width}px`).toBeLessThanOrEqual(targetAt(width) + 2);
+      expect(box.x + box.width).toBeLessThanOrEqual(width + 0.5);
+
+      // Every link a thumb's 44 pixels tall; each mark 44 wide too.
+      const links = block.locator("a");
+      expect(await links.count()).toBeGreaterThan(0);
+      for (let i = 0; i < (await links.count()); i++) {
+        const link = await boxOf(links.nth(i), `the block's link ${i}`);
+        expect(link.height, `the block's link ${i} is 44px tall at ${width}px`).toBeGreaterThanOrEqual(43.5);
+        expect(link.x + link.width, `the block's link ${i} ends inside ${width}px`).toBeLessThanOrEqual(width + 0.5);
+      }
+
+      // The marks are the bar's own list: the same addresses in the same order.
+      const social = block.getByTestId("club-identity-social").getByRole("link");
+      const barHrefs = await marks.evaluateAll((els) => els.map((el) => el.getAttribute("href")));
+      const blockHrefs = await social.evaluateAll((els) => els.map((el) => el.getAttribute("href")));
+      expect(blockHrefs).toEqual(barHrefs);
+      for (let i = 0; i < (await social.count()); i++) {
+        expect((await boxOf(social.nth(i), `mark ${i}`)).width).toBeGreaterThanOrEqual(43.5);
+      }
+
+      // «Contact», and «Scrie-ne» to the form, with its glyph.
+      const contact = block.getByTestId("club-identity-contact");
+      await expect(contact.getByRole("heading", { name: "Contact" })).toBeVisible();
+      const write = contact.getByTestId("club-identity-write");
+      await expect(write).toHaveText("Scrie-ne");
+      await expect(write).toHaveAttribute("href", "/ro/contact");
+      await expect(write.locator("svg")).toHaveCount(1);
+
+      // The legal facts: shown when the environment holds them, and nothing of them otherwise.
+      const name = block.getByTestId("club-identity-name");
+      if ((await name.count()) > 0) {
+        await expect(name).toContainText("România");
+        await expect(name).toContainText("(");
+      } else {
+        await expect(block).not.toContainText("C.I.F.");
+        await expect(block).not.toContainText("România");
+      }
+
+      // Three columns from `sm`, side by side and top-aligned; stacked on a phone.
+      const columns: Box[] = [];
+      for (const id of ["club-identity-name", "club-identity-social", "club-identity-contact"]) {
+        const column = block.getByTestId(id);
+        if ((await column.count()) > 0) columns.push(await boxOf(column, id));
+      }
+      for (let i = 1; i < columns.length; i++) {
+        const [before, after] = [columns[i - 1]!, columns[i]!];
+        if (width >= SM) {
+          expect(after.x, `column ${i} is right of column ${i - 1} at ${width}px`).toBeGreaterThanOrEqual(before.x + before.width - 0.5);
+          expect(Math.abs(after.y - before.y), `the columns share their top at ${width}px`).toBeLessThan(1.5);
+        } else {
+          expect(after.y, `column ${i} is under column ${i - 1} at ${width}px`).toBeGreaterThanOrEqual(before.y + before.height - 0.5);
+        }
+      }
+
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+      expect(overflow).toBeLessThanOrEqual(0);
+    });
+  }
+
+  test("speaks English on the English site", async ({ page }) => {
+    await page.goto("/en/events", { waitUntil: "networkidle" });
+    const block = page.getByTestId("club-identity-block");
+    await restAtTheEnd(page);
+    await expect(block).toHaveAttribute("aria-label", "The club's details");
+    await expect(block.getByTestId("club-identity-write")).toHaveText("Write to us");
+    await expect(block.getByTestId("club-identity-write")).toHaveAttribute("href", "/en/contact");
+    const name = block.getByTestId("club-identity-name");
+    if ((await name.count()) > 0) await expect(name).toContainText("Romania");
   });
 });
