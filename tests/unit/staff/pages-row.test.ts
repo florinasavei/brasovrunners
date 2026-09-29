@@ -100,7 +100,7 @@ describe("«Pagini»'s row: every entry an address of the section", () => {
     expect(list).not.toContain("/admin/settings/contact");
   });
 
-  it("keeps «Contact» off «Setări»: its two cards and their saves are «Pagini»'s, the gate unchanged", () => {
+  it("keeps «Contact» off «Setări»: its cards and their saves are «Pagini»'s, the gate unchanged", () => {
     expect(Object.values(SETTINGS_TAB_ROUTE) as string[]).not.toContain("/admin/settings/contact");
     expect("/admin/settings/contact" in routing.pathnames).toBe(false);
     const page = read("src/app/[locale]/admin/pages/contact/page.tsx");
@@ -108,9 +108,10 @@ describe("«Pagini»'s row: every entry an address of the section", () => {
     expect(page).toContain("if (!canReadContent(actor.role)) notFound();");
     expect(page).not.toContain("SettingsSubNav");
     const actions = read("src/app/[locale]/admin/pages/contact/actions.ts");
-    expect(actions.match(/href: "\/admin\/pages\/contact"/g)).toHaveLength(2);
+    // Three saves since «Telefon public» (§565): each lands back here, each behind the Administrator's gate.
+    expect(actions.match(/href: "\/admin\/pages\/contact"/g)).toHaveLength(3);
     expect(actions).not.toContain("/admin/settings/contact");
-    expect(actions.match(/requireStaffCapability\(canManageClubSettings\)/g)).toHaveLength(2);
+    expect(actions.match(/requireStaffCapability\(canManageClubSettings\)/g)).toHaveLength(3);
   });
 });
 

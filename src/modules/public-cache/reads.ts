@@ -7,6 +7,7 @@ import { contactFormReaches } from "@/modules/contact/delivery";
 import { readContactRecipients } from "@/modules/contact/recipients";
 import { resolveShownContactAddresses } from "@/modules/contact/domain/shown-address";
 import { readShownContactAddress } from "@/modules/contact/shown-address";
+import { readPublicPhone } from "@/modules/contact/public-phone";
 import { DEFAULT_SITE_TINT_SETTING, parseSiteTint, type SiteTintSetting } from "@/modules/appearance/domain/site-tint";
 import { readSiteTint } from "@/modules/appearance/site-tint";
 import { DEFAULT_SITE_FONT_SIZE_SETTING, parseSiteFontSize, type SiteFontSizeSetting } from "@/modules/appearance/domain/site-font-size";
@@ -555,6 +556,19 @@ export async function cachedShownContactAddresses(): Promise<string[]> {
     );
   } catch {
     return resolveShownContactAddresses(null, env.EMAIL_REPLY_TO, env.CONTACT_SMTP_USER);
+  }
+}
+
+/**
+ * «Telefon public» (§565): the number the footer's «Contact» column shows, or null — a number the
+ * site prints anyway, so the value itself is cached. When the database cannot answer, no number:
+ * the column still has the address and «Scrie-ne».
+ */
+export async function cachedPublicPhone(): Promise<string | null> {
+  try {
+    return await publicRead(["settings.public-phone"], ["settings"], async () => (await readPublicPhone(getDb())).phone);
+  } catch {
+    return null;
   }
 }
 

@@ -1,4 +1,4 @@
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import { legalDocuments, legalDocumentTranslations } from "@/db/schema/legal-documents";
 import type { LegalDocumentKey } from "@/db/schema/legal-documents";
 import type { StaffUser } from "@/db/schema/staff-users";
@@ -14,7 +14,8 @@ import {
   type LegalDocumentTranslationInput,
 } from "./domain/content-hash";
 import { isEmptyBody } from "./domain/body-text";
-import { matchesBatchConfirmation, matchesConfirmation } from "./domain/confirmation";
+import { matchesBatchConfirmation, matchesConfirmation, matchesVersionNumber } from "./domain/confirmation";
+import { RETIRE_REASON_MAX, RETIRE_REASON_MIN } from "./domain/retire-steps";
 import {
   deletionOrder,
   type DraftApprovalOutcome,
@@ -30,6 +31,8 @@ import {
   dependantObstacle,
   inForceWindow,
   isReliedOn,
+  removalPlan,
+  type RetireReliance,
   type TermsReliance,
 } from "./domain/deletability";
 import {
@@ -157,6 +160,8 @@ function refusalFor(obstacle: DeletionObstacle): DomainError {
         "CONFLICT",
         "this version was never approved; a draft is deleted by deleteDraftVersion, which needs no confirmation and retires no number",
       );
+    case "deleted":
+      return new DomainError("CONFLICT", "this version has already been deleted from the list", ["alreadyDeleted"]);
     case "referenced":
       return new DomainError(
         "CONFLICT",
@@ -213,6 +218,7 @@ export async function readDeletionFacts<T extends Record<string, unknown>>(
     privacyAcknowledgementCount: row.privacyAcknowledgementCount,
     inForce: inForce.has(row.id),
     terms: terms[index],
+    deleted: row.deletedAt !== null,
   }));
 }
 
@@ -772,6 +778,153 @@ async function destroyApprovedVersion<T extends Record<string, unknown>>(
   if (!deleted) {
     throw new DomainError("CONFLICT", "this version changed while it was being deleted");
   }
+}
+
+export type DeleteReliedOnVersionInput = {
+  versionId: string;
+  /** Why, as typed on step one: 3 to 200 characters, kept beside the version and in the audit row. */
+  reason: string;
+  /** The version's number, typed on step two: `6`. */
+  typedNumber: string;
+  now: Date;
+};
+
+/** The refusal for a version «Șterge» may not retire, in the words the screen maps to a sentence. */
+function retireRefusal(plan: Exclude<ReturnType<typeof removalPlan>, { kind: "retire" }>): DomainError {
+  if (plan.kind === "delete") {
+    return new DomainError(
+      "CONFLICT",
+      "nothing depends on this version any more; it is deleted for real, with the typed phrase",
+      ["nothingDepends"],
+    );
+  }
+  switch (plan.reason) {
+    case "draft":
+      return refusalFor({ kind: "draft" });
+    case "inForce":
+      return new DomainError(
+        "CONFLICT",
+        "this version is the one currently in force; approve its successor before deleting it",
+        ["inForce"],
+      );
+    case "alreadyDeleted":
+      return refusalFor({ kind: "deleted" });
+  }
+}
+
+/** The version as it is now and what «Șterge» may do with it, or the refusal — asked twice. */
+async function assertRetirable<T extends Record<string, unknown>>(
+  db: Database<T>,
+  versionId: string,
+  now: Date,
+): Promise<{ row: LegalDocumentVersionRow; reliance: RetireReliance }> {
+  const versions = await listVersionsForBackoffice(db);
+  const row = versions.find((candidate) => candidate.id === versionId);
+  if (!row) throw new DomainError("NOT_FOUND", "no such legal document version");
+  const [facts] = await readDeletionFacts(db, [row], versions, now);
+  const plan = removalPlan(facts);
+  if (plan.kind !== "retire") throw retireRefusal(plan);
+  return { row, reliance: plan.reliance };
+}
+
+/**
+ * «Șterge» on a version somebody relied on: retired and hidden, never destroyed (§567, amending
+ * §151 and §556; the owner, 2026-09-29: «aș vrea să pot șterge (cu dublă confirmare) chiar și
+ * documentele care sunt deja semnate»).
+ *
+ * ## The rule that binds
+ *
+ * A signed version is the club's proof of what a person accepted: every acceptance stores the
+ * version, the moment and the text's hash (§556), the signed PDF renders the text from this row,
+ * and AGENTS.md §10.8 forbids losing what was in force. So a version's text is never destroyed
+ * while a signature, an event or a registration depends on it — and «Șterge» on such a version is
+ * **retire-and-hide**: it leaves the list (`deleted_at`), it can never be put in force again (it is
+ * withdrawn in the same statement, and every reader of the text in force already skips a withdrawn
+ * version), and its row, its number and its words stay. The acceptances keep pointing at it; the
+ * registration's page, the desk and the signed PDF read it by id and still find it.
+ *
+ * A version with **no** dependants keeps §151's real delete (`deleteApprovedVersion`): nothing
+ * could need its words, so they go. The version **in force** is refused either way: approve the
+ * next version first.
+ *
+ * ## The two confirmations, checked here
+ *
+ * The screen asks the reason first (step one, with the counts in words) and the version's number
+ * second; this checks both, whatever the screen sent (BR-REQ-060-01). The role before either, like
+ * every write of the club's legal text (`assertMayEdit`: the Administrator and above, §450).
+ *
+ * ## Order inside the transaction
+ *
+ * The question again on the rows as they are, the audit row first (who, the key, the number, the
+ * reason, the counts, the text's hash — never the text, §12.12), then the guarded update. If the
+ * update matches nothing — deleted in another tab meanwhile — everything rolls back.
+ */
+export async function deleteReliedOnVersion<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  input: DeleteReliedOnVersionInput,
+): Promise<{ key: LegalDocumentKey; version: number }> {
+  assertMayEdit(actor);
+
+  const reason = input.reason.trim();
+  if (reason.length < RETIRE_REASON_MIN || reason.length > RETIRE_REASON_MAX) {
+    throw new DomainError(
+      "VALIDATION_ERROR",
+      `a deletion needs a reason of ${RETIRE_REASON_MIN} to ${RETIRE_REASON_MAX} characters; it stays beside the version`,
+      ["reason"],
+    );
+  }
+
+  const preflight = await assertRetirable(db, input.versionId, input.now);
+  if (!matchesVersionNumber(input.typedNumber, preflight.row.version)) {
+    throw new DomainError(
+      "VALIDATION_ERROR",
+      "the typed number is not this version's; nothing was deleted",
+      ["typedNumber"],
+    );
+  }
+
+  const retired = await db.transaction(async (tx) => {
+    const { row, reliance } = await assertRetirable(tx, input.versionId, input.now);
+
+    await recordAuditEvent(tx, {
+      actorStaffUserId: actor.id,
+      action: "legal_document_version.deleted",
+      entityType: "legal_document",
+      entityId: row.id,
+      metadata: {
+        ...(await describeVersionForAudit(tx, row)),
+        reason,
+        signatures: reliance.signatures,
+        events: reliance.events,
+        acknowledgements: reliance.acknowledgements,
+        termsRegistrations: reliance.termsRegistrations,
+        // Stated on the row, so nobody reading it later mistakes it for §151's destruction.
+        textKept: true,
+        withdrawnBefore: row.withdrawnAt?.toISOString() ?? null,
+      },
+      now: input.now,
+    });
+
+    const [updated] = await tx
+      .update(legalDocuments)
+      .set({
+        deletedAt: input.now,
+        deletedByStaffUserId: actor.id,
+        deletedReason: reason,
+        // Withdrawn as well, if it was not yet: the one condition every reader of the text in
+        // force, the event editor's choices and the templates' comparison already ask.
+        withdrawnAt: sql`coalesce(${legalDocuments.withdrawnAt}, ${input.now.toISOString()}::timestamptz)`,
+        withdrawnByStaffUserId: sql`coalesce(${legalDocuments.withdrawnByStaffUserId}, ${actor.id}::uuid)`,
+      })
+      .where(and(eq(legalDocuments.id, row.id), eq(legalDocuments.isApproved, true), isNull(legalDocuments.deletedAt)))
+      .returning({ id: legalDocuments.id });
+    if (!updated) throw new DomainError("CONFLICT", "this version changed while it was being deleted");
+    return { key: row.key, version: row.version };
+  });
+  // Never the text in force, but the public cache may hold one dated ahead of it (§333).
+  revalidatePublicContent("legal");
+  return retired;
 }
 
 /**

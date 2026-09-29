@@ -1,6 +1,6 @@
 import type { events } from "@/db/schema/events";
 import { costPaidToExternalOrganizer } from "../domain/cost";
-import { difficultyLevelOf, difficultyWords, type StoredDifficulty } from "../domain/difficulty";
+import { difficultyLevelOf, difficultyWords, type DifficultyTooltipBlock, type StoredDifficulty } from "../domain/difficulty";
 import { distanceInKm } from "../domain/event-type";
 import { clubNightEvent, nightTooltip } from "../night-event";
 import { difficultyLevelGlyph } from "./difficulty-glyphs";
@@ -13,7 +13,7 @@ import type { GlyphName } from "./glyphs";
  * word stays the closed set's own — the listing card's cost pill on an `EXTERNAL`-registration
  * `PAID` event still reads "Cu taxă" so every card's pill says the same short word, and a screen
  * reader alone is told the fee goes to the organizer (`DECISIONS.md` §394). `srLabel` replaces
- * the words a screen reader hears altogether: the difficulty pill shows «Mediu 5» and is heard as
+ * the words a screen reader hears altogether: the difficulty pill shows «Mediu» beside its gauge and is heard as
  * «Dificultate: mediu — nivelul 5 din 15 (mediu: 4–6)» (§526, §563). Content, not an
  * `aria-label` override: MUI's `Chip` is a plain, roleless `<div>` when it is not clickable, and
  * ARIA 1.2 does not allow naming a generic element, so the extra words have to be in the chip's
@@ -32,6 +32,8 @@ export type Pill = {
    * Absent, `label` is the whole of it.
    */
   plain?: string;
+  /** The difficulty's tooltip as a block, the level in bold and the ladder in rows (§566); drawn in place of `tooltip`'s text. */
+  tooltipBlock?: DifficultyTooltipBlock;
 };
 
 /** What a row has to carry to build the route's pills: the closed sets and the two numbers of a
@@ -128,9 +130,10 @@ export function routePillParts(
 
 /**
  * The difficulty's pill for a level on the club's scale of fifteen (§526): the gauge of the level
- * (the band's segments lit, the needle at the step, its dots), and the band with **the level** in
- * words — «Mediu 5», never the step (§563: the number is the level, the dots are the step). Every
- * word from `difficultyWords`, the one function every surface reads, never a string written here.
+ * (the band's segments lit, the needle at the step, its dots), and **the band alone** in words —
+ * «Mediu» (§566: the owner, 2026-09-29 19:08, «the sub indicator is enough» — the dots say the step,
+ * the tooltip the level; a number beside them said it a third time). Every word from
+ * `difficultyWords`, the one function every surface reads, never a string written here.
  *
  * **The tooltip is two lines (§528, §563)**: the level of fifteen, «Mediu — nivelul 5 din 15», then
  * the whole ladder, «ușor 1–3 · mediu 4–6 · greuț 7–9 · greu 10–12 · foarte greu 13–15»
@@ -149,6 +152,8 @@ function difficultyPillOf(level: number, t: Translate): Pill {
     // Where no chip is drawn — the emails' facts block (§392): «Mediu, nivelul 5 din 15».
     plain: words.plain,
     tooltip: words.tooltip,
+    // Drawn as a block (§566): «Mediu — nivelul 5 din 15» in bold, then one aligned row per band.
+    tooltipBlock: words.block,
   };
 }
 

@@ -241,6 +241,8 @@ export type AuditAction =
   | "contact_recipients.changed"
   /** «Adresa de contact afișată»: the mailbox, the club's Gmail, or both (§442). */
   | "shown_contact_address.changed"
+  /** «Telefon public»: the number the footer's «Contact» shows, set or cleared (§565); whether one is set, never the number. */
+  | "public_phone.changed"
   /** «Aspectul site-ului»: the public pages' light background tint, a preset or a typed colour (§488). */
   | "site_tint.changed"
   /** «Mărimea textului»: the public pages' text size, one of four steps (§530). */
@@ -287,6 +289,14 @@ export type AuditAction =
    * be inferred from another table.
    */
   | "legal_document.deleted"
+  /**
+   * «Șterge» on a version somebody relied on (`DECISIONS.md` §567): retired and hidden from the
+   * list, **its text kept** — signatures, events or registrations still point at it. The key, the
+   * number, the reason, the counts that stood on it and the hashes; never the text (§12.12), which
+   * is still on its row. Told apart from `legal_document.deleted`, which destroyed a version nothing
+   * relied on.
+   */
+  | "legal_document_version.deleted"
   /**
    * A draft made from the platform's template by «Regenerează din șablon» — one text's press on
    * its card, or «Regenerează toate» (§532, §539). One row per draft: the key and the version it

@@ -38,7 +38,9 @@ import {
   deletionObstacle,
   type InForceWindow,
   isReliedOn,
+  removalPlan,
 } from "@/modules/legal-documents/domain/deletability";
+import { reliancePhrases } from "@/modules/legal-documents/domain/retire-steps";
 import { planDraftApproval, readDeletionFacts, readLegalOverview } from "@/modules/legal-documents/service";
 import { confirmationPhrase } from "@/modules/legal-documents/domain/confirmation";
 import {
@@ -190,7 +192,16 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
 
   const t = await getTranslations("Admin");
   const words = await confirmWords();
-  const versions = await listVersionsForBackoffice(getDb());
+  /*
+    Every row, and the two lists the page draws from it (§567): the versions — everything but a
+    version deleted from the list — and «Versiuni șterse», read-only. A deleted version is never
+    listed, filtered, counted or offered anything; it stays among `allVersions` only where the rows
+    are read as history (a terms version's time in force was shortened by it while it was in force).
+    It is withdrawn as well, so every other reader skips it as it skips any withdrawn version.
+  */
+  const allVersions = await listVersionsForBackoffice(getDb());
+  const versions = allVersions.filter((version) => version.deletedAt === null);
+  const deletedVersions = allVersions.filter((version) => version.deletedAt !== null);
   // The one press (§132): offered while any text it covers (`PLATFORM_APPROVAL_KEYS`, §515) has no approved version, with the
   // facts it would write shown first — a wrong CIF is seen here, not on the public notice.
   // The contact address as the club chose to show it (§442).
@@ -236,7 +247,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
     Every row in one call, so the in-force question is asked once per document rather than once
     per row; the only per-row cost is the count for each terms version that was ever in force.
   */
-  const allFacts = await readDeletionFacts(getDb(), versions, versions, now);
+  const allFacts = await readDeletionFacts(getDb(), versions, allVersions, now);
   const factsById = new Map<string, DeletionFacts>(
     versions.map((version, index) => [version.id, allFacts[index]]),
   );
@@ -299,6 +310,8 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
     events: version.eventCount,
     acknowledgements: version.privacyAcknowledgementCount,
   });
+  // The three counts in words, «1 semnătură · 0 evenimente · 0 înscrieri» (§567, `countForm`).
+  const relianceWords = (version: LegalDocumentVersionRow) => reliancePhrases((key, values) => t(key, values), relianceOf(version), locale);
 
   // What the filter keeps, and how many of how many: «4 versiuni din 11».
   const shown = filterLegalVersions(versions, inForceIds, filter);
@@ -364,7 +377,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
           events: reliance.events,
           privacyAcknowledgements: reliance.acknowledgements,
         })
-          ? t("legal.referencedFull", reliance)
+          ? t("legal.referencedFull", relianceWords(version))
           : t("legal.unreferenced");
       },
     },
@@ -416,8 +429,6 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
       events: reliance.events,
       privacyAcknowledgements: reliance.acknowledgements,
     });
-    // The service's verdict on deleting this row, and the first reason if it is no.
-    const obstacle = deletionObstacle(factsOf(version));
 
     const reason = (message: string) => (
       <Typography
@@ -438,11 +449,62 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
       gives and the refusal the server would give name the same thing. The first two
       stop both verbs, because withdrawal asks the same question (`dependantObstacle`).
     */
+    const withdrawForm = (
+      <ActionForm
+        action={withdrawLegalVersionAction}
+        confirm={{ title: t("legal.withdrawTitle"), body: t("legal.withdrawBody"), confirmLabel: t("legal.withdraw"), cancelLabel: words.cancel, destructive: true }}
+      >
+        <input type="hidden" name="uiLocale" value={locale} />
+        <input type="hidden" name="versionId" value={version.id} />
+        {/*
+          Warning rather than error, and the word is "retrage" rather than "șterge", because
+          this button does not destroy anything — saying otherwise in the one place somebody
+          reads before pressing would be the wrong kind of honest.
+        */}
+        <GlyphButton icon="unpublish" type="submit" size="small" variant="outlined" color="warning" sx={{ minHeight: 44 }}>
+          {t("legal.withdraw")}
+        </GlyphButton>
+      </ActionForm>
+    );
+
     if (version.isApproved) {
-      if (obstacle?.kind === "referenced") {
-        return reason(t("legal.removeBlockedReferenced", reliance));
+      // What «Șterge» would do with it (§567): the service's own rule, so the row and the server agree.
+      const plan = removalPlan(factsOf(version));
+      if (plan.kind === "refused") return reason(t("legal.removeBlockedCurrent"));
+
+      /*
+        Somebody relied on it (§567, the owner, 2026-09-29: «aș vrea să pot șterge (cu dublă
+        confirmare) chiar și documentele care sunt deja semnate»): «Șterge» takes it off the list
+        and keeps its text, in two steps on its own screen. Withdrawal stays refused while a count
+        stands on it (§46); a terms version agreed to only inside its window keeps its withdraw
+        button (§316). The sentence says what stands on it, in words: «1 semnătură».
+      */
+      if (plan.kind === "retire") {
+        const terms = factsOf(version).terms;
+        return (
+          <Stack spacing={0.75} sx={{ alignItems: "flex-end" }}>
+            {mayDestroy && !relied && !version.withdrawnAt && withdrawForm}
+            {mayDestroy && (
+              <GlyphButtonLink
+                href={{ pathname: "/admin/legal/[id]/delete", params: { id: version.id } }}
+                icon="delete"
+                variant="outlined"
+                color="error"
+                size="small"
+                sx={{ minHeight: 44 }}
+                data-testid="legal-retire-link"
+              >
+                {t("legal.deleteAction")}
+              </GlyphButtonLink>
+            )}
+            {reason(
+              relied || !terms
+                ? t("legal.retireOffered", relianceWords(version))
+                : t("legal.retireTermsOffered", { count: terms.registrations, window: span(terms.window) }),
+            )}
+          </Stack>
+        );
       }
-      if (obstacle?.kind === "inForce") return reason(t("legal.removeBlockedCurrent"));
 
       /*
         Deletable, so the row says both verbs and what each one costs (§151).
@@ -476,50 +538,24 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
             // below already says what deleting would mean, once.
             null
           ) : (
-            <ActionForm
-              action={withdrawLegalVersionAction}
-              confirm={{ title: t("legal.withdrawTitle"), body: t("legal.withdrawBody"), confirmLabel: t("legal.withdraw"), cancelLabel: words.cancel, destructive: true }}
+            withdrawForm
+          )}
+          {mayDestroy && (
+            <Link
+              href={{
+                pathname: "/admin/legal/[id]/delete",
+                params: { id: version.id },
+              }}
             >
-              <input type="hidden" name="uiLocale" value={locale} />
-              <input type="hidden" name="versionId" value={version.id} />
-              {/*
-                Warning rather than error, and the word is "retrage" rather than
-                "șterge", because this button does not destroy anything — saying
-                otherwise in the one place somebody reads before pressing would be the
-                wrong kind of honest.
-              */}
-              <GlyphButton icon="unpublish" type="submit" size="small" variant="outlined" color="warning" sx={{ minHeight: 44 }}>
-                {t("legal.withdraw")}
-              </GlyphButton>
-            </ActionForm>
+              {t("legal.deletePermanently")}
+            </Link>
           )}
-          {obstacle?.kind === "termsAccepted" ? (
-            reason(
-              t("legal.deleteBlockedTermsAccepted", {
-                count: obstacle.registrations,
-                window: span(obstacle.window),
-              }),
-            )
-          ) : (
-            <>
-              {mayDestroy && (
-                <Link
-                  href={{
-                    pathname: "/admin/legal/[id]/delete",
-                    params: { id: version.id },
-                  }}
-                >
-                  {t("legal.deletePermanently")}
-                </Link>
-              )}
-              {reason(t("legal.deleteMeans", { version: version.version }))}
-            </>
-          )}
+          {reason(t("legal.deleteMeans", { version: version.version }))}
         </Stack>
       );
     }
 
-    if (relied) return reason(t("legal.deleteBlockedReferenced", reliance));
+    if (relied) return reason(t("legal.deleteBlockedReferenced", relianceWords(version)));
 
     // A draft nothing relied on can go, and only by the role the service lets (§222).
     if (!mayDestroy) return reason(t("legal.deleteMeans", { version: version.version }));
@@ -555,6 +591,8 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
   const kindCard = (key: LegalDocumentKey) => {
     const kind = overview[key];
     const rows = versionsOfKind(shown, key);
+    // Shown whatever the filter: a deleted version is in no state the chips name (§567).
+    const deletedOfKind = filter.kind === null || filter.kind === key ? versionsOfKind(deletedVersions, key) : [];
     const kindName = t(`legal.keys.${key}`);
     const headline = kindHeadline(kind.summary)
       .map((line) =>
@@ -653,6 +691,53 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
               )}
             />
           </Panel>
+
+          {/*
+            «Versiuni șterse» (§567): the versions of this text taken off the list, their text kept
+            because somebody relied on it. Closed, read-only, and nothing is restored from here: a
+            deleted version must never come back into force by accident, and the same words again
+            are a new version («Versiune nouă» from its page), approved like any other.
+          */}
+          {deletedOfKind.length > 0 && (
+            <Panel
+              glyph="deletedVersions"
+              level={4}
+              collapsible
+              id={`legal-deleted-${key}`}
+              data-testid={`legal-deleted-${key}`}
+              title={t("legal.deletedFold.title")}
+              aside={t(`legal.deletedFold.count.${countForm(deletedOfKind.length, locale)}`, { count: deletedOfKind.length })}
+              intro={t("legal.deletedFold.intro")}
+            >
+              <Box component="ul" sx={{ m: 0, p: 0, listStyle: "none" }}>
+                {deletedOfKind.map((version) => (
+                  <Box component="li" key={version.id} sx={{ py: 1, borderTop: 1, borderColor: "divider" }} data-testid="legal-deleted-row">
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                      {t("legal.deletedFold.row", {
+                        version: version.version,
+                        date: formatDay(version.deletedAt ?? now, { locale, timeZone: CLUB_TIME_ZONE, style: "short", position: "inline" }),
+                        who: version.deletedByName ?? t("legal.deletedFold.whoGone"),
+                      })}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {t("legal.deletedFold.reason", { reason: version.deletedReason ?? "—" })}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {t("legal.referencedFull", relianceWords(version))}
+                    </Typography>
+                    <GlyphButtonLink
+                      href={{ pathname: "/admin/legal/[id]", params: { id: version.id } }}
+                      icon="preview"
+                      size="small"
+                      sx={{ minHeight: 44, px: 0 }}
+                    >
+                      {t("legal.deletedFold.read")}
+                    </GlyphButtonLink>
+                  </Box>
+                ))}
+              </Box>
+            </Panel>
+          )}
         </Stack>
       </Panel>
     );
@@ -670,6 +755,9 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
         )}
         {/* The phrase that was typed names what went: a document code and a number, nothing
             about any person — the same two things the audit row keeps. */}
+        {saved === "legalVersionRetired" && (
+          <Alert severity="success">{t("legal.legalVersionRetired", { phrase: current.phrase ?? "" })}</Alert>
+        )}
         {saved === "legalVersionErased" && (
           <Alert severity="success">
             {t("legal.legalVersionErased", { phrase: current.phrase ?? "" })}
@@ -691,6 +779,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
           saved !== "legalVersionDeleted" &&
           saved !== "legalVersionWithdrawn" &&
           saved !== "legalVersionErased" &&
+          saved !== "legalVersionRetired" &&
           saved !== "legalTemplatesRegenerated" &&
           saved !== "legalDraftsApproved" &&
           saved !== "legalVersionsDeleted" &&

@@ -274,7 +274,10 @@ function tooltips(fragment: string): string[] {
 
 /** Every tooltip's words, in order. */
 function allTooltips(fragment: string): string[] {
-  return [...withoutStyles(fragment).matchAll(/data-tooltip-title="">([^<]*)</g)].map((match) => match[1]);
+  // The difficulty's tooltip is a block (§566): its first line, the level, stands for it here.
+  return [
+    ...withoutStyles(fragment).matchAll(/data-tooltip-title="">(?:<span [^>]*data-testid="difficulty-tooltip"><span [^>]*data-part="head">([^<]*)<|([^<]*)<)/g),
+  ].map((match) => match[1] ?? match[2]);
 }
 
 /** The `<dl>`'s rows: each label with its `<dd>` markup. */
@@ -284,7 +287,7 @@ function rows(html: string) {
 
 describe("§394 orderRoutePills — the night event where §382 put the headlamp", () => {
   const surface: Pill = { glyph: "surface:TRAIL", label: "Trail" };
-  const difficulty: Pill = { glyph: "difficulty:MEDIUM-2", label: "Mediu 5" };
+  const difficulty: Pill = { glyph: "difficulty:MEDIUM-2", label: "Mediu" };
   const distance: Pill = { glyph: "distance", label: "8 km" };
   const elevation: Pill = { glyph: "elevation", label: "250 m D+" };
   const night: Pill = { glyph: "night", label: "Noapte", tooltip: "Soarele apune la 16:44" };
@@ -312,10 +315,10 @@ describe("§394 the event page's facts", () => {
     const html = renderToStaticMarkup(await EventFacts({ event: event(), now: NOW, stacked: true }));
     const route = rows(html).find((row) => row.label === "Traseu");
     expect(route).toBeDefined();
-    expect(pillLabels(route!.dd)).toEqual(["Trail", "Mediu 5", "8 km", "250 m D+", "Noapte"]);
+    expect(pillLabels(route!.dd)).toEqual(["Trail", "Mediu", "8 km", "250 m D+", "Noapte"]);
     expect(tooltips(route!.dd)).toEqual(["Soarele apune la 16:44"]);
-    // The difficulty's own tooltip, before it in the row (§528).
-    expect(allTooltips(route!.dd)).toEqual(["Mediu — nivelul 5 din 15\nușor 1–3 · mediu 4–6 · greuț 7–9 · greu 10–12 · foarte greu 13–15", "Soarele apune la 16:44"]);
+    // The difficulty's own tooltip, before it in the row (§528), drawn as its block (§566).
+    expect(allTooltips(route!.dd)).toEqual(["Mediu — nivelul 5 din 15", "Soarele apune la 16:44"]);
     expect(route!.dd).toContain('data-testid="ModeNightIcon"');
     expect(route!.dd).not.toContain("FlashlightOnIcon");
     // The tooltip only opens on hover or focus, and the chip is not focusable, so the sunset
@@ -328,7 +331,7 @@ describe("§394 the event page's facts", () => {
     currentLocale = "en";
     const html = renderToStaticMarkup(await EventFacts({ event: event(), now: NOW, stacked: true }));
     const route = rows(html).find((row) => row.label === "Route")!;
-    expect(pillLabels(route.dd)).toEqual(["Trail", "Medium 5", "8 km", "250 m climb", "Night"]);
+    expect(pillLabels(route.dd)).toEqual(["Trail", "Medium", "8 km", "250 m climb", "Night"]);
     expect(tooltips(route.dd)).toEqual(["The sun sets at 16:44"]);
   });
 
@@ -371,7 +374,7 @@ describe("§394 the event page's facts", () => {
 describe("§394 the listing card and the hero", () => {
   it("the card's pills: the route, the night, then the cost", async () => {
     const html = renderToStaticMarkup(await EventFacts({ event: event(), now: NOW, variant: "compact" }));
-    expect(pillLabels(html)).toEqual(["Trail", "Mediu 5", "8 km", "250 m D+", "Noapte", "Gratuit"]);
+    expect(pillLabels(html)).toEqual(["Trail", "Mediu", "8 km", "250 m D+", "Noapte", "Gratuit"]);
     expect(html).toContain('data-testid="ModeNightIcon"');
   });
 
