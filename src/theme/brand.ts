@@ -338,10 +338,16 @@ export const PAGE_WIDTH = "xl" as const;
 export const PROSE_MEASURE = "60rem";
 
 /**
- * The wordmark's size (`shared/ui/Wordmark`: the listing, the calendar and the contact page). A
+ * The wordmark's size from `sm` (`shared/ui/Wordmark`: the listing, the calendar and the contact page). A
  * display face, but a signature rather than a banner — 4rem was "way too big" (the owner,
  * 2026-09-17), 2.5rem still a bit; it caps at 2rem. Measured: the face renders
  * about 10.5× its font size wide, so the 1.25rem floor (210px) fits well inside the 288px a 320px
  * viewport leaves inside the gutters (BR-REQ-041-01 criterion 1).
+ *
+ * Half of that since §NNN (the owner, 2026-09-29: «Textul ăsta de „Evenimente” e mult prea mare,
+ * pe mobil ia prea mult spațiu, la fel și la „Calendar”»): the wordmark is not drawn at all below
+ * `sm` — the header's lockup already carries the club's name, one brand per screen — and from
+ * `sm` it is a flat 1rem, 16px, where it was 30.7px at 768 and 32px at 1280. About 168px wide,
+ * so it fits every width it is drawn at; no clamp is needed once a phone never draws it.
  */
-export const WORDMARK_SIZE = "clamp(1.25rem, 4vw, 2rem)";
+export const WORDMARK_SIZE = "1rem";
