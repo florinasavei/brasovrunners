@@ -34,7 +34,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Item | Branch |
 | --- | --- |
-| — | nothing waiting: the last ready items shipped in `BR-V2.30` |
+| — | nothing waiting: the last ready items shipped in `BR-V2.31` |
 
 ## Next, queued
 
@@ -67,6 +67,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Baseline | What |
 | --- | --- |
+| `BR-V2.31` | the registration form asks medical information only when the event’s «Informații medicale» checkbox in the editor’s conditions is ticked (default off — sensitive data the club may not need); a posted value for an event that does not ask is ignored; the backoffice page, the desk, the export and the emergency sheet show it only then; the emergency contact unchanged; migration 0111 (§557) |
 | `BR-V2.30` | the declarations after the second review — three sentences of the templates (shoes as a safety outcome, «indicațiile generale de siguranță comunicate de organizator», the retention clause with the three-year prescription and a dispute hold), the «Reguli de siguranță» block on every group run’s page, the proof of signing (the signed text’s SHA-256, the version and the instant to the second in the PDF, the club’s copy and the database) and an Administrator’s «Păstrează: reclamație / litigiu» the purge respects; migration 0110; the club approves the new template versions (§556) |
 | `BR-V2.29` | the backoffice events list opens on «Viitoare» — no state in the address means the dates to come, «Toate» its own choice (state=ALL) — and /admin/legal’s «Regenerează din șabloane» says «N din 6» with one sentence giving the rule; the form’s sex is a dropdown again, «Feminin» first, each choice with its glyph (§555) |
 | `BR-V2.28` | the registration form’s sex is «Masculin» or «Feminin», each with its glyph, required, no «prefer să nu spun» (a stored one reads «—», no new one is accepted); the shirt is the club’s call per event — «Kit de participare» in the editor’s «Participanți și înscrieri» with a «Tricou» checkbox, the form asking the size only then, every surface showing it only then; migration 0109 (§554) |
