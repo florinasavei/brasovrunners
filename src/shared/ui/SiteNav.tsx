@@ -2,7 +2,6 @@
 
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import Divider from "@mui/material/Divider";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import { useTranslations } from "next-intl";
@@ -10,13 +9,15 @@ import { useSelectedLayoutSegments } from "next/navigation";
 import { useLayoutEffect, useRef, useState, type ComponentProps, type MouseEvent } from "react";
 import { Link } from "@/i18n/navigation";
 import { prefetchFor } from "@/i18n/prefetch";
+import { pageMenuKey, sortByMenuOrder } from "@/modules/content/menu/order";
 import { DURATION, EASE, HOVER_OK } from "@/theme/motion";
 
 /**
- * The platform's own sections — the one list that orders the public menu, the row and the ☰ menu
- * alike (the footer's fold carries links, not this list). The owner's order (§537, after §251):
- * «Evenimente · Calendar · Contact · Echipa · Întrebări frecvente», then the rule and
- * the club's own pages in their own order.
+ * The platform's own sections, in the default order — «Evenimente · Calendar · Contact · Echipa ·
+ * Întrebări frecvente» (§537, after §251), then the club's own pages. Since §NNN that is only the
+ * order of an entry the club has not placed: the club's one order (`order`, «Pagini» → «Ordinea
+ * meniului») sorts the sections and the pages together, the row and the ☰ menu alike, and the rule
+ * that stood between the two groups is gone — the menu is one list.
  *
  * The gallery sits with them rather than with the club's pages, because it is a section this
  * application ships and not something an organizer wrote — and it is offered only when a
@@ -44,17 +45,15 @@ const SECTIONS = [
   { segment: "members", href: "/members" },
 ] as const;
 
-export type NavPage = { slug: string; title: string };
+/** A custom page in the menu: its id is its key in the club's order (`page:<id>`), its slug its address. */
+export type NavPage = { id: string; slug: string; title: string };
 
 type Href = ComponentProps<typeof Link>["href"];
 /**
- * A row entry: a link, or the rule between this application's own sections and the club's
- * pages (§251). The rule is an item rather than a wrapper so the measuring below counts its
- * width like any other entry — a row that folds has to know what it is folding.
+ * A row entry, keyed as the club's order names it: a section by its name, a page as `page:<id>`.
+ * The rule between the sections and the pages (§251) went with §NNN: one order, one list.
  */
-type Item =
-  | { key: string; href: Href; label: string; current: boolean; divider?: false }
-  | { key: string; divider: true; current: false };
+type Item = { key: string; href: Href; label: string; current: boolean };
 
 /**
  * The site's sections, in the header, on every page — and, when they do not all fit on the
@@ -115,6 +114,7 @@ export default function SiteNav({
   showFaq = false,
   showMembers = false,
   showContact = false,
+  order = [],
 }: {
   pages?: readonly NavPage[];
   showGallery?: boolean;
@@ -122,12 +122,14 @@ export default function SiteNav({
   showFaq?: boolean;
   showMembers?: boolean;
   showContact?: boolean;
+  /** The club's stored order, keys first to last (§NNN); an entry it does not name keeps its default place after them. */
+  order?: readonly string[];
 }) {
   const t = useTranslations("Site.nav");
   const segments = useSelectedLayoutSegments();
   const selected = segments[0];
 
-  const items: Item[] = [
+  const defaultOrder: Item[] = [
     ...SECTIONS.filter(
       (section) =>
         (section.segment !== "gallery" || showGallery) &&
@@ -141,15 +143,15 @@ export default function SiteNav({
       label: t(section.segment),
       current: selected === section.segment,
     })),
-    // The rule, and only when there is something on the other side of it.
-    ...(pages.length > 0 ? [{ key: "divider", divider: true as const, current: false as const }] : []),
     ...pages.map((page) => ({
-      key: `page:${page.slug}`,
+      key: pageMenuKey(page.id),
       href: { pathname: "/pages/[slug]", params: { slug: page.slug } } as Href,
       label: page.title,
       current: selected === "pages" && segments[1] === page.slug,
     })),
   ];
+  // The club's order (§NNN): the one merge rule the backoffice card shows, so the card is the menu.
+  const items = sortByMenuOrder(defaultOrder, (item) => item.key, order);
 
   const navRef = useRef<HTMLElement>(null);
   const moreRef = useRef<HTMLElement>(null);
@@ -233,15 +235,9 @@ export default function SiteNav({
             ref={(el: HTMLElement | null) => {
               itemRefs.current[index] = el;
             }}
-            aria-hidden={folded || item.divider || undefined}
+            aria-hidden={folded || undefined}
             sx={folded ? FOLDED : undefined}
           >
-            {item.divider ? (
-              // A hairline, not a character: decoration, so it is out of the accessible name
-              // of the row and out of its tab order.
-              <Box sx={{ width: "1px", height: 20, bgcolor: "divider", mx: { xs: 0.25, sm: 0.5 } }} />
-            ) : (
-            <>
             {/*
               inline-flex so the anchor's box is the 44px entry, not a line of text. The contact
               form and «Membri» are rendered per request, so they are not prefetched (§549).
@@ -256,8 +252,6 @@ export default function SiteNav({
                 {item.label}
               </Box>
             </Link>
-            </>
-            )}
           </Box>
         );
       })}
@@ -316,23 +310,19 @@ export default function SiteNav({
         onClose={close}
         slotProps={{ list: { "aria-labelledby": "site-nav-more" } }}
       >
-        {overflow.map((item) =>
-          item.divider ? (
-            <Divider key={item.key} component="li" />
-          ) : (
-            <MenuItem
-              key={item.key}
-              component={Link}
-              href={item.href}
-              prefetch={prefetchFor(item.href)}
-              selected={item.current}
-              onClick={close}
-              sx={{ minHeight: 44 }}
-            >
-              {item.label}
-            </MenuItem>
-          ),
-        )}
+        {overflow.map((item) => (
+          <MenuItem
+            key={item.key}
+            component={Link}
+            href={item.href}
+            prefetch={prefetchFor(item.href)}
+            selected={item.current}
+            onClick={close}
+            sx={{ minHeight: 44 }}
+          >
+            {item.label}
+          </MenuItem>
+        ))}
       </Menu>
     </Box>
   );

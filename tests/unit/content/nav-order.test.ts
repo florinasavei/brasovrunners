@@ -8,6 +8,10 @@ import { describe, expect, it, vi } from "vitest";
  * its slot just before «Echipa» and «Membri» its slot right after «Întrebări frecvente». One list
  * (`SECTIONS` in `SiteNav`) decides the row and the ☰ menu alike, so the rendered anchors' order is
  * the menu's order.
+ *
+ * Since §NNN that order is only the default: the club's one stored order («Pagini» → «Ordinea
+ * meniului», the `order` prop) sorts the sections and the pages together, and the rule that stood
+ * between the two groups is gone.
  */
 vi.mock("next/navigation", () => ({
   useSelectedLayoutSegments: () => [],
@@ -41,6 +45,9 @@ async function html(element: ReactElement): Promise<string> {
   return new Response(stream).text();
 }
 
+const DESPRE = "11111111-1111-4111-8111-111111111111";
+const ISTORIC = "22222222-2222-4222-8222-222222222222";
+
 function hrefs(markup: string): string[] {
   return [...markup.matchAll(/<a[^>]*href="([^"]+)"/g)].map((match) => match[1]);
 }
@@ -53,8 +60,8 @@ describe("§537 the public menu's order", () => {
         showFaq: true,
         showContact: true,
         pages: [
-          { slug: "despre", title: "Despre" },
-          { slug: "istoric", title: "Istoric" },
+          { id: DESPRE, slug: "despre", title: "Despre" },
+          { id: ISTORIC, slug: "istoric", title: "Istoric" },
         ],
       }),
     );
@@ -66,5 +73,43 @@ describe("§537 the public menu's order", () => {
       createElement(SiteNav, { showGallery: true, showTeam: true, showFaq: true, showMembers: true, showContact: true }),
     );
     expect(hrefs(markup)).toEqual(["/ro/events", "/ro/calendar", "/ro/contact", "/ro/gallery", "/ro/team", "/ro/faq", "/ro/members"]);
+  });
+});
+
+describe("§NNN the club's one menu order", () => {
+  const pages = [
+    { id: DESPRE, slug: "despre", title: "Despre" },
+    { id: ISTORIC, slug: "istoric", title: "Istoric" },
+  ];
+
+  it("puts a custom page before «Evenimente» and «Contact» after it, where the club placed them", async () => {
+    const markup = await html(
+      createElement(SiteNav, {
+        showTeam: true,
+        showFaq: true,
+        showContact: true,
+        pages,
+        order: [`page:${ISTORIC}`, "events", "calendar", `page:${DESPRE}`, "contact", "faq", "team"],
+      }),
+    );
+    expect(hrefs(markup)).toEqual(["/ro/pages/istoric", "/ro/events", "/ro/calendar", "/ro/pages/despre", "/ro/contact", "/ro/faq", "/ro/team"]);
+  });
+
+  it("leaves an entry the order does not name at the end, in its default place, and skips one the menu does not offer", async () => {
+    const markup = await html(
+      createElement(SiteNav, {
+        showContact: true,
+        pages,
+        // «Echipa» is placed but not offered; «Istoric» is offered but not placed.
+        order: ["contact", "team", `page:${DESPRE}`, "events"],
+      }),
+    );
+    expect(hrefs(markup)).toEqual(["/ro/contact", "/ro/pages/despre", "/ro/events", "/ro/calendar", "/ro/pages/istoric"]);
+  });
+
+  it("draws no rule between the sections and the pages: one list", async () => {
+    const markup = await html(createElement(SiteNav, { showContact: true, pages }));
+    expect(markup).not.toContain("<hr");
+    expect(markup).not.toMatch(/key="divider"|width:1px;height:20px/);
   });
 });

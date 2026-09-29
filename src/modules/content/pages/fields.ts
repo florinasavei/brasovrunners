@@ -55,11 +55,8 @@ export type PageTranslationInput = z.infer<typeof pageTranslationSchema>;
  * texts are optional but both languages or neither, refused on the empty box (§354, §315).
  */
 export const pageFieldsSchema = z.object({
-  navOrder: z
-    .string()
-    .trim()
-    .transform((value) => (value === "" ? 0 : Number(value)))
-    .pipe(z.number().int().min(0).max(1000)),
+  // No «Ordinea în meniu» box since §NNN: the page's place is «Ordinea meniului»'s, one order for
+  // every entry of the menu. A posted `navOrder` is ignored (Zod drops keys it does not name).
   translations: z
     .object(
       Object.fromEntries(routing.locales.map((locale) => [locale, pageTranslationSchema])) as Record<

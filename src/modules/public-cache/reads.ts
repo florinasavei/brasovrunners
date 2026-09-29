@@ -12,6 +12,8 @@ import { DEFAULT_SITE_TINT_SETTING, parseSiteTint, type SiteTintSetting } from "
 import { readSiteTint } from "@/modules/appearance/site-tint";
 import { DEFAULT_SITE_FONT_SIZE_SETTING, parseSiteFontSize, type SiteFontSizeSetting } from "@/modules/appearance/domain/site-font-size";
 import { readSiteFontSize } from "@/modules/appearance/site-font-size";
+import { readMenuOrder } from "@/modules/content/menu/menu-order";
+import { parseStoredMenuOrder } from "@/modules/content/menu/order";
 import {
   findPublishedAlbumBySlug,
   findPublishedAlbumTranslations,
@@ -603,6 +605,23 @@ export async function cachedSiteFontSize(): Promise<SiteFontSizeSetting> {
     return parseSiteFontSize(read.value);
   } catch {
     return DEFAULT_SITE_FONT_SIZE_SETTING;
+  }
+}
+
+/**
+ * «Ordinea meniului» (§NNN): the site menu's stored order, a list of keys, for the header and the
+ * footer on every public page — so it is cached, filed under `settings`, which a save expires
+ * (`saveMenuOrder`). When the database cannot answer, the last good copy (§447), then no list at
+ * all, which is today's default order: never a page that fails over its menu.
+ */
+export async function cachedMenuOrder(): Promise<string[]> {
+  try {
+    const read = await readWithLastGood("settings:menu-order", () =>
+      publicRead(["settings.menu-order"], ["settings"], async () => (await readMenuOrder(getDb())).stored),
+    );
+    return parseStoredMenuOrder(read.value);
+  } catch {
+    return [];
   }
 }
 

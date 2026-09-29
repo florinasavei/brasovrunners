@@ -23,7 +23,10 @@ import { listTeamMembersForAdmin } from "@/modules/content/team/repository";
 import PagesSubNav from "@/modules/content/pages/ui/PagesSubNav";
 import { PAGES_ROW_ROUTE } from "@/modules/content/pages/pages-row";
 import { cachedContactFormReaches, cachedShownContactAddresses } from "@/modules/public-cache/reads";
-import { isEditorial, canEditTexts, canReadContent, type EditorialStatus } from "@/modules/staff-identity/domain/roles";
+import { canEditTexts, canManageClubSettings, canReadContent, type EditorialStatus } from "@/modules/staff-identity/domain/roles";
+import { readMenuOrder } from "@/modules/content/menu/menu-order";
+import { pageMenuKey, resolveMenuOrder, sortByMenuOrder } from "@/modules/content/menu/order";
+import MenuOrderPanel from "@/modules/content/menu/ui/MenuOrderPanel";
 import { pageListVerbs } from "@/modules/content/pages/page-list-verbs";
 import { EDITORIAL_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { countMembers } from "@/modules/staff-identity/repository";
@@ -34,10 +37,8 @@ import RowMenu, { type RowMenuItem } from "@/shared/ui/RowMenu";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
 import GlyphButtonLink from "@/shared/ui/GlyphButtonLink";
-import SubmitButton from "@/shared/ui/SubmitButton";
 import { CLUB_NAME } from "@/theme/brand";
-import { deletePageAction, movePageAction, transitionPageAction } from "../actions";
-import { actionKeyOf } from "@/shared/forms/action-key";
+import { deletePageAction, transitionPageAction } from "../actions";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -49,16 +50,15 @@ export const dynamic = "force-dynamic";
 /**
  * The club's standing pages (BR-REQ-050-03).
  *
- * ## The order is edited here, not in a number field
+ * ## The order is edited here, in one list for the whole menu (§NNN)
  *
- * `nav_order` was a number on the page editor, which asks the wrong question. Nobody wants page
- * four to have `nav_order = 40`; they want it above page three — and answering that through a
- * number means opening two editors, reading both numbers, inventing a third, and hoping no other
- * page shares it. Two arrows on the row ask the question the club is actually asking, and
- * `movePageInNav` renumbers the whole list behind them so duplicates and zeroes heal themselves.
- *
- * The number field on the editor stays: it is how a page is placed when it is first written,
- * before there is a list to move it within.
+ * `nav_order` was a number on the page editor, which asks the wrong question; then two arrows on
+ * each custom page's row, which ordered the club's pages among themselves and left «Evenimente»,
+ * «Calendar», «Contact» and the standard pages where the code put them. The owner, 2026-09-29:
+ * «vreau să pot seta ordinea la orice pagină, inclusiv cea de evenimente, calendar, contact». So
+ * «Ordinea meniului» orders every entry the menu can carry in one list, and the table below shows
+ * each custom page's place in it («Locul în meniu») rather than a number of its own. The old
+ * number only places a page the order does not name yet (a page written after the last save).
  *
  * The list is not paginated in practice — a club with more standing pages than fit on a screen
  * has a navigation problem rather than a paging one — but it goes through the same `AdminTable`
@@ -72,13 +72,15 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
   const actor = await requireStaff();
   // Reading the club's pages, not writing them (§208).
   if (!canReadContent(actor.role)) notFound();
-  const mayMove = isEditorial(actor.role);
+  // «Ordinea meniului» is a club setting (§450): the Administrator's, which the action asserts again.
+  const mayOrderMenu = canManageClubSettings(actor.role);
 
   const current = await searchParams;
   const { saved, error } = current;
   const db = getDb();
-  const [rows, teamSettings, teamMembers, faqSettings, faqItems, membersSettings, members, contactFormReaches, contactAddresses] = await Promise.all([
+  const [pageRows, menuState, teamSettings, teamMembers, faqSettings, faqItems, membersSettings, members, contactFormReaches, contactAddresses] = await Promise.all([
     listPagesForAdmin(db, locale),
+    readMenuOrder(db),
     readTeamPageSettings(db),
     listTeamMembersForAdmin(db),
     readFaqPageSettings(db),
@@ -88,6 +90,10 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
     cachedContactFormReaches(),
     cachedShownContactAddresses(),
   ]);
+  // The menu's one order (§NNN): every entry, the custom pages among them; the table follows it.
+  const menuOrder = resolveMenuOrder(menuState.stored, pageRows.map((row) => row.id));
+  const rows = sortByMenuOrder(pageRows, (row) => pageMenuKey(row.id), menuOrder);
+  const placeInMenu = (id: string) => menuOrder.indexOf(pageMenuKey(id)) + 1;
   const t = await getTranslations("Admin");
   /*
     The standard pages (§525): the platform's own, whose address and title the club does not
@@ -189,7 +195,8 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
       label: t("pages.columnOrder"),
       align: "right",
       hideBelow: "sm",
-      render: (row) => row.navOrder,
+      // Its place in «Ordinea meniului» (§NNN), counting every entry of the menu, not only the pages.
+      render: (row) => placeInMenu(row.id),
     },
   ];
 
@@ -239,6 +246,15 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
         </Stack>
       </Stack>
 
+      {/* «Ordinea meniului» (§NNN): every entry of the site menu, the standard and the custom pages together. */}
+      <MenuOrderPanel
+        locale={locale}
+        order={menuOrder}
+        pages={pageRows.map((row) => ({ id: row.id, title: row.title, editorialStatus: row.editorialStatus }))}
+        mayEdit={mayOrderMenu}
+        openWhen={{ saved: saved === "menuOrder" }}
+      />
+
       <Stack
         direction="row"
         sx={{ justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 1 }}
@@ -280,41 +296,9 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
         }}
         empty={<Typography variant="body1">{t("pages.empty")}</Typography>}
         rowActions={(row) => {
-          const index = rows.findIndex((candidate) => candidate.id === row.id);
-
           return (
             <Stack direction="row" spacing={0.5} sx={{ justifyContent: "flex-end", gap: 0.5 }}>
-              {/* The ends have no button rather than a disabled one: there is nothing to
-                  explain about an arrow that would move the first page above itself, and a
-                  control that never does anything is worse than one that is not there. */}
-              {/* The arrows only for a role `movePageInNav` accepts (`isEditorial`): a Redactor reads
-                  the list since its layout asks `canReadContent`, and an arrow it would be refused on is noise. */}
-              {mayMove && index > 0 && (
-                <Box component="form" action={movePageAction} data-action-key={actionKeyOf(movePageAction)}>
-                  <input type="hidden" name="uiLocale" value={locale} />
-                  <input type="hidden" name="pageId" value={row.id} />
-                  <input type="hidden" name="direction" value="up" />
-                  <SubmitButton
-                    label="↑"
-                    pendingLabel="↑"
-                    variant="outlined"
-                    ariaLabel={t("pages.moveUpNamed", { title: row.title ?? t("pages.untitled") })}
-                  />
-                </Box>
-              )}
-              {mayMove && index < rows.length - 1 && (
-                <Box component="form" action={movePageAction} data-action-key={actionKeyOf(movePageAction)}>
-                  <input type="hidden" name="uiLocale" value={locale} />
-                  <input type="hidden" name="pageId" value={row.id} />
-                  <input type="hidden" name="direction" value="down" />
-                  <SubmitButton
-                    label="↓"
-                    pendingLabel="↓"
-                    variant="outlined"
-                    ariaLabel={t("pages.moveDownNamed", { title: row.title ?? t("pages.untitled") })}
-                  />
-                </Box>
-              )}
+              {/* The ↑ / ↓ that stood here went with §NNN: a page moves in «Ordinea meniului», above. */}
               {/*
                 The verbs, in the same ⋮ every other list uses (§256). The two forms beside it
                 are the Server Actions the menu submits — hidden, because the menu is the

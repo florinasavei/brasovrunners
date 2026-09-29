@@ -5,7 +5,7 @@ import { z } from "zod";
 import { eventInputConstraints, translationInputConstraints } from "@/modules/content/events/constraints";
 import { eventFieldsSchema, translationFieldsSchema } from "@/modules/content/events/fields";
 import { albumInputConstraints, albumTranslationConstraints } from "@/modules/content/gallery/constraints";
-import { pageInputConstraints, pageTranslationConstraints } from "@/modules/content/pages/constraints";
+import { pageTranslationConstraints } from "@/modules/content/pages/constraints";
 import { staffRegistrationConstraints } from "@/modules/registrations/constraints";
 import { staffInviteConstraints } from "@/modules/staff-identity/constraints";
 import { constraintsOf, htmlConstraints, textFieldConstraints } from "@/shared/forms/constraints";
@@ -136,12 +136,10 @@ describe("the event form's constraints are the schema's (§315)", () => {
 });
 
 describe("the other backoffice forms read their schemas the same way", () => {
-  it("the page editor: title and address required, the order a bounded whole number", () => {
+  it("the page editor: title and address required", () => {
     expect(pageTranslationConstraints("title")).toMatchObject({ required: true, maxLength: 200 });
     expect(pageTranslationConstraints("slug")).toMatchObject({ required: true, maxLength: 120 });
     expect(pageTranslationConstraints("body").required).toBeUndefined();
-    // "" is 0, so the order is never required.
-    expect(pageInputConstraints("navOrder")).toEqual({ type: "number", min: 0, max: 1000, step: 1 });
   });
 
   it("the album: the date required in its shape, the title and address required", () => {

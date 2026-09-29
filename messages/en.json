@@ -1060,7 +1060,9 @@
         "now": "Send now, without waiting for the scheduled round",
         "queue": "Queue it for the scheduled round",
         "note": "For now, automatic emails leave on the scheduled round, within {wait}. Choose whether this one leaves now or waits for it."
-      }
+      },
+      "menuOrderTitle": "Change the menu order?",
+      "menuOrderBody": "The site's menu and footer show the pages in the new order, for every visitor, from the next page they open."
     },
     "errors": {
       "PICTURE_IN_USE": "The picture is used on a page, an event or in an album. Take it out of there first.",
@@ -3513,15 +3515,9 @@
       "columnTitle": "Title",
       "columnStatus": "Status",
       "columnAddress": "Address",
-      "columnOrder": "Order",
-      "tableCaption": "The club's pages, with their status and their order in the menu",
-      "moveUp": "Move up",
-      "moveDown": "Move down",
-      "moveUpNamed": "Move \"{title}\" up the menu",
-      "moveDownNamed": "Move \"{title}\" down the menu",
-      "moveHelp": "The order here is the order in the site menu.",
-      "navOrder": "Order in the menu",
-      "navOrderHelp": "A lower number comes first. Leave 0 if it does not matter.",
+      "columnOrder": "Place in the menu",
+      "tableCaption": "The club's pages, with their state and place in the menu",
+      "moveHelp": "The place in the menu is changed in «Menu order», above.",
       "slugHelp": "The page address: lowercase letters, digits and hyphens.",
       "slugLocked": "The address is fixed once published — links already sent have to keep working.",
       "bodyHelp": "A blank line separates paragraphs. A line starting with ## is a section heading.",
@@ -3553,6 +3549,32 @@
       "groupStandard": "Standard pages",
       "groupCustom": "Custom pages",
       "tabMembers": "Members"
+    },
+    "menuOrder": {
+      "title": "Menu order",
+      "intro": "The order of the pages in the site's menu, first to last. Move them with «Up» and «Down», then press «Save the order».",
+      "introMore": "A page that is not published keeps its place and appears there once you publish it. A new page appears at the end until you move it.",
+      "listLabel": "The site's menu, first to last",
+      "up": "Up",
+      "down": "Down",
+      "upNamed": "Move “{name}” up",
+      "downNamed": "Move “{name}” down",
+      "notYet": "not shown yet",
+      "custom": "custom page",
+      "movedTo": "“{name}” is now in place {position}.",
+      "unsaved": "The new order is not saved yet.",
+      "save": "Save the order",
+      "saving": "Saving…",
+      "readOnly": "The Administrator sets the order; here you see the menu's order.",
+      "entries": {
+        "events": "Events",
+        "calendar": "Calendar",
+        "contact": "Contact",
+        "gallery": "Gallery",
+        "team": "Team",
+        "faq": "Frequently asked questions",
+        "members": "Members"
+      }
     },
     "fontSize": {
       "title": "Text size",
@@ -7353,7 +7375,8 @@
       "memberCodeMoved": "The order of the codes was changed.",
       "memberCodeDeleted": "The code was deleted.",
       "declarationHeld": "The declaration is kept. It is not deleted until you remove the keep.",
-      "declarationReleased": "The keep was removed."
+      "declarationReleased": "The keep was removed.",
+      "menuOrder": "The menu order was saved."
     }
   },
   "Network": {
