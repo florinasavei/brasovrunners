@@ -26,7 +26,6 @@ import { readTeamPhotoCrop } from "../photo-crop";
 import TeamPhotoImage from "./TeamPhotoImage";
 
 export type TeamPhotoLabels = {
-  /** "Fotografia" — the group's name. */
   legend: string;
   choose: string;
   replace: string;
@@ -35,25 +34,24 @@ export type TeamPhotoLabels = {
   failed: string;
   none: string;
   help: string;
-  /** «Calitate: Minimă / Medie / Mare / Originală» beside the upload (§414), the gallery's words. */
+  /** Quality labels (§414). */
   quality: ImageQualityLabels;
   /** «Din galerie» and its picker's words (§485). */
   fromGallery: string;
   gallery: GalleryPickerLabels;
-  /** The crop box's words (§454), the text editor's own, with the card's title and help (§541). */
+  /** §454, §541. */
   crop: ImageCropLabels;
-  /** What is going up and what it became (§437, §414), the text editor's own sentences. */
+  /** §437, §414. */
   chosen: ChosenFactsLabels;
   stored: StoredFactsLabels;
-  /** "Din galerie: {name}, {width} × {height} px." — a picture taken from the gallery (§485). */
+  /** "Din galerie: {name}, {width} × {height} px." (§485). */
   picked: string;
 };
 
-/** The photograph on the card: its id, the master the crop box draws over, the small file, its size. */
+/** The card's photo: id, the master the crop box draws over, the small file, its size. */
 export type TeamPhotoValue = { id: string; src: string; preview: string; width: number; height: number };
 
 type Props = {
-  /** The stored picture on the card now, if any, with the crop it is shown with. */
   photo: TeamPhotoValue | null;
   crop: ImageCrop | null;
   labels: TeamPhotoLabels;
@@ -61,10 +59,7 @@ type Props = {
   inputId: string;
 };
 
-/**
- * The shape a person's photograph starts in (§541): a square portrait — what the card always
- * drew. The crop box offers every other shape of §454, and the club may pick one.
- */
+/** A person's photo starts as a square (§541); the crop box offers §454's other shapes. */
 export const TEAM_PHOTO_SHAPE = "1:1" as const;
 
 /** The crop a newly chosen photograph starts with: its largest square, in the middle. */
@@ -73,20 +68,10 @@ export function initialTeamCrop(intrinsic: { width: number; height: number }): I
 }
 
 /**
- * A card's photograph (§459), with the upload every other picture has (§541, amending §474): the
- * quality beside it (§414, §437), the chosen file's pixels and weight and what it became once
- * stored, «Din galerie» beside it (§485) — and after the choice the crop box with §454's shapes,
- * 1∶1 pressed first, a portrait. Uploaded through `uploadPicture`, the one upload a picture in the
- * text and a film's poster use, never a second one.
- *
- * The card keeps the picture's id and the crop in two hidden fields the save posts; nothing is
- * saved on the card until the form is — an uploaded picture waits in the store and is swept after
- * a week if the card never keeps it (§73). The stored file is never touched: the crop is four
- * fractions the page draws (§241).
- *
- * All its words arrive as strings from the page (§353: a backoffice island reads no catalogue of
- * its own). After a refused save it comes back with the picture and the crop that were chosen:
- * both are posted and recalled (§315), the picture's addresses and size in one hidden field.
+ * A card's photograph (§459, §541) through the shared `uploadPicture`: quality, «Din galerie»
+ * (§485), then the crop box. The id and crop go in hidden fields; nothing is kept until the form
+ * saves, and an unkept upload is swept after a week (§73). The crop is four fractions the page
+ * draws; the file is never touched (§241). Recalled after a refused save (§315).
  */
 export default function TeamPhotoField(props: Props) {
   const recall = useRecall();
@@ -117,18 +102,16 @@ function PhotoField({ photo: initial, crop: initialCrop, labels, inputId }: Prop
   });
   const [state, setState] = useState<"idle" | "uploading" | "failed">("idle");
   const [galleryOpen, setGalleryOpen] = useState(false);
-  // The session's choice, shared with every other uploader on the page (§414).
+  // Shared with every other uploader on the page (§414).
   const [quality, setQuality] = useImageQuality();
-  /** What is going up, or went up last (§437), and what it became (§414). */
   const [chosen, setChosen] = useState<ChosenFacts | null>(null);
   const [stored, setStored] = useState<StoredFacts | null>(null);
-  /** A picture taken from the gallery, said like an upload (§485). */
   const [picked, setPicked] = useState<{ name: string; width: number; height: number } | null>(null);
   const named = recall.named("photoAssetId");
   const lang = typeof document === "undefined" ? "ro" : document.documentElement.lang || "ro";
   const sized = photo.id !== "" && photo.width > 0 && photo.height > 0;
 
-  /** A new photograph: its largest square first (§541), the crop box's shapes for the rest. */
+  /** A new photo starts at its largest square (§541). */
   const take = (next: TeamPhotoValue) => {
     setPhoto(next);
     setCrop(next.width > 0 && next.height > 0 ? initialTeamCrop(next) : null);
@@ -175,7 +158,7 @@ function PhotoField({ photo: initial, crop: initialCrop, labels, inputId }: Prop
       />
       <Stack direction="row" spacing={2} sx={{ alignItems: "center", flexWrap: "wrap", gap: 1 }}>
         {photo.id && photo.preview ? (
-          // The card's own drawing at 96 pixels: the crop in its shape, or the square it always was.
+          // At 96 px: the crop in its shape, or the default square.
           sized ? (
             <TeamPhotoImage src={photo.preview} photo={{ width: photo.width, height: photo.height, crop }} width={96} radius={8} testId={`${inputId}-preview`} />
           ) : (
@@ -199,7 +182,6 @@ function PhotoField({ photo: initial, crop: initialCrop, labels, inputId }: Prop
           {state === "uploading" ? labels.uploading : photo.id ? labels.replace : labels.choose}
           <input id={inputId} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={onChoose} />
         </Button>
-        {/* The same glyph as the album's and the film poster's «Din galerie» (§485): one action, one look. */}
         <GlyphButton
           icon="gallery"
           variant="outlined"
@@ -220,7 +202,7 @@ function PhotoField({ photo: initial, crop: initialCrop, labels, inputId }: Prop
         <Box sx={{ mt: 1, border: 1, borderColor: "divider", borderRadius: 1 }}>
           <GalleryPicker
             onPick={(picture) => {
-              // The master for the crop box, the small file for the preview, as the saved card's are.
+              // The master for the crop box, the small file for the preview.
               take({ id: picture.id, src: picture.src, preview: picture.thumb, width: picture.width, height: picture.height });
               setChosen(null);
               setStored(null);
@@ -237,7 +219,6 @@ function PhotoField({ photo: initial, crop: initialCrop, labels, inputId }: Prop
       <Box sx={{ mt: 1 }}>
         <ImageQualityChoice value={quality} onChange={setQuality} labels={labels.quality} disabled={state === "uploading"} />
       </Box>
-      {/* What is going up (§437) and what it became (§414): the text editor's own sentences. */}
       {chosen && (
         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} aria-live="polite" data-testid={`${inputId}-chosen`}>
           {describeChosenImage(chosen, labels.chosen, lang)}
@@ -261,12 +242,7 @@ function PhotoField({ photo: initial, crop: initialCrop, labels, inputId }: Prop
       >
         {state === "failed" ? labels.failed : named && recall.fieldError ? recall.fieldError : labels.help}
       </Typography>
-      {/*
-        The crop box after the choice (§485's order), the text editor's own (§454): the five
-        shapes, 1∶1 held first — a portrait — and the rectangle over the whole photograph. Never
-        its pixels: the page draws the four fractions (§241). At most a phone's width, so the
-        photograph is never taller than the screen it is cropped on.
-      */}
+      {/* The crop box (§454, §485), at most a phone's width so the photo never outgrows the screen. */}
       {sized && (
         <Box sx={{ mt: 1.5, maxWidth: 360 }} data-testid={`${inputId}-crop`}>
           <ImageCropBox

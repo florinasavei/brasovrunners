@@ -18,7 +18,16 @@ import { useEffect, useRef, useTransition } from "react";
  * address now says.
  *
  * Takes strings only, and renders an empty span: nothing crosses the boundary but data (§370).
+ *
+ * **The panel stays open across the first tick** (§549). The bare listing and calendar are static
+ * pages the CDN answers, and a filtered address is their live twin — another route to the router
+ * (`i18n/live-twin.ts`) — so the first tick, and the way back to no filter, mount the page afresh,
+ * and the `<details>` would shut under the reader's finger. The tick itself says the panel was
+ * open: it is remembered here, in the island's own module (which a soft navigation keeps), and the
+ * next mount opens its panel again, once.
  */
+let reopenAfterTick = false;
+
 export default function FilterAutoApply({ ticked }: { ticked: string[] }) {
   const anchor = useRef<HTMLSpanElement>(null);
   const router = useRouter();
@@ -28,7 +37,11 @@ export default function FilterAutoApply({ ticked }: { ticked: string[] }) {
     const form = anchor.current?.closest("form");
     if (!form) return;
     form.dataset.enhanced = "true";
+    const fold = form.closest("details");
+    if (reopenAfterTick && fold) fold.open = true;
+    reopenAfterTick = false;
     const apply = () => {
+      reopenAfterTick = true;
       const params = new URLSearchParams();
       for (const [name, value] of new FormData(form)) if (typeof value === "string") params.append(name, value);
       const action = form.getAttribute("action") ?? window.location.pathname;
@@ -44,6 +57,8 @@ export default function FilterAutoApply({ ticked }: { ticked: string[] }) {
 
   const key = ticked.join("&");
   useEffect(() => {
+    // The tick landed on this same page (no fresh mount): nothing left to reopen later.
+    reopenAfterTick = false;
     const form = anchor.current?.closest("form");
     if (!form) return;
     const state = new Set(key ? key.split("&") : []);

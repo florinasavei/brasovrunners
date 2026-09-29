@@ -20,7 +20,12 @@ import { DENSITY } from "@/theme/density";
 
 type Props = { params: Promise<{ locale: string }> };
 
-export const dynamic = "force-dynamic";
+/**
+ * Static, made on its first visit and kept by the CDN (§549, amending §333); an album save expires
+ * it through the rows' own tag, and a day is the ceiling. A literal, as Next requires: it equals
+ * `PUBLIC_PAGE_CEILING_SECONDS` (a test holds them together).
+ */
+export const revalidate = 86400;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;

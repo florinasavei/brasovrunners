@@ -49,6 +49,12 @@ const NOT_A_BOX = new Set([
   // «Data se anunță mai târziu» and «Ora se anunță mai târziu» (§533): ticks under the start, in «Când și unde».
   "dateToBeAnnounced",
   "timeToBeAnnounced",
+  // «Doar pentru membrii BVR» (§552): a tick in «Ce fel de eveniment».
+  "membersOnly",
+  // «Kit de participare» → «Tricou» (§554): a tick in «Participanți și înscrieri».
+  "kitShirt",
+  // «Condiții de participare» → «Informații medicale» (§557): a tick in «Program, regulament și declarație».
+  "askHealthNote",
 ]);
 
 describe("the event form's constraints are the schema's (§315)", () => {

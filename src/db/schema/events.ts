@@ -408,6 +408,17 @@ export const events = pgTable(
     timeToBeAnnounced: boolean("time_to_be_announced").notNull().default(false),
 
     /**
+     * «Doar pentru membrii BVR» (§552; the owner, 2026-09-28): the event exists only for a signed-in
+     * member of the club (§524) and for the backoffice. The shape of the place's and the start's
+     * switches (§328, §533) — a state of the event, withheld in SQL: `publishedAnyDateIn` in
+     * `events/repository.ts`, the condition every public read shares, requires it false, so the
+     * listing, the calendar, the feed, the sitemap, the share pictures and the new-event alert never
+     * meet such a row. Its page, its `.ics` and its registration form answer only a members' session,
+     * read live, never from the public cache. Switching it on cancels nothing: registrations stay.
+     */
+    membersOnly: boolean("members_only").notNull().default(false),
+
+    /**
      * The two facts that stopped being free text in migration `0018`.
      *
      * Null means the club has not said, and the page then omits the row rather than guessing —
@@ -495,8 +506,7 @@ export const events = pgTable(
      * **Written only by the print** (`bibs.ts#reserveSpareBibs`), never by the editor's save: the
      * club types how many and the platform reserves them after the highest number anybody has, or
      * extends the reservation by the next free numbers — so it can never land on a number
-     * somebody holds. **The allocator never draws from it**: not the provisional number at
-     * submission, not the recompaction at the close, not a confirmation after it, not the batch.
+     * somebody holds. **The allocator never draws from it**: not a confirmation, not the batch.
      */
     walkInBibStart: integer("walk_in_bib_start"),
     walkInBibCount: integer("walk_in_bib_count"),
@@ -516,16 +526,9 @@ export const events = pgTable(
     bibDesign: jsonb("bib_design"),
 
     /**
-     * When this event's race numbers were settled (`DECISIONS.md` §214).
-     *
-     * Registration closes, the entry list stops moving, and the maintenance job turns every
-     * provisional number into a final one in a single dense sequence — then writes this. It is
-     * the idempotency marker and nothing else: the job runs every few minutes and must do that
-     * work exactly once, because a second pass would renumber people who have already been
-     * told their number.
-     *
-     * Null means "not settled yet", which is every event before its window shuts and every
-     * event written before this existed.
+     * When this event's race numbers were settled at the close (`DECISIONS.md` §214). **Retired
+     * since §548; nothing reads or writes it**: a number is drawn by each confirmation, so there is
+     * no settle. It stays, expand-only, until a contract release drops it.
      */
     bibsSettledAt: timestamp("bibs_settled_at", { withTimezone: true }),
 
@@ -584,6 +587,25 @@ export const events = pgTable(
      */
     registrationOpensSoon: boolean("registration_opens_soon").notNull().default(false),
     registrationClosesAt: timestamp("registration_closes_at", { withTimezone: true }),
+
+    /**
+     * «Kit de participare» → «Tricou» (§554; the owner, 2026-09-29: «doar dacă e bifat tricoul să
+     * avem alegerea mărimii în formular»): the event gives its runners a T-shirt, so the registration
+     * form asks the size. False by default — every event before this column asks none — and a size
+     * posted for an event without one is stored as NONE under the lock (`domain/kit.ts`). A series
+     * carries it by scope and a duplicate keeps it, like the rest of the registration block.
+     */
+    kitShirt: boolean("kit_shirt").notNull().default(false),
+
+    /**
+     * «Condiții de participare» → «Informații medicale» (§557; the owner, 2026-09-29: «trebuie să am
+     * o bifă și pentru acele informații medicale, pentru că nu știu ce să fac cu ele»): the event asks
+     * the optional health note (BR-REQ-031-05), GDPR art. 9 data the club collects only when it
+     * decides to. False by default — every event before this column stops asking — and a note posted
+     * for an event that does not ask is stored as null under the lock. A series carries it by scope
+     * and a duplicate keeps it, as `kit_shirt` (§554).
+     */
+    askHealthNote: boolean("ask_health_note").notNull().default(false),
 
     // The EVENT_DECLARATION document version an internal registration must accept.
     declarationDocumentId: uuid("declaration_document_id").references(() => legalDocuments.id),

@@ -62,6 +62,7 @@ describe("§418 the PDF's words", () => {
       minor: minorIdDocument === null ? null : { typedName: "Maria Popescu", idDocument: minorIdDocument },
       signedAt: "azi",
       signedAtInline: "azi",
+      acceptedAt: new Date("2026-01-01T10:00:00Z"),
       method: "link",
     });
     const notice = "delete within seven days";

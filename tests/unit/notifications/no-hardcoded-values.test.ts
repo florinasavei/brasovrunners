@@ -208,9 +208,14 @@ describe("§369 the club's name leaves the platform only through the constant", 
           "Network.page.report.heading",
           "Registration.clubMemberDeclared",
           "Registration.disclosure.race",
+          // The same fold's title for an event without a T-shirt (§554).
+          "Registration.disclosure.raceNoShirt",
           "Team.lead",
           // «Întrebări frecvente» (§525): the page's lead and its description.
           "Faq.lead",
+          // A group run's safety rules (§556): the first line names the club's run, by surface.
+          "Event.safetyRules.intro",
+          "Event.safetyRules.introMountain",
         ].sort(),
       );
     }
@@ -219,11 +224,14 @@ describe("§369 the club's name leaves the platform only through the constant", 
     const calls: Record<string, number> = {
       clubMemberDeclared: 2,
       "disclosure.race": 1,
+      "disclosure.raceNoShirt": 1,
       "registrations.clubMemberLabel": 1,
       "pages.intro": 1,
       "page.report.heading": 1,
       // «Echipa» (§459), «Întrebări frecvente» (§525) and «Beneficiile membrilor» (§524): each page and its description for search engines.
       lead: 6,
+      "safetyRules.intro": 1,
+      "safetyRules.introMountain": 1,
     };
     const sources = sourceFiles(path.join(process.cwd(), "src")).map((file) => readFileSync(file, "utf8"));
     for (const [key, expected] of Object.entries(calls)) {
@@ -242,6 +250,7 @@ describe("§369 the club's name leaves the platform only through the constant", 
     ] as const) {
       const t = createTranslator({ locale, messages, namespace: "Registration" });
       expect(t("disclosure.race", { club: CLUB_NAME })).toContain(CLUB_NAME);
+      expect(t("disclosure.raceNoShirt", { club: CLUB_NAME })).toContain(CLUB_NAME);
     }
   });
 

@@ -1,9 +1,7 @@
 /**
- * The sample dates are drawn from today (`DECISIONS.md` §162): a Sunday run last weekend (a
- * past event, for the "latest past" fallback), the Tâmpa run next Saturday, the intervals next
- * Wednesday, the race on a Sunday three weeks out — at Brașov wall-clock hours. The dates
- * used to be written out for September 2026, and on the morning of 2026-09-20 the Tâmpa run
- * slid into the past on CI and took an e2e assertion with it.
+ * Sample dates drawn from today (§162), at Brașov wall-clock hours, so a seeded event never
+ * slides into the past: a Sunday run last weekend, the Tâmpa run next Saturday, the intervals
+ * next Wednesday, the race on a Sunday three weeks out.
  */
 export const ZONE = "Europe/Bucharest";
 

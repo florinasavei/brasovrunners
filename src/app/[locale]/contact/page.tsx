@@ -22,7 +22,12 @@ import {
   cachedShownContactAddresses,
 } from "@/modules/public-cache/reads";
 import NewsletterSignup from "@/modules/newsletter/ui/NewsletterSignup";
-import { parseNewsletterFields, parseNewsletterOutcome } from "@/modules/newsletter/ui/newsletter-box";
+import {
+  newsletterLeaveRefused,
+  parseNewsletterFields,
+  parseNewsletterLeaveOutcome,
+  parseNewsletterOutcome,
+} from "@/modules/newsletter/ui/newsletter-box";
 import { parseInterestSince } from "@/modules/registrations/interest-box";
 import {
   CONTACT_ERROR_SUMMARY_ID,
@@ -43,7 +48,7 @@ import { DENSITY } from "@/theme/density";
 
 type Props = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ sent?: string; error?: string; fields?: string; about?: string; newsletter?: string; nfields?: string; since?: string }>;
+  searchParams: Promise<{ sent?: string; error?: string; fields?: string; about?: string; newsletter?: string; nfields?: string; nleave?: string; since?: string }>;
 };
 
 /**
@@ -90,7 +95,7 @@ export default async function ContactPage({ params, searchParams }: Props) {
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
-  const { sent, error: rawError, fields, about, newsletter, nfields, since } = await searchParams;
+  const { sent, error: rawError, fields, about, newsletter, nfields, nleave, since } = await searchParams;
   const t = await getTranslations("Contact");
   const legal = await getTranslations("Legal");
   const now = new Date();
@@ -117,7 +122,10 @@ export default async function ContactPage({ params, searchParams }: Props) {
   const newsletterOutcome = parseNewsletterOutcome(newsletter);
   const newsletterOffered = (await orNull(() => cachedNewsletterOffered(now))) === true;
   const newsletterRefused = newsletterOutcome === "invalid" || newsletterOutcome === "captcha" || newsletterOutcome === "limited";
-  const draft = error || sent || newsletterRefused ? await readFormDraft() : null;
+  // «Vreau să mă dezabonez» (§550): its own answer, and its typed address in the same sealed draft.
+  const leaveOutcome = parseNewsletterLeaveOutcome(nleave);
+  const leaveRefused = newsletterLeaveRefused(leaveOutcome);
+  const draft = error || sent || newsletterRefused || leaveRefused ? await readFormDraft() : null;
   const typed = (name: string) => (error || sent ? draft?.[name] : undefined);
 
   // The address the club chose to show (§442): the mailbox, its Gmail, or both, «… sau …».
@@ -243,10 +251,8 @@ export default async function ContactPage({ params, searchParams }: Props) {
             </Alert>
           )}
 
-          <Typography variant="body2" color="text.secondary" sx={{ mb: { xs: DENSITY.gapSm, sm: 2 } }}>
-            {t("requiredLegend")}
-          </Typography>
-
+          {/* No asterisk legend (§546): all three boxes are required, and the line under the send
+              button says what is still missing. */}
           <form action={submitContactAction}>
             {/* Outside the column (§480, the 360-px density pass): as its first children they made
                 the name box the column's second, and a column gives every item after its first the
@@ -264,8 +270,9 @@ export default async function ContactPage({ params, searchParams }: Props) {
             <input type="hidden" name="renderedAt" value={now.toISOString()} />
             <Stack spacing={2}>
               <TextField {...field("name")} label={t("name")} required autoComplete="name" fullWidth />
+              {/* The intro already says the answer comes by email (§546). */}
               <TextField
-                {...field("email", t("emailHelp"))}
+                {...field("email")}
                 type="email"
                 label={t("email")}
                 required
@@ -348,10 +355,12 @@ export default async function ContactPage({ params, searchParams }: Props) {
               : {}
           }
           siteKey={siteKey}
-          renderedAt={(newsletterRefused ? parseInterestSince(since, now) : null)?.toISOString() ?? now.toISOString()}
+          renderedAt={(newsletterRefused || leaveRefused ? parseInterestSince(since, now) : null)?.toISOString() ?? now.toISOString()}
           // This render's own time, never `since`: a refusal redraws with the same `since`, and a
           // Turnstile reset keyed on it would never run, posting the spent token again (§185).
           attempt={now.toISOString()}
+          leaveOutcome={leaveOutcome}
+          leaveTyped={leaveRefused ? draft?.newsletterLeaveEmail : undefined}
         />
       )}
     </Container>

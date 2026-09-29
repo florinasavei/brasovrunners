@@ -6,6 +6,7 @@ import BrushIcon from "@mui/icons-material/Brush";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import CardMembershipIcon from "@mui/icons-material/CardMembership";
 import CategoryIcon from "@mui/icons-material/Category";
+import CheckroomIcon from "@mui/icons-material/Checkroom";
 import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber";
 import ContactMailIcon from "@mui/icons-material/ContactMail";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
@@ -30,6 +31,7 @@ import LinkIcon from "@mui/icons-material/Link";
 import ListAltIcon from "@mui/icons-material/ListAlt";
 import MailIcon from "@mui/icons-material/Mail";
 import MapIcon from "@mui/icons-material/Map";
+import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
 import NewspaperIcon from "@mui/icons-material/Newspaper";
 import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
 import NotesIcon from "@mui/icons-material/Subject";
@@ -100,6 +102,10 @@ export const PANEL_GLYPHS = {
   confirmation: TaskAltIcon,
   reminder: NotificationsActiveIcon,
   bibs: ConfirmationNumberIcon,
+  // «Kit de participare» (§554): what the runners are handed — for now, the T-shirt.
+  kit: CheckroomIcon,
+  // «Condiții de participare» (§557): what the form asks beyond the person — for now, the health note.
+  conditions: MedicalServicesIcon,
   bibDesign: BrushIcon,
   print: PrintIcon,
   startList: GroupsIcon,

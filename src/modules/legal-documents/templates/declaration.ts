@@ -12,8 +12,54 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  * - Only equipment the event's rules call mandatory may refuse a start.
  * - Data and signature as the privacy notice says, the same in both texts.
  *
- * A Romanian lawyer should read both before approval — the liability paragraph first. No hardcoded
- * value (§357; `tests/unit/legal-documents/no-hardcoded-values.test.ts`); 14 and 17 are the Code's.
+ * 1. **No participant under fourteen, and no flow for one.** The absolute minimum is fourteen; an
+ *    event may ask more (`events.min_age`, never under fourteen since §515). The text opens with the
+ *    event's own minimum through `{{minimumAge}}` — "Declar că am cel puțin {{minimumAge}} împliniți
+ *    la data evenimentului" — and says that from 14 to 17 the minor signs and the parent or guardian
+ *    approves and signs beside them (Civil Code art. 41(2)), and that nobody under the event's
+ *    minimum takes part. The old sentence "for a minor under 14 the legal representative signs alone"
+ *    and the kit rule for "a minor participant under 14" are gone: there is no such participant.
+ * 2. **Two texts, one body.** A road or park race is not a mountain race: its declaration keeps every
+ *    shared section — the participant and their document, the minimum age, minors of 14–17, the
+ *    acceptance of risk, the organiser's liability, health, dropping out and being stopped, fair play,
+ *    belongings, the kit, photographs, the data, the electronic signature and the archive — and
+ *    swaps the trail's risks (mountain ground, roots, rocks, mud, wild animals and sheepdogs, slow
+ *    help, trail shoes, protected areas) for the road's and the park's (asphalt, concrete, tartan,
+ *    paving; kerbs, potholes, manhole covers, wet and slippery surfaces; bends and narrow sections;
+ *    crowding and contact with other runners; pedestrians, cyclists and scooters; traffic where the
+ *    course is not fully closed; no sudden change of direction and no blocking the course). The
+ *    shared sections live here once — `opening`, `sharedDuties`, `closing` — and each text is
+ *    `opening + riskSection + sharedDuties + closing`, so the data, the liability, the signature, the
+ *    minors and the retention cannot drift apart between the two.
+ * 3. **Liability without an absolute waiver**, the line terms §5 draws: the runner accepts the
+ *    inherent risks; the organiser answers under the law for what is attributable to it and not for
+ *    what is not (art. 1351–1352); the runner's own conduct reduces or removes it as the law says
+ *    (art. 1371); accepting a risk is no waiver of compensation (art. 1355(4)); nothing limits what the
+ *    law does not let be limited — intent, gross fault, harm to the body or health (art. 1355(1)–(3)).
+ *    Every sentence that says the organiser does not answer for something carries "în limitele
+ *    permise de lege" / "to the extent the law allows".
+ * 4. **Wild animals in general words** (the trail only), the owner's own sentence: keep the distance,
+ *    neither provoke nor feed, follow the organiser's general safety instructions (§556, the second
+ *    review of 2026-09-29, which also asked the trail shoes as grip «de preferat pantofi de trail» and
+ *    the dispute sentence after the three years), 112 in an emergency.
+ * 5. **Substances**, the owner's sentence: alcohol, drugs "or other substances that impair my ability
+ *    to take part safely" — not "medicines that lower my attention".
+ * 6. **Mandatory against recommended equipment**: the start may be refused only for lacking what the
+ *    event's own rules declare mandatory; what they recommend stays a recommendation.
+ * 7. **The data and the signature the same in both**, and as the privacy notice says: three years'
+ *    archive, the identity documents' series and number in the platform at most seven days after the
+ *    event, the archive copies with the documents masked, the text's fingerprint, the moment and the
+ *    signer's name, a simple electronic signature, an adult signing personally, and for 14–17 the
+ *    minor with the parent's or guardian's approval and signature.
+ *
+ * **A Romanian lawyer should read both before the club approves them.** These notes are the
+ * platform's reading of the Civil Code, not legal advice; the club approves and relies on the texts in
+ * `/admin/legal`, and the liability paragraph is the one to ask about first.
+ *
+ * **No hardcoded value (§357).** One approved text serves every event of its kind, so nothing names an
+ * event, a place, a date, a distance or the event's minimum age — those are merge fields — and the club
+ * only by the footnote's placeholder. The ages 14 and 17 are the Civil Code's, the same for every event.
+ * `tests/unit/legal-documents/no-hardcoded-values.test.ts` holds every template to it.
  */
 
 /** Who signs, for which event, at what age — the same in both texts. */
@@ -39,9 +85,9 @@ const openingEn = [
 const trailRisksRo = [
   "• Cunosc și accept riscurile participării la o alergare pe trasee montane sau de pădure: teren accidentat, condiții meteo schimbătoare, accidentare sau agravarea unei afecțiuni preexistente;",
   "• Știu că traseul poate avea porțiuni abrupte, rădăcini, pietre, noroi, frunze ude, gheață sau zăpadă și accept riscul de cădere, alunecare, entorsă, tăieturi sau lovituri; îmi adaptez ritmul la teren și la condiții;",
-  "• Știu că traseul poate traversa habitatul animalelor sălbatice și că pot întâlni animale domestice sau câini de stână. Mă oblig să păstrez distanța, să nu provoc sau hrănesc animalele, să respect indicațiile organizatorului și recomandările autorităților și, în caz de urgență, să apelez 112;",
+  "• Știu că traseul poate traversa habitatul animalelor sălbatice și că pot întâlni animale domestice sau câini de stână. Mă oblig să păstrez distanța, să nu provoc sau hrănesc animalele, să respect indicațiile generale de siguranță comunicate de organizator și, în caz de urgență, să apelez 112;",
   "• Știu că vremea la munte se poate schimba repede, inclusiv cu ceață, și că pe unele porțiuni ajutorul poate ajunge greu și târziu: am telefonul la mine și nu părăsesc traseul fără să anunț organizatorul;",
-  "• Știu că pe traseele montane am nevoie de încălțăminte potrivită terenului (pantofi de trail) și, la alergările care se desfășoară sau se termină după lăsarea întunericului, de o lanternă frontală funcțională, cu bateriile încărcate;",
+  "• Știu că pe traseele montane am nevoie de încălțăminte adecvată terenului, cu aderență corespunzătoare (de preferat pantofi de trail) și, la alergările care se desfășoară sau se termină după lăsarea întunericului, de o lanternă frontală funcțională, cu bateriile încărcate;",
   "• Unde traseul traversează sau folosește drumuri deschise circulației, respect regulile de circulație și indicațiile poliției, ale organizatorului și ale voluntarilor; știu că drumul nu este închis traficului decât dacă pagina evenimentului o spune;",
   "• În ariile naturale protejate rămân pe traseele marcate și nu las în urmă niciun deșeu;",
 ];
@@ -49,9 +95,9 @@ const trailRisksRo = [
 const trailRisksEn = [
   "• I know and accept the risks of taking part in a run on mountain or forest trails: rough ground, changing weather, injury, or the worsening of an existing condition;",
   "• I know the course may have steep sections, roots, rocks, mud, wet leaves, ice or snow, and I accept the risk of falls, slips, sprains, cuts and knocks; I adapt my pace to the ground and the conditions;",
-  "• I know the course may cross the habitat of wild animals and that I may meet domestic animals or sheepdogs. I undertake to keep my distance, not to provoke or feed the animals, to follow the organiser's instructions and the authorities' advice and, in an emergency, to call 112;",
+  "• I know the course may cross the habitat of wild animals and that I may meet domestic animals or sheepdogs. I undertake to keep my distance, not to provoke or feed the animals, to follow the general safety instructions communicated by the organiser and, in an emergency, to call 112;",
   "• I know the weather in the mountains can change quickly, fog included, and that on parts of the course help can be slow and late to arrive: I carry my phone and do not leave the course without telling the organiser;",
-  "• I know that on mountain trails I need footwear suited to the terrain (trail shoes) and, for runs that take place or end after dark, a working headlamp with charged batteries;",
+  "• I know that on mountain trails I need footwear suited to the terrain, with adequate grip (preferably trail shoes) and, for runs that take place or end after dark, a working headlamp with charged batteries;",
   "• Where the course crosses or uses roads open to traffic, I follow the traffic rules and the instructions of the police, the organiser and the marshals; I know the road is not closed to traffic unless the event's page says so;",
   "• In protected natural areas I keep to the marked trails and leave no waste behind;",
 ];
@@ -105,7 +151,7 @@ const closingRo = [
   "Îmi asum responsabilitatea pentru propria siguranță, pentru echipamentul meu și pentru deciziile pe care le iau pe traseu.",
   "Am luat la cunoștință că la eveniment se fac fotografii și filmări, iar pe cele făcute de organizator sau în numele lui acesta le poate publica pentru a povesti evenimentul, în condițiile descrise în nota de confidențialitate — unde este descris și cum pot cere oricând să nu apar. Sunt de acord cu termenii și condițiile clubului, în versiunea acceptată la înscriere, și cu regulamentul evenimentului.",
   "Dacă vin la eveniment însoțit/însoțită de minori care nu sunt înscriși, aceștia rămân în grija și sub supravegherea mea pe toată durata evenimentului. Organizatorul nu preia supravegherea lor, iar un minor care nu este înscris nu poate lua parte la cursă.",
-  "Sunt informat/ă că datele cu caracter personal din această declarație sunt prelucrate conform Regulamentului (UE) 2016/679 (GDPR) și notei de confidențialitate a clubului, pentru organizarea și desfășurarea acestui eveniment și, după el, ca dovadă a declarației. Declarația semnată se păstrează trei ani de la data evenimentului; seria și numărul actelor de identitate se păstrează în platformă cel mult șapte zile de la eveniment, iar copiile din arhiva clubului le au mascate.",
+  "Sunt informat/ă că datele cu caracter personal din această declarație sunt prelucrate conform Regulamentului (UE) 2016/679 (GDPR) și notei de confidențialitate a clubului, pentru organizarea și desfășurarea acestui eveniment și, după el, ca dovadă a declarației. Declarația semnată se păstrează trei ani de la data evenimentului. Dacă există o reclamație, un litigiu sau o procedură în curs, documentul poate fi păstrat până la soluționarea definitivă a acesteia. Seria și numărul actelor de identitate se păstrează în platformă cel mult șapte zile de la eveniment, iar copiile din arhiva clubului le au mascate.",
   "Semnez personal: un adult semnează doar pentru sine, iar o înscriere făcută de altcineva, pe adresa sa de email, nu îi dă dreptul să semneze în locul meu; pentru un participant de 14–17 ani semnează minorul și părintele sau tutorele legal, fiecare cu propriul act de identitate. Dacă semnez electronic, din linkul trimis pe adresa de email confirmată, numele fiecărui semnatar, scris mai jos, bifa de acceptare, momentul semnării și amprenta textului citit sunt înregistrate împreună: este o semnătură electronică simplă, căreia nu i se poate refuza efectul juridic doar pentru că este electronică (art. 25 alin. (1) din Regulamentul (UE) nr. 910/2014 (eIDAS); Legea nr. 214/2024 privind utilizarea semnăturii electronice, a mărcii temporale și prestarea serviciilor de încredere bazate pe acestea). Dacă semnez pe hârtie, la masa de înscrieri, un membru al echipei înregistrează semnătura în platformă, cu numele său, iar clubul păstrează originalul. În ambele cazuri primesc o copie pe adresa de email confirmată, iar arhiva clubului păstrează o copie cu seria și numărul actelor de identitate mascate (rămân cel mult primele două și ultimele două caractere); pe originalul de hârtie, clubul le acoperă în cel mult șapte zile de la eveniment.",
   "*Prin Organizator se înțelege <DENUMIREA JURIDICĂ COMPLETĂ A CLUBULUI>.",
 ];
@@ -114,7 +160,7 @@ const closingEn = [
   "I take responsibility for my own safety, my equipment and the decisions I make on the course.",
   "I acknowledge that photographs and film are made at the event and that the organiser may publish those made by it or on its behalf to tell the event's story, under the conditions described in the privacy notice — which also says how I can ask at any time not to appear. I agree with the club's terms and conditions, in the version accepted when registering, and with the event's rules.",
   "If I come to the event with minors who are not registered, they remain in my care and under my supervision throughout the event. The organiser does not take over their supervision, and a minor who is not registered may not take part in the race.",
-  "I am informed that the personal data in this declaration is processed under Regulation (EU) 2016/679 (GDPR) and the club's privacy notice, to organise and run this event and, afterwards, as evidence of the declaration. The signed declaration is kept for three years from the date of the event; the identity documents' series and numbers are kept on the platform for at most seven days from the event, and the copies in the club's archive have them masked.",
+  "I am informed that the personal data in this declaration is processed under Regulation (EU) 2016/679 (GDPR) and the club's privacy notice, to organise and run this event and, afterwards, as evidence of the declaration. The signed declaration is kept for three years from the date of the event. If a complaint, a dispute or proceedings are under way, the document may be kept until they are finally settled. The identity documents' series and numbers are kept on the platform for at most seven days from the event, and the copies in the club's archive have them masked.",
   "I sign personally: an adult signs only for themselves, and a registration made by someone else, on their own email address, does not entitle them to sign in my place; for a participant aged 14–17 the minor and the parent or legal guardian sign, each with their own identity document. If I sign electronically, from the link sent to my confirmed email address, each signer's name, written below, the acceptance tick, the moment of signing and the fingerprint of the text read are recorded together: this is a simple electronic signature, which cannot be denied legal effect solely because it is electronic (art. 25(1) of Regulation (EU) No 910/2014 (eIDAS); Romanian Law no. 214/2024 on the use of electronic signatures, time stamps and the provision of trust services based on them). If I sign on paper at the registration desk, a team member records the signature in the platform under their own name, and the club keeps the original. Either way a copy is sent to my confirmed email address, and the club's archive keeps a copy with the identity documents' series and numbers masked (at most the first two and last two characters remain); on the paper original, the club covers them within seven days of the event.",
   "*Organiser means <THE CLUB'S FULL LEGAL NAME>.",
 ];

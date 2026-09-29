@@ -10,15 +10,19 @@ import { events } from "@/db/schema/events";
 import { registrations } from "@/db/schema/registrations";
 import type { Database, Transaction } from "@/db/types";
 import { startHeldBack } from "@/modules/events/domain/dated";
-import { registrationHasClosed, registrationState } from "@/modules/events/domain/registration-window";
+import { registrationState } from "@/modules/events/domain/registration-window";
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { findCurrentApprovedDocument, findEventDeclaration } from "@/modules/legal-documents/repository";
+import { acceptanceTextHash } from "./signed-declaration";
 import { readClubNotices } from "@/modules/notifications/club-notices";
 import { confirmationNoticeRecipients, resolveDeclarationCopies } from "@/modules/notifications/domain/club-notices";
 import { startingDeadline } from "@/modules/notifications/domain/deadline-rebase";
 import { enqueueEmail, type OutboxRow } from "@/modules/notifications/outbox";
-import { bibNumberInUse, ensureProvisionalBibNumber, isEventSpareNumber, pickBibNumber } from "./bibs";
+import { bibNumberInUse, isEventSpareNumber, pickBibNumber } from "./bibs";
 import { handsSpareAtConfirm } from "./domain/spare-bibs";
+import type { CancelReason } from "./domain/cancel-reason";
+import { shirtSizeKept } from "./domain/kit";
+import { healthNoteKept, withoutHealthNote } from "./domain/health-note";
 import { asksForIdDocument, asksForMinorSignature, describesListSocials } from "@/modules/legal-documents/domain/merge-fields";
 import { newCheckinCode } from "./checkin-code";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
@@ -140,6 +144,18 @@ export type EventForRegistration = {
    */
   reminderHoursBefore?: number | null;
   /**
+   * «Doar pentru membrii BVR» (§552): the public form takes a registration only behind a members'
+   * session (`RegistrationOrigin.member`), for the account's own address, one person per account.
+   * Asked here before anything is spent and again under the event's lock. Absent on a partial row: false.
+   */
+  membersOnly?: boolean;
+  /**
+   * «Informații medicale» (§557): whether the form asks the health note. `false` drops a posted note
+   * before the schema reads it, so a stale form is not refused; what is stored is decided off the
+   * locked row whatever this says. Absent on a partial row: nothing dropped early, the lock decides.
+   */
+  askHealthNote?: boolean;
+  /**
    * The event's own zone (`events.timezone`), for the day the minimum age is counted against
    * (§321). Absent on a partial row means the column's default, `EVENT_TIMEZONE_DEFAULT`.
    */
@@ -224,91 +240,60 @@ function assertRegistrationOpen(event: EventForRegistration, now: Date, atTheDes
 }
 
 /**
- * The **final** race number to write when a registration is confirmed (`DECISIONS.md` §214).
+ * The race number a registration gets at the moment it is confirmed (§548, amending §173, §214,
+ * §420; the owner, 2026-09-28: «faza cu numerele de concurs provizorii e ciudată»).
  *
- * §87 drew one here, at "the moment the place is certain". That is no longer the moment the
- * number is certain, and the two had been the same thing only because nothing existed earlier.
- * Now a place-holding registration carries a provisional number from submission, and the entry
- * list is still moving — people cancel, holds lapse, the waiting list advances — so a number
- * written at confirmation would be a number printed with gaps in it.
+ * A number exists only once a registration is confirmed — the address proved and the declaration
+ * signed — and is drawn right here, under the event row's lock the confirmation already holds, the
+ * serialization point capacity uses (§10.6). Nothing is drawn, held or shown before: not at the
+ * form, not with a declaration hold, not with a waiting-list offer. So the numbers follow the order
+ * of confirmation, from the event's own first number, and since none is ever released they are
+ * never reused. The confirmation email carries it.
  *
- * So, while the window is open, confirmation writes **nothing**: the provisional number stands,
- * the runner keeps seeing it, and the recompaction at close turns the whole list into one dense
- * sequence and emails it. `REGISTRATION_CONFIRMED` therefore carries no number before the
- * close, which is the trade the owner chose: a number that is emailed is a number that cannot
- * move afterwards.
- *
- * **Once the window has shut it draws immediately**, because by then the sequence is settled
- * and a late confirmation — somebody signing on paper at the desk, a walk-in on race day —
- * needs a bib in their hand within the minute. `pickBibNumber` gives it the lowest free final
- * number, which is the one the recompaction has not used.
+ * A number the row already wears is kept: a cancelled confirmed registration that restarted keeps
+ * its retired number and gets it back at its new confirmation (§173), never a second one. A test
+ * registration wears none (`AGENTS.md` §12.6).
  */
-async function finalBibAtConfirmation<T extends Record<string, unknown>>(
+async function bibAtConfirmation<T extends Record<string, unknown>>(
   tx: Database<T>,
-  event: EventForRegistration,
   current: Registration,
-  now: Date,
-): Promise<{ bibNumber: number | null; provisionalBibNumber?: null }> {
-  // Never renumber: a number already given is that runner's, whatever else changes (§173).
+): Promise<{ bibNumber: number | null }> {
   if (current.bibNumber !== null) return { bibNumber: current.bibNumber };
-  // A test registration wears none, as in the batch assignment (`AGENTS.md` §12.6).
   if (current.kind !== "REAL") return { bibNumber: null };
-  if (!registrationHasClosed(event, now)) return { bibNumber: null };
-
-  /*
-    Past the close, the number becomes final — and it is **their own provisional one** where
-    they have one (§220).
-
-    Drawing a fresh one would be wrong twice over now that `pickBibNumber` treats a held
-    provisional number as taken: it would skip the number this very runner is looking at and
-    hand them a different one, leaving their old number reserved to nobody. Adopting it is
-    also what the runner expects — the desk screen has been showing it to them.
-
-    The provisional column is emptied in the same statement, so one runner is left holding
-    exactly one number, which is the invariant the settle keeps too.
-  */
-  // Inside the desk's reservation too (§444): the print reserves only numbers nobody holds, so a
-  // provisional number there was this runner's before the print, and stays theirs.
-  if (current.provisionalBibNumber !== null) {
-    return { bibNumber: current.provisionalBibNumber, provisionalBibNumber: null };
-  }
-  return { bibNumber: await pickBibNumber(tx, current.eventId), provisionalBibNumber: null };
+  return { bibNumber: await pickBibNumber(tx, current.eventId) };
 }
 
 /**
  * The number the desk handed with the paper (§444): a pre-printed spare, or any free number the
- * volunteer typed, written as the settled one at the moment the place is certain — whatever the
- * window says, because the bib is already in the runner's hand. The provisional number goes with
- * it: one runner, one number (§230). A spare is on paper already, so it is marked printed — the
- * next "unprinted" sheet must not print a second 901 with the name on it, and a cancellation later
+ * volunteer typed, written as the registration's number at the moment it is confirmed, in place of
+ * the one the draw would give. A spare is on paper already, so it is marked printed — the next
+ * "unprinted" sheet must not print a second 901 with the name on it, and a cancellation later
  * lists it among the bibs that exist (§311).
  *
  * Checked here, under the event lock the confirmation holds, as well as by the desk before the
- * entry: another volunteer may have given the same spare a moment ago. A runner who already has a
- * settled number keeps it (§173) and the typed one is refused rather than silently ignored.
+ * entry: another volunteer may have given the same spare a moment ago. A runner who already wears
+ * a number keeps it (§173) and the typed one is refused rather than silently ignored.
  */
 async function handedBibAtConfirmation<T extends Record<string, unknown>>(
   tx: Database<T>,
   current: Registration,
   handed: number,
   now: Date,
-): Promise<{ bibNumber: number; provisionalBibNumber: null; bibPrintedAt?: Date }> {
+): Promise<{ bibNumber: number; bibPrintedAt?: Date }> {
   if (current.kind !== "REAL") {
     throw new DomainError("VALIDATION_ERROR", "a test registration wears no race number", ["bibNumber"]);
   }
-  if (current.bibNumber !== null) {
-    throw new DomainError("VALIDATION_ERROR", "this registration already has a race number; it cannot be changed", ["bibNumber"]);
-  }
-  // Only a walk-in (§444): an online runner keeps the provisional number they were shown, and a
-  // printed bib stays the one in the pile. The same rule the desk's box is drawn by, under the lock.
+  // Nobody has a number before the confirmation (§548), so any real registration confirmed at the
+  // desk may take the one in the volunteer's hand — unless it already wears one (the same rule the
+  // desk's box is drawn by, `handsSpareAtConfirm`, here under the lock).
   if (!handsSpareAtConfirm(current)) {
-    throw new DomainError("VALIDATION_ERROR", "a number is handed at the desk only to a walk-in with no printed bib", ["bibNumber"]);
+    throw new DomainError("VALIDATION_ERROR", "this registration already has a race number; it cannot be changed", ["bibNumber"]);
   }
   if (await bibNumberInUse(tx, { eventId: current.eventId, number: handed, exceptRegistrationId: current.id })) {
     throw new DomainError("CONFLICT", `number ${handed} is already somebody's at this event`, ["bibNumber"]);
   }
   const spare = await isEventSpareNumber(tx, current.eventId, handed);
-  return { bibNumber: handed, provisionalBibNumber: null, ...(spare ? { bibPrintedAt: current.bibPrintedAt ?? now } : {}) };
+  return { bibNumber: handed, ...(spare ? { bibPrintedAt: current.bibPrintedAt ?? now } : {}) };
 }
 
 /**
@@ -770,17 +755,8 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
     return (await repo.findRegistrationById(db, registrationId)) ?? updated;
   }
 
-  /*
-    The place is held, so the number is (§214). Under the lock the caller is holding, which is
-    why it is safe here and would not be in the service's outer scope.
-
-    The Organizer, on why this cannot wait for a confirmation: "procesul trebuie să fie automat… vor fi
-    gratis, cu număr limitat de înscrieri… ce discuții și hate ne luăm dacă nu l-am înscris pe
-    unul la timp și i-a luat altul locul". The place was already held from submission; what was
-    missing was anything the runner or the club could *see*, and a number is that thing.
-  */
-  await ensureProvisionalBibNumber(db, { eventId: event.id, registrationId, now });
-  return (await repo.findRegistrationById(db, registrationId)) ?? updated;
+  // A held place carries no race number: the number comes with the confirmation (§548).
+  return updated;
 }
 
 /**
@@ -917,12 +893,7 @@ export async function fillAvailableSpots<T extends Record<string, unknown>>(
       now,
     });
     if (!offered) continue;
-    /*
-      An offer holds a place, so it carries a number (§214, §420) — the one door into a place that
-      drew none, which left a runner confirmed from the waiting list with no number until the
-      settle. Under the caller's event lock, like every draw; the offer's own expiry releases it.
-    */
-    await ensureProvisionalBibNumber(db, { eventId: event.id, registrationId: offered.id, now });
+    // An offer carries no race number; accepting it is a confirmation, which draws one (§548).
 
     await enqueueEmail(db, {
       participantId: offered.participantId,
@@ -1260,6 +1231,13 @@ export type RegistrationOrigin = {
    */
   anotherPerson?: { participantId: string };
   /**
+   * The members' session the public form was sent from (§552), read by the action from the account
+   * (`getCurrentAccount`, §524): the only door to an event for the members alone. `email` is the
+   * account's address, the one the registration is for; a form for any other address is refused.
+   * Ignored on every other event.
+   */
+  member?: { email: string };
+  /**
    * The public form's family sitting (§519): the form is one of several a browser sends in a row
    * for people on one address, with one email at the end. Present on every public form.
    *
@@ -1294,6 +1272,29 @@ export type RegistrationOrigin = {
 };
 
 const PUBLIC_ORIGIN: RegistrationOrigin = { source: "PUBLIC", createdByStaffUserId: null };
+
+/**
+ * The door of an event for the members alone (§552), for the public form: a members' session, and
+ * never the emailed link for another person — one person per account. The same NOT_FOUND an
+ * unknown event gives, so a post says nothing about whether such an event exists. A staff entry
+ * and the desk are the backoffice's, and pass.
+ */
+function assertMembersDoor(membersOnly: boolean, origin: RegistrationOrigin): void {
+  if (!membersOnly || origin.source !== "PUBLIC") return;
+  if (origin.anotherPerson) {
+    throw new DomainError("VALIDATION_ERROR", "a members' event takes one person per account: no link for another person", [ANOTHER_LINK_INVALID]);
+  }
+  if (!origin.member) throw new DomainError("NOT_FOUND", "no such event");
+}
+
+/** The account's address against the form's, as the address's identity compares them (§10.4). */
+function sameCanonical(accountEmail: string, canonicalEmail: string): boolean {
+  try {
+    return canonicalizeEmail(accountEmail).canonicalEmail === canonicalEmail;
+  } catch {
+    return false;
+  }
+}
 
 /** The queued row, or null when the idempotency key had already been used (`enqueueEmail`). */
 async function enqueueVerificationEmail<T extends Record<string, unknown>>(
@@ -1432,6 +1433,8 @@ export async function submitRegistration<T extends Record<string, unknown>>(
 ): Promise<SubmitRegistrationResult> {
   const atTheDesk = origin.source === "STAFF" && origin.atTheDesk === true;
   assertRegistrationOpen(event, now, atTheDesk);
+  // An event for the members alone (§552), before anything is parsed or spent: asked again under the lock.
+  assertMembersDoor(event.membersOnly === true, origin);
 
   /**
    * Which details are insisted on depends on who is filling the form in, and on nothing
@@ -1470,7 +1473,13 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     note, the socials, the public list, the first-person fitness statement — are dropped whatever
     was posted, before anything reads them. A minor's parent still consents for the child.
   */
-  const parsed = schema.safeParse(origin.anotherPerson ? withoutAnotherAdultsConsents(rawInput, now) : rawInput);
+  /*
+    An event that does not ask the health note (§557): a posted note and its tick are dropped before
+    the schema reads them, so a stale form is never refused for a note without its consent. Only
+    when the caller said so (`askHealthNote: false`); the lock below decides what is stored either way.
+  */
+  const posted = event.askHealthNote === false ? withoutHealthNote(rawInput) : rawInput;
+  const parsed = schema.safeParse(origin.anotherPerson ? withoutAnotherAdultsConsents(posted, now) : posted);
   if (!parsed.success) {
     throw new DomainError(
       "VALIDATION_ERROR",
@@ -1686,6 +1695,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     // Always a boolean, so a restart (which spreads these details) rewrites the old answer.
     listSocials,
     clubMemberDeclared: input.clubMemberDeclared,
+    // As posted; decided under the event's lock below (§554): kept only when the event gives a shirt.
     tshirtSize: input.tshirtSize,
     healthNotes,
     healthConsentVersion: healthNotes ? privacyNotice.version : null,
@@ -1744,23 +1754,48 @@ export async function submitRegistration<T extends Record<string, unknown>>(
 
   await db.transaction(async (tx) => {
     /*
-      The event row, locked, before anything is read about the address (§389; §214 took the lock
-      for the insert alone). Which runners the address already holds is now what decides between a
-      re-send, the email for another person and a new registration — and two members of one family
-      pressing at once must not both find the address empty. Taken before the participant row, the
-      order `confirmEmail` takes them in (event, then participant), so the two cannot deadlock.
+      The event row, locked, before anything is read about the address (§389). Which runners the
+      address already holds is now what decides between a re-send, the email for another person
+      and a new registration — and two members of one family pressing at once must not both find
+      the address empty. Taken before the participant row, the order `confirmEmail` takes them in
+      (event, then participant), so the two cannot deadlock.
       The price, accepted: every public submission to one event now waits on this row — the silent
       re-send and the email for another person included, not only the insert — so a busy event's
       submissions run one at a time, each a few milliseconds long.
     */
     const locked = await repo.lockEventForCapacity(tx, event.id);
     if (!locked) throw new DomainError("NOT_FOUND", "no such event");
+    /*
+      The T-shirt (§554), off the locked row and never off the caller's: the size is kept only when
+      the event gives a shirt («Kit de participare»); for any other event a posted size — a form
+      rendered before the tick came off, a script — is ignored, never refused, and the row says NONE.
+      Every door passes here: the public form, the family forms, a staff entry, the desk's walk-in.
+    */
+    details.tshirtSize = shirtSizeKept(locked.kitShirt, input.tshirtSize);
+    /*
+      The health note (§557), by the same rule off the same locked row: kept only when the event
+      asks it («Condiții de participare» → «Informații medicale»); otherwise a posted note is
+      ignored, never refused, and the row stores null with no consent. Every door passes here.
+    */
+    Object.assign(details, healthNoteKept(locked.askHealthNote, { healthNotes: details.healthNotes, healthConsentVersion: details.healthConsentVersion, healthConsentAt: details.healthConsentAt }));
     // Asked again under the lock (§533): the date held back by a save that committed after the
     // caller read the row. The save counts registrations under this same lock, so a submission and
     // the switch cannot both pass — one waits for the other and finds it.
     if (startHeldBack(locked)) {
       throw new DomainError("VALIDATION_ERROR", "the event's date is to be announced: registration is not open");
     }
+    // For the members alone (§552), asked under the lock too: the switch turned on by a save that
+    // committed after the caller read the row. And for the account's own address only.
+    assertMembersDoor(locked.membersOnly, origin);
+    if (locked.membersOnly && origin.source === "PUBLIC" && origin.member && !sameCanonical(origin.member.email, identity.canonicalEmail)) {
+      throw new DomainError("VALIDATION_ERROR", "a members' event is registered for with the account's own address", ["email"]);
+    }
+    /*
+      One person per account (§552): on a members' event the public form never opens the family
+      flow — no second person on the address, no sitting, no emailed link for another person. The
+      address's one registration is the account holder's; a form with another name re-sends it.
+    */
+    const onePerAccount = locked.membersOnly && origin.source === "PUBLIC";
 
     const participant = await findOrCreateParticipant(tx, identity, legalName, input.locale, now);
     if (origin.anotherPerson && origin.anotherPerson.participantId !== participant.id) {
@@ -1775,7 +1810,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       the same way either way, and costs no catalogue read. The same person again is asked too since
       §446 — whether the re-send may say how to register somebody else depends on it.
     */
-    const familyOpen = via === "link" || rows.length > 0 ? await familyRegistrationOpen(tx) : false;
+    const familyOpen = onePerAccount ? false : via === "link" || rows.length > 0 ? await familyRegistrationOpen(tx) : false;
     // The name and the birth date both decide who this is (§446): the owner's rule, `domain/family.ts`.
     const decision = decideSubmission({ rows, legalName, birthDate: input.birthDate ?? null, via, familyOpen, cap });
 
@@ -1827,7 +1862,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       «Da, încă o persoană» is not a sitting's. Its email is due at once and nothing is written for a
       sitting; it only remembers, for the browser's sealed half, what «Da» would take in (`offering`).
     */
-    const familyWindow = origin.source === "PUBLIC" && !origin.anotherPerson && origin.sitting !== undefined && familySittingHolds(settings);
+    const familyWindow = !onePerAccount && origin.source === "PUBLIC" && !origin.anotherPerson && origin.sitting !== undefined && familySittingHolds(settings);
     const inSitting = familyWindow && origin.sitting?.joined === true;
     const offering = familyWindow && !inSitting;
     let sitting =
@@ -2363,22 +2398,6 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       return;
     }
 
-    /*
-      The event row, locked, before the row that occupies one of its places is written (§214).
-
-      Until now the insert was the one door into the allocator that took no lock, on the
-      reasoning that the capacity *decision* happens later, at email confirmation. That is
-      still true of the decision — and a `PENDING_EMAIL_CONFIRMATION` row occupies a place
-      from the instant it exists (`ACTIVE_REGISTRATION_STATUSES`), so the number that goes
-      with the place has to be drawn here, and a draw without the lock is two people reaching
-      the same free number.
-
-      It is the same serialization point every other allocation uses (§10.6, §151), so the
-      cost is contention this event already has, not a new kind of it. Taken at the top of the
-      transaction since §389, where the address's runners are read.
-    */
-    const lockedForCreate = locked;
-
     // When the link lapses unconfirmed, written on the row (§377): the club's hours now, kept however they change.
     const linkExpiresAt = emailLinkExpiresAt(now, settings);
     const created = await repo.insertPendingEmailRegistration(tx, {
@@ -2399,16 +2418,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       createdByStaffUserId: origin.createdByStaffUserId ?? null,
       now,
     });
-    // The number, at the moment the place is taken rather than at the moment it is confirmed
-    // (§214). The runner sees it on the screen they land on, and the club sees it in the list
-    // before anybody has signed anything — which is what "the process must be automatic" asks
-    // for. It is never emailed, because it can still move when the numbers are settled.
-    await ensureProvisionalBibNumber(tx, {
-      eventId: event.id,
-      registrationId: created.id,
-      bibStartNumber: lockedForCreate.bibStartNumber,
-      now,
-    });
+    // No race number at the form: it is drawn when the registration is confirmed (§548).
 
     // At the desk the address is about to be vouched for by the person typing it
     // (BR-REQ-037-07); a verification email to somebody standing in front of them is noise.
@@ -2465,7 +2475,7 @@ export async function confirmEmail<T extends Record<string, unknown>>(
 
     /*
       The event is not being run any more (§331): cancelled, or over. Confirming the address
-      would allocate a place, draw a provisional number and send "sign the declaration" for a
+      would allocate a place and send "sign the declaration" for a
       race that will not happen — so nothing is written and nothing is sent. The registration is
       returned still unconfirmed, which is how the confirmation page knows to say why rather
       than "confirmed, now sign" (`registrations/confirm/[token]/actions.ts`), and it lapses with
@@ -2478,7 +2488,7 @@ export async function confirmEmail<T extends Record<string, unknown>>(
       The link has lapsed (§377, §420; BR-REQ-031-03 criterion 2): evaluated here against `now`,
       never trusting that the job has run since (§10.6). A click after the lapse and before the next
       sweep used to confirm and allocate a registration its own link had already given up on. It is
-      lapsed here exactly as the sweep would lapse it — the provisional number released with it — and
+      lapsed here exactly as the sweep would lapse it, and
       returned so, which the confirmation page reads as "lapsed, register again", never "confirmed".
     */
     const lapsesAt = current.emailLinkExpiresAt ?? new Date(current.submittedAt.getTime() + settings.confirmationHours * 60 * 60_000);
@@ -2703,6 +2713,8 @@ export async function signDeclaration<T extends Record<string, unknown>>(
       are stored only then. The minor's signature and document ride on the same row (§330): one
       acceptance, one instant, one text, signed by both.
     */
+    const idDocument = needsIdDocument ? (parsed.data.idDocument ?? null) : null;
+    const minorIdDocument = signedByMinorToo && needsIdDocument ? (parsed.data.minorIdDocument ?? null) : null;
     await repo.insertDeclarationAcceptance(tx, {
       registrationId: current.id,
       legalDocumentId: document.id,
@@ -2710,10 +2722,16 @@ export async function signDeclaration<T extends Record<string, unknown>>(
       contentSha256: document.contentSha256,
       locale: current.locale,
       typedName: parsed.data.typedName,
-      idDocument: needsIdDocument ? parsed.data.idDocument : null,
+      idDocument,
       minorTypedName: signedByMinorToo ? (parsed.data.minorTypedName ?? null) : null,
-      minorIdDocument: signedByMinorToo && needsIdDocument ? (parsed.data.minorIdDocument ?? null) : null,
+      minorIdDocument,
       acceptedAt: now,
+      // The proof of signing (§556): the exact text this signer's PDF prints, hashed in this transaction.
+      textHash: await acceptanceTextHash(tx, {
+        eventId: current.eventId,
+        document,
+        signer: { registeredName: current.registeredName, guardianName: current.guardianName, locale: current.locale, idDocument, minorIdDocument, acceptedAt: now },
+      }),
     });
 
     const confirmed = await repo.transitionRegistration(tx, {
@@ -2724,10 +2742,8 @@ export async function signDeclaration<T extends Record<string, unknown>>(
         confirmedAt: now,
         holdExpiresAt: null,
         checkinCode: current.checkinCode ?? newCheckinCode(),
-        // The race number, once the list is settled (§214, amending §87): nothing while the
-        // window is open — the provisional number stands and the recompaction at close gives
-        // the final one — and the next free number immediately once it has shut.
-        ...(await finalBibAtConfirmation(tx, event, current, now)),
+        // The race number, drawn now and at no other moment (§548): the next one in confirmation order.
+        ...(await bibAtConfirmation(tx, current)),
       },
       now,
     });
@@ -2865,6 +2881,12 @@ async function acceptDeclarationOnPaper<T extends Record<string, unknown>>(
     acceptedAt: now,
     method: "PAPER",
     attestedByStaffUserId: actor.id,
+    // The text the paper's record prints (§556): the documents stay on the paper, so their blanks are dotted.
+    textHash: await acceptanceTextHash(tx, {
+      eventId: current.eventId,
+      document,
+      signer: { registeredName: current.registeredName, guardianName: current.guardianName, locale: current.locale, idDocument: null, minorIdDocument: null, acceptedAt: now },
+    }),
   });
   const confirmed = await repo.transitionRegistration(tx, {
     id: current.id,
@@ -2874,12 +2896,9 @@ async function acceptDeclarationOnPaper<T extends Record<string, unknown>>(
       confirmedAt: now,
       holdExpiresAt: null,
       checkinCode: current.checkinCode ?? newCheckinCode(),
-      // As in `signDeclaration` (§214): nothing while the window is open, the next free
-      // number once it has shut — unless the desk handed one with the paper, a spare above all
-      // (§444), which is this runner's from now on whatever the window says.
-      ...(handedBib !== undefined
-        ? await handedBibAtConfirmation(tx, current, handedBib, now)
-        : await finalBibAtConfirmation(tx, event, current, now)),
+      // As in `signDeclaration` (§548): the next number in confirmation order — unless the desk
+      // handed one with the paper, a spare above all (§444).
+      ...(handedBib !== undefined ? await handedBibAtConfirmation(tx, current, handedBib, now) : await bibAtConfirmation(tx, current)),
     },
     now,
   });
@@ -3001,14 +3020,8 @@ export async function promoteFromWaitlistByStaff<T extends Record<string, unknow
       now,
     });
     if (!offered) throw new DomainError("CONFLICT", "this registration changed state concurrently");
-    /*
-      The place carries a number (§214, §420), as in `fillAvailableSpots`: drawn under this lock, and
-      read back so the confirmation below sees it — before the close it is kept as the provisional
-      one, after the close it is adopted as the final one (§220) rather than skipped for a fresh one.
-    */
-    await ensureProvisionalBibNumber(tx, { eventId: event.id, registrationId: offered.id, now });
-    const numbered = (await repo.findRegistrationById(tx, offered.id)) ?? offered;
-    const confirmed = await acceptDeclarationOnPaper(tx, locked, numbered, actor, now);
+    // The confirmation below draws the number, under this lock (§548).
+    const confirmed = await acceptDeclarationOnPaper(tx, locked, offered, actor, now);
     // As in `signDeclaration`: the expiry above may have released another person's lapsed
     // hold to the queue, and this transaction is the one holding the lock that can offer it.
     const offersMade = await fillAvailableSpots(tx, locked, now, settings);
@@ -3071,6 +3084,9 @@ export async function undoCheckIn<T extends Record<string, unknown>>(
   return updated;
 }
 
+/** Where a participant cancelled their own registration from (§547): audit metadata, never a name. */
+export type ParticipantCancelDoor = "MANAGE_LINK" | "MY_REGISTRATIONS" | "FAMILY_WIZARD";
+
 export async function unregister<T extends Record<string, unknown>>(
   db: Database<T>,
   event: EventForRegistration,
@@ -3083,7 +3099,22 @@ export async function unregister<T extends Record<string, unknown>>(
    * to a person who asked to be forgotten — a message the erasure would delete a moment later,
    * or that a drain between the two would already have sent.
    */
-  options: { notify?: boolean } = {},
+  options: {
+    notify?: boolean;
+    /**
+     * The door a participant cancelled through (§547): their own manage link, «Înscrierile mele», or
+     * «Renunț la înscrierea pentru …» in the family's wizard. Given, the cancellation writes one audit
+     * row with no staff actor — the state it left and the door, never a name (AGENTS.md §12.12) — so
+     * the club's timeline says the person withdrew themselves, as it says a staff cancellation.
+     */
+    via?: ParticipantCancelDoor;
+    /**
+     * The participant's own reason (§558), asked at every door above and required there: stored on
+     * the row (the answer, and the words of «Alt motiv»), the answer alone in the audit row — never
+     * the words, which are the person's own and may name them.
+     */
+    reason?: CancelReason;
+  } = {},
 ): Promise<Registration> {
   // The club's hold and offer lengths (§377), before the lock and from the memo when it is fresh.
   const settings = await currentDeadlines(db);
@@ -3105,11 +3136,29 @@ export async function unregister<T extends Record<string, unknown>>(
       id: registrationId,
       to: "CANCELLED",
       fromStatuses: allowedFromStatuses("CANCELLED"),
-      changes: { cancelledAt: now, cancellationSource: source },
+      changes: {
+        cancelledAt: now,
+        cancellationSource: source,
+        ...(source === "PARTICIPANT" && options.reason
+          ? { cancelReasonKind: options.reason.kind, cancelReason: options.reason.text }
+          : {}),
+      },
       now,
     });
     if (!cancelled) {
       throw new DomainError("CONFLICT", "this registration changed state concurrently");
+    }
+
+    if (source === "PARTICIPANT" && options.via) {
+      await recordAuditEvent(tx, {
+        actorStaffUserId: null,
+        participantId: cancelled.participantId,
+        action: "registration.cancelled_by_participant",
+        entityType: "registration",
+        entityId: cancelled.id,
+        metadata: { from: current.status, via: options.via, ...(options.reason ? { reasonKind: options.reason.kind } : {}) },
+        now,
+      });
     }
 
     if (options.notify !== false) {
@@ -3119,7 +3168,12 @@ export async function unregister<T extends Record<string, unknown>>(
         messageType: "REGISTRATION_CANCELLED",
         locale: cancelled.locale,
         recipientEmail: await deliveryEmailOf(tx, cancelled.participantId),
-        payload: {},
+        /*
+          The state the registration left (§547): the message says a held place was released, or that
+          the person left the waiting list — «Înscrierea pentru <nume> … a fost anulată», one per
+          person, whoever pressed it.
+        */
+        payload: { previousStatus: current.status },
         idempotencyKey: `registration:${cancelled.id}:cancelled:${now.toISOString()}`,
         now,
       });

@@ -25,7 +25,7 @@ let db: TestDatabase;
 let close: () => Promise<void>;
 vi.mock("@/db/client", () => ({ getDb: () => db }));
 vi.mock("next/cache", async () => (await import("../../helpers/next-cache")).fakeNextCache.module);
-vi.mock("@/modules/diagnostics/neon-budget", () => ({ peekNeonBudgetLevel: () => "unknown" }));
+vi.mock("@/modules/diagnostics/budget-level", () => ({ peekNeonBudgetLevel: () => "unknown", lastKnownBudget: () => null }));
 const request = vi.hoisted(() => ({ reads: new Map<string, Promise<unknown>>() }));
 vi.mock("@/modules/public-cache/request-memo", () => ({ thisRequestsReads: () => request.reads }));
 

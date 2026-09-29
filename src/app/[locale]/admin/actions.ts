@@ -68,7 +68,7 @@ import { env } from "@/shared/config/env";
 import { readBibDesignForm } from "@/modules/registrations/bib-design-query";
 import { assignBibNumbers, reserveSpareBibs } from "@/modules/registrations/bibs";
 import { withdrawInterest } from "@/modules/registrations/interest";
-import { eraseGroupRunDeclaration, eraseGroupRunDeclarations } from "@/modules/group-run-declarations/service";
+import { eraseGroupRunDeclaration, eraseGroupRunDeclarations, setGroupRunDeclarationHold } from "@/modules/group-run-declarations/service";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
 
 /**
@@ -293,11 +293,19 @@ function eventFieldsFrom(form: FormData) {
     // A checkbox like the one above it, and unlike it in every other way: any number of
     // events may be special (§168), so nothing is cleared when one is ticked.
     isSpecial: form.get("event.isSpecial") === "on",
+    // «Doar pentru membrii BVR» (§552): read only when the form carried its marker, as §451's box —
+    // a form without it is "not editing it", never "public".
+    membersOnly: form.get("event.membersOnly.present") === "1" ? form.get("event.membersOnly") === "on" : undefined,
     registrationMode: value("registrationMode"),
     capacity: value("capacity"),
     // The waiting list's length (§348), only when the form carried its box: an empty box is "no
     // limit", and a form without the box is "not editing it" — `fields.ts` tells the two apart.
     waitlistCapacity: form.has("event.waitlistCapacity") ? value("waitlistCapacity") : undefined,
+    // «Kit de participare» → «Tricou» (§554): a checkbox, read only when the form carried its marker,
+    // so a form without the card is "not editing it" rather than "no shirt".
+    kitShirt: form.get("event.kitShirt.present") === "1" ? form.get("event.kitShirt") === "on" : undefined,
+    // «Condiții de participare» → «Informații medicale» (§557), by the same marker.
+    askHealthNote: form.get("event.askHealthNote.present") === "1" ? form.get("event.askHealthNote") === "on" : undefined,
     bibStartNumber: value("bibStartNumber"),
     bibColour: value("bibColour"),
     /*
@@ -1054,6 +1062,24 @@ export async function eraseGroupRunDeclarationAction(_previous: FormOutcome | nu
     return refused(error, form);
   }
   return backTo(path, { saved: "groupRunDeclarationErased" });
+}
+
+/**
+ * «Păstrează: reclamație / litigiu în curs» on one group-run declaration, or its release (§556): the
+ * Administrator's, with a reason; the service asks the role again and writes the audit row.
+ */
+export async function groupRunDeclarationHoldAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = toLocale(form.get("uiLocale"));
+  const eventId = text(form, "eventId");
+  const path = editorPath(locale, eventId);
+  const hold = text(form, "hold") === "1";
+  try {
+    const actor = await requireStaffCapability(canManageRegistrations);
+    await setGroupRunDeclarationHold(getDb(), actor, { eventId, id: text(form, "declarationId"), hold, reason: text(form, "reason") }, new Date());
+  } catch (error) {
+    return refused(error, form);
+  }
+  return backTo(path, { saved: hold ? "declarationHeld" : "declarationReleased" });
 }
 
 /**

@@ -55,21 +55,21 @@ describe("§513 the screen after the form says the scheduled round's wait", () =
 
   it("says fifteen minutes by day on the scheduled round", async () => {
     const html = await render();
-    expect(html).toContain("Emailurile pleacă la trecerea programată a platformei, așa că ajunge în cel mult 15 minute.");
-    expect(html).not.toContain("De obicei ajunge într-un minut");
+    expect(html).toContain("Ajunge în cel mult 15 minute.");
+    expect(html).not.toContain("cinci minute");
   });
 
   it("says an hour at night, or whatever the interval makes it", async () => {
     wait.minutes = 60;
-    expect(await render()).toContain("ajunge în cel mult o oră.");
+    expect(await render()).toContain("Ajunge în cel mult o oră.");
     wait.minutes = 120;
-    expect(await render()).toContain("ajunge în cel mult 2 ore.");
+    expect(await render()).toContain("Ajunge în cel mult 2 ore.");
   });
 
   it("keeps the minute when the request itself sends", async () => {
     wait.minutes = null;
     const html = await render();
-    expect(html).toContain("De obicei ajunge într-un minut, cel târziu în cinci.");
+    expect(html).toContain("Ajunge în cel mult cinci minute.");
     expect(html).not.toContain("trecerea programată");
   });
 });
@@ -101,14 +101,16 @@ describe("§536 the short screen after the first form", () => {
     expect(html).toContain("Formularul pentru Ana a ajuns.");
     expect(html).toContain("Emailul către familia.pop@example.ro pleacă la 13:15.");
     expect(html.indexOf("Emailul către familia.pop@example.ro pleacă la 13:15.")).toBeLessThan(html.indexOf('data-testid="family-sitting-offer"'));
-    expect(html).toContain("Mai înscrii pe cineva cu aceeași adresă?");
-    expect(html).toContain("Da, încă o persoană");
+    // §547: no bold question and no primary button any more — one quiet line after the main content.
+    expect(html).not.toContain("Mai înscrii pe cineva cu aceeași adresă?");
+    expect(html).toContain("Înscriu încă o persoană cu această adresă");
+    expect(html).not.toContain("Da, încă o persoană");
     // While the email still waits, «Da» holds it — at most the club's window — and one email covers everybody.
-    expect(html).toContain("Dacă apeși „Da” până la 13:15, emailul așteaptă formularul următor, cel mult 15 minute, și primiți unul singur pentru toți.");
+    expect(html).toContain("Dacă înscrii încă o persoană până la 13:15, emailul îi așteaptă formularul, cel mult 15 minute, și primiți unul singur pentru toți.");
     // Said once, in one shape: no steps, no wait box, no second telling of the time (F2).
     expect(html).not.toContain("Ce urmează");
     expect(html).not.toContain("trecerea programată");
-    expect(html).not.toContain("ajunge în cel mult");
+    expect(html).not.toContain("Ajunge în cel mult");
     expect(html).not.toContain("Ți-am trimis un email");
   });
 
@@ -118,9 +120,9 @@ describe("§536 the short screen after the first form", () => {
     const html = await render(offer);
     expect(html).toContain("Formularul a ajuns.");
     expect(html).toContain("Emailul către familia.pop@example.ro pleacă acum.");
-    expect(html).toContain("Dacă apeși „Da”, următorul email așteaptă cel mult 15 minute după ultimul formular și îi cuprinde pe toți.");
+    expect(html).toContain("Dacă înscrii încă o persoană, următorul email așteaptă cel mult 15 minute după ultimul formular și îi cuprinde pe toți.");
     expect(html).not.toContain("emailul așteaptă");
-    expect(html).not.toContain("De obicei ajunge într-un minut");
+    expect(html).not.toContain("Ajunge în cel mult");
   });
 
   it("on another day says the weekday-led date with its own «la», never a second one (§452)", async () => {
@@ -128,7 +130,7 @@ describe("§536 the short screen after the first form", () => {
     const html = await render(offer, "Ana");
     expect(html).toContain("Emailul către familia.pop@example.ro pleacă marți, 29 septembrie, la 10:00.");
     expect(html).not.toContain("pleacă la mar");
-    expect(html).toContain("Dacă apeși „Da” până marți, 29 septembrie, la 10:00, emailul așteaptă formularul următor");
+    expect(html).toContain("Dacă înscrii încă o persoană până marți, 29 septembrie, la 10:00, emailul îi așteaptă formularul");
   });
 
   it("reads the pass the form stored, never one recomputed at render (the review of 2026-09-28)", async () => {
@@ -145,7 +147,7 @@ describe("§536 the short screen after the first form", () => {
     const html = await render({ ...offer, leavesAt: new Date("2026-09-28T10:15:00.000Z") }, "Ana");
     expect(html).toContain("Emailul către familia.pop@example.ro a plecat.");
     expect(html).not.toContain("pleacă la");
-    expect(html).toContain("Dacă apeși „Da”, următorul email așteaptă cel mult 15 minute după ultimul formular și îi cuprinde pe toți.");
+    expect(html).toContain("Dacă înscrii încă o persoană, următorul email așteaptă cel mult 15 minute după ultimul formular și îi cuprinde pe toți.");
     expect(html).not.toContain("emailul așteaptă formularul următor");
     expect(html).not.toContain("unul singur pentru toți");
   });
@@ -181,7 +183,7 @@ describe("§536 the short screen after the first form", () => {
   it("keeps the full inbox screen, with the steps and the wait box, wherever no question is asked", async () => {
     const html = await render();
     expect(html).toContain("Ce urmează");
-    expect(html).toContain("ajunge în cel mult 15 minute.");
+    expect(html).toContain("Ajunge în cel mult 15 minute.");
     expect(html).not.toContain('data-testid="check-email-leaves"');
     expect(html).not.toContain('data-testid="family-sitting-offer"');
   });

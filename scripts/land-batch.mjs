@@ -8,35 +8,16 @@
  *                                                     `.release/`, the next baseline after CLAUDE.md's, dated
  *                                                     today in Brașov — what `.github/workflows/release.yml` runs)
  *
- * The implementers are told not to touch DECISIONS.md, CHANGELOG.md, SPECS.md or a baseline marker, and to
- * cite their decision in code as `§NNN`: several branches cannot share one tail of DECISIONS.md, one open
- * CHANGELOG section and one next number. This does, once per batch, in six steps:
- *
- *   1. bumps the baseline `from` → `to` in every file that carries it, except the two that keep history:
- *      DECISIONS.md moves only its marker and its title line (each shipped section keeps its own
- *      "Baseline `…`." footer) and CHANGELOG.md gets a new section above the old one;
- *   2. numbers the items in the manifest's order, then the tree's entries in the order they were added,
- *      from the first free `§` in DECISIONS.md — first rewriting, in every landed field, a literal `§N`
- *      above that first free number to `§NNN`, since it can only be a guess at a number nobody assigned
- *      yet, never a citation of a decision already in the file (`land-entry.mjs`'s
- *      `rewriteFreeSectionRefs`), and printing each one it rewrites;
- *   3. replaces every `§NNN` in tracked files with its item's number, by the commit that wrote the line
- *      (git blame against the commits `base..branch`); when the batch holds one item, every line the
- *      batch wrote is that item's; any other line written by a merge is listed for a hand decision;
- *   4. appends each item's section to DECISIONS.md — the fixer's text if a fix round rewrote it, plus every
- *      later round's addendum, less any fixer's housekeeping — and its CHANGELOG bullet: the implementer's,
- *      or the item's own `changelog`, never a fixer's (`land-entry.mjs` says why);
- *   5. adds or amends the SPECS.md acceptance criteria, the latest stage winning per requirement;
- *   6. with `--tree`, adds the CLAUDE.md batch line and the docs/QUEUE.md Released row (the dispatcher
- *      writes those by hand after a manifest landing); and in both modes deletes every `.release/*.json`
- *      it read, so the landing commit carries the facts into the documents and out of the tree.
- *
- * It stops, before writing anything, on a blank fix report (a round with no result or no summary), a blank
- * `decisionsTitle`, a blank bullet and a malformed `.release/` entry; a manifest item's `title` and
- * `changelog` override the results'. With `--tree` — unattended on GitHub Actions — it also stops
- * on anything a person would have to finish: an entry's `docsNotes`, a criterion for a requirement
- * SPECS.md lacks, a placeholder line no branch wrote (`land-tree.mjs`'s `handWork`). Under Actions
- * (`GITHUB_STEP_SUMMARY` set) the numbers, those lists and a stop are written to the run's summary.
+ * Branches cite their decision as `§NNN` and never edit DECISIONS.md, CHANGELOG.md, SPECS.md or the
+ * baseline; this does it once per batch:
+ *   1. bumps the baseline in every carrier (DECISIONS.md: marker and title only; CHANGELOG.md: a new section);
+ *   2. numbers the items from the first free `§`, a literal `§N` above it rewritten to `§NNN` first;
+ *   3. replaces each `§NNN` by the item whose commit wrote the line (blame); the rest are listed;
+ *   4. appends each DECISIONS.md section and CHANGELOG bullet (`land-entry.mjs`);
+ *   5. adds or amends SPECS.md criteria;
+ *   6. with `--tree`, the QUEUE.md row (CLAUDE.md keeps no batch lines); always deletes the `.release/*.json` read.
+ * It stops before writing on a blank title, bullet or fix report or a malformed entry; with `--tree`
+ * (unattended) also on anything left for a person (`handWork`). Under Actions it writes the run's summary.
  *
  * manifest.json (it lives outside the repository, beside the saved results; it names local paths):
  *   {
@@ -50,12 +31,9 @@
  *       { "chain": "<the orchestrator's own entry, { impl: { decisionsTitle, decisionsSection, … } }>.json" }
  *     ]
  *   }
- * A result file is the Workflow's return value as saved: `{ impl, review, fixed, rereview }` from br-chain,
- * `{ fixed, rereview }` from br-fix-round; text before the first `{` and a `{ result: … }` wrapper are ignored.
- * A `.release/` entry whose branch a manifest item also names is the manifest's: it is not landed twice,
- * and it is deleted with the others. `.release/README.md` describes an entry's fields.
- *
- * With `--apply` under GitHub Actions (`GITHUB_OUTPUT` set) it also writes `from`, `to` and `title` there.
+ * A result file is the saved Workflow return value (br-chain or br-fix-round); text before the first `{`
+ * and a `{ result: … }` wrapper are ignored. A `.release/` entry a manifest item also names lands once.
+ * With `--apply` and `GITHUB_OUTPUT` set, it writes `from`, `to` and `title` there.
  */
 
 import { execFileSync } from "node:child_process";
@@ -76,11 +54,10 @@ import {
   releaseTitle,
   todayIn,
   validateEntry,
-  withBatchLine,
   withReleasedRow,
 } from "./land-tree.mjs";
 
-/** On GitHub Actions, lines for the run's summary page — what the owner reads on a phone; nothing elsewhere. */
+/** Lines for the GitHub Actions run's summary page; nothing elsewhere. */
 function summary(markdown) {
   if (!process.env.GITHUB_STEP_SUMMARY) return;
   try {
@@ -118,7 +95,7 @@ const gitMay = (...args) => {
 };
 const BASELINE = /^BR-V\d+\.\d+-\d{4}-\d{2}-\d{2}$/;
 
-/** The release facts the branch carries: every `.release/*.json`, validated, in the order they were added. */
+/** Every `.release/*.json`, validated, in the order they were added. */
 function readTreeEntries() {
   if (!existsSync(ENTRY_DIR)) return [];
   const found = [];
@@ -208,10 +185,8 @@ function loadResult(path) {
 }
 
 /**
- * One item's title, body, bullet and criteria, by the rules in `land-entry.mjs`: a blank fix
- * report, a blank title or a blank bullet stops the landing; a fixer's bullet and its housekeeping
- * ("carried forward", "no DECISIONS.md edit was made") never land, and the dry run says so. A tree
- * entry is an implementer's result with no fix rounds: a fixer rewrites the file in place.
+ * One item's title, body, bullet and criteria, by the rules in `land-entry.mjs`. A tree entry is an
+ * implementer's result with no fix rounds: a fixer rewrites the file in place.
  */
 function itemEntry(item) {
   const label = item.branch ?? item.chain;
@@ -253,7 +228,7 @@ for (const e of entries) {
 for (const e of entries) console.log(`§${e.n} ← ${e.branch ?? e.source}: ${e.title}`);
 
 // 3. §NNN in the code, by the commit that wrote each line.
-/** The commits an item wrote: its branch's (local, else origin's), and for a tree entry those up to its file's last change. */
+/** The commits an item wrote: its branch's, and for a tree entry those up to its file's last change. */
 function commitsOf(e) {
   const tips = [];
   if (e.branch) {
@@ -363,15 +338,10 @@ for (const e of entries) {
 }
 write("SPECS.md", specs.join("\n"));
 
-// 6. The batch line and the queue (--tree), the entries out of the tree.
+// 6. The queue's Released row (--tree), the entries out of the tree.
 const clauses = entries.map((e) => clauseOf({ decisionsTitle: e.title, batchLine: e.raw?.batchLine }, e.n));
 const title = releaseTitle(clauses);
 if (TREE) {
-  try {
-    write("CLAUDE.md", withBatchLine(read("CLAUDE.md").text, { to, date: manifest.date, clauses }));
-  } catch (error) {
-    fail(error.message);
-  }
   if (existsSync("docs/QUEUE.md")) {
     try {
       write("docs/QUEUE.md", withReleasedRow(read("docs/QUEUE.md").text, { to, clauses }));
@@ -387,8 +357,7 @@ if (missing.length) console.log(`\nrequirements not found in SPECS.md — add th
 const notes = entries.filter((e) => String(e.raw?.docsNotes ?? "").trim()).map((e) => `§${e.n}: ${e.raw.docsNotes.trim()}`);
 if (notes.length) console.log(`\ndocsNotes — text other documents need, by hand:\n  ${notes.join("\n  ")}`);
 
-// Unattended (--tree, on GitHub Actions from a phone) nobody reads a log: hand work stops the
-// landing before a file is written, dry run or not, and the run's summary says what and where.
+// Unattended nobody reads a log: hand work stops the landing before a file is written.
 if (TREE) {
   const refused = handWork({ docsNotes: notes, missing, manual });
   if (refused.length) fail(`--tree cannot land what needs a person:\n    ${refused.join("\n    ")}`);
@@ -417,5 +386,5 @@ for (const file of landedFiles) unlinkSync(file);
 if (process.env.GITHUB_OUTPUT) {
   appendFileSync(process.env.GITHUB_OUTPUT, `from=${from}\nto=${to}\ntitle=${title.replace(/[\r\n]+/g, " ")}\n`);
 }
-const next = TREE ? "yarn docs:check, then commit" : "docs/QUEUE.md and the CLAUDE.md batch line, then yarn check";
+const next = TREE ? "yarn docs:check, then commit" : "docs/QUEUE.md's Released row, then yarn check";
 console.log(`\napplied: ${dirty.length} files, ${landedFiles.length} ${ENTRY_DIR}/ entries deleted. Next: ${next}.`);

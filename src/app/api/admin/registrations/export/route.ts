@@ -2,17 +2,16 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/db/client";
 import { type RegistrationStatus, registrationStatus } from "@/db/schema/registrations";
 import { buildRegistrationsCsv } from "@/modules/registrations/csv";
+import { cancelReasonCell } from "@/modules/registrations/domain/cancel-reason";
 import { familyColumn, familyOf } from "@/modules/registrations/family-marker";
 import { recordAuditEvent } from "@/modules/audit/repository";
-import { buildRegistrationsWorkbook, type RegistrationSheetRow } from "@/modules/registrations/workbook";
+import { buildRegistrationsWorkbook, workbookExtras } from "@/modules/registrations/workbook";
 import {
   listEventsWithRegistrations,
   listLatestDeclarationAcceptances,
   listRegistrationsForAdmin,
   listWorkbookDetails,
-  type WorkbookDetails,
 } from "@/modules/registrations/admin-repository";
-import { ageOnRaceDay } from "@/modules/registrations/domain/age";
 import { defaultEventFilter } from "@/modules/registrations/domain/default-event-filter";
 import { identityDocumentsOf } from "@/modules/registrations/domain/identity-documents";
 import { canReadRegistrations } from "@/modules/staff-identity/domain/roles";
@@ -21,19 +20,6 @@ import { isDomainError } from "@/shared/errors/domain-error";
 
 function isRegistrationStatus(value: string | null): value is RegistrationStatus {
   return !!value && (registrationStatus.enumValues as readonly string[]).includes(value);
-}
-
-/** The spreadsheet's own columns for one row (§322), blank when the row has none. */
-function workbookExtras(details: WorkbookDetails | undefined): Pick<RegistrationSheetRow, "sex" | "ageOnRaceDay" | "nationality" | "country" | "city" | "tshirtSize"> {
-  if (!details) return {};
-  return {
-    sex: details.sex,
-    ageOnRaceDay: ageOnRaceDay(details.birthDate, details.eventStartsAt, details.eventTimezone),
-    nationality: details.nationality,
-    country: details.country,
-    city: details.city,
-    tshirtSize: details.tshirtSize,
-  };
 }
 
 /**
@@ -172,7 +158,6 @@ export async function GET(request: Request): Promise<Response> {
         submittedAt: row.submittedAt,
         confirmedAt: row.confirmedAt,
         bibNumber: row.bibNumber,
-        provisionalBibNumber: row.provisionalBibNumber,
         checkedInAt: row.checkedInAt,
         emailBounced: row.emailRejectedReason !== null,
         termsVersion: row.termsVersion,
@@ -180,6 +165,7 @@ export async function GET(request: Request): Promise<Response> {
         declarationVersion: declarations.get(row.id)?.version ?? null,
         declarationSignedAt: declarations.get(row.id)?.acceptedAt ?? null,
         family: familyColumn(family.get(row.id)),
+        cancelReason: cancelReasonCell(row.cancelReasonKind, row.cancelReason),
       })),
       eventTitle ?? "Participants",
     );
@@ -216,7 +202,6 @@ export async function GET(request: Request): Promise<Response> {
       submittedAt: row.submittedAt.toISOString(),
       confirmedAt: row.confirmedAt?.toISOString() ?? "",
       bibNumber: row.bibNumber,
-      provisionalBibNumber: row.provisionalBibNumber,
       checkedInAt: row.checkedInAt?.toISOString() ?? "",
       emailBounced: row.emailRejectedReason !== null,
       // The terms accepted on the form (§421, §425): blank for a staff or desk entry.
@@ -226,6 +211,8 @@ export async function GET(request: Request): Promise<Response> {
       declarationVersion: declarations.get(row.id)?.version ?? null,
       declarationSignedAt: declarations.get(row.id)?.acceptedAt.toISOString() ?? "",
       family: familyColumn(family.get(row.id)),
+      // Why the participant cancelled (§558): blank for a staff cancellation and every live row.
+      cancelReason: cancelReasonCell(row.cancelReasonKind, row.cancelReason),
     })),
   );
 

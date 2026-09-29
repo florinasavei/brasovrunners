@@ -27,7 +27,7 @@ function filledForm(overrides: Record<string, string> = {}): FormData {
     birthDate: "1990-05-17",
     // MUI renders a select's value into an input carrying the field's name. «Sex» has no
     // default since §510, so a runner answers it; the others are what an untouched form posts.
-    sex: "UNSPECIFIED",
+    sex: "FEMALE",
     nationality: "RO",
     country: "RO",
     tshirtSize: "NONE",
@@ -125,14 +125,17 @@ describe("BR-REQ-031-04 the rendered form reaches the schema", () => {
   });
 
   /**
-   * §510 — «Sex» starts empty: an untouched select posts an empty value, and the public form
-   * refuses it by name rather than recording «Prefer să nu spun» nobody chose.
+   * §510 — «Sex» starts empty: an untouched group posts nothing, and the public form refuses it by
+   * name. Since §554 the answers are «Masculin» and «Feminin»; «Prefer să nu spun» is refused too.
    */
   it("refuses the public form with no answer to «Sex», naming it (§510)", () => {
     const parsed = registrationSubmissionSchema.safeParse(readRegistrationForm(filledForm({ sex: "" }), "ro"));
     expect(parsed.error?.issues.map((issue) => issue.path.join("."))).toEqual(["sex"]);
-    // «Prefer să nu spun» is still an answer.
-    expect(registrationSubmissionSchema.safeParse(readRegistrationForm(filledForm({ sex: "UNSPECIFIED" }), "ro")).success).toBe(true);
+    expect(registrationSubmissionSchema.safeParse(readRegistrationForm(filledForm({ sex: "FEMALE" }), "ro")).success).toBe(true);
+    expect(registrationSubmissionSchema.safeParse(readRegistrationForm(filledForm({ sex: "MALE" }), "ro")).success).toBe(true);
+    // The retired answer (§554), refused by name like a missing one.
+    const retired = registrationSubmissionSchema.safeParse(readRegistrationForm(filledForm({ sex: "UNSPECIFIED" }), "ro"));
+    expect(retired.error?.issues.map((issue) => issue.path.join("."))).toEqual(["sex"]);
   });
 
   it("refuses the public form with a blank city alone, naming it (§467)", () => {
