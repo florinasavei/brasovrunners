@@ -1,7 +1,7 @@
 import { isRichTextEmpty, readRichText, richTextToPlainText } from "@/modules/content/rich-text/domain/schema";
 import { type CoHost, primaryCoHostLink } from "./domain/co-hosts";
 import { costUrlHost, type EventCostType } from "./domain/cost";
-import { DIFFICULTY_STEPS, difficultyBandOf, difficultyLevelOf, difficultyStepOf } from "./domain/difficulty";
+import { difficultyLevelOf, difficultyWords } from "./domain/difficulty";
 import { distanceInKm, type EventSurface, type EventType } from "./domain/event-type";
 import { type RegistrationWindowInput, registrationState } from "./domain/registration-window";
 import { type ProgrammeRow, programmeLines } from "./domain/schedule";
@@ -357,14 +357,14 @@ function htmlLine(line: Line): string {
  * before.
  */
 /**
- * The difficulty in the facts line, with its step (§526) — «Mediu, treapta 2 din 3»: a calendar
- * entry has no gauge to read the step off, so the words say it, as the emails' facts do.
+ * The difficulty in the facts line, with its level of fifteen (§526, §563) — «Mediu, nivelul 5 din
+ * 15»: a calendar entry has no gauge, so the words say it, as the emails' facts do — the same
+ * `difficultyWords` the pills read.
  */
-function difficultyWords(event: CalendarEvent, t: CalendarLabels["t"]): string {
+function difficultyLine(event: CalendarEvent, t: CalendarLabels["t"]): string {
   const level = difficultyLevelOf(event);
   if (level === null) return "";
-  const step = difficultyStepOf(level);
-  return t("difficultyWithStep", { band: t(`difficultyValues.${difficultyBandOf(level)}`), step, steps: DIFFICULTY_STEPS.length });
+  return difficultyWords(level, t).plain;
 }
 
 function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[][] {
@@ -435,7 +435,7 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
     km !== null ? `🏃 ${t("distanceKm", { km: new Intl.NumberFormat(intl, { maximumFractionDigits: 1 }).format(km) })}` : "",
     event.elevationGainMeters ? `↗ ${t("elevationM", { m: new Intl.NumberFormat(intl).format(event.elevationGainMeters) })}` : "",
     event.surface ? t(`surface.${event.surface}`) : "",
-    difficultyWords(event, t),
+    difficultyLine(event, t),
     ...costFacts,
   ]
     .filter((part) => part.length > 0)

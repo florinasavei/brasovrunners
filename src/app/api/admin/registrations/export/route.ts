@@ -166,6 +166,8 @@ export async function GET(request: Request): Promise<Response> {
         declarationSignedAt: declarations.get(row.id)?.acceptedAt ?? null,
         family: familyColumn(family.get(row.id)),
         cancelReason: cancelReasonCell(row.cancelReasonKind, row.cancelReason),
+        // The consent to offers and benefits (§562): its moment, blank for no.
+        promoConsentAt: row.promoConsent ? row.promoConsentAt : null,
       })),
       eventTitle ?? "Participants",
     );
@@ -213,6 +215,8 @@ export async function GET(request: Request): Promise<Response> {
       family: familyColumn(family.get(row.id)),
       // Why the participant cancelled (§558): blank for a staff cancellation and every live row.
       cancelReason: cancelReasonCell(row.cancelReasonKind, row.cancelReason),
+      // «Oferte și beneficii» (§562): the moment of the yes, empty for no — last, like the family.
+      promoConsentAt: row.promoConsent ? (row.promoConsentAt?.toISOString() ?? "") : "",
     })),
   );
 

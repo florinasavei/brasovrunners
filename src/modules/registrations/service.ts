@@ -12,7 +12,8 @@ import type { Database, Transaction } from "@/db/types";
 import { startHeldBack } from "@/modules/events/domain/dated";
 import { registrationState } from "@/modules/events/domain/registration-window";
 import { recordAuditEvent } from "@/modules/audit/repository";
-import { findCurrentApprovedDocument, findEventDeclaration } from "@/modules/legal-documents/repository";
+import { findCurrentApprovedDocument, findEventDeclaration, noticeDescribesPromotionalMaterials } from "@/modules/legal-documents/repository";
+import { recordFormPromoConsent, setPromoConsent } from "./promo-consent";
 import { acceptanceTextHash } from "./signed-declaration";
 import { readClubNotices } from "@/modules/notifications/club-notices";
 import { confirmationNoticeRecipients, resolveDeclarationCopies } from "@/modules/notifications/domain/club-notices";
@@ -23,7 +24,7 @@ import { handsSpareAtConfirm } from "./domain/spare-bibs";
 import type { CancelReason } from "./domain/cancel-reason";
 import { shirtSizeKept } from "./domain/kit";
 import { healthNoteKept, withoutHealthNote } from "./domain/health-note";
-import { asksForIdDocument, asksForMinorSignature, describesListSocials } from "@/modules/legal-documents/domain/merge-fields";
+import { asksForIdDocument, asksForMinorSignature, describesListSocials, describesPromotionalMaterials } from "@/modules/legal-documents/domain/merge-fields";
 import { newCheckinCode } from "./checkin-code";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import {
@@ -1652,6 +1653,17 @@ export async function submitRegistration<T extends Record<string, unknown>>(
   */
   const listSocials =
     input.listSocials && !input.listOptOut && (stravaUrl !== null || instagramHandle !== null) && describesListSocials(privacyNotice.body);
+  /*
+    «Vreau să primesc oferte și beneficii» (§562), kept only when every condition holds: the
+    person ticked it; on a public form — a staff entry or the desk never sets it, because staff
+    cannot consent for a person (the staff form has no box; a posted one is ignored here); and the
+    privacy notice this registration records — the one they were just given, in their language —
+    names `{{promotionalMaterials}}`, so a `true` is always consent to a text that described it
+    (AGENTS.md §10.8). Stored with the moment. Another adult's family form keeps none (§421,
+    `withoutAnotherAdultsConsents` and `withoutAnotherAdultsDetails`). `kind` plays no part: a test
+    registration is kept the same way (AGENTS.md §12.6).
+  */
+  const promoConsent = origin.source === "PUBLIC" && input.promoConsent && describesPromotionalMaterials(privacyNotice.body);
   const details: RegistrationEntryDetails = {
     firstName: input.firstName,
     lastName: input.lastName,
@@ -1694,6 +1706,9 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     instagramHandle,
     // Always a boolean, so a restart (which spreads these details) rewrites the old answer.
     listSocials,
+    // Always a boolean and a moment or null, so a restart rewrites the old answer (§562).
+    promoConsent,
+    promoConsentAt: promoConsent ? now : null,
     clubMemberDeclared: input.clubMemberDeclared,
     // As posted; decided under the event's lock below (§554): kept only when the event gives a shirt.
     tshirtSize: input.tshirtSize,
@@ -1735,6 +1750,8 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     stravaUrl: null,
     instagramHandle: null,
     listSocials: false,
+    promoConsent: false,
+    promoConsentAt: null,
     fitnessDeclaredAt: null,
   });
   /*
@@ -2154,6 +2171,8 @@ export async function submitRegistration<T extends Record<string, unknown>>(
             updatedAt: now,
           })
           .where(eq(registrations.id, existing.id));
+        // The form's answer on «Oferte și beneficii», on the trail with its moment (§562).
+        await recordFormPromoConsent(tx, { registrationId: existing.id, participantId: participant.id, kept: corrected.promoConsent === true, before: existing.promoConsent, now });
       }
       /*
         A correction keeps the person's place (§543): reserved while it holds, the waiting list otherwise.
@@ -2371,6 +2390,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
         // Not for another person confirmed from the email (§446): the caller confirms the address itself.
         // The link of this cycle starts with this message (§513): its send re-bases it, once.
         if (restarted && !atTheDesk && !origin.anotherPerson) await holdVerification(restarted);
+        if (restarted) await recordFormPromoConsent(tx, { registrationId: restarted.id, participantId: participant.id, kept: rowDetails.promoConsent === true, before: existing.promoConsent, now });
         createdDeadlines = [linkExpiresAt];
         written = restarted?.id;
         await finishSitting();
@@ -2381,6 +2401,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
         .update(registrations)
         .set({ ...carriedFields, updatedAt: now })
         .where(eq(registrations.id, existing.id));
+      await recordFormPromoConsent(tx, { registrationId: existing.id, participantId: participant.id, kept: rowDetails.promoConsent === true, before: existing.promoConsent, now });
 
       // The event row first, like every other allocation (rule 1 above, §10.6): a verified
       // participant's restart used to allocate against the capacity the page had read, with
@@ -2419,6 +2440,8 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       now,
     });
     // No race number at the form: it is drawn when the registration is confirmed (§548).
+    // A tick the form kept, on the trail with its moment (§562): it outlives a later withdrawal.
+    await recordFormPromoConsent(tx, { registrationId: created.id, participantId: participant.id, kept: rowDetails.promoConsent === true, before: false, now });
 
     // At the desk the address is about to be vouched for by the person typing it
     // (BR-REQ-037-07); a verification email to somebody standing in front of them is noise.
@@ -2614,6 +2637,16 @@ export async function signDeclaration<T extends Record<string, unknown>>(
     if (!before) throw new DomainError("NOT_FOUND", "no such registration");
     if (before.status !== "PENDING_DECLARATION" && before.status !== "WAITLIST_OFFERED") {
       throw new DomainError("CONFLICT", `a declaration cannot be signed from status ${before.status}`);
+    }
+
+    /*
+      «Vreau să primesc oferte și beneficii», ticked while signing (§562): the signer's own yes, in
+      this transaction — a signature refused below rolls it back with everything else. Kept only while
+      the notice in force describes the materials; otherwise ignored, never a refusal of the signature.
+      A no here changes nothing: the page offers only the yes, and the way out is the person's own page.
+    */
+    if (parsed.data.promoConsent && !before.promoConsent && (await noticeDescribesPromotionalMaterials(tx, now))) {
+      await setPromoConsent(tx, { registrationId: before.id, consent: true, via: "DECLARATION", now });
     }
 
     /**

@@ -771,6 +771,13 @@
       "when": 1790678518517,
       "tag": "0112_registration_cancel_reason",
       "breakpoints": true
+    },
+    {
+      "idx": 110,
+      "version": "7",
+      "when": 1790687229654,
+      "tag": "0113_promo_consent",
+      "breakpoints": true
     }
   ]
 }

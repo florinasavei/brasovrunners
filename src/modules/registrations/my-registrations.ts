@@ -103,6 +103,8 @@ export type MyRegistration = {
    */
   holdsHealthNote: boolean;
   holdsSocials: boolean;
+  /** «Vreau să primesc oferte și beneficii» (§562): the person's own answer, and the switch's side. */
+  promoConsent: boolean;
   /**
    * When this person's declaration was signed — on a link, in the family wizard or on paper at the
    * desk (§67) — or null while it is not (§519: «Toate înscrierile mele» says each person's
@@ -143,6 +145,7 @@ export async function listActiveRegistrationsForParticipant<T extends Record<str
       // Whether each is set, computed in SQL so the values never leave the database (§322).
       holdsHealthNote: sql<boolean>`(${registrations.healthNotes} IS NOT NULL OR ${registrations.healthConsentAt} IS NOT NULL)`.mapWith(Boolean),
       holdsSocials: sql<boolean>`(${registrations.stravaUrl} IS NOT NULL OR ${registrations.instagramHandle} IS NOT NULL)`.mapWith(Boolean),
+      promoConsent: registrations.promoConsent,
       // The latest acceptance's instant, qualified by hand: a bare "id" in the subquery would be the acceptance's own.
       declarationSignedAt: sql<Date | null>`(select max(${declarationAcceptances}."accepted_at") from ${declarationAcceptances} where ${declarationAcceptances}."registration_id" = ${registrations}."id")`.mapWith(
         (value: unknown) => (value === null || value === undefined ? null : value instanceof Date ? value : new Date(String(value))),
@@ -186,7 +189,7 @@ export async function listActiveRegistrationsForParticipant<T extends Record<str
  */
 export type ClosedRegistrationWithConsentData = Pick<
   MyRegistration,
-  "id" | "status" | "registeredName" | "eventId" | "eventTitle" | "eventStartsAt" | "eventTimezone" | "holdsHealthNote" | "holdsSocials"
+  "id" | "status" | "registeredName" | "eventId" | "eventTitle" | "eventStartsAt" | "eventTimezone" | "holdsHealthNote" | "holdsSocials" | "promoConsent"
 >;
 
 export async function listClosedRegistrationsHoldingConsentData<T extends Record<string, unknown>>(
@@ -209,6 +212,8 @@ export async function listClosedRegistrationsHoldingConsentData<T extends Record
       eventTimezone: events.timezone,
       holdsHealthNote: holdsHealthNote.mapWith(Boolean),
       holdsSocials: holdsSocials.mapWith(Boolean),
+      // A consent to offers and benefits outlives the place (§562): withdrawn from here too.
+      promoConsent: registrations.promoConsent,
     })
     .from(registrations)
     .innerJoin(events, eq(events.id, registrations.eventId))
@@ -220,7 +225,7 @@ export async function listClosedRegistrationsHoldingConsentData<T extends Record
       and(
         eq(registrations.participantId, participantId),
         notInArray(registrations.status, [...ACTIVE_REGISTRATION_STATUSES]),
-        or(holdsHealthNote, holdsSocials),
+        or(holdsHealthNote, holdsSocials, eq(registrations.promoConsent, true)),
       ),
     )
     .orderBy(desc(events.startsAt), asc(registrations.id));

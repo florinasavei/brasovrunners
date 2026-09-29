@@ -71,6 +71,8 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
       minorIdDocument: idDocumentFrom(form, t, "minorIdDocument"),
       documentId: String(form.get("documentId") ?? ""),
       contentSha256: String(form.get("contentSha256") ?? ""),
+      // The signer's own yes to offers and benefits (§562), optional; ignored unless the notice in force describes them.
+      promoConsent: form.get("promoConsent") === "on",
     };
     const result = familyRegistrationId
       ? await consumeAndSignFamilyDeclaration(token, pass, familyRegistrationId, input, now)
@@ -280,6 +282,8 @@ function declarationDraftOf(form: FormData): Record<string, string> {
     "minorIdDocumentType",
     "minorIdDocument",
     "minorTypedName",
+    // The offers-and-benefits box (§562) comes back as it was ticked after a refusal.
+    "promoConsent",
   ]) {
     const value = form.get(name);
     if (typeof value === "string" && value !== "") draft[name] = value;

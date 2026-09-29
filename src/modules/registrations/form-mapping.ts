@@ -120,6 +120,8 @@ export function readRegistrationForm(
     listOptOut: !checked(form, "listOptIn"),
     // The socials beside the name on the list (§500): the tick as posted; the service decides what is kept.
     listSocials: checked(form, "listSocials"),
+    // The offers and benefits (§562): the box as posted; the service decides what is kept.
+    promoConsent: checked(form, "promoConsent"),
 
     // Validated in the service, not here: a honeypot failure and a timing failure are answered
     // exactly like success, never as a validation error that would tell a bot what it tripped.

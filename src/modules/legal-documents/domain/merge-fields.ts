@@ -208,6 +208,18 @@ export const NEWSLETTER_MERGE_FIELD = "newsletterTopics";
 export const TEAM_PAGE_MERGE_FIELD = "teamPage";
 
 /**
+ * The privacy notice's marker for the offers and benefits (§562): the register form's optional
+ * «Vreau să primesc oferte și beneficii de la <club> și partenerii săi.». The same two-in-one
+ * as the list's socials above: filled, when the notice is shown, with the box's own words, quoted
+ * (`registrations/promo-consent-words.ts`), and the switch — the form offers the box, the service
+ * keeps a tick, and a person's own page offers to switch it on, only while the notice in force names
+ * it (`describesPromotionalMaterials`). A tick from the form is kept only when the notice that
+ * registration records names it, so a `true` is always consent to a text that described it
+ * (AGENTS.md §10.8: never collect under a notice that does not describe it).
+ */
+export const PROMOTIONAL_MATERIALS_MERGE_FIELD = "promotionalMaterials";
+
+/**
  * The blanks in a declaration (`DECISIONS.md` §95).
  *
  * The club's own paper declaration reads "Subsemnatul/a …………, posesor al CI seria …… nr.
@@ -248,6 +260,7 @@ export const MERGE_FIELDS = [
   LIST_SOCIALS_MERGE_FIELD,
   NEWSLETTER_MERGE_FIELD,
   TEAM_PAGE_MERGE_FIELD,
+  PROMOTIONAL_MATERIALS_MERGE_FIELD,
 ] as const;
 
 /**
@@ -402,6 +415,16 @@ export function describesNewsletter(body: unknown): boolean {
 /** Whether a privacy notice describes the team page (§459): it names `{{teamPage}}`. Pure. */
 export function describesTeamPage(body: unknown): boolean {
   return mergeFieldsIn(body).has(TEAM_PAGE_MERGE_FIELD);
+}
+
+/**
+ * Whether a privacy notice describes the offers and benefits (§562): it names
+ * `{{promotionalMaterials}}`. The gate for the form's box, for keeping a tick, and for the switch on
+ * a person's own page — the club's approval of such a text is the switch, as for the list's states
+ * (§396). Pure; the caller asks it of the notice in force, or of the one a registration records.
+ */
+export function describesPromotionalMaterials(body: unknown): boolean {
+  return mergeFieldsIn(body).has(PROMOTIONAL_MATERIALS_MERGE_FIELD);
 }
 
 export function isMergeField(name: string): name is MergeField {

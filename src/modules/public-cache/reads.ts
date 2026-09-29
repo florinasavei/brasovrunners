@@ -49,7 +49,7 @@ import { pingerCadenceMinutes } from "@/modules/jobs/quiet-hours";
 import { readDeliveryTiming } from "@/modules/notifications/delivery-timing";
 import { type DeliveryTiming, defaultDeliveryTiming } from "@/modules/notifications/domain/delivery-timing";
 import { emailLeavesAt, emailWaitMinutes } from "@/modules/notifications/domain/email-wait";
-import { describesListSocials, describesListStates, describesNewsletter } from "@/modules/legal-documents/domain/merge-fields";
+import { describesListSocials, describesListStates, describesNewsletter, describesPromotionalMaterials } from "@/modules/legal-documents/domain/merge-fields";
 import { findCurrentApprovedDocument, findFirstStatesNoticeVersion, listEffectiveDates } from "@/modules/legal-documents/repository";
 import { DEFAULT_BOT_CHECK, readBotCheck } from "@/modules/registrations/bot-check";
 import {
@@ -372,6 +372,17 @@ export async function cachedListStatesDisclosed(now: Date): Promise<boolean> {
 export async function cachedListSocialsDisclosed(now: Date): Promise<boolean> {
   const notices = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now)));
   return notices.every((notice) => notice !== undefined && describesListSocials(notice.body));
+}
+
+/**
+ * Whether the register form offers «Vreau să primesc oferte și beneficii» (§562): the privacy
+ * notice in force describes it (`describesPromotionalMaterials`), in every language — the same
+ * reading as the socials above. `noticeDescribesPromotionalMaterials` is the uncached twin; the
+ * service asks the notice each person is given at submission.
+ */
+export async function cachedPromotionalMaterialsOffered(now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesPromotionalMaterials(notice.body));
 }
 
 /**

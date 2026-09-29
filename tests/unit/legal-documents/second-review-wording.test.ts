@@ -6,7 +6,8 @@ import type { LegalDocumentBody } from "@/modules/legal-documents/domain/content
 
 /**
  * BR-REQ-053-01 (§556, the second review of 2026-09-29) — three sentences of the counsel-reviewed
- * templates, and nothing else: the trail shoes as grip, «de preferat pantofi de trail»; the organiser's
+ * templates, and nothing else: the trail shoes as grip, «de preferat încălțăminte pentru teren
+ * accidentat» (in Romanian words since §564; «pantofi de trail» until then); the organiser's
  * general safety instructions in place of «indicațiile organizatorului și recomandările
  * autorităților»; and the retention sentence that keeps a copy for as long as a right needs it, and
  * a document under a complaint, a dispute or proceedings until they are finally settled.
@@ -31,8 +32,8 @@ const AFTER = {
 describe("the second review's three sentences (§556)", () => {
   it("asks for grip on a trail, trail shoes preferred — the outcome, not a shoe category", () => {
     for (const body of TRAIL_TEXTS.ro) {
-      expect(text(body)).toContain("încălțăminte adecvată terenului, cu aderență corespunzătoare (de preferat pantofi de trail)");
-      expect(text(body)).not.toContain("potrivită terenului (pantofi de trail)");
+      expect(text(body)).toContain("încălțăminte adecvată terenului, cu aderență corespunzătoare (de preferat încălțăminte pentru teren accidentat)");
+      expect(text(body)).not.toContain("pantofi de trail");
     }
     for (const body of TRAIL_TEXTS.en) {
       expect(text(body)).toContain("footwear suited to the terrain, with adequate grip (preferably trail shoes)");

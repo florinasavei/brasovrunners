@@ -72,6 +72,9 @@ export type RegistrationListRow = {
   listOptOut: boolean;
   /** Whether the socials are printed beside the name on the public list (§500); the export's last column. */
   listSocials: boolean;
+  /** «Oferte și beneficii» (§562): the person's own consent and its moment; the export's last column. */
+  promoConsent: boolean;
+  promoConsentAt: Date | null;
   submittedAt: Date;
   confirmedAt: Date | null;
   /** The race number, drawn at the confirmation (BR-REQ-038-01, §548); shown through `raceNumberOf`. */
@@ -327,6 +330,8 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       clubName: registrations.clubName,
       listOptOut: registrations.listOptOut,
       listSocials: registrations.listSocials,
+      promoConsent: registrations.promoConsent,
+      promoConsentAt: registrations.promoConsentAt,
       stravaUrl: registrations.stravaUrl,
       instagramHandle: registrations.instagramHandle,
       guardianName: registrations.guardianName,
@@ -516,6 +521,9 @@ export type RegistrationDetail = {
   instagramHandle: string | null;
   /** Whether the public list prints them beside the name (§500): the runner's own tick, as kept. */
   listSocials: boolean;
+  /** «Oferte și beneficii» (§562): the person's own consent, and the moment of the tick or the last change. */
+  promoConsent: boolean;
+  promoConsentAt: Date | null;
   /** The parent or guardian of a minor (§108); null for an adult. */
   guardianName: string | null;
   /** Where the person lives (§510): the country's ISO code (never null, `RO` by default) and the city as typed. */
@@ -627,6 +635,8 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       stravaUrl: registrations.stravaUrl,
       instagramHandle: registrations.instagramHandle,
       listSocials: registrations.listSocials,
+      promoConsent: registrations.promoConsent,
+      promoConsentAt: registrations.promoConsentAt,
       guardianName: registrations.guardianName,
       country: registrations.country,
       city: registrations.city,

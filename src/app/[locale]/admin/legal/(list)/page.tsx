@@ -16,6 +16,7 @@ import {
   findCurrentApprovedDocument,
   noticeDescribesListSocials,
   noticeDescribesListStates,
+  noticeDescribesPromotionalMaterials,
 } from "@/modules/legal-documents/repository";
 import { clubFactsFromEnv } from "@/modules/legal-documents/templates/club-facts";
 import { shownContactAddresses } from "@/modules/contact/shown-address";
@@ -211,6 +212,9 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
   // The same for the socials beside a name (§500): the form offers the tick only while the notice
   // in force names `{{participantListSocials}}`, and this is where that notice is approved.
   const listSocialsMissing = !missingKeys.includes("PRIVACY_NOTICE") && !(await noticeDescribesListSocials(getDb(), now));
+  // The same for the offers and benefits (§562): no form offers the box, and nothing is kept,
+  // until the notice in force names `{{promotionalMaterials}}`.
+  const promoMissing = !missingKeys.includes("PRIVACY_NOTICE") && !(await noticeDescribesPromotionalMaterials(getDb(), now));
   /*
     What the service would answer about each row, asked of the service before anything is drawn
     (§290, §316): `readDeletionFacts` and `deletionObstacle` are exactly what `assertDeletable`
@@ -763,6 +767,11 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
       {listSocialsMissing && (
         <Alert severity="info" data-testid="legal-list-socials-missing">
           {t("legal.listSocialsMissing")}
+        </Alert>
+      )}
+      {promoMissing && (
+        <Alert severity="info" data-testid="legal-promo-missing">
+          {t("legal.promoMissing")}
         </Alert>
       )}
 

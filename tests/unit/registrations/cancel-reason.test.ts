@@ -8,7 +8,8 @@ import ro from "../../../messages/ro.json";
 
 /**
  * §558 — the participant's reason for cancelling: the form's three answers are the column's enum,
- * in both languages on the page and the backoffice, and the export's last column says it.
+ * in both languages on the page and the backoffice, and the export's column after the family says it
+ * (last until the offers and benefits, §NNN, came after it).
  */
 describe("§558 the cancellation reason", () => {
   it("the form's three answers are the column's enum values, in order", () => {
@@ -32,7 +33,7 @@ describe("§558 the cancellation reason", () => {
     expect(cancelReasonProblemOf(undefined)).toBeUndefined();
   });
 
-  it("the export's «Cancellation reason» column, last, the answer and the words of «Another reason»", () => {
+  it("the export's «Cancellation reason» column, just before the offers and benefits, the answer and the words of «Another reason»", () => {
     expect(cancelReasonCell(null, null)).toBe("");
     expect(cancelReasonCell("INJURY_OR_ILLNESS", null)).toBe("Injury or illness");
     expect(cancelReasonCell("OTHER_PLANS", "ignored")).toBe("Other plans");
@@ -59,9 +60,10 @@ describe("§558 the cancellation reason", () => {
       cancelReason: cancelReasonCell("OTHER", "=cmd, nunta"),
     };
     const [header, line] = buildRegistrationsCsv([row]).split("\r\n");
-    expect(header.split(",").at(-1)).toBe("Cancellation reason");
-    // A reason is typed on a public form: neutralized and quoted like every other cell.
-    expect(line.endsWith(',"Another reason: =cmd, nunta"')).toBe(true);
-    expect(REGISTRATION_SHEET_HEADERS.at(-1)).toBe("Cancellation reason");
+    // Followed only by the offers and benefits (§NNN), which came after it.
+    expect(header.split(",").slice(-2)).toEqual(["Cancellation reason", "Offers and benefits"]);
+    // A reason is typed on a public form: neutralized and quoted like every other cell — then the offers' cell, empty here.
+    expect(line.endsWith(',"Another reason: =cmd, nunta",')).toBe(true);
+    expect(REGISTRATION_SHEET_HEADERS.slice(-2)).toEqual(["Cancellation reason", "Offers and benefits"]);
   });
 });

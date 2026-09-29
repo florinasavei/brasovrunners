@@ -296,10 +296,10 @@ test.describe("BR-REQ-041-01 the event detail page on a phone", () => {
     // The seeded Tâmpa run — 14 km, 600 m of climb, moderate, on trail — as four pills, in order:
     // surface, difficulty, distance, elevation (§366, amended §375 — the owner, 2026-09-24: "The
     // order of this should be: terrain type, difficulty, distance, elevation").
-    // The difficulty pill's visible «Mediu 1» is followed by the screen reader's own words
+    // The difficulty pill's visible «Mediu 4» (the level, §563) is followed by the screen reader's own words
     // (`route-pills.ts` `srLabel`, §526), so the regex anchors on the visible words rather than
     // comparing the element's whole text.
-    await expect(value("Traseu").locator(".MuiChip-root")).toHaveText(["Trail", /^Mediu 1(?:Dificultate: .+)?$/, "14 km", "600 m D+"]);
+    await expect(value("Traseu").locator(".MuiChip-root")).toHaveText(["Trail", /^Mediu 4(?:Dificultate: .+)?$/, "14 km", "600 m D+"]);
     // Free, in a row of its own rather than among the route's pills.
     await expect(value("Cost").locator(".MuiChip-root")).toHaveText(["Gratuit"]);
     await expect(value("Traseu")).not.toContainText("Gratuit");

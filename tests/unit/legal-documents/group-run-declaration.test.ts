@@ -46,12 +46,13 @@ describe("§393 the kinds and their names", () => {
   });
 
   it("names the four declarations in both catalogues, as the owner did", () => {
-    expect(ro.Admin.legal.keys.EVENT_DECLARATION).toBe("Declarație pe propria răspundere — cursă trail");
-    expect(ro.Admin.legal.keys.EVENT_DECLARATION_ROAD).toBe("Declarație pe propria răspundere — cursă pe asfalt / în parc");
+    // In Romanian words since §564: «eveniment montan», «teren accidentat».
+    expect(ro.Admin.legal.keys.EVENT_DECLARATION).toBe("Declarație pe propria răspundere — eveniment montan");
+    expect(ro.Admin.legal.keys.EVENT_DECLARATION_ROAD).toBe("Declarație pe propria răspundere — eveniment pe asfalt / în parc");
     expect(ro.Admin.legal.keys.GROUP_RUN_DECLARATION_ASPHALT).toBe("Declarație pe propria răspundere (alergare de grup, asfalt)");
-    expect(ro.Admin.legal.keys.GROUP_RUN_DECLARATION_TRAIL).toBe("Declarație pe propria răspundere (alergare de grup, trail)");
-    expect(en.Admin.legal.keys.EVENT_DECLARATION).toBe("Self-declaration — trail race");
-    expect(en.Admin.legal.keys.EVENT_DECLARATION_ROAD).toBe("Self-declaration — road / park race");
+    expect(ro.Admin.legal.keys.GROUP_RUN_DECLARATION_TRAIL).toBe("Declarație pe propria răspundere (alergare de grup, teren accidentat)");
+    expect(en.Admin.legal.keys.EVENT_DECLARATION).toBe("Self-declaration — mountain event");
+    expect(en.Admin.legal.keys.EVENT_DECLARATION_ROAD).toBe("Self-declaration — road / park event");
     expect(en.Admin.legal.keys.GROUP_RUN_DECLARATION_ASPHALT).toBe("Self-declaration (group run, asphalt)");
     expect(en.Admin.legal.keys.GROUP_RUN_DECLARATION_TRAIL).toBe("Self-declaration (group run, trail)");
     for (const key of LEGAL_DOCUMENT_KEYS) {

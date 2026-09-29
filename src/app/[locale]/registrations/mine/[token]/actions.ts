@@ -6,6 +6,7 @@ import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { isSelfServiceField, withdrawFromMyRegistrations } from "@/modules/registrations/consent-withdrawal";
 import { setListConsentFromMyRegistrations } from "@/modules/registrations/list-consent";
+import { setPromoConsentFromMyRegistrations } from "@/modules/registrations/promo-consent";
 import {
   checkInSelfFromMyRegistrations,
   consumeAndCancelFromMyRegistrations,
@@ -73,6 +74,28 @@ export async function setListConsentFromMyRegistrationsAction(form: FormData): P
     redirect(result.ok ? `${path}?list=${encodeURIComponent(registrationId)}` : `${path}?invalid=1`);
   } catch (error) {
     if (isDomainError(error)) redirect(`${path}?listFailed=${encodeURIComponent(registrationId)}`);
+    throw error;
+  }
+}
+
+/**
+ * «Nu mai vreau oferte și beneficii» for one registration (§562): this door only withdraws — a yes
+ * posted here is refused FORBIDDEN in the module (second fix round), since the address link cannot
+ * tell the holder from another adult. The link stays valid; the registration must be the link
+ * holder's own, checked in the module.
+ */
+export async function setPromoConsentFromMyRegistrationsAction(form: FormData): Promise<void> {
+  const locale = (form.get("locale") === "en" ? "en" : "ro") as Locale;
+  const token = String(form.get("token") ?? "");
+  const registrationId = String(form.get("registrationId") ?? "");
+  const consent = form.get("consent") === "1";
+  const path = pagePath(locale, token);
+
+  try {
+    const result = await setPromoConsentFromMyRegistrations(getDb(), token, registrationId, consent, new Date());
+    redirect(result.ok ? `${path}?promo=${encodeURIComponent(registrationId)}` : `${path}?invalid=1`);
+  } catch (error) {
+    if (isDomainError(error)) redirect(`${path}?promoFailed=${encodeURIComponent(registrationId)}`);
     throw error;
   }
 }

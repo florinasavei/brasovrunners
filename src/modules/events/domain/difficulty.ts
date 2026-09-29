@@ -7,7 +7,7 @@ import type { events } from "@/db/schema/events";
  *
  * What the bands mean, in the owner's words (the backoffice guide says the same):
  * - «Ușor» — short and flat, for anyone;
- * - «Mediu» — 1 the run up Tâmpa, 2 a longer run, 3 long and technical;
+ * - «Mediu» — 4 the run up Tâmpa, 5 a longer run, 6 long and technical (the levels, §563);
  * - «Greuț» — from a half marathon up;
  * - «Greu» — marathons;
  * - «Foarte greu» — ultramarathons and beyond.
@@ -23,8 +23,9 @@ export const DIFFICULTY_BANDS = ["EASY", "MEDIUM", "FAIRLY_HARD", "HARD", "VERY_
 export type DifficultyBand = (typeof DIFFICULTY_BANDS)[number];
 
 /**
- * The three steps inside a band (§526): 1 the easiest of the band, 3 the hardest. «Mediu 3» is
- * harder than «Mediu 1» and easier than «Greuț 1».
+ * The three steps inside a band (§526): 1 the easiest of the band, 3 the hardest — the gauge's
+ * dots. A reader sees the level instead (§563): «Mediu 6» (step 3) is harder than «Mediu 4» (step 1)
+ * and easier than «Greuț 7».
  */
 export const DIFFICULTY_STEPS = [1, 2, 3] as const;
 
@@ -45,7 +46,7 @@ function assertLevel(level: number): void {
   if (!isDifficultyLevel(level)) throw new RangeError(`difficulty level ${level} is outside 1..${DIFFICULTY_LEVEL_COUNT}`);
 }
 
-/** The level of a band and a step: «Ușor 1» is 1, «Mediu 2» is 5, «Foarte greu 3» is 15. */
+/** The level of a band and a step: Ușor's step 1 is 1, Mediu's step 2 is 5 («Mediu 5»), Foarte greu's step 3 is 15. */
 export function difficultyLevel(band: DifficultyBand, step: DifficultyStep = DEFAULT_DIFFICULTY_STEP): number {
   return DIFFICULTY_BANDS.indexOf(band) * DIFFICULTY_STEPS.length + step;
 }
@@ -61,11 +62,64 @@ export function difficultyBandLevels(band: DifficultyBand): { from: number; to: 
   return { from: difficultyLevel(band, DIFFICULTY_STEPS[0]), to: difficultyLevel(band, DIFFICULTY_STEPS[DIFFICULTY_STEPS.length - 1]) };
 }
 
-
-/** The step a level is inside its band, 1 … 3. */
+/** The step a level is inside its band, 1 … 3 — what the gauge's dots draw (§526); the number a reader sees is the level (§563). */
 export function difficultyStepOf(level: number): DifficultyStep {
   assertLevel(level);
   return (((level - 1) % DIFFICULTY_STEPS.length) + 1) as DifficultyStep;
+}
+
+/** The three levels a band holds, in order: «Mediu» is 4, 5, 6 — the editor's «Nivelul» choices for that band (§563). */
+export function difficultyBandLevelList(band: DifficultyBand): number[] {
+  return DIFFICULTY_STEPS.map((step) => difficultyLevel(band, step));
+}
+
+/** A translator narrow enough for `difficultyWords`: a plain key of the `Event` catalogue with an optional value map. */
+type DifficultyTranslate = (key: string, values?: Record<string, string | number>) => string;
+
+/**
+ * Every word a surface says of a level (§563, amending §526 and §528 — the owner, 2026-09-29:
+ * «nu are cum și una grea și una ușoară să fie nivelul 2 … adică ușor: 1,2,3, mediu 4,5,6 și tot
+ * așa, în ordine»): **the number is the level, the dots are the step.** The pill says the band and
+ * the level of fifteen — «Mediu 5», never «Mediu 2» — and the gauge's dots alone still show where
+ * in its band the level stands.
+ *
+ * - `short` — the pill, the editor's closed line: «Mediu 5»;
+ * - `plain` — where no gauge is drawn (the emails' facts, the calendar entry, the `.ics`): «Mediu, nivelul 5 din 15»;
+ * - `tooltip` — the pill's tooltip, two lines (the owner, 2026-09-29 14:18: the tooltip explains
+ *   every level, not only its own band's): the level, then the whole ladder —
+ *   «Mediu — nivelul 5 din 15» / «ușor 1–3 · mediu 4–6 · greuț 7–9 · greu 10–12 · foarte greu 13–15»;
+ * - `sr` — what a screen reader hears in place of `short`, the shorter form with the level and its
+ *   band's range, once per card: «Dificultate: mediu — nivelul 5 din 15 (mediu: 4–6)».
+ *
+ * The one function every surface reads (the route pills, the calendar's lines): the words from the
+ * `Event` catalogue (`difficultyValues`, `difficultyBandWords`, `difficultyLevel*`), the numbers from here.
+ */
+export function difficultyWords(level: number, t: DifficultyTranslate): { short: string; plain: string; tooltip: string; sr: string } {
+  const band = difficultyBandOf(level);
+  const numbers = { level, levels: DIFFICULTY_LEVEL_COUNT, ...difficultyBandLevels(band) };
+  const title = t(`difficultyValues.${band}`);
+  const word = t(`difficultyBandWords.${band}`);
+  return {
+    short: t("difficultyLevelShort", { band: title, level }),
+    plain: t("difficultyWithLevel", { band: title, ...numbers }),
+    tooltip: t("difficultyLevelTooltip", { band: title, ladder: difficultyLadder(t).join(" · "), ...numbers }),
+    sr: t("difficultyLevelSr", { band: word, ...numbers }),
+  };
+}
+
+/**
+ * The club's whole scale, one item per band in order, each with its three levels (§563) —
+ * «ușor 1–3», «mediu 4–6», «greuț 7–9», «greu 10–12», «foarte greu 13–15»: the pill's tooltip joins
+ * them with «·», the editor's help under «Nivelul» with commas. Every range from
+ * `difficultyBandLevels`, never typed; `t` is the `Event` catalogue.
+ */
+export function difficultyLadder(t: DifficultyTranslate): string[] {
+  return DIFFICULTY_BANDS.map((band) => t("difficultyLadderItem", { band: t(`difficultyBandWords.${band}`), ...difficultyBandLevels(band) }));
+}
+
+/** A band with the levels it holds (§563) — «Mediu (4–6)»: the listing filter's box and chip, which tick the whole band (§413). */
+export function difficultyBandRangeWord(band: DifficultyBand, t: DifficultyTranslate): string {
+  return t("difficultyBandRange", { band: t(`difficultyValues.${band}`), ...difficultyBandLevels(band) });
 }
 
 /**
