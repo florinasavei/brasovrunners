@@ -43,10 +43,11 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  * still covered by it.
  *
  * **The second review (§556, 2026-09-29), three sentences.** The shoes name the safety outcome —
- * «adecvată terenului, cu aderență corespunzătoare (de preferat încălțăminte pentru teren accidentat)»,
- * in Romanian words since §NNN — not a shoe category; the animals clause asks for «indicațiile generale de siguranță comunicate de organizator»,
- * never «recomandările autorităților», as a run with no individual supervision and no mountain guide
- * can promise; and the retention sentence above.
+ * «adecvată terenului, cu aderență corespunzătoare (de preferat încălțăminte pentru teren
+ * accidentat)», in Romanian words since §NNN — not a shoe category; the animals clause asks for
+ * «indicațiile generale de siguranță comunicate de organizator», never «recomandările
+ * autorităților», as a run with no individual supervision and no mountain guide can promise; and the
+ * retention sentence above.
  *
  * **The counsel's second pass (§534, 2026-09-28), in the text's own words.** Valid for the whole
  * series and signed once, «until it is withdrawn or replaced by a new version» — never «fără termen de
