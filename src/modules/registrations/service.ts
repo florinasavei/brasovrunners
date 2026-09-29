@@ -12,7 +12,8 @@ import type { Database, Transaction } from "@/db/types";
 import { startHeldBack } from "@/modules/events/domain/dated";
 import { registrationState } from "@/modules/events/domain/registration-window";
 import { recordAuditEvent } from "@/modules/audit/repository";
-import { findCurrentApprovedDocument, findEventDeclaration } from "@/modules/legal-documents/repository";
+import { findCurrentApprovedDocument, findEventDeclaration, noticeDescribesPromotionalMaterials } from "@/modules/legal-documents/repository";
+import { setPromoConsent } from "./promo-consent";
 import { acceptanceTextHash } from "./signed-declaration";
 import { readClubNotices } from "@/modules/notifications/club-notices";
 import { confirmationNoticeRecipients, resolveDeclarationCopies } from "@/modules/notifications/domain/club-notices";
@@ -21,7 +22,7 @@ import { enqueueEmail, type OutboxRow } from "@/modules/notifications/outbox";
 import { bibNumberInUse, isEventSpareNumber, pickBibNumber } from "./bibs";
 import { handsSpareAtConfirm } from "./domain/spare-bibs";
 import { shirtSizeKept } from "./domain/kit";
-import { asksForIdDocument, asksForMinorSignature, describesListSocials } from "@/modules/legal-documents/domain/merge-fields";
+import { asksForIdDocument, asksForMinorSignature, describesListSocials, describesPromotionalMaterials } from "@/modules/legal-documents/domain/merge-fields";
 import { newCheckinCode } from "./checkin-code";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import {
@@ -1638,6 +1639,17 @@ export async function submitRegistration<T extends Record<string, unknown>>(
   */
   const listSocials =
     input.listSocials && !input.listOptOut && (stravaUrl !== null || instagramHandle !== null) && describesListSocials(privacyNotice.body);
+  /*
+    «Vreau să primesc materiale promoționale» (§NNN), kept only when every condition holds: the
+    person ticked it; on a public form — a staff entry or the desk never sets it, because staff
+    cannot consent for a person (the staff form has no box; a posted one is ignored here); and the
+    privacy notice this registration records — the one they were just given, in their language —
+    names `{{promotionalMaterials}}`, so a `true` is always consent to a text that described it
+    (AGENTS.md §10.8). Stored with the moment. Another adult's family form keeps none (§421,
+    `withoutAnotherAdultsConsents` and `withoutAnotherAdultsDetails`). `kind` plays no part: a test
+    registration is kept the same way (AGENTS.md §12.6).
+  */
+  const promoConsent = origin.source === "PUBLIC" && input.promoConsent && describesPromotionalMaterials(privacyNotice.body);
   const details: RegistrationEntryDetails = {
     firstName: input.firstName,
     lastName: input.lastName,
@@ -1680,6 +1692,9 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     instagramHandle,
     // Always a boolean, so a restart (which spreads these details) rewrites the old answer.
     listSocials,
+    // Always a boolean and a moment or null, so a restart rewrites the old answer (§NNN).
+    promoConsent,
+    promoConsentAt: promoConsent ? now : null,
     clubMemberDeclared: input.clubMemberDeclared,
     // As posted; decided under the event's lock below (§554): kept only when the event gives a shirt.
     tshirtSize: input.tshirtSize,
@@ -1721,6 +1736,8 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     stravaUrl: null,
     instagramHandle: null,
     listSocials: false,
+    promoConsent: false,
+    promoConsentAt: null,
     fitnessDeclaredAt: null,
   });
   /*
@@ -2594,6 +2611,16 @@ export async function signDeclaration<T extends Record<string, unknown>>(
     if (!before) throw new DomainError("NOT_FOUND", "no such registration");
     if (before.status !== "PENDING_DECLARATION" && before.status !== "WAITLIST_OFFERED") {
       throw new DomainError("CONFLICT", `a declaration cannot be signed from status ${before.status}`);
+    }
+
+    /*
+      «Vreau să primesc materiale promoționale», ticked while signing (§NNN): the signer's own yes, in
+      this transaction — a signature refused below rolls it back with everything else. Kept only while
+      the notice in force describes the materials; otherwise ignored, never a refusal of the signature.
+      A no here changes nothing: the page offers only the yes, and the way out is the person's own page.
+    */
+    if (parsed.data.promoConsent && !before.promoConsent && (await noticeDescribesPromotionalMaterials(tx, now))) {
+      await setPromoConsent(tx, { registrationId: before.id, consent: true, via: "DECLARATION", now });
     }
 
     /**

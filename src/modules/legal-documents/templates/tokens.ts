@@ -3,6 +3,7 @@ import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
 import { teamPageClause } from "@/modules/content/team/notice-words";
 import { listStatesClause } from "@/modules/registrations/list-state-words";
 import { listSocialsClause } from "@/modules/registrations/list-socials-words";
+import { promotionalMaterialsClause } from "@/modules/registrations/promo-consent-words";
 import { yearsPhrase } from "@/modules/registrations/domain/age";
 import {
   DEADLINE_MERGE_FIELDS,
@@ -11,6 +12,7 @@ import {
   LIST_STATES_MERGE_FIELD,
   MINIMUM_AGE_MERGE_FIELD,
   NEWSLETTER_MERGE_FIELD,
+  PROMOTIONAL_MATERIALS_MERGE_FIELD,
   TEAM_PAGE_MERGE_FIELD,
 } from "../domain/merge-fields";
 import { seriesRhythmPhrase } from "@/modules/group-run-declarations/series";
@@ -142,6 +144,13 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     token: `{{${TEAM_PAGE_MERGE_FIELD}}}`,
     messageKey: TEAM_PAGE_MERGE_FIELD,
     example: inBoth((locale) => teamPageClause(locale)),
+  },
+  // The privacy notice's marker for the promotional materials (§NNN): the form's own box, and the
+  // switch that lets the form offer it and a person's page switch it on (`describesPromotionalMaterials`).
+  {
+    token: `{{${PROMOTIONAL_MATERIALS_MERGE_FIELD}}}`,
+    messageKey: PROMOTIONAL_MATERIALS_MERGE_FIELD,
+    example: inBoth((locale) => promotionalMaterialsClause(locale)),
   },
 ];
 

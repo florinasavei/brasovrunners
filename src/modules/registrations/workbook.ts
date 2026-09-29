@@ -34,8 +34,10 @@ import { sexCell } from "./domain/sex";
 /** A row as the sheet wants it: the same data the CSV carries, with the dates still dates. */
 export type RegistrationSheetRow = Omit<
   RegistrationCsvRow,
-  "submittedAt" | "confirmedAt" | "checkedInAt" | "fitnessDeclaredAt" | "termsAcceptedAt" | "declarationSignedAt"
+  "submittedAt" | "confirmedAt" | "checkedInAt" | "fitnessDeclaredAt" | "termsAcceptedAt" | "declarationSignedAt" | "promoConsentAt"
 > & {
+  /** «Materiale promoționale» (§NNN): the moment of the yes, a date like the others; null for no. */
+  promoConsentAt?: Date | null;
   /** The moment the terms were accepted (§421, §425), a date like the others; null when not recorded. */
   termsAcceptedAt?: Date | null;
   /** The moment the latest declaration was signed (§499); null while none is. */
@@ -159,6 +161,8 @@ const COLUMNS: Array<{
   { header: "Declaration signed", width: 18, cell: (row) => ({ value: onClubClock(row.declarationSignedAt ?? null), type: Date, format: STAMP_FORMAT }) },
   // The family marker (§543): the other people on the same address at the event, last like the CSV's.
   { header: "family", width: 30, cell: (row) => ({ value: row.family ?? "", type: String }) },
+  // The consent to promotional materials (§NNN), last like the CSV's: its moment, blank for no.
+  { header: "Promotional materials", width: 18, cell: (row) => ({ value: onClubClock(row.promoConsentAt ?? null), type: Date, format: STAMP_FORMAT }) },
 ];
 
 /** The header row, exactly as the export writes it — what a re-import matches its columns by. */

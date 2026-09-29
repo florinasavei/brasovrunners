@@ -35,7 +35,7 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
-import { noticeDescribesListStates } from "@/modules/legal-documents/repository";
+import { noticeDescribesListStates, noticeDescribesPromotionalMaterials } from "@/modules/legal-documents/repository";
 import { listEventsAcceptingRegistrations } from "@/modules/registrations/admin-repository";
 import { listStateWords } from "@/modules/registrations/list-state-words";
 import { canReadRegistrations, canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
@@ -86,6 +86,8 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
   const now = new Date();
   // §396: whether the public lists show each runner's stage — the list tick's help says so then.
   const listStatesOn = await noticeDescribesListStates(getDb(), now);
+  // §NNN: the promotional materials exist only while the notice in force describes them.
+  const promoOn = await noticeDescribesPromotionalMaterials(getDb(), now);
   const eventDays = Object.fromEntries(events.map((event) => [event.id, dayIn(event.startsAt, event.timezone)]));
   // Each event's own minimum age (§329), so the date's bound follows the event chosen.
   const eventMinAges = Object.fromEntries(events.map((event) => [event.id, event.minAge]));
@@ -258,6 +260,14 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
                 </Typography>
               )}
             </Box>
+
+            {/* The promotional materials (§NNN): never asked here — staff cannot consent for a person,
+                so a staff entry always stores «nu». The person says yes from their own page. */}
+            {promoOn && (
+              <Typography variant="body2" color="text.secondary" data-testid="staff-promo-consent-no">
+                {t("registrations.promo.staffNo")}
+              </Typography>
+            )}
 
             {/* The service refuses the whole registration without this, so the warning is
                 binding rather than decorative — the same rule the live-edit acknowledgement

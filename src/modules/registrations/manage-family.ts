@@ -41,6 +41,8 @@ export type ManagedPerson = {
   bibNumber: number | null;
   /** Off the public list (§143): the participant's own answer, per person. */
   listOptOut: boolean;
+  /** «Vreau să primesc materiale promoționale» (§NNN): the person's own answer, per person. */
+  promoConsent: boolean;
   /** How the latest declaration was accepted — online (a signed PDF was emailed) or on paper at the desk (§67); null when none. */
   declarationMethod: "EMAIL_LINK" | "PAPER" | null;
   /** The registration the link itself names. */
@@ -63,6 +65,7 @@ export async function listManagedPeople<T extends Record<string, unknown>>(db: D
       checkedInAt: registrations.checkedInAt,
       bibNumber: registrations.bibNumber,
       listOptOut: registrations.listOptOut,
+      promoConsent: registrations.promoConsent,
     })
     .from(registrations)
     .where(
@@ -91,6 +94,7 @@ export async function listManagedPeople<T extends Record<string, unknown>>(db: D
     checkedInAt: row.checkedInAt,
     bibNumber: row.bibNumber,
     listOptOut: row.listOptOut,
+    promoConsent: row.promoConsent,
     declarationMethod: methods.get(row.id) ?? null,
     own: row.id === own.id,
   }));

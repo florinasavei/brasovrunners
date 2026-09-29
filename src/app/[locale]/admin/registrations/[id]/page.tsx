@@ -21,7 +21,7 @@ import { registrationStatus } from "@/db/schema/registrations";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { listAuditTrail } from "@/modules/audit/repository";
-import { declarationAsksMinorToSign } from "@/modules/legal-documents/repository";
+import { declarationAsksMinorToSign, noticeDescribesPromotionalMaterials } from "@/modules/legal-documents/repository";
 import {
   findRegistrationDetailForAdmin,
   listDeclarationAcceptances,
@@ -145,7 +145,11 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
     health: registration.holdsHealthNote,
     socials: registration.stravaUrl !== null || registration.instagramHandle !== null,
     results: registration.resultsNameConsent,
+    // The promotional materials (§NNN): withdrawn for a person who wrote; never given by staff.
+    promo: registration.promoConsent,
   };
+  // «Materiale promoționale» is a line of the page while the notice in force describes it, or while the row says yes (§NNN).
+  const promoShown = registration.promoConsent || (await noticeDescribesPromotionalMaterials(db, new Date()));
 
   /*
     The form filled again with the same address (§312), out of the trail and into the timeline,
@@ -311,6 +315,15 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
               {` — ${tr("registrations.socialsOnList")}`}
             </Box>
           )}
+        </Typography>
+      )}
+
+      {/* The consent to promotional materials (§NNN): yes with its moment, or no — the person's own answer. */}
+      {promoShown && (
+        <Typography variant="body2" color="text.secondary" data-testid="registration-promo">
+          {registration.promoConsent && registration.promoConsentAt
+            ? tr("registrations.promo.yes", { date: dtInline(registration.promoConsentAt) ?? "" })
+            : tr("registrations.promo.no")}
         </Typography>
       )}
 
@@ -713,7 +726,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           <Typography variant="h3" sx={{ fontSize: "1rem", mb: 1 }}>
             {tr("registrations.withdraw.title")}
           </Typography>
-          {withdrawable.health || withdrawable.socials || withdrawable.results ? (
+          {withdrawable.health || withdrawable.socials || withdrawable.results || withdrawable.promo ? (
             <ActionForm
               action={withdrawConsentAction}
               confirm={{ title: tr("confirm.withdrawConsentTitle"), body: tr("confirm.withdrawConsentBody"), confirmLabel: tr("registrations.withdraw.action"), cancelLabel: words.cancel, destructive: true }}
@@ -729,6 +742,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                   {withdrawable.health && <CheckboxField name="health">{tr("registrations.withdraw.health")}</CheckboxField>}
                   {withdrawable.socials && <CheckboxField name="socials">{tr("registrations.withdraw.socials")}</CheckboxField>}
                   {withdrawable.results && <CheckboxField name="results">{tr("registrations.withdraw.results")}</CheckboxField>}
+                  {withdrawable.promo && <CheckboxField name="promo">{tr("registrations.withdraw.promo")}</CheckboxField>}
                 </Box>
                 <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: "flex-start" }}>
                   <RecallField

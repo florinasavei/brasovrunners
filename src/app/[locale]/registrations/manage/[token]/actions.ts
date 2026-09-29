@@ -6,6 +6,7 @@ import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { isSelfServiceField, withdrawFromManageLink } from "@/modules/registrations/consent-withdrawal";
 import { setListConsentFromManageLink } from "@/modules/registrations/list-consent";
+import { setPromoConsentFromManageLink } from "@/modules/registrations/promo-consent";
 import { checkInSelf, consumeAndCancel } from "@/modules/registrations/token-actions";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { flashPublic } from "@/shared/feedback/flash";
@@ -81,6 +82,29 @@ export async function setListConsentFromManageAction(form: FormData): Promise<vo
     redirect(result.ok ? `${path}?list=1${who}#list` : `${path}?invalid=1`);
   } catch (error) {
     if (isDomainError(error)) redirect(`${path}?list=0${who}#list`);
+    throw error;
+  }
+}
+
+/**
+ * «Vreau materiale promoționale» / «Nu mai vreau materiale promoționale» from the participant's own
+ * link (§NNN), per person like the list switch above: read, not spent. `consent` is the answer the
+ * button carried, so a double submission lands on the state the person pressed for. A yes while the
+ * notice in force does not describe the materials is refused by the module, never kept.
+ */
+export async function setPromoConsentFromManageAction(form: FormData): Promise<void> {
+  const locale = (form.get("locale") === "en" ? "en" : "ro") as Locale;
+  const token = String(form.get("token") ?? "");
+  const consent = form.get("consent") === "1";
+  const person = personOf(form);
+  const path = getPathname({ locale, href: { pathname: "/registrations/manage/[token]", params: { token } } });
+  const who = person ? `&person=${encodeURIComponent(person)}` : "";
+
+  try {
+    const result = await setPromoConsentFromManageLink(getDb(), token, consent, new Date(), person);
+    redirect(result.ok ? `${path}?promo=1${who}#promo` : `${path}?invalid=1`);
+  } catch (error) {
+    if (isDomainError(error)) redirect(`${path}?promo=0${who}#promo`);
     throw error;
   }
 }

@@ -612,7 +612,8 @@
         "results": "The public-results consent",
         "reason": "Reason",
         "action": "Withdraw",
-        "nothing": "There is nothing left to withdraw: the health note, the socials and the results consent are already empty."
+        "nothing": "There is nothing left to withdraw: the health note, the socials, the results consent and the promotional-materials consent are already empty.",
+        "promo": "The consent to promotional materials"
       },
       "auditTrail": "What staff did",
       "auditActorRemoved": "account removed",
@@ -638,7 +639,8 @@
           "sent_now": "Sent now, past the scheduled round",
           "cancelled_by_participant": "Cancelled by the participant, from their own link",
           "declaration_hold_set": "Declaration kept for a complaint or a dispute",
-          "declaration_hold_cleared": "Keep removed from the declaration"
+          "declaration_hold_cleared": "Keep removed from the declaration",
+          "promo_consent_changed": "Consent to promotional materials changed"
         }
       },
       "locale": {
@@ -787,7 +789,12 @@
       "resubmittedHeld": "Registered again with the same address: {date} ({state}) — “{message}” is already waiting to leave, and leaves only once",
       "familyChip": "Family",
       "resendSentNow": "The email is leaving now, without waiting for the scheduled round.",
-      "filterMembersOnly": "{title} · Members"
+      "filterMembersOnly": "{title} · Members",
+      "promo": {
+        "yes": "Promotional materials: yes, since {date}",
+        "no": "Promotional materials: no",
+        "staffNo": "Promotional materials: no. The team cannot consent for the person; they give it themselves, from their registration's page."
+      }
     },
     "events": {
       "empty": "There is no event in the database.",
@@ -2162,7 +2169,8 @@
         "teamPage": "Privacy notice only: the team page's name, in quotation marks. With it in the notice in force, /admin/tasks counts the page as described",
         "series": "Only in the group-run declarations: the series' name, when the run repeats. The sentence that names it shows only for a series; a one-day run keeps the sentence with '{{event}}' and '{{eventDate}}'",
         "seriesRhythm": "Only in the group-run declarations: how often the series repeats, read off its dates (“every Tuesday at 18:30”)",
-        "seriesPlace": "Only in the group-run declarations: the series' usual starting place"
+        "seriesPlace": "Only in the group-run declarations: the series' usual starting place",
+        "promotionalMaterials": "Only in the privacy notice: the optional box for promotional materials from the club and its partners. Without it in the notice in force, the form does not offer it"
       },
       "removeBlockedReferenced": "Can neither be withdrawn nor deleted: {signatures} signatures, {events} events and {acknowledgements} registrations depend on this version.",
       "removeBlockedCurrent": "In force right now — it can neither be withdrawn nor deleted. Approve its successor first; then this one can go.",
@@ -2319,7 +2327,8 @@
         "title": "1. Regenerate (a draft from the template) · 2. Read the draft and fill in whatever is left written '<'…>, then “Save draft” · 3. Approve — only then is it in force",
         "body": "The text in force stays on the site until you approve the draft. The four facts are the club's legal name, CIF, seat and contact address."
       },
-      "tableCaptionOf": "The versions of {kind}, with their state and what depends on each"
+      "tableCaptionOf": "The versions of {kind}, with their state and what depends on each",
+      "promoMissing": "The notice in force does not yet describe promotional materials, so the form does not offer the box. Approve a new notice from the template."
     },
     "tasks": {
       "title": "What is still to do",
@@ -2793,6 +2802,16 @@
             "The same for “Self-declaration (group run, trail)”.",
             "Approve a new version of the privacy notice from the template too: it says a series' declaration is kept while it is active, and after a withdrawal for at most three years.",
             "Whoever signed the old version sees on the run's page, from the link in their email, that the new version is asked for; the old signature stays in the list."
+          ]
+        },
+        "promoNotice": {
+          "title": "Privacy notice: promotional materials",
+          "todo": "The notice in force does not yet describe promotional materials, so the form does not offer the box and no consent is kept until the club approves a new notice.",
+          "done": "The notice in force describes promotional materials: the form offers the box, and everyone changes their answer from their registration's page.",
+          "how": [
+            "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. Section 5 describes the promotional materials from the club and its partners.",
+            "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish”.",
+            "From the moment it takes effect, the form offers the box, with no other setting. Whoever ticks it appears in «Newsletter», in its own card."
           ]
         }
       },
@@ -4634,6 +4653,7 @@
               "steps": [
                 "«Newsletter» → open the «Subscribers» card. Its line says how many are confirmed and how many pending.",
                 "Search under «Search the address» or choose «Topic» and «State», then press «Filter». «Download CSV» takes the list as filtered.",
+                "The «Participants who ticked promotional materials» card: who ticked it when registering, with the address, the event and the date. «Download CSV» takes all of it. It is not the newsletter; partners never get the list.",
                 "Removing an address is the Administrator's: tell them who asked."
               ]
             },
@@ -4843,7 +4863,8 @@
                 "Type the address, whole or part of it, under «Search the address». Choose «Topic» and «State» if you like, then press «Filter». «Clear the filters» shows the whole list again.",
                 "Under «Pending», the row says until when the confirmation link works, or «The link has expired.» An address never confirmed is deleted by itself.",
                 "«Download CSV» takes the list as filtered, with the same columns. Keep the file only as long as you need it, then delete it.",
-                "To remove someone, at their request: «Unsubscribe» on their row, then confirm. The address is deleted with its topics, as when the person unsubscribes."
+                "To remove someone, at their request: «Unsubscribe» on their row, then confirm. The address is deleted with its topics, as when the person unsubscribes.",
+                "The «Participants who ticked promotional materials» card: who ticked it when registering, with the address, the event and the date. «Download CSV» takes all of it. It is not the newsletter; partners never get the list."
               ]
             },
             {
@@ -5015,7 +5036,7 @@
               "steps": [
                 "«Registrations» → find the person → open the registration.",
                 "What we hold about them: «Everything held about this person».",
-                "Withdraw a consent (the health note, the socials, the public results): «Withdraw consent» → tick what they withdraw → «Reason» → «Withdraw».",
+                "Withdraw a consent (the health note, the socials, the public results, the promotional materials): «Withdraw consent» → tick what they withdraw → «Reason» → «Withdraw».",
                 "Erasure: «Delete permanently» (see “Correct, cancel or erase a registration”). The history keeps who erased and why, never the person's data."
               ]
             }
@@ -5418,6 +5439,24 @@
         "unsubscribing": "Unsubscribing…",
         "unsubscribeTitle": "Unsubscribe {email}?",
         "unsubscribeBody": "The address leaves the newsletter, with its topics, as when the person unsubscribes. They can subscribe again from the contact page."
+      },
+      "promo": {
+        "title": "Participants who ticked promotional materials",
+        "intro": "Who ticked, when registering, that they want promotional materials from the club and its partners. It is not the newsletter, and the partners never get the list.",
+        "count": {
+          "one": "{count} registration with consent",
+          "few": "{count} registrations with consent",
+          "other": "{count} registrations with consent"
+        },
+        "csv": "Download CSV",
+        "truncated": "The table shows the first {count}; «Download CSV» takes them all.",
+        "empty": "Nobody has ticked promotional materials yet.",
+        "columns": {
+          "name": "Name",
+          "email": "Email address",
+          "event": "Event",
+          "since": "Ticked on"
+        }
       }
     },
     "team": {
@@ -6030,7 +6069,11 @@
       "addLink": "Register one more person with this address"
     },
     "membersAddressLabel": "Your member account's address",
-    "membersAddressHelp": "You register with your account's address. One account registers one person."
+    "membersAddressHelp": "You register with your account's address. One account registers one person.",
+    "promo": {
+      "label": "I want to receive promotional materials from the club and its partners",
+      "help": "You can opt out any time from your registration page."
+    }
   },
   "Registrations": {
     "invalidOrExpired": "This link is no longer valid. We can send you a new one, to the same email address.",
@@ -6353,6 +6396,16 @@
     "qr": {
       "number": "Race number: {number}",
       "code": "Access code: {code}"
+    },
+    "promo": {
+      "title": "Promotional materials",
+      "yes": "You receive promotional materials from the club and its partners at this registration's address. Only the club sends them; the partners never get your address.",
+      "no": "You do not receive promotional materials.",
+      "optIn": "I want promotional materials",
+      "optOut": "I no longer want promotional materials",
+      "help": "It is separate from the newsletter: unsubscribing from the newsletter does not change this, and this does not change the newsletter.",
+      "changed": "Your choice about promotional materials is saved.",
+      "failed": "We could not save your choice. Try again."
     }
   },
   "Devs": {

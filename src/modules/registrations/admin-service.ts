@@ -24,6 +24,7 @@ import {
   listEmergencySheet,
 } from "./admin-repository";
 import { clearOptionalData, OPTIONAL_DATA_FIELDS, type OptionalDataField } from "./consent-withdrawal";
+import { setPromoConsent } from "./promo-consent";
 import { eraseConfirmationMatches } from "./domain/erase-confirmation";
 import type { SexChoice } from "./domain/sex";
 import { heldRefusal, refuseIfRegistrationHeld, registrationIsHeld } from "./declaration-hold";
@@ -1265,25 +1266,40 @@ export async function withdrawOptionalData<T extends Record<string, unknown>>(
   db: Database<T>,
   actor: Pick<StaffUser, "id" | "role">,
   registrationId: string,
-  fields: { health?: true; socials?: true; results?: true },
+  fields: { health?: true; socials?: true; results?: true; promo?: true },
   reason: string,
   now: Date,
-): Promise<{ cleared: OptionalDataField[] }> {
+): Promise<{ cleared: (OptionalDataField | "promo")[] }> {
   if (!canManageRegistrations(actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not withdraw a participant's consent; AGENTS.md §15.11 reserves it to ADMIN`);
   }
   const named = OPTIONAL_DATA_FIELDS.filter((field) => fields[field] === true);
-  if (named.length === 0) {
+  if (named.length === 0 && fields.promo !== true) {
     throw new DomainError("VALIDATION_ERROR", "choose what to withdraw", ["fields"]);
   }
-  return clearOptionalData(db, {
-    registrationId,
-    fields: named,
-    via: "STAFF",
-    actorStaffUserId: actor.id,
-    reason,
-    now,
-  });
+  const cleared: (OptionalDataField | "promo")[] =
+    named.length > 0
+      ? (
+          await clearOptionalData(db, {
+            registrationId,
+            fields: named,
+            via: "STAFF",
+            actorStaffUserId: actor.id,
+            reason,
+            now,
+          })
+        ).cleared
+      : [];
+  /*
+    The promotional materials (§NNN), for the person who wrote to the club: the one write of
+    `promo-consent.ts`, with its own audit row naming the Administrator and the reason. A
+    withdrawal only — staff never consent for a person, and the module refuses a yes from here.
+  */
+  if (fields.promo === true) {
+    const promo = await setPromoConsent(db, { registrationId, consent: false, via: "STAFF", actorStaffUserId: actor.id, reason, now });
+    if (promo.changed) cleared.push("promo");
+  }
+  return { cleared };
 }
 
 /**

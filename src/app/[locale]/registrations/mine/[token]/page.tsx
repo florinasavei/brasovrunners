@@ -1,7 +1,9 @@
+import CampaignIcon from "@mui/icons-material/Campaign";
 import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import DrawIcon from "@mui/icons-material/Draw";
 import EventBusyIcon from "@mui/icons-material/EventBusy";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
+import UnsubscribeIcon from "@mui/icons-material/Unsubscribe";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
@@ -22,6 +24,7 @@ import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { confirmationDueMoment } from "@/modules/registrations/domain/hold-deadlines";
 import { readMyRegistrations } from "@/modules/registrations/my-registrations";
+import { cachedPromotionalMaterialsOffered } from "@/modules/public-cache/reads";
 import PublicFlash from "@/shared/feedback/PublicFlash";
 import ContactLink from "@/shared/ui/ContactLink";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
@@ -29,6 +32,7 @@ import {
   cancelFromMyRegistrationsAction,
   selfCheckInFromMyRegistrationsAction,
   setListConsentFromMyRegistrationsAction,
+  setPromoConsentFromMyRegistrationsAction,
   startFamilySigningFromMyRegistrationsAction,
   withdrawFromMyRegistrationsAction,
 } from "./actions";
@@ -50,6 +54,9 @@ type Props = {
     withdrawn?: string;
     field?: string;
     withdrawFailed?: string;
+    /** The promotional-materials switch (§NNN): the registration it saved, or refused. */
+    promo?: string;
+    promoFailed?: string;
   }>;
 };
 
@@ -68,7 +75,7 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
-  const { done, invalid, started, here, hereFailed, list, listFailed, withdrawn, field, withdrawFailed } = await searchParams;
+  const { done, invalid, started, here, hereFailed, list, listFailed, withdrawn, field, withdrawFailed, promo, promoFailed } = await searchParams;
   const t = await getTranslations("Registrations");
   // The words beside every QR (§547): whose it is, their number, the code.
   const qrWords: QrWords = {
@@ -102,6 +109,41 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
   // One token read for the page — throttled per presented token.
   const now = new Date();
   const context = invalid ? { ok: false as const } : await readMyRegistrations(getDb(), token, locale, now);
+  // «Vreau materiale promoționale» only while the notice in force describes them (§NNN); «Nu mai vreau» always.
+  const promoOn = context.ok ? await cachedPromotionalMaterialsOffered(now) : false;
+  /** The promotional-materials switch for one registration (§NNN): the answer as it stands, and the other one. */
+  const promoSwitch = (item: { id: string; promoConsent: boolean }) => (
+    <Stack spacing={1} sx={{ mt: 1.5 }} data-testid="my-promo">
+      {promo === item.id && (
+        <Alert severity="success" sx={{ py: 0 }}>
+          {t("promo.changed")}
+        </Alert>
+      )}
+      {promoFailed === item.id && (
+        <Alert severity="warning" sx={{ py: 0 }}>
+          {t("promo.failed")}
+        </Alert>
+      )}
+      <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1, alignItems: "center" }}>
+        <Typography variant="body2" color="text.secondary" data-testid="my-promo-state">
+          {item.promoConsent ? t("promo.yes") : t("promo.no")}
+        </Typography>
+        <form action={setPromoConsentFromMyRegistrationsAction}>
+          <input type="hidden" name="locale" value={locale} />
+          <input type="hidden" name="token" value={token} />
+          <input type="hidden" name="registrationId" value={item.id} />
+          <input type="hidden" name="consent" value={item.promoConsent ? "0" : "1"} />
+          <Button type="submit" variant="text" size="small" sx={{ minHeight: 44, ...WITH_GLYPH_SX }}>
+            {item.promoConsent ? <UnsubscribeIcon aria-hidden="true" sx={glyphSx("small")} /> : <CampaignIcon aria-hidden="true" sx={glyphSx("small")} />}
+            {item.promoConsent ? t("promo.optOut") : t("promo.optIn")}
+          </Button>
+        </form>
+      </Stack>
+      <Typography variant="body2" color="text.secondary">
+        {t("promo.help")}
+      </Typography>
+    </Stack>
+  );
 
   /*
     A family's declarations, signed as one wizard (§471): every event at which this address holds
@@ -141,6 +183,15 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
         !context.closed.some((item) => item.id === withdrawn) && (
           <Alert severity="success" sx={{ mb: 2 }}>
             {field === "socials" ? t("withdraw.socialsDone") : t("withdraw.healthDone")}
+          </Alert>
+        )}
+      {/* A closed registration whose last consent was the promotional one leaves the list once withdrawn (§NNN). */}
+      {promo &&
+        context.ok &&
+        !context.items.some((item) => item.id === promo) &&
+        !context.closed.some((item) => item.id === promo) && (
+          <Alert severity="success" sx={{ mb: 2 }}>
+            {t("promo.changed")}
           </Alert>
         )}
 
@@ -378,6 +429,13 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
               </Stack>
 
               {/*
+                The promotional materials (§NNN), the person's own switch: «Vreau» only while the notice
+                in force describes them, «Nu mai vreau» whenever the row says yes. The link is read, never
+                spent, as the list switch above. Separate from the newsletter, and the words say so.
+              */}
+              {(item.promoConsent || promoOn) && promoSwitch(item)}
+
+              {/*
                 What was given on consent, withdrawn from here (§322; art. 7(3) GDPR). A button
                 only for what this registration still holds — the page knows *whether*, never
                 *what* — and the link is read, not spent, so cancel above still works.
@@ -493,6 +551,14 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
                     </form>
                   )}
                 </Stack>
+                {/* A consent to promotional materials outlives the place (§NNN): only the way out here. */}
+                {item.promoConsent && promoSwitch(item)}
+                {/* Withdrawn just now, while the card stays for its other data: the answer, and no way back in here. */}
+                {!item.promoConsent && promo === item.id && (
+                  <Alert severity="success" sx={{ py: 0, mt: 1.5 }}>
+                    {t("promo.changed")}
+                  </Alert>
+                )}
               </Box>
             ))}
           </Stack>

@@ -1,3 +1,4 @@
+import CampaignIcon from "@mui/icons-material/Campaign";
 import DoneIcon from "@mui/icons-material/Done";
 import DrawIcon from "@mui/icons-material/Draw";
 import SkipNextIcon from "@mui/icons-material/SkipNext";
@@ -25,12 +26,13 @@ import { findEventNotificationDetails } from "@/modules/events/repository";
 import { findEventDeclaration } from "@/modules/legal-documents/repository";
 import { DEADLINE_RULES, type Deadlines } from "@/modules/deadlines/domain/deadlines";
 import { leadPhrase } from "@/modules/deadlines/domain/duration-words";
-import { cachedDeadlines, cachedShownContactAddresses } from "@/modules/public-cache/reads";
+import { cachedDeadlines, cachedPromotionalMaterialsOffered, cachedShownContactAddresses } from "@/modules/public-cache/reads";
 import { fillIn } from "@/shared/forms/fill-in";
 import { asksForIdDocument, asksForMinorSignature, deadlineMergeValues, minimumAgeMergeValue } from "@/modules/legal-documents/domain/merge-fields";
 import { effectiveMinimumAge } from "@/modules/registrations/domain/age";
 import { listStatesMergeValues } from "@/modules/registrations/list-state-words";
 import { listSocialsMergeValues } from "@/modules/registrations/list-socials-words";
+import { promotionalMaterialsMergeValues } from "@/modules/registrations/promo-consent-words";
 import { newsletterMergeValues } from "@/modules/newsletter/topic-words";
 import LegalDocumentBody from "@/modules/legal-documents/ui/LegalDocumentBody";
 import { expectedSignatures, mismatchedSignatures, type SignatureBox } from "@/modules/registrations/domain/signature-name";
@@ -337,6 +339,12 @@ export default async function DeclarePage({ params, searchParams }: Props) {
   // the text `signDeclaration` binds, read for the same event.
   const declaration = signing && registration ? await findEventDeclaration(db, registration.eventId, locale, now) : undefined;
   /*
+    «Vreau să primesc materiale promoționale» (§NNN) while signing: the signer's own yes — the one door
+    another adult on a family's address has (§421) — offered only while the notice in force describes
+    the materials and only to a registration that has not said yes already.
+  */
+  const offerPromo = Boolean(signing && registration && !registration.promoConsent && (await cachedPromotionalMaterialsOffered(now)));
+  /*
     The family's stepper (§471), from the opened link: everybody on the address at the event whose
     declaration waits, this person first. One person alone gets the page they always had.
   */
@@ -608,7 +616,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
               // The club's deadlines and the public list's period (§377, §421) — as the PDF fills them.
               ...deadlineMergeValues(locale, await cachedDeadlines()),
               // The list-states marker, should the declaration name it (§396) — as the PDF fills it.
-              ...listStatesMergeValues(locale), ...listSocialsMergeValues(locale),
+              ...listStatesMergeValues(locale), ...listSocialsMergeValues(locale), ...promotionalMaterialsMergeValues(locale),
               ...newsletterMergeValues(locale),
             }}
           />
@@ -823,6 +831,21 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                     refused={nameRefused}
                   />
                 </>
+              )}
+              {/*
+                The promotional materials (§NNN): optional, never pre-ticked, never required; a tick
+                the notice in force does not cover is ignored and the signature goes on.
+              */}
+              {offerPromo && (
+                <Box>
+                  <CheckboxField name="promoConsent" defaultChecked={draft?.promoConsent === "on"}>
+                    <CampaignIcon aria-hidden sx={{ fontSize: "1.15em", verticalAlign: "-0.2em", mr: 0.75, color: "text.secondary" }} />
+                    {`${formCopy("promo.label")} — ${formCopy("optionalSuffix")}`}
+                  </CheckboxField>
+                  <Typography variant="body2" color="text.secondary" data-testid="declare-promo-help">
+                    {formCopy("promo.help")}
+                  </Typography>
+                </Box>
               )}
               {/*
                 «Semnează și treci la următoarea persoană» only while another person's declaration

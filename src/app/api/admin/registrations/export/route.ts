@@ -164,6 +164,8 @@ export async function GET(request: Request): Promise<Response> {
         declarationVersion: declarations.get(row.id)?.version ?? null,
         declarationSignedAt: declarations.get(row.id)?.acceptedAt ?? null,
         family: familyColumn(family.get(row.id)),
+        // The consent to promotional materials (§NNN): its moment, blank for no.
+        promoConsentAt: row.promoConsent ? row.promoConsentAt : null,
       })),
       eventTitle ?? "Participants",
     );
@@ -209,6 +211,8 @@ export async function GET(request: Request): Promise<Response> {
       declarationVersion: declarations.get(row.id)?.version ?? null,
       declarationSignedAt: declarations.get(row.id)?.acceptedAt.toISOString() ?? "",
       family: familyColumn(family.get(row.id)),
+      // «Materiale promoționale» (§NNN): the moment of the yes, empty for no — last, like the family.
+      promoConsentAt: row.promoConsent ? (row.promoConsentAt?.toISOString() ?? "") : "",
     })),
   );
 

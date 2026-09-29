@@ -106,6 +106,13 @@ export type AuditAction =
    * fields — `["health"]`, `["socials"]` — and never what they held.
    */
   | "registration.consent_withdrawn"
+  /**
+   * «Vreau să primesc materiale promoționale» switched (§NNN, `registrations/promo-consent.ts`): the
+   * new value (`to: true | false`) and the door — the manage link, «Înscrierile mele», the
+   * declaration page, or an Administrator withdrawing it for a person who wrote (the actor and the
+   * reason then). Never the name or the address.
+   */
+  | "registration.promo_consent_changed"
   /** The registrations exported to a file (§322): the event, the format and the row count — never a row. */
   | "registration.exported"
   /**
@@ -180,6 +187,8 @@ export type AuditAction =
   | "newsletter.subscriber_unsubscribed"
   /** The «Abonați» list downloaded as a CSV (§550): who, the filter's shape and how many rows — never a row. */
   | "newsletter.subscribers_exported"
+  /** Who said yes to promotional materials, downloaded as a CSV (§NNN): who and how many rows — never a row. */
+  | "newsletter.promo_consenters_exported"
   /**
    * An event erased outright, with everyone registered for it (BR-REQ-037-06). Like
    * `registration.deleted_by_staff` it outlives what it describes, and like it, it names the
