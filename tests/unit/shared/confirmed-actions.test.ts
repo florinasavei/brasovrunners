@@ -200,6 +200,8 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   hardDeleteEventAction: "guarded by the event's title, typed: the typing is the question",
   eraseRegistrationFromListAction: "guarded by the registered name, typed: the typing is the question",
   deleteApprovedLegalVersionAction: "guarded by a typed phrase: the typing is the question",
+  deleteReliedOnLegalVersionAction:
+    "two steps on its own screen: the consequences and a reason, then the version's number typed by hand — the typing is the question (§NNN)",
   deleteLegalVersionsAction:
     "guarded by a typed phrase (DELETE <n>) when an approved version is ticked, the typing is the question; drafts alone ask in the §384 dialog (§532)",
   previewParticipantMessageAction: "a preview; sends nothing",

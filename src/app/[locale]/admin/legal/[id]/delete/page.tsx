@@ -15,16 +15,15 @@ import { getDb } from "@/db/client";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { confirmationPhrase } from "@/modules/legal-documents/domain/confirmation";
-import {
-  deletionObstacle,
-  type InForceWindow,
-} from "@/modules/legal-documents/domain/deletability";
+import { removalPlan } from "@/modules/legal-documents/domain/deletability";
+import { reliancePhrases } from "@/modules/legal-documents/domain/retire-steps";
 import { listVersionsForBackoffice } from "@/modules/legal-documents/repository";
 import { readDeletionFacts } from "@/modules/legal-documents/service";
+import LegalRetireSteps from "@/modules/legal-documents/ui/LegalRetireSteps";
 import { canWriteLegalTexts } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { isUuid } from "@/shared/ids";
-import { deleteApprovedLegalVersionAction } from "../../actions";
+import { deleteApprovedLegalVersionAction, deleteReliedOnLegalVersionAction } from "../../actions";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
@@ -36,26 +35,35 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 /**
- * Deleting an approved legal version outright (BR-REQ-053-02, `DECISIONS.md` §151).
+ * «Șterge» on one approved version (BR-REQ-053-02, `DECISIONS.md` §151, §NNN).
+ *
+ * ## Two kinds of deletion, one screen
+ *
+ * What the service would do with this version is asked of the service's own rule (`removalPlan`,
+ * fed by `readDeletionFacts`), so the screen and the server cannot name different things:
+ *
+ * - **nothing depends on it** — §151's real delete: the row, both texts and the number go, behind
+ *   a typed phrase (`GDPR 2`) and a reason;
+ * - **a signature, an event or a registration depends on it** (§NNN) — retire-and-hide, in two
+ *   steps (`LegalRetireSteps`): what happens, with the counts in words, and the reason; then the
+ *   version's number typed by hand. The text stays, because a signed version is the club's proof of
+ *   what a person accepted (AGENTS.md §10.8, §556);
+ * - **a draft, or the version in force** — refused, with what to do instead.
  *
  * ## Why a page rather than the dialog withdrawal uses
  *
  * The same three reasons `/admin/events/[id]/erase` gives, and they apply harder here. The
- * consequence is not one sentence — what goes, that nothing depends on it, that the number is
- * retired for ever, and that an audit line is all that will be left of a document the club
- * published. The confirmation is typed, so a refusal has to land somewhere that still shows the
- * phrase. And a dialog is JavaScript; the standing rule is that a form works without it.
+ * consequence is not one sentence; the confirmation is typed, so a refusal has to land somewhere
+ * that still shows what to type; and a dialog is JavaScript, while the standing rule is that a form
+ * works without it — the two steps are drawn together then, and the server checks both answers.
  *
  * ## What actually protects the text
  *
- * Not this page. `deleteApprovedVersion` asserts the role, re-reads the dependant counts inside
- * its own transaction, compares the typed phrase, requires the reason, writes the audit row
- * first and retires the number — a request that never rendered this page is refused in exactly
- * the same way (BR-REQ-060-01 criterion 4). The `notFound()` below is a courtesy: a role that
- * may not do this is not shown a screen explaining how.
- *
- * What this page owes the reader is the paragraph above the form — precisely what is about to
- * stop existing — and, when it cannot be done, the reason, in the same words the list gives.
+ * Not this page. `deleteApprovedVersion` and `deleteReliedOnVersion` assert the role, re-read the
+ * counts inside their own transaction, compare what was typed, require the reason and write the
+ * audit row first — a request that never rendered this page is refused in exactly the same way
+ * (BR-REQ-060-01 criterion 4). The `notFound()` below is a courtesy: a role that may not do this
+ * is not shown a screen explaining how.
  */
 export default async function DeleteLegalVersionPage({ params, searchParams }: Props) {
   const { locale, id } = await params;
@@ -78,76 +86,99 @@ export default async function DeleteLegalVersionPage({ params, searchParams }: P
   const t = await getTranslations("Admin");
 
   const now = new Date();
-
-  /*
-    The service's own question, asked through the service's own functions — `readDeletionFacts`
-    and `deletionObstacle` are exactly what `assertDeletable` asks before it destroys anything —
-    so the sentence this screen gives and the refusal the server would give cannot name different
-    things.
-
-    **They did, twice (§290, §316).** First the screen carried a copy of the obstacle list that was
-    one item short and promised "nimic nu depinde de ea" about a terms version the service refused.
-    Then both refused every terms version that had ever been in force, while the list beside them
-    offered the delete link: the owner pressed it three times. A copy is a thing that drifts; there
-    is no copy here any more.
-  */
   const [facts] = await readDeletionFacts(db, [version], versions, now);
-  const obstacle = deletionObstacle(facts);
+  const plan = removalPlan(facts);
   // "4–20 sept. 2026": the stretch the version was the text in force, up to now if it still is.
-  const span = (window: InForceWindow) =>
-    formatDayRange(window.from, window.until ?? now, { locale, timeZone: CLUB_TIME_ZONE, style: "short", position: "inline" });
+  const whenInForce = facts.terms
+    ? formatDayRange(facts.terms.window.from, facts.terms.window.until ?? now, { locale, timeZone: CLUB_TIME_ZONE, style: "short", position: "inline" })
+    : null;
 
-  const blocked = (() => {
-    switch (obstacle?.kind) {
-      case undefined:
-        return null;
-      case "draft":
-        return t("legal.erase.blockedDraft");
-      case "referenced":
-        return t("legal.erase.blockedReferenced", {
-          signatures: obstacle.signatures,
-          events: obstacle.events,
-          acknowledgements: obstacle.acknowledgements,
-        });
-      case "inForce":
-        return t("legal.erase.blockedCurrent");
-      case "termsAccepted":
-        // What stands on it, then what can still be done — which, for a version already
-        // withdrawn, is nothing more, and the sentence says so rather than offering it again.
-        return `${t("legal.erase.blockedTermsAccepted", {
-          count: obstacle.registrations,
-          window: span(obstacle.window),
-        })} ${version.withdrawnAt ? t("legal.erase.termsAlreadyWithdrawn") : t("legal.erase.termsWithdrawInstead")}`;
-    }
-  })();
+  const document = t(`legal.keys.${version.key}`);
+  const back = (
+    <Typography variant="body2">
+      <Link href={{ pathname: "/admin/legal/[id]", params: { id } }}>{t("legal.erase.backToVersion")}</Link>
+    </Typography>
+  );
+  const alert = (
+    <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
+      {error && <Alert severity="error">{t(`errors.${error}`)}</Alert>}
+    </Box>
+  );
+
+  if (plan.kind === "retire") {
+    const counts = reliancePhrases((key, values) => t(key, values), plan.reliance, locale);
+    const consequences = [
+      t("legal.retire.consequence", counts),
+      ...(plan.reliance.termsRegistrations > 0 ? [t("legal.retire.termsKept", { count: plan.reliance.termsRegistrations })] : []),
+      t("legal.retire.stillShown"),
+    ];
+    return (
+      <Stack spacing={3} sx={{ maxWidth: 640 }}>
+        {back}
+        {alert}
+        <Typography variant="h2" sx={{ fontSize: "1.25rem" }}>
+          {t("legal.retire.title", { document, version: version.version })}
+        </Typography>
+        <ActionForm
+          action={deleteReliedOnLegalVersionAction}
+          messages={await refusalMessages(
+            { typedConfirmation: t("legal.retire.numberLabel"), reason: t("legal.retire.reasonLabel") },
+            { confirmation: true },
+          )}
+          data-testid="legal-retire-form"
+        >
+          <input type="hidden" name="uiLocale" value={locale} />
+          <input type="hidden" name="versionId" value={version.id} />
+          <LegalRetireSteps
+            version={version.version}
+            words={{
+              stepOne: t("legal.retire.stepOne"),
+              consequences,
+              reasonLabel: t("legal.retire.reasonLabel"),
+              reasonHelp: t("legal.retire.reasonHelp"),
+              continueLabel: t("legal.retire.continue"),
+              stepTwo: t("legal.retire.stepTwo"),
+              numberLabel: t("legal.retire.numberLabel"),
+              numberHelp: t("legal.retire.numberHelp", { version: version.version }),
+              action: t("legal.retire.action", { version: version.version }),
+              back: t("legal.retire.back"),
+              incompleteHint: t.raw("forms.incompleteFirst") as string,
+            }}
+          />
+        </ActionForm>
+      </Stack>
+    );
+  }
+
+  const blocked =
+    plan.kind === "refused"
+      ? plan.reason === "draft"
+        ? t("legal.erase.blockedDraft")
+        : plan.reason === "inForce"
+          ? t("legal.erase.blockedCurrent")
+          : t("legal.retire.alreadyDeleted", {
+              date: formatDay(version.deletedAt ?? now, { locale, timeZone: CLUB_TIME_ZONE, style: "long", position: "inline" }),
+            })
+      : null;
 
   /*
     Why it may go, in the terms that apply to this key. The three counts say nothing about a terms
     version, so "no signature, no event, no registration" would be a vacuous reassurance there;
     what is true is when it was in force and that nobody submitted a registration or signed a
-    declaration in that time — or that it was never the text in force at all, which says no more
-    than it knows: superseded before its date and withdrawn before it are both that.
+    declaration in that time — or that it was never the text in force at all.
   */
-  const whyItMayGo = facts.terms
-    ? t("legal.erase.termsNobodyAccepted", { window: span(facts.terms.window) })
+  const whyItMayGo = whenInForce
+    ? t("legal.erase.termsNobodyAccepted", { window: whenInForce })
     : version.key === "TERMS"
       ? t("legal.erase.termsNeverInForce")
       : t("legal.erase.nothingDepends");
 
-  const document = t(`legal.keys.${version.key}`);
   const phrase = confirmationPhrase(version.key, version.version);
 
   return (
     <Stack spacing={3} sx={{ maxWidth: 640 }}>
-      <Typography variant="body2">
-        <Link href={{ pathname: "/admin/legal/[id]", params: { id } }}>
-          {t("legal.erase.backToVersion")}
-        </Link>
-      </Typography>
-
-      <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
-        {error && <Alert severity="error">{t(`errors.${error}`)}</Alert>}
-      </Box>
+      {back}
+      {alert}
 
       <Typography variant="h2" sx={{ fontSize: "1.25rem" }}>
         {t("legal.erase.title", { document, version: version.version })}
@@ -171,9 +202,7 @@ export default async function DeleteLegalVersionPage({ params, searchParams }: P
                 not obvious from the word "delete", and it is the whole reason deleting an
                 approved version is allowed at all (§151).
               */}
-              <Typography variant="body2">
-                {t("legal.erase.numberRetired", { version: version.version })}
-              </Typography>
+              <Typography variant="body2">{t("legal.erase.numberRetired", { version: version.version })}</Typography>
               <Typography variant="body2">{t("legal.erase.auditOnly")}</Typography>
             </Stack>
           </Alert>
@@ -198,12 +227,8 @@ export default async function DeleteLegalVersionPage({ params, searchParams }: P
 
           {/*
             No dialog and no tick: the confirmation *is* the typed phrase, checked on the server.
-            A tick the server does not read would be decoration (BR-REQ-060-01), and the phrase
-            carries the version number because every version of this document has the same title.
-
-            A refusal keeps the reason and asks for the phrase again (§315): the phrase is the
-            guard, and a `NeverKeptField` here is what says so — it is never recalled, and it
-            still carries the id the summary's link points at.
+            The phrase carries the version number because every version of this document has the
+            same title. A refusal keeps the reason and asks for the phrase again (§315).
           */}
           <ActionForm
             action={deleteApprovedLegalVersionAction}

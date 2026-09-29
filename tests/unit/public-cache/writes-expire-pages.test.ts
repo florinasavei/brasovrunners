@@ -120,6 +120,7 @@ const WRITES: Record<string, Expected> = {
   "src/modules/legal-documents/service.ts#approveVersion": ["legal"],
   "src/modules/legal-documents/service.ts#withdrawApprovedVersion": ["legal"],
   "src/modules/legal-documents/service.ts#deleteApprovedVersion": ["legal"],
+  "src/modules/legal-documents/service.ts#deleteReliedOnVersion": ["legal"],
   "src/modules/legal-documents/service.ts#approvePlatformTemplates": ["legal"],
   "src/modules/legal-documents/service.ts#approveDrafts": ["legal"],
   "src/modules/legal-documents/service.ts#deleteVersionsInBatch": ["legal"],

@@ -770,7 +770,9 @@ describe("BR-REQ-053-02 deleting an approved legal version", () => {
     ]) {
       const source = read(page);
       expect(source, page).toContain("readDeletionFacts(");
-      expect(source, page).toContain("deletionObstacle(");
+      // `removalPlan` is the same rule with «Șterge»'s retire-and-hide beside it (§NNN): it asks
+      // `deletionObstacle` itself, so a page reading it keeps no copy either.
+      expect(source, page).toMatch(/deletionObstacle\(|removalPlan\(/);
       expect(source, page).not.toContain("findCurrentApprovedVersionId");
       expect(source, page).not.toContain("termsHasBeenInForce");
     }

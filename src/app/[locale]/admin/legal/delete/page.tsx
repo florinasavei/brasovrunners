@@ -13,6 +13,7 @@ import { routing } from "@/i18n/routing";
 import { deletionOrder } from "@/modules/legal-documents/domain/batch";
 import { batchConfirmationPhrase, confirmationPhrase } from "@/modules/legal-documents/domain/confirmation";
 import { deletionObstacle, type InForceWindow, isReliedOn } from "@/modules/legal-documents/domain/deletability";
+import { reliancePhrases } from "@/modules/legal-documents/domain/retire-steps";
 import { type LegalDocumentVersionRow, listVersionsForBackoffice } from "@/modules/legal-documents/repository";
 import { readDeletionFacts } from "@/modules/legal-documents/service";
 import { canWriteLegalTexts } from "@/modules/staff-identity/domain/roles";
@@ -73,7 +74,12 @@ export default async function DeleteLegalVersionsPage({ params, searchParams }: 
 
   /** Why a ticked version stays, in the list's own sentences; null when it may go. */
   const blockedReason = (row: LegalDocumentVersionRow, index: number): string | null => {
-    const reliance = { signatures: row.acceptanceCount, events: row.eventCount, acknowledgements: row.privacyAcknowledgementCount };
+    // The counts in words, «1 semnătură» (§NNN): the site's rule for counted nouns.
+    const reliance = reliancePhrases(
+      (key, values) => t(key, values),
+      { signatures: row.acceptanceCount, events: row.eventCount, acknowledgements: row.privacyAcknowledgementCount },
+      locale,
+    );
     if (!row.isApproved) {
       return isReliedOn({ acceptances: row.acceptanceCount, events: row.eventCount, privacyAcknowledgements: row.privacyAcknowledgementCount })
         ? t("legal.deleteBlockedReferenced", reliance)
@@ -85,6 +91,8 @@ export default async function DeleteLegalVersionsPage({ params, searchParams }: 
         return null;
       case "draft":
         return null;
+      case "deleted":
+        return t("errors.LEGAL_ALREADY_DELETED");
       case "referenced":
         return t("legal.removeBlockedReferenced", reliance);
       case "inForce":

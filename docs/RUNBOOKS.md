@@ -733,6 +733,25 @@ own copy, sent by email at signing. With `DECLARATIONS_ARCHIVE_TO` set to the cl
 (`SETUP.md` §35), the club's copy arrives there at signing too, one email per declaration,
 subject "Declarație semnată: <name> — <event>" — the archive builds itself (`DECISIONS.md` §99).
 
+### Deleting a version (2026-09-29, `DECISIONS.md` §NNN)
+
+`/admin/legal` → the version's row → «Șterge» (Administrator and above). What it does depends on
+what stands on the version, and the screen says which before anything is pressed:
+
+- **Nothing depends on it** — «Șterge definitiv»: the row and both texts go, the number is retired
+  for good (§203). Type the phrase shown (`GDPR 2`) and a reason.
+- **A signature, an event or a registration depends on it** — two steps: step 1 states what happens
+  («1 semnătură, 0 evenimente și 0 înscrieri rămân valabile…») and asks a reason (at most 200
+  characters); step 2 asks the version's number, typed by hand, then «Șterg versiunea N». The
+  version leaves the list and moves into the closed fold «Versiuni șterse» under its text's card;
+  it can never be put in force again. Its text is **kept**: the signatures still point at it, and
+  the registration's page, the race desk and the signed PDF still show it. Nothing is restored from
+  the fold — the same words again are a new version, approved like any other.
+- **The version in force** is refused either way: approve the next version first.
+
+Every deletion leaves an audit row (`legal_document.deleted` for the first kind,
+`legal_document_version.deleted` for the second) naming who, when and why.
+
 ### Sample versions, and why the first approved one is not version 1
 
 Every environment except production is seeded with a clearly marked **sample** version of all
