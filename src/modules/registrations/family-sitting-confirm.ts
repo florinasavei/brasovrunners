@@ -15,6 +15,7 @@ import { readAddressCap } from "./address-cap";
 import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS } from "./domain/family";
 import { FAMILY_PASS_MINUTES } from "./domain/family-signing";
 import { waitlistRefusalOf } from "./domain/waitlist";
+import { withoutRetiredSex } from "./domain/sex";
 import { adultOnTheFamilyForm } from "./fields";
 import { deleteFamilyEntry, personOfEntry, registeredOnAddress } from "./family-entries";
 import { familyRegistrationOpen } from "./family-gate";
@@ -230,8 +231,9 @@ export async function confirmFamilySitting<T extends Record<string, unknown>>(
         const created = await submitRegistration(
           sp,
           event,
-          // The address is the sitting's participant's, never one kept or posted (§389).
-          { ...entry.fields, email: participant.deliveryEmail, fitnessAcknowledged: input.fitnessAcknowledged },
+          // The address is the sitting's participant's, never one kept or posted (§389). A kept
+          // «Prefer să nu spun» is dropped, never the person refused (§NNN, `withoutRetiredSex`).
+          { ...withoutRetiredSex(entry.fields), email: participant.deliveryEmail, fitnessAcknowledged: input.fitnessAcknowledged },
           now,
           "REAL",
           { source: "PUBLIC", createdByStaffUserId: null, anotherPerson: { participantId: participant.id } },

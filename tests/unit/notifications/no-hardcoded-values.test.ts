@@ -208,6 +208,8 @@ describe("§369 the club's name leaves the platform only through the constant", 
           "Network.page.report.heading",
           "Registration.clubMemberDeclared",
           "Registration.disclosure.race",
+          // The same fold's title for an event without a T-shirt (§NNN).
+          "Registration.disclosure.raceNoShirt",
           "Team.lead",
           // «Întrebări frecvente» (§525): the page's lead and its description.
           "Faq.lead",
@@ -219,6 +221,7 @@ describe("§369 the club's name leaves the platform only through the constant", 
     const calls: Record<string, number> = {
       clubMemberDeclared: 2,
       "disclosure.race": 1,
+      "disclosure.raceNoShirt": 1,
       "registrations.clubMemberLabel": 1,
       "pages.intro": 1,
       "page.report.heading": 1,
@@ -242,6 +245,7 @@ describe("§369 the club's name leaves the platform only through the constant", 
     ] as const) {
       const t = createTranslator({ locale, messages, namespace: "Registration" });
       expect(t("disclosure.race", { club: CLUB_NAME })).toContain(CLUB_NAME);
+      expect(t("disclosure.raceNoShirt", { club: CLUB_NAME })).toContain(CLUB_NAME);
     }
   });
 

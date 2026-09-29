@@ -34,6 +34,7 @@ import { instagramProfileUrl } from "@/modules/registrations/social-links";
 import { suggestFreeBibNumbers } from "@/modules/registrations/bibs";
 import { journeyOf } from "@/modules/registrations/domain/journey";
 import { countryName } from "@/modules/registrations/names";
+import SexAndShirtLine from "@/modules/registrations/ui/SexAndShirtLine";
 import { raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { canResendReminder, deriveAllowedResendMessageType } from "@/modules/registrations/domain/resend";
 import { canTransition, isTerminalStatus } from "@/modules/registrations/domain/state-machine";
@@ -283,6 +284,9 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           })}
         </Typography>
       )}
+      {/* The sex in words (§NNN), «—» for none — a paper entry left blank, or the retired «Prefer
+          să nu spun» of a row stored before it went; and the T-shirt, only for an event that gives one. */}
+      <SexAndShirtLine sex={registration.sex} tshirtSize={registration.tshirtSize} kitShirt={registration.eventKitShirt} />
       {/* The socials the person offered (§106): links to follow back — and whether the public
           list prints them beside the name, the runner's own tick (§500). */}
       {(registration.stravaUrl || registration.instagramHandle) && (

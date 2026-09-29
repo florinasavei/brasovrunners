@@ -19,6 +19,7 @@ import { startingDeadline } from "@/modules/notifications/domain/deadline-rebase
 import { enqueueEmail, type OutboxRow } from "@/modules/notifications/outbox";
 import { bibNumberInUse, isEventSpareNumber, pickBibNumber } from "./bibs";
 import { handsSpareAtConfirm } from "./domain/spare-bibs";
+import { shirtSizeKept } from "./domain/kit";
 import { asksForIdDocument, asksForMinorSignature, describesListSocials } from "@/modules/legal-documents/domain/merge-fields";
 import { newCheckinCode } from "./checkin-code";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
@@ -1679,6 +1680,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     // Always a boolean, so a restart (which spreads these details) rewrites the old answer.
     listSocials,
     clubMemberDeclared: input.clubMemberDeclared,
+    // As posted; decided under the event's lock below (§NNN): kept only when the event gives a shirt.
     tshirtSize: input.tshirtSize,
     healthNotes,
     healthConsentVersion: healthNotes ? privacyNotice.version : null,
@@ -1748,6 +1750,13 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     */
     const locked = await repo.lockEventForCapacity(tx, event.id);
     if (!locked) throw new DomainError("NOT_FOUND", "no such event");
+    /*
+      The T-shirt (§NNN), off the locked row and never off the caller's: the size is kept only when
+      the event gives a shirt («Kit de participare»); for any other event a posted size — a form
+      rendered before the tick came off, a script — is ignored, never refused, and the row says NONE.
+      Every door passes here: the public form, the family forms, a staff entry, the desk's walk-in.
+    */
+    details.tshirtSize = shirtSizeKept(locked.kitShirt, input.tshirtSize);
     // Asked again under the lock (§533): the date held back by a save that committed after the
     // caller read the row. The save counts registrations under this same lock, so a submission and
     // the switch cannot both pass — one waits for the other and finds it.

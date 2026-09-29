@@ -6,8 +6,10 @@ import { eventTranslations, events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import {
   type RegistrationKind,
+  type RegistrationSex,
   type RegistrationSource,
   type RegistrationStatus,
+  type RegistrationTshirtSize,
   registrations,
 } from "@/db/schema/registrations";
 import { staffUsers } from "@/db/schema/staff-users";
@@ -512,6 +514,14 @@ export type RegistrationDetail = {
   /** Where the person lives (§510): the country's ISO code (never null, `RO` by default) and the city as typed. */
   country: string | null;
   city: string | null;
+  /**
+   * The sex as stored (§NNN): one of the two answers, or none — a staff entry left blank, or the
+   * retired `UNSPECIFIED` of a row stored before it went, which the page shows as «—» (`sexShown`).
+   */
+  sex: RegistrationSex | null;
+  /** The T-shirt size as stored, and whether the event gives one (§NNN): the page shows it only then. */
+  tshirtSize: RegistrationTshirtSize | null;
+  eventKitShirt: boolean;
   /** The registration's language, as on the list row: the declaration translation it signs (§330). */
   locale: Locale;
   participantEmail: string;
@@ -608,6 +618,9 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       guardianName: registrations.guardianName,
       country: registrations.country,
       city: registrations.city,
+      sex: registrations.sex,
+      tshirtSize: registrations.tshirtSize,
+      eventKitShirt: events.kitShirt,
       locale: registrations.locale,
       submittedAt: registrations.submittedAt,
       emailConfirmedAt: registrations.emailConfirmedAt,
@@ -741,6 +754,8 @@ export type WorkbookDetails = {
   country: string | null;
   city: string | null;
   tshirtSize: "NONE" | "XS" | "S" | "M" | "L" | "XL" | "XXL" | null;
+  /** Whether the event gives a T-shirt (§NNN): the sheet prints the size only then. */
+  eventKitShirt: boolean;
   eventStartsAt: Date;
   /** The event's own zone: race day is the day on the start line's clock (§321). */
   eventTimezone: string;
@@ -760,6 +775,7 @@ export async function listWorkbookDetails<T extends Record<string, unknown>>(
       country: registrations.country,
       city: registrations.city,
       tshirtSize: registrations.tshirtSize,
+      eventKitShirt: events.kitShirt,
       eventStartsAt: events.startsAt,
       eventTimezone: events.timezone,
     })
