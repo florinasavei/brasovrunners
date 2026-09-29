@@ -54,7 +54,7 @@ type Props = {
     withdrawn?: string;
     /** Which person a check-in or a list answer was about (§547): an id the page already lists, never a name. */
     person?: string;
-    /** The box a cancel without its reason named (§NNN): `kind`, `text` or `long`, under `person`'s cancel. */
+    /** The box a cancel without its reason named (§558): `kind`, `text` or `long`, under `person`'s cancel. */
     reason?: string;
   }>;
 };
@@ -146,7 +146,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
   const eventTitle = details?.locale === locale ? details.title : "";
   // Which person a check-in or list answer was about: the one the press named, else the link's own.
   const answeredFor = person ?? live?.registration.id;
-  // Why the person cancels (§NNN): the words once, and the box a refused press named, under that person.
+  // Why the person cancels (§558): the words once, and the box a refused press named, under that person.
   const reasonWords = live ? await cancelReasonWords() : null;
   const reasonProblem = cancelReasonProblemOf(reason);
 

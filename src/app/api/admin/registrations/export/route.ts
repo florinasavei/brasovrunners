@@ -211,7 +211,7 @@ export async function GET(request: Request): Promise<Response> {
       declarationVersion: declarations.get(row.id)?.version ?? null,
       declarationSignedAt: declarations.get(row.id)?.acceptedAt.toISOString() ?? "",
       family: familyColumn(family.get(row.id)),
-      // Why the participant cancelled (§NNN): blank for a staff cancellation and every live row.
+      // Why the participant cancelled (§558): blank for a staff cancellation and every live row.
       cancelReason: cancelReasonCell(row.cancelReasonKind, row.cancelReason),
     })),
   );

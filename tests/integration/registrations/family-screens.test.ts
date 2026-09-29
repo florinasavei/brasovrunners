@@ -256,7 +256,7 @@ describe("§547 «Renunț la înscrierea pentru <nume>» in the declarations wiz
       ["Ion Pop", "PENDING_DECLARATION"],
     ]);
     expect(rows[1].cancellationSource).toBe("PARTICIPANT");
-    // Why (§NNN): the wizard asks as every door does, and the row keeps the answer.
+    // Why (§558): the wizard asks as every door does, and the row keeps the answer.
     expect([rows[1].cancelReasonKind, rows[1].cancelReason]).toEqual(["INJURY_OR_ILLNESS", null]);
     // The place went back through the allocator: one more free place.
     expect(await readPublicAvailability(db, { id: event.id, capacity: 20 }, at(22))).toBe((before ?? 0) + 1);
@@ -391,7 +391,7 @@ describe("§547 «Gestionează înscrierea» per person, and safe", () => {
     expect(after.find((row) => row.id === ana.id)?.status).toBe("CONFIRMED");
     expect(await readPublicAvailability(db, { id: event.id, capacity: 20 }, at(28))).toBe((before ?? 0) + 1);
     expect(await auditOf(maria.id)).toContainEqual({ action: "registration.cancelled_by_participant", actor: null, metadata: { from: "CONFIRMED", via: "MANAGE_LINK", reasonKind: "OTHER" } });
-    // The answer and the words on the row (§NNN); the audit row keeps the answer alone, never the words.
+    // The answer and the words on the row (§558); the audit row keeps the answer alone, never the words.
     expect(after.find((row) => row.id === maria.id)).toMatchObject({ cancelReasonKind: "OTHER", cancelReason: "Nunta fratelui" });
     expect(JSON.stringify(await auditOf(maria.id))).not.toContain("Nunta");
 
@@ -400,7 +400,7 @@ describe("§547 «Gestionează înscrierea» per person, and safe", () => {
     expect(message.subject).toContain("Înscrierea pentru Maria Pop la Crosul familiei a fost anulată");
     expect(message.text).toContain("Pe această adresă rămân înscriși: Ana P. (confirmat), Ion P. (confirmat).");
     expect(message.text).not.toContain("Vecina");
-    // The participant's own copy says nothing of the reason — the club's copy quotes it (§NNN).
+    // The participant's own copy says nothing of the reason — the club's copy quotes it (§558).
     expect(message.text).not.toContain("Motivul anulării");
     const clubCopy = await render({ ...email, participantId: null, payloadJson: { ...(email.payloadJson as object), clubCopy: true } }, at(29));
     expect(clubCopy.text).toContain("Motivul anulării: Alt motiv — „Nunta fratelui”.");

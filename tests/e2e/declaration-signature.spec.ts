@@ -136,7 +136,7 @@ test.describe("BR-REQ-033-02 §314 the signature is the registered name", () => 
     */
     await page.goto(`/ro/inregistrari/gestionare/${await mintActionLink(registration, "MANAGE_REGISTRATION")}`);
     await hydrated(page);
-    // «Anulează înscrierea pentru <nume>», asking first (§547, over §384) — and why, before that (§NNN):
+    // «Anulează înscrierea pentru <nume>», asking first (§547, over §384) — and why, before that (§558):
     // without an answer the browser names the empty box and nothing is asked.
     const personCancel = page.getByRole("button", { name: /^Anulează înscrierea pentru / });
     await personCancel.click();
@@ -202,7 +202,7 @@ test.describe("BR-REQ-033-02 §314 the signature is the registered name", () => 
     */
     await page.goto(`/ro/inscrieri/ale-mele/${await mintProfileLink(registration.participantId)}`);
     await hydrated(page);
-    // The reason first (§NNN): a press without one is refused, naming the box, and spends nothing.
+    // The reason first (§558): a press without one is refused, naming the box, and spends nothing.
     await page.getByRole("button", { name: "Renunț la această înscriere" }).click();
     await expect(page).not.toHaveURL(/done=1/);
     const cancel = page.getByTestId("mine-cancel").first();

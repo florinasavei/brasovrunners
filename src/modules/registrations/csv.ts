@@ -91,7 +91,7 @@ export type RegistrationCsvRow = {
    */
   family?: string;
   /**
-   * Why the participant cancelled (§NNN): the answer, and after «Another reason» their own words
+   * Why the participant cancelled (§558): the answer, and after «Another reason» their own words
    * (`cancelReasonCell`). Empty for a staff cancellation and every row that is not cancelled.
    */
   cancelReason?: string;
@@ -129,7 +129,7 @@ const HEADER = [
   "Declaration signed",
   // Last (§543), for the same reason: the other people on the same address.
   "family",
-  // Last (§NNN), for the same reason: the participant's own reason for cancelling.
+  // Last (§558), for the same reason: the participant's own reason for cancelling.
   "Cancellation reason",
 ];
 

@@ -7,10 +7,10 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN — the participant's reason for cancelling: the form's three answers are the column's enum,
+ * §558 — the participant's reason for cancelling: the form's three answers are the column's enum,
  * in both languages on the page and the backoffice, and the export's last column says it.
  */
-describe("§NNN the cancellation reason", () => {
+describe("§558 the cancellation reason", () => {
   it("the form's three answers are the column's enum values, in order", () => {
     expect([...CANCEL_REASON_KINDS]).toEqual(registrationCancelReasonKind.enumValues);
   });

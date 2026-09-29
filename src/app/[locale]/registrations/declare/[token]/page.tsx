@@ -122,7 +122,7 @@ async function familyDoneHref(eventId: string, locale: "ro" | "en"): Promise<str
 
 type Props = {
   params: Promise<{ locale: string; token: string }>;
-  /** `reason`: the box a «Renunț» without its reason named (§NNN) — `kind`, `text` or `long`. */
+  /** `reason`: the box a «Renunț» without its reason named (§558) — `kind`, `text` or `long`. */
   searchParams: Promise<{ done?: string; invalid?: string; changed?: string; full?: string; reminder?: string; reason?: string }>;
 };
 
@@ -169,7 +169,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
   const t = await getTranslations("Registrations");
   // "Opens in a new tab", said once for every legal link, in the form's own catalogue.
   const formCopy = await getTranslations("Registration");
-  // The wizard's «Renunț» asks why, as every cancel does (§NNN): its words, and the box a refused press named.
+  // The wizard's «Renunț» asks why, as every cancel does (§558): its words, and the box a refused press named.
   const reasonWords = await cancelReasonWords();
   const reasonProblem = cancelReasonProblemOf(reason);
   // The version line the terms and the privacy notice carry (§323), over the text being signed (§499).
@@ -882,7 +882,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
               <input type="hidden" name="locale" value={locale} />
               <input type="hidden" name="token" value={token} />
               <input type="hidden" name="registrationId" value={registration.id} />
-              {/* Why the person withdraws (§NNN), asked as at every other door; a refused press names the box here. */}
+              {/* Why the person withdraws (§558), asked as at every other door; a refused press names the box here. */}
               <CancelReasonFields
                 {...reasonWords.fields}
                 problem={reasonProblem}

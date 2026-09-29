@@ -52,7 +52,7 @@ export const registrationCancellationSource = pgEnum("registration_cancellation_
 ]);
 
 /**
- * Why a participant cancelled their own registration (§NNN; the owner, 2026-09-29: «when people
+ * Why a participant cancelled their own registration (§558; the owner, 2026-09-29: «when people
  * cancel, they need to provide a reason»): one of three answers, asked at every self-cancellation
  * door, with a short text of their own only for `OTHER` (`cancel_reason`). Null on a staff
  * cancellation and on every row cancelled before the column.
@@ -448,7 +448,7 @@ export const registrations = pgTable(
     expiryReason: registrationExpiryReason("expiry_reason"),
     cancellationSource: registrationCancellationSource("cancellation_source"),
     /**
-     * The participant's own reason for cancelling (§NNN): the answer of three, and the words typed
+     * The participant's own reason for cancelling (§558): the answer of three, and the words typed
      * for «Alt motiv» (at most 200 characters, `CANCEL_REASON_MAX`) — null for the other two. Both
      * null on a staff cancellation. Deleted with the row by an erasure, like every other field of it.
      */

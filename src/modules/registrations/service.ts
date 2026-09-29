@@ -3109,7 +3109,7 @@ export async function unregister<T extends Record<string, unknown>>(
      */
     via?: ParticipantCancelDoor;
     /**
-     * The participant's own reason (§NNN), asked at every door above and required there: stored on
+     * The participant's own reason (§558), asked at every door above and required there: stored on
      * the row (the answer, and the words of «Alt motiv»), the answer alone in the audit row — never
      * the words, which are the person's own and may name them.
      */

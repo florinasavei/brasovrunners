@@ -5,7 +5,7 @@ import { emailSampleActionUrl, emailSampleFamilyConfirmed, emailSampleFor } from
 import { buildTemplateContent, renderBilingual } from "@/modules/notifications/templates";
 
 /**
- * §NNN — «Nu mai pot ajunge» / "I can't make it any more" on every email about a live registration,
+ * §558 — «Nu mai pot ajunge» / "I can't make it any more" on every email about a live registration,
  * and on no other (BR-REQ-080-01, BR-REQ-036-01; the owner, 2026-09-29: «în fiecare mail trebuie să
  * fie clar butonul de „Nu mai pot ajunge”»). The table names every message type, with the decision's
  * reason, so a type added later fails here until somebody decides.
@@ -34,7 +34,7 @@ const EVERY_MESSAGE: Record<EmailMessageType, { button: boolean; why: string }> 
   ORGANIZER_MESSAGE: { button: true, why: "the organizer's message" },
   GROUP_RUN_DECLARATION_SIGNED: { button: false, why: "a declaration that registers nobody" },
   GROUP_RUN_DECLARATION_ARCHIVE: { button: false, why: "the club's archive" },
-  // On the family sitting's shape only (§NNN): the sample is the kept form's, which carries none — see below.
+  // On the family sitting's shape only (§558): the sample is the kept form's, which carries none — see below.
   REGISTER_ANOTHER_PERSON: { button: true, why: "the family sitting's message: «Toate înscrierile mele» lists the address's people" },
   NEWSLETTER_CONFIRM: { button: false, why: "the newsletter" },
   NEWSLETTER: { button: false, why: "the newsletter" },
@@ -50,7 +50,7 @@ function rendered(messageType: EmailMessageType, extra: Record<string, unknown> 
   return renderBilingual(messageType, "ro", data, emailSampleActionUrl("ro"));
 }
 
-describe("§NNN the «Nu mai pot ajunge» button, message type by message type", () => {
+describe("§558 the «Nu mai pot ajunge» button, message type by message type", () => {
   it("the table names every message type, and the platform's list is exactly its «yes» rows", () => {
     expect([...TYPES].sort()).toEqual([...emailMessageType.enumValues].sort());
     expect([...CANNOT_COME_MESSAGES].sort()).toEqual(TYPES.filter((type) => EVERY_MESSAGE[type].button).sort());
@@ -128,7 +128,7 @@ describe("§NNN the «Nu mai pot ajunge» button, message type by message type",
   });
 });
 
-describe("§NNN never in the club's copy (§320)", () => {
+describe("§558 never in the club's copy (§320)", () => {
   it.each([...CANNOT_COME_MESSAGES])("%s", (messageType) => {
     const { html, text } = rendered(messageType, { clubCopy: true });
     expect(html).not.toContain('data-email-part="cannot-come"');
@@ -138,7 +138,7 @@ describe("§NNN never in the club's copy (§320)", () => {
   });
 });
 
-describe("§NNN when a send carries it", () => {
+describe("§558 when a send carries it", () => {
   const live = { participantId: "p1", status: "CONFIRMED" as const };
   const ahead = { startsAt: new Date("2026-10-11T07:00:00Z"), eventStatus: "SCHEDULED" };
   const now = new Date("2026-10-01T07:00:00Z");

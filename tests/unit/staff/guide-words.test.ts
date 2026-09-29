@@ -54,7 +54,7 @@ const sourceLabels = (() => {
     // The repository is CRLF on Windows and LF on CI: `\r?` before the line's end.
     ...[...staffLabels.matchAll(/^\s+[A-Z_]+: "([^"]+)",\r?$/gm)].map((match) => match[1]),
     ...[...templates.matchAll(/^\s+action: "([^"]+)",\r?$/gm)].map((match) => match[1]),
-    // «Nu mai pot ajunge», the button of every email about a live registration (§NNN).
+    // «Nu mai pot ajunge», the button of every email about a live registration (§558).
     ...[...templates.matchAll(/^\s+cannotCome: \{\s+label: "([^"]+)"/gm)].map((match) => match[1]),
   ];
 })();

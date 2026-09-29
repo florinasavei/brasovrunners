@@ -11,7 +11,7 @@ import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Nu mai pot ajunge» in every email about a live registration (BR-REQ-036-01, BR-REQ-036-02,
+ * §558 — «Nu mai pot ajunge» in every email about a live registration (BR-REQ-036-01, BR-REQ-036-02,
  * BR-REQ-080-01; the owner, 2026-09-29): the renderer mints the message's own manage link — or reuses
  * the one it already carries — and the button's link, opened, is the manage page that asks first; the
  * press cancels the registration and queues the §547 cancellation email. Never on a club copy, never
@@ -145,7 +145,7 @@ async function manageTokens(registrationId: string) {
     .where(and(eq(emailActionTokens.registrationId, registrationId), eq(emailActionTokens.purpose, "MANAGE_REGISTRATION")));
 }
 
-describe("§NNN «Nu mai pot ajunge» from the email to the cancelled registration", () => {
+describe("§558 «Nu mai pot ajunge» from the email to the cancelled registration", () => {
   it("mints the organizer's message its own manage link; opened, the page asks first; the press cancels and queues the cancellation email", async () => {
     const ana = await registration("CONFIRMED");
     const message = await renderOutboxMessage(
@@ -175,7 +175,7 @@ describe("§NNN «Nu mai pot ajunge» from the email to the cancelled registrati
     expect(html).toContain("Anulează înscrierea pentru Ana Pop");
     expect((await db.select().from(registrations).where(eq(registrations.id, ana.id)))[0].status).toBe("CONFIRMED");
 
-    // The page asks why, before the cancel (§NNN).
+    // The page asks why, before the cancel (§558).
     expect(html).toContain('name="cancelReasonKind"');
 
     // The confirm press (the POST): cancelled through the allocator, the §547 email queued.

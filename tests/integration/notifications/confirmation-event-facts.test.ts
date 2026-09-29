@@ -273,7 +273,7 @@ describe("§392 the event's facts in the confirmed email, the reminder and the d
     expect(ro).not.toContain("Programul:");
     expect(ro).toContain("Unde: Parcul Tractorul");
     expect(en).toContain("Route: Trail · Hard, step 2 of 3 · 21.1 km · 900 m climb · Night");
-    // The reminder's own lines stay: the number and the code; "can't come" is the button now (§NNN).
+    // The reminder's own lines stay: the number and the code; "can't come" is the button now (§558).
     expect(ro).toMatch(/Numărul tău de concurs: \d+\./);
     expect(ro).toContain("Nu mai pot ajunge: ");
     expect(ro).not.toContain("Nu poți veni?");

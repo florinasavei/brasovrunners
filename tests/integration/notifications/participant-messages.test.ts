@@ -303,7 +303,7 @@ describe("§364 the organizer's message to an event's participants", () => {
     expect(english).toContain("A message from the organizers of The autumn cross");
     expect(english).toContain("Tractorul Park");
     expect(english).not.toContain("Startul se mută");
-    // The button is the event's page, "my registrations" by address — and, since §NNN, «Nu mai pot
+    // The button is the event's page, "my registrations" by address — and, since §558, «Nu mai pot
     // ajunge» under it: each registrant's own manage link, the one token the message mints.
     expect(ana.html).toContain(`/ro/evenimente/crosul-${event.id.slice(0, 8)}`);
     expect(ana.text).toContain("/ro/inscrieri/ale-mele");

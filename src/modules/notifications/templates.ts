@@ -61,7 +61,7 @@ export type TemplateContent = {
    */
   secondaryAction?: { label: string; url: string };
   /**
-   * «Nu mai pot ajunge» (§NNN): the registration's own cancel, a full-width outlined button with the
+   * «Nu mai pot ajunge» (§558): the registration's own cancel, a full-width outlined button with the
    * cancel glyph under the action — or the one button when the message has no other — and one plain
    * sentence under it. Only on a message about a live registration (`CANNOT_COME_MESSAGES`), never on
    * a club copy (§320).
@@ -219,7 +219,7 @@ const EARLIER_STATE_WORDS: Record<EmailLocale, Record<FamilyEarlierState, string
   en: { confirmed: "confirmed", declaration: "signing the declaration", waitlist: "on the waiting list", email: "waiting for the address to be confirmed" },
 };
 
-/** The participant's reason for cancelling (§NNN), as the cancel form offered it, for the club's copy. */
+/** The participant's reason for cancelling (§558), as the cancel form offered it, for the club's copy. */
 const CANCEL_REASON_WORDS: Record<EmailLocale, Record<RegistrationCancelReasonKind, string>> = {
   ro: { INJURY_OR_ILLNESS: "Accidentare sau boală", OTHER_PLANS: "Alt program", OTHER: "Alt motiv" },
   en: { INJURY_OR_ILLNESS: "Injury or illness", OTHER_PLANS: "Other plans", OTHER: "Another reason" },
@@ -353,7 +353,7 @@ export function renderContent(
         ]
       : []),
     /*
-      «Nu mai pot ajunge» (§NNN; the owner: «în fiecare mail trebuie să fie clar butonul»): the whole
+      «Nu mai pot ajunge» (§558; the owner: «în fiecare mail trebuie să fie clar butonul»): the whole
       card's width, so a thumb finds it on a phone and the eye on a desktop, outlined in the club's
       blue under the message's own button, the manage page's cancel glyph before the words (§521) —
       a hosted PNG, decorative (`alt=""`), so a client that blocks pictures shows the words alone —
@@ -729,7 +729,7 @@ export type TemplateData = {
   linkLifetime?: string;
   manageUrl?: string;
   /**
-   * «Nu mai pot ajunge» (§NNN): the registration's manage page at its own person's cancel
+   * «Nu mai pot ajunge» (§558): the registration's manage page at its own person's cancel
    * (`…/manage/<token>#cancel`), from the manage token this send minted or already carries. Set by
    * the renderer only on a message of `CANNOT_COME_MESSAGES` about a live registration at its own
    * address; drawn only on those, and never on a club copy (§320).
@@ -888,7 +888,7 @@ export type TemplateData = {
   cancelledFromWaitlist?: boolean;
   cancelledOthers?: ReadonlyArray<{ name: string; state: FamilyEarlierState }>;
   /**
-   * Why the participant cancelled (§NNN), from the row: the answer, and the words of «Alt motiv».
+   * Why the participant cancelled (§558), from the row: the answer, and the words of «Alt motiv».
    * Quoted on the club's copy of the cancellation only — the person knows why.
    */
   cancelReasonKind?: RegistrationCancelReasonKind;
@@ -1127,7 +1127,7 @@ const T = {
       ],
       action: "Vezi înscrierea",
       image: (d: TemplateData) => qrImage("ro", d),
-      // «Nu mai pot ajunge» is the button under the action now (§NNN), no longer a line of this list.
+      // «Nu mai pot ajunge» is the button under the action now (§558), no longer a line of this list.
       links: (d: TemplateData) => [
         // The list switch, worded by the row (§143): the answer given on the form, reversible here.
         ...(d.listConsentUrl
@@ -1154,12 +1154,12 @@ const T = {
           ? [`La masă arată codul QR de mai jos sau spune codul ${d.checkinCode}.`]
           : []),
         /*
-          «Nu poți veni? Anulează înscrierea cu linkul de mai jos» is gone (§NNN): the button says it, with
+          «Nu poți veni? Anulează înscrierea cu linkul de mai jos» is gone (§558): the button says it, with
           its own sentence under it, and a reminder sent after the start or for an event cancelled
           meanwhile carries no button — a body line would point at a link that is not there.
         */
       ],
-      // No action of its own (§NNN): «Nu mai pot ajunge» is the reminder's one button, its cancel.
+      // No action of its own (§558): «Nu mai pot ajunge» is the reminder's one button, its cancel.
       image: (d: TemplateData) => qrImage("ro", d),
       links: (d: TemplateData) => [
         ...(d.eventUrl ? [{ label: "Pagina evenimentului", url: d.eventUrl }] : []),
@@ -1619,7 +1619,7 @@ const T = {
     },
     /** The family link's second button (§468): the kept form deleted, nobody registered. */
     familyDecline: "Nu înscriu această persoană",
-    /** «Nu mai pot ajunge» (§NNN; the owner's words), and its one sentence under the button. */
+    /** «Nu mai pot ajunge» (§558; the owner's words), and its one sentence under the button. */
     cannotCome: {
       label: "Nu mai pot ajunge",
       note: "Locul se eliberează pentru altcineva.",
@@ -1637,7 +1637,7 @@ const T = {
       fromWaitlist ? `${name || "Persoana"} nu mai este pe lista de așteptare.` : "Locul a fost eliberat.",
     cancelledOthers: (others: ReadonlyArray<{ name: string; state: FamilyEarlierState }>) =>
       `Pe această adresă rămân înscriși: ${others.map((other) => `${other.name} (${EARLIER_STATE_WORDS.ro[other.state]})`).join(", ")}.`,
-    /** The club's copy of a cancellation (§NNN): the reason the participant gave, their words quoted. */
+    /** The club's copy of a cancellation (§558): the reason the participant gave, their words quoted. */
     cancelReason: (kind: RegistrationCancelReasonKind, text: string | undefined) =>
       `Motivul anulării: ${CANCEL_REASON_WORDS.ro[kind]}${kind === "OTHER" && text ? ` — „${text}”` : ""}.`,
     footer: "Răspunde la acest email pentru întrebări.",
@@ -1738,9 +1738,9 @@ const T = {
         ...(d.bibNumber ? [`Your race number: **${d.bibNumber}**.`] : []),
         ...(d.eventChecklist ? [`What to bring: ${d.eventChecklist}`] : []),
         ...(d.checkinCode ? [`At the desk show the QR code below or say the code ${d.checkinCode}.`] : []),
-        // "Can't come? Cancel with the link below" is gone (§NNN): the button and its sentence say it.
+        // "Can't come? Cancel with the link below" is gone (§558): the button and its sentence say it.
       ],
-      // No action of its own (§NNN): "I can't make it any more" is the reminder's one button, its cancel.
+      // No action of its own (§558): "I can't make it any more" is the reminder's one button, its cancel.
       image: (d: TemplateData) => qrImage("en", d),
       links: (d: TemplateData) => [
         ...(d.eventUrl ? [{ label: "The event's page", url: d.eventUrl }] : []),
@@ -1867,7 +1867,7 @@ const T = {
       ],
       action: "See your registration",
       image: (d: TemplateData) => qrImage("en", d),
-      // "I can't make it any more" is the button under the action now (§NNN), no longer a line of this list.
+      // "I can't make it any more" is the button under the action now (§558), no longer a line of this list.
       links: (d: TemplateData) => [
         // The list switch, worded by the row (§143): the answer given on the form, reversible here.
         ...(d.listConsentUrl
@@ -2347,7 +2347,7 @@ export function buildTemplateContent(
     data = {
       ...data,
       manageUrl: undefined,
-      // «Nu mai pot ajunge» is the participant's own cancel (§NNN): never in a club mailbox.
+      // «Nu mai pot ajunge» is the participant's own cancel (§558): never in a club mailbox.
       cannotComeUrl: undefined,
       listConsentUrl: undefined,
       declarationPdfUrl: undefined,
@@ -2629,7 +2629,7 @@ export function buildTemplateContent(
       ...(messageType === "REGISTRATION_CANCELLED" && data.cancelledOthers && data.cancelledOthers.length > 0
         ? [copy.cancelledOthers(data.cancelledOthers)]
         : []),
-      // The participant's reason (§NNN), on the club's copy only: the club asked for it, the person knows it.
+      // The participant's reason (§558), on the club's copy only: the club asked for it, the person knows it.
       ...(messageType === "REGISTRATION_CANCELLED" && clubCopy && data.cancelReasonKind
         ? [copy.cancelReason(data.cancelReasonKind, data.cancelReasonText)]
         : []),
@@ -2700,14 +2700,14 @@ export function buildTemplateContent(
         ? { label: copy.familyDecline, url: data.familyDeclineUrl }
         : undefined,
     /*
-      «Nu mai pot ajunge» (§NNN): only on a message about a live registration, and only with the link
+      «Nu mai pot ajunge» (§558): only on a message about a live registration, and only with the link
       the renderer minted for this send — never on a club copy, whose data lost it above (§320).
     */
     cannotCome:
       !clubCopy &&
       CANNOT_COME_MESSAGES.has(messageType) &&
       data.cannotComeUrl &&
-      // The family link only in the family sitting's shape (§NNN): the kept form's «Nu înscriu această
+      // The family link only in the family sitting's shape (§558): the kept form's «Nu înscriu această
       // persoană» sits beside it, and a second "no" there would cancel the person already registered.
       (messageType !== "REGISTER_ANOTHER_PERSON" || familySittingShape)
         ? { label: copy.cannotCome.label, url: data.cannotComeUrl, note: copy.cannotCome.note }

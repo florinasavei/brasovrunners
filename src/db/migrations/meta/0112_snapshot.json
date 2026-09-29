@@ -1,6 +1,6 @@
 {
   "id": "36ee591e-d212-480c-a810-a841b8d92a4b",
-  "prevId": "7990dcd4-6108-497a-ba0c-b02202d265e1",
+  "prevId": "e7f9c3a4-b003-41bf-859e-47a0554a6424",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -236,6 +236,37 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "text_hash": {
+          "name": "text_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "retention_hold": {
+          "name": "retention_hold",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "retention_hold_reason": {
+          "name": "retention_hold_reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "retention_hold_at": {
+          "name": "retention_hold_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "retention_hold_by_staff_user_id": {
+          "name": "retention_hold_by_staff_user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {
@@ -300,6 +331,19 @@
           ],
           "onDelete": "set null",
           "onUpdate": "no action"
+        },
+        "declaration_acceptances_retention_hold_by_staff_user_id_staff_users_id_fk": {
+          "name": "declaration_acceptances_retention_hold_by_staff_user_id_staff_users_id_fk",
+          "tableFrom": "declaration_acceptances",
+          "tableTo": "staff_users",
+          "columnsFrom": [
+            "retention_hold_by_staff_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -313,6 +357,10 @@
         "declaration_acceptances_hash_is_sha256_hex": {
           "name": "declaration_acceptances_hash_is_sha256_hex",
           "value": "\"declaration_acceptances\".\"content_sha256\" ~ '^[0-9a-f]{64}$'"
+        },
+        "declaration_acceptances_text_hash_is_sha256_hex": {
+          "name": "declaration_acceptances_text_hash_is_sha256_hex",
+          "value": "\"declaration_acceptances\".\"text_hash\" IS NULL OR \"declaration_acceptances\".\"text_hash\" ~ '^[0-9a-f]{64}$'"
         },
         "declaration_acceptances_paper_is_attested": {
           "name": "declaration_acceptances_paper_is_attested",
@@ -1407,6 +1455,13 @@
         },
         "kit_shirt": {
           "name": "kit_shirt",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "ask_health_note": {
+          "name": "ask_health_note",
           "type": "boolean",
           "primaryKey": false,
           "notNull": true,
@@ -3009,6 +3064,37 @@
           "type": "text",
           "primaryKey": false,
           "notNull": false
+        },
+        "text_hash": {
+          "name": "text_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "retention_hold": {
+          "name": "retention_hold",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "retention_hold_reason": {
+          "name": "retention_hold_reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "retention_hold_at": {
+          "name": "retention_hold_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "retention_hold_by_staff_user_id": {
+          "name": "retention_hold_by_staff_user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {
@@ -3103,6 +3189,19 @@
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
+        },
+        "group_run_declarations_retention_hold_by_staff_user_id_staff_users_id_fk": {
+          "name": "group_run_declarations_retention_hold_by_staff_user_id_staff_users_id_fk",
+          "tableFrom": "group_run_declarations",
+          "tableTo": "staff_users",
+          "columnsFrom": [
+            "retention_hold_by_staff_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -3120,6 +3219,10 @@
         "group_run_declarations_view_token_is_sha256_hex": {
           "name": "group_run_declarations_view_token_is_sha256_hex",
           "value": "\"group_run_declarations\".\"view_token_hash\" IS NULL OR \"group_run_declarations\".\"view_token_hash\" ~ '^[0-9a-f]{64}$'"
+        },
+        "group_run_declarations_text_hash_is_sha256_hex": {
+          "name": "group_run_declarations_text_hash_is_sha256_hex",
+          "value": "\"group_run_declarations\".\"text_hash\" IS NULL OR \"group_run_declarations\".\"text_hash\" ~ '^[0-9a-f]{64}$'"
         }
       },
       "isRLSEnabled": false

@@ -1,7 +1,7 @@
 import type { RegistrationCancelReasonKind } from "@/db/schema/registrations";
 
 /**
- * Why a participant cancels their own registration (§NNN; the owner, 2026-09-29: «when people
+ * Why a participant cancels their own registration (§558; the owner, 2026-09-29: «when people
  * cancel, they need to provide a reason»). Asked at every self-cancellation door — the manage page,
  * «Înscrierile mele» and the family wizard's «Renunț» — as one of three answers, with a short text of
  * the person's own for «Alt motiv» only. Required: a press without one is refused naming the box, and
@@ -59,7 +59,7 @@ const CELL_WORDS: Record<RegistrationCancelReasonKind, string> = {
 };
 
 /**
- * The export's «Cancellation reason» cell (§NNN), in the export's English like its other words
+ * The export's «Cancellation reason» cell (§558), in the export's English like its other words
  * (`sexCell`): the answer, and after «Another reason» the person's own words. Empty for a staff
  * cancellation, a row cancelled before the column, and every row that is not cancelled.
  */

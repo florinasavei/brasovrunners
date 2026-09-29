@@ -2,7 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { CANCEL_REASON_KINDS, type CancelReasonProblem } from "@/modules/registrations/domain/cancel-reason";
 
 /**
- * The words of the cancel's reason (§NNN), worded on the server in the page's language for the
+ * The words of the cancel's reason (§558), worded on the server in the page's language for the
  * `CancelReasonFields` island — plain strings only, since a Server Component hands a client one no
  * function or element (§370). One place for the three doors: the manage page, «Înscrierile mele» and
  * the family wizard.

@@ -12,7 +12,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN — a reason at every self-cancellation door (the owner, 2026-09-29: «when people cancel, they
+ * §558 — a reason at every self-cancellation door (the owner, 2026-09-29: «when people cancel, they
  * need to provide a reason»): the manage page's cancel, «Înscrierile mele» and the family wizard's
  * «Renunț» each refuse a press with no answer, with «Alt motiv» and no words, or with more than 200
  * characters — back on the same page, the box named, nothing spent and nobody cancelled — and a press
@@ -154,7 +154,7 @@ async function statusOf() {
 
 const TOO_LONG = "a".repeat(201);
 
-describe("§NNN the reason for a participant's own cancellation", () => {
+describe("§558 the reason for a participant's own cancellation", () => {
   it("reads the three answers, the words only for «Alt motiv», and names the box it refuses", () => {
     expect(parseCancelReason(formOf({}))).toEqual({ ok: false, problem: "kind" });
     expect(parseCancelReason(formOf({ cancelReasonKind: "BORED" }))).toEqual({ ok: false, problem: "kind" });

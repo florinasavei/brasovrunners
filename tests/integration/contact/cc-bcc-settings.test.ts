@@ -15,7 +15,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-070-04, `DECISIONS.md` §NNN (amending §442 and §457) — the owner, 2026-09-29: «trebuie
+ * BR-REQ-070-04, `DECISIONS.md` §559 (amending §442 and §457) — the owner, 2026-09-29: «trebuie
  * să am o setare de CC și BCC și pentru mailurile trimise de pe pagina de contact».
  *
  * «Pagini» → «Contact» → «Cine primește mesajele de contact» holds «Către», «CC» and «BCC». This

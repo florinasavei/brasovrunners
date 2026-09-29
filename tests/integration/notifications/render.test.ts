@@ -106,7 +106,7 @@ describe("BR-REQ-080-01 outbox renderer", () => {
     expect(message.subject.length).toBeGreaterThan(0);
     expect(message.html).toMatch(/https?:\/\/.+\/inregistrari\/declaratie\//);
 
-    // The declaration's own link — beside it, since §NNN, the manage link behind «Nu mai pot ajunge».
+    // The declaration's own link — beside it, since §558, the manage link behind «Nu mai pot ajunge».
     const tokens = await db.select().from(emailActionTokens).where(eq(emailActionTokens.registrationId, registrationId));
     expect(tokens.map((row) => row.purpose).sort()).toEqual(["COMPLETE_DECLARATION", "MANAGE_REGISTRATION"]);
     const token = tokens.find((row) => row.purpose === "COMPLETE_DECLARATION")!;

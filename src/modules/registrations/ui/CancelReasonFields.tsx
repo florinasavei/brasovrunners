@@ -26,7 +26,7 @@ type Props = {
 };
 
 /**
- * Why the person cancels (§NNN; the owner, 2026-09-29: «when people cancel, they need to provide a
+ * Why the person cancels (§558; the owner, 2026-09-29: «when people cancel, they need to provide a
  * reason»): a native select of three answers and, for «Alt motiv», a short text of their own — the
  * boxes of the cancel form they sit in, at every self-cancellation door (the manage page,
  * «Înscrierile mele», the family wizard's «Renunț»).

@@ -278,7 +278,7 @@ test.describe("BR-REQ-070-04 who receives the contact messages", () => {
     // Its own save opens it (§336), and the closed summary would now say the new address.
     await expect(contacts).toHaveAttribute("open", "");
     await expect(contacts.locator(":scope > summary")).toContainText("Acum ajung la: club@example.com");
-    // Since §NNN the summary names the copies too, and one sentence says what CC and BCC do.
+    // Since §559 the summary names the copies too, and one sentence says what CC and BCC do.
     await expect(contacts.locator(":scope > summary")).toContainText("CC: 1 · BCC: 1");
     await expect(main.getByTestId("contact-copies-help")).toHaveText("CC: adresele apar în email; BCC: primesc o copie fără să apară.");
     await expect(main.getByText(/Acum ajung la: club@example\.com\. CC: ioana@example\.org\. BCC: arhiva@example\.org/)).toBeVisible();
@@ -310,7 +310,7 @@ test.describe("BR-REQ-070-04 who receives the contact messages", () => {
     await main.getByRole("button", { name: "Salvează destinatarii" }).click();
     await confirmDialog(page);
     await expect(main.getByText(/Nu le primește nimeni|din CONTACT_FORM_TO de pe server/)).toBeVisible();
-    // No copies left: the closed line says so in words, never two zeros (§NNN).
+    // No copies left: the closed line says so in words, never two zeros (§559).
     await expect(contacts.locator(":scope > summary")).toContainText("· fără copii");
     await expect(main.getByLabel("BCC", { exact: true })).toHaveValue("");
   });
@@ -326,7 +326,7 @@ test.describe("BR-REQ-070-04 who receives the contact messages", () => {
     await page.goto("/ro/admin/pages/contact");
     await hydrated(page);
     const contacts = page.locator("#main").getByTestId("contact-recipients");
-    // «Către», exact: «CC» and «BCC» sit beside it since §NNN, and their labels hold no «Către».
+    // «Către», exact: «CC» and «BCC» sit beside it since §559, and their labels hold no «Către».
     const to = "Către";
 
     // With JavaScript on: the fold opened to press stays open, the refusal inside it.
@@ -455,7 +455,7 @@ test.describe("BR-REQ-033-02 criterion 12 the club's hidden copy of the emails t
     await expect(panel.locator(":scope > summary")).toContainText(/Adrese care primesc copii: \d+/);
     await openFold(main.getByTestId("email-plan"));
     await openFold(panel);
-    // The box sits in its own nested fold since §NNN, closed with the other two until opened.
+    // The box sits in its own nested fold since §559, closed with the other two until opened.
     const participants = panel.getByTestId("club-notices-participants");
     await expect(panel.getByTestId("club-notices-declarations")).not.toHaveAttribute("open", "");
     await expect(participants.locator(":scope > summary")).toContainText("Copia clubului la emailurile către participanți");

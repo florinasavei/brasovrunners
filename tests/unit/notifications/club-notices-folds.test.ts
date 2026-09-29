@@ -5,7 +5,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * `DECISIONS.md` §NNN — «Copiile clubului» on «Setări» → «Emailuri» is three nested folds under
+ * `DECISIONS.md` §559 — «Copiile clubului» on «Setări» → «Emailuri» is three nested folds under
  * one form and one Save (the owner, 2026-09-29: «și aici trebuie să fie mai multe acordeoane
  * nested»): the signed declarations, the confirmation notice, the club's copy of the emails to
  * participants — each closed with a glyph and a summary line, open for the card's save, a
@@ -15,7 +15,7 @@ const panel = readFileSync(path.join(process.cwd(), "src/modules/notifications/u
 const folds = (catalogue: typeof ro) => catalogue.Admin.emails.clubNotices.folds;
 const placeholders = (text: string) => [...text.matchAll(/\{(\w+)\}/g)].map((match) => match[1]).sort();
 
-describe("§NNN the club's copies as three nested folds", () => {
+describe("§559 the club's copies as three nested folds", () => {
   it("draws three level-3 folds, each with a glyph, a summary and its own test id, in the page's order", () => {
     const ids = ["club-notices-declarations", "club-notices-confirmations", "club-notices-participants"];
     const at = ids.map((id) => panel.indexOf(`data-testid="${id}"`));

@@ -3,7 +3,7 @@ import type { RegistrationStatus } from "@/db/schema/registrations";
 import { ACTIVE_REGISTRATION_STATUSES } from "@/db/schema/registrations";
 
 /**
- * «Nu mai pot ajunge» / "I can't make it any more" in every email about a live registration (§NNN,
+ * «Nu mai pot ajunge» / "I can't make it any more" in every email about a live registration (§558,
  * amending §81 and §419; the owner, 2026-09-29: «în fiecare mail trebuie să fie clar butonul de
  * „Nu mai pot ajunge”»).
  *
@@ -39,7 +39,7 @@ export const CANNOT_COME_MESSAGES: ReadonlySet<EmailMessageType> = new Set<Email
 ]);
 
 /**
- * Whether the button goes on this send (§NNN): a message of the list, to the registration's own
+ * Whether the button goes on this send (§558): a message of the list, to the registration's own
  * address, while the registration is active and its event is still ahead and not cancelled or over.
  * After the start the manage page refuses a participant's cancellation (AGENTS.md §10.5 rule 9), so
  * a button then would promise what the page cannot do.

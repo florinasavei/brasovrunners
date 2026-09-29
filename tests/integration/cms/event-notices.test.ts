@@ -273,7 +273,7 @@ describe("§331 the participants hear about a change when the organizer asks", (
     expect(message.text).toContain("Locul de întâlnire este acum: Poiana Brașov, la telecabină.");
     expect(message.text).not.toContain("Parcul Tractorul");
     expect(message.text).toContain("Vezi pagina evenimentului");
-    // English first for the English registration. Since §NNN each rendered notice mints one token, the
+    // English first for the English registration. Since §558 each rendered notice mints one token, the
     // registrant's own manage link behind «Nu mai pot ajunge», and nothing else.
     const english = await renderOutboxMessage(told.get(byName("bogdan").id)!, db, NOW);
     expect(english.subject.startsWith("Updated details for Autumn race")).toBe(true);
@@ -301,7 +301,7 @@ describe("§331 the participants hear about a change when the organizer asks", (
 
     await save(event.id, { fields: { locationName: "Poiana Brașov, la telecabină" }, notice: { notify: true } });
 
-    // The runner's own message: withdraw from "my registrations" by address — and, since §NNN, at once
+    // The runner's own message: withdraw from "my registrations" by address — and, since §558, at once
     // with «Nu mai pot ajunge», the one token the notice mints.
     const [ana] = (await queued("EVENT_UPDATE_NOTICE")).filter((row) => row.registrationId === rows.find((r) => r.registeredName === "ana")!.id);
     const message = await renderOutboxMessage(ana, db, NOW);

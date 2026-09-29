@@ -245,7 +245,7 @@ export async function withdrawFamilyPersonAction(form: FormData): Promise<void> 
   const path = getPathname({ locale, href: { pathname: "/registrations/declare/[token]", params: { token } } });
   const now = new Date();
 
-  // The reason, required (§NNN): refused before anything changes, the box named on the same step.
+  // The reason, required (§558): refused before anything changes, the box named on the same step.
   const reason = parseCancelReason(form);
   if (!reason.ok) redirect(`${path}?reason=${reason.problem}#cancel-reason`);
 

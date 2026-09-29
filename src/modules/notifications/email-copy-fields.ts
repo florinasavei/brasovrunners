@@ -112,7 +112,7 @@ export function emailSampleData(locale: EmailLocale): TemplateData {
     eventFacts: emailSampleEventFacts(locale),
     eventFactsOther: emailSampleEventFacts(OTHER[locale]),
     manageUrl: `${base}/${locale}/EXAMPLE`,
-    // «Nu mai pot ajunge» (§NNN): drawn by the template on the messages about a live registration only.
+    // «Nu mai pot ajunge» (§558): drawn by the template on the messages about a live registration only.
     cannotComeUrl: `${base}/${locale}/EXAMPLE#cancel`,
     // "Înscrierile mele" by address, which the update notice points at (§419) and the organizer's message too.
     myRegistrationsUrl: `${base}/${locale}/EXAMPLE-mine`,

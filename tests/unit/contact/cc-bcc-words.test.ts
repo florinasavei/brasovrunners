@@ -6,7 +6,7 @@ import ro from "../../../messages/ro.json";
 import { addressListRefusal, CONTACT_RECIPIENTS_MAX, parseAddressList } from "@/modules/contact/domain/recipients";
 
 /**
- * BR-REQ-070-04, `DECISIONS.md` §NNN — «CC» and «BCC» on «Pagini» → «Contact», in the words the
+ * BR-REQ-070-04, `DECISIONS.md` §559 — «CC» and «BCC» on «Pagini» → «Contact», in the words the
  * owner used, with one sentence saying what each does. The parser and the refusal are §457's,
  * shared with «Setări» → «Emailuri»: a box is read the same way on both pages.
  */
@@ -27,7 +27,7 @@ describe("BR-REQ-070-04 the contact page's CC and BCC boxes", () => {
       // The closed card's line names the copies in force, not only the "to".
       expect(contacts(catalogue).aside).toContain("{cc}");
       expect(contacts(catalogue).aside).toContain("{bcc}");
-      // No copies at all is said in words, never «CC: 0 · BCC: 0» (§NNN).
+      // No copies at all is said in words, never «CC: 0 · BCC: 0» (§559).
       expect(contacts(catalogue).asideNoCopies).toContain("{to}");
       expect(contacts(catalogue).asideNoCopies).not.toMatch(/{cc}|{bcc}/);
     }

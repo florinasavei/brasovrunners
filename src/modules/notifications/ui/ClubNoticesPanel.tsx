@@ -35,7 +35,7 @@ type Props = {
  * Save, with the list in force printed above it so "I saved it and nothing changed" cannot
  * happen. The address list format is §164's — commas or semicolons — and it is imported from
  * there rather than re-implemented, because two parsers for one typed line is two behaviours.
- * Since §NNN the one form holds three nested folds — the signed declarations, the confirmation
+ * Since §559 the one form holds three nested folds — the signed declarations, the confirmation
  * notice, the copy of the participants' emails — each with its list in force and its boxes, and
  * the one Save sits under them.
  *
@@ -72,7 +72,7 @@ export default async function ClubNoticesPanel({ locale, notices, declarations, 
         ? t("emails.clubNotices.folds.declarations.asideNoCopies", { to: declarations.to })
         : t("emails.clubNotices.folds.declarations.aside", { to: declarations.to, cc: declarations.cc.length, bcc: declarations.bcc.length });
   /*
-    The three folds inside the card (§NNN; the owner, 2026-09-29, on the one long form: «și aici
+    The three folds inside the card (§559; the owner, 2026-09-29, on the one long form: «și aici
     trebuie să fie mai multe acordeoane nested»): one per thing the club sends itself, each closed
     with its summary line (§336). They open for the card's own save — the one Save stores all three
     lists, so each shows its result. A refusal is not a page parameter here: the action returns it

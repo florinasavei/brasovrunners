@@ -27,7 +27,7 @@ export async function cancelFromMyRegistrationsAction(form: FormData): Promise<v
   const registrationId = String(form.get("registrationId") ?? "");
   const path = pagePath(locale, token);
 
-  // The reason, required (§NNN): refused before the link is spent, the box named under that person.
+  // The reason, required (§558): refused before the link is spent, the box named under that person.
   const reason = parseCancelReason(form);
   if (!reason.ok) redirect(`${path}?reason=${reason.problem}&person=${encodeURIComponent(registrationId)}#cancel-reason`);
 

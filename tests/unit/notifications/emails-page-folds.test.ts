@@ -235,7 +235,7 @@ describe("§336 the page hands every message to the card, and the panels fold", 
     expect(page).not.toContain("<ContactRecipientsPanel");
     expect(page).not.toContain("<ShownAddressPanel");
     expect(page).not.toContain("<DeadlinesPanel");
-    // The closed line names where the messages go, and «fără copii» when there is none (§NNN).
+    // The closed line names where the messages go, and «fără copii» when there is none (§559).
     expect(panel).toMatch(/aside=\{[\s\S]*?t\("emails\.contacts\.asideNoCopies"[\s\S]*?t\("emails\.contacts\.aside",/);
   });
 

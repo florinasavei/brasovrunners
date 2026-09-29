@@ -421,7 +421,7 @@ async function renderRow(
     data.cancelledFromWaitlist = (row.payloadJson as { previousStatus?: unknown } | null)?.previousStatus === "WAITLISTED";
     const others = await registeredOnAddressWithStates(db, registration.eventId, registration.participantId, [registration.id]);
     if (others.length > 0) data.cancelledOthers = others;
-    // The participant's own reason (§NNN), read from the row; the template quotes it on the club's copy only.
+    // The participant's own reason (§558), read from the row; the template quotes it on the club's copy only.
     if (registration.cancelReasonKind) {
       data.cancelReasonKind = registration.cancelReasonKind;
       if (registration.cancelReasonKind === "OTHER" && registration.cancelReason) data.cancelReasonText = registration.cancelReason;
@@ -989,7 +989,7 @@ async function renderRow(
   }
 
   /*
-    «Nu mai pot ajunge» (§NNN, amending §81 and §419; the owner, 2026-09-29: «în fiecare mail trebuie
+    «Nu mai pot ajunge» (§558, amending §81 and §419; the owner, 2026-09-29: «în fiecare mail trebuie
     să fie clar butonul de „Nu mai pot ajunge”»): every message about a live registration, at its own
     address, carries a cancel that asks first, then cancels that person (§547). Never on a club copy
     (§320), never after the start or on an event that will not run, never on a registration that is

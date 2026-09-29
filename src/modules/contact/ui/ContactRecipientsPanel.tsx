@@ -46,7 +46,7 @@ export default async function ContactRecipientsPanel({ locale, recipients, resol
   /*
     Closed by default (§336; the owner, 2026-09-23: "'Cine primește mesajele de contact' should
     be closed by default"), with where the messages go right now in the summary — the one thing
-    anybody opens this panel to check. Since §NNN the summary counts the CC and BCC in force too
+    anybody opens this panel to check. Since §559 the summary counts the CC and BCC in force too
     (the owner, 2026-09-29: «trebuie să am o setare de CC și BCC și pentru mailurile trimise de pe
     pagina de contact» — the setting existed since §164 and nobody could tell from the card).
   */
@@ -57,7 +57,7 @@ export default async function ContactRecipientsPanel({ locale, recipients, resol
       intro={t("emails.contacts.intro")}
       aside={
         // Counted, not named: the summary is one line at 360 px (§336); the lists are in the
-        // sentence inside. No copies at all reads «fără copii», never two zeros (§NNN).
+        // sentence inside. No copies at all reads «fără copii», never two zeros (§559).
         resolved.cc.length + resolved.bcc.length === 0
           ? t("emails.contacts.asideNoCopies", { to: formatAddressList(resolved.to) || t("emails.contacts.asideNobody") })
           : t("emails.contacts.aside", {
@@ -110,7 +110,7 @@ export default async function ContactRecipientsPanel({ locale, recipients, resol
           {/*
             The three boxes grow with what they hold (§457's shape): one address per line is read
             as well as commas (`parseAddressList`), and every address typed stays in view. What CC
-            and BCC mean is one sentence above them, and what happens to a repeat one below (§NNN).
+            and BCC mean is one sentence above them, and what happens to a repeat one below (§559).
           */}
           <Typography variant="body2" color="text.secondary" data-testid="contact-copies-help">
             {t("emails.contacts.copiesHelp")}

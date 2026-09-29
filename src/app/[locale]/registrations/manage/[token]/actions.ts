@@ -27,7 +27,7 @@ export async function cancelRegistrationAction(form: FormData): Promise<void> {
   const person = personOf(form);
 
   /*
-    The reason, required (§NNN): refused before anything is read or spent, back on the same page with
+    The reason, required (§558): refused before anything is read or spent, back on the same page with
     the box named under the person's own cancel — the link still works for the next press.
   */
   const reason = parseCancelReason(form);

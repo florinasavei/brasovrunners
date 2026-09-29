@@ -212,7 +212,7 @@ describe("BR-REQ-036-04 my registrations", () => {
 
     const result = await consumeAndCancelFromMyRegistrations(db, secret, mine, NOW, { kind: "OTHER_PLANS", text: null });
     expect(result.ok && result.registration.status).toBe("CANCELLED");
-    // Why (§NNN): «Înscrierile mele» asks as every door does, and the row keeps the answer.
+    // Why (§558): «Înscrierile mele» asks as every door does, and the row keeps the answer.
     expect(result.ok && [result.registration.cancelReasonKind, result.registration.cancelReason]).toEqual(["OTHER_PLANS", null]);
     const [theirRow] = await db.select().from(registrations).where(eq(registrations.id, theirs));
     expect(theirRow.status).toBe("CONFIRMED");

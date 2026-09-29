@@ -53,7 +53,7 @@ type Props = {
     withdrawn?: string;
     field?: string;
     withdrawFailed?: string;
-    /** The box a cancel without its reason named (§NNN), under `person`'s cancel — an id the page lists, never a name. */
+    /** The box a cancel without its reason named (§558), under `person`'s cancel — an id the page lists, never a name. */
     reason?: string;
     person?: string;
   }>;
@@ -76,7 +76,7 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
 
   const { done, invalid, started, here, hereFailed, list, listFailed, withdrawn, field, withdrawFailed, reason, person } = await searchParams;
   const t = await getTranslations("Registrations");
-  // Why the person cancels (§NNN): the words once, and the box a refused press named, under that person.
+  // Why the person cancels (§558): the words once, and the box a refused press named, under that person.
   const reasonWords = await cancelReasonWords();
   const reasonProblem = cancelReasonProblemOf(reason);
   // The words beside every QR (§547): whose it is, their number, the code.
@@ -338,7 +338,7 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
                       </Button>
                     </form>
                   ) : null)}
-                {/* The cancel with its reason (§NNN), on a line of its own under the race-day buttons. */}
+                {/* The cancel with its reason (§558), on a line of its own under the race-day buttons. */}
                 <Box component="form" action={cancelFromMyRegistrationsAction} sx={{ flexBasis: "100%" }} data-testid="mine-cancel">
                   <input type="hidden" name="locale" value={locale} />
                   <input type="hidden" name="token" value={token} />

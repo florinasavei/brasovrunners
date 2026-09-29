@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.31-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.33-2026-09-27 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V2.31-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.33-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1223,7 +1223,7 @@ Core invariants:
 6. Pending email and Waitlisted do not occupy capacity, but eligible Waitlisted entries have allocation priority over later registrations;
 7. no capacity-changing transaction may let a later registration bypass that queue;
 8. cancellation is idempotent;
-9. self-cancellation allowed before event start, with the participant's reason — one of three answers, and a short text for «Alt motiv» — at every door (`DECISIONS.md` §NNN);
+9. self-cancellation allowed before event start, with the participant's reason — one of three answers, and a short text for «Alt motiv» — at every door (`DECISIONS.md` §558);
 10. email failure does not roll back committed state;
 11. locale/legal/declaration acceptance are historical facts;
 12. Admin corrections are explicit/audited;
@@ -1885,7 +1885,7 @@ registrations
 - expired_at null
 - expiry_reason EMAIL_CONFIRMATION_LAPSED|DECLARATION_HOLD_LAPSED|WAITLIST_OFFER_LAPSED|EVENT_STARTED null
 - cancellation_source PARTICIPANT|ADMIN null
-- cancel_reason_kind INJURY_OR_ILLNESS|OTHER_PLANS|OTHER null   -- a participant's own cancellation, required at every self-cancellation door (DECISIONS.md §NNN); null on a staff cancellation
+- cancel_reason_kind INJURY_OR_ILLNESS|OTHER_PLANS|OTHER null   -- a participant's own cancellation, required at every self-cancellation door (DECISIONS.md §558); null on a staff cancellation
 - cancel_reason text null            -- the words of «Alt motiv» (OTHER only), at most 200 characters; the audit row carries the kind alone
 - created_at
 - updated_at
@@ -2768,7 +2768,7 @@ audited with the count, never who. `EVENT_CANCELLED` carries no token; `EVENT_UP
 carries one, minted at send time behind «Nu mai pot ajunge» (below).
 
 **«Nu mai pot ajunge» / "I can't make it any more" is on every message about a live
-registration** (`DECISIONS.md` §NNN, `notifications/domain/cannot-come.ts`): the address to
+registration** (`DECISIONS.md` §558, `notifications/domain/cannot-come.ts`): the address to
 confirm, the declaration to sign, the waiting list and its offer, the confirmation, the number,
 the reminder, the organizer's update notice and message, the manage link, the signed
 declaration and the family sitting's message. A full-width button under the action (the

@@ -101,7 +101,7 @@ export type RegistrationListRow = {
   holdExpiresAt: Date | null;
   declarationAcceptedAt: Date | null;
   cancelledAt: Date | null;
-  /** The participant's own reason for cancelling (§NNN): the export's «Cancellation reason». Null on a staff cancellation. */
+  /** The participant's own reason for cancelling (§558): the export's «Cancellation reason». Null on a staff cancellation. */
   cancelReasonKind: RegistrationCancelReasonKind | null;
   cancelReason: string | null;
   expiredAt: Date | null;
@@ -547,7 +547,7 @@ export type RegistrationDetail = {
   confirmedAt: Date | null;
   cancelledAt: Date | null;
   cancellationSource: string | null;
-  /** Why the participant cancelled (§NNN): the timeline's line under «Anulată». Null on a staff cancellation. */
+  /** Why the participant cancelled (§558): the timeline's line under «Anulată». Null on a staff cancellation. */
   cancelReasonKind: RegistrationCancelReasonKind | null;
   cancelReason: string | null;
   expiredAt: Date | null;

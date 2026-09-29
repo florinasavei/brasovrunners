@@ -67,7 +67,7 @@ test.describe("the event's facts in the confirmed email's preview", () => {
 });
 
 /**
- * §NNN (the owner, 2026-09-29: «în fiecare mail trebuie să fie clar butonul de „Nu mai pot
+ * §558 (the owner, 2026-09-29: «în fiecare mail trebuie să fie clar butonul de „Nu mai pot
  * ajunge”») — the preview of every message about a live registration shows «Nu mai pot ajunge»
  * under its button, in both halves, full width and a thumb's height, with its one sentence; a
  * message after the fact shows none. It reads nothing but the page, so both projects run it.
