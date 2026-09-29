@@ -4126,11 +4126,11 @@
         },
         "updatedAt": "Set on {when}.",
         "to": "To",
-        "toHelp": "Addresses separated by commas or on separate lines. Empty: CONTACT_FORM_TO on the server is used.",
+        "toHelp": "Addresses separated by commas, spaces or on separate lines. Empty: CONTACT_FORM_TO on the server is used.",
         "cc": "CC",
-        "ccHelp": "Addresses separated by commas or on separate lines. Empty: no CC.",
+        "ccHelp": "Addresses separated by commas, spaces or on separate lines. Empty: no CC.",
         "bcc": "BCC",
-        "bccHelp": "Addresses separated by commas or on separate lines. Empty: no BCC.",
+        "bccHelp": "Addresses separated by commas, spaces or on separate lines. Empty: no BCC.",
         "copiesHelp": "CC: the addresses appear in the email; BCC: they get a copy without appearing.",
         "repeats": "An address typed twice, or already under “To”, is kept once.",
         "save": "Save the recipients",
@@ -4855,7 +4855,7 @@
               "steps": [
                 "«Pages» → «Contact» → «Who receives the contact messages».",
                 "Under «To» write who receives the message. Under «CC», who gets a visible copy. Under «BCC», who gets a copy without appearing.",
-                "Addresses separated by commas or on separate lines. Press «Save the recipients» and confirm; the saved list shows on the card."
+                "Addresses separated by commas, spaces or on separate lines. Press «Save the recipients» and confirm; the saved list shows on the card."
               ]
             },
             {

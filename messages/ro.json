@@ -4126,11 +4126,11 @@
         },
         "updatedAt": "Setat {when}.",
         "to": "Către",
-        "toHelp": "Adrese despărțite prin virgulă sau pe rânduri. Gol: se folosește CONTACT_FORM_TO de pe server.",
+        "toHelp": "Adrese despărțite prin virgulă, spațiu sau pe rânduri. Gol: se folosește CONTACT_FORM_TO de pe server.",
         "cc": "CC",
-        "ccHelp": "Adrese despărțite prin virgulă sau pe rânduri. Gol: fără CC.",
+        "ccHelp": "Adrese despărțite prin virgulă, spațiu sau pe rânduri. Gol: fără CC.",
         "bcc": "BCC",
-        "bccHelp": "Adrese despărțite prin virgulă sau pe rânduri. Gol: fără BCC.",
+        "bccHelp": "Adrese despărțite prin virgulă, spațiu sau pe rânduri. Gol: fără BCC.",
         "copiesHelp": "CC: adresele apar în email; BCC: primesc o copie fără să apară.",
         "repeats": "O adresă scrisă de două ori, sau deja la „Către”, se păstrează o singură dată.",
         "save": "Salvează destinatarii",
@@ -4855,7 +4855,7 @@
               "steps": [
                 "«Pagini» → «Contact» → «Cine primește mesajele de contact».",
                 "La «Către» scrie cine primește mesajul. La «CC», cine primește o copie la vedere. La «BCC», cine primește o copie fără să apară.",
-                "Adrese despărțite prin virgulă sau pe rânduri. Apasă «Salvează destinatarii» și confirmă; lista salvată se vede pe card."
+                "Adrese despărțite prin virgulă, spațiu sau pe rânduri. Apasă «Salvează destinatarii» și confirmă; lista salvată se vede pe card."
               ]
             },
             {

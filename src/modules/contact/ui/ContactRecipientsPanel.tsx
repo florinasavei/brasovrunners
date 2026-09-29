@@ -46,7 +46,7 @@ export default async function ContactRecipientsPanel({ locale, recipients, resol
   /*
     Closed by default (§336; the owner, 2026-09-23: "'Cine primește mesajele de contact' should
     be closed by default"), with where the messages go right now in the summary — the one thing
-    anybody opens this panel to check. Since §NNN the summary names the CC and BCC in force too
+    anybody opens this panel to check. Since §NNN the summary counts the CC and BCC in force too
     (the owner, 2026-09-29: «trebuie să am o setare de CC și BCC și pentru mailurile trimise de pe
     pagina de contact» — the setting existed since §164 and nobody could tell from the card).
   */
@@ -57,8 +57,9 @@ export default async function ContactRecipientsPanel({ locale, recipients, resol
       intro={t("emails.contacts.intro")}
       aside={t("emails.contacts.aside", {
         to: formatAddressList(resolved.to) || t("emails.contacts.asideNobody"),
-        cc: formatAddressList(resolved.cc) || "—",
-        bcc: formatAddressList(resolved.bcc) || "—",
+        // Counted, not named: the summary is one line at 360 px (§336); the lists are in the sentence inside.
+        cc: resolved.cc.length,
+        bcc: resolved.bcc.length,
       })}
       collapsible
       openWhen={openWhen}

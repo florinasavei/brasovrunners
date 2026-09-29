@@ -267,7 +267,7 @@ test.describe("BR-REQ-070-04 who receives the contact messages", () => {
     await expect(contacts).toHaveAttribute("open", "");
     await expect(contacts.locator(":scope > summary")).toContainText("Acum ajung la: club@example.com");
     // Since §NNN the summary names the copies too, and one sentence says what CC and BCC do.
-    await expect(contacts.locator(":scope > summary")).toContainText("CC: ioana@example.org · BCC: arhiva@example.org");
+    await expect(contacts.locator(":scope > summary")).toContainText("CC: 1 · BCC: 1");
     await expect(main.getByTestId("contact-copies-help")).toHaveText("CC: adresele apar în email; BCC: primesc o copie fără să apară.");
     await expect(main.getByText(/Acum ajung la: club@example\.com\. CC: ioana@example\.org\. BCC: arhiva@example\.org/)).toBeVisible();
     // What was saved is what the boxes show on the way back — the whole point of a setting.
