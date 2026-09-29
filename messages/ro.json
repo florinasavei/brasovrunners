@@ -556,6 +556,12 @@
       "testKind": "Test",
       "enteredByStaff": "Adăugată de echipă",
       "livesIn": "Locuiește în: {place}",
+      "sexLine": "Sex: {sex}",
+      "sexOptions": {
+        "MALE": "Masculin",
+        "FEMALE": "Feminin"
+      },
+      "shirtLine": "Tricou: {size}",
       "new": "Adaugă o înscriere",
       "newTitle": "Adaugă o înscriere",
       "newExplanation": "Pentru cineva care a cerut personal. Intră ca orice înscriere; persoana primește emailul de confirmare și semnează singură declarația.",
@@ -1181,6 +1187,8 @@
       "registrationOpensAt": "Înscrierile se deschid",
       "registrationOpensSoon": "Înscrierile se deschid în curând (fără dată)",
       "registrationOpensSoonHelp": "Bifat, pagina spune „Înscrierile se deschid în curând” și formularul rămâne închis. Debifează când deschizi: cei de la „Anunță-mă” primesc emailul.",
+      "kitShirt": "Tricou",
+      "kitShirtHelp": "Dacă e bifat, formularul cere mărimea tricoului.",
       "registrationClosesAt": "Înscrierile se închid",
       "registrationWindowHelp": "Lasă deschiderea goală și înscrierile pornesc la publicarea evenimentului; lasă închiderea goală și se opresc la startul evenimentului.",
       "declarationDocument": "Declarația pe care o semnează participantul",
@@ -1572,6 +1580,9 @@
         "reminder": {
           "title": "Reminderul dinaintea startului"
         },
+        "kit": {
+          "title": "Kit de participare"
+        },
         "confirmation": {
           "title": "Fereastra de confirmare",
           "dates": "Pentru {date}: cerută din {opens}, termen {due}.",
@@ -1715,6 +1726,10 @@
             "sentence": "Cerută cu {opens} zile înainte, termen cu {due} zile înainte",
             "atStart": "Cerută cu {opens} zile înainte, termen la start",
             "off": "Fără fereastră — semnătura se cere la înscriere"
+          },
+          "kit": {
+            "shirtYes": "Tricou: da",
+            "shirtNo": "Tricou: nu"
           },
           "bibs": {
             "from": "De la {number}",
@@ -5731,12 +5746,9 @@
     "sex": "Sex",
     "sexOptions": {
       "FEMALE": "Feminin",
-      "MALE": "Masculin",
-      "UNSPECIFIED": "Prefer să nu spun"
+      "MALE": "Masculin"
     },
     "sexHelp": "Pentru clasamentele pe categorii.",
-    "sexChoose": "Alege…",
-    "sexMissing": "Alege sexul — poți alege „Prefer să nu spun”",
     "nationality": "Cetățenie",
     "country": "Țara de reședință",
     "city": "Oraș",
@@ -5860,6 +5872,7 @@
     },
     "disclosure": {
       "race": "Membru {club}, club și tricou — opțional",
+      "raceNoShirt": "Membru {club} și club — opțional",
       "health": "Informații medicale — opțional",
       "socials": "Rețele sociale — opțional",
       "guardian": "Înscriu un minor — părinte sau tutore legal"

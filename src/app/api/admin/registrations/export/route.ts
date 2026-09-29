@@ -4,15 +4,13 @@ import { type RegistrationStatus, registrationStatus } from "@/db/schema/registr
 import { buildRegistrationsCsv } from "@/modules/registrations/csv";
 import { familyColumn, familyOf } from "@/modules/registrations/family-marker";
 import { recordAuditEvent } from "@/modules/audit/repository";
-import { buildRegistrationsWorkbook, type RegistrationSheetRow } from "@/modules/registrations/workbook";
+import { buildRegistrationsWorkbook, workbookExtras } from "@/modules/registrations/workbook";
 import {
   listEventsWithRegistrations,
   listLatestDeclarationAcceptances,
   listRegistrationsForAdmin,
   listWorkbookDetails,
-  type WorkbookDetails,
 } from "@/modules/registrations/admin-repository";
-import { ageOnRaceDay } from "@/modules/registrations/domain/age";
 import { defaultEventFilter } from "@/modules/registrations/domain/default-event-filter";
 import { identityDocumentsOf } from "@/modules/registrations/domain/identity-documents";
 import { canReadRegistrations } from "@/modules/staff-identity/domain/roles";
@@ -21,19 +19,6 @@ import { isDomainError } from "@/shared/errors/domain-error";
 
 function isRegistrationStatus(value: string | null): value is RegistrationStatus {
   return !!value && (registrationStatus.enumValues as readonly string[]).includes(value);
-}
-
-/** The spreadsheet's own columns for one row (§322), blank when the row has none. */
-function workbookExtras(details: WorkbookDetails | undefined): Pick<RegistrationSheetRow, "sex" | "ageOnRaceDay" | "nationality" | "country" | "city" | "tshirtSize"> {
-  if (!details) return {};
-  return {
-    sex: details.sex,
-    ageOnRaceDay: ageOnRaceDay(details.birthDate, details.eventStartsAt, details.eventTimezone),
-    nationality: details.nationality,
-    country: details.country,
-    city: details.city,
-    tshirtSize: details.tshirtSize,
-  };
 }
 
 /**

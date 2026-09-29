@@ -63,7 +63,7 @@ const submission = (firstName: string, at: Date = NOW) => ({
   firstName,
   lastName: "Pop",
   birthDate: "1985-03-02",
-  sex: "UNSPECIFIED",
+  sex: "FEMALE",
   phone: "+40711111111",
   emergencyContactName: "Ion Vecinul",
   emergencyContactPhone: "+40722222222",

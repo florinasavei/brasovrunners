@@ -11,6 +11,7 @@ import { findParticipantById } from "@/modules/participants/repository";
 import { DomainError } from "@/shared/errors/domain-error";
 import { readAddressCap } from "./address-cap";
 import { ANOTHER_LINK_INVALID } from "./domain/family";
+import { withoutRetiredSex } from "./domain/sex";
 import { familyPlaceSlot } from "./family-place-slot";
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { birthDateText, deleteFamilyEntry, findFamilyEntryByToken, personOfEntry, registeredOnAddress } from "./family-entries";
@@ -140,8 +141,8 @@ export async function confirmFamilyEntry<T extends Record<string, unknown>>(
       // The address is the token's participant's, never one kept or posted (§389). An entry kept
       // before the country was asked (§510) has none, and the public schema now requires it: it
       // lives in Romania, as the column's default reads every older row — never a refusal of a
-      // parent who did everything right.
-      { country: "RO", ...entry.fields, email: participant.deliveryEmail, fitnessAcknowledged: input.fitnessAcknowledged },
+      // parent who did everything right. A kept «Prefer să nu spun» is dropped the same way (§NNN).
+      { country: "RO", ...withoutRetiredSex(entry.fields), email: participant.deliveryEmail, fitnessAcknowledged: input.fitnessAcknowledged },
       now,
       "REAL",
       { source: "PUBLIC", createdByStaffUserId: null, anotherPerson: { participantId: participant.id } },

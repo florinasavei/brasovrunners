@@ -28,6 +28,7 @@ import {
   bibDesignSummary,
   bibsSummary,
   confirmationSummary,
+  kitSummary,
   registrationSummary,
   registrationWindowSummary,
   summaryDate,
@@ -347,6 +348,24 @@ export default async function RegistrationBox({
                         <option value="0">{t("editor.reminder.none")}</option>
                       </RecallField>
                       <BoxNote>{t("editor.reminder.help", { lead: clubReminder })}</BoxNote>
+                    </Stack>
+                  </Panel>
+
+                  {/*
+                    8.3c — «Kit de participare» (§NNN; the owner, 2026-09-29: «o subsecțiune cu kit de
+                    participare, și doar dacă e bifat tricoul să avem alegerea mărimii în formular»):
+                    what the runners are handed. For now one tick, the T-shirt; the form asks the
+                    size only while it is on. Inside "Pe site", so only a type that takes
+                    registrations shows it (§111). The marker says the form carried the box, so an
+                    unticked one reads as "no shirt", not as "not edited".
+                  */}
+                  <Panel glyph="kit" collapsible level={3} id="box-kit" title={t("editor.boxes.kit.title")} aside={kitSummary(words, event?.kitShirt ?? false)}>
+                    <Stack spacing={1}>
+                      <input type="hidden" name="event.kitShirt.present" value="1" />
+                      <CheckboxField name="event.kitShirt" defaultChecked={event?.kitShirt ?? false}>
+                        {t("editor.kitShirt")}
+                      </CheckboxField>
+                      <BoxNote>{t("editor.kitShirtHelp")}</BoxNote>
                     </Stack>
                   </Panel>
 

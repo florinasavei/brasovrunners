@@ -182,3 +182,42 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
     await expect(page.locator("#box-kind #box-cost")).toHaveCount(1);
   });
 });
+
+/*
+  §NNN — «Kit de participare» in card 6 «Participanți și înscrieri»: a fold of its own, closed, its
+  line saying «Tricou: nu» until the box is ticked, and only for a type that takes registrations
+  with registration on the site — a group run takes none (§111).
+*/
+test.describe("§NNN the race kit card", () => {
+  test("hidden on a group run, shown closed with «Tricou: nu» for a race registering on the site", async ({ page }) => {
+    await signIn(page, "Dev Administrator");
+    await page.goto("/ro/admin/events/new");
+    await hydrated(page);
+    const kit = page.locator("#box-kit");
+
+    // A new event is a group run: no registration here, and no kit card to see.
+    await openEditorBox(page, "Participare și înscrieri");
+    await expect(kit).toBeHidden();
+
+    await page.getByRole("combobox", { name: /Tip eveniment/ }).click();
+    await page.getByRole("option", { name: "Concurs" }).click();
+    await page.getByRole("combobox", { name: "Modul de înscriere" }).click();
+    await page.getByRole("option", { name: "Înscrieri pe site" }).click();
+
+    await expect(kit).toBeVisible();
+    await expect(kit).not.toHaveAttribute("open", "");
+    await expect(kit.locator(":scope > summary")).toContainText("Kit de participare");
+    await expect(kit.locator(":scope > summary")).toContainText("Tricou: nu");
+    // A glyph before the heading, like every fold (§521). By its element: a production build drops
+    // MUI's `data-testid` on icons (the unit test `kit-card.test.ts` names the glyph).
+    await expect(kit.locator(":scope > summary svg").first()).toBeVisible();
+
+    const box = await openEditorBox(page, "Kit de participare");
+    const shirt = box.locator('[name="event.kitShirt"]');
+    await expect(shirt).not.toBeChecked();
+    await expect(box).toContainText("Dacă e bifat, formularul cere mărimea tricoului.");
+    await expect(box.locator('input[type="hidden"][name="event.kitShirt.present"]')).toHaveValue("1");
+    await shirt.check();
+    await expect(shirt).toBeChecked();
+  });
+});

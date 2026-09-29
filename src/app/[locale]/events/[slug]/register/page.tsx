@@ -65,6 +65,7 @@ import Hint from "@/shared/ui/Hint";
 import PhoneField from "@/modules/registrations/ui/PhoneField";
 import NationalityField from "@/modules/registrations/ui/NationalityField";
 import SexField from "@/modules/registrations/ui/SexField";
+import { SHIRT_SIZES } from "@/modules/registrations/domain/kit";
 import RegistrationSteps from "@/modules/registrations/ui/RegistrationSteps";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { activeBotCheckSiteKey } from "@/modules/registrations/bot-check";
@@ -423,6 +424,9 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   const whenLabel = formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long", withTime: true });
   const whenInSentence = formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long", withTime: true, position: "inline" });
   const hasRules = !isRichTextEmpty(readRichText(event.rulesJson));
+  // «Kit de participare» → «Tricou» (§NNN): the size is asked only when the event gives a shirt. A
+  // copy saved before the column existed has none, and asks nothing.
+  const askShirt = event.kitShirt === true;
   /*
     What is being paid for, and where (§343), the same short phrase the event page's facts say
     (`EventFacts`) — never a raw URL, only the host a runner recognises ("Linkuri și fișiere",
@@ -712,8 +716,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                     {rejected.map((name) => (
                       <li key={name}>
                         <MuiLink href={`#${fieldId(name)}`}>
-                          {/* «Sex» says what to do, and that "prefer not to say" is an answer (§510). */}
-                          {name === "sex" ? t("sexMissing") : t(`fieldNames.${name}`)}
+                          {t(`fieldNames.${name}`)}
                         </MuiLink>
                         {/* The rule, where the browser lands (§321): a birth date refused for age
                             is not a typo to hunt for, and the sentence says what would be accepted. */}
@@ -964,23 +967,15 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 />
               </Stack>
 
-              {/* What the answer is for, under the field (§322): a category ranking, and "prefer
-                  not to say" is an answer. It starts empty (§510): pre-chosen on «Prefer să nu
-                  spun», a runner who never looked at it sent an answer they did not give, and the
-                  category ranking could not tell the two apart. Now the browser, the §422 list
-                  and the server (the enum has no blank) refuse a form with no answer, and "prefer
-                  not to say" stays one press away. A native select behind an «Alege…» placeholder,
-                  so it answers without JavaScript as the citizenship does (§463). */}
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+              {/* «Masculin» or «Feminin», each with its glyph (§NNN, amending §510): two radio cards
+                  the server draws, nothing pre-chosen, required by the browser, the §422 list and the
+                  server — «Prefer să nu spun» is no longer an answer. What it is for stays under it
+                  (§322, §546): a category ranking, which the label cannot say. */}
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "flex-start" } }}>
                 <SexField
                   {...field("sex", t("sexHelp"))}
                   label={t("sex")}
-                  placeholder={t("sexChoose")}
-                  answers={{
-                    FEMALE: t("sexOptions.FEMALE"),
-                    MALE: t("sexOptions.MALE"),
-                    UNSPECIFIED: t("sexOptions.UNSPECIFIED"),
-                  }}
+                  answers={{ MALE: t("sexOptions.MALE"), FEMALE: t("sexOptions.FEMALE") }}
                 />
                 {/*
                   Citizenship, required and pre-chosen on Romania (§432; the owner, 2026-09-26:
@@ -990,14 +985,18 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   server draws and the form posts, searchable once the island runs (§463): the
                   owner, "vreau searchbox să pot găsi țara".
                 */}
-                <NationalityField
-                  {...field("nationality")}
-                  label={t("nationality")}
-                  // A blank from an older draft comes back as Romania too, never an empty select.
-                  defaultValue={prefill("nationality") || "RO"}
-                  countries={countries}
-                  words={countrySearchWords}
-                />
+                {/* Beside the two cards from `sm`, its box level with theirs: the legend above the
+                    cards is the height this top padding gives back. */}
+                <Box sx={{ width: "100%", minWidth: 0, pt: { sm: 3 } }}>
+                  <NationalityField
+                    {...field("nationality")}
+                    label={t("nationality")}
+                    // A blank from an older draft comes back as Romania too, never an empty select.
+                    defaultValue={prefill("nationality") || "RO"}
+                    countries={countries}
+                    words={countrySearchWords}
+                  />
+                </Box>
               </Stack>
 
               <Typography component="h2" variant="h6" sx={{ mt: 2 }}>
@@ -1168,7 +1167,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               <Box component="details" open sx={disclosureSx}>
                 <Typography component="summary" variant="body2">
                   <GroupsIcon aria-hidden sx={FOLD_GLYPH_SX} />
-                  {t("disclosure.race", { club: CLUB_NAME })}
+                  {/* «tricou» only when the event gives one (§NNN): the kit card's tick. */}
+                  {askShirt ? t("disclosure.race", { club: CLUB_NAME }) : t("disclosure.raceNoShirt", { club: CLUB_NAME })}
                 </Typography>
                 <Stack spacing={2} sx={{ pb: 2 }}>
                   {/*
@@ -1189,19 +1189,23 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                     <Hint text={t("clubMemberHint")} />
                   </CheckboxField>
 
-                  <TextField
-                    {...field("tshirtSize")}
-                    label={t("tshirtSize")}
-                    select
-                    defaultValue={prefill("tshirtSize", "NONE")}
-                  >
-                    <MenuItem value="NONE">{t("tshirtSizes.NONE")}</MenuItem>
-                    {["XS", "S", "M", "L", "XL", "XXL"].map((size) => (
-                      <MenuItem key={size} value={size}>
-                        {size}
-                      </MenuItem>
-                    ))}
-                  </TextField>
+                  {/* The T-shirt's size, only for an event that gives one (§NNN, «Kit de participare»):
+                      otherwise no box at all, and the server stores NONE whatever a stale form posts. */}
+                  {askShirt && (
+                    <TextField
+                      {...field("tshirtSize")}
+                      label={t("tshirtSize")}
+                      select
+                      defaultValue={prefill("tshirtSize", "NONE")}
+                    >
+                      <MenuItem value="NONE">{t("tshirtSizes.NONE")}</MenuItem>
+                      {SHIRT_SIZES.map((size) => (
+                        <MenuItem key={size} value={size}>
+                          {size}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  )}
 
                   {/*
                     The club, filled in and locked while the tick above is on (§215; the owner:
@@ -1569,8 +1573,6 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   // rules of its own shows a plain box linking to its page, where the field's
                   // own name is the right thing to list (review finding 1).
                   ...(hasRules ? { rulesAcknowledged: t("rules.missing") } : {}),
-                  // «Sex» likewise: it starts empty, and "prefer not to say" is an answer (§510).
-                  sex: t("sexMissing"),
                 }}
                 /*
                   Only when a widget is actually on the page (§285). With no keys, or with the

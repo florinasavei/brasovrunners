@@ -25,6 +25,7 @@ import {
 } from "./admin-repository";
 import { clearOptionalData, OPTIONAL_DATA_FIELDS, type OptionalDataField } from "./consent-withdrawal";
 import { eraseConfirmationMatches } from "./domain/erase-confirmation";
+import type { SexChoice } from "./domain/sex";
 import { bibNumberInUse, isEventSpareNumber, retiredBibNumbers } from "./bibs";
 import { BIB_NUMBER_MAX, handsSpareAtConfirm } from "./domain/spare-bibs";
 import { canResendReminder, deriveAllowedResendMessageType } from "./domain/resend";
@@ -268,7 +269,7 @@ export type CreateRegistrationByStaffInput = {
   details?: {
     displayName?: string;
     birthDate?: string;
-    sex?: "FEMALE" | "MALE" | "UNSPECIFIED";
+    sex?: SexChoice;
     nationality?: string;
     country?: string;
     city?: string;

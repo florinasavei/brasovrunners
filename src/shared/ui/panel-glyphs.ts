@@ -6,6 +6,7 @@ import BrushIcon from "@mui/icons-material/Brush";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import CardMembershipIcon from "@mui/icons-material/CardMembership";
 import CategoryIcon from "@mui/icons-material/Category";
+import CheckroomIcon from "@mui/icons-material/Checkroom";
 import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber";
 import ContactMailIcon from "@mui/icons-material/ContactMail";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
@@ -100,6 +101,8 @@ export const PANEL_GLYPHS = {
   confirmation: TaskAltIcon,
   reminder: NotificationsActiveIcon,
   bibs: ConfirmationNumberIcon,
+  // «Kit de participare» (§NNN): what the runners are handed — for now, the T-shirt.
+  kit: CheckroomIcon,
   bibDesign: BrushIcon,
   print: PrintIcon,
   startList: GroupsIcon,

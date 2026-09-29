@@ -2,6 +2,7 @@ import { z } from "zod";
 import { DomainError } from "@/shared/errors/domain-error";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { effectiveMinimumAge, isMinorOn, isUnderMinimumAge } from "./domain/age";
+import { SEX_CHOICES } from "./domain/sex";
 import { E164_PHONE } from "./phone";
 
 /**
@@ -51,7 +52,12 @@ const submissionFields = z.object({
       return date <= now && date >= oldest;
     }, "birthDate is outside the accepted range"),
 
-  sex: z.enum(["FEMALE", "MALE", "UNSPECIFIED"]),
+  /**
+   * «Masculin» or «Feminin» (§NNN, amending §510): the one rule every door meets, since every schema
+   * below is built from this field. `UNSPECIFIED` stays in the database enum for the rows stored
+   * with it and is refused here, so no new row carries it (`domain/sex.ts`).
+   */
+  sex: z.enum(SEX_CHOICES),
   /**
    * ISO 3166-1 alpha-2. Rendered per locale by `Intl.DisplayNames`, so no name table exists.
    *
@@ -466,7 +472,10 @@ export const staffRegistrationSubmissionSchema = submissionFields
  * is never read from the kept form: the caller fixes it from the token.
  */
 export const anotherPersonSubmissionSchema = submissionFields
-  .partial({ phone: true })
+  // The sex too (§NNN): only a kept form reaches this schema, and one kept before the retired
+  // «Prefer să nu spun» went has that answer dropped (`withoutRetiredSex`) rather than the parent
+  // refused. Every kept form after it passed the public schema, which requires one of the two.
+  .partial({ phone: true, sex: true })
   // Asked of a minor's parent only (§421): `anotherPersonFitnessRule(now)` decides which tick is
   // owed. Applied by the caller (`service.ts`, alongside `minimumAgeRule`), not baked in here, so
   // one `now` decides it and `withoutAnotherAdultsConsents` alike (finding (9)).
