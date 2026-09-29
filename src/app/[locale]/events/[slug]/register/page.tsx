@@ -56,7 +56,7 @@ import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import GuardianForMinor from "@/modules/registrations/ui/GuardianForMinor";
-import BirthDateEcho from "@/modules/registrations/ui/BirthDateEcho";
+import BirthDateField from "@/modules/registrations/ui/BirthDateField";
 import HiddenForMinor from "@/modules/registrations/ui/HiddenForMinor";
 import ShownWithSocial from "@/modules/registrations/ui/ShownWithSocial";
 import EmailTwice from "@/modules/registrations/ui/EmailTwice";
@@ -910,37 +910,32 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 />
               </Stack>
 
-              <TextField
-                {...field("birthDate")}
-                /* No help at rest (§546): the minimum age is the line above the form, and the
-                   words under the box (§467) say the age on race day. A refusal for age says the
-                   rule (§321, §329) rather than "complete this field correctly". Left native, not
-                   the backoffice's MUI picker (`shared/forms/pickers`, `DECISIONS.md` §345): a
-                   runner's own birth date is decades back, faster typed than paged through a
-                   calendar month by month, and this box is public. */
-                helperText={
-                  invalid.has("birthDate") ? (tooYoung ? t("errors.tooYoung", minimumAge) : t("errors.field")) : undefined
-                }
-                type="date"
+              {/* No help at rest (§546): the minimum age is the line above the form, and the date in
+                  words under the box (§467), its helper since §NNN, says the age on race day. A
+                  refusal for age says the rule (§321, §329) rather than "complete this field
+                  correctly". Typed day first — «11.05.1990» — never the browser's own date box,
+                  which drew the digits in the browser's order (§NNN), nor the backoffice's MUI
+                  picker (§345): a birth date decades back is faster typed than paged to, and this
+                  page stays free of the picker's library. The bounds are the server's: a date in
+                  the future, or one under this event's minimum age on the race day, is refused
+                  by the box itself rather than a round trip. */}
+              <BirthDateField
+                id={fieldId("birthDate")}
+                name="birthDate"
                 label={t("birthDate")}
+                defaultValue={prefill("birthDate")}
                 required
                 autoComplete="bday"
-                slotProps={{
-                  inputLabel: { shrink: true },
-                  // The same bounds the server applies — a date in the future, or one under this
-                  // event's minimum age on the race day — so the picker refuses them itself
-                  // rather than a round trip.
-                  htmlInput: { min: earliestBirthDate, max: latestBirthDate },
-                }}
-              />
-              {/* The typed date in words, with the age on race day (§467): a date box shows
-                  "03/04/1990" in whichever order the browser likes, so the runner reads back
-                  what they meant. */}
-              <BirthDateEcho
-                birthDateId={fieldId("birthDate")}
-                locale={locale}
+                error={invalid.has("birthDate")}
+                errorText={tooYoung ? t("errors.tooYoung", minimumAge) : t("errors.field")}
+                min={earliestBirthDate}
+                max={latestBirthDate}
                 eventDay={dayIn(event.startsAt, event.timezone)}
-                template={t("birthDateEcho", { date: "{date}", age: "{age}" })}
+                locale={locale}
+                echoTemplate={t("birthDateEcho", { date: "{date}", age: "{age}" })}
+                placeholder={t("birthDatePlaceholder")}
+                unreadable={t("birthDateUnreadable")}
+                tooYoung={t("errors.tooYoung", minimumAge)}
               />
 
               {/* The city, required and right after the birth date (§467; the owner, 2026-09-26:

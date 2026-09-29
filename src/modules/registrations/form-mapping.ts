@@ -1,6 +1,7 @@
 import type { Locale } from "@/i18n/routing";
 import { composePhone } from "./phone";
 import { env } from "@/shared/config/env";
+import { normalizeTypedDate } from "@/shared/forms/pickers/wall-values";
 
 /**
  * The rendered form's field names, read into the shape `registrationSubmissionSchema` parses.
@@ -74,7 +75,9 @@ export function readRegistrationForm(
     */
     emailConfirm: text(form, "emailConfirm") || undefined,
 
-    birthDate: text(form, "birthDate"),
+    // Typed day first — «11.05.1990», «11/5/1990», «11051990» — or posted as `YYYY-MM-DD` (§NNN):
+    // the schema reads the one shape; anything else goes through as typed for it to refuse.
+    birthDate: normalizeTypedDate(text(form, "birthDate")),
     sex: text(form, "sex"),
     // Optional since §322: blank is absent, so the schema's own "optional" is what answers.
     nationality: optional(form, "nationality"),
