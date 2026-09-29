@@ -63,6 +63,8 @@ vi.mock("@/shared/config/env", async (importOriginal) => {
 let shownAddresses: string[] = ["contact@example.org"];
 vi.mock("@/modules/public-cache/reads", () => ({
   cachedShownContactAddresses: async () => shownAddresses,
+  // «Telefon public» (§565), read by the identity block under the bar: unset, as it is by default.
+  cachedPublicPhone: async () => null,
 }));
 
 const { NextIntlClientProvider } = await import("next-intl");
@@ -415,7 +417,10 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's two doo
     expect(words, "'Scrie-ne' once").toBe(1);
     expect(contact).toMatch(/<a href="\/ro\/contact"[^>]*>Scrie-ne:<\/a>/);
     expect(contact).toMatch(/<a[^>]*href="mailto:contact@example.org"[^>]*>contact@example.org<\/a>/);
-    expect(markup.split("contact@example.org").length - 1, "the address once in the footer, as the mail link").toBe(2);
+    // Once in the bar (the identity block under it, §565, names it again in its «Contact» column).
+    const bar = markup.slice(0, markup.indexOf('data-testid="club-identity-block"'));
+    expect(markup.indexOf('data-testid="club-identity-block"'), "the identity block follows the bar").toBeGreaterThan(markup.indexOf("</footer>"));
+    expect(bar.split("contact@example.org").length - 1, "the address once in the bar, as the mail link").toBe(2);
   });
 
   it("shows the club's Gmail and the mailbox, «… sau …», when the club chose both (§442)", async () => {

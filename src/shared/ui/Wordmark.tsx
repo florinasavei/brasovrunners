@@ -9,6 +9,13 @@ import { CLUB_NAME, FONT, WORDMARK, WORDMARK_SIZE } from "@/theme/brand";
  * (§58), and an event page or a legal text is the event's or the text's, not the club's — so a
  * fourth page is a decision, and `tests/unit/theme/wordmark.test.ts` pins the three.
  *
+ * **Not on a phone** (§569, amending §292; the owner, 2026-09-29: «Textul ăsta de „Evenimente” e
+ * mult prea mare, pe mobil ia prea mult spațiu»). Below `sm` the sticky header's lockup is on the
+ * same screen and already says the club's name, so the wordmark would be the brand twice in the
+ * first 100 pixels, in front of the page's own title. `display: none` there — the element is
+ * still in the HTML the CDN serves (§549), one page for every width, and nothing on the server
+ * reads the viewport. From `sm` it is drawn at half its old height (`WORDMARK_SIZE`).
+ *
  * A page heading, not navigation: a paragraph that is an image to assistive technology, never
  * an `<h1>`, so each page keeps its own.
  *
@@ -25,7 +32,10 @@ export default function Wordmark() {
       component="p"
       role="img"
       aria-label={CLUB_NAME}
+      data-testid="wordmark"
       sx={{
+        // One brand per screen on a phone (§569): the header's lockup is it.
+        display: { xs: "none", sm: "block" },
         // Facón is one style: black, italic. Both are stated so the fallback, Roboto, lands in
         // the same weight and slant if the font has not arrived yet.
         fontFamily: `${FONT.wordmark}, ${FONT.fallback}`,

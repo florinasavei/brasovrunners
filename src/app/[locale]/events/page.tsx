@@ -198,8 +198,10 @@ export default async function EventsPage({ params, query: asked }: Props) {
       {/* Says so when what follows is the last copy rather than today's (§281). */}
       <LastGoodNotice read={read} />
 
-      {/* The gradient rule under the heading says where a section starts (§166). */}
-      <Typography variant="h1" gutterBottom sx={{ mt: 1, ...headingRule }}>
+      {/* The gradient rule under the heading says where a section starts (§166). Compact on a
+          phone (§569): the theme's H1 size, half the room above it — the first card is what the
+          first screen is for. */}
+      <Typography variant="h1" gutterBottom sx={{ mt: { xs: DENSITY.headGap, sm: 1 }, ...headingRule }}>
         {t("title")}
       </Typography>
       <Typography variant="body1" color="text.secondary" sx={{ mb: { xs: DENSITY.gapXs, sm: 2.5 } }}>

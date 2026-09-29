@@ -40,6 +40,7 @@ import BotCheck from "@/modules/registrations/ui/BotCheck";
 import { pageAlternates, staticRouteUrls } from "@/modules/seo/alternates";
 import { env } from "@/shared/config/env";
 import PublicFlash from "@/shared/feedback/PublicFlash";
+import ClubIdentity from "@/shared/ui/ClubIdentity";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import Wordmark from "@/shared/ui/Wordmark";
 import { INLINE_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
@@ -181,7 +182,7 @@ export default async function ContactPage({ params, searchParams }: Props) {
           client island — the button. */}
       <Wordmark />
 
-      <Typography variant="h1" gutterBottom sx={{ mt: 1 }}>
+      <Typography variant="h1" gutterBottom sx={{ mt: { xs: DENSITY.headGap, sm: 1 } }}>
         {t("title")}
       </Typography>
       <Typography variant="body1" color="text.secondary" sx={{ mb: { xs: DENSITY.sectionGap, sm: 3 } }}>
@@ -363,6 +364,11 @@ export default async function ContactPage({ params, searchParams }: Props) {
           leaveTyped={leaveRefused ? draft?.newsletterLeaveEmail : undefined}
         />
       )}
+
+      {/* Who is written to, by its legal name and CIF (§565): the page's last line, under the form
+          (or the address where there is no form) and under the newsletter's box; nothing while the
+          facts are unset. */}
+      <ClubIdentity shape="line" />
     </Container>
   );
 }

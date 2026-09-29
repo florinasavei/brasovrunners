@@ -147,8 +147,10 @@ describe("the declaration's merge fields", () => {
         // and once more for the club members' accounts and their zone (§524), and by the second
         // review's retention sentence for a group run's declaration (§556).
         // The race declaration grew by the second review's dispute sentence (§556). The notice grew by a
-        // paragraph for the offers and benefits, and a clause each in sections 6 and 7 (§562).
-        const ceiling = key === "EVENT_DECLARATION" ? 9300 : key === "PRIVACY_NOTICE" ? 28600 : 11000;
+        // paragraph for the offers and benefits, and a clause each in sections 6 and 7 (§562). The race
+        // declaration grew once more, by seven sentences, when the inherent risks came to name death and the
+        // claims for them were waived within the law's limits, the heirs and the minor's guardian included (§568).
+        const ceiling = key === "EVENT_DECLARATION" ? 10300 : key === "PRIVACY_NOTICE" ? 28600 : 11000;
         expect(text.length, `${key} ${locale}`).toBeGreaterThan(key === "EVENT_DECLARATION" ? 1500 : 2500);
         expect(text.length, `${key} ${locale}`).toBeLessThan(ceiling);
       }
