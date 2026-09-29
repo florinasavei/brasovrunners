@@ -102,7 +102,7 @@ function registrationForm(firstName: string, email: string): FormData {
     firstName,
     lastName: "Pop",
     birthDate: "1985-03-02",
-    sex: "UNSPECIFIED",
+    sex: "FEMALE",
     email,
     emailConfirm: email,
     phone: "0711111111",

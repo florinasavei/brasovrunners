@@ -87,7 +87,7 @@ const submission = (firstName: string, at: Date, overrides: Record<string, unkno
   firstName,
   lastName: "Pop",
   birthDate: BIRTH_DATES[firstName] ?? "1980-01-01",
-  sex: "UNSPECIFIED",
+  sex: "FEMALE",
   nationality: "RO",
   country: "RO",
   city: "Brașov",

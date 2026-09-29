@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.27-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.28-2026-09-27 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V2.27-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.28-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -810,6 +810,8 @@ coffee is run on nothing.
 29. «Sex» on the public registration form starts unanswered. It is a native, required select drawn by the server, whose first option is an empty, disabled «Alege…» / «Choose…» chosen while there is no draft, followed by Female, Male and «Prefer să nu spun». A reader without JavaScript can answer it and send the form. A form with no answer is refused by the browser, by the list of missing fields above the send button and by the server. The refusal summary and that list name it «Alege sexul — poți alege „Prefer să nu spun”» / "Choose your sex — you may pick “Prefer not to say”".
 30. Given a group run offering its optional self-declaration, when its minimum age is set, then it is 18 or more: a smaller value is refused on the server naming the group run's box, and a run saved with less reads as 18, so the declaration covers no minor (2026-09-27, `DECISIONS.md` §515). Verification: unit `group-run-declarations/minimum-age.test.ts`; integration `group-run-declarations/sign.test.ts`; e2e `group-run-declaration.spec.ts`.
 31. The shared country picker (citizenship and telephone prefix) opens with at least eight whole 44-pixel rows in view on a desktop and, below `sm` or on a screen under 520 px tall, as a full-width sheet at the screen's bottom with the search box above the list; the chosen country is in view as it opens (2026-09-28, `DECISIONS.md` §544).
+32. «Sex» on the public registration form is two required radio cards the server draws, «Masculin» and «Feminin» («Male» / «Female»), each with its glyph and none chosen. «Prefer să nu spun» is offered nowhere, and `UNSPECIFIED` is refused at every door: a public form without an answer, or with that one, is refused naming `sex`, and a staff entry may leave the sex out. A row stored with it earlier reads «—» on the backoffice registration page and has an empty cell in the spreadsheet (2026-09-29, `DECISIONS.md` §554).
+33. The public registration form asks the T-shirt size only when the event's «Kit de participare» gives a shirt (`events.kit_shirt`), and the optional fold's title names the shirt only then. A size posted for an event without one is stored as `NONE`, decided off the event row under its lock at every door. The spreadsheet and the backoffice registration page show a size only for an event with a shirt (2026-09-29, `DECISIONS.md` §554).
 
 **Verification:** integration `registrations/entry-details.test.ts`, `registrations/minors.test.ts` (9); unit `registrations/socials.test.ts` (8); e2e `registration-submit.spec.ts`; unit and integration `registrations/minimum-age.test.ts` (11); e2e `registration-form.spec.ts` (11)
 
@@ -1794,6 +1796,7 @@ way through every step, and none of them is a way around the allocator.
 101. Given the editor or the create page of an event that takes registrations, when «Vârsta minimă (ani)» renders, then it takes a whole number from 14 to 99, prefilled with the event's value or 14 (an older event's 0 opens at 14), and a value under 14 is refused naming the box with every value kept. A group run's own box starts at 18 and does not accept less (2026-09-27, `DECISIONS.md` §515, amending criterion 29). Verification: integration `cms/crud.test.ts`, `cms/series-edit.test.ts`; unit `shared/form-constraints.test.ts`; e2e `registration-form.spec.ts`.
 102. The event editor asks the difficulty in «Ce fel de eveniment»: the band select and «Treapta», a segmented 1 · 2 · 3 of native radios in 44-pixel segments each with a dots glyph, side by side from `sm`; a step outside 1–3 or a band outside the five is refused at save.
 103. Given the backoffice events list, when the address carries `q`, `state`, `sort` and `dir` (written by a GET form with native selects that works without JavaScript), then:
+104. Under «Pe site», the editor's «Participare și înscrieri» holds a closed «Kit de participare» card with a glyph, whose line says «Tricou: da» or «Tricou: nu», and one «Tricou» tick; a group run shows none. The tick is saved only by a form that carried the card. A series edit carries it by its scope, and every date a series makes and every duplicate keep it (2026-09-29, `DECISIONS.md` §554).
 - only the lines with a date whose title, page address or place contains every typed word in either language (accents and case ignored) and whose state matches are listed;
 - the state is an editorial state, «Anulat» (the event's own status), «Viitoare» or «Trecute»;
 - a series is narrowed to its matching dates before it is grouped;

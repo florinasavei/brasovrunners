@@ -34,7 +34,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Item | Branch |
 | --- | --- |
-| — | nothing waiting: the last ready items shipped in `BR-V2.27` |
+| — | nothing waiting: the last ready items shipped in `BR-V2.28` |
 
 ## Next, queued
 
@@ -67,6 +67,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Baseline | What |
 | --- | --- |
+| `BR-V2.28` | the registration form’s sex is «Masculin» or «Feminin», each with its glyph, required, no «prefer să nu spun» (a stored one reads «—», no new one is accepted); the shirt is the club’s call per event — «Kit de participare» in the editor’s «Participanți și înscrieri» with a «Tricou» checkbox, the form asking the size only then, every surface showing it only then; migration 0109 (§554) |
 | `BR-V2.27` | the git hooks strip git’s own environment (GIT_DIR, GIT_INDEX_FILE, GIT_WORK_TREE, GIT_PREFIX) before the checks and every test that spawns git passes a clean env through gitEnv(), guarded by a test — the 2026-09-28 incident where a test fixture rewrote a worktree’s index and the repo’s core.bare; and the review nits of V2.23–V2.26: one digits-only rule for the hand-typed race number and the Mailgun ceilings, the bib preview’s 404 tested, the withdraw dialog’s sentence without an event, the paper/email sentence tested, the site’s unsubscribe refusal focused, two helper sentences, the «places» kind pinned in the expire walk, the HIT poll in the event-route spec (§553) |
 | `BR-V2.26` | the members’ zone grows: discount codes the club keeps as a list on «Pagini» → «Membri» (partner, code, description in both languages, link, last day, hidden), shown only behind the account with a copy button, and «Doar pentru membrii BVR» on an event — withheld in SQL from every public surface, 404 without a member or backoffice account, the page through the live twin, listed in the zone, registration only with the member’s own account, one person per account; migration 0108 (§552) |
 | `BR-V2.25` | the newsletter's subscribers as a list — «Abonați» on /admin/newsletter with the address, the language, the topics, the state and the dates, searched through the canonicalizer and filtered in the address, a CSV, a per-row «Dezabonează» for the Administrator that asks first and audits without the address — and its letter written in the rich-text editor per language, pictures kept while a sent newsletter uses them, a way to unsubscribe from the site itself (the address → a single-use manage link by email, the same answer whether or not the address is subscribed) (§550) · the Mailgun plan's typed daily and monthly limit boxes appear only while «Altceva» is chosen, with and without JavaScript, keep what was typed across a switch, an empty box meaning no ceiling (§551) |

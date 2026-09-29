@@ -31,6 +31,7 @@ import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
 import { wholeDigits } from "@/shared/forms/whole-digits";
+import type { SexChoice } from "@/modules/registrations/domain/sex";
 
 /**
  * The three administrative changes to a registration (BR-REQ-037-03, BR-REQ-037-05).
@@ -236,7 +237,8 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
         details: {
           displayName: optional(form, "displayName"),
           birthDate: optional(form, "birthDate"),
-          sex: optional(form, "sex") as "FEMALE" | "MALE" | "UNSPECIFIED" | undefined,
+          // Any other value, the retired «Prefer să nu spun» included, is refused by the schema (§554).
+          sex: optional(form, "sex") as SexChoice | undefined,
           nationality: optional(form, "nationality"),
           country: optional(form, "country"),
           city: optional(form, "city"),

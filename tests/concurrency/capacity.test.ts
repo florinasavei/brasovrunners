@@ -264,7 +264,7 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
               firstName: "Ana",
               lastName: "Pop",
               birthDate: "1990-05-17",
-              sex: "UNSPECIFIED",
+              sex: "FEMALE",
               nationality: "RO",
               country: "RO",
               city: "Brașov",

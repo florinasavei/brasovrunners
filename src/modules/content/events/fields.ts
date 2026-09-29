@@ -769,6 +769,12 @@ export const eventFieldsSchema = z
      */
     waitlistCapacity: optionalWholeNumber({ min: 0, max: 100_000 }).optional(),
     /**
+     * «Kit de participare» → «Tricou» (§554): the event gives a T-shirt, so the form asks the size.
+     * Absent means this caller is not editing it — the partners' discipline, as «Se deschid în
+     * curând» — so a fixture or an older form never switches a shirt off by not mentioning it.
+     */
+    kitShirt: z.boolean().optional(),
+    /**
      * The race's own band (§173): where its numbers start, and the colour the sheet prints
      * behind them. The 5 km starts at 100 and prints green; the 10 km starts at 500 and prints
      * blue, and a volunteer sorting envelopes can tell them apart across a table.

@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.28-2026-09-27
+
+- **«Sex» is «Masculin» or «Feminin», with their glyphs, and the T-shirt size only when the event gives one**: two radio cards replace the select, and «Prefer să nu spun» is gone (stored rows keep it and read «—»). A closed «Kit de participare» card in the editor's «Participare și înscrieri» holds one «Tricou» tick, which series and duplicates carry. Migration `0109`. §554.
 ## BR-V2.27-2026-09-27
 
 - **The git hooks no longer let a test touch the repository being committed** — both hooks unset `GIT_DIR`, `GIT_INDEX_FILE`, `GIT_WORK_TREE` and `GIT_PREFIX` first and every test that spawns git passes a clean environment; a race number typed at the desk and the Mailgun plan's typed limits count only as digits («1e3» is refused, not 1000), the unsubscribe form's refusal takes the focus, the family's withdraw dialog names no empty event, and the emergency-contact and guardian help sentences read right again. §553.
