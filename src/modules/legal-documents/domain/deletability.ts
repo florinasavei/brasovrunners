@@ -130,6 +130,8 @@ export type DeletionFacts = {
   /** The version the site serves right now — `findCurrentApprovedVersionId`. */
   inForce: boolean;
   terms: TermsReliance | null;
+  /** Already deleted from the list (`deleted_at`, §567): retired and hidden, its text kept. */
+  deleted?: boolean;
 };
 
 export type DependantObstacle =
@@ -138,6 +140,8 @@ export type DependantObstacle =
 
 export type DeletionObstacle =
   | { kind: "draft" }
+  // Deleted from the list already (§567): its row stays, read-only, and nothing more is done to it.
+  | { kind: "deleted" }
   | DependantObstacle
   | { kind: "termsAccepted"; registrations: number; window: InForceWindow };
 
@@ -197,6 +201,8 @@ export function dependantObstacle(
  */
 export function deletionObstacle(facts: DeletionFacts): DeletionObstacle | null {
   if (!facts.isApproved) return { kind: "draft" };
+  // A version deleted from the list stays as it is: «Versiuni șterse» is read-only (§567).
+  if (facts.deleted) return { kind: "deleted" };
 
   const dependant = dependantObstacle(facts);
   if (dependant) return dependant;
@@ -209,4 +215,51 @@ export function deletionObstacle(facts: DeletionFacts): DeletionObstacle | null 
     };
   }
   return null;
+}
+
+/**
+ * What stands on a version that «Șterge» retires and hides instead of destroying (§567): the three
+ * counts, and for a terms version the registrations agreed to while it was in force (§316).
+ */
+export type RetireReliance = {
+  signatures: number;
+  events: number;
+  acknowledgements: number;
+  termsRegistrations: number;
+};
+
+/**
+ * What «Șterge» does with one version (§567, amending §151 and §556; the owner, 2026-09-29: «aș
+ * vrea să pot șterge (cu dublă confirmare) chiar și documentele care sunt deja semnate»):
+ *
+ * - `delete` — nothing depends on it: the row, both texts and the number go, as §151 deletes;
+ * - `retire` — a signature, an event or a registration depends on it (or, for the terms, somebody
+ *   agreed while it was in force): the version leaves the list and can never be put in force again,
+ *   while its row and its text stay, because a signed version is the club's proof of what a person
+ *   accepted (AGENTS.md §10.8, §556);
+ * - `refused` — a draft (its own delete, §53), the version in force (replace it first), or one
+ *   already deleted.
+ *
+ * The in-force question comes first here, unlike `dependantObstacle`: a version in force with
+ * signatures is refused because it is in force, and the reason says what to do — approve the next.
+ */
+export type RemovalPlan =
+  | { kind: "delete" }
+  | { kind: "retire"; reliance: RetireReliance }
+  | { kind: "refused"; reason: "draft" | "inForce" | "alreadyDeleted" };
+
+export function removalPlan(facts: DeletionFacts): RemovalPlan {
+  if (!facts.isApproved) return { kind: "refused", reason: "draft" };
+  if (facts.deleted) return { kind: "refused", reason: "alreadyDeleted" };
+  if (facts.inForce) return { kind: "refused", reason: "inForce" };
+  if (deletionObstacle(facts) === null) return { kind: "delete" };
+  return {
+    kind: "retire",
+    reliance: {
+      signatures: facts.acceptanceCount,
+      events: facts.eventCount,
+      acknowledgements: facts.privacyAcknowledgementCount,
+      termsRegistrations: facts.terms?.registrations ?? 0,
+    },
+  };
 }
