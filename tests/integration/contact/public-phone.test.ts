@@ -7,13 +7,13 @@ import { PUBLIC_PHONE_SETTING_KEY, readPublicPhone, updatePublicPhone } from "@/
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Telefon public» on «Pagini» → «Contact»: one `platform_settings` row (no migration), the
+ * §565 — «Telefon public» on «Pagini» → «Contact»: one `platform_settings` row (no migration), the
  * Administrator's, audited without the number, and none until one is typed. The number is made up.
  */
 const NOW = new Date("2026-09-29T18:00:00.000Z");
 const SAMPLE = "+40 123 456 789";
 
-describe("§NNN the public phone setting", () => {
+describe("§565 the public phone setting", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;

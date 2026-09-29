@@ -124,7 +124,7 @@ export function difficultyWords(
   };
 }
 
-/** The difficulty tooltip as the pill draws it (§NNN): the first line, then one row per band. */
+/** The difficulty tooltip as the pill draws it (§566): the first line, then one row per band. */
 export type DifficultyTooltipBlock = { head: string; rows: { word: string; range: string; current: boolean }[] };
 
 /**

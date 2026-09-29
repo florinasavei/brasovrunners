@@ -27,7 +27,7 @@ import { signedOnPageWords } from "@/modules/group-run-declarations/pdf";
  * The owner, 2026-09-25: "we need 'declarație pe propria răspundere (concurs)' and asfalt and trail
  * — 3 so far." The surface decides the text, because it decides the risks; the texts are informed
  * acceptance of risk and the runner's own obligations, never an absolute waiver (Civil Code art. 1355,
- * §357): since §NNN they waive, within the law's limits, the claims for harm from the inherent risks.
+ * §357): since §568 they waive, within the law's limits, the claims for harm from the inherent risks.
  */
 
 const paragraphs = (body: LegalDocumentBody): string[] => body.sections.flatMap((section) => [...section.paragraphs]);
@@ -156,10 +156,10 @@ describe("§393 the two templates", () => {
     }
   });
 
-  it("is informed acceptance, never an absolute waiver: every disclaimer and every waiver carries the law's limit (§NNN)", () => {
+  it("is informed acceptance, never an absolute waiver: every disclaimer and every waiver carries the law's limit (§568)", () => {
     const limit = { ro: "în limitele permise de lege", en: "to the extent the law allows" } as const;
     const disclaimer = { ro: /nu (?:pot|poate) fi (?:tras|trasă)|nu răspunde\b/, en: /cannot be held liable|not responsible/ } as const;
-    // Since §NNN the runner waives the claims for harm arising from the inherent risks — always within the
+    // Since §568 the runner waives the claims for harm arising from the inherent risks — always within the
     // law's limits, in the very sentence that waives. The Civil Code's own sentence that accepting the risks
     // is *not* by itself a waiver (art. 1355(4), §515) stays; the organiser free "in any way" never appears.
     const waives = { ro: /(?<!nu înseamnă, prin ea însăși, că )(?<![\p{L}])renunț(?![\p{L}])|moștenitorii mei/iu, en: /(?<!not, by itself, a )\bwaive\b|binds my heirs/i } as const;

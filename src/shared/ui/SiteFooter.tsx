@@ -174,7 +174,7 @@ const BAR_HEIGHT = 44;
  * is said twice, the hero's and this one; the owner objected to the strip under the cards, not to
  * the hero's line.
  *
- * ## The club's identity, under the bar (§NNN)
+ * ## The club's identity, under the bar (§565)
  *
  * The owner, 2026-09-29: the club's legal name and CIF «also in the footer, more clearly», after
  * another running club's footer. `ClubIdentity`'s `block` follows the `<footer>` as its sibling:
@@ -192,7 +192,7 @@ export default async function SiteFooter() {
   const contacts = await cachedShownContactAddresses();
   // «Întrebări frecvente» in the fold (§525) while the page is on the site — the header's own rule.
   const showFaq = await faqOnSite(locale);
-  // The one list the bar's marks and the identity block's middle column both read (§NNN).
+  // The one list the bar's marks and the identity block's middle column both read (§565).
   const social = await clubSocialLinks();
 
   return (
@@ -552,7 +552,7 @@ export default async function SiteFooter() {
       </Box>
     </Box>
 
-    {/* The club's identity under the bar, on every page and never in the fold (§NNN): a sibling of
+    {/* The club's identity under the bar, on every page and never in the fold (§565): a sibling of
         the sticky `<footer>` rather than its child, so the bar keeps its one row at every scroll
         position and its own height, and the block is what the page ends on. */}
     <ClubIdentity shape="block" social={social} />

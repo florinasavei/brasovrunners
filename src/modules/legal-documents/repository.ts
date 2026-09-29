@@ -380,7 +380,7 @@ export async function findCurrentApprovedVersionId<T extends Record<string, unkn
  * were removed and the next draft became 4 again, every registration that recorded "notice 4"
  * would become a consent to words written after it was given. The number stays taken.
  *
- * A version deleted from the list (§NNN) keeps its row, so it counts here as well: the next draft
+ * A version deleted from the list (§567) keeps its row, so it counts here as well: the next draft
  * continues the sequence and never reuses a deleted number.
  */
 export async function findLatestVersion<T extends Record<string, unknown>>(
@@ -471,7 +471,7 @@ export async function retireVersionNumber<T extends Record<string, unknown>>(
  * event pointing at a version is one of the three counts that refuse withdrawal, so a withdrawn
  * version is by construction one nothing here had chosen.
  *
- * Except one deleted from the list (§NNN), which is withdrawn too and may be an event's choice: the
+ * Except one deleted from the list (§567), which is withdrawn too and may be an event's choice: the
  * event keeps pointing at it, the editor posts the saved id as it was (`RaceDeclarationSelect`), and
  * what a participant signs is read by the event's kind of course, never by that id
  * (`findEventDeclaration`) — so nothing a runner sees changes, and the editor asks for a new choice.
@@ -556,7 +556,7 @@ export type LegalDocumentVersionRow = {
   withdrawnAt: Date | null;
   withdrawnByStaffUserId: string | null;
   /**
-   * «Șterge» on a version somebody relied on (§NNN): when, by whom (the staff member's display name,
+   * «Șterge» on a version somebody relied on (§567): when, by whom (the staff member's display name,
    * null once the account is gone) and why. Such a row is never among the list's versions — it is
    * in «Versiuni șterse» — and, withdrawn as well, never resolved, offered or counted as in force.
    */
@@ -735,7 +735,7 @@ export async function findVersionWithTranslations<T extends Record<string, unkno
       // Read but never filtered on: this is the page somebody lands on from the withdrawn fold,
       // and a version that renders as though nothing happened to it would be a lie of omission.
       withdrawnAt: legalDocuments.withdrawnAt,
-      // The same for a version deleted from the list (§NNN): its text is still what somebody
+      // The same for a version deleted from the list (§567): its text is still what somebody
       // signed, so it is still read here — by «Versiuni șterse»'s link and by the PDF route.
       deletedAt: legalDocuments.deletedAt,
       deletedReason: legalDocuments.deletedReason,

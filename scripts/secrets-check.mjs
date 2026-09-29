@@ -36,7 +36,7 @@ function git(...args) {
 const files = new Set([...git("ls-files"), ...git("diff", "--cached", "--name-only", "--diff-filter=ACMR")]);
 const findings = [];
 /**
- * The club's legal facts (§NNN, §132): not credentials, but the repository is public and a seat is
+ * The club's legal facts (§565, §132): not credentials, but the repository is public and a seat is
  * somebody's address. Their values are known only where they are set — this machine's environment
  * and `.env.local` — so a commit from there that carries one is refused, by the variable's name.
  */

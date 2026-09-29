@@ -130,7 +130,7 @@ export type DeletionFacts = {
   /** The version the site serves right now — `findCurrentApprovedVersionId`. */
   inForce: boolean;
   terms: TermsReliance | null;
-  /** Already deleted from the list (`deleted_at`, §NNN): retired and hidden, its text kept. */
+  /** Already deleted from the list (`deleted_at`, §567): retired and hidden, its text kept. */
   deleted?: boolean;
 };
 
@@ -140,7 +140,7 @@ export type DependantObstacle =
 
 export type DeletionObstacle =
   | { kind: "draft" }
-  // Deleted from the list already (§NNN): its row stays, read-only, and nothing more is done to it.
+  // Deleted from the list already (§567): its row stays, read-only, and nothing more is done to it.
   | { kind: "deleted" }
   | DependantObstacle
   | { kind: "termsAccepted"; registrations: number; window: InForceWindow };
@@ -201,7 +201,7 @@ export function dependantObstacle(
  */
 export function deletionObstacle(facts: DeletionFacts): DeletionObstacle | null {
   if (!facts.isApproved) return { kind: "draft" };
-  // A version deleted from the list stays as it is: «Versiuni șterse» is read-only (§NNN).
+  // A version deleted from the list stays as it is: «Versiuni șterse» is read-only (§567).
   if (facts.deleted) return { kind: "deleted" };
 
   const dependant = dependantObstacle(facts);
@@ -218,7 +218,7 @@ export function deletionObstacle(facts: DeletionFacts): DeletionObstacle | null 
 }
 
 /**
- * What stands on a version that «Șterge» retires and hides instead of destroying (§NNN): the three
+ * What stands on a version that «Șterge» retires and hides instead of destroying (§567): the three
  * counts, and for a terms version the registrations agreed to while it was in force (§316).
  */
 export type RetireReliance = {
@@ -229,7 +229,7 @@ export type RetireReliance = {
 };
 
 /**
- * What «Șterge» does with one version (§NNN, amending §151 and §556; the owner, 2026-09-29: «aș
+ * What «Șterge» does with one version (§567, amending §151 and §556; the owner, 2026-09-29: «aș
  * vrea să pot șterge (cu dublă confirmare) chiar și documentele care sunt deja semnate»):
  *
  * - `delete` — nothing depends on it: the row, both texts and the number go, as §151 deletes;

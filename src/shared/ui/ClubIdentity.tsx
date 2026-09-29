@@ -17,7 +17,7 @@ import { type ClubSocialLink, clubSocialLinks } from "./club-socials";
 import SocialIcon from "./SocialIcon";
 
 /**
- * The club's legal identity on the site (§NNN; the owner, 2026-09-29: «on the about pages and
+ * The club's legal identity on the site (§565; the owner, 2026-09-29: «on the about pages and
  * contact pages we need to show "<the club's legal name> (<the site's name>) CIF <the CIF>" in order to
  * meet legal requirements», then «and also in the footer, more clearly», with another running club's
  * footer as the example).
@@ -104,7 +104,7 @@ export default async function ClubIdentity(props: Props) {
         sx={{
           display: "grid",
           // Stacked on a phone; three columns from `sm`, each in its own place, so a missing one
-          // leaves its column empty rather than moving the others (§NNN).
+          // leaves its column empty rather than moving the others (§565).
           gridTemplateColumns: { xs: "minmax(0, 1fr)", sm: "repeat(3, minmax(0, 1fr))" },
           columnGap: 3,
           rowGap: 1.5,

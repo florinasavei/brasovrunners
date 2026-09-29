@@ -17,7 +17,7 @@ import type { RichTextDoc } from "@/modules/content/rich-text/domain/schema";
 const EMPTY: PublicFaqPage = { published: false, intro: null, introText: null, items: [] };
 let page: PublicFaqPage = EMPTY;
 
-// `cachedPublicPhone`: the footer's identity block reads it (§NNN); unset, as by default.
+// `cachedPublicPhone`: the footer's identity block reads it (§565); unset, as by default.
 vi.mock("@/modules/public-cache/reads", () => ({ cachedFaqPage: async () => page, cachedShownContactAddresses: async () => [], cachedPublicPhone: async () => null }));
 vi.mock("next-intl/server", async () => {
   const { createTranslator } = await import("next-intl");

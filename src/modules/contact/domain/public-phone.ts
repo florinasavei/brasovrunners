@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 /**
- * «Telefon public» — the one telephone number the club chooses to show on the site (§NNN; the
+ * «Telefon public» — the one telephone number the club chooses to show on the site (§565; the
  * owner, 2026-09-29: the club's identity «in the footer, more clearly», after another running
  * club's footer that shows its phone under «Contact»).
  *

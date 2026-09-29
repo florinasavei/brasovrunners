@@ -51,7 +51,7 @@ test.describe("BR-REQ-041-01 the difficulty pill names its level of fifteen on a
   test.use({ hasTouch: true, viewport: { width: 320, height: 720 } });
   /**
    * The level in bold, then every band's levels one row each (§528; the owner, 2026-09-29 14:18),
-   * set as a block (§NNN — 19:48, «formatat mai frumos»): five rows of one line each at 320 px, the
+   * set as a block (§566 — 19:48, «formatat mai frumos»): five rows of one line each at 320 px, the
    * level's own band marked, and «foarte greu» never parted from «13–15».
    */
   async function expectBlock(page: Page) {

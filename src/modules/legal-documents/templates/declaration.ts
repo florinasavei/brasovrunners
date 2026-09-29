@@ -35,7 +35,7 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  *    (art. 1371); accepting a risk is no waiver of compensation (art. 1355(4)); nothing limits what the
  *    law does not let be limited — intent, gross fault, harm to the body or health (art. 1355(1)–(3)).
  *    Every sentence that says the organiser does not answer for something carries "în limitele
- *    permise de lege" / "to the extent the law allows". Since §NNN the text also waives, within
+ *    permise de lege" / "to the extent the law allows". Since §568 the text also waives, within
  *    those limits, the claims for harm arising from the inherent risks alone (point 9).
  * 4. **Wild animals in general words** (the trail only), the owner's own sentence: keep the distance,
  *    neither provoke nor feed, follow the organiser's general safety instructions (§556, the second
@@ -57,7 +57,7 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  *    (`EVENT_DECLARATION`, `declarationTrailRo`, the surface `TRAIL`); English keeps "trail" for the
  *    ground, and its title says "mountain event".
  * 9. **The inherent risks include death, and the claims for them are waived as far as the law
- *    allows (§NNN, the owner, 2026-09-29: «vreau la declarații să fim acoperiți inclusiv în caz de
+ *    allows (§568, the owner, 2026-09-29: «vreau la declarații să fim acoperiți inclusiv în caz de
  *    deces»; amending §515 and §556).** The first risk bullet of each course names «vătămare gravă
  *    sau deces»; the acceptance says the runner takes part «pe propriul risc» and accepts the risks
  *    — ground, weather, own health, other participants, animals, traffic where roads are used or

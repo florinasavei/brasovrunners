@@ -6,7 +6,7 @@ import ro from "../../../messages/ro.json";
 import { CLUB_NAME } from "@/theme/brand";
 
 /**
- * §NNN — the club's legal identity, composed from the environment the legal texts read
+ * §565 — the club's legal identity, composed from the environment the legal texts read
  * (`CLUB_LEGAL_NAME`, `CLUB_REGISTRATION_NUMBER`, §132) and the site's one name (`CLUB_NAME`,
  * §215): the `line` on the «about» pages and the contact page, the `block` under the footer's bar.
  *
@@ -89,7 +89,7 @@ beforeEach(() => {
   state.phone = PHONE;
 });
 
-describe("§NNN the identity line", () => {
+describe("§565 the identity line", () => {
   it("reads «<legal name> (<site name>) · CIF <CIF>» from the environment and the constant", async () => {
     const html = await render("line");
     expect(html).toContain('data-testid="club-identity-line"');
@@ -117,7 +117,7 @@ describe("§NNN the identity line", () => {
   });
 });
 
-describe("§NNN the footer's identity block", () => {
+describe("§565 the footer's identity block", () => {
   it("has the three columns: the legal name with the site's name, C.I.F. and the country; the marks; Contact", async () => {
     const html = await render("block");
     const words = text(html);

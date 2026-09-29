@@ -169,7 +169,7 @@ export default async function CalendarPage({ params, query: asked }: Props) {
           fold, with the two calendar links it promises, so the month starts a paragraph higher.
           The fold's panel is anchored to this row (`position: relative`). From `sm` the sentence
           stands under the heading as before and the «?» is not drawn — never both. Half the room
-          above it on a phone (§NNN), where the wordmark is not drawn. */}
+          above it on a phone (§569), where the wordmark is not drawn. */}
       <Box sx={{ position: "relative", display: "flex", alignItems: "flex-start", gap: 0.5, mt: { xs: DENSITY.headGap, sm: 1 } }}>
         <Typography variant="h1" gutterBottom sx={headingRule}>
           {t("calendar.pageTitle")}

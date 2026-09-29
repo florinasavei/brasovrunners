@@ -106,7 +106,7 @@ test.describe("§265 the configuration panels", () => {
       await expect(row.getByRole("link", { name: entry.name, exact: true }), entry.name).toHaveAttribute("aria-current", "page");
     }
 
-    // The contact page is the same two cards it was on «Setări», and «Telefon public» (§NNN).
+    // The contact page is the same two cards it was on «Setări», and «Telefon public» (§565).
     await page.goto("/ro/admin/pages/contact");
     await expect(main.locator("#contact-recipients")).toBeVisible();
     await expect(main.locator("#shown-contact-address")).toBeVisible();
@@ -236,11 +236,11 @@ test.describe("§360 the sub-tabs on a phone", () => {
 });
 
 /**
- * §NNN — «Telefon public» on «Pagini» → «Contact»: the Administrator types a number, it shows under
+ * §565 — «Telefon public» on «Pagini» → «Contact»: the Administrator types a number, it shows under
  * «Contact» in the footer's identity block on every page, and an empty box takes it off again. The
  * number is made up; the club's is a setting, never a value in the repository.
  */
-test.describe("§NNN the public phone", () => {
+test.describe("§565 the public phone", () => {
   test.skip(() => test.info().project.name !== "desktop", "one viewport is enough: it writes a setting every page reads");
 
   test("is shown in the footer's block once saved, and gone once cleared", async ({ page }) => {

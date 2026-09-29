@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
 /**
- * §NNN (amending §292) — the compact page head, measured on the built pages. The owner,
+ * §569 (amending §292) — the compact page head, measured on the built pages. The owner,
  * 2026-09-29, on `/ro/calendar`: «Textul ăsta de „Evenimente” e mult prea mare, pe mobil ia prea
  * mult spațiu, la fel și la „Calendar”».
  *
@@ -34,7 +34,7 @@ async function fontSizeOf(page: Page, selector: string): Promise<number> {
   return page.locator(selector).first().evaluate((el) => Number.parseFloat(getComputedStyle(el).fontSize));
 }
 
-test.describe("§NNN the compact page head", () => {
+test.describe("§569 the compact page head", () => {
   for (const phone of PHONES) {
     test(`at ${phone.width} px the listing's first card starts in the first screen, under a 24-pixel title and no wordmark`, async ({ page }) => {
       test.skip(!isPhone(), "a phone's first screen");

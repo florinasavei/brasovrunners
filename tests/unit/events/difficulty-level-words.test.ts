@@ -73,7 +73,7 @@ describe("§563 the number is the level of fifteen, in order across the bands", 
     for (const level of levels) {
       const words = difficultyWords(level, t);
       const { block, ...strings } = words;
-      // The block (§NNN) says the same as the tooltip's string: its first line and one row per band.
+      // The block (§566) says the same as the tooltip's string: its first line and one row per band.
       expect(block.head).toBe(words.tooltip.split("\n")[0]);
       expect(block.rows.filter((row) => row.current)).toHaveLength(1);
       const blockWords = [block.head, ...block.rows.flatMap((row) => [row.word, row.range])];

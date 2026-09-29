@@ -365,7 +365,7 @@ export default async function ContactPage({ params, searchParams }: Props) {
         />
       )}
 
-      {/* Who is written to, by its legal name and CIF (§NNN): the page's last line, under the form
+      {/* Who is written to, by its legal name and CIF (§565): the page's last line, under the form
           (or the address where there is no form) and under the newsletter's box; nothing while the
           facts are unset. */}
       <ClubIdentity shape="line" />

@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V2.38-2026-09-27`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V2.40-2026-09-27`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -701,7 +701,7 @@ is created from the platform's text with those facts written in and approved in 
 A document that already has an approved version is not touched. A missing variable shows in
 red and the button is withheld — set it in Vercel, redeploy, come back.
 
-### The same facts on the site (2026-09-29, `DECISIONS.md` §NNN)
+### The same facts on the site (2026-09-29, `DECISIONS.md` §565)
 
 The legal name and the CIF also show on the site, from the same two variables: one line
 «<legal name> (<site name>) · CIF <CIF>» at the end of every club page, «Echipa» and the contact
@@ -733,7 +733,7 @@ own copy, sent by email at signing. With `DECLARATIONS_ARCHIVE_TO` set to the cl
 (`SETUP.md` §35), the club's copy arrives there at signing too, one email per declaration,
 subject "Declarație semnată: <name> — <event>" — the archive builds itself (`DECISIONS.md` §99).
 
-### Deleting a version (2026-09-29, `DECISIONS.md` §NNN)
+### Deleting a version (2026-09-29, `DECISIONS.md` §567)
 
 `/admin/legal` → the version's row → «Șterge» (Administrator and above). What it does depends on
 what stands on the version, and the screen says which before anything is pressed:

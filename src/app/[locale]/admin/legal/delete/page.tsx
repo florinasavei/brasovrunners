@@ -74,7 +74,7 @@ export default async function DeleteLegalVersionsPage({ params, searchParams }: 
 
   /** Why a ticked version stays, in the list's own sentences; null when it may go. */
   const blockedReason = (row: LegalDocumentVersionRow, index: number): string | null => {
-    // The counts in words, «1 semnătură» (§NNN): the site's rule for counted nouns.
+    // The counts in words, «1 semnătură» (§567): the site's rule for counted nouns.
     const reliance = reliancePhrases(
       (key, values) => t(key, values),
       { signatures: row.acceptanceCount, events: row.eventCount, acknowledgements: row.privacyAcknowledgementCount },

@@ -828,7 +828,7 @@ async function assertRetirable<T extends Record<string, unknown>>(
 }
 
 /**
- * «Șterge» on a version somebody relied on: retired and hidden, never destroyed (§NNN, amending
+ * «Șterge» on a version somebody relied on: retired and hidden, never destroyed (§567, amending
  * §151 and §556; the owner, 2026-09-29: «aș vrea să pot șterge (cu dublă confirmare) chiar și
  * documentele care sunt deja semnate»).
  *

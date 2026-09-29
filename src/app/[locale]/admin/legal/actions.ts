@@ -370,7 +370,7 @@ export async function deleteApprovedLegalVersionAction(_previous: FormOutcome | 
 
 /**
  * «Șterg versiunea N» — a version somebody relied on, retired and hidden with its text kept
- * (`DECISIONS.md` §NNN). The two steps' answers — the reason, the typed number — are checked by
+ * (`DECISIONS.md` §567). The two steps' answers — the reason, the typed number — are checked by
  * `deleteReliedOnVersion`, after the role (here and in the service, BR-REQ-060-01).
  *
  * A refusal stays on the screen with the reason kept in its box and the number emptied (the typed

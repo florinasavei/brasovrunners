@@ -13,7 +13,7 @@ import {
 } from "@/modules/legal-documents/domain/retire-steps";
 
 /**
- * «Șterge» on a version somebody relied on (`DECISIONS.md` §NNN): the words of the counts, the two
+ * «Șterge» on a version somebody relied on (`DECISIONS.md` §567): the words of the counts, the two
  * steps, the typed number and which verb a version gets — pure, so without a database.
  */
 type Say = (key: string, values: Record<string, string | number>) => string;
@@ -23,7 +23,7 @@ const translator = (locale: "ro" | "en"): Say =>
 const say = (locale: "ro" | "en") => (key: string, values: { count: number }) => translator(locale)(key, values);
 const counts = (signatures: number, events: number, acknowledgements: number) => ({ signatures, events, acknowledgements });
 
-describe("§NNN the counts in words, without ICU plurals", () => {
+describe("§567 the counts in words, without ICU plurals", () => {
   it("says «1 semnătură», never «1 semnături» — the screenshot of 2026-09-29", () => {
     expect(reliancePhrases(say("ro"), counts(1, 0, 0), "ro")).toEqual({
       signatures: "1 semnătură",
@@ -54,7 +54,7 @@ describe("§NNN the counts in words, without ICU plurals", () => {
   });
 });
 
-describe("§NNN the two steps", () => {
+describe("§567 the two steps", () => {
   it("goes to the number only with a reason of 3 to 200 characters", () => {
     expect(nextRetireStep("reason", { type: "continue", reason: "" })).toBe("reason");
     expect(nextRetireStep("reason", { type: "continue", reason: "  ok " })).toBe("reason");
@@ -76,7 +76,7 @@ describe("§NNN the two steps", () => {
   });
 });
 
-describe("§NNN which verb «Șterge» is", () => {
+describe("§567 which verb «Șterge» is", () => {
   const facts = (overrides: Partial<DeletionFacts>): DeletionFacts => ({
     isApproved: true,
     acceptanceCount: 0,

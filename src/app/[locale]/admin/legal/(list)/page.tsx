@@ -192,7 +192,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
   const t = await getTranslations("Admin");
   const words = await confirmWords();
   /*
-    Every row, and the two lists the page draws from it (§NNN): the versions — everything but a
+    Every row, and the two lists the page draws from it (§567): the versions — everything but a
     version deleted from the list — and «Versiuni șterse», read-only. A deleted version is never
     listed, filtered, counted or offered anything; it stays among `allVersions` only where the rows
     are read as history (a terms version's time in force was shortened by it while it was in force).
@@ -307,7 +307,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
     events: version.eventCount,
     acknowledgements: version.privacyAcknowledgementCount,
   });
-  // The three counts in words, «1 semnătură · 0 evenimente · 0 înscrieri» (§NNN, `countForm`).
+  // The three counts in words, «1 semnătură · 0 evenimente · 0 înscrieri» (§567, `countForm`).
   const relianceWords = (version: LegalDocumentVersionRow) => reliancePhrases((key, values) => t(key, values), relianceOf(version), locale);
 
   // What the filter keeps, and how many of how many: «4 versiuni din 11».
@@ -465,12 +465,12 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
     );
 
     if (version.isApproved) {
-      // What «Șterge» would do with it (§NNN): the service's own rule, so the row and the server agree.
+      // What «Șterge» would do with it (§567): the service's own rule, so the row and the server agree.
       const plan = removalPlan(factsOf(version));
       if (plan.kind === "refused") return reason(t("legal.removeBlockedCurrent"));
 
       /*
-        Somebody relied on it (§NNN, the owner, 2026-09-29: «aș vrea să pot șterge (cu dublă
+        Somebody relied on it (§567, the owner, 2026-09-29: «aș vrea să pot șterge (cu dublă
         confirmare) chiar și documentele care sunt deja semnate»): «Șterge» takes it off the list
         and keeps its text, in two steps on its own screen. Withdrawal stays refused while a count
         stands on it (§46); a terms version agreed to only inside its window keeps its withdraw
@@ -588,7 +588,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
   const kindCard = (key: LegalDocumentKey) => {
     const kind = overview[key];
     const rows = versionsOfKind(shown, key);
-    // Shown whatever the filter: a deleted version is in no state the chips name (§NNN).
+    // Shown whatever the filter: a deleted version is in no state the chips name (§567).
     const deletedOfKind = filter.kind === null || filter.kind === key ? versionsOfKind(deletedVersions, key) : [];
     const kindName = t(`legal.keys.${key}`);
     const headline = kindHeadline(kind.summary)
@@ -690,7 +690,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
           </Panel>
 
           {/*
-            «Versiuni șterse» (§NNN): the versions of this text taken off the list, their text kept
+            «Versiuni șterse» (§567): the versions of this text taken off the list, their text kept
             because somebody relied on it. Closed, read-only, and nothing is restored from here: a
             deleted version must never come back into force by accident, and the same words again
             are a new version («Versiune nouă» from its page), approved like any other.

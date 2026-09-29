@@ -10,7 +10,7 @@ import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import { nextRetireStep, reasonAcceptable, RETIRE_REASON_MAX, RETIRE_REASON_MIN, type RetireStep } from "../domain/retire-steps";
 
 /**
- * «Șterge» on a version somebody relied on, as two steps inside the page's form (§NNN; the owner,
+ * «Șterge» on a version somebody relied on, as two steps inside the page's form (§567; the owner,
  * 2026-09-29: «cu dublă confirmare»): step one says what happens, with the real counts, and asks
  * the reason; step two asks the version's number typed by hand and carries «Șterg versiunea N».
  *

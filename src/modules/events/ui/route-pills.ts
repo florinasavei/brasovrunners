@@ -32,7 +32,7 @@ export type Pill = {
    * Absent, `label` is the whole of it.
    */
   plain?: string;
-  /** The difficulty's tooltip as a block, the level in bold and the ladder in rows (§NNN); drawn in place of `tooltip`'s text. */
+  /** The difficulty's tooltip as a block, the level in bold and the ladder in rows (§566); drawn in place of `tooltip`'s text. */
   tooltipBlock?: DifficultyTooltipBlock;
 };
 
@@ -131,7 +131,7 @@ export function routePillParts(
 /**
  * The difficulty's pill for a level on the club's scale of fifteen (§526): the gauge of the level
  * (the band's segments lit, the needle at the step, its dots), and **the band alone** in words —
- * «Mediu» (§NNN: the owner, 2026-09-29 19:08, «the sub indicator is enough» — the dots say the step,
+ * «Mediu» (§566: the owner, 2026-09-29 19:08, «the sub indicator is enough» — the dots say the step,
  * the tooltip the level; a number beside them said it a third time). Every word from
  * `difficultyWords`, the one function every surface reads, never a string written here.
  *
@@ -152,7 +152,7 @@ function difficultyPillOf(level: number, t: Translate): Pill {
     // Where no chip is drawn — the emails' facts block (§392): «Mediu, nivelul 5 din 15».
     plain: words.plain,
     tooltip: words.tooltip,
-    // Drawn as a block (§NNN): «Mediu — nivelul 5 din 15» in bold, then one aligned row per band.
+    // Drawn as a block (§566): «Mediu — nivelul 5 din 15» in bold, then one aligned row per band.
     tooltipBlock: words.block,
   };
 }

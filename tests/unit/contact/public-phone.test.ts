@@ -2,12 +2,12 @@ import { describe, expect, it } from "vitest";
 import { publicPhoneSchema, telHref } from "@/modules/contact/domain/public-phone";
 
 /**
- * §NNN — «Telefon public»: one optional number, shown as the club typed it, dialled by its digits.
+ * §565 — «Telefon public»: one optional number, shown as the club typed it, dialled by its digits.
  * Every number here is made up: the club's is a setting, never a value in the repository.
  */
 const SAMPLE = "+40 123 456 789";
 
-describe("§NNN the public phone's value", () => {
+describe("§565 the public phone's value", () => {
   it("keeps a number as typed, trimmed, its inner spaces made one", () => {
     expect(publicPhoneSchema.parse({ phone: `  ${SAMPLE} ` })).toEqual({ phone: SAMPLE });
     expect(publicPhoneSchema.parse({ phone: "+40  123   456 789" })).toEqual({ phone: SAMPLE });

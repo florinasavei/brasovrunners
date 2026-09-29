@@ -100,7 +100,7 @@ export const legalDocuments = pgTable(
     }),
 
     /**
-     * «Șterge» on a version somebody relied on (`DECISIONS.md` §NNN, amending §151 and §556): the
+     * «Șterge» on a version somebody relied on (`DECISIONS.md` §567, amending §151 and §556): the
      * version leaves the club's list and can never be put in force again, and its row, its number
      * and its text stay — a signature, an event or a registration still points at them, and the
      * signed PDF still renders them. Retire-and-hide, never a destruction: a signed version is the

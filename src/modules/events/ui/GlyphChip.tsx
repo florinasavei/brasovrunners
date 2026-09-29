@@ -68,7 +68,7 @@ export default function GlyphChip({
    */
   tooltip?: string;
   /**
-   * The difficulty's tooltip as data (§NNN): drawn as a block — the level in bold, then the ladder
+   * The difficulty's tooltip as data (§566): drawn as a block — the level in bold, then the ladder
    * in aligned rows with the level's band marked (`DifficultyTooltipBlock`) — in place of `tooltip`'s
    * text, which still sets how long a tap keeps it open. Data, never an element, so a Server
    * Component may hand it over.
@@ -166,7 +166,7 @@ export default function GlyphChip({
   // A chip with its own `srLabel` (the difficulty's, §528) already says the tooltip's sentence in
   // its accessible name, so it takes the same path.
   const describeChild = srSuffix !== tooltip && !srLabel;
-  // The difficulty's block (§NNN) is a node too, so it takes the same branch as the fragment.
+  // The difficulty's block (§566) is a node too, so it takes the same branch as the fragment.
   const tooltipTitle = tooltipBlock ? (
     <DifficultyTooltipBlock block={tooltipBlock} />
   ) : describeChild ? (
@@ -186,7 +186,7 @@ export default function GlyphChip({
       onClose={() => setOpen(false)}
       enterTouchDelay={0}
       leaveTouchDelay={readingTimeMs(tooltip)}
-      // A `\n` is a line (§257) in a text tooltip. The difficulty's is a block (§NNN) that sets its
+      // A `\n` is a line (§257) in a text tooltip. The difficulty's is a block (§566) that sets its
       // own lines, and its bubble grows to the block's width rather than MUI's 300 px, so no row wraps.
       slotProps={{ tooltip: { sx: tooltipBlock ? { maxWidth: "none" } : { whiteSpace: "pre-line" } } }}
     >

@@ -15,7 +15,7 @@ import type { LegalDocumentBody } from "@/modules/legal-documents/domain/content
  * animals, proper equipment (shoes, headlamp for night running), falling, etc — basically the
  * runner takes ownership of everything". §418 — the counsel review: informed acceptance of risk,
  * never a waiver, and the law's limit on every sentence that says the organiser does not answer.
- * Never an absolute waiver: since §NNN the texts waive, within the law's limits, the claims for harm
+ * Never an absolute waiver: since §568 the texts waive, within the law's limits, the claims for harm
  * arising solely from the inherent risks, without the organiser's fault.
  *
  * §515 — the owner's review of 2026-09-27: the race's declaration is two texts from one shared

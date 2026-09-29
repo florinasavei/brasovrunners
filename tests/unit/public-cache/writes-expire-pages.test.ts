@@ -134,7 +134,7 @@ const WRITES: Record<string, Expected> = {
   // The settings a public page reads.
   "src/modules/contact/recipients.ts#updateContactRecipients": ["settings"],
   "src/modules/contact/shown-address.ts#updateShownContactAddress": ["settings"],
-  // «Telefon public» (§NNN): the footer's «Contact» on every page.
+  // «Telefon public» (§565): the footer's «Contact» on every page.
   "src/modules/contact/public-phone.ts#updatePublicPhone": ["settings"],
   "src/modules/appearance/site-tint.ts#updateSiteTint": ["settings"],
   "src/modules/appearance/site-font-size.ts#updateSiteFontSize": ["settings"],

@@ -36,7 +36,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-053-02 — «Șterge» on a version somebody signed (`DECISIONS.md` §NNN, amending §203 and
+ * BR-REQ-053-02 — «Șterge» on a version somebody signed (`DECISIONS.md` §567, amending §203 and
  * §556). The owner, 2026-09-29, of a group-run declaration whose version 1 read «1 semnături · 0
  * evenimente · 0 înscrieri» and «Nu se poate nici retrage, nici șterge»: «aș vrea să pot șterge
  * (cu dublă confirmare) chiar și documentele care sunt deja semnate».
@@ -74,7 +74,7 @@ const LABELS = {
   proofLine: (version: number, when: string, hash: string | null) => `Versiunea ${version} · Semnat la ${when}${hash ? ` · SHA-256 ${hash}` : ""}`,
 };
 
-describe("BR-REQ-053-02 «Șterge» on a version somebody relied on (§NNN)", () => {
+describe("BR-REQ-053-02 «Șterge» on a version somebody relied on (§567)", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let administrator: StaffUser;

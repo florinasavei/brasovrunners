@@ -344,7 +344,7 @@ export const PROSE_MEASURE = "60rem";
  * about 10.5× its font size wide, so the 1.25rem floor (210px) fits well inside the 288px a 320px
  * viewport leaves inside the gutters (BR-REQ-041-01 criterion 1).
  *
- * Half of that since §NNN (the owner, 2026-09-29: «Textul ăsta de „Evenimente” e mult prea mare,
+ * Half of that since §569 (the owner, 2026-09-29: «Textul ăsta de „Evenimente” e mult prea mare,
  * pe mobil ia prea mult spațiu, la fel și la „Calendar”»): the wordmark is not drawn at all below
  * `sm` — the header's lockup already carries the club's name, one brand per screen — and from
  * `sm` it is a flat 1rem, 16px, where it was 30.7px at 768 and 32px at 1280. About 168px wide,

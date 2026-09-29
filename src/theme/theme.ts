@@ -64,7 +64,7 @@ export const buildTheme = (options: ThemeOptions) => createTheme({
     // Headings take the display role, so an arriving club typeface changes these and leaves
     // body text alone. Both resolve to Roboto until one arrives — see brand.ts.
     /*
-      A page's title, compact (§NNN; the owner, 2026-09-29: «Textul ăsta de „Evenimente” e mult
+      A page's title, compact (§569; the owner, 2026-09-29: «Textul ăsta de „Evenimente” e mult
       prea mare, pe mobil ia prea mult spațiu, la fel și la „Calendar”»): 1.5rem on a phone —
       24px, MUI's h5 step — and one step down from the old 2rem, 1.75rem (28px), from `sm`. Here
       rather than on each page, so every public H1 that takes the theme's size follows at once:

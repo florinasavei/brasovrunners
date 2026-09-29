@@ -393,7 +393,7 @@ test.describe("legal documents: one card per text, filtered, and the templates' 
 });
 
 /**
- * §NNN — «Șterge» on a version somebody relied on (the owner, 2026-09-29: «aș vrea să pot șterge
+ * §567 — «Șterge» on a version somebody relied on (the owner, 2026-09-29: «aș vrea să pot șterge
  * (cu dublă confirmare) chiar și documentele care sunt deja semnate»): two steps on the version's
  * own screen — the consequences with the counts in words and a reason, then the number typed by
  * hand — and the version moves into the closed «Versiuni șterse» fold, its text still readable.

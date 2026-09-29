@@ -5,7 +5,7 @@ import { declarationRoadEn, declarationRoadRo, declarationTrailEn, declarationTr
 import { groupRunAsphaltEn, groupRunAsphaltRo, groupRunTrailEn, groupRunTrailRo } from "@/modules/legal-documents/templates/group-run-declaration";
 
 /**
- * BR-REQ-053-01, BR-REQ-053-02 (§NNN, amending §515, §523 and §556) — the owner, 2026-09-29: «vreau
+ * BR-REQ-053-01, BR-REQ-053-02 (§568, amending §515, §523 and §556) — the owner, 2026-09-29: «vreau
  * la declarații să fim acoperiți inclusiv în caz de deces». Every declaration template, in both
  * languages, names serious injury and death among the inherent risks, says the runner takes part at
  * their own risk and accepts those risks death included, and waives — «în limitele permise de lege» —
@@ -28,7 +28,7 @@ const DECLARATIONS: ReadonlyArray<{ key: keyof typeof LEGAL_TEMPLATES; ro: Legal
 
 const LAW_LIMIT = { ro: "în limitele permise de lege", en: "to the extent the law allows" } as const;
 
-/** The sentences §NNN wrote, the same in the four texts. */
+/** The sentences §568 wrote, the same in the four texts. */
 const WORDS = {
   ownRisk: { ro: "Particip de bunăvoie și pe propriul risc.", en: "I take part of my own free will and at my own risk." },
   canKill: { ro: "Aceste riscuri pot duce la accidentare, la vătămare gravă sau chiar la deces.", en: "These risks can lead to injury, to serious injury or even to death." },
@@ -67,7 +67,7 @@ const GUARDIAN = {
 const DEATH = { ro: /\bdeces(?:ul)?\b/, en: /\bdeath\b/ } as const;
 const NOT_LIABLE = { ro: /nu răspunde|nu (?:poate|pot) fi tras/, en: /not responsible|not liable|cannot be held liable/ } as const;
 
-describe("§NNN the declarations cover the inherent risks, death included, within the law's limits", () => {
+describe("§568 the declarations cover the inherent risks, death included, within the law's limits", () => {
   it("are the catalogue's four declaration texts", () => {
     for (const { key, ro, en } of DECLARATIONS) {
       expect(LEGAL_TEMPLATES[key].ro.body, key).toBe(ro);

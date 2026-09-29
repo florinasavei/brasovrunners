@@ -234,7 +234,7 @@ export type AuditAction =
   | "contact_recipients.changed"
   /** «Adresa de contact afișată»: the mailbox, the club's Gmail, or both (§442). */
   | "shown_contact_address.changed"
-  /** «Telefon public»: the number the footer's «Contact» shows, set or cleared (§NNN); whether one is set, never the number. */
+  /** «Telefon public»: the number the footer's «Contact» shows, set or cleared (§565); whether one is set, never the number. */
   | "public_phone.changed"
   /** «Aspectul site-ului»: the public pages' light background tint, a preset or a typed colour (§488). */
   | "site_tint.changed"
@@ -283,7 +283,7 @@ export type AuditAction =
    */
   | "legal_document.deleted"
   /**
-   * «Șterge» on a version somebody relied on (`DECISIONS.md` §NNN): retired and hidden from the
+   * «Șterge» on a version somebody relied on (`DECISIONS.md` §567): retired and hidden from the
    * list, **its text kept** — signatures, events or registrations still point at it. The key, the
    * number, the reason, the counts that stood on it and the hashes; never the text (§12.12), which
    * is still on its row. Told apart from `legal_document.deleted`, which destroyed a version nothing

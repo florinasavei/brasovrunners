@@ -64,7 +64,7 @@ describe("the kit-face wordmark heads the listing, the calendar and the contact 
     expect(source).not.toMatch(/next\/font|@font-face|\.ttf|\.woff/);
   });
 
-  it("is not drawn on a phone, where the header's lockup is the brand (§NNN)", () => {
+  it("is not drawn on a phone, where the header's lockup is the brand (§569)", () => {
     const source = read("shared/ui/Wordmark.tsx");
     // Hidden by CSS, not left out on the server: the static page is one for every width (§549).
     expect(source).toContain('display: { xs: "none", sm: "block" }');

@@ -35,7 +35,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 /**
- * «Șterge» on one approved version (BR-REQ-053-02, `DECISIONS.md` §151, §NNN).
+ * «Șterge» on one approved version (BR-REQ-053-02, `DECISIONS.md` §151, §567).
  *
  * ## Two kinds of deletion, one screen
  *
@@ -44,7 +44,7 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
  *
  * - **nothing depends on it** — §151's real delete: the row, both texts and the number go, behind
  *   a typed phrase (`GDPR 2`) and a reason;
- * - **a signature, an event or a registration depends on it** (§NNN) — retire-and-hide, in two
+ * - **a signature, an event or a registration depends on it** (§567) — retire-and-hide, in two
  *   steps (`LegalRetireSteps`): what happens, with the counts in words, and the reason; then the
  *   version's number typed by hand. The text stays, because a signed version is the club's proof of
  *   what a person accepted (AGENTS.md §10.8, §556);

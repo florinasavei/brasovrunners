@@ -1,7 +1,7 @@
 import { countForm, type CountForm } from "@/i18n/count-form";
 
 /**
- * «Șterge» on a version somebody relied on, in two steps (§NNN; the owner, 2026-09-29: «cu dublă
+ * «Șterge» on a version somebody relied on, in two steps (§567; the owner, 2026-09-29: «cu dublă
  * confirmare»): first the consequences and the reason, then the version's number typed by hand.
  * Pure — the step, the event, the next step — so the screen's two steps are tested without a
  * browser, and the server checks both answers again regardless (BR-REQ-060-01).

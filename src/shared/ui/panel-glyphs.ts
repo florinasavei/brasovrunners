@@ -137,7 +137,7 @@ export const PANEL_GLYPHS = {
   newsletter: NewspaperIcon,
   // The club and the platform.
   legal: GavelIcon,
-  // «Versiuni șterse» (§NNN): the versions taken off the list, their text kept — the swept bin.
+  // «Versiuni șterse» (§567): the versions taken off the list, their text kept — the swept bin.
   deletedVersions: DeleteSweepIcon,
   invite: PersonAddIcon,
   members: GroupAddIcon,

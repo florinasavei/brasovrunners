@@ -63,14 +63,14 @@ test.describe("BR-REQ-070-04 the contact form", () => {
     const target = width >= 600 ? FOLD_LINE.sm : FOLD_LINE.xs;
     expect((await inFooter.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(target - 0.5);
 
-    // And under the bar, in the club's identity block, always in sight at the page's end (§NNN).
+    // And under the bar, in the club's identity block, always in sight at the page's end (§565).
     const block = page.getByTestId("club-identity-block");
     await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
     await expect(block.getByTestId("club-identity-write")).toHaveAttribute("href", "/ro/contact");
   });
 
   /**
-   * §NNN — the page names who is written to: «<legal name> (<site name>) · CIF <CIF>» under the form
+   * §565 — the page names who is written to: «<legal name> (<site name>) · CIF <CIF>» under the form
    * (or the address), composed from the environment. The suite's server sets no legal fact (CI) —
    * a developer's `.env.local` may — so the line is checked when it is drawn and its absence when
    * it is not; its words are never compared with a value.

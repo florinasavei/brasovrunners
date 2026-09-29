@@ -32,7 +32,7 @@ describe("the club's facts in the templates", () => {
     expect(remainingPlaceholders(filled)).toEqual(["<CONTACT EMAIL>", "<REGISTERED ADDRESS>"]);
   });
 
-  it("§NNN gives the site the registration number without a label of its own", () => {
+  it("§565 gives the site the registration number without a label of its own", () => {
     for (const written of ["CIF 12345678", "C.I.F. 12345678", "cif: 12345678", "CUI 12345678", "C.U.I.: 12345678", " 12345678 "]) {
       expect(bareRegistrationNumber(written), written).toBe("12345678");
     }

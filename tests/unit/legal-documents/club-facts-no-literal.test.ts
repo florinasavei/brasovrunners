@@ -13,7 +13,7 @@ import {
 } from "../../../scripts/club-facts-values.mjs";
 
 /**
- * §NNN (amending §132's "environment, never source" into a check) — the club's legal name, CIF and
+ * §565 (amending §132's "environment, never source" into a check) — the club's legal name, CIF and
  * seat are shown on the site now (the identity line and the footer's block), and every one of them
  * is composed from the environment: no file of the repository — public — may carry one.
  *
@@ -47,7 +47,7 @@ const files = [
 /** The values in force here: the process's environment first, then `.env.local` beside it. */
 const knownValues = () => knownClubFactValues(path.join(ROOT, ".env.local"));
 
-describe("§NNN no legal fact of the club's is a literal in the repository", () => {
+describe("§565 no legal fact of the club's is a literal in the repository", () => {
   it("finds the files it walks", () => {
     expect(files.length).toBeGreaterThan(500);
     expect(files.some((file) => file.endsWith(path.join("src", "shared", "ui", "ClubIdentity.tsx")))).toBe(true);

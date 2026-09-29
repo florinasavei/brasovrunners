@@ -158,7 +158,7 @@ describe("§528, §563 the pill's tooltip names the level of fifteen, then every
     ["ro", 5, "Mediu — nivelul 5 din 15", 1],
     ["ro", 14, "Foarte greu — nivelul 14 din 15", 4],
     ["en", 8, "Fairly hard — level 8 of 15", 2],
-  ] as const)("§NNN in %s, level %i's tooltip is a block: the level in bold, then five aligned rows with its band marked", async (locale, level, head, current) => {
+  ] as const)("§566 in %s, level %i's tooltip is a block: the level in bold, then five aligned rows with its band marked", async (locale, level, head, current) => {
     currentLocale = locale;
     const pill = await difficultyPill(level);
     const block = pill.tooltipBlock!;

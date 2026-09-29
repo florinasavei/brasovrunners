@@ -391,7 +391,7 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       §539 adds one reader and no writer: `readLegalOverview` reads each text's state for the
       cards and «Versiune nouă».
 
-      §NNN adds `deleteReliedOnVersion`, and it edits no word either: «Șterge» on a version
+      §567 adds `deleteReliedOnVersion`, and it edits no word either: «Șterge» on a version
       somebody relied on sets `deleted_at`, who and why, and withdraws it — the row, the number and
       both texts stay exactly as they were, because the acceptances, the signed PDF and the desk
       still read them. Like withdrawal it cannot move the version in force (refused), and unlike it

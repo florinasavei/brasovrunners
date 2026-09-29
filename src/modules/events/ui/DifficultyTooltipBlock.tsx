@@ -2,7 +2,7 @@ import Box from "@mui/material/Box";
 import type { DifficultyTooltipBlock as Block } from "../domain/difficulty";
 
 /**
- * The difficulty pill's tooltip, set as a small block rather than two runs of text (§NNN — the
+ * The difficulty pill's tooltip, set as a small block rather than two runs of text (§566 — the
  * owner, 2026-09-29 19:48: «vreau ca acest tooltip să fie formatat mai frumos», of «foarte / greu
  * 13–15» split wherever the bubble ended): the level in bold on the first line, «Mediu — nivelul 5
  * din 15», then the ladder, one band per row, the band's word on the left and its levels on the

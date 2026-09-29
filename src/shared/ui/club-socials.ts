@@ -6,7 +6,7 @@ export type ClubSocialLink = { network: SocialNetwork; href: string; label: stri
 
 /**
  * The club's own profiles elsewhere, in the order the footer draws them — the one list the bar's
- * marks and the identity block's middle column both read (§NNN: reuse, never a second list). From
+ * marks and the identity block's middle column both read (§565: reuse, never a second list). From
  * the environment (`CLUB_FACEBOOK_URL`, `CLUB_INSTAGRAM_URL`, `CLUB_STRAVA_URL`, `env.ts`); an
  * unset one is left out, and none set is an empty list.
  */

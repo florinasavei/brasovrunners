@@ -76,7 +76,7 @@ export async function updateShownContactAddressAction(_previous: FormOutcome | n
 }
 
 /**
- * «Telefon public» (§NNN): the one number the footer's «Contact» shows, or none when the box is
+ * «Telefon public» (§565): the one number the footer's «Contact» shows, or none when the box is
  * left empty. Administrator at the door, the service asserting it again.
  */
 export async function updatePublicPhoneAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {

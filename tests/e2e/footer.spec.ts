@@ -451,7 +451,7 @@ test.describe("§372 §378 §385 one row on a phone, in both languages, fold clo
       }
 
       // At the end of the page: the same one row, and under it only the club's identity block
-      // (§NNN) — the bar is measured without it: from the bar's top to the block's top is the one
+      // (§565) — the bar is measured without it: from the bar's top to the block's top is the one
       // row, and the block is what the document ends on.
       await restAtTheEnd(page);
       const chrome = await page.evaluate(() => {
@@ -505,7 +505,7 @@ test.describe("§372 the desktop build stamp, pinned to the bar's own corner", (
 });
 
 /**
- * §NNN — the club's identity block under the bar (the owner, 2026-09-29: the legal name and the CIF
+ * §565 — the club's identity block under the bar (the owner, 2026-09-29: the legal name and the CIF
  * «also in the footer, more clearly», after another running club's footer). Always visible at the
  * page's end, never inside «Despre club»; three columns from `sm`, stacked on a phone; every link a
  * 44-pixel target; the marks the bar's own; «Contact» with «Scrie-ne». The legal facts come from
@@ -513,7 +513,7 @@ test.describe("§372 the desktop build stamp, pinned to the bar's own corner", (
  * first column is checked when it is there and its absence is checked when it is not; the words
  * are never compared with a value, which the repository does not hold.
  */
-test.describe("§NNN the club's identity block under the bar", () => {
+test.describe("§565 the club's identity block under the bar", () => {
   for (const width of [320, 360, 768, 1280] as const) {
     test(`at ${width}px it follows the bar, outside the fold, its links 44px, nothing wider than the page`, async ({ page }) => {
       await page.setViewportSize({ width, height: 720 });

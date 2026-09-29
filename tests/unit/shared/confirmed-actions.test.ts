@@ -144,7 +144,7 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   updateContactRecipientsAction: [],
   // What the site shows and every email's Reply-To (§442).
   updateShownContactAddressAction: [],
-  // «Telefon public» (§NNN): the number every page's footer shows from the next page view.
+  // «Telefon public» (§565): the number every page's footer shows from the next page view.
   updatePublicPhoneAction: [],
   // The public pages' background tint (§488): every visitor sees the new colour from the next page view.
   updateSiteTintAction: [],
@@ -201,7 +201,7 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   eraseRegistrationFromListAction: "guarded by the registered name, typed: the typing is the question",
   deleteApprovedLegalVersionAction: "guarded by a typed phrase: the typing is the question",
   deleteReliedOnLegalVersionAction:
-    "two steps on its own screen: the consequences and a reason, then the version's number typed by hand — the typing is the question (§NNN)",
+    "two steps on its own screen: the consequences and a reason, then the version's number typed by hand — the typing is the question (§567)",
   deleteLegalVersionsAction:
     "guarded by a typed phrase (DELETE <n>) when an approved version is ticked, the typing is the question; drafts alone ask in the §384 dialog (§532)",
   previewParticipantMessageAction: "a preview; sends nothing",

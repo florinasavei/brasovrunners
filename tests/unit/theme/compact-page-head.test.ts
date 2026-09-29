@@ -11,7 +11,7 @@ import { headingRule } from "@/theme/surfaces";
 import { theme } from "@/theme/theme";
 
 /**
- * §NNN (amending §292) — the compact page head. The owner, 2026-09-29, on `/ro/calendar`:
+ * §569 (amending §292) — the compact page head. The owner, 2026-09-29, on `/ro/calendar`:
  * «Textul ăsta de „Evenimente” e mult prea mare, pe mobil ia prea mult spațiu, la fel și la
  * „Calendar”».
  *
@@ -43,7 +43,7 @@ const cssOnly = (html: string) => [...html.matchAll(/<style[^>]*>([\s\S]*?)<\/st
 const withTheme = (child: ReturnType<typeof createElement>) =>
   createElement(ThemeProvider, { theme } as unknown as ComponentProps<typeof ThemeProvider>, child);
 
-describe("§NNN the page head is compact on a phone", () => {
+describe("§569 the page head is compact on a phone", () => {
   it("does not draw the wordmark below sm, and draws it at 1rem from sm", async () => {
     const html = await render(withTheme(createElement(Wordmark)));
     const css = cssOnly(html);

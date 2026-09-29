@@ -9,7 +9,7 @@ import { DomainError } from "@/shared/errors/domain-error";
 import { DEFAULT_PUBLIC_PHONE, type PublicPhone, publicPhoneSchema } from "./domain/public-phone";
 
 /**
- * «Telefon public» (§NNN): the shown contact address's shape (§442) — one `platform_settings` row
+ * «Telefon public» (§565): the shown contact address's shape (§442) — one `platform_settings` row
  * (the table is a key-value store, so no migration), written by an Administrator on «Pagini» →
  * «Contact», audited, read by the footer's «Contact» column through the public cache.
  */

@@ -25,7 +25,7 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  * carries "în limitele permise de lege" / "to the extent the law allows". A Romanian lawyer should
  * read both before the club approves them; these notes are the platform's reading, not advice.
  *
- * **Death named, and a waiver within the law's limits (§NNN, the owner, 2026-09-29: «vreau la
+ * **Death named, and a waiver within the law's limits (§568, the owner, 2026-09-29: «vreau la
  * declarații să fim acoperiți inclusiv în caz de deces»; amending §523 and §556).** The acceptance
  * paragraph now opens «Particip de bunăvoie și pe propriul risc», names where the inherent risks come
  * from — ground, weather, own health, other participants, animals, traffic where roads are used or

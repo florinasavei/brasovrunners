@@ -276,7 +276,7 @@ test.describe.serial("BR-REQ-050-03 standing pages", () => {
   });
 
   /**
-   * §NNN — a standing page is the club talking about itself, so it ends with the club's legal name
+   * §565 — a standing page is the club talking about itself, so it ends with the club's legal name
    * and CIF: «<legal name> (<site name>) · CIF <CIF>», composed from the environment. The suite's
    * server sets no legal fact (CI) — a developer's `.env.local` may — so the line is checked when it
    * is drawn and its absence when it is not; its words are never compared with a value.

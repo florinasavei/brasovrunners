@@ -45,7 +45,7 @@ export function clubFactsFromEnv(
 }
 
 /**
- * The registration number without a label of its own (§NNN): `CLUB_REGISTRATION_NUMBER` may be
+ * The registration number without a label of its own (§565): `CLUB_REGISTRATION_NUMBER` may be
  * written «CIF 12345678» — which is how the legal texts read it, after «sediul în …,» — while the
  * site's identity line and footer block write «CIF» / «C.I.F.» themselves. A leading «CIF», «C.I.F.»,
  * «CUI» or «C.U.I.», with or without a colon, is dropped; «RO…» and the digits stay as they are.

@@ -24,7 +24,7 @@ type Props = {
 };
 
 /**
- * «Telefon public» (§NNN): one optional number, shown under «Contact» in the footer's identity
+ * «Telefon public» (§565): one optional number, shown under «Contact» in the footer's identity
  * block on every page — and nowhere while the box is empty. The shown address's shape (§442): a
  * Server Component, one form, one box and its «Salvează», behind the §384 confirmation.
  */

@@ -1,6 +1,6 @@
 /**
  * The club's legal facts as this machine knows them — for the checks that refuse to let one into
- * the repository (§NNN; the repository is public, §98, §132).
+ * the repository (§565; the repository is public, §98, §132).
  *
  * The site shows the legal name and the CIF (the identity line and the footer's block), composed
  * from these variables; the values live on the Vercel projects and in a developer's `.env.local`,

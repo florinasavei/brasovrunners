@@ -219,7 +219,7 @@ export default async function LegalDocumentVersionPage({ params, searchParams }:
             page, unchanged, and the page has to explain why nothing else offers it any more.
           */}
           {/*
-            A version deleted from the list (§NNN), reached from «Versiuni șterse»: its text is
+            A version deleted from the list (§567), reached from «Versiuni șterse»: its text is
             still here, unchanged, because somebody signed it — and the page says why nothing
             offers it any more, and that it cannot come back into force.
           */}

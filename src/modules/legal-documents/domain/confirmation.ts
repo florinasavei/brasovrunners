@@ -58,7 +58,7 @@ export function batchConfirmationPhrase(approvedCount: number): string {
 }
 
 /**
- * The second step of «Șterge» on a version somebody relied on (§NNN): the version's number, typed
+ * The second step of «Șterge» on a version somebody relied on (§567): the version's number, typed
  * by hand — `6`, nothing else. Surrounding space is forgiven; a `v` in front is too, because the
  * list writes «v6» in places and a person copying it is not wrong. Anything else refuses.
  *

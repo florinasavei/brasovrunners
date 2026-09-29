@@ -85,7 +85,7 @@ export default async function AdminContactSettingsPage({ params, searchParams }:
         openWhen={{ primary: true, saved: saved === "shownContactAddress" }}
       />
 
-      {/* «Telefon public» (§NNN): optional; the footer's «Contact» shows it only when set. */}
+      {/* «Telefon public» (§565): optional; the footer's «Contact» shows it only when set. */}
       <PublicPhonePanel locale={locale} state={publicPhone} mayEdit={mayEdit} openWhen={{ primary: true, saved: saved === "publicPhone" }} />
     </Stack>
   );

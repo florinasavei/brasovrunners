@@ -543,7 +543,7 @@ export async function cachedShownContactAddresses(): Promise<string[]> {
 }
 
 /**
- * «Telefon public» (§NNN): the number the footer's «Contact» column shows, or null — a number the
+ * «Telefon public» (§565): the number the footer's «Contact» column shows, or null — a number the
  * site prints anyway, so the value itself is cached. When the database cannot answer, no number:
  * the column still has the address and «Scrie-ne».
  */
