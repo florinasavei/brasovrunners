@@ -10,7 +10,7 @@ import { CSV_BOM } from "@/modules/newsletter/subscribers-csv";
 import { canExportSponsorList } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import { csvCell } from "./csv";
-import { sharedWithSponsors, sponsorShareGate, type SponsorShareGate } from "./domain/sponsor-share";
+import { reachesPartner, sponsorShareGate, type SponsorShareGate } from "./domain/sponsor-share";
 
 /**
  * «Descarcă lista pentru sponsori» (§NNN, amending §562 and §550). The owner, 2026-09-29: "I need to
@@ -27,7 +27,10 @@ import { sharedWithSponsors, sponsorShareGate, type SponsorShareGate } from "./d
  * `kind` in no other condition) whose address is proved and which still stands — waiting for its
  * declaration, on the waiting list, offered a place, or confirmed — never an unproved address, a
  * cancelled or an expired one. For the partners, only a yes given under a notice that describes the
- * sharing (`{{promotionalMaterialsShared}}`).
+ * sharing (`{{promotionalMaterialsShared}}`), and never a minor: a child's name goes to no third
+ * party's marketing, whatever the guardian ticked — the participant must be 18 on the day of the
+ * download (`domain/sponsor-share.ts#adultForPartners`), and a registration with no birth date is
+ * left out, the safe side. The club's own sending (§562's list) is not narrowed: the guardian's address receives it.
  *
  * **The minimum.** Prenume, Nume, Email, Eveniment, Data acordului — never the birth date, the
  * phone, the health note, the declaration's facts or the address holder's other people.
@@ -39,6 +42,18 @@ import { sharedWithSponsors, sponsorShareGate, type SponsorShareGate } from "./d
 
 /** The states whose yes is listed: an address proved, a registration that still stands (§562). */
 export const PROMO_LISTED_STATUSES = ["PENDING_DECLARATION", "WAITLISTED", "WAITLIST_OFFERED", "CONFIRMED"] as const satisfies readonly RegistrationStatus[];
+
+/** «Cui dai lista», as long as a partner's name and a person's needs to be. */
+export const SPONSOR_RECIPIENT_MAX = 120;
+
+/**
+ * The optional recipient a download names (`?to=`), as the audit row keeps it: control characters
+ * gone, whitespace collapsed, at most `SPONSOR_RECIPIENT_MAX` characters; null when nothing is left.
+ */
+export function sponsorRecipient(raw: string | null): string | null {
+  const text = (raw ?? "").replace(/\p{Cc}+/gu, " ").replace(/\s+/g, " ").trim().slice(0, SPONSOR_RECIPIENT_MAX).trim();
+  return text === "" ? null : text;
+}
 
 /** Every row, not a table's first ones: the file is the whole answer. */
 export const SPONSOR_LIST_LIMIT = 100_000;
@@ -59,6 +74,8 @@ export type PromoConsentRow = {
   consentedAt: Date | null;
   /** The notice this registration recorded (§396's column). */
   privacyNoticeVersion: number;
+  /** The participant's birth date (`YYYY-MM-DD`), read only to keep a minor out of the partners' list; never in a file. */
+  birthDate: string | null;
 };
 
 /** The one condition of who is listed, per event or across events. */
@@ -87,6 +104,7 @@ export async function readPromoConsentRows<T extends Record<string, unknown>>(
       eventTitle: eventTranslations.title,
       consentedAt: registrations.promoConsentAt,
       privacyNoticeVersion: registrations.privacyNoticeVersion,
+      birthDate: registrations.birthDate,
     })
     .from(registrations)
     .innerJoin(participants, eq(participants.id, registrations.participantId))
@@ -116,6 +134,17 @@ export type SponsorList = {
   rows: PromoConsentRow[];
 };
 
+/** What a page shows beside the button: the switch and how many rows the file would hold. */
+export type SponsorListSummary = { offered: boolean; count: number };
+
+/**
+ * The one row rule for the partners, shared by the file and the count: a yes given under a notice
+ * that describes the sharing (`sharedWithSponsors`), and an adult on the day of the download.
+ */
+function mayReachPartner(row: { consentedAt: Date | null; privacyNoticeVersion: number; birthDate: string | null }, gate: SponsorShareGate, now: Date): boolean {
+  return reachesPartner({ promoConsent: true, promoConsentAt: row.consentedAt, privacyNoticeVersion: row.privacyNoticeVersion, birthDate: row.birthDate }, gate, now);
+}
+
 function assertMayExport(actor: Pick<StaffUser, "role">): void {
   if (!canExportSponsorList(actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not take the sponsor list; §NNN keeps it to the Organizer and the Administrator`);
@@ -137,10 +166,29 @@ export async function sponsorList<T extends Record<string, unknown>>(
   const gate = sponsorShareGate(versions);
   if (gate.sharing.size === 0) return { offered, rows: [] };
   const candidates = await readPromoConsentRows(db, { locale: input.locale, eventId: input.eventId, limit: SPONSOR_LIST_LIMIT, noticeVersions: [...gate.sharing] });
-  return {
-    offered,
-    rows: candidates.filter((row) => sharedWithSponsors({ promoConsent: true, promoConsentAt: row.consentedAt, privacyNoticeVersion: row.privacyNoticeVersion }, gate)),
-  };
+  return { offered, rows: candidates.filter((row) => mayReachPartner(row, gate, input.now)) };
+}
+
+/**
+ * The count beside the button, for the registrations page and «Newsletter» (§NNN, review nit): the
+ * same rule as the file, over three columns and no join, and no count at all while the notice in
+ * force does not describe the sharing — the page shows none then.
+ */
+export async function sponsorListSummary<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "role">,
+  input: { eventId?: string; now: Date },
+): Promise<SponsorListSummary> {
+  assertMayExport(actor);
+  const [offered, versions] = await Promise.all([noticeDescribesPromotionalMaterialsShared(db, input.now), findSponsorShareVersions(db)]);
+  const gate = sponsorShareGate(versions);
+  if (!offered || gate.sharing.size === 0) return { offered, count: 0 };
+  const rows = await db
+    .select({ consentedAt: registrations.promoConsentAt, privacyNoticeVersion: registrations.privacyNoticeVersion, birthDate: registrations.birthDate })
+    .from(registrations)
+    .where(and(promoListed(input.eventId), inArray(registrations.privacyNoticeVersion, [...gate.sharing])))
+    .limit(SPONSOR_LIST_LIMIT);
+  return { offered, count: rows.filter((row) => mayReachPartner(row, gate, input.now)).length };
 }
 
 export type SponsorListCsvHeader = { firstName: string; lastName: string; email: string; event: string; consentedAt: string };

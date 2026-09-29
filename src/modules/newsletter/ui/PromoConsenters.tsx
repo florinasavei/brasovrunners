@@ -14,7 +14,7 @@ import type { Locale } from "@/i18n/routing";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import Panel from "@/shared/ui/Panel";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
-import type { SponsorList } from "@/modules/registrations/sponsor-list";
+import type { SponsorListSummary } from "@/modules/registrations/sponsor-list";
 import SponsorListButton from "@/modules/registrations/ui/SponsorListButton";
 import { PROMO_TABLE_LIMIT, type PromoConsenterList, type PromoConsenterRow } from "../promo-consenters";
 
@@ -22,7 +22,7 @@ type Props = {
   locale: Locale;
   list: PromoConsenterList;
   /** The list for sponsors across every event (§NNN), or null for a role that may not take it. */
-  sponsors?: SponsorList | null;
+  sponsors?: SponsorListSummary | null;
 };
 
 /** The fold's own anchor, beside «Abonați»'s. */

@@ -232,6 +232,7 @@ describe("§562 the exports", () => {
         eventTitle: "Crosul, toamna",
         consentedAt: new Date("2026-09-29T10:00:00.000Z"),
         privacyNoticeVersion: 1,
+        birthDate: "1990-01-01",
       },
     ]);
     expect(csv.startsWith("﻿Prenume,Nume,Email,Eveniment,Data acordului\r\n")).toBe(true);

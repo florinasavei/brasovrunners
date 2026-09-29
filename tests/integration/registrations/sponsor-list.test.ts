@@ -12,7 +12,8 @@ import { computeContentHash, type LegalDocumentTranslationInput } from "@/module
 import { insertLegalDocumentVersion, noticeDescribesPromotionalMaterialsShared } from "@/modules/legal-documents/repository";
 import { CSV_BOM } from "@/modules/newsletter/subscribers-csv";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
-import { buildSponsorListCsv, readSponsorShareGate, sponsorList } from "@/modules/registrations/sponsor-list";
+import { listPartnerShares } from "@/modules/audit/repository";
+import { buildSponsorListCsv, readSponsorShareGate, sponsorList, sponsorListSummary } from "@/modules/registrations/sponsor-list";
 import { sharedWithSponsors } from "@/modules/registrations/domain/sponsor-share";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
@@ -28,7 +29,10 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * - only a yes given under a notice that says the partners may receive it
  *   (`{{promotionalMaterialsShared}}`): a yes given under §562's «partenerii nu primesc adresa ta»
  *   never reaches a sponsor, even once a sharing notice is in force;
+ * - never a minor on the day of the download, and never a registration without a birth date;
  * - the file is offered only while the notice in force says so — the route refuses otherwise;
+ * - every download records the registrations it held and whom it was given to, and a
+ *   registration's page reads that back (the notice's art. 15 and 19 promise);
  * - one query and one file for one event and for every event;
  * - the Organizer, the Administrator and the Superadministrator take it; Tehnic and the others are
  *   refused, on the server; every download leaves one audit row with the event and the count.
@@ -94,7 +98,7 @@ let seq = 0;
 async function seedRow(
   eventId: string,
   firstName: string,
-  options: { status?: Registration["status"]; kind?: Registration["kind"]; promoConsent?: boolean; version?: number; at?: Date | null } = {},
+  options: { status?: Registration["status"]; kind?: Registration["kind"]; promoConsent?: boolean; version?: number; at?: Date | null; birthDate?: string | null } = {},
 ) {
   seq += 1;
   const email = `${firstName.toLowerCase()}${seq}@example.ro`;
@@ -116,7 +120,7 @@ async function seedRow(
       firstName,
       lastName: "Pop",
       displayName: firstName,
-      birthDate: "1985-03-02",
+      birthDate: options.birthDate === undefined ? "1985-03-02" : options.birthDate,
       phone: "+40711111111",
       privacyNoticeVersion: options.version ?? 2,
       privacyAcknowledgedAt: options.at ?? UNDER_V2,
@@ -186,6 +190,26 @@ describe("§NNN who is on the sponsor list", () => {
     expect(csv).not.toContain("+40711111111");
   });
 
+  it("never lists a minor on the day of the download, nor a registration without a birth date; the count says the same", async () => {
+    await approveNotice(2, sharing, V1_AT);
+    const event = await createEvent("crosul-toamnei", "Crosul toamnei");
+    await seedRow(event.id, "Ana");
+    // Seventeen on the day of the download: the guardian's yes stays the club's, never a partner's.
+    await seedRow(event.id, "Bogdan", { birthDate: "2009-09-30" });
+    // Eighteen that very day: an adult now.
+    await seedRow(event.id, "Carmen", { birthDate: "2008-09-29" });
+    // No birth date (a registration the desk entered): left out, the safe side.
+    await seedRow(event.id, "Dan", { birthDate: null });
+    const admin = await staff("ADMIN");
+    const list = await sponsorList(db, admin, { eventId: event.id, locale: "ro", now: NOW });
+    expect(list.rows.map((row) => row.firstName).sort()).toEqual(["Ana", "Carmen"]);
+    expect(await sponsorListSummary(db, admin, { eventId: event.id, now: NOW })).toEqual({ offered: true, count: 2 });
+    expect(await sponsorListSummary(db, admin, { now: NOW })).toEqual({ offered: true, count: 2 });
+    // A day earlier Carmen was seventeen.
+    const dayBefore = new Date("2026-09-28T10:00:00.000Z");
+    expect((await sponsorList(db, admin, { eventId: event.id, locale: "ro", now: dayBefore })).rows.map((row) => row.firstName)).toEqual(["Ana"]);
+  });
+
   it("the row gate asks both notices: the one the registration recorded and the one in force at the yes", async () => {
     await approveNotice(1, boxOnly, V1_AT);
     await approveNotice(2, sharing, V2_AT);
@@ -201,8 +225,10 @@ describe("§NNN who is on the sponsor list", () => {
     const event = await createEvent("crosul-toamnei", "Crosul toamnei");
     await seedRow(event.id, "Ana", { version: 1, at: UNDER_V2 });
     expect(await noticeDescribesPromotionalMaterialsShared(db, NOW)).toBe(false);
-    const list = await sponsorList(db, await staff("ADMIN"), { eventId: event.id, locale: "ro", now: NOW });
+    const admin = await staff("ADMIN");
+    const list = await sponsorList(db, admin, { eventId: event.id, locale: "ro", now: NOW });
     expect(list).toEqual({ offered: false, rows: [] });
+    expect(await sponsorListSummary(db, admin, { eventId: event.id, now: NOW })).toEqual({ offered: false, count: 0 });
   });
 
   it("one query for one event and for every event: the same rows, the same shape", async () => {
@@ -225,6 +251,7 @@ describe("§NNN who is on the sponsor list", () => {
   it.each([["DEV"], ["CONTRIBUTOR"], ["COPYWRITER"], ["MEMBER"]] as const)("refuses the %s role in the read", async (role) => {
     await approveNotice(2, sharing, V1_AT);
     expect(await refusal(sponsorList(db, await staff(role), { locale: "ro", now: NOW }))).toBe("FORBIDDEN");
+    expect(await refusal(sponsorListSummary(db, await staff(role), { now: NOW }))).toBe("FORBIDDEN");
   });
 });
 
@@ -248,10 +275,10 @@ describe("§NNN the route: the role on the server, the notice, the file and its 
     expect(await db.select().from(auditLogs).where(eq(auditLogs.action, "registrations.sponsor_list_exported"))).toHaveLength(3);
   });
 
-  it("writes the five columns with a BOM, names the file by the event or «toate», and records the event and the count — never a row", async () => {
+  it("writes the five columns with a BOM, names the file by the event or «toate», and records the event, the count and the registrations — never a name or an address", async () => {
     await approveNotice(2, sharing, V1_AT);
     const event = await createEvent("crosul-toamnei", "Crosul toamnei");
-    await seedRow(event.id, "Ana");
+    const ana = await seedRow(event.id, "Ana");
     await seedRow(event.id, "Bogdan", { promoConsent: false });
     const organizer = await staff("MODERATOR");
     state.cookie = organizer.id;
@@ -272,9 +299,31 @@ describe("§NNN the route: the role on the server, the notice, the file and its 
     expect(new TextDecoder().decode(await every.arrayBuffer()).split("\r\n")[0]).toContain("First name,Last name,Email,Event,Consent date");
 
     const rows = await db.select().from(auditLogs).where(eq(auditLogs.action, "registrations.sponsor_list_exported"));
-    expect(rows.map((row) => row.metadataJson)).toEqual([{ eventId: event.id, count: 1 }, { eventId: null, count: 1 }]);
+    expect(rows.map((row) => row.metadataJson)).toEqual([
+      { eventId: event.id, count: 1, recipient: null, registrationIds: [ana.id] },
+      { eventId: null, count: 1, recipient: null, registrationIds: [ana.id] },
+    ]);
     expect(rows.every((row) => row.actorStaffUserId === organizer.id)).toBe(true);
     expect(JSON.stringify(rows.map((row) => row.metadataJson))).not.toContain("@");
+  });
+
+  it("keeps whom the file was given to, and a registration's page reads back which partners received it", async () => {
+    await approveNotice(2, sharing, V1_AT);
+    const event = await createEvent("crosul-toamnei", "Crosul toamnei");
+    const ana = await seedRow(event.id, "Ana");
+    const bogdan = await seedRow(event.id, "Bogdan", { promoConsent: false });
+    const organizer = await staff("MODERATOR");
+    state.cookie = organizer.id;
+    const url = (to: string) => `http://localhost/api/admin/registrations/sponsor-list?event=${event.id}&to=${encodeURIComponent(to)}`;
+    expect((await downloadSponsorList(new Request(url(`  Sport Shop${String.fromCharCode(7)} SRL  `)))).status).toBe(200);
+    expect((await downloadSponsorList(new Request(url("x".repeat(300))))).status).toBe(200);
+    expect((await downloadSponsorList(new Request(url("   ")))).status).toBe(200);
+
+    const shares = await listPartnerShares(db, ana.id);
+    expect(shares.map((share) => share.recipient).sort((a, b) => String(a).localeCompare(String(b)))).toEqual(["Sport Shop SRL", "x".repeat(120), null].sort((a, b) => String(a).localeCompare(String(b))));
+    expect(shares.every((share) => share.actorName === "MODERATOR")).toBe(true);
+    // A registration that was in no file has no history.
+    expect(await listPartnerShares(db, bogdan.id)).toEqual([]);
   });
 
   it("refuses the file while the notice in force does not say the list may be given to partners", async () => {

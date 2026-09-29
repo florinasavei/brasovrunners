@@ -191,8 +191,9 @@ export type AuditAction =
   | "newsletter.promo_consenters_exported"
   /**
    * «Descarcă lista pentru sponsori» (§NNN): the minimal CSV a partner receives — the event, or
-   * null for every event, and how many rows. Never a row: the file is the one copy a withdrawal
-   * cannot reach, so the trail says it was made, and the guide says to note who received it.
+   * null for every event, how many rows, the ids of the registrations in it (never a name or an
+   * address) and the recipient the download named, or null. The file is the one copy a withdrawal
+   * cannot reach, so the trail says which registrations went to whom (`listPartnerShares`).
    */
   | "registrations.sponsor_list_exported"
   /**
@@ -501,6 +502,33 @@ export type AuditEntry = Pick<AuditLog, "action" | "metadataJson" | "createdAt" 
    */
   actorName: string | null;
 };
+
+/** One file for sponsors that held a registration (§NNN): when, who downloaded it, whom it was given to. */
+export type PartnerShare = { createdAt: Date; actorName: string | null; recipient: string | null };
+
+/**
+ * Every list for sponsors a registration was in, newest first (§NNN, review finding): the export's
+ * audit row keeps the ids of the registrations in the file and the recipient the download named, so
+ * a withdrawal or an access request can be answered — which partner received this person's data,
+ * and when — after the club's own copy is deleted (the notice's art. 15 and 19 promise).
+ */
+export async function listPartnerShares<T extends Record<string, unknown>>(db: Database<T>, registrationId: string): Promise<PartnerShare[]> {
+  const rows = await db
+    .select({ createdAt: auditLogs.createdAt, actorName: staffUsers.displayName, metadataJson: auditLogs.metadataJson })
+    .from(auditLogs)
+    .leftJoin(staffUsers, eq(staffUsers.id, auditLogs.actorStaffUserId))
+    .where(
+      and(
+        eq(auditLogs.action, "registrations.sponsor_list_exported"),
+        sql`(${auditLogs.metadataJson} -> 'registrationIds') @> jsonb_build_array(${registrationId}::text)`,
+      ),
+    )
+    .orderBy(desc(auditLogs.createdAt));
+  return rows.map((row) => {
+    const recipient = (row.metadataJson as { recipient?: unknown } | null)?.recipient;
+    return { createdAt: row.createdAt, actorName: row.actorName, recipient: typeof recipient === "string" ? recipient : null };
+  });
+}
 
 /** Everything that happened to one entity, newest first, with the actor named where there is one. */
 export async function listAuditTrail<T extends Record<string, unknown>>(

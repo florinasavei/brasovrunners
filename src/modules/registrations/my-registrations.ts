@@ -108,6 +108,8 @@ export type MyRegistration = {
   /** When the yes was given, and the notice the registration recorded: whether it may reach a partner (§NNN). */
   promoConsentAt: Date | null;
   privacyNoticeVersion: number;
+  /** The birth date, read only so a minor's row never says a partner may receive it (§NNN). */
+  birthDate: string | null;
   /**
    * When this person's declaration was signed — on a link, in the family wizard or on paper at the
    * desk (§67) — or null while it is not (§519: «Toate înscrierile mele» says each person's
@@ -151,6 +153,7 @@ export async function listActiveRegistrationsForParticipant<T extends Record<str
       promoConsent: registrations.promoConsent,
       promoConsentAt: registrations.promoConsentAt,
       privacyNoticeVersion: registrations.privacyNoticeVersion,
+      birthDate: registrations.birthDate,
       // The latest acceptance's instant, qualified by hand: a bare "id" in the subquery would be the acceptance's own.
       declarationSignedAt: sql<Date | null>`(select max(${declarationAcceptances}."accepted_at") from ${declarationAcceptances} where ${declarationAcceptances}."registration_id" = ${registrations}."id")`.mapWith(
         (value: unknown) => (value === null || value === undefined ? null : value instanceof Date ? value : new Date(String(value))),

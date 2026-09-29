@@ -625,6 +625,10 @@
         "promo": "Acordul pentru oferte și beneficii"
       },
       "auditTrail": "Ce a făcut echipa",
+      "partnerShares": {
+        "title": "Dată partenerilor",
+        "noRecipient": "destinatar nenotat"
+      },
       "auditActorRemoved": "cont șters",
       "auditActorParticipant": "participantul, din linkul propriu",
       "audit": {
@@ -5797,7 +5801,8 @@
         "other": "{count} de persoane"
       },
       "noticeMissing": "Nota de confidențialitate în vigoare nu spune că lista poate fi dată partenerilor.",
-      "help": "Prenume, nume, adresă, eveniment și data acordului, doar pentru acordurile date sub o notă care permite asta. Notează cui dai fișierul și șterge-l în 30 de zile.",
+      "help": "Prenume, nume, adresă, eveniment și data acordului: doar adulții, cu acordul dat sub o notă care permite asta. Scrie cui dai lista: rămâne la fiecare înscriere din ea. Șterge fișierul în 30 de zile.",
+      "recipient": "Cui dai lista (opțional)",
       "columns": {
         "firstName": "Prenume",
         "lastName": "Nume",
@@ -6176,7 +6181,8 @@
     "promo": {
       "label": "Vreau să primesc oferte și beneficii de la {club} și partenerii săi.",
       "help": "Opțional. Poți renunța oricând din pagina înscrierii tale.",
-      "sharedData": "prenumele, numele și adresa ta de e-mail"
+      "sharedData": "prenumele, numele și adresa ta de e-mail",
+      "shared": "Clubul le poate da partenerilor prenumele, numele și adresa ta."
     }
   },
   "Registrations": {
@@ -6529,6 +6535,7 @@
       "changed": "Am salvat alegerea ta despre oferte și beneficii pentru această înscriere.",
       "failed": "Nu am putut salva alegerea. Încearcă din nou.",
       "otherAdult": "Acordul pentru oferte și beneficii îl dă doar persoana, din declarația ei sau din linkul înscrierii ei. De aici îl poți doar retrage.",
+      "optInShared": "Dacă îl dai, clubul le poate da partenerilor prenumele, numele și adresa ta.",
       "yesShared": "La această înscriere primești oferte și beneficii de la club și de la partenerii săi. Clubul le poate da partenerilor prenumele, numele și adresa ta, ca să îți scrie ei."
     }
   },

@@ -26,6 +26,7 @@ import {
   cachedListSocialsDisclosed,
   cachedListStatesDisclosed,
   cachedPromotionalMaterialsOffered,
+  cachedPromotionalMaterialsShared,
   cachedPublicAvailability,
 } from "@/modules/public-cache/reads";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
@@ -341,9 +342,12 @@ export default async function RegisterPage({ params, searchParams }: Props) {
     not it publishes a list. Off (or unread), the form has no box and the service keeps nothing.
   */
   let promoOn = false;
+  // And, while the notice in force says the partners may receive the list (§NNN), the box's caption
+  // says so where the yes is given — the box's words stay §562's.
+  let promoShared = false;
   if (!resting) {
     try {
-      promoOn = await cachedPromotionalMaterialsOffered(now);
+      [promoOn, promoShared] = await Promise.all([cachedPromotionalMaterialsOffered(now), cachedPromotionalMaterialsShared(now)]);
     } catch (failure) {
       unstable_rethrow(failure);
     }
@@ -1529,7 +1533,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 leads the words, drawn here in the Server Component as the label's own child.
               */}
               {promoOn && (
-                <CheckboxField name="promoConsent" dense defaultChecked={prefill("promoConsent") === "on"} help={t("promo.help")} helpTestId="promo-consent-help">
+                <CheckboxField name="promoConsent" dense defaultChecked={prefill("promoConsent") === "on"} help={promoShared ? `${t("promo.help")} ${t("promo.shared")}` : t("promo.help")} helpTestId="promo-consent-help">
                   <CampaignIcon aria-hidden data-testid="promo-consent-glyph" sx={{ fontSize: "1.15em", verticalAlign: "-0.2em", mr: 0.75, color: "text.secondary" }} />
                   {t("promo.label", { club: CLUB_NAME })}
                 </CheckboxField>

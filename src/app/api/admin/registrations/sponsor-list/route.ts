@@ -6,7 +6,7 @@ import { eventTranslations } from "@/db/schema/events";
 import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import { routing, type Locale } from "@/i18n/routing";
 import { recordAuditEvent } from "@/modules/audit/repository";
-import { buildSponsorListCsv, sponsorList, sponsorListFileName } from "@/modules/registrations/sponsor-list";
+import { buildSponsorListCsv, sponsorList, sponsorListFileName, sponsorRecipient } from "@/modules/registrations/sponsor-list";
 import { canExportSponsorList } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
@@ -22,7 +22,11 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
  * Superadministrator (`canExportSponsorList`); Tehnic, the volunteer, the Redactor and a member are
  * refused whatever the link. Refused too (409) while the privacy notice in force does not say the
  * list may be given to partners — the page's disabled button is the same rule, not the rule. The
- * one write is the audit row: who, which event (or null) and how many rows, never a row.
+ * one write is the audit row: who, which event (or null), how many rows, the registrations the file
+ * held (their ids — never a name or an address) and whom it was given to when the download named
+ * one (`to`, «Cui dai lista»). A registration's page reads that back as «Dată partenerilor», so the
+ * club can answer the notice's art. 15 and 19 promise — which partner received whose data — long
+ * after its own copy of the file is deleted (review finding).
  */
 export async function GET(request: Request): Promise<Response> {
   let actor;
@@ -63,7 +67,12 @@ export async function GET(request: Request): Promise<Response> {
     action: "registrations.sponsor_list_exported",
     entityType: "event",
     entityId: eventId ?? null,
-    metadata: { eventId: eventId ?? null, count: list.rows.length },
+    metadata: {
+      eventId: eventId ?? null,
+      count: list.rows.length,
+      recipient: sponsorRecipient(url.searchParams.get("to")),
+      registrationIds: list.rows.map((row) => row.registrationId),
+    },
     now,
   });
 

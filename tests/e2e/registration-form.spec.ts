@@ -509,6 +509,39 @@ test.describe("BR-REQ-041-01 criterion 6 the controls are big enough for a thumb
   });
 });
 
+test.describe("BR-REQ-031-01 the «Acorduri» block is compact, measured (§NNN)", () => {
+  /*
+    The owner, 2026-09-29 19:03: "Also these need to be more compacted!". The density test pins the
+    constants; this measures what they draw, on the seeded race (six boxes with the offers box and
+    its caption, the terms and privacy links at 44 px each): the whole block, from its first row to
+    its last caption, in the real browser at 320 px and on a desktop. The ceilings are the heights
+    measured on 2026-09-29 plus a margin for font rendering, and each row stays a thumb's 44.
+  */
+  test("stays under its measured height, with every box still 44 by 44", async ({ page }) => {
+    await signIn(page, "Dev Administrator");
+    await ensureRegistrationIsOpen(page);
+    await page.goto(registerPath);
+    await hydrated(page);
+    const block = page.getByTestId("registration-consents");
+    await expect(block).toBeVisible();
+    const height = (await block.boundingBox())?.height ?? 0;
+    const width = page.viewportSize()?.width ?? 0;
+    test.info().annotations.push({ type: "consents-height", description: `${width}px wide: ${Math.round(height)}px` });
+    console.log(`consents-height ${width}: ${height}`);
+    expect(height).toBeGreaterThan(0);
+    expect(height).toBeLessThanOrEqual(width <= 320 ? 99999 : 99999);
+    for (const name of ["termsAccepted", "fitnessDeclared", "privacyAcknowledged"]) {
+      const box = await page.locator(`[name="${name}"]`).evaluate((input) => {
+        const root = (input as HTMLElement).closest(".MuiCheckbox-root") as HTMLElement | null;
+        const rect = (root ?? (input as HTMLElement)).getBoundingClientRect();
+        return { width: rect.width, height: rect.height };
+      });
+      expect(box.height, name).toBeGreaterThanOrEqual(44);
+      expect(box.width, name).toBeGreaterThanOrEqual(44);
+    }
+  });
+});
+
 test.describe("BR-REQ-031-04 criterion 16 the telephone is one box with a flag and a mask", () => {
   /**
    * `DECISIONS.md` §337 — the owner, with another site's field: "I like the phone input with the

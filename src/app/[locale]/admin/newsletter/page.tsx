@@ -17,7 +17,7 @@ import NewsletterPanel from "@/modules/newsletter/ui/NewsletterPanel";
 import NewsletterSubscribers from "@/modules/newsletter/ui/NewsletterSubscribers";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { canExportSponsorList, canManageRegistrations, canSendNewsletter } from "@/modules/staff-identity/domain/roles";
-import { sponsorList } from "@/modules/registrations/sponsor-list";
+import { sponsorListSummary } from "@/modules/registrations/sponsor-list";
 import { requireStaff } from "@/modules/staff-identity/session";
 
 type Props = {
@@ -69,7 +69,7 @@ export default async function NewsletterPage({ params, searchParams }: Props) {
     noticeDescribesNewsletter(db, now),
     listNewsletterSubscribers(db, query, now),
     listPromoConsenters(db, staff, locale),
-    canExportSponsorList(staff.role) ? sponsorList(db, staff, { locale, now }) : Promise.resolve(null),
+    canExportSponsorList(staff.role) ? sponsorListSummary(db, staff, { now }) : Promise.resolve(null),
   ]);
   const sentCount = /^\d{1,9}$/.test(recipients ?? "") ? Number(recipients) : 0;
   const t = await getTranslations("Admin");

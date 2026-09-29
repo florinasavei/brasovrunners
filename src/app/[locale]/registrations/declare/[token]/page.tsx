@@ -26,7 +26,7 @@ import { findEventNotificationDetails } from "@/modules/events/repository";
 import { findEventDeclaration } from "@/modules/legal-documents/repository";
 import { DEADLINE_RULES, type Deadlines } from "@/modules/deadlines/domain/deadlines";
 import { leadPhrase } from "@/modules/deadlines/domain/duration-words";
-import { cachedDeadlines, cachedPromotionalMaterialsOffered, cachedShownContactAddresses } from "@/modules/public-cache/reads";
+import { cachedDeadlines, cachedPromotionalMaterialsOffered, cachedPromotionalMaterialsShared, cachedShownContactAddresses } from "@/modules/public-cache/reads";
 import { fillIn } from "@/shared/forms/fill-in";
 import { asksForIdDocument, asksForMinorSignature, deadlineMergeValues, minimumAgeMergeValue } from "@/modules/legal-documents/domain/merge-fields";
 import { effectiveMinimumAge } from "@/modules/registrations/domain/age";
@@ -352,6 +352,8 @@ export default async function DeclarePage({ params, searchParams }: Props) {
     the materials and only to a registration that has not said yes already.
   */
   const offerPromo = Boolean(signing && registration && !registration.promoConsent && (await cachedPromotionalMaterialsOffered(now)));
+  // The partners may receive the list (§NNN): the box's caption says so where the yes is given.
+  const promoShared = offerPromo && (await cachedPromotionalMaterialsShared(now));
   /*
     The family's stepper (§471), from the opened link: everybody on the address at the event whose
     declaration waits, this person first. One person alone gets the page they always had.
@@ -852,6 +854,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                   </CheckboxField>
                   <Typography variant="body2" color="text.secondary" data-testid="declare-promo-help">
                     {formCopy("promo.help")}
+                    {promoShared && ` ${formCopy("promo.shared")}`}
                   </Typography>
                 </Box>
               )}

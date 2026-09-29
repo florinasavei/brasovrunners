@@ -36,7 +36,7 @@ import FamilyChip from "@/modules/registrations/ui/FamilyChip";
 import GlyphChip from "@/modules/events/ui/GlyphChip";
 import { familyOf } from "@/modules/registrations/family-marker";
 import { canExportSponsorList, canManageRegistrations, canMessageParticipants, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
-import { sponsorList } from "@/modules/registrations/sponsor-list";
+import { sponsorListSummary } from "@/modules/registrations/sponsor-list";
 import SponsorListButton from "@/modules/registrations/ui/SponsorListButton";
 import { REGISTRATION_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
@@ -170,7 +170,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   filters.eventId = eventFilter.eventId;
   const featuredEvent = events.find((event) => event.featured) ?? null;
 
-  const [rows, total, summary, bibs, voidBibs] = await Promise.all([
+  const [rows, total, summary, bibs, voidBibs, sponsors] = await Promise.all([
     listRegistrationsForAdmin(db, filters, {
       limit: query.limit,
       offset: query.offset,
@@ -198,6 +198,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       the rule this list is the other half of.
     */
     filters.eventId ? voidBibsFor(db, filters.eventId) : Promise.resolve([]),
+    // «Descarcă lista pentru sponsori» for the chosen event (§NNN): the count only, for the roles that may take it.
+    filters.eventId && canExportSponsorList(actor.role) ? sponsorListSummary(db, actor, { eventId: filters.eventId, now: new Date() }) : Promise.resolve(null),
   ]);
 
   /*
@@ -224,9 +226,6 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   ]);
   // Every verb that writes asks first and says who is emailed (§384).
   const words = await confirmWords();
-  // «Descarcă lista pentru sponsori» for the chosen event (§NNN), for the roles that may take it.
-  const sponsors =
-    filters.eventId && canExportSponsorList(actor.role) ? await sponsorList(db, actor, { eventId: filters.eventId, locale, now: new Date() }) : null;
 
   const basePath = getPathname({ locale, href: "/admin/registrations" });
   /** Only the list-shaping keys travel with a sort link or a page link. */

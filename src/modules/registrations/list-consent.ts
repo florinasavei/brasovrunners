@@ -17,7 +17,7 @@ import { findRegistrationById } from "./repository";
  * The participant's own switch for the public participant list, after registration
  * (BR-REQ-039-01; `DECISIONS.md` §32, §143, §186).
  *
- * The form asks "Vreau să apar pe lista de participanți" once, at registration; §143 recorded
+ * The form asks "Vreau să apar pe lista de participanți & rezultate" once, at registration; §143 recorded
  * that the answer is withdrawn "by writing to the club". This module is the self-service form of
  * that sentence — the owner: "people should be able to choose to not be shown on the public
  * list if they don't want to, even after the registration, basically they can do that via

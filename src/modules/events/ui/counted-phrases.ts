@@ -36,7 +36,7 @@ export function waitlistRoomPhrase(say: Say, locale: string, room: number): stri
  * "42 de participanți confirmați — 39 cu numele afișat": the start list's own total, above it.
  *
  * `confirmed` is every confirmed, real registration of the event and `named` those of them who
- * ticked "Vreau să apar pe lista de participanți" — the same two counts the list's rows are
+ * ticked "Vreau să apar pe lista de participanți & rezultate" — the same two counts the list's rows are
  * drawn from, so the sentence and the rows under it cannot disagree.
  */
 export function confirmedPhrase(say: Say, locale: string, counts: { confirmed: number; named: number }): string {

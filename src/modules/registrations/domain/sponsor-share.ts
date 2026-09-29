@@ -1,3 +1,5 @@
+import { isMinorOn } from "./age";
+
 /**
  * Which yes to «oferte și beneficii» may reach a partner (§NNN, amending §562). Pure: the caller
  * reads the approved notices once (`legal-documents/repository.ts#findSponsorShareVersions`) and
@@ -17,6 +19,11 @@
  * For a tick on the form the two are the same notice. A row that registered under an older notice
  * and said yes later under a sharing one is left out — the safe side: one of the two texts in front
  * of that person said the partners would receive nothing. A yes without its moment is left out too.
+ *
+ * **Never a minor** (review finding): a child's name goes to no third party's marketing, whatever
+ * the guardian ticked — the box stays for the club's own sending, which reaches the guardian's
+ * address. The participant must be 18 on the day the list is made (`isMinorOn` against `now`, the
+ * guardian rule's calendar); a registration without a readable birth date is left out, the safe side.
  */
 
 export type SponsorShareVersion = { version: number; effectiveAt: Date; shares: boolean };
@@ -46,7 +53,17 @@ export function noticeVersionInForceAt(versions: readonly SponsorShareVersion[],
 
 export type SponsorShareRow = { promoConsent: boolean; promoConsentAt: Date | null; privacyNoticeVersion: number };
 
-/** Whether this registration's yes may be given to a partner (see above). */
+/** Whether the participant is an adult on `now` for the partners' list: a readable birth date, 18 or more. */
+export function adultForPartners(birthDate: string | null, now: Date): boolean {
+  return birthDate !== null && /^\d{4}-\d{2}-\d{2}$/.test(birthDate) && !Number.isNaN(Date.parse(`${birthDate}T00:00:00Z`)) && !isMinorOn(birthDate, now);
+}
+
+/** Whether this registration's yes, given under a sharing notice, may reach a partner today: that, and an adult. */
+export function reachesPartner(row: SponsorShareRow & { birthDate: string | null }, gate: SponsorShareGate, now: Date): boolean {
+  return adultForPartners(row.birthDate, now) && sharedWithSponsors(row, gate);
+}
+
+/** Whether this registration's yes was given under texts that describe the sharing (see above). */
 export function sharedWithSponsors(row: SponsorShareRow, gate: SponsorShareGate): boolean {
   if (!row.promoConsent || row.promoConsentAt === null) return false;
   if (!gate.sharing.has(row.privacyNoticeVersion)) return false;

@@ -24,7 +24,7 @@ import { routing } from "@/i18n/routing";
 import { confirmationDueMoment } from "@/modules/registrations/domain/hold-deadlines";
 import { readMyRegistrations } from "@/modules/registrations/my-registrations";
 import { cachedPromotionalMaterialsOffered } from "@/modules/public-cache/reads";
-import { sharedWithSponsors } from "@/modules/registrations/domain/sponsor-share";
+import { reachesPartner } from "@/modules/registrations/domain/sponsor-share";
 import { readSponsorShareGate } from "@/modules/registrations/sponsor-list";
 import PublicFlash from "@/shared/feedback/PublicFlash";
 import ContactLink from "@/shared/ui/ContactLink";
@@ -128,14 +128,17 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
     The sentence only while the notice in force describes the offers; «Nu mai vreau» always.
   */
   const promoOn = context.ok ? await cachedPromotionalMaterialsOffered(now) : false;
-  // Which yes may reach a partner (§NNN): «Clubul le poate da partenerilor…» only on such a row.
-  const shareGate = context.ok ? await readSponsorShareGate(getDb()) : null;
-  const promoYes = (item: { promoConsent: boolean; promoConsentAt?: Date | null; privacyNoticeVersion?: number }) =>
-    shareGate && item.privacyNoticeVersion !== undefined && sharedWithSponsors({ promoConsent: item.promoConsent, promoConsentAt: item.promoConsentAt ?? null, privacyNoticeVersion: item.privacyNoticeVersion }, shareGate)
+  // Which yes may reach a partner (§NNN): «Clubul le poate da partenerilor…» only on such a row —
+  // read only when some row on the page says yes, as the manage page does.
+  const shareGate = context.ok && context.items.some((item) => item.promoConsent) ? await readSponsorShareGate(getDb()) : null;
+  const promoYes = (item: { promoConsent: boolean; promoConsentAt?: Date | null; privacyNoticeVersion?: number; birthDate?: string | null }) =>
+    shareGate &&
+    item.privacyNoticeVersion !== undefined &&
+    reachesPartner({ promoConsent: item.promoConsent, promoConsentAt: item.promoConsentAt ?? null, privacyNoticeVersion: item.privacyNoticeVersion, birthDate: item.birthDate ?? null }, shareGate, now)
       ? t("promo.yesShared")
       : t("promo.yes");
   /** The offers-and-benefits line for one registration (§562): its answer, and the way out when it is yes. */
-  const promoSwitch = (item: { id: string; promoConsent: boolean; promoConsentAt?: Date | null; privacyNoticeVersion?: number }, closed = false) => (
+  const promoSwitch = (item: { id: string; promoConsent: boolean; promoConsentAt?: Date | null; privacyNoticeVersion?: number; birthDate?: string | null }, closed = false) => (
     <Stack spacing={1} sx={{ mt: 1.5 }} data-testid="my-promo">
       {promo === item.id && (
         <Alert severity="success" sx={{ py: 0 }}>

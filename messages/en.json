@@ -625,6 +625,10 @@
         "promo": "The consent to offers and benefits"
       },
       "auditTrail": "What staff did",
+      "partnerShares": {
+        "title": "Given to partners",
+        "noRecipient": "recipient not noted"
+      },
       "auditActorRemoved": "account removed",
       "auditActorParticipant": "the participant, from their own link",
       "audit": {
@@ -5797,7 +5801,8 @@
         "other": "{count} people"
       },
       "noticeMissing": "The privacy notice in force does not say the list may be given to partners.",
-      "help": "First name, last name, address, event and consent date, only for consents given under a notice that allows it. Note whom you give the file to and delete it within 30 days.",
+      "help": "First name, last name, address, event, consent date: adults only, consent given under a notice that allows it. Write whom it goes to: it stays on each registration in it. Delete the file in 30 days.",
+      "recipient": "Who receives the list (optional)",
       "columns": {
         "firstName": "First name",
         "lastName": "Last name",
@@ -6176,7 +6181,8 @@
     "promo": {
       "label": "I want to receive offers and benefits from {club} and its partners.",
       "help": "Optional. You can opt out any time from your registration page.",
-      "sharedData": "your first name, last name and email address"
+      "sharedData": "your first name, last name and email address",
+      "shared": "The club may give its partners your first name, last name and address."
     }
   },
   "Registrations": {
@@ -6529,6 +6535,7 @@
       "changed": "Your choice about offers and benefits for this registration is saved.",
       "failed": "We could not save your choice. Try again.",
       "otherAdult": "Only the person gives the consent to offers and benefits, on their own declaration or from their own registration's link. From here you can only withdraw it.",
+      "optInShared": "If you give it, the club may give its partners your first name, last name and address.",
       "yesShared": "On this registration you receive offers and benefits from the club and its partners. The club may give the partners your first name, last name and address, so they write to you themselves."
     }
   },
