@@ -4727,7 +4727,8 @@
                 "Ce înseamnă fiecare categorie și nivel: apasă semnul de întrebare de lângă «Dificultate» sau «Nivelul».",
                 "Nivelul în celelalte categorii: primul când traseul e la capătul ușor al categoriei, al treilea când e aproape de următoarea (mai lung, mai abrupt, noaptea, noroi). Nu știi? Cel din mijloc.",
                 "Filtrul de pe site bifează o categorie întreagă: «Greu» arată toate cele trei niveluri ale ei, 10–12, și le scrie lângă nume.",
-                "Nu-ți amintești scara? Semnul de întrebare de lângă «Nivelul» o arată toată. Pe site, pastila dificultății spune la atingere, de exemplu „Mediu — nivelul 5 din 15 (mediu: 4–6)”."
+                "Nu-ți amintești scara? Semnul de întrebare de lângă «Nivelul» o arată toată.",
+                "Pe site, pastila dificultății spune la atingere nivelul, de exemplu „Mediu — nivelul 5 din 15”, și sub el toată scara: ușor 1–3 · mediu 4–6 · greuț 7–9 · greu 10–12 · foarte greu 13–15."
               ]
             },
             {

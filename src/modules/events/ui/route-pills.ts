@@ -132,10 +132,12 @@ export function routePillParts(
  * words — «Mediu 5», never the step (§NNN: the number is the level, the dots are the step). Every
  * word from `difficultyWords`, the one function every surface reads, never a string written here.
  *
- * **The tooltip names the level of fifteen and the band's range (§528, §NNN)** — «Mediu — nivelul 5
- * din 15 (mediu: 4–6)»; never an example, which would say a non-Tâmpa «Mediu 4» is the Tâmpa run
+ * **The tooltip is two lines (§528, §NNN)**: the level of fifteen, «Mediu — nivelul 5 din 15», then
+ * the whole ladder, «ușor 1–3 · mediu 4–6 · greuț 7–9 · greu 10–12 · foarte greu 13–15»
+ * (`difficultyLadder`); never an example, which would say a non-Tâmpa «Mediu 4» is the Tâmpa run
  * (the examples live in the backoffice «?» and «Ghid» only). A screen reader hears it once, in
- * `srLabel` — «Dificultate: mediu — nivelul 5 din 15 (mediu: 4–6)» — so no `srSuffix` repeats it,
+ * `srLabel`, in the shorter form with the band's own range — «Dificultate: mediu — nivelul 5 din 15
+ * (mediu: 4–6)» — so no `srSuffix` repeats it,
  * and `GlyphChip` leaves the tooltip's description off for a chip with its own `srLabel`.
  */
 function difficultyPillOf(level: number, t: Translate): Pill {

@@ -4727,7 +4727,8 @@
                 "What each band and level means: press the question mark beside «Difficulty» or «Level».",
                 "The level in the other bands: the first when the route sits at the easy end of its band, the third when it is close to the next one (longer, steeper, at night, mud). Not sure? The middle one.",
                 "The site's filter ticks a whole band: «Hard» shows all three of its levels, 10–12, and writes them beside its name.",
-                "Forgot the scale? The question mark beside «Level» shows all of it. On the site, the difficulty pill says on a tap, for example \"Medium — level 5 of 15 (medium: 4–6)\"."
+                "Forgot the scale? The question mark beside «Level» shows all of it.",
+                "On the site, the difficulty pill says the level on a tap, for example \"Medium — level 5 of 15\", and under it the whole scale: easy 1–3 · medium 4–6 · fairly hard 7–9 · hard 10–12 · very hard 13–15."
               ]
             },
             {
