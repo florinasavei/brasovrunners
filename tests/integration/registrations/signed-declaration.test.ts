@@ -53,6 +53,8 @@ const LABELS = {
   signedByLink: (when: string) => `Semnat electronic pe ${when}`,
   signedOnPaper: (who: string, when: string) => `Semnat pe hârtie; înregistrat de ${who} pe ${when}`,
   attesterRemoved: "un membru al echipei",
+  // The proof of signing (§NNN), plain so a test reads it.
+  proofLine: (version: number, when: string, hash: string | null) => `Versiunea ${version} · Semnat la ${when}${hash ? ` · SHA-256 ${hash}` : ""}`,
 };
 
 async function approve(db: TestDatabase, declaration: LegalDocumentTranslationInput[]) {
@@ -301,8 +303,9 @@ describe("the club's declaration (§95)", () => {
     for (const page of textLinesByPage(pdf)) {
       const footer = page.filter(([, y]) => y < FOOTER_TOP);
       const distinctY = new Set(footer.map(([, y]) => y));
-      expect(footer.length, "three footer runs: two on the main line, one for the notice").toBe(3);
-      expect(distinctY.size, "the notice sits on its own, lower line").toBe(2);
+      // Four since §NNN: the signed entry's proof line sits between the main line and the notice.
+      expect(footer.length, "four footer runs: two on the main line, the proof of signing, the notice").toBe(4);
+      expect(distinctY.size, "the proof and the notice each on their own, lower line").toBe(3);
       expect(Math.min(...footer.map(([, y]) => y)), "the notice's line is below the footer's top").toBeLessThan(FOOTER_TOP);
     }
     // Once the retention sweep clears every identity document (§85), the bundle carries none
@@ -311,7 +314,7 @@ describe("the club's declaration (§95)", () => {
     const swept = await renderEventDeclarationsPdf(db, event.id, "ro", bundleLabels, NOW);
     for (const page of textLinesByPage(swept)) {
       const footer = page.filter(([, y]) => y < FOOTER_TOP);
-      expect(footer.length, "no notice line once identity documents are gone").toBe(2);
+      expect(footer.length, "no notice line once identity documents are gone: the main line and the proof").toBe(3);
     }
     // Nothing signed is still a valid file.
     const empty = await renderDeclarationPdf({ entries: [], locale: "ro", generatedAt: NOW, labels: LABELS });
@@ -425,11 +428,13 @@ describe("the club's declaration (§95)", () => {
         const page = `${name} page ${index + 1}`;
         const body = lines.filter(([, y]) => y >= FOOTER_TOP);
         const footer = lines.filter(([, y]) => y < FOOTER_TOP);
-        // The footer: the club and the date, and the page count — nothing else down there, both
-        // on one baseline under the footer's top and on the paper.
-        expect(footer.length, `${page} footer`).toBe(2);
+        // The footer: the club and the date, and the page count, on one baseline under the footer's
+        // top and on the paper — and on a signed entry's page the proof of signing (§NNN), one line
+        // under it, still on the paper. Nothing else down there; the blank form has no proof.
+        const signedPage = name.startsWith("signed");
+        expect(footer.length, `${page} footer`).toBe(signedPage ? 3 : 2);
         expect(Math.abs(footer[0][1] - footer[1][1]), `${page} footer on one line`).toBeLessThan(0.01);
-        expect(footer[0][1], `${page} footer on the paper`).toBeGreaterThan(0);
+        for (const [, y] of footer) expect(y, `${page} footer on the paper`).toBeGreaterThan(0);
         // Text on the page, all of it between the margins.
         expect(body.length, `${page} has text`).toBeGreaterThan(5);
         for (const [x, y] of body) {

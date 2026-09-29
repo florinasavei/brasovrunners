@@ -26,6 +26,7 @@ import {
 import { clearOptionalData, OPTIONAL_DATA_FIELDS, type OptionalDataField } from "./consent-withdrawal";
 import { eraseConfirmationMatches } from "./domain/erase-confirmation";
 import type { SexChoice } from "./domain/sex";
+import { heldRefusal, refuseIfRegistrationHeld, registrationIsHeld } from "./declaration-hold";
 import { bibNumberInUse, isEventSpareNumber, retiredBibNumbers } from "./bibs";
 import { BIB_NUMBER_MAX, handsSpareAtConfirm } from "./domain/spare-bibs";
 import { canResendReminder, deriveAllowedResendMessageType } from "./domain/resend";
@@ -1092,6 +1093,10 @@ async function eraseRegistration<T extends Record<string, unknown>>(
   reason: string,
   now: Date,
 ): Promise<void> {
+  // A declaration held for a complaint or a dispute (§NNN) is kept, the registration with it: every
+  // erase — one, the batch, an event's — meets the refusal until an Administrator clears the hold.
+  if (await registrationIsHeld(db, current.id)) throw heldRefusal();
+
   // Releasing the place is a capacity decision, so it goes through `unregister` and takes the
   // event lock the same way every other one does (§10.6). Only for a row that holds a place:
   // a lapsed or already-cancelled registration holds nothing to give back.
@@ -1140,6 +1145,9 @@ async function eraseRegistration<T extends Record<string, unknown>>(
       correction its before and after. The deletion's own row above keeps its reason — its
       `from` is a status and its reason and number name nobody (§311).
     */
+    // The hold asked again under a lock (§NNN): the check above is the cheap refusal before any
+    // write; this one closes the moment between it and the delete.
+    await refuseIfRegistrationHeld(tx, current.id);
     await scrubRegistrationFromAudit(tx, current.id);
     await tx.delete(declarationAcceptances).where(eq(declarationAcceptances.registrationId, current.id));
     await tx.delete(registrations).where(eq(registrations.id, current.id));

@@ -3,9 +3,11 @@ import { emailOutbox } from "@/db/schema/email-outbox";
 import { events, eventTranslations } from "@/db/schema/events";
 import { groupRunDeclarations } from "@/db/schema/group-run-declarations";
 import { type LegalDocumentKey, legalDocumentTranslations, legalDocuments } from "@/db/schema/legal-documents";
+import { staffUsers } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { type Locale, routing } from "@/i18n/routing";
 import { seriesKey } from "@/modules/events/domain/series";
+import { heldRefusal } from "@/modules/registrations/declaration-hold";
 import type { SeriesSignature } from "./domain";
 
 /**
@@ -109,6 +111,13 @@ export type GroupRunDeclarationListRow = {
   locale: Locale;
   version: number;
   series: boolean;
+  /** The SHA-256 of the exact text signed (§NNN); null on a row from before it. */
+  textHash: string | null;
+  /** «Păstrează: reclamație / litigiu în curs» (§NNN): whether, why, when and by whom. */
+  retentionHold: boolean;
+  retentionHoldReason: string | null;
+  retentionHoldAt: Date | null;
+  retentionHoldByName: string | null;
 };
 
 /**
@@ -130,8 +139,14 @@ export async function listGroupRunDeclarations<T extends Record<string, unknown>
       locale: groupRunDeclarations.locale,
       version: groupRunDeclarations.declarationVersion,
       seriesKey: groupRunDeclarations.seriesKey,
+      textHash: groupRunDeclarations.textHash,
+      retentionHold: groupRunDeclarations.retentionHold,
+      retentionHoldReason: groupRunDeclarations.retentionHoldReason,
+      retentionHoldAt: groupRunDeclarations.retentionHoldAt,
+      retentionHoldByName: staffUsers.displayName,
     })
     .from(groupRunDeclarations)
+    .leftJoin(staffUsers, eq(staffUsers.id, groupRunDeclarations.retentionHoldByStaffUserId))
     .where(inArray(groupRunDeclarations.eventId, dates))
     .orderBy(asc(groupRunDeclarations.acceptedAt));
   return rows.map(({ seriesKey: key, ...row }) => ({ ...row, series: key !== null }));
@@ -201,6 +216,8 @@ export async function findSignedGroupRunDeclaration<T extends Record<string, unk
       key: legalDocuments.key,
       version: groupRunDeclarations.declarationVersion,
       contentSha256: groupRunDeclarations.contentSha256,
+      // The fingerprint of the exact text signed (§NNN); null on a row from before it.
+      textHash: groupRunDeclarations.textHash,
       // The day the signed version took effect, for the PDF's version line (§499).
       effectiveAt: legalDocuments.effectiveAt,
       locale: groupRunDeclarations.locale,
@@ -313,6 +330,21 @@ export async function deleteGroupRunDeclarationMessagesOfEvent<T extends Record<
     )
     .returning({ id: emailOutbox.id });
   return deleted.length;
+}
+
+/**
+ * Before a date of a run is deleted (§NNN): a held declaration still on it — a one-off's, or a
+ * series' with no other date to move to (`rehomeGroupRunDeclarationsOfEvent` runs first) — would
+ * cascade away with the date, so the delete is refused until an Administrator clears the hold.
+ */
+export async function refuseHeldGroupRunDeclarationsOfEvent<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<void> {
+  // Every row of the date locked until the caller's transaction commits: a hold pressed meanwhile waits.
+  const rows = await db
+    .select({ held: groupRunDeclarations.retentionHold })
+    .from(groupRunDeclarations)
+    .where(eq(groupRunDeclarations.eventId, eventId))
+    .for("update");
+  if (rows.some((row) => row.held)) throw heldRefusal();
 }
 
 /** An outbox row's declaration id (§393), or null when its payload carries none. */

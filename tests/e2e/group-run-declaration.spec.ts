@@ -307,6 +307,14 @@ test.describe.serial("§393 a group run's optional self-declaration", () => {
         return Boolean(notice && declaration && notice.compareDocumentPosition(declaration) & Node.DOCUMENT_POSITION_FOLLOWING);
       }),
     ).toBe(true);
+    // The run's safety rules (§NNN) come before the optional declaration, for everybody who reads the fold.
+    expect(
+      await conditions.evaluate((fold) => {
+        const rules = fold.querySelector("[data-testid='group-run-safety-rules']");
+        const declaration = fold.querySelector("[data-testid='group-run-declaration-offer']");
+        return Boolean(rules && declaration && rules.compareDocumentPosition(declaration) & Node.DOCUMENT_POSITION_FOLLOWING);
+      }),
+    ).toBe(true);
     // Small, with a pen before the words, and still a thumb's 44 pixels.
     const button = offer.getByRole("link", { name: "Semnează declarația", exact: true });
     await expect(button.getByTestId("declaration-offer-glyph")).toBeVisible();
@@ -407,6 +415,33 @@ test.describe.serial("§393 a group run's optional self-declaration", () => {
     const pdf = await page.request.get(href ?? "");
     expect(pdf.status()).toBe(200);
     expect(pdf.headers()["content-type"]).toContain("application/pdf");
+
+    // The proof of signing (§NNN): the signed text's fingerprint, twelve characters, the whole in its name.
+    const hash = rows.first().getByTestId("declaration-text-hash");
+    await expect(hash).toHaveText(/^Amprenta: [0-9a-f]{12}…$/);
+    await expect(hash).toHaveAttribute("aria-label", /^Amprenta: [0-9a-f]{64}$/);
+
+    // «Păstrează: reclamație / litigiu în curs» (§NNN): set, which the erase then meets as a refusal, and cleared.
+    const hold = rows.first().getByTestId("declaration-hold-form");
+    await hold.locator("summary").click();
+    await hold.getByRole("textbox", { name: "Motivul", exact: true }).fill("Reclamație deschisă");
+    await hold.getByRole("button", { name: "Păstrează: reclamație / litigiu în curs" }).click();
+    await confirmDialog(page);
+    await page.waitForURL(/saved=declarationHeld/);
+    const heldFold = await openEditorBox(page, "Declarații semnate (alergare de grup)");
+    const heldRow = heldFold.getByTestId("group-run-declaration-row").first();
+    await expect(heldRow.getByTestId("declaration-held")).toContainText("Reclamație deschisă");
+    const release = heldRow.getByTestId("declaration-hold-form");
+    await release.locator("summary").click();
+    await release.getByRole("textbox", { name: "Motivul", exact: true }).fill("Reclamație închisă");
+    await release.getByRole("button", { name: "Scoate păstrarea" }).click();
+    await confirmDialog(page);
+    await page.waitForURL(/saved=declarationReleased/);
+    const actions = await withDatabase(async (client) =>
+      (await client.query<{ action: string }>("SELECT action FROM audit_logs WHERE entity_id = $1 AND action LIKE 'event.group_run_declaration_hold_%' ORDER BY created_at", [eventId])).rows,
+    );
+    expect(actions.map((row) => row.action)).toEqual(["event.group_run_declaration_hold_set", "event.group_run_declaration_hold_cleared"]);
+    await openEditorBox(page, "Declarații semnate (alergare de grup)");
 
     const erase = rows.first().getByTestId("group-run-declaration-erase");
     await erase.getByRole("textbox", { name: "Motivul ștergerii" }).fill("A cerut ștergerea");

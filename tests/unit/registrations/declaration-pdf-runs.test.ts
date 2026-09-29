@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { mergeTextSegments } from "@/modules/legal-documents/domain/merge-fields";
-import { runText } from "@/modules/registrations/declaration-pdf";
+import { runText } from "@/modules/legal-documents/domain/signed-text";
 
 /**
  * §225 as fixed by §330 — the signed declaration's paragraphs are drawn a run at a time so the

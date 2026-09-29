@@ -15,6 +15,9 @@ import GlyphButton from "@/shared/ui/GlyphButton";
 import Panel from "@/shared/ui/Panel";
 import QuietHelp from "@/shared/ui/QuietHelp";
 import { CHECKBOX_TAP_TARGET } from "@/shared/ui/tap-target";
+import { shortTextHash } from "@/modules/legal-documents/domain/signed-text";
+import DeclarationHoldForm from "@/modules/registrations/ui/DeclarationHoldForm";
+import TextHashTip from "@/modules/registrations/ui/TextHashTip";
 import { ERASE_REASON_MAX } from "../domain";
 import type { GroupRunDeclarationListRow } from "../repository";
 
@@ -44,6 +47,7 @@ export default async function GroupRunDeclarationsPanel({
   mayErase,
   eraseAction,
   batchEraseAction,
+  holdAction,
   runTitle,
 }: {
   eventId: string;
@@ -53,16 +57,20 @@ export default async function GroupRunDeclarationsPanel({
   mayErase: boolean;
   eraseAction: ActionFormAction;
   batchEraseAction: ActionFormAction;
+  /** «Păstrează: reclamație / litigiu în curs» and its release (§NNN), the Administrator's. */
+  holdAction: ActionFormAction;
   /** The run's name, for the batch dialog: «… pentru «Alergarea de joi»?». */
   runTitle: string;
 }) {
   const t = await getTranslations("Admin");
+  // A held declaration refuses the erase with its own code, DECLARATION_HELD (§NNN), which `Admin.errors` words.
   const messages = mayErase ? await refusalMessages({ reason: t("groupRunDeclarations.reason") }) : null;
   // The batch form's refusals: a set that changed meanwhile says so, not "somebody else saved".
   const batchMessages =
     mayErase && rows.length > 0
       ? await refusalMessages({ reason: t("groupRunDeclarations.reason"), declarationIds: t("groupRunDeclarations.ticked") }).then((words) => ({
           ...words,
+          // A set that changed meanwhile: nothing was erased. A held one among the ticked is DECLARATION_HELD (§NNN).
           errors: { ...words.errors, CONFLICT: t("groupRunDeclarations.batchChanged") },
         }))
       : null;
@@ -113,6 +121,12 @@ export default async function GroupRunDeclarationsPanel({
                     version: row.version,
                   })}
                 </Typography>
+                {/* The proof of signing (§NNN): the signed text's fingerprint, twelve characters and the whole in a tooltip. */}
+                {row.textHash && (
+                  <Typography variant="body2" color="text.secondary">
+                    <TextHashTip label={t("declarationHold.textHash")} hash={row.textHash} short={shortTextHash(row.textHash)} />
+                  </Typography>
+                )}
                 <GlyphButton
                   icon="pdf"
                   // Under the date it was signed on (§523): the list is the run's, the route checks the pair.
@@ -124,6 +138,22 @@ export default async function GroupRunDeclarationsPanel({
                   {t("groupRunDeclarations.pdf")}
                 </GlyphButton>
               </Stack>
+              {/* «Păstrează: reclamație / litigiu în curs» (§NNN): the line for every reader, the form for the Administrator. */}
+              <DeclarationHoldForm
+                groupRunAction={holdAction}
+                hidden={{ uiLocale: locale, eventId, declarationId: row.id }}
+                held={
+                  row.retentionHold
+                    ? {
+                        when: row.retentionHoldAt ? formatDay(row.retentionHoldAt, { locale, timeZone, style: "short", withTime: true, position: "inline" }) : "—",
+                        who: row.retentionHoldByName,
+                        reason: row.retentionHoldReason ?? "",
+                      }
+                    : null
+                }
+                mayManage={mayErase}
+                scope={`grd-hold-${row.id}`}
+              />
               {mayErase && messages && (
                 <ActionForm
                   action={eraseAction}

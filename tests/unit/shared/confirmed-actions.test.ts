@@ -63,6 +63,9 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   // A group run's self-declaration erased (§393), from its fold: handed to the panel as `eraseAction`.
   eraseGroupRunDeclarationAction: ["eraseAction"],
   eraseGroupRunDeclarationsAction: ["batchEraseAction"],
+  // «Păstrează: reclamație / litigiu în curs» (§NNN), from the shared hold form: a group run's and a registration's.
+  groupRunDeclarationHoldAction: ["groupRunAction"],
+  declarationHoldAction: ["registrationAction"],
   assignBibNumbersAction: ["assignAction"],
   // The desk's spares reserved by a print (§444): handed to the bib card's forms as `sparesAction`.
   reserveSpareBibsAction: ["sparesAction"],

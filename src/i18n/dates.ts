@@ -260,3 +260,27 @@ export function durationShort(totalMinutes: number): string {
   if (hours === 0) return `${minutes} min`;
   return minutes === 0 ? `${hours} h` : `${hours} h ${minutes} min`;
 }
+
+/**
+ * The moment a declaration was signed, to the second, in the club's zone (§NNN, the proof line of a
+ * signed PDF): "24.09.2026, 18:05:12". Digits only, day first, 24-hour — the same in both languages,
+ * which say the zone in words beside it («ora României» / "Romania time"). Built from the parts, so
+ * no engine's punctuation for a locale changes a line a signer may compare with another copy.
+ */
+export function formatSigningInstant(date: Date): string {
+  const parts = Object.fromEntries(
+    formatter("en-GB", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hourCycle: "h23",
+      timeZone: CLUB_TIME_ZONE,
+    })
+      .formatToParts(date)
+      .map((part) => [part.type, part.value]),
+  );
+  return `${parts.day}.${parts.month}.${parts.year}, ${parts.hour}:${parts.minute}:${parts.second}`;
+}

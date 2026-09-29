@@ -198,6 +198,22 @@ function yearsBefore(now: Date, years: number): Date {
  * Every participant left with no registration at all goes too (`DECISIONS.md` §88): the address
  * and the name are kept "with the last registration" and not a day longer.
  */
+/**
+ * «No declaration of this registration is held» (§NNN): the condition every sweep that deletes a
+ * registration adds, so a declaration an Administrator marked «Păstrează: reclamație / litigiu în
+ * curs» — and the registration it belongs to — outlives its period until the hold is cleared. The
+ * privacy notice's retention sentence («Dacă există o reclamație, un litigiu sau o procedură în curs,
+ * documentul poate fi păstrat până la soluționarea definitivă a acesteia») is what this implements.
+ */
+function notHeld<T extends Record<string, unknown>>(db: Database<T>) {
+  return notExists(
+    db
+      .select({ id: declarationAcceptances.id })
+      .from(declarationAcceptances)
+      .where(and(eq(declarationAcceptances.registrationId, registrations.id), eq(declarationAcceptances.retentionHold, true))),
+  );
+}
+
 async function deleteOrphanParticipants<T extends Record<string, unknown>>(db: Database<T>): Promise<number> {
   const deleted = await db
     .delete(participants)
@@ -418,6 +434,7 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
           eq(registrations.status, "EXPIRED"),
           eq(registrations.expiryReason, "EMAIL_CONFIRMATION_LAPSED"),
           lt(registrations.expiredAt, daysBefore(now, RETENTION.unconfirmedRegistrationDays)),
+          notHeld(tx),
         ),
       );
     // The trail loses what the manual erase takes from it (§324) — a rename's two names, a typed
@@ -441,11 +458,13 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
    */
   await step("registrations-after-event", async (tx) => {
     const eventCutoff = yearsBefore(now, RETENTION.registrationsYearsAfterEvent);
+    // A registration whose declaration an Administrator holds for a complaint or a dispute (§NNN) is
+    // skipped — the row and its declaration — until the hold is cleared, and then goes on the next run.
     const stale = tx
       .select({ id: registrations.id })
       .from(registrations)
       .innerJoin(events, eq(events.id, registrations.eventId))
-      .where(lt(events.startsAt, eventCutoff));
+      .where(and(lt(events.startsAt, eventCutoff), notHeld(tx)));
     // An audit row written after the event (a check-in, a rename on race day) is younger than
     // the registration's window and would outlive it with the name in it: scrubbed as an erase
     // scrubs (§324), before the delete.

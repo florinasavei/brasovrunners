@@ -23,6 +23,8 @@ import GridOnIcon from "@mui/icons-material/GridOn";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
 import ImageIcon from "@mui/icons-material/Image";
 import ListAltIcon from "@mui/icons-material/ListAlt";
+import LockIcon from "@mui/icons-material/Lock";
+import LockOpenIcon from "@mui/icons-material/LockOpen";
 import LogoutIcon from "@mui/icons-material/Logout";
 import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
 import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
@@ -146,6 +148,9 @@ export type ActionIconName =
   | "emergency"
   // Everything held about one address (§322), the Administrator's page for an access request.
   | "personData"
+  // A signed declaration kept for a complaint or a dispute (§NNN): the padlock, and opened, its release.
+  | "hold"
+  | "release"
   // The bibs (§264): a PDF to keep is the PDF; the batch that goes to the printer now — only the
   // unprinted, a single reprint, the blank paper form — is the printer; saying it came out of
   // the printer is the double tick, and taking that back is the tick struck through.
@@ -222,6 +227,8 @@ export const ACTION_ICONS: Record<ActionIconName, ComponentType<SvgIconProps>> =
   number: ConfirmationNumberIcon,
   emergency: MedicalServicesIcon,
   personData: PersonSearchIcon,
+  hold: LockIcon,
+  release: LockOpenIcon,
 
   pdf: PictureAsPdfIcon,
   print: PrintIcon,

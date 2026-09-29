@@ -253,6 +253,14 @@
         "one": "{count} pe lista de așteptare",
         "few": "{count} pe lista de așteptare",
         "other": "{count} pe lista de așteptare"
+      },
+      "legend": {
+        "title": "Ce înseamnă stadiile de pe listă",
+        "line": "„{word}”: {explanation}",
+        "confirmed": "a semnat declarația (online sau pe hârtie la masa de înscrieri) și are locul.",
+        "pendingWindow": "are loc păstrat, declarația nesemnată. Se cere la înscriere și cu {opens} înainte; se semnează până {due}, altfel pierde locul.",
+        "pendingHold": "are loc păstrat {hold} de la înscriere, până semnează declarația; altfel locul se eliberează.",
+        "waitlisted": "nu are încă loc. Când se eliberează unul, primul primește o ofertă pe email și are {offer} ca să semneze declarația."
       }
     },
     "cta": {
@@ -435,7 +443,18 @@
         "action": "Semnează declarația"
       }
     },
-    "membersOnly": "Doar pentru membri"
+    "membersOnly": "Doar pentru membri",
+    "safetyRules": {
+      "heading": "Reguli de siguranță",
+      "intro": "Este o alergare de grup {club}: nimeni nu supraveghează individual fiecare participant și nu este un serviciu de ghidaj.",
+      "introMountain": "Este o alergare de grup {club}: nimeni nu supraveghează individual fiecare participant și nu este un serviciu de ghidaj montan.",
+      "pace": "Fiecare își alege ritmul și drumul, în cadrul grupului.",
+      "gear": "Încălțăminte și haine potrivite terenului și vremii; la o alergare de noapte, o lanternă frontală.",
+      "supplies": "Apa și mâncarea le ai la tine.",
+      "health": "Alergi doar dacă, din câte știi, sănătatea ta îți permite.",
+      "wildlife": "Animale și vreme: urmezi indicațiile generale de siguranță date de organizator.",
+      "leaving": "Dacă pleci din grup, îi spui organizatorului."
+    }
   },
   "Admin": {
     "botCheck": {
@@ -617,7 +636,9 @@
           "consent_withdrawn": "Consimțământ retras",
           "declaration_downloaded": "Declarația semnată descărcată (PDF)",
           "sent_now": "Trimis acum, ocolind trecerea programată",
-          "cancelled_by_participant": "Anulată de participant, din linkul propriu"
+          "cancelled_by_participant": "Anulată de participant, din linkul propriu",
+          "declaration_hold_set": "Declarație păstrată pentru o reclamație sau un litigiu",
+          "declaration_hold_cleared": "Păstrarea declarației a fost scoasă"
         }
       },
       "locale": {
@@ -1028,6 +1049,7 @@
       "TOO_MANY_ADDRESSES": "Cel mult {max} adrese într-o căsuță. Nu s-a salvat nimic.",
       "ONE_ADDRESS_ONLY": "La „Declarațiile semnate merg la” încape o singură adresă — cutia de arhivă. Pune-le pe celelalte la „Copie vizibilă (Cc)” sau „Copie ascunsă (Bcc)”. Nu s-a salvat nimic.",
       "CONFLICT": "Altcineva a salvat între timp. Reîncarcă pagina și aplică din nou modificările tale — nimic nu a fost suprascris.",
+      "DECLARATION_HELD": "Nu s-a șters nimic: o declarație e păstrată pentru o reclamație sau un litigiu. Un Administrator scoate întâi păstrarea, din pagina înscrierii sau din semnăturile alergării.",
       "ERASE_NAME_MISMATCH": "Numele scris nu este numele înscrisului. Nu s-a șters nimic — scrie numele exact așa cum apare pe rând.",
       "LEGAL_CONFIRMATION_MISMATCH": "Confirmarea scrisă nu este a acestei versiuni. Nu s-a șters nimic — scrie exact textul cerut, de exemplu „GDPR 2”.",
       "LEGAL_DELETE_NEEDS_REASON": "Scrie un motiv. Este singurul lucru care rămâne după ștergere.",
@@ -4967,7 +4989,8 @@
                 "Un minor de 14–17 ani semnează alături de părinte sau tutore, fiecare cu actul lui de identitate; sub 14 ani nimeni nu se poate înscrie, la niciun eveniment.",
                 "Se păstrează numele, actele, versiunea textului, amprenta lui, momentul și metoda. E semnătură electronică simplă.",
                 "Apoi primește pe email declarația semnată, ca PDF, prin coada de emailuri (după «Termene» → «Când pleacă emailurile»). La masă, kitul se dă pe baza actului scris în declarație.",
-                "Cine nu poate semna online semnează pe hârtie, la masă, iar voluntarul apasă «Confirmă pe hârtie». Hârtia originală o păstrează clubul."
+                "Cine nu poate semna online semnează pe hârtie, la masă, iar voluntarul apasă «Confirmă pe hârtie». Hârtia originală o păstrează clubul.",
+                "Fiecare semnătură nouă păstrează amprenta SHA-256 a textului semnat. PDF-ul o tipărește cu versiunea și secunda semnării; înscrierea arată primele 12 caractere."
               ]
             },
             {
@@ -4983,7 +5006,8 @@
                 "Declarațiile sunt înregistrări în baza de date, nu fișiere; PDF-ul se face la cerere, identic.",
                 "Înscrierile și declarațiile se păstrează 3 ani de la eveniment, apoi se șterg singure. Contactul de urgență și nota medicală se șterg la 7 zile după eveniment.",
                 "Exporturile și PDF-urile descărcate care au acte de identitate le ștergi tu, în cel mult 7 zile de la eveniment.",
-                "Exact așa scrie și în nota de confidențialitate."
+                "Exact așa scrie și în nota de confidențialitate.",
+                "Reclamație sau litigiu în curs: în înscriere sau la «Declarații semnate (alergare de grup)», «Păstrează: reclamație / litigiu în curs». Nu se șterge până la «Scoate păstrarea»."
               ]
             },
             {
@@ -5271,7 +5295,7 @@
         "few": "Ștergi {count} declarații semnate pentru «{run}»? Nu se pot recupera.",
         "other": "Ștergi {count} de declarații semnate pentru «{run}»? Nu se pot recupera."
       },
-      "batchChanged": "Declarațiile bifate s-au schimbat între timp — cel puțin una a fost deja ștearsă. Nu s-a șters nimic: reîncarcă pagina și bifează din nou.",
+      "batchChanged": "Declarațiile bifate s-au schimbat între timp, sau una e păstrată pentru o reclamație. Nu s-a șters nimic: reîncarcă pagina și bifează din nou.",
       "batchErased": {
         "one": "{count} declarație semnată a fost ștearsă. În jurnal rămân numele tău și motivul.",
         "few": "{count} declarații semnate au fost șterse. În jurnal rămân numele tău și motivul.",
@@ -5623,6 +5647,24 @@
         "createTitle": "Adaugi codul?",
         "createBody": "Membrii îl văd în zona lor de îndată ce îl adaugi."
       }
+    },
+    "declarationHold": {
+      "textHash": "Amprenta",
+      "title": "Păstrează pentru o reclamație sau un litigiu",
+      "releaseFold": "Scoate păstrarea",
+      "help": "Folosește-o doar dacă există o reclamație, un litigiu sau o procedură în curs. Cât timp e pusă, declarația nu se șterge.",
+      "releaseHelp": "Când cazul s-a încheiat, scoate păstrarea. Declarația revine apoi la termenul obișnuit.",
+      "reason": "Motivul",
+      "reasonHelp": "Scrie despre ce e vorba, fără numele persoanei.",
+      "releaseReasonHelp": "Scrie de ce se încheie, fără numele persoanei.",
+      "hold": "Păstrează: reclamație / litigiu în curs",
+      "release": "Scoate păstrarea",
+      "holdTitle": "Păstrezi declarația?",
+      "holdBody": "Nu se mai șterge automat și nimeni nu o poate șterge până scoți păstrarea.",
+      "releaseTitle": "Scoți păstrarea?",
+      "releaseBody": "Declarația revine la termenul obișnuit și se poate șterge din nou.",
+      "heldLine": "Păstrată {when}, de {who}: {reason}",
+      "whoRemoved": "un membru al echipei (cont șters)"
     }
   },
   "NotFound": {
@@ -7045,7 +7087,9 @@
       "memberCodeHidden": "Codul a fost ascuns.",
       "memberCodeShown": "Codul este din nou vizibil membrilor.",
       "memberCodeMoved": "Ordinea codurilor a fost schimbată.",
-      "memberCodeDeleted": "Codul a fost șters."
+      "memberCodeDeleted": "Codul a fost șters.",
+      "declarationHeld": "Declarația e păstrată. Nu se mai șterge până scoți păstrarea.",
+      "declarationReleased": "Păstrarea a fost scoasă."
     }
   },
   "Network": {
