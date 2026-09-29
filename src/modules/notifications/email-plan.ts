@@ -7,9 +7,12 @@ import { canManageClubSettings } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import {
   DEFAULT_EMAIL_PLAN,
+  EMAIL_PLAN_IDS,
+  type EmailPlanId,
   type EmailPlanSetting,
   emailCeilings,
   emailPlanSettingSchema,
+  takesTypedCeilings,
 } from "./domain/email-plan";
 
 /**
@@ -54,7 +57,17 @@ export async function updateEmailPlan<T extends Record<string, unknown>>(
   if (!canManageClubSettings(actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not change the email plan`);
   }
-  const parsed = emailPlanSettingSchema.safeParse(rawInput);
+  /*
+    A catalogue plan ignores the typed boxes before they are validated (§551, amending §100): the
+    boxes are hidden while such a plan is chosen and keep what was typed, so a switch back to
+    «Altceva» loses nothing — and a leftover "0" in a box nobody can see must not refuse the save.
+  */
+  const plan = rawInput !== null && typeof rawInput === "object" ? (rawInput as { plan?: unknown }).plan : undefined;
+  const input =
+    (EMAIL_PLAN_IDS as readonly unknown[]).includes(plan) && !takesTypedCeilings(plan as EmailPlanId)
+      ? { ...(rawInput as Record<string, unknown>), dailyAllowance: null, monthlyAllowance: null }
+      : rawInput;
+  const parsed = emailPlanSettingSchema.safeParse(input);
   if (!parsed.success) {
     throw new DomainError(
       "VALIDATION_ERROR",
@@ -65,7 +78,7 @@ export async function updateEmailPlan<T extends Record<string, unknown>>(
   const next = parsed.data;
   // `CUSTOM` with both ceilings empty is allowed — "no ceiling" is what a contract looks like —
   // and the form says so next to the fields. A catalogue plan carries no typed numbers.
-  if (next.plan !== "CUSTOM") {
+  if (!takesTypedCeilings(next.plan)) {
     next.dailyAllowance = null;
     next.monthlyAllowance = null;
   }

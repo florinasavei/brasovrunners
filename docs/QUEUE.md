@@ -34,7 +34,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Item | Branch |
 | --- | --- |
-| — | nothing waiting: the last ready items shipped in `BR-V2.24` |
+| — | nothing waiting: the last ready items shipped in `BR-V2.25` |
 
 ## Next, queued
 
@@ -67,6 +67,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Baseline | What |
 | --- | --- |
+| `BR-V2.25` | the newsletter's subscribers as a list — «Abonați» on /admin/newsletter with the address, the language, the topics, the state and the dates, searched through the canonicalizer and filtered in the address, a CSV, a per-row «Dezabonează» for the Administrator that asks first and audits without the address — and its letter written in the rich-text editor per language, pictures kept while a sent newsletter uses them, a way to unsubscribe from the site itself (the address → a single-use manage link by email, the same answer whether or not the address is subscribed) (§550) · the Mailgun plan's typed daily and monthly limit boxes appear only while «Altceva» is chosen, with and without JavaScript, keep what was typed across a switch, an empty box meaning no ceiling (§551) |
 | `BR-V2.24` | the public pages are served from Vercel's CDN — static with ISR and a live twin for a request with a query or a session, invalidated by the writes §333 already expires, held to the page's own clock, a correct Cache-Control on the feed, the .ics and the pictures, robots.txt off the paths that are not content, no prefetch of a per-request page — a visitor or a crawler starts no function render (§549) |
 | `BR-V2.23` | fewer words on the public pages — a helper under a form field only where it says what the label cannot, the contact page under 120 visible words above the form per language, the event page's conditions, the after-form screen, «Înscrierile mele», the intros and the footer lightened; the legal texts and the emails untouched (§546) · the family's screens after the owner's walk — a discreet «Înscriu încă o persoană cu această adresă», «Semnează și treci la următoarea persoană» only when another person follows, «Renunț la înscrierea pentru <nume>» from the wizard, the name and the race number beside every QR, a manage page without the signed PDF and with every person of the address, a cancellation email per person (§547) · a race number exists only once a registration is confirmed — allocated in confirmation order from the event's first number, never reused, nothing provisional shown anywhere before (§548) |
 | `BR-V2.22` | a family sitting reserves every place the moment each form is sent (the one allocator, availability − N on the site), one deadline fixed by the first form, a counted placeholder so the count tells nobody an address's state (§39), one email listing every registration with one confirm, a «Familie» marker on every surface; migration `0107` (§543) · the citizenship and telephone-prefix pickers open tall enough to read — eight 44-px rows on a desktop, a bottom sheet with the search pinned on a phone, the chosen country in view (§544) · an event may be saved without its date or hour while «Data se anunță mai târziu» / «Ora se anunță mai târziu» is on — the boxes optional, the state said without inventing a date, required again when the switch goes off (§545) |

@@ -132,18 +132,26 @@ describe("§445 the new-event alert", () => {
 
 describe("§445 a newsletter's words", () => {
   it("wants both languages of both texts, within their ceilings, with no field in braces", () => {
+    // A plain string posted without the editor is read as a document: a blank line a paragraph (§550).
     const ok = checkNewsletterWords({ subject: { ro: " Știri\n", en: "News" }, body: { ro: "Salut\r\n\r\nText", en: "Hi" } });
-    expect(ok.words).toEqual({ subject: { ro: "Știri", en: "News" }, body: { ro: "Salut\n\nText", en: "Hi" } });
+    expect(ok.words).toEqual({
+      subject: { ro: "Știri", en: "News" },
+      body: {
+        ro: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Salut" }] }, { type: "paragraph", content: [{ type: "text", text: "Text" }] }] },
+        en: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Hi" }] }] },
+      },
+    });
     const bad = checkNewsletterWords({ subject: { ro: "", en: "{eventTitle}" }, body: { ro: "x".repeat(NEWSLETTER_BODY_MAX + 1), en: "ok" } });
     expect(bad.words).toBeNull();
     expect(bad.issues).toEqual([
       { box: "subjectRo", problem: "empty" },
       { box: "subjectEn", problem: "placeholder", names: ["eventTitle"] },
-      { box: "bodyRo", problem: "tooLong" },
+      { box: "newsletterBodyRo", problem: "tooLong" },
     ]);
   });
 
   it("reads a stored send only when both languages are there", () => {
+    // A send written before §550 stored plain text, and reads back as it was.
     expect(readNewsletterWords({ ro: "a", en: "b" }, { ro: "c", en: "d" })).toEqual({ subject: { ro: "a", en: "b" }, body: { ro: "c", en: "d" } });
     expect(readNewsletterWords({ ro: "a" }, { ro: "c", en: "d" })).toBeNull();
     expect(readNewsletterWords(null, null)).toBeNull();
@@ -259,8 +267,10 @@ describe("§445 the contact page's pop-up", () => {
   it("has one island on the contact page, the button, and draws the form, the ticks and the notice's link on the server", () => {
     const dir = path.join(process.cwd(), "src/modules/newsletter/ui");
     const islands = readdirSync(dir).filter((file) => readFileSync(path.join(dir, file), "utf8").startsWith('"use client"'));
-    // The preview is the backoffice composer's island, never the contact page's (§353).
-    expect(islands).toEqual(["NewsletterDialogButton.tsx", "NewsletterPreview.tsx"]);
+    // The preview is the backoffice composer's island, and the subscribers list's fields the
+    // «Abonați» card's (§550) — never the contact page's (§353).
+    expect(islands).toEqual(["NewsletterDialogButton.tsx", "NewsletterPreview.tsx", "SubscriberListFields.tsx"]);
+    expect(readFileSync(path.join(dir, "NewsletterSignup.tsx"), "utf8")).not.toContain("SubscriberListFields");
     const signup = readFileSync(path.join(dir, "NewsletterSignup.tsx"), "utf8");
     expect(signup).not.toContain("NewsletterPreview");
     expect(signup).toContain('component="dialog"');
