@@ -5,6 +5,7 @@ import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { events, eventTranslations } from "@/db/schema/events";
 import { registrations } from "@/db/schema/registrations";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
+import { hardDeleteEvent } from "@/modules/content/events/service";
 import { pruneExpiredRows } from "@/modules/jobs/retention";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { signedTextHash } from "@/modules/legal-documents/domain/signed-text";
@@ -14,7 +15,7 @@ import { deleteRegistrationByStaff } from "@/modules/registrations/admin-service
 import { holdDeclarationAcceptance, releaseDeclarationAcceptance } from "@/modules/registrations/declaration-hold";
 import { declarationWords } from "@/modules/registrations/declaration-labels";
 import type { DeclarationPdfInput } from "@/modules/registrations/declaration-pdf";
-import { confirmEmail, type EventForRegistration, signDeclaration, submitRegistration } from "@/modules/registrations/service";
+import { confirmByStaff, confirmEmail, type EventForRegistration, signDeclaration, submitRegistration } from "@/modules/registrations/service";
 import { findSignedDeclaration, renderSignedDeclarationPdf, signedDeclarationEntry } from "@/modules/registrations/signed-declaration";
 import { signingInput } from "../../helpers/declaration-signing";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
@@ -147,6 +148,22 @@ describe("the proof of signing on a race declaration (§NNN)", () => {
     expect(entry!.textHash).toBe(acceptance.textHash);
   });
 
+  it("keeps the hash of the paper's text for a declaration confirmed on paper at the desk — its documents dotted blanks", async () => {
+    await approve();
+    const event = await createEvent();
+    await submitRegistration(db, event, submission, NOW);
+    const [row] = await db.select().from(registrations).where(eq(registrations.eventId, event.id));
+    await confirmEmail(db, event, row.id, NOW);
+    const volunteer = await staff("CONTRIBUTOR");
+    await confirmByStaff(db, event, row.id, volunteer, NOW);
+    const [acceptance] = await db.select().from(declarationAcceptances).where(eq(declarationAcceptances.registrationId, row.id));
+    expect(acceptance.textHash).toMatch(/^[0-9a-f]{64}$/);
+    const declaration = await findSignedDeclaration(db, row.id);
+    const entry = await signedDeclarationEntry(db, declaration!, event.id, declarationWords("ro", NOW), "participant");
+    expect(signedTextHash({ title: entry!.title, body: entry!.body, values: entry!.values ?? {} })).toBe(acceptance.textHash);
+    expect(entry!.textHash).toBe(acceptance.textHash);
+  });
+
   it("prints the proof line from the row on the signer's copy and on the club's archive copy alike", async () => {
     const { event, registrationId, acceptance } = await signed();
     const declaration = await findSignedDeclaration(db, registrationId);
@@ -198,7 +215,7 @@ describe("«Păstrează: reclamație / litigiu în curs» on a race declaration 
     const { registrationId, acceptance } = await signed();
     const administrator = await staff("ADMIN");
     await holdDeclarationAcceptance(db, administrator, { registrationId, acceptanceId: acceptance.id, reason: "Litigiu în curs" }, NOW);
-    await expect(deleteRegistrationByStaff(db, administrator, registrationId, "cerere de ștergere", NOW)).rejects.toMatchObject({ code: "CONFLICT" });
+    await expect(deleteRegistrationByStaff(db, administrator, registrationId, "cerere de ștergere", NOW)).rejects.toMatchObject({ code: "DECLARATION_HELD" });
     expect(await db.select().from(registrations).where(eq(registrations.id, registrationId))).toHaveLength(1);
 
     const [row] = await db
@@ -208,6 +225,18 @@ describe("«Păstrează: reclamație / litigiu în curs» on a race declaration 
     expect(row).toMatchObject({ actorStaffUserId: administrator.id, participantId: null, entityType: "registration" });
     expect(row.metadataJson).toEqual({ declarationAcceptanceId: acceptance.id, reason: "Litigiu în curs" });
     expect(JSON.stringify(row.metadataJson)).not.toMatch(/Ana|Popescu|ana@example/);
+  });
+
+  it("refuses the erase of the whole event while one of its declarations is held, with its own code, and erases nothing", async () => {
+    const { event, registrationId, acceptance } = await signed();
+    const administrator = await staff("ADMIN");
+    await holdDeclarationAcceptance(db, administrator, { registrationId, acceptanceId: acceptance.id, reason: "Litigiu în curs" }, NOW);
+    await expect(
+      hardDeleteEvent(db, { actor: administrator, eventId: event.id, typedTitle: "Crosul aniversar", reason: "curățenie de sezon", now: NOW }),
+    ).rejects.toMatchObject({ code: "DECLARATION_HELD" });
+    expect(await db.select().from(events).where(eq(events.id, event.id))).toHaveLength(1);
+    expect(await db.select().from(registrations).where(eq(registrations.id, registrationId))).toHaveLength(1);
+    expect(await db.select().from(declarationAcceptances).where(eq(declarationAcceptances.id, acceptance.id))).toHaveLength(1);
   });
 
   it("is the Administrator's alone: an Organizer is refused, and an empty reason names its box", async () => {

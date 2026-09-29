@@ -338,12 +338,13 @@ export async function deleteGroupRunDeclarationMessagesOfEvent<T extends Record<
  * cascade away with the date, so the delete is refused until an Administrator clears the hold.
  */
 export async function refuseHeldGroupRunDeclarationsOfEvent<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<void> {
-  const [held] = await db
-    .select({ id: groupRunDeclarations.id })
+  // Every row of the date locked until the caller's transaction commits: a hold pressed meanwhile waits.
+  const rows = await db
+    .select({ held: groupRunDeclarations.retentionHold })
     .from(groupRunDeclarations)
-    .where(and(eq(groupRunDeclarations.eventId, eventId), eq(groupRunDeclarations.retentionHold, true)))
-    .limit(1);
-  if (held) throw heldRefusal();
+    .where(eq(groupRunDeclarations.eventId, eventId))
+    .for("update");
+  if (rows.some((row) => row.held)) throw heldRefusal();
 }
 
 /** An outbox row's declaration id (§393), or null when its payload carries none. */

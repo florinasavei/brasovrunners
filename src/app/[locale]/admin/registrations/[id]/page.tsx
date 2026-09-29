@@ -209,8 +209,6 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   });
   // The erase's own sentence: its "I understand" tick is asked again, never kept (§315).
   const eraseRefusal = { ...refusal, kept: (await refusalMessages({}, { confirmation: true })).kept };
-  // A declaration held for a complaint or a dispute refuses the erase (§NNN): the sentence says so.
-  eraseRefusal.errors = { ...eraseRefusal.errors, CONFLICT: tr("declarationHold.eraseRefused") };
   // The hand-set number's (§315): a CONFLICT here is a number somebody else wears, so the
   // sentence is "correct it and send again", not a colleague's save to reload for.
   const bibRefusal = await refusalMessages({ bibNumber: tr("registrations.bibNumber") });

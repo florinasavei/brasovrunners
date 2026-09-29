@@ -14,7 +14,10 @@ export type DomainErrorCode =
   | "FORBIDDEN"
   | "NOT_FOUND"
   | "VALIDATION_ERROR"
-  | "CONFLICT";
+  | "CONFLICT"
+  // An erase refused because a declaration is held for a complaint or a dispute (§NNN): its own
+  // code, so every form that shows `Admin.errors` says so rather than "somebody else saved".
+  | "DECLARATION_HELD";
 
 export class DomainError extends Error {
   readonly code: DomainErrorCode;

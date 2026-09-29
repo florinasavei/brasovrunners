@@ -623,8 +623,8 @@
           "declaration_downloaded": "Signed declaration downloaded (PDF)",
           "sent_now": "Sent now, past the scheduled round",
           "cancelled_by_participant": "Cancelled by the participant, from their own link",
-          "declaration_hold_set": "declaration kept for a complaint or a dispute",
-          "declaration_hold_cleared": "declaration keep removed"
+          "declaration_hold_set": "Declaration kept for a complaint or a dispute",
+          "declaration_hold_cleared": "Keep removed from the declaration"
         }
       },
       "locale": {
@@ -1035,6 +1035,7 @@
       "TOO_MANY_ADDRESSES": "At most {max} addresses in one box. Nothing was saved.",
       "ONE_ADDRESS_ONLY": "“Signed declarations go to” takes one address — the archive mailbox. Put the others under “Visible copy (Cc)” or “Hidden copy (Bcc)”. Nothing was saved.",
       "CONFLICT": "Someone else saved while you were editing. Reload the page and reapply your changes — nothing of yours was overwritten.",
+      "DECLARATION_HELD": "Nothing was erased: a declaration is kept for a complaint or a dispute. An Administrator removes the keep first, on the registration's page or the run's signatures.",
       "ERASE_NAME_MISMATCH": "The name you typed is not this participant's name. Nothing was erased — type the name exactly as the row shows it.",
       "LEGAL_CONFIRMATION_MISMATCH": "What you typed does not name this version. Nothing was deleted — type the phrase exactly as asked, for example “GDPR 2”.",
       "LEGAL_DELETE_NEEDS_REASON": "Type a reason. It is the only thing left after the deletion.",
@@ -5639,8 +5640,7 @@
       "releaseTitle": "Remove the keep?",
       "releaseBody": "The declaration goes back to its usual period and can be deleted again.",
       "heldLine": "Kept {when}, by {who}: {reason}",
-      "whoRemoved": "a team member (account removed)",
-      "eraseRefused": "Nothing was erased: the declaration is kept for a complaint or a dispute, or it changed meanwhile. Reload the page."
+      "whoRemoved": "a team member (account removed)"
     }
   },
   "NotFound": {

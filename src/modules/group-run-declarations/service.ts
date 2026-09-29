@@ -390,7 +390,9 @@ export async function setGroupRunDeclarationHold<T extends Record<string, unknow
       .select({ id: groupRunDeclarations.id, eventId: groupRunDeclarations.eventId, held: groupRunDeclarations.retentionHold })
       .from(groupRunDeclarations)
       .where(and(eq(groupRunDeclarations.id, input.id), inArray(groupRunDeclarations.eventId, dates.length > 0 ? dates : [input.eventId])))
-      .limit(1);
+      .limit(1)
+      // Locked, as `eraseSignature` locks it: a hold and an erase at once run one after the other (§NNN).
+      .for("update");
     if (!row) throw new DomainError("NOT_FOUND", "no such declaration");
     if (!input.hold && !row.held) return { eventId: row.eventId };
     await tx
@@ -435,13 +437,15 @@ async function eraseSignature<T extends Record<string, unknown>>(
   now: Date,
 ): Promise<void> {
   // Kept for a complaint or a dispute (§NNN): no erase — the signer's request included — until an
-  // Administrator clears the hold. The batch refuses whole, as it does for a set that changed.
-  const [held] = await tx
-    .select({ id: groupRunDeclarations.id })
+  // Administrator clears the hold. The batch refuses whole, as it does for a set that changed. The
+  // row is locked until the delete commits, so a hold pressed meanwhile waits and then finds nothing.
+  const [locked] = await tx
+    .select({ held: groupRunDeclarations.retentionHold })
     .from(groupRunDeclarations)
-    .where(and(eq(groupRunDeclarations.id, row.id), eq(groupRunDeclarations.retentionHold, true)))
-    .limit(1);
-  if (held) throw heldRefusal();
+    .where(eq(groupRunDeclarations.id, row.id))
+    .limit(1)
+    .for("update");
+  if (locked?.held) throw heldRefusal();
   await recordAuditEvent(tx, {
     actorStaffUserId: actor.id,
     action: "event.group_run_declaration_erased",

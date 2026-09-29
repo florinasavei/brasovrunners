@@ -63,16 +63,14 @@ export default async function GroupRunDeclarationsPanel({
   runTitle: string;
 }) {
   const t = await getTranslations("Admin");
-  // A held declaration refuses the erase (§NNN), and the sentence says so.
-  const messages = mayErase
-    ? await refusalMessages({ reason: t("groupRunDeclarations.reason") }).then((words) => ({ ...words, errors: { ...words.errors, CONFLICT: t("declarationHold.eraseRefused") } }))
-    : null;
+  // A held declaration refuses the erase with its own code, DECLARATION_HELD (§NNN), which `Admin.errors` words.
+  const messages = mayErase ? await refusalMessages({ reason: t("groupRunDeclarations.reason") }) : null;
   // The batch form's refusals: a set that changed meanwhile says so, not "somebody else saved".
   const batchMessages =
     mayErase && rows.length > 0
       ? await refusalMessages({ reason: t("groupRunDeclarations.reason"), declarationIds: t("groupRunDeclarations.ticked") }).then((words) => ({
           ...words,
-          // A set that changed, or a held declaration among the ticked (§NNN): nothing was erased.
+          // A set that changed meanwhile: nothing was erased. A held one among the ticked is DECLARATION_HELD (§NNN).
           errors: { ...words.errors, CONFLICT: t("groupRunDeclarations.batchChanged") },
         }))
       : null;

@@ -25,7 +25,7 @@ import {
 } from "./admin-repository";
 import { clearOptionalData, OPTIONAL_DATA_FIELDS, type OptionalDataField } from "./consent-withdrawal";
 import { eraseConfirmationMatches } from "./domain/erase-confirmation";
-import { heldRefusal, registrationIsHeld } from "./declaration-hold";
+import { heldRefusal, refuseIfRegistrationHeld, registrationIsHeld } from "./declaration-hold";
 import { bibNumberInUse, isEventSpareNumber, retiredBibNumbers } from "./bibs";
 import { BIB_NUMBER_MAX, handsSpareAtConfirm } from "./domain/spare-bibs";
 import { canResendReminder, deriveAllowedResendMessageType } from "./domain/resend";
@@ -1144,6 +1144,9 @@ async function eraseRegistration<T extends Record<string, unknown>>(
       correction its before and after. The deletion's own row above keeps its reason — its
       `from` is a status and its reason and number name nobody (§311).
     */
+    // The hold asked again under a lock (§NNN): the check above is the cheap refusal before any
+    // write; this one closes the moment between it and the delete.
+    await refuseIfRegistrationHeld(tx, current.id);
     await scrubRegistrationFromAudit(tx, current.id);
     await tx.delete(declarationAcceptances).where(eq(declarationAcceptances.registrationId, current.id));
     await tx.delete(registrations).where(eq(registrations.id, current.id));

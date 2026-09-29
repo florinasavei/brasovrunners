@@ -154,10 +154,10 @@ describe("«Păstrează: reclamație / litigiu în curs» on a group run's decla
     await pruneExpiredRows(db, MUCH_LATER);
     const [kept] = await db.select().from(groupRunDeclarations).where(eq(groupRunDeclarations.id, row.id));
     expect(kept).toMatchObject({ retentionHold: true, retentionHoldReason: "Reclamație deschisă", retentionHoldByStaffUserId: administrator.id });
-    await expect(eraseGroupRunDeclaration(db, administrator, { id: row.id, reason: "cererea semnatarului" }, NOW)).rejects.toMatchObject({ code: "CONFLICT" });
-    await expect(eraseGroupRunDeclarations(db, administrator, { eventId: run.id, ids: [row.id], reason: "cererea semnatarului" }, NOW)).rejects.toMatchObject({ code: "CONFLICT" });
-    // The run's only date deleted would cascade it away: refused while held.
-    await expect(deleteEvent(db, { actor: administrator, eventId: run.id })).rejects.toMatchObject({ code: "CONFLICT" });
+    await expect(eraseGroupRunDeclaration(db, administrator, { id: row.id, reason: "cererea semnatarului" }, NOW)).rejects.toMatchObject({ code: "DECLARATION_HELD" });
+    await expect(eraseGroupRunDeclarations(db, administrator, { eventId: run.id, ids: [row.id], reason: "cererea semnatarului" }, NOW)).rejects.toMatchObject({ code: "DECLARATION_HELD" });
+    // The run's only date deleted would cascade it away: refused while held, with its own code.
+    await expect(deleteEvent(db, { actor: administrator, eventId: run.id })).rejects.toMatchObject({ code: "DECLARATION_HELD" });
     expect(await db.select().from(groupRunDeclarations).where(eq(groupRunDeclarations.id, row.id))).toHaveLength(1);
     const [listed] = await listGroupRunDeclarations(db, run.id);
     expect(listed).toMatchObject({ retentionHold: true, retentionHoldReason: "Reclamație deschisă", retentionHoldByName: "ADMIN" });

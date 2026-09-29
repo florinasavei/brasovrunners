@@ -34,9 +34,13 @@ export function holdReason(typed: string): string {
   return reason;
 }
 
-/** The refusal an erase meets while a hold is set (§NNN): the Administrator clears it first. */
+/**
+ * The refusal an erase meets while a hold is set (§NNN): the Administrator clears it first. Its own
+ * code, `DECLARATION_HELD`, so the list's erase, an event's erase, an event's delete and every other
+ * form reading `Admin.errors` say the declaration is kept — never the generic CONFLICT sentence.
+ */
 export function heldRefusal(): DomainError {
-  return new DomainError("CONFLICT", "HELD: the declaration is kept for a complaint or a dispute; clear the hold first");
+  return new DomainError("DECLARATION_HELD", "HELD:the declaration is kept for a complaint or a dispute; clear the hold first");
 }
 
 type Actor = Pick<StaffUser, "id" | "role">;
@@ -47,7 +51,11 @@ async function findAcceptance<T extends Record<string, unknown>>(db: Database<T>
     .select({ id: declarationAcceptances.id, registrationId: declarationAcceptances.registrationId, held: declarationAcceptances.retentionHold })
     .from(declarationAcceptances)
     .where(and(eq(declarationAcceptances.id, acceptanceId), eq(declarationAcceptances.registrationId, registrationId)))
-    .limit(1);
+    .limit(1)
+    // Locked, as the erase locks it (`refuseIfRegistrationHeld`): a hold and an erase at once are
+    // one after the other — the erase refused, or the hold finding no row — never a hold's audit
+    // row left beside a deleted declaration.
+    .for("update");
   if (!row) throw new DomainError("NOT_FOUND", "no such declaration");
   return row;
 }
@@ -115,4 +123,18 @@ export async function registrationIsHeld<T extends Record<string, unknown>>(db: 
     .where(and(eq(declarationAcceptances.registrationId, registrationId), eq(declarationAcceptances.retentionHold, true)))
     .limit(1);
   return row !== undefined;
+}
+
+/**
+ * The same question inside the erase's own transaction, with every acceptance of the registration
+ * locked `FOR UPDATE` until it commits (§NNN): a hold set after the early check and before the delete
+ * is seen here, and a hold pressed while the erase runs waits for it and then finds no row.
+ */
+export async function refuseIfRegistrationHeld<T extends Record<string, unknown>>(tx: Database<T>, registrationId: string): Promise<void> {
+  const rows = await tx
+    .select({ held: declarationAcceptances.retentionHold })
+    .from(declarationAcceptances)
+    .where(eq(declarationAcceptances.registrationId, registrationId))
+    .for("update");
+  if (rows.some((row) => row.held)) throw heldRefusal();
 }

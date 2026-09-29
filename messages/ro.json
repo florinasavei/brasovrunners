@@ -623,8 +623,8 @@
           "declaration_downloaded": "Declarația semnată descărcată (PDF)",
           "sent_now": "Trimis acum, ocolind trecerea programată",
           "cancelled_by_participant": "Anulată de participant, din linkul propriu",
-          "declaration_hold_set": "declarație păstrată pentru o reclamație sau un litigiu",
-          "declaration_hold_cleared": "păstrarea declarației a fost scoasă"
+          "declaration_hold_set": "Declarație păstrată pentru o reclamație sau un litigiu",
+          "declaration_hold_cleared": "Păstrarea declarației a fost scoasă"
         }
       },
       "locale": {
@@ -1035,6 +1035,7 @@
       "TOO_MANY_ADDRESSES": "Cel mult {max} adrese într-o căsuță. Nu s-a salvat nimic.",
       "ONE_ADDRESS_ONLY": "La „Declarațiile semnate merg la” încape o singură adresă — cutia de arhivă. Pune-le pe celelalte la „Copie vizibilă (Cc)” sau „Copie ascunsă (Bcc)”. Nu s-a salvat nimic.",
       "CONFLICT": "Altcineva a salvat între timp. Reîncarcă pagina și aplică din nou modificările tale — nimic nu a fost suprascris.",
+      "DECLARATION_HELD": "Nu s-a șters nimic: o declarație e păstrată pentru o reclamație sau un litigiu. Un Administrator scoate întâi păstrarea, din pagina înscrierii sau din semnăturile alergării.",
       "ERASE_NAME_MISMATCH": "Numele scris nu este numele înscrisului. Nu s-a șters nimic — scrie numele exact așa cum apare pe rând.",
       "LEGAL_CONFIRMATION_MISMATCH": "Confirmarea scrisă nu este a acestei versiuni. Nu s-a șters nimic — scrie exact textul cerut, de exemplu „GDPR 2”.",
       "LEGAL_DELETE_NEEDS_REASON": "Scrie un motiv. Este singurul lucru care rămâne după ștergere.",
@@ -5639,8 +5640,7 @@
       "releaseTitle": "Scoți păstrarea?",
       "releaseBody": "Declarația revine la termenul obișnuit și se poate șterge din nou.",
       "heldLine": "Păstrată {when}, de {who}: {reason}",
-      "whoRemoved": "un membru al echipei (cont șters)",
-      "eraseRefused": "Nu s-a șters nimic: declarația e păstrată pentru o reclamație sau un litigiu, sau s-a schimbat între timp. Reîncarcă pagina."
+      "whoRemoved": "un membru al echipei (cont șters)"
     }
   },
   "NotFound": {
