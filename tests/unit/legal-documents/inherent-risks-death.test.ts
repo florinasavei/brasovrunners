@@ -38,8 +38,8 @@ const WORDS = {
     en: "the weather, my own health, the other participants, animals and traffic, where the",
   },
   waiver: {
-    ro: "Separat de această acceptare, renunț în mod expres, în limitele permise de lege, la pretențiile pentru prejudiciile care decurg din aceste riscuri inerente.",
-    en: "Separately from this acceptance, I expressly waive, to the extent the law allows, my claims for harm arising from these inherent risks.",
+    ro: "Separat de această acceptare, renunț în mod expres, în limitele permise de lege, la pretențiile pentru prejudiciile care decurg din aceste riscuri inerente, inclusiv vătămarea gravă sau decesul.",
+    en: "Separately from this acceptance, I expressly waive, to the extent the law allows, my claims for harm arising from these inherent risks, serious injury or death included.",
   },
   against: {
     ro: "Renunțarea privește pretențiile față de organizator, echipa lui de organizare, voluntarii și partenerii lui.",
@@ -50,8 +50,8 @@ const WORDS = {
     en: "It does not cover harm caused through their fault, and it does not remove the organiser's safety duties.",
   },
   heirs: {
-    ro: "Renunțarea îi privește și pe moștenitorii mei, în limitele permise de lege.",
-    en: "This waiver also binds my heirs and successors, to the extent the law allows.",
+    ro: "Renunțarea îi obligă și pe moștenitorii mei, în limitele permise de lege.",
+    en: "This waiver also binds my heirs, to the extent the law allows.",
   },
   notByItself: {
     ro: "nu înseamnă, prin ea însăși, că renunț la dreptul de a fi despăgubit (art. 1355 alin. (4) din Codul civil)",
@@ -60,11 +60,11 @@ const WORDS = {
 } as const;
 
 const GUARDIAN = {
-  ro: "Părintele sau tutorele legal care semnează alături de minor acceptă pentru el riscurile de mai jos, inclusiv pe cel de deces, și renunțarea, în limitele permise de lege.",
-  en: "The parent or legal guardian who signs beside the minor accepts for them the risks below, death included, and the waiver, to the extent the law allows.",
+  ro: "Părintele sau tutorele legal care semnează alături de minor acceptă pentru el riscurile de mai jos, inclusiv pe cel de deces, și renunțarea de mai jos, în limitele permise de lege.",
+  en: "The parent or legal guardian who signs beside the minor accepts for them the risks below, death included, and the waiver below, to the extent the law allows.",
 } as const;
 
-const DEATH = { ro: /\bdeces\b/, en: /\bdeath\b/ } as const;
+const DEATH = { ro: /\bdeces(?:ul)?\b/, en: /\bdeath\b/ } as const;
 const NOT_LIABLE = { ro: /nu răspunde|nu (?:poate|pot) fi tras/, en: /not responsible|not liable|cannot be held liable/ } as const;
 
 describe("§NNN the declarations cover the inherent risks, death included, within the law's limits", () => {
@@ -102,6 +102,9 @@ describe("§NNN the declarations cover the inherent risks, death included, withi
       it(`${key} ${locale}: waives, within the law's limits, the claims for harm from those risks — the heirs too, never for their fault`, () => {
         for (const sentence of [WORDS.waiver, WORDS.against, WORDS.notTheirFault, WORDS.heirs]) expect(all()).toContain(sentence[locale]);
         expect(WORDS.waiver[locale]).toContain(LAW_LIMIT[locale]);
+        // The waiver names death itself, not only by pointing back to the acceptance: a clause the
+        // club drafted is read against the club (art. 1269 C. civ.).
+        expect(WORDS.waiver[locale]).toMatch(DEATH[locale]);
         expect(WORDS.heirs[locale]).toContain(LAW_LIMIT[locale]);
         // The four sentences sit together, in this order, in one paragraph.
         const paragraph = paragraphsOf(bodies[locale]).find((p) => p.includes(WORDS.waiver[locale]))!;
