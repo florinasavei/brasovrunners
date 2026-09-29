@@ -6,6 +6,7 @@ import {
   type DifficultyStep,
   difficultyBandLevelList,
   difficultyBandLevels,
+  difficultyLadder,
   difficultyLevel,
 } from "@/modules/events/domain/difficulty";
 
@@ -51,18 +52,18 @@ export function difficultyStepWords(
 ): { label: string; help: string; scale: string; choices: StepWords; levels: Record<DifficultyBand, StepWords> } {
   const first = DIFFICULTY_BANDS[0];
   const last = DIFFICULTY_BANDS[DIFFICULTY_BANDS.length - 1];
-  const ranges = DIFFICULTY_BANDS.map((band) =>
-    t("editor.difficultyRangeItem", { band: tEvent(`difficultyBandWords.${band}`), ...difficultyBandLevels(band) }),
-  ).join(", ");
+  // The same ladder the pill's tooltip says (`difficultyLadder`), here with commas.
+  const ranges = difficultyLadder(tEvent).join(", ");
   const perStep = (word: (step: DifficultyStep) => string) =>
     Object.fromEntries(DIFFICULTY_STEPS.map((step) => [`step${step}`, word(step)])) as StepWords;
   return {
     label: t("editor.fields.difficultyStep"),
     help: t("editor.difficultyStepHelp", {
-      first: difficultyBandLevels(first).from,
-      firstBand: tEvent(`difficultyBandWords.${first}`),
-      last: difficultyBandLevels(last).to,
-      lastBand: tEvent(`difficultyBandWords.${last}`),
+      // Not {first} / {last}: «la {…}» before a date is what §452's check refuses, and these are levels.
+      lowest: difficultyBandLevels(first).from,
+      lowestBand: tEvent(`difficultyBandWords.${first}`),
+      highest: difficultyBandLevels(last).to,
+      highestBand: tEvent(`difficultyBandWords.${last}`),
       ranges,
     }),
     scale,

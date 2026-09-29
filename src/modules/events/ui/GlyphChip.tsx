@@ -167,6 +167,9 @@ export default function GlyphChip({
       onClose={() => setOpen(false)}
       enterTouchDelay={0}
       leaveTouchDelay={readingTimeMs(tooltip)}
+      // A `\n` is a line (§257): the difficulty's tooltip says its level, then the whole ladder
+      // under it (§NNN). Every other chip's tooltip is one line and reads the same.
+      slotProps={{ tooltip: { sx: { whiteSpace: "pre-line" } } }}
     >
       {chip}
     </Tooltip>

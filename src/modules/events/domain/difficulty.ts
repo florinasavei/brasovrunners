@@ -85,8 +85,11 @@ type DifficultyTranslate = (key: string, values?: Record<string, string | number
  *
  * - `short` — the pill, the editor's closed line: «Mediu 5»;
  * - `plain` — where no gauge is drawn (the emails' facts, the calendar entry, the `.ics`): «Mediu, nivelul 5 din 15»;
- * - `tooltip` — the pill's tooltip: «Mediu — nivelul 5 din 15 (mediu: 4–6)», the band's range from `difficultyBandLevels`;
- * - `sr` — what a screen reader hears in place of `short`: «Dificultate: mediu — nivelul 5 din 15 (mediu: 4–6)».
+ * - `tooltip` — the pill's tooltip, two lines (the owner, 2026-09-29 14:18: the tooltip explains
+ *   every level, not only its own band's): the level, then the whole ladder —
+ *   «Mediu — nivelul 5 din 15» / «ușor 1–3 · mediu 4–6 · greuț 7–9 · greu 10–12 · foarte greu 13–15»;
+ * - `sr` — what a screen reader hears in place of `short`, the shorter form with the level and its
+ *   band's range, once per card: «Dificultate: mediu — nivelul 5 din 15 (mediu: 4–6)».
  *
  * The one function every surface reads (the route pills, the calendar's lines): the words from the
  * `Event` catalogue (`difficultyValues`, `difficultyBandWords`, `difficultyLevel*`), the numbers from here.
@@ -99,9 +102,19 @@ export function difficultyWords(level: number, t: DifficultyTranslate): { short:
   return {
     short: t("difficultyLevelShort", { band: title, level }),
     plain: t("difficultyWithLevel", { band: title, ...numbers }),
-    tooltip: t("difficultyLevelTooltip", { band: title, bandWord: word, ...numbers }),
+    tooltip: t("difficultyLevelTooltip", { band: title, ladder: difficultyLadder(t).join(" · "), ...numbers }),
     sr: t("difficultyLevelSr", { band: word, ...numbers }),
   };
+}
+
+/**
+ * The club's whole scale, one item per band in order, each with its three levels (§NNN) —
+ * «ușor 1–3», «mediu 4–6», «greuț 7–9», «greu 10–12», «foarte greu 13–15»: the pill's tooltip joins
+ * them with «·», the editor's help under «Nivelul» with commas. Every range from
+ * `difficultyBandLevels`, never typed; `t` is the `Event` catalogue.
+ */
+export function difficultyLadder(t: DifficultyTranslate): string[] {
+  return DIFFICULTY_BANDS.map((band) => t("difficultyLadderItem", { band: t(`difficultyBandWords.${band}`), ...difficultyBandLevels(band) }));
 }
 
 /** A band with the levels it holds (§NNN) — «Mediu (4–6)»: the listing filter's box and chip, which tick the whole band (§413). */

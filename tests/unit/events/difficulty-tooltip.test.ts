@@ -4,14 +4,17 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 /**
  * `DECISIONS.md` §528 — the difficulty gauge says its level of fifteen, and the backoffice explains
- * the scale behind a «?».
+ * the scale behind a «?» — as §NNN words it (the owner, 2026-09-29: «ușor: 1,2,3, mediu 4,5,6 și
+ * tot așa, în ordine»; the number is the level, the dots are the step).
  *
- * - The event's pill (`route-pills.ts`): the tooltip «Mediu 2 — nivelul 5 din 15» — the band and
- *   step, then the level of fifteen, never an example (a non-Tâmpa «Mediu 1» is not the Tâmpa run) —
- *   and a screen reader hears it once, as the chip's `srLabel`: «Dificultate: mediu 2 — nivelul 5 din 15».
- * - An email has no gauge: its facts keep `plain` alone, «Mediu, treapta 2 din 3».
+ * - The event's pill (`route-pills.ts`): the tooltip «Mediu — nivelul 5 din 15», then the whole
+ *   ladder on a second line, «ușor 1–3 · mediu 4–6 · greuț 7–9 · greu 10–12 · foarte greu 13–15»
+ *   (the owner, 14:18) — never an example (a non-Tâmpa «Mediu 4» is not the Tâmpa run) — and a
+ *   screen reader hears the shorter form once, as the chip's `srLabel`: «Dificultate: mediu —
+ *   nivelul 5 din 15 (mediu: 4–6)».
+ * - An email has no gauge: its facts keep `plain` alone, «Mediu, nivelul 5 din 15».
  * - A band's filter box names its levels on hover: «Greuț: nivelurile 7–9 din 15».
- * - The editor's «Treapta» and the band select beside it carry a «?» with the whole scale, one
+ * - The editor's «Nivelul» and the band select beside it carry a «?» with the whole scale, one
  *   line per band in the owner's words, outside the radio group's own one-line description.
  */
 let currentLocale: "ro" | "en" = "ro";
@@ -30,15 +33,19 @@ vi.mock("next-intl/server", async () => {
 // The panel's one island reads the app router, which a static render has not mounted.
 vi.mock("@/modules/events/ui/FilterAutoApply", () => ({ default: () => null }));
 
+const { createTranslator } = await import("next-intl");
 const { getFormatter, getTranslations } = await import("next-intl/server");
 const { buildRoutePills } = await import("@/modules/events/ui/route-pills");
 const { default: RoutePills } = await import("@/modules/events/ui/RoutePills");
 const { DIFFICULTY_BANDS, DIFFICULTY_LEVEL_COUNT, difficultyBandLevels } = await import("@/modules/events/domain/difficulty");
 const { default: DifficultyStepField } = await import("@/modules/content/events/ui/DifficultyStepField");
+const { difficultyScaleText, difficultyStepWords } = await import("@/modules/content/events/ui/difficulty-words");
 const { default: ListingFilterPanel } = await import("@/modules/events/ui/ListingFilterPanel");
 const { NO_FILTER } = await import("@/modules/events/domain/listing-filter");
 const ro = (await import("../../../messages/ro.json")).default;
 const en = (await import("../../../messages/en.json")).default;
+
+type Words = Parameters<typeof difficultyStepWords>[0];
 
 describe("§528 a band's filter box names its levels", () => {
   it.each([
@@ -90,6 +97,12 @@ async function difficultyPill(level: number) {
   return pills[0]!;
 }
 
+/** The whole ladder, the tooltip's second line (the owner, 2026-09-29 14:18). */
+const LADDER = {
+  ro: "ușor 1–3 · mediu 4–6 · greuț 7–9 · greu 10–12 · foarte greu 13–15",
+  en: "easy 1–3 · medium 4–6 · fairly hard 7–9 · hard 10–12 · very hard 13–15",
+} as const;
+
 describe("§528 the scale's arithmetic", () => {
   it("names each band's levels, 1–3 up to 13–15", () => {
     expect(DIFFICULTY_BANDS.map((band) => difficultyBandLevels(band))).toEqual([
@@ -100,35 +113,35 @@ describe("§528 the scale's arithmetic", () => {
       { from: 13, to: 15 },
     ]);
   });
-
 });
 
-describe("§528 the pill's tooltip names the level of fifteen", () => {
+describe("§528, §NNN the pill's tooltip names the level of fifteen, then every band's levels", () => {
   it.each([
-    ["ro", 1, "Ușor 1 — nivelul 1 din 15"],
-    ["ro", 2, "Ușor 2 — nivelul 2 din 15"],
-    ["ro", 4, "Mediu 1 — nivelul 4 din 15"],
-    ["ro", 5, "Mediu 2 — nivelul 5 din 15"],
-    ["ro", 6, "Mediu 3 — nivelul 6 din 15"],
-    ["ro", 8, "Greuț 2 — nivelul 8 din 15"],
-    ["ro", 11, "Greu 2 — nivelul 11 din 15"],
-    ["ro", 15, "Foarte greu 3 — nivelul 15 din 15"],
-    ["en", 1, "Easy 1 — level 1 of 15"],
-    ["en", 2, "Easy 2 — level 2 of 15"],
-    ["en", 5, "Medium 2 — level 5 of 15"],
-    ["en", 12, "Hard 3 — level 12 of 15"],
-    ["en", 15, "Very hard 3 — level 15 of 15"],
-  ] as const)("in %s, level %i reads «%s»", async (locale, level, sentence) => {
+    ["ro", 1, "Ușor — nivelul 1 din 15", "Dificultate: ușor — nivelul 1 din 15 (ușor: 1–3)"],
+    ["ro", 2, "Ușor — nivelul 2 din 15", "Dificultate: ușor — nivelul 2 din 15 (ușor: 1–3)"],
+    ["ro", 4, "Mediu — nivelul 4 din 15", "Dificultate: mediu — nivelul 4 din 15 (mediu: 4–6)"],
+    ["ro", 5, "Mediu — nivelul 5 din 15", "Dificultate: mediu — nivelul 5 din 15 (mediu: 4–6)"],
+    ["ro", 6, "Mediu — nivelul 6 din 15", "Dificultate: mediu — nivelul 6 din 15 (mediu: 4–6)"],
+    ["ro", 8, "Greuț — nivelul 8 din 15", "Dificultate: greuț — nivelul 8 din 15 (greuț: 7–9)"],
+    ["ro", 11, "Greu — nivelul 11 din 15", "Dificultate: greu — nivelul 11 din 15 (greu: 10–12)"],
+    ["ro", 15, "Foarte greu — nivelul 15 din 15", "Dificultate: foarte greu — nivelul 15 din 15 (foarte greu: 13–15)"],
+    ["en", 1, "Easy — level 1 of 15", "Difficulty: easy — level 1 of 15 (easy: 1–3)"],
+    ["en", 2, "Easy — level 2 of 15", "Difficulty: easy — level 2 of 15 (easy: 1–3)"],
+    ["en", 5, "Medium — level 5 of 15", "Difficulty: medium — level 5 of 15 (medium: 4–6)"],
+    ["en", 12, "Hard — level 12 of 15", "Difficulty: hard — level 12 of 15 (hard: 10–12)"],
+    ["en", 15, "Very hard — level 15 of 15", "Difficulty: very hard — level 15 of 15 (very hard: 13–15)"],
+  ] as const)("in %s, level %i reads «%s» and then the ladder", async (locale, level, first, heard) => {
     currentLocale = locale;
     const pill = await difficultyPill(level);
-    expect(pill.tooltip).toBe(sentence);
-    // Heard once, without the hover: the chip's own srLabel says the same level, and no srSuffix repeats it.
-    expect(pill.srLabel).toBe(`${locale === "ro" ? "Dificultate" : "Difficulty"}: ${sentence.charAt(0).toLowerCase()}${sentence.slice(1)}`);
+    expect(pill.tooltip).toBe(`${first}\n${LADDER[locale]}`);
+    // Each of the two lines within the owner's 200 characters.
+    for (const line of pill.tooltip!.split("\n")) expect(line.length, line).toBeLessThanOrEqual(200);
+    // Heard once, without the hover: the chip's own srLabel says the level and its band's range, and no srSuffix repeats it.
+    expect(pill.srLabel).toBe(heard);
     expect(pill.srSuffix).toBeUndefined();
-    // No example on a public surface: nothing after the level.
+    // No example on a public surface: nothing but the level and the ranges.
     expect(pill.tooltip).not.toContain(":");
-    // An email has no gauge: its words stay the band and the step alone.
-    expect(pill.plain).not.toContain(String(DIFFICULTY_LEVEL_COUNT));
+    expect(pill.tooltip).not.toContain("Tâmpa");
   });
 
   it("every level of fifteen has its own sentence, in both languages", async () => {
@@ -140,27 +153,31 @@ describe("§528 the pill's tooltip names the level of fifteen", () => {
     }
   });
 
-  it("the drawn chip carries the tooltip mark and the sentence once in its accessible name, never an aria-label", async () => {
+  it("the drawn chip carries the tooltip mark and the level once in its accessible name, never an aria-label", async () => {
     const pill = await difficultyPill(5);
     const html = renderToStaticMarkup(RoutePills({ pills: [pill] }));
     expect(html).toContain('data-has-tooltip="true"');
-    expect(html).toContain(`<span aria-hidden="true">Mediu 2</span>`);
-    expect(html).toContain(">Dificultate: mediu 2 — nivelul 5 din 15<");
+    expect(html).toContain(`<span aria-hidden="true">Mediu 5</span>`);
+    expect(html).toContain(">Dificultate: mediu — nivelul 5 din 15 (mediu: 4–6)<");
     expect(html.match(/nivelul 5 din 15/g)).toHaveLength(1);
     expect(html).not.toMatch(/aria-label=/);
   });
 });
 
-describe("§528 the editor's «?» explains the whole scale", () => {
-  const words = {
-    label: ro.Admin.editor.fields.difficultyStep,
-    help: ro.Admin.editor.difficultyStepHelp,
-    scale: Object.values(ro.Admin.editor.difficultyScale).join("\n"),
-    choices: ro.Admin.editor.difficultySteps,
-  };
+/** The words `KindBox` hands «Nivelul», from the catalogue as the page reads it. */
+function editorWords(catalogue: typeof ro) {
+  const locale = catalogue === ro ? "ro" : "en";
+  const t = createTranslator({ locale, messages: catalogue, namespace: "Admin" }) as unknown as Words;
+  const tEvent = createTranslator({ locale, messages: catalogue, namespace: "Event" }) as unknown as Words;
+  return difficultyStepWords(t, tEvent, difficultyScaleText(t));
+}
+
+describe("§528, §NNN the editor's «?» explains the whole scale", () => {
+  const words = editorWords(ro);
+  const band = { name: "event.difficulty", initial: "MEDIUM" };
 
   it("draws a «?» named by the scale, beside the toggle (§537) and outside the radio group's description", () => {
-    const html = renderToStaticMarkup(createElement(DifficultyStepField, { name: "event.difficultyStep", defaultStep: 2, words }));
+    const html = renderToStaticMarkup(createElement(DifficultyStepField, { name: "event.difficultyStep", defaultStep: 2, band, words }));
     expect(html).toContain('data-testid="difficulty-scale-help"');
     expect(html).toContain(`aria-label="${words.scale}"`);
     expect(html).toContain('type="button"');
@@ -170,22 +187,42 @@ describe("§528 the editor's «?» explains the whole scale", () => {
     expect(html).toContain(`<span id="${describedBy}">${words.help}</span>`);
   });
 
-  it("says the scale in the owner's own words, one line per band («mediu» per step), in both languages", () => {
+  it("says the scale in the owner's own words, one line per band («mediu» per level), every number the level of fifteen", () => {
     // The owner's words (§526, §528), word for word — the one source the «?» and «Ghid» share.
-    expect(Object.values(ro.Admin.editor.difficultyScale)).toEqual([
-      "ușor: scurt, plat, pentru oricine",
-      "mediu 1: alergarea de pe Tâmpa",
-      "mediu 2: alergările mai lungi",
-      "mediu 3: lungi și tehnice",
-      "greuț: de la semimaraton în sus",
-      "greu: maratoane",
-      "foarte greu: ultramaratoane și mai sus",
-      "în fiecare categorie 1 = cel mai ușor, 3 = cel mai greu",
+    expect(words.scale.split("\n")).toEqual([
+      "ușor 1–3: scurt, plat, pentru oricine",
+      "mediu 4: alergarea de pe Tâmpa",
+      "mediu 5: alergările mai lungi",
+      "mediu 6: lungi și tehnice",
+      "greuț 7–9: de la semimaraton în sus",
+      "greu 10–12: maratoane",
+      "foarte greu 13–15: ultramaratoane și mai sus",
+      "în fiecare categorie, primul nivel e cel mai ușor, al treilea cel mai greu",
+    ]);
+    expect(editorWords(en).scale.split("\n")).toEqual([
+      "easy 1–3: short, flat, for anyone",
+      "medium 4: the run up Tâmpa",
+      "medium 5: the longer runs",
+      "medium 6: long and technical",
+      "fairly hard 7–9: from a half marathon up",
+      "hard 10–12: marathons",
+      "very hard 13–15: ultramarathons and beyond",
+      "in every band, the first level is the easiest, the third the hardest",
     ]);
     expect(Object.keys(en.Admin.editor.difficultyScale)).toEqual(Object.keys(ro.Admin.editor.difficultyScale));
-    for (const scale of [ro.Admin.editor.difficultyScale, en.Admin.editor.difficultyScale]) {
-      for (const line of Object.values(scale)) expect(line.length, line).toBeLessThanOrEqual(200);
+    for (const catalogue of [ro, en] as const) {
+      for (const line of editorWords(catalogue as typeof ro).scale.split("\n")) expect(line.length, line).toBeLessThanOrEqual(200);
     }
+  });
+
+  it("says the rule and the whole ladder under «Nivelul», in one sentence per language", () => {
+    expect(words.help).toBe(
+      "Nivelul e de la 1 (ușor) la 15 (foarte greu): fiecare categorie are trei niveluri — ușor 1–3, mediu 4–6, greuț 7–9, greu 10–12, foarte greu 13–15.",
+    );
+    expect(editorWords(en).help).toBe(
+      "The level runs from 1 (easy) to 15 (very hard): every band has three levels — easy 1–3, medium 4–6, fairly hard 7–9, hard 10–12, very hard 13–15.",
+    );
+    for (const catalogue of [ro, en] as const) expect(editorWords(catalogue as typeof ro).help.length).toBeLessThanOrEqual(200);
   });
 
   it("«Ghid» points to the «?» and never repeats the examples in words of its own", () => {
@@ -195,10 +232,16 @@ describe("§528 the editor's «?» explains the whole scale", () => {
     expect(JSON.stringify(en).match(/the run up Tâmpa/g)).toHaveLength(1);
   });
 
+  it("«Ghid» says the same ladder as the pill's tooltip", () => {
+    const steps = (catalogue: typeof ro) => JSON.stringify(catalogue.Admin.guide);
+    expect(steps(ro)).toContain(LADDER.ro.replace(/ · /g, ", "));
+    expect(steps(en as typeof ro)).toContain(LADDER.en.replace(/ · /g, ", "));
+  });
+
   it("draws no «?» when no scale is handed to it", () => {
     const { scale: _scale, ...without } = words;
     void _scale;
-    const html = renderToStaticMarkup(createElement(DifficultyStepField, { name: "event.difficultyStep", defaultStep: 2, words: without }));
+    const html = renderToStaticMarkup(createElement(DifficultyStepField, { name: "event.difficultyStep", defaultStep: 2, band, words: without }));
     expect(html).not.toContain("difficulty-scale-help");
   });
 });

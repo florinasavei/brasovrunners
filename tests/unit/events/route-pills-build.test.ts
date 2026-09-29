@@ -134,20 +134,21 @@ describe("§388 buildRoutePills — surface, difficulty, distance, elevation, ni
   });
 
   // Through `buildRoutePills` and `RoutePills` for levels in every band and both locales, asserting
-  // what the eye and a screen reader are given — the visible «Mediu 2», hidden from the reader, and
-  // the visually-hidden «Dificultate: mediu 2 — nivelul 5 din 15» in its place (§526, §528).
+  // what the eye and a screen reader are given — the visible «Mediu 5», hidden from the reader, and
+  // the visually-hidden «Dificultate: mediu — nivelul 5 din 15 (mediu: 4–6)» in its place (§526,
+  // §528; §NNN: the number is the level, the dots are the step — the glyph still carries the step).
   it.each([
-    // The owner's five bands (§526): ușor, mediu, greuț, greu, foarte greu — three steps each.
-    ["ro", "EASY", 1, "Ușor 1", "Dificultate: ușor 1 — nivelul 1 din 15", "Ușor, treapta 1 din 3"],
-    ["ro", "MEDIUM", 5, "Mediu 2", "Dificultate: mediu 2 — nivelul 5 din 15", "Mediu, treapta 2 din 3"],
-    ["ro", "FAIRLY_HARD", 9, "Greuț 3", "Dificultate: greuț 3 — nivelul 9 din 15", "Greuț, treapta 3 din 3"],
-    ["ro", "HARD", 10, "Greu 1", "Dificultate: greu 1 — nivelul 10 din 15", "Greu, treapta 1 din 3"],
-    ["ro", "VERY_HARD", 15, "Foarte greu 3", "Dificultate: foarte greu 3 — nivelul 15 din 15", "Foarte greu, treapta 3 din 3"],
-    ["en", "EASY", 2, "Easy 2", "Difficulty: easy 2 — level 2 of 15", "Easy, step 2 of 3"],
-    ["en", "MEDIUM", 4, "Medium 1", "Difficulty: medium 1 — level 4 of 15", "Medium, step 1 of 3"],
-    ["en", "FAIRLY_HARD", 8, "Fairly hard 2", "Difficulty: fairly hard 2 — level 8 of 15", "Fairly hard, step 2 of 3"],
-    ["en", "HARD", 12, "Hard 3", "Difficulty: hard 3 — level 12 of 15", "Hard, step 3 of 3"],
-    ["en", "VERY_HARD", 13, "Very hard 1", "Difficulty: very hard 1 — level 13 of 15", "Very hard, step 1 of 3"],
+    // The owner's five bands (§526): ușor, mediu, greuț, greu, foarte greu — three levels each.
+    ["ro", "EASY", 1, "Ușor 1", "Dificultate: ușor — nivelul 1 din 15 (ușor: 1–3)", "Ușor, nivelul 1 din 15"],
+    ["ro", "MEDIUM", 5, "Mediu 5", "Dificultate: mediu — nivelul 5 din 15 (mediu: 4–6)", "Mediu, nivelul 5 din 15"],
+    ["ro", "FAIRLY_HARD", 9, "Greuț 9", "Dificultate: greuț — nivelul 9 din 15 (greuț: 7–9)", "Greuț, nivelul 9 din 15"],
+    ["ro", "HARD", 10, "Greu 10", "Dificultate: greu — nivelul 10 din 15 (greu: 10–12)", "Greu, nivelul 10 din 15"],
+    ["ro", "VERY_HARD", 15, "Foarte greu 15", "Dificultate: foarte greu — nivelul 15 din 15 (foarte greu: 13–15)", "Foarte greu, nivelul 15 din 15"],
+    ["en", "EASY", 2, "Easy 2", "Difficulty: easy — level 2 of 15 (easy: 1–3)", "Easy, level 2 of 15"],
+    ["en", "MEDIUM", 4, "Medium 4", "Difficulty: medium — level 4 of 15 (medium: 4–6)", "Medium, level 4 of 15"],
+    ["en", "FAIRLY_HARD", 8, "Fairly hard 8", "Difficulty: fairly hard — level 8 of 15 (fairly hard: 7–9)", "Fairly hard, level 8 of 15"],
+    ["en", "HARD", 12, "Hard 12", "Difficulty: hard — level 12 of 15 (hard: 10–12)", "Hard, level 12 of 15"],
+    ["en", "VERY_HARD", 13, "Very hard 13", "Difficulty: very hard — level 13 of 15 (very hard: 13–15)", "Very hard, level 13 of 15"],
   ] as const)("in %s, %s at level %i shows «%s» and is heard as «%s»", async (locale, band, level, shown, heard, plain) => {
     currentLocale = locale;
     const t = await getTranslations("Event");
@@ -156,7 +157,7 @@ describe("§388 buildRoutePills — surface, difficulty, distance, elevation, ni
     const pills = buildRoutePills({ ...FULL_ROUTE, difficultyLevel: level }, t, format).filter((pill) => pill.glyph === `difficulty:${band}-${step}`);
     expect(pills).toHaveLength(1);
     expect(pills[0]!.label).toBe(shown);
-    // Where no gauge is drawn (an email's facts, §392), the words say the step.
+    // Where no gauge is drawn (an email's facts, §392), the words say the level of fifteen (§NNN).
     expect(pills[0]!.plain).toBe(plain);
     const html = renderToStaticMarkup(RoutePills({ pills }));
     // The visible words, hidden from a screen reader; the heard words, once, in a span clipped to
