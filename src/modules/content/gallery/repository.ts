@@ -110,6 +110,7 @@ function publishedEventTitle(locale: Locale) {
     where ${events.id} = ${galleryAlbums.eventId}
       and ${eventTranslations.locale} = ${locale}
       and ${events.editorialStatus} = 'PUBLISHED'
+      and ${events.membersOnly} = false
     limit 1)`;
 }
 
@@ -155,7 +156,8 @@ export async function findPublishedAlbumBySlug<T extends Record<string, unknown>
       .select({ slug: eventTranslations.slug, title: eventTranslations.title })
       .from(events)
       .innerJoin(eventTranslations, and(eq(eventTranslations.eventId, events.id), eq(eventTranslations.locale, locale)))
-      .where(and(eq(events.id, row.eventId), eq(events.editorialStatus, "PUBLISHED")))
+      // Nor a members' event (§552): the public gallery never names or links one.
+      .where(and(eq(events.id, row.eventId), eq(events.editorialStatus, "PUBLISHED"), eq(events.membersOnly, false)))
       .limit(1);
     event = linked ?? null;
   }

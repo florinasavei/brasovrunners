@@ -1008,7 +1008,9 @@ async function renderRow(
     eventDetails?.slug
   ) {
     // Dated only: an event whose date is to be announced (§533) has no calendar entry to attach.
-    const found = await findPublishedEventBySlug(db, locale, eventDetails.slug);
+    // The members' audience (§552): this message is to somebody registered for the event, so an
+    // event for the members alone gets its calendar entry like any other — past the door already.
+    const found = await findPublishedEventBySlug(db, locale, eventDetails.slug, "members");
     const published = found ? datedOrNull(found) : null;
     if (published) {
       const ics = buildCalendar({

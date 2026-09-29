@@ -140,6 +140,12 @@ export type EventForRegistration = {
    */
   reminderHoursBefore?: number | null;
   /**
+   * «Doar pentru membrii BVR» (§552): the public form takes a registration only behind a members'
+   * session (`RegistrationOrigin.member`), for the account's own address, one person per account.
+   * Asked here before anything is spent and again under the event's lock. Absent on a partial row: false.
+   */
+  membersOnly?: boolean;
+  /**
    * The event's own zone (`events.timezone`), for the day the minimum age is counted against
    * (§321). Absent on a partial row means the column's default, `EVENT_TIMEZONE_DEFAULT`.
    */
@@ -1215,6 +1221,13 @@ export type RegistrationOrigin = {
    */
   anotherPerson?: { participantId: string };
   /**
+   * The members' session the public form was sent from (§552), read by the action from the account
+   * (`getCurrentAccount`, §524): the only door to an event for the members alone. `email` is the
+   * account's address, the one the registration is for; a form for any other address is refused.
+   * Ignored on every other event.
+   */
+  member?: { email: string };
+  /**
    * The public form's family sitting (§519): the form is one of several a browser sends in a row
    * for people on one address, with one email at the end. Present on every public form.
    *
@@ -1249,6 +1262,29 @@ export type RegistrationOrigin = {
 };
 
 const PUBLIC_ORIGIN: RegistrationOrigin = { source: "PUBLIC", createdByStaffUserId: null };
+
+/**
+ * The door of an event for the members alone (§552), for the public form: a members' session, and
+ * never the emailed link for another person — one person per account. The same NOT_FOUND an
+ * unknown event gives, so a post says nothing about whether such an event exists. A staff entry
+ * and the desk are the backoffice's, and pass.
+ */
+function assertMembersDoor(membersOnly: boolean, origin: RegistrationOrigin): void {
+  if (!membersOnly || origin.source !== "PUBLIC") return;
+  if (origin.anotherPerson) {
+    throw new DomainError("VALIDATION_ERROR", "a members' event takes one person per account: no link for another person", [ANOTHER_LINK_INVALID]);
+  }
+  if (!origin.member) throw new DomainError("NOT_FOUND", "no such event");
+}
+
+/** The account's address against the form's, as the address's identity compares them (§10.4). */
+function sameCanonical(accountEmail: string, canonicalEmail: string): boolean {
+  try {
+    return canonicalizeEmail(accountEmail).canonicalEmail === canonicalEmail;
+  } catch {
+    return false;
+  }
+}
 
 /** The queued row, or null when the idempotency key had already been used (`enqueueEmail`). */
 async function enqueueVerificationEmail<T extends Record<string, unknown>>(
@@ -1387,6 +1423,8 @@ export async function submitRegistration<T extends Record<string, unknown>>(
 ): Promise<SubmitRegistrationResult> {
   const atTheDesk = origin.source === "STAFF" && origin.atTheDesk === true;
   assertRegistrationOpen(event, now, atTheDesk);
+  // An event for the members alone (§552), before anything is parsed or spent: asked again under the lock.
+  assertMembersDoor(event.membersOnly === true, origin);
 
   /**
    * Which details are insisted on depends on who is filling the form in, and on nothing
@@ -1716,6 +1754,18 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     if (startHeldBack(locked)) {
       throw new DomainError("VALIDATION_ERROR", "the event's date is to be announced: registration is not open");
     }
+    // For the members alone (§552), asked under the lock too: the switch turned on by a save that
+    // committed after the caller read the row. And for the account's own address only.
+    assertMembersDoor(locked.membersOnly, origin);
+    if (locked.membersOnly && origin.source === "PUBLIC" && origin.member && !sameCanonical(origin.member.email, identity.canonicalEmail)) {
+      throw new DomainError("VALIDATION_ERROR", "a members' event is registered for with the account's own address", ["email"]);
+    }
+    /*
+      One person per account (§552): on a members' event the public form never opens the family
+      flow — no second person on the address, no sitting, no emailed link for another person. The
+      address's one registration is the account holder's; a form with another name re-sends it.
+    */
+    const onePerAccount = locked.membersOnly && origin.source === "PUBLIC";
 
     const participant = await findOrCreateParticipant(tx, identity, legalName, input.locale, now);
     if (origin.anotherPerson && origin.anotherPerson.participantId !== participant.id) {
@@ -1730,7 +1780,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       the same way either way, and costs no catalogue read. The same person again is asked too since
       §446 — whether the re-send may say how to register somebody else depends on it.
     */
-    const familyOpen = via === "link" || rows.length > 0 ? await familyRegistrationOpen(tx) : false;
+    const familyOpen = onePerAccount ? false : via === "link" || rows.length > 0 ? await familyRegistrationOpen(tx) : false;
     // The name and the birth date both decide who this is (§446): the owner's rule, `domain/family.ts`.
     const decision = decideSubmission({ rows, legalName, birthDate: input.birthDate ?? null, via, familyOpen, cap });
 
@@ -1782,7 +1832,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       «Da, încă o persoană» is not a sitting's. Its email is due at once and nothing is written for a
       sitting; it only remembers, for the browser's sealed half, what «Da» would take in (`offering`).
     */
-    const familyWindow = origin.source === "PUBLIC" && !origin.anotherPerson && origin.sitting !== undefined && familySittingHolds(settings);
+    const familyWindow = !onePerAccount && origin.source === "PUBLIC" && !origin.anotherPerson && origin.sitting !== undefined && familySittingHolds(settings);
     const inSitting = familyWindow && origin.sitting?.joined === true;
     const offering = familyWindow && !inSitting;
     let sitting =

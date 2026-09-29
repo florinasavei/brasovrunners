@@ -23,7 +23,15 @@ import {
 import PagesSubNav from "@/modules/content/pages/ui/PagesSubNav";
 import LazyRichTextEditor from "@/modules/content/rich-text/ui/LazyRichTextEditor";
 import { richTextEditorLabels } from "@/modules/content/rich-text/ui/labels";
-import { canEditMembersPage, canManageStaff, canPublishMembersPage, canReadContent } from "@/modules/staff-identity/domain/roles";
+import { clubToday, listDiscountCodesForAdmin } from "@/modules/content/member-codes/repository";
+import {
+  canEditDiscountCodeWords,
+  canEditMembersPage,
+  canManageDiscountCodes,
+  canManageStaff,
+  canPublishMembersPage,
+  canReadContent,
+} from "@/modules/staff-identity/domain/roles";
 import { countMembers } from "@/modules/staff-identity/repository";
 import { requireStaff } from "@/modules/staff-identity/session";
 import TranslateAllButton from "@/modules/translate/ui/TranslateAllButton";
@@ -34,6 +42,7 @@ import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import { saveMembersTextAction, setMembersPagePublishedAction } from "./actions";
+import CodesCard from "./CodesCard";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -69,7 +78,7 @@ export default async function AdminMembersPage({ params, searchParams }: Props) 
   const t = await getTranslations("Admin");
   const words = await confirmWords();
   const db = getDb();
-  const [settings, members] = await Promise.all([readMembersPageSettings(db), countMembers(db)]);
+  const [settings, members, codes] = await Promise.all([readMembersPageSettings(db), countMembers(db), listDiscountCodesForAdmin(db)]);
   const mayEdit = canEditMembersPage(actor.role);
   const mayPublish = canPublishMembersPage(actor.role);
   const rich = richTextEditorLabels(await getTranslations("Admin.richText"));
@@ -78,6 +87,13 @@ export default async function AdminMembersPage({ params, searchParams }: Props) 
     benefitsEnBody: t("members.benefitsEn"),
     zoneRoBody: t("members.zoneRo"),
     zoneEnBody: t("members.zoneEn"),
+    // The discount codes' boxes (§552), by the names their forms post.
+    partnerName: t("members.codes.partner"),
+    code: t("members.codes.code"),
+    descriptionRo: t("members.codes.descriptionRo"),
+    descriptionEn: t("members.codes.descriptionEn"),
+    link: t("members.codes.link"),
+    validUntil: t("members.codes.validUntil"),
   });
 
   return (
@@ -120,6 +136,18 @@ export default async function AdminMembersPage({ params, searchParams }: Props) 
         mayEdit={mayEdit}
       />
       <TextCard text="zone" settings={settings} locale={locale} words={t} messages={messages} rich={rich} mayEdit={mayEdit} />
+
+      {/* «Coduri de reducere» (§552): shown only inside the members' zone, never on a public page. */}
+      <CodesCard
+        codes={codes}
+        today={clubToday(new Date())}
+        locale={locale}
+        words={t}
+        cancel={words.cancel}
+        messages={messages}
+        mayManage={canManageDiscountCodes(actor.role)}
+        mayEditWords={canEditDiscountCodeWords(actor.role)}
+      />
     </Stack>
   );
 }

@@ -40,6 +40,7 @@ import { registrationState } from "@/modules/events/domain/registration-window";
 import { datedOrNull } from "@/modules/events/domain/dated";
 import { confirmationWindow } from "@/modules/registrations/domain/hold-deadlines";
 import { registrationEventWithLastGood } from "@/modules/resilience/event-copy";
+import { membersEventBySlug, membersViewer } from "@/modules/events/members-only";
 import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
 import { countryOptions } from "@/modules/registrations/countries";
 import { phoneCountryLabels, phoneCountryOrder } from "@/modules/registrations/phone";
@@ -149,9 +150,17 @@ export default async function RegisterPage({ params, searchParams }: Props) {
     skipped then; the ones the public cache answers are tried and may say nothing.
   */
   const eventRead = await registrationEventWithLastGood(locale, slug, now);
+  /*
+    An event for the members alone (§552): the public read never meets one, so a slug it did not
+    find is asked once more for a members' session only, live, never from a copy. Anybody else gets
+    the page's 404. The member registers themselves, with the account's own address (`member`).
+  */
+  const membersRow = eventRead.value ? undefined : await membersEventBySlug(locale, slug);
+  const member = membersRow ? await membersViewer() : null;
+  const found = eventRead.value ?? membersRow ?? null;
   // No form while the date is to be announced (§533): registration is «în curând» until it is,
   // and the state below would say so anyway — this says it before a date is read.
-  const event = eventRead.value ? datedOrNull(eventRead.value) : null;
+  const event = found ? datedOrNull(found) : null;
   if (!event) notFound();
   const resting = eventRead.freshness === "stale";
 
@@ -181,7 +190,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
     on, the sitting's own screen, with «Gata»; with `?family=1` it is the next form, the address
     fixed. Everything it shows was typed on this browser (§39).
   */
-  const sittingCookie = resting ? null : await readFamilySittingCookie();
+  // One person per account on a members' event (§552): no family sitting, no «Mai înscrii pe cineva».
+  const sittingCookie = resting || member ? null : await readFamilySittingCookie();
   const sitting = sittingCookieLive(sittingCookie, event.id, now) ? sittingCookie : null;
   const afterForm = Boolean(submitted) && sent !== "1" ? afterFormScreen(sitting) : null;
   const sittingScreen = afterForm === "sitting";
@@ -1003,7 +1013,23 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 The next form of a family sitting (§519): the address is the sitting's, said back in
                 bold and not asked again — the server takes it from the browser's sealed half.
               */}
-              {familyForm && sitting ? (
+              {member ? (
+                /*
+                  A members' event (§552): the account's own address, said back in bold and not asked —
+                  the server takes it from the session, whatever is posted. One person per account.
+                */
+                <Box data-testid="members-address">
+                  <input type="hidden" name="email" value={member.email} />
+                  <input type="hidden" name="emailConfirm" value={member.email} />
+                  <Typography variant="body2" color="text.secondary">
+                    {t("membersAddressLabel")}
+                  </Typography>
+                  <Typography sx={{ fontWeight: 700, wordBreak: "break-all" }}>{member.email}</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {t("membersAddressHelp")}
+                  </Typography>
+                </Box>
+              ) : familyForm && sitting ? (
                 <Box data-testid="family-sitting-address">
                   <input type="hidden" name={FAMILY_SITTING_FIELD} value="1" />
                   <Typography variant="body2" color="text.secondary">
