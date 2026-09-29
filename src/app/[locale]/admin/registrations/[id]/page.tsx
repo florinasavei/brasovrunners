@@ -284,7 +284,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           })}
         </Typography>
       )}
-      {/* The sex in words (§NNN), «—» for none — a paper entry left blank, or the retired «Prefer
+      {/* The sex in words (§554), «—» for none — a paper entry left blank, or the retired «Prefer
           să nu spun» of a row stored before it went; and the T-shirt, only for an event that gives one. */}
       <SexAndShirtLine sex={registration.sex} tshirtSize={registration.tshirtSize} kitShirt={registration.eventKitShirt} />
       {/* The socials the person offered (§106): links to follow back — and whether the public

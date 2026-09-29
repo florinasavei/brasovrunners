@@ -141,7 +141,7 @@ export async function confirmFamilyEntry<T extends Record<string, unknown>>(
       // The address is the token's participant's, never one kept or posted (§389). An entry kept
       // before the country was asked (§510) has none, and the public schema now requires it: it
       // lives in Romania, as the column's default reads every older row — never a refusal of a
-      // parent who did everything right. A kept «Prefer să nu spun» is dropped the same way (§NNN).
+      // parent who did everything right. A kept «Prefer să nu spun» is dropped the same way (§554).
       { country: "RO", ...withoutRetiredSex(entry.fields), email: participant.deliveryEmail, fitnessAcknowledged: input.fitnessAcknowledged },
       now,
       "REAL",

@@ -20,7 +20,7 @@ vi.mock("next-intl/server", () => ({
 const { default: SexAndShirtLine } = await import("@/modules/registrations/ui/SexAndShirtLine");
 
 /**
- * §NNN (amending §510 and §59) — «Sex» is «Masculin» or «Feminin», refused at every door otherwise,
+ * §554 (amending §510 and §59) — «Sex» is «Masculin» or «Feminin», refused at every door otherwise,
  * and the T-shirt size is kept only for an event whose «Kit de participare» gives one. Real
  * PostgreSQL in process (PGlite): the rows are the ones the form, a staff entry and the desk write.
  */
@@ -98,7 +98,7 @@ async function refusedFields(promise: Promise<unknown>): Promise<string[]> {
   throw new Error("expected a refusal");
 }
 
-describe("§NNN «Sex» at every door, and the T-shirt only when the event gives one", () => {
+describe("§554 «Sex» at every door, and the T-shirt only when the event gives one", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
 

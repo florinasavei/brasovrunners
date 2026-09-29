@@ -8,7 +8,7 @@ import { kitSummary, type SummaryWords } from "@/modules/content/events/ui/box-s
 import { PANEL_GLYPHS } from "@/shared/ui/panel-glyphs";
 
 /**
- * §NNN — «Kit de participare» in card 6 «Participanți și înscrieri» (the owner, 2026-09-29: «o
+ * §554 — «Kit de participare» in card 6 «Participanți și înscrieri» (the owner, 2026-09-29: «o
  * subsecțiune cu kit de participare, și doar dacă e bifat tricoul să avem alegerea mărimii în
  * formular»): a fold of its own with a glyph, closed by default, its line «Tricou: da» / «Tricou:
  * nu», holding one tick and one sentence — and only where registration happens on the site, inside
@@ -75,7 +75,7 @@ function kitCard(html: string): string {
   return html.slice(open, html.indexOf("</summary>", start) + "</summary>".length);
 }
 
-describe("§NNN the race kit card", () => {
+describe("§554 the race kit card", () => {
   it("is a closed fold with a glyph and «Tricou: nu» on an event without a shirt", async () => {
     const html = await render(RACE);
     const card = kitCard(html);

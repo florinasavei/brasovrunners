@@ -1,7 +1,7 @@
 import type { RegistrationSex } from "@/db/schema/registrations";
 
 /**
- * «Sex» on a registration: two answers, «Masculin» and «Feminin» (§NNN, amending §510; the owner,
+ * «Sex» on a registration: two answers, «Masculin» and «Feminin» (§554, amending §510; the owner,
  * 2026-09-29: «sexul e doar masculin și feminin … nu avem opțiunea de a prefera să nu zică»).
  *
  * **The one rule every door meets.** `fields.ts` builds every submission schema — the public form,

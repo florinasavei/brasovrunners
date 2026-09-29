@@ -301,7 +301,7 @@ function eventFieldsFrom(form: FormData) {
     // The waiting list's length (§348), only when the form carried its box: an empty box is "no
     // limit", and a form without the box is "not editing it" — `fields.ts` tells the two apart.
     waitlistCapacity: form.has("event.waitlistCapacity") ? value("waitlistCapacity") : undefined,
-    // «Kit de participare» → «Tricou» (§NNN): a checkbox, read only when the form carried its marker,
+    // «Kit de participare» → «Tricou» (§554): a checkbox, read only when the form carried its marker,
     // so a form without the card is "not editing it" rather than "no shirt".
     kitShirt: form.get("event.kitShirt.present") === "1" ? form.get("event.kitShirt") === "on" : undefined,
     bibStartNumber: value("bibStartNumber"),

@@ -7,7 +7,7 @@ import ro from "../../../messages/ro.json";
 import { SHIRT_SIZES, shirtSizeKept, shirtSizeShown } from "@/modules/registrations/domain/kit";
 
 /**
- * §NNN (amending §59) — the registration form asks the T-shirt size only when the event's «Kit de
+ * §554 (amending §59) — the registration form asks the T-shirt size only when the event's «Kit de
  * participare» gives a shirt (`events.kit_shirt`); otherwise no box, and the optional fold's title
  * drops «tricou» in both languages. «Sex» is two radio cards with their glyphs. The page is rendered
  * on the server as a visitor meets it, with the database and the async parts not about the form
@@ -114,7 +114,7 @@ beforeEach(() => {
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
-describe("§NNN the T-shirt size is asked only when the event gives a shirt", () => {
+describe("§554 the T-shirt size is asked only when the event gives a shirt", () => {
   it("draws no size box and no «tricou» in the fold's title on an event without a shirt (ro, en)", async () => {
     const html = await render();
     expect(html).not.toContain('name="tshirtSize"');

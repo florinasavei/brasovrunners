@@ -5,7 +5,7 @@ import { shirtSizeShown } from "../domain/kit";
 import { sexShown } from "../domain/sex";
 
 /**
- * One line of the backoffice registration page (§NNN): «Sex: Masculin», or «Sex: —» for no answer —
+ * One line of the backoffice registration page (§554): «Sex: Masculin», or «Sex: —» for no answer —
  * a paper entry left blank, or the retired «Prefer să nu spun» of a row stored before it went — and
  * «· Tricou: M» only for an event that gives a T-shirt («Kit de participare»).
  */

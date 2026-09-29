@@ -208,7 +208,7 @@ describe("§369 the club's name leaves the platform only through the constant", 
           "Network.page.report.heading",
           "Registration.clubMemberDeclared",
           "Registration.disclosure.race",
-          // The same fold's title for an event without a T-shirt (§NNN).
+          // The same fold's title for an event without a T-shirt (§554).
           "Registration.disclosure.raceNoShirt",
           "Team.lead",
           // «Întrebări frecvente» (§525): the page's lead and its description.

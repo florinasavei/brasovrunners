@@ -4,12 +4,12 @@ import Box from "@mui/material/Box";
 import FormHelperText from "@mui/material/FormHelperText";
 import { SEX_CHOICES, type SexChoice } from "../domain/sex";
 
-/** Each answer's glyph beside its word (§171, §NNN; the owner: «trebuie să afișăm și iconițele»). */
+/** Each answer's glyph beside its word (§171, §554; the owner: «trebuie să afișăm și iconițele»). */
 const SEX_GLYPHS = { MALE: MaleIcon, FEMALE: FemaleIcon } as const satisfies Record<SexChoice, unknown>;
 
 /**
  * «Sex» on the public registration form: two answers side by side, «Masculin» and «Feminin», each
- * with its glyph (§NNN, amending §510; the owner, 2026-09-29: «sexul e doar masculin și feminin și
+ * with its glyph (§554, amending §510; the owner, 2026-09-29: «sexul e doar masculin și feminin și
  * trebuie să afișăm și iconițele, nu avem opțiunea de a prefera să nu zică»).
  *
  * **Two radio cards, native inputs, no island.** A `<fieldset>` whose legend is the label, and two

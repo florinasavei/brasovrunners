@@ -53,7 +53,7 @@ const submissionFields = z.object({
     }, "birthDate is outside the accepted range"),
 
   /**
-   * «Masculin» or «Feminin» (§NNN, amending §510): the one rule every door meets, since every schema
+   * «Masculin» or «Feminin» (§554, amending §510): the one rule every door meets, since every schema
    * below is built from this field. `UNSPECIFIED` stays in the database enum for the rows stored
    * with it and is refused here, so no new row carries it (`domain/sex.ts`).
    */
@@ -472,7 +472,7 @@ export const staffRegistrationSubmissionSchema = submissionFields
  * is never read from the kept form: the caller fixes it from the token.
  */
 export const anotherPersonSubmissionSchema = submissionFields
-  // The sex too (§NNN): only a kept form reaches this schema, and one kept before the retired
+  // The sex too (§554): only a kept form reaches this schema, and one kept before the retired
   // «Prefer să nu spun» went has that answer dropped (`withoutRetiredSex`) rather than the parent
   // refused. Every kept form after it passed the public schema, which requires one of the two.
   .partial({ phone: true, sex: true })

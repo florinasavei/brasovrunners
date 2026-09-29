@@ -424,7 +424,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   const whenLabel = formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long", withTime: true });
   const whenInSentence = formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long", withTime: true, position: "inline" });
   const hasRules = !isRichTextEmpty(readRichText(event.rulesJson));
-  // «Kit de participare» → «Tricou» (§NNN): the size is asked only when the event gives a shirt. A
+  // «Kit de participare» → «Tricou» (§554): the size is asked only when the event gives a shirt. A
   // copy saved before the column existed has none, and asks nothing.
   const askShirt = event.kitShirt === true;
   /*
@@ -967,7 +967,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 />
               </Stack>
 
-              {/* «Masculin» or «Feminin», each with its glyph (§NNN, amending §510): two radio cards
+              {/* «Masculin» or «Feminin», each with its glyph (§554, amending §510): two radio cards
                   the server draws, nothing pre-chosen, required by the browser, the §422 list and the
                   server — «Prefer să nu spun» is no longer an answer. What it is for stays under it
                   (§322, §546): a category ranking, which the label cannot say. */}
@@ -1167,7 +1167,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               <Box component="details" open sx={disclosureSx}>
                 <Typography component="summary" variant="body2">
                   <GroupsIcon aria-hidden sx={FOLD_GLYPH_SX} />
-                  {/* «tricou» only when the event gives one (§NNN): the kit card's tick. */}
+                  {/* «tricou» only when the event gives one (§554): the kit card's tick. */}
                   {askShirt ? t("disclosure.race", { club: CLUB_NAME }) : t("disclosure.raceNoShirt", { club: CLUB_NAME })}
                 </Typography>
                 <Stack spacing={2} sx={{ pb: 2 }}>
@@ -1189,7 +1189,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                     <Hint text={t("clubMemberHint")} />
                   </CheckboxField>
 
-                  {/* The T-shirt's size, only for an event that gives one (§NNN, «Kit de participare»):
+                  {/* The T-shirt's size, only for an event that gives one (§554, «Kit de participare»):
                       otherwise no box at all, and the server stores NONE whatever a stale form posts. */}
                   {askShirt && (
                     <TextField

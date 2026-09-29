@@ -589,7 +589,7 @@ export const events = pgTable(
     registrationClosesAt: timestamp("registration_closes_at", { withTimezone: true }),
 
     /**
-     * «Kit de participare» → «Tricou» (§NNN; the owner, 2026-09-29: «doar dacă e bifat tricoul să
+     * «Kit de participare» → «Tricou» (§554; the owner, 2026-09-29: «doar dacă e bifat tricoul să
      * avem alegerea mărimii în formular»): the event gives its runners a T-shirt, so the registration
      * form asks the size. False by default — every event before this column asks none — and a size
      * posted for an event without one is stored as NONE under the lock (`domain/kit.ts`). A series

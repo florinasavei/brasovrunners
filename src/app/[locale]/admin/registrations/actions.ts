@@ -237,7 +237,7 @@ export async function createRegistrationAction(_previous: FormOutcome | null, fo
         details: {
           displayName: optional(form, "displayName"),
           birthDate: optional(form, "birthDate"),
-          // Any other value, the retired «Prefer să nu spun» included, is refused by the schema (§NNN).
+          // Any other value, the retired «Prefer să nu spun» included, is refused by the schema (§554).
           sex: optional(form, "sex") as SexChoice | undefined,
           nationality: optional(form, "nationality"),
           country: optional(form, "country"),

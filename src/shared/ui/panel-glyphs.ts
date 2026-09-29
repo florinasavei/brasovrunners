@@ -101,7 +101,7 @@ export const PANEL_GLYPHS = {
   confirmation: TaskAltIcon,
   reminder: NotificationsActiveIcon,
   bibs: ConfirmationNumberIcon,
-  // «Kit de participare» (§NNN): what the runners are handed — for now, the T-shirt.
+  // «Kit de participare» (§554): what the runners are handed — for now, the T-shirt.
   kit: CheckroomIcon,
   bibDesign: BrushIcon,
   print: PrintIcon,

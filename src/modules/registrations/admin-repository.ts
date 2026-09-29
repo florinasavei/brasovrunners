@@ -515,11 +515,11 @@ export type RegistrationDetail = {
   country: string | null;
   city: string | null;
   /**
-   * The sex as stored (§NNN): one of the two answers, or none — a staff entry left blank, or the
+   * The sex as stored (§554): one of the two answers, or none — a staff entry left blank, or the
    * retired `UNSPECIFIED` of a row stored before it went, which the page shows as «—» (`sexShown`).
    */
   sex: RegistrationSex | null;
-  /** The T-shirt size as stored, and whether the event gives one (§NNN): the page shows it only then. */
+  /** The T-shirt size as stored, and whether the event gives one (§554): the page shows it only then. */
   tshirtSize: RegistrationTshirtSize | null;
   eventKitShirt: boolean;
   /** The registration's language, as on the list row: the declaration translation it signs (§330). */
@@ -754,7 +754,7 @@ export type WorkbookDetails = {
   country: string | null;
   city: string | null;
   tshirtSize: "NONE" | "XS" | "S" | "M" | "L" | "XL" | "XXL" | null;
-  /** Whether the event gives a T-shirt (§NNN): the sheet prints the size only then. */
+  /** Whether the event gives a T-shirt (§554): the sheet prints the size only then. */
   eventKitShirt: boolean;
   eventStartsAt: Date;
   /** The event's own zone: race day is the day on the start line's clock (§321). */

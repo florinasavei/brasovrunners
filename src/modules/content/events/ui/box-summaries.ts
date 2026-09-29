@@ -74,7 +74,7 @@ export type SummaryWords = {
   /** A group run's optional self-declaration, under «Regulamentul» (§448). */
   declaration: { offered: string; offeredNoText: string; notOffered: string; notAsked: string };
   confirmation: { sentence: string; atStart: string; off: string };
-  /** «Kit de participare»'s closed line (§NNN): "Tricou: da" / "Tricou: nu". */
+  /** «Kit de participare»'s closed line (§554): "Tricou: da" / "Tricou: nu". */
   kit: { shirtYes: string; shirtNo: string };
   bibs: { from: string; clubColour: string; allocated: string; toPrint: string; spares: string };
   bibDesign: { parts: string; footer: string };
@@ -455,7 +455,7 @@ export function confirmationSummary(words: SummaryWords, opens: number, due: num
   return fillIn(confirmationDueAtStart({ days: due }) ? words.confirmation.atStart : words.confirmation.sentence, { opens, due });
 }
 
-/** «Kit de participare» (§NNN): whether the event gives a T-shirt — the one thing the card holds for now. */
+/** «Kit de participare» (§554): whether the event gives a T-shirt — the one thing the card holds for now. */
 export function kitSummary(words: SummaryWords, kitShirt: boolean): string {
   return kitShirt ? words.kit.shirtYes : words.kit.shirtNo;
 }

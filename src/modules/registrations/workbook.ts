@@ -66,7 +66,7 @@ export type RegistrationSheetRow = Omit<
 /**
  * The spreadsheet's own columns for one row (§322), blank when the row has none: the export route's,
  * here so a test reads what the file will say. The sex in words — an empty cell for no answer, the
- * retired «Prefer să nu spun» included — and the T-shirt only for an event that gives one (§NNN).
+ * retired «Prefer să nu spun» included — and the T-shirt only for an event that gives one (§554).
  */
 export function workbookExtras(
   details: WorkbookDetails | undefined,

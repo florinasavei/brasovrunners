@@ -11,7 +11,7 @@ import SexField from "@/modules/registrations/ui/SexField";
 import { fieldId } from "@/shared/forms/outcome";
 
 /**
- * §NNN (amending §510) — «Sex» on the public registration form is two answers, «Masculin» and
+ * §554 (amending §510) — «Sex» on the public registration form is two answers, «Masculin» and
  * «Feminin», each with its glyph, as two radio cards the server draws: real `<input type="radio"
  * name="sex" required>`, nothing pre-chosen, so a reader without JavaScript answers and the browser
  * refuses a form without an answer. «Prefer să nu spun» is gone from the form, the catalogues and
@@ -39,7 +39,7 @@ function radios(html: string) {
     }));
 }
 
-describe("§NNN «Sex»: two answers with their glyphs", () => {
+describe("§554 «Sex»: two answers with their glyphs", () => {
   it("offers exactly two answers, Masculin then Feminin — never «Prefer să nu spun»", () => {
     expect(SEX_CHOICES).toEqual(["MALE", "FEMALE"]);
     const html = render();

@@ -1680,7 +1680,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     // Always a boolean, so a restart (which spreads these details) rewrites the old answer.
     listSocials,
     clubMemberDeclared: input.clubMemberDeclared,
-    // As posted; decided under the event's lock below (§NNN): kept only when the event gives a shirt.
+    // As posted; decided under the event's lock below (§554): kept only when the event gives a shirt.
     tshirtSize: input.tshirtSize,
     healthNotes,
     healthConsentVersion: healthNotes ? privacyNotice.version : null,
@@ -1751,7 +1751,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     const locked = await repo.lockEventForCapacity(tx, event.id);
     if (!locked) throw new DomainError("NOT_FOUND", "no such event");
     /*
-      The T-shirt (§NNN), off the locked row and never off the caller's: the size is kept only when
+      The T-shirt (§554), off the locked row and never off the caller's: the size is kept only when
       the event gives a shirt («Kit de participare»); for any other event a posted size — a form
       rendered before the tick came off, a script — is ignored, never refused, and the row says NONE.
       Every door passes here: the public form, the family forms, a staff entry, the desk's walk-in.

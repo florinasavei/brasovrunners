@@ -126,14 +126,14 @@ describe("BR-REQ-031-04 the rendered form reaches the schema", () => {
 
   /**
    * §510 — «Sex» starts empty: an untouched group posts nothing, and the public form refuses it by
-   * name. Since §NNN the answers are «Masculin» and «Feminin»; «Prefer să nu spun» is refused too.
+   * name. Since §554 the answers are «Masculin» and «Feminin»; «Prefer să nu spun» is refused too.
    */
   it("refuses the public form with no answer to «Sex», naming it (§510)", () => {
     const parsed = registrationSubmissionSchema.safeParse(readRegistrationForm(filledForm({ sex: "" }), "ro"));
     expect(parsed.error?.issues.map((issue) => issue.path.join("."))).toEqual(["sex"]);
     expect(registrationSubmissionSchema.safeParse(readRegistrationForm(filledForm({ sex: "FEMALE" }), "ro")).success).toBe(true);
     expect(registrationSubmissionSchema.safeParse(readRegistrationForm(filledForm({ sex: "MALE" }), "ro")).success).toBe(true);
-    // The retired answer (§NNN), refused by name like a missing one.
+    // The retired answer (§554), refused by name like a missing one.
     const retired = registrationSubmissionSchema.safeParse(readRegistrationForm(filledForm({ sex: "UNSPECIFIED" }), "ro"));
     expect(retired.error?.issues.map((issue) => issue.path.join("."))).toEqual(["sex"]);
   });

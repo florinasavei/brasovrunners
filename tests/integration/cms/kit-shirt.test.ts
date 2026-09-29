@@ -6,7 +6,7 @@ import { createEvent, duplicateEvent, repeatEvent, saveEventAndTranslations } fr
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Kit de participare» → «Tricou» (`events.kit_shirt`): saved through the editor's real
+ * §554 — «Kit de participare» → «Tricou» (`events.kit_shirt`): saved through the editor's real
  * action by its marker (a form without the card never switches it off), carried to every date a
  * series makes and by a "following" edit, and kept by a duplicate — like the rest of the
  * registration block. The session and navigation stand-ins are `discount-note-series.test.ts`'s.
@@ -117,7 +117,7 @@ const wordsFor = (row: { slug: string; title: string; excerpt: string | null }) 
   seoDescription: "",
 });
 
-describe("§NNN «Kit de participare» → «Tricou» on the event", () => {
+describe("§554 «Kit de participare» → «Tricou» on the event", () => {
   it("starts off, and is written on create when ticked", async () => {
     const plain = await createEvent(db, { actor: admin, fields: { ...FIELDS, translations: TRANSLATIONS }, now: NOW });
     expect((await reloadEvent(plain.id)).kitShirt).toBe(false);

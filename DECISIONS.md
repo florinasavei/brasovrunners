@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.27-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.28-2026-09-27 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.27-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.28-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -21241,3 +21241,30 @@ Baseline `BR-V2.26-2026-09-27`.
 **Refused.** Stripping the variables inside `scripts/land-batch.mjs` and `scripts/merge-branches.mjs` as well: those scripts are meant to act on the repository they are started in, and a person who sets `GIT_DIR` on purpose must be obeyed; the fixture is the test's to isolate.
 
 Baseline `BR-V2.27-2026-09-27`.
+
+## 554. «Sex» is «Masculin» or «Feminin» with their glyphs, and the T-shirt size only when the event's «Kit de participare» gives one
+
+**The owner, 2026-09-29:** «1. sexul e doar masculin și feminin și trebuie să afișăm și iconițele, nu avem opțiunea de a prefera să nu zică. 2. faza cu tricoul ar trebui să fie o bifă din backoffice, la secțiunea 6. Participanți și înscrieri, o subsecțiune cu kit de participare, și doar dacă e bifat tricoul să avem alegerea mărimii în formular». It amends §510 (the sex field's third answer and its select) and §59 (the optional fold «Membru {club}, club și tricou»).
+
+**1. «Sex» is two answers, each with its glyph.**
+- **The control.** Two radio cards the server draws, «Masculin» and «Feminin» (EN «Male» / «Female»), each with Material's `Male` / `Female` glyph before the word, in a `<fieldset>` whose legend is the label (`SexField`). Each card is a `<label>` around a real `<input type="radio" name="sex" required>`, 56 px tall like the outlined boxes beside it. Nothing is pre-chosen: §510's reason stands.
+- **Why radio cards and not §510's native select.** A native `<option>` cannot carry a glyph, and the owner asked to see them. With two answers a card is one tap instead of two. Native radios keep the form working without JavaScript, which is why §510 chose a native select. There is no island: the glyphs are the component's own children, never a prop handed to a client component.
+- **«Prefer să nu spun» is gone** from the form and from both catalogues (`Registration.sexOptions.UNSPECIFIED`, `sexChoose`, `sexMissing`). The §47 summary and the §422 list now name the field «Sex», like any other field, and the summary's link lands on the first answer.
+- **The helper «Pentru clasamentele pe categorii.» stays** (§546): it says why the answer is asked, which the label cannot.
+- **The one rule.** `fields.ts`'s `sex: z.enum(SEX_CHOICES)` (`domain/sex.ts`) is the field every submission schema is built from. That covers the public form, a family sitting's form, the family link, the staff entry, the desk's walk-in and a TEST row. The public form refuses a missing answer and the retired one, naming `sex`. A staff entry may leave the answer out (a paper entry, §510) but can never give `UNSPECIFIED`.
+- **Rows already stored with `UNSPECIFIED` keep it.** The enum keeps the value, there is no contract migration, and nothing is rewritten. The backoffice registration page, which now shows the sex at all, reads «Sex: —». The spreadsheet leaves the cell empty and prints the words «Male» / «Female» for the rest, in the language of its English headers.
+- **A form kept before this release** (§446, a family entry) that holds the retired answer is pressed through with the answer dropped, rather than the parent refused (`withoutRetiredSex`), as §510 did for the country. That row stores no sex.
+
+**2. «Kit de participare»: the T-shirt size only when ticked.**
+- **Storage.** Migration `0109_event_kit_shirt` (expand only) adds `events.kit_shirt boolean NOT NULL DEFAULT false`. No event created before it asks a size.
+- **The editor.** Card 6 «Participare și înscrieri» gets a new fold «Kit de participare» / "Race kit" under «Pe site». So a group run, which takes no registration (§111), never shows it, and neither does an event that registers elsewhere. The fold wears the `Checkroom` glyph, starts closed, and its line says «Tricou: da» or «Tricou: nu». Inside is one tick, «Tricou» / "T-shirt", and one sentence: «Dacă e bifat, formularul cere mărimea tricoului.». A marker posts with the tick, so a form without the card writes nothing (the partners' discipline, as §451). Like every event setting it is the Administrator's to save (§542).
+- **Series and copies.** A series edit carries the tick by its scope (`SERIES_COLUMNS`), and every date a series makes and every duplicate keep it.
+- **The form.** The size box is drawn only when the event gives a shirt. The optional fold's title is «Membru {club}, club și tricou — opțional» then, and «Membru {club} și club — opțional» otherwise (English likewise). The sizes are today's, with «Fără tricou» first.
+- **The server.** The decision is made under the event's lock in `submitRegistration`, read off the locked row and never the caller's. The size is kept only when the event gives a shirt. Otherwise a posted size, from a stale form or a script, is ignored rather than refused, and the row stores `NONE`, which is what the schema already stored for a form that asked nothing. Every door passes there: the public form, the family forms, a staff entry and the desk.
+- **Where the size shows.** The spreadsheet's «T-shirt size» column and the backoffice registration page («· Tricou: M») show it only for an event with a shirt. Otherwise they show an empty cell or nothing, even for a size stored before the tick came off. The staff entry form never asked the size and still does not.
+
+**Left as it is, and why.**
+- The desk row and the bib sheet show no size today, and still show none. The desk shows a name, a state and a number (AGENTS.md §15.11), and a bib is the club's printed design (§249). Adding the size to either is the owner's call.
+- The privacy-notice template is unchanged, because counsel reviewed it (§418). It already lists the sex and, as optional data, the T-shirt size.
+
+Baseline `BR-V2.28-2026-09-27`.

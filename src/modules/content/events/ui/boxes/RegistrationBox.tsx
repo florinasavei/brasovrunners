@@ -352,7 +352,7 @@ export default async function RegistrationBox({
                   </Panel>
 
                   {/*
-                    8.3c — «Kit de participare» (§NNN; the owner, 2026-09-29: «o subsecțiune cu kit de
+                    8.3c — «Kit de participare» (§554; the owner, 2026-09-29: «o subsecțiune cu kit de
                     participare, și doar dacă e bifat tricoul să avem alegerea mărimii în formular»):
                     what the runners are handed. For now one tick, the T-shirt; the form asks the
                     size only while it is on. Inside "Pe site", so only a type that takes

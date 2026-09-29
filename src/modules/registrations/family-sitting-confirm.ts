@@ -232,7 +232,7 @@ export async function confirmFamilySitting<T extends Record<string, unknown>>(
           sp,
           event,
           // The address is the sitting's participant's, never one kept or posted (§389). A kept
-          // «Prefer să nu spun» is dropped, never the person refused (§NNN, `withoutRetiredSex`).
+          // «Prefer să nu spun» is dropped, never the person refused (§554, `withoutRetiredSex`).
           { ...withoutRetiredSex(entry.fields), email: participant.deliveryEmail, fitnessAcknowledged: input.fitnessAcknowledged },
           now,
           "REAL",

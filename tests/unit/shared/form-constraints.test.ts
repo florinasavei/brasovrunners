@@ -51,7 +51,7 @@ const NOT_A_BOX = new Set([
   "timeToBeAnnounced",
   // «Doar pentru membrii BVR» (§552): a tick in «Ce fel de eveniment».
   "membersOnly",
-  // «Kit de participare» → «Tricou» (§NNN): a tick in «Participanți și înscrieri».
+  // «Kit de participare» → «Tricou» (§554): a tick in «Participanți și înscrieri».
   "kitShirt",
 ]);
 

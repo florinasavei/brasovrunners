@@ -210,7 +210,7 @@ export async function addTestRegistrations<T extends Record<string, unknown>>(
       email,
       locale,
       birthDate: syntheticBirthDate(event),
-      // One of the two answers the form offers (§NNN): the retired «Prefer să nu spun» is refused.
+      // One of the two answers the form offers (§554): the retired «Prefer să nu spun» is refused.
       sex: "FEMALE",
       nationality: "RO",
       country: "RO",

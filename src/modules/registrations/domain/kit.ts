@@ -1,7 +1,7 @@
 import type { RegistrationTshirtSize } from "@/db/schema/registrations";
 
 /**
- * The race kit (§NNN): what the event hands its runners, ticked in the editor's «Kit de participare»
+ * The race kit (§554): what the event hands its runners, ticked in the editor's «Kit de participare»
  * card (`events.kit_shirt`). For now one thing, the T-shirt — and the form asks its size only when
  * the event gives one.
  */

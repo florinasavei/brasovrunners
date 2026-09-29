@@ -116,7 +116,7 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
     await expect(page.locator('select[name="country"]')).toHaveValue("RO");
     await expect(page.locator('select[name="country"]')).toHaveAttribute("required", "");
     // «Sex» forces a choice (§510): «Masculin» and «Feminin» as two required radio cards with their
-    // glyphs (§NNN), nothing pre-chosen, and no «Prefer să nu spun».
+    // glyphs (§554), nothing pre-chosen, and no «Prefer să nu spun».
     const sexChoices = page.locator('input[type="radio"][name="sex"]');
     await expect(sexChoices).toHaveCount(2);
     for (const choice of await sexChoices.all()) {
@@ -126,7 +126,7 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
     await expect(page.getByTestId("sex-field")).toContainText("Masculin");
     await expect(page.getByTestId("sex-field")).toContainText("Feminin");
     await expect(page.getByTestId("sex-field")).not.toContainText("Prefer");
-    // The event gives no T-shirt (§NNN): no size box, and the fold's title says no «tricou».
+    // The event gives no T-shirt (§554): no size box, and the fold's title says no «tricou».
     await expect(page.locator('[name="tshirtSize"]')).toHaveCount(0);
     await expect(page.locator("summary").filter({ hasText: "tricou" })).toHaveCount(0);
     // The city is required and asked right after the birth date (§467, reversing §322).
@@ -604,7 +604,7 @@ test.describe("BR-REQ-031-04 criterion 16 the telephone is one box with a flag a
       await expect(box.locator('img[src="/flags/ro.svg"]')).toBeHidden();
       // Citizenship too is the server's native select, Romania chosen (§432, §463).
       await expect(noScript.locator('select[name="nationality"]')).toHaveValue("RO");
-      // So is the country of residence (§510). «Sex» is two radio cards the server draws (§NNN),
+      // So is the country of residence (§510). «Sex» is two radio cards the server draws (§554),
       // «Masculin» and «Feminin» with their glyphs, nothing chosen and required: a reader without
       // JavaScript answers with a tap, and the form can be sent.
       await expect(noScript.locator('select[name="country"]')).toHaveValue("RO");
@@ -738,7 +738,7 @@ test.describe("BR-REQ-031-04 a rejected submission says what to fix, and goes th
     expect(page.url()).not.toContain("Popescu");
   });
 
-  test("names an unanswered «Sex» in the refusal summary, and the link lands on its first answer (§510, §NNN)", async ({ page }) => {
+  test("names an unanswered «Sex» in the refusal summary, and the link lands on its first answer (§510, §554)", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);
     await page.goto(registerPath);
@@ -1051,7 +1051,7 @@ test.describe("BR-REQ-041-01 what is still missing is listed above the send butt
       "Prenume",
       "Nume de familie",
       "Data nașterii",
-      // «Sex» starts unanswered (§510), named like any field since §NNN.
+      // «Sex» starts unanswered (§510), named like any field since §554.
       SEX_MISSING,
       "Adresa scrisă a doua oară",
       "Declarația că ești apt medical",
@@ -1084,7 +1084,7 @@ test.describe("BR-REQ-041-01 what is still missing is listed above the send butt
   });
 });
 
-/** How the summary and the list above the send button name an unanswered «Sex» (§510): its field name since §NNN. */
+/** How the summary and the list above the send button name an unanswered «Sex» (§510): its field name since §554. */
 const SEX_MISSING = "Sex";
 
 /** How the list above the send button names the race's conditions: what is missing and what to do (§422). */

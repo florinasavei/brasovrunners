@@ -184,11 +184,11 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
 });
 
 /*
-  §NNN — «Kit de participare» in card 6 «Participanți și înscrieri»: a fold of its own, closed, its
+  §554 — «Kit de participare» in card 6 «Participanți și înscrieri»: a fold of its own, closed, its
   line saying «Tricou: nu» until the box is ticked, and only for a type that takes registrations
   with registration on the site — a group run takes none (§111).
 */
-test.describe("§NNN the race kit card", () => {
+test.describe("§554 the race kit card", () => {
   test("hidden on a group run, shown closed with «Tricou: nu» for a race registering on the site", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin/events/new");
