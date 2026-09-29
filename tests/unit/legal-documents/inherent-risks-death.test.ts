@@ -38,8 +38,8 @@ const WORDS = {
     en: "the weather, my own health, the other participants, animals and traffic, where the",
   },
   waiver: {
-    ro: "Separat de această acceptare, renunț în mod expres, în limitele permise de lege, la pretențiile pentru prejudiciile care decurg din aceste riscuri inerente, inclusiv vătămarea gravă sau decesul.",
-    en: "Separately from this acceptance, I expressly waive, to the extent the law allows, my claims for harm arising from these inherent risks, serious injury or death included.",
+    ro: "Renunț însă, separat și expres, în limitele permise de lege, la pretențiile pentru prejudiciile ce decurg exclusiv din riscurile inerente, fără vina organizatorului, inclusiv vătămare gravă sau deces.",
+    en: "I do, however, separately and expressly waive, to the extent the law allows, my claims for harm arising solely from the inherent risks, without the organiser's fault, serious injury or death included.",
   },
   against: {
     ro: "Renunțarea privește pretențiile față de organizator, echipa lui de organizare, voluntarii și partenerii lui.",
