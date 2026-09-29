@@ -58,7 +58,7 @@ export async function renderNewsletterRow(
   if (row.messageType === "NEW_EVENT_ALERT") {
     const [event] = eventId
       ? await db
-          .select({ editorialStatus: events.editorialStatus, eventStatus: events.eventStatus, startsAt: events.startsAt, dateToBeAnnounced: events.dateToBeAnnounced, timeToBeAnnounced: events.timeToBeAnnounced })
+          .select({ editorialStatus: events.editorialStatus, eventStatus: events.eventStatus, startsAt: events.startsAt, dateToBeAnnounced: events.dateToBeAnnounced, timeToBeAnnounced: events.timeToBeAnnounced, membersOnly: events.membersOnly })
           .from(events)
           .where(eq(events.id, eventId))
           .limit(1)
@@ -70,6 +70,8 @@ export async function renderNewsletterRow(
     // Queued while it had a date, and the date was since held back (§533): the alert would say a date
     // the club withdrew. Withdrawn; the event is announced again once its date is.
     if (event.dateToBeAnnounced || event.timeToBeAnnounced) throw new OutboxMessageWithdrawn("newsletter: the event's start is to be announced");
+    // Queued while it was public, and made the members' alone since (§552): withdrawn, never sent.
+    if (event.membersOnly) throw new OutboxMessageWithdrawn("newsletter: the event is for the club's members alone");
   }
 
   const subscriberId = typeof payload.subscriberId === "string" ? payload.subscriberId : null;

@@ -49,6 +49,7 @@ import { parseInterestOutcome, parseInterestSince } from "@/modules/registration
 import RegistrationInterestForm from "@/modules/registrations/ui/RegistrationInterestForm";
 import RegistrationSteps from "@/modules/registrations/ui/RegistrationSteps";
 import { CLUB_TIME_ZONE } from "@/i18n/dates";
+import { LIVE_SEGMENT } from "@/i18n/live-twin";
 import { nextWallMidnight } from "@/modules/events/domain/page-clock";
 import { holdPageUntil } from "@/modules/public-cache/page-lifetime";
 import { forecastForEvent } from "@/modules/weather/source";
@@ -77,7 +78,16 @@ type Props = {
    * The editor asserts the role again for itself (BR-REQ-060-01).
    */
   canEdit?: boolean;
+  /**
+   * A members' event (§552), read for a members' session — passed only by the live twin, which a
+   * signed-in visitor is sent to (§549). Asked only when the public read found nothing. The static
+   * copy has none: a members' row is withheld from the public read in SQL, so a stranger, and the
+   * CDN's copy, get the 404 an unpublished page gives (§28).
+   */
+  membersRead?: () => Promise<PublishedEvent | undefined>;
 };
+
+type PublishedEvent = NonNullable<Awaited<ReturnType<typeof cachedPublishedEventBySlug>>>;
 
 type EventQuery = { interest?: string | string[]; since?: string | string[]; lista?: string | string[]; declaratie?: string | string[] };
 
@@ -154,7 +164,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function EventDetailPage({ params, query, canEdit = false }: Props) {
+export default async function EventDetailPage({ params, query, canEdit = false, membersRead }: Props) {
   const { locale, slug } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
@@ -189,7 +199,18 @@ export default async function EventDetailPage({ params, query, canEdit = false }
     },
     now,
   );
-  const { event, interestBox } = read.value;
+  /*
+    An event for the members alone (§552): the public read above never meets one, so a slug it did
+    not find is asked once more — by the live twin only, for a members' session, live, never through
+    the public cache or the last good copy, both shared by every visitor (`events/members-only.ts`).
+    The static copy asks nobody: a stranger gets the 404 an unpublished page gives (§28), never a
+    sentence that the event exists.
+  */
+  const membersEvent = read.value.event || !membersRead ? undefined : await membersRead();
+  const event = read.value.event ?? membersEvent ?? null;
+  // No «Anunță-mă» on a members' event: its box is a public form, and a member is told by the zone.
+  const interestBox = membersEvent ? false : read.value.interestBox;
+  const membersOnly = membersEvent !== undefined;
   // An unknown slug, or one whose translation is still Draft or In review, is a 404 — never a
   // redirect to the other locale (BR-REQ-020-01 criterion 1, BR-REQ-040-02).
   if (!event) notFound();
@@ -214,7 +235,8 @@ export default async function EventDetailPage({ params, query, canEdit = false }
   const weather = dated ? await forecastForEvent(dated, now) : null;
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
-      {dated && (
+      {/* No structured data for a members' event (§552): nothing on its page is for a search engine. */}
+      {dated && !membersOnly && (
       <JsonLd
         data={sportsEventJsonLd(
           dated,
@@ -278,9 +300,11 @@ export default async function EventDetailPage({ params, query, canEdit = false }
       </Typography>
       {/* An edition apart (§168): the same badge the card and the hero wear, above the
           title where the overline already says what kind of event this is. */}
-      {event.isSpecial && (
-        <Box sx={{ mt: 1 }}>
-          <GlyphChip glyph="special" color="secondary" label={t("special")} />
+      {(event.isSpecial || membersOnly) && (
+        <Box sx={{ mt: 1, display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+          {event.isSpecial && <GlyphChip glyph="special" color="secondary" label={t("special")} />}
+          {/* For the members alone (§552): said on the page the member opened, never elsewhere. */}
+          {membersOnly && <GlyphChip glyph="membersOnly" color="primary" label={t("membersOnly")} />}
         </Box>
       )}
 
@@ -342,9 +366,12 @@ export default async function EventDetailPage({ params, query, canEdit = false }
           title={event.title}
           imageHref={`/${locale}/events/${slug}/share-image`}
           fileName={instagramFileName(slug)}
+          // A members' event is not shared (§552): its link opens for members, its pictures for nobody.
+          shareable={!membersOnly}
           calendar={
             dated ? {
-              icsHref: `/${locale}/events/${slug}/calendar.ics`,
+              // A members' file is the twin's, per request (§552): the static one reads the public row alone.
+              icsHref: membersOnly ? `/${locale}/${LIVE_SEGMENT}/events/${slug}/calendar.ics` : `/${locale}/events/${slug}/calendar.ics`,
               googleUrl: googleCalendarUrl(toCalendarEvent(dated, locale, now), { locale, t }),
             } : undefined
           }
@@ -450,7 +477,8 @@ export default async function EventDetailPage({ params, query, canEdit = false }
 
       {/* Nothing at all unless this event publishes one (BR-REQ-039-01). */}
       {/* Nobody registers before the date is announced (§533), so an undated event has no list. */}
-      {dated && <StartList event={dated} page={lista} />}
+      {/* Nor a members' event (§552): the public list is a public disclosure (§32), and this page is not public. */}
+      {dated && !membersOnly && <StartList event={dated} page={lista} />}
     </Container>
   );
 }

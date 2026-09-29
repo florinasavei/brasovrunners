@@ -93,6 +93,7 @@ const PER_REQUEST: Record<string, string> = {
   "src/app/[locale]/registrations/mine/[token]/page.tsx": TOKEN_PAGE,
   "src/app/[locale]/newsletter/confirm/[token]/page.tsx": TOKEN_PAGE,
   "src/app/[locale]/newsletter/manage/[token]/page.tsx": TOKEN_PAGE,
+  "src/app/[locale]/live/events/[slug]/calendar.ics/route.ts": "a members' event's .ics: it asks the account and reads the event live, private, no-store (§552)",
   "src/app/[locale]/events/[slug]/share-image/route.ts": "?shape= — a shared cache keeps it an hour instead",
   "src/app/sitemap.ts": "at the app's root there is no parameter to defer, so a static one would be made at build, with no database in CI",
 };
