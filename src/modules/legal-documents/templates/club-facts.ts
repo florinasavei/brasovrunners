@@ -44,6 +44,17 @@ export function clubFactsFromEnv(
   };
 }
 
+/**
+ * The registration number without a label of its own (§565): `CLUB_REGISTRATION_NUMBER` may be
+ * written «CIF 12345678» — which is how the legal texts read it, after «sediul în …,» — while the
+ * site's identity line and footer block write «CIF» / «C.I.F.» themselves. A leading «CIF», «C.I.F.»,
+ * «CUI» or «C.U.I.», with or without a colon, is dropped; «RO…» and the digits stay as they are.
+ */
+export function bareRegistrationNumber(value: string): string {
+  const bare = value.replace(/^\s*(?:C\.?\s?I\.?\s?F|C\.?\s?U\.?\s?I)\.?(?![A-Za-z])\s*:?\s*/i, "").trim();
+  return bare || value.trim();
+}
+
 /** Every placeholder the templates use, in both languages, and the fact it stands for. */
 const PLACEHOLDERS: ReadonlyArray<[keyof ClubFacts, readonly string[]]> = [
   ["legalName", ["<DENUMIREA JURIDICĂ COMPLETĂ A CLUBULUI>", "<THE CLUB'S FULL LEGAL NAME>"]],

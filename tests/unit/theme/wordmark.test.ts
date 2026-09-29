@@ -55,11 +55,19 @@ describe("the kit-face wordmark heads the listing, the calendar and the contact 
   });
 
   it("is a paragraph that is an image to assistive technology, rendered on the server", () => {
+    // (Its sizes: `tests/unit/theme/compact-page-head.test.ts`.)
     const source = read("shared/ui/Wordmark.tsx");
     expect(source).not.toContain('"use client"');
     expect(source).toContain('component="p"');
     expect(source).toContain('role="img"');
     // The font is the layout's, loaded once for every page — the component brings none of its own.
     expect(source).not.toMatch(/next\/font|@font-face|\.ttf|\.woff/);
+  });
+
+  it("is not drawn on a phone, where the header's lockup is the brand (§569)", () => {
+    const source = read("shared/ui/Wordmark.tsx");
+    // Hidden by CSS, not left out on the server: the static page is one for every width (§549).
+    expect(source).toContain('display: { xs: "none", sm: "block" }');
+    expect(source).not.toMatch(/useMediaQuery|"use client"/);
   });
 });

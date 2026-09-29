@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.38-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.40-2026-09-27 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V2.38-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.40-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1796,9 +1796,13 @@ Writing, and what may be undone (`DECISIONS.md` §46 and §53, BR-REQ-053-02):
   translations with it (`ON DELETE cascade`). Nothing can have relied on it: no public page
   renders an unapproved version, and both a registration and an acceptance record whichever
   version was current;
-- an **approved version is never edited and never deleted**, whatever its reference counts say.
-  Approval is the club publishing words as its own, and the record of what it published outlives
-  whether anybody acted on it;
+- an **approved version is never edited**, whatever its reference counts say. Approval is the club
+  publishing words as its own, and the record of what it published outlives whether anybody acted
+  on it. Its **text is never destroyed while anything relies on it**: one nothing relies on may be
+  deleted outright, its number retired (`DECISIONS.md` §203); «Șterge» on one a signature, an event
+  or a registration relies on retires and hides it — off the list, withdrawn, never in force again
+  — and keeps its row, its number and its words, which the acceptances, the signed PDF and the
+  desk still read (§567). The version in force is never deleted;
 - **approval is not withdrawn.** A declaration is bound to the participant at submission rather
   than at render — `registrations/service.ts` re-resolves the current version when the form is
   posted, and the form carries no version — so changing which version is current would let

@@ -18,7 +18,7 @@ import { DENSITY } from "@/theme/density";
  *    is a row of `CONVERTED_SITES` — file, prop, step, the `sm` value the site had before this
  *    change (asserted: sm and up never move) and the xs value it had (the step must be smaller).
  *    A new conversion without a row, or a row whose site is gone, fails.
- * 3. The scale itself: seven positive steps (eight until §470 took the hero's), each smaller than
+ * 3. The scale itself: eight positive steps (eight until §470 took the hero's, seven until §569 added the page head's), each smaller than
  *    what it replaced.
  */
 
@@ -258,13 +258,18 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   // de filtre e mult prea mare"): the open form's own padding and grid gap, tighter on a phone.
   { file: "src/modules/events/ui/ListingFilterPanel.tsx", prop: "p", step: "gapXs", sm: 1, xsBefore: 1.5 }, // §458: was gapSm (8px) / sm 1.5 (12px), now 6px / 8px
   { file: "src/modules/events/ui/ListingFilterPanel.tsx", prop: "gap", step: "gapXs", sm: 0.5, xsBefore: 1 }, // §458: sm 1 (8px) → 0.5 (4px); xs stays on the lowest step
+  // The compact page head (§569): the room above the H1 halved on a phone, where the wordmark is no longer drawn.
+  { file: "src/app/[locale]/events/page.tsx", prop: "mt", step: "headGap", sm: 1, xsBefore: 1 },
+  { file: "src/app/[locale]/calendar/page.tsx", prop: "mt", step: "headGap", sm: 1, xsBefore: 1 },
+  { file: "src/app/[locale]/contact/page.tsx", prop: "mt", step: "headGap", sm: 1, xsBefore: 1 },
 ];
 
 const siteKey = (site: { file: string; prop: string; step: string; sm: number }) => `${site.file} ${site.prop}: { xs: DENSITY.${site.step}, sm: ${site.sm} }`;
 
 describe("DECISIONS.md §380 the public pages share one phone density scale", () => {
-  it("defines seven positive steps, each tighter than every value it replaced", () => {
-    expect(Object.keys(DENSITY)).toHaveLength(7);
+  it("defines eight positive steps, each tighter than every value it replaced", () => {
+    // Seven until §569 added `headGap`, the room above a page's H1 on a phone.
+    expect(Object.keys(DENSITY)).toHaveLength(8);
     for (const [name, value] of Object.entries(DENSITY) as Array<[string, number]>) {
       expect(value, `${name} must be a positive number`).toBeGreaterThan(0);
     }

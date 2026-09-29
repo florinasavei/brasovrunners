@@ -160,7 +160,7 @@ describe("BR-REQ-041-01 the route is one row of pills (§356, amended §375)", (
     const html = await page();
     const route = row(html, "Traseu");
     const pills = chips(route.dd);
-    expect(pills.map((pill) => pill.label)).toEqual(["Asfalt", "Ușor 2", "10 km", "300 m D+"]);
+    expect(pills.map((pill) => pill.label)).toEqual(["Asfalt", "Ușor", "10 km", "300 m D+"]);
     for (const pill of pills) {
       expect(pill.outlined, pill.label).toBe(true);
       expect(pill.small, pill.label).toBe(true);
@@ -184,7 +184,7 @@ describe("BR-REQ-041-01 the route is one row of pills (§356, amended §375)", (
   it("says the climb short in English too", async () => {
     currentLocale = "en";
     const html = await page();
-    expect(chips(row(html, "Route").dd).map((pill) => pill.label)).toEqual(["Asphalt", "Easy 2", "10 km", "300 m climb"]);
+    expect(chips(row(html, "Route").dd).map((pill) => pill.label)).toEqual(["Asphalt", "Easy", "10 km", "300 m climb"]);
   });
 
   it("lets a pill's words wrap rather than cut them with an ellipsis", async () => {
@@ -357,7 +357,7 @@ describe("BR-REQ-041-01 the hero's route is the listing card's pills (§449), it
     const route = row(html, "Traseu");
     expect(route.dd).toContain('data-fact="pills"');
     const pills = chips(route.dd);
-    expect(pills.map((pill) => pill.label)).toEqual(["Asfalt", "Ușor 2", "10 km", "300 m D+", "Cu taxă"]);
+    expect(pills.map((pill) => pill.label)).toEqual(["Asfalt", "Ușor", "10 km", "300 m D+", "Cu taxă"]);
     for (const pill of pills) {
       expect(pill.outlined, pill.label).toBe(true);
       expect(pill.small, pill.label).toBe(true);
@@ -649,7 +649,7 @@ describe("BR-REQ-041-01 the listing card's facts: glyph-led lines and the page's
 
   it("draws the route and the cost as the page's small outlined pills — surface, difficulty, distance, climb, cost", async () => {
     const pills = chips(line(await card(), "pills").inner);
-    expect(pills.map((pill) => pill.label)).toEqual(["Asfalt", "Ușor 2", "10 km", "300 m D+", "Gratuit"]);
+    expect(pills.map((pill) => pill.label)).toEqual(["Asfalt", "Ușor", "10 km", "300 m D+", "Gratuit"]);
     for (const pill of pills) {
       expect(pill.outlined, pill.label).toBe(true);
       expect(pill.small, pill.label).toBe(true);
@@ -664,7 +664,7 @@ describe("BR-REQ-041-01 the listing card's facts: glyph-led lines and the page's
   it("in English too", async () => {
     currentLocale = "en";
     const pills = chips(line(await card(), "pills").inner);
-    expect(pills.map((pill) => pill.label)).toEqual(["Asphalt", "Easy 2", "10 km", "300 m climb", "Free"]);
+    expect(pills.map((pill) => pill.label)).toEqual(["Asphalt", "Easy", "10 km", "300 m climb", "Free"]);
   });
 
   it("draws no pill for what the club has not stated, and none at all when it stated nothing", async () => {
