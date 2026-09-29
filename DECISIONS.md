@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.26-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.27-2026-09-27 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.26-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.27-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -21211,3 +21211,33 @@ A list built on the same condition later cannot meet one either. The new-event a
 **The club's steps after this release** are item 18 of CLAUDE.md's «Still owed»: add the first members on «Echipa» → «Adaugă mai mulți membri», write «Pagini» → «Pagini standard» → «Membri», then add the codes in its «Coduri de reducere» fold.
 
 Baseline `BR-V2.26-2026-09-27`.
+
+## 553. A hook strips git's own environment before running tests; the review nits of V2.23–V2.26
+
+**The incident, 2026-09-28.** `.githooks/pre-commit` runs `yarn check`. git exports `GIT_DIR` and `GIT_INDEX_FILE` (and in some commands `GIT_WORK_TREE` and `GIT_PREFIX`) into a hook's environment, and every process the hook starts inherits them. `tests/unit/scripts/release-from-branch.test.ts` builds throwaway repositories and runs git in them — directly, and through `scripts/land-batch.mjs` and `scripts/merge-branches.mjs` — with `process.env` as it was. Run from the hook, the fixture's `git init` re-initialised the repository being committed (git printed «re-init: ignored --initial-branch»), its `git add` and `git rm` rewrote the committing worktree's index (1 942 staged deletions), and a later run set `core.bare=true` in the main checkout's `.git/config`.
+
+**Decision — a hook strips git's own environment before running tests.** Both ends are fixed, so neither alone has to be remembered:
+
+- **The hooks.** `.githooks/pre-commit` and `.githooks/pre-push` begin with `unset GIT_DIR GIT_INDEX_FILE GIT_WORK_TREE GIT_PREFIX`, before any command, with a comment saying why. git runs a hook at the top of the working tree, so every git below finds the same repository from the current directory; `docs:check` and `secrets:check` read `git ls-files` and the staged names from the real index and the files from disk, so they check what they checked before. Nothing else in the hooks changed; they call no `scripts/` helper of their own.
+- **The tests.** A test that spawns git, or node or bash running a script that runs git, passes `env: gitEnv(…)` from `tests/helpers/git-env.ts`: `process.env` plus the caller's variables, without `GIT_DIR`, `GIT_INDEX_FILE`, `GIT_WORK_TREE`, `GIT_PREFIX` and the three other repository-locating variables (`GIT_COMMON_DIR`, `GIT_OBJECT_DIRECTORY`, `GIT_ALTERNATE_OBJECT_DIRECTORIES`). `release-from-branch.test.ts` passes it on every call and `cloud-setup.test.ts` builds its environments from it.
+- **The guard.** `tests/unit/scripts/hook-git-env.test.ts` reads both hooks for the `unset` line before any command, proves the helper strips the variables and keeps the rest without touching what it copies, and walks `tests/` so a test that spawns git, node or bash without an env, or with `...process.env` as it is, fails `yarn check`.
+
+**The nits the reviews of V2.23–V2.26 left, fixed.**
+
+- **Digits only, one rule (§548, §551).** The race number typed by hand at the desk — with a paper confirmation or set on its own — and the Mailgun plan's typed daily and monthly ceilings read through one pure function, `src/shared/forms/whole-digits.ts#wholeDigits`: digits after a trim, empty is nothing typed, and «12.7», «1e3», «0x10», «-5» are NaN, which the service refuses naming the box. Before it the desk's `Number()` read «1e3» as race number 1000 and «0x10» as 16; the plan's boxes had the same rule as a second regex of their own. Unit-tested on '', ' 12 ', '12.7', '1e3', '0x10', '-5', '007'.
+- **The unsubscribe form's refusal takes the focus (§550).** On the contact page, «Vreau să mă dezabonez» answering a failed check or the hour's limit draws its alert (role=alert) and now moves the focus to it, opening its fold first, as a §47 summary is focused — through the page's existing newsletter island (`focusOnArrival`, `newsletter-box.ts#focusRefusal`), no new island.
+- **The single-bib preview (§548).** An integration test proves `GET /api/admin/events/<id>/bibs/preview` answers 404 for a row that is not a confirmed real registration — a restarted row still wearing its number, an unconfirmed address, the waiting list, a cancelled row, a test registration — and draws the PNG for a confirmed one.
+- **The withdraw dialog (§547).** When the event has no row in the page's language the dialog says `declare.family.withdrawBodyNoEvent` (both catalogues) instead of «Înscrierea pentru X la  se anulează».
+- **How the declaration was accepted (§547).** An integration test renders «Gestionează înscrierea» for a family where one person signed online, one on paper at the desk (a real `PAPER` acceptance, recorded by a volunteer) and one not yet: each card says its own sentence, the paper one never «trimisă pe email».
+- **Two form sentences (§546).** `emergencyContactHelp` ended «Le ștergem…», a plural for one number: it now says «Ștergem numele și numărul la șapte zile după eveniment.» (EN: «We delete the name and number seven days after the event.»). `guardianHelp` says again, in its one sentence, that the parent or guardian collects the kit — nothing else on the form said it.
+- **The `places` kind (§549).** `writes-expire-pages.test.ts` now also walks `src/modules/registrations`, `src/modules/jobs` and the deadline rebase, follows calls through a namespace import (`repo.transitionRegistration`), and pins forty verbs — the allocator's, the family's, the staff's, the start list's, the jobs' — to reach `revalidatePublicContent("places")`. Those modules are not held to "classify every write" like the content modules: they also write tokens, outbox, audit and rate-limit rows no public page reads, and every change of state goes through `transitionRegistration`, which is pinned first.
+- **The CDN hit (§549).** `tests/e2e/event-route.spec.ts` polls the page's `x-nextjs-cache: HIT` as it already polls the 404's, since another worker's save expires `public:events` between two asks.
+
+**Skipped, and why.**
+
+- **The pop-up's own summary.** Its focus is left to the browser's `showModal()`, as before; only the leave form, which is no dialog, needed the island's help.
+- **`tests/e2e/listing-cards.spec.ts:372`** (3 px short on a Windows build, green in CI): no product cause shown, left as it is.
+
+**Refused.** Stripping the variables inside `scripts/land-batch.mjs` and `scripts/merge-branches.mjs` as well: those scripts are meant to act on the repository they are started in, and a person who sets `GIT_DIR` on purpose must be obeyed; the fixture is the test's to isolate.
+
+Baseline `BR-V2.27-2026-09-27`.

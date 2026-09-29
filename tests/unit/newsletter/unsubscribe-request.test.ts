@@ -1,5 +1,6 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { newsletterLeaveRefused, parseNewsletterLeaveOutcome } from "@/modules/newsletter/ui/newsletter-box";
+import { focusRefusal, newsletterLeaveRefused, parseNewsletterLeaveOutcome } from "@/modules/newsletter/ui/newsletter-box";
 import { emailSampleActionUrl, emailSampleFor } from "@/modules/notifications/email-copy-fields";
 import { renderBilingual } from "@/modules/notifications/templates";
 import en from "../../../messages/en.json";
@@ -54,5 +55,38 @@ describe("§550 «Vreau să mă dezabonez»: the message", () => {
     expect(message.text).not.toContain("a cerut din nou");
     expect(message.text).not.toContain("Linkul este valabil");
     expect(message.subject).toContain("Abonamentul tău");
+  });
+});
+
+describe("§553 «Vreau să mă dezabonez»: a refusal takes the focus, as a §47 summary does", () => {
+  /** A stand-in for the page: one alert, inside a fold that may be closed. */
+  function page(open: boolean) {
+    const fold = { open };
+    const focused: string[] = [];
+    const alert = { closest: (selector: string) => (selector === "details" ? fold : null), focus: () => focused.push("newsletter-leave-errors") };
+    const root = { getElementById: (id: string) => (id === "newsletter-leave-errors" ? (alert as unknown as HTMLElement) : null) };
+    return { root, fold, focused };
+  }
+
+  it("focuses the leave form's alert on arrival, opening its fold first", () => {
+    const { root, fold, focused } = page(false);
+    expect(focusRefusal(root, "newsletter-leave-errors")).toBe(true);
+    expect(fold.open).toBe(true);
+    expect(focused).toEqual(["newsletter-leave-errors"]);
+  });
+
+  it("does nothing without a refusal on the page", () => {
+    const { root, focused } = page(true);
+    expect(focusRefusal(root, null)).toBe(false);
+    expect(focusRefusal(root, "newsletter-errors")).toBe(false);
+    expect(focused).toEqual([]);
+  });
+
+  it("is asked for by the contact page for a failed check or the hour's limit only", () => {
+    const signup = readFileSync("src/modules/newsletter/ui/NewsletterSignup.tsx", "utf8");
+    expect(signup).toContain("focusOnArrival={leaveErrorText ? NEWSLETTER_LEAVE_ERROR_ID : null}");
+    expect(signup).toContain('const leaveErrorText = leaveOutcome === "captcha" ? t("errors.captcha") : leaveOutcome === "limited" ? t("errors.limited") : null;');
+    expect(signup).toMatch(/id=\{NEWSLETTER_LEAVE_ERROR_ID\} role="alert" tabIndex=\{-1\}/);
+    expect(readFileSync("src/modules/newsletter/ui/NewsletterDialogButton.tsx", "utf8")).toContain("focusRefusal(document, focusOnArrival);");
   });
 });
