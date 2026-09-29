@@ -117,7 +117,7 @@ async function registerPublicly(event: EventForRegistration, email: string, at: 
       firstName: "Runner",
       lastName: email,
       birthDate: "1990-05-17",
-      sex: "UNSPECIFIED",
+      sex: "FEMALE",
       nationality: "RO",
       country: "RO",
       city: "Brașov",

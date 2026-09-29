@@ -3,7 +3,11 @@ import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
 import type { RegistrationCsvRow } from "./csv";
 import type { RegistrationStatus } from "@/db/schema/registrations";
+import type { WorkbookDetails } from "./admin-repository";
+import { ageOnRaceDay } from "./domain/age";
+import { shirtSizeShown } from "./domain/kit";
 import { raceNumberOf } from "./domain/race-number";
+import { sexCell } from "./domain/sex";
 
 /**
  * The start list as a spreadsheet the club can actually work in (§172; the owner: "CSV is
@@ -58,6 +62,25 @@ export type RegistrationSheetRow = Omit<
   city?: string | null;
   tshirtSize?: string | null;
 };
+
+/**
+ * The spreadsheet's own columns for one row (§322), blank when the row has none: the export route's,
+ * here so a test reads what the file will say. The sex in words — an empty cell for no answer, the
+ * retired «Prefer să nu spun» included — and the T-shirt only for an event that gives one (§554).
+ */
+export function workbookExtras(
+  details: WorkbookDetails | undefined,
+): Pick<RegistrationSheetRow, "sex" | "ageOnRaceDay" | "nationality" | "country" | "city" | "tshirtSize"> {
+  if (!details) return {};
+  return {
+    sex: sexCell(details.sex),
+    ageOnRaceDay: ageOnRaceDay(details.birthDate, details.eventStartsAt, details.eventTimezone),
+    nationality: details.nationality,
+    country: details.country,
+    city: details.city,
+    tshirtSize: shirtSizeShown(details.eventKitShirt, details.tshirtSize),
+  };
+}
 
 const bold = (value: string) => ({ value, fontWeight: "bold" as const });
 

@@ -11,7 +11,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 /**
  * §510 — the country the runner lives in, asked before the city: required on the public form,
  * stored on the registration, read by the spreadsheet and the backoffice page, never public.
- * And «Sex» with no answer is refused rather than recorded as «Prefer să nu spun».
+ * And «Sex» with no answer is refused (§510), as is the retired «Prefer să nu spun» since §554.
  */
 const NOW = new Date("2026-09-04T10:00:00.000Z");
 

@@ -1,0 +1,1 @@
+ALTER TABLE "events" ADD COLUMN "kit_shirt" boolean DEFAULT false NOT NULL;

@@ -138,6 +138,8 @@ const PUBLIC_COLUMNS = {
   registrationOpensAt: events.registrationOpensAt,
   registrationOpensSoon: events.registrationOpensSoon,
   registrationClosesAt: events.registrationClosesAt,
+  // «Kit de participare» → «Tricou» (§554): whether the registration form asks the T-shirt size.
+  kitShirt: events.kitShirt,
   confirmationOpensDaysBefore: events.confirmationOpensDaysBefore,
   confirmationDeadlineDaysBefore: events.confirmationDeadlineDaysBefore,
   // Who may enter (§329): the page says it, the form's picker is bounded by it, and the
