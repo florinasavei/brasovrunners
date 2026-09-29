@@ -164,7 +164,7 @@ export default async function PreviewEventPage({ params }: Props) {
     coHostUrl: event.coHostUrl,
     links: event.links,
     isSpecial: event.isSpecial,
-    // For the members alone (§NNN): the staff preview shows it as a member will see it.
+    // For the members alone (§552): the staff preview shows it as a member will see it.
     membersOnly: event.membersOnly,
     seoTitle: translation.seoTitle,
     seoDescription: translation.seoDescription,

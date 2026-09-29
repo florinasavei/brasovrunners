@@ -127,7 +127,7 @@ export default async function EventCard({
           {/* An edition apart (§168): an anniversary, a charity run, a date the club joins
               somebody else's race. Any number of events may wear it. */}
           {event.isSpecial && <GlyphChip glyph="special" color="secondary" label={tEvent("special")} />}
-          {/* For the members alone (§NNN): only the members' zone reads such a row, so only it draws this chip. */}
+          {/* For the members alone (§552): only the members' zone reads such a row, so only it draws this chip. */}
           {event.membersOnly && <GlyphChip glyph="membersOnly" color="primary" label={tEvent("membersOnly")} />}
           {/* Held with a partner (§367, amended §375, §379): the handshake and the generic "Colaborare" / "Partnership". */}
           <PartnerChip event={event} />

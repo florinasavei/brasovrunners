@@ -81,7 +81,7 @@ export default async function KindBox({
   const step = level === null ? DEFAULT_DIFFICULTY_STEP : difficultyStepOf(level);
   const difficultyLine = band ? t("editor.difficultySummary", { band: t(`editor.difficultyValues.${band}`), step }) : null;
   // The type, the status and the cost (§466), and the difficulty when stated (§526): what this box asks, on its closed line.
-  // For the members alone (§NNN), said on the closed line too: it decides who sees the event at all.
+  // For the members alone (§552), said on the closed line too: it decides who sees the event at all.
   const membersLine = event?.membersOnly ? t("editor.membersOnlyShort") : null;
   const aside = [tEvent(`type.${initialType}`), EVENT_STATUS_LABEL[event?.eventStatus ?? "SCHEDULED"], await costLine(event, languages), difficultyLine, membersLine]
     .filter((part): part is string => Boolean(part))
@@ -170,7 +170,7 @@ export default async function KindBox({
             </Typography>
           </Panel>
           {/*
-            «Doar pentru membrii BVR» (§NNN): who sees the event at all — beside what kind it is. The
+            «Doar pentru membrii BVR» (§552): who sees the event at all — beside what kind it is. The
             marker says the form carried the box, so a form without it never makes an event public.
             A series carries it by scope, like the night override (§382, §394).
           */}

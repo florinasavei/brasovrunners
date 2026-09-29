@@ -155,7 +155,7 @@ export async function queueRegistrationOpenedMessages<T extends Record<string, u
       timeToBeAnnounced: events.timeToBeAnnounced,
       registrationClosesAt: events.registrationClosesAt,
       publishedAt: events.publishedAt,
-      // A members' event's addresses wait (§NNN, `interestAction`).
+      // A members' event's addresses wait (§552, `interestAction`).
       membersOnly: events.membersOnly,
     })
     .from(events)

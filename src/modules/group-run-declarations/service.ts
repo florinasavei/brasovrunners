@@ -75,7 +75,7 @@ export type GroupRunSigningInput = {
   honeypot?: string;
   renderedAt?: string;
   /**
-   * Whether a members' session posted this (§NNN), asked of the account by the action — only when the
+   * Whether a members' session posted this (§552), asked of the account by the action — only when the
    * run is the members' alone, which takes a signature only from one, as its page opens only for one.
    */
   membersSession?: () => Promise<boolean>;
@@ -106,7 +106,7 @@ export type SignableEvent = {
   minAge: number;
   /** The run's own zone: the day the minimum age is counted on (§321). */
   timezone: string;
-  /** «Doar pentru membrii BVR» (§NNN): signed only behind a members' session. Absent on a fixture: false. */
+  /** «Doar pentru membrii BVR» (§552): signed only behind a members' session. Absent on a fixture: false. */
   membersOnly?: boolean;
 };
 
@@ -159,7 +159,7 @@ export async function signGroupRunDeclaration<T extends Record<string, unknown>>
   const event = await findSignableEvent(db, input.eventId);
   const key = event ? offeredGroupRunDeclarationKey(event) : null;
   if (!event || !key || !signingOpen(event, now)) throw new DomainError("NOT_FOUND", "this run offers no declaration to sign");
-  // A run for the members alone (§NNN) is signed for behind a members' session only — the same
+  // A run for the members alone (§552) is signed for behind a members' session only — the same
   // answer as a run that offers nothing, so a post says nothing about whether such a run exists.
   if (event.membersOnly === true && !(await input.membersSession?.())) throw new DomainError("NOT_FOUND", "this run offers no declaration to sign");
 

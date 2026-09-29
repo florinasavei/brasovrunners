@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.26-2026-09-27
+
+- **Discount codes and members-only events in the members' zone** — the club keeps its partners' codes on «Pagini» → «Membri» and a signed-in member reads and copies them in the zone; an event ticked «Doar pentru membrii BVR» is on no public page, list, feed, sitemap or alert, opens only for a member, who registers with the account's own address, one person per account; migration `0108`. §552.
 ## BR-V2.25-2026-09-27
 
 - **The newsletter's subscribers, a letter in rich text, and a way out from the site** — «Newsletter» → «Abonați» lists every address with its language, topics and state (how long its confirmation link still works), searched through the canonical address and filtered by topic and state in the address bar, and downloads as a CSV; an Administrator unsubscribes a row after a question naming the address; the composer writes each language in the rich-text editor, pictures included, with «Tradu cardul: RO → EN»; and under the contact page's newsletter button «Vreau să mă dezabonez» mails a subscriber the link to their own page, answering the same sentence for any address. §550.

@@ -3,7 +3,7 @@ import { hydrated } from "./support/featured-event";
 import { createMembersOnlyFixture, membersFixture, removeMembersOnlyFixture } from "./support/members-only";
 
 /**
- * §NNN — «Doar pentru membrii BVR» and «Coduri de reducere», in the browser.
+ * §552 — «Doar pentru membrii BVR» and «Coduri de reducere», in the browser.
  *
  * A stranger: the listing, the calendar feed and the sitemap never name the members' event, and its
  * page and `.ics` answer 404. A member signed in through the development switcher's «Dev Member»:
@@ -14,7 +14,7 @@ import { createMembersOnlyFixture, membersFixture, removeMembersOnlyFixture } fr
  */
 test.describe.configure({ mode: "serial" });
 
-test.describe("§NNN events and codes for the members alone", () => {
+test.describe("§552 events and codes for the members alone", () => {
   let fixture: ReturnType<typeof membersFixture>;
 
   test.beforeAll(async ({}, testInfo) => {

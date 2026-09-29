@@ -96,7 +96,7 @@ const PUBLIC_COLUMNS = {
   raceStartsAt: events.raceStartsAt,
   dateToBeAnnounced: events.dateToBeAnnounced,
   timeToBeAnnounced: events.timeToBeAnnounced,
-  // «Doar pentru membrii BVR» (§NNN): always false on a public read — `publishedAnyDateIn` keeps the
+  // «Doar pentru membrii BVR» (§552): always false on a public read — `publishedAnyDateIn` keeps the
   // members' events out — and true only on the members' own reads, whose card and page say so.
   membersOnly: events.membersOnly,
   timezone: events.timezone,
@@ -206,7 +206,7 @@ const publishedAnyDateIn = (locale: Locale) =>
   and(publishedForMembersIn(locale), NOT_MEMBERS_ONLY);
 
 /**
- * **Not an event for the members alone (§NNN).** «Doar pentru membrii BVR» withheld in SQL, the way
+ * **Not an event for the members alone (§552).** «Doar pentru membrii BVR» withheld in SQL, the way
  * the place (§328) and the start (§533) are: in the condition every public read shares, so the
  * listing, the calendar, the feed, the `.ics` list, the sitemap, the share pictures, the event page's
  * public read and whatever list is built on them next cannot meet such a row. A members' event is
@@ -216,7 +216,7 @@ const publishedAnyDateIn = (locale: Locale) =>
 const NOT_MEMBERS_ONLY = eq(events.membersOnly, false);
 
 /**
- * Published in this locale, a members' event included (§NNN) — only for a read made after the
+ * Published in this locale, a members' event included (§552) — only for a read made after the
  * session was asked: the members' zone and the event's own page, form and `.ics` for a member.
  */
 const publishedForMembersIn = (locale: Locale) =>
@@ -291,7 +291,7 @@ export async function findPublishedTranslations(db: Database, eventId: string) {
     .select({ locale: eventTranslations.locale, slug: eventTranslations.slug })
     .from(eventTranslations)
     .innerJoin(events, eq(events.id, eventTranslations.eventId))
-    // No alternates for a members' event (§NNN): its page carries no canonical and no hreflang (§342).
+    // No alternates for a members' event (§552): its page carries no canonical and no hreflang (§342).
     .where(and(eq(eventTranslations.eventId, eventId), eq(events.editorialStatus, "PUBLISHED"), NOT_MEMBERS_ONLY));
 }
 
@@ -634,7 +634,7 @@ export async function findPublishedEventBySlug<T extends Record<string, unknown>
   locale: Locale,
   slug: string,
   /**
-   * Who is reading (§NNN): `public` — every caller by default, the public cache included — never
+   * Who is reading (§552): `public` — every caller by default, the public cache included — never
    * meets a members' event; `members` meets it too, and is passed only by a caller that asked for a
    * members' session first (`events/members-only.ts`) or that is past the door already: the email
    * renderer, writing to somebody registered for it.
@@ -651,11 +651,11 @@ export async function findPublishedEventBySlug<T extends Record<string, unknown>
   return row;
 }
 
-/** Who a published event is read for (§NNN): anybody, or a member of the club and the backoffice. */
+/** Who a published event is read for (§552): anybody, or a member of the club and the backoffice. */
 export type EventAudience = "public" | "members";
 
 /**
- * The club's events for its members alone (§NNN), for the members' zone: published in this language,
+ * The club's events for its members alone (§552), for the members' zone: published in this language,
  * «Doar pentru membrii BVR», going ahead — the dated ones soonest first while they have not ended,
  * then those whose date is to be announced (§533), which never pass. Read with the undated columns,
  * so a start held back is null here as on every other read. Called only after the zone asked for the

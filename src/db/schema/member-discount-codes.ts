@@ -3,7 +3,7 @@ import { boolean, check, date, index, integer, pgTable, text, timestamp, uuid } 
 import { staffUsers } from "./staff-users";
 
 /**
- * «Coduri de reducere» (§NNN; the owner, 2026-09-28): the discount codes the club's partners give
+ * «Coduri de reducere» (§552; the owner, 2026-09-28): the discount codes the club's partners give
  * its members, one row each, shown only inside the members' zone (§524) — never on a public page,
  * in the public cache, a feed or an email. §517 took them out of the newsletter for exactly that
  * reason: "the club's discount codes are for its members only, not for anyone who subscribes".

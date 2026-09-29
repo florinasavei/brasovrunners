@@ -61,7 +61,7 @@ async function zoneOrAway(locale: Locale): Promise<RichTextDoc | null | "away"> 
 }
 
 /**
- * The club's events for its members alone (§NNN), and its discount codes (§NNN): read here, per
+ * The club's events for its members alone (§552), and its discount codes (§552): read here, per
  * request, behind the account this page asked for — live, never through the public cache, which is
  * shared by everybody. Empty while the database is away, like «Următoarele alergări».
  */
@@ -195,7 +195,7 @@ export default async function MembersAreaPage({ params }: Props) {
       )}
 
       {/*
-        «Evenimente pentru membri» (§NNN): the club's events for its members alone, upcoming first,
+        «Evenimente pentru membri» (§552): the club's events for its members alone, upcoming first,
         on the listing's own card with its door — the register button included. Nowhere else on the
         site. Nothing when there is none.
       */}
@@ -213,7 +213,7 @@ export default async function MembersAreaPage({ params }: Props) {
         </Box>
       )}
 
-      {/* «Coduri de reducere» (§NNN): the partners' codes, for the members alone (§517). */}
+      {/* «Coduri de reducere» (§552): the partners' codes, for the members alone (§517). */}
       {codes.length > 0 && <MemberCodes codes={codes} locale={locale} />}
 
       <Box component="section" aria-labelledby="members-upcoming-title" sx={{ mb: { xs: DENSITY.sectionGap, sm: 3 } }} data-testid="members-upcoming">

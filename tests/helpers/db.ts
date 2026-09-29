@@ -105,7 +105,7 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   await db.delete(teamMembers);
   // «Întrebări frecvente»'s questions (§525) reference only staff rows.
   await db.delete(faqQuestions);
-  // The members' discount codes (§NNN) reference only staff rows.
+  // The members' discount codes (§552) reference only staff rows.
   await db.delete(memberDiscountCodes);
   // The gallery: items, then albums (which the cover references), then the assets.
   await db.delete(galleryItems);

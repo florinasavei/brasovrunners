@@ -23,7 +23,7 @@ export async function requestRegistrationLinkAction(form: FormData): Promise<voi
   // The event, when the participant arrived from one — narrows the search to the registration
   // they are actually looking at. An unknown or unpublished slug simply drops back to "their
   // most recent active registration" rather than erroring: this page has one answer.
-  // Any published event, the members' own included (§NNN): the answer is the same whatever it finds
+  // Any published event, the members' own included (§552): the answer is the same whatever it finds
   // (§19.4), so narrowing by a members' event tells nobody it exists.
   const event = slug ? await findPublishedEventBySlug(getDb(), locale, slug, "members") : undefined;
 

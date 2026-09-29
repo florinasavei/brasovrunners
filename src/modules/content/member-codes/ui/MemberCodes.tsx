@@ -11,7 +11,7 @@ import type { MembersDiscountCode } from "../repository";
 import CopyCodeButton from "./CopyCodeButton";
 
 /**
- * The members' discount codes as cards (§NNN), on the members' zone alone — the page that asked for
+ * The members' discount codes as cards (§552), on the members' zone alone — the page that asked for
  * the account (`canOpenMembersZone`) before it read them. Each card: the partner, the code in a
  * monospace box with «Copiază codul», what it gives in the reader's language, the link, and «valabil
  * până …» through the one date helper (§349). The read already left out a hidden code and one past

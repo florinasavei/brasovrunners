@@ -7,7 +7,7 @@ import { membersEventBySlug } from "@/modules/events/members-only";
 import { env } from "@/shared/config/env";
 
 /**
- * A members' event's "Add to my calendar" (§NNN; the file itself is §107's): the static `.ics`
+ * A members' event's "Add to my calendar" (§552; the file itself is §107's): the static `.ics`
  * beside the event page is `force-static` and reads the public row, which never meets a members'
  * event, so this twin answers the one link a members' page gives (§549's live twin, as a file).
  *
@@ -36,7 +36,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ loc
     headers: {
       "Content-Type": "text/calendar; charset=utf-8",
       "Content-Disposition": `attachment; filename="${slug}.ics"`,
-      // A members' file is nobody else's (§NNN).
+      // A members' file is nobody else's (§552).
       "Cache-Control": "private, no-store, max-age=0",
       "X-Robots-Tag": "noindex, nofollow",
     },

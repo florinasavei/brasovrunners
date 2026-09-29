@@ -85,7 +85,7 @@ async function signOrRefuse(form: FormData, locale: Locale, path: string): Promi
         locale: signingLocale,
         honeypot: text(form, "honeypot") || undefined,
         renderedAt: text(form, "renderedAt") || undefined,
-        // A run for the members alone (§NNN) takes a signature from a members' session only.
+        // A run for the members alone (§552) takes a signature from a members' session only.
         membersSession: async () => (await membersViewer()) !== null,
       },
       new Date(),

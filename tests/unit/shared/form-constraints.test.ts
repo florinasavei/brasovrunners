@@ -49,7 +49,7 @@ const NOT_A_BOX = new Set([
   // «Data se anunță mai târziu» and «Ora se anunță mai târziu» (§533): ticks under the start, in «Când și unde».
   "dateToBeAnnounced",
   "timeToBeAnnounced",
-  // «Doar pentru membrii BVR» (§NNN): a tick in «Ce fel de eveniment».
+  // «Doar pentru membrii BVR» (§552): a tick in «Ce fel de eveniment».
   "membersOnly",
 ]);
 

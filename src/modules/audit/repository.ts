@@ -296,7 +296,7 @@ export type AuditAction =
   | "members_page.unpublished"
   | "members_page.text_saved"
   /**
-   * The members' discount codes (§NNN): a code added, written, hidden or shown again, moved, or
+   * The members' discount codes (§552): a code added, written, hidden or shown again, moved, or
    * deleted. The code's row id and the shape of the change — never the code, the partner or the words.
    */
   | "member_code.created"
@@ -350,7 +350,7 @@ export type RecordAuditInput = {
     | "team_member"
     | "content"
     | "staff_user"
-    // `member_discount_code` for a code of the members' zone (§NNN).
+    // `member_discount_code` for a code of the members' zone (§552).
     | "member_discount_code";
   /** Null only for an act about no single row — an export of every event's registrations (§322). */
   entityId: string | null;

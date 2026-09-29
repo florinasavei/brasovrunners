@@ -652,7 +652,7 @@ export async function queueNewEventAlerts<T extends Record<string, unknown>>(db:
         // that falls inside the window a publication has, like any other new event.
         eq(events.dateToBeAnnounced, false),
         eq(events.timeToBeAnnounced, false),
-        // Not an event for the members alone (§NNN): no subscriber hears of it. Still unseen, it is
+        // Not an event for the members alone (§552): no subscriber hears of it. Still unseen, it is
         // announced if the switch goes off inside the window a publication has, like any new event.
         eq(events.membersOnly, false),
         sql`${events.publishedAt} >= ${since.toISOString()}::timestamptz`,

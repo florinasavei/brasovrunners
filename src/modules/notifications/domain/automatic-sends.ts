@@ -114,7 +114,7 @@ export function participationConfirmationDueAt(candidate: ParticipationCandidate
 export type InterestEvent = RegistrationWindowInput & {
   editorialStatus: string;
   /**
-   * «Doar pentru membrii BVR» (§NNN): the addresses were left on a public page, and the page is the
+   * «Doar pentru membrii BVR» (§552): the addresses were left on a public page, and the page is the
    * members' alone now — they wait, as for a page taken off the site, and are told if it comes back.
    */
   membersOnly?: boolean;

@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import pg from "pg";
 
 /**
- * The setup of §NNN's spec: one published event for the members alone and one discount code,
+ * The setup of §552's spec: one published event for the members alone and one discount code,
  * written straight into the database the server reads, and removed after. The setup, not the
  * subject — what the spec proves is what the pages do with them.
  *

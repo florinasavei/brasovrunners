@@ -36,7 +36,7 @@ type Props = {
   fileName: string;
   calendar?: { icsHref: string; googleUrl: string };
   /**
-   * False on an event for the members alone (§NNN): its link opens for a member only, and its
+   * False on an event for the members alone (§552): its link opens for a member only, and its
    * share pictures answer 404 — so no Facebook, WhatsApp or Instagram button, the calendar kept.
    */
   shareable?: boolean;

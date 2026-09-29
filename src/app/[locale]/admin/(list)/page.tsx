@@ -300,7 +300,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
               {!next.event.dateToBeAnnounced && next.event.timeToBeAnnounced && (
                 <Chip size="small" variant="outlined" color="warning" label={t("events.timeToBeAnnounced")} data-testid="time-to-be-announced-chip" />
               )}
-              {/* For the members alone (§NNN): on no public surface, so the list says so beside the type. */}
+              {/* For the members alone (§552): on no public surface, so the list says so beside the type. */}
               {next.event.membersOnly && (
                 <GlyphChip glyph="membersOnly" color="primary" label={t("events.membersOnlyChip")} />
               )}

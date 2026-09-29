@@ -9,7 +9,7 @@ import { mayViewMembersOnlyEvents } from "./domain/members-only";
 import { findPublishedEventBySlug, listMembersOnlyEvents } from "./repository";
 
 /**
- * The door to the club's events for its members alone (§NNN): the one place a request asks
+ * The door to the club's events for its members alone (§552): the one place a request asks
  * "is a members' session reading this" before a members' event is read.
  *
  * The public reads never meet such an event — `publishedAnyDateIn` withholds it in SQL — so every
@@ -44,7 +44,7 @@ export const membersViewer = cache(async (): Promise<StaffUser | null> => {
 });
 
 /**
- * A published event by its slug for a members' session (§NNN) — any published event, the members'
+ * A published event by its slug for a members' session (§552) — any published event, the members'
  * own included — or undefined for anybody else. Live, never cached. Once per request per slug.
  */
 export const membersEventBySlug = cache(async (locale: Locale, slug: string) => {
@@ -55,7 +55,7 @@ export const membersEventBySlug = cache(async (locale: Locale, slug: string) => 
   return event?.membersOnly ? event : undefined;
 });
 
-/** The members' events for the zone (§NNN), or none for a viewer who may not see them. */
+/** The members' events for the zone (§552), or none for a viewer who may not see them. */
 export async function membersOnlyEventsFor(viewer: Pick<StaffUser, "role"> | null, locale: Locale, now: Date) {
   if (!viewer || !mayViewMembersOnlyEvents(viewer.role)) return [];
   return listMembersOnlyEvents(getDb(), locale, now);

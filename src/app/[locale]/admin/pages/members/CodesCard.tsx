@@ -29,7 +29,7 @@ import {
 type Words = Awaited<ReturnType<typeof getTranslations<"Admin">>>;
 
 /**
- * «Coduri de reducere» (§NNN): the members' discount codes, one fold on «Pagini» → «Membri», closed
+ * «Coduri de reducere» (§552): the members' discount codes, one fold on «Pagini» → «Membri», closed
  * until opened (§336), the count on its line. Each code is a row with its state and its verbs, and
  * its boxes in a fold of their own. Every control is offered only to the role its action asserts,
  * and the service asserts it again (BR-REQ-060-01): adding, the code, hiding, moving and deleting

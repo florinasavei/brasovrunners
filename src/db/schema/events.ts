@@ -408,7 +408,7 @@ export const events = pgTable(
     timeToBeAnnounced: boolean("time_to_be_announced").notNull().default(false),
 
     /**
-     * «Doar pentru membrii BVR» (§NNN; the owner, 2026-09-28): the event exists only for a signed-in
+     * «Doar pentru membrii BVR» (§552; the owner, 2026-09-28): the event exists only for a signed-in
      * member of the club (§524) and for the backoffice. The shape of the place's and the start's
      * switches (§328, §533) — a state of the event, withheld in SQL: `publishedAnyDateIn` in
      * `events/repository.ts`, the condition every public read shares, requires it false, so the

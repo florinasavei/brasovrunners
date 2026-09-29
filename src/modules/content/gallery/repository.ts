@@ -156,7 +156,7 @@ export async function findPublishedAlbumBySlug<T extends Record<string, unknown>
       .select({ slug: eventTranslations.slug, title: eventTranslations.title })
       .from(events)
       .innerJoin(eventTranslations, and(eq(eventTranslations.eventId, events.id), eq(eventTranslations.locale, locale)))
-      // Nor a members' event (§NNN): the public gallery never names or links one.
+      // Nor a members' event (§552): the public gallery never names or links one.
       .where(and(eq(events.id, row.eventId), eq(events.editorialStatus, "PUBLISHED"), eq(events.membersOnly, false)))
       .limit(1);
     event = linked ?? null;

@@ -9,7 +9,7 @@ import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Coduri de reducere»: the members' discount codes, kept by the club on «Pagini» → «Membri»
+ * §552 — «Coduri de reducere»: the members' discount codes, kept by the club on «Pagini» → «Membri»
  * and shown only inside the members' zone.
  *
  * The Administrator adds, writes, hides, moves and deletes a code; the Redactor writes the words
@@ -41,7 +41,7 @@ const CODE = {
   validUntil: "",
 };
 
-describe("§NNN the members' discount codes", () => {
+describe("§552 the members' discount codes", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;

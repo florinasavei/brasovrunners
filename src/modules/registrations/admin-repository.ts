@@ -1021,7 +1021,7 @@ export async function listEventsWithRegistrations<T extends Record<string, unkno
   db: Database<T>,
 ): Promise<Array<{ id: string; title: string | null; featured: boolean; membersOnly: boolean }>> {
   return db
-    // `membersOnly` (§NNN): the list's «Membri» chip on an event for the members alone.
+    // `membersOnly` (§552): the list's «Membri» chip on an event for the members alone.
     .selectDistinct({ id: events.id, title: eventTranslations.title, featured: events.featured, membersOnly: events.membersOnly })
     .from(events)
     .innerJoin(registrations, eq(registrations.eventId, events.id))

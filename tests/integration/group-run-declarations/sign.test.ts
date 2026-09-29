@@ -1086,7 +1086,7 @@ describe("§532 erasing the ticked ones in one press", () => {
   });
 });
 
-describe("§NNN a run for the members alone", () => {
+describe("§552 a run for the members alone", () => {
   it("takes a signature only from a members' session", async () => {
     await approveTemplate("GROUP_RUN_DECLARATION_TRAIL");
     const event = await trailRun({ membersOnly: true });

@@ -79,7 +79,7 @@ type Props = {
    */
   canEdit?: boolean;
   /**
-   * A members' event (§NNN), read for a members' session — passed only by the live twin, which a
+   * A members' event (§552), read for a members' session — passed only by the live twin, which a
    * signed-in visitor is sent to (§549). Asked only when the public read found nothing. The static
    * copy has none: a members' row is withheld from the public read in SQL, so a stranger, and the
    * CDN's copy, get the 404 an unpublished page gives (§28).
@@ -200,7 +200,7 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
     now,
   );
   /*
-    An event for the members alone (§NNN): the public read above never meets one, so a slug it did
+    An event for the members alone (§552): the public read above never meets one, so a slug it did
     not find is asked once more — by the live twin only, for a members' session, live, never through
     the public cache or the last good copy, both shared by every visitor (`events/members-only.ts`).
     The static copy asks nobody: a stranger gets the 404 an unpublished page gives (§28), never a
@@ -235,7 +235,7 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
   const weather = dated ? await forecastForEvent(dated, now) : null;
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
-      {/* No structured data for a members' event (§NNN): nothing on its page is for a search engine. */}
+      {/* No structured data for a members' event (§552): nothing on its page is for a search engine. */}
       {dated && !membersOnly && (
       <JsonLd
         data={sportsEventJsonLd(
@@ -303,7 +303,7 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
       {(event.isSpecial || membersOnly) && (
         <Box sx={{ mt: 1, display: "flex", flexWrap: "wrap", gap: 0.5 }}>
           {event.isSpecial && <GlyphChip glyph="special" color="secondary" label={t("special")} />}
-          {/* For the members alone (§NNN): said on the page the member opened, never elsewhere. */}
+          {/* For the members alone (§552): said on the page the member opened, never elsewhere. */}
           {membersOnly && <GlyphChip glyph="membersOnly" color="primary" label={t("membersOnly")} />}
         </Box>
       )}
@@ -366,11 +366,11 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
           title={event.title}
           imageHref={`/${locale}/events/${slug}/share-image`}
           fileName={instagramFileName(slug)}
-          // A members' event is not shared (§NNN): its link opens for members, its pictures for nobody.
+          // A members' event is not shared (§552): its link opens for members, its pictures for nobody.
           shareable={!membersOnly}
           calendar={
             dated ? {
-              // A members' file is the twin's, per request (§NNN): the static one reads the public row alone.
+              // A members' file is the twin's, per request (§552): the static one reads the public row alone.
               icsHref: membersOnly ? `/${locale}/${LIVE_SEGMENT}/events/${slug}/calendar.ics` : `/${locale}/events/${slug}/calendar.ics`,
               googleUrl: googleCalendarUrl(toCalendarEvent(dated, locale, now), { locale, t }),
             } : undefined
@@ -477,7 +477,7 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
 
       {/* Nothing at all unless this event publishes one (BR-REQ-039-01). */}
       {/* Nobody registers before the date is announced (§533), so an undated event has no list. */}
-      {/* Nor a members' event (§NNN): the public list is a public disclosure (§32), and this page is not public. */}
+      {/* Nor a members' event (§552): the public list is a public disclosure (§32), and this page is not public. */}
       {dated && !membersOnly && <StartList event={dated} page={lista} />}
     </Container>
   );

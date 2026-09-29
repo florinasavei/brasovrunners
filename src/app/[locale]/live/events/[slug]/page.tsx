@@ -18,7 +18,7 @@ import { hasLocale } from "next-intl";
  * backoffice" button (§135). The proxy rewrites such a visit here; the address is unchanged
  * (`i18n/live-twin.ts`). Its metadata is the event page's own, canonical to the bare address (§342).
  *
- * It is also the only door to an event for the members alone (§NNN): a member is signed in, so the
+ * It is also the only door to an event for the members alone (§552): a member is signed in, so the
  * proxy sends every visit of theirs here, and this twin — never the static copy, which reads no
  * session and whose public read never meets such a row — asks the account and reads the event live.
  * Next answers a `force-dynamic` render `private, no-cache, no-store`, so no shared cache and no
@@ -48,7 +48,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
 type MetadataProps = Parameters<typeof eventMetadata>[0];
 
 /**
- * A members' event's head (§NNN), when the public read found nothing and a members' session reads
+ * A members' event's head (§552), when the public read found nothing and a members' session reads
  * this: its title and nothing a search engine or a link preview could use — `noindex`, no
  * canonical, no hreflang (§342), no Open Graph card, whose picture answers 404 to everybody anyway.
  * Anybody else: the event page's own empty head, as for any unknown slug.
@@ -67,7 +67,7 @@ type Props = {
 export default async function LiveEventDetailPage({ params, searchParams }: Props) {
   const staffUser = env.STAFF_AUTH_MODE === "disabled" ? null : await readStaffUserOrNone();
   const { locale, slug } = await params;
-  // A members' event, for a members' session only (§NNN); asked by the page only when the public read found nothing.
+  // A members' event, for a members' session only (§552); asked by the page only when the public read found nothing.
   const membersRead = hasLocale(routing.locales, locale) ? () => membersEventBySlug(locale, slug) : undefined;
   return (
     <EventDetailPage params={params} query={searchParams} canEdit={staffUser !== null && canEditTexts(staffUser.role)} membersRead={membersRead} />

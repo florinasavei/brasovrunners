@@ -2,7 +2,7 @@ import { z } from "zod";
 import { refuseOneLanguage } from "@/shared/forms/both-languages";
 
 /**
- * What the club types for one discount code of the members' zone (§NNN).
+ * What the club types for one discount code of the members' zone (§552).
  *
  * The partner's name and the code, required: a code nobody can place is no code. What it gives, a
  * line or two, in Romanian **and** English or in neither (§352). An optional https link where the
@@ -77,7 +77,7 @@ export const discountCodeFieldsSchema = z
 export type DiscountCodeFields = z.output<typeof discountCodeFieldsSchema>;
 
 /**
- * Whether members see a code today (§NNN): not hidden, and its last day — the club's calendar day,
+ * Whether members see a code today (§552): not hidden, and its last day — the club's calendar day,
  * inclusive — not passed. The same rule as the members' read in SQL (`repository.ts`), for the
  * backoffice's line and the tests.
  */

@@ -151,7 +151,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   */
   const eventRead = await registrationEventWithLastGood(locale, slug, now);
   /*
-    An event for the members alone (§NNN): the public read never meets one, so a slug it did not
+    An event for the members alone (§552): the public read never meets one, so a slug it did not
     find is asked once more for a members' session only, live, never from a copy. Anybody else gets
     the page's 404. The member registers themselves, with the account's own address (`member`).
   */
@@ -190,7 +190,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
     on, the sitting's own screen, with «Gata»; with `?family=1` it is the next form, the address
     fixed. Everything it shows was typed on this browser (§39).
   */
-  // One person per account on a members' event (§NNN): no family sitting, no «Mai înscrii pe cineva».
+  // One person per account on a members' event (§552): no family sitting, no «Mai înscrii pe cineva».
   const sittingCookie = resting || member ? null : await readFamilySittingCookie();
   const sitting = sittingCookieLive(sittingCookie, event.id, now) ? sittingCookie : null;
   const afterForm = Boolean(submitted) && sent !== "1" ? afterFormScreen(sitting) : null;
@@ -1015,7 +1015,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               */}
               {member ? (
                 /*
-                  A members' event (§NNN): the account's own address, said back in bold and not asked —
+                  A members' event (§552): the account's own address, said back in bold and not asked —
                   the server takes it from the session, whatever is posted. One person per account.
                 */
                 <Box data-testid="members-address">

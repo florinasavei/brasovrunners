@@ -140,7 +140,7 @@ export type EventForRegistration = {
    */
   reminderHoursBefore?: number | null;
   /**
-   * «Doar pentru membrii BVR» (§NNN): the public form takes a registration only behind a members'
+   * «Doar pentru membrii BVR» (§552): the public form takes a registration only behind a members'
    * session (`RegistrationOrigin.member`), for the account's own address, one person per account.
    * Asked here before anything is spent and again under the event's lock. Absent on a partial row: false.
    */
@@ -1221,7 +1221,7 @@ export type RegistrationOrigin = {
    */
   anotherPerson?: { participantId: string };
   /**
-   * The members' session the public form was sent from (§NNN), read by the action from the account
+   * The members' session the public form was sent from (§552), read by the action from the account
    * (`getCurrentAccount`, §524): the only door to an event for the members alone. `email` is the
    * account's address, the one the registration is for; a form for any other address is refused.
    * Ignored on every other event.
@@ -1264,7 +1264,7 @@ export type RegistrationOrigin = {
 const PUBLIC_ORIGIN: RegistrationOrigin = { source: "PUBLIC", createdByStaffUserId: null };
 
 /**
- * The door of an event for the members alone (§NNN), for the public form: a members' session, and
+ * The door of an event for the members alone (§552), for the public form: a members' session, and
  * never the emailed link for another person — one person per account. The same NOT_FOUND an
  * unknown event gives, so a post says nothing about whether such an event exists. A staff entry
  * and the desk are the backoffice's, and pass.
@@ -1423,7 +1423,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
 ): Promise<SubmitRegistrationResult> {
   const atTheDesk = origin.source === "STAFF" && origin.atTheDesk === true;
   assertRegistrationOpen(event, now, atTheDesk);
-  // An event for the members alone (§NNN), before anything is parsed or spent: asked again under the lock.
+  // An event for the members alone (§552), before anything is parsed or spent: asked again under the lock.
   assertMembersDoor(event.membersOnly === true, origin);
 
   /**
@@ -1754,14 +1754,14 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     if (startHeldBack(locked)) {
       throw new DomainError("VALIDATION_ERROR", "the event's date is to be announced: registration is not open");
     }
-    // For the members alone (§NNN), asked under the lock too: the switch turned on by a save that
+    // For the members alone (§552), asked under the lock too: the switch turned on by a save that
     // committed after the caller read the row. And for the account's own address only.
     assertMembersDoor(locked.membersOnly, origin);
     if (locked.membersOnly && origin.source === "PUBLIC" && origin.member && !sameCanonical(origin.member.email, identity.canonicalEmail)) {
       throw new DomainError("VALIDATION_ERROR", "a members' event is registered for with the account's own address", ["email"]);
     }
     /*
-      One person per account (§NNN): on a members' event the public form never opens the family
+      One person per account (§552): on a members' event the public form never opens the family
       flow — no second person on the address, no sitting, no emailed link for another person. The
       address's one registration is the account holder's; a form with another name re-sends it.
     */

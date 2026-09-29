@@ -87,7 +87,7 @@ export default async function AdminMembersPage({ params, searchParams }: Props) 
     benefitsEnBody: t("members.benefitsEn"),
     zoneRoBody: t("members.zoneRo"),
     zoneEnBody: t("members.zoneEn"),
-    // The discount codes' boxes (§NNN), by the names their forms post.
+    // The discount codes' boxes (§552), by the names their forms post.
     partnerName: t("members.codes.partner"),
     code: t("members.codes.code"),
     descriptionRo: t("members.codes.descriptionRo"),
@@ -137,7 +137,7 @@ export default async function AdminMembersPage({ params, searchParams }: Props) 
       />
       <TextCard text="zone" settings={settings} locale={locale} words={t} messages={messages} rich={rich} mayEdit={mayEdit} />
 
-      {/* «Coduri de reducere» (§NNN): shown only inside the members' zone, never on a public page. */}
+      {/* «Coduri de reducere» (§552): shown only inside the members' zone, never on a public page. */}
       <CodesCard
         codes={codes}
         today={clubToday(new Date())}

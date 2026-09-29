@@ -79,7 +79,7 @@ export async function setMembersPagePublishedAction(_previous: FormOutcome | nul
   redirect(`${screen(form)}${query}#${outcome.error ? "admin-alert" : "members-page"}`);
 }
 
-// --- «Coduri de reducere» (§NNN) ----------------------------------------------------------------
+// --- «Coduri de reducere» (§552) ----------------------------------------------------------------
 
 /**
  * The members' discount codes: a saved or added code returns on a refusal, so every box comes back as

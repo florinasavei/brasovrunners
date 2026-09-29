@@ -78,7 +78,7 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
 
   const now = new Date();
   // The cached row, or the database's own at a red month's miss (§493): this page reads it anyway.
-  // A run for the members alone (§NNN): read for a members' session only, live, never cached.
+  // A run for the members alone (§552): read for a members' session only, live, never cached.
   const found = (await formEventBySlug(locale, slug)) ?? (await membersEventBySlug(locale, slug));
   // A group run whose date is to be announced (§533) takes no signature yet: nothing to sign for.
   const event = found ? datedOrNull(found) : null;

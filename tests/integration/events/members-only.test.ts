@@ -14,7 +14,7 @@ import { ANOTHER_LINK_INVALID } from "@/modules/registrations/domain/family";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Doar pentru membrii BVR»: an event for the club's members alone, withheld in SQL from every
+ * §552 — «Doar pentru membrii BVR»: an event for the club's members alone, withheld in SQL from every
  * public read, and opened — its page, its `.ics`, its registration — only for a members' session.
  *
  * The session is the real one (`session.ts`, the development switcher's cookie in tests), over a real
@@ -181,7 +181,7 @@ async function isNotFound(promise: Promise<unknown>): Promise<boolean> {
   }
 }
 
-describe("§NNN events for the members alone", () => {
+describe("§552 events for the members alone", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;

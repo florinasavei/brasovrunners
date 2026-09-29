@@ -9,7 +9,7 @@ import { isUuid } from "@/shared/ids";
 import { type DiscountCodeFields, discountCodeFieldsSchema } from "./fields";
 
 /**
- * The members' discount codes (§NNN): add, write, hide or show, move, delete. Every write is asserted
+ * The members' discount codes (§552): add, write, hide or show, move, delete. Every write is asserted
  * here, on the server, whatever the screen offered (BR-REQ-060-01):
  *
  * - adding, the code, its link and its last day, hiding, moving and deleting — `canManageDiscountCodes`,

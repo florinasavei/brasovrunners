@@ -70,7 +70,7 @@ export async function renderNewsletterRow(
     // Queued while it had a date, and the date was since held back (§533): the alert would say a date
     // the club withdrew. Withdrawn; the event is announced again once its date is.
     if (event.dateToBeAnnounced || event.timeToBeAnnounced) throw new OutboxMessageWithdrawn("newsletter: the event's start is to be announced");
-    // Queued while it was public, and made the members' alone since (§NNN): withdrawn, never sent.
+    // Queued while it was public, and made the members' alone since (§552): withdrawn, never sent.
     if (event.membersOnly) throw new OutboxMessageWithdrawn("newsletter: the event is for the club's members alone");
   }
 

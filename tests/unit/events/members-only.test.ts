@@ -10,7 +10,7 @@ import { interestAction } from "@/modules/notifications/domain/automatic-sends";
 import { STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
 
 /**
- * §NNN — «Doar pentru membrii BVR» and «Coduri de reducere»: the pure rules, the words, and the
+ * §552 — «Doar pentru membrii BVR» and «Coduri de reducere»: the pure rules, the words, and the
  * source-walk that no public read path selects a members' row or a code — the way §328's and §533's
  * tests prove the place and the start are withheld in SQL, here by where the reads live.
  */
@@ -26,7 +26,7 @@ function filesUnder(dir: string): string[] {
 
 const SOURCES = filesUnder(SRC).map((path) => ({ path: relative(process.cwd(), path).split(sep).join("/"), text: readFileSync(path, "utf8") }));
 
-describe("§NNN who sees an event for the members alone", () => {
+describe("§552 who sees an event for the members alone", () => {
   it("every account the club made, and nobody without one", () => {
     for (const role of STAFF_ROLES) expect(mayViewMembersOnlyEvents(role)).toBe(true);
     expect(mayViewMembersOnlyEvents(null)).toBe(false);
@@ -70,7 +70,7 @@ describe("§NNN who sees an event for the members alone", () => {
   });
 });
 
-describe("§NNN a code is shown while it is not hidden and its last day has not passed", () => {
+describe("§552 a code is shown while it is not hidden and its last day has not passed", () => {
   it("reads the last day inclusively", () => {
     expect(codeShownToMembers({ hidden: false, validUntil: null }, "2026-10-01")).toBe(true);
     expect(codeShownToMembers({ hidden: false, validUntil: "2026-10-01" }, "2026-10-01")).toBe(true);
@@ -85,7 +85,7 @@ describe("§NNN a code is shown while it is not hidden and its last day has not 
   });
 });
 
-describe("§NNN the words: both languages, plain, short", () => {
+describe("§552 the words: both languages, plain, short", () => {
   const KEYS = [
     "Event.membersOnly",
     "Registration.membersAddressLabel",
@@ -122,7 +122,7 @@ describe("§NNN the words: both languages, plain, short", () => {
   });
 });
 
-describe("§NNN no public read path meets a members' row or a code (source walk)", () => {
+describe("§552 no public read path meets a members' row or a code (source walk)", () => {
   it("the condition every public event read shares withholds the members' events", () => {
     const repository = SOURCES.find((file) => file.path === "src/modules/events/repository.ts")!.text;
     expect(repository).toMatch(/const publishedAnyDateIn = \(locale: Locale\) =>\s*and\(publishedForMembersIn\(locale\), NOT_MEMBERS_ONLY\)/);

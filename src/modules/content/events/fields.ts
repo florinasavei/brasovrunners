@@ -751,7 +751,7 @@ export const eventFieldsSchema = z
      */
     isSpecial: z.boolean().optional().default(false),
     /**
-     * «Doar pentru membrii BVR» (§NNN): the event exists only for a signed-in member and the
+     * «Doar pentru membrii BVR» (§552): the event exists only for a signed-in member and the
      * backoffice. Absent means this caller is not editing it — the partners' discipline — so a
      * fixture or an older form never turns a members' event public by not mentioning it.
      */

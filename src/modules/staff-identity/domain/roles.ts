@@ -114,7 +114,7 @@ export function canPublishMembersPage(role: StaffRole): boolean {
 }
 
 /**
- * The members' discount codes (§NNN): adding one, the code itself, its link and its last day, hiding
+ * The members' discount codes (§552): adding one, the code itself, its link and its last day, hiding
  * it, moving it and deleting it — the Administrator's (and the Superadministrator's), who runs the
  * club (§450): a code is the club's word to a partner, not words on a page.
  */
@@ -123,7 +123,7 @@ export function canManageDiscountCodes(role: StaffRole): boolean {
 }
 
 /**
- * The words around a code (§NNN) — the partner's name and the description in both languages — the
+ * The words around a code (§552) — the partner's name and the description in both languages — the
  * rule of the Membri texts (`canEditMembersPage`, §524): the Redactor's and the Administrator's.
  */
 export function canEditDiscountCodeWords(role: StaffRole): boolean {

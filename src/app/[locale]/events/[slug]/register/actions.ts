@@ -90,7 +90,7 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
 
   const db = getDb();
   /*
-    An event for the members alone (§NNN): read for a members' session only, live. Anybody else is
+    An event for the members alone (§552): read for a members' session only, live. Anybody else is
     answered as for an event that does not exist — sent to the listing — and the service asks again
     for the session under the event's lock (`submitRegistration`, `origin.member`).
   */
@@ -129,13 +129,13 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
     refused on that box, with what was typed kept, like any other refusal.
   */
   const now = new Date();
-  // One person per account on a members' event (§NNN): no family sitting, whatever this browser holds.
+  // One person per account on a members' event (§552): no family sitting, whatever this browser holds.
   const priorSitting = member ? null : await readFamilySittingCookie();
   const liveSitting = sittingCookieLive(priorSitting, publicEvent.id, now) ? priorSitting : null;
   const familyMode = text(form, FAMILY_SITTING_FIELD) === "1" && liveSitting !== null;
   const typed = readRegistrationForm(form, locale);
   /*
-    The address: the account's own on a members' event (§NNN), whatever was posted — the form shows
+    The address: the account's own on a members' event (§552), whatever was posted — the form shows
     it and asks nothing; the sitting's on a family sitting's next form (§519); else what was typed twice.
   */
   const input = member
@@ -203,7 +203,7 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
         turnstile: verdict,
         secondAttempt: String(form.get(SECOND_ATTEMPT_FIELD) ?? "") === "1",
         honeypotOn: await honeypotIsOn(getDb(), new Date()),
-        // The members' session (§NNN): the only door to an event for the members alone.
+        // The members' session (§552): the only door to an event for the members alone.
         ...(member ? { member: { email: member.email } } : {}),
         /*
           Every public form may begin a sitting (§519). Before «Da» it is an ordinary form that only

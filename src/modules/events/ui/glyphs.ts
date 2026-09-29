@@ -136,7 +136,7 @@ export const GLYPHS = {
   // The club's discount on an external event's own fee (§394): a price tag, under the cost row.
   discount: LocalOfferIcon,
   partner: HandshakeIcon,
-  // «Doar pentru membrii BVR» (§NNN): the members' card, the glyph «Pagini» → «Membri» already wears
+  // «Doar pentru membrii BVR» (§552): the members' card, the glyph «Pagini» → «Membri» already wears
   // (§524) — only on the members' own page, the zone and the backoffice, never on a public surface.
   membersOnly: CardMembershipIcon,
   // The filter button's own glyph (§413) — a tuning icon, not the funnel `FilterListIcon`, and

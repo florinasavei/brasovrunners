@@ -367,7 +367,7 @@ function resolveTimes(fields: EventFieldsInput, switches: StartSwitches): Resolv
  * (`assertNobodyRegisteredForUndated`).
  */
 /**
- * «Doar pentru membrii BVR» (§NNN) and «Evenimentul principal» do not go together: the listing leads
+ * «Doar pentru membrii BVR» (§552) and «Evenimentul principal» do not go together: the listing leads
  * with its featured event (§470), a members' event is on no public list, and marking it would clear
  * the mark from the event that does lead (`clearFeaturedExcept`). Refused on the featured box.
  */
@@ -375,7 +375,7 @@ function assertMembersOnlyAllowed(
   fields: Pick<EventFieldsInput, "membersOnly" | "featured">,
   current: Pick<EditableEvent, "membersOnly"> | null,
 ): void {
-  // A save that does not post the switch keeps the stored one (§NNN), so the stored one is asked.
+  // A save that does not post the switch keeps the stored one (§552), so the stored one is asked.
   const membersOnly = fields.membersOnly ?? current?.membersOnly ?? false;
   if (membersOnly && fields.featured) {
     throw new DomainError("VALIDATION_ERROR", "featured: an event for the members alone cannot lead the public listing", ["featured"]);
@@ -576,7 +576,7 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
     offersGroupRunDeclaration: fields.offersGroupRunDeclaration === true && groupRunDeclarationKeyFor(fields) !== null,
     featured: fields.featured,
     isSpecial: fields.isSpecial,
-    // «Doar pentru membrii BVR» (§NNN), by the partners' discipline: a caller that said nothing
+    // «Doar pentru membrii BVR» (§552), by the partners' discipline: a caller that said nothing
     // writes nothing. Turned on, it withdraws the event from every public read at once and cancels
     // nothing; turned off, the save's cache expiry puts it everywhere at once (§333).
     ...(fields.membersOnly === undefined ? {} : { membersOnly: fields.membersOnly }),
@@ -1750,7 +1750,7 @@ const SERIES_COLUMNS = [
   // The self-declaration offered on the run's page (§394), like the night override: "from this
   // date" carries it to every later Tâmpa run of the series.
   "offersGroupRunDeclaration",
-  // Who sees the event (§NNN): "from this date" makes a weekly run the members' on every later date.
+  // Who sees the event (§552): "from this date" makes a weekly run the members' on every later date.
   "membersOnly",
   "registrationMode",
   // «Se deschid în curând» (§451) travels with the opening date it stands in for, which the
@@ -2744,7 +2744,7 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     // The self-declaration travels with the route too (§393): a copy of the trail run, and every
     // date a series makes from it, offers the same declaration.
     offersGroupRunDeclaration: source.offersGroupRunDeclaration,
-    // A copy of a members' event is the members' too (§NNN), and so is every date its series makes:
+    // A copy of a members' event is the members' too (§552), and so is every date its series makes:
     // nothing becomes public by being copied.
     membersOnly: source.membersOnly,
     featured: false,
