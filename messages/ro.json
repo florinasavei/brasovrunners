@@ -5847,6 +5847,8 @@
     "displayNameHelp": "Implicit, pe listă și în rezultate apare numele tău complet; dacă preferi altceva, de exemplu „Ana P.”, scrie-l aici.",
     "birthDate": "Data nașterii",
     "birthDateEcho": "{date} · {age} în ziua evenimentului",
+    "birthDatePlaceholder": "ZZ.LL.AAAA",
+    "birthDateUnreadable": "Scrie data ca zi, lună, an: 11.05.1990.",
     "ageRule": {
       "minimumAndGuardian": "Vârsta minimă: {age}. Sub 18 ani, înscrierea se face de un părinte sau tutore, cu acordul acestuia.",
       "minimumAndConsent": "Vârsta minimă: {age}. Sub 18 ani, participarea se face cu acordul unui părinte.",

@@ -48,6 +48,53 @@ export function isDateValue(value: string): boolean {
   return probe.getUTCFullYear() === year && probe.getUTCMonth() === month - 1 && probe.getUTCDate() === day;
 }
 
+/*
+  The birth-date box (§NNN, applying §345's day-first order to the public registration form): a
+  typed text box, not the picker — the picker is kept off every public page
+  (`pickers-backoffice-only.test.ts`), and a birth date decades back is faster typed than paged
+  to. It shows what the backoffice's picker shows, `DATE_DISPLAY_FORMAT`, and reads what it is
+  given day first, whatever language the browser speaks: «05/11/1990» is 5 November.
+*/
+
+/** Day, month, year, with any one separator a keyboard offers: «11.05.1990», «11/5/1990», «11-05-1990», «11 05 1990». */
+const TYPED_DAY_FIRST = /^(\d{1,2})\s*[./\-, ]\s*(\d{1,2})\s*[./\-, ]\s*(\d{4})$/;
+/** Eight digits and nothing else — a phone's numeric keypad has no separator: «11051990». */
+const TYPED_DIGITS = /^(\d{2})(\d{2})(\d{4})$/;
+
+/**
+ * The typed box's HTML `pattern`, for a browser without JavaScript: a day-first date, eight digits
+ * or the posted `YYYY-MM-DD` (autofill, a pasted value). Browsers compile it with the `v` flag,
+ * which wants `/` and `-` escaped inside a class; the unit test compiles it that way.
+ */
+export const TYPED_DATE_PATTERN = "\\s*(?:\\d{1,2}\\s*[.\\/\\-, ]\\s*\\d{1,2}\\s*[.\\/\\-, ]\\s*\\d{4}|\\d{8}|\\d{4}-\\d{2}-\\d{2})\\s*";
+
+/**
+ * What a typed date is: `YYYY-MM-DD`, or "" while the box holds no real day yet («11.05», «31.02.1990»,
+ * «1990»). The posted shape is read as itself, so a value the server gave back, a browser's
+ * autofill or a test's `fill("1990-05-17")` means what it says.
+ */
+export function readTypedDate(typed: string): string {
+  const text = typed.trim();
+  if (isDateValue(text)) return text;
+  const parts = TYPED_DAY_FIRST.exec(text) ?? TYPED_DIGITS.exec(text);
+  if (!parts) return "";
+  const value = `${parts[3]}-${parts[2].padStart(2, "0")}-${parts[1].padStart(2, "0")}`;
+  return isDateValue(value) ? value : "";
+}
+
+/** What the server reads from the typed box: the date as posted, or what was typed, trimmed, for the schema to refuse. */
+export function normalizeTypedDate(typed: string): string {
+  return readTypedDate(typed) || typed.trim();
+}
+
+/** What the typed box shows for a value: `11.05.1990` (`DATE_DISPLAY_FORMAT`), or the text as it was when it is no date. */
+export function shownTypedDate(value: string): string {
+  const date = readTypedDate(value);
+  if (!date) return value;
+  const [year, month, day] = date.split("-");
+  return `${day}.${month}.${year}`;
+}
+
 export function isTimeValue(value: string): boolean {
   return TIME_VALUE.test(value);
 }

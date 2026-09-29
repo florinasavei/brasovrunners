@@ -5847,6 +5847,8 @@
     "displayNameHelp": "By default the list and the results show your full name; if you would rather show something else, such as “Ana P.”, write it here.",
     "birthDate": "Date of birth",
     "birthDateEcho": "{date} · {age} on the event day",
+    "birthDatePlaceholder": "DD.MM.YYYY",
+    "birthDateUnreadable": "Type the date as day, month, year: 11.05.1990.",
     "ageRule": {
       "minimumAndGuardian": "Minimum age: {age}. Under 18, a parent or legal guardian registers the runner, with their consent.",
       "minimumAndConsent": "Minimum age: {age}. Under 18, a parent's consent is needed to take part.",

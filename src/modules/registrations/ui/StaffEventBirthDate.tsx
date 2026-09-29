@@ -3,9 +3,9 @@
 import MenuItem from "@mui/material/MenuItem";
 import { createContext, type ReactNode, useContext, useState } from "react";
 import RecallField, { useRecall } from "@/shared/forms/recall";
-import { effectiveMinimumAge, latestBirthDateFor } from "../domain/age";
+import { effectiveMinimumAge, latestBirthDateFor, yearsPhrase } from "../domain/age";
 import { BIB_NUMBER_MAX, type SpareState } from "../domain/spare-bibs";
-import BirthDateEcho from "./BirthDateEcho";
+import BirthDateField from "./BirthDateField";
 import GuardianForMinor from "./GuardianForMinor";
 
 /**
@@ -101,24 +101,52 @@ export function StaffEventSelect({
 }
 
 /**
- * Native — `type="date"` — like the public form's box, never the backoffice's MUI picker
- * (`shared/forms/pickers`, `DECISIONS.md` §345): a birth date is decades back, and paging a
- * calendar month by month to reach 1985 is slower than typing four digits for the year.
+ * The public form's own box (`BirthDateField`, §NNN): typed day first, «11.05.1990», never the
+ * backoffice's MUI picker (`shared/forms/pickers`, `DECISIONS.md` §345) — a birth date is decades
+ * back, and paging a calendar month by month to reach 1985 is slower than typing it. Its helper
+ * is the desk's rule and, once a date and an event are chosen, the date in words with the age on
+ * that event's day (§467), under the box rather than drawn over its edge. Re-mounted with every
+ * refusal, as the kept form's boxes are (§315), and it comes back holding what was posted.
+ *
+ * `words.tooYoung` carries `{age}`, filled here with the chosen event's own minimum (§329).
  */
-export function StaffBirthDateField({ label, helperText }: { label: string; helperText: string }) {
+export function StaffBirthDateField({
+  label,
+  helperText,
+  locale,
+  words,
+}: {
+  label: string;
+  helperText: string;
+  locale: string;
+  words: { echoTemplate: string; placeholder: string; unreadable: string; tooYoung: string };
+}) {
+  const recall = useRecall();
   const { selected, eventDays, eventMinAges, today, earliest } = useContext(ChoiceContext);
   const day = selected ? eventDays[selected] : undefined;
   // The chosen event's own minimum (§329), never under fourteen (§515); with no event chosen, today.
   const minAge = effectiveMinimumAge(selected ? eventMinAges[selected] : undefined);
   const youngest = day ? latestBirthDateFor(minAge, day) : today;
   const max = youngest < today ? youngest : today;
+  const named = recall.named("birthDate");
   return (
-    <RecallField
+    <BirthDateField
+      key={recall.generation}
+      id={recall.idOf("birthDate")}
       name="birthDate"
-      type="date"
       label={label}
-      helperText={helperText}
-      slotProps={{ inputLabel: { shrink: true }, htmlInput: { min: earliest, max } }}
+      defaultValue={recall.value("birthDate") ?? ""}
+      error={named}
+      errorText={named && recall.fieldError ? recall.fieldError : undefined}
+      help={helperText}
+      min={earliest}
+      max={max}
+      eventDay={day}
+      locale={locale}
+      echoTemplate={words.echoTemplate}
+      placeholder={words.placeholder}
+      unreadable={words.unreadable}
+      tooYoung={words.tooYoung.replace("{age}", yearsPhrase(minAge, locale))}
     />
   );
 }
@@ -181,26 +209,5 @@ export function StaffGuardian({ children }: { children: ReactNode }) {
     <GuardianForMinor key={recall.generation} birthDateId={recall.idOf("birthDate")} forceOpen={recall.named("guardianName")}>
       {children}
     </GuardianForMinor>
-  );
-}
-
-/**
- * The public form's read-back under the desk's birth-date box (§467): the typed day in words and
- * the age on the chosen event's own day, following the event select. Re-mounted with every
- * refusal, as `StaffGuardian` is, because the kept form re-mounts its boxes then (§315).
- */
-export function StaffBirthDateEcho({ locale, template }: { locale: string; template: string }) {
-  const recall = useRecall();
-  const { selected, eventDays } = useContext(ChoiceContext);
-  const day = selected ? eventDays[selected] : undefined;
-  if (!day) return null;
-  return (
-    <BirthDateEcho
-      key={recall.generation}
-      birthDateId={recall.idOf("birthDate")}
-      locale={locale}
-      eventDay={day}
-      template={template}
-    />
   );
 }
