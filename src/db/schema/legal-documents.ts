@@ -99,10 +99,34 @@ export const legalDocuments = pgTable(
       onDelete: "set null",
     }),
 
+    /**
+     * «Șterge» on a version somebody relied on (`DECISIONS.md` §NNN, amending §151 and §556): the
+     * version leaves the club's list and can never be put in force again, and its row, its number
+     * and its text stay — a signature, an event or a registration still points at them, and the
+     * signed PDF still renders them. Retire-and-hide, never a destruction: a signed version is the
+     * club's proof of what a person accepted (AGENTS.md §10.8).
+     *
+     * A deleted version is always a withdrawn one too (the CHECK below), so every reader that
+     * already skips a withdrawn version — the text in force, the effective dates, the event
+     * editor's choices, the templates' «Șablon nou» — skips it without a second condition. Only the
+     * backoffice's list reads these three columns, to move the row into «Versiuni șterse».
+     */
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
+    // `SET NULL`, like the other staff references: removing an account keeps the record of the act.
+    deletedByStaffUserId: uuid("deleted_by_staff_user_id").references(() => staffUsers.id, {
+      onDelete: "set null",
+    }),
+    // Why, as the Administrator typed it (at most 200 characters): shown in «Versiuni șterse».
+    deletedReason: text("deleted_reason"),
+
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     unique("legal_documents_key_version_unique").on(t.key, t.version),
+    check(
+      "legal_documents_deleted_is_withdrawn",
+      sql`${t.deletedAt} is null or (${t.withdrawnAt} is not null and ${t.deletedReason} is not null)`,
+    ),
     check("legal_documents_version_positive", sql`${t.version} >= 1`),
     check(
       "legal_documents_hash_is_sha256_hex",

@@ -57,6 +57,18 @@ export function batchConfirmationPhrase(approvedCount: number): string {
   return `DELETE ${approvedCount}`;
 }
 
+/**
+ * The second step of «Șterge» on a version somebody relied on (§NNN): the version's number, typed
+ * by hand — `6`, nothing else. Surrounding space is forgiven; a `v` in front is too, because the
+ * list writes «v6» in places and a person copying it is not wrong. Anything else refuses.
+ *
+ * Only the number, not `GDPR 6`, because the page already names the text and the step asks one
+ * thing a thumb can type on a phone without switching keyboards.
+ */
+export function matchesVersionNumber(typed: string, version: number): boolean {
+  return typed.trim().replace(/^v\s*/i, "") === String(version);
+}
+
 /** `matchesConfirmation`'s forgiveness — case and space — for the batch phrase. */
 export function matchesBatchConfirmation(typed: string, approvedCount: number): boolean {
   return normalize(typed) === batchConfirmationPhrase(approvedCount).toUpperCase();

@@ -109,7 +109,9 @@ export default async function LegalDocumentVersionPage({ params, searchParams }:
           {t(`legal.keys.${document.key}`)} · v{document.version}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          {document.withdrawnAt
+          {document.deletedAt
+            ? t("legal.stateLabel.deleted")
+            : document.withdrawnAt
             ? t("legal.withdrawn")
             : document.isApproved
               ? t("legal.approved")
@@ -216,7 +218,20 @@ export default async function LegalDocumentVersionPage({ params, searchParams }:
             difference between withdrawal and deletion being legible: the text is still on this
             page, unchanged, and the page has to explain why nothing else offers it any more.
           */}
-          {document.withdrawnAt && (
+          {/*
+            A version deleted from the list (§NNN), reached from «Versiuni șterse»: its text is
+            still here, unchanged, because somebody signed it — and the page says why nothing
+            offers it any more, and that it cannot come back into force.
+          */}
+          {document.deletedAt && (
+            <Alert severity="warning" data-testid="legal-deleted-notice">
+              {t("legal.deletedNotice", {
+                date: formatDay(document.deletedAt, { locale, timeZone: CLUB_TIME_ZONE, style: "long", position: "inline" }),
+                reason: document.deletedReason ?? "—",
+              })}
+            </Alert>
+          )}
+          {document.withdrawnAt && !document.deletedAt && (
             <Alert severity="warning">
               {t("legal.withdrawnNotice", {
                 date: formatDay(document.withdrawnAt, { locale, timeZone: CLUB_TIME_ZONE, style: "long", position: "inline" }),

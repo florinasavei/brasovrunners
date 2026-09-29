@@ -12,6 +12,7 @@ import ContactMailIcon from "@mui/icons-material/ContactMail";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DataUsageIcon from "@mui/icons-material/DataUsage";
 import DateRangeIcon from "@mui/icons-material/DateRange";
+import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
 import DrawIcon from "@mui/icons-material/Draw";
 import EventIcon from "@mui/icons-material/Event";
 import EventRepeatIcon from "@mui/icons-material/EventRepeat";
@@ -134,6 +135,8 @@ export const PANEL_GLYPHS = {
   newsletter: NewspaperIcon,
   // The club and the platform.
   legal: GavelIcon,
+  // «Versiuni șterse» (§NNN): the versions taken off the list, their text kept — the swept bin.
+  deletedVersions: DeleteSweepIcon,
   invite: PersonAddIcon,
   members: GroupAddIcon,
   appearance: PaletteIcon,

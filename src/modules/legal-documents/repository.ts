@@ -9,6 +9,7 @@ import {
   type LegalDocumentKey,
 } from "@/db/schema/legal-documents";
 import { registrations } from "@/db/schema/registrations";
+import { staffUsers } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { routing, type Locale } from "@/i18n/routing";
 import type { LegalDocumentTranslationInput } from "./domain/content-hash";
@@ -378,6 +379,9 @@ export async function findCurrentApprovedVersionId<T extends Record<string, unkn
  * `registrations.privacy_notice_version` is a plain integer with no foreign key; if version 4
  * were removed and the next draft became 4 again, every registration that recorded "notice 4"
  * would become a consent to words written after it was given. The number stays taken.
+ *
+ * A version deleted from the list (§NNN) keeps its row, so it counts here as well: the next draft
+ * continues the sequence and never reuses a deleted number.
  */
 export async function findLatestVersion<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -466,6 +470,11 @@ export async function retireVersionNumber<T extends Record<string, unknown>>(
  * Withdrawn versions are gone from the list, and no event loses its selected value by it: an
  * event pointing at a version is one of the three counts that refuse withdrawal, so a withdrawn
  * version is by construction one nothing here had chosen.
+ *
+ * Except one deleted from the list (§NNN), which is withdrawn too and may be an event's choice: the
+ * event keeps pointing at it, the editor posts the saved id as it was (`RaceDeclarationSelect`), and
+ * what a participant signs is read by the event's kind of course, never by that id
+ * (`findEventDeclaration`) — so nothing a runner sees changes, and the editor asks for a new choice.
  */
 export async function listApprovedVersions<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -546,6 +555,14 @@ export type LegalDocumentVersionRow = {
    */
   withdrawnAt: Date | null;
   withdrawnByStaffUserId: string | null;
+  /**
+   * «Șterge» on a version somebody relied on (§NNN): when, by whom (the staff member's display name,
+   * null once the account is gone) and why. Such a row is never among the list's versions — it is
+   * in «Versiuni șterse» — and, withdrawn as well, never resolved, offered or counted as in force.
+   */
+  deletedAt: Date | null;
+  deletedByName: string | null;
+  deletedReason: string | null;
   locales: string[];
   acceptanceCount: number;
   eventCount: number;
@@ -579,6 +596,9 @@ export async function listVersionsForBackoffice<T extends Record<string, unknown
       contentSha256: legalDocuments.contentSha256,
       withdrawnAt: legalDocuments.withdrawnAt,
       withdrawnByStaffUserId: legalDocuments.withdrawnByStaffUserId,
+      deletedAt: legalDocuments.deletedAt,
+      deletedByName: sql<string | null>`(select ${staffUsers.displayName} from ${staffUsers} where ${staffUsers.id} = ${legalDocuments.deletedByStaffUserId})`,
+      deletedReason: legalDocuments.deletedReason,
       locales: sql<string[]>`coalesce(array_agg(distinct ${legalDocumentTranslations.locale}::text) filter (where ${legalDocumentTranslations.locale} is not null), '{}')`,
       // Every signature against this version: a race's acceptances, and a group run's optional
       // self-declarations (§393) — both are somebody relying on these exact words.
@@ -698,6 +718,8 @@ export async function findVersionWithTranslations<T extends Record<string, unkno
       isApproved: boolean;
       effectiveAt: Date;
       withdrawnAt: Date | null;
+      deletedAt: Date | null;
+      deletedReason: string | null;
       contentSha256: string;
       translations: Array<{ locale: string; title: string; body: unknown }>;
     }
@@ -713,6 +735,10 @@ export async function findVersionWithTranslations<T extends Record<string, unkno
       // Read but never filtered on: this is the page somebody lands on from the withdrawn fold,
       // and a version that renders as though nothing happened to it would be a lie of omission.
       withdrawnAt: legalDocuments.withdrawnAt,
+      // The same for a version deleted from the list (§NNN): its text is still what somebody
+      // signed, so it is still read here — by «Versiuni șterse»'s link and by the PDF route.
+      deletedAt: legalDocuments.deletedAt,
+      deletedReason: legalDocuments.deletedReason,
       contentSha256: legalDocuments.contentSha256,
     })
     .from(legalDocuments)

@@ -1096,7 +1096,12 @@
       "MEMBERS_ON_TEAM": "Sunt deja în echipă: {addresses}. Scoate-le din listă. Nu s-a adăugat nimeni.",
       "LEGAL_BATCH_CONFIRMATION_MISMATCH": "Confirmarea scrisă nu este cea cerută. Nu s-a șters nimic — scrie exact textul de sub casetă, de exemplu „DELETE 2”.",
       "LEGAL_BATCH_VERSION_BLOCKED": "Nu s-a șters nimic: între timp, {version} nu se mai poate șterge. Reîncarcă pagina: apare la „Rămân”, cu motivul; celelalte se șterg la apăsarea următoare.",
-      "SEND_NOW_ALLOWANCE_SPENT": "Nu s-a trimis nimic: limita planului Mailgun pe azi este atinsă. Alege «Pune la coadă»; emailul pleacă după resetare."
+      "SEND_NOW_ALLOWANCE_SPENT": "Nu s-a trimis nimic: limita planului Mailgun pe azi este atinsă. Alege «Pune la coadă»; emailul pleacă după resetare.",
+      "LEGAL_NUMBER_MISMATCH": "Numărul scris nu este al acestei versiuni. Nu s-a șters nimic — scrie doar numărul, de exemplu „6”.",
+      "LEGAL_RETIRE_NEEDS_REASON": "Scrie motivul, între 3 și 200 de caractere. Rămâne lângă versiune, în «Versiuni șterse».",
+      "LEGAL_NOTHING_DEPENDS": "Nu s-a șters nimic: între timp nu mai depinde nimic de această versiune. Reîncarcă pagina și șterge-o definitiv.",
+      "LEGAL_RETIRE_IN_FORCE": "Nu s-a șters nimic: aceasta este versiunea în vigoare. Aprobă întâi versiunea următoare, apoi o poți șterge.",
+      "LEGAL_ALREADY_DELETED": "Versiunea a fost deja ștearsă din listă. Textul ei rămâne în arhivă."
     },
     "editor": {
       "startsAt": "Începutul evenimentului",
@@ -2140,7 +2145,7 @@
       "legalDraftCreated": "Ciorna a fost creată.",
       "legalDraftSaved": "Ciorna a fost salvată.",
       "legalVersionApproved": "Versiunea a fost aprobată și este acum publică.",
-      "referencedFull": "{signatures} semnături · {events} evenimente · {acknowledgements} înscrieri",
+      "referencedFull": "{signatures} · {events} · {acknowledgements}",
       "termsRegistrations": "Înscrieri cât a fost în vigoare: {count}",
       "termsRegistrationsSoFar": "Înscrieri de când e în vigoare: {count}",
       "delete": "Șterge ciorna",
@@ -2148,7 +2153,7 @@
       "deleteTitle": "Ștergi ciorna?",
       "deleteBody": "Ciorna și textul ei în ambele limbi dispar definitiv. Nimeni nu a văzut-o: o ciornă nu apare public și nimeni nu a semnat-o.",
       "deleteBlockedApproved": "Aprobată — nu se poate șterge. Ce a publicat clubul rămâne în evidență.",
-      "deleteBlockedReferenced": "Nu se poate șterge: {signatures} semnături, {events} evenimente și {acknowledgements} înscrieri depind de această versiune.",
+      "deleteBlockedReferenced": "Nu se poate șterge: {signatures}, {events} și {acknowledgements} depind de această versiune.",
       "deleteBlockedTermsAccepted": "Nu se poate șterge definitiv: cât a fost în vigoare ({window}) s-au trimis înscrieri sau s-au semnat declarații ({count}), iar niciuna nu reține ce versiune a termenilor a fost acceptată.",
       "legalVersionDeleted": "Ciorna a fost ștearsă.",
       "newFromTemplateComplete": "Precompletat cu textul din șablon și cu datele clubului, complet. Citește tot, salvează ciorna, apoi aprob-o din pagina ei.",
@@ -2173,7 +2178,7 @@
       "withdrawTitle": "Retragi versiunea?",
       "withdrawBody": "Nu se șterge nimic: versiunea rămâne în evidență, cu numărul ei. Doar nu mai e oferită: nu mai apare public și nu se mai alege pe un eveniment.",
       "withdrawBlockedCurrent": "În vigoare acum — nu se poate retrage. Aprobă întâi versiunea următoare; apoi aceasta se poate retrage.",
-      "withdrawBlockedReferenced": "Nu se poate retrage: {signatures} semnături, {events} evenimente și {acknowledgements} înscrieri depind de această versiune.",
+      "withdrawBlockedReferenced": "Nu se poate retrage: {signatures}, {events} și {acknowledgements} depind de această versiune.",
       "withdrawn": "Retrasă",
       "withdrawnOn": "Retrasă {date}",
       "withdrawnNotice": "Versiunea a fost retrasă {date}. Textul rămâne aici, în evidență, cu numărul lui, dar nu mai apare public și nu se mai poate alege pe un eveniment.",
@@ -2213,7 +2218,7 @@
         "seriesPlace": "Doar în declarațiile alergărilor de grup: locul de plecare obișnuit al seriei",
         "promotionalMaterials": "Doar în nota de confidențialitate: bifa opțională pentru oferte și beneficii de la club și de la partenerii săi. Fără el în nota în vigoare, formularul nu o oferă"
       },
-      "removeBlockedReferenced": "Nu se poate nici retrage, nici șterge: {signatures} semnături, {events} evenimente și {acknowledgements} înscrieri depind de această versiune.",
+      "removeBlockedReferenced": "Nu se poate nici retrage, nici șterge definitiv: {signatures}, {events} și {acknowledgements} depind de ea. «Șterge» de pe rândul ei o scoate din listă.",
       "removeBlockedCurrent": "În vigoare acum — nu se poate nici retrage, nici șterge. Aprobă întâi versiunea următoare; apoi aceasta se poate scoate.",
       "deletePermanently": "Șterge definitiv",
       "deleteMeans": "Ștergerea este definitivă: textul dispare cu totul, iar numărul {version} rămâne retras pentru totdeauna.",
@@ -2235,7 +2240,7 @@
         "reasonHelp": "Rămâne în jurnal. Este singurul lucru care supraviețuiește ștergerii.",
         "action": "Șterge definitiv versiunea",
         "blockedDraft": "Aceasta este o ciornă, nu o versiune aprobată. Se șterge din listă, cu butonul de pe rândul ei, fără confirmare scrisă: nimeni nu a văzut-o și numărul ei nu a fost dat nimănui.",
-        "blockedReferenced": "Nu se poate șterge: {signatures} semnături, {events} evenimente și {acknowledgements} înscrieri depind de această versiune. Ce au acceptat oamenii rămâne.",
+        "blockedReferenced": "Nu se poate șterge definitiv: {signatures}, {events} și {acknowledgements} depind de această versiune. Ce au acceptat oamenii rămâne.",
         "blockedCurrent": "Aceasta este versiunea în vigoare acum. Aprobă întâi versiunea următoare; apoi aceasta se poate retrage sau șterge.",
         "blockedTermsAccepted": "Nu se poate șterge: cât a fost în vigoare ({window}) s-au trimis înscrieri sau s-au semnat declarații ({count}), care s-ar fi putut baza pe ea.",
         "termsWithdrawInstead": "Retragerea este ce se poate face: versiunea rămâne în evidență, cu numărul ei, și nu se mai oferă nimănui.",
@@ -2329,7 +2334,8 @@
       },
       "stateLabel": {
         "inForce": "În vigoare",
-        "superseded": "Înlocuită"
+        "superseded": "Înlocuită",
+        "deleted": "Ștearsă din listă"
       },
       "groups": {
         "general": "Documente generale",
@@ -2369,7 +2375,58 @@
         "body": "Textul în vigoare rămâne pe site până aprobi ciorna. Cele patru fapte sunt denumirea clubului, CIF-ul, sediul și adresa de contact."
       },
       "tableCaptionOf": "Versiunile textului {kind}, cu starea și ce depinde de fiecare",
-      "promoMissing": "Nota în vigoare nu descrie încă ofertele și beneficiile, deci formularul nu oferă bifa. Aprobă o notă nouă din șablon."
+      "promoMissing": "Nota în vigoare nu descrie încă ofertele și beneficiile, deci formularul nu oferă bifa. Aprobă o notă nouă din șablon.",
+      "counted": {
+        "signatures": {
+          "one": "{count} semnătură",
+          "few": "{count} semnături",
+          "other": "{count} de semnături"
+        },
+        "events": {
+          "one": "{count} eveniment",
+          "few": "{count} evenimente",
+          "other": "{count} de evenimente"
+        },
+        "acknowledgements": {
+          "one": "{count} înscriere",
+          "few": "{count} înscrieri",
+          "other": "{count} de înscrieri"
+        }
+      },
+      "deleteAction": "Șterge",
+      "retireOffered": "Nu se poate retrage: {signatures}, {events} și {acknowledgements} depind de ea. «Șterge» o scoate din listă; textul rămâne pentru cine l-a semnat.",
+      "retireTermsOffered": "Cât a fost în vigoare ({window}) s-au trimis înscrieri sau s-au semnat declarații ({count}). «Șterge» o scoate din listă; textul rămâne.",
+      "legalVersionRetired": "{phrase} a fost ștearsă din listă. Textul ei rămâne în arhivă, pentru cine l-a semnat.",
+      "deletedNotice": "Ștearsă din listă {date}. Motivul: {reason}. Textul rămâne aici pentru cine l-a semnat; versiunea nu mai poate fi pusă în vigoare.",
+      "retire": {
+        "title": "Ștergi {document}, versiunea {version}?",
+        "stepOne": "Pasul 1 din 2: ce se întâmplă",
+        "consequence": "{signatures}, {events} și {acknowledgements} rămân valabile, iar textul rămâne în arhivă. Versiunea dispare din listă și nu mai poate fi pusă în vigoare.",
+        "termsKept": "Înscrierile din perioada în care a fost în vigoare ({count}) păstrează ce au acceptat.",
+        "stillShown": "Pagina înscrierii, biroul de concurs și PDF-ul semnat arată în continuare acest text. Nu se poate anula.",
+        "reasonLabel": "Motivul",
+        "reasonHelp": "Obligatoriu, cel mult 200 de caractere. Rămâne lângă versiune, în «Versiuni șterse».",
+        "continue": "Continuă",
+        "stepTwo": "Pasul 2 din 2: confirmă",
+        "numberLabel": "Numărul versiunii",
+        "numberHelp": "Scrie „{version}”, ca să confirmi. Orice alt număr oprește ștergerea.",
+        "action": "Șterg versiunea {version}",
+        "back": "Înapoi",
+        "alreadyDeleted": "Această versiune a fost deja ștearsă din listă, {date}. Textul ei rămâne în arhivă."
+      },
+      "deletedFold": {
+        "title": "Versiuni șterse",
+        "count": {
+          "one": "{count} versiune",
+          "few": "{count} versiuni",
+          "other": "{count} de versiuni"
+        },
+        "intro": "Scoase din listă, cu textul păstrat pentru cine l-a semnat. Nu se pot readuce, ca să nu intre din greșeală în vigoare; pentru același text, fă o versiune nouă.",
+        "row": "Versiunea {version} · ștearsă {date} de {who}",
+        "whoGone": "un cont șters între timp",
+        "reason": "Motivul: {reason}",
+        "read": "Citește textul"
+      }
     },
     "tasks": {
       "title": "Ce mai este de făcut",
@@ -7091,6 +7148,7 @@
       "legalVersionDeleted": "Ciornă ștearsă.",
       "legalVersionWithdrawn": "Versiunea a fost retrasă.",
       "legalVersionErased": "Versiunea a fost ștearsă definitiv.",
+      "legalVersionRetired": "Versiunea a fost ștearsă din listă; textul rămâne în arhivă.",
       "albumCreated": "Albumul a fost creat.",
       "album": "Albumul a fost salvat.",
       "photoRemoved": "Fotografia a fost ștearsă.",
