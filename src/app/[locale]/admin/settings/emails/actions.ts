@@ -42,8 +42,9 @@ export async function updateEmailPlanAction(_previous: FormOutcome | null, form:
   const number = (name: string): number | null => {
     const value = form.get(name);
     if (typeof value !== "string" || value.trim() === "") return null;
-    const parsed = Number(value);
-    return Number.isFinite(parsed) ? Math.round(parsed) : Number.NaN;
+    // Plain text boxes: only a whole number of digits counts; "12.7", "1e3" and "0x10" are refused, never rounded.
+    const trimmed = value.trim();
+    return /^\d+$/.test(trimmed) ? Number(trimmed) : Number.NaN;
   };
 
   try {

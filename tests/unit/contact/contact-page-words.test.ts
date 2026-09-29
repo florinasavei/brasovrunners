@@ -62,7 +62,11 @@ vi.mock("@/modules/public-cache/reads", () => ({
 }));
 vi.mock("@/modules/content/faq/on-site", () => ({ faqOnSite: async () => true }));
 vi.mock("@/modules/registrations/form-draft", () => ({ readFormDraft: async () => null }));
-vi.mock("@/app/[locale]/contact/actions", () => ({ submitContactAction: async () => undefined, submitNewsletterAction: async () => undefined }));
+vi.mock("@/app/[locale]/contact/actions", () => ({
+  submitContactAction: async () => undefined,
+  submitNewsletterAction: async () => undefined,
+  requestNewsletterManageLinkAction: async () => undefined,
+}));
 vi.mock("@/shared/ui/Wordmark", () => ({ default: () => null }));
 
 const { NextIntlClientProvider } = await import("next-intl");

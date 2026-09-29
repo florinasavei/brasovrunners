@@ -17,6 +17,7 @@ import type { EmailPlanState } from "@/modules/notifications/email-plan";
 import { forecastCopiesNote } from "@/modules/notifications/domain/email-transport";
 import { COPIED_PARTICIPANT_MESSAGES_PER_COMPLETED_REGISTRATION, type EmailVolumeToday } from "@/modules/notifications/volume";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
+import { TYPED_CEILINGS_ATTRIBUTE, typedCeilingsHiddenSelector } from "@/modules/notifications/ui/typed-ceilings";
 
 type Props = {
   locale: Locale;
@@ -148,7 +149,8 @@ export default async function EmailPlanPanel({ locale, plan, volume, mayEdit, op
         data-testid="email-plan-form"
       >
         <input type="hidden" name="uiLocale" value={locale} />
-        <Stack spacing={1.5} sx={{ maxWidth: 520 }}>
+        {/* The typed boxes show only while «Altceva» is chosen (§551): CSS on the select's own state. */}
+        <Stack spacing={1.5} sx={{ maxWidth: 520, [typedCeilingsHiddenSelector()]: { display: "none" } }}>
           <RecallField
             select
             name="plan"
@@ -174,23 +176,26 @@ export default async function EmailPlanPanel({ locale, plan, volume, mayEdit, op
               );
             })}
           </RecallField>
-          <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
+          {/*
+            Plain text with a numeric keyboard, not `type="number"` with min/max: a box hidden under
+            a catalogue plan must never hold a constraint the browser would block the save on with
+            nothing in view to point at. The service checks the numbers and names the box (§47).
+          */}
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} {...{ [TYPED_CEILINGS_ATTRIBUTE]: "" }} data-testid="email-plan-typed-ceilings">
             <RecallField
               name="dailyAllowance"
-              type="number"
               label={t("emails.plan.dailyAllowance")}
               defaultValue={plan.plan === "CUSTOM" && plan.dailyAllowance !== null ? plan.dailyAllowance : ""}
               size="small"
-              slotProps={{ htmlInput: { min: 1, max: 1_000_000, inputMode: "numeric" } }}
+              slotProps={{ htmlInput: { inputMode: "numeric", maxLength: 8 } }}
               fullWidth
             />
             <RecallField
               name="monthlyAllowance"
-              type="number"
               label={t("emails.plan.monthlyAllowance")}
               defaultValue={plan.plan === "CUSTOM" && plan.monthlyAllowance !== null ? plan.monthlyAllowance : ""}
               size="small"
-              slotProps={{ htmlInput: { min: 1, max: 10_000_000, inputMode: "numeric" } }}
+              slotProps={{ htmlInput: { inputMode: "numeric", maxLength: 9 } }}
               fullWidth
             />
           </Stack>

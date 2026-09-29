@@ -4,6 +4,7 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
+import type { ReactNode } from "react";
 import { previewNewsletterAction, sendNewsletterAction, withdrawNewsletterAddressAction } from "@/app/[locale]/admin/newsletter/actions";
 import { countForm } from "@/i18n/count-form";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
@@ -15,11 +16,21 @@ import ActionForm from "@/shared/forms/ActionForm";
 import RecallField, { RecallRadio } from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
+import LocaleTabPanels from "@/shared/ui/LocaleTabPanels";
 import Panel from "@/shared/ui/Panel";
+import { EMPTY_DOC } from "@/modules/content/rich-text/domain/schema";
+import RichTextEditor from "@/modules/content/rich-text/ui/RichTextEditor";
+import { richTextEditorLabels } from "@/modules/content/rich-text/ui/labels";
 import { NEWSLETTER_BODY_MAX, NEWSLETTER_SUBJECT_MAX } from "../domain/message";
 import { SENDABLE_TOPICS } from "../domain/topics";
 import type { NewsletterAudience, NewsletterSendRow } from "../service";
 import NewsletterPreview from "./NewsletterPreview";
+
+/** The composer's two languages, as the tabs draw them (§550). */
+const LANGUAGES = [
+  { locale: "ro", suffix: "Ro", label: "langRo" },
+  { locale: "en", suffix: "En", label: "langEn" },
+] as const;
 
 type Props = {
   locale: Locale;
@@ -30,15 +41,18 @@ type Props = {
   offered: boolean;
   /** The Administrator's: removing an address at the person's request. */
   mayWithdraw: boolean;
+  /** The «Abonați» list (§550), drawn between the numbers and the composer. */
+  subscribers?: ReactNode;
 };
 
 /**
  * The backoffice's «Newsletter» page (§445; the owner, 2026-09-26: "un meniu suplimentar în
- * backoffice cu «Newsletter»"), as two cards. «Abonați»: who subscribed from the contact page, as
- * numbers — never an address: confirmed and pending, per topic, and the last send; what was sent;
- * and the Administrator's form for an address somebody asked, in writing, to have removed. «Scrie
- * abonaților»: a composer that writes to the subscribers of one topic in both languages, with a
- * preview of the message as it will arrive.
+ * backoffice cu «Newsletter»"), as cards. «Cifre și trimiteri»: the numbers — confirmed and
+ * pending, per topic, and the last send; what was sent, with each letter's first line; and the
+ * Administrator's form for an address somebody asked, in writing, to have removed. «Abonați»
+ * (`NewsletterSubscribers`, §550) is the list itself, with the addresses. «Scrie abonaților»: a
+ * composer that writes to the subscribers of one topic in both languages — in the rich-text editor
+ * since §550 — with a preview of the message as it will arrive.
  *
  * A Server Component around two `ActionForm`s, on a page only a role that may send opens
  * (`canSendNewsletter`, asserted by the page and again by the service). Both cards stand open — the
@@ -46,10 +60,11 @@ type Props = {
  * and says how much of it leaves today under the reserve the outbox keeps for registrations
  * (`domain/bulk.ts`) — the rest goes on the following days, never dropped (§40).
  */
-export default async function NewsletterPanel({ locale, audience, history, volume, offered, mayWithdraw }: Props) {
+export default async function NewsletterPanel({ locale, audience, history, volume, offered, mayWithdraw, subscribers }: Props) {
   const t = await getTranslations("Admin");
   const tn = await getTranslations("Newsletter");
   const words = await confirmWords();
+  const rich = richTextEditorLabels(await getTranslations("Admin.richText"));
   const budget = bulkBudget(volume);
   const sendId = randomUUID();
   const when = (at: Date) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" });
@@ -125,6 +140,12 @@ export default async function NewsletterPanel({ locale, audience, history, volum
                         sender: row.senderName ?? t("newsletter.historyNoSender"),
                       })}
                 </Typography>
+                {/* What the letter says, its first line of words (§550), under the line that says when and to whom. */}
+                {row.kind === "MESSAGE" && row.firstLine && row.firstLine[locale] !== "" && (
+                  <Typography variant="body2" color="text.secondary" sx={{ fontStyle: "italic", wordBreak: "break-word" }} data-testid="newsletter-history-first-line">
+                    {row.firstLine[locale]}
+                  </Typography>
+                )}
               </li>
             ))}
           </Box>
@@ -155,6 +176,8 @@ export default async function NewsletterPanel({ locale, audience, history, volum
         )}
       </Panel>
 
+      {subscribers}
+
       <Panel glyph="compose" title={t("newsletter.compose")} intro={t("newsletter.composeIntro")} id="newsletter-write" data-testid="newsletter-composer">
         <ActionForm
           key={sendId}
@@ -163,8 +186,8 @@ export default async function NewsletterPanel({ locale, audience, history, volum
             topic: t("newsletter.topic"),
             subjectRo: t("newsletter.subjectRo"),
             subjectEn: t("newsletter.subjectEn"),
-            bodyRo: t("newsletter.bodyRo"),
-            bodyEn: t("newsletter.bodyEn"),
+            newsletterBodyRo: t("newsletter.bodyRo"),
+            newsletterBodyEn: t("newsletter.bodyEn"),
           })}
           confirm={confirm}
           scope="newsletter"
@@ -194,42 +217,45 @@ export default async function NewsletterPanel({ locale, audience, history, volum
                 </Box>
               ))}
             </Box>
-            <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-              <RecallField
-                name="subjectRo"
-                label={t("newsletter.subjectRo")}
-                fullWidth
-                size="small"
-                slotProps={{ htmlInput: { maxLength: NEWSLETTER_SUBJECT_MAX } }}
-              />
-              <RecallField
-                name="subjectEn"
-                label={t("newsletter.subjectEn")}
-                fullWidth
-                size="small"
-                slotProps={{ htmlInput: { maxLength: NEWSLETTER_SUBJECT_MAX } }}
-              />
-            </Stack>
-            <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-              <RecallField
-                name="bodyRo"
-                label={t("newsletter.bodyRo")}
-                multiline
-                minRows={6}
-                fullWidth
-                helperText={t("newsletter.bodyHelp", { max: String(NEWSLETTER_BODY_MAX) })}
-                slotProps={{ htmlInput: { maxLength: NEWSLETTER_BODY_MAX } }}
-              />
-              <RecallField
-                name="bodyEn"
-                label={t("newsletter.bodyEn")}
-                multiline
-                minRows={6}
-                fullWidth
-                helperText={t("newsletter.bodyHelp", { max: String(NEWSLETTER_BODY_MAX) })}
-                slotProps={{ htmlInput: { maxLength: NEWSLETTER_BODY_MAX } }}
-              />
-            </Stack>
+            {/*
+              The words, one language per tab (§550): the subject and the letter in the platform's
+              rich-text editor — bold, lists, links and pictures the club stored; no film and no
+              table, which an inbox cannot draw (§270). «Tradu cardul: RO → EN» at the end of the
+              tab row fills the English subject and letter from the Romanian (§514). Both tabs'
+              boxes stay in the form, hidden, never unmounted (`LocaleTabPanels`).
+            */}
+            <LocaleTabPanels
+              idPrefix="newsletter-words"
+              translateCard
+              panels={LANGUAGES.map((language) => ({
+                locale: language.locale,
+                label: t(`newsletter.${language.label}`),
+                content: (
+                  <Stack spacing={2} sx={{ pt: 2 }}>
+                    <RecallField
+                      name={`subject${language.suffix}`}
+                      label={t(`newsletter.subject${language.suffix}`)}
+                      fullWidth
+                      size="small"
+                      slotProps={{ htmlInput: { maxLength: NEWSLETTER_SUBJECT_MAX } }}
+                    />
+                    <Box data-testid={`newsletter-body-${language.locale}`}>
+                      <RichTextEditor
+                        name={`newsletterBody${language.suffix}`}
+                        label={t(`newsletter.body${language.suffix}`)}
+                        accessibleSuffix={language.suffix.toUpperCase()}
+                        initialBody={EMPTY_DOC}
+                        features={{ media: true, tables: false, video: false }}
+                        labels={rich}
+                      />
+                    </Box>
+                  </Stack>
+                ),
+              }))}
+            />
+            <Typography variant="caption" color="text.secondary">
+              {t("newsletter.bodyHelp", { max: String(NEWSLETTER_BODY_MAX) })}
+            </Typography>
             <NewsletterPreview
               preview={previewNewsletterAction}
               labels={{

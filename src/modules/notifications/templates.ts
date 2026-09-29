@@ -1,6 +1,7 @@
 import type { EmailLocale, OutgoingEmail } from "@/infrastructure/email/adapter";
 import type { EmailMessageType } from "@/db/schema/email-outbox";
-import { emailBodyParts, readEmailBody, type EmailBodyPart } from "./domain/email-rich-text";
+import { emailBodyParts, newsletterBodyParts, readEmailBody, type EmailBodyPart } from "./domain/email-rich-text";
+import type { RichTextDoc } from "@/modules/content/rich-text/domain/schema";
 import { copyFor, onlyMissingFacts, type EmailCopy, fillPlaceholders } from "./domain/email-copy";
 import { organizerParagraphs } from "./domain/organizer-message";
 import { type EmailEventFacts, type EventFactsBlock, eventFactsBlock } from "./domain/event-facts";
@@ -486,6 +487,7 @@ export function renderBilingual(
     // The newsletter's own words and topics in the second half's language (§445).
     ...(data.newsletterSubjectOther ? { newsletterSubject: data.newsletterSubjectOther } : {}),
     ...(data.newsletterBodyOther ? { newsletterBody: data.newsletterBodyOther } : {}),
+    ...(data.newsletterBodyDocOther ? { newsletterBodyDoc: data.newsletterBodyDocOther } : {}),
     ...(data.newsletterTopicsOther ? { newsletterTopics: data.newsletterTopicsOther } : {}),
     // The organizer's message reads the same `eventTitleOther`/`eventChecklistOther` fields above
     // (§364) — every message's second half does now (§373, email follow-up), so no separate gate
@@ -882,6 +884,8 @@ export type TemplateData = {
   newsletterTopicsOther?: string;
   /** The confirmation message went to an address already subscribed: its action is the subscriber's own page. */
   newsletterAlready?: boolean;
+  /** …and it was asked for from the contact page's «Vreau să mă dezabonez» (§550), not by subscribing again. */
+  newsletterManageRequest?: boolean;
   /** The subscriber's own page — the topics and "unsubscribe" — on every newsletter message; never on anything else. */
   newsletterManageUrl?: string;
   /** A newsletter's own words (§445): this half's subject and body, and the other half's. */
@@ -889,6 +893,12 @@ export type TemplateData = {
   newsletterSubjectOther?: string;
   newsletterBody?: string;
   newsletterBodyOther?: string;
+  /**
+   * A newsletter written in the editor (§550): this half's document and the other half's. Set, it
+   * is what the message carries; `newsletterBody` is the plain text of a send written before.
+   */
+  newsletterBodyDoc?: RichTextDoc;
+  newsletterBodyDocOther?: RichTextDoc;
 };
 
 /**
@@ -1358,7 +1368,12 @@ const T = {
       subject: (d: TemplateData) => (d.newsletterAlready ? `Abonamentul tău la noutățile ${CLUB_NAME}` : `Confirmă abonarea la noutățile ${CLUB_NAME}`),
       greeting: () => "Salut,",
       body: (d: TemplateData) =>
-        d.newsletterAlready
+        d.newsletterManageRequest
+          ? [
+              "Cineva — probabil tu — a cerut, pe pagina noastră de contact, linkul abonamentului la noutăți pentru această adresă.",
+              "Cu butonul de mai jos te dezabonezi de la tot sau îți schimbi temele. Dacă nu ai cerut tu, ignoră emailul: abonamentul rămâne cum e.",
+            ]
+          : d.newsletterAlready
           ? [
               "Cineva — probabil tu — a cerut din nou, pe pagina noastră de contact, noutățile clubului pe această adresă. Ești deja abonat(ă), așa că nu s-a schimbat nimic.",
               "Cu butonul de mai jos vezi temele alese; acolo le poți schimba sau te poți dezabona.",
@@ -1910,7 +1925,12 @@ const T = {
       subject: (d: TemplateData) => (d.newsletterAlready ? `Your subscription to ${CLUB_NAME}'s news` : `Confirm your subscription to ${CLUB_NAME}'s news`),
       greeting: () => "Hello,",
       body: (d: TemplateData) =>
-        d.newsletterAlready
+        d.newsletterManageRequest
+          ? [
+              "Someone — probably you — asked, on our contact page, for the link to this address's subscription to the club's news.",
+              "With the button below you unsubscribe from everything or change your topics. If it was not you, ignore this email: the subscription stays as it is.",
+            ]
+          : d.newsletterAlready
           ? [
               "Someone — probably you — asked again, on our contact page, for the club's news at this address. You are already subscribed, so nothing has changed.",
               "The button below shows the topics you chose; you can change them there or unsubscribe.",
@@ -2135,7 +2155,10 @@ const NEWSLETTER_MESSAGES: ReadonlySet<EmailMessageType> = new Set(["NEWSLETTER_
  * placeholder is filled — the service refuses any.
  */
 function newsletterParts(messageType: EmailMessageType, data: TemplateData): EmailBodyPart[] {
-  if (messageType !== "NEWSLETTER" || !data.newsletterBody) return [];
+  if (messageType !== "NEWSLETTER") return [];
+  // Written in the editor (§550): its blocks and its pictures, every picture's address absolute.
+  if (data.newsletterBodyDoc) return newsletterBodyParts(data.newsletterBodyDoc, env.APP_BASE_URL);
+  if (!data.newsletterBody) return [];
   const paragraphs = organizerParagraphs(data.newsletterBody);
   return paragraphs.map((lines, index) => ({
     html: `<p style="margin:0 0 14px;font-size:16px;line-height:1.5">${lines.map(escapeHtml).join("<br>")}</p>`,

@@ -72,6 +72,8 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   // address at someone's request asks too, and cannot be undone.
   sendNewsletterAction: [],
   withdrawNewsletterAddressAction: [],
+  // «Dezabonează» on a row of the «Abonați» list (§550): asks, naming the address.
+  unsubscribeSubscriberAction: [],
   // Asks only when the press faces outward: the notice ticked, the status set to cancelled.
   saveEventAndTranslationsAction: [],
   // Asks only for the publish submitter (`then=publish`); the plain create is a draft nobody sees.

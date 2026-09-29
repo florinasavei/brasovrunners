@@ -20,7 +20,8 @@ export function neutralizeCsvValue(value: string): string {
   return FORMULA_PREFIXES.some((prefix) => value.startsWith(prefix)) ? `'${value}` : value;
 }
 
-function csvCell(value: string): string {
+/** One cell, neutralized and quoted — the rule every CSV the backoffice hands out follows (the newsletter's list too, §550). */
+export function csvCell(value: string): string {
   const neutralized = neutralizeCsvValue(value);
   const needsQuoting = /[",\n\r]/.test(neutralized);
   const escaped = neutralized.replaceAll('"', '""');
