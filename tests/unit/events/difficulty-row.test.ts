@@ -9,13 +9,13 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * `DECISIONS.md` §537 — «Dificultate» and «Nivelul» («Treapta» until §NNN) on one centred axis (the owner, 2026-09-28:
+ * `DECISIONS.md` §537 — «Dificultate» and «Nivelul» («Treapta» until §563) on one centred axis (the owner, 2026-09-28:
  * «partea asta nu e centrată!»). `KindBox` renders the row on the create page and in the editor
  * alike (§406), so the row itself is what is pinned here.
  */
 type Words = Parameters<typeof difficultyStepWords>[0];
 
-/** The words `KindBox` hands the field, from the catalogue as the page reads it (§NNN). */
+/** The words `KindBox` hands the field, from the catalogue as the page reads it (§563). */
 const words = (catalogue: typeof ro) => {
   const locale = catalogue === ro ? "ro" : "en";
   const t = createTranslator({ locale, messages: catalogue, namespace: "Admin" }) as unknown as Words;

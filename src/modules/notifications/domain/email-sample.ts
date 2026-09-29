@@ -59,7 +59,7 @@ export const EMAIL_SAMPLE_EVENT = {
     { startsAt: "2026-10-04T06:30:00.000Z", endsAt: null, label: { ro: "Startul", en: "The start" }, place: null },
   ],
   surface: "TRAIL",
-  // «Mediu 5» — level 5 of the club's fifteen (§526, §NNN).
+  // «Mediu 5» — level 5 of the club's fifteen (§526, §563).
   difficultyLevel: 5,
   distanceMeters: 12_000,
   elevationGainMeters: 450,

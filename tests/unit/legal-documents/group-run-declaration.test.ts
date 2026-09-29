@@ -46,7 +46,7 @@ describe("§393 the kinds and their names", () => {
   });
 
   it("names the four declarations in both catalogues, as the owner did", () => {
-    // In Romanian words since §NNN: «eveniment montan», «teren accidentat».
+    // In Romanian words since §564: «eveniment montan», «teren accidentat».
     expect(ro.Admin.legal.keys.EVENT_DECLARATION).toBe("Declarație pe propria răspundere — eveniment montan");
     expect(ro.Admin.legal.keys.EVENT_DECLARATION_ROAD).toBe("Declarație pe propria răspundere — eveniment pe asfalt / în parc");
     expect(ro.Admin.legal.keys.GROUP_RUN_DECLARATION_ASPHALT).toBe("Declarație pe propria răspundere (alergare de grup, asfalt)");

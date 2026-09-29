@@ -375,7 +375,7 @@ export async function cachedListSocialsDisclosed(now: Date): Promise<boolean> {
 }
 
 /**
- * Whether the register form offers «Vreau să primesc oferte și beneficii» (§NNN): the privacy
+ * Whether the register form offers «Vreau să primesc oferte și beneficii» (§562): the privacy
  * notice in force describes it (`describesPromotionalMaterials`), in every language — the same
  * reading as the socials above. `noticeDescribesPromotionalMaterials` is the uncached twin; the
  * service asks the notice each person is given at submission.

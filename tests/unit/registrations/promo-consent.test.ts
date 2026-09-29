@@ -15,13 +15,13 @@ import { REGISTRATION_SHEET_HEADERS } from "@/modules/registrations/workbook";
 import { CLUB_NAME } from "@/theme/brand";
 
 /**
- * §NNN — «Vreau să primesc oferte și beneficii de la <club> și partenerii săi.»: the privacy
+ * §562 — «Vreau să primesc oferte și beneficii de la <club> și partenerii săi.»: the privacy
  * notice's marker that switches the box on, the words, the form's reading, and the export's column.
  */
 const text = (paragraph: string) => ({ sections: [{ paragraphs: [paragraph] }] });
 const paragraphs = (body: typeof privacyNoticeRo) => body.sections.flatMap((section) => section.paragraphs);
 
-describe("§NNN the privacy notice's marker for offers and benefits", () => {
+describe("§562 the privacy notice's marker for offers and benefits", () => {
   it("is a merge field the platform's notice carries in both languages, and the legend lists", () => {
     expect(isMergeField("promotionalMaterials")).toBe(true);
     expect(describesPromotionalMaterials(privacyNoticeRo)).toBe(true);
@@ -78,7 +78,7 @@ describe("§NNN the privacy notice's marker for offers and benefits", () => {
   });
 });
 
-describe("§NNN the form's box", () => {
+describe("§562 the form's box", () => {
   it("is read as posted — never pre-ticked, never required; the service decides what is kept", () => {
     const form = new FormData();
     expect(readRegistrationForm(form, "ro").promoConsent).toBe(false);
@@ -126,7 +126,7 @@ describe("§NNN the form's box", () => {
   });
 });
 
-describe("§NNN the same words on every surface, scoped to the registration", () => {
+describe("§562 the same words on every surface, scoped to the registration", () => {
   const values = (node: unknown): string[] =>
     typeof node === "string" ? [node] : node && typeof node === "object" ? Object.values(node).flatMap(values) : [];
 
@@ -165,7 +165,7 @@ describe("§NNN the same words on every surface, scoped to the registration", ()
   });
 });
 
-describe("§NNN «Înscrierile mele» is a door out only (second fix round)", () => {
+describe("§562 «Înscrierile mele» is a door out only (second fix round)", () => {
   it("draws only «Nu mai vreau», posts only a no, and says where the yes is given", () => {
     const source = readFileSync(path.join(process.cwd(), "src/app/[locale]/registrations/mine/[token]/page.tsx"), "utf8");
     expect(source).not.toContain('t("promo.optIn")');
@@ -185,7 +185,7 @@ describe("§NNN «Înscrierile mele» is a door out only (second fix round)", ()
   });
 });
 
-describe("§NNN the exports", () => {
+describe("§562 the exports", () => {
   const row = (promoConsentAt: string): RegistrationCsvRow => ({
     eventTitle: "Crosul",
     registeredName: "Ana Pop",
@@ -232,7 +232,7 @@ describe("§NNN the exports", () => {
   });
 });
 
-describe("§NNN no public page imports the backoffice glyph table (§318)", () => {
+describe("§562 no public page imports the backoffice glyph table (§318)", () => {
   it("the pages that draw the box and the switch take their glyphs from @mui/icons-material/<Name>", () => {
     const root = process.cwd();
     const files = [

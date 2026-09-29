@@ -249,7 +249,7 @@ export async function consumeAndSignDeclaration(
     minorIdDocument?: string;
     documentId: string;
     contentSha256: string;
-    /** «Vreau să primesc oferte și beneficii», ticked while signing (§NNN); the service decides whether it is kept. */
+    /** «Vreau să primesc oferte și beneficii», ticked while signing (§562); the service decides whether it is kept. */
     promoConsent?: boolean;
   },
   now: Date,

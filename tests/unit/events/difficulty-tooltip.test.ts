@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 /**
  * `DECISIONS.md` §528 — the difficulty gauge says its level of fifteen, and the backoffice explains
- * the scale behind a «?» — as §NNN words it (the owner, 2026-09-29: «ușor: 1,2,3, mediu 4,5,6 și
+ * the scale behind a «?» — as §563 words it (the owner, 2026-09-29: «ușor: 1,2,3, mediu 4,5,6 și
  * tot așa, în ordine»; the number is the level, the dots are the step).
  *
  * - The event's pill (`route-pills.ts`): the tooltip «Mediu — nivelul 5 din 15», then the whole
@@ -115,7 +115,7 @@ describe("§528 the scale's arithmetic", () => {
   });
 });
 
-describe("§528, §NNN the pill's tooltip names the level of fifteen, then every band's levels", () => {
+describe("§528, §563 the pill's tooltip names the level of fifteen, then every band's levels", () => {
   it.each([
     ["ro", 1, "Ușor — nivelul 1 din 15", "Dificultate: ușor — nivelul 1 din 15 (ușor: 1–3)"],
     ["ro", 2, "Ușor — nivelul 2 din 15", "Dificultate: ușor — nivelul 2 din 15 (ușor: 1–3)"],
@@ -172,7 +172,7 @@ function editorWords(catalogue: typeof ro) {
   return difficultyStepWords(t, tEvent, difficultyScaleText(t));
 }
 
-describe("§528, §NNN the editor's «?» explains the whole scale", () => {
+describe("§528, §563 the editor's «?» explains the whole scale", () => {
   const words = editorWords(ro);
   const band = { name: "event.difficulty", initial: "MEDIUM" };
 

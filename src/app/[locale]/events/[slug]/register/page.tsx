@@ -335,7 +335,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
     }
   }
   /*
-    §NNN: «Vreau să primesc oferte și beneficii» is offered only while the privacy notice in
+    §562: «Vreau să primesc oferte și beneficii» is offered only while the privacy notice in
     force describes it (`{{promotionalMaterials}}`, every language) — on every event, whether or
     not it publishes a list. Off (or unread), the form has no box and the service keeps nothing.
   */
@@ -1507,7 +1507,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   return listQuestion;
                 })()}
               {/*
-                «Oferte și beneficii» (§NNN): a consent of its own, under the list tick — the owner's
+                «Oferte și beneficii» (§562): a consent of its own, under the list tick — the owner's
                 sentence as the label, ending in its full stop, the club named from `CLUB_NAME`, and
                 «Opțional.» leading the helper line rather than a suffix after that full stop;
                 optional, never pre-ticked, never required, never folded (§59). Asked only while the

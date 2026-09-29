@@ -147,7 +147,7 @@ describe("§448 the declaration card sits with «Regulamentul» (in one card sin
   // club approved no road text the card says a road race signs the trail one.
   it("names each option's kind, the newest of each kind, and the road race's fallback to the trail text", async () => {
     const html = await rules(RACE);
-    // The kinds in Romanian words since §NNN, «eveniment» for both because the select pairs them.
+    // The kinds in Romanian words since §564, «eveniment» for both because the select pairs them.
     expect(html).toContain("Eveniment montan · v3 · Declarația concursului");
     expect(html).toContain('data-testid="race-declaration-road-fallback"');
     expect(html).toContain("Eveniment pe șosea sau în parc: nicio versiune aprobată încă");

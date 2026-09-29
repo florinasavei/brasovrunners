@@ -14,7 +14,7 @@ const CSV_LIMIT = 100_000;
 
 /**
  * «Descarcă CSV» on the newsletter page's «Participanți care au bifat oferte și beneficii» fold
- * (§NNN, amending §550): the name, the address, the event and the moment, in the reader's language
+ * (§562, amending §550): the name, the address, the event and the moment, in the reader's language
  * (`lang`), as a UTF-8 file with a BOM.
  *
  * The page's own gate, asserted here and again in the read (`canSendNewsletter`, BR-REQ-060-01):

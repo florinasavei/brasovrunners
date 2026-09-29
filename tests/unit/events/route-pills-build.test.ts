@@ -136,7 +136,7 @@ describe("§388 buildRoutePills — surface, difficulty, distance, elevation, ni
   // Through `buildRoutePills` and `RoutePills` for levels in every band and both locales, asserting
   // what the eye and a screen reader are given — the visible «Mediu 5», hidden from the reader, and
   // the visually-hidden «Dificultate: mediu — nivelul 5 din 15 (mediu: 4–6)» in its place (§526,
-  // §528; §NNN: the number is the level, the dots are the step — the glyph still carries the step).
+  // §528; §563: the number is the level, the dots are the step — the glyph still carries the step).
   it.each([
     // The owner's five bands (§526): ușor, mediu, greuț, greu, foarte greu — three levels each.
     ["ro", "EASY", 1, "Ușor 1", "Dificultate: ușor — nivelul 1 din 15 (ușor: 1–3)", "Ușor, nivelul 1 din 15"],
@@ -157,7 +157,7 @@ describe("§388 buildRoutePills — surface, difficulty, distance, elevation, ni
     const pills = buildRoutePills({ ...FULL_ROUTE, difficultyLevel: level }, t, format).filter((pill) => pill.glyph === `difficulty:${band}-${step}`);
     expect(pills).toHaveLength(1);
     expect(pills[0]!.label).toBe(shown);
-    // Where no gauge is drawn (an email's facts, §392), the words say the level of fifteen (§NNN).
+    // Where no gauge is drawn (an email's facts, §392), the words say the level of fifteen (§563).
     expect(pills[0]!.plain).toBe(plain);
     const html = renderToStaticMarkup(RoutePills({ pills }));
     // The visible words, hidden from a screen reader; the heard words, once, in a span clipped to

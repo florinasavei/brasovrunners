@@ -102,7 +102,7 @@ describe("owner tasks", () => {
     }
   });
 
-  /** §NNN — the offers-and-benefits box waits on the club's notice, like the socials; open, never blocking. */
+  /** §562 — the offers-and-benefits box waits on the club's notice, like the socials; open, never blocking. */
   it("keeps the offers-and-benefits row open while the notice in force does not describe them, and never blocking", () => {
     expect(stateOf({ ...LAUNCHED, promoDescribed: false }, "promoNotice")).toBe("open");
     expect(stateOf(LAUNCHED, "promoNotice")).toBe("done");

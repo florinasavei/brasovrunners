@@ -42,10 +42,10 @@ export type ManagedPerson = {
   bibNumber: number | null;
   /** Off the public list (§143): the participant's own answer, per person. */
   listOptOut: boolean;
-  /** «Oferte și beneficii» (§NNN): the answer on this registration, per registration. */
+  /** «Oferte și beneficii» (§562): the answer on this registration, per registration. */
   promoConsent: boolean;
   /**
-   * Another adult on the address (§421, §NNN fix round): not the link's own registration and not
+   * Another adult on the address (§421, §562 fix round): not the link's own registration and not
    * a minor today (`anotherAdultOnTheLink`). On this page such a row offers only the way out of
    * «Oferte și beneficii»; the yes is that adult's own, on their declaration or their own link.
    */
@@ -128,7 +128,7 @@ export async function managedRegistration<T extends Record<string, unknown>>(
 
 /**
  * Whether `person`, reached through `own`'s manage link, is another adult on the address (§421;
- * §NNN, the fix round of 2026-09-29): not the link's own registration, and not a minor today by the
+ * §562, the fix round of 2026-09-29): not the link's own registration, and not a minor today by the
  * guardian rule's calendar (`isMinorOn`). A missing or unreadable birth date counts as an adult —
  * the safe side, since the consequence is only that the link cannot say yes for them.
  *

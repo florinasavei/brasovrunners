@@ -187,7 +187,7 @@ describe("§448 the first box holds the type and the status, and its line says b
 
   it("says the type, the status, the cost and the difficulty on its closed line, in both catalogues (§466, §526)", async () => {
     expect(summaryOf((await boxes(EVENT)).kind)).toMatch(/<h2[^>]*>(?:<svg[\s\S]*?<\/svg>)?Ce fel de eveniment<span[^>]*>Alergare de grup · Programat · Nespecificat · Ușor 2<\/span>/);
-    // The band and the level of fifteen (§NNN), never the step: level 5 is «Mediu 5».
+    // The band and the level of fifteen (§563), never the step: level 5 is «Mediu 5».
     const medium = { ...EVENT, difficultyLevel: 5 } as unknown as EditableEvent;
     expect(summaryOf((await boxes(medium)).kind)).toContain("Alergare de grup · Programat · Nespecificat · Mediu 5");
     expect(summaryOf((await boxes(medium, { locale: "en" })).kind)).toContain("Medium 5");
@@ -230,7 +230,7 @@ describe("§448 the first box holds the type and the status, and its line says b
       expect(drawn.course, name).not.toContain(`name="${name}"`);
     }
     expect(drawn.kind).toContain('name="event.difficultyStep" checked="" value="2"');
-    // «Nivelul» (§NNN): the rule and the ladder under it, and the band's own three levels on its segments.
+    // «Nivelul» (§563): the rule and the ladder under it, and the band's own three levels on its segments.
     expect(drawn.kind).toContain(
       "Nivelul e de la 1 (ușor) la 15 (foarte greu): fiecare categorie are trei niveluri — ușor 1–3, mediu 4–6, greuț 7–9, greu 10–12, foarte greu 13–15.",
     );

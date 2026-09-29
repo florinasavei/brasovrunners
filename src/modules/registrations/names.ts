@@ -43,7 +43,7 @@ export type RegistrationEntryDetails = {
    */
   listSocials?: boolean;
   /**
-   * «Vreau să primesc oferte și beneficii» (§NNN) and the moment it was given — kept only where
+   * «Vreau să primesc oferte și beneficii» (§562) and the moment it was given — kept only where
    * `service.ts` allows it (a public form, a notice naming `{{promotionalMaterials}}`, never another
    * adult's family form). A NOT NULL column with a default of false, like `listSocials`.
    */

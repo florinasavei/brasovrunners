@@ -79,7 +79,7 @@ export async function setListConsentFromMyRegistrationsAction(form: FormData): P
 }
 
 /**
- * «Nu mai vreau oferte și beneficii» for one registration (§NNN): this door only withdraws — a yes
+ * «Nu mai vreau oferte și beneficii» for one registration (§562): this door only withdraws — a yes
  * posted here is refused FORBIDDEN in the module (second fix round), since the address link cannot
  * tell the holder from another adult. The link stays valid; the registration must be the link
  * holder's own, checked in the module.

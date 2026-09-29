@@ -7,7 +7,7 @@ import type { LegalDocumentBody } from "@/modules/legal-documents/domain/content
 /**
  * BR-REQ-053-01 (§556, the second review of 2026-09-29) — three sentences of the counsel-reviewed
  * templates, and nothing else: the trail shoes as grip, «de preferat încălțăminte pentru teren
- * accidentat» (in Romanian words since §NNN; «pantofi de trail» until then); the organiser's
+ * accidentat» (in Romanian words since §564; «pantofi de trail» until then); the organiser's
  * general safety instructions in place of «indicațiile organizatorului și recomandările
  * autorităților»; and the retention sentence that keeps a copy for as long as a right needs it, and
  * a document under a complaint, a dispute or proceedings until they are finally settled.

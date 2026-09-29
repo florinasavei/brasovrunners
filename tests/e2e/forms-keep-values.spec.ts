@@ -208,7 +208,7 @@ test.describe("§515 the race's declaration follows the course", () => {
 
     await openEditorBox(page, "Declarația pe propria răspundere");
     const declaration = page.getByRole("combobox", { name: "Declarația pe care o semnează participantul" });
-    // The kinds in Romanian words since §NNN: «Eveniment montan», «Eveniment pe șosea sau în parc».
+    // The kinds in Romanian words since §564: «Eveniment montan», «Eveniment pe șosea sau în parc».
     await expect(declaration).toContainText("Eveniment montan");
     const trailId = await field("event.declarationDocumentId").inputValue();
     expect(trailId).not.toBe("");

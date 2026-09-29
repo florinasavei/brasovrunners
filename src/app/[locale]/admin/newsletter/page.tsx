@@ -59,7 +59,7 @@ export default async function NewsletterPage({ params, searchParams }: Props) {
   const now = new Date();
   // The day's allowance for the composer's "how much leaves today", and whether the notice in force
   // lets the contact page offer the pop-up; the list under its filter.
-  // And, since §NNN, who said yes to offers and benefits on a registration — the same readers (§550).
+  // And, since §562, who said yes to offers and benefits on a registration — the same readers (§550).
   const [audience, history, volume, offered, subscribers, promo] = await Promise.all([
     countNewsletterAudience(db),
     listNewsletterSends(db),
@@ -102,7 +102,7 @@ export default async function NewsletterPage({ params, searchParams }: Props) {
               mayUnsubscribe={mayManage}
               saved={saved === "newsletterUnsubscribed" || saved === "newsletterUnsubscribedGone"}
             />
-            {/* The second fold (§NNN): a consent on a registration, not a subscription — its own list and its own CSV. */}
+            {/* The second fold (§562): a consent on a registration, not a subscription — its own list and its own CSV. */}
             <PromoConsenters locale={locale} list={promo} />
           </>
         }

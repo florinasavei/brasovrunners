@@ -96,7 +96,7 @@ export type RegistrationCsvRow = {
    */
   cancelReason?: string;
   /**
-   * «Oferte și beneficii» (§NNN): the moment the person said yes (ISO 8601), or empty — never
+   * «Oferte și beneficii» (§562): the moment the person said yes (ISO 8601), or empty — never
    * asked, said no, or withdrawn. One cell says both whether and since when.
    */
   promoConsentAt?: string;
@@ -136,7 +136,7 @@ const HEADER = [
   "family",
   // Last (§558), for the same reason: the participant's own reason for cancelling.
   "Cancellation reason",
-  // Last (§NNN), for the same reason: the consent to offers and benefits, its moment or empty.
+  // Last (§562), for the same reason: the consent to offers and benefits, its moment or empty.
   "Offers and benefits",
 ];
 

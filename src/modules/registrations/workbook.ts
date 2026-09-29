@@ -36,7 +36,7 @@ export type RegistrationSheetRow = Omit<
   RegistrationCsvRow,
   "submittedAt" | "confirmedAt" | "checkedInAt" | "fitnessDeclaredAt" | "termsAcceptedAt" | "declarationSignedAt" | "promoConsentAt"
 > & {
-  /** «Oferte și beneficii» (§NNN): the moment of the yes, a date like the others; null for no. */
+  /** «Oferte și beneficii» (§562): the moment of the yes, a date like the others; null for no. */
   promoConsentAt?: Date | null;
   /** The moment the terms were accepted (§421, §425), a date like the others; null when not recorded. */
   termsAcceptedAt?: Date | null;
@@ -163,7 +163,7 @@ const COLUMNS: Array<{
   { header: "family", width: 30, cell: (row) => ({ value: row.family ?? "", type: String }) },
   // Why the participant cancelled (§558), last like the CSV's: the answer, and the words of «Another reason».
   { header: "Cancellation reason", width: 30, cell: (row) => ({ value: row.cancelReason ?? "", type: String }) },
-  // The consent to offers and benefits (§NNN), last like the CSV's: its moment, blank for no.
+  // The consent to offers and benefits (§562), last like the CSV's: its moment, blank for no.
   { header: "Offers and benefits", width: 18, cell: (row) => ({ value: onClubClock(row.promoConsentAt ?? null), type: Date, format: STAMP_FORMAT }) },
 ];
 

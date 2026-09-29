@@ -1346,7 +1346,7 @@ test.describe("BR-REQ-041-01 the race's conditions: the box is inside the read b
 });
 
 /**
- * §NNN — «Vreau să primesc oferte și beneficii de la <club> și partenerii săi.» (the owner's words,
+ * §562 — «Vreau să primesc oferte și beneficii de la <club> și partenerii săi.» (the owner's words,
  * 2026-09-29 16:12, the club named from `CLUB_NAME`): one optional
  * box, unticked, never required, under the list tick, with the glyph and one helper sentence — and
  * only while the privacy notice in force names `{{promotionalMaterials}}` (AGENTS.md §10.8). Which
@@ -1377,7 +1377,7 @@ async function noticeNamesPromo(client: pg.Client): Promise<boolean> {
   return translations.length >= 2 && translations.every((translation) => translation.body.includes("{{promotionalMaterials}}"));
 }
 
-test.describe("BR-REQ-031-01 «Oferte și beneficii», behind the privacy notice (§NNN)", () => {
+test.describe("BR-REQ-031-01 «Oferte și beneficii», behind the privacy notice (§562)", () => {
   test("an optional, unticked box while the notice describes it — stored with its moment when ticked; absent otherwise", async ({ page }) => {
     test.setTimeout(test.info().timeout + 300_000);
     const client = new pg.Client({ connectionString: noticeDatabaseUrl() });

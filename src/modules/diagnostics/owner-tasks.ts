@@ -170,7 +170,7 @@ export type OwnerTaskInputs = {
    */
   listSocialsDescribed: boolean;
   /**
-   * Does the notice in force, in every language, describe the offers and benefits (§NNN,
+   * Does the notice in force, in every language, describe the offers and benefits (§562,
    * `noticeDescribesPromotionalMaterials`)? Until it does, no form offers the box and nothing is kept.
    */
   promoDescribed: boolean;
@@ -346,7 +346,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
       state: input.listSocialsDescribed ? "done" : "open",
     });
     /*
-      The offers and benefits (§NNN), the same shape: open, never blocking — nothing is refused,
+      The offers and benefits (§562), the same shape: open, never blocking — nothing is refused,
       the form simply does not offer the box — and done by itself the day a notice naming
       `{{promotionalMaterials}}` takes effect.
     */

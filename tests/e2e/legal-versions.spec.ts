@@ -42,7 +42,7 @@ test.describe("legal documents: a Superadministrator can create the first versio
     await page.getByRole("combobox").first().click();
     await page
       .getByRole("option", {
-        // The race's mountain declaration, named by its course since §515, in Romanian words since §NNN.
+        // The race's mountain declaration, named by its course since §515, in Romanian words since §564.
         name: wantsTerms ? /Termeni|Terms/ : /— eveniment montan|— mountain event/,
       })
       .click();

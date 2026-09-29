@@ -44,7 +44,7 @@
  * switch — the pop-up appears, and the service takes an address, only while the notice in force in
  * every language names it (`describesNewsletter`). Section 7 carries the subscriber's retention.
  *
- * `{{promotionalMaterials}}` in section 5 (§NNN) is the same two-in-one for the optional
+ * `{{promotionalMaterials}}` in section 5 (§562) is the same two-in-one for the optional
  * «Vreau să primesc oferte și beneficii de la <club> și partenerii săi.»: the box's own words,
  * quoted, filled from the catalogue, and the switch — the register form and the declaration page
  * offer the box, and a person's own page offers to switch it on, only while the notice in force in

@@ -17,7 +17,7 @@ type Words = (key: string, values?: Record<string, string | number>) => string;
 export type StepWords = Record<`step${DifficultyStep}`, string>;
 
 /**
- * The editor's «?» beside «Dificultate» and «Nivelul» (§528, §NNN), one line each, in order:
+ * The editor's «?» beside «Dificultate» and «Nivelul» (§528, §563), one line each, in order:
  * «Ușor», «Mediu» per level, the other bands, what the levels of a band mean — the owner's words,
  * which «Ghid» points to. Each band's range and each «Mediu» level come from the domain, never
  * typed: «mediu 4: alergarea de pe Tâmpa», «greuț 7–9: de la semimaraton în sus». `t` is the
@@ -38,7 +38,7 @@ export function difficultyScaleText(t: Words): string {
 }
 
 /**
- * «Nivelul»'s words (§NNN, amending §526 and §537): its label; the rule in one sentence under it —
+ * «Nivelul»'s words (§563, amending §526 and §537): its label; the rule in one sentence under it —
  * «Nivelul e de la 1 (ușor) la 15 (foarte greu): fiecare bandă are trei niveluri — ușor 1–3, mediu
  * 4–6, …», every number from the domain; the whole scale behind its «?»; and each segment's
  * accessible name — per band the level of fifteen («Nivelul 5 din 15»), and a place in the band

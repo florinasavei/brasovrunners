@@ -60,7 +60,7 @@ const HEAD_RULE = { borderBottom: 2, borderColor: "text.secondary", fontWeight: 
 
 /**
  * «Participanți care au bifat oferte și beneficii» / "Participants who ticked offers and
- * benefits" (§NNN, amending §550): the newsletter page's second fold, under «Abonați». Every
+ * benefits" (§562, amending §550): the newsletter page's second fold, under «Abonați». Every
  * registration whose person said yes — the name, the address, the event and the moment — newest
  * first, with its own «Descarcă CSV». Closed by default (§336); its closed line says how many.
  *

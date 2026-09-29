@@ -103,7 +103,7 @@ export type MyRegistration = {
    */
   holdsHealthNote: boolean;
   holdsSocials: boolean;
-  /** «Vreau să primesc oferte și beneficii» (§NNN): the person's own answer, and the switch's side. */
+  /** «Vreau să primesc oferte și beneficii» (§562): the person's own answer, and the switch's side. */
   promoConsent: boolean;
   /**
    * When this person's declaration was signed — on a link, in the family wizard or on paper at the
@@ -212,7 +212,7 @@ export async function listClosedRegistrationsHoldingConsentData<T extends Record
       eventTimezone: events.timezone,
       holdsHealthNote: holdsHealthNote.mapWith(Boolean),
       holdsSocials: holdsSocials.mapWith(Boolean),
-      // A consent to offers and benefits outlives the place (§NNN): withdrawn from here too.
+      // A consent to offers and benefits outlives the place (§562): withdrawn from here too.
       promoConsent: registrations.promoConsent,
     })
     .from(registrations)

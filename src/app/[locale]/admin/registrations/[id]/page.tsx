@@ -145,10 +145,10 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
     health: registration.holdsHealthNote,
     socials: registration.stravaUrl !== null || registration.instagramHandle !== null,
     results: registration.resultsNameConsent,
-    // The offers and benefits (§NNN): withdrawn for a person who wrote; never given by staff.
+    // The offers and benefits (§562): withdrawn for a person who wrote; never given by staff.
     promo: registration.promoConsent,
   };
-  // «Oferte și beneficii» is a line of the page while the notice in force describes it, or while the row says yes (§NNN).
+  // «Oferte și beneficii» is a line of the page while the notice in force describes it, or while the row says yes (§562).
   const promoShown = registration.promoConsent || (await noticeDescribesPromotionalMaterials(db, new Date()));
 
   /*
@@ -318,7 +318,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         </Typography>
       )}
 
-      {/* The consent to offers and benefits (§NNN): yes with its moment, or no — the person's own answer. */}
+      {/* The consent to offers and benefits (§562): yes with its moment, or no — the person's own answer. */}
       {promoShown && (
         <Typography variant="body2" color="text.secondary" data-testid="registration-promo">
           {registration.promoConsent && registration.promoConsentAt

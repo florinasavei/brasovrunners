@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 /**
- * `DECISIONS.md` §NNN (amending §526, §528, §537) — the owner, 2026-09-29, of «Mediu 2 — nivelul 5
+ * `DECISIONS.md` §563 (amending §526, §528, §537) — the owner, 2026-09-29, of «Mediu 2 — nivelul 5
  * din 15» beside «Ușor 2 — nivelul 2 din 15»: «nu are cum și una grea și una ușoară să fie nivelul
  * 2 … adică ușor: 1,2,3, mediu 4,5,6 și tot așa, în ordine». **The number is the level, the dots
  * are the step**: every surface says the band with the level of fifteen, from one domain function
@@ -58,7 +58,7 @@ const WORDS = {
   },
 } as const;
 
-describe("§NNN the number is the level of fifteen, in order across the bands", () => {
+describe("§563 the number is the level of fifteen, in order across the bands", () => {
   it.each(["ro", "en"] as const)("in %s, every level's pill word and plain word", (locale) => {
     const t = tEvent(locale);
     const levels = Array.from({ length: DIFFICULTY_LEVEL_COUNT }, (_, index) => index + 1);
@@ -94,7 +94,7 @@ describe("§NNN the number is the level of fifteen, in order across the bands", 
   });
 });
 
-describe("§NNN the editor's «Nivelul» offers the chosen band's three levels", () => {
+describe("§563 the editor's «Nivelul» offers the chosen band's three levels", () => {
   const render = (locale: "ro" | "en", initial: string) => {
     const t = tAdmin(locale);
     return renderToStaticMarkup(
@@ -130,7 +130,7 @@ describe("§NNN the editor's «Nivelul» offers the chosen band's three levels",
   });
 });
 
-describe("§NNN, §413 the listing's filter ticks a whole band and names its range", () => {
+describe("§563, §413 the listing's filter ticks a whole band and names its range", () => {
   it.each([
     ["ro", ["Ușor (1–3)", "Mediu (4–6)", "Greuț (7–9)", "Greu (10–12)", "Foarte greu (13–15)"]],
     ["en", ["Easy (1–3)", "Medium (4–6)", "Fairly hard (7–9)", "Hard (10–12)", "Very hard (13–15)"]],

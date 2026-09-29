@@ -14,7 +14,7 @@ import { cardOnListing, openEditorBox } from "./support/fold";
  * (`difficulty-step-on` / `-off`), with `data-band`, `data-step` and `data-level` (1 … 15). The
  * seeded Tâmpa run is «Mediu 4» (level 4: two segments lit, one dot — the owner's own example of «mediu 4»); the interval session
  * «Foarte greu 15» (level 15, the top); the Sunday run «Ușor 1» (level 1, the bottom). The number is
- * the level of fifteen, the dots are the step (§NNN — the owner, 2026-09-29: «ușor: 1,2,3, mediu
+ * the level of fifteen, the dots are the step (§563 — the owner, 2026-09-29: «ușor: 1,2,3, mediu
  * 4,5,6 și tot așa, în ordine»).
  *
  * The pill shows «Mediu 4», hidden from a screen reader, and carries «Dificultate: mediu — nivelul
@@ -48,7 +48,7 @@ async function expectGauge(pill: Locator, band: number, step?: number) {
 
 test.describe("BR-REQ-041-01 the difficulty pill names its level of fifteen on a tap (§528)", () => {
   test.use({ hasTouch: true, viewport: { width: 320, height: 720 } });
-  // The level, then every band's levels on a second line (§NNN; the owner, 2026-09-29 14:18).
+  // The level, then every band's levels on a second line (§563; the owner, 2026-09-29 14:18).
   const SENTENCE = /^Mediu — nivelul 4 din 15\s+ușor 1–3 · mediu 4–6 · greuț 7–9 · greu 10–12 · foarte greu 13–15$/;
 
   test("on the event page, a tap on «Mediu 4» opens the tooltip", async ({ page }) => {
@@ -154,7 +154,7 @@ test.describe("BR-REQ-041-01 the difficulty gauge (§412)", () => {
     await expectGauge(page.getByRole("combobox", { name: "Dificultate" }), 5);
   });
 
-  test("the editor's «Nivelul» is a segmented control of the band's three levels beside the band, at the middle by default, each segment a 44-px target with its dots (§526, §NNN)", async ({ page }) => {
+  test("the editor's «Nivelul» is a segmented control of the band's three levels beside the band, at the middle by default, each segment a 44-px target with its dots (§526, §563)", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin/events/new");
     await hydrated(page);
@@ -166,7 +166,7 @@ test.describe("BR-REQ-041-01 the difficulty gauge (§412)", () => {
     await expect(steps.locator("label")).toHaveText(["–", "–", "–"]);
     await expect(steps.locator("svg")).toHaveCount(3);
     await expect(steps.getByRole("radio", { name: "Nivelul din mijlocul categoriei" })).toBeChecked();
-    // A band chosen: its own three levels of fifteen, in order (§NNN) — «Mediu» is 4 · 5 · 6, «Ușor» 1 · 2 · 3.
+    // A band chosen: its own three levels of fifteen, in order (§563) — «Mediu» is 4 · 5 · 6, «Ușor» 1 · 2 · 3.
     await page.getByRole("combobox", { name: "Dificultate" }).click();
     await page.getByRole("option", { name: "Mediu", exact: true }).click();
     await expect(steps.locator("label")).toHaveText(["4", "5", "6"]);
@@ -184,7 +184,7 @@ test.describe("BR-REQ-041-01 the difficulty gauge (§412)", () => {
       expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
       expect(box?.width ?? 0).toBeGreaterThanOrEqual(44);
     }
-    // The rule and the whole ladder in one sentence under the toggle (§NNN).
+    // The rule and the whole ladder in one sentence under the toggle (§563).
     const HELP = "Nivelul e de la 1 (ușor) la 15 (foarte greu): fiecare categorie are trei niveluri — ușor 1–3, mediu 4–6, greuț 7–9, greu 10–12, foarte greu 13–15.";
     await expect(page.getByText(HELP)).toBeVisible();
     // The whole scale behind a «?» beside the toggle and beside the band (§528, §537), one line per band.

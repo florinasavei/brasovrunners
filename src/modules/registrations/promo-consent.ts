@@ -12,7 +12,7 @@ import { anotherAdultOnTheLink, managedRegistration } from "./manage-family";
 import { findRegistrationById } from "./repository";
 
 /**
- * «Vreau să primesc oferte și beneficii de la <club> și partenerii săi.» after registration (§NNN;
+ * «Vreau să primesc oferte și beneficii de la <club> și partenerii săi.» after registration (§562;
  * the owner, 2026-09-29: «I need an extra check on the registration for participants to optionally
  * receive promotional materials from us and from clients»; the words are his of 16:12 the same day).
  * The column keeps its first name, `promo_consent`; every word a person or the club reads says
@@ -66,7 +66,7 @@ import { findRegistrationById } from "./repository";
 export type PromoConsentSurface = "FORM" | "MANAGE_LINK" | "MY_REGISTRATIONS" | "DECLARATION" | "STAFF";
 
 /**
- * The register form's answer, on the audit trail (§NNN, fix round): one row
+ * The register form's answer, on the audit trail (§562, fix round): one row
  * `registration.promo_consent_changed` `{ to: true, via: "FORM" }` whenever a form keeps a tick, and
  * `{ to: false, via: "FORM" }` when a restarted or corrected form takes back a yes the row held. No
  * row for an unticked box on a row that never said yes: nothing changed. In the caller's
@@ -164,7 +164,7 @@ export async function setPromoConsentFromManageLink<T extends Record<string, unk
   const own = await findRegistrationById(db, context.token.registrationId);
   const target = own ? await managedRegistration(db, own, registrationId) : null;
   if (!target) throw new DomainError("NOT_FOUND", "not a registration this link manages");
-  // Another adult on the address (§421): this link may take their yes back, never give it (§NNN fix round).
+  // Another adult on the address (§421): this link may take their yes back, never give it (§562 fix round).
   if (consent && own && anotherAdultOnTheLink(own, target, now)) {
     throw new DomainError("FORBIDDEN", "another adult on the address gives their own consent to offers and benefits");
   }
@@ -176,7 +176,7 @@ export async function setPromoConsentFromManageLink<T extends Record<string, unk
 /**
  * From «Înscrierile mele» (§77). The `MANAGE_PROFILE` token is read, never spent, and the
  * registration must be the holder's own; a stranger's id gets NOT_FOUND, never a hint. A withdrawal
- * only (§NNN, second fix round): the address link cannot tell the holder from another adult on the
+ * only (§562, second fix round): the address link cannot tell the holder from another adult on the
  * same address, so a yes from here is FORBIDDEN for every row — the yes is given on the
  * registration's own manage link or on the declaration.
  */

@@ -107,7 +107,7 @@ export type AuditAction =
    */
   | "registration.consent_withdrawn"
   /**
-   * «Vreau să primesc oferte și beneficii» switched (§NNN, `registrations/promo-consent.ts`): the
+   * «Vreau să primesc oferte și beneficii» switched (§562, `registrations/promo-consent.ts`): the
    * new value (`to: true | false`) and the door — the manage link, «Înscrierile mele», the
    * declaration page, or an Administrator withdrawing it for a person who wrote (the actor and the
    * reason then). Never the name or the address.
@@ -187,7 +187,7 @@ export type AuditAction =
   | "newsletter.subscriber_unsubscribed"
   /** The «Abonați» list downloaded as a CSV (§550): who, the filter's shape and how many rows — never a row. */
   | "newsletter.subscribers_exported"
-  /** Who said yes to offers and benefits, downloaded as a CSV (§NNN): who and how many rows — never a row. */
+  /** Who said yes to offers and benefits, downloaded as a CSV (§562): who and how many rows — never a row. */
   | "newsletter.promo_consenters_exported"
   /**
    * An event erased outright, with everyone registered for it (BR-REQ-037-06). Like

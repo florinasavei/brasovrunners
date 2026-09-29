@@ -17,7 +17,7 @@ import { signingInput } from "../../helpers/declaration-signing";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Vreau să primesc materiale promoționale de la club și de la partenerii lui»: the owner,
+ * §562 — «Vreau să primesc materiale promoționale de la club și de la partenerii lui»: the owner,
  * 2026-09-29, «I need an extra check on the registration for participants to optionally receive
  * promotional materials from us and from clients (this also has to be reflected in the GDPR notice)».
  *
@@ -161,7 +161,7 @@ beforeEach(async () => {
   await db.delete(newsletterSubscribers);
 });
 
-describe("§NNN the form keeps the tick only under a notice that describes it", () => {
+describe("§562 the form keeps the tick only under a notice that describes it", () => {
   it("stores the tick with its moment from a public form under a notice naming the marker", async () => {
     await texts();
     expect(await noticeDescribesPromotionalMaterials(db, NOW)).toBe(true);
@@ -229,7 +229,7 @@ describe("§NNN the form keeps the tick only under a notice that describes it", 
   });
 });
 
-describe("§NNN per person on a family's sitting", () => {
+describe("§562 per person on a family's sitting", () => {
   it("keeps the first person's and a minor's tick, and never another adult's (§421)", async () => {
     await texts();
     const event = await createEvent();
@@ -264,7 +264,7 @@ describe("§NNN per person on a family's sitting", () => {
   });
 });
 
-describe("§NNN the declaration page: the signer's own yes", () => {
+describe("§562 the declaration page: the signer's own yes", () => {
   async function pendingDeclaration(notice: object = withMarker, overrides: Record<string, unknown> = { promoConsent: false }) {
     await texts(notice);
     const event = await createEvent();
@@ -301,7 +301,7 @@ describe("§NNN the declaration page: the signer's own yes", () => {
   });
 });
 
-describe("§NNN the person's own switch: the manage link and «Înscrierile mele»", () => {
+describe("§562 the person's own switch: the manage link and «Înscrierile mele»", () => {
   async function registered(overrides: Record<string, unknown> = {}) {
     const event = await createEvent();
     await submitRegistration(db, event, submission("Ana", NOW, overrides), NOW);
@@ -392,7 +392,7 @@ describe("§NNN the person's own switch: the manage link and «Înscrierile mele
   });
 });
 
-describe("§NNN fix round: the form's moment, per registration, and another adult's yes", () => {
+describe("§562 fix round: the form's moment, per registration, and another adult's yes", () => {
   const token = (row: Registration, purpose: "MANAGE_REGISTRATION" | "MANAGE_PROFILE") =>
     issueActionToken(db, { participantId: row.participantId, registrationId: purpose === "MANAGE_REGISTRATION" ? row.id : null, purpose, expiresAt: STARTS_AT, now: NOW }).then((issued) => issued.secret);
 
@@ -502,7 +502,7 @@ describe("§NNN fix round: the form's moment, per registration, and another adul
   });
 });
 
-describe("§NNN two consents, two switches", () => {
+describe("§562 two consents, two switches", () => {
   it("a newsletter unsubscribe leaves the offers-and-benefits consent alone", async () => {
     await texts();
     const event = await createEvent();
@@ -551,7 +551,7 @@ describe("§NNN two consents, two switches", () => {
   });
 });
 
-describe("§NNN the newsletter page's second fold", () => {
+describe("§562 the newsletter page's second fold", () => {
   async function seedParticipant(email: string): Promise<string> {
     const identity = canonicalizeEmail(email);
     const [participant] = await db

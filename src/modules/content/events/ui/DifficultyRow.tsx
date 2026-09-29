@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 
 /**
  * The difficulty row of «Ce fel de eveniment» (§526, centred §537): the band select with its «?»
- * and «Nivelul» (§NNN, «Treapta» before) with its «?», on one axis — the owner, 2026-09-28: «partea asta nu e centrată!».
+ * and «Nivelul» (§563, «Treapta» before) with its «?», on one axis — the owner, 2026-09-28: «partea asta nu e centrată!».
  *
  * One grid: from `sm` the band and the step share the first row and the step's help line has a row
  * of its own under the step (the `help` area) — it never lifts the toggle. The cells align to the

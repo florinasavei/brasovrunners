@@ -388,7 +388,7 @@ export const registrations = pgTable(
     listSocials: boolean("list_socials").notNull().default(false),
 
     /**
-     * «Vreau să primesc oferte și beneficii de la <club> și partenerii săi.» (§NNN): the
+     * «Vreau să primesc oferte și beneficii de la <club> și partenerii săi.» (§562): the
      * person's own consent (art. 6(1)(a) GDPR), optional and never pre-ticked, separate from the
      * list tick above and from the newsletter (two consents, two switches — an unsubscribe from the
      * newsletter leaves this alone, and withdrawing this leaves the newsletter alone).

@@ -59,7 +59,7 @@ type Props = {
     /** The box a cancel without its reason named (§558), under `person`'s cancel — an id the page lists, never a name. */
     reason?: string;
     person?: string;
-    /** The offers-and-benefits switch (§NNN): the registration it saved, or refused. */
+    /** The offers-and-benefits switch (§562): the registration it saved, or refused. */
     promo?: string;
     promoFailed?: string;
   }>;
@@ -118,7 +118,7 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
   const now = new Date();
   const context = invalid ? { ok: false as const } : await readMyRegistrations(getDb(), token, locale, now);
   /*
-    Offers and benefits (§NNN, second fix round): «Înscrierile mele» is a door out only. The address
+    Offers and benefits (§562, second fix round): «Înscrierile mele» is a door out only. The address
     link cannot tell the holder from another adult on the same address, and the notice names this
     page as a way to withdraw, never to give — so a row that says yes gets «Nu mai vreau», and a row
     that says no gets one sentence pointing to where the yes is given: the registration's own page
@@ -126,7 +126,7 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
     The sentence only while the notice in force describes the offers; «Nu mai vreau» always.
   */
   const promoOn = context.ok ? await cachedPromotionalMaterialsOffered(now) : false;
-  /** The offers-and-benefits line for one registration (§NNN): its answer, and the way out when it is yes. */
+  /** The offers-and-benefits line for one registration (§562): its answer, and the way out when it is yes. */
   const promoSwitch = (item: { id: string; promoConsent: boolean }, closed = false) => (
     <Stack spacing={1} sx={{ mt: 1.5 }} data-testid="my-promo">
       {promo === item.id && (
@@ -202,7 +202,7 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
             {field === "socials" ? t("withdraw.socialsDone") : t("withdraw.healthDone")}
           </Alert>
         )}
-      {/* A closed registration whose last consent was the promotional one leaves the list once withdrawn (§NNN). */}
+      {/* A closed registration whose last consent was the promotional one leaves the list once withdrawn (§562). */}
       {promo &&
         context.ok &&
         !context.items.some((item) => item.id === promo) &&
@@ -452,7 +452,7 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
               </Stack>
 
               {/*
-                The offers and benefits (§NNN): «Nu mai vreau» whenever the row says yes; a no only says
+                The offers and benefits (§562): «Nu mai vreau» whenever the row says yes; a no only says
                 where the yes is given, while the notice in force describes them. The link is read, never
                 spent, as the list switch above. Separate from the newsletter, and the words say so.
               */}
@@ -574,7 +574,7 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
                     </form>
                   )}
                 </Stack>
-                {/* A consent to offers and benefits outlives the place (§NNN): only the way out here. */}
+                {/* A consent to offers and benefits outlives the place (§562): only the way out here. */}
                 {item.promoConsent && promoSwitch(item, true)}
                 {/* Withdrawn just now, while the card stays for its other data: the answer, and no way back in here. */}
                 {!item.promoConsent && promo === item.id && (

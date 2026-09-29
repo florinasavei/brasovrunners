@@ -91,7 +91,7 @@ export default async function ListingFilterPanel({
       case "surface":
         return tEvent(`surface.${value}`);
       case "difficulty":
-        // The band with the levels it ticks (§NNN): «Mediu (4–6)».
+        // The band with the levels it ticks (§563): «Mediu (4–6)».
         return isDifficultyBand(value) ? difficultyBandRangeWord(value, tEvent) : tEvent(`difficultyValues.${value}`);
       case "distance":
         return t(`filter.distance.${value}`);

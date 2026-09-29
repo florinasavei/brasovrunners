@@ -100,7 +100,7 @@ export async function setListConsentFromManageAction(form: FormData): Promise<vo
 
 /**
  * «Vreau oferte și beneficii» / «Nu mai vreau oferte și beneficii» from the participant's own
- * link (§NNN), per person like the list switch above: read, not spent. `consent` is the answer the
+ * link (§562), per person like the list switch above: read, not spent. `consent` is the answer the
  * button carried, so a double submission lands on the state the person pressed for. A yes while the
  * notice in force does not describe the materials is refused by the module, never kept.
  */

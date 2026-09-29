@@ -92,7 +92,7 @@ describe("BR-REQ-031-04 every rejected field can be named and reached", () => {
       // §500: a tick like `listOptOut`, and the service decides what is kept — nothing to refuse.
       "listSocials",
       "locale",
-      // §NNN: the offers and benefits, a tick the service decides — never required, nothing to refuse.
+      // §562: the offers and benefits, a tick the service decides — never required, nothing to refuse.
       "promoConsent",
       "renderedAt",
       "resultsNameConsent",

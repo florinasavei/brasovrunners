@@ -11,7 +11,7 @@ import { DomainError } from "@/shared/errors/domain-error";
 import { CSV_BOM } from "./subscribers-csv";
 
 /**
- * «Participanți care au bifat oferte și beneficii» (§NNN, amending §550): the second fold of the
+ * «Participanți care au bifat oferte și beneficii» (§562, amending §550): the second fold of the
  * newsletter's «Abonați» page — every registration whose person said yes to «Vreau să primesc
  * oferte și beneficii de la <club> și partenerii săi.», with the name, the address, the event
  * and the moment, newest first, and its own CSV.
@@ -106,7 +106,7 @@ export async function exportPromoConsenters<T extends Record<string, unknown>>(
 export type PromoConsenterCsvHeader = { name: string; email: string; event: string; consentedAt: string };
 
 /**
- * The file (§NNN): the subscribers CSV's rules (§550) — every cell through `csvCell` (formula
+ * The file (§562): the subscribers CSV's rules (§550) — every cell through `csvCell` (formula
  * characters neutralized, quotes doubled), CRLF, a BOM first for Excel on Windows, the moment in
  * ISO 8601 — with the headers in the reader's language.
  */

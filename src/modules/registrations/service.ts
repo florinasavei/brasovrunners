@@ -1654,7 +1654,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
   const listSocials =
     input.listSocials && !input.listOptOut && (stravaUrl !== null || instagramHandle !== null) && describesListSocials(privacyNotice.body);
   /*
-    «Vreau să primesc oferte și beneficii» (§NNN), kept only when every condition holds: the
+    «Vreau să primesc oferte și beneficii» (§562), kept only when every condition holds: the
     person ticked it; on a public form — a staff entry or the desk never sets it, because staff
     cannot consent for a person (the staff form has no box; a posted one is ignored here); and the
     privacy notice this registration records — the one they were just given, in their language —
@@ -1706,7 +1706,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     instagramHandle,
     // Always a boolean, so a restart (which spreads these details) rewrites the old answer.
     listSocials,
-    // Always a boolean and a moment or null, so a restart rewrites the old answer (§NNN).
+    // Always a boolean and a moment or null, so a restart rewrites the old answer (§562).
     promoConsent,
     promoConsentAt: promoConsent ? now : null,
     clubMemberDeclared: input.clubMemberDeclared,
@@ -2171,7 +2171,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
             updatedAt: now,
           })
           .where(eq(registrations.id, existing.id));
-        // The form's answer on «Oferte și beneficii», on the trail with its moment (§NNN).
+        // The form's answer on «Oferte și beneficii», on the trail with its moment (§562).
         await recordFormPromoConsent(tx, { registrationId: existing.id, participantId: participant.id, kept: corrected.promoConsent === true, before: existing.promoConsent, now });
       }
       /*
@@ -2440,7 +2440,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       now,
     });
     // No race number at the form: it is drawn when the registration is confirmed (§548).
-    // A tick the form kept, on the trail with its moment (§NNN): it outlives a later withdrawal.
+    // A tick the form kept, on the trail with its moment (§562): it outlives a later withdrawal.
     await recordFormPromoConsent(tx, { registrationId: created.id, participantId: participant.id, kept: rowDetails.promoConsent === true, before: false, now });
 
     // At the desk the address is about to be vouched for by the person typing it
@@ -2640,7 +2640,7 @@ export async function signDeclaration<T extends Record<string, unknown>>(
     }
 
     /*
-      «Vreau să primesc oferte și beneficii», ticked while signing (§NNN): the signer's own yes, in
+      «Vreau să primesc oferte și beneficii», ticked while signing (§562): the signer's own yes, in
       this transaction — a signature refused below rolls it back with everything else. Kept only while
       the notice in force describes the materials; otherwise ignored, never a refusal of the signature.
       A no here changes nothing: the page offers only the yes, and the way out is the person's own page.

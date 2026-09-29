@@ -640,7 +640,7 @@ test.describe("BR-REQ-041-01 the listing's cards (§366)", () => {
     const pills = tampa.locator('[data-fact="pills"] .MuiChip-root');
     // The owner, 2026-09-24, of "8 km · 250 m D+ · Mediu · Trail": "The order of this should be:
     // terrain type, difficulty, distance, elevation" (§366, amended §375); the cost pill follows.
-    // The difficulty pill's visible «Mediu 4» (the level, §NNN) is followed by the screen reader's own words
+    // The difficulty pill's visible «Mediu 4» (the level, §563) is followed by the screen reader's own words
     // (`route-pills.ts` `srLabel`, §526), so its element's own text is not just «Mediu 4» — the
     // regex anchors on the visible words and still counts and orders every pill.
     await expect(pills).toHaveText(["Trail", /^Mediu 4(?:Dificultate: .+)?$/, "14 km", "600 m D+", "Gratuit"]);

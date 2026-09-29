@@ -9,7 +9,7 @@ import { declarationTrailRo } from "@/modules/legal-documents/templates/declarat
 import { groupRunTrailRo } from "@/modules/legal-documents/templates/group-run-declaration";
 
 /**
- * BR-REQ-053-01, BR-REQ-053-02 (§NNN, amending §515, §523 and §556) — the owner, 2026-09-29: «let's
+ * BR-REQ-053-01, BR-REQ-053-02 (§564, amending §515, §523 and §556) — the owner, 2026-09-29: «let's
  * not call it "cursă montană" but "eveniment montan"; and don't use romgleză — don't use "trail" in a
  * Romanian document, use "teren accidentat"». The Romanian templates, their titles and every sentence
  * of the Romanian catalogue say «eveniment montan» and «teren accidentat»; the one «Trail» left is the
@@ -28,7 +28,7 @@ function strings(value: unknown, path = ""): Array<[string, string]> {
   return [];
 }
 
-describe("the Romanian documents say «eveniment montan» and «teren accidentat» (§NNN)", () => {
+describe("the Romanian documents say «eveniment montan» and «teren accidentat» (§564)", () => {
   it("no Romanian template title or body says «trail» or «cursă montană»", () => {
     for (const key of LEGAL_DOCUMENT_KEYS) {
       const { title, body } = LEGAL_TEMPLATES[key].ro;

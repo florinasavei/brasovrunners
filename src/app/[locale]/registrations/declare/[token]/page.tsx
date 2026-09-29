@@ -347,7 +347,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
   // the text `signDeclaration` binds, read for the same event.
   const declaration = signing && registration ? await findEventDeclaration(db, registration.eventId, locale, now) : undefined;
   /*
-    «Vreau să primesc oferte și beneficii» (§NNN) while signing: the signer's own yes — the one door
+    «Vreau să primesc oferte și beneficii» (§562) while signing: the signer's own yes — the one door
     another adult on a family's address has (§421) — offered only while the notice in force describes
     the materials and only to a registration that has not said yes already.
   */
@@ -841,7 +841,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                 </>
               )}
               {/*
-                The offers and benefits (§NNN): optional, never pre-ticked, never required; a tick
+                The offers and benefits (§562): optional, never pre-ticked, never required; a tick
                 the notice in force does not cover is ignored and the signature goes on.
               */}
               {offerPromo && (

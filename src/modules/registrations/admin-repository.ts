@@ -72,7 +72,7 @@ export type RegistrationListRow = {
   listOptOut: boolean;
   /** Whether the socials are printed beside the name on the public list (§500); the export's last column. */
   listSocials: boolean;
-  /** «Oferte și beneficii» (§NNN): the person's own consent and its moment; the export's last column. */
+  /** «Oferte și beneficii» (§562): the person's own consent and its moment; the export's last column. */
   promoConsent: boolean;
   promoConsentAt: Date | null;
   submittedAt: Date;
@@ -521,7 +521,7 @@ export type RegistrationDetail = {
   instagramHandle: string | null;
   /** Whether the public list prints them beside the name (§500): the runner's own tick, as kept. */
   listSocials: boolean;
-  /** «Oferte și beneficii» (§NNN): the person's own consent, and the moment of the tick or the last change. */
+  /** «Oferte și beneficii» (§562): the person's own consent, and the moment of the tick or the last change. */
   promoConsent: boolean;
   promoConsentAt: Date | null;
   /** The parent or guardian of a minor (§108); null for an adult. */

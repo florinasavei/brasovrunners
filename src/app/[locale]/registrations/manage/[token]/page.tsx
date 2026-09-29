@@ -56,7 +56,7 @@ type Props = {
     here?: string;
     list?: string;
     withdrawn?: string;
-    /** The offers-and-benefits switch's outcome (§NNN): 1 saved, 0 refused. */
+    /** The offers-and-benefits switch's outcome (§562): 1 saved, 0 refused. */
     promo?: string;
     /** Which person a check-in or a list answer was about (§547): an id the page already lists, never a name. */
     person?: string;
@@ -155,7 +155,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
   // Why the person cancels (§558): the words once, and the box a refused press named, under that person.
   const reasonWords = live ? await cancelReasonWords() : null;
   const reasonProblem = cancelReasonProblemOf(reason);
-  // «Vreau oferte și beneficii» is offered only while the notice in force describes it (§NNN);
+  // «Vreau oferte și beneficii» is offered only while the notice in force describes it (§562);
   // a person who said yes is always offered the way out, whatever the notice says today.
   const promoOn = live ? await cachedPromotionalMaterialsOffered(new Date()) : false;
 
@@ -325,7 +325,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                 )}
 
                 {/*
-                  «Oferte și beneficii» (§NNN), per registration — the same pattern as the
+                  «Oferte și beneficii» (§562), per registration — the same pattern as the
                   list's above: the token read, never spent; one write and an audit row. «Vreau» only
                   while the notice in force describes them; «Nu mai vreau» whenever the row says yes,
                   even on a cancelled registration. Separate from the newsletter, and the words say so.
@@ -350,7 +350,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                     <Typography sx={{ mb: 1 }} data-testid="manage-promo-state">
                       {one.promoConsent ? t("promo.yes") : t("promo.no")}
                     </Typography>
-                    {/* Another adult's row (§421): only the way out; their yes is their own (§NNN fix round). */}
+                    {/* Another adult's row (§421): only the way out; their yes is their own (§562 fix round). */}
                     {(one.promoConsent || !one.anotherAdult) && (
                       <form action={setPromoConsentFromManageAction}>
                         <input type="hidden" name="locale" value={locale} />

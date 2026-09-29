@@ -40,7 +40,7 @@ function isBand(value: string): value is DifficultyBand {
 }
 
 /**
- * «Nivelul» (§526, §NNN — «Treapta» until the owner, 2026-09-29: «adică ușor: 1,2,3, mediu 4,5,6 și
+ * «Nivelul» (§526, §563 — «Treapta» until the owner, 2026-09-29: «adică ușor: 1,2,3, mediu 4,5,6 și
  * tot așa, în ordine»): the editor's second difficulty control, beside the band select in «Ce fel de
  * eveniment» — where inside the band the event stands, as a segmented control of three, each
  * segment with its dots glyph. **The number on a segment is the level of fifteen** — Mediu → 4 · 5 ·
@@ -152,7 +152,7 @@ export default function DifficultyStepField({
                   sx={{ position: "absolute", inset: 0, opacity: 0, width: 1, height: 1, m: 0, cursor: "pointer" }}
                 />
                 <StepDotsIcon step={step} />
-                {/* The level of fifteen (§NNN): the band's own three numbers; a dash while no band is chosen. */}
+                {/* The level of fifteen (§563): the band's own three numbers; a dash while no band is chosen. */}
                 <Typography component="span" variant="body2" sx={{ fontWeight: 600, lineHeight: 1 }} aria-hidden="true" data-testid="difficulty-level-number">
                   {currentBand ? difficultyLevel(currentBand, step) : "–"}
                 </Typography>

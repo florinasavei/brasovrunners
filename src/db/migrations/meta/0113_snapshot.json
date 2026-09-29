@@ -1,6 +1,6 @@
 {
   "id": "30181c89-23e8-4f91-9439-3064325a4101",
-  "prevId": "cae71d2f-2bf1-470d-808f-9e5b86fcad25",
+  "prevId": "36ee591e-d212-480c-a810-a841b8d92a4b",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1455,6 +1455,13 @@
         },
         "kit_shirt": {
           "name": "kit_shirt",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "ask_health_note": {
+          "name": "ask_health_note",
           "type": "boolean",
           "primaryKey": false,
           "notNull": true,
@@ -5003,6 +5010,19 @@
           "primaryKey": false,
           "notNull": false
         },
+        "cancel_reason_kind": {
+          "name": "cancel_reason_kind",
+          "type": "registration_cancel_reason_kind",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cancel_reason": {
+          "name": "cancel_reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "checkin_code": {
           "name": "checkin_code",
           "type": "text",
@@ -5864,6 +5884,15 @@
         "WEEKLY_RUNS",
         "VOLUNTEERING",
         "RESULTS_PHOTOS"
+      ]
+    },
+    "public.registration_cancel_reason_kind": {
+      "name": "registration_cancel_reason_kind",
+      "schema": "public",
+      "values": [
+        "INJURY_OR_ILLNESS",
+        "OTHER_PLANS",
+        "OTHER"
       ]
     },
     "public.registration_cancellation_source": {

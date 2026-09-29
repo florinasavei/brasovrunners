@@ -40,7 +40,7 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  *    neither provoke nor feed, follow the organiser's general safety instructions (§556, the second
  *    review of 2026-09-29, which also asked the trail shoes as grip and the dispute sentence after
  *    the three years), 112 in an emergency. The shoes read «de preferat încălțăminte pentru teren
- *    accidentat» since §NNN.
+ *    accidentat» since §564.
  * 5. **Substances**, the owner's sentence: alcohol, drugs "or other substances that impair my ability
  *    to take part safely" — not "medicines that lower my attention".
  * 6. **Mandatory against recommended equipment**: the start may be refused only for lacking what the
@@ -50,7 +50,7 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  *    event, the archive copies with the documents masked, the text's fingerprint, the moment and the
  *    signer's name, a simple electronic signature, an adult signing personally, and for 14–17 the
  *    minor with the parent's or guardian's approval and signature.
- * 8. **Romanian words, not «romgleză» (§NNN, the owner, 2026-09-29).** The mountain race is an
+ * 8. **Romanian words, not «romgleză» (§564, the owner, 2026-09-29).** The mountain race is an
  *    «eveniment montan», never a «cursă montană» or a «cursă trail», and the ground is «teren
  *    accidentat»: not one «trail» in a Romanian text or title. The code keeps its names
  *    (`EVENT_DECLARATION`, `declarationTrailRo`, the surface `TRAIL`); English keeps "trail" for the

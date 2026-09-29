@@ -357,7 +357,7 @@ function htmlLine(line: Line): string {
  * before.
  */
 /**
- * The difficulty in the facts line, with its level of fifteen (§526, §NNN) — «Mediu, nivelul 5 din
+ * The difficulty in the facts line, with its level of fifteen (§526, §563) — «Mediu, nivelul 5 din
  * 15»: a calendar entry has no gauge, so the words say it, as the emails' facts do — the same
  * `difficultyWords` the pills read.
  */

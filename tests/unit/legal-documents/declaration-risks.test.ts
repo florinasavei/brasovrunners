@@ -110,7 +110,7 @@ describe("§515 the race's two declarations, one shared body", () => {
     expect(LEGAL_TEMPLATES.EVENT_DECLARATION.en.body).toBe(declarationTrailEn);
     expect(LEGAL_TEMPLATES.EVENT_DECLARATION_ROAD.ro.body).toBe(declarationRoadRo);
     expect(LEGAL_TEMPLATES.EVENT_DECLARATION_ROAD.en.body).toBe(declarationRoadEn);
-    // The titles by their course (§515), in Romanian words since §NNN: «— eveniment montan», and
+    // The titles by their course (§515), in Romanian words since §564: «— eveniment montan», and
     // «eveniment» for the road one too, because the two are named side by side.
     expect(LEGAL_TEMPLATES.EVENT_DECLARATION.ro.title).toBe("Declarație pe propria răspundere — eveniment montan");
     expect(LEGAL_TEMPLATES.EVENT_DECLARATION_ROAD.ro.title).toBe("Declarație pe propria răspundere — eveniment pe asfalt / în parc");
