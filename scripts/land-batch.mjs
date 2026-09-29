@@ -27,8 +27,8 @@
  *      later round's addendum, less any fixer's housekeeping — and its CHANGELOG bullet: the implementer's,
  *      or the item's own `changelog`, never a fixer's (`land-entry.mjs` says why);
  *   5. adds or amends the SPECS.md acceptance criteria, the latest stage winning per requirement;
- *   6. with `--tree`, adds the CLAUDE.md batch line and the docs/QUEUE.md Released row (the dispatcher
- *      writes those by hand after a manifest landing); and in both modes deletes every `.release/*.json`
+ *   6. with `--tree`, adds the docs/QUEUE.md Released row (the dispatcher writes it by hand after a
+ *      manifest landing); CLAUDE.md carries no batch lines. In both modes deletes every `.release/*.json`
  *      it read, so the landing commit carries the facts into the documents and out of the tree.
  *
  * It stops, before writing anything, on a blank fix report (a round with no result or no summary), a blank
@@ -76,7 +76,6 @@ import {
   releaseTitle,
   todayIn,
   validateEntry,
-  withBatchLine,
   withReleasedRow,
 } from "./land-tree.mjs";
 
@@ -363,15 +362,10 @@ for (const e of entries) {
 }
 write("SPECS.md", specs.join("\n"));
 
-// 6. The batch line and the queue (--tree), the entries out of the tree.
+// 6. The queue's Released row (--tree), the entries out of the tree.
 const clauses = entries.map((e) => clauseOf({ decisionsTitle: e.title, batchLine: e.raw?.batchLine }, e.n));
 const title = releaseTitle(clauses);
 if (TREE) {
-  try {
-    write("CLAUDE.md", withBatchLine(read("CLAUDE.md").text, { to, date: manifest.date, clauses }));
-  } catch (error) {
-    fail(error.message);
-  }
   if (existsSync("docs/QUEUE.md")) {
     try {
       write("docs/QUEUE.md", withReleasedRow(read("docs/QUEUE.md").text, { to, clauses }));
@@ -417,5 +411,5 @@ for (const file of landedFiles) unlinkSync(file);
 if (process.env.GITHUB_OUTPUT) {
   appendFileSync(process.env.GITHUB_OUTPUT, `from=${from}\nto=${to}\ntitle=${title.replace(/[\r\n]+/g, " ")}\n`);
 }
-const next = TREE ? "yarn docs:check, then commit" : "docs/QUEUE.md and the CLAUDE.md batch line, then yarn check";
+const next = TREE ? "yarn docs:check, then commit" : "docs/QUEUE.md's Released row, then yarn check";
 console.log(`\napplied: ${dirty.length} files, ${landedFiles.length} ${ENTRY_DIR}/ entries deleted. Next: ${next}.`);

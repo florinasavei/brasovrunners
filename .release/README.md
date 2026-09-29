@@ -20,7 +20,7 @@ at an unattended landing: a README index row for every new file under the root, 
 `scripts/`, `.github/` or `.githooks/` (`yarn docs:check` fails without it), the SETUP or
 `docs/*.md` section the change needs, a line in CLAUDE.md's command list for a new `yarn`
 command. What it never writes: `DECISIONS.md`, `CHANGELOG.md`, `SPECS.md`, a baseline marker,
-CLAUDE.md's baseline and batch lines, `docs/QUEUE.md`'s Released rows — the landing does.
+CLAUDE.md's baseline line, `docs/QUEUE.md`'s Released rows — the landing does.
 
 `yarn docs:check` checks every entry on the pull request — the fields, the file's name, and that
 each criterion's requirement exists in `SPECS.md` — so a bad entry is red there, not at release
@@ -39,7 +39,7 @@ The same ones an implementer returns to the dispatcher (`.claude/workflows/br-ch
 | `changelogLine` | yes | one English bullet with a bold lead, ending in `§NNN.` |
 | `specsCriteria` | no | a list of `{ "requirement": "BR-REQ-041-01", "text": "…" }` — a full requirement id that exists in `SPECS.md`, and the criterion ending `(<date>, \`DECISIONS.md\` §NNN).` |
 | `docsNotes` | no | leave it empty: text another document needs is written on the branch itself (below). Anything here is hand work — a PC landing prints it, `yarn docs:check` warns, and the release from the phone refuses it |
-| `batchLine` | no | the short clause for the CLAUDE.md batch line and the queue's Released row; the title when absent |
+| `batchLine` | no | the short clause for the queue's Released row; the title when absent |
 
 Cite the decision in the code and in these texts as `§NNN`: the landing replaces it with the
 section's number, in the code by the commit that wrote the line.

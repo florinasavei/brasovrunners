@@ -39,7 +39,7 @@ const blank = (value) => typeof value !== "string" || !value.trim();
  * What is wrong with one entry, as sentences naming `label` — empty when it can land. An entry
  * holds `branch`, `decisionsTitle`, `decisionsSection` and `changelogLine`, and may hold
  * `specsCriteria` (each a full `BR-REQ-NNN-NN` id and a text), `docsNotes` and `batchLine` —
- * the short clause for the CLAUDE.md batch line and the queue's Released row.
+ * the short clause for the queue's Released row.
  *
  * With `requirements` (the ids SPECS.md defines), a criterion naming one SPECS.md does not have
  * is a problem too — `yarn docs:check` passes them, so a bad entry fails on its pull request,
@@ -150,7 +150,7 @@ export function typedBaseline(input, current, date) {
   return to;
 }
 
-/** The baseline without its date, as the batch line and the queue write it: `BR-V2.17`. */
+/** The baseline without its date, as the queue writes it: `BR-V2.17`. */
 export const shortBaseline = (baseline) => String(baseline).replace(/-\d{4}-\d{2}-\d{2}$/, "");
 
 /** Today's date where the club is, `YYYY-MM-DD` — a landing at 01:00 in Brașov is dated that day, not UTC's. */
@@ -165,7 +165,7 @@ export function currentBaseline(claudeText) {
   return m[1];
 }
 
-/** One entry's clause for the batch line and the queue: its `batchLine`, else its title, as written, and its number. */
+/** One entry's clause for the queue: its `batchLine`, else its title, as written, and its number. */
 export function clauseOf(entry, n) {
   const words = (blank(entry.batchLine) ? entry.decisionsTitle : entry.batchLine).trim().replace(/\.$/, "");
   return `${words.replaceAll(PLACEHOLDER, `§${n}`)} (§${n})`;
@@ -176,23 +176,6 @@ export function releaseTitle(clauses, max = 180) {
   const joined = clauses.map((c) => c.replace(/ \(§\d+\)$/, "")).join(" · ");
   const counted = clauses.length > 1 ? `${joined}: ${clauses.length} changes` : joined;
   return counted.length <= max ? counted : `${counted.slice(0, max - 1).trimEnd()}…`;
-}
-
-/**
- * CLAUDE.md with one more batch line, `- **Batch N (<date>, `BR-V2.NN`):** a · b.`, placed before
- * the `/admin/tasks` line that closes the list, N one past the highest batch already there.
- * Throws when the anchor is gone, so a landing never writes the line somewhere else.
- */
-export function withBatchLine(text, { to, date, clauses }) {
-  const eol = text.includes("\r\n") ? "\r\n" : "\n";
-  const lines = text.split(/\r?\n/);
-  const anchor = lines.findIndex((l) => l.startsWith("- `/admin/tasks`: what the club still owes"));
-  if (anchor < 0) throw new Error("CLAUDE.md: the `/admin/tasks` line the batch lines end before is gone");
-  const numbers = lines.map((l) => l.match(/^- \*\*Batch (\d+) \(/)).filter(Boolean).map((m) => Number(m[1]));
-  const n = numbers.length ? Math.max(...numbers) + 1 : 1;
-  const line = `- **Batch ${n} (${date}, \`${shortBaseline(to)}\`):** ${clauses.join(" · ")}.`;
-  lines.splice(anchor, 0, line);
-  return lines.join(eol);
 }
 
 /** docs/QUEUE.md with the release as the newest row of its Released table. Throws when that table is gone. */
