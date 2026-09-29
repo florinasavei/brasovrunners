@@ -26,6 +26,7 @@ import {
 import { clearOptionalData, OPTIONAL_DATA_FIELDS, type OptionalDataField } from "./consent-withdrawal";
 import { eraseConfirmationMatches } from "./domain/erase-confirmation";
 import type { SexChoice } from "./domain/sex";
+import { heldRefusal, refuseIfRegistrationHeld, registrationIsHeld } from "./declaration-hold";
 import { bibNumberInUse, isEventSpareNumber, retiredBibNumbers } from "./bibs";
 import { BIB_NUMBER_MAX, handsSpareAtConfirm } from "./domain/spare-bibs";
 import { canResendReminder, deriveAllowedResendMessageType } from "./domain/resend";
@@ -1092,6 +1093,10 @@ async function eraseRegistration<T extends Record<string, unknown>>(
   reason: string,
   now: Date,
 ): Promise<void> {
+  // A declaration held for a complaint or a dispute (§556) is kept, the registration with it: every
+  // erase — one, the batch, an event's — meets the refusal until an Administrator clears the hold.
+  if (await registrationIsHeld(db, current.id)) throw heldRefusal();
+
   // Releasing the place is a capacity decision, so it goes through `unregister` and takes the
   // event lock the same way every other one does (§10.6). Only for a row that holds a place:
   // a lapsed or already-cancelled registration holds nothing to give back.
@@ -1140,6 +1145,9 @@ async function eraseRegistration<T extends Record<string, unknown>>(
       correction its before and after. The deletion's own row above keeps its reason — its
       `from` is a status and its reason and number name nobody (§311).
     */
+    // The hold asked again under a lock (§556): the check above is the cheap refusal before any
+    // write; this one closes the moment between it and the delete.
+    await refuseIfRegistrationHeld(tx, current.id);
     await scrubRegistrationFromAudit(tx, current.id);
     await tx.delete(declarationAcceptances).where(eq(declarationAcceptances.registrationId, current.id));
     await tx.delete(registrations).where(eq(registrations.id, current.id));
@@ -1216,6 +1224,12 @@ export async function readEmergencyDetails<T extends Record<string, unknown>>(
 }
 
 /**
+ * One event's emergency sheet: its rows, and whether the event asks the health note (§557) — the
+ * sheet prints the health column only then, and each row's note is null for any other event.
+ */
+export type EmergencySheet = { asksHealthNote: boolean; rows: EmergencySheetRow[] };
+
+/**
  * One event's emergency sheet (§322), under the same gate and with the same audit, once per
  * render — `event.emergency_sheet_viewed`, the event and the row count, never a value or a name.
  */
@@ -1224,9 +1238,9 @@ export async function readEmergencySheet<T extends Record<string, unknown>>(
   actor: Pick<StaffUser, "id" | "role">,
   eventId: string,
   now: Date,
-): Promise<EmergencySheetRow[]> {
+): Promise<EmergencySheet> {
   assertMayRead(actor);
-  const [event] = await db.select({ id: events.id }).from(events).where(eq(events.id, eventId)).limit(1);
+  const [event] = await db.select({ id: events.id, askHealthNote: events.askHealthNote }).from(events).where(eq(events.id, eventId)).limit(1);
   if (!event) throw new DomainError("NOT_FOUND", "no such event");
 
   const rows = await listEmergencySheet(db, event.id);
@@ -1238,7 +1252,7 @@ export async function readEmergencySheet<T extends Record<string, unknown>>(
     metadata: { rowCount: rows.length },
     now,
   });
-  return rows;
+  return { asksHealthNote: event.askHealthNote, rows };
 }
 
 /**

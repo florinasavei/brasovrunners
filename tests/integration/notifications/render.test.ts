@@ -106,8 +106,10 @@ describe("BR-REQ-080-01 outbox renderer", () => {
     expect(message.subject.length).toBeGreaterThan(0);
     expect(message.html).toMatch(/https?:\/\/.+\/inregistrari\/declaratie\//);
 
-    const [token] = await db.select().from(emailActionTokens).where(eq(emailActionTokens.registrationId, registrationId));
-    expect(token.purpose).toBe("COMPLETE_DECLARATION");
+    // The declaration's own link — beside it, since §558, the manage link behind «Nu mai pot ajunge».
+    const tokens = await db.select().from(emailActionTokens).where(eq(emailActionTokens.registrationId, registrationId));
+    expect(tokens.map((row) => row.purpose).sort()).toEqual(["COMPLETE_DECLARATION", "MANAGE_REGISTRATION"]);
+    const token = tokens.find((row) => row.purpose === "COMPLETE_DECLARATION")!;
     // The declaration link lives until the race, not until the hold (§160): a hold past its
     // deadline is kept while nobody waits, and the link must still open the declaration then.
     // Read from the event's own row, so it does not depend on a translation existing.

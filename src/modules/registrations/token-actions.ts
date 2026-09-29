@@ -58,6 +58,7 @@ import { currentFamilyStep, type FamilyStep, familySigningSteps, isFamilyWizard,
 import { readMyRegistrations } from "./my-registrations";
 import { isUuid } from "@/shared/ids";
 import { isActiveStatus } from "./domain/state-machine";
+import type { CancelReason } from "./domain/cancel-reason";
 import { familyOf } from "./family-marker";
 
 /**
@@ -601,7 +602,7 @@ export async function checkInSelf(secret: string, now: Date, registrationId?: st
  * the transaction, so the link is not spent and nobody is cancelled. `family` says whether the page
  * listed more than one person, for the outcome page's one extra sentence — never who.
  */
-export async function consumeAndCancel(secret: string, now: Date, registrationId?: string) {
+export async function consumeAndCancel(secret: string, now: Date, reason: CancelReason, registrationId?: string) {
   const db = getDb();
 
   if (!(await tokenAttemptAllowed(db, secret, now))) return TOKEN_NOT_FOUND;
@@ -619,7 +620,7 @@ export async function consumeAndCancel(secret: string, now: Date, registrationId
     const family = (await listManagedPeople(tx, own)).length > 1;
     const event = await loadEventForRegistration(tx, registration.eventId);
 
-    const updated = await unregister(tx, event, registration.id, "PARTICIPANT", now, { via: "MANAGE_LINK" });
+    const updated = await unregister(tx, event, registration.id, "PARTICIPANT", now, { via: "MANAGE_LINK", reason });
     return { ok: true as const, token: consumed.token, registration: updated, family };
   });
 }
@@ -643,6 +644,7 @@ export async function withdrawFromFamilyWizard(
   pass: FamilySigningPass | null,
   registrationId: string,
   now: Date,
+  reason: CancelReason,
 ): Promise<{ ok: true; pass: FamilySigningPass; steps: FamilyStep[] } | typeof TOKEN_NOT_FOUND> {
   const db = getDb();
   if (!isUuid(registrationId)) return TOKEN_NOT_FOUND;
@@ -679,6 +681,6 @@ export async function withdrawFromFamilyWizard(
   const registration = await findRegistrationById(db, registrationId);
   if (!registration || !isSignable(registration.status)) return TOKEN_NOT_FOUND;
   const event = await loadEventForRegistration(db, registration.eventId);
-  await unregister(db, event, registration.id, "PARTICIPANT", now, { via: "FAMILY_WIZARD" });
+  await unregister(db, event, registration.id, "PARTICIPANT", now, { via: "FAMILY_WIZARD", reason });
   return { ok: true, ...(await nextFamilyPass(db, base, now)) };
 }

@@ -5,6 +5,7 @@ import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventTranslations, events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import {
+  type RegistrationCancelReasonKind,
   type RegistrationKind,
   type RegistrationSex,
   type RegistrationSource,
@@ -17,6 +18,7 @@ import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
 import { alias } from "drizzle-orm/pg-core";
 import { familyEmailQueued, familyReservationHolds, offerAwaitingItsFirstEmail } from "./repository";
+import { healthNoteShown } from "./domain/health-note";
 
 /**
  * Read queries for the Administrator-only backoffice (AGENTS.md §15.8, §15.10; BR-REQ-060-01,
@@ -99,6 +101,9 @@ export type RegistrationListRow = {
   holdExpiresAt: Date | null;
   declarationAcceptedAt: Date | null;
   cancelledAt: Date | null;
+  /** The participant's own reason for cancelling (§558): the export's «Cancellation reason». Null on a staff cancellation. */
+  cancelReasonKind: RegistrationCancelReasonKind | null;
+  cancelReason: string | null;
   expiredAt: Date | null;
   expiryReason: string | null;
 };
@@ -342,6 +347,8 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       holdExpiresAt: registrations.holdExpiresAt,
       declarationAcceptedAt: latestDeclarationAcceptedAt,
       cancelledAt: registrations.cancelledAt,
+      cancelReasonKind: registrations.cancelReasonKind,
+      cancelReason: registrations.cancelReason,
       expiredAt: registrations.expiredAt,
       expiryReason: registrations.expiryReason,
     })
@@ -522,6 +529,8 @@ export type RegistrationDetail = {
   /** The T-shirt size as stored, and whether the event gives one (§554): the page shows it only then. */
   tshirtSize: RegistrationTshirtSize | null;
   eventKitShirt: boolean;
+  /** Whether the event asks the health note (§557): the emergency section's button names the note only then. */
+  eventAsksHealthNote: boolean;
   /** The registration's language, as on the list row: the declaration translation it signs (§330). */
   locale: Locale;
   participantEmail: string;
@@ -538,6 +547,9 @@ export type RegistrationDetail = {
   confirmedAt: Date | null;
   cancelledAt: Date | null;
   cancellationSource: string | null;
+  /** Why the participant cancelled (§558): the timeline's line under «Anulată». Null on a staff cancellation. */
+  cancelReasonKind: RegistrationCancelReasonKind | null;
+  cancelReason: string | null;
   expiredAt: Date | null;
   expiryReason: string | null;
   /** Race day (BR-REQ-037-07, BR-REQ-037-08, BR-REQ-038-01). */
@@ -621,6 +633,7 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       sex: registrations.sex,
       tshirtSize: registrations.tshirtSize,
       eventKitShirt: events.kitShirt,
+      eventAsksHealthNote: events.askHealthNote,
       locale: registrations.locale,
       submittedAt: registrations.submittedAt,
       emailConfirmedAt: registrations.emailConfirmedAt,
@@ -630,6 +643,8 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       confirmedAt: registrations.confirmedAt,
       cancelledAt: registrations.cancelledAt,
       cancellationSource: registrations.cancellationSource,
+      cancelReasonKind: registrations.cancelReasonKind,
+      cancelReason: registrations.cancelReason,
       expiredAt: registrations.expiredAt,
       expiryReason: registrations.expiryReason,
       cycleStartedAt: registrations.privacyAcknowledgedAt,
@@ -675,10 +690,22 @@ export type EmergencyDetails = {
   phone: string | null;
   emergencyContactName: string | null;
   emergencyContactPhone: string | null;
+  /** The note, only when the event asks it (§557): null for any other event, whatever the row holds. */
   healthNotes: string | null;
   /** When the health consent was given — shown beside the note, so it reads as consented. */
   healthConsentAt: Date | null;
+  /** Whether the event asks the health note (§557, «Informații medicale»): the page shows the line only then. */
+  eventAsksHealthNote: boolean;
 };
+
+/**
+ * The health note as a screen may show it (§557): only for an event that asks it. A note stored
+ * before the tick came off stays on the row until the seven-day purge, and no screen reads it.
+ */
+function gatedHealth<R extends { healthNotes: string | null; healthConsentAt: Date | null; eventAsksHealthNote: boolean }>(row: R): R {
+  const healthNotes = healthNoteShown(row.eventAsksHealthNote, row.healthNotes);
+  return { ...row, healthNotes, healthConsentAt: healthNotes ? row.healthConsentAt : null };
+}
 
 export async function findEmergencyDetails<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -691,11 +718,13 @@ export async function findEmergencyDetails<T extends Record<string, unknown>>(
       emergencyContactPhone: registrations.emergencyContactPhone,
       healthNotes: registrations.healthNotes,
       healthConsentAt: registrations.healthConsentAt,
+      eventAsksHealthNote: events.askHealthNote,
     })
     .from(registrations)
+    .innerJoin(events, eq(events.id, registrations.eventId))
     .where(eq(registrations.id, registrationId))
     .limit(1);
-  return row;
+  return row ? gatedHealth(row) : undefined;
 }
 
 /**
@@ -718,7 +747,7 @@ export async function listEmergencySheet<T extends Record<string, unknown>>(
   db: Database<T>,
   eventId: string,
 ): Promise<EmergencySheetRow[]> {
-  return db
+  const rows = await db
     .select({
       id: registrations.id,
       registeredName: registrations.registeredName,
@@ -729,14 +758,17 @@ export async function listEmergencySheet<T extends Record<string, unknown>>(
       emergencyContactPhone: registrations.emergencyContactPhone,
       healthNotes: registrations.healthNotes,
       healthConsentAt: registrations.healthConsentAt,
+      eventAsksHealthNote: events.askHealthNote,
     })
     .from(registrations)
+    .innerJoin(events, eq(events.id, registrations.eventId))
     .where(and(eq(registrations.eventId, eventId), eq(registrations.status, "CONFIRMED"), eq(registrations.kind, "REAL")))
     .orderBy(
       sql`${registrations.bibNumber} asc nulls last`,
       asc(registrations.registeredName),
       asc(registrations.id),
     );
+  return rows.map(gatedHealth);
 }
 
 /**
@@ -980,7 +1012,18 @@ export type DeclarationAcceptanceRow = {
   minorTypedName: string | null;
   minorIdDocument: string | null;
   declarationVersion: number;
+  /** The row's id: what the hold's form names (§556). */
+  id: string;
+  /** The SHA-256 of the exact text signed (§556); null on a row from before it. */
+  textHash: string | null;
+  /** «Păstrează: reclamație / litigiu în curs» (§556): whether, why, when and by whom. */
+  retentionHold: boolean;
+  retentionHoldReason: string | null;
+  retentionHoldAt: Date | null;
+  retentionHoldByName: string | null;
 };
+
+const holdBy = alias(staffUsers, "retention_hold_by");
 
 export async function listDeclarationAcceptances<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -988,6 +1031,12 @@ export async function listDeclarationAcceptances<T extends Record<string, unknow
 ): Promise<DeclarationAcceptanceRow[]> {
   return db
     .select({
+      id: declarationAcceptances.id,
+      textHash: declarationAcceptances.textHash,
+      retentionHold: declarationAcceptances.retentionHold,
+      retentionHoldReason: declarationAcceptances.retentionHoldReason,
+      retentionHoldAt: declarationAcceptances.retentionHoldAt,
+      retentionHoldByName: holdBy.displayName,
       acceptedAt: declarationAcceptances.acceptedAt,
       typedName: declarationAcceptances.typedName,
       idDocument: declarationAcceptances.idDocument,
@@ -999,6 +1048,7 @@ export async function listDeclarationAcceptances<T extends Record<string, unknow
     })
     .from(declarationAcceptances)
     .leftJoin(staffUsers, eq(staffUsers.id, declarationAcceptances.attestedByStaffUserId))
+    .leftJoin(holdBy, eq(holdBy.id, declarationAcceptances.retentionHoldByStaffUserId))
     .where(eq(declarationAcceptances.registrationId, registrationId))
     .orderBy(desc(declarationAcceptances.acceptedAt));
 }

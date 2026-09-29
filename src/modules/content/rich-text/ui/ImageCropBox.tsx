@@ -18,6 +18,7 @@ import {
   presetCrop,
   presetOf,
   PRESET_RATIOS,
+  ratioCrop,
   resizeLocked,
   type Intrinsic,
 } from "../domain/picture-frame";
@@ -61,6 +62,14 @@ const ResetGlyph = ACTION_ICONS.reset;
  * so the box also shows that frame — a dashed outline over the photograph and a small copy of the
  * card's picture underneath, drawn by the card's own function — and offers «Centrul pe card»: tap
  * where the subject is, and the card's frame is centred there.
+ *
+ * ## A place with one shape of its own (§560)
+ *
+ * A race number's header strip and its sponsors' band are each one shape — the paper's width to
+ * the strip's height, about 9∶1 and 22∶1 — that none of the five buttons is. `shape` holds the box
+ * to it: no row of shapes, one line saying the shape, every rectangle drawn, moved or resized in it,
+ * and the reset either back to the shape's largest rectangle in the middle or, where the place can
+ * draw a picture whole (the sponsors' band fits it), to no crop at all.
  */
 
 /** What one arrow press moves or resizes: fine enough to aim, coarse enough to get there. */
@@ -117,6 +126,7 @@ export default function ImageCropBox({
   card = false,
   presets = CROP_PRESETS,
   resting,
+  shape,
   labels,
   testId = "rich-text-crop",
 }: {
@@ -139,6 +149,12 @@ export default function ImageCropBox({
    * page shows the largest 16∶9 part of whichever rectangle is drawn.
    */
   resting?: CropPreset;
+  /**
+   * One fixed shape of the place's own (§560), width over height, in place of the presets: `label`
+   * says it above the photograph; the reset goes back to the shape's `centre`, or to the `whole`
+   * picture (no crop) where the place draws an uncropped picture whole.
+   */
+  shape?: { ratio: number; label: string; reset: "centre" | "whole" };
   labels: ImageCropLabels;
   /** The photograph's own test id: two boxes can be on one screen (a picture's, a poster's). */
   testId?: string;
@@ -156,7 +172,7 @@ export default function ImageCropBox({
     return presets.includes(stored) ? stored : restingPreset;
   });
   const [target, setTarget] = useState<Target>("crop");
-  const ratio = preset === "free" ? null : PRESET_RATIOS[preset];
+  const ratio = shape ? shape.ratio : preset === "free" ? null : PRESET_RATIOS[preset];
   const focusing = card && target === "focus";
   const shown = draft ?? crop ?? WHOLE_IMAGE;
   const shownFocus = draftFocus ?? focus;
@@ -228,24 +244,32 @@ export default function ImageCropBox({
       <Typography component="span" variant="body2" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
         {labels.title}
       </Typography>
+      {/* A place's own shape (§560), said in words: there is nothing to choose. */}
+      {shape && (
+        <Typography variant="caption" color="text.secondary" component="p" sx={{ mb: 1 }} data-testid={`${testId}-shape`}>
+          {shape.label}
+        </Typography>
+      )}
       {/* The shapes (§454). 44 pixels tall: a thumb presses these on a phone (BR-REQ-041-01 criterion 6). */}
-      <ToggleButtonGroup
-        exclusive
-        size="small"
-        value={preset}
-        onChange={(_event, next: CropPreset | null) => {
-          if (next !== null) choosePreset(next);
-        }}
-        aria-label={labels.presets}
-        data-testid="rich-text-crop-presets"
-        sx={{ flexWrap: "wrap", mb: 1 }}
-      >
-        {presets.map((value) => (
-          <ToggleButton key={value} value={value} sx={{ minWidth: 44, minHeight: 44, px: 1 }}>
-            {labels.preset[value]}
-          </ToggleButton>
-        ))}
-      </ToggleButtonGroup>
+      {!shape && (
+        <ToggleButtonGroup
+          exclusive
+          size="small"
+          value={preset}
+          onChange={(_event, next: CropPreset | null) => {
+            if (next !== null) choosePreset(next);
+          }}
+          aria-label={labels.presets}
+          data-testid="rich-text-crop-presets"
+          sx={{ flexWrap: "wrap", mb: 1 }}
+        >
+          {presets.map((value) => (
+            <ToggleButton key={value} value={value} sx={{ minWidth: 44, minHeight: 44, px: 1 }}>
+              {labels.preset[value]}
+            </ToggleButton>
+          ))}
+        </ToggleButtonGroup>
+      )}
       {card && (
         <ToggleButtonGroup
           exclusive
@@ -429,7 +453,20 @@ export default function ImageCropBox({
       <Typography variant="caption" color="text.secondary" component="p">
         {labels.help}
       </Typography>
-      <Button size="small" onClick={() => { setPreset(restingPreset); commit(null); }} disabled={crop === null} startIcon={<ResetGlyph fontSize="small" />} sx={{ minHeight: 44 }}>
+      <Button
+        size="small"
+        onClick={() => {
+          if (shape) {
+            commit(shape.reset === "centre" ? ratioCrop(shape.ratio, intrinsic) : null);
+            return;
+          }
+          setPreset(restingPreset);
+          commit(null);
+        }}
+        disabled={shape?.reset === "centre" ? false : crop === null}
+        startIcon={<ResetGlyph fontSize="small" />}
+        sx={{ minHeight: 44 }}
+      >
         {labels.reset}
       </Button>
       {card && (

@@ -67,6 +67,8 @@ async function seed() {
       locationAddress: "Strada Nicolae Labiș, Brașov",
       difficultyLevel: 5,
       costType: "FREE" as const,
+      // The sample race asks the health note (§557), so the form's medical fold can be walked here.
+      askHealthNote: true,
       ro: {
         slug: "crosul-aniversar-brasov-runners",
         title: "Crosul aniversar Brașov Runners",
@@ -167,6 +169,8 @@ async function seed() {
         // The level on the scale of fifteen (§526), plus the old column's word.
         ...storedDifficulty(row.difficultyLevel),
         costType: row.costType,
+        // «Informații medicale» (§557): off unless the row says otherwise, as on every new event.
+        askHealthNote: "askHealthNote" in row ? row.askHealthNote : false,
         // NONE for every seeded event: registration is configured in the backoffice (§28).
         registrationMode: "NONE",
         // Publication is one state for both languages (§28).

@@ -205,13 +205,15 @@ describe("BR-REQ-036-04 my registrations", () => {
     const theirs = await seedRegistration(soonEventId, "CONFIRMED", otherParticipantId);
     const secret = await profileToken();
 
-    const notMine = await consumeAndCancelFromMyRegistrations(db, secret, theirs, NOW).catch((e: unknown) => e);
+    const notMine = await consumeAndCancelFromMyRegistrations(db, secret, theirs, NOW, { kind: "OTHER_PLANS", text: null }).catch((e: unknown) => e);
     expect(isDomainError(notMine) && notMine.code).toBe("NOT_FOUND");
     // The refused attempt rolled back: the token is still live.
     expect((await readMyRegistrations(db, secret, "ro", NOW)).ok).toBe(true);
 
-    const result = await consumeAndCancelFromMyRegistrations(db, secret, mine, NOW);
+    const result = await consumeAndCancelFromMyRegistrations(db, secret, mine, NOW, { kind: "OTHER_PLANS", text: null });
     expect(result.ok && result.registration.status).toBe("CANCELLED");
+    // Why (§558): «Înscrierile mele» asks as every door does, and the row keeps the answer.
+    expect(result.ok && [result.registration.cancelReasonKind, result.registration.cancelReason]).toEqual(["OTHER_PLANS", null]);
     const [theirRow] = await db.select().from(registrations).where(eq(registrations.id, theirs));
     expect(theirRow.status).toBe("CONFIRMED");
     // Single use (§12.8): a second cancellation needs a fresh link.

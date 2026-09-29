@@ -1,0 +1,1 @@
+ALTER TABLE "events" ADD COLUMN "ask_health_note" boolean DEFAULT false NOT NULL;
