@@ -76,7 +76,7 @@ export type SummaryWords = {
   confirmation: { sentence: string; atStart: string; off: string };
   /** «Kit de participare»'s closed line (§554): "Tricou: da" / "Tricou: nu". */
   kit: { shirtYes: string; shirtNo: string };
-  /** «Condiții de participare»'s closed line (§NNN): "Informații medicale: da" / "Informații medicale: nu". */
+  /** «Condiții de participare»'s closed line (§557): "Informații medicale: da" / "Informații medicale: nu". */
   health: { asked: string; notAsked: string };
   bibs: { from: string; clubColour: string; allocated: string; toPrint: string; spares: string };
   bibDesign: { parts: string; footer: string };
@@ -462,7 +462,7 @@ export function kitSummary(words: SummaryWords, kitShirt: boolean): string {
   return kitShirt ? words.kit.shirtYes : words.kit.shirtNo;
 }
 
-/** «Condiții de participare» (§NNN): whether the form asks the health note — the card's one tick for now. */
+/** «Condiții de participare» (§557): whether the form asks the health note — the card's one tick for now. */
 export function healthNoteSummary(words: SummaryWords, askHealthNote: boolean): string {
   return askHealthNote ? words.health.asked : words.health.notAsked;
 }

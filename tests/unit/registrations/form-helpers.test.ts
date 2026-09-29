@@ -46,7 +46,7 @@ const EVENT = {
   confirmationOpensDaysBefore: 7,
   confirmationDeadlineDaysBefore: 2,
   reminderHoursBefore: null,
-  // It asks the health note (§NNN), so the fold's own sentence is among the words counted here.
+  // It asks the health note (§557), so the fold's own sentence is among the words counted here.
   askHealthNote: true,
 };
 

@@ -104,7 +104,7 @@ export const PANEL_GLYPHS = {
   bibs: ConfirmationNumberIcon,
   // «Kit de participare» (§554): what the runners are handed — for now, the T-shirt.
   kit: CheckroomIcon,
-  // «Condiții de participare» (§NNN): what the form asks beyond the person — for now, the health note.
+  // «Condiții de participare» (§557): what the form asks beyond the person — for now, the health note.
   conditions: MedicalServicesIcon,
   bibDesign: BrushIcon,
   print: PrintIcon,

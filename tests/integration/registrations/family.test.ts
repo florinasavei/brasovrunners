@@ -81,7 +81,7 @@ async function approve() {
 async function createEvent(capacity: number | null = 20, askHealthNote = true): Promise<EventInput> {
   const [event] = await db
     .insert(events)
-    // It asks the health note (§NNN), so the kept forms' consents below have a note to keep or drop.
+    // It asks the health note (§557), so the kept forms' consents below have a note to keep or drop.
     .values({ type: "RACE", startsAt: new Date("2026-10-11T07:00:00.000Z"), registrationMode: "INTERNAL", capacity, locationName: "Parcul Tractorul", editorialStatus: "PUBLISHED", publishedAt: NOW, askHealthNote })
     .returning();
   await db.insert(eventTranslations).values([
@@ -516,7 +516,7 @@ describe("§421 the kept form and another adult's own consents", () => {
     expect(ioana.stravaUrl).toBeNull();
   });
 
-  it("stores no note for a minor on an event that does not ask it, whatever the kept form carried (§NNN, BR-REQ-031-04)", async () => {
+  it("stores no note for a minor on an event that does not ask it, whatever the kept form carried (§557, BR-REQ-031-04)", async () => {
     const event = await createEvent(20, false);
     await submitRegistration(db, event, submission("Ana"), NOW);
     const child = { birthDate: "2011-05-10", guardianName: "Ana Pop" };

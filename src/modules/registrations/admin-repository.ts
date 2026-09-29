@@ -523,7 +523,7 @@ export type RegistrationDetail = {
   /** The T-shirt size as stored, and whether the event gives one (§554): the page shows it only then. */
   tshirtSize: RegistrationTshirtSize | null;
   eventKitShirt: boolean;
-  /** Whether the event asks the health note (§NNN): the emergency section's button names the note only then. */
+  /** Whether the event asks the health note (§557): the emergency section's button names the note only then. */
   eventAsksHealthNote: boolean;
   /** The registration's language, as on the list row: the declaration translation it signs (§330). */
   locale: Locale;
@@ -679,16 +679,16 @@ export type EmergencyDetails = {
   phone: string | null;
   emergencyContactName: string | null;
   emergencyContactPhone: string | null;
-  /** The note, only when the event asks it (§NNN): null for any other event, whatever the row holds. */
+  /** The note, only when the event asks it (§557): null for any other event, whatever the row holds. */
   healthNotes: string | null;
   /** When the health consent was given — shown beside the note, so it reads as consented. */
   healthConsentAt: Date | null;
-  /** Whether the event asks the health note (§NNN, «Informații medicale»): the page shows the line only then. */
+  /** Whether the event asks the health note (§557, «Informații medicale»): the page shows the line only then. */
   eventAsksHealthNote: boolean;
 };
 
 /**
- * The health note as a screen may show it (§NNN): only for an event that asks it. A note stored
+ * The health note as a screen may show it (§557): only for an event that asks it. A note stored
  * before the tick came off stays on the row until the seven-day purge, and no screen reads it.
  */
 function gatedHealth<R extends { healthNotes: string | null; healthConsentAt: Date | null; eventAsksHealthNote: boolean }>(row: R): R {

@@ -589,7 +589,7 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
     // «Kit de participare» → «Tricou» (§554), by the same discipline: a caller that did not post the
     // card writes nothing, so no save takes the shirt off an event by not mentioning it.
     ...(fields.kitShirt === undefined ? {} : { kitShirt: fields.kitShirt }),
-    // «Informații medicale» (§NNN), by the same discipline: a caller that did not post the card
+    // «Informații medicale» (§557), by the same discipline: a caller that did not post the card
     // writes nothing, so no save switches the health note on or off by not mentioning it.
     ...(fields.askHealthNote === undefined ? {} : { askHealthNote: fields.askHealthNote }),
     // The race's band (§173): where its numbers start and what colour they print. Both were
@@ -1769,7 +1769,7 @@ const SERIES_COLUMNS = [
   // The race kit (§554), like the headlamp once did (§382): "from this date" gives every later date
   // of the series the same T-shirt question.
   "kitShirt",
-  // The health note (§NNN), like the kit: "from this date" asks it, or stops asking it, on every
+  // The health note (§557), like the kit: "from this date" asks it, or stops asking it, on every
   // later date of the series.
   "askHealthNote",
   // One race, one band: a series is the same event on several dates (§173, §177).
@@ -2769,7 +2769,7 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     waitlistCapacity: source.waitlistCapacity,
     // The race kit goes with the race (§554): a copy, and every date of a series, give the same shirt.
     kitShirt: source.kitShirt,
-    // And the health note's question (§NNN): a copy, and every date of a series, ask it as the source does.
+    // And the health note's question (§557): a copy, and every date of a series, ask it as the source does.
     askHealthNote: source.askHealthNote,
     confirmationOpensDaysBefore: source.confirmationOpensDaysBefore,
     confirmationDeadlineDaysBefore: source.confirmationDeadlineDaysBefore,

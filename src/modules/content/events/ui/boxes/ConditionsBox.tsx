@@ -11,7 +11,7 @@ import OnlyForType from "../OnlyForType";
 import { BoxNote, type BoxProps, summaryWords } from "./box-kit";
 
 /**
- * «Condiții de participare» (§NNN; the owner, 2026-09-29: «trebuie să am o bifă și pentru acele
+ * «Condiții de participare» (§557; the owner, 2026-09-29: «trebuie să am o bifă și pentru acele
  * informații medicale, pentru că nu știu ce să fac cu ele, deci e mai bine să avem o bifă în
  * backoffice la Condiții de participare»): a level-3 card inside «Program, regulament și
  * declarație», after the declaration, holding one tick — «Informații medicale».

@@ -427,7 +427,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   // «Kit de participare» → «Tricou» (§554): the size is asked only when the event gives a shirt. A
   // copy saved before the column existed has none, and asks nothing.
   const askShirt = event.kitShirt === true;
-  // «Condiții de participare» → «Informații medicale» (§NNN): the health note's fold — the field, its
+  // «Condiții de participare» → «Informații medicale» (§557): the health note's fold — the field, its
   // words and its consent — only when the event asks it; a copy saved before the column asks nothing.
   const askHealth = event.askHealthNote === true;
   /*
@@ -1313,7 +1313,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 For another adult sent from an address registered already (§421, §446), the health
                 note is art. 9 data only that adult can consent to: the service keeps none of it.
 
-                Drawn only when the event asks it (§NNN, the editor's «Informații medicale»): the
+                Drawn only when the event asks it (§557, the editor's «Informații medicale»): the
                 club collects art. 9 data only where it decided to. The server ignores a posted note
                 for any other event, so a stale form is never refused.
               */}

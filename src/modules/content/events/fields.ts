@@ -775,7 +775,7 @@ export const eventFieldsSchema = z
      */
     kitShirt: z.boolean().optional(),
     /**
-     * «Condiții de participare» → «Informații medicale» (§NNN): the form asks the optional health
+     * «Condiții de participare» → «Informații medicale» (§557): the form asks the optional health
      * note. Absent means this caller is not editing it, by the kit's discipline (§554).
      */
     askHealthNote: z.boolean().optional(),

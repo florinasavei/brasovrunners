@@ -65,7 +65,7 @@ export function publicFormEvent(
     reminderHoursBefore: row.reminderHoursBefore,
     // For the members alone (§552): the public form takes it only behind a members' session.
     membersOnly: row.membersOnly ?? false,
-    // Whether the form asks the health note (§NNN): a note posted to an event that does not is
+    // Whether the form asks the health note (§557): a note posted to an event that does not is
     // dropped before the schema, never refused. Absent on a partial row: the lock decides alone.
     askHealthNote: row.askHealthNote,
   };

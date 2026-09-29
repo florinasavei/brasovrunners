@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.30-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.31-2026-09-27 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.30-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.31-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -21304,3 +21304,27 @@ The PDF (both kinds, both languages) prints «Versiunea N · Semnat la ZZ.LL.AAA
 **What the club must do.** The club's step, on production after the release: /admin/legal → «Regenerează din șabloane» for the trail and asphalt group-run declarations, the two race declarations and the privacy notice → read each → approve. Until then the texts in force keep their old sentences; the safety rules, the fingerprint and the hold work at once.
 
 Baseline `BR-V2.30-2026-09-27`.
+
+## 557. The health note only when the event asks it: «Informații medicale» in «Condiții de participare», off by default (amends §47, §171 and §322, the pattern of §554)
+
+**The owner, 2026-09-29:** «trebuie să am o bifă și pentru acele informații medicale, pentru că nu știu ce să fac cu ele, deci e mai bine să avem o bifă în backoffice la Condiții de participare». It amends §47 and §171 (the form's optional health note, BR-REQ-031-05, folded and second — now asked only where the event asks it) and §322 (where the note is shown), and follows §554's pattern for the T-shirt.
+
+**Why a switch.** The health note (conditions, allergies, medication) is special-category data under GDPR art. 9. The club collected it on every event, needed it on few, and did not know what to do with it. The rule now is to collect it only where the club decides to, per event.
+
+**1. Storage.** Migration `0111_event_ask_health_note` (expand only) adds `events.ask_health_note boolean NOT NULL DEFAULT false`. A series edit carries it by its scope (`SERIES_COLUMNS`), and every date a series makes and every duplicate keep it (`copiedEventValues`).
+
+**2. The editor.** «Program, regulament și declarație» gets a level-3 card «Condiții de participare» / "Participation conditions" (`#box-conditions`, the `MedicalServices` glyph, closed), after the declaration and before the public list. Its closed line says «Informații medicale: da» or «Informații medicale: nu» for an event registering on the site, and the same words join the outer card's line then; on any other event both lines leave it out, since there is no form to ask it on. Inside is one tick, «Informații medicale» / "Medical information", and one sentence: «Dacă e bifat, formularul cere informații medicale (afecțiuni, alergii, medicație); se șterg la 7 zile după eveniment.». The number comes from the retention sweep's constant (`RETENTION_PERIODS.identityAndHealthDaysAfterEvent`) through `durationPhrase`, never typed. A marker posts with the tick, so a form without the card writes nothing (§554's discipline). The tick shows only for a type that takes registrations, registering on the site (§111). Otherwise a sentence stands in its place, and the tick stays in the document, hidden, as the public list's does (§512). A reader who may not change the event sees the heading and the line alone (§542). Saving it is an event write, the Administrator's (§542).
+
+**3. The form.** The registration form draws the health fold (its field, its intro sentence and its own consent) only when the event asks. The family link's form and a family sitting's next form are the same page and follow the same switch. The staff entry and the desk never asked the note and still do not.
+
+**4. The server.** Every door (the public form, the family forms, a staff entry, the desk, a TEST row) passes through `submitRegistration`. The decision is made there under the event's lock, off the locked row (`healthNoteKept`). For an event that does not ask, a posted note is stored as null with no consent version and no consent time. It is also dropped before the schema reads it (`withoutHealthNote`) when the caller says the event does not ask, so a stale form carrying a note without its tick is ignored rather than refused. For an event that asks, BR-REQ-031-05 holds as before: a note without its own consent is refused.
+
+**5. The emergency contact is not part of this.** It stays asked, required and purged at seven days as §421 says.
+
+**6. Where the note shows.** The backoffice registration page's «Urgențe și sănătate» section shows the «Notă medicală» line only for an event that asks, and its opening button says «Arată telefonul și persoana de contact», without «nota medicală», otherwise. The emergency sheet (`/admin/events/[id]/urgente`) prints its health column only then, and its help sentence drops the note's sentence otherwise. Both read the note through `findEmergencyDetails` and `listEmergencySheet`, which return null for any other event (`healthNoteShown`). The export never carried the note (`csv.ts`, `workbook.ts`, BR-REQ-031-05 criterion 4), and the desk row never did (AGENTS.md §15.11); both are unchanged. The Administrator's «everything held about a person» view (§322) still shows every stored note, because it answers an access request (GDPR art. 15) about what is held, not what the event asks. The participant's own «Șterge nota medicală» and the staff withdrawal stay available for any stored note.
+
+**7. Existing events.** The default is false, so from this release the form stops asking the health note on every event until the club ticks «Informații medicale» on the ones that need it. That includes the published race: open it in `/admin/events` → «Program, regulament și declarație» → «Condiții de participare». Rows that already hold a note keep it, and the seven-day purge runs as today (§322, §421). A note stored before the tick came off stays on its row until then, and no screen shows it.
+
+**8. Left as it is.** The event page's «Condiții de participare» fold says nothing new, because the note is a form matter. The privacy-notice template is unchanged. Its health sentence describes the note and its consent; it does not say every form asks it, so it stays true, and counsel reviewed it (§418). The club does not need to approve the notice again for this change. The sample race in the seed asks the note, so the fold can be walked on a local database.
+
+Baseline `BR-V2.31-2026-09-27`.

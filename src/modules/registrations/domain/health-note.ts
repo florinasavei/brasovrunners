@@ -1,5 +1,5 @@
 /**
- * The health note only when the event asks it (§NNN; the owner, 2026-09-29: «trebuie să am o bifă
+ * The health note only when the event asks it (§557; the owner, 2026-09-29: «trebuie să am o bifă
  * și pentru acele informații medicale, pentru că nu știu ce să fac cu ele»).
  *
  * The note (BR-REQ-031-05) is GDPR art. 9 data, so the club collects it only where it decided to:

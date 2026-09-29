@@ -149,7 +149,7 @@ export type EventForRegistration = {
    */
   membersOnly?: boolean;
   /**
-   * «Informații medicale» (§NNN): whether the form asks the health note. `false` drops a posted note
+   * «Informații medicale» (§557): whether the form asks the health note. `false` drops a posted note
    * before the schema reads it, so a stale form is not refused; what is stored is decided off the
    * locked row whatever this says. Absent on a partial row: nothing dropped early, the lock decides.
    */
@@ -1473,7 +1473,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     was posted, before anything reads them. A minor's parent still consents for the child.
   */
   /*
-    An event that does not ask the health note (§NNN): a posted note and its tick are dropped before
+    An event that does not ask the health note (§557): a posted note and its tick are dropped before
     the schema reads them, so a stale form is never refused for a note without its consent. Only
     when the caller said so (`askHealthNote: false`); the lock below decides what is stored either way.
   */
@@ -1772,7 +1772,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     */
     details.tshirtSize = shirtSizeKept(locked.kitShirt, input.tshirtSize);
     /*
-      The health note (§NNN), by the same rule off the same locked row: kept only when the event
+      The health note (§557), by the same rule off the same locked row: kept only when the event
       asks it («Condiții de participare» → «Informații medicale»); otherwise a posted note is
       ignored, never refused, and the row stores null with no consent. Every door passes here.
     */

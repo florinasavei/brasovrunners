@@ -140,7 +140,7 @@ const PUBLIC_COLUMNS = {
   registrationClosesAt: events.registrationClosesAt,
   // «Kit de participare» → «Tricou» (§554): whether the registration form asks the T-shirt size.
   kitShirt: events.kitShirt,
-  // «Condiții de participare» → «Informații medicale» (§NNN): whether the form asks the health note.
+  // «Condiții de participare» → «Informații medicale» (§557): whether the form asks the health note.
   askHealthNote: events.askHealthNote,
   confirmationOpensDaysBefore: events.confirmationOpensDaysBefore,
   confirmationDeadlineDaysBefore: events.confirmationDeadlineDaysBefore,

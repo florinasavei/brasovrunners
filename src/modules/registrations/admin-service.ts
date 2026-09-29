@@ -1224,7 +1224,7 @@ export async function readEmergencyDetails<T extends Record<string, unknown>>(
 }
 
 /**
- * One event's emergency sheet: its rows, and whether the event asks the health note (§NNN) — the
+ * One event's emergency sheet: its rows, and whether the event asks the health note (§557) — the
  * sheet prints the health column only then, and each row's note is null for any other event.
  */
 export type EmergencySheet = { asksHealthNote: boolean; rows: EmergencySheetRow[] };

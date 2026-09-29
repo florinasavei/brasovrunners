@@ -9,7 +9,7 @@ import { RETENTION_PERIODS } from "@/modules/jobs/domain/retention-periods";
 import { PANEL_GLYPHS } from "@/shared/ui/panel-glyphs";
 
 /**
- * §NNN — «Condiții de participare» inside «Program, regulament și declarație» (the owner, 2026-09-29:
+ * §557 — «Condiții de participare» inside «Program, regulament și declarație» (the owner, 2026-09-29:
  * «trebuie să am o bifă și pentru acele informații medicale … deci e mai bine să avem o bifă în
  * backoffice la Condiții de participare»): a closed fold with a glyph, its line «Informații medicale:
  * da» / «nu», holding one tick and one sentence that names the days from the retention constant —
@@ -51,7 +51,7 @@ function card(html: string): string {
   return html.slice(open, html.indexOf("</summary>", start) + "</summary>".length);
 }
 
-describe("§NNN the «Condiții de participare» card", () => {
+describe("§557 the «Condiții de participare» card", () => {
   it("is a closed fold with a glyph and «Informații medicale: nu» on an event that does not ask it", async () => {
     const html = await render(RACE);
     const head = card(html);

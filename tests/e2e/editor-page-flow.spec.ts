@@ -223,12 +223,12 @@ test.describe("§554 the race kit card", () => {
 });
 
 /*
-  §NNN — «Condiții de participare» inside «Program, regulament și declarație» (the owner, 2026-09-29:
+  §557 — «Condiții de participare» inside «Program, regulament și declarație» (the owner, 2026-09-29:
   «e mai bine să avem o bifă în backoffice la Condiții de participare»): a closed fold whose line says
   «Informații medicale: nu» until the box is ticked, on a saved event registering on the site; the tick only for a type that registers on the
   site, a group run getting a sentence in its place (§111).
 */
-test.describe("§NNN the participation conditions card", () => {
+test.describe("§557 the participation conditions card", () => {
   test("a sentence on a group run, the tick closed and unticked for a race registering on the site", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin/events/new");

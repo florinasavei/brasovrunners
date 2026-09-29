@@ -6,7 +6,7 @@ import { createEvent, duplicateEvent, repeatEvent, saveEventAndTranslations } fr
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Condiții de participare» → «Informații medicale» (`events.ask_health_note`), the kit's
+ * §557 — «Condiții de participare» → «Informații medicale» (`events.ask_health_note`), the kit's
  * pattern (§554): saved through the editor's real
  * action by its marker (a form without the card never switches it off), carried to every date a
  * series makes and by a "following" edit, and kept by a duplicate — like the rest of the
@@ -118,7 +118,7 @@ const wordsFor = (row: { slug: string; title: string; excerpt: string | null }) 
   seoDescription: "",
 });
 
-describe("§NNN «Condiții de participare» → «Informații medicale» on the event", () => {
+describe("§557 «Condiții de participare» → «Informații medicale» on the event", () => {
   it("starts off, and is written on create when ticked", async () => {
     const plain = await createEvent(db, { actor: admin, fields: { ...FIELDS, translations: TRANSLATIONS }, now: NOW });
     expect((await reloadEvent(plain.id)).askHealthNote).toBe(false);

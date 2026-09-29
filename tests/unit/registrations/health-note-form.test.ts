@@ -7,7 +7,7 @@ import ro from "../../../messages/ro.json";
 import { healthNoteKept, healthNoteShown, withoutHealthNote } from "@/modules/registrations/domain/health-note";
 
 /**
- * §NNN (amending §47 and §171 on the form, §322 on where it shows; §554's pattern) — the registration form asks the health note only when the
+ * §557 (amending §47 and §171 on the form, §322 on where it shows; §554's pattern) — the registration form asks the health note only when the
  * event's «Condiții de participare» → «Informații medicale» is ticked (`events.ask_health_note`):
  * otherwise no fold, no field, no consent, in both languages. The page is rendered on the server as a
  * visitor meets it, with the database and the async parts not about the form stood in for —
@@ -108,7 +108,7 @@ beforeEach(() => {
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
-describe("§NNN the health note is asked only when the event asks it", () => {
+describe("§557 the health note is asked only when the event asks it", () => {
   it("draws no health fold, field or consent on an event that does not ask it (ro, en)", async () => {
     const html = await render();
     expect(html).not.toContain('name="healthNotes"');

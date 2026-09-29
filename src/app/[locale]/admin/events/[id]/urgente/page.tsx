@@ -43,7 +43,7 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
  *
  * The health column empties itself: seven days after the event the sweep clears the notes
  * (`jobs/retention.ts`), and a sheet printed afterwards simply has none. It is printed at all only
- * for an event that asks the note (§NNN, the editor's «Informații medicale»).
+ * for an event that asks the note (§557, the editor's «Informații medicale»).
  */
 export default async function EmergencySheetPage({ params }: Props) {
   const { locale, id } = await params;
@@ -63,7 +63,7 @@ export default async function EmergencySheetPage({ params }: Props) {
     if (isDomainError(error) && (error.code === "NOT_FOUND" || error.code === "FORBIDDEN")) notFound();
     throw error;
   }
-  // The health column only for an event that asks the note (§NNN, «Informații medicale»).
+  // The health column only for an event that asks the note (§557, «Informații medicale»).
   const { rows, asksHealthNote } = sheet;
   const event = await findEventForBibs(db, id, locale);
   const t = await getTranslations("Admin");

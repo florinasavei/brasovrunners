@@ -40,7 +40,7 @@ describe("BR-REQ-031-05 the emergency details, for the people they are for", () 
     await resetTables(db);
     const [event] = await db
       .insert(events)
-      // The event asks the health note (§NNN): these cases read it; the ones below switch it off.
+      // The event asks the health note (§557): these cases read it; the ones below switch it off.
       .values({ type: "RACE", startsAt: RACE_DAY, registrationMode: "INTERNAL", capacity: 10, askHealthNote: true })
       .returning();
     eventId = event.id;
@@ -127,7 +127,7 @@ describe("BR-REQ-031-05 the emergency details, for the people they are for", () 
       expect(JSON.stringify(trail)).not.toMatch(/penicilin|\+407/);
     });
 
-    it("shows no health note for an event that does not ask it, and says the event does not (§NNN)", async () => {
+    it("shows no health note for an event that does not ask it, and says the event does not (§557)", async () => {
       const reader = await staff("MODERATOR");
       const id = await seed({ email: "ana@example.ro", name: "Ana Pop" });
       await db.update(events).set({ askHealthNote: false }).where(eq(events.id, eventId));
@@ -203,7 +203,7 @@ describe("BR-REQ-031-05 the emergency details, for the people they are for", () 
       expect(await db.select().from(auditLogs)).toHaveLength(0);
     });
 
-    it("prints no health note for an event that does not ask it, even one stored before the tick came off (§NNN)", async () => {
+    it("prints no health note for an event that does not ask it, even one stored before the tick came off (§557)", async () => {
       const organizer = await staff("MODERATOR");
       await seed({ email: "a@example.ro", name: "Ana", bibNumber: 3 });
       await db.update(events).set({ askHealthNote: false }).where(eq(events.id, eventId));

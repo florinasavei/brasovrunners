@@ -23,7 +23,7 @@ import { RulesBox } from "./TextBoxes";
  * 2. «Regulamentul» (`#box-rules`): the rules, on their own tabs, and the minimum age — one box
  *    for every type since §505;
  * 3. «Declarația pe propria răspundere» (`#box-declaration`, §448): what the participant signs;
- * 3b. «Condiții de participare» (`#box-conditions`, §NNN): whether the form asks the health note;
+ * 3b. «Condiții de participare» (`#box-conditions`, §557): whether the form asks the health note;
  * 4. «Lista publică a participanților» (`#box-start-list`, §32, §512): whether the page draws the
  *    list, which it does last, under the rules — so it is the last card here, not a card of its own.
  *
@@ -56,7 +56,7 @@ export default async function ProgrammeRulesBox({
   const declaration = await DeclarationCard({ event, mayEditSettings, groupRunDeclarations, declarations, words });
   const conditions = await ConditionsBox({ event, mayEditSettings });
   const startList = await StartListBox({ event, mayEditSettings });
-  // The health note's line only where there is a form to ask it on (§NNN, §111).
+  // The health note's line only where there is a form to ask it on (§557, §111).
   const asksOnForm = takesRegistrations(initialType) && event?.registrationMode === "INTERNAL";
 
   return (
