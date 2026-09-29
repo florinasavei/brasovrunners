@@ -515,7 +515,8 @@ test.describe("BR-REQ-031-01 the «Acorduri» block is compact, measured (§NNN)
     constants; this measures what they draw, on the seeded race (six boxes with the offers box and
     its caption, the terms and privacy links at 44 px each): the whole block, from its first row to
     its last caption, in the real browser at 320 px and on a desktop. The ceilings are the heights
-    measured on 2026-09-29 plus a margin for font rendering, and each row stays a thumb's 44.
+    measured on 2026-09-29 with a glyph on every box (round 2) — 532 px at 320 px, 252 px on a
+    desktop — plus about a tenth for font rendering, and each row stays a thumb's 44.
   */
   test("stays under its measured height, with every box still 44 by 44", async ({ page }) => {
     await signIn(page, "Dev Administrator");
@@ -527,9 +528,8 @@ test.describe("BR-REQ-031-01 the «Acorduri» block is compact, measured (§NNN)
     const height = (await block.boundingBox())?.height ?? 0;
     const width = page.viewportSize()?.width ?? 0;
     test.info().annotations.push({ type: "consents-height", description: `${width}px wide: ${Math.round(height)}px` });
-    console.log(`consents-height ${width}: ${height}`);
     expect(height).toBeGreaterThan(0);
-    expect(height).toBeLessThanOrEqual(width <= 320 ? 99999 : 99999);
+    expect(height).toBeLessThanOrEqual(width <= 320 ? 580 : 280);
     // Every box of the block leads with a glyph (§NNN round 2: «pentru fiecare bifă ne trebuie și o iconiță la început»).
     const labels = block.locator("label");
     const labelCount = await labels.count();
