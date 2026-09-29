@@ -552,7 +552,8 @@ test.describe("§NNN the club's identity block under the bar", () => {
 
       // «Contact», and «Scrie-ne» to the form, with its glyph.
       const contact = block.getByTestId("club-identity-contact");
-      await expect(contact.getByRole("heading", { name: "Contact" })).toBeVisible();
+      await expect(contact.getByText("Contact", { exact: true })).toBeVisible();
+      await expect(block.getByRole("heading")).toHaveCount(0);
       const write = contact.getByTestId("club-identity-write");
       await expect(write).toHaveText("Scrie-ne");
       await expect(write).toHaveAttribute("href", "/ro/contact");

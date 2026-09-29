@@ -341,10 +341,6 @@ export default async function ContactPage({ params, searchParams }: Props) {
         </>
       )}
 
-      {/* Who is written to, by its legal name and CIF (§NNN): under the form, or under the address
-          where there is no form; nothing while the facts are unset. */}
-      <ClubIdentity shape="line" />
-
       {newsletterOffered && (
         <NewsletterSignup
           locale={locale}
@@ -368,6 +364,11 @@ export default async function ContactPage({ params, searchParams }: Props) {
           leaveTyped={leaveRefused ? draft?.newsletterLeaveEmail : undefined}
         />
       )}
+
+      {/* Who is written to, by its legal name and CIF (§NNN): the page's last line, under the form
+          (or the address where there is no form) and under the newsletter's box; nothing while the
+          facts are unset. */}
+      <ClubIdentity shape="line" />
     </Container>
   );
 }

@@ -166,7 +166,9 @@ export default async function ClubIdentity(props: Props) {
         )}
 
         <Box data-testid="club-identity-contact" sx={{ gridColumn: { sm: 3 }, gridRow: { sm: 1 }, minWidth: 0 }}>
-          <Typography component="h2" variant="h2" sx={{ fontSize: "1rem", fontWeight: 600, lineHeight: 1.35 }}>
+          {/* A paragraph styled as a heading, like the legal name's column: the block ends every
+              page, the backoffice's too, and a «Contact» section in each page's outline would be noise. */}
+          <Typography component="p" variant="h2" sx={{ fontSize: "1rem", fontWeight: 600, lineHeight: 1.35 }}>
             {t("contactHeading")}
           </Typography>
           {/* One wrapping row on a phone, as many to a line as fit; one per line from `sm`. */}

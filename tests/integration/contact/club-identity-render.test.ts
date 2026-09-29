@@ -135,7 +135,9 @@ describe("§NNN the footer's identity block", () => {
     }
 
     // «Contact»: the address shown (§442), the public phone, «Scrie-ne» to the form — each with its glyph.
-    expect(html).toMatch(/<h2[^>]*>Contact<\/h2>/);
+    // A paragraph in the heading's style, never an <h2>: the block adds no section to any page's outline.
+    expect(html).toMatch(/<p[^>]*>Contact<\/p>/);
+    expect(html).not.toMatch(/<h[1-6]/);
     expect(html).toContain(`href="mailto:${SHOWN}"`);
     expect(html).toContain('href="tel:+40123456789"');
     expect(words).toContain(PHONE);

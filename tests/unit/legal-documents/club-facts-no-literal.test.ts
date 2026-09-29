@@ -4,7 +4,13 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import en from "@/../messages/en.json";
 import ro from "@/../messages/ro.json";
-import { clubFactValuesFromEnvFile, knownClubFactValues } from "../../../scripts/club-facts-values.mjs";
+import { bareRegistrationNumber as siteBare } from "@/modules/legal-documents/templates/club-facts";
+import {
+  bareRegistrationNumber as scriptBare,
+  CLUB_FACT_VARIABLES,
+  clubFactValuesFromEnvFile,
+  knownClubFactValues,
+} from "../../../scripts/club-facts-values.mjs";
 
 /**
  * §NNN (amending §132's "environment, never source" into a check) — the club's legal name, CIF and
@@ -55,6 +61,30 @@ describe("§NNN no legal fact of the club's is a literal in the repository", () 
     );
     expect(clubFactValuesFromEnvFile(file)).toEqual({ CLUB_LEGAL_NAME: "Asociația Exemplu", CLUB_REGISTRATION_NUMBER: "RO00000000" });
     expect(clubFactValuesFromEnvFile(path.join(path.dirname(file), "missing"))).toEqual({});
+  });
+
+  it("looks for the CIF both as the variable holds it and bare, as the site shows it", () => {
+    const file = path.join(mkdtempSync(path.join(tmpdir(), "club-facts-")), ".env.local");
+    writeFileSync(file, ['CLUB_REGISTRATION_NUMBER="CIF 00000000"', ""].join("\n"));
+    const saved = Object.fromEntries(CLUB_FACT_VARIABLES.map((name) => [name, process.env[name]]));
+    try {
+      for (const name of CLUB_FACT_VARIABLES) delete process.env[name];
+      expect(knownClubFactValues(file)).toEqual([
+        ["CLUB_REGISTRATION_NUMBER", "CIF 00000000"],
+        ["CLUB_REGISTRATION_NUMBER", "00000000"],
+      ]);
+      // A value without a label is looked for once.
+      writeFileSync(file, "CLUB_REGISTRATION_NUMBER=RO00000000\n");
+      expect(knownClubFactValues(file)).toEqual([["CLUB_REGISTRATION_NUMBER", "RO00000000"]]);
+    } finally {
+      for (const [name, value] of Object.entries(saved)) if (value !== undefined) process.env[name] = value;
+    }
+  });
+
+  it("drops the CIF's label by the same rule as the site", () => {
+    for (const value of ["CIF 00000000", "C.I.F. 00000000", "CUI: 00000000", "RO00000000", "00000000"]) {
+      expect(scriptBare(value)).toBe(siteBare(value));
+    }
   });
 
   it("carries none of the values the environment holds — legal name, CIF, seat", () => {

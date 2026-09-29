@@ -49,6 +49,28 @@ export function knownClubFactValues(envFile) {
   const fromFile = clubFactValuesFromEnvFile(envFile);
   return CLUB_FACT_VARIABLES.flatMap((name) => {
     const value = (process.env[name] ?? fromFile[name] ?? "").trim();
-    return value.length >= 4 ? [/** @type {[string, string]} */ ([name, value])] : [];
+    if (value.length < 4) return [];
+    /** @type {Array<[string, string]>} */
+    const found = [[name, value]];
+    // The site shows the CIF without the label the variable may carry («CIF 12345678» → «12345678»),
+    // so the bare number is the form most likely to be typed into a fixture or a document.
+    if (name === "CLUB_REGISTRATION_NUMBER") {
+      const bare = bareRegistrationNumber(value);
+      if (bare !== value && bare.length >= 4) found.push([name, bare]);
+    }
+    return found;
   });
+}
+
+/**
+ * The CIF with a leading «CIF», «C.I.F.», «CUI» or «C.U.I.» dropped: the same rule as
+ * `bareRegistrationNumber` in `src/modules/legal-documents/templates/club-facts.ts`, repeated here
+ * because a script cannot import TypeScript. Keep the two regular expressions identical.
+ *
+ * @param {string} value
+ * @returns {string}
+ */
+export function bareRegistrationNumber(value) {
+  const bare = value.replace(/^\s*(?:C\.?\s?I\.?\s?F|C\.?\s?U\.?\s?I)\.?(?![A-Za-z])\s*:?\s*/i, "").trim();
+  return bare || value.trim();
 }

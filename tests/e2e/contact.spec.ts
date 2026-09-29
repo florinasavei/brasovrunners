@@ -85,9 +85,25 @@ test.describe("BR-REQ-070-04 the contact form", () => {
     }
     await expect(line).toBeVisible();
     await expect(line).toContainText("(");
-    const form = await main.locator("form").first().boundingBox();
+    // The page's last line: under the contact form and under the newsletter's box alike.
+    // One snapshot of the layout per try, polled: the form grows as it hydrates (the anti-bot box),
+    // and a line measured before that growth and the form after it would lie. The newsletter's own
+    // forms live in a pop-up (`<dialog>`), so its section is what the line must follow, not they.
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() => {
+            const lineTop = document.querySelector('main [data-testid="club-identity-line"]')!.getBoundingClientRect().top;
+            const above = [
+              ...[...document.querySelectorAll("main form")].filter((form) => !form.closest("dialog, [data-testid='newsletter-section']")),
+              ...document.querySelectorAll('main [data-testid="newsletter-section"]'),
+            ];
+            return lineTop - Math.max(-Infinity, ...above.map((element) => element.getBoundingClientRect().bottom));
+          }),
+        { message: "the line is under every form" },
+      )
+      .toBeGreaterThanOrEqual(0);
     const box = await line.boundingBox();
-    if (form) expect(box!.y, "the line is under the form").toBeGreaterThanOrEqual(form.y + form.height);
     expect(box!.x + box!.width).toBeLessThanOrEqual(page.viewportSize()!.width);
   });
 
