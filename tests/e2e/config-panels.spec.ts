@@ -236,14 +236,15 @@ test.describe("§360 the sub-tabs on a phone", () => {
 });
 
 /**
- * §565 — «Telefon public» on «Pagini» → «Contact»: the Administrator types a number, it shows under
- * «Contact» in the footer's identity block on every page, and an empty box takes it off again. The
- * number is made up; the club's is a setting, never a value in the repository.
+ * §565 — «Telefon public» on «Pagini» → «Contact»: the Administrator types a number, it shows beside
+ * «Scrie-ne» in the footer's «Despre club» fold on every page (since the hotfix, #293, which took the
+ * block under the bar away), and an empty box takes it off again. The number is made up; the club's
+ * is a setting, never a value in the repository.
  */
 test.describe("§565 the public phone", () => {
   test.skip(() => test.info().project.name !== "desktop", "one viewport is enough: it writes a setting every page reads");
 
-  test("is shown in the footer's block once saved, and gone once cleared", async ({ page }) => {
+  test("is shown in the footer's fold once saved, and gone once cleared", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     const main = page.locator("#main");
     const save = async (value: string) => {
@@ -258,12 +259,15 @@ test.describe("§565 the public phone", () => {
 
     await save("+40 123 456 789");
     await page.goto("/ro/evenimente", { waitUntil: "networkidle" });
-    const phone = page.getByTestId("club-identity-block").getByTestId("club-identity-phone");
+    const fold = page.getByTestId("footer-about-fold");
+    await fold.locator("summary").click();
+    const phone = fold.getByTestId("footer-contact").getByTestId("footer-phone");
+    await expect(phone).toBeVisible();
     await expect(phone).toHaveText("+40 123 456 789");
     await expect(phone).toHaveAttribute("href", "tel:+40123456789");
 
     await save("");
     await page.goto("/ro/evenimente", { waitUntil: "networkidle" });
-    await expect(page.getByTestId("club-identity-block").getByTestId("club-identity-phone")).toHaveCount(0);
+    await expect(page.getByTestId("footer-about-fold").getByTestId("footer-phone")).toHaveCount(0);
   });
 });

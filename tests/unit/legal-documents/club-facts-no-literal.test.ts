@@ -14,8 +14,9 @@ import {
 
 /**
  * §565 (amending §132's "environment, never source" into a check) — the club's legal name, CIF and
- * seat are shown on the site now (the identity line and the footer's block), and every one of them
- * is composed from the environment: no file of the repository — public — may carry one.
+ * seat are shown on the site now (the identity line, on the about and contact pages and in the
+ * footer's fold), and every one of them is composed from the environment: no file of the
+ * repository — public — may carry one.
  *
  * The values are known only where they are set: the Vercel projects and a developer's `.env.local`.
  * So this reads them from there (and from the process's own environment) and looks for each in
