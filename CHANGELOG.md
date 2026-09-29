@@ -8,6 +8,20 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.35-2026-09-27
+
+- **The bib's header strip and sponsors' band take an upload or a gallery picture, cropped to the strip's own shape** — «Încarcă o imagine», «Din galerie», the crop box at about 9 : 1 for the header and 22 : 1 for the sponsors (or «Toată imaginea»), the preview redrawn at once and the sheet printing the same crop; a picture on the race numbers is never swept. §560.
+- **The birth date reads day first, and the words under it no longer overlap the box** — «05/11/1990» is 5 November in both languages on the registration form and the desk, the box shows `05.11.1990` as the backoffice does, the date in words sits under the box as its helper, and a date under the event's minimum age says the rule in red as it is typed. §561.
+## BR-V2.33-2026-09-27
+
+- **«Nu mai pot ajunge» in every email about a live registration, and a reason for every cancellation** — a full-width button with the cancel glyph under the message's own button (the reminder's only one), «Locul se eliberează pentru altcineva.» under it, one tap to the registration's own manage page on every message (a family's email to «Înscrierile mele»); never after the fact, on a club copy or after the start. Every self-cancellation door — the manage page, «Înscrierile mele», the family wizard — asks «De ce anulezi?»: «Accidentare sau boală», «Alt program» or «Alt motiv» with a short text, refused naming the box; the club reads it on the registration's page, in the export's «Cancellation reason» column and in its copy of the cancellation email; migration `0112`. §558.
+- **«CC» and «BCC» on «Pagini» → «Contact», and «Copiile clubului» in three folds** — the contact form's copies are labelled as the owner calls them, one sentence says what each does, the boxes take one address per line, the card's closed line counts the copies in force (or says «fără copii»); on «Setări» → «Emailuri» the club's copies are three nested folds — the signed declarations, the confirmation notice, the copy of the participants' emails — each naming its addresses when closed, under one «Salvează», a refusal opening the fold it names. §559.
+## BR-V2.31-2026-09-27
+
+- **The health note only when the event asks it** — a «Condiții de participare» card in «Program, regulament și declarație» with one «Informații medicale» tick, off by default; the form asks the note, the server keeps it and the registration page and the emergency sheet show it only then; every existing event stops asking until the club ticks it. §557.
+## BR-V2.30-2026-09-27
+
+- **The declarations after the second review** — trail shoes «cu aderență corespunzătoare», the organiser's general safety instructions, a copy kept for a right and a disputed one until settled; «Reguli de siguranță» on every group run's page; every new signature keeps the SHA-256 of the exact text signed, printed on its PDF with the version and the second it was signed; an Administrator may hold a declaration for a complaint or a dispute, which no sweep or erase takes; the public participant list explains its words — «Confirmat», «Înscris, în așteptarea confirmării», «Pe lista de așteptare» — in a legend under it and a «?» beside each, with the event's own confirmation deadline in words, each in one sentence of at most 200 characters. §556.
 ## BR-V2.29-2026-09-27
 
 - **The backoffice events list opens on «Viitoare»** — with no state in the address it shows the dates to come and says «N din M evenimente»; «Toate» is its own choice (`state=ALL`). «Regenerează din șabloane (4 din 6)» on `/admin/legal` says the count out of every text, with one sentence explaining the rule. On the registration form «Sex» is a dropdown again, «Feminin» first, each answer with its glyph in the list and nothing chosen. §555.

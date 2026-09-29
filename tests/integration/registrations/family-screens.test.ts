@@ -235,11 +235,11 @@ describe("§547 «Renunț la înscrierea pentru <nume>» in the declarations wiz
 
     // Only the current step: Ion is next, not current, and Ana is signed.
     vi.setSystemTime(at(22));
-    expect(await withdrawFromFamilyWizard(secret, pass, ion.id, at(22))).toMatchObject({ ok: false });
-    expect(await withdrawFromFamilyWizard(secret, pass, ana.id, at(22))).toMatchObject({ ok: false });
-    expect(await withdrawFromFamilyWizard(secret, pass, "not-an-id", at(22))).toMatchObject({ ok: false });
+    expect(await withdrawFromFamilyWizard(secret, pass, ion.id, at(22), { kind: "OTHER_PLANS", text: null })).toMatchObject({ ok: false });
+    expect(await withdrawFromFamilyWizard(secret, pass, ana.id, at(22), { kind: "OTHER_PLANS", text: null })).toMatchObject({ ok: false });
+    expect(await withdrawFromFamilyWizard(secret, pass, "not-an-id", at(22), { kind: "OTHER_PLANS", text: null })).toMatchObject({ ok: false });
 
-    const withdrawn = await withdrawFromFamilyWizard(secret, pass, maria.id, at(22));
+    const withdrawn = await withdrawFromFamilyWizard(secret, pass, maria.id, at(22), { kind: "INJURY_OR_ILLNESS", text: null });
     if (!withdrawn.ok) throw new Error("the withdrawal was refused");
     // The next step is reached: Maria is listed as cancelled, Ion is current.
     expect(withdrawn.steps.map((step) => [step.registeredName, step.state, familyStepWordsKey(step)])).toEqual([
@@ -256,11 +256,13 @@ describe("§547 «Renunț la înscrierea pentru <nume>» in the declarations wiz
       ["Ion Pop", "PENDING_DECLARATION"],
     ]);
     expect(rows[1].cancellationSource).toBe("PARTICIPANT");
+    // Why (§558): the wizard asks as every door does, and the row keeps the answer.
+    expect([rows[1].cancelReasonKind, rows[1].cancelReason]).toEqual(["INJURY_OR_ILLNESS", null]);
     // The place went back through the allocator: one more free place.
     expect(await readPublicAvailability(db, { id: event.id, capacity: 20 }, at(22))).toBe((before ?? 0) + 1);
     // The audit row: no staff actor, the state it left and the door, never a name.
     expect(await auditOf(maria.id)).toEqual([
-      { action: "registration.cancelled_by_participant", actor: null, metadata: { from: "PENDING_DECLARATION", via: "FAMILY_WIZARD" } },
+      { action: "registration.cancelled_by_participant", actor: null, metadata: { from: "PENDING_DECLARATION", via: "FAMILY_WIZARD", reasonKind: "INJURY_OR_ILLNESS" } },
     ]);
 
     // One email for Maria, naming her, the event, the place released and who the address still holds.
@@ -273,7 +275,7 @@ describe("§547 «Renunț la înscrierea pentru <nume>» in the declarations wiz
     expect(message.text).toContain("The registration for Maria Pop at The family cross");
 
     // The last person: withdrawn too, the wizard ends.
-    const last = await withdrawFromFamilyWizard(secret, withdrawn.pass, ion.id, at(24));
+    const last = await withdrawFromFamilyWizard(secret, withdrawn.pass, ion.id, at(24), { kind: "OTHER_PLANS", text: null });
     if (!last.ok) throw new Error("the last withdrawal was refused");
     expect(last.pass.done).toBe(true);
     expect((await rowsOf(event.id)).map((row) => row.status)).toEqual(["CONFIRMED", "CANCELLED", "CANCELLED"]);
@@ -286,9 +288,9 @@ describe("§547 «Renunț la înscrierea pentru <nume>» in the declarations wiz
     const secret = await declarationLink(ana.id, at(20));
     vi.setSystemTime(at(21));
     // A person the link does not name, or the address's next one, is not the link's to withdraw.
-    expect(await withdrawFromFamilyWizard(secret, null, maria.id, at(21))).toMatchObject({ ok: false });
+    expect(await withdrawFromFamilyWizard(secret, null, maria.id, at(21), { kind: "OTHER_PLANS", text: null })).toMatchObject({ ok: false });
 
-    const withdrawn = await withdrawFromFamilyWizard(secret, null, ana.id, at(21));
+    const withdrawn = await withdrawFromFamilyWizard(secret, null, ana.id, at(21), { kind: "OTHER_PLANS", text: null });
     if (!withdrawn.ok) throw new Error("the withdrawal was refused");
     expect(withdrawn.pass).toMatchObject({ binding: "link", originId: ana.id, skippedIds: [ana.id], signedIds: [], done: false });
     expect(withdrawn.steps.map((step) => [step.registeredName, familyStepWordsKey(step)])).toEqual([
@@ -376,25 +378,33 @@ describe("§547 «Gestionează înscrierea» per person, and safe", () => {
     expect(rows.find((row) => row.id === ana.id)?.listOptOut).toBe(false);
     // A registration id is not a secret: another address's is refused, and so is its cancel.
     expect(await thrown(setListConsentFromManageLink(db, secret, false, at(27), vecina.id))).toBe("NOT_FOUND");
-    expect(await thrown(consumeAndCancel(secret, at(27), vecina.id))).toBe("NOT_FOUND");
+    expect(await thrown(consumeAndCancel(secret, at(27), { kind: "OTHER_PLANS", text: null }, vecina.id))).toBe("NOT_FOUND");
     expect((await rowsOf(event.id)).find((row) => row.id === vecina.id)?.status).not.toBe("CANCELLED");
     // …and the refusal spent nothing: the link still reads.
     expect((await readRaceDayContext(secret, at(27))).ok).toBe(true);
 
     const before = await readPublicAvailability(db, { id: event.id, capacity: 20 }, at(28));
-    const cancelled = await consumeAndCancel(secret, at(28), maria.id);
+    const cancelled = await consumeAndCancel(secret, at(28), { kind: "OTHER", text: "Nunta fratelui" }, maria.id);
     expect(cancelled).toMatchObject({ ok: true, family: true, registration: { id: maria.id, status: "CANCELLED" } });
     const after = await rowsOf(event.id);
     expect(after.find((row) => row.id === maria.id)?.status).toBe("CANCELLED");
     expect(after.find((row) => row.id === ana.id)?.status).toBe("CONFIRMED");
     expect(await readPublicAvailability(db, { id: event.id, capacity: 20 }, at(28))).toBe((before ?? 0) + 1);
-    expect(await auditOf(maria.id)).toContainEqual({ action: "registration.cancelled_by_participant", actor: null, metadata: { from: "CONFIRMED", via: "MANAGE_LINK" } });
+    expect(await auditOf(maria.id)).toContainEqual({ action: "registration.cancelled_by_participant", actor: null, metadata: { from: "CONFIRMED", via: "MANAGE_LINK", reasonKind: "OTHER" } });
+    // The answer and the words on the row (§558); the audit row keeps the answer alone, never the words.
+    expect(after.find((row) => row.id === maria.id)).toMatchObject({ cancelReasonKind: "OTHER", cancelReason: "Nunta fratelui" });
+    expect(JSON.stringify(await auditOf(maria.id))).not.toContain("Nunta");
 
     const [email] = (await outbox("REGISTRATION_CANCELLED")).filter((row) => row.registrationId === maria.id);
     const message = await render(email, at(29));
     expect(message.subject).toContain("Înscrierea pentru Maria Pop la Crosul familiei a fost anulată");
     expect(message.text).toContain("Pe această adresă rămân înscriși: Ana P. (confirmat), Ion P. (confirmat).");
     expect(message.text).not.toContain("Vecina");
+    // The participant's own copy says nothing of the reason — the club's copy quotes it (§558).
+    expect(message.text).not.toContain("Motivul anulării");
+    const clubCopy = await render({ ...email, participantId: null, payloadJson: { ...(email.payloadJson as object), clubCopy: true } }, at(29));
+    expect(clubCopy.text).toContain("Motivul anulării: Alt motiv — „Nunta fratelui”.");
+    expect(clubCopy.text).toContain("Cancellation reason: Another reason — “Nunta fratelui”.");
 
     // The cancel spent the link (§12.8), as «Înscrierile mele» spends its own.
     expect((await readRaceDayContext(secret, at(29))).ok).toBe(false);
@@ -403,7 +413,7 @@ describe("§547 «Gestionează înscrierea» per person, and safe", () => {
   it("refuses a sibling already cancelled without spending the link — no false «Gata» from a stale page", async () => {
     const { event, maria, secret } = await confirmedFamily();
     await db.update(registrations).set({ status: "CANCELLED" }).where(eq(registrations.id, maria.id));
-    expect(await thrown(consumeAndCancel(secret, at(27), maria.id))).toBe("NOT_FOUND");
+    expect(await thrown(consumeAndCancel(secret, at(27), { kind: "OTHER_PLANS", text: null }, maria.id))).toBe("NOT_FOUND");
     expect((await auditOf(maria.id)).some((row) => row.action === "registration.cancelled_by_participant")).toBe(false);
     expect((await rowsOf(event.id)).find((row) => row.id === maria.id)?.status).toBe("CANCELLED");
     expect((await readRaceDayContext(secret, at(27))).ok).toBe(true);

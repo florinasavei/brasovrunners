@@ -140,6 +140,8 @@ const PUBLIC_COLUMNS = {
   registrationClosesAt: events.registrationClosesAt,
   // «Kit de participare» → «Tricou» (§554): whether the registration form asks the T-shirt size.
   kitShirt: events.kitShirt,
+  // «Condiții de participare» → «Informații medicale» (§557): whether the form asks the health note.
+  askHealthNote: events.askHealthNote,
   confirmationOpensDaysBefore: events.confirmationOpensDaysBefore,
   confirmationDeadlineDaysBefore: events.confirmationDeadlineDaysBefore,
   // Who may enter (§329): the page says it, the form's picker is bounded by it, and the
@@ -604,6 +606,8 @@ export async function findEventNotificationRows<T extends Record<string, unknown
       costAmount: events.costAmount,
       costUrl: events.costUrl,
       startsAt: events.startsAt,
+      // Whether the event will still run, for «Nu mai pot ajunge» (§558): read with the rest, never a second query per row.
+      eventStatus: events.eventStatus,
       // The event's own end (§394): the night line's span reads it before the programme's rows,
       // as the pill does — a run whose «Durata» carries it past dusk is a night run here too.
       endsAt: events.endsAt,

@@ -253,6 +253,14 @@
         "one": "{count} on the waiting list",
         "few": "{count} on the waiting list",
         "other": "{count} on the waiting list"
+      },
+      "legend": {
+        "title": "What the states on the list mean",
+        "line": "“{word}”: {explanation}",
+        "confirmed": "signed the declaration (online or on paper at the registration desk) and has the place.",
+        "pendingWindow": "holds a place, declaration not signed. It is emailed at registration and {opens} before; it is due by {due}, or the place is freed.",
+        "pendingHold": "holds a place for {hold} from registration until the declaration is signed; otherwise the place is freed.",
+        "waitlisted": "has no place yet. When one is freed, the first gets an offer by email and has {offer} to sign the declaration."
       }
     },
     "cta": {
@@ -435,7 +443,18 @@
         "action": "Sign the declaration"
       }
     },
-    "membersOnly": "Members only"
+    "membersOnly": "Members only",
+    "safetyRules": {
+      "heading": "Safety rules",
+      "intro": "This is a {club} group run: nobody supervises each participant individually, and it is not a guiding service.",
+      "introMountain": "This is a {club} group run: nobody supervises each participant individually, and it is not a mountain guiding service.",
+      "pace": "Each runner chooses their own pace and way, within the group.",
+      "gear": "Shoes and clothing suited to the ground and the weather; on a night run, a headlamp.",
+      "supplies": "Bring your own water and food.",
+      "health": "Run only if, as far as you know, your health allows it.",
+      "wildlife": "Animals and weather: follow the organiser's general safety instructions.",
+      "leaving": "If you leave the group, tell the organiser."
+    }
   },
   "Admin": {
     "botCheck": {
@@ -544,6 +563,13 @@
       "holdExpires": "Hold expires",
       "confirmed": "Confirmed",
       "cancelled": "Cancelled",
+      "cancelReasonLabel": "Cancellation reason",
+      "cancelReasonOther": "{kind} — “{text}”",
+      "cancelReasonKinds": {
+        "INJURY_OR_ILLNESS": "Injury or illness",
+        "OTHER_PLANS": "Other plans",
+        "OTHER": "Another reason"
+      },
       "expired": "Expired",
       "declaration": "Declaration signed",
       "privacyNoticeLine": "Privacy notice acknowledged (v{version}): {date}",
@@ -617,7 +643,9 @@
           "consent_withdrawn": "Consent withdrawn",
           "declaration_downloaded": "Signed declaration downloaded (PDF)",
           "sent_now": "Sent now, past the scheduled round",
-          "cancelled_by_participant": "Cancelled by the participant, from their own link"
+          "cancelled_by_participant": "Cancelled by the participant, from their own link",
+          "declaration_hold_set": "Declaration kept for a complaint or a dispute",
+          "declaration_hold_cleared": "Keep removed from the declaration"
         }
       },
       "locale": {
@@ -671,6 +699,7 @@
       "emergency": {
         "title": "Emergency and health",
         "show": "Show the phone, the emergency contact and the health note",
+        "showNoHealth": "Show the phone and the emergency contact",
         "showHelp": "Who opened this section, and when, is recorded in the audit trail.",
         "phone": "Phone",
         "contact": "Emergency contact",
@@ -1028,6 +1057,7 @@
       "TOO_MANY_ADDRESSES": "At most {max} addresses in one box. Nothing was saved.",
       "ONE_ADDRESS_ONLY": "“Signed declarations go to” takes one address — the archive mailbox. Put the others under “Visible copy (Cc)” or “Hidden copy (Bcc)”. Nothing was saved.",
       "CONFLICT": "Someone else saved while you were editing. Reload the page and reapply your changes — nothing of yours was overwritten.",
+      "DECLARATION_HELD": "Nothing was erased: a declaration is kept for a complaint or a dispute. An Administrator removes the keep first, on the registration's page or the run's signatures.",
       "ERASE_NAME_MISMATCH": "The name you typed is not this participant's name. Nothing was erased — type the name exactly as the row shows it.",
       "LEGAL_CONFIRMATION_MISMATCH": "What you typed does not name this version. Nothing was deleted — type the phrase exactly as asked, for example “GDPR 2”.",
       "LEGAL_DELETE_NEEDS_REASON": "Type a reason. It is the only thing left after the deletion.",
@@ -1189,6 +1219,8 @@
       "registrationOpensSoonHelp": "Ticked, the page says “Registration opens soon” and the form stays closed. Untick it to open: the people who asked to be told get the email.",
       "kitShirt": "T-shirt",
       "kitShirtHelp": "When ticked, the form asks for the T-shirt size.",
+      "askHealthNote": "Medical information",
+      "askHealthNoteHelp": "When ticked, the form asks for medical information (conditions, allergies, medication); it is deleted {days} after the event.",
       "registrationClosesAt": "Registration closes",
       "registrationWindowHelp": "Leave the opening empty and registration opens when the event is published; leave the closing empty and it closes when the event starts.",
       "declarationDocument": "Declaration a participant signs",
@@ -1410,8 +1442,28 @@
         "headerImageSrc": "A picture instead of the coloured band",
         "headerImageSrcHelp": "It runs the full width across the top. With one chosen, the band, the logo and the text on it are not printed — the picture is the header.",
         "sponsorImageSrc": "A sponsors' strip",
-        "sponsorImageSrcHelp": "Above the small print at the foot. Fitted without being stretched.",
+        "sponsorImageSrcHelp": "Above the small print at the foot. Pick the part with the sponsors, or put the whole picture in the strip.",
         "noPicture": "No picture",
+        "picture": {
+          "choose": "Upload a picture",
+          "replace": "Upload another",
+          "uploading": "Uploading…",
+          "failed": "The picture did not upload. Try again.",
+          "fromGallery": "From the gallery",
+          "cropTitle": "The part that prints",
+          "cropHelp": {
+            "header": "Drag the rectangle over the part you want across the top of the number.",
+            "sponsors": "Drag the rectangle over the sponsors. “The whole picture” puts all of it in the strip."
+          },
+          "cropReset": {
+            "header": "Back to the middle",
+            "sponsors": "The whole picture"
+          },
+          "shape": {
+            "header": "Shape: {ratio} to 1, the size of the number's top strip.",
+            "sponsors": "Shape: {ratio} to 1, the size of the sponsors' strip."
+          }
+        },
         "footer": {
           "title": "Footer",
           "intro": "The small print at the foot, in the order below. What does not fit on one line goes onto a second; what does not fit there either is cut with “…” — the preview shows exactly where.",
@@ -1425,8 +1477,9 @@
           "notConfigured": "not set on this environment"
         },
         "previewCaption": "Preview — this is how it prints",
+        "previewPending": "Redrawing…",
         "previewAlt": "The race number as it would look with the current choices, for a runner named “Nume Prenume”",
-        "previewNote": "The pictures are the ones already uploaded (the “Pictures” page). The preview above changes at once; the “Numbers” page and the PDF follow a save."
+        "previewNote": "The preview above changes at once; the “Numbers” page and the PDF follow a save."
       },
       "bibColour": "Colour of the race numbers (BIB)",
       "bibColourHelp": "The band across the top of the printed number, the one carrying the club's logo and the race. “The club's colour” unless you want a specific one.",
@@ -1574,6 +1627,9 @@
           "earlierClose": "An earlier close stops only new registrations."
         },
         "conditions": {
+          "title": "Participation conditions",
+          "onlyHere": "Asked only when registration is here, on the site.",
+          "onlyRegisteringTypes": "A group run has no registration form, so it asks nothing.",
           "legalLink": "Legal documents — where a new version of the declaration is approved",
           "declarationUnderRules": "The minimum age and the declaration a participant signs are chosen under “Programme, rules and declaration”: the age in “Rules”, the declaration in “Self-declaration”."
         },
@@ -1730,6 +1786,10 @@
           "kit": {
             "shirtYes": "T-shirt: yes",
             "shirtNo": "T-shirt: no"
+          },
+          "health": {
+            "asked": "Medical information: yes",
+            "notAsked": "Medical information: no"
           },
           "bibs": {
             "from": "From {number}",
@@ -2666,8 +2726,8 @@
             "Vercel → the production project (and QA) → Settings → Environment Variables: CONTACT_SMTP_USER = the club's Gmail address; CONTACT_SMTP_PASSWORD = the 16 characters.",
             "(CONTACT_FORM_TO is no longer required — it is only the fallback for the recipients.)",
             "Redeploy both projects.",
-            "In the app: Pages → Contact → “Who receives the contact messages” → write the addresses under “To” and, if you like, a copy under “Copy (Cc)”.",
-            "A copy nobody on the message sees goes under “Hidden copy (Bcc)” → Save.",
+            "In the app: «Pages» → «Contact» → «Who receives the contact messages» → write the addresses under «To» and, if you like, under «CC» (they show in the email).",
+            "A copy nobody on the message sees goes under «BCC» → «Save the recipients».",
             "Changed here at any time, with no redeploy.",
             "Open {baseUrl}/en/contact and send a test message: “Your message is on its way.” on the page and the email in the mailbox, with “Reply” addressed to whoever wrote. This row turns green."
           ]
@@ -3648,6 +3708,7 @@
       "backToEvent": "Back to the event",
       "print": "Print",
       "help": "Every confirmed participant, checked in or not. The health note deletes itself seven days after the event; after that the column is empty. Opening this page is recorded in the audit trail.",
+      "helpNoHealth": "Every confirmed participant, checked in or not. Opening this page is recorded in the audit trail.",
       "columnBib": "No.",
       "columnName": "Name",
       "columnPhone": "Phone",
@@ -3891,7 +3952,22 @@
         "readOnly": "Who receives the club’s copies is the Administrator’s to set; you see the lists in force.",
         "saving": "Saving…",
         "saved": "Saved who receives the club's copies.",
-        "participantsBccHelpMore": "Not the address check or the link for another person. A message to everybody registered gives one copy, with no names. Never for test registrations."
+        "participantsBccHelpMore": "Not the address check or the link for another person. A message to everybody registered gives one copy, with no names. Never for test registrations.",
+        "folds": {
+          "addresses": "Addresses: {addresses}",
+          "declarations": {
+            "title": "Signed declarations",
+            "aside": "They go to: {to} · Cc: {cc} · Bcc: {bcc}",
+            "asideNoCopies": "They go to: {to} · no copies",
+            "asideNone": "Not sent"
+          },
+          "confirmations": {
+            "title": "The confirmation notice"
+          },
+          "participants": {
+            "title": "The club's copy of the emails to participants"
+          }
+        }
       },
       "queue": {
         "title": "The sending queue",
@@ -4117,21 +4193,24 @@
       },
       "contacts": {
         "title": "Who receives the contact messages",
-        "aside": "They currently reach: {to}",
+        "aside": "They currently reach: {to} · CC: {cc} · BCC: {bcc}",
+        "asideNoCopies": "They currently reach: {to} · no copies",
         "asideNobody": "nobody",
         "intro": "Who receives the messages from “Write to us”; they leave through the club's Gmail, not Mailgun. Saved here, with no redeploy.",
         "source": {
-          "setting": "They currently reach: {to}. Copy: {cc}. Hidden copy: {bcc}. Set here, in the app.",
-          "environment": "They currently reach: {to} — from the CONTACT_FORM_TO variable on the server, because the list below is empty. Copy: {cc}. Hidden copy: {bcc}.",
+          "setting": "They currently reach: {to}. CC: {cc}. BCC: {bcc}. Set here, in the app.",
+          "environment": "They currently reach: {to}, from CONTACT_FORM_TO on the server, because “To” is empty. CC: {cc}. BCC: {bcc}.",
           "none": "Nobody receives them: the “Write to us” page shows the club's address instead of the form. Write at least one address under “To”."
         },
         "updatedAt": "Set on {when}.",
-        "to": "To (addresses separated by commas)",
-        "toHelp": "Who receives the message. Empty means CONTACT_FORM_TO on the server is used instead.",
-        "cc": "Copy – Cc (addresses separated by commas)",
-        "ccHelp": "They get a copy of every message the form sends, on “Cc”, so they can see one another. Empty means no copies.",
-        "bcc": "Hidden copy – Bcc (addresses separated by commas)",
-        "bccHelp": "They get a copy of every message from the form without appearing in it. Empty means no hidden copies.",
+        "to": "To",
+        "toHelp": "Addresses separated by commas, spaces or on separate lines. Empty: CONTACT_FORM_TO on the server is used.",
+        "cc": "CC",
+        "ccHelp": "Addresses separated by commas, spaces or on separate lines. Empty: no CC.",
+        "bcc": "BCC",
+        "bccHelp": "Addresses separated by commas, spaces or on separate lines. Empty: no BCC.",
+        "copiesHelp": "CC: the addresses appear in the email; BCC: they get a copy without appearing.",
+        "repeats": "An address typed twice, or already under “To”, is kept once.",
         "save": "Save the recipients",
         "readOnly": "Who receives the contact messages is the Administrator’s to set; you see the list in force.",
         "saving": "Saving…",
@@ -4850,6 +4929,14 @@
               ]
             },
             {
+              "title": "Who receives the messages from the contact page",
+              "steps": [
+                "«Pages» → «Contact» → «Who receives the contact messages».",
+                "Under «To» write who receives the message. Under «CC», who gets a visible copy. Under «BCC», who gets a copy without appearing.",
+                "Addresses separated by commas, spaces or on separate lines. Press «Save the recipients» and confirm; the saved list shows on the card."
+              ]
+            },
+            {
               "title": "What the club still has to do",
               "steps": [
                 "«Tasks» → the «Club» tab: every row is read from the system, with the steps under it. A green row is done.",
@@ -4967,7 +5054,8 @@
                 "A minor aged 14 to 17 signs beside the parent or guardian, each with their own identity document; nobody under 14 can register for any event.",
                 "Kept: the names, the documents, the text's version, its fingerprint, the moment and the method. It is a simple electronic signature.",
                 "Then they get the signed declaration by email, as a PDF, through the email queue (by «Deadlines» → «When emails leave»). At the desk, the kit is handed over against the document written in the declaration.",
-                "Whoever cannot sign online signs on paper at the desk, and the volunteer presses «Confirm on paper». The club keeps the signed original."
+                "Whoever cannot sign online signs on paper at the desk, and the volunteer presses «Confirm on paper». The club keeps the signed original.",
+                "Every new signature keeps the SHA-256 fingerprint of the text signed. The PDF prints it with the version and the second of signing; the registration shows its first 12 characters."
               ]
             },
             {
@@ -4983,7 +5071,8 @@
                 "Declarations are records in the database, not files; the PDF is made on request, identically.",
                 "Registrations and declarations are kept 3 years from the event, then deleted by themselves. The emergency contact and the health note are deleted 7 days after the event.",
                 "Downloaded exports and PDFs that carry identity documents are yours to delete, within 7 days of the event.",
-                "The privacy notice says exactly this."
+                "The privacy notice says exactly this.",
+                "A complaint or dispute in progress: on the registration or under «Signed declarations (group run)», «Keep: a complaint or dispute in progress». Nothing deletes it until «Remove the keep»."
               ]
             },
             {
@@ -5032,9 +5121,10 @@
             {
               "title": "They withdraw or cannot come any more",
               "steps": [
-                "From the confirmation email: «Manage your registration» → «Cancel the registration for…» (with the person's name) → «Yes, cancel».",
-                "From the reminder: «I can't come — cancel my registration».",
-                "Any time: «My registrations», on the site, with their address. The place goes to the waiting list at once."
+                "From any email about their registration: «I can't make it any more» → at «Why are you cancelling?» choose the reason (for «Another reason» they write it in short) → «Cancel the registration for…» (with the person's name) → «Yes, cancel».",
+                "On a family's email, the button opens «My registrations», with each person: «Withdraw from this registration», with the reason chosen too. The same any time, from the site, with their address.",
+                "In a family's declarations: «Withdraw the registration for…», with the reason chosen too. The place goes to the waiting list at once.",
+                "The reason shows on the registration's page, in the export and in the club's copy of the cancellation email."
               ]
             },
             {
@@ -5271,7 +5361,7 @@
         "few": "Erase {count} signed declarations for “{run}”? They cannot be recovered.",
         "other": "Erase {count} signed declarations for “{run}”? They cannot be recovered."
       },
-      "batchChanged": "The ticked declarations changed meanwhile — at least one was already erased. Nothing was erased: reload the page and tick again.",
+      "batchChanged": "The ticked declarations changed meanwhile, or one is kept for a complaint. Nothing was erased: reload the page and tick again.",
       "batchErased": {
         "one": "{count} signed declaration was erased. The log keeps your name and the reason.",
         "few": "{count} signed declarations were erased. The log keeps your name and the reason.",
@@ -5623,6 +5713,24 @@
         "createTitle": "Add the code?",
         "createBody": "Members see it in their area as soon as you add it."
       }
+    },
+    "declarationHold": {
+      "textHash": "Fingerprint",
+      "title": "Keep for a complaint or a dispute",
+      "releaseFold": "Remove the keep",
+      "help": "Use it only while a complaint, a dispute or proceedings are under way. While it is set, the declaration is not deleted.",
+      "releaseHelp": "When the case is over, remove the keep. The declaration then goes back to its usual period.",
+      "reason": "Reason",
+      "reasonHelp": "Say what it is about, without the person's name.",
+      "releaseReasonHelp": "Say why it ends, without the person's name.",
+      "hold": "Keep: a complaint or dispute in progress",
+      "release": "Remove the keep",
+      "holdTitle": "Keep the declaration?",
+      "holdBody": "It is no longer deleted automatically, and nobody can delete it until you remove the keep.",
+      "releaseTitle": "Remove the keep?",
+      "releaseBody": "The declaration goes back to its usual period and can be deleted again.",
+      "heldLine": "Kept {when}, by {who}: {reason}",
+      "whoRemoved": "a team member (account removed)"
     }
   },
   "NotFound": {
@@ -5739,6 +5847,8 @@
     "displayNameHelp": "By default the list and the results show your full name; if you would rather show something else, such as “Ana P.”, write it here.",
     "birthDate": "Date of birth",
     "birthDateEcho": "{date} · {age} on the event day",
+    "birthDatePlaceholder": "DD.MM.YYYY",
+    "birthDateUnreadable": "Type the date as day, month, year: 11.05.1990.",
     "ageRule": {
       "minimumAndGuardian": "Minimum age: {age}. Under 18, a parent or legal guardian registers the runner, with their consent.",
       "minimumAndConsent": "Minimum age: {age}. Under 18, a parent's consent is needed to take part.",
@@ -5993,6 +6103,22 @@
   "Registrations": {
     "invalidOrExpired": "This link is no longer valid. We can send you a new one, to the same email address.",
     "cancelKeepsRecord": "Cancelling frees your place; we keep the registration for three years as a record. Want to see, correct or erase your data? <contact>Write to us</contact>.",
+    "cancelReason": {
+      "label": "Why are you cancelling?",
+      "choose": "Choose a reason",
+      "kinds": {
+        "INJURY_OR_ILLNESS": "Injury or illness",
+        "OTHER_PLANS": "Other plans",
+        "OTHER": "Another reason"
+      },
+      "textLabel": "The reason, in short",
+      "textHelp": "Only for «Another reason». At most 200 characters. Only the club reads it.",
+      "problem": {
+        "kind": "Choose why you are cancelling, then press again.",
+        "text": "You chose «Another reason»: write it, in short.",
+        "long": "The reason is at most 200 characters."
+      }
+    },
     "confirm": {
       "title": "Confirm your email address",
       "prompt": "We are confirming your email address. If nothing happens in a few seconds, press the button.",
@@ -7045,7 +7171,9 @@
       "memberCodeHidden": "The code was hidden.",
       "memberCodeShown": "The code is shown to members again.",
       "memberCodeMoved": "The order of the codes was changed.",
-      "memberCodeDeleted": "The code was deleted."
+      "memberCodeDeleted": "The code was deleted.",
+      "declarationHeld": "The declaration is kept. It is not deleted until you remove the keep.",
+      "declarationReleased": "The keep was removed."
     }
   },
   "Network": {

@@ -253,6 +253,14 @@
         "one": "{count} pe lista de așteptare",
         "few": "{count} pe lista de așteptare",
         "other": "{count} pe lista de așteptare"
+      },
+      "legend": {
+        "title": "Ce înseamnă stadiile de pe listă",
+        "line": "„{word}”: {explanation}",
+        "confirmed": "a semnat declarația (online sau pe hârtie la masa de înscrieri) și are locul.",
+        "pendingWindow": "are loc păstrat, declarația nesemnată. Se cere la înscriere și cu {opens} înainte; se semnează până {due}, altfel pierde locul.",
+        "pendingHold": "are loc păstrat {hold} de la înscriere, până semnează declarația; altfel locul se eliberează.",
+        "waitlisted": "nu are încă loc. Când se eliberează unul, primul primește o ofertă pe email și are {offer} ca să semneze declarația."
       }
     },
     "cta": {
@@ -435,7 +443,18 @@
         "action": "Semnează declarația"
       }
     },
-    "membersOnly": "Doar pentru membri"
+    "membersOnly": "Doar pentru membri",
+    "safetyRules": {
+      "heading": "Reguli de siguranță",
+      "intro": "Este o alergare de grup {club}: nimeni nu supraveghează individual fiecare participant și nu este un serviciu de ghidaj.",
+      "introMountain": "Este o alergare de grup {club}: nimeni nu supraveghează individual fiecare participant și nu este un serviciu de ghidaj montan.",
+      "pace": "Fiecare își alege ritmul și drumul, în cadrul grupului.",
+      "gear": "Încălțăminte și haine potrivite terenului și vremii; la o alergare de noapte, o lanternă frontală.",
+      "supplies": "Apa și mâncarea le ai la tine.",
+      "health": "Alergi doar dacă, din câte știi, sănătatea ta îți permite.",
+      "wildlife": "Animale și vreme: urmezi indicațiile generale de siguranță date de organizator.",
+      "leaving": "Dacă pleci din grup, îi spui organizatorului."
+    }
   },
   "Admin": {
     "botCheck": {
@@ -544,6 +563,13 @@
       "holdExpires": "Rezervarea expiră",
       "confirmed": "Confirmată",
       "cancelled": "Anulată",
+      "cancelReasonLabel": "Motivul anulării",
+      "cancelReasonOther": "{kind} — „{text}”",
+      "cancelReasonKinds": {
+        "INJURY_OR_ILLNESS": "Accidentare sau boală",
+        "OTHER_PLANS": "Alt program",
+        "OTHER": "Alt motiv"
+      },
       "expired": "Expirată",
       "declaration": "Declarație semnată",
       "privacyNoticeLine": "Nota de informare luată la cunoștință (v{version}): {date}",
@@ -617,7 +643,9 @@
           "consent_withdrawn": "Consimțământ retras",
           "declaration_downloaded": "Declarația semnată descărcată (PDF)",
           "sent_now": "Trimis acum, ocolind trecerea programată",
-          "cancelled_by_participant": "Anulată de participant, din linkul propriu"
+          "cancelled_by_participant": "Anulată de participant, din linkul propriu",
+          "declaration_hold_set": "Declarație păstrată pentru o reclamație sau un litigiu",
+          "declaration_hold_cleared": "Păstrarea declarației a fost scoasă"
         }
       },
       "locale": {
@@ -671,6 +699,7 @@
       "emergency": {
         "title": "Urgențe și sănătate",
         "show": "Arată telefonul, persoana de contact și nota medicală",
+        "showNoHealth": "Arată telefonul și persoana de contact",
         "showHelp": "Se înregistrează în jurnal cine a deschis secțiunea și când.",
         "phone": "Telefon",
         "contact": "Persoană de contact",
@@ -1028,6 +1057,7 @@
       "TOO_MANY_ADDRESSES": "Cel mult {max} adrese într-o căsuță. Nu s-a salvat nimic.",
       "ONE_ADDRESS_ONLY": "La „Declarațiile semnate merg la” încape o singură adresă — cutia de arhivă. Pune-le pe celelalte la „Copie vizibilă (Cc)” sau „Copie ascunsă (Bcc)”. Nu s-a salvat nimic.",
       "CONFLICT": "Altcineva a salvat între timp. Reîncarcă pagina și aplică din nou modificările tale — nimic nu a fost suprascris.",
+      "DECLARATION_HELD": "Nu s-a șters nimic: o declarație e păstrată pentru o reclamație sau un litigiu. Un Administrator scoate întâi păstrarea, din pagina înscrierii sau din semnăturile alergării.",
       "ERASE_NAME_MISMATCH": "Numele scris nu este numele înscrisului. Nu s-a șters nimic — scrie numele exact așa cum apare pe rând.",
       "LEGAL_CONFIRMATION_MISMATCH": "Confirmarea scrisă nu este a acestei versiuni. Nu s-a șters nimic — scrie exact textul cerut, de exemplu „GDPR 2”.",
       "LEGAL_DELETE_NEEDS_REASON": "Scrie un motiv. Este singurul lucru care rămâne după ștergere.",
@@ -1189,6 +1219,8 @@
       "registrationOpensSoonHelp": "Bifat, pagina spune „Înscrierile se deschid în curând” și formularul rămâne închis. Debifează când deschizi: cei de la „Anunță-mă” primesc emailul.",
       "kitShirt": "Tricou",
       "kitShirtHelp": "Dacă e bifat, formularul cere mărimea tricoului.",
+      "askHealthNote": "Informații medicale",
+      "askHealthNoteHelp": "Dacă e bifat, formularul cere informații medicale (afecțiuni, alergii, medicație); se șterg la {days} după eveniment.",
       "registrationClosesAt": "Înscrierile se închid",
       "registrationWindowHelp": "Lasă deschiderea goală și înscrierile pornesc la publicarea evenimentului; lasă închiderea goală și se opresc la startul evenimentului.",
       "declarationDocument": "Declarația pe care o semnează participantul",
@@ -1410,8 +1442,28 @@
         "headerImageSrc": "Imagine în locul benzii colorate",
         "headerImageSrcHelp": "Se întinde pe toată lățimea, sus. Când alegi una, banda colorată, sigla și textul din bandă nu se mai tipăresc — imaginea e antetul.",
         "sponsorImageSrc": "Bandă cu sponsori",
-        "sponsorImageSrcHelp": "Deasupra rândului mic de jos. Se încadrează fără să fie deformată.",
+        "sponsorImageSrcHelp": "Deasupra rândului mic de jos. Alegi partea cu sponsorii sau pui toată imaginea în bandă.",
         "noPicture": "Fără imagine",
+        "picture": {
+          "choose": "Încarcă o imagine",
+          "replace": "Încarcă alta",
+          "uploading": "Se încarcă…",
+          "failed": "Imaginea nu s-a încărcat. Încearcă din nou.",
+          "fromGallery": "Din galerie",
+          "cropTitle": "Partea care se tipărește",
+          "cropHelp": {
+            "header": "Trage dreptunghiul peste partea care vrei să apară sus, pe toată lățimea numărului.",
+            "sponsors": "Trage dreptunghiul peste sponsori. „Toată imaginea” pune imaginea întreagă în bandă."
+          },
+          "cropReset": {
+            "header": "Înapoi la mijloc",
+            "sponsors": "Toată imaginea"
+          },
+          "shape": {
+            "header": "Forma: {ratio} la 1, cât banda de sus a numărului.",
+            "sponsors": "Forma: {ratio} la 1, cât banda cu sponsori."
+          }
+        },
         "footer": {
           "title": "Subsol",
           "intro": "Rândul mic de jos, în ordinea de mai jos. Ce nu încape pe un rând trece pe al doilea; ce nu încape nici acolo se taie cu „…” — previzualizarea arată exact unde.",
@@ -1425,8 +1477,9 @@
           "notConfigured": "nesetată pe acest mediu"
         },
         "previewCaption": "Previzualizare — așa se tipărește",
+        "previewPending": "Se redesenează…",
         "previewAlt": "Numărul de concurs, așa cum ar arăta cu alegerile de acum, pentru un alergător cu numele „Nume Prenume”",
-        "previewNote": "Pozele sunt cele încărcate deja (pagina „Poze”). Previzualizarea de mai sus se schimbă pe loc; pagina „Numere” și PDF-ul, după salvare."
+        "previewNote": "Previzualizarea de mai sus se schimbă pe loc; pagina „Numere” și PDF-ul, după salvare."
       },
       "bibColour": "Culoarea numerelor de concurs (BIB)",
       "bibColourHelp": "Banda de sus a numărului tipărit, cea cu logo-ul clubului și cursa pe ea. „Culoarea clubului” dacă nu vrei una anume.",
@@ -1574,6 +1627,9 @@
           "earlierClose": "O închidere mai devreme oprește doar înscrierile noi."
         },
         "conditions": {
+          "title": "Condiții de participare",
+          "onlyHere": "Se cer doar când înscrierea e aici, pe site.",
+          "onlyRegisteringTypes": "Alergarea de grup nu are formular de înscriere, deci nu cere nimic.",
           "legalLink": "Documente legale — unde se aprobă o versiune nouă a declarației",
           "declarationUnderRules": "Vârsta minimă și declarația pe care o semnează participantul se aleg în «Program, regulament și declarație»: vârsta în «Regulamentul», declarația în «Declarația pe propria răspundere»."
         },
@@ -1730,6 +1786,10 @@
           "kit": {
             "shirtYes": "Tricou: da",
             "shirtNo": "Tricou: nu"
+          },
+          "health": {
+            "asked": "Informații medicale: da",
+            "notAsked": "Informații medicale: nu"
           },
           "bibs": {
             "from": "De la {number}",
@@ -2666,8 +2726,8 @@
             "Vercel → proiectul de producție (și QA) → Settings → Environment Variables: CONTACT_SMTP_USER = adresa Gmail a clubului; CONTACT_SMTP_PASSWORD = cele 16 caractere.",
             "(CONTACT_FORM_TO nu mai e obligatorie — e doar rezerva pentru destinatari.)",
             "Redeploy pe ambele proiecte.",
-            "În aplicație: Pagini → Contact → „Cine primește mesajele de contact” → scrie adresele la „Către” și, dacă vrei, o copie la „Copie (Cc)”.",
-            "O copie pe care nimeni din mesaj nu o vede merge la „Copie ascunsă (Bcc)” → Salvează.",
+            "În aplicație: «Pagini» → «Contact» → «Cine primește mesajele de contact» → scrie adresele la «Către» și, dacă vrei, la «CC» (se văd în email).",
+            "O copie pe care nimeni din mesaj nu o vede merge la «BCC» → «Salvează destinatarii».",
             "De aici se schimbă oricând, fără redeploy.",
             "Deschide {baseUrl}/ro/contact și trimite un mesaj de probă: „Mesajul a plecat.” pe pagină și e-mailul în căsuță, cu „Reply” către cine a scris. Rândul acesta devine verde."
           ]
@@ -3648,6 +3708,7 @@
       "backToEvent": "Înapoi la eveniment",
       "print": "Tipărește",
       "help": "Toți participanții confirmați, prezenți sau nu. Nota medicală se șterge singură la șapte zile după eveniment; după aceea coloana e goală. Deschiderea acestei pagini se înregistrează în jurnal.",
+      "helpNoHealth": "Toți participanții confirmați, prezenți sau nu. Deschiderea acestei pagini se înregistrează în jurnal.",
       "columnBib": "Nr.",
       "columnName": "Nume",
       "columnPhone": "Telefon",
@@ -3891,7 +3952,22 @@
         "readOnly": "Cine primește copiile clubului stabilește Administratorul; tu vezi listele în vigoare.",
         "saving": "Se salvează…",
         "saved": "Am salvat cine primește copiile clubului.",
-        "participantsBccHelpMore": "Nu și verificarea adresei sau linkul pentru altă persoană. Un mesaj către toți înscrișii dă o singură copie, fără nume. Niciodată pentru înscrierile de test."
+        "participantsBccHelpMore": "Nu și verificarea adresei sau linkul pentru altă persoană. Un mesaj către toți înscrișii dă o singură copie, fără nume. Niciodată pentru înscrierile de test.",
+        "folds": {
+          "addresses": "Adrese: {addresses}",
+          "declarations": {
+            "title": "Declarațiile semnate",
+            "aside": "Merg la: {to} · Cc: {cc} · Bcc: {bcc}",
+            "asideNoCopies": "Merg la: {to} · fără copii",
+            "asideNone": "Nu se trimit"
+          },
+          "confirmations": {
+            "title": "Anunțul de confirmare"
+          },
+          "participants": {
+            "title": "Copia clubului la emailurile către participanți"
+          }
+        }
       },
       "queue": {
         "title": "Coada de trimitere",
@@ -4117,21 +4193,24 @@
       },
       "contacts": {
         "title": "Cine primește mesajele de contact",
-        "aside": "Acum ajung la: {to}",
+        "aside": "Acum ajung la: {to} · CC: {cc} · BCC: {bcc}",
+        "asideNoCopies": "Acum ajung la: {to} · fără copii",
         "asideNobody": "nimeni",
         "intro": "Cine primește mesajele de pe „Scrie-ne”; ele pleacă prin Gmail-ul clubului, nu prin Mailgun. Se salvează aici, fără redeploy.",
         "source": {
-          "setting": "Acum ajung la: {to}. Copie: {cc}. Copie ascunsă: {bcc}. Scrise aici, în aplicație.",
-          "environment": "Acum ajung la: {to} — din variabila CONTACT_FORM_TO de pe server, pentru că lista de mai jos e goală. Copie: {cc}. Copie ascunsă: {bcc}.",
+          "setting": "Acum ajung la: {to}. CC: {cc}. BCC: {bcc}. Scrise aici, în aplicație.",
+          "environment": "Acum ajung la: {to}, din CONTACT_FORM_TO de pe server, pentru că „Către” e gol. CC: {cc}. BCC: {bcc}.",
           "none": "Nu le primește nimeni: pagina „Scrie-ne” arată adresa clubului în loc de formular. Scrie cel puțin o adresă la „Către”."
         },
         "updatedAt": "Setat {when}.",
-        "to": "Către (adrese despărțite prin virgulă)",
-        "toHelp": "Cine primește mesajul. Gol înseamnă că se folosește CONTACT_FORM_TO de pe server.",
-        "cc": "Copie – Cc (adrese despărțite prin virgulă)",
-        "ccHelp": "Primesc o copie la fiecare mesaj trimis din formular, pe „Cc”, deci se văd unul pe altul. Gol înseamnă fără copii.",
-        "bcc": "Copie ascunsă – Bcc (adrese despărțite prin virgulă)",
-        "bccHelp": "Primesc o copie a fiecărui mesaj din formular, fără să apară în el. Gol înseamnă fără copii ascunse.",
+        "to": "Către",
+        "toHelp": "Adrese despărțite prin virgulă, spațiu sau pe rânduri. Gol: se folosește CONTACT_FORM_TO de pe server.",
+        "cc": "CC",
+        "ccHelp": "Adrese despărțite prin virgulă, spațiu sau pe rânduri. Gol: fără CC.",
+        "bcc": "BCC",
+        "bccHelp": "Adrese despărțite prin virgulă, spațiu sau pe rânduri. Gol: fără BCC.",
+        "copiesHelp": "CC: adresele apar în email; BCC: primesc o copie fără să apară.",
+        "repeats": "O adresă scrisă de două ori, sau deja la „Către”, se păstrează o singură dată.",
         "save": "Salvează destinatarii",
         "readOnly": "Cine primește mesajele de contact stabilește Administratorul; tu vezi lista în vigoare.",
         "saving": "Se salvează…",
@@ -4850,6 +4929,14 @@
               ]
             },
             {
+              "title": "Cine primește mesajele de pe pagina de contact",
+              "steps": [
+                "«Pagini» → «Contact» → «Cine primește mesajele de contact».",
+                "La «Către» scrie cine primește mesajul. La «CC», cine primește o copie la vedere. La «BCC», cine primește o copie fără să apară.",
+                "Adrese despărțite prin virgulă, spațiu sau pe rânduri. Apasă «Salvează destinatarii» și confirmă; lista salvată se vede pe card."
+              ]
+            },
+            {
               "title": "Ce mai are clubul de făcut",
               "steps": [
                 "«Sarcini» → tabul «Club»: fiecare rând e citit din sistem, cu pașii sub el. Un rând verde s-a rezolvat.",
@@ -4967,7 +5054,8 @@
                 "Un minor de 14–17 ani semnează alături de părinte sau tutore, fiecare cu actul lui de identitate; sub 14 ani nimeni nu se poate înscrie, la niciun eveniment.",
                 "Se păstrează numele, actele, versiunea textului, amprenta lui, momentul și metoda. E semnătură electronică simplă.",
                 "Apoi primește pe email declarația semnată, ca PDF, prin coada de emailuri (după «Termene» → «Când pleacă emailurile»). La masă, kitul se dă pe baza actului scris în declarație.",
-                "Cine nu poate semna online semnează pe hârtie, la masă, iar voluntarul apasă «Confirmă pe hârtie». Hârtia originală o păstrează clubul."
+                "Cine nu poate semna online semnează pe hârtie, la masă, iar voluntarul apasă «Confirmă pe hârtie». Hârtia originală o păstrează clubul.",
+                "Fiecare semnătură nouă păstrează amprenta SHA-256 a textului semnat. PDF-ul o tipărește cu versiunea și secunda semnării; înscrierea arată primele 12 caractere."
               ]
             },
             {
@@ -4983,7 +5071,8 @@
                 "Declarațiile sunt înregistrări în baza de date, nu fișiere; PDF-ul se face la cerere, identic.",
                 "Înscrierile și declarațiile se păstrează 3 ani de la eveniment, apoi se șterg singure. Contactul de urgență și nota medicală se șterg la 7 zile după eveniment.",
                 "Exporturile și PDF-urile descărcate care au acte de identitate le ștergi tu, în cel mult 7 zile de la eveniment.",
-                "Exact așa scrie și în nota de confidențialitate."
+                "Exact așa scrie și în nota de confidențialitate.",
+                "Reclamație sau litigiu în curs: în înscriere sau la «Declarații semnate (alergare de grup)», «Păstrează: reclamație / litigiu în curs». Nu se șterge până la «Scoate păstrarea»."
               ]
             },
             {
@@ -5032,9 +5121,10 @@
             {
               "title": "Se retrage sau nu mai poate veni",
               "steps": [
-                "Din emailul de confirmare: «Gestionează înscrierea» → «Anulează înscrierea pentru…» (cu numele persoanei) → «Da, anulează».",
-                "Din reminder: «Nu pot veni — anulez înscrierea».",
-                "Oricând: «Înscrierile mele», pe site, cu adresa lui. Locul trece imediat la lista de așteptare."
+                "Din orice email despre înscrierea lui: «Nu mai pot ajunge» → la «De ce anulezi?» alege motivul (pentru «Alt motiv» îl scrie pe scurt) → «Anulează înscrierea pentru…» (cu numele persoanei) → «Da, anulează».",
+                "Pe emailul unei familii, butonul deschide «Înscrierile mele», cu fiecare persoană: «Renunț la această înscriere», tot cu motivul ales. Tot așa oricând, de pe site, cu adresa lui.",
+                "În declarațiile unei familii: «Renunț la înscrierea pentru…», tot cu motivul ales. Locul trece imediat la lista de așteptare.",
+                "Motivul apare pe pagina înscrierii, în export și în copia clubului a emailului de anulare."
               ]
             },
             {
@@ -5271,7 +5361,7 @@
         "few": "Ștergi {count} declarații semnate pentru «{run}»? Nu se pot recupera.",
         "other": "Ștergi {count} de declarații semnate pentru «{run}»? Nu se pot recupera."
       },
-      "batchChanged": "Declarațiile bifate s-au schimbat între timp — cel puțin una a fost deja ștearsă. Nu s-a șters nimic: reîncarcă pagina și bifează din nou.",
+      "batchChanged": "Declarațiile bifate s-au schimbat între timp, sau una e păstrată pentru o reclamație. Nu s-a șters nimic: reîncarcă pagina și bifează din nou.",
       "batchErased": {
         "one": "{count} declarație semnată a fost ștearsă. În jurnal rămân numele tău și motivul.",
         "few": "{count} declarații semnate au fost șterse. În jurnal rămân numele tău și motivul.",
@@ -5623,6 +5713,24 @@
         "createTitle": "Adaugi codul?",
         "createBody": "Membrii îl văd în zona lor de îndată ce îl adaugi."
       }
+    },
+    "declarationHold": {
+      "textHash": "Amprenta",
+      "title": "Păstrează pentru o reclamație sau un litigiu",
+      "releaseFold": "Scoate păstrarea",
+      "help": "Folosește-o doar dacă există o reclamație, un litigiu sau o procedură în curs. Cât timp e pusă, declarația nu se șterge.",
+      "releaseHelp": "Când cazul s-a încheiat, scoate păstrarea. Declarația revine apoi la termenul obișnuit.",
+      "reason": "Motivul",
+      "reasonHelp": "Scrie despre ce e vorba, fără numele persoanei.",
+      "releaseReasonHelp": "Scrie de ce se încheie, fără numele persoanei.",
+      "hold": "Păstrează: reclamație / litigiu în curs",
+      "release": "Scoate păstrarea",
+      "holdTitle": "Păstrezi declarația?",
+      "holdBody": "Nu se mai șterge automat și nimeni nu o poate șterge până scoți păstrarea.",
+      "releaseTitle": "Scoți păstrarea?",
+      "releaseBody": "Declarația revine la termenul obișnuit și se poate șterge din nou.",
+      "heldLine": "Păstrată {when}, de {who}: {reason}",
+      "whoRemoved": "un membru al echipei (cont șters)"
     }
   },
   "NotFound": {
@@ -5739,6 +5847,8 @@
     "displayNameHelp": "Implicit, pe listă și în rezultate apare numele tău complet; dacă preferi altceva, de exemplu „Ana P.”, scrie-l aici.",
     "birthDate": "Data nașterii",
     "birthDateEcho": "{date} · {age} în ziua evenimentului",
+    "birthDatePlaceholder": "ZZ.LL.AAAA",
+    "birthDateUnreadable": "Scrie data ca zi, lună, an: 11.05.1990.",
     "ageRule": {
       "minimumAndGuardian": "Vârsta minimă: {age}. Sub 18 ani, înscrierea se face de un părinte sau tutore, cu acordul acestuia.",
       "minimumAndConsent": "Vârsta minimă: {age}. Sub 18 ani, participarea se face cu acordul unui părinte.",
@@ -5993,6 +6103,22 @@
   "Registrations": {
     "invalidOrExpired": "Acest link nu mai este valabil. Îți putem trimite unul nou, pe aceeași adresă de email.",
     "cancelKeepsRecord": "Renunțarea eliberează locul; înscrierea o păstrăm trei ani, ca dovadă. Vrei să-ți vezi, corectezi sau ștergi datele? <contact>Scrie-ne</contact>.",
+    "cancelReason": {
+      "label": "De ce anulezi?",
+      "choose": "Alege motivul",
+      "kinds": {
+        "INJURY_OR_ILLNESS": "Accidentare sau boală",
+        "OTHER_PLANS": "Alt program",
+        "OTHER": "Alt motiv"
+      },
+      "textLabel": "Motivul, pe scurt",
+      "textHelp": "Doar pentru «Alt motiv». Cel mult 200 de caractere. Îl citește doar clubul.",
+      "problem": {
+        "kind": "Alege de ce anulezi, apoi apasă din nou.",
+        "text": "Ai ales «Alt motiv»: scrie motivul, pe scurt.",
+        "long": "Motivul are cel mult 200 de caractere."
+      }
+    },
     "confirm": {
       "title": "Confirmă adresa de email",
       "prompt": "Îți confirmăm adresa de email. Dacă nu se întâmplă nimic în câteva secunde, apasă butonul.",
@@ -7045,7 +7171,9 @@
       "memberCodeHidden": "Codul a fost ascuns.",
       "memberCodeShown": "Codul este din nou vizibil membrilor.",
       "memberCodeMoved": "Ordinea codurilor a fost schimbată.",
-      "memberCodeDeleted": "Codul a fost șters."
+      "memberCodeDeleted": "Codul a fost șters.",
+      "declarationHeld": "Declarația e păstrată. Nu se mai șterge până scoți păstrarea.",
+      "declarationReleased": "Păstrarea a fost scoasă."
     }
   },
   "Network": {
