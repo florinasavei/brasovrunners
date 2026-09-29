@@ -1,13 +1,6 @@
 import type { events } from "@/db/schema/events";
 import { costPaidToExternalOrganizer } from "../domain/cost";
-import {
-  DIFFICULTY_LEVEL_COUNT,
-  DIFFICULTY_STEPS,
-  difficultyBandOf,
-  difficultyLevelOf,
-  difficultyStepOf,
-  type StoredDifficulty,
-} from "../domain/difficulty";
+import { difficultyLevelOf, difficultyWords, type StoredDifficulty } from "../domain/difficulty";
 import { distanceInKm } from "../domain/event-type";
 import { clubNightEvent, nightTooltip } from "../night-event";
 import { difficultyLevelGlyph } from "./difficulty-glyphs";
@@ -20,8 +13,8 @@ import type { GlyphName } from "./glyphs";
  * word stays the closed set's own — the listing card's cost pill on an `EXTERNAL`-registration
  * `PAID` event still reads "Cu taxă" so every card's pill says the same short word, and a screen
  * reader alone is told the fee goes to the organizer (`DECISIONS.md` §394). `srLabel` replaces
- * the words a screen reader hears altogether: the difficulty pill shows «Mediu 2» and is heard as
- * «Dificultate: mediu, treapta 2 din 3» (§526). Content, not an
+ * the words a screen reader hears altogether: the difficulty pill shows «Mediu 5» and is heard as
+ * «Dificultate: mediu — nivelul 5 din 15 (mediu: 4–6)» (§526, §NNN). Content, not an
  * `aria-label` override: MUI's `Chip` is a plain, roleless `<div>` when it is not clickable, and
  * ARIA 1.2 does not allow naming a generic element, so the extra words have to be in the chip's
  * own text (visually hidden) rather than on the attribute.
@@ -35,7 +28,7 @@ export type Pill = {
   srLabel?: string;
   /**
    * The pill's words where no glyph is drawn beside them (an email's facts, §392) and the glyph
-   * said something the word does not — the difficulty's step (§526): «Mediu, treapta 2 din 3».
+   * said something the word does not — the difficulty's level of fifteen (§NNN): «Mediu, nivelul 5 din 15».
    * Absent, `label` is the whole of it.
    */
   plain?: string;
@@ -135,30 +128,27 @@ export function routePillParts(
 
 /**
  * The difficulty's pill for a level on the club's scale of fifteen (§526): the gauge of the level
- * (the band's segments lit, the needle at the step, its dots), the band and the step in words —
- * «Mediu 2» — and, for a screen reader, «Dificultate: mediu 2 — nivelul 5 din 15». Every word from the
- * catalogue (`Event.difficultyValues`, `difficultyBandWords`, `difficultyLevelShort`,
- * `difficultyLevelSr`), never a string written here.
+ * (the band's segments lit, the needle at the step, its dots), and the band with **the level** in
+ * words — «Mediu 5», never the step (§NNN: the number is the level, the dots are the step). Every
+ * word from `difficultyWords`, the one function every surface reads, never a string written here.
  *
- * **The tooltip names the level of fifteen (§528)** — «Mediu 2 — nivelul 5 din 15» — the band and
- * step the pill shows, then the gauge's position in numbers; never an example, which would say a
- * non-Tâmpa «Mediu 1» is the Tâmpa run (the examples live in the backoffice «?» and «Ghid» only).
- * A screen reader hears it once, in `srLabel` — «Dificultate: mediu 2 — nivelul 5 din 15» — so no
- * `srSuffix` repeats it, and `GlyphChip` leaves the tooltip's description off for a chip with its
- * own `srLabel`.
+ * **The tooltip is two lines (§528, §NNN)**: the level of fifteen, «Mediu — nivelul 5 din 15», then
+ * the whole ladder, «ușor 1–3 · mediu 4–6 · greuț 7–9 · greu 10–12 · foarte greu 13–15»
+ * (`difficultyLadder`); never an example, which would say a non-Tâmpa «Mediu 4» is the Tâmpa run
+ * (the examples live in the backoffice «?» and «Ghid» only). A screen reader hears it once, in
+ * `srLabel`, in the shorter form with the band's own range — «Dificultate: mediu — nivelul 5 din 15
+ * (mediu: 4–6)» — so no `srSuffix` repeats it,
+ * and `GlyphChip` leaves the tooltip's description off for a chip with its own `srLabel`.
  */
 function difficultyPillOf(level: number, t: Translate): Pill {
-  const band = difficultyBandOf(level);
-  const step = difficultyStepOf(level);
-  const steps = DIFFICULTY_STEPS.length;
-  const level15 = { step, level, levels: DIFFICULTY_LEVEL_COUNT };
+  const words = difficultyWords(level, t);
   return {
     glyph: difficultyLevelGlyph(level),
-    label: t("difficultyLevelShort", { band: t(`difficultyValues.${band}`), step }),
-    srLabel: t("difficultyLevelSr", { band: t(`difficultyBandWords.${band}`), ...level15 }),
-    // Where no chip is drawn — the emails' facts block (§392): «Mediu, treapta 2 din 3».
-    plain: t("difficultyWithStep", { band: t(`difficultyValues.${band}`), step, steps }),
-    tooltip: t("difficultyLevelTooltip", { band: t(`difficultyValues.${band}`), ...level15 }),
+    label: words.short,
+    srLabel: words.sr,
+    // Where no chip is drawn — the emails' facts block (§392): «Mediu, nivelul 5 din 15».
+    plain: words.plain,
+    tooltip: words.tooltip,
   };
 }
 

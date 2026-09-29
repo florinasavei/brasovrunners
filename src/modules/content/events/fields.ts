@@ -631,7 +631,7 @@ export const eventFieldsSchema = z
      */
     difficulty: optionalEnum(DIFFICULTY_BANDS),
     /**
-     * The step inside the band (§526) — the editor's second control, «Treapta» (1 · 2 · 3): 1 the
+     * The step inside the band (§526) — the editor's second control, «Nivelul» (its three segments show the level, §NNN): 1 the
      * easiest of the band, 3 the hardest. With the band it is the event's level on the club's scale
      * of fifteen (`difficultyLevel`), which the save writes. `""`, null or absent — a caller from
      * before the steps, a fixture — is the band's middle; a step with no band is read by nobody. A

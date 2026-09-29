@@ -11,6 +11,7 @@ import QuietHelp from "@/shared/ui/QuietHelp";
 import { eventInputConstraints } from "../../constraints";
 import DifficultyRow from "../DifficultyRow";
 import DifficultyStepField from "../DifficultyStepField";
+import { difficultyScaleText, difficultyStepWords } from "../difficulty-words";
 import GlyphSelect from "../GlyphSelect";
 import TypeNote from "../TypeNote";
 import { BoxNote, type BoxProps, type LanguageEntry, SettingsReadOnly } from "./box-kit";
@@ -43,9 +44,10 @@ import StatusCard, { type StatusNotice } from "./StatusBox";
  * «Alergare de grup · Programat · Gratuit».
  * It is drawn for every role — a words-only reader may own the discount note (§394).
  *
- * **The difficulty is asked here since §526** — the band («Ușor» … «Foarte greu») and its step
- * (1 · 2 · 3) side by side from `sm`: with the type, what kind of outing this is. The closed line
- * names it last, «Mediu 2», and says nothing while the club has not said.
+ * **The difficulty is asked here since §526** — the band («Ușor» … «Foarte greu») and its level
+ * («Nivelul», the band's own three numbers of fifteen since §NNN: Mediu → 4 · 5 · 6) side by side
+ * from `sm`: with the type, what kind of outing this is. The closed line names it last, «Mediu 5»,
+ * and says nothing while the club has not said.
  *
  * A role that may only read the settings is told so, in place of the select and the status card;
  * the closed line still names both.
@@ -72,14 +74,16 @@ export default async function KindBox({
   /** One sentence per type, for the note under the select (§170). */
   const typeNotes = Object.fromEntries(EVENT_TYPES.map((type) => [type, t(`editor.typeNotes.${type}`)]));
   const separator = (t.raw("editor.boxes.summary") as { separator: string }).separator;
-  // The level on the club's scale of fifteen (§526), as the two controls show it: its band and its step.
+  // The level on the club's scale of fifteen (§526), as the two controls ask it: its band, then
+  // the level inside it — the band's own three numbers since §NNN (Mediu → 4 · 5 · 6).
   const level = event ? difficultyLevelOf(event) : null;
   const band = level === null ? null : difficultyBandOf(level);
   // The club's whole scale, one line per band in the owner's words (§526, §528), behind a «?» beside
-  // the band and after «Treapta»'s help: a newline is a line in the tooltip (§257).
-  const difficultyScale = DIFFICULTY_SCALE_LINES.map((line) => t(`editor.difficultyScale.${line}`)).join("\n");
+  // the band and beside «Nivelul».
+  const difficultyScale = difficultyScaleText(t);
   const step = level === null ? DEFAULT_DIFFICULTY_STEP : difficultyStepOf(level);
-  const difficultyLine = band ? t("editor.difficultySummary", { band: t(`editor.difficultyValues.${band}`), step }) : null;
+  // The closed line says the band and the level (§NNN): «Mediu 5».
+  const difficultyLine = level !== null && band ? t("editor.difficultySummary", { band: t(`editor.difficultyValues.${band}`), level }) : null;
   // The type, the status and the cost (§466), and the difficulty when stated (§526): what this box asks, on its closed line.
   // For the members alone (§552), said on the closed line too: it decides who sees the event at all.
   const membersLine = event?.membersOnly ? t("editor.membersOnlyShort") : null;
@@ -130,7 +134,7 @@ export default async function KindBox({
               warning
             />
           )}
-          {/* How hard (§526): the band and its step, the level on the club's scale of fifteen, which
+          {/* How hard (§526, §NNN): the band and its level on the club's scale of fifteen, which
               «Ghid» explains — on one centred axis since §537 (`DifficultyRow`), stacked below `sm`. */}
           <DifficultyRow
             band={
@@ -153,12 +157,8 @@ export default async function KindBox({
               <DifficultyStepField
                 name="event.difficultyStep"
                 defaultStep={step}
-                words={{
-                  label: t("editor.fields.difficultyStep"),
-                  help: t("editor.difficultyStepHelp"),
-                  scale: difficultyScale,
-                  choices: { step1: t("editor.difficultySteps.step1"), step2: t("editor.difficultySteps.step2"), step3: t("editor.difficultySteps.step3") },
-                }}
+                band={{ name: "event.difficulty", initial: band ?? "" }}
+                words={difficultyStepWords(t, tEvent, difficultyScale)}
               />
             }
           />
@@ -195,6 +195,3 @@ export default async function KindBox({
     </Panel>
   );
 }
-
-/** The «?»'s lines, in order: «Ușor», «Mediu» per step, the other bands, what a step means — the owner's words (§528), which «Ghid» points to. */
-const DIFFICULTY_SCALE_LINES = ["EASY", "MEDIUM1", "MEDIUM2", "MEDIUM3", "FAIRLY_HARD", "HARD", "VERY_HARD", "steps"] as const;

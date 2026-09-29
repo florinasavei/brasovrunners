@@ -1,28 +1,38 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import { createTranslator } from "next-intl";
 import { describe, expect, it } from "vitest";
+import { difficultyScaleText, difficultyStepWords } from "@/modules/content/events/ui/difficulty-words";
 import DifficultyRow, { DIFFICULTY_ROW_SX } from "@/modules/content/events/ui/DifficultyRow";
 import DifficultyStepField, { STEP_FRAME } from "@/modules/content/events/ui/DifficultyStepField";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * `DECISIONS.md` §537 — «Dificultate» and «Treapta» on one centred axis (the owner, 2026-09-28:
+ * `DECISIONS.md` §537 — «Dificultate» and «Nivelul» («Treapta» until §NNN) on one centred axis (the owner, 2026-09-28:
  * «partea asta nu e centrată!»). `KindBox` renders the row on the create page and in the editor
  * alike (§406), so the row itself is what is pinned here.
  */
-const words = (catalogue: typeof ro) => ({
-  label: catalogue.Admin.editor.fields.difficultyStep,
-  help: catalogue.Admin.editor.difficultyStepHelp,
-  scale: Object.values(catalogue.Admin.editor.difficultyScale).join("\n"),
-  choices: catalogue.Admin.editor.difficultySteps,
-});
+type Words = Parameters<typeof difficultyStepWords>[0];
+
+/** The words `KindBox` hands the field, from the catalogue as the page reads it (§NNN). */
+const words = (catalogue: typeof ro) => {
+  const locale = catalogue === ro ? "ro" : "en";
+  const t = createTranslator({ locale, messages: catalogue, namespace: "Admin" }) as unknown as Words;
+  const tEvent = createTranslator({ locale, messages: catalogue, namespace: "Event" }) as unknown as Words;
+  return difficultyStepWords(t, tEvent, difficultyScaleText(t));
+};
 
 const render = (catalogue: typeof ro) =>
   renderToStaticMarkup(
     createElement(DifficultyRow, {
       band: createElement("span", { "data-testid": "band-slot" }, "band"),
-      step: createElement(DifficultyStepField, { name: "event.difficultyStep", defaultStep: 2, words: words(catalogue) }),
+      step: createElement(DifficultyStepField, {
+        name: "event.difficultyStep",
+        defaultStep: 2,
+        band: { name: "event.difficulty", initial: "MEDIUM" },
+        words: words(catalogue),
+      }),
     }),
   );
 
@@ -56,7 +66,7 @@ describe("§537 the difficulty row is centred", () => {
     expect(html).toMatch(/grid-area:band/);
     const control = html.indexOf('data-testid="difficulty-step-control"');
     const question = html.indexOf('data-testid="difficulty-scale-help"');
-    const help = html.indexOf(ro.Admin.editor.difficultyStepHelp);
+    const help = html.indexOf(words(ro).help);
     // The «?» beside the toggle, before the help line — which never shares the toggle's cell.
     expect(control).toBeGreaterThan(-1);
     expect(question).toBeGreaterThan(control);
@@ -84,7 +94,7 @@ describe("§537 the difficulty row is centred", () => {
       expect(html).toContain(`<legend class="`);
       expect(html).toContain(`id="${labelledBy}"`);
       const describedBy = /aria-describedby="([^"]+)"/.exec(html)?.[1];
-      expect(html).toContain(`<span id="${describedBy}">${catalogue.Admin.editor.difficultyStepHelp}</span>`);
+      expect(html).toContain(`<span id="${describedBy}">${words(catalogue as typeof ro).help}</span>`);
       expect(html.match(/type="radio"/g)).toHaveLength(3);
     }
   });

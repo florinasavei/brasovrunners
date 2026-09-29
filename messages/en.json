@@ -182,11 +182,13 @@
       "calendar": "{label}: {times}",
       "ics": "{label}: {times} — bring a headlamp"
     },
-    "difficultyLevelShort": "{band} {step}",
-    "difficultyLevelSr": "Difficulty: {band} {step} — level {level} of {levels}",
-    "difficultyWithStep": "{band}, step {step} of {steps}",
-    "difficultyLevelTooltip": "{band} {step} — level {level} of {levels}",
+    "difficultyLevelShort": "{band} {level}",
+    "difficultyLevelSr": "Difficulty: {band} — level {level} of {levels} ({band}: {from}–{to})",
+    "difficultyWithLevel": "{band}, level {level} of {levels}",
+    "difficultyLevelTooltip": "{band} — level {level} of {levels}\n{ladder}",
     "difficultyBandTitle": "{band}: levels {from}–{to} of {levels}",
+    "difficultyBandRange": "{band} ({from}–{to})",
+    "difficultyLadderItem": "{band} {from}–{to}",
     "cost": "Cost",
     "registration": "Registration",
     "cancelled": "Cancelled",
@@ -1154,7 +1156,7 @@
         "seoTitle": "Search engine title",
         "seoDescription": "Search engine description",
         "difficulty": "Difficulty",
-        "difficultyStep": "Step",
+        "difficultyStep": "Level",
         "costType": "Cost",
         "checklist": "What to bring — one line, in the emails and the calendar",
         "body": "Content — shown on the event page, under the title",
@@ -1250,21 +1252,22 @@
         "VERY_HARD": "Very hard"
       },
       "difficultySteps": {
-        "step1": "Step 1, the easiest in the band",
-        "step2": "Step 2, the middle of the band",
-        "step3": "Step 3, the hardest in the band"
+        "step1": "The band's first level, the easiest",
+        "step2": "The band's middle level",
+        "step3": "The band's last level, the hardest"
       },
-      "difficultySummary": "{band} {step}",
-      "difficultyStepHelp": "1 = the easiest in the band, 3 = the hardest",
+      "difficultyLevelChoice": "Level {level} of {levels}",
+      "difficultySummary": "{band} {level}",
+      "difficultyStepHelp": "The level runs from {lowest} ({lowestBand}) to {highest} ({highestBand}): every band has three levels — {ranges}.",
       "difficultyScale": {
-        "EASY": "easy: short, flat, for anyone",
-        "MEDIUM1": "medium 1: the run up Tâmpa",
-        "MEDIUM2": "medium 2: the longer runs",
-        "MEDIUM3": "medium 3: long and technical",
-        "FAIRLY_HARD": "fairly hard: from a half marathon up",
-        "HARD": "hard: marathons",
-        "VERY_HARD": "very hard: ultramarathons and beyond",
-        "steps": "in every band 1 = the easiest, 3 = the hardest"
+        "EASY": "easy {from}–{to}: short, flat, for anyone",
+        "MEDIUM1": "medium {level}: the run up Tâmpa",
+        "MEDIUM2": "medium {level}: the longer runs",
+        "MEDIUM3": "medium {level}: long and technical",
+        "FAIRLY_HARD": "fairly hard {from}–{to}: from a half marathon up",
+        "HARD": "hard {from}–{to}: marathons",
+        "VERY_HARD": "very hard {from}–{to}: ultramarathons and beyond",
+        "steps": "in every band, the first level is the easiest, the third the hardest"
       },
       "costValues": {
         "FREE": "Free",
@@ -4785,12 +4788,13 @@
             {
               "title": "The club's difficulty scale",
               "steps": [
-                "«Events» → «Edit» → the «What kind of event» card: pick «Difficulty» (the band) and, beside it, «Step» — 1, 2 or 3.",
-                "The scale has 15 steps: 5 bands × 3 steps. Step 1 is the easiest in its band, 3 the hardest. The site shows the band with its step, for example \"Medium 2\".",
-                "What each band and step means: press the question mark beside «Difficulty» or «Step».",
-                "The step in the other bands: 1 when the route sits at the easy end of its band, 3 when it is close to the next one (longer, steeper, at night, mud). Not sure? 2.",
-                "The site's filter ticks a whole band: «Hard» shows all three of its steps.",
-                "Forgot the scale? The question mark beside «Step» shows all of it. On the site, the difficulty pill says its level of 15 on a tap, for example \"Medium 2 — level 5 of 15\"."
+                "«Events» → «Edit» → the «What kind of event» card: pick «Difficulty» (the band) and, beside it, «Level» — one of the band's three.",
+                "The scale has 15 levels, in order: easy 1–3, medium 4–6, fairly hard 7–9, hard 10–12, very hard 13–15. The site shows the band with its level, for example \"Medium 5\".",
+                "What each band and level means: press the question mark beside «Difficulty» or «Level».",
+                "The level in the other bands: the first when the route sits at the easy end of its band, the third when it is close to the next one (longer, steeper, at night, mud). Not sure? The middle one.",
+                "The site's filter ticks a whole band: «Hard» shows all three of its levels, 10–12, and writes them beside its name.",
+                "Forgot the scale? The question mark beside «Level» shows all of it.",
+                "On the site, the difficulty pill says the level on a tap, for example \"Medium — level 5 of 15\", and under it the whole scale: easy 1–3 · medium 4–6 · fairly hard 7–9 · hard 10–12 · very hard 13–15."
               ]
             },
             {

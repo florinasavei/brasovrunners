@@ -187,6 +187,10 @@ describe("§448 the first box holds the type and the status, and its line says b
 
   it("says the type, the status, the cost and the difficulty on its closed line, in both catalogues (§466, §526)", async () => {
     expect(summaryOf((await boxes(EVENT)).kind)).toMatch(/<h2[^>]*>(?:<svg[\s\S]*?<\/svg>)?Ce fel de eveniment<span[^>]*>Alergare de grup · Programat · Nespecificat · Ușor 2<\/span>/);
+    // The band and the level of fifteen (§NNN), never the step: level 5 is «Mediu 5».
+    const medium = { ...EVENT, difficultyLevel: 5 } as unknown as EditableEvent;
+    expect(summaryOf((await boxes(medium)).kind)).toContain("Alergare de grup · Programat · Nespecificat · Mediu 5");
+    expect(summaryOf((await boxes(medium, { locale: "en" })).kind)).toContain("Medium 5");
     // No difficulty stated, nothing said of it.
     const unstated = { ...EVENT, difficultyLevel: null } as unknown as EditableEvent;
     expect(summaryOf((await boxes(unstated)).kind)).toMatch(/<h2[^>]*>(?:<svg[\s\S]*?<\/svg>)?Ce fel de eveniment<span[^>]*>Alergare de grup · Programat · Nespecificat<\/span>/);
@@ -226,7 +230,13 @@ describe("§448 the first box holds the type and the status, and its line says b
       expect(drawn.course, name).not.toContain(`name="${name}"`);
     }
     expect(drawn.kind).toContain('name="event.difficultyStep" checked="" value="2"');
-    expect(drawn.kind).toContain("1 = cel mai ușor din categorie, 3 = cel mai greu");
+    // «Nivelul» (§NNN): the rule and the ladder under it, and the band's own three levels on its segments.
+    expect(drawn.kind).toContain(
+      "Nivelul e de la 1 (ușor) la 15 (foarte greu): fiecare categorie are trei niveluri — ușor 1–3, mediu 4–6, greuț 7–9, greu 10–12, foarte greu 13–15.",
+    );
+    expect([...drawn.kind.matchAll(/data-testid="difficulty-level-number">([^<]+)</g)].map((match) => match[1])).toEqual(["1", "2", "3"]);
+    const medium = await boxes({ ...EVENT, difficultyLevel: 5 } as unknown as EditableEvent);
+    expect([...medium.kind.matchAll(/data-testid="difficulty-level-number">([^<]+)</g)].map((match) => match[1])).toEqual(["4", "5", "6"]);
     expect(drawn.course).not.toContain("group-run-declaration-field");
     for (const name of ["event.stravaEventUrl", "event.facebookEventUrl", "event.links[0].url"]) expect(drawn.links, name).toContain(`name="${name}"`);
   });
