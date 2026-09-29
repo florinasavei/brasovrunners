@@ -54,6 +54,9 @@ vi.mock("@/shared/config/env", async (importOriginal) => {
       CLUB_STRAVA_URL: "https://strava.com/clubs/brasovrunners",
       // The club's mailbox, so the panel's "Scrie-ne: <address>" line renders (§385).
       EMAIL_REPLY_TO: "contact@example.org",
+      // The club's legal facts (§565), made up, so the fold's identity line renders (the hotfix, #293).
+      CLUB_LEGAL_NAME: "Asociația Exemplu",
+      CLUB_REGISTRATION_NUMBER: "RO00000000",
     },
   };
 });
@@ -63,7 +66,7 @@ vi.mock("@/shared/config/env", async (importOriginal) => {
 let shownAddresses: string[] = ["contact@example.org"];
 vi.mock("@/modules/public-cache/reads", () => ({
   cachedShownContactAddresses: async () => shownAddresses,
-  // «Telefon public» (§565), read by the identity block under the bar: unset, as it is by default.
+  // «Telefon public» (§565), beside «Scrie-ne» in the fold since the hotfix (#293): unset, as it is by default.
   cachedPublicPhone: async () => null,
 }));
 
@@ -71,6 +74,7 @@ const { NextIntlClientProvider } = await import("next-intl");
 const messages = (await import("../../../messages/ro.json")).default;
 const { default: SiteFooter } = await import("@/shared/ui/SiteFooter");
 const { FOOTER_GAP } = await import("@/shared/ui/footer-target");
+const { CLUB_NAME } = await import("@/theme/brand");
 
 const ROOT = path.resolve(__dirname, "../../..");
 const read = (relative: string) => readFileSync(path.join(ROOT, relative), "utf8");
@@ -357,8 +361,9 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's two doo
     const panelStart = markup.indexOf('data-testid="footer-about-panel"');
     const panel = markup.slice(panelStart, markup.indexOf("</details>"));
 
-    // One container: every link and the stamp are its direct children, in this order.
-    const order = ['href="/ro/legal/terms"', 'href="/ro/registrations/mine"', 'data-testid="footer-contact"', 'data-testid="footer-build-badge-panel"'];
+    // One container: every link, the club's identity line (after «Scrie-ne» since the hotfix, #293)
+    // and the stamp are in it, in this order.
+    const order = ['href="/ro/legal/terms"', 'href="/ro/registrations/mine"', 'data-testid="footer-contact"', 'data-testid="footer-club-identity"', 'data-testid="footer-build-badge-panel"'];
     let last = -1;
     for (const needle of order) {
       const index = panel.indexOf(needle);
@@ -417,10 +422,15 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's two doo
     expect(words, "'Scrie-ne' once").toBe(1);
     expect(contact).toMatch(/<a href="\/ro\/contact"[^>]*>Scrie-ne:<\/a>/);
     expect(contact).toMatch(/<a[^>]*href="mailto:contact@example.org"[^>]*>contact@example.org<\/a>/);
-    // Once in the bar (the identity block under it, §565, names it again in its «Contact» column).
-    const bar = markup.slice(0, markup.indexOf('data-testid="club-identity-block"'));
-    expect(markup.indexOf('data-testid="club-identity-block"'), "the identity block follows the bar").toBeGreaterThan(markup.indexOf("</footer>"));
-    expect(bar.split("contact@example.org").length - 1, "the address once in the bar, as the mail link").toBe(2);
+    // Once in the footer, and nothing after it: the block §565 drew under the bar named the address
+    // again, and the hotfix (#293) took the block away.
+    expect(markup.split("contact@example.org").length - 1, "the address once in the footer, as the mail link").toBe(2);
+    expect(markup.slice(markup.indexOf("</footer>") + "</footer>".length).trim(), "nothing after the bar").toBe("");
+    // The club's legal identity (§565) is one line of this panel instead, composed from the
+    // environment's (made-up) facts and the site's name.
+    const identity = /<span[^>]*data-testid="footer-club-identity"[^>]*>([^<]*)<\/span>/.exec(panel);
+    expect(identity, "the club's identity line, in the fold").not.toBeNull();
+    expect(identity![1]).toBe(`Asociația Exemplu (${CLUB_NAME}) · CIF RO00000000`);
   });
 
   it("shows the club's Gmail and the mailbox, «… sau …», when the club chose both (§442)", async () => {

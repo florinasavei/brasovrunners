@@ -383,12 +383,21 @@ test.describe("§372 §378 §385 one row on a phone, in both languages, fold clo
             // published, and the listing's cached render can still carry the link after that spec
             // deletes its question. So that one line is allowed exactly when the link is drawn on a
             // line of its own.
+            //
+            // The club's legal identity (§565; inside the fold since the hotfix, #293) is one line
+            // more, after «Scrie-ne», exactly when the environment holds the legal name — CI's server
+            // sets none, a developer's `.env.local` may. It is words, not a link, with no gap or margin
+            // of its own: 21 pixels a line of the panel's 14-pixel words, and a legal name is long
+            // enough to wrap onto a second at 320 and 360. So the bound grows by that one line's own
+            // measured height, and by nothing when it is not drawn.
             if (width < SM) {
               const wrappedChip = chip.height > 30;
               const faq = panelContent(fold).getByRole("link", { name: /^(Întrebări frecvente|FAQ)$/ });
               const faqOwnLine = (await faq.count()) > 0 && (await boxOf(faq, "the FAQ link")).y - boxes[0]!.y > 1;
-              const bound = (width >= 360 ? 100 : wrappedChip ? 112 : 104) + (faqOwnLine ? 24 + phoneGapAt(width) : 0);
-              expect(panel.height, `the compact panel's height at ${width}px${wrappedChip ? ", its chip on two lines" : ""}${faqOwnLine ? ", the FAQ on a line of its own" : ""}`).toBeLessThanOrEqual(bound);
+              const identity = panelContent(fold).getByTestId("footer-club-identity");
+              const identityLine = (await identity.count()) > 0 ? (await boxOf(identity, "the identity line")).height : 0;
+              const bound = (width >= 360 ? 100 : wrappedChip ? 112 : 104) + (faqOwnLine ? 24 + phoneGapAt(width) : 0) + identityLine;
+              expect(panel.height, `the compact panel's height at ${width}px${wrappedChip ? ", its chip on two lines" : ""}${faqOwnLine ? ", the FAQ on a line of its own" : ""}${identityLine ? ", the club's identity line" : ""}`).toBeLessThanOrEqual(bound);
             } else {
               // From `sm` §385's one wrapping row, unchanged by the phone's lines (§480): 92px at
               // 768 on qa before this pass and after it, two 44-pixel lines and the 4 under them.
@@ -450,20 +459,14 @@ test.describe("§372 §378 §385 one row on a phone, in both languages, fold clo
         await expect(panelBadge).toBeHidden();
       }
 
-      // At the end of the page: the same one row, and under it only the club's identity block
-      // (§565) — the bar is measured without it: from the bar's top to the block's top is the one
-      // row, and the block is what the document ends on.
+      // At the end of the page: the same one row, nothing under it — the block §565 drew under the
+      // bar is gone since the hotfix (#293), and the club's identity is a line inside the fold.
       await restAtTheEnd(page);
       const chrome = await page.evaluate(() => {
         const bar = document.querySelector("footer")!.getBoundingClientRect();
-        const block = document.querySelector("[data-testid='club-identity-block']")!.getBoundingClientRect();
-        return {
-          row: block.top - bar.top,
-          after: document.documentElement.scrollHeight - (block.bottom + window.scrollY),
-        };
+        return document.documentElement.scrollHeight - (bar.top + window.scrollY);
       });
-      expect(chrome.row, `from the bar's top to the identity block at ${width}px`).toBeLessThanOrEqual(target + 2);
-      expect(Math.abs(chrome.after), `nothing under the identity block at ${width}px`).toBeLessThanOrEqual(1);
+      expect(chrome, `from the bar's top to the document's end at ${width}px`).toBeLessThanOrEqual(target + 2);
     });
   }
 
@@ -505,99 +508,49 @@ test.describe("§372 the desktop build stamp, pinned to the bar's own corner", (
 });
 
 /**
- * §565 — the club's identity block under the bar (the owner, 2026-09-29: the legal name and the CIF
- * «also in the footer, more clearly», after another running club's footer). Always visible at the
- * page's end, never inside «Despre club»; three columns from `sm`, stacked on a phone; every link a
- * 44-pixel target; the marks the bar's own; «Contact» with «Scrie-ne». The legal facts come from
- * the environment and the suite's server sets none (CI) — a developer's `.env.local` may — so the
- * first column is checked when it is there and its absence is checked when it is not; the words
- * are never compared with a value, which the repository does not hold.
+ * §565, as the hotfix (#293) left it — the club's legal identity is one line inside «Despre club,
+ * contact și termeni», after «Scrie-ne»: «<legal name> (<site name>) · CIF <CIF>» (the owner,
+ * 2026-09-29: «partea asta trebuie să fie în footerul colapsat!»), and nothing is under the bar any
+ * more — the block §565 drew there repeated the bar's marks and the fold's «Scrie-ne». The legal
+ * facts come from the environment and the suite's server sets none (CI) — a developer's
+ * `.env.local` may — so the line is checked when it is drawn and its absence when it is not; its
+ * words are never compared with a value, which the repository does not hold.
  */
-test.describe("§565 the club's identity block under the bar", () => {
+test.describe("§565 the club's identity, a line of the fold", () => {
   for (const width of [320, 360, 768, 1280] as const) {
-    test(`at ${width}px it follows the bar, outside the fold, its links 44px, nothing wider than the page`, async ({ page }) => {
+    test(`at ${width}px it is a line of the open fold after «Scrie-ne», nothing under the bar, nothing wider than the page`, async ({ page }) => {
       await page.setViewportSize({ width, height: 720 });
       await page.goto("/ro/evenimente", { waitUntil: "networkidle" });
-      const { footer, fold, marks } = controls(page);
-      const block = page.getByTestId("club-identity-block");
+      const { fold, summary } = controls(page);
+      const identity = page.getByTestId("footer-club-identity");
+      // Once at most, and wherever it is drawn it is the fold's.
+      const drawn = await identity.count();
+      expect(drawn).toBeLessThanOrEqual(1);
+      await expect(fold.getByTestId("footer-club-identity")).toHaveCount(drawn);
+      await summary.click();
+      await expect(fold).toHaveAttribute("open", "");
       await restAtTheEnd(page);
-      await expect(block).toBeVisible();
-      await expect(fold.getByTestId("club-identity-block")).toHaveCount(0);
-      await expect(footer.getByTestId("club-identity-block")).toHaveCount(0);
 
-      // Under the bar, which keeps its one row (the bar is measured without the block, above).
-      const bar = await boxOf(footer, "the footer");
-      const box = await boxOf(block, "the identity block");
-      expect(box.y, `the block starts under the bar at ${width}px`).toBeGreaterThanOrEqual(bar.y + bar.height - 1);
-      expect(bar.height, `the bar is still one row at ${width}px`).toBeLessThanOrEqual(targetAt(width) + 2);
-      expect(box.x + box.width).toBeLessThanOrEqual(width + 0.5);
+      // The document ends where the footer does, the fold open: nothing under the bar.
+      const under = await page.evaluate(() => document.documentElement.scrollHeight - (document.querySelector("footer")!.getBoundingClientRect().bottom + window.scrollY));
+      expect(Math.abs(under), `nothing under the bar at ${width}px`).toBeLessThanOrEqual(1);
 
-      // Every link a thumb's 44 pixels tall; each mark 44 wide too.
-      const links = block.locator("a");
-      expect(await links.count()).toBeGreaterThan(0);
-      for (let i = 0; i < (await links.count()); i++) {
-        const link = await boxOf(links.nth(i), `the block's link ${i}`);
-        expect(link.height, `the block's link ${i} is 44px tall at ${width}px`).toBeGreaterThanOrEqual(43.5);
-        expect(link.x + link.width, `the block's link ${i} ends inside ${width}px`).toBeLessThanOrEqual(width + 0.5);
-      }
-
-      // The marks are the bar's own list: the same addresses in the same order.
-      const social = block.getByTestId("club-identity-social").getByRole("link");
-      const barHrefs = await marks.evaluateAll((els) => els.map((el) => el.getAttribute("href")));
-      const blockHrefs = await social.evaluateAll((els) => els.map((el) => el.getAttribute("href")));
-      expect(blockHrefs).toEqual(barHrefs);
-      for (let i = 0; i < (await social.count()); i++) {
-        expect((await boxOf(social.nth(i), `mark ${i}`)).width).toBeGreaterThanOrEqual(43.5);
-      }
-
-      // «Contact», and «Scrie-ne» to the form, with its glyph.
-      const contact = block.getByTestId("club-identity-contact");
-      await expect(contact.getByText("Contact", { exact: true })).toBeVisible();
-      await expect(block.getByRole("heading")).toHaveCount(0);
-      const write = contact.getByTestId("club-identity-write");
-      await expect(write).toHaveText("Scrie-ne");
-      await expect(write).toHaveAttribute("href", "/ro/contact");
-      await expect(write.locator("svg")).toHaveCount(1);
-
-      // The legal facts: shown when the environment holds them, and nothing of them otherwise.
-      const name = block.getByTestId("club-identity-name");
-      if ((await name.count()) > 0) {
-        await expect(name).toContainText("România");
-        await expect(name).toContainText("(");
+      if (drawn > 0) {
+        await expect(identity).toBeVisible();
+        await expect(identity).toContainText("(");
+        // A line of its own: under «Scrie-ne», above Open-Meteo's credit, inside the screen.
+        const contact = await boxOf(fold.getByTestId("footer-contact"), "«Scrie-ne»");
+        const line = await boxOf(identity, "the identity line");
+        const credit = await boxOf(fold.getByTestId("footer-weather-credit"), "the weather credit");
+        expect(line.y, `the identity is under «Scrie-ne» at ${width}px`).toBeGreaterThanOrEqual(contact.y + contact.height - 0.5);
+        expect(credit.y, `the credit is under the identity at ${width}px`).toBeGreaterThanOrEqual(line.y + line.height - 0.5);
+        expect(line.x + line.width, `the identity ends inside ${width}px`).toBeLessThanOrEqual(width + 0.5);
       } else {
-        await expect(block).not.toContainText("C.I.F.");
-        await expect(block).not.toContainText("România");
-      }
-
-      // Three columns from `sm`, side by side and top-aligned; stacked on a phone.
-      const columns: Box[] = [];
-      for (const id of ["club-identity-name", "club-identity-social", "club-identity-contact"]) {
-        const column = block.getByTestId(id);
-        if ((await column.count()) > 0) columns.push(await boxOf(column, id));
-      }
-      for (let i = 1; i < columns.length; i++) {
-        const [before, after] = [columns[i - 1]!, columns[i]!];
-        if (width >= SM) {
-          expect(after.x, `column ${i} is right of column ${i - 1} at ${width}px`).toBeGreaterThanOrEqual(before.x + before.width - 0.5);
-          expect(Math.abs(after.y - before.y), `the columns share their top at ${width}px`).toBeLessThan(1.5);
-        } else {
-          expect(after.y, `column ${i} is under column ${i - 1} at ${width}px`).toBeGreaterThanOrEqual(before.y + before.height - 0.5);
-        }
+        await expect(fold).not.toContainText("· CIF");
       }
 
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
       expect(overflow).toBeLessThanOrEqual(0);
     });
   }
-
-  test("speaks English on the English site", async ({ page }) => {
-    await page.goto("/en/events", { waitUntil: "networkidle" });
-    const block = page.getByTestId("club-identity-block");
-    await restAtTheEnd(page);
-    await expect(block).toHaveAttribute("aria-label", "The club's details");
-    await expect(block.getByTestId("club-identity-write")).toHaveText("Write to us");
-    await expect(block.getByTestId("club-identity-write")).toHaveAttribute("href", "/en/contact");
-    const name = block.getByTestId("club-identity-name");
-    if ((await name.count()) > 0) await expect(name).toContainText("Romania");
-  });
 });
