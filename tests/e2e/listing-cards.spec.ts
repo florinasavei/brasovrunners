@@ -331,7 +331,8 @@ async function publishWithPicture(page: Page, created: Created): Promise<{ ro: s
  */
 async function removeEvents(page: Page, title: string, dates: number): Promise<void> {
   await signIn(page, "Dev Administrator");
-  await page.goto("/ro/admin");
+  // «Toate»: the plain list shows only the dates to come (§NNN), and a spec may publish a past one.
+  await page.goto("/ro/admin?state=ALL");
   // The row's checkbox is MUI's: a tick before hydration is reverted when React takes over.
   await hydrated(page);
   const main = page.locator("#main");

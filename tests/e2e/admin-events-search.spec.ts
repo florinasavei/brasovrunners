@@ -32,6 +32,16 @@ test.describe("§527 the backoffice events list: search, state, order", () => {
       expect(glyphBox && controlBox && glyphBox.x + glyphBox.width <= controlBox.x + 1).toBe(true);
     }
     await expect(sort).toHaveValue("date-near");
+    // The plain address opens on «Viitoare» (§NNN, amending §527), and says it narrows.
+    await expect(state).toHaveValue("UPCOMING");
+    await expect(page.getByTestId("events-list-count").filter({ visible: true })).toHaveText(/^\d+ din \d+ evenimente$/);
+
+    // «Toate» is its own choice, written into the address.
+    await state.selectOption({ label: "Toate" });
+    await form.getByRole("button", { name: "Aplică" }).click();
+    await expect(page).toHaveURL(/[?&]state=ALL(&|$)/);
+    await expect(page.getByRole("combobox", { name: "Starea" })).toHaveValue("ALL");
+    await expect(page.getByTestId("events-list-count")).toHaveCount(0);
 
     await search.fill("tampa");
     await sort.selectOption({ label: "Nume Z–A" });
@@ -57,5 +67,6 @@ test.describe("§527 the backoffice events list: search, state, order", () => {
 
     await page.getByRole("link", { name: "Șterge filtrele" }).click();
     await expect(page).toHaveURL(/\/ro\/admin$/);
+    await expect(page.getByRole("combobox", { name: "Starea" })).toHaveValue("UPCOMING");
   });
 });

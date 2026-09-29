@@ -807,7 +807,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
                 confirm={{
                   title: t("legal.batch.regenerateTitle", { count: toRegenerate.length }),
                   body: t("legal.batch.regenerateBody", { texts: keyNames(toRegenerate.map((item) => item.key)) }),
-                  confirmLabel: t("legal.batch.regenerate", { count: toRegenerate.length }),
+                  confirmLabel: t("legal.batch.regenerate", { count: toRegenerate.length, total: LEGAL_DOCUMENT_KEYS.length }),
                   cancelLabel: words.cancel,
                 }}
                 data-testid="legal-regenerate-form"
@@ -820,6 +820,10 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
                   <Typography variant="body2">
                     {t("legal.batch.regenerateIntro", { texts: keyNames(toRegenerate.map((item) => item.key)) })}
                   </Typography>
+                  {/* «4 din 6» read as a bug (the owner, 2026-09-29): the rule, said once (§NNN, amending §539). */}
+                  <Typography variant="body2" color="text.secondary" data-testid="legal-regenerate-rule">
+                    {t("legal.batch.regenerateRule")}
+                  </Typography>
                   {regeneratedWithBlanks.length > 0 && (
                     <Typography variant="body2" color="warning.main">
                       {t("legal.batch.regenerateBlanks", { texts: keyNames(regeneratedWithBlanks.map((item) => item.key)) })}
@@ -827,7 +831,8 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
                   )}
                   <Box>
                     <GlyphSubmitButton
-                      label={t("legal.batch.regenerate", { count: toRegenerate.length })}
+                      // The count out of every text (§NNN): «4 din 6», so the 4 reads as a choice, not a loss.
+                      label={t("legal.batch.regenerate", { count: toRegenerate.length, total: LEGAL_DOCUMENT_KEYS.length })}
                       pendingLabel={t("legal.batch.regeneratePending")}
                       icon="template"
                       variant="outlined"

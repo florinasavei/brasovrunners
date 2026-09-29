@@ -115,17 +115,31 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
     // posts, and on Romania unless the runner says otherwise.
     await expect(page.locator('select[name="country"]')).toHaveValue("RO");
     await expect(page.locator('select[name="country"]')).toHaveAttribute("required", "");
-    // «Sex» forces a choice (§510): «Masculin» and «Feminin» as two required radio cards with their
-    // glyphs (§554), nothing pre-chosen, and no «Prefer să nu spun».
-    const sexChoices = page.locator('input[type="radio"][name="sex"]');
-    await expect(sexChoices).toHaveCount(2);
-    for (const choice of await sexChoices.all()) {
-      await expect(choice).not.toBeChecked();
-      await expect(choice).toHaveAttribute("required", "");
+    // «Sex» forces a choice (§510): a dropdown again (§NNN), a native required select behind an
+    // empty «Alege…», «Feminin» first and «Masculin» second, and no «Prefer să nu spun» (§554).
+    const sexSelect = page.locator('select[name="sex"]');
+    await expect(sexSelect).toHaveValue("");
+    await expect(sexSelect).toHaveAttribute("required", "");
+    expect(await sexSelect.locator("option").allTextContents()).toEqual(["Alege…", "Feminin", "Masculin"]);
+    await expect(page.locator('input[type="radio"][name="sex"]')).toHaveCount(0);
+    // Once the island runs, the button over it opens a list with each answer's glyph beside its word.
+    const sexButton = page.getByRole("button", { name: /^Sex: / });
+    await expect(sexButton).toHaveAccessibleName("Sex: Alege…");
+    await sexButton.click();
+    const sexList = page.getByRole("listbox", { name: "Sex" });
+    const sexOptions = sexList.getByRole("option");
+    await expect(sexOptions).toHaveText(["Feminin", "Masculin"]);
+    for (const option of await sexOptions.all()) {
+      // One glyph each, by its element: a production build drops MUI's `data-testid` on icons.
+      await expect(option.locator("svg")).toHaveCount(1);
+      // Measured once the menu has grown in: its opening transition scales the rows.
+      await expect.poll(async () => (await option.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
     }
-    await expect(page.getByTestId("sex-field")).toContainText("Masculin");
-    await expect(page.getByTestId("sex-field")).toContainText("Feminin");
-    await expect(page.getByTestId("sex-field")).not.toContainText("Prefer");
+    await sexOptions.first().click();
+    await expect(sexList).toBeHidden();
+    await expect(sexSelect).toHaveValue("FEMALE");
+    await expect(sexButton).toHaveAccessibleName("Sex: Feminin");
+    await expect(sexButton).toBeFocused();
     // The event gives no T-shirt (§554): no size box, and the fold's title says no «tricou».
     await expect(page.locator('[name="tshirtSize"]')).toHaveCount(0);
     await expect(page.locator("summary").filter({ hasText: "tricou" })).toHaveCount(0);
@@ -604,28 +618,21 @@ test.describe("BR-REQ-031-04 criterion 16 the telephone is one box with a flag a
       await expect(box.locator('img[src="/flags/ro.svg"]')).toBeHidden();
       // Citizenship too is the server's native select, Romania chosen (§432, §463).
       await expect(noScript.locator('select[name="nationality"]')).toHaveValue("RO");
-      // So is the country of residence (§510). «Sex» is two radio cards the server draws (§554),
-      // «Masculin» and «Feminin» with their glyphs, nothing chosen and required: a reader without
-      // JavaScript answers with a tap, and the form can be sent.
+      // So is the country of residence (§510). «Sex» is the server's native select too (§NNN):
+      // «Alege…» chosen, then «Feminin» and «Masculin», required — a reader without JavaScript
+      // answers from the phone's own list, and the form can be sent.
       await expect(noScript.locator('select[name="country"]')).toHaveValue("RO");
-      const sex = noScript.locator('input[type="radio"][name="sex"]');
-      await expect(sex).toHaveCount(2);
-      expect(await sex.evaluateAll((inputs) => inputs.map((input) => (input as HTMLInputElement).value))).toEqual(["MALE", "FEMALE"]);
-      await expect(noScript.locator('select[name="sex"]')).toHaveCount(0);
-      // One glyph in each card, by its element: a production build drops MUI's `data-testid` on icons
-      // (the unit test `sex-field-ssr.test.ts` names which glyph is which).
-      for (const card of await noScript.getByTestId("sex-field").locator("label").all()) {
-        await expect(card.locator("svg")).toHaveCount(1);
-        await expect(card.locator("svg")).toBeVisible();
-      }
-      const male = noScript.locator('input[type="radio"][name="sex"][value="MALE"]');
-      expect(await male.evaluate((input: HTMLInputElement) => input.required && input.validity.valueMissing)).toBe(true);
-      // The whole card is the label: a press on the word answers, and the card is a thumb's size.
-      await noScript.getByTestId("sex-field").getByText("Masculin", { exact: true }).click();
-      await expect(male).toBeChecked();
-      expect(await male.evaluate((input: HTMLInputElement) => input.validity.valid)).toBe(true);
-      const card = await noScript.getByTestId("sex-field").locator("label").first().boundingBox();
-      expect(card?.height ?? 0).toBeGreaterThanOrEqual(44);
+      const sex = noScript.locator('select[name="sex"]');
+      await expect(sex).toHaveValue("");
+      expect(await sex.locator("option").evaluateAll((options) => options.map((option) => (option as HTMLOptionElement).value))).toEqual([
+        "",
+        "FEMALE",
+        "MALE",
+      ]);
+      expect(await sex.evaluate((select: HTMLSelectElement) => select.required && select.validity.valueMissing)).toBe(true);
+      await sex.selectOption("MALE");
+      expect(await sex.evaluate((select: HTMLSelectElement) => select.validity.valid)).toBe(true);
+      await expect(noScript.getByRole("button", { name: /^Sex: / })).toHaveCount(0);
       await expect(noScript.getByRole("button", { name: /^Cetățenie/ })).toHaveCount(0);
       // The mask's placeholder is in the server's HTML; the grouping itself needs the script.
       await expect(phone).toHaveAttribute("placeholder", "0712 345 678");
@@ -738,7 +745,7 @@ test.describe("BR-REQ-031-04 a rejected submission says what to fix, and goes th
     expect(page.url()).not.toContain("Popescu");
   });
 
-  test("names an unanswered «Sex» in the refusal summary, and the link lands on its first answer (§510, §554)", async ({ page }) => {
+  test("names an unanswered «Sex» in the refusal summary, and the link lands on its dropdown (§510, §NNN)", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);
     await page.goto(registerPath);
@@ -755,8 +762,10 @@ test.describe("BR-REQ-031-04 a rejected submission says what to fix, and goes th
     expect(page.url()).toContain("fields=sex");
     const link = page.locator("#registration-errors").getByRole("link", { name: SEX_MISSING, exact: true });
     await expect(link).toBeVisible();
+    // The select is marked invalid, and once the island runs its button takes the focus the link gave it.
+    await expect(page.locator('select[name="sex"]')).toHaveAttribute("aria-invalid", "true");
     await link.click();
-    await expect(page.locator('input[type="radio"][name="sex"][value="MALE"]')).toBeFocused();
+    await expect(page.getByRole("button", { name: /^Sex: / })).toBeFocused();
   });
 
   test("keeps a chosen option and says a phone number is not valid", async ({ page }) => {
@@ -769,7 +778,7 @@ test.describe("BR-REQ-031-04 a rejected submission says what to fix, and goes th
     await fillRequired(page);
     await page.locator('[name="phone"]').fill("12");
     // A choice the redirect would lose unless the draft brings it back (§142).
-    await page.locator('input[type="radio"][name="sex"][value="FEMALE"]').check();
+    await chooseSex(page, "FEMALE");
     // Behind the fold since §171; the point of the test is that what was typed comes back.
     await page.evaluate(() => document.querySelectorAll("details").forEach((details) => (details.open = true)));
     await page.locator('[name="healthNotes"]').fill("Astm");
@@ -781,7 +790,7 @@ test.describe("BR-REQ-031-04 a rejected submission says what to fix, and goes th
 
     await page.waitForURL(/error=VALIDATION_ERROR/);
     expect(page.url()).toContain("fields=phone");
-    await expect(page.locator('input[type="radio"][name="sex"][value="FEMALE"]')).toBeChecked();
+    await expect(page.locator('select[name="sex"]')).toHaveValue("FEMALE");
     await expect(page.locator('[name="phone"]')).toHaveValue("12");
     await expect(page.locator('[name="healthNotes"]')).toHaveValue("Astm");
     await expect(page.locator("#main")).toContainText("Numărul nu e valid");
