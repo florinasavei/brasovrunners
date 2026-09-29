@@ -220,6 +220,8 @@ it is the authority, this is the summary):
     Since §550 the notice's template also says that only the club's organizers and administrators see the newsletter's
     subscriber list with the addresses and may download it — approve that notice before an Organizer reads the addresses
     on production.
+    Since §NNN the four declarations' templates speak Romanian: «eveniment montan» for the mountain race, «teren accidentat»
+    for the ground, not one «trail» — «Regenerează din șabloane» makes the drafts; the texts in force keep their words until approved.
 17. **Re-grade every event's difficulty** — migration `0104` put each event in the middle step of its old band (§526). Open each
     event in `/admin/events` and choose the band and «Treapta» on the fifteen-step scale; the guide («Ghid») explains the scale.
 18. **Open the members' zone and the FAQ** — approve the members' zone address, `/ro/zona-membri` (it sits outside the backoffice,

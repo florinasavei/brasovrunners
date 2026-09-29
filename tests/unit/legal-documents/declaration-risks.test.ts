@@ -90,7 +90,7 @@ const SHARED: ReadonlyArray<{ what: string; ro: RegExp[]; en: RegExp[] }> = [
 
 /** The trail's own risks — and the road text must not carry them. */
 const TRAIL_ONLY = {
-  ro: [/trasee montane sau de pădure/, /rădăcini/, /noroi/, /animalelor sălbatice/, /câini de stână/, /pantofi de trail/, /ajutorul poate ajunge greu/, /ariile naturale protejate/],
+  ro: [/trasee montane sau de pădure/, /rădăcini/, /noroi/, /animalelor sălbatice/, /câini de stână/, /încălțăminte pentru teren accidentat/, /ajutorul poate ajunge greu/, /ariile naturale protejate/],
   en: [/mountain or forest trails/, /roots/, /mud/, /wild animals/, /sheepdogs/, /trail shoes/, /help can be slow/, /protected natural areas/],
 };
 
@@ -110,11 +110,12 @@ describe("§515 the race's two declarations, one shared body", () => {
     expect(LEGAL_TEMPLATES.EVENT_DECLARATION.en.body).toBe(declarationTrailEn);
     expect(LEGAL_TEMPLATES.EVENT_DECLARATION_ROAD.ro.body).toBe(declarationRoadRo);
     expect(LEGAL_TEMPLATES.EVENT_DECLARATION_ROAD.en.body).toBe(declarationRoadEn);
-    // The titles the review asked for (§515): «— cursă trail», «— cursă pe asfalt / în parc».
-    expect(LEGAL_TEMPLATES.EVENT_DECLARATION.ro.title).toBe("Declarație pe propria răspundere — cursă trail");
-    expect(LEGAL_TEMPLATES.EVENT_DECLARATION_ROAD.ro.title).toBe("Declarație pe propria răspundere — cursă pe asfalt / în parc");
-    expect(LEGAL_TEMPLATES.EVENT_DECLARATION.en.title).toMatch(/— trail race$/);
-    expect(LEGAL_TEMPLATES.EVENT_DECLARATION_ROAD.en.title).toMatch(/— road \/ park race$/);
+    // The titles by their course (§515), in Romanian words since §NNN: «— eveniment montan», and
+    // «eveniment» for the road one too, because the two are named side by side.
+    expect(LEGAL_TEMPLATES.EVENT_DECLARATION.ro.title).toBe("Declarație pe propria răspundere — eveniment montan");
+    expect(LEGAL_TEMPLATES.EVENT_DECLARATION_ROAD.ro.title).toBe("Declarație pe propria răspundere — eveniment pe asfalt / în parc");
+    expect(LEGAL_TEMPLATES.EVENT_DECLARATION.en.title).toMatch(/— mountain event$/);
+    expect(LEGAL_TEMPLATES.EVENT_DECLARATION_ROAD.en.title).toMatch(/— road \/ park event$/);
   });
 
   it("share every section but the risks, written once: opening + course risks + shared duties + closing", () => {

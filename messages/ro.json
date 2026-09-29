@@ -1214,7 +1214,7 @@
       "registrationClosesAt": "Înscrierile se închid",
       "registrationWindowHelp": "Lasă deschiderea goală și înscrierile pornesc la publicarea evenimentului; lasă închiderea goală și se opresc la startul evenimentului.",
       "declarationDocument": "Declarația pe care o semnează participantul",
-      "declarationDocumentHelp": "Trail pentru munte sau pădure, șosea sau parc pentru asfalt, beton, tartan sau pavele. Căsuța pornește de la suprafața din «Traseul»; o poți schimba. Textul se aprobă în Documente legale.",
+      "declarationDocumentHelp": "Eveniment montan pentru munte sau pădure; pe șosea sau în parc pentru asfalt, beton, tartan, pavele. Pornește de la suprafața din «Traseul»; o poți schimba. Textul se aprobă în Documente legale.",
       "declarationNone": "Nu există nicio declarație aprobată în acest mediu, deci niciun eveniment nu poate primi înscrieri încă.",
       "declarationUnset": "Niciuna",
       "participantList": "Publică lista participanților pe pagina evenimentului",
@@ -1817,7 +1817,7 @@
           "title": "Declarația pe propria răspundere",
           "newest": "{kind}: cea mai nouă versiune aprobată e v{version} · {title}. Participantul o semnează la confirmarea înscrierii.",
           "notOnSite": "Nu se cere nicio declarație: evenimentul nu primește înscrieri pe site. Alege «Înscrieri pe site» în «Participare și înscrieri» ca să alegi declarația.",
-          "roadFallback": "{kind}: nicio versiune aprobată încă, așa că un concurs pe șosea sau în parc semnează declarația de trail. Aprob-o în Documente legale → Versiune nouă → Pornește de la șablon.",
+          "roadFallback": "{kind}: nicio versiune aprobată încă, așa că un concurs pe șosea sau în parc semnează declarația pentru eveniment montan. Aprob-o în Documente legale → Versiune nouă → Pornește de la șablon.",
           "mismatch": "Traseul e pe «{surface}», iar varianta aleasă e «{chosen}»: pentru el se potrivește «{wanted}». Alege-o mai sus, dacă traseul e cel corect."
         }
       },
@@ -1830,7 +1830,7 @@
       "groupRunDeclaration": {
         "label": "Declarație opțională pe propria răspundere",
         "help": "Opțională, o dată pentru toate datele; semnatarul și clubul primesc o copie. Cere nota GDPR aprobată. Declarația de la alergări se semnează de la 18 ani, oricare ar fi vârsta minimă a alergării.",
-        "notGroupSurface": "Doar pentru o alergare de grup pe asfalt sau pe trail: alege suprafața în cardul «Traseul».",
+        "notGroupSurface": "Doar pentru o alergare de grup pe asfalt sau pe teren accidentat: alege suprafața în cardul «Traseul».",
         "missing": "Clubul nu are încă o versiune aprobată pentru „{document}”. Aprob-o în Documente legale, împreună cu o notă de confidențialitate nouă, apoi bifează aici.",
         "minAgeHelp": "Împlinită în ziua alergării, cel puțin 18 ani: declarația nu acoperă minorii, chiar dacă aici e mai puțin. Peste 18, de exemplu 21, pagina de semnare cere data nașterii.",
         "surface": "Suprafața, din cardul «Traseul»: {surface}",
@@ -1875,8 +1875,8 @@
       "participantListHelpMore": "Ceilalți apar ca „Participant (nume ascuns)”. Salvarea e refuzată cât timp nu e în vigoare o notă de confidențialitate aprobată care descrie lista.",
       "confirmationWindowHelpMore": "După termen, locul trece la următorul doar dacă așteaptă cineva. Cine se înscrie după deschiderea ferestrei, sau când prima cifră e 0, are {hold} să semneze.",
       "declarationKinds": {
-        "EVENT_DECLARATION": "Trail",
-        "EVENT_DECLARATION_ROAD": "Șosea sau parc"
+        "EVENT_DECLARATION": "Eveniment montan",
+        "EVENT_DECLARATION_ROAD": "Eveniment pe șosea sau în parc"
       },
       "membersOnly": "Doar pentru membrii BVR",
       "membersOnlyHelp": "Îl văd doar membrii autentificați, nu apare pe site. Înscrierile făcute rămân.",
@@ -2031,14 +2031,14 @@
     },
     "legal": {
       "title": "Documente legale",
-      "intro": "Nota de confidențialitate, termenii, declarația de concurs (trail și șosea sau parc) și cele două declarații ale alergărilor de grup: {count} texte. O corectură e o versiune nouă.",
+      "intro": "Nota de confidențialitate, termenii, declarațiile de concurs pentru eveniment montan și pentru șosea sau parc, cele două declarații ale alergărilor de grup: {count} texte. O corectură e o versiune nouă.",
       "whatIs": {
         "PRIVACY_NOTICE": "GDPR: ce date luăm de la participanți, de ce și cât le ținem. Se bifează la înscriere.",
         "TERMS": "Regulile site-ului și ale înscrierii, nu regulamentul cursei — acela e pe pagina evenimentului. Se bifează la înscriere.",
-        "EVENT_DECLARATION": "Declarația unui concurs pe trasee montane sau de pădure: vârsta, minorii, riscurile traseului, sănătatea. Se semnează la confirmarea locului.",
+        "EVENT_DECLARATION": "Declarația unui eveniment montan, pe trasee de munte sau de pădure: vârsta, minorii, riscurile traseului, sănătatea. Se semnează la confirmarea locului.",
         "GROUP_RUN_DECLARATION_ASPHALT": "Opțională, pentru o alergare de grup pe asfalt; se semnează pe pagina alergării, o dată pentru toate datele ei. Aprob-o împreună cu o notă de confidențialitate nouă.",
-        "GROUP_RUN_DECLARATION_TRAIL": "Opțională, pentru o alergare de grup pe trail; se semnează pe pagina alergării, o dată pentru toate datele ei. Aprob-o împreună cu o notă de confidențialitate nouă.",
-        "EVENT_DECLARATION_ROAD": "Declarația unui concurs pe șosea sau în parc, cu riscurile asfaltului și ale traficului. Până o aprobi, aceste concursuri semnează declarația de trail."
+        "GROUP_RUN_DECLARATION_TRAIL": "Opțională, pentru o alergare de grup pe teren accidentat; se semnează pe pagina alergării, o dată pentru toate datele ei. Aprob-o împreună cu o notă de confidențialitate nouă.",
+        "EVENT_DECLARATION_ROAD": "Declarația unui eveniment pe șosea sau în parc, cu riscurile asfaltului și ale traficului. Până o aprobi, aceste evenimente semnează declarația pentru eveniment montan."
       },
       "empty": "Nu există niciun document legal. Înscrierile sunt refuzate până când există o notă de confidențialitate aprobată.",
       "emptyCanCreate": "Nu există încă niciun document legal, așa că înscrierile sunt refuzate. Începe cu nota de confidențialitate: Versiune nouă.",
@@ -2053,10 +2053,10 @@
       "keys": {
         "PRIVACY_NOTICE": "GDPR",
         "TERMS": "Termeni de concurs",
-        "EVENT_DECLARATION": "Declarație pe propria răspundere — cursă trail",
+        "EVENT_DECLARATION": "Declarație pe propria răspundere — eveniment montan",
         "GROUP_RUN_DECLARATION_ASPHALT": "Declarație pe propria răspundere (alergare de grup, asfalt)",
-        "GROUP_RUN_DECLARATION_TRAIL": "Declarație pe propria răspundere (alergare de grup, trail)",
-        "EVENT_DECLARATION_ROAD": "Declarație pe propria răspundere — cursă pe asfalt / în parc"
+        "GROUP_RUN_DECLARATION_TRAIL": "Declarație pe propria răspundere (alergare de grup, teren accidentat)",
+        "EVENT_DECLARATION_ROAD": "Declarație pe propria răspundere — eveniment pe asfalt / în parc"
       },
       "referenced": "{signatures} semnături · {events} evenimente",
       "unreferenced": "Nefolosit încă",
@@ -2290,10 +2290,10 @@
       "shortKeys": {
         "PRIVACY_NOTICE": "GDPR",
         "TERMS": "Termeni",
-        "EVENT_DECLARATION": "Cursă trail",
-        "EVENT_DECLARATION_ROAD": "Cursă asfalt / parc",
+        "EVENT_DECLARATION": "Eveniment montan",
+        "EVENT_DECLARATION_ROAD": "Eveniment asfalt / parc",
         "GROUP_RUN_DECLARATION_ASPHALT": "Grup asfalt",
-        "GROUP_RUN_DECLARATION_TRAIL": "Grup trail"
+        "GROUP_RUN_DECLARATION_TRAIL": "Grup teren accidentat"
       },
       "filter": {
         "label": "Filtrează versiunile",
@@ -2483,7 +2483,7 @@
           "done": "Textele aprobate de club sunt publicate.",
           "how": [
             "Calea scurtă: /admin/legal → caseta „Într-un pas” → verifică denumirea, CIF-ul, sediul și emailul afișate → butonul de aprobare din casetă.",
-            "Nota, termenii și cele două declarații de concurs, trail și șosea sau parc, intră în vigoare cu datele clubului în ele.",
+            "Nota, termenii și cele două declarații de concurs, eveniment montan și eveniment pe șosea sau în parc, intră în vigoare cu datele clubului în ele.",
             "Ca să citești întâi: pe cardul textului, „Regenerează din șablon” → citește ciorna, completează → „Salvează ciorna” → „Aprobă și publică”. Toate deodată: „Versiune nouă” → „Regenerează toate”.",
             "Calea lungă, pentru o modificare: „Versiune nouă” → alege șablonul → „Salvează ciorna” → PDF → „Aprobă și publică”. Un text aprobat nu se mai schimbă; corectarea e versiunea următoare.",
             "Pe fiecare eveniment, la Înscrieri, se alege declarația aprobată (dacă nu e deja)."
@@ -2774,14 +2774,14 @@
           ]
         },
         "raceDeclarations": {
-          "title": "Declarațiile de concurs: trail și șosea sau parc",
-          "todo": "Cel puțin o declarație de concurs (trail, șosea sau parc) nu are încă o versiune din șablon. Până e aprobată cea de șosea, asfaltul semnează trail.",
-          "done": "Ambele declarații de concurs, trail și șosea sau parc, sunt în vigoare din șablon: fiecare concurs semnează declarația potrivită traseului lui.",
+          "title": "Declarațiile de concurs: eveniment montan și eveniment pe șosea sau în parc",
+          "todo": "Una dintre cele două declarații de concurs nu are încă o versiune din șablon. Până e aprobată cea de șosea, asfaltul semnează declarația pentru eveniment montan.",
+          "done": "Ambele declarații de concurs, eveniment montan și eveniment pe șosea sau în parc, sunt în vigoare din șablon: fiecare concurs semnează declarația potrivită traseului lui.",
           "how": [
-            "/admin/legal → cardul „Declarație pe propria răspundere — cursă trail” → „Regenerează din șablon”. Apoi ciorna: citește, completează, „Salvează ciorna”, apoi „Aprobă și publică”.",
-            "La fel pentru „Declarație pe propria răspundere — cursă pe asfalt / în parc”.",
+            "/admin/legal → cardul „Declarație pe propria răspundere — eveniment montan” → „Regenerează din șablon”. Apoi ciorna: citește, completează, „Salvează ciorna”, apoi „Aprobă și publică”.",
+            "La fel pentru „Declarație pe propria răspundere — eveniment pe asfalt / în parc”.",
             "Un concurs nou pornește singur de la varianta potrivită traseului. Un concurs salvat înainte păstrează declarația aleasă atunci.",
-            "Cea de trail, pentru unul pe asfalt: deschide-l, iar cardul «Declarația pe propria răspundere» spune când varianta nu se potrivește traseului. Alege-o pe cea de șosea sau parc și salvează."
+            "Unul pe asfalt, cu declarația pentru eveniment montan: deschide-l; cardul «Declarația pe propria răspundere» spune când nu se potrivește traseului. Alege-o pe cea de șosea sau parc și salvează."
           ]
         },
         "groupRunSeriesTexts": {
@@ -2790,7 +2790,7 @@
           "done": "Declarațiile alergărilor de grup în vigoare spun ce acoperă: un alergător semnează o dată pentru toată seria.",
           "how": [
             "/admin/legal → cardul „Declarație pe propria răspundere (alergare de grup, asfalt)” → „Regenerează din șablon”. Apoi ciorna: citește, completează, „Salvează ciorna”, apoi „Aprobă și publică”.",
-            "La fel pentru „Declarație pe propria răspundere (alergare de grup, trail)”.",
+            "La fel pentru „Declarație pe propria răspundere (alergare de grup, teren accidentat)”.",
             "Aprobă și o versiune nouă a notei de confidențialitate din șablon: ea spune că declarația unei serii se păstrează cât timp este activă, iar după retragere cel mult trei ani.",
             "Cine a semnat versiunea veche vede pe pagina alergării, din linkul din emailul lui, că i se cere versiunea nouă; semnătura veche rămâne în listă."
           ]
@@ -4976,7 +4976,7 @@
                 "Deschide fiecare ciornă (filtrul «Ciorne» le arată pe toate), citește-o și completează ce a rămas de forma <…>, în română și în engleză; «Salvează ciorna».",
                 "Înapoi pe «Documente legale»: «Aprobă ciornele» și confirmă. Ciornele gata de aprobat intră în vigoare împreună; ce nu se poate aproba deodată e scris sub buton, cu motivul.",
                 "Ce e în vigoare la fiecare text: capul cardului spune «În vigoare: versiunea…» sau «Nicio versiune în vigoare»; filtrele «În vigoare», «Înlocuite» și «Retrase» arată restul.",
-                "Fără termeni, notă și o declarație de cursă aprobate nu se poate înscrie nimeni. Pentru o cursă pe asfalt editorul alege declarația de asfalt, dacă e aprobată, altfel pe cea de trail. O alergare de grup oferă declarația doar dacă o bifează și dacă textul ei (asfalt sau trail) e aprobat.",
+                "Fără termeni, notă și o declarație de cursă aprobate nu se poate înscrie nimeni. Pentru o cursă pe asfalt editorul alege declarația de asfalt, dacă e aprobată, altfel pe cea pentru eveniment montan. O alergare de grup oferă declarația doar dacă o bifează și dacă textul ei (asfalt sau teren accidentat) e aprobat.",
                 "Până aprobi nota nouă, lista publică de participanți arată doar confirmații.",
                 "Ciorne sau versiuni de care nu mai ai nevoie: bifează-le în tabel, apasă «Șterge versiunile bifate» și verifică lista. Doar ciorne: «Șterge ciornele» și confirmă. Cu o versiune aprobată în listă: la «Confirmarea» scrii textul cerut (de exemplu „DELETE 2”), la «Motivul» de ce, apoi «Șterge versiunile».",
                 "Declarațiile semnate la o alergare de grup, când semnatarul cere ștergerea: «Evenimente» → «Editează» la alergare → «Declarații semnate (alergare de grup)» → «Șterge mai multe deodată»: bifează-le, completează o dată «Motivul ștergerii», apasă «Șterge cele bifate» și confirmă. În jurnal rămân numele tău și motivul, nu și al celui care a semnat."

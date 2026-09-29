@@ -230,7 +230,7 @@ test.describe.serial("§393 a group run's optional self-declaration", () => {
     await openEditorBox(page, "Declarația pe propria răspundere");
     const box = page.getByRole("checkbox", { name: "Declarație opțională pe propria răspundere" });
     await expect(box).toBeDisabled();
-    await expect(page.getByTestId("group-run-declaration-field")).toContainText("Doar pentru o alergare de grup pe asfalt sau pe trail");
+    await expect(page.getByTestId("group-run-declaration-field")).toContainText("Doar pentru o alergare de grup pe asfalt sau pe teren accidentat");
     await openEditorBox(page, "Traseul");
     await page.getByRole("combobox", { name: "Suprafață" }).click();
     await page.getByRole("option", { name: "Trail" }).click();

@@ -1214,7 +1214,7 @@
       "registrationClosesAt": "Registration closes",
       "registrationWindowHelp": "Leave the opening empty and registration opens when the event is published; leave the closing empty and it closes when the event starts.",
       "declarationDocument": "Declaration a participant signs",
-      "declarationDocumentHelp": "Trail for mountain or forest, road or park for asphalt, concrete, tartan or paving. The box starts from the surface in “The course”; you can change it. The text is approved under Legal documents.",
+      "declarationDocumentHelp": "Mountain event for mountain or forest; road or park event for asphalt, concrete, tartan, paving. It starts from the surface in “The course”; you can change it. Approved under Legal documents.",
       "declarationNone": "No approved declaration exists in this environment, so no event can take registrations here yet.",
       "declarationUnset": "None",
       "participantList": "Publish the participant list on the event page",
@@ -1817,7 +1817,7 @@
           "title": "Self-declaration",
           "newest": "{kind}: the newest approved version is v{version} · {title}. The participant signs it when confirming the registration.",
           "notOnSite": "No declaration is asked: the event takes no registrations on the site. Choose “Înscrieri pe site” under “Taking part and registration” to choose the declaration.",
-          "roadFallback": "{kind}: no approved version yet, so a road or park race signs the trail declaration. Approve one under Legal documents → New version → Start from the template.",
+          "roadFallback": "{kind}: no approved version yet, so a road or park race signs the mountain event declaration. Approve one under Legal documents → New version → Start from the template.",
           "mismatch": "The course is on “{surface}” and the kind chosen is “{chosen}”: “{wanted}” fits it. Choose it above, if the course is right."
         }
       },
@@ -1875,8 +1875,8 @@
       "participantListHelpMore": "Everyone else shows as “Participant (name hidden)”. The save is refused while no approved privacy notice that describes the list is in force.",
       "confirmationWindowHelpMore": "After the deadline, the place goes to the next in line only if someone is waiting. Whoever registers after the window opens, or when the first number is 0, has {hold} to sign.",
       "declarationKinds": {
-        "EVENT_DECLARATION": "Trail",
-        "EVENT_DECLARATION_ROAD": "Road or park"
+        "EVENT_DECLARATION": "Mountain event",
+        "EVENT_DECLARATION_ROAD": "Road or park event"
       },
       "membersOnly": "BVR members only",
       "membersOnlyHelp": "Only signed-in members see it; it is not on the public site. Existing registrations stay.",
@@ -2031,14 +2031,14 @@
     },
     "legal": {
       "title": "Legal documents",
-      "intro": "The privacy notice, the terms, the race declaration (trail and road or park) and the two group-run declarations: {count} texts. A correction is a new version.",
+      "intro": "The privacy notice, the terms, the race declarations for a mountain event and for a road or park event, the two group-run declarations: {count} texts. A correction is a new version.",
       "whatIs": {
         "PRIVACY_NOTICE": "GDPR: what data we take from participants, why and for how long. Ticked at registration.",
         "TERMS": "The rules of the site and of registering, not the race rules — those are on the event's page. Ticked at registration.",
-        "EVENT_DECLARATION": "The declaration of a race on mountain or forest trails: age, minors, the course's risks, health. Signed when the place is confirmed.",
+        "EVENT_DECLARATION": "The declaration of a mountain event, on mountain or forest trails: age, minors, the course's risks, health. Signed when the place is confirmed.",
         "GROUP_RUN_DECLARATION_ASPHALT": "Optional, for a group run on asphalt; signed on the run's page, once for every date of it. Approve it together with a new privacy notice.",
         "GROUP_RUN_DECLARATION_TRAIL": "Optional, for a group run on a trail; signed on the run's page, once for every date of it. Approve it together with a new privacy notice.",
-        "EVENT_DECLARATION_ROAD": "The declaration of a road or park race, with the risks of asphalt and traffic. Until you approve it, these races sign the trail declaration."
+        "EVENT_DECLARATION_ROAD": "The declaration of a road or park event, with the risks of asphalt and traffic. Until you approve it, these events sign the mountain event declaration."
       },
       "empty": "No legal document exists. Registration is refused until an approved privacy notice exists.",
       "emptyCanCreate": "No legal document exists yet, so registration is refused. Start with the privacy notice: New version.",
@@ -2053,10 +2053,10 @@
       "keys": {
         "PRIVACY_NOTICE": "GDPR",
         "TERMS": "Racing TOS",
-        "EVENT_DECLARATION": "Self-declaration — trail race",
+        "EVENT_DECLARATION": "Self-declaration — mountain event",
         "GROUP_RUN_DECLARATION_ASPHALT": "Self-declaration (group run, asphalt)",
         "GROUP_RUN_DECLARATION_TRAIL": "Self-declaration (group run, trail)",
-        "EVENT_DECLARATION_ROAD": "Self-declaration — road / park race"
+        "EVENT_DECLARATION_ROAD": "Self-declaration — road / park event"
       },
       "referenced": "{signatures} signatures · {events} events",
       "unreferenced": "Not yet used",
@@ -2290,8 +2290,8 @@
       "shortKeys": {
         "PRIVACY_NOTICE": "GDPR",
         "TERMS": "Terms",
-        "EVENT_DECLARATION": "Trail race",
-        "EVENT_DECLARATION_ROAD": "Road / park race",
+        "EVENT_DECLARATION": "Mountain event",
+        "EVENT_DECLARATION_ROAD": "Road / park event",
         "GROUP_RUN_DECLARATION_ASPHALT": "Group asphalt",
         "GROUP_RUN_DECLARATION_TRAIL": "Group trail"
       },
@@ -2483,7 +2483,7 @@
           "done": "The club’s approved wording is published.",
           "how": [
             "The short way: /admin/legal → the “One step” box → check the legal name, CIF, seat and email shown → the approval button in the box.",
-            "The notice, the terms and both race declarations, trail and road or park, come into force with the club's facts in them.",
+            "The notice, the terms and both race declarations, mountain event and road or park event, come into force with the club's facts in them.",
             "To read first: on each text's card, “Regenerate from the template” → open the draft, read, fill in → “Save draft” → “Approve and publish”. All at once: “New version” → “Regenerate all”.",
             "The long way, for a change: “New version” → pick the template → “Save draft” → PDF → “Approve and publish”. An approved text never changes; a correction is the next version.",
             "On each event, under Registration, pick the approved declaration (if not already)."
@@ -2774,14 +2774,14 @@
           ]
         },
         "raceDeclarations": {
-          "title": "The race declarations: trail, and road or park",
-          "todo": "At least one race declaration (trail, road or park) has no version from the template yet. Until the road one is approved, asphalt races sign trail.",
-          "done": "Both race declarations, trail and road or park, are in force from the template: every race signs the declaration that fits its course.",
+          "title": "The race declarations: mountain event, and road or park event",
+          "todo": "One of the two race declarations has no version from the template yet. Until the road one is approved, asphalt races sign the mountain event one.",
+          "done": "Both race declarations, mountain event and road or park event, are in force from the template: every race signs the declaration that fits its course.",
           "how": [
-            "/admin/legal → the “Self-declaration — trail race” card → “Regenerate from the template”. Then the draft: read, fill in, “Save draft”, then “Approve and publish”.",
-            "The same for “Self-declaration — road / park race”.",
+            "/admin/legal → the “Self-declaration — mountain event” card → “Regenerate from the template”. Then the draft: read, fill in, “Save draft”, then “Approve and publish”.",
+            "The same for “Self-declaration — road / park event”.",
             "A new race starts on the kind that fits its course by itself. A race saved earlier keeps the declaration chosen then.",
-            "The trail one, for an asphalt race: open it, and the “Self-declaration” card says when the kind does not fit the course. Choose the road or park one and save."
+            "An asphalt race on the mountain event one: open it, and the “Self-declaration” card says when the kind does not fit the course. Choose the road or park one and save."
           ]
         },
         "groupRunSeriesTexts": {
@@ -4976,7 +4976,7 @@
                 "Open each draft (the «Drafts» filter shows them all), read it and fill in what is left written <…>, in Romanian and in English; «Save draft».",
                 "Back on «Legal documents»: «Approve the drafts» and confirm. The drafts ready to approve take effect together; what cannot be approved at once is written under the button, with the reason.",
                 "What is in force for each text: the card's head says «In force: version…» or «No version in force»; the filters «In force», «Replaced» and «Withdrawn» show the rest.",
-                "Without approved terms, notice and a race declaration nobody can register. For a road race the editor picks the road declaration once it is approved, the trail one until then. A group run offers its declaration only when it ticks it and its text (asphalt or trail) is approved.",
+                "Without approved terms, notice and a race declaration nobody can register. For a road race the editor picks the road declaration once it is approved, the mountain event one until then. A group run offers its declaration only when it ticks it and its text (asphalt or trail) is approved.",
                 "Until you approve the new notice, the public participant list shows the confirmed only.",
                 "Drafts or versions you no longer need: tick them in the table, press «Delete the ticked versions» and check the list. Drafts only: «Delete the drafts» and confirm. With an approved version in the list: under «Confirmation» type the text asked for (for example “DELETE 2”), under «Reason» why, then «Delete the versions».",
                 "The signed declarations of a group run, when the signer asks for them to be erased: «Events» → «Edit» on the run → «Signed declarations (group run)» → «Erase several at once»: tick them, fill in «Why it is erased» once, press «Erase the ticked ones» and confirm. The log keeps your name and the reason, not the signer's."
