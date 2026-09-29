@@ -6,6 +6,7 @@ import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { isSelfServiceField, withdrawFromManageLink } from "@/modules/registrations/consent-withdrawal";
 import { setListConsentFromManageLink } from "@/modules/registrations/list-consent";
+import { parseCancelReason } from "@/modules/registrations/domain/cancel-reason";
 import { checkInSelf, consumeAndCancel } from "@/modules/registrations/token-actions";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { flashPublic } from "@/shared/feedback/flash";
@@ -23,9 +24,20 @@ export async function cancelRegistrationAction(form: FormData): Promise<void> {
   const locale = (form.get("locale") === "en" ? "en" : "ro") as Locale;
   const token = String(form.get("token") ?? "");
   const path = getPathname({ locale, href: { pathname: "/registrations/manage/[token]", params: { token } } });
+  const person = personOf(form);
+
+  /*
+    The reason, required (§NNN): refused before anything is read or spent, back on the same page with
+    the box named under the person's own cancel — the link still works for the next press.
+  */
+  const reason = parseCancelReason(form);
+  if (!reason.ok) {
+    const who = person ? `&person=${encodeURIComponent(person)}` : "";
+    redirect(`${path}?reason=${reason.problem}${who}#cancel-reason`);
+  }
 
   try {
-    const result = await consumeAndCancel(token, new Date(), personOf(form));
+    const result = await consumeAndCancel(token, new Date(), reason.reason, person);
     // The toast on the page it lands on (§427); a refused link says so on the page, never in a toast.
     if (result.ok) await flashPublic("unregistered");
     // `done=family`: the page listed more than one person, so the outcome says how to reach the others (§547) — never who.

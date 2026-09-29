@@ -27,6 +27,9 @@ import { holdsOptionalData } from "@/modules/registrations/consent-withdrawal";
 import { isActiveStatus } from "@/modules/registrations/domain/state-machine";
 import ActionLinkNotice from "@/modules/registrations/ui/ActionLinkNotice";
 import AskFirstButton from "@/modules/registrations/ui/AskFirstButton";
+import CancelReasonFields from "@/modules/registrations/ui/CancelReasonFields";
+import { cancelReasonWords } from "@/modules/registrations/ui/cancel-reason-words";
+import { cancelReasonProblemOf } from "@/modules/registrations/domain/cancel-reason";
 import QrWithName, { type QrWords } from "@/modules/registrations/ui/QrWithName";
 import { readRaceDayContext, readSpentRegistrationLink } from "@/modules/registrations/token-actions";
 import PublicFlash from "@/shared/feedback/PublicFlash";
@@ -51,6 +54,8 @@ type Props = {
     withdrawn?: string;
     /** Which person a check-in or a list answer was about (§547): an id the page already lists, never a name. */
     person?: string;
+    /** The box a cancel without its reason named (§NNN): `kind`, `text` or `long`, under `person`'s cancel. */
+    reason?: string;
   }>;
 };
 
@@ -79,7 +84,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
-  const { done, invalid, started, here, list, withdrawn, person } = await searchParams;
+  const { done, invalid, started, here, list, withdrawn, person, reason } = await searchParams;
   const t = await getTranslations("Registrations");
   // The words beside every QR (§547): whose it is, their number, the code.
   const qrWords: QrWords = {
@@ -141,6 +146,9 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
   const eventTitle = details?.locale === locale ? details.title : "";
   // Which person a check-in or list answer was about: the one the press named, else the link's own.
   const answeredFor = person ?? live?.registration.id;
+  // Why the person cancels (§NNN): the words once, and the box a refused press named, under that person.
+  const reasonWords = live ? await cancelReasonWords() : null;
+  const reasonProblem = cancelReasonProblemOf(reason);
 
   return (
     <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
@@ -319,6 +327,13 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                     <input type="hidden" name="token" value={token} />
                     <input type="hidden" name="registrationId" value={one.id} />
                     {!family && <Typography sx={{ mb: 1 }}>{t("manage.prompt")}</Typography>}
+                    {reasonWords && (
+                      <CancelReasonFields
+                        {...reasonWords.fields}
+                        problem={answered ? reasonProblem : undefined}
+                        problemText={answered && reasonProblem ? reasonWords.problemText[reasonProblem] : undefined}
+                      />
+                    )}
                     <AskFirstButton
                       glyph="cancel"
                       label={t("manage.personCancel", { name: one.registeredName })}

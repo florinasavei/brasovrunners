@@ -52,6 +52,20 @@ export const registrationCancellationSource = pgEnum("registration_cancellation_
 ]);
 
 /**
+ * Why a participant cancelled their own registration (§NNN; the owner, 2026-09-29: «when people
+ * cancel, they need to provide a reason»): one of three answers, asked at every self-cancellation
+ * door, with a short text of their own only for `OTHER` (`cancel_reason`). Null on a staff
+ * cancellation and on every row cancelled before the column.
+ */
+export const registrationCancelReasonKind = pgEnum("registration_cancel_reason_kind", [
+  "INJURY_OR_ILLNESS",
+  "OTHER_PLANS",
+  "OTHER",
+]);
+
+export type RegistrationCancelReasonKind = (typeof registrationCancelReasonKind.enumValues)[number];
+
+/**
  * Whether a registration is somebody's, or a demonstration of the queue.
  *
  * There is no "test participant" account type and none is added: participants have no accounts
@@ -433,6 +447,13 @@ export const registrations = pgTable(
 
     expiryReason: registrationExpiryReason("expiry_reason"),
     cancellationSource: registrationCancellationSource("cancellation_source"),
+    /**
+     * The participant's own reason for cancelling (§NNN): the answer of three, and the words typed
+     * for «Alt motiv» (at most 200 characters, `CANCEL_REASON_MAX`) — null for the other two. Both
+     * null on a staff cancellation. Deleted with the row by an erasure, like every other field of it.
+     */
+    cancelReasonKind: registrationCancelReasonKind("cancel_reason_kind"),
+    cancelReason: text("cancel_reason"),
 
     /**
      * Race day (BR-REQ-037-08, `DECISIONS.md` §67).

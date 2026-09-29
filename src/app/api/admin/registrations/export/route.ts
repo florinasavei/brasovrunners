@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/db/client";
 import { type RegistrationStatus, registrationStatus } from "@/db/schema/registrations";
 import { buildRegistrationsCsv } from "@/modules/registrations/csv";
+import { cancelReasonCell } from "@/modules/registrations/domain/cancel-reason";
 import { familyColumn, familyOf } from "@/modules/registrations/family-marker";
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { buildRegistrationsWorkbook, workbookExtras } from "@/modules/registrations/workbook";
@@ -164,6 +165,7 @@ export async function GET(request: Request): Promise<Response> {
         declarationVersion: declarations.get(row.id)?.version ?? null,
         declarationSignedAt: declarations.get(row.id)?.acceptedAt ?? null,
         family: familyColumn(family.get(row.id)),
+        cancelReason: cancelReasonCell(row.cancelReasonKind, row.cancelReason),
       })),
       eventTitle ?? "Participants",
     );
@@ -209,6 +211,8 @@ export async function GET(request: Request): Promise<Response> {
       declarationVersion: declarations.get(row.id)?.version ?? null,
       declarationSignedAt: declarations.get(row.id)?.acceptedAt.toISOString() ?? "",
       family: familyColumn(family.get(row.id)),
+      // Why the participant cancelled (§NNN): blank for a staff cancellation and every live row.
+      cancelReason: cancelReasonCell(row.cancelReasonKind, row.cancelReason),
     })),
   );
 

@@ -159,6 +159,8 @@ const COLUMNS: Array<{
   { header: "Declaration signed", width: 18, cell: (row) => ({ value: onClubClock(row.declarationSignedAt ?? null), type: Date, format: STAMP_FORMAT }) },
   // The family marker (§543): the other people on the same address at the event, last like the CSV's.
   { header: "family", width: 30, cell: (row) => ({ value: row.family ?? "", type: String }) },
+  // Why the participant cancelled (§NNN), last like the CSV's: the answer, and the words of «Another reason».
+  { header: "Cancellation reason", width: 30, cell: (row) => ({ value: row.cancelReason ?? "", type: String }) },
 ];
 
 /** The header row, exactly as the export writes it — what a re-import matches its columns by. */
