@@ -5,6 +5,8 @@
 **Baseline `BR-V2.40-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 > **Write code once, run forever, always vibe.**
+
+**Costuri minime** (the owner, 2026-09-29): the site costs as little as possible. An idle site consumes nothing — no database wake, no function call, no third-party call (Turnstile, the weather, translation, email) until a person does something, apart from one daily maintenance window. Free tiers only, since the club is an NGO; every change is judged by its cost per visit and by what it costs while nobody visits.
 >
 > Built by [Claude Code](https://claude.com/claude-code) — Anthropic's coding agent — with the club's owner steering: the
 > application, its documents and the dispatcher that lands every release were written this way, in one weekend and the
