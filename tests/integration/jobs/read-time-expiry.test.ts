@@ -81,7 +81,7 @@ async function submit(event: EventForRegistration, email: string): Promise<strin
       firstName: "Ana",
       lastName: "Pop",
       birthDate: "1990-05-17",
-      sex: "UNSPECIFIED",
+      sex: "FEMALE",
       nationality: "RO",
       country: "RO",
       city: "Brașov",

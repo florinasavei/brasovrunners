@@ -52,14 +52,15 @@ import {
 import { describeMovedOnDeclarationLink, stepForSpentLink } from "@/modules/registrations/domain/link-status";
 import PublicFlash from "@/shared/feedback/PublicFlash";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
-import { signDeclarationAction, skipFamilyDeclarationAction } from "./actions";
+import { signDeclarationAction, skipFamilyDeclarationAction, withdrawFamilyPersonAction } from "./actions";
+import AskFirstButton from "@/modules/registrations/ui/AskFirstButton";
 import { DENSITY } from "@/theme/density";
 import {
   currentFamilyStep,
   type FamilyStep,
   familySigningSteps,
   familyStepPosition,
-  hasNextFamilyStep,
+  signActionKey,
   isFamilyWizard,
 } from "@/modules/registrations/domain/family-signing";
 import {
@@ -166,6 +167,11 @@ export default async function DeclarePage({ params, searchParams }: Props) {
   const formCopy = await getTranslations("Registration");
   // The version line the terms and the privacy notice carry (§323), over the text being signed (§499).
   const legalCopy = await getTranslations("Legal");
+  /*
+    The page's one toast slot (§427): on the outcome page, the signature's own — the one that matches
+    this outcome, never the other — and on a family's step, «Renunț la înscrierea pentru …» (§547).
+  */
+  const flashSlot = <PublicFlash accept={[done === "waitlisted" ? "declarationWaitlisted" : done ? "declarationConfirmed" : "familyWithdrawn"]} />;
 
   /*
     The hold had lapsed at the press and the place went on down the line, and the line was full
@@ -206,7 +212,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
           <FamilyDone steps={familySteps} doneHref={await familyDoneHref(held.eventId, locale)} />
         )}
         {/* The toast the signature flashed (§427): the one that matches this outcome, never the other. */}
-        <PublicFlash accept={[done === "waitlisted" ? "declarationWaitlisted" : "declarationConfirmed"]} />
+        {flashSlot}
         {/* "What is next?" — asked the first time somebody got here (§86): said in three lines. */}
         <Typography variant="h2" sx={{ fontSize: "1.125rem", mt: 3, mb: 1 }}>
           {t("declare.nextTitle")}
@@ -496,6 +502,8 @@ export default async function DeclarePage({ params, searchParams }: Props) {
       {/* Where the registration actually is when the link is spent; the declaration step
           otherwise. Cancelled and lapsed get no stepper: there is no journey left. */}
       {journeyStep && <RegistrationJourney current={journeyStep} />}
+      {/* A person just withdrawn from the family's wizard (§547): said on the step it lands on. */}
+      {familyMode && flashSlot}
 
       {familyMode && !familyCurrent && passSteps && walking ? (
         /* The family's wizard with nobody left to sign (§471): who was signed, and nothing to press. */
@@ -816,10 +824,14 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                   />
                 </>
               )}
-              {/* «… și treci la următoarea» while another person follows (§471); the last one confirms. */}
-              <Button type="submit" variant="contained" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }}>
+              {/*
+                «Semnează și treci la următoarea persoană» only while another person's declaration
+                follows in this sitting (§471); on the last one, and on a single declaration, just
+                «Semnează» (§547; the owner: «altfel nu scrie»).
+              */}
+              <Button type="submit" variant="contained" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }} data-testid="declaration-sign">
                 <DrawIcon aria-hidden="true" sx={glyphSx("medium")} />
-                {familySteps && hasNextFamilyStep(familySteps) ? t("declare.family.nextAction") : t("declare.action")}
+                {t(signActionKey(familySteps))}
               </Button>
               {/*
                 The notice, under the button that hands over the identity document (§323): what
@@ -849,6 +861,35 @@ export default async function DeclarePage({ params, searchParams }: Props) {
               </Button>
               <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
                 {t("declare.family.skipHelp")}
+              </Typography>
+            </Box>
+          )}
+          {/*
+            «Renunț la înscrierea pentru <nume>» (§547, amending §471): a person registered by mistake
+            leaves the family here, on their own step — a quiet link, never the primary button, that
+            asks first naming the person (§384). The server cancels only the step's person, through the
+            allocator, and the page moves on to the next person or to the end.
+          */}
+          {familySteps && familyPosition && registration && (
+            <Box component="form" action={withdrawFamilyPersonAction} sx={{ mt: 2 }} data-testid="family-signing-withdraw">
+              <input type="hidden" name="locale" value={locale} />
+              <input type="hidden" name="token" value={token} />
+              <input type="hidden" name="registrationId" value={registration.id} />
+              <AskFirstButton
+                glyph="withdraw"
+                label={t("declare.family.withdraw", { name: registration.registeredName })}
+                title={t("declare.family.withdrawTitle", { name: registration.registeredName })}
+                body={
+                  // An event with no row in this language names none, rather than «… la  se anulează» (§553).
+                  ownLocale
+                    ? t("declare.family.withdrawBody", { name: registration.registeredName, event: ownLocale.title })
+                    : t("declare.family.withdrawBodyNoEvent", { name: registration.registeredName })
+                }
+                confirmLabel={t("declare.family.withdrawConfirm")}
+                cancelLabel={t("declare.family.withdrawBack")}
+              />
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                {t("declare.family.withdrawHelp")}
               </Typography>
             </Box>
           )}

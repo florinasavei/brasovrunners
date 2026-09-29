@@ -153,7 +153,6 @@ describe("§383 the forecast of automatic emails", () => {
       { at: at(DAY).toISOString(), eventId: a, type: "EVENT_REMINDER", send: "reminder", recipients: 2 },
       { at: at(DAY).toISOString(), eventId: c, type: "COMPLETE_DECLARATION", send: "participation", recipients: 1 },
       { at: at(2 * DAY).toISOString(), eventId: f, type: "REGISTRATION_OPENED", send: "registrationOpened", recipients: 2 },
-      { at: at(3 * DAY).toISOString(), eventId: a, type: "BIB_ASSIGNED", send: "bibs", recipients: 1 },
       { at: at(6 * DAY).toISOString(), eventId: c, type: "COMPLETE_DECLARATION", send: "lastCall", recipients: 1 },
     ]);
   });
@@ -218,8 +217,8 @@ describe("§383 the forecast of automatic emails", () => {
     expect(row.recipients).toBe(1);
     expect(row.testRecipients).toBe(1);
     expect(row.registrationIds).toHaveLength(2);
-    // A test registration is never numbered (§214), so the close sends it nothing.
-    expect((await forecast()).some((candidate) => candidate.send === "bibs")).toBe(false);
+    // No race number is sent on its own since §548: it rides on the confirmation.
+    expect((await forecast()).some((candidate) => candidate.type === "BIB_ASSIGNED")).toBe(false);
   });
 
   it("follows the club's reminder lead: none at all when the club sends none", async () => {
@@ -239,7 +238,7 @@ describe("§383 the forecast of automatic emails", () => {
     const g2 = await registration(g, "g2", "WAITLISTED");
 
     const rows = (await forecast()).filter((row) => row.eventId === g);
-    expect(rows.map((row) => row.send)).toEqual(["participation", "nextInLine", "bibs"]);
+    expect(rows.map((row) => row.send)).toEqual(["participation", "nextInLine"]);
     expect(rows.find((row) => row.send === "nextInLine")?.registrationIds).toEqual([g2]);
     expect(rows.some((row) => row.send === "lastCall")).toBe(false);
 
@@ -354,9 +353,6 @@ describe("§383 the forecast of automatic emails", () => {
         await runRegistrationMaintenance(db, when);
         return participantOnly("WAITLIST_SPOT_OFFER", "");
       }
-      case "bibs":
-        await runRegistrationMaintenance(db, when);
-        return participantOnly("BIB_ASSIGNED", ":bib-settled");
       case "registrationOpened": {
         const { queued: count } = await queueRegistrationOpenedMessages(db, when);
         return { ids: [], count };
@@ -370,7 +366,7 @@ describe("§383 the forecast of automatic emails", () => {
 
   it("matches, row by row, what the job's own code picks at that moment — and nothing a minute before", async () => {
     const rows = await forecast();
-    expect(rows).toHaveLength(6);
+    expect(rows).toHaveLength(5);
     const expected = new Map<ForecastRow, string[]>();
     for (const row of rows) expected.set(row, await labelsOf(row.registrationIds));
     expect(expected.get(rows.find((row) => row.send === "reminder") as ForecastRow)).toEqual(["a1", "a2"]);

@@ -37,15 +37,18 @@ export function usedHere(references: readonly { kind: string; id: string }[], sc
   return references.some((reference) => reference.kind === scope.kind && reference.id === scope.id);
 }
 
-/** A `MediaReference` kind as a chip: the team intro is «Echipa», FAQ and members' pages «Pagini» (§524, §525). */
-export function pictureUseOf(kind: "album" | "page" | "event" | "team" | "teamIntro" | "faq" | "membersPage"): PictureUse {
+/** A reference kind from the pictures page (`MediaReference`) as the picker's chip: the team page's introduction is «Echipa». */
+// «Întrebări frecvente» (§525) and the members' pages (§524) are pages the club writes: «Pagini».
+// A newsletter sent (§550) is no place a picker chooses from: it keeps its pictures, and has no chip.
+export function pictureUseOf(kind: "album" | "page" | "event" | "team" | "teamIntro" | "faq" | "membersPage" | "newsletter"): PictureUse | null {
+  if (kind === "newsletter") return null;
   if (kind === "teamIntro") return "team";
   if (kind === "faq" || kind === "membersPage") return "page";
   return kind;
 }
 
 /** Each use once, in the chips' order. */
-export function pictureUses(kinds: readonly ("album" | "page" | "event" | "team" | "teamIntro" | "faq" | "membersPage")[]): PictureUse[] {
+export function pictureUses(kinds: readonly ("album" | "page" | "event" | "team" | "teamIntro" | "faq" | "membersPage" | "newsletter")[]): PictureUse[] {
   const present = new Set(kinds.map(pictureUseOf));
   return PICTURE_SOURCES.filter((source): source is PictureUse => source !== "all" && present.has(source));
 }

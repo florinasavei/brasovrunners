@@ -92,7 +92,9 @@ test.describe("BR-REQ-060-01 the backoffice refuses an anonymous request", () =>
 test.describe("BR-REQ-051-01 a copywriter writes and may not publish; a volunteer has the desk (§103)", () => {
   test("shows a copywriter the text and no publish control, and says the settings are not theirs", async ({ page }) => {
     await signIn(page, "Dev Copywriter");
-    await page.goto("/ro/admin");
+    // «Toate»: the plain list shows only the dates to come (§555), and the seed dates the Sunday
+    // run last Sunday.
+    await page.goto("/ro/admin?state=ALL");
 
     const event = EVENT_BY_PROJECT[test.info().project.name];
     await page.getByRole("link", { name: event.title }).first().click();
@@ -187,7 +189,8 @@ test.describe("BR-REQ-060-01 an Organizer reads the events and changes none (§5
 
   test("opens the editor read-only: the sentence, and no «Salvează», «Publică» or «Duplică»", async ({ page }) => {
     await signIn(page, "Dev Moderator");
-    await page.goto("/ro/admin");
+    // «Toate» (§555): the Sunday run's date is past, so «Viitoare» does not list it.
+    await page.goto("/ro/admin?state=ALL");
     const event = EVENT_BY_PROJECT[test.info().project.name];
     await page.getByRole("link", { name: event.title }).first().click();
     await expect(page).toHaveURL(/\/admin\/events\//);
@@ -578,6 +581,10 @@ test.describe("BR-REQ-051-01 an Administrator publishes and unpublishes an event
     const event = EVENT_BY_PROJECT[test.info().project.name];
 
     await signIn(page, "Dev Administrator");
+    // Sign-in lands on the plain list, «Viitoare» since §555, which leaves out the Sunday run's
+    // past date: «Toate», and hydrated, as sign-in's own landing was, before the link is pressed.
+    await page.goto("/ro/admin?state=ALL");
+    await hydrated(page);
     await page.getByRole("link", { name: event.title }).first().click();
     // Wait for the navigation before reading the URL: taken too early, this is still the list,
     // and every later `goto` in the test would quietly reload the wrong page.

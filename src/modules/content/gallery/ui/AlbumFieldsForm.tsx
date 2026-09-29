@@ -20,13 +20,8 @@ export type EditableAlbumTranslation = {
 };
 
 /**
- * An album's own fields: when the photos were taken, which event they are from, and a title,
- * address and short description per language. Photos are not here — they come in through the
- * uploader on the album page. One component for the create and the edit form, so the two post
- * exactly the same names (`actions.ts#readFields`).
- *
- * Every box carries what `fields.ts` requires of it and comes back filled after a refused
- * submit (§315).
+ * An album's own fields (photos come through the uploader). One component for create and edit, so
+ * both post the same names (`actions.ts#readFields`); recalled after a refused submit (§315).
  */
 export default async function AlbumFieldsForm({
   takenOn,
@@ -69,20 +64,19 @@ export default async function AlbumFieldsForm({
           <MenuItem value="">{t("gallery.noEvent")}</MenuItem>
           {events.map((event) => (
             <MenuItem key={event.id} value={event.id}>
-              {/* A date left blank (§545) is said, never printed as the provisional day stored for it. */}
+              {/* A blank date (§545) is never printed as its stored provisional day. */}
               {typedStartOrNull(event) ? formatDay(event.startsAt, { locale: uiLocale, timeZone: event.timezone, style: "short" }) : t("editor.dateToBeAnnounced")} · {event.title}
             </MenuItem>
           ))}
         </RecallField>
       </Stack>
 
-      {/* «Copiază și tradu tot: RO → EN» (§464, §482): the album's English title and description from the Romanian. */}
+      {/* §464, §482. */}
       <TranslateAllButton />
 
-      {/* One tab per language, as every other editor has (§259). */}
       <LocaleTabPanels
         idPrefix="locale"
-        // «Tradu cardul: RO → EN» in the tab row too (§514), where the person is looking.
+        // §514.
         translateCard
         panels={routing.locales.map((locale) => {
           const translation = translations.find((row) => row.locale === locale);

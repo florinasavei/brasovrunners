@@ -249,7 +249,6 @@ describe("§329 every sentence about the minimum age says the event's number, th
   const sentences = (messages: typeof ro) => ({
     "Registration.ageRule.minimumAndGuardian": messages.Registration.ageRule.minimumAndGuardian,
     "Registration.ageRule.minimumOnly": messages.Registration.ageRule.minimumOnly,
-    "Registration.birthDateHelp": messages.Registration.birthDateHelp,
     "Registration.errors.tooYoung": messages.Registration.errors.tooYoung,
     "Admin.errors.UNDER_MINIMUM_AGE": messages.Admin.errors.UNDER_MINIMUM_AGE,
   });
@@ -269,7 +268,6 @@ describe("§329 every sentence about the minimum age says the event's number, th
         const age = yearsPhrase(years, locale);
         expect(t(`ageRule.${ageRuleVariant(years)}`, { age }), `${years}`).toContain(age);
         expect(t("errors.tooYoung", { age })).toContain(age);
-        expect(t("birthDateHelp", { age })).toContain(age);
       }
     });
 

@@ -43,10 +43,7 @@ function recalledRows(names: string[], value: (name: string) => string | undefin
   return rows.filter((row) => row !== undefined);
 }
 
-/**
- * A person's links in the editor of «Echipa» (§474): the rows come back as they were typed after a
- * refused submit (§315), keyed on the answer — `LinkRowsEditor`'s pattern for an event (§332).
- */
+/** A person's links in «Echipa»'s editor (§474), recalled after a refused submit (§315) as for events (§332). */
 export default function TeamLinkRowsEditor(props: ComponentProps<typeof TeamLinkRowsEditorIsland>) {
   const recall = useRecall();
   const initial = recall.has && recall.value("links.present") !== undefined ? recalledRows(recall.names(), recall.value) : props.initial;
@@ -54,13 +51,9 @@ export default function TeamLinkRowsEditor(props: ComponentProps<typeof TeamLink
 }
 
 /**
- * Per row: what it is (with the glyph the card shows), the address, and a label in each language
- * side by side — both or neither (§352), the kind's word standing in for none. A client island for
- * the three things a form cannot do by itself — add a row, remove one, move one — and nothing
- * else: every box is an ordinary input named `links[i].<box>`, which `actions.ts#linkRowsOf`
- * gathers by index, so "link 2" in a refusal is the second row on the screen. A row with nothing
- * typed is the spare line and is dropped on save; the hidden `links.present` says the form carried
- * the list at all, so removing every row saves "no links".
+ * Per row: kind, address, and a label in each language (both or neither, §352). The island only
+ * adds, removes and moves rows; every box is a plain input `links[i].<box>`, and the hidden
+ * `links.present` makes removing every row save "no links".
  */
 function TeamLinkRowsEditorIsland({
   initial,
@@ -69,7 +62,7 @@ function TeamLinkRowsEditorIsland({
 }: {
   initial: TeamLinkRowValue[];
   labels: TeamLinkRowsLabels;
-  /** Each kind's word, already translated — the same word the card shows when a label is empty. */
+  /** Each kind's translated word — what the card shows when a label is empty. */
   kindLabels: Record<TeamLinkKind, string>;
 }) {
   const recall = useRecall();
@@ -102,7 +95,7 @@ function TeamLinkRowsEditorIsland({
     );
   };
 
-  // A 44-pixel square for every control a thumb has to hit (BR-REQ-041-01 criterion 6).
+  // 44 px targets (BR-REQ-041-01 criterion 6).
   const square = { minHeight: 44, minWidth: 44 } as const;
 
   return (
@@ -190,7 +183,7 @@ function TeamLinkRowsEditorIsland({
           </Stack>
         );
       })}
-      {/* The list's own ceiling: the button stops at `MAX_TEAM_LINKS` (twelve) rather than letting one more row be typed and refused. */}
+      {/* Stops at `MAX_TEAM_LINKS` rather than offering a row the save would refuse. */}
       <Button
         type="button"
         variant="text"

@@ -11,21 +11,13 @@ import { DomainError } from "@/shared/errors/domain-error";
 import { normalizeTeamText, resolveRichPair, richTextBox, storedTeamDoc } from "./fields";
 
 /**
- * «Echipa» as a page (§459): whether it is on the site at all, and the club's own introduction.
- *
- * One `platform_settings` row (§100's shape), because the page is one thing and not a table of
- * things: `status` is DRAFT until an Administrator publishes it — both languages at once, as an
- * event and a standing page go live (§28) — and the introduction is the club's text, Romanian
- * **and** English or neither (§352). With none, the page reads the platform's sentence from the
- * catalogue. The cards keep their own «Pe site» switch as a second gate: a person is shown only on
- * a published page, and only once an Administrator has shown their card.
- *
- * A row this code cannot read is a DRAFT page with no introduction — the safe answer: nothing is
- * shown that nobody decided to show.
+ * «Echipa» as a page (§459): one `platform_settings` row with its DRAFT/PUBLISHED state (§28) and
+ * the club's introduction, both languages or neither (§352). A card is shown only on a published
+ * page and once its own «Pe site» is on. An unreadable row reads as a DRAFT with no introduction.
  */
 
 export const TEAM_PAGE_SETTING_KEY = "teamPage";
-/** `audit_logs.entity_id` for this setting, one fixed id per key, never reused (§164's rule). */
+/** `audit_logs.entity_id` for this setting, fixed and never reused (§164). */
 export const TEAM_PAGE_SETTING_ENTITY_ID = "00000000-0000-4000-8000-00000000e00c";
 
 /** The introduction's words, counted as the page reads them (`richTextToPlainText`). */
@@ -34,10 +26,8 @@ export const TEAM_INTRO_MAX = 3000;
 export type TeamPageStatus = "DRAFT" | "PUBLISHED";
 
 /**
- * The page's state and its introduction. Since §474 the introduction is written in the rich-text
- * editor and kept as `intro*Json`; `introRo` / `introEn` keep its words, written by every save, so
- * the code serving during a rollout still reads an introduction, and a value saved before the
- * editor still reads as paragraphs.
+ * Since §474 the introduction is `intro*Json`; `introRo` / `introEn` keep its words, written by
+ * every save, for code serving during a rollout and values from before the editor.
  */
 export type TeamPageSettings = {
   status: TeamPageStatus;
@@ -68,7 +58,7 @@ const storedSchema = z.object({
   introEnJson: storedDoc,
 });
 
-/** The plain boxes of §459's form — a caller that posts no document — absent reading as empty. */
+/** §459's plain boxes, for a caller that posts no document; absent reads as empty. */
 const plainIntro = z.string().optional().default("").transform(normalizeTeamText).pipe(z.string().max(TEAM_INTRO_MAX));
 
 const introSchema = z
@@ -78,7 +68,7 @@ const introSchema = z
       ctx,
       { ro: { plain: fields.introRo, body: fields.introRoBody }, en: { plain: fields.introEn, body: fields.introEnBody } },
       { ro: { plain: "introRo", body: "introRoBody" }, en: { plain: "introEn", body: "introEnBody" } },
-      // The page's own column: a table fits there, as on a standing page.
+      // A table fits in the page's own column.
       { max: TEAM_INTRO_MAX, tables: true, what: "the introduction" },
     );
     return { introRo: intro.ro.plain, introEn: intro.en.plain, introRoJson: intro.ro.doc, introEnJson: intro.en.doc };
@@ -93,15 +83,12 @@ export async function readTeamPageSettings<T extends Record<string, unknown>>(db
   return parsed.success ? parsed.data : DEFAULT_TEAM_PAGE;
 }
 
-/** The introduction's two sides as the editor opens them: the stored document, or the plain words as paragraphs. */
+/** The introduction's two sides for the editor: the stored document, or the plain words as paragraphs. */
 export function teamIntroDocs(settings: TeamPageSettings): { ro: RichTextDoc | null; en: RichTextDoc | null } {
   return { ro: storedTeamDoc(settings.introRoJson, settings.introRo), en: storedTeamDoc(settings.introEnJson, settings.introEn) };
 }
 
-/**
- * The introduction in this language — the document, and its words for the page's description —
- * or nulls unless both sides are written (§352, §354).
- */
+/** The introduction in this language, or nulls unless both sides are written (§352, §354). */
 export function teamIntroFor(locale: string, settings: TeamPageSettings): { doc: RichTextDoc | null; text: string | null } {
   const docs = teamIntroDocs(settings);
   if (!docs.ro || !docs.en) return { doc: null, text: null };
@@ -131,8 +118,7 @@ async function writeSettings<T extends Record<string, unknown>>(
       now,
     });
   });
-  // The page, the header's entry and the sitemap read the page's state from the public cache under
-  // `pages` (§333), as they read the cards.
+  // The page's state is read from the public cache under `pages` (§333).
   revalidatePublicContent("pages");
 }
 
@@ -165,10 +151,7 @@ export async function saveTeamPageIntro<T extends Record<string, unknown>>(
   return next;
 }
 
-/**
- * Put the page on the site in both languages, or take it off — the Administrator's, the threshold
- * of every other crossing into public view (§201).
- */
+/** Publish or unpublish the page in both languages — the Administrator's (§201). */
 export async function setTeamPagePublished<T extends Record<string, unknown>>(
   db: Database<T>,
   input: { actor: Actor; published: boolean; now?: Date },

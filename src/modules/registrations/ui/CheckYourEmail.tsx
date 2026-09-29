@@ -47,9 +47,9 @@ type Props = {
   window: { opensDays: number } | null;
   /**
    * After the first form of a would-be family (§536): the screen is then the short one — «Formularul
-   * pentru Ana a ajuns.», «Emailul către ana@… pleacă la 10:15.» and «Mai înscrii pe cineva cu aceeași adresă?» with
-   * its one button (`FamilySittingOffer`) — and nothing else. `atOnce`: the club's window is 0 (§519).
-   * `continueAction` is «Da, încă o persoană», a server action, never a component. `email` is the
+   * pentru Ana a ajuns.», «Emailul către ana@… pleacă la 10:15.» and, quiet after them, «Înscriu încă o
+   * persoană cu această adresă» (`FamilySittingOffer`, §547) — and nothing else. `atOnce`: the club's window is 0 (§519).
+   * `continueAction` is that press, a server action, never a component. `email` is the
    * address the form went to and `windowMinutes` the club's window as the action read it, both from the
    * browser's half (absent on an older half: the club's current window). `leavesAt` is when the first
    * form's email leaves, as the action computed it at submit (null: the request sent it; absent on an
@@ -88,10 +88,11 @@ type Props = {
  * hydration (`GlyphChip.tsx`).
  *
  * **After the first form of a would-be family it is the short screen** (§536; the owner, 2026-09-28:
- * the screen must be clearer; the review's nits F0 and F2): the heading, then exactly three lines and
- * one button — whose form is in, when its email leaves, and «Mai înscrii pe cineva cu aceeași
- * adresă?» with «Da, încă o persoană» — and at most one sentence under the button. No steps and no
- * wait box: the leaving time is said once, in one shape, and nothing contradicts it.
+ * the screen must be clearer; the review's nits F0 and F2): the heading, then two lines — whose form
+ * is in, and when its email leaves, the screen's point — and after them, since §547 one quiet text
+ * press, «Înscriu încă o persoană cu această adresă», with at most one sentence under it (the owner,
+ * 2026-09-28: «pare că încurajăm asta… când e doar o excepție»). No steps and no wait box: the
+ * leaving time is said once, in one shape, and nothing contradicts it.
  */
 export default async function CheckYourEmail({ eventTitle, whenLabel, eventHref, slug, facts, window, offer }: Props) {
   const t = await getTranslations("Registration");
@@ -134,14 +135,14 @@ export default async function CheckYourEmail({ eventTitle, whenLabel, eventHref,
       form was sent and kept in the browser's half, or now when the request itself sent it. Never
       recomputed here (the review of 2026-09-28): a reload after the 13:15 pass would otherwise say
       «pleacă la 13:30» about an email already sent. Once the pass has come, the line says it left and
-      the sentence under «Da» promises no hold. Nothing on this screen has to be pressed for it to leave.
+      the sentence under the press promises no hold. Nothing on this screen has to be pressed for it to leave.
     */
     const now = new Date();
     const leavesAt = offer.leavesAt !== undefined ? offer.leavesAt : await cachedEmailLeavesAt(now);
     const leaves = emailLeavesWords(leavesAt, now, locale, "prose");
     // Under «imediat» too (§540): the redirect from the submit says «pleacă acum», a reload after a minute «a plecat».
     const left = shortScreenEmailLeft({ leavesAt, submittedAt: offer.submittedAt, now });
-    // The hint under «Da» names the club's window (§519): how long the email may wait for the next form.
+    // The hint under the press names the club's window (§519): how long the email may wait for the next form.
     const sittingWindow = minutesPhrase(locale, offer.windowMinutes ?? (await cachedDeadlines()).familySittingMinutes);
     const hint = offerHint({ atOnce: offer.atOnce, leavesAt, now });
     // «până la 13:15» today, «până marți, 29 septembrie, la 10:00» on another day (§452: no «la» before a weekday).
@@ -162,10 +163,10 @@ export default async function CheckYourEmail({ eventTitle, whenLabel, eventHref,
             {leavesLine}
           </Typography>
         </Box>
+        {/* After the main content, quiet (§547): another person on the address is the exception. */}
         <FamilySittingOffer
           words={{
-            question: t("sitting.question"),
-            add: t("sitting.add"),
+            add: t("sitting.addLink"),
             addPending: t("sitting.addPending"),
             hint: t(`sitting.${hintKey}`, { window: sittingWindow, at: "at" in leaves ? leaves.at : "" }),
           }}

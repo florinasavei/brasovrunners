@@ -63,7 +63,7 @@ export function registrationState(event: RegistrationWindowInput, now: Date): Re
   // Nothing opens it but the organizer switching this off; no date is involved, so no clock can.
   // The close still closes it: a window that never opened is over once its closing has passed,
   // so an event that started while "soon" says closed, and its "Anunță-mă" list is dropped.
-  if (event.registrationOpensSoon) return now >= (event.registrationClosesAt ?? event.startsAt) ? "CLOSED" : "NOT_YET_OPEN";
+  if (event.registrationOpensSoon) return now >= registrationClosesOrStarts({ ...event, startsAt: event.startsAt }) ? "CLOSED" : "NOT_YET_OPEN";
 
   // BR-REQ-011-01 criterion 4: absent opening means registration opens when the event is
   // published in this locale. An unpublished translation has no public page at all, so this
@@ -72,35 +72,19 @@ export function registrationState(event: RegistrationWindowInput, now: Date): Re
   if (opensAt && now < opensAt) return "NOT_YET_OPEN";
 
   // BR-REQ-011-01 criterion 3: absent closing means the event start.
-  const closesAt = event.registrationClosesAt ?? event.startsAt;
-  if (now >= closesAt) return "CLOSED";
+  if (now >= registrationClosesOrStarts({ ...event, startsAt: event.startsAt })) return "CLOSED";
 
   return "OPEN";
 }
 
 /**
- * The moment the entry list stops growing — and therefore the moment race numbers can settle
- * (`DECISIONS.md` §214).
- *
- * Deliberately *not* `registrationState(...) !== "OPEN"`. That is false for four other reasons
- * — a window that has not opened yet, a cancelled event, an external or absent registration —
- * and none of them means the list is final. The only question here is whether the closing
- * instant has passed, which is the same expression `registrationState` uses for `CLOSED`,
- * named once so the two cannot drift.
+ * The instant the registration window closes, whatever state it is in now: the stated closing, or
+ * the event's start when none is stated (BR-REQ-011-01 criterion 3). `registrationState` turns
+ * `CLOSED` here and `openRegistrationClosing` names it, both through this one expression; the page
+ * clock (`page-clock.ts`) keeps a static page no longer than this instant, open, «în curând» (§451)
+ * or not yet open alike, since each of them reads differently once it has passed.
  */
-export function registrationHasClosed(
-  event: Pick<RegistrationWindowInput, "registrationClosesAt"> & { startsAt: Date },
-  now: Date,
-): boolean {
-  return now >= registrationClosingInstant(event);
-}
-
-/**
- * The instant `registrationHasClosed` turns true: the close, or the start when there is none —
- * which is also when the race numbers settle and "here is your race number" goes (§214), as the
- * forecast on `/admin/emails` says it (§383).
- */
-export function registrationClosingInstant(event: Pick<RegistrationWindowInput, "registrationClosesAt"> & { startsAt: Date }): Date {
+export function registrationClosesOrStarts(event: Pick<RegistrationWindowInput, "registrationClosesAt"> & { startsAt: Date }): Date {
   return event.registrationClosesAt ?? event.startsAt;
 }
 
@@ -129,5 +113,5 @@ export function upcomingRegistrationOpening(event: RegistrationWindowInput, now:
  */
 export function openRegistrationClosing(event: RegistrationWindowInput, now: Date): Date | null {
   if (registrationState(event, now) !== "OPEN" || event.startsAt === null) return null;
-  return event.registrationClosesAt ?? event.startsAt;
+  return registrationClosesOrStarts({ ...event, startsAt: event.startsAt });
 }

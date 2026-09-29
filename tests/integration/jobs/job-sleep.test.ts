@@ -194,7 +194,7 @@ describe("BR-REQ-090-03 criterion 11 a write path that makes work sooner wakes t
         firstName: "Ana",
         lastName: "Pop",
         birthDate: "1990-05-17",
-        sex: "UNSPECIFIED",
+        sex: "FEMALE",
         nationality: "RO",
         country: "RO",
         city: "Brașov",

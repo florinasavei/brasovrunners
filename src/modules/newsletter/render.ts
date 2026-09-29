@@ -18,7 +18,7 @@ import { env } from "@/shared/config/env";
 import { readNewsletterWords } from "./domain/message";
 import { normalizeTopics } from "./domain/topics";
 import { topicsPhrase } from "./topic-words";
-import { issueNewsletterToken, NEWSLETTER_MANAGE_LINK_DAYS } from "./tokens";
+import { issueNewsletterToken, NEWSLETTER_MANAGE_LINK_DAYS, NEWSLETTER_MANAGE_REQUEST } from "./tokens";
 
 type RendererDb = Parameters<EmailRenderer>[1];
 
@@ -58,7 +58,7 @@ export async function renderNewsletterRow(
   if (row.messageType === "NEW_EVENT_ALERT") {
     const [event] = eventId
       ? await db
-          .select({ editorialStatus: events.editorialStatus, eventStatus: events.eventStatus, startsAt: events.startsAt, dateToBeAnnounced: events.dateToBeAnnounced, timeToBeAnnounced: events.timeToBeAnnounced })
+          .select({ editorialStatus: events.editorialStatus, eventStatus: events.eventStatus, startsAt: events.startsAt, dateToBeAnnounced: events.dateToBeAnnounced, timeToBeAnnounced: events.timeToBeAnnounced, membersOnly: events.membersOnly })
           .from(events)
           .where(eq(events.id, eventId))
           .limit(1)
@@ -70,6 +70,8 @@ export async function renderNewsletterRow(
     // Queued while it had a date, and the date was since held back (§533): the alert would say a date
     // the club withdrew. Withdrawn; the event is announced again once its date is.
     if (event.dateToBeAnnounced || event.timeToBeAnnounced) throw new OutboxMessageWithdrawn("newsletter: the event's start is to be announced");
+    // Queued while it was public, and made the members' alone since (§552): withdrawn, never sent.
+    if (event.membersOnly) throw new OutboxMessageWithdrawn("newsletter: the event is for the club's members alone");
   }
 
   const subscriberId = typeof payload.subscriberId === "string" ? payload.subscriberId : null;
@@ -117,6 +119,8 @@ export async function renderNewsletterRow(
     if (subscriber.confirmedAt !== null) {
       // Already subscribed: nothing to confirm, and the owner of the address changes things there.
       data.newsletterAlready = true;
+      // Asked for from «Vreau să mă dezabonez» (§550): the same link, words that say what was asked.
+      if ((payload as { request?: unknown }).request === NEWSLETTER_MANAGE_REQUEST) data.newsletterManageRequest = true;
       actionUrl = await manageUrl();
     } else {
       // The double opt-in's link, for the club's email-link window (§377), superseding the last one.
@@ -137,8 +141,13 @@ export async function renderNewsletterRow(
     if (!words) throw new Error("newsletter: the send's words cannot be read");
     data.newsletterSubject = words.subject[locale];
     data.newsletterSubjectOther = words.subject[other];
-    data.newsletterBody = words.body[locale];
-    data.newsletterBodyOther = words.body[other];
+    // The editor's document since §550, or the plain text an older send stored — each half its own.
+    const mine = words.body[locale];
+    const theirs = words.body[other];
+    if (typeof mine === "string") data.newsletterBody = mine;
+    else data.newsletterBodyDoc = mine;
+    if (typeof theirs === "string") data.newsletterBodyOther = theirs;
+    else data.newsletterBodyDocOther = theirs;
     data.newsletterManageUrl = await manageUrl();
   } else {
     if (subscriber && subscriber.confirmedAt === null) throw new Error("newsletter: the address never confirmed");

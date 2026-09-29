@@ -1,4 +1,4 @@
-import { type AnyColumn, and, asc, desc, eq, gte, inArray, isNull, lt, type SQL, sql } from "drizzle-orm";
+import { type AnyColumn, and, asc, desc, eq, gte, inArray, isNull, lt, or, type SQL, sql } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import type { PgliteDatabase } from "drizzle-orm/pglite";
 import { eventTranslations, events } from "@/db/schema/events";
@@ -96,6 +96,9 @@ const PUBLIC_COLUMNS = {
   raceStartsAt: events.raceStartsAt,
   dateToBeAnnounced: events.dateToBeAnnounced,
   timeToBeAnnounced: events.timeToBeAnnounced,
+  // «Doar pentru membrii BVR» (§552): always false on a public read — `publishedAnyDateIn` keeps the
+  // members' events out — and true only on the members' own reads, whose card and page say so.
+  membersOnly: events.membersOnly,
   timezone: events.timezone,
   // The meeting point on a map, as the organizer pasted it: stored, never assembled, because
   // AGENTS.md §8 forbids a provider hostname under src/. Null while the place is to be
@@ -135,6 +138,8 @@ const PUBLIC_COLUMNS = {
   registrationOpensAt: events.registrationOpensAt,
   registrationOpensSoon: events.registrationOpensSoon,
   registrationClosesAt: events.registrationClosesAt,
+  // «Kit de participare» → «Tricou» (§554): whether the registration form asks the T-shirt size.
+  kitShirt: events.kitShirt,
   confirmationOpensDaysBefore: events.confirmationOpensDaysBefore,
   confirmationDeadlineDaysBefore: events.confirmationDeadlineDaysBefore,
   // Who may enter (§329): the page says it, the form's picker is bounded by it, and the
@@ -200,6 +205,23 @@ const PUBLIC_COLUMNS = {
  * in that locale and never a fallback to the other language.
  */
 const publishedAnyDateIn = (locale: Locale) =>
+  and(publishedForMembersIn(locale), NOT_MEMBERS_ONLY);
+
+/**
+ * **Not an event for the members alone (§552).** «Doar pentru membrii BVR» withheld in SQL, the way
+ * the place (§328) and the start (§533) are: in the condition every public read shares, so the
+ * listing, the calendar, the feed, the `.ics` list, the sitemap, the share pictures, the event page's
+ * public read and whatever list is built on them next cannot meet such a row. A members' event is
+ * read only through `findPublishedEventBySlug(…, "members")` and `listMembersOnlyEvents`, which the
+ * pages call after asking for a members' session — never through the public cache.
+ */
+const NOT_MEMBERS_ONLY = eq(events.membersOnly, false);
+
+/**
+ * Published in this locale, a members' event included (§552) — only for a read made after the
+ * session was asked: the members' zone and the event's own page, form and `.ics` for a member.
+ */
+const publishedForMembersIn = (locale: Locale) =>
   and(eq(events.editorialStatus, "PUBLISHED"), eq(eventTranslations.locale, locale));
 
 /**
@@ -271,7 +293,8 @@ export async function findPublishedTranslations(db: Database, eventId: string) {
     .select({ locale: eventTranslations.locale, slug: eventTranslations.slug })
     .from(eventTranslations)
     .innerJoin(events, eq(events.id, eventTranslations.eventId))
-    .where(and(eq(eventTranslations.eventId, eventId), eq(events.editorialStatus, "PUBLISHED")));
+    // No alternates for a members' event (§552): its page carries no canonical and no hreflang (§342).
+    .where(and(eq(eventTranslations.eventId, eventId), eq(events.editorialStatus, "PUBLISHED"), NOT_MEMBERS_ONLY));
 }
 
 /**
@@ -292,7 +315,7 @@ export async function findPublishedTranslationsForEvents(
     .select({ eventId: eventTranslations.eventId, locale: eventTranslations.locale, slug: eventTranslations.slug })
     .from(eventTranslations)
     .innerJoin(events, eq(events.id, eventTranslations.eventId))
-    .where(and(inArray(eventTranslations.eventId, eventIds as string[]), eq(events.editorialStatus, "PUBLISHED")));
+    .where(and(inArray(eventTranslations.eventId, eventIds as string[]), eq(events.editorialStatus, "PUBLISHED"), NOT_MEMBERS_ONLY));
 }
 
 /**
@@ -612,15 +635,50 @@ export async function findPublishedEventBySlug<T extends Record<string, unknown>
   db: GenericDatabase<T>,
   locale: Locale,
   slug: string,
+  /**
+   * Who is reading (§552): `public` — every caller by default, the public cache included — never
+   * meets a members' event; `members` meets it too, and is passed only by a caller that asked for a
+   * members' session first (`events/members-only.ts`) or that is past the door already: the email
+   * renderer, writing to somebody registered for it.
+   */
+  audience: EventAudience = "public",
 ) {
   const [row] = await db
     .select(UNDATED_PUBLIC_COLUMNS)
     .from(events)
     .innerJoin(eventTranslations, eq(eventTranslations.eventId, events.id))
-    .where(and(publishedAnyDateIn(locale), eq(eventTranslations.slug, slug)))
+    .where(and(audience === "members" ? publishedForMembersIn(locale) : publishedAnyDateIn(locale), eq(eventTranslations.slug, slug)))
     .limit(1);
 
   return row;
+}
+
+/** Who a published event is read for (§552): anybody, or a member of the club and the backoffice. */
+export type EventAudience = "public" | "members";
+
+/**
+ * The club's events for its members alone (§552), for the members' zone: published in this language,
+ * «Doar pentru membrii BVR», going ahead — the dated ones soonest first while they have not ended,
+ * then those whose date is to be announced (§533), which never pass. Read with the undated columns,
+ * so a start held back is null here as on every other read. Called only after the zone asked for the
+ * account (`canOpenMembersZone`), and never through the public cache.
+ */
+export async function listMembersOnlyEvents(db: Database, locale: Locale, now: Date) {
+  return db
+    .select(UNDATED_PUBLIC_COLUMNS)
+    .from(events)
+    .innerJoin(eventTranslations, eq(eventTranslations.eventId, events.id))
+    .where(
+      and(
+        publishedForMembersIn(locale),
+        eq(events.membersOnly, true),
+        or(
+          and(sql`NOT ${startHeldBack}`, gte(eventEndsAt, now)),
+          and(startHeldBack, eq(events.eventStatus, "SCHEDULED")),
+        ),
+      ),
+    )
+    .orderBy(sql`${startHeldBack} ASC`, asc(events.startsAt), asc(events.id));
 }
 
 /**

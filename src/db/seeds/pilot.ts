@@ -8,25 +8,13 @@ import { seedSampleLegalDocuments } from "./sample-legal-documents";
 import { seedSampleTeam } from "./sample-team";
 
 /**
- * Pilot seed: the club's events, published in both languages.
+ * Pilot seed: sample events, published in both languages. A published locale must be complete
+ * (BR-REQ-040-02), so the English row fills every field the Romanian one does.
  *
- * Every event carries a complete Romanian and English translation, both PUBLISHED. That is a
- * change from the original pilot plan, where English stayed Draft so `/en` returned 404. The
- * rule behind that 404 — BR-REQ-040-02, an unpublished locale is a 404 and never a fallback to
- * the other language — is unchanged and still enforced; these rows simply are published now.
- * `tests/integration/events/publication.test.ts` covers the rule with its own data.
+ * PLACEHOLDER CONTENT: the anniversary cross has an invented date, distance and meeting point.
  *
- * An English translation that is published must be complete. A page that shows an English
- * title over Romanian details is exactly the half-translated state BR-REQ-040-02 exists to
- * prevent, so every field the Romanian row fills, the English row fills too.
- *
- * PLACEHOLDER CONTENT. The anniversary cross below is a stand-in with an invented date,
- * distance and meeting point, so that the page it drives can be built and reviewed. Replace it
- * with the club's real race before this reaches anyone — an invented date for a real event is
- * worse than no page at all.
- *
- * Safe to re-run: it clears both tables first. It refuses to touch production, and it refuses
- * to clear an environment somebody has registered on — see below.
+ * Re-runnable: it clears both tables first. It refuses production and any environment with
+ * registrations.
  */
 async function seed() {
   const appEnv = process.env.APP_ENV ?? "local";
@@ -35,28 +23,19 @@ async function seed() {
   }
 
   /**
-   * The sample legal documents first, because an event that takes registrations references the
-   * declaration version a participant signs, and that row has to exist before the event does.
-   *
-   * DECISIONS.md §29 replaces §27: sample text everywhere but production, so QA can run the
-   * participant journey at all. `seedSampleLegalDocuments` refuses production itself; this call
-   * site never reaches it there either, because the whole seed refused above.
+   * Legal documents first: a registering event references the declaration version. Sample text
+   * everywhere but production (§29); `seedSampleLegalDocuments` refuses production itself too.
    */
   await seedSampleLegalDocuments();
 
   /*
-    «Echipa»'s two hidden placeholder cards (§459), only into an empty table: the screen and the
-    page can be walked on QA with nobody's real name. Production never reaches this line.
+    «Echipa»'s two hidden placeholder cards (§459), only into an empty table.
   */
   await seedSampleTeam();
 
   /**
-   * Clearing the events is destructive, and once an environment has registrations it is
-   * destructive to somebody.
-   *
-   * `registrations` references `events`, so the delete below would fail on the foreign key
-   * anyway — but it would fail with a constraint name, halfway through, after the legal
-   * documents were already touched. Ask first, and say what to do instead.
+   * Registrations reference events, so the delete would fail halfway on the foreign key anyway;
+   * refuse up front with a message that says what to do instead.
    */
   const [registered] = await getDb()
     .select({ count: sql<number>`count(*)::int` })
@@ -72,27 +51,18 @@ async function seed() {
 
   const rows = [
     {
-      // The race the site exists for. Every detail here is a placeholder, and the excerpt says
-      // so in both languages: this row is now the featured event, so it is the first thing a
-      // visitor reads, and an invented date presented as real is worse than no page at all.
+      // Every detail is a placeholder, and the excerpt says so in both languages: this is the
+      // featured event, the first thing a visitor reads.
       type: "RACE" as const,
       surface: "MIXED" as const,
-      // Two times, as a race has: gather at nine, gun at ten. `starts_at` is when the event
-      // begins and stays what the ordering and the listing read.
+      // Gather at nine, gun at ten; `starts_at` is what ordering and the listing read.
       startsAt: atBrasov(nextWeekday(0, 21), 9),
       raceStartsAt: atBrasov(nextWeekday(0, 21), 10),
-      // The one event the landing page leads with. The database refuses a second.
+      // The database refuses a second featured event.
       featured: true,
       distanceMeters: 10000,
       elevationGainMeters: 180,
-      /**
-       * One value for both languages (`DECISIONS.md` §36).
-       *
-       * The place, the difficulty and the cost are the same fact whichever language the page is
-       * read in, so they are the club's own words once rather than a translation twice. The
-       * English page shows them exactly as typed, which is the trade the owner chose over
-       * entering every event's meeting point twice.
-       */
+      /** One value for both languages (§36). */
       locationName: "Parcul Tractorul, zona de start",
       locationAddress: "Strada Nicolae Labiș, Brașov",
       difficultyLevel: 5,
@@ -116,8 +86,7 @@ async function seed() {
       startsAt: atBrasov(-((todayInBrasov().getUTCDay() + 7) % 7 || 7), 7),
       distanceMeters: 8000,
       locationName: "Parcul Tractorul, intrarea principală",
-      // The two ends of the club's scale of fifteen (§526), so a seeded listing shows the gauge at
-      // both: «Ușor 1» here, «Foarte greu 3» on the interval session.
+      // The two ends of the scale of fifteen (§526): «Ușor 1» here, «Foarte greu 3» on the intervals.
       difficultyLevel: 1,
       costType: "FREE" as const,
       ro: {
@@ -138,12 +107,11 @@ async function seed() {
       distanceMeters: 14000,
       elevationGainMeters: 600,
       locationName: "Stația de telecabină Tâmpa",
-      // «Coordonate» typed (§416): the cable car's lower station, so a seeded trail run reads the
-      // weather at its own trailhead and says «Pentru locul evenimentului». No map link carries a
-      // pin here: a map link is a hostname, which no file under `src/` may hold (AGENTS.md §8).
+      // «Coordonate» typed (§416), so the weather reads the trailhead. No map link: that would
+      // be a hostname under `src/` (AGENTS.md §8).
       latitude: 45.6384,
       longitude: 25.5921,
-      // «Mediu 1» — the owner's own example of it: the run up Tâmpa (§526).
+      // «Mediu 1»: the run up Tâmpa (§526).
       difficultyLevel: 4,
       costType: "FREE" as const,
       ro: {
@@ -158,8 +126,7 @@ async function seed() {
       },
     },
     {
-      // An interval session is a group run on the track; "interval" is the title's job now
-      // (`DECISIONS.md` §61).
+      // An interval session is a group run; "interval" is the title's job (§61).
       type: "GROUP_RUN" as const,
       surface: "ASPHALT" as const,
       startsAt: atBrasov(nextWeekday(3, 1), 18, 30),
@@ -190,31 +157,19 @@ async function seed() {
         startsAt: row.startsAt,
         raceStartsAt: "raceStartsAt" in row ? row.raceStartsAt : undefined,
         featured: "featured" in row ? row.featured : false,
-        // No map link or route link is seeded, and that is the rule working rather than an
-        // omission: AGENTS.md §8 forbids a hostname literal anywhere under `src/`, seeds
-        // included. An organizer pastes both in the backoffice.
+        // No map or route link: AGENTS.md §8 forbids a hostname literal under `src/`.
         distanceMeters: row.distanceMeters,
         elevationGainMeters: row.elevationGainMeters,
-        // The same event in either language (`DECISIONS.md` §36).
         locationName: row.locationName,
         locationAddress: "locationAddress" in row ? row.locationAddress : undefined,
         latitude: "latitude" in row ? row.latitude : undefined,
         longitude: "longitude" in row ? row.longitude : undefined,
-        // The level on the club's scale of fifteen (§526), and the old column's best-effort word beside it.
+        // The level on the scale of fifteen (§526), plus the old column's word.
         ...storedDifficulty(row.difficultyLevel),
         costType: row.costType,
-        /**
-         * NONE, deliberately, for every seeded event.
-         *
-         * The registration block — the mode, the capacity, the window and the declaration
-         * version — is configured by an organizer through the backoffice, not here.
-         * `DECISIONS.md` §28: this file stopped being how an event is configured the moment the
-         * CRUD covered every column, and an event that arrived from a seed already taking
-         * entries would be one more thing nobody could change without a developer.
-         */
+        // NONE for every seeded event: registration is configured in the backoffice (§28).
         registrationMode: "NONE",
-        // Publication is one state for the whole event now (`DECISIONS.md` §28): both languages
-        // go live together, and the date lives here rather than on each translation.
+        // Publication is one state for both languages (§28).
         editorialStatus: "PUBLISHED" as const,
         publishedAt,
       })

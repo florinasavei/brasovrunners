@@ -37,6 +37,13 @@ import { env } from "@/shared/config/env";
  * wake the database, and the rows here change only when an event, a page, an album or a legal
  * text is saved — each of which expires them. Each cached read carries its rows' alternates
  * already grouped, one query per kind for the whole list (`public-cache/reads.ts`).
+ *
+ * Still made per request, and the one public response that stays so on purpose (§549): at the app's
+ * root it has no parameter to defer, so a static sitemap would be prerendered by `next build` — which
+ * has no database in CI and files a build-time answer under no cache tag, so no save could expire
+ * it. Its shared-cache lifetime is `next.config.ts`'s `headers()` instead (an hour, then served once
+ * more while it is made again): a crawler asks for it a few times a day, and a URL added in that hour
+ * is found by the next crawl as it always was.
  */
 export const dynamic = "force-dynamic";
 

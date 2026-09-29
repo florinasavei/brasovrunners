@@ -5,27 +5,10 @@
  * Usage: node scripts/db-migrate.mjs <local|qa|production> [--yes]
  *        yarn db:migrate:env qa
  *
- * Why this exists rather than `yarn db:migrate` with an environment variable pasted in front of
- * it: nothing applies migrations to a deployed database. AGENTS.md §7.6 forbids migrating from a
- * build or from application startup — a destructive migration must never run because a page was
- * requested — so the step is a deliberate one, and a deliberate step that lives only in
- * somebody's shell history is a step that gets skipped. It was, once, and the QA landing page
- * returned 500 until somebody noticed (`DECISIONS.md` §31).
- *
- * What it adds over the raw drizzle-kit command:
- *
- *   - the target environment is an argument, so the connection string cannot be the one that
- *     happened to be exported in this shell;
- *   - it prints which database it is about to touch, credentials masked, and exactly which
- *     migrations are pending, before it applies anything;
- *   - production needs `--yes`, so the gated step §7.6 asks for is the default rather than a
- *     convention;
- *   - it exits non-zero on failure, which is what lets the workflow that calls it block a
- *     release.
- *
- * It does not read `drizzle.config.ts`, on purpose: that file loads `.env.local`, and a
- * migration tool whose target depends on which dotenv file happens to be present is exactly the
- * accident this is preventing.
+ * Migrating is never done by a build or at startup (AGENTS.md §7.6, `DECISIONS.md` §31), so it is
+ * this explicit step: the target is an argument, the database and pending migrations are printed
+ * first, production needs `--yes`, and a failure exits non-zero to block the release. It does not
+ * read `drizzle.config.ts`, which loads `.env.local` and would make the target depend on it.
  */
 
 import { readFile } from "node:fs/promises";
@@ -54,11 +37,7 @@ function describe(url) {
   }
 }
 
-/**
- * One environment, one variable. `local` alone falls back to `DATABASE_URL`, because that is
- * what every developer's `.env.local` already holds and asking them to duplicate it would be
- * the kind of ceremony people route around.
- */
+/** `DATABASE_URL_<ENV>`; `local` alone falls back to `DATABASE_URL`, which `.env.local` holds. */
 function resolveUrl(environment) {
   const named = process.env[`DATABASE_URL_${environment.toUpperCase()}`];
   if (named) return named;
@@ -77,11 +56,8 @@ async function readJournal() {
 }
 
 /**
- * What has been applied, from Drizzle's own bookkeeping table.
- *
- * `created_at` there is the `when` of the journal entry that produced the row, so the newest
- * one identifies the applied head exactly. A database nobody has migrated has no table at all,
- * which is a state to report rather than an error.
+ * The applied head's `when` (Drizzle's `created_at` is the journal entry's `when`); null for a
+ * database never migrated.
  */
 async function readApplied(db) {
   const present = await db.execute(
@@ -132,8 +108,7 @@ async function main() {
     console.log(`\n  ${pending.length} migration(s) to apply:`);
     for (const entry of pending) console.log(`    - ${entry.tag}`);
 
-    // Drizzle's migrator is what runs the SQL: same code path as `yarn db:migrate` and the
-    // in-process test database, so a migration cannot pass here and fail there.
+    // The same migrator as `yarn db:migrate` and the test database.
     console.log("");
     await migrate(db, { migrationsFolder: MIGRATIONS_FOLDER });
 
@@ -147,8 +122,7 @@ async function main() {
 }
 
 main().catch((error) => {
-  // Non-zero, loudly: "failed migration blocks deployment" (§7.6) is only true if the caller
-  // can tell.
+  // Non-zero, so the caller can block the deployment (§7.6).
   console.error("\n  Migration failed:", error instanceof Error ? error.message : error, "\n");
   process.exit(1);
 });

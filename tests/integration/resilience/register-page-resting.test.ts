@@ -76,8 +76,8 @@ vi.mock("@/modules/events/repository", () => ({
     return EVENT;
   },
 }));
-vi.mock("@/modules/diagnostics/neon-budget", () => ({
-  readNeonBudget: async () => ({ level: "red", budget: { spent: false }, meter: null }),
+vi.mock("@/modules/diagnostics/budget-level", () => ({
+  lastKnownBudget: () => ({ level: "red", spent: false, periodEnd: null, at: 0 }),
   peekNeonBudgetLevel: () => "unknown",
 }));
 vi.mock("@/modules/registrations/bot-check", () => ({

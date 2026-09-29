@@ -1,13 +1,8 @@
 /**
  * How a batch merge resolves the conflicts every batch has (§535) — the pure half of
- * `yarn batch:merge` (`scripts/merge-branches.mjs`), kept apart so the rules are testable.
- *
- * Sibling branches cut from the same `qa` collide in the same few files on every batch: the
- * migrations' journal (each appended an entry), the two message catalogues (each added keys), and
- * the tests (each appended a case to the same file). These resolvers lived in the dispatcher's
- * scratch folder on one PC; they are here now so a landing can run anywhere — on GitHub Actions
- * started from a phone included. Anything outside this list is not resolved by a rule: the merge
- * stops and names the files, for a person or a merge agent.
+ * `yarn batch:merge` (`scripts/merge-branches.mjs`), kept apart so the rules are testable. Only the
+ * migrations' journal, the message catalogues and test files are resolved by rule; anything else
+ * stops the merge for a person.
  */
 
 /** The four kinds of path a batch merge resolves by rule, or null for "stop and ask". */
@@ -19,17 +14,15 @@ export function conflictKind(path) {
   return null;
 }
 
-/** Whether the paths a merge changed include the dependencies — `package.json` or `yarn.lock` at the root — so the install must run again. */
+/** Whether a merge changed the root `package.json` or `yarn.lock`, so the install must run again. */
 export function dependenciesChanged(paths) {
   return paths.some((p) => ["package.json", "yarn.lock"].includes(String(p).replace(/\\/g, "/").trim()));
 }
 
 /**
- * The migrations' journal after a merge: every entry either side (or the base) knew, restricted to
- * the migration files present, in file-number order, `idx` from 0, and each `when` strictly after
- * the one before — the migrator applies only entries newer than the last one it applied, so an
- * entry that sorts back in time would be skipped on a deployed database. A file with no entry on any
- * side is reported, never invented; an entry whose file is gone is dropped and reported.
+ * The migrations' journal after a merge: every known entry whose file is present, in file order,
+ * each `when` strictly after the one before — the migrator skips an entry that sorts back in time.
+ * A file with no entry is reported, never invented; an entry without a file is dropped and reported.
  *
  * @param {Array<{ version?: string, dialect?: string, entries?: Array<{ idx: number, version?: string, when: number, tag: string, breakpoints?: boolean }> } | null>} sides  ours first; null for a side that has no journal
  * @param {string[]} tags  the migration files present, without `.sql`
@@ -62,12 +55,8 @@ const isObject = (v) => v !== null && typeof v === "object" && !Array.isArray(v)
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
 /**
- * A three-way merge of two JSON documents (a message catalogue): a key only one side changed takes
- * that side; keys either side added are kept; a key one side deleted and the other left alone is
- * deleted; objects both sides changed merge key by key; a leaf or a list both sides changed takes
- * THEIRS — the branch being merged in, which is the newer intent — and is reported.
- *
- * Returns { merged, conflicts: string[] } — the dotted paths where theirs won.
+ * A three-way merge of two JSON documents (a message catalogue), key by key; a leaf or list both
+ * sides changed takes THEIRS (the newer intent) and its dotted path is reported in `conflicts`.
  */
 export function mergeJson3(base, ours, theirs) {
   const conflicts = [];
@@ -96,13 +85,12 @@ export function mergeJson3(base, ours, theirs) {
 
 const moduleOf = (line) => line.match(/from\s+["']([^"']+)["']/)?.[1] ?? null;
 
-/** A one-line named import, `import [type] { a, b as c } from "m";`, as its parts; null for any other line. */
+/** A one-line named import, `import [type] { a, b as c } from "m";`. */
 const NAMED_IMPORT = /^(\s*import\s+(?:type\s+)?)\{([^{}]*)\}(\s*from\s+["'][^"']+["'];?\s*)$/;
 
 /**
- * Two imports of the same module as one: every specifier either side names, ours first in our
- * order, then theirs that are new. Null when either line is not a one-line named import or they
- * differ in `import type` — the caller then keeps both lines rather than guess.
+ * Two imports of one module as one, ours first. Null when either is not a one-line named import or
+ * they differ in `import type`; the caller then keeps both.
  */
 export function mergeImportLines(ours, theirs) {
   const o = ours.match(NAMED_IMPORT);
@@ -115,13 +103,9 @@ export function mergeImportLines(ours, theirs) {
 }
 
 /**
- * Every conflict block of a text file resolved as the union: our lines, then theirs that are not
- * already there — an import from a module both sides import becomes one import with both sides'
- * specifiers (`mergeImportLines`); two imports of one module it cannot read as one-line named
- * imports are both kept, for the typecheck to judge. For a test file, where both sides appended a
- * case, that is what a person would do. A line both sides changed differently is kept in both
- * versions: CI's typecheck and the tests judge it, and `yarn batch:merge` runs the typecheck
- * before it says done. Throws if a marker would remain. Returns { text, blocks }.
+ * Every conflict block resolved as the union: our lines, then theirs not already there, imports of
+ * one module merged. A line both sides changed is kept twice for the typecheck to judge. Throws if a
+ * marker would remain.
  */
 export function unionConflicts(text) {
   const eol = text.includes("\r\n") ? "\r\n" : "\n";
@@ -161,12 +145,8 @@ export function unionConflicts(text) {
 }
 
 /**
- * A JSON text's duplicate keys — which `JSON.parse` silently collapses to the last — as dotted
- * paths, and the text rewritten keeping the last of each (two-space indent, the text's own line
- * ending). Git's line merge can leave a catalogue with one key twice when both sides added it in
- * different places, and a duplicate is a translation that silently disappears.
- *
- * Returns { duplicates: string[], text } — `text` is null when there is nothing to fix.
+ * A JSON text's duplicate keys (a line merge can leave one twice; `JSON.parse` silently keeps the
+ * last) as dotted paths, and the text rewritten keeping the last — null when there is none.
  */
 export function dedupeJsonKeys(raw) {
   const s = raw;
@@ -236,10 +216,8 @@ export function dedupeJsonKeys(raw) {
 }
 
 /**
- * What differs from production in the journal: every migration already shipped (production's
- * journal) must be in this tree with the same `idx` and `when`, and every new one must sort after
- * the last shipped — drizzle applies by `when`, so a renumbered or back-dated entry is skipped
- * on production without an error. Returns the problems as sentences; empty is good.
+ * Every shipped migration must keep its `idx` and `when`, and every new one sort after the last
+ * shipped: drizzle applies by `when`, so a back-dated entry is silently skipped on production.
  */
 export function shippedJournalProblems(mine, shipped) {
   const problems = [];
@@ -262,9 +240,8 @@ export function shippedJournalProblems(mine, shipped) {
 export const ZERO_ID = "00000000-0000-0000-0000-000000000000";
 
 /**
- * The snapshots' `prevId` re-linked in journal order (what `tests/unit/db/migration-chain.test.ts`
- * holds): siblings that each generated on the same parent all name that parent. Mutates the
- * snapshots in place and returns the indexes it changed.
+ * The snapshots' `prevId` re-linked in journal order (siblings generated on one parent all name
+ * it), in place; returns the indexes changed.
  *
  * @param {Array<{ id: string, prevId: string }>} snapshots  in journal order
  */

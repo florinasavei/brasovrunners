@@ -17,7 +17,7 @@ const cacheState = vi.hoisted(() => ({
 }));
 
 const budget = vi.hoisted(() => ({ level: "unknown" as "unknown" | "green" | "amber" | "red" }));
-vi.mock("@/modules/diagnostics/neon-budget", () => ({ peekNeonBudgetLevel: () => budget.level }));
+vi.mock("@/modules/diagnostics/budget-level", () => ({ peekNeonBudgetLevel: () => budget.level, lastKnownBudget: () => null }));
 
 vi.mock("next/cache", () => ({
   unstable_cache: vi.fn(
