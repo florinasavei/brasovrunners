@@ -138,9 +138,9 @@ test.describe("BR-REQ-080-02 the Mailgun plan on «Setări» → «Emailuri»", 
     await openFold(main.getByTestId("contact-recipients"));
     await expect(main.getByRole("heading", { name: "Cine primește mesajele de contact" })).toBeVisible();
     await expect(main.getByText("Cine primește mesajele de contact stabilește Administratorul", { exact: false })).toBeVisible();
-    await expect(main.getByText(/Copie ascunsă:|Nu le primește nimeni/)).toBeVisible();
-    await expect(main.getByLabel("Către (adrese despărțite prin virgulă)")).toHaveCount(0);
-    await expect(main.getByLabel("Copie ascunsă – Bcc (adrese despărțite prin virgulă)")).toHaveCount(0);
+    await expect(main.getByText(/\. BCC: |Nu le primește nimeni/)).toBeVisible();
+    await expect(main.getByLabel("Către", { exact: true })).toHaveCount(0);
+    await expect(main.getByLabel("BCC", { exact: true })).toHaveCount(0);
     await expect(main.getByLabel("Copie ascunsă la emailurile către participanți (Bcc)")).toHaveCount(0);
   });
 
@@ -254,11 +254,11 @@ test.describe("BR-REQ-070-04 who receives the contact messages", () => {
     await expect(contacts.locator(":scope > summary")).toContainText("Acum ajung la: ");
     await openFold(contacts);
 
-    await main.getByLabel("Către (adrese despărțite prin virgulă)").fill("club@example.com");
-    await main.getByLabel("Copie – Cc (adrese despărțite prin virgulă)").fill("ioana@example.org");
+    await main.getByLabel("Către", { exact: true }).fill("club@example.com");
+    await main.getByLabel("CC", { exact: true }).fill("ioana@example.org");
     // The hidden copy (2026-09-22), with the club's own address typed again: an address in
     // "Către" is not also Bcc'd, so only the archive mailbox is kept from this box.
-    await main.getByLabel("Copie ascunsă – Bcc (adrese despărțite prin virgulă)").fill("Club@example.com, arhiva@example.org");
+    await main.getByLabel("BCC", { exact: true }).fill("Club@example.com, arhiva@example.org");
     await main.getByRole("button", { name: "Salvează destinatarii" }).click();
     await confirmDialog(page);
 
@@ -266,36 +266,39 @@ test.describe("BR-REQ-070-04 who receives the contact messages", () => {
     // Its own save opens it (§336), and the closed summary would now say the new address.
     await expect(contacts).toHaveAttribute("open", "");
     await expect(contacts.locator(":scope > summary")).toContainText("Acum ajung la: club@example.com");
-    await expect(main.getByText(/Acum ajung la: club@example\.com\. Copie: ioana@example\.org\. Copie ascunsă: arhiva@example\.org/)).toBeVisible();
+    // Since §NNN the summary names the copies too, and one sentence says what CC and BCC do.
+    await expect(contacts.locator(":scope > summary")).toContainText("CC: ioana@example.org · BCC: arhiva@example.org");
+    await expect(main.getByTestId("contact-copies-help")).toHaveText("CC: adresele apar în email; BCC: primesc o copie fără să apară.");
+    await expect(main.getByText(/Acum ajung la: club@example\.com\. CC: ioana@example\.org\. BCC: arhiva@example\.org/)).toBeVisible();
     // What was saved is what the boxes show on the way back — the whole point of a setting.
-    await expect(main.getByLabel("Către (adrese despărțite prin virgulă)")).toHaveValue("club@example.com");
-    await expect(main.getByLabel("Copie – Cc (adrese despărțite prin virgulă)")).toHaveValue("ioana@example.org");
-    await expect(main.getByLabel("Copie ascunsă – Bcc (adrese despărțite prin virgulă)")).toHaveValue("arhiva@example.org");
+    await expect(main.getByLabel("Către", { exact: true })).toHaveValue("club@example.com");
+    await expect(main.getByLabel("CC", { exact: true })).toHaveValue("ioana@example.org");
+    await expect(main.getByLabel("BCC", { exact: true })).toHaveValue("arhiva@example.org");
 
     // An address that is not one is refused and nothing of it is saved — but what was typed stays
     // in its box to be corrected, and the refusal is said inside the form it is about (§315).
-    await main.getByLabel("Către (adrese despărțite prin virgulă)").fill("nope");
+    await main.getByLabel("Către", { exact: true }).fill("nope");
     await main.getByRole("button", { name: "Salvează destinatarii" }).click();
     await confirmDialog(page);
     await expect(main.getByTestId("contact-recipients-form").getByTestId("form-refusal")).toBeVisible();
     // The fold the Administrator opened to press is still open: a kept form's refusal re-renders
     // nothing around it (§336, §315).
     await expect(contacts).toHaveAttribute("open", "");
-    await expect(main.getByLabel("Către (adrese despărțite prin virgulă)")).toHaveValue("nope");
-    await expect(main.getByLabel("Copie – Cc (adrese despărțite prin virgulă)")).toHaveValue("ioana@example.org");
+    await expect(main.getByLabel("Către", { exact: true })).toHaveValue("nope");
+    await expect(main.getByLabel("CC", { exact: true })).toHaveValue("ioana@example.org");
     await hydrated(page);
-    await expect(main.getByText(/Acum ajung la: club@example\.com\. Copie:/)).toBeVisible();
+    await expect(main.getByText(/Acum ajung la: club@example\.com\. CC:/)).toBeVisible();
 
     // And back to nobody in the app, which hands the question to `CONTACT_FORM_TO`: this
     // deployment sets none, so the page says so — a machine that sets one reads the other
     // half of the sentence, and both are the same answer to "the boxes are empty now".
-    await main.getByLabel("Către (adrese despărțite prin virgulă)").fill("");
-    await main.getByLabel("Copie – Cc (adrese despărțite prin virgulă)").fill("");
-    await main.getByLabel("Copie ascunsă – Bcc (adrese despărțite prin virgulă)").fill("");
+    await main.getByLabel("Către", { exact: true }).fill("");
+    await main.getByLabel("CC", { exact: true }).fill("");
+    await main.getByLabel("BCC", { exact: true }).fill("");
     await main.getByRole("button", { name: "Salvează destinatarii" }).click();
     await confirmDialog(page);
-    await expect(main.getByText(/Nu le primește nimeni|din variabila CONTACT_FORM_TO/)).toBeVisible();
-    await expect(main.getByLabel("Copie ascunsă – Bcc (adrese despărțite prin virgulă)")).toHaveValue("");
+    await expect(main.getByText(/Nu le primește nimeni|din CONTACT_FORM_TO de pe server/)).toBeVisible();
+    await expect(main.getByLabel("BCC", { exact: true })).toHaveValue("");
   });
 
   /*
