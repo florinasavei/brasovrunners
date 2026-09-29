@@ -38,7 +38,7 @@ export function publicFormEvent(
     | "reminderHoursBefore"
   > &
     // Optional on a partial row — a fixture — which reads as the column's default, false (§552).
-    Partial<Pick<Event, "membersOnly">>,
+    Partial<Pick<Event, "membersOnly" | "askHealthNote">>,
   publishedAt: Date | null,
 ): EventForRegistration {
   return {
@@ -65,5 +65,8 @@ export function publicFormEvent(
     reminderHoursBefore: row.reminderHoursBefore,
     // For the members alone (§552): the public form takes it only behind a members' session.
     membersOnly: row.membersOnly ?? false,
+    // Whether the form asks the health note (§557): a note posted to an event that does not is
+    // dropped before the schema, never refused. Absent on a partial row: the lock decides alone.
+    askHealthNote: row.askHealthNote,
   };
 }
