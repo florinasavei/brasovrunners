@@ -516,7 +516,7 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
   return {
     type: fields.type,
     surface: fields.surface,
-    // The level on the club's scale of fifteen (§526): the band select and «Treapta» make one level;
+    // The level on the club's scale of fifteen (§526): the band select and «Nivelul» make one level;
     // the retired `difficulty` column gets a best-effort word, for the release before this one.
     ...storedDifficulty(fields.difficulty ? difficultyLevel(fields.difficulty, fields.difficultyStep) : null),
     eventStatus: fields.eventStatus,

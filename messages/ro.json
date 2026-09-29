@@ -182,11 +182,12 @@
       "calendar": "{label}: {times}",
       "ics": "{label}: {times} — ia o frontală"
     },
-    "difficultyLevelShort": "{band} {step}",
-    "difficultyLevelSr": "Dificultate: {band} {step} — nivelul {level} din {levels}",
-    "difficultyWithStep": "{band}, treapta {step} din {steps}",
-    "difficultyLevelTooltip": "{band} {step} — nivelul {level} din {levels}",
+    "difficultyLevelShort": "{band} {level}",
+    "difficultyLevelSr": "Dificultate: {band} — nivelul {level} din {levels} ({band}: {from}–{to})",
+    "difficultyWithLevel": "{band}, nivelul {level} din {levels}",
+    "difficultyLevelTooltip": "{band} — nivelul {level} din {levels} ({bandWord}: {from}–{to})",
     "difficultyBandTitle": "{band}: nivelurile {from}–{to} din {levels}",
+    "difficultyBandRange": "{band} ({from}–{to})",
     "cost": "Cost",
     "registration": "Înscriere",
     "cancelled": "Anulat",
@@ -1139,7 +1140,7 @@
         "seoTitle": "Titlu pentru motoarele de căutare",
         "seoDescription": "Descriere pentru motoarele de căutare",
         "difficulty": "Dificultate",
-        "difficultyStep": "Treapta",
+        "difficultyStep": "Nivelul",
         "costType": "Cost",
         "checklist": "Ce să aduci — o linie, în emailuri și în calendar",
         "body": "Conținut — apare pe pagina evenimentului, sub titlu",
@@ -1233,21 +1234,23 @@
         "VERY_HARD": "Foarte greu"
       },
       "difficultySteps": {
-        "step1": "Treapta 1, cea mai ușoară din categorie",
-        "step2": "Treapta 2, la mijlocul categoriei",
-        "step3": "Treapta 3, cea mai grea din categorie"
+        "step1": "Primul nivel din categorie, cel mai ușor",
+        "step2": "Nivelul din mijlocul categoriei",
+        "step3": "Ultimul nivel din categorie, cel mai greu"
       },
-      "difficultySummary": "{band} {step}",
-      "difficultyStepHelp": "1 = cel mai ușor din categorie, 3 = cel mai greu",
+      "difficultyLevelChoice": "Nivelul {level} din {levels}",
+      "difficultyRangeItem": "{band} {from}–{to}",
+      "difficultySummary": "{band} {level}",
+      "difficultyStepHelp": "Nivelul e de la {first} ({firstBand}) la {last} ({lastBand}): fiecare categorie are trei niveluri — {ranges}.",
       "difficultyScale": {
-        "EASY": "ușor: scurt, plat, pentru oricine",
-        "MEDIUM1": "mediu 1: alergarea de pe Tâmpa",
-        "MEDIUM2": "mediu 2: alergările mai lungi",
-        "MEDIUM3": "mediu 3: lungi și tehnice",
-        "FAIRLY_HARD": "greuț: de la semimaraton în sus",
-        "HARD": "greu: maratoane",
-        "VERY_HARD": "foarte greu: ultramaratoane și mai sus",
-        "steps": "în fiecare categorie 1 = cel mai ușor, 3 = cel mai greu"
+        "EASY": "ușor {from}–{to}: scurt, plat, pentru oricine",
+        "MEDIUM1": "mediu {level}: alergarea de pe Tâmpa",
+        "MEDIUM2": "mediu {level}: alergările mai lungi",
+        "MEDIUM3": "mediu {level}: lungi și tehnice",
+        "FAIRLY_HARD": "greuț {from}–{to}: de la semimaraton în sus",
+        "HARD": "greu {from}–{to}: maratoane",
+        "VERY_HARD": "foarte greu {from}–{to}: ultramaratoane și mai sus",
+        "steps": "în fiecare categorie, primul nivel e cel mai ușor, al treilea cel mai greu"
       },
       "costValues": {
         "FREE": "Gratuit",
@@ -4708,12 +4711,12 @@
             {
               "title": "Scara de dificultate a clubului",
               "steps": [
-                "«Evenimente» → «Editează» → cardul «Ce fel de eveniment»: alegi «Dificultate» (categoria) și, alături, «Treapta» — 1, 2 sau 3.",
-                "Scara are 15 trepte: 5 categorii × 3 trepte. Treapta 1 e cea mai ușoară din categorie, 3 cea mai grea. Pe site apare categoria cu treapta ei, de exemplu „Mediu 2”.",
-                "Ce înseamnă fiecare categorie și treaptă: apasă semnul de întrebare de lângă «Dificultate» sau «Treapta».",
-                "Treapta în celelalte categorii: 1 când traseul e la capătul ușor al categoriei, 3 când e aproape de următoarea (mai lung, mai abrupt, noaptea, noroi). Nu știi? 2.",
-                "Filtrul de pe site bifează o categorie întreagă: «Greu» arată toate cele trei trepte ale ei.",
-                "Nu-ți amintești scara? Semnul de întrebare de lângă «Treapta» o arată toată. Pe site, pastila dificultății spune la atingere nivelul din 15, de exemplu „Mediu 2 — nivelul 5 din 15”."
+                "«Evenimente» → «Editează» → cardul «Ce fel de eveniment»: alegi «Dificultate» (categoria) și, alături, «Nivelul» — unul din cele trei ale categoriei.",
+                "Scara are 15 niveluri, în ordine: ușor 1–3, mediu 4–6, greuț 7–9, greu 10–12, foarte greu 13–15. Pe site apare categoria cu nivelul ei, de exemplu „Mediu 5”.",
+                "Ce înseamnă fiecare categorie și nivel: apasă semnul de întrebare de lângă «Dificultate» sau «Nivelul».",
+                "Nivelul în celelalte categorii: primul când traseul e la capătul ușor al categoriei, al treilea când e aproape de următoarea (mai lung, mai abrupt, noaptea, noroi). Nu știi? Cel din mijloc.",
+                "Filtrul de pe site bifează o categorie întreagă: «Greu (10–12)» arată toate cele trei niveluri ale ei.",
+                "Nu-ți amintești scara? Semnul de întrebare de lângă «Nivelul» o arată toată. Pe site, pastila dificultății spune la atingere, de exemplu „Mediu — nivelul 5 din 15 (mediu: 4–6)”."
               ]
             },
             {

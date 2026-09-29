@@ -7,7 +7,13 @@ import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
-import { DIFFICULTY_BANDS, DIFFICULTY_LEVEL_COUNT, difficultyBandLevels, type DifficultyBand } from "@/modules/events/domain/difficulty";
+import {
+  DIFFICULTY_BANDS,
+  DIFFICULTY_LEVEL_COUNT,
+  difficultyBandLevels,
+  difficultyBandRangeWord,
+  type DifficultyBand,
+} from "@/modules/events/domain/difficulty";
 import {
   activeFilterCount,
   FILTER_FLAGS,
@@ -85,7 +91,8 @@ export default async function ListingFilterPanel({
       case "surface":
         return tEvent(`surface.${value}`);
       case "difficulty":
-        return tEvent(`difficultyValues.${value}`);
+        // The band with the levels it ticks (§NNN): «Mediu (4–6)».
+        return isDifficultyBand(value) ? difficultyBandRangeWord(value, tEvent) : tEvent(`difficultyValues.${value}`);
       case "distance":
         return t(`filter.distance.${value}`);
       case "cost":

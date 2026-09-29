@@ -3,9 +3,10 @@
 import Box from "@mui/material/Box";
 import SvgIcon from "@mui/material/SvgIcon";
 import Typography from "@mui/material/Typography";
-import { DIFFICULTY_STEPS, type DifficultyStep } from "@/modules/events/domain/difficulty";
+import { DIFFICULTY_BANDS, DIFFICULTY_STEPS, type DifficultyBand, type DifficultyStep, difficultyLevel } from "@/modules/events/domain/difficulty";
 import { useRecall } from "@/shared/forms/recall";
 import QuietHelp from "@/shared/ui/QuietHelp";
+import { useSelectedValue } from "./OnlyForType";
 
 /**
  * Three dots, the first `step` of them lit — the same dots the event's gauge draws under its hub
@@ -31,17 +32,28 @@ function StepDotsIcon({ step }: { step: DifficultyStep }) {
  */
 export const STEP_FRAME = { height: 62, legendLine: 12, marginTop: -6, segmentHeight: 44 } as const;
 
+/** A step's words, one per segment. */
+type StepWords = Record<`step${DifficultyStep}`, string>;
+
+function isBand(value: string): value is DifficultyBand {
+  return (DIFFICULTY_BANDS as readonly string[]).includes(value);
+}
+
 /**
- * «Treapta» (§526): the editor's second difficulty control, beside the band select in «Ce fel de
- * eveniment» — where inside the band the event stands, as a segmented 1 · 2 · 3, each segment with
- * its dots glyph. With the band it is the level on the club's scale of fifteen, which the save
- * writes (`fields.ts`, `difficultyLevel`).
+ * «Nivelul» (§526, §NNN — «Treapta» until the owner, 2026-09-29: «adică ușor: 1,2,3, mediu 4,5,6 și
+ * tot așa, în ordine»): the editor's second difficulty control, beside the band select in «Ce fel de
+ * eveniment» — where inside the band the event stands, as a segmented control of three, each
+ * segment with its dots glyph. **The number on a segment is the level of fifteen** — Mediu → 4 · 5 ·
+ * 6, Ușor → 1 · 2 · 3 — read from the band select as it changes (`useSelectedValue`); the dots are
+ * the step. With no band chosen the segments show their dots alone. What posts is still the step
+ * (`event.difficultyStep`, 1 · 2 · 3): with the band it is the level the save writes (`fields.ts`,
+ * `difficultyLevel`), so the stored column is unchanged.
  *
  * Native radios, visually hidden inside their segments, so the choice posts `event.difficultyStep`
  * with or without a script and the keyboard moves through the three as a radio group does; each
  * segment is 44 pixels tall and at least 56 wide (BR-REQ-041-01 criterion 6). A client component
- * only for the recall after a refused save (§315): the choice that was posted comes back. Words
- * only, as strings — no element crosses from the Server Component that renders it (§370).
+ * for the recall after a refused save (§315) and for following the band select. Words only, as
+ * strings — no element crosses from the Server Component that renders it (§370).
  *
  * Laid out by `DifficultyRow` (§537): the root is `display: contents`, the outline with its «?» is
  * the grid's `step` cell — on the band select's axis — and the help line is the `help` cell under
@@ -50,16 +62,24 @@ export const STEP_FRAME = { height: 62, legendLine: 12, marginTop: -6, segmentHe
 export default function DifficultyStepField({
   name,
   defaultStep,
+  band,
   words,
 }: {
   name: string;
   defaultStep: DifficultyStep;
-  /** `scale`: the club's whole scale in words (§528), behind a «?» beside the toggle. */
-  words: { label: string; help: string; scale?: string; choices: Record<`step${DifficultyStep}`, string> };
+  /** The band select this control follows: the name it posts and the band it starts at ("" for none). */
+  band: { name: string; initial: string };
+  /**
+   * `scale`: the club's whole scale in words (§528), behind a «?» beside the toggle. `choices`: each
+   * segment's accessible name while no band is chosen; `levels`: each band's three, «Nivelul 5 din 15».
+   */
+  words: { label: string; help: string; scale?: string; choices: StepWords; levels: Record<DifficultyBand, StepWords> };
 }) {
   const recall = useRecall();
   const posted = recall.value(name);
   const initial = recall.has && posted && DIFFICULTY_STEPS.some((step) => String(step) === posted) ? posted : String(defaultStep);
+  const chosen = useSelectedValue(band.name, band.initial);
+  const currentBand = isBand(chosen) ? chosen : null;
   const labelId = `${recall.idOf(name)}-label`;
   const helpId = `${recall.idOf(name)}-help`;
   // What is left below the legend, less the bottom edge, round the 44-px segments: 5 px.
@@ -128,12 +148,13 @@ export default function DifficultyStepField({
                   name={name}
                   value={String(step)}
                   defaultChecked={String(step) === initial}
-                  aria-label={words.choices[`step${step}`]}
+                  aria-label={currentBand ? words.levels[currentBand][`step${step}`] : words.choices[`step${step}`]}
                   sx={{ position: "absolute", inset: 0, opacity: 0, width: 1, height: 1, m: 0, cursor: "pointer" }}
                 />
                 <StepDotsIcon step={step} />
-                <Typography component="span" variant="body2" sx={{ fontWeight: 600, lineHeight: 1 }} aria-hidden="true">
-                  {step}
+                {/* The level of fifteen (§NNN): the band's own three numbers; a dash while no band is chosen. */}
+                <Typography component="span" variant="body2" sx={{ fontWeight: 600, lineHeight: 1 }} aria-hidden="true" data-testid="difficulty-level-number">
+                  {currentBand ? difficultyLevel(currentBand, step) : "–"}
                 </Typography>
               </Box>
             ))}
