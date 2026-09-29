@@ -3,7 +3,7 @@
 import Box from "@mui/material/Box";
 import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
-import Flag from "./Flag";
+import Flag, { LANGUAGE_FLAG } from "./Flag";
 import { useLocale, useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 import { routing } from "@/i18n/routing";
@@ -39,12 +39,10 @@ import { footerGapSx, footerTargetSx, SM_UP } from "./footer-target";
  *
  * The files come from `flag-icons` (MIT), copied into `public/flags/` by
  * `scripts/sync-flags.mjs`. The set is there for the country field a participant will fill in
- * later; the switcher is its first, small use.
+ * later; the switcher is its first, small use. The map is `LANGUAGE_FLAG` in `Flag.tsx`, which the
+ * backoffice's language tabs read too (§NNN), so both say a language with the same flag.
  */
-const FLAG: Record<(typeof routing.locales)[number], string> = {
-  ro: "ro",
-  en: "gb",
-};
+const FLAG = LANGUAGE_FLAG;
 
 /**
  * The two-letter code, on screen from `sm` up and read by a screen reader at every width. On a

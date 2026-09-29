@@ -4,6 +4,7 @@ import { charactersToSend } from "../domain/budget";
 import { isRichTextField, isTranslatableEnglishField, romanianTwinCandidates } from "../domain/fields";
 import type { TranslateRefusal } from "../service";
 import type { TranslateAction } from "./TranslateProvider";
+import { announceTranslated } from "./translated-event";
 
 /**
  * The boxes of a form, as «Tradu din română» reads and fills them (`DECISIONS.md` §464).
@@ -223,6 +224,8 @@ export async function translateBoxes(form: HTMLFormElement | null, englishNames:
     const value: BoxValue = item.kind === "text" ? { kind: "text", text: item.text } : { kind: "rich", doc: item.doc };
     if (fillBox(form, item.field, value)) cut.push(labelOfBox(form, item.field));
   }
+  // The language tabs holding these boxes bring their English forward, marked (§NNN).
+  announceTranslated(outcome.items.map((item) => item.field), form);
   return { kind: "done", count: items.length, cut };
 }
 

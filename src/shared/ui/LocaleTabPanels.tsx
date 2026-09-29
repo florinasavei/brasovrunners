@@ -21,9 +21,11 @@ import {
 import { countForm } from "@/i18n/count-form";
 import { missingForPublish, missingInLanguage, type PublishGapBox } from "@/modules/content/events/ui/publish-check";
 import TranslateCardButton from "@/modules/translate/ui/TranslateCardButton";
+import { TRANSLATED_EVENT, type TranslatedDetail, translatedInto } from "@/modules/translate/ui/translated-event";
 import { paintedScheduler } from "@/shared/forms/after-paint";
 import { isBlankValue } from "@/shared/forms/blank-value";
 import { identicalInBothLanguages } from "@/shared/forms/both-languages";
+import Flag, { LANGUAGE_FLAG } from "./Flag";
 import { createTwinFoldStore, REVEAL_EVENT, type TwinFoldStore, twinFoldKey } from "./fold";
 
 /** What a panel tells the folds inside it (§363): the strip's shared store, its language, whether it is on top. */
@@ -90,9 +92,28 @@ export type RequiredCountWords = { one: string; few: string; other: string; comp
  * - `parity` — a watched box empty here while the other language has it (an optional text, where
  *   one language written and the other not is the thing worth seeing).
  *
- * `names` are the part after `translations.<locale>.`.
+ * `names` are the part after `translations.<locale>.` — or, for a form that spells its pair another
+ * way, the whole name with the language as `{Locale}` (`zone{Locale}Body`: `zoneRoBody`,
+ * `zoneEnBody`, «Membri», §NNN) or `{locale}`. `watchedBoxName` reads both.
  */
 export type TabWatch = { names: readonly string[]; rule: "required" | "parity" };
+
+/** The box a watched name stands for in one language (see `TabWatch`). */
+export function watchedBoxName(field: string, locale: string): string {
+  if (field.includes("{Locale}") || field.includes("{locale}")) {
+    const capital = locale.charAt(0).toUpperCase() + locale.slice(1);
+    return field.replaceAll("{Locale}", capital).replaceAll("{locale}", locale);
+  }
+  return `translations.${locale}.${field}`;
+}
+
+/**
+ * A tab's words: the language, then each mark that holds, joined by « · » — «EN · nescris încă»,
+ * «English · tradus — verifică», «Română · 2 obligatorii lipsă».
+ */
+export function tabLabel(parts: readonly (string | null | undefined | false)[]): string {
+  return parts.filter((part): part is string => Boolean(part)).join(" · ");
+}
 
 /**
  * The same words in both languages (§354, bilingual everywhere): which of the panel's boxes to
@@ -147,6 +168,7 @@ export default function LocaleTabPanels({
   requiredCount,
   live = true,
   translateCard = false,
+  translatedMark,
 }: {
   /** The box this strip belongs to: every id on it starts with it. */
   idPrefix: string;
@@ -169,8 +191,16 @@ export default function LocaleTabPanels({
    * words: greyed, saying why, where this deployment cannot translate (§482, §497).
    */
   translateCard?: boolean;
+  /**
+   * The English tab's word right after a translate press filled a box in it (§NNN): «tradus —
+   * verifică», until the person types there. Whatever the word, a press that filled a box of this
+   * strip brings the English tab forward (`TRANSLATED_EVENT`); the word is drawn only where given.
+   */
+  translatedMark?: string;
 }) {
   const [active, setActive] = useState(0);
+  // Whether the English panel holds a translation nobody has typed into yet (§NNN).
+  const [translated, setTranslated] = useState(false);
   const [incomplete, setIncomplete] = useState<readonly boolean[]>(() => panels.map((panel) => panel.incompleteLabel !== undefined));
   const [counts, setCounts] = useState<readonly number[]>(() => panels.map((panel) => panel.missingCount ?? 0));
   const [same, setSame] = useState(identical?.initial ?? false);
@@ -277,7 +307,7 @@ export default function LocaleTabPanels({
     const container = root.current;
     if ((!watch && !identical) || !live || !container) return;
     const boxOf = (locale: string, field: string) =>
-      container.querySelector<HTMLInputElement | HTMLTextAreaElement>(`[name="translations.${locale}.${field}"]`);
+      container.querySelector<HTMLInputElement | HTMLTextAreaElement>(`[name="${watchedBoxName(field, locale)}"]`);
     const valueOf = (locale: string, field: string) => boxOf(locale, field)?.value ?? "";
     const measure = () => {
       if (watch) {
