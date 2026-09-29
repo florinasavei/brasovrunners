@@ -92,22 +92,40 @@ type DifficultyTranslate = (key: string, values?: Record<string, string | number
  *   «Mediu — nivelul 5 din 15» / «ușor 1–3 · mediu 4–6 · greuț 7–9 · greu 10–12 · foarte greu 13–15»;
  * - `sr` — what a screen reader hears in place of `short`, the shorter form with the level and its
  *   band's range, once per card: «Dificultate: mediu — nivelul 5 din 15 (mediu: 4–6)».
+ * - `block` — the same tooltip's words as the pill draws them (the owner, 2026-09-29 19:48: «vreau
+ *   ca acest tooltip să fie formatat mai frumos»): `head`, the first line, and `rows`, the ladder
+ *   one band per row with its range apart, the level's own band marked `current`. Plain data, so it
+ *   crosses to the client chip (`DifficultyTooltipBlock`); `tooltip` stays the string form, for the
+ *   reading time and every reader of text.
  *
  * The one function every surface reads (the route pills, the calendar's lines): the words from the
  * `Event` catalogue (`difficultyValues`, `difficultyBandWords`, `difficultyLevel*`), the numbers from here.
  */
-export function difficultyWords(level: number, t: DifficultyTranslate): { short: string; plain: string; tooltip: string; sr: string } {
+export function difficultyWords(
+  level: number,
+  t: DifficultyTranslate,
+): { short: string; plain: string; tooltip: string; sr: string; block: DifficultyTooltipBlock } {
   const band = difficultyBandOf(level);
   const numbers = { level, levels: DIFFICULTY_LEVEL_COUNT, ...difficultyBandLevels(band) };
   const title = t(`difficultyValues.${band}`);
   const word = t(`difficultyBandWords.${band}`);
+  const head = t("difficultyLevelHead", { band: title, ...numbers });
+  const rows = DIFFICULTY_BANDS.map((each) => ({
+    word: t(`difficultyBandWords.${each}`),
+    range: t("difficultyLevelRange", difficultyBandLevels(each)),
+    current: each === band,
+  }));
   return {
     short: title,
     plain: t("difficultyWithLevel", { band: title, ...numbers }),
-    tooltip: t("difficultyLevelTooltip", { band: title, ladder: difficultyLadder(t).join(" · "), ...numbers }),
+    tooltip: t("difficultyLevelTooltip", { head, ladder: difficultyLadder(t).join(" · ") }),
     sr: t("difficultyLevelSr", { band: word, ...numbers }),
+    block: { head, rows },
   };
 }
+
+/** The difficulty tooltip as the pill draws it (§NNN): the first line, then one row per band. */
+export type DifficultyTooltipBlock = { head: string; rows: { word: string; range: string; current: boolean }[] };
 
 /**
  * The club's whole scale, one item per band in order, each with its three levels (§NNN) —

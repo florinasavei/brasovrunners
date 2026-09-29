@@ -1,6 +1,6 @@
 import type { events } from "@/db/schema/events";
 import { costPaidToExternalOrganizer } from "../domain/cost";
-import { difficultyLevelOf, difficultyWords, type StoredDifficulty } from "../domain/difficulty";
+import { difficultyLevelOf, difficultyWords, type DifficultyTooltipBlock, type StoredDifficulty } from "../domain/difficulty";
 import { distanceInKm } from "../domain/event-type";
 import { clubNightEvent, nightTooltip } from "../night-event";
 import { difficultyLevelGlyph } from "./difficulty-glyphs";
@@ -32,6 +32,8 @@ export type Pill = {
    * Absent, `label` is the whole of it.
    */
   plain?: string;
+  /** The difficulty's tooltip as a block, the level in bold and the ladder in rows (§NNN); drawn in place of `tooltip`'s text. */
+  tooltipBlock?: DifficultyTooltipBlock;
 };
 
 /** What a row has to carry to build the route's pills: the closed sets and the two numbers of a
@@ -150,6 +152,8 @@ function difficultyPillOf(level: number, t: Translate): Pill {
     // Where no chip is drawn — the emails' facts block (§392): «Mediu, nivelul 5 din 15».
     plain: words.plain,
     tooltip: words.tooltip,
+    // Drawn as a block (§NNN): «Mediu — nivelul 5 din 15» in bold, then one aligned row per band.
+    tooltipBlock: words.block,
   };
 }
 

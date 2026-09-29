@@ -1,4 +1,4 @@
-import { expect, type Locator, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
 import { hydrated, signIn } from "./support/featured-event";
 import { cardOnListing, openEditorBox } from "./support/fold";
 
@@ -49,15 +49,29 @@ async function expectGauge(pill: Locator, band: number, step?: number) {
 
 test.describe("BR-REQ-041-01 the difficulty pill names its level of fifteen on a tap (§528)", () => {
   test.use({ hasTouch: true, viewport: { width: 320, height: 720 } });
-  // The level, then every band's levels on a second line (§NNN; the owner, 2026-09-29 14:18).
-  const SENTENCE = /^Mediu — nivelul 4 din 15\s+ușor 1–3 · mediu 4–6 · greuț 7–9 · greu 10–12 · foarte greu 13–15$/;
+  /**
+   * The level in bold, then every band's levels one row each (§528; the owner, 2026-09-29 14:18),
+   * set as a block (§NNN — 19:48, «formatat mai frumos»): five rows of one line each at 320 px, the
+   * level's own band marked, and «foarte greu» never parted from «13–15».
+   */
+  async function expectBlock(page: Page) {
+    const block = page.getByRole("tooltip").getByTestId("difficulty-tooltip");
+    await expect(block.locator('[data-part="head"]')).toHaveText("Mediu — nivelul 4 din 15");
+    const rows = block.locator('[data-part="row"]');
+    await expect(rows).toHaveText([/^ușor\s*1–3$/, /^mediu\s*4–6$/, /^greuț\s*7–9$/, /^greu\s*10–12$/, /^foarte greu\s*13–15$/]);
+    await expect(block.locator('[data-current="true"]')).toHaveText(/^mediu\s*4–6$/);
+    const heights = await rows.evaluateAll((items) => items.map((item) => item.getBoundingClientRect().height));
+    for (const height of heights) expect(height).toBeCloseTo(heights[0]!, 0);
+    const box = await page.getByRole("tooltip").boundingBox();
+    expect(box!.x + box!.width).toBeLessThanOrEqual(320);
+  }
 
   test("on the event page, a tap on the «Mediu» pill opens the tooltip", async ({ page }) => {
     await page.goto("/ro/evenimente/tura-pe-tampa");
     await hydrated(page);
     const pill = page.getByTestId("event-facts").locator(".MuiChip-root", { hasText: "nivelul 4 din 15" });
     await pill.tap();
-    await expect(page.getByRole("tooltip")).toHaveText(SENTENCE);
+    await expectBlock(page);
   });
 
   test("on the listing card, a tap opens the tooltip and does not follow the whole-card link (§486)", async ({ page }) => {
@@ -68,7 +82,7 @@ test.describe("BR-REQ-041-01 the difficulty pill names its level of fifteen on a
     await expect(pill).toHaveAttribute("data-has-tooltip", "true");
     const before = page.url();
     await pill.tap();
-    await expect(page.getByRole("tooltip")).toHaveText(SENTENCE);
+    await expectBlock(page);
     expect(page.url()).toBe(before);
   });
 });

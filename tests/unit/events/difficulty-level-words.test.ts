@@ -72,7 +72,12 @@ describe("§NNN the number is the level of fifteen, in order across the bands", 
     // No surface says the step within the band in words any more.
     for (const level of levels) {
       const words = difficultyWords(level, t);
-      for (const said of Object.values(words)) {
+      const { block, ...strings } = words;
+      // The block (§NNN) says the same as the tooltip's string: its first line and one row per band.
+      expect(block.head).toBe(words.tooltip.split("\n")[0]);
+      expect(block.rows.filter((row) => row.current)).toHaveLength(1);
+      const blockWords = [block.head, ...block.rows.flatMap((row) => [row.word, row.range])];
+      for (const said of [...Object.values(strings), ...blockWords]) {
         expect(said).not.toMatch(/treapt|step \d|din 3\b|of 3\b/i);
         for (const line of said.split("\n")) expect(line.length, said).toBeLessThanOrEqual(200);
       }

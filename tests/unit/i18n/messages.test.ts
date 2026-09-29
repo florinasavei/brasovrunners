@@ -194,6 +194,8 @@ describe("BR-REQ-040-04 every key used in src/ resolves", () => {
     for (const key of [
       "Event.difficultyWithLevel",
       "Event.difficultyLevelTooltip",
+      "Event.difficultyLevelHead",
+      "Event.difficultyLevelRange",
       "Event.difficultyLevelSr",
       "Event.difficultyLadderItem",
       "Event.difficultyBandRange",

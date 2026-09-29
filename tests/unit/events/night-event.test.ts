@@ -274,7 +274,10 @@ function tooltips(fragment: string): string[] {
 
 /** Every tooltip's words, in order. */
 function allTooltips(fragment: string): string[] {
-  return [...withoutStyles(fragment).matchAll(/data-tooltip-title="">([^<]*)</g)].map((match) => match[1]);
+  // The difficulty's tooltip is a block (§NNN): its first line, the level, stands for it here.
+  return [
+    ...withoutStyles(fragment).matchAll(/data-tooltip-title="">(?:<span [^>]*data-testid="difficulty-tooltip"><span [^>]*data-part="head">([^<]*)<|([^<]*)<)/g),
+  ].map((match) => match[1] ?? match[2]);
 }
 
 /** The `<dl>`'s rows: each label with its `<dd>` markup. */
@@ -314,8 +317,8 @@ describe("§394 the event page's facts", () => {
     expect(route).toBeDefined();
     expect(pillLabels(route!.dd)).toEqual(["Trail", "Mediu", "8 km", "250 m D+", "Noapte"]);
     expect(tooltips(route!.dd)).toEqual(["Soarele apune la 16:44"]);
-    // The difficulty's own tooltip, before it in the row (§528).
-    expect(allTooltips(route!.dd)).toEqual(["Mediu — nivelul 5 din 15\nușor 1–3 · mediu 4–6 · greuț 7–9 · greu 10–12 · foarte greu 13–15", "Soarele apune la 16:44"]);
+    // The difficulty's own tooltip, before it in the row (§528), drawn as its block (§NNN).
+    expect(allTooltips(route!.dd)).toEqual(["Mediu — nivelul 5 din 15", "Soarele apune la 16:44"]);
     expect(route!.dd).toContain('data-testid="ModeNightIcon"');
     expect(route!.dd).not.toContain("FlashlightOnIcon");
     // The tooltip only opens on hover or focus, and the chip is not focusable, so the sunset
