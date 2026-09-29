@@ -253,6 +253,15 @@
         "one": "{count} pe lista de așteptare",
         "few": "{count} pe lista de așteptare",
         "other": "{count} pe lista de așteptare"
+      },
+      "legend": {
+        "title": "Ce înseamnă stadiile de pe listă",
+        "line": "„{word}”: {explanation}",
+        "confirmed": "și-a confirmat adresa de email și a semnat declarația de participare, deci locul îi aparține.",
+        "pendingWindow": "are un loc păstrat, dar nu a semnat încă declarația de participare. Semnătura se cere cu {opens} înainte de start și trebuie dată până {due}; altfel locul se eliberează.",
+        "pendingWindowLate": "Cine se înscrie după ce s-a cerut semnătura are {hold} ca să semneze.",
+        "pendingHold": "are un loc păstrat {hold}, cât să semneze declarația de participare; dacă nu o semnează la timp, locul se eliberează.",
+        "waitlisted": "nu are încă un loc. Când se eliberează unul, primul de pe listă primește o ofertă pe email și are {offer} ca să semneze declarația."
       }
     },
     "cta": {

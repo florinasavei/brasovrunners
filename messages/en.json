@@ -253,6 +253,15 @@
         "one": "{count} on the waiting list",
         "few": "{count} on the waiting list",
         "other": "{count} on the waiting list"
+      },
+      "legend": {
+        "title": "What the states on the list mean",
+        "line": "“{word}”: {explanation}",
+        "confirmed": "confirmed their email address and signed the participation declaration, so the place is theirs.",
+        "pendingWindow": "holds a place but has not signed the participation declaration yet. The signature is asked {opens} before the start and is due by {due}; otherwise the place is freed.",
+        "pendingWindowLate": "Whoever registers after it is asked has {hold} to sign.",
+        "pendingHold": "holds a place for {hold} to sign the participation declaration; if it is not signed in time, the place is freed.",
+        "waitlisted": "has no place yet. When one is freed, the first on the list gets an offer by email and has {offer} to sign the declaration."
       }
     },
     "cta": {
