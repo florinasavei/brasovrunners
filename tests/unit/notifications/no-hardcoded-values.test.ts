@@ -218,6 +218,10 @@ describe("§369 the club's name leaves the platform only through the constant", 
           // A group run's safety rules (§556): the first line names the club's run, by surface.
           "Event.safetyRules.intro",
           "Event.safetyRules.introMountain",
+          // The club's legal identity (§NNN): «<legal name> (<site name>) · CIF …», filled with the
+          // environment's facts and the constant — `club-identity-render.test.ts` reads it filled.
+          "Identity.line",
+          "Identity.lineNoCif",
         ].sort(),
       );
     }

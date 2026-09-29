@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { LEGAL_TEMPLATES } from "@/modules/legal-documents/templates/catalogue";
-import { clubFactsFromEnv, fillClubFacts, remainingPlaceholders } from "@/modules/legal-documents/templates/club-facts";
+import { bareRegistrationNumber, clubFactsFromEnv, fillClubFacts, remainingPlaceholders } from "@/modules/legal-documents/templates/club-facts";
 
 /** `DECISIONS.md` §132 — the club's facts, from the environment, written into the templates before the club reads them. */
 describe("the club's facts in the templates", () => {
@@ -30,6 +30,17 @@ describe("the club's facts in the templates", () => {
     const filled = fillClubFacts(body, partial);
     expect(filled.sections[0].heading).toBe("X");
     expect(remainingPlaceholders(filled)).toEqual(["<CONTACT EMAIL>", "<REGISTERED ADDRESS>"]);
+  });
+
+  it("§NNN gives the site the registration number without a label of its own", () => {
+    for (const written of ["CIF 12345678", "C.I.F. 12345678", "cif: 12345678", "CUI 12345678", "C.U.I.: 12345678", " 12345678 "]) {
+      expect(bareRegistrationNumber(written), written).toBe("12345678");
+    }
+    expect(bareRegistrationNumber("RO12345678")).toBe("RO12345678");
+    expect(bareRegistrationNumber("CIF RO12345678")).toBe("RO12345678");
+    // Only a label is dropped, never the start of a word, and never everything.
+    expect(bareRegistrationNumber("CIFRA 1")).toBe("CIFRA 1");
+    expect(bareRegistrationNumber("CIF")).toBe("CIF");
   });
 
   it("holds no fact in the source: the repository is public", () => {

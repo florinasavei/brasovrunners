@@ -41,6 +41,7 @@ import FormatSizeIcon from "@mui/icons-material/FormatSize";
 import PaletteIcon from "@mui/icons-material/Palette";
 import PaymentsIcon from "@mui/icons-material/Payments";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
+import PhoneIcon from "@mui/icons-material/Phone";
 import PlaceIcon from "@mui/icons-material/Place";
 import PrintIcon from "@mui/icons-material/Print";
 import PublicIcon from "@mui/icons-material/Public";
@@ -127,6 +128,7 @@ export const PANEL_GLYPHS = {
   email: MailIcon,
   contacts: ContactMailIcon,
   shownAddress: AlternateEmailIcon,
+  publicPhone: PhoneIcon,
   notices: AnnouncementIcon,
   plan: CardMembershipIcon,
   transport: HubIcon,

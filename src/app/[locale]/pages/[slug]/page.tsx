@@ -12,6 +12,7 @@ import { cachedPublishedPageBySlug, cachedPublishedPageTranslations } from "@/mo
 import RichText from "@/modules/content/rich-text/ui/RichText";
 import { pageAlternates, slugRouteUrls } from "@/modules/seo/alternates";
 import { env } from "@/shared/config/env";
+import ClubIdentity from "@/shared/ui/ClubIdentity";
 import { PAGE_WIDTH, PROSE_MEASURE } from "@/theme/brand";
 import { DENSITY } from "@/theme/density";
 import { readOrWhileAway } from "@/modules/resilience/optional-read";
@@ -90,6 +91,9 @@ export default async function StandingPage({ params }: Props) {
           {page.title}
         </Typography>
         <RichText body={page.bodyJson} pictures="prose" />
+        {/* The club's legal name and CIF under what the club wrote (§NNN): a standing page is the
+            club talking about itself; nothing while the facts are unset. */}
+        <ClubIdentity shape="line" />
       </Box>
     </Container>
   );

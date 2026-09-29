@@ -144,6 +144,8 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   updateContactRecipientsAction: [],
   // What the site shows and every email's Reply-To (§442).
   updateShownContactAddressAction: [],
+  // «Telefon public» (§NNN): the number every page's footer shows from the next page view.
+  updatePublicPhoneAction: [],
   // The public pages' background tint (§488): every visitor sees the new colour from the next page view.
   updateSiteTintAction: [],
   // The public pages' text size (§530): every visitor reads at the new size from the next page view.

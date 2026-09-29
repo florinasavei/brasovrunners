@@ -1039,6 +1039,8 @@
       "olderPicturesBody": "The pictures in this batch get their smaller sizes; the old address keeps working. It takes about twenty seconds. An editor open on a page using them will ask for a reload.",
       "shownAddressTitle": "Change the contact address shown?",
       "shownAddressBody": "The site shows the chosen address from now on, and replies to the club's emails go to it. Approved legal texts keep their own address.",
+      "publicPhoneTitle": "Change the phone shown?",
+      "publicPhoneBody": "The site shows this number at the foot of every page from now on. An empty box takes it off.",
       "siteTintTitle": "Change the site's background?",
       "siteTintBody": "Every public page of the site opens with the chosen background from now on, for every visitor. The dark theme and the backoffice stay as they are. You can go back to “White” at any time.",
       "siteFontSizeTitle": "Change the text size?",
@@ -4374,6 +4376,19 @@
         "saved": "The contact address shown was saved.",
         "sender": "Emails still leave from the Mailgun domain, or they would land in spam. Only the reply address changes."
       },
+      "publicPhone": {
+        "title": "Public phone",
+        "intro": "The number people see at the foot of every page, under «Contact». Empty, the site shows no number.",
+        "aside": "On the site: {phone}",
+        "asideNone": "No number on the site",
+        "field": "Phone",
+        "help": "As you want it to read, for example with the +40 prefix. Leave it empty to show none.",
+        "updatedAt": "Set {when}.",
+        "readOnly": "The Administrator sets the number; you see the one in force.",
+        "save": "Save the phone",
+        "saving": "Saving…",
+        "saved": "The public phone was saved."
+      },
       "perSendNewsletter": "The newsletter's text is written per send, on the backoffice's “Newsletter” page, so it has no words to edit here.",
       "newsletterLink": "Newsletter →",
       "newsletterLinkHelp": "The subscribers and the messages to them have their own page in the menu.",
@@ -5795,6 +5810,16 @@
     },
     "contactPage": "Write to us"
   },
+  "Identity": {
+    "blockLabel": "The club's details",
+    "line": "{legalName} ({club}) · CIF {cif}",
+    "lineNoCif": "{legalName} ({club})",
+    "cif": "C.I.F. {cif}",
+    "country": "Romania",
+    "socialLabel": "Follow the club",
+    "contactHeading": "Contact",
+    "writeToUs": "Write to us"
+  },
   "Legal": {
     "unavailable": "This document has not been published for this environment yet.",
     "privacyLinkLabel": "Privacy",
@@ -7131,6 +7156,7 @@
       },
       "groupRunDeclarationErased": "The declaration was erased.",
       "shownContactAddress": "The contact address shown was saved.",
+      "publicPhone": "The public phone was saved.",
       "siteTint": "The site's background was saved.",
       "siteFontSize": "The site's text size was saved.",
       "clubTodoAdded": "Added to the list.",

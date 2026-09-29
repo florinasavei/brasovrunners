@@ -7,6 +7,7 @@ import { getPathname } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
 import { addressListRefusal, CONTACT_RECIPIENTS_MAX, parseAddressList } from "@/modules/contact/domain/recipients";
 import { updateContactRecipients } from "@/modules/contact/recipients";
+import { updatePublicPhone } from "@/modules/contact/public-phone";
 import { updateShownContactAddress } from "@/modules/contact/shown-address";
 import { requireStaffCapability } from "@/modules/staff-identity/session";
 import { canManageClubSettings } from "@/modules/staff-identity/domain/roles";
@@ -72,4 +73,24 @@ export async function updateShownContactAddressAction(_previous: FormOutcome | n
   revalidatePath(path);
   await flashOutcome({ saved: "shownContactAddress" });
   redirect(`${path}?saved=shownContactAddress#admin-alert`);
+}
+
+/**
+ * «Telefon public» (§NNN): the one number the footer's «Contact» shows, or none when the box is
+ * left empty. Administrator at the door, the service asserting it again.
+ */
+export async function updatePublicPhoneAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = localeOf(form);
+  const path = getPathname({ locale, href: "/admin/pages/contact" });
+
+  try {
+    const actor = await requireStaffCapability(canManageClubSettings);
+    const phone = form.get("phone");
+    await updatePublicPhone(getDb(), actor, { phone: typeof phone === "string" ? phone : "" }, new Date());
+  } catch (error) {
+    return refused(error, form);
+  }
+  revalidatePath(path);
+  await flashOutcome({ saved: "publicPhone" });
+  redirect(`${path}?saved=publicPhone#admin-alert`);
 }

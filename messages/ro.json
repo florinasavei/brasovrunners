@@ -1039,6 +1039,8 @@
       "olderPicturesBody": "Imaginile din lot primesc mărimile mai mici; adresa veche merge în continuare. Durează cam douăzeci de secunde. Un editor deschis pe o pagină cu ele va cere reîncărcarea.",
       "shownAddressTitle": "Schimbi adresa de contact afișată?",
       "shownAddressBody": "Site-ul arată de acum adresa aleasă, iar răspunsurile la emailurile clubului ajung la ea. Textele legale aprobate își păstrează adresa lor.",
+      "publicPhoneTitle": "Schimbi telefonul afișat?",
+      "publicPhoneBody": "Site-ul arată de acum acest număr în subsolul fiecărei pagini. Un câmp gol îl scoate.",
       "siteTintTitle": "Schimbi fundalul site-ului?",
       "siteTintBody": "Fiecare pagină publică a site-ului se deschide de acum cu fundalul ales, pentru toți vizitatorii. Tema întunecată și backoffice-ul rămân cum sunt. Poți reveni oricând la «Alb».",
       "siteFontSizeTitle": "Schimbi mărimea textului?",
@@ -4374,6 +4376,19 @@
         "saved": "Adresa de contact afișată a fost salvată.",
         "sender": "Emailurile pleacă tot de pe domeniul Mailgun, altfel ar ajunge în spam. Se schimbă doar adresa la care se răspunde."
       },
+      "publicPhone": {
+        "title": "Telefon public",
+        "intro": "Numărul pe care oamenii îl văd în subsolul fiecărei pagini, sub «Contact». Gol, site-ul nu arată niciun număr.",
+        "aside": "Pe site: {phone}",
+        "asideNone": "Niciun număr pe site",
+        "field": "Telefon",
+        "help": "Cum vrei să apară, de exemplu cu prefixul +40. Lasă gol ca să nu apară.",
+        "updatedAt": "Setat {when}.",
+        "readOnly": "Numărul îl stabilește Administratorul; tu vezi ce e în vigoare.",
+        "save": "Salvează telefonul",
+        "saving": "Se salvează…",
+        "saved": "Telefonul public a fost salvat."
+      },
       "perSendNewsletter": "Textul newsletterului se scrie la fiecare trimitere, pe pagina „Newsletter” a backoffice-ului, așa că nu are cuvinte de editat aici.",
       "newsletterLink": "Newsletter →",
       "newsletterLinkHelp": "Abonații și mesajele către ei au pagina lor în meniu.",
@@ -5795,6 +5810,16 @@
     },
     "contactPage": "Scrie-ne"
   },
+  "Identity": {
+    "blockLabel": "Datele clubului",
+    "line": "{legalName} ({club}) · CIF {cif}",
+    "lineNoCif": "{legalName} ({club})",
+    "cif": "C.I.F. {cif}",
+    "country": "România",
+    "socialLabel": "Urmărește clubul",
+    "contactHeading": "Contact",
+    "writeToUs": "Scrie-ne"
+  },
   "Legal": {
     "unavailable": "Acest document nu a fost încă publicat pentru acest mediu.",
     "privacyLinkLabel": "Confidențialitate",
@@ -7131,6 +7156,7 @@
       },
       "groupRunDeclarationErased": "Declarația a fost ștearsă.",
       "shownContactAddress": "Adresa de contact afișată a fost salvată.",
+      "publicPhone": "Telefonul public a fost salvat.",
       "siteTint": "Fundalul site-ului a fost salvat.",
       "siteFontSize": "Mărimea textului a fost salvată.",
       "clubTodoAdded": "Adăugat pe listă.",
