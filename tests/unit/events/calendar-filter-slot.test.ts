@@ -57,7 +57,30 @@ describe("BR-REQ-041-01 criterion 12: the calendar's filter slot does not depend
   it("is the one way the calendar page draws its panel", () => {
     const page = readFileSync(path.join(ROOT, "src/app/[locale]/calendar/page.tsx"), "utf8");
     expect(page).toMatch(/<CalendarFilterSlot shown=\{[^}]*offersAnything\(offer\)/);
+    // The panel inside the slot is the one whose form and chips go to the period's own path.
+    expect(page).toMatch(/<CalendarFilterSlot shown=\{[^}]*\}>\s*<ListingFilterPanel\b[^>]*\bpath=\{periodPath\}[^>]*\/>\s*<\/CalendarFilterSlot>/);
     // The conditional render §413 had is gone: a `&&` in front of the panel would drop the box again.
     expect(page).not.toMatch(/&&\s*\(\s*<Box[^>]*>\s*<ListingFilterPanel/);
+  });
+
+  it("is the page every period's path and both live twins render, with no panel of their own", () => {
+    // A period at its own path (`/ro/calendar/2026-10`, `/ro/calendar/2026-10/list`, `/ro/calendar/2026`)
+    // is `calendar/[...period]/page.tsx`, which renders the bare calendar's page with the path's segments;
+    // the live twins, which answer a filter, render those two. None of them draws a panel or a slot, so
+    // the slot above is the one rule at every address a month or a year can have.
+    const read = (file: string) => readFileSync(path.join(ROOT, file), "utf8");
+    const renders: Record<string, RegExp> = {
+      "src/app/[locale]/calendar/[...period]/page.tsx": /<CalendarPage [^>]*period=\{period\}/,
+      "src/app/[locale]/live/calendar/page.tsx": /<CalendarPage [^>]*query=\{searchParams\}/,
+      "src/app/[locale]/live/calendar/[...period]/page.tsx": /<CalendarPeriodPage [^>]*query=\{searchParams\}/,
+    };
+    expect(read("src/app/[locale]/calendar/[...period]/page.tsx")).toMatch(/import CalendarPage from "\.\.\/page";/);
+    expect(read("src/app/[locale]/live/calendar/[...period]/page.tsx")).toMatch(/import CalendarPeriodPage from "\.\.\/\.\.\/\.\.\/calendar\/\[\.\.\.period\]\/page";/);
+    for (const [file, render] of Object.entries(renders)) {
+      const source = read(file);
+      expect(source, file).toMatch(render);
+      expect(source, file).not.toContain("ListingFilterPanel");
+      expect(source, file).not.toContain("CalendarFilterSlot");
+    }
   });
 });
