@@ -1163,7 +1163,7 @@
       "raceStartsAt": "Startul cursei",
       "raceStartsAtHelp": "Ora la care se dă startul. Dacă e aceeași cu începutul evenimentului, scrie aceeași oră.",
       "raceStartNotSet": "Startul cursei nu e stabilit",
-      "raceStartNotSetHelp": "Bifat, pe site apare doar „start la” cu ora de începere a evenimentului, iar sub ea „Ora startului cursei se anunță.”",
+      "raceStartNotSetHelp": "Bifat, pe site apare doar „(start eveniment)” cu ora de începere a evenimentului, iar sub ea „Ora startului cursei se anunță.”",
       "mapUrl": "Link către punctul de întâlnire",
       "mapUrlHelp": "Opțional. Punctul de întâlnire pe Google Maps sau orice altă hartă. Trebuie să înceapă cu https://.",
       "coordinates": "Coordonate (lat, lng)",

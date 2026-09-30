@@ -1163,7 +1163,7 @@
       "raceStartsAt": "Race start",
       "raceStartsAtHelp": "When the gun goes. If it is the event's start, type the same time.",
       "raceStartNotSet": "Race start not set yet",
-      "raceStartNotSetHelp": "Ticked, the site shows only \"start at\" with the event's start time, and under it \"The race start time is announced later.\"",
+      "raceStartNotSetHelp": "Ticked, the site shows only \"(event start)\" with the event's start time, and under it \"The race start time is announced later.\"",
       "mapUrl": "Meeting point link",
       "mapUrlHelp": "Optional. The meeting point on Google Maps or any other map. It must start with https://.",
       "coordinates": "Coordinates (lat, lng)",
