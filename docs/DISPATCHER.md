@@ -249,3 +249,15 @@ did, so a finding the dispatcher can decide in the brief is cheaper than one a r
 - The owner's standing rules go into every brief: every text the club types is Română and
   English, both or neither; legal texts and emails carry placeholders, never a hardcoded value.
 - The rules that cannot be broken (CLAUDE.md) outrank speed, and so does the public repository.
+
+## Keeping branches mergeable — the lessons of 2026-09-29
+
+On 2026-09-29 four landings stopped on merge conflicts or a red CI, and the dispatcher caused each of them, not the code. The rules that prevent them:
+
+1. **Every round merges `origin/qa` first.** A round brief never says «do not merge origin/qa». The premerge relinks the migration snapshot chain anyway. A branch that skips qa for hours collects conflicts with every release that lands on the same files: the promotional-consent branch met eleven at its premerge.
+2. **A follow-up to a branch that has already landed goes on a new branch**, cut from the current `origin/qa`, with a fresh `.release` entry that amends the landed decision. The landing deletes the landed branch's entry and qa carries its merged code, so more rounds on the old branch meet both as conflicts.
+3. **Chains that touch the same files do not run in parallel.** Before launching, compare `git diff --name-only origin/qa...<branch>` of the running chains. The registration pages (manage, mine, declare), the CSV, workbook and export, the legal templates and the footer are hot. Serialize them, or land the first before the second implements.
+4. **A batch worktree is never cleaned with `git checkout -- .`.** That throws away the premerge's own repairs, such as the snapshot relink. The premerge commits what it changes.
+5. **A kit derived from a paired kit keeps the old gates.** Before running a landing, grep its baseline strings (`grep -oE 'BR-V2\.[0-9]+-2026-09-27'`) in both the premerge and the land script.
+6. **E2E stays in CI.** Rounds do not run Playwright: the release PR’s eight CI shards are the e2e gate, and a red one is fixed on the batch before the ship restarts. The owner declined e2e in rounds: «cred că exagerezi cu E2E». The landing runs `yarn check` on the batch before it pushes, which catches the unit and docs failures locally.
+7. **A hotfix follows `docs/RUNBOOKS.md` § Hotfix:** a branch from main, only the checks that break a deploy, `--admin` into main by the owner’s authorisation, main back into qa at once, the tests in the next batch.
