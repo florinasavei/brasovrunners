@@ -97,6 +97,11 @@ export type BotCheckWords = Record<BotCheckWidgetState, string> & { slow: string
 
 const SCRIPT_SELECTOR = "script[data-turnstile]";
 const NOTHING_TO_WATCH = () => () => {};
+/**
+ * Whether a person has started on a protected form in this document (§NNN) — a module's memory,
+ * so it lasts as long as the page and no longer: a new visit is a new document and waits again.
+ */
+let startedInThisDocument = false;
 
 export default function TurnstileWidget({
   siteKey,
@@ -144,11 +149,16 @@ export default function TurnstileWidget({
     button, which is what the check needs; a press on the send button itself arms it too (its focus
     comes first), and the button then holds the press for the token as it always did (§502).
   */
-  const [armed, setArmed] = useState(false);
+  // A person who started on a form in this document has started: a refused attempt re-renders the
+  // form (a new mount after the redirect) and its check starts again at once, as it did before.
+  const [armed, setArmed] = useState(() => startedInThisDocument);
   useEffect(() => {
     if (armed) return;
     const target: EventTarget | null = holder.current?.closest("form") ?? document;
-    const arm = () => setArmed(true);
+    const arm = () => {
+      startedInThisDocument = true;
+      setArmed(true);
+    };
     for (const type of ARMING_EVENTS) target.addEventListener(type, arm, { once: true, passive: true });
     return () => {
       for (const type of ARMING_EVENTS) target.removeEventListener(type, arm);

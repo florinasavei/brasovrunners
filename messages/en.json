@@ -2565,7 +2565,7 @@
         "deferred": "Messages waiting: {count}. Mailgun's daily allowance ({allowance} messages a day) is spent. They go out by themselves on {resumesAt} (Romania time); nothing is lost.",
         "failed": "Messages not sent in the last 7 days: {count} — Mailgun's reason: “{reason}”. See Mailgun → Sending → Logs.",
         "overdue": "Messages whose turn passed more than 90 minutes ago: {count} — the monitors are not running. See the “Monitors” row below.",
-        "notify": "To hear about this without opening the page: a cron-job.org monitor on /api/health with failure notifications on — the step in the “Monitors” row."
+        "notify": "To hear about this without opening the page: a daily cron-job.org monitor on /api/health?deep=1 with failure notifications on — the step in the “Monitors” row."
       },
       "state": {
         "blocking": "Blocking",
@@ -2629,8 +2629,9 @@
             "Turn on email notification on failure, so a dead monitor tells you. This row turns green on the first run; /devs shows each job with its last run, and the database's consumption.",
             "At night the site answers its first request more slowly — that is intended.",
             "On QA: the outbox every hour (0 * * * *) and maintenance every 2 hours (0 */2 * * *), and on Settings → Costs “How often the site checks” = 2 hours: QA pays for its own database's awake hours too.",
-            "The third monitor, the one that tells you when emails stop going out: “Create cronjob” with the address {baseUrl}/api/health, Request method GET, no header.",
-            "Production once an hour at minute 2 (2 0-1,4-23 * * *), QA every 6 hours (2 */6 * * *). Under Notifications tick “on failure” and “when the job gets disabled”."
+            "The third monitor, the one that tells you when the site stops answering: “Create cronjob” with the address {baseUrl}/api/health, Request method GET, no header.",
+            "Production once an hour at minute 2 (2 0-1,4-23 * * *), QA every 6 hours (2 */6 * * *). Under Notifications tick “on failure” and “when the job gets disabled”.",
+            "The fourth, the full check, which tells you when emails stop going out: the address {baseUrl}/api/health?deep=1, daily at 04:02 (2 4 * * *), the same notifications."
           ]
         },
         "retentionSweep": {
@@ -2641,7 +2642,7 @@
             "Open /devs: the registration-maintenance row says “failing” and its last error names the steps that failed (for example “retention:registrations-after-event”).",
             "The step names live in the retention jobs code.",
             "In the function logs on Vercel, look for “[retention] sweep step failed”: next to the step's name is the database's error code (for example 57014, a timeout), never the values.",
-            "Fix the cause, then wait for the next run (at most 15 minutes by day, an hour at night). The row goes by itself after the first run without errors, and /api/health answers ok again."
+            "Fix the cause, then wait for the next run (at most 15 minutes by day, an hour at night). The row goes by itself after the first run without errors, and /api/health?deep=1 answers ok again."
           ]
         },
         "inviteStaff": {
@@ -3125,7 +3126,7 @@
         },
         "introMore": "The jobs are registration maintenance and the email outbox. With nothing to do they do not wake the database; every wake-up costs at least 5 minutes of compute.",
         "safeMore": "Every reading of the places counts the deadlines at that moment, whether or not the job has run. Your setting wins.",
-        "onTheHourMore": "A day with nothing to do costs one wake of the database, at {time}; the deletion of data past its window runs then too. A deadline (a held place, an offer, a reminder, an email to retry) keeps its own time. With an interval chosen, runs fall on its marks (with 2 hours, on the even hours), and some may be up to a quarter of an hour late.",
+        "onTheHourMore": "A day with nothing to do costs one wake of the database, at {time}. A deadline (a held place, a reminder) keeps its own time. With an interval chosen, some may be up to a quarter of an hour late.",
         "fieldHelpMore": "A ping inside the interval answers from the cache, without the database, exactly like one with nothing to do."
       },
       "budgetThresholds": {
@@ -5301,7 +5302,7 @@
             {
               "title": "Check whether the site is working",
               "steps": [
-                "Open /api/health in a new tab and read only the first word after \"status\", at the very start of the text: ok means the site is working, degraded or down means a problem, even if ok appears further down.",
+                "Open /api/health?deep=1 in a new tab and read only the first word after \"status\", at the very start of the text: ok means the site is working, degraded or down means a problem, even if ok appears further down.",
                 "Not sure what you see? Send the text to the club's owner."
               ]
             },
@@ -6597,7 +6598,7 @@
     "configuration": "Configuration",
     "neverValues": "No value, key or secret appears on this page. Only the variable's name and whether it is set.",
     "runtime": "State right now",
-    "runtimeIntro": "What the database and the scheduled jobs report at this moment. The same values as /api/health.",
+    "runtimeIntro": "What the database and the scheduled jobs report at this moment. The same values as /api/health?deep=1.",
     "weather": {
       "title": "Weather forecast",
       "ok": "Open-Meteo (public, keyless) — last answer on {when}, {hours} hours of forecast; places read in the last hour on this instance: {places}.",
@@ -6702,8 +6703,8 @@
       "none": "Plan {plan}: no message limit."
     },
     "emailHealth": {
-      "ok": "Sending works: nothing deferred, overdue or failed. /api/health answers 200.",
-      "stalled": "Sending has stopped — deferred (daily allowance): {deferred}; overdue: {overdue}; failed in 7 days: {failed}. Reason: “{reason}”. /api/health answers 503 until this clears."
+      "ok": "Sending works: nothing deferred, overdue or failed. /api/health?deep=1 answers 200.",
+      "stalled": "Sending has stopped — deferred (daily allowance): {deferred}; overdue: {overdue}; failed in 7 days: {failed}. Reason: “{reason}”. /api/health?deep=1 answers 503 until this clears."
     },
     "registrationsToday": "Registrations today",
     "testRegistrations": "test",
@@ -6921,8 +6922,8 @@
     "meaning": {
       "unknown": "Neon could not be read just now, so the site runs normally, with no extra brake.",
       "green": "The spend is on or under the month's line — the limit spread over the days gone — so the site runs normally.",
-      "amber": "The spend is more than {margin}% past the month's line or past {amber}% of the limit, so the site slows itself down; /api/health stays \"ok\", with a note.",
-      "red": "More than {red}% of the limit is used: the site slows down as far as it can, and /api/health raises the alarm so the limit can be raised in time."
+      "amber": "The spend is more than {margin}% past the month's line or past {amber}% of the limit, so the site slows itself down; /api/health?deep=1 stays \"ok\", with a note.",
+      "red": "More than {red}% of the limit is used: the site slows down as far as it can, and /api/health?deep=1 raises the alarm so the limit can be raised in time."
     },
     "spent": "{used} of {quota} CU-hours used ({percent}%); the month's line is at {line} now; the period ends {end}.",
     "spentNoLimit": "{used} CU-hours used; the period ends {end}.",
@@ -6949,7 +6950,7 @@
     "meteredNeedsKey": "The billed figure needs an organisation or personal Neon key; the project key may not read it.",
     "spentAll": "By this reading the limit is used up, but Neon stops the database only when its own meter reaches the limit.",
     "thresholds": {
-      "intro": "The thresholds, as percents of the monthly limit: amber from the first, red from the second (red raises the alarm on /api/health).",
+      "intro": "The thresholds, as percents of the monthly limit: amber from the first, red from the second (red raises the alarm on /api/health?deep=1).",
       "amber": "Amber from (%)",
       "red": "Red from (%)",
       "save": "Save the thresholds",

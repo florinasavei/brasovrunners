@@ -68,8 +68,13 @@ describe("BR-REQ-090-03 criterion 11 the drain wakes the outbox job only for wha
     expect(await drain()).toEqual(["br-jobs:due:email-outbox"]);
   });
 
-  it("leaves a row deferred to the allowance reset to the job's own hourly look", async () => {
+  it("wakes the job for a row deferred to the allowance reset ten hours away: the next look would be the daily window (§NNN)", async () => {
     state.left = new Date(Date.now() + 10 * 60 * 60_000);
+    expect(await drain()).toEqual(["br-jobs:due:email-outbox"]);
+  });
+
+  it("leaves a row due further away than the longest quiet to the daily window's own look (§NNN)", async () => {
+    state.left = new Date(Date.now() + 30 * 60 * 60_000);
     expect(await drain()).toEqual([]);
   });
 

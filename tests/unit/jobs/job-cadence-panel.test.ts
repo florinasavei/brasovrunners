@@ -105,10 +105,10 @@ describe("§NNN the throttle card says the safety look is once a day, at the win
   const onTheHour = (messages: typeof ro) => `${messages.Admin.tasks.jobCadence.onTheHour} ${messages.Admin.tasks.jobCadence.onTheHourMore}`;
 
   it("names the day, the window, the deep health check and the one wake of an idle day in both languages", () => {
-    expect(onTheHour(ro)).toMatch(/o dată pe zi, la \{time\}.*\/api\/health\?deep=1.*O zi fără nimic de făcut costă o singură trezire/);
+    expect(onTheHour(ro)).toMatch(/o dată pe zi, la \{time\}.*\/api\/health\?deep=1.*O zi fără nimic de făcut costă o trezire/);
     expect(onTheHour(en)).toMatch(/once a day, at \{time\}.*\/api\/health\?deep=1.*A day with nothing to do costs one wake/);
     // A deadline keeps its own time: the sentence must not suggest a hold waits for 04:00.
-    expect(onTheHour(ro)).toMatch(/își păstrează ora lui/);
+    expect(onTheHour(ro)).toMatch(/își păstrează ora/);
     expect(onTheHour(en)).toMatch(/keeps its own time/);
   });
 

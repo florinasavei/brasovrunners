@@ -2565,7 +2565,7 @@
         "deferred": "Mesaje care așteaptă: {count}. Limita zilnică Mailgun ({allowance} de mesaje pe zi) s-a consumat. Pleacă singure {resumesAt} (ora României); nimic nu s-a pierdut.",
         "failed": "Mesaje netrimise în ultimele 7 zile: {count} — motivul Mailgun: „{reason}”. Vezi Mailgun → Sending → Logs.",
         "overdue": "Mesaje cu rândul trecut de peste 90 de minute: {count} — monitoarele nu rulează. Vezi rândul „Monitoarele” de mai jos.",
-        "notify": "Ca să afli de asta fără să deschizi pagina: un monitor pe cron-job.org către /api/health, cu notificare la eșec — pasul din rândul „Monitoarele”."
+        "notify": "Ca să afli de asta fără să deschizi pagina: un monitor zilnic pe cron-job.org către /api/health?deep=1, cu notificare la eșec — pasul din rândul „Monitoarele”."
       },
       "state": {
         "blocking": "Blochează",
@@ -2629,8 +2629,9 @@
             "Bifează notificarea prin email la eșec, ca să afli când un monitor moare. La prima rulare rândul acesta devine verde; /devs arată fiecare sarcină cu ora ultimei rulări și consumul bazei de date.",
             "Noaptea site-ul răspunde mai încet la prima cerere — e voit.",
             "Pe QA: outbox-ul o dată pe oră (0 * * * *) și mentenanța la 2 ore (0 */2 * * *), iar pe Setări → Costuri „Cât de des verifică site-ul” = 2 ore: și QA plătește orele în care baza lui de date e trează.",
-            "Al treilea monitor, cel care te anunță când emailurile nu mai pleacă: „Create cronjob” cu adresa {baseUrl}/api/health, Request method GET, fără header.",
-            "Pe producție o dată pe oră, la minutul 2 (2 0-1,4-23 * * *), pe QA la 6 ore (2 */6 * * *). La Notifications bifează „on failure” și „when the job gets disabled”."
+            "Al treilea monitor, cel care te anunță când site-ul nu mai răspunde: „Create cronjob” cu adresa {baseUrl}/api/health, Request method GET, fără header.",
+            "Pe producție o dată pe oră, la minutul 2 (2 0-1,4-23 * * *), pe QA la 6 ore (2 */6 * * *). La Notifications bifează „on failure” și „when the job gets disabled”.",
+            "Al patrulea, verificarea completă, care te anunță când emailurile nu mai pleacă: adresa {baseUrl}/api/health?deep=1, zilnic la 04:02 (2 4 * * *), aceleași notificări."
           ]
         },
         "retentionSweep": {
@@ -2641,7 +2642,7 @@
             "Deschide /devs: rândul sarcinii registration-maintenance arată „eșuează” și, în ultima eroare, pașii care au eșuat (de exemplu „retention:registrations-after-event”).",
             "Numele pașilor sunt în codul sarcinilor de retenție.",
             "În jurnalele funcției din Vercel caută „[retention] sweep step failed”: lângă numele pasului apare codul erorii bazei de date (de exemplu 57014, timp depășit), niciodată valorile.",
-            "Repară cauza, apoi așteaptă următoarea rulare (cel mult 15 minute ziua, o oră noaptea). Rândul dispare singur după prima rulare fără erori, iar /api/health răspunde din nou ok."
+            "Repară cauza, apoi așteaptă următoarea rulare (cel mult 15 minute ziua, o oră noaptea). Rândul dispare singur după prima rulare fără erori, iar /api/health?deep=1 răspunde din nou ok."
           ]
         },
         "inviteStaff": {
@@ -3125,7 +3126,7 @@
         },
         "introMore": "Lucrările sunt mentenanța înscrierilor și coada de emailuri. Când nu au nimic de făcut, nu trezesc baza; fiecare trezire costă cel puțin 5 minute de calcul.",
         "safeMore": "Fiecare citire a locurilor socotește termenele în clipa aceea, cu sau fără lucrarea programată. Setarea ta are întâietate.",
-        "onTheHourMore": "O zi fără nimic de făcut costă o singură trezire a bazei, la {time}; atunci rulează și ștergerea datelor ajunse la termen. Un termen (o rezervare, o ofertă, o reamintire, un email de reîncercat) își păstrează ora lui. Cu un interval ales, rulările cad pe marginile lui (cu 2 ore, pe orele pare), iar unele pot întârzia cu până la un sfert de oră.",
+        "onTheHourMore": "O zi fără nimic de făcut costă o trezire a bazei, la {time}. Un termen (o rezervare, o reamintire) își păstrează ora. Cu un interval ales, unele pot întârzia cu până la un sfert de oră.",
         "fieldHelpMore": "Un ping în interval răspunde din memorie, fără bază de date, exact ca unul care nu are nimic de făcut."
       },
       "budgetThresholds": {
@@ -5301,7 +5302,7 @@
             {
               "title": "Verifică dacă site-ul funcționează",
               "steps": [
-                "Deschide /api/health într-un tab nou și citește doar primul cuvânt de după \"status\", chiar la începutul textului: ok înseamnă că site-ul funcționează, degraded sau down înseamnă o problemă, chiar dacă mai jos apare ok în altă parte.",
+                "Deschide /api/health?deep=1 într-un tab nou și citește doar primul cuvânt de după \"status\", chiar la începutul textului: ok înseamnă că site-ul funcționează, degraded sau down înseamnă o problemă, chiar dacă mai jos apare ok în altă parte.",
                 "Nu ești sigur ce vezi? Trimite textul proprietarului clubului."
               ]
             },
@@ -6597,7 +6598,7 @@
     "configuration": "Configurație",
     "neverValues": "Nicio valoare, nicio cheie și niciun secret nu apar pe această pagină. Doar numele variabilei și dacă are valoare.",
     "runtime": "Starea în acest moment",
-    "runtimeIntro": "Ce raportează baza de date și joburile programate acum. Aceleași valori ca /api/health.",
+    "runtimeIntro": "Ce raportează baza de date și joburile programate acum. Aceleași valori ca /api/health?deep=1.",
     "weather": {
       "title": "Prognoza vremii",
       "ok": "Open-Meteo (public, fără cheie) — ultimul răspuns {when}, {hours} ore de prognoză; locuri citite în ultima oră pe această instanță: {places}.",
@@ -6702,8 +6703,8 @@
       "none": "Planul {plan}: fără limită de mesaje."
     },
     "emailHealth": {
-      "ok": "Trimiterea funcționează: nimic amânat, întârziat sau eșuat. /api/health răspunde 200.",
-      "stalled": "Trimiterea s-a oprit — amânate (limita zilnică): {deferred}; întârziate: {overdue}; eșuate în 7 zile: {failed}. Motiv: „{reason}”. /api/health răspunde 503 până se rezolvă."
+      "ok": "Trimiterea funcționează: nimic amânat, întârziat sau eșuat. /api/health?deep=1 răspunde 200.",
+      "stalled": "Trimiterea s-a oprit — amânate (limita zilnică): {deferred}; întârziate: {overdue}; eșuate în 7 zile: {failed}. Motiv: „{reason}”. /api/health?deep=1 răspunde 503 până se rezolvă."
     },
     "registrationsToday": "Înscrieri astăzi",
     "testRegistrations": "de test",
@@ -6921,8 +6922,8 @@
     "meaning": {
       "unknown": "Neon nu a putut fi citit acum, așa că site-ul merge normal, fără nicio frână în plus.",
       "green": "Consumul e pe sau sub linia lunii, adică limita împărțită pe zilele trecute, așa că site-ul merge normal.",
-      "amber": "Consumul a trecut cu peste {margin}% de linia lunii sau de {amber}% din limită, așa că site-ul se frânează singur; /api/health rămâne „ok”, cu o notă.",
-      "red": "S-au folosit peste {red}% din limită: site-ul se frânează cât poate, iar /api/health dă alarma ca limita să poată fi mărită la timp."
+      "amber": "Consumul a trecut cu peste {margin}% de linia lunii sau de {amber}% din limită, așa că site-ul se frânează singur; /api/health?deep=1 rămâne „ok”, cu o notă.",
+      "red": "S-au folosit peste {red}% din limită: site-ul se frânează cât poate, iar /api/health?deep=1 dă alarma ca limita să poată fi mărită la timp."
     },
     "spent": "{used} din {quota} ore-CU folosite ({percent}%); linia lunii e acum la {line}; perioada se încheie {end}.",
     "spentNoLimit": "{used} ore-CU folosite, perioada se încheie {end}.",
@@ -6949,7 +6950,7 @@
     "meteredNeedsKey": "Cifra facturată cere o cheie Neon de organizație sau personală; cheia pe proiect nu are voie s-o citească.",
     "spentAll": "După această citire limita e consumată, dar Neon oprește baza abia când propriul lui contor ajunge la limită.",
     "thresholds": {
-      "intro": "Pragurile, în procente din limita lunară: galben de la primul, roșu de la al doilea (roșu dă alarma pe /api/health).",
+      "intro": "Pragurile, în procente din limita lunară: galben de la primul, roșu de la al doilea (roșu dă alarma pe /api/health?deep=1).",
       "amber": "Galben de la (%)",
       "red": "Roșu de la (%)",
       "save": "Salvează pragurile",
