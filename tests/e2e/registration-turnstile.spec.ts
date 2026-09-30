@@ -315,9 +315,16 @@ test.describe("§502 a press held for the anti-bot check is sent when the check 
     await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);
 
-    // Cloudflare's script, four seconds late — so the press comes before any widget exists.
+    // Cloudflare's script, held until the press is held — so the press comes before any widget
+    // exists. Not a fixed delay: since the script is requested at the first key in the form rather
+    // than on arrival (§NNN), a delay counted from the request would end at an unknown moment
+    // after the press and spend the valve's eight seconds on Cloudflare's own challenge.
+    let releaseScript: () => void = () => {};
+    const scriptReleased = new Promise<void>((resolve) => {
+      releaseScript = resolve;
+    });
     await page.route(TURNSTILE_SCRIPT_PATTERN, async (route) => {
-      await new Promise((resolve) => setTimeout(resolve, 4_000));
+      await scriptReleased;
       await route.continue();
     });
     await page.goto(registerPath, { waitUntil: "domcontentloaded" });
@@ -334,8 +341,9 @@ test.describe("§502 a press held for the anti-bot check is sent when the check 
     const pressedAt = Date.now();
     await sendButton(page).click();
     await expect(heldSentence(page)).toBeVisible();
+    releaseScript();
     await posted;
-    // The widget arrives a few seconds after the press and answers at once; the valve, eight
+    // The widget arrives after the press and answers at once; the valve, eight
     // seconds after the press, would post its token too — so the answer must have come first.
     expect(Date.now() - pressedAt, "sent by the widget's answer, not by the valve").toBeLessThan(RELEASE_AFTER_MS - 1_000);
     await expect(page).toHaveURL(/submitted=/, { timeout: 20_000 });

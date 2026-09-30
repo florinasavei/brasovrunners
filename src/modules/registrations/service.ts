@@ -304,8 +304,8 @@ async function handedBibAtConfirmation<T extends Record<string, unknown>>(
  * the holds and offers the change itself created; `maintenanceDueFor` adds the event's own
  * instants, and `wakeJobs` does nothing when all of them are further away than any quiet a run
  * can promise — which is the ordinary case: a race weeks away, a hold that lapses in days. A call
- * this file forgot costs the hour-long cap, never the work: every deadline here is also evaluated
- * on every read (§10.6).
+ * this file forgot delays the job's run to the daily window at 04:00 (§NNN) — at most a day —
+ * never the work: every deadline here is also evaluated on every read (§10.6).
  */
 function wakeMaintenance(
   event: EventForRegistration,
