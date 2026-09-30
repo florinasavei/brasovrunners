@@ -184,7 +184,7 @@ export function joinNames(locale: EmailLocale, names: readonly string[]): string
 /**
  * Whose QR this is (§547; the owner, 2026-09-28: a family's codes looked the same): the person's name
  * and their race number, «—» while none is given — the number this message carries, which the
- * renderer decided through `raceNumberOf` (§173, §NNN). Beside the QR in the confirmation, the
+ * renderer decided through `raceNumberOf` (§173, §548). Beside the QR in the confirmation, the
  * reminder and the number's own message; alone, in the QR's place, on the club's copy, which carries
  * no QR (§320).
  */

@@ -7,7 +7,7 @@ import { raceNumberOf } from "./race-number";
  * email, «Gestionează înscrierea», «Înscrierile mele» — and on the club copy, which carries no QR
  * (§320), the person's name and their race number: the number once one is given, «—» before.
  *
- * The number is the one rule every surface asks, `raceNumberOf({ status, bibNumber })` (§NNN): a
+ * The number is the one rule every surface asks, `raceNumberOf({ status, bibNumber })` (§548): a
  * number exists once the registration is confirmed, so there is nothing here to qualify it —
  * `raceNumber ?? «—»`. Pure, so the three surfaces and the email agree.
  */

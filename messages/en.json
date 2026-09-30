@@ -5923,14 +5923,8 @@
     "contactPage": "Write to us"
   },
   "Identity": {
-    "blockLabel": "The club's details",
     "line": "{legalName} ({club}) · CIF {cif}",
-    "lineNoCif": "{legalName} ({club})",
-    "cif": "C.I.F. {cif}",
-    "country": "Romania",
-    "socialLabel": "Follow the club",
-    "contactHeading": "Contact",
-    "writeToUs": "Write to us"
+    "lineNoCif": "{legalName} ({club})"
   },
   "Legal": {
     "unavailable": "This document has not been published for this environment yet.",
