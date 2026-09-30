@@ -19,6 +19,7 @@ import { CARD_BODY_SX, CARD_CHIPS_SX, CARD_DOOR_SX, CARD_TAP_SX, CARD_TITLE_SX, 
 import EventExcerpt from "./EventExcerpt";
 import EventFacts from "./EventFacts";
 import EventKindChips from "./EventKindChips";
+import type { PreviewDoor } from "./registration-door";
 import GlyphChip from "./GlyphChip";
 import PartnerChip from "./PartnerChip";
 import { repeatTooltip, rhythmLabel } from "./series-sentence";
@@ -70,6 +71,7 @@ export default async function EventCard({
   weather = null,
   featured,
   seriesDates,
+  previewDoor,
 }: {
   /** Undated only in the listing's «Data se anunță» section (§533): no countdown, «Când» says so. */
   event: PublicEventPage;
@@ -85,6 +87,11 @@ export default async function EventCard({
    * single date, the card wears no repeat chip.
    */
   seriesDates?: readonly { startsAt: Date }[];
+  /**
+   * The editor's preview before saving (§NNN): the draft's door and the word its disabled button
+   * carries (`draftRegistrationDoor`); absent on every card a visitor reads.
+   */
+  previewDoor?: PreviewDoor;
 }) {
   const tEvent = await getTranslations("Event");
   const locale = (await getLocale()) as Locale;
@@ -184,7 +191,7 @@ export default async function EventCard({
         {/* A group's gap above the facts, the density scale's short step on a phone (§480): eight,
             no nearer than the title's reach below its words when there is no summary (§366). */}
         <Box sx={{ mt: { xs: DENSITY.gapSm, sm: 1.5 } }}>
-          <EventFacts event={event} now={now} variant="compact" cardWeather={weather} raceWeek={week !== null} />
+          <EventFacts event={event} now={now} variant="compact" cardWeather={weather} raceWeek={week !== null} previewDoor={previewDoor} />
         </Box>
 
         {/* The door to the page, said in words (§305; the owner: "am nevoie de un buton pe carduri

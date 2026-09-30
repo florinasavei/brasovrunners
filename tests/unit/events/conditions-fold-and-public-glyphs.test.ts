@@ -19,7 +19,7 @@ import { BUTTON_GLYPH_PX } from "@/shared/ui/button-glyph";
 
 const ROOT = path.resolve(__dirname, "../../..");
 const read = (file: string) => readFileSync(path.join(ROOT, file), "utf8");
-const PAGE = read("src/app/[locale]/events/[slug]/page.tsx");
+const PAGE = read("src/modules/events/ui/EventPageView.tsx");
 const OFFER = read("src/modules/group-run-declarations/ui/DeclarationOffer.tsx");
 
 describe("§498 «Condiții de participare»", () => {

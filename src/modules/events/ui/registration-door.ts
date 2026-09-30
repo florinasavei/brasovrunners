@@ -1,6 +1,8 @@
 import { unstable_rethrow } from "next/navigation";
 import { DEGRADED_PAGE_SECONDS, holdPageFor, holdPageUntil } from "@/modules/public-cache/page-lifetime";
 import { cachedPublicAvailability } from "@/modules/public-cache/reads";
+import type { Database } from "@/db/types";
+import { readPublicPlaces } from "@/modules/registrations/service";
 import { eventClockInstants } from "../domain/page-clock";
 import { registrationDoorOpen } from "../domain/listing-filter";
 import { type PublicFill, publicFill, registrationCta, type RegistrationCta } from "../domain/registration-cta";
@@ -80,6 +82,40 @@ export async function readRegistrationDoor(event: PublicEventPage, now: Date): P
     kind: "KNOWN",
     cta: registrationCta({ ...event, availablePlaces, waitlistRoom, waitlistCapacity }, now),
     fill: publicFill(capacity, availablePlaces),
+  };
+}
+
+/**
+ * The door a preview before saving draws (§NNN): the answer below, and the word «previzualizare»
+ * the button carries, disabled, in the page's language.
+ */
+export type PreviewDoor = { door: RegistrationDoor; word: string };
+
+/**
+ * The door the draft would have, for the editor's preview before saving (§NNN): the same state
+ * `readRegistrationDoor` picks (`registrationCta`) and the same fill, but counted straight from the
+ * allocator's own formula (`readPublicPlaces`) against the **draft's** capacity and waiting-list
+ * length — the unsaved numbers are what the preview is for — never through the public cache, which
+ * a preview must neither fill nor read, and with no page lifetime to hold (a preview is no page the
+ * CDN keeps). An event not saved yet has nobody registered: its counts are nought.
+ */
+export async function draftRegistrationDoor<T extends Record<string, unknown>>(
+  db: Database<T>,
+  event: PublicEventPage,
+  limits: { capacity: number | null; waitlistCapacity: number | null },
+  now: Date,
+): Promise<RegistrationDoor> {
+  let availablePlaces: number | null = null;
+  let waitlistRoom: number | null = null;
+  if (event.registrationMode === "INTERNAL" && registrationState(event, now) === "OPEN") {
+    const places = await readPublicPlaces(db, { id: event.id, ...limits }, now);
+    availablePlaces = places.availablePlaces;
+    waitlistRoom = places.waitlistRoom;
+  }
+  return {
+    kind: "KNOWN",
+    cta: registrationCta({ ...event, availablePlaces, waitlistRoom, waitlistCapacity: limits.waitlistCapacity }, now),
+    fill: publicFill(limits.capacity, availablePlaces),
   };
 }
 

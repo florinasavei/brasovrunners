@@ -108,6 +108,7 @@
   "Event": {
     "backToEvents": "Back to events",
     "editInBackoffice": "Edit",
+    "previewDoor": "preview",
     "opensInNewTab": "opens in a new tab",
     "photosNotice": "Photos and video may be taken at club events; the club publishes them in its gallery and on its channels. Don't want to appear? Tell the photographer or <contact>write to us</contact> and we take the photo down, no reason needed. Details in the <privacy>privacy notice</privacy>.",
     "date": "Date",
@@ -1113,6 +1114,26 @@
       "LEGAL_ALREADY_DELETED": "This version has already been deleted from the list. Its text stays in the archive."
     },
     "editor": {
+      "draftPreview": {
+        "intro": "The listing card and the event page, from what you have typed now. Nothing is saved or published.",
+        "run": "Preview",
+        "running": "Getting it ready…",
+        "views": "What you see",
+        "card": "Card",
+        "page": "Page",
+        "language": "Language",
+        "width": "Width",
+        "phone": "Phone (360)",
+        "desktop": "Desktop",
+        "idle": "Press «Preview» to see the card and the page.",
+        "asOfPress": "Shows what was typed at the last press of «Preview».",
+        "incomplete": "{language} incomplete — missing: {missing}",
+        "complete": "Both languages have everything publication needs.",
+        "refused": "This cannot be previewed as it is: the save would refuse these boxes.",
+        "failed": "The preview did not work. Try again.",
+        "forbidden": "Your role cannot preview the event.",
+        "frameTitle": "Event preview"
+      },
       "startsAt": "Event start",
       "startsAtHelp": "Local time of the event ({timezone}). For a race this is the gathering time.",
       "raceStartsAt": "Race start",
@@ -1733,6 +1754,10 @@
           "title": "Recurrence",
           "none": "Does not repeat",
           "on": "Repeats"
+        },
+        "preview": {
+          "title": "Preview",
+          "summary": "How it looks on the site — the card and the page, without saving"
         },
         "summary": {
           "filled": "written",

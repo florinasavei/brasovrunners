@@ -192,7 +192,7 @@ describe("§367 the event page's overline, amended §375: one glyph, a generic l
   });
 
   it("stands on the page's overline after the type, and the overline wraps on a phone", () => {
-    const page = readFileSync("src/app/[locale]/events/[slug]/page.tsx", "utf8");
+    const page = readFileSync("src/modules/events/ui/EventPageView.tsx", "utf8");
     const start = page.indexOf('<Typography variant="overline"');
     const line = page.slice(start, page.indexOf("</Typography>", start));
     expect(line.indexOf("<PartnerOverline event={event} />")).toBeGreaterThan(line.indexOf("<TypeGlyph"));

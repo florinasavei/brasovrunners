@@ -25,7 +25,7 @@ import {
  */
 const ROOT = process.cwd();
 const read = (file: string) => readFileSync(path.join(ROOT, file), "utf8").replace(/\r\n/g, "\n");
-const PAGE = read("src/app/[locale]/events/[slug]/page.tsx");
+const PAGE = read("src/modules/events/ui/EventPageView.tsx");
 const FACTS = read("src/modules/events/ui/EventFacts.tsx");
 const EDIT = read("src/app/[locale]/admin/events/[id]/page.tsx");
 const CREATE = read("src/app/[locale]/admin/events/new/page.tsx");

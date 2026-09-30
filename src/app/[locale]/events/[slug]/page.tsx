@@ -1,56 +1,22 @@
-import Alert from "@mui/material/Alert";
 import Container from "@mui/material/Container";
-import Divider from "@mui/material/Divider";
-import Button from "@mui/material/Button";
-import Stack from "@mui/material/Stack";
-import Typography from "@mui/material/Typography";
 import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
-import { getPathname, Link } from "@/i18n/navigation";
+import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { sportsEventJsonLd } from "@/modules/events/structured-data";
-import EventFacts from "@/modules/events/ui/EventFacts";
-import EventAgeRule from "@/modules/events/ui/EventAgeRule";
-import EventPhotosNotice from "@/modules/events/ui/EventPhotosNotice";
-import GlyphChip from "@/modules/events/ui/GlyphChip";
-import EventLinks from "@/modules/events/ui/EventLinks";
-import EventRoute from "@/modules/events/ui/EventRoute";
-import { hasRouteDescription } from "@/modules/events/domain/route-section";
-import EventProgramme from "@/modules/events/ui/EventProgramme";
-import { EVENT_LINK_KINDS, type EventLinkKind } from "@/modules/events/domain/links";
-import { SURFACE_GLYPH, TYPE_GLYPH } from "@/modules/events/ui/glyphs";
-import PartnerOverline from "@/modules/events/ui/PartnerOverline";
-import Box from "@mui/material/Box";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import EditIcon from "@mui/icons-material/Edit";
-import GavelIcon from "@mui/icons-material/Gavel";
-import { isRichTextEmpty, readRichText } from "@/modules/content/rich-text/domain/schema";
-import RichText from "@/modules/content/rich-text/ui/RichText";
-import EventDescription from "@/modules/events/ui/EventDescription";
-import RegistrationCta from "@/modules/events/ui/RegistrationCta";
-import DeclarationOffer from "@/modules/group-run-declarations/ui/DeclarationOffer";
-import GroupRunSafetyRules from "@/modules/group-run-declarations/ui/GroupRunSafetyRules";
-import ShareLinks from "@/modules/events/ui/ShareLinks";
-import { instagramFileName } from "@/modules/events/instagram-share";
+import EventPageView from "@/modules/events/ui/EventPageView";
 import { absoluteUrl, eventPageUrl } from "@/modules/events/share-links";
-import { toCalendarEvent } from "@/modules/events/calendar";
 import { datedOrNull } from "@/modules/events/domain/dated";
-import { googleCalendarUrl } from "@/modules/events/ical";
-import StartList from "@/modules/events/ui/StartList";
 import { registrationState } from "@/modules/events/domain/registration-window";
 import {
   cachedCurrentApprovedDocument,
   cachedPublishedEventBySlug,
   cachedPublishedTranslations,
 } from "@/modules/public-cache/reads";
-import { confirmationWindow } from "@/modules/registrations/domain/hold-deadlines";
 import { parseInterestOutcome, parseInterestSince } from "@/modules/registrations/interest-box";
-import RegistrationInterestForm from "@/modules/registrations/ui/RegistrationInterestForm";
-import RegistrationSteps from "@/modules/registrations/ui/RegistrationSteps";
 import { CLUB_TIME_ZONE } from "@/i18n/dates";
-import { LIVE_SEGMENT } from "@/i18n/live-twin";
 import { nextWallMidnight } from "@/modules/events/domain/page-clock";
 import { holdPageUntil } from "@/modules/public-cache/page-lifetime";
 import { forecastForEvent } from "@/modules/weather/source";
@@ -59,9 +25,7 @@ import { readWithLastGood } from "@/modules/resilience/last-good";
 import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
 import { readOrWhileAway } from "@/modules/resilience/optional-read";
 import { pageAlternates, slugRouteUrls } from "@/modules/seo/alternates";
-import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_INLINE_SX } from "@/shared/ui/disclosure";
 import JsonLd from "@/shared/ui/JsonLd";
-import OpenFoldFromHash from "@/shared/ui/OpenFoldFromHash";
 import { CLUB_NAME, PAGE_WIDTH } from "@/theme/brand";
 import { DENSITY } from "@/theme/density";
 
@@ -116,15 +80,6 @@ export function generateStaticParams(): { slug: string }[] {
 }
 
 
-function TypeGlyph({ type }: { type: keyof typeof TYPE_GLYPH }) {
-  const Icon = TYPE_GLYPH[type];
-  return <Icon aria-hidden="true" sx={{ fontSize: 18 }} />;
-}
-
-function SurfaceGlyph({ surface }: { surface: keyof typeof SURFACE_GLYPH }) {
-  const Icon = SURFACE_GLYPH[surface];
-  return <Icon aria-hidden="true" sx={{ fontSize: 18 }} />;
-}
 
 /** Absolute URL for this event in a given locale, always derived from APP_BASE_URL. */
 function eventUrl(locale: "ro" | "en", slug: string): string {
@@ -219,9 +174,6 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
   // turns at that zone's midnight, and the page is made again then too (§549).
   await holdPageUntil([nextWallMidnight(now, event.timezone)], now);
 
-  const t = await getTranslations("Event");
-  // Each kind of link's own word in this language (§332), for the route section and "Linkuri și fișiere" alike.
-  const linkKindLabels = Object.fromEntries(EVENT_LINK_KINDS.map((kind) => [kind, t(`links.kinds.${kind}`)])) as Record<EventLinkKind, string>;
   const interestOutcome = parseInterestOutcome(interest);
   // A staff member who may edit the words gets the way into the editor from here (§135; the
   // owner: "when I am signed in … I should be able to edit events from the event page"). The live
@@ -252,238 +204,24 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
 
       <LastGoodNotice read={read} />
 
-      <Stack direction="row" spacing={2} sx={{ mb: { xs: DENSITY.gapSm, sm: 2 }, alignItems: "center", justifyContent: "space-between" }}>
-        <Typography variant="body2">
-          {/* A left arrow before the words, and a pencil in the staff edit button (§469). */}
-          <Link href="/events" style={{ display: "inline-flex", alignItems: "center", gap: 4, minHeight: 44 }}>
-            <ArrowBackIcon aria-hidden="true" data-testid="back-arrow" sx={{ fontSize: 18 }} />
-            {t("backToEvents")}
-          </Link>
-        </Typography>
-        {editHref && (
-          <Button component="a" href={editHref} variant="outlined" size="small" sx={{ minHeight: 44, gap: 1 }}>
-            <EditIcon aria-hidden="true" data-testid="edit-glyph" sx={{ fontSize: 18 }} />
-            {t("editInBackoffice")}
-          </Button>
-        )}
-      </Stack>
-
-      {/* Stated in words, not only by colour — BR-REQ-070-03 criterion 3. */}
-      {event.eventStatus === "CANCELLED" && (
-        <Alert severity="error" sx={{ mb: { xs: DENSITY.gapSm, sm: 3 } }}>
-          {t("cancelledNotice")}
-        </Alert>
-      )}
-      {/* The race is over (§82): said in words, and registration hides itself below. */}
-      {event.eventStatus === "COMPLETED" && (
-        <Alert severity="info" sx={{ mb: { xs: DENSITY.gapSm, sm: 3 } }}>
-          {t("completedNotice")}
-        </Alert>
-      )}
-
-      {/* What it is, and — when the club has said — what it is run on (`DECISIONS.md` §61),
-          each with its glyph (§112); the words stay, the glyphs decorate. Then, for an event held
-          with a partner, the handshake and the generic "Colaborare" / "Partnership"
-          marker (§367, amended §375, §379) — the marker the listing card and the calendar wear, which
-          never names a partner. The line wraps rather than overflowing a phone, and the small "·"
-          before the marker stays at the end of the line it follows. */}
-      <Typography variant="overline" color="text.secondary" sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", columnGap: 0.75, rowGap: 0 }}>
-        <TypeGlyph type={event.type} />
-        {t(`type.${event.type}`)}
-        {event.surface && (
-          <>
-            <span aria-hidden="true">·</span>
-            <SurfaceGlyph surface={event.surface} />
-            {t(`surface.${event.surface}`)}
-          </>
-        )}
-        <PartnerOverline event={event} />
-      </Typography>
-      {/* An edition apart (§168): the same badge the card and the hero wear, above the
-          title where the overline already says what kind of event this is. */}
-      {(event.isSpecial || membersOnly) && (
-        <Box sx={{ mt: 1, display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-          {event.isSpecial && <GlyphChip glyph="special" color="secondary" label={t("special")} />}
-          {/* For the members alone (§552): said on the page the member opened, never elsewhere. */}
-          {membersOnly && <GlyphChip glyph="membersOnly" color="primary" label={t("membersOnly")} />}
-        </Box>
-      )}
-
-      <Typography variant="h1" gutterBottom>
-        {event.title}
-      </Typography>
-
-      {/* The description, in the slot the editor's order implies (§187): the long one when it has
-          words, the summary otherwise, and then a wordless long description's picture. Shared
-          with the preview so the two cannot show it in different places. */}
-      <EventDescription bodyJson={event.bodyJson} excerptJson={event.excerptJson} excerpt={event.excerpt} />
-
-      <Divider sx={{ my: { xs: DENSITY.gapSm, sm: 3 } }} />
-      {/* The page's own facts (§168, §356): grouped by question, the route and the cost as pills,
-          the address under the place. */}
-      <EventFacts event={event} now={now} stacked weather={weather} />
-
-      {/* The photographs notice and the group run's self-declaration were here, under the facts;
-          since §498 they sit in «Condiții de participare», with the rules, after the programme. */}
-
-      {/* The way in to the registration lifecycle, or the sentence saying why there is none. */}
-      <RegistrationCta event={event} now={now} />
-
-      {/* "Tell me when registration opens" (§146), under the date, only while the window is ahead
-          and the notice that describes it is approved. A corrected address is timed from the
-          render the person is correcting, not from the redirect. */}
-      {interestBox && (
-        <RegistrationInterestForm
-          locale={locale}
-          slug={slug}
-          renderedAt={(interestOutcome === "invalid" && parseInterestSince(since, now)) || now}
-          outcome={interestOutcome}
-        />
-      )}
-
-      {/* The whole journey in five steps, folded — for the person deciding whether to press (§91). */}
-      {event.registrationMode === "INTERNAL" && registrationState(event, now) === "OPEN" && (
-        <Box sx={{ mt: { xs: DENSITY.gapSm, sm: 2 } }}>
-          <RegistrationSteps
-            folded
-            reminderHoursBefore={event.reminderHoursBefore}
-            window={
-              (() => {
-                // "Confirm a week before" only while that week is ahead (§104).
-                const w = dated && confirmationWindow(dated);
-                return w && w.opensAt.getTime() > now.getTime()
-                  ? { opensDays: event.confirmationOpensDaysBefore, deadlineDays: event.confirmationDeadlineDaysBefore }
-                  : null;
-              })()
-            }
-          />
-        </Box>
-      )}
-
-      {/* Facebook and WhatsApp take the link; Instagram takes the picture (§90). */}
-      <Box sx={{ mt: { xs: DENSITY.gapSm, sm: 2 } }}>
-        <ShareLinks
-          url={eventUrl(locale, slug)}
-          title={event.title}
-          imageHref={`/${locale}/events/${slug}/share-image`}
-          fileName={instagramFileName(slug)}
-          // A members' event is not shared (§552): its link opens for members, its pictures for nobody.
-          shareable={!membersOnly}
-          calendar={
-            dated ? {
-              // A members' file is the twin's, per request (§552): the static one reads the public row alone.
-              icsHref: membersOnly ? `/${locale}/${LIVE_SEGMENT}/events/${slug}/calendar.ics` : `/${locale}/events/${slug}/calendar.ics`,
-              googleUrl: googleCalendarUrl(toCalendarEvent(dated, locale, now), { locale, t }),
-            } : undefined
-          }
-        />
-      </Box>
-
-      {/* The address is not repeated here: it is the second line of "Unde" in the facts above
-          (§356), under the place's name, which is the one link to the map. */}
-
-      {/* "Traseul" (§387), under `#route`: the route / training description with the route's own
-          links first — the route link, the GPX, the map. The facts' route row points here. Not
-          between the facts and the registration button, which stays where a phone finds it; the
-          first section after them. Nothing at all when this language has no description. */}
-      <EventRoute
-        descriptionJson={event.routeDescriptionJson}
-        links={event.links}
-        routeUrl={event.routeUrl}
+      {/* The page itself: the one body the editor's preview before saving draws too (§NNN). */}
+      <EventPageView
+        event={event}
         locale={locale}
-        heading={t("routeSection")}
-        openRouteLabel={t("openRoute")}
-        kindLabels={linkKindLabels}
+        slug={slug}
+        now={now}
+        weather={weather}
+        membersOnly={membersOnly}
+        editHref={editHref}
+        visit={{
+          interestBox,
+          interestOutcome,
+          // A corrected address is timed from the render the person is correcting, not from the redirect.
+          interestRenderedAt: (interestOutcome === "invalid" && parseInterestSince(since, now)) || now,
+          declaratie,
+          lista,
+        }}
       />
-
-      {/* "Linkuri și fișiere" (§332), under `#links`: right after the route's facts and the map,
-          because most of them are the route again — the GPX, a map — and before the programme.
-          With a route section, the GPX and the map are drawn there instead (§387). Nothing at all
-          when the event has none left to show. */}
-      <EventLinks
-        links={event.links}
-        locale={locale}
-        heading={t("links.heading")}
-        kindLabels={linkKindLabels}
-        routeSection={hasRouteDescription(event.routeDescriptionJson)}
-      />
-
-      {/* The programme (§96, §117), under `#schedule`: the timed rows, then the text. */}
-      <EventProgramme scheduleItems={event.scheduleItems} scheduleJson={event.scheduleJson} timeZone={event.timezone} heading={t("schedule")} />
-
-      {/*
-        «Condiții de participare» / "Participation rules" (§498; the owner, 2026-09-27): the
-        rules, the minimum age (§505), the photographs notice and a group run's self-declaration, in that order, under one
-        fold, closed on arrival, right after the programme. Every event page has one: the photographs notice
-        is on all of them (§421), so the fold is never empty.
-
-        A native `<details>` in the start list's outlined shape (`StartList`), working without
-        JavaScript; its title is a real `h2` inside the `<summary>`, so it stays in a screen
-        reader's list of headings while the fold is shut (§336), and the parts under it are
-        `h3`s. The emails, the calendar entry and the registration form link `#rules`, and a group
-        run's page is reached at `#declaratie`: a full navigation to either opens the fold through
-        the browser's own ancestor-details reveal, and `OpenFoldFromHash` (§336, the backoffice's
-        island, mounted here too) opens it for the browsers that do not and for the registration
-        form's client-side link, which never runs that algorithm.
-      */}
-      <Box component="section" aria-labelledby="conditions-title" sx={{ mt: { xs: DENSITY.sectionGap, sm: 4 } }}>
-        <Box
-          component="details"
-          id="conditions"
-          data-testid="conditions-fold"
-          sx={{
-            border: 1,
-            borderColor: "divider",
-            borderRadius: 2,
-            px: 2,
-            "& > summary": { ...DISCLOSURE_SUMMARY_SX, py: 1.5 },
-            ...DISCLOSURE_OPEN_ARROW,
-            "&[open]": { pb: 2 },
-          }}
-        >
-          <Box component="summary">
-            <Typography component="h2" id="conditions-title" variant="h2" sx={{ fontSize: "1.25rem" }}>
-              <GavelIcon aria-hidden sx={FOLD_GLYPH_INLINE_SX} />
-              {t("conditions.heading")}
-            </Typography>
-          </Box>
-
-          {/* The rules (§96), under `#rules` — the anchor the emails and the declaration point at. */}
-          {!isRichTextEmpty(readRichText(event.rulesJson)) && (
-            <Box component="section" id="rules" aria-labelledby="rules-title" sx={{ mt: 1 }}>
-              <Typography component="h3" id="rules-title" variant="h3" sx={{ fontSize: "1.0625rem", mb: 1 }}>
-                {t("rules")}
-              </Typography>
-              <RichText body={event.rulesJson} />
-            </Box>
-          )}
-
-          {/* The minimum age (§505; §329, §410): set in the editor's «Regulamentul» for every type,
-              so it is read here with the rules rather than as a row of the facts. Nothing for no
-              minimum where nobody registers here. */}
-          <EventAgeRule event={event} />
-
-          {/* A group run's safety rules (§556): the essentials the optional declaration names, for
-              everybody who comes, signed or not — above the declaration. Nothing on any other type. */}
-          <GroupRunSafetyRules event={event} />
-
-          {/* Photographs are a legitimate-interest processing, so every event page — not only the
-              gallery — says how to object (§323; the photographs amendment's item 6). */}
-          <EventPhotosNotice />
-
-          {/* A group run's self-declaration (§393), at `#declaratie`, last: only where the
-              organizer offered it and the club has approved the text of its surface. */}
-          {/* `?declaratie=` is the signer's own link from their copy (§523): «Ai semnat deja…», read only from it. */}
-          {/* Nothing to sign for while the date is to be announced (§533). */}
-          {dated && <DeclarationOffer event={dated} locale={locale} slug={slug} now={now} viewToken={declaratie} />}
-        </Box>
-        <OpenFoldFromHash />
-      </Box>
-
-      {/* Nothing at all unless this event publishes one (BR-REQ-039-01). */}
-      {/* Nobody registers before the date is announced (§533), so an undated event has no list. */}
-      {/* Nor a members' event (§552): the public list is a public disclosure (§32), and this page is not public. */}
-      {dated && !membersOnly && <StartList event={dated} page={lista} />}
     </Container>
   );
 }
