@@ -393,7 +393,7 @@ export default async function EventFacts({
           ? <strong>{time(at)}</strong>
           : time(at)
         : boldTime
-          ? t.rich(key === "gatheringAt" ? "gatheringAtBold" : "raceStartAtBold", { time: time(at), strong })
+          ? t.rich(key === "gatheringAt" ? "gatheringAtBold" : key === "raceStartAt" ? "raceStartAtBold" : "eventStartAtBold", { time: time(at), strong })
           : t(key, { time: time(at) }),
     );
     return [

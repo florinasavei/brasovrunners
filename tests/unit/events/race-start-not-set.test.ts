@@ -24,7 +24,7 @@ describe("§590 «Când»'s times (whenTimes)", () => {
   });
 
   it("a race with no gun time: «start la» the event's start, and the start said to come later", () => {
-    expect(whenTimes({ type: "RACE", startsAt, raceStartsAt: null })).toEqual({ times: [{ key: "raceStartAt", at: startsAt }], raceStartLater: true });
+    expect(whenTimes({ type: "RACE", startsAt, raceStartsAt: null })).toEqual({ times: [{ key: "eventStartAt", at: startsAt }], raceStartLater: true });
   });
 
   it("a gun time equal to the start is one time, named «start», with nothing to announce", () => {
@@ -38,11 +38,11 @@ describe("§590 «Când»'s times (whenTimes)", () => {
   it("the emails' «Când» follows, in both languages", () => {
     const race = { ...emailSampleEventFacts("ro"), type: "RACE" as const, raceStartsAt: null };
     const ro = eventFactsBlock(race, "ro").text;
-    expect(ro).toMatch(/Când: .* · start la \d\d:\d\d/);
+    expect(ro).toMatch(/Când: .* · \d\d:\d\d \(start eveniment\)/);
     expect(ro).toContain("Ora startului cursei se anunță.");
     expect(ro).not.toContain("întâlnire");
     const en = eventFactsBlock({ ...emailSampleEventFacts("en"), type: "RACE" as const, raceStartsAt: null }, "en").text;
-    expect(en).toMatch(/When: .* · start at \d\d:\d\d/);
+    expect(en).toMatch(/When: .* · \d\d:\d\d \(event start\)/);
     expect(en).toContain("The race start time is announced later.");
     expect(en).not.toContain("gather at");
   });
