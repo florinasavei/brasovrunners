@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.45-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.46-2026-09-27 -->
 
 # Running this locally
 
-**Baseline `BR-V2.45-2026-09-27`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
+**Baseline `BR-V2.46-2026-09-27`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
 
 Everything here is a command that exists today. If a command is in this file it is in
 `package.json`; if it is not, it has not been built yet.
@@ -302,7 +302,7 @@ does not import React, Next, MUI, or a provider SDK, and there is no `utils.ts`.
   by the write that changes them — the same `revalidatePublicContent(...)` every write already
   calls — and by their clock (`src/modules/public-cache/page-lifetime.ts`). A render that was
   already running when the write committed is stored *after* the write's expiry and so reads as
-  fresh; the write's own `after()` expires the same tags again three seconds later (§NNN,
+  fresh; the write's own `after()` expires the same tags again three seconds later (§583,
   `SECOND_EXPIRY_DELAY_MS` in `public-cache/cache.ts`). So a spec that reads a static page right
   after a save, on a server other specs are rendering at the same time, may meet the old copy for
   those seconds: reload under a bounded `expect(…).toPass()` rather than reading once. `curl -sI` shows it:

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.45-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.46-2026-09-27 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.45-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.46-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -21962,3 +21962,76 @@ Baseline `BR-V2.45-2026-09-27`.
 **Tests.** Unit (`sponsor-sheet.test.ts`, a new `tests/helpers/xlsx.ts` reading the sheet's XML): the thirteen headers in order in both languages, no birth date, phone or document header; one sheet «Sponsori»; per row Da/Nu, versions as numbers, moments on the club's clock, blanks not written, the state in words; English words; no formula; an empty list still a file; `sponsori-<event>-<day>.xlsx` and `sponsorListFormat`; «Public list & results» after the socials in the CSV and the sheet. Integration on PGlite (`sponsor-list.test.ts`): the Excel file and the CSV hold the same rows, a yes under §562's notice, a minor and a no in neither; each tick's value per row (a ticked list and socials with terms v3 and declaration v5; an unticked one with nothing signed); the audit rows name `csv` and `xlsx` and both reach «Dată partenerilor»; English words; the Organizer, the Administrator and the Superadministrator 200, Tehnic, the volunteer and the Redactor 403, 409 without a sharing notice; the list filter returns exactly `promoListed`'s rows (the older notice's yes on screen, a no, a cancelled and a test row not), and the CSV and the Excel export with `promo=1` hold the same rows, «Public list & results» after the socials. The e2e spec `promo-filter.spec.ts` (written, not run: CI runs it on the batch): the box with its glyph at 44 px narrows the list, stays ticked, and both export links carry `promo=1`.
 
 Baseline `BR-V2.45-2026-09-27`.
+
+## 582. The club's legal identity is a line inside the footer's fold, never a second block (amending §565)
+
+**The owner, 2026-09-29 evening**, of the footer as `BR-V2.40` shipped it (§565 had asked for the club's legal name and CIF on the «about» and contact pages and «also in the footer, more clearly»): «ai duplicat footerul, arată oribil!! partea asta trebuie să fie în footerul colapsat!». §565 had drawn a block under the footer's bar: the legal name as a heading, «C.I.F.» and «România», the club's marks again, and a «Contact» column with the shown address, the phone and «Scrie-ne» again. Everything in it but the name, the CIF and the phone was already on the bar or in its fold, so every page ended on a second footer.
+
+**Decision — the identity is one line inside the fold (amending §565).** The block is gone. What it added that the footer did not already say is two items of the «Despre club, contact și termeni» fold: the identity line «<legal name> (<site name>) · CIF <CIF>» after the fold's links, at the panel's own 14 pixels and colour, with no margin of its own, on its own line from `sm` so the name never sits between two links; and «Telefon public» beside «Scrie-ne», while one is set. The marks stay on the bar, once; «Scrie-ne» and the address stay in the fold, once. With the legal name unset (CI, a fresh checkout, the e2e server) nothing of it shows, as before. The «about» pages and the contact page keep their line unchanged.
+
+- `ClubIdentity` has two shapes, `"line" | "fold"`: `line` is the secondary paragraph that ends an «about» page and the contact page; `fold` is a `<span>` for the footer's panel (`data-testid="footer-club-identity"`). Both compose the same words from `CLUB_LEGAL_NAME`, `CLUB_REGISTRATION_NUMBER` and the site's name constant (§132, §215); the repository carries none of the values. One Server Component, no island.
+- The block's words left the catalogues with it: `Identity.blockLabel`, `Identity.cif`, `Identity.country`, `Identity.socialLabel`, `Identity.contactHeading` and `Identity.writeToUs`, from both languages. `Identity.line` and `Identity.lineNoCif` stay.
+- The criteria that described the block (BR-REQ-041-01 criterion 164, and BR-REQ-070-04 criterion 23's «the footer's block») are amended by this section's criteria.
+
+**The rule, for every later fact the footer gains:** a new fact goes inside the existing fold, as one more line or item, never as a second block beside or under the bar. A reference screenshot the owner sends is content (what must be said), not layout (where and how big it is): the footer's shape is §372, §385 and §480, and a new fact does not change it.
+
+**How it shipped.** The owner, the same evening: a hotfix, straight to production. It is the path `docs/RUNBOOKS.md` § Hotfix records: a branch from `main`, the smallest change with only the checks that break a deploy (typecheck, lint on the touched files, `yarn secrets:check`), merged into `main` with his authorisation (#293), then `main` merged back into `qa` at once (#294). The footer's tests followed in the next batch. This entry is the runbook's last step, the hotfix recorded as an amendment of the decision it changed: it went to `main` with no `.release` entry, so it had no section and its two files cited `§582`.
+
+**Refused.**
+- *Keeping the block and folding it.* A second fold under the bar is still a second footer, and the facts it holds are the fold's.
+- *The identity on the bar itself.* The bar is one row at every width (§372); a legal name of forty characters would break it on a phone.
+
+**The housekeeping that carries this entry.** The same branch numbers the literal `§582` cites that earlier merges left on `qa` (the calendar's «Filtre» slot, §575; the race number through `raceNumberOf`, §548; «Vreau să mă dezabonez» sharing the sign-up's bucket, §550; the manage page's own cancellation line, §546; the offers-and-benefits column, §562). It makes `partner-marker.spec.ts` read the listing's live twin (`?partner=1`, §549) instead of the static page, which a render started just before the publish can store stale after it. It stops `resubmitted.test.ts` reading an action token's random underscores as an underline marker (§309): two 43-character base64url tokens hold `__` in about one message in fifty, which is the one CI failure (#297); a unit test pins the renderer's behaviour beside such a link. It proves that deleting the last FAQ question expires the header's and footer's link (§525): the delete is the page's one save and already expired `public:pages`, so no code changed. And it brings six difficulty criteria to the level of fifteen (BR-REQ-041-01 criteria 147, 149, 151, 152 and 156, BR-REQ-050-02 criterion 102, amended by §563).
+
+Baseline `BR-V2.46-2026-09-27`.
+
+## 583. A publish is on the listing for the next visitor: the write expires its tags once more, three seconds after its response
+
+**Why.** The branch that made `tests/e2e/partner-marker.spec.ts` deterministic (BR-V2.46's housekeeping) found the bare listing without the event the spec had just published, on the mobile project, while the desktop project's worker was rendering the same listing. The listing is a static page shared by everyone (§549). A render that started just before the publish read the old rows, and was stored just after the publish expired `public:events`. That copy read as fresh, and it stayed until the next write to any event or the page's own clock (the next midnight or event instant, at most a day). The owner's rule holds (§577, «site-ul ăsta trebuie să aibă costuri minime»): no cron, no poll, no invocation beyond the publish's own request.
+
+**What Next does, read in the installed Next (16.3.4).**
+
+- A `revalidateTag(tag, { expire: 0 })` in a Server Action or a route handler is queued in the request's `pendingRevalidatedTags` (`server/web/spec-extension/revalidate.js`) and executed when the action or the handler ends. `next start`'s file-system handler (`server/lib/incremental-cache/file-system-cache.js#revalidateTag`) writes `{ stale: now, expired: now }` for the tag into an in-memory tags manifest.
+- An entry's `lastModified` is the moment it was **stored**: `Date.now()` at `set()` in the memory cache, the file's mtime on disk (`file-system-cache.js#set`, `#get`). `unstable_cache` stores its callback's answer whenever the callback returns (`unstable-cache.js#cacheNewResult`).
+- On a read, an entry is expired only when `expiredAt <= now && expiredAt > lastModified` (`tags-manifest.external.js#areTagsExpired`). That rule holds for pages (`APP_PAGE`, through the page's `x-next-cache-tags`) and for `unstable_cache` entries (`FETCH`) alike (`incremental-cache/index.js#get`). Nothing records when a render started.
+
+So on `next start` the race is real, for the page and for the rows' own entry: a render that read before the commit and was stored after the expiry is a fresh copy without the write. That is what the e2e saw.
+
+**On Vercel.** Next runs in minimal mode with the platform's own cache handler (`globalThis[Symbol.for('@next/cache-handlers')].FetchCache` in `incremental-cache/index.js`), and Vercel's cache keeps the ISR pages. Vercel's documentation says an on-demand revalidation marks the tag stale in every region within 300 ms, the next request regenerates, and Vercel "atomically purges old payloads and propagates the updated content". It documents no comparison between the moment a payload's render started and the tag's invalidation. So a regeneration that started before the publish (a page whose clock just turned, a cold miss, a stale hit's background render) and finished after it is the payload kept. The race is treated as real on production as well. It was not measured there: that needs two requests racing a publish on production.
+
+**Decision.** `revalidatePublicContent` expires its kinds at once, as before. It also schedules, in the same request's `after()`, one more expiry of the same kinds three seconds after the response (`SECOND_EXPIRY_DELAY_MS`, `public-cache/cache.ts`). Everything stored before that second moment is expired again, so a render in flight at the write is served for at most those seconds. Every write already calls this function, so every kind gets the same guard (events, places, pages, gallery, legal, settings), and no call site changed.
+
+- **Under another profile, `{ stale: 0, expire: 0 }`.** Once the `after()` callbacks are done, Next executes only the revalidations that are new to the request's list, compared by tag and profile (`server/revalidation-utils.js`, `withExecuteRevalidates` → `diffRevalidationState`). A second call with the write's own `{ expire: 0 }` only updates the entry already in the list, and the diff then drops it: the second expiry would silently do nothing. Next hands the cache handler only `expire`, so the other profile has the same effect. `tests/unit/public-cache/second-expiry.test.ts` pins both halves against the installed Next.
+- **Only for what the first expiry was accepted for.** A call Next refused (inside a render, which may not expire) is not expired later behind its back.
+- **Outside a request** (a test, a script, a seed) `after()` throws, and there is no second expiry.
+
+**What it costs (§577).** Nothing is warmed, nothing polls, no request is made, no query runs, and Neon is not woken. The cost is one timer inside the write's own function, which `after()` (Vercel's `waitUntil`) keeps alive for three seconds after the response. The person who saved does not wait, because the response has already gone. That is three seconds of wall time per write and no Active CPU. A job ping that changed places lives three seconds longer. A ping with nothing due writes nothing and schedules nothing. A request that writes many times (a bulk sweep) schedules one timer per call, and Next executes their expiries once, together.
+
+**How long a visitor may still see the old page after a publish.**
+
+- **The browser** never keeps a static page: it is told `public, max-age=0, must-revalidate`, by the CDN on Vercel and by the proxy elsewhere (§549).
+- **`next start`** regenerates an expired page before it answers (a blocking render, `isStale = -1`). The only old answer is a render that was in flight at the write, for at most three seconds after the publish's response plus that render's own time.
+- **Vercel**: the purge reaches every region within 300 ms. If the CDN answers the first request after a tag's expiry with the old copy while it regenerates (its documented behaviour for tag invalidation; §577 saw a `STALE` turn `HIT`), one visitor after each expiry sees the old page. The visitor after that regeneration (about a second) sees the new one. The bound is a few seconds.
+- **Before this change** the bound was the page's own hold: up to a day.
+
+**The end-to-end spec.** On `qa`, `partner-marker.spec.ts` reads the bare listing once, right after the publish. The housekeeping branch moves it to the live twin (`?partner=1`, rendered per request) with a bounded reload. With this change the bare listing is deterministic under a bounded reload: the old copy lasts about three seconds, the reload loop thirty. A single read is still not deterministic, because a read inside those seconds can meet the old copy. The spec is not edited on this branch, so the two branches do not rewrite the same lines in parallel. Once both have landed it may read `/ro/evenimente` and `/en/events` again inside its `toPass`. `docs/DEVELOPMENT.md` now says the same for every spec that reads a static page after a save.
+
+**Rejected.** *Warming the listing after the publish*: a render nobody asked for (§577). *Several later expiries (1 s, 3 s, 10 s)*: more timers, for no case found. *`revalidatePath` or `updateTag`*: the same rule about the moment of the store, and `updateTag` throws outside a Server Action (the jobs are route handlers). *A cache handler of our own that compares a render's start with the tag's expiry*: a larger change, and on Vercel the platform's handler is the one used. *Reading the listing's rows around the cache*: it puts back the database read on every visit that §333 removed. *Words on «Publică»*: the bound is seconds, so no wording is changed.
+
+**Known limit.** A render that started before the commit and is stored more than three seconds after the response is not caught. Only a slow third party inside the render could take that long (the forecast's fetch, §402, which is itself cached for an hour). Such a render is bounded by the page's own clock, as before.
+
+**Amends** §549 (decision 2: a write expires its pages twice) and §333 ("How it stays right", point 1).
+
+Baseline `BR-V2.46-2026-09-27`.
+
+## 584. The twelve Dependabot alerts closed inside the existing ranges
+
+**The alerts.** On 2026-09-30 GitHub showed twelve open Dependabot alerts on the public repository: `undici` below 8.10.2 (#3–#12 — three high: a TLS certificate validation bypass in `BalancedPool`, a denial of service through an unrequested WebSocket subprotocol, cross-origin cache poisoning — plus mediums and lows) and `brace-expansion` below 1.1.21 and 4.x below 5.0.12 (#17, #18, medium: quadratic-time expansion).
+
+**Who pulled them — dev and install tooling only.** Neither is a direct dependency and neither reaches the site's runtime bundle. `undici` comes only through `node-gyp` 13 (range `^8.4.1`), which Yarn adds by itself as the build tool of the packages that carry native code (`@parcel/watcher`, which `next-intl` uses for its message watcher; `node-addon-api`; the macOS-only `fsevents` of Playwright, tsx and Vite) — it runs at install time, if at all, never in a request. `brace-expansion` 1.x comes through `minimatch` 3 (ESLint, `@eslint/*`, `eslint-plugin-import`, `-jsx-a11y`, `-react`), 5.x through `minimatch` 10 (`@typescript-eslint/typescript-estree`) — the linter.
+
+**What moved.** `yarn up -R undici brace-expansion` re-resolved the locked versions inside the ranges the parents already declare: `undici` 8.10.1 → 8.11.2, `brace-expansion` 1.1.18 → 1.1.21 and 5.0.9 → 5.0.12. Only `yarn.lock` changed; `package.json` gained no `resolutions` block, because every range accepts the patched version. No code changed; the whole test suite and a production build pass on the new lock.
+
+**What is left, and why it is not chased here.** `yarn npm audit --all --recursive` still names one advisory and three deprecations, all dev tooling: `esbuild` 0.18.20 (GHSA-67mh-4wv8-2f99, moderate — its development server answers any website's requests), pulled by `@esbuild-kit/core-utils` → `@esbuild-kit/esm-loader` → `drizzle-kit`, which never starts esbuild's server; the deprecations of those two `@esbuild-kit` packages (merged into tsx); and ESLint 9.39.5's end of support. Each is a major upgrade of a direct dev dependency (drizzle-kit, ESLint), not a lock refresh, and belongs in its own change.
+
+Baseline `BR-V2.46-2026-09-27`.

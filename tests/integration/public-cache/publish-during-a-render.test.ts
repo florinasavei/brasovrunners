@@ -4,7 +4,7 @@ import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN (amending §549), BR-REQ-020-01 — a publish is on the listing and the calendar for the next
+ * §583 (amending §549), BR-REQ-020-01 — a publish is on the listing and the calendar for the next
  * visitor, even when a render that started before it is stored after it.
  *
  * The race, on a real server: a visitor's render reads the rows, the club's publish commits and
@@ -67,7 +67,7 @@ async function afterTheResponse(): Promise<void> {
   }
 }
 
-describe("§NNN BR-REQ-020-01 a publish is shown although a render in flight was stored after it", () => {
+describe("§583 BR-REQ-020-01 a publish is shown although a render in flight was stored after it", () => {
   let admin: StaffUser;
 
   beforeAll(async () => {

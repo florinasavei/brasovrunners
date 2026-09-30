@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.45-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.46-2026-09-27 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V2.45-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.46-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -372,6 +372,7 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 171. Given an old calendar address with `?month=`, `?year=` or `?view=list`, when it is asked for with a GET or a HEAD, then the proxy redirects it to the same period's path with every other key kept: a 308 when a valid month or year names the period (this month spelled, never the bare page), a 307 with `Cache-Control: no-store` when it means this month (`?view=list` alone, a malformed or distant month); and a period path that is malformed, a year with a layout, or more than two years from now answers 404 (2026-09-30, `DECISIONS.md` §574).
 172. Given the calendar on a touch screen, when the reader drags it sideways far or quick enough, then the router is asked for the arrows' own address for that side (the next period's path to the left, the previous one's to the right) without scrolling the page, and the calendar that arrives slides in from that side; a mouse drag, an up-and-down drag, a short slow drag or a cancelled one asks for nothing (2026-09-30, `DECISIONS.md` §574).
 173. Given the calendar, when the month on view offers no filter and nothing is ticked, then the «Filtre» panel is still in the page, held unseen (`visibility: hidden`: out of the accessibility tree, the tab order and the pointer) in a box of the closed panel's height, so the calendar's controls sit at the same height in a month with filters and in one without (2026-09-30, `DECISIONS.md` §575).
+174. Amends criterion 164. The club's identity is one line inside the footer's «Despre club, contact și termeni» fold, after its links and before the weather credit and the build stamp — «<legal name> (<site name>) · CIF <CIF>» at the panel's own size and colour — drawn at most once on a page, and nothing follows the `<footer>`: the bar's marks show once, on the bar, and «Scrie-ne» with the shown address once, in the fold; with the legal name unset nothing of it shows. Tested in tests/integration/contact/club-identity-render.test.ts, tests/unit/shared/site-footer.test.ts and tests/e2e/footer.spec.ts (2026-09-30, `DECISIONS.md` §582).
 
 **Verification:** e2e `registration-form.spec.ts` and `registration-entry.spec.ts` under both Playwright viewport projects, `event-pages.spec.ts` (criterion 12); unit `registrations/form-errors.test.ts`, `events/listing.test.ts`, `theme/brand.test.ts`; release check on a real device
 
@@ -547,6 +548,7 @@ coffee is run on nothing.
 39. The manage page of a registration for a cancelled event says first, in its own line, that the event was cancelled — «Evenimentul a fost anulat; nu trebuie să faci nimic.» — and never borrows «Înscrierile mele»'s chip-less line (`tests/unit/registrations/manage-cancelled-line.test.ts`) (2026-09-28, `DECISIONS.md` §546).
 40. Criterion 15 above describes the provisional numbers of §214/§220/§444 and is superseded by this decision: a number exists only once the registration is confirmed (2026-09-28, `DECISIONS.md` §548).
 41. Amends criterion 7 (§129): the club feed is kept by the CDN until a save that changes an event expires it through its public-cache tags, or until its clock does (the next event's instant, at most a day). It is no longer read afresh on every request (2026-09-28, `DECISIONS.md` §549, amending §129).
+42. Given a public read or a static page whose render started before a write and is stored after the write expired its tags, then the write's own request expires the same tags once more, three seconds after its response (Next's `after()`), under a profile Next does not drop as already done, so the next visitor after that sees the write. No request, query or render is added, and a call Next refused, or one made outside a request, schedules nothing (2026-09-30, `DECISIONS.md` §583).
 
 **Verification:** integration `events/publication.test.ts`; e2e `event-cancelled.spec.ts`
 
@@ -2617,6 +2619,7 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 21. «Pagini» → «Contact» → «Cine primește mesajele de contact» labels the copy boxes «CC» and «BCC», says in one sentence what each does, reads addresses separated by commas, spaces or lines, names in a refused save the entry that is not an address, keeps a repeat once, and shows the saved lists back in the card and counts them in its closed line, or says «fără copii» when there are none; the contact form's message carries the CC as `Cc` and the BCC as hidden recipients, the «[posibil spam]» one too, and the visitor gets no copy (2026-09-29, `DECISIONS.md` §559).
 22. The contact page ends with the same identity line, under the form (or under the address where there is no form) and under the newsletter's box, and nothing while the legal name is unset. It never shows who receives the messages (CONTACT_FORM_TO). Tested in tests/integration/contact/club-identity-render.test.ts and tests/e2e/contact.spec.ts (2026-09-29, `DECISIONS.md` §565).
 23. «Pagini» → «Contact» has an optional «Telefon public». An Administrator saves a number (digits, spaces, a leading +, brackets, dots and dashes, 6 to 15 digits) or clears it with an empty box, after a confirmation. The server refuses anybody else and anything that is not a number. The save writes an audit row that says whether a number is set, never the number, and expires the public pages. The footer's block shows the number as a tel: link only while one is set. Tested in tests/unit/contact/public-phone.test.ts, tests/integration/contact/public-phone.test.ts and tests/e2e/config-panels.spec.ts (2026-09-29, `DECISIONS.md` §565).
+24. Amends criterion 23. The public phone shows inside the footer's fold, beside «Scrie-ne», as a tel: link only while one is set, and nowhere else in the footer. Tested in tests/e2e/config-panels.spec.ts (2026-09-30, `DECISIONS.md` §582).
 
 **Verification:** unit `contact/fields.test.ts`, `contact/message.test.ts`, `contact/recipients.test.ts`, `config/env.test.ts`, `diagnostics/configuration.test.ts`, `diagnostics/owner-tasks.test.ts`; integration `contact/service.test.ts`, `contact/recipients.test.ts`; e2e `contact.spec.ts`, `email-plan.spec.ts`; unit `contact/suspicion.test.ts` (11); unit `contact/message.test.ts` and integration `contact/service.test.ts` also cover 11
 

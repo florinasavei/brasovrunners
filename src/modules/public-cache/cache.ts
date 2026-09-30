@@ -47,7 +47,7 @@ import { buildInfo } from "@/shared/config/build-info";
  *    once (`{ expire: 0 }`: the next reader waits for fresh rows rather than being served the old
  *    ones while they refresh — a cancelled event must never read as scheduled, §28). The same
  *    kinds expire once more a few seconds after the write's response, so a render that was
- *    already running when the write committed cannot keep the old rows as a fresh copy (§NNN).
+ *    already running when the write committed cannot keep the old rows as a fresh copy (§583).
  * 2. **The clock is in the key**, where a query compares against `now` (`clock.ts`): the upcoming
  *    events are cached per stretch of time in which that list cannot change, so an event passing
  *    into the past is a new key rather than a stale entry.
@@ -295,7 +295,7 @@ const RED_LOOKUP_REVALIDATE_SECONDS = 365 * 24 * 60 * 60;
  * refusal that is not a problem is silent: outside a Next server there is nothing to expire.
  *
  * The same kinds are expired a second time, `SECOND_EXPIRY_DELAY_MS` after the response, in this
- * request's own `after()` (§NNN): see `expireAgainAfterTheInFlightRenders`.
+ * request's own `after()` (§583): see `expireAgainAfterTheInFlightRenders`.
  */
 export function revalidatePublicContent(...contents: PublicContent[]): void {
   if (!insideNextServer()) return;
@@ -306,7 +306,7 @@ export function revalidatePublicContent(...contents: PublicContent[]): void {
 }
 
 /**
- * How long after the response the second expiry waits (§NNN): three seconds.
+ * How long after the response the second expiry waits (§583): three seconds.
  *
  * Long enough for a render that was already running when the write committed to be stored — a
  * public page renders in well under a second of CPU (§549 measured about 68 ms), and its reads are
@@ -348,7 +348,7 @@ function expire(kinds: readonly PublicContent[], profile: typeof FIRST_EXPIRY | 
 }
 
 /**
- * Expire the same tags again once the renders that were in flight at the write have landed (§NNN).
+ * Expire the same tags again once the renders that were in flight at the write have landed (§583).
  *
  * **Why.** An expiry marks the tag with the moment it was made, and Next treats as fresh any entry
  * *stored* after that moment (`tags-manifest.external.js#areTagsExpired`: expired only when

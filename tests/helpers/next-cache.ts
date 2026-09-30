@@ -11,7 +11,7 @@
  * Removing, rather than marking, keeps Next's one rule about time too: an entry is expired only by
  * an expiry made after it was *stored* (`areTagsExpired`: `expiredAt > lastModified`, the moment of
  * the `set`). A miss whose store is held (`holdStore`) is a render that read its rows before a
- * write and is stored after the write's expiry, as on a real server (§NNN).
+ * write and is stored after the write's expiry, as on a real server (§583).
  *
  * One instance per test file, shared with the module under test through `vi.mock`:
  *

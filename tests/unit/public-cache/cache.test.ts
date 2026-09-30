@@ -55,7 +55,7 @@ const { ColdMissError } = await import("@/modules/resilience/breaker");
 
 /**
  * Run what `after()` was handed, as Next does once the response is out — on a fake clock, so a
- * write's second expiry (§NNN, three seconds after the response) does not make the test wait.
+ * write's second expiry (§583, three seconds after the response) does not make the test wait.
  */
 async function afterTheResponse(): Promise<void> {
   const tasks = afterTasks.splice(0);
@@ -356,7 +356,7 @@ describe("§333 revalidatePublicContent", () => {
     expect(revalidateTag).toHaveBeenCalledWith("public:places", { expire: 0 });
   });
 
-  it("expires the same kinds once more after the response, three seconds on, for the renders in flight (§NNN)", async () => {
+  it("expires the same kinds once more after the response, three seconds on, for the renders in flight (§583)", async () => {
     vi.stubEnv("NEXT_RUNTIME", "nodejs");
     revalidatePublicContent("events", "places");
     expect(afterTasks).toHaveLength(1);

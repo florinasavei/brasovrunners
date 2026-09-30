@@ -20,7 +20,7 @@ import { CLUB_NAME } from "@/theme/brand";
  *
  * - `line` — at the end of the «about» pages (the club's standing pages and «Echipa») and of the
  *   contact page: a secondary paragraph with the room above it that ends a page.
- * - `fold` — inside the footer's «Despre club, contact și termeni» fold, after its links, never a block of its own (§NNN,
+ * - `fold` — inside the footer's «Despre club, contact și termeni» fold, after its links, never a block of its own (§582,
  *   amending §565; the owner, 2026-09-29: «ai duplicat footerul, arată oribil!! partea asta trebuie
  *   să fie în footerul colapsat!»). §565 drew a block under the bar — the name, the marks again,
  *   «Contact» with the address and «Scrie-ne» again — which repeated the bar's marks and the fold's

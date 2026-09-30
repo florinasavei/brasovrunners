@@ -3,7 +3,7 @@ import { createRequire } from "node:module";
 import { describe, expect, it, vi } from "vitest";
 
 /**
- * §NNN — the second expiry a write schedules in its own `after()` reaches the cache, against the
+ * §583 — the second expiry a write schedules in its own `after()` reaches the cache, against the
  * installed Next (16.3.4), not a stand-in.
  *
  * Next keeps a request's revalidated tags in one list (`workStore.pendingRevalidatedTags`) and,
@@ -50,7 +50,7 @@ function requestStore() {
   return { store, handed };
 }
 
-describe("§NNN the second expiry, through Next's own after-phase execution", () => {
+describe("§583 the second expiry, through Next's own after-phase execution", () => {
   it("drops a second expiry written with the write's own profile — the trap", async () => {
     const { store, handed } = requestStore();
     await workAsyncStorage.run(store, async () => {

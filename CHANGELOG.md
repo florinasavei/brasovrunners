@@ -8,6 +8,11 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.46-2026-09-27
+
+- **The club's legal name and CIF are one line inside the footer's «Despre club, contact și termeni» fold** — after its links, with the public phone beside «Scrie-ne»; the block under the bar that repeated the marks and the contact is gone (the hotfix of 2026-09-29, now recorded). §582.
+- **A published event is on the listing and the calendar for the next visitor** — a visitor's page that was being made at the moment of the publish could keep the old list until the next change to any event; the publish now clears the pages once more, three seconds after it, with no extra request. §583.
+- **The Dependabot alerts closed** — `undici` 8.11.2 and `brace-expansion` 1.1.21 / 5.0.12 in the lock, inside the ranges their parents already declare; both were install and lint tooling, never in the site's runtime. §584.
 ## BR-V2.45-2026-09-27
 
 - **The birth date masks itself as you type** — digits only, the dots added by the box («11051990» shows «11.05.1990»), a backspace over a dot removes the digit before it, and a pasted «11/05/1990» or `1990-05-11` is shown in the mask; the mask is Maskito's (5.6.0, Apache-2.0, about 8.5 kB gzipped on the three pages with the field). §578.
