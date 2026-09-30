@@ -65,6 +65,8 @@ export async function GET(request: Request): Promise<Response> {
   const clubMember = url.searchParams.get("clubMember");
   const emailBounced = url.searchParams.get("bounced");
   const search = url.searchParams.get("q");
+  // «Doar cu oferte și beneficii» (§NNN): the list's filter, so the file is the rows on screen.
+  const promo = url.searchParams.get("promo");
 
   /*
     The event scope, by the rule the screen uses (§178, §312) rather than the raw parameter.
@@ -95,6 +97,7 @@ export async function GET(request: Request): Promise<Response> {
     status: isRegistrationStatus(status) ? status : undefined,
     clubMemberDeclared: clubMember === "1" || undefined,
     emailBounced: emailBounced === "1" || undefined,
+    promoConsented: promo === "1" || undefined,
     search: search || undefined,
     excludeTest: true,
   });
@@ -155,6 +158,8 @@ export async function GET(request: Request): Promise<Response> {
         guardianIdDocument: identityDocumentsOf(row).guardian ?? "",
         instagramHandle: row.instagramHandle ?? "",
         listSocials: row.listSocials,
+        // The public-list tick (§NNN), beside the socials it governs.
+        listPublic: !row.listOptOut,
         submittedAt: row.submittedAt,
         confirmedAt: row.confirmedAt,
         bibNumber: row.bibNumber,
@@ -201,6 +206,8 @@ export async function GET(request: Request): Promise<Response> {
       instagramHandle: row.instagramHandle ?? "",
       // Whether the public list prints the socials (§500): beside Instagram, as on the spreadsheet.
       listSocials: row.listSocials,
+      // The public-list tick (§NNN): «Vreau să apar pe lista de participanți & rezultate».
+      listPublic: !row.listOptOut,
       submittedAt: row.submittedAt.toISOString(),
       confirmedAt: row.confirmedAt?.toISOString() ?? "",
       bibNumber: row.bibNumber,

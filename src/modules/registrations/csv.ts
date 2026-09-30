@@ -86,6 +86,11 @@ export type RegistrationCsvRow = {
    */
   listSocials?: boolean;
   /**
+   * «Vreau să apar pe lista de participanți & rezultate» (§143, §570, §NNN): "Yes" when the person
+   * ticked it (`list_opt_out` false), empty otherwise — the tick the socials column depends on.
+   */
+  listPublic?: boolean;
+  /**
    * The family marker (§543): the other people registered on the same address at the event,
    * «; »-joined, or empty — so a spreadsheet shows who came together.
    */
@@ -116,6 +121,8 @@ const HEADER = [
   "Instagram",
   // Beside the two (§500), as on the spreadsheet: whether the public list prints them.
   "Socials on the public list",
+  // The public-list tick itself (§NNN), beside the socials it governs, as on the spreadsheet.
+  "Public list & results",
   "Guardian",
   // Beside the guardian's name (§330): the kit goes to that person (§108), against this document.
   "Guardian identity document",
@@ -159,6 +166,7 @@ export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[]): stri
         row.stravaUrl,
         row.instagramHandle,
         row.listSocials ? "Yes" : "",
+        row.listPublic ? "Yes" : "",
         row.guardianName,
         row.guardianIdDocument,
         row.submittedAt,

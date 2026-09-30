@@ -107,7 +107,8 @@ describe("BR-REQ-060-01 the start list as a spreadsheet (§172)", () => {
 
     // The header, in order, wherever the writer chose to keep the text.
     for (const header of REGISTRATION_SHEET_HEADERS) {
-      expect(strings, `${header} is written`).toContain(header);
+      // As XML spells it: «Public list & results» (§NNN) is written `&amp;`.
+      expect(strings, `${header} is written`).toContain(header.replaceAll("&", "&amp;"));
     }
     // The header row stays on screen while somebody scrolls two hundred runners.
     expect(sheet).toContain("pane");
@@ -178,6 +179,17 @@ describe("BR-REQ-060-01 the start list as a spreadsheet (§172)", () => {
     // Nothing signed: the cell is not written, never 0.
     const blank = unzip(await buildRegistrationsWorkbook([row({ declarationVersion: null, declarationSignedAt: null })], "Test"));
     expect(blank.get("xl/worksheets/sheet1.xml") ?? "").not.toContain(`<c r="${cell}"><v>`);
+  });
+
+  /** §NNN — the public-list tick has its own column beside the socials it governs, a yes/no cell. */
+  it("carries «Public list & results» as a boolean right after the socials", async () => {
+    const at = REGISTRATION_SHEET_HEADERS.indexOf("Socials on the public list") + 1;
+    expect(REGISTRATION_SHEET_HEADERS[at]).toBe("Public list & results");
+    const cell = `${columnLetter(at)}2`;
+    const listed = unzip(await buildRegistrationsWorkbook([row({ listPublic: true })], "Test")).get("xl/worksheets/sheet1.xml") ?? "";
+    expect(listed).toContain(`<c r="${cell}" t="b"><v>1</v></c>`);
+    const unlisted = unzip(await buildRegistrationsWorkbook([row({ listPublic: false })], "Test")).get("xl/worksheets/sheet1.xml") ?? "";
+    expect(unlisted).toContain(`<c r="${cell}" t="b"><v>0</v></c>`);
   });
 
   it("takes a sheet name Excel would refuse and makes one it accepts", async () => {
