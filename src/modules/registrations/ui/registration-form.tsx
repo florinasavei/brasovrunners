@@ -241,10 +241,10 @@ export type RegistrationFormInput = {
   resting: boolean;
   /**
    * No place and nothing to join (§348), said before anybody types — or `WAITLIST`, the join form
-   * itself (§NNN): no place, and a list that takes people.
+   * itself (§587): no place, and a list that takes people.
    */
   fullNotice: typeof WAITLIST_FULL | typeof NO_WAITLIST | "WAITLIST" | null;
-  /** For `WAITLIST`: the event's places and how many already wait, for the thank-you lead (§NNN). */
+  /** For `WAITLIST`: the event's places and how many already wait, for the thank-you lead (§587). */
   fullCounts: { capacity: number; waiting: number } | null;
   /** For `WAITLIST`: the club's offer window («Termene», `offerHours`, §377); null says no offer sentence. */
   offerHours: number | null;

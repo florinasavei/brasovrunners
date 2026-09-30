@@ -8,6 +8,10 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.49-2026-09-27
+
+- **The full event's card says how many places are left on the waiting list** — «Mai sunt 4 locuri pe lista de așteptare» under the join sentence, the event page's own words, only when the list has a limit. §594.
+- **A race with no race start says «10:00 (start eveniment)»** on the card, the page, the emails and the calendar — never a bare time that reads as the race start; the page keeps «Ora startului cursei se anunță.» (a hotfix straight to production, #305). §595.
 ## BR-V2.48-2026-09-27
 
 - **«Dă-i un loc» says why before the press** — on a full race the button stays, with an «i» (a tooltip on the list's ⋮ item) that gives the refusal's own numbers and «Mărește întâi capacitatea evenimentului.»; the refusal banner ends with the same sentence; the public README is English throughout. §592.
