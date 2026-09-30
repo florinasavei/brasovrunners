@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import pg from "pg";
-import { FEATURED, signIn } from "./support/featured-event";
+import { FEATURED, hydrated, signIn } from "./support/featured-event";
 
 /**
  * §581 (amending §570) — «Doar cu oferte și beneficii» on the registrations list: the owner,
@@ -75,10 +75,19 @@ test.describe("§581 «Doar cu oferte și beneficii»: the list and its export",
     try {
       await signIn(page, "Dev Administrator");
       await page.goto(`/ro/admin/registrations?eventId=${seeded.eventId}&q=${encodeURIComponent(seeded.tag)}`);
-      await expect(page.getByText(`Oferte da ${seeded.tag}`)).toBeVisible();
-      await expect(page.getByText(`Oferte nu ${seeded.tag}`)).toBeVisible();
+      await hydrated(page);
+      // One element per person: the row's own link, by its name, inside `#main`. The list draws a
+      // name twice (the table on a laptop, the card on a phone, one of them `display: none`), and
+      // while the page streams Next can hold a hidden copy of it outside `#main` — four matches for
+      // free text (CI on #299). A role locator skips what is hidden; the search keeps the rows ours.
+      const main = page.locator("#main");
+      const row = (who: "da" | "nu") => main.getByRole("link", { name: `Deschide înscrierea lui Oferte ${who} ${seeded.tag}`, exact: true });
+      const rows = main.getByRole("link", { name: new RegExp(`^Deschide înscrierea lui Oferte (da|nu) ${seeded.tag}$`) });
+      await expect(row("da")).toBeVisible();
+      await expect(row("nu")).toBeVisible();
+      await expect(rows).toHaveCount(2);
 
-      const filter = page.getByTestId("registrations-filter-promo");
+      const filter = main.getByTestId("registrations-filter-promo");
       await filter.scrollIntoViewIfNeeded();
       await expect(filter.getByTestId("registrations-filter-promo-glyph")).toBeVisible();
       const box = filter.getByRole("checkbox", { name: "Doar cu oferte și beneficii" });
@@ -86,16 +95,19 @@ test.describe("§581 «Doar cu oferte și beneficii»: the list and its export",
       expect(target?.width ?? 0).toBeGreaterThanOrEqual(44);
       expect(target?.height ?? 0).toBeGreaterThanOrEqual(44);
       await box.check();
-      await page.getByRole("button", { name: "Filtrează" }).click();
+      await main.getByRole("button", { name: "Filtrează" }).click();
       await expect(page).toHaveURL(/[?&]promo=1/);
-      await expect(page.getByText(`Oferte da ${seeded.tag}`)).toBeVisible();
-      await expect(page.getByText(`Oferte nu ${seeded.tag}`)).toHaveCount(0);
-      await expect(page.getByTestId("registrations-filter-promo").getByRole("checkbox")).toBeChecked();
+      await hydrated(page);
+      // The list narrows to who said yes: one row left, and it is hers.
+      await expect(row("da")).toBeVisible();
+      await expect(rows).toHaveCount(1);
+      await expect(row("nu")).toHaveCount(0);
+      await expect(main.getByTestId("registrations-filter-promo").getByRole("checkbox", { name: "Doar cu oferte și beneficii" })).toBeChecked();
 
       // The export beside the list carries the filter: the file is the rows on screen.
-      const excel = page.getByRole("link", { name: "Exportă Excel" });
+      const excel = main.getByRole("link", { name: "Exportă Excel" });
       await expect(excel).toHaveAttribute("href", /[?&]promo=1/);
-      const csvHref = await page.getByRole("link", { name: "Exportă CSV" }).getAttribute("href");
+      const csvHref = await main.getByRole("link", { name: "Exportă CSV" }).getAttribute("href");
       expect(csvHref).toMatch(/[?&]promo=1/);
       const response = await page.request.get(csvHref!);
       expect(response.status()).toBe(200);
