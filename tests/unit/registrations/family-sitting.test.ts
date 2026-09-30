@@ -163,7 +163,7 @@ describe("§519 the browser's half of a sitting", () => {
     // The next form posted nothing for it: the earlier form's country is kept.
     expect(sittingSharedValues(first, posted({ city: "Wien" }))).toEqual({ city: "Wien", country: "AT" });
     // And the form reads it back through the same prefill as the city.
-    const page = readFileSync(path.join(process.cwd(), "src/app/[locale]/events/[slug]/register/page.tsx"), "utf8");
+    const page = readFileSync(path.join(process.cwd(), "src/modules/registrations/ui/registration-form.tsx"), "utf8");
     expect(page).toContain('defaultValue={prefill("country") || "RO"}');
   });
 });

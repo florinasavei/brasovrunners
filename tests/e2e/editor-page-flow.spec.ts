@@ -158,7 +158,7 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
     unsaved title on the listing card and on the page, in Română and English, on a phone's width and
     a desktop's, with what each language still lacks — and nothing saved.
   */
-  test("«Previzualizare»: the unsaved event as the card and the page, both languages, both widths, nothing saved", async ({ page }) => {
+  test("«Previzualizare»: the unsaved event as the card, the page and the form, both languages, both widths, nothing saved", async ({ page }) => {
     test.skip(!editorUrl, "the create step did not run");
     await signIn(page, "Dev Administrator");
     await page.goto(editorUrl);
@@ -168,7 +168,7 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
     // Closed on arrival, its line saying what it is for, a glyph before its title (§521).
     const box = editorBox(page, "Previzualizare");
     await expect(box).not.toHaveAttribute("open", "");
-    await expect(box.locator(":scope > summary")).toContainText("Cum arată pe site — cardul și pagina, fără să salvezi");
+    await expect(box.locator(":scope > summary")).toContainText("Cum arată pe site — cardul, pagina și formularul, fără să salvezi");
     await expect(box.locator(":scope > summary svg").first()).toBeVisible();
 
     // A title typed and not saved.
@@ -178,7 +178,13 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
 
     await openEditorBox(page, "Previzualizare");
     const run = page.getByTestId("draft-preview-run");
-    for (const control of [run, page.getByTestId("draft-preview-view-page"), page.getByTestId("draft-preview-locale-en"), page.getByTestId("draft-preview-width-desktop")]) {
+    for (const control of [
+      run,
+      page.getByTestId("draft-preview-view-page"),
+      page.getByTestId("draft-preview-view-form"),
+      page.getByTestId("draft-preview-locale-en"),
+      page.getByTestId("draft-preview-width-desktop"),
+    ]) {
       expect((await control.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
     }
     await expect(page.getByTestId("draft-preview-locale-ro")).toHaveText("RO");
@@ -201,6 +207,22 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
     const en = page.frameLocator('[data-testid="draft-preview-frame-en"]');
     await expect(en.getByTestId("draft-preview-page").getByRole("heading", { level: 1 })).toBeVisible();
     await expect(en.getByText("Back to events")).toBeVisible();
+
+    /*
+      «Formular» (amending §579; the owner, 2026-09-30 17:10: «adică preview card și pagină ȘI
+      formular de înscriere»): the register page's form from the same press, with its glyph. This
+      group run takes no registration on the site, so the frame says it has no form — and there is
+      no form, no action and no Turnstile to load. The boxes of a race's form are proved in
+      `tests/unit/content/event-draft-form.test.ts` and `tests/integration/cms/event-draft-preview.test.ts`.
+    */
+    const formTab = page.getByTestId("draft-preview-view-form");
+    await expect(formTab).toContainText("Formular");
+    await expect(formTab.locator("svg")).toBeVisible();
+    await formTab.click();
+    await expect(en.getByTestId("draft-preview-form-none")).toHaveText("Preview: this event takes no registrations on the site, so it has no form.");
+    await expect(en.locator("#registration-form")).toHaveCount(0);
+    await expect(en.locator('script[src*="challenges.cloudflare.com"]')).toHaveCount(0);
+    await page.getByTestId("draft-preview-view-page").click();
 
     // A phone's 360 pixels, then a desktop's width, scaled to fit the card.
     const frame = page.getByTestId("draft-preview-frame-en");

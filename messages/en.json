@@ -1117,17 +1117,18 @@
     },
     "editor": {
       "draftPreview": {
-        "intro": "The listing card and the event page, from what you have typed now. Nothing is saved or published.",
+        "intro": "The listing card, the event page and the registration form, from what you have typed now. Nothing is saved or published.",
         "run": "Preview",
         "running": "Getting it ready…",
         "views": "What you see",
         "card": "Card",
         "page": "Page",
+        "form": "Form",
         "language": "Language",
         "width": "Width",
         "phone": "Phone (360)",
         "desktop": "Desktop",
-        "idle": "Press «Preview» to see the card and the page.",
+        "idle": "Press «Preview» to see the card, the page and the form.",
         "asOfPress": "Shows what was typed at the last press of «Preview».",
         "incomplete": "{language} incomplete — missing: {missing}",
         "complete": "Both languages have everything publication needs.",
@@ -1759,7 +1760,7 @@
         },
         "preview": {
           "title": "Preview",
-          "summary": "How it looks on the site — the card and the page, without saving"
+          "summary": "How it looks on the site — the card, the page and the form, without saving"
         },
         "summary": {
           "filled": "written",
@@ -6336,6 +6337,13 @@
     },
     "membersAddressLabel": "Your member account's address",
     "membersAddressHelp": "You register with your account's address. One account registers one person.",
+    "preview": {
+      "noForm": "Preview: this event takes no registrations on the site, so it has no form.",
+      "dateLater": "Preview: the form appears once you announce the event's date and time.",
+      "notOpen": "Preview: the form takes no registrations right now — {door} Below, how it looks once they open.",
+      "memberAddress": "the member's address, from their account",
+      "groupRunDeclaration": "The run's page also offers the optional self-declaration. Its form is not shown here."
+    },
     "promo": {
       "label": "I want to receive offers and benefits from {club} and its partners.",
       "help": "You can opt out any time from your registration page.",

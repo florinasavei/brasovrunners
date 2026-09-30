@@ -151,7 +151,7 @@ describe("BR-REQ-011-01 criterion 19 the share picture", () => {
 
 describe("BR-REQ-011-01 criterion 19 the registration form's facts line (§102)", () => {
   it("says the sentence from the same key while the place is to be announced", () => {
-    const page = readFileSync(path.join(process.cwd(), "src/app/[locale]/events/[slug]/register/page.tsx"), "utf8");
+    const page = readFileSync(path.join(process.cwd(), "src/modules/registrations/ui/registration-form.tsx"), "utf8");
     expect(page).toContain('event.locationToBeAnnounced ? ` · ${tEvent("locationToBeAnnounced")}`');
     expect(page).toContain('const tEvent = await getTranslations("Event")');
   });

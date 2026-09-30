@@ -27,9 +27,9 @@ const FRAME_ONLY_CSS = "body:has(#draft-preview-frame) :is(header, footer):not(#
 /**
  * **The frame of the editor's «Previzualizare» (§579)**, in the language of its address: the site's
  * own layout — theme, fonts, the public words in this language — at the width the editor gives the
- * frame (360 pixels, or a desktop's, scaled down to fit), so the card and the page are drawn with
- * the breakpoints a visitor's screen has. It holds no data: the editor posts its unsaved values
- * into it, and `previewEventDraftAction` answers with the card and the page.
+ * frame (360 pixels, or a desktop's, scaled down to fit), so the card, the page and the registration
+ * form (§NNN) are drawn with the breakpoints a visitor's screen has. It holds no data: the editor
+ * posts its unsaved values into it, and `previewEventDraftAction` answers with the three.
  *
  * Staff only, and only the roles that may preview (`canPreviewEventDraft`), asserted here and again
  * in the action (BR-REQ-060-01) — anybody else meets the 404 an unknown address gets. Under

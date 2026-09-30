@@ -178,7 +178,7 @@ describe("§561 the box, rendered: day first, and the echo is its helper", () =>
   });
 
   it("the public form and the desk draw this box, and no separate echo line pulled over the outline", () => {
-    const page = read("src/app/[locale]/events/[slug]/register/page.tsx");
+    const page = read("src/modules/registrations/ui/registration-form.tsx");
     expect(page).toContain("<BirthDateField");
     expect(page).not.toMatch(/\{\.\.\.field\("birthDate"\)\}/);
     expect(page).not.toContain("BirthDateEcho");
@@ -263,7 +263,7 @@ describe("§561 under the minimum age, the box says the rule", () => {
   });
 
   it("the public form hands the box the summary's own sentence, with this event's minimum", () => {
-    const page = read("src/app/[locale]/events/[slug]/register/page.tsx");
+    const page = read("src/modules/registrations/ui/registration-form.tsx");
     expect(page).toMatch(/tooYoung=\{t\("errors\.tooYoung", minimumAge\)\}/);
     const desk = read("src/modules/registrations/ui/StaffEventBirthDate.tsx");
     expect(desk).toMatch(/tooYoung=\{words\.tooYoung\.replace\("\{age\}", yearsPhrase\(minAge, locale\)\)\}/);

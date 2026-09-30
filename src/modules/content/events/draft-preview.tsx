@@ -13,6 +13,7 @@ import EventPageView from "@/modules/events/ui/EventPageView";
 import { draftRegistrationDoor } from "@/modules/events/ui/registration-door";
 import { canPreviewEventDraft } from "@/modules/staff-identity/domain/roles";
 import { isDomainError } from "@/shared/errors/domain-error";
+import { renderDraftForm } from "./draft-form";
 import { eventFormFieldName } from "./form-names";
 import { previewPageOf } from "./preview-view";
 import { findEventForEditing, listSeriesDates } from "./repository";
@@ -43,13 +44,15 @@ export type DraftPreview =
   | { outcome: "forbidden" }
   | { outcome: "notFound" }
   | { outcome: "refused"; error: string; fields: string[] }
-  | { outcome: "ready"; locale: Locale; card: ReactNode; page: ReactNode; missing: Record<Locale, string[]> };
+  | { outcome: "ready"; locale: Locale; card: ReactNode; page: ReactNode; form: ReactNode; missing: Record<Locale, string[]> };
 
 /**
- * **«Previzualizare» before saving (§579, amending §406 and §371).** The listing card and the event
- * page of what the save would store, in one language, drawn by the components the listing and the
- * page draw — `EventCard` in the listing's own grid (`CARD_GRID_SX`), `EventPageView` for the page —
- * from `service.ts#draftEvent`'s rows through `previewPageOf`, the saved-draft preview's mapping.
+ * **«Previzualizare» before saving (§579, amending §406 and §371).** The listing card, the event
+ * page and the registration form of what the save would store, in one language, drawn by the parts
+ * the listing, the page and the register page draw — `EventCard` in the listing's own grid
+ * (`CARD_GRID_SX`), `EventPageView` for the page, `registrationForm` for the form (§NNN,
+ * `draft-form.tsx`) — from `service.ts#draftEvent`'s rows through `previewPageOf`, the saved-draft
+ * preview's mapping.
  *
  * Authorization first, before a row is read (BR-REQ-060-01): the roles `canPreviewEventDraft` names.
  *
@@ -107,6 +110,8 @@ export async function renderEventDraftPreview<T extends Record<string, unknown>>
   const current = stored?.event;
   const series = current && (current.repeatOf !== null || current.repeatRule !== null) ? await listSeriesDates(db, current.repeatOf ?? current.id) : [];
   const seriesDates = series.length > 1 ? series.map((date) => ({ startsAt: date.id === current?.id && view.startsAt ? view.startsAt : date.startsAt })) : undefined;
+  // «Formular» (amending §579, §NNN): the register page's own form, drawn from the draft, sending nothing.
+  const form = await renderDraftForm(db, { view, door: previewDoor.door, locale: input.locale, now, word: previewDoor.word, steps });
 
   return {
     outcome: "ready",
@@ -121,6 +126,7 @@ export async function renderEventDraftPreview<T extends Record<string, unknown>>
         <EventPageView event={view} locale={input.locale} slug={view.slug} now={now} weather={null} membersOnly={view.membersOnly} preview={{ door: previewDoor, steps }} />
       </Box>
     ),
+    form,
     missing,
   };
 }

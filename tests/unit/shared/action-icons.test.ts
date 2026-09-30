@@ -348,7 +348,7 @@ describe("§318 one glyph per verb, by name", () => {
     // The owner: "butoanele de trimitere înscriere și contact trebuie să aibă și iconița cu un
     // alergător". The registration's send, its "send again" after a refusal, and the contact
     // form's send — each a `SubmitButton` with `runner`, and no name looked up anywhere.
-    const register = read("src/app/[locale]/events/[slug]/register/page.tsx");
+    const register = read("src/modules/registrations/ui/registration-form.tsx");
     const contact = read("src/app/[locale]/contact/page.tsx");
     // The props with their comments taken out, so "the club's runner" in a comment is not the flag.
     const runners = (text: string) =>

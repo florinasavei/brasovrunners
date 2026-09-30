@@ -1117,17 +1117,18 @@
     },
     "editor": {
       "draftPreview": {
-        "intro": "Cardul din listă și pagina evenimentului, din ce ai scris acum. Nu salvează și nu publică nimic.",
+        "intro": "Cardul din listă, pagina evenimentului și formularul de înscriere, din ce ai scris acum. Nu salvează și nu publică nimic.",
         "run": "Previzualizează",
         "running": "Se pregătește…",
         "views": "Ce vezi",
         "card": "Card",
         "page": "Pagina",
+        "form": "Formular",
         "language": "Limba",
         "width": "Lățime",
         "phone": "Telefon (360)",
         "desktop": "Desktop",
-        "idle": "Apasă «Previzualizează» ca să vezi cardul și pagina.",
+        "idle": "Apasă «Previzualizează» ca să vezi cardul, pagina și formularul.",
         "asOfPress": "Arată ce era scris la ultima apăsare pe «Previzualizează».",
         "incomplete": "{language} incomplet — lipsește: {missing}",
         "complete": "Ambele limbi au tot ce cere publicarea.",
@@ -1759,7 +1760,7 @@
         },
         "preview": {
           "title": "Previzualizare",
-          "summary": "Cum arată pe site — cardul și pagina, fără să salvezi"
+          "summary": "Cum arată pe site — cardul, pagina și formularul, fără să salvezi"
         },
         "summary": {
           "filled": "completat",
@@ -6336,6 +6337,13 @@
     },
     "membersAddressLabel": "Adresa contului tău de membru",
     "membersAddressHelp": "Te înscrii cu adresa contului. Un cont înscrie o singură persoană.",
+    "preview": {
+      "noForm": "Previzualizare: evenimentul nu primește înscrieri pe site, deci nu are formular.",
+      "dateLater": "Previzualizare: formularul apare după ce anunți data și ora evenimentului.",
+      "notOpen": "Previzualizare: acum formularul nu primește înscrieri — {door} Mai jos, cum arată când se deschid.",
+      "memberAddress": "adresa membrului, din contul lui",
+      "groupRunDeclaration": "Pagina alergării oferă și declarația opțională pe propria răspundere. Formularul ei nu apare aici."
+    },
     "promo": {
       "label": "Vreau să primesc oferte și beneficii de la {club} și partenerii săi.",
       "help": "Poți renunța oricând din pagina înscrierii tale.",

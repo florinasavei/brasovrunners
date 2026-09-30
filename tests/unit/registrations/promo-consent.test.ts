@@ -261,7 +261,7 @@ describe("§562 no public page imports the backoffice glyph table (§318)", () =
   it("the pages that draw the box and the switch take their glyphs from @mui/icons-material/<Name>", () => {
     const root = process.cwd();
     const files = [
-      "src/app/[locale]/events/[slug]/register/page.tsx",
+      "src/modules/registrations/ui/registration-form.tsx",
       "src/app/[locale]/registrations/manage/[token]/page.tsx",
       "src/app/[locale]/registrations/mine/[token]/page.tsx",
       "src/app/[locale]/registrations/declare/[token]/page.tsx",
