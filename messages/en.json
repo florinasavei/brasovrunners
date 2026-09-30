@@ -1097,6 +1097,7 @@
       "WAITLIST_FULL": "The places and the waiting list are full, so nothing changed. Try again once a slot on the list frees up.",
       "NO_WAITLIST": "Every place is taken and the event has no waiting list, so nothing changed.",
       "WALK_IN_LEFT_UNCONFIRMED": "The person is entered, but the last place just went, so they are unconfirmed and got no email. Confirm them on paper once a place frees up.",
+      "NO_FREE_PLACE": "No place is free, so nothing changed. Places: {capacity}; confirmed: {confirmed}; declaration to sign: {declaration}; offered from the list: {offered}; reserved for families: {family}.",
       "NO_RECIPIENTS": "Nothing was sent: nobody is in the chosen group right now. Choose another group.",
       "MESSAGE_UNKNOWN_PLACEHOLDER": "Nothing was sent: {names} is not a field we can fill in this message. The fields you can use are listed under the boxes.",
       "SAMPLE_VALUE_IN_EMAIL": "The text contains the sample value “{value}” — use {placeholder}.",

@@ -7,6 +7,7 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
+import { noFreePlaceValues, type PlacesTaken } from "@/modules/registrations/domain/capacity";
 import { declarationAsksMinorToSignByLocale } from "@/modules/legal-documents/repository";
 import { findRegistrationByCheckinCode } from "@/modules/registrations/admin-repository";
 import { spareStates } from "@/modules/registrations/bibs";
@@ -18,7 +19,7 @@ import { requireStaff } from "@/modules/staff-identity/session";
 
 type Props = {
   params: Promise<{ locale: string; code: string }>;
-  searchParams: Promise<{ saved?: string; error?: string }>;
+  searchParams: Promise<{ saved?: string; error?: string } & Partial<Record<keyof PlacesTaken, string>>>;
 };
 
 export const dynamic = "force-dynamic";
@@ -38,7 +39,8 @@ export default async function ScannedCodePage({ params, searchParams }: Props) {
   const actor = await requireStaff();
   if (!canWorkTheDesk(actor.role)) notFound();
 
-  const { saved, error } = await searchParams;
+  const query = await searchParams;
+  const { saved, error } = query;
   const t = await getTranslations("Admin");
   const code = normalizeCheckinCode(raw);
   const db = getDb();
@@ -59,7 +61,7 @@ export default async function ScannedCodePage({ params, searchParams }: Props) {
         {t("desk.scannedTitle")}
       </Typography>
       <div id="admin-alert" tabIndex={-1}>
-        {error && <Alert severity="error">{t(`errors.${error}`)}</Alert>}
+        {error && <Alert severity="error">{t(`errors.${error}`, noFreePlaceValues(error, query))}</Alert>}
         {saved && <Alert severity="success">{t(`desk.saved.${saved}`)}</Alert>}
       </div>
       {row ? (
