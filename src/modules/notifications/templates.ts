@@ -8,7 +8,7 @@ import { organizerParagraphs } from "./domain/organizer-message";
 import { type EmailEventFacts, type EventFactsBlock, eventFactsBlock } from "./domain/event-facts";
 import { DEFAULT_TOKEN_HOURS } from "./domain/token-lifetime";
 import type { EventChangeKind } from "@/modules/events/domain/event-changes";
-import { CLUB_NAME, COLOR } from "@/theme/brand";
+import { CLUB_NAME, COLOR, EMAIL_EMPHASIS } from "@/theme/brand";
 import { capitalizeFirst, formatBirthDate } from "@/i18n/dates";
 import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
 import { daysPhrase, durationPhrase, hoursPhrase, leadPhrase, minutesPhrase } from "@/modules/deadlines/domain/duration-words";
@@ -87,7 +87,46 @@ export type TemplateContent = {
    * message: the sentence, then the notice's address in the message's language as a link.
    */
   privacy?: { text: string; url: string };
+  /*
+    The emphasis (§NNN, amending §68 and §392; the owner, 2026-09-30: «I need more bold and highlight
+    in the emails sent to participants»). A message names, by their words, the paragraphs it is
+    about; the renderer draws them. Matched by their words rather than by position, so a text the
+    club saved unchanged from the editor (§359) is emphasised as the platform's own is, and one the
+    club rewrote is left as the club wrote it.
+  */
+  /** The one fact the message is about, on the band (`EMAIL_EMPHASIS`): consecutive ones share it. */
+  highlight?: readonly string[];
+  /**
+   * The same band as a line of its own, right under the greeting, for a fact no paragraph says: the
+   * reminder's start and place. When it is the §81 facts line, that line is drawn on the band, its
+   * links with it, instead of a second time.
+   */
+  highlightLine?: string;
+  /** The sentences a reader may skip — "ignore this if it was not you", where the data came from: smaller, muted. */
+  quiet?: readonly string[];
+  /**
+   * A message that asks one thing puts its button right under this paragraph — the highlighted one,
+   * or the line that says what the button does — rather than at the end (§NNN). Absent or not
+   * found, the button stays where it always was.
+   */
+  actionAfter?: string;
 };
+
+/**
+ * A paragraph's words without the platform's markers and with its spaces folded (§NNN): what the
+ * emphasis matches by, so `**774**` and `774`, a sentence and the same sentence typed in the
+ * editor, are one paragraph.
+ */
+export function emphasisKey(text: string): string {
+  return text
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/__([^_]+)__/g, "$1")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/** The plain-text half's mark before a highlighted line (§NNN), a blank line above and under it. */
+export const HIGHLIGHT_TEXT_MARK = "▶ ";
 
 /*
   The club's everyday name is the platform's one constant (`CLUB_NAME`, §215), never a literal
@@ -237,17 +276,30 @@ function familyFirstNames(people: NonNullable<TemplateData["familyConfirmed"]>):
  * the QR the desk scans. The second half of the bilingual message repeats the words, not the pictures
  * (`renderBilingual`), as for one person's QR. The plain-text half reads one line per fact.
  */
-function familyConfirmedPart(people: NonNullable<TemplateData["familyConfirmed"]>, words: FamilyConfirmedWords): EmailBodyPart {
+function familyConfirmedPart(people: NonNullable<TemplateData["familyConfirmed"]>, words: FamilyConfirmedWords, plainLook = false): EmailBodyPart {
   const numberText = (person: (typeof people)[number]) => (person.raceNumber === null ? words.noNumber : String(person.raceNumber));
   const blocks = people.map((person) => {
     const number = person.raceNumber === null ? escapeHtml(words.noNumber) : `<strong style="font-size:20px">${person.raceNumber}</strong>`;
     return [
       `<div data-email-part="family-person" style="margin:0 0 14px;padding:14px 16px;border:1px solid ${COLOR.line};border-radius:10px">`,
       `<p style="margin:0 0 8px;font-size:17px;line-height:1.4"><strong>${escapeHtml(person.name)}</strong></p>`,
-      `<p style="margin:0 0 6px;font-size:15px;line-height:1.5">${escapeHtml(words.number)}: ${number}</p>`,
-      ...(person.checkinCode
-        ? [`<p style="margin:0 0 8px;font-size:15px;line-height:1.5">${escapeHtml(words.code)}: <strong>${escapeHtml(person.checkinCode)}</strong></p>`]
-        : []),
+      // The number and the desk code on the band (§NNN), as one runner's confirmation draws them —
+      // the club's copy keeps the plain lines it always had.
+      ...(plainLook
+        ? [
+            `<p style="margin:0 0 6px;font-size:15px;line-height:1.5">${escapeHtml(words.number)}: ${number}</p>`,
+            ...(person.checkinCode
+              ? [`<p style="margin:0 0 8px;font-size:15px;line-height:1.5">${escapeHtml(words.code)}: <strong>${escapeHtml(person.checkinCode)}</strong></p>`]
+              : []),
+          ]
+        : [
+            highlightBand(
+              [
+                bandLine(`${escapeHtml(words.number)}: ${number}`),
+                ...(person.checkinCode ? [bandLine(`${escapeHtml(words.code)}: <strong>${escapeHtml(person.checkinCode)}</strong>`)] : []),
+              ].join(""),
+            ),
+          ]),
       ...(person.qrUrl
         ? [
             `<p style="margin:0"><img src="${person.qrUrl}" alt="${escapeHtml(`${words.qr} ${person.checkinCode ?? ""}`)}" width="160" height="160" style="display:block;width:160px;height:160px"></p>`,
@@ -260,44 +312,56 @@ function familyConfirmedPart(people: NonNullable<TemplateData["familyConfirmed"]
     html: `<div data-email-part="family-confirmed">${blocks.join("")}</div>`,
     text: people.flatMap((person) => [
       person.name,
-      `${words.number}: ${numberText(person)}`,
-      ...(person.checkinCode ? [`${words.code}: ${person.checkinCode}`] : []),
+      `${plainLook ? "" : HIGHLIGHT_TEXT_MARK}${words.number}: ${numberText(person)}`,
+      ...(person.checkinCode ? [`${plainLook ? "" : HIGHLIGHT_TEXT_MARK}${words.code}: ${person.checkinCode}`] : []),
       ...(person.qrUrl ? [`${words.qr}: ${person.qrUrl}`] : []),
       "",
     ]),
   };
 }
 
+/** One paragraph of the body as the emphasis sees it (§NNN): its words, how it is drawn, both halves. */
+type BodyItem = { kind: "plain" | "highlight" | "quiet"; key: string; html: string; text: string[]; inner?: string };
+
+/**
+ * The band a message's one fact sits on (§NNN): the club's blue at about 8 % behind the body's ink,
+ * the ink blue as its left edge — the same in every message. Inline, like every style here, and a
+ * background colour Gmail keeps; a client that darkens the message inverts band and words together.
+ */
+function highlightBand(inner: string): string {
+  return `<div data-email-part="highlight" style="margin:0 0 16px;padding:12px 16px 6px;background-color:${EMAIL_EMPHASIS.band};border-left:4px solid ${EMAIL_EMPHASIS.edge};border-radius:8px;color:${EMAIL_EMPHASIS.ink}">${inner}</div>`;
+}
+
+/** A paragraph of the club's words with nothing but its text (`email-rich-text.ts`, `P_STYLE`): its inner HTML. */
+const PLAIN_PARAGRAPH = /^<p style="margin:0 0 14px;font-size:16px;line-height:1\.5">((?:(?!<\/?p[ >])[^])*)<\/p>$/;
+
+/**
+ * One line on the band: a size above the body's, so the eye lands on it first. Every line alike —
+ * the band's padding closes the last — so a paragraph drawn as two lines differs by the break alone.
+ */
+function bandLine(inner: string): string {
+  return `<p style="margin:0 0 6px;font-size:17px;line-height:1.5;color:${EMAIL_EMPHASIS.ink}">${inner}</p>`;
+}
+
+/**
+ * Whether a paragraph is one the message highlights (§NNN): the same words, or whole sentences of
+ * them — the starting text the club saves unchanged (§359, `ownParagraphsOf`) breaks a paragraph
+ * before a sentence a fact may be missing from, and drops that sentence when the fact is.
+ */
+function isHighlighted(key: string, highlighted: ReadonlySet<string>): boolean {
+  if (key === "") return false;
+  if (highlighted.has(key)) return true;
+  if (!/[.!?:]$/.test(key)) return false;
+  for (const whole of highlighted) {
+    if (whole.startsWith(`${key} `) || whole.endsWith(` ${key}`) || whole.includes(` ${key} `)) return true;
+  }
+  return false;
+}
+
 export function renderContent(
   content: TemplateContent,
   locale: EmailLocale,
 ): { html: string; text: string; htmlParts: string[]; textLines: string[] } {
-  const textLines = [
-    content.greeting,
-    "",
-    ...(content.facts
-      ? [content.facts.line, ...content.facts.links.map((link) => `${link.label}: ${link.url}`), ""]
-      : []),
-    // The plain-text half drops the bold and underline markers rather than printing them (§189,
-    // §309); a block the club wrote carries its own lines, already stripped of formatting.
-    ...content.paragraphs.flatMap((part) =>
-      typeof part === "string" ? [part.replace(/\*\*([^*]+)\*\*/g, "$1").replace(/__([^_]+)__/g, "$1")] : part.text,
-    ),
-    ...(content.eventFacts ? ["", ...content.eventFacts.text.split("\n")] : []),
-    ...(content.image ? ["", `${content.image.caption}: ${content.image.url}`] : []),
-    ...(content.action ? ["", `${content.action.label}: ${content.action.url}`] : []),
-    ...(content.action && content.secondaryAction ? [`${content.secondaryAction.label}: ${content.secondaryAction.url}`] : []),
-    ...(content.cannotCome ? ["", `${content.cannotCome.label}: ${content.cannotCome.url}`, content.cannotCome.note] : []),
-    ...(content.links ?? []).map((link) => `${link.label}: ${link.url}`),
-    "",
-    content.closing,
-    SIGN_OFF[locale],
-    ...(content.footer ? ["", content.footer] : []),
-    // The address last, with nothing after it: a text client that links it could take a
-    // trailing full stop into the link (review nit). The HTML part keeps the sentence's stop.
-    ...(content.privacy ? ["", `${content.privacy.text} ${content.privacy.url}`] : []),
-  ];
-
   /**
    * `**like this**` becomes bold, applied **after** escaping so the marker can only ever wrap
    * text this codebase wrote (§189). The owner, of a confirmation: "in mail, numarul de concurs
@@ -314,22 +378,141 @@ export function renderContent(
     escaped
       .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
       .replace(/__([^_]+)__/g, '<u style="text-decoration:underline">$1</u>');
+  // The plain-text half drops the bold and underline markers rather than printing them (§189, §309).
+  const plain = (text: string) => text.replace(/\*\*([^*]+)\*\*/g, "$1").replace(/__([^_]+)__/g, "$1");
   const paragraph = (inner: string) => `<p style="margin:0 0 14px;font-size:16px;line-height:1.5">${inner}</p>`;
-  const htmlParts = [
+  // The quieter sentences (§NNN): a step smaller and muted, so the eye passes over them to what matters.
+  const quietParagraph = (inner: string) => `<p style="margin:0 0 12px;font-size:14px;line-height:1.5;color:${EMAIL_EMPHASIS.quiet}">${inner}</p>`;
+  const marked = (lines: readonly string[]) => lines.map((line) => (line === "" ? line : `${HIGHLIGHT_TEXT_MARK}${line}`));
+
+  const highlighted = new Set((content.highlight ?? []).map(emphasisKey));
+  const quieted = new Set((content.quiet ?? []).map(emphasisKey));
+  const items: BodyItem[] = content.paragraphs.map((part) => {
+    const key = emphasisKey(typeof part === "string" ? part : part.text.filter((line) => line !== "").join(" "));
+    const kind = isHighlighted(key, highlighted) ? "highlight" : key !== "" && quieted.has(key) ? "quiet" : "plain";
+    if (typeof part === "string") {
+      const inner = emphasise(escapeHtml(part));
+      return { kind, key, html: kind === "quiet" ? quietParagraph(inner) : paragraph(inner), text: [plain(part)], inner };
+    }
+    /*
+      A block the club wrote (§270) carries its own lines, already stripped of formatting. A plain
+      paragraph of it is drawn exactly as the platform's sentence would be — on the band, or quieter —
+      so the starting text saved unchanged sends the platform's message byte for byte (§359); any
+      other block keeps its own markup, muted by its colour when it is a quieter one.
+    */
+    const plainBlock = PLAIN_PARAGRAPH.exec(part.html)?.[1];
+    if (plainBlock !== undefined) {
+      return { kind, key, html: kind === "quiet" ? quietParagraph(plainBlock) : part.html, text: part.text, inner: plainBlock };
+    }
+    return { kind, key, html: kind === "quiet" ? `<div style="color:${EMAIL_EMPHASIS.quiet}">${part.html}</div>` : part.html, text: part.text };
+  });
+
+  // The button under the paragraph the message names (§NNN) — after the whole band when that paragraph is on it.
+  const anchor = content.action && content.actionAfter ? emphasisKey(content.actionAfter) : undefined;
+  // Its last sentence, when the club's saved text broke it into paragraphs (`isHighlighted`).
+  let actionAt = anchor === undefined ? -1 : items.findLastIndex((item) => isHighlighted(item.key, new Set([anchor])));
+  while (actionAt >= 0 && items[actionAt].kind === "highlight" && items[actionAt + 1]?.kind === "highlight") actionAt += 1;
+  const actionEarly = actionAt >= 0;
+
+  // The one action as a button (§96): a link a thumb finds, in the club's blue.
+  const actionHtml = content.action
+    ? [
+        `<p style="margin:20px 0"><a href="${content.action.url}" style="display:inline-block;background:${COLOR.blueInk};color:${COLOR.surface};text-decoration:none;font-weight:700;font-size:16px;padding:14px 22px;border-radius:10px">${escapeHtml(content.action.label)}</a></p>`,
+        // The second choice (§468): outlined, so the eye takes the first button for the message's point.
+        ...(content.secondaryAction
+          ? [
+              `<p style="margin:-8px 0 20px"><a href="${content.secondaryAction.url}" style="display:inline-block;background:${COLOR.surface};color:${COLOR.blueInk};text-decoration:none;font-weight:700;font-size:15px;padding:12px 20px;border:2px solid ${COLOR.blueInk};border-radius:10px">${escapeHtml(content.secondaryAction.label)}</a></p>`,
+            ]
+          : []),
+      ]
+    : [];
+  const actionText = content.action
+    ? [
+        `${content.action.label}: ${content.action.url}`,
+        ...(content.secondaryAction ? [`${content.secondaryAction.label}: ${content.secondaryAction.url}`] : []),
+      ]
+    : [];
+
+  /*
+    The body, both halves at once. A highlighted run shares one band, and in the plain-text half each
+    of its lines carries the mark, a blank line above and under the run; the early button is set apart
+    the same way. Nothing else in the text half moves: a paragraph still follows a paragraph on the
+    next line, as it always did.
+  */
+  const bodyHtml: string[] = [];
+  const bodyText: string[] = [];
+  let owed = false;
+  const addText = (lines: readonly string[], apart: boolean) => {
+    if (lines.length === 0) return;
+    if ((apart || owed) && bodyText.length > 0 && bodyText.at(-1) !== "" && lines[0] !== "") bodyText.push("");
+    bodyText.push(...lines);
+    owed = apart;
+  };
+  for (let index = 0; index < items.length; index += 1) {
+    const item = items[index];
+    if (item.kind === "highlight") {
+      const run: BodyItem[] = [item];
+      while (items[index + 1]?.kind === "highlight") run.push(items[(index += 1)]);
+      bodyHtml.push(
+        highlightBand(
+          run.map((member) => (member.inner !== undefined ? bandLine(member.inner) : member.html)).join(""),
+        ),
+      );
+      addText(marked(run.flatMap((member) => member.text)), true);
+    } else {
+      bodyHtml.push(item.html);
+      addText(item.text, false);
+    }
+    if (actionEarly && index === actionAt) {
+      bodyHtml.push(...actionHtml);
+      addText(actionText, true);
+    }
+  }
+
+  /*
+    The reminder's start and place (§NNN): a line of its own on the band, under the greeting. When it
+    is the §81 facts line itself, that line is the band, its links under it on the band, not twice.
+  */
+  const factsOnBand = content.highlightLine !== undefined && content.facts !== undefined && content.facts.line === content.highlightLine;
+  const factsLinksHtml = content.facts
+    ? content.facts.links.map((link) => `<br><a href="${link.url}" style="color:${COLOR.blueInk}">${escapeHtml(link.label)}</a>`).join("")
+    : "";
+  const factsLinksText = content.facts ? content.facts.links.map((link) => `${link.label}: ${link.url}`) : [];
+  const headHtml = [
     paragraph(escapeHtml(content.greeting)),
-    // The facts first and bold: what the eye finds on a phone the morning of.
-    ...(content.facts
-      ? [
-          paragraph(
-            `<strong>${escapeHtml(content.facts.line)}</strong>${content.facts.links
-              .map((link) => `<br><a href="${link.url}" style="color:${COLOR.blueInk}">${escapeHtml(link.label)}</a>`)
-              .join("")}`,
-          ),
-        ]
+    ...(content.highlightLine !== undefined
+      ? [highlightBand(bandLine(`<strong>${emphasise(escapeHtml(content.highlightLine))}</strong>${factsOnBand ? factsLinksHtml : ""}`))]
       : []),
-    ...content.paragraphs.map((part) =>
-      typeof part === "string" ? paragraph(emphasise(escapeHtml(part))) : part.html,
-    ),
+    // The facts first and bold: what the eye finds on a phone the morning of.
+    ...(content.facts && !factsOnBand ? [paragraph(`<strong>${escapeHtml(content.facts.line)}</strong>${factsLinksHtml}`)] : []),
+  ];
+  const headText = [
+    content.greeting,
+    "",
+    ...(content.highlightLine !== undefined ? [...marked([plain(content.highlightLine)]), ...(factsOnBand ? factsLinksText : []), ""] : []),
+    ...(content.facts && !factsOnBand ? [content.facts.line, ...factsLinksText, ""] : []),
+  ];
+
+  const tailText = [
+    ...(content.eventFacts ? ["", ...content.eventFacts.text.split("\n")] : []),
+    ...(content.image ? ["", `${content.image.caption}: ${content.image.url}`] : []),
+    ...(content.action && !actionEarly ? ["", ...actionText] : []),
+    ...(content.cannotCome ? ["", `${content.cannotCome.label}: ${content.cannotCome.url}`, content.cannotCome.note] : []),
+    ...(content.links ?? []).map((link) => `${link.label}: ${link.url}`),
+    "",
+    content.closing,
+    SIGN_OFF[locale],
+    ...(content.footer ? ["", content.footer] : []),
+    // The address last, with nothing after it: a text client that links it could take a
+    // trailing full stop into the link (review nit). The HTML part keeps the sentence's stop.
+    ...(content.privacy ? ["", `${content.privacy.text} ${content.privacy.url}`] : []),
+  ];
+  // A band that ends the body keeps its blank line under it, whatever follows.
+  const textLines = [...headText, ...bodyText, ...(owed && bodyText.at(-1) !== "" && tailText[0] !== "" ? [""] : []), ...tailText];
+
+  const htmlParts = [
+    ...headHtml,
+    ...bodyHtml,
     // The event's facts under the club's text and above the QR — what the eye finds on a phone
     // on race morning (§81, restored by the fix round; §392).
     ...(content.eventFacts ? [content.eventFacts.html] : []),
@@ -341,18 +524,7 @@ export function renderContent(
           paragraph(escapeHtml(content.image.caption)),
         ]
       : []),
-    // The one action as a button (§96): a link a thumb finds, in the club's blue.
-    ...(content.action
-      ? [
-          `<p style="margin:20px 0"><a href="${content.action.url}" style="display:inline-block;background:${COLOR.blueInk};color:${COLOR.surface};text-decoration:none;font-weight:700;font-size:16px;padding:14px 22px;border-radius:10px">${escapeHtml(content.action.label)}</a></p>`,
-        ]
-      : []),
-    // The second choice (§468): outlined, so the eye takes the first button for the message's point.
-    ...(content.action && content.secondaryAction
-      ? [
-          `<p style="margin:-8px 0 20px"><a href="${content.secondaryAction.url}" style="display:inline-block;background:${COLOR.surface};color:${COLOR.blueInk};text-decoration:none;font-weight:700;font-size:15px;padding:12px 20px;border:2px solid ${COLOR.blueInk};border-radius:10px">${escapeHtml(content.secondaryAction.label)}</a></p>`,
-        ]
-      : []),
+    ...(actionEarly ? [] : actionHtml),
     /*
       «Nu mai pot ajunge» (§558; the owner: «în fiecare mail trebuie să fie clar butonul»): the whole
       card's width, so a thumb finds it on a phone and the eye on a desktop, outlined in the club's
@@ -1045,6 +1217,48 @@ function standardLinks(
     ...(d.contactUrl ? [{ label: labels.contact, url: d.contactUrl }] : []),
   ];
 }
+
+/**
+ * What one message emphasises (§NNN): the paragraphs on the band, the line of its own on it, the
+ * quieter sentences and the paragraph the button goes under — each by its words, as the message's
+ * body writes them for this data (`TemplateContent`).
+ */
+type Emphasis = Pick<TemplateContent, "highlight" | "highlightLine" | "quiet" | "actionAfter">;
+
+/** The facts line alone (§81), for the band: its links are drawn only where the line itself is. */
+const NO_FACT_LINKS = { map: "", strava: "" } as const;
+
+/**
+ * The confirmation's two facts for the desk (§189, §NNN): the number, bold, and the code, bold —
+ * one sentence each, on one band. Written once, so the band finds the paragraph the body wrote.
+ */
+function confirmedNumberLine(locale: EmailLocale, number: number | string): string {
+  return locale === "ro"
+    ? `Numărul tău de concurs: **${number}**. Îl primești la masă, în ziua cursei.`
+    : `Your race number: **${number}**. You collect it at the desk on race day.`;
+}
+function confirmedCodeLine(locale: EmailLocale, code: string): string {
+  return locale === "ro"
+    ? `La ridicarea numărului de concurs arată codul QR de mai jos sau spune codul **${code}**.`
+    : `When you pick up your race number, show the QR code below or say the code **${code}**.`;
+}
+
+/**
+ * The link for another person (§389, §446): its first line on the band and the button under it;
+ * "ignore it" and the consent line quieter. At the limit and once the kept form is gone there is no
+ * button, only the fact and the one quieter line.
+ */
+function anotherPersonEmphasis(d: TemplateData, b: readonly string[]): Emphasis {
+  if (d.addressAtCap || d.familyEntryGone) return { highlight: [b[0]], quiet: b.slice(2) };
+  return { highlight: [b[0]], actionAfter: b[0], quiet: b.slice(1) };
+}
+
+/** The newsletter's confirmation (§445): what the button does on the band, the button under it. */
+function newsletterConfirmEmphasis(d: TemplateData, b: readonly string[]): Emphasis {
+  if (d.newsletterAlready && !d.newsletterManageRequest) return { highlight: [b[0]], actionAfter: b[1] };
+  return { highlight: [b[1]], actionAfter: b[1] };
+}
+
 const T = {
   ro: {
     hi: (name: string) => `Salut, ${name},`,
@@ -1073,11 +1287,13 @@ const T = {
       body: (d: TemplateData) => [
         "Apasă butonul ca să confirmi adresa. Dacă mai e loc, semnezi apoi declarația și primești codul QR.",
         `Am primit o înscriere la ${d.eventTitle ?? "eveniment"} pe numele ${d.participantName}, trimisă cu această adresă de email.`,
-        `Linkul e valabil ${d.confirmationHours ?? hoursPhrase("ro", DEFAULT_DEADLINES.confirmationHours)}; fără confirmare, înscrierea expiră.`,
+        `Linkul e valabil **${d.confirmationHours ?? hoursPhrase("ro", DEFAULT_DEADLINES.confirmationHours)}**; fără confirmare, înscrierea expiră.`,
         `Datele din înscriere ni le-a trimis cine a completat formularul cu această adresă. Dacă nu ${d.participantName} l-a completat, arată-i acest mesaj: cum folosim datele scrie în nota de confidențialitate, la linkul de la sfârșitul mesajului. Dacă ${d.participantName} nu vrea să participe, nu confirma: înscrierea expiră singură.`,
         "Dacă nu ai solicitat această înscriere, poți ignora acest mesaj.",
       ],
       action: "Confirmă adresa de email",
+      // The button under what it does, the data's origin and "ignore it" quieter (§NNN).
+      emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]], actionAfter: b[0], quiet: b.slice(3) }),
     },
     completeDeclaration: {
       subject: (d: TemplateData) =>
@@ -1087,18 +1303,20 @@ const T = {
       body: (d: TemplateData) => [
         d.confirmLater
           ? // No "the race is free" (§419): said of any event more than a day away, paid or not a race.
-            `Locul tău la ${d.eventTitle ?? "eveniment"} este rezervat. Înscrierea este completă doar după ce semnezi declarația pe proprie răspundere. ${d.windowOpen ? "Semnează acum, din linkul de mai jos." : `Poți semna acum, din linkul de mai jos, sau când îți reamintim, ${d.confirmationOpens ? `cu ${d.confirmationOpens} înainte de start` : "înainte de start"}.`}`
-          : `Un loc la ${d.eventTitle ?? "eveniment"} este rezervat pentru tine. Înscrierea este completă doar cu declarația pe proprie răspundere semnată — citește-o și semneaz-o din linkul de mai jos.`,
-        `Dacă nu apuci online, semnezi declarația pe hârtie la masa de înscrieri, în ziua cursei, înainte să-ți ridici numărul.${d.holdExpiresAtFormatted ? ` Dacă se formează lista de așteptare, locul îți este ținut până ${d.holdExpiresAtFormatted}; până atunci semnează.` : ""}`,
+            `Locul tău la ${d.eventTitle ?? "eveniment"} este rezervat. Înscrierea este completă doar după ce **semnezi declarația pe proprie răspundere**. ${d.windowOpen ? "Semnează acum, din linkul de mai jos." : `Poți semna acum, din linkul de mai jos, sau când îți reamintim, ${d.confirmationOpens ? `cu ${d.confirmationOpens} înainte de start` : "înainte de start"}.`}`
+          : `Un loc la ${d.eventTitle ?? "eveniment"} este rezervat pentru tine. Înscrierea este completă doar cu **declarația pe proprie răspundere semnată** — citește-o și semneaz-o din linkul de mai jos.`,
+        `Dacă nu apuci online, semnezi declarația pe hârtie la masa de înscrieri, în ziua cursei, înainte să-ți ridici numărul.${d.holdExpiresAtFormatted ? ` Dacă se formează lista de așteptare, locul îți este ținut până **${d.holdExpiresAtFormatted}**; până atunci semnează.` : ""}`,
       ],
       action: "Semnează declarația",
+      emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]], actionAfter: b[0] }),
       links: (d: TemplateData) => (d.eventRulesUrl ? [{ label: "Regulamentul evenimentului", url: d.eventRulesUrl }] : []),
     },
     waitlistJoined: {
       subject: "Ești pe lista de așteptare",
       body: (d: TemplateData) => [
-        `${d.eventTitle ?? "Evenimentul"} este complet momentan, așa că te-am adăugat pe lista de așteptare. Te vom anunța dacă se eliberează un loc.`,
+        `${d.eventTitle ?? "Evenimentul"} este complet momentan, așa că te-am adăugat **pe lista de așteptare**. Te vom anunța dacă se eliberează un loc.`,
       ],
+      emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
     },
     waitlistSpotOffer: {
       subject: "S-a eliberat un loc pentru tine",
@@ -1109,23 +1327,27 @@ const T = {
       */
       body: (d: TemplateData) => [
         d.holdExpiresAtFormatted
-          ? `S-a eliberat un loc la ${d.eventTitle ?? "eveniment"}. Este al tău dacă semnezi declarația pe propria răspundere până ${d.holdExpiresAtFormatted} (ai la dispoziție ${d.offerHours ?? hoursPhrase("ro", DEFAULT_DEADLINES.offerHours)}); după acest termen, locul trece la următorul de pe lista de așteptare.`
-          : `S-a eliberat un loc la ${d.eventTitle ?? "eveniment"}. Ai la dispoziție ${d.offerHours ?? hoursPhrase("ro", DEFAULT_DEADLINES.offerHours)} de la ofertă să semnezi declarația pe propria răspundere; după aceea, locul trece la următorul de pe lista de așteptare.`,
+          ? `S-a eliberat un loc la ${d.eventTitle ?? "eveniment"}. Este al tău dacă semnezi declarația pe propria răspundere până **${d.holdExpiresAtFormatted}** (ai la dispoziție **${d.offerHours ?? hoursPhrase("ro", DEFAULT_DEADLINES.offerHours)}**); după acest termen, locul trece la următorul de pe lista de așteptare.`
+          : `S-a eliberat un loc la ${d.eventTitle ?? "eveniment"}. Ai la dispoziție **${d.offerHours ?? hoursPhrase("ro", DEFAULT_DEADLINES.offerHours)}** de la ofertă să semnezi declarația pe propria răspundere; după aceea, locul trece la următorul de pe lista de așteptare.`,
       ],
       action: "Confirmă locul",
+      emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]], actionAfter: b[0] }),
     },
     registrationConfirmed: {
       subject: "Înscrierea este confirmată",
       facts: (d: TemplateData) => eventFacts(d, { map: "Harta punctului de întâlnire", strava: "Evenimentul pe Strava" }),
       body: (d: TemplateData) => [
         `Înscrierea ta la ${d.eventTitle ?? "eveniment"} este confirmată. Te așteptăm!`,
-        ...(d.bibNumber ? [`Numărul tău de concurs: **${d.bibNumber}**. Îl primești la masă, în ziua cursei.`] : []),
+        ...(d.bibNumber ? [confirmedNumberLine("ro", d.bibNumber)] : []),
+        // The code beside the number (§NNN): the two facts the desk asks for, on one band.
+        ...(d.checkinCode ? [confirmedCodeLine("ro", d.checkinCode)] : []),
         ...(d.eventChecklist ? [`Ce să aduci: ${d.eventChecklist}`] : []),
-        ...(d.checkinCode
-          ? [`La ridicarea numărului de concurs arată codul QR de mai jos sau spune codul ${d.checkinCode}.`]
-          : []),
         "Mai jos: înscrierea ta, „Nu mai pot ajunge” și pagina evenimentului.",
       ],
+      emphasis: (d: TemplateData, b: readonly string[]): Emphasis => ({
+        highlight: [...(d.bibNumber ? [confirmedNumberLine("ro", d.bibNumber)] : []), ...(d.checkinCode ? [confirmedCodeLine("ro", d.checkinCode)] : [])],
+        quiet: [b[b.length - 1]],
+      }),
       action: "Vezi înscrierea",
       image: (d: TemplateData) => qrImage("ro", d),
       // «Nu mai pot ajunge» is the button under the action now (§558), no longer a line of this list.
@@ -1152,7 +1374,7 @@ const T = {
         ...(d.bibNumber ? [`Numărul tău de concurs: **${d.bibNumber}**.`] : []),
         ...(d.eventChecklist ? [`Ce să aduci: ${d.eventChecklist}`] : []),
         ...(d.checkinCode
-          ? [`La masă arată codul QR de mai jos sau spune codul ${d.checkinCode}.`]
+          ? [`La masă arată codul QR de mai jos sau spune codul **${d.checkinCode}**.`]
           : []),
         /*
           «Nu poți veni? Anulează înscrierea cu linkul de mai jos» is gone (§558): the button says it, with
@@ -1162,6 +1384,8 @@ const T = {
       ],
       // No action of its own (§558): «Nu mai pot ajunge» is the reminder's one button, its cancel.
       image: (d: TemplateData) => qrImage("ro", d),
+      // The start and the place on the band, under the greeting (§NNN): what a runner opens it for.
+      emphasis: (d: TemplateData): Emphasis => ({ highlightLine: eventFacts(d, NO_FACT_LINKS)?.line }),
       links: (d: TemplateData) => [
         ...(d.eventUrl ? [{ label: "Pagina evenimentului", url: d.eventUrl }] : []),
         ...(d.eventScheduleUrl ? [{ label: "Programul evenimentului", url: d.eventScheduleUrl }] : []),
@@ -1177,26 +1401,29 @@ const T = {
         "Ne vedem la următoarea alergare.",
       ],
       action: "Rezultate și poze",
+      emphasis: (d: TemplateData, b: readonly string[]): Emphasis => (d.thanksUrl ? { highlight: [b[1]], actionAfter: b[1] } : { highlight: [b[0]] }),
     },
     declarationSigned: {
       subject: "Declarația ta semnată",
       body: (d: TemplateData) => [
-        `Atașată găsești declarația pe proprie răspundere pe care ai semnat-o pentru ${d.eventTitle ?? "eveniment"}${d.signedAtFormatted ? `, ${d.signedAtFormatted}` : ""}. Păstreaz-o: este copia ta.`,
-        "Kitul de participare se ridică personal, pe baza actului de identitate scris în declarație.",
+        `Atașată găsești declarația pe proprie răspundere pe care ai semnat-o pentru ${d.eventTitle ?? "eveniment"}${d.signedAtFormatted ? `, ${d.signedAtFormatted}` : ""}. **Păstreaz-o: este copia ta.**`,
+        "Kitul de participare se ridică **personal, pe baza actului de identitate** scris în declarație.",
         "Dacă nu vezi atașamentul, același document este la linkul de mai jos.",
       ],
       action: "Gestionează înscrierea",
+      emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]], quiet: [b[2]] }),
       links: (d: TemplateData) => (d.declarationPdfUrl ? [{ label: "Declarația semnată (PDF)", url: d.declarationPdfUrl }] : []),
     },
     bibAssigned: {
       subject: (d: TemplateData) => `Numărul tău de concurs: ${d.bibNumber ?? "—"}`,
       facts: (d: TemplateData) => eventFacts(d, { map: "Harta punctului de întâlnire", strava: "Evenimentul pe Strava" }),
       body: (d: TemplateData) => [
-        `Ți-am dat numărul **${d.bibNumber ?? "—"}** la ${d.eventTitle ?? "eveniment"}. Îl ridici la masă în ziua cursei${d.checkinCode ? `, cu codul QR de mai jos sau spunând codul ${d.checkinCode}` : ""}.`,
+        `Ți-am dat numărul **${d.bibNumber ?? "—"}** la ${d.eventTitle ?? "eveniment"}. Îl ridici la masă în ziua cursei${d.checkinCode ? `, cu codul QR de mai jos sau spunând codul **${d.checkinCode}**` : ""}.`,
         "Dacă ai primit deja un alt număr prin email, acesta îl înlocuiește.",
       ],
       action: "Vezi înscrierea",
       image: (d: TemplateData) => qrImage("ro", d),
+      emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
       links: (d: TemplateData) => [...(d.eventUrl ? [{ label: "Pagina evenimentului", url: d.eventUrl }] : [])],
     },
     declarationArchive: {
@@ -1220,15 +1447,16 @@ const T = {
         `Declarația ta pe propria răspundere — ${d.groupRunSeries ? `seria ${d.eventTitle ?? "alergării de grup"}` : (d.eventTitle ?? "alergarea de grup")}`,
       body: (d: TemplateData) => [
         d.groupRunSeries
-          ? `Atașată găsești declarația pe propria răspundere pe care ai semnat-o pentru seria de alergări de grup ${d.eventTitle ?? ""}${d.seriesRhythm ? ` (${d.seriesRhythm})` : ""}${d.signedAtFormatted ? `, ${d.signedAtFormatted}` : ""}. Păstreaz-o: este copia ta.`
-          : `Atașată găsești declarația pe propria răspundere pe care ai semnat-o pentru ${d.eventTitle ?? "alergarea de grup"}${d.signedAtFormatted ? `, ${d.signedAtFormatted}` : ""}. Păstreaz-o: este copia ta.`,
+          ? `Atașată găsești declarația pe propria răspundere pe care ai semnat-o pentru seria de alergări de grup ${d.eventTitle ?? ""}${d.seriesRhythm ? ` (${d.seriesRhythm})` : ""}${d.signedAtFormatted ? `, ${d.signedAtFormatted}` : ""}. **Păstreaz-o: este copia ta.**`
+          : `Atașată găsești declarația pe propria răspundere pe care ai semnat-o pentru ${d.eventTitle ?? "alergarea de grup"}${d.signedAtFormatted ? `, ${d.signedAtFormatted}` : ""}. **Păstreaz-o: este copia ta.**`,
         // One declaration for every run of the series (§523): a returning runner signs it once.
         d.groupRunSeries
-          ? `Semnarea a fost opțională și nu te înscrie nicăieri: la alergare vii ca de obicei. Declarația este valabilă pentru toate alergările seriei, așa că nu o mai semnezi la următoarele; dacă organizatorul aprobă o versiune nouă a textului, pagina alergării ți-o cere din nou. Clubul o păstrează cât timp este necesară pentru alergările la care se aplică; dacă ceri retragerea ei, nu o mai folosește, iar o copie o păstrează cel mult termenul de prescripție, apoi o șterge.`
-          : `Semnarea a fost opțională și nu te înscrie nicăieri: la alergare vii ca de obicei. Clubul o păstrează cât timp este necesară pentru alergările la care se aplică; dacă ceri retragerea ei, nu o mai folosește, iar o copie o păstrează cel mult termenul de prescripție, apoi o șterge.`,
+          ? `Semnarea a fost opțională și **nu te înscrie nicăieri: la alergare vii ca de obicei**. Declarația este valabilă pentru toate alergările seriei, așa că nu o mai semnezi la următoarele; dacă organizatorul aprobă o versiune nouă a textului, pagina alergării ți-o cere din nou. Clubul o păstrează cât timp este necesară pentru alergările la care se aplică; dacă ceri retragerea ei, nu o mai folosește, iar o copie o păstrează cel mult termenul de prescripție, apoi o șterge.`
+          : `Semnarea a fost opțională și **nu te înscrie nicăieri: la alergare vii ca de obicei**. Clubul o păstrează cât timp este necesară pentru alergările la care se aplică; dacă ceri retragerea ei, nu o mai folosește, iar o copie o păstrează cel mult termenul de prescripție, apoi o șterge.`,
       ],
       // The signer's own link (§523): the run's page says there that they have signed.
       action: "Vezi pe pagina alergării",
+      emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
     },
     groupRunDeclarationArchive: {
       // The club's archive copy (§393, §99): searchable by who and for what; the document masked (§320).
@@ -1290,6 +1518,7 @@ const T = {
         "Primești acest mesaj pentru că ai cerut, pe pagina evenimentului, să fii anunțat când se deschid înscrierile. E singurul: adresa ta a fost ștearsă din lista de anunțare odată cu trimiterea lui.",
       ],
       action: "Înscrie-te",
+      emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]], actionAfter: b[0], quiet: [b[1]] }),
       links: (d: TemplateData) => [
         ...(d.eventUrl ? [{ label: "Pagina evenimentului", url: d.eventUrl }] : []),
         ...(d.eventRulesUrl ? [{ label: "Regulamentul evenimentului", url: d.eventRulesUrl }] : []),
@@ -1304,33 +1533,39 @@ const T = {
     registrationCancelled: {
       subject: (d: TemplateData) => `Înscrierea${d.participantName ? ` pentru ${d.participantName}` : ""} la ${d.eventTitle ?? "eveniment"} a fost anulată`,
       body: (d: TemplateData) => [
-        `Înscrierea${d.participantName ? ` pentru ${d.participantName}` : ""} la ${d.eventTitle ?? "eveniment"}${d.eventStartsAtFormatted ? `, ${d.eventStartsAtFormatted},` : ""} a fost anulată.`,
+        `Înscrierea${d.participantName ? ` pentru ${d.participantName}` : ""} la ${d.eventTitle ?? "eveniment"}${d.eventStartsAtFormatted ? `, ${d.eventStartsAtFormatted},` : ""} **a fost anulată**.`,
       ],
+      // The fact first, and what it released under it on the same band (`cancelledReleased`, §NNN).
+      emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
     },
     waitlistOfferExpired: {
       subject: "Timpul pentru confirmarea locului a expirat",
       body: (d: TemplateData) => [
-        `Timpul disponibil pentru a confirma locul eliberat la ${d.eventTitle ?? "eveniment"} a expirat. Rămâi pe lista de așteptare și te vom anunța dacă se mai eliberează un loc.`,
+        `Timpul disponibil pentru a confirma locul eliberat la ${d.eventTitle ?? "eveniment"} **a expirat**. **Rămâi pe lista de așteptare** și te vom anunța dacă se mai eliberează un loc.`,
       ],
+      emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
     },
     registrationManageLink: {
       subject: "Linkul tău de gestionare a înscrierii",
       body: () => ["Iată linkul cu care poți vedea sau anula înscrierea ta."],
       action: "Gestionează înscrierea",
+      emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]], actionAfter: b[0] }),
     },
     profileManageLink: {
       subject: `Înscrierile tale la ${CLUB_NAME}`,
       body: (d: TemplateData) => [
         "Iată linkul cu care vezi toate înscrierile tale active: starea fiecăreia, codul de acces și codul QR pentru ziua cursei, și posibilitatea de a renunța.",
-        `Linkul este valabil ${d.linkLifetime ?? defaultLinkLifetime("ro")} și doar pentru tine.`,
+        `Linkul este valabil **${d.linkLifetime ?? defaultLinkLifetime("ro")}** și doar pentru tine.`,
       ],
       action: "Vezi înscrierile mele",
+      emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]], actionAfter: b[0] }),
     },
     registrationStateNotice: {
       subject: "Starea înscrierii tale",
       body: (d: TemplateData) => [
-        `Înscrierea ta la ${d.eventTitle ?? "eveniment"} are starea: ${d.currentStatus ?? "necunoscută"}.`,
+        `Înscrierea ta la ${d.eventTitle ?? "eveniment"} are starea: **${d.currentStatus ?? "necunoscută"}**.`,
       ],
+      emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
     },
     eventUpdateNotice: {
       subject: (d: TemplateData) => `Detalii actualizate pentru ${d.eventTitle ?? "eveniment"}`,
@@ -1338,19 +1573,22 @@ const T = {
       body: (d: TemplateData) => [
         `Organizatorii au actualizat detaliile pentru ${d.eventTitle ?? "evenimentul"} la care ești înscris.`,
         // A way out when the change does not suit, so the place goes to the waiting list (§419).
-        "Înscrierea ta rămâne valabilă și nu trebuie să faci nimic. Dacă noua dată sau noul loc nu ți se potrivește, renunță la înscriere din „Înscrierile mele” (linkul de mai jos), ca locul să treacă la altcineva. Detaliile la zi sunt pe pagina evenimentului.",
+        "Înscrierea ta rămâne valabilă și **nu trebuie să faci nimic**. Dacă noua dată sau noul loc nu ți se potrivește, renunță la înscriere din „Înscrierile mele” (linkul de mai jos), ca locul să treacă la altcineva. Detaliile la zi sunt pe pagina evenimentului.",
       ],
       action: "Vezi pagina evenimentului",
+      // What changed is the band (`noticeParts`, set in `buildTemplateContent`); with nothing named, this line.
+      emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
       links: (d: TemplateData) => (d.myRegistrationsUrl ? [{ label: "Înscrierile mele (îți trimitem linkul pe email)", url: d.myRegistrationsUrl }] : []),
     },
     eventCancelled: {
       // Without a title the sentence names no event — never the club's name standing in for one (§357).
       subject: (d: TemplateData) => (d.eventTitle ? `Evenimentul „${d.eventTitle}” a fost anulat` : "Evenimentul a fost anulat"),
       body: (d: TemplateData) => [
-        `Ne pare rău: evenimentul${d.eventTitle ? ` „${d.eventTitle}”` : ""}${d.eventStartsAtFormatted ? `, programat ${d.eventStartsAtFormatted},` : ""} a fost anulat.`,
-        "Înscrierea ta rămâne la noi ca înregistrare și nu trebuie să faci nimic: nu e nevoie să o anulezi.",
+        `Ne pare rău: evenimentul${d.eventTitle ? ` „${d.eventTitle}”` : ""}${d.eventStartsAtFormatted ? `, programat ${d.eventStartsAtFormatted},` : ""} **a fost anulat**.`,
+        "Înscrierea ta rămâne la noi ca înregistrare și **nu trebuie să faci nimic**: nu e nevoie să o anulezi.",
         `Pentru întrebări, scrie-ne din pagina de contact (linkul „Scrie-ne” de mai jos)${d.replyTo ? " sau răspunde la acest email" : ""}.`,
       ],
+      emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
     },
     /**
      * "Trimite un mesaj participanților" (§364): the organizer's subject and body, written for this
@@ -1389,7 +1627,7 @@ const T = {
       body: (d: TemplateData) =>
         d.addressAtCap
           ? [
-              `Formularul de înscriere la ${d.eventTitle ?? "eveniment"} a fost trimis din nou cu această adresă și un alt nume. Nu am înscris pe nimeni: pe o adresă de email se pot înscrie cel mult ${peoplePhrase("ro", d.addressCap)} la un eveniment, iar adresa ta le are deja.`,
+              `Formularul de înscriere la ${d.eventTitle ?? "eveniment"} a fost trimis din nou cu această adresă și un alt nume. **Nu am înscris pe nimeni**: pe o adresă de email se pot înscrie cel mult ${peoplePhrase("ro", d.addressCap)} la un eveniment, iar adresa ta le are deja.`,
               "Pentru încă o persoană, folosește adresa ei de email. Dacă cineva de pe adresa ta nu mai vine, îi anulezi înscrierea din linkul primit la confirmare sau din „Înscrierile mele”, și locul de pe adresă se eliberează.",
               "Dacă nu tu ai trimis formularul, poți ignora acest mesaj: nu s-a schimbat nimic.",
             ]
@@ -1406,6 +1644,7 @@ const T = {
               "Înscrie pe cineva doar cu acordul lui și spune-i cum îi folosim datele: nota de confidențialitate e la linkul de la sfârșitul mesajului.",
             ],
       action: "Confirm că înscriu altă persoană",
+      emphasis: (d: TemplateData, b: readonly string[]): Emphasis => anotherPersonEmphasis(d, b),
     },
     /**
      * The newsletter's one message to an address left in the contact page's pop-up (§445): the
@@ -1423,7 +1662,7 @@ const T = {
             ]
           : d.newsletterAlready
           ? [
-              "Cineva — probabil tu — a cerut din nou, pe pagina noastră de contact, noutățile clubului pe această adresă. Ești deja abonat(ă), așa că nu s-a schimbat nimic.",
+              "Cineva — probabil tu — a cerut din nou, pe pagina noastră de contact, noutățile clubului pe această adresă. **Ești deja abonat(ă)**, așa că nu s-a schimbat nimic.",
               "Cu butonul de mai jos vezi temele alese; acolo le poți schimba sau te poți dezabona.",
             ]
           : [
@@ -1431,6 +1670,7 @@ const T = {
               "Confirmă abonarea cu butonul de mai jos. Până nu confirmi nu îți trimitem nimic altceva, iar dacă nu confirmi, adresa se șterge.",
             ],
       action: (d: TemplateData) => (d.newsletterAlready ? "Vezi abonamentul" : "Confirmă abonarea"),
+      emphasis: (d: TemplateData, b: readonly string[]): Emphasis => newsletterConfirmEmphasis(d, b),
     },
     /** A newsletter the club wrote (§445): its own subject and body, the link to choose topics or unsubscribe. */
     newsletter: {
@@ -1447,6 +1687,7 @@ const T = {
         `${d.eventTitle ?? "Un eveniment nou"} e acum în calendarul clubului. Tot ce ține de el — programul, traseul și, unde e cazul, înscrierea — e pe pagina lui.`,
       ],
       action: "Vezi evenimentul",
+      emphasis: (d: TemplateData): Emphasis => ({ highlightLine: eventFacts(d, NO_FACT_LINKS)?.line }),
     },
     /** The newsletter's own lines (§445), which the platform adds whoever wrote the words above them. */
     newsletterWords: {
@@ -1480,7 +1721,7 @@ const T = {
      */
     alreadyRegistered: (bib?: number | null) =>
       bib
-        ? `Ne bucurăm că ești nerăbdător! __Ești deja înscris__ la acest eveniment, cu numărul ${bib} — nu s-a creat o a doua înscriere. Mai jos este înscrierea pe care o ai.`
+        ? `Ne bucurăm că ești nerăbdător! __Ești deja înscris__ la acest eveniment, cu numărul **${bib}** — nu s-a creat o a doua înscriere. Mai jos este înscrierea pe care o ai.`
         : "Ne bucurăm că ești nerăbdător! __Ești deja înscris__ la acest eveniment, așa că nu s-a creat o a doua înscriere — mai jos este înscrierea pe care o ai deja.",
     /**
      * The reminder of a night event (§394), after the body whoever wrote it — «Alergare de
@@ -1696,11 +1937,12 @@ const T = {
       body: (d: TemplateData) => [
         "Press the button to confirm your address. If there is still a place, you then sign the declaration and get your QR code.",
         `We have received a registration for ${d.eventTitle ?? "an event"} in the name of ${d.participantName}, sent with this email address.`,
-        `The link is valid for ${d.confirmationHours ?? hoursPhrase("en", DEFAULT_DEADLINES.confirmationHours)}; without a confirmation, the registration expires.`,
+        `The link is valid for **${d.confirmationHours ?? hoursPhrase("en", DEFAULT_DEADLINES.confirmationHours)}**; without a confirmation, the registration expires.`,
         `The details in this registration were sent to us by whoever filled in the form with this address. If that was not ${d.participantName}, show them this message: how we use the details is in the privacy notice, linked at the end of this message. If ${d.participantName} does not want to take part, do not confirm: the registration lapses by itself.`,
         "If you did not request this registration, you can ignore this message.",
       ],
       action: "Confirm your email",
+      emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]], actionAfter: b[0], quiet: b.slice(3) }),
     },
     completeDeclaration: {
       subject: (d: TemplateData) =>
@@ -1709,27 +1951,30 @@ const T = {
           : "A place is waiting — sign the declaration",
       body: (d: TemplateData) => [
         d.confirmLater
-          ? `Your place at ${d.eventTitle ?? "the event"} is held. Your registration is complete only once you sign the declaration of own responsibility. ${d.windowOpen ? "Sign now, from the link below." : `You can sign now, from the link below, or when we remind you ${d.confirmationOpens ? `${d.confirmationOpens} before the start` : "before the start"}.`}`
-          : `A place at ${d.eventTitle ?? "the event"} is held for you. The registration is complete only with the signed declaration of own responsibility — read and sign it from the link below.`,
-        `If you do not get to it online, you sign the declaration on paper at the registration desk on race day, before picking up your number.${d.holdExpiresAtFormatted ? ` If a waiting list forms, the place is held for you until ${d.holdExpiresAtFormatted}; sign before then.` : ""}`,
+          ? `Your place at ${d.eventTitle ?? "the event"} is held. Your registration is complete only once you **sign the declaration of own responsibility**. ${d.windowOpen ? "Sign now, from the link below." : `You can sign now, from the link below, or when we remind you ${d.confirmationOpens ? `${d.confirmationOpens} before the start` : "before the start"}.`}`
+          : `A place at ${d.eventTitle ?? "the event"} is held for you. The registration is complete only with the **signed declaration of own responsibility** — read and sign it from the link below.`,
+        `If you do not get to it online, you sign the declaration on paper at the registration desk on race day, before picking up your number.${d.holdExpiresAtFormatted ? ` If a waiting list forms, the place is held for you until **${d.holdExpiresAtFormatted}**; sign before then.` : ""}`,
       ],
       action: "Sign the declaration",
+      emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]], actionAfter: b[0] }),
       links: (d: TemplateData) => (d.eventRulesUrl ? [{ label: "The event's rules", url: d.eventRulesUrl }] : []),
     },
     waitlistJoined: {
       subject: "You're on the waiting list",
       body: (d: TemplateData) => [
-        `${d.eventTitle ?? "The event"} is full right now, so we added you to the waiting list. We'll let you know if a place opens up.`,
+        `${d.eventTitle ?? "The event"} is full right now, so we added you to **the waiting list**. We'll let you know if a place opens up.`,
       ],
+      emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
     },
     waitlistSpotOffer: {
       subject: "A place has opened up for you",
       body: (d: TemplateData) => [
         d.holdExpiresAtFormatted
-          ? `A place has opened up at ${d.eventTitle ?? "the event"}. It is yours if you sign the self-declaration by ${d.holdExpiresAtFormatted} (you have ${d.offerHours ?? hoursPhrase("en", DEFAULT_DEADLINES.offerHours)}); after that, the place passes to the next person on the waiting list.`
-          : `A place has opened up at ${d.eventTitle ?? "the event"}. You have ${d.offerHours ?? hoursPhrase("en", DEFAULT_DEADLINES.offerHours)} from the offer to sign the self-declaration; after that, the place passes to the next person on the waiting list.`,
+          ? `A place has opened up at ${d.eventTitle ?? "the event"}. It is yours if you sign the self-declaration by **${d.holdExpiresAtFormatted}** (you have **${d.offerHours ?? hoursPhrase("en", DEFAULT_DEADLINES.offerHours)}**); after that, the place passes to the next person on the waiting list.`
+          : `A place has opened up at ${d.eventTitle ?? "the event"}. You have **${d.offerHours ?? hoursPhrase("en", DEFAULT_DEADLINES.offerHours)}** from the offer to sign the self-declaration; after that, the place passes to the next person on the waiting list.`,
       ],
       action: "Confirm the place",
+      emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]], actionAfter: b[0] }),
     },
     eventReminder: {
       subject: "See you soon — the details for race day",
@@ -1738,11 +1983,12 @@ const T = {
         `${d.eventTitle ?? "The event"} is coming up. Here is what you need.`,
         ...(d.bibNumber ? [`Your race number: **${d.bibNumber}**.`] : []),
         ...(d.eventChecklist ? [`What to bring: ${d.eventChecklist}`] : []),
-        ...(d.checkinCode ? [`At the desk show the QR code below or say the code ${d.checkinCode}.`] : []),
+        ...(d.checkinCode ? [`At the desk show the QR code below or say the code **${d.checkinCode}**.`] : []),
         // "Can't come? Cancel with the link below" is gone (§558): the button and its sentence say it.
       ],
       // No action of its own (§558): "I can't make it any more" is the reminder's one button, its cancel.
       image: (d: TemplateData) => qrImage("en", d),
+      emphasis: (d: TemplateData): Emphasis => ({ highlightLine: eventFacts(d, NO_FACT_LINKS)?.line }),
       links: (d: TemplateData) => [
         ...(d.eventUrl ? [{ label: "The event's page", url: d.eventUrl }] : []),
         ...(d.eventScheduleUrl ? [{ label: "The event's programme", url: d.eventScheduleUrl }] : []),
@@ -1758,26 +2004,29 @@ const T = {
         "See you at the next run.",
       ],
       action: "Results and photos",
+      emphasis: (d: TemplateData, b: readonly string[]): Emphasis => (d.thanksUrl ? { highlight: [b[1]], actionAfter: b[1] } : { highlight: [b[0]] }),
     },
     declarationSigned: {
       subject: "Your signed declaration",
       body: (d: TemplateData) => [
-        `Attached is the declaration of own responsibility you signed for ${d.eventTitle ?? "the event"}${d.signedAtFormatted ? `, on ${d.signedAtFormatted}` : ""}. Keep it: it is your copy.`,
-        "The race kit is collected in person, against the identity document written in the declaration.",
+        `Attached is the declaration of own responsibility you signed for ${d.eventTitle ?? "the event"}${d.signedAtFormatted ? `, on ${d.signedAtFormatted}` : ""}. **Keep it: it is your copy.**`,
+        "The race kit is collected **in person, against the identity document** written in the declaration.",
         "If you cannot see the attachment, the same document is at the link below.",
       ],
       action: "Manage your registration",
+      emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]], quiet: [b[2]] }),
       links: (d: TemplateData) => (d.declarationPdfUrl ? [{ label: "Signed declaration (PDF)", url: d.declarationPdfUrl }] : []),
     },
     bibAssigned: {
       subject: (d: TemplateData) => `Your race number: ${d.bibNumber ?? "—"}`,
       facts: (d: TemplateData) => eventFacts(d, { map: "Map of the meeting point", strava: "The event on Strava" }),
       body: (d: TemplateData) => [
-        `You have number **${d.bibNumber ?? "—"}** at ${d.eventTitle ?? "the event"}. Collect it at the desk on race day${d.checkinCode ? `, with the QR code below or by saying the code ${d.checkinCode}` : ""}.`,
+        `You have number **${d.bibNumber ?? "—"}** at ${d.eventTitle ?? "the event"}. Collect it at the desk on race day${d.checkinCode ? `, with the QR code below or by saying the code **${d.checkinCode}**` : ""}.`,
         "If an earlier email gave you a different number, this one replaces it.",
       ],
       action: "See your registration",
       image: (d: TemplateData) => qrImage("en", d),
+      emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
       links: (d: TemplateData) => [...(d.eventUrl ? [{ label: "The event's page", url: d.eventUrl }] : [])],
     },
     declarationArchive: {
@@ -1793,13 +2042,14 @@ const T = {
         `Your self-declaration — ${d.groupRunSeries ? `${d.eventTitle ?? "the group run"} (series)` : (d.eventTitle ?? "the group run")}`,
       body: (d: TemplateData) => [
         d.groupRunSeries
-          ? `Attached is the self-declaration you signed for the group run series ${d.eventTitle ?? ""}${d.seriesRhythm ? ` (${d.seriesRhythm})` : ""}${d.signedAtFormatted ? `, on ${d.signedAtFormatted}` : ""}. Keep it: it is your copy.`
-          : `Attached is the self-declaration you signed for ${d.eventTitle ?? "the group run"}${d.signedAtFormatted ? `, on ${d.signedAtFormatted}` : ""}. Keep it: it is your copy.`,
+          ? `Attached is the self-declaration you signed for the group run series ${d.eventTitle ?? ""}${d.seriesRhythm ? ` (${d.seriesRhythm})` : ""}${d.signedAtFormatted ? `, on ${d.signedAtFormatted}` : ""}. **Keep it: it is your copy.**`
+          : `Attached is the self-declaration you signed for ${d.eventTitle ?? "the group run"}${d.signedAtFormatted ? `, on ${d.signedAtFormatted}` : ""}. **Keep it: it is your copy.**`,
         d.groupRunSeries
-          ? `Signing it was optional and registers you for nothing: come to the run as usual. The declaration is valid for every run of the series, so you do not sign it again for the next ones; if the organiser approves a new version of the text, the run's page asks you for it again. The club keeps it as long as it is needed for the runs it applies to; if you ask for its withdrawal, it no longer uses it, keeps a copy at most for the limitation period, then deletes it.`
-          : `Signing it was optional and registers you for nothing: come to the run as usual. The club keeps it as long as it is needed for the runs it applies to; if you ask for its withdrawal, it no longer uses it, keeps a copy at most for the limitation period, then deletes it.`,
+          ? `Signing it was optional and **registers you for nothing: come to the run as usual**. The declaration is valid for every run of the series, so you do not sign it again for the next ones; if the organiser approves a new version of the text, the run's page asks you for it again. The club keeps it as long as it is needed for the runs it applies to; if you ask for its withdrawal, it no longer uses it, keeps a copy at most for the limitation period, then deletes it.`
+          : `Signing it was optional and **registers you for nothing: come to the run as usual**. The club keeps it as long as it is needed for the runs it applies to; if you ask for its withdrawal, it no longer uses it, keeps a copy at most for the limitation period, then deletes it.`,
       ],
       action: "See it on the run's page",
+      emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
     },
     groupRunDeclarationArchive: {
       subject: (d: TemplateData) =>
@@ -1849,6 +2099,7 @@ const T = {
         "You are getting this because you asked, on the event's page, to be told when registration opens. It is the only one: your address was deleted from the notification list when it was sent.",
       ],
       action: "Register",
+      emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]], actionAfter: b[0], quiet: [b[1]] }),
       links: (d: TemplateData) => [
         ...(d.eventUrl ? [{ label: "The event's page", url: d.eventUrl }] : []),
         ...(d.eventRulesUrl ? [{ label: "The event's rules", url: d.eventRulesUrl }] : []),
@@ -1859,13 +2110,15 @@ const T = {
       facts: (d: TemplateData) => eventFacts(d, { map: "Map of the meeting point", strava: "The event on Strava" }),
       body: (d: TemplateData) => [
         `Your registration for ${d.eventTitle ?? "the event"} is confirmed. See you there!`,
-        ...(d.bibNumber ? [`Your race number: ${d.bibNumber}. You collect it at the desk on race day.`] : []),
+        ...(d.bibNumber ? [confirmedNumberLine("en", d.bibNumber)] : []),
+        ...(d.checkinCode ? [confirmedCodeLine("en", d.checkinCode)] : []),
         ...(d.eventChecklist ? [`What to bring: ${d.eventChecklist}`] : []),
-        ...(d.checkinCode
-          ? [`When you pick up your race number, show the QR code below or say the code ${d.checkinCode}.`]
-          : []),
         "Below: your registration, “I can't make it any more” and the event's page.",
       ],
+      emphasis: (d: TemplateData, b: readonly string[]): Emphasis => ({
+        highlight: [...(d.bibNumber ? [confirmedNumberLine("en", d.bibNumber)] : []), ...(d.checkinCode ? [confirmedCodeLine("en", d.checkinCode)] : [])],
+        quiet: [b[b.length - 1]],
+      }),
       action: "See your registration",
       image: (d: TemplateData) => qrImage("en", d),
       // "I can't make it any more" is the button under the action now (§558), no longer a line of this list.
@@ -1884,51 +2137,58 @@ const T = {
     registrationCancelled: {
       subject: (d: TemplateData) => `The registration${d.participantName ? ` for ${d.participantName}` : ""} at ${d.eventTitle ?? "the event"} has been cancelled`,
       body: (d: TemplateData) => [
-        `The registration${d.participantName ? ` for ${d.participantName}` : ""} at ${d.eventTitle ?? "the event"}${d.eventStartsAtFormatted ? `, ${d.eventStartsAtFormatted},` : ""} has been cancelled.`,
+        `The registration${d.participantName ? ` for ${d.participantName}` : ""} at ${d.eventTitle ?? "the event"}${d.eventStartsAtFormatted ? `, ${d.eventStartsAtFormatted},` : ""} **has been cancelled**.`,
       ],
+      emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
     },
     waitlistOfferExpired: {
       subject: "The time to confirm your place has expired",
       body: (d: TemplateData) => [
-        `The time available to confirm the place that opened up at ${d.eventTitle ?? "the event"} has expired. You remain on the waiting list and we'll let you know if another place opens up.`,
+        `The time available to confirm the place that opened up at ${d.eventTitle ?? "the event"} **has expired**. **You remain on the waiting list** and we'll let you know if another place opens up.`,
       ],
+      emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
     },
     registrationManageLink: {
       subject: "Your registration management link",
       body: () => ["Here is the link to view or cancel your registration."],
       action: "Manage your registration",
+      emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]], actionAfter: b[0] }),
     },
     profileManageLink: {
       subject: `Your registrations at ${CLUB_NAME}`,
       body: (d: TemplateData) => [
         "Here is the link to every active registration of yours: the state of each, the access code and QR for race day, and the option to withdraw.",
-        `The link is valid for ${d.linkLifetime ?? defaultLinkLifetime("en")} and only for you.`,
+        `The link is valid for **${d.linkLifetime ?? defaultLinkLifetime("en")}** and only for you.`,
       ],
       action: "See my registrations",
+      emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]], actionAfter: b[0] }),
     },
     registrationStateNotice: {
       subject: "Your registration status",
       body: (d: TemplateData) => [
-        `Your registration for ${d.eventTitle ?? "the event"} currently has this status: ${d.currentStatus ?? "unknown"}.`,
+        `Your registration for ${d.eventTitle ?? "the event"} currently has this status: **${d.currentStatus ?? "unknown"}**.`,
       ],
+      emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
     },
     eventUpdateNotice: {
       subject: (d: TemplateData) => `Updated details for ${d.eventTitle ?? "the event"}`,
       facts: (d: TemplateData) => eventFacts(d, { map: "Map of the meeting point", strava: "The event on Strava" }),
       body: (d: TemplateData) => [
         `The organizers have updated the details of ${d.eventTitle ?? "the event"}, which you are registered for.`,
-        "Your registration stays valid and there is nothing you need to do. If the new date or place does not suit you, withdraw from “My registrations” (the link below) so the place goes to someone else. The latest details are on the event's page.",
+        "Your registration stays valid and **there is nothing you need to do**. If the new date or place does not suit you, withdraw from “My registrations” (the link below) so the place goes to someone else. The latest details are on the event's page.",
       ],
       action: "See the event's page",
+      emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
       links: (d: TemplateData) => (d.myRegistrationsUrl ? [{ label: "My registrations (we email you the link)", url: d.myRegistrationsUrl }] : []),
     },
     eventCancelled: {
       subject: (d: TemplateData) => (d.eventTitle ? `“${d.eventTitle}” has been cancelled` : "The event has been cancelled"),
       body: (d: TemplateData) => [
-        `We are sorry: ${d.eventTitle ? `“${d.eventTitle}”` : "the event"}${d.eventStartsAtFormatted ? `, planned for ${d.eventStartsAtFormatted},` : ""} has been cancelled.`,
-        "Your registration stays with us as a record, and there is nothing you need to do: you do not need to cancel it.",
+        `We are sorry: ${d.eventTitle ? `“${d.eventTitle}”` : "the event"}${d.eventStartsAtFormatted ? `, planned for ${d.eventStartsAtFormatted},` : ""} **has been cancelled**.`,
+        "Your registration stays with us as a record, and **there is nothing you need to do**: you do not need to cancel it.",
         `For questions, write to us from the contact page (the “Write to us” link below)${d.replyTo ? " or reply to this email" : ""}.`,
       ],
+      emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
     },
     organizerMessage: {
       subject: (d: TemplateData) => organizerSubject(d, d.eventTitle ? `A message about ${d.eventTitle}` : "A message about the event you registered for"),
@@ -1952,7 +2212,7 @@ const T = {
       body: (d: TemplateData) =>
         d.addressAtCap
           ? [
-              `The registration form for ${d.eventTitle ?? "the event"} was sent again with this address and another name. We registered nobody: one email address may register at most ${peoplePhrase("en", d.addressCap)} for an event, and yours already has.`,
+              `The registration form for ${d.eventTitle ?? "the event"} was sent again with this address and another name. **We registered nobody**: one email address may register at most ${peoplePhrase("en", d.addressCap)} for an event, and yours already has.`,
               "For one more person, use their own email address. If someone on your address is no longer coming, cancel their registration from the link in their confirmation or from “My registrations”, and the place on the address is freed.",
               "If you did not send the form, you can ignore this message: nothing has changed.",
             ]
@@ -1968,6 +2228,7 @@ const T = {
               "Register someone only with their agreement, and tell them how we use their details: the privacy notice is at the link at the end of this message.",
             ],
       action: "I confirm I am registering another person",
+      emphasis: (d: TemplateData, b: readonly string[]): Emphasis => anotherPersonEmphasis(d, b),
     },
     /**
      * The newsletter's one message to an address left in the contact page's pop-up (§445): the
@@ -1985,7 +2246,7 @@ const T = {
             ]
           : d.newsletterAlready
           ? [
-              "Someone — probably you — asked again, on our contact page, for the club's news at this address. You are already subscribed, so nothing has changed.",
+              "Someone — probably you — asked again, on our contact page, for the club's news at this address. **You are already subscribed**, so nothing has changed.",
               "The button below shows the topics you chose; you can change them there or unsubscribe.",
             ]
           : [
@@ -1993,6 +2254,7 @@ const T = {
               "Confirm your subscription with the button below. Until you do we send you nothing else, and if you do not, the address is deleted.",
             ],
       action: (d: TemplateData) => (d.newsletterAlready ? "See my subscription" : "Confirm my subscription"),
+      emphasis: (d: TemplateData, b: readonly string[]): Emphasis => newsletterConfirmEmphasis(d, b),
     },
     /** A newsletter the club wrote (§445): its own subject and body, the link to choose topics or unsubscribe. */
     newsletter: {
@@ -2009,6 +2271,7 @@ const T = {
         `${d.eventTitle ?? "A new event"} is now on the club's calendar. Everything about it — the programme, the route and, where there is one, the registration — is on its page.`,
       ],
       action: "See the event",
+      emphasis: (d: TemplateData): Emphasis => ({ highlightLine: eventFacts(d, NO_FACT_LINKS)?.line }),
     },
     /** The newsletter's own lines (§445), which the platform adds whoever wrote the words above them. */
     newsletterWords: {
@@ -2032,7 +2295,7 @@ const T = {
     /** In front of a message re-sent because the form was filled in again (§235, §286). */
     alreadyRegistered: (bib?: number | null) =>
       bib
-        ? `We are glad you are keen! __You are already registered__ for this event, with number ${bib} — no second registration was created. Below is the one you have.`
+        ? `We are glad you are keen! __You are already registered__ for this event, with number **${bib}** — no second registration was created. Below is the one you have.`
         : "We are glad you are keen! __You are already registered__ for this event, so no second registration was created — below is the registration you already have.",
     /** «Night run» on a group run (the owner calls a run a run, not an "event"), «Night event» otherwise. */
     nightEvent: (night: NightReminderLine) => {
@@ -2362,6 +2625,8 @@ export function buildTemplateContent(
     facts?: (d: TemplateData) => TemplateContent["facts"];
     image?: (d: TemplateData) => TemplateContent["image"];
     links?: (d: TemplateData) => TemplateContent["links"];
+    /** What the message emphasises (§NNN), from the body the platform writes for this data. */
+    emphasis?: (d: TemplateData, body: readonly string[]) => Emphasis;
   };
 
   /*
@@ -2484,7 +2749,48 @@ export function buildTemplateContent(
   const guardianName =
     data.guardianName && !entry.greeting && !bulkCopy && !familyGreeting && messageType !== "DECLARATION_SIGNED" ? data.guardianName : undefined;
 
+  /*
+    The emphasis (§NNN): the message's own, from the body the platform writes for this data — a text
+    the club saved unchanged matches it, one the club rewrote keeps its own look — and then what the
+    platform adds around any body. A family sitting's band is its marker (§543) and its button goes
+    under the line that says what the one button does (§536); a family's confirmation draws a band
+    in each person's block instead (`familyConfirmedPart`). A re-send's band is "you are already
+    registered" (§235), the one sentence that person is hunting for; an update's is what changed
+    (§331); a cancellation's carries what it released (§547).
+
+    The club's copy of a participant message (§320) keeps the plain look — no band, no quieter line,
+    the button where it always was: the emphasis is for the participant's inbox, and the copy is the
+    club's own mail.
+  */
+  const familySittingWords = copy.familySitting;
+  const own: Emphasis = clubCopy
+    ? {}
+    : familySittingShape
+      ? {
+          highlight: [familySittingWords.heading(familySittingPeople, data.familyReservedUntilFormatted)],
+          actionAfter: data.familyEarlierSent ? familySittingWords.earlier : familySittingWords.lead(familySittingPeople.length),
+          quiet: familySittingWords.body().slice(1),
+        }
+      : familyConfirmedShape
+        ? {}
+        : (entry.emphasis?.(data, entry.body(data)) ?? {});
+  const changes = noticeParts(messageType, locale, data).filter((part): part is string => typeof part === "string");
+  const emphasis: Emphasis = clubCopy
+    ? {}
+    : {
+        ...own,
+        highlight: data.alreadyRegistered
+          ? [copy.alreadyRegistered(data.bibNumber ?? null)]
+          : messageType === "EVENT_UPDATE_NOTICE" && changes.length > 0
+            ? changes
+            : messageType === "REGISTRATION_CANCELLED"
+              ? [...(own.highlight ?? []), copy.cancelledReleased(data.participantName, data.cancelledFromWaitlist === true)]
+              : own.highlight,
+        quiet: [...(own.quiet ?? []), ...(messageType === "GROUP_RUN_DECLARATION_SIGNED" ? [copy.groupRunNotYou(data.contactUrl)] : [])],
+      };
+
   return {
+    ...emphasis,
     // Each half of a bilingual subject carries its own language's mark, so a mailbox filter on
     // either word finds every copy whichever language the runner chose (§96).
     subject: clubCopy ? `${copy.clubCopy.subject}${subject}` : subject,
@@ -2592,7 +2898,7 @@ export function buildTemplateContent(
           : familySittingShape
             ? copy.familySitting.body()
             : familyConfirmedShape
-              ? [...copy.familyConfirmed.body(data), familyConfirmedPart(familyConfirmedPeople, copy.familyConfirmed.words)]
+              ? [...copy.familyConfirmed.body(data), familyConfirmedPart(familyConfirmedPeople, copy.familyConfirmed.words, clubCopy)]
               : entry.body(data)),
       /*
         Who signs a minor's declaration (§419, §330), after the body whoever wrote it — a fact about

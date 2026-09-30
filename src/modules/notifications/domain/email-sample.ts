@@ -81,6 +81,14 @@ function sampleMoment(at: Date, locale: EmailLocale): string {
 }
 
 /**
+ * A deadline of the sample as a message writes it (§NNN, `render.ts`, `formatDeadlineInSentence`):
+ * the month spelled out — "vineri, 2 octombrie 2026, la 18:30", "Friday, 2 October 2026, at 18:30".
+ */
+function sampleDeadline(at: Date, locale: EmailLocale): string {
+  return formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "long", month: "long", withTime: true, position: "inline" });
+}
+
+/**
  * The same moment as it read between §349 and §452, the hour bare after the comma — "duminică, 4
  * oct. 2026, 09:00". A text saved from the editor in that time carries this form, so the guard
  * still finds it.
@@ -95,7 +103,8 @@ function sampleMomentBareHour(at: Date, locale: EmailLocale): string {
  */
 export function emailSampleFormerValuesOf(name: EmailCopyPlaceholder, locale: EmailLocale): readonly string[] {
   if (name === "eventStartsAtFormatted") return EMAIL_SAMPLE_FORMER_WHEN[locale];
-  if (name === "holdExpiresAtFormatted") return [sampleMomentBareHour(EMAIL_SAMPLE_HOLD_EXPIRES_AT, locale)];
+  // The hold as it read before §NNN, the month short: "2 oct. 2026", with "la" — and bare.
+  if (name === "holdExpiresAtFormatted") return [sampleMoment(EMAIL_SAMPLE_HOLD_EXPIRES_AT, locale), sampleMomentBareHour(EMAIL_SAMPLE_HOLD_EXPIRES_AT, locale)];
   if (name === "signedAtFormatted") return [sampleMomentBareHour(EMAIL_SAMPLE_SIGNED_AT, locale)];
   return [];
 }
@@ -176,7 +185,7 @@ export const EMAIL_SAMPLE: Readonly<Record<EmailLocale, EmailSampleValues>> = {
     checkinCode: "EXAMPL",
     bibNumber: 42,
     eventChecklist: "Apă, o haină de ploaie, bună dispoziție",
-    holdExpiresAtFormatted: sampleMoment(EMAIL_SAMPLE_HOLD_EXPIRES_AT, "ro"),
+    holdExpiresAtFormatted: sampleDeadline(EMAIL_SAMPLE_HOLD_EXPIRES_AT, "ro"),
     signedAtFormatted: sampleMoment(EMAIL_SAMPLE_SIGNED_AT, "ro"),
     ...emailSampleDeadlines("ro"),
     staffRole: "Organizator",
@@ -205,7 +214,7 @@ export const EMAIL_SAMPLE: Readonly<Record<EmailLocale, EmailSampleValues>> = {
     checkinCode: "EXAMPL",
     bibNumber: 42,
     eventChecklist: "Water, a rain jacket, good spirits",
-    holdExpiresAtFormatted: sampleMoment(EMAIL_SAMPLE_HOLD_EXPIRES_AT, "en"),
+    holdExpiresAtFormatted: sampleDeadline(EMAIL_SAMPLE_HOLD_EXPIRES_AT, "en"),
     signedAtFormatted: sampleMoment(EMAIL_SAMPLE_SIGNED_AT, "en"),
     ...emailSampleDeadlines("en"),
     staffRole: "Organizator",

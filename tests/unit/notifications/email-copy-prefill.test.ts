@@ -28,7 +28,8 @@ import {
   sampleLanguagesOf,
   sampleValuesIn,
 } from "@/modules/notifications/email-copy-fields";
-import { buildTemplateContent, renderBilingual, type TemplateData } from "@/modules/notifications/templates";
+import { buildTemplateContent, HIGHLIGHT_TEXT_MARK, renderBilingual, type TemplateData } from "@/modules/notifications/templates";
+import { EMAIL_EMPHASIS } from "@/theme/brand";
 
 /**
  * BR-REQ-080-01, `DECISIONS.md` §359 — the editor starts from the platform's words with the
@@ -155,6 +156,8 @@ function savedPrefill(messageType: EmailMessageType): EmailCopy {
 
 /** The paragraph both the platform's sentences and the club's words are drawn as. */
 const P = '<p style="margin:0 0 14px;font-size:16px;line-height:1.5">';
+/** A line of the highlighted band (§NNN): every line of it alike. */
+const BAND_P = `<p style="margin:0 0 6px;font-size:17px;line-height:1.5;color:${EMAIL_EMPHASIS.ink}">`;
 
 /**
  * Where the starting text starts a paragraph the platform's own message does not (§359,
@@ -188,6 +191,13 @@ function platformAsSaved(messageType: EmailMessageType, locale: (typeof LOCALES)
     }
     const opening = OWN_PARAGRAPH[messageType]?.[half];
     if (!opening) continue;
+    // A paragraph on the band (§NNN) breaks into two lines of the band, each with the text half's mark.
+    const onBand = text.split("\n").some((line) => line.startsWith(HIGHLIGHT_TEXT_MARK) && line.includes(` ${opening}`));
+    if (onBand) {
+      html = html.replace(` ${opening}`, `</p>${BAND_P}${opening}`);
+      text = text.replace(` ${opening}`, `\n${HIGHLIGHT_TEXT_MARK}${opening}`);
+      continue;
+    }
     // The card puts each paragraph on a line of its own.
     html = html.replace(` ${opening}`, `</p>\n${P}${opening}`);
     text = text.replace(` ${opening}`, `\n${opening}`);
@@ -585,7 +595,9 @@ describe("§359 \"Înlocuiește cu câmpurile\" rewrites a saved text to its fie
   it("drops the update notice's two lines the platform adds anyway, rather than sending them twice", () => {
     const old = oldStartingText("EVENT_UPDATE_NOTICE", "ro");
     expect(old.paragraphs.some((paragraph) => paragraph.startsWith("Locul de întâlnire este acum"))).toBe(true);
-    expect(replaceSampleValues(old, "EVENT_UPDATE_NOTICE", "ro").paragraphs).toEqual(emailCopyPrefill("EVENT_UPDATE_NOTICE", "ro").paragraphs);
+    // The same words; a plain saved text keeps the platform's bold markers (§189, §NNN), which the send draws as bold.
+    const words = (paragraphs: readonly string[]) => paragraphs.map((paragraph) => paragraph.replace(/\*\*([^*]+)\*\*/g, "$1"));
+    expect(words(replaceSampleValues(old, "EVENT_UPDATE_NOTICE", "ro").paragraphs)).toEqual(emailCopyPrefill("EVENT_UPDATE_NOTICE", "ro").paragraphs);
   });
 });
 

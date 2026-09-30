@@ -105,6 +105,26 @@ export const SITE_TINT = {
 } as const;
 
 /**
+ * The emails' highlighted line (§NNN, amending §68 and §392; the owner, 2026-09-30: «I need more bold
+ * and highlight in the emails sent to participants»): the one fact a message is about — the race
+ * number and the desk code, the deadline, the start and the place — on a soft band in the club's
+ * blue, the same in every message. No new colour: the band is the club's blue at about 8 % over
+ * white (`SITE_TINT.lightBlue`), its left edge the ink blue, its words the body's ink.
+ *
+ * A message declares itself light (`templates.ts#card`), and Gmail's app darkens it anyway by
+ * inverting it; the pairs hold either way — `tests/unit/notifications/email-emphasis.test.ts`
+ * asserts the words on the band, the edge beside it and the band against the card, as sent and
+ * inverted.
+ */
+export const EMAIL_EMPHASIS = {
+  band: SITE_TINT.lightBlue,
+  edge: COLOR.blueInk,
+  ink: COLOR.ink,
+  /** The quieter sentences — "ignore this if it was not you", where the data came from. */
+  quiet: COLOR.inkMuted,
+} as const;
+
+/**
  * The club kit's gradient: deep navy at the shoulders, running lighter and more cyan down the
  * body, to white at the hem. It is the most distinctive thing the club already owns, and the
  * one part of the identity that is theirs rather than generic.

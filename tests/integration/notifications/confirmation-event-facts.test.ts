@@ -287,7 +287,9 @@ describe("§392 the event's facts in the confirmed email, the reminder and the d
     const [ro] = halves(await render(event.id, "ro", "COMPLETE_DECLARATION", { status: "PENDING_DECLARATION" }));
     expect(ro.indexOf("Când: Sâmbătă, 21 nov. 2026")).toBeGreaterThan(ro.indexOf("declarația"));
     expect(ro).toContain("Unde: Parcul Tractorul");
-    expect(ro.indexOf("Semnează declarația:")).toBeGreaterThan(ro.indexOf("Când:"));
+    // The one button first (§NNN): under the highlighted line that asks for it, above the facts block.
+    expect(ro.indexOf("Semnează declarația:")).toBeGreaterThan(ro.indexOf("▶ "));
+    expect(ro.indexOf("Semnează declarația:")).toBeLessThan(ro.indexOf("Când:"));
   });
 
   it("draws the block under a text the club saved, which needs no edit and no new field", async () => {

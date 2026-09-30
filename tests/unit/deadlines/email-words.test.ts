@@ -14,8 +14,11 @@ import { emailFieldLegend } from "@/modules/notifications/email-copy-fields";
 const base: TemplateData = { participantName: "Ana Popescu", eventTitle: "Crosul de toamnă" };
 const timings = { confirmationHours: 12, holdMinutes: 60, offerHours: 6, reminderHours: 72, confirmationOpensDays: 10, linkDays: 14 };
 
+// The words, without the platform's bold markers (§189, §NNN): a duration is bold where it is stated.
 const text = (content: ReturnType<typeof buildTemplateContent>) =>
-  content.paragraphs.map((part) => (typeof part === "string" ? part : part.text.join("\n"))).join("\n");
+  content.paragraphs
+    .map((part) => (typeof part === "string" ? part.replace(/\*\*([^*]+)\*\*/g, "$1") : part.text.join("\n")))
+    .join("\n");
 
 describe("§377 the emails word the club's deadlines", () => {
   it("says the event is coming rather than a lead, in each half's language (§357)", () => {
