@@ -105,7 +105,7 @@ test.describe("BR-REQ-035-01 a waiting list with a limit, on the event page (§3
     expect((await join.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
     await expect(page.getByTestId("waitlist-room")).toHaveText("Mai sunt 2 locuri pe lista de așteptare");
     // Said kindly, before the button, and how an offer works (§NNN).
-    await expect(page.getByTestId("registration-waitlist-message")).toContainText("Locurile s-au ocupat.");
+    await expect(page.getByTestId("registration-waitlist-message")).toContainText("Mulțumim! Toate cele");
     await expect(page.getByTestId("waitlist-offer")).toContainText("să confirmi — altfel locul trece mai departe.");
     await page.goto(`/en/events/${room.slug}-en`);
     await expect(page.getByTestId("waitlist-room")).toHaveText("2 places left on the waiting list");

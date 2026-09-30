@@ -23,7 +23,7 @@ const state = vi.hoisted(() => ({
   refusal: null as Error | null,
   draft: null as Record<string, string> | null,
   // The event's count (§NNN: the join form's words); null, as before, for every other case.
-  availability: null as null | { available: number; capacity: number; waitlistRoom: number | null; waitlistCapacity: number | null },
+  availability: null as null | { available: number; capacity: number; waitlistRoom: number | null; waitlistCapacity: number | null; waiting?: number },
   sitting: null as null | {
     sittingId: string | null;
     seed?: null;
@@ -291,16 +291,17 @@ describe("§447 the registration page while the database is away", () => {
 
 describe("§NNN the join form says the event page's message once, above the form", () => {
   it("says the places are taken, what the list does and the club's offer hours, when the list takes people", async () => {
-    state.availability = { available: 0, capacity: 10, waitlistRoom: 4, waitlistCapacity: 5 };
+    state.availability = { available: 0, capacity: 10, waitlistRoom: 4, waitlistCapacity: 5, waiting: 1 };
     const html = await render();
+    const thanks = "Mulțumim! Toate cele 10 locuri s-au ocupat — 1 așteaptă deja un loc.";
     expect(html).toContain('data-testid="registration-waitlist-notice"');
-    expect(html).toContain(ro.Event.cta.fullLead);
+    expect(html).toContain(thanks);
     expect(html).toContain(ro.Event.cta.fullJoin);
     expect(html).toContain("Când se eliberează un loc, primești un email și ai 36 de ore să confirmi — altfel locul trece mai departe.");
     expect(html).not.toContain('data-testid="registration-full-notice"');
     // Said once, and above the first field.
-    expect(html.split(ro.Event.cta.fullLead)).toHaveLength(2);
-    expect(html.indexOf(ro.Event.cta.fullLead)).toBeLessThan(html.indexOf('name="firstName"'));
+    expect(html.split(thanks)).toHaveLength(2);
+    expect(html.indexOf(thanks)).toBeLessThan(html.indexOf('name="firstName"'));
   });
 
   it("says the kind refusal when the list is full or the event keeps none, and nothing while there is a place", async () => {

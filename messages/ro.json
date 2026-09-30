@@ -285,6 +285,17 @@
         "other": "{count} de locuri"
       },
       "fullLead": "Locurile s-au ocupat.",
+      "fullThanks": {
+        "one": "Mulțumim! Singurul loc s-a ocupat — {waiting} așteaptă deja un loc.",
+        "few": "Mulțumim! Toate cele {capacity} locuri s-au ocupat — {waiting} așteaptă deja un loc.",
+        "other": "Mulțumim! Toate cele {capacity} de locuri s-au ocupat — {waiting} așteaptă deja un loc."
+      },
+      "fullThanksFirst": {
+        "one": "Mulțumim! Singurul loc s-a ocupat. Fii primul pe lista de așteptare.",
+        "few": "Mulțumim! Toate cele {capacity} locuri s-au ocupat. Fii primul pe lista de așteptare.",
+        "other": "Mulțumim! Toate cele {capacity} de locuri s-au ocupat. Fii primul pe lista de așteptare."
+      },
+      "waitingCount": "{count} pe lista de așteptare",
       "fullJoin": "Intră pe lista de așteptare — te anunțăm pe email când se eliberează un loc.",
       "fullOffer": "Când se eliberează un loc, primești un email și ai {hours} să confirmi — altfel locul trece mai departe.",
       "waitlistFull": "Locurile s-au ocupat și lista de așteptare e plină — ne pare rău.",

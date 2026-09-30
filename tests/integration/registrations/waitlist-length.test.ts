@@ -338,11 +338,11 @@ describe("§160, §348 a lapsed declaration hold goes to the newcomer the line c
     expect(lapsing.status).toBe("PENDING_DECLARATION");
 
     // Inside the hold: full, and closed as full, since there is no line to join.
-    expect(await readPublicPlaces(db, { ...event, waitlistCapacity: 0 }, NOW)).toEqual({ availablePlaces: 0, waitlistRoom: 0 });
+    expect(await readPublicPlaces(db, { ...event, waitlistCapacity: 0 }, NOW)).toMatchObject({ availablePlaces: 0, waitlistRoom: 0 });
     expect(await refusalOf(submitRegistration(db, event, submission("early@example.test", NOW), NOW))).toBe(NO_WAITLIST);
 
     // Past it: the kept place is the next newcomer's — on the page, at the form, and in the allocator.
-    expect(await readPublicPlaces(db, { ...event, waitlistCapacity: 0 }, afterHold)).toEqual({ availablePlaces: 1, waitlistRoom: 0 });
+    expect(await readPublicPlaces(db, { ...event, waitlistCapacity: 0 }, afterHold)).toMatchObject({ availablePlaces: 1, waitlistRoom: 0 });
     const newcomer = await registerAndConfirm(event, "newcomer@example.test", "REAL", afterHold);
     expect(newcomer.status).toBe("PENDING_DECLARATION");
 
@@ -350,7 +350,7 @@ describe("§160, §348 a lapsed declaration hold goes to the newcomer the line c
     expect(released.status).toBe("EXPIRED");
     expect(released.expiryReason).toBe("DECLARATION_HOLD_LAPSED");
     // One newcomer, one hold: full again, and the next one is refused.
-    expect(await readPublicPlaces(db, { ...event, waitlistCapacity: 0 }, afterHold)).toEqual({ availablePlaces: 0, waitlistRoom: 0 });
+    expect(await readPublicPlaces(db, { ...event, waitlistCapacity: 0 }, afterHold)).toMatchObject({ availablePlaces: 0, waitlistRoom: 0 });
     expect(await refusalOf(submitRegistration(db, event, submission("next@example.test", afterHold), afterHold))).toBe(NO_WAITLIST);
   });
 
@@ -389,7 +389,7 @@ describe("§160, §348 a lapsed declaration hold goes to the newcomer the line c
 
     // The other hold lapses. An offer is not somebody waiting, so it was kept — until a newcomer
     // the line cannot take arrives.
-    expect(await readPublicPlaces(db, { ...event, waitlistCapacity: 1 }, afterHold)).toEqual({ availablePlaces: 1, waitlistRoom: 0 });
+    expect(await readPublicPlaces(db, { ...event, waitlistCapacity: 1 }, afterHold)).toMatchObject({ availablePlaces: 1, waitlistRoom: 0 });
     expect((await registerAndConfirm(event, "newcomer@example.test", "REAL", afterHold)).status).toBe("PENDING_DECLARATION");
 
     const [lapsingAfter] = await db.select().from(registrations).where(eq(registrations.id, lapsing.id));
@@ -479,17 +479,17 @@ describe("§30, AGENTS.md §12.6 a batch of test rows stops at the limit", () =>
 describe("§348 what the event page reads: the free places and the line's room", () => {
   it("counts the room from the same counts as the places, offers included", async () => {
     const event = await createInternalEvent(1, 3);
-    expect(await readPublicPlaces(db, { ...event, waitlistCapacity: 3 }, NOW)).toEqual({ availablePlaces: 1, waitlistRoom: 3 });
+    expect(await readPublicPlaces(db, { ...event, waitlistCapacity: 3 }, NOW)).toMatchObject({ availablePlaces: 1, waitlistRoom: 3 });
 
     await registerAndConfirm(event, "place@example.test");
     await registerAndConfirm(event, "wait@example.test");
-    expect(await readPublicPlaces(db, { ...event, waitlistCapacity: 3 }, NOW)).toEqual({ availablePlaces: 0, waitlistRoom: 2 });
+    expect(await readPublicPlaces(db, { ...event, waitlistCapacity: 3 }, NOW)).toMatchObject({ availablePlaces: 0, waitlistRoom: 2, waiting: 1 });
   });
 
   it("has no room figure without a limit, and none for an uncapped event", async () => {
     const limited = await createInternalEvent(1, null);
     expect((await readPublicPlaces(db, { ...limited, waitlistCapacity: null }, NOW)).waitlistRoom).toBeNull();
     const open = await createInternalEvent(null, 5);
-    expect(await readPublicPlaces(db, { ...open, waitlistCapacity: 5 }, NOW)).toEqual({ availablePlaces: null, waitlistRoom: null });
+    expect(await readPublicPlaces(db, { ...open, waitlistCapacity: 5 }, NOW)).toMatchObject({ availablePlaces: null, waitlistRoom: null });
   });
 });

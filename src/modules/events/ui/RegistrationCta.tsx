@@ -11,7 +11,7 @@ import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { DENSITY } from "@/theme/density";
 import type { PublicEventPage } from "../repository";
 import { cachedDeadlines } from "@/modules/public-cache/reads";
-import { fillPhrase, waitlistOfferPhrase, waitlistRoomPhrase } from "./counted-phrases";
+import { fillPhrase, fullThanksPhrase, waitingPhrase, waitlistOfferPhrase, waitlistRoomPhrase } from "./counted-phrases";
 import { type PreviewDoor, readRegistrationDoor } from "./registration-door";
 import RegistrationDoorButton, { doorButtonLabel } from "./RegistrationDoorButton";
 
@@ -86,6 +86,13 @@ export default async function RegistrationCta({
             {t("cta.placesRemaining", { count: cta.availablePlaces })}
           </Typography>
         )}
+
+        {/* Once anybody waits (§NNN, amending §346): the line's length, from the count the door made. */}
+        {cta.waiting > 0 && (
+          <Typography variant="body2" color="text.secondary" data-testid="waitlist-waiting">
+            {waitingPhrase(t, cta.waiting)}
+          </Typography>
+        )}
       </Stack>
     );
   }
@@ -103,7 +110,7 @@ export default async function RegistrationCta({
       <Stack spacing={1} sx={{ mt: { xs: DENSITY.gapSm, sm: 3 }, alignItems: "flex-start" }}>
         <Box data-testid="registration-waitlist-message">
           <Typography variant="body1" component="p" sx={{ fontWeight: 700 }}>
-            {t("cta.fullLead")}
+            {fill ? fullThanksPhrase(t, locale, fill.capacity, cta.waiting) : t("cta.fullLead")}
           </Typography>
           <Typography variant="body1" component="p">
             {t("cta.fullJoin")}

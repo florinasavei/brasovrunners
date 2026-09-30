@@ -31,6 +31,8 @@ export type RegistrationCtaInput = RegistrationWindowInput & {
   waitlistRoom?: number | null;
   /** The limit itself: 0 is an event with no waiting list at all; null or absent, no limit. */
   waitlistCapacity?: number | null;
+  /** How many are in the waiting list's line now (§NNN), from the same count; absent is nought. */
+  waiting?: number;
 };
 
 export type RegistrationCta =
@@ -44,13 +46,13 @@ export type RegistrationCta =
   | { kind: "NOT_YET_OPEN"; opensAt: Date | null }
   | { kind: "CLOSED" }
   /** `availablePlaces` is null for an uncapped event — open, with no number to show. */
-  | { kind: "OPEN"; availablePlaces: number | null }
+  | { kind: "OPEN"; availablePlaces: number | null; waiting: number }
   /**
    * No place, and the waiting list takes people: its button. `waitlistRoom` is how many more it
    * takes when it has a limit (§348) — "Mai sunt 3 locuri pe lista de așteptare" — and null when
    * it has none, which says no number, as today.
    */
-  | { kind: "FULL"; waitlistRoom: number | null }
+  | { kind: "FULL"; waitlistRoom: number | null; waiting: number }
   /** No place and the waiting list at its limit (§348): a sentence, no button. */
   | { kind: "WAITLIST_FULL" }
   /** No place on an event with no waiting list (a limit of 0, §348): closed as full, no button. */
@@ -94,12 +96,12 @@ export function registrationCta(event: RegistrationCtaInput, now: Date): Registr
     case "OPEN":
       // Zero free places is the waiting list, not a refusal: BR-REQ-035-01. `null` is an
       // uncapped event, which is never full.
-      if (event.availablePlaces !== 0) return { kind: "OPEN", availablePlaces: event.availablePlaces };
+      if (event.availablePlaces !== 0) return { kind: "OPEN", availablePlaces: event.availablePlaces, waiting: event.waiting ?? 0 };
       // …unless the event keeps no waiting list, or keeps one that is full (§348): then there is
       // nothing to join, and a button would lead to a form that refuses at the end of it.
       if (event.waitlistCapacity === 0) return { kind: "FULL_NO_WAITLIST" };
       if (event.waitlistRoom === 0) return { kind: "WAITLIST_FULL" };
-      return { kind: "FULL", waitlistRoom: event.waitlistRoom ?? null };
+      return { kind: "FULL", waitlistRoom: event.waitlistRoom ?? null, waiting: event.waiting ?? 0 };
 
     case "NOT_APPLICABLE":
       return { kind: "NONE" };

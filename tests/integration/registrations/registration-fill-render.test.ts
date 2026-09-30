@@ -115,6 +115,7 @@ describe("§346 the fill line beside the register button, from the cached count"
       capacity: 50,
       waitlistRoom: null,
       waitlistCapacity: null,
+      waiting: 0,
     });
   });
 
@@ -127,6 +128,7 @@ describe("§346 the fill line beside the register button, from the cached count"
       capacity: 2,
       waitlistRoom: 2,
       waitlistCapacity: 3,
+      waiting: 1,
     });
   });
 
@@ -155,16 +157,16 @@ describe("§346 the fill line beside the register button, from the cached count"
     await db.insert(platformSettings).values({ key: DEADLINES_SETTING_KEY, value: { ...DEFAULT_DEADLINES, offerHours: 12 }, updatedAt: NOW });
     const html = await render("cros-plin");
     expect(html).toContain('data-testid="registration-waitlist-message"');
-    expect(html).toContain("Locurile s-au ocupat.");
+    expect(html).toContain("Mulțumim! Toate cele 2 locuri s-au ocupat. Fii primul pe lista de așteptare.");
     expect(html).toContain("Intră pe lista de așteptare — te anunțăm pe email când se eliberează un loc.");
     expect(html).toContain("Mai sunt 3 locuri pe lista de așteptare");
     expect(html).toContain("Când se eliberează un loc, primești un email și ai 12 ore să confirmi — altfel locul trece mai departe.");
     // The two sentences come before the button, the offer after the room.
-    expect(html.indexOf("Locurile s-au ocupat.")).toBeLessThan(html.indexOf(">Intră pe lista de așteptare<"));
+    expect(html.indexOf("Mulțumim!")).toBeLessThan(html.indexOf(">Intră pe lista de așteptare<"));
     expect(html.indexOf("Mai sunt 3 locuri")).toBeLessThan(html.indexOf("ai 12 ore"));
     locale = "en";
     const en = await render("full-cross");
-    expect(en).toContain("All places are taken.");
+    expect(en).toContain("Thank you! All 2 places are taken. Be the first on the waiting list.");
     expect(en).toContain("When a place frees up, you get an email and 12 hours to confirm — then it passes on.");
   });
 

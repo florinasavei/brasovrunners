@@ -193,14 +193,14 @@ describe("BR-REQ-041-01 the race's card carries the page's registration door, th
     await take(event.id, 2);
     const html = await card();
     expect(line(html).words).toBe(
-      "Locurile s-au ocupat. Intră pe lista de așteptare — te anunțăm pe email când se eliberează un loc. Înscrieri deschise până sâm., 26 sept. 2026, la 10:00",
+      "Mulțumim! Toate cele 2 locuri s-au ocupat. Fii primul pe lista de așteptare. Intră pe lista de așteptare — te anunțăm pe email când se eliberează un loc. Înscrieri deschise până sâm., 26 sept. 2026, la 10:00",
     );
-    expect(bolds(html)).toEqual(["Locurile s-au ocupat."]);
+    expect(bolds(html)).toEqual(["Mulțumim! Toate cele 2 locuri s-au ocupat. Fii primul pe lista de așteptare."]);
     expect(door(html)).toMatchObject({ href: "/ro/evenimente/cros/inscriere", words: "Intră pe lista de așteptare" });
     // The page's door says the same two sentences, and how an offer works with the club's hours (§377).
     const onPage = text(await page());
     expect(onPage).toContain("Intră pe lista de așteptare");
-    expect(onPage).toContain("Locurile s-au ocupat.");
+    expect(onPage).toContain("Mulțumim! Toate cele 2 locuri s-au ocupat. Fii primul pe lista de așteptare.");
     expect(onPage).toContain("te anunțăm pe email când se eliberează un loc.");
     expect(onPage).toContain("Când se eliberează un loc, primești un email și ai 24 de ore să confirmi — altfel locul trece mai departe.");
   });

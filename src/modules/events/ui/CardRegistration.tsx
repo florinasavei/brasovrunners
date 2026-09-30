@@ -6,6 +6,7 @@ import { openRegistrationClosing, registrationState } from "../domain/registrati
 import type { PublicEvent } from "../repository";
 import { GROUP_GAP, LINE_GAP, ROW_ICON_SX } from "./card-layout";
 import { countForm } from "@/i18n/count-form";
+import { fullThanksPhrase, waitingPhrase } from "./counted-phrases";
 import type { RegistrationDoor } from "./registration-door";
 import RegistrationDoorButton, { type ButtonCta, doorButtonLabel, hasDoorButton } from "./RegistrationDoorButton";
 
@@ -113,7 +114,9 @@ export function cardRegistrationLine(
         free !== null && fill
           ? factParts(say, "cta.freeOfCard", { places: fill.capacity }, "free", say(`cta.freeCount.${countForm(free, locale)}`, { count: free }))
           : null;
-      return { lead: openUntil, leadParts: untilParts, detail: detailParts && whole(detailParts), detailParts, bold: true, button };
+      // Once anybody waits (§NNN, amending §346): "· 2 pe lista de așteptare", after the places, not bold.
+      const withWaiting = detailParts && cta.waiting > 0 ? { ...detailParts, after: `${detailParts.after} · ${waitingPhrase(say, cta.waiting)}` } : detailParts;
+      return { lead: openUntil, leadParts: untilParts, detail: withWaiting && whole(withWaiting), detailParts: withWaiting, bold: true, button };
     }
     case "FULL": {
       /*
@@ -122,7 +125,8 @@ export function cardRegistrationLine(
         whole sentence is the one bold part — then what the list does, then, quiet, until when it
         takes people, which is still the instant the button goes away.
       */
-      const lead = say("cta.fullLead");
+      // The thank-you lead with the counts (§NNN): «Mulțumim! Toate cele 10 locuri s-au ocupat — 3 așteaptă deja un loc.»
+      const lead = fill ? fullThanksPhrase(say, locale, fill.capacity, cta.waiting) : say("cta.fullLead");
       return {
         ...quiet,
         lead,

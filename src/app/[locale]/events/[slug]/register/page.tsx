@@ -85,7 +85,7 @@ import { continueFamilySittingAction, releaseFamilySittingAction, submitRegistra
 import FamilySittingNext from "@/modules/registrations/ui/FamilySittingNext";
 import { afterFormScreen, FAMILY_SITTING_FIELD, SITTING_AT_CAP, sittingCookieLive, sittingMinutesLeft, sittingNames } from "@/modules/registrations/domain/family-sitting";
 import { minutesPhrase } from "@/modules/deadlines/domain/duration-words";
-import { waitlistOfferPhrase } from "@/modules/events/ui/counted-phrases";
+import { fullThanksPhrase, waitlistOfferPhrase } from "@/modules/events/ui/counted-phrases";
 import { readFamilySittingCookie } from "@/modules/registrations/family-sitting-cookie";
 import { CLUB_NAME, PAGE_WIDTH } from "@/theme/brand";
 import { env } from "@/shared/config/env";
@@ -312,12 +312,16 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   */
   let fullNotice: typeof WAITLIST_FULL | typeof NO_WAITLIST | "WAITLIST" | null = null;
   let offerHours: number | null = null;
+  let fullCounts: { capacity: number; waiting: number } | null = null;
   if (!submitted && !error && !resting) {
     try {
       const places = await cachedPublicAvailability(event.id, now);
       if (places?.available === 0) {
         fullNotice = places.waitlistCapacity === 0 ? NO_WAITLIST : places.waitlistRoom === 0 ? WAITLIST_FULL : "WAITLIST";
-        if (fullNotice === "WAITLIST") offerHours = (await cachedDeadlines()).offerHours;
+        if (fullNotice === "WAITLIST") {
+          offerHours = (await cachedDeadlines()).offerHours;
+          fullCounts = { capacity: places.capacity, waiting: places.waiting ?? 0 };
+        }
       }
     } catch (failure) {
       unstable_rethrow(failure);
@@ -798,7 +802,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
           )}
           {fullNotice === "WAITLIST" ? (
             <Alert severity="info" sx={{ mb: 2 }} data-testid="registration-waitlist-notice">
-              <AlertTitle>{tEvent("cta.fullLead")}</AlertTitle>
+              <AlertTitle>{fullCounts ? fullThanksPhrase(tEvent, locale, fullCounts.capacity, fullCounts.waiting) : tEvent("cta.fullLead")}</AlertTitle>
               <Typography variant="body2">{tEvent("cta.fullJoin")}</Typography>
               {offerHours !== null && (
                 <Typography variant="body2" sx={{ mt: 0.5 }}>

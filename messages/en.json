@@ -285,6 +285,17 @@
         "other": "{count} places"
       },
       "fullLead": "All places are taken.",
+      "fullThanks": {
+        "one": "Thank you! The one place is taken — {waiting} already waiting.",
+        "few": "Thank you! All {capacity} places are taken — {waiting} already waiting.",
+        "other": "Thank you! All {capacity} places are taken — {waiting} already waiting."
+      },
+      "fullThanksFirst": {
+        "one": "Thank you! The one place is taken. Be the first on the waiting list.",
+        "few": "Thank you! All {capacity} places are taken. Be the first on the waiting list.",
+        "other": "Thank you! All {capacity} places are taken. Be the first on the waiting list."
+      },
+      "waitingCount": "{count} on the waiting list",
       "fullJoin": "Join the waiting list — we email you when a place frees up.",
       "fullOffer": "When a place frees up, you get an email and {hours} to confirm — then it passes on.",
       "waitlistFull": "All places are taken and the waiting list is full — sorry.",
