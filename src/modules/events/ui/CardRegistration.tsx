@@ -6,7 +6,7 @@ import { openRegistrationClosing, registrationState } from "../domain/registrati
 import type { PublicEvent } from "../repository";
 import { GROUP_GAP, LINE_GAP, ROW_ICON_SX } from "./card-layout";
 import { countForm } from "@/i18n/count-form";
-import { fullThanksPhrase, waitingPhrase } from "./counted-phrases";
+import { fullThanksPhrase, waitingPhrase, waitlistRoomPhrase } from "./counted-phrases";
 import type { RegistrationDoor } from "./registration-door";
 import RegistrationDoorButton, { type ButtonCta, doorButtonLabel, hasDoorButton } from "./RegistrationDoorButton";
 
@@ -28,6 +28,11 @@ export type CardRegistrationLine = {
    * in every other state.
    */
   note?: string;
+  /**
+   * Under the note, a capped list only (§NNN, amending §587): the room it has left, in the page's
+   * own phrase (§348) — "Mai sunt 4 locuri pe lista de așteptare". Absent when the list has no limit.
+   */
+  roomLine?: string;
   /** Under the note, in the quiet ink (§587): until when the list takes people. Absent elsewhere. */
   quietLine?: string;
   /** Bold where there is something to do or wait for; quiet where the question is closed. */
@@ -132,6 +137,8 @@ export function cardRegistrationLine(
         lead,
         leadParts: { before: "", fact: lead, after: "" },
         note: say("cta.fullJoin"),
+        // The room a capped list has left, as the page's door says it (§NNN, §348); a list with no limit says nothing.
+        ...(cta.waitlistRoom !== null ? { roomLine: waitlistRoomPhrase(say, locale, cta.waitlistRoom) } : {}),
         ...(closesText ? { quietLine: openUntil } : {}),
         bold: true,
         button,
@@ -204,6 +211,14 @@ export default function CardRegistration({
               {" "}
               <Box component="span" data-testid="card-waitlist-note" sx={{ display: "block" }}>
                 {line.note}
+              </Box>
+            </>
+          )}
+          {line.roomLine && (
+            <>
+              {" "}
+              <Box component="span" data-testid="card-waitlist-room" sx={{ display: "block" }}>
+                {line.roomLine}
               </Box>
             </>
           )}
