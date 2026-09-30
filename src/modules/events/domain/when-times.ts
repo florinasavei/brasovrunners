@@ -13,7 +13,7 @@
  * `key` is the `Event` catalogue's key for the time (`gatheringAt`, `raceStartAt`), or null for a
  * bare time; the caller formats `at` in the event's own zone.
  */
-export type WhenTime = { key: "gatheringAt" | "raceStartAt" | null; at: Date };
+export type WhenTime = { key: "gatheringAt" | "raceStartAt" | "eventStartAt" | null; at: Date };
 
 export type WhenTimes = { times: WhenTime[]; raceStartLater: boolean };
 
@@ -29,7 +29,7 @@ export function whenTimes(event: { type?: string | null; startsAt: Date; raceSta
     };
   }
   if (event.type === "RACE" || race) {
-    return { times: [{ key: "raceStartAt", at: event.startsAt }], raceStartLater: race === null };
+    return { times: [{ key: race === null ? "eventStartAt" : "raceStartAt", at: event.startsAt }], raceStartLater: race === null };
   }
   return { times: [{ key: null, at: event.startsAt }], raceStartLater: false };
 }
