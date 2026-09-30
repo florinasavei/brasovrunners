@@ -55,6 +55,8 @@ const NOT_A_BOX = new Set([
   "kitShirt",
   // «Condiții de participare» → «Informații medicale» (§557): a tick in «Program, regulament și declarație».
   "askHealthNote",
+  // «Estimativ» beside «Diferență de nivel (m)» (§585): a tick in «Traseu».
+  "elevationGainEstimated",
 ]);
 
 describe("the event form's constraints are the schema's (§315)", () => {

@@ -17,15 +17,28 @@ import { expect, type Page, test } from "@playwright/test";
  * under `?month=2026-10`, and the second press went to `?month=2026-10` again).
  */
 
-/** Vercel's answer to a segment prefetch of a static page: the page's whole flight data. */
+/**
+ * Vercel's answer to a segment prefetch of a static page: the page's whole flight data.
+ *
+ * The page prefetches every link it shows, so a handler is still fetching when a test ends; its
+ * `page.request.get` then rejects outside any test («apiRequestContext.get: Test ended»), which fails
+ * the whole run, and Playwright blamed the next test in the worker (`client-words.spec.ts`, «Failed to
+ * find browser context») — red on CI twice in a row (CI run 36750544798). A prefetch the test no longer waits for is
+ * dropped, and `afterEach` below takes the route off without waiting for the calls in flight.
+ */
 async function vercelPrefetch(page: Page) {
   await page.route("**/*", async (route) => {
     const request = route.request();
     if (!request.headers()["next-router-segment-prefetch"]) return route.continue();
     const url = new URL(request.url());
     url.searchParams.delete("_rsc");
-    const response = await page.request.get(url.toString(), { headers: { rsc: "1" } });
-    return route.fulfill({ response });
+    try {
+      const response = await page.request.get(url.toString(), { headers: { rsc: "1" } });
+      return await route.fulfill({ response });
+    } catch {
+      // The page or the test is gone; nothing waits for this prefetch any more.
+      return route.abort().catch(() => undefined);
+    }
   });
 }
 
@@ -48,6 +61,10 @@ const pad = (month: number) => String(month).padStart(2, "0");
 const title = (page: Page) => page.locator("#calendar-title");
 
 test.describe("§574 the calendar shows the month its address names", () => {
+  test.afterEach(async ({ page }) => {
+    await page.unrouteAll({ behavior: "ignoreErrors" });
+  });
+
   test("reached by the header's prefetched link, the arrows move the month on screen, not only the address", async ({ page }) => {
     await vercelPrefetch(page);
     const { now, next, after } = thisAndNext();

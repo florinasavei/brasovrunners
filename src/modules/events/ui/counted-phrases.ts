@@ -1,4 +1,5 @@
 import { countForm } from "@/i18n/count-form";
+import { hoursPhrase } from "@/modules/deadlines/domain/duration-words";
 import type { PublicFill } from "../domain/registration-cta";
 
 /**
@@ -30,6 +31,31 @@ export function fillPhrase(say: Say, locale: string, fill: PublicFill): string {
  */
 export function waitlistRoomPhrase(say: Say, locale: string, room: number): string {
   return say(`cta.waitlistRoom.${countForm(room, locale)}`, { count: room });
+}
+
+/**
+ * "Mulțumim! Toate cele 50 de locuri s-au ocupat — 3 așteaptă deja un loc." (§587, amending
+ * §348): the full event's thank-you lead, from the event's size and the line's length the door
+ * already counted; an empty line says «Fii primul pe lista de așteptare.» instead of a nought.
+ */
+export function fullThanksPhrase(say: Say, locale: string, capacity: number, waiting: number): string {
+  const key = waiting > 0 ? "cta.fullThanks" : "cta.fullThanksFirst";
+  return say(`${key}.${countForm(capacity, locale)}`, { capacity, waiting });
+}
+
+/** "3 pe lista de așteptare" (§587, amending §346): beside the free places, once anybody waits. */
+export function waitingPhrase(say: Say, waiting: number): string {
+  return say("cta.waitingCount", { count: waiting });
+}
+
+/**
+ * "Când se eliberează un loc, primești un email și ai 24 de ore să confirmi — altfel locul trece
+ * mai departe." (§587, amending §348): how a waiting-list offer works, under the full event's
+ * button and above the join form — with the club's own offer window («Termene», `offerHours`,
+ * §377), the number the allocator gives an offer, in the site's hour words (`hoursPhrase`).
+ */
+export function waitlistOfferPhrase(say: Say, locale: string, offerHours: number): string {
+  return say("cta.fullOffer", { hours: hoursPhrase(locale, offerHours) });
 }
 
 /**

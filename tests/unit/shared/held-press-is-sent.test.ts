@@ -44,7 +44,7 @@ describe("§304 a press held for the anti-bot check is sent, not dropped", () =>
   });
 
   it("is told both sentences by the registration page, in both languages", () => {
-    const page = read("src/app/[locale]/events/[slug]/register/page.tsx");
+    const page = read("src/modules/registrations/ui/registration-form.tsx");
     expect(page).toContain('botCheckHint={t("botCheckWait")}');
     expect(page).toContain('slowHint={t("submitSlow")}');
 

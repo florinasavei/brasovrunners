@@ -296,6 +296,7 @@ export async function cachedPublicAvailability(eventId: string, now: Date): Prom
       capacity: event.capacity,
       waitlistRoom: places.waitlistRoom,
       waitlistCapacity: event.waitlistCapacity,
+      waiting: places.waiting,
     };
   });
 }
@@ -309,6 +310,8 @@ export type PublicAvailability = {
   capacity: number;
   waitlistRoom: number | null;
   waitlistCapacity: number | null;
+  /** How many are in the waiting list's line (§587); absent in an entry cached before it was counted. */
+  waiting?: number;
 };
 
 /** The two counts the public start list pages by (§250): named, and left off at their request. */

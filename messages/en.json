@@ -29,8 +29,7 @@
       "team": "Team",
       "faq": "FAQ",
       "more": "Menu",
-      "contact": "Contact",
-      "members": "Members"
+      "contact": "Contact"
     },
     "newBuild": {
       "body": "A new version of the site has been deployed — reload the page whenever you are ready, but anything you have typed into an open form will be lost.",
@@ -117,6 +116,7 @@
     "raceStartAt": "start at {time}",
     "gatheringAtBold": "gather at <strong>{time}</strong>",
     "raceStartAtBold": "start at <strong>{time}</strong>",
+    "raceStartLater": "The race start time is announced later.",
     "when": "When",
     "where": "Where",
     "meetingPoint": "Meeting point",
@@ -169,6 +169,8 @@
     "elevation": "Elevation gain",
     "elevationM": "{m} m elevation gain",
     "elevationShort": "{m} m climb",
+    "elevationMEstimated": "about {m} m of elevation gain (estimated)",
+    "elevationShortEstimated": "≈ {m} m climb",
     "night": {
       "chip": "Night",
       "pill": "Night event",
@@ -284,9 +286,22 @@
         "few": "{count} places",
         "other": "{count} places"
       },
-      "full": "No places left. On the waiting list, the first in line gets the next free place.",
-      "waitlistFull": "The places and the waiting list are full.",
-      "fullNoWaitlist": "Every place has been taken, so registration has closed.",
+      "fullLead": "All places are taken.",
+      "fullThanks": {
+        "one": "Thank you! The one place is taken — {waiting} already waiting.",
+        "few": "Thank you! All {capacity} places are taken — {waiting} already waiting.",
+        "other": "Thank you! All {capacity} places are taken — {waiting} already waiting."
+      },
+      "fullThanksFirst": {
+        "one": "Thank you! The one place is taken. Be the first on the waiting list.",
+        "few": "Thank you! All {capacity} places are taken. Be the first on the waiting list.",
+        "other": "Thank you! All {capacity} places are taken. Be the first on the waiting list."
+      },
+      "waitingCount": "{count} on the waiting list",
+      "fullJoin": "Join the waiting list — we email you when a place frees up.",
+      "fullOffer": "When a place frees up, you get an email and {hours} to confirm — then it passes on.",
+      "waitlistFull": "All places are taken and the waiting list is full — sorry.",
+      "fullNoWaitlist": "All places are taken, and this event has no waiting list.",
       "waitlistRoom": {
         "one": "{count} place left on the waiting list",
         "few": "{count} places left on the waiting list",
@@ -303,7 +318,6 @@
         "other": "{count} places left"
       },
       "freeOfCard": "{free} out of {places}",
-      "cardWaitlist": "Waiting list",
       "closed": "Registration has closed for this event.",
       "closedRaceWeek": "Registration has closed — come to the desk with the QR from your email.",
       "cancelled": "The event has been cancelled, so registration has stopped.",
@@ -655,7 +669,8 @@
           "cancelled_by_participant": "Cancelled by the participant, from their own link",
           "declaration_hold_set": "Declaration kept for a complaint or a dispute",
           "declaration_hold_cleared": "Keep removed from the declaration",
-          "promo_consent_changed": "Consent to offers and benefits changed"
+          "promo_consent_changed": "Consent to offers and benefits changed",
+          "family_resent": "Email resent to the family"
         }
       },
       "locale": {
@@ -812,7 +827,9 @@
         "staffNo": "Offers and benefits: no. The team cannot consent for the person; they give it themselves, from their registration's page."
       },
       "promoOnly": "Only with offers and benefits",
-      "promoOnlyHelp": "Those who ticked “offers and benefits”, with a registration that still stands. The export follows the filter."
+      "promoOnlyHelp": "Those who ticked “offers and benefits”, with a registration that still stands. The export follows the filter.",
+      "resendFamily": "Resend to the family",
+      "resendFamilyLong": "Send one email to {name}'s address, for everybody registered from it at the event"
     },
     "events": {
       "empty": "There is no event in the database.",
@@ -1065,7 +1082,9 @@
         "note": "For now, automatic emails leave on the scheduled round, within {wait}. Choose whether this one leaves now or waits for it."
       },
       "menuOrderTitle": "Change the menu order?",
-      "menuOrderBody": "The site's menu and footer show the pages in the new order, for every visitor, from the next page they open."
+      "menuOrderBody": "The site's menu and footer show the pages in the new order, for every visitor, from the next page they open.",
+      "resendFamilyTitle": "Resend the family's email?",
+      "resendFamilyBody": "One email goes to their address, for everybody: {names}. Each gets the step they are at, with a new link; the links in the old emails stop working."
     },
     "errors": {
       "PICTURE_IN_USE": "The picture is used on a page, an event or in an album. Take it out of there first.",
@@ -1097,6 +1116,7 @@
       "WAITLIST_FULL": "The places and the waiting list are full, so nothing changed. Try again once a slot on the list frees up.",
       "NO_WAITLIST": "Every place is taken and the event has no waiting list, so nothing changed.",
       "WALK_IN_LEFT_UNCONFIRMED": "The person is entered, but the last place just went, so they are unconfirmed and got no email. Confirm them on paper once a place frees up.",
+      "NO_FREE_PLACE": "No place is free, so nothing changed. Places: {capacity}; confirmed: {confirmed}; declaration to sign: {declaration}; offered from the list: {offered}; reserved for families: {family}.",
       "NO_RECIPIENTS": "Nothing was sent: nobody is in the chosen group right now. Choose another group.",
       "MESSAGE_UNKNOWN_PLACEHOLDER": "Nothing was sent: {names} is not a field we can fill in this message. The fields you can use are listed under the boxes.",
       "SAMPLE_VALUE_IN_EMAIL": "The text contains the sample value “{value}” — use {placeholder}.",
@@ -1117,17 +1137,18 @@
     },
     "editor": {
       "draftPreview": {
-        "intro": "The listing card and the event page, from what you have typed now. Nothing is saved or published.",
+        "intro": "The listing card, the event page and the registration form, from what you have typed now. Nothing is saved or published.",
         "run": "Preview",
         "running": "Getting it ready…",
         "views": "What you see",
         "card": "Card",
         "page": "Page",
+        "form": "Form",
         "language": "Language",
         "width": "Width",
         "phone": "Phone (360)",
         "desktop": "Desktop",
-        "idle": "Press «Preview» to see the card and the page.",
+        "idle": "Press «Preview» to see the card, the page and the form.",
         "asOfPress": "Shows what was typed at the last press of «Preview».",
         "incomplete": "{language} incomplete — missing: {missing}",
         "complete": "Both languages have everything publication needs.",
@@ -1139,7 +1160,9 @@
       "startsAt": "Event start",
       "startsAtHelp": "Local time of the event ({timezone}). For a race this is the gathering time.",
       "raceStartsAt": "Race start",
-      "raceStartsAtHelp": "When the gun goes, if that differs from the gathering time. Leave empty when there is only one time.",
+      "raceStartsAtHelp": "When the gun goes. If it is the event's start, type the same time.",
+      "raceStartNotSet": "Race start not set yet",
+      "raceStartNotSetHelp": "Ticked, the site shows only \"start at\" with the event's start time, and under it \"The race start time is announced later.\"",
       "mapUrl": "Meeting point link",
       "mapUrlHelp": "Optional. The meeting point on Google Maps or any other map. It must start with https://.",
       "coordinates": "Coordinates (lat, lng)",
@@ -1237,6 +1260,8 @@
       "distanceMeters": "Distance",
       "distanceMetersHelp": "In metres. 10000 shows as 10 km.",
       "elevationGainMeters": "Elevation gain (m)",
+      "elevationGainEstimated": "Estimated",
+      "elevationGainEstimatedHelp": "Tick when the number is a guess — the site shows it with “≈” and “estimated”.",
       "night": {
         "label": "Night event",
         "auto": "Automatic (after sunset)",
@@ -1759,7 +1784,7 @@
         },
         "preview": {
           "title": "Preview",
-          "summary": "How it looks on the site — the card and the page, without saving"
+          "summary": "How it looks on the site — the card, the page and the form, without saving"
         },
         "summary": {
           "filled": "written",
@@ -1776,6 +1801,7 @@
             "timeTba": "Time to be announced later",
             "none": "No date chosen yet",
             "raceStart": "race start {time}",
+            "raceStartNotSet": "race start not set",
             "duration": "{duration}"
           },
           "timezone": {
@@ -1861,6 +1887,7 @@
             "route": "route",
             "km": "{km} km",
             "elevation": "+{m} m",
+            "elevationEstimated": "≈ +{m} m",
             "night": "night",
             "nightAuto": "night (automatic)",
             "day": "day",
@@ -3600,8 +3627,7 @@
         "contact": "Contact",
         "gallery": "Gallery",
         "team": "Team",
-        "faq": "Frequently asked questions",
-        "members": "Members"
+        "faq": "Frequently asked questions"
       }
     },
     "fontSize": {
@@ -5824,14 +5850,14 @@
       "pageHeading": "The Members' benefits page",
       "pagePublished": "On the site",
       "pageDraft": "Draft",
-      "pagePublishedHelp": "On the site at {ro} and {en}, with «Members» in the menu. The members' area opens either way, after signing in.",
+      "pagePublishedHelp": "On the site at {ro} and {en}, with «Members' zone» in the site's footer. The members' area opens either way, after signing in.",
       "pageDraftHelp": "Not on the site: the address answers \"page not found\". The members' area works anyway, for whoever has an account.",
       "publish": "Publish the page",
       "unpublish": "Take the page off the site",
       "publishTitle": "Publish the members' page?",
-      "publishBody": "The page appears in both languages, at {ro} and {en}, with «Members» in the menu.",
+      "publishBody": "The page appears in both languages, at {ro} and {en}, with «Members' zone» in the site's footer.",
       "unpublishTitle": "Take the page off the site?",
-      "unpublishBody": "The address will answer \"page not found\" and «Members» leaves the menu. The members' area stays open for whoever has an account.",
+      "unpublishBody": "The address will answer \"page not found\" and «Members' zone» leaves the site's footer. The members' area stays open for whoever has an account.",
       "written": "Written",
       "notWritten": "Not written",
       "benefitsHeading": "Members' benefits",
@@ -5967,6 +5993,7 @@
   "Footer": {
     "myRegistrations": "My registrations",
     "faq": "FAQ",
+    "membersZone": "Members' zone",
     "about": {
       "summaryShort": "About the club",
       "summaryTail": ", contact and legal",
@@ -6336,6 +6363,13 @@
     },
     "membersAddressLabel": "Your member account's address",
     "membersAddressHelp": "You register with your account's address. One account registers one person.",
+    "preview": {
+      "noForm": "Preview: this event takes no registrations on the site, so it has no form.",
+      "dateLater": "Preview: the form appears once you announce the event's date and time.",
+      "notOpen": "Preview: the form takes no registrations right now — {door} Below, how it looks once they open.",
+      "memberAddress": "the member's address, from their account",
+      "groupRunDeclaration": "The run's page also offers the optional self-declaration. Its form is not shown here."
+    },
     "promo": {
       "label": "I want to receive offers and benefits from {club} and its partners.",
       "help": "You can opt out any time from your registration page.",
@@ -6379,7 +6413,14 @@
       "doneTitle": "Your email address is confirmed",
       "eventOff": "The event has been cancelled or is over, so the registration does not go on: no place was held for you and there is nothing you need to do.",
       "waitlistFull": "The places and the waiting list are full, so your address was not confirmed and nothing was held for you. The link in your email stays valid for {confirmation} from when you sent the form: if a place opens on the waiting list in the meantime, open it again.",
-      "noWaitlist": "Every place has been taken and the event has no waiting list, so your address was not confirmed and nothing was held for you. The link in your email stays valid for {confirmation} from when you sent the form: if a place frees up in the meantime, open it again."
+      "noWaitlist": "Every place has been taken and the event has no waiting list, so your address was not confirmed and nothing was held for you. The link in your email stays valid for {confirmation} from when you sent the form: if a place frees up in the meantime, open it again.",
+      "doneFor": "The address is confirmed for:",
+      "next": {
+        "PENDING_DECLARATION": "signs the declaration from the email on its way now",
+        "WAITLIST_OFFERED": "has a place offered: sign the declaration from the email",
+        "WAITLISTED": "on the waiting list: gets an email when a place frees up",
+        "CONFIRMED": "confirmed"
+      }
     },
     "declare": {
       "title": "Event declaration",

@@ -2,6 +2,7 @@
 
 import ArticleIcon from "@mui/icons-material/Article";
 import DesktopWindowsIcon from "@mui/icons-material/DesktopWindows";
+import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import SmartphoneIcon from "@mui/icons-material/Smartphone";
 import TranslateIcon from "@mui/icons-material/Translate";
 import ViewAgendaIcon from "@mui/icons-material/ViewAgenda";
@@ -36,6 +37,7 @@ export type EventDraftPreviewLabels = {
   views: string;
   card: string;
   page: string;
+  form: string;
   language: string;
   width: string;
   phone: string;
@@ -60,9 +62,10 @@ const BOTH: Record<Locale, false> = { ro: false, en: false };
  *
  * «Previzualizează» takes the save form's values as they stand (`formEntries` on `#formId`, the form
  * «Salvează» / «Creează» posts) and hands them to a frame of the site itself, in the language chosen,
- * which asks the server once and draws the listing card or the event page with the listing's and the
- * page's own components (`EventDraftFrame`, `draft-preview.tsx`). Nothing is saved or published: the
- * frame's action writes nothing.
+ * which asks the server once and draws the listing card, the event page or the registration form
+ * with the listing's, the page's and the register page's own parts (`EventDraftFrame`,
+ * `draft-preview.tsx`, `draft-form.tsx` — «Formular», §586). Nothing is saved or published: the
+ * frame's action writes nothing, and the form it draws sends nothing.
  *
  * **Why a frame, and not markup painted into this page.** The card and the page are the site's
  * components with the site's theme, fonts and words — the public catalogue in the language being
@@ -222,6 +225,11 @@ export default function EventDraftPreview({
           <ToggleButton value="page" sx={TOGGLE_SX} data-testid="draft-preview-view-page">
             <ArticleIcon aria-hidden="true" fontSize="small" />
             {labels.page}
+          </ToggleButton>
+          {/* The registration form (§586, amending §579): the glyph of the five steps' «form» step. */}
+          <ToggleButton value="form" sx={TOGGLE_SX} data-testid="draft-preview-view-form">
+            <PersonAddIcon aria-hidden="true" fontSize="small" />
+            {labels.form}
           </ToggleButton>
         </ToggleButtonGroup>
         <ToggleButtonGroup exclusive size="small" value={locale} onChange={(_, next: Locale | null) => chooseLocale(next)} aria-label={labels.language}>

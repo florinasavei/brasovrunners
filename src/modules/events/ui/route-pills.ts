@@ -1,6 +1,7 @@
 import type { events } from "@/db/schema/events";
 import { costPaidToExternalOrganizer } from "../domain/cost";
 import { difficultyLevelOf, difficultyWords, type DifficultyTooltipBlock, type StoredDifficulty } from "../domain/difficulty";
+import { elevationWords, type ElevationSource } from "../domain/elevation";
 import { distanceInKm } from "../domain/event-type";
 import { clubNightEvent, nightTooltip } from "../night-event";
 import { difficultyLevelGlyph } from "./difficulty-glyphs";
@@ -62,7 +63,9 @@ export type RouteFactsSource = Pick<
 > &
   // The level on the club's scale of fifteen (§526), the difficulty's one column; optional like
   // `StoredDifficulty`'s, for a cached row from before it.
-  Pick<StoredDifficulty, "difficultyLevel"> & {
+  Pick<StoredDifficulty, "difficultyLevel"> &
+  // «Estimativ» (§585): optional for the same reason — a cached row from before it reads as exact.
+  Pick<ElevationSource, "elevationGainEstimated"> & {
     /** Null on an event page while the date is to be announced (§533): no date, so no night pill. */
     startsAt: Date | null;
   };
@@ -119,13 +122,25 @@ export function routePillParts(
   const distance = distanceInKm(event.distanceMeters);
   const distancePill: Pill | null =
     distance !== null ? { glyph: "distance", label: t("distanceKm", { km: format.number(distance, { maximumFractionDigits: 1 }) }) } : null;
-  const elevationPill: Pill | null = event.elevationGainMeters
-    ? { glyph: "elevation", label: t("elevationShort", { m: format.number(event.elevationGainMeters) }) }
-    : null;
+  const elevationPill = elevationPillOf(event, t, format);
   const level = difficultyLevelOf(event);
   const difficultyPill: Pill | null = level !== null ? difficultyPillOf(level, t) : null;
   const surfacePill: Pill | null = event.surface ? { glyph: `surface:${event.surface}`, label: t(`surface.${event.surface}`) } : null;
   return { surface: surfacePill, difficulty: difficultyPill, distance: distancePill, elevation: elevationPill, headlamp: nightPill(event, t) };
+}
+
+/**
+ * The climb's pill (§356, §585): «350 m D+», or «≈ 350 m D+» when the club ticked «Estimativ» —
+ * the words from `elevationWords`, the one function every surface reads. An estimate also carries
+ * the long form, «circa 350 m diferență de nivel (estimativ)», as its tooltip, as what a screen
+ * reader hears (`srLabel`, so «≈» is never read out as a bare sign) and as the emails' words
+ * (`plain`, §392): no surface shows the number without saying it is a guess.
+ */
+function elevationPillOf(event: RouteFactsSource, t: Translate, format: FormatNumber): Pill | null {
+  const words = elevationWords(event, t, (value) => format.number(value));
+  if (!words) return null;
+  if (!words.estimated) return { glyph: "elevation", label: words.short };
+  return { glyph: "elevation", label: words.short, tooltip: words.long, srLabel: words.long, plain: words.long };
 }
 
 /**

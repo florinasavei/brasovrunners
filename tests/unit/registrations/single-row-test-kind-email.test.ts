@@ -39,7 +39,7 @@ describe("§384 a TEST row's dialog names no participant email", () => {
     const list = read("src/app/[locale]/admin/registrations/(list)/page.tsx");
     expect(singleEmailCalls(list).every((call) => call.includes('row.kind === "TEST"'))).toBe(true);
     const gated = (list.match(/row\.kind === "TEST" \? \{\} : \{ email: words\.email\(1\) \}/g) ?? []).length;
-    expect(gated).toBe(4); // resend, row-menu confirm-on-paper, give-a-place, cancel
+    expect(gated).toBe(5); // resend, resend to the family (§588), row-menu confirm-on-paper, give-a-place, cancel
   });
 
   it("gates every single-row email line on the registration page", () => {

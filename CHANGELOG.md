@@ -8,6 +8,15 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.47-2026-09-27
+
+- **«Estimativ» beside the elevation gain** — a tick in the editor's «Traseu» card; the site then says «≈ 350 m D+» on the route pill and «circa 350 m diferență de nivel (estimativ)» in its tooltip, the emails, the calendar entry and the share picture. §585.
+- **«Formular» in the event editor's «Previzualizare»** — beside «Card» and «Pagina», the registration form a participant would meet for the unsaved event, drawn by the register page's own parts: the shirt, health-note, minimum-age, public-list and offers boxes the settings switch on, the terms in force and the door's state, in Română or English, on a phone or a desktop; nothing can be sent and nothing is written. §586.
+- **A full event thanks its runners and says how many wait** — «Mulțumim! Toate cele 50 de locuri s-au ocupat — 3 așteaptă deja un loc.» in bold on the card, the event page and the join form, then «Intră pe lista de așteptare — te anunțăm pe email când se eliberează un loc.», on the page how an offer works with the club's own hours; while places are free, «2 pe lista de așteptare» beside them once anybody waits; the two refusals in one kind sentence each. §587.
+- **One click confirms the whole family** — a verification link now confirms every registration on that address at the event sent before the click, each through the allocator, and the page names everybody with their next step; the registrations list keeps a family together and «Retrimite familiei» sends the address one email for all of them. §588.
+- **«Dă-i un loc» on a full race says why** — instead of «Verifică datele introduse», the banner counts the places: how many, confirmed, waiting for a declaration, offered, reserved for a family; the press still gives the place the moment one is free. §589.
+- **A race's start may be not set yet** — the editor's «Startul cursei nu e stabilit» saves no gun time, and the page, the card, the emails and the calendar then say «start la 08:30» with «Ora startului cursei se anunță.» under it, never «întâlnire la» alone. §590.
+- **The members' zone is linked from the footer, not the header** — «Zona membrilor» with its glyph in the «Despre club, contact și termeni» fold while the page is published; «Membri» leaves the header, the ☰ menu and «Ordinea meniului». §591.
 ## BR-V2.46-2026-09-27
 
 - **The club's legal name and CIF are one line inside the footer's «Despre club, contact și termeni» fold** — after its links, with the public phone beside «Scrie-ne»; the block under the bar that repeated the marks and the contact is gone (the hotfix of 2026-09-29, now recorded). §582.

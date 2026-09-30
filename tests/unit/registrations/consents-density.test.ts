@@ -18,7 +18,7 @@ import { CHECKBOX_TAP_TARGET } from "@/shared/ui/tap-target";
  * 5 × 44 = 220 px where they were 5 × 64 − 16 = 304; a label that wraps to four lines at 320 px is
  * 104 where it was 96 + 16 = 112, and every line of the block is 20 px where it was 24.
  */
-const PAGE = readFileSync(path.join(process.cwd(), "src", "app", "[locale]", "events", "[slug]", "register", "page.tsx"), "utf8");
+const PAGE = readFileSync(path.join(process.cwd(), "src", "modules", "registrations", "ui", "registration-form.tsx"), "utf8");
 const GATE = readFileSync(path.join(process.cwd(), "src", "modules", "registrations", "ui", "ReadAndAgree.tsx"), "utf8");
 const DECLARE = readFileSync(path.join(process.cwd(), "src", "app", "[locale]", "registrations", "declare", "[token]", "page.tsx"), "utf8").replace(/\r\n/g, "\n");
 /** The block: from the «Acorduri» heading to the end of its own Stack. */

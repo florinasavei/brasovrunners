@@ -23,13 +23,13 @@ import {
 } from "./domain/link-status";
 import {
   checkIn,
-  confirmEmail,
+  confirmEmailOnAddress,
   type EventForRegistration,
   signDeclaration,
   unregister,
 } from "./service";
 import { CLUB_TIME_ZONE } from "@/i18n/dates";
-import { findRegistrationById } from "./repository";
+import { findRegistrationById, findRegistrationsByEventAndParticipant } from "./repository";
 import {
   confirmFamilyEntry,
   declineFamilyEntry,
@@ -229,10 +229,36 @@ export async function consumeAndConfirmEmail(secret: string, now: Date) {
     if (!registration) throw new DomainError("NOT_FOUND", "no such registration");
     const event = await loadEventForRegistration(tx, registration.eventId);
 
-    const updated = await confirmEmail(tx, event, registration.id, now);
+    // One click proves the inbox (§588): the address's other waiting registrations at the event move on with it.
+    const { registration: updated } = await confirmEmailOnAddress(tx, event, registration.id, now);
     return { ok: true as const, token: consumed.token, registration: updated };
   });
 }
+
+/** What the page after the click says (§588): each person on the address at the event, and their next step. */
+export type ConfirmedOnAddress = { name: string; status: "PENDING_DECLARATION" | "WAITLISTED" | "WAITLIST_OFFERED" | "CONFIRMED" };
+
+/**
+ * Everybody the spent verification link's address holds at its event past the address step, in the
+ * order they were submitted — read-only, on the GET after the press (§12.8), and only for a link
+ * already spent: the secret is the proof, and it names only its own address's people (§39).
+ */
+export async function readConfirmedOnAddress(secret: string, now: Date): Promise<ConfirmedOnAddress[]> {
+  const db = getDb();
+  const scope = await readSpentActionTokenScope(db, { secret, purpose: "VERIFY_REGISTRATION_EMAIL", now });
+  if (!scope?.registrationId) return [];
+  return inReadOnlyTransaction(db, async (tx) => {
+    const clicked = await findRegistrationById(tx, scope.registrationId ?? "");
+    if (!clicked) return [];
+    const rows = await findRegistrationsByEventAndParticipant(tx, clicked.eventId, clicked.participantId);
+    return rows
+      .filter((row): row is typeof row & { status: ConfirmedOnAddress["status"] } => CONFIRMED_ON_ADDRESS.has(row.status))
+      .sort((a, b) => a.submittedAt.getTime() - b.submittedAt.getTime())
+      .map((row) => ({ name: row.registeredName, status: row.status }));
+  });
+}
+
+const CONFIRMED_ON_ADDRESS: ReadonlySet<string> = new Set(["PENDING_DECLARATION", "WAITLISTED", "WAITLIST_OFFERED", "CONFIRMED"]);
 
 export async function consumeAndSignDeclaration(
   secret: string,

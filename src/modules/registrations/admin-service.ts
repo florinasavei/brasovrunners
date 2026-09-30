@@ -88,6 +88,8 @@ export async function resendRegistrationMessage<T extends Record<string, unknown
    * it to «Când pleacă emailurile», as every resend did before.
    */
   delivery: DeliveryChoice = "queue",
+  /** Facts the message reads at send time beside the row's own — a family's confirmed people (§588). */
+  extraPayload: Record<string, unknown> = {},
 ): Promise<void> {
   assertAdministrator(actor);
 
@@ -186,7 +188,7 @@ export async function resendRegistrationMessage<T extends Record<string, unknown
       locale: registration.locale,
       recipientEmail: participant.deliveryEmail,
       // Marked for the queue panel's «Pleacă acum» (§540); the club's copies carry the mark with it.
-      payload: markedForNow({}, delivery),
+      payload: markedForNow({ ...extraPayload }, delivery),
       idempotencyKey,
       requestedByStaffUserId: actor.id,
       isManualResend: true,
@@ -209,6 +211,53 @@ export async function resendRegistrationMessage<T extends Record<string, unknown
   });
   // The message and its club copies, after this response, whatever «Când pleacă emailurile» says.
   if (delivery === "now") drainOutboxRowsAfterResponse(await outboxIdsForKey(db, idempotencyKey));
+}
+
+/**
+ * «Retrimite familiei» (§588): ONE email to the address for every person it holds at the event, the
+ * step the family is at — Administrator only (§289), through the row resend above, so the same
+ * checks, the same hourly limit on the row it sends for, the same «Trimite acum» (§540).
+ *
+ * Which message covers everybody, first that applies:
+ * - somebody still waits for the address: that person's verification link, which since §588 confirms
+ *   every waiting person on the address in one click; the email names the others with their state;
+ * - somebody has a declaration to sign: that person's request, whose one link signs them all (§471);
+ * - everybody else confirmed: one confirmation with each confirmed person's QR, desk code and number
+ *   (the family's confirmation of §519, for the address's confirmed people rather than a sitting's).
+ * A family of waiting-list people only has nothing to send, as a single one has not.
+ */
+export async function resendFamilyMessage<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  registrationId: string,
+  now: Date,
+  delivery: DeliveryChoice = "queue",
+): Promise<void> {
+  assertAdministrator(actor);
+  const registration = await findRegistrationById(db, registrationId);
+  if (!registration) throw new DomainError("NOT_FOUND", "no such registration");
+  const family = (await findRegistrationsByEventAndParticipant(db, registration.eventId, registration.participantId))
+    .filter((row) => isActiveStatus(row.status))
+    .sort((a, b) => a.submittedAt.getTime() - b.submittedAt.getTime());
+  if (family.length < 2) throw new DomainError("VALIDATION_ERROR", "the address holds nobody else at this event");
+  const target =
+    family.find((row) => row.status === "PENDING_EMAIL_CONFIRMATION") ??
+    family.find((row) => row.status === "PENDING_DECLARATION" || row.status === "WAITLIST_OFFERED") ??
+    family.find((row) => row.status === "CONFIRMED");
+  if (!target) throw new DomainError("VALIDATION_ERROR", "everybody on the address is on the waiting list; there is nothing to resend");
+  const confirmed = family.filter((row) => row.status === "CONFIRMED").map((row) => row.id);
+  const extra = target.status === "CONFIRMED" && confirmed.length > 1 ? { familyRegistrationIds: confirmed } : {};
+  await resendRegistrationMessage(db, actor, target.id, now, undefined, delivery, extra);
+  // The press on the trail of the row it was made from: who, which message, how many people — never a name.
+  await recordAuditEvent(db, {
+    actorStaffUserId: actor.id,
+    participantId: registration.participantId,
+    action: "registration.family_resent",
+    entityType: "registration",
+    entityId: registration.id,
+    metadata: { sentFor: target.id, status: target.status, people: family.length },
+    now,
+  });
 }
 
 // --- The rest of the registration CRUD (BR-REQ-037-03, BR-REQ-037-05) -------------------------

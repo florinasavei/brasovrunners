@@ -4,7 +4,13 @@ import { createElement, type ReactNode } from "react";
 import { renderToReadableStream } from "react-dom/server";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { auditLogs } from "@/db/schema/audit-logs";
+import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
+import { emailActionTokens } from "@/db/schema/email-action-tokens";
 import { emailOutbox } from "@/db/schema/email-outbox";
+import { familyPlaceHolds, familySittings, pendingFamilyEntries } from "@/db/schema/family-entries";
+import { participants } from "@/db/schema/participants";
+import { rateLimitBuckets } from "@/db/schema/rate-limit";
+import { registrations } from "@/db/schema/registrations";
 import { eventTranslations, events } from "@/db/schema/events";
 import { platformSettings } from "@/db/schema/platform-settings";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
@@ -338,6 +344,123 @@ describe("§579 «Previzualizare» before saving: the unsaved event, drawn by th
     const answer = await preview(form, "ro");
     expect(answer.outcome).toBe("ready");
     if (answer.outcome === "ready") expect(await markup(answer.card)).toContain("O alergare nouă");
+  });
+});
+
+/**
+ * «Formular» (amending §579): the register page's own form, from the same unsaved draft, through the
+ * same action — nothing held, registered, mailed, audited or cached, and the Tehnic refused.
+ */
+describe("§579 amended «Formular»: the registration form from the unsaved values", () => {
+  const TERMS: LegalDocumentTranslationInput[] = [
+    { locale: "ro", title: "Termeni", body: { sections: [{ paragraphs: ["Termenii."] }] } },
+    { locale: "en", title: "Terms", body: { sections: [{ paragraphs: ["The terms."] }] } },
+  ];
+
+  async function approve(key: "EVENT_DECLARATION" | "TERMS", version: number, translations: LegalDocumentTranslationInput[]) {
+    return insertLegalDocumentVersion(db, {
+      key,
+      version,
+      effectiveAt: new Date("2026-01-01T00:00:00.000Z"),
+      isApproved: true,
+      contentSha256: computeContentHash(translations),
+      translations,
+      now: NOW,
+    });
+  }
+
+  /** The editor's form turned into an open race of 40 places with a shirt, a health note and a minimum of 16 — none of it saved. */
+  async function raceForm() {
+    const declarationId = await approve("EVENT_DECLARATION", 1, [
+      { locale: "ro", title: "Declarație", body: { sections: [{ paragraphs: ["Declar."] }] } },
+      { locale: "en", title: "Declaration", body: { sections: [{ paragraphs: ["I declare."] }] } },
+    ]);
+    fakeNextCache.reset();
+    return editorForm((form) => {
+      form.set("event.type", "RACE");
+      form.set("event.registrationMode", "INTERNAL");
+      form.set("event.capacity", "40");
+      form.set("event.declarationDocumentId", declarationId);
+      form.set("event.registrationOpensAtWallTime", "2026-01-01T10:00");
+      form.set("event.startsAtWallTime", "2030-10-07T19:00");
+      form.set("event.kitShirt.present", "1");
+      form.set("event.kitShirt", "on");
+      form.set("event.askHealthNote.present", "1");
+      form.set("event.askHealthNote", "on");
+      form.set("event.minAge", "16");
+      form.set("translations.ro.title", "Crosul de toamnă (nesalvat)");
+    });
+  }
+
+  async function formCounts() {
+    const tables = [registrations, participants, familySittings, familyPlaceHolds, pendingFamilyEntries, declarationAcceptances, emailActionTokens, rateLimitBuckets];
+    return Promise.all(tables.map(async (table) => (await db.select({ n: count() }).from(table))[0].n));
+  }
+
+  it("draws the form with the boxes the unsaved settings switch on, in Română and English, from one draft", async () => {
+    await approve("TERMS", 2, TERMS);
+    const form = await raceForm();
+    for (const locale of ["ro", "en"] as const) {
+      const answer = await preview(form, locale);
+      expect(answer.outcome).toBe("ready");
+      if (answer.outcome !== "ready") return;
+      const catalogue = locale === "ro" ? ro : en;
+      // The streaming renderer's text separators out, so a sentence reads as one string.
+      const html = (await markup(answer.form)).replace(/<!-- -->/g, "");
+      expect(html).toContain('data-testid="draft-preview-form"');
+      expect(html).toContain('id="registration-form"');
+      if (locale === "ro") expect(html).toContain("Crosul de toamnă (nesalvat)");
+      // The switches of the unsaved form: the shirt, the health note, the minimum age of 16.
+      expect(html).toContain('name="tshirtSize"');
+      expect(html).toContain('name="healthNotes"');
+      expect(html).toContain(catalogue.Registration.ageRule.minimumOnly.replace("{age}", locale === "ro" ? "16 ani" : "16 years").replace(/\.$/, ""));
+      // The terms in force, by their version.
+      expect(html).toContain(locale === "ro" ? "(versiunea 2)" : "(version 2)");
+      // Sending nothing: no action, no Turnstile, the button disabled with the preview's word.
+      expect(html.match(/<form[^>]*>/)?.[0]).not.toContain("action=");
+      expect(html).not.toMatch(/turnstile|cf-turnstile-response/i);
+      expect(html).not.toContain('name="honeypot"');
+      expect(html).toContain(`${catalogue.Registration.submit} · ${catalogue.Event.previewDoor}`);
+    }
+  });
+
+  it("says the terms are missing, as the real form does, while none is approved", async () => {
+    const answer = await preview(await raceForm(), "ro");
+    expect(answer.outcome).toBe("ready");
+    if (answer.outcome === "ready") expect(await markup(answer.form)).toContain('data-testid="registration-terms-missing"');
+  });
+
+  it("writes nothing: no hold, no registration, no email, no audit, and no cache read, filled or expired", async () => {
+    await approve("TERMS", 2, TERMS);
+    const form = await raceForm();
+    const before = { rows: await rowCounts(), form: await formCounts() };
+    for (const locale of ["ro", "en"] as const) {
+      const answer = await preview(form, locale);
+      expect(answer.outcome).toBe("ready");
+      if (answer.outcome === "ready") await markup(answer.form);
+    }
+    expect({ rows: await rowCounts(), form: await formCounts() }).toEqual(before);
+    expect(fakeNextCache.counts).toEqual({ reads: 0, writes: 0 });
+    expect(fakeNextCache.invalidated).toEqual([]);
+  });
+
+  it("an event that takes no registration on the site has no form, only the line that says so", async () => {
+    const answer = await preview(await editorForm(), "ro");
+    expect(answer.outcome).toBe("ready");
+    if (answer.outcome !== "ready") return;
+    const html = await markup(answer.form);
+    expect(html).toContain(ro.Registration.preview.noForm);
+    expect(html).not.toContain("<form");
+  });
+
+  it("refuses the Tehnic and the volunteer the form as it refuses them the card and the page", async () => {
+    const form = await raceForm();
+    for (const role of ["DEV", "CONTRIBUTOR"] as const) {
+      [state.actor] = await db.insert(staffUsers).values({ email: `${role.toLowerCase()}-form@dev.test`, displayName: role, role }).returning();
+      const answer = await preview(form, "ro");
+      expect(answer.outcome).toBe("forbidden");
+      expect("form" in answer).toBe(false);
+    }
   });
 });
 

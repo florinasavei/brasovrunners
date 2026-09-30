@@ -92,6 +92,13 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     await expect(page).not.toHaveURL(/saved=event/);
 
     await field("event.routeUrl").fill(ROUTE_LINK);
+    // «Estimativ» beside the climb (§585): a guess from the map, which the page then says with «≈»
+    // and, in words, «estimativ». The tick is 44 pixels to the thumb (BR-REQ-041-01 criterion 6).
+    await field("event.elevationGainMeters").fill("350");
+    const estimated = page.getByRole("checkbox", { name: "Estimativ" });
+    await estimated.check();
+    expect((await estimated.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await expect(page.getByTestId("elevation-gain-estimated-help")).toContainText("≈");
     // "Linkuri și fișiere", the card where the page draws `#links` (§332, §406).
     await openEditorBox(page, "Linkuri și fișiere");
     // "Linkuri și fișiere" beside the route (criterion 19): the first row is the spare line —
@@ -183,7 +190,8 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     await expect(page.locator("dt").filter({ hasText: /^Traseu$/ })).toHaveCount(1);
     // With a route to show, the surface completes the row as its pill, beside the link (§356).
     const routeRow = page.locator("dt").filter({ hasText: /^Traseu$/ }).locator("xpath=following-sibling::dd[1]");
-    await expect(routeRow.locator(".MuiChip-root")).toHaveText(["Trail"]);
+    // The climb ticked «Estimativ» (§585): «≈ 350 m D+» on the pill, and the chip's name in words.
+    await expect(routeRow.locator(".MuiChip-root")).toHaveText(["Trail", /^≈ 350 m D\+circa 350 m diferență de nivel \(estimativ\)$/]);
 
     const route = page.getByRole("link", { name: "Vezi traseul" });
     await expect(route).toHaveAttribute("href", ROUTE_LINK);
@@ -210,6 +218,7 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     // The English page says the same kind in English, from the same row.
     await page.goto(`/en/events/route-race-${suffix}`);
     await expect(page.locator("section#links").getByRole("link", { name: /Route \(GPX\)/ })).toHaveAttribute("href", GPX_LINK);
+    await expect(page.locator(".MuiChip-root").filter({ hasText: "about 350 m of elevation gain (estimated)" }).first()).toContainText("≈ 350 m climb");
     await page.goto(`/ro/evenimente/${slug}`);
 
     // Criterion 1: a long pasted URL must not widen the document.
@@ -238,6 +247,9 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     await hydrated(page);
     await openEditorBox(page, "Traseul");
     await page.locator('[name="event.routeUrl"]').fill("");
+    // The first test also stated a climb (§585), and a stated climb is a route fact of its own: its
+    // pill alone earns the "Traseu" row. An event with no route drawn has none, so the climb goes too.
+    await page.locator('[name="event.elevationGainMeters"]').fill("");
     await openEditorBox(page, "Linkuri și fișiere");
     // The link saved by the first test comes back in its row, and removing the row removes it
     // (criterion 19): no rows left is "no links", not "not editing the links".

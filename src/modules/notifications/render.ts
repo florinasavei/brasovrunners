@@ -259,9 +259,28 @@ async function renderRow(
   */
   const familyConfirmedSittingId =
     row.messageType === "REGISTRATION_CONFIRMED" ? (row.payloadJson as { familySittingId?: unknown } | null)?.familySittingId : undefined;
+  // «Retrimite familiei» (§588): the address's confirmed people, named by the press rather than by a sitting.
+  const familyResentIds =
+    row.messageType === "REGISTRATION_CONFIRMED" ? (row.payloadJson as { familyRegistrationIds?: unknown } | null)?.familyRegistrationIds : undefined;
   let familyConfirmed: Registration[] | null = null;
   /** Who the family's confirmation greets: the person of the sitting's first form, whom its link was scoped to. */
   let familyGreeting: string | undefined;
+  if (typeof familyConfirmedSittingId !== "string" && Array.isArray(familyResentIds) && registration) {
+    const ids = familyResentIds.filter((id): id is string => typeof id === "string");
+    // Still confirmed at send time and still this address's (§39): anybody else is left out, never named.
+    const confirmedRows = ids.length
+      ? (
+          await db
+            .select()
+            .from(registrations)
+            .where(and(inArray(registrations.id, ids), eq(registrations.status, "CONFIRMED"), eq(registrations.participantId, registration.participantId)))
+        ).sort((a, b) => a.submittedAt.getTime() - b.submittedAt.getTime())
+      : [];
+    if (confirmedRows.length > 1) {
+      familyConfirmed = confirmedRows;
+      familyGreeting = confirmedRows[0]?.registeredName;
+    }
+  }
   if (typeof familyConfirmedSittingId === "string") {
     const sitting = await findSittingById(db, familyConfirmedSittingId);
     const confirmedRows =
@@ -410,6 +429,15 @@ async function renderRow(
   if (row.messageType === "COMPLETE_DECLARATION" && registration && !clubCopy) {
     const others = await awaitingSignatureOnAddress(db, registration.eventId, registration.participantId, registration.id);
     if (others.length > 0) data.familyToSign = others;
+  }
+  /*
+    The verification link proves the inbox, not one person (§588): the message names the address's
+    other people at the event with their state, and says the one link confirms everybody waiting.
+    This address's own rows only (§39), read at send time.
+  */
+  if (row.messageType === "VERIFY_REGISTRATION_EMAIL" && registration && !clubCopy) {
+    const others = await registeredOnAddressWithStates(db, registration.eventId, registration.participantId, [registration.id]);
+    if (others.length > 0) data.familyOnAddress = others;
   }
   /*
     One cancellation email per person (§547): whether the person held a place or waited in line —

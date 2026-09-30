@@ -29,6 +29,7 @@ export function emailEventFacts(row: EventNotificationRow, pageUrl: string | nul
     difficultyLevel: row.difficultyLevel,
     distanceMeters: row.distanceMeters,
     elevationGainMeters: row.elevationGainMeters,
+    elevationGainEstimated: row.elevationGainEstimated,
     type: row.type,
     endsAt: row.endsAt,
     nightOverride: row.nightOverride,

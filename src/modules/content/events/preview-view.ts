@@ -44,6 +44,8 @@ export function previewPageOf(event: EditableEvent, translation: EditableTransla
     featured: event.featured,
     distanceMeters: event.distanceMeters,
     elevationGainMeters: event.elevationGainMeters,
+    // «Estimativ» (§585): the preview draws the same pills as the page, so it says «≈» the same way.
+    elevationGainEstimated: event.elevationGainEstimated,
     nightOverride: event.nightOverride,
     offersGroupRunDeclaration: event.offersGroupRunDeclaration,
     registrationMode: event.registrationMode,
