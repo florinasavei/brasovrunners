@@ -16,19 +16,27 @@ import TurnstileWidget, { type BotCheckWords } from "./TurnstileWidget";
  * ea în câteva secunde»; on every other form those would be false, and the plain sentences
  * (`BotCheck.plain.*`) say only that the form can be sent anyway, which each of their actions
  * accepts (§216).
+ *
+ * `notice` adds the sentence that names Cloudflare and what it sees (§323, `Legal.botCheckNotice`)
+ * under the check — drawn by the island with the widget, once a person starts on the form, and not
+ * before (§593): the registration form, the contact form and the interest box carry it. The form
+ * wraps this in a box with `BOT_CHECK_SLOT_SX`, so an unarmed check leaves no gap either.
  */
 export default async function BotCheck({
   siteKey,
   locale,
   attempt,
   heldPress = false,
+  notice = false,
 }: {
   siteKey: string;
   locale: string;
   attempt: string;
   heldPress?: boolean;
+  notice?: boolean;
 }) {
   const t = await getTranslations({ locale, namespace: "BotCheck" });
+  const legal = notice ? await getTranslations({ locale, namespace: "Legal" }) : null;
   const words: BotCheckWords = {
     loading: t("loading"),
     checking: t("checking"),
@@ -42,6 +50,7 @@ export default async function BotCheck({
     slow: heldPress ? t("slow") : t("plain.slow"),
     retry: t("retry"),
     failed: heldPress ? t("failed") : t("plain.failed"),
+    ...(legal ? { notice: legal("botCheckNotice") } : {}),
   };
   return <TurnstileWidget siteKey={siteKey} locale={locale} attempt={attempt} words={words} />;
 }

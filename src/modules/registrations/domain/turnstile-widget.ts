@@ -155,6 +155,26 @@ export const BOT_CHECK_BLOCKED_AFTER_MS = 10_000;
  */
 export const BOT_CHECK_ARMING_EVENTS = ["focusin", "pointerdown", "keydown", "input"] as const;
 
+/**
+ * The attribute the widget's root carries once it is armed (§577, §593): from then on it reserves
+ * the challenge's height and says who runs the check. Before, it draws nothing a person can see.
+ */
+export const BOT_CHECK_ARMED_ATTRIBUTE = "data-bot-check-armed";
+
+/** The attribute a form puts on its "tick the box again" line inside the check's slot (§593). */
+export const BOT_CHECK_ERROR_ATTRIBUTE = "data-bot-check-error";
+
+/**
+ * The `sx` of the box a form wraps the check in (§593; the owner, 2026-09-30, of the blank space
+ * above Cloudflare's sentence on `/ro/contact`). Until the widget is armed — or a refusal says to
+ * tick it again — the box is not displayed at all, so the form's own spacing leaves no gap where
+ * the challenge will be. The island still listens on the form for the first touch: a box that is
+ * not displayed keeps its element in the document.
+ */
+export const BOT_CHECK_SLOT_SX = {
+  [`&:not(:has([${BOT_CHECK_ARMED_ATTRIBUTE}])):not(:has([${BOT_CHECK_ERROR_ATTRIBUTE}]))`]: { display: "none" },
+} as const;
+
 /** How long `loading` or `checking` may last before the widget offers to start it again. */
 export const BOT_CHECK_SLOW_AFTER_MS = 12_000;
 

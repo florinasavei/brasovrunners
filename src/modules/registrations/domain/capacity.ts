@@ -114,20 +114,41 @@ export class NoFreePlaceError extends DomainError {
     // VALIDATION_ERROR as before; the marker is what the desk's action turns into its sentence.
     super("VALIDATION_ERROR", "the event is full: no place is free to promote into", [NO_FREE_PLACE]);
     this.name = "NoFreePlaceError";
-    this.places = {
-      capacity,
-      confirmed: counts.confirmed,
-      declaration: counts.pendingDeclarationHolds,
-      offered: counts.unexpiredWaitlistOfferedHolds,
-      family: (counts.familyReservations ?? 0) + (counts.familyPlaceHolds ?? 0),
-    };
+    this.places = placesTaken(capacity, counts);
   }
+}
+
+/** Who holds an event's places, as the five numbers the sentence says (§589). */
+export function placesTaken(capacity: number, counts: OccupiedCounts): PlacesTaken {
+  return {
+    capacity,
+    confirmed: counts.confirmed,
+    declaration: counts.pendingDeclarationHolds,
+    offered: counts.unexpiredWaitlistOfferedHolds,
+    family: (counts.familyReservations ?? 0) + (counts.familyPlaceHolds ?? 0),
+  };
+}
+
+/**
+ * The press's own test, before the press (§592): the five numbers when «Dă-i un loc» would meet
+ * `NoFreePlaceError`, null when a place is free or the event is uncapped — the comparison
+ * `promoteFromWaitlistByStaff` makes under the lock. The page's read is a forecast for the
+ * tooltip; the server still decides, and still refuses.
+ */
+export function noFreePlace(capacity: number | null, counts: OccupiedCounts): PlacesTaken | null {
+  if (capacity === null || computeOccupied(counts) < capacity) return null;
+  return placesTaken(capacity, counts);
+}
+
+/** The sentence's values from the numbers themselves: the tooltip's, and the redirect's. */
+export function placesTakenValues(places: PlacesTaken): Record<keyof PlacesTaken, string> {
+  return Object.fromEntries(PLACES_TAKEN_KEYS.map((key) => [key, String(places[key])])) as Record<keyof PlacesTaken, string>;
 }
 
 /** The redirect's outcome for that refusal: the code and the five numbers, as strings. */
 export function noFreePlaceOutcome(error: unknown): Record<string, string> | null {
   if (!(error instanceof NoFreePlaceError)) return null;
-  return { error: NO_FREE_PLACE, ...Object.fromEntries(PLACES_TAKEN_KEYS.map((key) => [key, String(error.places[key])])) };
+  return { error: NO_FREE_PLACE, ...placesTakenValues(error.places) };
 }
 
 /**

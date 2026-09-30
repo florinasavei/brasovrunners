@@ -7,8 +7,10 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
+import Tooltip from "@mui/material/Tooltip";
 import { useState } from "react";
 import { ACTION_ICONS, type ActionIconName } from "@/shared/ui/action-icons";
+import { TOOLTIP_TEXT_SX } from "@/shared/ui/tooltip-text";
 
 /**
  * A registration's verbs behind "⋮" (`DECISIONS.md` §178).
@@ -56,6 +58,11 @@ export type RegistrationMenuItem =
       /** The id of a hidden form the page already rendered, whose Server Action this submits. */
       formId: string;
       color?: "primary" | "error" | "warning";
+      /**
+       * Why the press will be refused, as a tooltip on the item (§592): «Dă-i un loc» on a full race.
+       * The item stays and still submits; the server still refuses.
+       */
+      hint?: string;
     } & MenuSeparation);
 
 export default function RegistrationRowMenu({ ariaLabel, items }: { ariaLabel: string; items: readonly RegistrationMenuItem[] }) {
@@ -117,7 +124,21 @@ export default function RegistrationRowMenu({ ariaLabel, items }: { ariaLabel: s
               </MenuItem>
             );
 
-          return rule ? [rule, entry] : [entry];
+          /*
+            A hint is a tooltip on the item itself, which the menu already makes focusable: it opens
+            on hover and on the arrow keys' focus, the sentence is also the item's description for a
+            screen reader, and on a phone the verb's own question says it first (the list's page).
+          */
+          const shown =
+            item.kind === "submit" && item.hint ? (
+              <Tooltip key={item.label} title={item.hint} placement="left" arrow describeChild slotProps={{ tooltip: { sx: TOOLTIP_TEXT_SX } }}>
+                {entry}
+              </Tooltip>
+            ) : (
+              entry
+            );
+
+          return rule ? [rule, shown] : [shown];
         })}
       </Menu>
     </>

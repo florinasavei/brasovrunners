@@ -21,6 +21,7 @@ import { handsSpareAtConfirm, type SpareState } from "../domain/spare-bibs";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import FamilyChip from "./FamilyChip";
+import GivePlaceButton from "./GivePlaceButton";
 import {
   checkInAction,
   confirmRegistrationNowAction,
@@ -373,9 +374,8 @@ export default async function DeskRow({
               data-testid="desk-place-form"
             >
               {hidden}
-              <GlyphButton icon="place" type="submit" variant="outlined" size="small" sx={{ minHeight: 44 }}>
-                {t("desk.givePlace")}
-              </GlyphButton>
+              {/* On a full race, an «i» says why the press will be refused (§592): one read per event, not per row. */}
+              <GivePlaceButton eventId={row.eventId} size="small" />
             </ActionForm>
           )}
           {!readOnly && row.status === "CONFIRMED" && (

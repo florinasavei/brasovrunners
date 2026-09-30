@@ -34,6 +34,7 @@ import { countryName } from "@/modules/registrations/names";
 import { phoneCountryLabels, phoneCountryOrder } from "@/modules/registrations/phone";
 import BirthDateField from "@/modules/registrations/ui/BirthDateField";
 import BotCheck from "@/modules/registrations/ui/BotCheck";
+import { BOT_CHECK_ERROR_ATTRIBUTE, BOT_CHECK_SLOT_SX } from "@/modules/registrations/domain/turnstile-widget";
 import ClubForMember from "@/modules/registrations/ui/ClubForMember";
 import EmailTwice from "@/modules/registrations/ui/EmailTwice";
 import GuardianForMinor from "@/modules/registrations/ui/GuardianForMinor";
@@ -295,7 +296,6 @@ export async function registrationForm({
   const familyForm = sitting !== null;
   const t = await getTranslations("Registration");
   const tEvent = await getTranslations("Event");
-  const legal = await getTranslations("Legal");
   // "14 ani", "20 de ani" — the event's number as this page's sentences say it (§329).
   const minimumAge = { age: yearsPhrase(minAge, locale) };
   const capPeople = capMax === null ? "" : t(`addressCap.people.${countForm(capMax, locale)}`, { count: capMax });
@@ -1184,19 +1184,14 @@ export async function registrationForm({
           {/* Cloudflare Turnstile, when the club switched it on (§97), drawn and reset by
               its own island (§185) — the implicit widget could not survive a re-render. */}
           {siteKey && (
-            <Box id={fieldId("captcha")}>
+            <Box id={fieldId("captcha")} sx={BOT_CHECK_SLOT_SX}>
               {/* The one form whose send button holds a press for the check (§518). */}
-              <BotCheck siteKey={siteKey} locale={locale} attempt={now.toISOString()} heldPress />
+              <BotCheck siteKey={siteKey} locale={locale} attempt={now.toISOString()} notice heldPress />
               {captchaFailed && (
-                <Typography variant="body2" color="error" sx={{ mt: 1 }}>
+                <Typography variant="body2" color="error" sx={{ mt: 1 }} {...{ [BOT_CHECK_ERROR_ATTRIBUTE]: "true" }}>
                   {t("errors.captcha")}
                 </Typography>
               )}
-              {/* Who sees what for the check, where the check is (§323): a third party
-                  receives the address and the browser's signals, and the form says so. */}
-              <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
-                {legal("botCheckNotice")}
-              </Typography>
             </Box>
           )}
           {/*
