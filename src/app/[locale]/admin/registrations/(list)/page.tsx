@@ -1,3 +1,4 @@
+import CampaignIcon from "@mui/icons-material/Campaign";
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
@@ -38,6 +39,7 @@ import { familyOf } from "@/modules/registrations/family-marker";
 import { canExportSponsorList, canManageRegistrations, canMessageParticipants, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { sponsorListSummary } from "@/modules/registrations/sponsor-list";
 import SponsorListButton from "@/modules/registrations/ui/SponsorListButton";
+import CheckboxField from "@/shared/ui/CheckboxField";
 import { REGISTRATION_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
 import {
@@ -124,7 +126,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   if (!canReadRegistrations(actor.role)) notFound();
 
   const current = await searchParams;
-  const { eventId, status, clubMember, bounced, q, saved, error, cancelled, erased, failed, sent, erase, marked, voided, test } = current;
+  const { eventId, status, clubMember, bounced, promo, q, saved, error, cancelled, erased, failed, sent, erase, marked, voided, test } = current;
   // The printed numbers a bulk cancel just made void (§311), as the action wrote them: digits
   // and commas only, whatever the address bar says, and a race's worth at most.
   // A repeated key (`?voided=1&voided=2`) arrives as a list at runtime; only digits are ever read back.
@@ -143,6 +145,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     status?: RegistrationStatus;
     clubMemberDeclared?: true;
     emailBounced?: true;
+    promoConsented?: true;
     search?: string;
   } = {
     status: isRegistrationStatus(status) ? status : undefined,
@@ -150,6 +153,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     // (`admin-repository.ts` says why).
     clubMemberDeclared: clubMember === "1" || undefined,
     emailBounced: bounced === "1" || undefined,
+    // «Doar cu oferte și beneficii» (§581): who said yes, by the one condition of §570 (`promoListed`).
+    promoConsented: promo === "1" || undefined,
     search: q || undefined,
   };
 
@@ -234,6 +239,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     status,
     clubMember,
     bounced,
+    // Rides with every sort, page and export link (§581): the file is the rows on screen.
+    promo: promo === "1" ? "1" : undefined,
     q,
     sort: current.sort,
     dir: current.dir,
@@ -248,7 +255,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     `defaultEventFilter` over it, so `all` and a bookmarked link mean there what they mean here.
   */
   const exportQueryString = buildListHref("", listParams, { eventId: eventFilter.eventId ?? ALL_EVENTS }).replace(/^\?/, "");
-  const hasFilters = Boolean(eventId || status || clubMember || bounced || q);
+  const hasFilters = Boolean(eventId || status || clubMember || bounced || promo === "1" || q);
   /*
     Nobody chose a filter, yet the list is still narrowed: `defaultEventFilter` scoped it to the
     featured event with no URL parameter to show for it (§178). This is the shape §277 named —
@@ -1075,6 +1082,17 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             <MenuItem value="">{t("registrations.filterAll")}</MenuItem>
             <MenuItem value="1">{t("registrations.bouncedOnly")}</MenuItem>
           </TextField>
+          {/*
+            «Doar cu oferte și beneficii» (§581; the owner: «doar cei care au bifat că vor datele
+            publicate pentru parteneri»): the people who said yes, on screen, by §570's one condition —
+            and the export beside the list follows it. The megaphone is the offers box's own glyph (§570).
+          */}
+          <Box sx={{ minWidth: 220, maxWidth: 320, pt: 0.5 }} data-testid="registrations-filter-promo">
+            <CheckboxField name="promo" value="1" defaultChecked={promo === "1"} dense help={t("registrations.promoOnlyHelp")}>
+              <CampaignIcon aria-hidden data-testid="registrations-filter-promo-glyph" />
+              {t("registrations.promoOnly")}
+            </CheckboxField>
+          </Box>
           <TextField
             select
             name="status"

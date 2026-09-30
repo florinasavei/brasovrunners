@@ -341,7 +341,7 @@ describe("BR-REQ-041-01 «unde» carries its address, and every row the same gly
   });
 
   it("is what the event page and the preview draw, with no address of their own underneath", () => {
-    for (const file of ["src/app/[locale]/events/[slug]/page.tsx", "src/app/[locale]/preview/events/[id]/page.tsx"]) {
+    for (const file of ["src/modules/events/ui/EventPageView.tsx", "src/app/[locale]/preview/events/[id]/page.tsx"]) {
       const source = readFileSync(file, "utf8");
       expect(source, file).toMatch(/<EventFacts\b[^>]*\bstacked\b[^>]*\/>/);
       expect(source, file).not.toMatch(/\.locationAddress\s*&&/);

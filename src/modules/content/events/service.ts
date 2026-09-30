@@ -1118,12 +1118,7 @@ function writtenOptionalTexts(row: OptionalTextColumns) {
  * where the switch that excuses it (§328) is known.
  */
 function assertOptionalTextsInBothLanguages(rows: Readonly<Record<Locale, OptionalTextColumns>>): void {
-  const ro = writtenOptionalTexts(rows.ro);
-  const en = writtenOptionalTexts(rows.en);
-  const missing = (Object.keys(ro) as Array<keyof typeof ro>).flatMap((field) => {
-    const language = missingLanguage({ ro: ro[field], en: en[field] }, (written) => written);
-    return language ? [`translations.${language}.${field}`] : [];
-  });
+  const missing = textsOwedInOneLanguage(rows);
   if (missing.length > 0) {
     throw new DomainError("VALIDATION_ERROR", `${missing.join(", ")}: written in the other language only; write both languages or neither`, missing);
   }
@@ -2340,6 +2335,230 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
   */
   if (parsedEventFields) wakeJobs("registration-maintenance");
   return outcome;
+}
+
+// --- The preview before saving (§579) -------------------------------------------------------
+
+/** No row yet: the id the create page's preview draws with, which no event has. */
+export const DRAFT_EVENT_ID = "00000000-0000-0000-0000-000000000000";
+
+/**
+ * The event row a create page's preview starts from: every column at the default an insert would
+ * give it (`db/schema/events.ts`), before the form's columns are laid over it. Nobody reads it but
+ * the preview; it is never written.
+ */
+function blankEventRow(now: Date): EditableEvent {
+  return {
+    id: DRAFT_EVENT_ID,
+    raceId: null,
+    type: "GROUP_RUN",
+    surface: null,
+    eventStatus: "SCHEDULED",
+    editorialStatus: "DRAFT",
+    publishedAt: null,
+    thanksSentAt: null,
+    version: 1,
+    startsAt: now,
+    endsAt: null,
+    raceStartsAt: null,
+    timezone: "Europe/Bucharest",
+    mapUrl: null,
+    latitude: null,
+    longitude: null,
+    routeUrl: null,
+    stravaEventUrl: null,
+    facebookEventUrl: null,
+    coHostName: null,
+    coHostUrl: null,
+    coHosts: null,
+    links: null,
+    repeatRule: null,
+    repeatOf: null,
+    scheduleItems: null,
+    distanceMeters: null,
+    elevationGainMeters: null,
+    nightOverride: null,
+    offersGroupRunDeclaration: false,
+    locationName: null,
+    locationAddress: null,
+    locationToBeAnnounced: false,
+    dateToBeAnnounced: false,
+    timeToBeAnnounced: false,
+    membersOnly: false,
+    difficulty: null,
+    difficultyLevel: null,
+    costType: COST_TYPE_ON_CREATE,
+    costAmount: null,
+    costUrl: null,
+    featured: false,
+    isSpecial: false,
+    bibStartNumber: 1,
+    bibColour: null,
+    walkInBibStart: null,
+    walkInBibCount: null,
+    bibDesign: null,
+    bibsSettledAt: null,
+    capacity: null,
+    waitlistCapacity: null,
+    confirmationOpensDaysBefore: 7,
+    confirmationDeadlineDaysBefore: 2,
+    reminderHoursBefore: null,
+    minAge: 14,
+    registrationMode: "NONE",
+    registrationOpensAt: null,
+    registrationOpensSoon: false,
+    registrationClosesAt: null,
+    kitShirt: false,
+    askHealthNote: false,
+    declarationDocumentId: null,
+    externalProvider: null,
+    externalRegistrationUrl: null,
+    participantListVisibility: "HIDDEN",
+    createdByStaffUserId: null,
+    updatedByStaffUserId: null,
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+/** One language's row before anything is typed, as `blankEventRow` is the event's. */
+function blankTranslationRow(eventId: string, locale: Locale, now: Date): EditableTranslation {
+  return {
+    id: DRAFT_EVENT_ID,
+    eventId,
+    locale,
+    slug: "",
+    title: "",
+    excerpt: null,
+    excerptJson: null,
+    bodyJson: null,
+    rulesJson: null,
+    scheduleJson: null,
+    routeDescriptionJson: null,
+    checklist: null,
+    coverAltText: null,
+    locationName: null,
+    seoTitle: null,
+    seoDescription: null,
+    discountNote: null,
+    authorStaffUserId: null,
+    reviewedByStaffUserId: null,
+    version: 1,
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+/**
+ * A set of columns without the ones a caller did not post: `undefined` is "leave the column as it
+ * is" to an UPDATE (`translationColumnsFrom`'s own rule), so laid over a row in memory it must
+ * leave the row's value, never blank it.
+ */
+function definedOnly<T extends Record<string, unknown>>(columns: T): Partial<T> {
+  return Object.fromEntries(Object.entries(columns).filter(([, value]) => value !== undefined)) as Partial<T>;
+}
+
+export type DraftEventInput = {
+  /** The event as stored (the editor), or null (the create page): what the form is laid over. */
+  current: EditableEvent | null;
+  /** Its languages as stored; none on the create page. */
+  storedTranslations: readonly EditableTranslation[];
+  /**
+   * The event's fields as the form posts them (`form-read.ts#eventFieldsFrom`), or `undefined`
+   * when the form carried none — a reader who may not change the settings posts no settings box,
+   * exactly as `saveEventAndTranslations` reads it — and then the stored row stands.
+   */
+  fields?: unknown;
+  /** Each language's words as posted (`translationInputFrom`); a language absent here keeps its stored row. */
+  translations: Partial<Record<Locale, unknown>>;
+  /** The Locul box ran in the browser (§362): the names as typed, as the save reads the same flag. */
+  placeNamesAsTyped?: boolean;
+  now?: Date;
+};
+
+/** What the save would leave, held in memory: the event row and each language's row. */
+export type DraftEvent = {
+  event: EditableEvent;
+  translations: Record<Locale, EditableTranslation>;
+  /**
+   * A language whose words the save would refuse, with the boxes it names as the form posts them
+   * (`translations.<locale>.<box>`, §47): that language is drawn from its stored row, and the
+   * preview says why rather than drawing half a page.
+   */
+  refused: Partial<Record<Locale, DomainError>>;
+};
+
+/**
+ * **The save without the write (§579; the owner, 2026-09-30: "vreau să pot face preview la
+ * eveniment, înainte de salvare și publicare").** The form's values through the save's own steps —
+ * `ignoreHiddenFields`, the schema, `normalizeForType`, `normalizeForMode`, the registration block's
+ * and the start's refusals, `resolveTimes`, `eventColumnsFrom` for the row, `translationFieldsSchema`
+ * and `translationColumnsFrom` for each language, the place's names as `saveEventAndTranslations`
+ * writes them — laid over the stored rows in memory. So what the preview draws is what a press of
+ * «Salvează» would store, and a value the save refuses is refused here with the same boxes named.
+ *
+ * **Nothing is written, anywhere**: no transaction, no lock, no version, no audit row, no cache
+ * expiry, no job woken, no email — and no YouTube poster fetched and stored (§403), which the save
+ * does before its transaction: a film in a preview shows the facade a film without a poster shows.
+ * The reads are the save's own refusals' (the approved declaration, the series), nothing more.
+ *
+ * Deliberately not here: the capacity below the places taken (a lock the save takes, and a number
+ * the preview's door reads anyway), the live-edit acknowledgement, the version guards, the
+ * authorship rule, and «both languages or neither» for the optional texts (§352) — which the
+ * preview reports as a mark on the language still owed instead of refusing the draw, so an
+ * organizer can see the Romanian page before the English is written. A refused event row throws
+ * the save's `DomainError`; a refused language is returned in `refused`.
+ */
+export async function draftEvent<T extends Record<string, unknown>>(db: Database<T>, input: DraftEventInput): Promise<DraftEvent> {
+  const now = input.now ?? new Date();
+  let event: EditableEvent = input.current ?? blankEventRow(now);
+  let names: PlaceNames = {};
+  if (input.fields !== undefined) {
+    const parsed = normalizeForMode(normalizeForType(parseOrThrow(eventFieldsSchema, ignoreHiddenFields(input.fields))));
+    await assertCoherentRegistrationBlock(db, parsed, now);
+    await assertDateToBeAnnouncedAllowed(db, parsed, input.current);
+    const times = resolveTimes(parsed, switchesAfterSave(parsed, input.current));
+    event = { ...event, ...definedOnly(eventColumnsFrom(parsed, times, { isCreate: input.current === null })) } as EditableEvent;
+    const posted = placeNamesFrom(parsed);
+    names = input.placeNamesAsTyped || !input.current ? posted : namesAfterSave(input.current, input.storedTranslations, posted);
+  }
+
+  const translations = {} as Record<Locale, EditableTranslation>;
+  const refused: Partial<Record<Locale, DomainError>> = {};
+  const discountAllowed = costPaidToExternalOrganizer(event);
+  for (const locale of routing.locales) {
+    let row = input.storedTranslations.find((stored) => stored.locale === locale) ?? blankTranslationRow(event.id, locale, now);
+    const posted = input.translations[locale];
+    if (posted !== undefined) {
+      const parsed = translationFieldsSchema.safeParse(posted);
+      if (parsed.success) {
+        row = { ...row, ...definedOnly(translationColumnsFrom(parsed.data, event.type, discountAllowed)) } as EditableTranslation;
+      } else {
+        const fields = [...new Set(parsed.error.issues.map((issue) => issue.path.join(".")).filter((path) => path !== ""))];
+        refused[locale] = new DomainError("VALIDATION_ERROR", `translations.${locale}: refused`, fields.map((field) => `translations.${locale}.${field}`));
+      }
+    }
+    // The note the saved mode and cost no longer allow is cleared, as `clearDiscountNoteIfNotAllowed` does.
+    if (!discountAllowed) row = { ...row, discountNote: null };
+    const name = names[locale];
+    if (name !== undefined) row = { ...row, locationName: name };
+    translations[locale] = row;
+  }
+  return { event, translations, refused };
+}
+
+/**
+ * The optional texts written in one language and not the other (§352), by the box the language
+ * still owed posts — the names `assertOptionalTextsInBothLanguages` would refuse, said instead of
+ * refused: the preview's «English incomplet» mark (§579).
+ */
+export function textsOwedInOneLanguage(rows: Readonly<Record<Locale, OptionalTextColumns>>): string[] {
+  const ro = writtenOptionalTexts(rows.ro);
+  const en = writtenOptionalTexts(rows.en);
+  return (Object.keys(ro) as Array<keyof typeof ro>).flatMap((field) => {
+    const language = missingLanguage({ ro: ro[field], en: en[field] }, (written) => written);
+    return language ? [`translations.${language}.${field}`] : [];
+  });
 }
 
 export type CreateEventInput = {

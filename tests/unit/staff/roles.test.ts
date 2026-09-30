@@ -519,6 +519,8 @@ describe("BR-REQ-060-01 every capability × every role", () => {
     canManagePlatform: /*     */ [false, false, false, false, false, false, true],
     canManageClubSettings: /* */ [false, false, false, false, false, true, true],
     canReadContent: /*        */ [false, false, true, true, true, true, true],
+    // §579: the editor's preview before saving — the Redactor, the Organizer, the Administrators; never Tehnic.
+    canPreviewEventDraft: /*  */ [false, false, true, true, false, true, true],
     // «Setări» (§516): every role that reads the club's content — the volunteer has the desk alone.
     canOpenSettings: /*       */ [false, false, true, true, true, true, true],
     // §524: the members' zone is every account's; the backoffice line and the members' pages as for «Echipa».

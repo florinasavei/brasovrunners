@@ -108,6 +108,7 @@
   "Event": {
     "backToEvents": "Înapoi la evenimente",
     "editInBackoffice": "Editează",
+    "previewDoor": "previzualizare",
     "opensInNewTab": "se deschide într-o filă nouă",
     "photosNotice": "La evenimentele clubului se pot face fotografii și filmări, pe care clubul le publică în galerie și pe canalele sale. Nu vrei să apari? Spune-i fotografului sau <contact>scrie-ne</contact> și scoatem fotografia, fără să ne spui de ce. Detalii în <privacy>nota de confidențialitate</privacy>.",
     "date": "Data",
@@ -809,7 +810,9 @@
         "yes": "Oferte și beneficii: da, din {date}",
         "no": "Oferte și beneficii: nu",
         "staffNo": "Oferte și beneficii: nu. Echipa nu poate da acordul în locul persoanei; îl dă ea, din pagina înscrierii ei."
-      }
+      },
+      "promoOnly": "Doar cu oferte și beneficii",
+      "promoOnlyHelp": "Cei care au bifat „oferte și beneficii”, cu înscrierea încă valabilă. Exportul ia același filtru."
     },
     "events": {
       "empty": "Nu există niciun eveniment în baza de date.",
@@ -1113,6 +1116,26 @@
       "LEGAL_ALREADY_DELETED": "Versiunea a fost deja ștearsă din listă. Textul ei rămâne în arhivă."
     },
     "editor": {
+      "draftPreview": {
+        "intro": "Cardul din listă și pagina evenimentului, din ce ai scris acum. Nu salvează și nu publică nimic.",
+        "run": "Previzualizează",
+        "running": "Se pregătește…",
+        "views": "Ce vezi",
+        "card": "Card",
+        "page": "Pagina",
+        "language": "Limba",
+        "width": "Lățime",
+        "phone": "Telefon (360)",
+        "desktop": "Desktop",
+        "idle": "Apasă «Previzualizează» ca să vezi cardul și pagina.",
+        "asOfPress": "Arată ce era scris la ultima apăsare pe «Previzualizează».",
+        "incomplete": "{language} incomplet — lipsește: {missing}",
+        "complete": "Ambele limbi au tot ce cere publicarea.",
+        "refused": "Nu se poate previzualiza așa: salvarea ar refuza aceste căsuțe.",
+        "failed": "Previzualizarea nu a mers. Încearcă din nou.",
+        "forbidden": "Rolul tău nu poate previzualiza evenimentul.",
+        "frameTitle": "Previzualizarea evenimentului"
+      },
       "startsAt": "Începutul evenimentului",
       "startsAtHelp": "Ora locală a evenimentului ({timezone}). Pentru o cursă, aceasta este ora de întâlnire.",
       "raceStartsAt": "Startul cursei",
@@ -1733,6 +1756,10 @@
           "title": "Recurență",
           "none": "Nu se repetă",
           "on": "Se repetă"
+        },
+        "preview": {
+          "title": "Previzualizare",
+          "summary": "Cum arată pe site — cardul și pagina, fără să salvezi"
         },
         "summary": {
           "filled": "completat",
@@ -4757,6 +4784,7 @@
               "title": "Descarcă lista (Excel sau CSV)",
               "steps": [
                 "«Înscrieri» → alege evenimentul → «Filtrează».",
+                "Bifează «Doar cu oferte și beneficii» ca să vezi doar cine a spus da la oferte; exportul ia același filtru.",
                 "Apasă «Exportă Excel» (sau «Exportă CSV»). Fișierul are exact rândurile filtrate, fără înscrierile de test.",
                 "Fișierul are acte de identitate și telefoane: nu-l trimite pe grupuri și șterge-l în cel mult 7 zile de la eveniment."
               ]
@@ -4821,7 +4849,7 @@
                 "«Newsletter» → deschide cardul «Abonați». Linia lui spune câți sunt confirmați și câți în așteptare.",
                 "Caută la «Caută adresa» sau alege «Tema» și «Starea», apoi apasă «Filtrează». «Descarcă CSV» ia lista așa cum e filtrată.",
                 "Cardul «Participanți care au bifat oferte și beneficii»: cine a bifat asta la înscriere, cu adresa, evenimentul și data. «Descarcă CSV» îl ia întreg. Nu e newsletterul.",
-                "«Descarcă lista pentru sponsori»: prenume, nume, adresă, eveniment și data, doar pentru acordurile date sub o notă care permite asta. Notează cui dai fișierul; șterge-l în 30 de zile.",
+                "«Descarcă lista pentru sponsori (Excel)»: aceiași oameni ca în CSV, cu toate bifele fiecăruia (oferte, lista publică, rețele, termeni, declarație, starea) — pentru club. Partenerului dă-i «Descarcă CSV»: prenume, nume, adresă, eveniment și data. Doar acordurile date sub o notă care permite asta. Notează cui dai fișierul; șterge-l în 30 de zile.",
                 "Scoaterea unei adrese e a Administratorului: scrie-i cine a cerut-o."
               ]
             },
@@ -5034,7 +5062,7 @@
                 "«Descarcă CSV» ia lista așa cum e filtrată, cu aceleași coloane. Păstrează fișierul doar cât îți trebuie, apoi șterge-l.",
                 "Ca să scoți pe cineva, la cererea lui: «Dezabonează» pe rândul lui, apoi confirmă. Adresa se șterge cu temele ei, ca atunci când se dezabonează singură.",
                 "Cardul «Participanți care au bifat oferte și beneficii»: cine a bifat asta la înscriere, cu adresa, evenimentul și data. «Descarcă CSV» îl ia întreg. Nu e newsletterul.",
-                "«Descarcă lista pentru sponsori»: prenume, nume, adresă, eveniment și data, doar pentru acordurile date sub o notă care permite asta. Notează cui dai fișierul; șterge-l în 30 de zile."
+                "«Descarcă lista pentru sponsori (Excel)»: aceiași oameni ca în CSV, cu toate bifele fiecăruia (oferte, lista publică, rețele, termeni, declarație, starea) — pentru club. Partenerului dă-i «Descarcă CSV»: prenume, nume, adresă, eveniment și data. Doar acordurile date sub o notă care permite asta. Notează cui dai fișierul; șterge-l în 30 de zile."
               ]
             },
             {
@@ -5886,7 +5914,7 @@
       "whoRemoved": "un membru al echipei (cont șters)"
     },
     "sponsors": {
-      "button": "Descarcă lista pentru sponsori",
+      "button": "Descarcă lista pentru sponsori (Excel)",
       "count": {
         "one": "{count} persoană",
         "few": "{count} persoane",
@@ -5894,6 +5922,7 @@
       },
       "noticeMissing": "Nota de confidențialitate în vigoare nu spune că lista poate fi dată partenerilor.",
       "help": "Prenume, nume, adresă, eveniment și data acordului: doar adulții, cu acordul dat sub o notă care permite asta. Scrie cui dai lista: rămâne la fiecare înscriere din ea. Șterge fișierul în 30 de zile.",
+      "helpExcel": "Excelul are în plus toate bifele fiecăruia, ca să vezi la ce și-a dat acordul. Partenerului dă-i CSV-ul.",
       "recipient": "Cui dai lista (opțional)",
       "columns": {
         "firstName": "Prenume",
@@ -5901,6 +5930,33 @@
         "email": "Email",
         "event": "Eveniment",
         "consentedAt": "Data acordului"
+      },
+      "buttonCsv": "Descarcă CSV",
+      "sheet": {
+        "name": "Sponsori",
+        "yes": "Da",
+        "no": "Nu",
+        "columns": {
+          "firstName": "Prenume",
+          "lastName": "Nume",
+          "email": "Email",
+          "event": "Eveniment",
+          "promoConsentedAt": "Oferte și beneficii (data acordului)",
+          "promoNotice": "Nota de confidențialitate (versiunea)",
+          "listPublic": "Lista publică & rezultate",
+          "listSocials": "Rețele pe lista publică",
+          "termsVersion": "Termeni (versiunea)",
+          "termsAcceptedAt": "Termeni (acceptați la)",
+          "declarationVersion": "Declarația (versiunea)",
+          "declarationSignedAt": "Declarația (semnată la)",
+          "status": "Starea înscrierii"
+        },
+        "states": {
+          "PENDING_DECLARATION": "Așteaptă semnarea declarației",
+          "WAITLISTED": "Pe lista de așteptare",
+          "WAITLIST_OFFERED": "Ofertă activă",
+          "CONFIRMED": "Confirmată"
+        }
       }
     }
   },

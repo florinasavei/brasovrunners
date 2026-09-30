@@ -13,7 +13,11 @@ import { insertLegalDocumentVersion, noticeDescribesPromotionalMaterialsShared }
 import { CSV_BOM } from "@/modules/newsletter/subscribers-csv";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { listPartnerShares } from "@/modules/audit/repository";
-import { buildSponsorListCsv, readSponsorShareGate, sponsorList, sponsorListSummary } from "@/modules/registrations/sponsor-list";
+import { buildSponsorListCsv, promoListed, readSponsorShareGate, sponsorList, sponsorListSummary } from "@/modules/registrations/sponsor-list";
+import { SPONSOR_SHEET_COLUMNS, sponsorSheetHeaders } from "@/modules/registrations/sponsor-sheet";
+import { countRegistrationsForAdmin, listRegistrationsForAdmin } from "@/modules/registrations/admin-repository";
+import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
+import { readSheet } from "../../helpers/xlsx";
 import { sharedWithSponsors } from "@/modules/registrations/domain/sponsor-share";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
@@ -57,6 +61,7 @@ vi.mock("next-intl/server", () => ({
 }));
 
 const { GET: downloadSponsorList } = await import("@/app/api/admin/registrations/sponsor-list/route");
+const { GET: exportRegistrations } = await import("@/app/api/admin/registrations/export/route");
 
 const NOW = new Date("2026-09-29T10:00:00.000Z");
 /** §562's notice: the box, and «partenerii nu primesc adresa ta». */
@@ -98,7 +103,17 @@ let seq = 0;
 async function seedRow(
   eventId: string,
   firstName: string,
-  options: { status?: Registration["status"]; kind?: Registration["kind"]; promoConsent?: boolean; version?: number; at?: Date | null; birthDate?: string | null } = {},
+  options: {
+    status?: Registration["status"];
+    kind?: Registration["kind"];
+    promoConsent?: boolean;
+    version?: number;
+    at?: Date | null;
+    birthDate?: string | null;
+    listOptOut?: boolean;
+    listSocials?: boolean;
+    termsVersion?: number | null;
+  } = {},
 ) {
   seq += 1;
   const email = `${firstName.toLowerCase()}${seq}@example.ro`;
@@ -126,7 +141,10 @@ async function seedRow(
       privacyAcknowledgedAt: options.at ?? UNDER_V2,
       resultsNameConsent: false,
       resultsConsentVersion: 1,
-      listOptOut: true,
+      listOptOut: options.listOptOut ?? true,
+      listSocials: options.listSocials ?? false,
+      termsVersion: options.termsVersion ?? null,
+      termsAcceptedAt: options.termsVersion ? UNDER_V2 : null,
       promoConsent,
       promoConsentAt: options.at === undefined ? (promoConsent ? UNDER_V2 : null) : options.at,
     })
@@ -300,8 +318,8 @@ describe("§570 the route: the role on the server, the notice, the file and its 
 
     const rows = await db.select().from(auditLogs).where(eq(auditLogs.action, "registrations.sponsor_list_exported"));
     expect(rows.map((row) => row.metadataJson)).toEqual([
-      { eventId: event.id, count: 1, recipient: null, registrationIds: [ana.id] },
-      { eventId: null, count: 1, recipient: null, registrationIds: [ana.id] },
+      { eventId: event.id, format: "csv", count: 1, recipient: null, registrationIds: [ana.id] },
+      { eventId: null, format: "csv", count: 1, recipient: null, registrationIds: [ana.id] },
     ]);
     expect(rows.every((row) => row.actorStaffUserId === organizer.id)).toBe(true);
     expect(JSON.stringify(rows.map((row) => row.metadataJson))).not.toContain("@");
@@ -340,3 +358,167 @@ describe("§570 the route: the role on the server, the notice, the file and its 
     expect((await downloadSponsorList(new Request("http://localhost/api/admin/registrations/sponsor-list?event=1;drop"))).status).toBe(400);
   });
 });
+
+/**
+ * §581 (amending §570) — the owner, 2026-09-30: «cum pot exporta participanții, doar cei care au
+ * bifat că vor datele publicate pentru parteneri? trebuie să am Excel cu toate bifele lor».
+ */
+describe("§581 the sponsor list as Excel, every tick in its column", () => {
+  async function signDeclaration(registrationId: string, version: number) {
+    const translations: LegalDocumentTranslationInput[] = [
+      { locale: "ro", title: "Declarație", body: { sections: [{ paragraphs: ["Declar."] }] } as LegalDocumentTranslationInput["body"] },
+      { locale: "en", title: "Declaration", body: { sections: [{ paragraphs: ["I declare."] }] } as LegalDocumentTranslationInput["body"] },
+    ];
+    const contentSha256 = computeContentHash(translations);
+    const legalDocumentId = await insertLegalDocumentVersion(db, { key: "EVENT_DECLARATION", version, effectiveAt: V1_AT, isApproved: true, contentSha256, translations, now: NOW });
+    await db.insert(declarationAcceptances).values({ registrationId, legalDocumentId, declarationVersion: version, contentSha256, locale: "ro", typedName: "Ana Pop", acceptedAt: UNDER_V2 });
+  }
+
+  const excel = (eventId: string, lang = "ro") => new Request(`http://localhost/api/admin/registrations/sponsor-list?event=${eventId}&lang=${lang}&format=xlsx`);
+  const csv = (eventId: string) => new Request(`http://localhost/api/admin/registrations/sponsor-list?event=${eventId}&lang=ro&format=csv`);
+
+  it("lists the same rows as the CSV — never an older notice's yes, never a minor — with each consent's value per row, and the audit names the format", async () => {
+    await approveNotice(1, boxOnly, V1_AT);
+    await approveNotice(2, sharing, V2_AT);
+    const event = await createEvent("crosul-toamnei", "Crosul toamnei");
+    // Ticked the list and the socials, accepted the terms v3, signed the declaration v5.
+    const ana = await seedRow(event.id, "Ana", { listOptOut: false, listSocials: true, termsVersion: 3 });
+    // On the waiting list, the list left unticked, nothing signed.
+    const bogdan = await seedRow(event.id, "Bogdan", { status: "WAITLISTED" });
+    // A yes under §562's notice («partenerii nu primesc adresa ta»): in neither file.
+    await seedRow(event.id, "Ioana", { version: 1, at: UNDER_V1, listOptOut: false });
+    // Sixteen: the guardian's yes is the club's, never a partner's.
+    await seedRow(event.id, "Mara", { birthDate: "2010-05-05", listOptOut: false });
+    // Said no: in neither file.
+    await seedRow(event.id, "Horia", { promoConsent: false, listOptOut: false });
+    await signDeclaration(ana.id, 5);
+    state.cookie = (await staff("MODERATOR")).id;
+
+    const response = await downloadSponsorList(excel(event.id));
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Content-Type")).toBe("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    expect(response.headers.get("Content-Disposition")).toMatch(/^attachment; filename="sponsori-crosul-toamnei-\d{4}-\d{2}-\d{2}\.xlsx"$/);
+    const { rows, sheetName } = readSheet(Buffer.from(await response.arrayBuffer()));
+    expect(sheetName).toBe("Sponsori");
+    const sheet = ro.Admin.sponsors.sheet;
+    expect(rows[0]).toEqual(sponsorSheetHeaders({ sheet: sheet.name, yes: sheet.yes, no: sheet.no, columns: sheet.columns, states: sheet.states }));
+    const col = (key: (typeof SPONSOR_SHEET_COLUMNS)[number]) => SPONSOR_SHEET_COLUMNS.indexOf(key);
+    const byName = new Map(rows.slice(1).map((row) => [row[col("firstName")], row]));
+    expect([...byName.keys()].sort()).toEqual(["Ana", "Bogdan"]);
+
+    const csvResponse = await downloadSponsorList(csv(event.id));
+    const csvLines = new TextDecoder("utf-8", { ignoreBOM: true }).decode(await csvResponse.arrayBuffer()).slice(CSV_BOM.length).split("\r\n");
+    expect(csvLines.slice(1).map((line) => line.split(",")[0]).sort()).toEqual([...byName.keys()].sort());
+
+    const anaRow = byName.get("Ana")!;
+    expect(anaRow[col("email")]).toMatch(/^ana\d+@example\.ro$/);
+    expect(anaRow[col("event")]).toBe("Crosul toamnei");
+    expect(anaRow[col("promoConsentedAt")]).toBeDefined();
+    expect(anaRow[col("promoNotice")]).toBe("2");
+    expect(anaRow[col("listPublic")]).toBe("Da");
+    expect(anaRow[col("listSocials")]).toBe("Da");
+    expect(anaRow[col("termsVersion")]).toBe("3");
+    expect(anaRow[col("termsAcceptedAt")]).toBeDefined();
+    expect(anaRow[col("declarationVersion")]).toBe("5");
+    expect(anaRow[col("declarationSignedAt")]).toBeDefined();
+    expect(anaRow[col("status")]).toBe("Confirmată");
+    const bogdanRow = byName.get("Bogdan")!;
+    expect(bogdanRow[col("listPublic")]).toBe("Nu");
+    expect(bogdanRow[col("listSocials")]).toBe("Nu");
+    expect(bogdanRow[col("termsVersion")]).toBeUndefined();
+    expect(bogdanRow[col("declarationVersion")]).toBeUndefined();
+    expect(bogdanRow[col("status")]).toBe("Pe lista de așteptare");
+    // Never the birth date or the phone.
+    expect(JSON.stringify(rows)).not.toMatch(/1985-03-02|\+40711111111/);
+
+    const audits = await db.select().from(auditLogs).where(eq(auditLogs.action, "registrations.sponsor_list_exported"));
+    const metadata = audits.map((row) => row.metadataJson as { format: string; count: number; registrationIds: string[] });
+    expect(metadata.map((entry) => entry.format).sort()).toEqual(["csv", "xlsx"]);
+    for (const entry of metadata) {
+      expect(entry.count).toBe(2);
+      expect([...entry.registrationIds].sort()).toEqual([ana.id, bogdan.id].sort());
+    }
+    // The registration's page reads both downloads back as «Dată partenerilor».
+    expect(await listPartnerShares(db, ana.id)).toHaveLength(2);
+  });
+
+  it("reads in English for an English reader", async () => {
+    await approveNotice(2, sharing, V1_AT);
+    const event = await createEvent("crosul-toamnei", "Crosul toamnei");
+    await seedRow(event.id, "Ana", { listOptOut: false });
+    state.cookie = (await staff("ADMIN")).id;
+    const { rows, sheetName } = readSheet(Buffer.from(await (await downloadSponsorList(excel(event.id, "en"))).arrayBuffer()));
+    expect(sheetName).toBe("Sponsors");
+    expect(rows[0][SPONSOR_SHEET_COLUMNS.indexOf("listPublic")]).toBe("Public list & results");
+    expect(rows[1][SPONSOR_SHEET_COLUMNS.indexOf("listPublic")]).toBe("Yes");
+    expect(rows[1][SPONSOR_SHEET_COLUMNS.indexOf("event")]).toBe("Crosul toamnei (en)");
+  });
+
+  it("serves the Organizer and the Administrator, refuses Tehnic and the others on the server, and refuses the file without a sharing notice", async () => {
+    await approveNotice(2, sharing, V1_AT);
+    const event = await createEvent("crosul-toamnei", "Crosul toamnei");
+    await seedRow(event.id, "Ana");
+    for (const role of ["DEV", "CONTRIBUTOR", "COPYWRITER"] as const) {
+      state.cookie = (await staff(role)).id;
+      expect((await downloadSponsorList(excel(event.id))).status, role).toBe(403);
+    }
+    for (const role of ["MODERATOR", "ADMIN", "SUPERADMIN"] as const) {
+      state.cookie = (await staff(role)).id;
+      expect((await downloadSponsorList(excel(event.id))).status, role).toBe(200);
+    }
+    expect(await db.select().from(auditLogs).where(eq(auditLogs.action, "registrations.sponsor_list_exported"))).toHaveLength(3);
+
+    await resetTables(db);
+    await approveNotice(1, boxOnly, V1_AT);
+    state.cookie = (await staff("ADMIN")).id;
+    expect((await downloadSponsorList(new Request("http://localhost/api/admin/registrations/sponsor-list?format=xlsx"))).status).toBe(409);
+  });
+});
+
+describe("§581 «Doar cu oferte și beneficii» on the registrations list, and the export that follows it", () => {
+  it("narrows the list to who said yes on a real, standing registration — the one condition of §570 — and the export holds the same rows", async () => {
+    await approveNotice(1, boxOnly, V1_AT);
+    await approveNotice(2, sharing, V2_AT);
+    const event = await createEvent("crosul-toamnei", "Crosul toamnei");
+    const ana = await seedRow(event.id, "Ana", { listOptOut: false });
+    const bogdan = await seedRow(event.id, "Bogdan", { status: "WAITLISTED" });
+    // A yes under the older notice: consented to the club, so on screen — only the sponsor file leaves it out.
+    const ioana = await seedRow(event.id, "Ioana", { version: 1, at: UNDER_V1 });
+    await seedRow(event.id, "Horia", { promoConsent: false });
+    await seedRow(event.id, "Dan", { status: "CANCELLED" });
+    await seedRow(event.id, "Gelu", { kind: "TEST" });
+
+    const filtered = await listRegistrationsForAdmin(db, { eventId: event.id, promoConsented: true });
+    expect(filtered.map((row) => row.id).sort()).toEqual([ana.id, bogdan.id, ioana.id].sort());
+    expect(await countRegistrationsForAdmin(db, { eventId: event.id, promoConsented: true })).toBe(3);
+    // The same rows as the club's list on «Newsletter» (§562, `promoListed`).
+    const clubList = await sponsorListCandidates(event.id);
+    expect(clubList.sort()).toEqual(filtered.map((row) => row.id).sort());
+    // Unfiltered, the list holds everyone.
+    expect((await listRegistrationsForAdmin(db, { eventId: event.id })).length).toBe(6);
+
+    state.cookie = (await staff("MODERATOR")).id;
+    const exported = async (query: string) => {
+      const response = await exportRegistrations(new Request(`http://localhost/api/admin/registrations/export?eventId=${event.id}${query}`));
+      expect(response.status).toBe(200);
+      return (await response.text()).split("\r\n");
+    };
+    const [header, ...lines] = await exported("&promo=1");
+    expect(lines.map((line) => line.split(",")[2]).sort()).toEqual(["Ana", "Bogdan", "Ioana"]);
+    // The public-list tick in its own column beside the socials (§581).
+    const at = header.split(",").indexOf("Public list & results");
+    expect(header.split(",")[at - 1]).toBe("Socials on the public list");
+    expect(lines.find((line) => line.startsWith("Crosul toamnei,Ana "))?.split(",")[at]).toBe("Yes");
+    expect(lines.find((line) => line.startsWith("Crosul toamnei,Bogdan "))?.split(",")[at]).toBe("");
+    // Without the filter, every real row (the test row is never exported, §30).
+    expect((await exported("")).length - 1).toBe(5);
+    // The Excel export follows the filter too.
+    const workbook = await exportRegistrations(new Request(`http://localhost/api/admin/registrations/export?format=xlsx&eventId=${event.id}&promo=1`));
+    expect(readSheet(Buffer.from(await workbook.arrayBuffer())).rows).toHaveLength(4);
+  });
+});
+
+async function sponsorListCandidates(eventId: string): Promise<string[]> {
+  const rows = await db.select({ id: registrations.id }).from(registrations).where(promoListed(eventId));
+  return rows.map((row) => row.id);
+}

@@ -10,7 +10,7 @@ import { CSV_BOM } from "@/modules/newsletter/subscribers-csv";
 import { canExportSponsorList } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import { csvCell } from "./csv";
-import { reachesPartner, sponsorShareGate, type SponsorShareGate } from "./domain/sponsor-share";
+import { noticeVersionInForceAt, reachesPartner, sponsorShareGate, type SponsorShareGate } from "./domain/sponsor-share";
 
 /**
  * «Descarcă lista pentru sponsori» (§570, amending §562 and §550). The owner, 2026-09-29: "I need to
@@ -33,7 +33,9 @@ import { reachesPartner, sponsorShareGate, type SponsorShareGate } from "./domai
  * left out, the safe side. The club's own sending (§562's list) is not narrowed: the guardian's address receives it.
  *
  * **The minimum.** Prenume, Nume, Email, Eveniment, Data acordului — never the birth date, the
- * phone, the health note, the declaration's facts or the address holder's other people.
+ * phone, the health note, the declaration's facts or the address holder's other people. The Excel
+ * file (§581, `sponsor-sheet.ts`) holds the same rows with every tick the person gave beside the
+ * five — the club's own check of who consented to what; the CSV stays the file for a partner.
  *
  * **Who may take it.** `canExportSponsorList` (the Organizer, the Administrator, the
  * Superadministrator), asserted here and in the route (BR-REQ-060-01); offered only while the notice
@@ -76,6 +78,16 @@ export type PromoConsentRow = {
   privacyNoticeVersion: number;
   /** The participant's birth date (`YYYY-MM-DD`), read only to keep a minor out of the partners' list; never in a file. */
   birthDate: string | null;
+  /**
+   * The person's other ticks, for the Excel file's columns (§581): the registration's state, the
+   * public-list tick (`list_opt_out` false), the socials beside the name, and the terms accepted on
+   * the form (§421, §425). Never in the CSV, which keeps its five columns.
+   */
+  status: RegistrationStatus;
+  listPublic: boolean;
+  listSocials: boolean;
+  termsVersion: number | null;
+  termsAcceptedAt: Date | null;
 };
 
 /** The one condition of who is listed, per event or across events. */
@@ -105,6 +117,11 @@ export async function readPromoConsentRows<T extends Record<string, unknown>>(
       consentedAt: registrations.promoConsentAt,
       privacyNoticeVersion: registrations.privacyNoticeVersion,
       birthDate: registrations.birthDate,
+      status: registrations.status,
+      listOptOut: registrations.listOptOut,
+      listSocials: registrations.listSocials,
+      termsVersion: registrations.termsVersion,
+      termsAcceptedAt: registrations.termsAcceptedAt,
     })
     .from(registrations)
     .innerJoin(participants, eq(participants.id, registrations.participantId))
@@ -112,10 +129,10 @@ export async function readPromoConsentRows<T extends Record<string, unknown>>(
     .where(where)
     .orderBy(sql`${registrations.promoConsentAt} desc nulls last`, desc(registrations.createdAt), asc(registrations.id))
     .limit(input.limit);
-  return rows.map((row) => {
+  return rows.map(({ listOptOut, ...row }) => {
     const first = row.firstName?.trim();
     const last = row.lastName?.trim();
-    return { ...row, firstName: first || row.name, lastName: first ? (last ?? "") : "" };
+    return { ...row, listPublic: !listOptOut, firstName: first || row.name, lastName: first ? (last ?? "") : "" };
   });
 }
 
@@ -128,10 +145,20 @@ export async function readSponsorShareGate<T extends Record<string, unknown>>(db
   return sponsorShareGate(await findSponsorShareVersions(db));
 }
 
+/** A row of the sponsor list: the yes, and the notice it was given under (§581, the Excel file's column). */
+export type SponsorListRow = PromoConsentRow & {
+  /**
+   * The privacy notice in force at the moment of the yes (`noticeVersionInForceAt`) — the text it
+   * was given under; for a tick on the form, the one the registration records. Always a sharing
+   * notice on a listed row (`sharedWithSponsors` asks it).
+   */
+  consentNoticeVersion: number;
+};
+
 export type SponsorList = {
   /** Whether the notice in force describes the sharing, in every language: the button's switch. */
   offered: boolean;
-  rows: PromoConsentRow[];
+  rows: SponsorListRow[];
 };
 
 /** What a page shows beside the button: the switch and how many rows the file would hold. */
@@ -166,7 +193,12 @@ export async function sponsorList<T extends Record<string, unknown>>(
   const gate = sponsorShareGate(versions);
   if (gate.sharing.size === 0) return { offered, rows: [] };
   const candidates = await readPromoConsentRows(db, { locale: input.locale, eventId: input.eventId, limit: SPONSOR_LIST_LIMIT, noticeVersions: [...gate.sharing] });
-  return { offered, rows: candidates.filter((row) => mayReachPartner(row, gate, input.now)) };
+  return {
+    offered,
+    rows: candidates
+      .filter((row) => mayReachPartner(row, gate, input.now))
+      .map((row) => ({ ...row, consentNoticeVersion: (row.consentedAt && noticeVersionInForceAt(gate.versions, row.consentedAt)) ?? row.privacyNoticeVersion })),
+  };
 }
 
 /**
@@ -207,12 +239,21 @@ export function buildSponsorListCsv(header: SponsorListCsvHeader, rows: readonly
   return `${CSV_BOM}${lines.join("\r\n")}`;
 }
 
+/** The two files of the one list (§581): the CSV's five columns, or the Excel file with every tick beside them. */
+export type SponsorListFormat = "csv" | "xlsx";
+
+/** `?format=xlsx` is the Excel file; anything else is the CSV, as before §581. */
+export function sponsorListFormat(raw: string | null): SponsorListFormat {
+  return raw === "xlsx" ? "xlsx" : "csv";
+}
+
 /**
  * The file's name, with the club's date: `sponsori-crosul-toamnei-2026-09-29.csv` for one event
- * (its slug in the reader's language), `sponsori-toate-2026-09-29.csv` for every event. Only
- * `a-z`, digits and hyphens reach the header, whatever a slug holds.
+ * (its slug in the reader's language), `sponsori-toate-2026-09-29.csv` for every event, and
+ * `.xlsx` for the Excel file (§581). Only `a-z`, digits and hyphens reach the header, whatever a
+ * slug holds.
  */
-export function sponsorListFileName(eventSlug: string | null, day: string): string {
+export function sponsorListFileName(eventSlug: string | null, day: string, format: SponsorListFormat = "csv"): string {
   const scope = eventSlug ? eventSlug.toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "") || "eveniment" : "toate";
-  return `sponsori-${scope}-${day}.csv`;
+  return `sponsori-${scope}-${day}.${format}`;
 }

@@ -8,6 +8,12 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.45-2026-09-27
+
+- **The birth date masks itself as you type** — digits only, the dots added by the box («11051990» shows «11.05.1990»), a backspace over a dot removes the digit before it, and a pasted «11/05/1990» or `1990-05-11` is shown in the mask; the mask is Maskito's (5.6.0, Apache-2.0, about 8.5 kB gzipped on the three pages with the field). §578.
+- **«Previzualizare» in the event editor** — the listing card and the whole event page drawn from what is typed, before saving or publishing, in Română or English, at a phone's width or a desktop's; nothing is saved, the registration button shows disabled, and a language still missing its summary is marked «incomplet». §579.
+- **Bold and a highlighted line in the participant emails** — every message puts its one fact on a soft blue band (the race number and desk code, the offer's deadline, the start and the place, the cancellation), the key facts in bold, the deadline with its month spelled out, the one button right under the line that asks for it, and the side notes quieter; the plain text marks the line with ▶. The previews on «Emailuri» show it. §580.
+- **The sponsor list as Excel, with every tick** — «Descarcă lista pentru sponsori (Excel)» gives the same people as the CSV in one sheet «Sponsori», each consent in its own column (offers and benefits with its notice, the public list & results, the socials, the terms, the declaration, the state); the CSV stays beside it for a partner; a box «Doar cu oferte și beneficii» on the registrations list shows who said yes, and the export follows it; the full export gains «Public list & results». §581.
 ## BR-V2.44-2026-09-27
 
 - **A second person on the same address is no longer answered «Ești deja înscris»** when their birth date is a registered person's day: another name and the other sex are another person, confirmed from the inbox like anybody else. Same-sex twins keep the sentence that says how they are registered, and it is said only when the day really is the same. **The limit of four people per email address is now said** under the form's address box, as «2 din 4» on the family's screens, on «Înscrierile mele», in the terms and in the refusal at the limit. §576.

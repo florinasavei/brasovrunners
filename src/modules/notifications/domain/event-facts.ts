@@ -82,7 +82,8 @@ export type EventFactsBlock = { html: string; text: string };
 type Translate = (key: string, values?: Record<string, string | number>) => string;
 
 /** A piece of a row's line: words, or words that are a link. */
-type Piece = { text: string; url?: string };
+/** `bold`: a fact a runner hunts for — the day, the hours, the place's name (§580); the text half is the same words. */
+type Piece = { text: string; url?: string; bold?: boolean };
 type Row = { label: string; lines: Piece[][] };
 
 /** The `Event` catalogue outside a request — the renderer runs from the scheduler (`calendar-labels.ts`). */
@@ -108,7 +109,7 @@ export function eventFactsBlock(details: EmailEventFacts, locale: Locale, weathe
   const times = details.raceStartsAt
     ? [t("gatheringAt", { time: time(details.startsAt) }), t("raceStartAt", { time: time(details.raceStartsAt) })]
     : [time(details.startsAt)];
-  rows.push({ label: t("when"), lines: [[{ text: day }, ...times.map((text) => ({ text }))]] });
+  rows.push({ label: t("when"), lines: [[{ text: day, bold: true }, ...times.map((text) => ({ text, bold: true }))]] });
 
   // Vremea: the forecast at the start, right under «Când», the hour it is for (§402), and the credit its licence asks for, as a word.
   if (weather) rows.push({ label: weather.label, lines: [[{ text: weather.line }], [{ text: weather.credit }]] });
@@ -120,7 +121,7 @@ export function eventFactsBlock(details: EmailEventFacts, locale: Locale, weathe
     const name = details.locationName?.trim();
     const address = details.locationAddress?.trim();
     const where: Piece[][] = [
-      ...(name ? [[{ text: name }]] : []),
+      ...(name ? [[{ text: name, bold: true }]] : []),
       ...(address ? [[{ text: address }]] : []),
       ...(details.mapUrl ? [[{ text: t("openMap"), url: details.mapUrl }]] : []),
     ];
@@ -200,7 +201,11 @@ function escapeHtml(value: string): string {
  */
 function blockHtml(rows: Row[]): string {
   const piece = (part: Piece) =>
-    part.url ? `<a href="${escapeHtml(part.url)}" style="color:${COLOR.blueInk}">${escapeHtml(part.text)}</a>` : escapeHtml(part.text);
+    part.url
+      ? `<a href="${escapeHtml(part.url)}" style="color:${COLOR.blueInk}">${escapeHtml(part.text)}</a>`
+      : part.bold
+        ? `<strong>${escapeHtml(part.text)}</strong>`
+        : escapeHtml(part.text);
   const body = rows
     .map((row, index) => {
       const lines = row.lines.map((line) => line.map(piece).join(" · ")).join("<br>");

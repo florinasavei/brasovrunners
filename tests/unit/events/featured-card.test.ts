@@ -189,6 +189,8 @@ describe("§470 the listing draws the lead as the first card of its one grid", (
 
   it("gives the upcoming grid, the «Data se anunță» section (§533) and the past fold one grid (`CARD_GRID_SX`): one to three equal columns", () => {
     expect(page.match(/sx=\{CARD_GRID_SX\}/g)).toHaveLength(3);
-    expect(page).toContain('gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))", xl: "repeat(3, minmax(0, 1fr))" }');
+    // The grid itself lives beside the card's shape since §579, where the editor's preview draws it too.
+    expect(page).toContain('import { CARD_GRID_SX } from "@/modules/events/ui/card-layout";');
+    expect(readFileSync("src/modules/events/ui/card-layout.ts", "utf8")).toContain('gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))", xl: "repeat(3, minmax(0, 1fr))" }');
   });
 });

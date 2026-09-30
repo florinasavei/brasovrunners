@@ -92,11 +92,34 @@ const bold = (value: string) => ({ value, fontWeight: "bold" as const });
  * is handed the club's own wall clock instead, and the format `dd.mm.yyyy hh:mm` shows it on the
  * 24-hour clock — Excel's `hh` is 24-hour whenever the format has no `AM/PM`.
  */
-function onClubClock(at: Date | null): Date | null {
+export function onClubClock(at: Date | null): Date | null {
   return at ? new Date(`${toWallTimeInput(at, CLUB_TIME_ZONE)}:00.000Z`) : null;
 }
 
-const STAMP_FORMAT = "dd.mm.yyyy hh:mm";
+export const STAMP_FORMAT = "dd.mm.yyyy hh:mm";
+
+/** One column of a sheet: its header, its width in characters, and how a row becomes its cell. */
+export type SheetColumn<Row> = {
+  header: string;
+  width: number;
+  cell: (row: Row) => Record<string, unknown>;
+};
+
+/**
+ * The one writer every spreadsheet the backoffice hands out goes through — the start list here, the
+ * sponsor list (§581, `sponsor-sheet.ts`): a bold header row kept on screen, the columns' widths,
+ * the club's date format, and a sheet name Excel accepts (at most 31 characters, none of `: \ / ? * [ ]`).
+ */
+export async function writeSheet<Row>(columns: readonly SheetColumn<Row>[], rows: readonly Row[], sheetName: string, fallbackName: string): Promise<Buffer> {
+  const data = [columns.map((column) => bold(column.header)), ...rows.map((row) => columns.map((column) => column.cell(row)))];
+  return writeExcelFile(data, {
+    sheet: sheetName.replace(/[:\\/?*[\]]/g, " ").slice(0, 31) || fallbackName,
+    columns: columns.map((column) => ({ width: column.width })),
+    // The header stays on screen while somebody scrolls two hundred runners.
+    stickyRowsCount: 1,
+    dateFormat: STAMP_FORMAT,
+  }).toBuffer();
+}
 
 /**
  * The columns, in the order a start list is read: who, then what they entered as, then the
@@ -104,11 +127,7 @@ const STAMP_FORMAT = "dd.mm.yyyy hh:mm";
  * about. `id` is first and narrow: it is the handle a re-import matches on, and it is the one
  * column a club member must not retype.
  */
-const COLUMNS: Array<{
-  header: string;
-  width: number;
-  cell: (row: RegistrationSheetRow) => Record<string, unknown>;
-}> = [
+const COLUMNS: Array<SheetColumn<RegistrationSheetRow>> = [
   { header: "ID", width: 38, cell: (row) => ({ value: row.id, type: String }) },
   // Named as the backoffice names it (§180), and wide enough for the heading rather than the
   // number: a column headed by a truncated word is what makes somebody widen it by hand.
@@ -144,6 +163,8 @@ const COLUMNS: Array<{
   { header: "Instagram", width: 18, cell: (row) => ({ value: row.instagramHandle, type: String }) },
   // Beside the two (§500): whether the public list prints them. The sheet is matched by header, not position.
   { header: "Socials on the public list", width: 12, cell: (row) => ({ value: row.listSocials ?? false, type: Boolean }) },
+  // The public-list tick itself (§143, §570, §581), beside the socials it governs: every tick the person gave has its column.
+  { header: "Public list & results", width: 12, cell: (row) => ({ value: row.listPublic ?? false, type: Boolean }) },
   { header: "Submitted", width: 18, cell: (row) => ({ value: onClubClock(row.submittedAt), type: Date, format: STAMP_FORMAT }) },
   { header: "Confirmed", width: 18, cell: (row) => ({ value: onClubClock(row.confirmedAt), type: Date, format: STAMP_FORMAT }) },
   { header: "Checked in", width: 18, cell: (row) => ({ value: onClubClock(row.checkedInAt), type: Date, format: STAMP_FORMAT }) },
@@ -174,17 +195,5 @@ export async function buildRegistrationsWorkbook(
   rows: readonly RegistrationSheetRow[],
   sheetName: string,
 ): Promise<Buffer> {
-  const data = [
-    COLUMNS.map((column) => bold(column.header)),
-    ...rows.map((row) => COLUMNS.map((column) => column.cell(row))),
-  ];
-
-  return writeExcelFile(data, {
-    // Excel refuses a sheet name over 31 characters or containing any of : \ / ? * [ ].
-    sheet: sheetName.replace(/[:\\/?*[\]]/g, " ").slice(0, 31) || "Participants",
-    columns: COLUMNS.map((column) => ({ width: column.width })),
-    // The header stays on screen while somebody scrolls two hundred runners.
-    stickyRowsCount: 1,
-    dateFormat: "dd.mm.yyyy hh:mm",
-  }).toBuffer();
+  return writeSheet(COLUMNS, rows, sheetName, "Participants");
 }

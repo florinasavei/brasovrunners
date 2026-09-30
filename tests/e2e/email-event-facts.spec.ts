@@ -67,6 +67,44 @@ test.describe("the event's facts in the confirmed email's preview", () => {
 });
 
 /**
+ * §580 (the owner, 2026-09-30: «I need more bold and highlight in the emails sent to participants»)
+ * — the previews on `/admin/emails` show the new look: the confirmation's number and desk code on
+ * one highlighted band in each half, the offer's deadline bold with its month spelled out on the
+ * band, and its one button right under it. It reads nothing but the page, so both projects run it.
+ */
+test.describe("the highlighted band in the emails' preview", () => {
+  test("the confirmation's number and code, the offer's deadline and its button", async ({ page }) => {
+    await signIn(page, "Dev Copywriter");
+    await page.goto("/ro/admin/settings/emails?lang=ro");
+
+    const confirmed = page.locator("#main").locator("#email-REGISTRATION_CONFIRMED");
+    await openFold(confirmed);
+    const bands = confirmed.frameLocator("iframe").locator('[data-email-part="highlight"]');
+    await expect(bands).toHaveCount(2);
+    await expect(bands.nth(0)).toContainText("Numărul tău de concurs: 42");
+    await expect(bands.nth(0)).toContainText("EXAMPL");
+    await expect(bands.nth(1)).toContainText("Your race number: 42");
+    await expect(bands.nth(0).locator("strong", { hasText: "42" })).toHaveCount(1);
+    // A soft band, not the card's white.
+    const background = await bands.nth(0).evaluate((band) => getComputedStyle(band).backgroundColor);
+    expect(background).not.toBe("rgb(255, 255, 255)");
+    expect(background).not.toBe("rgba(0, 0, 0, 0)");
+
+    const offer = page.locator("#main").locator("#email-WAITLIST_SPOT_OFFER");
+    await openFold(offer);
+    const offerBand = offer.frameLocator("iframe").locator('[data-email-part="highlight"]').nth(0);
+    await expect(offerBand.locator("strong", { hasText: "2 octombrie 2026, la 18:30" })).toHaveCount(1);
+    const order = await offer.frameLocator("iframe").locator("body").evaluate((body) => ({
+      band: body.innerHTML.indexOf('data-email-part="highlight"'),
+      button: body.innerHTML.indexOf("Confirmă locul"),
+      cannotCome: body.innerHTML.indexOf('data-email-part="cannot-come"'),
+    }));
+    expect(order.button).toBeGreaterThan(order.band);
+    expect(order.cannotCome).toBeGreaterThan(order.button);
+  });
+});
+
+/**
  * §558 (the owner, 2026-09-29: «în fiecare mail trebuie să fie clar butonul de „Nu mai pot
  * ajunge”») — the preview of every message about a live registration shows «Nu mai pot ajunge»
  * under its button, in both halves, full width and a thumb's height, with its one sentence; a

@@ -108,6 +108,7 @@
   "Event": {
     "backToEvents": "Back to events",
     "editInBackoffice": "Edit",
+    "previewDoor": "preview",
     "opensInNewTab": "opens in a new tab",
     "photosNotice": "Photos and video may be taken at club events; the club publishes them in its gallery and on its channels. Don't want to appear? Tell the photographer or <contact>write to us</contact> and we take the photo down, no reason needed. Details in the <privacy>privacy notice</privacy>.",
     "date": "Date",
@@ -809,7 +810,9 @@
         "yes": "Offers and benefits: yes, since {date}",
         "no": "Offers and benefits: no",
         "staffNo": "Offers and benefits: no. The team cannot consent for the person; they give it themselves, from their registration's page."
-      }
+      },
+      "promoOnly": "Only with offers and benefits",
+      "promoOnlyHelp": "Those who ticked “offers and benefits”, with a registration that still stands. The export follows the filter."
     },
     "events": {
       "empty": "There is no event in the database.",
@@ -1113,6 +1116,26 @@
       "LEGAL_ALREADY_DELETED": "This version has already been deleted from the list. Its text stays in the archive."
     },
     "editor": {
+      "draftPreview": {
+        "intro": "The listing card and the event page, from what you have typed now. Nothing is saved or published.",
+        "run": "Preview",
+        "running": "Getting it ready…",
+        "views": "What you see",
+        "card": "Card",
+        "page": "Page",
+        "language": "Language",
+        "width": "Width",
+        "phone": "Phone (360)",
+        "desktop": "Desktop",
+        "idle": "Press «Preview» to see the card and the page.",
+        "asOfPress": "Shows what was typed at the last press of «Preview».",
+        "incomplete": "{language} incomplete — missing: {missing}",
+        "complete": "Both languages have everything publication needs.",
+        "refused": "This cannot be previewed as it is: the save would refuse these boxes.",
+        "failed": "The preview did not work. Try again.",
+        "forbidden": "Your role cannot preview the event.",
+        "frameTitle": "Event preview"
+      },
       "startsAt": "Event start",
       "startsAtHelp": "Local time of the event ({timezone}). For a race this is the gathering time.",
       "raceStartsAt": "Race start",
@@ -1733,6 +1756,10 @@
           "title": "Recurrence",
           "none": "Does not repeat",
           "on": "Repeats"
+        },
+        "preview": {
+          "title": "Preview",
+          "summary": "How it looks on the site — the card and the page, without saving"
         },
         "summary": {
           "filled": "written",
@@ -4757,6 +4784,7 @@
               "title": "Download the list (Excel or CSV)",
               "steps": [
                 "«Registrations» → pick the event → «Filter».",
+                "Tick «Only with offers and benefits» to see only who said yes to offers; the export follows the filter.",
                 "Press «Export to Excel» (or «Export CSV»). The file holds exactly the filtered rows, without test registrations.",
                 "The file carries identity documents and phone numbers: never send it to a group, and delete it within 7 days of the event."
               ]
@@ -4821,7 +4849,7 @@
                 "«Newsletter» → open the «Subscribers» card. Its line says how many are confirmed and how many pending.",
                 "Search under «Search the address» or choose «Topic» and «State», then press «Filter». «Download CSV» takes the list as filtered.",
                 "The «Participants who ticked offers and benefits» card: who ticked it when registering, with the address, the event and the date. «Download CSV» takes all of it. It is not the newsletter.",
-                "«Download the list for sponsors»: first name, last name, address, event and date, only for consents given under a notice that allows it. Note whom you give the file to; delete it within 30 days.",
+                "«Download the list for sponsors (Excel)»: the same people as the CSV, with every tick of each (offers, the public list, socials, terms, declaration, state) — for the club. Give the partner «Download CSV»: first name, last name, address, event and date. Only consents given under a notice that allows it. Note whom you give the file to; delete it within 30 days.",
                 "Removing an address is the Administrator's: tell them who asked."
               ]
             },
@@ -5034,7 +5062,7 @@
                 "«Download CSV» takes the list as filtered, with the same columns. Keep the file only as long as you need it, then delete it.",
                 "To remove someone, at their request: «Unsubscribe» on their row, then confirm. The address is deleted with its topics, as when the person unsubscribes.",
                 "The «Participants who ticked offers and benefits» card: who ticked it when registering, with the address, the event and the date. «Download CSV» takes all of it. It is not the newsletter.",
-                "«Download the list for sponsors»: first name, last name, address, event and date, only for consents given under a notice that allows it. Note whom you give the file to; delete it within 30 days."
+                "«Download the list for sponsors (Excel)»: the same people as the CSV, with every tick of each (offers, the public list, socials, terms, declaration, state) — for the club. Give the partner «Download CSV»: first name, last name, address, event and date. Only consents given under a notice that allows it. Note whom you give the file to; delete it within 30 days."
               ]
             },
             {
@@ -5886,7 +5914,7 @@
       "whoRemoved": "a team member (account removed)"
     },
     "sponsors": {
-      "button": "Download the list for sponsors",
+      "button": "Download the list for sponsors (Excel)",
       "count": {
         "one": "{count} person",
         "few": "{count} people",
@@ -5894,6 +5922,7 @@
       },
       "noticeMissing": "The privacy notice in force does not say the list may be given to partners.",
       "help": "First name, last name, address, event, consent date: adults only, consent given under a notice that allows it. Write whom it goes to: it stays on each registration in it. Delete the file in 30 days.",
+      "helpExcel": "The Excel file also has every tick of each person, so you see what they agreed to. Give the partner the CSV.",
       "recipient": "Who receives the list (optional)",
       "columns": {
         "firstName": "First name",
@@ -5901,6 +5930,33 @@
         "email": "Email",
         "event": "Event",
         "consentedAt": "Consent date"
+      },
+      "buttonCsv": "Download CSV",
+      "sheet": {
+        "name": "Sponsors",
+        "yes": "Yes",
+        "no": "No",
+        "columns": {
+          "firstName": "First name",
+          "lastName": "Last name",
+          "email": "Email",
+          "event": "Event",
+          "promoConsentedAt": "Offers and benefits (consent date)",
+          "promoNotice": "Privacy notice (version)",
+          "listPublic": "Public list & results",
+          "listSocials": "Socials on the public list",
+          "termsVersion": "Terms (version)",
+          "termsAcceptedAt": "Terms (accepted on)",
+          "declarationVersion": "Declaration (version)",
+          "declarationSignedAt": "Declaration (signed on)",
+          "status": "Registration state"
+        },
+        "states": {
+          "PENDING_DECLARATION": "Waiting for the declaration",
+          "WAITLISTED": "On the waiting list",
+          "WAITLIST_OFFERED": "Place offered",
+          "CONFIRMED": "Confirmed"
+        }
       }
     }
   },

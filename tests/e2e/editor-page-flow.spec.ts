@@ -152,6 +152,70 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
     await expect(page.getByText("În verificare", { exact: true })).toBeVisible();
   });
 
+  /*
+    §579 — «Previzualizare» (the owner, 2026-09-30: «vreau să pot face preview la eveniment, înainte
+    de salvare și publicare, ca să știu cum arată, atât pe card cât și descrierea completă»): an
+    unsaved title on the listing card and on the page, in Română and English, on a phone's width and
+    a desktop's, with what each language still lacks — and nothing saved.
+  */
+  test("«Previzualizare»: the unsaved event as the card and the page, both languages, both widths, nothing saved", async ({ page }) => {
+    test.skip(!editorUrl, "the create step did not run");
+    await signIn(page, "Dev Administrator");
+    await page.goto(editorUrl);
+    await hydrated(page);
+    const heading = (await page.getByTestId("editor-heading").textContent())?.trim() ?? "";
+
+    // Closed on arrival, its line saying what it is for, a glyph before its title (§521).
+    const box = editorBox(page, "Previzualizare");
+    await expect(box).not.toHaveAttribute("open", "");
+    await expect(box.locator(":scope > summary")).toContainText("Cum arată pe site — cardul și pagina, fără să salvezi");
+    await expect(box.locator(":scope > summary svg").first()).toBeVisible();
+
+    // A title typed and not saved.
+    const unsaved = `${heading} — nesalvat`;
+    await openEditorBox(page, "Titlu și rezumat");
+    await page.locator('[name="translations.ro.title"]').fill(unsaved);
+
+    await openEditorBox(page, "Previzualizare");
+    const run = page.getByTestId("draft-preview-run");
+    for (const control of [run, page.getByTestId("draft-preview-view-page"), page.getByTestId("draft-preview-locale-en"), page.getByTestId("draft-preview-width-desktop")]) {
+      expect((await control.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    }
+    await expect(page.getByTestId("draft-preview-locale-ro")).toHaveText("RO");
+    await expect(page.getByTestId("draft-preview-locale-en")).toHaveText("EN");
+    await run.click();
+
+    // The card, as the listing draws it, with the unsaved title — and what each language still lacks.
+    const ro = page.frameLocator('[data-testid="draft-preview-frame-ro"]');
+    await expect(ro.getByTestId("draft-preview-card")).toBeVisible();
+    await expect(ro.getByTestId("draft-preview-card").getByRole("heading", { name: unsaved })).toBeVisible();
+    await expect(page.getByTestId("draft-preview-incomplete-en")).toContainText("English incomplet — lipsește:");
+    await expect(page.getByTestId("draft-preview-incomplete-en")).toContainText("Titlu și rezumat › English › Rezumat");
+
+    // The page: the same title as its heading. No new request needed to switch.
+    await page.getByTestId("draft-preview-view-page").click();
+    await expect(ro.getByTestId("draft-preview-page").getByRole("heading", { level: 1, name: unsaved })).toBeVisible();
+
+    // English: its own frame, the English words of the page.
+    await page.getByTestId("draft-preview-locale-en").click();
+    const en = page.frameLocator('[data-testid="draft-preview-frame-en"]');
+    await expect(en.getByTestId("draft-preview-page").getByRole("heading", { level: 1 })).toBeVisible();
+    await expect(en.getByText("Back to events")).toBeVisible();
+
+    // A phone's 360 pixels, then a desktop's width, scaled to fit the card.
+    const frame = page.getByTestId("draft-preview-frame-en");
+    expect(await frame.evaluate((node) => (node as HTMLIFrameElement).clientWidth)).toBe(360);
+    await page.getByTestId("draft-preview-width-desktop").click();
+    expect(await frame.evaluate((node) => (node as HTMLIFrameElement).clientWidth)).toBe(1280);
+
+    // Nothing was saved: the editor, read again, still carries the saved title.
+    // (A second tab: this one holds unsaved boxes, and leaving it would be asked about.)
+    const fresh = await page.context().newPage();
+    await fresh.goto(editorUrl);
+    await expect(fresh.getByTestId("editor-heading")).toHaveText(heading);
+    await fresh.close();
+  });
+
   test("the grouped cards: «Când și unde», «Program, regulament și declarație» with the start list last in it, no film card", async ({ page }) => {
     test.skip(!editorUrl, "the create step did not run");
     await signIn(page, "Dev Administrator");

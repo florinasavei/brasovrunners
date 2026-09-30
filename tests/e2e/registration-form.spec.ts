@@ -156,7 +156,33 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
     const birthDateBox = page.locator('[name="birthDate"]');
     await expect(birthDateBox).toHaveAttribute("type", "text");
     await expect(birthDateBox).toHaveAttribute("placeholder", "ZZ.LL.AAAA");
-    await birthDateBox.pressSequentially("05/11/1990");
+    await expect(birthDateBox).toHaveAttribute("inputmode", "numeric");
+    await expect(birthDateBox).toHaveAttribute("autocomplete", "bday");
+    // Digits only: the box (Maskito's date mask) puts the dots in as they are typed (§578, amending §561).
+    await birthDateBox.pressSequentially("05");
+    await expect(birthDateBox).toHaveValue("05.");
+    await birthDateBox.pressSequentially("11");
+    await expect(birthDateBox).toHaveValue("05.11.");
+    await birthDateBox.pressSequentially("1990");
+    await expect(birthDateBox).toHaveValue("05.11.1990");
+    // A letter and a ninth digit are refused.
+    await birthDateBox.pressSequentially("7a");
+    await expect(birthDateBox).toHaveValue("05.11.1990");
+    // A backspace over a dot takes the digit before it, and the digits typed again come back.
+    await birthDateBox.press("End");
+    for (let key = 0; key < 4; key += 1) await birthDateBox.press("Backspace");
+    await expect(birthDateBox).toHaveValue("05.11");
+    await birthDateBox.press("Backspace");
+    await expect(birthDateBox).toHaveValue("05.1");
+    await birthDateBox.pressSequentially("11990");
+    await expect(birthDateBox).toHaveValue("05.11.1990");
+    // A pasted date is read whole, day first — the posted shape too.
+    await birthDateBox.press("ControlOrMeta+a");
+    await page.keyboard.insertText("5/11/1990");
+    await expect(birthDateBox).toHaveValue("05.11.1990");
+    await birthDateBox.press("ControlOrMeta+a");
+    await page.keyboard.insertText("1990-11-05");
+    await expect(birthDateBox).toHaveValue("05.11.1990");
     const birthDateHelper = page.locator(`#${await birthDateBox.getAttribute("id")}-helper-text`);
     await expect(birthDateHelper).toHaveText(/^Luni, 5 noiembrie 1990 · \d+ de ani în ziua evenimentului$/);
     await birthDateBox.blur();
@@ -165,9 +191,10 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
     const outline = await birthDateBox.locator("xpath=..").boundingBox();
     const helperBox = await birthDateHelper.boundingBox();
     expect(outline && helperBox && helperBox.y >= outline.y + outline.height - 0.5, "the echo is under the box, not over it").toBe(true);
-    // A phone's numeric keypad has no dot: eight digits are read the same.
+    // A phone's numeric keypad has no dot: eight digits are the whole date, masked as typed.
     await birthDateBox.fill("");
     await birthDateBox.pressSequentially("17051990");
+    await expect(birthDateBox).toHaveValue("17.05.1990");
     await expect(birthDateHelper).toHaveText(/^Joi, 17 mai 1990 · \d+ de ani în ziua evenimentului$/);
     await birthDateBox.blur();
     await expect(birthDateBox).toHaveValue("17.05.1990");

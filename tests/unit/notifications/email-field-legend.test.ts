@@ -242,17 +242,19 @@ describe("§373 the sample has every field, and each half of a preview its own l
     for (const locale of LOCALES) {
       for (const name of EMAIL_COPY_PLACEHOLDERS) expect(emailSampleValueOf(name, locale), `${locale} ${name}`).not.toBe("");
       const inSentence = (at: Date) => formatDay(at, { locale, timeZone: "Europe/Bucharest", style: "long", withTime: true, position: "inline" });
-      expect(EMAIL_SAMPLE[locale].holdExpiresAtFormatted).toBe(inSentence(EMAIL_SAMPLE_HOLD_EXPIRES_AT));
+      // A deadline spells its month out (§580, `formatDeadlineInSentence`); a moment keeps it short.
+      expect(EMAIL_SAMPLE[locale].holdExpiresAtFormatted).toBe(formatDay(EMAIL_SAMPLE_HOLD_EXPIRES_AT, { locale, timeZone: "Europe/Bucharest", style: "long", month: "long", withTime: true, position: "inline" }));
       expect(EMAIL_SAMPLE[locale].signedAtFormatted).toBe(inSentence(EMAIL_SAMPLE_SIGNED_AT));
     }
-    expect(EMAIL_SAMPLE.ro.holdExpiresAtFormatted).toBe("vineri, 2 oct. 2026, la 18:30");
+    expect(EMAIL_SAMPLE.ro.holdExpiresAtFormatted).toBe("vineri, 2 octombrie 2026, la 18:30");
+    expect(EMAIL_SAMPLE.en.holdExpiresAtFormatted).toBe("Friday, 2 October 2026, at 18:30");
     expect(EMAIL_SAMPLE.en.signedAtFormatted).toBe("Monday, 28 Sept 2026, at 19:42");
   });
 
   it("previews the declaration's hold and the time of signing, each half in its own words", () => {
     const declaration = renderBilingual("COMPLETE_DECLARATION", "ro", emailSampleFor("COMPLETE_DECLARATION", "ro"), emailSampleActionUrl("ro")).text;
-    expect(declaration).toContain("locul îți este ținut până vineri, 2 oct. 2026, la 18:30");
-    expect(declaration).toContain("the place is held for you until Friday, 2 Oct 2026, at 18:30");
+    expect(declaration).toContain("locul îți este ținut până vineri, 2 octombrie 2026, la 18:30");
+    expect(declaration).toContain("the place is held for you until Friday, 2 October 2026, at 18:30");
     const signed = renderBilingual("DECLARATION_SIGNED", "en", emailSampleFor("DECLARATION_SIGNED", "en"), emailSampleActionUrl("en")).text;
     expect(signed).toContain("you signed for The autumn cross, on Monday, 28 Sept 2026, at 19:42");
     expect(signed).toContain("ai semnat-o pentru Crosul de toamnă, luni, 28 sept. 2026, la 19:42");

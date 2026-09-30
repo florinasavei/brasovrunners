@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { confirmDialog } from "./support/confirm";
-import { signIn } from "./support/featured-event";
+import { hydrated, signIn } from "./support/featured-event";
 
 /**
  * BR-REQ-050-03 — an organizer writes "About Brașov Runners" and a visitor can read it.
@@ -240,9 +240,12 @@ test.describe.serial("BR-REQ-050-03 standing pages", () => {
     // §571: one order for every entry of the menu, the Administrator's, on «Pagini» → «Paginile clubului».
     await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin/pages");
-    const card = page.getByTestId("menu-order");
+    await hydrated(page);
+    // Inside `#main`, and each entry by its role: while the page streams, Next can hold a second,
+    // hidden copy of the card outside it for a moment (CI on #299 met both copies of the entry).
+    const card = page.locator("#main").getByTestId("menu-order");
     await card.locator("summary").first().click();
-    const entry = card.getByTestId("menu-order-list").locator("li").filter({ hasText: title });
+    const entry = card.getByTestId("menu-order-list").getByRole("listitem").filter({ hasText: title });
     await expect(entry).toBeVisible();
 
     // «Sus» until it is first: the button goes disabled at the top.
@@ -270,6 +273,7 @@ test.describe.serial("BR-REQ-050-03 standing pages", () => {
 
     // Back to the end, so the other specs meet the menu they expect.
     await page.goto("/ro/admin/pages");
+    await hydrated(page);
     await card.locator("summary").first().click();
     const down = entry.getByRole("button", { name: `Mută „${title}” mai jos` });
     for (let presses = 0; presses < 60 && (await down.isEnabled()); presses += 1) await down.click();

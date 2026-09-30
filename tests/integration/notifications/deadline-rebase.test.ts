@@ -210,7 +210,7 @@ describe("§513 a participant's deadline counts from the moment its email leaves
     const offer = mail.calls.find((call) => call.to === "ion@example.ro" && /S-a eliberat un loc/.test(call.text));
     expect(offer).toBeDefined();
     const [{ timezone }] = await db.select({ timezone: events.timezone }).from(events).where(eq(events.id, race.id));
-    const when = formatDay(moved, { locale: "ro", timeZone: timezone, style: "long", withTime: true, position: "inline" });
+    const when = formatDay(moved, { locale: "ro", timeZone: timezone, style: "long", month: "long", withTime: true, position: "inline" });
     expect(offer?.text).toContain(`până ${when} (ai la dispoziție ${hoursPhrase("ro", DEFAULT_DEADLINES.offerHours)})`);
     // …and its link lives exactly as long as the offer does.
     const [token] = await db
