@@ -73,7 +73,6 @@ describe("§485 GET /api/admin/media — what «Din galerie» lists", () => {
     const page = await createPage(db, {
       actor: editor,
       fields: {
-        navOrder: "10",
         translations: {
           ro: {
             slug: "despre",

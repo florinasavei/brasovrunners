@@ -1,14 +1,11 @@
-import { and, asc, count, desc, eq, inArray, sql } from "drizzle-orm";
-import { eventTranslations } from "@/db/schema/events";
-import { participants } from "@/db/schema/participants";
-import { registrations, type RegistrationStatus } from "@/db/schema/registrations";
+import { count } from "drizzle-orm";
+import { registrations } from "@/db/schema/registrations";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
-import { csvCell } from "@/modules/registrations/csv";
+import { buildSponsorListCsv, promoListed, readPromoConsentRows, type PromoConsentRow, type SponsorListCsvHeader } from "@/modules/registrations/sponsor-list";
 import { canSendNewsletter } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
-import { CSV_BOM } from "./subscribers-csv";
 
 /**
  * «Participanți care au bifat oferte și beneficii» (§562, amending §550): the second fold of the
@@ -30,26 +27,19 @@ import { CSV_BOM } from "./subscribers-csv";
  *
  * **Two consents, two lists.** The newsletter's subscribers are the fold above; this is not a
  * subscription and an unsubscribe there changes nothing here. The club sends the materials itself;
- * the partners never receive the list (the notice says so).
+ * the partners never receive this list — only the sponsor list (§570), from the same read.
+ *
+ * **One query (§570).** The rows come from `readPromoConsentRows`, the read the sponsor list narrows,
+ * and the file is `buildSponsorListCsv`'s five columns — one shape for every download of the yes.
  */
 
-/** The states whose yes is listed: an address proved, a registration that still stands. */
-export const PROMO_LISTED_STATUSES = ["PENDING_DECLARATION", "WAITLISTED", "WAITLIST_OFFERED", "CONFIRMED"] as const satisfies readonly RegistrationStatus[];
+/** The states whose yes is listed — kept here under its §562 name; the one list is the sponsor list's. */
+export { PROMO_LISTED_STATUSES } from "@/modules/registrations/sponsor-list";
 
 /** The table draws at most this many rows; the count and the CSV are always the whole list. */
 export const PROMO_TABLE_LIMIT = 500;
 
-export type PromoConsenterRow = {
-  registrationId: string;
-  /** The registered name, as the registration carries it. */
-  name: string;
-  /** The address the person's messages go to, as typed. */
-  email: string;
-  /** The event's title in the reader's language; null when the event has none in it. */
-  eventTitle: string | null;
-  /** The moment of the yes (or of the last change to it). */
-  consentedAt: Date | null;
-};
+export type PromoConsenterRow = PromoConsentRow;
 
 export type PromoConsenterList = { rows: PromoConsenterRow[]; total: number; truncated: boolean };
 
@@ -59,24 +49,10 @@ function assertMayRead(actor: Pick<StaffUser, "role">): void {
   }
 }
 
-const listed = () =>
-  and(eq(registrations.promoConsent, true), eq(registrations.kind, "REAL"), inArray(registrations.status, [...PROMO_LISTED_STATUSES]));
+const listed = () => promoListed();
 
 async function readRows<T extends Record<string, unknown>>(db: Database<T>, locale: Locale, limit: number): Promise<PromoConsenterRow[]> {
-  return db
-    .select({
-      registrationId: registrations.id,
-      name: registrations.registeredName,
-      email: participants.deliveryEmail,
-      eventTitle: eventTranslations.title,
-      consentedAt: registrations.promoConsentAt,
-    })
-    .from(registrations)
-    .innerJoin(participants, eq(participants.id, registrations.participantId))
-    .leftJoin(eventTranslations, and(eq(eventTranslations.eventId, registrations.eventId), eq(eventTranslations.locale, locale)))
-    .where(listed())
-    .orderBy(sql`${registrations.promoConsentAt} desc nulls last`, desc(registrations.createdAt), asc(registrations.id))
-    .limit(limit);
+  return readPromoConsentRows(db, { locale, limit });
 }
 
 /** The fold's read: the first rows for the table, and how many there are in all. */
@@ -103,19 +79,15 @@ export async function exportPromoConsenters<T extends Record<string, unknown>>(
   return readRows(db, locale, limit);
 }
 
-export type PromoConsenterCsvHeader = { name: string; email: string; event: string; consentedAt: string };
+export type PromoConsenterCsvHeader = SponsorListCsvHeader;
 
 /**
- * The file (§562): the subscribers CSV's rules (§550) — every cell through `csvCell` (formula
- * characters neutralized, quotes doubled), CRLF, a BOM first for Excel on Windows, the moment in
- * ISO 8601 — with the headers in the reader's language.
+ * The file (§562): since §570 the sponsor list's own shape — Prenume, Nume, Email, Eveniment, Data
+ * acordului — through the one writer (`buildSponsorListCsv`: `csvCell`, CRLF, a BOM, ISO 8601), so
+ * the club's list and the partners' read alike.
  */
 export function buildPromoConsentersCsv(header: PromoConsenterCsvHeader, rows: readonly PromoConsenterRow[]): string {
-  const lines = [
-    [header.name, header.email, header.event, header.consentedAt].map(csvCell).join(","),
-    ...rows.map((row) => [row.name, row.email, row.eventTitle ?? "", row.consentedAt?.toISOString() ?? ""].map(csvCell).join(",")),
-  ];
-  return `${CSV_BOM}${lines.join("\r\n")}`;
+  return buildSponsorListCsv(header, rows);
 }
 
 /** The file's name, with the club's date: `oferte-si-beneficii-2026-09-29.csv`. */

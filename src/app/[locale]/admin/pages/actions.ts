@@ -6,14 +6,15 @@ import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
 import type { EditorialStatus } from "@/modules/staff-identity/domain/roles";
+import { saveMenuOrder } from "@/modules/content/menu/menu-order";
 import {
   createPage,
   deletePage,
-  movePageInNav,
   savePage,
   transitionPage,
 } from "@/modules/content/pages/service";
-import { requireStaff } from "@/modules/staff-identity/session";
+import { canManageClubSettings } from "@/modules/staff-identity/domain/roles";
+import { requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
 
@@ -46,10 +47,12 @@ async function backTo(path: string, outcome: { error?: string; saved?: string })
   redirect(`${path}${query}#admin-alert`);
 }
 
-/** Both languages, read from the one form the editor renders. */
+/**
+ * Both languages, read from the one form the editor renders. No `navOrder` since §571: a page's
+ * place in the menu is «Ordinea meniului»'s, one order for every entry.
+ */
 function readFields(form: FormData) {
   return {
-    navOrder: text(form, "navOrder"),
     translations: Object.fromEntries(
       routing.locales.map((locale) => [
         locale,
@@ -129,28 +132,24 @@ export async function transitionPageAction(_previous: FormOutcome | null, form: 
 }
 
 /**
- * Move a page one place up or down the site navigation, from the list (BR-REQ-050-03).
- *
- * It lands back on the list rather than on the page it moved, because the thing being changed
- * is the order — which is only visible as a list — and the organizer is almost never moving one
- * page once.
+ * «Ordinea meniului» (§571): the site menu's one order, every entry first to last — the sections
+ * and the custom pages together, which replaced the custom pages' own ↑ / ↓. A club setting
+ * (§450): the Administrator's at the door, and the service asserts it again. Asked first (§384):
+ * every visitor's menu changes from the next page view. A refusal keeps the order as moved (§315).
  */
-export async function movePageAction(form: FormData): Promise<void> {
+export async function saveMenuOrderAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const listPath = getPathname({ locale, href: "/admin/pages" });
 
   try {
-    const actor = await requireStaff();
-    await movePageInNav(getDb(), {
-      actor,
-      pageId: text(form, "pageId"),
-      direction: text(form, "direction") === "up" ? "up" : "down",
-    });
+    const actor = await requireStaffCapability(canManageClubSettings);
+    await saveMenuOrder(getDb(), actor, form.get("order"), new Date());
   } catch (error) {
-    return backTo(listPath, outcomeOf(error));
+    return refused(error, form);
   }
 
-  return backTo(listPath, { saved: "moved" });
+  await flashOutcome({ saved: "menuOrder" });
+  redirect(`${listPath}?saved=menuOrder#menu-order`);
 }
 
 export async function deletePageAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {

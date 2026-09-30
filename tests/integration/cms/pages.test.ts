@@ -53,7 +53,6 @@ function body(heading: string, paragraph: string): string {
 
 function fields(overrides: Record<string, unknown> = {}) {
   return {
-    navOrder: "10",
     translations: {
       ro: {
         slug: "despre-noi",
@@ -99,7 +98,21 @@ describe("BR-REQ-050-03 standing pages", () => {
 
     expect(page.editorialStatus).toBe("DRAFT");
     expect(page.publishedAt).toBeNull();
-    expect(page.navOrder).toBe(10);
+    // No box for it since §571: a page is placed after every page there is, so a page «Ordinea
+    // meniului» does not name yet falls to the end of the menu rather than to its start.
+    expect(page.navOrder).toBe(1);
+    const second = await createPage(db, {
+      actor: editor,
+      fields: fields({
+        translations: {
+          ro: { slug: "istoric", title: "Istoric", body: body("Istoric", "Din 2015."), seoTitle: "", seoDescription: "" },
+          en: { slug: "history", title: "History", body: body("History", "Since 2015."), seoTitle: "", seoDescription: "" },
+        },
+      }),
+      now: NOW,
+    });
+    expect(second.navOrder).toBe(2);
+    await db.delete(pages).where(eq(pages.id, second.id));
 
     const translations = await db
       .select()
@@ -299,6 +312,7 @@ describe("BR-REQ-050-03 standing pages", () => {
       const editor = await seedStaff(db, "ADMIN");
       const page = await createPage(db, { actor: editor, fields: fields(), now: NOW });
 
+      // A posted `navOrder` is ignored since §571: the page's place is «Ordinea meniului»'s.
       const input = fields({ navOrder: "3" });
       input.translations.ro.title = "Despre noi";
       const saved = await savePage(db, {
@@ -309,7 +323,7 @@ describe("BR-REQ-050-03 standing pages", () => {
         now: NOW,
       });
 
-      expect(saved.navOrder).toBe(3);
+      expect(saved.navOrder).toBe(page.navOrder);
       expect(saved.version).toBe(page.version + 1);
       const [romanian] = await db
         .select()

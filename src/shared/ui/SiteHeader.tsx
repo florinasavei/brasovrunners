@@ -2,21 +2,10 @@ import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 import { getLocale } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
-import { contactFormReaches } from "@/modules/contact/delivery";
-import { faqOnSite } from "@/modules/content/faq/on-site";
-import { teamPageOnSite } from "@/modules/content/team/repository";
-import {
-  cachedContactFormReaches,
-  cachedShownContactAddresses,
-  cachedPublishedAlbums,
-  cachedPublishedPages,
-  cachedTeamPage,
-  cachedMembersPage,
-} from "@/modules/public-cache/reads";
-import { offersMembersEntry } from "@/modules/content/members/page-settings";
+import { menuOrderOnSite, menuSectionsOnSite } from "@/modules/content/menu/on-site";
+import { cachedPublishedPages } from "@/modules/public-cache/reads";
 import { readWithLastGood } from "@/modules/resilience/last-good";
 import { buildInfo } from "@/shared/config/build-info";
-import { env } from "@/shared/config/env";
 import { CLUB_NAME, HEADER_MARK_HEIGHT, HEADER_MARK_HEIGHT_PX, LOGO, PAGE_WIDTH } from "@/theme/brand";
 import { KEYFRAMES, MOTION_OK } from "@/theme/motion";
 import LocaleSwitcher from "./LocaleSwitcher";
@@ -67,33 +56,6 @@ async function navigationPages(locale: Locale) {
   }
 }
 
-/** Whether the gallery section is offered: a published album in this locale, or nothing. */
-async function hasPublishedAlbum(locale: Locale) {
-  try {
-    return (await readWithLastGood(`nav:gallery:${locale}`, async () => (await cachedPublishedAlbums(locale)).length > 0)).value;
-  } catch {
-    return false;
-  }
-}
-
-/** Whether «Echipa» is offered (§459): the page published with a card on it, or nothing — the gallery's rule. */
-async function hasVisibleTeam(locale: Locale) {
-  try {
-    return (await readWithLastGood(`nav:team:${locale}`, async () => teamPageOnSite(await cachedTeamPage(locale)))).value;
-  } catch {
-    return false;
-  }
-}
-
-/** Whether «Membri» is offered (§524): «Beneficiile membrilor» published with its words (`offersMembersEntry`), or nothing. */
-async function hasMembersPage(locale: Locale) {
-  try {
-    return (await readWithLastGood(`nav:members:${locale}`, async () => offersMembersEntry(await cachedMembersPage(locale)))).value;
-  } catch {
-    return false;
-  }
-}
-
 /**
  * The site header: the club's logo, whole, and a way back to the first page.
  *
@@ -128,32 +90,13 @@ export default async function SiteHeader() {
    */
   const locale = await getLocale();
   const pages = await navigationPages(locale as Locale);
-  const showGallery = await hasPublishedAlbum(locale as Locale);
-  const showTeam = await hasVisibleTeam(locale as Locale);
-  // «Întrebări frecvente» (§525): the page published with a question on it — «Echipa»'s rule.
-  const showFaq = await faqOnSite(locale as Locale);
-  const showMembers = await hasMembersPage(locale as Locale);
   /**
-   * "Contact" leads to the form, or to the club's address; a deployment with neither has no
-   * entry (BR-REQ-070-04 criterion 1) — the gallery's rule, for the same reason.
-   *
-   * The same question the page itself asks, and it has to be: since §164 `CONTACT_FORM_MODE`
-   * answers for the transport alone, so "can send" no longer implies "has somebody to send
-   * to" — a deployment with the Gmail account set and nobody named would otherwise show a
-   * menu entry leading to a page that says there is no address.
-   *
-   * The read costs nothing on the common path and is skipped by the `||`: an address to
-   * write to, or an environment that already reaches somebody, answers without it — and a
-   * setting can only *add* recipients to those, never take them away. Otherwise it is one
-   * primary-key lookup on `platform_settings`, beside the two the header already makes, and
-   * guarded the same way: no database means the environment's list answers, as before §164.
+   * Which of the platform's sections are offered — the gallery, «Echipa», «Întrebări frecvente»,
+   * «Membri» and «Contact» each only while there is something behind it — and the club's one
+   * order for every entry (§571), both asked where the backoffice's «Ordinea meniului» card asks
+   * them (`modules/content/menu/on-site.ts`), so the card greys exactly what the menu leaves out.
    */
-  const showContact =
-    Boolean(env.EMAIL_REPLY_TO) ||
-    contactFormReaches(env, null) ||
-    (await cachedContactFormReaches()) ||
-    // The club's Gmail alone is an address to write to as well (§442).
-    (await cachedShownContactAddresses()).length > 0;
+  const [sections, order] = await Promise.all([menuSectionsOnSite(locale as Locale), menuOrderOnSite()]);
 
   return (
     <>
@@ -273,12 +216,13 @@ export default async function SiteHeader() {
           }}
         >
           <SiteNav
-            pages={pages.map((page) => ({ slug: page.slug, title: page.title }))}
-            showGallery={showGallery}
-            showTeam={showTeam}
-            showFaq={showFaq}
-            showMembers={showMembers}
-            showContact={showContact}
+            pages={pages.map((page) => ({ id: page.id, slug: page.slug, title: page.title }))}
+            showGallery={sections.gallery}
+            showTeam={sections.team}
+            showFaq={sections.faq}
+            showMembers={sections.members}
+            showContact={sections.contact}
+            order={order}
           />
         </Box>
 

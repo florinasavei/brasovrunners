@@ -141,7 +141,6 @@ describe("§354 the organizer's note and the reason, read from the outbox", () =
 
 describe("§354 a standing page's search-engine texts and an album's description: both or neither", () => {
   const page = (seo: { roTitle?: string; enTitle?: string; roDescription?: string; enDescription?: string }) => ({
-    navOrder: "0",
     translations: {
       ro: { slug: "despre", title: "Despre", body: "", seoTitle: seo.roTitle ?? "", seoDescription: seo.roDescription ?? "" },
       en: { slug: "about", title: "About", body: "", seoTitle: seo.enTitle ?? "", seoDescription: seo.enDescription ?? "" },

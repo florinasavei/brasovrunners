@@ -1,4 +1,4 @@
-import { and, asc, eq } from "drizzle-orm";
+import { and, eq, max } from "drizzle-orm";
 import { pages, pageTranslations, type Page } from "@/db/schema/pages";
 import type { StaffUser } from "@/db/schema/staff-users";
 import { routing } from "@/i18n/routing";
@@ -84,10 +84,17 @@ export async function createPage<T extends Record<string, unknown>>(
   return db.transaction(async (tx) => {
     await assertSlugsAreFree(tx, fields, null);
 
+    /*
+      After every page there is (§571). The menu's place is «Ordinea meniului»'s, where a page the
+      stored order does not name yet falls to the end, by this number and then its date: so a new
+      page is last until the club moves it, never first because it started at 0.
+    */
+    const [{ last }] = await tx.select({ last: max(pages.navOrder) }).from(pages);
+
     const [page] = await tx
       .insert(pages)
       .values({
-        navOrder: fields.navOrder,
+        navOrder: (last ?? 0) + 1,
         createdByStaffUserId: input.actor.id,
         updatedByStaffUserId: input.actor.id,
         createdAt: now,
@@ -140,7 +147,6 @@ export async function savePage<T extends Record<string, unknown>>(
     const [page] = await tx
       .update(pages)
       .set({
-        navOrder: fields.navOrder,
         updatedByStaffUserId: input.actor.id,
         version: input.expectedVersion + 1,
         updatedAt: now,
@@ -275,46 +281,6 @@ export async function deletePage<T extends Record<string, unknown>>(
 
   const [deleted] = await db.delete(pages).where(eq(pages.id, input.pageId)).returning();
   if (!deleted) throw new DomainError("NOT_FOUND", "no such page");
-  revalidatePublicContent("pages");
-}
-
-/**
- * Move one page up or down the site navigation (BR-REQ-050-03). Renumbers the whole list in one
- * transaction rather than swapping two rows: `nav_order` is not unique (every page starts at 0),
- * and swapping equal numbers changes nothing.
- */
-export async function movePageInNav<T extends Record<string, unknown>>(
-  db: Database<T>,
-  input: { actor: Actor; pageId: string; direction: "up" | "down" },
-): Promise<void> {
-  if (!isEditorial(input.actor.role)) {
-    throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not reorder the navigation`);
-  }
-
-  await db.transaction(async (tx) => {
-    // The same order the navigation and the list screen use, so "up" means what it looked like.
-    const ordered = await tx
-      .select({ id: pages.id })
-      .from(pages)
-      .orderBy(asc(pages.navOrder), asc(pages.createdAt));
-
-    const index = ordered.findIndex((row) => row.id === input.pageId);
-    if (index === -1) throw new DomainError("NOT_FOUND", "no such page");
-
-    const target = input.direction === "up" ? index - 1 : index + 1;
-    // Already at that end: a replayed POST does nothing rather than fail.
-    if (target < 0 || target >= ordered.length) return;
-
-    const moved = [...ordered];
-    [moved[index], moved[target]] = [moved[target], moved[index]];
-
-    for (const [position, row] of moved.entries()) {
-      await tx
-        .update(pages)
-        .set({ navOrder: position + 1 })
-        .where(eq(pages.id, row.id));
-    }
-  });
   revalidatePublicContent("pages");
 }
 

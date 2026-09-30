@@ -8,6 +8,10 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.42-2026-09-27
+
+- **«Descarcă lista pentru sponsori»** — on an event's registrations page and on «Newsletter» for every event: first name, last name, email, event and consent date of the adults who said yes to «oferte și beneficii» under a privacy notice that says partners may receive them (the new template's `{{promotionalMaterialsShared}}`), Organizer and Administrator only; every download is audited with whom it was given to, and a registration's page says «Dată partenerilor»; the public-list tick reads «Vreau să apar pe lista de participanți & rezultate — opțional»; the form's «Acorduri» block is about half as tall, a glyph leads every box (a trophy for the list), and every optional box ends « — opțional». §570.
+- **«Ordinea meniului»: one order for the whole site menu** — on «Pagini» → «Paginile clubului» an Administrator puts every entry of the menu in order — Evenimente, Calendar, Contact, Galerie, Echipa, Întrebări frecvente, Membri and the club's own pages — with «Sus» / «Jos» and one confirmed save; the header and the footer follow it, the rule between the platform's sections and the club's pages is gone, a new page comes last, and an entry not on the site yet keeps its place, greyed. §571.
 ## BR-V2.40-2026-09-27
 
 - **The club's legal name and CIF on the site** — «<legal name> (Brașov Runners) · CIF <CIF>» at the end of the club's pages, «Echipa» and the contact page, and a block under the footer on every page: the legal name with «C.I.F.» and «România», the social marks, and «Contact» with the address, an optional «Telefon public» (new under «Pagini» → «Contact») and «Scrie-ne»; the values come from the environment only, and `yarn secrets:check` now refuses a commit that carries one. §565.

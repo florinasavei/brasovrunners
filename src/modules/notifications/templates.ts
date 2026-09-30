@@ -1131,7 +1131,7 @@ const T = {
       links: (d: TemplateData) => [
         // The list switch, worded by the row (§143): the answer given on the form, reversible here.
         ...(d.listConsentUrl
-          ? [{ label: d.listed === false ? "Vreau să apar pe lista publică de participanți" : "Nu vreau să apar pe lista publică de participanți", url: d.listConsentUrl }]
+          ? [{ label: d.listed === false ? "Vreau să apar pe lista de participanți & rezultate" : "Nu vreau să apar pe lista de participanți & rezultate", url: d.listConsentUrl }]
           : []),
         ...(d.eventUrl ? [{ label: "Pagina evenimentului", url: d.eventUrl }] : []),
         ...(d.eventScheduleUrl ? [{ label: "Programul evenimentului", url: d.eventScheduleUrl }] : []),
@@ -1871,7 +1871,7 @@ const T = {
       links: (d: TemplateData) => [
         // The list switch, worded by the row (§143): the answer given on the form, reversible here.
         ...(d.listConsentUrl
-          ? [{ label: d.listed === false ? "Show my name on the public participant list" : "Take me off the public participant list", url: d.listConsentUrl }]
+          ? [{ label: d.listed === false ? "I want to appear on the participants & results list" : "I do not want to appear on the participants & results list", url: d.listConsentUrl }]
           : []),
         ...(d.eventUrl ? [{ label: "The event's page", url: d.eventUrl }] : []),
         ...(d.eventScheduleUrl ? [{ label: "The event's programme", url: d.eventScheduleUrl }] : []),

@@ -5,8 +5,9 @@ import { routing } from "@/i18n/routing";
 import { PAGES_ROW_ENTRIES, PAGES_ROW_ROUTE, pagesRowEntryOf } from "@/modules/content/pages/pages-row";
 import { activeAdminTabHref } from "@/modules/staff-identity/domain/admin-tab-match";
 import { SETTINGS_TAB_ROUTE } from "@/modules/staff-identity/domain/settings-tabs";
-import { deletePage, movePageInNav } from "@/modules/content/pages/service";
-import { canEditTexts, isEditorial, canReadContent, canTransition, STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
+import { deletePage } from "@/modules/content/pages/service";
+import { saveMenuOrder } from "@/modules/content/menu/menu-order";
+import { canEditTexts, canManageClubSettings, isEditorial, canReadContent, canTransition, STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
 import { pageListVerbs } from "@/modules/content/pages/page-list-verbs";
 
 /**
@@ -137,11 +138,19 @@ describe("«Pagini»'s row on the club's own pages' editors, and the list's gate
     const copywriter = { id: "00000000-0000-4000-8000-000000000001", role: "COPYWRITER" as const };
     expect(isEditorial("COPYWRITER")).toBe(false);
     // Refused before the database is asked, so no database is needed to prove it.
-    const db = {} as Parameters<typeof movePageInNav>[0];
-    await expect(movePageInNav(db, { actor: copywriter, pageId: "x", direction: "up" })).rejects.toMatchObject({ code: "FORBIDDEN" });
+    const db = {} as Parameters<typeof deletePage>[0];
+    // «Ordinea meniului» (§571) is a club setting, the Administrator's (§450): a Redactor and an
+    // Organizer are refused by the service itself, before the database is asked.
+    expect(canManageClubSettings("COPYWRITER")).toBe(false);
+    expect(canManageClubSettings("MODERATOR")).toBe(false);
+    await expect(saveMenuOrder(db, copywriter, ["events"], new Date())).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(saveMenuOrder(db, { ...copywriter, role: "MODERATOR" }, ["events"], new Date())).rejects.toMatchObject({ code: "FORBIDDEN" });
     await expect(deletePage(db, { actor: copywriter, pageId: "x" })).rejects.toMatchObject({ code: "FORBIDDEN" });
-    // The arrows are drawn only for a role the move accepts.
-    expect(read("src/app/[locale]/admin/pages/(list)/page.tsx")).toContain("const mayMove = isEditorial(actor.role);");
+    // The card's buttons are drawn only for a role the save accepts; the old row arrows are gone.
+    const list = read("src/app/[locale]/admin/pages/(list)/page.tsx");
+    expect(list).toContain("const mayOrderMenu = canManageClubSettings(actor.role);");
+    expect(list).not.toContain("movePageAction");
+    expect(read("src/app/[locale]/admin/pages/actions.ts")).toContain("await requireStaffCapability(canManageClubSettings);");
   });
 });
 
