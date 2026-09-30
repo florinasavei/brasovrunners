@@ -129,6 +129,8 @@ const PUBLIC_COLUMNS = {
   isSpecial: events.isSpecial,
   distanceMeters: events.distanceMeters,
   elevationGainMeters: events.elevationGainMeters,
+  // «Estimativ» (§NNN): the climb is a guess, and every surface says «≈» (`elevationWords`).
+  elevationGainEstimated: events.elevationGainEstimated,
   // The night override (§394): with the start and the zone above, whether this date is a night
   // event — the pill on the card and the page, a line in the calendar entry and the `.ics`.
   nightOverride: events.nightOverride,
@@ -601,6 +603,7 @@ export async function findEventNotificationRows<T extends Record<string, unknown
       difficultyLevel: events.difficultyLevel,
       distanceMeters: events.distanceMeters,
       elevationGainMeters: events.elevationGainMeters,
+      elevationGainEstimated: events.elevationGainEstimated,
       routeUrl: events.routeUrl,
       costType: events.costType,
       costAmount: events.costAmount,

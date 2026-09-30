@@ -108,7 +108,7 @@ describe("§533 the start held back: the day alone, or nothing of time", () => {
       dateToBeAnnounced: "Date to be announced soon",
       timeToBeAnnounced: "Time to be announced soon",
       distanceKm: (km: string) => `${km} km`,
-      elevationM: (m: string) => `${m} m`,
+      t: (_key: string, values?: Record<string, string | number>) => `${values?.m} m`,
     })) as unknown as { element: ReactElement };
     const html = text(renderToStaticMarkup(image.element));
     expect(html).toContain("Saturday, 16 Jan 2027 · Time to be announced soon");
@@ -158,7 +158,7 @@ describe("BR-REQ-040-03 criterion 4 the share picture's date is the picture's la
     dateToBeAnnounced: "—",
     timeToBeAnnounced: "—",
     distanceKm: (km: string) => `${km} km`,
-    elevationM: (m: string) => `${m} m`,
+    t: (_key: string, values?: Record<string, string | number>) => `${values?.m} m`,
   };
   const drawn = async (locale: "ro" | "en") => {
     const image = (await eventShareImage(event(), locale, "og", labels)) as unknown as { element: ReactElement };

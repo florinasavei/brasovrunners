@@ -3,6 +3,7 @@ import { CLUB_NAME, COLOR } from "@/theme/brand";
 import { brandFonts } from "@/theme/pdf/fonts";
 import { env } from "@/shared/config/env";
 import { formatDay, formatTime } from "@/i18n/dates";
+import { elevationWords } from "./domain/elevation";
 import { distanceInKm } from "./domain/event-type";
 import { announcedDayInstant } from "./domain/dated";
 import type { PublicEventPage } from "./repository";
@@ -40,7 +41,8 @@ export type ShareImageEvent = Pick<
   | "distanceMeters"
   | "elevationGainMeters"
   | "eventStatus"
->;
+> &
+  Partial<Pick<PublicEventPage, "elevationGainEstimated">>;
 
 export async function eventShareImage(
   event: ShareImageEvent,
@@ -56,7 +58,8 @@ export async function eventShareImage(
     /** "Ora se anunță în curând" (§533), after the day, when only the time is held back. */
     timeToBeAnnounced: string;
     distanceKm: (km: string) => string;
-    elevationM: (m: string) => string;
+    /** The `Event` catalogue, for the climb's long form through `elevationWords` (§NNN) — «circa 350 m diferență de nivel (estimativ)» for an estimate. */
+    t: (key: string, values?: Record<string, string | number>) => string;
   },
 ): Promise<ImageResponse> {
   // A picture outlives the page it was made from — it is saved, posted, forwarded — so a place
@@ -76,7 +79,7 @@ export async function eventShareImage(
   const km = distanceInKm(event.distanceMeters);
   const route = [
     km !== null ? labels.distanceKm(new Intl.NumberFormat(intl, { maximumFractionDigits: 1 }).format(km)) : null,
-    event.elevationGainMeters ? labels.elevationM(new Intl.NumberFormat(intl).format(event.elevationGainMeters)) : null,
+    elevationWords(event, labels.t, (value) => new Intl.NumberFormat(intl).format(value))?.long ?? null,
   ].filter(Boolean);
   // The host, derived — never written (`AGENTS.md` §8).
   const host = new URL(env.APP_BASE_URL).host;

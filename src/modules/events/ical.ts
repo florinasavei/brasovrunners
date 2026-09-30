@@ -2,6 +2,7 @@ import { isRichTextEmpty, readRichText, richTextToPlainText } from "@/modules/co
 import { type CoHost, primaryCoHostLink } from "./domain/co-hosts";
 import { costUrlHost, type EventCostType } from "./domain/cost";
 import { difficultyLevelOf, difficultyWords } from "./domain/difficulty";
+import { elevationWords } from "./domain/elevation";
 import { distanceInKm, type EventSurface, type EventType } from "./domain/event-type";
 import { type RegistrationWindowInput, registrationState } from "./domain/registration-window";
 import { type ProgrammeRow, programmeLines } from "./domain/schedule";
@@ -98,6 +99,8 @@ export type CalendarEvent = {
   /** The facts line (§159): what the page's facts say, in the calendar's language through `labels.t`. */
   distanceMeters?: number | null;
   elevationGainMeters?: number | null;
+  /** «Estimativ» (§NNN): the facts line says «circa 350 m diferență de nivel (estimativ)». */
+  elevationGainEstimated?: boolean | null;
   /**
    * The organizer's night override (§394): true "Da", false "Nu", null or absent "Automat" — the
    * start and the end against civil dusk and dawn at the event's own place (§428: the map link's
@@ -430,10 +433,12 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
 
   // "Concurs · 🏃 10 km · ↗ 300 m urcare · Trail · Mediu · Gratuit": the page's own words (§112), one line.
   const km = distanceInKm(event.distanceMeters ?? null);
+  // The climb in its long form (§NNN), an estimate said as one: «circa 350 m diferență de nivel (estimativ)».
+  const climb = elevationWords(event, t, (value) => new Intl.NumberFormat(intl).format(value));
   const facts = [
     event.type ? t(`type.${event.type}`) : "",
     km !== null ? `🏃 ${t("distanceKm", { km: new Intl.NumberFormat(intl, { maximumFractionDigits: 1 }).format(km) })}` : "",
-    event.elevationGainMeters ? `↗ ${t("elevationM", { m: new Intl.NumberFormat(intl).format(event.elevationGainMeters) })}` : "",
+    climb ? `↗ ${climb.long}` : "",
     event.surface ? t(`surface.${event.surface}`) : "",
     difficultyLine(event, t),
     ...costFacts,

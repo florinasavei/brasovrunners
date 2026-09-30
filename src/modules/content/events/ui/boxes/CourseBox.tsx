@@ -11,9 +11,11 @@ import { clubNightEvent, nightPlace } from "@/modules/events/night-event";
 import { env } from "@/shared/config/env";
 import { textFieldConstraints } from "@/shared/forms/constraints";
 import RecallField from "@/shared/forms/recall";
+import CheckboxField from "@/shared/ui/CheckboxField";
 import Panel from "@/shared/ui/Panel";
 import { eventInputConstraints } from "../../constraints";
 import { savedDurationMinutes } from "../../duration";
+import ApproximateIcon from "../ApproximateIcon";
 import { BLANK, courseSummary } from "../box-summaries";
 import GlyphSelect from "../GlyphSelect";
 import NightEventField from "../NightEventField";
@@ -120,13 +122,28 @@ export default async function CourseBox({
             {...textFieldConstraints(eventInputConstraints("distanceMeters"), { inputMode: "numeric" })}
             sx={{ flex: 1 }}
           />
-          <RecallField
-            name="event.elevationGainMeters"
-            label={t("editor.elevationGainMeters")}
-            defaultValue={event?.elevationGainMeters ?? ""}
-            {...textFieldConstraints(eventInputConstraints("elevationGainMeters"), { inputMode: "numeric" })}
-            sx={{ flex: 1 }}
-          />
+          <Box sx={{ flex: 1 }}>
+            <RecallField
+              name="event.elevationGainMeters"
+              label={t("editor.elevationGainMeters")}
+              defaultValue={event?.elevationGainMeters ?? ""}
+              {...textFieldConstraints(eventInputConstraints("elevationGainMeters"), { inputMode: "numeric" })}
+              fullWidth
+            />
+            {/* «Estimativ» (§NNN): the climb is a guess — a GPS track, the map — and every surface
+                then says «≈» and «estimativ» (`elevationWords`). Ignored, saved false, with no number. */}
+            <CheckboxField
+              name="event.elevationGainEstimated"
+              defaultChecked={event?.elevationGainEstimated ?? false}
+              help={t("editor.elevationGainEstimatedHelp")}
+              helpTestId="elevation-gain-estimated-help"
+            >
+              <Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.75 }}>
+                <ApproximateIcon fontSize="small" aria-hidden="true" />
+                {t("editor.elevationGainEstimated")}
+              </Box>
+            </CheckboxField>
+          </Box>
         </Stack>
         {/* "Eveniment de noapte" (§394, replacing §382's "Necesită frontală"): Automat by default —
             the Wednesday hill run is a night event from autumn to spring by its own sunset — with

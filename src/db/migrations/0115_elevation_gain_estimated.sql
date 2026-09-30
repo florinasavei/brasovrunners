@@ -1,0 +1,1 @@
+ALTER TABLE "events" ADD COLUMN "elevation_gain_estimated" boolean DEFAULT false NOT NULL;

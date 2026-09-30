@@ -284,6 +284,8 @@ function eventFieldsFrom(form: FormData) {
     routeUrl: value("routeUrl"),
     distanceMeters: value("distanceMeters"),
     elevationGainMeters: value("elevationGainMeters"),
+    // «Estimativ» (§NNN): a checkbox beside the number; `fields.ts` drops it when the number is empty.
+    elevationGainEstimated: form.get("event.elevationGainEstimated") === "on",
     // "Eveniment de noapte" (§394): the three choices in "Traseul" — "yes", "no", or "auto" (and
     // an absent value) for the sunset's own answer.
     nightOverride: nightOverrideFromChoice(value("nightOverride")),

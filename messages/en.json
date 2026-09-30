@@ -169,6 +169,8 @@
     "elevation": "Elevation gain",
     "elevationM": "{m} m elevation gain",
     "elevationShort": "{m} m climb",
+    "elevationMEstimated": "about {m} m of elevation gain (estimated)",
+    "elevationShortEstimated": "≈ {m} m climb",
     "night": {
       "chip": "Night",
       "pill": "Night event",
@@ -1237,6 +1239,8 @@
       "distanceMeters": "Distance",
       "distanceMetersHelp": "In metres. 10000 shows as 10 km.",
       "elevationGainMeters": "Elevation gain (m)",
+      "elevationGainEstimated": "Estimated",
+      "elevationGainEstimatedHelp": "Tick when the number is a guess — the site shows it with “≈” and “estimated”.",
       "night": {
         "label": "Night event",
         "auto": "Automatic (after sunset)",
@@ -1861,6 +1865,7 @@
             "route": "route",
             "km": "{km} km",
             "elevation": "+{m} m",
+            "elevationEstimated": "≈ +{m} m",
             "night": "night",
             "nightAuto": "night (automatic)",
             "day": "day",
