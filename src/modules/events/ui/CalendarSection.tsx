@@ -48,7 +48,7 @@ export default async function CalendarSection({
   locale: Locale;
   view: CalendarView;
   layout: CalendarLayout;
-  /** What the month's own links keep — the filters (a group ticked twice is an array) and the layout. */
+  /** What the period's own links keep — the filters (a group ticked twice is an array); the period and the layout are the path's (§574). */
   query: Record<string, string | string[]>;
   now: Date;
   /** The period's rows, already read and narrowed by the page (§413). */
@@ -58,7 +58,7 @@ export default async function CalendarSection({
   const feed = `${env.APP_BASE_URL}/${locale}/events/calendar.ics`;
   // The same two doors the page head's «?» carries on a phone (§487), built in one place.
   const links = calendarFeedLinks(env.APP_BASE_URL, locale);
-  const steps = calendarStepHrefs({ view, query, locale, pathname: "/calendar" });
+  const steps = calendarStepHrefs({ view, layout, query, locale, now });
 
   return (
     <Box sx={{ mt: { xs: DENSITY.gapSm, sm: 2 }, mb: { xs: DENSITY.sectionGapLg, sm: 4 } }}>

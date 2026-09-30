@@ -31,6 +31,10 @@ describe("§549 robots.txt on production", () => {
     "/en/events?surface=TRAIL&cost=FREE",
     "/ro/calendar?month=2026-11",
     "/en/calendar?year=2027&view=list",
+    // A period's own path (§574): canonical to the bare calendar, and a cold month is a render.
+    "/ro/calendar/2026-11",
+    "/en/calendar/2026-11/list",
+    "/ro/calendar/2027",
     "/ro/evenimente/crosul-aniversar?lista=2",
     "/en/events/anniversary-cross?interest=1",
     "/en/events/anniversary-cross?since=1727500000",

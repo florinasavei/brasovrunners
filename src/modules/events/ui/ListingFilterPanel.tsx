@@ -58,18 +58,22 @@ import { GLYPHS, type GlyphName } from "./glyphs";
  * **The button is a chip too** (§424 — the owner, 2026-09-26: "Butonul de filtre e mult prea mare"): the
  * `<summary>` is the 44-pixel target, the outlined pill inside it the active-filter chips' own size.
  *
- * `keep` is what the address carries that is not a filter — the calendar's month or year, the list
- * layout — so neither the form nor a chip's link drops it.
+ * `keep` is what the address carries that is not a filter — the listing's list layout — so neither
+ * the form nor a chip's link drops it. `path`, when given, is the already-resolved address the form
+ * and the chips go to instead of `pathname`'s: the calendar's period, which lives in the path
+ * (`/ro/calendar/2026-10`, §574), not in the query.
  */
 export default async function ListingFilterPanel({
   locale,
   pathname,
+  path,
   filter,
   offer,
   keep = {},
 }: {
   locale: Locale;
   pathname: "/events" | "/calendar";
+  path?: string;
   filter: ListingFilter;
   offer: FilterOffer;
   keep?: Record<string, string>;
@@ -77,11 +81,14 @@ export default async function ListingFilterPanel({
   const t = await getTranslations("Events");
   const tEvent = await getTranslations("Event");
   const count = activeFilterCount(filter);
-  const action = getPathname({ locale, href: pathname });
+  const action = path ?? getPathname({ locale, href: pathname });
   const hrefFor = (next: ListingFilter) => {
     const query = { ...keep, ...listingFilterQuery(next) };
-    // No query, no "?": `getPathname` would write `/ro/evenimente?` for an empty one.
-    return Object.keys(query).length > 0 ? getPathname({ locale, href: { pathname, query } }) : action;
+    if (Object.keys(query).length === 0) return action;
+    if (path === undefined) return getPathname({ locale, href: { pathname, query } });
+    const search = new URLSearchParams();
+    for (const [name, value] of Object.entries(query)) for (const one of Array.isArray(value) ? value : [value]) search.append(name, one);
+    return `${path}?${search.toString()}`;
   };
 
   const label = (group: FilterGroup | FilterFlag, value: string): string => {

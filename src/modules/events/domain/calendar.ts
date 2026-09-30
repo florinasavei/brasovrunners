@@ -32,7 +32,7 @@ export function parseMonth(value: string | string[] | undefined, now: Date, time
 export const YEARS_EITHER_WAY = 2;
 
 /**
- * The year the URL asked for (`?year=2026`, `DECISIONS.md` §116), or null when it asked for
+ * The year asked for (`/calendar/2026`, or an old `?year=2026`; `DECISIONS.md` §116, §574), or null when it asked for
  * none or for one outside the two years either way — the caller then shows a month.
  */
 export function parseYear(value: string | string[] | undefined, now: Date, timeZone: string): number | null {

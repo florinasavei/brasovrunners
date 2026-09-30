@@ -5816,6 +5816,7 @@
       "zoneRo": "Members' area (Romanian)",
       "zoneEn": "Members' area (English)",
       "textEmpty": "Not written yet.",
+      "tabEmpty": "empty",
       "textHelp": "In both languages or in neither, at most {max} characters each. As on a page: headings, lists, links, pictures, a table.",
       "codes": {
         "heading": "Discount codes",
@@ -7544,6 +7545,7 @@
   },
   "Translate": {
     "button": "Translate from Romanian",
+    "tabTranslated": "translated — check it",
     "pending": "Translating…",
     "all": "Copy and translate everything: RO → EN",
     "allHelp": "Every text written in Romanian is translated automatically (DeepL) into its English box, with the same layout. Read, correct, then press Save.",
