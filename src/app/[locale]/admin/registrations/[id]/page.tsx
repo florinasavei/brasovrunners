@@ -20,6 +20,7 @@ import { emailMessageType } from "@/db/schema/email-outbox";
 import { registrationStatus } from "@/db/schema/registrations";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
+import { noFreePlaceValues, type PlacesTaken } from "@/modules/registrations/domain/capacity";
 import { listAuditTrail, listPartnerShares } from "@/modules/audit/repository";
 import { declarationAsksMinorToSign, noticeDescribesPromotionalMaterials } from "@/modules/legal-documents/repository";
 import {
@@ -69,7 +70,7 @@ import { sendNowChoiceFor } from "@/modules/notifications/send-now-choice";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
-  searchParams: Promise<{ resent?: string; saved?: string; error?: string; health?: string }>;
+  searchParams: Promise<{ resent?: string; saved?: string; error?: string; health?: string } & Partial<Record<keyof PlacesTaken, string>>>;
 };
 
 export const dynamic = "force-dynamic";
@@ -114,7 +115,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
     listPartnerShares(db, id),
   ]);
 
-  const { resent, saved, error, health } = await searchParams;
+  const query = await searchParams;
+  const { resent, saved, error, health } = query;
   const tr = await getTranslations("Admin");
   // «Trimite acum» or «Pune la coadă» on a resend (§540): offered only under the scheduled timing.
   const sendNow = mayManage ? await sendNowChoiceFor(db, locale) : null;
@@ -233,7 +235,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         {saved && <Alert severity="success">{tr("saved")}</Alert>}
       {/* The action redirects with a language-neutral code (AGENTS.md 14.3); this is where it
           becomes a sentence. */}
-        {error && <Alert severity="error">{tr(`errors.${error}`)}</Alert>}
+        {error && <Alert severity="error">{tr(`errors.${error}`, noFreePlaceValues(error, query))}</Alert>}
       </Box>
 
       <Stack direction="row" spacing={1} sx={{ alignItems: "center", flexWrap: "wrap", gap: 1 }}>

@@ -7,6 +7,7 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { noFreePlaceValues, type PlacesTaken } from "@/modules/registrations/domain/capacity";
 import { typedStartOrNull } from "@/modules/events/domain/provisional-start";
 import { formatDay } from "@/i18n/dates";
 import { notFound } from "next/navigation";
@@ -34,7 +35,7 @@ import GlyphButton from "@/shared/ui/GlyphButton";
 
 type Props = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ eventId?: string; q?: string; saved?: string; error?: string }>;
+  searchParams: Promise<{ eventId?: string; q?: string; saved?: string; error?: string } & Partial<Record<keyof PlacesTaken, string>>>;
 };
 
 export const dynamic = "force-dynamic";
@@ -59,7 +60,8 @@ export default async function DeskPage({ params, searchParams }: Props) {
   const actor = await requireStaff();
   if (!canWorkTheDesk(actor.role)) notFound();
 
-  const { eventId: requestedEventId, q = "", saved, error } = await searchParams;
+  const query = await searchParams;
+  const { eventId: requestedEventId, q = "", saved, error } = query;
   const t = await getTranslations("Admin");
   const db = getDb();
   const now = new Date();
@@ -104,7 +106,7 @@ export default async function DeskPage({ params, searchParams }: Props) {
       </Typography>
 
       <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
-        {error && <Alert severity="error">{t(`errors.${error}`)}</Alert>}
+        {error && <Alert severity="error">{t(`errors.${error}`, noFreePlaceValues(error, query))}</Alert>}
         {saved && <Alert severity="success">{t(`desk.saved.${saved}`)}</Alert>}
       </Box>
 

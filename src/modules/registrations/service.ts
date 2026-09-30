@@ -42,7 +42,7 @@ import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import { env } from "@/shared/config/env";
 import { CLUB_NAME } from "@/theme/brand";
 import { DomainError } from "@/shared/errors/domain-error";
-import { computeOccupied, computePublicAvailability, hasDirectAvailability } from "./domain/capacity";
+import { computeOccupied, computePublicAvailability, hasDirectAvailability, NoFreePlaceError } from "./domain/capacity";
 import { computeDeclarationHoldExpiry, computeFamilyReservationExpiry, computeWaitlistOfferExpiry, confirmationWindow } from "./domain/hold-deadlines";
 import { occupiedForNewcomer, waitlistFullError, waitlistHasRoom, waitlistLength, waitlistRoom } from "./domain/waitlist";
 import { deriveAllowedResendMessageType } from "./domain/resend";
@@ -3095,9 +3095,10 @@ export async function promoteFromWaitlistByStaff<T extends Record<string, unknow
     if (current.status !== "WAITLISTED") {
       throw new DomainError("CONFLICT", `only a waiting-list registration can be promoted; this one is ${current.status}`);
     }
-    const occupied = computeOccupied(await repo.countOccupied(tx, event.id, now));
-    if (lockedEvent.capacity !== null && occupied >= lockedEvent.capacity) {
-      throw new DomainError("VALIDATION_ERROR", "the event is full: no place is free to promote into");
+    const counts = await repo.countOccupied(tx, event.id, now);
+    if (lockedEvent.capacity !== null && computeOccupied(counts) >= lockedEvent.capacity) {
+      // Who holds the places, by the same counts (§NNN): the desk says it instead of "check the data".
+      throw new NoFreePlaceError(lockedEvent.capacity, counts);
     }
     const offered = await repo.transitionRegistration(tx, {
       id: current.id,
