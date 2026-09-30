@@ -8,6 +8,12 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.43-2026-09-27
+
+- **«Membri»: «Copiază și tradu tot» translates the members' texts, and their two languages are tabs «RO» | «EN»** — the press knows «Beneficiile membrilor» and the members' zone, so it no longer answers «Nu e nimic de tradus» over Romanian already written. One editor is on screen at a time, the English tab says «gol» while empty, and a refused save shows the English tab. After any translate press, every language strip in the backoffice brings its English tab forward marked «tradus — verifică» until you edit it, and every language tab carries the header's flag. §572.
+- **The group run's declaration types the birth date day first** — «11.05.1990» on an English phone too, with the date in words and the age on the run's day under the box, and the run's minimum age said there as soon as a younger date is typed, as on the registration form. §573.
+- **The calendar's arrows, selects and swipe show the month again** — on the site a press changed the address to `?month=…` and left September on screen; each period now has its own address (`/ro/calendar/2026-10`, `/ro/calendar/2026-10/list`, `/ro/calendar/2026`), served from the CDN, and old `?month=` links are sent there. §574.
+- **The calendar's arrows stay put** — a month with nothing to filter keeps the «Filtre» button's room, unseen, so stepping into a month that has filters no longer pushes the arrows down under your thumb. §575.
 ## BR-V2.42-2026-09-27
 
 - **«Descarcă lista pentru sponsori»** — on an event's registrations page and on «Newsletter» for every event: first name, last name, email, event and consent date of the adults who said yes to «oferte și beneficii» under a privacy notice that says partners may receive them (the new template's `{{promotionalMaterialsShared}}`), Organizer and Administrator only; every download is audited with whom it was given to, and a registration's page says «Dată partenerilor»; the public-list tick reads «Vreau să apar pe lista de participanți & rezultate — opțional»; the form's «Acorduri» block is about half as tall, a glyph leads every box (a trophy for the list), and every optional box ends « — opțional». §570.

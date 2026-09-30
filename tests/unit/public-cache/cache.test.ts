@@ -370,6 +370,7 @@ describe("§333 the public reads", () => {
     "src/app/[locale]/events/[slug]/calendar.ics/route.ts",
     "src/app/[locale]/events/calendar.ics/route.ts",
     "src/app/[locale]/calendar/page.tsx",
+    "src/app/[locale]/calendar/[...period]/page.tsx",
     "src/app/[locale]/gallery/page.tsx",
     "src/app/[locale]/gallery/[slug]/page.tsx",
     "src/app/[locale]/pages/[slug]/page.tsx",
