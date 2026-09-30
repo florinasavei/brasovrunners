@@ -82,6 +82,15 @@ test.describe("BR-REQ-060-01 the backoffice refuses an anonymous request", () =>
     await expect(page).toHaveURL(/\/ro\/autentificare$/);
   });
 
+  test("answers the editor's draft frame with a 404 to a signed-out visitor (§586)", async ({ page }) => {
+    // The frame the editor's «Previzualizare» draws the card, the page and the form in: no staff session in
+    // dev-switcher mode is the unknown address, never a thrown UNAUTHENTICATED (a 500).
+    for (const path of ["/ro/previzualizare/ciorna", "/en/preview/draft"]) {
+      const response = await page.goto(path);
+      expect(response?.status(), path).toBe(404);
+    }
+  });
+
   test("tells crawlers not to index the backoffice or the preview", async ({ page }) => {
     const admin = await page.goto("/ro/admin");
     expect(admin?.headers()["x-robots-tag"]).toContain("noindex");
