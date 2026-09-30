@@ -23,7 +23,7 @@ import { expect, type Page, test } from "@playwright/test";
  * The page prefetches every link it shows, so a handler is still fetching when a test ends; its
  * `page.request.get` then rejects outside any test («apiRequestContext.get: Test ended»), which fails
  * the whole run, and Playwright blamed the next test in the worker (`client-words.spec.ts`, «Failed to
- * find browser context») — red on CI twice in a row (§NNN). A prefetch the test no longer waits for is
+ * find browser context») — red on CI twice in a row (CI run 36750544798). A prefetch the test no longer waits for is
  * dropped, and `afterEach` below takes the route off without waiting for the calls in flight.
  */
 async function vercelPrefetch(page: Page) {
