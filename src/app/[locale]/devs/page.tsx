@@ -24,7 +24,7 @@ import { readContactRecipients } from "@/modules/contact/recipients";
 import { checkJobHealth } from "@/modules/jobs/health";
 import { readJobCadence } from "@/modules/jobs/cadence";
 import { describeJob } from "@/modules/jobs/overview";
-import { type JobName, NEXT_DUE_CAP_MINUTES } from "@/modules/jobs/schedule";
+import { DAILY_WINDOW_LABEL, type JobName } from "@/modules/jobs/schedule";
 import { countMediaAssets, ORPHAN_ASSET_DAYS } from "@/modules/media/references";
 import { readDatabaseSizeBytes } from "@/modules/diagnostics/database-size";
 import { REPO_DOCS } from "@/modules/diagnostics/repo-docs";
@@ -830,7 +830,7 @@ export default async function DevsPage({ params, searchParams }: Props) {
             })}
             <Typography variant="body2" color="text.secondary">
               {jobCadence.minutes === 0
-                ? t("jobSchedule.cadenceOnDemand", { cap: NEXT_DUE_CAP_MINUTES })
+                ? t("jobSchedule.cadenceOnDemand", { time: DAILY_WINDOW_LABEL })
                 : t("jobSchedule.cadenceEvery", { minutes: jobCadence.minutes })}
             </Typography>
             {/* The orphan sweep's own figure (`DECISIONS.md` §73): what it left. "Sweepable" is

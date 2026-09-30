@@ -3090,12 +3090,12 @@
         "title": "How often the site checks",
         "intro": "How often the two scheduled jobs may wake the database.",
         "inForce": {
-          "onDemand": "In force: on demand (default) — only when something is due, and in any case at least once every {cap} min.",
+          "onDemand": "In force: on demand (default) — only when something is due, and in any case once a day, at {time}.",
           "every": "In force: at most once every {minutes} min, for each job."
         },
         "cost": "What a longer interval costs: a waiting-list offer, a reminder, an announcement or a race number may go out up to that many minutes late.",
         "safe": "What does not change: a held place still lapses on time.",
-        "onTheHour": "The safety check happens on the hour, together with the /api/health monitor.",
+        "onTheHour": "The safety check happens once a day, at {time}, together with the monitor's full check (/api/health?deep=1).",
         "job": {
           "maintenance": "Registration maintenance",
           "outbox": "Email outbox"
@@ -3109,11 +3109,10 @@
         "updatedAt": "Set on {when}.",
         "readOnly": "The Superadministrator changes the interval, because a wrong one delays every job.",
         "field": "At most once every",
-        "fieldHelp": "\"On demand\" means only when something is due, plus the {cap}-minute safety check.",
+        "fieldHelp": "\"On demand\" means only when something is due, plus the daily safety check at {time}.",
         "option": {
-          "onDemand": "On demand (default) — when something is due, at least once every {cap} min",
-          "every": "{minutes} min",
-          "everyLong": "{minutes} min — the {cap}-minute safety check also moves to every {minutes} min"
+          "onDemand": "On demand (default) — when something is due, and once a day at {time}",
+          "every": "{minutes} min"
         },
         "save": "Save the interval",
         "saving": "Saving…",
@@ -3126,7 +3125,7 @@
         },
         "introMore": "The jobs are registration maintenance and the email outbox. With nothing to do they do not wake the database; every wake-up costs at least 5 minutes of compute.",
         "safeMore": "Every reading of the places counts the deadlines at that moment, whether or not the job has run. Your setting wins.",
-        "onTheHourMore": "With 2 hours, on the even hours. That way an idle hour costs at most one wake of the database; getting there may make some checks up to a quarter of an hour late each.",
+        "onTheHourMore": "A day with nothing to do costs one wake of the database, at {time}; the deletion of data past its window runs then too. A deadline (a held place, an offer, a reminder, an email to retry) keeps its own time. With an interval chosen, runs fall on its marks (with 2 hours, on the even hours), and some may be up to a quarter of an hour late.",
         "fieldHelpMore": "A ping inside the interval answers from the cache, without the database, exactly like one with nothing to do."
       },
       "budgetThresholds": {
@@ -6837,7 +6836,7 @@
       "nextPing": "the next ping runs",
       "pingRan": "last ping {when}: ran",
       "pingSkipped": "last ping {when}: skipped",
-      "cadenceOnDemand": "Minimum interval: on demand — at least one real run every {cap} min (Settings → Costs).",
+      "cadenceOnDemand": "Minimum interval: on demand — at least one real run a day, at {time} (Settings → Costs).",
       "cadenceEvery": "Minimum interval: {minutes} min between two real runs (Settings → Costs)."
     }
   },

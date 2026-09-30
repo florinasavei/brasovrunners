@@ -10,6 +10,8 @@ import {
   type PingVerdict,
   type QuietPlan,
   decidePing,
+  dueSlotsFor,
+  hourSlotStart,
   slotStart,
   slotsBack,
   slotsBetween,
@@ -61,8 +63,8 @@ import {
  * run could read before writing would be one more write-once slot with the same flush-at-request-
  * end timing, and so the same race one step later.
  *
- * It is left as it is because it is bounded and safe. Bounded by the plan itself — the cap, an
- * hour, or the Administrator's longer interval — after which a real run finds the work anyway;
+ * It is left as it is because it is bounded and safe. Bounded by the plan itself — the cap, the
+ * daily window since §NNN, or the Administrator's longer interval — after which a real run finds the work anyway;
  * safe because nothing the job does is what keeps a place right (AGENTS.md §10.6: a lapsed hold
  * or offer is lapsed on every read). The window is the few hundred milliseconds between a run's
  * `nextWork` query and the end of its request, so what it costs in practice is a message or a
@@ -76,7 +78,8 @@ const PING_TAG = `${TAG}:ping`;
 
 class NotRecorded extends Error {}
 
-type Family = "due" | "floor" | "ping";
+/** `dueHour` is the hour-wide "nothing due until" beyond a run's first hour (§NNN, `dueSlotsFor`). */
+type Family = "due" | "dueHour" | "floor" | "ping";
 
 /** A writer's value, or a reader's refusal to invent one. Always called bound, never directly. */
 async function produce(value: unknown): Promise<unknown> {
@@ -94,7 +97,8 @@ async function slot<T>(family: Family, job: JobName, at: Date, tags: string[], w
       engine's own `function () { [native code] }` in every bundle, and a bound argument is not
       part of the key, so writer and reader address the one entry the key parts name.
     */
-    return (await unstable_cache(produce.bind(null, write), [TAG, family, job, slotStart(at).toISOString()], {
+    const start = family === "dueHour" ? hourSlotStart(at) : slotStart(at);
+    return (await unstable_cache(produce.bind(null, write), [TAG, family, job, start.toISOString()], {
       tags,
       revalidate: false,
     })()) as T;
@@ -129,7 +133,8 @@ export function insideJobRun<T>(job: JobName, work: () => Promise<T>): Promise<T
  * Never throws and never waits: `revalidateTag` is queued and applied when the request ends,
  * after the transaction has committed; outside a request it is simply not there. A call this
  * misses, a call site nobody wrote, or a call that races a run's own slot writes (see "A wake
- * that races a run" above) costs at most the cap — an hour — never the work itself.
+ * that races a run" above) costs at most the cap — the daily window since §NNN — never the work
+ * itself.
  */
 export function wakeJobs(jobs: JobName | readonly JobName[], dueAt?: Date | null, now: Date = new Date()): void {
   if (dueAt && dueAt.getTime() - now.getTime() >= MAX_QUIET_MINUTES * 60_000) return;
@@ -157,9 +162,18 @@ export function forgetJobSchedules(): void {
   }
 }
 
-/** A ping's verdict, from the cache alone: two reads at most, no database. */
+/**
+ * The "nothing due until" a ping at `now` reads: its five-minute slot, or — beyond the first hour
+ * after the run that wrote it — its hour slot (§NNN). Both carry the job's due tag, so a wake
+ * forgets both at once.
+ */
+async function readDueSlot(job: JobName, now: Date): Promise<DueSlot | null> {
+  return (await slot<DueSlot>("due", job, now, dueTags(job))) ?? (await slot<DueSlot>("dueHour", job, now, dueTags(job)));
+}
+
+/** A ping's verdict, from the cache alone: three reads at most, no database. */
 export async function readPingVerdict(job: JobName, now: Date): Promise<PingVerdict> {
-  const due = await slot<DueSlot>("due", job, now, dueTags(job));
+  const due = await readDueSlot(job, now);
   const quiet = decidePing(now, due, null);
   if (!quiet.run) return quiet;
   const floor = await slot<FloorSlot>("floor", job, now, floorTags);
@@ -173,7 +187,7 @@ export async function readPingVerdict(job: JobName, now: Date): Promise<PingVerd
  * it wrote, which is not a stalled scheduler.
  */
 export async function plannedCadenceMinutes(job: JobName, now: Date): Promise<number> {
-  const [due, floor] = await Promise.all([slot<DueSlot>("due", job, now, dueTags(job)), slot<FloorSlot>("floor", job, now, floorTags)]);
+  const [due, floor] = await Promise.all([readDueSlot(job, now), slot<FloorSlot>("floor", job, now, floorTags)]);
   return Math.max(due?.cadenceMinutes ?? 0, floor?.cadenceMinutes ?? 0);
 }
 
@@ -184,8 +198,10 @@ export async function recordPing(job: JobName, now: Date, ran: boolean): Promise
 
 /**
  * Leave a real run's plan for the pings after it: one "nothing due until" slot for each five
- * minutes of quiet, one floor slot for each five minutes of the Administrator's interval, and
- * the ping itself. Writes are queued by Next and finished before the function is frozen.
+ * minutes of its first hour of quiet and one for each hour after that (§NNN — a day's quiet is
+ * then at most 12 + 27 writes, not 288), one floor slot for each five minutes of the
+ * Administrator's interval, and the ping itself. Writes are queued by Next and finished before
+ * the function is frozen.
  */
 export async function recordRealRun(job: JobName, plan: QuietPlan): Promise<void> {
   const due: DueSlot = {
@@ -193,9 +209,11 @@ export async function recordRealRun(job: JobName, plan: QuietPlan): Promise<void
     ranAt: plan.ranAt.toISOString(),
     cadenceMinutes: plan.cadenceMinutes,
   };
-  const writes: Promise<unknown>[] = slotsBetween(plan.ranAt, plan.quietUntil).map((at) =>
-    slot<DueSlot>("due", job, at, dueTags(job), due),
-  );
+  const { fine, hours } = dueSlotsFor(plan.ranAt, plan.quietUntil);
+  const writes: Promise<unknown>[] = [
+    ...fine.map((at) => slot<DueSlot>("due", job, at, dueTags(job), due)),
+    ...hours.map((at) => slot<DueSlot>("dueHour", job, at, dueTags(job), due)),
+  ];
   if (plan.floorUntil) {
     const floor: FloorSlot = {
       until: plan.floorUntil.toISOString(),
