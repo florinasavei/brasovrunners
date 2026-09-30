@@ -29,7 +29,7 @@ export type CardRegistrationLine = {
    */
   note?: string;
   /**
-   * Under the note, a capped list only (§NNN, amending §587): the room it has left, in the page's
+   * Under the note, a capped list only (§594, amending §587): the room it has left, in the page's
    * own phrase (§348) — "Mai sunt 4 locuri pe lista de așteptare". Absent when the list has no limit.
    */
   roomLine?: string;
@@ -137,7 +137,7 @@ export function cardRegistrationLine(
         lead,
         leadParts: { before: "", fact: lead, after: "" },
         note: say("cta.fullJoin"),
-        // The room a capped list has left, as the page's door says it (§NNN, §348); a list with no limit says nothing.
+        // The room a capped list has left, as the page's door says it (§594, §348); a list with no limit says nothing.
         ...(cta.waitlistRoom !== null ? { roomLine: waitlistRoomPhrase(say, locale, cta.waitlistRoom) } : {}),
         ...(closesText ? { quietLine: openUntil } : {}),
         bold: true,

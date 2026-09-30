@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.48-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.49-2026-09-27 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.48-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.49-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -22228,3 +22228,25 @@ Baseline `BR-V2.48-2026-09-27`.
 **Consequences.** `registrations/domain/turnstile-widget.ts` (`BOT_CHECK_ARMED_ATTRIBUTE`, `BOT_CHECK_ERROR_ATTRIBUTE`, `BOT_CHECK_SLOT_SX`), `TurnstileWidget.tsx`, `BotCheck.tsx`, the contact page, the registration form, `RegistrationInterestForm.tsx`, `messages/{ro,en}.json`. Tests: `contact/contact-page-words.test.ts`, `registrations/turnstile-lazy.test.ts`. No migration, no dependency. Amends §323 (where the Cloudflare caption sits) and §546 (the contact page's words).
 
 Baseline `BR-V2.48-2026-09-27`.
+
+## 594. The full event's card says the room left on a capped waiting list
+
+**The owner, 2026-09-30, a screenshot of the full race's listing card on QA (BR-V2.48):** «Aici trebuie să scriu și câte locuri mai sunt pe listă».
+
+**Decision (amending §587).** When the places are gone and the waiting list takes people, the card's three lines — the bold thank-you, «Intră pe lista de așteptare — te anunțăm pe email când se eliberează un loc.» and the quiet «Înscrieri deschise până …» — gain a fourth between the join sentence and the quiet window: the room the list has left, in the event page's own phrase (§348, `Event.cta.waitlistRoom.*`): «Mai este 1 loc pe lista de așteptare» / «Mai sunt 4 locuri pe lista de așteptare», «4 places left on the waiting list» in English. It is plain, like the join sentence, not bold: the thank-you stays the one bold part (§472, §587). It is drawn only when the list has a limit — a list with no limit says nothing, as on the page — and a list with no room left is already `WAITLIST_FULL`, §587's own sentence with no button.
+
+**One source, one read.** `cardRegistrationLine` in `CardRegistration.tsx` is the lead card's and the ordinary cards' line (§388), and the number is `cta.waitlistRoom` from the door the card already reads (`registration-door.ts`), the same the page's `RegistrationCta` draws it from: no new query, no new key.
+
+**Refused:** a shorter card form («Mai sunt 4 locuri pe listă») — a second wording of the same fact; the page's phrase fits a phone.
+
+Baseline `BR-V2.49-2026-09-27`.
+
+## 595. A race with no race start says «10:00 (start eveniment)», never a bare time (amending §590)
+
+**The owner, 2026-09-30 22:05, of the race's card on production (BR-V2.46), «Important! ASAP HOTFIX!»:** the card said «10:00» alone — the event's start — and a runner reads that as the race start, which the club has not set yet. §590 (in BR-V2.47, then on qa) had made it «start la 10:00» with «Ora startului cursei se anunță.» under it on the page; the owner wanted the words unmistakable on the card too.
+
+**Decision (amending §590).** `whenTimes` gains a third key, `eventStartAt`, for a race whose race start is not set: the event's own start is worded «{time} (start eveniment)» / "{time} (event start)" (`Event.eventStartAt`, bold form `Event.eventStartAtBold`) on the listing card, the page's «Când» row, the hero, the emails' facts block (§392) and the calendar description (§107); the page and the hero keep «Ora startului cursei se anunță.» under it. A race with its race start set still says «întâlnire la 08:30 · start la 10:00»; every other event type keeps its bare time. No migration, no dependency.
+
+**The path.** A hotfix straight to `main` (`docs/RUNBOOKS.md` § Hotfix): the branch from `main`, the four files, typecheck, eslint on the touched files, `yarn secrets:check`, the two touched unit tests (350 tests green), PR #305 merged into `main`, production live within minutes (no migration), `main` brought back into `qa` by PR #306; this entry lands with the next batch, as the path asks.
+
+Baseline `BR-V2.49-2026-09-27`.

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.48-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.49-2026-09-27 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V2.48-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.49-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -414,6 +414,7 @@ coffee is run on nothing.
 5. (Amends criterion 1.) On a listing card the surface is a pill among the card's route pills rather than a chip beside the type; the featured hero and the event page's overline keep it beside the type (2026-09-24, `DECISIONS.md` §366).
 6. (Amends criterion 5.) The featured hero, like a listing card, carries the surface as the first of its route pills, not as a chip beside the type; only the event page's overline keeps it beside the type (2026-09-26, `DECISIONS.md` §449).
 7. A race with no race start says only the event's start, named «start la 08:30» / "start at 08:30" — never «întâlnire la» — and the event page, its hero and the emails' facts block add «Ora startului cursei se anunță.» / "The race start time is announced later." once under it; the calendar description says the same on its times line (2026-09-30, `DECISIONS.md` §590).
+8. A race with no race start says only the event's start, worded «{time} (start eveniment)» / "{time} (event start)" on the card, the page, the hero, the emails' facts block and the calendar description — never a bare time and never «întâlnire la» — with «Ora startului cursei se anunță.» under it on the page and the hero (2026-09-30, `DECISIONS.md` §595).
 
 **Verification:** integration `events/configuration.test.ts`, `events/structural-constraints.test.ts`; unit `i18n/messages.test.ts`; e2e `event-route.spec.ts`
 
@@ -1229,6 +1230,7 @@ registration — and it lists registrations and never changes an address.
 10. While an event has no free place and its waiting list takes people, the listing card says in bold «Mulțumim! Toate cele {capacity} de locuri s-au ocupat — {n} așteaptă deja un loc.» (with nobody waiting, «… Fii primul pe lista de așteptare.»), then «Intră pe lista de așteptare — te anunțăm pe email când se eliberează un loc.», then the registration window in the quiet ink, above the waiting list's button; the event page says the same two sentences above the button and, under it, the room left in a capped list and «Când se eliberează un loc, primești un email și ai {hours} să confirmi — altfel locul trece mai departe.» with the club's own offer window; the join form says the thank-you lead, the join sentence and the offer sentence once, above the form; both languages (2026-09-30, `DECISIONS.md` §587).
 11. While an event has free places and somebody is on its waiting list, the card and the event page say «{n} pe lista de așteptare» beside the free places, counted from the same cached read as the free places, with no further query (2026-09-30, `DECISIONS.md` §587).
 12. A full waiting list reads «Locurile s-au ocupat și lista de așteptare e plină — ne pare rău.» and an event with no waiting list «Locurile s-au ocupat, iar acest eveniment nu are listă de așteptare.», with no button, on the card, the event page and the join form (2026-09-30, `DECISIONS.md` §587).
+13. While an event has no free place and its waiting list has a limit and room, the listing card says the room left in the event page's words — «Mai sunt {n} locuri pe lista de așteptare» — between «Intră pe lista de așteptare …» and the quiet window, not bold; a waiting list with no limit adds no line (2026-09-30, `DECISIONS.md` §594).
 
 **Verification:** integration `waitlist/join.test.ts`; e2e `waitlist.spec.ts`
 
