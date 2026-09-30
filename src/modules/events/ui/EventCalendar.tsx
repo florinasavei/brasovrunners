@@ -36,7 +36,7 @@ export type CalendarLayout = CalendarLayoutName;
 
 /**
  * The calendar's **body**: the month as a grid on every width — or as an agenda when the
- * reader asks (`?view=list`; `DECISIONS.md` §89, §137) — or the year, as the agenda of every
+ * reader asks (`/calendar/2026-10/list`; `DECISIONS.md` §89, §137, §NNN) — or the year, as the agenda of every
  * month that has something on it (§116).
  *
  * The controls that change the period are `CalendarHeader`. `events` arrives **already read**

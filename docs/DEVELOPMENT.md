@@ -312,7 +312,7 @@ does not import React, Next, MUI, or a provider SDK, and there is no `utils.ts`.
   (`src/i18n/live-twin.ts`) — so a signed-in browser never shows you the stranger's copy; use
   `curl` or a private window for that. A calendar month is a static page of its own path
   (`/ro/calendar/2026-10`, `/ro/calendar/2026-10/list`, `/ro/calendar/2026`), and the old
-  `?month=`, `?year=` and `?view=list` answer a 308 there from the proxy. Why: Next's router may
+  `?month=`, `?year=` and `?view=list` are redirected there by the proxy: a 308 when the address names the period, a `no-store` 307 when it means this month (whose target moves with the clock). Why: Next's router may
   answer a soft navigation to a static page's address plus a query from that page's prefetched
   copy, without asking the server, and on Vercel (whose answer to a prefetch is the page's whole
   `.rsc`) the calendar's arrows changed the address and left the month on screen
