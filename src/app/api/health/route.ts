@@ -2,7 +2,8 @@ import { sql } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 import { NextResponse } from "next/server";
 import { getDb } from "@/db/client";
-import { checkSchemaVersion } from "@/db/schema-version";
+import { checkSchemaVersion, EXPECTED_MIGRATION } from "@/db/schema-version";
+import { asksForDeepHealth, shallowHealth } from "@/modules/diagnostics/domain/shallow-health";
 import { checkJobHealth, type JobHealth } from "@/modules/jobs/health";
 import { checkEmailHealth } from "@/modules/notifications/health";
 import { governorEffects } from "@/modules/diagnostics/domain/neon-budget";
@@ -181,9 +182,34 @@ function withinWait<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T>
   return Promise.race([promise.catch(() => fallback), timeout]).finally(() => clearTimeout(timer));
 }
 
-export async function GET(): Promise<Response> {
-  const db = getDb();
+/**
+ * Shallow by default, deep on `?deep=1` (§577).
+ *
+ * The shallow answer is the build and the configuration (`diagnostics/domain/shallow-health.ts`):
+ * nothing here opens the database or calls a third party, so the hourly monitor wakes nothing on a
+ * platform nobody visits. Everything below it — the database, the schema, the jobs, the email, the
+ * Neon quota, the bot check, the DeepL credit — is the deep answer, asked by a person, by
+ * `yarn smoke` (and so the migration workflow), and by the monitor once a day at the maintenance
+ * window (`SETUP.md` §40), where the database is awake for the jobs' own 04:00 run anyway.
+ */
+export async function GET(request?: Request): Promise<Response> {
   const now = new Date();
+  if (!asksForDeepHealth(request?.url)) {
+    const report = shallowHealth({
+      build: buildInfo,
+      expectedMigration: EXPECTED_MIGRATION.tag,
+      appEnv: env.APP_ENV,
+      present: { DATABASE_URL: Boolean(env.DATABASE_URL), JOB_SECRET: Boolean(env.JOB_SECRET) },
+      domain: domainRenewal(env.DOMAIN_REGISTERED_ON, env.DOMAIN_RENEWAL_YEARS, now),
+      now,
+    });
+    return NextResponse.json(report, { status: report.status === "ok" ? 200 : 503 });
+  }
+  return deepHealth(now);
+}
+
+async function deepHealth(now: Date): Promise<Response> {
+  const db = getDb();
 
   // The quota reading is independent of this connection — Neon's console API, never a query —
   // so it runs beside the probe rather than after it, and answers the same whether the probe
@@ -289,6 +315,7 @@ export async function GET(): Promise<Response> {
   return NextResponse.json(
     {
       status,
+      depth: "deep",
       // Which code is answering. `buildInfo` is inlined at build time, so this is the commit
       // that was compiled, not the branch a deployment claims to track.
       build: {

@@ -7,6 +7,7 @@ import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
+import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { fadeIn } from "@/theme/motion";
@@ -15,6 +16,7 @@ import {
   BUILD_ENDPOINT,
   BUILD_STORAGE_KEYS,
   POLL_INTERVAL_MS,
+  pollsForNewBuild,
   readReloadStamp,
   readServedBuild,
   shouldRaiseNotice,
@@ -139,6 +141,8 @@ function writeStored(key: string, value: string): void {
 export default function NewBuildNotice({ build }: { build: string }) {
   const t = useTranslations("Site");
   const deployedBuild = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  // The backoffice asks every minute while visible; a public page only when it is shown again (§577).
+  const polls = pollsForNewBuild(usePathname());
   /** The identity this reader waved away in this render tree; the stored copy survives a remount. */
   const [dismissed, setDismissed] = useState<string | null>(null);
 
@@ -195,6 +199,8 @@ export default function NewBuildNotice({ build }: { build: string }) {
 
     const schedule = () => {
       window.clearInterval(timer);
+      // A public page never asks on a timer (§577, `pollsForNewBuild`): only when it is shown again.
+      if (!polls) return;
       timer = window.setInterval(() => {
         // Belt as well as braces: an interval can fire once more as a tab is being hidden.
         if (document.visibilityState === "visible") void ask();
@@ -232,7 +238,7 @@ export default function NewBuildNotice({ build }: { build: string }) {
       window.clearInterval(timer);
       document.removeEventListener("visibilitychange", onVisibilityChange);
     };
-  }, [build]);
+  }, [build, polls]);
 
   const show = deployedBuild !== null && deployedBuild !== dismissed;
 

@@ -2,7 +2,14 @@ import createMiddleware from "next-intl/middleware";
 import { NextResponse, type NextRequest } from "next/server";
 import { resolveAliasRedirect } from "@/i18n/aliases";
 import { legacyCalendarTarget } from "@/i18n/calendar-redirect";
-import { isStaticPublicAnswer, liveTwinPathname, mayBeSignedIn, STATIC_PAGE_BROWSER_CACHE_CONTROL } from "@/i18n/live-twin";
+import {
+  DECLINED_PREFETCH_STATUS,
+  isRouterPrefetch,
+  isStaticPublicAnswer,
+  liveTwinPathname,
+  mayBeSignedIn,
+  STATIC_PAGE_BROWSER_CACHE_CONTROL,
+} from "@/i18n/live-twin";
 import { resolveMovedBackofficePath } from "@/i18n/moved-paths";
 import { localeRootTarget } from "@/i18n/root-redirect";
 import { routing } from "@/i18n/routing";
@@ -132,6 +139,17 @@ export default function proxy(request: NextRequest) {
     const signedIn = mayBeSignedIn(request.cookies.getAll().map((cookie) => cookie.name));
     const twin = liveTwinPathname(internal.pathname, url.searchParams, signedIn);
     if (twin) {
+      /*
+        A prefetch the twin would have to render is declined (§577): a signed-in reader's event
+        cards in view were each a per-request render. The router drops the empty answer and the
+        press navigates to the twin as before (`DECLINED_PREFETCH_STATUS` says how).
+      */
+      if (isRouterPrefetch(request.headers)) {
+        return new NextResponse(null, {
+          status: DECLINED_PREFETCH_STATUS,
+          headers: { "Cache-Control": "private, no-store, max-age=0, must-revalidate" },
+        });
+      }
       const target = new URL(twin, url);
       target.search = url.search;
       const headers = new Headers(response.headers);

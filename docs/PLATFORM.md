@@ -494,6 +494,49 @@ Things already decided and owed, so they are not rediscovered.
 
 ---
 
+## Idle cost — nothing runs while nobody visits (2026-09-30)
+
+The owner, 2026-09-29: «dacă site-ul stă în idle nu vreau să consum nimic! nici Turnstile, nici
+nimic!». The target: outside the daily maintenance window (04:00 in Brașov) an idle environment
+wakes Neon **zero** times and invokes no function except the job pingers', which answer from the
+data cache in a few milliseconds without the database. Work happens because a person did
+something, or at 04:00.
+
+**How to measure it** (read-only; run from the repository root, `.env.local` in place):
+
+```text
+yarn idle:measure --hours 24                          Neon's wakes over a day, this key's project
+yarn idle:measure --hours 24 --neon-project <id>      another project (the key must be allowed on it)
+yarn idle:measure --hours 1 --vercel-project <name>   plus the last hour of Vercel requests, by kind
+```
+
+1. Pick a quiet day (no release, nobody testing). Run the Neon line the next morning. Every wake
+   is listed with its time in Brașov: `window` is 04:00–04:15, `pinger` a wake at a monitor's
+   minute (:00–:03, :15, :30, :45) — the platform's own doing, and the number that must be zero —
+   and `other` a person, a crawler or a deployment.
+2. For Vercel, Hobby keeps one hour of request logs: run the Vercel line at a quiet hour. `job ping`
+   and `health` are the monitors; `render` is a function that drew a page; `proxy (HIT)` is the
+   locale proxy in front of a CDN hit; `scanner probe` is somebody guessing `/wp-admin` (see the
+   firewall list in the decision).
+3. The 30-day totals — Fluid Active CPU, function invocations, edge requests — are on Vercel →
+   the project → Usage. Compare the same 30-day window a month apart; one day's change is lost in
+   the month's visitors. Route-level CPU needs Observability Plus, which Hobby does not have, so no
+   figure here attributes CPU to a route from an invocation count.
+
+**Per provider, idle cost and cost per visit — before (measured 2026-09-29/30) and after.**
+
+| Provider | Idle, before | Idle, after | Per visit |
+| --- | --- | --- | --- |
+| Neon, production | about 24 wakes a day from the monitors alone: each job's hourly safety run at :00 and the hourly health check at :02 (15.6 h measured: 49 wakes, 6.2 h awake, 12 of them at :00) — about 2 h awake, 0.5 CU-h, $0.06 a day | one wake a day, 04:00: both jobs' daily run and the deep health check at 04:02 inside it (≈7 min, $0.003) | a stranger: none (the pages are CDN copies; a miss reads the data cache). A registration, a desk action, a save: a wake, as it must |
+| Neon, QA | jobs every two hours (its 120-minute interval) and health every six: about 12 wakes a day | one a day, 04:00 | as production |
+| Vercel functions | the pings (production about 144 a day, QA about 36) answered from the cache; 22 health checks a day that each opened the database and asked Neon, Cloudflare and DeepL (cached) | the same pings, still cache-only; the hourly health is shallow (build and configuration, no request of its own); one deep check a day | a stranger's page: one proxy call (0.17–0.32 ms of CPU warm, measured on a production build) and a CDN copy, plus one proxy call per prefetched static link in view. A signed-in reader: no longer a twin render per event card in view (the prefetch is declined). An address with a key no page reads (`?foo=1`, `?page=2`): a CDN copy, no longer a render |
+| Vercel edge requests | an open public tab asked `/api/build-id` every minute (1 440 a day, CDN hits) | a public tab asks only when shown again; the backoffice every minute while visible | — |
+| Cloudflare Turnstile | the script and a challenge on every view of the registration, contact and declaration pages and of an event page with the interest box; a siteverify probe from every health check (cached 15 min) | nothing until a person focuses, presses or types in a protected form; the probe only in the daily deep check and `/admin/tasks` | one challenge per form a person starts; siteverify on submit |
+| DeepL, Neon's API | read by every health check (cached an hour and 15 minutes) | only by the deep check and the backoffice pages | — |
+| Open-Meteo | none (fetched only inside a page's render, one entry per place and hour, §402, §549) | unchanged | a render of a page that shows the forecast, once per hour per place |
+| R2, Mailgun | none on a timer; the picture sweep ran on every hourly safety run | the sweep runs once a day | a photo upload; an email a person caused |
+| GitHub Actions | `scheduled-jobs.yml` said every five minutes (GitHub ran it every three to five hours) | four times a day, as the backstop it is | — |
+
 ## Cost
 
 Nothing is on a paid plan today, so the running cost is the domain registration alone. Record a

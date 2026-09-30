@@ -87,6 +87,8 @@ vi.mock("@/modules/registrations/bot-check", () => ({
   },
 }));
 vi.mock("@/modules/public-cache/reads", () => ({
+  cachedAddressCap: async () => ({ registrationsPerAddress: 4 }),
+  cachedFamilyRegistrationOpen: async () => true,
   cachedCurrentApprovedDocument: async () => {
     if (state.refusal) throw state.refusal;
     return { version: 3 };

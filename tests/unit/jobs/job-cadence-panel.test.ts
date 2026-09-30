@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
-import { ALIGN_STRETCH_MINUTES } from "@/modules/jobs/schedule";
+import { ALIGN_STRETCH_MINUTES, DAILY_WINDOW_LABEL } from "@/modules/jobs/schedule";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
@@ -89,36 +89,39 @@ describe("§334, §221 the throttle card's sentence about email", () => {
 });
 
 /*
-  BR-REQ-090-03 criterion 14 (§355): the card says why an idle hour costs one wake — the safety
-  look is on the hour, with the health monitor's check — to a reader who may not change it too.
+  BR-REQ-090-03 criterion 14, as §577 amends §355: the card says why an idle day costs one wake —
+  the safety look is the daily window at 04:00, with the monitor's full check — to a reader who
+  may not change it too.
 */
-describe("§355 the throttle card says the safety look is on the hour", () => {
-  it("says it on the card, whether or not the reader may change the interval", async () => {
+describe("§577 the throttle card says the safety look is once a day, at the window", () => {
+  it("says it on the card with the window's time, whether or not the reader may change the interval", async () => {
     const html = await render("immediate");
     expect(html).toContain('data-testid="job-cadence-on-the-hour"');
-    expect(html).toContain(ro.Admin.tasks.jobCadence.onTheHour);
+    expect(html).toContain(ro.Admin.tasks.jobCadence.onTheHour.replace("{time}", DAILY_WINDOW_LABEL));
+    expect(DAILY_WINDOW_LABEL).toBe("04:00");
   });
 
   // The line on the card and its «?» (§511): one sentence visible, the reasons in the tooltip.
   const onTheHour = (messages: typeof ro) => `${messages.Admin.tasks.jobCadence.onTheHour} ${messages.Admin.tasks.jobCadence.onTheHourMore}`;
 
-  it("names the hour, the health monitor and the one wake of an idle hour in both languages", () => {
-    expect(onTheHour(ro)).toMatch(/ora fixă.*\/api\/health.*o oră fără nimic de făcut.*o trezire/);
-    expect(onTheHour(en)).toMatch(/on the hour.*\/api\/health.*idle hour.*one wake/);
+  it("names the day, the window, the deep health check and the one wake of an idle day in both languages", () => {
+    expect(onTheHour(ro)).toMatch(/o dată pe zi, la \{time\}.*\/api\/health\?deep=1.*O zi fără nimic de făcut costă o trezire/);
+    expect(onTheHour(en)).toMatch(/once a day, at \{time\}.*\/api\/health\?deep=1.*A day with nothing to do costs one wake/);
+    // A deadline keeps its own time: the sentence must not suggest a hold waits for 04:00.
+    expect(onTheHour(ro)).toMatch(/își păstrează ora/);
+    expect(onTheHour(en)).toMatch(/keeps its own time/);
   });
 
-  it("puts the reasons behind the card's «?»", async () => {
+  it("puts the reasons behind the card's «?», with the window's time filled in", async () => {
     const html = await render("immediate");
-    expect(html).toContain(`aria-label="${ro.Admin.tasks.jobCadence.onTheHourMore}"`);
+    expect(html).toContain(`aria-label="${ro.Admin.tasks.jobCadence.onTheHourMore.replace("{time}", DAILY_WINDOW_LABEL)}"`);
   });
 
-  it("promises no more lateness than the scheduler keeps: several checks, each at most the stretch late", () => {
-    // `minimumIntervalEnd` moves a run off its interval's marks one stretch at a time — several
-    // runs under an hour or two, not one — and the sentence says so, with the stretch's own length.
+  it("promises no more lateness than the scheduler keeps: some runs, each at most the stretch late", () => {
     expect(ALIGN_STRETCH_MINUTES).toBe(15);
-    expect(onTheHour(ro)).toMatch(/unele verificări pot întârzia fiecare cu până la un sfert de oră/);
-    expect(onTheHour(en)).toMatch(/some checks up to a quarter of an hour late each/);
-    expect(onTheHour(ro)).not.toMatch(/o dată|jumătate/);
-    expect(onTheHour(en)).not.toMatch(/once|half an hour/);
+    expect(onTheHour(ro)).toMatch(/unele pot întârzia cu până la un sfert de oră/);
+    expect(onTheHour(en)).toMatch(/some may be up to a quarter of an hour late/);
+    expect(onTheHour(ro)).not.toMatch(/jumătate/);
+    expect(onTheHour(en)).not.toMatch(/half an hour/);
   });
 });

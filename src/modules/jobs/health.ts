@@ -4,7 +4,7 @@ import type { Database } from "@/db/types";
 import { readJobCadence } from "./cadence";
 import { jobStalenessThresholdMs } from "./quiet-hours";
 import { RETENTION_ERROR_PREFIX } from "./retention";
-import { isJobName, NEXT_DUE_CAP_MINUTES, SLOT_MINUTES } from "./schedule";
+import { isJobName, SAFETY_LOOK_MAX_MINUTES, SLOT_MINUTES } from "./schedule";
 import { plannedCadenceMinutes, readLastPing } from "./schedule-cache";
 
 /**
@@ -22,10 +22,10 @@ import { plannedCadenceMinutes, readLastPing } from "./schedule-cache";
  *   with the threshold it always had. No ping at all for twice the cadence plus five minutes is
  *   `stale`, exactly as before; pings every fifteen minutes that all skip are `ok`.
  * - **Does a real run still happen?** Measured against the last `job_runs` row, with the longest
- *   quiet a run may promise added to the same threshold: an hour (the cap), or the
- *   Administrator's minimum interval when that is longer (`cadence.ts`). A club that set two
- *   hours sees a real run every two hours and reads `ok`, rather than being paged by its own
- *   throttle.
+ *   quiet a run may promise added to the same threshold: the daily window at its furthest
+ *   (`SAFETY_LOOK_MAX_MINUTES`, since §577; an hour before it), or the Administrator's minimum
+ *   interval when that is longer (`cadence.ts`). An idle platform sees one real run a day, at
+ *   04:00, and reads `ok`, rather than being paged for sleeping.
  *
  * Since §355 both end on the pinger's slots rather than a fixed time after the run, and neither
  * threshold moved. The cap ends on the latest top of the hour within sixty minutes of the run —
@@ -38,9 +38,10 @@ import { plannedCadenceMinutes, readLastPing } from "./schedule-cache";
  *
  * When the cache answers nothing for the pings — a caller outside a request, a cache this
  * function cannot reach, or ping slots evicted on their own — the last real run stands in for the
- * last ping. That is not the check as it was before §334: real runs are now up to an hour apart
- * by day, so a run fifty minutes old against the day's 35-minute threshold reads `stale` although
- * the pinger may be calling every quarter of an hour. It is left that way on purpose. Trusting
+ * last ping. That is not the check as it was before §334: real runs are now up to a day apart
+ * (§577), so a run hours old against the day's 35-minute threshold reads `stale` although the
+ * pinger may be calling every quarter of an hour. The daily deep check the monitor makes (04:02,
+ * `SETUP.md` §40) follows the window's own 04:00 run, so it reads `ok` even from an empty cache. It is left that way on purpose. Trusting
  * some other slot instead — "the plan is still cached, so the scheduler must be alive" — would
  * read `ok` for up to the cap after a pinger that died right after a run, and a dead scheduler
  * read as healthy is the one answer this check exists to refuse; an evicted ping slot costs one
@@ -115,7 +116,7 @@ export async function checkJobHealth<T extends Record<string, unknown>>(
   const lastSeen = Math.max(lastRun, ping ? Date.parse(ping.at) : 0);
   const { minutes: cadenceMinutes } = await readJobCadence(db);
   const planned = isJobName(jobName) ? await plannedCadenceMinutes(jobName, now) : 0;
-  const realRunThresholdMs = Math.max(NEXT_DUE_CAP_MINUTES, cadenceMinutes, governorFloorMinutes, planned) * 60_000 + pingThresholdMs;
+  const realRunThresholdMs = Math.max(SAFETY_LOOK_MAX_MINUTES, cadenceMinutes, governorFloorMinutes, planned) * 60_000 + pingThresholdMs;
 
   const stale = now.getTime() - lastSeen > pingThresholdMs || now.getTime() - lastRun > realRunThresholdMs;
   const failing = recent.length === 2 && recent.every((run) => run.finishedAt !== null && retentionFailed(run));

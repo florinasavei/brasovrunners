@@ -207,7 +207,8 @@ describe("§518 the wiring", () => {
 
   it("writes its state on its own element, speaks only once running, and the retry is a thumb's target", () => {
     expect(widget).toMatch(/\[BOT_CHECK_STATE_ATTRIBUTE\]: state/);
-    expect(widget).toMatch(/\{running && \(/);
+    // Once running, and once armed by a person starting on the form (§577).
+    expect(widget).toMatch(/\{running && armed && \(/);
     expect(widget).toMatch(/role="status"/);
     expect(widget).toMatch(/sx=\{TAP_TARGET\}/);
     expect(widget).toMatch(/type="button"/);

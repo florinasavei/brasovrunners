@@ -28,11 +28,14 @@ const COOKIE = "br_family_sitting";
 const PURPOSE = "family-sitting";
 
 /**
- * One line per person: the name, a tab, the birth date as typed ("" when none), a tab, and `w` when
- * no place was free for them (§543).
+ * One line per person: the name, a tab, the birth date as typed ("" when none), a tab, `w` when
+ * no place was free for them (§543), a tab, and `F` or `M` for the sex typed (§576; "" when none —
+ * and absent from a line written before it, which reads as none).
  */
+const SEX_LETTER = { FEMALE: "F", MALE: "M" } as const;
+
 function peopleLines(people: readonly SittingPerson[]): string {
-  return people.map((person) => `${person.name.replace(/[\t\n]/g, " ")}\t${person.birthDate}\t${person.waitlist ? "w" : ""}`).join("\n");
+  return people.map((person) => `${person.name.replace(/[\t\n]/g, " ")}\t${person.birthDate}\t${person.waitlist ? "w" : ""}\t${person.sex ? SEX_LETTER[person.sex] : ""}`).join("\n");
 }
 
 function peopleOf(lines: string | undefined): SittingPerson[] {
@@ -40,8 +43,9 @@ function peopleOf(lines: string | undefined): SittingPerson[] {
     .split("\n")
     .filter((line) => line.trim() !== "")
     .map((line) => {
-      const [name = "", birthDate = "", place = ""] = line.split("\t");
-      return place === "w" ? { name, birthDate, waitlist: true } : { name, birthDate };
+      const [name = "", birthDate = "", place = "", letter = ""] = line.split("\t");
+      const sex = letter === "F" ? { sex: "FEMALE" as const } : letter === "M" ? { sex: "MALE" as const } : {};
+      return place === "w" ? { name, birthDate, waitlist: true, ...sex } : { name, birthDate, ...sex };
     });
 }
 
