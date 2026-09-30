@@ -14,11 +14,16 @@ decision or a click only the club can make · **released** — on production, wi
 Where things stand at the end of 2026-09-30, written so that a session with no access to the laptop can carry on
 (the dispatcher's own notes lived under `D:/tmp/handoff/` on the laptop; from here on this page is the queue).
 
-- **Production:** `BR-V2.46` (released 16:49). **qa and QA:** `BR-V2.47` (#302, 21:14) and `BR-V2.48` (#303) once its
-  checks are green — the two carry §585–§593: «estimativ» beside the elevation, the preview's «Formular» tab, the full
-  race's thank-you and its counts, one click confirms the whole family and «Retrimite familiei», «Dă-i un loc» explained
-  before and after the press, an undefined race start, the members' link in the footer, the contact form's one-line note
-  and no gap before the anti-bot check, the README in English.
+- **Production:** `BR-V2.48` plus two hotfixes straight to `main` (#305 «10:00 (start eveniment)», #307 the card's
+  «când» row never clipped). **qa and QA:** `BR-V2.50` (02:24 on 2026-10-01; smoke ok) — §594–§599 on top of §585–§593:
+  the full card says the room left on the waiting list, a cancellation's offer email leaves at once, both starts named
+  with a chequered flag, the distance marked «aproximativ» (migration `0116`), the two hotfixes' decision entries.
+- **The morning, from the phone (2026-10-01):** open `qa.brasovrunners.com` and look at the race's card and page (the
+  two times, «≈» on a distance you tick, a cancellation on the QA race → the next person's offer email leaves at once).
+  Then release everything that is in qa: GitHub app → the repository → **Actions** → **release** → **Run workflow** →
+  `pr` = `310` (the last batch pull request, already merged: the run continues from the release step), `baseline` empty
+  → Run. It merges `qa` into `main`, runs the production migration (`0116`) and waits for production's health; the
+  run's Summary page says each step. Twenty to thirty minutes. Nothing on the laptop is needed.
 - **The release** is the owner's «ok release» after checking QA: from the phone, the label `ship` on the last batch PR into
   qa runs the landing and the release on GitHub Actions (`docs/RUNBOOKS.md` § Every release: the label); from a PC,
   `node scripts/ship.mjs <batch PR> BR-V2.50-2026-09-27 BR-V2.46-2026-09-27 "<title>"`. No migration is due
