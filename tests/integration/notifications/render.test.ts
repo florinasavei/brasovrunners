@@ -461,8 +461,15 @@ describe("BR-REQ-080-01 outbox renderer", () => {
       NOW,
     );
 
-    // Below the header band, which links nothing and only shows the lockup (§174).
-    expect(message.html.slice(message.html.indexOf("</div>") + 6)).not.toContain("http");
+    /*
+      No action link: no button and no token link anywhere in the message. Until §NNN this sliced
+      after the first `</div>`, which was the card's own end; the highlighted band is a `<div>` of
+      the body now, so the check names what it means — the standard links (events, contact, the
+      notice) stay, a link a token opens does not.
+    */
+    expect(message.html).not.toContain("display:inline-block;background:");
+    expect(message.html).not.toContain("#cancel");
+    expect(message.text).not.toMatch(/\/inregistrari\/[a-z-]+\/[A-Za-z0-9_-]{20,}/);
     const tokens = await db.select().from(emailActionTokens).where(eq(emailActionTokens.registrationId, registrationId));
     expect(tokens).toHaveLength(0);
   });
@@ -562,7 +569,7 @@ describe("BR-REQ-080-01 outbox renderer", () => {
     const offerHours = hoursPhrase("ro", DEFAULT_DEADLINES.offerHours);
 
     const live = await renderOutboxMessage(rowOf("WAITLIST_SPOT_OFFER", "offer"), db, NOW);
-    const when = formatDay(offerDeadline, { locale: "ro", timeZone: event.timezone, style: "long", withTime: true, position: "inline" });
+    const when = formatDay(offerDeadline, { locale: "ro", timeZone: event.timezone, style: "long", month: "long", withTime: true, position: "inline" });
     expect(live.text).toContain(
       `S-a eliberat un loc la Crosul. Este al tău dacă semnezi declarația pe propria răspundere până ${when} (ai la dispoziție ${offerHours}); după acest termen, locul trece la următorul de pe lista de așteptare.`,
     );
@@ -592,7 +599,7 @@ describe("BR-REQ-080-01 outbox renderer", () => {
       .where(eq(registrations.id, registrationId));
 
     const message = await renderOutboxMessage(rowOf("WAITLIST_SPOT_OFFER", "offer-capped"), db, NOW);
-    const when = formatDay(cappedDeadline, { locale: "ro", timeZone: event.timezone, style: "long", withTime: true, position: "inline" });
+    const when = formatDay(cappedDeadline, { locale: "ro", timeZone: event.timezone, style: "long", month: "long", withTime: true, position: "inline" });
     expect(message.text).toContain(
       `S-a eliberat un loc la Crosul. Este al tău dacă semnezi declarația pe propria răspundere până ${when} (ai la dispoziție ${hoursPhrase("ro", 3)}); după acest termen, locul trece la următorul de pe lista de așteptare.`,
     );
@@ -674,8 +681,8 @@ describe("BR-REQ-080-01 outbox renderer", () => {
       .where(eq(registrations.id, registrationId));
 
     const message = await renderOutboxMessage(rowOf("WAITLIST_SPOT_OFFER", "offer-at-start"), db, NOW);
-    const when = formatDay(event.startsAt, { locale: "ro", timeZone: event.timezone, style: "long", withTime: true, position: "inline" });
-    const whenEn = formatDay(event.startsAt, { locale: "en", timeZone: event.timezone, style: "long", withTime: true, position: "inline" });
+    const when = formatDay(event.startsAt, { locale: "ro", timeZone: event.timezone, style: "long", month: "long", withTime: true, position: "inline" });
+    const whenEn = formatDay(event.startsAt, { locale: "en", timeZone: event.timezone, style: "long", month: "long", withTime: true, position: "inline" });
     expect(message.text).toContain(`până la start, ${when}`);
     expect(message.text).toContain(`by the start, ${whenEn}`);
     expect(message.text).toContain("(ai la dispoziție 2 ore)");

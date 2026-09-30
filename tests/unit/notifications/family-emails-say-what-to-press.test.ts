@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { emailCopyPrefill, emailSampleFamilyConfirmed, emailSampleFor } from "@/modules/notifications/email-copy-fields";
-import { renderBilingual } from "@/modules/notifications/templates";
+import { HIGHLIGHT_TEXT_MARK, renderBilingual } from "@/modules/notifications/templates";
 
 /**
  * §536 (the owner, 2026-09-28) — the three emails of a registration say in one line what to press and
@@ -17,8 +17,9 @@ describe("§536 the verification email says what to press first", () => {
     expect(message.subject).toContain("Confirm your address — ");
     const first = "Apasă butonul ca să confirmi adresa. Dacă mai e loc, semnezi apoi declarația și primești codul QR.";
     expect(message.text).toContain(first);
-    // The first line of the body, right under the greeting.
-    expect(message.text.split("\n\n")[1].startsWith(`${first}\n`)).toBe(true);
+    // The first line of the body, right under the greeting, on the highlighted line, the button under it (§NNN).
+    expect(message.text.split("\n\n")[1]).toBe(`${HIGHLIGHT_TEXT_MARK}${first}`);
+    expect(message.text.split("\n\n")[2].startsWith("Confirmă adresa de email: ")).toBe(true);
     expect(message.text).toMatch(/^Când: /m);
     expect(message.text).toMatch(/Linkul e valabil \d+ de ore; fără confirmare, înscrierea expiră\./);
     expect(message.text).toContain("Press the button to confirm your address. If there is still a place, you then sign the declaration and get your QR code.");
@@ -55,10 +56,11 @@ describe("§536 a family's one message says the one button does everything", () 
   it("opens with the one line, then one line per person with the birth date in words, the button with the count, and the link's life", () => {
     const message = family();
     const lead = "Un singur buton: confirmi adresa și cele 2 înscrieri, apoi semnezi pe rând declarațiile celor care mai au loc.";
-    // The family marker first (§543), then the one line.
-    const block = message.text.split("\n\n")[1].split("\n");
-    expect(block[0]).toBe("Înscriere de familie: Ana și Maria.");
-    expect(block[1]).toBe(lead);
+    // The family marker first (§543), on the highlighted line (§NNN), then the one line and the button under it.
+    const blocks = message.text.split("\n\n");
+    expect(blocks[1]).toBe(`${HIGHLIGHT_TEXT_MARK}Înscriere de familie: Ana și Maria.`);
+    expect(blocks[2].split("\n")[0]).toBe(lead);
+    expect(blocks[3].startsWith("Confirm și semnez declarațiile (2): ")).toBe(true);
     expect(message.text).toContain("Persoana 1 din 2: Ana Pop, data nașterii 2 martie 1985");
     expect(message.text).toContain("Persoana 2 din 2: Maria Pop, data nașterii 11 iulie 2010");
     expect(message.text).not.toContain("la 2 martie");
