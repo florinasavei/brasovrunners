@@ -179,8 +179,8 @@ export const events = pgTable(
      *
      * `starts_at` keeps its meaning exactly: when the event begins — the gathering — and it is
      * what the ordering, the upcoming/past cut-off, the sitemap and the listing all read. A
-     * runner needs both times, and they are not the same fact: gather at 09:00, start at
-     * 10:00. Null when the club has stated only one time; the page then shows only that one
+     * runner needs both times, and they are not the same fact: 09:00 (event start),
+     * 10:00 (race start). Null when the club has stated only one time; the page then shows only that one
      * rather than inventing a gathering an hour before.
      */
     raceStartsAt: timestamp("race_starts_at", { withTimezone: true }),

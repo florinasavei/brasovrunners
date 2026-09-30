@@ -67,7 +67,7 @@ export type CalendarEvent = {
   endsAt: Date | null;
   /** Cancelled: `STATUS:CANCELLED` and the page's notice first in the description (§159); finished: the notice. */
   eventStatus?: "SCHEDULED" | "CANCELLED" | "COMPLETED";
-  /** The gun time, when it differs from the gathering (§159): "întâlnire la 08:00 · start la 09:00", the page's words. */
+  /** The gun time, when it differs from the gathering (§159): "08:00 (start eveniment) · 09:00 (start cursă)", the page's words (§NNN). */
   raceStartsAt?: Date | null;
   /** What the event is (§112): the page's overline, the first word of the facts line. */
   type?: EventType | null;
@@ -382,9 +382,10 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
   // The page's own sentence for an event that will not happen or has happened (BR-REQ-020-01 criteria 2 and 4).
   const notice = event.eventStatus === "CANCELLED" ? t("cancelledNotice") : event.eventStatus === "COMPLETED" ? t("completedNotice") : "";
 
-  // "întâlnire la 08:00 · start la 09:00": the page's two times when the race has a gun time.
+  // "08:00 (start eveniment) · 09:00 (start cursă)": the page's two times when the race has a gun
+  // time, in words alone — no flag, no emoji, in an `.ics` line (§NNN).
   const time = (at: Date) => formatTime(at, { locale, timeZone });
-  // The page's own rule (`whenTimes`, §590): a race with no gun time yet reads "start la 08:00 · Ora
+  // The page's own rule (`whenTimes`, §590): a race with no gun time yet reads "08:00 (start eveniment) · Ora
   // startului cursei se anunță."; a bare time is the calendar's own, and is not repeated.
   const when = whenTimes(event);
   const named = when.times.flatMap(({ key, at }) => (key === null ? [] : [t(key, { time: time(at) })]));

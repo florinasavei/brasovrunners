@@ -6,17 +6,17 @@ import { emailSampleEventFacts } from "@/modules/notifications/email-copy-fields
 
 /**
  * §590 — a race's start may be not set yet: «Startul cursei nu e stabilit» in the editor saves no
- * gun time, and «Când» then says the event's start alone, named «start la», with «Ora startului
- * cursei se anunță.» under it — never «întâlnire la 08:30 · start la —».
+ * gun time, and «Când» then says the event's start alone, «08:30 (start eveniment)», with «Ora
+ * startului cursei se anunță.» under it — never a gathering with no start after it.
  */
 const startsAt = new Date("2026-11-21T06:30:00Z");
 const gun = new Date("2026-11-21T08:00:00Z");
 
 describe("§590 «Când»'s times (whenTimes)", () => {
-  it("a race with its own gun time: the gathering and the start, each named", () => {
+  it("a race with its own gun time: the event start and the race start, each named (§NNN)", () => {
     expect(whenTimes({ type: "RACE", startsAt, raceStartsAt: gun })).toEqual({
       times: [
-        { key: "gatheringAt", at: startsAt },
+        { key: "eventStartAt", at: startsAt },
         { key: "raceStartAt", at: gun },
       ],
       raceStartLater: false,
@@ -27,8 +27,16 @@ describe("§590 «Când»'s times (whenTimes)", () => {
     expect(whenTimes({ type: "RACE", startsAt, raceStartsAt: null })).toEqual({ times: [{ key: "eventStartAt", at: startsAt }], raceStartLater: true });
   });
 
-  it("a gun time equal to the start is one time, named «start», with nothing to announce", () => {
-    expect(whenTimes({ type: "RACE", startsAt, raceStartsAt: new Date(startsAt) })).toEqual({ times: [{ key: "raceStartAt", at: startsAt }], raceStartLater: false });
+  it("a gun time equal to the start is one time, «(start eveniment)», with nothing to announce", () => {
+    expect(whenTimes({ type: "RACE", startsAt, raceStartsAt: new Date(startsAt) })).toEqual({ times: [{ key: "eventStartAt", at: startsAt }], raceStartLater: false });
+  });
+
+  it("the emails' «Când» with both times: «(start eveniment) · (start cursă)», words alone, in both languages (§NNN)", () => {
+    const ro = eventFactsBlock({ ...emailSampleEventFacts("ro"), type: "RACE" as const, startsAt, raceStartsAt: gun }, "ro").text;
+    expect(ro).toMatch(/Când: .* · 08:30 \(start eveniment\) · 10:00 \(start cursă\)/);
+    expect(ro).not.toContain("🏁");
+    const en = eventFactsBlock({ ...emailSampleEventFacts("en"), type: "RACE" as const, startsAt, raceStartsAt: gun }, "en").text;
+    expect(en).toMatch(/When: .* · 08:30 \(event start\) · 10:00 \(race start\)/);
   });
 
   it("anything else: the one time, bare", () => {

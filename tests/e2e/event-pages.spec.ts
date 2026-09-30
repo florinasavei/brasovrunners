@@ -463,8 +463,8 @@ test.describe("BR-REQ-011-01 the featured event leads the landing page", () => {
 
     const heroText = await hero.innerText();
     // A race has two times, each named: the gathering and the gun.
-    expect(heroText).toContain("întâlnire la");
-    expect(heroText).toContain("start la");
+    expect(heroText).toContain("(start eveniment)");
+    expect(heroText).toContain("(start cursă)");
     // The seeded race is a placeholder and says so, in the text a visitor reads first.
     expect(heroText).toContain("EXEMPLU");
   });

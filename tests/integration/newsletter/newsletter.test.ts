@@ -450,7 +450,7 @@ describe("§445 the newsletter: consent, links, sends and the allowance", () => 
       const page = `/ro/evenimente/crosul-${race.id.slice(0, 8)}`;
       const enPage = `/en/events/cross-${race.id.slice(0, 8)}`;
 
-      expect(ro).toContain("Când: Sâmbătă, 21 nov. 2026 · întâlnire la 09:00 · start la 09:30");
+      expect(ro).toContain("Când: Sâmbătă, 21 nov. 2026 · 09:00 (start eveniment) · 09:30 (start cursă)");
       expect(ro).toContain(`Unde: Parcul Tractorul\n  Strada Carpaților 60\n  Vezi pe hartă: ${MAP}`);
       expect(ro).toContain("Program: 08:00 — Ridicarea numerelor (Cort)");
       expect(ro).toContain(`Traseu: Trail · Greu, nivelul 11 din 15 · 21,1 km · 900 m D+ · Noapte (Soarele apune la 16:42)\n  Evenimentul pe Strava: ${STRAVA}`);
@@ -458,7 +458,7 @@ describe("§445 the newsletter: consent, links, sends and the allowance", () => 
       expect(ro).toMatch(
         new RegExp(`Linkuri:\\n  Pagina evenimentului: \\S+${page}\\n  Program: \\S+${page}#schedule\\n  Regulament: \\S+${page}#rules\\n  Traseul: \\S+${page}#route\\n  Linkuri și fișiere: \\S+${page}#links`),
       );
-      expect(en).toContain("When: Saturday, 21 Nov 2026 · gather at 09:00 · start at 09:30");
+      expect(en).toContain("When: Saturday, 21 Nov 2026 · 09:00 (event start) · 09:30 (race start)");
       expect(en).toContain(`Where: Tractorul Park\n  Strada Carpaților 60\n  Open the map: ${MAP}`);
       expect(en).toContain("Programme: 08:00 — Number pickup (Cort)");
       expect(en).toContain("Route: Trail · Hard, level 11 of 15 · 21.1 km · 900 m climb · Night");
