@@ -285,7 +285,7 @@ describe("CSV formula neutralization", () => {
     expect(shown.split(",").slice(at - 1, at + 1)).toEqual(["ana.pop", "Yes"]);
     expect(kept.split(",")[at]).toBe("");
     expect(older.split(",")[at]).toBe("");
-    // §NNN — the public-list tick itself, right after the socials it governs: "Yes" or empty, like them.
+    // §581 — the public-list tick itself, right after the socials it governs: "Yes" or empty, like them.
     expect(header.split(",")[at + 1]).toBe("Public list & results");
     const [, listed, unlisted] = buildRegistrationsCsv([{ ...base, listPublic: true }, { ...base, listPublic: false }]).split("\r\n");
     expect(listed.split(",")[at + 1]).toBe("Yes");

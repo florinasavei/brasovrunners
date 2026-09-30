@@ -7,7 +7,7 @@ import { REGISTRATION_SHEET_HEADERS } from "@/modules/registrations/workbook";
 import { readSheet, unzip } from "../../helpers/xlsx";
 
 /**
- * §NNN (amending §570) — the sponsor list as an Excel file with every tick beside the five columns.
+ * §581 (amending §570) — the sponsor list as an Excel file with every tick beside the five columns.
  * The owner, 2026-09-30: «trebuie să am Excel cu toate bifele lor».
  */
 function wordsOf(catalogue: typeof ro): SponsorSheetWords {
@@ -35,7 +35,7 @@ const row = (over: Partial<SponsorSheetRow> = {}): SponsorSheetRow => ({
 /** An Excel serial for a wall-clock moment, as `workbook.test.ts` computes it. */
 const serialOf = (utcWall: number) => String(utcWall / (24 * 60 * 60 * 1000) + (70 * 365 + 19));
 
-describe("§NNN the sponsor list's Excel file", () => {
+describe("§581 the sponsor list's Excel file", () => {
   it("heads the CSV's five columns first, then every consent, in the order the owner named — in both languages", () => {
     expect(sponsorSheetHeaders(wordsOf(ro))).toEqual([
       "Prenume",
@@ -112,7 +112,7 @@ describe("§NNN the sponsor list's Excel file", () => {
   });
 });
 
-describe("§NNN the full export names the public-list tick", () => {
+describe("§581 the full export names the public-list tick", () => {
   it("carries «Public list & results» right after «Socials on the public list»", () => {
     const at = REGISTRATION_SHEET_HEADERS.indexOf("Socials on the public list");
     expect(REGISTRATION_SHEET_HEADERS[at + 1]).toBe("Public list & results");

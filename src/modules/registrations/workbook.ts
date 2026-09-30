@@ -107,7 +107,7 @@ export type SheetColumn<Row> = {
 
 /**
  * The one writer every spreadsheet the backoffice hands out goes through — the start list here, the
- * sponsor list (§NNN, `sponsor-sheet.ts`): a bold header row kept on screen, the columns' widths,
+ * sponsor list (§581, `sponsor-sheet.ts`): a bold header row kept on screen, the columns' widths,
  * the club's date format, and a sheet name Excel accepts (at most 31 characters, none of `: \ / ? * [ ]`).
  */
 export async function writeSheet<Row>(columns: readonly SheetColumn<Row>[], rows: readonly Row[], sheetName: string, fallbackName: string): Promise<Buffer> {
@@ -163,7 +163,7 @@ const COLUMNS: Array<SheetColumn<RegistrationSheetRow>> = [
   { header: "Instagram", width: 18, cell: (row) => ({ value: row.instagramHandle, type: String }) },
   // Beside the two (§500): whether the public list prints them. The sheet is matched by header, not position.
   { header: "Socials on the public list", width: 12, cell: (row) => ({ value: row.listSocials ?? false, type: Boolean }) },
-  // The public-list tick itself (§143, §570, §NNN), beside the socials it governs: every tick the person gave has its column.
+  // The public-list tick itself (§143, §570, §581), beside the socials it governs: every tick the person gave has its column.
   { header: "Public list & results", width: 12, cell: (row) => ({ value: row.listPublic ?? false, type: Boolean }) },
   { header: "Submitted", width: 18, cell: (row) => ({ value: onClubClock(row.submittedAt), type: Date, format: STAMP_FORMAT }) },
   { header: "Confirmed", width: 18, cell: (row) => ({ value: onClubClock(row.confirmedAt), type: Date, format: STAMP_FORMAT }) },

@@ -51,7 +51,7 @@ import StartList from "./StartList";
 /**
  * What only a page a visitor opens has (§549): the «Anunță-mă» box and how it answered, the
  * signer's own link to a group run's declaration, the start list's page. The preview before saving
- * (§NNN) has none of them — each reads the public cache or takes an address.
+ * (§579) has none of them — each reads the public cache or takes an address.
  */
 export type EventPageVisit = {
   interestBox: boolean;
@@ -63,7 +63,7 @@ export type EventPageVisit = {
 };
 
 /**
- * The editor's preview before saving (§NNN): the draft's door, counted without the public cache and
+ * The editor's preview before saving (§579): the draft's door, counted without the public cache and
  * drawn disabled (`draftRegistrationDoor`), and the club's deadlines and family switch the five
  * steps are told with, read from the database rather than through the public cache.
  */
@@ -84,7 +84,7 @@ function SurfaceGlyph({ surface }: { surface: keyof typeof SURFACE_GLYPH }) {
 
 /**
  * **The event page's body, as a visitor reads it** — moved out of `app/[locale]/events/[slug]/page.tsx`
- * (§NNN) so the editor's preview before saving draws the page with the very components, in the very
+ * (§579) so the editor's preview before saving draws the page with the very components, in the very
  * order, the page does, from an event the save has not written yet (`content/events/draft-preview.tsx`):
  * one page, two callers, never a second copy that drifts (§187's lesson, where the preview once drew
  * the description five blocks higher than the page).
@@ -116,7 +116,7 @@ export default async function EventPageView({
   /** The staff edit button's address (§135), the live twin's alone. */
   editHref?: string | null;
   visit?: EventPageVisit;
-  /** The preview before saving (§NNN): what the page otherwise reads from the public cache. */
+  /** The preview before saving (§579): what the page otherwise reads from the public cache. */
   preview?: EventPagePreview;
 }) {
   const previewDoor = preview?.door;
@@ -201,7 +201,7 @@ export default async function EventPageView({
           since §498 they sit in «Condiții de participare», with the rules, after the programme. */}
 
       {/* The way in to the registration lifecycle, or the sentence saying why there is none. */}
-      {/* In the preview before saving (§NNN) the draft's door, its button disabled. */}
+      {/* In the preview before saving (§579) the draft's door, its button disabled. */}
       <RegistrationCta event={event} now={now} previewDoor={previewDoor} />
 
       {/* "Tell me when registration opens" (§146), under the date, only while the window is ahead
@@ -351,7 +351,7 @@ export default async function EventPageView({
               organizer offered it and the club has approved the text of its surface. */}
           {/* `?declaratie=` is the signer's own link from their copy (§523): «Ai semnat deja…», read only from it. */}
           {/* Nothing to sign for while the date is to be announced (§533). */}
-          {/* Not in the preview before saving (§NNN): the offer reads the approved texts through the public cache. */}
+          {/* Not in the preview before saving (§579): the offer reads the approved texts through the public cache. */}
           {dated && visit && <DeclarationOffer event={dated} locale={locale} slug={slug} now={now} viewToken={visit.declaratie} />}
         </Box>
         <OpenFoldFromHash />
@@ -360,7 +360,7 @@ export default async function EventPageView({
       {/* Nothing at all unless this event publishes one (BR-REQ-039-01). */}
       {/* Nobody registers before the date is announced (§533), so an undated event has no list. */}
       {/* Nor a members' event (§552): the public list is a public disclosure (§32), and this page is not public. */}
-      {/* Nor in the preview (§NNN): the list reads the public cache, and a draft has nobody on it. */}
+      {/* Nor in the preview (§579): the list reads the public cache, and a draft has nobody on it. */}
       {dated && !membersOnly && visit && <StartList event={dated} page={visit.lista} />}
     </>
   );

@@ -86,13 +86,13 @@ export async function readRegistrationDoor(event: PublicEventPage, now: Date): P
 }
 
 /**
- * The door a preview before saving draws (§NNN): the answer below, and the word «previzualizare»
+ * The door a preview before saving draws (§579): the answer below, and the word «previzualizare»
  * the button carries, disabled, in the page's language.
  */
 export type PreviewDoor = { door: RegistrationDoor; word: string };
 
 /**
- * The door the draft would have, for the editor's preview before saving (§NNN): the same state
+ * The door the draft would have, for the editor's preview before saving (§579): the same state
  * `readRegistrationDoor` picks (`registrationCta`) and the same fill, but counted straight from the
  * allocator's own formula (`readPublicPlaces`) against the **draft's** capacity and waiting-list
  * length — the unsaved numbers are what the preview is for — never through the public cache, which

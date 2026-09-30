@@ -360,10 +360,10 @@ describe("§570 the route: the role on the server, the notice, the file and its 
 });
 
 /**
- * §NNN (amending §570) — the owner, 2026-09-30: «cum pot exporta participanții, doar cei care au
+ * §581 (amending §570) — the owner, 2026-09-30: «cum pot exporta participanții, doar cei care au
  * bifat că vor datele publicate pentru parteneri? trebuie să am Excel cu toate bifele lor».
  */
-describe("§NNN the sponsor list as Excel, every tick in its column", () => {
+describe("§581 the sponsor list as Excel, every tick in its column", () => {
   async function signDeclaration(registrationId: string, version: number) {
     const translations: LegalDocumentTranslationInput[] = [
       { locale: "ro", title: "Declarație", body: { sections: [{ paragraphs: ["Declar."] }] } as LegalDocumentTranslationInput["body"] },
@@ -475,7 +475,7 @@ describe("§NNN the sponsor list as Excel, every tick in its column", () => {
   });
 });
 
-describe("§NNN «Doar cu oferte și beneficii» on the registrations list, and the export that follows it", () => {
+describe("§581 «Doar cu oferte și beneficii» on the registrations list, and the export that follows it", () => {
   it("narrows the list to who said yes on a real, standing registration — the one condition of §570 — and the export holds the same rows", async () => {
     await approveNotice(1, boxOnly, V1_AT);
     await approveNotice(2, sharing, V2_AT);
@@ -505,7 +505,7 @@ describe("§NNN «Doar cu oferte și beneficii» on the registrations list, and 
     };
     const [header, ...lines] = await exported("&promo=1");
     expect(lines.map((line) => line.split(",")[2]).sort()).toEqual(["Ana", "Bogdan", "Ioana"]);
-    // The public-list tick in its own column beside the socials (§NNN).
+    // The public-list tick in its own column beside the socials (§581).
     const at = header.split(",").indexOf("Public list & results");
     expect(header.split(",")[at - 1]).toBe("Socials on the public list");
     expect(lines.find((line) => line.startsWith("Crosul toamnei,Ana "))?.split(",")[at]).toBe("Yes");

@@ -11,7 +11,7 @@ type Answer =
   | { outcome: "ready"; card: ReactNode; page: ReactNode; missing: Record<string, string[]> };
 
 /**
- * The inside of the editor's «Previzualizare» frame (§NNN): a page of the site's own layout — its
+ * The inside of the editor's «Previzualizare» frame (§579): a page of the site's own layout — its
  * theme, its fonts, its words in the frame's language, at the frame's own width, so a phone's
  * breakpoints are a phone's — that draws what the preview action answers and nothing else.
  *

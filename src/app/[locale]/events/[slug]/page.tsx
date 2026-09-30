@@ -204,7 +204,7 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
 
       <LastGoodNotice read={read} />
 
-      {/* The page itself: the one body the editor's preview before saving draws too (§NNN). */}
+      {/* The page itself: the one body the editor's preview before saving draws too (§579). */}
       <EventPageView
         event={event}
         locale={locale}

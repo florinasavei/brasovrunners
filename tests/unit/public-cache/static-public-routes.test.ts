@@ -84,7 +84,7 @@ const PER_REQUEST: Record<string, string> = {
   "src/app/[locale]/members-area/page.tsx": "the members' zone reads the session and sends a stranger to the sign-in (§524, AGENTS.md §14.5)",
   "src/app/[locale]/sign-in/page.tsx": "reads the session, ?to= and ?error= (§26)",
   "src/app/[locale]/preview/events/[id]/page.tsx": "staff only: a draft shown to whoever the session says may read it (BR-REQ-060-01)",
-  "src/app/[locale]/preview/draft/page.tsx": "staff only: the editor's preview frame, for the roles the session says may preview (§NNN)",
+  "src/app/[locale]/preview/draft/page.tsx": "staff only: the editor's preview frame, for the roles the session says may preview (§579)",
   "src/app/[locale]/events/[slug]/register/page.tsx": "the registration form: the draft cookie, the family cookie, the render time (§97, §389)",
   "src/app/[locale]/events/[slug]/declaration/page.tsx": "the group run's signing form (§393)",
   "src/app/[locale]/registrations/mine/page.tsx": "a form that takes an address: ?sent= says its outcome (BR-REQ-036-04)",

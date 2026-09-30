@@ -46,7 +46,7 @@ export default function RegistrationDoorButton({
   cta: ButtonCta;
   label: string;
   /**
-   * The editor's preview before saving (§NNN): the word «previzualizare» in the page's language.
+   * The editor's preview before saving (§579): the word «previzualizare» in the page's language.
    * Given, the same button in the same place with the same glyph and words, drawn disabled — a
    * preview has no form behind its door, and an organizer's page is not the preview's to open.
    */

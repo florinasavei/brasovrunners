@@ -1,5 +1,5 @@
 /*
-  The birth-date box's mask (§NNN, amending §561): the person types digits and the box puts the
+  The birth-date box's mask (§578, amending §561): the person types digits and the box puts the
   dots in — «11» is «11.», «1105» is «11.05.», «11051990» is «11.05.1990» — so nobody types a
   separator, and a phone's number pad (which has none) is all it takes.
 

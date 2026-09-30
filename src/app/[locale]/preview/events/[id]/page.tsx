@@ -87,7 +87,7 @@ export default async function PreviewEventPage({ params }: Props) {
   const now = new Date();
 
   // The same shape the public page renders, from the editable rows (`preview-view.ts`) — the
-  // mapping the editor's preview before saving draws with too (§NNN).
+  // mapping the editor's preview before saving draws with too (§579).
   const preview = previewPageOf(event, translation);
 
   const linkKindLabels = Object.fromEntries(EVENT_LINK_KINDS.map((kind) => [kind, tEvent(`links.kinds.${kind}`)])) as Record<EventLinkKind, string>;

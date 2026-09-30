@@ -655,7 +655,7 @@ export async function saveEventAndTranslationsAction(_previous: FormOutcome | nu
 }
 
 /**
- * **«Previzualizare» before saving (§NNN)**: the editor's form, as it stands, drawn as the listing
+ * **«Previzualizare» before saving (§579)**: the editor's form, as it stands, drawn as the listing
  * card and the event page in one language — through the save's own readers here
  * (`eventFieldsFrom`, `translationFieldsFrom`, `translationInputFrom`) and the save's own steps
  * without the write (`draft-preview.tsx`). Posted by the preview frame (`EventDraftFrame`) from the

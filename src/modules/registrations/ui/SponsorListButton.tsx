@@ -19,7 +19,7 @@ import { SPONSOR_RECIPIENT_MAX, type SponsorListSummary } from "../sponsor-list"
  * into the audit row beside the registrations in the file, so a registration's page can later say
  * which partner received it (the notice's art. 15 and 19 promise; review finding).
  *
- * Two submits, one form (§NNN): «Descarcă lista pentru sponsori (Excel)» posts `format=xlsx`, the
+ * Two submits, one form (§581): «Descarcă lista pentru sponsori (Excel)» posts `format=xlsx`, the
  * same rows with every tick the person gave; «Descarcă CSV» the five columns, the file for a partner.
  */
 export default async function SponsorListButton({ locale, eventId, list }: { locale: Locale; eventId: string | null; list: SponsorListSummary }) {
@@ -44,7 +44,7 @@ export default async function SponsorListButton({ locale, eventId, list }: { loc
             slotProps={{ htmlInput: { maxLength: SPONSOR_RECIPIENT_MAX, "data-testid": "sponsor-list-recipient" } }}
             sx={{ minWidth: 0, flex: "1 1 14rem", maxWidth: "24rem" }}
           />
-          {/* Excel first, with every tick beside the five columns (§NNN); the CSV, the five alone, for a partner. */}
+          {/* Excel first, with every tick beside the five columns (§581); the CSV, the five alone, for a partner. */}
           <GlyphButton icon="sponsors" type="submit" name="format" value="xlsx" variant="outlined" size="small" sx={TAP_TARGET} data-testid="sponsor-list-button">
             {t("sponsors.button")}
           </GlyphButton>

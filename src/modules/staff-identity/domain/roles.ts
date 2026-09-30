@@ -791,7 +791,7 @@ export function canReadContent(role: StaffRole): boolean {
 }
 
 /**
- * **The event editor's «Previzualizare» before saving (§NNN)** — the listing card and the event
+ * **The event editor's «Previzualizare» before saving (§579)** — the listing card and the event
  * page drawn from the form's unsaved values: the Redactor who writes the words, the Organizer who
  * reads the event, the Administrator who sets it. Written as the union of the three capabilities
  * those roles hold rather than as a threshold, so the Tehnic — who opens the editor only because

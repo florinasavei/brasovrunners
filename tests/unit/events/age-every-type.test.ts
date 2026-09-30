@@ -109,7 +109,7 @@ describe("§505 the staff preview says the age as the page does", () => {
   it("renders EventAgeRule with the preview's event, after the rules", () => {
     expect(preview).toContain("<EventAgeRule event={preview} />");
     expect(preview.indexOf('id="rules"')).toBeLessThan(preview.indexOf("<EventAgeRule "));
-    // The mapping is `preview-view.ts` since §NNN, shared with the preview before saving.
+    // The mapping is `preview-view.ts` since §579, shared with the preview before saving.
     expect(readFileSync(path.join(process.cwd(), "src/modules/content/events/preview-view.ts"), "utf8")).toMatch(/minAge: event\.minAge/);
   });
 

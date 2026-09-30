@@ -156,7 +156,7 @@ function savedPrefill(messageType: EmailMessageType): EmailCopy {
 
 /** The paragraph both the platform's sentences and the club's words are drawn as. */
 const P = '<p style="margin:0 0 14px;font-size:16px;line-height:1.5">';
-/** A line of the highlighted band (§NNN): every line of it alike. */
+/** A line of the highlighted band (§580): every line of it alike. */
 const BAND_P = `<p style="margin:0 0 6px;font-size:17px;line-height:1.5;color:${EMAIL_EMPHASIS.ink}">`;
 
 /**
@@ -191,7 +191,7 @@ function platformAsSaved(messageType: EmailMessageType, locale: (typeof LOCALES)
     }
     const opening = OWN_PARAGRAPH[messageType]?.[half];
     if (!opening) continue;
-    // A paragraph on the band (§NNN) breaks into two lines of the band, each with the text half's mark.
+    // A paragraph on the band (§580) breaks into two lines of the band, each with the text half's mark.
     const onBand = text.split("\n").some((line) => line.startsWith(HIGHLIGHT_TEXT_MARK) && line.includes(` ${opening}`));
     if (onBand) {
       html = html.replace(` ${opening}`, `</p>${BAND_P}${opening}`);
@@ -595,7 +595,7 @@ describe("§359 \"Înlocuiește cu câmpurile\" rewrites a saved text to its fie
   it("drops the update notice's two lines the platform adds anyway, rather than sending them twice", () => {
     const old = oldStartingText("EVENT_UPDATE_NOTICE", "ro");
     expect(old.paragraphs.some((paragraph) => paragraph.startsWith("Locul de întâlnire este acum"))).toBe(true);
-    // The same words; a plain saved text keeps the platform's bold markers (§189, §NNN), which the send draws as bold.
+    // The same words; a plain saved text keeps the platform's bold markers (§189, §580), which the send draws as bold.
     const words = (paragraphs: readonly string[]) => paragraphs.map((paragraph) => paragraph.replace(/\*\*([^*]+)\*\*/g, "$1"));
     expect(words(replaceSampleValues(old, "EVENT_UPDATE_NOTICE", "ro").paragraphs)).toEqual(emailCopyPrefill("EVENT_UPDATE_NOTICE", "ro").paragraphs);
   });

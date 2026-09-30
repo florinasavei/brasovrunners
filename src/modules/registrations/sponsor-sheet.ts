@@ -2,7 +2,7 @@ import type { PROMO_LISTED_STATUSES, SponsorListRow } from "./sponsor-list";
 import { onClubClock, STAMP_FORMAT, writeSheet, type SheetColumn } from "./workbook";
 
 /**
- * «Descarcă lista pentru sponsori» as an Excel file (§NNN, amending §570). The owner, 2026-09-30:
+ * «Descarcă lista pentru sponsori» as an Excel file (§581, amending §570). The owner, 2026-09-30:
  * «cum pot exporta participanții, doar cei care au bifat că vor datele publicate pentru parteneri?
  * trebuie să am Excel cu toate bifele lor».
  *

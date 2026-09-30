@@ -257,7 +257,7 @@ export const routing = defineRouting({
     "/admin/gallery/[id]": "/admin/gallery/[id]",
     /** The staff-only preview of a draft (BR-REQ-051-02). */
     "/preview/events/[id]": { ro: "/previzualizare/evenimente/[id]", en: "/preview/events/[id]" },
-    /** The editor's preview before saving (§NNN): the frame the card and the page are drawn in, staff only. */
+    /** The editor's preview before saving (§579): the frame the card and the page are drawn in, staff only. */
     "/preview/draft": { ro: "/previzualizare/ciorna", en: "/preview/draft" },
   },
 });

@@ -153,7 +153,7 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
   });
 
   /*
-    §NNN — «Previzualizare» (the owner, 2026-09-30: «vreau să pot face preview la eveniment, înainte
+    §579 — «Previzualizare» (the owner, 2026-09-30: «vreau să pot face preview la eveniment, înainte
     de salvare și publicare, ca să știu cum arată, atât pe card cât și descrierea completă»): an
     unsaved title on the listing card and on the page, in Română and English, on a phone's width and
     a desktop's, with what each language still lacks — and nothing saved.

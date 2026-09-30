@@ -107,7 +107,7 @@ describe("BR-REQ-060-01 the start list as a spreadsheet (§172)", () => {
 
     // The header, in order, wherever the writer chose to keep the text.
     for (const header of REGISTRATION_SHEET_HEADERS) {
-      // As XML spells it: «Public list & results» (§NNN) is written `&amp;`.
+      // As XML spells it: «Public list & results» (§581) is written `&amp;`.
       expect(strings, `${header} is written`).toContain(header.replaceAll("&", "&amp;"));
     }
     // The header row stays on screen while somebody scrolls two hundred runners.
@@ -181,7 +181,7 @@ describe("BR-REQ-060-01 the start list as a spreadsheet (§172)", () => {
     expect(blank.get("xl/worksheets/sheet1.xml") ?? "").not.toContain(`<c r="${cell}"><v>`);
   });
 
-  /** §NNN — the public-list tick has its own column beside the socials it governs, a yes/no cell. */
+  /** §581 — the public-list tick has its own column beside the socials it governs, a yes/no cell. */
   it("carries «Public list & results» as a boolean right after the socials", async () => {
     const at = REGISTRATION_SHEET_HEADERS.indexOf("Socials on the public list") + 1;
     expect(REGISTRATION_SHEET_HEADERS[at]).toBe("Public list & results");

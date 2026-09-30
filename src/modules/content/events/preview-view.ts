@@ -6,7 +6,7 @@ import type { EditableEvent, EditableTranslation } from "./repository";
 
 /**
  * The shape the public page and the listing card render, assembled from the editable rows — for
- * the staff preview of a saved draft (BR-REQ-051-02) and the editor's preview before saving (§NNN),
+ * the staff preview of a saved draft (BR-REQ-051-02) and the editor's preview before saving (§579),
  * which hands it the rows the save would leave (`service.ts#draftEvent`). One mapping, so the two
  * previews cannot draw an event differently from each other or from the page.
  *

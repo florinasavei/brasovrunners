@@ -858,7 +858,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   <EditorGroup label={t("editor.groups.offPage")} />
                   <PromotionBox {...box} />
                   <AddressBox languages={languages} slugLocked={slugLocked} creating={false} />
-                  {/* «Previzualizare» (§NNN): the card and the page from these boxes as they stand, before
+                  {/* «Previzualizare» (§579): the card and the page from these boxes as they stand, before
                       «Salvează» — for the roles that may preview; the action asks the role again. */}
                   {canPreviewEventDraft(staffUser.role) && <PreviewBox formId="event-save-form" refusal={refusal} />}
 

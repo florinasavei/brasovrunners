@@ -34,7 +34,7 @@ import { noticeVersionInForceAt, reachesPartner, sponsorShareGate, type SponsorS
  *
  * **The minimum.** Prenume, Nume, Email, Eveniment, Data acordului — never the birth date, the
  * phone, the health note, the declaration's facts or the address holder's other people. The Excel
- * file (§NNN, `sponsor-sheet.ts`) holds the same rows with every tick the person gave beside the
+ * file (§581, `sponsor-sheet.ts`) holds the same rows with every tick the person gave beside the
  * five — the club's own check of who consented to what; the CSV stays the file for a partner.
  *
  * **Who may take it.** `canExportSponsorList` (the Organizer, the Administrator, the
@@ -79,7 +79,7 @@ export type PromoConsentRow = {
   /** The participant's birth date (`YYYY-MM-DD`), read only to keep a minor out of the partners' list; never in a file. */
   birthDate: string | null;
   /**
-   * The person's other ticks, for the Excel file's columns (§NNN): the registration's state, the
+   * The person's other ticks, for the Excel file's columns (§581): the registration's state, the
    * public-list tick (`list_opt_out` false), the socials beside the name, and the terms accepted on
    * the form (§421, §425). Never in the CSV, which keeps its five columns.
    */
@@ -145,7 +145,7 @@ export async function readSponsorShareGate<T extends Record<string, unknown>>(db
   return sponsorShareGate(await findSponsorShareVersions(db));
 }
 
-/** A row of the sponsor list: the yes, and the notice it was given under (§NNN, the Excel file's column). */
+/** A row of the sponsor list: the yes, and the notice it was given under (§581, the Excel file's column). */
 export type SponsorListRow = PromoConsentRow & {
   /**
    * The privacy notice in force at the moment of the yes (`noticeVersionInForceAt`) — the text it
@@ -239,10 +239,10 @@ export function buildSponsorListCsv(header: SponsorListCsvHeader, rows: readonly
   return `${CSV_BOM}${lines.join("\r\n")}`;
 }
 
-/** The two files of the one list (§NNN): the CSV's five columns, or the Excel file with every tick beside them. */
+/** The two files of the one list (§581): the CSV's five columns, or the Excel file with every tick beside them. */
 export type SponsorListFormat = "csv" | "xlsx";
 
-/** `?format=xlsx` is the Excel file; anything else is the CSV, as before §NNN. */
+/** `?format=xlsx` is the Excel file; anything else is the CSV, as before §581. */
 export function sponsorListFormat(raw: string | null): SponsorListFormat {
   return raw === "xlsx" ? "xlsx" : "csv";
 }
@@ -250,7 +250,7 @@ export function sponsorListFormat(raw: string | null): SponsorListFormat {
 /**
  * The file's name, with the club's date: `sponsori-crosul-toamnei-2026-09-29.csv` for one event
  * (its slug in the reader's language), `sponsori-toate-2026-09-29.csv` for every event, and
- * `.xlsx` for the Excel file (§NNN). Only `a-z`, digits and hyphens reach the header, whatever a
+ * `.xlsx` for the Excel file (§581). Only `a-z`, digits and hyphens reach the header, whatever a
  * slug holds.
  */
 export function sponsorListFileName(eventSlug: string | null, day: string, format: SponsorListFormat = "csv"): string {

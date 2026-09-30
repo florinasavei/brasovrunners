@@ -65,7 +65,7 @@ export async function GET(request: Request): Promise<Response> {
   const clubMember = url.searchParams.get("clubMember");
   const emailBounced = url.searchParams.get("bounced");
   const search = url.searchParams.get("q");
-  // «Doar cu oferte și beneficii» (§NNN): the list's filter, so the file is the rows on screen.
+  // «Doar cu oferte și beneficii» (§581): the list's filter, so the file is the rows on screen.
   const promo = url.searchParams.get("promo");
 
   /*
@@ -158,7 +158,7 @@ export async function GET(request: Request): Promise<Response> {
         guardianIdDocument: identityDocumentsOf(row).guardian ?? "",
         instagramHandle: row.instagramHandle ?? "",
         listSocials: row.listSocials,
-        // The public-list tick (§NNN), beside the socials it governs.
+        // The public-list tick (§581), beside the socials it governs.
         listPublic: !row.listOptOut,
         submittedAt: row.submittedAt,
         confirmedAt: row.confirmedAt,
@@ -206,7 +206,7 @@ export async function GET(request: Request): Promise<Response> {
       instagramHandle: row.instagramHandle ?? "",
       // Whether the public list prints the socials (§500): beside Instagram, as on the spreadsheet.
       listSocials: row.listSocials,
-      // The public-list tick (§NNN): «Vreau să apar pe lista de participanți & rezultate».
+      // The public-list tick (§581): «Vreau să apar pe lista de participanți & rezultate».
       listPublic: !row.listOptOut,
       submittedAt: row.submittedAt.toISOString(),
       confirmedAt: row.confirmedAt?.toISOString() ?? "",

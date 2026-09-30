@@ -230,7 +230,7 @@ export const CARD_DOOR_SX = { mt: 0.5 } as const;
  * every card the same width, the featured one included (the owner, 2026-09-26: "nu neaparat mai lat
  * pe desktop, e ok sa afisam 2 sau 3 carduri, dar toate cardurile trebuie sa aiba aceeasi latime").
  * The upcoming list and the past fold (§267) share it, so the two cannot drift apart — and since
- * §NNN the editor's preview before saving draws its card in it, at the listing's own widths.
+ * §579 the editor's preview before saving draws its card in it, at the listing's own widths.
  *
  * Every card in a row is as tall as the tallest (§275): `start` left a short card beside a tall one
  * and a hole under it, which is what made the listing look broken. The room a short card is given

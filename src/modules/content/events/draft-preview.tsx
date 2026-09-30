@@ -46,7 +46,7 @@ export type DraftPreview =
   | { outcome: "ready"; locale: Locale; card: ReactNode; page: ReactNode; missing: Record<Locale, string[]> };
 
 /**
- * **«Previzualizare» before saving (§NNN, amending §406 and §371).** The listing card and the event
+ * **«Previzualizare» before saving (§579, amending §406 and §371).** The listing card and the event
  * page of what the save would store, in one language, drawn by the components the listing and the
  * page draw — `EventCard` in the listing's own grid (`CARD_GRID_SX`), `EventPageView` for the page —
  * from `service.ts#draftEvent`'s rows through `previewPageOf`, the saved-draft preview's mapping.

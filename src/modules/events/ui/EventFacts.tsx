@@ -177,7 +177,7 @@ export default async function EventFacts({
   previewDoor,
 }: {
   /**
-   * The editor's preview before saving (§NNN): the door as the draft would read it, counted by
+   * The editor's preview before saving (§579): the door as the draft would read it, counted by
    * `draftRegistrationDoor` rather than read from the public cache, and its button drawn disabled.
    * The compact form only; absent everywhere a visitor reads.
    */

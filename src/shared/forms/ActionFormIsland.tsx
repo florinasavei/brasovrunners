@@ -50,7 +50,7 @@ export type RefusalMessages = {
  * The words a refused box is named by: the label under the exact name, then unindexed
  * (`event.schedule[].date`), then the panel the name belongs to (`event.bibDesign` for
  * `event.bibDesign.numberScale`), then the name. Shared with the editor's preview before saving
- * (§NNN), which names the boxes the save would refuse in the same words.
+ * (§579), which names the boxes the save would refuse in the same words.
  */
 export function fieldLabelOf(labels: Readonly<Record<string, string>>, name: string): string {
   const unindexed = name.replace(/\[\d+\]/g, "[]");

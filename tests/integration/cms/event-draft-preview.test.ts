@@ -17,7 +17,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { fakeNextCache } from "../../helpers/next-cache";
 
 /**
- * §NNN — «Previzualizare» before saving: the editor's unsaved values drawn as the listing card and
+ * §579 — «Previzualizare» before saving: the editor's unsaved values drawn as the listing card and
  * the event page, through the real action (`previewEventDraftAction`, the save's own readers) in
  * PGlite. The owner, 2026-09-30: «vreau să pot face preview la eveniment, înainte de salvare și
  * publicare, ca să știu cum arată, atât pe card cât și descrierea completă».
@@ -199,7 +199,7 @@ async function rowCounts() {
   return { events: eventRows.n, translations: translationRows.n, audit: auditRows.n, outbox: outboxRows.n, settings: settingRows.n };
 }
 
-describe("§NNN «Previzualizare» before saving: the unsaved event, drawn by the site's own components", () => {
+describe("§579 «Previzualizare» before saving: the unsaved event, drawn by the site's own components", () => {
   it("draws the unsaved title on the card and the page, in Română", async () => {
     const answer = await preview(await editorForm((form) => form.set("translations.ro.title", "Alergarea de joi (nesalvată)")), "ro");
     expect(answer.outcome).toBe("ready");
@@ -341,7 +341,7 @@ describe("§NNN «Previzualizare» before saving: the unsaved event, drawn by th
   });
 });
 
-describe("§NNN the preview draws what the save stores", () => {
+describe("§579 the preview draws what the save stores", () => {
   it("the preview's card is the listing's card, markup for markup (§366: one source draws the card)", async () => {
     const published = await createEventAndPublish(db, {
       actor: admin,

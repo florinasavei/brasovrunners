@@ -19,7 +19,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
  * «Descarcă lista pentru sponsori» (§570): `GET /api/admin/registrations/sponsor-list?event=<id>`
  * for one event, no `event` for every event — the same query and the same five columns either way
  * (`registrations/sponsor-list.ts`), in the reader's language (`lang`), as a UTF-8 file with a BOM
- * — or, with `format=xlsx` (§NNN), the same rows as an Excel file with every tick the person gave
+ * — or, with `format=xlsx` (§581), the same rows as an Excel file with every tick the person gave
  * beside the five columns (`sponsor-sheet.ts`), named `sponsori-<eveniment>-<zi>.xlsx`.
  *
  * Asserted here and again in the read (BR-REQ-060-01): the Organizer, the Administrator and the
@@ -64,7 +64,7 @@ export async function GET(request: Request): Promise<Response> {
     entityId: eventId ?? null,
     metadata: {
       eventId: eventId ?? null,
-      // Which of the two files (§NNN): the same rows either way.
+      // Which of the two files (§581): the same rows either way.
       format,
       count: list.rows.length,
       recipient: sponsorRecipient(url.searchParams.get("to")),
@@ -85,7 +85,7 @@ export async function GET(request: Request): Promise<Response> {
   const headers = { "Content-Disposition": `attachment; filename="${fileName}"`, "X-Robots-Tag": "noindex", "Cache-Control": "private, no-store" };
 
   if (format === "xlsx") {
-    // Every tick beside the five (§NNN): the declaration signed is one query for the rows in the file.
+    // Every tick beside the five (§581): the declaration signed is one query for the rows in the file.
     const declarations = await listLatestDeclarationAcceptances(db, list.rows.map((row) => row.registrationId));
     const workbook = await buildSponsorListWorkbook(
       {

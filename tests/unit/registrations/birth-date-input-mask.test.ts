@@ -16,7 +16,7 @@ import { fieldId } from "@/shared/forms/outcome";
 import { readTypedDate } from "@/shared/forms/pickers/wall-values";
 
 /**
- * §NNN (amending §561) — the owner, 2026-09-30: «la ziua nașterii ar trebui să am input mask, în
+ * §578 (amending §561) — the owner, 2026-09-30: «la ziua nașterii ar trebui să am input mask, în
  * timp ce scriu data nașterii», and then «we need libraries for this, for the mask». The
  * birth-date box takes digits and puts the dots in itself, through Maskito's date mask with three
  * preprocessors and two postprocessors of ours. BR-REQ-031-04 (the form's fields).
@@ -34,7 +34,7 @@ const state = (value: string, from = value.length, to = from) => ({ value, selec
 const run = (processor: MaskitoPreprocessor, value: string, selection: [number, number], data: string, action: Parameters<MaskitoPreprocessor>[1]) =>
   processor({ elementState: { value, selection }, data }, action);
 
-describe("§NNN a whole text in the box — autofill, a value set before the mask — is shown in the mask", () => {
+describe("§578 a whole text in the box — autofill, a value set before the mask — is shown in the mask", () => {
   for (const [whole, shown] of [
     ["1990-05-11", "11.05.1990"],
     ["1990-5-1", "01.05.1990"],
@@ -129,7 +129,7 @@ class StandInBox extends EventTarget {
   }
 }
 
-describe("§NNN the keystrokes, through Maskito itself", () => {
+describe("§578 the keystrokes, through Maskito itself", () => {
   beforeAll(() => vi.stubGlobal("InputEvent", StandInInputEvent));
   afterAll(() => vi.unstubAllGlobals());
   const masked = () => {
@@ -219,7 +219,7 @@ describe("§NNN the keystrokes, through Maskito itself", () => {
   });
 });
 
-describe("§NNN the posted shape and the other separators", () => {
+describe("§578 the posted shape and the other separators", () => {
   it("`1990-05-11` pasted, autofilled or filled is read day first, never «19» for the day", () => {
     expect(run(postedShapePreprocessor, "11.0", [0, 4], "1990-05-11", "insert").data).toBe("11.05.1990");
     expect(run(postedShapePreprocessor, "", [0, 0], " 1990-5-1 ", "insert").data).toBe("01.05.1990");
@@ -236,7 +236,7 @@ describe("§NNN the posted shape and the other separators", () => {
   });
 });
 
-describe("§NNN a backspace over a dot takes the digit before it", () => {
+describe("§578 a backspace over a dot takes the digit before it", () => {
   it("Backspace over the dot of «11.» selects «1.», so «1» is left", () => {
     expect(run(dotTakesDigitPreprocessor, "11.", [2, 3], "", "deleteBackward").elementState.selection).toEqual([1, 3]);
     expect(run(dotTakesDigitPreprocessor, "11.05.1990", [5, 6], "", "deleteBackward").elementState.selection).toEqual([4, 6]);
@@ -254,7 +254,7 @@ describe("§NNN a backspace over a dot takes the digit before it", () => {
   });
 });
 
-describe("§NNN the dot comes as soon as the day or the month is whole", () => {
+describe("§578 the dot comes as soon as the day or the month is whole", () => {
   it("«11» typed is «11.», «11.05» is «11.05.», with the caret after the dot", () => {
     expect(dotAfterWholePartPostprocessor(state("11"), state("1"))).toEqual(state("11."));
     expect(dotAfterWholePartPostprocessor(state("11.05"), state("11.0"))).toEqual(state("11.05."));
@@ -273,7 +273,7 @@ describe("§NNN the dot comes as soon as the day or the month is whole", () => {
   });
 });
 
-describe("§NNN the box, rendered", () => {
+describe("§578 the box, rendered", () => {
   it("shows «11.05.1990» for a posted 1990-05-11, keeps the number pad and the placeholder, and has no maxlength", () => {
     const html = renderToStaticMarkup(
       createElement(BirthDateField, {

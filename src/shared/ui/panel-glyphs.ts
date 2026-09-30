@@ -154,7 +154,7 @@ export const PANEL_GLYPHS = {
   translation: TranslateIcon,
   // «Ordinea meniului» (§571): the site menu's entries, one under the other, in the club's order.
   menuOrder: ReorderIcon,
-  // «Previzualizare» (§NNN): the event's card and page as a visitor will see them, before saving.
+  // «Previzualizare» (§579): the event's card and page as a visitor will see them, before saving.
   preview: VisibilityIcon,
 } satisfies Record<string, ComponentType<SvgIconProps>>;
 

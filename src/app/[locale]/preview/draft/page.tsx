@@ -25,7 +25,7 @@ export const metadata: Metadata = { robots: { index: false, follow: false, nocac
 const FRAME_ONLY_CSS = "body:has(#draft-preview-frame) :is(header, footer):not(#draft-preview-frame *) { display: none !important; }";
 
 /**
- * **The frame of the editor's «Previzualizare» (§NNN)**, in the language of its address: the site's
+ * **The frame of the editor's «Previzualizare» (§579)**, in the language of its address: the site's
  * own layout — theme, fonts, the public words in this language — at the width the editor gives the
  * frame (360 pixels, or a desktop's, scaled down to fit), so the card and the page are drawn with
  * the breakpoints a visitor's screen has. It holds no data: the editor posts its unsaved values

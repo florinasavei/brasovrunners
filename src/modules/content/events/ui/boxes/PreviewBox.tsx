@@ -13,7 +13,7 @@ function perLocale<T>(make: (locale: Locale) => T): Record<Locale, T> {
 }
 
 /**
- * «Previzualizare» (§NNN, amending §406): the editor's card that shows the event as the site will —
+ * «Previzualizare» (§579, amending §406): the editor's card that shows the event as the site will —
  * the listing card and the whole page, in Română or English, on a phone or a desktop — from the
  * save form's values as they stand, before anything is saved or published. Closed by default, its
  * closed line saying what it is for; a card like every other of the editor, apart from the page's

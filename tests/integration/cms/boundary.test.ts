@@ -258,7 +258,7 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/newsletter/confirm/[token]",
       "/newsletter/manage/[token]",
       "/pages/[slug]",
-      // The editor's preview before saving (§NNN): a staff frame the unsaved values are drawn in, by hand.
+      // The editor's preview before saving (§579): a staff frame the unsaved values are drawn in, by hand.
       "/preview/draft",
       "/preview/events/[id]",
       "/registrations/confirm/[token]",

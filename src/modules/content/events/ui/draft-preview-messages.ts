@@ -1,5 +1,5 @@
 /**
- * What the editor's «Previzualizare» card and its frame say to each other (§NNN), over
+ * What the editor's «Previzualizare» card and its frame say to each other (§579), over
  * `postMessage`, same origin only — the editor never reads the frame's document, and the frame
  * never reads the editor's form: the editor hands it the form's values as they stood at the press.
  */

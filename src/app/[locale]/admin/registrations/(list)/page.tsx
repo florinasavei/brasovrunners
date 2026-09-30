@@ -153,7 +153,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     // (`admin-repository.ts` says why).
     clubMemberDeclared: clubMember === "1" || undefined,
     emailBounced: bounced === "1" || undefined,
-    // «Doar cu oferte și beneficii» (§NNN): who said yes, by the one condition of §570 (`promoListed`).
+    // «Doar cu oferte și beneficii» (§581): who said yes, by the one condition of §570 (`promoListed`).
     promoConsented: promo === "1" || undefined,
     search: q || undefined,
   };
@@ -239,7 +239,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     status,
     clubMember,
     bounced,
-    // Rides with every sort, page and export link (§NNN): the file is the rows on screen.
+    // Rides with every sort, page and export link (§581): the file is the rows on screen.
     promo: promo === "1" ? "1" : undefined,
     q,
     sort: current.sort,
@@ -1083,7 +1083,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             <MenuItem value="1">{t("registrations.bouncedOnly")}</MenuItem>
           </TextField>
           {/*
-            «Doar cu oferte și beneficii» (§NNN; the owner: «doar cei care au bifat că vor datele
+            «Doar cu oferte și beneficii» (§581; the owner: «doar cei care au bifat că vor datele
             publicate pentru parteneri»): the people who said yes, on screen, by §570's one condition —
             and the export beside the list follows it. The megaphone is the offers box's own glyph (§570).
           */}

@@ -81,7 +81,7 @@ function sampleMoment(at: Date, locale: EmailLocale): string {
 }
 
 /**
- * A deadline of the sample as a message writes it (§NNN, `render.ts`, `formatDeadlineInSentence`):
+ * A deadline of the sample as a message writes it (§580, `render.ts`, `formatDeadlineInSentence`):
  * the month spelled out — "vineri, 2 octombrie 2026, la 18:30", "Friday, 2 October 2026, at 18:30".
  */
 function sampleDeadline(at: Date, locale: EmailLocale): string {
@@ -103,7 +103,7 @@ function sampleMomentBareHour(at: Date, locale: EmailLocale): string {
  */
 export function emailSampleFormerValuesOf(name: EmailCopyPlaceholder, locale: EmailLocale): readonly string[] {
   if (name === "eventStartsAtFormatted") return EMAIL_SAMPLE_FORMER_WHEN[locale];
-  // The hold as it read before §NNN, the month short: "2 oct. 2026", with "la" — and bare.
+  // The hold as it read before §580, the month short: "2 oct. 2026", with "la" — and bare.
   if (name === "holdExpiresAtFormatted") return [sampleMoment(EMAIL_SAMPLE_HOLD_EXPIRES_AT, locale), sampleMomentBareHour(EMAIL_SAMPLE_HOLD_EXPIRES_AT, locale)];
   if (name === "signedAtFormatted") return [sampleMomentBareHour(EMAIL_SAMPLE_SIGNED_AT, locale)];
   return [];

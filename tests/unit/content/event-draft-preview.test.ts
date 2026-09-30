@@ -10,14 +10,14 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN — «Previzualizare» before saving, the parts that need no database: who may preview, that the
+ * §579 — «Previzualizare» before saving, the parts that need no database: who may preview, that the
  * frame is a staff path served `private, no-store` and never indexed, the frame's words in both
  * languages, and the two islands' protocol. The render itself, the refusals and "nothing written"
  * are `tests/integration/cms/event-draft-preview.test.ts`.
  */
 const read = (file: string) => readFileSync(path.join(process.cwd(), file), "utf8");
 
-describe("§NNN who may preview an unsaved event", () => {
+describe("§579 who may preview an unsaved event", () => {
   it("is the Redactor, the Organizer and the Administrators — never the Tehnic, the volunteer or a member", () => {
     const allowed = STAFF_ROLES.filter((role) => canPreviewEventDraft(role));
     expect(allowed).toEqual(["COPYWRITER", "MODERATOR", "ADMIN", "SUPERADMIN"]);
@@ -33,7 +33,7 @@ describe("§NNN who may preview an unsaved event", () => {
   });
 });
 
-describe("§NNN the frame is never public and never cached", () => {
+describe("§579 the frame is never public and never cached", () => {
   it("lives at a staff address in both languages, which the proxy answers private, no-store and noindex", () => {
     const pathnames = routing.pathnames as unknown as Record<string, { ro: string; en: string }>;
     expect(pathnames["/preview/draft"]).toEqual({ ro: "/previzualizare/ciorna", en: "/preview/draft" });
@@ -72,7 +72,7 @@ describe("§NNN the frame is never public and never cached", () => {
   });
 });
 
-describe("§NNN the editor's words, in both languages", () => {
+describe("§579 the editor's words, in both languages", () => {
   const words = (catalogue: typeof ro) => catalogue.Admin.editor.draftPreview;
 
   it("has every word in Română and English, plain and short", () => {
@@ -104,7 +104,7 @@ describe("§NNN the editor's words, in both languages", () => {
   });
 });
 
-describe("§NNN the editor and its frame speak only to each other", () => {
+describe("§579 the editor and its frame speak only to each other", () => {
   it("reads only its own messages", () => {
     expect(readPreviewMessage({ type: "br-draft-preview:ready" })).toEqual({ type: "br-draft-preview:ready" });
     expect(readPreviewMessage({ type: "webpackOk" })).toBeNull();

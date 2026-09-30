@@ -2337,7 +2337,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
   return outcome;
 }
 
-// --- The preview before saving (§NNN) -------------------------------------------------------
+// --- The preview before saving (§579) -------------------------------------------------------
 
 /** No row yet: the id the create page's preview draws with, which no event has. */
 export const DRAFT_EVENT_ID = "00000000-0000-0000-0000-000000000000";
@@ -2489,7 +2489,7 @@ export type DraftEvent = {
 };
 
 /**
- * **The save without the write (§NNN; the owner, 2026-09-30: "vreau să pot face preview la
+ * **The save without the write (§579; the owner, 2026-09-30: "vreau să pot face preview la
  * eveniment, înainte de salvare și publicare").** The form's values through the save's own steps —
  * `ignoreHiddenFields`, the schema, `normalizeForType`, `normalizeForMode`, the registration block's
  * and the start's refusals, `resolveTimes`, `eventColumnsFrom` for the row, `translationFieldsSchema`
@@ -2550,7 +2550,7 @@ export async function draftEvent<T extends Record<string, unknown>>(db: Database
 /**
  * The optional texts written in one language and not the other (§352), by the box the language
  * still owed posts — the names `assertOptionalTextsInBothLanguages` would refuse, said instead of
- * refused: the preview's «English incomplet» mark (§NNN).
+ * refused: the preview's «English incomplet» mark (§579).
  */
 export function textsOwedInOneLanguage(rows: Readonly<Record<Locale, OptionalTextColumns>>): string[] {
   const ro = writtenOptionalTexts(rows.ro);

@@ -176,7 +176,7 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   { file: "src/app/[locale]/legal/privacy/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
   { file: "src/app/[locale]/legal/terms/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
   { file: "src/app/[locale]/preview/events/[id]/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
-  // The editor's preview frame (§NNN): the listing's and the event page's own container. New, so xsBefore is sm.
+  // The editor's preview frame (§579): the listing's and the event page's own container. New, so xsBefore is sm.
   { file: "src/app/[locale]/preview/draft/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 3 },
   { file: "src/app/[locale]/registrations/confirm/[token]/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2, count: 4 },
   { file: "src/app/[locale]/registrations/declare/[token]/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2, count: 3 },
@@ -211,7 +211,7 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   { file: "src/app/[locale]/events/page.tsx", prop: "mb", step: "gapSm", sm: 2, xsBefore: 2 },
   // One grid for the upcoming cards and the past fold since §470 (`CARD_GRID_SX`) — it was three
   // copies, one per shape `ListingBody` returned and one in the fold.
-  // Beside the card's shape since §NNN, where the editor's preview draws the card in it too.
+  // Beside the card's shape since §579, where the editor's preview draws the card in it too.
   { file: "src/modules/events/ui/card-layout.ts", prop: "gap", step: "cardGridGap", sm: 1.5, xsBefore: 1.5 },
   { file: "src/modules/events/ui/card-layout.ts", prop: "pt", step: "cardPadTop", sm: 2, xsBefore: 2 },
   // The featured hero's own padding (`heroPad`) and foot (`sectionGapLg`) went with it (§470): the

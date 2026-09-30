@@ -2,7 +2,7 @@ import { gunzipSync, inflateRawSync } from "node:zlib";
 
 /**
  * Reading a written `.xlsx` by hand, for the tests of the files the backoffice hands out (§172,
- * §NNN): the assertions are on the **bytes**, not on a library's own round trip — a writer that
+ * §581): the assertions are on the **bytes**, not on a library's own round trip — a writer that
  * agreed with its own reader and with nothing else would pass a round-trip test and still hand the
  * club a file Excel refuses.
  */

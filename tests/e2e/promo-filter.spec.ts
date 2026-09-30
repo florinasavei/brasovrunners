@@ -4,7 +4,7 @@ import pg from "pg";
 import { FEATURED, signIn } from "./support/featured-event";
 
 /**
- * §NNN (amending §570) — «Doar cu oferte și beneficii» on the registrations list: the owner,
+ * §581 (amending §570) — «Doar cu oferte și beneficii» on the registrations list: the owner,
  * 2026-09-30, «cum pot exporta participanții, doar cei care au bifat că vor datele publicate pentru
  * parteneri?». The box sits with the filters, wears the offers box's megaphone, narrows the list to
  * who said yes, and both exports beside the list follow it; the CSV names the public-list tick.
@@ -68,7 +68,7 @@ async function cleanup(seeded: Seeded): Promise<void> {
   }
 }
 
-test.describe("§NNN «Doar cu oferte și beneficii»: the list and its export", () => {
+test.describe("§581 «Doar cu oferte și beneficii»: the list and its export", () => {
   test("the box narrows the list to who said yes, keeps its glyph and 44 px, and both exports follow it", async ({ page }) => {
     test.setTimeout(90_000);
     const seeded = await seed(`${test.info().project.name}-${Date.now().toString(36)}`);
@@ -102,7 +102,7 @@ test.describe("§NNN «Doar cu oferte și beneficii»: the list and its export",
       const [header, ...lines] = (await response.text()).split("\r\n");
       expect(lines.some((line) => line.includes(`Oferte da ${seeded.tag}`))).toBe(true);
       expect(lines.some((line) => line.includes(`Oferte nu ${seeded.tag}`))).toBe(false);
-      // The public-list tick in its own column, right after the socials (§NNN).
+      // The public-list tick in its own column, right after the socials (§581).
       const at = header.split(",").indexOf("Public list & results");
       expect(header.split(",")[at - 1]).toBe("Socials on the public list");
       expect(lines.find((line) => line.includes(`Oferte da ${seeded.tag}`))?.split(",")[at]).toBe("Yes");

@@ -103,7 +103,7 @@ export function birthDateHelper({
  *   «Mai lipsesc:» list (`SubmitButton`, measured after the paint) names the box at once.
  * - **Under the minimum age it says so** (`birthDateHelper`): the rule's sentence in red above
  *   the date in words, as soon as a whole date is typed, and after the server's refusal.
- * - **It masks what is typed** (§NNN, the owner, 2026-09-30: «ar trebui să am input mask»):
+ * - **It masks what is typed** (§578, the owner, 2026-09-30: «ar trebui să am input mask»):
  *   digits only, the dots put in by the box — «11» is «11.», «11051990» is «11.05.1990» — a
  *   digit typed in the middle taking the place of the one there, a backspace over a dot taking
  *   the digit before it, and a pasted «11/05/1990» or `1990-05-11` shown in the mask. The mask is Maskito's

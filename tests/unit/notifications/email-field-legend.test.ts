@@ -242,7 +242,7 @@ describe("§373 the sample has every field, and each half of a preview its own l
     for (const locale of LOCALES) {
       for (const name of EMAIL_COPY_PLACEHOLDERS) expect(emailSampleValueOf(name, locale), `${locale} ${name}`).not.toBe("");
       const inSentence = (at: Date) => formatDay(at, { locale, timeZone: "Europe/Bucharest", style: "long", withTime: true, position: "inline" });
-      // A deadline spells its month out (§NNN, `formatDeadlineInSentence`); a moment keeps it short.
+      // A deadline spells its month out (§580, `formatDeadlineInSentence`); a moment keeps it short.
       expect(EMAIL_SAMPLE[locale].holdExpiresAtFormatted).toBe(formatDay(EMAIL_SAMPLE_HOLD_EXPIRES_AT, { locale, timeZone: "Europe/Bucharest", style: "long", month: "long", withTime: true, position: "inline" }));
       expect(EMAIL_SAMPLE[locale].signedAtFormatted).toBe(inSentence(EMAIL_SAMPLE_SIGNED_AT));
     }

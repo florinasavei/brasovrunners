@@ -67,7 +67,7 @@ test.describe("the event's facts in the confirmed email's preview", () => {
 });
 
 /**
- * §NNN (the owner, 2026-09-30: «I need more bold and highlight in the emails sent to participants»)
+ * §580 (the owner, 2026-09-30: «I need more bold and highlight in the emails sent to participants»)
  * — the previews on `/admin/emails` show the new look: the confirmation's number and desk code on
  * one highlighted band in each half, the offer's deadline bold with its month spelled out on the
  * band, and its one button right under it. It reads nothing but the page, so both projects run it.

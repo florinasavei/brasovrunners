@@ -462,7 +462,7 @@ describe("BR-REQ-080-01 outbox renderer", () => {
     );
 
     /*
-      No action link: no button and no token link anywhere in the message. Until §NNN this sliced
+      No action link: no button and no token link anywhere in the message. Until §580 this sliced
       after the first `</div>`, which was the card's own end; the highlighted band is a `<div>` of
       the body now, so the check names what it means — the standard links (events, contact, the
       notice) stay, a link a token opens does not.

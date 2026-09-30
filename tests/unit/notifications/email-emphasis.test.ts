@@ -6,7 +6,7 @@ import { HIGHLIGHT_TEXT_MARK, renderBilingual, renderContent, type TemplateConte
 import { COLOR, EMAIL_EMPHASIS } from "@/theme/brand";
 
 /**
- * BR-REQ-080-01, `DECISIONS.md` §NNN (amending §68 and §392; the owner, 2026-09-30: «I need more bold
+ * BR-REQ-080-01, `DECISIONS.md` §580 (amending §68 and §392; the owner, 2026-09-30: «I need more bold
  * and highlight in the emails sent to participants») — one emphasis vocabulary in the renderer:
  * `**bold**` for the facts a runner hunts for, one highlighted band for the fact a message is about,
  * the same in every message, the one button under the line that asks for it, the quieter sentences
@@ -45,7 +45,7 @@ function inverted(hex: string): string {
   return `#${value.toString(16).padStart(6, "0")}`;
 }
 
-describe("§NNN the renderer's emphasis vocabulary", () => {
+describe("§580 the renderer's emphasis vocabulary", () => {
   it("draws `**x**` as bold in the HTML and drops the markers in the plain text", () => {
     const message = renderContent(content(), "ro");
     expect(message.html).toContain("Faptul cu <strong>42</strong> în el.");
@@ -100,7 +100,7 @@ describe("§NNN the renderer's emphasis vocabulary", () => {
   });
 });
 
-describe("§NNN the band's colours read on a light card and on one a client darkens", () => {
+describe("§580 the band's colours read on a light card and on one a client darkens", () => {
   it("keeps the words readable on the band, as sent and inverted", () => {
     expect(contrastRatio(EMAIL_EMPHASIS.ink, EMAIL_EMPHASIS.band)).toBeGreaterThanOrEqual(MIN_TEXT_CONTRAST);
     expect(contrastRatio(inverted(EMAIL_EMPHASIS.ink), inverted(EMAIL_EMPHASIS.band))).toBeGreaterThanOrEqual(MIN_TEXT_CONTRAST);
@@ -147,7 +147,7 @@ const HIGHLIGHTED: ReadonlyArray<{ type: EmailMessageType; ro: readonly string[]
   { type: "NEW_EVENT_ALERT", ro: ["Duminică, 4 oct. 2026, la 09:00"], en: ["Sunday, 4 Oct 2026, at 09:00"] },
 ];
 
-/** The club's copies, the staff's and the club's own words: no band (out of scope, §NNN). */
+/** The club's copies, the staff's and the club's own words: no band (out of scope, §580). */
 const UNEMPHASISED: readonly EmailMessageType[] = [
   "DECLARATION_ARCHIVE",
   "GROUP_RUN_DECLARATION_ARCHIVE",
@@ -158,7 +158,7 @@ const UNEMPHASISED: readonly EmailMessageType[] = [
   "ORGANIZER_MESSAGE",
 ];
 
-describe("§NNN every participant message puts its one fact on the band, in both languages", () => {
+describe("§580 every participant message puts its one fact on the band, in both languages", () => {
   for (const { type, ro, en, button } of HIGHLIGHTED) {
     it(`${type}: ${ro.join(" · ")}`, () => {
       const message = renderBilingual(type, "ro", emailSampleFor(type, "ro"), ACTION, null);
@@ -218,7 +218,7 @@ describe("§NNN every participant message puts its one fact on the band, in both
 /** The participant messages the club gets a copy of (§320), each with its one fact on the band in the participant's own. */
 const CLUB_COPIED: readonly EmailMessageType[] = ["REGISTRATION_CONFIRMED", "REGISTRATION_CANCELLED", "COMPLETE_DECLARATION", "WAITLIST_SPOT_OFFER"];
 
-describe("§NNN the club's copy of a participant message keeps the plain look", () => {
+describe("§580 the club's copy of a participant message keeps the plain look", () => {
   const quietLine = `font-size:14px;line-height:1.5;color:${EMAIL_EMPHASIS.quiet}`;
   for (const type of CLUB_COPIED) {
     it(`${type} as the club's copy: no band, no quieter line, no ▶`, () => {

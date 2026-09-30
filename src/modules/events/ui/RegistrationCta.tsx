@@ -37,7 +37,7 @@ export default async function RegistrationCta({
   event: PublicEventPage;
   now: Date;
   /**
-   * The editor's preview before saving (§NNN): the draft's door (`draftRegistrationDoor`), read
+   * The editor's preview before saving (§579): the draft's door (`draftRegistrationDoor`), read
    * instead of the public cache's, and its button drawn disabled with the word it carries.
    */
   previewDoor?: PreviewDoor;

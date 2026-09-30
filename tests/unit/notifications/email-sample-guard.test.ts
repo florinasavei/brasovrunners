@@ -32,7 +32,7 @@ const FORMER_BARE_HOUR = {
   en: { hold: "Friday, 2 Oct 2026, 18:30", signed: "Monday, 28 Sept 2026, 19:42" },
 } as const;
 
-/** The hold as it read before a deadline's month was spelled out (§NNN), "la" / "at" before the hour. */
+/** The hold as it read before a deadline's month was spelled out (§580), "la" / "at" before the hour. */
 const FORMER_SHORT_MONTH_HOLD = { ro: "vineri, 2 oct. 2026, la 18:30", en: "Friday, 2 Oct 2026, at 18:30" } as const;
 
 const DECISIONS: readonly Decision[] = [

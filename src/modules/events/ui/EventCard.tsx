@@ -88,7 +88,7 @@ export default async function EventCard({
    */
   seriesDates?: readonly { startsAt: Date }[];
   /**
-   * The editor's preview before saving (§NNN): the draft's door and the word its disabled button
+   * The editor's preview before saving (§579): the draft's door and the word its disabled button
    * carries (`draftRegistrationDoor`); absent on every card a visitor reads.
    */
   previewDoor?: PreviewDoor;

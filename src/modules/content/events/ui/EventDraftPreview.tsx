@@ -54,7 +54,7 @@ export type EventDraftPreviewLabels = {
 const BOTH: Record<Locale, false> = { ro: false, en: false };
 
 /**
- * **«Previzualizare» in the event editor (§NNN, amending §406 and §371)** — the owner, 2026-09-30:
+ * **«Previzualizare» in the event editor (§579, amending §406 and §371)** — the owner, 2026-09-30:
  * «vreau să pot face preview la eveniment, înainte de salvare și publicare, ca să știu cum arată,
  * atât pe card cât și descrierea completă».
  *

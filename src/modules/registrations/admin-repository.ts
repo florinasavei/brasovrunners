@@ -122,7 +122,7 @@ export type RegistrationListFilters = {
   /** Only the rows whose email the provider refused (§83): who to call. */
   emailBounced?: boolean;
   /**
-   * «Doar cu oferte și beneficii» (§NNN): only the rows `sponsor-list.ts#promoListed` lists — a yes
+   * «Doar cu oferte și beneficii» (§581): only the rows `sponsor-list.ts#promoListed` lists — a yes
    * on a real registration that still stands, the one truth of who consented. Narrows only.
    */
   promoConsented?: boolean;
@@ -258,7 +258,7 @@ function registrationConditions(filters: RegistrationListFilters): SQL[] {
     // member", and a screen that presented it as the second would be inventing an answer.
     filters.clubMemberDeclared ? eq(registrations.clubMemberDeclared, true) : undefined,
     filters.emailBounced ? sql`${emailRejectedReason} IS NOT NULL` : undefined,
-    // The same condition as the club's list on «Newsletter» and the sponsor list's candidates (§570, §NNN).
+    // The same condition as the club's list on «Newsletter» and the sponsor list's candidates (§570, §581).
     filters.promoConsented ? promoListed() : undefined,
     /*
       Name only, and deliberately not the email address. An organizer at a desk is holding a

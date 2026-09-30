@@ -49,7 +49,7 @@ type Props = {
   reminderHoursBefore?: number | null;
   /**
    * The club's deadlines and whether the family flow is on, read by the caller — the editor's
-   * preview before saving (§NNN), which reads them from the database and never through the public
+   * preview before saving (§579), which reads them from the database and never through the public
    * cache. Absent everywhere a visitor reads: the data cache's, as above.
    */
   settings?: { deadlines: Deadlines; familyOpen: boolean };

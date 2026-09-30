@@ -401,7 +401,7 @@ describe("§552 events for the members alone", () => {
     it("the participant list is not drawn for a member, and still is on a public event (§32)", async () => {
       await createEventAndPublish(db, { actor: admin, fields: { ...fields(), translations: PUBLIC }, publish: true, now: NOW });
       state.cookie = member.id;
-      // The page's body is `EventPageView` since §NNN (the editor's preview draws it too): one level more.
+      // The page's body is `EventPageView` since §579 (the editor's preview draws it too): one level more.
       const onPage = async (slug: string) => {
         const [view] = elementsOf(await throughTwin({ params: Promise.resolve({ locale: "ro", slug }), searchParams: Promise.resolve({}) }), EventPageView);
         return elementsOf(await EventPageView(view.props as Parameters<typeof EventPageView>[0]), StartList);

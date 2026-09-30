@@ -1293,7 +1293,7 @@ function formatInSentence(at: Date, timeZone: string, locale: Locale): string {
 }
 
 /**
- * A deadline to act by, inside a sentence (§NNN; the owner, 2026-09-30: more bold in the emails):
+ * A deadline to act by, inside a sentence (§580; the owner, 2026-09-30: more bold in the emails):
  * the month spelled out — "vineri, 2 octombrie 2026, la 18:30" / "Friday, 2 October 2026, at 18:30"
  * — so the one date a runner must not miss reads whole, never as "2 oct.".
  */

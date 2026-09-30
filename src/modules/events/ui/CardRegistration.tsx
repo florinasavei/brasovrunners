@@ -142,7 +142,7 @@ export default function CardRegistration({
 }: {
   slug: string;
   line: CardRegistrationLine;
-  /** The editor's preview before saving (§NNN): the button drawn disabled, with this word. */
+  /** The editor's preview before saving (§579): the button drawn disabled, with this word. */
   preview?: string;
 }) {
   return (

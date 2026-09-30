@@ -118,7 +118,7 @@ describe("the participation window (§104)", () => {
 
     const [queued] = await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "COMPLETE_DECLARATION"));
     const message = await renderOutboxMessage({ ...queued, status: "PROCESSING", attemptCount: 1, lockedAt: NOW }, db, NOW);
-    // The deadline with its weekday and its month spelled out (§NNN), and the English half in English (§349).
+    // The deadline with its weekday and its month spelled out (§580), and the English half in English (§349).
     expect(message.subject).toBe(
       "Ești înscris — confirmă participarea până vineri, 9 octombrie 2026, la 09:00 / You are registered — confirm your participation by Friday, 9 October 2026, at 09:00",
     );

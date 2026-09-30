@@ -244,7 +244,7 @@ export default async function NewEventPage({ params, searchParams }: Props) {
               <EditorGroup label={t("editor.groups.offPage")} />
               <PromotionBox {...box} />
               <AddressBox languages={languages} slugLocked={false} creating />
-              {/* «Previzualizare» (§NNN): the card and the page from these boxes, before «Creează». */}
+              {/* «Previzualizare» (§579): the card and the page from these boxes, before «Creează». */}
               <PreviewBox formId="event-create-form" refusal={messages} />
 
               {/* 15 — always open: what the press makes, and the two buttons. */}

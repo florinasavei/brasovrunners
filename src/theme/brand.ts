@@ -105,7 +105,7 @@ export const SITE_TINT = {
 } as const;
 
 /**
- * The emails' highlighted line (§NNN, amending §68 and §392; the owner, 2026-09-30: «I need more bold
+ * The emails' highlighted line (§580, amending §68 and §392; the owner, 2026-09-30: «I need more bold
  * and highlight in the emails sent to participants»): the one fact a message is about — the race
  * number and the desk code, the deadline, the start and the place — on a soft band in the club's
  * blue, the same in every message. No new colour: the band is the club's blue at about 8 % over

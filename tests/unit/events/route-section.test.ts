@@ -321,7 +321,7 @@ describe("BR-REQ-011-01 where the section sits (§387)", () => {
     const route = preview.indexOf("<EventRoute");
     expect(route).toBeGreaterThan(preview.indexOf("<EventFacts"));
     expect(route).toBeLessThan(preview.indexOf("<EventLinks"));
-    // The mapping is `preview-view.ts` since §NNN, shared with the preview before saving.
+    // The mapping is `preview-view.ts` since §579, shared with the preview before saving.
     expect(read("src/modules/content/events/preview-view.ts")).toContain("routeDescriptionJson: translation.routeDescriptionJson");
     expect(preview).toContain("routeSection={hasRouteDescription(preview.routeDescriptionJson)}");
   });

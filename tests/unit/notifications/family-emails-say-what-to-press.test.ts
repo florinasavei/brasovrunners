@@ -17,7 +17,7 @@ describe("§536 the verification email says what to press first", () => {
     expect(message.subject).toContain("Confirm your address — ");
     const first = "Apasă butonul ca să confirmi adresa. Dacă mai e loc, semnezi apoi declarația și primești codul QR.";
     expect(message.text).toContain(first);
-    // The first line of the body, right under the greeting, on the highlighted line, the button under it (§NNN).
+    // The first line of the body, right under the greeting, on the highlighted line, the button under it (§580).
     expect(message.text.split("\n\n")[1]).toBe(`${HIGHLIGHT_TEXT_MARK}${first}`);
     expect(message.text.split("\n\n")[2].startsWith("Confirmă adresa de email: ")).toBe(true);
     expect(message.text).toMatch(/^Când: /m);
@@ -56,7 +56,7 @@ describe("§536 a family's one message says the one button does everything", () 
   it("opens with the one line, then one line per person with the birth date in words, the button with the count, and the link's life", () => {
     const message = family();
     const lead = "Un singur buton: confirmi adresa și cele 2 înscrieri, apoi semnezi pe rând declarațiile celor care mai au loc.";
-    // The family marker first (§543), on the highlighted line (§NNN), then the one line and the button under it.
+    // The family marker first (§543), on the highlighted line (§580), then the one line and the button under it.
     const blocks = message.text.split("\n\n");
     expect(blocks[1]).toBe(`${HIGHLIGHT_TEXT_MARK}Înscriere de familie: Ana și Maria.`);
     expect(blocks[2].split("\n")[0]).toBe(lead);

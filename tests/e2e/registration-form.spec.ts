@@ -158,7 +158,7 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
     await expect(birthDateBox).toHaveAttribute("placeholder", "ZZ.LL.AAAA");
     await expect(birthDateBox).toHaveAttribute("inputmode", "numeric");
     await expect(birthDateBox).toHaveAttribute("autocomplete", "bday");
-    // Digits only: the box (Maskito's date mask) puts the dots in as they are typed (§NNN, amending §561).
+    // Digits only: the box (Maskito's date mask) puts the dots in as they are typed (§578, amending §561).
     await birthDateBox.pressSequentially("05");
     await expect(birthDateBox).toHaveValue("05.");
     await birthDateBox.pressSequentially("11");

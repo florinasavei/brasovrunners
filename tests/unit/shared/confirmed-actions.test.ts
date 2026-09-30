@@ -181,7 +181,7 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
  * worked; the server asserts every rule as before (BR-REQ-060-01).
  */
 export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
-  previewEventDraftAction: "writes nothing and tells nobody: it draws the unsaved event's card and page (§NNN)",
+  previewEventDraftAction: "writes nothing and tells nobody: it draws the unsaved event's card and page (§579)",
   checkInAction: "emails nobody and is undone from the same row; a dialog per runner would double the desk's taps on race morning",
   createAlbumAction: "an editorial save: a draft album nobody sees until its own publish, which asks",
   saveAlbumAction: "an editorial save, like a page's; publishing and deleting ask",

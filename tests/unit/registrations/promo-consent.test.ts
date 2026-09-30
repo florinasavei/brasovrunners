@@ -234,7 +234,7 @@ describe("§562 the exports", () => {
         consentedAt: new Date("2026-09-29T10:00:00.000Z"),
         privacyNoticeVersion: 1,
         birthDate: "1990-01-01",
-        // The other ticks the row carries since §NNN, for the Excel file only: never in the CSV.
+        // The other ticks the row carries since §581, for the Excel file only: never in the CSV.
         status: "CONFIRMED",
         listPublic: true,
         listSocials: false,

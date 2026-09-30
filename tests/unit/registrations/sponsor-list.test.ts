@@ -123,7 +123,7 @@ describe("§570 the sponsor list's file", () => {
   it("has its words in both languages, the headers the owner named", () => {
     expect(ro.Admin.sponsors.columns).toEqual({ firstName: "Prenume", lastName: "Nume", email: "Email", event: "Eveniment", consentedAt: "Data acordului" });
     expect(Object.keys(en.Admin.sponsors.columns)).toEqual(Object.keys(ro.Admin.sponsors.columns));
-    // The Excel file since §NNN; the CSV beside it.
+    // The Excel file since §581; the CSV beside it.
     expect(ro.Admin.sponsors.button).toBe("Descarcă lista pentru sponsori (Excel)");
     expect(en.Admin.sponsors.button).toBe("Download the list for sponsors (Excel)");
     expect(ro.Admin.sponsors.buttonCsv).toBe("Descarcă CSV");

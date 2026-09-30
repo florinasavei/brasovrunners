@@ -82,7 +82,7 @@ export type EventFactsBlock = { html: string; text: string };
 type Translate = (key: string, values?: Record<string, string | number>) => string;
 
 /** A piece of a row's line: words, or words that are a link. */
-/** `bold`: a fact a runner hunts for — the day, the hours, the place's name (§NNN); the text half is the same words. */
+/** `bold`: a fact a runner hunts for — the day, the hours, the place's name (§580); the text half is the same words. */
 type Piece = { text: string; url?: string; bold?: boolean };
 type Row = { label: string; lines: Piece[][] };
 

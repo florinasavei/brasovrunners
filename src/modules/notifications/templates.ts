@@ -88,7 +88,7 @@ export type TemplateContent = {
    */
   privacy?: { text: string; url: string };
   /*
-    The emphasis (§NNN, amending §68 and §392; the owner, 2026-09-30: «I need more bold and highlight
+    The emphasis (§580, amending §68 and §392; the owner, 2026-09-30: «I need more bold and highlight
     in the emails sent to participants»). A message names, by their words, the paragraphs it is
     about; the renderer draws them. Matched by their words rather than by position, so a text the
     club saved unchanged from the editor (§359) is emphasised as the platform's own is, and one the
@@ -106,14 +106,14 @@ export type TemplateContent = {
   quiet?: readonly string[];
   /**
    * A message that asks one thing puts its button right under this paragraph — the highlighted one,
-   * or the line that says what the button does — rather than at the end (§NNN). Absent or not
+   * or the line that says what the button does — rather than at the end (§580). Absent or not
    * found, the button stays where it always was.
    */
   actionAfter?: string;
 };
 
 /**
- * A paragraph's words without the platform's markers and with its spaces folded (§NNN): what the
+ * A paragraph's words without the platform's markers and with its spaces folded (§580): what the
  * emphasis matches by, so `**774**` and `774`, a sentence and the same sentence typed in the
  * editor, are one paragraph.
  */
@@ -125,7 +125,7 @@ export function emphasisKey(text: string): string {
     .trim();
 }
 
-/** The plain-text half's mark before a highlighted line (§NNN), a blank line above and under it. */
+/** The plain-text half's mark before a highlighted line (§580), a blank line above and under it. */
 export const HIGHLIGHT_TEXT_MARK = "▶ ";
 
 /*
@@ -283,7 +283,7 @@ function familyConfirmedPart(people: NonNullable<TemplateData["familyConfirmed"]
     return [
       `<div data-email-part="family-person" style="margin:0 0 14px;padding:14px 16px;border:1px solid ${COLOR.line};border-radius:10px">`,
       `<p style="margin:0 0 8px;font-size:17px;line-height:1.4"><strong>${escapeHtml(person.name)}</strong></p>`,
-      // The number and the desk code on the band (§NNN), as one runner's confirmation draws them —
+      // The number and the desk code on the band (§580), as one runner's confirmation draws them —
       // the club's copy keeps the plain lines it always had.
       ...(plainLook
         ? [
@@ -320,11 +320,11 @@ function familyConfirmedPart(people: NonNullable<TemplateData["familyConfirmed"]
   };
 }
 
-/** One paragraph of the body as the emphasis sees it (§NNN): its words, how it is drawn, both halves. */
+/** One paragraph of the body as the emphasis sees it (§580): its words, how it is drawn, both halves. */
 type BodyItem = { kind: "plain" | "highlight" | "quiet"; key: string; html: string; text: string[]; inner?: string };
 
 /**
- * The band a message's one fact sits on (§NNN): the club's blue at about 8 % behind the body's ink,
+ * The band a message's one fact sits on (§580): the club's blue at about 8 % behind the body's ink,
  * the ink blue as its left edge — the same in every message. Inline, like every style here, and a
  * background colour Gmail keeps; a client that darkens the message inverts band and words together.
  */
@@ -344,7 +344,7 @@ function bandLine(inner: string): string {
 }
 
 /**
- * Whether a paragraph is one the message highlights (§NNN): the same words, or whole sentences of
+ * Whether a paragraph is one the message highlights (§580): the same words, or whole sentences of
  * them — the starting text the club saves unchanged (§359, `ownParagraphsOf`) breaks a paragraph
  * before a sentence a fact may be missing from, and drops that sentence when the fact is.
  */
@@ -381,7 +381,7 @@ export function renderContent(
   // The plain-text half drops the bold and underline markers rather than printing them (§189, §309).
   const plain = (text: string) => text.replace(/\*\*([^*]+)\*\*/g, "$1").replace(/__([^_]+)__/g, "$1");
   const paragraph = (inner: string) => `<p style="margin:0 0 14px;font-size:16px;line-height:1.5">${inner}</p>`;
-  // The quieter sentences (§NNN): a step smaller and muted, so the eye passes over them to what matters.
+  // The quieter sentences (§580): a step smaller and muted, so the eye passes over them to what matters.
   const quietParagraph = (inner: string) => `<p style="margin:0 0 12px;font-size:14px;line-height:1.5;color:${EMAIL_EMPHASIS.quiet}">${inner}</p>`;
   const marked = (lines: readonly string[]) => lines.map((line) => (line === "" ? line : `${HIGHLIGHT_TEXT_MARK}${line}`));
 
@@ -407,7 +407,7 @@ export function renderContent(
     return { kind, key, html: kind === "quiet" ? `<div style="color:${EMAIL_EMPHASIS.quiet}">${part.html}</div>` : part.html, text: part.text };
   });
 
-  // The button under the paragraph the message names (§NNN) — after the whole band when that paragraph is on it.
+  // The button under the paragraph the message names (§580) — after the whole band when that paragraph is on it.
   const anchor = content.action && content.actionAfter ? emphasisKey(content.actionAfter) : undefined;
   // Its last sentence, when the club's saved text broke it into paragraphs (`isHighlighted`).
   let actionAt = anchor === undefined ? -1 : items.findLastIndex((item) => isHighlighted(item.key, new Set([anchor])));
@@ -470,7 +470,7 @@ export function renderContent(
   }
 
   /*
-    The reminder's start and place (§NNN): a line of its own on the band, under the greeting. When it
+    The reminder's start and place (§580): a line of its own on the band, under the greeting. When it
     is the §81 facts line itself, that line is the band, its links under it on the band, not twice.
   */
   const factsOnBand = content.highlightLine !== undefined && content.facts !== undefined && content.facts.line === content.highlightLine;
@@ -1219,7 +1219,7 @@ function standardLinks(
 }
 
 /**
- * What one message emphasises (§NNN): the paragraphs on the band, the line of its own on it, the
+ * What one message emphasises (§580): the paragraphs on the band, the line of its own on it, the
  * quieter sentences and the paragraph the button goes under — each by its words, as the message's
  * body writes them for this data (`TemplateContent`).
  */
@@ -1229,7 +1229,7 @@ type Emphasis = Pick<TemplateContent, "highlight" | "highlightLine" | "quiet" | 
 const NO_FACT_LINKS = { map: "", strava: "" } as const;
 
 /**
- * The confirmation's two facts for the desk (§189, §NNN): the number, bold, and the code, bold —
+ * The confirmation's two facts for the desk (§189, §580): the number, bold, and the code, bold —
  * one sentence each, on one band. Written once, so the band finds the paragraph the body wrote.
  */
 function confirmedNumberLine(locale: EmailLocale, number: number | string): string {
@@ -1292,7 +1292,7 @@ const T = {
         "Dacă nu ai solicitat această înscriere, poți ignora acest mesaj.",
       ],
       action: "Confirmă adresa de email",
-      // The button under what it does, the data's origin and "ignore it" quieter (§NNN).
+      // The button under what it does, the data's origin and "ignore it" quieter (§580).
       emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]], actionAfter: b[0], quiet: b.slice(3) }),
     },
     completeDeclaration: {
@@ -1339,7 +1339,7 @@ const T = {
       body: (d: TemplateData) => [
         `Înscrierea ta la ${d.eventTitle ?? "eveniment"} este confirmată. Te așteptăm!`,
         ...(d.bibNumber ? [confirmedNumberLine("ro", d.bibNumber)] : []),
-        // The code beside the number (§NNN): the two facts the desk asks for, on one band.
+        // The code beside the number (§580): the two facts the desk asks for, on one band.
         ...(d.checkinCode ? [confirmedCodeLine("ro", d.checkinCode)] : []),
         ...(d.eventChecklist ? [`Ce să aduci: ${d.eventChecklist}`] : []),
         "Mai jos: înscrierea ta, „Nu mai pot ajunge” și pagina evenimentului.",
@@ -1384,7 +1384,7 @@ const T = {
       ],
       // No action of its own (§558): «Nu mai pot ajunge» is the reminder's one button, its cancel.
       image: (d: TemplateData) => qrImage("ro", d),
-      // The start and the place on the band, under the greeting (§NNN): what a runner opens it for.
+      // The start and the place on the band, under the greeting (§580): what a runner opens it for.
       emphasis: (d: TemplateData): Emphasis => ({ highlightLine: eventFacts(d, NO_FACT_LINKS)?.line }),
       links: (d: TemplateData) => [
         ...(d.eventUrl ? [{ label: "Pagina evenimentului", url: d.eventUrl }] : []),
@@ -1535,7 +1535,7 @@ const T = {
       body: (d: TemplateData) => [
         `Înscrierea${d.participantName ? ` pentru ${d.participantName}` : ""} la ${d.eventTitle ?? "eveniment"}${d.eventStartsAtFormatted ? `, ${d.eventStartsAtFormatted},` : ""} **a fost anulată**.`,
       ],
-      // The fact first, and what it released under it on the same band (`cancelledReleased`, §NNN).
+      // The fact first, and what it released under it on the same band (`cancelledReleased`, §580).
       emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
     },
     waitlistOfferExpired: {
@@ -2625,7 +2625,7 @@ export function buildTemplateContent(
     facts?: (d: TemplateData) => TemplateContent["facts"];
     image?: (d: TemplateData) => TemplateContent["image"];
     links?: (d: TemplateData) => TemplateContent["links"];
-    /** What the message emphasises (§NNN), from the body the platform writes for this data. */
+    /** What the message emphasises (§580), from the body the platform writes for this data. */
     emphasis?: (d: TemplateData, body: readonly string[]) => Emphasis;
   };
 
@@ -2750,7 +2750,7 @@ export function buildTemplateContent(
     data.guardianName && !entry.greeting && !bulkCopy && !familyGreeting && messageType !== "DECLARATION_SIGNED" ? data.guardianName : undefined;
 
   /*
-    The emphasis (§NNN): the message's own, from the body the platform writes for this data — a text
+    The emphasis (§580): the message's own, from the body the platform writes for this data — a text
     the club saved unchanged matches it, one the club rewrote keeps its own look — and then what the
     platform adds around any body. A family sitting's band is its marker (§543) and its button goes
     under the line that says what the one button does (§536); a family's confirmation draws a band
