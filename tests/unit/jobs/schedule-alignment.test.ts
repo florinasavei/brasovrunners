@@ -60,7 +60,7 @@ const idle = (ranAt: Date, cadenceMinutes: JobCadenceMinutes = 0) =>
 
 /**
  * A job that always has work a minute after each run — a queue being worked through, a retry — so
- * the Administrator's interval alone spaces its runs. Since §NNN an idle job runs only at the daily
+ * the Administrator's interval alone spaces its runs. Since §577 an idle job runs only at the daily
  * window, so this is where the interval's alignment (§355) still decides when the database wakes.
  */
 const busy = (ranAt: Date, cadenceMinutes: JobCadenceMinutes) =>
@@ -123,7 +123,7 @@ function wakes(queries: Date[]): Date[] {
 const onTheHour = (at: Date) => clubMinuteOfDay(at) % 60 === 0;
 const onEvenHour = (at: Date) => clubMinuteOfDay(at) % 120 === 0;
 
-describe("BR-REQ-090-03 criterion 14 (§NNN, amending §355) the safety look is the daily window, 04:00 on the club's clock", () => {
+describe("BR-REQ-090-03 criterion 14 (§577, amending §355) the safety look is the daily window, 04:00 on the club's clock", () => {
   it("looks again at tomorrow's 04:00 call after a run at 10:15, and skips every call before it", () => {
     const plan = idle(club("10:15"));
     expect(plan.quietUntil).toEqual(club("03:58", "2026-10-02"));
@@ -282,7 +282,7 @@ describe("BR-REQ-090-03 criterion 14 (§355) a minimum interval ends on a bounda
 });
 
 describe("BR-REQ-090-03 criterion 14 (§355) daylight saving, Europe/Bucharest", () => {
-  it("finds the 04:00 window across the autumn change, the day with an hour more (§NNN)", () => {
+  it("finds the 04:00 window across the autumn change, the day with an hour more (§577)", () => {
     // 25 October 2026: at 01:00Z the clocks go from 04:00 EEST back to 03:00 EET. A run at 03:15 EEST
     // is inside the gap before the 04:00 EEST that never comes; the window is 04:00 EET, 02:00Z.
     const plan = idle(new Date("2026-10-25T00:15:00.000Z"));
@@ -293,7 +293,7 @@ describe("BR-REQ-090-03 criterion 14 (§355) daylight saving, Europe/Bucharest",
     expect(idle(new Date("2026-10-25T02:00:00.300Z")).quietUntil).toEqual(new Date("2026-10-26T01:58:00.000Z"));
   });
 
-  it("finds the 04:00 window across the spring change, the day with an hour less (§NNN)", () => {
+  it("finds the 04:00 window across the spring change, the day with an hour less (§577)", () => {
     // 28 March 2027: at 01:00Z the clocks go from 03:00 EET to 04:00 EEST; 04:00 EEST is 01:00Z.
     const plan = idle(new Date("2027-03-27T18:00:00.000Z")); // 20:00 EET the evening before
     expect(plan.quietUntil).toEqual(new Date("2027-03-28T00:58:00.000Z"));

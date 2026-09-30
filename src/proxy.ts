@@ -140,7 +140,7 @@ export default function proxy(request: NextRequest) {
     const twin = liveTwinPathname(internal.pathname, url.searchParams, signedIn);
     if (twin) {
       /*
-        A prefetch the twin would have to render is declined (§NNN): a signed-in reader's event
+        A prefetch the twin would have to render is declined (§577): a signed-in reader's event
         cards in view were each a per-request render. The router drops the empty answer and the
         press navigates to the twin as before (`DECLINED_PREFETCH_STATUS` says how).
       */

@@ -25,7 +25,7 @@ const at = (minutes: number) => new Date(NOW.getTime() + minutes * MINUTE);
 const ends = (minutes: number) => at(minutes - PLAN_GRACE_MINUTES);
 /**
  * The daily window's 04:00 call after NOW (13:00 in Brașov), in minutes past NOW: 04:00 on 2 October
- * is 01:00Z, fifteen hours on (§NNN). An idle job looks for real there and nowhere before it.
+ * is 01:00Z, fifteen hours on (§577). An idle job looks for real there and nowhere before it.
  */
 const WINDOW = 15 * 60;
 /** Half a second before `minutes` — the pinger's call when this invocation started a touch sooner. */
@@ -122,7 +122,7 @@ describe("BR-REQ-090-03 criterion 9 a ping with nothing due answers without the 
     expect(await realRuns()).toBe(1);
   });
 
-  it("sleeps through every call of an idle day and looks for real at the daily window (§NNN)", async () => {
+  it("sleeps through every call of an idle day and looks for real at the daily window (§577)", async () => {
     await pingAt(0);
     // Every quarter-hour to 23:00 and every hour of the night after: from the cache, no database.
     for (let minutes = 15; minutes < WINDOW; minutes += minutes < 10 * 60 ? 15 : 60) {
@@ -266,7 +266,7 @@ describe("BR-REQ-090-07 criterion 7 the Administrator's minimum interval", () =>
     expect((await pingAt(justBefore(30))).body.ran).toBe(true);
   });
 
-  it("keeps even two hours a floor under the daily window, which it does not move (§NNN)", async () => {
+  it("keeps even two hours a floor under the daily window, which it does not move (§577)", async () => {
     // NOW is 13:00 in Brașov; a run an hour later is on an even hour, which two hours keep (§355).
     await db.insert(platformSettings).values({ key: "jobCadence", value: { minutes: 120 }, updatedAt: NOW });
     expect((await pingAt(60)).body).toMatchObject({ ran: true, nextCheckAt: ends(WINDOW).toISOString(), notBefore: ends(180).toISOString() });

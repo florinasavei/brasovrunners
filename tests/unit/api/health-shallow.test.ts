@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { asksForDeepHealth, shallowHealth, type ShallowHealthInput } from "@/modules/diagnostics/domain/shallow-health";
 
 /**
- * §NNN — `/api/health` is shallow unless it is asked `?deep=1`: the build and the configuration,
+ * §577 — `/api/health` is shallow unless it is asked `?deep=1`: the build and the configuration,
  * and no database, no Neon, no Cloudflare, no DeepL. The hourly monitor calls it, so on a platform
  * nobody visits it wakes nothing; `scripts/ship.mjs` reads its baseline; the full report is what a
  * person, `yarn smoke` and the daily monitor at the maintenance window ask for.
@@ -64,7 +64,7 @@ function nothingAsked(): void {
   expect(fetchSpy).not.toHaveBeenCalled();
 }
 
-describe("§NNN /api/health is shallow by default", () => {
+describe("§577 /api/health is shallow by default", () => {
   it("answers the build and the configuration with nothing asked of the database or anybody else", async () => {
     const response = await GET(new Request("http://localhost/api/health"));
     expect(response.status).toBe(200);
@@ -106,7 +106,7 @@ describe("§NNN /api/health is shallow by default", () => {
   });
 });
 
-describe("§NNN the shallow report's rules", () => {
+describe("§577 the shallow report's rules", () => {
   const base: ShallowHealthInput = {
     build: { baseline: "BR-V2.41-2026-09-30", commit: "abc1234", committedAt: "" },
     expectedMigration: "0114_example",

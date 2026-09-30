@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V2.43-2026-09-27`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V2.44-2026-09-27`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -644,7 +644,7 @@ are the run's to open, merge and approve.
 ## Email has stopped
 
 The monitor mail from cron-job.org says `/api/health?deep=1` failed (the daily 04:02 check; the
-hourly `/api/health` is shallow since §NNN and says only whether the site answers), or
+hourly `/api/health` is shallow since §577 and says only whether the site answers), or
 `/admin/tasks` is red at the top (`DECISIONS.md` §98). Three causes, told apart by the same page:
 
 1. **Deferred by the allowance** — Mailgun Free's 100 messages a day are spent. Nothing is

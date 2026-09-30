@@ -183,7 +183,7 @@ function withinWait<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T>
 }
 
 /**
- * Shallow by default, deep on `?deep=1` (§NNN).
+ * Shallow by default, deep on `?deep=1` (§577).
  *
  * The shallow answer is the build and the configuration (`diagnostics/domain/shallow-health.ts`):
  * nothing here opens the database or calls a third party, so the hourly monitor wakes nothing on a

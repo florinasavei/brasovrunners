@@ -25,7 +25,7 @@ vi.mock("@/modules/registrations/turnstile", () => ({ probeTurnstileSecret: asyn
 vi.mock("@/modules/translate/credit", () => ({ readTranslationCredit: (...args: unknown[]) => readTranslationCredit(...args) }));
 
 const healthRoute = await import("@/app/api/health/route");
-/** The full report (§NNN): these cases are about what the deep answer asks and says. */
+/** The full report (§577): these cases are about what the deep answer asks and says. */
 const GET = () => healthRoute.GET(new Request("http://localhost/api/health?deep=1"));
 
 beforeEach(() => {

@@ -28,7 +28,7 @@ import { PREFETCHED_PATHNAMES } from "./prefetch";
 export const LIVE_SEGMENT = "live";
 
 /*
-  What each page asks of its address, read the way the page reads it (§NNN, amending §549).
+  What each page asks of its address, read the way the page reads it (§577, amending §549).
 
   §549 sent every key outside a short list of share keys (`fbclid`, `utm_*`, Next's `_rsc`, …) to a
   twin, so `?foo=1`, `?page=2`, a scanner's `?s=` or a filter that names nothing (`?type=FOO`) was a
@@ -41,7 +41,7 @@ export const LIVE_SEGMENT = "live";
     page runs, so a value it drops is dropped here too) or the list layout (`?view=list`, first value,
     as the page reads it).
   - **The bare calendar**: the same filters, and its old `?month=`, `?year=`, `?view=` should one get
-    past the proxy's redirect to the period's path (§NNN, the calendar's own).
+    past the proxy's redirect to the period's path (§577, the calendar's own).
   - **A calendar period's path**: the filters.
   - **An event page**: its four keys, whatever their value — the start list's page (`?lista=`, §250),
     the interest box's outcome and its timing (`?interest=`, `?since=`, §146) and the signer's link
@@ -129,7 +129,7 @@ export function isStaticPublicAnswer(internalPathname: string, search: URLSearch
 }
 
 /**
- * Whether this request is the App Router's prefetch rather than a visit or a navigation (§NNN):
+ * Whether this request is the App Router's prefetch rather than a visit or a navigation (§577):
  * Next marks every prefetch it sends with `Next-Router-Prefetch`, and the per-segment ones with
  * `Next-Router-Segment-Prefetch` too (Next 16.3, `app-router-headers`). A navigation carries `RSC`
  * alone; a document request carries neither.
@@ -139,7 +139,7 @@ export function isRouterPrefetch(headers: Headers): boolean {
 }
 
 /**
- * What the proxy answers a prefetch that a twin would have to render (§NNN): nothing, `204`, and
+ * What the proxy answers a prefetch that a twin would have to render (§577): nothing, `204`, and
  * never kept by anybody.
  *
  * Next prefetches every link in view whose `prefetch` is left to it, and `prefetchFor` leaves it

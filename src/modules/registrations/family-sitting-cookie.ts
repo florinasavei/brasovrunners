@@ -29,7 +29,7 @@ const PURPOSE = "family-sitting";
 
 /**
  * One line per person: the name, a tab, the birth date as typed ("" when none), a tab, `w` when
- * no place was free for them (§543), a tab, and `F` or `M` for the sex typed (§NNN; "" when none —
+ * no place was free for them (§543), a tab, and `F` or `M` for the sex typed (§576; "" when none —
  * and absent from a line written before it, which reads as none).
  */
 const SEX_LETTER = { FEMALE: "F", MALE: "M" } as const;

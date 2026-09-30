@@ -389,7 +389,7 @@ export type SittingPerson = {
   name: string;
   birthDate: string;
   waitlist?: boolean;
-  /** «Feminin» or «Masculin» as typed (§NNN): on a shared birth date, the other sex is another person. Absent from a cookie written before it. */
+  /** «Feminin» or «Masculin» as typed (§576): on a shared birth date, the other sex is another person. Absent from a cookie written before it. */
   sex?: SexChoice;
 };
 
@@ -450,7 +450,7 @@ export function sittingCookieLive(cookie: FamilySittingCookie | null, eventId: s
  *   now typed — a corrected birth date replaces, never adds; the new spelling moves to the end;
  * - **another name on a birth date** typed before (§493: twins, or a corrected name): nobody is added
  *   and nobody is replaced — the form is not kept, and `sameBirthDate` names the two for the screen's
- *   sentence — unless the sex typed is the other one (§NNN, `sexesDiffer`): another name and the other
+ *   sentence — unless the sex typed is the other one (§576, `sexesDiffer`): another name and the other
  *   sex are another person, as the server reads them (`comparePerson`);
  * - anybody else: added, last.
  *
@@ -496,7 +496,7 @@ export function isFamilySitting(people: number): boolean {
  * - `sameBirthDate` — **another name on a kept form's birth date** (§493): twins, whom the owner's
  *   rule reads as a slip, or a corrected name. Neither replaced nor added: overwriting would lose the
  *   first person without a word. The screen says what to do (`withSittingPerson` keeps the same rule).
- *   Not when the sex posted is the other one (§NNN): that is another person, as `comparePerson` reads it.
+ *   Not when the sex posted is the other one (§576): that is another person, as `comparePerson` reads it.
  *
  * Null for a different person (both differ, `comparePerson`).
  */

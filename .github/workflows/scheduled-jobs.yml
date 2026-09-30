@@ -16,7 +16,7 @@ name: scheduled-jobs
 # per project in Vercel: SETUP.md §3, `Brașov Runners / Scheduler QA`.
 
 # The backstop, not the clock (CLAUDE.md § Stack): cron-job.org is the clock (SETUP.md §40). Since
-# §NNN a ping with nothing due answers from the cache and wakes no database, and an idle platform
+# §577 a ping with nothing due answers from the cache and wakes no database, and an idle platform
 # runs its jobs for real once a day at 04:00 in Brașov; so this runs four times a day, at 01:17,
 # 07:17, 13:17 and 19:17 UTC — off the pinger's quarter-hours — to do what is due if the external
 # pinger has stopped. It used to say every five minutes; GitHub ran it every three to five hours.

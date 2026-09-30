@@ -19,7 +19,7 @@ import type { JobName } from "./schedule";
  *
  * Each duty below mirrors the query of the job that performs it, and names it. A duty missing
  * here is not a wrong answer, it is a late one: the cap in `planQuiet` is the daily window
- * (`schedule.ts#dailyWindowEnd`, §NNN), so the job looks for real at 04:00 in Brașov whatever this
+ * (`schedule.ts#dailyWindowEnd`, §577), so the job looks for real at 04:00 in Brașov whatever this
  * says, and a forgotten duty is at most a day late. The sweeps measured in days — the retention
  * windows (`retention.ts`, `DECISIONS.md` §45, §95), the orphaned pictures (§73), the standing
  * series to the club's series horizon (§377) (§122) — are left to the window on purpose: they run

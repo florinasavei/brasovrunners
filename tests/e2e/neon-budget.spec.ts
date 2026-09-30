@@ -41,7 +41,7 @@ test.describe("§447 the month's budget", () => {
   });
 
   test("the public health answer names the level, never a figure, and when the database was asked", async ({ request }) => {
-    // The full report (§NNN): the bare address is the monitors' shallow answer, with no budget in it.
+    // The full report (§577): the bare address is the monitors' shallow answer, with no budget in it.
     const response = await request.get("/api/health?deep=1");
     const body = (await response.json()) as {
       neon: Record<string, unknown>;
@@ -55,7 +55,7 @@ test.describe("§447 the month's budget", () => {
     expect(body.databaseCheckedAt).toBe(body.checkedAt);
   });
 
-  test("the bare health answer is shallow: the build, and nothing the database or Neon would say (§NNN)", async ({ request }) => {
+  test("the bare health answer is shallow: the build, and nothing the database or Neon would say (§577)", async ({ request }) => {
     const response = await request.get("/api/health");
     const body = (await response.json()) as Record<string, unknown>;
     expect(body.depth).toBe("shallow");

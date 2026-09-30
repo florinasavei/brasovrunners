@@ -115,7 +115,7 @@ async function register(event: EventForRegistration, changes: Partial<typeof reg
 }
 
 describe("BR-REQ-090-03 criterion 10 the maintenance job's next work, duty by duty", () => {
-  it("is nothing on an empty database, which the plan caps at the daily window (§NNN)", async () => {
+  it("is nothing on an empty database, which the plan caps at the daily window (§577)", async () => {
     const next = await nextMaintenanceWork(db, NOW);
     expect(next).toBeNull();
     // 13:00 in Brașov: the next look is 04:00 tomorrow, fifteen hours on.

@@ -11,7 +11,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * `/api/health` answers 503 for anything but `ok`, and cron-job.org emails the owner on a 503
  * (§98). So the scheduler's liveness is measured against the last *ping*, skipped or real, read
  * from the cache the skip uses; and a real run is still required, within the daily window's
- * longest quiet (§NNN; an hour before it) plus the threshold it always had. Noon in Brașov
+ * longest quiet (§577; an hour before it) plus the threshold it always had. Noon in Brașov
  * throughout, so the day cadence (fifteen minutes, threshold 35) applies.
  */
 const NOON = new Date("2026-10-01T09:00:00.000Z"); // 12:00 in Brașov, summer time
@@ -57,7 +57,7 @@ describe("BR-REQ-090-03 criterion 12 liveness is measured against the pings", ()
     expect((await checkJobHealth(db, "registration-maintenance", NOON)).status).toBe("stale");
   });
 
-  it("reads one real run a day, at the window, as ok while the pings arrive (§NNN)", async () => {
+  it("reads one real run a day, at the window, as ok while the pings arrive (§577)", async () => {
     // 04:00 this morning, eight hours ago: an idle platform's only real run of the day.
     await realRun(8 * 60);
     await recordPing("registration-maintenance", ago(5), false);

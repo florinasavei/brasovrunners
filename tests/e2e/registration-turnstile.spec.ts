@@ -127,7 +127,7 @@ async function openWithStandIn(page: Page, { blindField = false } = {}) {
   await ensureRegistrationIsOpen(page);
   await page.goto(registerPath);
   await hydrated(page);
-  // Nothing of Cloudflare's before the person starts on the form (§NNN): no script, no widget.
+  // Nothing of Cloudflare's before the person starts on the form (§577): no script, no widget.
   await expect(page.locator("script[data-turnstile]")).toHaveCount(0);
   await expect(tokenField(page)).toHaveCount(0);
   await page.locator('[name="firstName"]').focus();
@@ -317,7 +317,7 @@ test.describe("§502 a press held for the anti-bot check is sent when the check 
 
     // Cloudflare's script, held until the press is held — so the press comes before any widget
     // exists. Not a fixed delay: since the script is requested at the first key in the form rather
-    // than on arrival (§NNN), a delay counted from the request would end at an unknown moment
+    // than on arrival (§577), a delay counted from the request would end at an unknown moment
     // after the press and spend the valve's eight seconds on Cloudflare's own challenge.
     let releaseScript: () => void = () => {};
     const scriptReleased = new Promise<void>((resolve) => {
@@ -329,7 +329,7 @@ test.describe("§502 a press held for the anti-bot check is sent when the check 
     });
     await page.goto(registerPath, { waitUntil: "domcontentloaded" });
     // `hydrated` waits for the network to settle, which the late script would hold up: the widget's
-    // own script tag — injected at the first focus in the form (§NNN) — is the sign the page's
+    // own script tag — injected at the first focus in the form (§577) — is the sign the page's
     // islands are running. A key in the first box until it is there, in case the first came before them.
     await expect(async () => {
       await page.locator('[name="firstName"]').press("Shift");
@@ -531,7 +531,7 @@ test.describe("§518 the anti-bot check says every state and never strands a pre
     await ensureRegistrationIsOpen(page);
     await page.goto(registerPath);
     await hydrated(page);
-    // The script is asked for at the first focus in the form (§NNN), and refused.
+    // The script is asked for at the first focus in the form (§577), and refused.
     await page.locator('[name="firstName"]').focus();
     const openedAt = Date.now();
 
@@ -554,7 +554,7 @@ test.describe("§518 the anti-bot check says every state and never strands a pre
   });
 });
 
-test.describe("§NNN Cloudflare is asked for nothing until a person starts on a protected form", () => {
+test.describe("§577 Cloudflare is asked for nothing until a person starts on a protected form", () => {
   test("no page loads the script on arrival — the listing, an event page, the contact page, the form — and the form's first focus does", async ({ page }) => {
     test.setTimeout(60_000);
     const asked: string[] = [];

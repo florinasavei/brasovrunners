@@ -130,7 +130,7 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
   */
   const promoOn = context.ok ? await cachedPromotionalMaterialsOffered(now) : false;
   /*
-    The club's limit per address (§389, §NNN; the owner, 2026-09-30: up to four people on one email
+    The club's limit per address (§389, §576; the owner, 2026-09-30: up to four people on one email
     address, and the limit said): under each registration, how many people this address has at that
     event out of the limit — «2 din cel mult 4 persoane». Counted from this page's own list, behind the
     address's own link, the one place the address's registrations may be read (§39). Only once the

@@ -141,7 +141,7 @@ function writeStored(key: string, value: string): void {
 export default function NewBuildNotice({ build }: { build: string }) {
   const t = useTranslations("Site");
   const deployedBuild = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
-  // The backoffice asks every minute while visible; a public page only when it is shown again (§NNN).
+  // The backoffice asks every minute while visible; a public page only when it is shown again (§577).
   const polls = pollsForNewBuild(usePathname());
   /** The identity this reader waved away in this render tree; the stored copy survives a remount. */
   const [dismissed, setDismissed] = useState<string | null>(null);
@@ -199,7 +199,7 @@ export default function NewBuildNotice({ build }: { build: string }) {
 
     const schedule = () => {
       window.clearInterval(timer);
-      // A public page never asks on a timer (§NNN, `pollsForNewBuild`): only when it is shown again.
+      // A public page never asks on a timer (§577, `pollsForNewBuild`): only when it is shown again.
       if (!polls) return;
       timer = window.setInterval(() => {
         // Belt as well as braces: an interval can fire once more as a tab is being hidden.

@@ -122,7 +122,7 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     messageKey: field,
     example: inBoth((locale) => deadlineMergeValues(locale, DEFAULT_DEADLINES)[field]),
   })),
-  // The club's limit per address (§389, §NNN), in the terms' sentence about registering somebody else:
+  // The club's limit per address (§389, §576), in the terms' sentence about registering somebody else:
   // filled from the setting when the text is shown; the example is what an unset setting fills in.
   {
     token: `{{${ADDRESS_CAP_MERGE_FIELD}}}`,

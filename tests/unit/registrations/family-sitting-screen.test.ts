@@ -102,7 +102,7 @@ describe("BR-REQ-031-01 the sitting's screen past the sitting's deadline (§543)
   });
 });
 
-describe("BR-REQ-032-03 the sitting's screen states the limit per address (§NNN)", () => {
+describe("BR-REQ-032-03 the sitting's screen states the limit per address (§576)", () => {
   const during = new Date(FIRST_FORM.getTime() + 20 * 60_000);
 
   it("«3 din 4»: the people sent so far out of the limit, and «Da» still offered below it", async () => {

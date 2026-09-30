@@ -64,7 +64,7 @@ import {
  * end timing, and so the same race one step later.
  *
  * It is left as it is because it is bounded and safe. Bounded by the plan itself — the cap, the
- * daily window since §NNN, or the Administrator's longer interval — after which a real run finds the work anyway;
+ * daily window since §577, or the Administrator's longer interval — after which a real run finds the work anyway;
  * safe because nothing the job does is what keeps a place right (AGENTS.md §10.6: a lapsed hold
  * or offer is lapsed on every read). The window is the few hundred milliseconds between a run's
  * `nextWork` query and the end of its request, so what it costs in practice is a message or a
@@ -78,7 +78,7 @@ const PING_TAG = `${TAG}:ping`;
 
 class NotRecorded extends Error {}
 
-/** `dueHour` is the hour-wide "nothing due until" beyond a run's first hour (§NNN, `dueSlotsFor`). */
+/** `dueHour` is the hour-wide "nothing due until" beyond a run's first hour (§577, `dueSlotsFor`). */
 type Family = "due" | "dueHour" | "floor" | "ping";
 
 /** A writer's value, or a reader's refusal to invent one. Always called bound, never directly. */
@@ -133,7 +133,7 @@ export function insideJobRun<T>(job: JobName, work: () => Promise<T>): Promise<T
  * Never throws and never waits: `revalidateTag` is queued and applied when the request ends,
  * after the transaction has committed; outside a request it is simply not there. A call this
  * misses, a call site nobody wrote, or a call that races a run's own slot writes (see "A wake
- * that races a run" above) costs at most the cap — the daily window since §NNN — never the work
+ * that races a run" above) costs at most the cap — the daily window since §577 — never the work
  * itself.
  */
 export function wakeJobs(jobs: JobName | readonly JobName[], dueAt?: Date | null, now: Date = new Date()): void {
@@ -164,7 +164,7 @@ export function forgetJobSchedules(): void {
 
 /**
  * The "nothing due until" a ping at `now` reads: its five-minute slot, or — beyond the first hour
- * after the run that wrote it — its hour slot (§NNN). Both carry the job's due tag, so a wake
+ * after the run that wrote it — its hour slot (§577). Both carry the job's due tag, so a wake
  * forgets both at once.
  */
 async function readDueSlot(job: JobName, now: Date): Promise<DueSlot | null> {
@@ -198,7 +198,7 @@ export async function recordPing(job: JobName, now: Date, ran: boolean): Promise
 
 /**
  * Leave a real run's plan for the pings after it: one "nothing due until" slot for each five
- * minutes of its first hour of quiet and one for each hour after that (§NNN — a day's quiet is
+ * minutes of its first hour of quiet and one for each hour after that (§577 — a day's quiet is
  * then at most 12 + 27 writes, not 288), one floor slot for each five minutes of the
  * Administrator's interval, and the ping itself. Writes are queued by Next and finished before
  * the function is frozen.

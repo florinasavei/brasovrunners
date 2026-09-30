@@ -15,7 +15,7 @@ import { daysPhrase, durationPhrase, hoursPhrase, leadPhrase, minutesPhrase } fr
 import { RETENTION_PERIODS } from "@/modules/jobs/domain/retention-periods";
 import { getPathname } from "@/i18n/navigation";
 import { countForm } from "@/i18n/count-form";
-// The limit per address in the words every page states it with (§389, §NNN).
+// The limit per address in the words every page states it with (§389, §576).
 import { peoplePhrase } from "@/modules/registrations/domain/address-cap";
 import { NO_RACE_NUMBER } from "@/modules/registrations/domain/qr-identity";
 import { env } from "@/shared/config/env";

@@ -66,7 +66,7 @@ export function addressHasRoom(active: number, cap: AddressCap): boolean {
 }
 
 /**
- * "4 persoane", "o persoană" / "4 people", "one person" (§389, §NNN): the limit as every sentence that
+ * "4 persoane", "o persoană" / "4 people", "one person" (§389, §576): the limit as every sentence that
  * states it says it — the form, the family's screen, «Înscrierile mele», the terms, the emails —
  * the site's count words (`countForm`, §341) and never a literal, so the limit reads the same
  * wherever a participant meets it. The bounds (1–10) never reach the "de" form; it is spelled for any

@@ -51,7 +51,7 @@ type Props = {
   /** The instant the screen is read at (§543): the deadline is compared with it. The request's clock; a test passes its own. */
   now?: Date;
   /**
-   * The club's limit per address (§389, §NNN; the owner, 2026-09-30: up to four people on one email
+   * The club's limit per address (§389, §576; the owner, 2026-09-30: up to four people on one email
    * address, and the limit said), from the data cache: «2 din 4 persoane cu această adresă» under the
    * names, and at the limit the rule in place of «Da, încă o persoană». The count is this browser's own
    * forms — what the server counts for a sitting too (`service.ts`, `SITTING_AT_CAP`) — never the
@@ -131,7 +131,7 @@ export default async function FamilySittingNext({
         ? t("sitting.markerPlaces", { names: facts.firstNames.join(", "), places: places.join(", ") })
         : t("sitting.marker", { names: facts.firstNames.join(", ") })
       : null;
-  // «N din 4» (§NNN): the people this browser sent, out of the limit; at it, «Da» gives way to the rule.
+  // «N din 4» (§576): the people this browser sent, out of the limit; at it, «Da» gives way to the rule.
   const capCount = cap !== null && cap > 0 ? t(`sitting.count.${countForm(cap, locale)}`, { count: Math.min(names.length, cap), max: cap }) : null;
   const atCap = cap !== null && cap > 0 && names.length >= cap;
   const placeOf = (index: number): string | null => {
@@ -239,7 +239,7 @@ export default async function FamilySittingNext({
             messages and this browser's half together — so it never lapses while the next form is open.
           */}
           {/*
-            At the limit (§NNN) the next form would be refused (`SITTING_AT_CAP`): the rule, said here,
+            At the limit (§576) the next form would be refused (`SITTING_AT_CAP`): the rule, said here,
             instead of a press that can only lead to the refusal.
           */}
           {atCap ? (

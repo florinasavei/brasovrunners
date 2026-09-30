@@ -141,7 +141,7 @@ const daysBefore = (now: Date, days: number) => new Date(now.getTime() - days * 
  * The orphan sweep: rides on the registration-maintenance job, last and in its own try/catch.
  *
  * Two statements and a loop. The sweep runs with the job's real runs — on a quiet site only the
- * daily window at 04:00 (§NNN). First, every referenced asset is marked as seen (a row at most
+ * daily window at 04:00 (§577). First, every referenced asset is marked as seen (a row at most
  * once an hour, so a run soon after another writes nothing). Then every asset nothing has referenced for
  * `ORPHAN_ASSET_DAYS` — and that is at least that old, so a picture uploaded into an editor
  * and not yet saved keeps its grace — is deleted: the row first, in a statement that re-checks

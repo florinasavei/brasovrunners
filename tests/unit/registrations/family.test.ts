@@ -220,7 +220,7 @@ describe("§389 §446 what one submission does on an address", () => {
   });
 });
 
-describe("§NNN the sex beside the birth date: another name and the other sex are another person", () => {
+describe("§576 the sex beside the birth date: another name and the other sex are another person", () => {
   const andrei: FamilyRow = { id: "a1", status: "CONFIRMED", registeredName: "Andrei Munteanu", birthDate: "1984-06-15", sex: "MALE" };
   const cap = { registrationsPerAddress: 4 };
 
@@ -267,7 +267,7 @@ describe("§NNN the sex beside the birth date: another name and the other sex ar
   });
 });
 
-describe("§NNN the limit per address: four unless set, the fourth accepted and the fifth refused", () => {
+describe("§576 the limit per address: four unless set, the fourth accepted and the fifth refused", () => {
   const person = (index: number): FamilyRow => ({ id: `p${index}`, status: "CONFIRMED", registeredName: `Persoana${index} Pop`, birthDate: `198${index}-01-0${index}` });
   const three = [1, 2, 3].map(person);
   const four = [1, 2, 3, 4].map(person);

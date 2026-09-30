@@ -1,7 +1,7 @@
 import type { DomainRenewal } from "./domain-renewal";
 
 /**
- * `/api/health` without `?deep=1` (§NNN): the build and the configuration, and nothing a call
+ * `/api/health` without `?deep=1` (§577): the build and the configuration, and nothing a call
  * has to ask anybody for — no database, no Neon, no Cloudflare, no DeepL.
  *
  * The owner, 2026-09-29: «dacă site-ul stă în idle nu vreau să consum nimic!». Every `/api/health`

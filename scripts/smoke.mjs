@@ -27,7 +27,7 @@ async function main() {
 
   let url;
   try {
-    // The full report (§NNN): the bare `/api/health` is the monitors' shallow answer, which asks
+    // The full report (§577): the bare `/api/health` is the monitors' shallow answer, which asks
     // no database and so could not say that the schema is behind.
     url = new URL("/api/health?deep=1", baseUrl);
   } catch {

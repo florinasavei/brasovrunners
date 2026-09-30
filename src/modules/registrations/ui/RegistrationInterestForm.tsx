@@ -91,7 +91,7 @@ export default async function RegistrationInterestForm({
             {/*
               Cloudflare Turnstile, when the club switched it on (§97) — the same explicit widget as
               every other form (§185, §518), which loads nothing until the person starts on this
-              form (§NNN). It was Cloudflare's implicit mode here, its script loaded on every view
+              form (§577). It was Cloudflare's implicit mode here, its script loaded on every view
               of an event page that shows the box: a third-party request per stranger on a page
               the CDN otherwise answers alone.
             */}

@@ -75,7 +75,7 @@ export default async function JobCadencePanel({ locale, cadence, jobs, mayEdit, 
         {t("tasks.jobCadence.safe")}
         <QuietHelp text={t("tasks.jobCadence.safeMore")} />
       </Typography>
-      {/* §NNN (was §355's hour): why an idle day costs one wake — the safety look is the daily
+      {/* §577 (was §355's hour): why an idle day costs one wake — the safety look is the daily
           window's 04:00 call, which the deep health check shares, whichever interval is chosen. */}
       <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} data-testid="job-cadence-on-the-hour">
         {t("tasks.jobCadence.onTheHour", { time: DAILY_WINDOW_LABEL })}

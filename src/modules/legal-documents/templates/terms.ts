@@ -16,7 +16,7 @@
  * publishes (§1). The unusual clauses — §3 cancelling or changing, §4 stopping or excluding, §5
  * liability, §10 law and court — are accepted expressly by a separate box (Civil Code art. 1203).
  * The family flow (§389) is allowed in §2, with the club's limit per address as the merge field
- * `{{registrationsPerAddress}}` (§NNN), and nobody signs for another adult (§8). §5 is written
+ * `{{registrationsPerAddress}}` (§576), and nobody signs for another adult (§8). §5 is written
  * around attribution (art. 1349–1352, 1355, 1371, 1373), never as a waiver for injury. §7 describes
  * the list's states only where the notice the runner was given does (§396). §10 has no compulsory
  * pre-litigation step and no forum at the club's seat, and points to ANSPDCP, not SAL-ANPC.

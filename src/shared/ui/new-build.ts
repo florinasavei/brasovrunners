@@ -34,7 +34,7 @@ export const BUILD_ENDPOINT = "/api/build-id";
 export const POLL_INTERVAL_MS = 60_000;
 
 /**
- * Whether a tab on `pathname` asks on a timer at all (§NNN): only the backoffice — `/<locale>/admin`
+ * Whether a tab on `pathname` asks on a timer at all (§577): only the backoffice — `/<locale>/admin`
  * and `/<locale>/devs` — and only while it is visible (the island clears the timer when hidden).
  *
  * The owner, 2026-09-29: «dacă site-ul stă în idle nu vreau să consum nimic!». A public page left

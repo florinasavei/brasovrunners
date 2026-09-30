@@ -726,7 +726,7 @@ export async function cachedFamilyRegistrationOpen(): Promise<boolean> {
 }
 
 /**
- * The club's limit per address (§389, §NNN; the owner, 2026-09-30: up to four people on one email
+ * The club's limit per address (§389, §576; the owner, 2026-09-30: up to four people on one email
  * address, and the limit said), for the public pages that state it — under the form's address box,
  * on the family's screens, on «Înscrierile mele» and in the terms — from the data cache, so a
  * visitor reading "cel mult 4 persoane" wakes nothing. A save expires it (`updateAddressCap`,

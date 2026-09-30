@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * What an environment consumed while nobody visited it (§NNN) — `yarn idle:measure`.
+ * What an environment consumed while nobody visited it (§577) — `yarn idle:measure`.
  *
  * Usage: yarn idle:measure [--hours 24] [--neon-project <id>] [--vercel-project <name>]
  *

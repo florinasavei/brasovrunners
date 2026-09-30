@@ -43,7 +43,7 @@ export function familyEntryFields(input: Record<string, unknown>, now: Date): Re
 
 const DROPPED: ReadonlySet<string> = new Set(["email", "emailConfirm", "honeypot", "renderedAt", "fitnessAcknowledged"]);
 
-/** The person an entry names: the legal name as the registration would carry it, the birth date, and the sex (§NNN). */
+/** The person an entry names: the legal name as the registration would carry it, the birth date, and the sex (§576). */
 export function personOfEntry(entry: Pick<PendingFamilyEntry, "fields">): { legalName: string; birthDate: string | null; sex: SexChoice | null; adult: (now: Date) => boolean } {
   const fields = entry.fields;
   const first = typeof fields.firstName === "string" ? fields.firstName : "";

@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { pollsForNewBuild } from "@/shared/ui/new-build";
 
 /**
- * §NNN — an open tab on a public page asks for nothing on a timer. The owner, 2026-09-29: «dacă
+ * §577 — an open tab on a public page asks for nothing on a timer. The owner, 2026-09-29: «dacă
  * site-ul stă în idle nu vreau să consum nimic!». Work happens because a person did something.
  *
  * The one timer that used to poll from every page, the new-build notice, now polls only in the
@@ -12,7 +12,7 @@ import { pollsForNewBuild } from "@/shared/ui/new-build";
  * island may start an interval unless it is named below with its reason, so a keep-alive or a
  * poll added later is decided rather than slipped in.
  */
-describe("§NNN which tabs ask for a new build on a timer", () => {
+describe("§577 which tabs ask for a new build on a timer", () => {
   it("is the backoffice and /devs, in both languages", () => {
     for (const path of ["/ro/admin", "/en/admin/events/123", "/ro/devs", "/en/devs/docs/SETUP"]) expect(pollsForNewBuild(path), path).toBe(true);
   });
@@ -55,7 +55,7 @@ function clientFiles(dir: string): string[] {
   return files;
 }
 
-describe("§NNN no client island polls or keeps alive on a timer", () => {
+describe("§577 no client island polls or keeps alive on a timer", () => {
   it("starts an interval only where it is named with its reason", () => {
     const root = process.cwd();
     const offenders = clientFiles(join(root, "src"))

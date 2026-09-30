@@ -3,7 +3,7 @@ import { jobRuns } from "@/db/schema/job-runs";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — `/api/health` against a real PostgreSQL (PGlite): the shallow answer opens no connection
+ * §577 — `/api/health` against a real PostgreSQL (PGlite): the shallow answer opens no connection
  * at all, the deep one (`?deep=1`) asks the database everything it always did.
  *
  * The pool refuses to open whenever a case says the database must not be touched, as in
@@ -50,7 +50,7 @@ beforeEach(async () => {
   fakeNextCache.reset();
 });
 
-describe("§NNN /api/health's two depths on a real database", () => {
+describe("§577 /api/health's two depths on a real database", () => {
   it("answers shallow with the pool refusing to open", async () => {
     pool.open = false;
     const response = await GET(new Request("http://localhost/api/health"));

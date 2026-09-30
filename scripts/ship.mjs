@@ -3,7 +3,7 @@
  * Ship one small batch to production, end to end — the release step of `docs/DISPATCHER.md`.
  *
  * Usage: yarn ship <batch PR> <new baseline> <previous baseline> "<release title>"
- *        yarn ship 163 BR-V2.43-2026-09-27 BR-V1.81-2026-09-24 "the listing cards and the partner marker"
+ *        yarn ship 163 BR-V2.44-2026-09-27 BR-V1.81-2026-09-24 "the listing cards and the partner marker"
  *
  *   1. waits until production reports the previous baseline: one release at a time;
  *   2. waits for the batch PR's checks to settle (§426), stops unless green, merges it into `qa`
@@ -99,7 +99,7 @@ function productionUrl() {
 }
 
 /**
- * Production's `/api/health`. Shallow by default since §NNN — the build and the configuration, no
+ * Production's `/api/health`. Shallow by default since §577 — the build and the configuration, no
  * database — so the polls below, every 20 to 30 seconds while a release is on its way, wake
  * nothing. `deep` asks for the full report once, after the flip, to say how the site is.
  */
@@ -262,7 +262,7 @@ const live = await until(async () => {
   return body.includes(`"${NEW}`) ? body : null;
 }, 20, 60);
 if (!live) stop(`production did not report ${NEW} in time — check the Vercel deployment`);
-// One deep call, now that the new build answers: the database, the schema and the jobs (§NNN).
+// One deep call, now that the new build answers: the database, the schema and the jobs (§577).
 const report = (await health(BASE, { deep: true })) || live;
 console.log(`production: ${report.match(/"status":"[a-z]+"/)?.[0] ?? "?"} ${NEW}`);
 clock.end();

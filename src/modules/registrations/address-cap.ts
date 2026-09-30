@@ -21,7 +21,7 @@ import { type AddressCap, addressCapSettingSchema, DEFAULT_ADDRESS_CAP, readAddr
  *   submission paths, which must not pay a round trip for a number that changes a few times a year.
  *   Read before the submission's transaction, never under the event's lock (§377's rule).
  *
- * The public pages state the number since §NNN — the form, the family's screens, «Înscrierile mele»,
+ * The public pages state the number since §576 — the form, the family's screens, «Înscrierile mele»,
  * the terms — through the data cache (`cachedAddressCap`), so a save expires the `settings` tag; the
  * email says it from the payload the submission wrote, and the form behind the emailed link reads it
  * with the token.
@@ -89,7 +89,7 @@ export async function updateAddressCap<T extends Record<string, unknown>>(
   });
 
   forgetCachedAddressCap();
-  // The pages that state the limit (§NNN) read it from the data cache: the save expires their copy.
+  // The pages that state the limit (§576) read it from the data cache: the save expires their copy.
   revalidatePublicContent("settings");
   return { cap: next, updatedAt: now };
 }

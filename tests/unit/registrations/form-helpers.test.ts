@@ -204,7 +204,7 @@ describe("§546 the registration form says only what a label cannot", () => {
     });
   }
 
-  it("states the club's limit per address under the address box once a family may register (BR-REQ-032-03, §NNN)", async () => {
+  it("states the club's limit per address under the address box once a family may register (BR-REQ-032-03, §576)", async () => {
     state.locale = "ro";
     expect(await render()).not.toContain('data-testid="address-cap-rule"');
     state.familyOpen = true;

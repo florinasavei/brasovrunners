@@ -2,13 +2,13 @@ import { describe, expect, it } from "vitest";
 import { classifyWake, neonWakes, requestKind, summariseRequests } from "../../../scripts/idle-cost.mjs";
 
 /**
- * §NNN — `yarn idle:measure`: what an environment consumed while nobody visited it. The target is
+ * §577 — `yarn idle:measure`: what an environment consumed while nobody visited it. The target is
  * zero wakes outside the daily maintenance window (04:00 in Brașov); these hold the arithmetic
  * that says so from Neon's operations log and Vercel's request log.
  */
 const op = (action: string, at: string) => ({ action, created_at: at });
 
-describe("§NNN reading Neon's operations log", () => {
+describe("§577 reading Neon's operations log", () => {
   it("pairs each start with the suspend after it, and classes the wake by the club's clock", () => {
     const wakes = neonWakes(
       [
@@ -44,7 +44,7 @@ describe("§NNN reading Neon's operations log", () => {
   });
 });
 
-describe("§NNN reading Vercel's request log", () => {
+describe("§577 reading Vercel's request log", () => {
   it("names each request by what it is, never by its count alone", () => {
     expect(requestKind({ requestPath: "/api/internal/jobs/email-outbox" })).toBe("job ping");
     expect(requestKind({ requestPath: "/api/health" })).toBe("health");

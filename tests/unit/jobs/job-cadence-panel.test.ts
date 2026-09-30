@@ -89,11 +89,11 @@ describe("§334, §221 the throttle card's sentence about email", () => {
 });
 
 /*
-  BR-REQ-090-03 criterion 14, as §NNN amends §355: the card says why an idle day costs one wake —
+  BR-REQ-090-03 criterion 14, as §577 amends §355: the card says why an idle day costs one wake —
   the safety look is the daily window at 04:00, with the monitor's full check — to a reader who
   may not change it too.
 */
-describe("§NNN the throttle card says the safety look is once a day, at the window", () => {
+describe("§577 the throttle card says the safety look is once a day, at the window", () => {
   it("says it on the card with the window's time, whether or not the reader may change the interval", async () => {
     const html = await render("immediate");
     expect(html).toContain('data-testid="job-cadence-on-the-hour"');

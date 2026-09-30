@@ -11,7 +11,7 @@ import { readRegistrationForm } from "@/modules/registrations/form-mapping";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN (amending §446 and §493) — a second person on the same address, from the public form, is
+ * §576 (amending §446 and §493) — a second person on the same address, from the public form, is
  * never answered «Ești deja înscris» (BR-REQ-032-03, BR-REQ-031-01 criterion 3).
  *
  * What QA showed on 2026-09-30: an address holding two confirmed runners at a race; the public form
@@ -149,7 +149,7 @@ async function pressLatestOffer(now: Date) {
 
 const FIRST = { firstName: "Andrei", lastName: "Munteanu", birthDate: "15.06.1984", sex: "MALE" } as const;
 
-describe("§NNN a second person on the same address, from the public form", () => {
+describe("§576 a second person on the same address, from the public form", () => {
   it("reads the birth date typed day first as the day it is, and refuses one it cannot read, naming the box (§47, §561)", async () => {
     expect(posted(FIRST, NOW).birthDate).toBe("1984-06-15");
     expect(posted({ ...FIRST, birthDate: "15061984" }, NOW).birthDate).toBe("1984-06-15");
@@ -238,7 +238,7 @@ describe("§NNN a second person on the same address, from the public form", () =
   });
 });
 
-describe("§NNN the same rule in a family sitting (§519, §543)", () => {
+describe("§576 the same rule in a family sitting (§519, §543)", () => {
   const PUBLIC = { source: "PUBLIC" as const, createdByStaffUserId: null };
   const WINDOW_MS = 10 * 60_000;
 

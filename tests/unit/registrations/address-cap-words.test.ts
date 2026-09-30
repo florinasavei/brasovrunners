@@ -8,7 +8,7 @@ import { termsEn, termsRo } from "@/modules/legal-documents/templates/terms";
 import { DECLARATION_TOKENS } from "@/modules/legal-documents/templates/tokens";
 
 /**
- * BR-REQ-032-03 — the club's limit per address, said wherever a participant meets it (§389, §NNN;
+ * BR-REQ-032-03 — the club's limit per address, said wherever a participant meets it (§389, §576;
  * the owner, 2026-09-30: up to four people on one email address, and the limit stated). The words
  * come from the catalogues in both languages, counted with the site's count words (`countForm`, no
  * ICU plurals), and the terms' template names the limit as a merge field, never a literal.
@@ -21,7 +21,7 @@ function people(locale: "ro" | "en", count: number): string {
   return translator(locale, "Registration")(`addressCap.people.${countForm(count, locale)}` as "addressCap.people.few", { count });
 }
 
-describe("§NNN the limit per address in words", () => {
+describe("§576 the limit per address in words", () => {
   it("the rule under the form's address box, in both languages", () => {
     expect(translator("ro", "Registration")("addressCap.rule", { people: people("ro", 4) })).toBe(
       "Cu aceeași adresă de email se pot înscrie cel mult 4 persoane la un eveniment, de exemplu o familie. Fiecare își semnează singură declarația.",

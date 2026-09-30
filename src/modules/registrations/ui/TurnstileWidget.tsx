@@ -98,7 +98,7 @@ export type BotCheckWords = Record<BotCheckWidgetState, string> & { slow: string
 const SCRIPT_SELECTOR = "script[data-turnstile]";
 const NOTHING_TO_WATCH = () => () => {};
 /**
- * Whether a person has started on a protected form in this document (§NNN) — a module's memory,
+ * Whether a person has started on a protected form in this document (§577) — a module's memory,
  * so it lasts as long as the page and no longer: a new visit is a new document and waits again.
  */
 let startedInThisDocument = false;
@@ -142,7 +142,7 @@ export default function TurnstileWidget({
     () => false,
   );
   /*
-    Nothing of Cloudflare's before the person starts on the form (§NNN): the script is injected and
+    Nothing of Cloudflare's before the person starts on the form (§577): the script is injected and
     the widget drawn at the first focus, press, key or input anywhere in the enclosing form — never
     on page load. A page opened and left, or scrolled past, costs Cloudflare nothing and the reader
     no third-party request. The first field a person fills is seconds of typing ahead of the send
@@ -252,7 +252,7 @@ export default function TurnstileWidget({
   */
   const [slow, setSlow] = useState(false);
   useEffect(() => {
-    // Not armed yet (§NNN): nothing is loading, so nothing can be slow.
+    // Not armed yet (§577): nothing is loading, so nothing can be slow.
     if (!armed) return;
     if (state !== "loading" && state !== "checking") return;
     const timer = setTimeout(() => setSlow(true), BOT_CHECK_SLOW_AFTER_MS);
@@ -337,7 +337,7 @@ export default function TurnstileWidget({
         never inside it: that one is the script's to draw into.
       */}
       {failedIn === attempt && <input type="hidden" name={BOT_CHECK_SIGNAL_FIELD} value="widget-failed" />}
-      {/* Said once the check has started (§NNN): before the first touch of the form there is nothing to say. */}
+      {/* Said once the check has started (§577): before the first touch of the form there is nothing to say. */}
       {running && armed && (
         <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", columnGap: 1.5, rowGap: 0.5, mt: 0.5 }}>
           {/*

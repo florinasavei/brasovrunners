@@ -235,7 +235,7 @@ export const PROMOTIONAL_MATERIALS_MERGE_FIELD = "promotionalMaterials";
 export const PROMOTIONAL_MATERIALS_SHARED_MERGE_FIELD = "promotionalMaterialsShared";
 
 /**
- * The club's limit per address (§389, §NNN; the owner, 2026-09-30: up to four people on one email
+ * The club's limit per address (§389, §576; the owner, 2026-09-30: up to four people on one email
  * address, and the limit said): how many people one email address may register for one event —
  * "4 persoane" / "4 people", with the unit, in the words every page and email says it with
  * (`peoplePhrase`). The terms' sentence about registering somebody else names it, filled from the

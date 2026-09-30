@@ -304,7 +304,7 @@ async function handedBibAtConfirmation<T extends Record<string, unknown>>(
  * the holds and offers the change itself created; `maintenanceDueFor` adds the event's own
  * instants, and `wakeJobs` does nothing when all of them are further away than any quiet a run
  * can promise — which is the ordinary case: a race weeks away, a hold that lapses in days. A call
- * this file forgot delays the job's run to the daily window at 04:00 (§NNN) — at most a day —
+ * this file forgot delays the job's run to the daily window at 04:00 (§577) — at most a day —
  * never the work: every deadline here is also evaluated on every read (§10.6).
  */
 function wakeMaintenance(
@@ -1828,7 +1828,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       §446 — whether the re-send may say how to register somebody else depends on it.
     */
     const familyOpen = onePerAccount ? false : via === "link" || rows.length > 0 ? await familyRegistrationOpen(tx) : false;
-    // The name and the birth date both decide who this is (§446), and the sex on a shared birth date (§NNN): the owner's rule, `domain/family.ts`.
+    // The name and the birth date both decide who this is (§446), and the sex on a shared birth date (§576): the owner's rule, `domain/family.ts`.
     const decision = decideSubmission({ rows, legalName, birthDate: input.birthDate ?? null, sex: input.sex ?? null, via, familyOpen, cap });
 
     /*

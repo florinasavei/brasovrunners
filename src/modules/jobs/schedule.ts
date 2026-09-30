@@ -15,7 +15,7 @@
  * connection. Two rules bound how wrong that can be:
  *
  * - **The cap.** Whatever the computation says, the job looks for real at least once a day, in
- *   the daily maintenance window (`DAILY_WINDOW_CLUB_MINUTE`, 04:00 on the club's clock; §NNN —
+ *   the daily maintenance window (`DAILY_WINDOW_CLUB_MINUTE`, 04:00 on the club's clock; §577 —
  *   it was once an hour until then). A duty this file forgot, a write path that forgot to say it
  *   made work, a clock that moved: each costs at most a day, never "never".
  * - **Nothing here is correctness.** A hold that lapses is lapsed on every read, whether or not
@@ -40,7 +40,7 @@
  * jobs' safety runs land on the same :00 call as the health check's wake:
  *
  * - **The cap** ended on the latest top of the hour no more than sixty minutes after the run: a
- *   run at 10:15 looked again at the 11:00 call. Since §NNN it ends at the daily window (below).
+ *   run at 10:15 looked again at the 11:00 call. Since §577 it ends at the daily window (below).
  * - **A minimum interval** ends on the first boundary of its own length at least that many
  *   minutes after the run (`minimumIntervalEnd`: quarter-hours for 15, :00/:30 for 30, the hour
  *   for 60, even hours for 120) — a minimum stays a minimum, so it may only come later, and at
@@ -49,7 +49,7 @@
  * - **A deadline the work itself has** (`nextWorkAt`) is never moved: before it there is nothing
  *   to do, and after it the next call runs, exactly as before.
  *
- * ## Once a day, not once an hour (§NNN)
+ * ## Once a day, not once an hour (§577)
  *
  * The owner, 2026-09-29: «dacă site-ul stă în idle nu vreau să consum nimic!». After §334 and §355
  * an idle hour still cost one wake of the database — the safety look at :00, which the health
@@ -74,7 +74,7 @@ export function isJobName(value: string): value is JobName {
 }
 
 /**
- * The daily maintenance window (§NNN): minutes after midnight on the club's clock, 04:00. The one
+ * The daily maintenance window (§577): minutes after midnight on the club's clock, 04:00. The one
  * moment an idle platform still looks at its database, whatever the computation said. A pinger
  * call on both environments (`SETUP.md` §40), after the night's quiet hours and before anybody
  * registers; it exists on both daylight-saving days (the spring change skips 03:00, the autumn one
@@ -121,7 +121,7 @@ export const ALIGN_STRETCH_MINUTES = 15;
 
 /**
  * No cached quiet period that a wake could shorten ends later than this after the run that wrote
- * it: the daily window at its furthest (§NNN), longer than any minimum interval. `wakeJobs` leans
+ * it: the daily window at its furthest (§577), longer than any minimum interval. `wakeJobs` leans
  * on it — work due further away than this is found by a real run before it is due, with no
  * invalidation needed.
  */
@@ -137,7 +137,7 @@ const SLOT_MS = SLOT_MINUTES * 60_000;
 const MINUTE = 60_000;
 
 /**
- * How far past a run its "nothing due" is written in five-minute slots (§NNN); beyond it, in
+ * How far past a run its "nothing due" is written in five-minute slots (§577); beyond it, in
  * hour-wide slots (`HOUR_SLOT_MINUTES`). A quiet of a day in five-minute slots would be 288 cache
  * writes per real run; this way it is at most 12 + 27. The fine slots are the ones read first, so a
  * run's own hour and the hour after it keep the five-minute precision a later run needs.
@@ -229,7 +229,7 @@ export function lastClubBoundary(at: Date, lengthMinutes: number): Date | null {
 const WINDOW_SEARCH_STEPS = (27 * 60) / PINGER_SLOT_MINUTES;
 
 /**
- * Where the safety look ends after a run at `ranAt` (§NNN, replacing §355's top of the hour): two
+ * Where the safety look ends after a run at `ranAt` (§577, replacing §355's top of the hour): two
  * minutes before the first 04:00 on the club's clock that is at least `DAILY_WINDOW_MIN_GAP_MINUTES`
  * after the run — the pinger's 04:00 call, which then runs whichever side of the minute it lands.
  * A run at 10:15 looks again at 04:00 tomorrow; a run at 03:30 (inside the gap) at 04:00 the day
@@ -283,7 +283,7 @@ export function slotStart(at: Date): Date {
   return new Date(Math.floor(at.getTime() / SLOT_MS) * SLOT_MS);
 }
 
-/** The start of the hour-wide slot `at` falls in (§NNN), UTC's hour — the key is an instant, not a wall clock. */
+/** The start of the hour-wide slot `at` falls in (§577), UTC's hour — the key is an instant, not a wall clock. */
 export function hourSlotStart(at: Date): Date {
   return new Date(Math.floor(at.getTime() / HOUR_SLOT_MS) * HOUR_SLOT_MS);
 }
@@ -300,7 +300,7 @@ export function slotsBetween(from: Date, until: Date): Date[] {
 }
 
 /**
- * Where a real run's "nothing due until" is written (§NNN): five-minute slots for the first
+ * Where a real run's "nothing due until" is written (§577): five-minute slots for the first
  * `FINE_SLOT_SPAN_MINUTES` after the run, hour-wide slots from the hour that span ends in to the
  * last hour that begins before `quietUntil`. A ping reads its five-minute slot first and its hour
  * slot only when that is missing (`schedule-cache.ts#readDueSlot`), so the hours the fine slots
@@ -340,7 +340,7 @@ export type QuietPlan = {
  * - `nextWorkAt` is the earliest instant the job will have something to do, from the database
  *   (`next-work.ts`); null when nothing at all is waiting. It is never aligned (§355): before it
  *   there is nothing to do, and after it the next ping runs.
- * - The cap ends at the daily window (`dailyWindowEnd`, §NNN) — or where the minimum interval
+ * - The cap ends at the daily window (`dailyWindowEnd`, §577) — or where the minimum interval
  *   ends, if that is later (a run just before the window under a two-hour interval).
  * - The minimum interval ends on a boundary of its own length, never sooner than the interval
  *   (`minimumIntervalEnd`).

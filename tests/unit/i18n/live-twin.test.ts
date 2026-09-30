@@ -66,10 +66,10 @@ describe("liveTwinPathname", () => {
 });
 
 /*
-  §NNN (amending §549): a twin only when what the page reads from the address changes what it shows.
+  §577 (amending §549): a twin only when what the page reads from the address changes what it shows.
   Measured on production 2026-09-30: `/ro/evenimente?foo=1` and `?page=2` were live-twin renders.
 */
-describe("§NNN the twin answers only the questions the page itself reads", () => {
+describe("§577 the twin answers only the questions the page itself reads", () => {
   it("leaves a key no page reads to the CDN, on every twinned route", () => {
     for (const query of ["foo=1", "page=2", "s=wp-login", "q=alergare", "lang=en", "fbclid=x&foo=1"]) {
       expect(liveTwinPathname("/ro/events", search(query), false), query).toBeNull();
@@ -109,10 +109,10 @@ describe("§NNN the twin answers only the questions the page itself reads", () =
 });
 
 /*
-  §NNN: a signed-in reader's event links in view were each a twin render on prefetch. The proxy now
+  §577: a signed-in reader's event links in view were each a twin render on prefetch. The proxy now
   declines a prefetch that a twin would answer — an empty 204 — and the press navigates to the twin.
 */
-describe("§NNN the proxy declines a prefetch only a twin could answer", () => {
+describe("§577 the proxy declines a prefetch only a twin could answer", () => {
   const session = { cookie: "authjs.session-token=abc" };
   const prefetch = { rsc: "1", "next-router-prefetch": "1", "next-router-segment-prefetch": "/_tree" };
   const ask = (path: string, headers: Record<string, string>) => proxy(new NextRequest(`http://localhost:4000${path}`, { headers }));

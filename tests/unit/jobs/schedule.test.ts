@@ -28,7 +28,7 @@ const RAN = new Date("2026-10-01T09:00:00.000Z");
 const minutes = (n: number) => new Date(RAN.getTime() + n * 60_000);
 /** Where a cap or an interval of `n` minutes ends: `PLAN_GRACE_MINUTES` early. */
 const ends = (n: number) => minutes(n - PLAN_GRACE_MINUTES);
-/** The daily window after RAN (§NNN): 04:00 in Brașov on 2 October, 01:00Z, `PLAN_GRACE_MINUTES` early. */
+/** The daily window after RAN (§577): 04:00 in Brașov on 2 October, 01:00Z, `PLAN_GRACE_MINUTES` early. */
 const WINDOW_END = new Date("2026-10-02T00:58:00.000Z");
 
 describe("§334 the quiet a real run may promise", () => {
@@ -38,11 +38,11 @@ describe("§334 the quiet a real run may promise", () => {
     expect(plan.floorUntil).toBeNull();
   });
 
-  it("caps the quiet at the daily window however far away the work is (§NNN)", () => {
+  it("caps the quiet at the daily window however far away the work is (§577)", () => {
     expect(planQuiet({ ranAt: RAN, nextWorkAt: minutes(3 * 24 * 60), cadenceMinutes: 0, failed: false }).quietUntil).toEqual(WINDOW_END);
   });
 
-  it("caps the quiet at the daily window when there is no work at all (§NNN)", () => {
+  it("caps the quiet at the daily window when there is no work at all (§577)", () => {
     expect(planQuiet({ ranAt: RAN, nextWorkAt: null, cadenceMinutes: 0, failed: false }).quietUntil).toEqual(WINDOW_END);
   });
 
@@ -56,20 +56,20 @@ describe("§334 the quiet a real run may promise", () => {
     expect(plan.floorUntil).toEqual(ends(30));
   });
 
-  it("keeps even the longest minimum interval a floor under the daily window (§NNN)", () => {
+  it("keeps even the longest minimum interval a floor under the daily window (§577)", () => {
     const plan = planQuiet({ ranAt: RAN, nextWorkAt: null, cadenceMinutes: 120, failed: false });
     expect(plan.quietUntil).toEqual(WINDOW_END);
     expect(plan.floorUntil).toEqual(ends(120));
   });
 
-  it("counts a run inside the hour before the window as the window's run: the next look is tomorrow (§NNN)", () => {
+  it("counts a run inside the hour before the window as the window's run: the next look is tomorrow (§577)", () => {
     const ranAt = new Date("2026-10-02T00:30:00.000Z"); // 03:30 in Brașov
     expect(planQuiet({ ranAt, nextWorkAt: null, cadenceMinutes: 0, failed: false }).quietUntil).toEqual(
       new Date("2026-10-03T00:58:00.000Z"),
     );
   });
 
-  it("lets a minimum interval that ends past the window hold the window's run back to it (§NNN)", () => {
+  it("lets a minimum interval that ends past the window hold the window's run back to it (§577)", () => {
     // A run at 02:59 in Brașov under two hours: 04:00 is 61 minutes on, so today's window, but the
     // interval runs to 05:13 — the later of the two is the quiet.
     const ranAt = new Date("2026-10-01T23:59:00.000Z");
@@ -93,7 +93,7 @@ describe("§334 the quiet a real run may promise", () => {
     expect(planQuiet({ ranAt: RAN, nextWorkAt: minutes(45), cadenceMinutes: 0, failed: false }).quietUntil).toEqual(minutes(45));
   });
 
-  it("never promises longer than the longest quiet any choice allows: a day, the gap and the autumn hour (§NNN)", () => {
+  it("never promises longer than the longest quiet any choice allows: a day, the gap and the autumn hour (§577)", () => {
     expect(SAFETY_LOOK_MAX_MINUTES).toBe(26 * 60);
     expect(MAX_QUIET_MINUTES).toBe(SAFETY_LOOK_MAX_MINUTES);
   });
@@ -127,7 +127,7 @@ describe("§334 the pinger's next call runs, early or late by its latency", () =
   /** The window's 04:00 call, half a second early. */
   const windowCallEarly = new Date(WINDOW_END.getTime() + PLAN_GRACE_MINUTES * 60_000 - 500);
 
-  it("runs the window's 04:00 call after a run on demand, half a second early (§NNN)", () => {
+  it("runs the window's 04:00 call after a run on demand, half a second early (§577)", () => {
     const plan = planQuiet({ ranAt: RAN, nextWorkAt: null, cadenceMinutes: 0, failed: false });
     expect(verdictAt(halfSecondBefore(60), plan)).toMatchObject({ run: false, reason: "nothing-due" });
     expect(verdictAt(windowCallEarly, plan)).toEqual({ run: true });
@@ -184,7 +184,7 @@ describe("§334 the five-minute slots", () => {
     expect(slotsBetween(RAN, RAN)).toEqual([]);
   });
 
-  it("writes a day's quiet as twelve five-minute slots and then hour slots, not 288 (§NNN)", () => {
+  it("writes a day's quiet as twelve five-minute slots and then hour slots, not 288 (§577)", () => {
     const { fine, hours } = dueSlotsFor(RAN, WINDOW_END);
     expect(fine).toHaveLength(12);
     expect(fine[0]).toEqual(RAN);

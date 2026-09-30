@@ -596,7 +596,7 @@ describe("§536 the short screen's sentences, formatted", () => {
   });
 });
 
-describe("§NNN the sex beside the birth date, on the browser's half and the kept forms", () => {
+describe("§576 the sex beside the birth date, on the browser's half and the kept forms", () => {
   it("another name and the other sex on a typed birth date is a new person; the same sex is the twins' clash, as before", () => {
     const andrei = [{ name: "Andrei Munteanu", birthDate: "1984-06-15", sex: "MALE" as const }];
     const sister = withSittingPerson(andrei, { name: "Andreea Munteanu", birthDate: "1984-06-15", sex: "FEMALE" });

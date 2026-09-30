@@ -209,7 +209,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   const sittingScreen = afterForm === "sitting";
   const familyForm = !submitted && family === "1" && sitting?.joined === true;
   /*
-    The club's limit per address, said where a participant meets it (§389, §NNN; the owner,
+    The club's limit per address, said where a participant meets it (§389, §576; the owner,
     2026-09-30: up to four people on one email address, and the limit said): under the address box,
     on the family's screens, and in the refusal at the limit. A sentence about the rule, from the data
     cache — never about this address (§39). Not on a members' event (one person per account, §552),
@@ -606,7 +606,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
           slug={slug}
           continueAction={continueFamilySittingAction}
           releaseAction={releaseFamilySittingAction}
-          // «N din 4» and, at the limit, the rule in place of «Da» (§NNN).
+          // «N din 4» and, at the limit, the rule in place of «Da» (§576).
           cap={familyOpen ? capMax : null}
         />
       ) : submitted ? (
@@ -1074,7 +1074,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   <Typography variant="body2" color="text.secondary">
                     {t("sitting.addressHelp")}
                   </Typography>
-                  {/* How many so far, out of the limit (§NNN): the people this browser sent, and this one. */}
+                  {/* How many so far, out of the limit (§576): the people this browser sent, and this one. */}
                   {familyOpen && capMax !== null && (
                     <Typography variant="body2" color="text.secondary" data-testid="address-cap-count">
                       {t(`sitting.count.${countForm(capMax, locale)}`, { count: Math.min(sitting.people.length + 1, capMax), max: capMax })}
@@ -1104,7 +1104,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 helperText={invalid.has("email") || invalid.has("emailConfirm") ? t("errors.field") : undefined}
               />
               {/*
-                The limit per address, under the box (§NNN, amending §546's "no help at rest" for this one
+                The limit per address, under the box (§576, amending §546's "no help at rest" for this one
                 fact): the owner asked for it said, and the form is where a family starts.
               */}
               {capRule && (

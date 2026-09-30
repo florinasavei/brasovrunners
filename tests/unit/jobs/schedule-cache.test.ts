@@ -51,7 +51,7 @@ describe("BR-REQ-090-03 criterion 9 the cache slots", () => {
 
   it("writes one slot per five minutes of a run's first hour, one per hour after it to the window, and the first ping of each five minutes", async () => {
     await recordRealRun("registration-maintenance", planQuiet({ ranAt: NOW, nextWorkAt: null, cadenceMinutes: 0, failed: false }));
-    // 13:00 in Brașov, quiet to tomorrow's 04:00 window (§NNN): twelve five-minute slots, the
+    // 13:00 in Brașov, quiet to tomorrow's 04:00 window (§577): twelve five-minute slots, the
     // fourteen hours from 11:00Z to 00:00Z, and the run's own ping — not 288 five-minute slots.
     expect(fakeNextCache.entries.size).toBe(12 + 14 + 1);
 
@@ -64,7 +64,7 @@ describe("BR-REQ-090-03 criterion 9 the cache slots", () => {
     });
   });
 
-  it("answers a ping hours after the run from its hour slot, and a wake forgets the hour slots too (§NNN)", async () => {
+  it("answers a ping hours after the run from its hour slot, and a wake forgets the hour slots too (§577)", async () => {
     const plan = planQuiet({ ranAt: NOW, nextWorkAt: null, cadenceMinutes: 0, failed: false });
     await recordRealRun("registration-maintenance", plan);
     const evening = new Date(NOW.getTime() + 7 * 60 * 60_000); // 20:00 in Brașov

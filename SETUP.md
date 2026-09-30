@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.43-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.44-2026-09-27 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V2.43-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.44-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1485,14 +1485,14 @@ brasovrunners PROD health   GET  the .com /api/health                         2 
 qa outbox                   POST QA …/api/internal/jobs/email-outbox          0 * * * *             hourly
 qa maintenance              POST QA …/jobs/registration-maintenance           0 */2 * * *           every 2 hours, even hours
 brasovrunners QA health     GET  qa. /api/health                              2 */6 * * *           00:02, 06:02, 12:02, 18:02
-brasovrunners PROD deep     GET  the .com /api/health?deep=1                  2 4 * * *             once a day, 04:02 — to add (§NNN)
-brasovrunners QA deep       GET  qa. /api/health?deep=1                       2 4 * * *             once a day, 04:02 — to add (§NNN)
+brasovrunners PROD deep     GET  the .com /api/health?deep=1                  2 4 * * *             once a day, 04:02 — to add (§577)
+brasovrunners QA deep       GET  qa. /api/health?deep=1                       2 4 * * *             once a day, 04:02 — to add (§577)
 ```
 
 All of them: *notify on failure* after 1 failure, *notify when disabled for too many failures* on,
 responses not saved.
 
-**Since §NNN (2026-09-30): the daily window and the two depths of `/api/health`.** An idle
+**Since §577 (2026-09-30): the daily window and the two depths of `/api/health`.** An idle
 platform now looks at its database once a day, at **04:00** in Brașov — both jobs' safety run, the
 retention sweep, the picture sweep and the standing series — instead of every hour; every deadline
 the work has (a hold, an offer, an email link, a reminder, an outbox retry) keeps its own time, and
@@ -1520,11 +1520,11 @@ production; 125 on QA, which carries `PINGER_CADENCE_MINUTES=60`):
 - QA's maintenance every 2 hours sits inside its 125 minutes, and each QA health check runs two
   minutes after an even-hour maintenance run.
 - The health checks were the expensive ones: every `/api/health` touched the database, and on
-  Launch a wake costs at least five minutes (above). Since §NNN the monitors' `/api/health` is
+  Launch a wake costs at least five minutes (above). Since §577 the monitors' `/api/health` is
   shallow and touches nothing; only the daily `?deep=1` at 04:02 reads the database, inside the
   04:00 runs' wake. A job ping with nothing due answers from the cache and wakes nothing (§334),
   which is why the job monitors stay frequent. The staleness figures below are for the deep check;
-  since §NNN a real run is allowed up to a day apart (the 04:00 window), plus the same threshold.
+  since §577 a real run is allowed up to a day apart (the 04:00 window), plus the same threshold.
 
 **QA's emails wait longer than production's, on purpose.** Under «Când pleacă emailurile» =
 «La trecerea programată» (the default) an email leaves at the outbox job's next real run. On QA

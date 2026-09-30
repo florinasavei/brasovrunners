@@ -7,7 +7,7 @@ import { BOT_CHECK_ARMING_EVENTS, TURNSTILE_SCRIPT_URL } from "@/modules/registr
 import TurnstileWidget, { type BotCheckWords } from "@/modules/registrations/ui/TurnstileWidget";
 
 /**
- * BR-REQ-031-01, §NNN amending §97 — Cloudflare Turnstile loads only on a page with a protected
+ * BR-REQ-031-01, §577 amending §97 — Cloudflare Turnstile loads only on a page with a protected
  * form, and only once a person starts on that form: a focus, a press, a key, a typed character.
  * Never on page load, never on another page; the server's siteverify only on submit.
  *
@@ -34,7 +34,7 @@ const words = Object.fromEntries(
   ["loading", "checking", "interactive", "passed", "expired", "timeout", "error", "unsupported", "blocked", "slow", "retry", "failed"].map((key) => [key, `«${key}»`]),
 ) as BotCheckWords;
 
-describe("§NNN the widget waits for a person to start on the form", () => {
+describe("§577 the widget waits for a person to start on the form", () => {
   it("arms on a focus, a press, a key or a typed character — never on load, scroll or visibility", () => {
     expect([...BOT_CHECK_ARMING_EVENTS].sort()).toEqual(["focusin", "input", "keydown", "pointerdown"]);
     for (const passive of ["load", "DOMContentLoaded", "scroll", "visibilitychange", "mouseover"]) {
@@ -61,7 +61,7 @@ describe("§NNN the widget waits for a person to start on the form", () => {
   });
 });
 
-describe("§NNN no other public file loads Cloudflare's script", () => {
+describe("§577 no other public file loads Cloudflare's script", () => {
   it("names the script's address only in the widget, its domain constants, and the backoffice's network probe", () => {
     const users = sourceFiles(join(ROOT, "src")).filter((path) => {
       const text = read(path);

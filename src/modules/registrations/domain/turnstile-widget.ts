@@ -149,7 +149,7 @@ export const BOT_CHECK_STATE_ATTRIBUTE = "data-bot-check";
 export const BOT_CHECK_BLOCKED_AFTER_MS = 10_000;
 
 /**
- * What counts as a person starting on a protected form (§NNN): a focus anywhere inside it, a press,
+ * What counts as a person starting on a protected form (§577): a focus anywhere inside it, a press,
  * a key, a typed character. Until one of them, the widget injects no script and draws nothing, so a
  * page opened and left costs Cloudflare nothing (`TurnstileWidget`'s `armed`).
  */
