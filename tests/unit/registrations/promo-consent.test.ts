@@ -234,9 +234,17 @@ describe("§562 the exports", () => {
         consentedAt: new Date("2026-09-29T10:00:00.000Z"),
         privacyNoticeVersion: 1,
         birthDate: "1990-01-01",
+        // The other ticks the row carries since §NNN, for the Excel file only: never in the CSV.
+        status: "CONFIRMED",
+        listPublic: true,
+        listSocials: false,
+        termsVersion: 3,
+        termsAcceptedAt: new Date("2026-09-20T10:00:00.000Z"),
       },
     ]);
     expect(csv.startsWith("﻿Prenume,Nume,Email,Eveniment,Data acordului\r\n")).toBe(true);
+    expect(csv).not.toContain("CONFIRMED");
+    expect(csv).not.toContain("2026-09-20");
     expect(csv).toContain("'=HYPERLINK(1)");
     expect(csv).toContain('"Crosul, toamna"');
     expect(csv).toContain("2026-09-29T10:00:00.000Z");

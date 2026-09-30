@@ -123,8 +123,11 @@ describe("§570 the sponsor list's file", () => {
   it("has its words in both languages, the headers the owner named", () => {
     expect(ro.Admin.sponsors.columns).toEqual({ firstName: "Prenume", lastName: "Nume", email: "Email", event: "Eveniment", consentedAt: "Data acordului" });
     expect(Object.keys(en.Admin.sponsors.columns)).toEqual(Object.keys(ro.Admin.sponsors.columns));
-    expect(ro.Admin.sponsors.button).toBe("Descarcă lista pentru sponsori");
-    expect(en.Admin.sponsors.button).toBe("Download the list for sponsors");
+    // The Excel file since §NNN; the CSV beside it.
+    expect(ro.Admin.sponsors.button).toBe("Descarcă lista pentru sponsori (Excel)");
+    expect(en.Admin.sponsors.button).toBe("Download the list for sponsors (Excel)");
+    expect(ro.Admin.sponsors.buttonCsv).toBe("Descarcă CSV");
+    expect(en.Admin.sponsors.buttonCsv).toBe("Download CSV");
     expect(ro.Admin.sponsors.noticeMissing).toBe("Nota de confidențialitate în vigoare nu spune că lista poate fi dată partenerilor.");
     for (const catalogue of [ro, en]) {
       for (const words of [catalogue.Admin.sponsors.help, catalogue.Admin.sponsors.noticeMissing, catalogue.Registrations.promo.yesShared]) {
