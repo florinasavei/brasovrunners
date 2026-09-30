@@ -259,7 +259,7 @@ async function renderRow(
   */
   const familyConfirmedSittingId =
     row.messageType === "REGISTRATION_CONFIRMED" ? (row.payloadJson as { familySittingId?: unknown } | null)?.familySittingId : undefined;
-  // «Retrimite familiei» (§NNN): the address's confirmed people, named by the press rather than by a sitting.
+  // «Retrimite familiei» (§588): the address's confirmed people, named by the press rather than by a sitting.
   const familyResentIds =
     row.messageType === "REGISTRATION_CONFIRMED" ? (row.payloadJson as { familyRegistrationIds?: unknown } | null)?.familyRegistrationIds : undefined;
   let familyConfirmed: Registration[] | null = null;
@@ -431,7 +431,7 @@ async function renderRow(
     if (others.length > 0) data.familyToSign = others;
   }
   /*
-    The verification link proves the inbox, not one person (§NNN): the message names the address's
+    The verification link proves the inbox, not one person (§588): the message names the address's
     other people at the event with their state, and says the one link confirms everybody waiting.
     This address's own rows only (§39), read at send time.
   */

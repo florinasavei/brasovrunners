@@ -7,7 +7,7 @@ import type { RichTextDoc } from "@/modules/content/rich-text/domain/schema";
  * §524 — «Membri» in the menu: offered only while «Beneficiile membrilor» is published **and** its
  * benefits are written (`offersMembersEntry`, which `SiteHeader` and the sitemap both ask), so a
  * published page with no words never puts the platform's placeholder sentence in every visitor's
- * menu. Since §NNN the link is the footer's fold's, not the header's: `SiteNav` never draws it
+ * menu. Since §591 the link is the footer's fold's, not the header's: `SiteNav` never draws it
  * (the footer's side is `site-footer-menu-order.test.ts`).
  */
 vi.mock("next/navigation", () => ({
@@ -44,7 +44,7 @@ describe("§524 «Membri» in the menu", () => {
     expect(offersMembersEntry({ published: true, benefits })).toBe(true);
   });
 
-  it("is never drawn by the header's navigation (§NNN)", async () => {
+  it("is never drawn by the header's navigation (§591)", async () => {
     const markup = await html(createElement(SiteNav, { showGallery: true, showTeam: true, showFaq: true, showContact: true }));
     expect(markup).not.toContain('href="/ro/members"');
   });

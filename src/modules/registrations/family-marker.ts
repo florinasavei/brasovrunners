@@ -47,7 +47,7 @@ export async function familyOf<T extends Record<string, unknown>>(
 }
 
 /**
- * The people of one address at one event next to each other on the list (§NNN), within the order the
+ * The people of one address at one event next to each other on the list (§588), within the order the
  * list was sorted by: each family where its first row falls, the others pulled up behind it in the
  * order they came. Only the rows of the page; nothing is fetched.
  */

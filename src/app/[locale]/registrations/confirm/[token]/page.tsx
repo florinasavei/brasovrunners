@@ -75,7 +75,7 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
   }
 
   if (done) {
-    // One click proved the inbox (§NNN): with more than one person on it, the page names each and their next step.
+    // One click proved the inbox (§588): with more than one person on it, the page names each and their next step.
     const people = await readConfirmedOnAddress(token, new Date());
     return (
       <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>

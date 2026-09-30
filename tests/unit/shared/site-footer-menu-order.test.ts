@@ -53,7 +53,7 @@ function menuLinks(markup: string): string[] {
   return [...markup.matchAll(/<a[^>]*href="\/ro\/(faq|contact)"/g)].map((match) => match[1]!);
 }
 
-describe("§NNN the members' zone is a link in the footer's fold", () => {
+describe("§591 the members' zone is a link in the footer's fold", () => {
   it("shows «Zona membrilor» in the fold's links while the zone is published, and nothing otherwise", async () => {
     storedOrder = [];
     membersPublished = false;

@@ -310,7 +310,7 @@ export type PublicAvailability = {
   capacity: number;
   waitlistRoom: number | null;
   waitlistCapacity: number | null;
-  /** How many are in the waiting list's line (§NNN); absent in an entry cached before it was counted. */
+  /** How many are in the waiting list's line (§587); absent in an entry cached before it was counted. */
   waiting?: number;
 };
 

@@ -247,7 +247,7 @@ function eventFieldsFrom(form: FormData) {
     endsAtWallTime: wallTime("endsAt"),
     // «Durata» as hours and minutes (§433), joined into the minutes the service has read since §71.
     durationMinutes: joinDuration(value("durationHours"), value("durationMinutesPart")),
-    // «Startul cursei nu e stabilit» (§NNN): ticked, the gun time is saved empty, whatever the boxes hold.
+    // «Startul cursei nu e stabilit» (§590): ticked, the gun time is saved empty, whatever the boxes hold.
     raceStartsAtWallTime: raceStartWallTime(form, wallTime("raceStartsAt")),
     scheduleRows: scheduleRows.filter((row) => row !== undefined),
     stravaEventUrl: value("stravaEventUrl"),
@@ -286,7 +286,7 @@ function eventFieldsFrom(form: FormData) {
     routeUrl: value("routeUrl"),
     distanceMeters: value("distanceMeters"),
     elevationGainMeters: value("elevationGainMeters"),
-    // «Estimativ» (§NNN): a checkbox beside the number; `fields.ts` drops it when the number is empty.
+    // «Estimativ» (§585): a checkbox beside the number; `fields.ts` drops it when the number is empty.
     elevationGainEstimated: form.get("event.elevationGainEstimated") === "on",
     // "Eveniment de noapte" (§394): the three choices in "Traseul" — "yes", "no", or "auto" (and
     // an absent value) for the sunset's own answer.

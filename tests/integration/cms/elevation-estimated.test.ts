@@ -11,7 +11,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Estimativ» beside «Diferență de nivel (m)» (`events.elevation_gain_estimated`, migration
+ * §585 — «Estimativ» beside «Diferență de nivel (m)» (`events.elevation_gain_estimated`, migration
  * `0115`): saved through the editor's real action, dropped quietly when the number is empty,
  * carried by a copy and by every date a series makes, and read back by the page's own sources —
  * the preview's page row (§579) and the route pill — as «≈ 350 m D+». The session and navigation
@@ -114,7 +114,7 @@ async function postSave(form: FormData) {
   expect(outcome, JSON.stringify(outcome)).toBe("redirected");
 }
 
-describe("§NNN «Estimativ» on the event's climb", () => {
+describe("§585 «Estimativ» on the event's climb", () => {
   it("migration 0115 adds the column, not null and false by default", async () => {
     const { rows } = await db.execute<{ is_nullable: string; column_default: string | null }>(
       sql`SELECT is_nullable, column_default FROM information_schema.columns WHERE table_name = 'events' AND column_name = 'elevation_gain_estimated'`,

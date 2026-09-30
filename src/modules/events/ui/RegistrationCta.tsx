@@ -87,7 +87,7 @@ export default async function RegistrationCta({
           </Typography>
         )}
 
-        {/* Once anybody waits (§NNN, amending §346): the line's length, from the count the door made. */}
+        {/* Once anybody waits (§587, amending §346): the line's length, from the count the door made. */}
         {cta.waiting > 0 && (
           <Typography variant="body2" color="text.secondary" data-testid="waitlist-waiting">
             {waitingPhrase(t, cta.waiting)}
@@ -99,7 +99,7 @@ export default async function RegistrationCta({
 
   if (cta.kind === "FULL") {
     /*
-      The places are gone and the list takes people (§NNN, amending §348; the owner, 2026-09-30:
+      The places are gone and the list takes people (§587, amending §348; the owner, 2026-09-30:
       «pt lista de așteptare trebuie un mesaj mai frumos»): the card's two sentences first — the
       news in bold, then what the list does — so a person reads them before the button; under it
       how full the event is (§346), the room left in a capped list (§348), and how an offer works,

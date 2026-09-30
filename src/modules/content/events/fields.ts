@@ -732,7 +732,7 @@ export const eventFieldsSchema = z
     distanceMeters: optionalWholeNumber({ min: 0, max: 500_000 }),
     elevationGainMeters: optionalWholeNumber({ min: 0, max: 20_000 }),
     /**
-     * «Estimativ» beside the climb (§NNN): the number is a guess. Optional for a caller from before
+     * «Estimativ» beside the climb (§585): the number is a guess. Optional for a caller from before
      * it, which means exact; never a refusal — a tick with no number is dropped at the write
      * (`estimatedElevation`), since this schema is extended and cannot end in a transform.
      */

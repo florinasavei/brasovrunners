@@ -69,7 +69,7 @@ function closedDoorSentence(tEvent: (key: string, values?: Record<string, string
 }
 
 /**
- * **«Formular» in the editor's «Previzualizare» (§579, amended by §NNN)** — the owner, 2026-09-30:
+ * **«Formular» in the editor's «Previzualizare» (§579, amended by §586)** — the owner, 2026-09-30:
  * «adică preview card și pagină ȘI formular de înscriere». The public registration form as a
  * participant would meet it for this draft, drawn by the register page's own parts — the facts
  * above the form, the journey, the five steps, and `registrationForm` itself — in preview state.

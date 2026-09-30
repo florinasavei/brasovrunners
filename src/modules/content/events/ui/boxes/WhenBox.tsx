@@ -147,7 +147,7 @@ export default async function WhenBox({
             />
           )}
           {/* Only a race has a gun time apart from the meeting time (§71); hidden, not removed. Its
-              tick «Startul cursei nu e stabilit» saves none (§NNN) — ticked on an event that has none. */}
+              tick «Startul cursei nu e stabilit» saves none (§590) — ticked on an event that has none. */}
           <OnlyForType type="RACE" selectName="event.type" initialType={initialType}>
             <RaceStartNotSet
               labels={{

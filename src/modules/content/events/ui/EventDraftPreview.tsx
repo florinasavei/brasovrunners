@@ -64,7 +64,7 @@ const BOTH: Record<Locale, false> = { ro: false, en: false };
  * «Salvează» / «Creează» posts) and hands them to a frame of the site itself, in the language chosen,
  * which asks the server once and draws the listing card, the event page or the registration form
  * with the listing's, the page's and the register page's own parts (`EventDraftFrame`,
- * `draft-preview.tsx`, `draft-form.tsx` — «Formular», §NNN). Nothing is saved or published: the
+ * `draft-preview.tsx`, `draft-form.tsx` — «Formular», §586). Nothing is saved or published: the
  * frame's action writes nothing, and the form it draws sends nothing.
  *
  * **Why a frame, and not markup painted into this page.** The card and the page are the site's
@@ -226,7 +226,7 @@ export default function EventDraftPreview({
             <ArticleIcon aria-hidden="true" fontSize="small" />
             {labels.page}
           </ToggleButton>
-          {/* The registration form (§NNN, amending §579): the glyph of the five steps' «form» step. */}
+          {/* The registration form (§586, amending §579): the glyph of the five steps' «form» step. */}
           <ToggleButton value="form" sx={TOGGLE_SX} data-testid="draft-preview-view-form">
             <PersonAddIcon aria-hidden="true" fontSize="small" />
             {labels.form}

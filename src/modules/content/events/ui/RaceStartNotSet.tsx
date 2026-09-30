@@ -23,7 +23,7 @@ type Props = {
 };
 
 /**
- * «Startul cursei» and its tick «Startul cursei nu e stabilit» (§NNN; the owner, 2026-09-30:
+ * «Startul cursei» and its tick «Startul cursei nu e stabilit» (§590; the owner, 2026-09-30:
  * «Race start must be nullable … a checkbox with "undefined race start"»). Ticked, the two boxes
  * are gone and the save stores no gun time (`race-start.ts#raceStartWallTime`); unticked, they are
  * back with what they held. The boxes post `event.raceStartsAtDate` / `…Time`, as `WallTimeField`

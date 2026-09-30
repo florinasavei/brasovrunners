@@ -161,7 +161,7 @@ export async function promoteRegistrationAction(_previous: FormOutcome | null, f
     await promoteRegistrationByStaff(getDb(), actor, registrationId, new Date());
     outcome = { saved: "registrationConfirmed" };
   } catch (error) {
-    // No place free (§NNN): the sentence names who holds the places, by number, not "check the data".
+    // No place free (§589): the sentence names who holds the places, by number, not "check the data".
     outcome = noFreePlaceOutcome(error) ?? outcomeOf(error);
   }
   return backToDesk(form, locale, registrationId, outcome);

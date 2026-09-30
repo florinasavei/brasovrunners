@@ -92,7 +92,7 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     await expect(page).not.toHaveURL(/saved=event/);
 
     await field("event.routeUrl").fill(ROUTE_LINK);
-    // «Estimativ» beside the climb (§NNN): a guess from the map, which the page then says with «≈»
+    // «Estimativ» beside the climb (§585): a guess from the map, which the page then says with «≈»
     // and, in words, «estimativ». The tick is 44 pixels to the thumb (BR-REQ-041-01 criterion 6).
     await field("event.elevationGainMeters").fill("350");
     const estimated = page.getByRole("checkbox", { name: "Estimativ" });
@@ -190,7 +190,7 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     await expect(page.locator("dt").filter({ hasText: /^Traseu$/ })).toHaveCount(1);
     // With a route to show, the surface completes the row as its pill, beside the link (§356).
     const routeRow = page.locator("dt").filter({ hasText: /^Traseu$/ }).locator("xpath=following-sibling::dd[1]");
-    // The climb ticked «Estimativ» (§NNN): «≈ 350 m D+» on the pill, and the chip's name in words.
+    // The climb ticked «Estimativ» (§585): «≈ 350 m D+» on the pill, and the chip's name in words.
     await expect(routeRow.locator(".MuiChip-root")).toHaveText(["Trail", /^≈ 350 m D\+circa 350 m diferență de nivel \(estimativ\)$/]);
 
     const route = page.getByRole("link", { name: "Vezi traseul" });

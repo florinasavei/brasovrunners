@@ -129,7 +129,7 @@ const PUBLIC_COLUMNS = {
   isSpecial: events.isSpecial,
   distanceMeters: events.distanceMeters,
   elevationGainMeters: events.elevationGainMeters,
-  // «Estimativ» (§NNN): the climb is a guess, and every surface says «≈» (`elevationWords`).
+  // «Estimativ» (§585): the climb is a guess, and every surface says «≈» (`elevationWords`).
   elevationGainEstimated: events.elevationGainEstimated,
   // The night override (§394): with the start and the zone above, whether this date is a night
   // event — the pill on the card and the page, a line in the calendar entry and the `.ics`.

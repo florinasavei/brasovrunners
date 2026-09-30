@@ -22,7 +22,7 @@ const QUOTA = new Error("Your project has exceeded the compute time quota. Upgra
 const state = vi.hoisted(() => ({
   refusal: null as Error | null,
   draft: null as Record<string, string> | null,
-  // The event's count (§NNN: the join form's words); null, as before, for every other case.
+  // The event's count (§587: the join form's words); null, as before, for every other case.
   availability: null as null | { available: number; capacity: number; waitlistRoom: number | null; waitlistCapacity: number | null; waiting?: number },
   sitting: null as null | {
     sittingId: string | null;
@@ -289,7 +289,7 @@ describe("§447 the registration page while the database is away", () => {
   });
 });
 
-describe("§NNN the join form says the event page's message once, above the form", () => {
+describe("§587 the join form says the event page's message once, above the form", () => {
   it("says the places are taken, what the list does and the club's offer hours, when the list takes people", async () => {
     state.availability = { available: 0, capacity: 10, waitlistRoom: 4, waitlistCapacity: 5, waiting: 1 };
     const html = await render();

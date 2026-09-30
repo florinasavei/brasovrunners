@@ -66,7 +66,7 @@ describe("§409 cardRegistrationLine — the card's registration, in words", () 
     expect(line.button?.label).toBe("Register for this event");
   });
 
-  it("§NNN says kindly that the places are taken and what the list does, the window quiet under it, with the waiting list's button", () => {
+  it("§587 says kindly that the places are taken and what the list does, the window quiet under it, with the waiting list's button", () => {
     const line = cardRegistrationLine(translator("ro"), "ro", race(), NOW, known({ kind: "FULL", waitlistRoom: null, waiting: 0 }, { taken: 10, capacity: 10 }));
     const thanks = "Mulțumim! Toate cele 10 locuri s-au ocupat. Fii primul pe lista de așteptare.";
     expect(line).toEqual({
@@ -90,12 +90,12 @@ describe("§409 cardRegistrationLine — the card's registration, in words", () 
     expect(en.button?.label).toBe("Join the waiting list");
   });
 
-  it("§NNN says how many wait beside the free places, once anybody does", () => {
+  it("§587 says how many wait beside the free places, once anybody does", () => {
     const line = cardRegistrationLine(translator("ro"), "ro", race(), NOW, known({ kind: "OPEN", availablePlaces: 1, waiting: 2 }, { taken: 9, capacity: 10 }));
     expect(line.detail).toBe("1 loc liber din 10 · 2 pe lista de așteptare");
   });
 
-  it("§NNN keeps the full event's words short enough for a phone", () => {
+  it("§587 keeps the full event's words short enough for a phone", () => {
     for (const locale of ["ro", "en"] as const) {
       const say = translator(locale);
       for (const key of ["cta.fullLead", "cta.fullJoin", "cta.waitlistFull", "cta.fullNoWaitlist", "cta.fullThanks.other", "cta.fullThanksFirst.other", "cta.waitingCount"]) {
@@ -186,7 +186,7 @@ describe("§472 CardRegistration — only the date, the hour and the free places
     }
   });
 
-  it("§NNN bolds «Locurile s-au ocupat.» alone on a full event, the list's sentence and the quiet window under it", () => {
+  it("§587 bolds «Locurile s-au ocupat.» alone on a full event, the list's sentence and the quiet window under it", () => {
     const html = render("ro", known({ kind: "FULL", waitlistRoom: null, waiting: 2 }, { taken: 10, capacity: 10 }));
     expect(strongs(html)).toEqual(["Mulțumim! Toate cele 10 locuri s-au ocupat — 2 așteaptă deja un loc."]);
     expect(text(html)).toContain(

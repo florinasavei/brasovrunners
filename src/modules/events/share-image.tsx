@@ -58,7 +58,7 @@ export async function eventShareImage(
     /** "Ora se anunță în curând" (§533), after the day, when only the time is held back. */
     timeToBeAnnounced: string;
     distanceKm: (km: string) => string;
-    /** The `Event` catalogue, for the climb's long form through `elevationWords` (§NNN) — «circa 350 m diferență de nivel (estimativ)» for an estimate. */
+    /** The `Event` catalogue, for the climb's long form through `elevationWords` (§585) — «circa 350 m diferență de nivel (estimativ)» for an estimate. */
     t: (key: string, values?: Record<string, string | number>) => string;
   },
 ): Promise<ImageResponse> {

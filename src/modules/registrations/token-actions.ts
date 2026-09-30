@@ -229,13 +229,13 @@ export async function consumeAndConfirmEmail(secret: string, now: Date) {
     if (!registration) throw new DomainError("NOT_FOUND", "no such registration");
     const event = await loadEventForRegistration(tx, registration.eventId);
 
-    // One click proves the inbox (§NNN): the address's other waiting registrations at the event move on with it.
+    // One click proves the inbox (§588): the address's other waiting registrations at the event move on with it.
     const { registration: updated } = await confirmEmailOnAddress(tx, event, registration.id, now);
     return { ok: true as const, token: consumed.token, registration: updated };
   });
 }
 
-/** What the page after the click says (§NNN): each person on the address at the event, and their next step. */
+/** What the page after the click says (§588): each person on the address at the event, and their next step. */
 export type ConfirmedOnAddress = { name: string; status: "PENDING_DECLARATION" | "WAITLISTED" | "WAITLIST_OFFERED" | "CONFIRMED" };
 
 /**

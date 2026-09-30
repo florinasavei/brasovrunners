@@ -88,7 +88,7 @@ export async function resendRegistrationMessage<T extends Record<string, unknown
    * it to «Când pleacă emailurile», as every resend did before.
    */
   delivery: DeliveryChoice = "queue",
-  /** Facts the message reads at send time beside the row's own — a family's confirmed people (§NNN). */
+  /** Facts the message reads at send time beside the row's own — a family's confirmed people (§588). */
   extraPayload: Record<string, unknown> = {},
 ): Promise<void> {
   assertAdministrator(actor);
@@ -214,12 +214,12 @@ export async function resendRegistrationMessage<T extends Record<string, unknown
 }
 
 /**
- * «Retrimite familiei» (§NNN): ONE email to the address for every person it holds at the event, the
+ * «Retrimite familiei» (§588): ONE email to the address for every person it holds at the event, the
  * step the family is at — Administrator only (§289), through the row resend above, so the same
  * checks, the same hourly limit on the row it sends for, the same «Trimite acum» (§540).
  *
  * Which message covers everybody, first that applies:
- * - somebody still waits for the address: that person's verification link, which since §NNN confirms
+ * - somebody still waits for the address: that person's verification link, which since §588 confirms
  *   every waiting person on the address in one click; the email names the others with their state;
  * - somebody has a declaration to sign: that person's request, whose one link signs them all (§471);
  * - everybody else confirmed: one confirmation with each confirmed person's QR, desk code and number

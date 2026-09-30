@@ -31,7 +31,7 @@ export type RegistrationCtaInput = RegistrationWindowInput & {
   waitlistRoom?: number | null;
   /** The limit itself: 0 is an event with no waiting list at all; null or absent, no limit. */
   waitlistCapacity?: number | null;
-  /** How many are in the waiting list's line now (§NNN), from the same count; absent is nought. */
+  /** How many are in the waiting list's line now (§587), from the same count; absent is nought. */
   waiting?: number;
 };
 

@@ -151,7 +151,7 @@ describe("§346 the fill line beside the register button, from the cached count"
     expect(html).not.toContain("Înscrie-te");
   });
 
-  it("§NNN says kindly that the places are taken, the room left, and the club's own offer hours (§377)", async () => {
+  it("§587 says kindly that the places are taken, the room left, and the club's own offer hours (§377)", async () => {
     const event = await openRace(2, 3);
     await confirm(event.id, 2);
     await db.insert(platformSettings).values({ key: DEADLINES_SETTING_KEY, value: { ...DEFAULT_DEADLINES, offerHours: 12 }, updatedAt: NOW });

@@ -10,7 +10,7 @@ import { eventFactsBlock } from "@/modules/notifications/domain/event-facts";
 import { emailSampleEventFacts } from "@/modules/notifications/email-copy-fields";
 
 /**
- * §NNN (amending §388 and §392) — the owner, 2026-09-30: «la elevație, trebuie să pot pune
+ * §585 (amending §388 and §392) — the owner, 2026-09-30: «la elevație, trebuie să pot pune
  * "estimativ"». One function, `elevationWords`, says the climb on every surface: «≈ 350 m D+» on
  * the pill, «circa 350 m diferență de nivel (estimativ)» wherever the words stand alone — the
  * pill's tooltip and what a screen reader hears, the emails' facts block and its text twin, the
@@ -59,7 +59,7 @@ const ROUTE = {
   locationToBeAnnounced: false,
 };
 
-describe("§NNN elevationWords — the one source of the climb's words", () => {
+describe("§585 elevationWords — the one source of the climb's words", () => {
   for (const locale of ["ro", "en"] as const) {
     it(`says an estimate with «≈» and in words, and an exact climb as before (${locale})`, async () => {
       currentLocale = locale;
@@ -92,7 +92,7 @@ describe("§NNN elevationWords — the one source of the climb's words", () => {
   });
 });
 
-describe("§NNN the editor's tick is dropped without a number", () => {
+describe("§585 the editor's tick is dropped without a number", () => {
   it("keeps the tick only beside a climb", () => {
     expect(estimatedElevation(350, true)).toBe(true);
     expect(estimatedElevation(350, false)).toBe(false);
@@ -111,7 +111,7 @@ describe("§NNN the editor's tick is dropped without a number", () => {
   });
 });
 
-describe("§NNN amending §388 — the route pill", () => {
+describe("§585 amending §388 — the route pill", () => {
   for (const locale of ["ro", "en"] as const) {
     it(`an estimate reads «≈» on the pill, and the long form on hover, to a screen reader and in an email (${locale})`, async () => {
       currentLocale = locale;
@@ -139,7 +139,7 @@ describe("§NNN amending §388 — the route pill", () => {
   });
 });
 
-describe("§NNN amending §392 — the emails' facts block", () => {
+describe("§585 amending §392 — the emails' facts block", () => {
   for (const locale of ["ro", "en"] as const) {
     it(`says the estimate in words, in the HTML part and in its text twin (${locale})`, () => {
       const facts = { ...emailSampleEventFacts(locale), elevationGainMeters: 350, elevationGainEstimated: true };
@@ -155,7 +155,7 @@ describe("§NNN amending §392 — the emails' facts block", () => {
   }
 });
 
-describe("§NNN the calendar entry's facts line (§107, §159)", () => {
+describe("§585 the calendar entry's facts line (§107, §159)", () => {
   function translator(catalogue: { Event: Record<string, unknown> }): CalendarLabels["t"] {
     return (key, values) => {
       const message = key.split(".").reduce<unknown>((node, part) => (node as Record<string, unknown> | undefined)?.[part], catalogue.Event);

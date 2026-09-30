@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.46-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.47-2026-09-27 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.46-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.47-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -22035,3 +22035,150 @@ Baseline `BR-V2.46-2026-09-27`.
 **What is left, and why it is not chased here.** `yarn npm audit --all --recursive` still names one advisory and three deprecations, all dev tooling: `esbuild` 0.18.20 (GHSA-67mh-4wv8-2f99, moderate — its development server answers any website's requests), pulled by `@esbuild-kit/core-utils` → `@esbuild-kit/esm-loader` → `drizzle-kit`, which never starts esbuild's server; the deprecations of those two `@esbuild-kit` packages (merged into tsx); and ESLint 9.39.5's end of support. Each is a major upgrade of a direct dev dependency (drizzle-kit, ESLint), not a lock refresh, and belongs in its own change.
 
 Baseline `BR-V2.46-2026-09-27`.
+
+## 585. «Estimativ» beside the elevation gain: every surface says «≈» and «estimativ»
+
+**The owner, 2026-09-30 17:00:** «la elevație, trebuie să pot pune "estimativ"». The club often knows the climb only roughly (a GPS track, a guess from the map), and every surface said it as an exact number: «350 m D+» on the listing card's and the event page's route pills (§388), «350 m diferență de nivel» in the calendar entry (§107) and the share picture, the pill's words in the emails' facts block (§392), «+350 m» on the editor's closed «Traseu» card.
+
+**Decision.**
+
+- One new column, `events.elevation_gain_estimated boolean NOT NULL DEFAULT false` (migration `0115`, expand only). Every event before it reads as exact, and so does a cached row from before it.
+- The editor's «Traseu» card: under «Diferență de nivel (m)», a tick «Estimativ» / "Estimated" with a drawn «≈» glyph (`ApproximateIcon`; Material's set has none) and one caption: «Bifează când cifra e aproximativă — pe site apare cu „≈” și „estimativ”.» The tick means nothing without a number: with the box empty it is saved false, quietly, and the save is not refused (`estimatedElevation`). The closed card says «≈ +350 m».
+- One function says the climb for every surface, `events/domain/elevation.ts#elevationWords`: a short form for the pill, «≈ 350 m D+» / "≈ 350 m climb", and a long form where the words stand alone, «circa 350 m diferență de nivel (estimativ)» / "about 350 m of elevation gain (estimated)". **Amending §388:** the pill keeps «≈ 350 m D+» visible and carries the long form as its tooltip and as what a screen reader hears (`srLabel`, so «≈» is never read out as a bare sign). **Amending §392:** the emails' facts block says the long form (`plain`), in the HTML part and in the text twin alike. The calendar entry and the share picture use the long form too. An exact climb reads exactly as before, and no surface shows an estimate's bare number.
+- The tick travels with the climb: a duplicate, every date a series makes, a "following" series edit, the draft preview (§579 renders the same components from `previewPageOf`, so there is no second path) and the create page's blank event.
+
+**Refused.**
+
+- A free-text precision field or a range («300–400 m»): the owner asked for one word, and a range is a second number to check and to say on every surface.
+- The same tick on the distance: not asked, and a distance is measured on the route the club draws.
+- A refusal for a tick with no number: the tick qualifies a number, so without one there is nothing to be wrong about; saving it false keeps the save one press.
+- A change to the JSON-LD: the event's structured data names no climb.
+- The English pill as "≈ 350 m D+": the English pill has always said "350 m climb", so the estimate is "≈ 350 m climb" — the same words per language on every pill.
+
+Baseline `BR-V2.47-2026-09-27`.
+
+## 586. «Formular» in the editor's «Previzualizare»: the registration form from the unsaved values, drawn by the register page's own parts and sending nothing (amending §579)
+
+**The owner, 2026-09-30 17:10**, of the preview BR-V2.45 shipped (§579: «Card» | «Pagina», RO | EN, Telefon (360) | Desktop): «adică preview card și pagină ȘI formular de înscriere».
+
+**Decision (amending §579).** A third tab, «Formular» / "Form", with the glyph of the five steps' «form» step (`PersonAdd`), beside «Card» and «Pagina» in the editor's «Previzualizare». The same press draws it, in the same frame (`/<locale>/preview/draft`), in the chosen language and width: the public registration form as a participant would meet it for this event, from the editor's unsaved values. The box's line and intro now name the form too: «Cum arată pe site — cardul, pagina și formularul, fără să salvezi». Nothing is saved or published; switching tabs asks nothing (§371).
+
+**One source.** The register page's body moved out of `register/page.tsx` into `registrations/ui/registration-form.tsx`, unchanged: `registrationFacts` (the title, the date and place, the cost, the links, the age line, §102) and `registrationForm` (the notices before the first field, every box, «Acorduri», the send button). What the form takes from the event is one pure reading, `registrations/form-view.ts#formViewOf`: the minimum age (§329, never under fourteen), the birth date's bounds, the shirt (§554), the health note (§557), the rules panel (§195), the public list (§143), the cost's host (§343), the participation window's steps (§104). The page and the preview both call the two. They are awaited by their caller (`{await registrationForm({…})}`), not mounted as components, so the register page stays one tree its tests draw with the synchronous renderer, as before the move. The page's reads, its refusal summary, the family sitting's screens and the screen after the form stay in the page; its behaviour is unchanged. Only the paths of the source-reading tests that looked for the form's markup in `page.tsx` changed, to the new file; their assertions did not.
+
+**What the preview's form shows.** Every box the event's settings switch on: the shirt size only with a shirt, the health note's fold only when asked, the minimum age in the age line and in the birth-date box's bounds (the Maskito box of §578), the costs, the public-list tick with its states and the socials only when the event publishes a list and the notice in force describes them (§396, §500), «oferte și beneficii» with its glyph and «— opțional» only under a notice that describes it (§562, §563, §570), the club's limit per address under a typed address (§389, §576), the account's address named and not asked on a members' event (§552, «adresa membrului, din contul lui»), and the terms named by the version in force, or the real form's own warning while none is approved (§421). These are read straight from their rows (`draft-form.tsx#readDraftFormSettings`: the terms, the privacy notice in each language, the limit per address, the family switch the page preview already reads); the register page reads the same through the public cache, which a preview neither reads nor fills (§579).
+
+**The door.** The public form exists only while the window is open (the page 404s otherwise). The preview draws it whatever the window says, under one line with the event page's own sentence («Înscrierile se deschid …», closed, cancelled, ended): «Previzualizare: acum formularul nu primește înscrieri — … Mai jos, cum arată când se deschid.» Full with nothing to join: the real form's own notice (§348). An event that takes no registration on the site, or whose date is still to be announced (§533), has no form: one line says so and nothing else is drawn. A run that offers its group-run declaration (§393, §523) gets one line that the run's page offers it; its signing form is its own page, not this form, and is not drawn here.
+
+**Nothing can be sent (preview state, in the markup).** The form has no action (`data-preview="true"`); none of the fields the service reads is drawn: the event's locale and slug, the honeypot, the timing check's `renderedAt`, the terms version shown, the second try. No Turnstile: no widget container, no script, no token field, whatever the club's switch (§577's lazy load never runs). The send button stands where it is, with its runner, disabled and marked «previzualizare», as the preview's door is. The address and the person's boxes are plain empty inputs a staff member may type in to feel the form; the frame stops a submit and the sandbox allows no form (§579). No hold, registration, email, audit row, job wake or cache entry: the action writes nothing, and a Tehnic or a volunteer is refused before a row is read (`canPreviewEventDraft`, BR-REQ-060-01).
+
+**Cost.** The press is still one server call; the form adds four small reads (the terms, the notice in each language, the limit per address) to it. Nothing runs while nobody presses.
+
+**Refused.** A second form for the preview (it would drift from the real one, §187's lesson). Posting the preview's form to a sandbox action (nothing to send is safer than a send that is thrown away). Drawing the form only when its tab is chosen (a second request per press; the tabs redraw nothing). A discount-code box: the registration form has none — a members' discount is the event page's «discountNote» and the members' zone's codes (§524), and the page tab already draws the first.
+
+**Left for later.** The group-run declaration's signing form in the preview; a sample of the refusal summary or of the family sitting's second form (the preview draws the first form, as a participant meets it).
+
+Baseline `BR-V2.47-2026-09-27`.
+
+## 587. A full event thanks its runners, says how many wait, and what the waiting list does (amending §346, §348, §472)
+
+**The owner, 2026-09-30, of a screenshot of the listing's lead card of the race, whose places were all taken:** «pt lista de așteptare trebuie un mesaj mai frumos (lista de participanți este plină, bla bla, te anunțăm când se eliberează un loc…)».
+
+**What it said.** The card's door in the `FULL` state read «Înscrieri deschise până vin., 20 nov. 2026, la 07:30 · Lista de așteptare» above «Intră pe lista de așteptare»: a person learned neither that the places were taken nor what the list does. The event page said «Nu mai sunt locuri. Pe lista de așteptare, primul primește locul care se eliberează.» — closer, but dry. The two refusals read «Locurile și lista de așteptare sunt pline.» and «Toate locurile au fost ocupate, așa că înscrierile s-au închis.»
+
+**Decision.** One kind message for the full state, the same idea on every surface, in the catalogues (`Event.cta.*`), both languages:
+
+- **The listing card** (lead card and ordinary cards alike — one source draws them, §366/§388): «**Locurile s-au ocupat.**» in bold, then on a line of its own «Intră pe lista de așteptare — te anunțăm pe email când se eliberează un loc.», then «Înscrieri deschise până …» kept underneath in the quiet ink — the list still closes then — and the button unchanged («Intră pe lista de așteptare», its glyph). §472's one bold part holds: on a full event the bold part is the whole lead, «Locurile s-au ocupat.»; the date moves to the quiet line and is not bold. The «· Lista de așteptare» detail (`cta.cardWaitlist`) is gone.
+- **The event page's door** (`RegistrationCta`, `FULL`): the same two sentences, above the button now, so they are read before the press; under the button the fill line (§346), the room left in a capped list (§348) as before, and one sentence on how an offer works: «Când se eliberează un loc, primești un email și ai {hours} să confirmi — altfel locul trece mai departe.» `{hours}` is the club's own offer window («Termene», `offerHours`, §377) read from the data cache (`cachedDeadlines`), in the site's hour words (`hoursPhrase`: «24 de ore», «12 ore») — the number the allocator gives an offer, never a literal. `cta.full` is gone.
+- **The join form** (`/events/[slug]/register` while there is no place and the list takes people): an information box above the form, titled «Locurile s-au ocupat.», with the join sentence and the offer sentence — said once, to the person who arrived from the button. The two refusals keep their warning box.
+- **The two refusals**, one kind sentence each: `WAITLIST_FULL` «Locurile s-au ocupat și lista de așteptare e plină — ne pare rău.» / "All places are taken and the waiting list is full — sorry."; `FULL_NO_WAITLIST` «Locurile s-au ocupat, iar acest eveniment nu are listă de așteptare.» / "All places are taken, and this event has no waiting list." They read the same wherever `cta.waitlistFull` and `cta.fullNoWaitlist` are said — the card, the event page, the join form's notice and refusal, the family form.
+
+**Refused.** A per-event offer window: the offer's length is the club's setting (§377), capped by the close and the start (`computeWaitlistOfferExpiry`); the sentence states the club's number as the waiting-list legend (§396) does. An ICU plural for the hours: `hoursPhrase` is the one copy of the hour words. A second line of the button on a phone: the button's words are unchanged.
+
+**The counts (the owner, 2026-09-30, 18:45:** «trebuie să afișăm și câți sunt în lista de așteptare și câte locuri mai sunt; avem nevoie de ceva mesaj de mulțumire că toate locurile s-au ocupat»**).** The line's length is counted where the room already was: `readPublicPlaces` returns `waiting` (`waitlistLength`: the people waiting plus the open offers — the line the queue panel shows) from the two counts it already made, and `cachedPublicAvailability` carries it in the same entry beside the free places and the room (§333, §346, §348). No new query per request; an entry cached before this release has no `waiting` and reads as nought until it next expires. The door (`registrationCta`) carries it on `OPEN` and `FULL`.
+
+- **While places are free:** the free places as before (§346) and, once anybody waits, «N pe lista de așteptare» / "N on the waiting list" — on the card after the free places («1 loc liber din 10 · 2 pe lista de așteptare», not bold), on the event page under the places.
+- **When full:** a thank-you lead replaces «Locurile s-au ocupat.» on the card (the one bold part, §472), on the event page and as the join form's title: «Mulțumim! Toate cele {capacity} de locuri s-au ocupat — {n} așteaptă deja un loc.» / "Thank you! All {capacity} places are taken — {n} already waiting."; with nobody in the line yet, «Mulțumim! Toate cele {capacity} de locuri s-au ocupat. Fii primul pe lista de așteptare.» / "… Be the first on the waiting list." The capacity picks the catalogue's count form (`countForm`: «10 locuri», «50 de locuri», «Singurul loc s-a ocupat»); the waiting number needs none, having no noun after it. «Locurile s-au ocupat.» (`cta.fullLead`) stays as the words for a full event whose size could not be read. The kind join sentence, the offer sentence and the refusals are unchanged from above.
+
+**Refused.** A count of the people waiting on the refusals (`WAITLIST_FULL`, `FULL_NO_WAITLIST`): nobody can join there, and the number is not something they can act on.
+
+Baseline `BR-V2.47-2026-09-27`.
+
+## 588. One verification click proves the address for everybody it holds at the event, and the backoffice shows a family together with one «Retrimite familiei» (amending §389, §446 and §543)
+
+**2026-09-30. Amends §389, §446 and §543; applies to §540 and §289.** The owner, on QA: two registrations on one address, sent at 17:25 and 17:26; he clicked the verification link he had received and expected both confirmed. Only one moved on; the other still read «Așteaptă confirmarea emailului».
+
+### Which case it was
+
+Two separate submissions, not a family sitting: each form outside a sitting sends its own verification email (`holdVerification`, no `SITTING_HELD`), and each email's link is scoped to its own registration (`consumeAndConfirmEmail` → `confirmEmail` of that one row). One click confirmed exactly its row, by design until now. A sitting's one email (§519, §543) confirms every registration of the sitting through `family-sitting-confirm.ts` and was not involved. So this is case (i): the rule changes, no bug in the sitting's path.
+
+### The rule
+
+A verification link proves the **inbox**, not one person. On the click (`confirmEmailOnAddress`, service):
+- the event row is locked first (AGENTS.md §10.6);
+- the registration the link was minted for is confirmed exactly as before — its own refusal (no place and the line full, §348) still takes the whole press back, the token spend included, so the same link can be opened again;
+- then every other registration of the same address at the same event still `PENDING_EMAIL_CONFIRMATION`, **submitted before the click** and with its own link still alive (§377), moves on too, in submission order, each through `confirmEmail` and so through the one allocator in the same transaction. Nobody outside the address is leapfrogged; a full event puts them on the waiting list. One refused by a full line keeps waiting for its own link and never undoes the others;
+- a registration submitted **after** the click is not read (the lock, and `submitted_at <= now`): a stranger typing an address that was just proved still waits for the inbox's own click.
+
+The clicked person goes first, then the others by submission: a click must not lose the last place its own link earned to a sibling. The token stays single use and the GET still mutates nothing (§12.8); the other people's own links become «already done» links, which the page already reads.
+
+**The page after the click** names everyone when the address holds more than one person there: «Adresa e confirmată pentru:» with each name and its next step — «semnează declarația din emailul care vine acum», «pe lista de așteptare: primește un email când se eliberează un loc», «are un loc oferit…», «confirmat». Read-only from the spent link (`readConfirmedOnAddress`), this address's rows only (§39).
+
+**The verification email** names the address's other people at the event with their state and says «Butonul de mai sus confirmă adresa pentru toți cei care o așteaptă.»
+
+### The backoffice: a family together, and one email for it
+
+On `/admin/registrations` the people of one address at one event sit next to each other within the chosen sort, where the family's first row falls (`familiesTogether`, the page's rows only — the phone cards read the same rows). The «Familie» chip stays.
+
+Beside the row's «Retrimite» (§540) a family row has **«Retrimite familiei» / "Resend to the family"**, with the family glyph: ONE email to the address for everybody. Administrator only (§289), refused again in the service, through the row resend — same checks, same hourly limit, same «Trimite acum» / «Pune la coadă» — and audited as `registration.family_resent` (who, the row it was sent for, how many people; never a name). The confirm dialog names the members. Which one email covers everybody, first that applies:
+- somebody still waits for the address: the earliest one's verification link, which now confirms every waiting person in one click, the email naming the others with their state;
+- somebody has a declaration to sign: that request, whose one link signs them all (§471);
+- everybody else confirmed: one confirmation with each confirmed person's QR, desk code and number (the family confirmation of §519, for the address's confirmed people rather than a sitting's).
+A family on the waiting list only has nothing to resend, as a single registration has not.
+
+*Rejected:*
+- **Confirming a registration sent after the click.** It would let anybody who knows a proved address add people to it without the inbox.
+- **One message per member's own step in one email** (a verification link, a declaration link and a QR side by side). The step before carries the next ones — the verification's click leads to the one declaration request (§471), which leads to the confirmations — so one link at the family's earliest step covers everybody with the message types that exist. No new message type, no migration.
+- **Grouping across pages.** A family is pulled together within the page's rows; a sort that splits it across pages leaves it split.
+
+Baseline `BR-V2.47-2026-09-27`.
+
+## 589. «Dă-i un loc» on a full race says who holds the places, instead of «Verifică datele introduse»
+
+**The owner, 2026-09-30, on QA (BR-V2.46):** «Nu merge atribuirea de loc din lista de așteptare» — «Dă-i un loc» on a waiting-list row did nothing he could read.
+
+**The cause.** The press reached the service and was refused, correctly: `promoteFromWaitlistByStaff` gives a place only into one that is free under the event lock (§67, `AGENTS.md` §10.6), and before the close every place that frees up is offered to the head of the queue at once (`fillAvailableSpots`), so on an open race with a waiting list the press meets «full» every time. His race was full: one runner confirmed, a family on one address holding its places until it confirms the address (§543), a declaration to sign. The refusal came back as the generic `VALIDATION_ERROR`, which every backoffice page shows as «Verifică datele introduse; ceva nu este valid.» — about a button with no data behind it. Reproduced in PGlite with that shape; nothing was wrong with the wiring (the list, the row page and the desk post the same action), the verb's roles, or the allocator's counts, and the same press gives the place as soon as one is free (the family's deadline past, no job run since — tested).
+
+**Decision.** The refusal names its reason with the allocator's own counts, taken under the same lock: `NoFreePlaceError` (`registrations/domain/capacity.ts`, still `VALIDATION_ERROR` with the marker `NO_FREE_PLACE`), turned by `promoteRegistrationAction` into `?error=NO_FREE_PLACE&capacity=…&confirmed=…&declaration=…&offered=…&family=…`; the row page and both desk pages read the five numbers back (digits only) into «Nu e niciun loc liber, deci nu s-a schimbat nimic. Locuri: 3; confirmați: 1; declarație de semnat: 0; oferite din listă: 0; rezervate familiilor: 2.» and its English twin — one sentence, inside §511's 200 characters. Numbers only, never a name: they ride on the query string.
+
+**Refused.** Letting the desk take a place promised to somebody else — an unexpired declaration hold, an open offer, a family's reservation — to give it to the person pressed: that is overbooking by another name (§10.6, BR-REQ-034-01). What is already dead is released first, as before (`expireStaleHolds` under the lock), so a lapsed hold or a past reservation never blocks the press. Hiding the button while the race is full was left for the owner: it needs the event's count on every row of the list.
+
+Baseline `BR-V2.47-2026-09-27`.
+
+## 590. A race's start may be not set yet: «Startul cursei nu e stabilit»
+
+**The owner, 2026-09-30:** «Race start must be nullable, we must be able to show just "event start" and have a checkbox with "undefined race start"».
+
+**What was there.** `events.race_starts_at` was already nullable (with `race_starts_at >= starts_at`), and the editor already saved a blank «Startul cursei» as null — its help said «Lasă gol dacă există o singură oră». Every surface then drew the event's start bare, «08:30», as for a group run: nothing said the gun time was still to come.
+
+**Decision.** A null gun time on a race now means *not set yet*, and one domain function says «Când»'s times for every surface (`src/modules/events/domain/when-times.ts#whenTimes`): the page, its hero and the listing card (`EventFacts`), the emails' facts block (§392) and the calendar's description (§107).
+
+- A race with its own gun time: «întâlnire la 08:30 · start la 10:00», unchanged.
+- A race with none: «start la 08:30» — the word «start», never «întâlnire» with nothing after it — and, on the page, the hero and in the emails, «Ora startului cursei se anunță.» / "The race start time is announced later." once, under the start, in the grey second-line type the address uses. The card says the start alone; the `.ics` description joins the two with a middle dot.
+- A gun time equal to the start: one time, «start la 08:30», nothing announced — the way to say "one time only" now.
+- Any other type: the bare time, as before.
+
+**The editor** (the «Când și unde» card, §481): under the race's date and hour, a tick with an hourglass, «Startul cursei nu e stabilit» / "Race start not set yet" (`ui/RaceStartNotSet.tsx`, a client island). Ticked, the two boxes are gone and the save stores no gun time whatever they held (`race-start.ts#raceStartWallTime`, read by `admin/actions.ts`); unticked, they are back with their values. It opens ticked on an existing event with no gun time, unticked on a new one; after a refusal it comes back as posted (§315). The closed card's summary says «startul cursei nestabilit». The help under the boxes now says to type the same hour for a one-time race.
+
+**Not done.** No column, no migration: null already is the state. No new flag distinguishing "one time only" from "not set" — the same hour typed twice says the first. A form without the tick (a series) keeps the boxes' meaning.
+
+Baseline `BR-V2.47-2026-09-27`.
+
+## 591. The members' zone is a link in the footer's fold, not an entry of the header's menu (amending §524, §571)
+
+**The owner, 2026-09-30:** «link-ul către pagina de membri trebuie să fie în footer, nu în header».
+
+**Decision.** «Membri» leaves the site menu: the header's row and its ☰ «Meniu» no longer draw it, and it is no longer one of the menu's section keys (`MENU_SECTION_KEYS`), so «Pagini» → «Ordinea meniului» no longer lists it. A stored order that still names `members` loses that key by the merge rule's own clause for a key no longer known (§571) — no migration, nothing to re-save. The footer's «Despre club, contact și termeni» fold carries it instead, as «Zona membrilor» / "Members' zone" with the card glyph (§498), after the standing links (the terms, «Înscrierile mele», «Întrebări frecvente» when it comes first), inside the fold as §582 asks, never a block of its own. It shows under the same condition the header's entry had (§524): «Beneficiile membrilor» published with its benefits written (`membersOnSite`, the former `hasMembersPage`, read through the public cache and false on any failure). The link still leads to `/members` — the public page with the sign-in — and is never prefetched (§549). The «Membri» editor's publish, unpublish and published help texts now say «în subsolul site-ului» rather than «în meniu».
+
+**Refused.** Keeping «Membri» on the order screen marked «în footer»: an entry the club cannot place is not an order entry, and the footer's fold is not the menu (only FAQ and Contact follow the order there, §571).
+
+Baseline `BR-V2.47-2026-09-27`.

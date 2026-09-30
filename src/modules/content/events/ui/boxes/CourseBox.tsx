@@ -130,7 +130,7 @@ export default async function CourseBox({
               {...textFieldConstraints(eventInputConstraints("elevationGainMeters"), { inputMode: "numeric" })}
               fullWidth
             />
-            {/* «Estimativ» (§NNN): the climb is a guess — a GPS track, the map — and every surface
+            {/* «Estimativ» (§585): the climb is a guess — a GPS track, the map — and every surface
                 then says «≈» and «estimativ» (`elevationWords`). Ignored, saved false, with no number. */}
             <CheckboxField
               name="event.elevationGainEstimated"

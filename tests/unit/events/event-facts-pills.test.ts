@@ -262,7 +262,7 @@ describe("BR-REQ-041-01 «când» is one line with its weekday (§356, §349)", 
     expect(text(row(await page({ type: "GROUP_RUN" }), "When").dd)).toMatch(/^Saturday, 26 Sept? 2026·08:00$/);
   });
 
-  it("a race whose start is not set yet: «start la» the event's start, and the sentence under it, once (§NNN)", async () => {
+  it("a race whose start is not set yet: «start la» the event's start, and the sentence under it, once (§590)", async () => {
     const when = row(await page({ raceStartsAt: null }), "Când").dd;
     expect(text(when)).toBe("Sâmbătă, 26 sept. 2026·start la 08:00Ora startului cursei se anunță.");
     expect(text(when)).not.toContain("întâlnire");
@@ -590,7 +590,7 @@ describe("BR-REQ-041-01 the listing card's facts: glyph-led lines and the page's
     // Over a year out: `formatDay` is called once, with the year — no second rendering to toggle.
     // January carries no DST (Europe/Bucharest is UTC+2 then, +3 in September).
     const far = line(await card({ startsAt: new Date("2028-01-15T05:00:00Z") }), "when").inner;
-    // A race with no gun time yet names its one time «start la» (§NNN); the card has no sentence under it.
+    // A race with no gun time yet names its one time «start la» (§590); the card has no sentence under it.
     expect(text(far)).toBe("Sâmbătă, 15 ian. 2028·start la 07:00");
     expect([...far.matchAll(/Sâmbătă, 15 ian\. 2028/g)]).toHaveLength(1);
     // Within the year: both the full date and the short one (no year, still the weekday, §349)

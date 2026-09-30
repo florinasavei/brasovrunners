@@ -85,7 +85,7 @@ export type SummaryWords = {
     route: string;
     km: string;
     elevation: string;
-    /** `≈ +350 m` — a climb the club ticked «Estimativ» for (§NNN). */
+    /** `≈ +350 m` — a climb the club ticked «Estimativ» for (§585). */
     elevationEstimated: string;
     night: string;
     nightAuto: string;
@@ -272,7 +272,7 @@ export function whenSummary(words: SummaryWords, event: WhenEvent | null, locale
     event.type === "RACE"
       ? event.raceStartsAt
         ? fillIn(words.when.raceStart, { time: summaryTime(event.raceStartsAt, event.timezone, locale) })
-        : // «Startul cursei nu e stabilit» (§NNN): said, so the closed card does not read as a one-time race.
+        : // «Startul cursei nu e stabilit» (§590): said, so the closed card does not read as a one-time race.
           words.when.raceStartNotSet
       : null,
     minutes ? fillIn(words.when.duration, { duration: durationShort(minutes) }) : null,
@@ -549,7 +549,7 @@ export function courseSummary(
   const line = join(words, [
     labels.surface,
     distanceWords(words, event?.distanceMeters),
-    // `≈ +350 m` for a climb ticked «Estimativ» (§NNN), never the bare number.
+    // `≈ +350 m` for a climb ticked «Estimativ» (§585), never the bare number.
     event?.elevationGainMeters
       ? fillIn(event.elevationGainEstimated ? words.course.elevationEstimated : words.course.elevation, { m: event.elevationGainMeters })
       : null,

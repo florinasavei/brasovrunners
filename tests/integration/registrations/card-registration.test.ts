@@ -188,7 +188,7 @@ describe("BR-REQ-041-01 the race's card carries the page's registration door, th
     expect(door(html)?.words).toBe("Înscrie-te la eveniment");
   });
 
-  it("§NNN says kindly that the places are taken once they are gone, and offers the waiting list's button", async () => {
+  it("§587 says kindly that the places are taken once they are gone, and offers the waiting list's button", async () => {
     const event = await publish({ capacity: 2 });
     await take(event.id, 2);
     const html = await card();

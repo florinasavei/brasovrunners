@@ -30,7 +30,7 @@ const ASIDE_NAMES = 4;
 /**
  * «Ordinea meniului» (§571) on «Pagini» → «Paginile clubului»: every entry the site menu can carry
  * — «Evenimente», «Calendar», «Contact», «Galerie», «Echipa», «Întrebări frecvente» and the club's
- * own pages (the members' zone is the footer's since §NNN) — in one list, the order the header and the footer draw. An entry the menu
+ * own pages (the members' zone is the footer's since §591) — in one list, the order the header and the footer draw. An entry the menu
  * leaves out today (a draft, a page with nothing on it yet) keeps its place, greyed, «nu apare
  * încă»: asked by the header's own questions (`menuSectionsOnSite`), so the card never disagrees
  * with the site. A fold, closed, its line the first names in the order; «Salvează ordinea» behind

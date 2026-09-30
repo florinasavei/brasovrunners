@@ -20,7 +20,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * de așteptare»). The owner's shape: a race whose places are all taken or promised — one runner
  * confirmed, a family on one address holding its places until it confirms the address — and somebody
  * else on the waiting list. The press was refused, rightly (no place is free, §10.6), with «Verifică
- * datele introduse; ceva nu este valid.», which said nothing. It now names who holds the places (§NNN),
+ * datele introduse; ceva nu este valid.», which said nothing. It now names who holds the places (§589),
  * and the same press gives the place as soon as one is free — here, the family's deadline passing
  * with no job run since.
  */
@@ -115,7 +115,7 @@ async function theOwnersShape() {
   return { admin, waiting, deadline: pressed.reservedUntil! };
 }
 
-describe("BR-REQ-037-07 «Dă-i un loc» on a full race (§NNN)", () => {
+describe("BR-REQ-037-07 «Dă-i un loc» on a full race (§589)", () => {
   it("is refused with who holds the places, changes nothing, and the banner says it in both languages", async () => {
     const { admin, waiting } = await theOwnersShape();
 

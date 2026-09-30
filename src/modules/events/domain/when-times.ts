@@ -1,5 +1,5 @@
 /**
- * The times «Când» says, in one place (§NNN): the event page, its hero and card
+ * The times «Când» says, in one place (§590): the event page, its hero and card
  * (`ui/EventFacts.tsx`), the emails' facts block (`notifications/domain/event-facts.ts`, §392)
  * and the calendar's description (`ical.ts`, §107) all ask this, and only word the answer.
  *

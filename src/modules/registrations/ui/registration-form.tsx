@@ -79,7 +79,7 @@ const disclosureSx = {
 } as const;
 
 /**
- * The editor's «Previzualizare» (§579, amended by §NNN): the form drawn as a participant sees it,
+ * The editor's «Previzualizare» (§579, amended by §586): the form drawn as a participant sees it,
  * sending nothing. `word` is «previzualizare» in the form's language, carried by the disabled
  * send button as the preview's door carries it.
  */
@@ -257,7 +257,7 @@ export type RegistrationFormInput = {
 /**
  * **The registration form (BR-REQ-030-01, BR-REQ-031-01, BR-REQ-031-04, BR-REQ-031-05,
  * BR-REQ-033-01 criterion 1, BR-REQ-041-01)** — one drawing for the register page and the
- * editor's «Previzualizare» (§579, amended by §NNN), so the preview is the form a participant meets,
+ * editor's «Previzualizare» (§579, amended by §586), so the preview is the form a participant meets,
  * never a second copy that drifts (§187's lesson). Awaited by its caller, like `registrationFacts`.
  *
  * Why this is one page and not a wizard is `DECISIONS.md` §47: every way of splitting it keeps
@@ -399,7 +399,7 @@ export async function registrationForm({
         {event.participantListVisibility === "NAMES" ? t("privacyBannerWithList") : t("privacyBanner")}
       </Alert>
       {familyIntro}
-      {/* A preview's form has no action (§579, amended by §NNN): nothing it holds is posted anywhere. */}
+      {/* A preview's form has no action (§579, amended by §586): nothing it holds is posted anywhere. */}
       <form action={preview ? undefined : action} id={REGISTRATION_FORM_ID} data-preview={preview ? "true" : undefined}>
         {/*
           The try after a refusal (§282). The action reads this back and lets the submission
@@ -1210,7 +1210,7 @@ export async function registrationForm({
           */}
           {preview ? (
             /*
-              The editor's preview (§579, amended by §NNN): the send button where it stands, with its
+              The editor's preview (§579, amended by §586): the send button where it stands, with its
               runner and its words, disabled and marked «previzualizare» as the preview's door is —
               a preview sends nothing.
             */

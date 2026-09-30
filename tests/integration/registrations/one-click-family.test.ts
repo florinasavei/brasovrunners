@@ -17,7 +17,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — one click of a verification link proves the inbox, not one person: every registration of
+ * §588 — one click of a verification link proves the inbox, not one person: every registration of
  * the address at the event still waiting for it, sent before the click, moves on with it, through
  * the one allocator; a form sent after the click still waits for its own. And «Retrimite familiei»
  * sends the address one email, Administrator only. Made-up people throughout.
@@ -43,7 +43,7 @@ async function approveLegalDocuments(db: TestDatabase) {
   }
 }
 
-describe("§NNN one click confirms the whole address", () => {
+describe("§588 one click confirms the whole address", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
 

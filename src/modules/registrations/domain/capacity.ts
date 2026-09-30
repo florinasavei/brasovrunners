@@ -87,7 +87,7 @@ export function wantedLapsedHoldReleases(input: { lapsed: number; waiting: numbe
 }
 
 /**
- * «Dă-i un loc» refused because no place is free (§NNN; §67, BR-REQ-037-07): the allocator's own
+ * «Dă-i un loc» refused because no place is free (§589; §67, BR-REQ-037-07): the allocator's own
  * counts, under the event lock, so the desk reads who holds the places instead of «Verifică datele
  * introduse». Before the close every place that frees up is offered to the head of the queue at
  * once (`fillAvailableSpots`), so while the race is full the press meets this every time — and a

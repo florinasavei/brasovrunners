@@ -78,7 +78,7 @@ describe("§347 one event form for five features, on both pages", () => {
     for (const instant of ["startsAt", "registrationOpensAt", "registrationClosesAt"]) {
       expect(EVENT_FORM).toContain(`name="event.${instant}"`);
     }
-    // The race's start through the same pickers, beside its tick «Startul cursei nu e stabilit» (§NNN).
+    // The race's start through the same pickers, beside its tick «Startul cursei nu e stabilit» (§590).
     expect(EVENT_FORM).toContain("<RaceStartNotSet");
     const raceStart = read(`${UI_DIR}/RaceStartNotSet.tsx`);
     expect(raceStart).toContain('name="event.raceStartsAtDate"');

@@ -46,7 +46,7 @@ export type AuditAction =
    * row's id and its message type — never the address or a body.
    */
   | "registration.sent_now"
-  /** «Retrimite familiei» (§NNN): one email for every person on the address at the event; the row it was sent for, never a name. */
+  /** «Retrimite familiei» (§588): one email for every person on the address at the event; the row it was sent for, never a name. */
   | "registration.family_resent"
   /** Race numbers given to an event's confirmed registrations, as a batch (BR-REQ-038-01). */
   | "registration.bibs_assigned"

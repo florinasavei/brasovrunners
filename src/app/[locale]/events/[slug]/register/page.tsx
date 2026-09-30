@@ -68,7 +68,7 @@ export const metadata: Metadata = {
  * BR-REQ-033-01 criterion 1, BR-REQ-041-01): the event, what the club's texts in force and its
  * settings switch on, and the page's own state — a refusal, the family sitting, the screen after
  * the form. The form itself is `registrationForm` (`registrations/ui/registration-form.tsx`), one
- * drawing with the editor's «Previzualizare» (§579, as amended by §NNN): this page reads, it draws.
+ * drawing with the editor's «Previzualizare» (§579, as amended by §586): this page reads, it draws.
  *
  * Only for an event that is `INTERNAL` and currently open — anything else 404s rather than
  * showing a form that cannot submit, the same reasoning `sign-in/page.tsx` gives for not
@@ -218,7 +218,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   /*
     What the form asks of this event (`form-view.ts`): its minimum age, the birth date's bounds, the
     boxes its settings switch on — one reading with the editor's «Previzualizare» (§579, as amended
-    by §NNN).
+    by §586).
   */
   const view = formViewOf(event, now);
   const { minAge, stepsWindow } = view;
@@ -246,7 +246,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   */
   const sittingAtCap = refusedMarkers.includes(SITTING_AT_CAP);
   /*
-    `WAITLIST` is the join form itself (§NNN): no place, and a list that takes people — the page
+    `WAITLIST` is the join form itself (§587): no place, and a list that takes people — the page
     says the event page's two sentences and how an offer works once, above the form, to the person
     who arrived from «Intră pe lista de așteptare».
   */
@@ -577,7 +577,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
 
           {/*
             The form itself (`registrationForm`, one drawing with the editor's «Previzualizare»,
-            §579 as amended by §NNN): the notices before the first field, the boxes this event's
+            §579 as amended by §586): the notices before the first field, the boxes this event's
             settings switch on, the consents and the send button.
           */}
           {await registrationForm({

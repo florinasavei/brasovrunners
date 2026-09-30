@@ -104,7 +104,7 @@ test.describe("BR-REQ-035-01 a waiting list with a limit, on the event page (§3
     await expect(join).toBeVisible();
     expect((await join.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
     await expect(page.getByTestId("waitlist-room")).toHaveText("Mai sunt 2 locuri pe lista de așteptare");
-    // Said kindly, before the button, and how an offer works (§NNN).
+    // Said kindly, before the button, and how an offer works (§587).
     await expect(page.getByTestId("registration-waitlist-message")).toContainText("Mulțumim! Toate cele");
     await expect(page.getByTestId("waitlist-offer")).toContainText("să confirmi — altfel locul trece mai departe.");
     await page.goto(`/en/events/${room.slug}-en`);
@@ -119,7 +119,7 @@ test.describe("BR-REQ-035-01 a waiting list with a limit, on the event page (§3
     await expect(page.getByTestId("registration-full")).toHaveText("All places are taken and the waiting list is full — sorry.");
     await expect(page.getByRole("link", { name: "Join the waiting list" })).toHaveCount(0);
 
-    // No waiting list: said kindly, and no button to a line (§NNN).
+    // No waiting list: said kindly, and no button to a line (§587).
     await page.goto(`/ro/evenimente/${none.slug}-ro`);
     const closed = page.getByTestId("registration-full");
     await expect(closed).toHaveText("Locurile s-au ocupat, iar acest eveniment nu are listă de așteptare.");

@@ -207,7 +207,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     filters.eventId && canExportSponsorList(actor.role) ? sponsorListSummary(db, actor, { eventId: filters.eventId, now: new Date() }) : Promise.resolve(null),
   ]);
 
-  // A family's rows side by side (§NNN), where its first row falls in the chosen order; phone cards read the same rows.
+  // A family's rows side by side (§588), where its first row falls in the chosen order; phone cards read the same rows.
   const rows = familiesTogether(sortedRows);
   /*
     Who filled the form again, for the rows on this page only (§312): one grouped read of the
@@ -1221,7 +1221,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               </ActionForm>
             )}
             {/*
-              «Retrimite familiei» (§NNN): one email for everybody on the address at the event, beside the
+              «Retrimite familiei» (§588): one email for everybody on the address at the event, beside the
               row's own resend. Administrator only, and refused again in its service (§289, BR-REQ-060-01).
             */}
             {mayManage && (family.get(row.id)?.length ?? 0) > 0 && (

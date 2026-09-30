@@ -195,7 +195,7 @@ export default async function SiteFooter() {
   const contacts = await cachedShownContactAddresses();
   // «Întrebări frecvente» in the fold (§525) while the page is on the site — the header's own rule.
   const showFaq = await faqOnSite(locale);
-  // «Zona membrilor» in the fold (§NNN, moved from the header's menu): while «Beneficiile membrilor» is published with its words (§524).
+  // «Zona membrilor» in the fold (§591, moved from the header's menu): while «Beneficiile membrilor» is published with its words (§524).
   const showMembers = await membersOnSite(locale);
   /*
     The menu's entries the fold carries — «Întrebări frecvente» and «Contact» — in the club's one
@@ -395,7 +395,7 @@ export default async function SiteFooter() {
                 {/* "My registrations" (BR-REQ-036-04): the one place a runner finds it without an email. A form rendered per request: never prefetched (§549). */}
                 <Link href="/registrations/mine" prefetch={false}>{footer("myRegistrations")}</Link>
                 {showFaq && !faqAfterContact && <Link href="/faq" data-testid="footer-faq">{footer("faq")}</Link>}
-                {/* The members' zone (§NNN): the header's «Membri» moved here, after the standing links, with its glyph (§498);
+                {/* The members' zone (§591): the header's «Membri» moved here, after the standing links, with its glyph (§498);
                     rendered per request (the sign-in), so never prefetched (§549). */}
                 {showMembers && (
                   <Link href="/members" prefetch={false} data-testid="footer-members" style={{ gap: 4 }}>

@@ -5,14 +5,14 @@ import { eventFactsBlock } from "@/modules/notifications/domain/event-facts";
 import { emailSampleEventFacts } from "@/modules/notifications/email-copy-fields";
 
 /**
- * §NNN — a race's start may be not set yet: «Startul cursei nu e stabilit» in the editor saves no
+ * §590 — a race's start may be not set yet: «Startul cursei nu e stabilit» in the editor saves no
  * gun time, and «Când» then says the event's start alone, named «start la», with «Ora startului
  * cursei se anunță.» under it — never «întâlnire la 08:30 · start la —».
  */
 const startsAt = new Date("2026-11-21T06:30:00Z");
 const gun = new Date("2026-11-21T08:00:00Z");
 
-describe("§NNN «Când»'s times (whenTimes)", () => {
+describe("§590 «Când»'s times (whenTimes)", () => {
   it("a race with its own gun time: the gathering and the start, each named", () => {
     expect(whenTimes({ type: "RACE", startsAt, raceStartsAt: gun })).toEqual({
       times: [
@@ -48,7 +48,7 @@ describe("§NNN «Când»'s times (whenTimes)", () => {
   });
 });
 
-describe("§NNN the editor's tick (raceStartWallTime)", () => {
+describe("§590 the editor's tick (raceStartWallTime)", () => {
   it("ticked, the gun time is saved empty whatever the boxes hold", () => {
     const form = new FormData();
     form.set(RACE_START_NOT_SET, "on");

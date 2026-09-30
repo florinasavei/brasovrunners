@@ -64,7 +64,7 @@ export type RouteFactsSource = Pick<
   // The level on the club's scale of fifteen (§526), the difficulty's one column; optional like
   // `StoredDifficulty`'s, for a cached row from before it.
   Pick<StoredDifficulty, "difficultyLevel"> &
-  // «Estimativ» (§NNN): optional for the same reason — a cached row from before it reads as exact.
+  // «Estimativ» (§585): optional for the same reason — a cached row from before it reads as exact.
   Pick<ElevationSource, "elevationGainEstimated"> & {
     /** Null on an event page while the date is to be announced (§533): no date, so no night pill. */
     startsAt: Date | null;
@@ -130,7 +130,7 @@ export function routePillParts(
 }
 
 /**
- * The climb's pill (§356, §NNN): «350 m D+», or «≈ 350 m D+» when the club ticked «Estimativ» —
+ * The climb's pill (§356, §585): «350 m D+», or «≈ 350 m D+» when the club ticked «Estimativ» —
  * the words from `elevationWords`, the one function every surface reads. An estimate also carries
  * the long form, «circa 350 m diferență de nivel (estimativ)», as its tooltip, as what a screen
  * reader hears (`srLabel`, so «≈» is never read out as a bare sign) and as the emails' words

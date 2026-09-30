@@ -1,5 +1,5 @@
 /**
- * The words for the event's elevation gain, for every surface that says it (§NNN, amending §388
+ * The words for the event's elevation gain, for every surface that says it (§585, amending §388
  * and §392; the owner, 2026-09-30: «la elevație, trebuie să pot pune "estimativ"»).
  *
  * Two forms, and an estimate is never a bare number in either:
@@ -21,7 +21,7 @@
 
 type Translate = (key: string, values?: Record<string, string | number>) => string;
 
-/** What an event carries for its climb; the flag optional, for a cached row from before it (§NNN). */
+/** What an event carries for its climb; the flag optional, for a cached row from before it (§585). */
 export type ElevationSource = {
   elevationGainMeters?: number | null;
   elevationGainEstimated?: boolean | null;

@@ -23,7 +23,7 @@ import { DURATION, EASE, HOVER_OK } from "@/theme/motion";
  * application ships and not something an organizer wrote — and it is offered only when a
  * published album exists (`showGallery`): a section with nothing behind it is a signpost to an
  * empty room. It keeps its slot just before «Echipa». The members' zone is not a section of the
- * menu: since §NNN it is a link in the footer's fold (`SiteFooter`). "Scrie-ne" (BR-REQ-070-04, §149) is offered only while the page has
+ * menu: since §591 it is a link in the footer's fold (`SiteFooter`). "Scrie-ne" (BR-REQ-070-04, §149) is offered only while the page has
  * something to offer (`showContact`): the form, or the club's address as a link.
  */
 const SECTIONS = [

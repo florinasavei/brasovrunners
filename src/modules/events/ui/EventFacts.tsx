@@ -385,7 +385,7 @@ export default async function EventFacts({
           ]
         : [day];
     }
-    // Which times, and their names, from the one rule every surface asks (`whenTimes`, §NNN): a race
+    // Which times, and their names, from the one rule every surface asks (`whenTimes`, §590): a race
     // with no gun time yet says «start la 08:30», never «întâlnire la» with nothing after it.
     const said = whenTimes({ type: event.type, startsAt, raceStartsAt: event.raceStartsAt }).times.map(({ key, at }) =>
       key === null
@@ -406,7 +406,7 @@ export default async function EventFacts({
     ];
   };
   // «Ora startului cursei se anunță.» — under the page's and the hero's «Când», once, while a race's
-  // gun time is not set (§NNN); the card says the start alone.
+  // gun time is not set (§590); the card says the start alone.
   const raceStartNote =
     startsAt !== null && whenTimes({ type: event.type, startsAt, raceStartsAt: event.raceStartsAt }).raceStartLater ? (
       <Typography component="div" variant="body2" color="text.secondary" data-testid="race-start-later">

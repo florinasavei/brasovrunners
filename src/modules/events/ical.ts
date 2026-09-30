@@ -100,7 +100,7 @@ export type CalendarEvent = {
   /** The facts line (§159): what the page's facts say, in the calendar's language through `labels.t`. */
   distanceMeters?: number | null;
   elevationGainMeters?: number | null;
-  /** «Estimativ» (§NNN): the facts line says «circa 350 m diferență de nivel (estimativ)». */
+  /** «Estimativ» (§585): the facts line says «circa 350 m diferență de nivel (estimativ)». */
   elevationGainEstimated?: boolean | null;
   /**
    * The organizer's night override (§394): true "Da", false "Nu", null or absent "Automat" — the
@@ -384,7 +384,7 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
 
   // "întâlnire la 08:00 · start la 09:00": the page's two times when the race has a gun time.
   const time = (at: Date) => formatTime(at, { locale, timeZone });
-  // The page's own rule (`whenTimes`, §NNN): a race with no gun time yet reads "start la 08:00 · Ora
+  // The page's own rule (`whenTimes`, §590): a race with no gun time yet reads "start la 08:00 · Ora
   // startului cursei se anunță."; a bare time is the calendar's own, and is not repeated.
   const when = whenTimes(event);
   const named = when.times.flatMap(({ key, at }) => (key === null ? [] : [t(key, { time: time(at) })]));
@@ -438,7 +438,7 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
 
   // "Concurs · 🏃 10 km · ↗ 300 m urcare · Trail · Mediu · Gratuit": the page's own words (§112), one line.
   const km = distanceInKm(event.distanceMeters ?? null);
-  // The climb in its long form (§NNN), an estimate said as one: «circa 350 m diferență de nivel (estimativ)».
+  // The climb in its long form (§585), an estimate said as one: «circa 350 m diferență de nivel (estimativ)».
   const climb = elevationWords(event, t, (value) => new Intl.NumberFormat(intl).format(value));
   const facts = [
     event.type ? t(`type.${event.type}`) : "",

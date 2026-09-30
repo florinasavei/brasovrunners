@@ -43,7 +43,7 @@ async function hasVisibleTeam(locale: Locale) {
 
 /**
  * Whether the members' zone is linked (§524): «Beneficiile membrilor» published with its words
- * (`offersMembersEntry`), or nothing. The footer's fold asks it since §NNN; the menu no longer does.
+ * (`offersMembersEntry`), or nothing. The footer's fold asks it since §591; the menu no longer does.
  */
 export async function membersOnSite(locale: Locale) {
   try {

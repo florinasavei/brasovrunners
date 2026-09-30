@@ -16,7 +16,7 @@ function toLocale(value: FormDataEntryValue | null): Locale {
   return value === "en" ? "en" : "ro";
 }
 
-/** «Retrimite familiei» (§NNN): one email for everybody on the row's address at its event. */
+/** «Retrimite familiei» (§588): one email for everybody on the row's address at its event. */
 export async function resendFamilyEmailAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const registrationId = String(form.get("registrationId") ?? "");

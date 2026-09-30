@@ -21,7 +21,7 @@ type Answer =
  * itself: no request on load, none on a timer, one per press the editor relays.
  *
  * A preview is not a site: a press on a link or a button inside it goes nowhere (the editor stays
- * where it is), and a form inside it sends nothing — the registration form of «Formular» (§NNN)
+ * where it is), and a form inside it sends nothing — the registration form of «Formular» (§586)
  * has no action and a disabled send button besides, and Enter in one of its boxes is stopped here.
  */
 export default function EventDraftFrame({ action, locale }: { action: (form: FormData) => Promise<Answer>; locale: string }) {

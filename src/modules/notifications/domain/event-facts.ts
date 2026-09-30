@@ -60,7 +60,7 @@ export type EmailEventFacts = Pick<
 > & {
   /** The level on the club's scale of fifteen (§526), the difficulty's one column. */
   difficultyLevel?: number | null;
-  /** «Estimativ» (§NNN): the climb is said «circa 350 m diferență de nivel (estimativ)», never the bare number. */
+  /** «Estimativ» (§585): the climb is said «circa 350 m diferență de nivel (estimativ)», never the bare number. */
   elevationGainEstimated?: boolean | null;
   startsAt: Date;
   timezone: string;
@@ -109,7 +109,7 @@ export function eventFactsBlock(details: EmailEventFacts, locale: Locale, weathe
 
   // Când: the date starts its line, capitalised (§349), then the time — a race's two, each named, as on the page.
   const day = formatDay(details.startsAt, { locale, timeZone: zone, style: "long" });
-  // The page's own rule (`whenTimes`, §NNN): a race with no gun time yet says «start la 08:30» and, on a
+  // The page's own rule (`whenTimes`, §590): a race with no gun time yet says «start la 08:30» and, on a
   // line of its own, that the race's start is announced later.
   const when = whenTimes(details);
   const times = when.times.map(({ key, at }) => (key === null ? time(at) : t(key, { time: time(at) })));

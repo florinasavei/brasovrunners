@@ -570,7 +570,7 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
     ...(fields.costUrl === undefined ? {} : { costUrl: fields.costUrl }),
     distanceMeters: fields.distanceMeters,
     elevationGainMeters: fields.elevationGainMeters,
-    // «Estimativ» (§NNN) means nothing without a number: a tick beside an empty box is saved false, quietly.
+    // «Estimativ» (§585) means nothing without a number: a tick beside an empty box is saved false, quietly.
     elevationGainEstimated: estimatedElevation(fields.elevationGainMeters, fields.elevationGainEstimated === true),
     nightOverride: fields.nightOverride,
     // Only a group run on asphalt or trail has a self-declaration to offer (§393): anything else
@@ -1748,7 +1748,7 @@ const SERIES_COLUMNS = [
   "costUrl",
   "distanceMeters",
   "elevationGainMeters",
-  // Whether the climb is a guess (§NNN) travels with the climb it qualifies.
+  // Whether the climb is a guess (§585) travels with the climb it qualifies.
   "elevationGainEstimated",
   // The night override, a fact of the route like the two above (§382, §394). "Automat" carried to
   // every date is what makes a weekly run follow the season by itself: each date asks its own sunset.
@@ -2974,7 +2974,7 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     costUrl: source.costUrl,
     distanceMeters: source.distanceMeters,
     elevationGainMeters: source.elevationGainMeters,
-    // «Estimativ» travels with the climb it qualifies (§NNN): a copy, and every date of a series.
+    // «Estimativ» travels with the climb it qualifies (§585): a copy, and every date of a series.
     elevationGainEstimated: source.elevationGainEstimated,
     // The night override travels with the route (§382, §394): a copy, and every date a series
     // makes, keeps the organizer's "Da" or "Nu" — and "Automat" stays automatic, so each date is a

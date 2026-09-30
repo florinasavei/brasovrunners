@@ -914,7 +914,7 @@ export function emailLinkLapseSql(confirmationHours: number) {
 }
 
 /**
- * The address's other registrations at an event still waiting for the address (§NNN, amending §389,
+ * The address's other registrations at an event still waiting for the address (§588, amending §389,
  * §446 and §543): a verification link proves the inbox, not one person, so the click that confirms
  * one of them moves these on with it. Only rows submitted at or before the click (`now`) and whose
  * own link is still alive — a lapsed one is the sweep's (§377) — in the order they were submitted,

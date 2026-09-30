@@ -68,7 +68,7 @@ describe("§537 the public menu's order", () => {
     expect(hrefs(markup)).toEqual(["/ro/events", "/ro/calendar", "/ro/contact", "/ro/team", "/ro/faq", "/ro/pages/despre", "/ro/pages/istoric"]);
   });
 
-  it("keeps «Galerie» just before «Echipa», and no «Membri» in the menu (§NNN: it is the footer's)", async () => {
+  it("keeps «Galerie» just before «Echipa», and no «Membri» in the menu (§591: it is the footer's)", async () => {
     const markup = await html(
       createElement(SiteNav, { showGallery: true, showTeam: true, showFaq: true, showContact: true }),
     );

@@ -4,7 +4,7 @@
  * never reads the editor's form: the editor hands it the form's values as they stood at the press.
  */
 
-/** The listing card, the event page, or the registration form (§NNN, amending §579). */
+/** The listing card, the event page, or the registration form (§586, amending §579). */
 export type DraftPreviewView = "card" | "page" | "form";
 
 /** The editor → the frame: draw these values (one request), or only show the other view (none). */

@@ -320,7 +320,7 @@ export const events = pgTable(
     distanceMeters: integer("distance_meters"),
     elevationGainMeters: integer("elevation_gain_meters"),
     /**
-     * «Estimativ» beside «Diferență de nivel (m)» (§NNN; the owner, 2026-09-30: «la elevație,
+     * «Estimativ» beside «Diferență de nivel (m)» (§585; the owner, 2026-09-30: «la elevație,
      * trebuie să pot pune "estimativ"»): the club knows the climb only roughly — a GPS track, a
      * guess from the map — and says so. Every surface then reads «≈ 350 m D+» and «circa 350 m
      * diferență de nivel (estimativ)» through `elevationWords`, never a bare number. Meaningless

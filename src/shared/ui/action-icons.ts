@@ -168,7 +168,7 @@ export type ActionIconName =
   | "sponsors"
   | "send"
   | "resend"
-  // «Retrimite familiei» (§NNN): the family marker's own glyph (§543), one email for everybody on the address.
+  // «Retrimite familiei» (§588): the family marker's own glyph (§543), one email for everybody on the address.
   | "family"
   // Writing to an event's participants in the club's own words (§364): the loudspeaker, because
   // it is an announcement to many, not one message sent again.

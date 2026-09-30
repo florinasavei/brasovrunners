@@ -949,7 +949,7 @@ export type PublicPlaces = {
    * no limit — and always null for an uncapped event, which never waitlists anybody.
    */
   waitlistRoom: number | null;
-  /** How many are in the line right now (`domain/waitlist.ts#waitlistLength`, §NNN): 0 for an uncapped event. */
+  /** How many are in the line right now (`domain/waitlist.ts#waitlistLength`, §587): 0 for an uncapped event. */
   waiting: number;
 };
 
@@ -2584,7 +2584,7 @@ export async function confirmEmail<T extends Record<string, unknown>>(
 }
 
 /**
- * One click of a verification link proves the inbox, not one person (§NNN, amending §389, §446 and
+ * One click of a verification link proves the inbox, not one person (§588, amending §389, §446 and
  * §543). The registration the link was minted for is confirmed first, exactly as `confirmEmail`
  * always did — its own refusal (no place and the line full, §348) still takes the whole press back,
  * the token spend included. Then every other registration of the same address at the same event
@@ -3097,7 +3097,7 @@ export async function promoteFromWaitlistByStaff<T extends Record<string, unknow
     }
     const counts = await repo.countOccupied(tx, event.id, now);
     if (lockedEvent.capacity !== null && computeOccupied(counts) >= lockedEvent.capacity) {
-      // Who holds the places, by the same counts (§NNN): the desk says it instead of "check the data".
+      // Who holds the places, by the same counts (§589): the desk says it instead of "check the data".
       throw new NoFreePlaceError(lockedEvent.capacity, counts);
     }
     const offered = await repo.transitionRegistration(tx, {

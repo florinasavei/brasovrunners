@@ -1054,7 +1054,7 @@ export type TemplateData = {
    */
   familyToSign?: string[];
   /**
-   * A verification link's other people on the address at the event, each with their state (§NNN):
+   * A verification link's other people on the address at the event, each with their state (§588):
    * the one link confirms everybody still waiting for the address. Absent for a person alone.
    */
   familyOnAddress?: ReadonlyArray<{ name: string; state: FamilyEarlierState }>;
@@ -1882,7 +1882,7 @@ const T = {
     // A cancellation (§547): what the cancelled person held, and who else the address still holds.
     cancelledReleased: (name: string, fromWaitlist: boolean) =>
       fromWaitlist ? `${name || "Persoana"} nu mai este pe lista de așteptare.` : "Locul a fost eliberat.",
-    /** A verification link on an address with others at the event (§NNN): the one link confirms everybody waiting. */
+    /** A verification link on an address with others at the event (§588): the one link confirms everybody waiting. */
     verifyCoversFamily: (others: ReadonlyArray<{ name: string; state: FamilyEarlierState }>) =>
       `Pe această adresă sunt înscriși și: ${others.map((other) => `${other.name} (${EARLIER_STATE_WORDS.ro[other.state]})`).join(", ")}. Butonul de mai sus confirmă adresa pentru toți cei care o așteaptă.`,
     cancelledOthers: (others: ReadonlyArray<{ name: string; state: FamilyEarlierState }>) =>
@@ -2925,7 +2925,7 @@ export function buildTemplateContent(
       ...(messageType === "COMPLETE_DECLARATION" && data.familyToSign && data.familyToSign.length > 0
         ? [copy.familyToSign(data.familyToSign)]
         : []),
-      // The verification link's other people on the address (§NNN): its one click confirms everybody waiting.
+      // The verification link's other people on the address (§588): its one click confirms everybody waiting.
       ...(messageType === "VERIFY_REGISTRATION_EMAIL" && data.familyOnAddress && data.familyOnAddress.length > 0
         ? [copy.verifyCoversFamily(data.familyOnAddress)]
         : []),

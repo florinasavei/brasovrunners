@@ -93,7 +93,7 @@ export default async function SiteHeader() {
   /**
    * Which of the platform's sections are offered — the gallery, «Echipa», «Întrebări frecvente»
    * and «Contact» each only while there is something behind it (the members' zone is the footer's
-   * since §NNN, not the menu's) — and the club's one
+   * since §591, not the menu's) — and the club's one
    * order for every entry (§571), both asked where the backoffice's «Ordinea meniului» card asks
    * them (`modules/content/menu/on-site.ts`), so the card greys exactly what the menu leaves out.
    */

@@ -50,7 +50,7 @@ export type DraftPreview =
  * **«Previzualizare» before saving (§579, amending §406 and §371).** The listing card, the event
  * page and the registration form of what the save would store, in one language, drawn by the parts
  * the listing, the page and the register page draw — `EventCard` in the listing's own grid
- * (`CARD_GRID_SX`), `EventPageView` for the page, `registrationForm` for the form (§NNN,
+ * (`CARD_GRID_SX`), `EventPageView` for the page, `registrationForm` for the form (§586,
  * `draft-form.tsx`) — from `service.ts#draftEvent`'s rows through `previewPageOf`, the saved-draft
  * preview's mapping.
  *
@@ -110,7 +110,7 @@ export async function renderEventDraftPreview<T extends Record<string, unknown>>
   const current = stored?.event;
   const series = current && (current.repeatOf !== null || current.repeatRule !== null) ? await listSeriesDates(db, current.repeatOf ?? current.id) : [];
   const seriesDates = series.length > 1 ? series.map((date) => ({ startsAt: date.id === current?.id && view.startsAt ? view.startsAt : date.startsAt })) : undefined;
-  // «Formular» (amending §579, §NNN): the register page's own form, drawn from the draft, sending nothing.
+  // «Formular» (amending §579, §586): the register page's own form, drawn from the draft, sending nothing.
   const form = await renderDraftForm(db, { view, door: previewDoor.door, locale: input.locale, now, word: previewDoor.word, steps });
 
   return {

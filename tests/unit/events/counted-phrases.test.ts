@@ -70,7 +70,7 @@ describe("§348 waitlistRoomPhrase — the room a capped waiting list has left",
     expect(waitlistRoomPhrase(say, "en", 21)).toBe("21 places left on the waiting list");
   });
 
-  it("§NNN has the two sentences a full line and an event with no list say, kindly, in both catalogues", () => {
+  it("§587 has the two sentences a full line and an event with no list say, kindly, in both catalogues", () => {
     expect(translator("ro")("cta.waitlistFull")).toBe("Locurile s-au ocupat și lista de așteptare e plină — ne pare rău.");
     expect(translator("en")("cta.waitlistFull")).toBe("All places are taken and the waiting list is full — sorry.");
     expect(translator("ro")("cta.fullNoWaitlist")).toBe("Locurile s-au ocupat, iar acest eveniment nu are listă de așteptare.");
@@ -78,7 +78,7 @@ describe("§348 waitlistRoomPhrase — the room a capped waiting list has left",
   });
 });
 
-describe("§NNN waitlistOfferPhrase — how an offer works, with the club's own hours", () => {
+describe("§587 waitlistOfferPhrase — how an offer works, with the club's own hours", () => {
   it("says the offer window the club set, in the site's hour words", () => {
     const ro = translator("ro");
     expect(waitlistOfferPhrase(ro, "ro", 24)).toBe(
