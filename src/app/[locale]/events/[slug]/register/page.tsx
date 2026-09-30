@@ -12,6 +12,7 @@ import { getDb } from "@/db/client";
 import {
   cachedAddressCap,
   cachedCurrentApprovedDocument,
+  cachedDeadlines,
   cachedFamilyRegistrationOpen,
   cachedListSocialsDisclosed,
   cachedListStatesDisclosed,
@@ -244,12 +245,23 @@ export default async function RegisterPage({ params, searchParams }: Props) {
     browser already sent fill it. A marker, like the two above; every person it counts was typed here (§39).
   */
   const sittingAtCap = refusedMarkers.includes(SITTING_AT_CAP);
-  let fullNotice: typeof WAITLIST_FULL | typeof NO_WAITLIST | null = null;
+  /*
+    `WAITLIST` is the join form itself (§NNN): no place, and a list that takes people — the page
+    says the event page's two sentences and how an offer works once, above the form, to the person
+    who arrived from «Intră pe lista de așteptare».
+  */
+  let fullNotice: typeof WAITLIST_FULL | typeof NO_WAITLIST | "WAITLIST" | null = null;
+  let offerHours: number | null = null;
+  let fullCounts: { capacity: number; waiting: number } | null = null;
   if (!submitted && !error && !resting) {
     try {
       const places = await cachedPublicAvailability(event.id, now);
       if (places?.available === 0) {
-        fullNotice = places.waitlistCapacity === 0 ? NO_WAITLIST : places.waitlistRoom === 0 ? WAITLIST_FULL : null;
+        fullNotice = places.waitlistCapacity === 0 ? NO_WAITLIST : places.waitlistRoom === 0 ? WAITLIST_FULL : "WAITLIST";
+        if (fullNotice === "WAITLIST") {
+          offerHours = (await cachedDeadlines()).offerHours;
+          fullCounts = { capacity: places.capacity, waiting: places.waiting ?? 0 };
+        }
       }
     } catch (failure) {
       unstable_rethrow(failure);
@@ -584,6 +596,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
             draft: draft ?? null,
             resting,
             fullNotice,
+            fullCounts,
+            offerHours,
             action: submitRegistrationAction,
             /*
               The next person of a family sitting (§519): who was sent so far, that nothing waiting is

@@ -22,6 +22,8 @@ const QUOTA = new Error("Your project has exceeded the compute time quota. Upgra
 const state = vi.hoisted(() => ({
   refusal: null as Error | null,
   draft: null as Record<string, string> | null,
+  // The event's count (§NNN: the join form's words); null, as before, for every other case.
+  availability: null as null | { available: number; capacity: number; waitlistRoom: number | null; waitlistCapacity: number | null; waiting?: number },
   sitting: null as null | {
     sittingId: string | null;
     seed?: null;
@@ -94,7 +96,8 @@ vi.mock("@/modules/public-cache/reads", () => ({
     return { version: 3 };
   },
   cachedListStatesDisclosed: async () => false,
-  cachedPublicAvailability: async () => null,
+  cachedPublicAvailability: async () => state.availability,
+  cachedDeadlines: async () => ({ offerHours: 36 }),
   cachedPublishedEventBySlug: async () => EVENT,
 }));
 vi.mock("@/modules/registrations/form-draft", () => ({
@@ -155,6 +158,7 @@ async function render(searchParams: Record<string, string> = {}, slug: string = 
 beforeEach(() => {
   state.refusal = null;
   state.draft = null;
+  state.availability = null;
   state.sitting = null;
   forgetLastGood();
   resetBreaker();
@@ -282,5 +286,32 @@ describe("§447 the registration page while the database is away", () => {
     state.refusal = QUOTA;
     // A slug never served, so neither this instance's memory nor the store holds a copy of it.
     await expect(render({}, "alt-eveniment")).rejects.toThrow("Failed query");
+  });
+});
+
+describe("§NNN the join form says the event page's message once, above the form", () => {
+  it("says the places are taken, what the list does and the club's offer hours, when the list takes people", async () => {
+    state.availability = { available: 0, capacity: 10, waitlistRoom: 4, waitlistCapacity: 5, waiting: 1 };
+    const html = await render();
+    const thanks = "Mulțumim! Toate cele 10 locuri s-au ocupat — 1 așteaptă deja un loc.";
+    expect(html).toContain('data-testid="registration-waitlist-notice"');
+    expect(html).toContain(thanks);
+    expect(html).toContain(ro.Event.cta.fullJoin);
+    expect(html).toContain("Când se eliberează un loc, primești un email și ai 36 de ore să confirmi — altfel locul trece mai departe.");
+    expect(html).not.toContain('data-testid="registration-full-notice"');
+    // Said once, and above the first field.
+    expect(html.split(thanks)).toHaveLength(2);
+    expect(html.indexOf(thanks)).toBeLessThan(html.indexOf('name="firstName"'));
+  });
+
+  it("says the kind refusal when the list is full or the event keeps none, and nothing while there is a place", async () => {
+    state.availability = { available: 0, capacity: 10, waitlistRoom: 0, waitlistCapacity: 5 };
+    expect(await render()).toContain(ro.Event.cta.waitlistFull);
+    state.availability = { available: 0, capacity: 10, waitlistRoom: 0, waitlistCapacity: 0 };
+    expect(await render()).toContain(ro.Event.cta.fullNoWaitlist);
+    state.availability = { available: 3, capacity: 10, waitlistRoom: null, waitlistCapacity: null };
+    const open = await render();
+    expect(open).not.toContain('data-testid="registration-waitlist-notice"');
+    expect(open).not.toContain('data-testid="registration-full-notice"');
   });
 });

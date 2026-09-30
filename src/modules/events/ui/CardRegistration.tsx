@@ -6,6 +6,7 @@ import { openRegistrationClosing, registrationState } from "../domain/registrati
 import type { PublicEvent } from "../repository";
 import { GROUP_GAP, LINE_GAP, ROW_ICON_SX } from "./card-layout";
 import { countForm } from "@/i18n/count-form";
+import { fullThanksPhrase, waitingPhrase } from "./counted-phrases";
 import type { RegistrationDoor } from "./registration-door";
 import RegistrationDoorButton, { type ButtonCta, doorButtonLabel, hasDoorButton } from "./RegistrationDoorButton";
 
@@ -17,10 +18,18 @@ export type CardRegistrationLine = {
   lead: string;
   /** `lead` cut around its date and hour, the one part in bold (§472); null when it has no date. */
   leadParts: FactParts | null;
-  /** After a middle dot: "7 locuri libere din 10", or "Lista de așteptare" once the places are gone. */
+  /** After a middle dot: "7 locuri libere din 10"; null once the places are gone (§NNN). */
   detail: string | null;
-  /** `detail` cut around "7 locuri libere", the one part in bold (§472); null for the waiting list. */
+  /** `detail` cut around "7 locuri libere", the one part in bold (§472); null with `detail`. */
   detailParts: FactParts | null;
+  /**
+   * A full event with a waiting list (§NNN): what the list does, on a line of its own under the
+   * lead — "Intră pe lista de așteptare — te anunțăm pe email când se eliberează un loc." Absent
+   * in every other state.
+   */
+  note?: string;
+  /** Under the note, in the quiet ink (§NNN): until when the list takes people. Absent elsewhere. */
+  quietLine?: string;
   /** Bold where there is something to do or wait for; quiet where the question is closed. */
   bold: boolean;
   button: { cta: ButtonCta; label: string } | null;
@@ -62,7 +71,7 @@ const whole = (parts: FactParts) => parts.before + parts.fact + parts.after;
  * nothing where the page has no button (a full list, §348; a window not open yet or closed).
  *
  * **The line.** Bold where there is something to do or wait for — "Înscrieri deschise până pe
- * sâm., 26 sept. 2026, 10:00 · 7 locuri libere din 10", "… · Lista de așteptare", "Înscrierile se
+ * sâm., 26 sept. 2026, 10:00 · 7 locuri libere din 10", "Locurile s-au ocupat." (§NNN), "Înscrierile se
  * deschid pe …", the organizer's site, a full event — and as it was (quiet, secondary) where the
  * question is closed: registration over, the event cancelled or held, or none needed. An uncapped
  * event says no number (BR-REQ-034-01 criterion 4). A count that could not be read (§281) says the
@@ -105,10 +114,29 @@ export function cardRegistrationLine(
         free !== null && fill
           ? factParts(say, "cta.freeOfCard", { places: fill.capacity }, "free", say(`cta.freeCount.${countForm(free, locale)}`, { count: free }))
           : null;
-      return { lead: openUntil, leadParts: untilParts, detail: detailParts && whole(detailParts), detailParts, bold: true, button };
+      // Once anybody waits (§NNN, amending §346): "· 2 pe lista de așteptare", after the places, not bold.
+      const withWaiting = detailParts && cta.waiting > 0 ? { ...detailParts, after: `${detailParts.after} · ${waitingPhrase(say, cta.waiting)}` } : detailParts;
+      return { lead: openUntil, leadParts: untilParts, detail: withWaiting && whole(withWaiting), detailParts: withWaiting, bold: true, button };
     }
-    case "FULL":
-      return { ...quiet, lead: openUntil, leadParts: untilParts, detail: say("cta.cardWaitlist"), bold: true, button };
+    case "FULL": {
+      /*
+        The places are gone and the list takes people (§NNN, amending §472; the owner, 2026-09-30:
+        «pt lista de așteptare trebuie un mesaj mai frumos»): the news first and in bold — the
+        whole sentence is the one bold part — then what the list does, then, quiet, until when it
+        takes people, which is still the instant the button goes away.
+      */
+      // The thank-you lead with the counts (§NNN): «Mulțumim! Toate cele 10 locuri s-au ocupat — 3 așteaptă deja un loc.»
+      const lead = fill ? fullThanksPhrase(say, locale, fill.capacity, cta.waiting) : say("cta.fullLead");
+      return {
+        ...quiet,
+        lead,
+        leadParts: { before: "", fact: lead, after: "" },
+        note: say("cta.fullJoin"),
+        ...(closesText ? { quietLine: openUntil } : {}),
+        bold: true,
+        button,
+      };
+    }
     case "WAITLIST_FULL":
       return { ...quiet, lead: say("cta.waitlistFull"), bold: true, button: null };
     case "FULL_NO_WAITLIST":
@@ -169,6 +197,24 @@ export default function CardRegistration({
               </Box>
             </>
           )}
+          {/* The full event's two more lines (§NNN), each a block: what the list does, and — quiet —
+              until when it takes people. The spaces keep the words apart for a reader of the text. */}
+          {line.note && (
+            <>
+              {" "}
+              <Box component="span" data-testid="card-waitlist-note" sx={{ display: "block" }}>
+                {line.note}
+              </Box>
+            </>
+          )}
+          {line.quietLine && (
+            <>
+              {" "}
+              <Box component="span" sx={{ display: "block", color: "text.secondary" }}>
+                {line.quietLine}
+              </Box>
+            </>
+          )}
         </Box>
       </Typography>
       {line.button && (
@@ -187,7 +233,8 @@ export default function CardRegistration({
  * chestiile importante … adică doar data, ora și locurile libere"): "Înscrieri deschise până
  * **dum., 27 sept. 2026, la 07:00** · **8 locuri libere** din 10". A sentence with no date or count
  * (the waiting list full, race week, "soon", the organizer's site) has nothing in bold; it stays in
- * the primary ink, so the line still reads as live.
+ * the primary ink, so the line still reads as live. A full event with a waiting list bolds its
+ * whole lead, «Locurile s-au ocupat.» — the one fact that matters then (§NNN, amending §472).
  */
 function Words({ text, parts, bold }: { text: string; parts: FactParts | null; bold: boolean }) {
   if (!bold || !parts) return <>{text}</>;

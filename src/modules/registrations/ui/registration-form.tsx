@@ -9,6 +9,7 @@ import MenuBookIcon from "@mui/icons-material/MenuBook";
 import ShareIcon from "@mui/icons-material/Share";
 import ShieldIcon from "@mui/icons-material/Shield";
 import Alert from "@mui/material/Alert";
+import AlertTitle from "@mui/material/AlertTitle";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import MuiLink from "@mui/material/Link";
@@ -21,6 +22,7 @@ import type { ReactNode } from "react";
 import { formatDay } from "@/i18n/dates";
 import { getPathname, Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
+import { fullThanksPhrase, waitlistOfferPhrase } from "@/modules/events/ui/counted-phrases";
 import { SHIRT_SIZES } from "@/modules/registrations/domain/kit";
 import { ageRuleVariant, yearsPhrase } from "@/modules/registrations/domain/age";
 import { NO_WAITLIST, WAITLIST_FULL } from "@/modules/registrations/domain/waitlist";
@@ -236,8 +238,15 @@ export type RegistrationFormInput = {
   draft: Readonly<Record<string, string>> | null;
   /** The database is away (§447): the form is drawn disabled, and nothing can be sent. */
   resting: boolean;
-  /** No place and nothing to join (§348), said before anybody types. */
-  fullNotice: typeof WAITLIST_FULL | typeof NO_WAITLIST | null;
+  /**
+   * No place and nothing to join (§348), said before anybody types — or `WAITLIST`, the join form
+   * itself (§NNN): no place, and a list that takes people.
+   */
+  fullNotice: typeof WAITLIST_FULL | typeof NO_WAITLIST | "WAITLIST" | null;
+  /** For `WAITLIST`: the event's places and how many already wait, for the thank-you lead (§NNN). */
+  fullCounts: { capacity: number; waiting: number } | null;
+  /** For `WAITLIST`: the club's offer window («Termene», `offerHours`, §377); null says no offer sentence. */
+  offerHours: number | null;
   /** The family sitting's next form (§519): who was sent so far, above the form. */
   familyIntro?: ReactNode;
   /** The Server Action the form posts to; absent in a preview, which posts nothing. */
@@ -271,6 +280,8 @@ export async function registrationForm({
   draft,
   resting,
   fullNotice,
+  fullCounts,
+  offerHours,
   familyIntro,
   action,
   preview,
@@ -343,10 +354,22 @@ export async function registrationForm({
           {t("terms.missing")}
         </Alert>
       )}
-      {fullNotice && (
-        <Alert severity="warning" sx={{ mb: 2 }} data-testid="registration-full-notice">
-          {fullNotice === NO_WAITLIST ? tEvent("cta.fullNoWaitlist") : tEvent("cta.waitlistFull")}
+      {fullNotice === "WAITLIST" ? (
+        <Alert severity="info" sx={{ mb: 2 }} data-testid="registration-waitlist-notice">
+          <AlertTitle>{fullCounts ? fullThanksPhrase(tEvent, locale, fullCounts.capacity, fullCounts.waiting) : tEvent("cta.fullLead")}</AlertTitle>
+          <Typography variant="body2">{tEvent("cta.fullJoin")}</Typography>
+          {offerHours !== null && (
+            <Typography variant="body2" sx={{ mt: 0.5 }}>
+              {waitlistOfferPhrase(tEvent, locale, offerHours)}
+            </Typography>
+          )}
         </Alert>
+      ) : (
+        fullNotice && (
+          <Alert severity="warning" sx={{ mb: 2 }} data-testid="registration-full-notice">
+            {fullNotice === NO_WAITLIST ? tEvent("cta.fullNoWaitlist") : tEvent("cta.waitlistFull")}
+          </Alert>
+        )
       )}
 
       {/*

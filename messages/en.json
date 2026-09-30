@@ -286,9 +286,22 @@
         "few": "{count} places",
         "other": "{count} places"
       },
-      "full": "No places left. On the waiting list, the first in line gets the next free place.",
-      "waitlistFull": "The places and the waiting list are full.",
-      "fullNoWaitlist": "Every place has been taken, so registration has closed.",
+      "fullLead": "All places are taken.",
+      "fullThanks": {
+        "one": "Thank you! The one place is taken — {waiting} already waiting.",
+        "few": "Thank you! All {capacity} places are taken — {waiting} already waiting.",
+        "other": "Thank you! All {capacity} places are taken — {waiting} already waiting."
+      },
+      "fullThanksFirst": {
+        "one": "Thank you! The one place is taken. Be the first on the waiting list.",
+        "few": "Thank you! All {capacity} places are taken. Be the first on the waiting list.",
+        "other": "Thank you! All {capacity} places are taken. Be the first on the waiting list."
+      },
+      "waitingCount": "{count} on the waiting list",
+      "fullJoin": "Join the waiting list — we email you when a place frees up.",
+      "fullOffer": "When a place frees up, you get an email and {hours} to confirm — then it passes on.",
+      "waitlistFull": "All places are taken and the waiting list is full — sorry.",
+      "fullNoWaitlist": "All places are taken, and this event has no waiting list.",
       "waitlistRoom": {
         "one": "{count} place left on the waiting list",
         "few": "{count} places left on the waiting list",
@@ -305,7 +318,6 @@
         "other": "{count} places left"
       },
       "freeOfCard": "{free} out of {places}",
-      "cardWaitlist": "Waiting list",
       "closed": "Registration has closed for this event.",
       "closedRaceWeek": "Registration has closed — come to the desk with the QR from your email.",
       "cancelled": "The event has been cancelled, so registration has stopped.",

@@ -10,7 +10,8 @@ import ButtonLink from "@/shared/ui/ButtonLink";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { DENSITY } from "@/theme/density";
 import type { PublicEventPage } from "../repository";
-import { fillPhrase, waitlistRoomPhrase } from "./counted-phrases";
+import { cachedDeadlines } from "@/modules/public-cache/reads";
+import { fillPhrase, fullThanksPhrase, waitingPhrase, waitlistOfferPhrase, waitlistRoomPhrase } from "./counted-phrases";
 import { type PreviewDoor, readRegistrationDoor } from "./registration-door";
 import RegistrationDoorButton, { doorButtonLabel } from "./RegistrationDoorButton";
 
@@ -66,7 +67,7 @@ export default async function RegistrationCta({
     );
   }
 
-  if (cta.kind === "OPEN" || cta.kind === "FULL") {
+  if (cta.kind === "OPEN") {
     // How full it is (§346): the free places read against the event's size. Null — and nothing
     // rendered — for an uncapped event, which shows no number at all (BR-REQ-034-01 criterion 4).
     return (
@@ -80,24 +81,60 @@ export default async function RegistrationCta({
         )}
 
         {/* An uncapped event shows no number at all (BR-REQ-034-01 criterion 4). */}
-        {cta.kind === "FULL" ? (
+        {cta.availablePlaces !== null && (
           <Typography variant="body2" color="text.secondary">
-            {t("cta.full")}
+            {t("cta.placesRemaining", { count: cta.availablePlaces })}
           </Typography>
-        ) : (
-          cta.availablePlaces !== null && (
-            <Typography variant="body2" color="text.secondary">
-              {t("cta.placesRemaining", { count: cta.availablePlaces })}
-            </Typography>
-          )
+        )}
+
+        {/* Once anybody waits (§NNN, amending §346): the line's length, from the count the door made. */}
+        {cta.waiting > 0 && (
+          <Typography variant="body2" color="text.secondary" data-testid="waitlist-waiting">
+            {waitingPhrase(t, cta.waiting)}
+          </Typography>
+        )}
+      </Stack>
+    );
+  }
+
+  if (cta.kind === "FULL") {
+    /*
+      The places are gone and the list takes people (§NNN, amending §348; the owner, 2026-09-30:
+      «pt lista de așteptare trebuie un mesaj mai frumos»): the card's two sentences first — the
+      news in bold, then what the list does — so a person reads them before the button; under it
+      how full the event is (§346), the room left in a capped list (§348), and how an offer works,
+      with the club's own offer window («Termene», §377), the number the allocator gives it.
+    */
+    const { offerHours } = await cachedDeadlines();
+    return (
+      <Stack spacing={1} sx={{ mt: { xs: DENSITY.gapSm, sm: 3 }, alignItems: "flex-start" }}>
+        <Box data-testid="registration-waitlist-message">
+          <Typography variant="body1" component="p" sx={{ fontWeight: 700 }}>
+            {fill ? fullThanksPhrase(t, locale, fill.capacity, cta.waiting) : t("cta.fullLead")}
+          </Typography>
+          <Typography variant="body1" component="p">
+            {t("cta.fullJoin")}
+          </Typography>
+        </Box>
+
+        <RegistrationDoorButton slug={event.slug} cta={cta} label={doorButtonLabel(t, cta)} preview={preview} />
+
+        {fill && (
+          <Typography variant="body2" data-testid="registration-fill" sx={{ fontWeight: 600 }}>
+            {fillPhrase(t, locale, fill)}
+          </Typography>
         )}
 
         {/* The room left in a capped waiting list (§348); nothing for a list with no limit. */}
-        {cta.kind === "FULL" && cta.waitlistRoom !== null && (
+        {cta.waitlistRoom !== null && (
           <Typography variant="body2" data-testid="waitlist-room" sx={{ fontWeight: 600 }}>
             {waitlistRoomPhrase(t, locale, cta.waitlistRoom)}
           </Typography>
         )}
+
+        <Typography variant="body2" color="text.secondary" data-testid="waitlist-offer">
+          {waitlistOfferPhrase(t, locale, offerHours)}
+        </Typography>
       </Stack>
     );
   }

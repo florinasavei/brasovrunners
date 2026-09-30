@@ -44,7 +44,7 @@ import { CLUB_NAME } from "@/theme/brand";
 import { DomainError } from "@/shared/errors/domain-error";
 import { computeOccupied, computePublicAvailability, hasDirectAvailability } from "./domain/capacity";
 import { computeDeclarationHoldExpiry, computeFamilyReservationExpiry, computeWaitlistOfferExpiry, confirmationWindow } from "./domain/hold-deadlines";
-import { occupiedForNewcomer, waitlistFullError, waitlistHasRoom, waitlistRoom } from "./domain/waitlist";
+import { occupiedForNewcomer, waitlistFullError, waitlistHasRoom, waitlistLength, waitlistRoom } from "./domain/waitlist";
 import { deriveAllowedResendMessageType } from "./domain/resend";
 import { expectedSignatures, mismatchedSignatures } from "./domain/signature-name";
 import { allowedFromStatuses, holdsAPlace, isActiveStatus } from "./domain/state-machine";
@@ -948,6 +948,8 @@ export type PublicPlaces = {
    * no limit — and always null for an uncapped event, which never waitlists anybody.
    */
   waitlistRoom: number | null;
+  /** How many are in the line right now (`domain/waitlist.ts#waitlistLength`, §NNN): 0 for an uncapped event. */
+  waiting: number;
 };
 
 /**
@@ -967,7 +969,7 @@ export async function readPublicPlaces<T extends Record<string, unknown>>(
   event: { id: string; capacity: number | null; waitlistCapacity: number | null },
   now: Date,
 ): Promise<PublicPlaces> {
-  if (event.capacity === null) return { availablePlaces: null, waitlistRoom: null };
+  if (event.capacity === null) return { availablePlaces: null, waitlistRoom: null, waiting: 0 };
 
   const counts = await repo.countOccupied(db, event.id, now);
   const eligibleWaitlisted = await repo.countEligibleWaitlisted(db, event.id);
@@ -979,6 +981,7 @@ export async function readPublicPlaces<T extends Record<string, unknown>>(
       eligibleWaitlisted,
     }),
     waitlistRoom: waitlistRoom(line),
+    waiting: waitlistLength(line),
   };
 }
 

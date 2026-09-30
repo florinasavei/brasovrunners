@@ -76,8 +76,8 @@ function closedDoorSentence(tEvent: (key: string, values?: Record<string, string
  *
  * - **The door.** The public form exists only while the window is open; here it is drawn whatever
  *   the window says, under one line that says what a visitor meets today («Înscrierile se deschid
- *   …», closed, cancelled) in the event page's words. Full with nothing to join: the real form's
- *   own notice. An event that takes no registration on the site, or whose date is still to be
+ *   …», closed, cancelled) in the event page's words. Full, with nothing to join or with a list
+ *   that takes people: the real form's own notice. An event that takes no registration on the site, or whose date is still to be
  *   announced, has no form: one line says so.
  * - **Nothing sent, nothing written.** No action, no hidden field the service reads, no Turnstile,
  *   the send button disabled with «previzualizare» (`registrationForm`'s `preview`). The texts in
@@ -119,8 +119,12 @@ export async function renderDraftForm<T extends Record<string, unknown>>(
   const settings = await readDraftFormSettings(db, { locale, now, membersOnly: view.membersOnly, familyOpen: steps.familyOpen });
   const cta = door.kind === "KNOWN" ? door.cta : null;
   const closed = cta ? closedDoorSentence(tEvent, cta, locale, dated.timezone) : null;
-  // No place and nothing to join (§348): the real form's own notice above the first field.
-  const fullNotice = cta?.kind === "FULL_NO_WAITLIST" ? NO_WAITLIST : cta?.kind === "WAITLIST_FULL" ? WAITLIST_FULL : null;
+  // No place and nothing to join (§348): the real form's own notice above the first field. No place
+  // and a list that takes people (§NNN): the join form's thank-you, from the draft's own door and the
+  // club's «Termene» already read for the steps — nothing more is read.
+  const fullNotice = cta?.kind === "FULL_NO_WAITLIST" ? NO_WAITLIST : cta?.kind === "WAITLIST_FULL" ? WAITLIST_FULL : cta?.kind === "FULL" ? "WAITLIST" : null;
+  const fullCounts = cta?.kind === "FULL" && door.kind === "KNOWN" && door.fill ? { capacity: door.fill.capacity, waiting: cta.waiting } : null;
+  const offerHours = fullNotice === "WAITLIST" ? steps.deadlines.offerHours : null;
 
   return (
     <Box data-testid="draft-preview-form">
@@ -149,6 +153,8 @@ export async function renderDraftForm<T extends Record<string, unknown>>(
         draft: null,
         resting: false,
         fullNotice,
+        fullCounts,
+        offerHours,
         preview: { word },
       })}
     </Box>

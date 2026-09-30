@@ -188,13 +188,21 @@ describe("BR-REQ-041-01 the race's card carries the page's registration door, th
     expect(door(html)?.words).toBe("Înscrie-te la eveniment");
   });
 
-  it("says «Lista de așteptare» once the places are gone, and offers the waiting list's button", async () => {
+  it("§NNN says kindly that the places are taken once they are gone, and offers the waiting list's button", async () => {
     const event = await publish({ capacity: 2 });
     await take(event.id, 2);
     const html = await card();
-    expect(line(html).words).toBe("Înscrieri deschise până sâm., 26 sept. 2026, la 10:00 · Lista de așteptare");
+    expect(line(html).words).toBe(
+      "Mulțumim! Toate cele 2 locuri s-au ocupat. Fii primul pe lista de așteptare. Intră pe lista de așteptare — te anunțăm pe email când se eliberează un loc. Înscrieri deschise până sâm., 26 sept. 2026, la 10:00",
+    );
+    expect(bolds(html)).toEqual(["Mulțumim! Toate cele 2 locuri s-au ocupat. Fii primul pe lista de așteptare."]);
     expect(door(html)).toMatchObject({ href: "/ro/evenimente/cros/inscriere", words: "Intră pe lista de așteptare" });
-    expect(await page()).toContain("Intră pe lista de așteptare");
+    // The page's door says the same two sentences, and how an offer works with the club's hours (§377).
+    const onPage = text(await page());
+    expect(onPage).toContain("Intră pe lista de așteptare");
+    expect(onPage).toContain("Mulțumim! Toate cele 2 locuri s-au ocupat. Fii primul pe lista de așteptare.");
+    expect(onPage).toContain("te anunțăm pe email când se eliberează un loc.");
+    expect(onPage).toContain("Când se eliberează un loc, primești un email și ai 24 de ore să confirmi — altfel locul trece mai departe.");
   });
 
   it("offers no button when the waiting list is full or the race keeps none — as the page (§348)", async () => {
@@ -202,7 +210,7 @@ describe("BR-REQ-041-01 the race's card carries the page's registration door, th
     await take(event.id, 2);
     await take(event.id, 1, "WAITLISTED", 2);
     let html = await card();
-    expect(line(html).words).toBe("Locurile și lista de așteptare sunt pline.");
+    expect(line(html).words).toBe("Locurile s-au ocupat și lista de așteptare e plină — ne pare rău.");
     expect(door(html)).toBeNull();
     expect(await page()).not.toContain("Înscrie-te");
 
@@ -210,7 +218,7 @@ describe("BR-REQ-041-01 the race's card carries the page's registration door, th
     const none = await publish({ capacity: 1, waitlistCapacity: 0 });
     await take(none.id, 1);
     html = await card();
-    expect(line(html).words).toBe("Toate locurile au fost ocupate, așa că înscrierile s-au închis.");
+    expect(line(html).words).toBe("Locurile s-au ocupat, iar acest eveniment nu are listă de așteptare.");
     expect(door(html)).toBeNull();
   });
 
