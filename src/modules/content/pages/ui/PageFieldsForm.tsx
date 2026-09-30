@@ -8,7 +8,7 @@ import LocaleTabPanels from "@/shared/ui/LocaleTabPanels";
 import { richTextEditorLabels } from "@/modules/content/rich-text/ui/labels";
 import TranslateAllButton from "@/modules/translate/ui/TranslateAllButton";
 import TranslateFieldButton from "@/modules/translate/ui/TranslateFieldButton";
-import { pageInputConstraints, pageTranslationConstraints } from "../constraints";
+import { pageTranslationConstraints } from "../constraints";
 
 export type EditablePageTranslation = {
   locale: string;
@@ -20,16 +20,15 @@ export type EditablePageTranslation = {
 };
 
 /**
- * The page editor's fields: the nav order, then one tab per language (§259). Every box comes back
- * as typed after a refused submit, rich text included (§315).
+ * The page editor's fields: one tab per language (§259). Every box comes back as typed after a
+ * refused submit, rich text included (§315). The page's place in the menu is not here since §571:
+ * «Pagini» → «Ordinea meniului» orders every entry of the menu in one list.
  */
 export default async function PageFieldsForm({
-  navOrder,
   translations,
   slugLocked,
   pageId,
 }: {
-  navOrder: number;
   translations: readonly EditablePageTranslation[];
   /** AGENTS.md §11.5: a published page's address is stable. */
   slugLocked: boolean;
@@ -43,15 +42,6 @@ export default async function PageFieldsForm({
 
   return (
     <Stack spacing={3}>
-      <RecallField
-        name="navOrder"
-        label={t("navOrder")}
-        helperText={t("navOrderHelp")}
-        defaultValue={String(navOrder)}
-        {...textFieldConstraints(pageInputConstraints("navOrder"), { inputMode: "numeric" })}
-        sx={{ maxWidth: 220 }}
-      />
-
       {/* §464, §482. */}
       <TranslateAllButton />
 

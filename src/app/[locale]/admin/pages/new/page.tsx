@@ -53,7 +53,7 @@ export default async function NewPagePage({ params, searchParams }: Props) {
       <ActionForm action={createPageAction} messages={await refusalMessages(await pageFormFieldLabels())} data-testid="page-create-form">
         <Stack spacing={3}>
           <input type="hidden" name="uiLocale" value={locale} />
-          <PageFieldsForm navOrder={0} translations={[]} slugLocked={false} />
+          <PageFieldsForm translations={[]} slugLocked={false} />
           <Box>
             <GlyphSubmitButton
               label={t("pages.create")}

@@ -93,7 +93,6 @@ describe("§430 the pictures from before §414 get their ladder, a batch per pre
     const page = await createPage(db, {
       actor: admin,
       fields: {
-        navOrder: "10",
         translations: {
           ro: { slug: "despre", title: "Despre", body: bodyWith(older.src, 2000), seoTitle: "", seoDescription: "" },
           en: { slug: "about", title: "About", body: "", seoTitle: "", seoDescription: "" },
@@ -290,7 +289,6 @@ describe("§430 the pictures from before §414 get their ladder, a batch per pre
     const page = await createPage(db, {
       actor: admin,
       fields: {
-        navOrder: "20",
         translations: {
           ro: { slug: "veche", title: "Veche", body: bodyWith(older.src, 800), seoTitle: "", seoDescription: "" },
           en: { slug: "old", title: "Old", body: "", seoTitle: "", seoDescription: "" },

@@ -219,7 +219,7 @@
       "title": "Who's coming",
       "titleCount": "Who's coming ({count})",
       "empty": "Nobody has confirmed a place yet.",
-      "note": "Every confirmed participant is counted here. A name is shown only for those who ticked “I want to appear on the participant list”; the others appear as “Participant (name hidden)”, with nothing else about them. The choice can be changed at any time from the confirmation email or from “My registrations”.",
+      "note": "Every confirmed participant is counted here. A name is shown only for those who ticked “I want to appear on the participants & results list”; the others appear as “Participant (name hidden)”, with nothing else about them. The choice can be changed at any time from the confirmation email or from “My registrations”.",
       "anonymous": "Participant (name hidden)",
       "caption": "The confirmed participants: first those whose name is shown, in the order they confirmed, then the others.",
       "summary": "{confirmed} — {named} with their name shown",
@@ -244,7 +244,7 @@
         "instagram": "{name} on Instagram"
       },
       "captionStates": "First the confirmed participants — those whose name is shown, in the order they confirmed, then the others — then those registered who have not confirmed yet and those on the waiting list, in the list's order.",
-      "noteStates": "Every confirmed participant is counted here. A name is shown only for those who ticked “I want to appear on the participant list”; the other confirmed participants appear as “Participant (name hidden)”, with nothing else about them. Those registered who have not confirmed yet and those on the waiting list appear only if they ticked it, with the registration's stage beside the name; a cancelled or expired registration does not appear. The choice can be changed at any time from the confirmation email or from “My registrations”.",
+      "noteStates": "Every confirmed participant is counted here. A name is shown only for those who ticked “I want to appear on the participants & results list”; the other confirmed participants appear as “Participant (name hidden)”, with nothing else about them. Those registered who have not confirmed yet and those on the waiting list appear only if they ticked it, with the registration's stage beside the name; a cancelled or expired registration does not appear. The choice can be changed at any time from the confirmation email or from “My registrations”.",
       "socialsNote": "Strava and Instagram appear only beside the names of those who chose it when registering.",
       "othersLead": "Also listed by name:",
       "pendingCount": {
@@ -602,7 +602,7 @@
       "birthDateMinimumAge": "Optional here. When given, the person must be at least the chosen event's minimum age on the day of the race — the number with a “+” beside its name; otherwise the registration is refused.",
       "participantLocale": "Language we write to them in",
       "participantLocaleHelp": "The language of every email about this registration.",
-      "listOptIn": "The person wants to appear on the public participant list",
+      "listOptIn": "The person wants to appear on the participants & results list",
       "listOptInHelp": "Tick only if the person told you they want to.",
       "relayConfirmation": "I confirm this person asked me to register them, and I told them the club uses their details for the race and that the privacy notice is on the site, at the foot of every page.",
       "create": "Add the registration",
@@ -626,6 +626,10 @@
         "promo": "The consent to offers and benefits"
       },
       "auditTrail": "What staff did",
+      "partnerShares": {
+        "title": "Given to partners",
+        "noRecipient": "recipient not noted"
+      },
       "auditActorRemoved": "account removed",
       "auditActorParticipant": "the participant, from their own link",
       "audit": {
@@ -1056,7 +1060,9 @@
         "now": "Send now, without waiting for the scheduled round",
         "queue": "Queue it for the scheduled round",
         "note": "For now, automatic emails leave on the scheduled round, within {wait}. Choose whether this one leaves now or waits for it."
-      }
+      },
+      "menuOrderTitle": "Change the menu order?",
+      "menuOrderBody": "The site's menu and footer show the pages in the new order, for every visitor, from the next page they open."
     },
     "errors": {
       "PICTURE_IN_USE": "The picture is used on a page, an event or in an album. Take it out of there first.",
@@ -1245,7 +1251,7 @@
       "declarationNone": "No approved declaration exists in this environment, so no event can take registrations here yet.",
       "declarationUnset": "None",
       "participantList": "Publish the participant list on the event page",
-      "participantListHelp": "Publishes the names of the confirmed who ticked “I want to appear on the participant list”, with no email addresses.",
+      "participantListHelp": "Publishes the names of the confirmed who ticked “I want to appear on the participants & results list”, with no email addresses.",
       "externalProvider": "External organiser",
       "externalRegistrationUrl": "External registration link",
       "externalHelp": "Both only for an event registered elsewhere. The link must start with https://.",
@@ -2218,7 +2224,8 @@
         "series": "Only in the group-run declarations: the series' name, when the run repeats. The sentence that names it shows only for a series; a one-day run keeps the sentence with '{{event}}' and '{{eventDate}}'",
         "seriesRhythm": "Only in the group-run declarations: how often the series repeats, read off its dates (“every Tuesday at 18:30”)",
         "seriesPlace": "Only in the group-run declarations: the series' usual starting place",
-        "promotionalMaterials": "Only in the privacy notice: the optional box for offers and benefits from the club and its partners. Without it in the notice in force, the form does not offer it"
+        "promotionalMaterials": "Only in the privacy notice: the optional box for offers and benefits from the club and its partners. Without it in the notice in force, the form does not offer it",
+        "promotionalMaterialsShared": "Only in the privacy notice: what data the club's partners may receive from those who ticked offers and benefits. Without it in the notice in force, the list for sponsors is off"
       },
       "removeBlockedReferenced": "Can neither be withdrawn nor deleted permanently: {signatures}, {events} and {acknowledgements} depend on it. “Delete” on its row takes it off the list.",
       "removeBlockedCurrent": "In force right now — it can neither be withdrawn nor deleted. Approve its successor first; then this one can go.",
@@ -2374,6 +2381,7 @@
       },
       "tableCaptionOf": "The versions of {kind}, with their state and what depends on each",
       "promoMissing": "The notice in force does not yet describe offers and benefits, so the form does not offer the box. Approve a new notice from the template.",
+      "sponsorMissing": "The notice in force does not yet say the list for sponsors may be given to partners, so its button is off. Approve a new notice from the template.",
       "counted": {
         "signatures": {
           "one": "{count} signature",
@@ -2908,6 +2916,16 @@
             "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. Section 5 describes the offers and benefits from the club and its partners.",
             "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish”.",
             "From the moment it takes effect, the form offers the box, with no other setting. Whoever ticks it appears in «Newsletter», in its own card."
+          ]
+        },
+        "sponsorNotice": {
+          "title": "Privacy notice: the list for sponsors",
+          "todo": "The notice in force does not yet say that partners may receive the first name, last name and address of those who ticked offers and benefits, so «Download the list for sponsors» is off.",
+          "done": "The notice in force says the list may be given to partners: «Download the list for sponsors» is on and takes only the consents given under it.",
+          "how": [
+            "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. Sections 5 and 6 say partners may receive the first name, last name and address.",
+            "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish”.",
+            "The list takes only the consents given under the new notice. Whoever ticked under an older notice never reaches a partner."
           ]
         }
       },
@@ -3497,15 +3515,9 @@
       "columnTitle": "Title",
       "columnStatus": "Status",
       "columnAddress": "Address",
-      "columnOrder": "Order",
-      "tableCaption": "The club's pages, with their status and their order in the menu",
-      "moveUp": "Move up",
-      "moveDown": "Move down",
-      "moveUpNamed": "Move \"{title}\" up the menu",
-      "moveDownNamed": "Move \"{title}\" down the menu",
-      "moveHelp": "The order here is the order in the site menu.",
-      "navOrder": "Order in the menu",
-      "navOrderHelp": "A lower number comes first. Leave 0 if it does not matter.",
+      "columnOrder": "Place in the menu",
+      "tableCaption": "The club's pages, with their state and place in the menu",
+      "moveHelp": "The place in the menu is changed in «Menu order», above.",
       "slugHelp": "The page address: lowercase letters, digits and hyphens.",
       "slugLocked": "The address is fixed once published — links already sent have to keep working.",
       "bodyHelp": "A blank line separates paragraphs. A line starting with ## is a section heading.",
@@ -3537,6 +3549,32 @@
       "groupStandard": "Standard pages",
       "groupCustom": "Custom pages",
       "tabMembers": "Members"
+    },
+    "menuOrder": {
+      "title": "Menu order",
+      "intro": "The order of the pages in the site's menu, first to last. Move them with «Up» and «Down», then press «Save the order».",
+      "introMore": "A page that is not published keeps its place and appears there once you publish it. A new page appears at the end until you move it.",
+      "listLabel": "The site's menu, first to last",
+      "up": "Up",
+      "down": "Down",
+      "upNamed": "Move “{name}” up",
+      "downNamed": "Move “{name}” down",
+      "notYet": "not shown yet",
+      "custom": "custom page",
+      "movedTo": "“{name}” is now in place {position}.",
+      "unsaved": "The new order is not saved yet.",
+      "save": "Save the order",
+      "saving": "Saving…",
+      "readOnly": "The Administrator sets the order; here you see the menu's order.",
+      "entries": {
+        "events": "Events",
+        "calendar": "Calendar",
+        "contact": "Contact",
+        "gallery": "Gallery",
+        "team": "Team",
+        "faq": "Frequently asked questions",
+        "members": "Members"
+      }
     },
     "fontSize": {
       "title": "Text size",
@@ -4781,7 +4819,8 @@
               "steps": [
                 "«Newsletter» → open the «Subscribers» card. Its line says how many are confirmed and how many pending.",
                 "Search under «Search the address» or choose «Topic» and «State», then press «Filter». «Download CSV» takes the list as filtered.",
-                "The «Participants who ticked offers and benefits» card: who ticked it when registering, with the address, the event and the date. «Download CSV» takes all of it. It is not the newsletter; partners never get the list.",
+                "The «Participants who ticked offers and benefits» card: who ticked it when registering, with the address, the event and the date. «Download CSV» takes all of it. It is not the newsletter.",
+                "«Download the list for sponsors»: first name, last name, address, event and date, only for consents given under a notice that allows it. Note whom you give the file to; delete it within 30 days.",
                 "Removing an address is the Administrator's: tell them who asked."
               ]
             },
@@ -4993,7 +5032,8 @@
                 "Under «Pending», the row says until when the confirmation link works, or «The link has expired.» An address never confirmed is deleted by itself.",
                 "«Download CSV» takes the list as filtered, with the same columns. Keep the file only as long as you need it, then delete it.",
                 "To remove someone, at their request: «Unsubscribe» on their row, then confirm. The address is deleted with its topics, as when the person unsubscribes.",
-                "The «Participants who ticked offers and benefits» card: who ticked it when registering, with the address, the event and the date. «Download CSV» takes all of it. It is not the newsletter; partners never get the list."
+                "The «Participants who ticked offers and benefits» card: who ticked it when registering, with the address, the event and the date. «Download CSV» takes all of it. It is not the newsletter.",
+                "«Download the list for sponsors»: first name, last name, address, event and date, only for consents given under a notice that allows it. Note whom you give the file to; delete it within 30 days."
               ]
             },
             {
@@ -5580,7 +5620,7 @@
       },
       "promo": {
         "title": "Participants who ticked offers and benefits",
-        "intro": "Who ticked, when registering, that they want offers and benefits from the club and its partners. It is not the newsletter, and the partners never get the list.",
+        "intro": "Who ticked, when registering, that they want offers and benefits from the club and its partners. It is not the newsletter. Partners receive only the list for sponsors, below.",
         "count": {
           "one": "{count} registration with consent",
           "few": "{count} registrations with consent",
@@ -5842,6 +5882,24 @@
       "releaseBody": "The declaration goes back to its usual period and can be deleted again.",
       "heldLine": "Kept {when}, by {who}: {reason}",
       "whoRemoved": "a team member (account removed)"
+    },
+    "sponsors": {
+      "button": "Download the list for sponsors",
+      "count": {
+        "one": "{count} person",
+        "few": "{count} people",
+        "other": "{count} people"
+      },
+      "noticeMissing": "The privacy notice in force does not say the list may be given to partners.",
+      "help": "First name, last name, address, event, consent date: adults only, consent given under a notice that allows it. Write whom it goes to: it stays on each registration in it. Delete the file in 30 days.",
+      "recipient": "Who receives the list (optional)",
+      "columns": {
+        "firstName": "First name",
+        "lastName": "Last name",
+        "email": "Email",
+        "event": "Event",
+        "consentedAt": "Consent date"
+      }
     }
   },
   "NotFound": {
@@ -5889,7 +5947,7 @@
     "email": "Email address",
     "privacyPrefix": "I have read the",
     "privacyLinkLabel": "privacy notice",
-    "listOptIn": "I want to appear on the participant list",
+    "listOptIn": "I want to appear on the participants & results list",
     "listSocials": "Also show my Strava and Instagram beside my name on the list",
     "listSocialsHelp": "Only with the tick above. Take them off any time from “My registrations”.",
     "submit": "Submit registration",
@@ -6222,7 +6280,9 @@
     "membersAddressHelp": "You register with your account's address. One account registers one person.",
     "promo": {
       "label": "I want to receive offers and benefits from {club} and its partners.",
-      "help": "Optional. You can opt out any time from your registration page."
+      "help": "You can opt out any time from your registration page.",
+      "sharedData": "your first name, last name and email address",
+      "shared": "The club may give its partners your first name, last name and address."
     }
   },
   "Registrations": {
@@ -6372,8 +6432,8 @@
       "listed": "Your name appears on this event's public participant list.",
       "notListed": "Your name does not appear on this event's public participant list.",
       "help": "The list shows the name (or the display name) and the club; without your name, you are only counted. You can change this any time, here or from “My registrations”.",
-      "optOut": "Take me off the public list",
-      "optIn": "Show my name on the public list",
+      "optOut": "I do not want to appear on the participants & results list",
+      "optIn": "I want to appear on the participants & results list",
       "changed": "Your choice has been saved.",
       "changedHelp": "The link from the email has been used. This page carries a fresh one — if you change your mind, press the button above.",
       "failed": "Could not save your choice. Try again or write to us.",
@@ -6574,7 +6634,9 @@
       "help": "It is separate from the newsletter: unsubscribing from the newsletter does not change this, and this does not change the newsletter.",
       "changed": "Your choice about offers and benefits for this registration is saved.",
       "failed": "We could not save your choice. Try again.",
-      "otherAdult": "Only the person gives the consent to offers and benefits, on their own declaration or from their own registration's link. From here you can only withdraw it."
+      "otherAdult": "Only the person gives the consent to offers and benefits, on their own declaration or from their own registration's link. From here you can only withdraw it.",
+      "optInShared": "If you give it, the club may give its partners your first name, last name and address.",
+      "yesShared": "On this registration you receive offers and benefits from the club and its partners. The club may give the partners your first name, last name and address, so they write to you themselves."
     }
   },
   "Devs": {
@@ -7313,7 +7375,8 @@
       "memberCodeMoved": "The order of the codes was changed.",
       "memberCodeDeleted": "The code was deleted.",
       "declarationHeld": "The declaration is kept. It is not deleted until you remove the keep.",
-      "declarationReleased": "The keep was removed."
+      "declarationReleased": "The keep was removed.",
+      "menuOrder": "The menu order was saved."
     }
   },
   "Network": {

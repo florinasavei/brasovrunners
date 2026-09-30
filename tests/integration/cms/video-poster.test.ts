@@ -558,7 +558,6 @@ describe("§403 the club's own copy of a YouTube poster", () => {
 
       it("createPage and savePage: a standing page's films are fetched before either transaction opens", async () => {
         const pageFields = (suffix: string, videoId: string) => ({
-          navOrder: "10",
           translations: {
             ro: { slug: `despre-${suffix}`, title: "Despre", body: film(videoId, NEVER_ANSWERS), seoTitle: "", seoDescription: "" },
             en: { slug: `about-${suffix}`, title: "About", body: film(videoId), seoTitle: "", seoDescription: "" },
