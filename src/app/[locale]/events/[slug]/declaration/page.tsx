@@ -34,6 +34,7 @@ import { membersEventBySlug } from "@/modules/events/members-only";
 import { dayIn, latestBirthDateFor, yearsPhrase } from "@/modules/registrations/domain/age";
 import { readFormDraft } from "@/modules/registrations/form-draft";
 import { DECLARATION_ERROR_SUMMARY_ID } from "@/modules/registrations/form-errors";
+import BirthDateField from "@/modules/registrations/ui/BirthDateField";
 import IdDocumentFields, { ID_DOCUMENT_TYPES } from "@/modules/registrations/ui/IdDocumentFields";
 import SignatureField from "@/modules/registrations/ui/SignatureField";
 import BotCheck from "@/modules/registrations/ui/BotCheck";
@@ -166,8 +167,13 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
   const minimumAge = { age: yearsPhrase(minAge, locale) };
   const tooYoung = hasMinimumAge && refusedTooYoung(invalid);
   const today = now.toISOString().slice(0, 10);
-  const youngestAllowed = hasMinimumAge ? latestBirthDateFor(minAge, dayIn(event.startsAt, event.timezone)) : today;
+  const runDay = dayIn(event.startsAt, event.timezone);
+  const youngestAllowed = hasMinimumAge ? latestBirthDateFor(minAge, runDay) : today;
   const latestBirthDate = youngestAllowed < today ? youngestAllowed : today;
+  // The oldest bound, the registration form's (§561): a hundred and twenty years back.
+  const earliestBirthDate = new Date(Date.UTC(now.getUTCFullYear() - 120, now.getUTCMonth(), now.getUTCDate())).toISOString().slice(0, 10);
+  const tooYoungWords = t("groupRunDeclaration.page.tooYoung", minimumAge);
+  const birthDateHelp = t("groupRunDeclaration.page.birthDateHelp", minimumAge);
 
   return (
     <Container id="main" component="main" maxWidth="md" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
@@ -235,7 +241,7 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
           {refused.map((field) => (
             <Box key={field} sx={{ mt: 0.5 }}>
               <MuiLink href={`#${field}`}>{fieldLabel(field)}</MuiLink>
-              {field === "birthDate" && tooYoung && <>: {t("groupRunDeclaration.page.tooYoung", minimumAge)}</>}
+              {field === "birthDate" && tooYoung && <>: {tooYoungWords}</>}
             </Box>
           ))}
         </Alert>
@@ -274,19 +280,32 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
               refused={refused.includes("idDocument")}
             />
           )}
+          {/*
+            The registration form's own box (§NNN, applying §561): typed day first, «11.05.1990»,
+            never the browser's date box, which an English phone drew month first. The same
+            placeholder, the date in words with the age on the run's day as its helper, and the
+            run's minimum age refused live under it; the action reads the typed text with the same
+            `normalizeTypedDate`, and the service still refuses what the box let through.
+          */}
           {hasMinimumAge && (
-            <TextField
+            <BirthDateField
               id="birthDate"
               name="birthDate"
-              type="date"
               label={fieldLabel("birthDate")}
-              helperText={tooYoung ? t("groupRunDeclaration.page.tooYoung", minimumAge) : t("groupRunDeclaration.page.birthDateHelp", minimumAge)}
               defaultValue={draft?.birthDate ?? ""}
-              error={refused.includes("birthDate")}
               required
               autoComplete="bday"
-              slotProps={{ inputLabel: { shrink: true }, htmlInput: { max: latestBirthDate } }}
-              data-testid="group-run-declaration-birth-date"
+              error={refused.includes("birthDate")}
+              errorText={tooYoung ? tooYoungWords : birthDateHelp}
+              help={birthDateHelp}
+              min={earliestBirthDate}
+              max={latestBirthDate}
+              eventDay={runDay}
+              locale={locale}
+              echoTemplate={formCopy("birthDateEcho", { date: "{date}", age: "{age}" })}
+              placeholder={formCopy("birthDatePlaceholder")}
+              unreadable={formCopy("birthDateUnreadable")}
+              tooYoung={tooYoungWords}
             />
           )}
           <TextField
