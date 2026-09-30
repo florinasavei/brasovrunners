@@ -52,6 +52,10 @@ describe("§NNN «Dă-i un loc» says why before the press", () => {
     expect(roHtml).toContain(
       'aria-label="Cursa e plină: locuri 3, confirmați 1, declarații de semnat 0, oferite 0, rezervate familiilor 2. Mărește întâi capacitatea evenimentului."',
     );
+    // The «i» is a plain button: a tap on it reads the sentence, it never submits the press's form.
+    expect(roHtml.match(/type="button"/g)?.length ?? 0).toBeGreaterThanOrEqual(1);
+    expect(roHtml).toMatch(/<button[^>]*type="button"[^>]*aria-label="Cursa e plină/);
+    expect(roHtml.match(/type="submit"/g)?.length ?? 0).toBeLessThanOrEqual(1);
     const enHtml = await render("en");
     expect(enHtml).toContain("Give a place");
     expect(enHtml).toContain("The race is full: places 3, confirmed 1, declarations to sign 0, offered 0, reserved for families 2. Raise the event&#x27;s capacity first.");
