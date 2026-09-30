@@ -76,6 +76,10 @@ export default function robots(): MetadataRoute.Robots {
           "/en/events?",
           "/ro/calendar?",
           "/en/calendar?",
+          // A period's own path (§NNN): canonical to the bare calendar like the query was, and a
+          // cold month is a render — a crawler walking five years of months would wake the database.
+          "/ro/calendar/",
+          "/en/calendar/",
           ...EVENT_PAGE_QUERY_KEYS.flatMap((key) => ["/ro/evenimente/*", "/en/events/*"].flatMap((base) => [`${base}?${key}=`, `${base}&${key}=`])),
           "/ro/live/",
           "/en/live/",

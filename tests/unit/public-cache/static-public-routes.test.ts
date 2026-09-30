@@ -45,6 +45,8 @@ const STATIC_PAGES = [
   "src/app/[locale]/events/page.tsx",
   "src/app/[locale]/events/[slug]/page.tsx",
   "src/app/[locale]/calendar/page.tsx",
+  // A period at its own path (§NNN): a month is a static page of its own, not the twin's query.
+  "src/app/[locale]/calendar/[...period]/page.tsx",
   "src/app/[locale]/faq/page.tsx",
   "src/app/[locale]/team/page.tsx",
   "src/app/[locale]/gallery/page.tsx",
@@ -67,6 +69,7 @@ const LIVE_TWINS = {
   "src/app/[locale]/live/events/page.tsx": "../../events/page",
   "src/app/[locale]/live/events/[slug]/page.tsx": "../../../events/[slug]/page",
   "src/app/[locale]/live/calendar/page.tsx": "../../calendar/page",
+  "src/app/[locale]/live/calendar/[...period]/page.tsx": "../../../calendar/[...period]/page",
 } as const;
 
 /**
@@ -158,7 +161,7 @@ describe("§549 the public routes' segment config", () => {
 
   it("makes no page at build: the locale layout and every slug route generate no params", () => {
     const generatesNothing = /export function generateStaticParams\(\)[^\n]*\{\n\s*return \[\];\n\}/;
-    for (const file of ["src/app/[locale]/layout.tsx", ...[...STATIC_PAGES, ...STATIC_HANDLERS].filter((route) => route.includes("[slug]") && !route.endsWith("opengraph-image.tsx"))]) {
+    for (const file of ["src/app/[locale]/layout.tsx", ...[...STATIC_PAGES, ...STATIC_HANDLERS].filter((route) => (route.includes("[slug]") || route.includes("[...")) && !route.endsWith("opengraph-image.tsx"))]) {
       expect(code(file), file).toMatch(generatesNothing);
     }
     // The feed's only parameter is the locale, and a route handler has no layout to inherit it from.

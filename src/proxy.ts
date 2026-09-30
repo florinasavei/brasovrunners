@@ -1,6 +1,7 @@
 import createMiddleware from "next-intl/middleware";
 import { NextResponse, type NextRequest } from "next/server";
 import { resolveAliasRedirect } from "@/i18n/aliases";
+import { legacyCalendarTarget } from "@/i18n/calendar-redirect";
 import { isStaticPublicAnswer, liveTwinPathname, mayBeSignedIn, STATIC_PAGE_BROWSER_CACHE_CONTROL } from "@/i18n/live-twin";
 import { resolveMovedBackofficePath } from "@/i18n/moved-paths";
 import { localeRootTarget } from "@/i18n/root-redirect";
@@ -69,6 +70,17 @@ export default function proxy(request: NextRequest) {
     const target = new URL(listing, url);
     target.search = url.search;
     return NextResponse.redirect(target, 308);
+  }
+
+  /*
+    The calendar's period moved from the query into the path (§NNN): `/ro/calendar?month=2026-10`
+    → `/ro/calendar/2026-10`, `?view=list` → `/<this month>/list`, `?year=2027` → `/2027`, every
+    filter kept. A real 308 before anything renders, so a bookmark or a search result lands on the
+    static period page the CDN answers. Only a read: a POST keeps its address.
+  */
+  if (request.method === "GET" || request.method === "HEAD") {
+    const calendar = legacyCalendarTarget(url.pathname, url.searchParams, new Date());
+    if (calendar) return NextResponse.redirect(new URL(calendar, url), 308);
   }
 
   /*

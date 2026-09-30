@@ -307,10 +307,19 @@ does not import React, Next, MUI, or a provider SDK, and there is no `utils.ts`.
   and `stale-while-revalidate`, and the browser would show its copy from before the last save
   (and Playwright's `networkidle` would wait for its background request forever). On Vercel the
   CDN keeps Next's `s-maxage` and the proxy sets nothing. A filtered listing
-  (`?type=…`), a month (`?month=…`), `?lista=` and a signed-in browser on an event page are the
+  (`?type=…`), `?lista=` and a signed-in browser on an event page are the
   page's *live twin* under `src/app/[locale]/live/`, rendered per request as before
   (`src/i18n/live-twin.ts`) — so a signed-in browser never shows you the stranger's copy; use
-  `curl` or a private window for that. `next start` stores the pages it made in
+  `curl` or a private window for that. A calendar month is a static page of its own path
+  (`/ro/calendar/2026-10`, `/ro/calendar/2026-10/list`, `/ro/calendar/2026`), and the old
+  `?month=`, `?year=` and `?view=list` answer a 308 there from the proxy. Why: Next's router may
+  answer a soft navigation to a static page's address plus a query from that page's prefetched
+  copy, without asking the server, and on Vercel (whose answer to a prefetch is the page's whole
+  `.rsc`) the calendar's arrows changed the address and left the month on screen
+  (`src/modules/events/domain/calendar-path.ts`). A new control that changes what a static page
+  shows goes to a path of its own, not to a query on the same path. `next start` does not show
+  the difference; `tests/e2e/calendar-month-from-path.spec.ts` answers a prefetch the way Vercel
+  does to catch it. `next start` stores the pages it made in
   `.next/server/app/ro/` and `/en/`, and they outlive a restart: `yarn db:reset:local` deletes
   them, and a running `yarn start` must be restarted after a reset (it holds them in memory
   too). A row changed by hand in the database is on the pages within a day, or at the next

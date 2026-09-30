@@ -39,13 +39,14 @@ test.describe("BR-REQ-041-01 the event list on a phone", () => {
     // One tooltip per entry, and it is MUI's (§367): no entry carries the browser's `title` too.
     await expect(main.locator("[role=table] a[title], [role=table] a [title]")).toHaveCount(0);
 
+    // The list is the month's own path with `/list` at its end (§NNN), no longer `?view=list`.
     await main.getByRole("link", { name: "Listă", exact: true }).click();
-    await expect(page).toHaveURL(/view=list/);
+    await expect(page).toHaveURL(/\/ro\/calendar\/\d{4}-\d{2}\/list$/);
     await expect(main.getByRole("table")).toHaveCount(0);
     // The next-month arrow keeps the list.
-    expect(await main.getByRole("link", { name: "Luna următoare" }).getAttribute("href")).toContain("view=list");
+    expect(await main.getByRole("link", { name: "Luna următoare" }).getAttribute("href")).toMatch(/\/list$/);
     await main.getByRole("link", { name: "Calendar", exact: true }).click();
-    await expect(page).not.toHaveURL(/view=list/);
+    await expect(page).not.toHaveURL(/\/list$/);
     await expect(main.getByRole("table")).toBeVisible();
   });
 
@@ -195,14 +196,14 @@ test.describe("BR-REQ-041-01 the event list on a phone", () => {
     const titleBefore = await page.locator("#calendar-title").innerText();
     const controlBefore = await next.boundingBox();
     const gridBefore = await main.getByRole("table").boundingBox();
-    // A real href, still, with the whole query in it: the soft navigation is an enhancement
-    // of the link and never a replacement for it.
-    expect(await next.getAttribute("href")).toContain("month=");
+    // A real href, still, with the period in its path (§NNN): the soft navigation is an
+    // enhancement of the link and never a replacement for it.
+    expect(await next.getAttribute("href")).toMatch(/\/ro\/calendar\/\d{4}-\d{2}$/);
 
     await next.click();
     // The navigation actually happened, and the month actually moved. Without these two the
     // assertions below would all pass against the pre-click DOM.
-    await expect(page).toHaveURL(/month=/);
+    await expect(page).toHaveURL(/\/ro\/calendar\/\d{4}-\d{2}$/);
     await expect(page.locator("#calendar-title")).not.toHaveText(titleBefore);
     await expect(main.getByRole("table")).toBeVisible();
     await expect(main.locator('[role="status"]')).toHaveCount(0);

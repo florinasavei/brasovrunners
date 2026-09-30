@@ -3,11 +3,13 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import { CLUB_TIME_ZONE, formatTime } from "@/i18n/dates";
-import { getPathname, Link } from "@/i18n/navigation";
+import Link from "next/link";
+import { getPathname } from "@/i18n/navigation";
 import { fadeInSoft } from "@/theme/motion";
 import { DENSITY } from "@/theme/density";
 import {
   type CalendarDay,
+  currentMonth,
   dayKey,
   groupByDay,
   groupByMonth,
@@ -15,6 +17,7 @@ import {
   monthParam,
   type YearMonth,
 } from "../domain/calendar";
+import { calendarAddress, type CalendarLayoutName, type CalendarPeriod } from "../domain/calendar-path";
 import type { PublicEvent } from "../repository";
 import { editionDifference, groupSeries, usualOf } from "../domain/series";
 import CalendarEventChip from "./CalendarEventChip";
@@ -25,11 +28,11 @@ import { partnerPhrase } from "./counted-phrases";
 import type { GlyphName } from "./glyphs";
 import { editionNote } from "./series-sentence";
 
-/** What the calendar shows: one month (`?month=`) or one year (`?year=`, §116). */
-export type CalendarView = { kind: "month"; month: YearMonth } | { kind: "year"; year: number };
+/** What the calendar shows: one month (`/calendar/2026-10`) or one year (`/calendar/2026`, §116, §NNN). */
+export type CalendarView = CalendarPeriod;
 
-/** How the month is laid out (§137): the grid, on every width, or the agenda by choice (`?view=list`). */
-export type CalendarLayout = "grid" | "list";
+/** How the month is laid out (§137): the grid, on every width, or the agenda by choice (`/calendar/2026-10/list`). */
+export type CalendarLayout = CalendarLayoutName;
 
 /**
  * The calendar's **body**: the month as a grid on every width — or as an agenda when the
@@ -61,15 +64,12 @@ export default async function EventCalendar({
   now,
   query = {},
   layout = "grid",
-  pathname = "/calendar",
 }: {
   view: CalendarView;
-  /** The page the calendar is on (§251): a day links back to it, never to the listing. */
-  pathname?: "/calendar" | "/events";
   /** The period's rows, already read and filtered by the page (§413). */
   events: PublicEvent[];
   now: Date;
-  /** Other query parameters the month links keep — the filters (§89, §413; a group ticked twice is an array), the layout (§137). */
+  /** What the month links keep — the filters (§89, §413; a group ticked twice is an array). A month's own link goes to its path on the calendar (§251, §NNN). */
   query?: Record<string, string | string[]>;
   layout?: CalendarLayout;
 }) {
@@ -164,6 +164,9 @@ export default async function EventCalendar({
 
   if (view.kind === "year") {
     const byMonth = groupByMonth(rows);
+    const basePath = getPathname({ locale, href: "/calendar" });
+    const thisMonth = currentMonth(now, CLUB_TIME_ZONE);
+    const monthHref = (ym: YearMonth) => calendarAddress(basePath, { view: { kind: "month", month: ym }, layout: "grid", query, thisMonth });
     const months = Array.from({ length: 12 }, (_, i) => ({ year: view.year, month: i + 1 })).filter((ym) => byMonth.has(monthParam(ym)));
     return (
       // The streamed swap settles rather than snapping; static for reduced motion (§166).
@@ -190,8 +193,8 @@ export default async function EventCalendar({
                 >
                   <Stack direction="row" spacing={1} sx={{ alignItems: "center", px: 1.5, bgcolor: "action.hover", borderBottom: 1, borderColor: "divider" }}>
                     <Typography component="h3" variant="h3" sx={{ fontSize: "1rem", fontWeight: 600, textTransform: "capitalize" }}>
-                      {/* `?month=` is the calendar's live twin, rendered per request: twelve prefetches here would be twelve functions (§549). */}
-                      <Link href={{ pathname, query: { ...query, month: monthParam(ym) } }} prefetch={false} style={{ color: "inherit", textDecoration: "none", minHeight: 44, display: "inline-flex", alignItems: "center" }}>
+                      {/* The month's own path (§NNN): a static page, but a cold one is a render, so twelve prefetches here could be twelve functions (§549). */}
+                      <Link href={monthHref(ym)} prefetch={false} style={{ color: "inherit", textDecoration: "none", minHeight: 44, display: "inline-flex", alignItems: "center" }}>
                         {monthNames[ym.month - 1]}
                       </Link>
                     </Typography>

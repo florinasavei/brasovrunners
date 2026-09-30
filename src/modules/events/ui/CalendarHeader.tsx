@@ -3,10 +3,12 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import ChipLink from "@/shared/ui/ChipLink";
-import { getPathname, Link } from "@/i18n/navigation";
+import Link from "next/link";
+import { getPathname } from "@/i18n/navigation";
 import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import { DENSITY } from "@/theme/density";
-import { monthParam, shiftMonth, type YearMonth, yearsAround } from "../domain/calendar";
+import { currentMonth, shiftMonth, type YearMonth, yearsAround } from "../domain/calendar";
+import { calendarAddress } from "../domain/calendar-path";
 import CalendarPicker from "./CalendarPicker";
 import CalendarStepLink from "./CalendarStepLink";
 import type { CalendarLayout, CalendarView } from "./EventCalendar";
@@ -29,26 +31,31 @@ import type { CalendarLayout, CalendarView } from "./EventCalendar";
 /**
  * Where the two arrows go: the period before and the period after, keeping every filter and the
  * layout. One function, because the swipe on a touch screen (`CalendarSwipe`, §475) must go
- * exactly where the arrows go.
+ * exactly where the arrows go. The period is the address's path (`/ro/calendar/2026-10`, §NNN),
+ * never its query: a `?month=` on the static calendar is what Next's router answered from the bare
+ * page's prefetched copy, so the arrows changed the address and left September on screen.
  */
 export function calendarStepHrefs({
   view,
+  layout = "grid",
   query,
   locale,
-  pathname,
+  now,
 }: {
   view: CalendarView;
+  layout?: CalendarLayout;
   query: Record<string, string | string[]>;
   locale: "ro" | "en";
-  pathname: "/calendar" | "/events";
+  now: Date;
 }): { previous: string; next: string } {
+  const basePath = getPathname({ locale, href: "/calendar" });
+  const thisMonth = currentMonth(now, CLUB_TIME_ZONE);
   const step = (by: -1 | 1) =>
-    getPathname({
-      locale,
-      href: {
-        pathname,
-        query: { ...query, ...(view.kind === "month" ? { month: monthParam(shiftMonth(view.month, by)) } : { year: String(view.year + by) }) },
-      },
+    calendarAddress(basePath, {
+      view: view.kind === "month" ? { kind: "month", month: shiftMonth(view.month, by) } : { kind: "year", year: view.year + by },
+      layout,
+      query,
+      thisMonth,
     });
   return { previous: step(-1), next: step(1) };
 }
@@ -74,13 +81,10 @@ export default async function CalendarHeader({
   now,
   query = {},
   layout = "grid",
-  pathname = "/calendar",
 }: {
   view: CalendarView;
   now: Date;
-  /** The page the calendar is on (§251): every control links back to it, never to /events. */
-  pathname?: "/calendar" | "/events";
-  /** Other query parameters the month links keep — the filters (§89, §413; a group ticked twice is an array), the layout (§137). */
+  /** What the period links keep — the filters (§89, §413; a group ticked twice is an array). The period and the layout are the path's (§NNN). */
   query?: Record<string, string | string[]>;
   layout?: CalendarLayout;
 }) {
@@ -94,13 +98,12 @@ export default async function CalendarHeader({
     view.kind === "month"
       ? format.dateTime(anchor, { timeZone: "UTC", month: "long", year: "numeric" })
       : String(view.year);
-  const basePath = getPathname({ locale, href: pathname });
-  const href = (params: Record<string, string>, drop?: string) => {
-    const merged: Record<string, string | string[]> = { ...query, ...params };
-    if (drop) delete merged[drop];
-    return getPathname({ locale, href: { pathname, query: merged } });
-  };
-  const { previous: previousHref, next: nextHref } = calendarStepHrefs({ view, query, locale, pathname });
+  // Every control is an address on the calendar's own path (§251, §NNN): the period in the path,
+  // the filters in the query.
+  const basePath = getPathname({ locale, href: "/calendar" });
+  const thisMonth = currentMonth(now, CLUB_TIME_ZONE);
+  const href = (period: CalendarView, periodLayout: CalendarLayout) => calendarAddress(basePath, { view: period, layout: periodLayout, query, thisMonth });
+  const { previous: previousHref, next: nextHref } = calendarStepHrefs({ view, layout, query, locale, now });
 
   // The months from any year, in the reader's language.
   const monthNames = Array.from({ length: 12 }, (_, i) =>
@@ -124,6 +127,8 @@ export default async function CalendarHeader({
           basePath={basePath}
           query={query}
           view={view.kind}
+          layout={layout}
+          thisMonth={thisMonth}
           year={month.year}
           month={month.month}
           years={yearsAround(now, CLUB_TIME_ZONE)}
@@ -132,7 +137,7 @@ export default async function CalendarHeader({
         />
         <Stack direction="row" spacing={{ xs: 0, sm: 0.5 }} sx={{ alignItems: "center", flexShrink: 0 }}>
           <CalendarStepLink href={previousHref} label={view.kind === "month" ? t("calendar.previous") : t("calendar.previousYear")} direction="previous" />
-          <Link href={{ pathname, query }} prefetch={false} style={{ fontSize: "0.875rem", minHeight: 44, display: "inline-flex", alignItems: "center" }}>
+          <Link href={href({ kind: "month", month: thisMonth }, layout)} prefetch={false} style={{ fontSize: "0.875rem", minHeight: 44, display: "inline-flex", alignItems: "center" }}>
             {t("calendar.today")}
           </Link>
           <CalendarStepLink href={nextHref} label={view.kind === "month" ? t("calendar.next") : t("calendar.nextYear")} direction="next" />
@@ -142,8 +147,8 @@ export default async function CalendarHeader({
         <Box data-testid="calendar-chip-row" sx={{ display: "flex", alignItems: "center", flexWrap: "nowrap", columnGap: 1 }}>
         {/* The view: one month, or the whole year — small pills in 44px links (§158). */}
         <Stack direction="row" spacing={0.5} role="group" aria-label={`${t("calendar.viewMonth")} / ${t("calendar.viewYear")}`}>
-          <ChipLink href={href({ month: monthParam(month) })} label={t("calendar.viewMonth")} active={view.kind === "month"} current={view.kind === "month" ? "page" : undefined} />
-          <ChipLink href={href({ year: String(month.year) })} label={t("calendar.viewYear")} active={view.kind === "year"} current={view.kind === "year" ? "page" : undefined} />
+          <ChipLink href={href({ kind: "month", month }, layout)} label={t("calendar.viewMonth")} active={view.kind === "month"} current={view.kind === "month" ? "page" : undefined} />
+          <ChipLink href={href({ kind: "year", year: month.year }, "grid")} label={t("calendar.viewYear")} active={view.kind === "year"} current={view.kind === "year" ? "page" : undefined} />
         </Stack>
         {/* The layout, for a month (§137): the grid, or the list a phone used to get by default.
             A rule between the two groups (§175; the owner: "I need a separator here"): "month
@@ -155,8 +160,8 @@ export default async function CalendarHeader({
         )}
         {view.kind === "month" && (
           <Stack direction="row" spacing={0.5} role="group" aria-label={`${t("calendar.layoutGrid")} / ${t("calendar.layoutList")}`}>
-            <ChipLink href={href({}, "view")} label={t("calendar.layoutGrid")} active={layout === "grid"} current={layout === "grid" ? "page" : undefined} />
-            <ChipLink href={href({ view: "list" })} label={t("calendar.layoutList")} active={layout === "list"} current={layout === "list" ? "page" : undefined} />
+            <ChipLink href={href(view, "grid")} label={t("calendar.layoutGrid")} active={layout === "grid"} current={layout === "grid" ? "page" : undefined} />
+            <ChipLink href={href(view, "list")} label={t("calendar.layoutList")} active={layout === "list"} current={layout === "list" ? "page" : undefined} />
           </Stack>
         )}
         </Box>

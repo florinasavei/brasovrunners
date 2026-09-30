@@ -148,7 +148,9 @@ test.describe("BR-REQ-041-01 the listing's filters are one collapsed button", ()
     await expect(panel(page).locator("summary")).toHaveText("Filtre (1)");
     // The month and year links keep the filter; the form keeps the year.
     await expect(page.getByRole("link", { name: "Lună", exact: true })).toHaveAttribute("href", /type=RACE/);
-    await expect(panel(page).locator('form input[type="hidden"][name="year"]')).toHaveValue(String(year));
+    // The old `?year=` was sent on to the year's own path (§NNN), and the form goes back to it.
+    await expect(page).toHaveURL(new RegExp(`/ro/calendar/${year}\\?type=RACE$`));
+    await expect(panel(page).locator("form")).toHaveAttribute("action", `/ro/calendar/${year}`);
   });
 });
 
@@ -232,8 +234,8 @@ test.describe("BR-REQ-041-01 the filters work with no script at all", () => {
       await fold.getByRole("checkbox", { name: "Concurs", exact: true }).check();
       await fold.getByRole("button", { name: "Aplică", exact: true }).click();
 
-      // The form kept the year it was on, and the year is narrowed to races.
-      await expect(page).toHaveURL(new RegExp(`/ro/calendar\\?year=${year}&type=RACE$`));
+      // The form kept the year it was on — its own path since §NNN — and the year is narrowed to races.
+      await expect(page).toHaveURL(new RegExp(`/ro/calendar/${year}\\?type=RACE$`));
       await expect(page.locator(`[aria-label*="${RACE}"]`).first()).toBeVisible();
       if (intervalsUnfiltered > 0) await expect(page.locator(`[aria-label*="${INTERVALS}"]`)).toHaveCount(0);
       await expect(panel(page).locator("summary")).toHaveText("Filtre (1)");
