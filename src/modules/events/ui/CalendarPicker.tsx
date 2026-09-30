@@ -4,6 +4,8 @@ import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import { useRouter } from "next/navigation";
 import { DENSITY } from "@/theme/density";
+import type { YearMonth } from "../domain/calendar";
+import { calendarAddress, type CalendarLayoutName, type CalendarPeriod } from "../domain/calendar-path";
 
 /*
   On a phone the two selects share one row with ‹ Azi › (§487): they take what the row leaves
@@ -38,17 +40,23 @@ export default function CalendarPicker({
   basePath,
   query,
   view,
+  layout = "grid",
+  thisMonth,
   year,
   month,
   years,
   monthNames,
   labels,
 }: {
-  /** The listing's own localized path, such as `/ro/evenimente`. */
+  /** The calendar's own localized path, such as `/ro/calendar`. */
   basePath: string;
   /** The other query parameters the address keeps — the filters (a group ticked twice is an array, §413). */
   query: Record<string, string | string[]>;
   view: "month" | "year";
+  /** The month's layout, kept by a change of month (§137). */
+  layout?: CalendarLayoutName;
+  /** This month in Brașov, as the server read it: the one month whose grid is the bare calendar. */
+  thisMonth: YearMonth;
   year: number;
   /** 1–12. */
   month: number;
@@ -58,12 +66,10 @@ export default function CalendarPicker({
   labels: { month: string; year: string };
 }) {
   const router = useRouter();
+  // The period is the path's (§NNN): the same address the arrows build, from the same function.
   const go = (next: { year: number; month: number }) => {
-    const params = new URLSearchParams();
-    for (const [name, value] of Object.entries(query)) for (const one of Array.isArray(value) ? value : [value]) params.append(name, one);
-    if (view === "year") params.set("year", String(next.year));
-    else params.set("month", `${next.year}-${String(next.month).padStart(2, "0")}`);
-    router.push(`${basePath}?${params.toString()}#calendar`);
+    const period: CalendarPeriod = view === "year" ? { kind: "year", year: next.year } : { kind: "month", month: next };
+    router.push(`${calendarAddress(basePath, { view: period, layout, query, thisMonth })}#calendar`);
   };
 
   const select = { select: { native: true }, inputLabel: { shrink: true } } as const;

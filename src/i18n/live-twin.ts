@@ -10,8 +10,9 @@ import { PREFETCHED_PATHNAMES } from "./prefetch";
  * they show depend on the request instead, and those requests go to a twin of the same page,
  * rendered per request exactly as every public page was before (`app/[locale]/live/…`):
  *
- * - **the address's own question** — the filters (`?type=`, `?surface=`, … §413), the calendar's
- *   month or year and layout (`?month=`, `?year=`, `?view=` §116, §137), an event page's start-list
+ * - **the address's own question** — the filters (`?type=`, `?surface=`, … §413; the calendar's
+ *   month, year and layout are its path since §NNN, `/ro/calendar/2026-10`, and the old `?month=`,
+ *   `?year=`, `?view=` are redirected there by the proxy before this is asked), an event page's start-list
  *   page (`?lista=` §250), the interest box's outcome (`?interest=`, `?since=` §146) and the
  *   signer's own link (`?declaratie=` §523). A query key the page does not read — a share's
  *   `fbclid`, a campaign's `utm_*` — changes nothing on the page, so it stays static;
@@ -59,12 +60,17 @@ type Twin = { pattern: RegExp; signedIn: boolean };
 const TWINS: readonly Twin[] = [
   { pattern: /^\/(ro|en)\/events$/, signedIn: false },
   { pattern: /^\/(ro|en)\/calendar$/, signedIn: false },
+  // A period's own path (`/ro/calendar/2026-10`, §NNN): static too, and a filter on it is its twin.
+  { pattern: /^\/(ro|en)\/calendar\/.+$/, signedIn: false },
   { pattern: /^\/(ro|en)\/events\/[^/]+$/, signedIn: true },
 ];
 
-/** The static public pages' internal paths (`/ro/events/crosul`), one pattern per route of `PREFETCHED_PATHNAMES`. */
+/**
+ * The static public pages' internal paths (`/ro/events/crosul`), one pattern per route of
+ * `PREFETCHED_PATHNAMES`: a `[slug]` is one segment, a catch-all `[...period]` one or more.
+ */
 const STATIC_PAGES: readonly RegExp[] = [...PREFETCHED_PATHNAMES].map(
-  (pathname) => new RegExp(`^/(ro|en)${pathname.replace(/\[[^\]]+\]/g, "[^/]+")}$`),
+  (pathname) => new RegExp(`^/(ro|en)${pathname.replace(/\[\.\.\.[^\]]+\]/g, ".+").replace(/\[[^\]]+\]/g, "[^/]+")}$`),
 );
 
 /**
