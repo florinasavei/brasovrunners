@@ -71,6 +71,8 @@ import {
 } from "@/modules/registrations/repository";
 import { readPublicPlaces } from "@/modules/registrations/service";
 import { familyRegistrationOpen } from "@/modules/registrations/family-gate";
+import { readAddressCap } from "@/modules/registrations/address-cap";
+import { type AddressCap, DEFAULT_ADDRESS_CAP } from "@/modules/registrations/domain/address-cap";
 import { EXPECTED_MIGRATION } from "@/db/schema-version";
 import { turnstileSiteKey } from "@/modules/registrations/turnstile";
 import { env } from "@/shared/config/env";
@@ -720,6 +722,22 @@ export async function cachedFamilyRegistrationOpen(): Promise<boolean> {
     return await publicRead(["registrations.family-open", EXPECTED_MIGRATION.tag ?? ""], ["settings"], () => familyRegistrationOpen(getDb()));
   } catch {
     return false;
+  }
+}
+
+/**
+ * The club's limit per address (§389, §NNN; the owner, 2026-09-30: up to four people on one email
+ * address, and the limit said), for the public pages that state it — under the form's address box,
+ * on the family's screens, on «Înscrierile mele» and in the terms — from the data cache, so a
+ * visitor reading "cel mult 4 persoane" wakes nothing. A save expires it (`updateAddressCap`,
+ * the `settings` tag). A sentence about the rule, never about any address (§39). When the database
+ * cannot answer, the default: a page never fails over a sentence.
+ */
+export async function cachedAddressCap(): Promise<AddressCap> {
+  try {
+    return await publicRead(["settings.address-cap"], ["settings"], async () => (await readAddressCap(getDb())).cap);
+  } catch {
+    return { ...DEFAULT_ADDRESS_CAP };
   }
 }
 

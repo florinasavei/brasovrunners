@@ -1,6 +1,7 @@
-import type { RegistrationStatus } from "@/db/schema/registrations";
+import type { RegistrationSex, RegistrationStatus } from "@/db/schema/registrations";
 import { type AddressCap, addressHasRoom } from "./address-cap";
 import { sameRunner } from "./name-key";
+import { isSexChoice } from "./sex";
 import { isActiveStatus } from "./state-machine";
 
 /**
@@ -40,10 +41,25 @@ export const ANOTHER_LINK_INVALID = "anotherLink";
  */
 export const ANOTHER_PERSON_PARAM = "another";
 
-export type FamilyRow = { id: string; status: RegistrationStatus; registeredName: string; birthDate: string | null };
+export type FamilyRow = { id: string; status: RegistrationStatus; registeredName: string; birthDate: string | null; sex?: RegistrationSex | null };
 
-/** The person a submission names: the legal name (`composeLegalName`) and the birth date, as posted. */
-export type PostedPerson = { legalName: string; birthDate?: string | null };
+/** The person a submission names: the legal name (`composeLegalName`), the birth date and the sex, as posted. */
+export type PostedPerson = { legalName: string; birthDate?: string | null; sex?: RegistrationSex | null };
+
+/** A birth date as the calendar day it is, `YYYY-MM-DD`, or null when there is none to compare. */
+function dayOf(birthDate: string | null | undefined): string | null {
+  const day = birthDate ? birthDate.slice(0, 10) : "";
+  return day === "" ? null : day;
+}
+
+/**
+ * Two answers to «Sex» that say two different people (§NNN): both given — «Feminin» or «Masculin»
+ * (`isSexChoice`) — and not the same. A row stored without one (a staff entry, the retired
+ * `UNSPECIFIED`) or a form without one says nothing either way.
+ */
+export function sexesDiffer(a: RegistrationSex | null | undefined, b: RegistrationSex | null | undefined): boolean {
+  return isSexChoice(a) && isSexChoice(b) && a !== b;
+}
 
 /**
  * How the posted person compares with one registration on the address (§446; the owner,
@@ -58,24 +74,49 @@ export type PostedPerson = { legalName: string; birthDate?: string | null };
  *
  * `same`: both agree — the same person again. `different`: both differ — somebody else, on purpose.
  * `partial`: one agrees and the other does not — a slip, never a second registration.
+ *
+ * **The sex, beside the birth date (§NNN, amending §446 and §493; the owner, 2026-09-30: «asta cu
+ * înscrierea cu același mail trebe să devină top prio!»).** Another name on a registered person's
+ * birth date was always a slip — the owner's rule read literally, which §446 kept for twins. But a
+ * slip changes one box: a mistyped name, or a birth date the browser filled in by itself
+ * (`autocomplete="bday"` fills the owner of the device's own). Another name **and** the other sex
+ * is two boxes changed on purpose, so it is another person — a brother and a sister born on the
+ * same day included. The same sex, or a sex one side does not have, leaves the day to decide, as
+ * before: same-sex twins still hear how they are registered (§493).
  */
 export type PersonMatch = "same" | "partial" | "different";
 
-export function comparePerson(row: Pick<FamilyRow, "registeredName" | "birthDate">, posted: PostedPerson): PersonMatch {
+export function comparePerson(row: Pick<FamilyRow, "registeredName" | "birthDate" | "sex">, posted: PostedPerson): PersonMatch {
   const nameDiffers = !sameRunner(row.registeredName, posted.legalName);
-  const posting = posted.birthDate ? posted.birthDate.slice(0, 10) : null;
-  const dateDiffers = posting !== null && (row.birthDate === null || row.birthDate.slice(0, 10) !== posting);
-  if (nameDiffers && dateDiffers) return "different";
+  const posting = dayOf(posted.birthDate);
+  const dateDiffers = posting !== null && dayOf(row.birthDate) !== posting;
+  /*
+    The sex weighs only beside a posted birth date (§NNN, the review's nit): it is the second box
+    changed on a shared day. With no date posted there is no day to share, and the sex alone never
+    makes another person — the form is a slip, as before.
+  */
+  const sexDecides = posting !== null && sexesDiffer(row.sex, posted.sex);
+  if (nameDiffers && (dateDiffers || sexDecides)) return "different";
   if (!nameDiffers && !dateDiffers) return "same";
   return "partial";
 }
 
 /**
- * The rule the owner asked for, whole: the posted person is another person than **every**
- * registration given — the name differs from each one's, and so does the birth date. No rows, no
- * one to be the same as.
+ * Whether the posted birth date is this registration's own day: a real day on both sides, and the
+ * same one. What the twins' sentence (§493) needs to be true before the email says it — a form
+ * with no date to compare is never "born on the same day" as anybody.
  */
-export function isDifferentPerson(posted: PostedPerson, rows: readonly Pick<FamilyRow, "registeredName" | "birthDate">[]): boolean {
+export function sameBirthDay(row: Pick<FamilyRow, "birthDate">, posted: PostedPerson): boolean {
+  const posting = dayOf(posted.birthDate);
+  return posting !== null && dayOf(row.birthDate) === posting;
+}
+
+/**
+ * The rule the owner asked for, whole: the posted person is another person than **every**
+ * registration given — the name differs from each one's, and so does the birth date (or, on a
+ * shared birth date, the sex, §NNN). No rows, no one to be the same as.
+ */
+export function isDifferentPerson(posted: PostedPerson, rows: readonly Pick<FamilyRow, "registeredName" | "birthDate" | "sex">[]): boolean {
   return rows.every((row) => comparePerson(row, posted) === "different");
 }
 
@@ -118,6 +159,8 @@ export function decideSubmission<R extends FamilyRow>(input: {
   legalName: string;
   /** The runner's birth date as submitted; absent only on a staff entry that was not told it. */
   birthDate?: string | null;
+  /** The runner's sex as submitted (§NNN): on a registered birth date, another name and the other sex are another person. */
+  sex?: RegistrationSex | null;
   via: "form" | "link" | "staff";
   /**
    * Whether the schema allows a second runner on an address (`family-gate.ts`): false until the
@@ -126,8 +169,8 @@ export function decideSubmission<R extends FamilyRow>(input: {
   familyOpen: boolean;
   cap: AddressCap;
 }): SubmissionDecision<R> {
-  const { rows, legalName, birthDate, via, familyOpen, cap } = input;
-  const posted: PostedPerson = { legalName, birthDate };
+  const { rows, legalName, birthDate, sex, via, familyOpen, cap } = input;
+  const posted: PostedPerson = { legalName, birthDate, sex };
   const active = rows.filter((row) => isActiveStatus(row.status));
 
   if (!familyOpen) {
@@ -168,8 +211,9 @@ export function decideSubmission<R extends FamilyRow>(input: {
       person at the desk has no such doubt — they typed the name of somebody standing in front of
       them, or relayed a request (the tick `createRegistrationByStaff` requires). So the name alone
       decides here: the same runner again is refused, anybody else is registered, within the club's
-      limit per address. It is also the one way twins reach one address: the public form reads the
-      second as a slip of the first, by the birth date they share (§446).
+      limit per address. It is also the one way twins of one sex reach one address: the public form
+      reads the second as a slip of the first, by the birth date they share (§446; a brother and a
+      sister are two people there too since §NNN).
     */
     if (active.some((row) => sameRunner(row.registeredName, legalName))) return { kind: "refuseAlreadyRegistered" };
     if (!addressHasRoom(active.length, cap)) return { kind: "refuseAtCap" };
@@ -194,8 +238,11 @@ export function decideSubmission<R extends FamilyRow>(input: {
       Another name on a registered birth date (§493): possibly twins — whom the owner's rule reads
       as a slip, and whom "send the form with that person's name and birth date" cannot help, since
       that is what they did. The re-sent message says what can: another address, or the club.
+      Only on a birth date that truly is the registration's own day (§NNN): a form with no date to
+      compare is never told it names a twin.
     */
-    return byName ? { kind: "resend", registration: partial, notAnotherPerson: true } : { kind: "resend", registration: partial, notAnotherPerson: true, sameBirthDate: true };
+    if (byName || !sameBirthDay(partial, posted)) return { kind: "resend", registration: partial, notAnotherPerson: true };
+    return { kind: "resend", registration: partial, notAnotherPerson: true, sameBirthDate: true };
   }
 
   if (via === "form") {

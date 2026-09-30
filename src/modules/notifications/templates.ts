@@ -15,7 +15,8 @@ import { daysPhrase, durationPhrase, hoursPhrase, leadPhrase, minutesPhrase } fr
 import { RETENTION_PERIODS } from "@/modules/jobs/domain/retention-periods";
 import { getPathname } from "@/i18n/navigation";
 import { countForm } from "@/i18n/count-form";
-import { ADDRESS_CAP_RULE } from "@/modules/registrations/domain/address-cap";
+// The limit per address in the words every page states it with (§389, §NNN).
+import { peoplePhrase } from "@/modules/registrations/domain/address-cap";
 import { NO_RACE_NUMBER } from "@/modules/registrations/domain/qr-identity";
 import { env } from "@/shared/config/env";
 import { CLUB_LOCALITY } from "@/modules/events/domain/place";
@@ -2237,19 +2238,6 @@ function newsletterLines(messageType: EmailMessageType, locale: EmailLocale, dat
     ...(data.newsletterTopics && (confirming || messageType === "NEW_EVENT_ALERT") ? [words.topics(data.newsletterTopics)] : []),
     ...(confirming ? [words.link(data.confirmationHours ?? hoursPhrase(locale, DEFAULT_DEADLINES.confirmationHours))] : []),
   ];
-}
-
-/**
- * "4 persoane", "o persoană" / "4 people", "one person" (§389): how many runners one address may
- * register, as the words the two sentences about the limit say it — the number is the club's
- * setting, carried on the row, never a literal here. `countForm`'s Romanian forms (§341); the
- * limit's bounds (1–10) never reach the "de" form, and it is spelled for any number all the same.
- */
-function peoplePhrase(locale: EmailLocale, count: number | undefined): string {
-  const n = count ?? ADDRESS_CAP_RULE.default;
-  const form = countForm(n, locale);
-  if (locale === "ro") return form === "one" ? "o persoană" : form === "few" ? `${n} persoane` : `${n} de persoane`;
-  return form === "one" ? "one person" : `${n} people`;
 }
 
 /** "12 participanți", "un participant" / "12 participants", "one participant" — a bulk copy's count (§419). */

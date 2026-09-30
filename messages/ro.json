@@ -2225,7 +2225,8 @@
         "seriesRhythm": "Doar în declarațiile alergărilor de grup: cât de des se repetă seria, citit din datele ei („în fiecare marți, la 18:30”)",
         "seriesPlace": "Doar în declarațiile alergărilor de grup: locul de plecare obișnuit al seriei",
         "promotionalMaterials": "Doar în nota de confidențialitate: bifa opțională pentru oferte și beneficii de la club și de la partenerii săi. Fără el în nota în vigoare, formularul nu o oferă",
-        "promotionalMaterialsShared": "Doar în nota de confidențialitate: ce date pot primi partenerii clubului de la cei care au bifat oferte și beneficii. Fără el în nota în vigoare, lista pentru sponsori e oprită"
+        "promotionalMaterialsShared": "Doar în nota de confidențialitate: ce date pot primi partenerii clubului de la cei care au bifat oferte și beneficii. Fără el în nota în vigoare, lista pentru sponsori e oprită",
+        "registrationsPerAddress": "Doar în termeni: câte persoane se pot înscrie cu aceeași adresă de email la un eveniment, cu unitatea („4 persoane”), din Setări → „Termene”"
       },
       "removeBlockedReferenced": "Nu se poate nici retrage, nici șterge definitiv: {signatures}, {events} și {acknowledgements} depind de ea. «Șterge» de pe rândul ei o scoate din listă.",
       "removeBlockedCurrent": "În vigoare acum — nu se poate nici retrage, nici șterge. Aprobă întâi versiunea următoare; apoi aceasta se poate scoate.",
@@ -5293,12 +5294,12 @@
               "title": "Înscrie a doua persoană pe aceeași adresă",
               "steps": [
                 "Prima persoană se înscrie cu formularul, ca oricine.",
-                "Formularul se trimite din nou cu aceeași adresă pentru o persoană diferită — alt nume și altă dată a nașterii decât ale fiecărei persoane deja înscrise. Încă nu se înscrie nimeni: pe ecran apare același „verifică-ți emailul” ca oricând, ca nimeni să nu afle din formular cine e înscris.",
+                "Formularul se trimite din nou cu aceeași adresă pentru o persoană diferită — alt nume și altă dată a nașterii decât ale fiecărei persoane deja înscrise, sau, pe data nașterii cuiva înscris, alt nume și celălalt sex (un frate și o soră născuți în aceeași zi). Încă nu se înscrie nimeni: pe ecran apare același „verifică-ți emailul” ca oricând, ca nimeni să nu afle din formular cine e înscris.",
                 "Cu «Da, încă o persoană» pe ecranul de după formular, fiecare formular următor rezervă pe loc locul persoanei. Adresa primește apoi un email pentru toți, cu un singur buton.",
                 "Adresa primește emailul „Înscrii încă o persoană?”, cu cine e deja înscris și cu persoana din formular, și un singur buton, «Confirm că înscriu altă persoană».",
                 "Pagina care se deschide arată din nou datele; pentru un adult cere o bifă (persoana își declară singură starea de sănătate la semnare). Confirmarea o înscrie direct — fără alt link de confirmare. Linkul e valabil {confirmation} și merge o singură dată; datele neconfirmate se șterg singure după aceea.",
-                "Dacă doar numele sau doar data nașterii diferă, nu se înscrie nimeni: adresa primește emailul înscrierii existente, cu o propoziție despre cum se înscrie altcineva.",
-                "Pe o adresă se pot înscrie cel mult {people} la un eveniment. La limită, emailul spune asta și nu mai are buton."
+                "Dacă doar numele sau doar data nașterii diferă — sau alt nume pe data cuiva înscris, de același sex —, nu se înscrie nimeni: adresa primește emailul înscrierii existente, cu o propoziție despre cum se înscrie altcineva.",
+                "Pe o adresă se pot înscrie cel mult {people} la un eveniment. Limita o spun formularul (sub adresă), ecranul «Da, încă o persoană» (câte persoane s-au trimis până acum, din limită), «Înscrierile mele» și termenii. La limită, emailul și ecranul o spun, iar emailul nu mai are buton."
               ]
             },
             {
@@ -6013,7 +6014,7 @@
       "tooFastNothingSent": "Nu am înregistrat nimic și nu ți-am trimis niciun email. Apasă „Trimite din nou înscrierea” — datele și bifele tale sunt încă aici.",
       "tooFastResend": "Trimite din nou înscrierea",
       "waitlistFullNothingSent": "Nu am înregistrat nimic și nu ți-am trimis niciun email. Ce ai completat a rămas în formular.",
-      "sittingAtCap": "Cei trimiși deja cu această adresă ating limita clubului pentru un eveniment. Pentru această persoană nu am înregistrat nimic: apasă „Gata” sau folosește altă adresă."
+      "sittingAtCap": "Cei trimiși deja cu această adresă ating limita clubului: cu aceeași adresă de email se pot înscrie cel mult {people} la un eveniment. Pentru această persoană nu am înregistrat nimic: apasă „Gata” sau folosește altă adresă."
     },
     "sections": {
       "about": "Despre tine",
@@ -6275,7 +6276,13 @@
       "placeWaitlist": "pe lista de așteptare, după confirmare",
       "reservedHelp": "Fiecare loc e rezervat din clipa în care trimiți formularul. Butonul din email le confirmă pe toate.",
       "reservationLapsed": "Locurile nu mai sunt rezervate. Confirmă adresa din email; dacă mai e loc, îl primești atunci.",
-      "addLink": "Înscriu încă o persoană cu această adresă"
+      "addLink": "Înscriu încă o persoană cu această adresă",
+      "count": {
+        "one": "{count} din o persoană cu această adresă",
+        "few": "{count} din {max} persoane cu această adresă",
+        "other": "{count} din {max} de persoane cu această adresă"
+      },
+      "atCap": "Ai ajuns la limită: cu aceeași adresă de email se pot înscrie cel mult {people} la un eveniment. Pentru încă o persoană, folosește altă adresă de email."
     },
     "membersAddressLabel": "Adresa contului tău de membru",
     "membersAddressHelp": "Te înscrii cu adresa contului. Un cont înscrie o singură persoană.",
@@ -6284,6 +6291,14 @@
       "help": "Poți renunța oricând din pagina înscrierii tale.",
       "sharedData": "prenumele, numele și adresa ta de e-mail",
       "shared": "Clubul le poate da partenerilor prenumele, numele și adresa ta."
+    },
+    "addressCap": {
+      "rule": "Cu aceeași adresă de email se pot înscrie cel mult {people} la un eveniment, de exemplu o familie. Fiecare își semnează singură declarația.",
+      "people": {
+        "one": "o persoană",
+        "few": "{count} persoane",
+        "other": "{count} de persoane"
+      }
     }
   },
   "Registrations": {
@@ -6496,7 +6511,12 @@
         "how": "Nu sunt încă înscriși: apasă butonul din emailul primit pentru ei. Până atunci nu li se ține niciun loc."
       },
       "family": "Familie",
-      "reservedUntil": "Loc rezervat până {until}. Confirmă adresa din email ca să-l păstrezi."
+      "reservedUntil": "Loc rezervat până {until}. Confirmă adresa din email ca să-l păstrezi.",
+      "perAddress": {
+        "one": "Cu această adresă, la acest eveniment: {count} din cel mult o persoană.",
+        "few": "Cu această adresă, la acest eveniment: {count} din cel mult {max} persoane.",
+        "other": "Cu această adresă, la acest eveniment: {count} din cel mult {max} de persoane."
+      }
     },
     "manage": {
       "title": "Gestionează înscrierea",

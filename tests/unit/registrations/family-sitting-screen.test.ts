@@ -44,7 +44,7 @@ const PEOPLE = [
   { name: "Ioana Pop", birthDate: "2010-07-11", waitlist: true },
 ];
 
-async function screen(now: Date): Promise<string> {
+async function screen(now: Date, cap: number | null = null): Promise<string> {
   const page = (await FamilySittingNext({
     email: "familia.pop@example.ro",
     names: PEOPLE.map((person) => person.name),
@@ -60,6 +60,7 @@ async function screen(now: Date): Promise<string> {
     continueAction: async () => undefined,
     releaseAction: async () => undefined,
     now,
+    cap,
   })) as ReactElement;
   const stream = await renderToReadableStream(
     createElement(NextIntlClientProvider, { locale, messages: catalogues[locale] } as unknown as ComponentProps<typeof NextIntlClientProvider>, page),
@@ -98,5 +99,37 @@ describe("BR-REQ-031-01 the sitting's screen past the sitting's deadline (§543)
     } finally {
       locale = "ro";
     }
+  });
+});
+
+describe("BR-REQ-032-03 the sitting's screen states the limit per address (§NNN)", () => {
+  const during = new Date(FIRST_FORM.getTime() + 20 * 60_000);
+
+  it("«3 din 4»: the people sent so far out of the limit, and «Da» still offered below it", async () => {
+    const html = await screen(during, 4);
+    expect(html).toContain("3 din 4 persoane cu această adresă");
+    expect(html).toContain('data-testid="family-sitting-add"');
+    expect(html).not.toContain('data-testid="family-sitting-at-cap"');
+  });
+
+  it("at the limit: the rule in place of «Da, încă o persoană», in both languages", async () => {
+    const html = await screen(during, 3);
+    expect(html).toContain("3 din 3 persoane cu această adresă");
+    expect(html).toContain("Ai ajuns la limită: cu aceeași adresă de email se pot înscrie cel mult 3 persoane la un eveniment.");
+    expect(html).not.toContain('data-testid="family-sitting-add"');
+    locale = "en";
+    try {
+      const english = await screen(during, 3);
+      expect(english).toContain("3 of 3 people on this address");
+      expect(english).toContain("You have reached the limit: one email address may register at most 3 people for an event.");
+    } finally {
+      locale = "ro";
+    }
+  });
+
+  it("says nothing about a limit it was not given", async () => {
+    const html = await screen(during);
+    expect(html).not.toContain('data-testid="family-sitting-count"');
+    expect(html).toContain('data-testid="family-sitting-add"');
   });
 });

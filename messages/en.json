@@ -2225,7 +2225,8 @@
         "seriesRhythm": "Only in the group-run declarations: how often the series repeats, read off its dates (“every Tuesday at 18:30”)",
         "seriesPlace": "Only in the group-run declarations: the series' usual starting place",
         "promotionalMaterials": "Only in the privacy notice: the optional box for offers and benefits from the club and its partners. Without it in the notice in force, the form does not offer it",
-        "promotionalMaterialsShared": "Only in the privacy notice: what data the club's partners may receive from those who ticked offers and benefits. Without it in the notice in force, the list for sponsors is off"
+        "promotionalMaterialsShared": "Only in the privacy notice: what data the club's partners may receive from those who ticked offers and benefits. Without it in the notice in force, the list for sponsors is off",
+        "registrationsPerAddress": "Terms only: how many people may register with the same email address for one event, with the unit (“4 people”), from Settings → “Deadlines”"
       },
       "removeBlockedReferenced": "Can neither be withdrawn nor deleted permanently: {signatures}, {events} and {acknowledgements} depend on it. “Delete” on its row takes it off the list.",
       "removeBlockedCurrent": "In force right now — it can neither be withdrawn nor deleted. Approve its successor first; then this one can go.",
@@ -5293,12 +5294,12 @@
               "title": "Register a second person on the same address",
               "steps": [
                 "The first person registers with the form, like anyone.",
-                "The form is sent again with the same address for a different person — another name and another birth date than every person already registered. Nobody is registered yet: the screen shows the same “check your email” as always, so nobody learns from the form who is registered.",
+                "The form is sent again with the same address for a different person — another name and another birth date than every person already registered, or, on a registered person's birth date, another name and the other sex (a brother and a sister born on the same day). Nobody is registered yet: the screen shows the same “check your email” as always, so nobody learns from the form who is registered.",
                 "With «Yes, one more person» on the screen after the form, each next form reserves that person’s place at once. The address then gets one email for everybody, with one button.",
                 "The address gets the email “Registering one more person?”, with who is already registered and the person from the form, and one button, «I confirm I am registering another person».",
                 "The page it opens shows the details again; for an adult it asks one tick (the person declares their own health when they sign). The confirmation registers them straight away — no second confirmation link. The link is valid for {confirmation} and works once; unconfirmed details are deleted by themselves after that.",
-                "If only the name or only the birth date differs, nobody is registered: the address gets the existing registration's email, with one sentence on how to register someone else.",
-                "One address may register at most {people} for an event. At the limit, the email says so and carries no button."
+                "If only the name or only the birth date differs — or another name on a registered person's birth date, of the same sex — nobody is registered: the address gets the existing registration's email, with one sentence on how to register someone else.",
+                "One address may register at most {people} for an event. The form (under the address), the «Yes, one more person» screen (how many people were sent so far, out of the limit), «My registrations» and the terms all say the limit. At the limit, the email and the screen say so, and the email carries no button."
               ]
             },
             {
@@ -6013,7 +6014,7 @@
       "tooFastNothingSent": "Nothing was registered and no email was sent to you. Press “Send the registration again” — your answers and your ticks are still here.",
       "tooFastResend": "Send the registration again",
       "waitlistFullNothingSent": "Nothing was registered and no email was sent. What you filled in is still in the form.",
-      "sittingAtCap": "The people already sent with this address reach the club's limit for one event. Nothing was registered for this person: press “Done” or use another address."
+      "sittingAtCap": "The people already sent with this address reach the club's limit: one email address may register at most {people} for an event. Nothing was registered for this person: press “Done” or use another address."
     },
     "sections": {
       "about": "About you",
@@ -6275,7 +6276,13 @@
       "placeWaitlist": "on the waiting list, once confirmed",
       "reservedHelp": "Each place is reserved the moment you send its form. The button in the email confirms them all.",
       "reservationLapsed": "The places are no longer reserved. Confirm the address from the email; if there is still room, you get it then.",
-      "addLink": "Register one more person with this address"
+      "addLink": "Register one more person with this address",
+      "count": {
+        "one": "{count} of one person on this address",
+        "few": "{count} of {max} people on this address",
+        "other": "{count} of {max} people on this address"
+      },
+      "atCap": "You have reached the limit: one email address may register at most {people} for an event. For one more person, use another email address."
     },
     "membersAddressLabel": "Your member account's address",
     "membersAddressHelp": "You register with your account's address. One account registers one person.",
@@ -6284,6 +6291,14 @@
       "help": "You can opt out any time from your registration page.",
       "sharedData": "your first name, last name and email address",
       "shared": "The club may give its partners your first name, last name and address."
+    },
+    "addressCap": {
+      "rule": "One email address may register at most {people} for an event, a family for instance. Each person signs their own declaration.",
+      "people": {
+        "one": "one person",
+        "few": "{count} people",
+        "other": "{count} people"
+      }
     }
   },
   "Registrations": {
@@ -6496,7 +6511,12 @@
         "how": "They are not registered yet: press the button in the email you got for them. Until then no place is held for them."
       },
       "family": "Family",
-      "reservedUntil": "Place reserved until {until}. Confirm the address from the email to keep it."
+      "reservedUntil": "Place reserved until {until}. Confirm the address from the email to keep it.",
+      "perAddress": {
+        "one": "On this address, for this event: {count} of at most one person.",
+        "few": "On this address, for this event: {count} of at most {max} people.",
+        "other": "On this address, for this event: {count} of at most {max} people."
+      }
     },
     "manage": {
       "title": "Manage your registration",

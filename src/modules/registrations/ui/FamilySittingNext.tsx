@@ -50,6 +50,14 @@ type Props = {
   releaseAction: (form: FormData) => Promise<void>;
   /** The instant the screen is read at (§543): the deadline is compared with it. The request's clock; a test passes its own. */
   now?: Date;
+  /**
+   * The club's limit per address (§389, §NNN; the owner, 2026-09-30: up to four people on one email
+   * address, and the limit said), from the data cache: «2 din 4 persoane cu această adresă» under the
+   * names, and at the limit the rule in place of «Da, încă o persoană». The count is this browser's own
+   * forms — what the server counts for a sitting too (`service.ts`, `SITTING_AT_CAP`) — never the
+   * address's (§39). Absent: nothing is said about it.
+   */
+  cap?: number | null;
 };
 
 /**
@@ -87,6 +95,7 @@ export default async function FamilySittingNext({
   continueAction,
   releaseAction,
   now = new Date(),
+  cap = null,
 }: Props) {
   const t = await getTranslations("Registration");
   const windowWords = minutesPhrase(locale, windowMinutes ?? (await cachedDeadlines()).familySittingMinutes);
@@ -122,6 +131,9 @@ export default async function FamilySittingNext({
         ? t("sitting.markerPlaces", { names: facts.firstNames.join(", "), places: places.join(", ") })
         : t("sitting.marker", { names: facts.firstNames.join(", ") })
       : null;
+  // «N din 4» (§NNN): the people this browser sent, out of the limit; at it, «Da» gives way to the rule.
+  const capCount = cap !== null && cap > 0 ? t(`sitting.count.${countForm(cap, locale)}`, { count: Math.min(names.length, cap), max: cap }) : null;
+  const atCap = cap !== null && cap > 0 && names.length >= cap;
   const placeOf = (index: number): string | null => {
     const person = until ? reservation?.people[index] : undefined;
     if (!person) return null;
@@ -200,6 +212,11 @@ export default async function FamilySittingNext({
             </Typography>
           ))}
         </Box>
+        {capCount && (
+          <Typography variant="body2" sx={{ mt: 1, fontWeight: 700 }} data-testid="family-sitting-count">
+            {capCount}
+          </Typography>
+        )}
         {places.length > 0 && (
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
             {t("sitting.reservedHelp")}
@@ -221,13 +238,23 @@ export default async function FamilySittingNext({
             A press, not a link (§519): «Da» starts the window again — the server's row, its held
             messages and this browser's half together — so it never lapses while the next form is open.
           */}
-          <form action={continueAction} data-testid="family-sitting-add">
-            <input type="hidden" name="locale" value={locale} />
-            <input type="hidden" name="slug" value={slug} />
-            <SubmitButton label={t("sitting.add")} pendingLabel={t("sitting.addPending")} variant="outlined" size="large" fullWidth>
-              <PersonAddIcon />
-            </SubmitButton>
-          </form>
+          {/*
+            At the limit (§NNN) the next form would be refused (`SITTING_AT_CAP`): the rule, said here,
+            instead of a press that can only lead to the refusal.
+          */}
+          {atCap ? (
+            <Alert severity="info" data-testid="family-sitting-at-cap">
+              {t("sitting.atCap", { people: t(`addressCap.people.${countForm(cap ?? 0, locale)}`, { count: cap ?? 0 }) })}
+            </Alert>
+          ) : (
+            <form action={continueAction} data-testid="family-sitting-add">
+              <input type="hidden" name="locale" value={locale} />
+              <input type="hidden" name="slug" value={slug} />
+              <SubmitButton label={t("sitting.add")} pendingLabel={t("sitting.addPending")} variant="outlined" size="large" fullWidth>
+                <PersonAddIcon />
+              </SubmitButton>
+            </form>
+          )}
           <form action={releaseAction} data-testid="family-sitting-done">
             <input type="hidden" name="locale" value={locale} />
             <input type="hidden" name="slug" value={slug} />

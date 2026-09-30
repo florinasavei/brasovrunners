@@ -26,7 +26,9 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound, unstable_rethrow } from "next/navigation";
 import { getDb } from "@/db/client";
 import {
+  cachedAddressCap,
   cachedCurrentApprovedDocument,
+  cachedFamilyRegistrationOpen,
   cachedListSocialsDisclosed,
   cachedListStatesDisclosed,
   cachedPromotionalMaterialsOffered,
@@ -86,6 +88,7 @@ import { readFamilySittingCookie } from "@/modules/registrations/family-sitting-
 import { CLUB_NAME, PAGE_WIDTH } from "@/theme/brand";
 import { env } from "@/shared/config/env";
 import { DENSITY } from "@/theme/density";
+import { countForm } from "@/i18n/count-form";
 
 type Props = {
   params: Promise<{ locale: string; slug: string }>;
@@ -205,6 +208,15 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   const afterForm = Boolean(submitted) && sent !== "1" ? afterFormScreen(sitting) : null;
   const sittingScreen = afterForm === "sitting";
   const familyForm = !submitted && family === "1" && sitting?.joined === true;
+  /*
+    The club's limit per address, said where a participant meets it (§389, §NNN; the owner,
+    2026-09-30: up to four people on one email address, and the limit said): under the address box,
+    on the family's screens, and in the refusal at the limit. A sentence about the rule, from the data
+    cache — never about this address (§39). Not on a members' event (one person per account, §552),
+    and only once the schema allows a family at all (`family-gate.ts`).
+  */
+  const [addressCap, familyOpen] = member ? [null, false] : await Promise.all([cachedAddressCap(), cachedFamilyRegistrationOpen()]);
+  const capMax = addressCap?.registrationsPerAddress ?? null;
   /*
     A link from an email sent before §446, which opened this form for another person on the address
     (§389). Retired: the email now carries one confirmation of the person the form named
@@ -383,6 +395,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
     }
   }
   const t = await getTranslations("Registration");
+  const capPeople = capMax === null ? "" : t(`addressCap.people.${countForm(capMax, locale)}`, { count: capMax });
+  const capRule = familyOpen && capMax !== null && capMax > 1 ? t("addressCap.rule", { people: capPeople }) : null;
   // The event page's own words for a place still to be announced (§328), one key for every surface.
   const tEvent = await getTranslations("Event");
   const legal = await getTranslations("Legal");
@@ -592,6 +606,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
           slug={slug}
           continueAction={continueFamilySittingAction}
           releaseAction={releaseFamilySittingAction}
+          // «N din 4» and, at the limit, the rule in place of «Da» (§NNN).
+          cap={familyOpen ? capMax : null}
         />
       ) : submitted ? (
         /*
@@ -706,7 +722,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 </>
               ) : sittingAtCap ? (
                 <Box component="span" data-testid="registration-sitting-at-cap">
-                  {t("errors.sittingAtCap")}
+                  {t("errors.sittingAtCap", { people: capPeople })}
                 </Box>
               ) : captchaFailed ? (
                 t("errors.captcha")
@@ -1058,8 +1074,15 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   <Typography variant="body2" color="text.secondary">
                     {t("sitting.addressHelp")}
                   </Typography>
+                  {/* How many so far, out of the limit (§NNN): the people this browser sent, and this one. */}
+                  {familyOpen && capMax !== null && (
+                    <Typography variant="body2" color="text.secondary" data-testid="address-cap-count">
+                      {t(`sitting.count.${countForm(capMax, locale)}`, { count: Math.min(sitting.people.length + 1, capMax), max: capMax })}
+                    </Typography>
+                  )}
                 </Box>
               ) : (
+              <>
               <EmailTwice
                 name="email"
                 confirmName="emailConfirm"
@@ -1080,6 +1103,16 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 error={invalid.has("email") || invalid.has("emailConfirm")}
                 helperText={invalid.has("email") || invalid.has("emailConfirm") ? t("errors.field") : undefined}
               />
+              {/*
+                The limit per address, under the box (§NNN, amending §546's "no help at rest" for this one
+                fact): the owner asked for it said, and the form is where a family starts.
+              */}
+              {capRule && (
+                <Typography variant="body2" color="text.secondary" data-testid="address-cap-rule">
+                  {capRule}
+                </Typography>
+              )}
+              </>
               )}
               {/* The country and the digits (§84): what is stored is one number a phone can dial. */}
               <PhoneField
