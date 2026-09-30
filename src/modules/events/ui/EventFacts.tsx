@@ -27,6 +27,7 @@ import { registrationState } from "../domain/registration-window";
 import { hasRouteDescription } from "../domain/route-section";
 import type { PublicEventPage } from "../repository";
 import { announcedDayInstant, datedOrNull } from "../domain/dated";
+import { whenTimes } from "../domain/when-times";
 import { GROUP_GAP, LINE_GAP, ROW_ICON_SX } from "./card-layout";
 import CardRegistration, { cardRegistrationLine } from "./CardRegistration";
 import { type PreviewDoor, readRegistrationDoor } from "./registration-door";
@@ -384,28 +385,34 @@ export default async function EventFacts({
           ]
         : [day];
     }
-    if (event.raceStartsAt) {
-      return [
-        day,
-        <>
-          {clock}
-          {boldTime
-            ? t.rich("gatheringAtBold", { time: time(startsAt), strong })
-            : t("gatheringAt", { time: time(startsAt) })}
-        </>,
-        boldTime
-          ? t.rich("raceStartAtBold", { time: time(event.raceStartsAt), strong })
-          : t("raceStartAt", { time: time(event.raceStartsAt) }),
-      ];
-    }
+    // Which times, and their names, from the one rule every surface asks (`whenTimes`, §NNN): a race
+    // with no gun time yet says «start la 08:30», never «întâlnire la» with nothing after it.
+    const said = whenTimes({ type: event.type, startsAt, raceStartsAt: event.raceStartsAt }).times.map(({ key, at }) =>
+      key === null
+        ? boldTime
+          ? <strong>{time(at)}</strong>
+          : time(at)
+        : boldTime
+          ? t.rich(key === "gatheringAt" ? "gatheringAtBold" : "raceStartAtBold", { time: time(at), strong })
+          : t(key, { time: time(at) }),
+    );
     return [
       day,
       <>
         {clock}
-        {boldTime ? <strong>{time(startsAt)}</strong> : time(startsAt)}
+        {said[0]}
       </>,
+      ...said.slice(1),
     ];
   };
+  // «Ora startului cursei se anunță.» — under the page's and the hero's «Când», once, while a race's
+  // gun time is not set (§NNN); the card says the start alone.
+  const raceStartNote =
+    startsAt !== null && whenTimes({ type: event.type, startsAt, raceStartsAt: event.raceStartsAt }).raceStartLater ? (
+      <Typography component="div" variant="body2" color="text.secondary" data-testid="race-start-later">
+        {t("raceStartLater")}
+      </Typography>
+    ) : null;
 
   // The organizations the event is held with (§168, §344): the page draws each in full
   // (`partnerFacts`, below), the hero says them in one sentence (`coHostSentence`, built in its
@@ -805,7 +812,17 @@ export default async function EventFacts({
     // `value` is a line of pieces, middle dots between them; `node` is an answer drawn in its own
     // shape — the route's pills with its words under them (§449).
     const lines: Array<{ label: string; icon: Glyph; value: ReactNode[]; node?: ReactNode; testId?: string }> = [
-      { label: t("when"), icon: CalendarMonthIcon, value: whenPieces(HERO_GLYPH_SX) },
+      {
+        label: t("when"),
+        icon: CalendarMonthIcon,
+        value: whenPieces(HERO_GLYPH_SX),
+        node: raceStartNote ? (
+          <>
+            {pieces(whenPieces(HERO_GLYPH_SX))}
+            {raceStartNote}
+          </>
+        ) : undefined,
+      },
     ];
     if (where.length > 0) lines.push({ label: t("where"), icon: PlaceIcon, value: where });
     // Held with other organizations (§121, §168).
@@ -898,7 +915,17 @@ export default async function EventFacts({
   /* ---- The event page, and the staff preview that draws exactly what it will (§356). ---- */
 
   const rows: Array<{ key: string; label: string; icon: Glyph; value: ReactNode }> = [
-    { key: "when", label: t("when"), icon: CalendarMonthIcon, value: flow(whenPieces(CLOCK_SX)) },
+    {
+      key: "when",
+      label: t("when"),
+      icon: CalendarMonthIcon,
+      value: (
+        <>
+          {flow(whenPieces(CLOCK_SX))}
+          {raceStartNote}
+        </>
+      ),
+    },
   ];
 
   /*

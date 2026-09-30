@@ -117,6 +117,7 @@
     "raceStartAt": "start at {time}",
     "gatheringAtBold": "gather at <strong>{time}</strong>",
     "raceStartAtBold": "start at <strong>{time}</strong>",
+    "raceStartLater": "The race start time is announced later.",
     "when": "When",
     "where": "Where",
     "meetingPoint": "Meeting point",
@@ -1160,7 +1161,9 @@
       "startsAt": "Event start",
       "startsAtHelp": "Local time of the event ({timezone}). For a race this is the gathering time.",
       "raceStartsAt": "Race start",
-      "raceStartsAtHelp": "When the gun goes, if that differs from the gathering time. Leave empty when there is only one time.",
+      "raceStartsAtHelp": "When the gun goes. If it is the event's start, type the same time.",
+      "raceStartNotSet": "Race start not set yet",
+      "raceStartNotSetHelp": "Ticked, the site shows only \"start at\" with the event's start time, and under it \"The race start time is announced later.\"",
       "mapUrl": "Meeting point link",
       "mapUrlHelp": "Optional. The meeting point on Google Maps or any other map. It must start with https://.",
       "coordinates": "Coordinates (lat, lng)",
@@ -1799,6 +1802,7 @@
             "timeTba": "Time to be announced later",
             "none": "No date chosen yet",
             "raceStart": "race start {time}",
+            "raceStartNotSet": "race start not set",
             "duration": "{duration}"
           },
           "timezone": {

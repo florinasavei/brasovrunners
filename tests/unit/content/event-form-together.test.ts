@@ -75,9 +75,14 @@ describe("§347 one event form for five features, on both pages", () => {
     expect(capacityRow).toContain('name="event.capacity"');
     expect(capacityRow).toContain('name="event.waitlistCapacity"');
     // Every wall-clock instant goes through the pickers' field.
-    for (const instant of ["startsAt", "raceStartsAt", "registrationOpensAt", "registrationClosesAt"]) {
+    for (const instant of ["startsAt", "registrationOpensAt", "registrationClosesAt"]) {
       expect(EVENT_FORM).toContain(`name="event.${instant}"`);
     }
+    // The race's start through the same pickers, beside its tick «Startul cursei nu e stabilit» (§NNN).
+    expect(EVENT_FORM).toContain("<RaceStartNotSet");
+    const raceStart = read(`${UI_DIR}/RaceStartNotSet.tsx`);
+    expect(raceStart).toContain('name="event.raceStartsAtDate"');
+    expect(raceStart).toContain('name="event.raceStartsAtTime"');
   });
 
   it("every feature's boxes come back filled after a refusal (§315): each reads the kept form", () => {
@@ -86,6 +91,7 @@ describe("§347 one event form for five features, on both pages", () => {
       `${UI_DIR}/CoHostRowsEditor.tsx`,
       `${UI_DIR}/LinkRowsEditor.tsx`,
       `${UI_DIR}/PlaceToBeAnnounced.tsx`,
+      `${UI_DIR}/RaceStartNotSet.tsx`,
       "src/shared/forms/pickers/DateField.tsx",
       "src/shared/forms/pickers/TimeField.tsx",
     ]) {
