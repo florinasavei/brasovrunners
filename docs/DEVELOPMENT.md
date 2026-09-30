@@ -300,7 +300,12 @@ does not import React, Next, MUI, or a provider SDK, and there is no `utils.ts`.
   listing, the calendar, an event page, the standing pages, the gallery, the legal pages, the
   `.ics` files and the Open Graph pictures are made on their first visit and kept (ISR), expired
   by the write that changes them — the same `revalidatePublicContent(...)` every write already
-  calls — and by their clock (`src/modules/public-cache/page-lifetime.ts`). `curl -sI` shows it:
+  calls — and by their clock (`src/modules/public-cache/page-lifetime.ts`). A render that was
+  already running when the write committed is stored *after* the write's expiry and so reads as
+  fresh; the write's own `after()` expires the same tags again three seconds later (§NNN,
+  `SECOND_EXPIRY_DELAY_MS` in `public-cache/cache.ts`). So a spec that reads a static page right
+  after a save, on a server other specs are rendering at the same time, may meet the old copy for
+  those seconds: reload under a bounded `expect(…).toPass()` rather than reading once. `curl -sI` shows it:
   `x-nextjs-cache: HIT` on a second visit, and on a static *page* `Cache-Control: public,
   max-age=0, must-revalidate` — what Vercel's CDN hands the browser for such a page, said by
   `proxy.ts` everywhere else for a GET or a HEAD (the pictures and the `.ics` files keep Next's

@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { revalidateTag, unstable_cache } from "next/cache";
+import { after } from "next/server";
 import { governorEffects } from "@/modules/diagnostics/domain/neon-budget";
 import { peekNeonBudgetLevel } from "@/modules/diagnostics/budget-level";
 import { ColdMissError, isColdMiss, throughBreaker } from "@/modules/resilience/breaker";
@@ -44,7 +45,9 @@ import { buildInfo } from "@/shared/config/build-info";
  * 1. **Every write says what it changed** — `revalidatePublicContent("events")` after an event is
  *    saved, `("places")` after a registration moves — and the cached rows of that kind expire at
  *    once (`{ expire: 0 }`: the next reader waits for fresh rows rather than being served the old
- *    ones while they refresh — a cancelled event must never read as scheduled, §28).
+ *    ones while they refresh — a cancelled event must never read as scheduled, §28). The same
+ *    kinds expire once more a few seconds after the write's response, so a render that was
+ *    already running when the write committed cannot keep the old rows as a fresh copy (§NNN).
  * 2. **The clock is in the key**, where a query compares against `now` (`clock.ts`): the upcoming
  *    events are cached per stretch of time in which that list cannot change, so an event passing
  *    into the past is a new key rather than a stale entry.
@@ -290,16 +293,87 @@ const RED_LOOKUP_REVALIDATE_SECONDS = 365 * 24 * 60 * 60;
  * It never throws. A write that committed must not be reported as failed because a cache could
  * not be told — the day's ceiling still bounds it — so a refusal is logged and swallowed. The one
  * refusal that is not a problem is silent: outside a Next server there is nothing to expire.
+ *
+ * The same kinds are expired a second time, `SECOND_EXPIRY_DELAY_MS` after the response, in this
+ * request's own `after()` (§NNN): see `expireAgainAfterTheInFlightRenders`.
  */
 export function revalidatePublicContent(...contents: PublicContent[]): void {
   if (!insideNextServer()) return;
   // The write woke the compute already: a red month's next miss may refresh at once (§447).
   allowRefreshNow();
-  for (const content of new Set(contents)) {
+  const expired = expire([...new Set(contents)], FIRST_EXPIRY);
+  expireAgainAfterTheInFlightRenders(expired);
+}
+
+/**
+ * How long after the response the second expiry waits (§NNN): three seconds.
+ *
+ * Long enough for a render that was already running when the write committed to be stored — a
+ * public page renders in well under a second of CPU (§549 measured about 68 ms), and its reads are
+ * one or two queries on a compute the write has just woken — and short enough that the next
+ * visitor after it sees the write. It costs no CPU, no query and no request: a timer inside the
+ * write's own function, which `after()` keeps alive until it fires.
+ */
+export const SECOND_EXPIRY_DELAY_MS = 3_000;
+
+/** The write's own expiry: at once, never "max" (above). */
+const FIRST_EXPIRY = { expire: 0 } as const;
+
+/**
+ * The second expiry's profile: the same effect as the first — Next hands the cache handler only
+ * `expire` (`revalidation-utils.js#revalidateTags`), so both mark the tag stale and expired *now* —
+ * under a profile that is not written the same way.
+ *
+ * It has to be different. Next keeps a request's revalidated tags in one list and, after the
+ * `after()` callbacks, executes only the tags that are *new* to it, compared by tag and profile
+ * (`withExecuteRevalidates` → `diffRevalidationState`). A second `revalidateTag` of the same tag with
+ * the same profile updates the entry already in the list, which the diff then drops: the second
+ * expiry would silently do nothing. `second-expiry.test.ts` pins both halves against the installed
+ * Next.
+ */
+export const SECOND_EXPIRY = { stale: 0, expire: 0 } as const;
+
+/** Expire each kind's tag; returns the kinds Next accepted. */
+function expire(kinds: readonly PublicContent[], profile: typeof FIRST_EXPIRY | typeof SECOND_EXPIRY): PublicContent[] {
+  const accepted: PublicContent[] = [];
+  for (const content of kinds) {
     try {
-      revalidateTag(publicTag(content), { expire: 0 });
+      revalidateTag(publicTag(content), profile);
+      accepted.push(content);
     } catch (error) {
       console.error("[public-cache] could not expire", publicTag(content), error);
     }
+  }
+  return accepted;
+}
+
+/**
+ * Expire the same tags again once the renders that were in flight at the write have landed (§NNN).
+ *
+ * **Why.** An expiry marks the tag with the moment it was made, and Next treats as fresh any entry
+ * *stored* after that moment (`tags-manifest.external.js#areTagsExpired`: expired only when
+ * `expiredAt > lastModified`, and `lastModified` is the moment of the `set`). Nothing records when
+ * the entry's render *started*. So a visitor's render of the listing that read the rows just before
+ * the publish committed, and was stored just after the publish expired `public:events`, is a fresh
+ * copy without the new event — on `next start` until the next write to any event or the page's own
+ * clock (at most a day), found by `partner-marker.spec.ts` on a shared listing. The rows' own entry
+ * (`unstable_cache`) has the same window. Vercel documents no guard either: its ISR purges the old
+ * payload and keeps the one stored next, whichever rows it was made from.
+ *
+ * **What.** One timer in the write's own request, after its response: nothing warms a page, nothing
+ * polls, no request is made and nothing reads the database; the next visitor's request renders the
+ * page, as after any write (§577). Only the kinds the first expiry was accepted for: a call Next
+ * refused (a render, which may not expire) is not expired later behind its back. Outside a request
+ * (a test, a script, a seed) there is no `after()` and nothing to expire twice.
+ */
+function expireAgainAfterTheInFlightRenders(kinds: readonly PublicContent[]): void {
+  if (kinds.length === 0) return;
+  try {
+    after(async () => {
+      await new Promise((resolve) => setTimeout(resolve, SECOND_EXPIRY_DELAY_MS));
+      expire(kinds, SECOND_EXPIRY);
+    });
+  } catch {
+    // No request scope: the first expiry is all there is to do.
   }
 }
