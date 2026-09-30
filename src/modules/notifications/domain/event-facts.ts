@@ -6,6 +6,7 @@ import { formatDay, formatTime, intlLocale } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
 import { costUrlHost } from "@/modules/events/domain/cost";
 import { localizedSchedule, programmeLines, readScheduleItems } from "@/modules/events/domain/schedule";
+import { whenTimes } from "@/modules/events/domain/when-times";
 import { orderRoutePills, routePillParts } from "@/modules/events/ui/route-pills";
 import { COLOR } from "@/theme/brand";
 
@@ -106,10 +107,17 @@ export function eventFactsBlock(details: EmailEventFacts, locale: Locale, weathe
 
   // Când: the date starts its line, capitalised (§349), then the time — a race's two, each named, as on the page.
   const day = formatDay(details.startsAt, { locale, timeZone: zone, style: "long" });
-  const times = details.raceStartsAt
-    ? [t("gatheringAt", { time: time(details.startsAt) }), t("raceStartAt", { time: time(details.raceStartsAt) })]
-    : [time(details.startsAt)];
-  rows.push({ label: t("when"), lines: [[{ text: day, bold: true }, ...times.map((text) => ({ text, bold: true }))]] });
+  // The page's own rule (`whenTimes`, §NNN): a race with no gun time yet says «start la 08:30» and, on a
+  // line of its own, that the race's start is announced later.
+  const when = whenTimes(details);
+  const times = when.times.map(({ key, at }) => (key === null ? time(at) : t(key, { time: time(at) })));
+  rows.push({
+    label: t("when"),
+    lines: [
+      [{ text: day, bold: true }, ...times.map((text) => ({ text, bold: true }))],
+      ...(when.raceStartLater ? [[{ text: t("raceStartLater") }]] : []),
+    ],
+  });
 
   // Vremea: the forecast at the start, right under «Când», the hour it is for (§402), and the credit its licence asks for, as a word.
   if (weather) rows.push({ label: weather.label, lines: [[{ text: weather.line }], [{ text: weather.credit }]] });

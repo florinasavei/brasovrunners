@@ -7,10 +7,12 @@ import RecallField from "@/shared/forms/recall";
 import { textFieldConstraints } from "@/shared/forms/constraints";
 import Panel from "@/shared/ui/Panel";
 import { startBoxValues, typedStartOrNull } from "@/modules/events/domain/provisional-start";
+import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
 import { eventInputConstraints } from "../../constraints";
 import { DURATION_HOURS_CONSTRAINTS, DURATION_MINUTES_CONSTRAINTS, savedDurationMinutes, splitDuration } from "../../duration";
 import { placeSummary, summaryDateTime, timezoneSummary, whenSummary } from "../box-summaries";
 import OnlyForType from "../OnlyForType";
+import RaceStartNotSet from "../RaceStartNotSet";
 import StartToBeAnnounced from "../StartToBeAnnounced";
 import WallTimeField from "../WallTimeField";
 import { BoxNote, type BoxProps, type LanguageEntry, requiredLine, RiskLine, SettingsReadOnly, summaryWords } from "./box-kit";
@@ -82,6 +84,9 @@ export default async function WhenBox({
   const place = placeNameInBox(event, languages, "ro");
   // What publication still needs from this card, in each language (§406): the meeting point.
   const required = await requiredLine("place", event, languages);
+  const raceWall = toWallTimeInput(event?.raceStartsAt ?? null, zone);
+  const [raceDate, raceTime] = raceWall ? raceWall.split("T") : ["", ""];
+  const raceStartBoxes = { date: raceDate, time: raceTime };
 
   return (
     <Panel glyph="when"
@@ -141,16 +146,20 @@ export default async function WhenBox({
               required={eventInputConstraints("startsAtWallTime").required === true}
             />
           )}
-          {/* Only a race has a gun time apart from the meeting time (§71); hidden, not removed. */}
+          {/* Only a race has a gun time apart from the meeting time (§71); hidden, not removed. Its
+              tick «Startul cursei nu e stabilit» saves none (§NNN) — ticked on an event that has none. */}
           <OnlyForType type="RACE" selectName="event.type" initialType={initialType}>
-            <WallTimeField
-              name="event.raceStartsAt"
-              label={t("editor.raceStartsAt")}
-              timeLabel={t("editor.timeOfDay")}
-              helperText={t("editor.raceStartsAtHelp")}
-              value={event?.raceStartsAt ?? null}
-              zone={zone}
-              required={eventInputConstraints("raceStartsAtWallTime").required}
+            <RaceStartNotSet
+              labels={{
+                date: t("editor.raceStartsAt"),
+                time: t("editor.timeOfDay"),
+                help: t("editor.raceStartsAtHelp"),
+                tick: t("editor.raceStartNotSet"),
+                tickHelp: t("editor.raceStartNotSetHelp"),
+              }}
+              values={raceStartBoxes}
+              defaultNotSet={event !== null && event.raceStartsAt === null}
+              required={eventInputConstraints("raceStartsAtWallTime").required === true}
             />
           </OnlyForType>
           {/* How long, not when it ends: the end is derived (§71) — asked as hours and minutes (§433). */}

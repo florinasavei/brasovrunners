@@ -49,7 +49,7 @@ export type SummaryWords = {
   /** "{language} identic cu {source}": the same words in both languages (§354). */
   identical: string;
   titleSummary: { untitled: string };
-  when: { none: string; tba: string; timeTba: string; raceStart: string; duration: string };
+  when: { none: string; tba: string; timeTba: string; raceStart: string; raceStartNotSet: string; duration: string };
   timezone: { home: string };
   place: { tba: string; map: string; none: string; inLanguage: string };
   programme: { moments: CountWords; range: string; groupRun: string; none: string; checklist: string };
@@ -267,8 +267,11 @@ export function whenSummary(words: SummaryWords, event: WhenEvent | null, locale
     // Said first while the date is held back (§533): the provisional date after it is staff's alone.
     event.dateToBeAnnounced ? words.when.tba : event.timeToBeAnnounced ? words.when.timeTba : null,
     blank.date ? null : blank.time ? summaryDate(event.startsAt, event.timezone, locale) : summaryDateTime(event.startsAt, event.timezone, locale),
-    event.type === "RACE" && event.raceStartsAt
-      ? fillIn(words.when.raceStart, { time: summaryTime(event.raceStartsAt, event.timezone, locale) })
+    event.type === "RACE"
+      ? event.raceStartsAt
+        ? fillIn(words.when.raceStart, { time: summaryTime(event.raceStartsAt, event.timezone, locale) })
+        : // «Startul cursei nu e stabilit» (§NNN): said, so the closed card does not read as a one-time race.
+          words.when.raceStartNotSet
       : null,
     minutes ? fillIn(words.when.duration, { duration: durationShort(minutes) }) : null,
   ]);

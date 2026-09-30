@@ -5,6 +5,7 @@ import { difficultyLevelOf, difficultyWords } from "./domain/difficulty";
 import { distanceInKm, type EventSurface, type EventType } from "./domain/event-type";
 import { type RegistrationWindowInput, registrationState } from "./domain/registration-window";
 import { type ProgrammeRow, programmeLines } from "./domain/schedule";
+import { whenTimes } from "./domain/when-times";
 import { clubNightEvent, nightLine as nightWords } from "./night-event";
 import { env } from "@/shared/config/env";
 import { CLUB_TIME_ZONE, formatDay, formatTime } from "@/i18n/dates";
@@ -380,7 +381,11 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
 
   // "întâlnire la 08:00 · start la 09:00": the page's two times when the race has a gun time.
   const time = (at: Date) => formatTime(at, { locale, timeZone });
-  const times = event.raceStartsAt ? `${t("gatheringAt", { time: time(event.startsAt) })} · ${t("raceStartAt", { time: time(event.raceStartsAt) })}` : "";
+  // The page's own rule (`whenTimes`, §NNN): a race with no gun time yet reads "start la 08:00 · Ora
+  // startului cursei se anunță."; a bare time is the calendar's own, and is not repeated.
+  const when = whenTimes(event);
+  const named = when.times.flatMap(({ key, at }) => (key === null ? [] : [t(key, { time: time(at) })]));
+  const times = [...named, ...(when.raceStartLater ? [t("raceStartLater")] : [])].join(" · ");
 
   /*
     The cost (§343), the same short phrase the page's full facts say — an amount for a paid

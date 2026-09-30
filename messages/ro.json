@@ -117,6 +117,7 @@
     "raceStartAt": "start la {time}",
     "gatheringAtBold": "întâlnire la <strong>{time}</strong>",
     "raceStartAtBold": "start la <strong>{time}</strong>",
+    "raceStartLater": "Ora startului cursei se anunță.",
     "when": "Când",
     "where": "Unde",
     "meetingPoint": "Punct de întâlnire",
@@ -1139,7 +1140,9 @@
       "startsAt": "Începutul evenimentului",
       "startsAtHelp": "Ora locală a evenimentului ({timezone}). Pentru o cursă, aceasta este ora de întâlnire.",
       "raceStartsAt": "Startul cursei",
-      "raceStartsAtHelp": "Ora la care se dă startul, dacă diferă de ora de întâlnire. Lasă gol dacă există o singură oră.",
+      "raceStartsAtHelp": "Ora la care se dă startul. Dacă e aceeași cu începutul evenimentului, scrie aceeași oră.",
+      "raceStartNotSet": "Startul cursei nu e stabilit",
+      "raceStartNotSetHelp": "Bifat, pe site apare doar „start la” cu ora de începere a evenimentului, iar sub ea „Ora startului cursei se anunță.”",
       "mapUrl": "Link către punctul de întâlnire",
       "mapUrlHelp": "Opțional. Punctul de întâlnire pe Google Maps sau orice altă hartă. Trebuie să înceapă cu https://.",
       "coordinates": "Coordonate (lat, lng)",
@@ -1776,6 +1779,7 @@
             "timeTba": "Ora se anunță mai târziu",
             "none": "Data nu e aleasă încă",
             "raceStart": "startul cursei {time}",
+            "raceStartNotSet": "startul cursei nestabilit",
             "duration": "{duration}"
           },
           "timezone": {
