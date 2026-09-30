@@ -169,6 +169,8 @@
     "elevation": "Diferență de nivel",
     "elevationM": "{m} m diferență de nivel",
     "elevationShort": "{m} m D+",
+    "elevationMEstimated": "circa {m} m diferență de nivel (estimativ)",
+    "elevationShortEstimated": "≈ {m} m D+",
     "night": {
       "chip": "Noapte",
       "pill": "Eveniment de noapte",
@@ -1237,6 +1239,8 @@
       "distanceMeters": "Distanță",
       "distanceMetersHelp": "În metri. 10000 se afișează ca 10 km.",
       "elevationGainMeters": "Diferență de nivel (m)",
+      "elevationGainEstimated": "Estimativ",
+      "elevationGainEstimatedHelp": "Bifează când cifra e aproximativă — pe site apare cu „≈” și „estimativ”.",
       "night": {
         "label": "Eveniment de noapte",
         "auto": "Automat (după apus)",
@@ -1861,6 +1865,7 @@
             "route": "traseu",
             "km": "{km} km",
             "elevation": "+{m} m",
+            "elevationEstimated": "≈ +{m} m",
             "night": "de noapte",
             "nightAuto": "de noapte (automat)",
             "day": "de zi",

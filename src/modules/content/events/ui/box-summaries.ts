@@ -85,6 +85,8 @@ export type SummaryWords = {
     route: string;
     km: string;
     elevation: string;
+    /** `≈ +350 m` — a climb the club ticked «Estimativ» for (§NNN). */
+    elevationEstimated: string;
     night: string;
     nightAuto: string;
     day: string;
@@ -506,7 +508,8 @@ export function startListSummary(words: SummaryWords, visibility: string | null 
   return visibility === "NAMES" ? words.startList.shown : words.startList.hidden;
 }
 
-type CourseEvent = Pick<EditableEvent, "distanceMeters" | "elevationGainMeters" | "routeUrl" | "nightOverride">;
+type CourseEvent = Pick<EditableEvent, "distanceMeters" | "elevationGainMeters" | "routeUrl" | "nightOverride"> &
+  Partial<Pick<EditableEvent, "elevationGainEstimated">>;
 
 /**
  * The night event's word on the closed "Traseul" card (§394): `de noapte` for the organizer's "Da",
@@ -543,7 +546,10 @@ export function courseSummary(
   const line = join(words, [
     labels.surface,
     distanceWords(words, event?.distanceMeters),
-    event?.elevationGainMeters ? fillIn(words.course.elevation, { m: event.elevationGainMeters }) : null,
+    // `≈ +350 m` for a climb ticked «Estimativ» (§NNN), never the bare number.
+    event?.elevationGainMeters
+      ? fillIn(event.elevationGainEstimated ? words.course.elevationEstimated : words.course.elevation, { m: event.elevationGainMeters })
+      : null,
     event ? nightSummary(words, event.nightOverride, labels.night === true) : null,
     event?.routeUrl ? words.course.route : null,
     described === 0 ? null : described === translations.length ? words.course.described : words.course.describedOneLanguage,

@@ -320,6 +320,14 @@ export const events = pgTable(
     distanceMeters: integer("distance_meters"),
     elevationGainMeters: integer("elevation_gain_meters"),
     /**
+     * «Estimativ» beside «Diferență de nivel (m)» (§NNN; the owner, 2026-09-30: «la elevație,
+     * trebuie să pot pune "estimativ"»): the club knows the climb only roughly — a GPS track, a
+     * guess from the map — and says so. Every surface then reads «≈ 350 m D+» and «circa 350 m
+     * diferență de nivel (estimativ)» through `elevationWords`, never a bare number. Meaningless
+     * without a number: the editor saves it false when the number is empty.
+     */
+    elevationGainEstimated: boolean("elevation_gain_estimated").notNull().default(false),
+    /**
      * "Eveniment de noapte" — the organizer's override of the computed answer (§394, replacing
      * §382's "Necesită frontală" checkbox; the owner, 2026-09-25: "«Necesită frontală» ar trebui
      * să fie cumva «eveniment de noapte» setat automat în funcție de ora de start și când apune

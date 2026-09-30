@@ -59,6 +59,8 @@ export type EmailEventFacts = Pick<
 > & {
   /** The level on the club's scale of fifteen (§526), the difficulty's one column. */
   difficultyLevel?: number | null;
+  /** «Estimativ» (§NNN): the climb is said «circa 350 m diferență de nivel (estimativ)», never the bare number. */
+  elevationGainEstimated?: boolean | null;
   startsAt: Date;
   timezone: string;
   /** The place's name in this language (§362); null while it is to be announced (§328). */

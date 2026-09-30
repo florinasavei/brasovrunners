@@ -732,6 +732,12 @@ export const eventFieldsSchema = z
     distanceMeters: optionalWholeNumber({ min: 0, max: 500_000 }),
     elevationGainMeters: optionalWholeNumber({ min: 0, max: 20_000 }),
     /**
+     * «Estimativ» beside the climb (§NNN): the number is a guess. Optional for a caller from before
+     * it, which means exact; never a refusal — a tick with no number is dropped at the write
+     * (`estimatedElevation`), since this schema is extended and cannot end in a transform.
+     */
+    elevationGainEstimated: z.boolean().optional().default(false),
+    /**
      * "Eveniment de noapte" (§394, replacing §382's checkbox): the organizer's override — true
      * "Da", false "Nu", null "Automat" (after sunset, `events/domain/night.ts`). Optional for a
      * caller from before it existed, which means automatic.
