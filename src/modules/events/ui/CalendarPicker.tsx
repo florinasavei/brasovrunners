@@ -66,7 +66,7 @@ export default function CalendarPicker({
   labels: { month: string; year: string };
 }) {
   const router = useRouter();
-  // The period is the path's (§NNN): the same address the arrows build, from the same function.
+  // The period is the path's (§574): the same address the arrows build, from the same function.
   const go = (next: { year: number; month: number }) => {
     const period: CalendarPeriod = view === "year" ? { kind: "year", year: next.year } : { kind: "month", month: next };
     router.push(`${calendarAddress(basePath, { view: period, layout, query, thisMonth })}#calendar`);

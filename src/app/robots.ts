@@ -76,7 +76,7 @@ export default function robots(): MetadataRoute.Robots {
           "/en/events?",
           "/ro/calendar?",
           "/en/calendar?",
-          // A period's own path (§NNN): canonical to the bare calendar like the query was, and a
+          // A period's own path (§574): canonical to the bare calendar like the query was, and a
           // cold month is a render — a crawler walking five years of months would wake the database.
           "/ro/calendar/",
           "/en/calendar/",

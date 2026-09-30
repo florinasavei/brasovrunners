@@ -1,7 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
 
 /**
- * BR-REQ-041-01 criterion 12 and §NNN (amending §116, §137, §475, §549) — the month on screen is
+ * BR-REQ-041-01 criterion 12 and §574 (amending §116, §137, §475, §549) — the month on screen is
  * the month in the address, on a first load and after every arrow, select, «Azi» and swipe.
  *
  * The owner, 2026-09-29, on production: «nu pot schimba luna din săgeți (deși se schimbă în query
@@ -47,7 +47,7 @@ function thisAndNext(): { now: { year: number; month: number }; next: { year: nu
 const pad = (month: number) => String(month).padStart(2, "0");
 const title = (page: Page) => page.locator("#calendar-title");
 
-test.describe("§NNN the calendar shows the month its address names", () => {
+test.describe("§574 the calendar shows the month its address names", () => {
   test("reached by the header's prefetched link, the arrows move the month on screen, not only the address", async ({ page }) => {
     await vercelPrefetch(page);
     const { now, next, after } = thisAndNext();

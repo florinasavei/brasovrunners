@@ -28,7 +28,7 @@ import { partnerPhrase } from "./counted-phrases";
 import type { GlyphName } from "./glyphs";
 import { editionNote } from "./series-sentence";
 
-/** What the calendar shows: one month (`/calendar/2026-10`) or one year (`/calendar/2026`, §116, §NNN). */
+/** What the calendar shows: one month (`/calendar/2026-10`) or one year (`/calendar/2026`, §116, §574). */
 export type CalendarView = CalendarPeriod;
 
 /** How the month is laid out (§137): the grid, on every width, or the agenda by choice (`/calendar/2026-10/list`). */
@@ -36,7 +36,7 @@ export type CalendarLayout = CalendarLayoutName;
 
 /**
  * The calendar's **body**: the month as a grid on every width — or as an agenda when the
- * reader asks (`/calendar/2026-10/list`; `DECISIONS.md` §89, §137, §NNN) — or the year, as the agenda of every
+ * reader asks (`/calendar/2026-10/list`; `DECISIONS.md` §89, §137, §574) — or the year, as the agenda of every
  * month that has something on it (§116).
  *
  * The controls that change the period are `CalendarHeader`. `events` arrives **already read**
@@ -69,7 +69,7 @@ export default async function EventCalendar({
   /** The period's rows, already read and filtered by the page (§413). */
   events: PublicEvent[];
   now: Date;
-  /** What the month links keep — the filters (§89, §413; a group ticked twice is an array). A month's own link goes to its path on the calendar (§251, §NNN). */
+  /** What the month links keep — the filters (§89, §413; a group ticked twice is an array). A month's own link goes to its path on the calendar (§251, §574). */
   query?: Record<string, string | string[]>;
   layout?: CalendarLayout;
 }) {
@@ -193,7 +193,7 @@ export default async function EventCalendar({
                 >
                   <Stack direction="row" spacing={1} sx={{ alignItems: "center", px: 1.5, bgcolor: "action.hover", borderBottom: 1, borderColor: "divider" }}>
                     <Typography component="h3" variant="h3" sx={{ fontSize: "1rem", fontWeight: 600, textTransform: "capitalize" }}>
-                      {/* The month's own path (§NNN): a static page, but a cold one is a render, so twelve prefetches here could be twelve functions (§549). */}
+                      {/* The month's own path (§574): a static page, but a cold one is a render, so twelve prefetches here could be twelve functions (§549). */}
                       <Link href={monthHref(ym)} prefetch={false} style={{ color: "inherit", textDecoration: "none", minHeight: 44, display: "inline-flex", alignItems: "center" }}>
                         {monthNames[ym.month - 1]}
                       </Link>

@@ -11,7 +11,7 @@ import { PREFETCHED_PATHNAMES } from "./prefetch";
  * rendered per request exactly as every public page was before (`app/[locale]/live/…`):
  *
  * - **the address's own question** — the filters (`?type=`, `?surface=`, … §413; the calendar's
- *   month, year and layout are its path since §NNN, `/ro/calendar/2026-10`, and the old `?month=`,
+ *   month, year and layout are its path since §574, `/ro/calendar/2026-10`, and the old `?month=`,
  *   `?year=`, `?view=` are redirected there by the proxy before this is asked), an event page's start-list
  *   page (`?lista=` §250), the interest box's outcome (`?interest=`, `?since=` §146) and the
  *   signer's own link (`?declaratie=` §523). A query key the page does not read — a share's
@@ -60,7 +60,7 @@ type Twin = { pattern: RegExp; signedIn: boolean };
 const TWINS: readonly Twin[] = [
   { pattern: /^\/(ro|en)\/events$/, signedIn: false },
   { pattern: /^\/(ro|en)\/calendar$/, signedIn: false },
-  // A period's own path (`/ro/calendar/2026-10`, §NNN): static too, and a filter on it is its twin.
+  // A period's own path (`/ro/calendar/2026-10`, §574): static too, and a filter on it is its twin.
   { pattern: /^\/(ro|en)\/calendar\/.+$/, signedIn: false },
   { pattern: /^\/(ro|en)\/events\/[^/]+$/, signedIn: true },
 ];

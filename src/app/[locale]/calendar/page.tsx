@@ -48,7 +48,7 @@ type Props = {
    */
   query?: Promise<CalendarQuery>;
   /**
-   * The period's path segments — passed only by `calendar/[...period]/page.tsx` (§NNN):
+   * The period's path segments — passed only by `calendar/[...period]/page.tsx` (§574):
    * `["2026-10"]`, `["2026-10", "list"]`, `["2026"]`. Absent, the page is the bare calendar: this
    * month as a grid (or, on the bare twin, what an old `?month=` still says, should one reach it
    * past the proxy's redirect).
@@ -109,7 +109,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       very page under a second address, and neither declared a canonical — the likeliest pair
       behind Search Console's "duplicate without user-selected canonical". Another month is the
       same events' own pages, arranged; the event pages are what is indexed. A period's own path
-      (`/calendar/2026-10`, `/calendar/2026-10/list`, `/calendar/2026`, §NNN) is canonical to
+      (`/calendar/2026-10`, `/calendar/2026-10/list`, `/calendar/2026`, §574) is canonical to
       the bare calendar the same way, and robots.txt keeps crawlers off `/calendar/…`.
     */
     alternates: pageAlternates(locale, staticRouteUrls(env.APP_BASE_URL, "/calendar")),
@@ -128,7 +128,7 @@ export default async function CalendarPage({ params, query: asked, period: segme
   // This month, and today's square, are the day's: the static page is made again at midnight (§549).
   await holdPageUntil([nextWallMidnight(now, CLUB_TIME_ZONE)], now);
 
-  // The period is the path's (§NNN): `/calendar/2026-10`, `/calendar/2026-10/list`, `/calendar/2026`.
+  // The period is the path's (§574): `/calendar/2026-10`, `/calendar/2026-10/list`, `/calendar/2026`.
   // Anything else under `/calendar/` is no page. The bare calendar is this month as a grid; its twin
   // still reads an old `?month=`, `?year=` or `?view=` should one reach it past the proxy's redirect.
   const fromPath = segments ? readCalendarSegments(segments, now, CLUB_TIME_ZONE) : null;
@@ -166,7 +166,7 @@ export default async function CalendarPage({ params, query: asked, period: segme
   // The calendar's own panel (§413): what it offers is read off the period on view, whole — the
   // same rule the listing applies to its own rows — and it keeps the month or year and the layout.
   const offer = offeredFilters(period.value, filter, facts);
-  // The panel's form and chips go to the period's own path (§NNN), spelled even for this month:
+  // The panel's form and chips go to the period's own path (§574), spelled even for this month:
   // a filter on the bare path would be the bare static page's query, which Next's router answers
   // from that page's prefetched copy without asking the server.
   const periodPath = calendarPeriodPath(getPathname({ locale, href: "/calendar" }), view, layout);

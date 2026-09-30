@@ -26,7 +26,7 @@ import RunnerLoader, { RunnerLoaderStyles } from "@/shared/ui/RunnerLoader";
  * query in it, which is what a crawler follows and what `event-pages.spec.ts` reads.
  *
  * Never prefetched (§549): its href is the next or previous period's own path (`/calendar/2026-10`,
- * §NNN), a static page, but one nobody has opened today is a render — two prefetches per visit
+ * §574), a static page, but one nobody has opened today is a render — two prefetches per visit
  * could start two functions on a page the CDN otherwise answers alone. The press waits for its
  * answer; the runner says it is travelling.
  */

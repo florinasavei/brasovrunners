@@ -4,7 +4,7 @@ import { NextRequest } from "next/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 /**
- * §NNN (amending §116, §137, §475, §549) — the month shown is the month in the address, and the
+ * §574 (amending §116, §137, §475, §549) — the month shown is the month in the address, and the
  * address names it in its path: `/ro/calendar/2026-10`, `/ro/calendar/2026-10/list`,
  * `/ro/calendar/2026`.
  *
@@ -76,7 +76,7 @@ const month = (m: number, year = 2026) => ({ kind: "month" as const, month: { ye
 const hrefs = (html: string, marker: string) => [...html.matchAll(new RegExp(`${marker}[^>]*?href="([^"]*)"|href="([^"]*)"[^>]*?${marker}`, "g"))].map((m) => (m[1] ?? m[2]).replace(/&amp;/g, "&"));
 const hrefOf = (html: string, marker: string) => hrefs(html, marker)[0];
 
-describe("a period's path (§NNN)", () => {
+describe("a period's path (§574)", () => {
   it("spells a month, a month as a list and a year", () => {
     expect(calendarSegments(month(10), "grid")).toEqual(["2026-10"]);
     expect(calendarSegments(month(10), "list")).toEqual(["2026-10", "list"]);
@@ -119,7 +119,7 @@ describe("a period's path (§NNN)", () => {
   });
 });
 
-describe("the old addresses (§NNN)", () => {
+describe("the old addresses (§574)", () => {
   const legacy = (query: string) => legacyCalendarAddress("/ro/calendar", new URLSearchParams(query), NOW, TZ);
 
   it("sends ?month=, ?year= and ?view= to the same period's path, every filter kept", () => {
@@ -169,7 +169,7 @@ describe("the old addresses (§NNN)", () => {
   });
 });
 
-describe("every control goes to a period's path (§NNN)", () => {
+describe("every control goes to a period's path (§574)", () => {
   it("steps the arrows — and so the swipe — to the next and the previous month's path", () => {
     expect(calendarStepHrefs({ view: month(9), query: {}, locale: "ro", now: NOW })).toEqual({ previous: "/ro/calendar/2026-08", next: "/ro/calendar/2026-10" });
     // Back to this month is the bare calendar again.

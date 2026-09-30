@@ -282,7 +282,7 @@ test.describe.serial("§393 a group run's optional self-declaration", () => {
   });
 
   /*
-    §NNN (applying §561 to §440's box) — above eighteen the page asks a birth date, and it is the
+    §573 (applying §561 to §440's box) — above eighteen the page asks a birth date, and it is the
     registration form's typed box: day first in both languages, never the browser's date box that
     an English phone drew month first. The second date gets a minimum of twenty before anything
     reads it (so no cached copy says otherwise); the signatures below are the first date's.

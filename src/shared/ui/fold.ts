@@ -93,7 +93,7 @@ export const REVEAL_EVENT = "br:reveal";
  *
  * The forms that spell their pair `…RoBody` / `…EnBody` («Membri»'s two texts, «Echipa»'s words,
  * a question's answer) lose the language the same way — `zoneRoBody` and `zoneEnBody` are both
- * `zone*Body` — so the members' zone opened under «RO» is open under «EN» (§NNN).
+ * `zone*Body` — so the members' zone opened under «RO» is open under «EN» (§572).
  */
 export function twinFoldKey(name: string, locale: string): string {
   const suffix = `${locale.charAt(0).toUpperCase()}${locale.slice(1)}Body`;

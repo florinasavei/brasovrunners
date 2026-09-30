@@ -45,7 +45,7 @@ const STATIC_PAGES = [
   "src/app/[locale]/events/page.tsx",
   "src/app/[locale]/events/[slug]/page.tsx",
   "src/app/[locale]/calendar/page.tsx",
-  // A period at its own path (§NNN): a month is a static page of its own, not the twin's query.
+  // A period at its own path (§574): a month is a static page of its own, not the twin's query.
   "src/app/[locale]/calendar/[...period]/page.tsx",
   "src/app/[locale]/faq/page.tsx",
   "src/app/[locale]/team/page.tsx",

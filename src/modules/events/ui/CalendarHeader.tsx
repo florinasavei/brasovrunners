@@ -31,7 +31,7 @@ import type { CalendarLayout, CalendarView } from "./EventCalendar";
 /**
  * Where the two arrows go: the period before and the period after, keeping every filter and the
  * layout. One function, because the swipe on a touch screen (`CalendarSwipe`, §475) must go
- * exactly where the arrows go. The period is the address's path (`/ro/calendar/2026-10`, §NNN),
+ * exactly where the arrows go. The period is the address's path (`/ro/calendar/2026-10`, §574),
  * never its query: a `?month=` on the static calendar is what Next's router answered from the bare
  * page's prefetched copy, so the arrows changed the address and left September on screen.
  */
@@ -84,7 +84,7 @@ export default async function CalendarHeader({
 }: {
   view: CalendarView;
   now: Date;
-  /** What the period links keep — the filters (§89, §413; a group ticked twice is an array). The period and the layout are the path's (§NNN). */
+  /** What the period links keep — the filters (§89, §413; a group ticked twice is an array). The period and the layout are the path's (§574). */
   query?: Record<string, string | string[]>;
   layout?: CalendarLayout;
 }) {
@@ -98,7 +98,7 @@ export default async function CalendarHeader({
     view.kind === "month"
       ? format.dateTime(anchor, { timeZone: "UTC", month: "long", year: "numeric" })
       : String(view.year);
-  // Every control is an address on the calendar's own path (§251, §NNN): the period in the path,
+  // Every control is an address on the calendar's own path (§251, §574): the period in the path,
   // the filters in the query.
   const basePath = getPathname({ locale, href: "/calendar" });
   const thisMonth = currentMonth(now, CLUB_TIME_ZONE);

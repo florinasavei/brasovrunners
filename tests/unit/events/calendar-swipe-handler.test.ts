@@ -2,8 +2,8 @@ import type { ReactElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
- * §NNN (amending §475) — the swipe's handler itself, driven with a finger's events rather than read
- * as source: a sideways drag pushes the arrows' own address (a period's path since §NNN, never
+ * §574 (amending §475) — the swipe's handler itself, driven with a finger's events rather than read
+ * as source: a sideways drag pushes the arrows' own address (a period's path since §574, never
  * `?month=`), a mouse or an up-and-down drag pushes nothing, and the calendar that mounts with the
  * next period slides in from the side the thumb pushed towards — each period is a page of its own
  * path now, so the step has to be handed across to a new instance.
@@ -73,7 +73,7 @@ afterEach(() => {
   push.mockClear();
 });
 
-describe("the calendar's swipe handler (§475, §NNN)", () => {
+describe("the calendar's swipe handler (§475, §574)", () => {
   it("pushes the next period's path on a drag to the left, and the previous one's on a drag to the right", () => {
     const { handlers } = mount();
     drag(handlers, { from: [300, 100], to: [180, 104] });

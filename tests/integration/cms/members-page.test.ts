@@ -95,7 +95,7 @@ describe("§524 the members' pages", () => {
     expect(settings.benefitsEnJson).toEqual(doc("Discounts on the club's races."));
   });
 
-  it("§NNN the screenshot: the Romanian alone is refused on the English box, and the translated English then saves", async () => {
+  it("§572 the screenshot: the Romanian alone is refused on the English box, and the translated English then saves", async () => {
     // «Salutare colegii!» written, the English tab empty: refused, naming the English (§352, §47).
     expect(
       await refusal(saveMembersText(db, { actor: actor("ADMIN"), text: "zone", fields: { zoneRoBody: body("Salutare colegii!"), zoneEnBody: "" } })),

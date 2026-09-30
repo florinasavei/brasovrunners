@@ -95,7 +95,7 @@ export type RequiredCountWords = { one: string; few: string; other: string; comp
  *
  * `names` are the part after `translations.<locale>.` — or, for a form that spells its pair another
  * way, the whole name with the language as `{Locale}` (`zone{Locale}Body`: `zoneRoBody`,
- * `zoneEnBody`, «Membri», §NNN) or `{locale}`. `watchedBoxName` reads both.
+ * `zoneEnBody`, «Membri», §572) or `{locale}`. `watchedBoxName` reads both.
  */
 export type TabWatch = { names: readonly string[]; rule: "required" | "parity" };
 
@@ -117,7 +117,7 @@ export function tabLabel(parts: readonly (string | null | undefined | false)[]):
 }
 
 /**
- * The default «tradus — verifică» on an English tab (§NNN), from `Translate` — a namespace every
+ * The default «tradus — verifică» on an English tab (§572), from `Translate` — a namespace every
  * backoffice page already hands its client islands. Drawn only after a press, in the browser, so a
  * strip rendered without a translator (a test's static render) never reaches it.
  */
@@ -203,7 +203,7 @@ export default function LocaleTabPanels({
    */
   translateCard?: boolean;
   /**
-   * The English tab's word right after a translate press filled a box in it (§NNN), until the
+   * The English tab's word right after a translate press filled a box in it (§572), until the
    * person types there. Left out, every strip says the catalogue's `Translate.tabTranslated` —
    * «tradus — verifică» — so the event editor, a standing page, an album, the FAQ and the
    * newsletter wear the same mark as «Membri» without a word passed. A press that filled a box of
@@ -212,7 +212,7 @@ export default function LocaleTabPanels({
   translatedMark?: string;
 }) {
   const [active, setActive] = useState(0);
-  // Whether the English panel holds a translation nobody has typed into yet (§NNN).
+  // Whether the English panel holds a translation nobody has typed into yet (§572).
   const [translated, setTranslated] = useState(false);
   const [incomplete, setIncomplete] = useState<readonly boolean[]>(() => panels.map((panel) => panel.incompleteLabel !== undefined));
   const [counts, setCounts] = useState<readonly number[]>(() => panels.map((panel) => panel.missingCount ?? 0));
@@ -380,7 +380,7 @@ export default function LocaleTabPanels({
   };
 
   /*
-    A translate press that filled a box of this strip's English panel (§NNN): «Copiază și tradu
+    A translate press that filled a box of this strip's English panel (§572): «Copiază și tradu
     tot» above the strip, or the card's own press at the end of its row. The English tab comes
     forward — a translation behind the Romanian tab is one nobody reads before «Salvează» — and,
     where the strip was given the word, wears «tradus — verifică» until the person types there.
@@ -403,7 +403,7 @@ export default function LocaleTabPanels({
   }, [panels, live]);
 
   /*
-    The mark goes the moment the person edits the English (§NNN): `beforeinput` is the browser's
+    The mark goes the moment the person edits the English (§572): `beforeinput` is the browser's
     word for a person's own typing, pasting or deleting — the translation filling the box fires
     `input` only, so it does not take its own mark away.
   */
@@ -486,7 +486,7 @@ export default function LocaleTabPanels({
                       // The copying language's tab — every one after the first — says it (§354).
                       same && identical && index > 0 ? identical.mark : null,
                     ])}
-                    {/* Right after a translate press filled this panel, until typed into (§NNN). */}
+                    {/* Right after a translate press filled this panel, until typed into (§572). */}
                     {translated && panel.locale === "en" && (
                       <>
                         {" · "}
@@ -495,7 +495,7 @@ export default function LocaleTabPanels({
                     )}
                   </>
                 }
-                // The header's flag for the language (§NNN, the glyph beside the word), never the label.
+                // The header's flag for the language (§572, the glyph beside the word), never the label.
                 icon={flag ? <Flag code={flag} width={16} /> : undefined}
                 iconPosition="start"
                 id={`${idPrefix}-tab-${panel.locale}`}

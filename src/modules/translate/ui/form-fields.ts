@@ -81,7 +81,7 @@ export function writePlainBox(box: Box, text: string): void {
  * answer past the box's `maxLength` is cut to it (the box could not hold more, and the save's own
  * ceiling is the same), and `cut` says so, so the press can say which box lost its ending.
  * `filled` says whether a box of that name was there to take the answer at all — only those are
- * announced to the language tabs (§NNN), so a strip never comes forward for a box nobody filled.
+ * announced to the language tabs (§572), so a strip never comes forward for a box nobody filled.
  */
 export function fillBox(form: HTMLFormElement | null, name: string, value: BoxValue): { filled: boolean; cut: boolean } {
   const box = boxNamed(form, name);
@@ -231,7 +231,7 @@ export async function translateBoxes(form: HTMLFormElement | null, englishNames:
     if (fill.filled) filled.push(item.field);
     if (fill.cut) cut.push(labelOfBox(form, item.field));
   }
-  // The language tabs holding the boxes it filled bring their English forward, marked (§NNN).
+  // The language tabs holding the boxes it filled bring their English forward, marked (§572).
   announceTranslated(filled, form);
   return { kind: "done", count: items.length, cut };
 }

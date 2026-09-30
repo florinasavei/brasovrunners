@@ -23,7 +23,7 @@ describe("liveTwinPathname", () => {
     expect(liveTwinPathname("/en/calendar", search("view=list&partner=1"), false)).toBe(`/en/${LIVE_SEGMENT}/calendar`);
   });
 
-  it("leaves a calendar period's own path to the CDN, and sends a filter on it to the period's twin (§NNN)", () => {
+  it("leaves a calendar period's own path to the CDN, and sends a filter on it to the period's twin (§574)", () => {
     expect(liveTwinPathname("/ro/calendar/2026-10", search(""), false)).toBeNull();
     expect(liveTwinPathname("/ro/calendar/2026-10/list", search("_rsc=1"), false)).toBeNull();
     expect(liveTwinPathname("/ro/calendar/2026-10", search("type=RACE"), false)).toBe(`/ro/${LIVE_SEGMENT}/calendar/2026-10`);
@@ -83,7 +83,7 @@ describe("isStaticPublicAnswer", () => {
     }
     // Next's own `_rsc` and a share's `utm_*` still reach the static page.
     expect(isStaticPublicAnswer("/ro/events", search("_rsc=abc&utm_source=x"), false)).toBe(true);
-    // A calendar period's own path, one segment or two (§NNN).
+    // A calendar period's own path, one segment or two (§574).
     expect(isStaticPublicAnswer("/ro/calendar/2026-10", search(""), false)).toBe(true);
     expect(isStaticPublicAnswer("/en/calendar/2026-10/list", search(""), false)).toBe(true);
     expect(isStaticPublicAnswer("/ro/calendar/2026-10", search("type=RACE"), false)).toBe(false);

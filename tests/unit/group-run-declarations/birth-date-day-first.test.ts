@@ -8,7 +8,7 @@ import ro from "../../../messages/ro.json";
 import BirthDateField from "@/modules/registrations/ui/BirthDateField";
 
 /**
- * §NNN (applying §561 to §440's box) — the group run's signing page asks a birth date only above
+ * §573 (applying §561 to §440's box) — the group run's signing page asks a birth date only above
  * eighteen, and it drew the browser's own `type="date"` box for it: month first on an English
  * phone. It now draws the registration form's `BirthDateField` — typed day first, «11.05.1990»,
  * the same placeholder, the date in words with the age on the run's day as its helper, the run's
@@ -67,7 +67,7 @@ beforeEach(() => {
   signed.inputs.length = 0;
 });
 
-describe("§NNN the group run's signing page draws the typed, day-first birth date", () => {
+describe("§573 the group run's signing page draws the typed, day-first birth date", () => {
   it("uses the registration form's `BirthDateField`, never the browser's date box", () => {
     const page = read(PAGE);
     expect(page).toContain('import BirthDateField from "@/modules/registrations/ui/BirthDateField"');
@@ -134,7 +134,7 @@ describe("§NNN the group run's signing page draws the typed, day-first birth da
   });
 });
 
-describe("§NNN the signing action reads the typed date as the registration form does", () => {
+describe("§573 the signing action reads the typed date as the registration form does", () => {
   it("posts `YYYY-MM-DD` to the service for a day-first date, whatever the separator", async () => {
     expect(read(ACTION)).toContain('normalizeTypedDate(text(form, "birthDate"))');
     for (const typed of ["11.05.1990", "11/05/1990", "11-5-1990", "11051990", " 11.05.1990 "]) {

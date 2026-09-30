@@ -54,7 +54,7 @@ export const dynamic = "force-dynamic";
 
 type Words = Awaited<ReturnType<typeof getTranslations<"Admin">>>;
 
-/** The two editors of a text, in the site's order: the tab's code, the posted name's part (§NNN). */
+/** The two editors of a text, in the site's order: the tab's code, the posted name's part (§572). */
 const LANGUAGES = [
   { locale: "ro", code: "RO", suffix: "Ro" },
   { locale: "en", code: "EN", suffix: "En" },
@@ -217,7 +217,7 @@ function PublicPageCard({
 
 /**
  * One of the two texts: its state on the line, and the two editors in a fold — tabs «RO» | «EN»
- * (§NNN), both or neither (§352), the whole toolbar of a page's column (§474), the one «Copiază și
+ * (§572), both or neither (§352), the whole toolbar of a page's column (§474), the one «Copiază și
  * tradu tot» above them (§482). Closed until opened, like every backoffice fold (§336).
  */
 function TextCard({
@@ -269,12 +269,12 @@ function TextCard({
                 {/*
                   «Copiază și tradu tot: RO → EN» (§464, §482): this text's English from its Romanian,
                   above the tabs so it is there whichever language is on top; the English tab comes
-                  forward after it, marked «tradus — verifică» (§NNN).
+                  forward after it, marked «tradus — verifică» (§572).
                 */}
                 <TranslateAllButton />
                 {/*
                   The two languages as tabs «RO» | «EN» with the header's flags, one editor on screen
-                  at a time (§NNN; the owner, 2026-09-29: «partea bilingvă trebuie să fie per tabs»).
+                  at a time (§572; the owner, 2026-09-29: «partea bilingvă trebuie să fie per tabs»).
                   The other language's editor stays in the form, hidden, so the save posts both
                   (§352); a refusal naming the English brings its tab forward (§47).
                 */}

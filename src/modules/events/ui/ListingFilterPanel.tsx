@@ -61,7 +61,7 @@ import { GLYPHS, type GlyphName } from "./glyphs";
  * `keep` is what the address carries that is not a filter — the listing's list layout — so neither
  * the form nor a chip's link drops it. `path`, when given, is the already-resolved address the form
  * and the chips go to instead of `pathname`'s: the calendar's period, which lives in the path
- * (`/ro/calendar/2026-10`, §NNN), not in the query.
+ * (`/ro/calendar/2026-10`, §574), not in the query.
  */
 export default async function ListingFilterPanel({
   locale,

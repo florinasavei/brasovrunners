@@ -40,7 +40,7 @@ import { footerGapSx, footerTargetSx, SM_UP } from "./footer-target";
  * The files come from `flag-icons` (MIT), copied into `public/flags/` by
  * `scripts/sync-flags.mjs`. The set is there for the country field a participant will fill in
  * later; the switcher is its first, small use. The map is `LANGUAGE_FLAG` in `Flag.tsx`, which the
- * backoffice's language tabs read too (§NNN), so both say a language with the same flag.
+ * backoffice's language tabs read too (§572), so both say a language with the same flag.
  */
 const FLAG = LANGUAGE_FLAG;
 

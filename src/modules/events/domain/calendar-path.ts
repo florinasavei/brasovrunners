@@ -1,7 +1,7 @@
 import { currentMonth, monthParam, parseMonth, parseYear, type YearMonth, YEARS_EITHER_WAY } from "./calendar";
 
 /**
- * The calendar's period lives in the address's path, never in its query (§NNN, amending §116,
+ * The calendar's period lives in the address's path, never in its query (§574, amending §116,
  * §137 and §549): `/ro/calendar` is this month, `/ro/calendar/2026-10` October,
  * `/ro/calendar/2026-10/list` October as a list, `/ro/calendar/2026` the year. The filters stay in
  * the query (`?type=RACE`), on the period's own path.
@@ -112,7 +112,7 @@ export type LegacyCalendarRedirect = { address: string; fixed: boolean };
  * with the clock), so the proxy may answer it with a permanent 308. `?view=list` alone, or a
  * malformed or distant month, means "this month": its target changes on the first of the next
  * month, so the proxy answers a 307 the browser does not keep, or a bookmark would stay on the
- * month it first resolved to (§NNN).
+ * month it first resolved to (§574).
  */
 export function legacyCalendarAddress(basePath: string, search: URLSearchParams, now: Date, timeZone: string): LegacyCalendarRedirect | null {
   if (!LEGACY_PERIOD_KEYS.some((key) => search.has(key))) return null;

@@ -14,7 +14,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN (amending §482, §524) — «Membri» → «Scrie zona membrilor»: the owner's screenshot of
+ * §572 (amending §482, §524) — «Membri» → «Scrie zona membrilor»: the owner's screenshot of
  * 2026-09-29, «Salutare colegii!» in the Romanian editor, the English empty, and «Copiază și tradu
  * tot» answering «Nu e nimic de tradus: scrie întâi textele în română.»
  *
@@ -122,7 +122,7 @@ function capture<T>(type: string) {
   return { seen, stop: () => target.removeEventListener(type, listener) };
 }
 
-describe("§NNN «Copiază și tradu tot» on «Membri»", () => {
+describe("§572 «Copiază și tradu tot» on «Membri»", () => {
   it("knows the members' two texts as English rich texts with a Romanian twin", () => {
     for (const text of ["zone", "benefits"]) {
       expect(isTranslatableEnglishField(`${text}EnBody`), text).toBe(true);
@@ -196,7 +196,7 @@ describe("§NNN «Copiază și tradu tot» on «Membri»", () => {
   });
 });
 
-describe("§NNN the tabs «RO» | «EN» of a bilingual text", () => {
+describe("§572 the tabs «RO» | «EN» of a bilingual text", () => {
   const panels = (enWritten: boolean) => [
     { locale: "ro", label: "RO", content: createElement("input", { type: "hidden", name: "zoneRoBody", value: "{}", readOnly: true }) },
     {

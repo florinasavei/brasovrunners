@@ -24,7 +24,7 @@ import type { GlyphName } from "@/modules/events/ui/glyphs";
  * so it already carries its locale prefix, and prefixing it again would give `/ro/ro/…`. What
  * is rendered is still an ordinary `<a href="…">` with the whole query in it.
  *
- * Never prefetched (§549, §NNN): a filter chip's href carries a query, and such an address is the
+ * Never prefetched (§549, §574): a filter chip's href carries a query, and such an address is the
  * page's live twin, rendered per request; the calendar's period chips («Lună», «An», «Calendar»,
  * «Listă») are paths to static period pages (`/ro/calendar/2026-10/list`), each made on its first
  * visit of the day. A prefetch per chip in view would start a function, or a period page nobody

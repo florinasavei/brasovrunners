@@ -48,7 +48,7 @@ export default async function CalendarSection({
   locale: Locale;
   view: CalendarView;
   layout: CalendarLayout;
-  /** What the period's own links keep — the filters (a group ticked twice is an array); the period and the layout are the path's (§NNN). */
+  /** What the period's own links keep — the filters (a group ticked twice is an array); the period and the layout are the path's (§574). */
   query: Record<string, string | string[]>;
   now: Date;
   /** The period's rows, already read and narrowed by the page (§413). */

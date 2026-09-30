@@ -281,7 +281,7 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
             />
           )}
           {/*
-            The registration form's own box (§NNN, applying §561): typed day first, «11.05.1990»,
+            The registration form's own box (§573, applying §561): typed day first, «11.05.1990»,
             never the browser's date box, which an English phone drew month first. The same
             placeholder, the date in words with the age on the run's day as its helper, and the
             run's minimum age refused live under it; the action reads the typed text with the same

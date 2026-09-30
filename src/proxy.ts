@@ -73,7 +73,7 @@ export default function proxy(request: NextRequest) {
   }
 
   /*
-    The calendar's period moved from the query into the path (§NNN): `/ro/calendar?month=2026-10`
+    The calendar's period moved from the query into the path (§574): `/ro/calendar?month=2026-10`
     → `/ro/calendar/2026-10`, `?view=list` → `/<this month>/list`, `?year=2027` → `/2027`, every
     filter kept. A redirect before anything renders (a 308 where the address fixes the period, a
     `no-store` 307 where it means this month), so a bookmark or a search result lands on the

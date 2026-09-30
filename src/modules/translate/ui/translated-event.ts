@@ -1,5 +1,5 @@
 /**
- * What a translate press tells the page once its answers are in their English boxes (§NNN).
+ * What a translate press tells the page once its answers are in their English boxes (§572).
  *
  * The press that fills the English (`translateBoxes` — «Copiază și tradu tot», «Tradu cardul») sits
  * above the language tabs, or at the end of their row, and does not know which strip, if any, holds

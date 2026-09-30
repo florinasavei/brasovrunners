@@ -3,7 +3,7 @@ import type { routing } from "@/i18n/routing";
 /**
  * Which flag stands for which language: Romania for Romanian, the United Kingdom for English (the
  * site formats English as `en-GB`). A judgement, not a lookup — `LocaleSwitcher` explains it. Read by
- * the header's switcher and by the backoffice's language tabs (§NNN), always beside the language's
+ * the header's switcher and by the backoffice's language tabs (§572), always beside the language's
  * code or name, never alone as the label.
  */
 export const LANGUAGE_FLAG: Record<(typeof routing.locales)[number], string> = {

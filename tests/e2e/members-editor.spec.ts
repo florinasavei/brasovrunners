@@ -3,7 +3,7 @@ import { hydrated, signIn } from "./support/featured-event";
 import { openFold } from "./support/fold";
 
 /**
- * §NNN (amending §482, §524) — «Pagini» → «Membri» → «Scrie zona membrilor»: the two languages are
+ * §572 (amending §482, §524) — «Pagini» → «Membri» → «Scrie zona membrilor»: the two languages are
  * tabs «RO» | «EN» in the fold, one editor on screen at a time, with «Copiază și tradu tot» above
  * them; the English tab says «gol» while its editor is empty; a save with the Romanian alone
  * is refused naming the English, and the English tab comes forward with the box it names; both
@@ -33,7 +33,7 @@ async function write(card: Locator, suffix: "Ro" | "En", text: string) {
   else await card.page().keyboard.type(text);
 }
 
-test.describe.serial("§NNN the members' zone editor: tabs RO | EN", () => {
+test.describe.serial("§572 the members' zone editor: tabs RO | EN", () => {
   test("the two languages are tabs under the translate press, and the Romanian alone is refused on the English tab", async ({ page }) => {
     test.setTimeout(90_000);
     const card = await zoneEditor(page);

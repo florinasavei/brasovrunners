@@ -1,7 +1,7 @@
 import CalendarPage from "../page";
 
 /**
- * A period of the calendar at its own path (§NNN, amending §116, §137, §549): `/ro/calendar/2026-10`
+ * A period of the calendar at its own path (§574, amending §116, §137, §549): `/ro/calendar/2026-10`
  * is October, `/ro/calendar/2026-10/list` October as a list, `/ro/calendar/2026` the year. The same
  * page as the bare calendar, told its period by the path instead of the query
  * (`events/domain/calendar-path.ts` says why the query could not carry it).

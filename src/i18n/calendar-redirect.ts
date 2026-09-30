@@ -3,7 +3,7 @@ import { CLUB_TIME_ZONE } from "./dates";
 import { type Locale, routing } from "./routing";
 
 /**
- * The calendar's old addresses, sent on by the proxy before anything renders (§NNN).
+ * The calendar's old addresses, sent on by the proxy before anything renders (§574).
  *
  * Until this change a month was `/ro/calendar?month=2026-10`, a year `?year=2027`, the list
  * `?view=list`. They live in bookmarks, shared links and search results; each now answers a redirect

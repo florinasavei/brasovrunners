@@ -24,12 +24,12 @@ import { readSwipe, type SwipeStep, swipeAxis } from "../domain/calendar-swipe";
  * The step is `router.push` with the address the arrow carries, `scroll: false` so the reader stays
  * where they are on the page, inside a transition so the month on screen stays — dimmed, `aria-busy`
  * — until the next one is ready (§166, §413). Nothing is prefetched here, and since §549 the arrows'
- * own links are not either: a stepped address is a period's own static page since §NNN
+ * own links are not either: a stepped address is a period's own static page since §574
  * (`/calendar/2026-10`), but a month nobody has opened today is a render, and a prefetch of it a
  * function started on a visit the CDN answers alone (and a database awake, §327). Under reduced motion nothing
  * slides; the swipe still steps.
  *
- * The addresses are paths, never `?month=` (§NNN): on the static calendar a query was answered by
+ * The addresses are paths, never `?month=` (§574): on the static calendar a query was answered by
  * Next's router from the bare page's prefetched copy, so a swipe changed the address and the same
  * month stayed on screen.
  */
@@ -61,7 +61,7 @@ export default function CalendarSwipe({
     return settle(track.current, step);
   }, [pending, previousHref, nextHref]);
 
-  // Each period is a page of its own path since §NNN (`/calendar/2026-10`), so the next period
+  // Each period is a page of its own path since §574 (`/calendar/2026-10`), so the next period
   // usually arrives as a new calendar rather than as this one re-rendered: the step is handed over
   // through `arriving`, and the calendar that mounts with it slides in the same way.
   useEffect(() => {
@@ -130,7 +130,7 @@ export default function CalendarSwipe({
 }
 
 /**
- * The step a swipe has just pressed, for the calendar that arrives with the next period (§NNN): a
+ * The step a swipe has just pressed, for the calendar that arrives with the next period (§574): a
  * period's path is a page of its own, so that calendar is a new instance and cannot read the old
  * one's refs. One per tab, cleared by whoever reads it, and believed only for a few seconds, so a
  * swipe whose navigation came to nothing never slides a calendar met later.

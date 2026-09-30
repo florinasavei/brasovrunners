@@ -81,7 +81,7 @@ async function signOrRefuse(form: FormData, locale: Locale, path: string): Promi
         typedName: text(form, "typedName"),
         idDocument,
         // Counted against the run's minimum age and dropped (§440); absent when the run has none.
-        // Typed day first, «11.05.1990», and read as the registration form reads it (§NNN, §561):
+        // Typed day first, «11.05.1990», and read as the registration form reads it (§573, §561):
         // `YYYY-MM-DD` for the service, or what was typed, trimmed, for it to refuse.
         birthDate: normalizeTypedDate(text(form, "birthDate")) || undefined,
         email: text(form, "email"),
