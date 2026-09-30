@@ -137,8 +137,8 @@ describe("BR-REQ-037-07 «Dă-i un loc» on a full race (§589)", () => {
     expect(noFreePlaceValues("VALIDATION_ERROR", outcome)).toBeUndefined();
     const sentence = (messages: typeof ro, locale: "ro" | "en") =>
       createTranslator({ locale, messages, namespace: "Admin" })("errors.NO_FREE_PLACE", noFreePlaceValues(outcome.error, outcome));
-    expect(sentence(ro, "ro")).toContain("Locuri: 3; confirmați: 1; declarație de semnat: 0; oferite din listă: 0; rezervate familiilor: 2.");
-    expect(sentence(en as typeof ro, "en")).toContain("Places: 3; confirmed: 1; declaration to sign: 0; offered from the list: 0; reserved for families: 2.");
+    expect(sentence(ro, "ro")).toContain("locuri 3, confirmați 1, declarații de semnat 0, oferite 0, rezervate familiilor 2.");
+    expect(sentence(en as typeof ro, "en")).toContain("places 3, confirmed 1, declarations to sign 0, offered 0, reserved for families 2.");
   });
 
   it("gives the place once one is free: the family's deadline passed and no job has run since", async () => {

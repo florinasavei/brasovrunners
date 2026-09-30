@@ -75,6 +75,7 @@ import {
 } from "../actions";
 import { ALL_EVENTS, AUTOMATIC, defaultEventFilter } from "@/modules/registrations/domain/default-event-filter";
 import { rowVerbsFor } from "@/modules/registrations/domain/row-verbs";
+import { givePlaceRefusalAhead } from "@/modules/registrations/give-place-tip";
 import RegistrationRowMenu, { type RegistrationMenuItem } from "@/modules/registrations/ui/RegistrationRowMenu";
 import { CLUB_NAME } from "@/theme/brand";
 import { actionKeyOf } from "@/shared/forms/action-key";
@@ -233,6 +234,17 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   ]);
   // Every verb that writes asks first and says who is emailed (§384).
   const words = await confirmWords();
+  /*
+    Why «Dă-i un loc» would be refused, per event on the page (§NNN): the rows grouped by event,
+    one door read each (cached per request), and only where a waiting row offers the verb.
+  */
+  const givePlaceWhy = new Map(
+    await Promise.all(
+      [...new Set(canManageRegistrations(actor.role) ? rows.filter((row) => row.status === "WAITLISTED").map((row) => row.eventId) : [])].map(
+        async (id) => [id, await givePlaceRefusalAhead(id)] as const,
+      ),
+    ),
+  );
 
   const basePath = getPathname({ locale, href: "/admin/registrations" });
   /** Only the list-shaping keys travel with a sort link or a page link. */
@@ -1289,7 +1301,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 });
               }
               if (verbs.includes("givePlace")) {
-                items.push({ kind: "submit", icon: "place", label: t("desk.givePlace"), formId: `place-${row.id}` });
+                // On a full race the item stays, with the refusal's sentence as its tooltip (§NNN).
+                items.push({ kind: "submit", icon: "place", label: t("desk.givePlace"), formId: `place-${row.id}`, hint: givePlaceWhy.get(row.eventId) ?? undefined });
               }
               if (verbs.includes("checkIn")) {
                 items.push({ kind: "submit", icon: "checkIn", label: t("desk.checkIn"), formId: `checkin-${row.id}` });
@@ -1365,7 +1378,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                       id={`place-${row.id}`}
                       action={promoteRegistrationAction}
                       hidden
-                      confirm={{ title: t("confirm.givePlaceTitle"), body: t("confirm.givePlaceBody", { name: row.registeredName }), ...(row.kind === "TEST" ? {} : { email: words.email(1) }), confirmLabel: t("desk.givePlace"), cancelLabel: words.cancel }}
+                      // A thumb cannot hover a menu item: the question says the same sentence first.
+                      confirm={{ title: t("confirm.givePlaceTitle"), body: [givePlaceWhy.get(row.eventId), t("confirm.givePlaceBody", { name: row.registeredName })].filter(Boolean).join(" "), ...(row.kind === "TEST" ? {} : { email: words.email(1) }), confirmLabel: t("desk.givePlace"), cancelLabel: words.cancel }}
                     >
                       {hidden}
                     </ActionForm>

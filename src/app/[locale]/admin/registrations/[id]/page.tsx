@@ -67,6 +67,7 @@ import TextHashTip from "@/modules/registrations/ui/TextHashTip";
 import { shortTextHash } from "@/modules/legal-documents/domain/signed-text";
 import { withSendNowChoice } from "@/modules/notifications/domain/send-at-once";
 import { sendNowChoiceFor } from "@/modules/notifications/send-now-choice";
+import GivePlaceButton from "@/modules/registrations/ui/GivePlaceButton";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
@@ -483,9 +484,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
               data-testid="promote-form"
             >
               {deskHidden}
-              <GlyphButton icon="place" type="submit" variant="outlined" sx={{ minHeight: 44 }}>
-                {tr("desk.givePlace")}
-              </GlyphButton>
+              {/* On a full race, an «i» says why the press will be refused (§NNN). */}
+              <GivePlaceButton eventId={registration.eventId} />
             </ActionForm>
           )}
           {registration.status === "CONFIRMED" && (

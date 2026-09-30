@@ -72,7 +72,7 @@ export function occupiedForNewcomer(input: WaitlistInput & { occupied: number; l
 
 /**
  * The marker a refusal carries when the places are gone and the waiting list is full too — the
- * public form's "Locurile și lista de așteptare sunt pline." Not a field of any form: a rule
+ * public form's «Locurile s-au ocupat și lista de așteptare e plină — ne pare rău.» (§587). Not a field of any form: a rule
  * about the event, like the throttle's marker, read by the page from the refusal's field list.
  */
 export const WAITLIST_FULL = "waitlistFull";
