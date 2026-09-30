@@ -49,17 +49,35 @@ describe("BR-REQ-090-03 criterion 9 the cache slots", () => {
     expect(fakeNextCache.counts.writes).toBe(0);
   });
 
-  it("writes one slot per five minutes of a run's quiet, and the first ping of each five minutes", async () => {
+  it("writes one slot per five minutes of a run's first hour, one per hour after it to the window, and the first ping of each five minutes", async () => {
     await recordRealRun("registration-maintenance", planQuiet({ ranAt: NOW, nextWorkAt: null, cadenceMinutes: 0, failed: false }));
-    // Twelve five-minute slots in the hour, and the run's own ping.
-    expect(fakeNextCache.entries.size).toBe(13);
+    // 13:00 in Brașov, quiet to tomorrow's 04:00 window (§577): twelve five-minute slots, the
+    // fourteen hours from 11:00Z to 00:00Z, and the run's own ping — not 288 five-minute slots.
+    expect(fakeNextCache.entries.size).toBe(12 + 14 + 1);
 
     await recordPing("registration-maintenance", new Date(NOW.getTime() + 60_000), false);
     // Same five minutes: the run's ping stays the one on record.
-    expect(fakeNextCache.entries.size).toBe(13);
+    expect(fakeNextCache.entries.size).toBe(27);
     expect(await readLastPing("registration-maintenance", new Date(NOW.getTime() + 2 * 60_000), 30 * 60_000)).toEqual({
       at: NOW.toISOString(),
       ran: true,
     });
+  });
+
+  it("answers a ping hours after the run from its hour slot, and a wake forgets the hour slots too (§577)", async () => {
+    const plan = planQuiet({ ranAt: NOW, nextWorkAt: null, cadenceMinutes: 0, failed: false });
+    await recordRealRun("registration-maintenance", plan);
+    const evening = new Date(NOW.getTime() + 7 * 60 * 60_000); // 20:00 in Brașov
+    expect(await readPingVerdict("registration-maintenance", evening)).toMatchObject({
+      run: false,
+      reason: "nothing-due",
+      until: plan.quietUntil,
+    });
+    // The window's 04:00 call runs.
+    expect(await readPingVerdict("registration-maintenance", new Date(plan.quietUntil.getTime() + 2 * 60_000 - 500))).toEqual({ run: true });
+
+    const { wakeJobs } = await import("@/modules/jobs/schedule-cache");
+    wakeJobs("registration-maintenance", new Date(evening.getTime() + 60 * 60_000), evening);
+    expect(await readPingVerdict("registration-maintenance", evening)).toEqual({ run: true });
   });
 });

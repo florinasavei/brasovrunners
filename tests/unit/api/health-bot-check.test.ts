@@ -31,7 +31,9 @@ vi.mock("@/modules/registrations/bot-check-signals", async (original) => ({
   countBotCheckSignals: (...args: unknown[]) => countBotCheckSignals(...args),
 }));
 
-const { GET } = await import("@/app/api/health/route");
+const healthRoute = await import("@/app/api/health/route");
+/** The full report (§577): these cases are about what the deep answer asks and says. */
+const GET = () => healthRoute.GET(new Request("http://localhost/api/health?deep=1"));
 const { botCheckSignalLevel } = await import("@/modules/registrations/bot-check-signals");
 
 beforeEach(() => {

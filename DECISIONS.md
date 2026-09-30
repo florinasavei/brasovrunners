@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.43-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.44-2026-09-27 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.43-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.44-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -21753,3 +21753,101 @@ Baseline `BR-V2.43-2026-09-27`.
 **Tests.** Unit `events/calendar-filter-slot.test.ts` renders the slot both ways. The held slot has the panel in its markup with `visibility: hidden` and never `display: none`, and the calendar page draws its panel through the slot and nowhere else. A new e2e test in `event-pages.spec.ts` makes the criterion independent of the date. A January two years back has nothing to offer; its slot is held, has the closed panel's 44-pixel height, and puts the arrow where the calendar's own month puts it. Both Playwright projects run it on a production build.
 
 Baseline `BR-V2.43-2026-09-27`.
+
+## 576. A second person on one address is never answered «deja înscris» for sharing a birth date: another name and the other sex are another person, and the limit of four per address is said
+
+**2026-09-30. Amends §446 and §493; applies to §519 and §543.** The owner, on QA (BR-V2.40), from his phone: «asta cu înscrierea cu același mail trebe să devină top prio!». He had registered a second person on the same address from the public form — another name, and he said another birth date and another sex. The email answered: «Ești deja înscris la acest eveniment, cu numărul 101 — nu s-a creat o a doua înscriere», with the twins' sentence, and the confirmation of the runner already registered.
+
+### What the data showed
+
+The QA database was read only for its shape, with no name, address or date printed:
+- the address held two confirmed runners at the race;
+- all three stored birth dates (the two and the one registered a minute later) differ from each other, and no row changed after the answer;
+- the answer was the confirmation of the second registered runner, marked `sameBirthDateHint`.
+
+The code has exactly one route to that answer (`decideSubmission`, `domain/family.ts`). The typed name differed from every registration's. The posted birth date was the day of the second runner, and the first runner's day was different. §446 read that as a slip of that runner. The owner remembered a different date. The likeliest reason he got the twins' answer anyway: the box is `autocomplete="bday"`, so a phone fills in the device owner's own birthday, and the second runner was the owner's own test entry with his own date.
+
+What did **not** cause it:
+- the name key keeps every word: «X duplicat Y» is not «X Y» (`foldName`);
+- the typed day-first birth date is read as the day it is;
+- a date the box cannot read is refused with the box named (`z.iso.date()`, §47), never compared as "no date";
+- no sitting was involved: the sitting row was written a minute later, by the next form, which registered its person correctly.
+
+### The rule
+
+`comparePerson` weighs the **sex** beside the birth date. On a registered birth date, **another name and the other sex** are another person: two boxes changed on purpose, never a slip. A mistyped name changes one box, and a birth date filled in by the browser changes one box. Such a form goes the ordinary way for another person (§446): the posted form is kept, «Înscrii încă o persoană la …?» goes to the address, and one press registers them. After «Da» in a family sitting, it is the sitting's next registration (§543).
+
+The sex counts only when both sides have one of the form's two answers (`isSexChoice`). A staff entry with none, or a row with the retired `UNSPECIFIED`, says nothing either way, and the day decides as before. The same name is still the same runner whatever the sex box says (a slip in one box).
+
+The same rule is kept in every place that decides who a form is:
+- the address's registrations (`decideSubmission`, `isDifferentPerson`), and so also the recheck at the press behind the emailed link;
+- a sitting's kept forms (`sittingEntryFor`, reading the kept form's sex through `personOfEntry`);
+- the browser's own half of the sitting (`withSittingPerson`). Its cookie now carries each person's sex as a fourth tab-separated field, `F`, `M` or empty. A line written before this release reads as no sex.
+
+**The twins' sentence (§493)** stays for true twins of one sex: another name, the same day, the same sex. It is said only when the posted day really is the registration's own. A form with no day to compare gets the plain «Dacă vrei să înscrii pe altcineva…» sentence, never the twins' one.
+
+The screen after the form still reads the same in every case (§39, AGENTS.md §19.4). No migration.
+
+*Rejected:*
+- **Letting any other name on a registered address be another person.** That undoes §446's slip rule, which the owner asked for, so a typo in one's own name would again produce a family email.
+- **Dropping `autocomplete="bday"` from the box.** It helps the first person, who is most often the device's owner. Whether a sitting's next form, which is by definition somebody else, should switch it off is left to the owner.
+- **Recomputing the name keys.** They were right. Nothing is migrated.
+
+### The sex only beside a birth date (the review's nit)
+
+The sex weighs only when the form posts a birth date. With no date posted there is no day to share, so another name and the other sex stay a slip. The form is `partial`, exactly as before this section. Without that guard a form missing its date, such as a staff entry that was not told it or a link from an older email, would have become another person on the sex alone. That is wider than the rule above.
+
+### The limit per address, said (the owner, 2026-09-30, 10:02)
+
+The owner: up to **four** people on the same email address, and the limit must be stated. The limit was already a club setting (§389, «Termene», from one to ten) with a default of four (`ADDRESS_CAP_RULE.default`). Only the backoffice, the guide and the emails at the limit said it. A participant read it nowhere before an email refused them. The setting and its default stay as they are, and nothing is migrated. An environment whose stored row says another number keeps that number, and «Setări» → «Termene» shows it.
+
+It is now said wherever a participant meets it, always as the club's setting and never as a literal. The words are the site's count words (`peoplePhrase` for the emails and the legal text, and `addressCap.people.*` with `countForm` on the pages):
+- **under the form's address box**: «Cu aceeași adresă de email se pot înscrie cel mult 4 persoane la un eveniment, de exemplu o familie. Fiecare își semnează singură declarația.» It is a line under the box, not the box's helper. §546's «no help at rest» still holds for every other box, and the owner asked for this one fact. It is said once the schema allows a family (`family-gate.ts`) and never on a members' event (one person per account, §552);
+- **on the family's screens**: the next form's address box says «2 din 4 persoane cu această adresă». The sitting's screen says the same under the names. At the limit it puts the rule in place of «Da, încă o persoană»: «Ai ajuns la limită: … cel mult 4 persoane la un eveniment. Pentru încă o persoană, folosește altă adresă de email.» The count is this browser's own forms. That is what the server counts for a sitting (`SITTING_AT_CAP`), never what the address holds (§39);
+- **in the refusal at the limit**: the screen's «Cei trimiși deja cu această adresă ating limita clubului: … cel mult 4 persoane la un eveniment» and the email at the limit (unchanged, from the payload) both name the number;
+- **on «Înscrierile mele»**: under each registration, «Cu această adresă, la acest eveniment: 2 din cel mult 4 persoane.», counted from the page's own list behind the address's link;
+- **in the terms' template**: §2's sentence about registering somebody else says «cel mult `{{registrationsPerAddress}}` cu aceeași adresă la un eveniment». This is a new merge field, filled from the setting when `/legal/terms` is shown and listed in the editors' legend. The text in force on production says «cel mult câte permite clubul» until the club approves a version from the new template;
+- **in the guide**: the family section says where the limit is stated, and it has the new rule about the sex.
+
+The public pages read the limit from the data cache (`cachedAddressCap`, the `settings` tag), and a save expires it (`updateAddressCap`). A visitor reading the sentence wakes nothing.
+
+*Rejected:*
+- **A hard ceiling of four in the code.** The club already chose the number in a setting it can change. Fixing it would undo §389 for a club that wants five.
+- **A second sentence under «Înscriu încă o persoană cu această adresă» on the first screen.** §547 keeps that screen to one quiet sentence. The form above has already said the limit, and the sitting's screen counts against it.
+
+Baseline `BR-V2.44-2026-09-27`.
+
+## 577. Nothing runs while the site is idle: one daily window at 04:00, a shallow health check, Turnstile on touch, and no render nobody asked for
+
+**The owner, 2026-09-29 22:40–22:42:** «vreau să pui în coadă partea de performanță! dacă site-ul stă în idle nu vreau să consum nimic! nici Turnstile, nici nimic!» and «site-ul ăsta trebuie să aibă costuri minime!». And on 2026-09-30, a second brief on Vercel's Fluid Active CPU: 3 h 36 m of Hobby's 4 h in 30 days, 179 K function invocations, 171 K CDN requests, with §549's ISR already on production — so the 30-day figure includes the weeks before it, and no saving is claimed here that was not measured.
+
+**The principle, for every provider.** While nobody visits, the platform consumes nothing: no Neon wake, no function invocation beyond the job pingers' own (which answer from the data cache), no Turnstile call, no third-party fetch, no polling in an open tab. Work happens because a person did something, or once a day in the maintenance window, **04:00 in Brașov**.
+
+**Audit — every idle consumer found, what it cost, what changed.**
+
+1. **The jobs' hourly safety run** (§334, §355). A ping with nothing due already answered from the cache, but each job still looked for real once an hour whatever the computation said, at :00, and the health check's :02 shared that wake: about 24 Neon wakes a day on production (measured over 15.6 h on 2026-09-29/30: 49 wakes, 6.2 h awake, 12 of them at :00), about 12 on QA under its two-hour interval. **Changed:** the safety look waits for the daily window (`jobs/schedule.ts#dailyWindowEnd`): the first 04:00 on the club's clock at least an hour after the run, two minutes early so the pinger's 04:00 call runs. Every deadline the work has is still its own (`next-work.ts`: holds, offers, email links, reminders, windows, family entries, outbox retries); the duties measured in days (retention, the picture sweep, the standing series) run at 04:00. `MAX_QUIET_MINUTES` is 26 hours (a day, the hour's gap before the window, the autumn hour), so `wakeJobs` now forgets the promise for any work due within it — a registration whose next deadline is hours away wakes the job at the next ping, as a person's act should; work further away is found by the window's run. A day's quiet in five-minute slots would be 288 cache writes a run, so the promise is written in five-minute slots for the run's first hour and hour-wide slots after it (at most 12 + 27), read fine-first; a wake forgets both (one tag). The job health allows a real run up to that 26 hours plus its old threshold, and the Administrator's interval is a floor under the window, never a cap over it. **The §40 cadence stays**: a skipped ping costs a few milliseconds of a function and no database, and the quarter-hour by day is what a hold's hand-over to the waiting list waits for. Relaxing it would delay a person's place for no saving.
+2. **The health check** (§98, §335). Every `/api/health` opened the database (the schema, both jobs, the outbox, the bot-check counts) and asked Neon's API, Cloudflare's siteverify and DeepL (cached 15 minutes to an hour): 22 a day on production from the monitor, plus every watcher and `yarn ship`'s 20-second poll. **Changed:** the default is **shallow** (`diagnostics/domain/shallow-health.ts`): the build (baseline, commit, the migration it expects), the configuration (a deployed environment without `DATABASE_URL` or `JOB_SECRET` is `degraded`) and the domain's renewal — no database, no third party; still a 503 for anything but `ok`, still a 500 if the deployment cannot start. **`?deep=1`** is the full report as it was. `yarn smoke` (and so `migrate.yml`) asks for it; `yarn ship` polls the shallow one for the baseline and asks the deep one once after the flip; the monitors keep calling the shallow one, and two new cron-job.org monitors (production and QA) call the deep one daily at **04:02**, inside the 04:00 runs' wake — the owner's clicks, in `SETUP.md` §40.
+3. **Turnstile** (§97, §185, §518). The widget's script and challenge loaded on arrival on the registration, contact and declaration pages, and — in Cloudflare's implicit mode, through `next/script` — on every view of an event page showing the interest box, a static page the CDN otherwise answers alone. **Changed:** `TurnstileWidget` injects nothing until a person starts on its form (`BOT_CHECK_ARMING_EVENTS`: a focus inside it, a press, a key, a typed character); the status line and the slow timer wait with it; a press on the send button arms it (its focus comes first) and the button holds the press for the token as before (§502). The interest box uses the same `BotCheck` island. siteverify runs only on submit; the health's probe only in the deep check and on `/admin/tasks`. The browser proves it (`registration-turnstile.spec.ts`): no Cloudflare request on the listing, an event page, the contact page or the form until the form's first focus; the held-press cases arm the widget with a key in the first box; and the real test widget's case (`E2E_REAL_TURNSTILE=1`) now holds Cloudflare's script until the press is held rather than for a fixed four seconds — counted from a request that now starts at the first key, a fixed delay ended after the press and spent the valve's eight seconds on Cloudflare's own challenge.
+4. **The public pages** (§549). Verified on production 2026-09-30 with `curl -sI`: the listing, the calendar, the privacy page and `/api/build-id` answer `X-Vercel-Cache: HIT` (a `STALE` answer turned `HIT` within the minute, its regeneration done). ISR regenerates only on a request, so the day ceiling and the clock holds cost nothing while nobody visits: **§549 suffices** here, and no time-based revalidation was changed.
+5. **The weather** (§402, §549). Fetched only inside a page's render, one cached entry per place and hour, never on a timer: **§549 suffices**, nothing changed.
+6. **The client.** `NewBuildNotice` asked `/api/build-id` every minute in every visible tab, public pages included — a CDN hit, not a function, but 1 440 edge requests a day per tab left open. **Changed:** a public tab asks only when it is shown again; the backoffice (`/admin`, `/devs`) keeps its minute while visible (`pollsForNewBuild`). No other client island polls: the video bar's handshake is bounded and follows a click, the registration's `PressWhenWindowEnds` is one timer on a form a person is on; a test now fails on any new `setInterval` in a client island not named with its reason.
+7. **The backstop.** `scheduled-jobs.yml` said every five minutes (GitHub ran it every three to five hours, four job calls a run). **Changed:** four times a day, off the pingers' quarter-hours — a backstop for a dead cron-job.org, not a clock. `vercel.json` also stops deploying `perf/*` and `refactor/*` branches, like every other working prefix.
+8. **Measure** (`yarn idle:measure`, `scripts/idle-cost.mjs`, `docs/PLATFORM.md` § Idle cost): Neon's operations log over a window, every wake classed inside the 04:00 window, at a pinger minute or at any other; the last hour of Vercel's request log by kind (Hobby keeps one hour); the procedure for the 30-day Usage figures. The table of idle cost and cost per visit, before and after, is in that section. The target is zero `pinger` wakes and zero non-ping invocations outside the window.
+
+**Part B — Active CPU, investigated in order.**
+
+- **B1, prefetch.** `prefetchFor` leaves prefetch to Next only for a static page at its bare address (§549), which is a CDN hit for a stranger. But a session cookie sends a bare event page to its live twin (the edit button, §135), so for a signed-in reader every event card in view on the listing was a prefetch to a force-dynamic render. **Changed:** the proxy answers a router prefetch (`Next-Router-Prefetch`) that a twin would answer with an empty, never-kept `204` (`isRouterPrefetch`, `DECLINED_PREFETCH_STATUS`). Next 16.3's segment cache reads no Flight answer from it, rejects the route entry for ten seconds, and a press then navigates without prefetched data — through the proxy to the twin, edit button included (`segment-cache/navigation.js#navigateImpl` → `navigateToUnknownRoute`). A stranger's prefetch, every visit and every navigation are unchanged. Prefetching the static links themselves stays: each costs one proxy call and a CDN hit, and the proxy was measured at **0.17–0.32 ms of CPU per call warm** (3 000 calls per request shape, production build's code, this machine) — about a minute a month at the current volume, not worth a slower press.
+- **B2, needless twins.** `live-twin.ts` sent any key outside a short ignore list to a twin: `/ro/evenimente?foo=1` and `?page=2` answered on production from `/[locale]/live/events`, `private, no-store`, a MISS every time, the same page the CDN held. **Changed:** each twin names what its page reads — the listing a filter that ticks something (the page's own `parseListingFilter`, so a value the page drops is dropped here too) or `?view=list`; the bare calendar the same filters and its old `?month=`, `?year=`, `?view=` (still redirected first); a period's path the filters; an event page `?lista=`, `?interest=`, `?since=`, `?declaratie=` whatever their value, and the session. Every filter, the start list's pages, the interest box's outcome, the signer's link and the staff session behave exactly as before; `?foo=1`, `?type=FOO`, `?view=grid` are the CDN's copy.
+- **B3, the proxy.** It matches every extensionless page request and runs before the cache, on hits too. Measured cheap (above), so the routing stays: moving the localized paths into `next.config.ts` rewrites with a matcher that skips prefetches would save well under a minute of CPU a month and would need proof for every twin, redirect and header the proxy owns — not done. The only proxy change is B1's early answer.
+- **B4, scanners.** The available log (Hobby: one hour, read 2026-09-30 with `vercel logs`) had `/wp-admin/install.php` from outside about every few minutes, each a function render of the 404 page (`/[locale]/[...rest]`, a dotted path the proxy never sees, `private, no-store`, MISS) — roughly 150 a day if steady, a few minutes of CPU a month; real but not dominant. **Recommended, not applied** (no Vercel setting was changed; the owner's click, Vercel → the production project → Firewall → Custom Rules, action *Deny*, one rule each or combined):
+  1. request path **ends with** `.php`, `.asp`, `.aspx`, `.jsp` or `.cgi` — the application serves none;
+  2. request path **starts with** `/wp-`, `/wordpress`, `/xmlrpc`, `/phpmyadmin`, `/cgi-bin`, `/.env` or `/.git`;
+  3. nothing else: no challenge on `/api/internal/jobs/*` (the pingers), `/api/webhooks/mailgun`, `/api/health`, `/robots.txt`, `/sitemap.xml`, the Open Graph pictures or any page — a challenge there breaks the jobs, the webhooks, search indexing and link cards.
+
+**What stays unexplained.** About two thirds of production's wakes in the measured window were at random minutes, some at night (02:27, 03:07, 03:32, 04:24 in Brașov): visitors, crawlers reaching per-request routes, staff, other sessions' checks, deployments. The one-hour request log cannot attribute them after the fact; `yarn idle:measure` is how the next quiet day is read. The groups of listing/calendar/footer-link/event requests in the log are a page view and its prefetches (the header's and the footer's static links, the event cards in view); the duplicated event request within the same millisecond is not explained by the code and is left as a question for a longer log.
+
+**Rejected.** *Relaxing the job monitors*: it delays a waiting runner's place and saves no database wake, which the cache already avoids. *A static (`force-static`) shallow health*: free, but it would say `ok` for a deployment whose functions cannot start, which is what an hourly monitor exists to catch. *The pinger's "is anything due" on a CDN-cached URL*: a pinger cannot branch on it, and a cached answer could not be expired by a wake without a second service. *Edge Config or KV for the due moment*: a service and a write quota for one timestamp that the data cache already holds. *Replacing the locale proxy with config rewrites*: see B3. *Blanket bot challenges*: see B4.
+
+**Amends** §334 and §355 (the hourly cap is the daily window), §98 and §335 (the health's default depth), §97 and §185 (when the widget loads), §549 (which query sends a visitor to a twin; a declined prefetch), §210 (the notice's minute is the backoffice's).
+
+Baseline `BR-V2.44-2026-09-27`.

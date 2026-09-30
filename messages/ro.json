@@ -2225,7 +2225,8 @@
         "seriesRhythm": "Doar în declarațiile alergărilor de grup: cât de des se repetă seria, citit din datele ei („în fiecare marți, la 18:30”)",
         "seriesPlace": "Doar în declarațiile alergărilor de grup: locul de plecare obișnuit al seriei",
         "promotionalMaterials": "Doar în nota de confidențialitate: bifa opțională pentru oferte și beneficii de la club și de la partenerii săi. Fără el în nota în vigoare, formularul nu o oferă",
-        "promotionalMaterialsShared": "Doar în nota de confidențialitate: ce date pot primi partenerii clubului de la cei care au bifat oferte și beneficii. Fără el în nota în vigoare, lista pentru sponsori e oprită"
+        "promotionalMaterialsShared": "Doar în nota de confidențialitate: ce date pot primi partenerii clubului de la cei care au bifat oferte și beneficii. Fără el în nota în vigoare, lista pentru sponsori e oprită",
+        "registrationsPerAddress": "Doar în termeni: câte persoane se pot înscrie cu aceeași adresă de email la un eveniment, cu unitatea („4 persoane”), din Setări → „Termene”"
       },
       "removeBlockedReferenced": "Nu se poate nici retrage, nici șterge definitiv: {signatures}, {events} și {acknowledgements} depind de ea. «Șterge» de pe rândul ei o scoate din listă.",
       "removeBlockedCurrent": "În vigoare acum — nu se poate nici retrage, nici șterge. Aprobă întâi versiunea următoare; apoi aceasta se poate scoate.",
@@ -2573,7 +2574,7 @@
         "deferred": "Mesaje care așteaptă: {count}. Limita zilnică Mailgun ({allowance} de mesaje pe zi) s-a consumat. Pleacă singure {resumesAt} (ora României); nimic nu s-a pierdut.",
         "failed": "Mesaje netrimise în ultimele 7 zile: {count} — motivul Mailgun: „{reason}”. Vezi Mailgun → Sending → Logs.",
         "overdue": "Mesaje cu rândul trecut de peste 90 de minute: {count} — monitoarele nu rulează. Vezi rândul „Monitoarele” de mai jos.",
-        "notify": "Ca să afli de asta fără să deschizi pagina: un monitor pe cron-job.org către /api/health, cu notificare la eșec — pasul din rândul „Monitoarele”."
+        "notify": "Ca să afli de asta fără să deschizi pagina: un monitor zilnic pe cron-job.org către /api/health?deep=1, cu notificare la eșec — pasul din rândul „Monitoarele”."
       },
       "state": {
         "blocking": "Blochează",
@@ -2637,8 +2638,9 @@
             "Bifează notificarea prin email la eșec, ca să afli când un monitor moare. La prima rulare rândul acesta devine verde; /devs arată fiecare sarcină cu ora ultimei rulări și consumul bazei de date.",
             "Noaptea site-ul răspunde mai încet la prima cerere — e voit.",
             "Pe QA: outbox-ul o dată pe oră (0 * * * *) și mentenanța la 2 ore (0 */2 * * *), iar pe Setări → Costuri „Cât de des verifică site-ul” = 2 ore: și QA plătește orele în care baza lui de date e trează.",
-            "Al treilea monitor, cel care te anunță când emailurile nu mai pleacă: „Create cronjob” cu adresa {baseUrl}/api/health, Request method GET, fără header.",
-            "Pe producție o dată pe oră, la minutul 2 (2 0-1,4-23 * * *), pe QA la 6 ore (2 */6 * * *). La Notifications bifează „on failure” și „when the job gets disabled”."
+            "Al treilea monitor, cel care te anunță când site-ul nu mai răspunde: „Create cronjob” cu adresa {baseUrl}/api/health, Request method GET, fără header.",
+            "Pe producție o dată pe oră, la minutul 2 (2 0-1,4-23 * * *), pe QA la 6 ore (2 */6 * * *). La Notifications bifează „on failure” și „when the job gets disabled”.",
+            "Al patrulea, verificarea completă, care te anunță când emailurile nu mai pleacă: adresa {baseUrl}/api/health?deep=1, zilnic la 04:02 (2 4 * * *), aceleași notificări."
           ]
         },
         "retentionSweep": {
@@ -2649,7 +2651,7 @@
             "Deschide /devs: rândul sarcinii registration-maintenance arată „eșuează” și, în ultima eroare, pașii care au eșuat (de exemplu „retention:registrations-after-event”).",
             "Numele pașilor sunt în codul sarcinilor de retenție.",
             "În jurnalele funcției din Vercel caută „[retention] sweep step failed”: lângă numele pasului apare codul erorii bazei de date (de exemplu 57014, timp depășit), niciodată valorile.",
-            "Repară cauza, apoi așteaptă următoarea rulare (cel mult 15 minute ziua, o oră noaptea). Rândul dispare singur după prima rulare fără erori, iar /api/health răspunde din nou ok."
+            "Repară cauza, apoi așteaptă următoarea rulare (cel mult 15 minute ziua, o oră noaptea). Rândul dispare singur după prima rulare fără erori, iar /api/health?deep=1 răspunde din nou ok."
           ]
         },
         "inviteStaff": {
@@ -3108,12 +3110,12 @@
         "title": "Cât de des verifică site-ul",
         "intro": "Cât de des au voie cele două lucrări programate să trezească baza de date.",
         "inForce": {
-          "onDemand": "Setarea în vigoare: la nevoie (implicit) — doar când e ceva de făcut, și oricum cel puțin o dată la {cap} min.",
+          "onDemand": "Setarea în vigoare: la nevoie (implicit) — doar când e ceva de făcut, și oricum o dată pe zi, la {time}.",
           "every": "Setarea în vigoare: cel mult o dată la {minutes} min, pentru fiecare lucrare."
         },
         "cost": "Ce costă un interval mai lung: o ofertă de pe lista de așteptare, o reamintire, un anunț sau un număr de concurs pot pleca cu până la atâtea minute mai târziu.",
         "safe": "Ce nu se schimbă: un loc rezervat expiră tot la timp.",
-        "onTheHour": "Verificarea de siguranță se face la ora fixă, odată cu monitorul /api/health.",
+        "onTheHour": "Verificarea de siguranță se face o dată pe zi, la {time}, odată cu verificarea completă a monitorului (/api/health?deep=1).",
         "job": {
           "maintenance": "Mentenanța înscrierilor",
           "outbox": "Coada de emailuri"
@@ -3127,11 +3129,10 @@
         "updatedAt": "Setat {when}.",
         "readOnly": "Intervalul îl schimbă Superadministratorul, pentru că unul greșit întârzie toate lucrările.",
         "field": "Cel mult o dată la",
-        "fieldHelp": "„La nevoie” înseamnă doar când e ceva de făcut, plus verificarea de siguranță de {cap} min.",
+        "fieldHelp": "„La nevoie” înseamnă doar când e ceva de făcut, plus verificarea de siguranță de zi cu zi, la {time}.",
         "option": {
-          "onDemand": "La nevoie (implicit) — când e ceva de făcut, cel puțin o dată la {cap} min",
-          "every": "{minutes} min",
-          "everyLong": "{minutes} min — și verificarea de siguranță de {cap} min trece tot la {minutes} min"
+          "onDemand": "La nevoie (implicit) — când e ceva de făcut, și o dată pe zi, la {time}",
+          "every": "{minutes} min"
         },
         "save": "Salvează intervalul",
         "saving": "Se salvează…",
@@ -3144,7 +3145,7 @@
         },
         "introMore": "Lucrările sunt mentenanța înscrierilor și coada de emailuri. Când nu au nimic de făcut, nu trezesc baza; fiecare trezire costă cel puțin 5 minute de calcul.",
         "safeMore": "Fiecare citire a locurilor socotește termenele în clipa aceea, cu sau fără lucrarea programată. Setarea ta are întâietate.",
-        "onTheHourMore": "Cu 2 ore, la orele pare. Așa, o oră fără nimic de făcut costă cel mult o trezire a bazei; pentru asta, unele verificări pot întârzia fiecare cu până la un sfert de oră.",
+        "onTheHourMore": "O zi fără nimic de făcut costă o trezire a bazei, la {time}. Un termen (o rezervare, o reamintire) își păstrează ora. Cu un interval ales, unele pot întârzia cu până la un sfert de oră.",
         "fieldHelpMore": "Un ping în interval răspunde din memorie, fără bază de date, exact ca unul care nu are nimic de făcut."
       },
       "budgetThresholds": {
@@ -5293,12 +5294,12 @@
               "title": "Înscrie a doua persoană pe aceeași adresă",
               "steps": [
                 "Prima persoană se înscrie cu formularul, ca oricine.",
-                "Formularul se trimite din nou cu aceeași adresă pentru o persoană diferită — alt nume și altă dată a nașterii decât ale fiecărei persoane deja înscrise. Încă nu se înscrie nimeni: pe ecran apare același „verifică-ți emailul” ca oricând, ca nimeni să nu afle din formular cine e înscris.",
+                "Formularul se trimite din nou cu aceeași adresă pentru o persoană diferită — alt nume și altă dată a nașterii decât ale fiecărei persoane deja înscrise, sau, pe data nașterii cuiva înscris, alt nume și celălalt sex (un frate și o soră născuți în aceeași zi). Încă nu se înscrie nimeni: pe ecran apare același „verifică-ți emailul” ca oricând, ca nimeni să nu afle din formular cine e înscris.",
                 "Cu «Da, încă o persoană» pe ecranul de după formular, fiecare formular următor rezervă pe loc locul persoanei. Adresa primește apoi un email pentru toți, cu un singur buton.",
                 "Adresa primește emailul „Înscrii încă o persoană?”, cu cine e deja înscris și cu persoana din formular, și un singur buton, «Confirm că înscriu altă persoană».",
                 "Pagina care se deschide arată din nou datele; pentru un adult cere o bifă (persoana își declară singură starea de sănătate la semnare). Confirmarea o înscrie direct — fără alt link de confirmare. Linkul e valabil {confirmation} și merge o singură dată; datele neconfirmate se șterg singure după aceea.",
-                "Dacă doar numele sau doar data nașterii diferă, nu se înscrie nimeni: adresa primește emailul înscrierii existente, cu o propoziție despre cum se înscrie altcineva.",
-                "Pe o adresă se pot înscrie cel mult {people} la un eveniment. La limită, emailul spune asta și nu mai are buton."
+                "Dacă doar numele sau doar data nașterii diferă — sau alt nume pe data cuiva înscris, de același sex —, nu se înscrie nimeni: adresa primește emailul înscrierii existente, cu o propoziție despre cum se înscrie altcineva.",
+                "Pe o adresă se pot înscrie cel mult {people} la un eveniment. Limita o spun formularul (sub adresă), ecranul «Da, încă o persoană» (câte persoane s-au trimis până acum, din limită), «Înscrierile mele» și termenii. La limită, emailul și ecranul o spun, iar emailul nu mai are buton."
               ]
             },
             {
@@ -5342,7 +5343,7 @@
             {
               "title": "Verifică dacă site-ul funcționează",
               "steps": [
-                "Deschide /api/health într-un tab nou și citește doar primul cuvânt de după \"status\", chiar la începutul textului: ok înseamnă că site-ul funcționează, degraded sau down înseamnă o problemă, chiar dacă mai jos apare ok în altă parte.",
+                "Deschide /api/health?deep=1 într-un tab nou și citește doar primul cuvânt de după \"status\", chiar la începutul textului: ok înseamnă că site-ul funcționează, degraded sau down înseamnă o problemă, chiar dacă mai jos apare ok în altă parte.",
                 "Nu ești sigur ce vezi? Trimite textul proprietarului clubului."
               ]
             },
@@ -6013,7 +6014,7 @@
       "tooFastNothingSent": "Nu am înregistrat nimic și nu ți-am trimis niciun email. Apasă „Trimite din nou înscrierea” — datele și bifele tale sunt încă aici.",
       "tooFastResend": "Trimite din nou înscrierea",
       "waitlistFullNothingSent": "Nu am înregistrat nimic și nu ți-am trimis niciun email. Ce ai completat a rămas în formular.",
-      "sittingAtCap": "Cei trimiși deja cu această adresă ating limita clubului pentru un eveniment. Pentru această persoană nu am înregistrat nimic: apasă „Gata” sau folosește altă adresă."
+      "sittingAtCap": "Cei trimiși deja cu această adresă ating limita clubului: cu aceeași adresă de email se pot înscrie cel mult {people} la un eveniment. Pentru această persoană nu am înregistrat nimic: apasă „Gata” sau folosește altă adresă."
     },
     "sections": {
       "about": "Despre tine",
@@ -6275,7 +6276,13 @@
       "placeWaitlist": "pe lista de așteptare, după confirmare",
       "reservedHelp": "Fiecare loc e rezervat din clipa în care trimiți formularul. Butonul din email le confirmă pe toate.",
       "reservationLapsed": "Locurile nu mai sunt rezervate. Confirmă adresa din email; dacă mai e loc, îl primești atunci.",
-      "addLink": "Înscriu încă o persoană cu această adresă"
+      "addLink": "Înscriu încă o persoană cu această adresă",
+      "count": {
+        "one": "{count} din o persoană cu această adresă",
+        "few": "{count} din {max} persoane cu această adresă",
+        "other": "{count} din {max} de persoane cu această adresă"
+      },
+      "atCap": "Ai ajuns la limită: cu aceeași adresă de email se pot înscrie cel mult {people} la un eveniment. Pentru încă o persoană, folosește altă adresă de email."
     },
     "membersAddressLabel": "Adresa contului tău de membru",
     "membersAddressHelp": "Te înscrii cu adresa contului. Un cont înscrie o singură persoană.",
@@ -6284,6 +6291,14 @@
       "help": "Poți renunța oricând din pagina înscrierii tale.",
       "sharedData": "prenumele, numele și adresa ta de e-mail",
       "shared": "Clubul le poate da partenerilor prenumele, numele și adresa ta."
+    },
+    "addressCap": {
+      "rule": "Cu aceeași adresă de email se pot înscrie cel mult {people} la un eveniment, de exemplu o familie. Fiecare își semnează singură declarația.",
+      "people": {
+        "one": "o persoană",
+        "few": "{count} persoane",
+        "other": "{count} de persoane"
+      }
     }
   },
   "Registrations": {
@@ -6496,7 +6511,12 @@
         "how": "Nu sunt încă înscriși: apasă butonul din emailul primit pentru ei. Până atunci nu li se ține niciun loc."
       },
       "family": "Familie",
-      "reservedUntil": "Loc rezervat până {until}. Confirmă adresa din email ca să-l păstrezi."
+      "reservedUntil": "Loc rezervat până {until}. Confirmă adresa din email ca să-l păstrezi.",
+      "perAddress": {
+        "one": "Cu această adresă, la acest eveniment: {count} din cel mult o persoană.",
+        "few": "Cu această adresă, la acest eveniment: {count} din cel mult {max} persoane.",
+        "other": "Cu această adresă, la acest eveniment: {count} din cel mult {max} de persoane."
+      }
     },
     "manage": {
       "title": "Gestionează înscrierea",
@@ -6661,7 +6681,7 @@
     "configuration": "Configurație",
     "neverValues": "Nicio valoare, nicio cheie și niciun secret nu apar pe această pagină. Doar numele variabilei și dacă are valoare.",
     "runtime": "Starea în acest moment",
-    "runtimeIntro": "Ce raportează baza de date și joburile programate acum. Aceleași valori ca /api/health.",
+    "runtimeIntro": "Ce raportează baza de date și joburile programate acum. Aceleași valori ca /api/health?deep=1.",
     "weather": {
       "title": "Prognoza vremii",
       "ok": "Open-Meteo (public, fără cheie) — ultimul răspuns {when}, {hours} ore de prognoză; locuri citite în ultima oră pe această instanță: {places}.",
@@ -6766,8 +6786,8 @@
       "none": "Planul {plan}: fără limită de mesaje."
     },
     "emailHealth": {
-      "ok": "Trimiterea funcționează: nimic amânat, întârziat sau eșuat. /api/health răspunde 200.",
-      "stalled": "Trimiterea s-a oprit — amânate (limita zilnică): {deferred}; întârziate: {overdue}; eșuate în 7 zile: {failed}. Motiv: „{reason}”. /api/health răspunde 503 până se rezolvă."
+      "ok": "Trimiterea funcționează: nimic amânat, întârziat sau eșuat. /api/health?deep=1 răspunde 200.",
+      "stalled": "Trimiterea s-a oprit — amânate (limita zilnică): {deferred}; întârziate: {overdue}; eșuate în 7 zile: {failed}. Motiv: „{reason}”. /api/health?deep=1 răspunde 503 până se rezolvă."
     },
     "registrationsToday": "Înscrieri astăzi",
     "testRegistrations": "de test",
@@ -6900,7 +6920,7 @@
       "nextPing": "următorul ping rulează",
       "pingRan": "ultimul ping {when}: a rulat",
       "pingSkipped": "ultimul ping {when}: sărit",
-      "cadenceOnDemand": "Interval minim: la nevoie — cel puțin o rulare reală la {cap} min (Setări → Costuri).",
+      "cadenceOnDemand": "Interval minim: la nevoie — cel puțin o rulare reală pe zi, la {time} (Setări → Costuri).",
       "cadenceEvery": "Interval minim: {minutes} min între două rulări reale (Setări → Costuri)."
     }
   },
@@ -6985,8 +7005,8 @@
     "meaning": {
       "unknown": "Neon nu a putut fi citit acum, așa că site-ul merge normal, fără nicio frână în plus.",
       "green": "Consumul e pe sau sub linia lunii, adică limita împărțită pe zilele trecute, așa că site-ul merge normal.",
-      "amber": "Consumul a trecut cu peste {margin}% de linia lunii sau de {amber}% din limită, așa că site-ul se frânează singur; /api/health rămâne „ok”, cu o notă.",
-      "red": "S-au folosit peste {red}% din limită: site-ul se frânează cât poate, iar /api/health dă alarma ca limita să poată fi mărită la timp."
+      "amber": "Consumul a trecut cu peste {margin}% de linia lunii sau de {amber}% din limită, așa că site-ul se frânează singur; /api/health?deep=1 rămâne „ok”, cu o notă.",
+      "red": "S-au folosit peste {red}% din limită: site-ul se frânează cât poate, iar /api/health?deep=1 dă alarma ca limita să poată fi mărită la timp."
     },
     "spent": "{used} din {quota} ore-CU folosite ({percent}%); linia lunii e acum la {line}; perioada se încheie {end}.",
     "spentNoLimit": "{used} ore-CU folosite, perioada se încheie {end}.",
@@ -7013,7 +7033,7 @@
     "meteredNeedsKey": "Cifra facturată cere o cheie Neon de organizație sau personală; cheia pe proiect nu are voie s-o citească.",
     "spentAll": "După această citire limita e consumată, dar Neon oprește baza abia când propriul lui contor ajunge la limită.",
     "thresholds": {
-      "intro": "Pragurile, în procente din limita lunară: galben de la primul, roșu de la al doilea (roșu dă alarma pe /api/health).",
+      "intro": "Pragurile, în procente din limita lunară: galben de la primul, roșu de la al doilea (roșu dă alarma pe /api/health?deep=1).",
       "amber": "Galben de la (%)",
       "red": "Roșu de la (%)",
       "save": "Salvează pragurile",

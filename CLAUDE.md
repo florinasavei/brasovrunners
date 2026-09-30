@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.43-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.44-2026-09-27 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V2.43-2026-09-27`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V2.44-2026-09-27`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -45,7 +45,8 @@ yarn db:migrate   apply migrations locally · db:seed sample events · db:studio
 yarn db:seed:legal  the sample legal documents alone; never deletes, safe on a live database
 yarn db:migrate:env  apply migrations to local|qa|production — the only supported way to
                   migrate a deployed database (AGENTS.md §7.6, DECISIONS.md §31)
-yarn smoke        ask a deployment's /api/health whether it works; ends every deploy
+yarn smoke        ask a deployment's /api/health?deep=1 whether it works; ends every deploy
+yarn idle:measure  Neon's wakes and Vercel's requests while nobody visited (docs/PLATFORM.md § Idle cost)
 yarn release      versioned archive and share copies under dist/
 yarn batch:merge  merge branches into the one checked out; the journal, catalogues and tests by rule
 yarn docs:land    land a batch's documents: a dispatcher's manifest, or `--tree` for the branch's

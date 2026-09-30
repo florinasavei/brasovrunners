@@ -8,6 +8,10 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.44-2026-09-27
+
+- **A second person on the same address is no longer answered «Ești deja înscris»** when their birth date is a registered person's day: another name and the other sex are another person, confirmed from the inbox like anybody else. Same-sex twins keep the sentence that says how they are registered, and it is said only when the day really is the same. **The limit of four people per email address is now said** under the form's address box, as «2 din 4» on the family's screens, on «Înscrierile mele», in the terms and in the refusal at the limit. §576.
+- **An idle site consumes (almost) nothing** — the jobs look at the database once a day at 04:00 unless something is due, `/api/health` is shallow (build and configuration) with the full report on `?deep=1`, Turnstile loads only when a person starts on a form, a public tab no longer polls for a new build, and a stranger's `?foo=1` or a signed-in reader's prefetch no longer renders a page. §577.
 ## BR-V2.43-2026-09-27
 
 - **«Membri»: «Copiază și tradu tot» translates the members' texts, and their two languages are tabs «RO» | «EN»** — the press knows «Beneficiile membrilor» and the members' zone, so it no longer answers «Nu e nimic de tradus» over Romanian already written. One editor is on screen at a time, the English tab says «gol» while empty, and a refused save shows the English tab. After any translate press, every language strip in the backoffice brings its English tab forward marked «tradus — verifică» until you edit it, and every language tab carries the header's flag. §572.

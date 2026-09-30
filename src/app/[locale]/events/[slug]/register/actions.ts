@@ -166,7 +166,8 @@ async function submitRegistrationOrRefuse(form: FormData): Promise<void> {
   */
   const lapsed = continuing && liveSitting?.reservedUntil != null && liveSitting.reservedUntil.getTime() <= now.getTime();
   const priorPeople = continuing && liveSitting && !lapsed ? liveSitting.people : [];
-  const typedPerson = withSittingPerson(priorPeople, { name: `${input.firstName} ${input.lastName}`, birthDate: input.birthDate });
+  // The sex beside the birth date (§576): another name and the other sex on a typed birth date are another person.
+  const typedPerson = withSittingPerson(priorPeople, { name: `${input.firstName} ${input.lastName}`, birthDate: input.birthDate, sex: input.sex });
   const newPerson = continuing && isNewSittingPerson(priorPeople, typedPerson);
 
   try {

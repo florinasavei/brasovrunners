@@ -59,6 +59,8 @@ vi.mock("@/modules/diagnostics/neon-budget", () => ({
 }));
 vi.mock("@/modules/registrations/bot-check", () => ({ activeBotCheckSiteKey: async () => undefined }));
 vi.mock("@/modules/public-cache/reads", () => ({
+  cachedAddressCap: async () => ({ registrationsPerAddress: 4 }),
+  cachedFamilyRegistrationOpen: async () => false,
   cachedCurrentApprovedDocument: async () => ({ version: 3 }),
   cachedListStatesDisclosed: async () => false,
   cachedListSocialsDisclosed: async () => false,

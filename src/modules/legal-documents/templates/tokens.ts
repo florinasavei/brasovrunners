@@ -1,11 +1,14 @@
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
+import { ADDRESS_CAP_RULE } from "@/modules/registrations/domain/address-cap";
 import { teamPageClause } from "@/modules/content/team/notice-words";
 import { listStatesClause } from "@/modules/registrations/list-state-words";
 import { listSocialsClause } from "@/modules/registrations/list-socials-words";
 import { promotionalMaterialsClause, promotionalMaterialsSharedClause } from "@/modules/registrations/promo-consent-words";
 import { yearsPhrase } from "@/modules/registrations/domain/age";
 import {
+  ADDRESS_CAP_MERGE_FIELD,
+  addressCapMergeValues,
   DEADLINE_MERGE_FIELDS,
   deadlineMergeValues,
   LIST_SOCIALS_MERGE_FIELD,
@@ -119,6 +122,13 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     messageKey: field,
     example: inBoth((locale) => deadlineMergeValues(locale, DEFAULT_DEADLINES)[field]),
   })),
+  // The club's limit per address (§389, §576), in the terms' sentence about registering somebody else:
+  // filled from the setting when the text is shown; the example is what an unset setting fills in.
+  {
+    token: `{{${ADDRESS_CAP_MERGE_FIELD}}}`,
+    messageKey: ADDRESS_CAP_MERGE_FIELD,
+    example: inBoth((locale) => addressCapMergeValues(locale, ADDRESS_CAP_RULE.default).registrationsPerAddress),
+  },
   // The privacy notice's marker for the public list's states (§396): filled with the three words
   // the list prints, and the switch that lets the list print them (`describesListStates`).
   {

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { countForm } from "@/i18n/count-form";
 
 /**
  * "Maxim de înscrieri pe o adresă (pe eveniment)" — how many registrations one email address may
@@ -62,4 +63,18 @@ export function readAddressCapValue(value: unknown): AddressCap {
  */
 export function addressHasRoom(active: number, cap: AddressCap): boolean {
   return active < cap.registrationsPerAddress;
+}
+
+/**
+ * "4 persoane", "o persoană" / "4 people", "one person" (§389, §576): the limit as every sentence that
+ * states it says it — the form, the family's screen, «Înscrierile mele», the terms, the emails —
+ * the site's count words (`countForm`, §341) and never a literal, so the limit reads the same
+ * wherever a participant meets it. The bounds (1–10) never reach the "de" form; it is spelled for any
+ * number all the same.
+ */
+export function peoplePhrase(locale: string, count: number | undefined): string {
+  const n = count ?? ADDRESS_CAP_RULE.default;
+  const form = countForm(n, locale);
+  if (locale === "ro") return form === "one" ? "o persoană" : form === "few" ? `${n} persoane` : `${n} de persoane`;
+  return form === "one" ? "one person" : `${n} people`;
 }

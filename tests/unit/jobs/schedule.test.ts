@@ -2,11 +2,13 @@ import { describe, expect, it } from "vitest";
 import {
   decidePing,
   maintenanceDueFor,
+  dueSlotsFor,
+  hourSlotStart,
   MAX_QUIET_MINUTES,
-  NEXT_DUE_CAP_MINUTES,
   PLAN_GRACE_MINUTES,
   planQuiet,
   type QuietPlan,
+  SAFETY_LOOK_MAX_MINUTES,
   slotStart,
   slotsBack,
   slotsBetween,
@@ -26,6 +28,8 @@ const RAN = new Date("2026-10-01T09:00:00.000Z");
 const minutes = (n: number) => new Date(RAN.getTime() + n * 60_000);
 /** Where a cap or an interval of `n` minutes ends: `PLAN_GRACE_MINUTES` early. */
 const ends = (n: number) => minutes(n - PLAN_GRACE_MINUTES);
+/** The daily window after RAN (§577): 04:00 in Brașov on 2 October, 01:00Z, `PLAN_GRACE_MINUTES` early. */
+const WINDOW_END = new Date("2026-10-02T00:58:00.000Z");
 
 describe("§334 the quiet a real run may promise", () => {
   it("promises quiet until the soonest work", () => {
@@ -34,14 +38,12 @@ describe("§334 the quiet a real run may promise", () => {
     expect(plan.floorUntil).toBeNull();
   });
 
-  it("caps the quiet at an hour however far away the work is", () => {
-    expect(planQuiet({ ranAt: RAN, nextWorkAt: minutes(180), cadenceMinutes: 0, failed: false }).quietUntil).toEqual(
-      ends(NEXT_DUE_CAP_MINUTES),
-    );
+  it("caps the quiet at the daily window however far away the work is (§577)", () => {
+    expect(planQuiet({ ranAt: RAN, nextWorkAt: minutes(3 * 24 * 60), cadenceMinutes: 0, failed: false }).quietUntil).toEqual(WINDOW_END);
   });
 
-  it("caps the quiet at an hour when there is no work at all", () => {
-    expect(planQuiet({ ranAt: RAN, nextWorkAt: null, cadenceMinutes: 0, failed: false }).quietUntil).toEqual(ends(60));
+  it("caps the quiet at the daily window when there is no work at all (§577)", () => {
+    expect(planQuiet({ ranAt: RAN, nextWorkAt: null, cadenceMinutes: 0, failed: false }).quietUntil).toEqual(WINDOW_END);
   });
 
   it("promises nothing for work already due, so the next ping runs", () => {
@@ -54,10 +56,26 @@ describe("§334 the quiet a real run may promise", () => {
     expect(plan.floorUntil).toEqual(ends(30));
   });
 
-  it("lets a minimum interval longer than the cap replace the cap", () => {
+  it("keeps even the longest minimum interval a floor under the daily window (§577)", () => {
     const plan = planQuiet({ ranAt: RAN, nextWorkAt: null, cadenceMinutes: 120, failed: false });
-    expect(plan.quietUntil).toEqual(ends(120));
+    expect(plan.quietUntil).toEqual(WINDOW_END);
     expect(plan.floorUntil).toEqual(ends(120));
+  });
+
+  it("counts a run inside the hour before the window as the window's run: the next look is tomorrow (§577)", () => {
+    const ranAt = new Date("2026-10-02T00:30:00.000Z"); // 03:30 in Brașov
+    expect(planQuiet({ ranAt, nextWorkAt: null, cadenceMinutes: 0, failed: false }).quietUntil).toEqual(
+      new Date("2026-10-03T00:58:00.000Z"),
+    );
+  });
+
+  it("lets a minimum interval that ends past the window hold the window's run back to it (§577)", () => {
+    // A run at 02:59 in Brașov under two hours: 04:00 is 61 minutes on, so today's window, but the
+    // interval runs to 05:13 — the later of the two is the quiet.
+    const ranAt = new Date("2026-10-01T23:59:00.000Z");
+    const plan = planQuiet({ ranAt, nextWorkAt: null, cadenceMinutes: 120, failed: false });
+    expect(plan.floorUntil).toEqual(new Date("2026-10-02T02:13:00.000Z"));
+    expect(plan.quietUntil).toEqual(plan.floorUntil);
   });
 
   it("keeps a shorter interval as a floor under work that is due sooner", () => {
@@ -67,12 +85,17 @@ describe("§334 the quiet a real run may promise", () => {
   });
 
   it("gives the work's own deadline no grace: before it there is nothing to do", () => {
-    expect(planQuiet({ ranAt: RAN, nextWorkAt: minutes(59), cadenceMinutes: 0, failed: false }).quietUntil).toEqual(ends(60));
+    // Due a minute after the window: the window's grace wins, two minutes early.
+    expect(planQuiet({ ranAt: RAN, nextWorkAt: new Date(WINDOW_END.getTime() + 3 * 60_000), cadenceMinutes: 0, failed: false }).quietUntil).toEqual(
+      WINDOW_END,
+    );
+    expect(planQuiet({ ranAt: RAN, nextWorkAt: minutes(59), cadenceMinutes: 0, failed: false }).quietUntil).toEqual(minutes(59));
     expect(planQuiet({ ranAt: RAN, nextWorkAt: minutes(45), cadenceMinutes: 0, failed: false }).quietUntil).toEqual(minutes(45));
   });
 
-  it("never promises longer than the longest quiet any choice allows", () => {
-    expect(MAX_QUIET_MINUTES).toBe(120);
+  it("never promises longer than the longest quiet any choice allows: a day, the gap and the autumn hour (§577)", () => {
+    expect(SAFETY_LOOK_MAX_MINUTES).toBe(26 * 60);
+    expect(MAX_QUIET_MINUTES).toBe(SAFETY_LOOK_MAX_MINUTES);
   });
 
   it("keeps the grace under one slot, so it never lets a genuinely early ping through", () => {
@@ -101,14 +124,18 @@ describe("§334 the pinger's next call runs, early or late by its latency", () =
     return decidePing(now, due, floor);
   }
 
-  it("runs the call an hour after a run on demand, half a second early", () => {
+  /** The window's 04:00 call, half a second early. */
+  const windowCallEarly = new Date(WINDOW_END.getTime() + PLAN_GRACE_MINUTES * 60_000 - 500);
+
+  it("runs the window's 04:00 call after a run on demand, half a second early (§577)", () => {
     const plan = planQuiet({ ranAt: RAN, nextWorkAt: null, cadenceMinutes: 0, failed: false });
-    expect(verdictAt(halfSecondBefore(60), plan)).toEqual({ run: true });
+    expect(verdictAt(halfSecondBefore(60), plan)).toMatchObject({ run: false, reason: "nothing-due" });
+    expect(verdictAt(windowCallEarly, plan)).toEqual({ run: true });
   });
 
-  it.each([15, 30, 60, 120] as const)("runs the call %i minutes after a run under that interval, half a second early", (cadence) => {
+  it.each([15, 30, 60, 120] as const)("runs the window's call under a %i-minute interval, and the interval's own after a wake", (cadence) => {
     const idle = planQuiet({ ranAt: RAN, nextWorkAt: null, cadenceMinutes: cadence, failed: false });
-    expect(verdictAt(halfSecondBefore(Math.max(cadence, NEXT_DUE_CAP_MINUTES)), idle)).toEqual({ run: true });
+    expect(verdictAt(windowCallEarly, idle)).toEqual({ run: true });
     // Work due at once (a failed run, or a write path that woke the job): the interval alone decides.
     const busy = planQuiet({ ranAt: RAN, nextWorkAt: minutes(1), cadenceMinutes: cadence, failed: true });
     expect(verdictAt(halfSecondBefore(cadence), busy, true)).toEqual({ run: true });
@@ -155,6 +182,29 @@ describe("§334 the five-minute slots", () => {
       "2026-10-01T10:15:00.000Z",
     ]);
     expect(slotsBetween(RAN, RAN)).toEqual([]);
+  });
+
+  it("writes a day's quiet as twelve five-minute slots and then hour slots, not 288 (§577)", () => {
+    const { fine, hours } = dueSlotsFor(RAN, WINDOW_END);
+    expect(fine).toHaveLength(12);
+    expect(fine[0]).toEqual(RAN);
+    expect(fine.at(-1)).toEqual(minutes(55));
+    // From the hour the fine span ends in (10:00Z) to the last hour that begins before 00:58Z.
+    expect(hours[0]).toEqual(new Date("2026-10-01T10:00:00.000Z"));
+    expect(hours.at(-1)).toEqual(new Date("2026-10-02T00:00:00.000Z"));
+    expect(hours).toHaveLength(15);
+    // Every minute of the quiet has a slot: its five-minute one, or else its hour's.
+    const fineStarts = new Set(fine.map((at) => at.getTime()));
+    const hourStarts = new Set(hours.map((at) => at.getTime()));
+    for (let at = RAN.getTime(); at < WINDOW_END.getTime(); at += 60_000) {
+      const covered = fineStarts.has(slotStart(new Date(at)).getTime()) || hourStarts.has(hourSlotStart(new Date(at)).getTime());
+      expect(covered, new Date(at).toISOString()).toBe(true);
+    }
+  });
+
+  it("writes only five-minute slots for a quiet shorter than an hour, and none for none", () => {
+    expect(dueSlotsFor(RAN, minutes(20))).toEqual({ fine: [RAN, minutes(5), minutes(10), minutes(15)], hours: [] });
+    expect(dueSlotsFor(RAN, RAN)).toEqual({ fine: [], hours: [] });
   });
 
   it("looks back newest first", () => {
