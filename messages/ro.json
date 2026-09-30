@@ -29,8 +29,7 @@
       "team": "Echipa",
       "faq": "Întrebări",
       "more": "Meniu",
-      "contact": "Contact",
-      "members": "Membri"
+      "contact": "Contact"
     },
     "newBuild": {
       "body": "S-a publicat o versiune nouă a site-ului — reîncarcă pagina când vrei, dar vei pierde ce ai completat în formularele deschise.",
@@ -3628,8 +3627,7 @@
         "contact": "Contact",
         "gallery": "Galerie",
         "team": "Echipa",
-        "faq": "Întrebări frecvente",
-        "members": "Membri"
+        "faq": "Întrebări frecvente"
       }
     },
     "fontSize": {
@@ -5852,14 +5850,14 @@
       "pageHeading": "Pagina Beneficiile membrilor",
       "pagePublished": "Pe site",
       "pageDraft": "Ciornă",
-      "pagePublishedHelp": "Pe site la {ro} și {en}, cu «Membri» în meniu. Zona membrilor se deschide oricum, după autentificare.",
+      "pagePublishedHelp": "Pe site la {ro} și {en}, cu «Zona membrilor» în subsolul site-ului. Zona membrilor se deschide oricum, după autentificare.",
       "pageDraftHelp": "Nu e pe site: adresa răspunde „pagina nu există”. Zona membrilor merge și așa, pentru cine are cont.",
       "publish": "Publică pagina",
       "unpublish": "Scoate pagina de pe site",
       "publishTitle": "Publici pagina membrilor?",
-      "publishBody": "Pagina apare în ambele limbi, la {ro} și {en}, cu «Membri» în meniu.",
+      "publishBody": "Pagina apare în ambele limbi, la {ro} și {en}, cu «Zona membrilor» în subsolul site-ului.",
       "unpublishTitle": "Scoți pagina de pe site?",
-      "unpublishBody": "Adresa va răspunde „pagina nu există”, iar «Membri» dispare din meniu. Zona membrilor rămâne deschisă pentru cine are cont.",
+      "unpublishBody": "Adresa va răspunde „pagina nu există”, iar «Zona membrilor» dispare din subsolul site-ului. Zona membrilor rămâne deschisă pentru cine are cont.",
       "written": "Scris",
       "notWritten": "Nescris",
       "benefitsHeading": "Beneficiile membrilor",
@@ -5995,6 +5993,7 @@
   "Footer": {
     "myRegistrations": "Înscrierile mele",
     "faq": "Întrebări frecvente",
+    "membersZone": "Zona membrilor",
     "about": {
       "summaryShort": "Despre club",
       "summaryTail": ", contact și termeni",

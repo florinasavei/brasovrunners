@@ -4,7 +4,6 @@ import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArticleIcon from "@mui/icons-material/Article";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
-import CardMembershipIcon from "@mui/icons-material/CardMembership";
 import EventIcon from "@mui/icons-material/Event";
 import GroupsIcon from "@mui/icons-material/Groups";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutlineOutlined";
@@ -51,7 +50,6 @@ const GLYPHS: Record<MenuSectionKey, ComponentType<SvgIconProps>> = {
   gallery: PhotoLibraryIcon,
   team: GroupsIcon,
   faq: HelpOutlineIcon,
-  members: CardMembershipIcon,
 };
 
 function glyphOf(entry: MenuOrderEntry): ComponentType<SvgIconProps> {

@@ -41,8 +41,11 @@ async function hasVisibleTeam(locale: Locale) {
   }
 }
 
-/** Whether «Membri» is offered (§524): «Beneficiile membrilor» published with its words (`offersMembersEntry`), or nothing. */
-async function hasMembersPage(locale: Locale) {
+/**
+ * Whether the members' zone is linked (§524): «Beneficiile membrilor» published with its words
+ * (`offersMembersEntry`), or nothing. The footer's fold asks it since §NNN; the menu no longer does.
+ */
+export async function membersOnSite(locale: Locale) {
   try {
     return (await readWithLastGood(`nav:members:${locale}`, async () => offersMembersEntry(await cachedMembersPage(locale)))).value;
   } catch {
@@ -75,15 +78,14 @@ async function offersContact(): Promise<boolean> {
 
 /** Whether each of the platform's sections is in the menu now. «Evenimente» and «Calendar» always are. */
 export async function menuSectionsOnSite(locale: Locale): Promise<Record<MenuSectionKey, boolean>> {
-  const [gallery, team, faq, members, contact] = await Promise.all([
+  const [gallery, team, faq, contact] = await Promise.all([
     hasPublishedAlbum(locale),
     hasVisibleTeam(locale),
     // «Întrebări frecvente» (§525): the page published with a question on it — «Echipa»'s rule.
     faqOnSite(locale),
-    hasMembersPage(locale),
     offersContact(),
   ]);
-  return { events: true, calendar: true, contact, gallery, team, faq, members };
+  return { events: true, calendar: true, contact, gallery, team, faq };
 }
 
 /**

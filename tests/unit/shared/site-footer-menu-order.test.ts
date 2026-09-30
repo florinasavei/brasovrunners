@@ -32,7 +32,8 @@ vi.mock("@/modules/public-cache/reads", () => ({
 }));
 vi.mock("@/modules/content/faq/on-site", () => ({ faqOnSite: async () => true }));
 let storedOrder: string[] = [];
-vi.mock("@/modules/content/menu/on-site", () => ({ menuOrderOnSite: async () => storedOrder }));
+let membersPublished = false;
+vi.mock("@/modules/content/menu/on-site", () => ({ menuOrderOnSite: async () => storedOrder, membersOnSite: async () => membersPublished }));
 
 const { NextIntlClientProvider } = await import("next-intl");
 const messages = (await import("../../../messages/ro.json")).default;
@@ -51,6 +52,18 @@ async function renderFooter(): Promise<string> {
 function menuLinks(markup: string): string[] {
   return [...markup.matchAll(/<a[^>]*href="\/ro\/(faq|contact)"/g)].map((match) => match[1]!);
 }
+
+describe("§NNN the members' zone is a link in the footer's fold", () => {
+  it("shows «Zona membrilor» in the fold's links while the zone is published, and nothing otherwise", async () => {
+    storedOrder = [];
+    membersPublished = false;
+    expect(await renderFooter()).not.toContain('href="/ro/members"');
+    membersPublished = true;
+    const markup = await renderFooter();
+    expect(markup).toMatch(/data-testid="footer-panel-links"[\s\S]*<a[^>]*href="\/ro\/members"[^>]*data-testid="footer-members"[\s\S]*Zona membrilor/);
+    membersPublished = false;
+  });
+});
 
 describe("§571 the footer's menu entries follow the club's one order", () => {
   it("keeps «Întrebări frecvente» before «Contact» with no stored order, as it always was", async () => {
