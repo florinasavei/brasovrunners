@@ -104,11 +104,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description: t("calendar.pageIntro"),
     /*
       One calendar page per language, whatever month, year, layout or kind the address names
-      (§342). The "Lună" pill on the plain page links to `?month=<this month>`, which is this
+      (§342). The "Lună" pill on the plain page linked to `?month=<this month>`, which was this
       very page under a second address, and neither declared a canonical — the likeliest pair
       behind Search Console's "duplicate without user-selected canonical". Another month is the
-      same events' own pages, arranged; the event pages are what is indexed, and every month's
-      links are still followed. A month's own path (`/calendar/2026-10`, §NNN) is canonical to
+      same events' own pages, arranged; the event pages are what is indexed. A period's own path
+      (`/calendar/2026-10`, `/calendar/2026-10/list`, `/calendar/2026`, §NNN) is canonical to
       the bare calendar the same way, and robots.txt keeps crawlers off `/calendar/…`.
     */
     alternates: pageAlternates(locale, staticRouteUrls(env.APP_BASE_URL, "/calendar")),
