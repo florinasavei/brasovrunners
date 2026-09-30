@@ -24,9 +24,14 @@ import { readSwipe, type SwipeStep, swipeAxis } from "../domain/calendar-swipe";
  * The step is `router.push` with the address the arrow carries, `scroll: false` so the reader stays
  * where they are on the page, inside a transition so the month on screen stays — dimmed, `aria-busy`
  * — until the next one is ready (§166, §413). Nothing is prefetched here, and since §549 the arrows'
- * own links are not either: a stepped address is the calendar's live twin, and a prefetch of it is
- * a function started on a visit the CDN answers alone (and a database awake, §327). Under reduced motion nothing
+ * own links are not either: a stepped address is a period's own static page since §574
+ * (`/calendar/2026-10`), but a month nobody has opened today is a render, and a prefetch of it a
+ * function started on a visit the CDN answers alone (and a database awake, §327). Under reduced motion nothing
  * slides; the swipe still steps.
+ *
+ * The addresses are paths, never `?month=` (§574): on the static calendar a query was answered by
+ * Next's router from the bare page's prefetched copy, so a swipe changed the address and the same
+ * month stayed on screen.
  */
 export default function CalendarSwipe({
   previousHref,
@@ -52,14 +57,18 @@ export default function CalendarSwipe({
     if (pending) return;
     const step = lastStep.current;
     lastStep.current = null;
-    if (!step || reducedMotion()) {
-      slide(track.current, 0, false);
-      return;
-    }
-    slide(track.current, step === "next" ? 24 : -24, false);
-    const frame = requestAnimationFrame(() => slide(track.current, 0, true));
-    return () => cancelAnimationFrame(frame);
+    if (step) arriving = null;
+    return settle(track.current, step);
   }, [pending, previousHref, nextHref]);
+
+  // Each period is a page of its own path since §574 (`/calendar/2026-10`), so the next period
+  // usually arrives as a new calendar rather than as this one re-rendered: the step is handed over
+  // through `arriving`, and the calendar that mounts with it slides in the same way.
+  useEffect(() => {
+    const handed = arriving && performance.now() - arriving.at < ARRIVAL_WINDOW_MS ? arriving.step : null;
+    arriving = null;
+    return settle(track.current, handed);
+  }, []);
 
   const end = (event: PointerEvent<HTMLDivElement>, cancelled: boolean) => {
     const start = gesture.current;
@@ -81,6 +90,7 @@ export default function CalendarSwipe({
       return;
     }
     lastStep.current = step;
+    arriving = { step, at: performance.now() };
     if (!reducedMotion()) slide(track.current, step === "next" ? -width * 0.35 : width * 0.35, true, 0.4);
     startTransition(() => router.push(step === "next" ? nextHref : previousHref, { scroll: false }));
   };
@@ -117,6 +127,26 @@ export default function CalendarSwipe({
       </Box>
     </Box>
   );
+}
+
+/**
+ * The step a swipe has just pressed, for the calendar that arrives with the next period (§574): a
+ * period's path is a page of its own, so that calendar is a new instance and cannot read the old
+ * one's refs. One per tab, cleared by whoever reads it, and believed only for a few seconds, so a
+ * swipe whose navigation came to nothing never slides a calendar met later.
+ */
+let arriving: { step: SwipeStep; at: number } | null = null;
+const ARRIVAL_WINDOW_MS = 10_000;
+
+/** Brings the calendar in from the side `step` pushed towards and settles it; with no step, or under reduced motion, it simply stands. */
+function settle(element: HTMLDivElement | null, step: SwipeStep | null): (() => void) | undefined {
+  if (!step || reducedMotion()) {
+    slide(element, 0, false);
+    return undefined;
+  }
+  slide(element, step === "next" ? 24 : -24, false);
+  const frame = requestAnimationFrame(() => slide(element, 0, true));
+  return () => cancelAnimationFrame(frame);
 }
 
 function reducedMotion(): boolean {

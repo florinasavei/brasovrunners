@@ -95,6 +95,25 @@ describe("§524 the members' pages", () => {
     expect(settings.benefitsEnJson).toEqual(doc("Discounts on the club's races."));
   });
 
+  it("§572 the screenshot: the Romanian alone is refused on the English box, and the translated English then saves", async () => {
+    // «Salutare colegii!» written, the English tab empty: refused, naming the English (§352, §47).
+    expect(
+      await refusal(saveMembersText(db, { actor: actor("ADMIN"), text: "zone", fields: { zoneRoBody: body("Salutare colegii!"), zoneEnBody: "" } })),
+    ).toEqual({ code: "VALIDATION_ERROR", fields: ["zoneEnBody"] });
+    expect((await readMembersPageSettings(db)).zoneRo).toBeNull();
+
+    // After «Copiază și tradu tot»: the English editor holds the translation and the form posts it.
+    const translated = {
+      type: "doc" as const,
+      content: [{ type: "paragraph" as const, content: [{ type: "text" as const, text: "Hello, ", marks: [{ type: "bold" as const }] }, { type: "text" as const, text: "colleagues!" }] }],
+    };
+    await saveMembersText(db, { actor: actor("ADMIN"), text: "zone", fields: { zoneRoBody: body("Salutare colegii!"), zoneEnBody: JSON.stringify(translated) } });
+    const settings = await readMembersPageSettings(db);
+    expect(settings.zoneRo).toBe("Salutare colegii!");
+    expect(settings.zoneEn).toBe("Hello, colleagues!");
+    expect(settings.zoneEnJson).toEqual(translated);
+  });
+
   it("publishes the public page only for an Administrator, and never hands the zone's words to the public read", async () => {
     await saveMembersText(db, { actor: actor("ADMIN"), text: "benefits", fields: { benefitsRoBody: body("Beneficii."), benefitsEnBody: body("Benefits.") } });
     await saveMembersText(db, { actor: actor("ADMIN"), text: "zone", fields: { zoneRoBody: body("Doar pentru membri."), zoneEnBody: body("Members only.") } });

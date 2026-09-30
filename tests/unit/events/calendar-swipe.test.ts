@@ -52,7 +52,8 @@ describe("the calendar's swipe", () => {
     const header = read("src/modules/events/ui/CalendarHeader.tsx");
     const swipe = read("src/modules/events/ui/CalendarSwipe.tsx");
     // One function draws both the arrows' addresses and the swipe's.
-    expect(header).toContain("calendarStepHrefs({ view, query, locale, pathname })");
+    expect(header).toContain("calendarStepHrefs({ view, layout, query, locale, now })");
+    expect(section).toContain("calendarStepHrefs({ view, layout, query, locale, now })");
     expect(section).toMatch(/<CalendarSwipe previousHref=\{steps\.previous\} nextHref=\{steps\.next\}>\s*<EventCalendar/);
     // Touch only, the vertical scroll left to the browser, and the reader kept where they are.
     expect(swipe).toContain('event.pointerType === "mouse"');
