@@ -64,7 +64,7 @@ export function fieldLabelOf(labels: Readonly<Record<string, string>>, name: str
   return name;
 }
 
-export type ActionFormAction =(state: FormOutcome | null, form: FormData) => Promise<FormOutcome | null>;
+export type ActionFormAction = (state: FormOutcome | null, form: FormData) => Promise<FormOutcome | null>;
 
 export const REFUSAL_SUMMARY_ID = "form-refusal";
 

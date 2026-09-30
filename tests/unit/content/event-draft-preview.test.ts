@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { isStaticPublicAnswer } from "@/i18n/live-twin";
 import { routing } from "@/i18n/routing";
 import { readPreviewMessage } from "@/modules/content/events/ui/draft-preview-messages";
 import { canPreviewEventDraft, STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
@@ -47,6 +48,17 @@ describe("§NNN the frame is never public and never cached", () => {
     expect(page).toContain('export const dynamic = "force-dynamic";');
     expect(page).toContain("robots: { index: false, follow: false, nocache: true }");
     expect(page).not.toMatch(/export const revalidate/);
+  });
+
+  it("is kept out of the sitemap and out of the public cache (§549), and no public page links it", () => {
+    for (const path of ["/ro/preview/draft", "/en/preview/draft"]) {
+      expect(isStaticPublicAnswer(path, new URLSearchParams(), false)).toBe(false);
+      expect(isStaticPublicAnswer(path, new URLSearchParams(), true)).toBe(false);
+    }
+    expect(read("src/app/robots.ts")).toContain('"/ro/previzualizare",');
+    expect(read("src/app/sitemap.ts")).not.toMatch(/preview/);
+    // Its one link is the editor's frame, behind the same role (`PreviewBox`, offered by `canPreviewEventDraft`).
+    expect(read("src/app/[locale]/admin/events/[id]/page.tsx")).toContain("canPreviewEventDraft(staffUser.role) && <PreviewBox");
   });
 
   it("writes nothing and expires nothing: no transaction, no revalidation, no job, no poster in the draft's path", () => {
