@@ -18,7 +18,7 @@ Where things stand at the end of 2026-09-30, written so that a session with no a
   «când» row never clipped). **qa and QA:** `BR-V2.50` (02:24 on 2026-10-01; smoke ok) — §594–§599 on top of §585–§593:
   the full card says the room left on the waiting list, a cancellation's offer email leaves at once, both starts named
   with a chequered flag, the distance marked «aproximativ» (migration `0116`), the two hotfixes' decision entries.
-- **The morning, from the phone (2026-10-01):** open `qa.brasovrunners.com` and look at the race's card and page (the
+- **The morning, from the phone (2026-10-01):** open the QA site (its address: SETUP.md §26) and look at the race's card and page (the
   two times, «≈» on a distance you tick, a cancellation on the QA race → the next person's offer email leaves at once).
   Then release everything that is in qa: GitHub app → the repository → **Actions** → **release** → **Run workflow** →
   `pr` = `310` (the last batch pull request, already merged: the run continues from the release step), `baseline` empty
