@@ -285,6 +285,8 @@ function eventFieldsFrom(form: FormData) {
     coordinates: form.has("event.coordinates") ? value("coordinates") : undefined,
     routeUrl: value("routeUrl"),
     distanceMeters: value("distanceMeters"),
+    // «Aproximativ» (§NNN): a checkbox beside the distance; `service.ts` drops it when the distance is empty.
+    distanceEstimated: form.get("event.distanceEstimated") === "on",
     elevationGainMeters: value("elevationGainMeters"),
     // «Estimativ» (§585): a checkbox beside the number; `fields.ts` drops it when the number is empty.
     elevationGainEstimated: form.get("event.elevationGainEstimated") === "on",

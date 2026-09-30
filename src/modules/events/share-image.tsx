@@ -3,8 +3,8 @@ import { CLUB_NAME, COLOR } from "@/theme/brand";
 import { brandFonts } from "@/theme/pdf/fonts";
 import { env } from "@/shared/config/env";
 import { formatDay, formatTime } from "@/i18n/dates";
+import { distanceWords } from "./domain/distance";
 import { elevationWords } from "./domain/elevation";
-import { distanceInKm } from "./domain/event-type";
 import { announcedDayInstant } from "./domain/dated";
 import type { PublicEventPage } from "./repository";
 
@@ -42,7 +42,7 @@ export type ShareImageEvent = Pick<
   | "elevationGainMeters"
   | "eventStatus"
 > &
-  Partial<Pick<PublicEventPage, "elevationGainEstimated">>;
+  Partial<Pick<PublicEventPage, "elevationGainEstimated" | "distanceEstimated">>;
 
 export async function eventShareImage(
   event: ShareImageEvent,
@@ -57,8 +57,11 @@ export async function eventShareImage(
     dateToBeAnnounced: string;
     /** "Ora se anunță în curând" (§533), after the day, when only the time is held back. */
     timeToBeAnnounced: string;
-    distanceKm: (km: string) => string;
-    /** The `Event` catalogue, for the climb's long form through `elevationWords` (§585) — «circa 350 m diferență de nivel (estimativ)» for an estimate. */
+    /**
+     * The `Event` catalogue, for the distance's and the climb's long forms through `distanceWords`
+     * (§NNN) and `elevationWords` (§585) — «circa 10 km (aproximativ)», «circa 350 m diferență de
+     * nivel (estimativ)» for an estimate.
+     */
     t: (key: string, values?: Record<string, string | number>) => string;
   },
 ): Promise<ImageResponse> {
@@ -76,9 +79,9 @@ export async function eventShareImage(
         ? `${formatDay(announcedDayInstant(event.announcedDay), { locale, timeZone: "UTC", style: "long" })} · ${labels.timeToBeAnnounced}`
         : labels.dateToBeAnnounced
       : `${formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long" })} · ${formatTime(event.raceStartsAt ?? event.startsAt, { locale, timeZone: event.timezone })}`;
-  const km = distanceInKm(event.distanceMeters);
   const route = [
-    km !== null ? labels.distanceKm(new Intl.NumberFormat(intl, { maximumFractionDigits: 1 }).format(km)) : null,
+    // «circa 10 km (aproximativ)» for a distance ticked «Aproximativ» (§NNN); «10 km» as before otherwise.
+    distanceWords(event, labels.t, (km) => new Intl.NumberFormat(intl, { maximumFractionDigits: 1 }).format(km))?.long ?? null,
     elevationWords(event, labels.t, (value) => new Intl.NumberFormat(intl).format(value))?.long ?? null,
   ].filter(Boolean);
   // The host, derived — never written (`AGENTS.md` §8).

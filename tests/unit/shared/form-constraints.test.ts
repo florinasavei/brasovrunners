@@ -57,6 +57,8 @@ const NOT_A_BOX = new Set([
   "askHealthNote",
   // «Estimativ» beside «Diferență de nivel (m)» (§585): a tick in «Traseu».
   "elevationGainEstimated",
+  // «Aproximativ» beside «Distanță (m)» (§NNN): a tick in «Traseu».
+  "distanceEstimated",
 ]);
 
 describe("the event form's constraints are the schema's (§315)", () => {

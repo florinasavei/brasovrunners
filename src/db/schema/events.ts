@@ -318,6 +318,14 @@ export const events = pgTable(
     scheduleItems: jsonb("schedule_items"),
 
     distanceMeters: integer("distance_meters"),
+    /**
+     * «Aproximativ» beside «Distanță (m)» (§NNN, the twin of §585's climb; the owner, 2026-09-30:
+     * «la distanță vreau să pot pune aproximativ, ca și la elevație»): the club knows the length only
+     * roughly and says so. Every surface then reads «≈ 10 km» and «circa 10 km (aproximativ)»
+     * through `distanceWords`, never a bare number. Meaningless without a distance: the editor saves
+     * it false when the box is empty.
+     */
+    distanceEstimated: boolean("distance_estimated").notNull().default(false),
     elevationGainMeters: integer("elevation_gain_meters"),
     /**
      * «Estimativ» beside «Diferență de nivel (m)» (§585; the owner, 2026-09-30: «la elevație,

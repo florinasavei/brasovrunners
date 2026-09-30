@@ -9,6 +9,7 @@ import { startHeldBack } from "@/modules/events/domain/dated";
 import { readCoHosts } from "@/modules/events/domain/co-hosts";
 import { costPaidToExternalOrganizer, type EventCostType } from "@/modules/events/domain/cost";
 import { difficultyLevel, storedDifficulty } from "@/modules/events/domain/difficulty";
+import { estimatedDistance } from "@/modules/events/domain/distance";
 import { estimatedElevation } from "@/modules/events/domain/elevation";
 import { EVENT_NOTICE_TEXT_MAX, type EventChangeKind, eventChangesToAnnounce, eventNoticeTextSchema } from "@/modules/events/domain/event-changes";
 import { EVENT_TYPES, type EventType, hasProgramme, takesRegistrations } from "@/modules/events/domain/event-type";
@@ -569,6 +570,8 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
     ...(fields.costAmount === undefined ? {} : { costAmount: fields.costAmount }),
     ...(fields.costUrl === undefined ? {} : { costUrl: fields.costUrl }),
     distanceMeters: fields.distanceMeters,
+    // «Aproximativ» (§NNN) means nothing without a distance: a tick beside an empty box is saved false, quietly.
+    distanceEstimated: estimatedDistance(fields.distanceMeters, fields.distanceEstimated === true),
     elevationGainMeters: fields.elevationGainMeters,
     // «Estimativ» (§585) means nothing without a number: a tick beside an empty box is saved false, quietly.
     elevationGainEstimated: estimatedElevation(fields.elevationGainMeters, fields.elevationGainEstimated === true),
@@ -1748,6 +1751,8 @@ const SERIES_COLUMNS = [
   "costUrl",
   "distanceMeters",
   "elevationGainMeters",
+  // Whether the distance is approximate (§NNN) travels with the distance it qualifies.
+  "distanceEstimated",
   // Whether the climb is a guess (§585) travels with the climb it qualifies.
   "elevationGainEstimated",
   // The night override, a fact of the route like the two above (§382, §394). "Automat" carried to
@@ -2381,6 +2386,7 @@ function blankEventRow(now: Date): EditableEvent {
     repeatOf: null,
     scheduleItems: null,
     distanceMeters: null,
+    distanceEstimated: false,
     elevationGainMeters: null,
     elevationGainEstimated: false,
     nightOverride: null,
@@ -2973,6 +2979,8 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     costAmount: source.costAmount,
     costUrl: source.costUrl,
     distanceMeters: source.distanceMeters,
+    // «Aproximativ» travels with the distance it qualifies (§NNN): a copy, and every date of a series.
+    distanceEstimated: source.distanceEstimated,
     elevationGainMeters: source.elevationGainMeters,
     // «Estimativ» travels with the climb it qualifies (§585): a copy, and every date of a series.
     elevationGainEstimated: source.elevationGainEstimated,

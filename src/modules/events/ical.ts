@@ -2,8 +2,9 @@ import { isRichTextEmpty, readRichText, richTextToPlainText } from "@/modules/co
 import { type CoHost, primaryCoHostLink } from "./domain/co-hosts";
 import { costUrlHost, type EventCostType } from "./domain/cost";
 import { difficultyLevelOf, difficultyWords } from "./domain/difficulty";
+import { distanceWords } from "./domain/distance";
 import { elevationWords } from "./domain/elevation";
-import { distanceInKm, type EventSurface, type EventType } from "./domain/event-type";
+import { type EventSurface, type EventType } from "./domain/event-type";
 import { type RegistrationWindowInput, registrationState } from "./domain/registration-window";
 import { type ProgrammeRow, programmeLines } from "./domain/schedule";
 import { whenTimes } from "./domain/when-times";
@@ -99,6 +100,8 @@ export type CalendarEvent = {
   timezone?: string;
   /** The facts line (§159): what the page's facts say, in the calendar's language through `labels.t`. */
   distanceMeters?: number | null;
+  /** «Aproximativ» (§NNN): the facts line says «circa 10 km (aproximativ)». */
+  distanceEstimated?: boolean | null;
   elevationGainMeters?: number | null;
   /** «Estimativ» (§585): the facts line says «circa 350 m diferență de nivel (estimativ)». */
   elevationGainEstimated?: boolean | null;
@@ -438,12 +441,13 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
   const nightLine = night.night ? nightWords(night, t, event.type === "GROUP_RUN", "ics") : "";
 
   // "Concurs · 🏃 10 km · ↗ 300 m urcare · Trail · Mediu · Gratuit": the page's own words (§112), one line.
-  const km = distanceInKm(event.distanceMeters ?? null);
+  // The distance in its long form (§NNN), an approximate one said as one: «circa 10 km (aproximativ)».
+  const distance = distanceWords(event, t, (km) => new Intl.NumberFormat(intl, { maximumFractionDigits: 1 }).format(km));
   // The climb in its long form (§585), an estimate said as one: «circa 350 m diferență de nivel (estimativ)».
   const climb = elevationWords(event, t, (value) => new Intl.NumberFormat(intl).format(value));
   const facts = [
     event.type ? t(`type.${event.type}`) : "",
-    km !== null ? `🏃 ${t("distanceKm", { km: new Intl.NumberFormat(intl, { maximumFractionDigits: 1 }).format(km) })}` : "",
+    distance ? `🏃 ${distance.long}` : "",
     climb ? `↗ ${climb.long}` : "",
     event.surface ? t(`surface.${event.surface}`) : "",
     difficultyLine(event, t),

@@ -62,6 +62,8 @@ export type EmailEventFacts = Pick<
   difficultyLevel?: number | null;
   /** «Estimativ» (§585): the climb is said «circa 350 m diferență de nivel (estimativ)», never the bare number. */
   elevationGainEstimated?: boolean | null;
+  /** «Aproximativ» (§NNN): the distance is said «circa 10 km (aproximativ)», never the bare number. */
+  distanceEstimated?: boolean | null;
   startsAt: Date;
   timezone: string;
   /** The place's name in this language (§362); null while it is to be announced (§328). */
