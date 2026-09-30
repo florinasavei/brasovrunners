@@ -104,8 +104,9 @@ test.describe("BR-REQ-035-01 a waiting list with a limit, on the event page (§3
     await expect(join).toBeVisible();
     expect((await join.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
     await expect(page.getByTestId("waitlist-room")).toHaveText("Mai sunt 2 locuri pe lista de așteptare");
-    // Said kindly, before the button, and how an offer works (§587).
-    await expect(page.getByTestId("registration-waitlist-message")).toContainText("Mulțumim! Toate cele");
+    // Said kindly, before the button, and how an offer works (§587). The fixture's race has one
+    // place, so the lead is the catalogue's one-form, with the one already waiting counted in it.
+    await expect(page.getByTestId("registration-waitlist-message")).toContainText("Mulțumim! Singurul loc s-a ocupat — 1 așteaptă deja un loc.");
     await expect(page.getByTestId("waitlist-offer")).toContainText("să confirmi — altfel locul trece mai departe.");
     await page.goto(`/en/events/${room.slug}-en`);
     await expect(page.getByTestId("waitlist-room")).toHaveText("2 places left on the waiting list");

@@ -247,6 +247,9 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     await hydrated(page);
     await openEditorBox(page, "Traseul");
     await page.locator('[name="event.routeUrl"]').fill("");
+    // The first test also stated a climb (§585), and a stated climb is a route fact of its own: its
+    // pill alone earns the "Traseu" row. An event with no route drawn has none, so the climb goes too.
+    await page.locator('[name="event.elevationGainMeters"]').fill("");
     await openEditorBox(page, "Linkuri și fișiere");
     // The link saved by the first test comes back in its row, and removing the row removes it
     // (criterion 19): no rows left is "no links", not "not editing the links".
