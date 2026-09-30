@@ -76,6 +76,7 @@ import PhoneField from "@/modules/registrations/ui/PhoneField";
 import NationalityField from "@/modules/registrations/ui/NationalityField";
 import SexField from "@/modules/registrations/ui/SexField";
 import { SHIRT_SIZES } from "@/modules/registrations/domain/kit";
+import { BOT_CHECK_ERROR_ATTRIBUTE, BOT_CHECK_SLOT_SX } from "@/modules/registrations/domain/turnstile-widget";
 import RegistrationSteps from "@/modules/registrations/ui/RegistrationSteps";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { activeBotCheckSiteKey } from "@/modules/registrations/bot-check";
@@ -399,7 +400,6 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   const capRule = familyOpen && capMax !== null && capMax > 1 ? t("addressCap.rule", { people: capPeople }) : null;
   // The event page's own words for a place still to be announced (§328), one key for every surface.
   const tEvent = await getTranslations("Event");
-  const legal = await getTranslations("Legal");
   // Names from the platform, order from the reader's own collation (`countries.ts`).
   const countries = countryOptions(locale, (code) => countryName(code, locale));
   // The phone prefixes' order and names, sorted and named here and only drawn in the browser
@@ -1616,19 +1616,15 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               {/* Cloudflare Turnstile, when the club switched it on (§97), drawn and reset by
                   its own island (§185) — the implicit widget could not survive a re-render. */}
               {siteKey && (
-                <Box id={fieldId("captcha")}>
-                  {/* The one form whose send button holds a press for the check (§518). */}
-                  <BotCheck siteKey={siteKey} locale={locale} attempt={now.toISOString()} heldPress />
+                <Box id={fieldId("captcha")} sx={BOT_CHECK_SLOT_SX}>
+                  {/* The one form whose send button holds a press for the check (§518). Who sees what
+                      for it (§323) is said by the island with the widget, not before it (§NNN). */}
+                  <BotCheck siteKey={siteKey} locale={locale} attempt={now.toISOString()} notice heldPress />
                   {captchaFailed && (
-                    <Typography variant="body2" color="error" sx={{ mt: 1 }}>
+                    <Typography variant="body2" color="error" sx={{ mt: 1 }} {...{ [BOT_CHECK_ERROR_ATTRIBUTE]: "true" }}>
                       {t("errors.captcha")}
                     </Typography>
                   )}
-                  {/* Who sees what for the check, where the check is (§323): a third party
-                      receives the address and the browser's signals, and the form says so. */}
-                  <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
-                    {legal("botCheckNotice")}
-                  </Typography>
                 </Box>
               )}
               {/*

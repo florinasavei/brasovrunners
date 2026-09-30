@@ -3,7 +3,13 @@ import { join, relative } from "node:path";
 import { renderToStaticMarkup } from "react-dom/server";
 import { createElement } from "react";
 import { describe, expect, it } from "vitest";
-import { BOT_CHECK_ARMING_EVENTS, TURNSTILE_SCRIPT_URL } from "@/modules/registrations/domain/turnstile-widget";
+import {
+  BOT_CHECK_ARMED_ATTRIBUTE,
+  BOT_CHECK_ARMING_EVENTS,
+  BOT_CHECK_ERROR_ATTRIBUTE,
+  BOT_CHECK_SLOT_SX,
+  TURNSTILE_SCRIPT_URL,
+} from "@/modules/registrations/domain/turnstile-widget";
 import TurnstileWidget, { type BotCheckWords } from "@/modules/registrations/ui/TurnstileWidget";
 
 /**
@@ -58,6 +64,31 @@ describe("§577 the widget waits for a person to start on the form", () => {
     expect(html).not.toContain("<script");
     expect(html).not.toContain("challenges.cloudflare.com");
     expect(html).not.toContain("«loading»");
+  });
+
+  it("draws no Cloudflare sentence and reserves no height until armed (§NNN)", () => {
+    const html = renderToStaticMarkup(
+      createElement(TurnstileWidget, { siteKey: "1x00000000000000000000AA", locale: "ro", attempt: "a", words: { ...words, notice: "«notice»" } }),
+    );
+    expect(html).not.toContain("«notice»");
+    expect(html).not.toContain("min-height");
+    expect(html).not.toContain(BOT_CHECK_ARMED_ATTRIBUTE);
+  });
+
+  it("hides the forms' slot for the check until the widget is armed or a refusal is said (§NNN)", () => {
+    const [selector, rule] = Object.entries(BOT_CHECK_SLOT_SX)[0];
+    expect(rule).toEqual({ display: "none" });
+    expect(selector).toContain(`:not(:has([${BOT_CHECK_ARMED_ATTRIBUTE}]))`);
+    expect(selector).toContain(`:not(:has([${BOT_CHECK_ERROR_ATTRIBUTE}]))`);
+    for (const path of [
+      "src/app/[locale]/contact/page.tsx",
+      "src/app/[locale]/events/[slug]/register/page.tsx",
+      "src/modules/registrations/ui/RegistrationInterestForm.tsx",
+    ]) {
+      const source = read(path);
+      expect(source, path).toMatch(/sx=\{BOT_CHECK_SLOT_SX\}>\s*(\{\/\*[\s\S]*?\*\/\}\s*)?<BotCheck [^>]*\bnotice\b/);
+      expect(source, path).not.toContain('legal("botCheckNotice")');
+    }
   });
 });
 

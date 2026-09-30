@@ -7,6 +7,7 @@ import Typography from "@mui/material/Typography";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import {
+  BOT_CHECK_ARMED_ATTRIBUTE,
   BOT_CHECK_ARMING_EVENTS as ARMING_EVENTS,
   BOT_CHECK_BLOCKED_AFTER_MS,
   BOT_CHECK_GAVE_UP_ATTRIBUTE,
@@ -93,7 +94,13 @@ declare global {
  * The line under the widget, per state, the slow line, the retry button's label and the line of a
  * failure that gave up — translated on the server (`BotCheck`).
  */
-export type BotCheckWords = Record<BotCheckWidgetState, string> & { slow: string; retry: string; failed: string };
+export type BotCheckWords = Record<BotCheckWidgetState, string> & {
+  slow: string;
+  retry: string;
+  failed: string;
+  /** Who runs the check and what it sees (§323), said only once the widget is there (§NNN). */
+  notice?: string;
+};
 
 const SCRIPT_SELECTOR = "script[data-turnstile]";
 const NOTHING_TO_WATCH = () => () => {};
@@ -324,12 +331,16 @@ export default function TurnstileWidget({
     slow && (state === "loading" || state === "checking") ? words.slow : state === "error" && gaveUp ? words.failed : words[state];
 
   return (
-    <Box>
-      {/* `min-height` so the form does not jump when the challenge draws itself a moment later. */}
+    <Box {...(running && armed ? { [BOT_CHECK_ARMED_ATTRIBUTE]: "true" } : {})}>
+      {/*
+        `min-height` so the form does not jump when the challenge draws itself a moment later — only
+        once armed (§NNN): before the first touch nothing is coming, and a blank box above
+        Cloudflare's sentence read as a broken form.
+      */}
       <Box
         ref={holder}
         {...{ [BOT_CHECK_STATE_ATTRIBUTE]: state, ...(gaveUp ? { [BOT_CHECK_GAVE_UP_ATTRIBUTE]: "true" } : {}) }}
-        sx={{ minHeight: 65 }}
+        sx={armed ? { minHeight: 65 } : undefined}
       />
       {/*
         A widget that failed in this attempt says so with the form (§518) — a word, nothing about
@@ -369,6 +380,12 @@ export default function TurnstileWidget({
             </Button>
           )}
         </Box>
+      )}
+      {/* Who runs the check and what it sees (§323) — with the widget, never before it (§NNN). */}
+      {running && armed && words.notice && (
+        <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }} data-testid="bot-check-notice">
+          {words.notice}
+        </Typography>
       )}
     </Box>
   );
