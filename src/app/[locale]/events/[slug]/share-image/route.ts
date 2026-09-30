@@ -24,7 +24,6 @@ export async function GET(request: Request, { params }: { params: Promise<{ loca
     locationToBeAnnounced: t("locationToBeAnnounced"),
     dateToBeAnnounced: t("dateToBeAnnounced"),
     timeToBeAnnounced: t("timeToBeAnnounced"),
-    distanceKm: (km) => t("distanceKm", { km }),
     t: (key, values) => t(key, values),
   });
   image.headers.set("Content-Disposition", `attachment; filename="${slug}-${shape}.png"`);
