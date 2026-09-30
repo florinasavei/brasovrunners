@@ -275,20 +275,30 @@ function familyFirstNames(people: NonNullable<TemplateData["familyConfirmed"]>):
  * the QR the desk scans. The second half of the bilingual message repeats the words, not the pictures
  * (`renderBilingual`), as for one person's QR. The plain-text half reads one line per fact.
  */
-function familyConfirmedPart(people: NonNullable<TemplateData["familyConfirmed"]>, words: FamilyConfirmedWords): EmailBodyPart {
+function familyConfirmedPart(people: NonNullable<TemplateData["familyConfirmed"]>, words: FamilyConfirmedWords, plainLook = false): EmailBodyPart {
   const numberText = (person: (typeof people)[number]) => (person.raceNumber === null ? words.noNumber : String(person.raceNumber));
   const blocks = people.map((person) => {
     const number = person.raceNumber === null ? escapeHtml(words.noNumber) : `<strong style="font-size:20px">${person.raceNumber}</strong>`;
     return [
       `<div data-email-part="family-person" style="margin:0 0 14px;padding:14px 16px;border:1px solid ${COLOR.line};border-radius:10px">`,
       `<p style="margin:0 0 8px;font-size:17px;line-height:1.4"><strong>${escapeHtml(person.name)}</strong></p>`,
-      // The number and the desk code on the band (§NNN), as one runner's confirmation draws them.
-      highlightBand(
-        [
-          bandLine(`${escapeHtml(words.number)}: ${number}`),
-          ...(person.checkinCode ? [bandLine(`${escapeHtml(words.code)}: <strong>${escapeHtml(person.checkinCode)}</strong>`)] : []),
-        ].join(""),
-      ),
+      // The number and the desk code on the band (§NNN), as one runner's confirmation draws them —
+      // the club's copy keeps the plain lines it always had.
+      ...(plainLook
+        ? [
+            `<p style="margin:0 0 6px;font-size:15px;line-height:1.5">${escapeHtml(words.number)}: ${number}</p>`,
+            ...(person.checkinCode
+              ? [`<p style="margin:0 0 8px;font-size:15px;line-height:1.5">${escapeHtml(words.code)}: <strong>${escapeHtml(person.checkinCode)}</strong></p>`]
+              : []),
+          ]
+        : [
+            highlightBand(
+              [
+                bandLine(`${escapeHtml(words.number)}: ${number}`),
+                ...(person.checkinCode ? [bandLine(`${escapeHtml(words.code)}: <strong>${escapeHtml(person.checkinCode)}</strong>`)] : []),
+              ].join(""),
+            ),
+          ]),
       ...(person.qrUrl
         ? [
             `<p style="margin:0"><img src="${person.qrUrl}" alt="${escapeHtml(`${words.qr} ${person.checkinCode ?? ""}`)}" width="160" height="160" style="display:block;width:160px;height:160px"></p>`,
@@ -301,8 +311,8 @@ function familyConfirmedPart(people: NonNullable<TemplateData["familyConfirmed"]
     html: `<div data-email-part="family-confirmed">${blocks.join("")}</div>`,
     text: people.flatMap((person) => [
       person.name,
-      `${HIGHLIGHT_TEXT_MARK}${words.number}: ${numberText(person)}`,
-      ...(person.checkinCode ? [`${HIGHLIGHT_TEXT_MARK}${words.code}: ${person.checkinCode}`] : []),
+      `${plainLook ? "" : HIGHLIGHT_TEXT_MARK}${words.number}: ${numberText(person)}`,
+      ...(person.checkinCode ? [`${plainLook ? "" : HIGHLIGHT_TEXT_MARK}${words.code}: ${person.checkinCode}`] : []),
       ...(person.qrUrl ? [`${words.qr}: ${person.qrUrl}`] : []),
       "",
     ]),
@@ -2759,29 +2769,37 @@ export function buildTemplateContent(
     in each person's block instead (`familyConfirmedPart`). A re-send's band is "you are already
     registered" (§235), the one sentence that person is hunting for; an update's is what changed
     (§331); a cancellation's carries what it released (§547).
+
+    The club's copy of a participant message (§320) keeps the plain look — no band, no quieter line,
+    the button where it always was: the emphasis is for the participant's inbox, and the copy is the
+    club's own mail.
   */
   const familySittingWords = copy.familySitting;
-  const own: Emphasis = familySittingShape
-    ? {
-        highlight: [familySittingWords.heading(familySittingPeople, data.familyReservedUntilFormatted)],
-        actionAfter: data.familyEarlierSent ? familySittingWords.earlier : familySittingWords.lead(familySittingPeople.length),
-        quiet: familySittingWords.body().slice(1),
-      }
-    : familyConfirmedShape
-      ? {}
-      : (entry.emphasis?.(data, entry.body(data)) ?? {});
+  const own: Emphasis = clubCopy
+    ? {}
+    : familySittingShape
+      ? {
+          highlight: [familySittingWords.heading(familySittingPeople, data.familyReservedUntilFormatted)],
+          actionAfter: data.familyEarlierSent ? familySittingWords.earlier : familySittingWords.lead(familySittingPeople.length),
+          quiet: familySittingWords.body().slice(1),
+        }
+      : familyConfirmedShape
+        ? {}
+        : (entry.emphasis?.(data, entry.body(data)) ?? {});
   const changes = noticeParts(messageType, locale, data).filter((part): part is string => typeof part === "string");
-  const emphasis: Emphasis = {
-    ...own,
-    highlight: data.alreadyRegistered
-      ? [copy.alreadyRegistered(data.bibNumber ?? null)]
-      : messageType === "EVENT_UPDATE_NOTICE" && changes.length > 0
-        ? changes
-        : messageType === "REGISTRATION_CANCELLED"
-          ? [...(own.highlight ?? []), copy.cancelledReleased(data.participantName, data.cancelledFromWaitlist === true)]
-          : own.highlight,
-    quiet: [...(own.quiet ?? []), ...(messageType === "GROUP_RUN_DECLARATION_SIGNED" ? [copy.groupRunNotYou(data.contactUrl)] : [])],
-  };
+  const emphasis: Emphasis = clubCopy
+    ? {}
+    : {
+        ...own,
+        highlight: data.alreadyRegistered
+          ? [copy.alreadyRegistered(data.bibNumber ?? null)]
+          : messageType === "EVENT_UPDATE_NOTICE" && changes.length > 0
+            ? changes
+            : messageType === "REGISTRATION_CANCELLED"
+              ? [...(own.highlight ?? []), copy.cancelledReleased(data.participantName, data.cancelledFromWaitlist === true)]
+              : own.highlight,
+        quiet: [...(own.quiet ?? []), ...(messageType === "GROUP_RUN_DECLARATION_SIGNED" ? [copy.groupRunNotYou(data.contactUrl)] : [])],
+      };
 
   return {
     ...emphasis,
@@ -2892,7 +2910,7 @@ export function buildTemplateContent(
           : familySittingShape
             ? copy.familySitting.body()
             : familyConfirmedShape
-              ? [...copy.familyConfirmed.body(data), familyConfirmedPart(familyConfirmedPeople, copy.familyConfirmed.words)]
+              ? [...copy.familyConfirmed.body(data), familyConfirmedPart(familyConfirmedPeople, copy.familyConfirmed.words, clubCopy)]
               : entry.body(data)),
       /*
         Who signs a minor's declaration (§419, §330), after the body whoever wrote it — a fact about

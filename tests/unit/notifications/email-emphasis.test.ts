@@ -214,3 +214,29 @@ describe("§NNN every participant message puts its one fact on the band, in both
     });
   }
 });
+
+/** The participant messages the club gets a copy of (§320), each with its one fact on the band in the participant's own. */
+const CLUB_COPIED: readonly EmailMessageType[] = ["REGISTRATION_CONFIRMED", "REGISTRATION_CANCELLED", "COMPLETE_DECLARATION", "WAITLIST_SPOT_OFFER"];
+
+describe("§NNN the club's copy of a participant message keeps the plain look", () => {
+  const quietLine = `font-size:14px;line-height:1.5;color:${EMAIL_EMPHASIS.quiet}`;
+  for (const type of CLUB_COPIED) {
+    it(`${type} as the club's copy: no band, no quieter line, no ▶`, () => {
+      const participant = renderBilingual(type, "ro", emailSampleFor(type, "ro"), ACTION, null);
+      // The participant's own does draw the band — so the copy's plain look is the gate, not the sample.
+      expect(bands(participant.html).length).toBeGreaterThan(0);
+      const message = renderBilingual(type, "ro", { ...emailSampleFor(type, "ro"), clubCopy: true }, ACTION, null);
+      expect(message.html).not.toContain('data-email-part="highlight"');
+      expect(message.html).not.toContain(quietLine);
+      expect(message.text).not.toContain(HIGHLIGHT_TEXT_MARK);
+    });
+  }
+
+  it("a family's confirmation as the club's copy draws no band in anybody's block", () => {
+    const data = { ...emailSampleFor("REGISTRATION_CONFIRMED", "ro"), familyConfirmed: emailSampleFamilyConfirmed(), clubCopy: true };
+    const message = renderBilingual("REGISTRATION_CONFIRMED", "ro", data, ACTION, null);
+    expect(message.html).toContain('data-email-part="family-person"');
+    expect(message.html).not.toContain('data-email-part="highlight"');
+    expect(message.text).not.toContain(HIGHLIGHT_TEXT_MARK);
+  });
+});
