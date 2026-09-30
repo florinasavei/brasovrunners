@@ -135,7 +135,16 @@ export function cardRegistrationLine(
  * The card's registration line and, under it, the page's button — two rows of the facts' grid, the
  * line last among the facts where BR-REQ-011-01 criterion 18 reads it.
  */
-export default function CardRegistration({ slug, line }: { slug: string; line: CardRegistrationLine }) {
+export default function CardRegistration({
+  slug,
+  line,
+  preview,
+}: {
+  slug: string;
+  line: CardRegistrationLine;
+  /** The editor's preview before saving (§NNN): the button drawn disabled, with this word. */
+  preview?: string;
+}) {
   return (
     <>
       <Typography
@@ -166,7 +175,7 @@ export default function CardRegistration({ slug, line }: { slug: string; line: C
         // A group's gap under the line (the grid's own gap is a line's): the button is a group of
         // its own, as the pills are (§366). 44 pixels tall (BR-REQ-041-01 criterion 6).
         <Box data-fact="door" sx={{ mt: GROUP_GAP - LINE_GAP }}>
-          <RegistrationDoorButton slug={slug} cta={line.button.cta} label={line.button.label} />
+          <RegistrationDoorButton slug={slug} cta={line.button.cta} label={line.button.label} preview={preview} />
         </Box>
       )}
     </>

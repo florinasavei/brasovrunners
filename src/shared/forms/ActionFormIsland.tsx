@@ -46,7 +46,25 @@ export type RefusalMessages = {
   keptConflict: string;
 };
 
-export type ActionFormAction = (state: FormOutcome | null, form: FormData) => Promise<FormOutcome | null>;
+/**
+ * The words a refused box is named by: the label under the exact name, then unindexed
+ * (`event.schedule[].date`), then the panel the name belongs to (`event.bibDesign` for
+ * `event.bibDesign.numberScale`), then the name. Shared with the editor's preview before saving
+ * (§NNN), which names the boxes the save would refuse in the same words.
+ */
+export function fieldLabelOf(labels: Readonly<Record<string, string>>, name: string): string {
+  const unindexed = name.replace(/\[\d+\]/g, "[]");
+  for (const candidate of [name, unindexed]) if (labels[candidate]) return labels[candidate];
+  const parts = unindexed.split(".");
+  while (parts.length > 1) {
+    parts.pop();
+    const shorter = labels[parts.join(".")];
+    if (shorter) return shorter;
+  }
+  return name;
+}
+
+export type ActionFormAction =(state: FormOutcome | null, form: FormData) => Promise<FormOutcome | null>;
 
 export const REFUSAL_SUMMARY_ID = "form-refusal";
 
@@ -289,20 +307,7 @@ export default function ActionFormIsland({
     revealField(event.target as HTMLElement);
   };
 
-  // The label under the exact name, then unindexed (`event.schedule[].date`), then the panel
-  // the name belongs to (`event.bibDesign` for `event.bibDesign.numberScale`), then the name.
-  const labelOf = (name: string): string => {
-    const unindexed = name.replace(/\[\d+\]/g, "[]");
-    const labels = messages?.fields ?? {};
-    for (const candidate of [name, unindexed]) if (labels[candidate]) return labels[candidate];
-    const parts = unindexed.split(".");
-    while (parts.length > 1) {
-      parts.pop();
-      const shorter = labels[parts.join(".")];
-      if (shorter) return shorter;
-    }
-    return name;
-  };
+  const labelOf = (name: string): string => fieldLabelOf(messages?.fields ?? {}, name);
 
   return (
     // `data-action-key` and `data-action-form` are `ACTION_KEY_ATTRIBUTE` and `ACTION_FORM_ATTRIBUTE` (§436).

@@ -61,6 +61,7 @@ import TimerIcon from "@mui/icons-material/Timer";
 import TitleIcon from "@mui/icons-material/Title";
 import TranslateIcon from "@mui/icons-material/Translate";
 import UpdateIcon from "@mui/icons-material/Update";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import type { SvgIconProps } from "@mui/material/SvgIcon";
 import type { ComponentType } from "react";
 
@@ -153,6 +154,8 @@ export const PANEL_GLYPHS = {
   translation: TranslateIcon,
   // «Ordinea meniului» (§571): the site menu's entries, one under the other, in the club's order.
   menuOrder: ReorderIcon,
+  // «Previzualizare» (§NNN): the event's card and page as a visitor will see them, before saving.
+  preview: VisibilityIcon,
 } satisfies Record<string, ComponentType<SvgIconProps>>;
 
 export type PanelGlyphName = keyof typeof PANEL_GLYPHS;

@@ -791,6 +791,19 @@ export function canReadContent(role: StaffRole): boolean {
 }
 
 /**
+ * **The event editor's «Previzualizare» before saving (§NNN)** — the listing card and the event
+ * page drawn from the form's unsaved values: the Redactor who writes the words, the Organizer who
+ * reads the event, the Administrator who sets it. Written as the union of the three capabilities
+ * those roles hold rather than as a threshold, so the Tehnic — who opens the editor only because
+ * `canReadContent` is a threshold `DEV` happens to sit above — gets no render of a draft, which
+ * is editorial work (`MAY_EDIT_TEXTS` says why `DEV` is out of it), and the volunteer gets none.
+ * The preview writes nothing, so reading is enough; the route asserts this, never a hidden card.
+ */
+export function canPreviewEventDraft(role: StaffRole): boolean {
+  return canEditTexts(role) || canEditEventFields(role) || canReadRegistrations(role);
+}
+
+/**
  * Whether «Setări» is offered at all (§516): the union of its tabs' gates, which
  * `settings-tabs.ts` spells out per tab. Written here as the threshold — every tab asks
  * `canReadContent` or the higher `canManageRegistrations` — because that module reads its

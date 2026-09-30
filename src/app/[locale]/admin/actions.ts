@@ -24,6 +24,7 @@ import {
 } from "@/modules/content/events/service";
 import { eventFormFieldName, PLACE_NAMES_AS_TYPED_FIELD, THEN_FIELD, THEN_PUBLISH } from "@/modules/content/events/form-names";
 import { joinDuration } from "@/modules/content/events/duration";
+import { type DraftPreview, renderEventDraftPreview } from "@/modules/content/events/draft-preview";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
 import { REPEAT_CADENCES, type RepeatCadence, type Weekday, WEEKDAYS } from "@/modules/events/domain/repeat";
 import { nightOverrideFromChoice } from "@/modules/events/domain/night";
@@ -651,6 +652,47 @@ export async function saveEventAndTranslationsAction(_previous: FormOutcome | nu
   }
 
   return backTo(path, outcome);
+}
+
+/**
+ * **«Previzualizare» before saving (§NNN)**: the editor's form, as it stands, drawn as the listing
+ * card and the event page in one language — through the save's own readers here
+ * (`eventFieldsFrom`, `translationFieldsFrom`, `translationInputFrom`) and the save's own steps
+ * without the write (`draft-preview.tsx`). Posted by the preview frame (`EventDraftFrame`) from the
+ * page `/<locale>/preview/draft`, so the request's language is the language drawn.
+ *
+ * One function call per press, nothing in idle (the owner's «costuri minime»): no row, no audit, no
+ * cache entry filled or expired, no email, no revalidation, no redirect. The role is asserted here,
+ * before anything is read (BR-REQ-060-01) — the card that offers the button is a courtesy.
+ * `private, no-store` is the proxy's on every staff path the frame is served from (`private-paths.ts`),
+ * and Next answers an action uncached.
+ */
+export async function previewEventDraftAction(form: FormData): Promise<DraftPreview> {
+  let actor;
+  try {
+    actor = await requireStaff();
+  } catch (error) {
+    if (isDomainError(error)) return { outcome: "forbidden" };
+    throw error;
+  }
+  const eventId = text(form, "eventId") || null;
+  // The create page posts no id and every box; the editor posts the settings only with their
+  // version (a reader who may not change them posts none) and each language with its row id.
+  const editsEventRow = eventId === null || text(form, "event.expectedVersion") !== "";
+  return renderEventDraftPreview(getDb(), {
+    actor,
+    eventId,
+    fields: editsEventRow ? eventFieldsFrom(form) : undefined,
+    translations: Object.fromEntries(
+      routing.locales.flatMap((contentLocale) => {
+        if (eventId === null) return [[contentLocale, translationInputFrom(form, contentLocale)]];
+        const posted = translationFieldsFrom(form, contentLocale);
+        return posted ? [[contentLocale, posted.fields]] : [];
+      }),
+    ),
+    placeNamesAsTyped: form.get(PLACE_NAMES_AS_TYPED_FIELD) === "1",
+    locale: toLocale(form.get("previewLocale")),
+  });
 }
 
 /**

@@ -11,7 +11,7 @@ import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { DENSITY } from "@/theme/density";
 import type { PublicEventPage } from "../repository";
 import { fillPhrase, waitlistRoomPhrase } from "./counted-phrases";
-import { readRegistrationDoor } from "./registration-door";
+import { type PreviewDoor, readRegistrationDoor } from "./registration-door";
 import RegistrationDoorButton, { doorButtonLabel } from "./RegistrationDoorButton";
 
 /**
@@ -31,13 +31,20 @@ import RegistrationDoorButton, { doorButtonLabel } from "./RegistrationDoorButto
 export default async function RegistrationCta({
   event,
   now,
+  previewDoor,
 }: {
   /** An event page's read: undated while its date is to be announced, and then «în curând» (§533). */
   event: PublicEventPage;
   now: Date;
+  /**
+   * The editor's preview before saving (§NNN): the draft's door (`draftRegistrationDoor`), read
+   * instead of the public cache's, and its button drawn disabled with the word it carries.
+   */
+  previewDoor?: PreviewDoor;
 }) {
   const t = await getTranslations("Event");
   const locale = await getLocale();
+  const preview = previewDoor?.word;
 
   /*
     The state and the count, read once (`registration-door.ts`, shared with the listing card since
@@ -46,7 +53,7 @@ export default async function RegistrationCta({
     block says so and the page around it stands. A refresh is what fixes it, and it is offered as a
     link rather than a promise.
   */
-  const door = await readRegistrationDoor(event, now);
+  const door = previewDoor?.door ?? (await readRegistrationDoor(event, now));
   if (door.kind === "UNKNOWN") return <CapacityUnknown slug={event.slug} />;
   const { cta, fill } = door;
   if (cta.kind === "NONE") return null;
@@ -54,7 +61,7 @@ export default async function RegistrationCta({
   if (cta.kind === "EXTERNAL") {
     return (
       <Box sx={{ mt: { xs: DENSITY.gapSm, sm: 3 } }}>
-        <RegistrationDoorButton slug={event.slug} cta={cta} label={doorButtonLabel(t, cta)} />
+        <RegistrationDoorButton slug={event.slug} cta={cta} label={doorButtonLabel(t, cta)} preview={preview} />
       </Box>
     );
   }
@@ -64,7 +71,7 @@ export default async function RegistrationCta({
     // rendered — for an uncapped event, which shows no number at all (BR-REQ-034-01 criterion 4).
     return (
       <Stack spacing={1} sx={{ mt: { xs: DENSITY.gapSm, sm: 3 }, alignItems: "flex-start" }}>
-        <RegistrationDoorButton slug={event.slug} cta={cta} label={doorButtonLabel(t, cta)} />
+        <RegistrationDoorButton slug={event.slug} cta={cta} label={doorButtonLabel(t, cta)} preview={preview} />
 
         {fill && (
           <Typography variant="body2" data-testid="registration-fill" sx={{ fontWeight: 600 }}>

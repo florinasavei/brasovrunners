@@ -29,7 +29,7 @@ import type { PublicEventPage } from "../repository";
 import { announcedDayInstant, datedOrNull } from "../domain/dated";
 import { GROUP_GAP, LINE_GAP, ROW_ICON_SX } from "./card-layout";
 import CardRegistration, { cardRegistrationLine } from "./CardRegistration";
-import { readRegistrationDoor } from "./registration-door";
+import { type PreviewDoor, readRegistrationDoor } from "./registration-door";
 import CoHostLinkGlyph from "./co-host-glyphs";
 import { GLYPHS, type Glyph } from "./glyphs";
 import { buildRoutePills, orderRoutePills, routePillParts, type Pill } from "./route-pills";
@@ -174,7 +174,14 @@ export default async function EventFacts({
   weather = null,
   cardWeather = null,
   raceWeek = false,
+  previewDoor,
 }: {
+  /**
+   * The editor's preview before saving (§NNN): the door as the draft would read it, counted by
+   * `draftRegistrationDoor` rather than read from the public cache, and its button drawn disabled.
+   * The compact form only; absent everywhere a visitor reads.
+   */
+  previewDoor?: PreviewDoor;
   /**
    * An event page's read, whose date is null while it is to be announced (§533) — only the page
    * and its preview meet one: every listing read is of dated events. The «Când» row then says
@@ -650,7 +657,7 @@ export default async function EventFacts({
     // A card is always of a dated event (the listing reads no other, §533).
     const dated = datedOrNull(event);
     const registration = mentionsRegistration && dated
-      ? cardRegistrationLine(t, locale, dated, now, await readRegistrationDoor(dated, now), raceWeek)
+      ? cardRegistrationLine(t, locale, dated, now, previewDoor?.door ?? (await readRegistrationDoor(dated, now)), raceWeek)
       : null;
 
     // One line of the card: its glyph, then its words beside it — the glyph on the first line.
@@ -689,7 +696,7 @@ export default async function EventFacts({
         {/* The state of registration, last, where BR-REQ-011-01 criterion 18 reads it — and on a
             card whose page has a registration door, that door too, with the free places in bold
             (§409; the owner: "trebuie să văd butonul de înscrieri pe card"). */}
-        {registration && <CardRegistration slug={event.slug} line={registration} />}
+        {registration && <CardRegistration slug={event.slug} line={registration} preview={previewDoor?.word} />}
       </Box>
     );
   }

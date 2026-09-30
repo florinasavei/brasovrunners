@@ -9,7 +9,7 @@ import { describe, expect, it } from "vitest";
  * child element inside its control, before the words, never a prop across the client boundary (§318).
  */
 const ROOT = path.resolve(__dirname, "../../..");
-const PAGE = readFileSync(path.join(ROOT, "src/app/[locale]/events/[slug]/page.tsx"), "utf8").replace(/\r\n/g, "\n");
+const PAGE = readFileSync(path.join(ROOT, "src/modules/events/ui/EventPageView.tsx"), "utf8").replace(/\r\n/g, "\n");
 
 describe("BR-REQ-011-01 the event page's back arrow and edit pencil (§469)", () => {
   it("imports one file per glyph from @mui/icons-material", () => {

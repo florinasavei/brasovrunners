@@ -42,6 +42,7 @@ import { cachedDeadlines, cachedLatestPastEvent, cachedPastEvents, cachedUndated
 import type { CalendarLayout } from "@/modules/events/ui/EventCalendar";
 import { CLUB_NAME, PAGE_WIDTH } from "@/theme/brand";
 import { DENSITY } from "@/theme/density";
+import { CARD_GRID_SX } from "@/modules/events/ui/card-layout";
 import { headingRule } from "@/theme/surfaces";
 
 type Props = {
@@ -299,26 +300,6 @@ async function ListingLead({
     </>
   );
 }
-
-/**
- * The listing's one grid of cards (§470): one column on a phone, two from `md`, three from `xl` —
- * every card the same width, the featured one included (the owner, 2026-09-26: "nu neaparat mai lat
- * pe desktop, e ok sa afisam 2 sau 3 carduri, dar toate cardurile trebuie sa aiba aceeasi latime").
- * The upcoming list and the past fold (§267) share it, so the two cannot drift apart.
- *
- * Every card in a row is as tall as the tallest (§275): `start` left a short card beside a tall one
- * and a hole under it, which is what made the listing look broken. The room a short card is given
- * is at its foot, under its door (§366, `CARD_BODY_SX`).
- */
-const CARD_GRID_SX = {
-  listStyle: "none",
-  p: 0,
-  m: 0,
-  display: "grid",
-  gap: { xs: DENSITY.cardGridGap, sm: 1.5 },
-  gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))", xl: "repeat(3, minmax(0, 1fr))" },
-  alignItems: "stretch",
-} as const;
 
 /**
  * How many finished events the foot of the listing carries (§267).
