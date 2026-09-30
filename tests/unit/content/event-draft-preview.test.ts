@@ -83,7 +83,8 @@ describe("§579 the editor's words, in both languages", () => {
         expect(text).not.toMatch(/platform|de obicei/i);
       }
     }
-    expect(ro.Admin.editor.boxes.preview.summary).toBe("Cum arată pe site — cardul și pagina, fără să salvezi");
+    // The card, the page and, since the form joined them (amending §579), the registration form.
+    expect(ro.Admin.editor.boxes.preview.summary).toBe("Cum arată pe site — cardul, pagina și formularul, fără să salvezi");
     expect(ro.Event.previewDoor).toBe("previzualizare");
     expect(en.Event.previewDoor).toBe("preview");
   });
@@ -97,8 +98,9 @@ describe("§579 the editor's words, in both languages", () => {
     expect(read("src/modules/content/events/ui/boxes/PreviewBox.tsx")).toContain('glyph="preview"');
     const island = read("src/modules/content/events/ui/EventDraftPreview.tsx");
     expect(island).toContain("startIcon={<VisibilityIcon />}");
-    // Card, Pagina, the language (one per language), Telefon, Desktop.
-    expect(island.match(/<ToggleButton [^>]*>\s*<[A-Za-z]+Icon aria-hidden="true"/g)?.length).toBe(5);
+    // Card, Pagina, Formular (amending §579), the language (one per language), Telefon, Desktop.
+    expect(island.match(/<ToggleButton [^>]*>\s*<[A-Za-z]+Icon aria-hidden="true"/g)?.length).toBe(6);
+    expect(island).toMatch(/<ToggleButton value="form"[^>]*>\s*<PersonAddIcon aria-hidden="true"/);
     // The language toggle draws one button per language, each with its glyph.
     expect(island).toMatch(/<ToggleButton key=\{code\}[^>]*>\s*<TranslateIcon aria-hidden="true"/);
   });

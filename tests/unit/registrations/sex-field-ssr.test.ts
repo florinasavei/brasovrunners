@@ -141,7 +141,7 @@ describe("§555 «Sex»: a dropdown, Feminin first", () => {
   });
 
   it("is what the form draws, Feminin first, and the §47 summary and the §422 list name it «Sex» like any field", () => {
-    const page = readFileSync(path.join(process.cwd(), "src/app/[locale]/events/[slug]/register/page.tsx"), "utf8");
+    const page = readFileSync(path.join(process.cwd(), "src/modules/registrations/ui/registration-form.tsx"), "utf8");
     expect(page).toContain("<SexField");
     expect(page).toContain('placeholder={t("sexChoose")}');
     expect(page).toMatch(/answers=\{\{ FEMALE: t\("sexOptions\.FEMALE"\), MALE: t\("sexOptions\.MALE"\) \}\}/);

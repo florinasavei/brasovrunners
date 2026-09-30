@@ -1370,7 +1370,8 @@ else's: they are marked **YOURS**. Everything else below is a value, not a place
 | Când și unde | Program | kit pickup, briefing, start, cut-offs — one timed row each; every row becomes a calendar entry and is repeated in the reminder. The rows are the programme (§117). Change the event's date and the rows move with it (§295) |
 | Română / English | Note sub program | optional free text that appears beneath the rows on the page — how the kit is collected, the cut-off rules — per language (§294) |
 
-Then **Salvează**, read the page through **Previzualizare**, and press **Publică**. Both
+Then **Salvează**, read the page through **Previzualizare** — the editor's card of that name also
+has **Formular**, the registration form a runner will fill in, with the boxes set above — and press **Publică**. Both
 languages go live together; that is the rule, not a setting.
 
 ### After it is published, in this order
