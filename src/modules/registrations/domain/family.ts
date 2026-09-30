@@ -90,7 +90,13 @@ export function comparePerson(row: Pick<FamilyRow, "registeredName" | "birthDate
   const nameDiffers = !sameRunner(row.registeredName, posted.legalName);
   const posting = dayOf(posted.birthDate);
   const dateDiffers = posting !== null && dayOf(row.birthDate) !== posting;
-  if (nameDiffers && (dateDiffers || sexesDiffer(row.sex, posted.sex))) return "different";
+  /*
+    The sex weighs only beside a posted birth date (§NNN, the review's nit): it is the second box
+    changed on a shared day. With no date posted there is no day to share, and the sex alone never
+    makes another person — the form is a slip, as before.
+  */
+  const sexDecides = posting !== null && sexesDiffer(row.sex, posted.sex);
+  if (nameDiffers && (dateDiffers || sexDecides)) return "different";
   if (!nameDiffers && !dateDiffers) return "same";
   return "partial";
 }

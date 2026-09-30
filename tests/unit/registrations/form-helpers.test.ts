@@ -22,7 +22,7 @@ import ro from "../../../messages/ro.json";
  * under a box. The database and the async parts not about the words are stood in for, the
  * `register-page-resting.test.ts` shape.
  */
-const state = vi.hoisted(() => ({ locale: "ro" as "ro" | "en", list: false }));
+const state = vi.hoisted(() => ({ locale: "ro" as "ro" | "en", list: false, familyOpen: false }));
 
 const EVENT = {
   id: "00000000-0000-4000-8000-000000000001",
@@ -70,6 +70,8 @@ vi.mock("@/modules/diagnostics/neon-budget", () => ({
 }));
 vi.mock("@/modules/registrations/bot-check", () => ({ activeBotCheckSiteKey: async () => undefined }));
 vi.mock("@/modules/public-cache/reads", () => ({
+  cachedAddressCap: async () => ({ registrationsPerAddress: 4 }),
+  cachedFamilyRegistrationOpen: async () => state.familyOpen,
   cachedCurrentApprovedDocument: async () => ({ version: 3 }),
   cachedListStatesDisclosed: async () => state.list,
   cachedListSocialsDisclosed: async () => state.list,
@@ -174,6 +176,7 @@ const PLAIN_FIELD_HELPERS = ["f-emergencyContactName", "f-guardianName", "f-phon
 
 beforeEach(() => {
   state.list = false;
+  state.familyOpen = false;
   forgetLastGood();
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
@@ -200,6 +203,19 @@ describe("§546 the registration form says only what a label cannot", () => {
       );
     });
   }
+
+  it("states the club's limit per address under the address box once a family may register (BR-REQ-032-03, §NNN)", async () => {
+    state.locale = "ro";
+    expect(await render()).not.toContain('data-testid="address-cap-rule"');
+    state.familyOpen = true;
+    const html = await render();
+    expect(html).toContain('data-testid="address-cap-rule"');
+    expect(textOf(html)).toContain("Cu aceeași adresă de email se pot înscrie cel mult 4 persoane la un eveniment, de exemplu o familie.");
+    // Under the box, never as one of its helpers (§546): the helpers under a box are unchanged.
+    expect(fieldHelpers(html)).toEqual(PLAIN_FIELD_HELPERS);
+    state.locale = "en";
+    expect(textOf(await render())).toContain("One email address may register at most 4 people for an event, a family for instance.");
+  });
 
   it("keeps the words the form lost out of both catalogues, so nothing is left to drift", () => {
     for (const catalogue of [ro, en]) {

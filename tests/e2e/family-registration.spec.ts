@@ -194,6 +194,8 @@ test.describe("§389 §446 a family on one address", () => {
     await expect(names).toHaveCount(2);
     await expect(names.filter({ hasText: `Ana ${lastName}` })).toHaveCount(1);
     await expect(names.filter({ hasText: `Maria ${lastName}` })).toHaveCount(1);
+    // Under each, how many this address has at the event, out of the limit (§NNN).
+    await expect(page.getByTestId("my-registration-per-address").first()).toHaveText(/^Cu această adresă, la acest eveniment: 2 din cel mult \d+ persoane\.$/);
   });
 
   test("the registered name with another birth date registers nobody, and the re-send says how to register somebody else", async ({ page }) => {
@@ -257,6 +259,8 @@ test.describe("§389 §446 a family on one address", () => {
     await page.context().clearCookies({ name: "br_family_sitting" });
     await page.goto(registerPath);
     await hydrated(page);
+    // The club's limit per address, under the address box (§NNN): the number is the setting's, whatever it is now.
+    await expect(page.getByTestId("address-cap-rule")).toHaveText(/^Cu aceeași adresă de email se pot înscrie cel mult \d+ persoane la un eveniment, de exemplu o familie\./);
     await fillPerson(page, { firstName: "Ana", lastName, birthDate: "1985-03-02" }, email);
     // The name once, in the line under the plain heading (the review of 2026-09-28).
     await expect(page.getByRole("heading", { name: "Aproape gata!", exact: true })).toBeVisible();
@@ -281,6 +285,8 @@ test.describe("§389 §446 a family on one address", () => {
     await expect(page).toHaveURL(/family=1/);
     await hydrated(page);
     await expect(page.getByTestId("family-sitting-address")).toContainText(email);
+    // This form is the second person, out of the limit (§NNN).
+    await expect(page.getByTestId("address-cap-count")).toHaveText(/^2 din \d+ persoane cu această adresă$/);
     await expect(page.locator('[name="emailConfirm"]')).toHaveCount(0);
     // How long is left, said on the form itself, with the way back to «Gata».
     await expect(page.getByTestId("family-sitting-intro")).toContainText("pleacă singur peste");
@@ -294,6 +300,8 @@ test.describe("§389 §446 a family on one address", () => {
     // After «Da», the sitting's own screen (§519): the people so far, the minutes left, «Gata».
     await expect(page.getByTestId("family-sitting-names")).toContainText(`Ana ${lastName}`);
     await expect(page.getByTestId("family-sitting-names")).toContainText(`Maria ${lastName}`);
+    // «N din 4» (§NNN): the people sent so far, out of the limit.
+    await expect(page.getByTestId("family-sitting-count")).toHaveText(/^2 din \d+ persoane cu această adresă$/);
     await expect(page.getByTestId("family-sitting-when")).toContainText("Emailul pleacă când apeși „Gata” sau singur după");
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 

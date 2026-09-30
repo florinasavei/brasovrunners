@@ -1,6 +1,7 @@
 import type { Deadlines } from "@/modules/deadlines/domain/deadlines";
 import { daysPhrase, hoursPhrase, leadPhrase, minutesPhrase } from "@/modules/deadlines/domain/duration-words";
 import { yearsPhrase } from "@/modules/registrations/domain/age";
+import { peoplePhrase } from "@/modules/registrations/domain/address-cap";
 import { isLegalDocumentBody, type LegalDocumentBody } from "./content-hash";
 
 /**
@@ -234,6 +235,21 @@ export const PROMOTIONAL_MATERIALS_MERGE_FIELD = "promotionalMaterials";
 export const PROMOTIONAL_MATERIALS_SHARED_MERGE_FIELD = "promotionalMaterialsShared";
 
 /**
+ * The club's limit per address (§389, §NNN; the owner, 2026-09-30: up to four people on one email
+ * address, and the limit said): how many people one email address may register for one event —
+ * "4 persoane" / "4 people", with the unit, in the words every page and email says it with
+ * (`peoplePhrase`). The terms' sentence about registering somebody else names it, filled from the
+ * club's setting («Setări» → «Termene») when the text is shown, so an approved text never freezes a
+ * number the club may change.
+ */
+export const ADDRESS_CAP_MERGE_FIELD = "registrationsPerAddress";
+
+/** The limit's value in one language: "4 persoane", "o persoană" / "4 people", "one person". */
+export function addressCapMergeValues(locale: string, registrationsPerAddress: number): { registrationsPerAddress: string } {
+  return { registrationsPerAddress: peoplePhrase(locale, registrationsPerAddress) };
+}
+
+/**
  * The blanks in a declaration (`DECISIONS.md` §95).
  *
  * The club's own paper declaration reads "Subsemnatul/a …………, posesor al CI seria …… nr.
@@ -276,6 +292,7 @@ export const MERGE_FIELDS = [
   TEAM_PAGE_MERGE_FIELD,
   PROMOTIONAL_MATERIALS_MERGE_FIELD,
   PROMOTIONAL_MATERIALS_SHARED_MERGE_FIELD,
+  ADDRESS_CAP_MERGE_FIELD,
 ] as const;
 
 /**
