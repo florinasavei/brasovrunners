@@ -120,7 +120,7 @@ export async function renderDraftForm<T extends Record<string, unknown>>(
   const cta = door.kind === "KNOWN" ? door.cta : null;
   const closed = cta ? closedDoorSentence(tEvent, cta, locale, dated.timezone) : null;
   // No place and nothing to join (§348): the real form's own notice above the first field. No place
-  // and a list that takes people (§NNN): the join form's thank-you, from the draft's own door and the
+  // and a list that takes people (§587): the join form's thank-you, from the draft's own door and the
   // club's «Termene» already read for the steps — nothing more is read.
   const fullNotice = cta?.kind === "FULL_NO_WAITLIST" ? NO_WAITLIST : cta?.kind === "WAITLIST_FULL" ? WAITLIST_FULL : cta?.kind === "FULL" ? "WAITLIST" : null;
   const fullCounts = cta?.kind === "FULL" && door.kind === "KNOWN" && door.fill ? { capacity: door.fill.capacity, waiting: cta.waiting } : null;
