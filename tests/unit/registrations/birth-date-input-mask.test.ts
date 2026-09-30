@@ -1,9 +1,9 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { maskitoTransform, type MaskitoPreprocessor } from "@maskito/core";
+import { Maskito, maskitoTransform, type MaskitoPreprocessor } from "@maskito/core";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import ro from "../../../messages/ro.json";
 import BirthDateField from "@/modules/registrations/ui/BirthDateField";
 import {
@@ -21,10 +21,11 @@ import { readTypedDate } from "@/shared/forms/pickers/wall-values";
  * birth-date box takes digits and puts the dots in itself, through Maskito's date mask with three
  * preprocessors and two postprocessors of ours. BR-REQ-031-04 (the form's fields).
  *
- * Maskito works from `beforeinput`, which no test environment here types: the keystrokes — the
- * dots appearing, a backspace over a dot, a digit over a digit — are proved in a real browser
- * (`tests/e2e/registration-form.spec.ts`). Here: what the mask does with a whole text (autofill,
- * `maskitoTransform`), and what each piece of ours decides.
+ * Maskito works from `beforeinput` and `input`. The tests run in Node with no DOM, so the
+ * keystrokes go through Maskito itself on a stand-in input (an `EventTarget` with a value and a
+ * selection) that does what a browser does between the two events; a real browser does the same
+ * in `tests/e2e/registration-form.spec.ts`. Here too: what the mask does with a whole text
+ * (autofill, `maskitoTransform`), and what each piece of ours decides.
  */
 const ROOT = path.resolve(__dirname, "../../..");
 const read = (relative: string) => readFileSync(path.join(ROOT, relative), "utf8").replace(/\r\n/g, "\n");
@@ -58,6 +59,163 @@ describe("§NNN a whole text in the box — autofill, a value set before the mas
   it("no min or max goes to the kit: a too-young date is not moved to the youngest allowed", () => {
     const young = `11.05.${new Date().getFullYear() - 3}`;
     expect(maskitoTransform(young, birthDateMaskOptions)).toBe(young);
+  });
+});
+
+/** Node has `Event` but no `InputEvent`, which Maskito reads and sends. */
+class StandInInputEvent extends Event {
+  readonly inputType: string;
+  readonly data: string | null;
+  constructor(type: string, init: EventInit & { inputType?: string; data?: string | null } = {}) {
+    super(type, init);
+    this.inputType = init.inputType ?? "";
+    this.data = init.data ?? null;
+  }
+}
+
+/** As much of an `<input>` as Maskito touches, focused. */
+class StandInBox extends EventTarget {
+  value = "";
+  selectionStart = 0;
+  selectionEnd = 0;
+  readonly nodeName = "INPUT";
+  readonly isContentEditable = false;
+  readonly maxLength = -1;
+  matches() {
+    return true;
+  }
+  setSelectionRange(from: number, to: number) {
+    this.selectionStart = from;
+    this.selectionEnd = to;
+  }
+  /** What the browser does: `beforeinput`, then — unless Maskito refused it — the edit and `input`. */
+  private edit(inputType: string, data: string | null, apply: () => void) {
+    const before = new StandInInputEvent("beforeinput", { inputType, data, cancelable: true });
+    this.dispatchEvent(before);
+    if (before.defaultPrevented) return;
+    apply();
+    this.dispatchEvent(new StandInInputEvent("input", { inputType, data }));
+  }
+  insert(data: string, inputType = "insertText") {
+    this.edit(inputType, data, () => {
+      this.value = this.value.slice(0, this.selectionStart) + data + this.value.slice(this.selectionEnd);
+      this.selectionStart = this.selectionEnd = this.selectionStart + data.length;
+    });
+  }
+  type(keys: string) {
+    for (const key of keys) this.insert(key);
+  }
+  paste(text: string) {
+    this.setSelectionRange(0, this.value.length);
+    this.insert(text, "insertFromPaste");
+  }
+  press(key: "Backspace" | "Delete") {
+    const forward = key === "Delete";
+    this.edit(forward ? "deleteContentForward" : "deleteContentBackward", null, () => {
+      let [from, to] = [this.selectionStart, this.selectionEnd];
+      if (from === to) {
+        if (forward) to += 1;
+        else from = Math.max(0, from - 1);
+      }
+      this.value = this.value.slice(0, from) + this.value.slice(to);
+      this.selectionStart = this.selectionEnd = from;
+    });
+  }
+  /** Chrome's autofill: a new value and an `input` event with no `beforeinput`. */
+  autofill(value: string) {
+    this.value = value;
+    this.selectionStart = this.selectionEnd = value.length;
+    this.dispatchEvent(new StandInInputEvent("input", {}));
+  }
+}
+
+describe("§NNN the keystrokes, through Maskito itself", () => {
+  beforeAll(() => vi.stubGlobal("InputEvent", StandInInputEvent));
+  afterAll(() => vi.unstubAllGlobals());
+  const masked = () => {
+    const box = new StandInBox();
+    new Maskito(box as unknown as HTMLInputElement, birthDateMaskOptions);
+    return box;
+  };
+
+  it("digits only: the box puts the dots in, refuses a letter and a ninth digit", () => {
+    const box = masked();
+    box.type("1");
+    expect(box.value).toBe("1");
+    box.type("1");
+    expect(box.value).toBe("11.");
+    box.type("05");
+    expect(box.value).toBe("11.05.");
+    box.type("1990");
+    expect(box.value).toBe("11.05.1990");
+    box.type("7a");
+    expect(box.value).toBe("11.05.1990");
+    expect(box.selectionEnd).toBe(10);
+  });
+
+  it("a dot or another separator after a lone digit pads it; a day over 31 cannot start", () => {
+    const box = masked();
+    box.type("5.");
+    expect(box.value).toBe("05.");
+    box.type("3/");
+    expect(box.value).toBe("05.03.");
+    const other = masked();
+    other.type("35");
+    expect(other.value).toBe("03.05.");
+  });
+
+  it("backspace from the end: the digits go, and a dot goes with the digit before it", () => {
+    const box = masked();
+    box.type("11051990");
+    for (let key = 0; key < 4; key += 1) box.press("Backspace");
+    expect(box.value).toBe("11.05");
+    box.press("Backspace");
+    expect(box.value).toBe("11.0");
+    box.type("51990");
+    expect(box.value).toBe("11.05.1990");
+    box.setSelectionRange(6, 6);
+    box.press("Backspace");
+    expect(box.value).toBe("11.00.1990");
+    expect(box.selectionEnd).toBe(4);
+  });
+
+  it("in the middle a digit takes the place of the one there, and Delete over a dot the digit after it", () => {
+    const box = masked();
+    box.type("29122001");
+    box.setSelectionRange(1, 1);
+    box.type("8");
+    expect(box.value).toBe("28.12.2001");
+    box.setSelectionRange(2, 2);
+    box.press("Delete");
+    expect(box.value).toBe("28.02.2001");
+    expect(box.selectionEnd).toBe(4);
+  });
+
+  it("a pasted date is read whole, day first, whatever its separator — the posted shape too", () => {
+    const box = masked();
+    for (const [pasted, shown] of [
+      ["5/11/1990", "05.11.1990"],
+      ["1990-11-05", "05.11.1990"],
+      ["11 05 1990", "11.05.1990"],
+      ["11-05-1990", "11.05.1990"],
+      ["5.6.1990", "05.06.1990"],
+      ["11051990", "11.05.1990"],
+    ] as const) {
+      box.paste(pasted);
+      expect(box.value, pasted).toBe(shown);
+    }
+  });
+
+  it("autofill's `1990-05-11`, which sends no `beforeinput`, is shown day first", () => {
+    const box = masked();
+    box.autofill("1990-05-11");
+    expect(box.value).toBe("11.05.1990");
+  });
+
+  it("an impossible date typed stays as typed, never moved to another day", () => {
+    const box = masked();
+    box.type("29022001");
+    expect(box.value).toBe("29.02.2001");
   });
 });
 

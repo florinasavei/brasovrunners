@@ -2,7 +2,7 @@
 
 import { useMaskito } from "@maskito/react";
 import TextField from "@mui/material/TextField";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { type FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { readTypedDate, shownTypedDate, TYPED_DATE_PATTERN } from "@/shared/forms/pickers/wall-values";
 import { birthDateEchoText } from "./birth-date-echo";
 import { birthDateMaskOptions } from "./birth-date-mask";
@@ -108,9 +108,11 @@ export function birthDateHelper({
  *   digit typed in the middle taking the place of the one there, a backspace over a dot taking
  *   the digit before it, and a pasted «11/05/1990» or `1990-05-11` shown in the mask. The mask is Maskito's
  *   (`useMaskito`, with the options of `birth-date-mask.ts`), attached to the uncontrolled input:
- *   it writes the masked text before the `input` event reaches `onChange` and the islands that
- *   read the box by its id. Without JavaScript the box is the plain text box above, and the
- *   server reads what it posts.
+ *   it writes the masked text before the `input` event reaches our `onInput` and the islands that
+ *   read the box by its id. `onInput`, not `onChange`, as Maskito's React guide says: when the
+ *   mask rewrites the text («11» to «11.»), React's own value tracker already holds the new text
+ *   and fires no `onChange`, so the date in words would lag a keystroke behind. Without
+ *   JavaScript the box is the plain text box above, and the server reads what it posts.
  *
  * Uncontrolled: whatever was typed before the island hydrated stays in the box (§211's lesson).
  * `GuardianForMinor`, `HiddenForMinor` read the same input by its id (`useBirthDateValue`,
@@ -176,10 +178,6 @@ export default function BirthDateField({
       error={red}
       autoComplete={autoComplete}
       inputRef={inputRef}
-      onChange={(event) => {
-        event.target.setCustomValidity(birthDateValidity(event.target.value, min, max, { unreadable, tooYoung }));
-        setText(event.target.value);
-      }}
       onBlur={(event) => {
         const shown = shownTypedDate(event.target.value.trim());
         if (shown === event.target.value) return;
@@ -210,6 +208,12 @@ export default function BirthDateField({
           // No `maxLength`: the mask keeps eight digits, and a paste with spaces around it is read whole.
           "data-min": min,
           "data-max": max,
+          // After Maskito's own `input` listener: the text read here is the masked one.
+          onInput: (event: FormEvent<HTMLInputElement>) => {
+            const box = event.currentTarget;
+            box.setCustomValidity(birthDateValidity(box.value, min, max, { unreadable, tooYoung }));
+            setText(box.value);
+          },
         },
       }}
     />
