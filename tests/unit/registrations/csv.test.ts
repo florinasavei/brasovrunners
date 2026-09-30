@@ -213,7 +213,7 @@ describe("CSV formula neutralization", () => {
     ]);
     const [header, accepted, staff, older] = csv.split("\r\n");
     const columns = header.split(",");
-    // §425's two, now followed by the declaration's two (§499), the family column (§543), the cancellation reason (§558) and the offers and benefits (§NNN).
+    // §425's two, now followed by the declaration's two (§499), the family column (§543), the cancellation reason (§558) and the offers and benefits (§562).
     expect(columns.slice(-7, -5)).toEqual(["Terms version", "Terms accepted"]);
     expect(accepted.split(",").slice(-7, -5)).toEqual(["3", "2026-09-25T10:00:00.000Z"]);
     expect(staff.split(",").slice(-7, -5)).toEqual(["", ""]);
@@ -251,7 +251,7 @@ describe("CSV formula neutralization", () => {
       base,
     ]);
     const [header, signed, unsigned, older] = csv.split("\r\n");
-    // Before the family column (§543), the cancellation reason (§558) and the offers and benefits (§NNN), which is last.
+    // Before the family column (§543), the cancellation reason (§558) and the offers and benefits (§562), which is last.
     expect(header.split(",").slice(-5, -3)).toEqual(["Declaration version", "Declaration signed"]);
     expect(signed.split(",").slice(-7, -3)).toEqual(["3", "2026-09-25T10:00:00.000Z", "2", "2026-09-26T08:30:00.000Z"]);
     expect(unsigned.split(",").slice(-5, -3)).toEqual(["", ""]);
@@ -291,6 +291,7 @@ describe("CSV formula neutralization", () => {
     expect(listed.split(",")[at + 1]).toBe("Yes");
     expect(unlisted.split(",")[at + 1]).toBe("");
     // The declaration's pair stays after the terms (§499), then the family column (§543), the cancellation reason (§558) and the offers and benefits, last (§NNN).
+    // The declaration's pair stays after the terms (§499), then the family column (§543), the cancellation reason (§558) and the offers and benefits, last (§562).
     expect(header.split(",").slice(-5)).toEqual(["Declaration version", "Declaration signed", "family", "Cancellation reason", "Offers and benefits"]);
   });
 
@@ -316,7 +317,7 @@ describe("CSV formula neutralization", () => {
       emailBounced: false,
     };
     const [header, family, alone] = buildRegistrationsCsv([{ ...base, family: "Mihai Pop; Ioana Pop" }, base]).split("\r\n");
-    // Just before the cancellation reason (§558) and the offers and benefits, which came last with §NNN.
+    // Just before the cancellation reason (§558) and the offers and benefits, which came last with §562.
     expect(header.split(",").at(-3)).toBe("family");
     expect(family.split(",").at(-3)).toBe("Mihai Pop; Ioana Pop");
     expect(alone.split(",").at(-3)).toBe("");

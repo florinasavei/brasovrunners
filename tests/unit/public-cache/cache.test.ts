@@ -38,22 +38,42 @@ vi.mock("next/cache", () => ({
 
 /** What `after()` was handed: the work that runs once the response is sent. */
 const afterTasks = vi.hoisted(() => [] as Array<() => unknown>);
-vi.mock("next/server", () => ({ after: (task: () => unknown) => void afterTasks.push(task) }));
+/** `after()` outside a request scope throws, as Next's does; a test sets this for one call. */
+const afterFails = vi.hoisted(() => ({ now: false }));
+vi.mock("next/server", () => ({
+  after: (task: () => unknown) => {
+    if (afterFails.now) throw new Error("`after` was called outside a request scope.");
+    afterTasks.push(task);
+  },
+}));
 
 const { revalidateTag, unstable_cache } = await import("next/cache");
-const { publicRead, revalidatePublicContent, PUBLIC_CACHE_CEILING_SECONDS } = await import("@/modules/public-cache/cache");
+const { publicRead, revalidatePublicContent, PUBLIC_CACHE_CEILING_SECONDS, SECOND_EXPIRY, SECOND_EXPIRY_DELAY_MS } = await import("@/modules/public-cache/cache");
 const { forgetLastGood, readWithLastGood } = await import("@/modules/resilience/last-good");
 const { forgetMissRefreshes, pendingMissRefreshes, READ_AFTER_WRITE_MS } = await import("@/modules/public-cache/miss-refresh");
 const { ColdMissError } = await import("@/modules/resilience/breaker");
 
-/** Run what `after()` was handed, as Next does once the response is out. */
+/**
+ * Run what `after()` was handed, as Next does once the response is out — on a fake clock, so a
+ * write's second expiry (§583, three seconds after the response) does not make the test wait.
+ */
 async function afterTheResponse(): Promise<void> {
   const tasks = afterTasks.splice(0);
-  for (const task of tasks) await task();
+  vi.useFakeTimers({ toFake: ["setTimeout"] });
+  try {
+    for (const task of tasks) {
+      const done = Promise.resolve(task());
+      await vi.runAllTimersAsync();
+      await done;
+    }
+  } finally {
+    vi.useRealTimers();
+  }
 }
 
 beforeEach(() => {
   afterTasks.length = 0;
+  afterFails.now = false;
   forgetLastGood();
   forgetMissRefreshes();
   budget.level = "unknown";
@@ -334,6 +354,44 @@ describe("§333 revalidatePublicContent", () => {
     expect(revalidateTag).toHaveBeenCalledTimes(2);
     expect(revalidateTag).toHaveBeenCalledWith("public:events", { expire: 0 });
     expect(revalidateTag).toHaveBeenCalledWith("public:places", { expire: 0 });
+  });
+
+  it("expires the same kinds once more after the response, three seconds on, for the renders in flight (§583)", async () => {
+    vi.stubEnv("NEXT_RUNTIME", "nodejs");
+    revalidatePublicContent("events", "places");
+    expect(afterTasks).toHaveLength(1);
+    vi.mocked(revalidateTag).mockClear();
+
+    vi.useFakeTimers({ toFake: ["setTimeout"] });
+    try {
+      const done = Promise.resolve(afterTasks.splice(0)[0]());
+      await vi.advanceTimersByTimeAsync(SECOND_EXPIRY_DELAY_MS - 1);
+      expect(revalidateTag).not.toHaveBeenCalled();
+      await vi.advanceTimersByTimeAsync(1);
+      await done;
+    } finally {
+      vi.useRealTimers();
+    }
+    expect(revalidateTag).toHaveBeenCalledTimes(2);
+    expect(revalidateTag).toHaveBeenCalledWith("public:events", SECOND_EXPIRY);
+    expect(revalidateTag).toHaveBeenCalledWith("public:places", SECOND_EXPIRY);
+  });
+
+  it("schedules no second expiry for a kind Next refused the first time, nor outside a request", () => {
+    vi.stubEnv("NEXT_RUNTIME", "nodejs");
+    const logged = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    vi.mocked(revalidateTag).mockImplementation(() => {
+      throw new Error("used during render");
+    });
+    revalidatePublicContent("events");
+    expect(afterTasks).toHaveLength(0);
+    logged.mockRestore();
+
+    vi.mocked(revalidateTag).mockReset();
+    afterFails.now = true;
+    expect(() => revalidatePublicContent("events")).not.toThrow();
+    expect(revalidateTag).toHaveBeenCalledTimes(1);
+    expect(afterTasks).toHaveLength(0);
   });
 
   it("never fails the write that called it", () => {

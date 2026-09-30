@@ -8,7 +8,7 @@ import CalendarFilterSlot from "@/modules/events/ui/CalendarFilterSlot";
 import { theme } from "@/theme/theme";
 
 /**
- * BR-REQ-041-01 criterion 12 (§NNN, amending §413) — the calendar's controls do not move when the
+ * BR-REQ-041-01 criterion 12 (§575, amending §413) — the calendar's controls do not move when the
  * month changes, so the «Filtre» slot above them is the same box in every month.
  *
  * Found by `event-pages.spec.ts` on 2026-09-30, the last day of a month whose one remaining event

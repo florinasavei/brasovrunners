@@ -2,7 +2,7 @@ import Box from "@mui/material/Box";
 import type { ReactNode } from "react";
 
 /**
- * The calendar's «Filtre» slot (§NNN, amending §413): the panel is always rendered, and a month with
+ * The calendar's «Filtre» slot (§575, amending §413): the panel is always rendered, and a month with
  * nothing to narrow and nothing ticked keeps its box, unseen, rather than dropping it.
  *
  * §413 let the calendar leave its panel out when the period on view offers no box — the listing's
