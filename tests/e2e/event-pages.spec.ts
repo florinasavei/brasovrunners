@@ -220,6 +220,33 @@ test.describe("BR-REQ-041-01 the event list on a phone", () => {
     expect(overflow).toBeLessThanOrEqual(0);
   });
 
+  /**
+   * The same criterion, made independent of the day it runs (§NNN, amending §413). The test above
+   * steps from this month to the next, so it only sees the «Filtre» slot change when one of the two
+   * months happens to offer nothing — as on 2026-09-30, when September's one remaining event had
+   * nothing to choose between and October did: the arrows moved 44 px on a phone, 60 on a desktop.
+   * Here the month with nothing to offer is fixed (a January two years back, which only a seed of
+   * the past could fill), and its slot must hold the panel's box, unseen, so the month's arrows sit
+   * at the height they sit at on the calendar's own month, whichever of the two states that one is in.
+   */
+  test("holds the filter slot's box in a month with nothing to offer, so the controls do not move", async ({ page }) => {
+    const empty = `${new Date().getFullYear() - 2}-01`;
+    await page.goto(`/ro/calendar?month=${empty}`);
+    const main = page.locator("#main");
+    const slot = main.getByTestId("calendar-filter-slot");
+    await expect(slot).toHaveAttribute("data-held", "true");
+    // Held, not offered: nothing to see, press or read out…
+    await expect(slot.getByTestId("listing-filters")).toBeHidden();
+    // …but the box of a closed panel, the 44-pixel «Filtre» target.
+    expect((await slot.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    const heldArrow = await main.getByRole("link", { name: "Luna următoare" }).boundingBox();
+
+    await page.goto("/ro/calendar");
+    await expect(main.getByRole("table")).toBeVisible();
+    const arrow = await main.getByRole("link", { name: "Luna următoare" }).boundingBox();
+    expect(Math.abs((arrow?.y ?? -1) - (heldArrow?.y ?? 0))).toBeLessThanOrEqual(2);
+  });
+
   test("gives every event link a tap target of at least 44 by 44 pixels", async ({ page }) => {
     await page.goto("/ro/evenimente");
     // The past-events fold (§267) is closed, and a link in a closed fold measures 0×0 and is not a

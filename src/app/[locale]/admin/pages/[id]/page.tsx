@@ -176,7 +176,6 @@ export default async function EditPagePage({ params, searchParams }: Props) {
             {/* The posted version after a refusal, with the edits made against it (§315). */}
             <RecallHidden name="expectedVersion" value={page.version} />
             <PageFieldsForm
-              navOrder={page.navOrder}
               translations={translations}
               slugLocked={page.publishedAt !== null}
               pageId={page.id}

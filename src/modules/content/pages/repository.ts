@@ -58,7 +58,12 @@ export async function findPublishedPageBySlug<T extends Record<string, unknown>>
   return row;
 }
 
-/** Every published page in this locale, in the order the club put them in. For nav and sitemap. */
+/**
+ * Every published page in this locale, in the old «Ordinea» column's order — the fallback the
+ * menu's one order (§571) gives a page it does not name yet, and the backoffice list's own order
+ * (`listPagesForAdmin`): the number, then the date it was written. It was the title after the
+ * number, which sorted two equal numbers differently in each language. For nav and sitemap.
+ */
 export async function listPublishedPages<T extends Record<string, unknown>>(
   db: Database<T>,
   locale: Locale,
@@ -68,7 +73,7 @@ export async function listPublishedPages<T extends Record<string, unknown>>(
     .from(pages)
     .innerJoin(pageTranslations, eq(pageTranslations.pageId, pages.id))
     .where(and(eq(pages.editorialStatus, "PUBLISHED"), eq(pageTranslations.locale, locale)))
-    .orderBy(asc(pages.navOrder), asc(pageTranslations.title));
+    .orderBy(asc(pages.navOrder), asc(pages.createdAt), asc(pages.id));
 }
 
 export type PageListRow = {
@@ -103,7 +108,7 @@ export async function listPagesForAdmin<T extends Record<string, unknown>>(
       pageTranslations,
       and(eq(pageTranslations.pageId, pages.id), eq(pageTranslations.locale, locale)),
     )
-    .orderBy(asc(pages.navOrder), asc(pages.createdAt));
+    .orderBy(asc(pages.navOrder), asc(pages.createdAt), asc(pages.id));
 }
 
 /** One page and every translation it has, for the editor. */

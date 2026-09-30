@@ -112,6 +112,8 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   deleteAlbumAction: [],
   deletePictureAction: [],
   transitionPageAction: [],
+  // «Ordinea meniului» (§571): every visitor's menu and footer change from the next page view.
+  saveMenuOrderAction: [],
   deletePageAction: [],
   // «Echipa» (§459): a card put on the site or taken off it, and a card deleted.
   setTeamMemberVisibleAction: [],
@@ -185,7 +187,6 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   setCoverAction: "picks the album's cover, undone by picking another",
   createPageAction: "an editorial save: a draft page nobody sees until its own publish, which asks",
   savePageAction: "an editorial save, like the event's without a notice; publishing and deleting ask",
-  movePageAction: "reorders the pages, undone by moving back",
   createTeamMemberAction: "adds a hidden card nobody sees until an Administrator shows it, which asks",
   saveTeamMemberAction: "an editorial save of a card's words and photo, like a page's; showing and deleting ask",
   moveTeamMemberAction: "reorders the team's cards, undone by moving back",

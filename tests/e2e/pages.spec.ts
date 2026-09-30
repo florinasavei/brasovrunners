@@ -76,7 +76,7 @@ addEventListener("message", (event) => {
 
 type PlayerWindow = { playerMessages?: string[] };
 
-/* Serial: all four tests act on the one page the first creates. */
+/* Serial: every test acts on the one page the first creates. */
 test.describe.serial("BR-REQ-050-03 standing pages", () => {
   test("is created, published, and reachable in both languages", async ({ page }) => {
     const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
@@ -91,7 +91,6 @@ test.describe.serial("BR-REQ-050-03 standing pages", () => {
     /* The two languages are tabs since §259: the English panel is `hidden` until its tab is
        pressed, which is also how an organizer reaches it. */
     const language = (name: RegExp) => page.getByRole("tab", { name });
-    await field("navOrder").fill("5");
     await field("translations.ro.title").fill(title);
     await field("translations.ro.slug").fill(slug);
 
@@ -235,6 +234,49 @@ test.describe.serial("BR-REQ-050-03 standing pages", () => {
     // on the listing.
     await page.getByRole("link", { name: /English/i }).first().click();
     await expect(page).toHaveURL(new RegExp(`/en/pages/${englishSlug}$`));
+  });
+
+  test("takes its place in «Ordinea meniului», first in the menu when moved there, and back to the end", async ({ page }) => {
+    // §571: one order for every entry of the menu, the Administrator's, on «Pagini» → «Paginile clubului».
+    await signIn(page, "Dev Administrator");
+    await page.goto("/ro/admin/pages");
+    const card = page.getByTestId("menu-order");
+    await card.locator("summary").first().click();
+    const entry = card.getByTestId("menu-order-list").locator("li").filter({ hasText: title });
+    await expect(entry).toBeVisible();
+
+    // «Sus» until it is first: the button goes disabled at the top.
+    const up = entry.getByRole("button", { name: `Mută „${title}” mai sus` });
+    for (let presses = 0; presses < 60 && (await up.isEnabled()); presses += 1) await up.click();
+    await expect(up).toBeDisabled();
+    await expect(card.getByTestId("menu-order-unsaved")).toBeVisible();
+    await card.getByRole("button", { name: "Salvează ordinea" }).click();
+    await confirmDialog(page, "Schimbi ordinea meniului?");
+    await expect(page).toHaveURL(/saved=menuOrder/);
+
+    // The public menu's first entry is the page now, before «Evenimente»; no rule between the groups.
+    await page.goto(`/ro/pagini/${slug}`, { waitUntil: "networkidle" });
+    const nav = page.getByRole("navigation", { name: "Navigare principală" });
+    // On a phone the row may fold every entry into «Meniu» (a long title first does not fit at 320 px),
+    // so the first entry is read from the row when it has one, otherwise from the menu.
+    const firstOnRow = nav.getByRole("link").first();
+    if ((await firstOnRow.count()) > 0 && (await firstOnRow.isVisible())) {
+      await expect(firstOnRow).toHaveText(title);
+    } else {
+      await nav.getByRole("button", { name: "Meniu" }).click();
+      await expect(page.getByRole("menuitem").first()).toHaveText(title);
+      await page.keyboard.press("Escape");
+    }
+
+    // Back to the end, so the other specs meet the menu they expect.
+    await page.goto("/ro/admin/pages");
+    await card.locator("summary").first().click();
+    const down = entry.getByRole("button", { name: `Mută „${title}” mai jos` });
+    for (let presses = 0; presses < 60 && (await down.isEnabled()); presses += 1) await down.click();
+    await expect(down).toBeDisabled();
+    await card.getByRole("button", { name: "Salvează ordinea" }).click();
+    await confirmDialog(page, "Schimbi ordinea meniului?");
+    await expect(page).toHaveURL(/saved=menuOrder/);
   });
 
   test("refuses to publish a page whose other language is empty", async ({ page }) => {

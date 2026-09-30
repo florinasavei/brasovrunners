@@ -967,8 +967,8 @@ async function renderRow(
 
   /*
     The confirmation's second token: the public participant list, the participant's own switch
-    (BR-REQ-039-01; `DECISIONS.md` §143). "Nu vreau să apar pe lista publică" when the name is
-    on it, "Vreau să apar" when it is not — the link reads the row as it stands at send time.
+    (BR-REQ-039-01; `DECISIONS.md` §143). "Nu vreau să apar pe lista de participanți & rezultate"
+    when the name is on it, "Vreau să apar pe lista de participanți & rezultate" when it is not — the link reads the row as it stands at send time.
 
     Its own purpose, `LIST_CONSENT`, rather than a second use of the manage token above:
     spending one must not spend the other, and one active token per (registration, purpose) is

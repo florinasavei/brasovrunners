@@ -192,10 +192,14 @@ describe("§521 a glyph on every button", () => {
       expect(read(allowed.file), `${allowed.file}: ${allowed.words}`).toContain(allowed.words);
     }
     // The arrows still carry the row's name as their accessible name.
-    for (const file of ["src/app/[locale]/admin/pages/(list)/page.tsx", "src/app/[locale]/admin/pages/team/page.tsx", "src/modules/club-todo/ui/ClubTodoPanel.tsx"]) {
+    // The custom pages' own ↑ / ↓ went with §571: «Ordinea meniului»'s «Sus» / «Jos» carry a glyph and the entry's name.
+    for (const file of ["src/app/[locale]/admin/pages/team/page.tsx", "src/modules/club-todo/ui/ClubTodoPanel.tsx"]) {
       const text = read(file);
       expect(text, file).toMatch(/label="↑"[\s\S]*?ariaLabel=/);
     }
+    const menu = read("src/modules/content/menu/ui/MenuOrderList.tsx");
+    expect(menu).toMatch(/startIcon=\{<ArrowUpwardIcon[\s\S]*?aria-label=\{entry\.upLabel\}/);
+    expect(menu).toMatch(/startIcon=\{<ArrowDownwardIcon[\s\S]*?aria-label=\{entry\.downLabel\}/);
     // The FAQ cards' arrows are the page's one save, written as the button's words, named too.
     const faq = read("src/app/[locale]/admin/pages/faq/page.tsx");
     expect(faq).toMatch(/value=\{`\$\{index\}:up`\}[^>]*aria-label=\{t\("faq\.moveUpNamed"/);

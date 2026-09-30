@@ -20,6 +20,7 @@ import {
 import { clubNightEvent } from "@/modules/events/night-event";
 import { readRegistrationDoors } from "@/modules/events/ui/registration-door";
 import type { PublicEvent } from "@/modules/events/repository";
+import CalendarFilterSlot from "@/modules/events/ui/CalendarFilterSlot";
 import ListingFilterPanel from "@/modules/events/ui/ListingFilterPanel";
 import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import { monthRange, parseMonth, parseYear, yearRange } from "@/modules/events/domain/calendar";
@@ -201,18 +202,13 @@ export default async function CalendarPage({ params, query: asked, period: segme
 
       {/* The listing's filter panel on the calendar (§413): the same button, the same boxes, the
           same address — so "races on a trail" is a month of races on a trail, not only a list of
-          cards. Nothing to narrow and nothing ticked, it does not render. */}
-      {(offersAnything(offer) || activeFilterCount(filter) > 0) && (
-        <Box sx={{ mb: 1 }}>
-          <ListingFilterPanel
-            locale={locale}
-            pathname="/calendar"
-            path={periodPath}
-            filter={filter}
-            offer={offer}
-          />
-        </Box>
-      )}
+          cards. Nothing to narrow and nothing ticked, it is held unseen rather than left out
+          (§NNN): the arrows under it must not move when the next month has something to offer.
+          The period is the path's (the calendar branch's §NNN), so the panel posts to it and keeps
+          nothing else. */}
+      <CalendarFilterSlot shown={offersAnything(offer) || activeFilterCount(filter) > 0}>
+        <ListingFilterPanel locale={locale} pathname="/calendar" path={periodPath} filter={filter} offer={offer} />
+      </CalendarFilterSlot>
 
       <CalendarSection locale={locale} view={view} layout={layout} query={query} now={now} events={events} />
     </Container>
