@@ -290,7 +290,6 @@ describe("CSV formula neutralization", () => {
     const [, listed, unlisted] = buildRegistrationsCsv([{ ...base, listPublic: true }, { ...base, listPublic: false }]).split("\r\n");
     expect(listed.split(",")[at + 1]).toBe("Yes");
     expect(unlisted.split(",")[at + 1]).toBe("");
-    // The declaration's pair stays after the terms (§499), then the family column (§543), the cancellation reason (§558) and the offers and benefits, last (§NNN).
     // The declaration's pair stays after the terms (§499), then the family column (§543), the cancellation reason (§558) and the offers and benefits, last (§562).
     expect(header.split(",").slice(-5)).toEqual(["Declaration version", "Declaration signed", "family", "Cancellation reason", "Offers and benefits"]);
   });

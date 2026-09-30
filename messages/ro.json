@@ -1116,7 +1116,7 @@
       "WAITLIST_FULL": "Locurile și lista de așteptare sunt pline, așa că nu s-a schimbat nimic. Încearcă din nou când se eliberează un loc pe listă.",
       "NO_WAITLIST": "Toate locurile sunt ocupate și evenimentul nu are listă de așteptare, așa că nu s-a schimbat nimic.",
       "WALK_IN_LEFT_UNCONFIRMED": "Persoana e înscrisă, dar tocmai s-a ocupat ultimul loc, deci e neconfirmată și nu a primit email. Confirm-o pe hârtie când se eliberează un loc.",
-      "NO_FREE_PLACE": "Nu e niciun loc liber, deci nu s-a schimbat nimic. Locuri: {capacity}; confirmați: {confirmed}; declarație de semnat: {declaration}; oferite din listă: {offered}; rezervate familiilor: {family}.",
+      "NO_FREE_PLACE": "Cursa e plină: locuri {capacity}, confirmați {confirmed}, declarații de semnat {declaration}, oferite {offered}, rezervate familiilor {family}. Mărește întâi capacitatea evenimentului.",
       "NO_RECIPIENTS": "Nu s-a trimis nimic: nu e nimeni în grupul ales acum. Alege alt grup.",
       "MESSAGE_UNKNOWN_PLACEHOLDER": "Nu s-a trimis nimic: {names} nu este un câmp pe care îl putem completa în acest mesaj. Câmpurile folosibile sunt scrise sub casete.",
       "SAMPLE_VALUE_IN_EMAIL": "Textul conține valoarea de exemplu „{value}” — folosește {placeholder}.",

@@ -26,7 +26,8 @@ export default function InfoTip({ text }: { text: string }) {
       */
       slotProps={{ tooltip: { sx: TOOLTIP_TEXT_SX } }}
     >
-      <IconButton aria-label={text} size="small" sx={{ minHeight: 44, minWidth: 44 }}>
+      {/* `type="button"`, as `Hint` does: inside a form a tap on the glyph must not be the form's press. */}
+      <IconButton type="button" aria-label={text} size="small" sx={{ minHeight: 44, minWidth: 44 }}>
         <InfoOutlinedIcon fontSize="small" />
       </IconButton>
     </Tooltip>
