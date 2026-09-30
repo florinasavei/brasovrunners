@@ -4543,7 +4543,7 @@
         "title": "When emails leave",
         "intro": "On the scheduled round (the default), emails leave at the next check: within {day} by day and {night} at night. «Right after the request» sends them within seconds. No email is lost.",
         "field": "Emails leave",
-        "help": "However long an email waits, its deadline runs from when it leaves: the held place, the offer and the links lose nothing.",
+        "help": "A waiting-list offer leaves at once either way. However long an email waits, its deadline runs from when it leaves: the held place, the offer and the links lose nothing.",
         "option": {
           "scheduled": "On the scheduled round (within {wait}; recommended)",
           "immediate": "Right after the request"
