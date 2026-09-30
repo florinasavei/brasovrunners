@@ -59,7 +59,7 @@ export async function eventShareImage(
     timeToBeAnnounced: string;
     /**
      * The `Event` catalogue, for the distance's and the climb's long forms through `distanceWords`
-     * (§NNN) and `elevationWords` (§585) — «circa 10 km (aproximativ)», «circa 350 m diferență de
+     * (§598) and `elevationWords` (§585) — «circa 10 km (aproximativ)», «circa 350 m diferență de
      * nivel (estimativ)» for an estimate.
      */
     t: (key: string, values?: Record<string, string | number>) => string;
@@ -80,7 +80,7 @@ export async function eventShareImage(
         : labels.dateToBeAnnounced
       : `${formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long" })} · ${formatTime(event.raceStartsAt ?? event.startsAt, { locale, timeZone: event.timezone })}`;
   const route = [
-    // «circa 10 km (aproximativ)» for a distance ticked «Aproximativ» (§NNN); «10 km» as before otherwise.
+    // «circa 10 km (aproximativ)» for a distance ticked «Aproximativ» (§598); «10 km» as before otherwise.
     distanceWords(event, labels.t, (km) => new Intl.NumberFormat(intl, { maximumFractionDigits: 1 }).format(km))?.long ?? null,
     elevationWords(event, labels.t, (value) => new Intl.NumberFormat(intl).format(value))?.long ?? null,
   ].filter(Boolean);

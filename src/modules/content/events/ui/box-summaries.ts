@@ -84,7 +84,7 @@ export type SummaryWords = {
   course: {
     route: string;
     km: string;
-    /** `≈ 10 km` — a distance the club ticked «Aproximativ» for (§NNN). */
+    /** `≈ 10 km` — a distance the club ticked «Aproximativ» for (§598). */
     kmEstimated: string;
     elevation: string;
     /** `≈ +350 m` — a climb the club ticked «Estimativ» for (§585). */
@@ -528,7 +528,7 @@ export function nightSummary(words: SummaryWords, nightOverride: boolean | null 
   return computedNight ? words.course.nightAuto : words.course.dayAuto;
 }
 
-/** `12 km`, `10,5 km` — the distance to one decimal, or null when none is stored; `≈ 10 km` when ticked «Aproximativ» (§NNN). */
+/** `12 km`, `10,5 km` — the distance to one decimal, or null when none is stored; `≈ 10 km` when ticked «Aproximativ» (§598). */
 function distanceSummary(words: SummaryWords, distanceMeters: number | null | undefined, estimated: boolean): string | null {
   const km = distanceMeters ? Math.round(distanceMeters / 100) / 10 : null;
   return km ? fillIn(estimated ? words.course.kmEstimated : words.course.km, { km: String(km).replace(".", ",") }) : null;

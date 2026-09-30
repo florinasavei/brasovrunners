@@ -13,7 +13,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 
 /**
  * BR-REQ-035-02, BR-REQ-034-02, BR-REQ-036-01, BR-REQ-037-03, AGENTS.md §10.6 — a cancellation offers the freed place
- * to the head of the waiting list at once, and the offer's email leaves at once (§348, §589, §NNN; the
+ * to the head of the waiting list at once, and the offer's email leaves at once (§348, §589, §596; the
  * owner, 2026-09-30: «când anulez pe cineva, iau automat pe altcineva de pe lista de așteptare»).
  *
  * The owner's shape: a full race of three — one confirmed, a family's two reserved places, one person
@@ -158,7 +158,7 @@ async function expectOfferLeavingNow(name: string) {
   expect(sentNow.flat()).toContain(offers[0].id);
 }
 
-describe("AGENTS.md §10.6 a cancellation offers the freed place to the head of the waiting list, and the email leaves now (§348, §589, §NNN)", () => {
+describe("AGENTS.md §10.6 a cancellation offers the freed place to the head of the waiting list, and the email leaves now (§348, §589, §596)", () => {
   it("a staff cancel of the confirmed one: Elena is offered the place, and the family keeps its two", async () => {
     const { radu } = await ownersRace();
     await cancelRegistrationByStaff(db, admin, radu.id, "nu mai vine", at(10));

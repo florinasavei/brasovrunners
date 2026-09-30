@@ -43,7 +43,7 @@ export function previewPageOf(event: EditableEvent, translation: EditableTransla
     facebookEventUrl: event.facebookEventUrl,
     featured: event.featured,
     distanceMeters: event.distanceMeters,
-    // «Aproximativ» (§NNN): the same pills as the page, so the preview says «≈ 10 km» the same way.
+    // «Aproximativ» (§598): the same pills as the page, so the preview says «≈ 10 km» the same way.
     distanceEstimated: event.distanceEstimated,
     elevationGainMeters: event.elevationGainMeters,
     // «Estimativ» (§585): the preview draws the same pills as the page, so it says «≈» the same way.

@@ -11,7 +11,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Aproximativ» beside «Distanță (m)» (`events.distance_estimated`, migration `0116`), the
+ * §598 — «Aproximativ» beside «Distanță (m)» (`events.distance_estimated`, migration `0116`), the
  * twin of §585's climb: saved through the editor's real action, dropped quietly when the distance
  * is empty, carried by a copy and by every date a series makes, and read back by the page's own
  * sources — the preview's page row (§579) and the route pill — as «≈ 12 km». The session and
@@ -114,7 +114,7 @@ async function postSave(form: FormData) {
   expect(outcome, JSON.stringify(outcome)).toBe("redirected");
 }
 
-describe("§NNN «Aproximativ» on the event's distance", () => {
+describe("§598 «Aproximativ» on the event's distance", () => {
   it("migration 0116 adds the column, not null and false by default", async () => {
     const { rows } = await db.execute<{ is_nullable: string; column_default: string | null }>(
       sql`SELECT is_nullable, column_default FROM information_schema.columns WHERE table_name = 'events' AND column_name = 'distance_estimated'`,

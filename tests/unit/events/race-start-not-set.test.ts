@@ -13,7 +13,7 @@ const startsAt = new Date("2026-11-21T06:30:00Z");
 const gun = new Date("2026-11-21T08:00:00Z");
 
 describe("§590 «Când»'s times (whenTimes)", () => {
-  it("a race with its own gun time: the event start and the race start, each named (§NNN)", () => {
+  it("a race with its own gun time: the event start and the race start, each named (§597)", () => {
     expect(whenTimes({ type: "RACE", startsAt, raceStartsAt: gun })).toEqual({
       times: [
         { key: "eventStartAt", at: startsAt },
@@ -31,7 +31,7 @@ describe("§590 «Când»'s times (whenTimes)", () => {
     expect(whenTimes({ type: "RACE", startsAt, raceStartsAt: new Date(startsAt) })).toEqual({ times: [{ key: "eventStartAt", at: startsAt }], raceStartLater: false });
   });
 
-  it("the emails' «Când» with both times: «(start eveniment) · (start cursă)», words alone, in both languages (§NNN)", () => {
+  it("the emails' «Când» with both times: «(start eveniment) · (start cursă)», words alone, in both languages (§597)", () => {
     const ro = eventFactsBlock({ ...emailSampleEventFacts("ro"), type: "RACE" as const, startsAt, raceStartsAt: gun }, "ro").text;
     expect(ro).toMatch(/Când: .* · 08:30 \(start eveniment\) · 10:00 \(start cursă\)/);
     expect(ro).not.toContain("🏁");

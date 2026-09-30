@@ -123,7 +123,7 @@ export default async function CourseBox({
               {...textFieldConstraints(eventInputConstraints("distanceMeters"), { inputMode: "numeric" })}
               fullWidth
             />
-            {/* «Aproximativ» (§NNN, the twin of the climb's «Estimativ»): the length is known only
+            {/* «Aproximativ» (§598, the twin of the climb's «Estimativ»): the length is known only
                 roughly, and every surface then says «≈» and «aproximativ» (`distanceWords`).
                 Ignored, saved false, with no distance. */}
             <CheckboxField

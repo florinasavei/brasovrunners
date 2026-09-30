@@ -269,7 +269,7 @@ describe("BR-REQ-041-01 «când» is one line with its weekday (§356, §349)", 
     expect(when.match(/data-testid="race-start-later"/g)).toHaveLength(1);
   });
 
-  it("a race's two times, each named, on the same line, the race start behind a chequered flag (§NNN)", async () => {
+  it("a race's two times, each named, on the same line, the race start behind a chequered flag (§597)", async () => {
     const when = row(await page({ startsAt: new Date("2026-09-26T06:00:00Z"), raceStartsAt: new Date("2026-09-26T07:00:00Z") }), "Când").dd;
     expect(text(when)).toBe("Sâmbătă, 26 sept. 2026·09:00 (start eveniment)·10:00 (start cursă)");
     // One clock, in front of the first time: the two read as one group (§366).
@@ -282,12 +282,12 @@ describe("BR-REQ-041-01 «când» is one line with its weekday (§356, §349)", 
     expect(when.indexOf('data-testid="race-start-flag"')).toBeLessThan(when.indexOf("10:00"));
   });
 
-  it("the flag is drawn only beside a race start: never on a lone event start or a bare time (§NNN)", async () => {
+  it("the flag is drawn only beside a race start: never on a lone event start or a bare time (§597)", async () => {
     expect(row(await page({ raceStartsAt: null }), "Când").dd).not.toContain("race-start-flag");
     expect(row(await page({ type: "GROUP_RUN" }), "Când").dd).not.toContain("race-start-flag");
   });
 
-  it("in English, the two times say «(event start)» and «(race start)» (§NNN)", async () => {
+  it("in English, the two times say «(event start)» and «(race start)» (§597)", async () => {
     currentLocale = "en";
     const when = row(await page({ startsAt: new Date("2026-09-26T06:00:00Z"), raceStartsAt: new Date("2026-09-26T07:00:00Z") }), "When").dd;
     expect(text(when)).toMatch(/·09:00 \(event start\)·10:00 \(race start\)$/);

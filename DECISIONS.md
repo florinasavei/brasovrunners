@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.49-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.50-2026-09-27 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.49-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.50-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -22250,3 +22250,61 @@ Baseline `BR-V2.49-2026-09-27`.
 **The path.** A hotfix straight to `main` (`docs/RUNBOOKS.md` § Hotfix): the branch from `main`, the four files, typecheck, eslint on the touched files, `yarn secrets:check`, the two touched unit tests (350 tests green), PR #305 merged into `main`, production live within minutes (no migration), `main` brought back into `qa` by PR #306; this entry lands with the next batch, as the path asks.
 
 Baseline `BR-V2.49-2026-09-27`.
+
+## 596. A waiting-list offer leaves at once, past the scheduled pass (amending §540 and §513)
+
+**The owner, 2026-09-30 22:20:** «când anulez pe cineva, iau automat pe altcineva de pe lista de așteptare». On QA he cancelled a confirmed runner on a full race and nobody was taken from the waiting list.
+
+**What was true.** It was tested in PGlite with the owner's shape: a race of three places, one runner confirmed, a family whose sitting held two places (§543) and one runner waiting. Three paths were tried: a staff «Anulează» (`cancelRegistrationByStaff`), the participant's own cancellation (`unregister` from the manage link, «Înscrierile mele» or the family wizard, §547, §558) and an erasure (§67). Each already released the place and offered it to the head of the queue in the cancellation's own transaction, under the event's lock, through `fillAvailableSpots`. The waiting row became `WAITLIST_OFFERED` with its deadline, the family kept its two places and the `WAITLIST_SPOT_OFFER` email was queued. An offer that lapsed went to the next in line on the maintenance job's run. The backoffice already showed «Ofertă activă» and «Loc rezervat — loc oferit, până …». What failed was the email. Under «La trecerea programată», QA's and production's default since §513, the offer sat in the outbox until the outbox job's next pass. That is up to fifteen minutes by day on production and an hour or two on QA. §540 had left «everything automatic» on the pass. So the runner who was given the place heard nothing, and to the owner nobody had been taken.
+
+**Decision.** Every waiting-list offer leaves at once, whatever «Când pleacă emailurile» says. `fillAvailableSpots` is the one place an offer is made: a cancellation, an erasure, a lapse handed on, a declined offer, a capacity raised in the editor, a confirmation that frees a place. It marks the offer's email «Pleacă acum» (§540's `sentNow`, so the queue panel says so). It hands that row and the club's copies riding on it to `drainOutboxRowsAfterResponse`, the same id-limited send §540's presses use. That send runs after the response, once the transaction that made the offer has committed. A transaction that rolls back leaves no row for it to find. The day's allowance is asked by the batch as for any send, so a spent one defers the row to the job and never drops it (§40). The offer's deadline still counts from the send (§513, §520). Outside a request (a script, the tests) the drain does nothing and the job sends the row, as before. «Setări» → «Emailuri» → «Când pleacă emailurile» now says, in both languages, that a waiting-list offer leaves at once either way.
+
+**Refused.** *A second allocator call in the cancel paths:* each of them already calls the one allocator, and a second call would be a second decision about the same place. *Sending only the staff cancel's offer now:* the person given the place is waiting the same way whoever freed it, so every offer goes now. *Switching QA's timing to «imediat»:* that would change every other email too, and production would still wait.
+
+**Not changed.** Who is offered, in what order and for how long (§348, §377, BR-REQ-035-02). The family's reservations (§543). The close, after which no offer is made (§420). The job's cadence, which still decides when a lapse is found (§577).
+
+Baseline `BR-V2.50-2026-09-27`.
+
+## 597. A race's two times are «start eveniment» and «start cursă», the race start behind a chequered flag
+
+**The owner, 2026-09-30 22:35, after the hotfix #305:** «când avem ambele date trebuie să scriem start eveniment și start cursă, iconiță de racing flag 🏁».
+
+**Amends §590 and the hotfix #305.** The hotfix made a race with no race start say «10:00 (start eveniment)»; a race with both times still said «întâlnire la 08:30 · start la 10:00». The two cases now use the same words: «08:30 (start eveniment) · 10:00 (start cursă)» / "08:30 (event start) · 10:00 (race start)". `whenTimes` (`src/modules/events/domain/when-times.ts`) names the event's start `eventStartAt` in every case, so the words have one source. `raceStartAt` is used only when a race start differs from the event's start. A race start equal to the event's start is one time, «(start eveniment)». The keys `gatheringAt` and `gatheringAtBold` are gone. `raceStartAt` and `raceStartAtBold` now read «{time} (start cursă)», and the bold key wraps only the digits, as §375 has them.
+
+**The glyph.** On the card, the event page's «Când» and the listing's hero, the race start's time has Material's `SportsScore` (the chequered flag) in front of it. It has the clock's size and position (`CLOCK_SX` / `HERO_GLYPH_SX`, §366) and is imported from its own file, like every glyph (§498). `EventFacts.tsx` is a Server Component and draws it itself, so no element is passed to a client component. Its accessible name is «start cursă» / "race start" (`Event.raceStartFlag`). The owner wrote 🏁, but the site draws the glyph, never the emoji. The emails' facts block (§392) and the calendar's description (§107) use the same words with no flag and no emoji.
+
+**Width.** The card's row with two times already wraps between whole pieces (§375's exception, `flow`'s `wrap` while a race start is set). The longer words mean that on a narrow phone each time can take a line of its own, and nothing is clipped. §381's 226-pixel measurement predates the new words and was not repeated.
+
+**Refused.** «întâlnire» kept for the first time: the owner asked for the two names he wrote. An emoji in the emails or the `.ics`: the brief says plain words there.
+
+Baseline `BR-V2.50-2026-09-27`.
+
+## 598. «Aproximativ» beside the distance: every surface says «≈ 10 km» and «aproximativ» (amending §585)
+
+**The owner, 2026-09-30 22:36:** «la distanță vreau să pot pune aproximativ, ca și la elevație, tot așa cu bifă». §585 let the club mark the climb «Estimativ» and refused the same tick on the distance as not asked; now it is asked. The club often knows a route's length only roughly (a trail run drawn on the map, a group run's loop), and every surface said it as an exact number: «10 km» on the listing card's and the event page's route pills (§388), in the emails' facts block (§392), the calendar entry (§107) and the share picture, «10 km» on the editor's closed «Traseu» card.
+
+**Decision (amending §585, the twin of its climb).**
+
+- One new column, `events.distance_estimated boolean NOT NULL DEFAULT false` (migration `0116`, expand only). Every event before it reads as exact, and so does a cached row from before it.
+- The editor's «Traseu» card: under «Distanță (m)», a tick «Aproximativ» / "Approximate" with the same drawn «≈» glyph as the climb's tick (`ApproximateIcon`) and one caption: «Bifează când distanța e aproximativă — pe site apare cu „≈” și „aproximativ”.» The tick means nothing without a distance: with the box empty it is saved false, quietly, and the save is not refused (`estimatedDistance`). The closed card says «≈ 10 km».
+- One function says the distance for every surface, `events/domain/distance.ts#distanceWords`, beside `elevationWords`: a short form for the pill, «≈ 10 km» (the same in English), and a long form where the words stand alone, «circa 10 km (aproximativ)» / "about 10 km (approximate)". **Amending §388:** the pill keeps «≈ 10 km» visible and carries the long form as its tooltip and as what a screen reader hears (`srLabel`). **Amending §392:** the emails' facts block says the long form (`plain`), in the HTML part and in the text twin alike. The calendar entry and the share picture (and the page's Open Graph picture) use the long form too. An exact distance reads exactly as before, «10 km» everywhere.
+- The tick travels with the distance: a duplicate, every date a series makes, a "following" series edit, the draft preview (§579 renders the same components from `previewPageOf`) and the create page's blank event; the public and the notification queries carry the column.
+
+**Refused.**
+
+- «Estimativ» as the distance's word: the owner said «aproximativ» for the distance, and the two ticks sit side by side in one card, so each says its own word.
+- A range or a precision field («9–11 km»): one tick, as for the climb (§585).
+- A change to the JSON-LD: the event's structured data names no distance, and structured data would never carry «≈».
+- A change to the listing's distance filter (the bands of «Filtre», §413): an approximate 10 km is still in the band of its number.
+
+Baseline `BR-V2.50-2026-09-27`.
+
+## 599. The card's «când» row wraps when the race start is not set, never clipped (amending §375 and the «(start eveniment)» hotfix)
+
+**The owner, 2026-09-30 23:30, a phone screenshot of the race's card on production:** «Sâmbătă, 21 nov. · 10:00 (start eveniment)» lost its end — the card showed «10:00 (start evenimen». §375 had made the card's «când» row one line on a phone (`nowrap`, the card clipping its overflow), measured with «Sâmbătă, 21 nov. · 10:00»; the hotfix #305 made that time piece longer, and the widest weekday no longer fits at a phone's width.
+
+**Decision.** The row keeps §375's one line where it fits, and wraps between its whole pieces when the race start is not set — exactly as it already did for a race with two named times (§366, amended §375) and for a card that keeps its year: `raceStartLater` joins the row's `wrap` condition in `EventFacts.tsx`. The date stays whole on the first line and the time with its «(start eveniment)» on the second; nothing is ever clipped. The owner's other thought — a short weekday («sâm.») on the phone — was not taken tonight: at 320 pixels even «sâm., 21 nov. · 10:00 (start eveniment)» is wider than the row, so the wrap is the rule that holds on every phone; the short weekday can come later as a refinement.
+
+**The path.** A hotfix straight to `main` (`docs/RUNBOOKS.md` § Hotfix): typecheck, eslint on the file, `yarn secrets:check`, the two touched unit tests (55 green), PR #307 merged into `main`, `main` back into `qa` by PR #308; this entry lands with the next batch.
+
+Baseline `BR-V2.50-2026-09-27`.

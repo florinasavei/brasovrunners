@@ -1,7 +1,7 @@
 import { distanceInKm } from "./event-type";
 
 /**
- * The words for the event's distance, for every surface that says it (§NNN, the twin of §585's
+ * The words for the event's distance, for every surface that says it (§598, the twin of §585's
  * `elevationWords`, amending §388 and §392; the owner, 2026-09-30: «la distanță vreau să pot pune
  * aproximativ, ca și la elevație, tot așa cu bifă»).
  *
@@ -23,7 +23,7 @@ import { distanceInKm } from "./event-type";
 
 type Translate = (key: string, values?: Record<string, string | number>) => string;
 
-/** What an event carries for its distance; the flag optional, for a cached row from before it (§NNN). */
+/** What an event carries for its distance; the flag optional, for a cached row from before it (§598). */
 export type DistanceSource = {
   distanceMeters?: number | null;
   distanceEstimated?: boolean | null;

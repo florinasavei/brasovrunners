@@ -128,7 +128,7 @@ const PUBLIC_COLUMNS = {
   // A special edition (§168): a badge on the card and the page, and a tie-break below.
   isSpecial: events.isSpecial,
   distanceMeters: events.distanceMeters,
-  // «Aproximativ» (§NNN): the distance is approximate, and every surface says «≈» (`distanceWords`).
+  // «Aproximativ» (§598): the distance is approximate, and every surface says «≈» (`distanceWords`).
   distanceEstimated: events.distanceEstimated,
   elevationGainMeters: events.elevationGainMeters,
   // «Estimativ» (§585): the climb is a guess, and every surface says «≈» (`elevationWords`).

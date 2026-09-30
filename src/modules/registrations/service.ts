@@ -889,7 +889,7 @@ export async function fillAvailableSpots<T extends Record<string, unknown>>(
   let offers = 0;
   const candidates = await repo.lockOldestWaitlisted(db, event.id, availablePlaces);
   if (candidates.length === 0) return 0;
-  // Every offer's email and its club copies, sent past the scheduled pass once this request is out (§NNN).
+  // Every offer's email and its club copies, sent past the scheduled pass once this request is out (§596).
   const leaveNow: string[] = [];
   for (const candidate of candidates) {
     const offered = await repo.transitionRegistration(db, {
@@ -914,7 +914,7 @@ export async function fillAvailableSpots<T extends Record<string, unknown>>(
         Marked as leaving now (§540), because it does: a freed place is the waiting runner's the
         moment it frees, and under «La trecerea programată» (QA's and production's default) the offer
         sat in the queue until the outbox job's next pass — up to an hour or two on QA — while the
-        backoffice already said «Ofertă activă» (§NNN; the owner, 2026-09-30: «când anulez pe cineva,
+        backoffice already said «Ofertă activă» (§596; the owner, 2026-09-30: «când anulez pe cineva,
         iau automat pe altcineva de pe lista de așteptare»).
       */
       payload: markedForNow(startingDeadline(), "now"),

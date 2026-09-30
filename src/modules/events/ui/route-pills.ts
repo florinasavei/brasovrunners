@@ -66,7 +66,7 @@ export type RouteFactsSource = Pick<
   Pick<StoredDifficulty, "difficultyLevel"> &
   // «Estimativ» (§585): optional for the same reason — a cached row from before it reads as exact.
   Pick<ElevationSource, "elevationGainEstimated"> &
-  // «Aproximativ» (§NNN), the distance's twin: optional, a cached row from before it reads as exact.
+  // «Aproximativ» (§598), the distance's twin: optional, a cached row from before it reads as exact.
   Pick<DistanceSource, "distanceEstimated"> & {
     /** Null on an event page while the date is to be announced (§533): no date, so no night pill. */
     startsAt: Date | null;
@@ -130,7 +130,7 @@ export function routePillParts(
 }
 
 /**
- * The distance's pill (§356, §NNN): «10 km», or «≈ 10 km» when the club ticked «Aproximativ» — the
+ * The distance's pill (§356, §598): «10 km», or «≈ 10 km» when the club ticked «Aproximativ» — the
  * words from `distanceWords`, the one function every surface reads. An approximate distance also
  * carries the long form, «circa 10 km (aproximativ)», as its tooltip, as what a screen reader hears
  * (`srLabel`) and as the emails' words (`plain`, §392), exactly as the climb's pill does (§585).

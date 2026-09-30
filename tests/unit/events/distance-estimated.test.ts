@@ -11,7 +11,7 @@ import { eventFactsBlock } from "@/modules/notifications/domain/event-facts";
 import { emailSampleEventFacts } from "@/modules/notifications/email-copy-fields";
 
 /**
- * §NNN (the twin of §585, amending §388 and §392) — the owner, 2026-09-30: «la distanță vreau să
+ * §598 (the twin of §585, amending §388 and §392) — the owner, 2026-09-30: «la distanță vreau să
  * pot pune aproximativ, ca și la elevație, tot așa cu bifă». One function, `distanceWords`, says the
  * distance on every surface: «≈ 10 km» on the pill, «circa 10 km (aproximativ)» wherever the words
  * stand alone — the pill's tooltip and what a screen reader hears, the emails' facts block and its
@@ -60,7 +60,7 @@ const ROUTE = {
   locationToBeAnnounced: false,
 };
 
-describe("§NNN distanceWords — the one source of the distance's words", () => {
+describe("§598 distanceWords — the one source of the distance's words", () => {
   for (const locale of ["ro", "en"] as const) {
     it(`says an approximate distance with «≈» and in words, and an exact one as before (${locale})`, async () => {
       currentLocale = locale;
@@ -94,7 +94,7 @@ describe("§NNN distanceWords — the one source of the distance's words", () =>
   });
 });
 
-describe("§NNN the editor's tick is dropped without a distance", () => {
+describe("§598 the editor's tick is dropped without a distance", () => {
   it("keeps the tick only beside a distance", () => {
     expect(estimatedDistance(12_000, true)).toBe(true);
     expect(estimatedDistance(12_000, false)).toBe(false);
@@ -118,7 +118,7 @@ describe("§NNN the editor's tick is dropped without a distance", () => {
   });
 });
 
-describe("§NNN amending §388 — the route pill", () => {
+describe("§598 amending §388 — the route pill", () => {
   for (const locale of ["ro", "en"] as const) {
     it(`an approximate distance reads «≈» on the pill, and the long form on hover, to a screen reader and in an email (${locale})`, async () => {
       currentLocale = locale;
@@ -144,7 +144,7 @@ describe("§NNN amending §388 — the route pill", () => {
   });
 });
 
-describe("§NNN amending §392 — the emails' facts block", () => {
+describe("§598 amending §392 — the emails' facts block", () => {
   for (const locale of ["ro", "en"] as const) {
     it(`says the approximate distance in words, in the HTML part and in its text twin (${locale})`, () => {
       const facts = { ...emailSampleEventFacts(locale), distanceMeters: 12_000, distanceEstimated: true };
@@ -157,7 +157,7 @@ describe("§NNN amending §392 — the emails' facts block", () => {
   }
 });
 
-describe("§NNN the calendar entry's facts line (§107, §159)", () => {
+describe("§598 the calendar entry's facts line (§107, §159)", () => {
   function translator(catalogue: { Event: Record<string, unknown> }): CalendarLabels["t"] {
     return (key, values) => {
       const message = key.split(".").reduce<unknown>((node, part) => (node as Record<string, unknown> | undefined)?.[part], catalogue.Event);

@@ -68,7 +68,7 @@ export type CalendarEvent = {
   endsAt: Date | null;
   /** Cancelled: `STATUS:CANCELLED` and the page's notice first in the description (§159); finished: the notice. */
   eventStatus?: "SCHEDULED" | "CANCELLED" | "COMPLETED";
-  /** The gun time, when it differs from the gathering (§159): "08:00 (start eveniment) · 09:00 (start cursă)", the page's words (§NNN). */
+  /** The gun time, when it differs from the gathering (§159): "08:00 (start eveniment) · 09:00 (start cursă)", the page's words (§597). */
   raceStartsAt?: Date | null;
   /** What the event is (§112): the page's overline, the first word of the facts line. */
   type?: EventType | null;
@@ -100,7 +100,7 @@ export type CalendarEvent = {
   timezone?: string;
   /** The facts line (§159): what the page's facts say, in the calendar's language through `labels.t`. */
   distanceMeters?: number | null;
-  /** «Aproximativ» (§NNN): the facts line says «circa 10 km (aproximativ)». */
+  /** «Aproximativ» (§598): the facts line says «circa 10 km (aproximativ)». */
   distanceEstimated?: boolean | null;
   elevationGainMeters?: number | null;
   /** «Estimativ» (§585): the facts line says «circa 350 m diferență de nivel (estimativ)». */
@@ -386,7 +386,7 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
   const notice = event.eventStatus === "CANCELLED" ? t("cancelledNotice") : event.eventStatus === "COMPLETED" ? t("completedNotice") : "";
 
   // "08:00 (start eveniment) · 09:00 (start cursă)": the page's two times when the race has a gun
-  // time, in words alone — no flag, no emoji, in an `.ics` line (§NNN).
+  // time, in words alone — no flag, no emoji, in an `.ics` line (§597).
   const time = (at: Date) => formatTime(at, { locale, timeZone });
   // The page's own rule (`whenTimes`, §590): a race with no gun time yet reads "08:00 (start eveniment) · Ora
   // startului cursei se anunță."; a bare time is the calendar's own, and is not repeated.
@@ -441,7 +441,7 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
   const nightLine = night.night ? nightWords(night, t, event.type === "GROUP_RUN", "ics") : "";
 
   // "Concurs · 🏃 10 km · ↗ 300 m urcare · Trail · Mediu · Gratuit": the page's own words (§112), one line.
-  // The distance in its long form (§NNN), an approximate one said as one: «circa 10 km (aproximativ)».
+  // The distance in its long form (§598), an approximate one said as one: «circa 10 km (aproximativ)».
   const distance = distanceWords(event, t, (km) => new Intl.NumberFormat(intl, { maximumFractionDigits: 1 }).format(km));
   // The climb in its long form (§585), an estimate said as one: «circa 350 m diferență de nivel (estimativ)».
   const climb = elevationWords(event, t, (value) => new Intl.NumberFormat(intl).format(value));

@@ -4,7 +4,7 @@
  * and the calendar's description (`ical.ts`, §107) all ask this, and only word the answer.
  *
  * - A race with its own gun time (§71): «08:30 (start eveniment) · 10:00 (start cursă)» — two
- *   times, each named (§NNN; it said «întâlnire la 08:30 · start la 10:00» before). On the site the
+ *   times, each named (§597; it said «întâlnire la 08:30 · start la 10:00» before). On the site the
  *   race start's time is led by a chequered flag; the emails and the `.ics` keep the words alone.
  * - A race whose gun time is the event's start, or is not set yet (`race_starts_at` null — the
  *   editor's «Startul cursei nu e stabilit»): the one time, «08:30 (start eveniment)» (#305) —
