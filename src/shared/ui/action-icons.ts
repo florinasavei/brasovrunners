@@ -18,6 +18,7 @@ import EventRepeatIcon from "@mui/icons-material/EventRepeat";
 import EventSeatIcon from "@mui/icons-material/EventSeat";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import FilterAltOffIcon from "@mui/icons-material/FilterAltOff";
+import FamilyRestroomIcon from "@mui/icons-material/FamilyRestroom";
 import ForwardToInboxIcon from "@mui/icons-material/ForwardToInbox";
 import GridOnIcon from "@mui/icons-material/GridOn";
 import HandshakeIcon from "@mui/icons-material/Handshake";
@@ -167,6 +168,8 @@ export type ActionIconName =
   | "sponsors"
   | "send"
   | "resend"
+  // «Retrimite familiei» (§NNN): the family marker's own glyph (§543), one email for everybody on the address.
+  | "family"
   // Writing to an event's participants in the club's own words (§364): the loudspeaker, because
   // it is an announcement to many, not one message sent again.
   | "announce"
@@ -243,6 +246,7 @@ export const ACTION_ICONS: Record<ActionIconName, ComponentType<SvgIconProps>> =
   sponsors: HandshakeIcon,
   send: SendIcon,
   resend: ForwardToInboxIcon,
+  family: FamilyRestroomIcon,
   announce: CampaignIcon,
   translate: TranslateIcon,
 

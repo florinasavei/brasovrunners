@@ -1054,6 +1054,11 @@ export type TemplateData = {
    */
   familyToSign?: string[];
   /**
+   * A verification link's other people on the address at the event, each with their state (§NNN):
+   * the one link confirms everybody still waiting for the address. Absent for a person alone.
+   */
+  familyOnAddress?: ReadonlyArray<{ name: string; state: FamilyEarlierState }>;
+  /**
    * A cancellation (§547): whether the person was on the waiting list rather than holding a place,
    * from the state the registration left (the row's payload), and who else the address still holds
    * at the event, each with their state — read at send time, the address's own rows only (§39).
@@ -1877,6 +1882,9 @@ const T = {
     // A cancellation (§547): what the cancelled person held, and who else the address still holds.
     cancelledReleased: (name: string, fromWaitlist: boolean) =>
       fromWaitlist ? `${name || "Persoana"} nu mai este pe lista de așteptare.` : "Locul a fost eliberat.",
+    /** A verification link on an address with others at the event (§NNN): the one link confirms everybody waiting. */
+    verifyCoversFamily: (others: ReadonlyArray<{ name: string; state: FamilyEarlierState }>) =>
+      `Pe această adresă sunt înscriși și: ${others.map((other) => `${other.name} (${EARLIER_STATE_WORDS.ro[other.state]})`).join(", ")}. Butonul de mai sus confirmă adresa pentru toți cei care o așteaptă.`,
     cancelledOthers: (others: ReadonlyArray<{ name: string; state: FamilyEarlierState }>) =>
       `Pe această adresă rămân înscriși: ${others.map((other) => `${other.name} (${EARLIER_STATE_WORDS.ro[other.state]})`).join(", ")}.`,
     /** The club's copy of a cancellation (§558): the reason the participant gave, their words quoted. */
@@ -2406,6 +2414,8 @@ const T = {
       `The declarations of ${names.join(", ")} on this address are waiting for a signature too. You can sign them all from this link, one after the other: one person per step.`,
     cancelledReleased: (name: string, fromWaitlist: boolean) =>
       fromWaitlist ? `${name || "The person"} is no longer on the waiting list.` : "The place has been released.",
+    verifyCoversFamily: (others: ReadonlyArray<{ name: string; state: FamilyEarlierState }>) =>
+      `Also registered on this address: ${others.map((other) => `${other.name} (${EARLIER_STATE_WORDS.en[other.state]})`).join(", ")}. The button above confirms the address for everybody waiting for it.`,
     cancelledOthers: (others: ReadonlyArray<{ name: string; state: FamilyEarlierState }>) =>
       `Still registered on this address: ${others.map((other) => `${other.name} (${EARLIER_STATE_WORDS.en[other.state]})`).join(", ")}.`,
     cancelReason: (kind: RegistrationCancelReasonKind, text: string | undefined) =>
@@ -2914,6 +2924,10 @@ export function buildTemplateContent(
       */
       ...(messageType === "COMPLETE_DECLARATION" && data.familyToSign && data.familyToSign.length > 0
         ? [copy.familyToSign(data.familyToSign)]
+        : []),
+      // The verification link's other people on the address (§NNN): its one click confirms everybody waiting.
+      ...(messageType === "VERIFY_REGISTRATION_EMAIL" && data.familyOnAddress && data.familyOnAddress.length > 0
+        ? [copy.verifyCoversFamily(data.familyOnAddress)]
         : []),
       /*
         A cancellation's facts (§547), after the body whoever wrote it: the place released — or the

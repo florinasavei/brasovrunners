@@ -46,6 +46,22 @@ export async function familyOf<T extends Record<string, unknown>>(
   return family;
 }
 
+/**
+ * The people of one address at one event next to each other on the list (§NNN), within the order the
+ * list was sorted by: each family where its first row falls, the others pulled up behind it in the
+ * order they came. Only the rows of the page; nothing is fetched.
+ */
+export function familiesTogether<R extends { participantId: string; eventId: string }>(rows: readonly R[]): R[] {
+  const groups = new Map<string, R[]>();
+  for (const row of rows) {
+    const key = `${row.participantId}:${row.eventId}`;
+    const group = groups.get(key);
+    if (group) group.push(row);
+    else groups.set(key, [row]);
+  }
+  return [...groups.values()].flat();
+}
+
 /** The export's `family` column (§543): the other people on the address, «; »-joined, or empty. */
 export function familyColumn(members: readonly FamilyMember[] | undefined): string {
   return (members ?? []).map((member) => member.name).join("; ");
