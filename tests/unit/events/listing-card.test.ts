@@ -440,8 +440,8 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§366)"
     expect(strongs[0]).toContain("2026");
     expect(strongs[1]).toBe("10:00");
     expect(strongs[2]).toBe("09:00");
-    expect(text(when)).toContain("întâlnire la");
-    expect(text(when)).toContain("start la");
+    expect(text(when)).toContain("(start eveniment)");
+    expect(text(when)).toContain("(start cursă)");
   });
 
   it("never wraps the when line onto a second line, except a race's two named times (§366, amended §375 — the owner: \"This should be on a single line on a phone\")", () => {

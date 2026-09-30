@@ -201,7 +201,7 @@ describe("the calendar file", () => {
         "",
         "Ediția a treia a crosului nostru.\nTraseul urcă pe Tâmpa.",
         "",
-        "întâlnire la 09:00 · start la 10:00",
+        "09:00 (start eveniment) · 10:00 (start cursă)",
         "Concurs · 🏃 10 km · ↗ 300 m diferență de nivel · Trail · Mediu, nivelul 5 din 15 · Gratuit",
         "",
         "Înscrierile sunt deschise — https://example.test/ro/evenimente/crosul-aniversar/inscriere",
@@ -223,7 +223,7 @@ describe("the calendar file", () => {
     );
     // The same words in English, with the English separator for 14,5 km.
     const english = calendarDescription({ ...full, distanceMeters: 14_500 }, labelsEn);
-    expect(english).toContain("gather at 09:00 · start at 10:00\nRace · 🏃 14.5 km · ↗ 300 m elevation gain · Trail · Medium, level 5 of 15 · Free");
+    expect(english).toContain("09:00 (event start) · 10:00 (race start)\nRace · 🏃 14.5 km · ↗ 300 m elevation gain · Trail · Medium, level 5 of 15 · Free");
     expect(english).toContain("Registration is open — ");
     expect(english).toContain("Event page: ");
     // No film line (§481): a film is a figure in the description, reached through the page.

@@ -109,8 +109,9 @@ export function eventFactsBlock(details: EmailEventFacts, locale: Locale, weathe
 
   // Când: the date starts its line, capitalised (§349), then the time — a race's two, each named, as on the page.
   const day = formatDay(details.startsAt, { locale, timeZone: zone, style: "long" });
-  // The page's own rule (`whenTimes`, §590): a race with no gun time yet says «start la 08:30» and, on a
-  // line of its own, that the race's start is announced later.
+  // The page's own rule (`whenTimes`, §590): a race with both says «08:30 (start eveniment) · 10:00 (start
+  // cursă)» in words alone — the site's flag glyph is not an email's (§NNN); one with no gun time yet says
+  // «08:30 (start eveniment)» and, on a line of its own, that the race's start is announced later.
   const when = whenTimes(details);
   const times = when.times.map(({ key, at }) => (key === null ? time(at) : t(key, { time: time(at) })));
   rows.push({

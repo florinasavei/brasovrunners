@@ -48,7 +48,7 @@ export const EMAIL_SAMPLE_SIGNED_AT = new Date("2026-09-28T16:42:00Z");
  */
 export const EMAIL_SAMPLE_EVENT = {
   startsAt: EMAIL_SAMPLE_STARTS_AT,
-  /** A race's gun time half an hour after the gathering (§71): "întâlnire la 09:00 · start la 09:30". */
+  /** A race's gun time half an hour after the gathering (§71): "09:00 (start eveniment) · 09:30 (start cursă)". */
   raceStartsAt: new Date("2026-10-04T06:30:00Z"),
   timezone: CLUB_TIME_ZONE,
   locationAddress: "Aleea Tiberiu Brediceanu",
