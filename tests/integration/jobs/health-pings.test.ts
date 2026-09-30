@@ -10,8 +10,8 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  *
  * `/api/health` answers 503 for anything but `ok`, and cron-job.org emails the owner on a 503
  * (§98). So the scheduler's liveness is measured against the last *ping*, skipped or real, read
- * from the cache the skip uses; and a real run is still required, within the hour-long cap — or
- * the Administrator's longer interval — plus the threshold it always had. Noon in Brașov
+ * from the cache the skip uses; and a real run is still required, within the daily window's
+ * longest quiet (§NNN; an hour before it) plus the threshold it always had. Noon in Brașov
  * throughout, so the day cadence (fifteen minutes, threshold 35) applies.
  */
 const NOON = new Date("2026-10-01T09:00:00.000Z"); // 12:00 in Brașov, summer time
@@ -57,20 +57,22 @@ describe("BR-REQ-090-03 criterion 12 liveness is measured against the pings", ()
     expect((await checkJobHealth(db, "registration-maintenance", NOON)).status).toBe("stale");
   });
 
-  it("is stale when the pings arrive but no real run has happened within the cap and the threshold", async () => {
-    await realRun(100);
+  it("reads one real run a day, at the window, as ok while the pings arrive (§NNN)", async () => {
+    // 04:00 this morning, eight hours ago: an idle platform's only real run of the day.
+    await realRun(8 * 60);
     await recordPing("registration-maintenance", ago(5), false);
-    // 100 minutes: past the hour-long cap plus the 35-minute threshold.
-    expect((await checkJobHealth(db, "registration-maintenance", NOON)).status).toBe("stale");
+    expect((await checkJobHealth(db, "registration-maintenance", NOON)).status).toBe("ok");
+    // Twenty-five hours: inside the longest quiet the window allows, plus the threshold.
+    await resetTables(db);
+    await realRun(25 * 60);
+    expect((await checkJobHealth(db, "registration-maintenance", NOON)).status).toBe("ok");
   });
 
-  it("reads a real run every two hours as ok when the Administrator chose two hours", async () => {
-    await realRun(115);
+  it("is stale when the pings arrive but no real run has happened within the window's longest quiet and the threshold", async () => {
+    // Twenty-six hours and forty minutes: past the 26-hour quiet plus the 35-minute threshold.
+    await realRun(26 * 60 + 40);
     await recordPing("registration-maintenance", ago(5), false);
     expect((await checkJobHealth(db, "registration-maintenance", NOON)).status).toBe("stale");
-
-    await db.insert(platformSettings).values({ key: "jobCadence", value: { minutes: 120 }, updatedAt: ago(200) });
-    expect((await checkJobHealth(db, "registration-maintenance", NOON)).status).toBe("ok");
   });
 
   it("keeps each job's pings to itself", async () => {

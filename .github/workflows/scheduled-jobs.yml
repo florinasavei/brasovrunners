@@ -15,10 +15,14 @@ name: scheduled-jobs
 # not a copy of this file. Secrets are per environment in GitHub, mirroring how they are
 # per project in Vercel: SETUP.md §3, `Brașov Runners / Scheduler QA`.
 
+# The backstop, not the clock (CLAUDE.md § Stack): cron-job.org is the clock (SETUP.md §40). Since
+# §NNN a ping with nothing due answers from the cache and wakes no database, and an idle platform
+# runs its jobs for real once a day at 04:00 in Brașov; so this runs four times a day, at 01:17,
+# 07:17, 13:17 and 19:17 UTC — off the pinger's quarter-hours — to do what is due if the external
+# pinger has stopped. It used to say every five minutes; GitHub ran it every three to five hours.
 on:
   schedule:
-    # Every five minutes: the outbox wants one to five, maintenance about five (§16.2).
-    - cron: "*/5 * * * *"
+    - cron: "17 1,7,13,19 * * *"
   # So a run can be forced while debugging without waiting for the next tick.
   workflow_dispatch:
 

@@ -41,7 +41,8 @@ test.describe("§447 the month's budget", () => {
   });
 
   test("the public health answer names the level, never a figure, and when the database was asked", async ({ request }) => {
-    const response = await request.get("/api/health");
+    // The full report (§NNN): the bare address is the monitors' shallow answer, with no budget in it.
+    const response = await request.get("/api/health?deep=1");
     const body = (await response.json()) as {
       neon: Record<string, unknown>;
       budget: Record<string, unknown>;
@@ -52,5 +53,13 @@ test.describe("§447 the month's budget", () => {
     expect(body.budget).toEqual({ level: "unknown", meteredPercent: null, linePercent: null, note: null });
     // Below `red` the database half is always fresh.
     expect(body.databaseCheckedAt).toBe(body.checkedAt);
+  });
+
+  test("the bare health answer is shallow: the build, and nothing the database or Neon would say (§NNN)", async ({ request }) => {
+    const response = await request.get("/api/health");
+    const body = (await response.json()) as Record<string, unknown>;
+    expect(body.depth).toBe("shallow");
+    expect(body).toHaveProperty("build");
+    for (const key of ["database", "jobs", "neon", "budget"]) expect(body).not.toHaveProperty(key);
   });
 });

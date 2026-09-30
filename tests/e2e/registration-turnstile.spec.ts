@@ -127,7 +127,11 @@ async function openWithStandIn(page: Page, { blindField = false } = {}) {
   await ensureRegistrationIsOpen(page);
   await page.goto(registerPath);
   await hydrated(page);
-  // The widget is drawn inside the form, and has not answered.
+  // Nothing of Cloudflare's before the person starts on the form (§NNN): no script, no widget.
+  await expect(page.locator("script[data-turnstile]")).toHaveCount(0);
+  await expect(tokenField(page)).toHaveCount(0);
+  await page.locator('[name="firstName"]').focus();
+  // Started on: the widget is drawn inside the form, and has not answered.
   await expect(tokenField(page)).toHaveCount(1);
   await expect(tokenField(page)).toHaveValue("");
   return Date.now();
@@ -311,23 +315,35 @@ test.describe("§502 a press held for the anti-bot check is sent when the check 
     await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);
 
-    // Cloudflare's script, four seconds late — so the press comes before any widget exists.
+    // Cloudflare's script, held until the press is held — so the press comes before any widget
+    // exists. Not a fixed delay: since the script is requested at the first key in the form rather
+    // than on arrival (§NNN), a delay counted from the request would end at an unknown moment
+    // after the press and spend the valve's eight seconds on Cloudflare's own challenge.
+    let releaseScript: () => void = () => {};
+    const scriptReleased = new Promise<void>((resolve) => {
+      releaseScript = resolve;
+    });
     await page.route(TURNSTILE_SCRIPT_PATTERN, async (route) => {
-      await new Promise((resolve) => setTimeout(resolve, 4_000));
+      await scriptReleased;
       await route.continue();
     });
     await page.goto(registerPath, { waitUntil: "domcontentloaded" });
     // `hydrated` waits for the network to settle, which the late script would hold up: the widget's
-    // own script tag is the sign the page's islands are running.
-    await page.locator("script[data-turnstile]").waitFor({ state: "attached" });
+    // own script tag — injected at the first focus in the form (§NNN) — is the sign the page's
+    // islands are running. A key in the first box until it is there, in case the first came before them.
+    await expect(async () => {
+      await page.locator('[name="firstName"]').press("Shift");
+      await expect(page.locator("script[data-turnstile]")).toHaveCount(1, { timeout: 1_000 });
+    }).toPass({ timeout: 20_000 });
     await fillRequired(page, address());
 
     const posted = postWithToken(page);
     const pressedAt = Date.now();
     await sendButton(page).click();
     await expect(heldSentence(page)).toBeVisible();
+    releaseScript();
     await posted;
-    // The widget arrives a few seconds after the press and answers at once; the valve, eight
+    // The widget arrives after the press and answers at once; the valve, eight
     // seconds after the press, would post its token too — so the answer must have come first.
     expect(Date.now() - pressedAt, "sent by the widget's answer, not by the valve").toBeLessThan(RELEASE_AFTER_MS - 1_000);
     await expect(page).toHaveURL(/submitted=/, { timeout: 20_000 });
@@ -515,6 +531,8 @@ test.describe("§518 the anti-bot check says every state and never strands a pre
     await ensureRegistrationIsOpen(page);
     await page.goto(registerPath);
     await hydrated(page);
+    // The script is asked for at the first focus in the form (§NNN), and refused.
+    await page.locator('[name="firstName"]').focus();
     const openedAt = Date.now();
 
     await expect(botCheckLine(page)).toHaveText(/nu s-a încărcat/);
@@ -533,5 +551,32 @@ test.describe("§518 the anti-bot check says every state and never strands a pre
     expect(request.postData() ?? "").toContain("widget-failed");
     expect(request.postData() ?? "").not.toContain("held-press-valve");
     await expect(page).toHaveURL(/submitted=/, { timeout: 20_000 });
+  });
+});
+
+test.describe("§NNN Cloudflare is asked for nothing until a person starts on a protected form", () => {
+  test("no page loads the script on arrival — the listing, an event page, the contact page, the form — and the form's first focus does", async ({ page }) => {
+    test.setTimeout(60_000);
+    const asked: string[] = [];
+    await page.route(TURNSTILE_SCRIPT_PATTERN, (route) => {
+      asked.push(page.url());
+      return route.fulfill({ status: 200, contentType: "text/javascript", body: FAKE_TURNSTILE_SCRIPT });
+    });
+    await signIn(page, "Dev Administrator");
+    await ensureRegistrationIsOpen(page);
+    for (const path of ["/ro/evenimente", `/ro/evenimente/${FEATURED.slug}`, "/ro/contact", registerPath]) {
+      await page.goto(path);
+      await hydrated(page);
+      // Scrolled to the end, as a reader would: arrival and scrolling are not starting on a form.
+      await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+      await page.waitForTimeout(500);
+      expect(await page.locator("script[data-turnstile]").count(), path).toBe(0);
+    }
+    expect(asked).toEqual([]);
+
+    await page.locator('[name="firstName"]').focus();
+    await expect(page.locator("script[data-turnstile]")).toHaveCount(1);
+    await expect(tokenField(page)).toHaveCount(1);
+    expect(asked).toHaveLength(1);
   });
 });

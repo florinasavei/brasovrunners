@@ -24,7 +24,9 @@ vi.mock("@/modules/diagnostics/budget-thresholds", () => ({ cachedBudgetThreshol
 vi.mock("@/modules/registrations/turnstile", () => ({ probeTurnstileSecret: async () => "not_configured" }));
 vi.mock("@/modules/translate/credit", () => ({ readTranslationCredit: (...args: unknown[]) => readTranslationCredit(...args) }));
 
-const { GET } = await import("@/app/api/health/route");
+const healthRoute = await import("@/app/api/health/route");
+/** The full report (§NNN): these cases are about what the deep answer asks and says. */
+const GET = () => healthRoute.GET(new Request("http://localhost/api/health?deep=1"));
 
 beforeEach(() => {
   vi.clearAllMocks();

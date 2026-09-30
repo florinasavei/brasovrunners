@@ -3,17 +3,19 @@ import { jobStalenessThresholdMs } from "@/modules/jobs/quiet-hours";
 import {
   ALIGN_STRETCH_MINUTES,
   clubMinuteOfDay,
+  DAILY_WINDOW_CLUB_MINUTE,
+  DAILY_WINDOW_MIN_GAP_MINUTES,
+  dailyWindowEnd,
   decidePing,
   type JobCadenceMinutes,
   lastClubBoundary,
   minimumIntervalEnd,
-  NEXT_DUE_CAP_MINUTES,
   nextClubBoundary,
   PINGER_SLOT_MINUTES,
   PLAN_GRACE_MINUTES,
   planQuiet,
   type QuietPlan,
-  safetyCapEnd,
+  SAFETY_LOOK_MAX_MINUTES,
 } from "@/modules/jobs/schedule";
 import { EMAIL_HEALTH_THRESHOLDS } from "@/modules/notifications/health";
 
@@ -55,6 +57,14 @@ function verdict(now: Date, plan: QuietPlan) {
 
 const idle = (ranAt: Date, cadenceMinutes: JobCadenceMinutes = 0) =>
   planQuiet({ ranAt, nextWorkAt: null, cadenceMinutes, failed: false });
+
+/**
+ * A job that always has work a minute after each run — a queue being worked through, a retry — so
+ * the Administrator's interval alone spaces its runs. Since §NNN an idle job runs only at the daily
+ * window, so this is where the interval's alignment (§355) still decides when the database wakes.
+ */
+const busy = (ranAt: Date, cadenceMinutes: JobCadenceMinutes) =>
+  planQuiet({ ranAt, nextWorkAt: new Date(ranAt.getTime() + MINUTE), cadenceMinutes, failed: false });
 
 type Call = { slot: Date; at: Date };
 
@@ -99,14 +109,6 @@ function realRuns(start: Date, until: Date, plan: Rule, dayMinutes = 15, dropped
   return runs;
 }
 
-/** §334's rule as it was: an hour after the run, minus the grace, whatever the clock said. */
-const driftingRule: Rule = (ranAt) => ({
-  ranAt,
-  quietUntil: new Date(ranAt.getTime() + NEXT_DUE_CAP_MINUTES * MINUTE - GRACE),
-  floorUntil: null,
-  cadenceMinutes: 0,
-});
-
 /** Neon Launch: the first query wakes the compute, which sleeps five idle minutes after the last. */
 function wakes(queries: Date[]): Date[] {
   const starts: Date[] = [];
@@ -121,92 +123,77 @@ function wakes(queries: Date[]): Date[] {
 const onTheHour = (at: Date) => clubMinuteOfDay(at) % 60 === 0;
 const onEvenHour = (at: Date) => clubMinuteOfDay(at) % 120 === 0;
 
-describe("BR-REQ-090-03 criterion 14 (§355) the safety look lands on the pinger's hour", () => {
-  it("looks again at the 11:00 call after a run at 10:15, not at 11:15", () => {
+describe("BR-REQ-090-03 criterion 14 (§NNN, amending §355) the safety look is the daily window, 04:00 on the club's clock", () => {
+  it("looks again at tomorrow's 04:00 call after a run at 10:15, and skips every call before it", () => {
     const plan = idle(club("10:15"));
-    expect(plan.quietUntil).toEqual(club("10:58"));
-    expect(verdict(club("10:30"), plan)).toMatchObject({ run: false, reason: "nothing-due" });
-    expect(verdict(club("10:45"), plan)).toMatchObject({ run: false, reason: "nothing-due" });
-    expect(verdict(early(club("11:00")), plan)).toEqual({ run: true });
-  });
-
-  it("looks again at 11:00 after a run at 10:00:20, whichever side of the hour that call lands", () => {
-    const plan = idle(club("10:00:20"));
-    expect(plan.quietUntil).toEqual(club("10:58"));
-    expect(verdict(early(club("11:00")), plan)).toEqual({ run: true });
-    expect(verdict(club("11:00:00.800"), plan)).toEqual({ run: true });
-  });
-
-  it("counts a run whose :00 call landed early as that hour's run, next due at the following :00", () => {
-    const plan = idle(club("09:59:59.600"));
-    expect(verdict(club("10:15"), plan).run).toBe(false);
-    expect(verdict(club("10:45"), plan).run).toBe(false);
-    expect(verdict(early(club("11:00")), plan)).toEqual({ run: true });
-  });
-
-  it("is never later than §334's hour-minus-grace and always lands on a top-of-the-hour call, for a run at any moment", () => {
-    // Every ten seconds of two hours, and the moments either side of each boundary.
-    const starts: Date[] = [];
-    for (let at = club("09:00").getTime(); at < club("11:00").getTime(); at += 10_000) starts.push(new Date(at));
-    for (const boundary of ["09:15", "09:30", "09:45", "10:00"]) for (const offset of [-GRACE - 1, -GRACE, -900, -1, 1, 900]) {
-      starts.push(new Date(club(boundary).getTime() + offset));
+    expect(plan.quietUntil).toEqual(club("03:58", "2026-10-02"));
+    for (const call of pingerCalls(club("10:15"), club("03:59", "2026-10-02"), 15)) {
+      expect(verdict(call.at, plan), call.at.toISOString()).toMatchObject({ run: false, reason: "nothing-due" });
     }
-    for (const ranAt of starts) {
-      const end = safetyCapEnd(ranAt).getTime();
-      expect(end, ranAt.toISOString()).toBeLessThanOrEqual(ranAt.getTime() + NEXT_DUE_CAP_MINUTES * MINUTE - GRACE);
-      expect(end, ranAt.toISOString()).toBeGreaterThan(ranAt.getTime());
-      // The first pinger slot the end lets through is a top of the hour.
-      expect(onTheHour(nextClubBoundary(new Date(end), PINGER_SLOT_MINUTES)!), ranAt.toISOString()).toBe(true);
+    expect(verdict(early(club("04:00", "2026-10-02")), plan)).toEqual({ run: true });
+    expect(verdict(club("04:00:00.800", "2026-10-02"), plan)).toEqual({ run: true });
+  });
+
+  it("counts the window's own run — or a 04:00 call that landed early — as today's, next due tomorrow at 04:00", () => {
+    expect(idle(club("04:00:00.300")).quietUntil).toEqual(club("03:58", "2026-10-02"));
+    expect(idle(club("03:59:59.600")).quietUntil).toEqual(club("03:58", "2026-10-02"));
+  });
+
+  it("is always after the run, at least the gap past it, never more than the longest quiet, and on a 04:00 call, for a run at any moment", () => {
+    for (let at = club("00:00").getTime(); at < club("00:00", "2026-10-03").getTime(); at += 7 * MINUTE + 13_000) {
+      const ranAt = new Date(at);
+      const end = dailyWindowEnd(ranAt).getTime();
+      expect(end, ranAt.toISOString()).toBeGreaterThanOrEqual(at + (DAILY_WINDOW_MIN_GAP_MINUTES * MINUTE - GRACE));
+      expect(end, ranAt.toISOString()).toBeLessThanOrEqual(at + SAFETY_LOOK_MAX_MINUTES * MINUTE);
+      expect(clubMinuteOfDay(end + GRACE), ranAt.toISOString()).toBe(DAILY_WINDOW_CLUB_MINUTE);
     }
   });
 
-  it("runs every hourly call at night, on the hour", () => {
-    const runs = realRuns(club("23:00"), club("07:00", "2026-10-02"), idle);
-    expect(runs.map((run) => run.slot)).toEqual(Array.from({ length: 8 }, (_, hour) => after(club("23:00"), hour * 60)));
-  });
-
-  it("brings both jobs to the same :00 after one cycle, wherever each started", () => {
-    const until = club("15:00");
-    const hours = [club("11:00"), club("12:00"), club("13:00"), club("14:00")];
-    const aligned = realRuns(club("10:00"), until, idle).slice(1);
-    expect(aligned.map((run) => run.slot)).toEqual(hours);
-    for (let second = 0; second < 3600; second += 20) {
-      // One job's last real run anywhere in 10:00–10:59 (a woken run, a deploy), the other's on the hour.
-      const start = after(club("10:00"), second / 60);
-      const drifted = realRuns(start, until, idle).slice(1);
-      // A run within the grace of 11:00 is the 11:00 call's own run; any other is followed by it.
-      const expected = start.getTime() >= club("11:00").getTime() - GRACE ? hours.slice(1) : hours;
-      expect(drifted.map((run) => run.slot), start.toISOString()).toEqual(expected);
+  it("makes an idle day one real run of each job, both at the 04:00 call", () => {
+    for (const start of [club("10:15"), club("10:00"), club("16:45:20"), club("23:00")]) {
+      const runs = realRuns(start, club("23:00", "2026-10-03"), idle).slice(1);
+      expect(runs.map((run) => run.slot), start.toISOString()).toEqual([club("04:00", "2026-10-02"), club("04:00", "2026-10-03")]);
     }
   });
 
-  it("makes each quiet hour one wake of the database instead of two, the :02 health check included", () => {
-    // The measured morning: maintenance's last real run at 10:15, the outbox's at 10:00, the
-    // production health monitor's GET at :02 every hour.
-    const until = club("16:00");
-    const health = [11, 12, 13, 14, 15].map((hour) => club(`${hour}:02`));
-    const queries = (rule: Rule) => [
-      ...realRuns(club("10:15"), until, rule).slice(1).map((run) => run.at),
-      ...realRuns(club("10:00"), until, rule).slice(1).map((run) => run.at),
-      ...health,
+  it("makes an idle day one wake of the database instead of twenty-four, the daily deep health check included", () => {
+    // The measured shape before: each job's safety look every hour at :00 and the health monitor's
+    // GET at :02, which read the database; now the monitor's hourly check is shallow and the deep
+    // one runs once, at 04:02, inside the window's wake (at 04:05 it would miss a run whose call
+    // landed early by the jitter: five idle minutes and the compute sleeps).
+    const from = club("04:30");
+    const until = club("04:30", "2026-10-02");
+    const hourlyRule: Rule = (ranAt) => ({ ranAt, quietUntil: new Date(lastHourEnd(ranAt)), floorUntil: null, cadenceMinutes: 0 });
+    const before = [
+      ...realRuns(club("04:00"), until, hourlyRule).slice(1).map((run) => run.at),
+      ...realRuns(club("04:00"), until, hourlyRule).slice(1).map((run) => run.at),
+      ...Array.from({ length: 24 }, (_, hour) => after(club("05:02"), hour * 60)).filter((at) => at < until),
     ];
-    const inWindow = (starts: Date[]) => starts.filter((at) => at.getTime() >= club("10:55").getTime());
-
-    expect(inWindow(wakes(queries(driftingRule))).length).toBe(10);
-    const aligned = inWindow(wakes(queries(idle)));
-    expect(aligned.length).toBe(5);
-    expect(aligned.every((at) => onTheHour(new Date(at.getTime() + 1_000)))).toBe(true);
+    const after04 = [
+      ...realRuns(club("04:00"), until, idle).slice(1).map((run) => run.at),
+      ...realRuns(club("04:00"), until, idle).slice(1).map((run) => run.at),
+      club("04:02", "2026-10-02"),
+    ];
+    const inWindow = (starts: Date[]) => starts.filter((at) => at.getTime() >= from.getTime() && at.getTime() < until.getTime());
+    expect(inWindow(wakes(before)).length).toBeGreaterThanOrEqual(23);
+    expect(inWindow(wakes(after04)).length).toBe(1);
   });
 
-  it("leaves a deadline the work itself has where it is: due at 10:37, the 10:45 call runs", () => {
+  it("leaves a deadline the work itself has where it is: due at 10:37, the 10:45 call runs, and the look after it is the window", () => {
     const plan = planQuiet({ ranAt: club("10:00"), nextWorkAt: club("10:37"), cadenceMinutes: 0, failed: false });
     expect(plan.quietUntil).toEqual(club("10:37"));
     expect(verdict(club("10:30"), plan).run).toBe(false);
     expect(verdict(early(club("10:45")), plan)).toEqual({ run: true });
-    // And from that run the safety look is back on the hour.
-    expect(idle(early(club("10:45"))).quietUntil).toEqual(club("10:58"));
+    expect(idle(early(club("10:45"))).quietUntil).toEqual(club("03:58", "2026-10-02"));
   });
 });
+
+/** §355's safety look, for the before-and-after count above: two minutes before the next top of the hour at most an hour on. */
+function lastHourEnd(ranAt: Date): number {
+  const hour = lastClubBoundary(new Date(ranAt.getTime() + 60 * MINUTE + GRACE), 60);
+  const plain = ranAt.getTime() + 60 * MINUTE - GRACE;
+  return hour === null ? plain : Math.min(plain, hour.getTime() - GRACE);
+}
 
 describe("BR-REQ-090-03 criterion 14 (§355) a minimum interval ends on a boundary of its own length, never sooner", () => {
   it("ends on its own boundary after a run that is already on it", () => {
@@ -249,8 +236,8 @@ describe("BR-REQ-090-03 criterion 14 (§355) a minimum interval ends on a bounda
     }
   });
 
-  it("puts QA's two-hour runs on even hours under its hourly pinger, so the 00:02, 06:02, 12:02 and 18:02 checks share their wakes", () => {
-    const every2h = (ranAt: Date) => idle(ranAt, 120);
+  it("puts QA's two-hour runs on even hours under its hourly pinger while there is work", () => {
+    const every2h = (ranAt: Date) => busy(ranAt, 120);
     // QA's last real run on an odd hour, an even one, or off the hour altogether (a woken run).
     for (const start of [club("09:00"), club("10:00"), club("10:30"), club("11:15"), club("11:59:59.500")]) {
       // The first run after the start may still be on its way (10:30 goes to 13:00, then 16:00);
@@ -270,7 +257,7 @@ describe("BR-REQ-090-03 criterion 14 (§355) a minimum interval ends on a bounda
 
   it("brings production's quarter-hour pinger onto the boundary within a few runs, never sooner than the interval", () => {
     for (const cadence of [30, 60, 120] as const) {
-      const rule = (ranAt: Date) => idle(ranAt, cadence);
+      const rule = (ranAt: Date) => busy(ranAt, cadence);
       const boundary = cadence === 120 ? onEvenHour : cadence === 60 ? onTheHour : (at: Date) => clubMinuteOfDay(at) % 30 === 0;
       /*
         From a run on the pinger's grid the boundary is at most the interval less one slot away,
@@ -295,16 +282,20 @@ describe("BR-REQ-090-03 criterion 14 (§355) a minimum interval ends on a bounda
 });
 
 describe("BR-REQ-090-03 criterion 14 (§355) daylight saving, Europe/Bucharest", () => {
-  it("keeps the safety look on the hour across the autumn change", () => {
-    // 25 October 2026: at 01:00Z the clocks go from 04:00 EEST back to 03:00 EET.
-    const plan = idle(new Date("2026-10-25T00:15:00.000Z")); // 03:15 EEST
-    expect(plan.quietUntil).toEqual(new Date("2026-10-25T00:58:00.000Z"));
-    expect(verdict(early(new Date("2026-10-25T01:00:00.000Z")), plan)).toEqual({ run: true }); // 03:00 EET
+  it("finds the 04:00 window across the autumn change, the day with an hour more (§NNN)", () => {
+    // 25 October 2026: at 01:00Z the clocks go from 04:00 EEST back to 03:00 EET. A run at 03:15 EEST
+    // is inside the gap before the 04:00 EEST that never comes; the window is 04:00 EET, 02:00Z.
+    const plan = idle(new Date("2026-10-25T00:15:00.000Z"));
+    expect(plan.quietUntil).toEqual(new Date("2026-10-25T01:58:00.000Z"));
+    expect(verdict(early(new Date("2026-10-25T01:00:00.000Z")), plan)).toMatchObject({ run: false }); // 03:00 EET
+    expect(verdict(early(new Date("2026-10-25T02:00:00.000Z")), plan)).toEqual({ run: true }); // 04:00 EET
+    // The window's own run: the next is 04:00 EET the day after, 02:00Z.
+    expect(idle(new Date("2026-10-25T02:00:00.300Z")).quietUntil).toEqual(new Date("2026-10-26T01:58:00.000Z"));
   });
 
-  it("keeps the safety look on the hour across the spring change", () => {
-    // 28 March 2027: at 01:00Z the clocks go from 03:00 EET to 04:00 EEST.
-    const plan = idle(new Date("2027-03-28T00:15:00.000Z")); // 02:15 EET
+  it("finds the 04:00 window across the spring change, the day with an hour less (§NNN)", () => {
+    // 28 March 2027: at 01:00Z the clocks go from 03:00 EET to 04:00 EEST; 04:00 EEST is 01:00Z.
+    const plan = idle(new Date("2027-03-27T18:00:00.000Z")); // 20:00 EET the evening before
     expect(plan.quietUntil).toEqual(new Date("2027-03-28T00:58:00.000Z"));
     expect(verdict(early(new Date("2027-03-28T01:00:00.000Z")), plan)).toEqual({ run: true }); // 04:00 EEST
   });
@@ -322,7 +313,7 @@ describe("BR-REQ-090-03 criterion 14 (§355) daylight saving, Europe/Bucharest",
     const plan = idle(ranAt, 120);
     expect(plan.floorUntil!.getTime()).toBeGreaterThanOrEqual(ranAt.getTime() + 120 * MINUTE - GRACE);
     expect(verdict(new Date("2027-03-28T01:00:00.000Z"), plan)).toMatchObject({ run: false }); // 04:00 EEST, one hour on
-    const runs = realRuns(ranAt, new Date("2027-03-28T08:00:00.000Z"), (at) => idle(at, 120));
+    const runs = realRuns(ranAt, new Date("2027-03-28T08:00:00.000Z"), (at) => busy(at, 120));
     // Under the night pinger the next run is 06:00 EEST, three hours on, then even hours.
     expect(runs.slice(1, 4).map((run) => run.slot.toISOString())).toEqual([
       "2027-03-28T03:00:00.000Z",
@@ -333,7 +324,7 @@ describe("BR-REQ-090-03 criterion 14 (§355) daylight saving, Europe/Bucharest",
 
   it("reaches 04:00 EET across the autumn change without ever running sooner than two hours", () => {
     const ranAt = new Date("2026-10-24T23:00:00.000Z"); // 02:00 EEST
-    const runs = realRuns(ranAt, new Date("2026-10-25T08:00:00.000Z"), (at) => idle(at, 120));
+    const runs = realRuns(ranAt, new Date("2026-10-25T08:00:00.000Z"), (at) => busy(at, 120));
     expect(runs[1].slot.toISOString()).toBe("2026-10-25T02:00:00.000Z"); // 04:00 EET, three hours on
     for (let index = 1; index < runs.length; index++) {
       expect(runs[index].at.getTime() - runs[index - 1].at.getTime()).toBeGreaterThanOrEqual(120 * MINUTE - GRACE);
@@ -347,7 +338,7 @@ describe("BR-REQ-090-03 criterion 14 (§355) no health threshold is ever crossed
 
   /**
    * For every pair of consecutive real runs, the job health's real-run threshold (`health.ts`:
-   * max(cap, interval) plus twice the pinger cadence in force plus five) is not crossed at any
+   * max(the daily window's longest quiet, interval) plus twice the pinger cadence in force plus five) is not crossed at any
    * moment between them — checked just before every pinger slot in between, which is where the
    * gap is largest under each threshold, the day's ending at 23:00 included — and, with work
    * waiting at every run, the outbox's claim is never later than the email health's "overdue".
@@ -373,7 +364,7 @@ describe("BR-REQ-090-03 criterion 14 (§355) no health threshold is ever crossed
       const checks = [next - 1];
       for (let slot = Math.ceil(last / step) * step; slot < next; slot += step) if (slot - 1 > last) checks.push(slot - 1);
       for (const at of checks) {
-        if (at - last > Math.max(NEXT_DUE_CAP_MINUTES, cadence) * MINUTE + stalenessAt(at, dayMinutes)) {
+        if (at - last > Math.max(SAFETY_LOOK_MAX_MINUTES, cadence) * MINUTE + stalenessAt(at, dayMinutes)) {
           return `${new Date(last).toISOString()} → ${new Date(at).toISOString()}`;
         }
       }
@@ -422,7 +413,7 @@ describe("BR-REQ-090-03 criterion 14 (§355) no health threshold is ever crossed
     // Aligned on the hour at 12:00; 13:00 never arrives, so 13:15 runs and stretches to 14:30;
     // 14:30 never arrives either, so 14:45 runs — ninety minutes, inside ninety-five — and 16:00
     // is back on the hour. Under a thirty-minute stretch the second gap was 13:15 → 15:00, 105.
-    const every60 = (ranAt: Date) => idle(ranAt, 60);
+    const every60 = (ranAt: Date) => busy(ranAt, 60);
     const runs = realRuns(club("12:00"), club("17:30"), every60, 15, new Set([0, 2]));
     expect(runs.map((run) => run.slot)).toEqual([club("12:00"), club("13:15"), club("14:45"), club("16:00"), club("17:00")]);
     expect(firstCrossing(runs, 60, 15)).toBeNull();

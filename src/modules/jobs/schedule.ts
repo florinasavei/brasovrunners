@@ -14,9 +14,10 @@
  * (`schedule-cache.ts`). A ping that arrives before it answers from the cache and never opens a
  * connection. Two rules bound how wrong that can be:
  *
- * - **The cap.** Whatever the computation says, the job looks for real at least once an hour
- *   (`NEXT_DUE_CAP_MINUTES`). A duty this file forgot, a write path that forgot to say it made
- *   work, a clock that moved: each costs at most an hour, never "never".
+ * - **The cap.** Whatever the computation says, the job looks for real at least once a day, in
+ *   the daily maintenance window (`DAILY_WINDOW_CLUB_MINUTE`, 04:00 on the club's clock; §NNN —
+ *   it was once an hour until then). A duty this file forgot, a write path that forgot to say it
+ *   made work, a clock that moved: each costs at most a day, never "never".
  * - **Nothing here is correctness.** A hold that lapses is lapsed on every read, whether or not
  *   the job has run (AGENTS.md §10.6, `repository.ts#countOccupied`); a skipped run delays a
  *   message or a hand-over to the waiting list and cannot give a place twice.
@@ -38,8 +39,8 @@
  * So both now END on the pinger's own slots in the club's clock (`CLUB_TIME_ZONE`), and both
  * jobs' safety runs land on the same :00 call as the health check's wake:
  *
- * - **The cap** ends on the latest top of the hour no more than sixty minutes after the run
- *   (`safetyCapEnd`): a run at 10:15 looks again at the 11:00 call, never later than before.
+ * - **The cap** ended on the latest top of the hour no more than sixty minutes after the run: a
+ *   run at 10:15 looked again at the 11:00 call. Since §NNN it ends at the daily window (below).
  * - **A minimum interval** ends on the first boundary of its own length at least that many
  *   minutes after the run (`minimumIntervalEnd`: quarter-hours for 15, :00/:30 for 30, the hour
  *   for 60, even hours for 120) — a minimum stays a minimum, so it may only come later, and at
@@ -47,6 +48,20 @@
  *   threshold room for one missed pinger call after the stretched run.
  * - **A deadline the work itself has** (`nextWorkAt`) is never moved: before it there is nothing
  *   to do, and after it the next call runs, exactly as before.
+ *
+ * ## Once a day, not once an hour (§NNN)
+ *
+ * The owner, 2026-09-29: «dacă site-ul stă în idle nu vreau să consum nimic!». After §334 and §355
+ * an idle hour still cost one wake of the database — the safety look at :00, which the health
+ * monitor's :02 check shared — so an idle day was about 24 wakes on production, five billed minutes
+ * each, and nothing to do in any of them. The safety look now waits for the daily maintenance
+ * window instead (`dailyWindowEnd`): the first 04:00 on the club's clock at least an hour after the
+ * run, which both environments' pingers call (production's night maintenance skips 02:00 and 03:00,
+ * QA's runs on even hours). The retention sweep, the orphaned pictures and the standing series —
+ * the duties measured in days that this look was always what ran — run there. Every deadline the
+ * work has is still its own (`next-work.ts`): a hold, an offer, an email link, a reminder, a
+ * window, an outbox retry. And every write path that makes work sooner still forgets the promise
+ * (`wakeJobs`), which is now the case for any work within the longest quiet, a day and a bit.
  */
 
 import { CLUB_TIME_ZONE } from "@/i18n/dates";
@@ -58,8 +73,31 @@ export function isJobName(value: string): value is JobName {
   return (JOB_NAMES as readonly string[]).includes(value);
 }
 
-/** The safety net: at worst one real look an hour, whatever the computation said. */
-export const NEXT_DUE_CAP_MINUTES = 60;
+/**
+ * The daily maintenance window (§NNN): minutes after midnight on the club's clock, 04:00. The one
+ * moment an idle platform still looks at its database, whatever the computation said. A pinger
+ * call on both environments (`SETUP.md` §40), after the night's quiet hours and before anybody
+ * registers; it exists on both daylight-saving days (the spring change skips 03:00, the autumn one
+ * repeats it).
+ */
+export const DAILY_WINDOW_CLUB_MINUTE = 4 * 60;
+
+/** The window as the screens name it («o dată pe zi, la 04:00»). */
+export const DAILY_WINDOW_LABEL = "04:00";
+
+/**
+ * A run this close before the window counts as the window's own run, and the next look is the day
+ * after: a real run at 03:30 (a registration woke the job) has just done everything the 04:00 one
+ * would, and waking the database again half an hour later would be a second wake for nothing.
+ */
+export const DAILY_WINDOW_MIN_GAP_MINUTES = 60;
+
+/**
+ * The longest the safety look can be away from the run before it: a day, plus the gap above (a run
+ * just inside it waits for tomorrow's window), plus the autumn change's extra hour. What the job
+ * health allows a real run (`health.ts`), and what bounds every cached quiet (`MAX_QUIET_MINUTES`).
+ */
+export const SAFETY_LOOK_MAX_MINUTES = 24 * 60 + DAILY_WINDOW_MIN_GAP_MINUTES + 60;
 
 /**
  * The choices the Administrator has (`cadence.ts`), in minutes; zero is "only when something is
@@ -83,15 +121,11 @@ export const ALIGN_STRETCH_MINUTES = 15;
 
 /**
  * No cached quiet period that a wake could shorten ends later than this after the run that wrote
- * it: the cap, or the longest minimum interval when that is longer. `wakeJobs` leans on it — work
- * due further away than this is found by a real run before it is due, with no invalidation needed.
- *
- * An interval's alignment may end its quiet up to `ALIGN_STRETCH_MINUTES` later (§355), and that
- * is still covered: an interval at least as long as the cap ends the quiet exactly where its floor
- * ends, and a wake forgets the quiet but never the floor, so work due in those extra minutes waits
- * for the owner's interval whether or not anything was invalidated.
+ * it: the daily window at its furthest (§NNN), longer than any minimum interval. `wakeJobs` leans
+ * on it — work due further away than this is found by a real run before it is due, with no
+ * invalidation needed.
  */
-export const MAX_QUIET_MINUTES = Math.max(NEXT_DUE_CAP_MINUTES, ...JOB_CADENCE_CHOICES);
+export const MAX_QUIET_MINUTES = Math.max(SAFETY_LOOK_MAX_MINUTES, ...JOB_CADENCE_CHOICES);
 
 /**
  * The width of one cache slot. A slot is written once and never overwritten (see
@@ -101,6 +135,16 @@ export const MAX_QUIET_MINUTES = Math.max(NEXT_DUE_CAP_MINUTES, ...JOB_CADENCE_C
 export const SLOT_MINUTES = 5;
 const SLOT_MS = SLOT_MINUTES * 60_000;
 const MINUTE = 60_000;
+
+/**
+ * How far past a run its "nothing due" is written in five-minute slots (§NNN); beyond it, in
+ * hour-wide slots (`HOUR_SLOT_MINUTES`). A quiet of a day in five-minute slots would be 288 cache
+ * writes per real run; this way it is at most 12 + 27. The fine slots are the ones read first, so a
+ * run's own hour and the hour after it keep the five-minute precision a later run needs.
+ */
+export const FINE_SLOT_SPAN_MINUTES = 60;
+export const HOUR_SLOT_MINUTES = 60;
+const HOUR_SLOT_MS = HOUR_SLOT_MINUTES * MINUTE;
 
 /**
  * How much earlier than their boundary the cap and the minimum interval end — a whole number of
@@ -181,27 +225,30 @@ export function lastClubBoundary(at: Date, lengthMinutes: number): Date | null {
   return null;
 }
 
+/** Twenty-seven hours of pinger slots: the furthest window is a day, the gap and the autumn hour away. */
+const WINDOW_SEARCH_STEPS = (27 * 60) / PINGER_SLOT_MINUTES;
+
 /**
- * Where the safety cap ends after a run at `ranAt` (§355): two minutes before the latest top of
- * the hour on the club's clock that is at most sixty minutes after the run — the pinger's :00
- * call, whose wake the health monitor's :02 check shares. A run at 10:15 looks again at 11:00
- * (45 minutes), a run at 10:00:20 at 11:00.
+ * Where the safety look ends after a run at `ranAt` (§NNN, replacing §355's top of the hour): two
+ * minutes before the first 04:00 on the club's clock that is at least `DAILY_WINDOW_MIN_GAP_MINUTES`
+ * after the run — the pinger's 04:00 call, which then runs whichever side of the minute it lands.
+ * A run at 10:15 looks again at 04:00 tomorrow; a run at 03:30 (inside the gap) at 04:00 the day
+ * after; a run at 04:00:00.4 — the window's own — at 04:00 tomorrow, and so does one whose 04:00
+ * call landed a few hundred milliseconds early.
  *
- * - **Never later than §334's rule**, `ranAt + 60 − grace`: it is the minimum of the two, so
- *   every threshold measured against the cap (`health.ts`, `quiet-hours.ts`, the email health)
- *   holds exactly as it did.
- * - **The hour is looked for up to the grace past the sixty minutes**, so a run whose :00 call
- *   landed a few hundred milliseconds early still counts as that hour's run and is next due at
- *   the following :00, not at the :00 two minutes after it.
- * - **Always after `ranAt`**, and only minutes after it when the run itself came shortly before
- *   an hour: that call finds the database still awake from the run, and from it the job is on
- *   the hour.
+ * Always after `ranAt`, and never later than `SAFETY_LOOK_MAX_MINUTES` after it, through both
+ * daylight-saving changes (04:00 exists on each). The two-minute grace is §334's: the call on the
+ * boundary is the one that runs.
  */
-export function safetyCapEnd(ranAt: Date): Date {
-  const run = ranAt.getTime();
-  const plain = run + NEXT_DUE_CAP_MINUTES * MINUTE - GRACE_MS;
-  const hour = lastClubBoundary(new Date(run + NEXT_DUE_CAP_MINUTES * MINUTE + GRACE_MS), NEXT_DUE_CAP_MINUTES);
-  return new Date(hour === null ? plain : Math.min(plain, hour.getTime() - GRACE_MS));
+export function dailyWindowEnd(ranAt: Date): Date {
+  const from = ranAt.getTime() + DAILY_WINDOW_MIN_GAP_MINUTES * MINUTE;
+  const first = Math.ceil(from / PINGER_SLOT_MS) * PINGER_SLOT_MS;
+  for (let step = 0; step <= WINDOW_SEARCH_STEPS; step++) {
+    const candidate = first + step * PINGER_SLOT_MS;
+    if (clubMinuteOfDay(candidate) === DAILY_WINDOW_CLUB_MINUTE) return new Date(candidate - GRACE_MS);
+  }
+  // No zone the club could be in lacks a 04:00 for 27 hours; a day, as the fallback.
+  return new Date(ranAt.getTime() + 24 * 60 * MINUTE - GRACE_MS);
 }
 
 /**
@@ -236,6 +283,11 @@ export function slotStart(at: Date): Date {
   return new Date(Math.floor(at.getTime() / SLOT_MS) * SLOT_MS);
 }
 
+/** The start of the hour-wide slot `at` falls in (§NNN), UTC's hour — the key is an instant, not a wall clock. */
+export function hourSlotStart(at: Date): Date {
+  return new Date(Math.floor(at.getTime() / HOUR_SLOT_MS) * HOUR_SLOT_MS);
+}
+
 /**
  * Every slot a ping could fall in while it should still wait: from the slot of `from` to the
  * last slot that begins before `until`. Empty when `until` is not after `from`.
@@ -245,6 +297,23 @@ export function slotsBetween(from: Date, until: Date): Date[] {
   if (until.getTime() <= from.getTime()) return slots;
   for (let at = slotStart(from).getTime(); at < until.getTime(); at += SLOT_MS) slots.push(new Date(at));
   return slots;
+}
+
+/**
+ * Where a real run's "nothing due until" is written (§NNN): five-minute slots for the first
+ * `FINE_SLOT_SPAN_MINUTES` after the run, hour-wide slots from the hour that span ends in to the
+ * last hour that begins before `quietUntil`. A ping reads its five-minute slot first and its hour
+ * slot only when that is missing (`schedule-cache.ts#readDueSlot`), so the hours the fine slots
+ * cover never need their hour slot, and the hour the fine span ends in has both.
+ */
+export function dueSlotsFor(ranAt: Date, quietUntil: Date): { fine: Date[]; hours: Date[] } {
+  const fineUntil = new Date(Math.min(quietUntil.getTime(), ranAt.getTime() + FINE_SLOT_SPAN_MINUTES * MINUTE));
+  const fine = slotsBetween(ranAt, fineUntil);
+  const hours: Date[] = [];
+  if (quietUntil.getTime() > fineUntil.getTime()) {
+    for (let at = hourSlotStart(fineUntil).getTime(); at < quietUntil.getTime(); at += HOUR_SLOT_MS) hours.push(new Date(at));
+  }
+  return { fine, hours };
 }
 
 /** The slots a lookback of `horizonMs` ending at `now` touches, newest first. */
@@ -271,9 +340,8 @@ export type QuietPlan = {
  * - `nextWorkAt` is the earliest instant the job will have something to do, from the database
  *   (`next-work.ts`); null when nothing at all is waiting. It is never aligned (§355): before it
  *   there is nothing to do, and after it the next ping runs.
- * - The cap ends on the pinger's top of the hour, at most an hour after the run
- *   (`safetyCapEnd`) — or where the minimum interval ends, when the Administrator chose one at
- *   least as long as the cap.
+ * - The cap ends at the daily window (`dailyWindowEnd`, §NNN) — or where the minimum interval
+ *   ends, if that is later (a run just before the window under a two-hour interval).
  * - The minimum interval ends on a boundary of its own length, never sooner than the interval
  *   (`minimumIntervalEnd`).
  * - A run that could not do everything (`failed`) promises nothing: the next ping tries again.
@@ -289,8 +357,8 @@ export function planQuiet(input: {
 }): QuietPlan {
   const ranAt = input.ranAt.getTime();
   const floorUntil = input.cadenceMinutes > 0 ? minimumIntervalEnd(input.ranAt, input.cadenceMinutes).getTime() : null;
-  const capAt =
-    floorUntil !== null && input.cadenceMinutes >= NEXT_DUE_CAP_MINUTES ? floorUntil : safetyCapEnd(input.ranAt).getTime();
+  const windowAt = dailyWindowEnd(input.ranAt).getTime();
+  const capAt = floorUntil !== null ? Math.max(floorUntil, windowAt) : windowAt;
   const next = input.nextWorkAt === null ? capAt : Math.min(input.nextWorkAt.getTime(), capAt);
   const quietUntil = input.failed ? ranAt : Math.max(next, ranAt);
   return {

@@ -115,11 +115,12 @@ async function register(event: EventForRegistration, changes: Partial<typeof reg
 }
 
 describe("BR-REQ-090-03 criterion 10 the maintenance job's next work, duty by duty", () => {
-  it("is nothing on an empty database, which the plan caps at an hour", async () => {
+  it("is nothing on an empty database, which the plan caps at the daily window (§NNN)", async () => {
     const next = await nextMaintenanceWork(db, NOW);
     expect(next).toBeNull();
+    // 13:00 in Brașov: the next look is 04:00 tomorrow, fifteen hours on.
     expect(planQuiet({ ranAt: NOW, nextWorkAt: next, cadenceMinutes: 0, failed: false }).quietUntil).toEqual(
-      new Date(NOW.getTime() + HOUR - PLAN_GRACE_MINUTES * MINUTE),
+      new Date(NOW.getTime() + 15 * HOUR - PLAN_GRACE_MINUTES * MINUTE),
     );
   });
 

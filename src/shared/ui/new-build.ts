@@ -34,6 +34,22 @@ export const BUILD_ENDPOINT = "/api/build-id";
 export const POLL_INTERVAL_MS = 60_000;
 
 /**
+ * Whether a tab on `pathname` asks on a timer at all (§NNN): only the backoffice — `/<locale>/admin`
+ * and `/<locale>/devs` — and only while it is visible (the island clears the timer when hidden).
+ *
+ * The owner, 2026-09-29: «dacă site-ul stă în idle nu vreau să consum nimic!». A public page left
+ * open on a phone asked every minute, 1 440 requests a day for one tab — CDN hits, not functions,
+ * but edge requests and bandwidth all the same, for a reader who may never look at the tab again.
+ * A public tab now asks only when it becomes visible again — the moment a person is back and could
+ * be told — and never on a timer. Staff keep the minute: they are the ones in a form while the club
+ * deploys, and the editor and the desk are where a stale build costs work.
+ */
+export function pollsForNewBuild(pathname: string | null | undefined): boolean {
+  const [, second] = (pathname ?? "").split("/").filter(Boolean);
+  return second === "admin" || second === "devs";
+}
+
+/**
  * How long the answer is given before the attempt is abandoned.
  *
  * Three seconds. A hanging request must never wedge the check: without a deadline one stalled

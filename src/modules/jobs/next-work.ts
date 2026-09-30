@@ -18,11 +18,13 @@ import type { JobName } from "./schedule";
  * run that has it awake (§334) — the other half of `schedule.ts`.
  *
  * Each duty below mirrors the query of the job that performs it, and names it. A duty missing
- * here is not a wrong answer, it is a late one: the cap in `planQuiet` looks for real within the
- * hour whatever this says. The sweeps measured in days — the retention windows (`retention.ts`,
- * `DECISIONS.md` §45, §95), the orphaned pictures (§73), the standing series to the club's series horizon (§377)
- * (§122) — are left to the cap on purpose: an hour late on a seven-day window is nothing, and a
- * query to say so would be one more thing to keep in step.
+ * here is not a wrong answer, it is a late one: the cap in `planQuiet` is the daily window
+ * (`schedule.ts#dailyWindowEnd`, §NNN), so the job looks for real at 04:00 in Brașov whatever this
+ * says, and a forgotten duty is at most a day late. The sweeps measured in days — the retention
+ * windows (`retention.ts`, `DECISIONS.md` §45, §95), the orphaned pictures (§73), the standing
+ * series to the club's series horizon (§377) (§122) — are left to the window on purpose: they run
+ * at 04:00, a day on a seven-day window is nothing, and a query to say so would be one more thing
+ * to keep in step.
  */
 
 type AnyDb = Database<Record<string, unknown>>;

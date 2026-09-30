@@ -45,7 +45,8 @@ yarn db:migrate   apply migrations locally · db:seed sample events · db:studio
 yarn db:seed:legal  the sample legal documents alone; never deletes, safe on a live database
 yarn db:migrate:env  apply migrations to local|qa|production — the only supported way to
                   migrate a deployed database (AGENTS.md §7.6, DECISIONS.md §31)
-yarn smoke        ask a deployment's /api/health whether it works; ends every deploy
+yarn smoke        ask a deployment's /api/health?deep=1 whether it works; ends every deploy
+yarn idle:measure  Neon's wakes and Vercel's requests while nobody visited (docs/PLATFORM.md § Idle cost)
 yarn release      versioned archive and share copies under dist/
 yarn batch:merge  merge branches into the one checked out; the journal, catalogues and tests by rule
 yarn docs:land    land a batch's documents: a dispatcher's manifest, or `--tree` for the branch's

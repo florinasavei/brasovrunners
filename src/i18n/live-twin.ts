@@ -1,3 +1,4 @@
+import { activeFilterCount, parseListingFilter } from "@/modules/events/domain/listing-filter";
 import { DEV_STAFF_COOKIE } from "@/modules/staff-identity/dev-staff-cookie";
 import { PREFETCHED_PATHNAMES } from "./prefetch";
 
@@ -26,19 +27,40 @@ import { PREFETCHED_PATHNAMES } from "./prefetch";
 /** The first segment of every twin under the locale: `/ro/live/events/…`. Never linked, never in the sitemap. */
 export const LIVE_SEGMENT = "live";
 
-/**
- * Query keys that no page reads — added by whoever shared the link, not by the site — and that must
- * therefore not turn a cached page into a rendered one. `_rsc` is Next's own cache-busting key on a
- * client navigation; it never selects different content.
- */
-const IGNORED_QUERY_KEYS: ReadonlySet<string> = new Set(["_rsc", "fbclid", "gclid", "msclkid", "igshid", "mc_cid", "mc_eid", "ref"]);
+/*
+  What each page asks of its address, read the way the page reads it (§NNN, amending §549).
 
-function asksSomething(search: URLSearchParams): boolean {
-  for (const key of search.keys()) {
-    if (IGNORED_QUERY_KEYS.has(key) || key.startsWith("utm_")) continue;
-    return true;
-  }
-  return false;
+  §549 sent every key outside a short list of share keys (`fbclid`, `utm_*`, Next's `_rsc`, …) to a
+  twin, so `?foo=1`, `?page=2`, a scanner's `?s=` or a filter that names nothing (`?type=FOO`) was a
+  function render of exactly the page the CDN holds — measured on production, 2026-09-30:
+  `/ro/evenimente?foo=1` and `?page=2` answered from `/[locale]/live/events`, `private, no-store`,
+  a MISS each time. The rule is now the page's own: a twin only when what the page would read from
+  the address changes what it shows.
+
+  - **The listing**: a filter that ticks something (`parseListingFilter`, §413 — the same parser the
+    page runs, so a value it drops is dropped here too) or the list layout (`?view=list`, first value,
+    as the page reads it).
+  - **The bare calendar**: the same filters, and its old `?month=`, `?year=`, `?view=` should one get
+    past the proxy's redirect to the period's path (§NNN, the calendar's own).
+  - **A calendar period's path**: the filters.
+  - **An event page**: its four keys, whatever their value — the start list's page (`?lista=`, §250),
+    the interest box's outcome and its timing (`?interest=`, `?since=`, §146) and the signer's link
+    (`?declaratie=`, §523), which the page judges itself.
+*/
+/** An event page's own questions: the keys `EventDetailPage` reads. */
+const EVENT_PAGE_KEYS = ["lista", "interest", "since", "declaratie"] as const;
+/** The bare calendar's keys from before its period moved into the path: its twin still reads them. */
+const LEGACY_CALENDAR_KEYS = ["month", "year", "view"] as const;
+
+function asParams(search: URLSearchParams): Record<string, string[]> {
+  const params: Record<string, string[]> = {};
+  for (const [key, value] of search) (params[key] ??= []).push(value);
+  return params;
+}
+
+/** Whether the address ticks any filter the listing and the calendar offer (§413). */
+function asksAFilter(search: URLSearchParams): boolean {
+  return activeFilterCount(parseListingFilter(asParams(search))) > 0;
 }
 
 /**
@@ -54,15 +76,21 @@ export function mayBeSignedIn(cookieNames: Iterable<string>): boolean {
   return false;
 }
 
-type Twin = { pattern: RegExp; signedIn: boolean };
+type Twin = {
+  pattern: RegExp;
+  /** Whether a session sends a visitor there (the staff edit button, §135). */
+  signedIn: boolean;
+  /** Whether this address asks the page something the static copy cannot answer. */
+  asks: (search: URLSearchParams) => boolean;
+};
 
-/** The internal paths (after next-intl's rewrite) that have a twin, and whether a session sends a visitor there. */
+/** The internal paths (after next-intl's rewrite) that have a twin, and what sends a visitor there. */
 const TWINS: readonly Twin[] = [
-  { pattern: /^\/(ro|en)\/events$/, signedIn: false },
-  { pattern: /^\/(ro|en)\/calendar$/, signedIn: false },
+  { pattern: /^\/(ro|en)\/events$/, signedIn: false, asks: (search) => asksAFilter(search) || search.get("view") === "list" },
+  { pattern: /^\/(ro|en)\/calendar$/, signedIn: false, asks: (search) => asksAFilter(search) || LEGACY_CALENDAR_KEYS.some((key) => search.has(key)) },
   // A period's own path (`/ro/calendar/2026-10`, §574): static too, and a filter on it is its twin.
-  { pattern: /^\/(ro|en)\/calendar\/.+$/, signedIn: false },
-  { pattern: /^\/(ro|en)\/events\/[^/]+$/, signedIn: true },
+  { pattern: /^\/(ro|en)\/calendar\/.+$/, signedIn: false, asks: asksAFilter },
+  { pattern: /^\/(ro|en)\/events\/[^/]+$/, signedIn: true, asks: (search) => EVENT_PAGE_KEYS.some((key) => search.has(key)) },
 ];
 
 /**
@@ -101,6 +129,31 @@ export function isStaticPublicAnswer(internalPathname: string, search: URLSearch
 }
 
 /**
+ * Whether this request is the App Router's prefetch rather than a visit or a navigation (§NNN):
+ * Next marks every prefetch it sends with `Next-Router-Prefetch`, and the per-segment ones with
+ * `Next-Router-Segment-Prefetch` too (Next 16.3, `app-router-headers`). A navigation carries `RSC`
+ * alone; a document request carries neither.
+ */
+export function isRouterPrefetch(headers: Headers): boolean {
+  return headers.has("next-router-prefetch") || headers.has("next-router-segment-prefetch");
+}
+
+/**
+ * What the proxy answers a prefetch that a twin would have to render (§NNN): nothing, `204`, and
+ * never kept by anybody.
+ *
+ * Next prefetches every link in view whose `prefetch` is left to it, and `prefetchFor` leaves it
+ * only to a static page at its bare address (§549). For a stranger that is a CDN hit. For a
+ * signed-in reader the same bare event link is a twin (the edit button, §135), so every event card
+ * in view on the listing started a per-request render of that event, for a click that mostly never
+ * came. A prefetch answered without a body is one Next's router drops (`fetchPrefetchResponse` reads
+ * no Flight answer, the route entry is rejected for ten seconds), and a press then fetches the page
+ * as a navigation — through this proxy, to the twin, edit button and all. Only the prefetch is
+ * declined: the visit, the navigation and every stranger's prefetch are exactly as before.
+ */
+export const DECLINED_PREFETCH_STATUS = 204;
+
+/**
  * The twin's internal path for this request, or null when the static page answers it.
  *
  * `internalPathname` is the route's own path — `/ro/events/crosul`, not `/ro/evenimente/crosul` —
@@ -109,7 +162,7 @@ export function isStaticPublicAnswer(internalPathname: string, search: URLSearch
 export function liveTwinPathname(internalPathname: string, search: URLSearchParams, signedIn: boolean): string | null {
   const twin = TWINS.find(({ pattern }) => pattern.test(internalPathname));
   if (!twin) return null;
-  if (!asksSomething(search) && !(twin.signedIn && signedIn)) return null;
+  if (!twin.asks(search) && !(twin.signedIn && signedIn)) return null;
   const [, locale, ...rest] = internalPathname.split("/");
   return `/${locale}/${LIVE_SEGMENT}/${rest.join("/")}`;
 }

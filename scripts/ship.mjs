@@ -98,9 +98,14 @@ function productionUrl() {
   stop("set SHIP_PRODUCTION_URL (production's origin) in the environment or in .env.local");
 }
 
-async function health(base) {
+/**
+ * Production's `/api/health`. Shallow by default since §NNN — the build and the configuration, no
+ * database — so the polls below, every 20 to 30 seconds while a release is on its way, wake
+ * nothing. `deep` asks for the full report once, after the flip, to say how the site is.
+ */
+async function health(base, { deep = false } = {}) {
   try {
-    const response = await fetch(new URL("/api/health", base), { signal: AbortSignal.timeout(15_000) });
+    const response = await fetch(new URL(deep ? "/api/health?deep=1" : "/api/health", base), { signal: AbortSignal.timeout(15_000) });
     return await response.text();
   } catch {
     return "";
@@ -257,6 +262,8 @@ const live = await until(async () => {
   return body.includes(`"${NEW}`) ? body : null;
 }, 20, 60);
 if (!live) stop(`production did not report ${NEW} in time — check the Vercel deployment`);
-console.log(`production: ${live.match(/"status":"[a-z]+"/)?.[0] ?? "?"} ${NEW}`);
+// One deep call, now that the new build answers: the database, the schema and the jobs (§NNN).
+const report = (await health(BASE, { deep: true })) || live;
+console.log(`production: ${report.match(/"status":"[a-z]+"/)?.[0] ?? "?"} ${NEW}`);
 clock.end();
 measured("released");

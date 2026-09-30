@@ -33,7 +33,9 @@ vi.mock("@/shared/config/build-info", () => ({
 }));
 
 const { fakeNextCache } = await import("../../helpers/next-cache");
-const { GET } = await import("@/app/api/health/route");
+const healthRoute = await import("@/app/api/health/route");
+/** The full report (§NNN): these cases are about what the deep answer asks and says. */
+const GET = () => healthRoute.GET(new Request("http://localhost/api/health?deep=1"));
 
 const T0 = new Date("2026-10-20T10:01:00.000Z");
 const MINUTE = 60_000;

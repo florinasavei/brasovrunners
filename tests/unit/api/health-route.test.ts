@@ -37,7 +37,9 @@ vi.mock("@/shared/config/build-info", () => ({
   buildInfo: { baseline: "BR-V1.43-2026-09-21", commit: "7c6ca38", committedAt: "2026-09-22T10:00:00.000Z" },
 }));
 
-const { GET } = await import("@/app/api/health/route");
+const healthRoute = await import("@/app/api/health/route");
+/** The full report (§NNN): these cases are about what the deep answer asks and says. */
+const GET = () => healthRoute.GET(new Request("http://localhost/api/health?deep=1"));
 
 /** What the driver actually throws: the statement, and the host it could not reach. */
 const PROVIDER_ERROR = new Error(

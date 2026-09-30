@@ -4,15 +4,14 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import Script from "next/script";
 import { getTranslations } from "next-intl/server";
 import { registerInterestAction } from "@/app/[locale]/events/[slug]/actions";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { INTEREST_BOX_ID, type InterestOutcome } from "../interest-box";
-import { TURNSTILE_SCRIPT_URL } from "../domain/turnstile-widget";
 import { turnstileSiteKey } from "../turnstile";
+import BotCheck from "./BotCheck";
 
 /**
  * "Anunță-mă când se deschid înscrierile" (`DECISIONS.md` §146): one address, one button, one
@@ -89,11 +88,16 @@ export default async function RegistrationInterestForm({
               error={outcome === "invalid"}
             />
 
-            {/* Cloudflare Turnstile, when the club switched it on (§97). */}
+            {/*
+              Cloudflare Turnstile, when the club switched it on (§97) — the same explicit widget as
+              every other form (§185, §518), which loads nothing until the person starts on this
+              form (§NNN). It was Cloudflare's implicit mode here, its script loaded on every view
+              of an event page that shows the box: a third-party request per stranger on a page
+              the CDN otherwise answers alone.
+            */}
             {siteKey && (
               <Box>
-                <div className="cf-turnstile" data-sitekey={siteKey} data-language={locale} />
-                <Script src={TURNSTILE_SCRIPT_URL} async defer strategy="afterInteractive" />
+                <BotCheck siteKey={siteKey} locale={locale} attempt={renderedAt.toISOString()} />
                 {/* The sentence the registration and contact forms carry under their check (§323). */}
                 <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
                   {legal("botCheckNotice")}
