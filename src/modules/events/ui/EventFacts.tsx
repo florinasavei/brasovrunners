@@ -407,8 +407,11 @@ export default async function EventFacts({
   };
   // «Ora startului cursei se anunță.» — under the page's and the hero's «Când», once, while a race's
   // gun time is not set (§590); the card says the start alone.
+  // A race with no race start says «10:00 (start eveniment)» (#305): longer than the one-line row of §375 allows on a
+  // phone, so that row may wrap between its whole pieces rather than let the card's overflow clip the time.
+  const raceStartLater = startsAt !== null && whenTimes({ type: event.type, startsAt, raceStartsAt: event.raceStartsAt }).raceStartLater;
   const raceStartNote =
-    startsAt !== null && whenTimes({ type: event.type, startsAt, raceStartsAt: event.raceStartsAt }).raceStartLater ? (
+    raceStartLater ? (
       <Typography component="div" variant="body2" color="text.secondary" data-testid="race-start-later">
         {t("raceStartLater")}
       </Typography>
@@ -692,7 +695,7 @@ export default async function EventFacts({
             a race's gathering and start time, or a date that keeps its year on a phone (no
             `dateShort`: past, or more than a year out), may still wrap between whole pieces rather
             than be clipped (§366, amended §375). */}
-        {cardLine("when", CalendarMonthIcon, flow(whenPieces(CLOCK_SX, true), { lead: whenLead, wrap: !!event.raceStartsAt || (compact && !dateShort), tight: !!event.raceStartsAt }))}
+        {cardLine("when", CalendarMonthIcon, flow(whenPieces(CLOCK_SX, true), { lead: whenLead, wrap: !!event.raceStartsAt || (compact && !dateShort) || raceStartLater, tight: !!event.raceStartsAt }))}
         {place && cardLine("where", PlaceIcon, place)}
         {/* A group of its own, so a group's gap above it rather than a line's (§366). */}
         {pillsRow && (
