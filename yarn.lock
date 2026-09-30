@@ -1759,6 +1759,33 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@maskito/core@npm:5.6.0":
+  version: 5.6.0
+  resolution: "@maskito/core@npm:5.6.0"
+  checksum: 10c0/0242ddcfed0a9272f6822d999af7dab6633208bd0eb11c6d832eb27ea25ebfd92006e5232aa3caf05efa38900edc9f104bfcd6ada3c5822e74ee4384fbd1099e
+  languageName: node
+  linkType: hard
+
+"@maskito/kit@npm:5.6.0":
+  version: 5.6.0
+  resolution: "@maskito/kit@npm:5.6.0"
+  peerDependencies:
+    "@maskito/core": ^5.6.0
+  checksum: 10c0/d046c160e7407f1ee1fb81da52cfad77a1adac9ab19a03659f8459d8464f30512bfd2b280b5eeb6ab70fc390398b55b92fd9b1439776d56c38630b99b61962ad
+  languageName: node
+  linkType: hard
+
+"@maskito/react@npm:5.6.0":
+  version: 5.6.0
+  resolution: "@maskito/react@npm:5.6.0"
+  peerDependencies:
+    "@maskito/core": ^5.6.0
+    react: ">=16.8"
+    react-dom: ">=16.8"
+  checksum: 10c0/08c1f2352a95007e64eb78e3d8a494ef0dbafd8a81f48678b45534787bcd00156f2516b1ecdf35da840a8e3822055f97a79be71bd45514c397e18a4747d758d1
+  languageName: node
+  linkType: hard
+
 "@mui/core-downloads-tracker@npm:^9.4.0":
   version: 9.4.0
   resolution: "@mui/core-downloads-tracker@npm:9.4.0"
@@ -3833,6 +3860,9 @@ __metadata:
     "@emotion/react": "npm:11.14.0"
     "@emotion/server": "npm:11.11.0"
     "@emotion/styled": "npm:11.14.1"
+    "@maskito/core": "npm:5.6.0"
+    "@maskito/kit": "npm:5.6.0"
+    "@maskito/react": "npm:5.6.0"
     "@mui/icons-material": "npm:9.4.0"
     "@mui/material": "npm:9.4.0"
     "@mui/material-nextjs": "npm:9.4.0"

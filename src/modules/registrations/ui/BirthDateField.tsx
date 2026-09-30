@@ -1,9 +1,11 @@
 "use client";
 
+import { useMaskito } from "@maskito/react";
 import TextField from "@mui/material/TextField";
-import { useEffect, useRef, useState } from "react";
+import { type FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { readTypedDate, shownTypedDate, TYPED_DATE_PATTERN } from "@/shared/forms/pickers/wall-values";
 import { birthDateEchoText } from "./birth-date-echo";
+import { birthDateMaskOptions } from "./birth-date-mask";
 
 export type BirthDateFieldProps = {
   id: string;
@@ -101,6 +103,16 @@ export function birthDateHelper({
  *   «Mai lipsesc:» list (`SubmitButton`, measured after the paint) names the box at once.
  * - **Under the minimum age it says so** (`birthDateHelper`): the rule's sentence in red above
  *   the date in words, as soon as a whole date is typed, and after the server's refusal.
+ * - **It masks what is typed** (§NNN, the owner, 2026-09-30: «ar trebui să am input mask»):
+ *   digits only, the dots put in by the box — «11» is «11.», «11051990» is «11.05.1990» — a
+ *   digit typed in the middle taking the place of the one there, a backspace over a dot taking
+ *   the digit before it, and a pasted «11/05/1990» or `1990-05-11` shown in the mask. The mask is Maskito's
+ *   (`useMaskito`, with the options of `birth-date-mask.ts`), attached to the uncontrolled input:
+ *   it writes the masked text before the `input` event reaches our `onInput` and the islands that
+ *   read the box by its id. `onInput`, not `onChange`, as Maskito's React guide says: when the
+ *   mask rewrites the text («11» to «11.»), React's own value tracker already holds the new text
+ *   and fires no `onChange`, so the date in words would lag a keystroke behind. Without
+ *   JavaScript the box is the plain text box above, and the server reads what it posts.
  *
  * Uncontrolled: whatever was typed before the island hydrated stays in the box (§211's lesson).
  * `GuardianForMinor`, `HiddenForMinor` read the same input by its id (`useBirthDateValue`,
@@ -127,7 +139,16 @@ export default function BirthDateField({
 }: BirthDateFieldProps) {
   const drawn = shownTypedDate(defaultValue);
   const [text, setText] = useState(drawn);
-  const input = useRef<HTMLInputElement>(null);
+  const input = useRef<HTMLInputElement | null>(null);
+  const mask = useMaskito({ options: birthDateMaskOptions });
+  // One ref for both: ours for the custom validity, Maskito's to mask the input it is given.
+  const inputRef = useCallback(
+    (node: HTMLInputElement | null) => {
+      input.current = node;
+      mask(node);
+    },
+    [mask],
+  );
   const validity = birthDateValidity(text, min, max, { unreadable, tooYoung });
   // The desk's bounds move with the event select; the keystroke's own handler covers the rest.
   useEffect(() => {
@@ -156,11 +177,7 @@ export default function BirthDateField({
       required={required}
       error={red}
       autoComplete={autoComplete}
-      inputRef={input}
-      onChange={(event) => {
-        event.target.setCustomValidity(birthDateValidity(event.target.value, min, max, { unreadable, tooYoung }));
-        setText(event.target.value);
-      }}
+      inputRef={inputRef}
       onBlur={(event) => {
         const shown = shownTypedDate(event.target.value.trim());
         if (shown === event.target.value) return;
@@ -188,9 +205,15 @@ export default function BirthDateField({
           inputMode: "numeric",
           pattern: TYPED_DATE_PATTERN,
           placeholder,
-          maxLength: 10,
+          // No `maxLength`: the mask keeps eight digits, and a paste with spaces around it is read whole.
           "data-min": min,
           "data-max": max,
+          // After Maskito's own `input` listener: the text read here is the masked one.
+          onInput: (event: FormEvent<HTMLInputElement>) => {
+            const box = event.currentTarget;
+            box.setCustomValidity(birthDateValidity(box.value, min, max, { unreadable, tooYoung }));
+            setText(box.value);
+          },
         },
       }}
     />
