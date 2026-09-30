@@ -452,7 +452,7 @@ async function renderRow(
     const holdEndsAt = registration.holdExpiresAt;
     const due = eventDetails ? { at: holdEndsAt, startsAt: eventDetails.startsAt } : null;
     const dated = (inLocale: Locale) => {
-      const formatted = formatInSentence(holdEndsAt, holdZone, inLocale);
+      const formatted = formatDeadlineInSentence(holdEndsAt, holdZone, inLocale);
       return due ? confirmationDueMoment(inLocale, due, formatted) : formatted;
     };
     data.holdExpiresAtFormatted = dated(locale);
@@ -1290,6 +1290,15 @@ function formatEventStart(event: { startsAt: Date; timezone: string } | undefine
 /** The long form with its time, inside a sentence of a message (§349). */
 function formatInSentence(at: Date, timeZone: string, locale: Locale): string {
   return formatDay(at, { locale, timeZone, style: "long", withTime: true, position: "inline" });
+}
+
+/**
+ * A deadline to act by, inside a sentence (§NNN; the owner, 2026-09-30: more bold in the emails):
+ * the month spelled out — "vineri, 2 octombrie 2026, la 18:30" / "Friday, 2 October 2026, at 18:30"
+ * — so the one date a runner must not miss reads whole, never as "2 oct.".
+ */
+export function formatDeadlineInSentence(at: Date, timeZone: string, locale: Locale): string {
+  return formatDay(at, { locale, timeZone, style: "long", month: "long", withTime: true, position: "inline" });
 }
 
 /**
