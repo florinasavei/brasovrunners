@@ -62,6 +62,14 @@ function caretAfterDigits(text: string, count: number): number {
 
 export type BirthDateEdit = { text: string; caret: number };
 
+/** `raw` is `previous` with one stretch taken out and nothing put in: what a deletion leaves, and a paste does not. */
+function isCutFrom(raw: string, previous: string): boolean {
+  if (raw.length >= previous.length) return false;
+  let head = 0;
+  while (head < raw.length && raw[head] === previous[head]) head += 1;
+  return raw.slice(head) === previous.slice(previous.length - (raw.length - head));
+}
+
 /**
  * One edit of the box, masked: `raw` is what the browser now holds, `caret` its selection end,
  * `previous` what the box showed before (the mask's own last text), and `inputType` the
@@ -87,8 +95,9 @@ export function maskBirthDate(raw: string, caret: number, previous: string, inpu
     }
   }
   // A digit taken out of the middle leaves «1.05.1990», which reads as a whole date: a deletion only shifts the digits.
-  // (A paste over a selection may be shorter too: the event's own word decides when there is one.)
-  const deleting = inputType ? inputType.startsWith("delete") : raw.length < previous.length;
+  // A paste over a selection may be shorter too: the event's own word decides when there is one, and without it
+  // (a keyboard or webview that sends none) only a text that is the old one with a stretch cut out is a deletion.
+  const deleting = inputType ? inputType.startsWith("delete") : isCutFrom(raw, previous);
   const text = birthDateMasked(deleting ? raw.replace(/\D/g, "").slice(0, MAX_DIGITS) : birthDateDigits(raw));
   // A paste of a whole date, a padded separator, or a caret at the end: the caret goes to the end.
   const whole = !deleting && (ISO_SHAPE.test(raw) || WHOLE_DAY_FIRST.test(raw));

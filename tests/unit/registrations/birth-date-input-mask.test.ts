@@ -192,6 +192,17 @@ describe("§NNN a pasted date is read whole and shown in the mask", () => {
     expect(state.value).toBe("05.11.1990");
   });
 
+  it("a shorter date pasted with no inputType (a keyboard that sends none) is still a paste", () => {
+    const state: MaskedBox = { value: "5.6.1990", selectionEnd: 8, setSelectionRange() {} };
+    expect(applyBirthDateMask(state, "11.05.1990", "")).toBe("05.06.1990");
+    expect(state.value).toBe("05.06.1990");
+  });
+
+  it("with no inputType, a digit cut from the middle is still a deletion, not a whole date", () => {
+    expect(maskBirthDate("1.05.1990", 0, "11.05.1990", "").text).toBe("10.51.990");
+    expect(maskBirthDate("11.05.199", 9, "11.05.1990", "").text).toBe("11.05.199");
+  });
+
   it("the digits and the mask on their own", () => {
     expect(birthDateDigits("1990-5-1")).toBe("01051990");
     expect(birthDateDigits("abc")).toBe("");
