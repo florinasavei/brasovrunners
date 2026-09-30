@@ -10,6 +10,7 @@ import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { INTEREST_BOX_ID, type InterestOutcome } from "../interest-box";
+import { BOT_CHECK_SLOT_SX } from "../domain/turnstile-widget";
 import { turnstileSiteKey } from "../turnstile";
 import BotCheck from "./BotCheck";
 
@@ -35,7 +36,6 @@ export default async function RegistrationInterestForm({
   outcome: InterestOutcome | null;
 }) {
   const t = await getTranslations("Event");
-  const legal = await getTranslations("Legal");
   const siteKey = turnstileSiteKey();
 
   return (
@@ -96,12 +96,9 @@ export default async function RegistrationInterestForm({
               the CDN otherwise answers alone.
             */}
             {siteKey && (
-              <Box>
-                <BotCheck siteKey={siteKey} locale={locale} attempt={renderedAt.toISOString()} />
-                {/* The sentence the registration and contact forms carry under their check (§323). */}
-                <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
-                  {legal("botCheckNotice")}
-                </Typography>
+              <Box sx={BOT_CHECK_SLOT_SX}>
+                {/* Cloudflare's sentence (§323) comes with the widget, and the box takes no room before it (§NNN). */}
+                <BotCheck siteKey={siteKey} locale={locale} attempt={renderedAt.toISOString()} notice />
               </Box>
             )}
 
