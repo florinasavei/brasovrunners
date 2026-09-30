@@ -9,20 +9,39 @@ Legend: **building** — a change is being implemented, reviewed and fixed on it
 **ready** — reviewed, waiting for the next small release · **waiting on the owner** — a
 decision or a click only the club can make · **released** — on production, with its baseline.
 
-## Release plan (2026-09-28, morning)
+## Release plan (2026-09-30, evening — the owner is away from 2026-10-01 noon and works from the phone)
 
-What the next release carries. A line moves to «Released» below when its baseline is on production. `BR-V2.13` to `BR-V2.17` landed on 2026-09-28 (00:05–10:45); production and QA run `BR-V2.17` on schema `0104`; `BR-V2.18` brings `0105`.
+Where things stand at the end of 2026-09-30, written so that a session with no access to the laptop can carry on
+(the dispatcher's own notes lived under `D:/tmp/handoff/` on the laptop; from here on this page is the queue).
 
-### BR-V2.18 — today (the owner, from the phone)
+- **Production:** `BR-V2.46` (released 16:49). **qa and QA:** `BR-V2.47` (#302, 21:14) and `BR-V2.48` (#303) once its
+  checks are green — the two carry §585–§593: «estimativ» beside the elevation, the preview's «Formular» tab, the full
+  race's thank-you and its counts, one click confirms the whole family and «Retrimite familiei», «Dă-i un loc» explained
+  before and after the press, an undefined race start, the members' link in the footer, the contact form's one-line note
+  and no gap before the anti-bot check, the README in English.
+- **The release** is the owner's «ok release» after checking QA: from the phone, the label `ship` on the last batch PR into
+  qa runs the landing and the release on GitHub Actions (`docs/RUNBOOKS.md` § Every release: the label); from a PC,
+  `node scripts/ship.mjs <batch PR> BR-V2.48-2026-09-27 BR-V2.46-2026-09-27 "<title>"`. No migration is due
+  after `0115` (the elevation tick, in `BR-V2.47`).
+- **Decided today, recorded in the sections:** a full race never gets a place from the desk — raise the capacity first
+  (§589, §592); the address is confirmed for all or for none, the declaration per person, a cancellation per person
+  (§588, §592); «Retrimite familiei» sends one email for the family's earliest step; the site costs as little as possible
+  (§577: one daily window at 04:00, a shallow health check, the anti-bot check on touch).
+- **How a change is made** (`docs/DISPATCHER.md`): one branch per change, a brief, an adversarial review, the
+  `.release/<branch>.json` entry, one batch PR into qa a day, `yarn check` before the push, e2e in CI only.
+  The owner's standing words: plain words, both languages or neither, a glyph on every button and fold, free tiers,
+  fewer CI runs, fewer tests («cut the bullshit and tests»), no Romanian in the README.
 
-- **An event published before its date or its time is known** — «Data se anunță mai târziu» / «Ora se anunță mai târziu» in «Când și unde»; the site says «Data se anunță în curând» (or the day with «Ora se anunță în curând»), the listing's own «Data sau ora se anunță» section, registration «în curând», nothing in the calendar, the feed or the .ics; migration `0105` (§533).
+### Follow-ups, in order (none blocks the race)
 
-### BR-V2.19 — next
-
-- **A form's email is never held before «Da»** — the family sitting begins on «Da, încă o persoană»; the screen after the form asks one question and states one true time; the emails say what to press.
-- **The group-run declaration template** after the owner's second counsel pass.
-- **A release from the phone** — the label `ship` on a PR into qa runs the landing and the release on GitHub Actions; `.release/<branch>.json` carries a change's facts.
-
+- `yarn npm audit` leftovers: `esbuild` 0.18 through `drizzle-kit`, ESLint 9.39's end of support — major upgrades of two
+  dev dependencies, each its own change, after the owner's yes (§584).
+- `scripts/land-batch.mjs`: a `§NNN` line written by a merge commit should be listed for hand numbering instead of
+  taking one entry's number (the `BR-V2.44` landing gave §577 to two merge lines; corrected in §582).
+- Measure Neon after §577: `yarn idle:measure` on production on 2026-10-01 (5.7 CU-hours a day before it); the
+  cron-job.org job pings are the next suspect if it does not fall below 2.
+- After the 21 November race: Vercel production back from Pro to Hobby (moved to Pro on 2026-09-30 for the function
+  quota).
 ## Building
 
 Since the evening of 2026-09-24 at most four changes are built at once: eleven in parallel exhausted the development machine and every run had to be recovered.
@@ -59,6 +78,10 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 | The 21 November race on production | `SETUP.md` §39, field by field; the club decides the places and the confirmation window |
 | Volunteer accounts for race day | «Echipa» → «Adaugă o persoană», and a rehearsal on QA |
 | QA's Neon cap | 30 CU-hours may run out late in a month of heavy testing (QA only); raise it if that matters |
+| Two daily deep health monitors (§577) | cron-job.org: `GET /api/health?deep=1` on production and on QA at 04:02, notifications on failure — the hourly health check is shallow now and no longer sees a stalled outbox; the steps are on `/admin/tasks` |
+| The privacy notice from the new template, on production | `/admin/legal` → the notice → «Versiune nouă» → «Pornește de la șablon» → approve: until then «Descarcă lista pentru sponsori» refuses (§570), and the newsletter and the members' zone are not described |
+| Vercel back to Hobby | after the 21 November race: production was moved to Pro on 2026-09-30 (the function quota) |
+| Two major upgrades (dev tooling) | say yes or no: `drizzle-kit` (drops the old `esbuild` audit line) and ESLint 10 (9.39 is past support) — §584 |
 
 ## Later
 
