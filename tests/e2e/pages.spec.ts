@@ -257,7 +257,16 @@ test.describe.serial("BR-REQ-050-03 standing pages", () => {
     // The public menu's first entry is the page now, before «Evenimente»; no rule between the groups.
     await page.goto(`/ro/pagini/${slug}`, { waitUntil: "networkidle" });
     const nav = page.getByRole("navigation", { name: "Navigare principală" });
-    await expect(nav.getByRole("link").first()).toHaveText(title);
+    // On a phone the row may fold every entry into «Meniu» (a long title first does not fit at 320 px),
+    // so the first entry is read from the row when it has one, otherwise from the menu.
+    const firstOnRow = nav.getByRole("link").first();
+    if ((await firstOnRow.count()) > 0 && (await firstOnRow.isVisible())) {
+      await expect(firstOnRow).toHaveText(title);
+    } else {
+      await nav.getByRole("button", { name: "Meniu" }).click();
+      await expect(page.getByRole("menuitem").first()).toHaveText(title);
+      await page.keyboard.press("Escape");
+    }
 
     // Back to the end, so the other specs meet the menu they expect.
     await page.goto("/ro/admin/pages");
