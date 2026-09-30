@@ -4,6 +4,7 @@ import TextField from "@mui/material/TextField";
 import { useEffect, useRef, useState } from "react";
 import { readTypedDate, shownTypedDate, TYPED_DATE_PATTERN } from "@/shared/forms/pickers/wall-values";
 import { birthDateEchoText } from "./birth-date-echo";
+import { applyBirthDateMask } from "./birth-date-mask";
 
 export type BirthDateFieldProps = {
   id: string;
@@ -101,6 +102,12 @@ export function birthDateHelper({
  *   «Mai lipsesc:» list (`SubmitButton`, measured after the paint) names the box at once.
  * - **Under the minimum age it says so** (`birthDateHelper`): the rule's sentence in red above
  *   the date in words, as soon as a whole date is typed, and after the server's refusal.
+ * - **It masks what is typed** (§NNN, the owner, 2026-09-30: «ar trebui să am input mask»):
+ *   digits only, the dots put in by the box — «11» is «11.», «11051990» is «11.05.1990» — with
+ *   the caret after the digit it followed, a backspace over a dot taking the digit before it, and
+ *   a pasted «11/05/1990» or `1990-05-11` shown in the mask (`birth-date-mask.ts`). The mask
+ *   writes into the uncontrolled input from the `input` event's handler; without JavaScript the
+ *   box is the plain text box above, and the server reads what it posts.
  *
  * Uncontrolled: whatever was typed before the island hydrated stays in the box (§211's lesson).
  * `GuardianForMinor`, `HiddenForMinor` read the same input by its id (`useBirthDateValue`,
@@ -158,8 +165,20 @@ export default function BirthDateField({
       autoComplete={autoComplete}
       inputRef={input}
       onChange={(event) => {
+        // Mid-composition (a keyboard that composes) the text is the keyboard's: masked at its end.
+        const native = event.nativeEvent as Partial<InputEvent>;
+        if (!native.isComposing) {
+          applyBirthDateMask(event.target, text, native.inputType ?? "", document.activeElement === event.target);
+        }
         event.target.setCustomValidity(birthDateValidity(event.target.value, min, max, { unreadable, tooYoung }));
         setText(event.target.value);
+      }}
+      onCompositionEnd={(event) => {
+        const box = event.currentTarget.querySelector("input");
+        if (!box) return;
+        applyBirthDateMask(box, text, "", document.activeElement === box);
+        box.setCustomValidity(birthDateValidity(box.value, min, max, { unreadable, tooYoung }));
+        setText(box.value);
       }}
       onBlur={(event) => {
         const shown = shownTypedDate(event.target.value.trim());
@@ -188,7 +207,7 @@ export default function BirthDateField({
           inputMode: "numeric",
           pattern: TYPED_DATE_PATTERN,
           placeholder,
-          maxLength: 10,
+          // No `maxLength`: the mask keeps eight digits, and a paste with spaces around it is read whole.
           "data-min": min,
           "data-max": max,
         },
