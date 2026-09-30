@@ -28,6 +28,7 @@ import { getDb } from "@/db/client";
 import {
   cachedAddressCap,
   cachedCurrentApprovedDocument,
+  cachedDeadlines,
   cachedFamilyRegistrationOpen,
   cachedListSocialsDisclosed,
   cachedListStatesDisclosed,
@@ -84,6 +85,7 @@ import { continueFamilySittingAction, releaseFamilySittingAction, submitRegistra
 import FamilySittingNext from "@/modules/registrations/ui/FamilySittingNext";
 import { afterFormScreen, FAMILY_SITTING_FIELD, SITTING_AT_CAP, sittingCookieLive, sittingMinutesLeft, sittingNames } from "@/modules/registrations/domain/family-sitting";
 import { minutesPhrase } from "@/modules/deadlines/domain/duration-words";
+import { waitlistOfferPhrase } from "@/modules/events/ui/counted-phrases";
 import { readFamilySittingCookie } from "@/modules/registrations/family-sitting-cookie";
 import { CLUB_NAME, PAGE_WIDTH } from "@/theme/brand";
 import { env } from "@/shared/config/env";
@@ -303,12 +305,19 @@ export default async function RegisterPage({ params, searchParams }: Props) {
     browser already sent fill it. A marker, like the two above; every person it counts was typed here (§39).
   */
   const sittingAtCap = refusedMarkers.includes(SITTING_AT_CAP);
-  let fullNotice: typeof WAITLIST_FULL | typeof NO_WAITLIST | null = null;
+  /*
+    `WAITLIST` is the join form itself (§NNN): no place, and a list that takes people — the page
+    says the event page's two sentences and how an offer works once, above the form, to the person
+    who arrived from «Intră pe lista de așteptare».
+  */
+  let fullNotice: typeof WAITLIST_FULL | typeof NO_WAITLIST | "WAITLIST" | null = null;
+  let offerHours: number | null = null;
   if (!submitted && !error && !resting) {
     try {
       const places = await cachedPublicAvailability(event.id, now);
       if (places?.available === 0) {
-        fullNotice = places.waitlistCapacity === 0 ? NO_WAITLIST : places.waitlistRoom === 0 ? WAITLIST_FULL : null;
+        fullNotice = places.waitlistCapacity === 0 ? NO_WAITLIST : places.waitlistRoom === 0 ? WAITLIST_FULL : "WAITLIST";
+        if (fullNotice === "WAITLIST") offerHours = (await cachedDeadlines()).offerHours;
       }
     } catch (failure) {
       unstable_rethrow(failure);
@@ -787,10 +796,22 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               {t("terms.missing")}
             </Alert>
           )}
-          {fullNotice && (
-            <Alert severity="warning" sx={{ mb: 2 }} data-testid="registration-full-notice">
-              {fullNotice === NO_WAITLIST ? tEvent("cta.fullNoWaitlist") : tEvent("cta.waitlistFull")}
+          {fullNotice === "WAITLIST" ? (
+            <Alert severity="info" sx={{ mb: 2 }} data-testid="registration-waitlist-notice">
+              <AlertTitle>{tEvent("cta.fullLead")}</AlertTitle>
+              <Typography variant="body2">{tEvent("cta.fullJoin")}</Typography>
+              {offerHours !== null && (
+                <Typography variant="body2" sx={{ mt: 0.5 }}>
+                  {waitlistOfferPhrase(tEvent, locale, offerHours)}
+                </Typography>
+              )}
             </Alert>
+          ) : (
+            fullNotice && (
+              <Alert severity="warning" sx={{ mb: 2 }} data-testid="registration-full-notice">
+                {fullNotice === NO_WAITLIST ? tEvent("cta.fullNoWaitlist") : tEvent("cta.waitlistFull")}
+              </Alert>
+            )
           )}
 
           {/*

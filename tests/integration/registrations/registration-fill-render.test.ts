@@ -5,6 +5,9 @@ import { events, eventTranslations } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
 import { findPublishedEventBySlug } from "@/modules/events/repository";
+import { platformSettings } from "@/db/schema/platform-settings";
+import { DEADLINES_SETTING_KEY } from "@/modules/deadlines/deadlines";
+import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
 import { cachedPublicAvailability } from "@/modules/public-cache/reads";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
@@ -141,9 +144,28 @@ describe("§346 the fill line beside the register button, from the cached count"
     await confirm(event.id, 2);
     await confirm(event.id, 1, "WAITLISTED", 2);
     const html = await render("cros-plin");
-    expect(html).toContain("Locurile și lista de așteptare sunt pline.");
+    expect(html).toContain("Locurile s-au ocupat și lista de așteptare e plină — ne pare rău.");
     expect(html).toContain("2 înscriși din 2 locuri");
     expect(html).not.toContain("Înscrie-te");
+  });
+
+  it("§NNN says kindly that the places are taken, the room left, and the club's own offer hours (§377)", async () => {
+    const event = await openRace(2, 3);
+    await confirm(event.id, 2);
+    await db.insert(platformSettings).values({ key: DEADLINES_SETTING_KEY, value: { ...DEFAULT_DEADLINES, offerHours: 12 }, updatedAt: NOW });
+    const html = await render("cros-plin");
+    expect(html).toContain('data-testid="registration-waitlist-message"');
+    expect(html).toContain("Locurile s-au ocupat.");
+    expect(html).toContain("Intră pe lista de așteptare — te anunțăm pe email când se eliberează un loc.");
+    expect(html).toContain("Mai sunt 3 locuri pe lista de așteptare");
+    expect(html).toContain("Când se eliberează un loc, primești un email și ai 12 ore să confirmi — altfel locul trece mai departe.");
+    // The two sentences come before the button, the offer after the room.
+    expect(html.indexOf("Locurile s-au ocupat.")).toBeLessThan(html.indexOf(">Intră pe lista de așteptare<"));
+    expect(html.indexOf("Mai sunt 3 locuri")).toBeLessThan(html.indexOf("ai 12 ore"));
+    locale = "en";
+    const en = await render("full-cross");
+    expect(en).toContain("All places are taken.");
+    expect(en).toContain("When a place frees up, you get an email and 12 hours to confirm — then it passes on.");
   });
 
   it("is null for an uncapped event, and the line's limit means nothing there", async () => {

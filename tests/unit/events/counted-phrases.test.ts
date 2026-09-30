@@ -2,7 +2,7 @@ import { createTranslator } from "next-intl";
 import { describe, expect, it } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
-import { confirmedPhrase, fillPhrase, waitlistRoomPhrase } from "@/modules/events/ui/counted-phrases";
+import { confirmedPhrase, fillPhrase, waitlistOfferPhrase, waitlistRoomPhrase } from "@/modules/events/ui/counted-phrases";
 
 /**
  * §346 — the two counted sentences an event page can show, assembled from the real catalogues.
@@ -70,11 +70,29 @@ describe("§348 waitlistRoomPhrase — the room a capped waiting list has left",
     expect(waitlistRoomPhrase(say, "en", 21)).toBe("21 places left on the waiting list");
   });
 
-  it("has the two sentences a full line and a closed event say, in both catalogues", () => {
-    expect(translator("ro")("cta.waitlistFull")).toBe("Locurile și lista de așteptare sunt pline.");
-    expect(translator("en")("cta.waitlistFull")).toBe("The places and the waiting list are full.");
-    expect(translator("ro")("cta.fullNoWaitlist")).not.toMatch(/așteptare/);
-    expect(translator("en")("cta.fullNoWaitlist")).not.toMatch(/waiting/);
+  it("§NNN has the two sentences a full line and an event with no list say, kindly, in both catalogues", () => {
+    expect(translator("ro")("cta.waitlistFull")).toBe("Locurile s-au ocupat și lista de așteptare e plină — ne pare rău.");
+    expect(translator("en")("cta.waitlistFull")).toBe("All places are taken and the waiting list is full — sorry.");
+    expect(translator("ro")("cta.fullNoWaitlist")).toBe("Locurile s-au ocupat, iar acest eveniment nu are listă de așteptare.");
+    expect(translator("en")("cta.fullNoWaitlist")).toBe("All places are taken, and this event has no waiting list.");
+  });
+});
+
+describe("§NNN waitlistOfferPhrase — how an offer works, with the club's own hours", () => {
+  it("says the offer window the club set, in the site's hour words", () => {
+    const ro = translator("ro");
+    expect(waitlistOfferPhrase(ro, "ro", 24)).toBe(
+      "Când se eliberează un loc, primești un email și ai 24 de ore să confirmi — altfel locul trece mai departe.",
+    );
+    expect(waitlistOfferPhrase(ro, "ro", 12)).toContain("ai 12 ore să confirmi");
+    expect(waitlistOfferPhrase(ro, "ro", 48)).toContain("ai 48 de ore să confirmi");
+    const en = translator("en");
+    expect(waitlistOfferPhrase(en, "en", 24)).toBe("When a place frees up, you get an email and 24 hours to confirm — then it passes on.");
+    expect(waitlistOfferPhrase(en, "en", 6)).toContain("6 hours to confirm");
+  });
+
+  it("stays under 200 characters at the longest window the club may set", () => {
+    for (const locale of ["ro", "en"] as const) expect(waitlistOfferPhrase(translator(locale), locale, 72).length).toBeLessThanOrEqual(200);
   });
 });
 

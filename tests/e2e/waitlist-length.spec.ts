@@ -104,27 +104,30 @@ test.describe("BR-REQ-035-01 a waiting list with a limit, on the event page (§3
     await expect(join).toBeVisible();
     expect((await join.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
     await expect(page.getByTestId("waitlist-room")).toHaveText("Mai sunt 2 locuri pe lista de așteptare");
+    // Said kindly, before the button, and how an offer works (§NNN).
+    await expect(page.getByTestId("registration-waitlist-message")).toContainText("Locurile s-au ocupat.");
+    await expect(page.getByTestId("waitlist-offer")).toContainText("să confirmi — altfel locul trece mai departe.");
     await page.goto(`/en/events/${room.slug}-en`);
     await expect(page.getByTestId("waitlist-room")).toHaveText("2 places left on the waiting list");
 
     // Full: the sentence, and no button at all.
     await page.goto(`/ro/evenimente/${full.slug}-ro`);
-    await expect(page.getByTestId("registration-full")).toHaveText("Locurile și lista de așteptare sunt pline.");
+    await expect(page.getByTestId("registration-full")).toHaveText("Locurile s-au ocupat și lista de așteptare e plină — ne pare rău.");
     await expect(page.getByRole("link", { name: "Intră pe lista de așteptare" })).toHaveCount(0);
     await expect(page.getByRole("link", { name: "Înscrie-te la eveniment" })).toHaveCount(0);
     await page.goto(`/en/events/${full.slug}-en`);
-    await expect(page.getByTestId("registration-full")).toHaveText("The places and the waiting list are full.");
+    await expect(page.getByTestId("registration-full")).toHaveText("All places are taken and the waiting list is full — sorry.");
     await expect(page.getByRole("link", { name: "Join the waiting list" })).toHaveCount(0);
 
-    // No waiting list: closed as full, and no word about a line.
+    // No waiting list: said kindly, and no button to a line (§NNN).
     await page.goto(`/ro/evenimente/${none.slug}-ro`);
     const closed = page.getByTestId("registration-full");
-    await expect(closed).toHaveText("Toate locurile au fost ocupate, așa că înscrierile s-au închis.");
+    await expect(closed).toHaveText("Locurile s-au ocupat, iar acest eveniment nu are listă de așteptare.");
     await expect(page.getByRole("link", { name: "Intră pe lista de așteptare" })).toHaveCount(0);
 
     // The form, reached by its address, says the same before anybody types.
     await page.goto(`/ro/evenimente/${full.slug}-ro/inscriere`);
-    await expect(page.getByTestId("registration-full-notice")).toHaveText("Locurile și lista de așteptare sunt pline.");
+    await expect(page.getByTestId("registration-full-notice")).toHaveText("Locurile s-au ocupat și lista de așteptare e plină — ne pare rău.");
 
     // Nothing wider than the phone.
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);

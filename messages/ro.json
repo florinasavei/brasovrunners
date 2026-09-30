@@ -284,9 +284,11 @@
         "few": "{count} locuri",
         "other": "{count} de locuri"
       },
-      "full": "Nu mai sunt locuri. Pe lista de așteptare, primul primește locul care se eliberează.",
-      "waitlistFull": "Locurile și lista de așteptare sunt pline.",
-      "fullNoWaitlist": "Toate locurile au fost ocupate, așa că înscrierile s-au închis.",
+      "fullLead": "Locurile s-au ocupat.",
+      "fullJoin": "Intră pe lista de așteptare — te anunțăm pe email când se eliberează un loc.",
+      "fullOffer": "Când se eliberează un loc, primești un email și ai {hours} să confirmi — altfel locul trece mai departe.",
+      "waitlistFull": "Locurile s-au ocupat și lista de așteptare e plină — ne pare rău.",
+      "fullNoWaitlist": "Locurile s-au ocupat, iar acest eveniment nu are listă de așteptare.",
       "waitlistRoom": {
         "one": "Mai este {count} loc pe lista de așteptare",
         "few": "Mai sunt {count} locuri pe lista de așteptare",
@@ -303,7 +305,6 @@
         "other": "{count} de locuri libere"
       },
       "freeOfCard": "{free} din {places}",
-      "cardWaitlist": "Lista de așteptare",
       "closed": "Înscrierile s-au închis pentru acest eveniment.",
       "closedRaceWeek": "Înscrierile s-au închis — vino la masă cu QR-ul din email.",
       "cancelled": "Evenimentul a fost anulat, așa că înscrierile s-au oprit.",

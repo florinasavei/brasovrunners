@@ -1,4 +1,5 @@
 import { countForm } from "@/i18n/count-form";
+import { hoursPhrase } from "@/modules/deadlines/domain/duration-words";
 import type { PublicFill } from "../domain/registration-cta";
 
 /**
@@ -30,6 +31,16 @@ export function fillPhrase(say: Say, locale: string, fill: PublicFill): string {
  */
 export function waitlistRoomPhrase(say: Say, locale: string, room: number): string {
   return say(`cta.waitlistRoom.${countForm(room, locale)}`, { count: room });
+}
+
+/**
+ * "Când se eliberează un loc, primești un email și ai 24 de ore să confirmi — altfel locul trece
+ * mai departe." (§NNN, amending §348): how a waiting-list offer works, under the full event's
+ * button and above the join form — with the club's own offer window («Termene», `offerHours`,
+ * §377), the number the allocator gives an offer, in the site's hour words (`hoursPhrase`).
+ */
+export function waitlistOfferPhrase(say: Say, locale: string, offerHours: number): string {
+  return say("cta.fullOffer", { hours: hoursPhrase(locale, offerHours) });
 }
 
 /**

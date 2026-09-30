@@ -66,10 +66,33 @@ describe("§409 cardRegistrationLine — the card's registration, in words", () 
     expect(line.button?.label).toBe("Register for this event");
   });
 
-  it("says the waiting list once the places are gone, with the waiting list's button", () => {
+  it("§NNN says kindly that the places are taken and what the list does, the window quiet under it, with the waiting list's button", () => {
     const line = cardRegistrationLine(translator("ro"), "ro", race(), NOW, known({ kind: "FULL", waitlistRoom: null }, { taken: 10, capacity: 10 }));
-    expect(line.detail).toBe("Lista de așteptare");
-    expect(line.button?.label).toBe("Intră pe lista de așteptare");
+    expect(line).toEqual({
+      lead: "Locurile s-au ocupat.",
+      leadParts: { before: "", fact: "Locurile s-au ocupat.", after: "" },
+      detail: null,
+      detailParts: null,
+      note: "Intră pe lista de așteptare — te anunțăm pe email când se eliberează un loc.",
+      quietLine: "Înscrieri deschise până sâm., 26 sept. 2026, la 10:00",
+      bold: true,
+      button: { cta: { kind: "FULL", waitlistRoom: null }, label: "Intră pe lista de așteptare" },
+    });
+    const en = cardRegistrationLine(translator("en"), "en", race(), NOW, known({ kind: "FULL", waitlistRoom: 3 }));
+    expect(en.lead).toBe("All places are taken.");
+    expect(en.note).toBe("Join the waiting list — we email you when a place frees up.");
+    expect(en.quietLine).toMatch(/^Registration open until /);
+    expect(en.button?.label).toBe("Join the waiting list");
+  });
+
+  it("§NNN keeps the full event's words short enough for a phone", () => {
+    for (const locale of ["ro", "en"] as const) {
+      const say = translator(locale);
+      for (const key of ["cta.fullLead", "cta.fullJoin", "cta.waitlistFull", "cta.fullNoWaitlist"]) {
+        expect(say(key).length, `${locale} ${key}`).toBeLessThanOrEqual(200);
+        expect(say(key), `${locale} ${key}`).not.toMatch(/platform|de obicei/i);
+      }
+    }
   });
 
   it("says the window and no number, and offers no button, when the count could not be read (§281)", () => {
@@ -151,8 +174,17 @@ describe("§472 CardRegistration — only the date, the hour and the free places
       expect(strongs(render(locale, known({ kind: "CLOSED" }), closed, true))).toEqual([]);
       expect(strongs(render(locale, known({ kind: "CLOSED" }), closed))).toEqual([]);
     }
-    // The waiting list after the dot is words, not a count: only the date is bold.
-    expect(strongs(render("ro", known({ kind: "FULL", waitlistRoom: null }, { taken: 10, capacity: 10 })))).toEqual(["sâm., 26 sept. 2026, la 10:00"]);
+  });
+
+  it("§NNN bolds «Locurile s-au ocupat.» alone on a full event, the list's sentence and the quiet window under it", () => {
+    const html = render("ro", known({ kind: "FULL", waitlistRoom: null }, { taken: 10, capacity: 10 }));
+    expect(strongs(html)).toEqual(["Locurile s-au ocupat."]);
+    expect(text(html)).toContain(
+      "Locurile s-au ocupat. Intră pe lista de așteptare — te anunțăm pe email când se eliberează un loc. Înscrieri deschise până sâm., 26 sept. 2026, la 10:00",
+    );
+    expect(html).toContain('data-testid="card-waitlist-note"');
+    expect(html).not.toContain('data-testid="card-places"');
+    expect(strongs(render("en", known({ kind: "FULL", waitlistRoom: null })))).toEqual(["All places are taken."]);
   });
 });
 
