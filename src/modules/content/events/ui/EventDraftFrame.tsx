@@ -8,7 +8,7 @@ type Answer =
   | { outcome: "forbidden" }
   | { outcome: "notFound" }
   | { outcome: "refused"; error: string; fields: string[] }
-  | { outcome: "ready"; card: ReactNode; page: ReactNode; missing: Record<string, string[]> };
+  | { outcome: "ready"; card: ReactNode; page: ReactNode; form: ReactNode; missing: Record<string, string[]> };
 
 /**
  * The inside of the editor's «Previzualizare» frame (§579): a page of the site's own layout — its
@@ -21,7 +21,8 @@ type Answer =
  * itself: no request on load, none on a timer, one per press the editor relays.
  *
  * A preview is not a site: a press on a link or a button inside it goes nowhere (the editor stays
- * where it is), and a form inside it sends nothing.
+ * where it is), and a form inside it sends nothing — the registration form of «Formular» (§586)
+ * has no action and a disabled send button besides, and Enter in one of its boxes is stopped here.
  */
 export default function EventDraftFrame({ action, locale }: { action: (form: FormData) => Promise<Answer>; locale: string }) {
   const [answer, setAnswer] = useState<Answer | null>(null);
@@ -84,7 +85,7 @@ export default function EventDraftFrame({ action, locale }: { action: (form: For
 
   return (
     <Box ref={root} id="draft-preview-frame" data-testid="draft-preview-frame" onClickCapture={stop} onSubmitCapture={(event) => event.preventDefault()}>
-      {answer?.outcome === "ready" ? (view === "card" ? answer.card : answer.page) : null}
+      {answer?.outcome === "ready" ? answer[view] : null}
     </Box>
   );
 }

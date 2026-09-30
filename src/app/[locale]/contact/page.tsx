@@ -37,6 +37,7 @@ import {
 } from "@/modules/contact/fields";
 import { readFormDraft } from "@/modules/registrations/form-draft";
 import BotCheck from "@/modules/registrations/ui/BotCheck";
+import { BOT_CHECK_ERROR_ATTRIBUTE, BOT_CHECK_SLOT_SX } from "@/modules/registrations/domain/turnstile-widget";
 import { pageAlternates, staticRouteUrls } from "@/modules/seo/alternates";
 import { env } from "@/shared/config/env";
 import PublicFlash from "@/shared/feedback/PublicFlash";
@@ -98,7 +99,6 @@ export default async function ContactPage({ params, searchParams }: Props) {
 
   const { sent, error: rawError, fields, about, newsletter, nfields, nleave, since } = await searchParams;
   const t = await getTranslations("Contact");
-  const legal = await getTranslations("Legal");
   const now = new Date();
   // Read once: the widget is drawn only when both keys are set (`turnstile.ts`).
   /*
@@ -291,29 +291,28 @@ export default async function ContactPage({ params, searchParams }: Props) {
               />
 
               {/* Cloudflare Turnstile, when the club switched it on (§97), drawn and reset by
-                  its own island (§185) — the implicit widget could not survive a re-render. */}
+                  its own island (§185) — the implicit widget could not survive a re-render.
+                  Cloudflare's sentence (§323) comes with the widget, and the box takes no room before it (§593). */}
               {siteKey && (
-                <Box id={fieldId("captcha")}>
-                  <BotCheck siteKey={siteKey} locale={locale} attempt={now.toISOString()} />
+                <Box id={fieldId("captcha")} sx={BOT_CHECK_SLOT_SX}>
+                  <BotCheck siteKey={siteKey} locale={locale} attempt={now.toISOString()} notice />
                   {invalid.has("captcha") && (
-                    <Typography variant="body2" color="error" sx={{ mt: 1 }}>
+                    <Typography variant="body2" color="error" sx={{ mt: 1 }} {...{ [BOT_CHECK_ERROR_ATTRIBUTE]: "true" }}>
                       {t("errors.captcha")}
                     </Typography>
                   )}
-                  {/* The same sentence the registration form has under its check (§323). */}
-                  <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
-                    {legal("botCheckNotice")}
-                  </Typography>
                 </Box>
               )}
 
-              {/* The notice, named as the registration form names it — a sentence, not the footer's bare "GDPR". */}
+              {/*
+                One line and the notice's link (§593; the owner: «prea lung și AI slop»): how we answer,
+                where the message lands (Gmail, §323) and how long it is kept. The notice says the rest.
+              */}
               <Typography variant="body2" color="text.secondary">
-                {t("privacy")} {t("privacyDetails")}{" "}
+                {t("privacy")}{" "}
                 <Link href="/legal/privacy" style={inlineLink}>
                   {t("privacyLinkLabel")}
                 </Link>
-                .
               </Typography>
 
               {/* The club's runner at the start of the label, and running while it sends (§318). */}

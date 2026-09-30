@@ -35,7 +35,7 @@ import { deriveAllowedResendMessageType } from "@/modules/registrations/domain/r
 import StaffJourney from "@/modules/registrations/ui/StaffJourney";
 import FamilyChip from "@/modules/registrations/ui/FamilyChip";
 import GlyphChip from "@/modules/events/ui/GlyphChip";
-import { familyOf } from "@/modules/registrations/family-marker";
+import { familiesTogether, familyOf } from "@/modules/registrations/family-marker";
 import { canExportSponsorList, canManageRegistrations, canMessageParticipants, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { sponsorListSummary } from "@/modules/registrations/sponsor-list";
 import SponsorListButton from "@/modules/registrations/ui/SponsorListButton";
@@ -57,7 +57,7 @@ import { CHECKBOX_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { countBibs, voidBibsFor } from "@/modules/registrations/bibs";
 import { bulkCancelRegistrationsAction, bulkDeleteRegistrationsAction, markBibsPrintedAction, sendOutboxNowAction } from "../actions";
-import { resendRegistrationEmailAction } from "../[id]/actions";
+import { resendFamilyEmailAction, resendRegistrationEmailAction } from "../[id]/actions";
 import { withSendNowChoice } from "@/modules/notifications/domain/send-at-once";
 import { sendNowChoiceFor } from "@/modules/notifications/send-now-choice";
 import { confirmWords } from "@/shared/feedback/confirm-words";
@@ -75,6 +75,7 @@ import {
 } from "../actions";
 import { ALL_EVENTS, AUTOMATIC, defaultEventFilter } from "@/modules/registrations/domain/default-event-filter";
 import { rowVerbsFor } from "@/modules/registrations/domain/row-verbs";
+import { givePlaceRefusalAhead } from "@/modules/registrations/give-place-tip";
 import RegistrationRowMenu, { type RegistrationMenuItem } from "@/modules/registrations/ui/RegistrationRowMenu";
 import { CLUB_NAME } from "@/theme/brand";
 import { actionKeyOf } from "@/shared/forms/action-key";
@@ -175,7 +176,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   filters.eventId = eventFilter.eventId;
   const featuredEvent = events.find((event) => event.featured) ?? null;
 
-  const [rows, total, summary, bibs, voidBibs, sponsors] = await Promise.all([
+  const [sortedRows, total, summary, bibs, voidBibs, sponsors] = await Promise.all([
     listRegistrationsForAdmin(db, filters, {
       limit: query.limit,
       offset: query.offset,
@@ -207,6 +208,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     filters.eventId && canExportSponsorList(actor.role) ? sponsorListSummary(db, actor, { eventId: filters.eventId, now: new Date() }) : Promise.resolve(null),
   ]);
 
+  // A family's rows side by side (§588), where its first row falls in the chosen order; phone cards read the same rows.
+  const rows = familiesTogether(sortedRows);
   /*
     Who filled the form again, for the rows on this page only (§312): one grouped read of the
     audit trail keyed on the ids just fetched, so a page of twenty-five costs one query, not
@@ -231,6 +234,17 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   ]);
   // Every verb that writes asks first and says who is emailed (§384).
   const words = await confirmWords();
+  /*
+    Why «Dă-i un loc» would be refused, per event on the page (§592): the rows grouped by event,
+    one door read each (cached per request), and only where a waiting row offers the verb.
+  */
+  const givePlaceWhy = new Map(
+    await Promise.all(
+      [...new Set(canManageRegistrations(actor.role) ? rows.filter((row) => row.status === "WAITLISTED").map((row) => row.eventId) : [])].map(
+        async (id) => [id, await givePlaceRefusalAhead(id)] as const,
+      ),
+    ),
+  );
 
   const basePath = getPathname({ locale, href: "/admin/registrations" });
   /** Only the list-shaping keys travel with a sort link or a page link. */
@@ -1219,6 +1233,39 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               </ActionForm>
             )}
             {/*
+              «Retrimite familiei» (§588): one email for everybody on the address at the event, beside the
+              row's own resend. Administrator only, and refused again in its service (§289, BR-REQ-060-01).
+            */}
+            {mayManage && (family.get(row.id)?.length ?? 0) > 0 && (
+              <ActionForm
+                action={resendFamilyEmailAction}
+                confirm={withSendNowChoice(
+                  {
+                    title: t("confirm.resendFamilyTitle"),
+                    body: t("confirm.resendFamilyBody", {
+                      names: [row.registeredName, ...(family.get(row.id) ?? []).map((member) => member.name)].join(", "),
+                    }),
+                    ...(row.kind === "TEST" ? {} : { email: words.email(1) }),
+                    confirmLabel: t("registrations.resendFamily"),
+                    cancelLabel: words.cancel,
+                  },
+                  sendNow,
+                )}
+              >
+                <input type="hidden" name="uiLocale" value={locale} />
+                <input type="hidden" name="registrationId" value={row.id} />
+                {sendNow && <input type="hidden" name={sendNow.field} value={sendNow.value} />}
+                <GlyphSubmitButton
+                  icon="family"
+                  label={t("registrations.resendFamily")}
+                  pendingLabel={t("registrations.resendFamily")}
+                  ariaLabel={t("registrations.resendFamilyLong", { name: row.registeredName })}
+                  variant="outlined"
+                  compact
+                />
+              </ActionForm>
+            )}
+            {/*
               The rest of the verbs behind "⋮" (§178). Each is a hidden form the Server Component
               renders, already carrying its action and its fields; the menu only decides which one
               to submit. Which verbs appear is `rowVerbsFor`, a pure function tested against the
@@ -1254,7 +1301,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 });
               }
               if (verbs.includes("givePlace")) {
-                items.push({ kind: "submit", icon: "place", label: t("desk.givePlace"), formId: `place-${row.id}` });
+                // On a full race the item stays, with the refusal's sentence as its tooltip (§592).
+                items.push({ kind: "submit", icon: "place", label: t("desk.givePlace"), formId: `place-${row.id}`, hint: givePlaceWhy.get(row.eventId) ?? undefined });
               }
               if (verbs.includes("checkIn")) {
                 items.push({ kind: "submit", icon: "checkIn", label: t("desk.checkIn"), formId: `checkin-${row.id}` });
@@ -1330,7 +1378,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                       id={`place-${row.id}`}
                       action={promoteRegistrationAction}
                       hidden
-                      confirm={{ title: t("confirm.givePlaceTitle"), body: t("confirm.givePlaceBody", { name: row.registeredName }), ...(row.kind === "TEST" ? {} : { email: words.email(1) }), confirmLabel: t("desk.givePlace"), cancelLabel: words.cancel }}
+                      // A thumb cannot hover a menu item: the question says the same sentence first.
+                      confirm={{ title: t("confirm.givePlaceTitle"), body: [givePlaceWhy.get(row.eventId), t("confirm.givePlaceBody", { name: row.registeredName })].filter(Boolean).join(" "), ...(row.kind === "TEST" ? {} : { email: words.email(1) }), confirmLabel: t("desk.givePlace"), cancelLabel: words.cancel }}
                     >
                       {hidden}
                     </ActionForm>

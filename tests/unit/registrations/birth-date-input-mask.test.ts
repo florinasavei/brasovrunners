@@ -311,7 +311,7 @@ describe("§578 the box, rendered", () => {
     expect(maskito.every((version) => /^\d+\.\d+\.\d+$/.test(version ?? "")), "exact pins").toBe(true);
     expect(new Set(maskito).size, "one version for the three").toBe(1);
     expect(JSON.stringify(pkg.dependencies)).not.toMatch(/imask|inputmask|"input-mask|number-format|text-mask/i);
-    expect(read("src/app/[locale]/events/[slug]/register/page.tsx")).toMatch(/<BirthDateField[\s\S]*?autoComplete="bday"/);
+    expect(read("src/modules/registrations/ui/registration-form.tsx")).toMatch(/<BirthDateField[\s\S]*?autoComplete="bday"/);
     expect(read("src/modules/registrations/ui/StaffEventBirthDate.tsx")).not.toMatch(/autoComplete="bday"/);
   });
 });

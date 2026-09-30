@@ -22,8 +22,8 @@ import { DURATION, EASE, HOVER_OK } from "@/theme/motion";
  * The gallery sits with them rather than with the club's pages, because it is a section this
  * application ships and not something an organizer wrote — and it is offered only when a
  * published album exists (`showGallery`): a section with nothing behind it is a signpost to an
- * empty room. It keeps its slot just before «Echipa»; «Membri» keeps its slot right after
- * «Întrebări frecvente». "Scrie-ne" (BR-REQ-070-04, §149) is offered only while the page has
+ * empty room. It keeps its slot just before «Echipa». The members' zone is not a section of the
+ * menu: since §591 it is a link in the footer's fold (`SiteFooter`). "Scrie-ne" (BR-REQ-070-04, §149) is offered only while the page has
  * something to offer (`showContact`): the form, or the club's address as a link.
  */
 const SECTIONS = [
@@ -40,9 +40,6 @@ const SECTIONS = [
   // «Întrebări frecvente» (§525): another page this application ships, offered while a question is
   // on the site (`showFaq`).
   { segment: "faq", href: "/faq" },
-  // «Membri» (§524): «Beneficiile membrilor» and its sign-in — offered while the page is published
-  // with its words (`offersMembersEntry`, `showMembers`).
-  { segment: "members", href: "/members" },
 ] as const;
 
 /** A custom page in the menu: its id is its key in the club's order (`page:<id>`), its slug its address. */
@@ -112,7 +109,6 @@ export default function SiteNav({
   showGallery = false,
   showTeam = false,
   showFaq = false,
-  showMembers = false,
   showContact = false,
   order = [],
 }: {
@@ -120,7 +116,6 @@ export default function SiteNav({
   showGallery?: boolean;
   showTeam?: boolean;
   showFaq?: boolean;
-  showMembers?: boolean;
   showContact?: boolean;
   /** The club's stored order, keys first to last (§571); an entry it does not name keeps its default place after them. */
   order?: readonly string[];
@@ -135,7 +130,6 @@ export default function SiteNav({
         (section.segment !== "gallery" || showGallery) &&
         (section.segment !== "team" || showTeam) &&
         (section.segment !== "faq" || showFaq) &&
-        (section.segment !== "members" || showMembers) &&
         (section.segment !== "contact" || showContact),
     ).map((section) => ({
       key: section.segment,
@@ -240,7 +234,7 @@ export default function SiteNav({
           >
             {/*
               inline-flex so the anchor's box is the 44px entry, not a line of text. The contact
-              form and «Membri» are rendered per request, so they are not prefetched (§549).
+              form is rendered per request, so it is not prefetched (§549).
             */}
             <Link
               href={item.href}

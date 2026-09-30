@@ -250,7 +250,7 @@ describe("BR-REQ-041-01 the cost is its own row, with its own pill (§356, §343
 
 describe("BR-REQ-041-01 «când» is one line with its weekday (§356, §349)", () => {
   it("the date and the time, a hidden middle dot between them, and no «începe la»", async () => {
-    const when = row(await page(), "Când").dd;
+    const when = row(await page({ type: "GROUP_RUN" }), "Când").dd;
     expect(text(when)).toBe("Sâmbătă, 26 sept. 2026·08:00");
     expect(when).toContain('aria-hidden="true">·');
     expect(text(when)).not.toContain("începe la");
@@ -259,7 +259,14 @@ describe("BR-REQ-041-01 «când» is one line with its weekday (§356, §349)", 
   it("in English, the English weekday", async () => {
     currentLocale = "en";
     // ICU versions disagree on September's abbreviation in English ("Sep" / "Sept"); the rest is fixed.
-    expect(text(row(await page(), "When").dd)).toMatch(/^Saturday, 26 Sept? 2026·08:00$/);
+    expect(text(row(await page({ type: "GROUP_RUN" }), "When").dd)).toMatch(/^Saturday, 26 Sept? 2026·08:00$/);
+  });
+
+  it("a race whose start is not set yet: «start la» the event's start, and the sentence under it, once (§590)", async () => {
+    const when = row(await page({ raceStartsAt: null }), "Când").dd;
+    expect(text(when)).toBe("Sâmbătă, 26 sept. 2026·start la 08:00Ora startului cursei se anunță.");
+    expect(text(when)).not.toContain("întâlnire");
+    expect(when.match(/data-testid="race-start-later"/g)).toHaveLength(1);
   });
 
   it("a race's two times, each named, on the same line", async () => {
@@ -583,7 +590,8 @@ describe("BR-REQ-041-01 the listing card's facts: glyph-led lines and the page's
     // Over a year out: `formatDay` is called once, with the year — no second rendering to toggle.
     // January carries no DST (Europe/Bucharest is UTC+2 then, +3 in September).
     const far = line(await card({ startsAt: new Date("2028-01-15T05:00:00Z") }), "when").inner;
-    expect(text(far)).toBe("Sâmbătă, 15 ian. 2028·07:00");
+    // A race with no gun time yet names its one time «start la» (§590); the card has no sentence under it.
+    expect(text(far)).toBe("Sâmbătă, 15 ian. 2028·start la 07:00");
     expect([...far.matchAll(/Sâmbătă, 15 ian\. 2028/g)]).toHaveLength(1);
     // Within the year: both the full date and the short one (no year, still the weekday, §349)
     // are in the markup, one hidden by width at a time — never two read together at once.

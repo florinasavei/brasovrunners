@@ -914,6 +914,33 @@ export function emailLinkLapseSql(confirmationHours: number) {
 }
 
 /**
+ * The address's other registrations at an event still waiting for the address (§588, amending §389,
+ * §446 and §543): a verification link proves the inbox, not one person, so the click that confirms
+ * one of them moves these on with it. Only rows submitted at or before the click (`now`) and whose
+ * own link is still alive — a lapsed one is the sweep's (§377) — in the order they were submitted,
+ * which is the order the allocator serves them in (§10.6: nobody leapfrogs). The caller holds the
+ * event row's lock, so a form sent after the click is not here yet; the instant says so as well.
+ */
+export async function pendingEmailRegistrationsOnAddress<T extends Record<string, unknown>>(
+  db: Database<T>,
+  scope: { eventId: string; participantId: string; now: Date; confirmationHours: number },
+): Promise<Registration[]> {
+  return db
+    .select()
+    .from(registrations)
+    .where(
+      and(
+        eq(registrations.eventId, scope.eventId),
+        eq(registrations.participantId, scope.participantId),
+        eq(registrations.status, "PENDING_EMAIL_CONFIRMATION"),
+        lte(registrations.submittedAt, scope.now),
+        gt(emailLinkLapseSql(scope.confirmationHours), scope.now),
+      ),
+    )
+    .orderBy(asc(registrations.submittedAt), asc(registrations.createdAt), asc(registrations.id));
+}
+
+/**
  * Expire registrations still waiting on email confirmation once their link has lapsed — the
  * club's hours after the submission (48 unless changed, §377), as written on the row.
  *

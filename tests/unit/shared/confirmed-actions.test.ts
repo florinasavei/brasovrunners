@@ -96,6 +96,7 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   bulkCancelRegistrationsAction: [],
   bulkDeleteRegistrationsAction: [],
   resendRegistrationEmailAction: [],
+  resendFamilyEmailAction: [],
   sendOutboxNowAction: [],
   sendOutboxNowFromEmailsAction: [],
   // Legal.

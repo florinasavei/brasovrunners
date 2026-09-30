@@ -42,9 +42,9 @@ import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import { env } from "@/shared/config/env";
 import { CLUB_NAME } from "@/theme/brand";
 import { DomainError } from "@/shared/errors/domain-error";
-import { computeOccupied, computePublicAvailability, hasDirectAvailability } from "./domain/capacity";
+import { computeOccupied, computePublicAvailability, hasDirectAvailability, NoFreePlaceError } from "./domain/capacity";
 import { computeDeclarationHoldExpiry, computeFamilyReservationExpiry, computeWaitlistOfferExpiry, confirmationWindow } from "./domain/hold-deadlines";
-import { occupiedForNewcomer, waitlistFullError, waitlistHasRoom, waitlistRoom } from "./domain/waitlist";
+import { occupiedForNewcomer, waitlistFullError, waitlistHasRoom, waitlistLength, waitlistRoom } from "./domain/waitlist";
 import { deriveAllowedResendMessageType } from "./domain/resend";
 import { expectedSignatures, mismatchedSignatures } from "./domain/signature-name";
 import { allowedFromStatuses, holdsAPlace, isActiveStatus } from "./domain/state-machine";
@@ -89,6 +89,7 @@ import {
   type RegistrationEntryDetails,
 } from "./names";
 import * as repo from "./repository";
+import { waitlistRefusalOf } from "./domain/waitlist";
 
 /**
  * The registration lifecycle (AGENTS.md §15.1-§15.7; BR-REQ-030/031/033/034/035/036).
@@ -948,6 +949,8 @@ export type PublicPlaces = {
    * no limit — and always null for an uncapped event, which never waitlists anybody.
    */
   waitlistRoom: number | null;
+  /** How many are in the line right now (`domain/waitlist.ts#waitlistLength`, §587): 0 for an uncapped event. */
+  waiting: number;
 };
 
 /**
@@ -967,7 +970,7 @@ export async function readPublicPlaces<T extends Record<string, unknown>>(
   event: { id: string; capacity: number | null; waitlistCapacity: number | null },
   now: Date,
 ): Promise<PublicPlaces> {
-  if (event.capacity === null) return { availablePlaces: null, waitlistRoom: null };
+  if (event.capacity === null) return { availablePlaces: null, waitlistRoom: null, waiting: 0 };
 
   const counts = await repo.countOccupied(db, event.id, now);
   const eligibleWaitlisted = await repo.countEligibleWaitlisted(db, event.id);
@@ -979,6 +982,7 @@ export async function readPublicPlaces<T extends Record<string, unknown>>(
       eligibleWaitlisted,
     }),
     waitlistRoom: waitlistRoom(line),
+    waiting: waitlistLength(line),
   };
 }
 
@@ -2579,6 +2583,56 @@ export async function confirmEmail<T extends Record<string, unknown>>(
   return result.registration;
 }
 
+/**
+ * One click of a verification link proves the inbox, not one person (§588, amending §389, §446 and
+ * §543). The registration the link was minted for is confirmed first, exactly as `confirmEmail`
+ * always did — its own refusal (no place and the line full, §348) still takes the whole press back,
+ * the token spend included. Then every other registration of the same address at the same event
+ * still waiting for the address, submitted before this click and with its own link alive, moves on
+ * with it, in the order they were submitted: each through `confirmEmail`, so each through the one
+ * allocator under the event's lock (AGENTS.md §10.6) — nobody outside the address is leapfrogged,
+ * and a full event puts them on the waiting list. One of them refused by a full line stays waiting
+ * for its own link; it never undoes the others. A form sent after the click is not read: the event
+ * row is locked first, and the query asks `submitted_at <= now` besides, so a stranger typing a proved
+ * address still waits for the inbox's own click.
+ */
+export async function confirmEmailOnAddress<T extends Record<string, unknown>>(
+  db: Database<T>,
+  event: EventForRegistration,
+  registrationId: string,
+  now: Date,
+): Promise<{ registration: Registration; alsoConfirmed: Registration[] }> {
+  const settings = await currentDeadlines(db);
+  return db.transaction(async (tx) => {
+    // The serialization point first (§10.6): the address's rows are read under it.
+    await repo.lockEventForCapacity(tx, event.id);
+    const clicked = await repo.findRegistrationById(tx, registrationId);
+    const waiting = clicked
+      ? await repo.pendingEmailRegistrationsOnAddress(tx, {
+          eventId: clicked.eventId,
+          participantId: clicked.participantId,
+          now,
+          confirmationHours: settings.confirmationHours,
+        })
+      : [];
+    // The clicked link itself decides whether anything is proved: lapsed, off or already used, nobody else moves.
+    const proves = waiting.some((row) => row.id === registrationId);
+    const registration = await confirmEmail(tx, event, registrationId, now);
+    if (!proves || registration.status === "PENDING_EMAIL_CONFIRMATION") return { registration, alsoConfirmed: [] };
+    const alsoConfirmed: Registration[] = [];
+    for (const row of waiting) {
+      if (row.id === registrationId) continue;
+      try {
+        alsoConfirmed.push(await confirmEmail(tx, event, row.id, now));
+      } catch (error) {
+        // The line full for this one (§348): its savepoint is gone, it waits for its own link.
+        if (!waitlistRefusalOf(error)) throw error;
+      }
+    }
+    return { registration, alsoConfirmed };
+  });
+}
+
 // --- §15.3 Declaration signing, and offer acceptance (the same act) ------------------------
 
 /**
@@ -3041,9 +3095,10 @@ export async function promoteFromWaitlistByStaff<T extends Record<string, unknow
     if (current.status !== "WAITLISTED") {
       throw new DomainError("CONFLICT", `only a waiting-list registration can be promoted; this one is ${current.status}`);
     }
-    const occupied = computeOccupied(await repo.countOccupied(tx, event.id, now));
-    if (lockedEvent.capacity !== null && occupied >= lockedEvent.capacity) {
-      throw new DomainError("VALIDATION_ERROR", "the event is full: no place is free to promote into");
+    const counts = await repo.countOccupied(tx, event.id, now);
+    if (lockedEvent.capacity !== null && computeOccupied(counts) >= lockedEvent.capacity) {
+      // Who holds the places, by the same counts (§589): the desk says it instead of "check the data".
+      throw new NoFreePlaceError(lockedEvent.capacity, counts);
     }
     const offered = await repo.transitionRegistration(tx, {
       id: current.id,

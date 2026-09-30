@@ -123,7 +123,7 @@ describe("BR-REQ-011-01 criterion 19 the share picture", () => {
     dateToBeAnnounced: "Data se anunță în curând",
     timeToBeAnnounced: "Ora se anunță în curând",
     distanceKm: (km: string) => `${km} km`,
-    elevationM: (m: string) => `${m} m`,
+    t: (_key: string, values?: Record<string, string | number>) => `${values?.m} m`,
   };
   const drawn = async (overrides: Partial<PublicEvent>) => {
     const image = (await eventShareImage(event(overrides), "ro", "og", labels)) as unknown as { element: ReactElement };
@@ -151,7 +151,7 @@ describe("BR-REQ-011-01 criterion 19 the share picture", () => {
 
 describe("BR-REQ-011-01 criterion 19 the registration form's facts line (§102)", () => {
   it("says the sentence from the same key while the place is to be announced", () => {
-    const page = readFileSync(path.join(process.cwd(), "src/app/[locale]/events/[slug]/register/page.tsx"), "utf8");
+    const page = readFileSync(path.join(process.cwd(), "src/modules/registrations/ui/registration-form.tsx"), "utf8");
     expect(page).toContain('event.locationToBeAnnounced ? ` · ${tEvent("locationToBeAnnounced")}`');
     expect(page).toContain('const tEvent = await getTranslations("Event")');
   });

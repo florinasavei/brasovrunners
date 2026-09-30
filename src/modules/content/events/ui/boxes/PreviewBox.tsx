@@ -14,7 +14,8 @@ function perLocale<T>(make: (locale: Locale) => T): Record<Locale, T> {
 
 /**
  * «Previzualizare» (§579, amending §406): the editor's card that shows the event as the site will —
- * the listing card and the whole page, in Română or English, on a phone or a desktop — from the
+ * the listing card, the whole page and the registration form (§586), in Română or English, on a
+ * phone or a desktop — from the
  * save form's values as they stand, before anything is saved or published. Closed by default, its
  * closed line saying what it is for; a card like every other of the editor, apart from the page's
  * sections because it is not one of them.
@@ -33,6 +34,7 @@ export default async function PreviewBox({ formId, refusal }: { formId: string; 
     views: t("editor.draftPreview.views"),
     card: t("editor.draftPreview.card"),
     page: t("editor.draftPreview.page"),
+    form: t("editor.draftPreview.form"),
     language: t("editor.draftPreview.language"),
     width: t("editor.draftPreview.width"),
     phone: t("editor.draftPreview.phone"),

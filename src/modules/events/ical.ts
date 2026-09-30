@@ -2,9 +2,11 @@ import { isRichTextEmpty, readRichText, richTextToPlainText } from "@/modules/co
 import { type CoHost, primaryCoHostLink } from "./domain/co-hosts";
 import { costUrlHost, type EventCostType } from "./domain/cost";
 import { difficultyLevelOf, difficultyWords } from "./domain/difficulty";
+import { elevationWords } from "./domain/elevation";
 import { distanceInKm, type EventSurface, type EventType } from "./domain/event-type";
 import { type RegistrationWindowInput, registrationState } from "./domain/registration-window";
 import { type ProgrammeRow, programmeLines } from "./domain/schedule";
+import { whenTimes } from "./domain/when-times";
 import { clubNightEvent, nightLine as nightWords } from "./night-event";
 import { env } from "@/shared/config/env";
 import { CLUB_TIME_ZONE, formatDay, formatTime } from "@/i18n/dates";
@@ -98,6 +100,8 @@ export type CalendarEvent = {
   /** The facts line (§159): what the page's facts say, in the calendar's language through `labels.t`. */
   distanceMeters?: number | null;
   elevationGainMeters?: number | null;
+  /** «Estimativ» (§585): the facts line says «circa 350 m diferență de nivel (estimativ)». */
+  elevationGainEstimated?: boolean | null;
   /**
    * The organizer's night override (§394): true "Da", false "Nu", null or absent "Automat" — the
    * start and the end against civil dusk and dawn at the event's own place (§428: the map link's
@@ -380,7 +384,11 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
 
   // "întâlnire la 08:00 · start la 09:00": the page's two times when the race has a gun time.
   const time = (at: Date) => formatTime(at, { locale, timeZone });
-  const times = event.raceStartsAt ? `${t("gatheringAt", { time: time(event.startsAt) })} · ${t("raceStartAt", { time: time(event.raceStartsAt) })}` : "";
+  // The page's own rule (`whenTimes`, §590): a race with no gun time yet reads "start la 08:00 · Ora
+  // startului cursei se anunță."; a bare time is the calendar's own, and is not repeated.
+  const when = whenTimes(event);
+  const named = when.times.flatMap(({ key, at }) => (key === null ? [] : [t(key, { time: time(at) })]));
+  const times = [...named, ...(when.raceStartLater ? [t("raceStartLater")] : [])].join(" · ");
 
   /*
     The cost (§343), the same short phrase the page's full facts say — an amount for a paid
@@ -430,10 +438,12 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
 
   // "Concurs · 🏃 10 km · ↗ 300 m urcare · Trail · Mediu · Gratuit": the page's own words (§112), one line.
   const km = distanceInKm(event.distanceMeters ?? null);
+  // The climb in its long form (§585), an estimate said as one: «circa 350 m diferență de nivel (estimativ)».
+  const climb = elevationWords(event, t, (value) => new Intl.NumberFormat(intl).format(value));
   const facts = [
     event.type ? t(`type.${event.type}`) : "",
     km !== null ? `🏃 ${t("distanceKm", { km: new Intl.NumberFormat(intl, { maximumFractionDigits: 1 }).format(km) })}` : "",
-    event.elevationGainMeters ? `↗ ${t("elevationM", { m: new Intl.NumberFormat(intl).format(event.elevationGainMeters) })}` : "",
+    climb ? `↗ ${climb.long}` : "",
     event.surface ? t(`surface.${event.surface}`) : "",
     difficultyLine(event, t),
     ...costFacts,

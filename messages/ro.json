@@ -29,8 +29,7 @@
       "team": "Echipa",
       "faq": "Întrebări",
       "more": "Meniu",
-      "contact": "Contact",
-      "members": "Membri"
+      "contact": "Contact"
     },
     "newBuild": {
       "body": "S-a publicat o versiune nouă a site-ului — reîncarcă pagina când vrei, dar vei pierde ce ai completat în formularele deschise.",
@@ -117,6 +116,7 @@
     "raceStartAt": "start la {time}",
     "gatheringAtBold": "întâlnire la <strong>{time}</strong>",
     "raceStartAtBold": "start la <strong>{time}</strong>",
+    "raceStartLater": "Ora startului cursei se anunță.",
     "when": "Când",
     "where": "Unde",
     "meetingPoint": "Punct de întâlnire",
@@ -169,6 +169,8 @@
     "elevation": "Diferență de nivel",
     "elevationM": "{m} m diferență de nivel",
     "elevationShort": "{m} m D+",
+    "elevationMEstimated": "circa {m} m diferență de nivel (estimativ)",
+    "elevationShortEstimated": "≈ {m} m D+",
     "night": {
       "chip": "Noapte",
       "pill": "Eveniment de noapte",
@@ -284,9 +286,22 @@
         "few": "{count} locuri",
         "other": "{count} de locuri"
       },
-      "full": "Nu mai sunt locuri. Pe lista de așteptare, primul primește locul care se eliberează.",
-      "waitlistFull": "Locurile și lista de așteptare sunt pline.",
-      "fullNoWaitlist": "Toate locurile au fost ocupate, așa că înscrierile s-au închis.",
+      "fullLead": "Locurile s-au ocupat.",
+      "fullThanks": {
+        "one": "Mulțumim! Singurul loc s-a ocupat — {waiting} așteaptă deja un loc.",
+        "few": "Mulțumim! Toate cele {capacity} locuri s-au ocupat — {waiting} așteaptă deja un loc.",
+        "other": "Mulțumim! Toate cele {capacity} de locuri s-au ocupat — {waiting} așteaptă deja un loc."
+      },
+      "fullThanksFirst": {
+        "one": "Mulțumim! Singurul loc s-a ocupat. Fii primul pe lista de așteptare.",
+        "few": "Mulțumim! Toate cele {capacity} locuri s-au ocupat. Fii primul pe lista de așteptare.",
+        "other": "Mulțumim! Toate cele {capacity} de locuri s-au ocupat. Fii primul pe lista de așteptare."
+      },
+      "waitingCount": "{count} pe lista de așteptare",
+      "fullJoin": "Intră pe lista de așteptare — te anunțăm pe email când se eliberează un loc.",
+      "fullOffer": "Când se eliberează un loc, primești un email și ai {hours} să confirmi — altfel locul trece mai departe.",
+      "waitlistFull": "Locurile s-au ocupat și lista de așteptare e plină — ne pare rău.",
+      "fullNoWaitlist": "Locurile s-au ocupat, iar acest eveniment nu are listă de așteptare.",
       "waitlistRoom": {
         "one": "Mai este {count} loc pe lista de așteptare",
         "few": "Mai sunt {count} locuri pe lista de așteptare",
@@ -303,7 +318,6 @@
         "other": "{count} de locuri libere"
       },
       "freeOfCard": "{free} din {places}",
-      "cardWaitlist": "Lista de așteptare",
       "closed": "Înscrierile s-au închis pentru acest eveniment.",
       "closedRaceWeek": "Înscrierile s-au închis — vino la masă cu QR-ul din email.",
       "cancelled": "Evenimentul a fost anulat, așa că înscrierile s-au oprit.",
@@ -655,7 +669,8 @@
           "cancelled_by_participant": "Anulată de participant, din linkul propriu",
           "declaration_hold_set": "Declarație păstrată pentru o reclamație sau un litigiu",
           "declaration_hold_cleared": "Păstrarea declarației a fost scoasă",
-          "promo_consent_changed": "Acordul pentru oferte și beneficii schimbat"
+          "promo_consent_changed": "Acordul pentru oferte și beneficii schimbat",
+          "family_resent": "Email retrimis familiei"
         }
       },
       "locale": {
@@ -812,7 +827,9 @@
         "staffNo": "Oferte și beneficii: nu. Echipa nu poate da acordul în locul persoanei; îl dă ea, din pagina înscrierii ei."
       },
       "promoOnly": "Doar cu oferte și beneficii",
-      "promoOnlyHelp": "Cei care au bifat „oferte și beneficii”, cu înscrierea încă valabilă. Exportul ia același filtru."
+      "promoOnlyHelp": "Cei care au bifat „oferte și beneficii”, cu înscrierea încă valabilă. Exportul ia același filtru.",
+      "resendFamily": "Retrimite familiei",
+      "resendFamilyLong": "Trimite un singur email adresei lui {name}, pentru toți cei înscriși de pe ea la eveniment"
     },
     "events": {
       "empty": "Nu există niciun eveniment în baza de date.",
@@ -1065,7 +1082,9 @@
         "note": "Deocamdată, emailurile automate pleacă la trecerea programată, în cel mult {wait}. Alege dacă acesta pleacă acum sau o așteaptă."
       },
       "menuOrderTitle": "Schimbi ordinea meniului?",
-      "menuOrderBody": "Meniul site-ului și subsolul arată paginile în ordinea nouă, pentru toți vizitatorii, de la următoarea pagină deschisă."
+      "menuOrderBody": "Meniul site-ului și subsolul arată paginile în ordinea nouă, pentru toți vizitatorii, de la următoarea pagină deschisă.",
+      "resendFamilyTitle": "Retrimiți emailul familiei?",
+      "resendFamilyBody": "Pleacă un singur email către adresa lor, pentru toți: {names}. Fiecare primește pasul la care a rămas, cu un link nou; linkurile din emailurile vechi nu mai merg."
     },
     "errors": {
       "PICTURE_IN_USE": "Imaginea este folosită într-o pagină, într-un eveniment sau într-un album. Scoate-o de acolo mai întâi.",
@@ -1097,6 +1116,7 @@
       "WAITLIST_FULL": "Locurile și lista de așteptare sunt pline, așa că nu s-a schimbat nimic. Încearcă din nou când se eliberează un loc pe listă.",
       "NO_WAITLIST": "Toate locurile sunt ocupate și evenimentul nu are listă de așteptare, așa că nu s-a schimbat nimic.",
       "WALK_IN_LEFT_UNCONFIRMED": "Persoana e înscrisă, dar tocmai s-a ocupat ultimul loc, deci e neconfirmată și nu a primit email. Confirm-o pe hârtie când se eliberează un loc.",
+      "NO_FREE_PLACE": "Cursa e plină: locuri {capacity}, confirmați {confirmed}, declarații de semnat {declaration}, oferite {offered}, rezervate familiilor {family}. Mărește întâi capacitatea evenimentului.",
       "NO_RECIPIENTS": "Nu s-a trimis nimic: nu e nimeni în grupul ales acum. Alege alt grup.",
       "MESSAGE_UNKNOWN_PLACEHOLDER": "Nu s-a trimis nimic: {names} nu este un câmp pe care îl putem completa în acest mesaj. Câmpurile folosibile sunt scrise sub casete.",
       "SAMPLE_VALUE_IN_EMAIL": "Textul conține valoarea de exemplu „{value}” — folosește {placeholder}.",
@@ -1117,17 +1137,18 @@
     },
     "editor": {
       "draftPreview": {
-        "intro": "Cardul din listă și pagina evenimentului, din ce ai scris acum. Nu salvează și nu publică nimic.",
+        "intro": "Cardul din listă, pagina evenimentului și formularul de înscriere, din ce ai scris acum. Nu salvează și nu publică nimic.",
         "run": "Previzualizează",
         "running": "Se pregătește…",
         "views": "Ce vezi",
         "card": "Card",
         "page": "Pagina",
+        "form": "Formular",
         "language": "Limba",
         "width": "Lățime",
         "phone": "Telefon (360)",
         "desktop": "Desktop",
-        "idle": "Apasă «Previzualizează» ca să vezi cardul și pagina.",
+        "idle": "Apasă «Previzualizează» ca să vezi cardul, pagina și formularul.",
         "asOfPress": "Arată ce era scris la ultima apăsare pe «Previzualizează».",
         "incomplete": "{language} incomplet — lipsește: {missing}",
         "complete": "Ambele limbi au tot ce cere publicarea.",
@@ -1139,7 +1160,9 @@
       "startsAt": "Începutul evenimentului",
       "startsAtHelp": "Ora locală a evenimentului ({timezone}). Pentru o cursă, aceasta este ora de întâlnire.",
       "raceStartsAt": "Startul cursei",
-      "raceStartsAtHelp": "Ora la care se dă startul, dacă diferă de ora de întâlnire. Lasă gol dacă există o singură oră.",
+      "raceStartsAtHelp": "Ora la care se dă startul. Dacă e aceeași cu începutul evenimentului, scrie aceeași oră.",
+      "raceStartNotSet": "Startul cursei nu e stabilit",
+      "raceStartNotSetHelp": "Bifat, pe site apare doar „start la” cu ora de începere a evenimentului, iar sub ea „Ora startului cursei se anunță.”",
       "mapUrl": "Link către punctul de întâlnire",
       "mapUrlHelp": "Opțional. Punctul de întâlnire pe Google Maps sau orice altă hartă. Trebuie să înceapă cu https://.",
       "coordinates": "Coordonate (lat, lng)",
@@ -1237,6 +1260,8 @@
       "distanceMeters": "Distanță",
       "distanceMetersHelp": "În metri. 10000 se afișează ca 10 km.",
       "elevationGainMeters": "Diferență de nivel (m)",
+      "elevationGainEstimated": "Estimativ",
+      "elevationGainEstimatedHelp": "Bifează când cifra e aproximativă — pe site apare cu „≈” și „estimativ”.",
       "night": {
         "label": "Eveniment de noapte",
         "auto": "Automat (după apus)",
@@ -1759,7 +1784,7 @@
         },
         "preview": {
           "title": "Previzualizare",
-          "summary": "Cum arată pe site — cardul și pagina, fără să salvezi"
+          "summary": "Cum arată pe site — cardul, pagina și formularul, fără să salvezi"
         },
         "summary": {
           "filled": "completat",
@@ -1776,6 +1801,7 @@
             "timeTba": "Ora se anunță mai târziu",
             "none": "Data nu e aleasă încă",
             "raceStart": "startul cursei {time}",
+            "raceStartNotSet": "startul cursei nestabilit",
             "duration": "{duration}"
           },
           "timezone": {
@@ -1861,6 +1887,7 @@
             "route": "traseu",
             "km": "{km} km",
             "elevation": "+{m} m",
+            "elevationEstimated": "≈ +{m} m",
             "night": "de noapte",
             "nightAuto": "de noapte (automat)",
             "day": "de zi",
@@ -3600,8 +3627,7 @@
         "contact": "Contact",
         "gallery": "Galerie",
         "team": "Echipa",
-        "faq": "Întrebări frecvente",
-        "members": "Membri"
+        "faq": "Întrebări frecvente"
       }
     },
     "fontSize": {
@@ -5824,14 +5850,14 @@
       "pageHeading": "Pagina Beneficiile membrilor",
       "pagePublished": "Pe site",
       "pageDraft": "Ciornă",
-      "pagePublishedHelp": "Pe site la {ro} și {en}, cu «Membri» în meniu. Zona membrilor se deschide oricum, după autentificare.",
+      "pagePublishedHelp": "Pe site la {ro} și {en}, cu «Zona membrilor» în subsolul site-ului. Zona membrilor se deschide oricum, după autentificare.",
       "pageDraftHelp": "Nu e pe site: adresa răspunde „pagina nu există”. Zona membrilor merge și așa, pentru cine are cont.",
       "publish": "Publică pagina",
       "unpublish": "Scoate pagina de pe site",
       "publishTitle": "Publici pagina membrilor?",
-      "publishBody": "Pagina apare în ambele limbi, la {ro} și {en}, cu «Membri» în meniu.",
+      "publishBody": "Pagina apare în ambele limbi, la {ro} și {en}, cu «Zona membrilor» în subsolul site-ului.",
       "unpublishTitle": "Scoți pagina de pe site?",
-      "unpublishBody": "Adresa va răspunde „pagina nu există”, iar «Membri» dispare din meniu. Zona membrilor rămâne deschisă pentru cine are cont.",
+      "unpublishBody": "Adresa va răspunde „pagina nu există”, iar «Zona membrilor» dispare din subsolul site-ului. Zona membrilor rămâne deschisă pentru cine are cont.",
       "written": "Scris",
       "notWritten": "Nescris",
       "benefitsHeading": "Beneficiile membrilor",
@@ -5967,6 +5993,7 @@
   "Footer": {
     "myRegistrations": "Înscrierile mele",
     "faq": "Întrebări frecvente",
+    "membersZone": "Zona membrilor",
     "about": {
       "summaryShort": "Despre club",
       "summaryTail": ", contact și termeni",
@@ -5989,7 +6016,7 @@
     "privacyLinkName": "Nota de confidențialitate (GDPR)",
     "privacyLinkShort": "GDPR",
     "termsLinkLabel": "Termeni de concurs",
-    "botCheckNotice": "Verificarea „nu sunt robot” o face Cloudflare, care vede adresa IP și date tehnice ale browserului, doar pentru asta.",
+    "botCheckNotice": "Verificarea „nu sunt robot” e făcută de Cloudflare (vede IP-ul și date tehnice ale browserului).",
     "inForce": "Versiunea {version}, în vigoare din {date}",
     "termsTitle": "Termeni și condiții",
     "privacyTitle": "Notă de confidențialitate"
@@ -6336,6 +6363,13 @@
     },
     "membersAddressLabel": "Adresa contului tău de membru",
     "membersAddressHelp": "Te înscrii cu adresa contului. Un cont înscrie o singură persoană.",
+    "preview": {
+      "noForm": "Previzualizare: evenimentul nu primește înscrieri pe site, deci nu are formular.",
+      "dateLater": "Previzualizare: formularul apare după ce anunți data și ora evenimentului.",
+      "notOpen": "Previzualizare: acum formularul nu primește înscrieri — {door} Mai jos, cum arată când se deschid.",
+      "memberAddress": "adresa membrului, din contul lui",
+      "groupRunDeclaration": "Pagina alergării oferă și declarația opțională pe propria răspundere. Formularul ei nu apare aici."
+    },
     "promo": {
       "label": "Vreau să primesc oferte și beneficii de la {club} și partenerii săi.",
       "help": "Poți renunța oricând din pagina înscrierii tale.",
@@ -6379,7 +6413,14 @@
       "doneTitle": "Adresa a fost confirmată",
       "eventOff": "Evenimentul a fost anulat sau s-a încheiat, așa că înscrierea nu mai continuă: nu ți-am rezervat un loc și nu trebuie să faci nimic.",
       "waitlistFull": "Locurile și lista de așteptare sunt pline, așa că adresa nu a fost confirmată și nu ți-am rezervat nimic. Linkul din email rămâne valabil {confirmation} de la trimiterea formularului: dacă între timp se eliberează un loc pe lista de așteptare, deschide-l din nou.",
-      "noWaitlist": "Toate locurile au fost ocupate și evenimentul nu are listă de așteptare, așa că adresa nu a fost confirmată și nu ți-am rezervat nimic. Linkul din email rămâne valabil {confirmation} de la trimiterea formularului: dacă între timp se eliberează un loc, deschide-l din nou."
+      "noWaitlist": "Toate locurile au fost ocupate și evenimentul nu are listă de așteptare, așa că adresa nu a fost confirmată și nu ți-am rezervat nimic. Linkul din email rămâne valabil {confirmation} de la trimiterea formularului: dacă între timp se eliberează un loc, deschide-l din nou.",
+      "doneFor": "Adresa e confirmată pentru:",
+      "next": {
+        "PENDING_DECLARATION": "semnează declarația din emailul care vine acum",
+        "WAITLIST_OFFERED": "are un loc oferit: semnează declarația din email",
+        "WAITLISTED": "pe lista de așteptare: primește un email când se eliberează un loc",
+        "CONFIRMED": "confirmat"
+      }
     },
     "declare": {
       "title": "Declarație pe proprie răspundere",
@@ -7002,9 +7043,8 @@
     "email": "Adresa ta de e-mail",
     "message": "Mesajul",
     "messageHelp": "Cel mult 2000 de caractere.",
-    "privacy": "Mesajul ajunge ca e-mail în căsuța clubului, la Gmail (Google), unde îl citesc cei din echipă care răspund. Îl folosim doar ca să-ți răspundem și îl ștergem după cel mult 12 luni.",
-    "privacyDetails": "Detalii în",
-    "privacyLinkLabel": "nota de confidențialitate",
+    "privacy": "Îți răspundem pe e-mail (Gmail). Păstrăm mesajul cel mult 12 luni.",
+    "privacyLinkLabel": "Nota de confidențialitate",
     "submit": "Trimite",
     "submitting": "Se trimite…",
     "incompleteHint": "Completează numele, adresa și mesajul ca să poți trimite.",

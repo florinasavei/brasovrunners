@@ -1,3 +1,5 @@
+import { DomainError } from "@/shared/errors/domain-error";
+
 /**
  * The capacity formula of AGENTS.md §10.6, as pure functions over counts a caller has already
  * queried. No database access here: the concurrency test asserts this arithmetic directly, and
@@ -82,4 +84,83 @@ export function hasDirectAvailability(input: AvailabilityInput): boolean {
  */
 export function wantedLapsedHoldReleases(input: { lapsed: number; waiting: number; free: number }): number {
   return Math.min(input.lapsed, Math.max(input.waiting - input.free, 0));
+}
+
+/**
+ * «Dă-i un loc» refused because no place is free (§589; §67, BR-REQ-037-07): the allocator's own
+ * counts, under the event lock, so the desk reads who holds the places instead of «Verifică datele
+ * introduse». Before the close every place that frees up is offered to the head of the queue at
+ * once (`fillAvailableSpots`), so while the race is full the press meets this every time — and a
+ * place promised to somebody (a declaration to sign, an offer, a family's reservation) is never
+ * taken back for it: that would be the overbooking §10.6 forbids. Numbers only, never a name: the
+ * counts ride on the redirect's query string.
+ */
+export const NO_FREE_PLACE = "NO_FREE_PLACE";
+
+export type PlacesTaken = {
+  capacity: number;
+  confirmed: number;
+  declaration: number;
+  offered: number;
+  family: number;
+};
+
+const PLACES_TAKEN_KEYS = ["capacity", "confirmed", "declaration", "offered", "family"] as const satisfies ReadonlyArray<keyof PlacesTaken>;
+
+export class NoFreePlaceError extends DomainError {
+  readonly places: PlacesTaken;
+
+  constructor(capacity: number, counts: OccupiedCounts) {
+    // VALIDATION_ERROR as before; the marker is what the desk's action turns into its sentence.
+    super("VALIDATION_ERROR", "the event is full: no place is free to promote into", [NO_FREE_PLACE]);
+    this.name = "NoFreePlaceError";
+    this.places = placesTaken(capacity, counts);
+  }
+}
+
+/** Who holds an event's places, as the five numbers the sentence says (§589). */
+export function placesTaken(capacity: number, counts: OccupiedCounts): PlacesTaken {
+  return {
+    capacity,
+    confirmed: counts.confirmed,
+    declaration: counts.pendingDeclarationHolds,
+    offered: counts.unexpiredWaitlistOfferedHolds,
+    family: (counts.familyReservations ?? 0) + (counts.familyPlaceHolds ?? 0),
+  };
+}
+
+/**
+ * The press's own test, before the press (§592): the five numbers when «Dă-i un loc» would meet
+ * `NoFreePlaceError`, null when a place is free or the event is uncapped — the comparison
+ * `promoteFromWaitlistByStaff` makes under the lock. The page's read is a forecast for the
+ * tooltip; the server still decides, and still refuses.
+ */
+export function noFreePlace(capacity: number | null, counts: OccupiedCounts): PlacesTaken | null {
+  if (capacity === null || computeOccupied(counts) < capacity) return null;
+  return placesTaken(capacity, counts);
+}
+
+/** The sentence's values from the numbers themselves: the tooltip's, and the redirect's. */
+export function placesTakenValues(places: PlacesTaken): Record<keyof PlacesTaken, string> {
+  return Object.fromEntries(PLACES_TAKEN_KEYS.map((key) => [key, String(places[key])])) as Record<keyof PlacesTaken, string>;
+}
+
+/** The redirect's outcome for that refusal: the code and the five numbers, as strings. */
+export function noFreePlaceOutcome(error: unknown): Record<string, string> | null {
+  if (!(error instanceof NoFreePlaceError)) return null;
+  return { error: NO_FREE_PLACE, ...placesTakenValues(error.places) };
+}
+
+/**
+ * The sentence's values, read back from the page's query: whole numbers only (a hand-typed URL
+ * says «0», never text of its own), and nothing for any other error.
+ */
+export function noFreePlaceValues(error: string | undefined, query: Readonly<Record<string, string | string[] | undefined>>): Record<string, string> | undefined {
+  if (error !== NO_FREE_PLACE) return undefined;
+  return Object.fromEntries(
+    PLACES_TAKEN_KEYS.map((key) => {
+      const value = query[key];
+      return [key, typeof value === "string" && /^\d{1,6}$/.test(value) ? value : "0"];
+    }),
+  );
 }

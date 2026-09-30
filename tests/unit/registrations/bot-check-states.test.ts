@@ -228,7 +228,7 @@ describe("§518 the wiring", () => {
     expect(button).toMatch(/if \(byValve\) \{\s*button\.name = BOT_CHECK_SIGNAL_FIELD;\s*button\.value = "held-press-valve";\s*\}/);
     expect(button).toMatch(/finally \{\s*if \(byValve\) \{\s*button\.removeAttribute\("name"\);\s*button\.removeAttribute\("value"\);/);
     expect(button).not.toMatch(/sendBeacon|reportBotCheckSignal/);
-    const page = read("src/app/[locale]/events/[slug]/register/page.tsx");
+    const page = read("src/modules/registrations/ui/registration-form.tsx");
     for (const [prop, key] of [
       ["botCheckHint", "botCheckWait"],
       ["botCheckTickHint", "botCheckTick"],
@@ -242,7 +242,7 @@ describe("§518 the wiring", () => {
 
   it("every form that runs the check places it with its words", () => {
     for (const page of [
-      "src/app/[locale]/events/[slug]/register/page.tsx",
+      "src/modules/registrations/ui/registration-form.tsx",
       "src/app/[locale]/contact/page.tsx",
       "src/app/[locale]/events/[slug]/declaration/page.tsx",
       "src/modules/newsletter/ui/NewsletterSignup.tsx",
@@ -255,7 +255,7 @@ describe("§518 the wiring", () => {
     for (const key of [...BOT_CHECK_WIDGET_STATES, "slow", "retry", "failed"]) expect(place, key).toMatch(new RegExp(`${key}: (heldPress \\? )?t\\("${key}"\\)`));
     for (const key of PLAIN_KEYS) expect(place, key).toContain(`${key}: heldPress ? t("${key}") : t("plain.${key}")`);
     // Only the registration form holds a press, so only it says the held-press sentences.
-    expect(read("src/app/[locale]/events/[slug]/register/page.tsx")).toMatch(/<BotCheck [^>]*heldPress \/>/);
+    expect(read("src/modules/registrations/ui/registration-form.tsx")).toMatch(/<BotCheck [^>]*heldPress \/>/);
     for (const page of ["src/app/[locale]/contact/page.tsx", "src/app/[locale]/events/[slug]/declaration/page.tsx", "src/modules/newsletter/ui/NewsletterSignup.tsx"]) {
       expect(read(page), page).not.toMatch(/<BotCheck [^>]*heldPress/);
     }

@@ -144,8 +144,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
 
-  // «Beneficiile membrilor» (§524), once per locale, while the menu offers it (`offersMembersEntry`:
-  // published, with its words) — a DRAFT page is a 404. Never the members' zone: it is behind the
+  // «Beneficiile membrilor» (§524), once per locale, while the footer's fold links it (§591,
+  // `offersMembersEntry`: published, with its words) — a DRAFT page is a 404. Never the members' zone: it is behind the
   // sign-in, and `robots.txt` names it.
   if ((await readWithLastGood("sitemap:members", async () => offersMembersEntry(await cachedMembersPage(routing.defaultLocale)), now)).value) {
     for (const locale of routing.locales) {

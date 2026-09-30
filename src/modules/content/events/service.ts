@@ -9,6 +9,7 @@ import { startHeldBack } from "@/modules/events/domain/dated";
 import { readCoHosts } from "@/modules/events/domain/co-hosts";
 import { costPaidToExternalOrganizer, type EventCostType } from "@/modules/events/domain/cost";
 import { difficultyLevel, storedDifficulty } from "@/modules/events/domain/difficulty";
+import { estimatedElevation } from "@/modules/events/domain/elevation";
 import { EVENT_NOTICE_TEXT_MAX, type EventChangeKind, eventChangesToAnnounce, eventNoticeTextSchema } from "@/modules/events/domain/event-changes";
 import { EVENT_TYPES, type EventType, hasProgramme, takesRegistrations } from "@/modules/events/domain/event-type";
 import { englishNameAfterSave, PLACE_NAME_FIELD, type PlaceNameField, placeNameIn, placeShown } from "@/modules/events/domain/place";
@@ -569,6 +570,8 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
     ...(fields.costUrl === undefined ? {} : { costUrl: fields.costUrl }),
     distanceMeters: fields.distanceMeters,
     elevationGainMeters: fields.elevationGainMeters,
+    // «Estimativ» (§585) means nothing without a number: a tick beside an empty box is saved false, quietly.
+    elevationGainEstimated: estimatedElevation(fields.elevationGainMeters, fields.elevationGainEstimated === true),
     nightOverride: fields.nightOverride,
     // Only a group run on asphalt or trail has a self-declaration to offer (§393): anything else
     // is written as not offering one, whatever a hidden or stale box posted — as §111 normalizes a
@@ -1745,6 +1748,8 @@ const SERIES_COLUMNS = [
   "costUrl",
   "distanceMeters",
   "elevationGainMeters",
+  // Whether the climb is a guess (§585) travels with the climb it qualifies.
+  "elevationGainEstimated",
   // The night override, a fact of the route like the two above (§382, §394). "Automat" carried to
   // every date is what makes a weekly run follow the season by itself: each date asks its own sunset.
   "nightOverride",
@@ -2377,6 +2382,7 @@ function blankEventRow(now: Date): EditableEvent {
     scheduleItems: null,
     distanceMeters: null,
     elevationGainMeters: null,
+    elevationGainEstimated: false,
     nightOverride: null,
     offersGroupRunDeclaration: false,
     locationName: null,
@@ -2968,6 +2974,8 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     costUrl: source.costUrl,
     distanceMeters: source.distanceMeters,
     elevationGainMeters: source.elevationGainMeters,
+    // «Estimativ» travels with the climb it qualifies (§585): a copy, and every date of a series.
+    elevationGainEstimated: source.elevationGainEstimated,
     // The night override travels with the route (§382, §394): a copy, and every date a series
     // makes, keeps the organizer's "Da" or "Nu" — and "Automat" stays automatic, so each date is a
     // night event by its own sunset.

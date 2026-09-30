@@ -105,15 +105,12 @@ test.describe.serial("BR-REQ-020-01 criterion 18 the partner marker", () => {
 
   test("the listing card carries one chip with the handshake and the generic label, never the partner's name", async ({ page }) => {
     /*
-      The listing filtered to «Colaborare» (`?partner=1`, §401) — the live twin, rendered per
-      request (§549) — and not the bare listing. The bare listing is a static page shared by both
-      projects: a render another worker started just before the publish above is stored just after
-      the publish expired `public:events`, so it reads as fresh while it lacks this card, and stays
-      so until the next write to an event (the mobile run found the card's chip count 0 there). The
-      twin never stores a page, so it shows the publish; the reload under a bounded wait covers the
-      rows' own cache entry, whose window is one query long. The static page's expiry after a publish
-      is `event-route.spec.ts`'s to prove, not this marker's. The card is found by its own heading
-      (`cardOnListing`, §411), the one way specs find a card.
+      The bare listing, as a visitor opens it. It is a static page shared by both projects, and a
+      render another worker started just before the publish above could be stored just after the
+      publish expired `public:events`; since §583 the write expires its tags a second time, three
+      seconds after its response, so such a render is gone within the bounded wait below, which
+      reloads until the card shows. The card is found by its own heading (`cardOnListing`, §411),
+      the one way specs find a card.
     */
     const partnerChipOn = async (address: string, heading: string, label: string) => {
       await expect(async () => {
@@ -123,7 +120,7 @@ test.describe.serial("BR-REQ-020-01 criterion 18 the partner marker", () => {
       }).toPass({ timeout: 30_000 });
       return cardOnListing(page, heading);
     };
-    const card = await partnerChipOn("/ro/evenimente?partner=1", title, "Colaborare");
+    const card = await partnerChipOn("/ro/evenimente", title, "Colaborare");
     const chip = card.locator(".MuiChip-root").filter({ hasText: "Colaborare" });
     await expect(chip).toHaveCount(1);
     await expect(chip).not.toContainText(partner);
@@ -133,7 +130,7 @@ test.describe.serial("BR-REQ-020-01 criterion 18 the partner marker", () => {
     expect(overflow).toBeLessThanOrEqual(0);
 
     // The English listing says it in English, and never in Romanian.
-    const englishCard = await partnerChipOn("/en/events?partner=1", englishTitle, "Partnership");
+    const englishCard = await partnerChipOn("/en/events", englishTitle, "Partnership");
     await expect(englishCard).not.toContainText("Colaborare");
     await expect(englishCard).not.toContainText(partner);
   });

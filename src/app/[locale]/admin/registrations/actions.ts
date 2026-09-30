@@ -26,6 +26,7 @@ import { effectiveMinimumAge, yearsPhrase } from "@/modules/registrations/domain
 import { UNDER_MINIMUM_AGE } from "@/modules/registrations/fields";
 import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS } from "@/modules/registrations/domain/family";
 import { waitlistRefusalCode } from "@/modules/registrations/domain/waitlist";
+import { noFreePlaceOutcome } from "@/modules/registrations/domain/capacity";
 import { sendOutboxNow } from "@/modules/notifications/send-now";
 import { requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
@@ -154,13 +155,14 @@ export async function promoteRegistrationAction(_previous: FormOutcome | null, f
   const locale = toLocale(form.get("uiLocale"));
   const registrationId = text(form, "registrationId");
 
-  let outcome: { error?: string; saved?: string };
+  let outcome: Record<string, string | undefined>;
   try {
     const actor = await requireStaff();
     await promoteRegistrationByStaff(getDb(), actor, registrationId, new Date());
     outcome = { saved: "registrationConfirmed" };
   } catch (error) {
-    outcome = outcomeOf(error);
+    // No place free (§589): the sentence names who holds the places, by number, not "check the data".
+    outcome = noFreePlaceOutcome(error) ?? outcomeOf(error);
   }
   return backToDesk(form, locale, registrationId, outcome);
 }

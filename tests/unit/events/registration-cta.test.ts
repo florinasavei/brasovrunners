@@ -138,6 +138,7 @@ describe("BR-REQ-034-01 an open event", () => {
     expect(registrationCta(event({ availablePlaces: 4 }), DURING)).toEqual({
       kind: "OPEN",
       availablePlaces: 4,
+      waiting: 0,
     });
   });
 
@@ -146,6 +147,7 @@ describe("BR-REQ-034-01 an open event", () => {
     expect(registrationCta(event({ availablePlaces: null }), DURING)).toEqual({
       kind: "OPEN",
       availablePlaces: null,
+      waiting: 0,
     });
   });
 });
@@ -153,7 +155,7 @@ describe("BR-REQ-034-01 an open event", () => {
 describe("BR-REQ-035-01 a full event", () => {
   it("offers the waiting list rather than refusing", () => {
     // No limit said — every event before §348, and every caller that does not pass one.
-    expect(registrationCta(event({ availablePlaces: 0 }), DURING)).toEqual({ kind: "FULL", waitlistRoom: null });
+    expect(registrationCta(event({ availablePlaces: 0 }), DURING)).toEqual({ kind: "FULL", waitlistRoom: null, waiting: 0 });
   });
 
   it("is never full when it is uncapped", () => {
@@ -172,6 +174,7 @@ describe("BR-REQ-035-01 a full event whose waiting list has a limit (§348)", ()
     expect(registrationCta(event({ availablePlaces: 0, waitlistCapacity: 10, waitlistRoom: 3 }), DURING)).toEqual({
       kind: "FULL",
       waitlistRoom: 3,
+      waiting: 0,
     });
   });
 
@@ -191,6 +194,7 @@ describe("BR-REQ-035-01 a full event whose waiting list has a limit (§348)", ()
     expect(registrationCta(event({ availablePlaces: 2, waitlistCapacity: 0, waitlistRoom: 0 }), DURING)).toEqual({
       kind: "OPEN",
       availablePlaces: 2,
+      waiting: 0,
     });
   });
 

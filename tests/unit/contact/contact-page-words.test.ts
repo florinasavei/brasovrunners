@@ -125,10 +125,12 @@ describe("§546 the contact page says what it must and little else", () => {
         const buttonEnd = main.indexOf("</button>", main.indexOf('type="submit"', formAt));
         const toTheButton = words(main.slice(0, buttonEnd));
         expect(toTheButton.length, toTheButton.join(" ")).toBeLessThanOrEqual(120);
-        // What a rule asks for is still there: the privacy sentence and Cloudflare's line.
+        // What a rule asks for is still there: the privacy line and the notice's link (§593).
+        // Cloudflare's line is not, at rest: it comes with the widget, on the first touch (§593).
         const text = words(main).join(" ");
-        expect(text).toContain(words(catalogues[lang].Contact.privacy).join(" "));
-        expect(text).toContain(words(catalogues[lang].Legal.botCheckNotice).join(" "));
+        const contact = catalogues[lang].Contact;
+        expect(text).toContain(words(`${contact.privacy} ${contact.privacyLinkLabel}`).join(" "));
+        expect(text).not.toContain(words(catalogues[lang].Legal.botCheckNotice).join(" "));
         // The newsletter's box at rest: its heading, one short sentence and the button.
         const box = words(main.slice(main.indexOf('data-testid="newsletter-open"') - 2000, main.indexOf('data-testid="newsletter-open"')));
         const newsletter = catalogues[lang].Newsletter;
@@ -141,12 +143,22 @@ describe("§546 the contact page says what it must and little else", () => {
     });
   }
 
+  it("says the privacy line and Cloudflare's line in one short sentence each (§593)", () => {
+    expect(catalogues.ro.Contact.privacy).toBe("Îți răspundem pe e-mail (Gmail). Păstrăm mesajul cel mult 12 luni.");
+    expect(catalogues.en.Contact.privacy).toBe("We answer by e-mail (Gmail). We keep the message for at most 12 months.");
+    expect(catalogues.ro.Contact.privacyLinkLabel).toBe("Nota de confidențialitate");
+    expect(catalogues.en.Contact.privacyLinkLabel).toBe("Privacy notice");
+    expect(catalogues.ro.Legal.botCheckNotice).toBe("Verificarea „nu sunt robot” e făcută de Cloudflare (vede IP-ul și date tehnice ale browserului).");
+    expect(catalogues.en.Legal.botCheckNotice).toBe("The “not a robot” check is done by Cloudflare (it sees the IP and technical browser data).");
+  });
+
   it("keeps the words the page lost out of both catalogues", () => {
     for (const catalogue of [catalogues.ro, catalogues.en]) {
       const contact = catalogue.Contact as Record<string, unknown>;
       const newsletter = catalogue.Newsletter as Record<string, unknown>;
       expect(contact.requiredLegend, "Contact.requiredLegend is orphaned").toBeUndefined();
       expect(contact.emailHelp, "Contact.emailHelp is orphaned").toBeUndefined();
+      expect(contact.privacyDetails, "Contact.privacyDetails is orphaned").toBeUndefined();
       expect(newsletter.emailHelp, "Newsletter.emailHelp is orphaned").toBeUndefined();
     }
   });
