@@ -1,3 +1,4 @@
+import CardMembershipIcon from "@mui/icons-material/CardMembership";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import Box from "@mui/material/Box";
 import MuiLink from "@mui/material/Link";
@@ -5,7 +6,7 @@ import Stack from "@mui/material/Stack";
 import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { faqOnSite } from "@/modules/content/faq/on-site";
-import { menuOrderOnSite } from "@/modules/content/menu/on-site";
+import { membersOnSite, menuOrderOnSite } from "@/modules/content/menu/on-site";
 import { sortByMenuOrder } from "@/modules/content/menu/order";
 import { OPEN_METEO_SITE } from "@/modules/weather/domain/credit";
 import { weatherListWords } from "@/modules/weather/words";
@@ -194,6 +195,8 @@ export default async function SiteFooter() {
   const contacts = await cachedShownContactAddresses();
   // «Întrebări frecvente» in the fold (§525) while the page is on the site — the header's own rule.
   const showFaq = await faqOnSite(locale);
+  // «Zona membrilor» in the fold (§NNN, moved from the header's menu): while «Beneficiile membrilor» is published with its words (§524).
+  const showMembers = await membersOnSite(locale);
   /*
     The menu's entries the fold carries — «Întrebări frecvente» and «Contact» — in the club's one
     order (§571), the header's. «Întrebări frecvente» stays on the first line after the terms and
@@ -392,6 +395,14 @@ export default async function SiteFooter() {
                 {/* "My registrations" (BR-REQ-036-04): the one place a runner finds it without an email. A form rendered per request: never prefetched (§549). */}
                 <Link href="/registrations/mine" prefetch={false}>{footer("myRegistrations")}</Link>
                 {showFaq && !faqAfterContact && <Link href="/faq" data-testid="footer-faq">{footer("faq")}</Link>}
+                {/* The members' zone (§NNN): the header's «Membri» moved here, after the standing links, with its glyph (§498);
+                    rendered per request (the sign-in), so never prefetched (§549). */}
+                {showMembers && (
+                  <Link href="/members" prefetch={false} data-testid="footer-members" style={{ gap: 4 }}>
+                    <CardMembershipIcon aria-hidden sx={{ fontSize: "1.1em" }} />
+                    {footer("membersZone")}
+                  </Link>
+                )}
               </Box>
               {/* "Scrie-ne" once (BR-REQ-070-04; the form is rendered per request, so never prefetched, §549): the form, and — when the club's mailbox is
                   configured (§8; nothing here invents an address) — the address beside it as the

@@ -29,8 +29,7 @@
       "team": "Team",
       "faq": "FAQ",
       "more": "Menu",
-      "contact": "Contact",
-      "members": "Members"
+      "contact": "Contact"
     },
     "newBuild": {
       "body": "A new version of the site has been deployed — reload the page whenever you are ready, but anything you have typed into an open form will be lost.",
@@ -3600,8 +3599,7 @@
         "contact": "Contact",
         "gallery": "Gallery",
         "team": "Team",
-        "faq": "Frequently asked questions",
-        "members": "Members"
+        "faq": "Frequently asked questions"
       }
     },
     "fontSize": {
@@ -5824,14 +5822,14 @@
       "pageHeading": "The Members' benefits page",
       "pagePublished": "On the site",
       "pageDraft": "Draft",
-      "pagePublishedHelp": "On the site at {ro} and {en}, with «Members» in the menu. The members' area opens either way, after signing in.",
+      "pagePublishedHelp": "On the site at {ro} and {en}, with «Members' zone» in the site's footer. The members' area opens either way, after signing in.",
       "pageDraftHelp": "Not on the site: the address answers \"page not found\". The members' area works anyway, for whoever has an account.",
       "publish": "Publish the page",
       "unpublish": "Take the page off the site",
       "publishTitle": "Publish the members' page?",
-      "publishBody": "The page appears in both languages, at {ro} and {en}, with «Members» in the menu.",
+      "publishBody": "The page appears in both languages, at {ro} and {en}, with «Members' zone» in the site's footer.",
       "unpublishTitle": "Take the page off the site?",
-      "unpublishBody": "The address will answer \"page not found\" and «Members» leaves the menu. The members' area stays open for whoever has an account.",
+      "unpublishBody": "The address will answer \"page not found\" and «Members' zone» leaves the site's footer. The members' area stays open for whoever has an account.",
       "written": "Written",
       "notWritten": "Not written",
       "benefitsHeading": "Members' benefits",
@@ -5967,6 +5965,7 @@
   "Footer": {
     "myRegistrations": "My registrations",
     "faq": "FAQ",
+    "membersZone": "Members' zone",
     "about": {
       "summaryShort": "About the club",
       "summaryTail": ", contact and legal",

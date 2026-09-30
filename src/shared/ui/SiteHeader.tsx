@@ -91,8 +91,9 @@ export default async function SiteHeader() {
   const locale = await getLocale();
   const pages = await navigationPages(locale as Locale);
   /**
-   * Which of the platform's sections are offered — the gallery, «Echipa», «Întrebări frecvente»,
-   * «Membri» and «Contact» each only while there is something behind it — and the club's one
+   * Which of the platform's sections are offered — the gallery, «Echipa», «Întrebări frecvente»
+   * and «Contact» each only while there is something behind it (the members' zone is the footer's
+   * since §NNN, not the menu's) — and the club's one
    * order for every entry (§571), both asked where the backoffice's «Ordinea meniului» card asks
    * them (`modules/content/menu/on-site.ts`), so the card greys exactly what the menu leaves out.
    */
@@ -220,7 +221,6 @@ export default async function SiteHeader() {
             showGallery={sections.gallery}
             showTeam={sections.team}
             showFaq={sections.faq}
-            showMembers={sections.members}
             showContact={sections.contact}
             order={order}
           />
