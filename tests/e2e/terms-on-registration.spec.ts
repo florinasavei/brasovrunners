@@ -112,7 +112,7 @@ test.describe("§425 the accepted terms on the registration's page and in the ex
       expect(response.status()).toBe(200);
       const [header, ...lines] = (await response.text()).split("\r\n");
       // The terms' two columns, then the declaration's two (§499), then the family column (§543),
-      // then the participant's reason for cancelling (§558), then the offers and benefits (§NNN), the last.
+      // then the participant's reason for cancelling (§558), then the offers and benefits (§562), the last.
       expect(header.split(",").slice(-7, -3)).toEqual(["Terms version", "Terms accepted", "Declaration version", "Declaration signed"]);
       expect(header.split(",").at(-3)).toBe("family");
       expect(header.split(",").at(-2)).toBe("Cancellation reason");

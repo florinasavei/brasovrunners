@@ -104,10 +104,26 @@ test.describe.serial("BR-REQ-020-01 criterion 18 the partner marker", () => {
   });
 
   test("the listing card carries one chip with the handshake and the generic label, never the partner's name", async ({ page }) => {
-    await page.goto("/ro/evenimente");
-    // `cardOnListing` opens "other events" first — a phone listing folded by more than four
-    // cards (§78, another spec's fixtures among them) would otherwise stay closed over this one.
-    const card = await cardOnListing(page, title);
+    /*
+      The listing filtered to «Colaborare» (`?partner=1`, §401) — the live twin, rendered per
+      request (§549) — and not the bare listing. The bare listing is a static page shared by both
+      projects: a render another worker started just before the publish above is stored just after
+      the publish expired `public:events`, so it reads as fresh while it lacks this card, and stays
+      so until the next write to an event (the mobile run found the card's chip count 0 there). The
+      twin never stores a page, so it shows the publish; the reload under a bounded wait covers the
+      rows' own cache entry, whose window is one query long. The static page's expiry after a publish
+      is `event-route.spec.ts`'s to prove, not this marker's. The card is found by its own heading
+      (`cardOnListing`, §411), the one way specs find a card.
+    */
+    const partnerChipOn = async (address: string, heading: string, label: string) => {
+      await expect(async () => {
+        await page.goto(address);
+        const card = await cardOnListing(page, heading);
+        await expect(card.locator(".MuiChip-root").filter({ hasText: label })).toHaveCount(1, { timeout: 2_000 });
+      }).toPass({ timeout: 30_000 });
+      return cardOnListing(page, heading);
+    };
+    const card = await partnerChipOn("/ro/evenimente?partner=1", title, "Colaborare");
     const chip = card.locator(".MuiChip-root").filter({ hasText: "Colaborare" });
     await expect(chip).toHaveCount(1);
     await expect(chip).not.toContainText(partner);
@@ -117,9 +133,7 @@ test.describe.serial("BR-REQ-020-01 criterion 18 the partner marker", () => {
     expect(overflow).toBeLessThanOrEqual(0);
 
     // The English listing says it in English, and never in Romanian.
-    await page.goto("/en/events");
-    const englishCard = await cardOnListing(page, englishTitle);
-    await expect(englishCard.locator(".MuiChip-root").filter({ hasText: "Partnership" })).toHaveCount(1);
+    const englishCard = await partnerChipOn("/en/events?partner=1", englishTitle, "Partnership");
     await expect(englishCard).not.toContainText("Colaborare");
     await expect(englishCard).not.toContainText(partner);
   });

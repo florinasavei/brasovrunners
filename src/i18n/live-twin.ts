@@ -41,7 +41,7 @@ export const LIVE_SEGMENT = "live";
     page runs, so a value it drops is dropped here too) or the list layout (`?view=list`, first value,
     as the page reads it).
   - **The bare calendar**: the same filters, and its old `?month=`, `?year=`, `?view=` should one get
-    past the proxy's redirect to the period's path (§577, the calendar's own).
+    past the proxy's redirect to the period's path (§574, the calendar's own).
   - **A calendar period's path**: the filters.
   - **An event page**: its four keys, whatever their value — the start list's page (`?lista=`, §250),
     the interest box's outcome and its timing (`?interest=`, `?since=`, §146) and the signer's link

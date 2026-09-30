@@ -18,7 +18,7 @@ export type QrWords = {
 type Props = {
   checkinCode: string;
   registeredName: string;
-  /** With the number, what `raceNumberOf` asks (§NNN): a number is shown once confirmed, and never before. */
+  /** With the number, what `raceNumberOf` asks (§548): a number is shown once confirmed, and never before. */
   status: RegistrationStatus;
   bibNumber: number | null;
   /** The picture's side in pixels: 200 on «Gestionează înscrierea», 160 on «Înscrierile mele». */

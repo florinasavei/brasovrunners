@@ -214,7 +214,15 @@ describe("§199 the form filled a second time with the same address", () => {
     // the marker never reaches a reader as underscores.
     expect(message.html).toContain(`<u style="text-decoration:underline">Ești deja înscris</u>`);
     expect(message.text).toContain("Ești deja înscris la acest eveniment");
-    expect(message.text).not.toContain("__");
+    /*
+      The words, not the addresses (§309). The text's links carry the action tokens — 43 random
+      base64url characters each (`generateTokenSecret`), an alphabet with `_` in it — and two of
+      them hold `__` somewhere in about one message in fifty: CI met one (#297) while every local
+      run passed. The marker is the renderer's to strip from the sentences; an address is left as
+      it was minted, underscores and all, or the link would not open.
+    */
+    const words = message.text.replace(/https?:\/\/\S+/g, "<link>");
+    expect(words).not.toContain("__");
   });
   it("sends what the state can offer once the address is already confirmed", async () => {
     /*

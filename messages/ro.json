@@ -5980,14 +5980,8 @@
     "contactPage": "Scrie-ne"
   },
   "Identity": {
-    "blockLabel": "Datele clubului",
     "line": "{legalName} ({club}) · CIF {cif}",
-    "lineNoCif": "{legalName} ({club})",
-    "cif": "C.I.F. {cif}",
-    "country": "România",
-    "socialLabel": "Urmărește clubul",
-    "contactHeading": "Contact",
-    "writeToUs": "Scrie-ne"
+    "lineNoCif": "{legalName} ({club})"
   },
   "Legal": {
     "unavailable": "Acest document nu a fost încă publicat pentru acest mediu.",

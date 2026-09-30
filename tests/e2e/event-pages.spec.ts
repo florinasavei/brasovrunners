@@ -221,7 +221,7 @@ test.describe("BR-REQ-041-01 the event list on a phone", () => {
   });
 
   /**
-   * The same criterion, made independent of the day it runs (§NNN, amending §413). The test above
+   * The same criterion, made independent of the day it runs (§575, amending §413). The test above
    * steps from this month to the next, so it only sees the «Filtre» slot change when one of the two
    * months happens to offer nothing — as on 2026-09-30, when September's one remaining event had
    * nothing to choose between and October did: the arrows moved 44 px on a phone, 60 on a desktop.
