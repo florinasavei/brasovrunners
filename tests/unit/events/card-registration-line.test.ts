@@ -90,6 +90,14 @@ describe("§409 cardRegistrationLine — the card's registration, in words", () 
     expect(en.button?.label).toBe("Join the waiting list");
   });
 
+  it("§NNN says the room a capped waiting list has left under the join sentence, and nothing for a list with no limit", () => {
+    const capped = cardRegistrationLine(translator("ro"), "ro", race(), NOW, known({ kind: "FULL", waitlistRoom: 4, waiting: 1 }, { taken: 10, capacity: 10 }));
+    expect(capped.roomLine).toBe("Mai sunt 4 locuri pe lista de așteptare");
+    expect(cardRegistrationLine(translator("en"), "en", race(), NOW, known({ kind: "FULL", waitlistRoom: 1, waiting: 0 })).roomLine).toBe("1 place left on the waiting list");
+    const unlimited = cardRegistrationLine(translator("ro"), "ro", race(), NOW, known({ kind: "FULL", waitlistRoom: null, waiting: 1 }, { taken: 10, capacity: 10 }));
+    expect(unlimited.roomLine).toBeUndefined();
+  });
+
   it("§587 says how many wait beside the free places, once anybody does", () => {
     const line = cardRegistrationLine(translator("ro"), "ro", race(), NOW, known({ kind: "OPEN", availablePlaces: 1, waiting: 2 }, { taken: 9, capacity: 10 }));
     expect(line.detail).toBe("1 loc liber din 10 · 2 pe lista de așteptare");
@@ -195,6 +203,13 @@ describe("§472 CardRegistration — only the date, the hour and the free places
     expect(html).toContain('data-testid="card-waitlist-note"');
     expect(html).not.toContain('data-testid="card-places"');
     expect(strongs(render("en", known({ kind: "FULL", waitlistRoom: null, waiting: 0 })))).toEqual(["All places are taken."]);
+  });
+
+  it("§NNN draws the capped list's room between the join sentence and the quiet window, not bold, and nothing for a list with no limit", () => {
+    const html = render("ro", known({ kind: "FULL", waitlistRoom: 4, waiting: 1 }, { taken: 10, capacity: 10 }));
+    expect(text(html)).toContain("te anunțăm pe email când se eliberează un loc. Mai sunt 4 locuri pe lista de așteptare Înscrieri deschise până");
+    expect(strongs(html)).toHaveLength(1);
+    expect(render("ro", known({ kind: "FULL", waitlistRoom: null, waiting: 1 }, { taken: 10, capacity: 10 }))).not.toContain('data-testid="card-waitlist-room"');
   });
 });
 

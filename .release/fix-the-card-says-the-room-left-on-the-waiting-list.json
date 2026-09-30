@@ -1,0 +1,14 @@
+{
+  "branch": "fix/the-card-says-the-room-left-on-the-waiting-list",
+  "decisionsTitle": "The full event's card says the room left on a capped waiting list",
+  "decisionsSection": "**The owner, 2026-09-30, a screenshot of the full race's listing card on QA (BR-V2.48):** «Aici trebuie să scriu și câte locuri mai sunt pe listă».\n\n**Decision (amending §587).** When the places are gone and the waiting list takes people, the card's three lines — the bold thank-you, «Intră pe lista de așteptare — te anunțăm pe email când se eliberează un loc.» and the quiet «Înscrieri deschise până …» — gain a fourth between the join sentence and the quiet window: the room the list has left, in the event page's own phrase (§348, `Event.cta.waitlistRoom.*`): «Mai este 1 loc pe lista de așteptare» / «Mai sunt 4 locuri pe lista de așteptare», «4 places left on the waiting list» in English. It is plain, like the join sentence, not bold: the thank-you stays the one bold part (§472, §587). It is drawn only when the list has a limit — a list with no limit says nothing, as on the page — and a list with no room left is already `WAITLIST_FULL`, §587's own sentence with no button.\n\n**One source, one read.** `cardRegistrationLine` in `CardRegistration.tsx` is the lead card's and the ordinary cards' line (§388), and the number is `cta.waitlistRoom` from the door the card already reads (`registration-door.ts`), the same the page's `RegistrationCta` draws it from: no new query, no new key.\n\n**Refused:** a shorter card form («Mai sunt 4 locuri pe listă») — a second wording of the same fact; the page's phrase fits a phone.",
+  "changelogLine": "- **The full event's card says how many places are left on the waiting list** — «Mai sunt 4 locuri pe lista de așteptare» under the join sentence, the event page's own words, only when the list has a limit. §NNN.",
+  "specsCriteria": [
+    {
+      "requirement": "BR-REQ-035-01",
+      "text": "While an event has no free place and its waiting list has a limit and room, the listing card says the room left in the event page's words — «Mai sunt {n} locuri pe lista de așteptare» — between «Intră pe lista de așteptare …» and the quiet window, not bold; a waiting list with no limit adds no line (2026-09-30, `DECISIONS.md` §NNN)."
+    }
+  ],
+  "docsNotes": "",
+  "batchLine": "the full event's card says the room left on a capped waiting list"
+}
