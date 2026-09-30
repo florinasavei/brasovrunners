@@ -17,7 +17,11 @@
  * - «Echipa» (§474, §482): a card's role, its words about the person and its links' labels, and
  *   the page's introduction — one form per card, each posting the same names;
  * - «Întrebări frecvente» (§525): each card's question, «Categorie» and answer (`faq[<n>].…`), and
- *   the page's introduction — the whole page one form.
+ *   the page's introduction — the whole page one form;
+ * - «Membri» (§524, §NNN): «Beneficiile membrilor» and the members' zone, each its own form posting
+ *   `benefitsRoBody` / `benefitsEnBody` and `zoneRoBody` / `zoneEnBody`. They were missing here
+ *   until §NNN, so «Copiază și tradu tot» above them found no English box it could fill and said
+ *   «Nu e nimic de tradus» over a Romanian text already written.
  *
  * **Deliberately not on it:** a page's address (`slug` — an address, not words); anything under
  * `/admin/legal` (counsel-reviewed, §418, and the legal editor posts other names anyway); and
@@ -61,6 +65,8 @@ const ENGLISH_FIELD_PATTERNS: readonly RegExp[] = [
   /^faq\[\d{1,3}\]\.answerEnBody$/,
   // The newsletter's body, written in the editor (§550); its subject is `subjectEn` above.
   /^newsletterBodyEn$/,
+  // «Membri» (§524, §NNN): the public page's benefits and the members' zone, one rich text each.
+  /^(benefits|zone)EnBody$/,
 ];
 
 /** The newsletter composer's body (§550): a rich text posting as `newsletterBodyRo` / `newsletterBodyEn`. */
@@ -68,9 +74,9 @@ const NEWSLETTER_RICH_TEXT = /^newsletterBodyEn$/;
 
 /**
  * The rich texts that spell their pair `…RoBody` / `…EnBody`: «Echipa»'s bio and introduction
- * (§474), and a question's answer on «Întrebări frecvente» (§525).
+ * (§474), a question's answer on «Întrebări frecvente» (§525), and «Membri»'s two texts (§524, §NNN).
  */
-const TEAM_RICH_TEXT = /^(?:bio|intro|faq\[\d{1,3}\]\.answer)EnBody$/;
+const TEAM_RICH_TEXT = /^(?:bio|intro|benefits|zone|faq\[\d{1,3}\]\.answer)EnBody$/;
 
 /** Whether `name` is an English box the club types words into — the whole of what may be translated. */
 export function isTranslatableEnglishField(name: string): boolean {
