@@ -292,7 +292,7 @@ export default async function ContactPage({ params, searchParams }: Props) {
 
               {/* Cloudflare Turnstile, when the club switched it on (§97), drawn and reset by
                   its own island (§185) — the implicit widget could not survive a re-render.
-                  Cloudflare's sentence (§323) comes with the widget, and the box takes no room before it (§NNN). */}
+                  Cloudflare's sentence (§323) comes with the widget, and the box takes no room before it (§593). */}
               {siteKey && (
                 <Box id={fieldId("captcha")} sx={BOT_CHECK_SLOT_SX}>
                   <BotCheck siteKey={siteKey} locale={locale} attempt={now.toISOString()} notice />
@@ -305,7 +305,7 @@ export default async function ContactPage({ params, searchParams }: Props) {
               )}
 
               {/*
-                One line and the notice's link (§NNN; the owner: «prea lung și AI slop»): how we answer,
+                One line and the notice's link (§593; the owner: «prea lung și AI slop»): how we answer,
                 where the message lands (Gmail, §323) and how long it is kept. The notice says the rest.
               */}
               <Typography variant="body2" color="text.secondary">

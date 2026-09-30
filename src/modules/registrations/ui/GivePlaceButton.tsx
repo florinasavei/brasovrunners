@@ -7,7 +7,7 @@ import { givePlaceRefusalAhead } from "../give-place-tip";
 /**
  * «Dă-i un loc», the submit of the form its page renders — on the registration's page and at the
  * desk (§67, BR-REQ-037-07). On a full race it stays visible and pressable, and an «i» beside it,
- * 44 px, says why the press will be refused and what to do first (§NNN): the refusal banner's own
+ * 44 px, says why the press will be refused and what to do first (§592): the refusal banner's own
  * sentence with the numbers read now, on hover, on keyboard focus and on a tap. With a place free
  * there is no «i». The server still refuses a full race whatever this says (§589, §10.6).
  */

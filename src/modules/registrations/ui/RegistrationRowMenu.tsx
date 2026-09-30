@@ -59,7 +59,7 @@ export type RegistrationMenuItem =
       formId: string;
       color?: "primary" | "error" | "warning";
       /**
-       * Why the press will be refused, as a tooltip on the item (§NNN): «Dă-i un loc» on a full race.
+       * Why the press will be refused, as a tooltip on the item (§592): «Dă-i un loc» on a full race.
        * The item stays and still submits; the server still refuses.
        */
       hint?: string;

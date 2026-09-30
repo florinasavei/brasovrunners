@@ -125,8 +125,8 @@ describe("§546 the contact page says what it must and little else", () => {
         const buttonEnd = main.indexOf("</button>", main.indexOf('type="submit"', formAt));
         const toTheButton = words(main.slice(0, buttonEnd));
         expect(toTheButton.length, toTheButton.join(" ")).toBeLessThanOrEqual(120);
-        // What a rule asks for is still there: the privacy line and the notice's link (§NNN).
-        // Cloudflare's line is not, at rest: it comes with the widget, on the first touch (§NNN).
+        // What a rule asks for is still there: the privacy line and the notice's link (§593).
+        // Cloudflare's line is not, at rest: it comes with the widget, on the first touch (§593).
         const text = words(main).join(" ");
         const contact = catalogues[lang].Contact;
         expect(text).toContain(words(`${contact.privacy} ${contact.privacyLinkLabel}`).join(" "));
@@ -143,7 +143,7 @@ describe("§546 the contact page says what it must and little else", () => {
     });
   }
 
-  it("says the privacy line and Cloudflare's line in one short sentence each (§NNN)", () => {
+  it("says the privacy line and Cloudflare's line in one short sentence each (§593)", () => {
     expect(catalogues.ro.Contact.privacy).toBe("Îți răspundem pe e-mail (Gmail). Păstrăm mesajul cel mult 12 luni.");
     expect(catalogues.en.Contact.privacy).toBe("We answer by e-mail (Gmail). We keep the message for at most 12 months.");
     expect(catalogues.ro.Contact.privacyLinkLabel).toBe("Nota de confidențialitate");

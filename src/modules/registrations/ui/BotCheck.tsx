@@ -19,7 +19,7 @@ import TurnstileWidget, { type BotCheckWords } from "./TurnstileWidget";
  *
  * `notice` adds the sentence that names Cloudflare and what it sees (§323, `Legal.botCheckNotice`)
  * under the check — drawn by the island with the widget, once a person starts on the form, and not
- * before (§NNN): the registration form, the contact form and the interest box carry it. The form
+ * before (§593): the registration form, the contact form and the interest box carry it. The form
  * wraps this in a box with `BOT_CHECK_SLOT_SX`, so an unarmed check leaves no gap either.
  */
 export default async function BotCheck({

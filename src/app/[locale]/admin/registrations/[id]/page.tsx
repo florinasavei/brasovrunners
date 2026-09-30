@@ -484,7 +484,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
               data-testid="promote-form"
             >
               {deskHidden}
-              {/* On a full race, an «i» says why the press will be refused (§NNN). */}
+              {/* On a full race, an «i» says why the press will be refused (§592). */}
               <GivePlaceButton eventId={registration.eventId} />
             </ActionForm>
           )}

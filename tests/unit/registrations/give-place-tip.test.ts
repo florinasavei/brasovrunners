@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { PlacesTaken } from "@/modules/registrations/domain/capacity";
 
 /**
- * `DECISIONS.md` §NNN — «Dă-i un loc» on a full race stays, and an «i» beside it says why the press
+ * `DECISIONS.md` §592 — «Dă-i un loc» on a full race stays, and an «i» beside it says why the press
  * will be refused, in the refusal banner's own words (§589), which now end by saying what to do
  * first: raise the event's capacity. No overbooking from the desk (AGENTS.md §10.6).
  */
@@ -40,7 +40,7 @@ const render = async (locale: "ro" | "en") => {
   return renderToStaticMarkup(await GivePlaceButton({ eventId: "event" }));
 };
 
-describe("§NNN «Dă-i un loc» says why before the press", () => {
+describe("§592 «Dă-i un loc» says why before the press", () => {
   beforeEach(() => {
     full = null;
   });

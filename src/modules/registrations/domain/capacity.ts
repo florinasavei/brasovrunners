@@ -130,7 +130,7 @@ export function placesTaken(capacity: number, counts: OccupiedCounts): PlacesTak
 }
 
 /**
- * The press's own test, before the press (§NNN): the five numbers when «Dă-i un loc» would meet
+ * The press's own test, before the press (§592): the five numbers when «Dă-i un loc» would meet
  * `NoFreePlaceError`, null when a place is free or the event is uncapped — the comparison
  * `promoteFromWaitlistByStaff` makes under the lock. The page's read is a forecast for the
  * tooltip; the server still decides, and still refuses.

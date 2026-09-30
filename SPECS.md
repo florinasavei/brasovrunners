@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.47-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.48-2026-09-27 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V2.47-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.48-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -741,6 +741,7 @@ coffee is run on nothing.
 27. Given the registration form, when its «Acorduri» block renders, then it is its own stack with no gap between rows, every box in it is MUI's small box at 44 by 44 pixels with its label in body2 (a one-line row 44 px, a row `max(44, 24 + 20 × lines)` px), each helper line is a caption under the label's words that describes the box, and the race's conditions are a regular-height button with the book glyph that still opens the text before its box can be ticked — with every word of the terms, fitness and privacy ticks unchanged, and the whole block measured under 580 px at 320 px and 280 px on a desktop (2026-09-29, `DECISIONS.md` §570).
 28. Given the registration form's «Acorduri» block and the declaration page's boxes, when they render, then every box's label starts with its own `aria-hidden` glyph in a column of its own — the book for the race's conditions, a document for the terms, the medical case for the fitness declaration, the shield for the privacy notice, the trophy for the participants & results list, the share glyph for the socials, the megaphone for offers and benefits, the quill for the declaration — the optional boxes (the list, the socials, the offers) end « — opțional» / “ — optional” after their words, the offers sentence keeps its full stop and its helper no longer opens with «Opțional.», and a required box carries one required mark after its last word on a required input (2026-09-29, `DECISIONS.md` §570).
 29. Given a page with a form protected by the anti-bot check, then Cloudflare's script is not requested and no widget is drawn until a person focuses, presses, types or presses a key inside that form, and no page without such a form (the listing, an event page's interest box before it is touched) requests it at all; the token is verified on the server only on submit (2026-09-30, `DECISIONS.md` §577, amending §97 and §185).
+30. Until a person starts on a protected form, the anti-bot check draws nothing a person can see: no reserved height and no sentence naming Cloudflare; the sentence appears with the widget (2026-09-30, `DECISIONS.md` §593).
 
 **Verification:** e2e `registration-submit.spec.ts`, `registration-form.spec.ts` (5); integration `participants/identity.test.ts`; unit `registrations/turnstile.test.ts`
 
@@ -1551,6 +1552,8 @@ way through every step, and none of them is a way around the allocator.
 14. A paper confirmation at the desk gets its number at that press, in the order of confirmation, or the spare the volunteer hands, checked again under the lock (2026-09-28, `DECISIONS.md` §548).
 15. Criteria 12 and 13 above describe the provisional numbers of §214/§220/§444 and are superseded by this decision: a number exists only once the registration is confirmed (2026-09-28, `DECISIONS.md` §548).
 16. «Dă-i un loc» refused because no place is free changes nothing and says so with the allocator's own counts under the event lock — the event's places, the confirmed, the declarations to sign, the open offers and a family's reserved places — in the backoffice's language, never «Verifică datele introduse»; the same press confirms the registration, with a number and the confirmation email, as soon as a place is free, including one a family's lapsed reservation released with no job run since (2026-09-30, `DECISIONS.md` §589).
+17. On a full race «Dă-i un loc» stays visible on the registrations list, the registration's page and both desk pages. It carries a keyboard- and touch-reachable tooltip whose words are the refusal banner's own (`Admin.errors.NO_FREE_PLACE`) with the allocator's counts, read once per event per request. With a place free there is no tooltip (2026-09-30, `DECISIONS.md` §592).
+18. The refusal of «Dă-i un loc» on a full race ends «Mărește întâi capacitatea evenimentului.» / "Raise the event's capacity first." The press never takes a place beyond capacity or one promised to somebody else (2026-09-30, `DECISIONS.md` §592).
 
 **Verification:** integration `registrations/race-day.test.ts`, `registrations/staff-crud.test.ts`
 
@@ -2634,6 +2637,7 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 22. The contact page ends with the same identity line, under the form (or under the address where there is no form) and under the newsletter's box, and nothing while the legal name is unset. It never shows who receives the messages (CONTACT_FORM_TO). Tested in tests/integration/contact/club-identity-render.test.ts and tests/e2e/contact.spec.ts (2026-09-29, `DECISIONS.md` §565).
 23. «Pagini» → «Contact» has an optional «Telefon public». An Administrator saves a number (digits, spaces, a leading +, brackets, dots and dashes, 6 to 15 digits) or clears it with an empty box, after a confirmation. The server refuses anybody else and anything that is not a number. The save writes an audit row that says whether a number is set, never the number, and expires the public pages. The footer's block shows the number as a tel: link only while one is set. Tested in tests/unit/contact/public-phone.test.ts, tests/integration/contact/public-phone.test.ts and tests/e2e/config-panels.spec.ts (2026-09-29, `DECISIONS.md` §565).
 24. Amends criterion 23. The public phone shows inside the footer's fold, beside «Scrie-ne», as a tel: link only while one is set, and nowhere else in the footer. Tested in tests/e2e/config-panels.spec.ts (2026-09-30, `DECISIONS.md` §582).
+25. Under the message box the contact form says one line, how the club answers (e-mail, Gmail) and that the message is kept at most 12 months, followed by the privacy notice's link (2026-09-30, `DECISIONS.md` §593).
 
 **Verification:** unit `contact/fields.test.ts`, `contact/message.test.ts`, `contact/recipients.test.ts`, `config/env.test.ts`, `diagnostics/configuration.test.ts`, `diagnostics/owner-tasks.test.ts`; integration `contact/service.test.ts`, `contact/recipients.test.ts`; e2e `contact.spec.ts`, `email-plan.spec.ts`; unit `contact/suspicion.test.ts` (11); unit `contact/message.test.ts` and integration `contact/service.test.ts` also cover 11
 

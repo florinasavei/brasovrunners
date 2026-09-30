@@ -7,7 +7,7 @@ import { noFreePlace, type PlacesTaken, placesTakenValues } from "./domain/capac
 import { countOccupied } from "./repository";
 
 /**
- * Whether «Dă-i un loc» would be refused as full, read before the press (§NNN; the owner,
+ * Whether «Dă-i un loc» would be refused as full, read before the press (§592; the owner,
  * 2026-09-30: the button stays, and says why). The allocator's own counts (`countOccupied`) and the
  * event's capacity, compared as `promoteFromWaitlistByStaff` compares them under the lock — the
  * five numbers when the race is full, null when a place is free or the event is uncapped.

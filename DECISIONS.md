@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.47-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.48-2026-09-27 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.47-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.48-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -22182,3 +22182,49 @@ Baseline `BR-V2.47-2026-09-27`.
 **Refused.** Keeping «Membri» on the order screen marked «în footer»: an entry the club cannot place is not an order entry, and the footer's fold is not the menu (only FAQ and Contact follow the order there, §571).
 
 Baseline `BR-V2.47-2026-09-27`.
+
+## 592. «Dă-i un loc» on a full race says why before the press, and the refusal says to raise the capacity first (amending §588, §589)
+
+**Amends §589 and §588. The owner, 2026-09-30 19:50, answering BR-V2.47's questions:** «Dă-i un loc» stays on a full race but says why the press will be refused; «NU, mai întâi trebuie să măresc manual capacitatea» — no overbooking from the desk, ever.
+
+### «Dă-i un loc» says why before the press (amending §589)
+
+On a full race the button stays visible and pressable, and it says beforehand what the refusal banner of §589 would say afterwards: «Cursa e plină: locuri 3, confirmați 1, declarații de semnat 0, oferite 0, rezervate familiilor 2. Mărește întâi capacitatea evenimentului.» / "The race is full: places 3, confirmed 1, declarations to sign 0, offered 0, reserved for families 2. Raise the event's capacity first."
+
+- **One text for both.** The tooltip and the banner are the same catalogue text, `Admin.errors.NO_FREE_PLACE`, with the same five numbers (`placesTakenValues`). The banner's opening «Nu e niciun loc liber, deci nu s-a schimbat nimic.» is gone, because a tooltip read before the press cannot say "nothing changed". A red banner after a press already says the press was refused. Both languages stay inside §511's 200 characters.
+- **The numbers come from the door read**, the allocator's own counts: `countOccupied` and the event's capacity, compared as `promoteFromWaitlistByStaff` compares them under the lock (`domain/capacity.ts#noFreePlace`). `registrations/give-place-tip.ts#placesTakenIfFull` reads them once per event per request (React's `cache`). The list page groups its waiting rows by event and asks once per event, and the desk's rows of one event share the one read. It is never one read per row. It is a forecast, not a gate: the press counts again under the lock, after releasing whatever has lapsed, and the server still decides.
+- **Where.** The registration's page (`[id]/page.tsx`) and the desk (`/admin/checkin`, `/admin/checkin/[code]`, through `DeskRow`) show «Dă-i un loc» with an info glyph beside it (`ui/GivePlaceButton.tsx`, `InfoTip`, 44 px). The glyph answers hover, keyboard focus and a tap, and it is a plain button (`type="button"`, as `Hint` is), so a tap on it inside the press's form only reads the sentence and never opens the press's question.On the list (`(list)/page.tsx`) the verb is the ⋮ menu's item, which gets the sentence as a MUI Tooltip on the item itself (it opens on hover and on the arrow keys' focus, and is the item's description for a screen reader). A thumb cannot hover a menu item, so the item's own question («Îi dai un loc?», §384) says the same sentence first. When a place is free there is no glyph, no tooltip and no extra sentence.
+- **The banner of §589** now ends «Mărește întâi capacitatea evenimentului.» / "Raise the event's capacity first."
+
+*Refused:* letting the desk overbook, or take a place promised to somebody else, to seat the person pressed (§10.6, BR-REQ-034-01; the owner: first raise the capacity by hand). Hiding the button on a full race (the owner kept it). A second sentence for the tooltip, which would let the two drift apart.
+
+### The family's address: for all or for none (amending §588)
+
+**The owner's rule, 2026-09-30 19:50:** the address is confirmed for everybody or for nobody. One click moves on everybody on the address who was submitted before it. The declaration is signed per person, and each person may cancel alone.
+
+§588's `confirmEmailOnAddress` already does this, with no code change. There is **one exception, and it comes from the allocator**. When the places are gone and the waiting list is full, the person the full line refuses (§348, `waitlistRefusalOf`) stays «Așteaptă confirmarea emailului» and waits for their own link. Everybody the click did move stays moved. This happens, for example, when a second person on the address finds the waiting list full after the first took its last slot. The allocator refuses more because a place beyond capacity is overbooking, and a waiting-list entry beyond the club's limit breaks the limit the club set. Two other cases are by design and not exceptions: a registration whose own link has lapsed or been switched off is not moved (the click proves only live links), and one submitted after the click is not read (§588). If the clicked registration itself is refused by a full line, nothing moves and the link can be opened again.
+
+### Housekeeping
+
+`SPECS.md` BR-REQ-041-01 criterion 158 and BR-REQ-050-03 criterion 52 now say that «Membri» is a link in the footer's fold, not a menu entry (§591). Two comments were fixed: the sitemap's "while the menu offers it" and the old waiting-list refusal wording in `waitlist.ts`. A duplicate comment with a literal `§592` was removed from `csv.test.ts` (its twin already cites §562). `partner-marker.spec.ts` reads the bare listing again inside its bounded wait, since §583's second expiry. The public `README.md` is in English throughout: «Costuri minime» became "Minimal costs", and the screen names are now plain English words.
+
+No migration, no dependency, no new message type.
+
+Baseline `BR-V2.48-2026-09-27`.
+
+## 593. The contact form says one short line, and the anti-bot check takes no room until it starts
+
+**The owner, 2026-09-30, a screenshot of `/ro/contact` on production:** «De ce nu văd Cloudflare widget aici inițial? e intenționat ca să salvăm costurile?» and, of the sentence under the message box, «prea lung și AI slop».
+
+**Why the widget is not there at first.** It is intentional (§577): Cloudflare's script loads at the first touch of the form, so a page opened and left costs nothing. What was wrong is what the form drew meanwhile: the widget's holder reserved 65 pixels from the start, and Cloudflare's sentence sat under that blank box, promising a check nobody could see.
+
+**Decision.**
+- *No gap, no sentence, until the check starts.* The holder reserves its height only once armed. The sentence that names Cloudflare (§323) moves into the island (`BotCheck notice`, `words.notice`) and is drawn with the widget, not before. The box each form wraps the check in (`BOT_CHECK_SLOT_SX`) is not displayed while the island is unarmed (`data-bot-check-armed`) and no refusal line (`data-bot-check-error`) is in it, so the form's own spacing leaves no gap either. The island still arms on the form's first focus, press, key or input: a box that is not displayed keeps its element. Same rule on the registration form and the event page's interest box, which carried the same blank box and sentence. The newsletter box and the declaration page never showed the sentence and are unchanged.
+- *Cloudflare's sentence, shorter:* «Verificarea „nu sunt robot” e făcută de Cloudflare (vede IP-ul și date tehnice ale browserului).» / "The “not a robot” check is done by Cloudflare (it sees the IP and technical browser data)."
+- *The contact form's note, one line and the link:* «Îți răspundem pe e-mail (Gmail). Păstrăm mesajul cel mult 12 luni. Nota de confidențialitate» / "We answer by e-mail (Gmail). We keep the message for at most 12 months. Privacy notice". §323 asks the form to say the message lands in the club's Gmail and how long it is kept; both stay, in two words and one sentence. Who reads it, the purpose and the rest are the notice's (§149), which is unchanged. `Contact.privacyDetails` is gone from both catalogues.
+
+**Refused.** Showing Cloudflare's sentence before the widget, to disclose before any contact: nothing reaches Cloudflare before the first touch, and the sentence appears in the same moment the script is asked for. Dropping «(Gmail)»: §323 names the recipient on the form.
+
+**Consequences.** `registrations/domain/turnstile-widget.ts` (`BOT_CHECK_ARMED_ATTRIBUTE`, `BOT_CHECK_ERROR_ATTRIBUTE`, `BOT_CHECK_SLOT_SX`), `TurnstileWidget.tsx`, `BotCheck.tsx`, the contact page, the registration form, `RegistrationInterestForm.tsx`, `messages/{ro,en}.json`. Tests: `contact/contact-page-words.test.ts`, `registrations/turnstile-lazy.test.ts`. No migration, no dependency. Amends §323 (where the Cloudflare caption sits) and §546 (the contact page's words).
+
+Baseline `BR-V2.48-2026-09-27`.

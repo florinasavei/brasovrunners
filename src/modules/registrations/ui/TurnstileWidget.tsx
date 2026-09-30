@@ -98,7 +98,7 @@ export type BotCheckWords = Record<BotCheckWidgetState, string> & {
   slow: string;
   retry: string;
   failed: string;
-  /** Who runs the check and what it sees (§323), said only once the widget is there (§NNN). */
+  /** Who runs the check and what it sees (§323), said only once the widget is there (§593). */
   notice?: string;
 };
 
@@ -334,7 +334,7 @@ export default function TurnstileWidget({
     <Box {...(running && armed ? { [BOT_CHECK_ARMED_ATTRIBUTE]: "true" } : {})}>
       {/*
         `min-height` so the form does not jump when the challenge draws itself a moment later — only
-        once armed (§NNN): before the first touch nothing is coming, and a blank box above
+        once armed (§593): before the first touch nothing is coming, and a blank box above
         Cloudflare's sentence read as a broken form.
       */}
       <Box
@@ -381,7 +381,7 @@ export default function TurnstileWidget({
           )}
         </Box>
       )}
-      {/* Who runs the check and what it sees (§323) — with the widget, never before it (§NNN). */}
+      {/* Who runs the check and what it sees (§323) — with the widget, never before it (§593). */}
       {running && armed && words.notice && (
         <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }} data-testid="bot-check-notice">
           {words.notice}

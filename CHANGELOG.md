@@ -8,6 +8,10 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.48-2026-09-27
+
+- **«Dă-i un loc» says why before the press** — on a full race the button stays, with an «i» (a tooltip on the list's ⋮ item) that gives the refusal's own numbers and «Mărește întâi capacitatea evenimentului.»; the refusal banner ends with the same sentence; the public README is English throughout. §592.
+- **The contact form says less, and leaves no blank space** — one line under the message, «Îți răspundem pe e-mail (Gmail). Păstrăm mesajul cel mult 12 luni.» and the notice's link; the anti-bot check and Cloudflare's shorter sentence appear together on the first touch of the form, with no empty box before it, on the contact, registration and «Anunță-mă» forms. §593.
 ## BR-V2.47-2026-09-27
 
 - **«Estimativ» beside the elevation gain** — a tick in the editor's «Traseu» card; the site then says «≈ 350 m D+» on the route pill and «circa 350 m diferență de nivel (estimativ)» in its tooltip, the emails, the calendar entry and the share picture. §585.

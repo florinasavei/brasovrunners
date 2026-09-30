@@ -66,7 +66,7 @@ describe("§577 the widget waits for a person to start on the form", () => {
     expect(html).not.toContain("«loading»");
   });
 
-  it("draws no Cloudflare sentence and reserves no height until armed (§NNN)", () => {
+  it("draws no Cloudflare sentence and reserves no height until armed (§593)", () => {
     const html = renderToStaticMarkup(
       createElement(TurnstileWidget, { siteKey: "1x00000000000000000000AA", locale: "ro", attempt: "a", words: { ...words, notice: "«notice»" } }),
     );
@@ -75,7 +75,7 @@ describe("§577 the widget waits for a person to start on the form", () => {
     expect(html).not.toContain(BOT_CHECK_ARMED_ATTRIBUTE);
   });
 
-  it("hides the forms' slot for the check until the widget is armed or a refusal is said (§NNN)", () => {
+  it("hides the forms' slot for the check until the widget is armed or a refusal is said (§593)", () => {
     const [selector, rule] = Object.entries(BOT_CHECK_SLOT_SX)[0];
     expect(rule).toEqual({ display: "none" });
     expect(selector).toContain(`:not(:has([${BOT_CHECK_ARMED_ATTRIBUTE}]))`);

@@ -97,7 +97,7 @@ export default async function RegistrationInterestForm({
             */}
             {siteKey && (
               <Box sx={BOT_CHECK_SLOT_SX}>
-                {/* Cloudflare's sentence (§323) comes with the widget, and the box takes no room before it (§NNN). */}
+                {/* Cloudflare's sentence (§323) comes with the widget, and the box takes no room before it (§593). */}
                 <BotCheck siteKey={siteKey} locale={locale} attempt={renderedAt.toISOString()} notice />
               </Box>
             )}

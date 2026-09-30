@@ -374,7 +374,7 @@ export default async function DeskRow({
               data-testid="desk-place-form"
             >
               {hidden}
-              {/* On a full race, an «i» says why the press will be refused (§NNN): one read per event, not per row. */}
+              {/* On a full race, an «i» says why the press will be refused (§592): one read per event, not per row. */}
               <GivePlaceButton eventId={row.eventId} size="small" />
             </ActionForm>
           )}

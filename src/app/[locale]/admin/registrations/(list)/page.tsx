@@ -235,7 +235,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   // Every verb that writes asks first and says who is emailed (§384).
   const words = await confirmWords();
   /*
-    Why «Dă-i un loc» would be refused, per event on the page (§NNN): the rows grouped by event,
+    Why «Dă-i un loc» would be refused, per event on the page (§592): the rows grouped by event,
     one door read each (cached per request), and only where a waiting row offers the verb.
   */
   const givePlaceWhy = new Map(
@@ -1301,7 +1301,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 });
               }
               if (verbs.includes("givePlace")) {
-                // On a full race the item stays, with the refusal's sentence as its tooltip (§NNN).
+                // On a full race the item stays, with the refusal's sentence as its tooltip (§592).
                 items.push({ kind: "submit", icon: "place", label: t("desk.givePlace"), formId: `place-${row.id}`, hint: givePlaceWhy.get(row.eventId) ?? undefined });
               }
               if (verbs.includes("checkIn")) {
