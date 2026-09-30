@@ -34,7 +34,7 @@ test.describe("§389 §446 a family on one address", () => {
 
   const registerPath = `/ro/evenimente/${FEATURED.slug}/inscriere`;
 
-  type Person = { firstName: string; lastName: string; birthDate: string };
+  type Person = { firstName: string; lastName: string; birthDate: string; sex?: "FEMALE" | "MALE" };
 
   /**
    * One form, sent. `email` null is a family sitting's next form (§519): the address is fixed and not
@@ -54,7 +54,7 @@ test.describe("§389 §446 a family on one address", () => {
     };
     for (const [name, value] of Object.entries(values)) await page.locator(`[name="${name}"]`).fill(value);
     // «Sex» starts empty (§510): the form is refused without an answer.
-    await chooseSex(page);
+    await chooseSex(page, person.sex);
     if (email) await page.locator('[name="emailConfirm"]').fill(email);
     await page.locator('[name="privacyAcknowledged"]').check();
     await page.locator('[name="rulesAcknowledged"]').check();
@@ -216,6 +216,29 @@ test.describe("§389 §446 a family on one address", () => {
     // The re-sent email, as captured: the sentence, in both halves.
     const resent = await capturedEmail(page, email, "Dacă vrei să înscrii pe altcineva, trimite formularul cu numele complet și data de naștere a acelei persoane.");
     expect(resent.text).toContain("If you want to register someone else, send the form with that person's full name and birth date.");
+  });
+
+  test("§NNN another name and the other sex on a registered person's birth date, typed day first, is another person — never «deja înscris»", async ({ page }) => {
+    test.skip(!(await familyFlowOpen()), "the family flow opens with the contract release that drops registrations_event_participant_unique (§389)");
+    await signIn(page, "Dev Administrator");
+    await ensureRegistrationIsOpen(page);
+    const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
+    const email = `e2e-family-sibling-${suffix}@test.invalid`;
+    const lastName = `Pop ${suffix}`;
+
+    // The box's own shape (§561): day first, as a person types it — and the same day for both.
+    await publicSubmission(page, { firstName: "Ana", lastName, birthDate: "02.03.1985", sex: "FEMALE" }, email);
+    await publicSubmission(page, { firstName: "Andrei", lastName, birthDate: "02.03.1985", sex: "MALE" }, email);
+
+    const rows = await registrationsByEmail(email);
+    expect(rows.map((row) => row.registeredName)).toEqual([`Ana ${lastName}`]);
+    // Not a slip of Ana's: the address is asked to confirm Andrei, and Ana's email is not re-sent with the twins' sentence.
+    expect(await queuedPayloads(rows[0].id, "REGISTER_ANOTHER_PERSON")).toEqual([
+      { atCap: false, registrationsPerAddress: expect.any(Number), familyEntryId: expect.any(String), startsDeadline: true },
+    ]);
+    expect(await queuedPayloads(rows[0].id, "VERIFY_REGISTRATION_EMAIL")).toEqual([{ startsDeadline: true }]);
+    const offer = await capturedEmail(page, email, `Persoana din formular: Andrei ${lastName}`);
+    expect(offer.text).toContain("Data nașterii: 2 martie 1985");
   });
 
   test("§519 one sitting: the first email leaves at once, «Da» opens the sitting with the address kept, every form reserves its place (§543), «Gata» sends one family message naming three, one press confirms everybody and opens the wizard", async ({ page }) => {

@@ -218,3 +218,40 @@ describe("§389 §446 what one submission does on an address", () => {
     expect(decide([ana], "Maria Pop", "link", false)).toEqual({ kind: "refuseClosed" });
   });
 });
+
+describe("§NNN the sex beside the birth date: another name and the other sex are another person", () => {
+  const andrei: FamilyRow = { id: "a1", status: "CONFIRMED", registeredName: "Andrei Munteanu", birthDate: "1984-06-15", sex: "MALE" };
+  const cap = { registrationsPerAddress: 4 };
+
+  it("keeps every word of a name: a three-word name is not the two-word one, nor another first name", () => {
+    expect(registrationNameKey("Andrei duplicat Munteanu")).toBe("andrei duplicat munteanu");
+    expect(sameRunner("Andrei duplicat Munteanu", "Andrei Munteanu")).toBe(false);
+    expect(sameRunner("Ion Popescu", "Andrei Munteanu")).toBe(false);
+  });
+
+  it("on a registered birth date, another name and the other sex differ; the same sex, or none on one side, stays a slip", () => {
+    expect(comparePerson(andrei, { legalName: "Andreea Munteanu", birthDate: "1984-06-15", sex: "FEMALE" })).toBe("different");
+    expect(comparePerson(andrei, { legalName: "Mihai Munteanu", birthDate: "1984-06-15", sex: "MALE" })).toBe("partial");
+    expect(comparePerson({ ...andrei, sex: null }, { legalName: "Andreea Munteanu", birthDate: "1984-06-15", sex: "FEMALE" })).toBe("partial");
+    expect(comparePerson({ ...andrei, sex: "UNSPECIFIED" }, { legalName: "Andreea Munteanu", birthDate: "1984-06-15", sex: "FEMALE" })).toBe("partial");
+    expect(comparePerson(andrei, { legalName: "Andreea Munteanu", birthDate: "1984-06-15" })).toBe("partial");
+    // The same name is the same runner whatever the sex box says: a slip in one box.
+    expect(comparePerson(andrei, { legalName: "ANDREI  MUNTEANU", birthDate: "1984-06-15", sex: "FEMALE" })).toBe("same");
+    expect(comparePerson(andrei, { legalName: "Andrei Munteanu", birthDate: "1990-01-01", sex: "FEMALE" })).toBe("partial");
+  });
+
+  it("the public form keeps the other person for the inbox; the confirmation behind the link registers them", () => {
+    const posted = { legalName: "Andreea Munteanu", birthDate: "1984-06-15", sex: "FEMALE" as const };
+    expect(decideSubmission({ rows: [andrei], ...posted, via: "form", familyOpen: true, cap })).toEqual({ kind: "offerAnother", about: andrei, atCap: false });
+    expect(decideSubmission({ rows: [andrei], ...posted, via: "link", familyOpen: true, cap })).toEqual({ kind: "insert" });
+    expect(isDifferentPerson(posted, [andrei])).toBe(true);
+  });
+
+  it("the twins' sentence only for a birth date that truly is the registration's day (§493)", () => {
+    const twin = decideSubmission({ rows: [andrei], legalName: "Mihai Munteanu", birthDate: "1984-06-15", sex: "MALE", via: "form", familyOpen: true, cap });
+    expect(twin).toEqual({ kind: "resend", registration: andrei, notAnotherPerson: true, sameBirthDate: true });
+    // A form with no day to compare is never told it names a twin.
+    const noDay = decideSubmission({ rows: [andrei], legalName: "Mihai Munteanu", birthDate: null, sex: "MALE", via: "form", familyOpen: true, cap });
+    expect(noDay).toEqual({ kind: "resend", registration: andrei, notAnotherPerson: true });
+  });
+});

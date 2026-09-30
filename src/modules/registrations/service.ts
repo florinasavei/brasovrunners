@@ -1828,8 +1828,8 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       §446 — whether the re-send may say how to register somebody else depends on it.
     */
     const familyOpen = onePerAccount ? false : via === "link" || rows.length > 0 ? await familyRegistrationOpen(tx) : false;
-    // The name and the birth date both decide who this is (§446): the owner's rule, `domain/family.ts`.
-    const decision = decideSubmission({ rows, legalName, birthDate: input.birthDate ?? null, via, familyOpen, cap });
+    // The name and the birth date both decide who this is (§446), and the sex on a shared birth date (§NNN): the owner's rule, `domain/family.ts`.
+    const decision = decideSubmission({ rows, legalName, birthDate: input.birthDate ?? null, sex: input.sex ?? null, via, familyOpen, cap });
 
     /*
       Behind the emailed link only (§389): whoever holds it has read the address's inbox, so the
@@ -1971,9 +1971,9 @@ export async function submitRegistration<T extends Record<string, unknown>>(
         ? sittingEntryFor(
             keptInSitting.map((entry) => {
               const person = personOfEntry(entry);
-              return { entry, registeredName: person.legalName, birthDate: person.birthDate };
+              return { entry, registeredName: person.legalName, birthDate: person.birthDate, sex: person.sex };
             }),
-            { legalName, birthDate: input.birthDate ?? null },
+            { legalName, birthDate: input.birthDate ?? null, sex: input.sex ?? null },
           )
         : null;
     if (sameKept?.kind === "sameBirthDate") {

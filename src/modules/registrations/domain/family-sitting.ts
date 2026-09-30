@@ -1,5 +1,6 @@
-import { comparePerson, type PostedPerson } from "./family";
+import { comparePerson, type PostedPerson, sexesDiffer } from "./family";
 import { sameRunner } from "./name-key";
+import { isSexChoice, type SexChoice } from "./sex";
 
 /**
  * A family registered in one sitting, with one email (§519; the owner, 2026-09-27: "niciun email
@@ -384,7 +385,13 @@ export function isNewSittingPerson(before: readonly SittingPerson[], after: { pe
  * or ""). `waitlist` (§543): no place was free when their form was sent, so they join the waiting
  * list when the address is confirmed — a fact about the event, never about the address (§39).
  */
-export type SittingPerson = { name: string; birthDate: string; waitlist?: boolean };
+export type SittingPerson = {
+  name: string;
+  birthDate: string;
+  waitlist?: boolean;
+  /** «Feminin» or «Masculin» as typed (§NNN): on a shared birth date, the other sex is another person. Absent from a cookie written before it. */
+  sex?: SexChoice;
+};
 
 /** The names, in the order the screen lists them. */
 export function sittingNames(people: readonly SittingPerson[]): string[] {
@@ -443,7 +450,8 @@ export function sittingCookieLive(cookie: FamilySittingCookie | null, eventId: s
  *   now typed — a corrected birth date replaces, never adds; the new spelling moves to the end;
  * - **another name on a birth date** typed before (§493: twins, or a corrected name): nobody is added
  *   and nobody is replaced — the form is not kept, and `sameBirthDate` names the two for the screen's
- *   sentence;
+ *   sentence — unless the sex typed is the other one (§NNN, `sexesDiffer`): another name and the other
+ *   sex are another person, as the server reads them (`comparePerson`);
  * - anybody else: added, last.
  *
  * Decided from this browser's own forms alone, never from what the address holds, so the screen reads
@@ -452,20 +460,22 @@ export function sittingCookieLive(cookie: FamilySittingCookie | null, eventId: s
  */
 export function withSittingPerson(
   people: readonly SittingPerson[],
-  typed: { name: string; birthDate: string | null | undefined },
+  typed: { name: string; birthDate: string | null | undefined; sex?: string | null },
 ): { people: SittingPerson[]; sameBirthDate: { typed: string; kept: string } | null } {
   const name = typed.name.replace(/\s+/g, " ").trim();
   const birthDate = (typed.birthDate ?? "").slice(0, 10);
+  // Only an answer the form offers is kept (`isSexChoice`): anything else says nothing about who this is.
+  const sexKept = isSexChoice(typed.sex) ? { sex: typed.sex } : {};
   if (name === "") return { people: [...people], sameBirthDate: null };
   const sameName = people.find((person) => sameRunner(person.name, name));
   if (sameName) {
     // A correction keeps the place the person had (§543): only a new person takes one.
     const place = sameName.waitlist ? { waitlist: true } : {};
-    return { people: [...people.filter((person) => person !== sameName), { name, birthDate, ...place }].slice(-SITTING_NAMES_MAX), sameBirthDate: null };
+    return { people: [...people.filter((person) => person !== sameName), { name, birthDate, ...sexKept, ...place }].slice(-SITTING_NAMES_MAX), sameBirthDate: null };
   }
-  const sameDay = birthDate !== "" ? people.find((person) => person.birthDate === birthDate) : undefined;
+  const sameDay = birthDate !== "" ? people.find((person) => person.birthDate === birthDate && !sexesDiffer(person.sex, sexKept.sex)) : undefined;
   if (sameDay) return { people: [...people], sameBirthDate: { typed: name, kept: sameDay.name } };
-  return { people: [...people, { name, birthDate }].slice(-SITTING_NAMES_MAX), sameBirthDate: null };
+  return { people: [...people, { name, birthDate, ...sexKept }].slice(-SITTING_NAMES_MAX), sameBirthDate: null };
 }
 
 /**
@@ -486,12 +496,13 @@ export function isFamilySitting(people: number): boolean {
  * - `sameBirthDate` — **another name on a kept form's birth date** (§493): twins, whom the owner's
  *   rule reads as a slip, or a corrected name. Neither replaced nor added: overwriting would lose the
  *   first person without a word. The screen says what to do (`withSittingPerson` keeps the same rule).
+ *   Not when the sex posted is the other one (§NNN): that is another person, as `comparePerson` reads it.
  *
  * Null for a different person (both differ, `comparePerson`).
  */
 export type SittingEntryMatch<E> = { kind: "replace"; entry: E } | { kind: "sameBirthDate"; entry: E } | null;
 
-export function sittingEntryFor<E extends { registeredName: string; birthDate: string | null }>(
+export function sittingEntryFor<E extends { registeredName: string; birthDate: string | null; sex?: PostedPerson["sex"] }>(
   entries: readonly E[],
   posted: PostedPerson,
 ): SittingEntryMatch<E> {
