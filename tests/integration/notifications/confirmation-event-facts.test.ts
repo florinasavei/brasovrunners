@@ -160,7 +160,7 @@ describe("§392 the event's facts in the confirmed email, the reminder and the d
     const [ro, en] = halves(message);
     const page = `/ro/evenimente/crosul-${event.id.slice(0, 8)}`;
 
-    expect(ro).toContain("Când: Sâmbătă, 21 nov. 2026 · întâlnire la 09:00 · start la 09:30");
+    expect(ro).toContain("Când: Sâmbătă, 21 nov. 2026 · 09:00 (start eveniment) · 09:30 (start cursă)");
     expect(ro).toContain(`Unde: Parcul Tractorul\n  Strada Carpaților 60\n  Vezi pe hartă: ${MAP}`);
     expect(ro).toContain("Program: 08:00 — Ridicarea numerelor (Cort)");
     // The page's pills, in the page's order, the page's words; the route link lives under #route with a description.
@@ -190,7 +190,7 @@ describe("§392 the event's facts in the confirmed email, the reminder and the d
 
     // The English half in its own words, its own place, and its own page.
     const enPage = `/en/events/the-cross-${event.id.slice(0, 8)}`;
-    expect(en).toContain("When: Saturday, 21 Nov 2026 · gather at 09:00 · start at 09:30");
+    expect(en).toContain("When: Saturday, 21 Nov 2026 · 09:00 (event start) · 09:30 (race start)");
     expect(en).toContain(`Where: Tractorul Park\n  Strada Carpaților 60\n  Open the map: ${MAP}`);
     expect(en).toContain("Programme: 08:00 — Number pickup (Cort)");
     expect(en).toContain("Route: Trail · Hard, level 11 of 15 · 21.1 km · 900 m climb · Night");
@@ -204,13 +204,13 @@ describe("§392 the event's facts in the confirmed email, the reminder and the d
   it("carries the six rows in English first for an English registrant", async () => {
     const event = await seedEvent();
     const [en, ro] = halves(await render(event.id, "en", "REGISTRATION_CONFIRMED"));
-    expect(en).toContain("When: Saturday, 21 Nov 2026 · gather at 09:00 · start at 09:30");
+    expect(en).toContain("When: Saturday, 21 Nov 2026 · 09:00 (event start) · 09:30 (race start)");
     expect(en).toContain("Where: Tractorul Park");
     expect(en).toContain("Programme: 08:00 — Number pickup (Cort)");
     expect(en).toContain("Route: Trail · Hard, level 11 of 15 · 21.1 km · 900 m climb · Night");
     expect(en).toContain("Cost: 50 lei");
     expect(en).toMatch(/Links:\n {2}The event's page: \S+\/en\/events\/the-cross-\S+\n {2}Programme: \S+\/en\/events\/the-cross-\S+#schedule/);
-    expect(ro).toContain("Când: Sâmbătă, 21 nov. 2026 · întâlnire la 09:00 · start la 09:30");
+    expect(ro).toContain("Când: Sâmbătă, 21 nov. 2026 · 09:00 (start eveniment) · 09:30 (start cursă)");
     expect(ro).toContain("Unde: Parcul Tractorul");
     expect(ro).toMatch(/Linkuri:\n {2}Pagina evenimentului: \S+\/ro\/evenimente\/crosul-\S+\n {2}Program: \S+\/ro\/evenimente\/crosul-\S+#schedule/);
   });

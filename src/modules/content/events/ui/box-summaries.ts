@@ -84,6 +84,8 @@ export type SummaryWords = {
   course: {
     route: string;
     km: string;
+    /** `≈ 10 km` — a distance the club ticked «Aproximativ» for (§598). */
+    kmEstimated: string;
     elevation: string;
     /** `≈ +350 m` — a climb the club ticked «Estimativ» for (§585). */
     elevationEstimated: string;
@@ -512,7 +514,7 @@ export function startListSummary(words: SummaryWords, visibility: string | null 
 }
 
 type CourseEvent = Pick<EditableEvent, "distanceMeters" | "elevationGainMeters" | "routeUrl" | "nightOverride"> &
-  Partial<Pick<EditableEvent, "elevationGainEstimated">>;
+  Partial<Pick<EditableEvent, "elevationGainEstimated" | "distanceEstimated">>;
 
 /**
  * The night event's word on the closed "Traseul" card (§394): `de noapte` for the organizer's "Da",
@@ -526,10 +528,10 @@ export function nightSummary(words: SummaryWords, nightOverride: boolean | null 
   return computedNight ? words.course.nightAuto : words.course.dayAuto;
 }
 
-/** `12 km`, `10,5 km` — the distance to one decimal, or null when none is stored. */
-function distanceWords(words: SummaryWords, distanceMeters: number | null | undefined): string | null {
+/** `12 km`, `10,5 km` — the distance to one decimal, or null when none is stored; `≈ 10 km` when ticked «Aproximativ» (§598). */
+function distanceSummary(words: SummaryWords, distanceMeters: number | null | undefined, estimated: boolean): string | null {
   const km = distanceMeters ? Math.round(distanceMeters / 100) / 10 : null;
-  return km ? fillIn(words.course.km, { km: String(km).replace(".", ",") }) : null;
+  return km ? fillIn(estimated ? words.course.kmEstimated : words.course.km, { km: String(km).replace(".", ",") }) : null;
 }
 
 /**
@@ -548,7 +550,7 @@ export function courseSummary(
   const described = translations.filter((translation) => !BLANK.route(translation)).length;
   const line = join(words, [
     labels.surface,
-    distanceWords(words, event?.distanceMeters),
+    distanceSummary(words, event?.distanceMeters, event?.distanceEstimated === true),
     // `≈ +350 m` for a climb ticked «Estimativ» (§585), never the bare number.
     event?.elevationGainMeters
       ? fillIn(event.elevationGainEstimated ? words.course.elevationEstimated : words.course.elevation, { m: event.elevationGainMeters })

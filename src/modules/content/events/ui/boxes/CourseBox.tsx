@@ -114,14 +114,30 @@ export default async function CourseBox({
           ]}
         />
         <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-          <RecallField
-            name="event.distanceMeters"
-            label={t("editor.distanceMeters")}
-            helperText={t("editor.distanceMetersHelp")}
-            defaultValue={event?.distanceMeters ?? ""}
-            {...textFieldConstraints(eventInputConstraints("distanceMeters"), { inputMode: "numeric" })}
-            sx={{ flex: 1 }}
-          />
+          <Box sx={{ flex: 1 }}>
+            <RecallField
+              name="event.distanceMeters"
+              label={t("editor.distanceMeters")}
+              helperText={t("editor.distanceMetersHelp")}
+              defaultValue={event?.distanceMeters ?? ""}
+              {...textFieldConstraints(eventInputConstraints("distanceMeters"), { inputMode: "numeric" })}
+              fullWidth
+            />
+            {/* «Aproximativ» (§598, the twin of the climb's «Estimativ»): the length is known only
+                roughly, and every surface then says «≈» and «aproximativ» (`distanceWords`).
+                Ignored, saved false, with no distance. */}
+            <CheckboxField
+              name="event.distanceEstimated"
+              defaultChecked={event?.distanceEstimated ?? false}
+              help={t("editor.distanceEstimatedHelp")}
+              helpTestId="distance-estimated-help"
+            >
+              <Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.75 }}>
+                <ApproximateIcon fontSize="small" aria-hidden="true" />
+                {t("editor.distanceEstimated")}
+              </Box>
+            </CheckboxField>
+          </Box>
           <Box sx={{ flex: 1 }}>
             <RecallField
               name="event.elevationGainMeters"
