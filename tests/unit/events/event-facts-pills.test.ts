@@ -652,7 +652,8 @@ describe("BR-REQ-041-01 the listing card's facts: glyph-led lines and the page's
     const plainWhen = line(plain, "when").inner;
     const plainRowTag = ([...plainWhen.matchAll(/<div\b[^>]*class="[^"]*\b(css-[\w-]+)"[^>]*>/g)][1] ?? [])[0] ?? "";
     expect(plainRowTag).not.toBe("");
-    expect(ruleOf(plain, plainRowTag)).toContain("flex-wrap:nowrap");
+    // Since #305 a race with no race start says «10:00 (start eveniment)», longer than one phone line: it wraps too.
+    expect(ruleOf(plain, plainRowTag)).toContain("flex-wrap:wrap");
   });
 
   it("draws the route and the cost as the page's small outlined pills — surface, difficulty, distance, climb, cost", async () => {
