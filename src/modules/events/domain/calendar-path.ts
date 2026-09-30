@@ -97,22 +97,40 @@ export function calendarPeriodPath(basePath: string, view: CalendarPeriod, layou
   return `${basePath}/${calendarSegments(view, layout).join("/")}`;
 }
 
+/** Where an old address goes, and whether the address alone fixes it (`legacyCalendarAddress`). */
+export type LegacyCalendarRedirect = { address: string; fixed: boolean };
+
 /**
  * Where an old address goes (`?month=2026-10`, `?year=2027`, `?view=list`, in a bookmark, a
  * shared link or a search result): the same period on its path, every other key kept (the
  * filters), Next's `_rsc` dropped. Null when the query names none of the three, so the proxy
  * leaves the address alone. The old readings stand: `?year=` wins over `?month=`, a value that
  * is malformed or too far away is this month, and a year ignores `?view=`.
+ *
+ * `fixed` says whether the target depends on the address alone. A valid `?year=` or `?month=`
+ * goes to that period's spelled path (this month too, never the bare page, whose meaning moves
+ * with the clock), so the proxy may answer it with a permanent 308. `?view=list` alone, or a
+ * malformed or distant month, means "this month": its target changes on the first of the next
+ * month, so the proxy answers a 307 the browser does not keep, or a bookmark would stay on the
+ * month it first resolved to (§NNN).
  */
-export function legacyCalendarAddress(basePath: string, search: URLSearchParams, now: Date, timeZone: string): string | null {
+export function legacyCalendarAddress(basePath: string, search: URLSearchParams, now: Date, timeZone: string): LegacyCalendarRedirect | null {
   if (!LEGACY_PERIOD_KEYS.some((key) => search.has(key))) return null;
   const year = parseYear(search.get("year") ?? undefined, now, timeZone);
-  const view: CalendarPeriod = year ? { kind: "year", year } : { kind: "month", month: parseMonth(search.get("month") ?? undefined, now, timeZone) };
+  const asked = search.get("month");
+  const thisMonth = currentMonth(now, timeZone);
+  const month = parseMonth(asked ?? undefined, now, timeZone);
+  const namedMonth = asked !== null && MONTH_SEGMENT.test(asked) && monthParam(month) === asked;
+  const view: CalendarPeriod = year ? { kind: "year", year } : { kind: "month", month };
   const layout: CalendarLayoutName = search.get("view") === "list" ? "list" : "grid";
   const query: Record<string, string[]> = {};
   for (const [name, value] of search) {
     if ((LEGACY_PERIOD_KEYS as readonly string[]).includes(name) || name === "_rsc") continue;
     (query[name] ??= []).push(value);
   }
-  return calendarAddress(basePath, { view, layout, query, thisMonth: currentMonth(now, timeZone) });
+  const fixed = year !== null || namedMonth;
+  if (!fixed) return { address: calendarAddress(basePath, { view, layout, query, thisMonth }), fixed };
+  const kept = searchOf(query);
+  const path = calendarPeriodPath(basePath, view, layout);
+  return { address: kept ? `${path}?${kept}` : path, fixed };
 }

@@ -123,14 +123,19 @@ describe("the old addresses (§NNN)", () => {
   const legacy = (query: string) => legacyCalendarAddress("/ro/calendar", new URLSearchParams(query), NOW, TZ);
 
   it("sends ?month=, ?year= and ?view= to the same period's path, every filter kept", () => {
-    expect(legacy("month=2026-10")).toBe("/ro/calendar/2026-10");
-    expect(legacy("month=2026-10&view=list&type=RACE&type=TRAIL_RACE")).toBe("/ro/calendar/2026-10/list?type=RACE&type=TRAIL_RACE");
-    expect(legacy("view=list")).toBe("/ro/calendar/2026-09/list");
-    expect(legacy("year=2027&month=2026-10&view=list")).toBe("/ro/calendar/2027");
-    // This month as a grid is the bare page; Next's `_rsc` is not carried.
-    expect(legacy("month=2026-09&_rsc=abc")).toBe("/ro/calendar");
+    expect(legacy("month=2026-10")).toEqual({ address: "/ro/calendar/2026-10", fixed: true });
+    expect(legacy("month=2026-10&view=list&type=RACE&type=TRAIL_RACE")).toEqual({ address: "/ro/calendar/2026-10/list?type=RACE&type=TRAIL_RACE", fixed: true });
+    expect(legacy("year=2027&month=2026-10&view=list")).toEqual({ address: "/ro/calendar/2027", fixed: true });
+    // A named month is always spelled, this month too: the bare page's meaning moves with the clock. `_rsc` is not carried.
+    expect(legacy("month=2026-09&_rsc=abc")).toEqual({ address: "/ro/calendar/2026-09", fixed: true });
+  });
+
+  it("marks a target that means this month as not fixed by the address, so the proxy does not answer it permanently", () => {
+    expect(legacy("view=list")).toEqual({ address: "/ro/calendar/2026-09/list", fixed: false });
     // Malformed or too far away: this month, as the query always read it.
-    expect(legacy("month=2031-01&partner=1")).toBe("/ro/calendar/2026-09?partner=1");
+    expect(legacy("month=2031-01&partner=1")).toEqual({ address: "/ro/calendar/2026-09?partner=1", fixed: false });
+    expect(legacy("month=october")).toEqual({ address: "/ro/calendar", fixed: false });
+    expect(legacy("year=2040")).toEqual({ address: "/ro/calendar", fixed: false });
   });
 
   it("leaves an address that names no period alone: a filter alone is still the bare page's twin", () => {
@@ -141,7 +146,7 @@ describe("the old addresses (§NNN)", () => {
     expect(legacyCalendarTarget("/ro/calendar/2026-10", new URLSearchParams("month=2026-11"), NOW)).toBeNull();
   });
 
-  it("is a real 308 from the proxy, in both languages, before anything renders", () => {
+  it("is a 308 from the proxy for a named period and a no-store 307 for this month, in both languages, before anything renders", () => {
     const ask = (address: string, method = "GET") => proxy(new NextRequest(`http://localhost:4000${address}`, { method }));
     const october = ask("/ro/calendar?month=2026-10");
     expect(october.status).toBe(308);
@@ -150,6 +155,15 @@ describe("the old addresses (§NNN)", () => {
     expect(english.status).toBe(308);
     const target = new URL(english.headers.get("location") ?? "");
     expect(`${target.pathname}${target.search}`).toBe("/en/calendar/2026-11/list?type=RACE");
+    // A named period is a permanent 308 and carries no cache header of its own.
+    expect(october.headers.get("cache-control")).toBeNull();
+    // "This month" moves with the clock: a 307 the browser does not keep.
+    for (const address of ["/ro/calendar?view=list", "/ro/calendar?month=bad", "/en/calendar?month=2031-01&type=RACE"]) {
+      const moving = ask(address);
+      expect(moving.status, address).toBe(307);
+      expect(moving.headers.get("cache-control"), address).toContain("no-store");
+    }
+    expect(new URL(ask("/ro/calendar?view=list").headers.get("location") ?? "").pathname).toMatch(/^\/ro\/calendar\/\d{4}-\d{2}\/list$/);
     // A POST keeps its address (a Server Action posts to the page it is on).
     expect(ask("/ro/calendar?month=2026-10", "POST").status).not.toBe(308);
   });

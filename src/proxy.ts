@@ -75,12 +75,19 @@ export default function proxy(request: NextRequest) {
   /*
     The calendar's period moved from the query into the path (§NNN): `/ro/calendar?month=2026-10`
     → `/ro/calendar/2026-10`, `?view=list` → `/<this month>/list`, `?year=2027` → `/2027`, every
-    filter kept. A real 308 before anything renders, so a bookmark or a search result lands on the
+    filter kept. A redirect before anything renders (a 308 where the address fixes the period, a
+    `no-store` 307 where it means this month), so a bookmark or a search result lands on the
     static period page the CDN answers. Only a read: a POST keeps its address.
   */
   if (request.method === "GET" || request.method === "HEAD") {
     const calendar = legacyCalendarTarget(url.pathname, url.searchParams, new Date());
-    if (calendar) return NextResponse.redirect(new URL(calendar, url), 308);
+    if (calendar?.fixed) return NextResponse.redirect(new URL(calendar.address, url), 308);
+    if (calendar) {
+      // "This month" moves with the clock: a 307 the browser does not keep, never a cached 308.
+      const redirect = NextResponse.redirect(new URL(calendar.address, url), 307);
+      redirect.headers.set("Cache-Control", "private, no-store, max-age=0, must-revalidate");
+      return redirect;
+    }
   }
 
   /*
