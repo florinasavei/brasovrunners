@@ -1,237 +1,129 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
+import { maskitoTransform, type MaskitoPreprocessor } from "@maskito/core";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import ro from "../../../messages/ro.json";
 import BirthDateField from "@/modules/registrations/ui/BirthDateField";
 import {
-  applyBirthDateMask,
-  birthDateDigits,
-  birthDateMasked,
-  maskBirthDate,
-  type MaskedBox,
+  birthDateMaskOptions,
+  dotAfterWholePartPostprocessor,
+  dotTakesDigitPreprocessor,
+  postedShapePreprocessor,
 } from "@/modules/registrations/ui/birth-date-mask";
 import { fieldId } from "@/shared/forms/outcome";
 import { readTypedDate } from "@/shared/forms/pickers/wall-values";
 
 /**
  * §NNN (amending §561) — the owner, 2026-09-30: «la ziua nașterii ar trebui să am input mask, în
- * timp ce scriu data nașterii». The birth-date box takes digits and puts the dots in itself.
- * BR-REQ-031-04 (the form's fields).
+ * timp ce scriu data nașterii», and then «we need libraries for this, for the mask». The
+ * birth-date box takes digits and puts the dots in itself, through Maskito's date mask with three
+ * preprocessors and two postprocessors of ours. BR-REQ-031-04 (the form's fields).
+ *
+ * Maskito works from `beforeinput`, which no test environment here types: the keystrokes — the
+ * dots appearing, a backspace over a dot, a digit over a digit — are proved in a real browser
+ * (`tests/e2e/registration-form.spec.ts`). Here: what the mask does with a whole text (autofill,
+ * `maskitoTransform`), and what each piece of ours decides.
  */
 const ROOT = path.resolve(__dirname, "../../..");
 const read = (relative: string) => readFileSync(path.join(ROOT, relative), "utf8").replace(/\r\n/g, "\n");
 
-/** A stand-in for the input: the browser's own edit, then the mask, as the `input` event's handler runs it. */
-function box(value = "", caret = value.length) {
-  const events: string[] = [];
-  const state: MaskedBox & { caret: number; events: string[] } = {
-    value,
-    selectionEnd: caret,
-    caret,
-    events,
-    setSelectionRange(start: number) {
-      state.caret = start;
-      state.selectionEnd = start;
-    },
-    dispatchEvent(event: Event) {
-      events.push(event.type);
-      return true;
-    },
-  };
-  /** Types one character at the caret (what the browser does before the `input` event). */
-  const type = (text: string) => {
-    for (const char of text) {
-      const previous = state.value;
-      state.value = previous.slice(0, state.caret) + char + previous.slice(state.caret);
-      state.selectionEnd = state.caret + 1;
-      applyBirthDateMask(state, previous, "insertText");
+const state = (value: string, from = value.length, to = from) => ({ value, selection: [from, to] as const });
+const run = (processor: MaskitoPreprocessor, value: string, selection: [number, number], data: string, action: Parameters<MaskitoPreprocessor>[1]) =>
+  processor({ elementState: { value, selection }, data }, action);
+
+describe("§NNN a whole text in the box — autofill, a value set before the mask — is shown in the mask", () => {
+  for (const [whole, shown] of [
+    ["1990-05-11", "11.05.1990"],
+    ["1990-5-1", "01.05.1990"],
+    ["11051990", "11.05.1990"],
+    ["11.05.1990", "11.05.1990"],
+    ["11.05.1990x", "11.05.1990"],
+    ["1105199012", "11.05.1990"],
+  ] as const) {
+    it(`«${whole}» is «${shown}»`, () => {
+      expect(maskitoTransform(whole, birthDateMaskOptions)).toBe(shown);
+      expect(readTypedDate(shown)).toBe(readTypedDate(whole) || readTypedDate(shown));
+    });
+  }
+
+  it("a date that does not exist stays as typed, never another day: the box's check calls it no date", () => {
+    expect(maskitoTransform("29.02.2001", birthDateMaskOptions)).toBe("29.02.2001");
+    expect(maskitoTransform("31.04.1990", birthDateMaskOptions)).toBe("31.04.1990");
+    expect(readTypedDate("29.02.2001")).toBe("");
+    expect(maskitoTransform("29.02.2000", birthDateMaskOptions)).toBe("29.02.2000");
+  });
+
+  it("no min or max goes to the kit: a too-young date is not moved to the youngest allowed", () => {
+    const young = `11.05.${new Date().getFullYear() - 3}`;
+    expect(maskitoTransform(young, birthDateMaskOptions)).toBe(young);
+  });
+});
+
+describe("§NNN the posted shape and the other separators", () => {
+  it("`1990-05-11` pasted, autofilled or filled is read day first, never «19» for the day", () => {
+    expect(run(postedShapePreprocessor, "11.0", [0, 4], "1990-05-11", "insert").data).toBe("11.05.1990");
+    expect(run(postedShapePreprocessor, "", [0, 0], " 1990-5-1 ", "insert").data).toBe("01.05.1990");
+    const autofilled = run(postedShapePreprocessor, "1990-05-11", [10, 10], "", "validation");
+    expect(autofilled.elementState).toEqual(state("11.05.1990"));
+  });
+
+  it("a typed «/», «-», «,» or space is the dot; a digit or a day-first paste is left to the kit", () => {
+    for (const separator of ["/", "-", ",", " "]) {
+      expect(run(postedShapePreprocessor, "5", [1, 1], separator, "insert").data).toBe(".");
     }
-  };
-  /** Backspace (or Delete) at the caret. */
-  const erase = (forward = false) => {
-    const previous = state.value;
-    const at = forward ? state.caret : state.caret - 1;
-    if (at < 0 || at >= previous.length) return;
-    state.value = previous.slice(0, at) + previous.slice(at + 1);
-    state.selectionEnd = at;
-    applyBirthDateMask(state, previous, forward ? "deleteContentForward" : "deleteContentBackward");
-  };
-  /** A paste replacing the whole box. */
-  const paste = (text: string) => {
-    const previous = state.value;
-    state.value = text;
-    state.selectionEnd = text.length;
-    applyBirthDateMask(state, previous, "insertFromPaste");
-  };
-  const moveTo = (at: number) => state.setSelectionRange(at, at);
-  return { state, type, erase, paste, moveTo };
-}
-
-describe("§NNN the box puts the dots in as the digits are typed", () => {
-  it("«11» is «11.», «1105» is «11.05.», and eight digits are the whole date", () => {
-    const steps: Array<[string, string]> = [
-      ["1", "1"],
-      ["1", "11."],
-      ["0", "11.0"],
-      ["5", "11.05."],
-      ["1", "11.05.1"],
-      ["9", "11.05.19"],
-      ["9", "11.05.199"],
-      ["0", "11.05.1990"],
-    ];
-    const { state, type } = box();
-    for (const [char, shown] of steps) {
-      type(char);
-      expect(state.value, `after «${char}»`).toBe(shown);
-      expect(state.caret, "the caret is at the end").toBe(shown.length);
-    }
-  });
-
-  it("takes no more than eight digits and no letters", () => {
-    const { state, type } = box();
-    type("110519901");
-    expect(state.value).toBe("11.05.1990");
-    const letters = box();
-    letters.type("1a1b0");
-    expect(letters.state.value).toBe("11.0");
-  });
-
-  it("a dot the person types is no second dot, and after a lone digit it closes the day or the month", () => {
-    const { state, type } = box();
-    type("11.05.1990");
-    expect(state.value).toBe("11.05.1990");
-    const short = box();
-    short.type("5.");
-    expect(short.state.value).toBe("05.");
-    short.type("3/");
-    expect(short.state.value).toBe("05.03.");
-    short.type("1990");
-    expect(short.state.value).toBe("05.03.1990");
-  });
-
-  it("the caret stays after the digit it followed when a digit is typed in the middle", () => {
-    const { state, type, moveTo } = box("11.05.199");
-    moveTo(4); // after «11.0»
-    type("7");
-    expect(state.value).toBe("11.07.5199");
-    expect(state.caret).toBe(5); // after «11.07», the digit just typed
-    const early = box("11.05.1990");
-    early.moveTo(1);
-    early.erase(); // backspace over the first «1»
-    expect(early.state.value).toBe("10.51.990");
-    expect(early.state.caret).toBe(0);
+    expect(run(postedShapePreprocessor, "5", [1, 1], "3", "insert").data).toBe("3");
+    expect(run(postedShapePreprocessor, "", [0, 0], "11/05/1990", "insert").data).toBe("11/05/1990");
   });
 });
 
 describe("§NNN a backspace over a dot takes the digit before it", () => {
-  it("«11.» and a backspace is «1», not «11.» again", () => {
-    const { state, type, erase } = box();
-    type("11");
-    expect(state.value).toBe("11.");
-    erase();
-    expect(state.value).toBe("1");
-    expect(state.caret).toBe(1);
+  it("Backspace over the dot of «11.» selects «1.», so «1» is left", () => {
+    expect(run(dotTakesDigitPreprocessor, "11.", [2, 3], "", "deleteBackward").elementState.selection).toEqual([1, 3]);
+    expect(run(dotTakesDigitPreprocessor, "11.05.1990", [5, 6], "", "deleteBackward").elementState.selection).toEqual([4, 6]);
   });
 
-  it("from the whole date down to nothing, one digit at a time", () => {
-    const { state, erase } = box("11.05.1990");
-    const seen: string[] = [];
-    while (state.value !== "") {
-      erase();
-      seen.push(state.value);
-    }
-    expect(seen).toEqual(["11.05.199", "11.05.19", "11.05.1", "11.05.", "11.0", "11.", "1", ""]);
+  it("Delete over a dot takes the digit after it", () => {
+    expect(run(dotTakesDigitPreprocessor, "11.05.1990", [2, 3], "", "deleteForward").elementState.selection).toEqual([2, 4]);
   });
 
-  it("a dot in the middle: the digit before it goes, the caret stays where it was", () => {
-    const { state, erase, moveTo } = box("11.05.1990");
-    moveTo(6); // after «11.05.»
-    erase();
-    expect(state.value).toBe("11.01.990");
-    expect(state.caret).toBe(4);
-  });
-
-  it("the Delete key over a dot takes the digit after it", () => {
-    const { state, erase, moveTo } = box("11.05.1990");
-    moveTo(2); // before the first dot
-    erase(true);
-    expect(state.value).toBe("11.51.990");
-    expect(state.caret).toBe(2);
-  });
-
-  it("Android sends no key: the removed dot is found from the text alone", () => {
-    expect(maskBirthDate("11.05", 5, "11.05.", "")).toEqual({ text: "11.0", caret: 4 });
-    expect(maskBirthDate("11", 2, "11.", "")).toEqual({ text: "1", caret: 1 });
+  it("a digit deleted, a selection, or a dot with no digit beside it is left to the kit", () => {
+    expect(run(dotTakesDigitPreprocessor, "11.05", [4, 5], "", "deleteBackward").elementState.selection).toEqual([4, 5]);
+    expect(run(dotTakesDigitPreprocessor, "11.05", [0, 5], "", "deleteBackward").elementState.selection).toEqual([0, 5]);
+    expect(run(dotTakesDigitPreprocessor, "11.", [2, 3], "", "deleteForward").elementState.selection).toEqual([2, 3]);
+    expect(run(dotTakesDigitPreprocessor, "11.", [2, 3], "1", "insert").elementState.selection).toEqual([2, 3]);
   });
 });
 
-describe("§NNN a pasted date is read whole and shown in the mask", () => {
-  for (const [pasted, shown] of [
-    ["11/05/1990", "11.05.1990"],
-    ["11-05-1990", "11.05.1990"],
-    ["11051990", "11.05.1990"],
-    ["1990-05-11", "11.05.1990"],
-    ["5.11.1990", "05.11.1990"],
-    [" 11 05 1990 ", "11.05.1990"],
-    ["11.05.1990", "11.05.1990"],
-  ] as const) {
-    it(`«${pasted}» is «${shown}», read as the date it names`, () => {
-      const { state, paste } = box("11.0");
-      paste(pasted);
-      expect(state.value).toBe(shown);
-      expect(state.caret).toBe(shown.length);
-      expect(readTypedDate(state.value)).toBe(readTypedDate(pasted));
-    });
-  }
-
-  it("a shorter date pasted over the whole box is read whole, not as a deletion", () => {
-    const { state, paste } = box("11.05.1990");
-    paste("5/11/1990");
-    expect(state.value).toBe("05.11.1990");
+describe("§NNN the dot comes as soon as the day or the month is whole", () => {
+  it("«11» typed is «11.», «11.05» is «11.05.», with the caret after the dot", () => {
+    expect(dotAfterWholePartPostprocessor(state("11"), state("1"))).toEqual(state("11."));
+    expect(dotAfterWholePartPostprocessor(state("11.05"), state("11.0"))).toEqual(state("11.05."));
   });
 
-  it("a shorter date pasted with no inputType (a keyboard that sends none) is still a paste", () => {
-    const state: MaskedBox = { value: "5.6.1990", selectionEnd: 8, setSelectionRange() {} };
-    expect(applyBirthDateMask(state, "11.05.1990", "")).toBe("05.06.1990");
-    expect(state.value).toBe("05.06.1990");
+  it("not while deleting, not in the middle, not in the year", () => {
+    expect(dotAfterWholePartPostprocessor(state("11"), state("11.0"))).toEqual(state("11"));
+    expect(dotAfterWholePartPostprocessor(state("11.05", 1), state("1.05"))).toEqual(state("11.05", 1));
+    expect(dotAfterWholePartPostprocessor(state("11.05.19"), state("11.05.1"))).toEqual(state("11.05.19"));
   });
 
-  it("with no inputType, a digit cut from the middle is still a deletion, not a whole date", () => {
-    expect(maskBirthDate("1.05.1990", 0, "11.05.1990", "").text).toBe("10.51.990");
-    expect(maskBirthDate("11.05.199", 9, "11.05.1990", "").text).toBe("11.05.199");
-  });
-
-  it("the digits and the mask on their own", () => {
-    expect(birthDateDigits("1990-5-1")).toBe("01051990");
-    expect(birthDateDigits("abc")).toBe("");
-    expect(birthDateMasked("")).toBe("");
-    expect(birthDateMasked("1")).toBe("1");
-    expect(birthDateMasked("110")).toBe("11.0");
-  });
-
-  it("tells the islands reading the box by its id that the text changed under them", () => {
-    const { state, paste } = box();
-    paste("1990-05-11");
-    expect(state.events).toEqual(["change"]);
-    const unchanged = box("11.05.", 6);
-    unchanged.type("1");
-    expect(unchanged.state.events).toEqual([]);
+  it("our pieces run before the kit's preprocessors and after its postprocessors", () => {
+    const pre = birthDateMaskOptions.preprocessors ?? [];
+    expect(pre.slice(0, 2)).toEqual([postedShapePreprocessor, dotTakesDigitPreprocessor]);
+    expect(birthDateMaskOptions.postprocessors?.at(-1)).toBe(dotAfterWholePartPostprocessor);
   });
 });
 
-describe("§NNN the box, rendered after the digits are typed", () => {
-  it("shows «11.05.1990» after «11051990», and the date it posts is 1990-05-11", () => {
-    const { state, type } = box();
-    type("11051990");
+describe("§NNN the box, rendered", () => {
+  it("shows «11.05.1990» for a posted 1990-05-11, keeps the number pad and the placeholder, and has no maxlength", () => {
     const html = renderToStaticMarkup(
       createElement(BirthDateField, {
         id: fieldId("birthDate"),
         name: "birthDate",
         label: ro.Registration.birthDate,
         required: true,
-        defaultValue: state.value,
+        defaultValue: "1990-05-11",
         min: "1906-09-29",
         max: "2012-11-21",
         eventDay: "2026-11-21",
@@ -249,15 +141,19 @@ describe("§NNN the box, rendered after the digits are typed", () => {
     expect(input).toMatch(/autocomplete="bday"/i);
     expect(input).toContain('placeholder="ZZ.LL.AAAA"');
     expect(input).not.toMatch(/maxlength/i);
-    expect(readTypedDate(state.value)).toBe("1990-05-11");
     expect(html).toContain("Vineri, 11 mai 1990 · 36 de ani în ziua evenimentului");
   });
 
-  it("the mask lives in the one field every form draws, with no mask library", () => {
+  it("the mask is Maskito's, pinned, in the one field every form draws; the public form alone asks for autofill", () => {
     const field = read("src/modules/registrations/ui/BirthDateField.tsx");
-    expect(field).toContain("applyBirthDateMask");
-    const pkg = read("package.json");
-    expect(pkg).not.toMatch(/imask|inputmask|input-mask|number-format|text-mask/i);
+    expect(field).toContain('from "@maskito/react"');
+    expect(field).toContain("useMaskito({ options: birthDateMaskOptions })");
+    const pkg = JSON.parse(read("package.json")) as { dependencies: Record<string, string> };
+    const maskito = ["@maskito/core", "@maskito/kit", "@maskito/react"].map((name) => pkg.dependencies[name]);
+    expect(maskito.every((version) => /^\d+\.\d+\.\d+$/.test(version ?? "")), "exact pins").toBe(true);
+    expect(new Set(maskito).size, "one version for the three").toBe(1);
+    expect(JSON.stringify(pkg.dependencies)).not.toMatch(/imask|inputmask|"input-mask|number-format|text-mask/i);
     expect(read("src/app/[locale]/events/[slug]/register/page.tsx")).toMatch(/<BirthDateField[\s\S]*?autoComplete="bday"/);
+    expect(read("src/modules/registrations/ui/StaffEventBirthDate.tsx")).not.toMatch(/autoComplete="bday"/);
   });
 });
