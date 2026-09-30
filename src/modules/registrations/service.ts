@@ -18,7 +18,10 @@ import { acceptanceTextHash } from "./signed-declaration";
 import { readClubNotices } from "@/modules/notifications/club-notices";
 import { confirmationNoticeRecipients, resolveDeclarationCopies } from "@/modules/notifications/domain/club-notices";
 import { startingDeadline } from "@/modules/notifications/domain/deadline-rebase";
+import { markedForNow } from "@/modules/notifications/domain/send-at-once";
+import { drainOutboxRowsAfterResponse } from "@/modules/notifications/drain";
 import { enqueueEmail, type OutboxRow } from "@/modules/notifications/outbox";
+import { outboxIdsForKey } from "@/modules/notifications/send-at-once";
 import { bibNumberInUse, isEventSpareNumber, pickBibNumber } from "./bibs";
 import { handsSpareAtConfirm } from "./domain/spare-bibs";
 import type { CancelReason } from "./domain/cancel-reason";
@@ -886,6 +889,8 @@ export async function fillAvailableSpots<T extends Record<string, unknown>>(
   let offers = 0;
   const candidates = await repo.lockOldestWaitlisted(db, event.id, availablePlaces);
   if (candidates.length === 0) return 0;
+  // Every offer's email and its club copies, sent past the scheduled pass once this request is out (§NNN).
+  const leaveNow: string[] = [];
   for (const candidate of candidates) {
     const offered = await repo.transitionRegistration(db, {
       id: candidate.id,
@@ -897,19 +902,37 @@ export async function fillAvailableSpots<T extends Record<string, unknown>>(
     if (!offered) continue;
     // An offer carries no race number; accepting it is a confirmation, which draws one (§548).
 
+    const idempotencyKey = `registration:${offered.id}:waitlist-offered:${now.toISOString()}`;
     await enqueueEmail(db, {
       participantId: offered.participantId,
       registrationId: offered.id,
       messageType: "WAITLIST_SPOT_OFFER",
       locale: offered.locale,
       recipientEmail: await deliveryEmailOf(db, offered.participantId),
-      // The offer's own first message: its send re-bases the offer once (§513); a resend never does.
-      payload: startingDeadline(),
-      idempotencyKey: `registration:${offered.id}:waitlist-offered:${now.toISOString()}`,
+      /*
+        The offer's own first message: its send re-bases the offer once (§513); a resend never does.
+        Marked as leaving now (§540), because it does: a freed place is the waiting runner's the
+        moment it frees, and under «La trecerea programată» (QA's and production's default) the offer
+        sat in the queue until the outbox job's next pass — up to an hour or two on QA — while the
+        backoffice already said «Ofertă activă» (§NNN; the owner, 2026-09-30: «când anulez pe cineva,
+        iau automat pe altcineva de pe lista de așteptare»).
+      */
+      payload: markedForNow(startingDeadline(), "now"),
+      idempotencyKey,
       now,
+      // Sent by the drain below, whatever the timing says; the timing's own drain is not needed for it.
+      drainAfter: false,
     });
+    leaveNow.push(...(await outboxIdsForKey(db, idempotencyKey)));
     offers += 1;
   }
+  /*
+    After this request's response, once the transaction that made the offers has committed: only these
+    rows, through the one worker, the day's allowance asked by the batch as for any send (§40: a spent
+    one defers them to the job, never drops them). A caller whose transaction rolls back left no row
+    for it to find. Outside a request (a script, the tests) it does nothing and the job sends them.
+  */
+  drainOutboxRowsAfterResponse(leaveNow);
   return offers;
 }
 

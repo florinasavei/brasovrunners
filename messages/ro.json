@@ -4543,7 +4543,7 @@
         "title": "Când pleacă emailurile",
         "intro": "La trecerea programată (implicit), emailurile pleacă la următoarea verificare: în cel mult {day} ziua și {night} noaptea. «Imediat după cerere» le trimite în câteva secunde. Niciun email nu se pierde.",
         "field": "Emailurile pleacă",
-        "help": "Oricât ar aștepta un email, termenul curge de când pleacă: locul ținut, oferta și linkurile nu pierd nimic.",
+        "help": "O ofertă de pe lista de așteptare pleacă oricum imediat. Oricât ar aștepta un email, termenul curge de când pleacă: locul ținut, oferta și linkurile nu pierd nimic.",
         "option": {
           "scheduled": "La trecerea programată (în cel mult {wait}; recomandat)",
           "immediate": "Imediat după cerere"
