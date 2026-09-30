@@ -6,7 +6,7 @@ import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { DELIVERY_CHOICE_FIELD, deliveryChoiceOf } from "@/modules/notifications/domain/send-at-once";
 import { sendNowRefusalCode } from "@/modules/notifications/send-at-once";
-import { resendRegistrationMessage } from "@/modules/registrations/admin-service";
+import { resendFamilyMessage, resendRegistrationMessage } from "@/modules/registrations/admin-service";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { flashOutcome } from "@/shared/feedback/flash";
@@ -14,6 +14,25 @@ import type { FormOutcome } from "@/shared/forms/outcome";
 
 function toLocale(value: FormDataEntryValue | null): Locale {
   return value === "en" ? "en" : "ro";
+}
+
+/** «Retrimite familiei» (§NNN): one email for everybody on the row's address at its event. */
+export async function resendFamilyEmailAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = toLocale(form.get("uiLocale"));
+  const registrationId = String(form.get("registrationId") ?? "");
+  const path = getPathname({ locale, href: { pathname: "/admin/registrations/[id]", params: { id: registrationId } } });
+  const delivery = deliveryChoiceOf(form.get(DELIVERY_CHOICE_FIELD));
+  let error: string | null = null;
+  try {
+    // Authorization on the server (BR-REQ-060-01): the service refuses anyone but an Administrator.
+    await resendFamilyMessage(getDb(), await requireStaff(), registrationId, new Date(), delivery);
+  } catch (caught) {
+    if (!isDomainError(caught)) throw caught;
+    error = sendNowRefusalCode(caught);
+  }
+  const now = delivery === "now";
+  if (error === null) await flashOutcome(now ? { saved: "resentNow" } : { saved: "resent" });
+  redirect(error === null ? `${path}?resent=${now ? "now" : "1"}#admin-alert` : `${path}?error=${error}#admin-alert`);
 }
 
 export async function resendRegistrationEmailAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {

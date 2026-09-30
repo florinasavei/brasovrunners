@@ -669,7 +669,8 @@
           "cancelled_by_participant": "Anulată de participant, din linkul propriu",
           "declaration_hold_set": "Declarație păstrată pentru o reclamație sau un litigiu",
           "declaration_hold_cleared": "Păstrarea declarației a fost scoasă",
-          "promo_consent_changed": "Acordul pentru oferte și beneficii schimbat"
+          "promo_consent_changed": "Acordul pentru oferte și beneficii schimbat",
+          "family_resent": "Email retrimis familiei"
         }
       },
       "locale": {
@@ -826,7 +827,9 @@
         "staffNo": "Oferte și beneficii: nu. Echipa nu poate da acordul în locul persoanei; îl dă ea, din pagina înscrierii ei."
       },
       "promoOnly": "Doar cu oferte și beneficii",
-      "promoOnlyHelp": "Cei care au bifat „oferte și beneficii”, cu înscrierea încă valabilă. Exportul ia același filtru."
+      "promoOnlyHelp": "Cei care au bifat „oferte și beneficii”, cu înscrierea încă valabilă. Exportul ia același filtru.",
+      "resendFamily": "Retrimite familiei",
+      "resendFamilyLong": "Trimite un singur email adresei lui {name}, pentru toți cei înscriși de pe ea la eveniment"
     },
     "events": {
       "empty": "Nu există niciun eveniment în baza de date.",
@@ -1079,7 +1082,9 @@
         "note": "Deocamdată, emailurile automate pleacă la trecerea programată, în cel mult {wait}. Alege dacă acesta pleacă acum sau o așteaptă."
       },
       "menuOrderTitle": "Schimbi ordinea meniului?",
-      "menuOrderBody": "Meniul site-ului și subsolul arată paginile în ordinea nouă, pentru toți vizitatorii, de la următoarea pagină deschisă."
+      "menuOrderBody": "Meniul site-ului și subsolul arată paginile în ordinea nouă, pentru toți vizitatorii, de la următoarea pagină deschisă.",
+      "resendFamilyTitle": "Retrimiți emailul familiei?",
+      "resendFamilyBody": "Pleacă un singur email către adresa lor, pentru toți: {names}. Fiecare primește pasul la care a rămas, cu un link nou; linkurile din emailurile vechi nu mai merg."
     },
     "errors": {
       "PICTURE_IN_USE": "Imaginea este folosită într-o pagină, într-un eveniment sau într-un album. Scoate-o de acolo mai întâi.",
@@ -6404,7 +6409,14 @@
       "doneTitle": "Adresa a fost confirmată",
       "eventOff": "Evenimentul a fost anulat sau s-a încheiat, așa că înscrierea nu mai continuă: nu ți-am rezervat un loc și nu trebuie să faci nimic.",
       "waitlistFull": "Locurile și lista de așteptare sunt pline, așa că adresa nu a fost confirmată și nu ți-am rezervat nimic. Linkul din email rămâne valabil {confirmation} de la trimiterea formularului: dacă între timp se eliberează un loc pe lista de așteptare, deschide-l din nou.",
-      "noWaitlist": "Toate locurile au fost ocupate și evenimentul nu are listă de așteptare, așa că adresa nu a fost confirmată și nu ți-am rezervat nimic. Linkul din email rămâne valabil {confirmation} de la trimiterea formularului: dacă între timp se eliberează un loc, deschide-l din nou."
+      "noWaitlist": "Toate locurile au fost ocupate și evenimentul nu are listă de așteptare, așa că adresa nu a fost confirmată și nu ți-am rezervat nimic. Linkul din email rămâne valabil {confirmation} de la trimiterea formularului: dacă între timp se eliberează un loc, deschide-l din nou.",
+      "doneFor": "Adresa e confirmată pentru:",
+      "next": {
+        "PENDING_DECLARATION": "semnează declarația din emailul care vine acum",
+        "WAITLIST_OFFERED": "are un loc oferit: semnează declarația din email",
+        "WAITLISTED": "pe lista de așteptare: primește un email când se eliberează un loc",
+        "CONFIRMED": "confirmat"
+      }
     },
     "declare": {
       "title": "Declarație pe proprie răspundere",

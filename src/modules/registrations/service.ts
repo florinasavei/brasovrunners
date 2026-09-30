@@ -89,6 +89,7 @@ import {
   type RegistrationEntryDetails,
 } from "./names";
 import * as repo from "./repository";
+import { waitlistRefusalOf } from "./domain/waitlist";
 
 /**
  * The registration lifecycle (AGENTS.md §15.1-§15.7; BR-REQ-030/031/033/034/035/036).
@@ -2580,6 +2581,56 @@ export async function confirmEmail<T extends Record<string, unknown>>(
     wakeMaintenance(event, now, settings, result.registration.holdExpiresAt, joinedQueue(result.registration) ? offerDeadline(event, now, settings) : null);
   }
   return result.registration;
+}
+
+/**
+ * One click of a verification link proves the inbox, not one person (§NNN, amending §389, §446 and
+ * §543). The registration the link was minted for is confirmed first, exactly as `confirmEmail`
+ * always did — its own refusal (no place and the line full, §348) still takes the whole press back,
+ * the token spend included. Then every other registration of the same address at the same event
+ * still waiting for the address, submitted before this click and with its own link alive, moves on
+ * with it, in the order they were submitted: each through `confirmEmail`, so each through the one
+ * allocator under the event's lock (AGENTS.md §10.6) — nobody outside the address is leapfrogged,
+ * and a full event puts them on the waiting list. One of them refused by a full line stays waiting
+ * for its own link; it never undoes the others. A form sent after the click is not read: the event
+ * row is locked first, and the query asks `submitted_at <= now` besides, so a stranger typing a proved
+ * address still waits for the inbox's own click.
+ */
+export async function confirmEmailOnAddress<T extends Record<string, unknown>>(
+  db: Database<T>,
+  event: EventForRegistration,
+  registrationId: string,
+  now: Date,
+): Promise<{ registration: Registration; alsoConfirmed: Registration[] }> {
+  const settings = await currentDeadlines(db);
+  return db.transaction(async (tx) => {
+    // The serialization point first (§10.6): the address's rows are read under it.
+    await repo.lockEventForCapacity(tx, event.id);
+    const clicked = await repo.findRegistrationById(tx, registrationId);
+    const waiting = clicked
+      ? await repo.pendingEmailRegistrationsOnAddress(tx, {
+          eventId: clicked.eventId,
+          participantId: clicked.participantId,
+          now,
+          confirmationHours: settings.confirmationHours,
+        })
+      : [];
+    // The clicked link itself decides whether anything is proved: lapsed, off or already used, nobody else moves.
+    const proves = waiting.some((row) => row.id === registrationId);
+    const registration = await confirmEmail(tx, event, registrationId, now);
+    if (!proves || registration.status === "PENDING_EMAIL_CONFIRMATION") return { registration, alsoConfirmed: [] };
+    const alsoConfirmed: Registration[] = [];
+    for (const row of waiting) {
+      if (row.id === registrationId) continue;
+      try {
+        alsoConfirmed.push(await confirmEmail(tx, event, row.id, now));
+      } catch (error) {
+        // The line full for this one (§348): its savepoint is gone, it waits for its own link.
+        if (!waitlistRefusalOf(error)) throw error;
+      }
+    }
+    return { registration, alsoConfirmed };
+  });
 }
 
 // --- §15.3 Declaration signing, and offer acceptance (the same act) ------------------------

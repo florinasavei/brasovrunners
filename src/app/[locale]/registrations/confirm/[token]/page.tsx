@@ -11,7 +11,7 @@ import { cachedDeadlines } from "@/modules/public-cache/reads";
 import ActionLinkNotice from "@/modules/registrations/ui/ActionLinkNotice";
 import ConfirmOnArrival from "@/modules/registrations/ui/ConfirmOnArrival";
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
-import { readRegistrationTokenContext, readSpentRegistrationLink } from "@/modules/registrations/token-actions";
+import { readConfirmedOnAddress, readRegistrationTokenContext, readSpentRegistrationLink } from "@/modules/registrations/token-actions";
 import { confirmEmailAction } from "./actions";
 import { DENSITY } from "@/theme/density";
 
@@ -75,6 +75,8 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
   }
 
   if (done) {
+    // One click proved the inbox (§NNN): with more than one person on it, the page names each and their next step.
+    const people = await readConfirmedOnAddress(token, new Date());
     return (
       <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
         {/* Every page in this journey opens with an h1, this one included. A page whose only
@@ -88,6 +90,18 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
             protects their place is running. Saying "done" alone loses people here. */}
         <RegistrationJourney current="declare" />
         <Alert severity="success">{t("confirm.done")}</Alert>
+        {people.length > 1 && (
+          <Alert severity="info" icon={false} sx={{ mt: 2 }} data-testid="confirm-address-people">
+            <Typography sx={{ fontWeight: 600 }}>{t("confirm.doneFor")}</Typography>
+            <ul style={{ margin: "4px 0 0", paddingInlineStart: 20 }}>
+              {people.map((person, index) => (
+                <li key={index}>
+                  <strong>{person.name}</strong> — {t(`confirm.next.${person.status}`)}
+                </li>
+              ))}
+            </ul>
+          </Alert>
+        )}
       </Container>
     );
   }
