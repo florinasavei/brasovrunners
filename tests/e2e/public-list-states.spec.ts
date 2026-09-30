@@ -424,6 +424,8 @@ test.describe("BR-REQ-039-01 the public list's states, behind the privacy notice
 
       await test.step("the form's «Vreau să apar» says what the list will show beside the name", async () => {
         await page.goto(`/ro/evenimente/${event.slug}-ro/inscriere`);
+        // The tick names the list and the results as one disclosure (§570).
+        await expect(page.getByLabel("Vreau să apar pe lista de participanți & rezultate — opțional")).toHaveCount(1);
         await expect(page.getByTestId("list-opt-in-states")).toContainText("„Pe lista de așteptare”");
       });
 

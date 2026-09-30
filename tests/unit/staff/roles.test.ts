@@ -506,6 +506,8 @@ describe("BR-REQ-060-01 every capability × every role", () => {
     canReadRegistrations: /*  */ [false, false, false, true, false, true, true],
     canMessageParticipants: /**/ [false, false, false, true, false, true, true],
     canSendNewsletter: /*     */ [false, false, false, true, false, true, true],
+    // §570: the list for sponsors — the Organizer, the Administrator, the Superadministrator; never Tehnic.
+    canExportSponsorList: /*  */ [false, false, false, true, false, true, true],
     canTranslateTexts: /*     */ [false, false, true, true, false, true, true],
     canManageRegistrations: /**/ [false, false, false, false, false, true, true],
     canWorkTheDesk: /*        */ [false, true, true, true, true, true, true],
@@ -517,6 +519,8 @@ describe("BR-REQ-060-01 every capability × every role", () => {
     canManagePlatform: /*     */ [false, false, false, false, false, false, true],
     canManageClubSettings: /* */ [false, false, false, false, false, true, true],
     canReadContent: /*        */ [false, false, true, true, true, true, true],
+    // §579: the editor's preview before saving — the Redactor, the Organizer, the Administrators; never Tehnic.
+    canPreviewEventDraft: /*  */ [false, false, true, true, false, true, true],
     // «Setări» (§516): every role that reads the club's content — the volunteer has the desk alone.
     canOpenSettings: /*       */ [false, false, true, true, true, true, true],
     // §524: the members' zone is every account's; the backoffice line and the members' pages as for «Echipa».

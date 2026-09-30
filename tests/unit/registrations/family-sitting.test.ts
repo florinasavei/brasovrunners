@@ -31,6 +31,7 @@ const {
   sittingNames,
   sittingSharedValues,
   withSittingPerson,
+  isNewSittingPerson,
   SITTING_NAMES_MAX,
   SITTING_SHARED_FIELDS,
 } = await import("@/modules/registrations/domain/family-sitting");
@@ -592,5 +593,38 @@ describe("§536 the short screen's sentences, formatted", () => {
     expect(en("addHint", { window: "10 minutes", at: "13:15" })).toBe("If you register one more person by 13:15, the email waits for their form, at most 10 minutes, and you get one email for everybody.");
     expect(en("addHintLeft", { window: "10 minutes" })).toBe("If you register one more person, the next email waits at most 10 minutes after the last form and covers everybody.");
     expect(en("addHintAtOnce")).toBe("Each person gets their own email.");
+  });
+});
+
+describe("§576 the sex beside the birth date, on the browser's half and the kept forms", () => {
+  it("another name and the other sex on a typed birth date is a new person; the same sex is the twins' clash, as before", () => {
+    const andrei = [{ name: "Andrei Munteanu", birthDate: "1984-06-15", sex: "MALE" as const }];
+    const sister = withSittingPerson(andrei, { name: "Andreea Munteanu", birthDate: "1984-06-15", sex: "FEMALE" });
+    expect(sister).toEqual({ people: [...andrei, { name: "Andreea Munteanu", birthDate: "1984-06-15", sex: "FEMALE" }], sameBirthDate: null });
+    expect(isNewSittingPerson(andrei, sister)).toBe(true);
+    const brother = withSittingPerson(andrei, { name: "Mihai Munteanu", birthDate: "1984-06-15", sex: "MALE" });
+    expect(brother).toEqual({ people: andrei, sameBirthDate: { typed: "Mihai Munteanu", kept: "Andrei Munteanu" } });
+    // A person typed before the sex was kept (an older cookie) says nothing either way: the day decides.
+    expect(withSittingPerson([{ name: "Andrei Munteanu", birthDate: "1984-06-15" }], { name: "Andreea Munteanu", birthDate: "1984-06-15", sex: "FEMALE" }).sameBirthDate).not.toBeNull();
+    // Only an answer the form offers is kept.
+    expect(withSittingPerson([], { name: "Ion Pop", birthDate: "1990-01-01", sex: "UNSPECIFIED" }).people).toEqual([{ name: "Ion Pop", birthDate: "1990-01-01" }]);
+  });
+
+  it("the cookie carries each person's sex, and reads a line written before it as none", () => {
+    const people = [
+      { name: "Andrei Munteanu", birthDate: "1984-06-15", sex: "MALE" as const },
+      { name: "Andreea Munteanu", birthDate: "1984-06-15", sex: "FEMALE" as const, waitlist: true },
+      { name: "Ion Pop", birthDate: "" },
+    ];
+    const cookie = { sittingId: "00000000-0000-4000-8000-0000000000aa", seed: null, eventId: EVENT_ID, email: "familia.pop@example.ro", people, heldUntil: new Date(NOW.getTime() + 900_000), sameBirthDate: null };
+    expect(openFamilySittingCookie(sealFamilySittingCookie(cookie)!)?.people).toEqual(people);
+  });
+
+  it("a kept form is not set aside for another name and the other sex on its birth date", () => {
+    const kept = [{ id: "e1", registeredName: "Maria Pop", birthDate: "2010-07-11", sex: "FEMALE" as const }];
+    expect(sittingEntryFor(kept, { legalName: "Ion Pop", birthDate: "2010-07-11", sex: "MALE" })).toBeNull();
+    expect(sittingEntryFor(kept, { legalName: "Ioana Pop", birthDate: "2010-07-11", sex: "FEMALE" })).toEqual({ kind: "sameBirthDate", entry: kept[0] });
+    // The same name is the same person whatever the sex box says: a correction.
+    expect(sittingEntryFor(kept, { legalName: "maria pop", birthDate: "2010-07-11", sex: "MALE" })).toEqual({ kind: "replace", entry: kept[0] });
   });
 });

@@ -1,7 +1,15 @@
 import { NextRequest } from "next/server";
 import { describe, expect, it } from "vitest";
 import proxy from "@/proxy";
-import { isStaticPublicAnswer, LIVE_SEGMENT, liveTwinPathname, mayBeSignedIn, STATIC_PAGE_BROWSER_CACHE_CONTROL } from "@/i18n/live-twin";
+import {
+  DECLINED_PREFETCH_STATUS,
+  isRouterPrefetch,
+  isStaticPublicAnswer,
+  LIVE_SEGMENT,
+  liveTwinPathname,
+  mayBeSignedIn,
+  STATIC_PAGE_BROWSER_CACHE_CONTROL,
+} from "@/i18n/live-twin";
 import { PREFETCHED_PATHNAMES } from "@/i18n/prefetch";
 
 /**
@@ -21,6 +29,14 @@ describe("liveTwinPathname", () => {
     expect(liveTwinPathname("/ro/events", search("type=RACE"), false)).toBe(`/ro/${LIVE_SEGMENT}/events`);
     expect(liveTwinPathname("/ro/calendar", search("month=2026-11"), false)).toBe(`/ro/${LIVE_SEGMENT}/calendar`);
     expect(liveTwinPathname("/en/calendar", search("view=list&partner=1"), false)).toBe(`/en/${LIVE_SEGMENT}/calendar`);
+  });
+
+  it("leaves a calendar period's own path to the CDN, and sends a filter on it to the period's twin (§574)", () => {
+    expect(liveTwinPathname("/ro/calendar/2026-10", search(""), false)).toBeNull();
+    expect(liveTwinPathname("/ro/calendar/2026-10/list", search("_rsc=1"), false)).toBeNull();
+    expect(liveTwinPathname("/ro/calendar/2026-10", search("type=RACE"), false)).toBe(`/ro/${LIVE_SEGMENT}/calendar/2026-10`);
+    expect(liveTwinPathname("/en/calendar/2026-10/list", search("partner=1"), false)).toBe(`/en/${LIVE_SEGMENT}/calendar/2026-10/list`);
+    expect(liveTwinPathname("/ro/calendar/2027", search("surface=TRAIL"), true)).toBe(`/ro/${LIVE_SEGMENT}/calendar/2027`);
   });
 
   it("sends an event page's own questions to the twin: ?lista=, ?interest=, ?declaratie=", () => {
@@ -46,6 +62,94 @@ describe("liveTwinPathname", () => {
     expect(liveTwinPathname("/ro/contact", search("sent=1"), false)).toBeNull();
     expect(liveTwinPathname("/ro/admin", search("a=1"), true)).toBeNull();
     expect(liveTwinPathname("/ro/faq", search("q=1"), false)).toBeNull();
+  });
+});
+
+/*
+  §577 (amending §549): a twin only when what the page reads from the address changes what it shows.
+  Measured on production 2026-09-30: `/ro/evenimente?foo=1` and `?page=2` were live-twin renders.
+*/
+describe("§577 the twin answers only the questions the page itself reads", () => {
+  it("leaves a key no page reads to the CDN, on every twinned route", () => {
+    for (const query of ["foo=1", "page=2", "s=wp-login", "q=alergare", "lang=en", "fbclid=x&foo=1"]) {
+      expect(liveTwinPathname("/ro/events", search(query), false), query).toBeNull();
+      expect(liveTwinPathname("/ro/calendar/2026-10", search(query), false), query).toBeNull();
+      expect(liveTwinPathname("/ro/events/crosul", search(query), false), query).toBeNull();
+    }
+  });
+
+  it("leaves a filter that names nothing the page knows to the CDN, as the page would show the bare listing", () => {
+    for (const query of ["type=FOO", "surface=", "difficulty=constructor", "partner=0", "night=yes", "view=grid", "cost=x&distance=y"]) {
+      expect(liveTwinPathname("/ro/events", search(query), false), query).toBeNull();
+      expect(liveTwinPathname("/en/calendar/2026-10/list", search(query), false), query).toBeNull();
+    }
+  });
+
+  it("keeps every filter the page reads, in each shape it reads it, and the list layout", () => {
+    for (const query of ["type=RACE", "type=race", "type=RACE,HIKE", "surface=TRAIL", "partner=1", "night=1", "registration=1", "view=list"]) {
+      expect(liveTwinPathname("/ro/events", search(query), false), query).toBe(`/ro/${LIVE_SEGMENT}/events`);
+    }
+    expect(liveTwinPathname("/ro/calendar/2026-10", search("cost=FREE"), false)).toBe(`/ro/${LIVE_SEGMENT}/calendar/2026-10`);
+    // The period path's layout is the path's, never the query's.
+    expect(liveTwinPathname("/ro/calendar/2026-10", search("view=list"), false)).toBeNull();
+  });
+
+  it("keeps the bare calendar's old month, year and layout keys for its twin, past the proxy's redirect", () => {
+    for (const query of ["month=2026-11", "year=2027", "view=list", "view=grid"]) {
+      expect(liveTwinPathname("/ro/calendar", search(query), false), query).toBe(`/ro/${LIVE_SEGMENT}/calendar`);
+    }
+  });
+
+  it("keeps an event page's four keys whatever their value, and the session's twin", () => {
+    for (const query of ["lista=", "lista=2", "interest=done", "since=x", "declaratie=abc", "foo=1&lista=3"]) {
+      expect(liveTwinPathname("/ro/events/crosul", search(query), false), query).toBe(`/ro/${LIVE_SEGMENT}/events/crosul`);
+    }
+    expect(liveTwinPathname("/ro/events/crosul", search("foo=1"), true)).toBe(`/ro/${LIVE_SEGMENT}/events/crosul`);
+  });
+});
+
+/*
+  §577: a signed-in reader's event links in view were each a twin render on prefetch. The proxy now
+  declines a prefetch that a twin would answer — an empty 204 — and the press navigates to the twin.
+*/
+describe("§577 the proxy declines a prefetch only a twin could answer", () => {
+  const session = { cookie: "authjs.session-token=abc" };
+  const prefetch = { rsc: "1", "next-router-prefetch": "1", "next-router-segment-prefetch": "/_tree" };
+  const ask = (path: string, headers: Record<string, string>) => proxy(new NextRequest(`http://localhost:4000${path}`, { headers }));
+
+  it("knows the router's prefetch from a navigation and a visit", () => {
+    expect(isRouterPrefetch(new Headers(prefetch))).toBe(true);
+    expect(isRouterPrefetch(new Headers({ "next-router-prefetch": "1" }))).toBe(true);
+    expect(isRouterPrefetch(new Headers({ rsc: "1" }))).toBe(false);
+    expect(isRouterPrefetch(new Headers())).toBe(false);
+  });
+
+  it("answers a signed-in reader's prefetch of an event page with an empty, unkept 204", async () => {
+    const response = ask("/ro/evenimente/crosul", { ...session, ...prefetch });
+    expect(response.status).toBe(DECLINED_PREFETCH_STATUS);
+    expect(response.headers.get("cache-control")).toMatch(/private, no-store/);
+    expect(response.headers.get("x-middleware-rewrite")).toBeNull();
+    expect(await response.text()).toBe("");
+  });
+
+  it("still sends the signed-in reader's navigation and visit to the twin", () => {
+    for (const headers of [{ ...session, rsc: "1" }, session]) {
+      const response = ask("/ro/evenimente/crosul", headers);
+      expect(response.status).toBe(200);
+      expect(response.headers.get("x-middleware-rewrite")).toContain(`/ro/${LIVE_SEGMENT}/events/crosul`);
+    }
+  });
+
+  it("lets a stranger's prefetch of the same page reach the static page, and a signed-in prefetch of the listing too", () => {
+    for (const [path, headers] of [
+      ["/ro/evenimente/crosul", prefetch],
+      ["/ro/evenimente", { ...session, ...prefetch }],
+      ["/en/events/crosul", prefetch],
+    ] as const) {
+      const response = ask(path, headers);
+      expect(response.status, path).toBe(200);
+      expect(response.headers.get("x-middleware-rewrite") ?? "", path).not.toContain(`/${LIVE_SEGMENT}/`);
+    }
   });
 });
 
@@ -75,7 +179,11 @@ describe("isStaticPublicAnswer", () => {
     }
     // Next's own `_rsc` and a share's `utm_*` still reach the static page.
     expect(isStaticPublicAnswer("/ro/events", search("_rsc=abc&utm_source=x"), false)).toBe(true);
-    expect(PREFETCHED_PATHNAMES.size).toBe(10);
+    // A calendar period's own path, one segment or two (§574).
+    expect(isStaticPublicAnswer("/ro/calendar/2026-10", search(""), false)).toBe(true);
+    expect(isStaticPublicAnswer("/en/calendar/2026-10/list", search(""), false)).toBe(true);
+    expect(isStaticPublicAnswer("/ro/calendar/2026-10", search("type=RACE"), false)).toBe(false);
+    expect(PREFETCHED_PATHNAMES.size).toBe(11);
   });
 
   it("is never a twin's answer, a page rendered per request, or the backoffice", () => {

@@ -39,13 +39,14 @@ test.describe("BR-REQ-041-01 the event list on a phone", () => {
     // One tooltip per entry, and it is MUI's (§367): no entry carries the browser's `title` too.
     await expect(main.locator("[role=table] a[title], [role=table] a [title]")).toHaveCount(0);
 
+    // The list is the month's own path with `/list` at its end (§574), no longer `?view=list`.
     await main.getByRole("link", { name: "Listă", exact: true }).click();
-    await expect(page).toHaveURL(/view=list/);
+    await expect(page).toHaveURL(/\/ro\/calendar\/\d{4}-\d{2}\/list$/);
     await expect(main.getByRole("table")).toHaveCount(0);
     // The next-month arrow keeps the list.
-    expect(await main.getByRole("link", { name: "Luna următoare" }).getAttribute("href")).toContain("view=list");
+    expect(await main.getByRole("link", { name: "Luna următoare" }).getAttribute("href")).toMatch(/\/list$/);
     await main.getByRole("link", { name: "Calendar", exact: true }).click();
-    await expect(page).not.toHaveURL(/view=list/);
+    await expect(page).not.toHaveURL(/\/list$/);
     await expect(main.getByRole("table")).toBeVisible();
   });
 
@@ -195,14 +196,14 @@ test.describe("BR-REQ-041-01 the event list on a phone", () => {
     const titleBefore = await page.locator("#calendar-title").innerText();
     const controlBefore = await next.boundingBox();
     const gridBefore = await main.getByRole("table").boundingBox();
-    // A real href, still, with the whole query in it: the soft navigation is an enhancement
-    // of the link and never a replacement for it.
-    expect(await next.getAttribute("href")).toContain("month=");
+    // A real href, still, with the period in its path (§574): the soft navigation is an
+    // enhancement of the link and never a replacement for it.
+    expect(await next.getAttribute("href")).toMatch(/\/ro\/calendar\/\d{4}-\d{2}$/);
 
     await next.click();
     // The navigation actually happened, and the month actually moved. Without these two the
     // assertions below would all pass against the pre-click DOM.
-    await expect(page).toHaveURL(/month=/);
+    await expect(page).toHaveURL(/\/ro\/calendar\/\d{4}-\d{2}$/);
     await expect(page.locator("#calendar-title")).not.toHaveText(titleBefore);
     await expect(main.getByRole("table")).toBeVisible();
     await expect(main.locator('[role="status"]')).toHaveCount(0);
@@ -217,6 +218,34 @@ test.describe("BR-REQ-041-01 the event list on a phone", () => {
     // Criterion 1 still holds after the month change.
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(0);
+  });
+
+  /**
+   * The same criterion, made independent of the day it runs (§575, amending §413). The test above
+   * steps from this month to the next, so it only sees the «Filtre» slot change when one of the two
+   * months happens to offer nothing — as on 2026-09-30, when September's one remaining event had
+   * nothing to choose between and October did: the arrows moved 44 px on a phone, 60 on a desktop.
+   * Here the month with nothing to offer is fixed (a January two years back, which only a seed of
+   * the past could fill), and its slot must hold the panel's box, unseen, so the month's arrows sit
+   * at the height they sit at on the calendar's own month, whichever of the two states that one is in.
+   */
+  test("holds the filter slot's box in a month with nothing to offer, so the controls do not move", async ({ page }) => {
+    const empty = `${new Date().getFullYear() - 2}-01`;
+    // The month's own path, the address every arrow and select now builds; the old `?month=` is only redirected there.
+    await page.goto(`/ro/calendar/${empty}`);
+    const main = page.locator("#main");
+    const slot = main.getByTestId("calendar-filter-slot");
+    await expect(slot).toHaveAttribute("data-held", "true");
+    // Held, not offered: nothing to see, press or read out…
+    await expect(slot.getByTestId("listing-filters")).toBeHidden();
+    // …but the box of a closed panel, the 44-pixel «Filtre» target.
+    expect((await slot.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    const heldArrow = await main.getByRole("link", { name: "Luna următoare" }).boundingBox();
+
+    await page.goto("/ro/calendar");
+    await expect(main.getByRole("table")).toBeVisible();
+    const arrow = await main.getByRole("link", { name: "Luna următoare" }).boundingBox();
+    expect(Math.abs((arrow?.y ?? -1) - (heldArrow?.y ?? 0))).toBeLessThanOrEqual(2);
   });
 
   test("gives every event link a tap target of at least 44 by 44 pixels", async ({ page }) => {

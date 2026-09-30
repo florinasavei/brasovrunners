@@ -22,6 +22,7 @@ import CoHostsBox from "@/modules/content/events/ui/boxes/CoHostsBox";
 import KindBox from "@/modules/content/events/ui/boxes/KindBox";
 import LinksBox from "@/modules/content/events/ui/boxes/LinksBox";
 import ProgrammeRulesBox from "@/modules/content/events/ui/boxes/ProgrammeRulesBox";
+import PreviewBox from "@/modules/content/events/ui/boxes/PreviewBox";
 import PromotionBox from "@/modules/content/events/ui/boxes/PromotionBox";
 import RegistrationBox from "@/modules/content/events/ui/boxes/RegistrationBox";
 import { AddressBox, DescriptionBox, TitleSummaryBox } from "@/modules/content/events/ui/boxes/TextBoxes";
@@ -55,6 +56,7 @@ import {
   canReadContent,
   canReadRegistrations,
   canManageTestRegistrations,
+  canPreviewEventDraft,
   isLiveContent,
 } from "@/modules/staff-identity/domain/roles";
 import {
@@ -856,6 +858,9 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   <EditorGroup label={t("editor.groups.offPage")} />
                   <PromotionBox {...box} />
                   <AddressBox languages={languages} slugLocked={slugLocked} creating={false} />
+                  {/* «Previzualizare» (§579): the card and the page from these boxes as they stand, before
+                      «Salvează» — for the roles that may preview; the action asks the role again. */}
+                  {canPreviewEventDraft(staffUser.role) && <PreviewBox formId="event-save-form" refusal={refusal} />}
 
                   {/* 15 — always open: which dates, who is told, the live tick, and the one button.
                       A required tick in a closed box would be a Save that silently does nothing. */}

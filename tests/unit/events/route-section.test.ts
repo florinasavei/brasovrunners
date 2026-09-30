@@ -307,7 +307,7 @@ describe("BR-REQ-011-01 where the section sits (§387)", () => {
   const read = (file: string) => readFileSync(path.join(process.cwd(), file), "utf8");
 
   it("on the public page: after the facts and the registration button, before «Linkuri și fișiere» and the programme", () => {
-    const page = read("src/app/[locale]/events/[slug]/page.tsx");
+    const page = read("src/modules/events/ui/EventPageView.tsx");
     const route = page.indexOf("<EventRoute");
     expect(route).toBeGreaterThan(page.indexOf("<EventFacts"));
     expect(route).toBeGreaterThan(page.indexOf("<RegistrationCta"));
@@ -321,7 +321,8 @@ describe("BR-REQ-011-01 where the section sits (§387)", () => {
     const route = preview.indexOf("<EventRoute");
     expect(route).toBeGreaterThan(preview.indexOf("<EventFacts"));
     expect(route).toBeLessThan(preview.indexOf("<EventLinks"));
-    expect(preview).toContain("routeDescriptionJson: translation.routeDescriptionJson");
+    // The mapping is `preview-view.ts` since §579, shared with the preview before saving.
+    expect(read("src/modules/content/events/preview-view.ts")).toContain("routeDescriptionJson: translation.routeDescriptionJson");
     expect(preview).toContain("routeSection={hasRouteDescription(preview.routeDescriptionJson)}");
   });
 

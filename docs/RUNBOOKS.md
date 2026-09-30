@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V2.40-2026-09-27`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V2.46-2026-09-27`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -643,8 +643,9 @@ are the run's to open, merge and approve.
 
 ## Email has stopped
 
-The monitor mail from cron-job.org says `/api/health` failed, or `/admin/tasks` is red at the
-top (`DECISIONS.md` §98). Three causes, told apart by the same page:
+The monitor mail from cron-job.org says `/api/health?deep=1` failed (the daily 04:02 check; the
+hourly `/api/health` is shallow since §577 and says only whether the site answers), or
+`/admin/tasks` is red at the top (`DECISIONS.md` §98). Three causes, told apart by the same page:
 
 1. **Deferred by the allowance** — Mailgun Free's 100 messages a day are spent. Nothing is
    lost; the queue resumes at the time the alert names (the UTC reset, five minutes past).
@@ -813,3 +814,16 @@ acceptances against it.
 - Publishing a version with only one locale present when both are required.
 - Marking a declaration as accepted on a participant's behalf.
 - Describing the acceptance as a qualified electronic signature.
+
+## Hotfix — a fix straight to production
+
+When production shows something broken that must go now — the owner, 2026-09-29: «HOTFIX!!! fără teste»:
+
+1. **Branch from main.** `git fetch origin`, `git worktree add --no-track -b hotfix/<what> .claude/worktrees/hotfix-<what> origin/main`, then `yarn install` in it.
+2. **The smallest change, and only the checks that break a deploy:** `yarn typecheck`, `eslint` on the touched files, `yarn secrets:check` (the repository is public). A test that no longer compiles is made to compile; the tests themselves follow in the next batch.
+3. **Into main with the owner's authorisation.** Commit, push, `gh pr create --base main`, then `gh pr merge <n> --merge --admin`. Nothing else is ever merged with `--admin`.
+4. **Back into qa at once.** `gh pr create --base qa --head main`, then `gh pr merge <n> --merge --admin`, so the next batch starts from the fixed code.
+5. **Production.** Vercel builds main by itself. After an instant rollback it no longer gives the domain to new deployments: promote the new production deployment once it is READY (`vercel promote <deployment url> --yes --scope <team>`), then read `/api/health`.
+6. **The next batch, first item:** the tests the hotfix left behind, and a `.release` entry that records the hotfix as an amendment of the decision it changed.
+
+An instant rollback (`vercel rollback <previous production deployment> --yes --scope <team>`) is the stop-gap while the hotfix builds, never instead of it: the owner wants the fix, not yesterday's site.

@@ -9,7 +9,7 @@ import ro from "../../../messages/ro.json";
 /**
  * §558 — the participant's reason for cancelling: the form's three answers are the column's enum,
  * in both languages on the page and the backoffice, and the export's column after the family says it
- * (last until the offers and benefits, §NNN, came after it).
+ * (last until the offers and benefits, §562, came after it).
  */
 describe("§558 the cancellation reason", () => {
   it("the form's three answers are the column's enum values, in order", () => {
@@ -60,7 +60,7 @@ describe("§558 the cancellation reason", () => {
       cancelReason: cancelReasonCell("OTHER", "=cmd, nunta"),
     };
     const [header, line] = buildRegistrationsCsv([row]).split("\r\n");
-    // Followed only by the offers and benefits (§NNN), which came after it.
+    // Followed only by the offers and benefits (§562), which came after it.
     expect(header.split(",").slice(-2)).toEqual(["Cancellation reason", "Offers and benefits"]);
     // A reason is typed on a public form: neutralized and quoted like every other cell — then the offers' cell, empty here.
     expect(line.endsWith(',"Another reason: =cmd, nunta",')).toBe(true);

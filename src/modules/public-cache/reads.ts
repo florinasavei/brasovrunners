@@ -12,6 +12,8 @@ import { DEFAULT_SITE_TINT_SETTING, parseSiteTint, type SiteTintSetting } from "
 import { readSiteTint } from "@/modules/appearance/site-tint";
 import { DEFAULT_SITE_FONT_SIZE_SETTING, parseSiteFontSize, type SiteFontSizeSetting } from "@/modules/appearance/domain/site-font-size";
 import { readSiteFontSize } from "@/modules/appearance/site-font-size";
+import { readMenuOrder } from "@/modules/content/menu/menu-order";
+import { parseStoredMenuOrder } from "@/modules/content/menu/order";
 import {
   findPublishedAlbumBySlug,
   findPublishedAlbumTranslations,
@@ -50,7 +52,13 @@ import { pingerCadenceMinutes } from "@/modules/jobs/quiet-hours";
 import { readDeliveryTiming } from "@/modules/notifications/delivery-timing";
 import { type DeliveryTiming, defaultDeliveryTiming } from "@/modules/notifications/domain/delivery-timing";
 import { emailLeavesAt, emailWaitMinutes } from "@/modules/notifications/domain/email-wait";
-import { describesListSocials, describesListStates, describesNewsletter, describesPromotionalMaterials } from "@/modules/legal-documents/domain/merge-fields";
+import {
+  describesListSocials,
+  describesListStates,
+  describesNewsletter,
+  describesPromotionalMaterials,
+  describesPromotionalMaterialsShared,
+} from "@/modules/legal-documents/domain/merge-fields";
 import { findCurrentApprovedDocument, findFirstStatesNoticeVersion, listEffectiveDates } from "@/modules/legal-documents/repository";
 import { DEFAULT_BOT_CHECK, readBotCheck } from "@/modules/registrations/bot-check";
 import {
@@ -63,6 +71,8 @@ import {
 } from "@/modules/registrations/repository";
 import { readPublicPlaces } from "@/modules/registrations/service";
 import { familyRegistrationOpen } from "@/modules/registrations/family-gate";
+import { readAddressCap } from "@/modules/registrations/address-cap";
+import { type AddressCap, DEFAULT_ADDRESS_CAP } from "@/modules/registrations/domain/address-cap";
 import { EXPECTED_MIGRATION } from "@/db/schema-version";
 import { turnstileSiteKey } from "@/modules/registrations/turnstile";
 import { env } from "@/shared/config/env";
@@ -387,6 +397,17 @@ export async function cachedPromotionalMaterialsOffered(now: Date): Promise<bool
 }
 
 /**
+ * Whether the box «oferte și beneficii» also says, where the yes is given, that the club may give
+ * the partners the person's name and address (§570, review finding — art. 7(2) GDPR): the privacy
+ * notice in force names `{{promotionalMaterialsShared}}` in every language, the same reading as
+ * `noticeDescribesPromotionalMaterialsShared`, which gates the list for sponsors itself.
+ */
+export async function cachedPromotionalMaterialsShared(now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesPromotionalMaterialsShared(notice.body));
+}
+
+/**
  * Whether the contact page offers the newsletter (§445): the privacy notice in force describes it
  * (`describesNewsletter`), in every language — the same reading as the list's states above, so an
  * approval opens the pop-up the moment the notice itself changes. `noticeDescribesNewsletter` is
@@ -590,6 +611,23 @@ export async function cachedSiteFontSize(): Promise<SiteFontSizeSetting> {
 }
 
 /**
+ * «Ordinea meniului» (§571): the site menu's stored order, a list of keys, for the header and the
+ * footer on every public page — so it is cached, filed under `settings`, which a save expires
+ * (`saveMenuOrder`). When the database cannot answer, the last good copy (§447), then no list at
+ * all, which is today's default order: never a page that fails over its menu.
+ */
+export async function cachedMenuOrder(): Promise<string[]> {
+  try {
+    const read = await readWithLastGood("settings:menu-order", () =>
+      publicRead(["settings.menu-order"], ["settings"], async () => (await readMenuOrder(getDb())).stored),
+    );
+    return parseStoredMenuOrder(read.value);
+  } catch {
+    return [];
+  }
+}
+
+/**
  * The Turnstile site key the contact page draws its widget with, or nothing (§254) — on when the
  * database cannot answer, as `botCheckIsOn` is. Verifying a submission reads the switch itself.
  */
@@ -684,6 +722,22 @@ export async function cachedFamilyRegistrationOpen(): Promise<boolean> {
     return await publicRead(["registrations.family-open", EXPECTED_MIGRATION.tag ?? ""], ["settings"], () => familyRegistrationOpen(getDb()));
   } catch {
     return false;
+  }
+}
+
+/**
+ * The club's limit per address (§389, §576; the owner, 2026-09-30: up to four people on one email
+ * address, and the limit said), for the public pages that state it — under the form's address box,
+ * on the family's screens, on «Înscrierile mele» and in the terms — from the data cache, so a
+ * visitor reading "cel mult 4 persoane" wakes nothing. A save expires it (`updateAddressCap`,
+ * the `settings` tag). A sentence about the rule, never about any address (§39). When the database
+ * cannot answer, the default: a page never fails over a sentence.
+ */
+export async function cachedAddressCap(): Promise<AddressCap> {
+  try {
+    return await publicRead(["settings.address-cap"], ["settings"], async () => (await readAddressCap(getDb())).cap);
+  } catch {
+    return { ...DEFAULT_ADDRESS_CAP };
   }
 }
 

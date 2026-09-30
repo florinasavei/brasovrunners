@@ -23,6 +23,11 @@ const MINUTE = 60_000;
 const at = (minutes: number) => new Date(NOW.getTime() + minutes * MINUTE);
 /** Where a cap or an interval of `minutes` ends: a little early, so the pinger's own next call runs. */
 const ends = (minutes: number) => at(minutes - PLAN_GRACE_MINUTES);
+/**
+ * The daily window's 04:00 call after NOW (13:00 in Brașov), in minutes past NOW: 04:00 on 2 October
+ * is 01:00Z, fifteen hours on (§577). An idle job looks for real there and nowhere before it.
+ */
+const WINDOW = 15 * 60;
 /** Half a second before `minutes` — the pinger's call when this invocation started a touch sooner. */
 const justBefore = (minutes: number) => minutes - 0.5 / 60;
 const SECRET = "correct-job-secret-value";
@@ -98,7 +103,7 @@ describe("BR-REQ-090-03 criterion 9 a ping with nothing due answers without the 
   it("runs for real when nothing is cached, and leaves its plan for the pings after it", async () => {
     const first = await pingAt(0);
     expect(first.status).toBe(200);
-    expect(first.body).toMatchObject({ job: "registration-maintenance", ran: true, nextCheckAt: ends(60).toISOString() });
+    expect(first.body).toMatchObject({ job: "registration-maintenance", ran: true, nextCheckAt: ends(WINDOW).toISOString() });
     expect(await realRuns()).toBe(1);
   });
 
@@ -110,25 +115,27 @@ describe("BR-REQ-090-03 criterion 9 a ping with nothing due answers without the 
       job: "registration-maintenance",
       ran: false,
       reason: "nothing-due",
-      nothingDueUntil: ends(60).toISOString(),
+      nothingDueUntil: ends(WINDOW).toISOString(),
       lastRealRunAt: NOW.toISOString(),
     });
     // No `job_runs` row either: nothing ran.
     expect(await realRuns()).toBe(1);
   });
 
-  it("looks for real once the hour-long cap is reached, whatever the cache said", async () => {
+  it("sleeps through every call of an idle day and looks for real at the daily window (§577)", async () => {
     await pingAt(0);
-    expect((await pingAt(45, { database: false })).body.ran).toBe(false);
-    expect((await pingAt(60)).body.ran).toBe(true);
+    // Every quarter-hour to 23:00 and every hour of the night after: from the cache, no database.
+    for (let minutes = 15; minutes < WINDOW; minutes += minutes < 10 * 60 ? 15 : 60) {
+      expect((await pingAt(minutes, { database: false })).body.ran, `+${minutes} min`).toBe(false);
+    }
+    expect((await pingAt(WINDOW)).body.ran).toBe(true);
     expect(await realRuns()).toBe(2);
   });
 
-  it("runs the pinger's call an hour later even when it lands half a second before the hour", async () => {
-    // The night pinger is hourly: had this call skipped, the next real run would have been two
-    // hours after the last, not one.
+  it("runs the window's 04:00 call even when it lands half a second early", async () => {
+    // Had this call skipped, the next real run would have been an hour later, at 05:00.
     await pingAt(0);
-    expect((await pingAt(justBefore(60))).body.ran).toBe(true);
+    expect((await pingAt(justBefore(WINDOW))).body.ran).toBe(true);
     expect(await realRuns()).toBe(2);
   });
 
@@ -259,20 +266,28 @@ describe("BR-REQ-090-07 criterion 7 the Administrator's minimum interval", () =>
     expect((await pingAt(justBefore(30))).body.ran).toBe(true);
   });
 
-  it("replaces the hour-long cap when it is longer", async () => {
+  it("keeps even two hours a floor under the daily window, which it does not move (§577)", async () => {
     // NOW is 13:00 in Brașov; a run an hour later is on an even hour, which two hours keep (§355).
     await db.insert(platformSettings).values({ key: "jobCadence", value: { minutes: 120 }, updatedAt: NOW });
-    expect((await pingAt(60)).body).toMatchObject({ ran: true, nextCheckAt: ends(180).toISOString(), notBefore: ends(180).toISOString() });
+    expect((await pingAt(60)).body).toMatchObject({ ran: true, nextCheckAt: ends(WINDOW).toISOString(), notBefore: ends(180).toISOString() });
     expect((await pingAt(135, { database: false })).body.ran).toBe(false);
+    // Idle, the interval's end is no reason to look: only the window is.
+    expect((await pingAt(justBefore(180), { database: false })).body.ran).toBe(false);
+    // Work arriving inside the interval waits for its end.
+    wakeJobs("registration-maintenance");
+    expect((await pingAt(165, { database: false })).body).toMatchObject({ ran: false, reason: "cadence" });
     expect((await pingAt(justBefore(180))).body.ran).toBe(true);
   });
 
   it("moves a two-hour interval that started on an odd hour onto the even hours, never sooner than two hours (§355)", async () => {
     await db.insert(platformSettings).values({ key: "jobCadence", value: { minutes: 120 }, updatedAt: NOW });
     // 13:00 in Brașov: 16:00 would be three hours on, so this run goes a quarter of an hour past the two, to 15:15.
-    expect((await pingAt(0)).body).toMatchObject({ ran: true, nextCheckAt: ends(135).toISOString(), notBefore: ends(135).toISOString() });
+    // Work keeps arriving (each ping below is after a wake), so the interval alone spaces the runs.
+    expect((await pingAt(0)).body).toMatchObject({ ran: true, notBefore: ends(135).toISOString() });
     // QA's hourly pinger: the 15:00 call is held, the 16:00 call runs, and from it the runs are even.
-    expect((await pingAt(120, { database: false })).body).toMatchObject({ ran: false, nothingDueUntil: ends(135).toISOString() });
-    expect((await pingAt(justBefore(180))).body).toMatchObject({ ran: true, nextCheckAt: ends(300).toISOString() });
+    wakeJobs("registration-maintenance");
+    expect((await pingAt(120, { database: false })).body).toMatchObject({ ran: false, reason: "cadence", notBefore: ends(135).toISOString() });
+    wakeJobs("registration-maintenance");
+    expect((await pingAt(justBefore(180))).body).toMatchObject({ ran: true, notBefore: ends(300).toISOString() });
   });
 });

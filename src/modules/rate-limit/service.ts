@@ -67,7 +67,7 @@ export const RATE_LIMITS: Record<RateLimitScope, { limit: number; windowMs: numb
   "group-run-declaration": { limit: 5, windowMs: 60 * 60_000 },
   /**
    * The newsletter pop-up (§445), hashed canonical address: each post mails an unproven address.
-   * «Vreau să mă dezabonez» under the same button (§NNN) spends the same bucket, so the two forms
+   * «Vreau să mă dezabonez» under the same button (§550) spends the same bucket, so the two forms
    * together still put at most three messages an hour in one mailbox.
    */
   "newsletter-subscribe": { limit: 3, windowMs: 60 * 60_000 },

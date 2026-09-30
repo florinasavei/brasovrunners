@@ -41,12 +41,14 @@ export async function GET(request: Request): Promise<Response> {
   const rows = await exportPromoConsenters(db, actor, locale, CSV_LIMIT);
 
   const t = await getTranslations({ locale, namespace: "Admin" });
+  // The sponsor list's five columns (§570): one shape for every download of the yes.
   const csv = buildPromoConsentersCsv(
     {
-      name: t("newsletter.promo.columns.name"),
-      email: t("newsletter.promo.columns.email"),
-      event: t("newsletter.promo.columns.event"),
-      consentedAt: t("newsletter.promo.columns.since"),
+      firstName: t("sponsors.columns.firstName"),
+      lastName: t("sponsors.columns.lastName"),
+      email: t("sponsors.columns.email"),
+      event: t("sponsors.columns.event"),
+      consentedAt: t("sponsors.columns.consentedAt"),
     },
     rows,
   );

@@ -22,6 +22,7 @@ const { forgetLastGood } = await import("@/modules/resilience/last-good");
 const { readFaqPageSettings, setFaqPagePublished } = await import("@/modules/content/faq/page-settings");
 const { listFaqItemsForAdmin } = await import("@/modules/content/faq/repository");
 const { saveFaqPage } = await import("@/modules/content/faq/service");
+const { faqOnSite } = await import("@/modules/content/faq/on-site");
 
 const doc = (text: string) => ({ type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text }] }] });
 const card = (ro: string, en: string) => ({
@@ -82,6 +83,20 @@ describe("§333 the FAQ page is read from the public cache and a save expires it
     expect(fakeNextCache.entries.size).toBe(0);
     expect((await visit()).items.map((item) => item.question)).toEqual(["Cum mă înscriu?", "Ce aduc?"]);
     expect(fakeNextCache.counts.writes).toBe(2);
+  });
+
+  it("expires the link's read when the last question is deleted, so the header and footer stop offering the page", async () => {
+    // What the header, the footer and the contact page ask (`faqOnSite`): the same cached read.
+    request.reads.clear();
+    expect(await faqOnSite("ro")).toBe(true);
+    const [only] = await listFaqItemsForAdmin(db);
+    await saveFaqPage(db, { actor: admin, expectedVersion: (await readFaqPageSettings(db)).version, fields: { items: [{ id: only.id, remove: "on" }] } });
+
+    // The delete is the page's one save: it expires the tag every static page's link was filed under (§549).
+    expect(fakeNextCache.invalidated).toContain("public:pages");
+    expect(fakeNextCache.entries.size).toBe(0);
+    request.reads.clear();
+    expect(await faqOnSite("ro")).toBe(false);
   });
 
   it("expires it when the page is taken off the site, so the next visit reads it as a draft", async () => {

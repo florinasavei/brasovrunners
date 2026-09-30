@@ -281,6 +281,41 @@ test.describe.serial("§393 a group run's optional self-declaration", () => {
     });
   });
 
+  /*
+    §573 (applying §561 to §440's box) — above eighteen the page asks a birth date, and it is the
+    registration form's typed box: day first in both languages, never the browser's date box that
+    an English phone drew month first. The second date gets a minimum of twenty before anything
+    reads it (so no cached copy says otherwise); the signatures below are the first date's.
+  */
+  test("above eighteen the birth date is typed day first, in English too, and an under-age date is refused under the box", async ({ page }) => {
+    await withDatabase(async (client) => {
+      const { rowCount } = await client.query(
+        "UPDATE events SET min_age = 20 WHERE id = (SELECT event_id FROM event_translations WHERE slug = $1)",
+        [secondSlug],
+      );
+      expect(rowCount).toBe(1);
+    });
+    for (const locale of ["en", "ro"] as const) {
+      await page.goto(locale === "en" ? `/en/events/${englishSlug}-2/declaration` : `/ro/evenimente/${secondSlug}/declaratie`);
+      await hydrated(page);
+      const box = page.getByRole("textbox", { name: locale === "en" ? "Date of birth" : "Data nașterii" });
+      await expect(box).toHaveAttribute("type", "text");
+      await expect(box).toHaveAttribute("placeholder", locale === "en" ? "DD.MM.YYYY" : "ZZ.LL.AAAA");
+      // A phone's numeric keypad has no dot: eight digits are 11 May, shown day first on leaving the box.
+      await box.fill("11051990");
+      await box.blur();
+      await expect(box).toHaveValue("11.05.1990");
+      const field = page.locator(".MuiFormControl-root", { has: box });
+      // The second date is 21 April 2027: thirty-six on the run's day.
+      await expect(field).toContainText(locale === "en" ? "Friday, 11 May 1990 · 36 years on the event day" : "Vineri, 11 mai 1990 · 36 de ani în ziua evenimentului");
+      // Nineteen on the run's day: the rule's sentence, under the box, before any press.
+      await box.fill("22.04.2007");
+      await expect(field).toContainText(locale === "en" ? "The minimum age for this run is 20 years" : "Vârsta minimă pentru această alergare este 20 de ani");
+      await expect(box).toHaveAttribute("aria-invalid", "true");
+      await noSidewaysScroll(page);
+    }
+  });
+
   test("the run's page offers it under the route, and a runner signs it in Romanian", async ({ page }) => {
     await page.goto(`/ro/evenimente/${slug}`);
     const offer = page.getByTestId("group-run-declaration-offer");

@@ -23,7 +23,10 @@ import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { confirmationDueMoment } from "@/modules/registrations/domain/hold-deadlines";
 import { readMyRegistrations } from "@/modules/registrations/my-registrations";
-import { cachedPromotionalMaterialsOffered } from "@/modules/public-cache/reads";
+import { cachedAddressCap, cachedFamilyRegistrationOpen, cachedPromotionalMaterialsOffered } from "@/modules/public-cache/reads";
+import { countForm } from "@/i18n/count-form";
+import { reachesPartner } from "@/modules/registrations/domain/sponsor-share";
+import { readSponsorShareGate } from "@/modules/registrations/sponsor-list";
 import PublicFlash from "@/shared/feedback/PublicFlash";
 import ContactLink from "@/shared/ui/ContactLink";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
@@ -126,8 +129,30 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
     The sentence only while the notice in force describes the offers; «Nu mai vreau» always.
   */
   const promoOn = context.ok ? await cachedPromotionalMaterialsOffered(now) : false;
+  /*
+    The club's limit per address (§389, §576; the owner, 2026-09-30: up to four people on one email
+    address, and the limit said): under each registration, how many people this address has at that
+    event out of the limit — «2 din cel mult 4 persoane». Counted from this page's own list, behind the
+    address's own link, the one place the address's registrations may be read (§39). Only once the
+    schema allows a family at all (`family-gate.ts`).
+  */
+  const capMax = context.ok && context.items.length > 0 && (await cachedFamilyRegistrationOpen()) ? (await cachedAddressCap()).registrationsPerAddress : null;
+  const perAddressLine = (eventId: string): string | null => {
+    if (!context.ok || capMax === null || capMax <= 1) return null;
+    const count = context.items.filter((other) => other.eventId === eventId).length;
+    return t(`mine.perAddress.${countForm(capMax, locale)}`, { count, max: capMax });
+  };
+  // Which yes may reach a partner (§570): «Clubul le poate da partenerilor…» only on such a row —
+  // read only when some row on the page says yes, as the manage page does.
+  const shareGate = context.ok && context.items.some((item) => item.promoConsent) ? await readSponsorShareGate(getDb()) : null;
+  const promoYes = (item: { promoConsent: boolean; promoConsentAt?: Date | null; privacyNoticeVersion?: number; birthDate?: string | null }) =>
+    shareGate &&
+    item.privacyNoticeVersion !== undefined &&
+    reachesPartner({ promoConsent: item.promoConsent, promoConsentAt: item.promoConsentAt ?? null, privacyNoticeVersion: item.privacyNoticeVersion, birthDate: item.birthDate ?? null }, shareGate, now)
+      ? t("promo.yesShared")
+      : t("promo.yes");
   /** The offers-and-benefits line for one registration (§562): its answer, and the way out when it is yes. */
-  const promoSwitch = (item: { id: string; promoConsent: boolean }, closed = false) => (
+  const promoSwitch = (item: { id: string; promoConsent: boolean; promoConsentAt?: Date | null; privacyNoticeVersion?: number; birthDate?: string | null }, closed = false) => (
     <Stack spacing={1} sx={{ mt: 1.5 }} data-testid="my-promo">
       {promo === item.id && (
         <Alert severity="success" sx={{ py: 0 }}>
@@ -141,7 +166,7 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
       )}
       <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1, alignItems: "center" }}>
         <Typography variant="body2" color="text.secondary" data-testid="my-promo-state">
-          {item.promoConsent ? t(closed ? "promo.closedYes" : "promo.yes") : t("promo.no")}
+          {item.promoConsent ? (closed ? t("promo.closedYes") : promoYes(item)) : t("promo.no")}
         </Typography>
         {item.promoConsent && (
           <form action={setPromoConsentFromMyRegistrationsAction}>
@@ -313,6 +338,11 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
                   testId="my-registration-family"
                 />
               </Box>
+              {perAddressLine(item.eventId) && (
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} data-testid="my-registration-per-address">
+                  {perAddressLine(item.eventId)}
+                </Typography>
+              )}
               <Typography variant="body2" color="text.secondary" sx={{ mb: declarationLine(item) ? 0.5 : 1.5 }}>
                 {formatDay(item.eventStartsAt, { locale, timeZone: item.eventTimezone, style: "long", withTime: true })}
               </Typography>

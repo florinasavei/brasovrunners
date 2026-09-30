@@ -7,6 +7,7 @@ import Typography from "@mui/material/Typography";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import {
+  BOT_CHECK_ARMING_EVENTS as ARMING_EVENTS,
   BOT_CHECK_BLOCKED_AFTER_MS,
   BOT_CHECK_GAVE_UP_ATTRIBUTE,
   BOT_CHECK_SLOW_AFTER_MS,
@@ -96,6 +97,11 @@ export type BotCheckWords = Record<BotCheckWidgetState, string> & { slow: string
 
 const SCRIPT_SELECTOR = "script[data-turnstile]";
 const NOTHING_TO_WATCH = () => () => {};
+/**
+ * Whether a person has started on a protected form in this document (§577) — a module's memory,
+ * so it lasts as long as the page and no longer: a new visit is a new document and waits again.
+ */
+let startedInThisDocument = false;
 
 export default function TurnstileWidget({
   siteKey,
@@ -135,8 +141,32 @@ export default function TurnstileWidget({
     () => true,
     () => false,
   );
+  /*
+    Nothing of Cloudflare's before the person starts on the form (§577): the script is injected and
+    the widget drawn at the first focus, press, key or input anywhere in the enclosing form — never
+    on page load. A page opened and left, or scrolled past, costs Cloudflare nothing and the reader
+    no third-party request. The first field a person fills is seconds of typing ahead of the send
+    button, which is what the check needs; a press on the send button itself arms it too (its focus
+    comes first), and the button then holds the press for the token as it always did (§502).
+  */
+  // A person who started on a form in this document has started: a refused attempt re-renders the
+  // form (a new mount after the redirect) and its check starts again at once, as it did before.
+  const [armed, setArmed] = useState(() => startedInThisDocument);
+  useEffect(() => {
+    if (armed) return;
+    const target: EventTarget | null = holder.current?.closest("form") ?? document;
+    const arm = () => {
+      startedInThisDocument = true;
+      setArmed(true);
+    };
+    for (const type of ARMING_EVENTS) target.addEventListener(type, arm, { once: true, passive: true });
+    return () => {
+      for (const type of ARMING_EVENTS) target.removeEventListener(type, arm);
+    };
+  }, [armed]);
 
   useEffect(() => {
+    if (!armed) return;
     let cancelled = false;
     const become = (next: BotCheckWidgetState) => {
       if (cancelled) return;
@@ -212,7 +242,7 @@ export default function TurnstileWidget({
       script.removeEventListener("load", draw);
       script.removeEventListener("error", refused);
     };
-  }, [siteKey, locale, attempt, reload]);
+  }, [armed, siteKey, locale, attempt, reload]);
 
   /*
     A check that takes longer than it should says so and offers to start again (§518): the usual
@@ -222,13 +252,15 @@ export default function TurnstileWidget({
   */
   const [slow, setSlow] = useState(false);
   useEffect(() => {
+    // Not armed yet (§577): nothing is loading, so nothing can be slow.
+    if (!armed) return;
     if (state !== "loading" && state !== "checking") return;
     const timer = setTimeout(() => setSlow(true), BOT_CHECK_SLOW_AFTER_MS);
     return () => {
       clearTimeout(timer);
       setSlow(false);
     };
-  }, [state, attempt, tries]);
+  }, [armed, state, attempt, tries]);
 
   /*
     «Reîncearcă verificarea»: a fresh challenge on the widget that is there, or — when there is none
@@ -305,7 +337,8 @@ export default function TurnstileWidget({
         never inside it: that one is the script's to draw into.
       */}
       {failedIn === attempt && <input type="hidden" name={BOT_CHECK_SIGNAL_FIELD} value="widget-failed" />}
-      {running && (
+      {/* Said once the check has started (§577): before the first touch of the form there is nothing to say. */}
+      {running && armed && (
         <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", columnGap: 1.5, rowGap: 0.5, mt: 0.5 }}>
           {/*
             A live region the state is read from as it changes: polite, it waits for the typing —

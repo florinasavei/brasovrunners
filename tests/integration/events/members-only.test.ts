@@ -62,6 +62,7 @@ const { default: GroupRunDeclarationPage } = await import("@/app/[locale]/events
 const { default: MembersAreaPage } = await import("@/app/[locale]/members-area/page");
 const { default: EventCard } = await import("@/modules/events/ui/EventCard");
 const { default: StartList } = await import("@/modules/events/ui/StartList");
+const { default: EventPageView } = await import("@/modules/events/ui/EventPageView");
 const { signGroupRunDeclaration } = await import("@/modules/group-run-declarations/service");
 
 const NOW = new Date("2026-10-01T09:00:00.000Z");
@@ -400,8 +401,11 @@ describe("§552 events for the members alone", () => {
     it("the participant list is not drawn for a member, and still is on a public event (§32)", async () => {
       await createEventAndPublish(db, { actor: admin, fields: { ...fields(), translations: PUBLIC }, publish: true, now: NOW });
       state.cookie = member.id;
-      const onPage = async (slug: string) =>
-        elementsOf(await throughTwin({ params: Promise.resolve({ locale: "ro", slug }), searchParams: Promise.resolve({}) }), StartList);
+      // The page's body is `EventPageView` since §579 (the editor's preview draws it too): one level more.
+      const onPage = async (slug: string) => {
+        const [view] = elementsOf(await throughTwin({ params: Promise.resolve({ locale: "ro", slug }), searchParams: Promise.resolve({}) }), EventPageView);
+        return elementsOf(await EventPageView(view.props as Parameters<typeof EventPageView>[0]), StartList);
+      };
       expect(await onPage("crosul-membrilor")).toHaveLength(0);
       expect(await onPage("crosul-public")).toHaveLength(1);
     });

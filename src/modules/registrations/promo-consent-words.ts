@@ -26,7 +26,18 @@ export function promotionalMaterialsClause(locale: string, club: string = CLUB_N
   return locale === "en" ? `“${label}”` : `„${label}”`;
 }
 
-/** The notice's merge value, beside the list's socials on the legal pages. */
-export function promotionalMaterialsMergeValues(locale: string): { promotionalMaterials: string } {
-  return { promotionalMaterials: promotionalMaterialsClause(locale) };
+/**
+ * What the privacy notice's `{{promotionalMaterialsShared}}` becomes (§570): the three data the
+ * sponsor list gives a partner, in words — «prenumele, numele și adresa ta de e-mail» / “your first
+ * name, last name and email address” — read from the catalogue beside the list's own columns
+ * (`Registration.promo.sharedData`), so the approved sentence names exactly what the file carries.
+ */
+export function promotionalMaterialsSharedClause(locale: string): string {
+  const words = createTranslator({ locale: locale === "en" ? "en" : "ro", messages: locale === "en" ? en : ro, namespace: "Registration" });
+  return words("promo.sharedData");
+}
+
+/** The notice's merge values, beside the list's socials on the legal pages: the box, and what a partner may receive. */
+export function promotionalMaterialsMergeValues(locale: string): { promotionalMaterials: string; promotionalMaterialsShared: string } {
+  return { promotionalMaterials: promotionalMaterialsClause(locale), promotionalMaterialsShared: promotionalMaterialsSharedClause(locale) };
 }

@@ -169,7 +169,7 @@ describe("BR-REQ-011-01 criterion 20 the block on the event page", () => {
   });
 
   it("sits on the public page after the map and before the programme, and in the preview before the programme", () => {
-    const page = readFileSync(path.join(process.cwd(), "src/app/[locale]/events/[slug]/page.tsx"), "utf8");
+    const page = readFileSync(path.join(process.cwd(), "src/modules/events/ui/EventPageView.tsx"), "utf8");
     const links = page.indexOf("<EventLinks");
     expect(links).toBeGreaterThan(page.indexOf("event.locationAddress && ("));
     expect(links).toBeLessThan(page.indexOf("<EventProgramme"));

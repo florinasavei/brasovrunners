@@ -509,6 +509,18 @@ export function canSendNewsletter(role: StaffRole): boolean {
 }
 
 /**
+ * **«Descarcă lista pentru sponsori» (§570)** — the minimal file the club gives its partners: the
+ * first name, the last name, the address, the event and the moment of the yes to «oferte și
+ * beneficii». Whoever reads the participant list (`canReadRegistrations`): the Organizer, the
+ * Administrator and the Superadministrator — the owner's "Organizer and Administrator only". The
+ * Tehnic role is out, as it is out of the list itself (§289); the volunteer, the Redactor and a
+ * member likewise. Asserted in the route and in the read, never by hiding the button.
+ */
+export function canExportSponsorList(role: StaffRole): boolean {
+  return canReadRegistrations(role);
+}
+
+/**
  * «Tradu din română» (§464): whoever writes words the club publishes or sends — the Redactor's
  * texts (`canEditTexts`) and the Organizer's notes, reasons and messages to the participants
  * (`canMessageParticipants`). So the Redactor, the Organizer, the Administrator and the
@@ -776,6 +788,19 @@ export type AdminSection = (typeof ADMIN_SECTIONS)[number];
  */
 export function canReadContent(role: StaffRole): boolean {
   return atLeast(role, "COPYWRITER");
+}
+
+/**
+ * **The event editor's «Previzualizare» before saving (§579)** — the listing card and the event
+ * page drawn from the form's unsaved values: the Redactor who writes the words, the Organizer who
+ * reads the event, the Administrator who sets it. Written as the union of the three capabilities
+ * those roles hold rather than as a threshold, so the Tehnic — who opens the editor only because
+ * `canReadContent` is a threshold `DEV` happens to sit above — gets no render of a draft, which
+ * is editorial work (`MAY_EDIT_TEXTS` says why `DEV` is out of it), and the volunteer gets none.
+ * The preview writes nothing, so reading is enough; the route asserts this, never a hidden card.
+ */
+export function canPreviewEventDraft(role: StaffRole): boolean {
+  return canEditTexts(role) || canEditEventFields(role) || canReadRegistrations(role);
 }
 
 /**

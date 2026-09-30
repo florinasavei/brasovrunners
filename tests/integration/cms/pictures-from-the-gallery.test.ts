@@ -48,7 +48,6 @@ describe("§485 pictures from the gallery", () => {
   const photo = (color = "#3355ff") => sharp({ create: { width: 1200, height: 800, channels: 3, background: color } }).jpeg().toBuffer();
 
   const pageWith = (src: string) => ({
-    navOrder: "10",
     translations: {
       ro: {
         slug: "despre",

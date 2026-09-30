@@ -1,7 +1,15 @@
 import createMiddleware from "next-intl/middleware";
 import { NextResponse, type NextRequest } from "next/server";
 import { resolveAliasRedirect } from "@/i18n/aliases";
-import { isStaticPublicAnswer, liveTwinPathname, mayBeSignedIn, STATIC_PAGE_BROWSER_CACHE_CONTROL } from "@/i18n/live-twin";
+import { legacyCalendarTarget } from "@/i18n/calendar-redirect";
+import {
+  DECLINED_PREFETCH_STATUS,
+  isRouterPrefetch,
+  isStaticPublicAnswer,
+  liveTwinPathname,
+  mayBeSignedIn,
+  STATIC_PAGE_BROWSER_CACHE_CONTROL,
+} from "@/i18n/live-twin";
 import { resolveMovedBackofficePath } from "@/i18n/moved-paths";
 import { localeRootTarget } from "@/i18n/root-redirect";
 import { routing } from "@/i18n/routing";
@@ -72,6 +80,24 @@ export default function proxy(request: NextRequest) {
   }
 
   /*
+    The calendar's period moved from the query into the path (§574): `/ro/calendar?month=2026-10`
+    → `/ro/calendar/2026-10`, `?view=list` → `/<this month>/list`, `?year=2027` → `/2027`, every
+    filter kept. A redirect before anything renders (a 308 where the address fixes the period, a
+    `no-store` 307 where it means this month), so a bookmark or a search result lands on the
+    static period page the CDN answers. Only a read: a POST keeps its address.
+  */
+  if (request.method === "GET" || request.method === "HEAD") {
+    const calendar = legacyCalendarTarget(url.pathname, url.searchParams, new Date());
+    if (calendar?.fixed) return NextResponse.redirect(new URL(calendar.address, url), 308);
+    if (calendar) {
+      // "This month" moves with the clock: a 307 the browser does not keep, never a cached 308.
+      const redirect = NextResponse.redirect(new URL(calendar.address, url), 307);
+      redirect.headers.set("Cache-Control", "private, no-store, max-age=0, must-revalidate");
+      return redirect;
+    }
+  }
+
+  /*
     The visited address, handed to the page as a request header (§447): a public page that has
     nothing to show while the month's budget is red sends its reader to the short resting page,
     and this is how that page knows where to bring them back. Always overwritten here, so a caller
@@ -113,6 +139,17 @@ export default function proxy(request: NextRequest) {
     const signedIn = mayBeSignedIn(request.cookies.getAll().map((cookie) => cookie.name));
     const twin = liveTwinPathname(internal.pathname, url.searchParams, signedIn);
     if (twin) {
+      /*
+        A prefetch the twin would have to render is declined (§577): a signed-in reader's event
+        cards in view were each a per-request render. The router drops the empty answer and the
+        press navigates to the twin as before (`DECLINED_PREFETCH_STATUS` says how).
+      */
+      if (isRouterPrefetch(request.headers)) {
+        return new NextResponse(null, {
+          status: DECLINED_PREFETCH_STATUS,
+          headers: { "Cache-Control": "private, no-store, max-age=0, must-revalidate" },
+        });
+      }
       const target = new URL(twin, url);
       target.search = url.search;
       const headers = new Headers(response.headers);

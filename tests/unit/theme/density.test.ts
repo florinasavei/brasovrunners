@@ -176,6 +176,8 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   { file: "src/app/[locale]/legal/privacy/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
   { file: "src/app/[locale]/legal/terms/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
   { file: "src/app/[locale]/preview/events/[id]/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
+  // The editor's preview frame (§579): the listing's and the event page's own container. New, so xsBefore is sm.
+  { file: "src/app/[locale]/preview/draft/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 3 },
   { file: "src/app/[locale]/registrations/confirm/[token]/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2, count: 4 },
   { file: "src/app/[locale]/registrations/declare/[token]/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2, count: 3 },
   // Another person confirmed from the inbox (§446): born on the scale, its three containers.
@@ -209,7 +211,8 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   { file: "src/app/[locale]/events/page.tsx", prop: "mb", step: "gapSm", sm: 2, xsBefore: 2 },
   // One grid for the upcoming cards and the past fold since §470 (`CARD_GRID_SX`) — it was three
   // copies, one per shape `ListingBody` returned and one in the fold.
-  { file: "src/app/[locale]/events/page.tsx", prop: "gap", step: "cardGridGap", sm: 1.5, xsBefore: 1.5 },
+  // Beside the card's shape since §579, where the editor's preview draws the card in it too.
+  { file: "src/modules/events/ui/card-layout.ts", prop: "gap", step: "cardGridGap", sm: 1.5, xsBefore: 1.5 },
   { file: "src/modules/events/ui/card-layout.ts", prop: "pt", step: "cardPadTop", sm: 2, xsBefore: 2 },
   // The featured hero's own padding (`heroPad`) and foot (`sectionGapLg`) went with it (§470): the
   // lead event is a card, with a card's padding, in the grid's gap.
@@ -232,11 +235,11 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   { file: "src/modules/events/ui/EventCalendar.tsx", prop: "spacing", step: "gapSm", sm: 1.5, xsBefore: 1.5 },
   { file: "src/modules/events/ui/EventCalendar.tsx", prop: "gap", step: "gapSm", sm: 2, xsBefore: 2 },
   // The event page.
-  { file: "src/app/[locale]/events/[slug]/page.tsx", prop: "mb", step: "gapSm", sm: 2, xsBefore: 2 },
-  { file: "src/app/[locale]/events/[slug]/page.tsx", prop: "mb", step: "gapSm", sm: 3, xsBefore: 3, count: 2 }, // §480: one step tighter on a phone, the event page
-  { file: "src/app/[locale]/events/[slug]/page.tsx", prop: "my", step: "gapSm", sm: 3, xsBefore: 3 }, // §480: one step tighter on a phone, the event page
-  { file: "src/app/[locale]/events/[slug]/page.tsx", prop: "mt", step: "gapSm", sm: 2, xsBefore: 2, count: 2 },
-  { file: "src/app/[locale]/events/[slug]/page.tsx", prop: "mt", step: "sectionGap", sm: 4, xsBefore: 4 }, // §480: one step tighter on a phone, the event page
+  { file: "src/modules/events/ui/EventPageView.tsx", prop: "mb", step: "gapSm", sm: 2, xsBefore: 2 },
+  { file: "src/modules/events/ui/EventPageView.tsx", prop: "mb", step: "gapSm", sm: 3, xsBefore: 3, count: 2 }, // §480: one step tighter on a phone, the event page
+  { file: "src/modules/events/ui/EventPageView.tsx", prop: "my", step: "gapSm", sm: 3, xsBefore: 3 }, // §480: one step tighter on a phone, the event page
+  { file: "src/modules/events/ui/EventPageView.tsx", prop: "mt", step: "gapSm", sm: 2, xsBefore: 2, count: 2 },
+  { file: "src/modules/events/ui/EventPageView.tsx", prop: "mt", step: "sectionGap", sm: 4, xsBefore: 4 }, // §480: one step tighter on a phone, the event page
   { file: "src/modules/events/ui/EventFacts.tsx", prop: "mb", step: "gapXs", sm: 0, xsBefore: 1 },
   { file: "src/modules/events/ui/EventFacts.tsx", prop: "rowGap", step: "gapXs", sm: 1.5, xsBefore: 1.5 }, // §480: one step tighter on a phone, the event page
   // The partners section (§401 — "this should be block, and collapsible"): its own gap under

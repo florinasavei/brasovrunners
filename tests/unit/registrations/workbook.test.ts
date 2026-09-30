@@ -107,7 +107,8 @@ describe("BR-REQ-060-01 the start list as a spreadsheet (§172)", () => {
 
     // The header, in order, wherever the writer chose to keep the text.
     for (const header of REGISTRATION_SHEET_HEADERS) {
-      expect(strings, `${header} is written`).toContain(header);
+      // As XML spells it: «Public list & results» (§581) is written `&amp;`.
+      expect(strings, `${header} is written`).toContain(header.replaceAll("&", "&amp;"));
     }
     // The header row stays on screen while somebody scrolls two hundred runners.
     expect(sheet).toContain("pane");
@@ -147,7 +148,7 @@ describe("BR-REQ-060-01 the start list as a spreadsheet (§172)", () => {
 
   /** §425 — the terms accepted on the form (§421), the CSV's two columns, last and in the same order. */
   it("ends with the accepted terms version as a number and its moment as a date", async () => {
-    // Followed by the declaration's two since §499, the family column since §543, the cancellation reason since §558 and the offers and benefits since §NNN.
+    // Followed by the declaration's two since §499, the family column since §543, the cancellation reason since §558 and the offers and benefits since §562.
     expect(REGISTRATION_SHEET_HEADERS.slice(-7, -5)).toEqual(["Terms version", "Terms accepted"]);
     const parts = unzip(
       await buildRegistrationsWorkbook([row({ bibNumber: null, termsVersion: 42, termsAcceptedAt: new Date("2026-09-25T10:00:00.000Z") })], "Test"),
@@ -161,7 +162,7 @@ describe("BR-REQ-060-01 the start list as a spreadsheet (§172)", () => {
 
   /** §499 — the signed declaration's version as a number and its moment, the CSV's last two columns. */
   it("ends with the signed declaration's version as a number and its moment as a date", async () => {
-    // The family column (§543) comes after them, then the cancellation reason (§558) and the offers and benefits, last (§NNN).
+    // The family column (§543) comes after them, then the cancellation reason (§558) and the offers and benefits, last (§562).
     expect(REGISTRATION_SHEET_HEADERS.slice(-5)).toEqual(["Declaration version", "Declaration signed", "family", "Cancellation reason", "Offers and benefits"]);
     const parts = unzip(
       await buildRegistrationsWorkbook([row({ bibNumber: null, declarationVersion: 37, declarationSignedAt: new Date("2026-09-26T08:30:00.000Z") })], "Test"),
@@ -178,6 +179,17 @@ describe("BR-REQ-060-01 the start list as a spreadsheet (§172)", () => {
     // Nothing signed: the cell is not written, never 0.
     const blank = unzip(await buildRegistrationsWorkbook([row({ declarationVersion: null, declarationSignedAt: null })], "Test"));
     expect(blank.get("xl/worksheets/sheet1.xml") ?? "").not.toContain(`<c r="${cell}"><v>`);
+  });
+
+  /** §581 — the public-list tick has its own column beside the socials it governs, a yes/no cell. */
+  it("carries «Public list & results» as a boolean right after the socials", async () => {
+    const at = REGISTRATION_SHEET_HEADERS.indexOf("Socials on the public list") + 1;
+    expect(REGISTRATION_SHEET_HEADERS[at]).toBe("Public list & results");
+    const cell = `${columnLetter(at)}2`;
+    const listed = unzip(await buildRegistrationsWorkbook([row({ listPublic: true })], "Test")).get("xl/worksheets/sheet1.xml") ?? "";
+    expect(listed).toContain(`<c r="${cell}" t="b"><v>1</v></c>`);
+    const unlisted = unzip(await buildRegistrationsWorkbook([row({ listPublic: false })], "Test")).get("xl/worksheets/sheet1.xml") ?? "";
+    expect(unlisted).toContain(`<c r="${cell}" t="b"><v>0</v></c>`);
   });
 
   it("takes a sheet name Excel would refuse and makes one it accepts", async () => {

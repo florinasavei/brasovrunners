@@ -5,6 +5,7 @@ import {
   addressCapSettingSchema,
   addressHasRoom,
   DEFAULT_ADDRESS_CAP,
+  peoplePhrase,
   readAddressCapValue,
 } from "@/modules/registrations/domain/address-cap";
 import { comparePerson, decideSubmission, type FamilyRow, isDifferentPerson } from "@/modules/registrations/domain/family";
@@ -216,5 +217,88 @@ describe("§389 §446 what one submission does on an address", () => {
     const cancelled = row("Ana Pop", "CANCELLED");
     expect(decide([cancelled], "Maria Pop", "form", false)).toEqual({ kind: "restart", registration: cancelled });
     expect(decide([ana], "Maria Pop", "link", false)).toEqual({ kind: "refuseClosed" });
+  });
+});
+
+describe("§576 the sex beside the birth date: another name and the other sex are another person", () => {
+  const andrei: FamilyRow = { id: "a1", status: "CONFIRMED", registeredName: "Andrei Munteanu", birthDate: "1984-06-15", sex: "MALE" };
+  const cap = { registrationsPerAddress: 4 };
+
+  it("keeps every word of a name: a three-word name is not the two-word one, nor another first name", () => {
+    expect(registrationNameKey("Andrei duplicat Munteanu")).toBe("andrei duplicat munteanu");
+    expect(sameRunner("Andrei duplicat Munteanu", "Andrei Munteanu")).toBe(false);
+    expect(sameRunner("Ion Popescu", "Andrei Munteanu")).toBe(false);
+  });
+
+  it("on a registered birth date, another name and the other sex differ; the same sex, or none on one side, stays a slip", () => {
+    expect(comparePerson(andrei, { legalName: "Andreea Munteanu", birthDate: "1984-06-15", sex: "FEMALE" })).toBe("different");
+    expect(comparePerson(andrei, { legalName: "Mihai Munteanu", birthDate: "1984-06-15", sex: "MALE" })).toBe("partial");
+    expect(comparePerson({ ...andrei, sex: null }, { legalName: "Andreea Munteanu", birthDate: "1984-06-15", sex: "FEMALE" })).toBe("partial");
+    expect(comparePerson({ ...andrei, sex: "UNSPECIFIED" }, { legalName: "Andreea Munteanu", birthDate: "1984-06-15", sex: "FEMALE" })).toBe("partial");
+    expect(comparePerson(andrei, { legalName: "Andreea Munteanu", birthDate: "1984-06-15" })).toBe("partial");
+    // The same name is the same runner whatever the sex box says: a slip in one box.
+    expect(comparePerson(andrei, { legalName: "ANDREI  MUNTEANU", birthDate: "1984-06-15", sex: "FEMALE" })).toBe("same");
+    expect(comparePerson(andrei, { legalName: "Andrei Munteanu", birthDate: "1990-01-01", sex: "FEMALE" })).toBe("partial");
+  });
+
+  it("the public form keeps the other person for the inbox; the confirmation behind the link registers them", () => {
+    const posted = { legalName: "Andreea Munteanu", birthDate: "1984-06-15", sex: "FEMALE" as const };
+    expect(decideSubmission({ rows: [andrei], ...posted, via: "form", familyOpen: true, cap })).toEqual({ kind: "offerAnother", about: andrei, atCap: false });
+    expect(decideSubmission({ rows: [andrei], ...posted, via: "link", familyOpen: true, cap })).toEqual({ kind: "insert" });
+    expect(isDifferentPerson(posted, [andrei])).toBe(true);
+  });
+
+  it("the twins' sentence only for a birth date that truly is the registration's day (§493)", () => {
+    const twin = decideSubmission({ rows: [andrei], legalName: "Mihai Munteanu", birthDate: "1984-06-15", sex: "MALE", via: "form", familyOpen: true, cap });
+    expect(twin).toEqual({ kind: "resend", registration: andrei, notAnotherPerson: true, sameBirthDate: true });
+    // A form with no day to compare is never told it names a twin.
+    const noDay = decideSubmission({ rows: [andrei], legalName: "Mihai Munteanu", birthDate: null, sex: "MALE", via: "form", familyOpen: true, cap });
+    expect(noDay).toEqual({ kind: "resend", registration: andrei, notAnotherPerson: true });
+  });
+
+  it("with no birth date posted, the other sex alone never makes another person: a slip, as before (the review's nit)", () => {
+    expect(comparePerson(andrei, { legalName: "Andreea Munteanu", birthDate: null, sex: "FEMALE" })).toBe("partial");
+    expect(comparePerson(andrei, { legalName: "Andreea Munteanu", birthDate: "", sex: "FEMALE" })).toBe("partial");
+    expect(comparePerson(andrei, { legalName: "Andreea Munteanu", sex: "FEMALE" })).toBe("partial");
+    const posted = { legalName: "Andreea Munteanu", birthDate: null, sex: "FEMALE" as const };
+    expect(decideSubmission({ rows: [andrei], ...posted, via: "form", familyOpen: true, cap })).toEqual({ kind: "resend", registration: andrei, notAnotherPerson: true });
+    expect(isDifferentPerson(posted, [andrei])).toBe(false);
+    expect(decideSubmission({ rows: [andrei], ...posted, via: "link", familyOpen: true, cap })).toEqual({ kind: "refuseAlreadyRegistered" });
+  });
+});
+
+describe("§576 the limit per address: four unless set, the fourth accepted and the fifth refused", () => {
+  const person = (index: number): FamilyRow => ({ id: `p${index}`, status: "CONFIRMED", registeredName: `Persoana${index} Pop`, birthDate: `198${index}-01-0${index}` });
+  const three = [1, 2, 3].map(person);
+  const four = [1, 2, 3, 4].map(person);
+  const next = { legalName: "Ioana Pop", birthDate: "2012-05-05", sex: "FEMALE" as const };
+
+  it("defaults to four people on one email address for one event", () => {
+    expect(DEFAULT_ADDRESS_CAP.registrationsPerAddress).toBe(4);
+    expect(readAddressCapValue(undefined)).toEqual({ registrationsPerAddress: 4 });
+  });
+
+  it("accepts the fourth person: the form asks the inbox, the link and the desk register", () => {
+    expect(decideSubmission({ rows: three, ...next, via: "form", familyOpen: true, cap: DEFAULT_ADDRESS_CAP })).toEqual({ kind: "offerAnother", about: three[0], atCap: false });
+    expect(decideSubmission({ rows: three, ...next, via: "link", familyOpen: true, cap: DEFAULT_ADDRESS_CAP })).toEqual({ kind: "insert" });
+    expect(decideSubmission({ rows: three, ...next, via: "staff", familyOpen: true, cap: DEFAULT_ADDRESS_CAP })).toEqual({ kind: "insert" });
+  });
+
+  it("refuses the fifth: the form's email says the limit, the link and the desk are refused", () => {
+    expect(decideSubmission({ rows: four, ...next, via: "form", familyOpen: true, cap: DEFAULT_ADDRESS_CAP })).toEqual({ kind: "offerAnother", about: four[0], atCap: true });
+    expect(decideSubmission({ rows: four, ...next, via: "link", familyOpen: true, cap: DEFAULT_ADDRESS_CAP })).toEqual({ kind: "refuseAtCap" });
+    expect(decideSubmission({ rows: four, ...next, via: "staff", familyOpen: true, cap: DEFAULT_ADDRESS_CAP })).toEqual({ kind: "refuseAtCap" });
+    // A cancelled one frees its slot: four rows, one of them cancelled, still take a fourth.
+    const freed = [...three, { ...person(4), status: "CANCELLED" as const }];
+    expect(decideSubmission({ rows: freed, ...next, via: "link", familyOpen: true, cap: DEFAULT_ADDRESS_CAP })).toEqual({ kind: "insert" });
+  });
+
+  it("says the limit in the site's count words, in both languages", () => {
+    expect(peoplePhrase("ro", 4)).toBe("4 persoane");
+    expect(peoplePhrase("ro", 1)).toBe("o persoană");
+    expect(peoplePhrase("ro", 20)).toBe("20 de persoane");
+    expect(peoplePhrase("ro", undefined)).toBe("4 persoane");
+    expect(peoplePhrase("en", 4)).toBe("4 people");
+    expect(peoplePhrase("en", 1)).toBe("one person");
   });
 });

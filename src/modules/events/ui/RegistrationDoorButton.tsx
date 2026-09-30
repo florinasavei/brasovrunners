@@ -36,7 +36,31 @@ export function doorButtonLabel(say: Say, cta: ButtonCta): string {
  * Synchronous on purpose: the facts that hold it on a card are rendered by tests with the
  * synchronous renderer, and the words are the caller's to give.
  */
-export default function RegistrationDoorButton({ slug, cta, label }: { slug: string; cta: ButtonCta; label: string }) {
+export default function RegistrationDoorButton({
+  slug,
+  cta,
+  label,
+  preview,
+}: {
+  slug: string;
+  cta: ButtonCta;
+  label: string;
+  /**
+   * The editor's preview before saving (§579): the word «previzualizare» in the page's language.
+   * Given, the same button in the same place with the same glyph and words, drawn disabled — a
+   * preview has no form behind its door, and an organizer's page is not the preview's to open.
+   */
+  preview?: string;
+}) {
+  if (preview !== undefined) {
+    const Glyph = cta.kind === "EXTERNAL" ? OpenInNewIcon : cta.kind === "FULL" ? HourglassEmptyIcon : DirectionsRunIcon;
+    return (
+      <Button variant="contained" disabled data-testid="preview-door" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }}>
+        <Glyph aria-hidden="true" data-testid="door-glyph" sx={glyphSx("medium")} />
+        {label} · {preview}
+      </Button>
+    );
+  }
   if (cta.kind === "EXTERNAL") {
     return (
       <Button

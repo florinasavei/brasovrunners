@@ -18,12 +18,15 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
+import { useTranslations } from "next-intl";
 import { countForm } from "@/i18n/count-form";
 import { missingForPublish, missingInLanguage, type PublishGapBox } from "@/modules/content/events/ui/publish-check";
 import TranslateCardButton from "@/modules/translate/ui/TranslateCardButton";
+import { TRANSLATED_EVENT, type TranslatedDetail, translatedInto } from "@/modules/translate/ui/translated-event";
 import { paintedScheduler } from "@/shared/forms/after-paint";
 import { isBlankValue } from "@/shared/forms/blank-value";
 import { identicalInBothLanguages } from "@/shared/forms/both-languages";
+import Flag, { LANGUAGE_FLAG } from "./Flag";
 import { createTwinFoldStore, REVEAL_EVENT, type TwinFoldStore, twinFoldKey } from "./fold";
 
 /** What a panel tells the folds inside it (§363): the strip's shared store, its language, whether it is on top. */
@@ -90,9 +93,38 @@ export type RequiredCountWords = { one: string; few: string; other: string; comp
  * - `parity` — a watched box empty here while the other language has it (an optional text, where
  *   one language written and the other not is the thing worth seeing).
  *
- * `names` are the part after `translations.<locale>.`.
+ * `names` are the part after `translations.<locale>.` — or, for a form that spells its pair another
+ * way, the whole name with the language as `{Locale}` (`zone{Locale}Body`: `zoneRoBody`,
+ * `zoneEnBody`, «Membri», §572) or `{locale}`. `watchedBoxName` reads both.
  */
 export type TabWatch = { names: readonly string[]; rule: "required" | "parity" };
+
+/** The box a watched name stands for in one language (see `TabWatch`). */
+export function watchedBoxName(field: string, locale: string): string {
+  if (field.includes("{Locale}") || field.includes("{locale}")) {
+    const capital = locale.charAt(0).toUpperCase() + locale.slice(1);
+    return field.replaceAll("{Locale}", capital).replaceAll("{locale}", locale);
+  }
+  return `translations.${locale}.${field}`;
+}
+
+/**
+ * A tab's words: the language, then each mark that holds, joined by « · » — «EN · nescris încă»,
+ * «English · tradus — verifică», «Română · 2 obligatorii lipsă».
+ */
+export function tabLabel(parts: readonly (string | null | undefined | false)[]): string {
+  return parts.filter((part): part is string => Boolean(part)).join(" · ");
+}
+
+/**
+ * The default «tradus — verifică» on an English tab (§572), from `Translate` — a namespace every
+ * backoffice page already hands its client islands. Drawn only after a press, in the browser, so a
+ * strip rendered without a translator (a test's static render) never reaches it.
+ */
+export function TranslatedTabWord() {
+  const words = useTranslations("Translate");
+  return <>{words("tabTranslated")}</>;
+}
 
 /**
  * The same words in both languages (§354, bilingual everywhere): which of the panel's boxes to
@@ -147,6 +179,7 @@ export default function LocaleTabPanels({
   requiredCount,
   live = true,
   translateCard = false,
+  translatedMark,
 }: {
   /** The box this strip belongs to: every id on it starts with it. */
   idPrefix: string;
@@ -169,8 +202,18 @@ export default function LocaleTabPanels({
    * words: greyed, saying why, where this deployment cannot translate (§482, §497).
    */
   translateCard?: boolean;
+  /**
+   * The English tab's word right after a translate press filled a box in it (§572), until the
+   * person types there. Left out, every strip says the catalogue's `Translate.tabTranslated` —
+   * «tradus — verifică» — so the event editor, a standing page, an album, the FAQ and the
+   * newsletter wear the same mark as «Membri» without a word passed. A press that filled a box of
+   * this strip also brings the English tab forward (`TRANSLATED_EVENT`).
+   */
+  translatedMark?: string;
 }) {
   const [active, setActive] = useState(0);
+  // Whether the English panel holds a translation nobody has typed into yet (§572).
+  const [translated, setTranslated] = useState(false);
   const [incomplete, setIncomplete] = useState<readonly boolean[]>(() => panels.map((panel) => panel.incompleteLabel !== undefined));
   const [counts, setCounts] = useState<readonly number[]>(() => panels.map((panel) => panel.missingCount ?? 0));
   const [same, setSame] = useState(identical?.initial ?? false);
@@ -277,7 +320,7 @@ export default function LocaleTabPanels({
     const container = root.current;
     if ((!watch && !identical) || !live || !container) return;
     const boxOf = (locale: string, field: string) =>
-      container.querySelector<HTMLInputElement | HTMLTextAreaElement>(`[name="translations.${locale}.${field}"]`);
+      container.querySelector<HTMLInputElement | HTMLTextAreaElement>(`[name="${watchedBoxName(field, locale)}"]`);
     const valueOf = (locale: string, field: string) => boxOf(locale, field)?.value ?? "";
     const measure = () => {
       if (watch) {
@@ -336,6 +379,43 @@ export default function LocaleTabPanels({
     return incomplete[index] && markWord ? markWord : null;
   };
 
+  /*
+    A translate press that filled a box of this strip's English panel (§572): «Copiază și tradu
+    tot» above the strip, or the card's own press at the end of its row. The English tab comes
+    forward — a translation behind the Romanian tab is one nobody reads before «Salvează» — and,
+    where the strip was given the word, wears «tradus — verifică» until the person types there.
+    Only the strip whose English panel holds a filled box answers, in the form that pressed.
+  */
+  useEffect(() => {
+    const english = englishPanelIndex(panels);
+    if (english < 0 || !live) return;
+    const onTranslated = (event: Event) => {
+      const panel = panelRefs.current[english];
+      if (!panel) return;
+      const find = (name: string) => panel.querySelector<HTMLInputElement | HTMLTextAreaElement>(`[name="${name}"]`);
+      if (!translatedInto((event as CustomEvent<TranslatedDetail>).detail, find)) return;
+      showOnly(panelRefs.current, english);
+      setActive(english);
+      setTranslated(true);
+    };
+    window.addEventListener(TRANSLATED_EVENT, onTranslated);
+    return () => window.removeEventListener(TRANSLATED_EVENT, onTranslated);
+  }, [panels, live]);
+
+  /*
+    The mark goes the moment the person edits the English (§572): `beforeinput` is the browser's
+    word for a person's own typing, pasting or deleting — the translation filling the box fires
+    `input` only, so it does not take its own mark away.
+  */
+  useEffect(() => {
+    if (!translated) return;
+    const panel = panelRefs.current[englishPanelIndex(panels)];
+    if (!panel) return;
+    const typed = () => setTranslated(false);
+    panel.addEventListener("beforeinput", typed);
+    return () => panel.removeEventListener("beforeinput", typed);
+  }, [translated, panels]);
+
   const withCardButton = translateCard && live && panels.some((panel) => panel.locale === "ro") && panels.some((panel) => panel.locale === "en");
   // After the card's press filled its English boxes (§514): the English tab on top, so the person
   // reads what was written rather than the Romanian they were already looking at.
@@ -387,29 +467,44 @@ export default function LocaleTabPanels({
           scrollButtons={false}
           sx={{ minHeight: 44, minWidth: 0, flex: "1 1 auto" }}
         >
-          {panels.map((panel, index) => (
-            <Tab
-              key={panel.locale}
-              /*
-                The language in its own words, and a mark when it is not finished. "Conținut (EN)"
-                said which panel this was and nothing about whether anybody had filled it in — so
-                the missing language was found at the moment publication was refused, which is the
-                worst moment to find it.
-              */
-              label={[
-                panel.label,
-                stateOf(index),
-                // The copying language's tab — every one after the first — says it (§354).
-                same && identical && index > 0 ? identical.mark : null,
-              ]
-                .filter((part): part is string => Boolean(part))
-                .join(" · ")}
-              id={`${idPrefix}-tab-${panel.locale}`}
-              aria-controls={`${idPrefix}-panel-${panel.locale}`}
-              value={index}
-              sx={{ minHeight: 44, textTransform: "none" }}
-            />
-          ))}
+          {panels.map((panel, index) => {
+            const flag = LANGUAGE_FLAG[panel.locale as keyof typeof LANGUAGE_FLAG];
+            return (
+              <Tab
+                key={panel.locale}
+                /*
+                  The language in its own words, and a mark when it is not finished. "Conținut (EN)"
+                  said which panel this was and nothing about whether anybody had filled it in — so
+                  the missing language was found at the moment publication was refused, which is the
+                  worst moment to find it.
+                */
+                label={
+                  <>
+                    {tabLabel([
+                      panel.label,
+                      stateOf(index),
+                      // The copying language's tab — every one after the first — says it (§354).
+                      same && identical && index > 0 ? identical.mark : null,
+                    ])}
+                    {/* Right after a translate press filled this panel, until typed into (§572). */}
+                    {translated && panel.locale === "en" && (
+                      <>
+                        {" · "}
+                        {translatedMark ?? <TranslatedTabWord />}
+                      </>
+                    )}
+                  </>
+                }
+                // The header's flag for the language (§572, the glyph beside the word), never the label.
+                icon={flag ? <Flag code={flag} width={16} /> : undefined}
+                iconPosition="start"
+                id={`${idPrefix}-tab-${panel.locale}`}
+                aria-controls={`${idPrefix}-panel-${panel.locale}`}
+                value={index}
+                sx={{ minHeight: 44, textTransform: "none", px: { xs: 1.25, sm: 2 } }}
+              />
+            );
+          })}
         </Tabs>
         {withCardButton && <TranslateCardButton onTranslated={() => showEnglish()} />}
       </Box>

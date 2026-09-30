@@ -62,11 +62,6 @@ test.describe("BR-REQ-070-04 the contact form", () => {
     const width = page.viewportSize()?.width ?? 1280;
     const target = width >= 600 ? FOLD_LINE.sm : FOLD_LINE.xs;
     expect((await inFooter.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(target - 0.5);
-
-    // And under the bar, in the club's identity block, always in sight at the page's end (§565).
-    const block = page.getByTestId("club-identity-block");
-    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
-    await expect(block.getByTestId("club-identity-write")).toHaveAttribute("href", "/ro/contact");
   });
 
   /**

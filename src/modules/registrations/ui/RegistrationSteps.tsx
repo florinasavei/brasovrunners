@@ -10,7 +10,7 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getLocale, getTranslations } from "next-intl/server";
-import { reminderHoursFor } from "@/modules/deadlines/domain/deadlines";
+import { type Deadlines, reminderHoursFor } from "@/modules/deadlines/domain/deadlines";
 import { daysPhrase, deadlineWords, leadPhrase } from "@/modules/deadlines/domain/duration-words";
 import { cachedDeadlines, cachedFamilyRegistrationOpen } from "@/modules/public-cache/reads";
 import { confirmationDueAtStart, confirmationDueWords } from "@/modules/registrations/domain/hold-deadlines";
@@ -47,12 +47,18 @@ type Props = {
    * is none — then the fourth step promises no reminder.
    */
   reminderHoursBefore?: number | null;
+  /**
+   * The club's deadlines and whether the family flow is on, read by the caller — the editor's
+   * preview before saving (§579), which reads them from the database and never through the public
+   * cache. Absent everywhere a visitor reads: the data cache's, as above.
+   */
+  settings?: { deadlines: Deadlines; familyOpen: boolean };
 };
 
-export default async function RegistrationSteps({ folded = false, window = null, reminderHoursBefore = null }: Props) {
+export default async function RegistrationSteps({ folded = false, window = null, reminderHoursBefore = null, settings }: Props) {
   const t = await getTranslations("Registration");
   const locale = await getLocale();
-  const [deadlines, familyOpen] = await Promise.all([cachedDeadlines(), cachedFamilyRegistrationOpen()]);
+  const [deadlines, familyOpen] = settings ? [settings.deadlines, settings.familyOpen] : await Promise.all([cachedDeadlines(), cachedFamilyRegistrationOpen()]);
   const words = deadlineWords(locale, deadlines);
   const reminderHours = reminderHoursFor({ reminderHoursBefore }, deadlines);
   const values = {

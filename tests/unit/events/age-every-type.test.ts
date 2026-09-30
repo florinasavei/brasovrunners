@@ -93,7 +93,7 @@ describe("§505 the page says the minimum age for every type", () => {
   });
 
   it("is drawn inside «Condiții de participare», after the rules and before the photographs notice — no longer a facts row", () => {
-    const page = readFileSync(path.join(process.cwd(), "src/app/[locale]/events/[slug]/page.tsx"), "utf8");
+    const page = readFileSync(path.join(process.cwd(), "src/modules/events/ui/EventPageView.tsx"), "utf8");
     const fold = page.slice(page.indexOf('data-testid="conditions-fold"'), page.indexOf("<OpenFoldFromHash />"));
     expect(fold.indexOf('id="rules"')).toBeGreaterThan(-1);
     expect(fold.indexOf('id="rules"')).toBeLessThan(fold.indexOf("<EventAgeRule "));
@@ -109,7 +109,8 @@ describe("§505 the staff preview says the age as the page does", () => {
   it("renders EventAgeRule with the preview's event, after the rules", () => {
     expect(preview).toContain("<EventAgeRule event={preview} />");
     expect(preview.indexOf('id="rules"')).toBeLessThan(preview.indexOf("<EventAgeRule "));
-    expect(preview).toMatch(/minAge: event\.minAge/);
+    // The mapping is `preview-view.ts` since §579, shared with the preview before saving.
+    expect(readFileSync(path.join(process.cwd(), "src/modules/content/events/preview-view.ts"), "utf8")).toMatch(/minAge: event\.minAge/);
   });
 
   it("a race and a group run in the preview's shape get the page's sentences", async () => {

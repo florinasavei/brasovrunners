@@ -1759,6 +1759,33 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@maskito/core@npm:5.6.0":
+  version: 5.6.0
+  resolution: "@maskito/core@npm:5.6.0"
+  checksum: 10c0/0242ddcfed0a9272f6822d999af7dab6633208bd0eb11c6d832eb27ea25ebfd92006e5232aa3caf05efa38900edc9f104bfcd6ada3c5822e74ee4384fbd1099e
+  languageName: node
+  linkType: hard
+
+"@maskito/kit@npm:5.6.0":
+  version: 5.6.0
+  resolution: "@maskito/kit@npm:5.6.0"
+  peerDependencies:
+    "@maskito/core": ^5.6.0
+  checksum: 10c0/d046c160e7407f1ee1fb81da52cfad77a1adac9ab19a03659f8459d8464f30512bfd2b280b5eeb6ab70fc390398b55b92fd9b1439776d56c38630b99b61962ad
+  languageName: node
+  linkType: hard
+
+"@maskito/react@npm:5.6.0":
+  version: 5.6.0
+  resolution: "@maskito/react@npm:5.6.0"
+  peerDependencies:
+    "@maskito/core": ^5.6.0
+    react: ">=16.8"
+    react-dom: ">=16.8"
+  checksum: 10c0/08c1f2352a95007e64eb78e3d8a494ef0dbafd8a81f48678b45534787bcd00156f2516b1ecdf35da840a8e3822055f97a79be71bd45514c397e18a4747d758d1
+  languageName: node
+  linkType: hard
+
 "@mui/core-downloads-tracker@npm:^9.4.0":
   version: 9.4.0
   resolution: "@mui/core-downloads-tracker@npm:9.4.0"
@@ -3796,21 +3823,21 @@ __metadata:
   linkType: hard
 
 "brace-expansion@npm:^1.1.7":
-  version: 1.1.18
-  resolution: "brace-expansion@npm:1.1.18"
+  version: 1.1.21
+  resolution: "brace-expansion@npm:1.1.21"
   dependencies:
     balanced-match: "npm:^1.0.0"
     concat-map: "npm:0.0.1"
-  checksum: 10c0/3432c18a9e2ebf94162d4effb62198bd0adea06a9f332b2c0188df5d5e30b1e51ea3c848b6608e47d0b857ebe1ea5b3888ed3326dd3c4f6f9645c94153cf9c14
+  checksum: 10c0/8f0a68a720f9cb28c2ecaea5cdaf15fafd686d6b6e4e722a81c9d4bd2f68c1fd0619731cac05875d842221eaf4d97d564d329a12eb3c4c22137502fb3c65be8b
   languageName: node
   linkType: hard
 
 "brace-expansion@npm:^5.0.8":
-  version: 5.0.9
-  resolution: "brace-expansion@npm:5.0.9"
+  version: 5.0.12
+  resolution: "brace-expansion@npm:5.0.12"
   dependencies:
     balanced-match: "npm:^4.0.2"
-  checksum: 10c0/3dea38884a1c3c8b1c9c44a7402a0c76fca460f70cffb3127242b0b4cbf4472019e022ade021eec44838ff19f1dac2625dfd11dd459d7e1e055b0698a8d52fec
+  checksum: 10c0/a40ac64d3bdb5bb222456514d3633c1f627f03b844f509c69e70f98b78be0ce85e21b44bbfecdd0ddd4cc0855ca4242b41ea96ddccf88c7c3c7a84405474bb3a
   languageName: node
   linkType: hard
 
@@ -3833,6 +3860,9 @@ __metadata:
     "@emotion/react": "npm:11.14.0"
     "@emotion/server": "npm:11.11.0"
     "@emotion/styled": "npm:11.14.1"
+    "@maskito/core": "npm:5.6.0"
+    "@maskito/kit": "npm:5.6.0"
+    "@maskito/react": "npm:5.6.0"
     "@mui/icons-material": "npm:9.4.0"
     "@mui/material": "npm:9.4.0"
     "@mui/material-nextjs": "npm:9.4.0"
@@ -8353,9 +8383,9 @@ __metadata:
   linkType: hard
 
 "undici@npm:^8.4.1":
-  version: 8.10.1
-  resolution: "undici@npm:8.10.1"
-  checksum: 10c0/90ac5636aa9d22fb710a261ef05e136df6b4bd7a0122201796bd2eb59ccab6661cdf4f635e543ca04420379eafe3f4d214031bbc7623214287988881c24dad55
+  version: 8.11.2
+  resolution: "undici@npm:8.11.2"
+  checksum: 10c0/106f6991178fb7562fd90cdec7993c5f807a9428682306091f0c4b27fc474ec291f868e29972c6252988bf061ad193df943b3b99e775be157a28d92bbb95699d
   languageName: node
   linkType: hard
 

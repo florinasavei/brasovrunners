@@ -8,7 +8,7 @@ import type { Locale } from "@/i18n/routing";
 import type { JobCadenceState } from "@/modules/jobs/cadence";
 import type { JobOverview } from "@/modules/jobs/overview";
 import type { DeliveryTiming } from "@/modules/notifications/domain/delivery-timing";
-import { JOB_CADENCE_CHOICES, NEXT_DUE_CAP_MINUTES } from "@/modules/jobs/schedule";
+import { DAILY_WINDOW_LABEL, JOB_CADENCE_CHOICES } from "@/modules/jobs/schedule";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
@@ -65,7 +65,7 @@ export default async function JobCadencePanel({ locale, cadence, jobs, mayEdit, 
     >
       <Typography variant="body2" sx={{ fontWeight: 500 }} data-testid="job-cadence-in-force">
         {cadence.minutes === 0
-          ? t("tasks.jobCadence.inForce.onDemand", { cap: NEXT_DUE_CAP_MINUTES })
+          ? t("tasks.jobCadence.inForce.onDemand", { time: DAILY_WINDOW_LABEL })
           : t("tasks.jobCadence.inForce.every", { minutes: cadence.minutes })}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
@@ -75,11 +75,11 @@ export default async function JobCadencePanel({ locale, cadence, jobs, mayEdit, 
         {t("tasks.jobCadence.safe")}
         <QuietHelp text={t("tasks.jobCadence.safeMore")} />
       </Typography>
-      {/* §355: why an idle hour costs one wake — the safety look shares the :00 call and the
-          health monitor's check, whichever interval is chosen. */}
+      {/* §577 (was §355's hour): why an idle day costs one wake — the safety look is the daily
+          window's 04:00 call, which the deep health check shares, whichever interval is chosen. */}
       <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} data-testid="job-cadence-on-the-hour">
-        {t("tasks.jobCadence.onTheHour")}
-        <QuietHelp text={t("tasks.jobCadence.onTheHourMore")} />
+        {t("tasks.jobCadence.onTheHour", { time: DAILY_WINDOW_LABEL })}
+        <QuietHelp text={t("tasks.jobCadence.onTheHourMore", { time: DAILY_WINDOW_LABEL })} />
       </Typography>
       {/* Email, as it is on this deployment (§221): untouched by the interval when it leaves
           after the request, delayed by it when the outbox job is the only sender. */}
@@ -140,16 +140,14 @@ export default async function JobCadencePanel({ locale, cadence, jobs, mayEdit, 
                 defaultValue={String(cadence.minutes)}
                 size="small"
                 slotProps={{ select: { native: true } }}
-                helperText={t("tasks.jobCadence.fieldHelp", { cap: NEXT_DUE_CAP_MINUTES })}
+                helperText={t("tasks.jobCadence.fieldHelp", { time: DAILY_WINDOW_LABEL })}
                 helpMore={t("tasks.jobCadence.fieldHelpMore")}
               >
                 {JOB_CADENCE_CHOICES.map((minutes) => (
                   <option key={minutes} value={String(minutes)}>
                     {minutes === 0
-                      ? t("tasks.jobCadence.option.onDemand", { cap: NEXT_DUE_CAP_MINUTES })
-                      : minutes > NEXT_DUE_CAP_MINUTES
-                        ? t("tasks.jobCadence.option.everyLong", { minutes, cap: NEXT_DUE_CAP_MINUTES })
-                        : t("tasks.jobCadence.option.every", { minutes })}
+                      ? t("tasks.jobCadence.option.onDemand", { time: DAILY_WINDOW_LABEL })
+                      : t("tasks.jobCadence.option.every", { minutes })}
                   </option>
                 ))}
               </RecallField>

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.40-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.46-2026-09-27 -->
 
 # Running this locally
 
-**Baseline `BR-V2.40-2026-09-27`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
+**Baseline `BR-V2.46-2026-09-27`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
 
 Everything here is a command that exists today. If a command is in this file it is in
 `package.json`; if it is not, it has not been built yet.
@@ -95,7 +95,8 @@ yarn test:watch          re-run on change
 yarn test:e2e            browser tests, mobile and desktop; needs the database running
 yarn db:seed:legal       the sample legal documents alone; never deletes, safe on a live database
 yarn db:migrate:env      apply migrations to one named environment (local|qa|production)
-yarn smoke               ask a deployment's /api/health whether it actually works
+yarn smoke               ask a deployment's /api/health?deep=1 whether it actually works
+yarn idle:measure        Neon's wakes (and, with --vercel-project, the last hour of requests) while nobody visited; docs/PLATFORM.md § Idle cost
 yarn test:e2e:ui         the same, in Playwright's UI mode
 yarn test:e2e:dev        every backoffice and public route against `next dev` (E2E_DEV=1; port 4784, or a running `yarn dev` via E2E_PORT); minutes; not on the docs-check CI a pull request waits on — `.github/workflows/e2e-dev-nightly.yml` runs it once a night at 01:37 UTC on `qa` instead (§370, §426)
 yarn typecheck           tsc --noEmit
@@ -299,7 +300,12 @@ does not import React, Next, MUI, or a provider SDK, and there is no `utils.ts`.
   listing, the calendar, an event page, the standing pages, the gallery, the legal pages, the
   `.ics` files and the Open Graph pictures are made on their first visit and kept (ISR), expired
   by the write that changes them — the same `revalidatePublicContent(...)` every write already
-  calls — and by their clock (`src/modules/public-cache/page-lifetime.ts`). `curl -sI` shows it:
+  calls — and by their clock (`src/modules/public-cache/page-lifetime.ts`). A render that was
+  already running when the write committed is stored *after* the write's expiry and so reads as
+  fresh; the write's own `after()` expires the same tags again three seconds later (§583,
+  `SECOND_EXPIRY_DELAY_MS` in `public-cache/cache.ts`). So a spec that reads a static page right
+  after a save, on a server other specs are rendering at the same time, may meet the old copy for
+  those seconds: reload under a bounded `expect(…).toPass()` rather than reading once. `curl -sI` shows it:
   `x-nextjs-cache: HIT` on a second visit, and on a static *page* `Cache-Control: public,
   max-age=0, must-revalidate` — what Vercel's CDN hands the browser for such a page, said by
   `proxy.ts` everywhere else for a GET or a HEAD (the pictures and the `.ics` files keep Next's
@@ -307,10 +313,19 @@ does not import React, Next, MUI, or a provider SDK, and there is no `utils.ts`.
   and `stale-while-revalidate`, and the browser would show its copy from before the last save
   (and Playwright's `networkidle` would wait for its background request forever). On Vercel the
   CDN keeps Next's `s-maxage` and the proxy sets nothing. A filtered listing
-  (`?type=…`), a month (`?month=…`), `?lista=` and a signed-in browser on an event page are the
+  (`?type=…`), `?lista=` and a signed-in browser on an event page are the
   page's *live twin* under `src/app/[locale]/live/`, rendered per request as before
   (`src/i18n/live-twin.ts`) — so a signed-in browser never shows you the stranger's copy; use
-  `curl` or a private window for that. `next start` stores the pages it made in
+  `curl` or a private window for that. A calendar month is a static page of its own path
+  (`/ro/calendar/2026-10`, `/ro/calendar/2026-10/list`, `/ro/calendar/2026`), and the old
+  `?month=`, `?year=` and `?view=list` are redirected there by the proxy: a 308 when the address names the period, a `no-store` 307 when it means this month (whose target moves with the clock). Why: Next's router may
+  answer a soft navigation to a static page's address plus a query from that page's prefetched
+  copy, without asking the server, and on Vercel (whose answer to a prefetch is the page's whole
+  `.rsc`) the calendar's arrows changed the address and left the month on screen
+  (`src/modules/events/domain/calendar-path.ts`). A new control that changes what a static page
+  shows goes to a path of its own, not to a query on the same path. `next start` does not show
+  the difference; `tests/e2e/calendar-month-from-path.spec.ts` answers a prefetch the way Vercel
+  does to catch it. `next start` stores the pages it made in
   `.next/server/app/ro/` and `/en/`, and they outlive a restart: `yarn db:reset:local` deletes
   them, and a running `yarn start` must be restarted after a reset (it holds them in memory
   too). A row changed by hand in the database is on the pages within a day, or at the next

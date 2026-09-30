@@ -46,6 +46,7 @@ import PhoneIcon from "@mui/icons-material/Phone";
 import PlaceIcon from "@mui/icons-material/Place";
 import PrintIcon from "@mui/icons-material/Print";
 import PublicIcon from "@mui/icons-material/Public";
+import ReorderIcon from "@mui/icons-material/Reorder";
 import RouteIcon from "@mui/icons-material/Route";
 import RuleIcon from "@mui/icons-material/Rule";
 import SaveIcon from "@mui/icons-material/Save";
@@ -60,6 +61,7 @@ import TimerIcon from "@mui/icons-material/Timer";
 import TitleIcon from "@mui/icons-material/Title";
 import TranslateIcon from "@mui/icons-material/Translate";
 import UpdateIcon from "@mui/icons-material/Update";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import type { SvgIconProps } from "@mui/material/SvgIcon";
 import type { ComponentType } from "react";
 
@@ -150,6 +152,10 @@ export const PANEL_GLYPHS = {
   jobs: UpdateIcon,
   pictures: ImageIcon,
   translation: TranslateIcon,
+  // «Ordinea meniului» (§571): the site menu's entries, one under the other, in the club's order.
+  menuOrder: ReorderIcon,
+  // «Previzualizare» (§579): the event's card and page as a visitor will see them, before saving.
+  preview: VisibilityIcon,
 } satisfies Record<string, ComponentType<SvgIconProps>>;
 
 export type PanelGlyphName = keyof typeof PANEL_GLYPHS;

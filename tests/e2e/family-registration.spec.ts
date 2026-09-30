@@ -34,7 +34,7 @@ test.describe("§389 §446 a family on one address", () => {
 
   const registerPath = `/ro/evenimente/${FEATURED.slug}/inscriere`;
 
-  type Person = { firstName: string; lastName: string; birthDate: string };
+  type Person = { firstName: string; lastName: string; birthDate: string; sex?: "FEMALE" | "MALE" };
 
   /**
    * One form, sent. `email` null is a family sitting's next form (§519): the address is fixed and not
@@ -54,7 +54,7 @@ test.describe("§389 §446 a family on one address", () => {
     };
     for (const [name, value] of Object.entries(values)) await page.locator(`[name="${name}"]`).fill(value);
     // «Sex» starts empty (§510): the form is refused without an answer.
-    await chooseSex(page);
+    await chooseSex(page, person.sex);
     if (email) await page.locator('[name="emailConfirm"]').fill(email);
     await page.locator('[name="privacyAcknowledged"]').check();
     await page.locator('[name="rulesAcknowledged"]').check();
@@ -194,6 +194,8 @@ test.describe("§389 §446 a family on one address", () => {
     await expect(names).toHaveCount(2);
     await expect(names.filter({ hasText: `Ana ${lastName}` })).toHaveCount(1);
     await expect(names.filter({ hasText: `Maria ${lastName}` })).toHaveCount(1);
+    // Under each, how many this address has at the event, out of the limit (§576).
+    await expect(page.getByTestId("my-registration-per-address").first()).toHaveText(/^Cu această adresă, la acest eveniment: 2 din cel mult \d+ persoane\.$/);
   });
 
   test("the registered name with another birth date registers nobody, and the re-send says how to register somebody else", async ({ page }) => {
@@ -218,6 +220,29 @@ test.describe("§389 §446 a family on one address", () => {
     expect(resent.text).toContain("If you want to register someone else, send the form with that person's full name and birth date.");
   });
 
+  test("§576 another name and the other sex on a registered person's birth date, typed day first, is another person — never «deja înscris»", async ({ page }) => {
+    test.skip(!(await familyFlowOpen()), "the family flow opens with the contract release that drops registrations_event_participant_unique (§389)");
+    await signIn(page, "Dev Administrator");
+    await ensureRegistrationIsOpen(page);
+    const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
+    const email = `e2e-family-sibling-${suffix}@test.invalid`;
+    const lastName = `Pop ${suffix}`;
+
+    // The box's own shape (§561): day first, as a person types it — and the same day for both.
+    await publicSubmission(page, { firstName: "Ana", lastName, birthDate: "02.03.1985", sex: "FEMALE" }, email);
+    await publicSubmission(page, { firstName: "Andrei", lastName, birthDate: "02.03.1985", sex: "MALE" }, email);
+
+    const rows = await registrationsByEmail(email);
+    expect(rows.map((row) => row.registeredName)).toEqual([`Ana ${lastName}`]);
+    // Not a slip of Ana's: the address is asked to confirm Andrei, and Ana's email is not re-sent with the twins' sentence.
+    expect(await queuedPayloads(rows[0].id, "REGISTER_ANOTHER_PERSON")).toEqual([
+      { atCap: false, registrationsPerAddress: expect.any(Number), familyEntryId: expect.any(String), startsDeadline: true },
+    ]);
+    expect(await queuedPayloads(rows[0].id, "VERIFY_REGISTRATION_EMAIL")).toEqual([{ startsDeadline: true }]);
+    const offer = await capturedEmail(page, email, `Persoana din formular: Andrei ${lastName}`);
+    expect(offer.text).toContain("Data nașterii: 2 martie 1985");
+  });
+
   test("§519 one sitting: the first email leaves at once, «Da» opens the sitting with the address kept, every form reserves its place (§543), «Gata» sends one family message naming three, one press confirms everybody and opens the wizard", async ({ page }) => {
     test.skip(!(await familyFlowOpen()), "the family flow opens with the contract release that drops registrations_event_participant_unique (§389)");
     await signIn(page, "Dev Administrator");
@@ -234,6 +259,8 @@ test.describe("§389 §446 a family on one address", () => {
     await page.context().clearCookies({ name: "br_family_sitting" });
     await page.goto(registerPath);
     await hydrated(page);
+    // The club's limit per address, under the address box (§576): the number is the setting's, whatever it is now.
+    await expect(page.getByTestId("address-cap-rule")).toHaveText(/^Cu aceeași adresă de email se pot înscrie cel mult \d+ persoane la un eveniment, de exemplu o familie\./);
     await fillPerson(page, { firstName: "Ana", lastName, birthDate: "1985-03-02" }, email);
     // The name once, in the line under the plain heading (the review of 2026-09-28).
     await expect(page.getByRole("heading", { name: "Aproape gata!", exact: true })).toBeVisible();
@@ -258,6 +285,8 @@ test.describe("§389 §446 a family on one address", () => {
     await expect(page).toHaveURL(/family=1/);
     await hydrated(page);
     await expect(page.getByTestId("family-sitting-address")).toContainText(email);
+    // This form is the second person, out of the limit (§576).
+    await expect(page.getByTestId("address-cap-count")).toHaveText(/^2 din \d+ persoane cu această adresă$/);
     await expect(page.locator('[name="emailConfirm"]')).toHaveCount(0);
     // How long is left, said on the form itself, with the way back to «Gata».
     await expect(page.getByTestId("family-sitting-intro")).toContainText("pleacă singur peste");
@@ -271,6 +300,8 @@ test.describe("§389 §446 a family on one address", () => {
     // After «Da», the sitting's own screen (§519): the people so far, the minutes left, «Gata».
     await expect(page.getByTestId("family-sitting-names")).toContainText(`Ana ${lastName}`);
     await expect(page.getByTestId("family-sitting-names")).toContainText(`Maria ${lastName}`);
+    // «N din 4» (§576): the people sent so far, out of the limit.
+    await expect(page.getByTestId("family-sitting-count")).toHaveText(/^2 din \d+ persoane cu această adresă$/);
     await expect(page.getByTestId("family-sitting-when")).toContainText("Emailul pleacă când apeși „Gata” sau singur după");
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 

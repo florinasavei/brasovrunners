@@ -148,6 +148,13 @@ export const BOT_CHECK_STATE_ATTRIBUTE = "data-bot-check";
 /** How long the script may take before the widget says it did not load (a blocker, a proxy, offline). */
 export const BOT_CHECK_BLOCKED_AFTER_MS = 10_000;
 
+/**
+ * What counts as a person starting on a protected form (§577): a focus anywhere inside it, a press,
+ * a key, a typed character. Until one of them, the widget injects no script and draws nothing, so a
+ * page opened and left costs Cloudflare nothing (`TurnstileWidget`'s `armed`).
+ */
+export const BOT_CHECK_ARMING_EVENTS = ["focusin", "pointerdown", "keydown", "input"] as const;
+
 /** How long `loading` or `checking` may last before the widget offers to start it again. */
 export const BOT_CHECK_SLOW_AFTER_MS = 12_000;
 

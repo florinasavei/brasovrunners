@@ -1,11 +1,14 @@
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
+import { ADDRESS_CAP_RULE } from "@/modules/registrations/domain/address-cap";
 import { teamPageClause } from "@/modules/content/team/notice-words";
 import { listStatesClause } from "@/modules/registrations/list-state-words";
 import { listSocialsClause } from "@/modules/registrations/list-socials-words";
-import { promotionalMaterialsClause } from "@/modules/registrations/promo-consent-words";
+import { promotionalMaterialsClause, promotionalMaterialsSharedClause } from "@/modules/registrations/promo-consent-words";
 import { yearsPhrase } from "@/modules/registrations/domain/age";
 import {
+  ADDRESS_CAP_MERGE_FIELD,
+  addressCapMergeValues,
   DEADLINE_MERGE_FIELDS,
   deadlineMergeValues,
   LIST_SOCIALS_MERGE_FIELD,
@@ -13,6 +16,7 @@ import {
   MINIMUM_AGE_MERGE_FIELD,
   NEWSLETTER_MERGE_FIELD,
   PROMOTIONAL_MATERIALS_MERGE_FIELD,
+  PROMOTIONAL_MATERIALS_SHARED_MERGE_FIELD,
   TEAM_PAGE_MERGE_FIELD,
 } from "../domain/merge-fields";
 import { seriesRhythmPhrase } from "@/modules/group-run-declarations/series";
@@ -118,6 +122,13 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     messageKey: field,
     example: inBoth((locale) => deadlineMergeValues(locale, DEFAULT_DEADLINES)[field]),
   })),
+  // The club's limit per address (§389, §576), in the terms' sentence about registering somebody else:
+  // filled from the setting when the text is shown; the example is what an unset setting fills in.
+  {
+    token: `{{${ADDRESS_CAP_MERGE_FIELD}}}`,
+    messageKey: ADDRESS_CAP_MERGE_FIELD,
+    example: inBoth((locale) => addressCapMergeValues(locale, ADDRESS_CAP_RULE.default).registrationsPerAddress),
+  },
   // The privacy notice's marker for the public list's states (§396): filled with the three words
   // the list prints, and the switch that lets the list print them (`describesListStates`).
   {
@@ -152,6 +163,13 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     messageKey: PROMOTIONAL_MATERIALS_MERGE_FIELD,
     // Never the club's name in the legend (§369): the sentence as the box reads, with a plain «club».
     example: inBoth((locale) => promotionalMaterialsClause(locale, locale === "en" ? "the club" : "club")),
+  },
+  // The privacy notice's marker for the sponsor list (§570): the three data a partner may receive,
+  // and the switch for «Descarcă lista pentru sponsori» (`describesPromotionalMaterialsShared`).
+  {
+    token: `{{${PROMOTIONAL_MATERIALS_SHARED_MERGE_FIELD}}}`,
+    messageKey: PROMOTIONAL_MATERIALS_SHARED_MERGE_FIELD,
+    example: inBoth((locale) => promotionalMaterialsSharedClause(locale)),
   },
 ];
 

@@ -6,6 +6,7 @@ import type { Locale } from "@/i18n/routing";
 import { adultOnTheFamilyForm, withoutAnotherAdultsConsents } from "./fields";
 import { composeLegalName } from "./names";
 import { SIGNABLE_STATUSES } from "./domain/family-signing";
+import { isSexChoice, type SexChoice } from "./domain/sex";
 
 /**
  * Another person's registration waiting for the address's confirmation (§446, amending §389):
@@ -42,13 +43,14 @@ export function familyEntryFields(input: Record<string, unknown>, now: Date): Re
 
 const DROPPED: ReadonlySet<string> = new Set(["email", "emailConfirm", "honeypot", "renderedAt", "fitnessAcknowledged"]);
 
-/** The person an entry names: the legal name as the registration would carry it, and the birth date. */
-export function personOfEntry(entry: Pick<PendingFamilyEntry, "fields">): { legalName: string; birthDate: string | null; adult: (now: Date) => boolean } {
+/** The person an entry names: the legal name as the registration would carry it, the birth date, and the sex (§576). */
+export function personOfEntry(entry: Pick<PendingFamilyEntry, "fields">): { legalName: string; birthDate: string | null; sex: SexChoice | null; adult: (now: Date) => boolean } {
   const fields = entry.fields;
   const first = typeof fields.firstName === "string" ? fields.firstName : "";
   const last = typeof fields.lastName === "string" ? fields.lastName : "";
   const birthDate = typeof fields.birthDate === "string" ? fields.birthDate : null;
-  return { legalName: composeLegalName(first, last), birthDate, adult: (now) => adultOnTheFamilyForm(birthDate, now) };
+  const sex = isSexChoice(fields.sex) ? fields.sex : null;
+  return { legalName: composeLegalName(first, last), birthDate, sex, adult: (now) => adultOnTheFamilyForm(birthDate, now) };
 }
 
 /**

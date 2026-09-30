@@ -15,7 +15,8 @@
  * and a fee, where there is one, is the event page's; on another organiser's event the club only
  * publishes (§1). The unusual clauses — §3 cancelling or changing, §4 stopping or excluding, §5
  * liability, §10 law and court — are accepted expressly by a separate box (Civil Code art. 1203).
- * The family flow (§389) is allowed in §2 and nobody signs for another adult (§8). §5 is written
+ * The family flow (§389) is allowed in §2, with the club's limit per address as the merge field
+ * `{{registrationsPerAddress}}` (§576), and nobody signs for another adult (§8). §5 is written
  * around attribution (art. 1349–1352, 1355, 1371, 1373), never as a waiver for injury. §7 describes
  * the list's states only where the notice the runner was given does (§396). §10 has no compulsory
  * pre-litigation step and no forum at the club's seat, and points to ANSPDCP, not SAL-ANPC.
@@ -37,7 +38,7 @@ export const termsRo: LegalDocumentBody = {
     {
       heading: "2. Înscrierea",
       paragraphs: [
-        "Completezi formularul cu numele real al persoanei care aleargă, cel din actul ei de identitate. De pe aceeași adresă de e-mail poți înscrie la același eveniment și alte persoane, de exemplu din familie, cel mult câte permite clubul, fiecare o singură dată, doar cu acordul lor și după ce le-ai spus, pe baza notei de confidențialitate, cum le folosim datele; un minor îl înscrie părintele sau tutorele legal, ca la punctul 4. Fiecare persoană are propria înscriere, propriul loc și propria declarație, pe care o semnează ea însăși (pentru un minor, ca la punctul 4). Mesajele care o privesc ajung pe adresa ta și i le transmiți.",
+        "Completezi formularul cu numele real al persoanei care aleargă, cel din actul ei de identitate. De pe aceeași adresă de e-mail poți înscrie la același eveniment și alte persoane, de exemplu din familie — cel mult {{registrationsPerAddress}} cu aceeași adresă la un eveniment —, fiecare o singură dată, doar cu acordul lor și după ce le-ai spus, pe baza notei de confidențialitate, cum le folosim datele; un minor îl înscrie părintele sau tutorele legal, ca la punctul 4. Fiecare persoană are propria înscriere, propriul loc și propria declarație, pe care o semnează ea însăși (pentru un minor, ca la punctul 4). Mesajele care o privesc ajung pe adresa ta și i le transmiți.",
         "Confirmi adresa de e-mail din legătura primită, în {{confirmationHours}}, altfel înscrierea expiră. Dacă există un loc liber, este ținut {{holdMinutes}}, cât citești și semnezi declarația — iar la un eveniment care cere confirmarea participării cu câteva zile înainte de start, până la termenul de confirmare arătat pe pagina lui; doar semnătura confirmă înscrierea.",
         "Fără locuri, intri pe lista de așteptare, în ordinea confirmării; când se eliberează un loc, primul de pe listă are {{offerHours}} să semneze, apoi oferta trece la următorul.",
         "Semnezi scriindu-ți numele complet și bifând că accepți; platforma reține numele, seria și numărul actului de identitate, momentul și o amprentă a textului exact. Declarația semnată îți vine pe e-mail, ca PDF.",
@@ -116,7 +117,7 @@ export const termsEn: LegalDocumentBody = {
     {
       heading: "2. Registering",
       paragraphs: [
-        "You fill in the form with the real name of the person who will run, as on their identity document. From the same email address you may also register other people for the same event, your family for instance, up to the number the club allows, each of them once, only with their agreement and after telling them, from the privacy notice, how we use their data; a minor is registered by a parent or legal guardian, as in section 4. Each person has their own registration, place and declaration, which they sign themselves (for a minor, as in section 4). The messages about them reach your address, and you pass them on.",
+        "You fill in the form with the real name of the person who will run, as on their identity document. From the same email address you may also register other people for the same event, your family for instance — at most {{registrationsPerAddress}} on one address for one event — each of them once, only with their agreement and after telling them, from the privacy notice, how we use their data; a minor is registered by a parent or legal guardian, as in section 4. Each person has their own registration, place and declaration, which they sign themselves (for a minor, as in section 4). The messages about them reach your address, and you pass them on.",
         "Confirm your email address from the link received within {{confirmationHours}}, or the registration expires. If a place is free, it is held for {{holdMinutes}} while you read and sign the declaration — or, at an event that asks for the confirmation of participation a few days before the start, until the confirmation deadline shown on its page; only the signature confirms the registration.",
         "With no place left, you join the waiting list in order of confirmation; when a place frees up, the first on the list has {{offerHours}} to sign before the offer passes to the next.",
         "You sign by typing your full name and ticking that you accept; the platform records the name, your identity document's series and number, the moment and a fingerprint of the exact text. The signed declaration reaches you by email as a PDF.",

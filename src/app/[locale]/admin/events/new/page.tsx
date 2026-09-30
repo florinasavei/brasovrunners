@@ -13,6 +13,7 @@ import CoHostsBox from "@/modules/content/events/ui/boxes/CoHostsBox";
 import KindBox from "@/modules/content/events/ui/boxes/KindBox";
 import LinksBox from "@/modules/content/events/ui/boxes/LinksBox";
 import ProgrammeRulesBox from "@/modules/content/events/ui/boxes/ProgrammeRulesBox";
+import PreviewBox from "@/modules/content/events/ui/boxes/PreviewBox";
 import PromotionBox from "@/modules/content/events/ui/boxes/PromotionBox";
 import RegistrationBox from "@/modules/content/events/ui/boxes/RegistrationBox";
 import { AddressBox, DescriptionBox, TitleSummaryBox } from "@/modules/content/events/ui/boxes/TextBoxes";
@@ -243,6 +244,8 @@ export default async function NewEventPage({ params, searchParams }: Props) {
               <EditorGroup label={t("editor.groups.offPage")} />
               <PromotionBox {...box} />
               <AddressBox languages={languages} slugLocked={false} creating />
+              {/* «Previzualizare» (§579): the card and the page from these boxes, before «Creează». */}
+              <PreviewBox formId="event-create-form" refusal={messages} />
 
               {/* 15 — always open: what the press makes, and the two buttons. */}
               <Panel glyph="save" static id="box-save" title={t("editor.boxes.save.title")}>

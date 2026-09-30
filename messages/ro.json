@@ -108,6 +108,7 @@
   "Event": {
     "backToEvents": "Înapoi la evenimente",
     "editInBackoffice": "Editează",
+    "previewDoor": "previzualizare",
     "opensInNewTab": "se deschide într-o filă nouă",
     "photosNotice": "La evenimentele clubului se pot face fotografii și filmări, pe care clubul le publică în galerie și pe canalele sale. Nu vrei să apari? Spune-i fotografului sau <contact>scrie-ne</contact> și scoatem fotografia, fără să ne spui de ce. Detalii în <privacy>nota de confidențialitate</privacy>.",
     "date": "Data",
@@ -219,7 +220,7 @@
       "title": "Cine vine",
       "titleCount": "Cine vine ({count})",
       "empty": "Încă nu și-a confirmat nimeni participarea.",
-      "note": "Aici sunt numărați toți participanții confirmați. Numele apare doar pentru cei care au bifat „Vreau să apar pe lista de participanți”; ceilalți apar ca „Participant (nume ascuns)”, fără niciun alt detaliu. Alegerea se poate schimba oricând din emailul de confirmare sau din „Înscrierile mele”.",
+      "note": "Aici sunt numărați toți participanții confirmați. Numele apare doar pentru cei care au bifat „Vreau să apar pe lista de participanți & rezultate”; ceilalți apar ca „Participant (nume ascuns)”, fără niciun alt detaliu. Alegerea se poate schimba oricând din emailul de confirmare sau din „Înscrierile mele”.",
       "anonymous": "Participant (nume ascuns)",
       "caption": "Participanții confirmați: întâi cei cu numele afișat, în ordinea confirmării, apoi ceilalți.",
       "summary": "{confirmed} — {named} cu numele afișat",
@@ -244,7 +245,7 @@
         "instagram": "{name} pe Instagram"
       },
       "captionStates": "Întâi participanții confirmați — cei cu numele afișat, în ordinea confirmării, apoi ceilalți —, apoi cei înscriși care nu au confirmat încă și cei de pe lista de așteptare, în ordinea listei.",
-      "noteStates": "Aici sunt numărați toți participanții confirmați. Numele apare doar pentru cei care au bifat „Vreau să apar pe lista de participanți”; ceilalți confirmați apar ca „Participant (nume ascuns)”, fără niciun alt detaliu. Cei înscriși care nu au confirmat încă și cei de pe lista de așteptare apar doar dacă au bifat, cu stadiul înscrierii lângă nume; o înscriere anulată sau expirată nu apare. Alegerea se poate schimba oricând din emailul de confirmare sau din „Înscrierile mele”.",
+      "noteStates": "Aici sunt numărați toți participanții confirmați. Numele apare doar pentru cei care au bifat „Vreau să apar pe lista de participanți & rezultate”; ceilalți confirmați apar ca „Participant (nume ascuns)”, fără niciun alt detaliu. Cei înscriși care nu au confirmat încă și cei de pe lista de așteptare apar doar dacă au bifat, cu stadiul înscrierii lângă nume; o înscriere anulată sau expirată nu apare. Alegerea se poate schimba oricând din emailul de confirmare sau din „Înscrierile mele”.",
       "socialsNote": "Strava și Instagram apar doar lângă numele celor care au ales asta la înscriere.",
       "othersLead": "Apar cu numele și:",
       "pendingCount": {
@@ -602,7 +603,7 @@
       "birthDateMinimumAge": "Opțional aici. Dacă o scrii, persoana trebuie să aibă, în ziua cursei, cel puțin vârsta minimă a evenimentului ales (numărul cu „+” de lângă nume); altfel înscrierea este refuzată.",
       "participantLocale": "Limba în care îi scriem",
       "participantLocaleHelp": "Limba tuturor e-mailurilor legate de această înscriere.",
-      "listOptIn": "Persoana vrea să apară pe lista publică de participanți",
+      "listOptIn": "Persoana vrea să apară pe lista de participanți & rezultate",
       "listOptInHelp": "Bifează doar dacă persoana ți-a spus că vrea.",
       "relayConfirmation": "Confirm că această persoană mi-a cerut să o înscriu și i-am spus că datele ei le folosește clubul pentru cursă, iar nota de confidențialitate este pe site, jos pe fiecare pagină.",
       "create": "Adaugă înscrierea",
@@ -626,6 +627,10 @@
         "promo": "Acordul pentru oferte și beneficii"
       },
       "auditTrail": "Ce a făcut echipa",
+      "partnerShares": {
+        "title": "Dată partenerilor",
+        "noRecipient": "destinatar nenotat"
+      },
       "auditActorRemoved": "cont șters",
       "auditActorParticipant": "participantul, din linkul propriu",
       "audit": {
@@ -805,7 +810,9 @@
         "yes": "Oferte și beneficii: da, din {date}",
         "no": "Oferte și beneficii: nu",
         "staffNo": "Oferte și beneficii: nu. Echipa nu poate da acordul în locul persoanei; îl dă ea, din pagina înscrierii ei."
-      }
+      },
+      "promoOnly": "Doar cu oferte și beneficii",
+      "promoOnlyHelp": "Cei care au bifat „oferte și beneficii”, cu înscrierea încă valabilă. Exportul ia același filtru."
     },
     "events": {
       "empty": "Nu există niciun eveniment în baza de date.",
@@ -1056,7 +1063,9 @@
         "now": "Trimite acum, fără să aștepte trecerea programată",
         "queue": "Pune la coadă pentru trecerea programată",
         "note": "Deocamdată, emailurile automate pleacă la trecerea programată, în cel mult {wait}. Alege dacă acesta pleacă acum sau o așteaptă."
-      }
+      },
+      "menuOrderTitle": "Schimbi ordinea meniului?",
+      "menuOrderBody": "Meniul site-ului și subsolul arată paginile în ordinea nouă, pentru toți vizitatorii, de la următoarea pagină deschisă."
     },
     "errors": {
       "PICTURE_IN_USE": "Imaginea este folosită într-o pagină, într-un eveniment sau într-un album. Scoate-o de acolo mai întâi.",
@@ -1107,6 +1116,26 @@
       "LEGAL_ALREADY_DELETED": "Versiunea a fost deja ștearsă din listă. Textul ei rămâne în arhivă."
     },
     "editor": {
+      "draftPreview": {
+        "intro": "Cardul din listă și pagina evenimentului, din ce ai scris acum. Nu salvează și nu publică nimic.",
+        "run": "Previzualizează",
+        "running": "Se pregătește…",
+        "views": "Ce vezi",
+        "card": "Card",
+        "page": "Pagina",
+        "language": "Limba",
+        "width": "Lățime",
+        "phone": "Telefon (360)",
+        "desktop": "Desktop",
+        "idle": "Apasă «Previzualizează» ca să vezi cardul și pagina.",
+        "asOfPress": "Arată ce era scris la ultima apăsare pe «Previzualizează».",
+        "incomplete": "{language} incomplet — lipsește: {missing}",
+        "complete": "Ambele limbi au tot ce cere publicarea.",
+        "refused": "Nu se poate previzualiza așa: salvarea ar refuza aceste căsuțe.",
+        "failed": "Previzualizarea nu a mers. Încearcă din nou.",
+        "forbidden": "Rolul tău nu poate previzualiza evenimentul.",
+        "frameTitle": "Previzualizarea evenimentului"
+      },
       "startsAt": "Începutul evenimentului",
       "startsAtHelp": "Ora locală a evenimentului ({timezone}). Pentru o cursă, aceasta este ora de întâlnire.",
       "raceStartsAt": "Startul cursei",
@@ -1245,7 +1274,7 @@
       "declarationNone": "Nu există nicio declarație aprobată în acest mediu, deci niciun eveniment nu poate primi înscrieri încă.",
       "declarationUnset": "Niciuna",
       "participantList": "Publică lista participanților pe pagina evenimentului",
-      "participantListHelp": "Publică numele celor confirmați care au bifat „Vreau să apar pe lista de participanți”, fără adrese de email.",
+      "participantListHelp": "Publică numele celor confirmați care au bifat „Vreau să apar pe lista de participanți & rezultate”, fără adrese de email.",
       "externalProvider": "Organizator extern",
       "externalRegistrationUrl": "Link de înscriere extern",
       "externalHelp": "Amândouă doar pentru un eveniment cu înscriere în altă parte. Linkul trebuie să înceapă cu https://.",
@@ -1727,6 +1756,10 @@
           "title": "Recurență",
           "none": "Nu se repetă",
           "on": "Se repetă"
+        },
+        "preview": {
+          "title": "Previzualizare",
+          "summary": "Cum arată pe site — cardul și pagina, fără să salvezi"
         },
         "summary": {
           "filled": "completat",
@@ -2218,7 +2251,9 @@
         "series": "Doar în declarațiile alergărilor de grup: numele seriei, când alergarea se repetă. Propoziția care îl conține apare doar la o serie; la o alergare de o zi rămâne propoziția cu '{{event}}' și '{{eventDate}}'",
         "seriesRhythm": "Doar în declarațiile alergărilor de grup: cât de des se repetă seria, citit din datele ei („în fiecare marți, la 18:30”)",
         "seriesPlace": "Doar în declarațiile alergărilor de grup: locul de plecare obișnuit al seriei",
-        "promotionalMaterials": "Doar în nota de confidențialitate: bifa opțională pentru oferte și beneficii de la club și de la partenerii săi. Fără el în nota în vigoare, formularul nu o oferă"
+        "promotionalMaterials": "Doar în nota de confidențialitate: bifa opțională pentru oferte și beneficii de la club și de la partenerii săi. Fără el în nota în vigoare, formularul nu o oferă",
+        "promotionalMaterialsShared": "Doar în nota de confidențialitate: ce date pot primi partenerii clubului de la cei care au bifat oferte și beneficii. Fără el în nota în vigoare, lista pentru sponsori e oprită",
+        "registrationsPerAddress": "Doar în termeni: câte persoane se pot înscrie cu aceeași adresă de email la un eveniment, cu unitatea („4 persoane”), din Setări → „Termene”"
       },
       "removeBlockedReferenced": "Nu se poate nici retrage, nici șterge definitiv: {signatures}, {events} și {acknowledgements} depind de ea. «Șterge» de pe rândul ei o scoate din listă.",
       "removeBlockedCurrent": "În vigoare acum — nu se poate nici retrage, nici șterge. Aprobă întâi versiunea următoare; apoi aceasta se poate scoate.",
@@ -2374,6 +2409,7 @@
       },
       "tableCaptionOf": "Versiunile textului {kind}, cu starea și ce depinde de fiecare",
       "promoMissing": "Nota în vigoare nu descrie încă ofertele și beneficiile, deci formularul nu oferă bifa. Aprobă o notă nouă din șablon.",
+      "sponsorMissing": "Nota în vigoare nu spune încă că lista pentru sponsori poate fi dată partenerilor, deci butonul ei e oprit. Aprobă o notă nouă din șablon.",
       "counted": {
         "signatures": {
           "one": "{count} semnătură",
@@ -2565,7 +2601,7 @@
         "deferred": "Mesaje care așteaptă: {count}. Limita zilnică Mailgun ({allowance} de mesaje pe zi) s-a consumat. Pleacă singure {resumesAt} (ora României); nimic nu s-a pierdut.",
         "failed": "Mesaje netrimise în ultimele 7 zile: {count} — motivul Mailgun: „{reason}”. Vezi Mailgun → Sending → Logs.",
         "overdue": "Mesaje cu rândul trecut de peste 90 de minute: {count} — monitoarele nu rulează. Vezi rândul „Monitoarele” de mai jos.",
-        "notify": "Ca să afli de asta fără să deschizi pagina: un monitor pe cron-job.org către /api/health, cu notificare la eșec — pasul din rândul „Monitoarele”."
+        "notify": "Ca să afli de asta fără să deschizi pagina: un monitor zilnic pe cron-job.org către /api/health?deep=1, cu notificare la eșec — pasul din rândul „Monitoarele”."
       },
       "state": {
         "blocking": "Blochează",
@@ -2629,8 +2665,9 @@
             "Bifează notificarea prin email la eșec, ca să afli când un monitor moare. La prima rulare rândul acesta devine verde; /devs arată fiecare sarcină cu ora ultimei rulări și consumul bazei de date.",
             "Noaptea site-ul răspunde mai încet la prima cerere — e voit.",
             "Pe QA: outbox-ul o dată pe oră (0 * * * *) și mentenanța la 2 ore (0 */2 * * *), iar pe Setări → Costuri „Cât de des verifică site-ul” = 2 ore: și QA plătește orele în care baza lui de date e trează.",
-            "Al treilea monitor, cel care te anunță când emailurile nu mai pleacă: „Create cronjob” cu adresa {baseUrl}/api/health, Request method GET, fără header.",
-            "Pe producție o dată pe oră, la minutul 2 (2 0-1,4-23 * * *), pe QA la 6 ore (2 */6 * * *). La Notifications bifează „on failure” și „when the job gets disabled”."
+            "Al treilea monitor, cel care te anunță când site-ul nu mai răspunde: „Create cronjob” cu adresa {baseUrl}/api/health, Request method GET, fără header.",
+            "Pe producție o dată pe oră, la minutul 2 (2 0-1,4-23 * * *), pe QA la 6 ore (2 */6 * * *). La Notifications bifează „on failure” și „when the job gets disabled”.",
+            "Al patrulea, verificarea completă, care te anunță când emailurile nu mai pleacă: adresa {baseUrl}/api/health?deep=1, zilnic la 04:02 (2 4 * * *), aceleași notificări."
           ]
         },
         "retentionSweep": {
@@ -2641,7 +2678,7 @@
             "Deschide /devs: rândul sarcinii registration-maintenance arată „eșuează” și, în ultima eroare, pașii care au eșuat (de exemplu „retention:registrations-after-event”).",
             "Numele pașilor sunt în codul sarcinilor de retenție.",
             "În jurnalele funcției din Vercel caută „[retention] sweep step failed”: lângă numele pasului apare codul erorii bazei de date (de exemplu 57014, timp depășit), niciodată valorile.",
-            "Repară cauza, apoi așteaptă următoarea rulare (cel mult 15 minute ziua, o oră noaptea). Rândul dispare singur după prima rulare fără erori, iar /api/health răspunde din nou ok."
+            "Repară cauza, apoi așteaptă următoarea rulare (cel mult 15 minute ziua, o oră noaptea). Rândul dispare singur după prima rulare fără erori, iar /api/health?deep=1 răspunde din nou ok."
           ]
         },
         "inviteStaff": {
@@ -2909,6 +2946,16 @@
             "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”.",
             "Din momentul în care intră în vigoare, formularul oferă bifa, fără altă setare. Cine a bifat apare în «Newsletter», în cardul lui."
           ]
+        },
+        "sponsorNotice": {
+          "title": "Nota de confidențialitate: lista pentru sponsori",
+          "todo": "Nota în vigoare nu spune încă că partenerii pot primi prenumele, numele și adresa celor care au bifat oferte și beneficii, deci «Descarcă lista pentru sponsori» e oprit.",
+          "done": "Nota în vigoare spune că lista poate fi dată partenerilor: «Descarcă lista pentru sponsori» e pornit și ia doar acordurile date sub ea.",
+          "how": [
+            "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Secțiunile 5 și 6 spun că partenerii pot primi prenumele, numele și adresa.",
+            "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”.",
+            "Lista ia doar acordurile date sub nota nouă. Cine a bifat sub o notă mai veche nu ajunge la parteneri."
+          ]
         }
       },
       "freeVerdict": {
@@ -3090,12 +3137,12 @@
         "title": "Cât de des verifică site-ul",
         "intro": "Cât de des au voie cele două lucrări programate să trezească baza de date.",
         "inForce": {
-          "onDemand": "Setarea în vigoare: la nevoie (implicit) — doar când e ceva de făcut, și oricum cel puțin o dată la {cap} min.",
+          "onDemand": "Setarea în vigoare: la nevoie (implicit) — doar când e ceva de făcut, și oricum o dată pe zi, la {time}.",
           "every": "Setarea în vigoare: cel mult o dată la {minutes} min, pentru fiecare lucrare."
         },
         "cost": "Ce costă un interval mai lung: o ofertă de pe lista de așteptare, o reamintire, un anunț sau un număr de concurs pot pleca cu până la atâtea minute mai târziu.",
         "safe": "Ce nu se schimbă: un loc rezervat expiră tot la timp.",
-        "onTheHour": "Verificarea de siguranță se face la ora fixă, odată cu monitorul /api/health.",
+        "onTheHour": "Verificarea de siguranță se face o dată pe zi, la {time}, odată cu verificarea completă a monitorului (/api/health?deep=1).",
         "job": {
           "maintenance": "Mentenanța înscrierilor",
           "outbox": "Coada de emailuri"
@@ -3109,11 +3156,10 @@
         "updatedAt": "Setat {when}.",
         "readOnly": "Intervalul îl schimbă Superadministratorul, pentru că unul greșit întârzie toate lucrările.",
         "field": "Cel mult o dată la",
-        "fieldHelp": "„La nevoie” înseamnă doar când e ceva de făcut, plus verificarea de siguranță de {cap} min.",
+        "fieldHelp": "„La nevoie” înseamnă doar când e ceva de făcut, plus verificarea de siguranță de zi cu zi, la {time}.",
         "option": {
-          "onDemand": "La nevoie (implicit) — când e ceva de făcut, cel puțin o dată la {cap} min",
-          "every": "{minutes} min",
-          "everyLong": "{minutes} min — și verificarea de siguranță de {cap} min trece tot la {minutes} min"
+          "onDemand": "La nevoie (implicit) — când e ceva de făcut, și o dată pe zi, la {time}",
+          "every": "{minutes} min"
         },
         "save": "Salvează intervalul",
         "saving": "Se salvează…",
@@ -3126,7 +3172,7 @@
         },
         "introMore": "Lucrările sunt mentenanța înscrierilor și coada de emailuri. Când nu au nimic de făcut, nu trezesc baza; fiecare trezire costă cel puțin 5 minute de calcul.",
         "safeMore": "Fiecare citire a locurilor socotește termenele în clipa aceea, cu sau fără lucrarea programată. Setarea ta are întâietate.",
-        "onTheHourMore": "Cu 2 ore, la orele pare. Așa, o oră fără nimic de făcut costă cel mult o trezire a bazei; pentru asta, unele verificări pot întârzia fiecare cu până la un sfert de oră.",
+        "onTheHourMore": "O zi fără nimic de făcut costă o trezire a bazei, la {time}. Un termen (o rezervare, o reamintire) își păstrează ora. Cu un interval ales, unele pot întârzia cu până la un sfert de oră.",
         "fieldHelpMore": "Un ping în interval răspunde din memorie, fără bază de date, exact ca unul care nu are nimic de făcut."
       },
       "budgetThresholds": {
@@ -3497,15 +3543,9 @@
       "columnTitle": "Titlu",
       "columnStatus": "Stare",
       "columnAddress": "Adresa",
-      "columnOrder": "Ordinea",
-      "tableCaption": "Paginile clubului, cu starea și ordinea în meniu",
-      "moveUp": "Mută mai sus",
-      "moveDown": "Mută mai jos",
-      "moveUpNamed": "Mută „{title}” mai sus în meniu",
-      "moveDownNamed": "Mută „{title}” mai jos în meniu",
-      "moveHelp": "Ordinea de aici este ordinea din meniul site-ului.",
-      "navOrder": "Ordinea în meniu",
-      "navOrderHelp": "Numărul mai mic apare primul. Lasă 0 dacă nu contează.",
+      "columnOrder": "Locul în meniu",
+      "tableCaption": "Paginile clubului, cu starea și locul în meniu",
+      "moveHelp": "Locul în meniu se schimbă din «Ordinea meniului», mai sus.",
       "slugHelp": "Adresa paginii: litere mici, cifre și cratime.",
       "slugLocked": "Adresa nu se mai schimbă după publicare — linkurile deja trimise trebuie să funcționeze.",
       "bodyHelp": "Un rând gol separă paragrafele. Un rând care începe cu ## este un titlu de secțiune.",
@@ -3537,6 +3577,32 @@
       "groupStandard": "Pagini standard",
       "groupCustom": "Pagini personalizate",
       "tabMembers": "Membri"
+    },
+    "menuOrder": {
+      "title": "Ordinea meniului",
+      "intro": "Ordinea paginilor în meniul site-ului, de sus în jos. Mută-le cu «Sus» și «Jos», apoi apasă «Salvează ordinea».",
+      "introMore": "O pagină care nu e publicată își păstrează locul și apare acolo când o publici. O pagină nouă apare la sfârșit, până o muți.",
+      "listLabel": "Meniul site-ului, de sus în jos",
+      "up": "Sus",
+      "down": "Jos",
+      "upNamed": "Mută „{name}” mai sus",
+      "downNamed": "Mută „{name}” mai jos",
+      "notYet": "nu apare încă",
+      "custom": "pagină personalizată",
+      "movedTo": "„{name}” e acum pe locul {position}.",
+      "unsaved": "Ordinea nouă nu e salvată încă.",
+      "save": "Salvează ordinea",
+      "saving": "Se salvează…",
+      "readOnly": "Ordinea o alege Administratorul; aici vezi ordinea din meniu.",
+      "entries": {
+        "events": "Evenimente",
+        "calendar": "Calendar",
+        "contact": "Contact",
+        "gallery": "Galerie",
+        "team": "Echipa",
+        "faq": "Întrebări frecvente",
+        "members": "Membri"
+      }
     },
     "fontSize": {
       "title": "Mărimea textului",
@@ -4718,6 +4784,7 @@
               "title": "Descarcă lista (Excel sau CSV)",
               "steps": [
                 "«Înscrieri» → alege evenimentul → «Filtrează».",
+                "Bifează «Doar cu oferte și beneficii» ca să vezi doar cine a spus da la oferte; exportul ia același filtru.",
                 "Apasă «Exportă Excel» (sau «Exportă CSV»). Fișierul are exact rândurile filtrate, fără înscrierile de test.",
                 "Fișierul are acte de identitate și telefoane: nu-l trimite pe grupuri și șterge-l în cel mult 7 zile de la eveniment."
               ]
@@ -4781,7 +4848,8 @@
               "steps": [
                 "«Newsletter» → deschide cardul «Abonați». Linia lui spune câți sunt confirmați și câți în așteptare.",
                 "Caută la «Caută adresa» sau alege «Tema» și «Starea», apoi apasă «Filtrează». «Descarcă CSV» ia lista așa cum e filtrată.",
-                "Cardul «Participanți care au bifat oferte și beneficii»: cine a bifat asta la înscriere, cu adresa, evenimentul și data. «Descarcă CSV» îl ia întreg. Nu e newsletterul; partenerii nu primesc lista.",
+                "Cardul «Participanți care au bifat oferte și beneficii»: cine a bifat asta la înscriere, cu adresa, evenimentul și data. «Descarcă CSV» îl ia întreg. Nu e newsletterul.",
+                "«Descarcă lista pentru sponsori (Excel)»: aceiași oameni ca în CSV, cu toate bifele fiecăruia (oferte, lista publică, rețele, termeni, declarație, starea) — pentru club. Partenerului dă-i «Descarcă CSV»: prenume, nume, adresă, eveniment și data. Doar acordurile date sub o notă care permite asta. Notează cui dai fișierul; șterge-l în 30 de zile.",
                 "Scoaterea unei adrese e a Administratorului: scrie-i cine a cerut-o."
               ]
             },
@@ -4993,7 +5061,8 @@
                 "La «În așteptare», rândul spune până când merge linkul de confirmare, sau «Linkul a expirat.» O adresă neconfirmată se șterge singură.",
                 "«Descarcă CSV» ia lista așa cum e filtrată, cu aceleași coloane. Păstrează fișierul doar cât îți trebuie, apoi șterge-l.",
                 "Ca să scoți pe cineva, la cererea lui: «Dezabonează» pe rândul lui, apoi confirmă. Adresa se șterge cu temele ei, ca atunci când se dezabonează singură.",
-                "Cardul «Participanți care au bifat oferte și beneficii»: cine a bifat asta la înscriere, cu adresa, evenimentul și data. «Descarcă CSV» îl ia întreg. Nu e newsletterul; partenerii nu primesc lista."
+                "Cardul «Participanți care au bifat oferte și beneficii»: cine a bifat asta la înscriere, cu adresa, evenimentul și data. «Descarcă CSV» îl ia întreg. Nu e newsletterul.",
+                "«Descarcă lista pentru sponsori (Excel)»: aceiași oameni ca în CSV, cu toate bifele fiecăruia (oferte, lista publică, rețele, termeni, declarație, starea) — pentru club. Partenerului dă-i «Descarcă CSV»: prenume, nume, adresă, eveniment și data. Doar acordurile date sub o notă care permite asta. Notează cui dai fișierul; șterge-l în 30 de zile."
               ]
             },
             {
@@ -5253,12 +5322,12 @@
               "title": "Înscrie a doua persoană pe aceeași adresă",
               "steps": [
                 "Prima persoană se înscrie cu formularul, ca oricine.",
-                "Formularul se trimite din nou cu aceeași adresă pentru o persoană diferită — alt nume și altă dată a nașterii decât ale fiecărei persoane deja înscrise. Încă nu se înscrie nimeni: pe ecran apare același „verifică-ți emailul” ca oricând, ca nimeni să nu afle din formular cine e înscris.",
+                "Formularul se trimite din nou cu aceeași adresă pentru o persoană diferită — alt nume și altă dată a nașterii decât ale fiecărei persoane deja înscrise, sau, pe data nașterii cuiva înscris, alt nume și celălalt sex (un frate și o soră născuți în aceeași zi). Încă nu se înscrie nimeni: pe ecran apare același „verifică-ți emailul” ca oricând, ca nimeni să nu afle din formular cine e înscris.",
                 "Cu «Da, încă o persoană» pe ecranul de după formular, fiecare formular următor rezervă pe loc locul persoanei. Adresa primește apoi un email pentru toți, cu un singur buton.",
                 "Adresa primește emailul „Înscrii încă o persoană?”, cu cine e deja înscris și cu persoana din formular, și un singur buton, «Confirm că înscriu altă persoană».",
                 "Pagina care se deschide arată din nou datele; pentru un adult cere o bifă (persoana își declară singură starea de sănătate la semnare). Confirmarea o înscrie direct — fără alt link de confirmare. Linkul e valabil {confirmation} și merge o singură dată; datele neconfirmate se șterg singure după aceea.",
-                "Dacă doar numele sau doar data nașterii diferă, nu se înscrie nimeni: adresa primește emailul înscrierii existente, cu o propoziție despre cum se înscrie altcineva.",
-                "Pe o adresă se pot înscrie cel mult {people} la un eveniment. La limită, emailul spune asta și nu mai are buton."
+                "Dacă doar numele sau doar data nașterii diferă — sau alt nume pe data cuiva înscris, de același sex —, nu se înscrie nimeni: adresa primește emailul înscrierii existente, cu o propoziție despre cum se înscrie altcineva.",
+                "Pe o adresă se pot înscrie cel mult {people} la un eveniment. Limita o spun formularul (sub adresă), ecranul «Da, încă o persoană» (câte persoane s-au trimis până acum, din limită), «Înscrierile mele» și termenii. La limită, emailul și ecranul o spun, iar emailul nu mai are buton."
               ]
             },
             {
@@ -5302,7 +5371,7 @@
             {
               "title": "Verifică dacă site-ul funcționează",
               "steps": [
-                "Deschide /api/health într-un tab nou și citește doar primul cuvânt de după \"status\", chiar la începutul textului: ok înseamnă că site-ul funcționează, degraded sau down înseamnă o problemă, chiar dacă mai jos apare ok în altă parte.",
+                "Deschide /api/health?deep=1 într-un tab nou și citește doar primul cuvânt de după \"status\", chiar la începutul textului: ok înseamnă că site-ul funcționează, degraded sau down înseamnă o problemă, chiar dacă mai jos apare ok în altă parte.",
                 "Nu ești sigur ce vezi? Trimite textul proprietarului clubului."
               ]
             },
@@ -5580,7 +5649,7 @@
       },
       "promo": {
         "title": "Participanți care au bifat oferte și beneficii",
-        "intro": "Cine a bifat la înscriere că vrea oferte și beneficii de la club și de la partenerii săi. Nu e newsletterul, iar partenerii nu primesc lista.",
+        "intro": "Cine a bifat la înscriere că vrea oferte și beneficii de la club și de la partenerii săi. Nu e newsletterul. Partenerii primesc doar lista pentru sponsori, de mai jos.",
         "count": {
           "one": "{count} înscriere cu acord",
           "few": "{count} înscrieri cu acord",
@@ -5776,6 +5845,7 @@
       "zoneRo": "Zona membrilor (română)",
       "zoneEn": "Zona membrilor (engleză)",
       "textEmpty": "Nescris încă.",
+      "tabEmpty": "gol",
       "textHelp": "În ambele limbi sau în niciuna, cel mult {max} de caractere în fiecare. Ca într-o pagină: titluri, liste, linkuri, poze, un tabel.",
       "codes": {
         "heading": "Coduri de reducere",
@@ -5842,6 +5912,52 @@
       "releaseBody": "Declarația revine la termenul obișnuit și se poate șterge din nou.",
       "heldLine": "Păstrată {when}, de {who}: {reason}",
       "whoRemoved": "un membru al echipei (cont șters)"
+    },
+    "sponsors": {
+      "button": "Descarcă lista pentru sponsori (Excel)",
+      "count": {
+        "one": "{count} persoană",
+        "few": "{count} persoane",
+        "other": "{count} de persoane"
+      },
+      "noticeMissing": "Nota de confidențialitate în vigoare nu spune că lista poate fi dată partenerilor.",
+      "help": "Prenume, nume, adresă, eveniment și data acordului: doar adulții, cu acordul dat sub o notă care permite asta. Scrie cui dai lista: rămâne la fiecare înscriere din ea. Șterge fișierul în 30 de zile.",
+      "helpExcel": "Excelul are în plus toate bifele fiecăruia, ca să vezi la ce și-a dat acordul. Partenerului dă-i CSV-ul.",
+      "recipient": "Cui dai lista (opțional)",
+      "columns": {
+        "firstName": "Prenume",
+        "lastName": "Nume",
+        "email": "Email",
+        "event": "Eveniment",
+        "consentedAt": "Data acordului"
+      },
+      "buttonCsv": "Descarcă CSV",
+      "sheet": {
+        "name": "Sponsori",
+        "yes": "Da",
+        "no": "Nu",
+        "columns": {
+          "firstName": "Prenume",
+          "lastName": "Nume",
+          "email": "Email",
+          "event": "Eveniment",
+          "promoConsentedAt": "Oferte și beneficii (data acordului)",
+          "promoNotice": "Nota de confidențialitate (versiunea)",
+          "listPublic": "Lista publică & rezultate",
+          "listSocials": "Rețele pe lista publică",
+          "termsVersion": "Termeni (versiunea)",
+          "termsAcceptedAt": "Termeni (acceptați la)",
+          "declarationVersion": "Declarația (versiunea)",
+          "declarationSignedAt": "Declarația (semnată la)",
+          "status": "Starea înscrierii"
+        },
+        "states": {
+          "PENDING_DECLARATION": "Așteaptă semnarea declarației",
+          "WAITLISTED": "Pe lista de așteptare",
+          "WAITLIST_OFFERED": "Ofertă activă",
+          "CONFIRMED": "Confirmată"
+        }
+      }
     }
   },
   "NotFound": {
@@ -5864,14 +5980,8 @@
     "contactPage": "Scrie-ne"
   },
   "Identity": {
-    "blockLabel": "Datele clubului",
     "line": "{legalName} ({club}) · CIF {cif}",
-    "lineNoCif": "{legalName} ({club})",
-    "cif": "C.I.F. {cif}",
-    "country": "România",
-    "socialLabel": "Urmărește clubul",
-    "contactHeading": "Contact",
-    "writeToUs": "Scrie-ne"
+    "lineNoCif": "{legalName} ({club})"
   },
   "Legal": {
     "unavailable": "Acest document nu a fost încă publicat pentru acest mediu.",
@@ -5889,7 +5999,7 @@
     "email": "Adresă de email",
     "privacyPrefix": "Am citit",
     "privacyLinkLabel": "nota de confidențialitate",
-    "listOptIn": "Vreau să apar pe lista de participanți",
+    "listOptIn": "Vreau să apar pe lista de participanți & rezultate",
     "listSocials": "Arată și Strava și Instagram lângă numele meu pe listă",
     "listSocialsHelp": "Doar cu bifa de mai sus. Le scoți oricând din „Înscrierile mele”.",
     "submit": "Trimite înscrierea",
@@ -5954,7 +6064,7 @@
       "tooFastNothingSent": "Nu am înregistrat nimic și nu ți-am trimis niciun email. Apasă „Trimite din nou înscrierea” — datele și bifele tale sunt încă aici.",
       "tooFastResend": "Trimite din nou înscrierea",
       "waitlistFullNothingSent": "Nu am înregistrat nimic și nu ți-am trimis niciun email. Ce ai completat a rămas în formular.",
-      "sittingAtCap": "Cei trimiși deja cu această adresă ating limita clubului pentru un eveniment. Pentru această persoană nu am înregistrat nimic: apasă „Gata” sau folosește altă adresă."
+      "sittingAtCap": "Cei trimiși deja cu această adresă ating limita clubului: cu aceeași adresă de email se pot înscrie cel mult {people} la un eveniment. Pentru această persoană nu am înregistrat nimic: apasă „Gata” sau folosește altă adresă."
     },
     "sections": {
       "about": "Despre tine",
@@ -6216,13 +6326,29 @@
       "placeWaitlist": "pe lista de așteptare, după confirmare",
       "reservedHelp": "Fiecare loc e rezervat din clipa în care trimiți formularul. Butonul din email le confirmă pe toate.",
       "reservationLapsed": "Locurile nu mai sunt rezervate. Confirmă adresa din email; dacă mai e loc, îl primești atunci.",
-      "addLink": "Înscriu încă o persoană cu această adresă"
+      "addLink": "Înscriu încă o persoană cu această adresă",
+      "count": {
+        "one": "{count} din o persoană cu această adresă",
+        "few": "{count} din {max} persoane cu această adresă",
+        "other": "{count} din {max} de persoane cu această adresă"
+      },
+      "atCap": "Ai ajuns la limită: cu aceeași adresă de email se pot înscrie cel mult {people} la un eveniment. Pentru încă o persoană, folosește altă adresă de email."
     },
     "membersAddressLabel": "Adresa contului tău de membru",
     "membersAddressHelp": "Te înscrii cu adresa contului. Un cont înscrie o singură persoană.",
     "promo": {
       "label": "Vreau să primesc oferte și beneficii de la {club} și partenerii săi.",
-      "help": "Opțional. Poți renunța oricând din pagina înscrierii tale."
+      "help": "Poți renunța oricând din pagina înscrierii tale.",
+      "sharedData": "prenumele, numele și adresa ta de e-mail",
+      "shared": "Clubul le poate da partenerilor prenumele, numele și adresa ta."
+    },
+    "addressCap": {
+      "rule": "Cu aceeași adresă de email se pot înscrie cel mult {people} la un eveniment, de exemplu o familie. Fiecare își semnează singură declarația.",
+      "people": {
+        "one": "o persoană",
+        "few": "{count} persoane",
+        "other": "{count} de persoane"
+      }
     }
   },
   "Registrations": {
@@ -6372,8 +6498,8 @@
       "listed": "Numele tău apare pe lista publică de participanți a acestui eveniment.",
       "notListed": "Numele tău nu apare pe lista publică de participanți a acestui eveniment.",
       "help": "Lista arată numele (sau numele afișat) și clubul; fără numele tău, ești doar numărat. Alegerea o poți schimba oricând, de aici sau din „Înscrierile mele”.",
-      "optOut": "Nu vreau să apar pe lista publică",
-      "optIn": "Vreau să apar pe lista publică",
+      "optOut": "Nu vreau să apar pe lista de participanți & rezultate",
+      "optIn": "Vreau să apar pe lista de participanți & rezultate",
       "changed": "Am reținut alegerea ta.",
       "changedHelp": "Linkul din email s-a folosit. Pagina aceasta are unul nou — dacă te răzgândești, apasă butonul de mai sus.",
       "failed": "Nu am putut salva alegerea. Încearcă din nou sau scrie-ne.",
@@ -6435,7 +6561,12 @@
         "how": "Nu sunt încă înscriși: apasă butonul din emailul primit pentru ei. Până atunci nu li se ține niciun loc."
       },
       "family": "Familie",
-      "reservedUntil": "Loc rezervat până {until}. Confirmă adresa din email ca să-l păstrezi."
+      "reservedUntil": "Loc rezervat până {until}. Confirmă adresa din email ca să-l păstrezi.",
+      "perAddress": {
+        "one": "Cu această adresă, la acest eveniment: {count} din cel mult o persoană.",
+        "few": "Cu această adresă, la acest eveniment: {count} din cel mult {max} persoane.",
+        "other": "Cu această adresă, la acest eveniment: {count} din cel mult {max} de persoane."
+      }
     },
     "manage": {
       "title": "Gestionează înscrierea",
@@ -6574,7 +6705,9 @@
       "help": "E separat de newsletter: dezabonarea de la newsletter nu schimbă asta, iar asta nu schimbă newsletterul.",
       "changed": "Am salvat alegerea ta despre oferte și beneficii pentru această înscriere.",
       "failed": "Nu am putut salva alegerea. Încearcă din nou.",
-      "otherAdult": "Acordul pentru oferte și beneficii îl dă doar persoana, din declarația ei sau din linkul înscrierii ei. De aici îl poți doar retrage."
+      "otherAdult": "Acordul pentru oferte și beneficii îl dă doar persoana, din declarația ei sau din linkul înscrierii ei. De aici îl poți doar retrage.",
+      "optInShared": "Dacă îl dai, clubul le poate da partenerilor prenumele, numele și adresa ta.",
+      "yesShared": "La această înscriere primești oferte și beneficii de la club și de la partenerii săi. Clubul le poate da partenerilor prenumele, numele și adresa ta, ca să îți scrie ei."
     }
   },
   "Devs": {
@@ -6598,7 +6731,7 @@
     "configuration": "Configurație",
     "neverValues": "Nicio valoare, nicio cheie și niciun secret nu apar pe această pagină. Doar numele variabilei și dacă are valoare.",
     "runtime": "Starea în acest moment",
-    "runtimeIntro": "Ce raportează baza de date și joburile programate acum. Aceleași valori ca /api/health.",
+    "runtimeIntro": "Ce raportează baza de date și joburile programate acum. Aceleași valori ca /api/health?deep=1.",
     "weather": {
       "title": "Prognoza vremii",
       "ok": "Open-Meteo (public, fără cheie) — ultimul răspuns {when}, {hours} ore de prognoză; locuri citite în ultima oră pe această instanță: {places}.",
@@ -6703,8 +6836,8 @@
       "none": "Planul {plan}: fără limită de mesaje."
     },
     "emailHealth": {
-      "ok": "Trimiterea funcționează: nimic amânat, întârziat sau eșuat. /api/health răspunde 200.",
-      "stalled": "Trimiterea s-a oprit — amânate (limita zilnică): {deferred}; întârziate: {overdue}; eșuate în 7 zile: {failed}. Motiv: „{reason}”. /api/health răspunde 503 până se rezolvă."
+      "ok": "Trimiterea funcționează: nimic amânat, întârziat sau eșuat. /api/health?deep=1 răspunde 200.",
+      "stalled": "Trimiterea s-a oprit — amânate (limita zilnică): {deferred}; întârziate: {overdue}; eșuate în 7 zile: {failed}. Motiv: „{reason}”. /api/health?deep=1 răspunde 503 până se rezolvă."
     },
     "registrationsToday": "Înscrieri astăzi",
     "testRegistrations": "de test",
@@ -6837,7 +6970,7 @@
       "nextPing": "următorul ping rulează",
       "pingRan": "ultimul ping {when}: a rulat",
       "pingSkipped": "ultimul ping {when}: sărit",
-      "cadenceOnDemand": "Interval minim: la nevoie — cel puțin o rulare reală la {cap} min (Setări → Costuri).",
+      "cadenceOnDemand": "Interval minim: la nevoie — cel puțin o rulare reală pe zi, la {time} (Setări → Costuri).",
       "cadenceEvery": "Interval minim: {minutes} min între două rulări reale (Setări → Costuri)."
     }
   },
@@ -6922,8 +7055,8 @@
     "meaning": {
       "unknown": "Neon nu a putut fi citit acum, așa că site-ul merge normal, fără nicio frână în plus.",
       "green": "Consumul e pe sau sub linia lunii, adică limita împărțită pe zilele trecute, așa că site-ul merge normal.",
-      "amber": "Consumul a trecut cu peste {margin}% de linia lunii sau de {amber}% din limită, așa că site-ul se frânează singur; /api/health rămâne „ok”, cu o notă.",
-      "red": "S-au folosit peste {red}% din limită: site-ul se frânează cât poate, iar /api/health dă alarma ca limita să poată fi mărită la timp."
+      "amber": "Consumul a trecut cu peste {margin}% de linia lunii sau de {amber}% din limită, așa că site-ul se frânează singur; /api/health?deep=1 rămâne „ok”, cu o notă.",
+      "red": "S-au folosit peste {red}% din limită: site-ul se frânează cât poate, iar /api/health?deep=1 dă alarma ca limita să poată fi mărită la timp."
     },
     "spent": "{used} din {quota} ore-CU folosite ({percent}%); linia lunii e acum la {line}; perioada se încheie {end}.",
     "spentNoLimit": "{used} ore-CU folosite, perioada se încheie {end}.",
@@ -6950,7 +7083,7 @@
     "meteredNeedsKey": "Cifra facturată cere o cheie Neon de organizație sau personală; cheia pe proiect nu are voie s-o citească.",
     "spentAll": "După această citire limita e consumată, dar Neon oprește baza abia când propriul lui contor ajunge la limită.",
     "thresholds": {
-      "intro": "Pragurile, în procente din limita lunară: galben de la primul, roșu de la al doilea (roșu dă alarma pe /api/health).",
+      "intro": "Pragurile, în procente din limita lunară: galben de la primul, roșu de la al doilea (roșu dă alarma pe /api/health?deep=1).",
       "amber": "Galben de la (%)",
       "red": "Roșu de la (%)",
       "save": "Salvează pragurile",
@@ -7313,7 +7446,8 @@
       "memberCodeMoved": "Ordinea codurilor a fost schimbată.",
       "memberCodeDeleted": "Codul a fost șters.",
       "declarationHeld": "Declarația e păstrată. Nu se mai șterge până scoți păstrarea.",
-      "declarationReleased": "Păstrarea a fost scoasă."
+      "declarationReleased": "Păstrarea a fost scoasă.",
+      "menuOrder": "Ordinea meniului a fost salvată."
     }
   },
   "Network": {
@@ -7481,6 +7615,7 @@
   },
   "Translate": {
     "button": "Tradu din română",
+    "tabTranslated": "tradus — verifică",
     "pending": "Se traduce…",
     "all": "Copiază și tradu tot: RO → EN",
     "allHelp": "Fiecare text scris în română ajunge tradus automat (DeepL) în câmpul lui din engleză, cu aceeași așezare. Citește, corectează, apoi apasă Salvează.",
