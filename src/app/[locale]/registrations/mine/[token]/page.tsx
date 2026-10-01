@@ -41,6 +41,8 @@ import {
 import { declarationStateKey, isSignable } from "@/modules/registrations/domain/family-signing";
 import { DENSITY } from "@/theme/density";
 import FamilyChip from "@/modules/registrations/ui/FamilyChip";
+import { replacedLinkWords } from "@/modules/registrations/ui/link-wait-words";
+import { readReplacedActionLink } from "@/modules/registrations/token-actions";
 import QrWithName, { type QrWords } from "@/modules/registrations/ui/QrWithName";
 import CancelReasonFields from "@/modules/registrations/ui/CancelReasonFields";
 import { cancelReasonWords } from "@/modules/registrations/ui/cancel-reason-words";
@@ -120,6 +122,12 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
   // One token read for the page — throttled per presented token.
   const now = new Date();
   const context = invalid ? { ok: false as const } : await readMyRegistrations(getDb(), token, locale, now);
+  // A newer «Înscrierile mele» email replaced this link (§619): said so, in place of the generic refusal.
+  const replaced =
+    !context.ok && "reason" in context
+      ? await readReplacedActionLink(token, [{ purpose: "MANAGE_PROFILE", reason: context.reason }], locale, now)
+      : null;
+  const replacedWords = replaced ? await replacedLinkWords(locale, replaced.issuedAt) : null;
   /*
     Offers and benefits (§562, second fix round): «Înscrierile mele» is a door out only. The address
     link cannot tell the holder from another adult on the same address, and the notice names this
@@ -239,7 +247,13 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
 
       {!context.ok ? (
         <>
-          <Alert severity="warning">{t("invalidOrExpired")}</Alert>
+          {replacedWords ? (
+            <Alert severity="info" data-testid="link-replaced">
+              {replacedWords}
+            </Alert>
+          ) : (
+            <Alert severity="warning">{t("invalidOrExpired")}</Alert>
+          )}
           <Typography sx={{ mt: 2 }}>
             <Link href="/registrations/mine">{t("mine.newLink")}</Link>
           </Typography>

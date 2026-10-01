@@ -1,4 +1,4 @@
-import { asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, sql } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
@@ -24,6 +24,7 @@ import {
   signDeclaration,
   submitRegistration,
 } from "@/modules/registrations/service";
+import { renderOutboxMessage } from "@/modules/notifications/render";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS } from "@/modules/registrations/domain/family";
 import { signingInput } from "../../helpers/declaration-signing";
@@ -480,6 +481,69 @@ describe("BR-REQ-037-03 cancelling on the club's behalf", () => {
       .where(eq(auditLogs.action, "registration.cancelled_by_staff"));
     expect(entry.actorStaffUserId).toBe(admin.id);
     expect(entry.metadataJson).toMatchObject({ reason: "asked us at the club night" });
+    // An ordinary cancellation tells the person nothing of the reason, which stays in the team's log.
+    const [message] = await db
+      .select()
+      .from(emailOutbox)
+      .where(and(eq(emailOutbox.registrationId, holder.id), eq(emailOutbox.messageType, "REGISTRATION_CANCELLED")));
+    expect(message.payloadJson).toEqual({ previousStatus: "PENDING_DECLARATION" });
+    const rendered = await renderOutboxMessage({ ...message, status: "PROCESSING", attemptCount: 1, lockedAt: NOW }, db, NOW);
+    expect(rendered.text).not.toContain("asked us at the club night");
+    expect(rendered.text).not.toContain("Clubul a refuzat");
+  });
+
+  it("§618 — the club's refusal under the terms: the ground goes to the person, the place to the queue, the kind to the log", async () => {
+    const event = await createInternalEvent(1);
+    const holder = await registerPublicly(event, "refused@example.org", NOW);
+    const waiting = await registerPublicly(event, "next@example.org", new Date(NOW.getTime() + 1_000));
+    expect(waiting.status).toBe("WAITLISTED");
+
+    const ground = "Data nașterii din formular nu este cea din actul de identitate.";
+    const cancelled = await cancelRegistrationByStaff(db, admin, holder.id, `  ${ground}  `, new Date(NOW.getTime() + 2_000), {
+      kind: "REFUSED_BY_ORGANIZER",
+    });
+
+    // The same verb and the same allocator: cancelled by the club, the place offered to the front of the queue.
+    expect(cancelled).toMatchObject({ status: "CANCELLED", cancellationSource: "ADMIN" });
+    const [promoted] = await db.select().from(registrations).where(eq(registrations.id, waiting.id));
+    expect(promoted.status).toBe("WAITLIST_OFFERED");
+
+    // The audit row keeps who and why as today, and the kind beside them.
+    const [entry] = await db.select().from(auditLogs).where(eq(auditLogs.action, "registration.cancelled_by_staff"));
+    expect(entry.actorStaffUserId).toBe(admin.id);
+    expect(entry.metadataJson).toEqual({ from: "PENDING_DECLARATION", reason: ground, kind: "REFUSED_BY_ORGANIZER" });
+
+    // The person's email: refused under the terms, the ground quoted, the place released, the terms linked — both halves.
+    const [message] = await db
+      .select()
+      .from(emailOutbox)
+      .where(and(eq(emailOutbox.registrationId, holder.id), eq(emailOutbox.messageType, "REGISTRATION_CANCELLED")));
+    expect(message.messageType).toBe("REGISTRATION_CANCELLED");
+    expect(message.payloadJson).toEqual({ previousStatus: "PENDING_DECLARATION", refusedGround: ground });
+    const rendered = await renderOutboxMessage({ ...message, status: "PROCESSING", attemptCount: 1, lockedAt: NOW }, db, NOW);
+    expect(rendered.text).toContain(
+      `Clubul a refuzat această înscriere. Motivul: „${ground}”.`,
+    );
+    expect(rendered.text).toContain("Locul a fost eliberat.");
+    expect(rendered.text).toContain(`The club refused this registration. The ground: “${ground}”.`);
+    expect(rendered.text).toContain("The place has been released.");
+    expect(rendered.text).toMatch(/Termenii și condițiile: \S+\/ro\/termeni/);
+    expect(rendered.text).toMatch(/Terms and conditions: \S+\/en\/terms/);
+  });
+
+  it("§618 — refuses a refusal under the terms with no ground, and changes nothing", async () => {
+    const event = await createInternalEvent(10);
+    const holder = await registerPublicly(event, "noground@example.org", NOW);
+
+    expect(await codeOf(cancelRegistrationByStaff(db, admin, holder.id, "   ", NOW, { kind: "REFUSED_BY_ORGANIZER" }))).toBe(
+      "VALIDATION_ERROR",
+    );
+    const [row] = await db.select().from(registrations).where(eq(registrations.id, holder.id));
+    expect(row.status).toBe("PENDING_DECLARATION");
+    // Administrator-only, as every cancel (§67): an Editor is refused for the role first.
+    expect(await codeOf(cancelRegistrationByStaff(db, editor, holder.id, "date false", NOW, { kind: "REFUSED_BY_ORGANIZER" }))).toBe(
+      "FORBIDDEN",
+    );
   });
 
   it("never deletes the row", async () => {

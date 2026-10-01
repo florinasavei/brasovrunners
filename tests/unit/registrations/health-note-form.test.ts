@@ -59,6 +59,8 @@ vi.mock("@/modules/diagnostics/neon-budget", () => ({
 }));
 vi.mock("@/modules/registrations/bot-check", () => ({ activeBotCheckSiteKey: async () => undefined }));
 vi.mock("@/modules/public-cache/reads", () => ({
+  // The emails are on time (§623): the late notice draws nothing.
+  cachedEmailDelay: async () => null,
   cachedAddressCap: async () => ({ registrationsPerAddress: 4 }),
   cachedFamilyRegistrationOpen: async () => false,
   cachedCurrentApprovedDocument: async () => ({ version: 3 }),

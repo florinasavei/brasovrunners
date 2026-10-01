@@ -446,7 +446,13 @@ async function renderRow(
     rows (the participant is the address, §389), so nothing about another inbox is said (§39).
   */
   if (row.messageType === "REGISTRATION_CANCELLED" && registration) {
-    data.cancelledFromWaitlist = (row.payloadJson as { previousStatus?: unknown } | null)?.previousStatus === "WAITLISTED";
+    const cancelPayload = row.payloadJson as { previousStatus?: unknown; refusedGround?: unknown } | null;
+    data.cancelledFromWaitlist = cancelPayload?.previousStatus === "WAITLISTED";
+    // The club's refusal under the terms (§618): the ground the Administrator typed under a box that
+    // said it goes to the person, from the payload `cancelRegistrationByStaff` wrote.
+    if (typeof cancelPayload?.refusedGround === "string" && cancelPayload.refusedGround.trim() !== "") {
+      data.refusedGround = cancelPayload.refusedGround.trim();
+    }
     const others = await registeredOnAddressWithStates(db, registration.eventId, registration.participantId, [registration.id]);
     if (others.length > 0) data.cancelledOthers = others;
     // The participant's own reason (§558), read from the row; the template quotes it on the club's copy only.

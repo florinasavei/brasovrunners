@@ -36,6 +36,7 @@ import BirthDateField from "@/modules/registrations/ui/BirthDateField";
 import BotCheck from "@/modules/registrations/ui/BotCheck";
 import { BOT_CHECK_ERROR_ATTRIBUTE, BOT_CHECK_SLOT_SX } from "@/modules/registrations/domain/turnstile-widget";
 import ClubForMember from "@/modules/registrations/ui/ClubForMember";
+import { emailDelayNotice } from "@/modules/registrations/ui/email-delay-notice";
 import EmailTwice from "@/modules/registrations/ui/EmailTwice";
 import GuardianForMinor from "@/modules/registrations/ui/GuardianForMinor";
 import HiddenForMinor from "@/modules/registrations/ui/HiddenForMinor";
@@ -1256,6 +1257,8 @@ export async function registrationForm({
             fullWidth
           />
           )}
+          {/* Under the send button, while the club's emails are late (§623): one line, before the press. */}
+          {!preview && !resting && (await emailDelayNotice({ variant: "short" }))}
         </Stack>
         </Box>
       </form>

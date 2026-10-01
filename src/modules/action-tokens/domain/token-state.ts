@@ -12,15 +12,22 @@ export type EvaluatedToken = {
   expiresAt: Date;
   usedAt: Date | null;
   invalidatedAt: Date | null;
+  /** Set only on a row a newer token of the same purpose and scope replaced (§619). */
+  supersededByTokenId: string | null;
 };
 
 /**
- * Why a token was refused — for logs, metrics and tests only. The participant sees one generic
- * invalid-or-expired response (AGENTS.md §13.2).
+ * Why a token was refused — for logs, metrics and tests, and for the two refusals a page may
+ * answer with more than one generic invalid-or-expired response (AGENTS.md §13.2;
+ * `registrations/domain/link-status.ts` argues both): `ALREADY_USED` and `SUPERSEDED`.
+ *
+ * `SUPERSEDED` and `INVALIDATED` are the two facts `invalidated_at` holds (§619): replaced by a
+ * newer token of the same purpose and scope (`superseded_by_token_id` set), or revoked for cause.
  */
 export type TokenRejectionReason =
   | "NOT_FOUND"
   | "PURPOSE_MISMATCH"
+  | "SUPERSEDED"
   | "INVALIDATED"
   | "ALREADY_USED"
   | "EXPIRED";
@@ -42,8 +49,10 @@ export const TOKEN_NOT_FOUND: TokenRejection = {
 
 /**
  * The order is a rule. Purpose first, so a link replayed against another endpoint is
- * indistinguishable from a missing token. Invalidated before used only affects the logged
- * reason. Expiry last, with its own code, because a new link fixes it.
+ * indistinguishable from a missing token. Invalidated — superseded or revoked — before used; a
+ * row is never both (the consume statement and the supersede both require `used_at IS NULL`), so
+ * that order only matters for the logged reason. Expiry last, with its own code, because a new
+ * link fixes it.
  */
 export function evaluateActionToken(
   token: EvaluatedToken,
@@ -54,7 +63,9 @@ export function evaluateActionToken(
     return { ok: false, code: "TOKEN_INVALID", reason: "PURPOSE_MISMATCH" };
   }
   if (token.invalidatedAt !== null) {
-    return { ok: false, code: "TOKEN_INVALID", reason: "INVALIDATED" };
+    // Replaced by a newer email (§619), or revoked for cause: only the first may be told so.
+    const reason = token.supersededByTokenId !== null ? "SUPERSEDED" : "INVALIDATED";
+    return { ok: false, code: "TOKEN_INVALID", reason };
   }
   if (token.usedAt !== null) {
     return { ok: false, code: "TOKEN_INVALID", reason: "ALREADY_USED" };

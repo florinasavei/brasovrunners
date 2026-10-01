@@ -9,6 +9,7 @@ import { registerInterestAction } from "@/app/[locale]/events/[slug]/actions";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import SubmitButton from "@/shared/ui/SubmitButton";
+import { spamHintWords } from "./link-wait-words";
 import { INTEREST_BOX_ID, type InterestOutcome } from "../interest-box";
 import { BOT_CHECK_SLOT_SX } from "../domain/turnstile-widget";
 import { turnstileSiteKey } from "../turnstile";
@@ -52,9 +53,15 @@ export default async function RegistrationInterestForm({
       {outcome === "done" ? (
         // The same sentence whether the address was new or already on the list (BR-REQ-031-01
         // criterion 3): the box is not an oracle for who signed up.
-        <Alert severity="success" role="status">
-          {t("interest.done")}
-        </Alert>
+        <>
+          <Alert severity="success" role="status">
+            {t("interest.done")}
+          </Alert>
+          {/* The announcement is an email still to come: where to look for it (§619). */}
+          <Alert severity="info" sx={{ mt: 1.5 }} data-testid="spam-hint">
+            {await spamHintWords()}
+          </Alert>
+        </>
       ) : (
         <form action={registerInterestAction}>
           <Stack spacing={1.5}>

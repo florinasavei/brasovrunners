@@ -25,6 +25,8 @@ vi.mock("@/i18n/navigation", async () => {
   };
 });
 vi.mock("@/modules/public-cache/reads", () => ({
+  // The emails are on time (§623): the late notice draws nothing.
+  cachedEmailDelay: async () => null,
   cachedDeadlines: async () => ({ confirmationHours: 48, familySittingMinutes: 10 }),
   cachedEmailWaitMinutes: async () => wait.minutes,
   cachedEmailLeavesAt: async () => wait.leavesAt,

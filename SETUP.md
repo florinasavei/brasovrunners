@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.55-2026-10-01 -->
+<!-- PROJECT_BASELINE: BR-V2.56-2026-10-01 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V2.55-2026-10-01`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.56-2026-10-01`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1213,6 +1213,12 @@ Each environment counts only its own outbox, and QA shares the domain and its bo
 too: together the two could send 200 in Mailgun's hour. Set QA's «Limita pe oră» to about 10 now,
 and keep its rehearsals small while the probation lasts.
 Ask Mailgun's support to lift the probation, then raise or clear the field on production.
+**While Mailgun says stop** — a pause, or the allowance spent — the switch «Gmail preia când Mailgun se
+oprește» (same page, «Prin ce pleacă emailurile»; on by default wherever the club's Gmail of §38 is set
+and the privacy notice in force names `{{gmailFallback}}` — until a notice from the template is approved
+it is greyed, and «Sarcini» carries the row «Nota de confidențialitate: Gmail preia când Mailgun se oprește»)
+sends every group through Gmail until Mailgun reopens, and a refusal that is not about the message never
+marks it failed; the failed come back with «Reîncearcă emailurile eșuate» on the queue (`DECISIONS.md` §622).
 
 ## 36. The anti-bot check and the health monitors — done (2026-09-19)
 
@@ -1285,6 +1291,13 @@ it "Add" creates the account too and Zitadel sends the password link.
 Locally the development switcher is the provider, so nothing is sent and the alert says so.
 
 ## 38. The contact form — the club's Gmail lends it an app password — done (2026-09-20)
+
+**The same account is the outbox's fallback road (`DECISIONS.md` §622):** while Mailgun says stop, «Gmail
+preia când Mailgun se oprește» sends the whole queue through it — once the approved privacy notice names it
+(`{{gmailFallback}}`, section 6 of the template), never before — at most «Limita Gmail pe zi» recipients in
+a rolling day (500 is Google's own ceiling, shared with the people who write by hand and with QA) — on a
+race morning that cap, not Mailgun's, is what decides how many confirmations still leave, so raise it there
+before the window if Mailgun is on probation.
 
 **Done on both Vercel projects**, and visible: `/ro/contact` shows the form on production and on
 QA rather than the club's address (checked 2026-09-22). `CONTACT_SMTP_USER`,

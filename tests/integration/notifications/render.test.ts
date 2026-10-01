@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { emailActionTokens } from "@/db/schema/email-action-tokens";
 import { events, eventTranslations } from "@/db/schema/events";
@@ -168,10 +168,12 @@ describe("BR-REQ-080-01 outbox renderer", () => {
       .set({ status: "PENDING_DECLARATION", holdExpiresAt: null })
       .where(eq(registrations.id, registrationId));
     await renderOutboxMessage({ ...row, id: "row-l", idempotencyKey: "test:l" }, db, afterStart);
+    // The live token only: a resend marks the earlier one superseded (§619), and an UPDATE moves a
+    // row's heap position, so a SELECT without ORDER BY may return the old token last.
     const late = await db
       .select()
       .from(emailActionTokens)
-      .where(eq(emailActionTokens.purpose, "COMPLETE_DECLARATION"));
+      .where(and(eq(emailActionTokens.purpose, "COMPLETE_DECLARATION"), isNull(emailActionTokens.invalidatedAt)));
     expect(late.at(-1)?.expiresAt).toEqual(new Date(afterStart.getTime() + 14 * 24 * 60 * 60_000));
   });
 

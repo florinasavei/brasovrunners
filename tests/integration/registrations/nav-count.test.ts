@@ -2,6 +2,8 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { events, eventTranslations } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { registrations, type RegistrationStatus } from "@/db/schema/registrations";
+import { computeOccupied } from "@/modules/registrations/domain/capacity";
+import { countOccupied } from "@/modules/registrations/repository";
 import { createTranslator } from "next-intl";
 import enMessages from "../../../messages/en.json";
 import roMessages from "../../../messages/ro.json";
@@ -52,7 +54,7 @@ describe("§255 how many are signed up", () => {
   });
 
   let counter = 0;
-  async function enter(eventId: string, status: RegistrationStatus, kind: "REAL" | "TEST" = "REAL") {
+  async function enter(eventId: string, status: RegistrationStatus, kind: "REAL" | "TEST" = "REAL", holdExpiresAt: Date | null = null) {
     counter += 1;
     const email = `runner-${counter}@example.test`;
     const [participant] = await db
@@ -64,6 +66,7 @@ describe("§255 how many are signed up", () => {
       participantId: participant.id,
       status,
       kind,
+      holdExpiresAt,
       locale: "ro",
       registeredName: `Runner ${counter}`,
       displayName: `Runner ${counter}`,
@@ -111,8 +114,8 @@ describe("§255 how many are signed up", () => {
     expect(ro).toEqual({
       total: 3,
       events: [
-        { eventId: upcoming, title: "Crosul", count: 2 },
-        { eventId: later.id, title: "—", count: 1 },
+        { eventId: upcoming, title: "Crosul", count: 2, withPlace: 1, awaitingEmail: 0, waitlisted: 1, capacity: 100 },
+        { eventId: later.id, title: "—", count: 1, withPlace: 1, awaitingEmail: 0, waitlisted: 0, capacity: 100 },
       ],
     });
     // No English row: a dash, never the Romanian title.
@@ -126,7 +129,7 @@ describe("§255 how many are signed up", () => {
     expect((await registeredBadgeBreakdown(db, NOW, "ro"))?.total).toBe(1);
     await enter(upcoming, "CONFIRMED");
     expect((await registeredBadgeBreakdown(db, new Date(NOW.getTime() + 1_000), "ro"))?.events).toEqual([
-      { eventId: upcoming, title: "—", count: 1 },
+      { eventId: upcoming, title: "—", count: 1, withPlace: 1, awaitingEmail: 0, waitlisted: 0, capacity: 100 },
     ]);
     // The other language has its own memo, read fresh.
     expect((await registeredBadgeBreakdown(db, NOW, "en"))?.total).toBe(2);
@@ -146,35 +149,105 @@ describe("§255 how many are signed up", () => {
     expect(split?.total).toBe(1);
   });
 
-  it("§476 the tooltip's words, in Romanian and in English: the rule, five events, how many more", () => {
-    const rows: RegisteredOnEvent[] = Array.from({ length: 7 }, (_, i) => ({ eventId: `e${i}`, title: `Cros ${i + 1}`, count: i + 1 }));
-    function words(locale: "ro" | "en") {
-      const t = createTranslator({ locale, messages: locale === "ro" ? roMessages : enMessages, namespace: "Admin" });
-      return {
-        rule: t("nav.registeredHint"),
-        event: (title: string, count: number) => t("nav.registeredEvent", { title, count }),
-        more: (count: number) => t("nav.registeredMoreEvents", { count }),
-      };
-    }
+  it("the split says who holds a place: confirmed, awaiting the signature and offered; not awaiting the email, not waitlisted", async () => {
+    await enter(upcoming, "CONFIRMED");
+    await enter(upcoming, "CONFIRMED");
+    await enter(upcoming, "PENDING_DECLARATION");
+    await enter(upcoming, "WAITLIST_OFFERED", "REAL", new Date(NOW.getTime() + DAY));
+    await enter(upcoming, "PENDING_EMAIL_CONFIRMATION");
+    await enter(upcoming, "PENDING_EMAIL_CONFIRMATION");
+    await enter(upcoming, "PENDING_EMAIL_CONFIRMATION");
+    await enter(upcoming, "WAITLISTED");
+    await enter(upcoming, "CANCELLED");
+    await enter(upcoming, "CONFIRMED", "TEST");
+    const split = await registeredBadgeBreakdown(db, NOW, "ro");
+    expect(split?.events).toEqual([
+      { eventId: upcoming, title: "—", count: 8, withPlace: 4, awaitingEmail: 3, waitlisted: 1, capacity: 100 },
+    ]);
+    expect(split?.total).toBe(await countRegisteredForUpcoming(db, NOW));
+  });
+
+  it("§543 a family's reservation holds a place like the allocator says; a lapsed offer holds none", async () => {
+    await enter(upcoming, "CONFIRMED");
+    await enter(upcoming, "PENDING_EMAIL_CONFIRMATION", "REAL", new Date(NOW.getTime() + DAY)); // reserved
+    await enter(upcoming, "PENDING_EMAIL_CONFIRMATION", "REAL", new Date(NOW.getTime() - DAY)); // reservation lapsed
+    await enter(upcoming, "PENDING_EMAIL_CONFIRMATION"); // no reservation
+    await enter(upcoming, "WAITLIST_OFFERED", "REAL", new Date(NOW.getTime() - DAY)); // lapsed offer
+    const split = await registeredBadgeBreakdown(db, NOW, "ro");
+    expect(split?.events).toEqual([
+      { eventId: upcoming, title: "—", count: 5, withPlace: 2, awaitingEmail: 2, waitlisted: 1, capacity: 100 },
+    ]);
+    expect(split?.events[0].withPlace).toBe(computeOccupied(await countOccupied(db, upcoming, NOW)));
+  });
+
+  it("an event without a limit carries a null capacity", async () => {
+    const [open] = await db
+      .insert(events)
+      .values({ type: "RACE", startsAt: new Date(NOW.getTime() + 2 * DAY), registrationMode: "INTERNAL", capacity: null })
+      .returning();
+    await enter(open.id, "CONFIRMED");
+    expect((await registeredBadgeBreakdown(db, NOW, "ro"))?.events[0]?.capacity).toBeNull();
+  });
+
+  function words(locale: "ro" | "en") {
+    const t = createTranslator({ locale, messages: locale === "ro" ? roMessages : enMessages, namespace: "Admin" });
+    return {
+      rule: t("nav.registeredHint"),
+      event: (title: string, count: number, parts: string) => t("nav.registeredEvent", { title, count, parts }),
+      withPlace: (count: number) => t("nav.registeredWithPlace", { count }),
+      withPlaceOf: (count: number, capacity: number) => t("nav.registeredWithPlaceOf", { count, capacity }),
+      awaitingEmail: (count: number) => t("nav.registeredAwaitingEmail", { count }),
+      waitlisted: (count: number) => t("nav.registeredWaitlisted", { count }),
+      more: (count: number) => t("nav.registeredMoreEvents", { count }),
+    };
+  }
+  const row = (i: number, extra: Partial<RegisteredOnEvent> = {}): RegisteredOnEvent => ({
+    eventId: `e${i}`,
+    title: `Cros ${i}`,
+    count: i,
+    withPlace: i,
+    awaitingEmail: 0,
+    waitlisted: 0,
+    capacity: null,
+    ...extra,
+  });
+
+  it("the tooltip's words, in Romanian and in English: the rule, five events, how many more", () => {
+    const rows = Array.from({ length: 7 }, (_, i) => row(i + 1));
     expect(registeredBadgeHint(rows, words("ro")).split("\n")).toEqual([
-      "Înscrieri active (fără anulate și teste) la evenimentele care urmează:",
-      "Cros 1: 1",
-      "Cros 2: 2",
-      "Cros 3: 3",
-      "Cros 4: 4",
-      "Cros 5: 5",
+      "Oameni cu o înscriere în curs la evenimentele viitoare — nu locuri. Cine așteaptă confirmarea emailului sau e pe lista de așteptare e numărat aici, dar nu ocupă încă un loc.",
+      "Cros 1: 1 — 1 cu loc",
+      "Cros 2: 2 — 2 cu loc",
+      "Cros 3: 3 — 3 cu loc",
+      "Cros 4: 4 — 4 cu loc",
+      "Cros 5: 5 — 5 cu loc",
       "+2 altele",
     ]);
     expect(registeredBadgeHint(rows, words("en")).split("\n")).toEqual([
-      "Active registrations (no cancelled, no tests) on the events still to come:",
-      "Cros 1: 1",
-      "Cros 2: 2",
-      "Cros 3: 3",
-      "Cros 4: 4",
-      "Cros 5: 5",
+      "People with a registration in progress on the upcoming events — not places. Somebody awaiting the email confirmation or on the waiting list is counted here but holds no place.",
+      "Cros 1: 1 — 1 with a place",
+      "Cros 2: 2 — 2 with a place",
+      "Cros 3: 3 — 3 with a place",
+      "Cros 4: 4 — 4 with a place",
+      "Cros 5: 5 — 5 with a place",
       "+2 more",
     ]);
     // Five or fewer: no "more" line.
     expect(registeredBadgeHint(rows.slice(0, 5), words("en")).split("\n")).toHaveLength(6);
+  });
+
+  it("each event's line carries the split, omitting a zero part except the places", () => {
+    const owner = row(1, { title: "Cursa", count: 153, withPlace: 144, awaitingEmail: 9, waitlisted: 0, capacity: 150 });
+    const full = row(2, { title: "Alt cros", count: 5, withPlace: 2, awaitingEmail: 1, waitlisted: 2, capacity: 20 });
+    const none = row(3, { title: "Fără loc", count: 1, withPlace: 0, awaitingEmail: 0, waitlisted: 1, capacity: 10 });
+    expect(registeredBadgeHint([owner, full, none], words("ro")).split("\n").slice(1)).toEqual([
+      "Cursa: 153 — 144 cu loc din 150, 9 așteaptă confirmarea emailului",
+      "Alt cros: 5 — 2 cu loc din 20, 1 așteaptă confirmarea emailului, 2 pe lista de așteptare",
+      "Fără loc: 1 — 0 cu loc din 10, 1 pe lista de așteptare",
+    ]);
+    expect(registeredBadgeHint([owner, full], words("en")).split("\n").slice(1)).toEqual([
+      "Cursa: 153 — 144 of 150 places taken, 9 awaiting the email confirmation",
+      "Alt cros: 5 — 2 of 20 places taken, 1 awaiting the email confirmation, 2 on the waiting list",
+    ]);
   });
 });

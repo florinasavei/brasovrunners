@@ -1,6 +1,6 @@
 import type { emailOutbox } from "@/db/schema/email-outbox";
 import type { Database } from "@/db/types";
-import { type OutboxBatchSummary, OUTBOX_BATCH_SIZE, processOutboxBatch } from "./outbox";
+import { type OutboxBatchSummary, OUTBOX_BATCH_SIZE, OUTBOX_SUMMARY_COUNTS, processOutboxBatch } from "./outbox";
 import { SEND_NOW_ROW_LIMIT } from "./domain/send-at-once";
 import { createOutboxSender } from "./outbox-sender";
 import { createOutboxRenderer } from "./render";
@@ -45,7 +45,9 @@ export async function sendOutboxRowsNow(
       ids,
       recordRun: false,
     });
-    for (const key of Object.keys(total) as (keyof OutboxBatchSummary)[]) total[key] += summary[key];
+    for (const key of OUTBOX_SUMMARY_COUNTS) total[key] += summary[key];
+    // Gmail carried for a stopped Mailgun (§622): the press's own rows left that way, said with the stop.
+    if (summary.carried) total.carried = { stop: summary.carried.stop, viaGmail: (total.carried?.viaGmail ?? 0) + summary.carried.viaGmail };
     // A batch that was not full took the last of the press's rows: no empty batch after it.
     if (summary.claimed < OUTBOX_BATCH_SIZE) break;
     // The provider said stop (a spent cap defers the rest, §40): the outbox job takes it from here.

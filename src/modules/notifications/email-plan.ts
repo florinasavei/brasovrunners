@@ -1,4 +1,5 @@
-import { eq } from "drizzle-orm";
+import { and, eq, gt, sql } from "drizzle-orm";
+import { emailOutbox } from "@/db/schema/email-outbox";
 import { platformSettings } from "@/db/schema/platform-settings";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
@@ -14,6 +15,8 @@ import {
   emailPlanSettingSchema,
   takesTypedCeilings,
 } from "./domain/email-plan";
+import { ALLOWANCE_DEFERRED_ERROR_PREFIX } from "./domain/mailgun-stop";
+import { MAILGUN_STOP_KEY } from "./mailgun-stop";
 
 /**
  * Which Mailgun plan the club is on (`DECISIONS.md` §100): read by every page that says how
@@ -92,6 +95,24 @@ export async function updateEmailPlan<T extends Record<string, unknown>>(
         target: platformSettings.key,
         set: { value: next, updatedAt: now, updatedByStaffUserId: actor.id },
       });
+    /*
+      Saving the plan reopens Mailgun's road after an allowance stop (§622): a club that upgrades
+      mid-day has the allowance back, and neither the record nor the marked rows may keep Gmail
+      carrying until midnight. A pause Mailgun asked for is not the plan's and stays.
+    */
+    await tx
+      .delete(platformSettings)
+      .where(and(eq(platformSettings.key, MAILGUN_STOP_KEY), sql`${platformSettings.value} ->> 'kind' = 'allowance'`));
+    await tx
+      .update(emailOutbox)
+      .set({ nextAttemptAt: now })
+      .where(
+        and(
+          eq(emailOutbox.status, "PENDING"),
+          gt(emailOutbox.nextAttemptAt, now),
+          sql`${emailOutbox.lastError} LIKE ${`${ALLOWANCE_DEFERRED_ERROR_PREFIX}%`}`,
+        ),
+      );
     await recordAuditEvent(tx, {
       actorStaffUserId: actor.id,
       action: "email_plan.changed",

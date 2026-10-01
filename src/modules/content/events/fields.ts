@@ -839,10 +839,10 @@ export const eventFieldsSchema = z
     /**
      * How many hours before the start this event's reminder goes (§81, §377): empty is "as usual"
      * — the club's number from "Termene", stored as null — zero is no reminder, anything else this
-     * event's own, within the column's CHECK. The editor offers four choices (24, 48, 72, none)
-     * beside "as usual"; any whole number in the bounds is accepted, so a value a script stored is
-     * kept by a save rather than refused. Optional, and absent means "this caller is not editing
-     * it": the service then writes nothing, the discipline `waitlistCapacity` follows.
+     * event's own, within the column's CHECK. The editor offers choices (24, 48, 72, 96, 120 hours,
+     * none) beside "as usual"; any whole number in the bounds is accepted, so a value a script
+     * stored is kept by a save rather than refused. Optional, and absent means "this caller is not
+     * editing it": the service then writes nothing, the discipline `waitlistCapacity` follows.
      */
     reminderHoursBefore: optionalWholeNumber({ min: 0, max: EVENT_REMINDER_MAX_HOURS }).optional(),
     registrationOpensAtWallTime: z.string().trim(),

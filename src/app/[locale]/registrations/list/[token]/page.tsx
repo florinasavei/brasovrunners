@@ -14,6 +14,7 @@ import { getDb } from "@/db/client";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { readListConsent } from "@/modules/registrations/list-consent";
+import { readReplacedActionLink } from "@/modules/registrations/token-actions";
 import ActionLinkNotice from "@/modules/registrations/ui/ActionLinkNotice";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { setListConsentAction } from "./actions";
@@ -49,6 +50,11 @@ export default async function ListConsentPage({ params, searchParams }: Props) {
   // One token read for the page — throttled per presented token. After a refused POST the
   // link is known to be dead, so it is not charged a second attempt for saying so.
   const context = invalid ? null : await readListConsent(getDb(), token, locale, new Date());
+  // A newer email replaced this link (§619) — a resent confirmation carries a new one: said so.
+  const replaced =
+    context && !context.ok
+      ? await readReplacedActionLink(token, [{ purpose: "LIST_CONSENT", reason: context.reason }], locale, new Date())
+      : null;
 
   return (
     <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
@@ -57,7 +63,7 @@ export default async function ListConsentPage({ params, searchParams }: Props) {
       </Typography>
 
       {!context || !context.ok ? (
-        <ActionLinkNotice locale={locale} status={null} />
+        <ActionLinkNotice locale={locale} status={null} replaced={replaced} />
       ) : (
         <Stack spacing={2} sx={{ alignItems: "flex-start" }}>
           {changed && (

@@ -70,7 +70,7 @@ import {
   sittingHasMessageToLeave,
   sittingPendingRegistrations,
 } from "./family-sitting";
-import { FAMILY_HELD, familyHeldDeclaration, SITTING_AT_CAP, SITTING_HELD, type SittingSeed, sittingEntryFor } from "./domain/family-sitting";
+import { FAMILY_HELD, familyHeldDeclaration, familyHeldUntil, SITTING_AT_CAP, SITTING_HELD, type SittingSeed, sittingEntryFor } from "./domain/family-sitting";
 import { publicFormEvent } from "./public-form-event";
 import { familyPlaceSlot } from "./family-place-slot";
 import { sameRunner } from "./domain/name-key";
@@ -837,7 +837,8 @@ async function enqueueAllocationEmail<T extends Record<string, unknown>>(
     locale: allocated.locale,
     recipientEmail,
     // The declaration's message starts the hold (§513); a family's held request says so too (`familyHeld`).
-    payload: messageType === "COMPLETE_DECLARATION" ? startingDeadline(held ? { familyHeld: true } : {}) : {},
+    // Held, with the instant it is let go (`familyHeldUntil`, §623).
+    payload: messageType === "COMPLETE_DECLARATION" ? startingDeadline(held ? { [FAMILY_HELD]: true, ...familyHeldUntil(declarationNotBefore) } : {}) : {},
     idempotencyKey,
     now,
     ...(held ? { notBefore: declarationNotBefore } : {}),
@@ -2207,7 +2208,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
               atCap: false,
               registrationsPerAddress: cap.registrationsPerAddress,
               familyEntryId: entry.id,
-              ...(holding ? { [FAMILY_HELD]: true } : {}),
+              ...(holding ? { [FAMILY_HELD]: true, ...familyHeldUntil(heldUntil) } : {}),
             })
           : { atCap, registrationsPerAddress: cap.registrationsPerAddress },
         idempotencyKey: `registration:${decision.about.id}:another-person:${now.toISOString()}`,
@@ -2428,7 +2429,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
         return;
       }
       sitting ??= await newSitting(registration.id);
-      const queued = await enqueueVerificationEmail(tx, participant, registration, now, startingDeadline({ [SITTING_HELD]: true }), heldUntil);
+      const queued = await enqueueVerificationEmail(tx, participant, registration, now, startingDeadline({ [SITTING_HELD]: true, ...familyHeldUntil(heldUntil) }), heldUntil);
       sitting = await holdInSitting(tx, sitting, { registrationId: registration.id, outboxId: queued?.id ?? null });
       // Its place, reserved now (§543): the family's count drops by one with every form, not at the press.
       placeResult = await reserveFamilyPlace(tx, lockedEvent, registration.id, now, settings, reservationUntil);
@@ -3393,6 +3394,12 @@ export async function unregister<T extends Record<string, unknown>>(
      * the words, which are the person's own and may name them.
      */
     reason?: CancelReason;
+    /**
+     * A staff cancellation that is the club refusing the registration under the terms (§618): the
+     * ground the Administrator typed under a box that said it goes to the person. Written into the
+     * message's payload, so the cancellation email names it; never on the row.
+     */
+    refusedGround?: string;
   } = {},
 ): Promise<Registration> {
   // The club's hold and offer lengths (§377), before the lock and from the memo when it is fresh.
@@ -3452,7 +3459,10 @@ export async function unregister<T extends Record<string, unknown>>(
           the person left the waiting list — «Înscrierea pentru <nume> … a fost anulată», one per
           person, whoever pressed it.
         */
-        payload: { previousStatus: current.status },
+        payload: {
+          previousStatus: current.status,
+          ...(source === "ADMIN" && options.refusedGround ? { refusedGround: options.refusedGround } : {}),
+        },
         idempotencyKey: `registration:${cancelled.id}:cancelled:${now.toISOString()}`,
         now,
       });

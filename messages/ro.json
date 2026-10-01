@@ -571,8 +571,12 @@
       "checkin": "Ziua cursei",
       "settings": "Setări",
       "guide": "Ghid",
-      "registeredHint": "Înscrieri active (fără anulate și teste) la evenimentele care urmează:",
-      "registeredEvent": "{title}: {count}",
+      "registeredHint": "Oameni cu o înscriere în curs la evenimentele viitoare — nu locuri. Cine așteaptă confirmarea emailului sau e pe lista de așteptare e numărat aici, dar nu ocupă încă un loc.",
+      "registeredEvent": "{title}: {count} — {parts}",
+      "registeredWithPlace": "{count} cu loc",
+      "registeredWithPlaceOf": "{count} cu loc din {capacity}",
+      "registeredAwaitingEmail": "{count} așteaptă confirmarea emailului",
+      "registeredWaitlisted": "{count} pe lista de așteptare",
       "registeredMoreEvents": "+{count} altele",
       "newsletter": "Newsletter"
     },
@@ -588,14 +592,18 @@
       "sending": "Se trimit…",
       "sendNowLong": "Trimite acum emailurile din coadă, fără să aștepți monitorul; se oprește la limita zilnică",
       "sentNow": "Emailuri trimise acum: {count}.",
-      "waitingShort": "{count} în așteptare"
+      "waitingShort": "{count} în așteptare",
+      "sentViaGmail": "Dintre ele, {gmail} prin Gmail — {stop}.",
+      "stopResumes": "Mailgun reia la {hour}.",
+      "stopResumesOn": "Mailgun reia {until}.",
+      "stopHeld": "Cele de pe drumul Mailgun rămân în coadă: Mailgun e oprit."
     },
     "registrations": {
       "empty": "Nu există nicio înscriere.",
       "filterAll": "Toate evenimentele",
       "filter": "Filtrează",
       "statusLabel": "Stare",
-      "summaryTotal": "Înscrieri: {count}",
+      "summaryTotal": "Înscrieri: {count} (toate stările, anulate și expirate incluse)",
       "summaryTest": "De test: {count}",
       "export": "Exportă CSV",
       "personLink": "Toate datele unei persoane",
@@ -659,6 +667,8 @@
       "cancelReason": "Motivul",
       "cancelAction": "Anulează înscrierea",
       "cancelHelp": "Înscrierea nu se șterge niciodată — rămâne ca dovadă a ce a acceptat persoana și când. Anularea eliberează locul, iar acesta merge la primul de pe lista de așteptare.",
+      "refusedByOrganizer": "Clubul refuză înscrierea, potrivit termenilor: motivul scris mai sus îi este trimis persoanei pe e-mail",
+      "refusedByOrganizerHelp": "Doar pe un motiv obiectiv din termeni: condiții neîndeplinite, date false, capacitate sau siguranță, conduită. Niciodată pe un criteriu interzis de lege. Nebifat, motivul rămâne doar în jurnal.",
       "withdraw": {
         "title": "Retrage consimțământul",
         "help": "Pentru cine a cerut în scris ștergerea datelor date cu acord. Se șterge doar ce bifezi; înscrierea rămâne, iar persoana nu primește niciun mesaj.",
@@ -733,7 +743,7 @@
       "emptyFiltered": "Nicio înscriere nu corespunde filtrelor. Șterge filtrele ca să le vezi pe toate.",
       "selectRow": "Selectează înscrierea lui {name}",
       "bulkCancelTitle": "Anulează înscrierile bifate",
-      "bulkCancelHelp": "Fiecare înscriere bifată este anulată separat, cu același motiv, iar locul fiecăreia merge la primul de pe lista de așteptare. Ștergerea definitivă nu se face în grup.",
+      "bulkCancelHelp": "Fiecare înscriere bifată se anulează separat, cu același motiv; locul merge la primul de pe listă. Nu se șterge în grup. Un refuz potrivit termenilor se face din pagina înscrierii.",
       "bulkCancelAction": "Anulează cele bifate",
       "bulkCancelPending": "Se anulează…",
       "bulkCancelPrinted": "Pe această pagină sunt numere deja tipărite: {numbers}. Dacă le bifezi, după anulare rămân retrase — nu se dau altcuiva — și trebuie scoase din teanc.",
@@ -824,7 +834,7 @@
       "bibsUnprintedAlert": "{count, plural, one {# BID nu mai e marcat ca printat.} few {# BID-uri nu mai sunt marcate ca printate.} other {# de BID-uri nu mai sunt marcate ca printate.}}",
       "openRow": "Deschide înscrierea",
       "cancel": "Anulează înscrierea",
-      "cancelBody": "Locul se eliberează și se oferă primei persoane de pe lista de așteptare. Nu se poate desface: persoana se poate înscrie din nou.",
+      "cancelBody": "Locul se eliberează și se oferă primei persoane de pe lista de așteptare. Nu se poate desface: persoana se poate înscrie din nou. Un refuz potrivit termenilor se face din pagina înscrierii.",
       "confirmOnPaperBody": "Confirmi că participantul a semnat declarația pe hârtie, la masă. Primește locul și numărul. Doar cu hârtia semnată în față.",
       "downloadBib": "Descarcă numărul de concurs (BIB)",
       "notOnPublicList": "Nu apare public",
@@ -1172,7 +1182,12 @@
       "LEGAL_RETIRE_IN_FORCE": "Nu s-a șters nimic: aceasta este versiunea în vigoare. Aprobă întâi versiunea următoare, apoi o poți șterge.",
       "LEGAL_ALREADY_DELETED": "Versiunea a fost deja ștearsă din listă. Textul ei rămâne în arhivă.",
       "SEND_NOW_HOUR_SPENT": "Nu s-a trimis nimic: limita pe oră a Mailgun («Limita pe oră» din «Emailuri») nu mai are loc acum. Alege «Pune la coadă»; emailul pleacă singur când ora are din nou loc.",
-      "OFFER_AFTER_CLOSE": "Înscrierile s-au închis, deci o ofertă ar expira pe loc; nu s-a schimbat nimic. La masă, folosește «Dă-i un loc»."
+      "OFFER_AFTER_CLOSE": "Înscrierile s-au închis, deci o ofertă ar expira pe loc; nu s-a schimbat nimic. La masă, folosește «Dă-i un loc».",
+      "RETRY_FAILED_THROTTLED": "Nu s-a pus nimic înapoi: emailurile eșuate au fost deja reîncercate de 3 ori în ultima oră. Așteaptă puțin și uită-te de ce au eșuat înainte să apeși din nou.",
+      "SEND_NOW_MAILGUN_STOPPED_FALLBACK_OFF": "Nu s-a trimis nimic: Mailgun e oprit, iar «Gmail preia când Mailgun se oprește» e pe Nu. Pune-l pe Da în «Emailuri», sau alege «Pune la coadă»: pleacă singur când Mailgun reia.",
+      "SEND_NOW_MAILGUN_STOPPED_NO_GMAIL": "Nu s-a trimis nimic: Mailgun e oprit, iar Gmail-ul clubului nu e configurat aici. Alege «Pune la coadă»: emailul pleacă singur când Mailgun reia.",
+      "SEND_NOW_MAILGUN_STOPPED_GMAIL_FULL": "Nu s-a trimis nimic: Mailgun e oprit, iar Gmail și-a atins limita pe zi. Ridic-o în «Emailuri» (cel mult 500), sau alege «Pune la coadă»: pleacă singur când Mailgun reia.",
+      "SEND_NOW_MAILGUN_STOPPED_NOTICE": "Nu s-a trimis nimic: Mailgun e oprit, iar Gmail preia abia după ce aprobi nota de confidențialitate din șablonul nou. Până atunci alege «Pune la coadă»."
     },
     "editor": {
       "draftPreview": {
@@ -1802,7 +1817,8 @@
         },
         "received": {
           "title": "Înscrierile primite",
-          "summary": "înscrieri reale: {count} · pe lista de așteptare: {waiting}"
+          "summary": "înscrieri reale: {count} · pe lista de așteptare: {waiting}",
+          "summaryPlaces": "înscrieri reale: {count} · pe lista de așteptare: {waiting} · locuri ocupate: {occupied} din {capacity}"
         },
         "queue": {
           "title": "Coada de înscrieri",
@@ -2347,7 +2363,8 @@
         "seriesPlace": "Doar în declarațiile alergărilor de grup: locul de plecare obișnuit al seriei",
         "promotionalMaterials": "Doar în nota de confidențialitate: bifa opțională pentru oferte și beneficii de la club și de la partenerii săi. Fără el în nota în vigoare, formularul nu o oferă",
         "promotionalMaterialsShared": "Doar în nota de confidențialitate: ce date pot primi partenerii clubului de la cei care au bifat oferte și beneficii. Fără el în nota în vigoare, lista pentru sponsori e oprită",
-        "registrationsPerAddress": "Doar în termeni: câte persoane se pot înscrie cu aceeași adresă de email la un eveniment, cu unitatea („4 persoane”), din Setări → „Termene”"
+        "registrationsPerAddress": "Doar în termeni: câte persoane se pot înscrie cu aceeași adresă de email la un eveniment, cu unitatea („4 persoane”), din Setări → „Termene”",
+        "gmailFallback": "Doar în nota de confidențialitate: numele comutatorului «Gmail preia când Mailgun se oprește», între ghilimele. Fără el în nota în vigoare, comutatorul e oprit și mesajele așteaptă Mailgun"
       },
       "removeBlockedReferenced": "Nu se poate nici retrage, nici șterge definitiv: {signatures}, {events} și {acknowledgements} depind de ea. «Șterge» de pe rândul ei o scoate din listă.",
       "removeBlockedCurrent": "În vigoare acum — nu se poate nici retrage, nici șterge. Aprobă întâi versiunea următoare; apoi aceasta se poate scoate.",
@@ -2725,7 +2742,7 @@
       "emailStalled": {
         "title": "Emailurile nu pleacă.",
         "deferred": "Mesaje care așteaptă: {count}. Limita zilnică Mailgun ({allowance} de mesaje pe zi) s-a consumat. Pleacă singure {resumesAt} (ora României); nimic nu s-a pierdut.",
-        "failed": "Mesaje netrimise în ultimele 7 zile: {count} — motivul Mailgun: „{reason}”. Vezi Mailgun → Sending → Logs.",
+        "failed": "Mesaje netrimise în ultimele 7 zile: {count} — motivul Mailgun: „{reason}”. După ce repari cauza: «Setări» → «Emailuri» → «Reîncearcă emailurile eșuate».",
         "overdue": "Mesaje cu rândul trecut de peste 90 de minute: {count} — monitoarele nu rulează. Vezi rândul „Monitoarele” de mai jos.",
         "notify": "Ca să afli de asta fără să deschizi pagina: un monitor zilnic pe cron-job.org către /api/health?deep=1, cu notificare la eșec — pasul din rândul „Monitoarele”."
       },
@@ -3094,6 +3111,30 @@
             "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Secțiunile 5 și 6 spun că partenerii pot primi prenumele, numele și adresa.",
             "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”.",
             "Lista ia doar acordurile date sub nota nouă. Cine a bifat sub o notă mai veche nu ajunge la parteneri."
+          ]
+        },
+        "gmailFallbackNotice": {
+          "title": "Nota de confidențialitate: Gmail preia când Mailgun se oprește",
+          "todo": "Nota în vigoare nu spune încă că un mesaj poate pleca prin Gmail cât timp Mailgun e oprit: «Gmail preia când Mailgun se oprește» rămâne oprit, iar emailurile așteaptă Mailgun.",
+          "done": "Nota în vigoare spune că un mesaj poate pleca prin Gmail cât timp Mailgun e oprit: «Gmail preia când Mailgun se oprește» funcționează, cum îl lasă Administratorul.",
+          "how": [
+            "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Secțiunea 6 spune că un mesaj poate pleca prin Gmail-ul clubului (Google) când Mailgun refuză sau amână.",
+            "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”.",
+            "De ce: numele, linkurile și PDF-ul semnat al unui participant ajung atunci la Google, iar nota trebuie s-o spună înainte. După aprobare comutatorul nu mai e gri."
+          ]
+        },
+        "emailFailSafe": {
+          "title": "Emailuri pe care nu le duce nimeni",
+          "todo": "Mailgun a spus stop de peste 90 de minute și nimic nu duce emailurile, un email e refuzat temporar și după șase încercări sau unul a eșuat în ultimele 7 zile.",
+          "broken": "Mailgun a spus stop de peste 90 de minute și nimic nu duce emailurile, un email e refuzat temporar și după șase încercări sau unul a eșuat în 7 zile. Nimic nu s-a pierdut.",
+          "done": "Niciun email blocat sau eșuat. Dacă Mailgun spune stop, Gmail preia (când comutatorul e pornit).",
+          "how": [
+            "«Setări» → «Emailuri» → «Prin ce pleacă emailurile» → «Gmail preia când Mailgun se oprește»: Da → «Salvează drumurile». Cât timp Mailgun e în pauză sau fără cotă, Gmail duce toate grupurile.",
+            "Dacă Gmail și-a atins limita: tot acolo, «Limita Gmail pe zi» mai sus (cel mult 500, din care oamenii clubului mai trimit și de mână).",
+            "Emailurile eșuate: «Setări» → «Emailuri» → «Coada de trimitere» → «Reîncearcă emailurile eșuate». Le pune înapoi în coadă, de la prima încercare.",
+            "Un email refuzat temporar (5xx, 404) se reîncearcă singur în fiecare oră; motivul e pe rândul lui din coadă. Un 404 care nu trece: verifică MAILGUN_API_BASE_URL și MAILGUN_DOMAIN pe Vercel.",
+            "Dacă Mailgun a cerut pauza pentru ritm (proba): «Setări» → «Emailuri» → planul Mailgun → «Limita pe oră» — 90 cât ține proba.",
+            "Antetul cozii spune până când e Mailgun oprit și cine preia."
           ]
         }
       },
@@ -4341,6 +4382,28 @@
             "reserve": "rezerva pentru newsletter: {count}"
           },
           "nothingDue": "Niciun email nu e la rând acum: cele din coadă sunt ținute până la ora lor, se trimit chiar acum sau și-au consumat încercările."
+        },
+        "stop": {
+          "paused": "Mailgun în pauză până la {hour}",
+          "allowance": "Cota Mailgun epuizată până la {hour}",
+          "line": "{stop} — {carried}.",
+          "carried": {
+            "gmail": "Gmail preia",
+            "fallbackOff": "Gmail nu preia: «Gmail preia când Mailgun se oprește» e oprit",
+            "gmailUnconfigured": "Gmail nu e configurat",
+            "gmailCapSpent": "Gmail și-a atins limita pe zi",
+            "noticeMissing": "Gmail nu preia: nota de confidențialitate în vigoare nu o spune încă"
+          },
+          "pausedOn": "Mailgun în pauză până {until}",
+          "allowanceOn": "Cota Mailgun epuizată până {until}"
+        },
+        "retryFailed": {
+          "count": "Emailuri eșuate în ultimele 7 zile: {count}.",
+          "title": "Reîncerci emailurile eșuate?",
+          "body": "Emailurile eșuate în ultimele 7 zile (de toate: {count}) se pun înapoi în coadă și pleacă la următoarea trecere; motivul rămâne scris. Cele respinse pentru adresă rămân cum sunt.",
+          "button": "Reîncearcă emailurile eșuate",
+          "pending": "Se pun înapoi…",
+          "done": "Emailuri eșuate puse înapoi în coadă: {count}."
         }
       },
       "copy": {
@@ -4515,7 +4578,15 @@
         "saving": "Se salvează…",
         "saved": "Setarea a fost salvată. Următoarele emailuri pleacă pe drumurile alese.",
         "readOnly": "Setarea o schimbă Administratorul.",
-        "updatedAt": "Setat {when}."
+        "updatedAt": "Setat {when}.",
+        "fallback": "Gmail preia când Mailgun se oprește",
+        "fallbackHelp": "Cât timp Mailgun a cerut o pauză sau cota lui e epuizată, toate grupurile pleacă prin Gmail, în limita și ritmul lui; când Mailgun reia, grupurile lui se întorc singure la el.",
+        "fallbackUnconfigured": "Indisponibil: Gmail-ul clubului nu e configurat pe acest mediu (CONTACT_SMTP_USER și CONTACT_SMTP_PASSWORD).",
+        "fallbackNotice": "Oprit până la aprobarea notei din șablonul nou: nota în vigoare nu spune încă că un mesaj poate pleca prin Gmail. Pornește singur după aprobare.",
+        "fallbackOptions": {
+          "yes": "Da, Gmail preia",
+          "no": "Nu, emailurile așteaptă Mailgun"
+        }
       },
       "contacts": {
         "title": "Cine primește mesajele de contact",
@@ -4753,7 +4824,7 @@
                 "«Înscrieri»: cine s-a înscris, cu filtre, export și pagina fiecărei înscrieri.",
                 "«Ziua cursei»: masa de ridicare a numerelor, pe telefon.",
                 "«Galerie» și «Pagini» (paginile standard — «Contact», «Echipa», «Întrebări frecvente», «Membri» — și paginile clubului).",
-                "«Setări»: «Emailuri» (ce primesc participanții, planul Mailgun), «Termene», «Aspect», «Costuri», «Anti-robot» și, la sfârșitul rândului, «Configurație» (pentru rolul Tehnic și Administratori).",
+                "«Setări»: «Emailuri» (ce primesc participanții, planul Mailgun, limita pe oră, drumurile prin Gmail, coada de trimitere), «Termene», «Aspect», «Costuri», «Anti-robot» și, la sfârșitul rândului, «Configurație» (pentru rolul Tehnic și Administratori).",
                 "«Sarcini» → «Club»: ce mai are clubul de făcut, citit din sistem, cu pașii sub fiecare rând. «Sarcini» → «De făcut»: lista clubului, scrisă și bifată de mână — adaugi un rând, îl dai cuiva, îi pui un termen, îl bifezi când e gata.",
                 "«Documente legale»: termenii, nota de confidențialitate (GDPR) și declarațiile.",
                 "«Echipa» și «Ghid» (pagina aceasta)."
@@ -4786,7 +4857,8 @@
                 "Nimeni nu unește două înscrieri într-una.",
                 "Nimeni din echipă nu semnează declarația în locul participantului: la masă înregistrezi doar declarația de hârtie pe care a semnat-o el.",
                 "Niciun text legal nu intră în vigoare fără o versiune aprobată; fără termeni, notă și declarație aprobate nu se poate înscrie nimeni.",
-                "Nimeni nu trece peste numărul de locuri: nu există înscriere peste capacitate, nici de mână, nici la masă. Un loc se dă doar când e liber."
+                "Nimeni nu trece peste numărul de locuri: nu există înscriere peste capacitate, nici de mână, nici la masă. Un loc se dă doar când e liber.",
+                "Nimeni nu primește un loc fără semnătura lui (la un minor, a părintelui): o ofertă din lista de așteptare o acceptă și o semnează persoana, din emailul ei, iar la masă «Dă-i un loc» confirmă doar pe declarația de hârtie semnată acolo, de față."
               ]
             }
           ]
@@ -4857,7 +4929,7 @@
                 "În «Numărul dat acum» e deja scris următorul număr de rezervă. Ia BID-ul acela din teancul de rezervă și scrie-i numele cu markerul pe linia goală. Dai alt număr? Schimbă-l în căsuță. Nu mai sunt rezerve? Scrie numărul pe care i-l dai sau las-o goală, și site-ul alege unul.",
                 "Apasă «Adaugă înscrierea» și confirmă în fereastră.",
                 "Îi dai declarația pe hârtie s-o semneze, apoi «Marchează prezent» și îi dai BID-ul.",
-                "Evenimentul e plin? Intră pe lista de așteptare, ca oricine. «Dă-i un loc» merge doar dacă s-a eliberat unul."
+                "Evenimentul e plin, sau așteaptă deja cineva pe lista de așteptare? Persoana intră pe listă, ca oricine. «Dă-i un loc» merge doar când e un loc liber, și o confirmă pe declarația de hârtie pe care o semnează ea, la masă."
               ]
             },
             {
@@ -4960,7 +5032,10 @@
                 "La «Evenimente» alege evenimentul (sau «Toate evenimentele»), la «Stare» ce te interesează, apoi «Filtrează».",
                 "Cauți pe cineva: scrie o parte din nume în «Caută după nume» și apasă «Filtrează». Fără un eveniment ales, caută în toate.",
                 "Coloana «Unde a ajuns» spune pasul fiecăruia. Apasă pe nume ca să deschizi înscrierea: «Parcursul înscrierii» și «Cronologie» spun tot ce s-a întâmplat.",
-                "Sus scrie o dată ce nu poți modifica aici. Rolul Tehnic nu vede înscrierile deloc."
+                "Sus scrie o dată ce nu poți modifica aici. Rolul Tehnic nu vede înscrierile deloc.",
+                "Pe pagina publică a evenimentului, prima cifră numără înscrierile care țin un loc: confirmații plus cei încă în curs — o declarație nesemnată, o ofertă din lista de așteptare neacceptată, locul ținut de o familie. După liniuță, linia spune doar ce există: câți sunt confirmați și câți în curs, și câte locuri libere sunt păstrate pentru lista de așteptare, de exemplu „6 înscriși din 10 locuri — 4 confirmați, 2 în curs de confirmare, 4 locuri păstrate pentru lista de așteptare”.",
+                "Locurile păstrate sunt locuri libere pe care le cere lista de așteptare, iar cardul le arată în două feluri. Dacă sunt mai multe locuri libere decât oameni care așteaptă, cardul spune «Locurile se dau din lista de așteptare» și nu numără niciun loc liber. Dacă lista cere toate locurile libere, ca în exemplu, cardul spune că locurile s-au ocupat — „Mulțumim! Toate cele 10 locuri s-au ocupat — … așteaptă deja un loc.” — și oferă «Intră pe lista de așteptare», deși linia locurilor numește încă „4 locuri păstrate pentru lista de așteptare”. În ambele cazuri locurile acelea sunt libere: cu «Ofertele din lista de așteptare pleacă automat» pe «Nu» le dă clubul, cu «Trimite-i oferta»; pe «Da» le dă coada, primilor de pe listă.",
+                "Lista «Cine vine» are doar pe cei care au bifat că vor să apară pe ea, mai ales confirmații, așa că prima cifră și lista diferă. Pe card, „1 loc oferit din lista de așteptare” e un loc trimis cuiva de pe listă, care încă nu l-a acceptat."
               ]
             },
             {
@@ -4993,7 +5068,8 @@
                 "«Descarcă toate numerele (PDF)»: câte două numere A5 pe o foaie A4, cu linia de tăiere. «Câte unul pe pagină» dacă vrei unul singur, centrat pe A4.",
                 "Tipărește la mărimea reală (100%) și taie pe linie.",
                 "Numerele se dau în ordinea confirmării, de la «Numerele de concurs (BIB) încep de la». «Alocă numerele» e al Administratorului.",
-                "Rezervele pentru masă: «Retipărește rezervele libere (PDF)» le tipărește din nou pe cele încă nedate. Numere de rezervă noi pune doar Administratorul."
+                "Rezervele pentru masă: «Retipărește rezervele libere (PDF)» le tipărește din nou pe cele încă nedate. Numere de rezervă noi pune doar Administratorul.",
+                "Pe site, lista «Cine vine» arată coloana «Nr.» după ce clubul aprobă nota de confidențialitate nouă. Înainte, Administratorul le scrie celor deja înscriși cu «Trimite un mesaj participanților»; cine nu vrea să apară apasă «Nu vreau să apar pe lista de participanți & rezultate» în «Înscrierile mele», iar numărul dispare odată cu numele. De la aprobare, coloana arată numărul fiecărui confirmat care are număr, oricare ar fi nota sub care s-a înscris; un confirmat fără număr are „—”."
               ]
             },
             {
@@ -5065,7 +5141,7 @@
               "title": "Ce face Administratorul, nu tu",
               "steps": [
                 "Creează, schimbă, publică, duplică și anulează evenimentele și anunță participanții despre o schimbare.",
-                "Anulează sau șterge înscrieri, retrimite emailuri, «Alocă numerele», marchează numerele tipărite și trimite mulțumirile. Spune-i ce trebuie făcut."
+                "Anulează sau șterge înscrieri, retrimite emailuri (și declarația tuturor celor care nu au semnat), trimite oferte din lista de așteptare («Trimite-i oferta»), «Alocă numerele», marchează numerele tipărite și trimite mulțumirile. Spune-i ce trebuie făcut."
               ]
             }
           ]
@@ -5162,12 +5238,26 @@
               "steps": [
                 "«Evenimente» → «Editează» → cardul «Participare și înscrieri».",
                 "«Modul de înscriere» → «Înscrieri pe site».",
-                "«Număr de locuri» și «Lungimea maximă a listei de așteptare» (gol = fără limită, 0 = fără listă).",
+                "«Număr de locuri» și «Lungimea maximă a listei de așteptare» (gol = fără limită, 0 = fără listă). Sub ele, «Ofertele din lista de așteptare pleacă automat»: «Da» dă fiecare loc eliberat sau adăugat primului de pe listă; «Nu», dacă vrei să alegi tu (vezi „Alege tu cine primește un loc eliberat”).",
                 "«Perioada de înscriere»: «Înscrierile se deschid» și «Înscrierile se închid».",
                 "«Fereastra de confirmare»: «Confirmarea participării: cu câte zile înainte se cere» și, în căsuța de lângă, cu câte zile înainte expiră (0 = locul nu expiră până la start).",
                 "«Program, regulament și declarație» → «Regulamentul»: «Vârsta minimă de participare» (14 dacă nu o schimbi, niciodată sub 14), la orice tip de eveniment. Declarația: «Program, regulament și declarație» → «Declarația pe propria răspundere» → «Declarația pe care o semnează participantul».",
                 "«Numere de concurs (BIB)»: «Numerele de concurs (BIB) încep de la».",
                 "Apasă «Salvează», apoi publică evenimentul. Nimeni nu se poate înscrie cât termenii, nota de confidențialitate și declarația nu sunt aprobate."
+              ]
+            },
+            {
+              "title": "Alege tu cine primește un loc eliberat",
+              "steps": [
+                "«Evenimente» → «Editează» pe rândul cursei → cardul «Participare și înscrieri».",
+                "La «Ofertele din lista de așteptare pleacă automat» alege «Nu» și apasă «Salvează». Pe «Nu», un loc eliberat sau adăugat rămâne liber până îl dai tu.",
+                "Abia apoi mărește «Număr de locuri», cu atâtea locuri câte vrei să dai acum. Pe «Da», locurile adăugate pleacă pe loc, ca oferte, la primii de pe listă.",
+                "Cardul «Înscrierile primite» → «Coada de înscrieri»: pe rândul persoanei alese din lista de așteptare apasă «Trimite-i oferta». Același buton e și pe pagina înscrierii ei.",
+                "Fereastra spune până când are timp; apasă din nou «Trimite-i oferta». Primește emailul obișnuit «S-a eliberat un loc», cu termenul obișnuit, {offer}: din email apasă «Confirmă locul» și semnează declarația, dacă nu a semnat-o încă.",
+                "Nu acceptă la timp? Oferta expiră și locul e din nou liber, pentru cine alegi tu.",
+                "Trebuie un loc liber: o anulare sau mai multe locuri. Pe un eveniment plin apăsarea e refuzată, iar un „i” lângă buton spune de ce. După închiderea înscrierilor nu se mai trimit oferte: la masă, cu persoana de față, «Dă-i un loc» o confirmă pe declarația de hârtie.",
+                "Ceilalți rămân pe lista de așteptare și nu primesc nimic. Pe site, cardul spune «Locurile se dau din lista de așteptare», iar cine se înscrie acum intră tot pe listă cât timp așteaptă cineva. Câți pot aștepta spune «Lungimea maximă a listei de așteptare».",
+                "Atenție la capătul listei: când nu mai e nimeni pe lista de așteptare — cine are o ofertă nu mai e pe ea —, locurile încă libere le ia următorul care se înscrie."
               ]
             },
             {
@@ -5195,10 +5285,23 @@
               "steps": [
                 "«Înscrieri» → caută persoana → apasă pe numele ei.",
                 "Nume greșit: la «Corectează numele» scrie numele bun → «Salvează numele».",
-                "Nu mai vine: «Anulează înscrierea», scrie «Motivul», apasă «Anulează înscrierea» și confirmă. Locul trece la lista de așteptare.",
+                "Nu mai vine: «Anulează înscrierea», scrie «Motivul», apasă «Anulează înscrierea» și confirmă. Locul trece la primul de pe lista de așteptare; dacă la eveniment ofertele nu pleacă automat, rămâne liber până îl dai tu.",
                 "Nu a primit emailul: «Retrimite emailul» → «Trimite acum, fără să aștepte trecerea programată».",
                 "Cere ștergerea datelor: «Șterge definitiv», scrie «Motivul ștergerii», bifează «Confirm că această ștergere este definitivă» și apasă «Șterge definitiv».",
                 "Mai multe deodată: pe listă bifează rândurile → «Anulează cele bifate»."
+              ]
+            },
+            {
+              "title": "Retrimite declarația celor care nu au semnat",
+              "steps": [
+                "«Evenimente» → «Editează» pe rândul cursei → cardul «Înscrierile primite».",
+                "Deasupra cozii apasă «Retrimite declarația tuturor care nu au semnat». Butonul e gri când nu așteaptă nimeni: sub el scrie «Nimeni nu așteaptă semnarea declarației.»",
+                "Fereastra spune câți așteaptă semnarea și pe câți îi sare: pe cei al căror email cu declarația a plecat în ultima oră sau e încă în coadă, și pe cei ajunși la limita de retrimiteri. Citește, apoi apasă din nou «Retrimite declarația tuturor care nu au semnat».",
+                "Sus apare «La coadă:» cu câți primesc emailul și câți au fost săriți. Emailurile pleacă prin coada de trimitere, în ritmul ei (vezi „Emailurile întârzie sau Mailgun a refuzat”).",
+                "Atenție: fiecare primește un link nou, iar linkul din emailul de dinainte nu mai merge. Spune-le să deschidă emailul cel mai nou.",
+                "Spune-le să caute emailul și în Spam și în Promoții.",
+                "Cel mult trei apăsări pe oră la un eveniment. Un „i” lângă buton spune când o apăsare ar fi refuzată: evenimentul e anulat, încheiat sau a început, ori s-au consumat apăsările orei.",
+                "O singură persoană: deschide înscrierea ei → «Retrimite emailul»."
               ]
             },
             {
@@ -5225,8 +5328,23 @@
                 "Întâi plătești planul în contul Mailgun.",
                 "«Setări» → «Emailuri» → «Planul Mailgun și cât mai putem trimite».",
                 "La «Planul pe care e contul Mailgun» alege Basic; la «Notă (de ce, până când)» scrie de ce și până când.",
-                "Apasă «Salvează planul» și confirmă. Cifrele din «Costuri» și butonul «Trimite acum» se iau după el.",
-                "După cursă: anulezi în Mailgun, apoi aici pui Free la loc și «Salvează planul»."
+                "«Limita pe oră»: câte emailuri pleacă prin Mailgun într-o oră; restul așteaptă la coadă și pleacă singure, fără să se piardă vreunul. Cât timp Mailgun ține contul limitat, scrie 90 (textul de sub căsuță cere același lucru); pe QA, care împarte domeniul cu producția, pune mult mai puțin, în jur de 10. Când Mailgun ridică limita, mărește numărul sau golește căsuța.",
+                "Apasă «Salvează planul» și confirmă. Cifrele din «Costuri», linia «Trimise în ultima oră:» și butonul «Trimite acum» se iau după el.",
+                "Mai jos, «Prin ce pleacă emailurile: Mailgun sau Gmail-ul clubului»: pentru fiecare grup de emailuri alegi «Mailgun» sau «Gmail-ul clubului». Gmail-ul nu costă nimic, dar Google blochează trimiterile în masă: sub fiecare grup scrie ce e recomandat.",
+                "«Limita Gmail pe zi (destinatari)» și «Pauza între două mesaje Gmail (secunde)» spun cât și cât de rar pleacă prin Gmail. Apasă «Salvează drumurile» și confirmă.",
+                "«Setări» → «Costuri» → «Cât costă»: fiecare serviciu pe lună și pe an, cu totalurile. Ați luat Vercel Pro pentru cursă? Tot acolo, la «Planul Vercel» alege Pro, apoi «Salvează planul Vercel» și confirmă; în ziua în care renunțați, Hobby.",
+                "După cursă: anulezi în Mailgun, apoi aici pui Free la loc și «Salvează planul». La «Limita pe oră» lasă cât îți cere Mailgun."
+              ]
+            },
+            {
+              "title": "Emailurile întârzie sau Mailgun a refuzat",
+              "steps": [
+                "«Setări» → «Emailuri». La «Planul Mailgun și cât mai putem trimite», linia «Trimise în ultima oră:» spune câte au plecat prin Mailgun în ultima oră, din «Limita pe oră». Când ora e plină, restul așteaptă la coadă și pleacă singur când ora are iar loc. Nu se pierde nimic.",
+                "Deschide «Coada de trimitere»: «În coadă:» spune câte așteaptă, iar fiecare rând spune când pleacă. Un rând roșu, «Întârziat: trebuia să fi plecat deja…», a trecut de ora lui.",
+                "Mailgun a cerut o pauză, pentru că trimitem prea repede: pe rând, «Ultimul răspuns al furnizorului:» începe cu „paused by the provider”. Emailurile prin Mailgun așteaptă cât a cerut Mailgun, fără să consume vreo încercare, apoi pleacă singure.",
+                "«Trimite acum» trimite pe loc ce e la rând. Ajută pentru emailurile prin Gmail-ul clubului și cât timp ora Mailgun mai are loc; cât ora e plină sau pauza ține, nu trimite nimic prin Mailgun, oricât ai apăsa — iar sub buton sau într-un chenar scrie de ce.",
+                "Participanților care întreabă: emailul vine, doar mai târziu; să caute și în Spam și în Promoții. Cine nu are linkul de declarație: „Retrimite declarația celor care nu au semnat”.",
+                "Scrie unui Superadministrator (sau proprietarului clubului), cu o poză a ecranului, dacă un rând arată «Oprit după toate încercările», dacă rândurile roșii rămân și după o oră sau dacă «Trimise în ultima oră:» stă pe 0 în timp ce coada crește."
               ]
             },
             {
@@ -5388,6 +5506,8 @@
                 "Ce e în vigoare la fiecare text: capul cardului spune «În vigoare: versiunea…» sau «Nicio versiune în vigoare»; filtrele «În vigoare», «Înlocuite» și «Retrase» arată restul.",
                 "Fără termeni, notă și o declarație de cursă aprobate nu se poate înscrie nimeni. Pentru o cursă pe asfalt editorul alege declarația de asfalt, dacă e aprobată, altfel pe cea pentru eveniment montan. O alergare de grup oferă declarația doar dacă o bifează și dacă textul ei (asfalt sau teren accidentat) e aprobat.",
                 "Până aprobi nota nouă, lista publică de participanți arată doar confirmații.",
+                "Coloana «Nr.» din lista «Cine vine» (numărul de concurs) apare după ce aprobi nota de confidențialitate din șablonul nou. Mai întâi scrie-le celor deja înscriși: «Evenimente» → «Deschide» → cardul «Înscrierile primite» → «Trimite un mesaj participanților»; spune-le că numărul lor va apărea lângă nume și că, dacă nu vor, apasă «Nu vreau să apar pe lista de participanți & rezultate» în «Înscrierile mele» (numărul dispare odată cu numele).",
+                "Apoi aprobi nota: cardul «GDPR» → «Regenerează din șablon» → ciorna → «Salvează ciorna» → «Aprobă și publică». De atunci coloana arată numărul fiecărui confirmat care are număr, oricare ar fi nota sub care s-a înscris; un confirmat fără număr are „—”. «Sarcini» → «Club» are rândul ei până atunci.",
                 "Ciorne sau versiuni de care nu mai ai nevoie: bifează-le în tabel, apasă «Șterge versiunile bifate» și verifică lista. Doar ciorne: «Șterge ciornele» și confirmă. Cu o versiune aprobată în listă: la «Confirmarea» scrii textul cerut (de exemplu „DELETE 2”), la «Motivul» de ce, apoi «Șterge versiunile».",
                 "Declarațiile semnate la o alergare de grup, când semnatarul cere ștergerea: «Evenimente» → «Editează» la alergare → «Declarații semnate (alergare de grup)» → «Șterge mai multe deodată»: bifează-le, completează o dată «Motivul ștergerii», apasă «Șterge cele bifate» și confirmă. În jurnal rămân numele tău și motivul, nu și al celui care a semnat."
               ]
@@ -5450,7 +5570,7 @@
                 "Completează formularul. La o cursă: «Citește condițiile concursului», derulează până la capăt, apoi «Am citit și sunt de acord». Bifează și termenii.",
                 "Apasă «Trimite înscrierea». Dacă lipsește ceva, deasupra butonului apare «Mai lipsesc:» cu fiecare lucru — atinge-l și te duce la el.",
                 "În email apasă «Confirmă adresa de email». Linkul e valabil {confirmation}.",
-                "Semnează declarația: pe pagina care se deschide sau din emailul «Semnează declarația» → «Semnează».",
+                "După confirmare, pagina îi spune că declarația vine pe email. Din emailul «Semnează declarația» → bifează «Am citit și accept declarația…» → «Semnează». Fără bifă, pagina spune chiar sub casetă ce lipsește.",
                 "Primește confirmarea cu codul QR și numărul de concurs, plus declarația semnată ca PDF.",
                 "Verifică în backoffice: «Înscrieri» → caută numele → starea «Confirmată»."
               ]
@@ -5459,7 +5579,7 @@
               "title": "Locul și termenele lui",
               "steps": [
                 "După confirmarea adresei, locul e ținut {hold} (sau până la termenul de confirmare, la un eveniment mai departe de fereastra lui). Termenul contează doar dacă așteaptă cineva un loc; altfel locul rămâne al lui până la start.",
-                "Evenimentul e plin: intră pe lista de așteptare. Când se eliberează un loc primește un email și are {offer} să semneze declarația.",
+                "Evenimentul e plin, sau așteaptă deja cineva: intră pe lista de așteptare. Când primește un loc — singur, sau ales de club, după setarea evenimentului — primește emailul «S-a eliberat un loc» și are {offer} să-l accepte și să semneze declarația.",
                 "Cu {checkin} înainte de start, din «Gestionează înscrierea» poate apăsa «Am ajuns — marchează-mă prezent». Numărul îl ridică tot de la masă."
               ]
             },
@@ -5468,7 +5588,7 @@
               "steps": [
                 "Din orice email despre înscrierea lui: «Nu mai pot ajunge» → la «De ce anulezi?» alege motivul (pentru «Alt motiv» îl scrie pe scurt) → «Anulează înscrierea pentru…» (cu numele persoanei) → «Da, anulează».",
                 "Pe emailul unei familii, butonul deschide «Înscrierile mele», cu fiecare persoană: «Renunț la această înscriere», tot cu motivul ales. Tot așa oricând, de pe site, cu adresa lui.",
-                "În declarațiile unei familii: «Renunț la înscrierea pentru…», tot cu motivul ales. Locul trece imediat la lista de așteptare.",
+                "În declarațiile unei familii: «Renunț la înscrierea pentru…», tot cu motivul ales. Locul trece imediat la lista de așteptare, sau rămâne liber pentru club, dacă ofertele nu pleacă automat la acel eveniment.",
                 "Motivul apare pe pagina înscrierii, în export și în copia clubului a emailului de anulare."
               ]
             },
@@ -5506,7 +5626,7 @@
               "steps": [
                 "Prima persoană se înscrie cu formularul, ca oricine.",
                 "Formularul se trimite din nou cu aceeași adresă pentru o persoană diferită — alt nume și altă dată a nașterii decât ale fiecărei persoane deja înscrise, sau, pe data nașterii cuiva înscris, alt nume și celălalt sex (un frate și o soră născuți în aceeași zi). Încă nu se înscrie nimeni: pe ecran apare același „verifică-ți emailul” ca oricând, ca nimeni să nu afle din formular cine e înscris.",
-                "Cu «Da, încă o persoană» pe ecranul de după formular, fiecare formular următor rezervă pe loc locul persoanei. Adresa primește apoi un email pentru toți, cu un singur buton.",
+                "Cu «Da, încă o persoană» pe ecranul de după formular, fiecare formular următor rezervă pe loc locul persoanei. Adresa primește apoi un email pentru toți, cu un singur buton. Cât timp așteaptă cineva pe lista de așteptare nu se rezervă nimic: toată familia intră pe listă după ce adresa e confirmată.",
                 "Adresa primește emailul „Înscrii încă o persoană?”, cu cine e deja înscris și cu persoana din formular, și un singur buton, «Confirm că înscriu altă persoană».",
                 "Pagina care se deschide arată din nou datele; pentru un adult cere o bifă (persoana își declară singură starea de sănătate la semnare). Confirmarea o înscrie direct — fără alt link de confirmare. Linkul e valabil {confirmation} și merge o singură dată; datele neconfirmate se șterg singure după aceea.",
                 "Dacă doar numele sau doar data nașterii diferă — sau alt nume pe data cuiva înscris, de același sex —, nu se înscrie nimeni: adresa primește emailul înscrierii existente, cu o propoziție despre cum se înscrie altcineva.",
@@ -6220,7 +6340,6 @@
       },
       "delay": "Ajunge în cel mult cinci minute.",
       "delayScheduled": "Ajunge în cel mult {wait}.",
-      "notArrived": "Nu a venit? Uită-te și în Spam.",
       "backToEvent": "Înapoi la eveniment",
       "family": "Un singur email, pentru toți: {names}.",
       "familyEach": "Fiecare persoană primește emailul ei."
@@ -6342,8 +6461,8 @@
       "intro": "Dacă nu ai primit mesajul nostru, scrie adresa cu care te-ai înscris și îți trimitem linkul din nou. Verifică și folderul de spam.",
       "emailHelp": "Adresa folosită la înscriere.",
       "submit": "Trimite linkul",
-      "sent": "Dacă există o înscriere pe această adresă, tocmai am trimis linkul acolo. Verifică inclusiv folderul de spam.",
-      "sentScheduled": "Dacă există o înscriere pe această adresă, linkul pleacă acolo la următoarea trecere programată a platformei, în cel mult {wait}. Verifică inclusiv folderul de spam.",
+      "sent": "Dacă există o înscriere pe această adresă, tocmai am trimis linkul acolo.",
+      "sentScheduled": "Dacă există o înscriere pe această adresă, linkul pleacă acolo la următoarea trecere programată a platformei, în cel mult {wait}.",
       "prompt": "Nu a ajuns mesajul?",
       "linkLabel": "Trimite-l din nou",
       "stillNothing": "Nici după ce l-ai cerut din nou nu a ajuns nimic?",
@@ -6554,6 +6673,11 @@
   },
   "Registrations": {
     "invalidOrExpired": "Acest link nu mai este valabil. Îți putem trimite unul nou, pe aceeași adresă de email.",
+    "replaced": "Acest link a fost înlocuit. Ți-am trimis un email mai nou, cu un link valabil. Deschide cel mai recent email de la noi — dacă nu-l găsești, caută în Spam și în Promoții.",
+    "replacedAt": "Acest link a fost înlocuit. Ți-am trimis un email mai nou, cu un link valabil (trimis {issuedAt}). Deschide cel mai recent email de la noi — dacă nu-l găsești, caută în Spam și în Promoții.",
+    "spamHint": {
+      "body": "Nu găsești emailul nostru? Caută în Spam și în Promoții și mută-ne în Inbox, ca să primești și următoarele."
+    },
     "cancelKeepsRecord": "Renunțarea eliberează locul; înscrierea o păstrăm trei ani, ca dovadă. Vrei să-ți vezi, corectezi sau ștergi datele? <contact>Scrie-ne</contact>.",
     "cancelReason": {
       "label": "De ce anulezi?",
@@ -6732,7 +6856,7 @@
       "intro": "Scrie adresa cu care te-ai înscris și îți trimitem un link cu toate înscrierile tale.",
       "email": "Adresa de email",
       "submit": "Trimite-mi linkul",
-      "sent": "Dacă există înscrieri pe această adresă, tocmai am trimis linkul acolo. Verifică inclusiv folderul de spam.",
+      "sent": "Dacă există înscrieri pe această adresă, tocmai am trimis linkul acolo.",
       "listTitle": "Înscrierile tale",
       "empty": "Nu ai nicio înscriere activă în acest moment.",
       "cancel": "Renunț la această înscriere",
@@ -6759,7 +6883,7 @@
         "body": "La {event} așteaptă semnătura declarațiile pentru: {names}. Le poți semna aici pe toate, una după alta.",
         "action": "Semnează declarațiile"
       },
-      "sentScheduled": "Dacă există înscrieri pe această adresă, linkul pleacă acolo în cel mult {wait}. Verifică inclusiv folderul de spam.",
+      "sentScheduled": "Dacă există înscrieri pe această adresă, linkul pleacă acolo în cel mult {wait}.",
       "declaration": {
         "signed": "Declarația: semnată — {when}",
         "toSign": "Declarația: de semnat",
@@ -7048,7 +7172,8 @@
     },
     "emailHealth": {
       "ok": "Trimiterea funcționează: nimic amânat, întârziat sau eșuat. /api/health?deep=1 răspunde 200.",
-      "stalled": "Trimiterea s-a oprit — amânate (limita zilnică): {deferred}; întârziate: {overdue}; eșuate în 7 zile: {failed}. Motiv: „{reason}”. /api/health?deep=1 răspunde 503 până se rezolvă."
+      "stalled": "Trimiterea s-a oprit — amânate (limita zilnică): {deferred}; întârziate: {overdue}; eșuate în 7 zile: {failed}. Motiv: „{reason}”. /api/health?deep=1 răspunde 503 până se rezolvă.",
+      "degraded": "Mailgun a spus stop și Gmail duce toate grupurile până reia; nimic întârziat sau eșuat. /api/health?deep=1 răspunde 200 și o spune în blocul „email”."
     },
     "registrationsToday": "Înscrieri astăzi",
     "testRegistrations": "de test",
@@ -7319,6 +7444,21 @@
     "reloadingTitle": "Pagina se reîncarcă în câteva minute",
     "reloadingBody": "Site-ul își ia acum datele doar din copiile salvate, iar pagina aceasta nu avea încă una. O pregătim chiar acum; pagina se reîncarcă singură în câteva minute.",
     "reloadingLink": "Încearcă din nou acum"
+  },
+  "Delay": {
+    "full": "Emailurile noastre întârzie acum: {queued}, cel mai vechi așteaptă de {minutes}{estimate}. Al tău pleacă când îi vine rândul — termenul lui curge de când pleacă, nu de acum. Nu te înscrie din nou.",
+    "fullLink": "Emailurile noastre întârzie acum: {queued}, cel mai vechi așteaptă de {minutes}{estimate}. Al tău pleacă când îi vine rândul — termenul lui curge de când pleacă, nu de acum. Nu cere din nou linkul.",
+    "fullSubscribe": "Emailurile noastre întârzie acum: {queued}, cel mai vechi așteaptă de {minutes}{estimate}. Al tău pleacă când îi vine rândul — termenul lui curge de când pleacă, nu de acum. Nu te abona din nou.",
+    "fullResend": "Emailurile noastre întârzie acum: {queued}, cel mai vechi așteaptă de {minutes}{estimate}. Al tău pleacă când îi vine rândul. Termenul din primul tău email curge de când a plecat acela, nu de acum.",
+    "fullPlain": "Emailurile noastre întârzie acum: {queued}, cel mai vechi așteaptă de {minutes}{estimate}. Al tău pleacă când îi vine rândul.",
+    "over": "peste {amount}",
+    "short": "Confirmarea pe email întârzie azi{estimate}.",
+    "estimate": "; estimăm cel mult {estimate}",
+    "queued": {
+      "one": "{count} mesaj așteaptă",
+      "few": "{count} mesaje așteaptă",
+      "other": "{count} de mesaje așteaptă"
+    }
   },
   "Weather": {
     "label": "Vremea",
@@ -7670,7 +7810,12 @@
       "declarationHeld": "Declarația e păstrată. Nu se mai șterge până scoți păstrarea.",
       "declarationReleased": "Păstrarea a fost scoasă.",
       "menuOrder": "Ordinea meniului a fost salvată.",
-      "registrationOffered": "Oferta e trimisă: are termenul obișnuit ca să semneze declarația."
+      "registrationOffered": "Oferta e trimisă: are termenul obișnuit ca să semneze declarația.",
+      "failedRetried": {
+        "one": "{count} email eșuat pus înapoi în coadă.",
+        "few": "{count} emailuri eșuate puse înapoi în coadă.",
+        "other": "{count} de emailuri eșuate puse înapoi în coadă."
+      }
     }
   },
   "Network": {
@@ -7768,8 +7913,8 @@
     "submitting": "Se trimite…",
     "sent": {
       "title": "Verifică-ți căsuța de email",
-      "body": "Dacă adresa e bună, în câteva minute primești un email cu un link. Abonarea începe doar după ce apeși linkul. Nu îl găsești? Uită-te și în dosarul Spam.",
-      "bodyScheduled": "Dacă adresa e bună, primești un email cu un link în cel mult {wait}. Abonarea începe doar după ce apeși linkul. Nu îl găsești? Uită-te și în dosarul Spam."
+      "body": "Dacă adresa e bună, în câteva minute primești un email cu un link. Abonarea începe doar după ce apeși linkul.",
+      "bodyScheduled": "Dacă adresa e bună, primești un email cu un link în cel mult {wait}. Abonarea începe doar după ce apeși linkul."
     },
     "errors": {
       "title": "Abonarea nu a pornit încă",
