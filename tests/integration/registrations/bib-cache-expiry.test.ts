@@ -6,6 +6,7 @@ import { registrations } from "@/db/schema/registrations";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { setBibNumberByStaff } from "@/modules/registrations/admin-service";
 import { assignBibNumbers } from "@/modules/registrations/bibs";
+import { runRegistrationMaintenance } from "@/modules/registrations/maintenance";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
@@ -84,6 +85,17 @@ describe("BR-REQ-039-01 race-number writes expire the public list", () => {
     cache.revalidatePublicContent.mockClear();
     expect((await assignBibNumbers(db, { actor: admin, eventId })).assigned).toBe(0);
     expect(cache.revalidatePublicContent).not.toHaveBeenCalled();
+  });
+
+  it("expires «places» when the maintenance run's one-off step keeps a legacy number, and not when it keeps none", async () => {
+    await register("Ana", { provisional: 7 });
+    await runRegistrationMaintenance(db, new Date("2026-09-21T09:00:00Z"));
+    expect(cache.revalidatePublicContent).toHaveBeenCalledWith("places");
+    expect((await db.select().from(registrations))[0].bibNumber).toBe(7);
+
+    cache.revalidatePublicContent.mockClear();
+    await runRegistrationMaintenance(db, new Date("2026-09-21T10:00:00Z"));
+    expect(cache.revalidatePublicContent).not.toHaveBeenCalledWith("places");
   });
 
   it("does not expire anything for a number that was never written", async () => {
