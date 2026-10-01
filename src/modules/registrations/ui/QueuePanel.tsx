@@ -230,7 +230,7 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
               ) : (
                 // The two times, each labelled (§NNN): when the form was sent, and when the person joined the line.
                 <Typography variant="body2" color="text.secondary" data-testid="queue-times">
-                  {t("queue.sent", { when: when(row.submittedAt) })}
+                  {t("queue.sent", { when: when(row.formSentAt) })}
                   {row.waitlistedAt ? ` · ${t("queue.joined", { when: when(row.waitlistedAt) })}` : ""}
                 </Typography>
               )}

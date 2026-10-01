@@ -15,7 +15,8 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * §NNN — «Coada de înscrieri» lists the people waiting in the order the club hands places out by,
  * and says when each form was sent. With `waitlist_auto_offer` off (the club picks by hand) the order
  * is `submitted_at`; with it on, the line's own `waitlisted_at`, the order automatic offers follow.
- * The time of a form is a backoffice line: the public list's select does not carry it
+ * «Sent» is the current cycle's: `greatest(submitted_at, privacy_acknowledged_at)`, the journey's rule,
+ * because a restart rewrites the second and never the first. The time of a form is a backoffice line: the public list's select does not carry it
  * (`tests/privacy/public-surface.test.ts`).
  */
 let db: TestDatabase;
@@ -85,7 +86,8 @@ async function register(eventId: string, name: string, row: Partial<typeof regis
     registeredName: name,
     displayName: resolveDisplayName({ legalName: name }),
     privacyNoticeVersion: 1,
-    privacyAcknowledgedAt: NOW,
+    // A first form acknowledges the notice in the same instant it is sent; a restart rewrites only this one.
+    privacyAcknowledgedAt: row.submittedAt ?? NOW,
     resultsNameConsent: false,
     resultsConsentVersion: 1,
     status: "WAITLISTED",
@@ -100,7 +102,7 @@ async function threeWaiting(eventId: string) {
   await register(eventId, "Ciprian Trei", { submittedAt: SENT_EARLY, waitlistedAt: JOINED_THIRD });
 }
 
-async function renderPanel(event: Awaited<ReturnType<typeof createEvent>>) {
+async function renderPanel(event: Awaited<ReturnType<typeof createEvent>>, waiting = 3) {
   const element = await QueuePanel({
     db,
     event: {
@@ -110,7 +112,7 @@ async function renderPanel(event: Awaited<ReturnType<typeof createEvent>>) {
       timezone: event.timezone,
       waitlistAutoOffer: event.waitlistAutoOffer,
     },
-    waiting: 3,
+    waiting,
     now: NOW,
   });
   return renderToStaticMarkup(element);
@@ -133,7 +135,7 @@ describe("§NNN the queue reader's order", () => {
     expect(rows.map((row) => row.registeredName)).toEqual(["Ciprian Trei", "Bianca Doua", "Ana Prima"]);
     // Both times on every row: the panel writes the form's, and the join stays for the line.
     for (const row of rows) {
-      expect(row.submittedAt).toBeInstanceOf(Date);
+      expect(row.formSentAt).toBeInstanceOf(Date);
       expect(row.waitlistedAt).toBeInstanceOf(Date);
     }
   });
@@ -143,7 +145,25 @@ describe("§NNN the queue reader's order", () => {
     await threeWaiting(event.id);
     const rows = await listQueueForEvent(db, event.id, NOW, queueOrderFor(event.waitlistAutoOffer));
     expect(rows.map((row) => row.registeredName)).toEqual(["Ana Prima", "Bianca Doua", "Ciprian Trei"]);
-    for (const row of rows) expect(row.submittedAt).toBeInstanceOf(Date);
+    for (const row of rows) expect(row.formSentAt).toBeInstanceOf(Date);
+  });
+
+  it("dates and orders by the form sent again, not the first one a restart left behind", async () => {
+    const event = await createEvent(false);
+    // Dan sent his first form at SENT_EARLY, let the link lapse, and sent it again at SENT_LATE: a
+    // restart rewrote privacy_acknowledged_at and left submitted_at where it was.
+    await register(event.id, "Dan Retrimis", { submittedAt: SENT_EARLY, privacyAcknowledgedAt: SENT_LATE, waitlistedAt: JOINED_THIRD });
+    await register(event.id, "Eva Mijloc", { submittedAt: SENT_MIDDLE, waitlistedAt: JOINED_SECOND });
+    const rows = await listQueueForEvent(db, event.id, NOW, "SUBMITTED");
+    expect(rows.map((row) => row.registeredName)).toEqual(["Eva Mijloc", "Dan Retrimis"]);
+    expect(rows[1].formSentAt.getTime()).toBe(SENT_LATE.getTime());
+    expect(rows[0].formSentAt.getTime()).toBe(SENT_MIDDLE.getTime());
+
+    locale = "ro";
+    const html = await renderPanel(event, 2);
+    const at = (date: Date) => formatDay(date, { locale: "ro", timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" });
+    expect(html).toContain(ro.Admin.queue.sent.replace("{when}", at(SENT_LATE)));
+    expect(html).not.toContain(ro.Admin.queue.sent.replace("{when}", at(SENT_EARLY)));
   });
 
   it("breaks a tie by id in either order", async () => {

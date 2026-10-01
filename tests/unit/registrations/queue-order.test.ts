@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { formatDay } from "@/i18n/dates";
+import { formSentAt } from "@/modules/registrations/domain/journey";
 import { queueOrderFor } from "@/modules/registrations/domain/waitlist";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
@@ -49,5 +50,16 @@ describe("§NNN the words on a waiting row", () => {
   it("calls the registration page's timeline entry the same thing", () => {
     expect(ro.Admin.registrations.submitted).toBe("Formular trimis");
     expect(en.Admin.registrations.submitted).toBe("Form sent");
+  });
+});
+
+describe("§NNN when a form was sent", () => {
+  const first = new Date("2026-09-30T08:00:00.000Z");
+  const again = new Date("2026-10-01T09:00:00.000Z");
+
+  it("is the restart's moment when the form was sent again, the row's own submission otherwise", () => {
+    // A restart rewrites privacy_acknowledged_at and never submitted_at.
+    expect(formSentAt(first, again)).toEqual(again);
+    expect(formSentAt(first, first)).toEqual(first);
   });
 });
