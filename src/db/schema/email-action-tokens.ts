@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+  type AnyPgColumn,
   check,
   index,
   pgEnum,
@@ -77,6 +78,17 @@ export const emailActionTokens = pgTable(
     usedAt: timestamp("used_at", { withTimezone: true }),
     // Set when a newer token supersedes this one, or when staff revoke it.
     invalidatedAt: timestamp("invalidated_at", { withTimezone: true }),
+    /*
+      Which of the two `invalidated_at` means (§NNN): the newer token of the same purpose and scope
+      that replaced this one, set by `issueActionToken` on exactly the rows it invalidated. Null on
+      an invalidated row means revoked for cause, and that link keeps the one generic refusal
+      (§13.2); a superseded one may say a newer email exists, because only the holder of this
+      row's secret ever reaches it. `set null` when the newer row is swept (§322): the older then
+      reads as revoked — generic, the strict reading — rather than pointing at nothing.
+    */
+    supersededByTokenId: uuid("superseded_by_token_id").references((): AnyPgColumn => emailActionTokens.id, {
+      onDelete: "set null",
+    }),
 
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },

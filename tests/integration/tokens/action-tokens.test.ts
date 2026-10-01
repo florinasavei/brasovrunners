@@ -10,6 +10,7 @@ import {
   consumeActionToken,
   issueActionToken,
   readActionTokenContext,
+  readSupersededActionTokenScope,
 } from "@/modules/action-tokens/repository";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { expectViolation, SQLSTATE } from "../../helpers/constraints";
@@ -294,7 +295,7 @@ describe("BR-REQ-036-02 email action tokens", () => {
       expect((await rowFor(row.id)).usedAt).toBeNull();
     });
 
-    it("rejects a token that a reissue invalidated", async () => {
+    it("rejects a token that a reissue invalidated, naming it superseded (§NNN)", async () => {
       const first = await issue();
       await issue();
 
@@ -304,7 +305,19 @@ describe("BR-REQ-036-02 email action tokens", () => {
           purpose: "MANAGE_REGISTRATION",
           now: NOW,
         }),
-      ).toEqual({ ok: false, code: "TOKEN_INVALID", reason: "INVALIDATED" });
+      ).toEqual({ ok: false, code: "TOKEN_INVALID", reason: "SUPERSEDED" });
+    });
+
+    it("rejects a token revoked for cause as invalidated, not superseded (§NNN)", async () => {
+      const { secret, token } = await issue();
+      // No code path revokes today; the column keeps the two facts apart for the day one does.
+      await db.update(emailActionTokens).set({ invalidatedAt: NOW }).where(eq(emailActionTokens.id, token.id));
+
+      expect(await consumeActionToken(db, { secret, purpose: "MANAGE_REGISTRATION", now: NOW })).toEqual({
+        ok: false,
+        code: "TOKEN_INVALID",
+        reason: "INVALIDATED",
+      });
     });
 
     it("refuses to issue a token that is already expired", async () => {
@@ -542,6 +555,109 @@ describe("BR-REQ-036-02 email action tokens", () => {
         }),
         { code: SQLSTATE.UNIQUE_VIOLATION },
       );
+    });
+  });
+
+  /**
+   * §NNN — `invalidated_at` held two facts; `superseded_by_token_id` tells them apart. Set by
+   * `issueActionToken` on exactly the rows it invalidated, and read back only for the holder of the
+   * superseded row's own secret.
+   */
+  describe("§NNN which invalidated tokens a newer one superseded", () => {
+    it("marks the previous token superseded by the new one, and only that row", async () => {
+      const manage = await issue("MANAGE_REGISTRATION");
+      const first = await issue("COMPLETE_DECLARATION");
+      const second = await issue("COMPLETE_DECLARATION");
+
+      expect((await rowFor(first.token.id)).supersededByTokenId).toBe(second.token.id);
+      expect((await rowFor(second.token.id)).supersededByTokenId).toBeNull();
+      // Another purpose of the same registration is neither invalidated nor marked.
+      expect((await rowFor(manage.token.id)).supersededByTokenId).toBeNull();
+      expect((await rowFor(manage.token.id)).invalidatedAt).toBeNull();
+    });
+
+    it("marks a superseded profile token too", async () => {
+      const profile = (now: Date) =>
+        issueActionToken(db, { participantId, registrationId: null, purpose: "MANAGE_PROFILE", expiresAt: IN_TWO_DAYS, now });
+      const first = await profile(NOW);
+      const second = await profile(new Date(NOW.getTime() + 60_000));
+
+      expect((await rowFor(first.token.id)).supersededByTokenId).toBe(second.token.id);
+    });
+
+    it("never marks a used token, which a reissue does not invalidate", async () => {
+      const { secret, token } = await issue();
+      await consumeActionToken(db, { secret, purpose: "MANAGE_REGISTRATION", now: NOW });
+      await issue();
+
+      expect((await rowFor(token.id)).supersededByTokenId).toBeNull();
+    });
+
+    it("leaves every family link live and unmarked (§420)", async () => {
+      const family = () =>
+        issueActionToken(db, {
+          participantId,
+          registrationId: REGISTRATION_ID,
+          purpose: "REGISTER_ANOTHER_PERSON",
+          expiresAt: IN_TWO_DAYS,
+          now: NOW,
+        });
+      const first = await family();
+      await family();
+
+      const row = await rowFor(first.token.id);
+      expect(row.invalidatedAt).toBeNull();
+      expect(row.supersededByTokenId).toBeNull();
+    });
+
+    it("reads a superseded token's scope and when the newest email of its kind was issued", async () => {
+      const first = await issue();
+      const secondAt = new Date(NOW.getTime() + 60_000);
+      const thirdAt = new Date(NOW.getTime() + 120_000);
+      for (const now of [secondAt, thirdAt]) {
+        await issueActionToken(db, { participantId, registrationId: REGISTRATION_ID, purpose: "MANAGE_REGISTRATION", expiresAt: IN_TWO_DAYS, now });
+      }
+      const before = await rowFor(first.token.id);
+
+      // The latest email's time, not the one the column names: the page says "open the latest".
+      expect(
+        await readSupersededActionTokenScope(db, { secret: first.secret, purpose: "MANAGE_REGISTRATION", now: thirdAt }),
+      ).toEqual({ participantId, registrationId: REGISTRATION_ID, purpose: "MANAGE_REGISTRATION", newestIssuedAt: thirdAt });
+      // A GET's read: nothing changed.
+      expect(await rowFor(first.token.id)).toEqual(before);
+    });
+
+    it("answers null for a superseded link replayed elsewhere, and for unknown or malformed secrets", async () => {
+      const replaced = await issue();
+      await issue();
+      // Replayed at another endpoint: indistinguishable from a missing token.
+      expect(await readSupersededActionTokenScope(db, { secret: replaced.secret, purpose: "COMPLETE_DECLARATION", now: NOW })).toBeNull();
+      expect(await readSupersededActionTokenScope(db, { secret: "z".repeat(43), purpose: "MANAGE_REGISTRATION", now: NOW })).toBeNull();
+      expect(await readSupersededActionTokenScope(db, { secret: "short", purpose: "MANAGE_REGISTRATION", now: NOW })).toBeNull();
+    });
+
+    it("answers null for a live, a used and a revoked link", async () => {
+      const live = await issue();
+      expect(await readSupersededActionTokenScope(db, { secret: live.secret, purpose: "MANAGE_REGISTRATION", now: NOW })).toBeNull();
+      await consumeActionToken(db, { secret: live.secret, purpose: "MANAGE_REGISTRATION", now: NOW });
+      expect(await readSupersededActionTokenScope(db, { secret: live.secret, purpose: "MANAGE_REGISTRATION", now: NOW })).toBeNull();
+
+      const revoked = await issue();
+      await db.update(emailActionTokens).set({ invalidatedAt: NOW }).where(eq(emailActionTokens.id, revoked.token.id));
+      expect(await readSupersededActionTokenScope(db, { secret: revoked.secret, purpose: "MANAGE_REGISTRATION", now: NOW })).toBeNull();
+    });
+
+    it("reads as revoked — generic — once the newer row is swept (§322)", async () => {
+      const first = await issue();
+      const second = await issue();
+      await db.delete(emailActionTokens).where(eq(emailActionTokens.id, second.token.id));
+
+      expect((await rowFor(first.token.id)).supersededByTokenId).toBeNull();
+      expect(await consumeActionToken(db, { secret: first.secret, purpose: "MANAGE_REGISTRATION", now: NOW })).toEqual({
+        ok: false,
+        code: "TOKEN_INVALID",
+        reason: "INVALIDATED",
+      });
     });
   });
 });

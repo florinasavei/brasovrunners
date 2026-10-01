@@ -49,6 +49,7 @@ import SignatureField from "@/modules/registrations/ui/SignatureField";
 import IdDocumentFields, { type DocumentBox, ID_DOCUMENT_TYPES } from "@/modules/registrations/ui/IdDocumentFields";
 import {
   readRegistrationTokenContext,
+  readReplacedActionLink,
   readSpentRegistrationLink,
   type SpentRegistrationLink,
 } from "@/modules/registrations/token-actions";
@@ -290,6 +291,8 @@ export default async function DeclarePage({ params, searchParams }: Props) {
   const familyMode = passSteps !== null && isFamilyWizard(passSteps);
 
   const spent = context.ok || familyMode ? null : await readSpentRegistrationLink(token, refusals, locale, now);
+  // A newer email replaced this link (§NNN): said so, in place of the generic refusal.
+  const replaced = context.ok || familyMode || spent ? null : await readReplacedActionLink(token, refusals, locale, now);
   /*
     A spent link with no pass that holds (§471, nit found in review): lapsed, done elsewhere, or
     another device. When the address still has declarations to sign at the event, one line says each
@@ -529,7 +532,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
         <FamilyDone steps={passSteps} doneHref={await familyDoneHref(walking.eventId, locale)} />
       ) : blocked || !declaration || movedOnNotice ? (
         <>
-          <ActionLinkNotice locale={locale} status={notice} />
+          <ActionLinkNotice locale={locale} status={notice} replaced={notice ? null : replaced} />
           {familyLeft && (
             <Alert severity="info" sx={{ mt: 2 }} data-testid="family-own-links">
               {t("declare.family.ownLinksStillWork")}

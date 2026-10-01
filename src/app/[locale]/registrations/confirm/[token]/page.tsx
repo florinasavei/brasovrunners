@@ -11,7 +11,12 @@ import { cachedDeadlines } from "@/modules/public-cache/reads";
 import ActionLinkNotice from "@/modules/registrations/ui/ActionLinkNotice";
 import ConfirmOnArrival from "@/modules/registrations/ui/ConfirmOnArrival";
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
-import { readConfirmedOnAddress, readRegistrationTokenContext, readSpentRegistrationLink } from "@/modules/registrations/token-actions";
+import {
+  readConfirmedOnAddress,
+  readRegistrationTokenContext,
+  readReplacedActionLink,
+  readSpentRegistrationLink,
+} from "@/modules/registrations/token-actions";
 import { confirmEmailAction } from "./actions";
 import { DENSITY } from "@/theme/density";
 
@@ -124,6 +129,10 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
         locale,
         new Date(),
       );
+  // A newer email replaced this link (§NNN): said so, in place of the generic refusal.
+  const replaced = context.ok
+    ? null
+    : await readReplacedActionLink(token, [{ purpose: "VERIFY_REGISTRATION_EMAIL", reason: context.reason }], locale, new Date());
 
   const journeyStep = spent ? spent.step : ("confirm" as const);
 
@@ -138,7 +147,7 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
       {journeyStep && <RegistrationJourney current={journeyStep} />}
 
       {!context.ok || invalid ? (
-        <ActionLinkNotice locale={locale} status={spent} />
+        <ActionLinkNotice locale={locale} status={spent} replaced={replaced} />
       ) : (
         <form action={confirmEmailAction}>
           <input type="hidden" name="locale" value={locale} />

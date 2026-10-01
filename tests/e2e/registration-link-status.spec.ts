@@ -108,4 +108,26 @@ test.describe("§420 a lapsed or moved-on registration link never shows the wron
     await expect(page.locator('[name="accepted"]')).toHaveCount(0);
     await expect(page.locator('[name="typedName"]')).toHaveCount(0);
   });
+
+  /**
+   * §NNN: a second link of the same purpose — what a resend's email carries — replaces the first,
+   * and the first email's page says a newer email has the working link, rather than the generic
+   * "no longer valid" a guessed address gets. Nothing is pressed: the refusal is the GET's.
+   */
+  test("an older link that a newer email replaced says so, and keeps the way to ask again", async ({ page }) => {
+    const registration = await submitRegistration(page, "verify-replaced");
+    const older = await mintActionLink(registration, "VERIFY_REGISTRATION_EMAIL");
+    await mintActionLink(registration, "VERIFY_REGISTRATION_EMAIL");
+
+    await page.goto(`/ro/inregistrari/confirmare/${older}`);
+    await hydrated(page);
+    const notice = page.getByTestId("link-replaced");
+    await expect(notice).toBeVisible();
+    await expect(notice).toContainText("Acest link a fost înlocuit. Ți-am trimis un email mai nou, cu un link valabil (trimis");
+    await expect(notice).toContainText("caută în Spam și în Promoții");
+    await expect(page.getByText("Acest link nu mai este valabil.")).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Trimite-mi din nou linkul" })).toBeVisible();
+    // Opening it confirmed nothing.
+    expect(await registrationStatus(registration.id)).toBe("PENDING_EMAIL_CONFIRMATION");
+  });
 });

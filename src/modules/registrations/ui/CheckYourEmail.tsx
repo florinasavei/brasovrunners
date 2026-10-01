@@ -4,6 +4,7 @@ import CelebrationIcon from "@mui/icons-material/Celebration";
 import DrawIcon from "@mui/icons-material/Draw";
 import MarkEmailReadIcon from "@mui/icons-material/MarkEmailRead";
 import QrCode2Icon from "@mui/icons-material/QrCode2";
+import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
@@ -17,6 +18,7 @@ import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { doneFamilySentence, offerHint, shortScreenEmailLeft } from "../domain/family-sitting";
 import type { SubmittedFacts } from "../form-draft";
 import FamilySittingOffer from "./FamilySittingOffer";
+import { spamHintWords } from "./link-wait-words";
 
 /**
  * What happens next, in three steps — the same three glyphs `RegistrationSteps` gives the
@@ -72,7 +74,7 @@ type Props = {
  *
  * Warmth, not cuteness: a first name in the heading when there is one, the event and its date,
  * the address the message went to (§224), three short steps with a glyph each, the wait in
- * bold and once (§224, §513), the spam folder, how long the link lives — the club's own hours (§377),
+ * bold and once (§224, §513), Spam and Promotions in a visible box (§NNN), how long the link lives — the club's own hours (§377),
  * the very number the link just sent was given, so this cannot promise what the platform does
  * not keep — and the sentence that keeps it true
  * for somebody who was already registered (§229). Then the two ways out when nothing arrives
@@ -260,7 +262,6 @@ export default async function CheckYourEmail({ eventTitle, whenLabel, eventHref,
         <Typography variant="body2" sx={{ fontWeight: 700 }}>
           {waitMinutes === null ? t("done.delay") : t("done.delayScheduled", { wait: minutesPhrase(locale, waitMinutes) })}
         </Typography>
-        <Typography variant="body2">{t("done.notArrived", values)}</Typography>
         {/*
           The sentence that keeps this screen true (§229). Re-submitting an address that is
           already confirmed re-sends the confirmation, QR and all (§199); saying "you are already
@@ -272,6 +273,12 @@ export default async function CheckYourEmail({ eventTitle, whenLabel, eventHref,
           {t("submittedAlready")}
         </Typography>
       </Box>
+
+      {/* Spam and Promotions, in a box of its own rather than a grey line (§NNN): the person whose
+          email went there is the one who needs it, and never reads a hint inside the email. */}
+      <Alert severity="info" data-testid="spam-hint">
+        {await spamHintWords()}
+      </Alert>
 
       <Box>
         {/*

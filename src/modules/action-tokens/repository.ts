@@ -1,4 +1,4 @@
-import { and, eq, gt, isNull } from "drizzle-orm";
+import { and, desc, eq, gt, inArray, isNull, ne } from "drizzle-orm";
 import { inReadOnlyTransaction } from "@/db/read-only";
 import {
   type EmailActionTokenPurpose,
@@ -16,7 +16,8 @@ import {
  * Email action tokens (BR-REQ-036-02; AGENTS.md §12.8, §13.2). Priority-1 code (`docs/PRACTICES.md` §198).
  *
  * Which entry point a route uses is a security decision:
- *   issueActionToken       writes a token and kills the previous ones for that scope.
+ *   issueActionToken       writes a token and kills the previous ones for that scope, marking
+ *                          each as superseded by the new one (§NNN).
  *   readActionTokenContext what a GET may do. Runs in a read-only transaction.
  *   consumeActionToken     what a POST does. One statement, single use, no second winner.
  *
@@ -60,7 +61,9 @@ const CONTEXT_COLUMNS = {
 
 /**
  * Issue a token for one purpose and scope, invalidating the previous live ones in the same
- * transaction, so a resend never leaves two working links (BR-REQ-036-02 criterion 5).
+ * transaction, so a resend never leaves two working links (BR-REQ-036-02 criterion 5). Each row it
+ * invalidates is also marked superseded by the new one (§NNN) — so its page can say a newer email
+ * exists — and only those rows: an invalidation from anywhere else is a revocation, and stays generic.
  *
  * `db` is normally the caller's open transaction (registration, token and outbox row together,
  * §15.1). The scope matched mirrors the partial unique indexes; if they drift, the insert fails.
@@ -96,24 +99,26 @@ export async function issueActionToken<T extends Record<string, unknown>>(
       own window. Each is single use and the address's limit is counted under the event's lock,
       so several live links cannot exceed it. The partial unique index excludes this purpose too.
     */
-    if (purpose !== "REGISTER_ANOTHER_PERSON") {
-      await tx
-        .update(emailActionTokens)
-        .set({ invalidatedAt: now })
-        .where(
-          and(
-            eq(emailActionTokens.purpose, purpose),
-            isNull(emailActionTokens.usedAt),
-            isNull(emailActionTokens.invalidatedAt),
-            registrationId === null
-              ? and(
-                  eq(emailActionTokens.participantId, participantId),
-                  isNull(emailActionTokens.registrationId),
-                )
-              : eq(emailActionTokens.registrationId, registrationId),
-          ),
-        );
-    }
+    const superseded =
+      purpose === "REGISTER_ANOTHER_PERSON"
+        ? []
+        : await tx
+            .update(emailActionTokens)
+            .set({ invalidatedAt: now })
+            .where(
+              and(
+                eq(emailActionTokens.purpose, purpose),
+                isNull(emailActionTokens.usedAt),
+                isNull(emailActionTokens.invalidatedAt),
+                registrationId === null
+                  ? and(
+                      eq(emailActionTokens.participantId, participantId),
+                      isNull(emailActionTokens.registrationId),
+                    )
+                  : eq(emailActionTokens.registrationId, registrationId),
+              ),
+            )
+            .returning({ id: emailActionTokens.id });
 
     const [row] = await tx
       .insert(emailActionTokens)
@@ -128,6 +133,18 @@ export async function issueActionToken<T extends Record<string, unknown>>(
         createdAt: now,
       })
       .returning(CONTEXT_COLUMNS);
+
+    /*
+      Which rows a newer email replaced (§NNN): exactly the ones the UPDATE above invalidated, by id,
+      after the insert because the column points at the new row. Two statements rather than one, so
+      the reference is never to a row that does not exist yet; the transaction makes them one fact.
+    */
+    if (superseded.length > 0) {
+      await tx
+        .update(emailActionTokens)
+        .set({ supersededByTokenId: row.id })
+        .where(inArray(emailActionTokens.id, superseded.map((old) => old.id)));
+    }
 
     return row;
   });
@@ -157,6 +174,7 @@ export async function readActionTokenContext<T extends Record<string, unknown>>(
         ...CONTEXT_COLUMNS,
         usedAt: emailActionTokens.usedAt,
         invalidatedAt: emailActionTokens.invalidatedAt,
+        supersededByTokenId: emailActionTokens.supersededByTokenId,
       })
       .from(emailActionTokens)
       .where(eq(emailActionTokens.tokenHash, tokenHash))
@@ -215,6 +233,7 @@ export async function readSpentActionTokenScope<T extends Record<string, unknown
         expiresAt: emailActionTokens.expiresAt,
         usedAt: emailActionTokens.usedAt,
         invalidatedAt: emailActionTokens.invalidatedAt,
+        supersededByTokenId: emailActionTokens.supersededByTokenId,
       })
       .from(emailActionTokens)
       .where(eq(emailActionTokens.tokenHash, tokenHash))
@@ -229,6 +248,81 @@ export async function readSpentActionTokenScope<T extends Record<string, unknown
       participantId: row.participantId,
       registrationId: row.registrationId,
       purpose: row.purpose,
+    };
+  });
+}
+
+/**
+ * The scope of a token a newer one *replaced*, and when the newest of its kind was issued, so a
+ * page can say "a newer email has the working link" (§NNN; `registrations/domain/link-status.ts`).
+ * The sibling of `readSpentActionTokenScope`, with the same three properties:
+ *
+ * - Answers only for `SUPERSEDED`, re-evaluated here; a purpose mismatch, a revoked row, an
+ *   unknown secret all return null — the caller falls back to the one generic refusal (§13.2).
+ * - A read-only transaction: reached from a GET.
+ * - Reveals the scope the holder's secret was issued for and one instant — when the newest token
+ *   of the same purpose and scope was created, which is when its email was rendered (links are
+ *   minted at send time, `notifications/render.ts`). Never the newer token's id, hash or secret.
+ *
+ * The newest, not merely the row `superseded_by_token_id` names: after two resends the person is
+ * told to open the latest email, so the time given is the latest email's.
+ */
+export type SupersededActionTokenScope = SpentActionTokenScope & {
+  /** When the newest token of this purpose and scope was issued; null when none can be read. */
+  newestIssuedAt: Date | null;
+};
+
+export async function readSupersededActionTokenScope<T extends Record<string, unknown>>(
+  db: Database<T>,
+  params: { secret: string; purpose: EmailActionTokenPurpose; now: Date },
+): Promise<SupersededActionTokenScope | null> {
+  const { secret, purpose, now } = params;
+
+  if (!isWellFormedTokenSecret(secret)) return null;
+
+  const tokenHash = hashTokenSecret(secret);
+
+  return inReadOnlyTransaction(db, async (tx) => {
+    const [row] = await tx
+      .select({
+        id: emailActionTokens.id,
+        participantId: emailActionTokens.participantId,
+        registrationId: emailActionTokens.registrationId,
+        purpose: emailActionTokens.purpose,
+        expiresAt: emailActionTokens.expiresAt,
+        usedAt: emailActionTokens.usedAt,
+        invalidatedAt: emailActionTokens.invalidatedAt,
+        supersededByTokenId: emailActionTokens.supersededByTokenId,
+      })
+      .from(emailActionTokens)
+      .where(eq(emailActionTokens.tokenHash, tokenHash))
+      .limit(1);
+
+    if (!row) return null;
+
+    const evaluation = evaluateActionToken(row, purpose, now);
+    if (evaluation.ok || evaluation.reason !== "SUPERSEDED") return null;
+
+    const [newest] = await tx
+      .select({ createdAt: emailActionTokens.createdAt })
+      .from(emailActionTokens)
+      .where(
+        and(
+          eq(emailActionTokens.purpose, row.purpose),
+          ne(emailActionTokens.id, row.id),
+          row.registrationId === null
+            ? and(eq(emailActionTokens.participantId, row.participantId), isNull(emailActionTokens.registrationId))
+            : eq(emailActionTokens.registrationId, row.registrationId),
+        ),
+      )
+      .orderBy(desc(emailActionTokens.createdAt))
+      .limit(1);
+
+    return {
+      participantId: row.participantId,
+      registrationId: row.registrationId,
+      purpose: row.purpose,
+      newestIssuedAt: newest?.createdAt ?? null,
     };
   });
 }
@@ -271,6 +365,7 @@ export async function consumeActionToken<T extends Record<string, unknown>>(
       expiresAt: emailActionTokens.expiresAt,
       usedAt: emailActionTokens.usedAt,
       invalidatedAt: emailActionTokens.invalidatedAt,
+      supersededByTokenId: emailActionTokens.supersededByTokenId,
     })
     .from(emailActionTokens)
     .where(eq(emailActionTokens.tokenHash, tokenHash))

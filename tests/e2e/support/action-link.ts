@@ -175,19 +175,31 @@ export async function mintActionLink(
     try {
       // One live token per registration and purpose (the partial unique index): supersede, then add —
       // for every purpose but the family link, which the index leaves out and the real send never
-      // supersedes (§389, §420).
-      if (purpose !== "REGISTER_ANOTHER_PERSON") {
-        await client.query(
-          `UPDATE email_action_tokens SET invalidated_at = now()
-            WHERE registration_id = $1 AND purpose = $2 AND used_at IS NULL AND invalidated_at IS NULL`,
-          [registration.id, purpose],
-        );
-      }
-      await client.query(
+      // supersedes (§389, §420). The superseded rows point at the new one, as `issueActionToken`
+      // leaves them (§NNN), so their pages say a newer email replaced them.
+      const superseded =
+        purpose === "REGISTER_ANOTHER_PERSON"
+          ? []
+          : (
+              await client.query<{ id: string }>(
+                `UPDATE email_action_tokens SET invalidated_at = now()
+                  WHERE registration_id = $1 AND purpose = $2 AND used_at IS NULL AND invalidated_at IS NULL
+                  RETURNING id`,
+                [registration.id, purpose],
+              )
+            ).rows.map((row) => row.id);
+      const inserted = await client.query<{ id: string }>(
         `INSERT INTO email_action_tokens (participant_id, registration_id, purpose, token_hash, expires_at)
-         VALUES ($1, $2, $3, $4, now() + interval '2 hours')`,
+         VALUES ($1, $2, $3, $4, now() + interval '2 hours')
+         RETURNING id`,
         [registration.participantId, registration.id, purpose, hash],
       );
+      if (superseded.length > 0) {
+        await client.query(`UPDATE email_action_tokens SET superseded_by_token_id = $1 WHERE id = ANY($2::uuid[])`, [
+          inserted.rows[0].id,
+          superseded,
+        ]);
+      }
       await client.query("COMMIT");
     } catch (error) {
       await client.query("ROLLBACK");

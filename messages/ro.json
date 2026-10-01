@@ -6069,7 +6069,6 @@
       },
       "delay": "Ajunge în cel mult cinci minute.",
       "delayScheduled": "Ajunge în cel mult {wait}.",
-      "notArrived": "Nu a venit? Uită-te și în Spam.",
       "backToEvent": "Înapoi la eveniment",
       "family": "Un singur email, pentru toți: {names}.",
       "familyEach": "Fiecare persoană primește emailul ei."
@@ -6191,8 +6190,8 @@
       "intro": "Dacă nu ai primit mesajul nostru, scrie adresa cu care te-ai înscris și îți trimitem linkul din nou. Verifică și folderul de spam.",
       "emailHelp": "Adresa folosită la înscriere.",
       "submit": "Trimite linkul",
-      "sent": "Dacă există o înscriere pe această adresă, tocmai am trimis linkul acolo. Verifică inclusiv folderul de spam.",
-      "sentScheduled": "Dacă există o înscriere pe această adresă, linkul pleacă acolo la următoarea trecere programată a platformei, în cel mult {wait}. Verifică inclusiv folderul de spam.",
+      "sent": "Dacă există o înscriere pe această adresă, tocmai am trimis linkul acolo.",
+      "sentScheduled": "Dacă există o înscriere pe această adresă, linkul pleacă acolo la următoarea trecere programată a platformei, în cel mult {wait}.",
       "prompt": "Nu a ajuns mesajul?",
       "linkLabel": "Trimite-l din nou",
       "stillNothing": "Nici după ce l-ai cerut din nou nu a ajuns nimic?",
@@ -6393,6 +6392,11 @@
   },
   "Registrations": {
     "invalidOrExpired": "Acest link nu mai este valabil. Îți putem trimite unul nou, pe aceeași adresă de email.",
+    "replaced": "Acest link a fost înlocuit. Ți-am trimis un email mai nou, cu un link valabil. Deschide cel mai recent email de la noi — dacă nu-l găsești, caută în Spam și în Promoții.",
+    "replacedAt": "Acest link a fost înlocuit. Ți-am trimis un email mai nou, cu un link valabil (trimis {issuedAt}). Deschide cel mai recent email de la noi — dacă nu-l găsești, caută în Spam și în Promoții.",
+    "spamHint": {
+      "body": "Nu a venit în câteva minute? Caută în Spam și în Promoții și mută-ne în Inbox, ca să primești și următoarele."
+    },
     "cancelKeepsRecord": "Renunțarea eliberează locul; înscrierea o păstrăm trei ani, ca dovadă. Vrei să-ți vezi, corectezi sau ștergi datele? <contact>Scrie-ne</contact>.",
     "cancelReason": {
       "label": "De ce anulezi?",
@@ -6568,7 +6572,7 @@
       "intro": "Scrie adresa cu care te-ai înscris și îți trimitem un link cu toate înscrierile tale.",
       "email": "Adresa de email",
       "submit": "Trimite-mi linkul",
-      "sent": "Dacă există înscrieri pe această adresă, tocmai am trimis linkul acolo. Verifică inclusiv folderul de spam.",
+      "sent": "Dacă există înscrieri pe această adresă, tocmai am trimis linkul acolo.",
       "listTitle": "Înscrierile tale",
       "empty": "Nu ai nicio înscriere activă în acest moment.",
       "cancel": "Renunț la această înscriere",
@@ -6595,7 +6599,7 @@
         "body": "La {event} așteaptă semnătura declarațiile pentru: {names}. Le poți semna aici pe toate, una după alta.",
         "action": "Semnează declarațiile"
       },
-      "sentScheduled": "Dacă există înscrieri pe această adresă, linkul pleacă acolo în cel mult {wait}. Verifică inclusiv folderul de spam.",
+      "sentScheduled": "Dacă există înscrieri pe această adresă, linkul pleacă acolo în cel mult {wait}.",
       "declaration": {
         "signed": "Declarația: semnată — {when}",
         "toSign": "Declarația: de semnat",
@@ -7597,8 +7601,8 @@
     "submitting": "Se trimite…",
     "sent": {
       "title": "Verifică-ți căsuța de email",
-      "body": "Dacă adresa e bună, în câteva minute primești un email cu un link. Abonarea începe doar după ce apeși linkul. Nu îl găsești? Uită-te și în dosarul Spam.",
-      "bodyScheduled": "Dacă adresa e bună, primești un email cu un link în cel mult {wait}. Abonarea începe doar după ce apeși linkul. Nu îl găsești? Uită-te și în dosarul Spam."
+      "body": "Dacă adresa e bună, în câteva minute primești un email cu un link. Abonarea începe doar după ce apeși linkul.",
+      "bodyScheduled": "Dacă adresa e bună, primești un email cu un link în cel mult {wait}. Abonarea începe doar după ce apeși linkul."
     },
     "errors": {
       "title": "Abonarea nu a pornit încă",
