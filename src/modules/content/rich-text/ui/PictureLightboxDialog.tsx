@@ -140,6 +140,8 @@ function ZoomLayer({
   }, []);
 
   const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    // A new finger cancels a tap's pending close: a pinch or a pan begun within 300 ms of it keeps the preview.
+    if (closeTimer.current) { clearTimeout(closeTimer.current); closeTimer.current = null; }
     event.currentTarget.setPointerCapture?.(event.pointerId);
     const point = local(event.clientX, event.clientY);
     pointers.current.set(event.pointerId, point);
@@ -196,7 +198,7 @@ function ZoomLayer({
       data-testid="picture-preview"
       // Three rows — the ✕, the picture, the caption — and the middle one takes what is left, which
       // is a definite height the picture can be contained in.
-      sx={{ display: "grid", gridTemplateRows: "auto minmax(0, 1fr) auto", height: "100%", cursor: zoomed ? "grab" : "zoom-out" }}
+      sx={{ display: "grid", gridTemplateRows: "auto minmax(0, 1fr) auto", height: "100%", touchAction: "none", cursor: zoomed ? "grab" : "zoom-out" }}
     >
       <Box sx={{ display: "flex", justifyContent: "flex-end", p: 1 }}>
         <Button

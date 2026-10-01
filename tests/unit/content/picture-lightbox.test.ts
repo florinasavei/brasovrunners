@@ -186,6 +186,9 @@ describe("§NNN the preview itself", () => {
     expect(dialog).toMatch(/<Dialog[\s\S]*?onClose=\{onClose\}/);
     expect(dialog).not.toMatch(/onClick=\{onClose\}/);
     expect(dialog).toMatch(/!isTap\(start\.down, up\)\)[\s\S]*?setTimeout\(onClose, TAP_MS\)/);
+    // A new finger cancels a tap's pending close, so a pinch begun right after a tap keeps the preview.
+    expect(dialog).toMatch(/const onPointerDown = [^{]*\{\s*(?:\/\/[^\n]*\s*)?if \(closeTimer\.current\) \{ clearTimeout\(closeTimer\.current\); closeTimer\.current = null; \}/);
+    expect(dialog).toMatch(/data-testid="picture-preview"[\s\S]*?touchAction: "none"/);
     expect(dialog).toMatch(/onPointerUp=\{\(event\) => onPointerEnd\(event, false\)\}/);
     expect(dialog).toContain("minHeight: 44");
     // The dialog is a separate chunk, fetched the first time a picture is tapped (§577).
