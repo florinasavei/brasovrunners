@@ -33,7 +33,26 @@ import { useEffect, useRef, useTransition } from "react";
  * opens every fold around it too, so a reader who unticked the section's last box is not left with
  * its fold shut over the panel they were using.
  */
-let reopenAfterTick: string | null = null;
+let reopenAfterTick: { scope: string; at: number } | null = null;
+
+/** A tick that has not landed in this long is not coming: the memory of it is dropped, never kept for a later page. */
+const REOPEN_WINDOW_MS = 10_000;
+
+/**
+ * Whether this panel is the one that was ticked, and the memory spent either way once the page that
+ * answers the tick has committed (§NNN). If the ticked panel no longer renders — the reader unticked
+ * the past section's last box and nothing is left to narrow — no instance consumes the value, and a
+ * stale "past" would open a past panel mounted later from a shared link or the back button. So the
+ * value is consumed by its own scope, dropped once it is old, and cleared after this commit's effects
+ * have all run, whichever instance asked.
+ */
+function takeReopen(scope: string): boolean {
+  const mine = reopenAfterTick !== null && reopenAfterTick.scope === scope && Date.now() - reopenAfterTick.at < REOPEN_WINDOW_MS;
+  setTimeout(() => {
+    reopenAfterTick = null;
+  }, 0);
+  return mine;
+}
 
 /** The panel's own fold, and every `<details>` around it, open. */
 function openFolds(fold: HTMLDetailsElement | null) {
@@ -49,12 +68,9 @@ export default function FilterAutoApply({ scope, ticked }: { scope: string; tick
     const form = anchor.current?.closest("form");
     if (!form) return;
     form.dataset.enhanced = "true";
-    if (reopenAfterTick === scope) {
-      openFolds(form.closest("details"));
-      reopenAfterTick = null;
-    }
+    if (takeReopen(scope)) openFolds(form.closest("details"));
     const apply = () => {
-      reopenAfterTick = scope;
+      reopenAfterTick = { scope, at: Date.now() };
       const params = new URLSearchParams();
       for (const [name, value] of new FormData(form)) if (typeof value === "string") params.append(name, value);
       const action = form.getAttribute("action") ?? window.location.pathname;
@@ -74,10 +90,7 @@ export default function FilterAutoApply({ scope, ticked }: { scope: string; tick
     if (!form) return;
     // The tick landed on this same page (no fresh mount): nothing left to reopen later — but a fold
     // around the panel may have followed the new state shut (the past section's, §NNN).
-    if (reopenAfterTick === scope) {
-      openFolds(form.closest("details"));
-      reopenAfterTick = null;
-    }
+    if (takeReopen(scope)) openFolds(form.closest("details"));
     const state = new Set(key ? key.split("&") : []);
     for (const box of form.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')) {
       box.checked = state.has(`${box.name}=${box.value}`);

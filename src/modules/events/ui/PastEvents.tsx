@@ -55,6 +55,12 @@ export const PAST_EVENTS_SHOWN = 12;
  * as §267 has it. Ticked with nothing matching, the section stays — the panel names its ticks and
  * «Șterge filtrele» is one press away — and says that nothing matches.
  *
+ * **When there is no «Filtre» here — on purpose.** §413's rule holds for this panel as for the other (criterion
+ * 75): a box only where ticking it narrows the past window, or where the address ticks it. A window whose
+ * events are all one kind, surface, cost and distance narrows by nothing, and a button that opens onto no box
+ * would be a control that does nothing. Production's past is the weekly group run and nothing else (§NNN), so
+ * it shows no panel there until a second kind of event has been held; the section says so in DECISIONS, not here.
+ *
  * Between seasons the lead already shows the club's last event with a notice (§167), so this
  * section skips that one row: it would be the same card twice on one page.
  */
