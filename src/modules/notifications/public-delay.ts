@@ -20,7 +20,7 @@ import { EMAIL_PLAN_SETTING_KEY } from "./email-plan";
 import { EMAIL_TRANSPORT_SETTING_KEY, gmailIsConfigured } from "./email-transport";
 import { carriedByMailgunApi } from "./hourly-pace";
 import type { OutboxRoads } from "./outbox";
-import { outboxRoadsFor } from "./outbox-roads";
+import { fallbackNoticeForOutbox, outboxRoadsFor } from "./outbox-roads";
 
 /**
  * «Emailurile noastre întârzie acum» (§NNN): the outbox as a public page reads it — how many messages
@@ -120,16 +120,21 @@ export async function readEmailDelayFacts<T extends Record<string, unknown>>(db:
     .where(or(inArray(emailOutbox.status, ["PENDING", "PROCESSING"]), gt(emailOutbox.sentAt, new Date(now.getTime() - PACE_EVIDENCE_MS))))
     .groupBy(emailOutbox.messageType, clubCopy);
 
-  return factsFromGroups(groups);
+  // The Gmail takeover (§622) carries a stop only once the notice in force names it: the outbox's own
+  // reader, asked only when the switch could act — so a stop Gmail carries is not read as a stop here.
+  const transport = emailTransportSettingSchema.safeParse(groups[0]?.transportValue);
+  const transportSetting = transport.success ? transport.data : defaultEmailTransportFor(env.APP_ENV);
+  const noticeNamesFallback = await fallbackNoticeForOutbox(db, transportSetting, gmailIsConfigured(), now);
+  return factsFromGroups(groups, noticeNamesFallback);
 }
 
 /** The groups, classified: the roads from the transport setting, the pace from the plan — as `readEmailPlan` and `readOutboxRoads` read them. */
-function factsFromGroups(groups: readonly FactsGroup[]): EmailDelayFacts {
+function factsFromGroups(groups: readonly FactsGroup[], noticeNamesFallback: boolean): EmailDelayFacts {
   const settings = groups[0];
   const plan = emailPlanSettingSchema.safeParse(settings?.planValue);
   const hourlyAllowance = plan.success ? plan.data.hourlyAllowance : DEFAULT_EMAIL_PLAN.hourlyAllowance;
   const transport = emailTransportSettingSchema.safeParse(settings?.transportValue);
-  const roads = outboxRoadsFor(transport.success ? transport.data : defaultEmailTransportFor(env.APP_ENV), gmailIsConfigured());
+  const roads = outboxRoadsFor(transport.success ? transport.data : defaultEmailTransportFor(env.APP_ENV), gmailIsConfigured(), noticeNamesFallback);
 
   const facts: EmailDelayFacts = {
     queued: 0,
