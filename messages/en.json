@@ -48,6 +48,7 @@
     "pastCountFiltered": "Past, filtered ({count})",
     "filter": {
       "label": "Event filters",
+      "labelPast": "Filters for past events",
       "button": "Filters",
       "buttonCount": "Filters ({count})",
       "groups": {
@@ -71,7 +72,9 @@
       "clear": "Clear filters",
       "remove": "Remove filter",
       "active": "Active filters",
-      "none": "No event matches the filters you chose."
+      "activePast": "Active filters for past events",
+      "none": "No event matches the filters you chose.",
+      "pastNothingToNarrow": "Every past event is the same — {values} — so there is nothing to narrow here."
     },
     "calendar": {
       "previous": "Previous month",

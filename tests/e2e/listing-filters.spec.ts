@@ -130,6 +130,76 @@ test.describe("BR-REQ-041-01 the listing's filters are one collapsed button", ()
     await expect(page.locator("#main")).toContainText("No event matches the filters you chose.");
   });
 
+  test("the past section has its own «Filtre»: `past-` names in the same address, and neither list narrows the other (§NNN)", async ({ page }) => {
+    // The owner, 2026-10-01: «Am zis că vreau un filtru și la evenimentele trecute, la fel ca la cele
+    // curente». The seed's one past event is last Sunday's group run, and other specs add more on
+    // both projects, so the past panel is reached from an address that ticks two kinds — a box the
+    // address ticks is always offered (§413, criterion 75) — never from a count of past rows.
+    const ahead = (name: string) =>
+      page.getByTestId("listing-cards").locator("h1, h2, h3").filter({ hasText: new RegExp(`^\\s*${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*$`) });
+    await page.goto("/ro/evenimente?past-type=RACE&past-type=GROUP_RUN");
+    await hydrated(page);
+    const section = page.locator("#main").getByTestId("past-events");
+    const pastHeading = section.locator("> summary");
+    // A past tick opens the fold and says it is filtered; the cards ahead are all there, unfiltered.
+    await expect(section).toHaveAttribute("open", "");
+    await expect(pastHeading).toHaveText(/^\s*Din trecut, după filtre \(\d+\)\s*$/);
+    await expect(ahead(RACE)).toBeVisible();
+    await expect(ahead(TRAIL_RUN)).toBeAttached();
+    await expect(ahead(INTERVALS)).toBeAttached();
+    await expect(panel(page).locator("summary")).toHaveText("Filtre");
+
+    // Its own panel, inside the fold, counting its own ticks.
+    const pastPanel = section.getByTestId("past-filters");
+    await expect(pastPanel.locator("summary")).toHaveText("Filtre (2)");
+    await pastPanel.locator("summary").click();
+    await expect(page.getByRole("form", { name: "Filtrele evenimentelor trecute" })).toBeVisible();
+
+    // Untick «Concurs» there: only the past scope changes, and the heading names the kind left.
+    await pastPanel.getByRole("checkbox", { name: "Concurs", exact: true }).uncheck();
+    await expect(page).toHaveURL(/\/ro\/evenimente\?past-type=GROUP_RUN$/);
+    await expect(pastHeading).toHaveText(/^\s*Din trecut — Alergare de grup \([1-9]\d*\)\s*$/);
+    const pastWords = await pastHeading.innerText();
+    await expect(pastPanel.locator("summary")).toHaveText("Filtre (1)");
+    await expect(section).toHaveAttribute("open", "");
+    await expect(ahead(RACE)).toBeVisible();
+    await expect(ahead(TRAIL_RUN)).toBeAttached();
+    await expect(ahead(INTERVALS)).toBeAttached();
+
+    // Tick «Concurs» in the top panel: the cards ahead narrow, the past does not move.
+    const fold = panel(page);
+    await fold.locator("summary").click();
+    await fold.getByRole("checkbox", { name: "Concurs", exact: true }).check();
+    await expect(page).toHaveURL(/[?&]type=RACE(&|$)/);
+    await expect(page).toHaveURL(/[?&]past-type=GROUP_RUN(&|$)/);
+    await expect(fold.locator("summary")).toHaveText("Filtre (1)");
+    await expect(ahead(RACE)).toBeVisible();
+    await expect(ahead(TRAIL_RUN)).toHaveCount(0);
+    await expect(pastHeading).toHaveText(pastWords);
+    await expect(pastPanel.locator("summary")).toHaveText("Filtre (1)");
+    await expect(section).toHaveAttribute("open", "");
+  });
+
+  test("the past section always carries its «Filtre», whether the window is uniform or mixed (§NNN)", async ({ page }) => {
+    // The seed's one past event is last Sunday's group run (uniform: one kind, surface, band, cost);
+    // other specs add more on both projects, so the window may be mixed. Either way the control is
+    // there: the button always, and under it boxes when something narrows, else the one sentence.
+    await page.goto("/ro/evenimente");
+    await hydrated(page);
+    const section = page.locator("#main").getByTestId("past-events");
+    await section.locator("> summary").click();
+    const pastPanel = section.getByTestId("past-filters");
+    await expect(pastPanel.locator("summary")).toHaveText("Filtre");
+    await pastPanel.locator("summary").click();
+    const sentence = section.getByTestId("past-filters-nothing");
+    if ((await sentence.count()) > 0) {
+      await expect(sentence).toContainText("Toate evenimentele trecute sunt la fel");
+      await expect(pastPanel.getByRole("checkbox")).toHaveCount(0);
+    } else {
+      await expect(pastPanel.getByRole("checkbox").first()).toBeVisible();
+    }
+  });
+
   test("the calendar reads the same address, keeps it through its own links, and carries the same button", async ({ page }) => {
     // The year the race falls in (it is three weeks out, so this year or the next).
     const now = new Date();
