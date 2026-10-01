@@ -614,7 +614,8 @@ describe("BR-REQ-041-01 the listing card's facts: glyph-led lines and the page's
     // are in the markup, one hidden by width at a time — never two read together at once.
     const near = line(await card(), "when").inner;
     expect([...near.matchAll(/Sâmbătă, 26 sept\. 2026/g)]).toHaveLength(1);
-    expect([...near.matchAll(/Sâmbătă, 26 sept\.(?! 2026)/g)]).toHaveLength(1);
+    // The phone span says the weekday short since the time piece grew (the hotfix of 2026-10-01): «Sâm., 26 sept.».
+    expect([...near.matchAll(/Sâm\., 26 sept\.(?! 2026)/g)]).toHaveLength(1);
     // The source says which is which: the full date reads at `sm` and up, the short one at `xs`.
     const source = readFileSync("src/modules/events/ui/EventFacts.tsx", "utf8");
     expect(source).toMatch(/display:\s*\{\s*xs:\s*"none",\s*sm:\s*"inline"\s*\}/);

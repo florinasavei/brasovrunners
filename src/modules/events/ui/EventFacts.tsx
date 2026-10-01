@@ -285,7 +285,9 @@ export default async function EventFacts({
    * card that fits — a desktop's, a short weekday's — stays one line.
    */
   const dateWithinYear = compact && startsAt !== null && startsAt.getTime() - now.getTime() >= 0 && startsAt.getTime() - now.getTime() < 365 * 24 * 60 * 60 * 1000;
-  const dateShort = dateWithinYear && startsAt !== null ? formatDay(startsAt, { locale, timeZone: event.timezone, style: "long", year: false }) : null;
+  // The phone card drops the year within twelve months (§375) and, since the time piece grew («10:00 (start eveniment)»,
+  // #305), says the weekday short too — «sâm., 21 nov.» — so the row stays one line on most phones (the owner, 2026-10-01).
+  const dateShort = dateWithinYear && startsAt !== null ? formatDay(startsAt, { locale, timeZone: event.timezone, style: "short", year: false }) : null;
   const date: ReactNode = dateShort ? (
     <>
       <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
