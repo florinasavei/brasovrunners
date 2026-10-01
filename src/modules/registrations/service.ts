@@ -1031,6 +1031,15 @@ export type PublicPlaces = {
    * progress. `kind` is in no condition. 0 for an uncapped event.
    */
   confirmed: number;
+  /**
+   * The occupied places as `occupiedForNewcomer` counts them (`computeOccupied`, §NNN, less the lapsed
+   * declaration holds when the waiting list has no room): confirmed, a pending declaration, an open
+   * offer and a family's hold. The same count `availablePlaces` is built on; the display's first
+   * number is this value clamped to the capacity. The places line's «în curs de confirmare» is this
+   * minus `confirmed`.
+   * 0 for an uncapped event.
+   */
+  occupied: number;
 };
 
 /**
@@ -1050,23 +1059,24 @@ export async function readPublicPlaces<T extends Record<string, unknown>>(
   event: { id: string; capacity: number | null; waitlistCapacity: number | null },
   now: Date,
 ): Promise<PublicPlaces> {
-  if (event.capacity === null) return { availablePlaces: null, waitlistRoom: null, waiting: 0, offered: 0, waitlisted: 0, confirmed: 0 };
+  if (event.capacity === null) return { availablePlaces: null, waitlistRoom: null, waiting: 0, offered: 0, waitlisted: 0, confirmed: 0, occupied: 0 };
 
   const counts = await repo.countOccupied(db, event.id, now);
   const eligibleWaitlisted = await repo.countEligibleWaitlisted(db, event.id);
   const line = { waitlistCapacity: event.waitlistCapacity, waitlisted: eligibleWaitlisted, openOffers: counts.unexpiredWaitlistOfferedHolds };
+  // The count the free places are built on, carried to the display as it is (§NNN): a lapsed
+  // declaration hold the line has no room to wait behind is free, not occupied, so the places
+  // line and the free line add up to the capacity.
+  const occupied = occupiedForNewcomer({ ...line, occupied: computeOccupied(counts), lapsedDeclarationHolds: counts.lapsedDeclarationHolds });
   return {
-    availablePlaces: computePublicAvailability({
-      capacity: event.capacity,
-      occupied: occupiedForNewcomer({ ...line, occupied: computeOccupied(counts), lapsedDeclarationHolds: counts.lapsedDeclarationHolds }),
-      eligibleWaitlisted,
-    }),
+    availablePlaces: computePublicAvailability({ capacity: event.capacity, occupied, eligibleWaitlisted }),
     waitlistRoom: waitlistRoom(line),
     waiting: waitlistLength(line),
     // The line's two halves, from the same two counts — no query of their own (§NNN).
     offered: line.openOffers,
     waitlisted: line.waitlisted,
     confirmed: counts.confirmed,
+    occupied,
   };
 }
 

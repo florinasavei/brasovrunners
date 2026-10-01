@@ -156,24 +156,30 @@ export type PublicFill = {
   taken: number;
   capacity: number;
   /**
-   * The confirmed registrations among `taken` (§NNN), when the line should say how many are still in
-   * progress: a pending declaration, an open offer and a family's hold occupy a place and are not
-   * confirmed. Absent when the count is unknown (a cache entry from before it) or somebody waits.
+   * The confirmed registrations among `taken` (§NNN), when the occupied count is known: `taken - confirmed`
+   * are in progress — a pending declaration, an open offer, a family's hold. Absent when the count is
+   * unknown (a cache entry from before it).
    */
   confirmed?: number;
+  /**
+   * The free places the waiting list has a claim on (§NNN, §617): the capacity less the free places the
+   * button shows less `taken`. Absent when nought or unknown.
+   */
+  kept?: number;
 };
 
 /**
  * "12 înscriși din 50 de locuri" — the free places read the other way round (§346; the owner:
  * "I need to show the total number registered out of the available places").
  *
- * **Not a second count.** `taken` is the event's places minus the free places the button
- * already shows, and those come from `readPublicAvailability`, the allocator's own formula
- * (AGENTS.md §10.6). So the two lines beside the button can never disagree — "12 of 50" beside
- * "38 places left" is one number read twice — and what "taken" means is exactly what the
- * formula means by occupied: confirmed places, held places (a declaration still to sign, a
- * waiting-list offer still open) and the waiting list's claim on anything free. A form sent but
- * not yet confirmed by email takes no place and is not counted (BR-REQ-034-01 criterion 5).
+ * **Not a second count.** The first number is the occupied count the free places are built on
+ * (`occupiedForNewcomer`, from `readPublicAvailability`, the allocator's own formula, AGENTS.md
+ * §10.6), at most the capacity: confirmed places and held places (a declaration still to sign, a
+ * waiting-list offer still open, a family's hold). The waiting list's claim on free places is not
+ * in it; it is reported separately as `kept = (capacity - free) - occupied`, floored at nought, so
+ * taken + kept + free = capacity whenever a free line shows and the lines beside the button never
+ * disagree. An entry cached before the counts existed falls back to capacity - free. A form sent
+ * but not yet confirmed by email takes no place and is not counted (BR-REQ-034-01 criterion 5).
  *
  * It says nothing the page did not say already: with the free places public, the taken places
  * are the event's size minus them. What is new is the size, and the size is a fact about the
@@ -198,8 +204,23 @@ export type PublicFill = {
  * against a mixed REAL/TEST event on a real database, the same way it proves every other §30
  * property.
  */
-export function publicFill(capacity: number | null, availablePlaces: number | null, confirmed?: number): PublicFill | null {
+export function publicFill(
+  capacity: number | null,
+  availablePlaces: number | null,
+  held?: { occupied?: number; confirmed?: number },
+): PublicFill | null {
   if (capacity === null || availablePlaces === null) return null;
-  const taken = Math.min(Math.max(capacity - availablePlaces, 0), capacity);
-  return confirmed === undefined ? { taken, capacity } : { taken, capacity, confirmed: Math.min(confirmed, taken) };
+  const claimed = Math.min(Math.max(capacity - availablePlaces, 0), capacity);
+  /*
+    The first number is the occupied count in every state (§NNN): the registrations holding places,
+    confirmed and in progress — the count `availablePlaces` is built on — never the capacity less the
+    free places, which also holds the waiting list's claim on free places (§617). That claim is `kept`,
+    its own part of the clause, so «6 înscriși din 10 locuri — 4 confirmați, 2 în curs, 4 păstrate» adds up.
+    An entry cached before the counts existed has only the free places: the plain line.
+  */
+  if (held?.occupied === undefined || held.confirmed === undefined) return { taken: claimed, capacity };
+  const taken = Math.max(Math.min(held.occupied, capacity), 0);
+  const confirmed = Math.min(held.confirmed, taken);
+  const kept = Math.max(claimed - taken, 0);
+  return { taken, capacity, confirmed, ...(kept > 0 ? { kept } : {}) };
 }

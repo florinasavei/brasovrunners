@@ -291,7 +291,13 @@
         "few": "{count} înscriși",
         "other": "{count} de înscriși"
       },
-      "fillProgress": "{taken} din {places} — {confirmed}, {progress} în curs de confirmare",
+      "fillParts": "{taken} din {places} — {parts}",
+      "fillInProgress": "{count} în curs de confirmare",
+      "fillKept": {
+        "one": "{count} loc păstrat pentru lista de așteptare",
+        "few": "{count} locuri păstrate pentru lista de așteptare",
+        "other": "{count} de locuri păstrate pentru lista de așteptare"
+      },
       "fillConfirmed": {
         "one": "{count} confirmat",
         "few": "{count} confirmați",
