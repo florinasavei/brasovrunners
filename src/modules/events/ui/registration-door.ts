@@ -46,6 +46,10 @@ export async function readRegistrationDoor(event: PublicEventPage, now: Date): P
   let waitlistRoom: number | null = null;
   let waitlistCapacity: number | null = null;
   let waiting = 0;
+  let offered = 0;
+  let waitlisted = 0;
+  let confirmed: number | undefined;
+  let occupied: number | undefined;
   /*
     Every page that shows a door is kept no longer than the door's next change (§549): the window
     opening or closing, the start, the confirmation window, the weather window — the page's card,
@@ -61,6 +65,11 @@ export async function readRegistrationDoor(event: PublicEventPage, now: Date): P
         waitlistRoom = availability.waitlistRoom;
         waitlistCapacity = availability.waitlistCapacity;
         waiting = availability.waiting ?? 0;
+        // An entry cached before §612 has neither: nought until it next expires.
+        offered = availability.offered ?? 0;
+        waitlisted = availability.waitlisted ?? 0;
+        confirmed = availability.confirmed;
+        occupied = availability.occupied;
       }
     } catch (error) {
       /*
@@ -82,8 +91,9 @@ export async function readRegistrationDoor(event: PublicEventPage, now: Date): P
 
   return {
     kind: "KNOWN",
-    cta: registrationCta({ ...event, availablePlaces, waitlistRoom, waitlistCapacity, waiting }, now),
-    fill: publicFill(capacity, availablePlaces),
+    cta: registrationCta({ ...event, availablePlaces, waitlistRoom, waitlistCapacity, waiting, offered, waitlisted }, now),
+    // In progress is counted from the occupied places, in every state (§615).
+    fill: publicFill(capacity, availablePlaces, { occupied, confirmed }),
   };
 }
 
@@ -110,16 +120,24 @@ export async function draftRegistrationDoor<T extends Record<string, unknown>>(
   let availablePlaces: number | null = null;
   let waitlistRoom: number | null = null;
   let waiting = 0;
+  let offered = 0;
+  let waitlisted = 0;
+  let confirmed: number | undefined;
+  let occupied: number | undefined;
   if (event.registrationMode === "INTERNAL" && registrationState(event, now) === "OPEN") {
     const places = await readPublicPlaces(db, { id: event.id, ...limits }, now);
     availablePlaces = places.availablePlaces;
     waitlistRoom = places.waitlistRoom;
     waiting = places.waiting;
+    offered = places.offered;
+    waitlisted = places.waitlisted;
+    confirmed = places.confirmed;
+    occupied = places.occupied;
   }
   return {
     kind: "KNOWN",
-    cta: registrationCta({ ...event, availablePlaces, waitlistRoom, waitlistCapacity: limits.waitlistCapacity, waiting }, now),
-    fill: publicFill(limits.capacity, availablePlaces),
+    cta: registrationCta({ ...event, availablePlaces, waitlistRoom, waitlistCapacity: limits.waitlistCapacity, waiting, offered, waitlisted }, now),
+    fill: publicFill(limits.capacity, availablePlaces, { occupied, confirmed }),
   };
 }
 

@@ -15,6 +15,7 @@ import { listingSections } from "@/modules/events/domain/listing";
 import PastEvents from "@/modules/events/ui/PastEvents";
 import {
   activeFilterCount,
+  listingFilterQuery,
   listingFilterRows,
   matchesListingFilter,
   offeredFilters,
@@ -67,6 +68,8 @@ type ListingQuery = {
   cost?: string | string[];
   night?: string | string[];
   registration?: string | string[];
+  /** The past section's own filter (§611): the same names under `past-` (`past-type`, `past-partner`, …). */
+  [pastFilter: `past-${string}`]: string | string[] | undefined;
 };
 
 /**
@@ -133,7 +136,9 @@ export default async function EventsPage({ params, query: asked }: Props) {
   const query: ListingQuery = (await asked) ?? {};
   // The filters (§413, amending §133/§401): every group the panel offers, OR within a group and AND
   // across groups, read off the address — `?type=RACE` and `?partner=1` mean what they always meant.
-  const filter = parseListingFilter(query);
+  const filter = parseListingFilter(query, "upcoming");
+  // The past section's own (§611, amending §602): the same groups under `past-` names, its own list.
+  const pastFilter = parseListingFilter(query, "past");
   // The layout the month links keep (§137); the panel's form and links carry it along.
   const layout: CalendarLayout = (Array.isArray(query.view) ? query.view[0] : query.view) === "list" ? "list" : "grid";
   if (!hasLocale(routing.locales, locale)) notFound();
@@ -209,7 +214,16 @@ export default async function EventsPage({ params, query: asked }: Props) {
         {t("intro")}
       </Typography>
 
-      <ListingLead events={events} undated={undatedRows} past={pastRows} hasUpcoming={hasUpcoming} filter={filter} facts={facts} layout={layout} locale={locale} />
+      <ListingLead
+        events={events}
+        undated={undatedRows}
+        hasUpcoming={hasUpcoming}
+        filter={filter}
+        carry={listingFilterQuery(pastFilter, "past")}
+        facts={facts}
+        layout={layout}
+        locale={locale}
+      />
 
       {/* The calendar moved to its own page in §251 — a tab after the events, because the
           front page is for "what is on next" and a grid of squares is what somebody planning a
@@ -220,13 +234,16 @@ export default async function EventsPage({ params, query: asked }: Props) {
       {/* The events whose date is to be announced (§533): under the dated ones, never in a month. */}
       <UndatedEvents rows={undatedShown} now={now} />
 
-      {/* What the club has already held, at the foot and folded (§267). */}
+      {/* What the club has already held, at the foot and folded (§267), with its own «Filtre» (§611). */}
       <PastEvents
         rows={pastRows}
         now={now}
-        filter={filter}
+        filter={pastFilter}
         facts={facts}
         shownAbove={hasUpcoming ? undefined : events[0]?.id}
+        locale={locale}
+        keep={layout === "list" ? { view: "list" } : {}}
+        carry={listingFilterQuery(filter, "upcoming")}
       />
     </Container>
   );
@@ -248,19 +265,19 @@ export default async function EventsPage({ params, query: asked }: Props) {
 async function ListingLead({
   events,
   undated,
-  past,
   hasUpcoming,
   filter,
+  carry,
   facts,
   layout,
   locale,
 }: Listing & {
   /** The events whose date is to be announced (§533): the panel offers their values too. */
   undated: readonly PublicEventPage[];
-  /** The past section's window (§267), which the same filters narrow (§602): its values are offered too. */
-  past: readonly PublicEventPage[];
   /** The filters the address names (§413): OR within a group, AND across groups. */
   filter: ListingFilter;
+  /** The past section's own ticks (§611), as query parameters: this panel's form and links keep them. */
+  carry: Record<string, string | string[]>;
   /** The night and door answers, per row, the page read once (§394, §413). */
   facts: FilterFacts<PublicEventPage>;
   layout: CalendarLayout;
@@ -270,10 +287,9 @@ async function ListingLead({
   // What the panel offers (§413, §133's rule generalised): a box only where ticking it would change
   // what the page shows — read off every row, the lead's included, never off the filtered rows —
   // or where the address already ticks it, so a filtered page can say what it is filtered by.
-  // The past section narrows by the same boxes (§602), so its window is read too: a value only a
-  // past event carries is a box that changes what the page shows. Each row once — between seasons
-  // the lead is the past window's first row (§167).
-  const offer = offeredFilters<PublicEventPage>(listingFilterRows<PublicEventPage>(events, undated, past), filter, facts);
+  // The cards ahead alone (§611, reversing §602's reading of the past window here): the past section
+  // has its own panel and its own state, so a box only the past carries would narrow nothing above.
+  const offer = offeredFilters<PublicEventPage>(listingFilterRows<PublicEventPage>(events, undated), filter, facts);
 
   return (
     <>
@@ -294,6 +310,7 @@ async function ListingLead({
             filter={filter}
             offer={offer}
             keep={layout === "list" ? { view: "list" } : {}}
+            carry={carry}
           />
         </Box>
       )}

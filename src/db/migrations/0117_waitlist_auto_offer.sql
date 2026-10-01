@@ -1,0 +1,1 @@
+ALTER TABLE "events" ADD COLUMN "waitlist_auto_offer" boolean DEFAULT true NOT NULL;

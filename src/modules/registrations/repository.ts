@@ -159,6 +159,18 @@ export async function lockEventForCapacity<T extends Record<string, unknown>>(
 }
 
 /**
+ * Whether the event offers its freed and added places to the waiting list on its own (§615):
+ * `events.waitlist_auto_offer`, read by `fillAvailableSpots` inside the caller's transaction, after
+ * the caller locked the row — so the answer is the row's as it stands under the lock, whatever copy
+ * of the event the caller carries (a fixture's partial row, the editor's row from before the save).
+ * A row that does not exist offers nothing.
+ */
+export async function offersWaitlistAutomatically<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<boolean> {
+  const [row] = await db.select({ auto: events.waitlistAutoOffer }).from(events).where(eq(events.id, eventId)).limit(1);
+  return row?.auto ?? false;
+}
+
+/**
  * One event's row, unlocked — what the backoffice needs to build an `EventForRegistration`
  * before handing it to the allocator.
  *
@@ -359,13 +371,16 @@ export async function transitionRegistration<T extends Record<string, unknown>>(
 /**
  * A row of the public list: the display name and the club — and, only when the caller asked for
  * the socials behind the notice's gate (§500), the runner's Strava link and Instagram username,
- * each null unless that runner ticked «Arată și Strava și Instagram» (`registrations.list_socials`).
+ * each null unless that runner ticked «Arată și Strava și Instagram» (`registrations.list_socials`);
+ * and, only when the caller asked for the numbers behind theirs (§613), a confirmed runner's race
+ * number, null while it has none.
  */
 export type PublicStartListRow = {
   displayName: string;
   clubName: string | null;
   stravaUrl?: string | null;
   instagramHandle?: string | null;
+  bibNumber?: number | null;
 };
 
 /**
@@ -384,6 +399,24 @@ function publicSocialColumns(socials: boolean | undefined): Record<string, SQL<s
     stravaUrl: sql<string | null>`case when ${registrations.listSocials} then ${registrations.stravaUrl} end`,
     instagramHandle: sql<string | null>`case when ${registrations.listSocials} then ${registrations.instagramHandle} end`,
   };
+}
+
+/**
+ * The race-number column a public list may add (§613, amending §396), or none.
+ *
+ * Asked for only by `StartList`, only while the privacy notice in force names
+ * `{{participantListNumbers}}` (`cachedListNumbersDisclosed`), and only on the confirmed list —
+ * `listPublicStartListOthers` never selects it: a pending or waiting registration has no number
+ * (§548). It is selected for every confirmed runner, whichever privacy notice their registration
+ * recorded: the owner decided so on 2026-10-01 (§613), the club telling the earlier registrations
+ * beforehand, where §421's per-runner line still holds for the states. **`bib_number` and never
+ * `provisional_bib_number`** (§214): the provisional number was printed nowhere and emailed to
+ * nobody precisely so that it could move, and a number published beside a name is a number that
+ * cannot. Since §548 nothing writes the provisional column any more, which changes nothing here:
+ * the public select never names it (`tests/privacy/public-surface.test.ts`).
+ */
+function publicNumberColumns(numbers: boolean | undefined): Record<string, typeof registrations.bibNumber> {
+  return numbers ? { bibNumber: registrations.bibNumber } : {};
 }
 
 /**
@@ -414,14 +447,22 @@ export async function listPublicStartList<T extends Record<string, unknown>>(
    * the page existed asked for, and what the privacy test still reads.
    */
   page?: { offset: number; limit: number },
-  /** Only behind the notice's gate (§500): see `publicSocialColumns`. */
-  options: { socials?: boolean } = {},
+  /**
+   * Only behind the notice's gates: the socials (§500, `publicSocialColumns`) and the race number
+   * (§613, `publicNumberColumns`). Without either, the select is exactly the name and the club.
+   */
+  options: { socials?: boolean; numbers?: boolean } = {},
 ): Promise<PublicStartListRow[]> {
   const query = db
     // BR-REQ-039-02: the display name, never the legal one, and the club they wrote (§85).
     // The select list is the guarantee — widening it is what
     // tests/privacy/public-surface.test.ts refuses.
-    .select({ displayName: registrations.displayName, clubName: registrations.clubName, ...publicSocialColumns(options.socials) })
+    .select({
+      displayName: registrations.displayName,
+      clubName: registrations.clubName,
+      ...publicSocialColumns(options.socials),
+      ...publicNumberColumns(options.numbers),
+    })
     .from(registrations)
     .where(
       and(
@@ -436,8 +477,8 @@ export async function listPublicStartList<T extends Record<string, unknown>>(
   // The order is what makes a page meaningful: a runner keeps their position and their page
   // however often the list is read, because both columns of the sort are fixed at confirmation.
   const rows = await (page ? query.limit(page.limit).offset(page.offset) : query);
-  // The socials' spread widens Drizzle's inferred row to an index signature; the select above is
-  // exactly `PublicStartListRow`'s keys, the two socials present only when asked for.
+  // The gated spreads widen Drizzle's inferred row to an index signature; the select above is
+  // exactly `PublicStartListRow`'s keys, the two socials and the number present only when asked for.
   return rows as unknown as PublicStartListRow[];
 }
 
@@ -1146,7 +1187,8 @@ export async function lockOldestWaitlisted<T extends Record<string, unknown>>(
  * look at: an offer past its deadline, a lapsed declaration hold that somebody is waiting for
  * (§160 — with nobody waiting the hold is kept, and the job would lock the event to do
  * nothing, on every run until the race), a hold or waiting-list entry left open on an event
- * that has started, or numbers to settle. Never a cancelled or completed event (§331, §82).
+ * that has started, or numbers to settle — and, since §612, a free place on a capped event before
+ * its close while somebody waits. Never a cancelled or completed event (§331, §82).
  *
  * A liveness query, not a correctness one — §16.2 is explicit that the job exists to send
  * expiry messages and retry delivery, not to make capacity correct, so missing an event here
@@ -1200,7 +1242,48 @@ export async function findEventsNeedingMaintenance<T extends Record<string, unkn
         ),
       ),
     );
-  return rows.map((row) => row.eventId);
+  const due = new Set(rows.map((row) => row.eventId));
+
+  /*
+    A free place while somebody waits (§612, amending §104 and §587): a scheduled, capped event,
+    before its close, with a `WAITLISTED` row and fewer places occupied than its capacity. Every
+    clause above names a row whose deadline has passed; this one names the result — a place nobody
+    holds and nobody was offered — whatever freed it: a family's reservation or held place that lapsed
+    with no write (§543, cleared only by a sweep), or a place given back while the event was cancelled,
+    when `fillAvailableSpots` offers nothing (§331), and found free once the race is put back on. Such
+    an event goes through the same locked `fillAvailableSpots` as every other (`maintenance.ts`), which
+    counts again under the lock and keeps every rule: no offer after the close, none on a cancelled
+    event, never more offers than free places. Nothing is decided here; this only says where to look.
+
+    The occupied count is the allocator's own (`countOccupied` → `computeOccupied`), read without the
+    lock, never a second formula in SQL. **What it costs:** one read per scheduled capped event with
+    somebody waiting, per run — on a full race with a waiting list, one `countOccupied` each run while
+    the line stands; on every other event, nothing. `kind` is in no condition here (§30).
+
+    Only an event that offers on its own (`waitlist_auto_offer`, §615): on one whose organizer hands
+    out the places («Nu»), a free place while people wait is the organizer's to give and
+    `fillAvailableSpots` would offer nothing — so the sweep does not select it, rather than locking it
+    on every run to do nothing.
+  */
+  const waitedFor = await db
+    .selectDistinct({ eventId: events.id, capacity: events.capacity })
+    .from(events)
+    .innerJoin(registrations, and(eq(registrations.eventId, events.id), eq(registrations.status, "WAITLISTED")))
+    .where(
+      and(
+        sql`${events.eventStatus} = 'SCHEDULED'`,
+        eq(events.waitlistAutoOffer, true),
+        isNotNull(events.capacity),
+        // Before the close — or the start, when there is no close or it is later (`capHoldExpiry`'s instant, §420).
+        sql`${now} < least(coalesce(${events.registrationClosesAt}, ${events.startsAt}), ${events.startsAt})`,
+      ),
+    );
+  for (const candidate of waitedFor) {
+    if (due.has(candidate.eventId) || candidate.capacity === null) continue;
+    const occupied = computeOccupied(await countOccupied(db, candidate.eventId, now));
+    if (occupied < candidate.capacity) due.add(candidate.eventId);
+  }
+  return [...due];
 }
 
 /**

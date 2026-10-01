@@ -1,5 +1,6 @@
 import type { CreditReading } from "@/modules/translate/credit";
 import type { NeonPlanId } from "./domain/neon-plan";
+import { VERCEL_PLANS, type VercelPlanId } from "./domain/vercel-plan";
 import { type MonthCostFacts, type MonthCostId, type MonthCostLine, monthCosts, type MonthTotals, monthTotals, previousMonth, utcMonth } from "./domain/month-costs";
 
 /**
@@ -48,6 +49,8 @@ export type MonthCostInputs = {
     dailyAllowance: number | null;
   };
   vercelBuildMinutesPerMonth: number;
+  /** The Vercel plan the club states on Costuri (`readVercelPlan`, §610): Hobby, or Pro and its seats. */
+  vercelPlan: { plan: VercelPlanId; seats: number };
   domain: { planName: string; usdPerYear: number; expiresOn: string | null };
 };
 
@@ -107,6 +110,8 @@ export async function readMonthCosts(inputs: MonthCostInputs, readers: MonthCost
     },
     vercel: vercel.ok ? vercel.value : null,
     vercelBuildMinutesPerMonth: inputs.vercelBuildMinutesPerMonth,
+    // The seat price from the one catalogue; the plan and the seats are the club's setting.
+    vercelPlan: { ...inputs.vercelPlan, usdPerSeatPerMonth: VERCEL_PLANS[inputs.vercelPlan.plan].usdPerSeatPerMonth },
     domain: inputs.domain,
     deepl: characters.ok ? { charactersThisMonth: characters.value } : null,
     deeplCredit: { expected: credit.ok || credit.reason !== "unconfigured", credit: credit.ok ? credit.credit : null },

@@ -174,6 +174,32 @@ describe("§420 BR-REQ-031-03 criterion 2 the confirmation page of a lapsed regi
   });
 });
 
+describe("§614 the confirmation of a registration that lands on the waiting list", () => {
+  it("redirects to ?done=waitlist and queues the waiting-list email, not the declaration", async () => {
+    const event = await createEvent(30);
+    await db.update(events).set({ capacity: 1 }).where(eq(events.id, event.id));
+    await press(submitRegistrationAction, registrationForm("Ana", "ana@example.ro"));
+    const first = await onlyRegistration();
+    const eventInput = publicFormEvent({ ...event, capacity: 1 }, event.publishedAt);
+    await confirmEmail(db, eventInput, first.id, new Date());
+    expect((await onlyRegistration()).status).toBe("PENDING_DECLARATION");
+
+    await press(submitRegistrationAction, registrationForm("Dan", "dan@example.ro"));
+    const token = await secretOf("VERIFY_REGISTRATION_EMAIL");
+    const form = new FormData();
+    form.set("locale", "ro");
+    form.set("token", token);
+    const to = await press(confirmEmailAction, form);
+    expect(to).toContain("?done=waitlist");
+
+    const second = (await db.select().from(registrations)).find((row) => row.id !== first.id)!;
+    expect(second.status).toBe("WAITLISTED");
+    const types = (await db.select().from(emailOutbox)).filter((message) => message.registrationId === second.id).map((message) => message.messageType);
+    expect(types).toContain("WAITLIST_JOINED");
+    expect(types).not.toContain("COMPLETE_DECLARATION");
+  });
+});
+
 describe("§420 AGENTS.md §14.3 a live declaration link on a registration that has moved on", () => {
   it("returns to its page with nothing spent, instead of ending on the error page", async () => {
     const event = await createEvent(30);

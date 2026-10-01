@@ -7,6 +7,7 @@ import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { type BibDesign, readBibDesign } from "./bib-design";
 import { recordAuditEvent } from "@/modules/audit/repository";
+import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { type CoHost, readCoHosts } from "@/modules/events/domain/co-hosts";
 import { typedStartOrNull } from "@/modules/events/domain/provisional-start";
 import { formatDay } from "@/i18n/dates";
@@ -355,7 +356,7 @@ export async function assignBibNumbers<T extends Record<string, unknown>>(
     throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not assign race numbers`);
   }
 
-  return db.transaction(async (tx) => {
+  const result = await db.transaction(async (tx) => {
     // The band this race counts from (§173), read once under the same lock.
     const [event] = await tx
       .select({ id: events.id, bibStartNumber: events.bibStartNumber })
@@ -438,6 +439,9 @@ export async function assignBibNumbers<T extends Record<string, unknown>>(
       test: Number(skipped?.test ?? 0),
     };
   });
+  // The public list may show these numbers (§613): expire its cached pages, after the commit.
+  if (result.assigned > 0) revalidatePublicContent("places");
+  return result;
 }
 
 /**

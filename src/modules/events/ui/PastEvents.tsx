@@ -1,11 +1,22 @@
 import HistoryIcon from "@mui/icons-material/History";
+import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
+import type { Locale } from "@/i18n/routing";
 import EventCard from "@/modules/events/ui/EventCard";
+import ListingFilterPanel from "@/modules/events/ui/ListingFilterPanel";
 import SeriesCard from "@/modules/events/ui/SeriesCard";
 import { groupSeries, seriesLookup } from "@/modules/events/domain/series";
-import { activeFilterCount, matchingPastEvents, type FilterFacts, type ListingFilter } from "@/modules/events/domain/listing-filter";
+import {
+  activeFilterCount,
+  matchingPastEvents,
+  NO_FILTER,
+  offeredFilters,
+  singleValues,
+  type FilterFacts,
+  type ListingFilter,
+} from "@/modules/events/domain/listing-filter";
 import type { PublicEvent } from "@/modules/events/repository";
 import { DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import { DENSITY } from "@/theme/density";
@@ -33,12 +44,22 @@ export const PAST_EVENTS_SHOWN = 12;
  * is past is something a reader goes looking for. A closed `<details>` is also a section that
  * costs a phone nothing to scroll past.
  *
- * **The listing's filters reach it** (§413, §602 — the owner, 2026-10-01: «Mi-ar trebui aceleași
- * filtre și pentru evenimentele din trecut»): the same parsed address and the same predicate as the
- * cards above (`matchingPastEvents`), over the page's one cached window, and a filtered page opens
- * the fold. A filtered address is the live twin (§549), a route of its own, so a tick remounts the
- * page and a fold the reader had opened came back closed — the matches were there, behind a
- * heading nobody reads twice. Unfiltered, it stays closed as §267 has it.
+ * **Its own «Filtre»** (§611, amending §602 — the owner, 2026-10-01: «Mi-ar trebui aceleași filtre
+ * și pentru evenimentele din trecut», and once §602 had shipped: «Am zis că vreau un filtru și la
+ * evenimentele trecute, la fel ca la cele curente»). The same panel as the cards ahead, inside this
+ * fold right under its heading, over the address's `past-` names (`?past-type=RACE`): its own ticks,
+ * its own offer — read off the page's one cached window alone — and its own count. A tick here never
+ * narrows the cards ahead, and a tick above never narrows this. With a past tick the fold is open: a
+ * filtered address is the live twin (§549), a route of its own, so a tick remounts the page, and a
+ * fold the reader had opened would come back closed over the matches. Nothing ticked, it stays closed
+ * as §267 has it. Ticked with nothing matching, the section stays — the panel names its ticks and
+ * «Șterge filtrele» is one press away — and says that nothing matches.
+ *
+ * **The control is always here when the section has rows.** §413's rule for the boxes holds (criterion 75): a
+ * box only where ticking it narrows the window, or where the address ticks it. But a past window may be uniform
+ * — one series alone — and a control that vanishes then reads as missing, not as honest; so the «Filtre» button
+ * stays and its fold says, in one sentence, what the events all share (`singleValues`) and that there is nothing
+ * to narrow. The cards ahead's panel keeps criterion 75's rendering rule as it was (§611).
  *
  * Between seasons the lead already shows the club's last event with a notice (§167), so this
  * section skips that one row: it would be the same card twice on one page.
@@ -49,24 +70,38 @@ export default async function PastEvents({
   filter,
   facts,
   shownAbove,
+  locale,
+  keep = {},
+  carry = {},
 }: {
   /** The page's past window (§413), newest first, read beside the listing's own rows. */
   rows: readonly PublicEvent[];
   now: Date;
-  /** The filters above (§272, §413) — the past narrows by them too, in memory. */
+  /** The past section's own filter, the address's `past-` scope (§611). */
   filter: ListingFilter;
   facts: FilterFacts<PublicEvent>;
   /** The past event the lead already shows between seasons (§167), if any. */
   shownAbove: string | undefined;
+  locale: Locale;
+  /** What the address carries that is not a filter (the list layout): the panel keeps it. */
+  keep?: Record<string, string>;
+  /** The cards ahead's ticks, as query parameters: the panel's form and links keep them. */
+  carry?: Record<string, string | string[]>;
 }) {
   const filtered = activeFilterCount(filter) > 0;
-  // The heading names the kind when one kind is all that is ticked, as `?type=` always did (§272).
-  const sourceType = filter.type.length === 1 ? filter.type[0] : undefined;
+  // The rows the section can show: the window, the lead's row left out (§167).
+  const shown = matchingPastEvents(rows, NO_FILTER, facts, shownAbove);
   const events = matchingPastEvents(rows, filter, facts, shownAbove);
-  if (events.length === 0) return null;
+  if (events.length === 0 && !filtered) return null;
+  // What the panel offers (§413's rule): a box only where ticking it narrows the past, or where the
+  // address already ticks it — read off the window alone, never off the filtered rows. No past event
+  // has an open door, so «Înscrieri deschise» is never offered here unless the address ticks it.
+  const offer = offeredFilters(shown, filter, facts);
 
   const t = await getTranslations("Events");
   const tEvent = await getTranslations("Event");
+  // The heading names the kind when one kind is all that is ticked, as `?type=` always did (§272).
+  const sourceType = filter.type.length === 1 ? filter.type[0] : undefined;
   // A repeated event is one card here too (§113) — "Happy Monday" is one line, not eleven.
   const cards = groupSeries(events.slice(0, PAST_EVENTS_SHOWN));
   // A date left alone on its card by the filter or the cut still wears its series' rhythm (§486):
@@ -90,15 +125,33 @@ export default async function PastEvents({
             ? t("pastCountFiltered", { count: cards.length })
             : t("pastCount", { count: cards.length })}
       </Typography>
-      <Box component="ul" sx={CARD_GRID_SX}>
-        {cards.map((series, index) =>
-          series.members.length > 1 ? (
-            <SeriesCard key={series.key} members={series.members} index={index} now={now} />
-          ) : (
-            <EventCard key={series.key} event={series.members[0]} index={index} now={now} seriesDates={seriesOf(series.members[0])} />
-          ),
-        )}
-      </Box>
+      {(shown.length > 0 || filtered) && (
+        <Box sx={{ mb: { xs: DENSITY.gapXs, sm: 1.5 } }}>
+          <ListingFilterPanel
+            locale={locale}
+            pathname="/events"
+            filter={filter}
+            offer={offer}
+            keep={keep}
+            carry={carry}
+            scope="past"
+            shared={singleValues(shown)}
+          />
+        </Box>
+      )}
+      {cards.length === 0 ? (
+        <Alert severity="info">{t("filter.none")}</Alert>
+      ) : (
+        <Box component="ul" sx={CARD_GRID_SX}>
+          {cards.map((series, index) =>
+            series.members.length > 1 ? (
+              <SeriesCard key={series.key} members={series.members} index={index} now={now} />
+            ) : (
+              <EventCard key={series.key} event={series.members[0]} index={index} now={now} seriesDates={seriesOf(series.members[0])} />
+            ),
+          )}
+        </Box>
+      )}
     </Box>
   );
 }

@@ -23,6 +23,7 @@ function inputs(patch: Partial<MonthCostInputs> = {}): MonthCostInputs {
     databaseBytes: GB,
     mailgun: { planName: "Free", planId: "FREE", usdPerMonth: 0, sentThisMonth: 100, monthlyAllowance: null, dailyAllowance: 100 },
     vercelBuildMinutesPerMonth: VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH,
+    vercelPlan: { plan: "HOBBY", seats: 1 },
     domain: { planName: ".com", usdPerYear: DOMAIN_PRICE_USD_PER_YEAR, expiresOn: "2027-09-16" },
     ...patch,
   };
@@ -65,6 +66,13 @@ describe("BR-REQ-090-07 «Luna aceasta» assembled from its readers", () => {
     expect(reading.totals.incomplete).toBe(false);
     expect(reading.totals.lastMonthMissing).toEqual([]);
     expect(Object.values(reading.reasons.current).every((reason) => reason === null)).toBe(true);
+  });
+
+  it("§610 prices the Vercel plan the club states from the one catalogue: Hobby free, Pro the seats' month", async () => {
+    expect(line(await readMonthCosts(inputs(), readers()), "vercel")).toMatchObject({ plan: "Hobby", billing: "free", soFarUsd: 0 });
+    const pro = await readMonthCosts(inputs({ vercelPlan: { plan: "PRO", seats: 3 } }), readers());
+    expect(line(pro, "vercel")).toMatchObject({ plan: "Pro", billing: "monthly", soFarUsd: 60, projectedUsd: 60, plusVat: true });
+    expect(line(pro, "vercel").usage).toMatchObject({ used: 42, ceiling: null });
   });
 
   it("a typed Mailgun plan: its price is unknown, never zero, and says why", async () => {

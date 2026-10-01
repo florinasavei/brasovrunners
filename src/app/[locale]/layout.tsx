@@ -221,8 +221,8 @@ export default async function LocaleLayout({ children, params }: Props) {
                   </Box>
                   <SiteHeader />
                   <Box sx={{ flex: 1 }}>{children}</Box>
-                  {/* The build stamp is the fold's own line below `md`, and pinned to the bar's own
-                      bottom-right corner from `md` (`SiteFooter`, §372), not a label of its own here. */}
+                  {/* The build stamp is the fold's own last line at every width (`SiteFooter`,
+                      §608), not a label of its own here. */}
                   <SiteFooter />
                 </Box>
               </IntlErrorHandling>

@@ -38,7 +38,9 @@ export async function confirmEmailAction(form: FormData): Promise<void> {
     cancelled) before the click is over; the page re-reads the spent link and says so — "lapsed,
     register again" — rather than promising a declaration email that will never come (§217).
   */
-  redirect(CONFIRMED_ONWARDS.has(result.registration.status) ? `${path}?done=1` : `${path}?invalid=1`);
+  if (!CONFIRMED_ONWARDS.has(result.registration.status)) redirect(`${path}?invalid=1`);
+  // On the waiting list no declaration email is queued (WAITLIST_JOINED is), so the page shows no declaration step (§202).
+  redirect(result.registration.status === "WAITLISTED" ? `${path}?done=waitlist` : `${path}?done=1`);
 }
 
 /** The states a confirmed address moves on to (AGENTS.md §10.5): anything else is over. */

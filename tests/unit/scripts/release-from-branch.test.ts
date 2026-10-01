@@ -148,6 +148,43 @@ describe("§535 yarn docs:land --tree lands the facts a branch carries", () => {
     expect(empty.stderr).toMatch(/no \.release\/\*\.json on this branch/);
   });
 
+  it("refuses, unattended, a placeholder line a merge commit wrote, and names it — the one entry does not take it (§607)", () => {
+    const { dir, git, put, read } = repo();
+    const from = "BR-V9.40-2031-01-01";
+    put("CLAUDE.md", `**Baseline \`${from}\`**\n\n- \`/admin/tasks\`: what the club still owes\n`);
+    put("DECISIONS.md", `<!-- PROJECT_BASELINE: ${from} -->\n\n**Baseline \`${from}\`**\n\n## 12. Old\n\nOld.\n`);
+    put("CHANGELOG.md", `## ${from}\n\n- old.\n`);
+    put("SPECS.md", "#### BR-REQ-041-01 Pages\n\n1. First.\n\n**Verification:** tests.\n");
+    put("src/shared.ts", "export const shared = 1;\n");
+    git("add", "-A");
+    git("commit", "-qm", "base");
+    git("checkout", "-qb", "feat/x");
+    put("src/shared.ts", `export const shared = 2; // the branch's (${PLACEHOLDER})\n`);
+    put("src/own.ts", `// the branch's own line (${PLACEHOLDER})\n`);
+    put(".release/feat-x.json", JSON.stringify({ branch: "feat/x", decisionsTitle: "X", decisionsSection: "Body.", changelogLine: `- **X**. ${PLACEHOLDER}.` }));
+    git("add", "-A");
+    git("commit", "-qm", "feat: x");
+    // qa moved the same line; the merge resolves it with a line neither side wrote.
+    git("checkout", "-q", "qa");
+    put("src/shared.ts", "export const shared = 3;\n");
+    git("commit", "-qam", "qa: shared");
+    git("update-ref", "refs/remotes/origin/qa", "HEAD");
+    git("checkout", "-q", "feat/x");
+    expect(() => git("merge", "qa")).toThrow();
+    put("src/shared.ts", `export const shared = 4; // resolved by the merge (${PLACEHOLDER})\n`);
+    git("add", "-A");
+    git("commit", "-qm", "Merge qa into feat/x");
+    const merge = git("rev-parse", "--short=7", "HEAD").trim();
+
+    const run = spawnSync("node", [LAND, "--tree", "--apply"], { cwd: dir, encoding: "utf8", env: ENV });
+    expect(run.status).toBe(1);
+    expect(run.stderr).toMatch(/--tree cannot land what needs a person/);
+    expect(run.stderr).toContain(`line no branch wrote, to number by hand: src/shared.ts:1 [${merge}]`);
+    expect(run.stderr).not.toContain("src/own.ts");
+    expect(read("CLAUDE.md")).toContain(from);
+    expect(read("src/own.ts")).toContain(PLACEHOLDER);
+  });
+
   it("refuses, unattended, what needs a person — docsNotes and a requirement SPECS.md lacks — dry run or not, and says so in the run's summary", () => {
     const { dir, git, put, read } = repo();
     const from = "BR-V9.40-2031-01-01";

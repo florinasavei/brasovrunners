@@ -17,10 +17,18 @@ export function hasDoorButton(cta: RegistrationCta): cta is ButtonCta {
 
 type Say = (key: string, values?: Record<string, string | number>) => string;
 
+/**
+ * Whether the door leads onto the waiting list: a full event (§587), or an open one while somebody
+ * is in the line (§615) — a newcomer joins the line then whatever is free, so the button says so.
+ */
+export function isWaitlistDoor(cta: ButtonCta): boolean {
+  return cta.kind === "FULL" || (cta.kind === "OPEN" && cta.fromWaitlist);
+}
+
 /** The button's words, from the page's translator under `Event`: one set for the page and the card. */
 export function doorButtonLabel(say: Say, cta: ButtonCta): string {
   if (cta.kind === "EXTERNAL") return cta.provider ? say("cta.externalWithProvider", { provider: cta.provider }) : say("cta.external");
-  return cta.kind === "FULL" ? say("cta.joinWaitingList") : say("cta.register");
+  return isWaitlistDoor(cta) ? say("cta.joinWaitingList") : say("cta.register");
 }
 
 /**
@@ -53,7 +61,7 @@ export default function RegistrationDoorButton({
   preview?: string;
 }) {
   if (preview !== undefined) {
-    const Glyph = cta.kind === "EXTERNAL" ? OpenInNewIcon : cta.kind === "FULL" ? HourglassEmptyIcon : DirectionsRunIcon;
+    const Glyph = cta.kind === "EXTERNAL" ? OpenInNewIcon : isWaitlistDoor(cta) ? HourglassEmptyIcon : DirectionsRunIcon;
     return (
       <Button variant="contained" disabled data-testid="preview-door" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }}>
         <Glyph aria-hidden="true" data-testid="door-glyph" sx={glyphSx("medium")} />
@@ -82,7 +90,7 @@ export default function RegistrationDoorButton({
 
   // The club's runner on the way in (the public send buttons' figure, §318), an hourglass on the
   // way onto the waiting list (§498: every public button wears a glyph).
-  const Glyph = cta.kind === "FULL" ? HourglassEmptyIcon : DirectionsRunIcon;
+  const Glyph = isWaitlistDoor(cta) ? HourglassEmptyIcon : DirectionsRunIcon;
   return (
     <ButtonLink variant="contained" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX, ...accentOnHover }} href={{ pathname: "/events/[slug]/register", params: { slug } }}>
       <Glyph aria-hidden="true" data-testid="door-glyph" sx={glyphSx("medium")} />

@@ -16,6 +16,7 @@ import type { LegalDocumentTranslationInput } from "./domain/content-hash";
 import { GROUP_RUN_DECLARATION_KEYS, raceDeclarationKeysFor, RACE_DECLARATION_KEYS } from "./domain/keys";
 import {
   asksForMinorSignature,
+  describesListNumbers,
   describesListSocials,
   describesListStates,
   describesNewsletter,
@@ -246,6 +247,16 @@ export async function noticeDescribesListStates<T extends Record<string, unknown
 export async function noticeDescribesListSocials<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
   const notices = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now)));
   return notices.every((notice) => notice !== undefined && describesListSocials(notice.body));
+}
+
+/**
+ * Whether the privacy notice in force describes the race number beside a confirmed name on the
+ * public list (§613, `describesListNumbers`) — in every language, like `noticeDescribesListStates`.
+ * For `/admin/tasks`; a public page asks through the public cache (`cachedListNumbersDisclosed`).
+ */
+export async function noticeDescribesListNumbers<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesListNumbers(notice.body));
 }
 
 /**

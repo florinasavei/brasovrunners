@@ -14,6 +14,7 @@ import { getDb } from "@/db/client";
 import type { LegalDocumentKey } from "@/db/schema/legal-documents";
 import {
   findCurrentApprovedDocument,
+  noticeDescribesListNumbers,
   noticeDescribesListSocials,
   noticeDescribesListStates,
   noticeDescribesPromotionalMaterials,
@@ -224,6 +225,8 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
   // The same for the socials beside a name (§500): the form offers the tick only while the notice
   // in force names `{{participantListSocials}}`, and this is where that notice is approved.
   const listSocialsMissing = !missingKeys.includes("PRIVACY_NOTICE") && !(await noticeDescribesListSocials(getDb(), now));
+  // §613: the race number on the public list, off until the notice in force names `{{participantListNumbers}}`.
+  const listNumbersMissing = !missingKeys.includes("PRIVACY_NOTICE") && !(await noticeDescribesListNumbers(getDb(), now));
   // The same for the offers and benefits (§562): no form offers the box, and nothing is kept,
   // until the notice in force names `{{promotionalMaterials}}`.
   const promoMissing = !missingKeys.includes("PRIVACY_NOTICE") && !(await noticeDescribesPromotionalMaterials(getDb(), now));
@@ -859,6 +862,11 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
       {listSocialsMissing && (
         <Alert severity="info" data-testid="legal-list-socials-missing">
           {t("legal.listSocialsMissing")}
+        </Alert>
+      )}
+      {listNumbersMissing && (
+        <Alert severity="info" data-testid="legal-list-numbers-missing">
+          {t("legal.listNumbersMissing")}
         </Alert>
       )}
       {promoMissing && (

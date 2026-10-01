@@ -43,6 +43,7 @@ vi.mock("@/modules/deadlines/request", async () => {
 });
 
 const { default: QueuePanel } = await import("@/modules/registrations/ui/QueuePanel");
+const { readPublicPlaces } = await import("@/modules/registrations/service");
 
 const NEW_YORK = "America/New_York";
 const NOW = new Date("2026-10-01T16:00:00.000Z");
@@ -190,5 +191,39 @@ describe("§369 the queue panel's times are the event's own", () => {
     const html = await renderPanel({ ...event, timezone: CLUB_TIME_ZONE });
     expect(html).toContain("17:05");
     expect(html).not.toContain("10:05");
+  });
+});
+
+/**
+ * §612 — the panel's «Oferite» beside «Libere» and «În așteptare»: the open offers, the very count the
+ * public card reads «1 loc oferit din lista de așteptare» from (`readPublicPlaces`'s `offered`), so the
+ * panel and the card say the same number.
+ */
+describe("§612 the queue panel's «Oferite» is the card's offered count", () => {
+  const figureOf = (html: string, label: string) => new RegExp(`${label}</span><span[^>]*>([^<]*)</span>`).exec(html)?.[1];
+
+  for (const language of ["ro", "en"] as const) {
+    it(`shows the open offers beside the free places and the people waiting (${language})`, async () => {
+      locale = language;
+      const event = await createEvent();
+      await register(event.id, "Ion Oferta", { status: "WAITLIST_OFFERED", waitlistedAt: WAITLISTED_AT, holdExpiresAt: OFFER_UNTIL });
+      await register(event.id, "Maria Asteapta", { status: "WAITLISTED", waitlistedAt: WAITLISTED_AT });
+
+      const html = await renderPanel(event);
+      const words = (language === "ro" ? ro : en).Admin.queue;
+      const places = await readPublicPlaces(db, { id: event.id, capacity: event.capacity, waitlistCapacity: event.waitlistCapacity }, NOW);
+      expect(places).toMatchObject({ offered: 1, waitlisted: 1 });
+      expect(figureOf(html, words.offeredFigure)).toBe(String(places.offered));
+      expect(figureOf(html, words.waiting)).toBe(String(places.waitlisted));
+      // In the order the card says them: the free places, the offers, then the people waiting.
+      expect(html.indexOf(words.free)).toBeLessThan(html.indexOf(words.offeredFigure));
+      expect(html.indexOf(words.offeredFigure)).toBeLessThan(html.indexOf(`${words.waiting}</span>`));
+    });
+  }
+
+  it("says nought with no offer open", async () => {
+    const event = await createEvent();
+    await register(event.id, "Maria Asteapta", { status: "WAITLISTED", waitlistedAt: WAITLISTED_AT });
+    expect(figureOf(await renderPanel(event), ro.Admin.queue.offeredFigure)).toBe("0");
   });
 });

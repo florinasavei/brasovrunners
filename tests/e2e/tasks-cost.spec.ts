@@ -37,9 +37,24 @@ test.describe("BR-REQ-090-05 the club's money, «Setări» → «Costuri» (§51
     await expect(main.getByTestId("month-costs-domain-year")).toContainText("Domeniul .com:");
     await expect(main.locator('details[data-testid="month-costs"]')).not.toHaveAttribute("open", /.*/);
     await expect(main.getByRole("heading", { name: "Cât costă" })).toBeVisible();
-    // The verdict and the number, before the table that justifies them.
-    await expect(main.getByText(/Astăzi clubul (nu plătește nimic|plătește)/)).toBeVisible();
-    await expect(main.getByText(/Prima cheltuială care urmează/)).toBeVisible();
+    // The verdict and the number, before the table that justifies them — per month and per year (§610).
+    await expect(main.getByTestId("cost-today")).toHaveText(
+      /^Astăzi clubul (nu plătește nimic|plătește (circa )?.+ pe lună, adică .+ pe an\.)/,
+    );
+    // The next thing to cost money — or, once everything on that list is paid for, the sentence that says so.
+    await expect(main.getByTestId("next-spend")).toHaveText(/Prima cheltuială care urmează|Nu urmează nicio cheltuială nouă/);
+    // The breakdown (§610): the two columns, and one line per service, then the total.
+    const table = main.getByRole("table", { name: "Costul fiecărui serviciu, pe lună și pe an" });
+    await expect(table.getByRole("columnheader", { name: "Pe lună", exact: true })).toBeVisible();
+    await expect(table.getByRole("columnheader", { name: "Pe an", exact: true })).toBeVisible();
+    for (const name of ["Domeniul", "Mailgun", "Vercel", "Neon", "Zitadel", "cron-job.org + GitHub"]) {
+      await expect(table.getByRole("rowheader", { name: new RegExp(`^${name.replace(/[.+]/g, "\\$&")}`) })).toHaveCount(1);
+    }
+    await expect(table.getByTestId("plan-cost-total")).toHaveCount(1);
+    // The Vercel plan, a setting the Administrator sees and may change (§610).
+    const vercelPlan = main.getByTestId("vercel-plan");
+    await expect(vercelPlan.getByTestId("vercel-plan-in-force")).toHaveText(/^Vercel: (Hobby, gratuit|Pro, .+ USD pe lună \+ TVA)\.$/);
+    await expect(vercelPlan.getByTestId("vercel-plan-form")).toHaveCount(1);
     // A row per service, each carrying its own ceiling and how close this deployment is to it.
     await expect(main.getByRole("heading", { name: "Mailgun (trimiterea e-mailurilor)" })).toBeVisible();
     // A price with no age is a claim, so the page states how old these are.

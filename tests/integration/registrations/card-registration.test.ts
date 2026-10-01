@@ -1,3 +1,4 @@
+import { eq } from "drizzle-orm";
 import { createFormatter, createTranslator } from "next-intl";
 import { createElement, type ReactNode } from "react";
 import { renderToReadableStream } from "react-dom/server";
@@ -169,6 +170,104 @@ describe("BR-REQ-041-01 the race's card carries the page's registration door, th
     const onPage = await page();
     expect(onPage).toContain("1 loc liber");
     expect(onPage).toContain("9 înscriși din 10 locuri");
+  });
+
+  /**
+   * §615 — the owner's card: 10 places, 7 taken, one place offered to somebody in the line and one
+   * person still waiting. An offer is promised, not free, and the person offered is not «pe lista de
+   * așteptare» any more; and while anybody is in the line a newcomer joins it whatever is free
+   * (`newcomerJoinsLine`), so the card no longer counts places free: «Locurile se dau din lista de
+   * așteptare», then the line, and the waiting list's door — on the card and the page alike, read
+   * through the public cache's one entry (`cachedPublicAvailability`) from the allocator's own counts.
+   */
+  it("§615 gives the places from the waiting list while an offer is open and somebody waits, on the card and the page alike", async () => {
+    const event = await publish({ capacity: 10 });
+    await take(event.id, 7);
+    await take(event.id, 1, "WAITLISTED", 7);
+    await take(event.id, 1, "WAITLISTED", 8);
+    // The first in the line holds an offer until tomorrow; the second still waits.
+    const [offered] = await db.select().from(registrations).where(eq(registrations.registeredName, "Runner 7"));
+    await db.update(registrations).set({ status: "WAITLIST_OFFERED", offerCreatedAt: NOW, holdExpiresAt: new Date(NOW.getTime() + 24 * HOUR) }).where(eq(registrations.id, offered.id));
+
+    const html = await card();
+    expect(line(html).words).toBe(
+      "Înscrieri deschise până sâm., 26 sept. 2026, la 10:00 · Locurile se dau din lista de așteptare · 1 loc oferit din lista de așteptare · 1 pe lista de așteptare",
+    );
+    expect(bolds(html)).toEqual(["sâm., 26 sept. 2026, la 10:00", "Locurile se dau din lista de așteptare"]);
+    expect(door(html)).toMatchObject({ href: "/ro/evenimente/cros/inscriere", words: "Intră pe lista de așteptare" });
+    const onPage = text(await page());
+    expect(onPage).toContain("Locurile se dau din lista de așteptare");
+    expect(onPage).toContain("Intră pe lista de așteptare");
+    expect(onPage).toContain("1 loc oferit din lista de așteptare");
+    expect(onPage).toContain("1 pe lista de așteptare");
+    expect(onPage).not.toMatch(/loc liber|locuri libere/);
+    locale = "en";
+    expect(line(await card()).words).toMatch(/· Places are given from the waiting list · 1 place offered from the waiting list · 1 on the waiting list$/);
+  });
+
+  /**
+   * §615 — the three states of an open race, in both languages: nobody waiting (today's count and
+   * door — an open offer alone included); somebody waiting with places free while offers go out on
+   * their own (the moment before the job's sweep); somebody waiting with places free while the
+   * organizer hands them out («Nu»: a raise offered nobody). The card and the page read the line, not
+   * the setting, so the last two say the same — places given from the line, the line's door.
+   */
+  it("§615 says the free places with nobody waiting, and the line's words and door with somebody in it, whatever the setting", async () => {
+    // Nobody in the line: the count and the register button, as before.
+    const quiet = await publish({ capacity: 10 }, "linistit");
+    await take(quiet.id, 4);
+    expect(line(await card("linistit")).words).toMatch(/· 6 locuri libere din 10$/);
+    expect(door(await card("linistit"))?.words).toBe("Înscrie-te la eveniment");
+
+    // Offers on their own, the moment before the job's sweep: a place freed with nothing written (a
+    // family's lapsed reservation, §543) and one person waiting for it, plus an offer already out.
+    const auto = await publish({ capacity: 10, waitlistAutoOffer: true }, "automat");
+    await take(auto.id, 7, "CONFIRMED", 100);
+    await take(auto.id, 1, "WAITLISTED", 107);
+    await take(auto.id, 1, "WAITLISTED", 108);
+    await db.update(registrations).set({ status: "WAITLIST_OFFERED", offerCreatedAt: NOW, holdExpiresAt: new Date(NOW.getTime() + 24 * HOUR) }).where(eq(registrations.registeredName, "Runner 107"));
+
+    // An offer alone, with places left over from a raise past the line: the holder has a place and
+    // nobody waits, so the free places are a newcomer's and the card counts them (§160).
+    const offerOnly = await publish({ capacity: 10, waitlistAutoOffer: true }, "oferta");
+    await take(offerOnly.id, 7, "CONFIRMED", 300);
+    await take(offerOnly.id, 1, "WAITLISTED", 307);
+    await db.update(registrations).set({ status: "WAITLIST_OFFERED", offerCreatedAt: NOW, holdExpiresAt: new Date(NOW.getTime() + 24 * HOUR) }).where(eq(registrations.registeredName, "Runner 307"));
+
+    // By hand: 5 places free beside 2 people waiting, offered to nobody.
+    const manual = await publish({ capacity: 10, waitlistAutoOffer: false }, "manual");
+    await take(manual.id, 3, "CONFIRMED", 200);
+    await take(manual.id, 2, "WAITLISTED", 203);
+
+    for (const which of ["ro", "en"] as const) {
+      locale = which;
+      const quietCard = await card("linistit");
+      expect(line(quietCard).words, which).toMatch(which === "ro" ? /· 6 locuri libere din 10$/ : /· 6 places left out of 10$/);
+      expect(door(quietCard)?.words, which).toBe(which === "ro" ? "Înscrie-te la eveniment" : "Register for this event");
+
+      const autoCard = await card("automat");
+      expect(line(autoCard).words, which).toMatch(
+        which === "ro"
+          ? /· Locurile se dau din lista de așteptare · 1 loc oferit din lista de așteptare · 1 pe lista de așteptare$/
+          : /· Places are given from the waiting list · 1 place offered from the waiting list · 1 on the waiting list$/,
+      );
+      expect(door(autoCard)?.words, which).toBe(which === "ro" ? "Intră pe lista de așteptare" : "Join the waiting list");
+
+      const offerCard = await card("oferta");
+      expect(line(offerCard).words, which).toMatch(
+        which === "ro" ? /· 2 locuri libere din 10 · 1 loc oferit din lista de așteptare$/ : /· 2 places left out of 10 · 1 place offered from the waiting list$/,
+      );
+      expect(door(offerCard)?.words, which).toBe(which === "ro" ? "Înscrie-te la eveniment" : "Register for this event");
+
+      const manualCard = await card("manual");
+      expect(line(manualCard).words, which).toMatch(
+        which === "ro" ? /· Locurile se dau din lista de așteptare · 2 pe lista de așteptare$/ : /· Places are given from the waiting list · 2 on the waiting list$/,
+      );
+      expect(door(manualCard)?.words, which).toBe(which === "ro" ? "Intră pe lista de așteptare" : "Join the waiting list");
+      const manualPage = text(await page("manual"));
+      expect(manualPage, which).toContain(which === "ro" ? "Locurile se dau din lista de așteptare" : "Places are given from the waiting list");
+      expect(manualPage, which).not.toMatch(which === "ro" ? /locuri libere/ : /places left/);
+    }
   });
 
   it("uses Romanian's «de» from twenty on, and English's own order", async () => {

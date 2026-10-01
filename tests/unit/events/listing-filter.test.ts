@@ -2,13 +2,17 @@ import { describe, expect, it } from "vitest";
 import {
   activeFilterCount,
   distanceBand,
+  FILTER_SCOPES,
   listingFilterQuery,
+  listingFilterRows,
   matchesListingFilter,
   NO_FILTER,
   offeredFilters,
   offersAnything,
   parseListingFilter,
   registrationDoorOpen,
+  scopedName,
+  scopedParams,
   withoutValue,
   type FilterableEvent,
   type FilterFacts,
@@ -337,5 +341,90 @@ describe("offeredFilters offers a box only where ticking it would change the pag
 
   it("offers nothing at all when there is nothing", () => {
     expect(offered([])).toEqual({ groups: [], flags: [] });
+  });
+});
+
+/*
+  §611, amending §602 — the owner, 2026-10-01: «Am zis că vreau un filtru și la evenimentele trecute,
+  la fel ca la cele curente». Two states in one address: the cards ahead read the names §413 gave
+  them, the past section the same names under `past-`. Neither scope reads the other's.
+*/
+describe("§611 two scopes in one address: the cards ahead and the past section", () => {
+  it("names the two scopes", () => {
+    expect(FILTER_SCOPES).toEqual(["upcoming", "past"]);
+  });
+
+  it("reads the upcoming scope from the unprefixed names alone, ignoring every `past-` name", () => {
+    const address = { type: "RACE", "past-type": "HIKE", "past-partner": "1", view: "list", foo: "1" };
+    expect(scopedParams(address, "upcoming")).toEqual({ type: "RACE" });
+    expect(parseListingFilter(address)).toEqual({ ...NO_FILTER, type: ["RACE"] });
+    expect(parseListingFilter(address, "upcoming")).toEqual(parseListingFilter(address));
+    expect(parseListingFilter({ "past-type": "RACE", "past-night": "1" })).toEqual(NO_FILTER);
+  });
+
+  it("reads the past scope from the `past-` names alone, the prefix stripped", () => {
+    const address = { type: "RACE", "past-type": "HIKE", "past-partner": "1", "past-foo": "1", view: "list" };
+    expect(scopedParams(address, "past")).toEqual({ type: "HIKE", partner: "1" });
+    expect(parseListingFilter(address, "past")).toEqual({ ...NO_FILTER, type: ["HIKE"], partner: true });
+  });
+
+  it("reads the past scope in both of §413's shapes — repeated and comma-joined — any case, `-` for `_` (criterion 77)", () => {
+    // In the closed set's own order, whatever order the address named them in.
+    const expected = { ...NO_FILTER, type: ["GROUP_RUN", "RACE"] };
+    expect(parseListingFilter({ "past-type": ["GROUP_RUN", "RACE"] }, "past")).toEqual(expected);
+    expect(parseListingFilter({ "past-type": "race,group-run" }, "past")).toEqual(expected);
+    expect(parseListingFilter({ "past-type": "Group_Run, RACE" }, "past")).toEqual(expected);
+    expect(parseListingFilter({ "past-distance": "10-21", "past-difficulty": "moderate" }, "past")).toEqual({
+      ...NO_FILTER,
+      distance: ["FROM_10_TO_21"],
+      difficulty: ["MEDIUM"],
+    });
+  });
+
+  it("reads a `past-` name that names nothing as no filter, as `?type=FOO` always was", () => {
+    expect(parseListingFilter({ "past-type": "FOO", "past-foo": "1", "past-partner": "yes" }, "past")).toEqual(NO_FILTER);
+    expect(activeFilterCount(parseListingFilter({ "past-type": "FOO" }, "past"))).toBe(0);
+  });
+
+  it("writes the past scope under its own names, and reads back what it wrote", () => {
+    const filter = parseListingFilter(
+      { "past-type": ["HIKE", "RACE"], "past-surface": "TRAIL", "past-distance": "OVER_21", "past-partner": "1", "past-registration": "1" },
+      "past",
+    );
+    expect(listingFilterQuery(filter, "past")).toEqual({
+      "past-type": ["RACE", "HIKE"],
+      "past-surface": "TRAIL",
+      "past-distance": "OVER_21",
+      "past-partner": "1",
+      "past-registration": "1",
+    });
+    expect(parseListingFilter(listingFilterQuery(filter, "past"), "past")).toEqual(filter);
+    // Written for the past, it is nothing to the cards ahead; written for them, nothing to the past.
+    expect(parseListingFilter(listingFilterQuery(filter, "past"))).toEqual(NO_FILTER);
+    expect(parseListingFilter(listingFilterQuery(filter), "past")).toEqual(NO_FILTER);
+    expect(listingFilterQuery(filter, "upcoming")).toEqual(listingFilterQuery(filter));
+    expect(scopedName("night", "past")).toBe("past-night");
+    expect(scopedName("night", "upcoming")).toBe("night");
+  });
+
+  it("unticks one box of a past filter for its chip's link, and leaves the rest", () => {
+    const filter = parseListingFilter({ "past-type": ["RACE", "HIKE"], "past-night": "1" }, "past");
+    expect(listingFilterQuery(withoutValue(filter, "type", "RACE"), "past")).toEqual({ "past-type": "HIKE", "past-night": "1" });
+    expect(listingFilterQuery(withoutValue(filter, "night"), "past")).toEqual({ "past-type": ["RACE", "HIKE"] });
+  });
+
+  it("offers the top panel the cards ahead alone: a box only the past carries is not offered there any more", () => {
+    // §602 read the past window into the top panel's offer, because the past section then narrowed
+    // by the same boxes: a value only a past event carried changed what the page showed. Since §611
+    // the past section has its own panel and its own state, so above the cards such a box would
+    // narrow nothing — and «Înscrieri deschise» was offered whenever a past event existed.
+    const ahead = [row("a", { type: "GROUP_RUN", door: true }), row("b", { type: "GROUP_RUN", door: true })];
+    const past = [row("p1", { type: "RACE" }), row("p2", { type: "HIKE" })];
+    const top = offeredFilters(listingFilterRows(ahead, []), NO_FILTER, facts);
+    expect(top).toEqual({ groups: [], flags: [] });
+    expect(listingFilterRows(ahead, [])).toHaveLength(2);
+    // The past panel's own offer is the window's.
+    expect(offeredFilters(past, NO_FILTER, facts).groups).toEqual([{ group: "type", values: ["RACE", "HIKE"] }]);
+    expect(offeredFilters(past, NO_FILTER, facts).flags).toEqual([]);
   });
 });

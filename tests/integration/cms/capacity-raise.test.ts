@@ -1,6 +1,7 @@
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { PgTransaction } from "drizzle-orm/pg-core";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { auditLogs } from "@/db/schema/audit-logs";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventTranslations, events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
@@ -432,6 +433,75 @@ describe("BR-REQ-034-02 criterion 5 a raised capacity offers places to the waiti
     expect(await refusalOf(saveCapacity(source.id, "2", new Date(NOW.getTime() + 60_000), "all"))).toBe("VALIDATION_ERROR");
     expect((await reload(source.id)).capacity).toBe(1);
     expect(await statusOf(source.id, bogdan.id)).toBe("WAITLISTED");
+    expect(await offersQueued()).toBe(0);
+  });
+
+  /**
+   * §615 — «Ofertele din lista de așteptare pleacă automat» (the owner, 2026-10-01: 200 medals, 150
+   * places announced, the places past 150 handed out by the organizer). The editor saves the setting;
+   * a save that does not post it keeps it; the trail names the change; and with «Nu» a raise adds free
+   * places and offers nobody — the gate inside `fillAvailableSpots`, which the raise calls as before.
+   */
+  const autoOfferTrail = (eventId: string) =>
+    db
+      .select()
+      .from(auditLogs)
+      .where(and(eq(auditLogs.action, "event.waitlist_auto_offer_changed"), eq(auditLogs.entityId, eventId)));
+
+  it("§615 saves «Nu», keeps it on a save that does not post it, names the change in the trail, and a raise then offers nobody", async () => {
+    const row = await seedEvent(1);
+    expect(row.waitlistAutoOffer).toBe(true);
+    await enter(row, "Ana", NOW, true);
+    const bogdan = await enter(row, "Bogdan", new Date(NOW.getTime() + 1000));
+    expect(bogdan.status).toBe("WAITLISTED");
+
+    await save(row.id, { waitlistAutoOffer: false }, new Date(NOW.getTime() + 30_000));
+    expect((await reload(row.id)).waitlistAutoOffer).toBe(false);
+    const trail = await autoOfferTrail(row.id);
+    expect(trail).toHaveLength(1);
+    expect(trail[0]).toMatchObject({ actorStaffUserId: editor.id, entityType: "event", metadataJson: { from: true, to: false } });
+
+    // The raise: two more places, nobody offered; the places stay free for the organizer to hand out.
+    const raised = await saveCapacity(row.id, "3", new Date(NOW.getTime() + 60_000));
+    expect(raised).toMatchObject({ offered: 0 });
+    expect((await reload(row.id)).capacity).toBe(3);
+    // The save that did not post the select kept «Nu» (the partners' discipline).
+    expect((await reload(row.id)).waitlistAutoOffer).toBe(false);
+    expect(await statusOf(row.id, bogdan.id)).toBe("WAITLISTED");
+    expect(await offersQueued()).toBe(0);
+    // A save that does not change it writes no trail; switching it back writes the second row.
+    expect(await autoOfferTrail(row.id)).toHaveLength(1);
+    await save(row.id, { waitlistAutoOffer: true }, new Date(NOW.getTime() + 90_000));
+    expect((await autoOfferTrail(row.id)).map((entry) => entry.metadataJson)).toEqual(expect.arrayContaining([{ from: false, to: true }]));
+    // Switching it back offers nothing by itself: the next place freed or added goes to the line.
+    expect(await statusOf(row.id, bogdan.id)).toBe("WAITLISTED");
+    expect(await offersQueued()).toBe(0);
+  });
+
+  it("§615 a series' scoped save carries the setting to every date it reaches, each date's trail naming it, and their raise offers nobody", async () => {
+    const source = await seedEvent(1);
+    await repeatEvent(db, { actor: editor, eventId: source.id, rule: { cadence: "WEEKLY", weekdays: [], until: "2026-11-01", publish: false }, now: NOW });
+    const dates = await db.select().from(events).where(eq(events.repeatOf, source.id)).orderBy(asc(events.startsAt));
+    expect(dates).toHaveLength(3);
+    await seedRows([
+      { eventId: source.id, name: "ana", status: "CONFIRMED" },
+      { eventId: source.id, name: "bogdan", status: "WAITLISTED" },
+      { eventId: dates[1].id, name: "carmen", status: "CONFIRMED" },
+      { eventId: dates[1].id, name: "dan", status: "WAITLISTED" },
+    ]);
+
+    const result = await save(source.id, { waitlistAutoOffer: false }, new Date(NOW.getTime() + 30_000), "all");
+    expect(result).toMatchObject({ appliedTo: 3 });
+    for (const id of [source.id, ...dates.map((d) => d.id)]) {
+      expect((await reload(id)).waitlistAutoOffer, id).toBe(false);
+      expect((await autoOfferTrail(id)).map((entry) => entry.metadataJson), id).toEqual([{ from: true, to: false }]);
+    }
+
+    // The same raise that offered a place on two dates before (above) now offers none.
+    expect(await saveCapacity(source.id, "2", new Date(NOW.getTime() + 60_000), "all")).toMatchObject({ appliedTo: 3, offered: 0 });
+    const statuses = async (eventId: string) => (await registrationsOf(eventId)).map((r) => r.status).sort();
+    expect(await statuses(source.id)).toEqual(["CONFIRMED", "WAITLISTED"]);
+    expect(await statuses(dates[1].id)).toEqual(["CONFIRMED", "WAITLISTED"]);
     expect(await offersQueued()).toBe(0);
   });
 });

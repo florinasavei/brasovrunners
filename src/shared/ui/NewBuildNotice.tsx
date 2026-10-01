@@ -257,7 +257,7 @@ export default function NewBuildNotice({ build }: { build: string }) {
      * because the reader may be typing.
      *
      * It is at the top of the page, so it is never over a submit button — those are at the
-     * bottom of a form — and never over the build badge in the opposite corner.
+     * bottom of a form.
      *
      * `role="status"` is on the wrapper, which is always rendered, so the region exists before
      * the sentence arrives in it; a live region created at the same moment as its content is

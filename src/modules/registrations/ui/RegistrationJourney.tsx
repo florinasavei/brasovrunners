@@ -26,7 +26,26 @@ export type JourneyStep = "details" | "confirm" | "declare" | "done";
 
 const ORDER: readonly JourneyStep[] = ["details", "confirm", "declare"];
 
-export default async function RegistrationJourney({ current }: { current: JourneyStep }) {
+/**
+ * Where the declaration is, said on the third step (§614). A sentence for every page that shows
+ * the step was the bug: «aici» on a page that has no form is a word nobody can press.
+ *
+ * - `emailJustSent` — the page has no form; the signing link is in the email queued a moment ago.
+ * - `emailHeldUntil` — the club holds the declaration email until `opens` before the start.
+ * - `onThisPage` — the form (or the wizard's button) is below.
+ * - `emailReceived` — a spent or moved-on link: the email came some time ago.
+ */
+export type DeclarationWhere = "emailJustSent" | "emailHeldUntil" | "onThisPage" | "emailReceived";
+
+/** `declaration` is required at the third step and has no meaning at any other: the type says so. */
+export type RegistrationJourneyProps =
+  | { current: Exclude<JourneyStep, "declare">; declaration?: never; opens?: never }
+  | { current: "declare"; declaration: Exclude<DeclarationWhere, "emailHeldUntil">; opens?: never }
+  /** `opens` is the phrase for «{opens} înainte de start», built with `daysPhrase` as CheckYourEmail builds it. */
+  | { current: "declare"; declaration: "emailHeldUntil"; opens: string };
+
+export default async function RegistrationJourney(props: RegistrationJourneyProps) {
+  const { current } = props;
   const t = await getTranslations("Registration.journey");
 
   const currentIndex = current === "done" ? ORDER.length : ORDER.indexOf(current);
@@ -36,10 +55,13 @@ export default async function RegistrationJourney({ current }: { current: Journe
     under the budget governor's floor (§447) — the same real wait the screen after the form says.
   */
   const waitMinutes = current === "declare" ? await cachedEmailWaitMinutes(new Date()) : null;
+  const opens = props.opens ?? "";
   const now =
-    current === "declare" && waitMinutes !== null
-      ? t("now.declareScheduled", { wait: minutesPhrase(await getLocale(), waitMinutes) })
-      : t(`now.${current}`);
+    props.current === "declare"
+      ? waitMinutes !== null
+        ? t(`now.declareScheduled.${props.declaration}`, { wait: minutesPhrase(await getLocale(), waitMinutes), opens })
+        : t(`now.declare.${props.declaration}`, { opens })
+      : t(`now.${props.current}`);
 
   return (
     <Box sx={{ mb: 3 }}>

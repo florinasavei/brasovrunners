@@ -19,6 +19,7 @@ import { checkJobHealth } from "@/modules/jobs/health";
 import { checkEmailHealth } from "@/modules/notifications/health";
 import {
   findCurrentApprovedDocument,
+  noticeDescribesListNumbers,
   noticeDescribesListSocials,
   noticeDescribesPromotionalMaterials,
   noticeDescribesPromotionalMaterialsShared,
@@ -415,6 +416,8 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       listStatesDescribed: await noticeDescribesListStates(db, now),
       // §500: the same switch for Strava and Instagram beside a name on the public list.
       listSocialsDescribed: await noticeDescribesListSocials(db, now),
+      // §613: the same switch for the race number beside a confirmed name on the public list.
+      listNumbersDescribed: await noticeDescribesListNumbers(db, now),
       promoDescribed: await noticeDescribesPromotionalMaterials(db, now),
       // §570: the same switch for the list the club gives its partners.
       sponsorShareDescribed: await noticeDescribesPromotionalMaterialsShared(db, now),

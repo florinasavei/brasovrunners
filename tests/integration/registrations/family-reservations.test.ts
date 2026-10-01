@@ -75,6 +75,11 @@ const { runRegistrationMaintenance } = await import("@/modules/registrations/mai
 const { default: FamilySittingConfirm } = await import("@/modules/registrations/ui/FamilySittingConfirm");
 const { NextIntlClientProvider } = await import("next-intl");
 const { familyPlaceSlot } = await import("@/modules/registrations/family-place-slot");
+const { nextMaintenanceWork } = await import("@/modules/jobs/next-work");
+const { planQuiet } = await import("@/modules/jobs/schedule");
+const { draftRegistrationDoor } = await import("@/modules/events/ui/registration-door");
+const { cardRegistrationLine } = await import("@/modules/events/ui/CardRegistration");
+const { createTranslator } = await import("next-intl");
 const catalogues = {
   ro: (await import("../../../messages/ro.json")).default,
   en: (await import("../../../messages/en.json")).default,
@@ -213,6 +218,31 @@ async function familyMessage(now: Date) {
   const message = await renderOutboxMessage({ ...row, status: "PROCESSING", attemptCount: 1, lockedAt: now }, db, now);
   const secret = /\/inregistrari\/familie\/([A-Za-z0-9_-]+)/.exec(message.text)?.[1] ?? null;
   return { row, message, secret };
+}
+
+/**
+ * The listing card's registration line for the event at `now` (§409, §612): the door the card reads,
+ * counted straight from the allocator's formula (`readPublicPlaces`, through `draftRegistrationDoor`,
+ * which skips only the public cache), in the real Romanian catalogue.
+ */
+async function cardLine(event: EventInput, now: Date) {
+  const publicEvent = {
+    id: event.id,
+    slug: "crosul-familiei",
+    timezone: "Europe/Bucharest",
+    registrationMode: "INTERNAL",
+    eventStatus: "SCHEDULED",
+    startsAt: event.startsAt,
+    registrationOpensAt: null,
+    registrationOpensSoon: false,
+    registrationClosesAt: null,
+    publishedAt: NOW,
+    externalRegistrationUrl: null,
+    externalProvider: null,
+  } as unknown as Parameters<typeof draftRegistrationDoor>[1];
+  const door = await draftRegistrationDoor(db, publicEvent, { capacity: event.capacity, waitlistCapacity: null }, now);
+  const say = createTranslator({ locale: "ro", messages: catalogues.ro.Event, namespace: undefined }) as unknown as (key: string, values?: Record<string, string | number>) => string;
+  return cardRegistrationLine(say, "ro", publicEvent as unknown as Parameters<typeof cardRegistrationLine>[2], now, door);
 }
 
 async function refusal(promise: Promise<unknown>) {
@@ -398,6 +428,43 @@ describe("BR-REQ-034-02 a family's unconfirmed places go back through the alloca
     ]);
     const [raduNow] = await db.select().from(registrations).where(eq(registrations.id, radu.id));
     expect(raduNow.status).toBe("WAITLIST_OFFERED");
+    /*
+      §612: the card names the place offered to Radu — 3 places, his offer holding one, two free —
+      rather than counting him as still waiting: before, «2 locuri libere din 3 · 1 pe lista de
+      așteptare», which read as free places while somebody waited for one.
+    */
+    const card = await cardLine(event, at(41));
+    expect(card.detail).toBe("2 locuri libere din 3 · 1 loc oferit din lista de așteptare");
+    expect(card.detail).not.toContain("pe lista de așteptare ·");
+    expect(card.detail).not.toMatch(/· \d+ pe lista de așteptare/);
+  });
+
+  it("§612 the job's plan wakes it at the family's deadline, so the place reaches the next in line with no hand call", async () => {
+    const event = await createEvent(3);
+    const { sittingId } = await start(event, "Ana", 0);
+    await send(event, "Mihai", 1, sittingId);
+    await send(event, "Ioana", 2, sittingId);
+    await submitRegistration(db, event, submission("Radu", at(3), { email: "radu@example.ro" }), at(3), "REAL", PUBLIC);
+    const [radu] = (await rows()).filter((row) => row.registeredName === "Radu Pop");
+    expect((await confirmEmail(db, event, radu.id, at(4))).status).toBe("WAITLISTED");
+    await releaseFamilySitting(db, sittingId!, at(5));
+    const { row } = await familyMessage(at(5));
+    await db.update(emailOutbox).set({ status: "SENT", sentAt: at(5), attemptCount: 1 }).where(eq(emailOutbox.id, row.id));
+
+    // The run the form's save woke (§334) finds nothing to do yet: every place is reserved until minute 40.
+    expect((await runRegistrationMaintenance(db, at(5))).eventsProcessed).toBe(0);
+    // …and its plan is the family's deadline, not the next sign-up or the daily window.
+    const next = await nextMaintenanceWork(db, at(5));
+    expect(next?.toISOString()).toBe(at(40).toISOString());
+    expect(planQuiet({ ranAt: at(5), nextWorkAt: next, cadenceMinutes: 0, failed: false }).quietUntil.toISOString()).toBe(at(40).toISOString());
+    // Before the deadline the card says nothing is free and one waits.
+    expect((await cardLine(event, at(39))).lead).toBe("Mulțumim! Toate cele 3 locuri s-au ocupat — 1 așteaptă deja un loc.");
+
+    // The run at the planned instant clears the reservations and offers Radu the place.
+    expect((await runRegistrationMaintenance(db, next!)).eventsProcessed).toBe(1);
+    const [raduNow] = await db.select().from(registrations).where(eq(registrations.id, radu.id));
+    expect(raduNow.status).toBe("WAITLIST_OFFERED");
+    expect((await cardLine(event, at(40))).detail).toBe("2 locuri libere din 3 · 1 loc oferit din lista de așteptare");
   });
 });
 

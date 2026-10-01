@@ -6,7 +6,7 @@ import { openRegistrationClosing, registrationState } from "../domain/registrati
 import type { PublicEvent } from "../repository";
 import { GROUP_GAP, LINE_GAP, ROW_ICON_SX } from "./card-layout";
 import { countForm } from "@/i18n/count-form";
-import { fullThanksPhrase, waitingPhrase, waitlistRoomPhrase } from "./counted-phrases";
+import { fullThanksPhrase, openLinePhrases, waitlistRoomPhrase } from "./counted-phrases";
 import type { RegistrationDoor } from "./registration-door";
 import RegistrationDoorButton, { type ButtonCta, doorButtonLabel, hasDoorButton } from "./RegistrationDoorButton";
 
@@ -22,6 +22,12 @@ export type CardRegistrationLine = {
   detail: string | null;
   /** `detail` cut around "7 locuri libere", the one part in bold (§472); null with `detail`. */
   detailParts: FactParts | null;
+  /**
+   * The detail carries the waiting list's phrases too (§587, §615) — «… · 1 loc oferit din lista de
+   * așteptare · 2 pe lista de așteptare» — and so wraps like a sentence on a phone; a bare count
+   * («7 locuri libere din 10») stays whole on one line. Absent is a bare count.
+   */
+  detailWraps?: boolean;
   /**
    * A full event with a waiting list (§587): what the list does, on a line of its own under the
    * lead — "Intră pe lista de așteptare — te anunțăm pe email când se eliberează un loc." Absent
@@ -114,14 +120,40 @@ export function cardRegistrationLine(
   const button = hasDoorButton(cta) ? { cta, label: doorButtonLabel(say, cta) } : null;
   switch (cta.kind) {
     case "OPEN": {
+      if (cta.fromWaitlist) {
+        /*
+          Somebody waits in the line (§615): a newcomer joins it whatever is free, so the card does not
+          count places free — «Locurile se dau din lista de așteptare», the one bold part (§472), then
+          the line as below, «· 1 loc oferit din lista de așteptare · 2 pe lista de așteptare». The
+          button is the line's (`doorButtonLabel`).
+        */
+        const fact = say("cta.fromWaitlist");
+        const after = openLinePhrases(say, locale, cta).map((phrase) => ` · ${phrase}`).join("");
+        const fromLine = { before: "", fact, after };
+        return { lead: openUntil, leadParts: untilParts, detail: whole(fromLine), detailParts: fromLine, detailWraps: true, bold: true, button };
+      }
       const free = cta.availablePlaces;
       const detailParts =
         free !== null && fill
           ? factParts(say, "cta.freeOfCard", { places: fill.capacity }, "free", say(`cta.freeCount.${countForm(free, locale)}`, { count: free }))
           : null;
-      // Once anybody waits (§587, amending §346): "· 2 pe lista de așteptare", after the places, not bold.
-      const withWaiting = detailParts && cta.waiting > 0 ? { ...detailParts, after: `${detailParts.after} · ${waitingPhrase(say, cta.waiting)}` } : detailParts;
-      return { lead: openUntil, leadParts: untilParts, detail: withWaiting && whole(withWaiting), detailParts: withWaiting, bold: true, button };
+      /*
+        With nobody waiting, an open offer is said after the places and not bold (§587, amending §346):
+        named as offered (§615) — «2 locuri libere din 10 · 1 loc oferit din lista de așteptare». Before
+        §615 an offer read as one more person «pe lista de așteptare» beside free places, which looked
+        like a place nobody was given. Somebody waiting takes the branch above.
+      */
+      const line = openLinePhrases(say, locale, cta);
+      const withWaiting = detailParts && line.length > 0 ? { ...detailParts, after: [detailParts.after, ...line].join(" · ") } : detailParts;
+      return {
+        lead: openUntil,
+        leadParts: untilParts,
+        detail: withWaiting && whole(withWaiting),
+        detailParts: withWaiting,
+        ...(withWaiting && line.length > 0 ? { detailWraps: true } : {}),
+        bold: true,
+        button,
+      };
     }
     case "FULL": {
       /*
@@ -198,8 +230,9 @@ export default function CardRegistration({
               <Box component="span" aria-hidden="true" sx={{ color: "text.disabled", fontWeight: 400 }}>
                 ·
               </Box>{" "}
-              {/* The count stays whole on a phone: it wraps as one piece, never "7 locuri / libere". */}
-              <Box component="span" data-testid="card-places" sx={{ whiteSpace: "nowrap" }}>
+              {/* The count stays whole on a phone: it wraps as one piece, never "7 locuri / libere".
+                  With the waiting list's phrases after it (§615) it is a sentence, and wraps like one. */}
+              <Box component="span" data-testid="card-places" sx={{ whiteSpace: line.detailWraps ? "normal" : "nowrap" }}>
                 <Words text={line.detail} parts={line.detailParts} bold={line.bold} />
               </Box>
             </>

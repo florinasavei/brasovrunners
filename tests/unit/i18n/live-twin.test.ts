@@ -109,6 +109,39 @@ describe("§577 the twin answers only the questions the page itself reads", () =
 });
 
 /*
+  §611 (amending §602): the listing's past section has its own «Filtre», the same names under `past-`
+  in the same address. A past tick changes what the listing shows, so it is the listing's twin — or
+  the CDN's static page would ignore it. The calendar draws no past section: a `past-` name is
+  nothing to it.
+*/
+describe("§611 a tick in the past section's own filter is the listing's twin", () => {
+  it("sends a past tick to the listing's twin, in each shape the page reads it", () => {
+    for (const query of ["past-type=RACE", "past-type=race,hike", "past-type=RACE&past-type=HIKE", "past-surface=TRAIL", "past-partner=1", "past-night=1"]) {
+      expect(liveTwinPathname("/ro/events", search(query), false), query).toBe(`/ro/${LIVE_SEGMENT}/events`);
+      expect(isStaticPublicAnswer("/ro/events", search(query), false), query).toBe(false);
+    }
+    expect(liveTwinPathname("/en/events", search("type=GROUP_RUN&past-type=RACE"), false)).toBe(`/en/${LIVE_SEGMENT}/events`);
+  });
+
+  it("leaves a `past-` name that names nothing to the CDN, as the page would show the bare listing", () => {
+    for (const query of ["past-foo=1", "past-type=FOO", "past-partner=0", "past-=1", "past-view=list"]) {
+      expect(liveTwinPathname("/ro/events", search(query), false), query).toBeNull();
+    }
+  });
+
+  it("keeps the cards ahead's own filter a twin, as before", () => {
+    expect(liveTwinPathname("/ro/events", search("type=RACE"), false)).toBe(`/ro/${LIVE_SEGMENT}/events`);
+  });
+
+  it("is nothing to the calendar: its pages read the cards ahead's names alone", () => {
+    for (const path of ["/ro/calendar", "/ro/calendar/2026-10", "/en/calendar/2026-10/list"]) {
+      expect(liveTwinPathname(path, search("past-type=RACE"), false), path).toBeNull();
+    }
+    expect(liveTwinPathname("/ro/calendar/2026-10", search("type=RACE&past-type=RACE"), false)).toBe(`/ro/${LIVE_SEGMENT}/calendar/2026-10`);
+  });
+});
+
+/*
   §577: a signed-in reader's event links in view were each a twin render on prefetch. The proxy now
   declines a prefetch that a twin would answer — an empty 204 — and the press navigates to the twin.
 */

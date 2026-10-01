@@ -11,6 +11,8 @@ import type { RegistrationCta } from "./registration-cta";
  * One state, read from the address and written back to it, and nowhere else: the listing and the
  * calendar read the same parameters, a GET form with no script writes them, and a link that was in
  * somebody's history before this change still means what it meant (`?type=RACE`, `?partner=1`).
+ * Since §611 the listing's past section has its own state in the same address, under `past-` names
+ * (`FilterScope`, `scopedParams`).
  *
  * **OR within a group, AND across groups.** Ticking "Cursă" and "Tură montană" shows either kind;
  * ticking "Cursă" and "Trail" shows a race on a trail. A group with nothing ticked asks nothing.
@@ -133,6 +135,42 @@ export function registrationDoorOpen(door: DoorAnswer): boolean {
 type SearchParams = Record<string, string | string[] | undefined>;
 
 /**
+ * The listing's two filter states in one address (§611, amending §602 — the owner, 2026-10-01: «Am
+ * zis că vreau un filtru și la evenimentele trecute, la fel ca la cele curente»): the cards ahead
+ * read the names §413 gave them (`?type=RACE`), and the past section reads the same groups and flags
+ * under `past-` (`?past-type=RACE`). Neither narrows the other's list. The calendar reads the
+ * `upcoming` scope only, as it always read these names.
+ */
+export const FILTER_SCOPES = ["upcoming", "past"] as const;
+export type FilterScope = (typeof FILTER_SCOPES)[number];
+
+/** What a `past` scope's parameter is called in the address: `past-type`, `past-partner`, … */
+const PAST_PREFIX = "past-";
+
+/** Every name a filter reads, unprefixed: the groups, then the flags. */
+const FILTER_NAMES: readonly string[] = [...FILTER_GROUPS, ...FILTER_FLAGS];
+
+/** A filter's parameter name in the address, for one scope: `type` ahead, `past-type` behind. */
+export function scopedName(name: FilterGroup | FilterFlag, scope: FilterScope): string {
+  return scope === "past" ? `${PAST_PREFIX}${name}` : name;
+}
+
+/**
+ * The filter parameters of one scope, under their unprefixed names (`past-type` → `type`). The
+ * `upcoming` scope is the unprefixed names and ignores every `past-` one; the `past` scope is the
+ * `past-` names alone. A key that names no filter (`view`, `foo`, `past-foo`) is in neither. Values
+ * come back exactly as the address wrote them — the parser reads both of §413's shapes.
+ */
+export function scopedParams(params: SearchParams, scope: FilterScope): SearchParams {
+  const scoped: SearchParams = {};
+  for (const name of FILTER_NAMES) {
+    const value = params[scope === "past" ? `${PAST_PREFIX}${name}` : name];
+    if (value !== undefined) scoped[name] = value;
+  }
+  return scoped;
+}
+
+/**
  * Every value a parameter names, whichever shape the address wrote it in: repeated
  * (`?type=RACE&type=HIKE`, what the GET form submits) or comma-separated (`?type=RACE,HIKE`, the
  * shape a hand-written link might use) — both parse to the same tick set. Each is trimmed, so a
@@ -175,9 +213,11 @@ function canonical(group: FilterGroup, asked: string): string {
  * the way `?type=NOPE` always was — and the values come back in the closed set's own order, once
  * each, so two addresses that tick the same boxes in another order are the same state. Besides the
  * enum names the form itself submits, the short forms a link might be written in are read the same
- * way: `?type=race,group-run`, `?distance=10-21` (§413).
+ * way: `?type=race,group-run`, `?distance=10-21` (§413). `scope` names which of the address's two
+ * states is read (§611): the cards ahead by default, the past section's `past-` names when asked.
  */
-export function parseListingFilter(params: SearchParams): ListingFilter {
+export function parseListingFilter(address: SearchParams, scope: FilterScope = "upcoming"): ListingFilter {
+  const params = scopedParams(address, scope);
   const pick = <G extends FilterGroup>(group: G): GroupValues[G][] => {
     const asked = all(params[group]).map((value) => canonical(group, value));
     return GROUP_VALUES[group].filter((value) => asked.includes(value)) as GroupValues[G][];
@@ -202,16 +242,17 @@ export function activeFilterCount(filter: ListingFilter): number {
 /**
  * The filter as query parameters, in the shape the form itself submits — one parameter per ticked
  * box, repeated within a group (`?type=RACE&type=HIKE&partner=1`) — so a link the server builds
- * and the address a script-less form produces are the same address.
+ * and the address a script-less form produces are the same address. Under the scope's own names
+ * (§611): `?past-type=RACE` for the past section.
  */
-export function listingFilterQuery(filter: ListingFilter): Record<string, string | string[]> {
+export function listingFilterQuery(filter: ListingFilter, scope: FilterScope = "upcoming"): Record<string, string | string[]> {
   const query: Record<string, string | string[]> = {};
   for (const group of FILTER_GROUPS) {
     const values = filter[group];
-    if (values.length === 1) query[group] = values[0];
-    else if (values.length > 1) query[group] = [...values];
+    if (values.length === 1) query[scopedName(group, scope)] = values[0];
+    else if (values.length > 1) query[scopedName(group, scope)] = [...values];
   }
-  for (const flag of FILTER_FLAGS) if (filter[flag]) query[flag] = "1";
+  for (const flag of FILTER_FLAGS) if (filter[flag]) query[scopedName(flag, scope)] = "1";
   return query;
 }
 
@@ -318,10 +359,24 @@ export function offersAnything(offer: FilterOffer): boolean {
 }
 
 /**
- * The past section's rows under the listing's filter (§267, §413, §602): the very predicate the
- * upcoming cards pass through (`matchesListingFilter`), over the one cached window the page read,
- * the row the lead already shows between seasons (§167) left out by its id. Every match comes back,
- * newest first as the window is; the section draws the first twelve of them.
+ * The one value every event shares, per group — for a window nothing narrows (§611): the past panel
+ * says "every past event is the same — Concurs, Trail" rather than draw no control. A group is
+ * listed only when every event carries the same, stated value in it; one with two values, or a
+ * question the club left unanswered on any event, is left out. Empty for no events.
+ */
+export function singleValues<T extends FilterableEvent>(events: readonly T[]): { group: FilterGroup; value: string }[] {
+  if (events.length === 0) return [];
+  return FILTER_GROUPS.flatMap((group) => {
+    const first = valueOf(events[0], group);
+    return first !== null && events.every((event) => valueOf(event, group) === first) ? [{ group, value: first }] : [];
+  });
+}
+
+/**
+ * The past section's rows under its own filter (§267, §602, §611): the `past-` scope of the address,
+ * through the very predicate the upcoming cards pass through (`matchesListingFilter`), over the one
+ * cached window the page read, the row the lead already shows between seasons (§167) left out by its
+ * id. Every match comes back, newest first as the window is; the section draws the first twelve.
  */
 export function matchingPastEvents<T extends FilterableEvent & { id: string }>(
   rows: readonly T[],
@@ -333,9 +388,10 @@ export function matchingPastEvents<T extends FilterableEvent & { id: string }>(
 }
 
 /**
- * Every row the listing's panel reads its offer off (§413, §602): the dated cards, the undated ones
- * and the past window, each once by id. The past section narrows by the same boxes, so a value only
- * a past event carries — last spring's trail race — is a box that changes what the page shows.
+ * Every row a panel reads its offer off, each once by id (§413): for the listing's top panel the
+ * dated cards and the undated ones. Since §611 the past window is not among them — the past section
+ * has its own panel and its own state, so a value only a past event carries is offered there, not
+ * above the cards it would not narrow (§602 had read the window here too).
  */
 export function listingFilterRows<T extends { id: string }>(...sections: readonly (readonly T[])[]): T[] {
   const seen = new Set<string>();
