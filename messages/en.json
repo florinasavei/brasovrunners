@@ -1063,6 +1063,8 @@
       "neonLimitsTitle": "Save the Neon limits?",
       "neonPlanTitle": "Change the Neon plan?",
       "neonPlanBody": "The costs and limits on this page are worked out from the plan chosen whenever Neon does not state its own plan.",
+      "vercelPlanTitle": "Change the Vercel plan?",
+      "vercelPlanBody": "The costs on this page are worked out from the plan and the seats chosen.",
       "olderPicturesTitle": "Make the phone sizes?",
       "olderPicturesBody": "The pictures in this batch get their smaller sizes; the old address keeps working. It takes about twenty seconds. An editor open on a page using them will ask for a reload.",
       "shownAddressTitle": "Change the contact address shown?",
@@ -2568,6 +2570,37 @@
         "fieldHelpMore": "The rates and limits come from the Neon console and neon.com/pricing. The account holds both projects, QA and production.",
         "decemberMore": "Choose Free only if the invoices say so, and check Free's limits at that time first, on both projects."
       },
+      "vercelPlan": {
+        "title": "The Vercel plan (hosting)",
+        "intro": "The club states the Vercel plan here; the costs on this page are worked out from it.",
+        "introMore": "The site does not ask Vercel which plan the account is on. When you change the plan in the Vercel account, change it here too.",
+        "inForce": {
+          "HOBBY": "Vercel: Hobby, free.",
+          "PRO": "Vercel: Pro, {seats}, {price} USD a month + VAT."
+        },
+        "seats": {
+          "one": "{count} seat",
+          "few": "{count} seats",
+          "other": "{count} seats"
+        },
+        "updated": "Set by {who}, {when}. Note: {note}",
+        "updatedNoWho": "Set {when}. Note: {note}",
+        "field": "The Vercel plan",
+        "fieldHelp": "Prices checked {checkedOn}; set on each environment separately.",
+        "fieldHelpMore": "Pro is paid per developer seat; view-only seats are free.",
+        "option": {
+          "HOBBY": "{name} — free, for non-commercial use only",
+          "PRO": "{name} — {price} USD per seat, a month, + VAT"
+        },
+        "seatsField": "Developer seats",
+        "seatsHelp": "How many people deploy the site; counts on Pro only, from 1 to {max}.",
+        "note": "Note (why, until when)",
+        "back": "On the day you drop Pro, choose Hobby here.",
+        "save": "Save the Vercel plan",
+        "saving": "Saving…",
+        "saved": "The Vercel plan was saved; the costs on this page use it from now on.",
+        "readOnly": "The Administrator changes the plan; the figures above are current."
+      },
       "neonLimits": {
         "title": "The database's limits",
         "intro": "Two brakes on the Neon bill, set in Neon itself: the database's size and its CU-hours per period.",
@@ -3015,27 +3048,58 @@
       "freeVerdict": {
         "freeExceptDomain": "Yes, apart from the domain: every service is on a free plan and nothing is paid monthly.",
         "paysForUsage": "Almost: the domain and the database are paid for (Neon Launch, by usage), and every other service is on a free plan.",
+        "paysForPlans": "Paid for: {services}; every other service is on a free plan.",
         "freeButAtALimit": "Yes, but today's free emails are used up, and the rest go out after midnight.",
         "notFree": "Careful: a published event charges a fee, and the free plans do not care that we are a non-profit.",
         "paysForUsageMore": "Launch has no subscription and was chosen by the club on 22 September 2026.",
         "freeButAtALimitMore": "Nothing is lost. If you open entries now, the confirmations arrive tomorrow morning.",
-        "notFreeMore": "Not necessarily a problem: a donation is allowed, a compulsory fee is not, even if it only covers costs."
+        "notFreeMore": "Not necessarily a problem: a donation is allowed, a compulsory fee is not, even if it only covers costs.",
+        "paidName": {
+          "domain": "the domain (.com)",
+          "mailgun": "email (Mailgun {plan})",
+          "vercel": "hosting (Vercel {plan}, {seats})",
+          "neon": "the database (Neon {plan}, by usage)"
+        }
       },
       "costTitle": "What it costs",
       "costToday": {
         "nothing": "Today the club pays nothing at all: every service is on a free plan.",
-        "total": "Today the club pays {total} a year.",
+        "sentence": "Today the club pays {month} a month, that is {year} a year.",
+        "sentenceEstimated": "Today the club pays about {month} a month, that is {year} a year.",
         "amount": "{amount} {currency}",
         "amountPlusVat": "{amount} {currency} + VAT",
         "free": "free",
         "notTaken": "nothing yet",
-        "usage": "about {amount} {currency}/month, by usage",
         "usageUnknown": "by usage — the pace is not measured here",
-        "estimated": "Of which the database is an estimate at this month's pace (× 12), not an invoice."
+        "billedMonthly": "{month} {currency}/month, billed monthly · {year} {currency} a year",
+        "billedMonthlyPlusVat": "{month} {currency}/month + VAT, billed monthly · {year} {currency} a year + VAT",
+        "billedYearly": "{year} {currency} a year, billed yearly · about {month} {currency}/month",
+        "billedYearlyPlusVat": "{year} {currency} a year + VAT, billed yearly · about {month} {currency}/month + VAT",
+        "usageBoth": "about {month} {currency}/month, by usage · about {year} {currency} a year",
+        "estimated": "Of which the database is an estimate at this month's pace, not an invoice."
+      },
+      "costTable": {
+        "caption": "What each service costs, per month and per year",
+        "service": "Service",
+        "perMonth": "Per month",
+        "perYear": "Per year",
+        "total": "Total",
+        "unmeasured": "pace not measured",
+        "plusVat": "+ VAT",
+        "help": "“Per month” and “Per year”: one is the amount on the vendor's invoice, the other is worked out from it. “≈” is an estimate at this month's pace.",
+        "name": {
+          "domain": "Domain",
+          "mailgun": "Mailgun",
+          "vercel": "Vercel",
+          "neon": "Neon",
+          "zitadel": "Zitadel",
+          "scheduler": "cron-job.org + GitHub"
+        }
       },
       "nextSpend": {
         "mailgun": "The next thing to cost money: one month of Mailgun Basic, {cost}.",
         "vercel": "The next thing to cost money: Vercel Pro, {cost}.",
+        "none": "No new spend is coming: what is taken for now can be dropped after the race.",
         "mailgunMore": "Bought for a single race, when a day is expected to bring more entries than the free emails cover.",
         "vercelMore": "It arrives only if the site starts asking for money to take part, or if the site's code moves to the club's own account."
       },
@@ -3095,7 +3159,15 @@
           "closeYes": "A published event is marked as charging a fee — check how it is worded.",
           "closeNo": "No published event asks for money.",
           "bumpBack": "This one does not come back down: it is a change in how the site is used, not a busy weekend.",
-          "more": "Over a free-plan limit, the feature stops for 30 days and no payment restarts it: move up before a race, not during one."
+          "more": "Over a free-plan limit, the feature stops for 30 days and no payment restarts it: move up before a race, not during one.",
+          "pro": {
+            "freeGives": "Pro: {seats} at {seatPrice} USD a month each, with {credit} USD of usage included.",
+            "ceiling": "No limit measured here: the usage credit is on the Vercel dashboard.",
+            "whenCrossed": "Usage beyond the credit is billed on top, on the same invoice.",
+            "bumpBack": "Taken for the race's months and can be given back after it; the card's note says when and why.",
+            "more": "Pro is taken so the site's functions do not stop before the race; the card's note says when it was taken.",
+            "close": "On Pro, the “non-commercial only” rule no longer applies."
+          }
         },
         "neon": {
           "name": "Neon (the database)",
@@ -7402,6 +7474,7 @@
       "honeypotOn": "Honeypot: on.",
       "honeypotOff": "Honeypot: off.",
       "neonPlan": "Neon plan saved.",
+      "vercelPlan": "Vercel plan saved.",
       "jobCadence": "Interval saved.",
       "budgetThresholds": "Budget thresholds saved.",
       "deadlines": "Deadlines saved.",

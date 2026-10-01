@@ -160,6 +160,8 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   // Asks for "Revino la textul implicit" (`reset=1`) only; saving the wording is an editorial save.
   updateEmailCopyAction: [],
   updateNeonPlanAction: [],
+  // The Vercel plan and its seats (§NNN): every cost on «Costuri» is priced from it.
+  updateVercelPlanAction: [],
   updateBotCheckAction: [],
   updateJobCadenceAction: [],
   // The month's budget thresholds (§447): how early the platform throttles itself.

@@ -6,16 +6,23 @@ import {
   DOMAIN_PRICE_USD_PER_YEAR,
   freeTierVerdict,
   moneyDecisions,
+  monthlyCostToday,
   nextSpend,
   oldestCheckDate,
   OPERATIONAL_LIMITS,
+  payingRows,
+  perMonth,
+  perYear,
+  type PlanCost,
   type PlatformFacts,
   platformServices,
   PRICE_AGEING_AFTER_DAYS,
   PRICE_STALE_AFTER_DAYS,
   priceFreshness,
   registrationsLeftToday,
+  type ServiceRow,
 } from "@/modules/diagnostics/platform-plans";
+import { VERCEL_PLANS } from "@/modules/diagnostics/domain/vercel-plan";
 import {
   MAILGUN_FREE_DAILY_MESSAGES,
   MESSAGES_PER_COMPLETED_REGISTRATION,
@@ -259,7 +266,16 @@ describe("BR-REQ-090-05 nothing renders as an untranslated key, in either langua
       // sentences are read under `services.neon.launch.*`, and "how close" is the estimate.
       platformServices({ ...BASE, neonPlan: "LAUNCH", databaseBytes: 1024 ** 2, neonCuHoursThisMonth: 2, neonHoursElapsed: 24 }),
       platformServices({ ...BASE, neonPlan: "LAUNCH" }),
+      // Mailgun Basic and Vercel Pro paid (§NNN): the Vercel row reads `services.vercel.pro.*`.
+      platformServices({ ...BASE, emailPlanName: "Basic", emailPlanUsdPerMonth: 15, emailAllowance: 10_000, vercelPlan: "PRO", vercelSeats: 2 }),
+      platformServices({ ...BASE, vercelPlan: "PRO", hasPaidEvent: true }),
     ];
+    /** The «Cost azi» key the page prints for a row (§NNN): both figures, the billed one first. */
+    const costKey = (cost: PlanCost): string => {
+      if (cost.kind === "usage") return cost.estimatedPerMonth === null ? "usageUnknown" : "usageBoth";
+      if (cost.kind === "paid") return `${cost.billed === "monthly" ? "billedMonthly" : "billedYearly"}${cost.plusVat ? "PlusVat" : ""}`;
+      return cost.kind;
+    };
 
     for (const rows of variants) {
       for (const row of rows) {
@@ -284,9 +300,13 @@ describe("BR-REQ-090-05 nothing renders as an untranslated key, in either langua
             `${locale} ${row.id}.${closeKey}`,
           ).toBeTruthy();
           if (row.variant) {
-            // Both sentences the page can print for a usage row: with a measured pace, and without.
+            // The variant's own «how close»: for a usage row both sentences, with a measured pace and
+            // without; for Vercel on Pro the one sentence that replaces the commercial clause.
             expect(messageAt(messages, wording("close")), `${locale} ${wording("close")}`).toBeTruthy();
-            expect(messageAt(messages, wording("closeUnknown")), `${locale} ${wording("closeUnknown")}`).toBeTruthy();
+            if (row.variant === "launch") {
+              expect(messageAt(messages, wording("closeUnknown")), `${locale} ${wording("closeUnknown")}`).toBeTruthy();
+            }
+            expect(messageAt(messages, wording("more")), `${locale} ${wording("more")}`).toBeTruthy();
           }
 
           if (row.bump) {
@@ -294,10 +314,9 @@ describe("BR-REQ-090-05 nothing renders as an untranslated key, in either langua
               .toBeTruthy();
             expect(messageAt(messages, `bump.${row.bump}`), `${locale} ${row.bump}`).toBeTruthy();
           }
-          expect(
-            messageAt(messages, `costToday.${row.costToday.kind === "usage" ? (row.costToday.estimatedPerMonth === null ? "usageUnknown" : "usage") : row.costToday.kind === "paid" ? "amount" : row.costToday.kind}`),
-            `${locale} ${row.id} costToday`,
-          ).toBeTruthy();
+          expect(messageAt(messages, `costToday.${costKey(row.costToday)}`), `${locale} ${row.id} costToday ${costKey(row.costToday)}`).toBeTruthy();
+          // The breakdown's short name for the row (§NNN).
+          expect(messageAt(messages, `costTable.name.${row.id}`), `${locale} costTable.name.${row.id}`).toBeTruthy();
           expect(messageAt(messages, `severity.${row.severity}`), `${locale} ${row.severity}`)
             .toBeTruthy();
         }
@@ -305,11 +324,36 @@ describe("BR-REQ-090-05 nothing renders as an untranslated key, in either langua
     }
   });
 
-  it("translates the next-spend sentence for every service that can be next", () => {
-    for (const facts of [BASE, { ...BASE, clubDomainBound: true }]) {
+  it("translates the next-spend sentence for every service that can be next, and the one for none", () => {
+    const allPaid: PlatformFacts = { ...BASE, emailPlanName: "Basic", emailPlanUsdPerMonth: 15, emailNextPlan: { name: "Foundation", usdPerMonth: 35 }, vercelPlan: "PRO" };
+    for (const facts of [BASE, { ...BASE, clubDomainBound: true }, { ...BASE, emailPlanName: "Basic", emailPlanUsdPerMonth: 15 }, allPaid]) {
       const next = nextSpend(platformServices(facts));
       for (const [locale, messages] of LOCALES) {
-        expect(messageAt(messages, `nextSpend.${next?.id}`), `${locale} ${next?.id}`).toBeTruthy();
+        // Null is said in its own sentence (§NNN), never an empty line.
+        const key = next ? `nextSpend.${next.id}` : "nextSpend.none";
+        expect(messageAt(messages, key), `${locale} ${key}`).toBeTruthy();
+        if (next) expect(messageAt(messages, `${key}More`), `${locale} ${key}More`).toBeTruthy();
+      }
+    }
+  });
+
+  it("§NNN translates the verdict that names what is paid, and every name it can use", () => {
+    for (const [locale, messages] of LOCALES) {
+      expect(messageAt(messages, "freeVerdict.paysForPlans"), `${locale} paysForPlans`).toMatch(/\{services\}/);
+      for (const id of ["domain", "mailgun", "vercel", "neon"]) {
+        expect(messageAt(messages, `freeVerdict.paidName.${id}`), `${locale} paidName.${id}`).toBeTruthy();
+      }
+      for (const form of ["one", "few", "other"]) {
+        expect(messageAt(messages, `vercelPlan.seats.${form}`), `${locale} vercelPlan.seats.${form}`).toMatch(/\{count\}/);
+      }
+      for (const key of ["sentence", "sentenceEstimated", "estimated", "nothing"]) {
+        expect(messageAt(messages, `costToday.${key}`), `${locale} costToday.${key}`).toBeTruthy();
+      }
+      // The sentence says the month and the year; «(× 12)» is gone from the estimate's note.
+      expect(messageAt(messages, "costToday.sentence")).toMatch(/\{month\}.*\{year\}/);
+      expect(messageAt(messages, "costToday.estimated")).not.toMatch(/× ?12/);
+      for (const key of ["caption", "service", "perMonth", "perYear", "total", "unmeasured", "plusVat", "help"]) {
+        expect(messageAt(messages, `costTable.${key}`), `${locale} costTable.${key}`).toBeTruthy();
       }
     }
   });
@@ -448,5 +492,130 @@ describe("the Neon row follows the plan setting", () => {
       expect(messageAt(messages, "freeVerdict.paysForUsage"), `${locale} paysForUsage`).toBeTruthy();
       expect(messageAt(messages, "costToday.estimated"), `${locale} costToday.estimated`).toBeTruthy();
     }
+  });
+});
+
+/**
+ * BR-REQ-090-05, §NNN — «Cât costă» per month and per year (the owner, 2026-10-01: «la costuri
+ * vreau să văd defalcat pe lună și per serviciu!» and, of the yearly figure, «aici nu e clar ca e
+ * per an»). A paid plan keeps the figure its invoice carries and says which period that is; the
+ * other figure is derived, never stored, and the totals are the derived figures summed.
+ */
+describe("§NNN each cost per month and per year", () => {
+  const paid = (amount: number, billed: "monthly" | "yearly", plusVat = true): PlanCost => ({ kind: "paid", amount, billed, currency: "USD", plusVat });
+
+  it("does the arithmetic both ways, to the cent", () => {
+    // Mailgun Basic: 15 a month is 180 a year.
+    expect(perMonth(paid(15, "monthly"))).toBe(15);
+    expect(perYear(paid(15, "monthly"))).toBe(180);
+    // The domain: 10.97 a year is 0.91 a month.
+    expect(perYear(paid(10.97, "yearly"))).toBe(10.97);
+    expect(perMonth(paid(10.97, "yearly"))).toBe(0.91);
+    // Vercel Pro, two seats: 40 a month is 480 a year.
+    expect(perMonth(paid(20 * 2, "monthly"))).toBe(40);
+    expect(perYear(paid(20 * 2, "monthly"))).toBe(480);
+    // A usage plan at 9.61 a month: 115.32 a year.
+    expect(perMonth({ kind: "usage", currency: "USD", estimatedPerMonth: 9.61 })).toBe(9.61);
+    expect(perYear({ kind: "usage", currency: "USD", estimatedPerMonth: 9.61 })).toBe(115.32);
+    // Unmeasured usage is null both ways — a word on the page, never a zero.
+    expect(perMonth({ kind: "usage", currency: "USD", estimatedPerMonth: null })).toBeNull();
+    expect(perYear({ kind: "usage", currency: "USD", estimatedPerMonth: null })).toBeNull();
+    // Free and not taken cost nothing.
+    for (const cost of [{ kind: "free" }, { kind: "notTaken" }] as const) {
+      expect(perMonth(cost)).toBe(0);
+      expect(perYear(cost)).toBe(0);
+    }
+  });
+
+  it("keeps Mailgun's month as Mailgun bills it — no longer stored × 12", () => {
+    const mailgun = platformServices({ ...BASE, emailPlanName: "Basic", emailPlanUsdPerMonth: 15 }).find((row) => row.id === "mailgun");
+    expect(mailgun?.costToday).toEqual({ kind: "paid", amount: 15, billed: "monthly", currency: "USD", plusVat: true });
+    const domain = platformServices(BASE).find((row) => row.id === "domain");
+    expect(domain?.costToday).toEqual({ kind: "paid", amount: DOMAIN_PRICE_USD_PER_YEAR, billed: "yearly", currency: "USD", plusVat: true });
+  });
+
+  it("totals the domain, Mailgun Basic, Vercel Pro on two seats and Neon Launch, per month and per year", () => {
+    // Neon at 1.8 CU-hours a day and a mebibyte: 5.72 a month (§280).
+    const facts: PlatformFacts = {
+      ...BASE,
+      emailPlanName: "Basic",
+      emailPlanUsdPerMonth: 15,
+      emailAllowance: 10_000,
+      vercelPlan: "PRO",
+      vercelSeats: 2,
+      neonPlan: "LAUNCH",
+      databaseBytes: 1024 ** 2,
+      neonCuHoursThisMonth: 1.8,
+      neonHoursElapsed: 24,
+    };
+    const rows = platformServices(facts);
+    // 0.91 + 15 + 40 + 5.72 a month; 10.97 + 180 + 480 + 68.64 a year.
+    expect(monthlyCostToday(rows)).toEqual([{ currency: "USD", amount: 61.63, plusVat: true, estimated: true }]);
+    expect(annualCostToday(rows)).toEqual([{ currency: "USD", amount: 739.61, plusVat: true, estimated: true }]);
+    // Without Neon's pace the estimate adds nothing and still marks the totals.
+    const unmeasured = platformServices({ ...facts, neonCuHoursThisMonth: null });
+    expect(monthlyCostToday(unmeasured)).toEqual([{ currency: "USD", amount: 55.91, plusVat: true, estimated: true }]);
+    expect(annualCostToday(unmeasured)).toEqual([{ currency: "USD", amount: 670.97, plusVat: true, estimated: true }]);
+    // Every paying row, in the table's order.
+    expect(payingRows(rows).map((row) => row.id)).toEqual(["domain", "mailgun", "vercel", "neon"]);
+  });
+
+  it("on the free plans is the domain alone: its twelfth a month, its fee a year, no estimate", () => {
+    const rows = platformServices(BASE);
+    expect(monthlyCostToday(rows)).toEqual([{ currency: "USD", amount: 0.91, plusVat: true, estimated: false }]);
+    expect(annualCostToday(rows)).toEqual([{ currency: "USD", amount: DOMAIN_PRICE_USD_PER_YEAR, plusVat: true, estimated: false }]);
+    expect(monthlyCostToday([])).toEqual([]);
+  });
+});
+
+/** BR-REQ-090-05, §NNN — the Vercel row follows the plan the club states on «Costuri». */
+describe("§NNN the Vercel row follows the plan setting", () => {
+  const vercel = (facts: PlatformFacts): ServiceRow | undefined => platformServices(facts).find((row) => row.id === "vercel");
+
+  it("on Hobby — the default — reads exactly as before the setting existed", () => {
+    for (const facts of [BASE, { ...BASE, vercelPlan: "HOBBY" as const, vercelSeats: 3 }]) {
+      const row = vercel(facts);
+      expect(row).toMatchObject({ planToday: "Hobby", costToday: { kind: "free" }, nextPlan: "Pro", nextCost: "$20/mo per seat", bump: "permanent", severity: "ok" });
+      expect(row?.variant).toBeUndefined();
+      expect(row?.headroom).toEqual({ kind: "derived", reached: false });
+    }
+    expect(vercel({ ...BASE, hasPaidEvent: true })?.severity).toBe("watch");
+  });
+
+  it("on Pro is the seats' price, billed monthly with VAT on top, no next step, a temporary bump", () => {
+    const row = vercel({ ...BASE, vercelPlan: "PRO", vercelSeats: 2 });
+    expect(row).toMatchObject({
+      planToday: "Pro",
+      costToday: { kind: "paid", amount: 2 * VERCEL_PLANS.PRO.usdPerSeatPerMonth, billed: "monthly", currency: "USD", plusVat: true },
+      headroom: { kind: "derived", reached: false },
+      severity: "ok",
+      nextPlan: null,
+      nextCost: null,
+      bump: "temporary",
+      variant: "pro",
+      seats: 2,
+    });
+    // The non-commercial clause no longer applies on Pro: a paid event is no caution there.
+    expect(vercel({ ...BASE, vercelPlan: "PRO", hasPaidEvent: true })).toMatchObject({ severity: "ok", headroom: { kind: "derived", reached: false } });
+    // One seat when the seats are not said.
+    expect(vercel({ ...BASE, vercelPlan: "PRO" })?.costToday).toMatchObject({ amount: VERCEL_PLANS.PRO.usdPerSeatPerMonth });
+  });
+
+  it("leaves nothing to spend next once the domain, Mailgun and Vercel are paid", () => {
+    const facts: PlatformFacts = { ...BASE, emailPlanName: "Basic", emailPlanUsdPerMonth: 15, emailNextPlan: { name: "Foundation", usdPerMonth: 35 }, vercelPlan: "PRO" };
+    expect(nextSpend(platformServices(facts))).toBeNull();
+    // Vercel Pro alone: email is still next.
+    expect(nextSpend(platformServices({ ...BASE, vercelPlan: "PRO" }))?.id).toBe("mailgun");
+  });
+
+  it("names what is paid once a plan besides the domain is — and keeps the earlier verdicts first", () => {
+    expect(freeTierVerdict({ ...BASE, vercelPlan: "PRO" })).toBe("paysForPlans");
+    expect(freeTierVerdict({ ...BASE, emailPlanName: "Basic", emailPlanUsdPerMonth: 15, emailAllowance: 10_000 })).toBe("paysForPlans");
+    expect(freeTierVerdict({ ...BASE, vercelPlan: "PRO", neonPlan: "LAUNCH" })).toBe("paysForPlans");
+    // Neon alone is still «pays for usage».
+    expect(freeTierVerdict({ ...BASE, neonPlan: "LAUNCH" })).toBe("paysForUsage");
+    // A paid event and a spent allowance still come first.
+    expect(freeTierVerdict({ ...BASE, vercelPlan: "PRO", hasPaidEvent: true })).toBe("notFree");
+    expect(freeTierVerdict({ ...BASE, vercelPlan: "PRO", emailSentToday: 100 })).toBe("freeButAtALimit");
   });
 });

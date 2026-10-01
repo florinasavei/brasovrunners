@@ -2,6 +2,7 @@ import type { TranslationCredit } from "@/modules/translate/domain/credit";
 import { R2_FREE_STORAGE_GB, R2_USD_PER_GB_MONTH } from "../platform-plans";
 import { NEON_BUDGET_MIN_PACE_HOURS } from "./neon-budget";
 import { NEON_PLANS, type NeonPlanId, roundUsd } from "./neon-plan";
+import type { VercelPlanId } from "./vercel-plan";
 
 /**
  * «Luna aceasta» — what each provider has cost the club so far this month, and what it will
@@ -29,7 +30,7 @@ import { NEON_PLANS, type NeonPlanId, roundUsd } from "./neon-plan";
  * characters are counted per UTC calendar month, the month `notifications/volume.ts` and
  * `diagnostics/vercel.ts` already count, so each line names its period.
  *
- * **Every price comes from its catalogue** (`neon-plan.ts`, `email-plan.ts`, the domain and R2
+ * **Every price comes from its catalogue** (`neon-plan.ts`, `email-plan.ts`, `vercel-plan.ts`, the domain and R2
  * constants in `platform-plans.ts`; DeepL's credit is DeepL's own answer, §497), never from
  * here: this file multiplies and adds, and says "estimate" wherever it projects — `AGENTS.md`
  * §1.2's rule that a vendor's price is quoted, never invented. Every amount is in USD, the
@@ -119,7 +120,13 @@ export type MonthCostFacts = {
   };
   /** This month's build minutes and deployments from Vercel, or null without a token or an answer. */
   vercel: { buildMinutes: number; deployments: number } | null;
+  /** Hobby's build minutes a month — the ceiling the usage meets on Hobby only. */
   vercelBuildMinutesPerMonth: number;
+  /**
+   * The Vercel plan the club states (§NNN): Hobby, or Pro with its seats and the catalogue's seat
+   * price (`domain/vercel-plan.ts`), which this file multiplies and never quotes.
+   */
+  vercelPlan: { plan: VercelPlanId; seats: number; usdPerSeatPerMonth: number };
   domain: { planName: string; usdPerYear: number; expiresOn: string | null };
   /** The month's translated characters (§464), or null when the audit trail could not be read. */
   deepl: { charactersThisMonth: number } | null;
@@ -314,27 +321,37 @@ function mailgunLine(facts: MonthCostFacts): MonthCostLine {
   return { ...line, severity: severityOf(line, true) };
 }
 
-/** Vercel Hobby: free; the build minutes are the ceiling a busy month of pushes meets (§101). */
+/**
+ * Vercel. On Hobby: free; the build minutes are the ceiling a busy month of pushes meets (§101).
+ * On Pro (§NNN): the seats' price, billed whole for the month like Mailgun's, so so far and at the
+ * end are the same figure, with VAT on top as the invoice decides; last month is the same plan's
+ * price, as Mailgun's is — the plan is today's. The build minutes are still counted, with no
+ * ceiling: Pro's is not recorded here, and none is invented.
+ */
 function vercelLine(facts: MonthCostFacts): MonthCostLine {
   const period = utcMonth(facts.now);
+  const pro = facts.vercelPlan.plan === "PRO";
   const use = facts.vercel
-    ? usage("buildMinutes", facts.vercel.buildMinutes, period, facts.now, facts.vercelBuildMinutesPerMonth, "plan")
+    ? usage("buildMinutes", facts.vercel.buildMinutes, period, facts.now, pro ? null : facts.vercelBuildMinutesPerMonth, "plan")
     : null;
   const detail = facts.vercel ? { kind: "deployments" as const, count: facts.vercel.deployments } : null;
+  const price = pro ? roundUsd(facts.vercelPlan.usdPerSeatPerMonth * facts.vercelPlan.seats) : 0;
   const line = {
     id: "vercel" as const,
-    plan: "Hobby",
-    billing: "free" as const,
+    plan: pro ? "Pro" : "Hobby",
+    billing: pro ? ("monthly" as const) : ("free" as const),
     period,
-    soFarUsd: 0,
-    projectedUsd: 0,
+    soFarUsd: price,
+    projectedUsd: price,
     estimated: false,
-    plusVat: false,
+    plusVat: pro,
     usage: use,
     renewsOn: null,
     renewsThisPeriod: false,
     detail,
-    lastMonth: nothingLastMonth(period),
+    lastMonth: pro
+      ? { period: previousMonth(period), usd: price, usage: null, estimated: false, plusVat: true }
+      : nothingLastMonth(period),
   };
   return { ...line, severity: severityOf(line, facts.vercel !== null) };
 }

@@ -17,6 +17,10 @@ import { neonBudget } from "@/modules/diagnostics/domain/neon-budget";
 import { NEON_PLANS } from "@/modules/diagnostics/domain/neon-plan";
 import { DOMAIN_PRICE_USD_PER_YEAR } from "@/modules/diagnostics/platform-plans";
 import { VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH } from "@/modules/diagnostics/vercel";
+import { VERCEL_PLANS } from "@/modules/diagnostics/domain/vercel-plan";
+
+/** Vercel Pro with `seats` developer seats, at the catalogue's seat price (§NNN). */
+const pro = (seats: number) => ({ plan: "PRO" as const, seats, usdPerSeatPerMonth: VERCEL_PLANS.PRO.usdPerSeatPerMonth });
 
 /**
  * BR-REQ-090-07 criterion 19 (§479) — Costuri's «Luna aceasta»: each provider's month so far and
@@ -35,6 +39,7 @@ function facts(patch: Partial<MonthCostFacts> = {}): MonthCostFacts {
     mailgun: { planName: "Free", usdPerMonth: 0, sentThisMonth: 100, monthlyAllowance: null, dailyAllowance: 100 },
     vercel: { buildMinutes: 100, deployments: 12 },
     vercelBuildMinutesPerMonth: VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH,
+    vercelPlan: { plan: "HOBBY", seats: 1, usdPerSeatPerMonth: VERCEL_PLANS.HOBBY.usdPerSeatPerMonth },
     domain: { planName: ".com", usdPerYear: DOMAIN_PRICE_USD_PER_YEAR, expiresOn: "2027-09-16" },
     deepl: { charactersThisMonth: 50_000 },
     deeplCredit: { expected: false, credit: null },
@@ -174,6 +179,22 @@ describe("one line per provider that bills or meters something", () => {
     expect(busy).toMatchObject({ plan: "Hobby", soFarUsd: 0, projectedUsd: 0, severity: "watch" });
     expect(busy.usage).toMatchObject({ unit: "buildMinutes", ceiling: VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH, state: "close" });
     expect(line(facts({ vercel: null }), "vercel")).toMatchObject({ usage: null, severity: "unknown" });
+    // Hobby is the setting's default and reads exactly as before it existed: free, nothing last month.
+    expect(line(facts(), "vercel")).toMatchObject({ plan: "Hobby", billing: "free", soFarUsd: 0, projectedUsd: 0, plusVat: false, estimated: false });
+    expect(line(facts(), "vercel").lastMonth).toMatchObject({ usd: 0, plusVat: false });
+  });
+
+  it("§NNN Vercel on Pro: the seats' monthly price so far and at the end, VAT on top, last month the same; the build minutes with no ceiling", () => {
+    const one = line(facts({ vercelPlan: pro(1) }), "vercel");
+    expect(one).toMatchObject({ plan: "Pro", billing: "monthly", soFarUsd: 20, projectedUsd: 20, plusVat: true, estimated: false, severity: "ok" });
+    expect(one.lastMonth).toMatchObject({ period: previousMonth(OCTOBER), usd: 20, usage: null, estimated: false, plusVat: true });
+    // Pro's own ceiling is not recorded, so none is invented: the minutes are counted against nothing.
+    expect(one.usage).toMatchObject({ unit: "buildMinutes", used: 100, ceiling: null, ceilingKind: null, state: "ok" });
+    const two = line(facts({ vercelPlan: pro(2), vercel: { buildMinutes: 9_000, deployments: 300 } }), "vercel");
+    expect(two).toMatchObject({ soFarUsd: 40, projectedUsd: 40, severity: "ok" });
+    expect(two.usage?.state).toBe("ok");
+    // Without a token the money is still known; the usage is what is unmeasured.
+    expect(line(facts({ vercelPlan: pro(1), vercel: null }), "vercel")).toMatchObject({ soFarUsd: 20, usage: null, severity: "unknown" });
   });
 
   it("the domain: nothing in a month without its expiry; the renewal in the month that has it, paid once the day has passed", () => {
@@ -221,6 +242,19 @@ describe("the month's total", () => {
     expect(monthTotals(lines)).toMatchObject({ soFarUsd: 16.18, projectedUsd: 29.62, estimated: true, soFarPlusVat: true, projectedPlusVat: true, incomplete: false });
     const renewalOnly = monthCosts(facts({ domain: { planName: ".com", usdPerYear: DOMAIN_PRICE_USD_PER_YEAR, expiresOn: "2026-10-20" } }));
     expect(monthTotals(renewalOnly)).toMatchObject({ soFarUsd: 1.18, soFarPlusVat: false, projectedUsd: 14.62, projectedPlusVat: true });
+  });
+
+  it("§NNN carries Vercel Pro's month: so far and at the end, with VAT on top, and last month too", () => {
+    // Neon 1.18 so far and 3.65 at the end (10 CU-hours in ten days, a GB stored); Pro's two seats 40 each way.
+    const lines = monthCosts(facts({ vercelPlan: pro(2) }));
+    expect(monthTotals(lines)).toMatchObject({ soFarUsd: 41.18, projectedUsd: 43.65, estimated: true, soFarPlusVat: true, projectedPlusVat: true, incomplete: false });
+    const neonLast = Math.round((20 * NEON_PLANS.LAUNCH.usdPerCuHour + NEON_PLANS.LAUNCH.usdPerGbMonth) * 100) / 100;
+    // Last month: Neon's history, Pro's two seats, and the domain's September renewal (it expires 2027-09-16).
+    expect(monthTotals(lines)).toMatchObject({
+      lastMonthUsd: Math.round((neonLast + 40 + DOMAIN_PRICE_USD_PER_YEAR) * 100) / 100,
+      lastMonthPlusVat: true,
+      lastMonthMissing: [],
+    });
   });
 
   it("on the free plans is zero, with no estimate and no VAT", () => {

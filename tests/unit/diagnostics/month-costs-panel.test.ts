@@ -42,6 +42,7 @@ function facts(patch: Partial<MonthCostFacts> = {}): MonthCostFacts {
     mailgun: { planName: "Free", usdPerMonth: 0, sentThisMonth: 100, monthlyAllowance: null, dailyAllowance: 100 },
     vercel: null,
     vercelBuildMinutesPerMonth: VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH,
+    vercelPlan: { plan: "HOBBY", seats: 1, usdPerSeatPerMonth: 0 },
     domain: { planName: ".com", usdPerYear: DOMAIN_PRICE_USD_PER_YEAR, expiresOn: "2026-10-20" },
     deepl: { charactersThisMonth: 1_234 },
     deeplCredit: { expected: false, credit: null },
@@ -157,6 +158,16 @@ describe("BR-REQ-090-07 «Luna aceasta» on Costuri", () => {
     expect(words).toContain("Ar costa doar peste 10 GB stocați: 0,015 USD pe GB pe lună");
     // Vercel's deployments beside its build minutes.
     expect(words).toContain("Publicări 7 luna aceasta");
+  });
+
+  it("§NNN prints Vercel Pro's line as a monthly subscription: its price so far and at the end, + TVA, and no «what would cost money»", async () => {
+    const html = await render("ro", facts({ vercelPlan: { plan: "PRO", seats: 1, usdPerSeatPerMonth: 20 }, vercel: { buildMinutes: 30, deployments: 7 } }), reasons({ current: { vercel: null } }));
+    const words = text(html);
+    expect(words).toContain("Pro · abonament lunar");
+    expect(words).toContain("20,00 USD + TVA");
+    expect(html).not.toContain('data-testid="month-cost-vercel-trigger"');
+    // Neon is no longer the only monthly cost.
+    expect(words).not.toContain("Neon este singurul cost lunar");
   });
 
   it("reads the same in English, with the same figures", async () => {
