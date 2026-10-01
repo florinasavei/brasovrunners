@@ -20,6 +20,7 @@ import { alias } from "drizzle-orm/pg-core";
 import { familyEmailQueued, familyReservationHolds, offerAwaitingItsFirstEmail } from "./repository";
 import { promoListed } from "./sponsor-list";
 import { healthNoteShown } from "./domain/health-note";
+import type { QueueOrder } from "./domain/waitlist";
 
 /**
  * Read queries for the Administrator-only backoffice (AGENTS.md §15.8, §15.10; BR-REQ-060-01,
@@ -1242,7 +1243,13 @@ export async function listFamilyReservationsForEvent<T extends Record<string, un
     .orderBy(asc(registrations.submittedAt), asc(registrations.id));
 }
 
-export async function listQueueForEvent<T extends Record<string, unknown>>(db: Database<T>, eventId: string, now: Date) {
+/**
+ * The line the queue panel draws (§92), in the order it was asked to show (§NNN, `queueOrderFor`):
+ * `SUBMITTED` — `submitted_at`, for an event whose places are handed out by hand — or `LINE` —
+ * `waitlisted_at`, the allocator's own. `id` breaks a tie either way. Display only: no offer is made
+ * from this order, and the allocator reads its own (`lockOldestWaitlisted`).
+ */
+export async function listQueueForEvent<T extends Record<string, unknown>>(db: Database<T>, eventId: string, now: Date, order: QueueOrder) {
   return db
     .select({
       id: registrations.id,
@@ -1261,6 +1268,6 @@ export async function listQueueForEvent<T extends Record<string, unknown>>(db: D
         sql`${registrations.status} in ('PENDING_DECLARATION', 'WAITLISTED', 'WAITLIST_OFFERED', 'CONFIRMED')`,
       ),
     )
-    .orderBy(asc(registrations.waitlistedAt), asc(registrations.id));
+    .orderBy(asc(order === "SUBMITTED" ? registrations.submittedAt : registrations.waitlistedAt), asc(registrations.id));
 }
 

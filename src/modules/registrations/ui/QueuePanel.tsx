@@ -21,6 +21,7 @@ import ActionForm from "@/shared/forms/ActionForm";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import type { FormOutcome } from "@/shared/forms/outcome";
 import { offerDeadlineIfMadeNow } from "../give-place-tip";
+import { queueOrderFor } from "../domain/waitlist";
 
 /**
  * The queue of one event as the allocator sees it (`DECISIONS.md` §92; the owner: "I need to
@@ -31,6 +32,12 @@ import { offerDeadlineIfMadeNow } from "../give-place-tip";
  *
  * Administrator only, because it names people; rendered on the event page beside the test
  * registrations, which is the one way to fill it without ten mailboxes.
+ *
+ * **The order the line is listed in (§NNN)** follows how the club hands places out: with offers on their
+ * own (`events.waitlist_auto_offer`) it is the allocator's — when each person joined the line — and
+ * with them off, where the club picks by hand, it is when each form was sent. Each waiting row says
+ * both times, and the lead line says which order is shown, so the panel never presents an order the
+ * allocator will not honour as if it did. Backoffice only: no time of anybody's reaches the public list.
  *
  * Each waiting row carries «Trimite-i oferta» for the Administrator (`offerAction`, §615): the ordinary
  * offer to the person chosen, ahead of the line — the way places are handed out on an event whose
@@ -47,7 +54,7 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
 }: {
   db: Database<T>;
   /** `timezone` is the event's own zone, which every time on the panel is written in (§349). */
-  event: { id: string; capacity: number | null; waitlistCapacity: number | null; timezone: string };
+  event: { id: string; capacity: number | null; waitlistCapacity: number | null; timezone: string; waitlistAutoOffer: boolean };
   /** WAITLISTED rows — the page reads it once, for this panel and for the capacity field (§147). */
   waiting: number;
   now: Date;
@@ -72,7 +79,9 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
   const when = (at: Date) => formatDay(at, { locale, timeZone: event.timezone, style: "short", withTime: true, position: "inline" });
   const counts = knownCounts ?? (await countOccupied(db, event.id, now));
   const occupied = computeOccupied(counts);
-  const rows = await listQueueForEvent(db, event.id, now);
+  // Which order the line is listed in (§NNN): the setting decides; the allocator is not asked.
+  const order = queueOrderFor(event.waitlistAutoOffer);
+  const rows = await listQueueForEvent(db, event.id, now, order);
   const free = event.capacity === null ? null : Math.max(0, event.capacity - occupied);
   // A family's reserved places count as held (§543): the same count the public page and the allocator read.
   const holds = counts.pendingDeclarationHolds + counts.unexpiredWaitlistOfferedHolds + counts.familyReservations + counts.familyPlaceHolds;
@@ -184,6 +193,12 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
         <HourglassTopIcon fontSize="small" aria-hidden="true" />
         {limit === null ? t("queue.lineTitle", { count: line.length }) : t("queue.lineTitleLimited", { count: line.length, limit })}
       </Typography>
+      {/* The lead line (§NNN): which order the rows below are in — the form's, or the line's own. */}
+      {line.length > 0 && (
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }} data-testid="queue-order">
+          {t(order === "SUBMITTED" ? "queue.orderSubmitted" : "queue.orderLine")}
+        </Typography>
+      )}
       {line.length === 0 ? (
         <Typography variant="body2" color="text.secondary">
           {limit === 0 ? t("queue.lineNone") : t("queue.lineEmpty")}
@@ -213,10 +228,10 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
                   label={t("queue.offered", { until: when(row.holdExpiresAt) })}
                 />
               ) : (
-                <Typography variant="body2" color="text.secondary">
-                  {row.waitlistedAt
-                    ? t("queue.since", { when: when(row.waitlistedAt) })
-                    : ""}
+                // The two times, each labelled (§NNN): when the form was sent, and when the person joined the line.
+                <Typography variant="body2" color="text.secondary" data-testid="queue-times">
+                  {t("queue.sent", { when: when(row.submittedAt) })}
+                  {row.waitlistedAt ? ` · ${t("queue.joined", { when: when(row.waitlistedAt) })}` : ""}
                 </Typography>
               )}
               {row.status === "WAITLISTED" && offerAction && offerUntil && dialog && (
