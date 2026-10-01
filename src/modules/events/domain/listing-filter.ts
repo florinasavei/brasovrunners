@@ -316,3 +316,34 @@ export function offeredFilters<T extends FilterableEvent>(events: readonly T[], 
 export function offersAnything(offer: FilterOffer): boolean {
   return offer.groups.length > 0 || offer.flags.length > 0;
 }
+
+/**
+ * The past section's rows under the listing's filter (§267, §413, §NNN): the very predicate the
+ * upcoming cards pass through (`matchesListingFilter`), over the one cached window the page read,
+ * the row the lead already shows between seasons (§167) left out by its id. Every match comes back,
+ * newest first as the window is; the section draws the first twelve of them.
+ */
+export function matchingPastEvents<T extends FilterableEvent & { id: string }>(
+  rows: readonly T[],
+  filter: ListingFilter,
+  facts: FilterFacts<T>,
+  shownAbove?: string,
+): T[] {
+  return rows.filter((event) => event.id !== shownAbove && matchesListingFilter(event, filter, facts));
+}
+
+/**
+ * Every row the listing's panel reads its offer off (§413, §NNN): the dated cards, the undated ones
+ * and the past window, each once by id. The past section narrows by the same boxes, so a value only
+ * a past event carries — last spring's trail race — is a box that changes what the page shows.
+ */
+export function listingFilterRows<T extends { id: string }>(...sections: readonly (readonly T[])[]): T[] {
+  const seen = new Set<string>();
+  const rows: T[] = [];
+  for (const event of sections.flat()) {
+    if (seen.has(event.id)) continue;
+    seen.add(event.id);
+    rows.push(event);
+  }
+  return rows;
+}
