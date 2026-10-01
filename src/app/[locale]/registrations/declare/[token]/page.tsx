@@ -35,6 +35,7 @@ import { listStatesMergeValues } from "@/modules/registrations/list-state-words"
 import { listSocialsMergeValues } from "@/modules/registrations/list-socials-words";
 import { listNumbersMergeValues } from "@/modules/registrations/list-number-words";
 import { promotionalMaterialsMergeValues } from "@/modules/registrations/promo-consent-words";
+import { gmailFallbackMergeValues } from "@/modules/notifications/fallback-notice-words";
 import { newsletterMergeValues } from "@/modules/newsletter/topic-words";
 import LegalDocumentBody from "@/modules/legal-documents/ui/LegalDocumentBody";
 import { expectedSignatures, mismatchedSignatures, type SignatureBox } from "@/modules/registrations/domain/signature-name";
@@ -46,11 +47,14 @@ import { countEligibleWaitlisted, findRegistrationById } from "@/modules/registr
 import { confirmationDueAtStart } from "@/modules/registrations/domain/hold-deadlines";
 import { declarantValues, identityDocumentValues } from "@/modules/registrations/signed-declaration";
 import ActionLinkNotice from "@/modules/registrations/ui/ActionLinkNotice";
+import { spamHintWords } from "@/modules/registrations/ui/link-wait-words";
+import { emailDelayNotice } from "@/modules/registrations/ui/email-delay-notice";
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
 import SignatureField from "@/modules/registrations/ui/SignatureField";
 import IdDocumentFields, { type DocumentBox, ID_DOCUMENT_TYPES } from "@/modules/registrations/ui/IdDocumentFields";
 import {
   readRegistrationTokenContext,
+  readReplacedActionLink,
   readSpentRegistrationLink,
   type SpentRegistrationLink,
 } from "@/modules/registrations/token-actions";
@@ -217,10 +221,16 @@ export default async function DeclarePage({ params, searchParams }: Props) {
         <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
           {t("declare.doneTitle")}
         </Typography>
+        {/* While the club's emails are late (§623): the confirmation and its QR are one of them. */}
+        {await emailDelayNotice({ variant: "plain", sx: { mb: 2 } })}
         {/* Waitlisted is not the end of the journey — it is a place in a queue, and the
             declaration is already signed — so both outcomes render the finished stepper. */}
         <RegistrationJourney current="done" />
         <Alert severity="success">{done === "waitlisted" ? t("declare.doneWaitlisted") : t("declare.doneConfirmed")}</Alert>
+        {/* The confirmation email (with the QR) or the waiting list's offer is on its way (§619). */}
+        <Alert severity="info" sx={{ mt: 2 }} data-testid="spam-hint">
+          {await spamHintWords()}
+        </Alert>
         {held && familySteps && isFamilyWizard(familySteps) && (
           <FamilyDone steps={familySteps} doneHref={await familyDoneHref(held.eventId, locale)} />
         )}
@@ -292,6 +302,8 @@ export default async function DeclarePage({ params, searchParams }: Props) {
   const familyMode = passSteps !== null && isFamilyWizard(passSteps);
 
   const spent = context.ok || familyMode ? null : await readSpentRegistrationLink(token, refusals, locale, now);
+  // A newer email replaced this link (§619): said so, in place of the generic refusal.
+  const replaced = context.ok || familyMode || spent ? null : await readReplacedActionLink(token, refusals, locale, now);
   /*
     A spent link with no pass that holds (§471, nit found in review): lapsed, done elsewhere, or
     another device. When the address still has declarations to sign at the event, one line says each
@@ -549,7 +561,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
         <FamilyDone steps={passSteps} doneHref={await familyDoneHref(walking.eventId, locale)} />
       ) : blocked || !declaration || movedOnNotice ? (
         <>
-          <ActionLinkNotice locale={locale} status={notice} />
+          <ActionLinkNotice locale={locale} status={notice} replaced={notice ? null : replaced} />
           {familyLeft && (
             <Alert severity="info" sx={{ mt: 2 }} data-testid="family-own-links">
               {t("declare.family.ownLinksStillWork")}
@@ -647,7 +659,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
               // The club's deadlines and the public list's period (§377, §421) — as the PDF fills them.
               ...deadlineMergeValues(locale, await cachedDeadlines()),
               // The list-states marker, should the declaration name it (§396) — as the PDF fills it.
-              ...listStatesMergeValues(locale), ...listSocialsMergeValues(locale), ...listNumbersMergeValues(locale), ...promotionalMaterialsMergeValues(locale),
+              ...listStatesMergeValues(locale), ...listSocialsMergeValues(locale), ...listNumbersMergeValues(locale), ...gmailFallbackMergeValues(locale), ...promotionalMaterialsMergeValues(locale),
               ...newsletterMergeValues(locale),
             }}
           />

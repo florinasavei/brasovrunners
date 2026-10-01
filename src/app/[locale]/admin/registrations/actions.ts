@@ -29,7 +29,7 @@ import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS } from "@/modules/registrations/doma
 import { offerRefusalCode, waitlistRefusalCode } from "@/modules/registrations/domain/waitlist";
 import { noFreePlaceOutcome } from "@/modules/registrations/domain/capacity";
 import { sendOutboxNow } from "@/modules/notifications/send-now";
-import { sendNowRefusalCode } from "@/modules/notifications/send-at-once";
+import { SendNowRefused, sendNowRefusalCode } from "@/modules/notifications/send-at-once";
 import { requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
@@ -379,14 +379,27 @@ export async function correctRegisteredNameAction(_previous: FormOutcome | null,
   return backTo(detailPath(locale, registrationId), { saved: "nameCorrected" });
 }
 
-/** Cancel, with a reason. A refusal keeps the reason typed (§315). */
+/**
+ * Cancel, with a reason. A refusal keeps the reason typed (§315). The box «Clubul refuză
+ * înscrierea, potrivit termenilor» (§618) makes it the club's refusal: the reason goes to the
+ * person as the ground — the box's own words say so before the press. Only the page's form has the
+ * box; the list's row menu posts none, so it stays an ordinary cancellation.
+ */
 export async function cancelRegistrationAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const registrationId = text(form, "registrationId");
+  const byOrganizer = form.get("refusedByOrganizer") === "on";
 
   try {
     const actor = await requireStaffCapability(canManageRegistrations);
-    await cancelRegistrationByStaff(getDb(), actor, registrationId, text(form, "reason"), new Date());
+    await cancelRegistrationByStaff(
+      getDb(),
+      actor,
+      registrationId,
+      text(form, "reason"),
+      new Date(),
+      byOrganizer ? { kind: "REFUSED_BY_ORGANIZER" } : {},
+    );
   } catch (error) {
     return refused(error, form);
   }
@@ -731,15 +744,27 @@ export async function sendOutboxNowAction(_previous: FormOutcome | null, form: F
   const returnTo = listQuery ? `${listPath}?${listQuery}` : listPath;
 
   let sent = 0;
+  // Gmail carried for a stopped Mailgun (§622): how many, why and until when, as the emails page says it.
+  let carried = "";
   try {
     const actor = await requireStaffCapability(canManageRegistrations);
     const result = await sendOutboxNow(getDb(), actor, new Date());
     sent = result.sent;
+    // Carried: how many by Gmail and until when; not carried (Gmail's own rows only): when Mailgun reopens.
+    if (result.stop) {
+      const until = `&until=${encodeURIComponent(result.stop.until.toISOString())}`;
+      carried = result.carriedByGmail ? `&gmail=${result.viaGmail}&stop=${result.stop.kind}${until}` : `&held=1${until}`;
+    }
   } catch (error) {
-    // Mailgun's hour spent says so in its own sentence (§605), not as a bare validation error.
-    return backTo(returnTo, isDomainError(error) ? { error: sendNowRefusalCode(error) } : outcomeOf(error));
+    // Mailgun's hour spent says so in its own sentence (§605), not as a bare validation error; a stop says when Mailgun reopens.
+    if (isDomainError(error)) {
+      const until = error instanceof SendNowRefused && error.until ? `&until=${encodeURIComponent(error.until.toISOString())}` : "";
+      await flashOutcome({ error: sendNowRefusalCode(error) });
+      redirect(`${returnTo}${returnTo.includes("?") ? "&" : "?"}error=${sendNowRefusalCode(error)}${until}#admin-alert`);
+    }
+    return backTo(returnTo, outcomeOf(error));
   }
   await flashOutcome({ saved: "outboxSent", sent: String(sent) });
-  redirect(`${returnTo}${returnTo.includes("?") ? "&" : "?"}saved=outboxSent&sent=${sent}#admin-alert`);
+  redirect(`${returnTo}${returnTo.includes("?") ? "&" : "?"}saved=outboxSent&sent=${sent}${carried}#admin-alert`);
 }
 

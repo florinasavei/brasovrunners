@@ -63,6 +63,20 @@ export const SITTING_HELD = "sittingHeld";
 export const FAMILY_HELD = "familyHeld";
 
 /**
+ * The instant a family's held message is let go (§623), written beside its marker wherever the family's
+ * path writes the row's not-before — the hold (the window's end, the wizard's half hour) and «Gata»
+ * (now) — and nowhere on the sending path. The public notice of a late email (`public-delay.ts`) reads
+ * a released row's wait from it: the not-before itself is the outbox's, and a failed attempt moves it
+ * to the retry's turn. An ISO instant, never a person's data.
+ */
+export const FAMILY_HELD_UNTIL = "heldUntil";
+
+/** The payload entry that records a family's release instant (`FAMILY_HELD_UNTIL`). */
+export function familyHeldUntil(at: Date): { [FAMILY_HELD_UNTIL]: string } {
+  return { [FAMILY_HELD_UNTIL]: at.toISOString() };
+}
+
+/**
  * What the first form left for «Da» to open a sitting with (§536): the registration it created or
  * restarted, or the kept form of §446, and the message it queued for it. Written by the action into
  * the browser's sealed half, never read from the registrations table by the screen (§39).

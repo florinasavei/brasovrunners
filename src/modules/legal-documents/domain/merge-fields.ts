@@ -246,6 +246,18 @@ export const PROMOTIONAL_MATERIALS_MERGE_FIELD = "promotionalMaterials";
 export const PROMOTIONAL_MATERIALS_SHARED_MERGE_FIELD = "promotionalMaterialsShared";
 
 /**
+ * The privacy notice's marker for Gmail carrying the platform's mail while Mailgun is stopped
+ * (§622, amending §443): a notice that names it says that when the club's email provider refuses or
+ * delays sending, a message may leave through the club's Gmail mailbox (Google Ireland Ltd.) with
+ * the same content and data, for the same purpose. Filled with the switch's own words, quoted
+ * (`notifications/fallback-notice-words.ts`), the same two-in-one as `{{promotionalMaterials}}`:
+ * «Gmail preia când Mailgun se oprește» carries a participant's message through Google only while the
+ * notice in force names it in every language (`describesGmailFallback`); before that the switch is
+ * greyed and Mailgun's stop holds the mail as BR-V2.53 did.
+ */
+export const GMAIL_FALLBACK_MERGE_FIELD = "gmailFallback";
+
+/**
  * The club's limit per address (§389, §576; the owner, 2026-09-30: up to four people on one email
  * address, and the limit said): how many people one email address may register for one event —
  * "4 persoane" / "4 people", with the unit, in the words every page and email says it with
@@ -304,6 +316,7 @@ export const MERGE_FIELDS = [
   TEAM_PAGE_MERGE_FIELD,
   PROMOTIONAL_MATERIALS_MERGE_FIELD,
   PROMOTIONAL_MATERIALS_SHARED_MERGE_FIELD,
+  GMAIL_FALLBACK_MERGE_FIELD,
   ADDRESS_CAP_MERGE_FIELD,
 ] as const;
 
@@ -489,6 +502,16 @@ export function describesPromotionalMaterials(body: unknown): boolean {
  */
 export function describesPromotionalMaterialsShared(body: unknown): boolean {
   return mergeFieldsIn(body).has(PROMOTIONAL_MATERIALS_SHARED_MERGE_FIELD);
+}
+
+/**
+ * Whether a privacy notice says a message may leave through the club's Gmail while Mailgun is
+ * stopped (§622): it names `{{gmailFallback}}`. The gate for «Gmail preia când Mailgun se oprește» —
+ * the club's approval of such a text is the switch's precondition, as for the list's states (§396).
+ * Pure; the caller asks it of the notice in force, in every language.
+ */
+export function describesGmailFallback(body: unknown): boolean {
+  return mergeFieldsIn(body).has(GMAIL_FALLBACK_MERGE_FIELD);
 }
 
 export function isMergeField(name: string): name is MergeField {

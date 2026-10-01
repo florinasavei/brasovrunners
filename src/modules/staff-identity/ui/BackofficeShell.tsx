@@ -82,7 +82,11 @@ export default async function BackofficeShell({
   const registeredHint = breakdown
     ? registeredBadgeHint(breakdown.events, {
         rule: t("nav.registeredHint"),
-        event: (title, count) => t("nav.registeredEvent", { title, count }),
+        event: (title, count, parts) => t("nav.registeredEvent", { title, count, parts }),
+        withPlace: (count) => t("nav.registeredWithPlace", { count }),
+        withPlaceOf: (count, capacity) => t("nav.registeredWithPlaceOf", { count, capacity }),
+        awaitingEmail: (count) => t("nav.registeredAwaitingEmail", { count }),
+        waitlisted: (count) => t("nav.registeredWaitlisted", { count }),
         more: (count) => t("nav.registeredMoreEvents", { count }),
       })
     : undefined;

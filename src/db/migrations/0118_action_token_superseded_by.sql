@@ -1,0 +1,3 @@
+ALTER TABLE "email_action_tokens" ADD COLUMN "superseded_by_token_id" uuid;--> statement-breakpoint
+ALTER TABLE "email_action_tokens" ADD CONSTRAINT "email_action_tokens_superseded_by_token_id_email_action_tokens_id_fk" FOREIGN KEY ("superseded_by_token_id") REFERENCES "public"."email_action_tokens"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+CREATE INDEX "email_action_tokens_superseded_by_idx" ON "email_action_tokens" USING btree ("superseded_by_token_id") WHERE "email_action_tokens"."superseded_by_token_id" IS NOT NULL;

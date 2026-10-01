@@ -9,8 +9,9 @@ import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
-import type { SpentRegistrationLink } from "@/modules/registrations/token-actions";
+import type { ReplacedActionLink, SpentRegistrationLink } from "@/modules/registrations/token-actions";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
+import { replacedLinkWords } from "./link-wait-words";
 
 /**
  * What an email action link says when it cannot open its form.
@@ -23,6 +24,9 @@ import { TAP_TARGET } from "@/shared/ui/tap-target";
  * - **`status` null** — the generic invalid-or-expired refusal §13.2 requires, now with the
  *   resend path §13.2 also requires and which the sentence only ever gestured at ("you can ask
  *   for a new one from the event page" — from a page that did not link to one).
+ * - **`replaced` given** (§619), with `status` null — a newer email replaced this link: the
+ *   generic page's shape, its sentence swapped for "a newer email has the working link", and the
+ *   same resend path under it.
  *
  * Rendered on the server with no client island; the only interactive thing on it is a link.
  *
@@ -39,9 +43,12 @@ import { TAP_TARGET } from "@/shared/ui/tap-target";
 export default async function ActionLinkNotice({
   locale,
   status,
+  replaced = null,
 }: {
   locale: Locale;
   status: SpentRegistrationLink | null;
+  /** A link a newer one of the same purpose superseded (§619); read only when `status` is null. */
+  replaced?: ReplacedActionLink | null;
 }) {
   const t = await getTranslations("Registrations");
 
@@ -53,14 +60,22 @@ export default async function ActionLinkNotice({
    */
   const resendHref =
     getPathname({ locale, href: "/registrations/resend" }) +
-    (status?.eventSlug ? `?event=${encodeURIComponent(status.eventSlug)}` : "");
+    (status?.eventSlug ? `?event=${encodeURIComponent(status.eventSlug)}` : "") +
+    (!status && replaced?.eventSlug ? `?event=${encodeURIComponent(replaced.eventSlug)}` : "");
 
   if (!status) {
     return (
       <Stack spacing={2} sx={{ alignItems: "flex-start" }}>
-        <Alert severity="warning" sx={{ alignSelf: "stretch" }}>
-          {t("invalidOrExpired")}
-        </Alert>
+        {/* Replaced by a newer email (§619): `info`, since nothing broke and there is one email to open. */}
+        {replaced ? (
+          <Alert severity="info" sx={{ alignSelf: "stretch" }} data-testid="link-replaced">
+            {await replacedLinkWords(locale, replaced.issuedAt)}
+          </Alert>
+        ) : (
+          <Alert severity="warning" sx={{ alignSelf: "stretch" }}>
+            {t("invalidOrExpired")}
+          </Alert>
+        )}
         {/* `component="a"` with a resolved path, never `component={Link}`: a React element as
             a prop from a Server Component is what §14.1 forbids, and a string is not one. */}
         <Button component="a" href={resendHref} variant="contained" sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }}>

@@ -10,8 +10,15 @@ import { hoursPhrase } from "@/modules/deadlines/domain/duration-words";
 import { cachedDeadlines } from "@/modules/public-cache/reads";
 import ActionLinkNotice from "@/modules/registrations/ui/ActionLinkNotice";
 import ConfirmOnArrival from "@/modules/registrations/ui/ConfirmOnArrival";
+import { spamHintWords } from "@/modules/registrations/ui/link-wait-words";
+import { emailDelayNotice } from "@/modules/registrations/ui/email-delay-notice";
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
-import { readConfirmedOnAddress, readRegistrationTokenContext, readSpentRegistrationLink } from "@/modules/registrations/token-actions";
+import {
+  readConfirmedOnAddress,
+  readRegistrationTokenContext,
+  readReplacedActionLink,
+  readSpentRegistrationLink,
+} from "@/modules/registrations/token-actions";
 import { confirmEmailAction } from "./actions";
 import { DENSITY } from "@/theme/density";
 
@@ -86,6 +93,8 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
         <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
           {t("confirm.doneTitle")}
         </Typography>
+        {/* While the club's emails are late (§623): the declaration's email is one of them. */}
+        {await emailDelayNotice({ sx: { mb: 2 } })}
         {/* Confirmed is not finished: the declaration is still to sign, and the hold that
             protects their place is running. Saying "done" alone loses people here. */}
         {done !== "waitlist" && <RegistrationJourney current="declare" declaration="emailJustSent" />}
@@ -108,6 +117,10 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
             </ul>
           </Alert>
         )}
+        {/* After the people list, which names the email still to come: where to look for it (§619). */}
+        <Alert severity="info" sx={{ mt: 2 }} data-testid="spam-hint">
+          {await spamHintWords()}
+        </Alert>
       </Container>
     );
   }
@@ -130,6 +143,10 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
         locale,
         new Date(),
       );
+  // A newer email replaced this link (§619): said so, in place of the generic refusal.
+  const replaced = context.ok
+    ? null
+    : await readReplacedActionLink(token, [{ purpose: "VERIFY_REGISTRATION_EMAIL", reason: context.reason }], locale, new Date());
 
   const journeyStep = spent ? spent.step : ("confirm" as const);
 
@@ -148,7 +165,7 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
       )}
 
       {!context.ok || invalid ? (
-        <ActionLinkNotice locale={locale} status={spent} />
+        <ActionLinkNotice locale={locale} status={spent} replaced={replaced} />
       ) : (
         <form action={confirmEmailAction}>
           <input type="hidden" name="locale" value={locale} />

@@ -210,6 +210,42 @@ describe("BR-REQ-060-01 criterion 38 the guide quotes the screen's own words", (
     }
   });
 
+  /*
+    The October releases (§620): the owner, 2026-10-01, «Trebuie să actualizăm și documentația live
+    pt voluntari». The hourly limit and the Gmail road, the bulk resend and the chosen offers are
+    the Administrator's jobs, each named by the screen's own button; and the hard limits say that
+    nobody is seated without their own signature. Pinned so a later rewrite cannot drop them quietly.
+  */
+  it("carries the October jobs, each with the screen's own words, in both languages (§620)", () => {
+    const jobs = {
+      ro: {
+        "Planul Mailgun, înainte și după cursă": ["«Limita pe oră»", "«Prin ce pleacă emailurile: Mailgun sau Gmail-ul clubului»", "«Cât costă»"],
+        "Emailurile întârzie sau Mailgun a refuzat": ["«Trimise în ultima oră:»", "«Trimite acum»", "Spam"],
+        "Retrimite declarația celor care nu au semnat": ["«Retrimite declarația tuturor care nu au semnat»", "Spam"],
+        "Alege tu cine primește un loc eliberat": ["«Ofertele din lista de așteptare pleacă automat»", "«Trimite-i oferta»", "«Dă-i un loc»"],
+        "Ce NU se poate face": ["fără semnătura lui", "«Dă-i un loc»"],
+      },
+      en: {
+        "The Mailgun plan, before and after a race": ["«Hourly limit»", "«How emails leave: Mailgun or the club's Gmail»", "«What it costs»"],
+        "Emails are late, or Mailgun refused": ["«Sent in the last hour:»", "«Send now»", "Spam"],
+        "Resend the declaration to those who have not signed": ["«Resend the declaration to everyone who has not signed»", "Spam"],
+        "Choose who gets a freed place": ["«Waiting-list offers go out automatically»", "«Send them the offer»", "«Give a place»"],
+        "What cannot be done": ["without their own signature", "«Give a place»"],
+      },
+    } as const;
+    for (const [locale, catalogue] of Object.entries(locales) as ["ro" | "en", Catalogue][]) {
+      const tasks = guideOf(catalogue).sections.flatMap((section) => section.tasks);
+      for (const [title, words] of Object.entries(jobs[locale])) {
+        const job = tasks.find((task) => task.title === title);
+        expect(job, `${locale}: ${title}`).toBeDefined();
+        const text = job!.steps.join(" ");
+        for (const word of words) expect(text, `${locale}: ${title}`).toContain(word);
+        // An Administrator's job: no «Rol necesar» line in front of it.
+        expect(job!.steps[0].startsWith("Rol necesar") || job!.steps[0].startsWith("Role needed"), `${locale}: ${title}`).toBe(false);
+      }
+    }
+  });
+
   it("keeps the family section the page appends its pending line to (§389)", () => {
     for (const catalogue of Object.values(locales)) {
       expect(guideOf(catalogue).sections.filter((section) => section.key === "family")).toHaveLength(1);

@@ -283,7 +283,7 @@ describe("BR-REQ-080-02 transactional outbox", () => {
       expect(sender.calls).toHaveLength(2);
     });
 
-    it("gives up at the attempt ceiling instead of retrying forever", async () => {
+    it("keeps a transient refusal past the attempt ceiling waiting, retried hourly, never FAILED (§622)", async () => {
       await queueOne();
       const sender = recordingSender({ outcome: "transient_failure", error: "502" });
       let clock = NOW;
@@ -295,14 +295,16 @@ describe("BR-REQ-080-02 transactional outbox", () => {
         clock = new Date((row.nextAttemptAt ?? clock).getTime() + 1000);
       }
 
+      // An outage is the provider's problem, not the runner's: the message waits, its attempts counted.
       const [row] = await db.select().from(emailOutbox);
-      expect(row.status).toBe("FAILED");
+      expect(row.status).toBe("PENDING");
       expect(row.attemptCount).toBe(MAX_SEND_ATTEMPTS);
-      expect(row.nextAttemptAt).toBeNull();
+      expect(row.nextAttemptAt).not.toBeNull();
 
-      // A FAILED row is terminal: no worker picks it up again.
-      const after = await processOutboxBatch(db, { sender, render, now: clock });
-      expect(after.claimed).toBe(0);
+      // And it is tried again, and sent once the provider is back.
+      const back = recordingSender({ outcome: "sent", providerMessageId: "provider:back" });
+      const after = await processOutboxBatch(db, { sender: back, render, now: clock });
+      expect(after).toMatchObject({ claimed: 1, sent: 1, failed: 0 });
     });
 
     it("treats an adapter that throws as transient", async () => {

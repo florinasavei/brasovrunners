@@ -12,6 +12,7 @@ import { computeContentHash, type LegalDocumentTranslationInput } from "@/module
 import { findCurrentApprovedDocument, insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { declarationTrailEn, declarationTrailRo } from "@/modules/legal-documents/templates/declaration";
 import { isDomainError } from "@/shared/errors/domain-error";
+import { RATE_PAUSE_ERROR_PREFIX } from "@/modules/notifications/domain/hourly-pace";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
@@ -230,7 +231,8 @@ describe("§519 one person in a sitting", () => {
     const [row] = await outbox();
     expect(row.nextAttemptAt?.toISOString()).toBe(new Date(at(1).getTime() + WINDOW_MS).toISOString());
     // «Da» took it in while it still waited, so it is marked held now, and only now (nit F1).
-    expect(row.payloadJson).toEqual({ startsDeadline: true, sittingHeld: true });
+    // With the instant it is let go (`heldUntil`, §623): the window's end, as its not-before.
+    expect(row.payloadJson).toEqual({ startsDeadline: true, sittingHeld: true, heldUntil: new Date(at(1).getTime() + WINDOW_MS).toISOString() });
     const [open] = await db.select().from(familySittings);
     expect(open.heldOutboxIds).toEqual([row.id]);
     expect(open.registrationIds).toHaveLength(1);
@@ -238,6 +240,8 @@ describe("§519 one person in a sitting", () => {
     await releaseFamilySitting(db, sittingId!, at(2));
     const [released] = await outbox();
     expect(released.nextAttemptAt?.toISOString()).toBe(at(2).toISOString());
+    // «Gata» rewrites the release instant to now (§623): the public notice counts the wait from here.
+    expect(released.payloadJson).toEqual({ startsDeadline: true, sittingHeld: true, heldUntil: at(2).toISOString() });
     const [sitting] = await db.select().from(familySittings);
     expect(sitting.releasedAt?.toISOString()).toBe(at(2).toISOString());
 
@@ -270,7 +274,7 @@ describe("§519 one person in a sitting", () => {
     expect(entryHeld.nextAttemptAt?.toISOString()).toBe(new Date(at(1).getTime() + WINDOW_MS).toISOString());
     // …marked as the family's hold (the review of 2026-09-28, round two), never as `sittingHeld`,
     // which changes a verification link's life: the queue panel counts it as the family's, not a retry.
-    expect(entryHeld.payloadJson).toMatchObject({ familyHeld: true });
+    expect(entryHeld.payloadJson).toMatchObject({ familyHeld: true, heldUntil: new Date(at(1).getTime() + WINDOW_MS).toISOString() });
     expect(entryHeld.payloadJson).not.toHaveProperty("sittingHeld");
     // Ana's own email thrown back for a retry, with no flag: a retry, and only a retry.
     const [anaEmail] = (await outbox()).filter((candidate) => candidate.messageType === "VERIFY_REGISTRATION_EMAIL");
@@ -328,7 +332,7 @@ describe("§519 a family in one sitting", () => {
     expect(rows).toHaveLength(1);
     expect(rows[0].messageType).toBe("REGISTER_ANOTHER_PERSON");
     // Flagged as the family's hold (§540): the queue panel (§529) counts it there, never as a retry.
-    expect(rows[0].payloadJson).toEqual({ familySittingId: sittingId, familyHeld: true });
+    expect(rows[0].payloadJson).toEqual({ familySittingId: sittingId, familyHeld: true, heldUntil: new Date(at(6).getTime() + WINDOW_MS).toISOString() });
     expect(rows[0].nextAttemptAt?.toISOString()).toBe(new Date(at(6).getTime() + WINDOW_MS).toISOString());
     expect((await readOutboxQueue(db, 50, at(7))).held).toMatchObject({ total: 1, family: 1, retry: 0, reserve: 0 });
 
@@ -500,7 +504,7 @@ describe("§519 a family in one sitting", () => {
     const requests = (await outbox()).filter((row) => row.messageType === "COMPLETE_DECLARATION" && row.participantId !== null);
     expect(requests).toHaveLength(4);
     for (const row of requests) {
-      expect(row.payloadJson).toEqual({ familyHeld: true, startsDeadline: true });
+      expect(row.payloadJson).toEqual({ familyHeld: true, startsDeadline: true, heldUntil: new Date(at(23).getTime() + 30 * 60_000).toISOString() });
       expect(row.nextAttemptAt?.toISOString()).toBe(new Date(at(23).getTime() + 30 * 60_000).toISOString());
     }
     await db.update(registrations).set({ status: "CONFIRMED" }).where(eq(registrations.id, rows[0].id));
@@ -705,7 +709,7 @@ describe("§519 the fix round of 2026-09-27", () => {
     await send(event, "Ion", 3, sittingId);
     const family = (await outbox()).filter((row) => row.id !== anaEmail.id);
     expect(family).toHaveLength(1);
-    expect(family[0].payloadJson).toEqual({ familySittingId: sittingId, familyHeld: true });
+    expect(family[0].payloadJson).toEqual({ familySittingId: sittingId, familyHeld: true, heldUntil: new Date(at(3).getTime() + WINDOW_MS).toISOString() });
     expect(family[0].nextAttemptAt?.toISOString()).toBe(new Date(at(3).getTime() + WINDOW_MS).toISOString());
 
     const { message, secret } = await familyLink(at(20));
@@ -781,7 +785,8 @@ describe("§519 the fix round of 2026-09-27", () => {
     // One confirmation for the family, never one each; everybody signed, so it is due at the last signature.
     const confirmations = (await outbox()).filter((row) => row.messageType === "REGISTRATION_CONFIRMED" && row.participantId !== null);
     expect(confirmations).toHaveLength(1);
-    expect(confirmations[0].payloadJson).toEqual({ familySittingId: sittingId });
+    // Its release instant moved with each signature, to the last one's (§623).
+    expect(confirmations[0].payloadJson).toEqual({ familySittingId: sittingId, heldUntil: at(25).toISOString() });
     expect(confirmations[0].nextAttemptAt?.toISOString()).toBe(at(25).toISOString());
 
     const message = await render(confirmations[0], at(26));
@@ -835,5 +840,80 @@ describe("§519 the fix round of 2026-09-27", () => {
     const confirmations = (await outbox()).filter((row) => row.messageType === "REGISTRATION_CONFIRMED" && row.participantId !== null);
     expect(confirmations).toHaveLength(2);
     expect(confirmations.find((row) => row.id !== family.id)).toMatchObject({ registrationId: ionId, payloadJson: {} });
+  });
+});
+
+/*
+  §622 (BR-V2.53's review nit): a family sitting neither stretches nor cuts a pause Mailgun asked for.
+  The hold and release statements leave a row carrying the rate-pause mark at its turn — Mailgun's
+  pause. The replace deletes it like any never-tried row: the stop is recorded apart from the row
+  (`platform_settings.mailgunStop`), so its going ends no pause, and the family message says it all.
+*/
+describe("§622 a sitting leaves a row Mailgun paused alone", () => {
+  const PAUSED = `${RATE_PAUSE_ERROR_PREFIX}mailgun 429: Too Many Requests`;
+
+  it("«Da» does not hold a paused first email to the sitting's window, and «Gata» does not send it before the pause ends", async () => {
+    const event = await createEvent();
+    const { seed } = await first(event, "Ana", 0);
+    const [row] = await outbox();
+    // Mailgun paused it until minute 5, the attempt given back (`releaseForPause`).
+    await db.update(emailOutbox).set({ lastError: PAUSED, nextAttemptAt: at(5) }).where(eq(emailOutbox.id, row.id));
+
+    const sittingId = await yes(event, { seed }, 1);
+    const [held] = await outbox();
+    expect(held.nextAttemptAt?.toISOString()).toBe(at(5).toISOString());
+
+    await releaseFamilySitting(db, sittingId!, at(2));
+    const [released] = await outbox();
+    expect(released.nextAttemptAt?.toISOString()).toBe(at(5).toISOString());
+    expect(released.lastError).toBe(PAUSED);
+  });
+
+  it("a second «Da» does not stretch a held row's pause to the new window, and «Gata» does not end it", async () => {
+    const event = await createEvent();
+    const sittingId = await start(event, "Ana", 0);
+    const [row] = await outbox();
+    // Held by the sitting, then paused by Mailgun until minute 4 on its way out.
+    await db.update(emailOutbox).set({ lastError: PAUSED, nextAttemptAt: at(4) }).where(eq(emailOutbox.id, row.id));
+
+    await yes(event, { sittingId }, 3);
+    expect((await outbox())[0].nextAttemptAt?.toISOString()).toBe(at(4).toISOString());
+
+    await releaseFamilySitting(db, sittingId!, at(3));
+    expect((await outbox())[0].nextAttemptAt?.toISOString()).toBe(at(4).toISOString());
+  });
+
+  it("the family message replaces a paused first email: one message to the address, never both", async () => {
+    const event = await createEvent();
+    const sittingId = await start(event, "Ana", 0);
+    const [row] = await outbox();
+    // Mailgun paused Ana's held email until minute 5, its attempt given back.
+    await db.update(emailOutbox).set({ lastError: PAUSED, nextAttemptAt: at(5) }).where(eq(emailOutbox.id, row.id));
+
+    expect(await send(event, "Ion", 1, sittingId)).toBe(sittingId);
+
+    const rows = await outbox();
+    expect(rows.map((candidate) => candidate.messageType)).toEqual(["REGISTER_ANOTHER_PERSON"]);
+    expect(rows.some((candidate) => candidate.id === row.id)).toBe(false);
+  });
+
+  it("a first email Mailgun paused before «Da» is still the sitting's: the second form replaces it, one message to the address", async () => {
+    const event = await createEvent();
+    const { seed } = await first(event, "Ana", 0);
+    const [row] = await outbox();
+    // Paused before «Da» was pressed, the attempt given back (`releaseForPause`).
+    await db.update(emailOutbox).set({ lastError: PAUSED, nextAttemptAt: at(5) }).where(eq(emailOutbox.id, row.id));
+
+    const sittingId = await yes(event, { seed }, 1);
+    const [tracked] = await db.select({ heldOutboxIds: familySittings.heldOutboxIds }).from(familySittings).where(eq(familySittings.id, sittingId!));
+    expect(tracked.heldOutboxIds).toEqual([row.id]);
+    const [kept] = await outbox();
+    // Tracked, not held: its turn is still Mailgun's pause, and it carries no sitting's mark.
+    expect(kept.nextAttemptAt?.toISOString()).toBe(at(5).toISOString());
+    expect(kept.payloadJson).not.toHaveProperty("sittingHeld");
+
+    expect(await send(event, "Ion", 2, sittingId)).toBe(sittingId);
+    const rows = await outbox();
+    expect(rows.map((candidate) => candidate.messageType)).toEqual(["REGISTER_ANOTHER_PERSON"]);
   });
 });

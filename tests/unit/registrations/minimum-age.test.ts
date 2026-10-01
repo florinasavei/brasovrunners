@@ -330,7 +330,11 @@ describe("§329 the platform's legal templates leave the number to the event", (
     for (const locale of ["ro", "en"] as const) {
       it(`${key} ${locale}: a minimum per event, on the event's page, no number but the guardian's eighteen`, () => {
         const paragraphs = LEGAL_TEMPLATES[key][locale].body.sections.flatMap((section) => section.paragraphs);
-        const sentence = paragraphs.find((paragraph) => /vârst[aă] minimă|minimum age/i.test(paragraph));
+        // By content, not position: the terms' refusal clause (§618) also names the minimum age,
+        // in passing, so the paragraph is the one that states the rule and points to the page.
+        const sentence = paragraphs.find(
+          (paragraph) => /vârst[aă] minimă|minimum age/i.test(paragraph) && (locale === "ro" ? /pagina/ : /page/).test(paragraph),
+        );
         expect(sentence, "the template still states the rule").toBeDefined();
         expect(sentence).toMatch(locale === "ro" ? /pagina/ : /page/);
         // No number of the template's own but the guardian's eighteen. The privacy notice's

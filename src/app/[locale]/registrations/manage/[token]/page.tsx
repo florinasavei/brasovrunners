@@ -36,7 +36,7 @@ import CancelReasonFields from "@/modules/registrations/ui/CancelReasonFields";
 import { cancelReasonWords } from "@/modules/registrations/ui/cancel-reason-words";
 import { cancelReasonProblemOf } from "@/modules/registrations/domain/cancel-reason";
 import QrWithName, { type QrWords } from "@/modules/registrations/ui/QrWithName";
-import { readRaceDayContext, readSpentRegistrationLink } from "@/modules/registrations/token-actions";
+import { readRaceDayContext, readReplacedActionLink, readSpentRegistrationLink } from "@/modules/registrations/token-actions";
 import PublicFlash from "@/shared/feedback/PublicFlash";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import {
@@ -145,6 +145,11 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
           new Date(),
         )
       : null;
+  // A newer email replaced this link (§619): said so, in place of the generic refusal.
+  const replaced =
+    context && !context.ok
+      ? await readReplacedActionLink(token, [{ purpose: "MANAGE_REGISTRATION" as const, reason: context.reason }], locale, new Date())
+      : null;
   const blocked = context === null || !context.ok || Boolean(invalid);
   const live = context !== null && context.ok && !invalid ? context : null;
   const people = live?.people ?? [];
@@ -176,7 +181,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
       {started ? (
         <Alert severity="info">{t("manage.eventStarted")}</Alert>
       ) : blocked || !live ? (
-        <ActionLinkNotice locale={locale} status={spent} />
+        <ActionLinkNotice locale={locale} status={spent} replaced={replaced} />
       ) : (
         <Stack spacing={3}>
           {/* The race will not run (§331): said first, and no race-day block under it. This page has no

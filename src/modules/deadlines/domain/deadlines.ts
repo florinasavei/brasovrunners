@@ -113,7 +113,7 @@ export const RECOMMENDED: Deadlines = DEFAULT_DEADLINES;
 export const EVENT_REMINDER_MAX_HOURS = DEADLINE_RULES.reminderHours.max;
 
 /** The editor's choices for one event (§377), besides "as usual" (null) and "no reminder" (0). */
-export const EVENT_REMINDER_CHOICES = [24, 48, 72] as const;
+export const EVENT_REMINDER_CHOICES = [24, 48, 72, 96, 120] as const;
 
 /**
  * One deadline as a save may post it: a number, or the digits a form box posts. An empty box is

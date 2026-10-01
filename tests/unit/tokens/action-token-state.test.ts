@@ -13,6 +13,7 @@ import {
  * be read as a table.
  */
 const NOW = new Date("2026-09-03T10:00:00.000Z");
+const NEWER_ID = "44444444-4444-4444-8444-444444444444";
 
 function token(overrides: Partial<EvaluatedToken> = {}): EvaluatedToken {
   return {
@@ -20,6 +21,7 @@ function token(overrides: Partial<EvaluatedToken> = {}): EvaluatedToken {
     expiresAt: new Date("2026-09-05T10:00:00.000Z"),
     usedAt: null,
     invalidatedAt: null,
+    supersededByTokenId: null,
     ...overrides,
   };
 }
@@ -70,7 +72,17 @@ describe("BR-REQ-036-02 when an action token may be acted on", () => {
       ).toEqual({ ok: false, code: "TOKEN_INVALID", reason: "ALREADY_USED" });
     });
 
-    it("rejects a token that a newer one superseded", () => {
+    it("rejects a token that a newer one superseded, and names it SUPERSEDED (§619)", () => {
+      expect(
+        evaluateActionToken(
+          token({ invalidatedAt: new Date("2026-09-02T10:00:00.000Z"), supersededByTokenId: NEWER_ID }),
+          "MANAGE_REGISTRATION",
+          NOW,
+        ),
+      ).toEqual({ ok: false, code: "TOKEN_INVALID", reason: "SUPERSEDED" });
+    });
+
+    it("rejects a token revoked for cause as INVALIDATED — never SUPERSEDED without the column (§619)", () => {
       expect(
         evaluateActionToken(
           token({ invalidatedAt: new Date("2026-09-02T10:00:00.000Z") }),
@@ -78,6 +90,28 @@ describe("BR-REQ-036-02 when an action token may be acted on", () => {
           NOW,
         ),
       ).toEqual({ ok: false, code: "TOKEN_INVALID", reason: "INVALIDATED" });
+    });
+
+    it("still reports a purpose mismatch before a superseded row, so a replayed link names nothing (§619)", () => {
+      const superseded = token({ invalidatedAt: new Date("2026-09-02T10:00:00.000Z"), supersededByTokenId: NEWER_ID });
+      expect(evaluateActionToken(superseded, "COMPLETE_DECLARATION", NOW)).toEqual({
+        ok: false,
+        code: "TOKEN_INVALID",
+        reason: "PURPOSE_MISMATCH",
+      });
+    });
+
+    it("reports a superseded token past its expiry as superseded: the newer email is still the answer (§619)", () => {
+      const supersededAndExpired = token({
+        invalidatedAt: new Date("2026-09-02T10:00:00.000Z"),
+        supersededByTokenId: NEWER_ID,
+        expiresAt: new Date("2026-09-02T12:00:00.000Z"),
+      });
+      expect(evaluateActionToken(supersededAndExpired, "MANAGE_REGISTRATION", NOW)).toEqual({
+        ok: false,
+        code: "TOKEN_INVALID",
+        reason: "SUPERSEDED",
+      });
     });
 
     it("rejects a token past its expiry, with the one code the participant can act on", () => {

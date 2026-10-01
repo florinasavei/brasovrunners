@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V2.55-2026-10-01`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V2.56-2026-10-01`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -645,16 +645,31 @@ are the run's to open, merge and approve.
 
 The monitor mail from cron-job.org says `/api/health?deep=1` failed (the daily 04:02 check; the
 hourly `/api/health` is shallow since §577 and says only whether the site answers), or
-`/admin/tasks` is red at the top (`DECISIONS.md` §98). Three causes, told apart by the same page:
+`/admin/tasks` is red at the top (`DECISIONS.md` §98), or its row «Emailuri pe care nu le duce nimeni»
+is red (§622). First look at «Setări» → «Emailuri» → «Coada de trimitere»: its header says whether
+Mailgun has said stop, until when, and who carries the mail meanwhile («Mailgun în pauză până la 10:15 —
+Gmail preia», «… — Gmail nu e configurat»). **The switch:** «Prin ce pleacă emailurile» → «Gmail preia când
+Mailgun se oprește» → Da → «Salvează drumurile» (greyed «până la aprobarea notei din șablonul nou» until the
+privacy notice in force names `{{gmailFallback}}`: approve it from the template on «Documente legale» first): while Mailgun is paused or out of allowance, every group
+leaves through the club's Gmail, within «Limita Gmail pe zi» (raise it there, 500 at most, if Gmail is
+the one that is full), and returns to Mailgun on its own afterwards. While Gmail carries everything,
+`/api/health?deep=1` answers 200 with `email.status: "degraded"` and the monitor stays quiet; it answers
+503 once a row has waited ninety minutes with nothing to carry it.
+Meanwhile the public pages say it themselves,
+for as long as it lasts: every page that waits for an email shows «Emailurile noastre întârzie acum»
+with how many messages wait, the oldest's wait, the estimate when there is one and that the deadline
+runs from the send, and the event page and the form say it in one line (§623) — nothing to switch on
+or off; it goes when the queue is through. Four causes, told apart by the same page:
 
 1. **Deferred by the allowance** — Mailgun Free's 100 messages a day are spent. Nothing is
    lost; the queue resumes at the time the alert names (the UTC reset, five minutes past).
    If it is registration day and people are waiting for confirmations: Mailgun → Billing →
    Basic removes the daily limit the moment it is paid; then «Setări» → «Emailuri» (`/admin/settings/emails`, §516) → "The Mailgun
    plan" → Basic → save, so the counters and "Trimite acum" stop counting against a hundred
-   (`DECISIONS.md` §100); the next scheduler tick — or "Trimite acum" — sends everything. When
+   (`DECISIONS.md` §100) — saving also reopens Mailgun's road at once and makes the allowance-deferred rows due, so Gmail stops carrying (§622); the next scheduler tick — or "Trimite acum" — sends everything. When
    the month is over and the plan is cancelled, set it back to Free there. `docs/PLATFORM.md`
-   has the price.
+   has the price. With «Gmail preia când Mailgun se oprește» on, the deferred rows leave through Gmail
+   at once instead (§622), and «Trimite acum» says «N prin Gmail — cota Mailgun epuizată până la …».
 2. **Overdue** — messages waited more than ninety minutes for a scheduler. cron-job.org →
    the two job monitors: paused, disabled after failures, or the `JOB_SECRET` changed. Run
    `yarn smoke` on the environment; `jobs[].status` names which one is stale. Pressing
@@ -664,18 +679,28 @@ hourly `/api/health` is shallow since §577 and says only whether the site answe
    Your account is on probation…»): the message waits, due at `Retry-After` or fifteen minutes, and no
    attempt is spent, and no other Mailgun message is tried until the pause ends, so nothing fails.
    A row paused recently and queued longer ago than the overdue allowance turns **overdue**: ask
-   Mailgun's support to lift the probation or check Sending → Logs. Mailgun rows only waiting for the
+   Mailgun's support to lift the probation or check Sending → Logs, and lower «Limita pe oră» (90 while
+   the probation lasts). With the switch on, Gmail carries the queue during the pause (§622) — no SQL,
+   no setting by hand. Mailgun rows only waiting for the
    hour's pace (`hourPaced` in `/api/health`, «Limita pe oră» on «Emailuri») are not an alert while
    Mailgun's hour is full; a Gmail row, or a Mailgun row behind an hour with room, is.
-4. **Failed** — Mailgun refused six times. The alert carries the last reason. A `401` is the
-   `MAILGUN_API_KEY`; a `404` is the domain or the API base (`SETUP.md` §35: EU domains
-   answer at `api.eu.mailgun.net`); "not allowed to send" without the probation's words is the sandbox, an unverified domain or an account under review — open
-   Mailgun → Sending → Logs. A failed message is not retried; once the cause is fixed, resend
-   it from the registration's page (`/admin/registrations/<id>` → Retrimite).
+4. **Failed** — since §622 only a refusal *of the message or the account*: a `401` or `403` (the
+   `MAILGUN_API_KEY`, an unverified domain), a `400` that is not about the address ("not allowed to
+   send" without the probation's words: an unverified or closed domain, an account under review), or a
+   message that could not be rendered. A transient refusal (a 5xx, a timeout, a 404 — `SETUP.md` §35:
+   EU domains answer at `api.eu.mailgun.net`) is never FAILED any more: it is retried hourly and shows
+   as **overdue** instead (`retryingLate`, once past six attempts), and «Sarcini» turns
+   red for it with the reason on the row. The alert carries the last reason; open Mailgun → Sending → Logs. Once the
+   cause is fixed: «Setări» → «Emailuri» → «Coada de trimitere» → **«Reîncearcă emailurile eșuate»**
+   puts every FAILED message of the last seven days back in the queue, from the first attempt, in one
+   press (Administrator, three presses an hour, audited); an address problem stays BOUNCED. One message
+   can still be resent from the registration's page (`/admin/registrations/<id>` → Retrimite).
 
 The health page answers 200 again on its own once no row is deferred, overdue or failed in
-the last seven days; a failed row that is not resent keeps the alert up for those seven days,
-which is deliberate — it is the one the club still owes somebody.
+the last seven days; a failed row that is not retried keeps the alert up for those seven days,
+which is deliberate — it is the one the club still owes somebody. **«Trimite acum» during a stop**
+says what it did: «N prin Gmail — Mailgun în pauză până la HH:MM» with the switch on, or a refusal
+naming the remedy (the switch, Gmail's limit, or the hour Mailgun reopens) — never «0 trimise».
 
 **People waiting for their declaration link** after the email was late or lost: the event's page
 in the backoffice (`/admin/events/<id>` → «Înscrierile primite») →

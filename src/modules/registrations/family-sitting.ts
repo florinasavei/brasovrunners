@@ -5,9 +5,10 @@ import { type Registration, registrations } from "@/db/schema/registrations";
 import type { Database, Transaction } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
 import { drainOutboxAfterResponse } from "@/modules/notifications/drain";
+import { notHeldByMailgun } from "@/modules/notifications/mailgun-stop";
 import { enqueueEmail } from "@/modules/notifications/outbox";
 import { isUuid } from "@/shared/ids";
-import { FAMILY_HELD, isFamilySitting, SITTING_HELD, type SittingSeed, sittingLinkExpiresAt } from "./domain/family-sitting";
+import { FAMILY_HELD, familyHeldUntil, isFamilySitting, SITTING_HELD, type SittingSeed, sittingLinkExpiresAt } from "./domain/family-sitting";
 import { FAMILY_PASS_MINUTES, SIGNABLE_STATUSES } from "./domain/family-signing";
 import { liveSittingEntries } from "./family-entries";
 
@@ -148,6 +149,15 @@ export async function sittingHasMessageToLeave<T extends Record<string, unknown>
 }
 
 /**
+ * A held row's payload with the instant it is let go (`FAMILY_HELD_UNTIL`, §623), written in the same
+ * statement as every not-before the family's path sets — the hold, its move, «Gata» — so the two never
+ * disagree. Only here: the outbox's own writes (a retry, a pause, a deferral) leave it as it is.
+ */
+function withHeldUntil(at: Date) {
+  return sql`${emailOutbox.payloadJson} || ${JSON.stringify(familyHeldUntil(at))}::jsonb`;
+}
+
+/**
  * After each form of the sitting (§519), under the event's lock: the window moves to `heldUntil`,
  * and from the second person on the held messages become the one family message. Every message the
  * sitting still holds waits until `heldUntil`; the row learns when its link's last lapse is.
@@ -173,7 +183,7 @@ export async function settleSitting<T extends Record<string, unknown>>(
       recipientEmail: params.recipientEmail,
       // `FAMILY_HELD` (§540): held until «Gata» or the window, the queue panel (§529) counts it as the
       // family's hold, not as a retry. The renderer ignores the flag on this message.
-      payload: { familySittingId: sitting.id, [FAMILY_HELD]: true },
+      payload: { familySittingId: sitting.id, [FAMILY_HELD]: true, ...familyHeldUntil(heldUntil) },
       idempotencyKey: key,
       now,
       notBefore: heldUntil,
@@ -181,7 +191,9 @@ export async function settleSitting<T extends Record<string, unknown>>(
     const familyId =
       queued?.id ?? (await tx.select({ id: emailOutbox.id }).from(emailOutbox).where(eq(emailOutbox.idempotencyKey, key)).limit(1))[0]?.id;
     const replaced = held.filter((id) => id !== familyId);
-    // Only rows still waiting and never tried: a message that has left is not taken back.
+    // Only rows still waiting and never tried: a message that has left is not taken back. A row Mailgun
+    // stopped goes too (§622): the stop is recorded apart from it (`platform_settings.mailgunStop`), so
+    // deleting it ends no pause, and keeping it would send the person both it and the family message.
     if (replaced.length > 0) {
       await tx
         .delete(emailOutbox)
@@ -191,10 +203,11 @@ export async function settleSitting<T extends Record<string, unknown>>(
   }
 
   if (held.length > 0) {
+    // A row Mailgun stopped keeps its turn (§622): held to the sitting's window, its pause would be stretched to it.
     await tx
       .update(emailOutbox)
-      .set({ nextAttemptAt: heldUntil })
-      .where(and(inArray(emailOutbox.id, held), eq(emailOutbox.status, "PENDING"), eq(emailOutbox.attemptCount, 0)));
+      .set({ nextAttemptAt: heldUntil, payloadJson: withHeldUntil(heldUntil) })
+      .where(and(inArray(emailOutbox.id, held), eq(emailOutbox.status, "PENDING"), eq(emailOutbox.attemptCount, 0), notHeldByMailgun()));
   }
   const expiresAt =
     sittingLinkExpiresAt([...pending.map((row) => row.emailLinkExpiresAt), ...entries.map((entry) => entry.expiresAt), sitting.expiresAt, heldUntil], now) ?? heldUntil;
@@ -214,10 +227,12 @@ export async function releaseFamilySitting<T extends Record<string, unknown>>(db
     const [row] = await tx.select().from(familySittings).where(eq(familySittings.id, sittingId)).limit(1).for("update");
     if (!row || row.releasedAt !== null || row.confirmedAt !== null) return false;
     if (row.heldOutboxIds.length > 0) {
+      // «Gata» does not end a pause Mailgun asked for (§622): a row carrying the stop's mark keeps its turn.
       await tx
         .update(emailOutbox)
-        .set({ nextAttemptAt: now })
-        .where(and(inArray(emailOutbox.id, [...row.heldOutboxIds]), eq(emailOutbox.status, "PENDING"), eq(emailOutbox.attemptCount, 0)));
+        // Let go now: the release instant the public notice counts a wait from (§623).
+        .set({ nextAttemptAt: now, payloadJson: withHeldUntil(now) })
+        .where(and(inArray(emailOutbox.id, [...row.heldOutboxIds]), eq(emailOutbox.status, "PENDING"), eq(emailOutbox.attemptCount, 0), notHeldByMailgun()));
     }
     await tx
       .update(familySittings)
@@ -270,8 +285,8 @@ export async function continueFamilySitting<T extends Record<string, unknown>>(
         if (row.heldOutboxIds.length > 0) {
           await tx
             .update(emailOutbox)
-            .set({ nextAttemptAt: heldUntil })
-            .where(and(inArray(emailOutbox.id, [...row.heldOutboxIds]), eq(emailOutbox.status, "PENDING"), eq(emailOutbox.attemptCount, 0)));
+            .set({ nextAttemptAt: heldUntil, payloadJson: withHeldUntil(heldUntil) })
+            .where(and(inArray(emailOutbox.id, [...row.heldOutboxIds]), eq(emailOutbox.status, "PENDING"), eq(emailOutbox.attemptCount, 0), notHeldByMailgun()));
         }
         await tx
           .update(familySittings)
@@ -297,7 +312,8 @@ function liveSittingWhere(eventId: string, now: Date) {
 
 /**
  * The first form's message, held until the window's end (§536) — only while it is still waiting and
- * never tried, and only the one the seed named for this registration. Null when it has left.
+ * never tried, and only the one the seed named for this registration. Null when it has left. A row
+ * Mailgun paused is still returned, so the sitting tracks it, but keeps its turn and goes unmarked (§622).
  *
  * The message taken in is marked held here, and only here — the first form queued it unmarked, so a
  * first form nobody pressed «Da» after reads as what it was:
@@ -317,17 +333,20 @@ async function holdSeedMessage<T extends Record<string, unknown>>(
   mark: typeof SITTING_HELD | typeof FAMILY_HELD,
 ): Promise<string | null> {
   if (!outboxId || !isUuid(outboxId)) return null;
-  const [row] = await tx
+  const waiting = and(eq(emailOutbox.id, outboxId), eq(emailOutbox.registrationId, registrationId), eq(emailOutbox.status, "PENDING"), eq(emailOutbox.attemptCount, 0));
+  // Tracked whether or not Mailgun paused it (§622, the review of round three): a paused seed still
+  // lands in `heldOutboxIds`, so the family message replaces it and the address gets one message.
+  const [row] = await tx.select({ id: emailOutbox.id }).from(emailOutbox).where(waiting).limit(1).for("update");
+  if (!row) return null;
+  // Held and marked only when no provider's stop is on it: its turn is then Mailgun's pause, left alone.
+  await tx
     .update(emailOutbox)
     .set({
       nextAttemptAt: heldUntil,
-      payloadJson: sql`${emailOutbox.payloadJson} || ${JSON.stringify({ [mark]: true })}::jsonb`,
+      payloadJson: sql`${emailOutbox.payloadJson} || ${JSON.stringify({ [mark]: true, ...familyHeldUntil(heldUntil) })}::jsonb`,
     })
-    .where(
-      and(eq(emailOutbox.id, outboxId), eq(emailOutbox.registrationId, registrationId), eq(emailOutbox.status, "PENDING"), eq(emailOutbox.attemptCount, 0)),
-    )
-    .returning({ id: emailOutbox.id });
-  return row?.id ?? null;
+    .where(and(waiting, notHeldByMailgun()));
+  return row.id;
 }
 
 /** The sitting «Da» opens from the first form (§536): its registration or kept form, and its message while still waiting. */
@@ -472,8 +491,15 @@ export async function queueFamilyConfirmed<T extends Record<string, unknown>>(
       // The participant's message and its club copies, which carry the key as their prefix.
       await tx
         .update(emailOutbox)
-        .set({ nextAttemptAt: releaseAt })
-        .where(and(or(eq(emailOutbox.idempotencyKey, key), like(emailOutbox.idempotencyKey, `${key}:club-copy:%`)), eq(emailOutbox.status, "PENDING"), eq(emailOutbox.attemptCount, 0)));
+        .set({ nextAttemptAt: releaseAt, payloadJson: withHeldUntil(releaseAt) })
+        .where(
+          and(
+            or(eq(emailOutbox.idempotencyKey, key), like(emailOutbox.idempotencyKey, `${key}:club-copy:%`)),
+            eq(emailOutbox.status, "PENDING"),
+            eq(emailOutbox.attemptCount, 0),
+            notHeldByMailgun(),
+          ),
+        );
       if (releaseAt.getTime() <= now.getTime()) drainOutboxAfterResponse();
     }
     return true;
@@ -486,7 +512,7 @@ export async function queueFamilyConfirmed<T extends Record<string, unknown>>(
     locale: sitting.locale,
     recipientEmail,
     // The sitting by its id alone — never a name or a number in the outbox (§12.12).
-    payload: { familySittingId: sitting.id },
+    payload: { familySittingId: sitting.id, ...familyHeldUntil(releaseAt) },
     idempotencyKey: key,
     now,
     notBefore: releaseAt,

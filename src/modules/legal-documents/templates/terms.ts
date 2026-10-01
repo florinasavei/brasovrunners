@@ -21,6 +21,13 @@
  * the list's states only where the notice the runner was given does (§396). §10 has no compulsory
  * pre-litigation step and no forum at the club's seat, and points to ANSPDCP, not SAL-ANPC.
  *
+ * §3's last paragraph (§618, amending §418): the club refuses or cancels a registration only on the
+ * objective grounds it names, says the ground by email (the staff cancel's «Clubul refuză
+ * înscrierea…» box), releases the place by the ordinary rules, and never on a ground the law
+ * forbids. It sits in §3, which §1 lists among the clauses accepted expressly (art. 1203: cancelling
+ * a registration is a unilateral termination); the form's box keeps its reviewed words (§421) until
+ * the lawyer says whether they must name it. A lawyer reads that paragraph first.
+ *
  * §1's separate box and the version §9 records are `Registration.terms.accept` on the form and `registrations.terms_version` (§421).
  */
 import type { LegalDocumentBody } from "../domain/content-hash";
@@ -32,7 +39,7 @@ export const termsRo: LegalDocumentBody = {
       paragraphs: [
         "Acești termeni se încheie între <DENUMIREA JURIDICĂ COMPLETĂ A CLUBULUI>, cu sediul în <ADRESA SEDIULUI>, înregistrată sub <NUMĂR DE ÎNREGISTRARE / CUI> („clubul”, „noi”), și tine. Dacă versiunea în engleză diferă, contează cea în română.",
         "Site-ul publică evenimentele clubului și, pentru informarea ta, evenimente ale altor organizatori; unde este marcat astfel, te poți înscrie online. Înscrierea pe site este gratuită; dacă un eveniment cere o taxă, pagina lui spune cât, cui și cum se plătește. Unde înscrierea se face pe site-ul altui organizator, clubul doar publică informația și nu este parte la acel contract: înscrierea, taxa (plătită organizatorului, nu clubului), reducerea afișată, dacă există, rambursarea, regulamentul și datele tale personale sunt ale acelui organizator, după condițiile lui. La înscrierea pe acest site, termenii, declarația pe propria răspundere și pagina evenimentului formează acordul tău de participare.",
-        "Clauzele din secțiunile 3 (anularea sau modificarea evenimentului), 4 (oprirea sau excluderea de pe traseu), 5 (răspunderea) și 10 (legea și instanța) le accepți în mod expres, prin căsuța separată din formularul de înscriere (Codul civil, articolul 1203).",
+        "Clauzele din secțiunile 3 (anularea înscrierii sau a evenimentului ori modificarea evenimentului), 4 (oprirea sau excluderea de pe traseu), 5 (răspunderea) și 10 (legea și instanța) le accepți în mod expres, prin căsuța separată din formularul de înscriere (Codul civil, articolul 1203).",
       ],
     },
     {
@@ -50,6 +57,7 @@ export const termsRo: LegalDocumentBody = {
       paragraphs: [
         "Îți poți anula înscrierea oricând înainte de start, din legătura primită pe e-mail; locul trece la lista de așteptare.",
         "Clubul poate anula, amâna, muta sau scurta un eveniment ori îi poate schimba traseul când vremea, siguranța sau autoritățile o impun, anunțând pe pagina evenimentului și, când poate, pe e-mail. Un eveniment mutat îți păstrează înscrierea. La un eveniment gratuit nu se returnează nimic. Dacă ai plătit clubului o taxă de participare și clubul anulează evenimentul, îți restituim integral taxa, pe calea pe care ai plătit-o. Alte reguli de restituire, dacă există, sunt pe pagina evenimentului. Dreptul de retragere de 14 zile nu se aplică unui serviciu de agrement cu dată fixă (OUG nr. 34/2014, articolul 16 litera l)), dar îți poți anula oricând înscrierea, ca mai sus. Cheltuielile tale de drum rămân ale tale.",
+        "Clubul poate refuza o înscriere sau o poate anula după ce a fost făcută doar pe un motiv obiectiv: nu sunt îndeplinite condițiile de participare ale evenimentului (vârsta minimă, declarațiile cerute, declarația că ești apt medical, unde evenimentul o cere); datele sunt false, incomplete sau ale altei persoane; o impun capacitatea sau siguranța evenimentului (vremea, traseul, numărul de voluntari); conduita ta contravine regulamentului evenimentului ori îi pune pe alții în pericol; înscrierea a fost făcută cu încălcarea acestor termeni. Îți spunem motivul pe e-mail — sau pe ecran, când chiar formularul refuză înscrierea —, iar locul eliberat, când este cazul, trece la lista de așteptare, după regulile obișnuite. La un eveniment gratuit nu este nimic de restituit; dacă ai plătit clubului o taxă de participare, se aplică regulile de restituire de mai sus. Clubul nu refuză și nu anulează o înscriere pe niciun criteriu interzis de lege.",
       ],
     },
     {
@@ -111,7 +119,7 @@ export const termsEn: LegalDocumentBody = {
       paragraphs: [
         "These terms are between <THE CLUB'S FULL LEGAL NAME>, of <REGISTERED ADDRESS>, registered under <REGISTRATION NUMBER> (“the club”, “we”), and you. If the English version differs, the Romanian one counts.",
         "The site publishes the club's events and, for your information, events by other organisers; where marked so, you can register online. Registering on the site is free; if an event asks a fee, its page says how much, to whom and how it is paid. Where registration is on another organiser's site, the club only publishes the information and is not a party to that contract: the registration, the fee (paid to the organiser, not to the club), any discount shown, refunds, the rules and your personal data are that organiser's, on its own terms. When you register on this site, the terms, the declaration and the event page form your participation agreement.",
-        "You accept the clauses in sections 3 (cancelling or changing an event), 4 (being stopped or excluded on the course), 5 (liability) and 10 (law and courts) expressly, by the separate box on the registration form (Civil Code, article 1203).",
+        "You accept the clauses in sections 3 (cancelling a registration or an event, or changing an event), 4 (being stopped or excluded on the course), 5 (liability) and 10 (law and courts) expressly, by the separate box on the registration form (Civil Code, article 1203).",
       ],
     },
     {
@@ -129,6 +137,7 @@ export const termsEn: LegalDocumentBody = {
       paragraphs: [
         "You may cancel at any time before the start, from the link in your email; the place goes to the waiting list.",
         "The club may cancel, postpone, move or shorten an event or change its course when weather, safety or the authorities require it, announced on the event page and, when possible, by email. A moved event keeps your registration. At a free event nothing is refunded. If you paid the club a participation fee and the club cancels the event, we refund the fee in full, by the way you paid it. Any other refund rules are on the event's page. The 14-day right of withdrawal does not apply to a leisure service on a set date (Emergency Ordinance no. 34/2014, article 16(l)), but you may still cancel your registration at any time, as above. Your travel costs are your own.",
+        "The club may refuse a registration, or cancel one already made, only on an objective ground: the event's conditions for taking part are not met (the minimum age, the declarations it asks for, the statement that you are medically fit, where the event asks for it); the details are false, incomplete or somebody else's; the event's capacity or safety requires it (the weather, the course, the number of volunteers); your conduct breaches the event's rules or endangers others; the registration was made in breach of these terms. We tell you the ground by email — or on screen, where the form itself refuses the registration — and a place released goes, where that applies, to the waiting list by the ordinary rules. At a free event there is nothing to refund; if you paid the club a participation fee, the refund rules above apply. The club refuses or cancels no registration on any ground the law forbids.",
       ],
     },
     {

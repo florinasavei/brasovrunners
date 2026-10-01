@@ -510,7 +510,7 @@ export default async function DevsPage({ params, searchParams }: Props) {
             })}
           </Alert>
           {/* The stall the monitors are told about (§98): `/api/health` answers 503 while it lasts. */}
-          <Alert severity={emailHealth.status === "stalled" ? "error" : "success"} sx={{ mb: 2 }}>
+          <Alert severity={emailHealth.status === "stalled" ? "error" : emailHealth.status === "degraded" ? "warning" : "success"} sx={{ mb: 2 }}>
             {t(`emailHealth.${emailHealth.status}`, {
               deferred: emailHealth.deferred,
               overdue: emailHealth.overdue,

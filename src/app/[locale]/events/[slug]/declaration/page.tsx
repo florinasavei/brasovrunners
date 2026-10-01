@@ -37,8 +37,10 @@ import { DECLARATION_ERROR_SUMMARY_ID } from "@/modules/registrations/form-error
 import BirthDateField from "@/modules/registrations/ui/BirthDateField";
 import IdDocumentFields, { ID_DOCUMENT_TYPES } from "@/modules/registrations/ui/IdDocumentFields";
 import SignatureField from "@/modules/registrations/ui/SignatureField";
+import { spamHintWords } from "@/modules/registrations/ui/link-wait-words";
 import BotCheck from "@/modules/registrations/ui/BotCheck";
 import UntickedBoxSummary from "@/modules/registrations/ui/UntickedBoxSummary";
+import { emailDelayNotice } from "@/modules/registrations/ui/email-delay-notice";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import LegalLink from "@/shared/ui/LegalLink";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
@@ -112,11 +114,18 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
         <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
           {t("groupRunDeclaration.page.doneTitle")}
         </Typography>
+        {/* While the club's emails are late (§623): the signed copy is one of them. */}
+        {await emailDelayNotice({ variant: "plain", sx: { mb: 2 } })}
         {/* The same words whether a row was written or the one already kept was sent again (§523):
             the page tells nobody whether the address had signed before. */}
-        <Alert severity="success" data-testid="group-run-declaration-done">
-          {t(doneWords, { event: event.title })}
-        </Alert>
+        <Stack spacing={2}>
+          <Alert severity="success" data-testid="group-run-declaration-done">
+            {t(doneWords, { event: event.title })}
+          </Alert>
+          <Alert severity="info" data-testid="spam-hint">
+            {await spamHintWords()}
+          </Alert>
+        </Stack>
       </Container>
     );
   }

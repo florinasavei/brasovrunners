@@ -220,12 +220,12 @@ describe("BR-REQ-036-02 a spent action link", () => {
       ),
     ).toBeNull();
 
-    // Superseded by a newer link: `invalidated_at`, which also carries "revoked for cause".
+    // Superseded by a newer link: no state to report — its own sentence is `readReplacedActionLink`'s (§619).
     await mint("COMPLETE_DECLARATION");
     expect(
       await readSpentRegistrationLink(
         expiring,
-        [{ purpose: "COMPLETE_DECLARATION", reason: "INVALIDATED" }],
+        [{ purpose: "COMPLETE_DECLARATION", reason: "SUPERSEDED" }],
         "ro",
         LATER,
       ),
