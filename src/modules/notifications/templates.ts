@@ -1895,7 +1895,7 @@ const T = {
     /** The club's copy of a cancellation (§558): the reason the participant gave, their words quoted. */
     cancelReason: (kind: RegistrationCancelReasonKind, text: string | undefined) =>
       `Motivul anulării: ${CANCEL_REASON_WORDS.ro[kind]}${kind === "OTHER" && text ? ` — „${text}”` : ""}.`,
-    /** The club's refusal under the terms (§NNN): what the terms allow, and the ground the club gave. */
+    /** The club's refusal under the terms (§NNN): the fact and the ground the club gave. */
     refusedByClub: (ground: string) =>
       `Clubul a refuzat această înscriere. Motivul: „${ground}”.`,
     termsLink: "Termenii și condițiile",
@@ -2949,7 +2949,7 @@ export function buildTemplateContent(
         A cancellation's facts (§547), after the body whoever wrote it: the place released — or the
         waiting list left — and who the address still holds at the event, with their states.
       */
-      // The club's refusal under the terms (§NNN): what the terms allow and the ground, before the place released.
+      // The club's refusal under the terms (§NNN): the fact and the ground the club gave, before the place released.
       ...(messageType === "REGISTRATION_CANCELLED" && data.refusedGround ? [copy.refusedByClub(data.refusedGround)] : []),
       ...(messageType === "REGISTRATION_CANCELLED" ? [copy.cancelledReleased(data.participantName, data.cancelledFromWaitlist === true)] : []),
       ...(messageType === "REGISTRATION_CANCELLED" && data.cancelledOthers && data.cancelledOthers.length > 0
