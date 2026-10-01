@@ -549,7 +549,7 @@ describe("BR-REQ-041-01 the one-off card is the series card's structure (§366)"
     expect(chipLabels(html)).toEqual(["Group run", "Partnership", "Mixed", "Medium", "8 km", "250 m climb", "Free"]);
     expect(anchors(html).map((link) => link.text)).toEqual(["Trail to Road cu Brașov Running Festival", "Piața Sfatului, Brașov", "Full event description"]);
     // ICU versions disagree on September's abbreviation in English ("Sep" / "Sept"); the rest is fixed.
-    expect(text(fact(html, "when"))).toMatch(/^Sunday, 27 Sept? 2026Sunday, 27 Sept?·10:00$/);
+    expect(text(fact(html, "when"))).toMatch(/^Sunday, 27 Sept? 2026Sun, 27 Sept?·10:00$/);
     expect(fact(html, "when")).toContain('data-testid="ScheduleIcon"');
   });
 });
@@ -567,7 +567,7 @@ describe("BR-REQ-041-01 the series card (§366)", () => {
       // The date is within the coming twelve months of `NOW`, so both renderings are in the
       // markup — the full one, then the year dropped (§366, amended §375) — CSS shows one at a
       // time by width.
-      "Următoarea:Luni, 28 sept. 2026Luni, 28 sept.·18:30",
+      "Următoarea:Luni, 28 sept. 2026Lun., 28 sept.·18:30",
       "Parcul Titulescu, la fântâna arteziană",
       "8 km",
       "Gratuit",
@@ -579,7 +579,7 @@ describe("BR-REQ-041-01 the series card (§366)", () => {
     expect(positions).toEqual([...positions].sort((a, b) => a - b));
     // «Următoarea» is not a line of its own any more: it leads the date's line, and the clock the time.
     const when = fact(html, "when");
-    expect(text(when)).toBe("Următoarea:Luni, 28 sept. 2026Luni, 28 sept.·18:30");
+    expect(text(when)).toBe("Următoarea:Luni, 28 sept. 2026Lun., 28 sept.·18:30");
     expect(when).toContain('data-testid="ScheduleIcon"');
     // The row never wraps: nowrap, and every glyph and piece kept whole (§366, amended §375).
     expect(when).toContain("white-space:nowrap");
