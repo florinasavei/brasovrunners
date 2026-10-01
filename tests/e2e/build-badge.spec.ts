@@ -29,7 +29,7 @@ async function openTheFold(page: import("@playwright/test").Page) {
 
 /**
  * The other half of "which site am I looking at": the badge answers it for whoever knows to
- * look in the corner, and this answers it for a visitor who does not.
+ * open the fold, and this answers it for a visitor who does not.
  */
 test.describe("the environment notice", () => {
   test("tells a visitor this is not the club's real site, in both languages", async ({ page }) => {
@@ -141,9 +141,9 @@ test.describe("the build badge", () => {
     // The same words as the stamp always had, and the exact build in the box's title.
     await expect(chip).toHaveText(/app-ver/);
     await expect(badge).toHaveAttribute("title", /BR-V\d+\.\d+|dev/);
-    // The chip is the 24px you see; the box around it is the 44px a long press is aimed at, on
-    // the bar's corner (criterion 6) and in the phone's fold alike — there its line is the fold's
-    // 24px and the rest of the 44 reaches up over the line above (§480, amending §385).
+    // The chip is the 24px you see; the box around it is the 44px a long press is aimed at
+    // (criterion 6): on a phone its line is the fold's 24px plus a 20px reach up over the line
+    // above (§480, amending §385), from `sm` a plain 44.
     const box = await badge.boundingBox();
     const drawn = await chip.boundingBox();
     expect(box!.height).toBeGreaterThanOrEqual(43.5);
@@ -160,39 +160,8 @@ test.describe("the build badge", () => {
     await expect(page).toHaveURL(/\/ro\/autentificare$/);
   });
 
-  test("does nothing on a single tap", async ({ page }, testInfo) => {
-    test.skip(testInfo.project.name !== "mobile", "the panel copy only shows below md");
-    await page.goto("/ro/evenimente", { waitUntil: "networkidle" });
-    await openTheFold(page);
-
-    // The badge receives pointer events, because a double-click on it opens staff sign-in.
-    // What keeps it from being a trap for somebody who opened the fold for the links above it
-    // is that one tap does nothing at all.
-    await panelBadge(page).click();
-    await expect(page).toHaveURL(/\/ro\/evenimente$/);
-  });
-
-  test("is the staff entrance: a double-click opens sign-in, and so does Enter", async ({
-    page,
-  }, testInfo) => {
-    test.skip(testInfo.project.name !== "mobile", "the panel copy only shows below md");
-    // The footer's "Staff" link is gone; this replaced it. Not a security measure — the
-    // backoffice is guarded on the server on every request — but the club's public pages no
-    // longer advertise a backoffice to everybody who reads them.
-    await page.goto("/ro/evenimente", { waitUntil: "networkidle" });
-    await openTheFold(page);
-    await panelBadge(page).dblclick();
-    await expect(page).toHaveURL(/\/ro\/autentificare$/);
-
-    await page.goto("/ro/evenimente", { waitUntil: "networkidle" });
-    await openTheFold(page);
-    await panelBadge(page).focus();
-    await page.keyboard.press("Enter");
-    await expect(page).toHaveURL(/\/ro\/autentificare$/);
-  });
-
   test("is the staff entrance on a phone too: press and hold opens sign-in", async ({ page }, testInfo) => {
-    test.skip(testInfo.project.name !== "mobile", "the panel copy only shows below md");
+    test.skip(testInfo.project.name !== "mobile", "a phone's long press; the desktop project has its own test above");
     // A double-tap is unreliable on a phone and often zooms instead; a long press is the gesture
     // a thumb can do on purpose and a scroll never does by accident.
     await page.goto("/ro/evenimente", { waitUntil: "networkidle" });
@@ -222,7 +191,7 @@ test.describe("the build badge", () => {
   test("does not widen the document past the viewport", async ({ page }) => {
     await page.goto("/ro/evenimente");
 
-    // BR-REQ-041-01 criterion 1, restated for the one element positioned outside the flow.
+    // BR-REQ-041-01 criterion 1, restated for the stamp in the fold.
     const overflow = await page.evaluate(() => ({
       documentWidth: document.documentElement.scrollWidth,
       viewportWidth: document.documentElement.clientWidth,

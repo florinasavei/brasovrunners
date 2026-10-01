@@ -370,7 +370,7 @@ export default async function SiteFooter() {
                 // The address's own size before (`body2`), for every link now: 14 pixels rather
                 // than 16, so the terms and "my registrations" share a line at 320.
                 fontSize: "0.875rem",
-                // Every link paints over the stamp's long-press reach (`BuildBadge`, `phoneTarget`),
+                // Every link paints over the stamp's long-press reach (`BuildBadge`),
                 // which runs up into the line above it: a press on a link is the link's; only the
                 // empty part of that line is the stamp's.
                 "& a": { display: "inline-flex", alignItems: "center", position: "relative", zIndex: 1, ...foldLineSx(["minHeight"]) },
@@ -449,7 +449,7 @@ export default async function SiteFooter() {
                     shown at every width and only here, opened on purpose, the panel's last item
                     (§NNN, the owner, 2026-10-01; it supersedes §372's pinned desktop copy). */}
                 <Box data-testid="footer-build-badge-panel" sx={{ display: "flex", maxWidth: "100%" }}>
-                  <BuildBadge phoneTarget />
+                  <BuildBadge />
                 </Box>
               </Box>
             </Box>

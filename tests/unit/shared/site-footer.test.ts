@@ -443,44 +443,43 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's one doo
     }
   });
 
-  it("draws the build stamp as a small outlined chip in both places, the name and the title on its box", async () => {
+  it("draws the build stamp as a small outlined chip in the fold, the name and the title on its box", async () => {
     // §385, the owner, 2026-09-25: "Version must be within a chip."
     const html = await renderFooter();
     const markup = markupOnly(html);
     const css = cssOnly(html);
-    for (const testId of ["footer-build-badge-panel"]) {
-      const start = markup.indexOf(`data-testid="${testId}"`);
-      const copy = markup.slice(start, markup.indexOf("</p>", start) + 4);
-      // The staff entrance (dev-switcher in tests): a button with the build in its name and title.
-      expect(copy, testId).toMatch(/role="button"/);
-      expect(copy, testId).toMatch(/aria-label="Versiunea site-ului[^"]*—[^"]*"/);
-      expect(copy, testId).toMatch(/title="(BR-V\d+\.\d+|dev)[^"]*"/);
-      // The chip inside it: MUI's own small outlined chip, a span (it stands in a `<p>`), whose
-      // label is the stamp's text.
-      const chip = /<span[^>]*class="([^"]*MuiChip-root[^"]*)"[^>]*data-testid="build-badge-chip"[^>]*>|<span[^>]*data-testid="build-badge-chip"[^>]*class="([^"]*MuiChip-root[^"]*)"[^>]*>/.exec(copy);
-      expect(chip, `${testId}: the chip`).not.toBeNull();
-      const classes = chip![1] ?? chip![2]!;
-      expect(classes).toMatch(/MuiChip-outlined/);
-      expect(classes).toMatch(/MuiChip-sizeSmall/);
-      expect(copy).toMatch(/<span class="MuiChip-label[^"]*">[^<]*app-ver[^<]*<\/span>/);
-      const chipRules = rulesOf(css, /(css-[A-Za-z0-9-]+)/.exec(classes)![1]!);
-      // Muted ink, and a label that wraps rather than being cut on a 320px panel.
-      expect(chipRules).toMatch(/color:rgba\(0, 0, 0, 0\.6\);/);
-      expect(chipRules).toMatch(/height:auto;/);
-      expect(chipRules).toMatch(/\.MuiChip-label\{[^}]*white-space:normal;/);
-      // The box a long press is aimed at: in the fold, the fold's 24-pixel line on a phone with
-      // twenty more pixels of reach above it, given back as a negative margin so the line stays
-      // 24, and a plain 44 from `sm` (§480, the 360-px density pass, amending §385).
-      const box = rulesOf(css, emotionClassOf(copy, 'role="button"'));
-      expect(box).toMatch(/(^|[;{])box-sizing:content-box;/);
-      expect(box).toMatch(/(^|[;{])min-height:24px;/);
-      expect(box).toMatch(/(^|[;{])padding-top:20px;/);
-      expect(box).toMatch(/(^|[;{])margin-top:-20px;/);
-      expect(box).toMatch(/@media \(min-width:600px\)\{[^{]*\{[^}]*min-height:44px;/);
-      expect(box).toMatch(/@media \(min-width:600px\)\{[^{]*\{[^}]*padding-top:0(px)?;/);
-      expect(box).toMatch(/@media \(min-width:600px\)\{[^{]*\{[^}]*margin-top:0(px)?;/);
-      expect(box, "no 28px band in the fold").not.toMatch(/min-height:28px;/);
-    }
+    const testId = "footer-build-badge-panel";
+    const start = markup.indexOf(`data-testid="${testId}"`);
+    const copy = markup.slice(start, markup.indexOf("</p>", start) + 4);
+    // The staff entrance (dev-switcher in tests): a button with the build in its name and title.
+    expect(copy, testId).toMatch(/role="button"/);
+    expect(copy, testId).toMatch(/aria-label="Versiunea site-ului[^"]*—[^"]*"/);
+    expect(copy, testId).toMatch(/title="(BR-V\d+\.\d+|dev)[^"]*"/);
+    // The chip inside it: MUI's own small outlined chip, a span (it stands in a `<p>`), whose
+    // label is the stamp's text.
+    const chip = /<span[^>]*class="([^"]*MuiChip-root[^"]*)"[^>]*data-testid="build-badge-chip"[^>]*>|<span[^>]*data-testid="build-badge-chip"[^>]*class="([^"]*MuiChip-root[^"]*)"[^>]*>/.exec(copy);
+    expect(chip, `${testId}: the chip`).not.toBeNull();
+    const classes = chip![1] ?? chip![2]!;
+    expect(classes).toMatch(/MuiChip-outlined/);
+    expect(classes).toMatch(/MuiChip-sizeSmall/);
+    expect(copy).toMatch(/<span class="MuiChip-label[^"]*">[^<]*app-ver[^<]*<\/span>/);
+    const chipRules = rulesOf(css, /(css-[A-Za-z0-9-]+)/.exec(classes)![1]!);
+    // Muted ink, and a label that wraps rather than being cut on a 320px panel.
+    expect(chipRules).toMatch(/color:rgba\(0, 0, 0, 0\.6\);/);
+    expect(chipRules).toMatch(/height:auto;/);
+    expect(chipRules).toMatch(/\.MuiChip-label\{[^}]*white-space:normal;/);
+    // The box a long press is aimed at: in the fold, the fold's 24-pixel line on a phone with
+    // twenty more pixels of reach above it, given back as a negative margin so the line stays
+    // 24, and a plain 44 from `sm` (§480, the 360-px density pass, amending §385).
+    const box = rulesOf(css, emotionClassOf(copy, 'role="button"'));
+    expect(box).toMatch(/(^|[;{])box-sizing:content-box;/);
+    expect(box).toMatch(/(^|[;{])min-height:24px;/);
+    expect(box).toMatch(/(^|[;{])padding-top:20px;/);
+    expect(box).toMatch(/(^|[;{])margin-top:-20px;/);
+    expect(box).toMatch(/@media \(min-width:600px\)\{[^{]*\{[^}]*min-height:44px;/);
+    expect(box).toMatch(/@media \(min-width:600px\)\{[^{]*\{[^}]*padding-top:0(px)?;/);
+    expect(box).toMatch(/@media \(min-width:600px\)\{[^{]*\{[^}]*margin-top:0(px)?;/);
+    expect(box, "no 28px band in the fold").not.toMatch(/min-height:28px;/);
   });
 
   it("reserves room for what the browser scrolls into view", () => {
