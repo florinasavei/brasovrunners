@@ -21,6 +21,9 @@ import {
   participantMessageBcc,
 } from "./domain/club-notices";
 import { readBulkLimit } from "./bulk-budget";
+import { readEmailPlan } from "./email-plan";
+import { readMailgunHour } from "./hourly-pace";
+import { RATE_PAUSE_ERROR_PREFIX } from "./domain/hourly-pace";
 import { applyDeadlineRebase, type DeadlineRebase, planDeadlineRebase } from "./deadline-rebase";
 import { BULK_MESSAGE_TYPES, isBulkMessage } from "./domain/bulk";
 import { drainOutboxAfterResponse } from "./drain";
@@ -366,6 +369,9 @@ export class OutboxMessageWithdrawn extends Error {
  * Rows stuck in PROCESSING past the lock timeout are claimed too — see
  * `PROCESSING_LOCK_TIMEOUT_MS` for why, and for the duplicate-send window that implies.
  *
+ * Mailgun's road takes no more than its hourly pace leaves (§NNN, `hourly-pace.ts`); Gmail's is
+ * not held to it. The rest waits, untouched, for the next drain or job run.
+ *
  * `attempt_count` is incremented at claim time, not at failure time. A worker that dies
  * mid-send has still consumed an attempt, so a message that reliably kills the process cannot
  * be retried forever.
@@ -395,10 +401,17 @@ export async function claimOutboxBatch(
      * stale PROCESSING): a row already sent, bounced or failed is never sent again by this path (§39).
      */
     ids?: readonly string[];
+    /**
+     * Mailgun's hourly pace (§NNN): the most its road may carry in any sixty minutes. Absent, the
+     * email plan setting's (100 by default); null, no pace. Gmail's road is not held to it.
+     */
+    hourlyAllowance?: number | null;
   },
 ): Promise<OutboxRow[]> {
   const { now, batchSize, roads } = params;
   if (params.ids && params.ids.length === 0) return [];
+  // The setting once per claim, before the transaction: one primary-key lookup (`readEmailPlan`).
+  const hourlyAllowance = params.hourlyAllowance !== undefined ? params.hourlyAllowance : (await readEmailPlan(db)).hourlyAllowance;
   const bulkLimit = params.bulkLimit ?? null;
   const staleBefore = new Date(now.getTime() - PROCESSING_LOCK_TIMEOUT_MS);
   const claimable = or(
@@ -446,7 +459,17 @@ export async function claimOutboxBatch(
       lets one batch send.
     */
     const gmailRoad = roads ? gmailRoadCondition(roads) : undefined;
-    const mailgun = await claimRoad(gmailRoad ? not(gmailRoad) : undefined, batchSize, bulkLimit);
+    const mailgunRoad = gmailRoad ? not(gmailRoad) : undefined;
+    /*
+      Mailgun's hour (§NNN): no more than the pace leaves — the allowance less what Mailgun carried in
+      the trailing sixty minutes and what another worker holds for it now — oldest first, as always.
+      What is not claimed is simply not claimed: its `next_attempt_at` is untouched, and the next drain
+      or job run (every fifteen minutes by day) takes it when the hour has room. One query
+      (`countMailgunHour`), inside this transaction, and only when a pace is set.
+    */
+    const hour = hourlyAllowance === null ? null : await readMailgunHour(tx, now, { mailgunRoad, hourlyAllowance });
+    const mailgunLimit = hour?.remaining == null ? batchSize : Math.min(batchSize, hour.remaining);
+    const mailgun = await claimRoad(mailgunRoad, mailgunLimit, bulkLimit);
     const gmail = gmailRoad
       ? await claimRoad(gmailRoad, Math.min(batchSize, roads?.gmailBatchSize ?? batchSize), null)
       : { first: [], second: [] };
@@ -488,7 +511,8 @@ export type OutboxBatchSummary = {
    * rather than for the ordinary backoff. Counted apart from `retrying` because the two mean
    * opposite things to whoever is watching a registration window: `retrying` is a hiccup,
    * `deferred` is "the club has sent as much as its plan allows today, and the rest goes out
-   * tomorrow unless somebody upgrades" (`docs/PLATFORM.md`, limit 1).
+   * tomorrow unless somebody upgrades" (`docs/PLATFORM.md`, limit 1). Since §NNN also a message
+   * Mailgun paused for the rate (a 429, the probation), due again in minutes, its attempt given back.
    */
   deferred: number;
   failed: number;
@@ -571,11 +595,24 @@ export async function processOutboxBatch(
   };
 
   /*
+    Mailgun asked us to stop (§NNN: a 429, the probation's "temporarily disabled"): until when, and
+    why. The rest of this batch's Mailgun rows are not sent into the same refusal — knocking again
+    while an account on probation is told to wait is what gets it disabled — but handed back for
+    the same instant, with the same reason and their attempt given back. Gmail's rows still go.
+  */
+  let mailgunPause: { until: Date; error: string } | null = null;
+
+  /*
     The Gmail road's one connection for the whole batch (§493) is let go when the batch ends,
     however it ends: a pooled SMTP socket left open would outlive the function's work for nothing.
   */
   try {
     for (const row of claimed) {
+      if (mailgunPause && !(roads && onGmailRoad(row, roads))) {
+        await releaseForPause(db, row, mailgunPause.until, mailgunPause.error);
+        summary.deferred += 1;
+        continue;
+      }
       let message: OutgoingEmail;
       /*
         The deadline this message starts, counted from its send (§513, «termenul curge de când
@@ -666,6 +703,21 @@ export async function processOutboxBatch(
        * Checked before `permanent_failure` only for reading order; the outcomes are disjoint.
        */
       /*
+        Paused by Mailgun for the rate (§NNN): the attempt given back, as for Gmail's pace below, so no
+        number of pauses ever spends the six attempts and marks a confirmation FAILED —
+        `MAX_SEND_ATTEMPTS` counts refusals of the message, and this is not one. The reason stays on
+        the row (marked, for `/api/health`), the row is due again when Mailgun said, and the batch's
+        other Mailgun rows wait with it. Counted as deferred, like the daily allowance: the provider
+        said stop, so «Trimite acum» stops too.
+      */
+      if (result.outcome === "throttled" && result.paced && result.rateRefused) {
+        mailgunPause = { until: result.retryAfter ?? now, error: `${RATE_PAUSE_ERROR_PREFIX}${error}`.slice(0, 500) };
+        await releaseForPause(db, row, mailgunPause.until, mailgunPause.error);
+        summary.deferred += 1;
+        continue;
+      }
+
+      /*
         Held back by Gmail's pace, not refused (§443): nothing was tried, so the attempt the claim
         counted is given back, and the row is due again in the few seconds the pace asks for — the
         next drain or job run takes it. Counted as a retry: the mechanism working, not the plan's limit.
@@ -742,6 +794,17 @@ export async function processOutboxBatch(
   }
 
   return summary;
+}
+
+/**
+ * A row handed back for a provider's pause (§NNN): waiting again, due at `until`, its reason kept and
+ * the attempt the claim counted given back — a pause is never one of the six.
+ */
+async function releaseForPause(db: Db, row: OutboxRow, until: Date, error: string): Promise<void> {
+  await db
+    .update(emailOutbox)
+    .set({ status: "PENDING", lockedAt: null, attemptCount: Math.max(0, row.attemptCount - 1), nextAttemptAt: until, lastError: error })
+    .where(eq(emailOutbox.id, row.id));
 }
 
 /** A terminal outcome: the row is released, keeps its reason, and is not scheduled again. */

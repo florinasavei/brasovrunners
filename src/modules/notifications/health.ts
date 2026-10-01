@@ -2,6 +2,9 @@ import { and, count, desc, eq, gt, inArray, isNotNull, lt, not, or, sql } from "
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { BULK_MESSAGE_TYPES } from "./domain/bulk";
 import { GMAIL_CAP_DEFERRED_ERROR } from "./domain/email-transport";
+import { PACE_EVIDENCE_MS, paceHolds, RATE_PAUSE_ERROR_PREFIX } from "./domain/hourly-pace";
+import { readEmailPlan } from "./email-plan";
+import { carriedByMailgunApi } from "./hourly-pace";
 import type { Database } from "@/db/types";
 import { readJobCadence } from "@/modules/jobs/cadence";
 import { checkGmailHealth, type GmailHealth } from "./email-transport";
@@ -22,7 +25,9 @@ import { type OutboxDelivery, outboxOverdueCadenceMinutes, readOutboxDelivery } 
  *
  *   deferred   PENDING rows the provider refused for the day; they go at the allowance reset.
  *   overdue    PENDING rows whose turn came and passed, by more than the backoff can explain:
- *              the scheduler is not draining them.
+ *              the scheduler is not draining them — unless Mailgun's hourly pace holds them
+ *              (§NNN, `hourPaced`); and rows Mailgun keeps pausing for the rate, past the same
+ *              allowance since they were queued.
  *   failed     rows that spent every attempt, in the last seven days: the provider said no
  *              six times, or the message could not be rendered.
  *
@@ -52,6 +57,11 @@ export type EmailHealth = {
   waiting: number;
   deferred: number;
   overdue: number;
+  /**
+   * Rows whose turn passed while Mailgun's hourly pace holds the queue back (§NNN): waiting for the
+   * hour, the pace working — counted here, never in `overdue`, and never a status of their own.
+   */
+  hourPaced: number;
   failed: number;
   /** The earliest a deferred row will be tried again, when any is deferred. */
   resumesAt: string | null;
@@ -137,19 +147,52 @@ export async function checkEmailHealth<T extends Record<string, unknown>>(
   );
   const failedWhere = and(eq(emailOutbox.status, "FAILED"), gt(emailOutbox.createdAt, failedSince));
 
-  const [row] = await db
-    .select({
-      waiting: count(sql`case when ${emailOutbox.status} in ('PENDING', 'PROCESSING') then 1 end`),
-      deferred: count(sql`case when ${deferredWhere} then 1 end`),
-      overdue: count(sql`case when ${overdueWhere} then 1 end`),
-      failed: count(sql`case when ${failedWhere} then 1 end`),
-      resumesAt: sql<Date | null>`min(case when ${deferredWhere} then ${emailOutbox.nextAttemptAt} end)`,
-      gmailDeferred: count(sql`case when ${gmailDeferredWhere} then 1 end`),
-      gmailResumesAt: sql<Date | null>`min(case when ${gmailDeferredWhere} then ${emailOutbox.nextAttemptAt} end)`,
-    })
-    .from(emailOutbox);
+  /*
+    Mailgun's hourly pace (§NNN). A queue held back for the hour is the pace working: while a pace is
+    set and Mailgun carried a message in the last ninety minutes (`paceHolds`), a row whose turn
+    passed is waiting for the hour — `hourPaced`, not `overdue` — exactly as a row held for Gmail's
+    cap or the newsletter's reserve is not. With nothing carried in ninety minutes the outbox is not
+    moving, whatever the pace, and they are overdue as before.
 
-  const stalled = row.deferred > 0 || row.overdue > 0 || row.failed > 0;
+    A row Mailgun itself paused for the rate (`RATE_PAUSE_ERROR_PREFIX`: a 429, the probation's
+    "temporarily disabled") gives its attempt back on every pause, so it is never FAILED and its turn
+    is always minutes ahead — it would never be counted anywhere. So once such a row has waited longer
+    than the overdue allowance since it was queued, it is overdue, pace or no pace: a provider that
+    keeps refusing needs a person, and `lastError` says which refusal.
+  */
+  const ratePaused = sql`${emailOutbox.lastError} LIKE ${`${RATE_PAUSE_ERROR_PREFIX}%`}`;
+  const lateWhere = and(overdueWhere, sql`(${emailOutbox.lastError} IS NULL OR NOT (${ratePaused}))`);
+  // Not one already counted as deferred: a `Retry-After` over an hour away is that, and says when.
+  const pausedLateWhere = and(
+    pending,
+    ratePaused,
+    lt(emailOutbox.createdAt, overdueBefore),
+    sql`(${emailOutbox.nextAttemptAt} IS NULL OR ${emailOutbox.nextAttemptAt} <= ${deferredFrom.toISOString()}::timestamptz)`,
+  );
+  const evidenceSince = new Date(now.getTime() - PACE_EVIDENCE_MS);
+
+  const [[row], plan] = await Promise.all([
+    db
+      .select({
+        waiting: count(sql`case when ${emailOutbox.status} in ('PENDING', 'PROCESSING') then 1 end`),
+        deferred: count(sql`case when ${deferredWhere} then 1 end`),
+        late: count(sql`case when ${lateWhere} then 1 end`),
+        pausedLate: count(sql`case when ${pausedLateWhere} then 1 end`),
+        failed: count(sql`case when ${failedWhere} then 1 end`),
+        resumesAt: sql<Date | null>`min(case when ${deferredWhere} then ${emailOutbox.nextAttemptAt} end)`,
+        gmailDeferred: count(sql`case when ${gmailDeferredWhere} then 1 end`),
+        gmailResumesAt: sql<Date | null>`min(case when ${gmailDeferredWhere} then ${emailOutbox.nextAttemptAt} end)`,
+        // What Mailgun carried in the last ninety minutes, as the claim counts it (`hourly-pace.ts`).
+        carriedRecently: count(sql`case when ${emailOutbox.sentAt} > ${evidenceSince.toISOString()}::timestamptz and ${carriedByMailgunApi} then 1 end`),
+      })
+      .from(emailOutbox),
+    readEmailPlan(db),
+  ]);
+
+  const holds = paceHolds({ hourlyAllowance: plan.hourlyAllowance, carriedRecently: row.carriedRecently });
+  const overdue = (holds ? 0 : row.late) + row.pausedLate;
+  const hourPaced = holds ? row.late : 0;
+  const stalled = row.deferred > 0 || overdue > 0 || row.failed > 0;
 
   // The reason, from the most recent row that has one among those that count. One more query
   // only when there is something to explain.
@@ -158,7 +201,7 @@ export async function checkEmailHealth<T extends Record<string, unknown>>(
     const [latest] = await db
       .select({ lastError: emailOutbox.lastError })
       .from(emailOutbox)
-      .where(and(or(deferredWhere, overdueWhere, failedWhere), isNotNull(emailOutbox.lastError)))
+      .where(and(or(deferredWhere, holds ? undefined : lateWhere, pausedLateWhere, failedWhere), isNotNull(emailOutbox.lastError)))
       .orderBy(desc(emailOutbox.createdAt))
       .limit(1);
     lastError = latest?.lastError ?? null;
@@ -171,7 +214,8 @@ export async function checkEmailHealth<T extends Record<string, unknown>>(
     status: stalled ? "stalled" : "ok",
     waiting: row.waiting,
     deferred: row.deferred,
-    overdue: row.overdue,
+    overdue,
+    hourPaced,
     failed: row.failed,
     resumesAt: resumesAt ? resumesAt.toISOString() : null,
     lastError,

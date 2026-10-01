@@ -131,12 +131,28 @@ describe("BR-REQ-080-03 transient and permanent are not the same failure", () =>
     expect(result.outcome).toBe("permanent_failure");
   });
 
-  it.each([429, 500, 502, 503])("treats %i as transient, so the outbox retries", async (status) => {
-    respondWith(status, "Too Many Requests");
+  it.each([500, 502, 503])("treats %i as transient, so the outbox retries", async (status) => {
+    respondWith(status, "Service Unavailable");
 
     const result = await adapter().send(MESSAGE);
 
     expect(result.outcome).toBe("transient_failure");
+  });
+
+  it("pauses a 429 until the response's Retry-After, which reaches the classifier (§NNN)", async () => {
+    globalThis.fetch = (async (url: string | URL | Request, init?: RequestInit) => {
+      calls.push({ url: String(url), init: init ?? {} });
+      return new Response("Too Many Requests", { status: 429, headers: { "Retry-After": "600" } });
+    }) as typeof fetch;
+    const before = Date.now();
+
+    const result = await adapter().send(MESSAGE);
+
+    expect(result).toMatchObject({ outcome: "throttled", paced: true, rateRefused: true, error: expect.stringContaining("mailgun 429") });
+    const retryAfter = (result as { retryAfter: Date }).retryAfter.getTime();
+    // Ten minutes from the moment of the answer, not the fifteen-minute fallback.
+    expect(retryAfter).toBeGreaterThanOrEqual(before + 600_000);
+    expect(retryAfter).toBeLessThan(before + 600_000 + 60_000);
   });
 
   it("treats an unreachable provider as transient", async () => {

@@ -10,6 +10,7 @@ import { type OutboxBatchSummary, processOutboxBatch } from "./outbox";
 import { createOutboxSender } from "./outbox-sender";
 import { createOutboxRenderer } from "./render";
 import { readEmailVolumeToday } from "./volume";
+import { SEND_NOW_HOUR_SPENT, SendNowRefused } from "./send-at-once";
 
 /**
  * "Send now": the outbox drained from the backoffice, without waiting for the monitor
@@ -55,6 +56,16 @@ export async function sendOutboxNow(
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not send the outbox by hand`);
   }
 
+  /*
+    Mailgun's hour (§NNN): with no room left in it, the press is told so with its sentence rather
+    than claiming nothing in silence — and spends none of the hour's presses, like every refusal
+    that only read something. With room, the claim itself keeps every batch inside it.
+  */
+  const before = await readEmailVolumeToday(db, now);
+  if (before.hourRemaining === 0) {
+    throw new SendNowRefused(`Mailgun's hourly pace is spent: ${before.sentLastHour} of ${before.hourlyAllowance} in the last hour`, SEND_NOW_HOUR_SPENT);
+  }
+
   const verdict = await consumeRateLimit(db, "admin-send-now", actor.id, now);
   if (!verdict.allowed) {
     throw new DomainError(
@@ -65,7 +76,7 @@ export async function sendOutboxNow(
 
   const total: OutboxBatchSummary = { claimed: 0, sent: 0, retrying: 0, deferred: 0, failed: 0, bounced: 0 };
   let batches = 0;
-  let volume = await readEmailVolumeToday(db, now);
+  let volume = before;
 
   // The club's road per group and the Reply-To it chose to show (§442): one sender for the press;
   // Gmail's cap and pace from the database before each Gmail message.

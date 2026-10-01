@@ -28,6 +28,7 @@ import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS } from "@/modules/registrations/doma
 import { waitlistRefusalCode } from "@/modules/registrations/domain/waitlist";
 import { noFreePlaceOutcome } from "@/modules/registrations/domain/capacity";
 import { sendOutboxNow } from "@/modules/notifications/send-now";
+import { sendNowRefusalCode } from "@/modules/notifications/send-at-once";
 import { requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
@@ -704,7 +705,8 @@ export async function sendOutboxNowAction(_previous: FormOutcome | null, form: F
     const result = await sendOutboxNow(getDb(), actor, new Date());
     sent = result.sent;
   } catch (error) {
-    return backTo(returnTo, outcomeOf(error));
+    // Mailgun's hour spent says so in its own sentence (§NNN), not as a bare validation error.
+    return backTo(returnTo, isDomainError(error) ? { error: sendNowRefusalCode(error) } : outcomeOf(error));
   }
   await flashOutcome({ saved: "outboxSent", sent: String(sent) });
   redirect(`${returnTo}${returnTo.includes("?") ? "&" : "?"}saved=outboxSent&sent=${sent}#admin-alert`);

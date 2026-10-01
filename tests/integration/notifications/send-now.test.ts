@@ -84,9 +84,10 @@ describe("§80 the outbox sent by hand", () => {
   });
 
   it("stops at the day's allowance and never sends past it", async () => {
-    // A hundred already sent today, by whatever path.
+    // A hundred already sent today, by whatever path — two hours ago, so the day binds, not the
+    // hour's pace (§NNN), which has its own test in `hourly-pace.test.ts`.
     await queue(100, "earlier");
-    await db.update(emailOutbox).set({ status: "SENT", sentAt: NOW });
+    await db.update(emailOutbox).set({ status: "SENT", sentAt: new Date(NOW.getTime() - 2 * 3_600_000) });
     await queue(5, "late");
 
     const result = await sendOutboxNow(db, admin, NOW);

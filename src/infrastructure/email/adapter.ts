@@ -113,10 +113,19 @@ export type SendResult =
       outcome: "throttled";
       error: string;
       /**
-       * Held back by Gmail's pace, not refused by anybody (§443): nothing was tried, so the
-       * outbox gives the attempt back rather than spending one of six on a few seconds' wait.
+       * A pause, not a refusal of the message: held back by Gmail's pace (§443), where nothing was
+       * tried, or by Mailgun's rate limit (§NNN: a 429, the probation's "temporarily disabled"),
+       * where nothing was taken. The outbox gives the attempt back rather than spending one of six
+       * on a wait, so no number of pauses ever marks a message FAILED.
        */
       paced?: true;
+      /**
+       * The provider refused for the rate (§NNN), as opposed to the club's own pace: the outbox keeps
+       * the reason on the row, holds the rest of the batch's Mailgun messages until `retryAfter`
+       * rather than knocking again at once, and `/api/health` counts a message held this way past
+       * the overdue allowance as overdue — a pause that never ends needs a person.
+       */
+      rateRefused?: true;
       /**
        * When the provider's allowance is expected back. The outbox schedules the next attempt
        * for then rather than applying its own backoff. Absent means "the adapter does not

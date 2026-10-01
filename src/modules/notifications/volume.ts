@@ -8,6 +8,8 @@ import { BULK_MESSAGE_TYPES } from "./domain/bulk";
 import { declarationArchiveIsConfigured, participantMessageBcc } from "./domain/club-notices";
 import { type EmailPlanId, EMAIL_PLANS, emailCeilings, emailHeadroom } from "./domain/email-plan";
 import { readEmailPlan } from "./email-plan";
+import { readMailgunHour } from "./hourly-pace";
+import { paceHolds } from "./domain/hourly-pace";
 import { GMAIL_WINDOW_MS, mailgunMessagesPerCompletedRegistration } from "./domain/email-transport";
 import { type GmailFailure, readEmailTransport, readGmailLastFailure, readGmailUsage } from "./email-transport";
 
@@ -140,6 +142,19 @@ export type EmailVolumeToday = {
   allowance: number | null;
   /** `allowance − sent` over the binding period, never below zero; null when nothing binds. */
   remaining: number | null;
+  /**
+   * Mailgun's hourly pace (§NNN): the setting's `hourlyAllowance` (null — no pace), what Mailgun
+   * carried in the last sixty minutes, and the room left (`allowance − sent − in flight`, null with
+   * no pace) — «trimise în ultima oră: N din …» on «Emailuri», and «Trimite acum»'s second stop.
+   */
+  hourlyAllowance: number | null;
+  sentLastHour: number;
+  hourRemaining: number | null;
+  /**
+   * Whether a backlog is the pace working (`paceHolds`): the queue panel's «late» then says what
+   * `/api/health`'s `overdue` says — a row held for the hour is not late (§529, §NNN).
+   */
+  hourPaceHolds: boolean;
   /** Whether a signed declaration also reaches the club, which is the sixth message's seventh (§244). */
   archiveConfigured: boolean;
   /** How many club addresses receive a hidden copy of every participant message (2026-09-22). */
@@ -262,6 +277,8 @@ export async function readEmailVolumeToday<T extends Record<string, unknown>>(
   });
   const ceilings = emailCeilings(setting);
   const headroom = emailHeadroom(ceilings, sentMessages, sentThisMonth);
+  // The hour, counted the way the claim counts it (`hourly-pace.ts`): one more query, always — the page shows it.
+  const hour = await readMailgunHour(db, now, { hourlyAllowance: setting.hourlyAllowance, alwaysCount: true });
 
   return {
     realRegistrations,
@@ -286,5 +303,9 @@ export async function readEmailVolumeToday<T extends Record<string, unknown>>(
     period: headroom.period,
     allowance: headroom.allowance,
     remaining: headroom.remaining,
+    hourlyAllowance: hour.allowance,
+    sentLastHour: hour.sentLastHour,
+    hourRemaining: hour.remaining,
+    hourPaceHolds: paceHolds({ hourlyAllowance: hour.allowance, carriedRecently: hour.carriedRecently }),
   };
 }

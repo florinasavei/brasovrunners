@@ -1200,6 +1200,16 @@ Sandbox afterwards: unused since 2026-09-23 — QA sends through the club domain
 daily allowance (a rehearsal's messages count against the same hundred a day), and the domain's
 webhooks point at production, so a QA bounce is recorded on production's outbox, not QA's.
 
+**Probation: 100 messages an hour on a new or newly paid account.** Mailgun keeps a new account,
+and one just moved to a paid plan, on probation: at most a hundred messages an hour per domain,
+and past that the account is disabled for a while. The outbox paces to «Limita pe oră» on
+«Setări» → «Emailuri» (default 100; `DECISIONS.md` §NNN): Mailgun's road sends at most that many
+in any sixty minutes, the rest wait for the next pass, and a refusal for the rate (a 429, or
+"temporarily disabled") pauses the message instead of failing it. The page shows «Trimise în
+ultima oră: N din 100» beside the day's count. Each environment counts only its own outbox and QA
+shares the domain, so keep QA's rehearsals small while the probation lasts (or set QA's box lower).
+Ask Mailgun's support to lift the probation, then raise or clear the field on production.
+
 ## 36. The anti-bot check and the health monitors — done (2026-09-19)
 
 Both were the club's clicks, done outside the repository on 2026-09-19 and recorded here so
