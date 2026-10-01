@@ -20,10 +20,12 @@ import {
   FILTER_GROUPS,
   listingFilterQuery,
   NO_FILTER,
+  scopedName,
   withoutValue,
   type FilterFlag,
   type FilterGroup,
   type FilterOffer,
+  type FilterScope,
   type ListingFilter,
 } from "@/modules/events/domain/listing-filter";
 import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
@@ -62,6 +64,14 @@ import { GLYPHS, type GlyphName } from "./glyphs";
  * the form nor a chip's link drops it. `path`, when given, is the already-resolved address the form
  * and the chips go to instead of `pathname`'s: the calendar's period, which lives in the path
  * (`/ro/calendar/2026-10`, §574), not in the query.
+ *
+ * **Two on the listing, one address** (§NNN, amending §602 — the owner: «Am zis că vreau un filtru și
+ * la evenimentele trecute, la fel ca la cele curente»). `scope` says whose state this panel is: the
+ * cards ahead (`upcoming`, the names §413 gave them, the calendar's only panel) or the past section
+ * (`past`, the same boxes named `past-type`, `past-partner`, …), which renders it inside its fold.
+ * `carry` is the OTHER scope's ticks, kept as hidden inputs in this form and in every link here, so a
+ * tick in one panel — submitted natively or by `FilterAutoApply`, which reads the form's own fields —
+ * never drops the other's.
  */
 export default async function ListingFilterPanel({
   locale,
@@ -70,6 +80,8 @@ export default async function ListingFilterPanel({
   filter,
   offer,
   keep = {},
+  scope = "upcoming",
+  carry = {},
 }: {
   locale: Locale;
   pathname: "/events" | "/calendar";
@@ -77,13 +89,17 @@ export default async function ListingFilterPanel({
   filter: ListingFilter;
   offer: FilterOffer;
   keep?: Record<string, string>;
+  scope?: FilterScope;
+  carry?: Record<string, string | string[]>;
 }) {
   const t = await getTranslations("Events");
   const tEvent = await getTranslations("Event");
   const count = activeFilterCount(filter);
+  const past = scope === "past";
   const action = path ?? getPathname({ locale, href: pathname });
   const hrefFor = (next: ListingFilter) => {
-    const query = { ...keep, ...listingFilterQuery(next) };
+    // The other scope's ticks before this one's, in the order the form's hidden inputs submit them.
+    const query = { ...keep, ...carry, ...listingFilterQuery(next, scope) };
     if (Object.keys(query).length === 0) return action;
     if (path === undefined) return getPathname({ locale, href: { pathname, query } });
     const search = new URLSearchParams();
@@ -145,7 +161,7 @@ export default async function ListingFilterPanel({
     return (
       <Box component="label" key={`${group}=${value}`} sx={FILTER_OPTION_SX} title={title}>
         <span>
-          <input type="checkbox" name={group} value={value} defaultChecked={checked} />
+          <input type="checkbox" name={scopedName(group, scope)} value={value} defaultChecked={checked} />
           <Icon aria-hidden="true" />
           {label(group, value)}
         </span>
@@ -155,7 +171,7 @@ export default async function ListingFilterPanel({
 
   return (
     <Box sx={{ "& > details[open] + [data-active-filters]": { display: "none" } }}>
-      <Box component="details" data-testid="listing-filters" sx={{ "&[open] > summary .filters-caret": { transform: "rotate(180deg)" } }}>
+      <Box component="details" data-testid={past ? "past-filters" : "listing-filters"} data-filter-scope={scope} sx={{ "&[open] > summary .filters-caret": { transform: "rotate(180deg)" } }}>
         <Box component="summary" sx={FILTER_BUTTON_SX}>
           <span>
             <GLYPHS.filters aria-hidden="true" />
@@ -167,7 +183,7 @@ export default async function ListingFilterPanel({
           component="form"
           method="get"
           action={action}
-          aria-label={t("filter.label")}
+          aria-label={past ? t("filter.labelPast") : t("filter.label")}
           sx={{
             mt: 1,
             // Tighter on a phone (§424, amending §380's scale — the owner: "Butonul de filtre e
@@ -188,6 +204,9 @@ export default async function ListingFilterPanel({
           {Object.entries(keep).map(([name, value]) => (
             <input key={name} type="hidden" name={name} value={value} />
           ))}
+          {Object.entries(carry).flatMap(([name, value]) =>
+            (Array.isArray(value) ? value : [value]).map((one) => <input key={`${name}=${one}`} type="hidden" name={name} value={one} />),
+          )}
           {offer.groups.map(({ group, values }) => (
             <Box component="fieldset" key={group} sx={FIELDSET_SX}>
               <Typography component="legend" variant="subtitle2" sx={{ p: 0 }}>
@@ -215,16 +234,16 @@ export default async function ListingFilterPanel({
             </Button>
             {count > 0 && <ChipLink href={hrefFor(NO_FILTER)} label={t("filter.clear")} keepScroll />}
           </Stack>
-          <FilterAutoApply ticked={ticked.map(({ group, value }) => `${group}=${value}`)} />
+          <FilterAutoApply scope={scope} ticked={ticked.map(({ group, value }) => `${scopedName(group, scope)}=${value}`)} />
         </Box>
       </Box>
       {count > 0 && (
         <Stack
           direction="row"
           data-active-filters="true"
-          data-testid="active-filters"
+          data-testid={past ? "past-active-filters" : "active-filters"}
           role="group"
-          aria-label={t("filter.active")}
+          aria-label={past ? t("filter.activePast") : t("filter.active")}
           sx={{ flexWrap: "wrap", columnGap: 0.5, alignItems: "center" }}
         >
           {ticked.map(({ group, value }) => (

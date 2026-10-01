@@ -48,6 +48,7 @@
     "pastCountFiltered": "Past, filtered ({count})",
     "filter": {
       "label": "Event filters",
+      "labelPast": "Filters for past events",
       "button": "Filters",
       "buttonCount": "Filters ({count})",
       "groups": {
@@ -71,6 +72,7 @@
       "clear": "Clear filters",
       "remove": "Remove filter",
       "active": "Active filters",
+      "activePast": "Active filters for past events",
       "none": "No event matches the filters you chose."
     },
     "calendar": {

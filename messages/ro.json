@@ -48,6 +48,7 @@
     "pastCountFiltered": "Din trecut, după filtre ({count})",
     "filter": {
       "label": "Filtrele evenimentelor",
+      "labelPast": "Filtrele evenimentelor trecute",
       "button": "Filtre",
       "buttonCount": "Filtre ({count})",
       "groups": {
@@ -71,6 +72,7 @@
       "clear": "Șterge filtrele",
       "remove": "Scoate filtrul",
       "active": "Filtre active",
+      "activePast": "Filtre active pentru evenimentele trecute",
       "none": "Niciun eveniment nu se potrivește filtrelor alese."
     },
     "calendar": {
