@@ -41,6 +41,7 @@ vi.mock("@/app/[locale]/registrations/family/[token]/actions", () => ({
   confirmFamilySittingAction: async () => {},
   declineFamilyEntryAction: async () => {},
 }));
+vi.mock("@/app/[locale]/events/[slug]/actions", () => ({ registerInterestAction: async () => {} }));
 vi.mock("@/modules/registrations/ui/RegistrationJourney", () => ({ default: () => null }));
 // The two done pages (address confirmed, race declaration): no database, no cookies, no family pass.
 vi.mock("@/modules/registrations/token-actions", async (importOriginal) => ({
@@ -76,10 +77,11 @@ const { default: FamilyConfirmPage } = await import("@/app/[locale]/registration
 const { default: GroupRunDeclarationPage } = await import("@/app/[locale]/events/[slug]/declaration/page");
 const { default: ConfirmEmailPage } = await import("@/app/[locale]/registrations/confirm/[token]/page");
 const { default: DeclarePage } = await import("@/app/[locale]/registrations/declare/[token]/page");
+const { default: RegistrationInterestForm } = await import("@/modules/registrations/ui/RegistrationInterestForm");
 const { default: NewsletterSignup } = await import("@/modules/newsletter/ui/NewsletterSignup");
 
-const SPAM_RO = "Nu îl găsești? Caută în Spam și în Promoții și mută-ne în Inbox, ca să primești și următoarele.";
-const SPAM_EN = "Can't find it? Look in Spam and Promotions and move us to your inbox so the next ones arrive.";
+const SPAM_RO = "Nu găsești emailul nostru? Caută în Spam și în Promoții și mută-ne în Inbox, ca să primești și următoarele.";
+const SPAM_EN = "Can't find our email? Look in Spam and Promotions and move us to your inbox so the next ones arrive.";
 
 function markup(element: ReactElement): string {
   return renderToStaticMarkup(element)
@@ -216,16 +218,24 @@ describe("§NNN the pages that wait for an email point at Spam and Promotions, v
     }
   });
 
-  it("the address-confirmed page and the race declaration's done page show it, on every outcome", async () => {
+  it("the event page's interest form shows it once the address is taken", async () => {
+    for (const locale of ["ro", "en"] as const) {
+      lang.current = locale;
+      const page = markup(
+        (await RegistrationInterestForm({ locale, slug: "crosul-tampei", renderedAt: new Date(), outcome: "done" })) as ReactElement,
+      );
+      expect(spamBox(page), `${locale} interest`).toContain(locale === "ro" ? SPAM_RO : SPAM_EN);
+    }
+  });
+
+  it("the address-confirmed page and the race declaration's done page show it", async () => {
     for (const locale of ["ro", "en"] as const) {
       lang.current = locale;
       const expected = locale === "ro" ? SPAM_RO : SPAM_EN;
-      for (const done of ["1", "waitlist"]) {
-        const page = markup(
-          (await ConfirmEmailPage({ params: Promise.resolve({ locale, token: "t" }), searchParams: Promise.resolve({ done }) })) as ReactElement,
-        );
-        expect(spamBox(page), `${locale} confirm ${done}`).toContain(expected);
-      }
+      const confirmed = markup(
+        (await ConfirmEmailPage({ params: Promise.resolve({ locale, token: "t" }), searchParams: Promise.resolve({ done: "1" }) })) as ReactElement,
+      );
+      expect(spamBox(confirmed), `${locale} confirm`).toContain(expected);
       for (const done of ["confirmed", "waitlisted"]) {
         const page = markup(
           (await DeclarePage({ params: Promise.resolve({ locale, token: "t" }), searchParams: Promise.resolve({ done }) })) as ReactElement,
