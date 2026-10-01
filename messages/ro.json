@@ -6427,6 +6427,7 @@
       "pending": "Se confirmă…",
       "done": "Adresa de email a fost confirmată.",
       "doneTitle": "Adresa a fost confirmată",
+      "doneWaitlist": "Ești pe lista de așteptare. Dacă se eliberează un loc, îți scriem pe email cu ce ai de făcut.",
       "eventOff": "Evenimentul a fost anulat sau s-a încheiat, așa că înscrierea nu mai continuă: nu ți-am rezervat un loc și nu trebuie să faci nimic.",
       "waitlistFull": "Locurile și lista de așteptare sunt pline, așa că adresa nu a fost confirmată și nu ți-am rezervat nimic. Linkul din email rămâne valabil {confirmation} de la trimiterea formularului: dacă între timp se eliberează un loc pe lista de așteptare, deschide-l din nou.",
       "noWaitlist": "Toate locurile au fost ocupate și evenimentul nu are listă de așteptare, așa că adresa nu a fost confirmată și nu ți-am rezervat nimic. Linkul din email rămâne valabil {confirmation} de la trimiterea formularului: dacă între timp se eliberează un loc, deschide-l din nou.",

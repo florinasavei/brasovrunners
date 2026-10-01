@@ -90,6 +90,12 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
             protects their place is running. Saying "done" alone loses people here. */}
         {done !== "waitlist" && <RegistrationJourney current="declare" declaration="emailJustSent" />}
         <Alert severity="success">{t("confirm.done")}</Alert>
+        {/* On the waiting list there is no declaration to sign yet, so the page says what is true instead. */}
+        {done === "waitlist" && (
+          <Alert severity="info" sx={{ mt: 2 }} data-testid="confirm-waitlist">
+            {t("confirm.doneWaitlist")}
+          </Alert>
+        )}
         {people.length > 1 && (
           <Alert severity="info" icon={false} sx={{ mt: 2 }} data-testid="confirm-address-people">
             <Typography sx={{ fontWeight: 600 }}>{t("confirm.doneFor")}</Typography>
