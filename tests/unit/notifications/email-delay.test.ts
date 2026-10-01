@@ -22,6 +22,7 @@ const facts = (overrides: Partial<EmailDelayFacts> = {}): EmailDelayFacts => ({
   queuedOnMailgun: 3,
   aheadOnMailgun: 3,
   oldestWaitingSince: ago(5),
+  hourFreesAt: null,
   deferredUntil: null,
   pausedUntil: null,
   hourlyAllowance: 100,
@@ -55,16 +56,18 @@ describe("§NNN judgeEmailDelay", () => {
     const paused = judgeEmailDelay(facts({ pausedUntil: ahead(12), oldestWaitingSince: ago(1) }), 15, NOW);
     expect(paused).toEqual({ late: true, reason: "paused", queued: 3, oldestWaitMinutes: 1, estimateMinutes: 15 });
     // A pause that ended, or one with nothing of ours on its road, says nothing.
+    // More waiting than an hour carries: the pause's end plus the queue at the pace (12 + 150 ÷ 100 × 60 = 102).
+    expect(judgeEmailDelay(facts({ pausedUntil: ahead(12), aheadOnMailgun: 150, queued: 150, oldestWaitingSince: ago(1) }), 15, NOW).estimateMinutes).toBe(105);
     expect(judgeEmailDelay(facts({ pausedUntil: ago(1), oldestWaitingSince: ago(1) }), 15, NOW).late).toBe(false);
     expect(judgeEmailDelay(facts({ pausedUntil: ahead(12), queuedOnMailgun: 0, oldestWaitingSince: ago(1) }), 15, NOW).late).toBe(false);
   });
 
   it("a spent hour is late, and the estimate is the queue at the pace", () => {
-    const spent = judgeEmailDelay(facts({ hourlyRemaining: 0, aheadOnMailgun: 150, queued: 120, oldestWaitingSince: ago(2) }), 15, NOW);
-    // 150 ÷ 100 × 60 = 90.
-    expect(spent).toEqual({ late: true, reason: "allowance", queued: 120, oldestWaitMinutes: 2, estimateMinutes: 90 });
-    // 7 ÷ 100 × 60 = 4.2 → never under five.
-    expect(judgeEmailDelay(facts({ hourlyRemaining: 0, aheadOnMailgun: 7 }), 15, NOW).estimateMinutes).toBe(5);
+    // The first place frees in 41 minutes, then 150 ÷ 100 × 60 = 90 at the pace: 131 → 135.
+    const spent = judgeEmailDelay(facts({ hourlyRemaining: 0, aheadOnMailgun: 150, queued: 120, oldestWaitingSince: ago(2), hourFreesAt: ahead(41) }), 15, NOW);
+    expect(spent).toEqual({ late: true, reason: "allowance", queued: 120, oldestWaitMinutes: 2, estimateMinutes: 135 });
+    // Seven behind a spent hour: nothing leaves for 41 minutes, however few they are — never «5 minutes».
+    expect(judgeEmailDelay(facts({ hourlyRemaining: 0, aheadOnMailgun: 7, hourFreesAt: ahead(41) }), 15, NOW).estimateMinutes).toBe(50);
     // Rows on Gmail's road only: Mailgun's hour holds none of them.
     expect(judgeEmailDelay(facts({ hourlyRemaining: 0, queuedOnMailgun: 0 }), 15, NOW).late).toBe(false);
     // No pace set: nothing to spend.

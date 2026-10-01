@@ -217,7 +217,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
           {t("declare.doneTitle")}
         </Typography>
         {/* While the club's emails are late (§NNN): the confirmation and its QR are one of them. */}
-        {await emailDelayNotice({ sx: { mb: 2 } })}
+        {await emailDelayNotice({ variant: "plain", sx: { mb: 2 } })}
         {/* Waitlisted is not the end of the journey — it is a place in a queue, and the
             declaration is already signed — so both outcomes render the finished stepper. */}
         <RegistrationJourney current="done" />

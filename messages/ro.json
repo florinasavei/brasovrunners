@@ -7164,6 +7164,9 @@
   },
   "Delay": {
     "full": "Emailurile noastre întârzie acum: {queued}, cel mai vechi de {minutes}{estimate}. Al tău pleacă la rând — termenul lui curge de când pleacă, nu de acum. Nu te înscrie din nou.",
+    "fullResend": "Emailurile noastre întârzie acum: {queued}, cel mai vechi de {minutes}{estimate}. Al tău pleacă la rând. Termenul din primul tău email curge de când a plecat acela, nu de acum.",
+    "fullPlain": "Emailurile noastre întârzie acum: {queued}, cel mai vechi de {minutes}{estimate}. Al tău pleacă la rând.",
+    "over": "peste {amount}",
     "short": "Confirmarea pe email întârzie azi{estimate}.",
     "estimate": "; estimăm cel mult {estimate}",
     "queued": {

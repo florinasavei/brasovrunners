@@ -361,7 +361,7 @@ export default async function NewsletterSignup({ locale, outcome, refused, typed
       {leaveOutcome === "sent" && (
         <>
           {/* While the club's emails are late (§NNN): the link to leave is one of them. */}
-          {await emailDelayNotice({ sx: { mt: 2 } })}
+          {await emailDelayNotice({ variant: "plain", sx: { mt: 2 } })}
           <Alert severity="info" role="status" sx={{ mt: 2 }} data-testid="newsletter-leave-sent">
             {t("leave.sent")}
           </Alert>

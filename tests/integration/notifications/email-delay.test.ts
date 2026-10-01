@@ -111,8 +111,8 @@ describe("§NNN readEmailDelay", () => {
     await insert(...Array.from({ length: 30 }, () => ({ createdAt: ago(2) })));
     const facts = await readEmailDelayFacts(db, NOW);
     expect(facts).toMatchObject({ hourlyAllowance: 100, hourlyRemaining: 0, paceBinding: true, queued: 30, queuedOnMailgun: 30, aheadOnMailgun: 30 });
-    // 30 ÷ 100 × 60 = 18 → 20.
-    expect(await readEmailDelay(db, NOW, 15)).toEqual({ late: true, reason: "allowance", queued: 30, oldestWaitMinutes: 2, estimateMinutes: 20 });
+    // The hour's first place frees 41 minutes from now (the sends were 20 minutes ago, the window is 61); then 30 ÷ 100 × 60 = 18: 59 → 60.
+    expect(await readEmailDelay(db, NOW, 15)).toEqual({ late: true, reason: "allowance", queued: 30, oldestWaitMinutes: 2, estimateMinutes: 60 });
   });
 
   it("is not paced when the club cleared the hourly allowance", async () => {
@@ -125,6 +125,22 @@ describe("§NNN readEmailDelay", () => {
   it("says allowance for a message a provider put off to its reset, with the reset as the estimate", async () => {
     await insert({ createdAt: ago(3), lastError: "mailgun: daily allowance spent", nextAttemptAt: ahead(178), attemptCount: 1 });
     expect(await readEmailDelay(db, NOW, 15)).toEqual({ late: true, reason: "allowance", queued: 1, oldestWaitMinutes: 3, estimateMinutes: 180 });
+  });
+});
+
+describe("§NNN a batch held behind Mailgun's pause", () => {
+  it("still counts every message of it, from its creation, while the pause lasts", async () => {
+    vi.stubEnv("NEXT_RUNTIME", "nodejs");
+    await insert(...Array.from({ length: 5 }, () => ({ createdAt: ago(30) })));
+    const pause: SendResult = { outcome: "throttled", error: "mailgun 429", paced: true, rateRefused: true, retryAfter: ahead(20) };
+    const summary = await processOutboxBatch(db, {
+      sender: { send: async () => pause },
+      render: async (r: OutboxRow) => ({ to: r.recipientEmail, subject: "x", html: "<p>x</p>", text: "x", locale: r.locale, idempotencyKey: r.idempotencyKey }),
+      now: NOW,
+    });
+    expect(summary).toMatchObject({ claimed: 5, deferred: 5 });
+    // Four were handed back unrefused, not the family's no-reason hold: all five wait, since 30 minutes ago.
+    expect(await readEmailDelay(db, NOW, 15)).toEqual({ late: true, reason: "paused", queued: 5, oldestWaitMinutes: 30, estimateMinutes: 20 });
   });
 });
 

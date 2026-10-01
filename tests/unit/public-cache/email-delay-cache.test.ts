@@ -55,6 +55,7 @@ const FACTS: EmailDelayFacts = {
   queuedOnMailgun: 12,
   aheadOnMailgun: 12,
   oldestWaitingSince: new Date(NOW.getTime() - 3 * 60_000),
+  hourFreesAt: null,
   deferredUntil: null,
   pausedUntil: new Date(NOW.getTime() + 20 * 60_000),
   hourlyAllowance: 100,

@@ -113,7 +113,7 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
           {t("groupRunDeclaration.page.doneTitle")}
         </Typography>
         {/* While the club's emails are late (§NNN): the signed copy is one of them. */}
-        {await emailDelayNotice({ sx: { mb: 2 } })}
+        {await emailDelayNotice({ variant: "plain", sx: { mb: 2 } })}
         {/* The same words whether a row was written or the one already kept was sent again (§523):
             the page tells nobody whether the address had signed before. */}
         <Alert severity="success" data-testid="group-run-declaration-done">

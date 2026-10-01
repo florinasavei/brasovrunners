@@ -86,9 +86,20 @@ const { default: NewsletterSignup } = await import("@/modules/newsletter/ui/News
 const LATE: EmailDelay = { late: true, reason: "backlog", queued: 23, oldestWaitMinutes: 47, estimateMinutes: 30 };
 const NOT_LATE: EmailDelay = { late: false, reason: null, queued: 2, oldestWaitMinutes: 3, estimateMinutes: null };
 
+/** Three shapes by what the page's email carries: a deadline from its send, a resend's, none. */
 const WORDS = {
-  ro: "Emailurile noastre întârzie acum: 23 de mesaje așteaptă, cel mai vechi de 47 de minute; estimăm cel mult 30 de minute. Al tău pleacă la rând — termenul lui curge de când pleacă, nu de acum. Nu te înscrie din nou.",
-  en: "Our emails are running late: 23 messages are waiting, the oldest for 47 minutes; we estimate at most 30 minutes. Yours leaves in its turn — its deadline runs from the moment it leaves, not from now. Do not register again.",
+  full: {
+    ro: "Emailurile noastre întârzie acum: 23 de mesaje așteaptă, cel mai vechi de 47 de minute; estimăm cel mult 30 de minute. Al tău pleacă la rând — termenul lui curge de când pleacă, nu de acum. Nu te înscrie din nou.",
+    en: "Our emails are running late: 23 messages are waiting, the oldest for 47 minutes; we estimate at most 30 minutes. Yours leaves in its turn — its deadline runs from the moment it leaves, not from now. Do not register again.",
+  },
+  resend: {
+    ro: "Emailurile noastre întârzie acum: 23 de mesaje așteaptă, cel mai vechi de 47 de minute; estimăm cel mult 30 de minute. Al tău pleacă la rând. Termenul din primul tău email curge de când a plecat acela, nu de acum.",
+    en: "Our emails are running late: 23 messages are waiting, the oldest for 47 minutes; we estimate at most 30 minutes. Yours leaves in its turn. The deadline in your first email runs from when that one left, not from now.",
+  },
+  plain: {
+    ro: "Emailurile noastre întârzie acum: 23 de mesaje așteaptă, cel mai vechi de 47 de minute; estimăm cel mult 30 de minute. Al tău pleacă la rând.",
+    en: "Our emails are running late: 23 messages are waiting, the oldest for 47 minutes; we estimate at most 30 minutes. Yours leaves in its turn.",
+  },
 } as const;
 
 function markup(element: ReactElement): string {
@@ -109,12 +120,12 @@ function noticeText(html: string): string | null {
  * One page, three ways: late (the notice says the words, above `above`), not late and unknown (the
  * markup is the late page's with the notice cut out, byte for byte).
  */
-async function holds(name: string, render: () => Promise<string>, above?: string) {
+async function holds(name: string, render: () => Promise<string>, above?: string, variant: keyof typeof WORDS = "full") {
   for (const lang of ["ro", "en"] as const) {
     state.lang = lang;
     state.delay = LATE;
     const late = await render();
-    expect(noticeText(late), `${name} ${lang}`).toBe(WORDS[lang]);
+    expect(noticeText(late), `${name} ${lang}`).toBe(WORDS[variant][lang]);
     expect(late, `${name} ${lang}: a warning`).toMatch(/MuiAlert-colorWarning[^>]*data-testid="email-delay"|data-testid="email-delay"[^>]*MuiAlert-colorWarning/);
     if (above) expect(late.indexOf('data-testid="email-delay"'), `${name} ${lang}: above the page's wait`).toBeLessThan(late.indexOf(above));
 
@@ -154,7 +165,7 @@ describe("§NNN the pages that wait for an email say when the club's emails are 
       page(await ResendPage({ params: Promise.resolve({ locale: state.lang }), searchParams: Promise.resolve(sent ? { sent: "1" } : {}) }));
     const mine = (sent: boolean) => async () =>
       page(await MyRegistrationsRequestPage({ params: Promise.resolve({ locale: state.lang }), searchParams: Promise.resolve(sent ? { sent: "1" } : {}) }));
-    await holds("resend", resend(true), "MuiAlert-colorSuccess");
+    await holds("resend", resend(true), "MuiAlert-colorSuccess", "resend");
     await holds("mine", mine(true), "MuiAlert-colorSuccess");
     state.delay = LATE;
     expect(await resend(false)()).not.toContain("email-delay");
@@ -174,6 +185,7 @@ describe("§NNN the pages that wait for an email say when the club's emails are 
     await holds("group run", async () =>
       page(await GroupRunDeclarationPage({ params: Promise.resolve({ locale: state.lang, slug: "alergare" }), searchParams: Promise.resolve({ done: "1" }) })),
       'data-testid="group-run-declaration-done"',
+      "plain",
     );
   });
 
@@ -186,15 +198,14 @@ describe("§NNN the pages that wait for an email say when the club's emails are 
       await holds(`declare ${done}`, async () =>
         page(await DeclarePage({ params: Promise.resolve({ locale: state.lang, token: "t" }), searchParams: Promise.resolve({ done }) })),
         "MuiAlert-colorSuccess",
+        "plain",
       );
     }
   });
 
-  it("the event page's interest form, once the address is taken", async () => {
-    await holds("interest", async () =>
-      page(await RegistrationInterestForm({ locale: state.lang, slug: "crosul-tampei", renderedAt: new Date(), outcome: "done" })),
-      "MuiAlert-colorSuccess",
-    );
+  it("the event page's interest form says nothing: no email waits for that address yet", async () => {
+    state.delay = LATE;
+    expect(page(await RegistrationInterestForm({ locale: state.lang, slug: "crosul-tampei", renderedAt: new Date(), outcome: "done" }))).not.toContain("email-delay");
   });
 
   it("the newsletter's two answers, and not the form before them", async () => {
@@ -213,9 +224,21 @@ describe("§NNN the pages that wait for an email say when the club's emails are 
         }),
       );
     await holds("newsletter sent", render("sent", null), 'data-testid="newsletter-sent"');
-    await holds("newsletter leave", render(null, "sent"), 'data-testid="newsletter-leave-sent"');
+    await holds("newsletter leave", render(null, "sent"), 'data-testid="newsletter-leave-sent"', "plain");
     state.delay = LATE;
     expect(await render(null, null)()).not.toContain("email-delay");
+  });
+
+  it("says a long wait in whole hours, never in hundreds of minutes", async () => {
+    state.delay = { late: true, reason: "allowance", queued: 40, oldestWaitMinutes: 247, estimateMinutes: 1385 };
+    state.lang = "ro";
+    expect(noticeText(page(await ResendPage({ params: Promise.resolve({ locale: "ro" }), searchParams: Promise.resolve({ sent: "1" }) })))).toContain(
+      "cel mai vechi de peste 4 ore; estimăm cel mult 24 de ore.",
+    );
+    state.lang = "en";
+    expect(noticeText(page(await ResendPage({ params: Promise.resolve({ locale: "en" }), searchParams: Promise.resolve({ sent: "1" }) })))).toContain(
+      "the oldest for over 4 hours; we estimate at most 24 hours.",
+    );
   });
 
   it("says no estimate when it has none, and a single message in the singular", async () => {
@@ -223,12 +246,12 @@ describe("§NNN the pages that wait for an email say when the club's emails are 
     state.delay = { late: true, reason: "paused", queued: 1, oldestWaitMinutes: 0, estimateMinutes: null };
     const ro = page(await ResendPage({ params: Promise.resolve({ locale: "ro" }), searchParams: Promise.resolve({ sent: "1" }) }));
     expect(noticeText(ro)).toBe(
-      "Emailurile noastre întârzie acum: 1 mesaj așteaptă, cel mai vechi de un minut. Al tău pleacă la rând — termenul lui curge de când pleacă, nu de acum. Nu te înscrie din nou.",
+      "Emailurile noastre întârzie acum: 1 mesaj așteaptă, cel mai vechi de un minut. Al tău pleacă la rând. Termenul din primul tău email curge de când a plecat acela, nu de acum.",
     );
     state.lang = "en";
     const en = page(await ResendPage({ params: Promise.resolve({ locale: "en" }), searchParams: Promise.resolve({ sent: "1" }) }));
     expect(noticeText(en)).toBe(
-      "Our emails are running late: 1 message is waiting, the oldest for one minute. Yours leaves in its turn — its deadline runs from the moment it leaves, not from now. Do not register again.",
+      "Our emails are running late: 1 message is waiting, the oldest for one minute. Yours leaves in its turn. The deadline in your first email runs from when that one left, not from now.",
     );
   });
 });

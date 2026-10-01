@@ -62,7 +62,7 @@ export default async function ResendPage({ params, searchParams }: Props) {
       {sent ? (
         <>
           {/* While the club's emails are late (§NNN), above the wait the sentence below promises. */}
-          {await emailDelayNotice({ sx: { mb: 2 } })}
+          {await emailDelayNotice({ variant: "resend", sx: { mb: 2 } })}
           <Alert severity="success">
             {waitMinutes === null ? t("resend.sent") : t("resend.sentScheduled", { wait: minutesPhrase(locale, waitMinutes) })}
           </Alert>

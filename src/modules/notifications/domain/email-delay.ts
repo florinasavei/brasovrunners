@@ -78,6 +78,11 @@ export type EmailDelayFacts = {
   /** Since when the oldest of `queued` has waited; null when nothing waits. */
   oldestWaitingSince: Date | null;
   /**
+   * When Mailgun's hour frees its first place: the oldest send still inside the pace window, plus the
+   * window; null when no send is in it. Nothing can leave a spent hour before it.
+   */
+  hourFreesAt: Date | null;
+  /**
    * The earliest instant a provider (or Gmail's cap) put one of `queued` off to, more than an hour
    * ahead: a spent daily allowance, deferred to the reset. Null when none is.
    */
@@ -102,9 +107,13 @@ export type EmailDelayFacts = {
  * - **backlog**: the oldest has waited longer than the platform promises (`promisedWaitMinutes`,
  *   `emailWaitMinutes`: null under `immediate`) plus `LATE_MARGIN_MINUTES`.
  *
- * The estimate: the pause's end when paused; the reset when deferred; otherwise, while the pace
- * binds, the queue at the pace — `aheadOnMailgun ÷ allowance × 60`; else unknown. Rounded up to five
- * minutes, never under five: «cel mult» is a ceiling, and a precise number would read as a promise.
+ * The estimate is a ceiling, so it is never optimistic. Mailgun's road leaves nothing until its pause
+ * ends and nothing while its hour is spent, so: paused — the pause's end (or the hour's freeing, if
+ * later) plus, when more waits than an hour carries, the queue at the pace; a spent hour — the
+ * first place freeing (`hourFreesAt`) plus the queue at the pace, `aheadOnMailgun ÷ allowance × 60`;
+ * deferred — the reset; a backlog while the pace binds — the queue at the pace; else unknown.
+ * Rounded up to five minutes, never under five: «cel mult» is a ceiling, and a precise number would
+ * read as a promise.
  */
 export function judgeEmailDelay(facts: EmailDelayFacts, promisedWaitMinutes: number | null, now: Date): EmailDelay {
   if (facts.queued <= 0 || facts.oldestWaitingSince === null) return { ...NO_EMAIL_DELAY };
@@ -119,12 +128,22 @@ export function judgeEmailDelay(facts: EmailDelayFacts, promisedWaitMinutes: num
   const reason: EmailDelayReason | null = paused ? "paused" : deferred || hourSpent ? "allowance" : behind ? "backlog" : null;
   if (reason === null) return { ...NO_EMAIL_DELAY, queued: facts.queued, oldestWaitMinutes };
 
-  const paceMinutes =
-    facts.hourlyAllowance !== null && (facts.paceBinding || hourSpent) && facts.aheadOnMailgun > 0
-      ? (facts.aheadOnMailgun / facts.hourlyAllowance) * 60
-      : null;
+  const atPace = facts.hourlyAllowance !== null && facts.aheadOnMailgun > 0 ? (facts.aheadOnMailgun / facts.hourlyAllowance) * 60 : 0;
+  const paceMinutes = facts.hourlyAllowance !== null && (facts.paceBinding || hourSpent) && facts.aheadOnMailgun > 0 ? atPace : null;
   const untilMinutes = (instant: Date | null) => (instant === null ? null : Math.max(0, (instant.getTime() - at) / 60_000));
-  const estimate = reason === "paused" ? untilMinutes(facts.pausedUntil) : deferred ? untilMinutes(facts.deferredUntil) : paceMinutes;
+  const untilHourFrees = hourSpent ? (untilMinutes(facts.hourFreesAt) ?? 0) : 0;
+  let estimate: number | null;
+  if (reason === "paused") {
+    const untilPause = untilMinutes(facts.pausedUntil);
+    const overHour = facts.hourlyAllowance !== null && facts.aheadOnMailgun > facts.hourlyAllowance;
+    estimate = untilPause === null ? null : Math.max(untilPause, untilHourFrees) + (overHour || hourSpent ? atPace : 0);
+  } else if (deferred) {
+    estimate = untilMinutes(facts.deferredUntil);
+  } else if (hourSpent) {
+    estimate = paceMinutes === null ? null : untilHourFrees + paceMinutes;
+  } else {
+    estimate = paceMinutes;
+  }
 
   return { late: true, reason, queued: facts.queued, oldestWaitMinutes, estimateMinutes: estimate === null ? null : roundUpToFive(estimate) };
 }

@@ -12,7 +12,7 @@ import { type EmailDelay, type EmailDelayFacts, isWaitedFor, judgeEmailDelay } f
 import { DEFAULT_EMAIL_PLAN, emailPlanSettingSchema } from "./domain/email-plan";
 import { defaultEmailTransportFor, emailTransportSettingSchema } from "./domain/email-transport";
 import { emailWaitMinutes } from "./domain/email-wait";
-import { hourlyRoom, PACE_EVIDENCE_MS, PACE_WINDOW_MS, paceHolds, RATE_PAUSE_ERROR_PREFIX } from "./domain/hourly-pace";
+import { hourlyRoom, PACE_EVIDENCE_MS, PACE_WINDOW_MS, paceHolds, PAUSE_HELD_ERROR, RATE_PAUSE_ERROR_PREFIX } from "./domain/hourly-pace";
 import { PROCESSING_LOCK_TIMEOUT_MS } from "./domain/retry";
 import { readDeliveryTiming } from "./delivery-timing";
 import { EMAIL_PLAN_SETTING_KEY } from "./email-plan";
@@ -46,6 +46,7 @@ type FactsGroup = {
   waitingSince: unknown;
   deferredUntil: unknown;
   pausedUntil: unknown;
+  oldestSentInHour: unknown;
   inFlight: number;
   sentLastHour: number;
   carriedRecently: number;
@@ -61,14 +62,16 @@ export async function readEmailDelayFacts<T extends Record<string, unknown>>(db:
   const clubCopy = sql<boolean>`coalesce(${emailOutbox.payloadJson} -> ${sql.raw(`'${CLUB_COPY_FLAG}'`)} = 'true'::jsonb, false)`;
   /*
     Waiting: not sent yet — due, being sent, or held by a provider (a pause, a deferral, a retry: the
-    row carries the reason). Not a row the club itself holds for later with no reason on it — a
+    row carries the reason, and a batch-mate held behind a pause carries `PAUSE_HELD_ERROR`). Not a
+    row the club itself holds for later with no reason on it — a
     family's sitting window (§519), whose screen already named the hour it leaves.
   */
   // `coalesce`: a row never touched has no `next_attempt_at`, and NOT of a NULL comparison is NULL, not true.
   const waiting = sql`(${emailOutbox.status} IN ('PENDING', 'PROCESSING') AND NOT coalesce(${emailOutbox.status} = 'PENDING' AND ${emailOutbox.nextAttemptAt} > ${nowSql} AND ${emailOutbox.lastError} IS NULL, false))`;
   // Since its creation, or since a hold the club chose ended: the person was told that hour.
   const waitedSince = sql`(CASE WHEN ${emailOutbox.lastError} IS NULL AND ${emailOutbox.nextAttemptAt} > ${emailOutbox.createdAt} THEN ${emailOutbox.nextAttemptAt} ELSE ${emailOutbox.createdAt} END)`;
-  const deferred = sql`(${emailOutbox.status} = 'PENDING' AND ${emailOutbox.lastError} IS NOT NULL AND ${emailOutbox.nextAttemptAt} > ${at(DEFERRED_BEYOND_MS)})`;
+  // A batch-mate held behind a pause is waiting for the pause, not for an allowance's reset.
+  const deferred = sql`(${emailOutbox.status} = 'PENDING' AND ${emailOutbox.lastError} IS NOT NULL AND ${emailOutbox.lastError} <> ${PAUSE_HELD_ERROR} AND ${emailOutbox.nextAttemptAt} > ${at(DEFERRED_BEYOND_MS)})`;
   // The mark only the row Mailgun refused carries (`outbox.ts`, `releaseForPause`), its pause not over.
   const pausedRow = sql`(${emailOutbox.status} = 'PENDING' AND ${emailOutbox.lastError} LIKE ${`${RATE_PAUSE_ERROR_PREFIX}%`} AND ${emailOutbox.nextAttemptAt} > ${nowSql})`;
   // Claimed and still held: leaving now, so already spent from the hour (`countMailgunHour`).
@@ -84,6 +87,8 @@ export async function readEmailDelayFacts<T extends Record<string, unknown>>(db:
       waitingSince: sql<unknown>`min(${waitedSince}) FILTER (WHERE ${waiting})`,
       deferredUntil: sql<unknown>`min(${emailOutbox.nextAttemptAt}) FILTER (WHERE ${waiting} AND ${deferred})`,
       pausedUntil: sql<unknown>`max(${emailOutbox.nextAttemptAt}) FILTER (WHERE ${pausedRow})`,
+      // When Mailgun's hour frees its first place: the oldest send still inside the window.
+      oldestSentInHour: sql<unknown>`min(${emailOutbox.sentAt}) FILTER (WHERE ${emailOutbox.sentAt} > ${at(-PACE_WINDOW_MS)} AND ${carriedByMailgunApi})`,
       inFlight: sql<number>`(count(*) FILTER (WHERE ${held}))::int`,
       sentLastHour: sentSince(PACE_WINDOW_MS),
       carriedRecently: sentSince(PACE_EVIDENCE_MS),
@@ -110,6 +115,7 @@ function factsFromGroups(groups: readonly FactsGroup[]): EmailDelayFacts {
     queuedOnMailgun: 0,
     aheadOnMailgun: 0,
     oldestWaitingSince: null,
+    hourFreesAt: null,
     deferredUntil: null,
     pausedUntil: null,
     hourlyAllowance,
@@ -123,6 +129,8 @@ function factsFromGroups(groups: readonly FactsGroup[]): EmailDelayFacts {
     // Every row Mailgun's API took counts against its hour, whatever road it was meant for (`carriedByMailgunApi`).
     sentLastHour += group.sentLastHour;
     carriedRecently += group.carriedRecently;
+    const oldestSent = asDate(group.oldestSentInHour);
+    facts.hourFreesAt = earliest(facts.hourFreesAt, oldestSent === null ? null : new Date(oldestSent.getTime() + PACE_WINDOW_MS));
     const mailgun = !onGmailRoad(group, roads);
     if (mailgun) {
       inFlight += group.inFlight;

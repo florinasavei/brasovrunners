@@ -24,7 +24,7 @@ import {
 import { readBulkLimit } from "./bulk-budget";
 import { readEmailPlan } from "./email-plan";
 import { readMailgunHour } from "./hourly-pace";
-import { RATE_PAUSE_ERROR_PREFIX } from "./domain/hourly-pace";
+import { PAUSE_HELD_ERROR, RATE_PAUSE_ERROR_PREFIX } from "./domain/hourly-pace";
 import { applyDeadlineRebase, type DeadlineRebase, planDeadlineRebase } from "./deadline-rebase";
 import { BULK_MESSAGE_TYPES, isBulkMessage } from "./domain/bulk";
 import { drainOutboxAfterResponse } from "./drain";
@@ -623,6 +623,8 @@ export async function processOutboxBatch(
     the same instant, with the same reason and their attempt given back. Gmail's rows still go.
   */
   let mailgunPause: { until: Date; error: string } | null = null;
+  // Messages withdrawn in this batch (deleted unsent): they leave the queue the public delay counts (§NNN).
+  let withdrawn = 0;
 
   /*
     The Gmail road's one connection for the whole batch (§493) is let go when the batch ends,
@@ -649,6 +651,7 @@ export async function processOutboxBatch(
       } catch (error) {
         if (error instanceof OutboxMessageWithdrawn) {
           await db.delete(emailOutbox).where(eq(emailOutbox.id, row.id));
+          withdrawn += 1;
           continue;
         }
         await recordFailure(db, row.id, "FAILED", sanitizeProviderError(error));
@@ -823,10 +826,10 @@ export async function processOutboxBatch(
 
   /*
     The pages that wait for an email say when the queue is late (§NNN, `cachedEmailDelay`): once per
-    batch that moved it — a send, a pause or a deferral, a message given up on — never per row, and
+    batch that moved it — a send, a pause or a deferral, a message given up on or withdrawn — never per row, and
     nothing for a batch that claimed nothing or only scheduled a retry.
   */
-  if (summary.sent + summary.deferred + summary.failed + summary.bounced > 0) revalidatePublicContent("email");
+  if (summary.sent + summary.deferred + summary.failed + summary.bounced + withdrawn > 0) revalidatePublicContent("email");
 
   return summary;
 }
@@ -836,12 +839,13 @@ export async function processOutboxBatch(
  * claim counted given back — a pause is never one of the six. `error` is the reason, written only on
  * the row Mailgun actually refused: its batch-mates are held without it (null), so they never carry
  * the rate-pause mark that `/api/health` reads as «paused by the provider» and the claim reads as the
- * road's stop — they are waiting their turn, not refused.
+ * road's stop — they are waiting their turn, not refused. They carry `PAUSE_HELD_ERROR` instead, so
+ * that the public delay (§NNN) tells them from a family's held row, which has no reason at all.
  */
 async function releaseForPause(db: Db, row: OutboxRow, until: Date, error: string | null): Promise<void> {
   await db
     .update(emailOutbox)
-    .set({ status: "PENDING", lockedAt: null, attemptCount: Math.max(0, row.attemptCount - 1), nextAttemptAt: until, ...(error === null ? {} : { lastError: error }) })
+    .set({ status: "PENDING", lockedAt: null, attemptCount: Math.max(0, row.attemptCount - 1), nextAttemptAt: until, lastError: error ?? PAUSE_HELD_ERROR })
     .where(eq(emailOutbox.id, row.id));
 }
 
