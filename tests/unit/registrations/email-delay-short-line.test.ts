@@ -110,7 +110,7 @@ const LINE = {
   en: "The confirmation email is running late today; we estimate at most 85 minutes.",
 } as const;
 
-const OPEN: RegistrationDoor = { kind: "KNOWN", cta: { kind: "OPEN", availablePlaces: 12, waiting: 0 }, fill: null };
+const OPEN: RegistrationDoor = { kind: "KNOWN", cta: { kind: "OPEN", availablePlaces: 12, offered: 0, waitlisted: 0, fromWaitlist: false }, fill: null };
 const FULL: RegistrationDoor = { kind: "KNOWN", cta: { kind: "FULL", waitlistRoom: null, waiting: 3 }, fill: null };
 const CLOSED: RegistrationDoor = { kind: "KNOWN", cta: { kind: "CLOSED" } as never, fill: null };
 

@@ -62,6 +62,7 @@ vi.mock("@/modules/events/members-only", () => ({ membersEventBySlug: async () =
 vi.mock("@/modules/events/domain/dated", () => ({ datedOrNull: (event: unknown) => event }));
 vi.mock("@/modules/legal-documents/domain/keys", () => ({ offeredGroupRunDeclarationKey: () => "GROUP_RUN_DECLARATION_TRAIL" }));
 vi.mock("@/modules/public-cache/reads", () => ({
+  cachedEmailDelay: vi.fn(async () => null),
   cachedDeadlines: async () => ({ confirmationHours: 48, familySittingMinutes: 10 }),
   cachedEmailWaitMinutes: async () => 15,
   cachedEmailLeavesAt: async () => null,
