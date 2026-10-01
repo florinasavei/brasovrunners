@@ -457,6 +457,8 @@
         "languageNote": "The declaration is signed in this page's language, and the PDF and the email are in it too. For the other language, switch the language in the header before you sign.",
         "adultsOnly": "Sign it only for yourself, if you are at least {age} old on the day of the run; never on behalf of someone else, nor of a minor.",
         "accept": "I am at least {age} old, I have read the declaration above and sign it on my own responsibility",
+        "acceptInline": "Tick this box so you can sign.",
+        "acceptSummary": "Tick the box accepting the declaration so you can sign.",
         "typedNameHelp": "Type your full name. It appears as a signature.",
         "birthDateHelp": "For the run's minimum age: {age}, reached by the day of the run. We do not keep it and it is not in the declaration.",
         "tooYoung": "The minimum age for this run is {age}, reached by the day of the run. The declaration cannot be signed.",
@@ -6500,6 +6502,8 @@
         "You can withdraw at any time from the email you received."
       ],
       "pressFailed": "We could not record the signature. Tick that you have read the declaration and try again — your link is fine.",
+      "acceptSummary": "Tick the box “I have read and accept the declaration…” so you can sign.",
+      "acceptInline": "Tick this box so you can sign.",
       "idDocumentType": "Which document you will show",
       "idDocumentTypeHelp": "Choose the kind of document — it appears in the declaration with the series and number.",
       "typedNameHelpWithName": "You registered as <strong>{name}</strong> — type exactly this name. It appears as a signature.",
