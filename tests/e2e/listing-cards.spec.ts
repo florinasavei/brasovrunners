@@ -903,7 +903,7 @@ test.describe("BR-REQ-041-01 the listing's cards (§366)", () => {
       // A race's two named times (§597): «09:00 (start eveniment) ·» measures 178 pixels and
       // «[flag] 10:00 (start cursă)» 140, 322 with the row's gap, against a row of 228 at 320, 268 at
       // 360 and 298 at 390 — so the date, then each time whole on its own, take three lines. Since
-      // §NNN the list form is a container query on the row's own text column (below 32em with two
+      // §604 the list form is a container query on the row's own text column (below 32em with two
       // named times, 23em with one, in the column's own 14-pixel em: 448 and 322 pixels): at every phone width here, 412 included, that column is at
       // most 320 pixels, so a two-times race is the three-line list everywhere (at 412 it was two)
       // and a one-named-time race the two-line list below 412. Every piece stays whole
@@ -936,7 +936,7 @@ test.describe("BR-REQ-041-01 the listing's cards (§366)", () => {
                 overflow: Math.max(line.scrollWidth - line.clientWidth, right - box.right),
                 // `innerText` leaves out the rendering `display: none` hides: the date as shown.
                 shown: (line as HTMLElement).innerText,
-                // The list form itself (§NNN), not merely two lines — the old wrap measured two too:
+                // The list form itself (§604), not merely two lines — the old wrap measured two too:
                 // every «·» hidden; each time's leading glyph (the clock, the flag) hung back under the
                 // calendar — its left within 2 pixels of the calendar glyph's — and each time's words
                 // starting at the date's left edge, against the wrap's clock inside the text column.
@@ -991,7 +991,7 @@ test.describe("BR-REQ-041-01 the listing's cards (§366)", () => {
             expect.soft(row.overflow, `${name}: nothing past the card (${at})`).toBeLessThanOrEqual(TOLERANCE);
           }
 
-          // The race: both times whole, on three lines at every phone width (§597, §600 amended §NNN).
+          // The race: both times whole, on three lines at every phone width (§597, §600 amended §604).
           const raceCard = byTitle(race);
           await expect(raceCard, `race present (${at})`).toHaveCount(1);
           const raceRow = await measure(raceCard);
@@ -1024,7 +1024,7 @@ test.describe("BR-REQ-041-01 the listing's cards (§366)", () => {
             const twoTimes = /\d{2}:\d{2}[\s\S]*\d{2}:\d{2}/.test(row.shown);
             const withYear = /\b20\d{2}\b/.test(row.shown);
             // A race's one time, named «(start eveniment)» (#305, §597), is the two-line list below
-            // 412 (§NNN: the row's column is under 23em, 322 pixels, there), the date and the time a line each;
+            // 412 (§604: the row's column is under 23em, 322 pixels, there), the date and the time a line each;
             // at 412 the column is about 320 pixels, at the threshold, so it may be either form;
             // the list itself is asserted at 320, 360 and 390, the widths the owner's photo came from.
             const namedTime = /\(start eveniment\)|\(event start\)/.test(row.shown);

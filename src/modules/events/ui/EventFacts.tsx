@@ -126,7 +126,7 @@ const RACE_ROW_GAP = 0.5;
  * label, so there the glyphs lead their own lines instead of hanging. CSS alone: the markup is the
  * same at every width, a media query decides.
  *
- * Amended §NNN (the owner, 2026-10-01, of the production race's card with ONE named time:
+ * Amended §604 (the owner, 2026-10-01, of the production race's card with ONE named time:
  * «Iconițele astea tot nu sunt aliniate» — «Sâm., 21 nov. ·» / «[clock] 10:00 (start eveniment)»,
  * the clock inside the text column, a dot dangling): the list is for every race's «când» — one
  * named time or two — and it is decided by the row's OWN width, not the viewport's. A CSS container
@@ -143,7 +143,7 @@ const RACE_ROW_GAP = 0.5;
  * without container queries shows the inline row, as before. A bare time (a group run, a series)
  * has no name and no list.
  *
- * The thresholds follow the DATE's form too (a review, §NNN): 23em / 32em were measured on the
+ * The thresholds follow the DATE's form too (a review, §604): 23em / 32em were measured on the
  * card's SHORT date («Sâm., 21 nov.», `dateShort`, below `sm` only). The LONG date («Sâmbătă,
  * 21 nov. 2026 · », about 75 pixels wider at sixteen) — the card from `sm` up, the page's «Când»
  * and the hero — needs 187 + 24 + 166 ≈ 377 pixels (23.6em) for one named time and
@@ -157,7 +157,7 @@ const WHEN_BELOW_SM = "@media (max-width:599.95px)";
 const WHEN_FROM_SM = "@media (min-width:600px)";
 /** The date's form the row carries: the card's phone date («Sâm., 21 nov.») or the long one («Sâmbătă, 21 nov. 2026»). */
 type WhenDate = "short" | "long";
-/** The container query under which a race's «când» is a list (§600, amended §NNN), by its count of named times and its date's form. */
+/** The container query under which a race's «când» is a list (§600, amended §604), by its count of named times and its date's form. */
 function whenListQuery(namedTimes: number, date: WhenDate): string | null {
   if (namedTimes >= 2) return `@container when (max-width: ${date === "short" ? 32 : 36}em)`;
   if (namedTimes === 1) return `@container when (max-width: ${date === "short" ? 23 : 27}em)`;
@@ -491,7 +491,7 @@ export default async function EventFacts({
   // A race with no race start says «10:00 (start eveniment)» (#305): longer than the one-line row of §375 allows on a
   // phone, so that row may wrap between its whole pieces rather than let the card's overflow clip the time.
   const raceStartLater = startsAt !== null && whenTimes({ type: event.type, startsAt, raceStartsAt: event.raceStartsAt }).raceStartLater;
-  // A race's named times — one or both (§597, #305) — make the row the list form is for (§600, amended §NNN).
+  // A race's named times — one or both (§597, #305) — make the row the list form is for (§600, amended §604).
   const namedTimes = startsAt === null ? 0 : whenTimes({ type: event.type, startsAt, raceStartsAt: event.raceStartsAt }).times.filter(({ key }) => key !== null).length;
   // The page and the hero always show the long date; the card shows the short one below `sm` when it has one (`dateShort`).
   const listQuery = whenListQuery(namedTimes, "long");
@@ -800,7 +800,7 @@ export default async function EventFacts({
 
     // One line of the card: its glyph, then its words beside it — the glyph on the first line.
     // The registration line draws the same shape in `CardRegistration` (§409).
-    // The «când» row's text column is its list's container (`WHEN_CONTAINER`, §NNN): it fills the
+    // The «când» row's text column is its list's container (`WHEN_CONTAINER`, §604): it fills the
     // line beside the glyph (`flex: 1 1 auto` — a size-contained box has no content width of its own).
     const cardLine = (key: string, Icon: Glyph, value: ReactNode, container = false) => (
       <Typography

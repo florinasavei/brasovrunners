@@ -100,7 +100,7 @@ function rows(html: string) {
 /**
  * Every rule Emotion emitted for a tag's `css-` class inside the «când» container query of the
  * given threshold (`@container when (max-width: 23em)` / `32em` on the card's short date, `27em` /
- * `36em` on the long one, §600 amended §NNN) — each block
+ * `36em` on the long one, §600 amended §604) — each block
  * read whole, braces balanced, since the page's hang nests a breakpoint inside it.
  */
 function containerRulesOf(html: string, tag: string, threshold: string) {
@@ -317,7 +317,7 @@ describe("BR-REQ-041-01 «când» is one line with its weekday (§356, §349)", 
     expect(when).toContain('aria-label="race start"');
   });
 
-  it("where the answer is narrower than the row, the page's two times are a list too: a line each, the glyphs hung in the phone's indent under the calendar (§600 amended §NNN)", async () => {
+  it("where the answer is narrower than the row, the page's two times are a list too: a line each, the glyphs hung in the phone's indent under the calendar (§600 amended §604)", async () => {
     const html = await page({ startsAt: new Date("2026-09-26T06:00:00Z"), raceStartsAt: new Date("2026-09-26T07:00:00Z") });
     const dd = /<dd\b[^>]*>[\s\S]*?<\/dd>/.exec(html.slice(html.indexOf("<dt")))?.[0] ?? "";
     const times = [...dd.matchAll(/<span\b[^>]*data-when-line="time"[^>]*>/g)].map(([tag]) => tag);
@@ -727,7 +727,7 @@ describe("BR-REQ-041-01 the listing card's facts: glyph-led lines and the page's
     return ruleOf(html, tag);
   }
 
-  it("lists a race's two named times where its column is under 32em — a line each, no dots, the clock and the flag hung in the glyph column under the calendar (§600 amended §NNN)", async () => {
+  it("lists a race's two named times where its column is under 32em — a line each, no dots, the clock and the flag hung in the glyph column under the calendar (§600 amended §604)", async () => {
     const html = await card({ startsAt: new Date("2026-09-26T06:00:00Z"), raceStartsAt: new Date("2026-09-26T07:00:00Z") });
     const when = line(html, "when").inner;
     // The text column is the container, and fills the line beside the glyph.
@@ -759,7 +759,7 @@ describe("BR-REQ-041-01 the listing card's facts: glyph-led lines and the page's
     for (const tag of separators) expect(containerRulesOf(html, tag, "32em")).toContain("display:none");
   });
 
-  it("lists a race's ONE named time where its column is under 23em: the date, then the clock hung under the calendar and «10:00 (start eveniment)» at the date's edge (§NNN)", async () => {
+  it("lists a race's ONE named time where its column is under 23em: the date, then the clock hung under the calendar and «10:00 (start eveniment)» at the date's edge (§604)", async () => {
     // The owner, 2026-10-01, of the production race (no race start): «Iconițele astea tot nu sunt aliniate».
     const html = await card({ startsAt: new Date("2026-09-26T07:00:00Z"), raceStartsAt: null });
     const when = line(html, "when").inner;
@@ -788,7 +788,7 @@ describe("BR-REQ-041-01 the listing card's facts: glyph-led lines and the page's
     expect(run).not.toContain("container-name:when");
   });
 
-  it("the hero shows the long date, so it takes the long thresholds alone: 27em with one named time, 36em with two (§NNN)", async () => {
+  it("the hero shows the long date, so it takes the long thresholds alone: 27em with one named time, 36em with two (§604)", async () => {
     const one = renderToStaticMarkup(await EventFacts({ event: event({ startsAt: new Date("2026-09-26T07:00:00Z"), raceStartsAt: null }), now: NOW }));
     expect(one).toContain("@container when (max-width: 27em){");
     for (const threshold of ["23em", "32em", "36em"]) expect(one).not.toContain(`max-width: ${threshold}`);
@@ -801,7 +801,7 @@ describe("BR-REQ-041-01 the listing card's facts: glyph-led lines and the page's
     for (const threshold of ["23em", "32em", "36em"]) expect(pageOne).not.toContain(`max-width: ${threshold}`);
   });
 
-  it("keeps the inline row where it fits, and every other card's row as it was (§600 amended §NNN)", async () => {
+  it("keeps the inline row where it fits, and every other card's row as it was (§600 amended §604)", async () => {
     const html = await card({ startsAt: new Date("2026-09-26T06:00:00Z"), raceStartsAt: new Date("2026-09-26T07:00:00Z") });
     const when = line(html, "when").inner;
     // Outside the container query nothing changes: the pieces flow, the dots show, the glyphs keep their seat.
