@@ -301,6 +301,7 @@ export async function cachedPublicAvailability(eventId: string, now: Date): Prom
       waiting: places.waiting,
       offered: places.offered,
       waitlisted: places.waitlisted,
+      confirmed: places.confirmed,
     };
   });
 }
@@ -323,6 +324,8 @@ export type PublicAvailability = {
    */
   offered?: number;
   waitlisted?: number;
+  /** The confirmed among the occupied places (§NNN); absent in an entry cached before it was counted. */
+  confirmed?: number;
 };
 
 /** The two counts the public start list pages by (§250): named, and left off at their request. */

@@ -284,6 +284,12 @@
         "few": "{count} înscriși",
         "other": "{count} de înscriși"
       },
+      "fillProgress": "{taken} din {places} — {confirmed}, {progress} în curs de confirmare",
+      "fillConfirmed": {
+        "one": "{count} confirmat",
+        "few": "{count} confirmați",
+        "other": "{count} de confirmați"
+      },
       "fillPlaces": {
         "one": "{count} loc",
         "few": "{count} locuri",

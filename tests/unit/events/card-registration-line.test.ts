@@ -2,6 +2,7 @@ import { createTranslator } from "next-intl";
 import { describe, expect, it } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
+import type { PublicFill } from "@/modules/events/domain/registration-cta";
 import type { PublicEvent } from "@/modules/events/repository";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -40,7 +41,7 @@ function race(overrides: Partial<PublicEvent> = {}): PublicEvent {
   } as PublicEvent;
 }
 
-const known = (cta: Extract<RegistrationDoor, { kind: "KNOWN" }>["cta"], fill: { taken: number; capacity: number } | null = null): RegistrationDoor => ({
+const known = (cta: Extract<RegistrationDoor, { kind: "KNOWN" }>["cta"], fill: PublicFill | null = null): RegistrationDoor => ({
   kind: "KNOWN",
   cta,
   fill,
@@ -149,6 +150,9 @@ describe("§409 cardRegistrationLine — the card's registration, in words", () 
     expect(one.detail).toBe("Locurile se dau din lista de așteptare · 20 pe lista de așteptare");
     const en = cardRegistrationLine(translator("en"), "en", race(), NOW, known({ kind: "OPEN", availablePlaces: 1, offered: 2, waitlisted: 3, fromWaitlist: true }, { taken: 9, capacity: 10 }));
     expect(en.detail).toBe("Places are given from the waiting list · 2 places offered from the waiting list · 3 on the waiting list");
+    // §NNN: the page's «— 86 confirmați, 19 în curs» clause is not the card's: it counts free places, so a fill that carries `confirmed` changes nothing here.
+    const progress = cardRegistrationLine(translator("ro"), "ro", race(), NOW, known({ kind: "OPEN", availablePlaces: 45, offered: 0, waitlisted: 0, fromWaitlist: false }, { taken: 105, capacity: 150, confirmed: 86 }));
+    expect(progress.detail).toBe("45 de locuri libere din 150");
     // An uncapped event with somebody still waiting: the same words, no count to replace.
     const uncapped = cardRegistrationLine(translator("ro"), "ro", race(), NOW, known({ kind: "OPEN", availablePlaces: null, offered: 0, waitlisted: 1, fromWaitlist: true }));
     expect(uncapped.detail).toBe("Locurile se dau din lista de așteptare · 1 pe lista de așteptare");

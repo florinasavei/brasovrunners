@@ -1025,6 +1025,12 @@ export type PublicPlaces = {
    */
   offered: number;
   waitlisted: number;
+  /**
+   * The confirmed registrations alone (`OccupiedCounts.confirmed`, §NNN), from the same count: the
+   * rest of the occupied places — a pending declaration, an open offer, a family's hold — are in
+   * progress. `kind` is in no condition. 0 for an uncapped event.
+   */
+  confirmed: number;
 };
 
 /**
@@ -1044,7 +1050,7 @@ export async function readPublicPlaces<T extends Record<string, unknown>>(
   event: { id: string; capacity: number | null; waitlistCapacity: number | null },
   now: Date,
 ): Promise<PublicPlaces> {
-  if (event.capacity === null) return { availablePlaces: null, waitlistRoom: null, waiting: 0, offered: 0, waitlisted: 0 };
+  if (event.capacity === null) return { availablePlaces: null, waitlistRoom: null, waiting: 0, offered: 0, waitlisted: 0, confirmed: 0 };
 
   const counts = await repo.countOccupied(db, event.id, now);
   const eligibleWaitlisted = await repo.countEligibleWaitlisted(db, event.id);
@@ -1060,6 +1066,7 @@ export async function readPublicPlaces<T extends Record<string, unknown>>(
     // The line's two halves, from the same two counts — no query of their own (§NNN).
     offered: line.openOffers,
     waitlisted: line.waitlisted,
+    confirmed: counts.confirmed,
   };
 }
 

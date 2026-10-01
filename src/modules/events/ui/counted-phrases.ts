@@ -18,10 +18,17 @@ type Say = (key: string, values?: Record<string, string | number>) => string;
  * from the same two numbers: the catalogue decides where the words go, this only picks the forms.
  */
 export function fillPhrase(say: Say, locale: string, fill: PublicFill): string {
-  return say("cta.fill", {
-    taken: say(`cta.fillTaken.${countForm(fill.taken, locale)}`, { count: fill.taken }),
-    places: say(`cta.fillPlaces.${countForm(fill.capacity, locale)}`, { count: fill.capacity }),
-  });
+  const taken = say(`cta.fillTaken.${countForm(fill.taken, locale)}`, { count: fill.taken });
+  const places = say(`cta.fillPlaces.${countForm(fill.capacity, locale)}`, { count: fill.capacity });
+  /*
+    Places held and not yet confirmed (§NNN; the owner read «105 înscriși» beside 86 confirmed names as
+    an inconsistency): when more are taken than confirmed, the line says the two parts —
+    «105 înscriși din 150 de locuri — 86 confirmați, 19 în curs de confirmare».
+  */
+  const progress = fill.confirmed === undefined ? 0 : fill.taken - fill.confirmed;
+  if (fill.confirmed === undefined || progress <= 0) return say("cta.fill", { taken, places });
+  const confirmed = say(`cta.fillConfirmed.${countForm(fill.confirmed, locale)}`, { count: fill.confirmed });
+  return say("cta.fillProgress", { taken, places, confirmed, progress });
 }
 
 /**

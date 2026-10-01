@@ -152,7 +152,16 @@ export function registrationCta(event: RegistrationCtaInput, now: Date): Registr
 }
 
 /** How full a capped event is, in the two numbers a visitor reads beside the button (§346). */
-export type PublicFill = { taken: number; capacity: number };
+export type PublicFill = {
+  taken: number;
+  capacity: number;
+  /**
+   * The confirmed registrations among `taken` (§NNN), when the line should say how many are still in
+   * progress: a pending declaration, an open offer and a family's hold occupy a place and are not
+   * confirmed. Absent when the count is unknown (a cache entry from before it) or somebody waits.
+   */
+  confirmed?: number;
+};
 
 /**
  * "12 înscriși din 50 de locuri" — the free places read the other way round (§346; the owner:
@@ -189,8 +198,8 @@ export type PublicFill = { taken: number; capacity: number };
  * against a mixed REAL/TEST event on a real database, the same way it proves every other §30
  * property.
  */
-export function publicFill(capacity: number | null, availablePlaces: number | null): PublicFill | null {
+export function publicFill(capacity: number | null, availablePlaces: number | null, confirmed?: number): PublicFill | null {
   if (capacity === null || availablePlaces === null) return null;
   const taken = Math.min(Math.max(capacity - availablePlaces, 0), capacity);
-  return { taken, capacity };
+  return confirmed === undefined ? { taken, capacity } : { taken, capacity, confirmed: Math.min(confirmed, taken) };
 }
