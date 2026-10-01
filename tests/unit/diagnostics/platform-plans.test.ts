@@ -266,11 +266,11 @@ describe("BR-REQ-090-05 nothing renders as an untranslated key, in either langua
       // sentences are read under `services.neon.launch.*`, and "how close" is the estimate.
       platformServices({ ...BASE, neonPlan: "LAUNCH", databaseBytes: 1024 ** 2, neonCuHoursThisMonth: 2, neonHoursElapsed: 24 }),
       platformServices({ ...BASE, neonPlan: "LAUNCH" }),
-      // Mailgun Basic and Vercel Pro paid (§NNN): the Vercel row reads `services.vercel.pro.*`.
+      // Mailgun Basic and Vercel Pro paid (§610): the Vercel row reads `services.vercel.pro.*`.
       platformServices({ ...BASE, emailPlanName: "Basic", emailPlanUsdPerMonth: 15, emailAllowance: 10_000, vercelPlan: "PRO", vercelSeats: 2 }),
       platformServices({ ...BASE, vercelPlan: "PRO", hasPaidEvent: true }),
     ];
-    /** The «Cost azi» key the page prints for a row (§NNN): both figures, the billed one first. */
+    /** The «Cost azi» key the page prints for a row (§610): both figures, the billed one first. */
     const costKey = (cost: PlanCost): string => {
       if (cost.kind === "usage") return cost.estimatedPerMonth === null ? "usageUnknown" : "usageBoth";
       if (cost.kind === "paid") return `${cost.billed === "monthly" ? "billedMonthly" : "billedYearly"}${cost.plusVat ? "PlusVat" : ""}`;
@@ -315,7 +315,7 @@ describe("BR-REQ-090-05 nothing renders as an untranslated key, in either langua
             expect(messageAt(messages, `bump.${row.bump}`), `${locale} ${row.bump}`).toBeTruthy();
           }
           expect(messageAt(messages, `costToday.${costKey(row.costToday)}`), `${locale} ${row.id} costToday ${costKey(row.costToday)}`).toBeTruthy();
-          // The breakdown's short name for the row (§NNN).
+          // The breakdown's short name for the row (§610).
           expect(messageAt(messages, `costTable.name.${row.id}`), `${locale} costTable.name.${row.id}`).toBeTruthy();
           expect(messageAt(messages, `severity.${row.severity}`), `${locale} ${row.severity}`)
             .toBeTruthy();
@@ -329,7 +329,7 @@ describe("BR-REQ-090-05 nothing renders as an untranslated key, in either langua
     for (const facts of [BASE, { ...BASE, clubDomainBound: true }, { ...BASE, emailPlanName: "Basic", emailPlanUsdPerMonth: 15 }, allPaid]) {
       const next = nextSpend(platformServices(facts));
       for (const [locale, messages] of LOCALES) {
-        // Null is said in its own sentence (§NNN), never an empty line.
+        // Null is said in its own sentence (§610), never an empty line.
         const key = next ? `nextSpend.${next.id}` : "nextSpend.none";
         expect(messageAt(messages, key), `${locale} ${key}`).toBeTruthy();
         if (next) expect(messageAt(messages, `${key}More`), `${locale} ${key}More`).toBeTruthy();
@@ -337,7 +337,7 @@ describe("BR-REQ-090-05 nothing renders as an untranslated key, in either langua
     }
   });
 
-  it("§NNN translates the verdict that names what is paid, and every name it can use", () => {
+  it("§610 translates the verdict that names what is paid, and every name it can use", () => {
     for (const [locale, messages] of LOCALES) {
       expect(messageAt(messages, "freeVerdict.paysForPlans"), `${locale} paysForPlans`).toMatch(/\{services\}/);
       for (const id of ["domain", "mailgun", "vercel", "neon"]) {
@@ -496,12 +496,12 @@ describe("the Neon row follows the plan setting", () => {
 });
 
 /**
- * BR-REQ-090-05, §NNN — «Cât costă» per month and per year (the owner, 2026-10-01: «la costuri
+ * BR-REQ-090-05, §610 — «Cât costă» per month and per year (the owner, 2026-10-01: «la costuri
  * vreau să văd defalcat pe lună și per serviciu!» and, of the yearly figure, «aici nu e clar ca e
  * per an»). A paid plan keeps the figure its invoice carries and says which period that is; the
  * other figure is derived, never stored, and the totals are the derived figures summed.
  */
-describe("§NNN each cost per month and per year", () => {
+describe("§610 each cost per month and per year", () => {
   const paid = (amount: number, billed: "monthly" | "yearly", plusVat = true): PlanCost => ({ kind: "paid", amount, billed, currency: "USD", plusVat });
 
   it("does the arithmetic both ways, to the cent", () => {
@@ -568,8 +568,8 @@ describe("§NNN each cost per month and per year", () => {
   });
 });
 
-/** BR-REQ-090-05, §NNN — the Vercel row follows the plan the club states on «Costuri». */
-describe("§NNN the Vercel row follows the plan setting", () => {
+/** BR-REQ-090-05, §610 — the Vercel row follows the plan the club states on «Costuri». */
+describe("§610 the Vercel row follows the plan setting", () => {
   const vercel = (facts: PlatformFacts): ServiceRow | undefined => platformServices(facts).find((row) => row.id === "vercel");
 
   it("on Hobby — the default — reads exactly as before the setting existed", () => {

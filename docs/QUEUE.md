@@ -119,6 +119,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Baseline | What |
 | --- | --- |
+| `BR-V2.55` | a merge's placeholder line is numbered by hand (§607) · the version stamp shows only in the open fold, on the desktop too (§608) · a prettier shared card, drawn from a design object (§609) · the money page per month and per service, and Vercel's plan as a setting (§610) · the past events' own «Filtre» (§611) · an offered place named on the card; the queue wakes at a family's lapse (§612) · the race number on the public list, behind the notice (§613) · the third step says where the declaration is (§614) · automatic waiting-list offers as a setting, and offers by choice (§615) · the unticked declaration box is named (§616) · the running cost written down: three paid plans and the consoles' readings (§617) |
 | `BR-V2.54` | the declaration resent to everyone who has not signed, in one press (§606) |
 | `BR-V2.53` | the outbox paces Mailgun to 100 an hour; a rate refusal is a pause (§605) |
 | `BR-V2.52` | the race’s card, hero and page draw the date and each named time on a line of their own, the clock and the flag under the calendar, wherever the row’s own box is too narrow for one line (a container query in em, by the date’s form), one named time too; the pills’ tooltips say «circa 10 km» and «circa 350 m diferență de nivel» without «(aproximativ)»/«(estimativ)» (§604) |

@@ -23,7 +23,7 @@ export type CardRegistrationLine = {
   /** `detail` cut around "7 locuri libere", the one part in bold (§472); null with `detail`. */
   detailParts: FactParts | null;
   /**
-   * The detail carries the waiting list's phrases too (§587, §NNN) — «… · 1 loc oferit din lista de
+   * The detail carries the waiting list's phrases too (§587, §615) — «… · 1 loc oferit din lista de
    * așteptare · 2 pe lista de așteptare» — and so wraps like a sentence on a phone; a bare count
    * («7 locuri libere din 10») stays whole on one line. Absent is a bare count.
    */
@@ -122,7 +122,7 @@ export function cardRegistrationLine(
     case "OPEN": {
       if (cta.fromWaitlist) {
         /*
-          Somebody waits in the line (§NNN): a newcomer joins it whatever is free, so the card does not
+          Somebody waits in the line (§615): a newcomer joins it whatever is free, so the card does not
           count places free — «Locurile se dau din lista de așteptare», the one bold part (§472), then
           the line as below, «· 1 loc oferit din lista de așteptare · 2 pe lista de așteptare». The
           button is the line's (`doorButtonLabel`).
@@ -139,8 +139,8 @@ export function cardRegistrationLine(
           : null;
       /*
         With nobody waiting, an open offer is said after the places and not bold (§587, amending §346):
-        named as offered (§NNN) — «2 locuri libere din 10 · 1 loc oferit din lista de așteptare». Before
-        §NNN an offer read as one more person «pe lista de așteptare» beside free places, which looked
+        named as offered (§615) — «2 locuri libere din 10 · 1 loc oferit din lista de așteptare». Before
+        §615 an offer read as one more person «pe lista de așteptare» beside free places, which looked
         like a place nobody was given. Somebody waiting takes the branch above.
       */
       const line = openLinePhrases(say, locale, cta);
@@ -231,7 +231,7 @@ export default function CardRegistration({
                 ·
               </Box>{" "}
               {/* The count stays whole on a phone: it wraps as one piece, never "7 locuri / libere".
-                  With the waiting list's phrases after it (§NNN) it is a sentence, and wraps like one. */}
+                  With the waiting list's phrases after it (§615) it is a sentence, and wraps like one. */}
               <Box component="span" data-testid="card-places" sx={{ whiteSpace: line.detailWraps ? "normal" : "nowrap" }}>
                 <Words text={line.detail} parts={line.detailParts} bold={line.bold} />
               </Box>

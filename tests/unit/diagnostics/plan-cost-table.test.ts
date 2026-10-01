@@ -7,7 +7,7 @@ import PlanCostTable, { type PlanCostTableLabels } from "@/modules/diagnostics/u
 import { MESSAGES_PER_COMPLETED_REGISTRATION } from "@/modules/notifications/volume";
 
 /**
- * BR-REQ-090-05, §NNN — «Cât costă»'s breakdown, rendered to HTML on the server the way the page
+ * BR-REQ-090-05, §610 — «Cât costă»'s breakdown, rendered to HTML on the server the way the page
  * sends it, over the real catalogues: one line per service with its month and its year, a free
  * service saying «gratuit» in both cells, an estimate marked «≈», VAT named per amount, a usage
  * plan nothing measures saying so, and the total line — a grid, never a table that scrolls.
@@ -61,7 +61,7 @@ function cell(html: string, testId: string): string {
   return match[1].replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
 }
 
-describe("§NNN «Cât costă» per service, per month and per year", () => {
+describe("§610 «Cât costă» per service, per month and per year", () => {
   it("draws one line per service, in the cost table's order, under the three column headers", () => {
     const { rows, html } = render("ro");
     expect(html).toContain('role="table"');

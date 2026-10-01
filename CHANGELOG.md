@@ -8,6 +8,19 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.55-2026-10-01
+
+- **A landing never guesses a merge's decision number** — a `§` placeholder in a line a merge commit resolved is listed for a person (and refuses the phone's landing, naming the line), instead of taking the release's one entry; §607.
+- **The version stamp hides until the footer opens** — the desktop corner no longer shows «app-ver» on every page; open «Despre club, contact și termeni» to read it, at every width. §608.
+- **A prettier card to share** — the picture «Instagram» downloads and the one links show carry the club's logo, large enough to read on a phone, a deeper blue with the kit orange, the time as the headline, the route as chips and a white band with the site's address; a long title, place or tagline makes the title smaller rather than push anything off the card, and its design is one object with the platform's defaults, ready to be made the club's choice later. §609.
+- **«Cât costă», pe lună și pe an, serviciu cu serviciu** — the money page lists every service with its monthly and yearly cost and the totals, says which one the vendor bills and where VAT comes on top, and knows Vercel's plan from a new setting on «Costuri». §610.
+- **«Din trecut» has its own «Filtre»** — the past events get the same filter button as the current ones, with their own choices in the same address; filtering one list no longer changes the other. §611.
+- **A place offered is named as offered** — the card says «1 loc oferit din lista de așteptare» instead of counting that person as still waiting, and the registration queue wakes when a family's reservation lapses, so a free place reaches the next person without waiting for the next sign-up. §612.
+- **The race number on the public list** — «Cine vine» shows each confirmed runner's race number in its own «Nr.» column, once the club approves the privacy notice from the new template, which now describes it. §613.
+- **After confirming your address, the page says the declaration comes by email** — the third step no longer says «aici» where there is nothing to press; it says «from the email we have just sent you» (or, when the platform sends on its scheduled round, «from the email on its way to you»), «below» where the form is on the page, or «from the email you received». §614.
+- **You choose who gets a freed place** — each event says whether freed or added places are offered automatically to the waiting list; with that off, the organizer sends the offer to the person of their choice («Trimite-i oferta»), newcomers keep queueing while anyone waits, and the card says places are given from the waiting list instead of counting them free; the event page's places line now says how many of those registered are confirmed and how many are still completing their registration, in every state, including a full race. §615.
+- **The declaration box tells you when it is unticked** — pressing «Semnează» without accepting the declaration now names the box, under it and in the page's error summary, instead of doing nothing visible. §616.
+- **The running cost, written down** — `docs/PLATFORM.md` § Cost lists the three paid plans (Neon Launch, one Vercel Pro seat for the race, Mailgun) with the day each was taken and when it is to be dropped, and both consoles' readings of 2026-10-01. §617.
 ## BR-V2.54-2026-10-01
 
 - **One press resends the declaration to everyone who has not signed** — on the event's registrations, the Administrator sends a fresh signing link to every pending registration at once, skipping those whose email left in the last hour or is still queued; each earlier link stops working. §606.

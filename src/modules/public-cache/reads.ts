@@ -278,7 +278,7 @@ function groupById<T extends { locale: Locale; slug: string }>(
  *   clock, frees a slot in the line exactly when it frees a place;
  * - `waitlistCapacity`: the limit itself, `null` for none and 0 for no waiting list at all;
  * - `waiting`, `offered`, `waitlisted`: the line's length and its two halves — the open offers and
- *   the people with no offer yet (§587, §NNN) — from the same two counts.
+ *   the people with no offer yet (§587, §612) — from the same two counts.
  *
  * `null` for an uncapped event, which shows no number and never waitlists anybody, and for one
  * that no longer exists.
@@ -320,15 +320,15 @@ export type PublicAvailability = {
   /** How many are in the waiting list's line (§587); absent in an entry cached before it was counted. */
   waiting?: number;
   /**
-   * The line's two halves (§NNN): the offers still open, and the people waiting with no offer yet —
+   * The line's two halves (§612): the offers still open, and the people waiting with no offer yet —
    * `readPublicPlaces`'s own two counts. Absent in an entry cached before this release, which reads
    * them as nought until it next expires.
    */
   offered?: number;
   waitlisted?: number;
-  /** The confirmed among the occupied places (§NNN); absent in an entry cached before it was counted. */
+  /** The confirmed among the occupied places (§615); absent in an entry cached before it was counted. */
   confirmed?: number;
-  /** The occupied places, `readPublicPlaces`'s (§NNN); absent in an entry cached before it was counted: the plain line. */
+  /** The occupied places, `readPublicPlaces`'s (§615); absent in an entry cached before it was counted: the plain line. */
   occupied?: number;
 };
 
@@ -343,8 +343,8 @@ export async function cachedStartListCounts(eventId: string): Promise<{ named: n
 
 /**
  * One page of `listPublicStartList` — names and clubs, and, only with `socials` (the notice in force
- * describes them, §500), each ticked runner's Strava and Instagram, and only with `numbers` (§NNN)
- * each confirmed runner's race number (every one, whichever notice they registered under: §NNN). Both flags are in the key, so a page read without a gate is never
+ * describes them, §500), each ticked runner's Strava and Instagram, and only with `numbers` (§613)
+ * each confirmed runner's race number (every one, whichever notice they registered under: §613). Both flags are in the key, so a page read without a gate is never
  * served to a reader with it, or the other way round. A number is written by a confirmation, which
  * is a change of state and expires "places" (`transitionRegistration`), and by the hand-typed
  * change and «Alocă numerele» (`setBibNumberByStaff`, `assignBibNumbers`), which expire it too.
@@ -412,7 +412,7 @@ export async function cachedListSocialsDisclosed(now: Date): Promise<boolean> {
 }
 
 /**
- * Whether the public list may show the race number beside a confirmed name (§NNN): the privacy
+ * Whether the public list may show the race number beside a confirmed name (§613): the privacy
  * notice in force describes it (`describesListNumbers`), in every language — the same reading as
  * the states and the socials above. `noticeDescribesListNumbers` is the backoffice's uncached twin.
  */

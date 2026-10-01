@@ -92,7 +92,7 @@ describe("owner tasks", () => {
     }
   });
 
-  /** §NNN — the race number beside a confirmed name waits on the club's notice, like the states; open, never blocking. */
+  /** §613 — the race number beside a confirmed name waits on the club's notice, like the states; open, never blocking. */
   it("keeps the list-numbers row open while the notice in force does not describe the number, and never blocking", () => {
     expect(stateOf({ ...LAUNCHED, listNumbersDescribed: false }, "listNumbersNotice")).toBe("open");
     expect(stateOf(LAUNCHED, "listNumbersNotice")).toBe("done");
@@ -104,7 +104,7 @@ describe("owner tasks", () => {
       const item = catalogue.Admin.tasks.items.listNumbersNotice;
       expect(item.title && item.todo && item.done && item.how.length > 0).toBeTruthy();
       expect(item.how.join("\n")).toContain("/admin/legal");
-      // §NNN: the club writes to the runners registered under the earlier notice BEFORE it approves the new one,
+      // §613: the club writes to the runners registered under the earlier notice BEFORE it approves the new one,
       // with the backoffice's own message, and names the participant's own control for withdrawing.
       const approveStep = item.how.findIndex((step) => /Aprobă și publică|Approve and publish/.test(step));
       const messageStep = item.how.findIndex((step) => step.includes(catalogue.Admin.participantMessages.link));

@@ -265,7 +265,7 @@ export default async function RegistrationBox({
                   </Stack>
 
                   {/*
-                    Who hands out a freed or added place (§NNN): the line, at once («Da», the default
+                    Who hands out a freed or added place (§615): the line, at once («Da», the default
                     and every event before it), or the organizer, from «Coada de înscrieri» with
                     «Trimite-i oferta» and at the desk with «Dă-i un loc» («Nu»). Under the capacity,
                     because it says what a raise of the capacity does. A native select of the two

@@ -175,7 +175,7 @@ export type OwnerTaskInputs = {
   listSocialsDescribed: boolean;
   /**
    * Does the notice in force, in every language, describe the race number beside a confirmed name
-   * on the public list (§NNN, `noticeDescribesListNumbers`)? Until it does, the list shows no number.
+   * on the public list (§613, `noticeDescribesListNumbers`)? Until it does, the list shows no number.
    */
   listNumbersDescribed: boolean;
   /**
@@ -361,7 +361,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
       state: input.listSocialsDescribed ? "done" : "open",
     });
     /*
-      The race number beside a confirmed name (§NNN), the same shape: open, never blocking — nothing
+      The race number beside a confirmed name (§613), the same shape: open, never blocking — nothing
       is refused, the list simply shows no «Nr.» column — and done by itself the day a notice naming
       `{{participantListNumbers}}` takes effect.
     */

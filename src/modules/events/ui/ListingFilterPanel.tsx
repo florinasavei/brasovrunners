@@ -66,7 +66,7 @@ import { GLYPHS, type GlyphName } from "./glyphs";
  * and the chips go to instead of `pathname`'s: the calendar's period, which lives in the path
  * (`/ro/calendar/2026-10`, §574), not in the query.
  *
- * **Two on the listing, one address** (§NNN, amending §602 — the owner: «Am zis că vreau un filtru și
+ * **Two on the listing, one address** (§611, amending §602 — the owner: «Am zis că vreau un filtru și
  * la evenimentele trecute, la fel ca la cele curente»). `scope` says whose state this panel is: the
  * cards ahead (`upcoming`, the names §413 gave them, the calendar's only panel) or the past section
  * (`past`, the same boxes named `past-type`, `past-partner`, …), which renders it inside its fold.
@@ -175,7 +175,7 @@ export default async function ListingFilterPanel({
   };
 
   // Nothing to narrow in the past window and nothing ticked: the fold says so in a sentence instead
-  // of drawing a form of no boxes (§NNN). The button keeps its words and still opens the fold.
+  // of drawing a form of no boxes (§611). The button keeps its words and still opens the fold.
   const nothingToNarrow = past && count === 0 && !offersAnything(offer);
 
   return (

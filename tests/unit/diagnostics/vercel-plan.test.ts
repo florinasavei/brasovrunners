@@ -13,11 +13,11 @@ import {
 } from "@/modules/diagnostics/domain/vercel-plan";
 
 /**
- * BR-REQ-090-05, §NNN — the Vercel plan is a setting: Hobby when nobody said otherwise, Pro with
+ * BR-REQ-090-05, §610 — the Vercel plan is a setting: Hobby when nobody said otherwise, Pro with
  * its developer seats when an Administrator says so, and the one price the pages print comes from
  * the catalogue, dated, the way `docs/PLATFORM.md` quotes it.
  */
-describe("§NNN the Vercel plan setting", () => {
+describe("§610 the Vercel plan setting", () => {
   it("is Hobby with one seat when absent, when unreadable, and when it says something this code does not know", () => {
     expect(DEFAULT_VERCEL_PLAN).toEqual({ plan: "HOBBY", seats: 1, note: "" });
     for (const garbage of [undefined, null, "PRO", 42, [], { plan: "ENTERPRISE" }, { plan: "PRO", seats: 0 }, { plan: "PRO", extra: true }]) {
@@ -51,7 +51,7 @@ describe("§NNN the Vercel plan setting", () => {
   });
 });
 
-describe("§NNN the one Vercel price", () => {
+describe("§610 the one Vercel price", () => {
   it("is $20 a developer seat a month on Pro, with $20 of usage included, checked with the other vendors", () => {
     // `docs/PLATFORM.md` § Subscriptions: «Pro $20/month per developer seat … $20 usage credit included».
     expect(VERCEL_PLANS_CHECKED_ON).toBe("2026-09-05");

@@ -369,7 +369,7 @@ describe("AGENTS.md §16.2 registration maintenance", () => {
 });
 
 /**
- * §NNN (amending §104 and §587) — a free place while somebody waits is swept. Every other clause of
+ * §612 (amending §104 and §587) — a free place while somebody waits is swept. Every other clause of
  * the job's scan names a row whose deadline has passed; a place given back while the event was
  * cancelled (`fillAvailableSpots` offers nothing then, §331), or a family's reservation that lapsed
  * with no write (§543), left a place nobody held and nobody was offered, and nothing woke for it. The
@@ -377,7 +377,7 @@ describe("AGENTS.md §16.2 registration maintenance", () => {
  * places occupied than its capacity, and hands it to the same locked `fillAvailableSpots` — so no
  * offer after the close, none on a cancelled event, and never more offers than places.
  */
-describe("§NNN the job sweeps a free place while somebody waits", () => {
+describe("§612 the job sweeps a free place while somebody waits", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
 

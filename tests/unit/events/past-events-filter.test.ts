@@ -13,7 +13,7 @@ import {
 import type { PublicEvent } from "@/modules/events/repository";
 
 /**
- * BR-REQ-041-01 — the past section's own «Filtre» (`DECISIONS.md` §NNN, amending §602 and §413).
+ * BR-REQ-041-01 — the past section's own «Filtre» (`DECISIONS.md` §611, amending §602 and §413).
  *
  * The owner, 2026-10-01 on QA: «Mi-ar trebui aceleași filtre și pentru evenimentele din trecut»;
  * §602 answered it by sending the top panel's one state through the past section too, and the
@@ -156,7 +156,7 @@ const cardsAhead = (address: Record<string, string | string[]>) => {
   return AHEAD.filter((event) => matchesListingFilter(event, filter, facts)).map((event) => event.title);
 };
 
-describe("§NNN the past section's own filter, independent of the cards ahead", () => {
+describe("§611 the past section's own filter, independent of the cards ahead", () => {
   it("narrows the past by the `past-` scope and leaves the cards ahead alone — and the other way round", () => {
     const pastTick = { "past-type": "RACE", "past-surface": "TRAIL" };
     expect(matchingPastEvents(PAST, parseListingFilter(pastTick, "past"), facts).map((event) => event.title)).toEqual([

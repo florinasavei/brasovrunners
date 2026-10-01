@@ -148,7 +148,7 @@ describe("§535 yarn docs:land --tree lands the facts a branch carries", () => {
     expect(empty.stderr).toMatch(/no \.release\/\*\.json on this branch/);
   });
 
-  it("refuses, unattended, a placeholder line a merge commit wrote, and names it — the one entry does not take it (§NNN)", () => {
+  it("refuses, unattended, a placeholder line a merge commit wrote, and names it — the one entry does not take it (§607)", () => {
     const { dir, git, put, read } = repo();
     const from = "BR-V9.40-2031-01-01";
     put("CLAUDE.md", `**Baseline \`${from}\`**\n\n- \`/admin/tasks\`: what the club still owes\n`);

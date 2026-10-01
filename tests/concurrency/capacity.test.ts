@@ -53,7 +53,7 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
   let eventCounter = 0;
   const createdEventIds: string[] = [];
   const createdParticipantIds: string[] = [];
-  /** The Administrator who sends the offers of §NNN's case, made by that case and removed after. */
+  /** The Administrator who sends the offers of §615's case, made by that case and removed after. */
   let staffId: string | null = null;
 
   beforeAll(async () => {
@@ -86,7 +86,7 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
   afterAll(async () => {
     // Only this suite's own rows, in FK order — a developer's local database may hold seeded
     // or hand-created events with the same `kind` that must survive this suite running.
-    // The staff offers' trail (§NNN): its rows name this suite's registrations and its own staff user.
+    // The staff offers' trail (§615): its rows name this suite's registrations and its own staff user.
     const ownRegistrations = await db.select({ id: registrations.id }).from(registrations).where(inArray(registrations.eventId, createdEventIds));
     if (ownRegistrations.length > 0) {
       await db.delete(auditLogs).where(inArray(auditLogs.entityId, ownRegistrations.map((row) => row.id)));
@@ -344,7 +344,7 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
   );
 
   it(
-    "§NNN: offers by hand («Nu») and one free place — two staff offers racing for it, exactly one is made",
+    "§615: offers by hand («Nu») and one free place — two staff offers racing for it, exactly one is made",
     async () => {
       const event = await createInternalEvent(1);
       await db.update(events).set({ waitlistAutoOffer: false }).where(eq(events.id, event.id));

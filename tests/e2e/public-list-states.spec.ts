@@ -42,7 +42,7 @@ import { hydrated, signIn } from "./support/featured-event";
  * would flake.
  *
  * The notice the local seed approves from the current template also names
- * `{{participantListNumbers}}` (§NNN), which puts a «Nr.» column on the list — but only when a listed
+ * `{{participantListNumbers}}` (§613), which puts a «Nr.» column on the list — but only when a listed
  * confirmed runner wears a race number. The runners seeded here are written straight to the table
  * with none, so the table must stay the three columns it was: one step says so, on both projects.
  * The column itself is proven by `tests/integration/registrations/start-list-numbers.test.ts`.
@@ -52,7 +52,7 @@ const LOCK_KEY = 390_039_001;
 const MARKER = "{{participantListStates}}";
 /** The socials beside a name (§500): the platform's template carries it beside the states' marker. */
 const SOCIALS_MARKER = "{{participantListSocials}}";
-/** The race number beside a confirmed name (§NNN): the template carries it beside the other two. */
+/** The race number beside a confirmed name (§613): the template carries it beside the other two. */
 const NUMBERS_MARKER = "{{participantListNumbers}}";
 const LINK_REL = "noopener noreferrer nofollow ugc";
 
@@ -430,7 +430,7 @@ test.describe("BR-REQ-039-01 the public list's states, behind the privacy notice
         ).toHaveAccessibleName(`Ana Confirmata ${tag} on Strava`);
       });
 
-      await test.step("nobody listed wears a race number: no «Nr.» column, whatever the notice names (§NNN)", async () => {
+      await test.step("nobody listed wears a race number: no «Nr.» column, whatever the notice names (§613)", async () => {
         const ro = await readList(page, `/ro/evenimente/${event.slug}-ro`, tag);
         await expect(ro.list.getByRole("columnheader")).toHaveText(["#", "Nume", "Club"]);
         await expect(ro.list.locator('[data-col="number"]')).toHaveCount(0);
@@ -486,7 +486,7 @@ test.describe("BR-REQ-039-01 the public list's states, behind the privacy notice
         const current = await withDatabase(noticeInForce);
         const withoutMarker = current.translations.map((translation) => ({
           ...translation,
-          // The race number's marker too (§NNN), so `/admin/legal` names all three missing.
+          // The race number's marker too (§613), so `/admin/legal` names all three missing.
           body: JSON.parse(
             JSON.stringify(translation.body).split(MARKER).join("").split(SOCIALS_MARKER).join("").split(NUMBERS_MARKER).join(""),
           ),

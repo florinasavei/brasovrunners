@@ -437,7 +437,7 @@ describe("BR-REQ-034-02 criterion 5 a raised capacity offers places to the waiti
   });
 
   /**
-   * §NNN — «Ofertele din lista de așteptare pleacă automat» (the owner, 2026-10-01: 200 medals, 150
+   * §615 — «Ofertele din lista de așteptare pleacă automat» (the owner, 2026-10-01: 200 medals, 150
    * places announced, the places past 150 handed out by the organizer). The editor saves the setting;
    * a save that does not post it keeps it; the trail names the change; and with «Nu» a raise adds free
    * places and offers nobody — the gate inside `fillAvailableSpots`, which the raise calls as before.
@@ -448,7 +448,7 @@ describe("BR-REQ-034-02 criterion 5 a raised capacity offers places to the waiti
       .from(auditLogs)
       .where(and(eq(auditLogs.action, "event.waitlist_auto_offer_changed"), eq(auditLogs.entityId, eventId)));
 
-  it("§NNN saves «Nu», keeps it on a save that does not post it, names the change in the trail, and a raise then offers nobody", async () => {
+  it("§615 saves «Nu», keeps it on a save that does not post it, names the change in the trail, and a raise then offers nobody", async () => {
     const row = await seedEvent(1);
     expect(row.waitlistAutoOffer).toBe(true);
     await enter(row, "Ana", NOW, true);
@@ -478,7 +478,7 @@ describe("BR-REQ-034-02 criterion 5 a raised capacity offers places to the waiti
     expect(await offersQueued()).toBe(0);
   });
 
-  it("§NNN a series' scoped save carries the setting to every date it reaches, each date's trail naming it, and their raise offers nobody", async () => {
+  it("§615 a series' scoped save carries the setting to every date it reaches, each date's trail naming it, and their raise offers nobody", async () => {
     const source = await seedEvent(1);
     await repeatEvent(db, { actor: editor, eventId: source.id, rule: { cadence: "WEEKLY", weekdays: [], until: "2026-11-01", publish: false }, now: NOW });
     const dates = await db.select().from(events).where(eq(events.repeatOf, source.id)).orderBy(asc(events.startsAt));

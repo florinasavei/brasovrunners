@@ -195,11 +195,11 @@ describe("§369 the queue panel's times are the event's own", () => {
 });
 
 /**
- * §NNN — the panel's «Oferite» beside «Libere» and «În așteptare»: the open offers, the very count the
+ * §612 — the panel's «Oferite» beside «Libere» and «În așteptare»: the open offers, the very count the
  * public card reads «1 loc oferit din lista de așteptare» from (`readPublicPlaces`'s `offered`), so the
  * panel and the card say the same number.
  */
-describe("§NNN the queue panel's «Oferite» is the card's offered count", () => {
+describe("§612 the queue panel's «Oferite» is the card's offered count", () => {
   const figureOf = (html: string, label: string) => new RegExp(`${label}</span><span[^>]*>([^<]*)</span>`).exec(html)?.[1];
 
   for (const language of ["ro", "en"] as const) {

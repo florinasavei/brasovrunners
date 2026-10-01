@@ -34,7 +34,7 @@ export type RegistrationCtaInput = RegistrationWindowInput & {
   /** How many are in the waiting list's line now (§587), from the same count; absent is nought. */
   waiting?: number;
   /**
-   * The line's two halves while places are free (§NNN, amending §587): the offers still open and the
+   * The line's two halves while places are free (§612, amending §587): the offers still open and the
    * people waiting with no offer yet (`readPublicPlaces`'s `offered` and `waitlisted`); absent is
    * nought, as in a cache entry written before they were counted.
    */
@@ -54,11 +54,11 @@ export type RegistrationCta =
   | { kind: "CLOSED" }
   /**
    * `availablePlaces` is null for an uncapped event — open, with no number to show. `offered` and
-   * `waitlisted` say the line (§NNN): «1 loc oferit din lista de așteptare» for a place promised to
+   * `waitlisted` say the line (§615): «1 loc oferit din lista de așteptare» for a place promised to
    * somebody in the line, «2 pe lista de așteptare» for the people with no offer yet — never the
    * person offered counted as still waiting.
    *
-   * `fromWaitlist` (§NNN): somebody is waiting in the line, so a newcomer joins it whatever is free
+   * `fromWaitlist` (§615): somebody is waiting in the line, so a newcomer joins it whatever is free
    * (`registrations/domain/waitlist.ts#newcomerJoinsLine`, the allocator's own rule). The door is the
    * waiting list's — its words and its glyph, as `FULL` — and the free places are not advertised:
    * «Locurile se dau din lista de așteptare» stands where «N locuri libere din C» stood. False with
@@ -77,7 +77,7 @@ export type RegistrationCta =
   | { kind: "FULL_NO_WAITLIST" };
 
 /**
- * Whether a newcomer would be sent to the waiting list on this event (§NNN): no free place, or
+ * Whether a newcomer would be sent to the waiting list on this event (§615): no free place, or
  * somebody waiting in the line — a person with no place yet, or in a cache entry written before the
  * halves were counted, the line's length alone (§587). The card and the registration form ask it
  * alike, so neither says what the allocator will not do.
@@ -125,7 +125,7 @@ export function registrationCta(event: RegistrationCtaInput, now: Date): Registr
       const offered = event.offered ?? 0;
       const waitlisted = event.waitlisted ?? 0;
       /*
-        Somebody waiting (§NNN): a person in the line with no place yet — or, in a cache entry written
+        Somebody waiting (§615): a person in the line with no place yet — or, in a cache entry written
         before the halves were counted, the line's length alone (§587), until it next expires. Then a
         newcomer joins the line whatever is free (`newcomerJoinsLine`), so the door is the line's. The
         same rule the allocator follows, so the door never promises what the press will not give.
@@ -138,10 +138,10 @@ export function registrationCta(event: RegistrationCtaInput, now: Date): Registr
       }
       // …unless the event keeps no waiting list, or keeps one that is full (§348): then there is
       // nothing to join, and a button would lead to a form that refuses at the end of it — with
-      // places free too, since a newcomer is not given one past the line (§NNN).
+      // places free too, since a newcomer is not given one past the line (§615).
       if (event.waitlistCapacity === 0) return { kind: "FULL_NO_WAITLIST" };
       if (event.waitlistRoom === 0) return { kind: "WAITLIST_FULL" };
-      // Places free while somebody is in the line (§NNN): open, through the line's door.
+      // Places free while somebody is in the line (§615): open, through the line's door.
       if (event.availablePlaces !== 0) return { kind: "OPEN", availablePlaces: event.availablePlaces, offered, waitlisted, fromWaitlist: true };
       return { kind: "FULL", waitlistRoom: event.waitlistRoom ?? null, waiting: event.waiting ?? 0 };
     }
@@ -156,13 +156,13 @@ export type PublicFill = {
   taken: number;
   capacity: number;
   /**
-   * The confirmed registrations among `taken` (§NNN), when the occupied count is known: `taken - confirmed`
+   * The confirmed registrations among `taken` (§615), when the occupied count is known: `taken - confirmed`
    * are in progress — a pending declaration, an open offer, a family's hold. Absent when the count is
    * unknown (a cache entry from before it).
    */
   confirmed?: number;
   /**
-   * The free places the waiting list has a claim on (§NNN, §617): the capacity less the free places the
+   * The free places the waiting list has a claim on (§615, §617): the capacity less the free places the
    * button shows less `taken`. Absent when nought or unknown.
    */
   kept?: number;
@@ -212,7 +212,7 @@ export function publicFill(
   if (capacity === null || availablePlaces === null) return null;
   const claimed = Math.min(Math.max(capacity - availablePlaces, 0), capacity);
   /*
-    The first number is the occupied count in every state (§NNN): the registrations holding places,
+    The first number is the occupied count in every state (§615): the registrations holding places,
     confirmed and in progress — the count `availablePlaces` is built on — never the capacity less the
     free places, which also holds the waiting list's claim on free places (§617). That claim is `kept`,
     its own part of the clause, so «6 înscriși din 10 locuri — 4 confirmați, 2 în curs, 4 păstrate» adds up.

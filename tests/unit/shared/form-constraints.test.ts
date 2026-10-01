@@ -53,7 +53,7 @@ const NOT_A_BOX = new Set([
   "membersOnly",
   // «Kit de participare» → «Tricou» (§554): a tick in «Participanți și înscrieri».
   "kitShirt",
-  // «Ofertele din lista de așteptare pleacă automat» (§NNN): a «Da»/«Nu» select of two answers, both valid, under the capacity.
+  // «Ofertele din lista de așteptare pleacă automat» (§615): a «Da»/«Nu» select of two answers, both valid, under the capacity.
   "waitlistAutoOffer",
   // «Condiții de participare» → «Informații medicale» (§557): a tick in «Program, regulament și declarație».
   "askHealthNote",

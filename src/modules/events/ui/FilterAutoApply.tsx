@@ -30,7 +30,7 @@ import { rememberTick, spendTick, wasTicked } from "./filter-reopen";
  * The memory is `filter-reopen.ts`: the scope ticked and the address it goes to, so a note nobody took
  * (the ticked panel stopped rendering) expires by itself — a later mount on another address ignores it.
  *
- * **Which panel** (§NNN): the listing draws two — the cards ahead's and the past section's, inside
+ * **Which panel** (§611): the listing draws two — the cards ahead's and the past section's, inside
  * that section's own fold — so what is remembered is the `scope` that was ticked, and only that
  * panel reopens; the other is left as its page drew it. The past panel's fold sits inside the
  * section's `<details>`: `closest("details")` from the form is the panel's own fold, and reopening it
@@ -80,7 +80,7 @@ export default function FilterAutoApply({ scope, ticked }: { scope: string; tick
     const form = anchor.current?.closest("form");
     if (!form) return;
     // The tick landed on this same page (no fresh mount): nothing left to reopen later — but a fold
-    // around the panel may have followed the new state shut (the past section's, §NNN).
+    // around the panel may have followed the new state shut (the past section's, §611).
     if (takeReopen(scope)) openFolds(form.closest("details"));
     const state = new Set(key ? key.split("&") : []);
     for (const box of form.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')) {

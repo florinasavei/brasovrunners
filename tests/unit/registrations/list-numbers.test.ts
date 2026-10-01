@@ -16,10 +16,10 @@ import { DECLARATION_TOKENS } from "@/modules/legal-documents/templates/tokens";
 import { listNumbersClause, listNumbersMergeValues } from "@/modules/registrations/list-number-words";
 
 /**
- * §NNN (amending §396) — the race number beside a confirmed name on the public list: the privacy
+ * §613 (amending §396) — the race number beside a confirmed name on the public list: the privacy
  * notice's marker that switches the «Nr.» column on, and the words it is filled with.
  */
-describe("§NNN the privacy notice's marker for the race number", () => {
+describe("§613 the privacy notice's marker for the race number", () => {
   const text = (paragraph: string) => ({ sections: [{ paragraphs: [paragraph] }] });
 
   it("is a merge field the platform's notice and terms carry, in both languages, and the legend lists", () => {

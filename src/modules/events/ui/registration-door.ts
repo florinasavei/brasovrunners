@@ -65,7 +65,7 @@ export async function readRegistrationDoor(event: PublicEventPage, now: Date): P
         waitlistRoom = availability.waitlistRoom;
         waitlistCapacity = availability.waitlistCapacity;
         waiting = availability.waiting ?? 0;
-        // An entry cached before §NNN has neither: nought until it next expires.
+        // An entry cached before §612 has neither: nought until it next expires.
         offered = availability.offered ?? 0;
         waitlisted = availability.waitlisted ?? 0;
         confirmed = availability.confirmed;
@@ -92,7 +92,7 @@ export async function readRegistrationDoor(event: PublicEventPage, now: Date): P
   return {
     kind: "KNOWN",
     cta: registrationCta({ ...event, availablePlaces, waitlistRoom, waitlistCapacity, waiting, offered, waitlisted }, now),
-    // In progress is counted from the occupied places, in every state (§NNN).
+    // In progress is counted from the occupied places, in every state (§615).
     fill: publicFill(capacity, availablePlaces, { occupied, confirmed }),
   };
 }

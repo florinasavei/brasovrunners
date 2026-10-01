@@ -14,7 +14,7 @@ import {
 
 /**
  * Which Vercel plan the club is on, and with how many seats: read by «Setări» → «Costuri», whose
- * cost table, month card and yearly sentence price it, written there by an Administrator (§NNN).
+ * cost table, month card and yearly sentence price it, written there by an Administrator (§610).
  *
  * Copied from the Neon plan (`neon-plan.ts`, §306) and the Mailgun plan before it (§100): one
  * `platform_settings` row, a strict schema, the role asserted here as well as at the action, and an

@@ -1,5 +1,5 @@
 /**
- * The memory that keeps a filter panel open across the tick that remounts its page (§549, §NNN).
+ * The memory that keeps a filter panel open across the tick that remounts its page (§549, §611).
  *
  * A tick says the panel was open; it is written down here, in a module a soft navigation keeps, with
  * the scope that was ticked and the address the tick goes to, and the next mount of that scope's panel

@@ -432,12 +432,12 @@ describe("§500 what the socials beside a name may contain", () => {
 });
 
 /**
- * §NNN (amending §396) — the race number beside a confirmed name. A deliberate widening, and the
+ * §613 (amending §396) — the race number beside a confirmed name. A deliberate widening, and the
  * narrowest there is: one key, `bibNumber`, only when the caller asks (the page does only while the
  * privacy notice in force names `{{participantListNumbers}}`), only on the confirmed list, and only
  * the settled column. Without the option the keys are exactly the ones pinned above.
  */
-describe("§NNN what the race number on the public list may contain", () => {
+describe("§613 what the race number on the public list may contain", () => {
   const at = (hour: number) => new Date(Date.UTC(2026, 8, 3, hour));
 
   it("returns no number key at all unless asked, whatever the rows hold", async () => {

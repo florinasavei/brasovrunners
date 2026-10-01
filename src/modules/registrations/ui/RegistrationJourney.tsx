@@ -27,7 +27,7 @@ export type JourneyStep = "details" | "confirm" | "declare" | "done";
 const ORDER: readonly JourneyStep[] = ["details", "confirm", "declare"];
 
 /**
- * Where the declaration is, said on the third step (§NNN). A sentence for every page that shows
+ * Where the declaration is, said on the third step (§614). A sentence for every page that shows
  * the step was the bug: «aici» on a page that has no form is a word nobody can press.
  *
  * - `emailJustSent` — the page has no form; the signing link is in the email queued a moment ago.

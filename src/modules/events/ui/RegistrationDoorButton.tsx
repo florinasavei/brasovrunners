@@ -19,7 +19,7 @@ type Say = (key: string, values?: Record<string, string | number>) => string;
 
 /**
  * Whether the door leads onto the waiting list: a full event (§587), or an open one while somebody
- * is in the line (§NNN) — a newcomer joins the line then whatever is free, so the button says so.
+ * is in the line (§615) — a newcomer joins the line then whatever is free, so the button says so.
  */
 export function isWaitlistDoor(cta: ButtonCta): boolean {
   return cta.kind === "FULL" || (cta.kind === "OPEN" && cta.fromWaitlist);

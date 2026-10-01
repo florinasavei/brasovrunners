@@ -8,7 +8,7 @@ import { readPublicPlaces } from "@/modules/registrations/service";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — the public line says «105 înscriși din 150 de locuri — 86 confirmați, 19 în curs de
+ * §615 — the public line says «105 înscriși din 150 de locuri — 86 confirmați, 19 în curs de
  * confirmare»: `readPublicPlaces` returns `confirmed` beside the occupied places, and only a
  * CONFIRMED row is confirmed — a pending declaration, an open offer and a family's hold occupy a
  * place and are in progress. `kind` is in no condition (§12.6): a TEST row counts as confirmed.
@@ -49,7 +49,7 @@ async function register(eventId: string, name: string, row: Partial<typeof regis
   });
 }
 
-describe("§NNN readPublicPlaces returns the confirmed beside the occupied", () => {
+describe("§615 readPublicPlaces returns the confirmed beside the occupied", () => {
   it("counts CONFIRMED rows alone as confirmed; holds occupy a place and are in progress", async () => {
     const [event] = await db
       .insert(events)

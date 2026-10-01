@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 /**
- * §NNN — the journey's third step says where the declaration is. The owner found «aici» selected
+ * §614 — the journey's third step says where the declaration is. The owner found «aici» selected
  * on the confirmation page, Google offering a search for it: the page has no form and no link.
  * Each variant, in both languages, says its own place; none says «aici» / «here» bare; the held
  * one carries the `{opens}` phrase; the scheduled-delivery clause (§513) still rides along.
@@ -51,7 +51,7 @@ const PHRASES: Record<"ro" | "en", Record<Where | "emailHeldUntil", string>> = {
   },
 };
 
-describe("RegistrationJourney, the declaration step (§NNN)", () => {
+describe("RegistrationJourney, the declaration step (§614)", () => {
   for (const locale of ["ro", "en"] as const) {
     for (const where of ["emailJustSent", "emailHeldUntil", "onThisPage", "emailReceived"] as const) {
       it(`${locale} · ${where} says where the declaration is, and never a bare «aici»`, async () => {

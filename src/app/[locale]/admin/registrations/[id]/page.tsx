@@ -126,7 +126,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   const sendNow = mayManage ? await sendNowChoiceFor(db, locale) : null;
   // Every verb here asks first and says who is emailed (§384); the service decides, as before.
   const words = await confirmWords();
-  // «Trimite-i oferta»'s deadline in its question (§NNN): read only where the button can be drawn.
+  // «Trimite-i oferta»'s deadline in its question (§615): read only where the button can be drawn.
   const offerDeadline = registration.status === "WAITLISTED" && mayManage ? await offerDeadlineIfMadeNow(registration.eventId, locale) : null;
   // The timeline's short form with the time (§349): a value beside its label, so capitalised;
   // `dtInline` inside a sentence.
@@ -494,7 +494,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
             </ActionForm>
           )}
           {/*
-            «Trimite-i oferta» (§NNN): the ordinary offer, by the organizer's choice — the email and the
+            «Trimite-i oferta» (§615): the ordinary offer, by the organizer's choice — the email and the
             deadline, no confirmation. The Administrator's; offered while registration is open, since an
             offer made after the close would already be lapsed (the desk's «Dă-i un loc» is for then).
           */}

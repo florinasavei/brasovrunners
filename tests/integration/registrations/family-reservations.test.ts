@@ -221,7 +221,7 @@ async function familyMessage(now: Date) {
 }
 
 /**
- * The listing card's registration line for the event at `now` (§409, §NNN): the door the card reads,
+ * The listing card's registration line for the event at `now` (§409, §612): the door the card reads,
  * counted straight from the allocator's formula (`readPublicPlaces`, through `draftRegistrationDoor`,
  * which skips only the public cache), in the real Romanian catalogue.
  */
@@ -429,7 +429,7 @@ describe("BR-REQ-034-02 a family's unconfirmed places go back through the alloca
     const [raduNow] = await db.select().from(registrations).where(eq(registrations.id, radu.id));
     expect(raduNow.status).toBe("WAITLIST_OFFERED");
     /*
-      §NNN: the card names the place offered to Radu — 3 places, his offer holding one, two free —
+      §612: the card names the place offered to Radu — 3 places, his offer holding one, two free —
       rather than counting him as still waiting: before, «2 locuri libere din 3 · 1 pe lista de
       așteptare», which read as free places while somebody waited for one.
     */
@@ -439,7 +439,7 @@ describe("BR-REQ-034-02 a family's unconfirmed places go back through the alloca
     expect(card.detail).not.toMatch(/· \d+ pe lista de așteptare/);
   });
 
-  it("§NNN the job's plan wakes it at the family's deadline, so the place reaches the next in line with no hand call", async () => {
+  it("§612 the job's plan wakes it at the family's deadline, so the place reaches the next in line with no hand call", async () => {
     const event = await createEvent(3);
     const { sittingId } = await start(event, "Ana", 0);
     await send(event, "Mihai", 1, sittingId);

@@ -12,7 +12,7 @@ import { PREFETCHED_PATHNAMES } from "./prefetch";
  * rendered per request exactly as every public page was before (`app/[locale]/live/…`):
  *
  * - **the address's own question** — the filters (`?type=`, `?surface=`, … §413, and the listing's
- *   past section's `?past-type=`, … §NNN; the calendar's
+ *   past section's `?past-type=`, … §611; the calendar's
  *   month, year and layout are its path since §574, `/ro/calendar/2026-10`, and the old `?month=`,
  *   `?year=`, `?view=` are redirected there by the proxy before this is asked), an event page's start-list
  *   page (`?lista=` §250), the interest box's outcome (`?interest=`, `?since=` §146) and the
@@ -40,7 +40,7 @@ export const LIVE_SEGMENT = "live";
 
   - **The listing**: a filter that ticks something in either of its two scopes (`parseListingFilter`,
     §413 — the same parser the page runs, so a value it drops is dropped here too): the cards ahead
-    (`?type=RACE`) or, since §NNN, the past section's own (`?past-type=RACE`; `?past-foo=1` and
+    (`?type=RACE`) or, since §611, the past section's own (`?past-type=RACE`; `?past-foo=1` and
     `?past-type=FOO` name nothing) — or the list layout (`?view=list`, first value, as the page reads it).
   - **The bare calendar**: the same filters, the cards-ahead scope only (it draws no past section), and its old `?month=`, `?year=`, `?view=` should one get
     past the proxy's redirect to the period's path (§574, the calendar's own).
@@ -65,7 +65,7 @@ function asksAFilter(search: URLSearchParams): boolean {
   return activeFilterCount(parseListingFilter(asParams(search), "upcoming")) > 0;
 }
 
-/** Whether the address ticks any filter the listing offers: the cards ahead's, or the past section's own (§NNN). */
+/** Whether the address ticks any filter the listing offers: the cards ahead's, or the past section's own (§611). */
 function asksAListingFilter(search: URLSearchParams): boolean {
   const params = asParams(search);
   return activeFilterCount(parseListingFilter(params, "upcoming")) + activeFilterCount(parseListingFilter(params, "past")) > 0;

@@ -118,7 +118,7 @@ describe("§346 the fill line beside the register button, from the cached count"
       waitlistRoom: null,
       waitlistCapacity: null,
       waiting: 0,
-      // The line's two halves, from the same read (§NNN).
+      // The line's two halves, from the same read (§612).
       offered: 0,
       waitlisted: 0,
       confirmed: 12,
@@ -136,7 +136,7 @@ describe("§346 the fill line beside the register button, from the cached count"
       waitlistRoom: 2,
       waitlistCapacity: 3,
       waiting: 1,
-      // One waiting with no offer yet (§NNN).
+      // One waiting with no offer yet (§612).
       offered: 0,
       waitlisted: 1,
       confirmed: 2,
@@ -195,7 +195,7 @@ describe("§346 the fill line beside the register button, from the cached count"
     expect(html).toContain("38 de locuri libere");
   });
 
-  it("§NNN says how many are confirmed and how many in progress, from the cache through the door", async () => {
+  it("§615 says how many are confirmed and how many in progress, from the cache through the door", async () => {
     const event = await openRace(50);
     await confirm(event.id, 12);
     await confirm(event.id, 3, "PENDING_DECLARATION", 12);
@@ -203,7 +203,7 @@ describe("§346 the fill line beside the register button, from the cached count"
     expect(html).toContain("15 înscriși din 50 de locuri — 12 confirmați, 3 în curs de confirmare");
   });
 
-  it("§NNN keeps the clause on a full race with somebody in the line", async () => {
+  it("§615 keeps the clause on a full race with somebody in the line", async () => {
     const event = await openRace(5, 3);
     await confirm(event.id, 3);
     await confirm(event.id, 2, "PENDING_DECLARATION", 3);
@@ -212,7 +212,7 @@ describe("§346 the fill line beside the register button, from the cached count"
     expect(html).toContain("5 înscriși din 5 locuri — 3 confirmați, 2 în curs de confirmare");
   });
 
-  it("§NNN adds up while people wait beside free places, automatic offers off", async () => {
+  it("§615 adds up while people wait beside free places, automatic offers off", async () => {
     const event = await openRace(10);
     await db.update(events).set({ waitlistAutoOffer: false }).where(eq(events.id, event.id));
     await confirm(event.id, 4);
@@ -226,7 +226,7 @@ describe("§346 the fill line beside the register button, from the cached count"
     expect(en).toContain("6 registered of 10 places — 4 confirmed, 2 completing their registration, 4 places kept for the waiting list");
   });
 
-  it("§NNN keeps the first number at 6 with nothing pending, and names the claim", async () => {
+  it("§615 keeps the first number at 6 with nothing pending, and names the claim", async () => {
     const event = await openRace(10);
     await db.update(events).set({ waitlistAutoOffer: false }).where(eq(events.id, event.id));
     await confirm(event.id, 6);
@@ -239,7 +239,7 @@ describe("§346 the fill line beside the register button, from the cached count"
     expect(en).toContain("6 registered of 10 places — 4 places kept for the waiting list");
   });
 
-  it("§NNN counts a lapsed declaration hold as free when the line has no room: places plus free add up", async () => {
+  it("§615 counts a lapsed declaration hold as free when the line has no room: places plus free add up", async () => {
     const event = await openRace(10, 0);
     await confirm(event.id, 6);
     await confirm(event.id, 2, "PENDING_DECLARATION", 6);

@@ -173,14 +173,14 @@ describe("BR-REQ-041-01 the race's card carries the page's registration door, th
   });
 
   /**
-   * §NNN — the owner's card: 10 places, 7 taken, one place offered to somebody in the line and one
+   * §615 — the owner's card: 10 places, 7 taken, one place offered to somebody in the line and one
    * person still waiting. An offer is promised, not free, and the person offered is not «pe lista de
    * așteptare» any more; and while anybody is in the line a newcomer joins it whatever is free
    * (`newcomerJoinsLine`), so the card no longer counts places free: «Locurile se dau din lista de
    * așteptare», then the line, and the waiting list's door — on the card and the page alike, read
    * through the public cache's one entry (`cachedPublicAvailability`) from the allocator's own counts.
    */
-  it("§NNN gives the places from the waiting list while an offer is open and somebody waits, on the card and the page alike", async () => {
+  it("§615 gives the places from the waiting list while an offer is open and somebody waits, on the card and the page alike", async () => {
     const event = await publish({ capacity: 10 });
     await take(event.id, 7);
     await take(event.id, 1, "WAITLISTED", 7);
@@ -206,13 +206,13 @@ describe("BR-REQ-041-01 the race's card carries the page's registration door, th
   });
 
   /**
-   * §NNN — the three states of an open race, in both languages: nobody waiting (today's count and
+   * §615 — the three states of an open race, in both languages: nobody waiting (today's count and
    * door — an open offer alone included); somebody waiting with places free while offers go out on
    * their own (the moment before the job's sweep); somebody waiting with places free while the
    * organizer hands them out («Nu»: a raise offered nobody). The card and the page read the line, not
    * the setting, so the last two say the same — places given from the line, the line's door.
    */
-  it("§NNN says the free places with nobody waiting, and the line's words and door with somebody in it, whatever the setting", async () => {
+  it("§615 says the free places with nobody waiting, and the line's words and door with somebody in it, whatever the setting", async () => {
     // Nobody in the line: the count and the register button, as before.
     const quiet = await publish({ capacity: 10 }, "linistit");
     await take(quiet.id, 4);

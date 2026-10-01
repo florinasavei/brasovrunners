@@ -39,7 +39,7 @@
  * runner whose own notice named it. Section 2's "pe site le publicăm doar dacă alegi asta" points
  * at it; the withdrawal it names — deleting the socials, or leaving the list — clears the tick.
  *
- * `{{participantListNumbers}}` in section 4 (§NNN, amending §396) is the same two-in-one for the
+ * `{{participantListNumbers}}` in section 4 (§613, amending §396) is the same two-in-one for the
  * race number beside a confirmed name: the list's own word for its «Nr.» column, quoted, filled from
  * the catalogue (`list-number-words.ts`), and the switch — the list shows the column only while the
  * notice in force, in every language, names it (`describesListNumbers`). Only the number a

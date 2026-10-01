@@ -37,7 +37,7 @@ export async function givePlaceRefusalAhead(eventId: string): Promise<string | n
 }
 
 /**
- * «Trimite-i oferta»'s question (§NNN): until when the runner would have to sign if the press were
+ * «Trimite-i oferta»'s question (§615): until when the runner would have to sign if the press were
  * made now — the ordinary offer's deadline (`computeWaitlistOfferExpiry`: the club's window from
  * «Termene», capped by the close and the start), in the event's own zone and the page's words, as the
  * email names it. Null once registration has closed, when the press is refused: an offer then would

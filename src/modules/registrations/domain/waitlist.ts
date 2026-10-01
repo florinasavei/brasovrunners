@@ -36,7 +36,7 @@ export function waitlistLength(input: Pick<WaitlistInput, "waitlisted" | "openOf
 }
 
 /**
- * Whether a newcomer must join the line rather than take a free place (§NNN): somebody is waiting in
+ * Whether a newcomer must join the line rather than take a free place (§615): somebody is waiting in
  * it — a `WAITLISTED` row, a person with no place yet. A free place is given from the line while
  * anybody waits there, whether the event offers its places on its own or its organizer hands them
  * out (`events.waitlist_auto_offer`): a newcomer who could take a free place past the people waiting
@@ -161,7 +161,7 @@ export function waitlistRefusalCode(error: unknown): "WAITLIST_FULL" | "NO_WAITL
 }
 
 /**
- * «Trimite-i oferta» refused because the registration has closed (§NNN): an offer made now would be
+ * «Trimite-i oferta» refused because the registration has closed (§615): an offer made now would be
  * born lapsed — its deadline is capped by the close and the start (§420), already behind — as the
  * automatic offer refuses to make one then (`fillAvailableSpots`). The desk's «Dă-i un loc», which
  * confirms on paper at once, is the verb for after the close. A marker, like the others above; the

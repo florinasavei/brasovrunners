@@ -164,7 +164,7 @@ const SAME_VERB: Array<{ glyph: string; keys: string[] }> = [
   // An email sent again, whoever it is for: a registration's, a staff invitation, a password reset —
   // and to everyone at once too: the declaration to everyone who has not signed (§606).
   { glyph: "resend", keys: ["registrations.resend", "staff.resendInvite", "staff.passwordReset", "bulkResend.button"] },
-  // «Trimite-i oferta» (§NNN) sends the offer's email: the same verb, the same glyph.
+  // «Trimite-i oferta» (§615) sends the offer's email: the same verb, the same glyph.
   { glyph: "send", keys: ["outbox.sendNow", "thanks.send", "registrations.sendReminder", "desk.offerPlace"] },
   // An email sent again, whoever it is for: a registration's, a staff invitation, a password reset.
   { glyph: "resend", keys: ["registrations.resend", "staff.resendInvite", "staff.passwordReset"] },

@@ -19,7 +19,7 @@ import { DOMAIN_PRICE_USD_PER_YEAR } from "@/modules/diagnostics/platform-plans"
 import { VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH } from "@/modules/diagnostics/vercel";
 import { VERCEL_PLANS } from "@/modules/diagnostics/domain/vercel-plan";
 
-/** Vercel Pro with `seats` developer seats, at the catalogue's seat price (§NNN). */
+/** Vercel Pro with `seats` developer seats, at the catalogue's seat price (§610). */
 const pro = (seats: number) => ({ plan: "PRO" as const, seats, usdPerSeatPerMonth: VERCEL_PLANS.PRO.usdPerSeatPerMonth });
 
 /**
@@ -184,7 +184,7 @@ describe("one line per provider that bills or meters something", () => {
     expect(line(facts(), "vercel").lastMonth).toMatchObject({ usd: 0, plusVat: false });
   });
 
-  it("§NNN Vercel on Pro: the seats' monthly price so far and at the end, VAT on top, last month the same; the build minutes with no ceiling", () => {
+  it("§610 Vercel on Pro: the seats' monthly price so far and at the end, VAT on top, last month the same; the build minutes with no ceiling", () => {
     const one = line(facts({ vercelPlan: pro(1) }), "vercel");
     expect(one).toMatchObject({ plan: "Pro", billing: "monthly", soFarUsd: 20, projectedUsd: 20, plusVat: true, estimated: false, severity: "ok" });
     expect(one.lastMonth).toMatchObject({ period: previousMonth(OCTOBER), usd: 20, usage: null, estimated: false, plusVat: true });
@@ -244,7 +244,7 @@ describe("the month's total", () => {
     expect(monthTotals(renewalOnly)).toMatchObject({ soFarUsd: 1.18, soFarPlusVat: false, projectedUsd: 14.62, projectedPlusVat: true });
   });
 
-  it("§NNN carries Vercel Pro's month: so far and at the end, with VAT on top, and last month too", () => {
+  it("§610 carries Vercel Pro's month: so far and at the end, with VAT on top, and last month too", () => {
     // Neon 1.18 so far and 3.65 at the end (10 CU-hours in ten days, a GB stored); Pro's two seats 40 each way.
     const lines = monthCosts(facts({ vercelPlan: pro(2) }));
     expect(monthTotals(lines)).toMatchObject({ soFarUsd: 41.18, projectedUsd: 43.65, estimated: true, soFarPlusVat: true, projectedPlusVat: true, incomplete: false });

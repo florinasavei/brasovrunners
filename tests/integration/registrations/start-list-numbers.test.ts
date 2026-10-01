@@ -15,7 +15,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-039-01, `DECISIONS.md` §NNN (amending §396) — the rendered public list with the race
+ * BR-REQ-039-01, `DECISIONS.md` §613 (amending §396) — the rendered public list with the race
  * number in a «Nr.» column, both faces of the gate.
  *
  * With the platform's privacy notice in force — it names `{{participantListNumbers}}` — and at
@@ -189,7 +189,7 @@ beforeEach(async () => {
   await resetTables(db);
 });
 
-describe("§NNN with a notice that describes the race number", () => {
+describe("§613 with a notice that describes the race number", () => {
   it("shows a «Nr.» column after the position: the number, «—» without one or before the confirmation, nothing on a hidden row", async () => {
     await approveNotice({ ro: privacyNoticeRo, en: privacyNoticeEn });
     const event = await mixedEvent();
@@ -272,7 +272,7 @@ describe("§NNN with a notice that describes the race number", () => {
   });
 });
 
-describe("§NNN a runner who registered under an older notice shows the number too (the owner, 2026-10-01)", () => {
+describe("§613 a runner who registered under an older notice shows the number too (the owner, 2026-10-01)", () => {
   it("shows the number of a confirmed runner whatever notice their registration recorded, in both languages", async () => {
     // Version 1 does not name the number; version 2 does. The club tells the earlier runners beforehand.
     await approveNotice(without(MARKER));
@@ -302,7 +302,7 @@ describe("§NNN a runner who registered under an older notice shows the number t
   });
 });
 
-describe("§NNN with a notice that does not describe it", () => {
+describe("§613 with a notice that does not describe it", () => {
   it("is exactly today's list: no column, no number, whatever the rows wear", async () => {
     await approveNotice(OLDER_NOTICE);
     const event = await mixedEvent();

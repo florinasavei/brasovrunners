@@ -130,7 +130,7 @@ test.describe("BR-REQ-041-01 the listing's filters are one collapsed button", ()
     await expect(page.locator("#main")).toContainText("No event matches the filters you chose.");
   });
 
-  test("the past section has its own «Filtre»: `past-` names in the same address, and neither list narrows the other (§NNN)", async ({ page }) => {
+  test("the past section has its own «Filtre»: `past-` names in the same address, and neither list narrows the other (§611)", async ({ page }) => {
     // The owner, 2026-10-01: «Am zis că vreau un filtru și la evenimentele trecute, la fel ca la cele
     // curente». The seed's one past event is last Sunday's group run, and other specs add more on
     // both projects, so the past panel is reached from an address that ticks two kinds — a box the
@@ -180,7 +180,7 @@ test.describe("BR-REQ-041-01 the listing's filters are one collapsed button", ()
     await expect(section).toHaveAttribute("open", "");
   });
 
-  test("the past section always carries its «Filtre», whether the window is uniform or mixed (§NNN)", async ({ page }) => {
+  test("the past section always carries its «Filtre», whether the window is uniform or mixed (§611)", async ({ page }) => {
     // The seed's one past event is last Sunday's group run (uniform: one kind, surface, band, cost);
     // other specs add more on both projects, so the window may be mixed. Either way the control is
     // there: the button always, and under it boxes when something narrows, else the one sentence.

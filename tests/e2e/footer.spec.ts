@@ -29,7 +29,7 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
  * The widths are set here rather than taken from the project: 320 is the requirement's floor,
  * 360 the owner's screenshot and the second size's first width, 393 the Pixel phone, 640 and
  * 768 the band where the marks used to land on the summary and the badge, and 1280 a desktop,
- * where the build stamp is still in the fold, not on the bar (§NNN).
+ * where the build stamp is still in the fold, not on the bar (§608).
  */
 type Box = { x: number; y: number; width: number; height: number };
 
@@ -73,7 +73,7 @@ function controls(page: Page, where: (typeof PAGES)[number] = PAGES[0]) {
     language,
     current: language.locator('[aria-current="true"]'),
     other: language.getByRole("link", { name: where.other, exact: true }),
-    // The one copy, in the fold at every width (§NNN).
+    // The one copy, in the fold at every width (§608).
     panelBadge: page.getByTestId("footer-build-badge-panel").getByLabel(/versiunea site-ului|website version/i),
   };
 }
@@ -245,7 +245,7 @@ test.describe("BR-REQ-041-01 the footer's one row, at every width", () => {
       expect(bar.height, `the bar's height at ${width}px`).toBeLessThanOrEqual(target + 2);
       await expect(summary).toBeVisible();
 
-      // The build stamp: the fold is closed, so it is on screen at no width (§NNN).
+      // The build stamp: the fold is closed, so it is on screen at no width (§608).
       await expect(panelBadge).toBeHidden();
       expectDisjoint(items, width);
 
@@ -470,7 +470,7 @@ test.describe("§372 §378 §385 one row on a phone, in both languages, fold clo
   });
 });
 
-test.describe("§NNN the build stamp shows only in the open fold, on a 1280-px desktop too", () => {
+test.describe("§608 the build stamp shows only in the open fold, on a 1280-px desktop too", () => {
   test("is hidden with the fold closed, and a line of the footer once it is open", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 720 });
     await page.goto("/ro/evenimente", { waitUntil: "networkidle" });

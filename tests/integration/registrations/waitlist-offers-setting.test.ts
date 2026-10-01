@@ -18,7 +18,7 @@ import en from "../../../messages/en.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN (amending §104, §587 and §589) — the owner, 2026-10-01: the race has 200 medals and announces
+ * §615 (amending §104, §587 and §589) — the owner, 2026-10-01: the race has 200 medals and announces
  * 150 places; once the list forms, the organizer wants to hand the margin out to the people of their
  * choice rather than let it go to the head of the line at once. So:
  *
@@ -157,7 +157,7 @@ async function oneHeldTwoWaiting(auto = false) {
   return event;
 }
 
-describe("§NNN «Nu»: a freed place is offered to nobody — the one gate inside fillAvailableSpots", () => {
+describe("§615 «Nu»: a freed place is offered to nobody — the one gate inside fillAvailableSpots", () => {
   it("a staff cancel frees the place and offers it to nobody: the line stands, no offer email, the place free", async () => {
     const event = await oneHeldTwoWaiting();
     await cancelRegistrationByStaff(db, admin, (await rowOf("Ana")).id, "nu mai vine", at(10));
@@ -229,7 +229,7 @@ describe("§NNN «Nu»: a freed place is offered to nobody — the one gate insi
   });
 });
 
-describe("§NNN newcomers queue while anyone waits, whatever the setting", () => {
+describe("§615 newcomers queue while anyone waits, whatever the setting", () => {
   it("«Nu»: a free place beside somebody waiting is not the newcomer's — they join the line", async () => {
     const event = await oneHeldTwoWaiting();
     // Two more places, offered to nobody (the editor's raise is the cms suite's; here the row itself).
@@ -336,7 +336,7 @@ describe("§NNN newcomers queue while anyone waits, whatever the setting", () =>
   });
 });
 
-describe("§NNN «Trimite-i oferta»: the ordinary offer, to the person chosen, into a counted free place", () => {
+describe("§615 «Trimite-i oferta»: the ordinary offer, to the person chosen, into a counted free place", () => {
   it("offers the chosen row — not the oldest — with the ordinary deadline and email, and the trail names who, to whom and how many waited before", async () => {
     const event = await oneHeldTwoWaiting();
     await cancelRegistrationByStaff(db, admin, (await rowOf("Ana")).id, "nu mai vine", at(10));

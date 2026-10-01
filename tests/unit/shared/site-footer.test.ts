@@ -6,7 +6,7 @@ import { describe, expect, it, vi } from "vitest";
 
 /**
  * BR-REQ-041-01 (§372) — the footer as the server sends it: one row on every width, the build
- * stamp only inside the "Despre club" fold at every width (§NNN),
+ * stamp only inside the "Despre club" fold at every width (§608),
  * RO and EN side by side, and the privacy notice and the language on the always-visible bar.
  *
  * The owner, 2026-09-24: one row on a phone, every item kept but not every word — the privacy

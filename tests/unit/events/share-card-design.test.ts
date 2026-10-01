@@ -14,7 +14,7 @@ import {
 import { COLOR } from "@/theme/brand";
 
 /**
- * BR-REQ-052-02 criterion 8 (`DECISIONS.md` §NNN) — the shared card is drawn from one design
+ * BR-REQ-052-02 criterion 8 (`DECISIONS.md` §609) — the shared card is drawn from one design
  * object with the platform's defaults, and whatever is handed to the reader comes back as a
  * design: a card that fails to draw is worse than a plain card, so nothing here throws.
  */
@@ -127,7 +127,7 @@ describe("shareCardColours — the palette, the accent and a picture, as colours
   });
 });
 
-describe("SHARE_PICTURE_VEIL — white words read over any photograph (§NNN)", () => {
+describe("SHARE_PICTURE_VEIL — white words read over any photograph (§609)", () => {
   /** The base at an opacity over pure white, as the veil draws it over the lightest picture there is. */
   function overWhite(hex: string, alpha: number): number {
     const channel = (at: number) => {
@@ -178,7 +178,7 @@ describe("clampTitle — at most 110 characters, cut at a word", () => {
   });
 });
 
-describe("clampPlace — at most 60 characters, cut at a word, on one line (§NNN)", () => {
+describe("clampPlace — at most 60 characters, cut at a word, on one line (§609)", () => {
   it("leaves a place of 60 characters or fewer untouched, its whitespace on one line", () => {
     expect(clampPlace("Piața Sfatului")).toBe("Piața Sfatului");
     const exactly = `${"a".repeat(30)} ${"b".repeat(29)}`;

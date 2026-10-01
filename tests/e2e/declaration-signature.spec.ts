@@ -88,7 +88,7 @@ test.describe("BR-REQ-033-02 §314 the signature is the registered name", () => 
     if (await idDocument.count()) await idDocument.fill("BV 123456");
   }
 
-  test("§NNN pressing «Semnează» with the acceptance box unticked names the box in the summary and under it", async ({ page }) => {
+  test("§616 pressing «Semnează» with the acceptance box unticked names the box in the summary and under it", async ({ page }) => {
     const registration = await awaitingDeclaration(page, "unticked");
     await page.goto(registration.link);
     await hydrated(page);

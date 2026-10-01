@@ -28,7 +28,7 @@ type Props = {
 
 /**
  * Which Vercel plan the club is on — Hobby, or Pro with its developer seats — said in one sentence,
- * then the form that sets it (§NNN; the club took Pro on 2026-09-30, for the function quota before
+ * then the form that sets it (§610; the club took Pro on 2026-09-30, for the function quota before
  * the race, while «Costuri» went on printing Hobby).
  *
  * The Neon plan's panel (`NeonPlanPanel`, §306), copied: a Server Component with one form, the

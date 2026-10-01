@@ -248,7 +248,7 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
         </Alert>
       )}
 
-      {/* The unticked box, said before the press where a script runs (§NNN); after a server refusal the summary above names it. */}
+      {/* The unticked box, said before the press where a script runs (§616); after a server refusal the summary above names it. */}
       {!refused.includes("accepted") && (
         <UntickedBoxSummary boxId="accepted" summaryId="accepted-summary" message={t("groupRunDeclaration.page.acceptSummary")} />
       )}

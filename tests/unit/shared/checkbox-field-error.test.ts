@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import CheckboxField from "@/shared/ui/CheckboxField";
 
 /**
- * §NNN — `CheckboxField`'s `error`: a refused, unticked box says so under itself.
+ * §616 — `CheckboxField`'s `error`: a refused, unticked box says so under itself.
  *
  * The golden file is the markup the component printed before `error` existed (captured from the
  * previous revision), so "every other caller byte-for-byte" is checked against what it was, not
@@ -22,7 +22,7 @@ describe("CheckboxField without an error", () => {
     expect(renderToStaticMarkup(box({ name: "x", help: "Help" }))).toBe(golden.help);
   });
 
-  it("keeps one root for a box that can show a message: the same markup inside a wrapper, so a flag never swaps the root (§NNN)", () => {
+  it("keeps one root for a box that can show a message: the same markup inside a wrapper, so a flag never swaps the root (§616)", () => {
     const html = renderToStaticMarkup(box({ name: "accepted", id: "accepted", required: true, dense: true, requiredMessage: "Bifează" }));
     const wrapper = /^<div class="MuiBox-root[^"]*">([\s\S]*)<\/div>$/.exec(html);
     expect(wrapper).not.toBeNull();

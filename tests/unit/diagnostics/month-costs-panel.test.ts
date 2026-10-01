@@ -160,7 +160,7 @@ describe("BR-REQ-090-07 «Luna aceasta» on Costuri", () => {
     expect(words).toContain("Publicări 7 luna aceasta");
   });
 
-  it("§NNN prints Vercel Pro's line as a monthly subscription: its price so far and at the end, + TVA, and no «what would cost money»", async () => {
+  it("§610 prints Vercel Pro's line as a monthly subscription: its price so far and at the end, + TVA, and no «what would cost money»", async () => {
     const html = await render("ro", facts({ vercelPlan: { plan: "PRO", seats: 1, usdPerSeatPerMonth: 20 }, vercel: { buildMinutes: 30, deployments: 7 } }), reasons({ current: { vercel: null } }));
     const words = text(html);
     expect(words).toContain("Pro · abonament lunar");

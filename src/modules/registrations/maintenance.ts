@@ -85,7 +85,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
   let legacyFailed = false;
   try {
     kept = (await releaseLegacyHeldNumbers(db, now)).kept;
-    // The public list may show a kept number (§NNN): a one-off step that wrote some expires the cached pages.
+    // The public list may show a kept number (§613): a one-off step that wrote some expires the cached pages.
     if (kept.length > 0) revalidatePublicContent("places");
   } catch {
     legacyFailed = true;

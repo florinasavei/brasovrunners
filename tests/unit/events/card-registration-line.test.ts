@@ -100,13 +100,13 @@ describe("§409 cardRegistrationLine — the card's registration, in words", () 
   });
 
   /**
-   * §NNN (the owner, 2026-10-01: 200 medals, 150 places announced, and the places past the 150 handed
+   * §615 (the owner, 2026-10-01: 200 medals, 150 places announced, and the places past the 150 handed
    * out by the organizer). While anybody is in the line a newcomer joins it whatever is free
    * (`newcomerJoinsLine`), so the card stops counting places free: «Locurile se dau din lista de
    * așteptare», the one bold part (§472), then the line — an open offer named as offered, before the
    * people with no offer yet — and the waiting list's button, the door the full state shows.
    */
-  it("§NNN gives the places from the waiting list while anybody waits: no free count, the line's door", () => {
+  it("§615 gives the places from the waiting list while anybody waits: no free count, the line's door", () => {
     const line = cardRegistrationLine(translator("ro"), "ro", race(), NOW, known({ kind: "OPEN", availablePlaces: 1, offered: 0, waitlisted: 2, fromWaitlist: true }, { taken: 9, capacity: 10 }));
     expect(line).toEqual({
       lead: "Înscrieri deschise până sâm., 26 sept. 2026, la 10:00",
@@ -130,7 +130,7 @@ describe("§409 cardRegistrationLine — the card's registration, in words", () 
    * (`newcomerJoinsLine`: an offer is not somebody waiting, §160), so the card counts them and names
    * the offer after them, with the register button.
    */
-  it("§NNN names an open offer as a place offered from the waiting list, not one more person waiting", () => {
+  it("§612 names an open offer as a place offered from the waiting list, not one more person waiting", () => {
     const ro = cardRegistrationLine(translator("ro"), "ro", race(), NOW, known({ kind: "OPEN", availablePlaces: 2, offered: 1, waitlisted: 0, fromWaitlist: false }, { taken: 8, capacity: 10 }));
     expect(ro.detail).toBe("2 locuri libere din 10 · 1 loc oferit din lista de așteptare");
     // The free places alone stay bold (§472); the offer is said after them, not bold.
@@ -143,14 +143,14 @@ describe("§409 cardRegistrationLine — the card's registration, in words", () 
     expect(many.detail).toBe("5 locuri libere din 100 · 20 de locuri oferite din lista de așteptare");
   });
 
-  it("§NNN says both halves of the line — offered first — in both languages and every count form", () => {
+  it("§615 says both halves of the line — offered first — in both languages and every count form", () => {
     const both = cardRegistrationLine(translator("ro"), "ro", race(), NOW, known({ kind: "OPEN", availablePlaces: 1, offered: 2, waitlisted: 3, fromWaitlist: true }, { taken: 9, capacity: 10 }));
     expect(both.detail).toBe("Locurile se dau din lista de așteptare · 2 locuri oferite din lista de așteptare · 3 pe lista de așteptare");
     const one = cardRegistrationLine(translator("ro"), "ro", race(), NOW, known({ kind: "OPEN", availablePlaces: 5, offered: 0, waitlisted: 20, fromWaitlist: true }, { taken: 95, capacity: 100 }));
     expect(one.detail).toBe("Locurile se dau din lista de așteptare · 20 pe lista de așteptare");
     const en = cardRegistrationLine(translator("en"), "en", race(), NOW, known({ kind: "OPEN", availablePlaces: 1, offered: 2, waitlisted: 3, fromWaitlist: true }, { taken: 9, capacity: 10 }));
     expect(en.detail).toBe("Places are given from the waiting list · 2 places offered from the waiting list · 3 on the waiting list");
-    // §NNN: the page's «— 86 confirmați, 19 în curs» clause is not the card's: it counts free places, so a fill that carries `confirmed` changes nothing here.
+    // §615: the page's «— 86 confirmați, 19 în curs» clause is not the card's: it counts free places, so a fill that carries `confirmed` changes nothing here.
     const progress = cardRegistrationLine(translator("ro"), "ro", race(), NOW, known({ kind: "OPEN", availablePlaces: 45, offered: 0, waitlisted: 0, fromWaitlist: false }, { taken: 105, capacity: 150, confirmed: 86 }));
     expect(progress.detail).toBe("45 de locuri libere din 150");
     // An uncapped event with somebody still waiting: the same words, no count to replace.
@@ -159,13 +159,13 @@ describe("§409 cardRegistrationLine — the card's registration, in words", () 
     expect(uncapped.button?.label).toBe("Intră pe lista de așteptare");
   });
 
-  it("§NNN keeps «Locurile se dau din lista de așteptare» short enough for a phone", () => {
+  it("§615 keeps «Locurile se dau din lista de așteptare» short enough for a phone", () => {
     for (const locale of ["ro", "en"] as const) {
       expect(translator(locale)("cta.fromWaitlist").length, locale).toBeLessThanOrEqual(45);
     }
   });
 
-  it("§NNN keeps the offered words short enough for a phone, in both languages and every form", () => {
+  it("§612 keeps the offered words short enough for a phone, in both languages and every form", () => {
     for (const locale of ["ro", "en"] as const) {
       for (const form of ["one", "few", "other"]) {
         const words = translator(locale)(`cta.offeredCount.${form}`, { count: 1 });
@@ -241,7 +241,7 @@ describe("§472 CardRegistration — only the date, the hour and the free places
     expect(text(html)).toContain("Înscrieri deschise până sâm., 26 sept. 2026, la 10:00 · 7 locuri libere din 10");
   });
 
-  it("§NNN bolds «Locurile se dau din lista de așteptare» alone, and lets the line wrap on a phone", () => {
+  it("§615 bolds «Locurile se dau din lista de așteptare» alone, and lets the line wrap on a phone", () => {
     const html = render("ro", known({ kind: "OPEN", availablePlaces: 2, offered: 1, waitlisted: 1, fromWaitlist: true }, { taken: 8, capacity: 10 }));
     expect(strongs(html)).toEqual(["sâm., 26 sept. 2026, la 10:00", "Locurile se dau din lista de așteptare"]);
     expect(text(html)).toContain("· Locurile se dau din lista de așteptare · 1 loc oferit din lista de așteptare · 1 pe lista de așteptare");

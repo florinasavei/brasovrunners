@@ -47,7 +47,7 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
   const pass = await readFamilySigningPass(now);
 
   /*
-    The box left unticked (§NNN): its own refusal, decided from the form before the service is
+    The box left unticked (§616): its own refusal, decided from the form before the service is
     called — the form already says so. The browser's `required` stops this press first, but MUI
     hides the native input and its bubble does not show on a phone, so a press that does reach here
     is told at the box. The page says it twice (the summary and under the box); the generic
@@ -202,7 +202,7 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
       await stashDraftValues(declarationDraftOf(form), path);
       redirect(`${path}?invalid=document#${DECLARATION_ERROR_SUMMARY_ID}`);
     }
-    // An unticked box never reaches here (it is refused above with `invalid=accept`, §NNN). What
+    // An unticked box never reaches here (it is refused above with `invalid=accept`, §616). What
     // does is a validation failure on another field the client let through — treated the same as
     // an invalid token rather than as a server error, since nothing was consumed (the whole
     // transaction, including the token spend, rolled back with the validation failure).
