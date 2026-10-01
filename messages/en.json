@@ -4779,7 +4779,7 @@
                 "Nobody on the team signs the declaration for the participant: at the desk you only record the paper declaration they signed themselves.",
                 "No legal text takes effect without an approved version; without approved terms, notice and declaration nobody can register.",
                 "Nobody goes past the number of places: there is no registration over capacity, not by hand and not at the desk. A place is given only when it is free.",
-                "Nobody gets a place without their own signature: a waiting-list offer is accepted and signed by the person, from their email, and at the desk «Give a place» confirms only on the paper declaration they sign there, in person."
+                "Nobody gets a place without their own signature (a parent's, for a minor): a waiting-list offer is accepted and signed by the person, from their email, and at the desk «Give a place» confirms only on the paper declaration they sign there, in person."
               ]
             }
           ]
@@ -5247,7 +5247,7 @@
                 "First pay for the plan in the Mailgun account.",
                 "«Settings» → «Emails» → «The Mailgun plan, and how much we can still send».",
                 "Under «The plan the Mailgun account is on» pick Basic; under «Note (why, until when)» write why and until when.",
-                "«Hourly limit»: how many emails leave through Mailgun in an hour; the rest wait in the queue and leave on their own, none lost. While Mailgun keeps the account limited, leave 90, as the text under the box says; once Mailgun lifts the limit, raise the number or clear the box.",
+                "«Hourly limit»: how many emails leave through Mailgun in an hour; the rest wait in the queue and leave on their own, none lost. While Mailgun keeps the account limited, write 90 (the text under the box asks the same); on QA, which shares the domain with production, set much less, about 10. Once Mailgun lifts the limit, raise the number or clear the box.",
                 "Press «Save the plan» and confirm. The figures on «Costs», the «Sent in the last hour:» line and the «Send now» button follow it.",
                 "Further down, «How emails leave: Mailgun or the club's Gmail»: for each group of emails choose «Mailgun» or «The club's Gmail». Gmail costs nothing, but Google blocks bulk sending: under each group it says what is recommended.",
                 "«Gmail limit per day (recipients)» and «Pause between two Gmail messages (seconds)» say how much leaves through Gmail, and how slowly. Press «Save the routes» and confirm.",
@@ -5263,7 +5263,7 @@
                 "Mailgun asked for a pause, because we are sending too fast: on the row, «The provider's last answer:» starts with “paused by the provider”. The emails through Mailgun wait as long as Mailgun asked, spending no attempt, then leave on their own.",
                 "«Send now» sends what is due at once. It helps for the emails through the club's Gmail and while Mailgun's hour has room; while the hour is full or the pause lasts it sends nothing through Mailgun, however often you press — and under the button or in a banner it says why.",
                 "To participants who ask: the email is coming, only later; they should look in Spam and in Promotions too. Those without their declaration link: “Resend the declaration to those who have not signed”.",
-                "Write to the club's owner, with a picture of the screen, if a row shows «Stopped after every attempt», if the red rows are still there an hour later, or if «Sent in the last hour:» stays at 0 while the queue grows."
+                "Write to a Superadministrator (or the club's owner), with a picture of the screen, if a row shows «Stopped after every attempt», if the red rows are still there an hour later, or if «Sent in the last hour:» stays at 0 while the queue grows."
               ]
             },
             {

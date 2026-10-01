@@ -4779,7 +4779,7 @@
                 "Nimeni din echipă nu semnează declarația în locul participantului: la masă înregistrezi doar declarația de hârtie pe care a semnat-o el.",
                 "Niciun text legal nu intră în vigoare fără o versiune aprobată; fără termeni, notă și declarație aprobate nu se poate înscrie nimeni.",
                 "Nimeni nu trece peste numărul de locuri: nu există înscriere peste capacitate, nici de mână, nici la masă. Un loc se dă doar când e liber.",
-                "Nimeni nu primește un loc fără semnătura lui: o ofertă din lista de așteptare o acceptă și o semnează persoana, din emailul ei, iar la masă «Dă-i un loc» confirmă doar pe declarația de hârtie semnată de ea, de față."
+                "Nimeni nu primește un loc fără semnătura lui (la un minor, a părintelui): o ofertă din lista de așteptare o acceptă și o semnează persoana, din emailul ei, iar la masă «Dă-i un loc» confirmă doar pe declarația de hârtie semnată acolo, de față."
               ]
             }
           ]
@@ -5247,7 +5247,7 @@
                 "Întâi plătești planul în contul Mailgun.",
                 "«Setări» → «Emailuri» → «Planul Mailgun și cât mai putem trimite».",
                 "La «Planul pe care e contul Mailgun» alege Basic; la «Notă (de ce, până când)» scrie de ce și până când.",
-                "«Limita pe oră»: câte emailuri pleacă prin Mailgun într-o oră; restul așteaptă la coadă și pleacă singure, fără să se piardă vreunul. Cât timp Mailgun ține contul limitat, lasă 90, cum scrie sub căsuță; când Mailgun ridică limita, mărește numărul sau golește căsuța.",
+                "«Limita pe oră»: câte emailuri pleacă prin Mailgun într-o oră; restul așteaptă la coadă și pleacă singure, fără să se piardă vreunul. Cât timp Mailgun ține contul limitat, scrie 90 (textul de sub căsuță cere același lucru); pe QA, care împarte domeniul cu producția, pune mult mai puțin, în jur de 10. Când Mailgun ridică limita, mărește numărul sau golește căsuța.",
                 "Apasă «Salvează planul» și confirmă. Cifrele din «Costuri», linia «Trimise în ultima oră:» și butonul «Trimite acum» se iau după el.",
                 "Mai jos, «Prin ce pleacă emailurile: Mailgun sau Gmail-ul clubului»: pentru fiecare grup de emailuri alegi «Mailgun» sau «Gmail-ul clubului». Gmail-ul nu costă nimic, dar Google blochează trimiterile în masă: sub fiecare grup scrie ce e recomandat.",
                 "«Limita Gmail pe zi (destinatari)» și «Pauza între două mesaje Gmail (secunde)» spun cât și cât de rar pleacă prin Gmail. Apasă «Salvează drumurile» și confirmă.",
@@ -5263,7 +5263,7 @@
                 "Mailgun a cerut o pauză, pentru că trimitem prea repede: pe rând, «Ultimul răspuns al furnizorului:» începe cu „paused by the provider”. Emailurile prin Mailgun așteaptă cât a cerut Mailgun, fără să consume vreo încercare, apoi pleacă singure.",
                 "«Trimite acum» trimite pe loc ce e la rând. Ajută pentru emailurile prin Gmail-ul clubului și cât timp ora Mailgun mai are loc; cât ora e plină sau pauza ține, nu trimite nimic prin Mailgun, oricât ai apăsa — iar sub buton sau într-un chenar scrie de ce.",
                 "Participanților care întreabă: emailul vine, doar mai târziu; să caute și în Spam și în Promoții. Cine nu are linkul de declarație: „Retrimite declarația celor care nu au semnat”.",
-                "Scrie proprietarului clubului, cu o poză a ecranului, dacă un rând arată «Oprit după toate încercările», dacă rândurile roșii rămân și după o oră sau dacă «Trimise în ultima oră:» stă pe 0 în timp ce coada crește."
+                "Scrie unui Superadministrator (sau proprietarului clubului), cu o poză a ecranului, dacă un rând arată «Oprit după toate încercările», dacă rândurile roșii rămân și după o oră sau dacă «Trimise în ultima oră:» stă pe 0 în timp ce coada crește."
               ]
             },
             {
