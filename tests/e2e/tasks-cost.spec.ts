@@ -45,8 +45,8 @@ test.describe("BR-REQ-090-05 the club's money, «Setări» → «Costuri» (§51
     await expect(main.getByTestId("next-spend")).toHaveText(/Prima cheltuială care urmează|Nu urmează nicio cheltuială nouă/);
     // The breakdown (§610): the two columns, and one line per service, then the total.
     const table = main.getByRole("table", { name: "Costul fiecărui serviciu, pe lună și pe an" });
-    await expect(table.getByRole("columnheader", { name: "Pe lună" })).toBeVisible();
-    await expect(table.getByRole("columnheader", { name: "Pe an" })).toBeVisible();
+    await expect(table.getByRole("columnheader", { name: "Pe lună", exact: true })).toBeVisible();
+    await expect(table.getByRole("columnheader", { name: "Pe an", exact: true })).toBeVisible();
     for (const name of ["Domeniul", "Mailgun", "Vercel", "Neon", "Zitadel", "cron-job.org + GitHub"]) {
       await expect(table.getByRole("rowheader", { name: new RegExp(`^${name.replace(/[.+]/g, "\\$&")}`) })).toHaveCount(1);
     }
