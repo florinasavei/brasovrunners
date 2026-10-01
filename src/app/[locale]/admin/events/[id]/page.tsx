@@ -243,7 +243,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const waiting = internal && (maySaveSettings || canReadRegistrations(staffUser.role)) ? await countEligibleWaitlisted(db, event.id) : 0;
   /*
     The places the allocator counts as taken (§NNN): the number the public line "N înscriși din C" and the
-    queue panel read, a family's reservation included — one more aggregate over the event's own rows, only when
+    queue panel read, a family's reservation included — the same aggregate the queue panel reads, read once here and handed to it, only when
     there is a limit to say it against.
   */
   const occupiedCounts =
