@@ -426,7 +426,7 @@ describe("§NNN the job sweeps a free place while somebody waits", () => {
   it("offers the place to the head of the line on the next run once a cancelled race is put back on, and to nobody else", async () => {
     const { event, statusOf } = await freedWhileCancelled();
     await db.update(events).set({ eventStatus: "SCHEDULED" }).where(eq(events.id, event.id));
-    // Put back on: a free place and two waiting. The public count said «1 pe lista» beside nothing free.
+    // Put back on: a free place and two waiting. the public count reads full with two waiting, though a place is free.
     expect(await readPublicPlaces(db, { id: event.id, capacity: 1, waitlistCapacity: null }, minutes(2))).toMatchObject({ availablePlaces: 0, offered: 0, waitlisted: 2 });
 
     const result = await runRegistrationMaintenance(db, minutes(2));

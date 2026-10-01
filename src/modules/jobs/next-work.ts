@@ -114,7 +114,9 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
     …and a family sitting's held place for a form that wrote no registration (§543), at the same
     deadline (§NNN): `expireStaleHolds` deletes it then, and the place is the next in line's. Only a
     row that holds a place — a person sent while none was free holds none and frees none (round six)
-    — and only on a scheduled event, as above (§331).
+    — and only on a scheduled event, as above (§331). Like the reservation read above, it does not look
+    for a waiting person: a deadline on an event where nobody waits wakes the job once for nothing
+    (§334), which a join before it would have replanned anyway.
   */
   const [placeHolds] = await any
     .select({ next: sql<unknown>`min(${familyPlaceHolds.expiresAt})` })
