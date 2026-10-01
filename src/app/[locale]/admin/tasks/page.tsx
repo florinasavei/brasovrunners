@@ -20,6 +20,7 @@ import { checkEmailHealth } from "@/modules/notifications/health";
 import {
   findCurrentApprovedDocument,
   noticeDescribesListSocials,
+  noticeDescribesGmailFallback,
   noticeDescribesPromotionalMaterials,
   noticeDescribesPromotionalMaterialsShared,
   noticeDescribesListStates,
@@ -420,6 +421,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       sponsorShareDescribed: await noticeDescribesPromotionalMaterialsShared(db, now),
       // §445: the same switch for the newsletter's pop-up on the contact page.
       newsletterDescribed: await noticeDescribesNewsletter(db, now),
+      gmailFallbackDescribed: await noticeDescribesGmailFallback(db, now),
       // §459: the team page's names and photographs, described by the notice in force.
       teamPageDescribed: await noticeDescribesTeamPage(db, now),
       // §515: both race declarations, trail and road or park, from the platform's shared body.
@@ -433,7 +435,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       emailDeliveryMode: env.EMAIL_DELIVERY_MODE,
       appEnv: env.APP_ENV,
       // Email nothing is carrying (§NNN): the health check's own counts, read above for the red banner.
-      emailFailSafe: { stoppedLong: email.stoppedLong, failed: email.failed },
+      emailFailSafe: { stoppedLong: email.stoppedLong, failed: email.failed, retryingLate: email.retryingLate },
       staleJobNames,
       failingJobNames,
       staffCount,

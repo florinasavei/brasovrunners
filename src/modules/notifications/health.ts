@@ -9,7 +9,15 @@ import { readOutboxRoads } from "./outbox-roads";
 import type { Database } from "@/db/types";
 import { readJobCadence } from "@/modules/jobs/cadence";
 import { checkGmailHealth, type GmailHealth, readEmailTransport } from "./email-transport";
-import { FALLBACK_WAITING_ERROR_PREFIX, fallbackActive, type MailgunStopKind, routeWhileStopped, type StopWaitReason } from "./domain/mailgun-stop";
+import {
+  ALLOWANCE_DEFERRED_ERROR_PREFIX,
+  FALLBACK_WAITING_ERROR_PREFIX,
+  fallbackSwitchOn,
+  type MailgunStopKind,
+  routeWhileStopped,
+  type StopWaitReason,
+} from "./domain/mailgun-stop";
+import { MAX_SEND_ATTEMPTS } from "./domain/retry";
 import { heldByMailgunCondition, readMailgunStop } from "./mailgun-stop";
 import { type OutboxDelivery, outboxOverdueCadenceMinutes, readOutboxDelivery } from "./outbox-delivery";
 
@@ -29,8 +37,9 @@ import { type OutboxDelivery, outboxOverdueCadenceMinutes, readOutboxDelivery } 
  *   deferred   PENDING rows the provider refused for the day; they go at the allowance reset.
  *   overdue    PENDING rows whose turn came and passed, by more than the backoff can explain:
  *              the scheduler is not draining them — unless Mailgun's hourly pace binds and
- *              they ride Mailgun's road (§605, `hourPaced`); and rows Mailgun paused recently
- *              for the rate, past the same allowance since they were queued.
+ *              they ride Mailgun's road (§605, `hourPaced`); rows Mailgun paused recently
+ *              for the rate, past the same allowance since they were queued; and since §NNN rows
+ *              a transient refusal keeps retrying hourly past six attempts or that allowance.
  *   failed     rows the provider refused for the message or the account, in the last seven
  *              days, or that could not be rendered. Since §NNN a transient refusal never lands
  *              here: it is retried hourly and shows as overdue instead; «Reîncearcă emailurile
@@ -110,6 +119,12 @@ export type EmailHealth = {
    * (§NNN): what «Sarcini» turns red for, with the remedies named.
    */
   stoppedLong: number;
+  /**
+   * Waiting rows a transient refusal keeps retrying (§NNN): a plain provider error (a 5xx, a timeout,
+   * a 404), six attempts spent or queued past the overdue allowance, the turn scheduled — counted in
+   * `overdue` as well, and what «Sarcini» turns red for with the remedy for a refusal that does not pass.
+   */
+  retryingLate: number;
 };
 
 /**
@@ -188,22 +203,25 @@ export async function checkEmailHealth<T extends Record<string, unknown>>(
     keeps refusing needs a person, and `lastError` says which refusal. A row whose pause mark is older
     is waiting its turn like any other, and judged like any other.
   */
-  const roads = await readOutboxRoads(db);
+  // The roads as the claim reads them, the fallback's notice included (§NNN, `readOutboxRoads`).
+  const [roads, transport] = await Promise.all([readOutboxRoads(db, now), readEmailTransport(db)]);
   const gmailRoad = roads ? gmailRoadCondition(roads) : sql`false`;
   /*
     Mailgun's stop and who carries for it (§NNN), as the claim reads them: while Gmail carries every
     group, the rows Mailgun held back are Gmail's to send at once — not deferred to Mailgun's reset and
     not paused — so they count in neither; a row Gmail could not carry, queued longer ago than the
-    overdue allowance, is overdue whatever the switch says: nothing is carrying it.
+    overdue allowance, is overdue while the stop it waits on is in force and nothing carries it.
   */
   const gmailHealth = await checkGmailHealth(db, now);
-  const [transport, stop] = await Promise.all([
-    readEmailTransport(db),
-    readMailgunStop(db, now, roads ? not(gmailRoadCondition(roads)) : undefined),
-  ]);
+  const stop = await readMailgunStop(db, now, roads ? not(gmailRoadCondition(roads)) : undefined);
   const whileStopped = routeWhileStopped({
     stop,
-    fallbackToGmail: fallbackActive(transport, gmailHealth.configured),
+    fallbackToGmail: fallbackSwitchOn(transport),
+    /*
+      The roads carry the fallback only under a notice that names it; where they do not, a configured
+      deployment with the switch on was refused by the notice — the two earlier reasons come first.
+    */
+    noticeNamesFallback: roads?.fallbackToGmail === true,
     gmailConfigured: gmailHealth.configured,
     gmailRoom: Math.max(0, gmailHealth.cap - gmailHealth.sentLastDay),
   });
@@ -213,26 +231,49 @@ export async function checkEmailHealth<T extends Record<string, unknown>>(
   const notCarried = (where: SQL | undefined) => (carried ? and(where, sql`NOT coalesce(${held}, false)`) : where);
   const evidenceSince = new Date(now.getTime() - PACE_EVIDENCE_MS);
   const recentPause = sql`(${emailOutbox.lastError} LIKE ${`${RATE_PAUSE_ERROR_PREFIX}%`} AND ${emailOutbox.nextAttemptAt} > ${evidenceSince.toISOString()}::timestamptz)`;
-  const lateWhere = and(overdueWhere, sql`NOT coalesce(${recentPause}, false)`);
+  const turnWithinDeferral = sql`${emailOutbox.nextAttemptAt} <= ${deferredFrom.toISOString()}::timestamptz`;
   // Not one already counted as deferred: a `Retry-After` over an hour away is that, and says when.
-  const pausedLateWhere = notCarried(
-    and(pending, recentPause, lt(emailOutbox.createdAt, overdueBefore), sql`${emailOutbox.nextAttemptAt} <= ${deferredFrom.toISOString()}::timestamptz`),
-  );
-  // Gmail could not carry it while Mailgun was stopped (§NNN), and it was queued past the allowance: nothing is carrying it.
-  const stoppedLateWhere = and(
+  const pausedLateWhere = notCarried(and(pending, recentPause, lt(emailOutbox.createdAt, overdueBefore), turnWithinDeferral));
+  /*
+    Gmail could not carry it while Mailgun was stopped (§NNN), and it was queued past the allowance:
+    nothing is carrying it — but only while a stop is in force that nothing carries. Once the stop has
+    ended the mark is the last thing said, not what holds the row: it is back on Mailgun's road waiting
+    its paced turn, and judged as any waiting row (`late`, `hourPaced`), never twice.
+  */
+  const stopUncarried = stop !== null && !carried;
+  const stoppedLateWhere = stopUncarried
+    ? and(pending, fallbackWaiting, lt(emailOutbox.createdAt, overdueBefore), turnWithinDeferral)
+    : sql`false`;
+  /*
+    A transient refusal retried for ever (§NNN): past `MAX_SEND_ATTEMPTS` a 5xx, a timeout or a 404 keeps
+    the row PENDING and hourly, its turn always minutes ahead — so it is neither overdue (its turn never
+    passes by ninety minutes while the scheduler runs) nor deferred (never more than an hour ahead) nor
+    FAILED, and would be counted nowhere: the blind spot `pausedLate` closed for the pause (§605). So a
+    row carrying a plain provider error — no stop mark, no Gmail-cap wait — that has spent the backoff's
+    six attempts or was queued past the overdue allowance is overdue, pace or no pace: a provider that
+    keeps refusing needs a person, and `lastError` says which refusal (a 404 is usually the API base or
+    the domain). A row whose turn has already passed by the allowance is in `late` as before, not here.
+  */
+  const plainError = sql`(${emailOutbox.lastError} IS NOT NULL
+    AND ${emailOutbox.lastError} NOT LIKE ${`${RATE_PAUSE_ERROR_PREFIX}%`}
+    AND ${emailOutbox.lastError} NOT LIKE ${`${ALLOWANCE_DEFERRED_ERROR_PREFIX}%`}
+    AND ${emailOutbox.lastError} NOT LIKE ${`${FALLBACK_WAITING_ERROR_PREFIX}%`}
+    AND ${emailOutbox.lastError} <> ${GMAIL_CAP_DEFERRED_ERROR})`;
+  const retryingLateWhere = and(
     pending,
-    fallbackWaiting,
-    lt(emailOutbox.createdAt, overdueBefore),
-    sql`${emailOutbox.nextAttemptAt} <= ${deferredFrom.toISOString()}::timestamptz`,
+    plainError,
+    or(sql`${emailOutbox.attemptCount} >= ${MAX_SEND_ATTEMPTS}`, lt(emailOutbox.createdAt, overdueBefore)),
+    turnWithinDeferral,
+    sql`${emailOutbox.nextAttemptAt} >= ${overdueBefore.toISOString()}::timestamptz`,
   );
+  // Each late row counted once: a recent pause and a stop nothing carries have counts of their own.
+  const lateWhere = and(overdueWhere, sql`NOT coalesce(${recentPause}, false)`, stopUncarried ? sql`NOT coalesce(${fallbackWaiting}, false)` : undefined);
   const deferredCounted = notCarried(deferredWhere);
   // «Sarcini»'s red row (§NNN): stopped rows queued past the allowance that nothing carries now.
-  // A Mailgun mark counts only while a stop is in force and nothing carries it; an old mark past its stop is a row waiting its turn.
-  const stoppedLongWhere = and(
-    pending,
-    lt(emailOutbox.createdAt, overdueBefore),
-    stop && !carried ? sql`(coalesce(${held}, false) OR ${fallbackWaiting})` : fallbackWaiting,
-  );
+  // A mark counts only while a stop is in force and nothing carries it; an old mark past its stop is a row waiting its turn.
+  const stoppedLongWhere = stopUncarried
+    ? and(pending, lt(emailOutbox.createdAt, overdueBefore), sql`(coalesce(${held}, false) OR coalesce(${fallbackWaiting}, false))`)
+    : sql`false`;
 
   const [[row], hour] = await Promise.all([
     db
@@ -244,6 +285,7 @@ export async function checkEmailHealth<T extends Record<string, unknown>>(
         late: count(sql`case when ${lateWhere} then 1 end`),
         lateOnGmail: count(sql`case when ${and(lateWhere, gmailRoad)} then 1 end`),
         pausedLate: count(sql`case when ${pausedLateWhere} then 1 end`),
+        retryingLate: count(sql`case when ${retryingLateWhere} then 1 end`),
         failed: count(sql`case when ${failedWhere} then 1 end`),
         resumesAt: sql<Date | null>`min(case when ${deferredCounted} then ${emailOutbox.nextAttemptAt} end)`,
         gmailDeferred: count(sql`case when ${gmailDeferredWhere} then 1 end`),
@@ -256,7 +298,7 @@ export async function checkEmailHealth<T extends Record<string, unknown>>(
 
   const holds = paceHolds({ hourlyAllowance: hour.allowance, carriedRecently: hour.carriedRecently, inFlight: hour.inFlight });
   const hourPaced = holds ? row.late - row.lateOnGmail : 0;
-  const overdue = row.late - hourPaced + row.pausedLate + row.stoppedLate;
+  const overdue = row.late - hourPaced + row.pausedLate + row.stoppedLate + row.retryingLate;
   const stalled = row.deferred > 0 || overdue > 0 || row.failed > 0;
 
   // The reason, from the most recent row that has one among those that count. One more query
@@ -266,7 +308,7 @@ export async function checkEmailHealth<T extends Record<string, unknown>>(
     const [latest] = await db
       .select({ lastError: emailOutbox.lastError })
       .from(emailOutbox)
-      .where(and(or(deferredCounted, holds ? and(lateWhere, gmailRoad) : lateWhere, pausedLateWhere, stoppedLateWhere, failedWhere), isNotNull(emailOutbox.lastError)))
+      .where(and(or(deferredCounted, holds ? and(lateWhere, gmailRoad) : lateWhere, pausedLateWhere, stoppedLateWhere, retryingLateWhere, failedWhere), isNotNull(emailOutbox.lastError)))
       .orderBy(desc(emailOutbox.createdAt))
       .limit(1);
     lastError = latest?.lastError ?? null;
@@ -299,6 +341,7 @@ export async function checkEmailHealth<T extends Record<string, unknown>>(
         }
       : null,
     stoppedLong: row.stoppedLong,
+    retryingLate: row.retryingLate,
   };
 }
 

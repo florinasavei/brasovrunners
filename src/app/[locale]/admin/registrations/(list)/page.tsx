@@ -134,6 +134,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   const untilAt = untilParsed && !Number.isNaN(untilParsed.getTime()) ? untilParsed : null;
   const carriedKind = current.stop === "paused" || current.stop === "allowance" ? current.stop : null;
   const carriedCount = current.gmail && /^\d{1,9}$/.test(current.gmail) ? Number(current.gmail) : null;
+  // A press during a stop nobody carried (§NNN): Mailgun's rows still wait, and this list has no queue header to say so.
+  const mailgunHeld = current.held === "1";
   const stopNow = new Date();
   // The printed numbers a bulk cancel just made void (§311), as the action wrote them: digits
   // and commas only, whatever the address bar says, and a race's worth at most.
@@ -559,6 +561,10 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               carriedCount !== null &&
               untilAt &&
               ` ${t("outbox.sentViaGmail", { gmail: carriedCount, stop: stopWords(carriedKind, untilAt, stopNow, locale, (key, values) => t(key, values)) })}`}
+            {!carriedKind &&
+              mailgunHeld &&
+              untilAt &&
+              ` ${t("outbox.stopHeld")} ${resumesWords(untilAt, stopNow, locale, (key, values) => t(key, values))}`}
           </Alert>
         )}
         {saved === "registrationDeleted" && (

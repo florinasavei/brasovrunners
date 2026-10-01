@@ -18,6 +18,7 @@ import { effectiveMinimumAge } from "./domain/age";
 import { listStatesMergeValues } from "./list-state-words";
 import { listSocialsMergeValues } from "./list-socials-words";
 import { promotionalMaterialsMergeValues } from "./promo-consent-words";
+import { gmailFallbackMergeValues } from "@/modules/notifications/fallback-notice-words";
 import { newsletterMergeValues } from "@/modules/newsletter/topic-words";
 import { maskIdDocument, renderDeclarationPdf, type DeclarationEntry, type DeclarationPdfInput } from "./declaration-pdf";
 
@@ -214,7 +215,7 @@ export async function eventMergeValues<T extends Record<string, unknown>>(
       ...deadlineMergeValues(locale, await currentDeadlines(db)),
       // The list-states marker is a general merge field (§396) and the declaration editor accepts
       // it, so a declaration that names it is filled here too rather than signed with a blank.
-      ...listStatesMergeValues(locale), ...listSocialsMergeValues(locale), ...promotionalMaterialsMergeValues(locale),
+      ...listStatesMergeValues(locale), ...listSocialsMergeValues(locale), ...promotionalMaterialsMergeValues(locale), ...gmailFallbackMergeValues(locale),
       ...newsletterMergeValues(locale),
     },
     title: event.title,

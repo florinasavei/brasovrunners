@@ -45,11 +45,18 @@ export type SendNowResult = OutboxBatchSummary & {
   allowance: number | null;
   remaining: number | null;
   /**
-   * Gmail carried for a stopped Mailgun (§NNN): how many of `sent` left by Gmail for it, and the stop —
-   * «N prin Gmail — Mailgun în pauză până la HH:MM» on the page. 0 and null when Mailgun's road was open.
+   * Gmail carried for a stopped Mailgun (§NNN): how many of `sent` left by Gmail for it —
+   * «N prin Gmail — Mailgun în pauză până la HH:MM» on the page. 0 when nothing was carried.
    */
   viaGmail: number;
+  /**
+   * Mailgun's stop whenever one was in force for the press (§NNN), carried or not: with `carriedByGmail`
+   * false the press sent only Gmail's own rows and Mailgun's still wait — the registrations list says
+   * «Mailgun reia la HH:MM», having no queue header to say it. Null while Mailgun's road was open.
+   */
   stop: MailgunStop | null;
+  /** Whether Gmail carried Mailgun's groups for `stop` (§NNN). */
+  carriedByGmail: boolean;
 };
 
 /** What the worker and the counter read; any fuller schema — the app's, the tests' — fits. */
@@ -111,9 +118,11 @@ export async function sendOutboxNow(
   let batches = 0;
   let volume = before;
   let viaGmail = 0;
-  let stop: MailgunStop | null = carrying ? whileStopped.stop : null;
+  // The stop in force whether Gmail carries it or not (§NNN): a press that sent only Gmail's own rows still says Mailgun's wait.
+  let stop: MailgunStop | null = whileStopped.road === "mailgun" ? null : whileStopped.stop;
+  let carriedByGmail = carrying;
   // Mailgun's day is not Gmail's: while Gmail carries for it, the day's counter does not stop the press.
-  const room = () => (stop !== null || volume.remaining === null ? null : volume.remaining);
+  const room = () => (carriedByGmail || volume.remaining === null ? null : volume.remaining);
 
   while (batches < MAX_BATCHES && (room() === null || (room() ?? 0) > 0)) {
     const summary = await processOutboxBatch(db, {
@@ -133,6 +142,7 @@ export async function sendOutboxNow(
     if (summary.carried) {
       viaGmail += summary.carried.viaGmail;
       stop = summary.carried.stop;
+      carriedByGmail = true;
     }
     volume = await readEmailVolumeToday(db, now);
     // The provider said stop (a spent cap defers the rest): no point in another batch.
@@ -150,10 +160,10 @@ export async function sendOutboxNow(
       sentToday: volume.sentMessages,
       remaining: volume.remaining,
       // What Gmail carried for a stopped Mailgun (§NNN): counts and the stop's kind, never an address.
-      ...(stop ? { viaGmail, mailgunStop: stop.kind, mailgunStopUntil: stop.until.toISOString() } : {}),
+      ...(stop ? { viaGmail, mailgunStop: stop.kind, mailgunStopUntil: stop.until.toISOString(), carriedByGmail } : {}),
     },
     now,
   });
 
-  return { ...total, batches, sentToday: volume.sentMessages, allowance: volume.allowance, remaining: volume.remaining, viaGmail, stop };
+  return { ...total, batches, sentToday: volume.sentMessages, allowance: volume.allowance, remaining: volume.remaining, viaGmail, stop, carriedByGmail };
 }

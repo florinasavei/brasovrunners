@@ -16,6 +16,7 @@ import type { LegalDocumentTranslationInput } from "./domain/content-hash";
 import { GROUP_RUN_DECLARATION_KEYS, raceDeclarationKeysFor, RACE_DECLARATION_KEYS } from "./domain/keys";
 import {
   asksForMinorSignature,
+  describesGmailFallback,
   describesListSocials,
   describesListStates,
   describesNewsletter,
@@ -268,6 +269,18 @@ export async function noticeDescribesPromotionalMaterials<T extends Record<strin
 export async function noticeDescribesPromotionalMaterialsShared<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
   const notices = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now)));
   return notices.every((notice) => notice !== undefined && describesPromotionalMaterialsShared(notice.body));
+}
+
+/**
+ * Whether the privacy notice in force says a message may leave through the club's Gmail while
+ * Mailgun is stopped (§NNN, `describesGmailFallback`) — in every language, like the offers. The
+ * precondition of «Gmail preia când Mailgun se oprește»: the outbox's claim and sender, `/api/health`,
+ * the emails page and «Sarcini» (`gmailFallbackNotice`) read it, never a public page, so it has no
+ * cached twin. False while no notice is approved.
+ */
+export async function noticeDescribesGmailFallback<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesGmailFallback(notice.body));
 }
 
 /**

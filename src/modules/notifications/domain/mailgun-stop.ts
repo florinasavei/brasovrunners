@@ -50,8 +50,12 @@ export function stopInForce(input: { pausedUntil: Date | null; allowanceUntil: D
   return null;
 }
 
-/** Why nothing can carry a due Mailgun row while Mailgun is stopped: the remedy each sentence names. */
-export type StopWaitReason = "fallbackOff" | "gmailUnconfigured" | "gmailCapSpent";
+/**
+ * Why nothing can carry a due Mailgun row while Mailgun is stopped: the remedy each sentence names.
+ * `noticeMissing` — the switch is on, but the privacy notice in force does not yet say a message may
+ * leave through Gmail (`{{gmailFallback}}`, §NNN): the remedy is approving the notice, not the switch.
+ */
+export type StopWaitReason = "fallbackOff" | "gmailUnconfigured" | "noticeMissing" | "gmailCapSpent";
 
 /**
  * Which road a due Mailgun row takes now (§NNN):
@@ -60,16 +64,21 @@ export type StopWaitReason = "fallbackOff" | "gmailUnconfigured" | "gmailCapSpen
  * - **gmail** — Mailgun is stopped, the switch is on, Gmail is configured and its rolling day still
  *   has room for `needed` recipients (one by default): Gmail carries it, inside its own cap and pace;
  * - **wait** — Mailgun is stopped and Gmail cannot carry it, with the reason (the switch is off,
- *   Gmail is not configured, or its cap is spent) and when Mailgun's road opens again.
+ *   Gmail is not configured, the notice in force does not name the fallback, or its cap is spent) and
+ *   when Mailgun's road opens again.
  *
  * The switch off is checked after "configured": a deployment without Gmail cannot turn it on, and
- * the sentence must name the remedy that exists.
+ * the sentence must name the remedy that exists; the notice after the switch, because a club that
+ * turned it off is told about its own choice first.
  */
 export type StopRoute = { road: "mailgun" } | { road: "gmail"; stop: MailgunStop } | { road: "wait"; stop: MailgunStop; reason: StopWaitReason };
 
 export function routeWhileStopped(input: {
   stop: MailgunStop | null;
+  /** The club's switch as stored — absent reads as on (`fallbackSwitchOn`) — not yet the notice's gate. */
   fallbackToGmail: boolean;
+  /** Whether the privacy notice in force names `{{gmailFallback}}` in every language (§NNN). */
+  noticeNamesFallback: boolean;
   gmailConfigured: boolean;
   /** Recipients Gmail's rolling day still has room for: the cap less what it reached. */
   gmailRoom: number;
@@ -79,16 +88,34 @@ export function routeWhileStopped(input: {
   if (!stop) return { road: "mailgun" };
   if (!input.gmailConfigured) return { road: "wait", stop, reason: "gmailUnconfigured" };
   if (!input.fallbackToGmail) return { road: "wait", stop, reason: "fallbackOff" };
+  if (!input.noticeNamesFallback) return { road: "wait", stop, reason: "noticeMissing" };
   if (input.gmailRoom < Math.max(1, input.needed ?? 1)) return { road: "wait", stop, reason: "gmailCapSpent" };
   return { road: "gmail", stop };
 }
 
+/** The club's switch as stored (§NNN): on unless the club turned it off — a value saved before the switch existed reads as on. */
+export function fallbackSwitchOn(setting: { fallbackToGmail?: boolean }): boolean {
+  return setting.fallbackToGmail !== false;
+}
+
 /**
- * The switch as it acts (§NNN): on unless the club turned it off, and only where Gmail is configured
- * — a stored «on» on a deployment without the account carries nothing, and the panel greys it.
+ * The switch as it acts (§NNN): on unless the club turned it off, only where Gmail is configured — a
+ * stored «on» on a deployment without the account carries nothing, and the panel greys it — and only
+ * while the privacy notice in force names `{{gmailFallback}}` in every language (§443: a participant's
+ * name, single-use links and signed PDF leave through Google only under a notice that says so).
  */
-export function fallbackActive(setting: { fallbackToGmail?: boolean }, gmailConfigured: boolean): boolean {
-  return gmailConfigured && setting.fallbackToGmail !== false;
+export function fallbackActive(setting: { fallbackToGmail?: boolean }, gmailConfigured: boolean, noticeNamesFallback: boolean): boolean {
+  return gmailConfigured && noticeNamesFallback && fallbackSwitchOn(setting);
+}
+
+/**
+ * Why the panel greys the switch (§NNN), or null when it can act: Gmail not configured here first —
+ * no notice makes an absent account carry — then the notice that does not name the fallback yet.
+ */
+export function fallbackUnavailable(gmailConfigured: boolean, noticeNamesFallback: boolean): "gmailUnconfigured" | "noticeMissing" | null {
+  if (!gmailConfigured) return "gmailUnconfigured";
+  if (!noticeNamesFallback) return "noticeMissing";
+  return null;
 }
 
 /**

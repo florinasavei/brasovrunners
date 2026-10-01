@@ -162,7 +162,9 @@ export type EmailTransportSetting = z.infer<typeof emailTransportSettingSchema>;
  *   suspends.
  * - **overflow off**: the same notice question as the participant groups.
  * - **the fallback on** (§NNN): a stop is Mailgun's, not the runner's — while Mailgun says stop, Gmail
- *   carries every group rather than a confirmation waiting out a pause or a day. Off, today's wait.
+ *   carries every group rather than a confirmation waiting out a pause or a day. Off, today's wait. It
+ *   acts only once the privacy notice in force names `{{gmailFallback}}` (`fallbackActive`): for the
+ *   participant groups that is the same notice question as above, answered by the notice.
  * - **200 a day on production, 50 elsewhere**: one Gmail account serves both environments and the
  *   people answering by hand; 250 of Google's 500 leaves them the rest.
  */

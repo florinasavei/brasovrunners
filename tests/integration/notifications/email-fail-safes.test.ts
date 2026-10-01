@@ -9,9 +9,12 @@ import { DEFAULT_EMAIL_TRANSPORT, GMAIL_CAP_DEFERRED_ERROR } from "@/modules/not
 import { RATE_PAUSE_ERROR_PREFIX } from "@/modules/notifications/domain/hourly-pace";
 import { ALLOWANCE_DEFERRED_ERROR_PREFIX, FALLBACK_WAITING_ERROR_PREFIX } from "@/modules/notifications/domain/mailgun-stop";
 import { MAX_SEND_ATTEMPTS } from "@/modules/notifications/domain/retry";
+import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
+import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { updateEmailPlan } from "@/modules/notifications/email-plan";
 import { updateEmailTransport } from "@/modules/notifications/email-transport";
 import { checkEmailHealth, EMAIL_HEALTH_THRESHOLDS } from "@/modules/notifications/health";
+import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { readMailgunStop, recordMailgunStop } from "@/modules/notifications/mailgun-stop";
 import { claimOutboxBatch, type OutboxRow, processOutboxBatch } from "@/modules/notifications/outbox";
 import { createOutboxSender } from "@/modules/notifications/outbox-sender";
@@ -31,8 +34,9 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * is not about the message never marks it FAILED; the failed come back with one press; «Trimite
  * acum» says what it did; health and «Sarcini» name the remedy.
  *
- * This deployment has the club's Gmail (the two variables below, nothing real), so the setting's
- * default switch is on. The sender is a stand-in for both roads: a message the outbox hands to Gmail
+ * This deployment has the club's Gmail (the two variables below, nothing real), and the privacy
+ * notice in force names `{{gmailFallback}}` (approved in `beforeEach`), so the setting's default switch
+ * acts; the gate itself has its own block below. The sender is a stand-in for both roads: a message the outbox hands to Gmail
  * (`transport: "gmail"`, `gmailOnly` while Gmail carries for Mailgun) goes to `gmail`, anything else
  * to `mailgun`, each answering as the test says.
  */
@@ -91,11 +95,23 @@ beforeEach(async () => {
   [organizer] = await db.insert(staffUsers).values({ email: "organizer@dev.test", displayName: "Organizer", role: "MODERATOR" }).returning();
   roads.mailgun = mailgunSent;
   roads.gmail = gmailSent;
+  await approveNotice(1, NAMES_FALLBACK);
 });
 afterEach(() => {
   roads.calls.mailgun = [];
   roads.calls.gmail = [];
 });
+
+/** A privacy notice in both languages, approved and in force; `{{gmailFallback}}` named unless said otherwise. */
+async function approveNotice(version: number, paragraph: string, effectiveAt = new Date("2026-01-01T00:00:00.000Z")) {
+  const body = { sections: [{ paragraphs: [paragraph] }] };
+  const translations: LegalDocumentTranslationInput[] = [
+    { locale: "ro", title: "Nota", body },
+    { locale: "en", title: "Notice", body },
+  ];
+  await insertLegalDocumentVersion(db, { key: "PRIVACY_NOTICE", version, effectiveAt, isApproved: true, contentSha256: computeContentHash(translations), translations, now: NOW });
+}
+const NAMES_FALLBACK = "Când Mailgun se oprește, un mesaj poate pleca prin Gmail: {{gmailFallback}}.";
 
 let counter = 0;
 const row = (overrides: Partial<typeof emailOutbox.$inferInsert> = {}) => {
@@ -189,6 +205,26 @@ describe("§NNN Gmail takes over while Mailgun is paused, with the switch on", (
   });
 });
 
+describe("§NNN a spill that does not end in «sent» still records Mailgun's stop", () => {
+  it("records the pause from a spill Gmail refused for the address, and holds the batch's next Mailgun row", async () => {
+    await switchOff();
+    let first = true;
+    roads.mailgun = (message) => {
+      if (!first) return mailgunSent(message);
+      first = false;
+      // Mailgun said 429, the message spilled, and Gmail refused the address for good.
+      return { outcome: "permanent_failure", error: "gmail 550 5.1.1", mailgunStopped: { kind: "paused", until: PAUSE_UNTIL } };
+    };
+    await db.insert(emailOutbox).values([row(), row({ createdAt: new Date(NOW.getTime() - 10 * MINUTE) })]);
+
+    const summary = await batch();
+
+    expect(summary).toMatchObject({ claimed: 2, bounced: 1, deferred: 1, sent: 0 });
+    expect(roads.calls.mailgun).toHaveLength(1);
+    expect(await readMailgunStop(db, NOW)).toEqual({ kind: "paused", until: PAUSE_UNTIL });
+  });
+});
+
 describe("§NNN with the switch off, today's behaviour", () => {
   it("moves nothing on Mailgun's road during a pause, and Gmail's own groups still go", async () => {
     await switchOff({ announcements: "gmail" });
@@ -263,6 +299,9 @@ describe("§NNN Gmail's cap spent while Mailgun is stopped", () => {
       expect(waiting.nextAttemptAt?.toISOString()).toBe(PAUSE_UNTIL.toISOString());
     }
     expect((await rows()).map((r) => r.attemptCount).sort()).toEqual([0, 2]);
+    // The relabel took the pause's mark off the paused row, and the stop was only on that mark: it is
+    // written as the record, so Mailgun's road still reads closed until the pause ends.
+    expect(await readMailgunStop(db, new Date(NOW.getTime() + 2 * MINUTE))).toEqual({ kind: "paused", until: PAUSE_UNTIL });
     // Not taken back at once as a row Mailgun held: it waits for its turn.
     expect(await claimOutboxBatch(db, { now: new Date(NOW.getTime() + 2 * MINUTE), batchSize: 20, roads: await readOutboxRoads(db) })).toHaveLength(0);
   });
@@ -354,7 +393,7 @@ describe("§NNN «Trimite acum» during a stop says what it did", () => {
   it("sends through Gmail and says how many and why, with the switch on", async () => {
     await db.insert(emailOutbox).values([pausedRow(), row({ createdAt: NOW })]);
     const result = await sendOutboxNow(db, admin, new Date(NOW.getTime() + MINUTE));
-    expect(result).toMatchObject({ sent: 2, viaGmail: 2, stop: { kind: "paused", until: PAUSE_UNTIL } });
+    expect(result).toMatchObject({ sent: 2, viaGmail: 2, carriedByGmail: true, stop: { kind: "paused", until: PAUSE_UNTIL } });
     expect(roads.calls.mailgun).toHaveLength(0);
     const [audit] = await db.select().from(auditLogs).where(eq(auditLogs.action, "outbox.sent_by_staff"));
     expect(audit.metadataJson).toMatchObject({ viaGmail: 2, mailgunStop: "paused" });
@@ -373,6 +412,15 @@ describe("§NNN «Trimite acum» during a stop says what it did", () => {
     expect((off as SendNowRefused).reason).toBe(SEND_NOW_STOPPED_REFUSALS.fallbackOff);
     // Nothing moved, and no «0 trimise».
     expect(roads.calls.mailgun.length + roads.calls.gmail.length).toBe(0);
+  });
+
+  it("says Mailgun's stop when the press sent only Gmail's own rows, the switch off", async () => {
+    await switchOff({ announcements: "gmail" });
+    await db.insert(emailOutbox).values([pausedRow(), row({ messageType: "ORGANIZER_MESSAGE", createdAt: NOW })]);
+    const result = await sendOutboxNow(db, admin, new Date(NOW.getTime() + MINUTE));
+    // Gmail's own group went; Mailgun's row waits, and the result says until when — not «sent» alone.
+    expect(result).toMatchObject({ sent: 1, viaGmail: 0, carriedByGmail: false, stop: { kind: "paused", until: PAUSE_UNTIL } });
+    expect(roads.calls.mailgun).toHaveLength(0);
   });
 
   it("lets a resend's «now» through on Gmail's room, and refuses it with the stop's sentence otherwise", async () => {
@@ -439,10 +487,105 @@ describe("§NNN health and «Sarcini» name the remedy", () => {
     expect(health.mailgunStop).toMatchObject({ kind: "paused", carriedBy: null, waitReason: "gmailCapSpent" });
   });
 
-  it("counts a row Gmail could not carry, queued past ninety minutes, as overdue", async () => {
+  it("counts a row Gmail could not carry, queued past ninety minutes, as overdue while the stop it waits on is in force", async () => {
+    // The pause is in force, and nothing carries it: Gmail's day is spent.
+    await recordMailgunStop(db, { kind: "paused", until: PAUSE_UNTIL }, NOW);
+    await gmailCapSpent();
     const late = new Date(NOW.getTime() - EMAIL_HEALTH_THRESHOLDS.OVERDUE_AFTER_MS - 5 * MINUTE);
     await db.insert(emailOutbox).values(row({ createdAt: late, lastError: `${FALLBACK_WAITING_ERROR_PREFIX}gmail is not taking messages`, nextAttemptAt: PAUSE_UNTIL }));
     const health = await checkEmailHealth(db, NOW);
     expect(health).toMatchObject({ status: "stalled", overdue: 1, stoppedLong: 1 });
+  });
+
+  it("does not count it once the stop has ended and Mailgun's hour is paced — the row waits its turn, counted once", async () => {
+    // The pause ended an hour ago; the row Gmail could not carry is back on Mailgun's road, its turn
+    // two hours past, while Mailgun's hour is full: the pace working, not a stall.
+    await recordMailgunStop(db, { kind: "paused", until: new Date(NOW.getTime() - 60 * MINUTE) }, NOW);
+    await db.insert(emailOutbox).values(
+      Array.from({ length: 100 }, () => row({ status: "SENT", sentAt: new Date(NOW.getTime() - 10 * MINUTE), transport: "mailgun", createdAt: new Date(NOW.getTime() - 11 * MINUTE) })),
+    );
+    const late = new Date(NOW.getTime() - 4 * 60 * MINUTE);
+    await db.insert(emailOutbox).values(
+      row({ createdAt: late, lastError: `${FALLBACK_WAITING_ERROR_PREFIX}gmail is not taking messages`, nextAttemptAt: new Date(NOW.getTime() - 120 * MINUTE) }),
+    );
+    const health = await checkEmailHealth(db, NOW);
+    expect(health).toMatchObject({ status: "ok", overdue: 0, hourPaced: 1, stoppedLong: 0, mailgunStop: null });
+
+    // With no pace binding the same row is a stall, and counted once.
+    await db.delete(emailOutbox).where(eq(emailOutbox.status, "SENT"));
+    expect(await checkEmailHealth(db, NOW)).toMatchObject({ status: "stalled", overdue: 1, hourPaced: 0, stoppedLong: 0 });
+  });
+});
+
+/*
+  §NNN (the review's blocker): a transient refusal is retried hourly for ever, its turn always minutes
+  ahead, so neither the overdue count nor the deferred one ever saw it — before this branch it reached
+  FAILED within two hours and raised the alarm. `retryingLate` counts it, the way `pausedLate` counts a
+  pause that does not end.
+*/
+describe("§NNN a transient refusal retried for ever is a stall", () => {
+  it("is stalled, with the reason, for a row past six transient attempts while the scheduler runs; a third attempt is not", async () => {
+    const reason = "mailgun 404: Not Found";
+    // Past six attempts, its next hourly turn minutes ahead: the scheduler is running, the provider keeps refusing.
+    await db.insert(emailOutbox).values(row({ attemptCount: MAX_SEND_ATTEMPTS + 2, lastError: reason, nextAttemptAt: new Date(NOW.getTime() + 20 * MINUTE) }));
+    const health = await checkEmailHealth(db, NOW);
+    expect(health).toMatchObject({ status: "stalled", overdue: 1, retryingLate: 1, deferred: 0, failed: 0, lastError: reason });
+
+    // On its third attempt, queued twenty minutes ago, its turn four minutes ahead: the backoff working.
+    await db.delete(emailOutbox);
+    await db.insert(emailOutbox).values(row({ attemptCount: 3, lastError: "mailgun 502: Bad Gateway", nextAttemptAt: new Date(NOW.getTime() + 4 * MINUTE) }));
+    expect(await checkEmailHealth(db, NOW)).toMatchObject({ status: "ok", overdue: 0, retryingLate: 0 });
+  });
+
+  it("counts a row queued past the allowance that is still being refused, and never one a stop or Gmail's cap holds", async () => {
+    const late = new Date(NOW.getTime() - EMAIL_HEALTH_THRESHOLDS.OVERDUE_AFTER_MS - 5 * MINUTE);
+    await db.insert(emailOutbox).values([
+      row({ createdAt: late, attemptCount: 2, lastError: "mailgun 503: Service Unavailable", nextAttemptAt: new Date(NOW.getTime() + 2 * MINUTE) }),
+      // Gmail's cap, the club's own choice (§493): its own count, never a retry.
+      row({ createdAt: late, attemptCount: 1, lastError: GMAIL_CAP_DEFERRED_ERROR, nextAttemptAt: new Date(NOW.getTime() + 30 * MINUTE) }),
+    ]);
+    expect(await checkEmailHealth(db, NOW)).toMatchObject({ status: "stalled", overdue: 1, retryingLate: 1 });
+  });
+});
+
+/*
+  §NNN (the review, the orchestrator's decision): Gmail carries a participant's message only under a
+  privacy notice that says so (§443) — the notice in force must name `{{gmailFallback}}` in every
+  language. Three states: the notice does not name it; it names it and the switch is on; it names it
+  and the club turned the switch off.
+*/
+describe("§NNN the fallback waits for a notice that names it", () => {
+  async function noticeWithout() {
+    // The club approves a notice that does not name the field, in force from a second ago.
+    await approveNotice(2, "Mesajele pleacă prin Mailgun.", new Date(NOW.getTime() - 1000));
+  }
+
+  it("does not carry while the notice in force does not name it: Mailgun's rows wait, and every page says why", async () => {
+    await noticeWithout();
+    await db.insert(emailOutbox).values([pausedRow(), row({ createdAt: NOW })]);
+
+    expect((await readOutboxRoads(db, NOW))?.fallbackToGmail).toBe(false);
+    const summary = await batch(new Date(NOW.getTime() + MINUTE));
+    expect(summary).toMatchObject({ claimed: 0, sent: 0 });
+    expect(summary.carried).toBeUndefined();
+    expect(roads.calls.gmail.length + roads.calls.mailgun.length).toBe(0);
+
+    const volume = await readEmailVolumeToday(db, NOW);
+    expect(volume).toMatchObject({ fallbackDisclosed: false, fallbackToGmail: false });
+    expect(volume.whileStopped).toEqual({ road: "wait", stop: { kind: "paused", until: PAUSE_UNTIL }, reason: "noticeMissing" });
+    expect((await checkEmailHealth(db, NOW)).mailgunStop).toMatchObject({ carriedBy: null, waitReason: "noticeMissing" });
+    const refused = await sendOutboxNow(db, admin, NOW).catch((error: unknown) => error);
+    expect((refused as SendNowRefused).reason).toBe(SEND_NOW_STOPPED_REFUSALS.noticeMissing);
+  });
+
+  it("carries once the notice names it with the switch on, and not with the switch off", async () => {
+    await db.insert(emailOutbox).values(pausedRow());
+    expect((await readEmailVolumeToday(db, NOW)).whileStopped.road).toBe("gmail");
+
+    await switchOff();
+    const off = await readEmailVolumeToday(db, NOW);
+    expect(off).toMatchObject({ fallbackDisclosed: true, fallbackToGmail: false });
+    expect(off.whileStopped).toMatchObject({ road: "wait", reason: "fallbackOff" });
+    expect((await batch(new Date(NOW.getTime() + MINUTE))).claimed).toBe(0);
   });
 });

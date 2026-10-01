@@ -15,6 +15,7 @@ import { teamPageMergeValues } from "@/modules/content/team/notice-words";
 import { listStatesMergeValues } from "@/modules/registrations/list-state-words";
 import { listSocialsMergeValues } from "@/modules/registrations/list-socials-words";
 import { promotionalMaterialsMergeValues } from "@/modules/registrations/promo-consent-words";
+import { gmailFallbackMergeValues } from "@/modules/notifications/fallback-notice-words";
 import { newsletterMergeValues } from "@/modules/newsletter/topic-words";
 import { cachedAddressCap, cachedCurrentApprovedDocument, cachedDeadlines } from "@/modules/public-cache/reads";
 import { env } from "@/shared/config/env";
@@ -81,7 +82,7 @@ export default async function TermsPage({ params }: Props) {
             })}
           </Typography>
           {/* The club's deadlines in the text's merge fields (§377), from the data cache like the text itself. */}
-          <LegalDocumentBody body={document.body} values={{ ...deadlineMergeValues(locale, await cachedDeadlines()), ...addressCapMergeValues(locale, (await cachedAddressCap()).registrationsPerAddress), ...listStatesMergeValues(locale), ...listSocialsMergeValues(locale), ...promotionalMaterialsMergeValues(locale), ...newsletterMergeValues(locale), ...teamPageMergeValues(locale) }} emphasizeFilled={false} />
+          <LegalDocumentBody body={document.body} values={{ ...deadlineMergeValues(locale, await cachedDeadlines()), ...addressCapMergeValues(locale, (await cachedAddressCap()).registrationsPerAddress), ...listStatesMergeValues(locale), ...listSocialsMergeValues(locale), ...promotionalMaterialsMergeValues(locale), ...gmailFallbackMergeValues(locale), ...newsletterMergeValues(locale), ...teamPageMergeValues(locale) }} emphasizeFilled={false} />
         </>
       ) : (
         <>

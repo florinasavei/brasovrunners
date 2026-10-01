@@ -97,7 +97,7 @@ export async function readOutboxQueue<T extends Record<string, unknown>>(
     neither key made `not(…)` null, so a real retry counted nowhere.
   */
   // The roads as the claim splits them: one row by key, and the panel's «late» reads them (§605).
-  const roads = await readOutboxRoads(db);
+  const roads = await readOutboxRoads(db, now);
   const familyFlag = sql`coalesce((${emailOutbox.payloadJson} ->> 'sittingHeld') = 'true' or (${emailOutbox.payloadJson} ->> 'familyHeld') = 'true', false)`;
   const rows = await db
     .select({

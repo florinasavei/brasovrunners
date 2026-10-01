@@ -682,6 +682,8 @@ export async function processOutboxBatch(
   const fallbackOn = roads?.fallbackToGmail === true;
   let viaGmail = 0;
   let carrying: MailgunStop | null = claim.carried ? claim.stop : null;
+  // Whether this batch has written the stop it carries for as the record (§NNN: before a relabel, below).
+  let stopKept = false;
   /** Mailgun refused the account (§NNN): the stop is recorded, and with the switch on Gmail carries the rest. */
   const mailgunStopped = async (stop: MailgunStop): Promise<void> => {
     await recordMailgunStop(db, stop, clock()).catch((error: unknown) => {
@@ -742,11 +744,12 @@ export async function processOutboxBatch(
       }
 
       /*
-        Mailgun refused the account and Gmail took the message all the same (§NNN): the message is out,
-        and the stop Mailgun announced still closes its road — recorded, so the next claim neither
-        knocks on Mailgun during it nor reads an open road because the refused row has left.
+        Mailgun refused the account and the message spilled to Gmail (§NNN): whatever Gmail answered —
+        sent, paced, a refused address, a connection that broke — the stop Mailgun announced still
+        closes its road. Recorded before the outcome is handled, so the next claim neither knocks on
+        Mailgun during it nor reads an open road because the refused row has left or was closed.
       */
-      if ((result.outcome === "sent" || result.outcome === "throttled") && result.mailgunStopped) {
+      if (result.mailgunStopped) {
         const announced = result.mailgunStopped;
         await mailgunStopped({ kind: announced.kind, until: announced.until ?? (announced.kind === "paused" ? now : nextAllowanceResetAt(now)) });
         if (announced.kind === "paused" && !fallbackOn) mailgunPause = { until: announced.until ?? now, error: "" };
@@ -817,6 +820,18 @@ export async function processOutboxBatch(
         branch below, as for any Gmail row.
       */
       if (gmailOnly && result.outcome === "throttled" && !result.paced) {
+        /*
+          The relabel takes the row's pause or allowance mark away — one of the stop's two witnesses
+          (`readMailgunStop`). So the stop this batch carries for is written as the record first, once
+          a batch: a stop read from the marks alone (a row paused before the record existed, or a
+          record write that failed) would otherwise read as an open road at the next claim.
+        */
+        if (!stopKept) {
+          stopKept = true;
+          await recordMailgunStop(db, gmailOnly, clock()).catch((recordError: unknown) => {
+            console.error("[email-outbox] the stop could not be recorded", recordError);
+          });
+        }
         await db
           .update(emailOutbox)
           .set({

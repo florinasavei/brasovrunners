@@ -462,13 +462,16 @@ own fault, `BOUNCED` for the address — and everything else waits.
 **The fallback road (§NNN).** While Mailgun's road is stopped — a pause it asked for (a 429, the
 probation), or its daily or monthly allowance spent — and «Setări» → «Emailuri» → «Prin ce pleacă
 emailurile» → «Gmail preia când Mailgun se oprește» is on (the default wherever the club's Gmail is
-configured), the outbox claims **every** group's due mail on Gmail's road, inside Gmail's own cap
+configured) and the privacy notice in force names `{{gmailFallback}}` in every language (a participant's
+name, links and signed PDF reach Google only under a notice that says so, §443), the outbox claims **every** group's due mail on Gmail's road, inside Gmail's own cap
 («Limita Gmail pe zi», at most 500 recipients in a rolling day, shared with the people who send from
 that account by hand) and pace. The rows Mailgun held back leave at once; the `transport` column
 records which road each row left on. The stop is recorded (`platform_settings.mailgunStop`) so the road
 stays closed after the refused row itself has left by Gmail, and Mailgun's groups return to Mailgun on
-their own when the pause ends or the reset comes. Off, or with Gmail's cap spent, the rows wait as they
-always did, and the queue panel's header and «Sarcini» say so with the remedy.
+their own when the pause ends or the reset comes. Off, under a notice that does not name it, or with
+Gmail's cap spent, the rows wait as they always did, and the queue panel's header and «Sarcini» say so
+with the remedy. A transient refusal retried hourly past six attempts or ninety minutes is counted as
+overdue (`retryingLate`), so `/api/health?deep=1` answers 503 for it as it did when such a row was FAILED.
 
 The patterns that move a 400 out of permanent are **narrow on purpose** and must stay narrow.
 The daily allowance's is limit wording alone. The probation's (§605) is two parts that must both

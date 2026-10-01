@@ -1214,7 +1214,9 @@ too: together the two could send 200 in Mailgun's hour. Set QA's «Limita pe or�
 and keep its rehearsals small while the probation lasts.
 Ask Mailgun's support to lift the probation, then raise or clear the field on production.
 **While Mailgun says stop** — a pause, or the allowance spent — the switch «Gmail preia când Mailgun se
-oprește» (same page, «Prin ce pleacă emailurile»; on by default wherever the club's Gmail of §38 is set)
+oprește» (same page, «Prin ce pleacă emailurile»; on by default wherever the club's Gmail of §38 is set
+and the privacy notice in force names `{{gmailFallback}}` — until a notice from the template is approved
+it is greyed, and «Sarcini» carries the row «Nota de confidențialitate: Gmail preia când Mailgun se oprește»)
 sends every group through Gmail until Mailgun reopens, and a refusal that is not about the message never
 marks it failed; the failed come back with «Reîncearcă emailurile eșuate» on the queue (`DECISIONS.md` §NNN).
 
@@ -1291,7 +1293,8 @@ Locally the development switcher is the provider, so nothing is sent and the ale
 ## 38. The contact form — the club's Gmail lends it an app password — done (2026-09-20)
 
 **The same account is the outbox's fallback road (`DECISIONS.md` §NNN):** while Mailgun says stop, «Gmail
-preia când Mailgun se oprește» sends the whole queue through it, at most «Limita Gmail pe zi» recipients in
+preia când Mailgun se oprește» sends the whole queue through it — once the approved privacy notice names it
+(`{{gmailFallback}}`, section 6 of the template), never before — at most «Limita Gmail pe zi» recipients in
 a rolling day (500 is Google's own ceiling, shared with the people who write by hand and with QA) — on a
 race morning that cap, not Mailgun's, is what decides how many confirmations still leave, so raise it there
 before the window if Mailgun is on probation.

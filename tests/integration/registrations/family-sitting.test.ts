@@ -841,8 +841,9 @@ describe("§519 the fix round of 2026-09-27", () => {
 
 /*
   §NNN (BR-V2.53's review nit): a family sitting neither stretches nor cuts a pause Mailgun asked for.
-  The hold, release and replace statements leave a row carrying the rate-pause mark as it was — its
-  turn is Mailgun's pause, and the claim reads Mailgun's road as stopped while it waits.
+  The hold and release statements leave a row carrying the rate-pause mark at its turn — Mailgun's
+  pause. The replace deletes it like any never-tried row: the stop is recorded apart from the row
+  (`platform_settings.mailgunStop`), so its going ends no pause, and the family message says it all.
 */
 describe("§NNN a sitting leaves a row Mailgun paused alone", () => {
   const PAUSED = `${RATE_PAUSE_ERROR_PREFIX}mailgun 429: Too Many Requests`;
@@ -876,5 +877,19 @@ describe("§NNN a sitting leaves a row Mailgun paused alone", () => {
 
     await releaseFamilySitting(db, sittingId!, at(3));
     expect((await outbox())[0].nextAttemptAt?.toISOString()).toBe(at(4).toISOString());
+  });
+
+  it("the family message replaces a paused first email: one message to the address, never both", async () => {
+    const event = await createEvent();
+    const sittingId = await start(event, "Ana", 0);
+    const [row] = await outbox();
+    // Mailgun paused Ana's held email until minute 5, its attempt given back.
+    await db.update(emailOutbox).set({ lastError: PAUSED, nextAttemptAt: at(5) }).where(eq(emailOutbox.id, row.id));
+
+    expect(await send(event, "Ion", 1, sittingId)).toBe(sittingId);
+
+    const rows = await outbox();
+    expect(rows.map((candidate) => candidate.messageType)).toEqual(["REGISTER_ANOTHER_PERSON"]);
+    expect(rows.some((candidate) => candidate.id === row.id)).toBe(false);
   });
 });

@@ -7,7 +7,7 @@ import { clubCopyRecipients, isCopiedPerMessage, participantMessageBcc } from ".
 import { roomToSendNow, SENT_NOW_FLAG } from "./domain/send-at-once";
 import { preferredTransport, roadsByMessageType } from "./domain/email-transport";
 import { gmailIsConfigured, readEmailTransport } from "./email-transport";
-import { routeWhileStopped, type StopRoute, type StopWaitReason } from "./domain/mailgun-stop";
+import { fallbackSwitchOn, routeWhileStopped, type StopRoute, type StopWaitReason } from "./domain/mailgun-stop";
 import { readEmailVolumeToday } from "./volume";
 
 /**
@@ -33,12 +33,14 @@ export const SEND_NOW_HOUR_SPENT = "SEND_NOW_HOUR_SPENT";
 
 /**
  * Mailgun said stop and Gmail cannot carry the press (§NNN): one sentence per remedy, in
- * `Admin.errors` — turn the switch on, configure Gmail, raise Gmail's cap — each saying that waiting
- * for Mailgun's return is the other answer. Never «0 trimise» in silence.
+ * `Admin.errors` — turn the switch on, configure Gmail, approve the notice that names the fallback,
+ * raise Gmail's cap — each saying that waiting for Mailgun's return is the other answer. Never
+ * «0 trimise» in silence.
  */
 export const SEND_NOW_STOPPED_REFUSALS = {
   fallbackOff: "SEND_NOW_MAILGUN_STOPPED_FALLBACK_OFF",
   gmailUnconfigured: "SEND_NOW_MAILGUN_STOPPED_NO_GMAIL",
+  noticeMissing: "SEND_NOW_MAILGUN_STOPPED_NOTICE",
   gmailCapSpent: "SEND_NOW_MAILGUN_STOPPED_GMAIL_FULL",
 } as const satisfies Record<StopWaitReason, string>;
 
@@ -110,7 +112,8 @@ export async function assertRoomToSendNow<T extends Record<string, unknown>>(
   const total = messageTypes.length + clubCopyTypes.length;
   const whileStopped = routeWhileStopped({
     stop: volume.mailgunStop,
-    fallbackToGmail: volume.fallbackToGmail,
+    fallbackToGmail: fallbackSwitchOn(setting),
+    noticeNamesFallback: volume.fallbackDisclosed,
     gmailConfigured: volume.gmailConfigured,
     gmailRoom: volume.gmailRoom,
     needed: total,

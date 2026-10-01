@@ -366,13 +366,14 @@ export function createEmailSender(config: {
       if (result.outcome === "sent") return { ...result, transport: "mailgun", recipients: transmit ? recipientsOf(outgoing) : 0 };
       if (result.outcome === "throttled" && gmail?.overflowToGmail && outgoing.transport !== "gmail" && !outgoing.bulk) {
         // Carried, or handed back for the pace — either is sooner than Mailgun's reset. Mailgun's own
-        // stop rides on the answer (§NNN), so the outbox still closes Mailgun's road until it ends.
+        // stop rides on every answer the spill ends with (§NNN) — sent, paced, a refused address, a
+        // connection that broke where Gmail may have taken it — so the outbox still records it and
+        // closes Mailgun's road until it ends, whatever became of this one message.
         const spilled = await viaGmail(outgoing, transmit, false);
-        if (spilled && (spilled.outcome === "sent" || spilled.outcome === "throttled")) {
+        if (spilled) {
           const kind = result.paced && result.rateRefused ? "paused" : "allowance";
           return { ...spilled, mailgunStopped: { kind, ...(result.retryAfter ? { until: result.retryAfter } : {}) } };
         }
-        if (spilled) return spilled;
       }
       return result;
     },

@@ -649,7 +649,8 @@ hourly `/api/health` is shallow since §577 and says only whether the site answe
 is red (§NNN). First look at «Setări» → «Emailuri» → «Coada de trimitere»: its header says whether
 Mailgun has said stop, until when, and who carries the mail meanwhile («Mailgun în pauză până la 10:15 —
 Gmail preia», «… — Gmail nu e configurat»). **The switch:** «Prin ce pleacă emailurile» → «Gmail preia când
-Mailgun se oprește» → Da → «Salvează drumurile»: while Mailgun is paused or out of allowance, every group
+Mailgun se oprește» → Da → «Salvează drumurile» (greyed «până la aprobarea notei din șablonul nou» until the
+privacy notice in force names `{{gmailFallback}}`: approve it from the template on «Documente legale» first): while Mailgun is paused or out of allowance, every group
 leaves through the club's Gmail, within «Limita Gmail pe zi» (raise it there, 500 at most, if Gmail is
 the one that is full), and returns to Mailgun on its own afterwards. While Gmail carries everything,
 `/api/health?deep=1` answers 200 with `email.status: "degraded"` and the monitor stays quiet; it answers
@@ -683,7 +684,8 @@ the one that is full), and returns to Mailgun on its own afterwards. While Gmail
    send" without the probation's words: an unverified or closed domain, an account under review), or a
    message that could not be rendered. A transient refusal (a 5xx, a timeout, a 404 — `SETUP.md` §35:
    EU domains answer at `api.eu.mailgun.net`) is never FAILED any more: it is retried hourly and shows
-   as **overdue** instead. The alert carries the last reason; open Mailgun → Sending → Logs. Once the
+   as **overdue** instead (`retryingLate`, once past six attempts or ninety minutes), and «Sarcini» turns
+   red for it with the reason on the row. The alert carries the last reason; open Mailgun → Sending → Logs. Once the
    cause is fixed: «Setări» → «Emailuri» → «Coada de trimitere» → **«Reîncearcă emailurile eșuate»**
    puts every FAILED message of the last seven days back in the queue, from the first attempt, in one
    press (Administrator, three presses an hour, audited); an address problem stays BOUNCED. One message

@@ -14,7 +14,8 @@ import { outboxRoadsFor } from "./outbox-roads";
 import { paceHolds } from "./domain/hourly-pace";
 import { GMAIL_WINDOW_MS, mailgunMessagesPerCompletedRegistration } from "./domain/email-transport";
 import { type GmailFailure, readEmailTransport, readGmailLastFailure, readGmailUsage } from "./email-transport";
-import { fallbackActive, type MailgunStop, routeWhileStopped, type StopRoute } from "./domain/mailgun-stop";
+import { fallbackActive, fallbackSwitchOn, type MailgunStop, routeWhileStopped, type StopRoute } from "./domain/mailgun-stop";
+import { noticeDescribesGmailFallback } from "@/modules/legal-documents/repository";
 import { readMailgunStop } from "./mailgun-stop";
 
 /**
@@ -185,8 +186,13 @@ export type EmailVolumeToday = {
    * while its road is open. Read as the claim reads it (`mailgun-stop.ts`), on Mailgun's road.
    */
   mailgunStop: MailgunStop | null;
-  /** «Gmail preia când Mailgun se oprește» as it acts: on, and Gmail configured (§NNN, `fallbackActive`). */
+  /**
+   * «Gmail preia când Mailgun se oprește» as it acts: on, Gmail configured, and the privacy notice in
+   * force naming `{{gmailFallback}}` in every language (§NNN, `fallbackActive`).
+   */
   fallbackToGmail: boolean;
+  /** Whether the privacy notice in force names `{{gmailFallback}}` (§NNN): the panel greys the switch until it does. */
+  fallbackDisclosed: boolean;
   /** Recipients Gmail's rolling day still has room for (§443); 0 where Gmail is not configured. */
   gmailRoom: number;
   /**
@@ -297,7 +303,9 @@ export async function readEmailVolumeToday<T extends Record<string, unknown>>(
   const headroom = emailHeadroom(ceilings, sentMessages, sentThisMonth);
   // The hour, counted the way the claim counts it (`hourly-pace.ts`), on Mailgun's road as the claim
   // splits it: one more query, always — the page shows it.
-  const roads = outboxRoadsFor(transport, gmail.configured);
+  // The notice's gate for the fallback (§NNN): read on every page that shows the switch or the stop.
+  const fallbackDisclosed = await noticeDescribesGmailFallback(db, now);
+  const roads = outboxRoadsFor(transport, gmail.configured, fallbackDisclosed);
   const mailgunRoad = roads ? not(gmailRoadCondition(roads)) : undefined;
   const hour = await readMailgunHour(db, now, {
     hourlyAllowance: setting.hourlyAllowance,
@@ -306,7 +314,7 @@ export async function readEmailVolumeToday<T extends Record<string, unknown>>(
   });
   // Mailgun's stop and who carries for it (§NNN): one more query, the claim's own.
   const mailgunStop = await readMailgunStop(db, now, mailgunRoad);
-  const fallbackToGmail = fallbackActive(transport, gmail.configured);
+  const fallbackToGmail = fallbackActive(transport, gmail.configured, fallbackDisclosed);
   const gmailRoom = gmail.configured ? Math.max(0, transport.gmailDailyCap - gmail.sentLastDay) : 0;
 
   return {
@@ -338,7 +346,14 @@ export async function readEmailVolumeToday<T extends Record<string, unknown>>(
     hourPaceHolds: paceHolds({ hourlyAllowance: hour.allowance, carriedRecently: hour.carriedRecently, inFlight: hour.inFlight }),
     mailgunStop,
     fallbackToGmail,
+    fallbackDisclosed,
     gmailRoom,
-    whileStopped: routeWhileStopped({ stop: mailgunStop, fallbackToGmail, gmailConfigured: gmail.configured, gmailRoom }),
+    whileStopped: routeWhileStopped({
+      stop: mailgunStop,
+      fallbackToGmail: fallbackSwitchOn(transport),
+      noticeNamesFallback: fallbackDisclosed,
+      gmailConfigured: gmail.configured,
+      gmailRoom,
+    }),
   };
 }

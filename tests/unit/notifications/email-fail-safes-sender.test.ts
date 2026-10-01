@@ -105,6 +105,25 @@ describe("§NNN the sender while Mailgun is stopped", () => {
     expect(result).toMatchObject({ outcome: "sent", transport: "gmail", mailgunStopped: { kind: "allowance" } });
   });
 
+  /*
+    The review's nit: a spill that ends in anything but «sent» or «paced» still carries Mailgun's stop,
+    so the outbox records it and the batch's next Mailgun row does not knock during the pause.
+  */
+  it("carries the stop on a spill Gmail refused for the address, and on one that may have been accepted", async () => {
+    const refusedAddress = build({ mailgun: paused, gmail: { outcome: "permanent_failure", error: "gmail 550 5.1.1: no such user" } });
+    expect(await refusedAddress.sender.send(message())).toMatchObject({
+      outcome: "permanent_failure",
+      mailgunStopped: { kind: "paused", until: RETRY },
+    });
+
+    const broke = build({ mailgun: { outcome: "throttled", error: "mailgun 420" }, gmail: { outcome: "transient_failure", error: "gmail: socket closed", mayHaveBeenAccepted: true } });
+    expect(await broke.sender.send(message())).toMatchObject({
+      outcome: "transient_failure",
+      mayHaveBeenAccepted: true,
+      mailgunStopped: { kind: "allowance" },
+    });
+  });
+
   it("never spills a bulk message to Gmail: the newsletter's refusal stands", async () => {
     const { sender, gmail } = build({ mailgun: paused });
     const result = await sender.send(message({ bulk: true }));

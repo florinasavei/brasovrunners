@@ -134,7 +134,8 @@ export async function sendOutboxNowFromEmailsAction(_previous: FormOutcome | nul
     const actor = await requireStaffCapability(canManageRegistrations);
     const result = await sendOutboxNow(getDb(), actor, new Date());
     // Gmail carried for a stopped Mailgun (§NNN): the page says how many, why and until when.
-    const carried = result.stop ? `&gmail=${result.viaGmail}&stop=${result.stop.kind}&until=${encodeURIComponent(result.stop.until.toISOString())}` : "";
+    // The queue's header says a stop nobody carries; the sentence says only what Gmail carried (§NNN).
+    const carried = result.stop && result.carriedByGmail ? `&gmail=${result.viaGmail}&stop=${result.stop.kind}&until=${encodeURIComponent(result.stop.until.toISOString())}` : "";
     outcome = `saved=outboxSent&sent=${result.sent}${carried}`;
     await flashOutcome({ saved: "outboxSent", sent: String(result.sent) });
   } catch (error) {

@@ -706,7 +706,11 @@ export async function sendOutboxNowAction(_previous: FormOutcome | null, form: F
     const actor = await requireStaffCapability(canManageRegistrations);
     const result = await sendOutboxNow(getDb(), actor, new Date());
     sent = result.sent;
-    if (result.stop) carried = `&gmail=${result.viaGmail}&stop=${result.stop.kind}&until=${encodeURIComponent(result.stop.until.toISOString())}`;
+    // Carried: how many by Gmail and until when; not carried (Gmail's own rows only): when Mailgun reopens.
+    if (result.stop) {
+      const until = `&until=${encodeURIComponent(result.stop.until.toISOString())}`;
+      carried = result.carriedByGmail ? `&gmail=${result.viaGmail}&stop=${result.stop.kind}${until}` : `&held=1${until}`;
+    }
   } catch (error) {
     // Mailgun's hour spent says so in its own sentence (§605), not as a bare validation error; a stop says when Mailgun reopens.
     if (isDomainError(error)) {

@@ -30,7 +30,9 @@ export function heldByMailgunCondition(): SQL {
 /**
  * A row no family sitting may move (§NNN, the review of BR-V2.53): one that carries a provider's
  * stop. Holding it to the sitting's window would stretch the pause it marks; releasing it at «Gata»
- * would end the pause early. So the sitting's hold, release and replace statements leave it alone.
+ * would end the pause early. So the sitting's hold and release statements leave its turn alone. The
+ * replace may delete it: the stop is recorded apart from the row (`recordMailgunStop`), so its going
+ * ends no pause, and keeping it would send the person both messages.
  */
 export function notHeldByMailgun(): SQL {
   return sql`(${emailOutbox.lastError} IS NULL OR NOT ${heldByMailgunCondition()})`;

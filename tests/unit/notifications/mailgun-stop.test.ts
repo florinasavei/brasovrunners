@@ -7,6 +7,8 @@ import {
   FALLBACK_WAITING_ERROR_PREFIX,
   fallbackActive,
   fallbackRetryAt,
+  fallbackSwitchOn,
+  fallbackUnavailable,
   heldByMailgun,
   routeWhileStopped,
   stopInForce,
@@ -79,14 +81,35 @@ describe("§NNN the stop and its marks", () => {
   });
 
   it("acts on the switch only where Gmail is configured, and reads a value stored before it as on", () => {
-    expect(fallbackActive({}, true)).toBe(true);
-    expect(fallbackActive({ fallbackToGmail: true }, false)).toBe(false);
-    expect(fallbackActive({ fallbackToGmail: false }, true)).toBe(false);
+    expect(fallbackActive({}, true, true)).toBe(true);
+    expect(fallbackActive({ fallbackToGmail: true }, false, true)).toBe(false);
+    expect(fallbackActive({ fallbackToGmail: false }, true, true)).toBe(false);
+    expect(fallbackSwitchOn({})).toBe(true);
+    expect(fallbackSwitchOn({ fallbackToGmail: false })).toBe(false);
     expect(DEFAULT_EMAIL_TRANSPORT.fallbackToGmail).toBe(true);
     // A value stored before the switch existed still reads: the field is optional, and absent is on.
     const stored: Record<string, unknown> = { ...DEFAULT_EMAIL_TRANSPORT };
     delete stored.fallbackToGmail;
     expect(emailTransportSettingSchema.safeParse(stored).success).toBe(true);
+  });
+
+  /*
+    The notice's gate (§NNN, §443): a participant's message leaves through Google only under a privacy
+    notice that names `{{gmailFallback}}` — the switch on, Gmail configured and the notice: three states.
+  */
+  it("acts only while the notice in force names the fallback, whatever the switch says", () => {
+    // 1. the notice does not name it: off, even with the switch on and the account configured — greyed for the notice.
+    expect(fallbackActive({}, true, false)).toBe(false);
+    expect(fallbackActive({ fallbackToGmail: true }, true, false)).toBe(false);
+    expect(fallbackUnavailable(true, false)).toBe("noticeMissing");
+    // 2. the notice names it and the switch is absent or on: on.
+    expect(fallbackActive({}, true, true)).toBe(true);
+    expect(fallbackUnavailable(true, true)).toBeNull();
+    // 3. the notice names it, the club turned the switch off: off, and not greyed — it is the club's choice.
+    expect(fallbackActive({ fallbackToGmail: false }, true, true)).toBe(false);
+    // Gmail not configured is said first: no notice makes an absent account carry.
+    expect(fallbackActive({}, false, true)).toBe(false);
+    expect(fallbackUnavailable(false, false)).toBe("gmailUnconfigured");
   });
 
   it("holds a row Gmail could not carry until Gmail's room or a quarter of an hour, never past Mailgun's return", () => {
@@ -98,7 +121,7 @@ describe("§NNN the stop and its marks", () => {
 });
 
 describe("§NNN the route while Mailgun is stopped: stopped × switch × Gmail's room", () => {
-  const base = { fallbackToGmail: true, gmailConfigured: true, gmailRoom: 50 };
+  const base = { fallbackToGmail: true, noticeNamesFallback: true, gmailConfigured: true, gmailRoom: 50 };
 
   it("is Mailgun's road while Mailgun is not stopped, whatever the switch", () => {
     expect(routeWhileStopped({ ...base, stop: null })).toEqual({ road: "mailgun" });
@@ -114,6 +137,9 @@ describe("§NNN the route while Mailgun is stopped: stopped × switch × Gmail's
     expect(routeWhileStopped({ ...base, stop: PAUSE, fallbackToGmail: false })).toEqual({ road: "wait", stop: PAUSE, reason: "fallbackOff" });
     expect(routeWhileStopped({ ...base, stop: PAUSE, gmailRoom: 0 })).toEqual({ road: "wait", stop: PAUSE, reason: "gmailCapSpent" });
     expect(routeWhileStopped({ ...base, stop: ALLOWANCE, gmailRoom: 3, needed: 4 })).toEqual({ road: "wait", stop: ALLOWANCE, reason: "gmailCapSpent" });
+    // The notice not naming the fallback (§NNN): its own reason, the remedy being the notice, after the switch's.
+    expect(routeWhileStopped({ ...base, stop: PAUSE, noticeNamesFallback: false })).toEqual({ road: "wait", stop: PAUSE, reason: "noticeMissing" });
+    expect(routeWhileStopped({ ...base, stop: PAUSE, noticeNamesFallback: false, fallbackToGmail: false })).toEqual({ road: "wait", stop: PAUSE, reason: "fallbackOff" });
     // Not configured is said before the switch: a deployment without the account cannot turn it on.
     expect(routeWhileStopped({ ...base, stop: PAUSE, gmailConfigured: false, fallbackToGmail: false })).toEqual({
       road: "wait",

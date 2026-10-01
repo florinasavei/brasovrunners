@@ -29,13 +29,14 @@ const LAUNCHED: OwnerTaskInputs = {
   promoDescribed: true,
   sponsorShareDescribed: true,
   newsletterDescribed: true,
+  gmailFallbackDescribed: true,
   teamPageDescribed: true,
   raceDeclarationsCurrent: true,
   groupRunSeriesTextsCurrent: true,
   legalTextIsSample: false,
   emailDeliveryMode: "live",
   appEnv: "production",
-  emailFailSafe: { stoppedLong: 0, failed: 0 },
+  emailFailSafe: { stoppedLong: 0, failed: 0, retryingLate: 0 },
   staleJobNames: [],
   failingJobNames: [],
   staffCount: 3,
@@ -288,6 +289,7 @@ describe("owner tasks", () => {
       "promoNotice",
       "sponsorNotice",
       "newsletterNotice",
+      "gmailFallbackNotice",
       "teamPageNotice",
       "raceDeclarations",
       "groupRunSeriesTexts",
@@ -310,11 +312,33 @@ describe("owner tasks", () => {
   // §NNN: email nothing is carrying — red with the remedies, green otherwise, and always on the list.
   it("turns the email fail-safe row red while a stopped row waits past ninety minutes or a message failed this week", () => {
     expect(ownerTasks(LAUNCHED).find((task) => task.id === "emailFailSafe")).toMatchObject({ owner: "club", kind: "check", state: "done" });
-    expect(ownerTasks({ ...LAUNCHED, emailFailSafe: { stoppedLong: 2, failed: 0 } }).find((task) => task.id === "emailFailSafe")).toMatchObject({
+    expect(ownerTasks({ ...LAUNCHED, emailFailSafe: { stoppedLong: 2, failed: 0, retryingLate: 0 } }).find((task) => task.id === "emailFailSafe")).toMatchObject({
       state: "broken",
       text: "broken",
     });
-    expect(stateOf({ ...LAUNCHED, emailFailSafe: { stoppedLong: 0, failed: 1 } }, "emailFailSafe")).toBe("broken");
+    expect(stateOf({ ...LAUNCHED, emailFailSafe: { stoppedLong: 0, failed: 1, retryingLate: 0 } }, "emailFailSafe")).toBe("broken");
+    // A transient refusal retried for ever (§NNN): red, and the steps name the refusal that does not pass.
+    expect(stateOf({ ...LAUNCHED, emailFailSafe: { stoppedLong: 0, failed: 0, retryingLate: 1 } }, "emailFailSafe")).toBe("broken");
+    for (const catalogue of [ro, en]) {
+      const item = catalogue.Admin.tasks.items.emailFailSafe;
+      expect(item.broken).toContain("90");
+      expect(item.how.join("\n")).toContain("MAILGUN_API_BASE");
+    }
+  });
+
+  /** §NNN — Gmail carrying while Mailgun is stopped waits on a notice that names it; open, never blocking. */
+  it("keeps the Gmail-fallback notice row open while the notice in force does not name it, and says what to approve and why", () => {
+    expect(stateOf({ ...LAUNCHED, gmailFallbackDescribed: false }, "gmailFallbackNotice")).toBe("open");
+    expect(stateOf(LAUNCHED, "gmailFallbackNotice")).toBe("done");
+    expect(ownerTasks({ ...LAUNCHED, hasApprovedPrivacyNotice: false }).some((task) => task.id === "gmailFallbackNotice")).toBe(false);
+    expect(ownerTasks({ ...LAUNCHED, gmailFallbackDescribed: false }).find((task) => task.id === "gmailFallbackNotice")).toMatchObject({ owner: "club", kind: "text" });
+    for (const catalogue of [ro, en]) {
+      const item = catalogue.Admin.tasks.items.gmailFallbackNotice;
+      expect(item.title && item.todo && item.done && item.how.length > 0).toBeTruthy();
+      expect(item.how.join("\n")).toContain("/admin/legal");
+      // Why: a participant's data reaches Google only under a notice that says so.
+      expect(item.how.join("\n")).toContain("Google");
+    }
   });
 
   // §523: the group-run declarations written for one signature per series, approved again.

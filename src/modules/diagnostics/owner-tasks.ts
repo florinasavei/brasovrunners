@@ -60,6 +60,7 @@ export type TaskId =
   | "promoNotice"
   | "sponsorNotice"
   | "newsletterNotice"
+  | "gmailFallbackNotice"
   | "teamPageNotice"
   | "raceDeclarations"
   | "groupRunSeriesTexts"
@@ -91,6 +92,7 @@ export const TASK_KIND: Record<TaskId, TaskKind> = {
   promoNotice: "text",
   sponsorNotice: "text",
   newsletterNotice: "text",
+  gmailFallbackNotice: "text",
   teamPageNotice: "text",
   raceDeclarations: "text",
   groupRunSeriesTexts: "text",
@@ -190,6 +192,12 @@ export type OwnerTaskInputs = {
    */
   newsletterDescribed: boolean;
   /**
+   * Does the notice in force, in every language, say a message may leave through the club's Gmail
+   * while Mailgun is stopped (§NNN, `noticeDescribesGmailFallback`)? Until it does, «Gmail preia când
+   * Mailgun se oprește» is greyed and a Mailgun stop holds participants' mail.
+   */
+  gmailFallbackDescribed: boolean;
+  /**
    * Does the notice in force, in every language, describe «Echipa» (§459, `noticeDescribesTeamPage`)?
    * The page shows staff and volunteers' names and photographs; the notice has to say so.
    */
@@ -219,9 +227,10 @@ export type OwnerTaskInputs = {
    * Email that nothing is carrying (§NNN), from `/api/health`'s own counts (`checkEmailHealth`):
    * `stoppedLong` — Mailgun-road rows stopped (paused, deferred to the reset, or waiting because Gmail
    * could not carry them) and queued longer ago than the overdue allowance, with the fallback off or
-   * Gmail's cap spent; `failed` — FAILED rows of the last seven days.
+   * Gmail's cap spent; `failed` — FAILED rows of the last seven days; `retryingLate` — rows a transient
+   * refusal keeps retrying hourly past six attempts or ninety minutes (`/api/health`'s own count).
    */
-  emailFailSafe: { stoppedLong: number; failed: number };
+  emailFailSafe: { stoppedLong: number; failed: number; retryingLate: number };
   /**
    * Each scheduled job's own liveness, not one boolean for all of them.
    *
@@ -389,6 +398,16 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
       owner: "club",
       state: input.newsletterDescribed ? "done" : "open",
     });
+    /*
+      Gmail carrying while Mailgun is stopped (§NNN), the same shape: open, never blocking — nothing is
+      refused, a Mailgun stop simply holds the mail as it always did — and done by itself the day a
+      notice naming `{{gmailFallback}}` takes effect. Its words say what to approve and why: a
+      participant's name, links and signed PDF reach Google only under a notice that says so (§443).
+    */
+    push("gmailFallbackNotice", {
+      owner: "club",
+      state: input.gmailFallbackDescribed ? "done" : "open",
+    });
   }
 
   /*
@@ -433,12 +452,13 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
   // when the provider is configured at all; the detail still names the mode.
   /*
     Email nothing is carrying (§NNN): red while a Mailgun-road row has waited past ninety minutes
-    stopped with nobody to carry it, or a message FAILED in the last seven days; green otherwise —
-    the row stays on the list, so the club sees the fail-safes are there before it needs them. Its
-    steps name the four remedies: the switch, Gmail's cap, «Reîncearcă emailurile eșuate» and
-    «Limita pe oră».
+    stopped with nobody to carry it, a transient refusal keeps a row retrying past six attempts or
+    ninety minutes, or a message FAILED in the last seven days; green otherwise — the row stays on the
+    list, so the club sees the fail-safes are there before it needs them. Its steps name the remedies:
+    the switch, Gmail's cap, the refusal that does not pass (the API base, the domain, Mailgun's logs),
+    «Reîncearcă emailurile eșuate» and «Limita pe oră».
   */
-  const stoppedOrFailed = input.emailFailSafe.stoppedLong > 0 || input.emailFailSafe.failed > 0;
+  const stoppedOrFailed = input.emailFailSafe.stoppedLong > 0 || input.emailFailSafe.failed > 0 || input.emailFailSafe.retryingLate > 0;
   push("emailFailSafe", {
     owner: "club",
     state: stoppedOrFailed ? "broken" : "done",

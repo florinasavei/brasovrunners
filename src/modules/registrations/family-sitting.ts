@@ -182,12 +182,13 @@ export async function settleSitting<T extends Record<string, unknown>>(
     const familyId =
       queued?.id ?? (await tx.select({ id: emailOutbox.id }).from(emailOutbox).where(eq(emailOutbox.idempotencyKey, key)).limit(1))[0]?.id;
     const replaced = held.filter((id) => id !== familyId);
-    // Only rows still waiting and never tried: a message that has left is not taken back. Nor one
-    // Mailgun stopped (§NNN): it carries the stop's mark, and deleting it would end the pause early.
+    // Only rows still waiting and never tried: a message that has left is not taken back. A row Mailgun
+    // stopped goes too (§NNN): the stop is recorded apart from it (`platform_settings.mailgunStop`), so
+    // deleting it ends no pause, and keeping it would send the person both it and the family message.
     if (replaced.length > 0) {
       await tx
         .delete(emailOutbox)
-        .where(and(inArray(emailOutbox.id, replaced), eq(emailOutbox.status, "PENDING"), eq(emailOutbox.attemptCount, 0), notHeldByMailgun()));
+        .where(and(inArray(emailOutbox.id, replaced), eq(emailOutbox.status, "PENDING"), eq(emailOutbox.attemptCount, 0)));
     }
     held = familyId ? [familyId] : [];
   }

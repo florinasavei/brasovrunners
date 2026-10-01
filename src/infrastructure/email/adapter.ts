@@ -129,6 +129,11 @@ export type SendResult =
       addressRefusedForNow?: true;
       /** How many recipients the server took all the same — the copies — for Gmail's daily ledger. */
       acceptedRecipients?: number;
+      /**
+       * Mailgun refused it first, for the account (§NNN), and the spill to Gmail ended here — the
+       * connection broke where Gmail may have taken it. The stop still closes Mailgun's road.
+       */
+      mailgunStopped?: MailgunStopped;
     }
   | {
       outcome: "throttled";
@@ -171,6 +176,11 @@ export type SendResult =
        * copies left and count against Google's daily cap, so the sender credits the ledger with them.
        */
       acceptedRecipients?: number;
+      /**
+       * Mailgun refused it first, for the account (§NNN), and Gmail then refused the address for good.
+       * The message is BOUNCED; the stop Mailgun announced still closes its road.
+       */
+      mailgunStopped?: MailgunStopped;
     };
 
 export interface EmailAdapter {

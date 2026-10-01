@@ -218,7 +218,7 @@ test.describe("BR-REQ-080-02 the Mailgun plan on «Setări» → «Emailuri»", 
     await switchTo(from);
   });
 
-  test("an Administrator finds «Gmail preia când Mailgun se oprește», greyed with its reason where Gmail is not configured (§NNN)", async ({ page }) => {
+  test("an Administrator finds «Gmail preia când Mailgun se oprește», greyed with its reason where Gmail is not configured or the notice does not name it (§NNN)", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin/settings/emails");
     const main = page.locator("#main");
@@ -227,8 +227,9 @@ test.describe("BR-REQ-080-02 the Mailgun plan on «Setări» → «Emailuri»", 
     const fallback = transport.getByLabel("Gmail preia când Mailgun se oprește");
     await expect(fallback).toBeVisible();
     if (await fallback.isDisabled()) {
-      // No Gmail on this deployment: the reason, never a switch that cannot act.
-      await expect(transport.getByText(/Indisponibil: Gmail-ul clubului nu e configurat/)).toBeVisible();
+      // No Gmail on this deployment, or a privacy notice in force that does not name the fallback yet:
+      // the reason, never a switch that cannot act.
+      await expect(transport.getByText(/Indisponibil: Gmail-ul clubului nu e configurat|Oprit până la aprobarea notei din șablonul nou/)).toBeVisible();
       return;
     }
     // On by default where Gmail is configured; the help says what it does.
