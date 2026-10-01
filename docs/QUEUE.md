@@ -11,29 +11,41 @@ decision or a click only the club can make · **released** — on production, wi
 
 ## Release plan (2026-09-30, evening — the owner is away from 2026-10-01 noon and works from the phone)
 
-Where things stand at the end of 2026-09-30, written so that a session with no access to the laptop can carry on
+Where things stand at 09:20 on 2026-10-01, written so that a session with no access to the laptop can carry on
 (the dispatcher's own notes lived under `D:/tmp/handoff/` on the laptop; from here on this page is the queue).
 
-- **Production:** `BR-V2.50` plus the hotfix #312 (the phone card's short weekday) — since 03:36 on 2026-10-01, and
-  not by plan: the merge watcher brought the main → qa pull request #313 «up to date» with `gh pr update-branch`, which
-  merges the base into the head — qa into main — so the release of `BR-V2.50` happened by itself; the gated production
-  migration (`0116`) was approved under the standing «approve / deploy prod for me», production's health answered ok,
-  and the watcher now never updates a pull request whose head is `main`. **Nothing of `BR-V2.50` is left to release.**
-  **qa and QA:** `BR-V2.50` + the docs of #311/#313; the batch `BR-V2.51` (pull request #314: the race card's two times
-  aligned as a list where the row wraps, a picture in a description opens large in place with pinch-zoom, the listing's
-  filters reach the past events, the hotfix #312's entry) merges into qa on green — the laptop's watcher does it, and if
-  the laptop is off, the «Merge» button on #314 does the same once its checks are green.
-- **The morning, from the phone (2026-10-01):** open the QA site (its address: SETUP.md §26) once #314 is merged
-  (the card's «când» row on the race, a tap on a picture in the description, a filter with the past events).
-  Then release it: GitHub app → the repository → **Actions** → **release** → **Run workflow** → `pr` = `314`
-  (already merged: the run continues from the release step), `baseline` empty → Run. It merges `qa` into `main`
-  (no migration is due: the newest is `0116`, already on production) and waits for production's health; the run's
-  Summary page says each step. Twenty to thirty minutes. Nothing on the laptop is needed. **Do not run `pr 310`
-  again:** it is on production already.
-- **The release** is the owner's «ok release» after checking QA: from the phone, the label `ship` on the last batch PR into
-  qa runs the landing and the release on GitHub Actions (`docs/RUNBOOKS.md` § Every release: the label); from a PC,
-  `node scripts/ship.mjs <batch PR> BR-V2.52-2026-09-27 BR-V2.46-2026-09-27 "<title>"`. No migration is due
-  after `0115` (the elevation tick, in `BR-V2.47`).
+- **Production = qa = QA: `BR-V2.52`** (released 09:10 on 2026-10-01; health ok). **The race is published on
+  production and takes real registrations since the morning of 2026-10-01** — every change from here on is a change to a
+  live system: one batch a day at most, CI's e2e as the gate, and a release only on the owner's word. What the day
+  shipped: `BR-V2.51` (§600 the card's two times as a list where the row wraps; §601 a picture in a description opens
+  large in place with pinch-zoom; §602 the listing's filters reach the past events; §603 the phone card's short weekday)
+  and `BR-V2.52` (§604 every race's «când» lines up with one named time too — a container query sized for the short and
+  the long date — and the pills' tooltips say «circa 10 km» once, without «(aproximativ)»). No migration is due after
+  `0116`. **Nothing is waiting in qa.**
+- **Mailgun is paid since 2026-10-01** (the owner's word: «Am luat mailgun plătit»). The platform still has to be told:
+  «Setări» → «Emailuri» → the Mailgun plan (`platform_settings.emailPlan`) — until it names the paid tier the outbox
+  defers everything past Free's hundred a day to the reset. `/admin/tasks` is the go-live list read from the system;
+  `/admin/emails` shows the day's volume; `/api/health?deep=1` the outbox and the jobs.
+- **Word fixes from the phone (the owner: «e posibil să îți mai dau diverse spell checks»):** the lightest change there
+  is. A remote session branches from `origin/qa`, edits `messages/ro.json` and `messages/en.json` (both languages
+  or neither; a word that says "about" says it once — «circa 10 km», never «circa 10 km (aproximativ)»), updates the
+  tests that pin the words (`grep -rn "<old words>" tests/`), runs `yarn check`, writes `.release/<branch>.json`,
+  pushes and opens a pull request into `qa`; the label `ship` lands and releases it (`docs/RUNBOOKS.md` § Every
+  release: the label). Never a push to `qa` or `main`; never a pull request whose head is `main` (a sync branch
+  cut at `main`'s tip instead — `update-branch` on a main-headed pull request merges qa into main, an unplanned release).
+- **The release from the phone**, when something new sits in qa: GitHub app → the repository → **Actions** → **release**
+  → **Run workflow** → `pr` = the batch pull request's number, `baseline` empty → Run; it merges `qa` into
+  `main`, runs a production migration if one is due and waits for production's health; the run's Summary says each
+  step. If the step «the qa run» stops because GitHub started no run on qa's merge commit (it happened on 2026-10-01
+  09:05), open the `qa` → `main` pull request by hand and merge it on green; production's health flips to the new
+  baseline within two minutes.
+- **Open questions for the owner** (from the night's reviews; none blocks anything): phones 412–470 px wide now get the
+  list form too (§604 — say if the one-line row was preferred there); «Înscrieri deschise» is offered as a filter
+  whenever past events exist (§602); the picture preview shows the whole picture, not the organizer's crop, and a tap
+  on the picture closes it (§601); the e2e never exercises a one-named-time race card (no such card in the seed) — the
+  unit test pins its markup; a few code comments still quote «(aproximativ)»/«(estimativ)»; «Aproximativ» vs
+  «Estimativ» as the editor's word; the racing flag's aria; Vercel back to Free after the race; `yarn idle:measure`
+  is meaningless while the site has visitors.
 - **Decided today, recorded in the sections:** a full race never gets a place from the desk — raise the capacity first
   (§589, §592); the address is confirmed for all or for none, the declaration per person, a cancellation per person
   (§588, §592); «Retrimite familiei» sends one email for the family's earliest step; the site costs as little as possible
