@@ -73,7 +73,8 @@
       "remove": "Scoate filtrul",
       "active": "Filtre active",
       "activePast": "Filtre active pentru evenimentele trecute",
-      "none": "Niciun eveniment nu se potrivește filtrelor alese."
+      "none": "Niciun eveniment nu se potrivește filtrelor alese.",
+      "pastNothingToNarrow": "Toate evenimentele trecute sunt la fel — {values} — așa că nu e nimic de filtrat aici."
     },
     "calendar": {
       "previous": "Luna anterioară",

@@ -359,6 +359,20 @@ export function offersAnything(offer: FilterOffer): boolean {
 }
 
 /**
+ * The one value every event shares, per group — for a window nothing narrows (§NNN): the past panel
+ * says "every past event is the same — Concurs, Trail" rather than draw no control. A group is
+ * listed only when every event carries the same, stated value in it; one with two values, or a
+ * question the club left unanswered on any event, is left out. Empty for no events.
+ */
+export function singleValues<T extends FilterableEvent>(events: readonly T[]): { group: FilterGroup; value: string }[] {
+  if (events.length === 0) return [];
+  return FILTER_GROUPS.flatMap((group) => {
+    const first = valueOf(events[0], group);
+    return first !== null && events.every((event) => valueOf(event, group) === first) ? [{ group, value: first }] : [];
+  });
+}
+
+/**
  * The past section's rows under its own filter (§267, §602, §NNN): the `past-` scope of the address,
  * through the very predicate the upcoming cards pass through (`matchesListingFilter`), over the one
  * cached window the page read, the row the lead already shows between seasons (§167) left out by its

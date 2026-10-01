@@ -4,7 +4,7 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { getTranslations } from "next-intl/server";
+import { getFormatter, getTranslations } from "next-intl/server";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import {
@@ -20,6 +20,7 @@ import {
   FILTER_GROUPS,
   listingFilterQuery,
   NO_FILTER,
+  offersAnything,
   scopedName,
   withoutValue,
   type FilterFlag,
@@ -82,6 +83,7 @@ export default async function ListingFilterPanel({
   keep = {},
   scope = "upcoming",
   carry = {},
+  shared = [],
 }: {
   locale: Locale;
   pathname: "/events" | "/calendar";
@@ -91,8 +93,11 @@ export default async function ListingFilterPanel({
   keep?: Record<string, string>;
   scope?: FilterScope;
   carry?: Record<string, string | string[]>;
+  /** The past scope's window when nothing narrows it: the value each group has in common, for the sentence in the fold. */
+  shared?: { group: FilterGroup; value: string }[];
 }) {
   const t = await getTranslations("Events");
+  const formatter = await getFormatter();
   const tEvent = await getTranslations("Event");
   const count = activeFilterCount(filter);
   const past = scope === "past";
@@ -169,6 +174,10 @@ export default async function ListingFilterPanel({
     );
   };
 
+  // Nothing to narrow in the past window and nothing ticked: the fold says so in a sentence instead
+  // of drawing a form of no boxes (§NNN). The button keeps its words and still opens the fold.
+  const nothingToNarrow = past && count === 0 && !offersAnything(offer);
+
   return (
     <Box sx={{ "& > details[open] + [data-active-filters]": { display: "none" } }}>
       <Box component="details" data-testid={past ? "past-filters" : "listing-filters"} data-filter-scope={scope} sx={{ "&[open] > summary .filters-caret": { transform: "rotate(180deg)" } }}>
@@ -179,6 +188,11 @@ export default async function ListingFilterPanel({
             <ExpandMoreIcon className="filters-caret" aria-hidden="true" sx={{ transition: "transform 120ms" }} />
           </span>
         </Box>
+        {nothingToNarrow ? (
+          <Typography data-testid="past-filters-nothing" sx={{ mt: 1 }}>
+            {t("filter.pastNothingToNarrow", { values: formatter.list(shared.map(({ group, value }) => label(group, value))) })}
+          </Typography>
+        ) : (
         <Box
           component="form"
           method="get"
@@ -236,6 +250,7 @@ export default async function ListingFilterPanel({
           </Stack>
           <FilterAutoApply scope={scope} ticked={ticked.map(({ group, value }) => `${scopedName(group, scope)}=${value}`)} />
         </Box>
+        )}
       </Box>
       {count > 0 && (
         <Stack

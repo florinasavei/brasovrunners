@@ -13,7 +13,7 @@ import {
   matchingPastEvents,
   NO_FILTER,
   offeredFilters,
-  offersAnything,
+  singleValues,
   type FilterFacts,
   type ListingFilter,
 } from "@/modules/events/domain/listing-filter";
@@ -55,11 +55,11 @@ export const PAST_EVENTS_SHOWN = 12;
  * as §267 has it. Ticked with nothing matching, the section stays — the panel names its ticks and
  * «Șterge filtrele» is one press away — and says that nothing matches.
  *
- * **When there is no «Filtre» here — on purpose.** §413's rule holds for this panel as for the other (criterion
- * 75): a box only where ticking it narrows the past window, or where the address ticks it. A window whose
- * events are all one kind, surface, cost and distance narrows by nothing, and a button that opens onto no box
- * would be a control that does nothing. Production's past is the weekly group run and nothing else (§NNN), so
- * it shows no panel there until a second kind of event has been held; the section says so in DECISIONS, not here.
+ * **The control is always here when the section has rows.** §413's rule for the boxes holds (criterion 75): a
+ * box only where ticking it narrows the window, or where the address ticks it. But a past window may be uniform
+ * — one series alone — and a control that vanishes then reads as missing, not as honest; so the «Filtre» button
+ * stays and its fold says, in one sentence, what the events all share (`singleValues`) and that there is nothing
+ * to narrow. The cards ahead's panel keeps criterion 75's rendering rule as it was (§NNN).
  *
  * Between seasons the lead already shows the club's last event with a notice (§167), so this
  * section skips that one row: it would be the same card twice on one page.
@@ -125,9 +125,18 @@ export default async function PastEvents({
             ? t("pastCountFiltered", { count: cards.length })
             : t("pastCount", { count: cards.length })}
       </Typography>
-      {(offersAnything(offer) || filtered) && (
+      {(shown.length > 0 || filtered) && (
         <Box sx={{ mb: { xs: DENSITY.gapXs, sm: 1.5 } }}>
-          <ListingFilterPanel locale={locale} pathname="/events" filter={filter} offer={offer} keep={keep} carry={carry} scope="past" />
+          <ListingFilterPanel
+            locale={locale}
+            pathname="/events"
+            filter={filter}
+            offer={offer}
+            keep={keep}
+            carry={carry}
+            scope="past"
+            shared={singleValues(shown)}
+          />
         </Box>
       )}
       {cards.length === 0 ? (

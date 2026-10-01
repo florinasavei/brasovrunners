@@ -208,6 +208,36 @@ describe("§NNN the past section's own filter, independent of the cards ahead", 
     expect(summary(html)).toBe("5 evenimente trecute");
   });
 
+  it("a uniform past window still draws the button, and its fold says why there is nothing to narrow — in both languages, no box", async () => {
+    const uniform = [held(1), held(3)];
+    const draw = () =>
+      markup(createElement(PastEvents, { rows: uniform, now: NOW, filter: NO_FILTER, facts, shownAbove: undefined, locale: currentLocale })).then(withoutStyles);
+    const html = await draw();
+    expect(html).toContain('data-testid="past-filters"');
+    expect(html).toMatch(/<summary[^>]*>[\s\S]*?Filtre[\s\S]*?<\/summary>/);
+    expect(inputs(html, "checkbox")).toEqual([]);
+    expect(html).not.toContain("<form");
+    expect(html).toContain("Toate evenimentele trecute sunt la fel — Alergare de grup, Asfalt, Mediu (4–6), 5–10 km și Gratuit — așa că nu e nimic de filtrat aici.");
+    currentLocale = "en";
+    const en = await draw();
+    expect(en).toContain("Every past event is the same — Group run, Asphalt, Medium (4–6), 5–10 km, and Free — so there is nothing to narrow here.");
+    expect(en).not.toContain("<form");
+  });
+
+  it("the sentence names a group only where every past event shares one value", async () => {
+    const html = await markup(
+      createElement(PastEvents, { rows: [held(1), held(3, { surface: "TRAIL", costType: "PAID" })], now: NOW, filter: NO_FILTER, facts, shownAbove: undefined, locale: "ro" }),
+    );
+    // Two surfaces and two costs narrow, so the boxes are drawn and no sentence is.
+    expect(html).not.toContain("sunt la fel");
+    expect(inputs(withoutStyles(html), "checkbox").length).toBeGreaterThan(0);
+  });
+
+  it("a section whose only row is the lead's draws nothing; one row besides it draws the control", async () => {
+    const only = [held(1)];
+    expect(await markup(createElement(PastEvents, { rows: only, now: NOW, filter: NO_FILTER, facts, shownAbove: only[0].id, locale: "ro" }))).toBe("");
+  });
+
   it("stays folded with nothing ticked, and draws nothing when there is no past at all", async () => {
     const plain = await past({});
     expect(plain).not.toMatch(/<details[^>]*data-testid="past-events"[^>]*open/);

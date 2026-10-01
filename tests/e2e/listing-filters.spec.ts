@@ -180,6 +180,26 @@ test.describe("BR-REQ-041-01 the listing's filters are one collapsed button", ()
     await expect(section).toHaveAttribute("open", "");
   });
 
+  test("the past section always carries its «Filtre», whether the window is uniform or mixed (§NNN)", async ({ page }) => {
+    // The seed's one past event is last Sunday's group run (uniform: one kind, surface, band, cost);
+    // other specs add more on both projects, so the window may be mixed. Either way the control is
+    // there: the button always, and under it boxes when something narrows, else the one sentence.
+    await page.goto("/ro/evenimente");
+    await hydrated(page);
+    const section = page.locator("#main").getByTestId("past-events");
+    await section.locator("> summary").click();
+    const pastPanel = section.getByTestId("past-filters");
+    await expect(pastPanel.locator("summary")).toHaveText("Filtre");
+    await pastPanel.locator("summary").click();
+    const sentence = section.getByTestId("past-filters-nothing");
+    if ((await sentence.count()) > 0) {
+      await expect(sentence).toContainText("Toate evenimentele trecute sunt la fel");
+      await expect(pastPanel.getByRole("checkbox")).toHaveCount(0);
+    } else {
+      await expect(pastPanel.getByRole("checkbox").first()).toBeVisible();
+    }
+  });
+
   test("the calendar reads the same address, keeps it through its own links, and carries the same button", async ({ page }) => {
     // The year the race falls in (it is three weeks out, so this year or the next).
     const now = new Date();

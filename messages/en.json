@@ -73,7 +73,8 @@
       "remove": "Remove filter",
       "active": "Active filters",
       "activePast": "Active filters for past events",
-      "none": "No event matches the filters you chose."
+      "none": "No event matches the filters you chose.",
+      "pastNothingToNarrow": "Every past event is the same — {values} — so there is nothing to narrow here."
     },
     "calendar": {
       "previous": "Previous month",

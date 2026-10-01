@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useTransition } from "react";
+import { rememberTick, spendTick, wasTicked } from "./filter-reopen";
 
 /**
  * The listing's filter panel, applied on each tick (§413) — an enhancement, never the mechanism.
@@ -26,6 +27,9 @@ import { useEffect, useRef, useTransition } from "react";
  * open: it is remembered here, in the island's own module (which a soft navigation keeps), and the
  * next mount opens its panel again, once.
  *
+ * The memory is `filter-reopen.ts`: the scope ticked and the address it goes to, so a note nobody took
+ * (the ticked panel stopped rendering) expires by itself — a later mount on another address ignores it.
+ *
  * **Which panel** (§NNN): the listing draws two — the cards ahead's and the past section's, inside
  * that section's own fold — so what is remembered is the `scope` that was ticked, and only that
  * panel reopens; the other is left as its page drew it. The past panel's fold sits inside the
@@ -33,24 +37,9 @@ import { useEffect, useRef, useTransition } from "react";
  * opens every fold around it too, so a reader who unticked the section's last box is not left with
  * its fold shut over the panel they were using.
  */
-let reopenAfterTick: { scope: string; at: number } | null = null;
-
-/** A tick that has not landed in this long is not coming: the memory of it is dropped, never kept for a later page. */
-const REOPEN_WINDOW_MS = 10_000;
-
-/**
- * Whether this panel is the one that was ticked, and the memory spent either way once the page that
- * answers the tick has committed (§NNN). If the ticked panel no longer renders — the reader unticked
- * the past section's last box and nothing is left to narrow — no instance consumes the value, and a
- * stale "past" would open a past panel mounted later from a shared link or the back button. So the
- * value is consumed by its own scope, dropped once it is old, and cleared after this commit's effects
- * have all run, whichever instance asked.
- */
 function takeReopen(scope: string): boolean {
-  const mine = reopenAfterTick !== null && reopenAfterTick.scope === scope && Date.now() - reopenAfterTick.at < REOPEN_WINDOW_MS;
-  setTimeout(() => {
-    reopenAfterTick = null;
-  }, 0);
+  const mine = wasTicked(scope, window.location.pathname + window.location.search);
+  setTimeout(spendTick, 0);
   return mine;
 }
 
@@ -70,12 +59,14 @@ export default function FilterAutoApply({ scope, ticked }: { scope: string; tick
     form.dataset.enhanced = "true";
     if (takeReopen(scope)) openFolds(form.closest("details"));
     const apply = () => {
-      reopenAfterTick = { scope, at: Date.now() };
       const params = new URLSearchParams();
       for (const [name, value] of new FormData(form)) if (typeof value === "string") params.append(name, value);
       const action = form.getAttribute("action") ?? window.location.pathname;
       const query = params.toString();
-      startTransition(() => router.push(query ? `${action}?${query}` : action, { scroll: false }));
+      const target = query ? `${action}?${query}` : action;
+      const to = new URL(target, window.location.href);
+      rememberTick(scope, to.pathname + to.search);
+      startTransition(() => router.push(target, { scroll: false }));
     };
     form.addEventListener("change", apply);
     return () => {
