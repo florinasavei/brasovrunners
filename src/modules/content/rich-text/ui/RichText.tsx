@@ -20,6 +20,7 @@ import {
   imageCaptionSx,
   imageFigureSx,
 } from "./image-layout";
+import PictureLightbox from "./PictureLightbox";
 import { blockAlignSx } from "./text-align";
 import RichTextVideo from "./RichTextVideo";
 import { tableSx } from "./table-layout";
@@ -136,27 +137,34 @@ function renderBlock(
       const sizes = srcSet
         ? pictureSizes(pictures, block.attrs.widthPercent, crop && block.attrs.crop ? 1 / block.attrs.crop.w : 1)
         : undefined;
+      /*
+        A tap opens the picture large over the page (§NNN, `PictureLightbox`): the same <img> as
+        before, inside the island's button, which takes only plain values (§318). The crop window
+        is a <span> drawn as a block, because a button holds phrasing content only.
+      */
       return (
         <Box component="figure" sx={imageFigureSx(block.attrs, floats)}>
-          {crop ? (
-            // No `width`/`height` attributes inside: the window reserves the space from the
-            // crop's own shape, and the photograph is laid over it at whatever size that takes.
-            <Box className="rt-crop" sx={cropWindowSx(crop)}>
-              <Box component="img" src={block.attrs.src} srcSet={srcSet} sizes={sizes} alt={block.attrs.alt} loading="lazy" sx={cropImageSx(crop)} />
-            </Box>
-          ) : (
-            <Box
-              component="img"
-              src={block.attrs.src}
-              srcSet={srcSet}
-              sizes={sizes}
-              alt={block.attrs.alt}
-              width={block.attrs.width ?? undefined}
-              height={block.attrs.height ?? undefined}
-              loading="lazy"
-              sx={{ display: "block", width: "100%", height: "auto", borderRadius: 1 }}
-            />
-          )}
+          <PictureLightbox src={block.attrs.src} srcSet={srcSet} alt={block.attrs.alt} caption={block.attrs.caption}>
+            {crop ? (
+              // No `width`/`height` attributes inside: the window reserves the space from the
+              // crop's own shape, and the photograph is laid over it at whatever size that takes.
+              <Box component="span" className="rt-crop" sx={{ display: "block", ...cropWindowSx(crop) }}>
+                <Box component="img" src={block.attrs.src} srcSet={srcSet} sizes={sizes} alt={block.attrs.alt} loading="lazy" sx={cropImageSx(crop)} />
+              </Box>
+            ) : (
+              <Box
+                component="img"
+                src={block.attrs.src}
+                srcSet={srcSet}
+                sizes={sizes}
+                alt={block.attrs.alt}
+                width={block.attrs.width ?? undefined}
+                height={block.attrs.height ?? undefined}
+                loading="lazy"
+                sx={{ display: "block", width: "100%", height: "auto", borderRadius: 1 }}
+              />
+            )}
+          </PictureLightbox>
           {block.attrs.caption !== "" && (
             <Typography component="figcaption" variant="body2" color="text.secondary" sx={imageCaptionSx(block.attrs)}>
               {block.attrs.caption}

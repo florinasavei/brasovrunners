@@ -20,6 +20,7 @@ import {
 import { assetObjectKeys } from "@/modules/media/storage";
 import { chosenFactsOf, describeChosenImage, describeStoredImage, formatBytes } from "@/modules/media/ui/stored-facts";
 import { HIGH_WEB_MAX, LOW_WEB_MAX, ORIGINAL_WEB_MAX, WEB_MAX } from "@/modules/media/limits";
+import { withClientWords } from "../../helpers/client-words";
 
 /**
  * BR-REQ-054-01 criterion 12, BR-REQ-050-03 criterion 22 (`DECISIONS.md` §414) — a picture is
@@ -186,7 +187,7 @@ describe("§414 the body renderer", () => {
     content: [{ type: "image", attrs: { src, alt: "Startul", width: 2400, height: 1600, ...attrs } }],
   });
   const render = (body: unknown, pictures?: "page" | "prose" | "card") =>
-    renderToStaticMarkup(createElement(RichText, { body, pictures }));
+    renderToStaticMarkup(withClientWords(createElement(RichText, { body, pictures })));
 
   it("gives a picture with a ladder its srcset and the column's sizes", () => {
     const html = render(doc(r2(LADDER_PREFIX)));
