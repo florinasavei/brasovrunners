@@ -28,10 +28,10 @@ waiting on.
 
 | Service | Plan / SKU | What it holds | Console | State |
 | --- | --- | --- | --- | --- |
-| **Vercel** | **Pro** since 2026-09-30, one seat, for the function quota before the race; Hobby until then and again after the 21 November race (`docs/QUEUE.md` § Waiting on the owner) | Account exists. Both applications. One project per environment, function region `fra1` — QA's was `iad1` until read back on 2026-09-16 (`SETUP.md` §26) | vercel.com/dashboard | QA live; production project created 2026-09-16, configured, **never deployed** |
+| **Vercel** | **Pro** since 2026-09-30, one seat, for the function quota before the race; Hobby until then and again after the 21 November race (`docs/QUEUE.md` § Waiting on the owner) | Account exists. Both applications. One project per environment, function region `fra1` — QA's was `iad1` until read back on 2026-09-16 (`SETUP.md` §26) | vercel.com/dashboard | deployed on both projects since 2026-09-17 |
 | **Neon** | **Launch** since 2026-09-22 (usage-based; Free until then). The pages read the plan from Neon's project row; `platform_settings.neonPlan` is the fallback without a key (`DECISIONS.md` §326). Capped 2026-09-23: production ≤ 1 CU and 100 CU-hours a month, QA 0.25 CU and 30 (`SETUP.md` §40) | PostgreSQL, Frankfurt. Region is fixed at project creation. Both plans allow 100 projects, so the second one adds no fee (checked 2026-09-22) | console.neon.tech | QA project live, migrated, seeded; production project created 2026-09-16, **never migrated** — `SETUP.md` §25 |
 | **Zitadel** | Free | Staff identity. `staff_users` is the allowlist; Zitadel never decides who may in | `brasov-runners-8iqx8c.eu1.zitadel.cloud/ui/console` | One instance, one project, one application per environment. QA live since 2026-09-04; production application created 2026-09-17. Own mail through Mailgun SMTP (`smtp.mailgun.org:587`, US sandbox, working 2026-09-05). Setup, traps and limits: `docs/RUNBOOKS.md` § Staff sign-in |
-| **Mailgun** | **Foundation** since 2026-10-01 ($35 a month); Basic advised for November once the probation is lifted, Free from December | Transactional email, the delivery webhook, and Zitadel's SMTP | app.mailgun.com | Created 2026-09-05, **US region** (see limit 2); sandbox domain only, no domain verified |
+| **Mailgun** | **Foundation** since 2026-10-01 ($35 a month); Basic advised for November once the probation is lifted, Free from December | Transactional email, the delivery webhook, and Zitadel's SMTP | app.mailgun.com | Created 2026-09-05; live on the verified `mail.` subdomain, EU region |
 | **GitHub** | Free (public repository) | Code, Actions: `docs-check`, `migrate`, `scheduled-jobs` | github.com | Live, under the maintainer's personal account |
 | **Domain registrar** | ROMARG, one `.com` for one year | `<domain>` and its DNS, edited in ROMARG's Zone Editor — a `.com` first, a `.ro` a year later (`DECISIONS.md` §55) | ROMARG client area | **`.com` registered 2026-09-16, DNS live**, renews 2027-09-16; the invoice amount is still to be recorded below. `.ro` not registered. `.com` registry wholesale $10.26/year, **$10.97 from 2026-11-01** (Verisign, checked 2026-09-16); the registrar charges more and adds VAT |
 | **Team mail** | *provider not chosen* — a nonprofit grant from **Google** (applied 2026-09-16, pending) or **Microsoft**; **Zoho Mail** only if neither is granted | Team mailboxes on `<domain>`, and a shared `contact@` — never application mail, which stays on a subdomain (`SETUP.md` §26, `DECISIONS.md` §56) | — | **Not created.** No entitlements quoted for either grant until one is granted (§1.2). Zoho free plan checked 2026-09-16: up to 5 users, 5 GB each, one domain, web access only — its paid tier is why it is the fallback rather than the plan |
@@ -75,7 +75,7 @@ the organisation's $15 spending notification — `SETUP.md` §40. If 1.8 CU-hour
 day, 30 days is 54 CU-hours or about **$5.72 compute**, before storage and restore history. A
 0.25 CU compute kept warm for all 720 hours of a 30-day month is **$19.08 per project**; two
 always-warm projects would be $38.16. These are projections, not a fixed subscription or invoice.
-The next separate cost likely to arrive is a month of Mailgun Basic around a real race.
+Mailgun steps down from Foundation to Basic in November once the probation is lifted and to Free in December; the next separate cost after that is the domain's renewal in September 2027.
 
 **Read from both consoles on 2026-10-01, the first day of Neon's October period (Oct 1 – Nov 1).**
 Neon, organisation-wide: plan Launch, **1.28 compute hours and $0.14** charged so far — $0.14 of
@@ -571,4 +571,4 @@ Expected next spend: the registrar's renewal of the domain in September 2027 ($1
 `.com` registry plus the registrar's margin and VAT; record what the registrar actually charged in
 the row above). The two plans taken for the race are the ones to drop after it — the Vercel seat the
 day the quota is no longer needed, Mailgun when the volume fits Free again — and Neon's review is
-December's; a temporary upgrade nobody reverses is the expensive failure here.
+December's.
