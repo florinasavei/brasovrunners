@@ -169,14 +169,24 @@ describe("§NNN the preview itself", () => {
     expect(html).toMatch(/<button[^>]*>.*<svg[^>]*data-testid="CloseIcon".*Închide<\/button>/);
     expect(html).toContain('sizes="100vw"');
     expect(html).toContain("Startul din 2025");
+    // The pinch-zoom: the picture's wrapper takes every finger and zooms with one transform, at 1×.
+    const wrapper = /<div[^>]*data-testid="picture-preview-zoom"[^>]*>/.exec(html)?.[0] ?? "";
+    expect(wrapper).toContain("touch-action:none");
+    expect(wrapper).toContain("transform:translate(0px, 0px) scale(1)");
+    expect(wrapper).not.toContain("will-change");
+    // The picture's container is not a button: the ✕ is the only one.
+    expect(html.match(/<button/g)).toHaveLength(1);
   });
 
   it("closes on Escape and a tap through MUI's dialog, Back through the history, and loads only on a tap", () => {
     const island = readFileSync(path.join(process.cwd(), "src/modules/content/rich-text/ui/PictureLightbox.tsx"), "utf8");
     const dialog = readFileSync(path.join(process.cwd(), "src/modules/content/rich-text/ui/PictureLightboxDialog.tsx"), "utf8");
-    // The dialog's onClose is MUI's Escape and backdrop; the layer and the ✕ call the same close.
+    // The dialog's onClose is MUI's Escape and backdrop; the ✕ calls the same close, and the layer
+    // only after `isTap` — a pinch's or a pan's end never closes it.
     expect(dialog).toMatch(/<Dialog[\s\S]*?onClose=\{onClose\}/);
-    expect(dialog).toMatch(/onClick=\{onClose\}\s+data-testid="picture-preview"/);
+    expect(dialog).not.toMatch(/onClick=\{onClose\}/);
+    expect(dialog).toMatch(/!isTap\(start\.down, up\)\)[\s\S]*?setTimeout\(onClose, TAP_MS\)/);
+    expect(dialog).toMatch(/onPointerUp=\{\(event\) => onPointerEnd\(event, false\)\}/);
     expect(dialog).toContain("minHeight: 44");
     // The dialog is a separate chunk, fetched the first time a picture is tapped (§577).
     expect(island).toContain('lazy(() => import("./PictureLightboxDialog"))');
