@@ -6241,8 +6241,18 @@
       "now": {
         "details": "We will then email you to confirm your address.",
         "confirm": "We have sent you a confirmation link.",
-        "declare": "One step left: read and sign the declaration — here, or on paper at the registration desk on race day. Your place is held. Once you sign, we email you the signed declaration (PDF) and your race number — usually within a few minutes, within the hour at the latest.",
-        "declareScheduled": "One step left: read and sign the declaration — here, or on paper at the registration desk on race day. Your place is held. Once you sign, we email you the signed declaration (PDF) and your race number — it leaves on the platform's scheduled round, within {wait} at the most.",
+        "declare": {
+          "emailJustSent": "One step left: read and sign the declaration from the email we have just sent you — or on paper at the registration desk on race day. Your place is held. Once you sign, we email you the signed declaration (PDF) and your race number — usually within a few minutes, within the hour at the latest.",
+          "emailHeldUntil": "Your place is held. We ask for the declaration by email {opens} before the start — you sign it then, online or on paper at the registration desk; once you sign, we email you the signed declaration (PDF) and your race number — usually within a few minutes, within the hour at the latest.",
+          "onThisPage": "One step left: read and sign the declaration below — or on paper at the registration desk on race day. Your place is held. Once you sign, we email you the signed declaration (PDF) and your race number — usually within a few minutes, within the hour at the latest.",
+          "emailReceived": "One step left: read and sign the declaration from the email you received — or on paper at the registration desk on race day. Your place is held. Once you sign, we email you the signed declaration (PDF) and your race number — usually within a few minutes, within the hour at the latest."
+        },
+        "declareScheduled": {
+          "emailJustSent": "One step left: read and sign the declaration from the email we have just sent you — or on paper at the registration desk on race day. Your place is held. Once you sign, we email you the signed declaration (PDF) and your race number — it leaves on the platform's scheduled round, within {wait} at the most.",
+          "emailHeldUntil": "Your place is held. We ask for the declaration by email {opens} before the start — you sign it then, online or on paper at the registration desk; once you sign, we email you the signed declaration (PDF) and your race number — it leaves on the platform's scheduled round, within {wait} at the most.",
+          "onThisPage": "One step left: read and sign the declaration below — or on paper at the registration desk on race day. Your place is held. Once you sign, we email you the signed declaration (PDF) and your race number — it leaves on the platform's scheduled round, within {wait} at the most.",
+          "emailReceived": "One step left: read and sign the declaration from the email you received — or on paper at the registration desk on race day. Your place is held. Once you sign, we email you the signed declaration (PDF) and your race number — it leaves on the platform's scheduled round, within {wait} at the most."
+        },
         "done": "Your registration is confirmed. See you at the start!"
       }
     },

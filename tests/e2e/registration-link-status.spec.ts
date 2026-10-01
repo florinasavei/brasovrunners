@@ -98,6 +98,9 @@ test.describe("§420 a lapsed or moved-on registration link never shows the wron
     await page.goto(`/ro/inregistrari/confirmare/${await mintActionLink(registration, "VERIFY_REGISTRATION_EMAIL")}`);
     await expect(page).toHaveURL(/done=1/, { timeout: 30_000 });
     expect(await registrationStatus(registration.id)).toBe("PENDING_DECLARATION");
+    // The page after confirming has no form: the third step says the declaration is in the email, never a «aici» (§NNN).
+    await expect(page.getByText("din emailul pe care tocmai ți l-am trimis")).toBeVisible();
+    await expect(page.getByText("— aici")).toHaveCount(0);
 
     const token = await mintActionLink(registration, "COMPLETE_DECLARATION");
     await setRegistrationStatus(registration.id, "CANCELLED");

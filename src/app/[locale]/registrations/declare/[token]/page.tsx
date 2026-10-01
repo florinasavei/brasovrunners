@@ -520,7 +520,12 @@ export default async function DeclarePage({ params, searchParams }: Props) {
 
       {/* Where the registration actually is when the link is spent; the declaration step
           otherwise. Cancelled and lapsed get no stepper: there is no journey left. */}
-      {journeyStep && <RegistrationJourney current={journeyStep} />}
+      {journeyStep === "declare" ? (
+        // The form is below on a live link; a spent or moved-on one points at the email the link came in (§NNN).
+        <RegistrationJourney current="declare" declaration={notice ? "emailReceived" : "onThisPage"} />
+      ) : (
+        journeyStep && <RegistrationJourney current={journeyStep} />
+      )}
       {/* A person just withdrawn from the family's wizard (§547): said on the step it lands on. */}
       {familyMode && flashSlot}
 

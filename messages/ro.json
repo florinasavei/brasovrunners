@@ -6241,8 +6241,18 @@
       "now": {
         "details": "După trimitere îți scriem pe email ca să confirmi adresa.",
         "confirm": "Ți-am trimis un email cu un link de confirmare.",
-        "declare": "Mai rămâne un pas: citește și semnează declarația — aici, sau pe hârtie la masa de înscrieri în ziua cursei. Locul tău este rezervat. După ce semnezi, îți trimitem pe email declarația semnată (PDF) și numărul de concurs — de obicei în câteva minute, cel târziu într-o oră.",
-        "declareScheduled": "Mai rămâne un pas: citește și semnează declarația — aici, sau pe hârtie la masa de înscrieri în ziua cursei. Locul tău este rezervat. După ce semnezi, îți trimitem pe email declarația semnată (PDF) și numărul de concurs — pleacă la trecerea programată a platformei, în cel mult {wait}.",
+        "declare": {
+          "emailJustSent": "Mai rămâne un pas: citește și semnează declarația din emailul pe care tocmai ți l-am trimis — sau pe hârtie la masa de înscrieri în ziua cursei. Locul tău este rezervat. După ce semnezi, îți trimitem pe email declarația semnată (PDF) și numărul de concurs — de obicei în câteva minute, cel târziu într-o oră.",
+          "emailHeldUntil": "Locul tău este rezervat. Declarația ți-o cerem pe email cu {opens} înainte de start — o semnezi atunci, online sau pe hârtie la masa de înscrieri; după ce semnezi, îți trimitem declarația semnată (PDF) și numărul de concurs — de obicei în câteva minute, cel târziu într-o oră.",
+          "onThisPage": "Mai rămâne un pas: citește și semnează declarația mai jos — sau pe hârtie la masa de înscrieri în ziua cursei. Locul tău este rezervat. După ce semnezi, îți trimitem pe email declarația semnată (PDF) și numărul de concurs — de obicei în câteva minute, cel târziu într-o oră.",
+          "emailReceived": "Mai rămâne un pas: citește și semnează declarația din emailul pe care l-ai primit — sau pe hârtie la masa de înscrieri în ziua cursei. Locul tău este rezervat. După ce semnezi, îți trimitem pe email declarația semnată (PDF) și numărul de concurs — de obicei în câteva minute, cel târziu într-o oră."
+        },
+        "declareScheduled": {
+          "emailJustSent": "Mai rămâne un pas: citește și semnează declarația din emailul pe care tocmai ți l-am trimis — sau pe hârtie la masa de înscrieri în ziua cursei. Locul tău este rezervat. După ce semnezi, îți trimitem pe email declarația semnată (PDF) și numărul de concurs — pleacă la trecerea programată a platformei, în cel mult {wait}.",
+          "emailHeldUntil": "Locul tău este rezervat. Declarația ți-o cerem pe email cu {opens} înainte de start — o semnezi atunci, online sau pe hârtie la masa de înscrieri; după ce semnezi, îți trimitem declarația semnată (PDF) și numărul de concurs — pleacă la trecerea programată a platformei, în cel mult {wait}.",
+          "onThisPage": "Mai rămâne un pas: citește și semnează declarația mai jos — sau pe hârtie la masa de înscrieri în ziua cursei. Locul tău este rezervat. După ce semnezi, îți trimitem pe email declarația semnată (PDF) și numărul de concurs — pleacă la trecerea programată a platformei, în cel mult {wait}.",
+          "emailReceived": "Mai rămâne un pas: citește și semnează declarația din emailul pe care l-ai primit — sau pe hârtie la masa de înscrieri în ziua cursei. Locul tău este rezervat. După ce semnezi, îți trimitem pe email declarația semnată (PDF) și numărul de concurs — pleacă la trecerea programată a platformei, în cel mult {wait}."
+        },
         "done": "Înscrierea ta este confirmată. Ne vedem la start!"
       }
     },
