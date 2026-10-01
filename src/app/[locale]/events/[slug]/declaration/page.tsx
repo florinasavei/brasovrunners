@@ -40,6 +40,7 @@ import SignatureField from "@/modules/registrations/ui/SignatureField";
 import { spamHintWords } from "@/modules/registrations/ui/link-wait-words";
 import BotCheck from "@/modules/registrations/ui/BotCheck";
 import UntickedBoxSummary from "@/modules/registrations/ui/UntickedBoxSummary";
+import { emailDelayNotice } from "@/modules/registrations/ui/email-delay-notice";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import LegalLink from "@/shared/ui/LegalLink";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
@@ -113,6 +114,8 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
         <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
           {t("groupRunDeclaration.page.doneTitle")}
         </Typography>
+        {/* While the club's emails are late (§NNN): the signed copy is one of them. */}
+        {await emailDelayNotice({ variant: "plain", sx: { mb: 2 } })}
         {/* The same words whether a row was written or the one already kept was sent again (§523):
             the page tells nobody whether the address had signed before. */}
         <Stack spacing={2}>

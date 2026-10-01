@@ -7380,6 +7380,21 @@
     "reloadingBody": "The site is serving its data from saved copies only just now, and this page did not have one yet. We are preparing it now; the page reloads by itself in a few minutes.",
     "reloadingLink": "Try again now"
   },
+  "Delay": {
+    "full": "Our emails are running late: {queued}, the oldest for {minutes}{estimate}. Yours leaves in its turn — its deadline runs from the moment it leaves, not from now. Do not register again.",
+    "fullLink": "Our emails are running late: {queued}, the oldest for {minutes}{estimate}. Yours leaves in its turn — its deadline runs from the moment it leaves, not from now. Do not ask for the link again.",
+    "fullSubscribe": "Our emails are running late: {queued}, the oldest for {minutes}{estimate}. Yours leaves in its turn — its deadline runs from the moment it leaves, not from now. Do not subscribe again.",
+    "fullResend": "Our emails are running late: {queued}, the oldest for {minutes}{estimate}. Yours leaves in its turn. The deadline in your first email runs from when that one left, not from now.",
+    "fullPlain": "Our emails are running late: {queued}, the oldest for {minutes}{estimate}. Yours leaves in its turn.",
+    "over": "over {amount}",
+    "short": "The confirmation email is running late today{estimate}.",
+    "estimate": "; we estimate at most {estimate}",
+    "queued": {
+      "one": "{count} message is waiting",
+      "few": "{count} messages are waiting",
+      "other": "{count} messages are waiting"
+    }
+  },
   "Weather": {
     "label": "Weather",
     "temperature": "{degrees} °C",

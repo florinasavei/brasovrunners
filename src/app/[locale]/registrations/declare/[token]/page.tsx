@@ -47,6 +47,7 @@ import { confirmationDueAtStart } from "@/modules/registrations/domain/hold-dead
 import { declarantValues, identityDocumentValues } from "@/modules/registrations/signed-declaration";
 import ActionLinkNotice from "@/modules/registrations/ui/ActionLinkNotice";
 import { spamHintWords } from "@/modules/registrations/ui/link-wait-words";
+import { emailDelayNotice } from "@/modules/registrations/ui/email-delay-notice";
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
 import SignatureField from "@/modules/registrations/ui/SignatureField";
 import IdDocumentFields, { type DocumentBox, ID_DOCUMENT_TYPES } from "@/modules/registrations/ui/IdDocumentFields";
@@ -219,6 +220,8 @@ export default async function DeclarePage({ params, searchParams }: Props) {
         <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
           {t("declare.doneTitle")}
         </Typography>
+        {/* While the club's emails are late (§NNN): the confirmation and its QR are one of them. */}
+        {await emailDelayNotice({ variant: "plain", sx: { mb: 2 } })}
         {/* Waitlisted is not the end of the journey — it is a place in a queue, and the
             declaration is already signed — so both outcomes render the finished stepper. */}
         <RegistrationJourney current="done" />

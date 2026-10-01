@@ -17,6 +17,7 @@ import { cachedDeadlines, cachedEmailLeavesAt, cachedEmailWaitMinutes } from "@/
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { doneFamilySentence, offerHint, shortScreenEmailLeft } from "../domain/family-sitting";
 import type { SubmittedFacts } from "../form-draft";
+import { emailDelayNotice } from "./email-delay-notice";
 import FamilySittingOffer from "./FamilySittingOffer";
 import { spamHintWords } from "./link-wait-words";
 
@@ -159,6 +160,8 @@ export default async function CheckYourEmail({ eventTitle, whenLabel, eventHref,
       <Stack spacing={3} data-testid="check-email-short">
         <Box>
           {heading(false)}
+          {/* While the club's emails are late (§NNN), above the hour this screen promises. */}
+          {await emailDelayNotice({ sx: { my: 1 } })}
           <Typography variant="body1" data-testid="check-email-form-in">
             {facts?.firstName ? t("done.formIn", { name: facts.firstName }) : t("done.formInUnnamed")}
           </Typography>
@@ -224,6 +227,8 @@ export default async function CheckYourEmail({ eventTitle, whenLabel, eventHref,
             </Box>
           </Typography>
         )}
+        {/* While the club's emails are late (§NNN): before the steps and the wait they promise. */}
+        {await emailDelayNotice({ sx: { mt: 2 } })}
       </Box>
 
       <Box component="section" aria-labelledby="check-email-next">

@@ -230,7 +230,8 @@ describe("§519 one person in a sitting", () => {
     const [row] = await outbox();
     expect(row.nextAttemptAt?.toISOString()).toBe(new Date(at(1).getTime() + WINDOW_MS).toISOString());
     // «Da» took it in while it still waited, so it is marked held now, and only now (nit F1).
-    expect(row.payloadJson).toEqual({ startsDeadline: true, sittingHeld: true });
+    // With the instant it is let go (`heldUntil`, §NNN): the window's end, as its not-before.
+    expect(row.payloadJson).toEqual({ startsDeadline: true, sittingHeld: true, heldUntil: new Date(at(1).getTime() + WINDOW_MS).toISOString() });
     const [open] = await db.select().from(familySittings);
     expect(open.heldOutboxIds).toEqual([row.id]);
     expect(open.registrationIds).toHaveLength(1);
@@ -238,6 +239,8 @@ describe("§519 one person in a sitting", () => {
     await releaseFamilySitting(db, sittingId!, at(2));
     const [released] = await outbox();
     expect(released.nextAttemptAt?.toISOString()).toBe(at(2).toISOString());
+    // «Gata» rewrites the release instant to now (§NNN): the public notice counts the wait from here.
+    expect(released.payloadJson).toEqual({ startsDeadline: true, sittingHeld: true, heldUntil: at(2).toISOString() });
     const [sitting] = await db.select().from(familySittings);
     expect(sitting.releasedAt?.toISOString()).toBe(at(2).toISOString());
 
@@ -270,7 +273,7 @@ describe("§519 one person in a sitting", () => {
     expect(entryHeld.nextAttemptAt?.toISOString()).toBe(new Date(at(1).getTime() + WINDOW_MS).toISOString());
     // …marked as the family's hold (the review of 2026-09-28, round two), never as `sittingHeld`,
     // which changes a verification link's life: the queue panel counts it as the family's, not a retry.
-    expect(entryHeld.payloadJson).toMatchObject({ familyHeld: true });
+    expect(entryHeld.payloadJson).toMatchObject({ familyHeld: true, heldUntil: new Date(at(1).getTime() + WINDOW_MS).toISOString() });
     expect(entryHeld.payloadJson).not.toHaveProperty("sittingHeld");
     // Ana's own email thrown back for a retry, with no flag: a retry, and only a retry.
     const [anaEmail] = (await outbox()).filter((candidate) => candidate.messageType === "VERIFY_REGISTRATION_EMAIL");
@@ -328,7 +331,7 @@ describe("§519 a family in one sitting", () => {
     expect(rows).toHaveLength(1);
     expect(rows[0].messageType).toBe("REGISTER_ANOTHER_PERSON");
     // Flagged as the family's hold (§540): the queue panel (§529) counts it there, never as a retry.
-    expect(rows[0].payloadJson).toEqual({ familySittingId: sittingId, familyHeld: true });
+    expect(rows[0].payloadJson).toEqual({ familySittingId: sittingId, familyHeld: true, heldUntil: new Date(at(6).getTime() + WINDOW_MS).toISOString() });
     expect(rows[0].nextAttemptAt?.toISOString()).toBe(new Date(at(6).getTime() + WINDOW_MS).toISOString());
     expect((await readOutboxQueue(db, 50, at(7))).held).toMatchObject({ total: 1, family: 1, retry: 0, reserve: 0 });
 
@@ -500,7 +503,7 @@ describe("§519 a family in one sitting", () => {
     const requests = (await outbox()).filter((row) => row.messageType === "COMPLETE_DECLARATION" && row.participantId !== null);
     expect(requests).toHaveLength(4);
     for (const row of requests) {
-      expect(row.payloadJson).toEqual({ familyHeld: true, startsDeadline: true });
+      expect(row.payloadJson).toEqual({ familyHeld: true, startsDeadline: true, heldUntil: new Date(at(23).getTime() + 30 * 60_000).toISOString() });
       expect(row.nextAttemptAt?.toISOString()).toBe(new Date(at(23).getTime() + 30 * 60_000).toISOString());
     }
     await db.update(registrations).set({ status: "CONFIRMED" }).where(eq(registrations.id, rows[0].id));
@@ -705,7 +708,7 @@ describe("§519 the fix round of 2026-09-27", () => {
     await send(event, "Ion", 3, sittingId);
     const family = (await outbox()).filter((row) => row.id !== anaEmail.id);
     expect(family).toHaveLength(1);
-    expect(family[0].payloadJson).toEqual({ familySittingId: sittingId, familyHeld: true });
+    expect(family[0].payloadJson).toEqual({ familySittingId: sittingId, familyHeld: true, heldUntil: new Date(at(3).getTime() + WINDOW_MS).toISOString() });
     expect(family[0].nextAttemptAt?.toISOString()).toBe(new Date(at(3).getTime() + WINDOW_MS).toISOString());
 
     const { message, secret } = await familyLink(at(20));
@@ -781,7 +784,8 @@ describe("§519 the fix round of 2026-09-27", () => {
     // One confirmation for the family, never one each; everybody signed, so it is due at the last signature.
     const confirmations = (await outbox()).filter((row) => row.messageType === "REGISTRATION_CONFIRMED" && row.participantId !== null);
     expect(confirmations).toHaveLength(1);
-    expect(confirmations[0].payloadJson).toEqual({ familySittingId: sittingId });
+    // Its release instant moved with each signature, to the last one's (§NNN).
+    expect(confirmations[0].payloadJson).toEqual({ familySittingId: sittingId, heldUntil: at(25).toISOString() });
     expect(confirmations[0].nextAttemptAt?.toISOString()).toBe(at(25).toISOString());
 
     const message = await render(confirmations[0], at(26));

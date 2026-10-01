@@ -15,6 +15,7 @@ import { routing } from "@/i18n/routing";
 import { minutesPhrase } from "@/modules/deadlines/domain/duration-words";
 import { cachedEmailWaitMinutes } from "@/modules/public-cache/reads";
 import { spamHintWords } from "@/modules/registrations/ui/link-wait-words";
+import { emailDelayNotice } from "@/modules/registrations/ui/email-delay-notice";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { requestMyRegistrationsLinkAction } from "./actions";
 import { DENSITY } from "@/theme/density";
@@ -54,6 +55,8 @@ export default async function MyRegistrationsRequestPage({ params, searchParams 
 
       {sent ? (
         <>
+          {/* While the club's emails are late (§NNN), above the wait the sentence below promises. */}
+          {await emailDelayNotice({ variant: "link", sx: { mb: 2 } })}
           <Alert severity="success">
             {waitMinutes === null ? t("mine.sent") : t("mine.sentScheduled", { wait: minutesPhrase(locale, waitMinutes) })}
           </Alert>

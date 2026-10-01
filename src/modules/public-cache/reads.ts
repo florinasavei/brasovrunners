@@ -52,6 +52,8 @@ import { pingerCadenceMinutes } from "@/modules/jobs/quiet-hours";
 import { readDeliveryTiming } from "@/modules/notifications/delivery-timing";
 import { type DeliveryTiming, defaultDeliveryTiming } from "@/modules/notifications/domain/delivery-timing";
 import { emailLeavesAt, emailWaitMinutes } from "@/modules/notifications/domain/email-wait";
+import { type EmailDelay, judgeEmailDelay } from "@/modules/notifications/domain/email-delay";
+import { readEmailDelayFacts } from "@/modules/notifications/public-delay";
 import {
   describesListNumbers,
   describesListSocials,
@@ -81,7 +83,7 @@ import { readWithLastGood } from "@/modules/resilience/last-good";
 import { isDatabaseAwayError } from "@/modules/resilience/domain/database-away";
 import { answeringFromCacheOnly, type PublicContent, publicRead } from "./cache";
 import { type ChangesWhen, clockWindow } from "./clock";
-import { holdPageUntil } from "./page-lifetime";
+import { holdPageUntil, renderKind } from "./page-lifetime";
 
 /**
  * Every read a public page makes, through the data cache (`DECISIONS.md` §333).
@@ -709,10 +711,18 @@ export async function cachedDeadlines(): Promise<Deadlines> {
  * environment's default timing and no interval: the page still renders, and says the pinger's wait.
  */
 export async function cachedEmailWaitMinutes(now: Date): Promise<number | null> {
-  const settings = await cachedEmailTiming();
+  return promisedWaitAt(await cachedEmailTiming(), now, now);
+}
+
+/**
+ * The wait promised a message queued at `instant` (§513), from the two settings: the pinger's cadence
+ * is the instant's (§NNN: a reset at 02:05 waits for the night's hourly tick, whoever looks by day),
+ * the governor's floor is now's — this instance's memory knows no other.
+ */
+function promisedWaitAt(settings: { timing: DeliveryTiming; intervalMinutes: number }, instant: Date, now: Date): number | null {
   return emailWaitMinutes({
     timing: settings.timing,
-    pingerMinutes: pingerCadenceMinutes(now),
+    pingerMinutes: pingerCadenceMinutes(instant),
     intervalMinutes: settings.intervalMinutes,
     governorFloorMinutes: governorEffects(peekNeonBudgetLevel(now)).jobFloorMinutes,
   });
@@ -732,6 +742,42 @@ export async function cachedEmailLeavesAt(now: Date): Promise<Date | null> {
     intervalMinutes: settings.intervalMinutes,
     governorFloorMinutes: governorEffects(peekNeonBudgetLevel(now)).jobFloorMinutes,
   });
+}
+
+/**
+ * How long the email queue's answer stands (§NNN): a minute — the queue moves with the clock, and
+ * nothing announces a message that has merely waited longer — so a page that waits for an email costs
+ * at most one query a minute, and nothing while the entry is warm. A batch that sent, deferred or gave
+ * up on a message expires it at once (`processOutboxBatch`, the `email` tag).
+ */
+export const EMAIL_DELAY_SECONDS = 60;
+
+/**
+ * Whether the club's emails are late (§NNN, `readEmailDelay`), for the pages that wait for one: the
+ * outbox's facts from the data cache, judged now against the wait the platform promises
+ * (`cachedEmailWaitMinutes`). Null when it cannot be told — the database away, a red month's miss —
+ * and a page then says nothing about it, exactly as on a day nothing is late.
+ *
+ * **A kept page does not shorten its life for it** (§549). A static page's render — the event page's
+ * registration box — reads the same facts under a key of its own at the day's ceiling: a minute's
+ * entry there would hold the whole page to a minute (`page-lifetime.ts`), every event page rendered
+ * again each minute somebody looks. The `email` tag still expires it, and the page with it, at every
+ * batch that moves the queue — the pause, the spent hour, the send that clears the backlog. What it
+ * misses until the page's own clock is a queue that stalls without any batch running at all; the
+ * pages that wait for an email are rendered per request and read the minute's entry.
+ */
+export async function cachedEmailDelay(now: Date): Promise<EmailDelay | null> {
+  try {
+    const kept = renderKind() !== "request";
+    const facts = kept
+      ? await publicRead(["email.delay-page"], ["email"], () => readEmailDelayFacts(getDb(), now))
+      : await publicRead(["email.delay"], ["email"], () => readEmailDelayFacts(getDb(), now), EMAIL_DELAY_SECONDS);
+    const settings = await cachedEmailTiming();
+    // The wait a message queued at an instant is promised: the cadence is the instant's, not now's (§NNN).
+    return judgeEmailDelay(facts, promisedWaitAt(settings, now, now), now, (instant) => promisedWaitAt(settings, instant, now));
+  } catch {
+    return null;
+  }
 }
 
 /** The delivery timing and the minimum interval, from the data cache; the environment's default when the database cannot answer. */

@@ -11,6 +11,7 @@ import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { DENSITY } from "@/theme/density";
 import type { PublicEventPage } from "../repository";
 import { cachedDeadlines } from "@/modules/public-cache/reads";
+import { emailDelayNotice } from "@/modules/registrations/ui/email-delay-notice";
 import { fillPhrase, fullThanksPhrase, offeredPhrase, waitingPhrase, waitlistOfferPhrase, waitlistRoomPhrase } from "./counted-phrases";
 import { type PreviewDoor, readRegistrationDoor } from "./registration-door";
 import RegistrationDoorButton, { doorButtonLabel } from "./RegistrationDoorButton";
@@ -58,6 +59,13 @@ export default async function RegistrationCta({
   if (door.kind === "UNKNOWN") return <CapacityUnknown slug={event.slug} />;
   const { cta, fill } = door;
   if (cta.kind === "NONE") return null;
+  /*
+    Under the club's own button only (§NNN): «Confirmarea pe email întârzie azi», while the club's
+    emails are late, so a person knows before pressing. This page is static (§549): the line reads
+    the queue's own cache entry, which the outbox expires with the page (`cachedEmailDelay`). Never
+    in the editor's preview, which sends nothing. Read only for the two states that draw it.
+  */
+  const lateLine = previewDoor || (cta.kind !== "OPEN" && cta.kind !== "FULL") ? null : await emailDelayNotice({ variant: "short" });
 
   if (cta.kind === "EXTERNAL") {
     return (
@@ -83,6 +91,7 @@ export default async function RegistrationCta({
         )}
 
         <RegistrationDoorButton slug={event.slug} cta={cta} label={doorButtonLabel(t, cta)} preview={preview} />
+        {lateLine}
 
         {fill && (
           <Typography variant="body2" data-testid="registration-fill" sx={{ fontWeight: 600 }}>
@@ -137,6 +146,7 @@ export default async function RegistrationCta({
         </Box>
 
         <RegistrationDoorButton slug={event.slug} cta={cta} label={doorButtonLabel(t, cta)} preview={preview} />
+        {lateLine}
 
         {fill && (
           <Typography variant="body2" data-testid="registration-fill" sx={{ fontWeight: 600 }}>

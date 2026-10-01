@@ -9,6 +9,7 @@ import type { Database, Transaction } from "@/db/types";
 import type { EmailTransportName, OutgoingEmail } from "@/infrastructure/email/adapter";
 import type { EmailSender } from "@/infrastructure/email/delivery";
 import { finishJobRun, startJobRun } from "@/modules/jobs/repository";
+import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { readClubNotices } from "./club-notices";
 import {
   BULK_COPY_RECIPIENTS,
@@ -622,6 +623,8 @@ export async function processOutboxBatch(
     the same instant, with the same reason and their attempt given back. Gmail's rows still go.
   */
   let mailgunPause: { until: Date; error: string } | null = null;
+  // Messages withdrawn in this batch (deleted unsent): they leave the queue the public delay counts (§NNN).
+  let withdrawn = 0;
 
   /*
     The Gmail road's one connection for the whole batch (§493) is let go when the batch ends,
@@ -648,6 +651,7 @@ export async function processOutboxBatch(
       } catch (error) {
         if (error instanceof OutboxMessageWithdrawn) {
           await db.delete(emailOutbox).where(eq(emailOutbox.id, row.id));
+          withdrawn += 1;
           continue;
         }
         await recordFailure(db, row.id, "FAILED", sanitizeProviderError(error));
@@ -819,6 +823,13 @@ export async function processOutboxBatch(
       new Date(),
     );
   }
+
+  /*
+    The pages that wait for an email say when the queue is late (§NNN, `cachedEmailDelay`): once per
+    batch that moved it — a send, a pause or a deferral, a message given up on or withdrawn — never per row, and
+    nothing for a batch that claimed nothing or only scheduled a retry.
+  */
+  if (summary.sent + summary.deferred + summary.failed + summary.bounced + withdrawn > 0) revalidatePublicContent("email");
 
   return summary;
 }

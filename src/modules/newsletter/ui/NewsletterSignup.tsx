@@ -17,6 +17,7 @@ import { minutesPhrase } from "@/modules/deadlines/domain/duration-words";
 import { cachedEmailWaitMinutes } from "@/modules/public-cache/reads";
 import BotCheck from "@/modules/registrations/ui/BotCheck";
 import { spamHintWords } from "@/modules/registrations/ui/link-wait-words";
+import { emailDelayNotice } from "@/modules/registrations/ui/email-delay-notice";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { DENSITY } from "@/theme/density";
@@ -116,6 +117,8 @@ export default async function NewsletterSignup({ locale, outcome, refused, typed
 
       {outcome === "sent" && (
         <>
+          {/* While the club's emails are late (§NNN), above the wait the answer promises. */}
+          {await emailDelayNotice({ variant: "subscribe", sx: { mb: 2 } })}
           <Alert severity="success" role="status" sx={{ mb: 1 }} data-testid="newsletter-sent">
             <AlertTitle>{t("sent.title")}</AlertTitle>
             {waitMinutes === null ? t("sent.body") : t("sent.bodyScheduled", { wait: minutesPhrase(locale, waitMinutes) })}
@@ -364,6 +367,8 @@ export default async function NewsletterSignup({ locale, outcome, refused, typed
       */}
       {leaveOutcome === "sent" && (
         <>
+          {/* While the club's emails are late (§NNN): the link to leave is one of them. */}
+          {await emailDelayNotice({ variant: "plain", sx: { mt: 2 } })}
           <Alert severity="info" role="status" sx={{ mt: 2 }} data-testid="newsletter-leave-sent">
             {t("leave.sent")}
           </Alert>

@@ -7380,6 +7380,21 @@
     "reloadingBody": "Site-ul își ia acum datele doar din copiile salvate, iar pagina aceasta nu avea încă una. O pregătim chiar acum; pagina se reîncarcă singură în câteva minute.",
     "reloadingLink": "Încearcă din nou acum"
   },
+  "Delay": {
+    "full": "Emailurile noastre întârzie acum: {queued}, cel mai vechi așteaptă de {minutes}{estimate}. Al tău pleacă când îi vine rândul — termenul lui curge de când pleacă, nu de acum. Nu te înscrie din nou.",
+    "fullLink": "Emailurile noastre întârzie acum: {queued}, cel mai vechi așteaptă de {minutes}{estimate}. Al tău pleacă când îi vine rândul — termenul lui curge de când pleacă, nu de acum. Nu cere din nou linkul.",
+    "fullSubscribe": "Emailurile noastre întârzie acum: {queued}, cel mai vechi așteaptă de {minutes}{estimate}. Al tău pleacă când îi vine rândul — termenul lui curge de când pleacă, nu de acum. Nu te abona din nou.",
+    "fullResend": "Emailurile noastre întârzie acum: {queued}, cel mai vechi așteaptă de {minutes}{estimate}. Al tău pleacă când îi vine rândul. Termenul din primul tău email curge de când a plecat acela, nu de acum.",
+    "fullPlain": "Emailurile noastre întârzie acum: {queued}, cel mai vechi așteaptă de {minutes}{estimate}. Al tău pleacă când îi vine rândul.",
+    "over": "peste {amount}",
+    "short": "Confirmarea pe email întârzie azi{estimate}.",
+    "estimate": "; estimăm cel mult {estimate}",
+    "queued": {
+      "one": "{count} mesaj așteaptă",
+      "few": "{count} mesaje așteaptă",
+      "other": "{count} de mesaje așteaptă"
+    }
+  },
   "Weather": {
     "label": "Vremea",
     "temperature": "{degrees} °C",

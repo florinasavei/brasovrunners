@@ -645,7 +645,11 @@ are the run's to open, merge and approve.
 
 The monitor mail from cron-job.org says `/api/health?deep=1` failed (the daily 04:02 check; the
 hourly `/api/health` is shallow since §577 and says only whether the site answers), or
-`/admin/tasks` is red at the top (`DECISIONS.md` §98). Three causes, told apart by the same page:
+`/admin/tasks` is red at the top (`DECISIONS.md` §98). Meanwhile the public pages say it themselves,
+for as long as it lasts: every page that waits for an email shows «Emailurile noastre întârzie acum»
+with how many messages wait, the oldest's wait, the estimate when there is one and that the deadline
+runs from the send, and the event page and the form say it in one line (§NNN) — nothing to switch on
+or off; it goes when the queue is through. Three causes, told apart by the same page:
 
 1. **Deferred by the allowance** — Mailgun Free's 100 messages a day are spent. Nothing is
    lost; the queue resumes at the time the alert names (the UTC reset, five minutes past).

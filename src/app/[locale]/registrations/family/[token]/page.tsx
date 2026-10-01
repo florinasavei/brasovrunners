@@ -20,6 +20,7 @@ import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { spamHintWords } from "@/modules/registrations/ui/link-wait-words";
 import ActionLinkNotice from "@/modules/registrations/ui/ActionLinkNotice";
+import { emailDelayNotice } from "@/modules/registrations/ui/email-delay-notice";
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import SubmitButton from "@/shared/ui/SubmitButton";
@@ -80,6 +81,8 @@ export default async function FamilyConfirmPage({ params, searchParams }: Props)
         <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
           {t("family.doneTitle")}
         </Typography>
+        {/* While the club's emails are late (§NNN), above the wait the steps promise. */}
+        {await emailDelayNotice({ sx: { mb: 2 } })}
         {done === "declare" && <RegistrationJourney current="declare" declaration="emailJustSent" />}
         {/* The inbox is not named: that would put the address in the URL (§14.5). It is the one the email came to. */}
         <Stack spacing={2}>
@@ -119,6 +122,8 @@ export default async function FamilyConfirmPage({ params, searchParams }: Props)
         <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
           {nobodyJoined ? t("familySitting.nobodyTitle") : t("familySitting.doneTitle")}
         </Typography>
+        {/* While the club's emails are late (§NNN): nobody joined, nothing was sent, nothing is said. */}
+        {!nobodyJoined && (await emailDelayNotice({ sx: { mb: 2 } }))}
         {/* Somebody has a declaration to sign only when the wizard is on the page; everyone on the waiting list gets no stepper (§202). */}
         {!nobodyJoined && wizard === "1" && <RegistrationJourney current="declare" declaration="onThisPage" />}
         <Stack spacing={2}>
