@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V2.53-2026-10-01`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V2.54-2026-10-01`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -679,7 +679,7 @@ which is deliberate — it is the one the club still owes somebody.
 
 **People waiting for their declaration link** after the email was late or lost: the event's page
 in the backoffice (`/admin/events/<id>` → «Înscrierile primite») →
-«Retrimite declarația tuturor care nu au semnat», Administrator only (`DECISIONS.md` §NNN). The
+«Retrimite declarația tuturor care nu au semnat», Administrator only (`DECISIONS.md` §606). The
 dialog says how many wait to sign and how many it skips — anyone whose declaration email is still
 queued or left in the last hour, and anyone whose five resends of the hour are spent — and every
 email it queues carries a new link, so the link in the earlier email stops working. It queues;

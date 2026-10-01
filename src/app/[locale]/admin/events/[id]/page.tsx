@@ -422,7 +422,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
     cancelLabel: words.cancel,
   };
   /*
-    «Retrimite declarația tuturor care nu au semnat» (§NNN): Administrator only, as the single resend.
+    «Retrimite declarația tuturor care nu au semnat» (§606): Administrator only, as the single resend.
     The question's numbers are the press's own query read now (`previewDeclarationResend`): who waits
     to sign, who would be skipped and why; the real registrations counted, the test ones named apart
     (§12.6). A press the server would refuse — the event closed, the hour's presses spent — keeps its
@@ -627,7 +627,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             </Alert>
           )}
           {saved === "interestNotFound" && <Alert severity="info">{t("queue.interestNotFound")}</Alert>}
-          {/* The declaration resent to everyone who has not signed (§NNN): what was queued, what was skipped and why. */}
+          {/* The declaration resent to everyone who has not signed (§606): what was queued, what was skipped and why. */}
           {saved === "declarationResent" && (
             <Alert severity={countOf(queued) > 0 ? "success" : "info"} data-testid="declaration-resent">
               {t("bulkResend.done", {
@@ -1038,7 +1038,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                         </GlyphButton>
                       </Stack>
 
-                      {/* 16.0 — the declaration again, to everyone who has not signed (§NNN): beside the queue,
+                      {/* 16.0 — the declaration again, to everyone who has not signed (§606): beside the queue,
                           whose «Rezervate» counts them; one press, Administrator only, asks first. */}
                       {declarationResend && declarationResendConfirm && (
                         <Box data-testid="bulk-resend">

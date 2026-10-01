@@ -170,7 +170,7 @@ type ManualResendOutcome =
 
 /**
  * One registration's manual resend, past every check that only reads — the one path the single
- * press and the bulk press both take (§NNN): the registration's hourly limit, the enqueue marked
+ * press and the bulk press both take (§606): the registration's hourly limit, the enqueue marked
  * `isManualResend`, and the registration's own trail. A bulk press is exactly N of these.
  *
  * BR-REQ-037-02 criterion 5: "repeated resends... a rate limit applies and the refusal is
@@ -244,16 +244,16 @@ async function queueManualResend<T extends Record<string, unknown>>(
   return { queued: true, idempotencyKey };
 }
 
-/** The marker on a bulk press refused because nothing can be signed any more (§NNN). */
+/** The marker on a bulk press refused because nothing can be signed any more (§606). */
 export const BULK_RESEND_CLOSED = "bulkResendClosed";
-/** The marker on a bulk press refused by the event's own hourly limit (§NNN). */
+/** The marker on a bulk press refused by the event's own hourly limit (§606). */
 export const BULK_RESEND_LIMITED = "bulkResendLimited";
 
-/** What one bulk press did (§NNN): the real registrations' counts, the test ones apart (§12.6). */
+/** What one bulk press did (§606): the real registrations' counts, the test ones apart (§12.6). */
 export type BulkResendResult = BulkResendCounts & { test: BulkResendCounts };
 
 /**
- * «Retrimite declarația tuturor care nu au semnat» (§NNN, amending §540): a fresh signing link to
+ * «Retrimite declarația tuturor care nu au semnat» (§606, amending §540): a fresh signing link to
  * every registration of the event still `PENDING_DECLARATION`, in one press — Administrator only,
  * the single resend's rule, asserted here as in the action.
  *

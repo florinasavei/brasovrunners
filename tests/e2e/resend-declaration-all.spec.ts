@@ -6,7 +6,7 @@ import { signIn } from "./support/featured-event";
 import { openEditorBox } from "./support/fold";
 
 /**
- * §NNN (amending §540) — «Retrimite declarația tuturor care nu au semnat»: on the event's page, beside
+ * §606 (amending §540) — «Retrimite declarația tuturor care nu au semnat»: on the event's page, beside
  * the queue, one press asks first with the live counts («N persoane așteaptă semnarea; M vor fi
  * sărite: …») and lands on a banner that says what was queued and what was skipped and why.
  *
@@ -71,7 +71,7 @@ async function seedEvent(tag: string): Promise<{ eventId: string; registrationId
   });
 }
 
-test.describe("§NNN the declaration resent to everyone who has not signed", () => {
+test.describe("§606 the declaration resent to everyone who has not signed", () => {
   test("an Administrator presses it on the event page, reads the counts first, and lands on what was queued", async ({ page }, testInfo) => {
     test.setTimeout(90_000);
     const tag = `${testInfo.project.name}-${Date.now().toString(36)}`;

@@ -18,7 +18,7 @@ export function canResendReminder(status: RegistrationStatus, eventStartsAt: Dat
 }
 
 /**
- * «Retrimite declarația tuturor care nu au semnat» (§NNN): only while a declaration can still be
+ * «Retrimite declarația tuturor care nu au semnat» (§606): only while a declaration can still be
  * signed — the event still on (`signDeclaration` refuses anything but SCHEDULED) and not started (the
  * link lives until the start, §160). A cancelled, finished or started event has nothing to sign.
  */
@@ -28,11 +28,11 @@ export function canResendDeclarationToAll(eventStatus: "SCHEDULED" | "CANCELLED"
 
 /**
  * How long after a declaration email was queued or left the bulk press leaves that registration out
- * (§NNN): a person who has just been sent the link must not get a second one in the same hour.
+ * (§606): a person who has just been sent the link must not get a second one in the same hour.
  */
 export const RECENT_DECLARATION_EMAIL_MS = 60 * 60_000;
 
-/** The counts one bulk press reports, for one kind of registration (§NNN). */
+/** The counts one bulk press reports, for one kind of registration (§606). */
 export type BulkResendCounts = { queued: number; skippedRecent: number; skippedLimited: number };
 
 export function deriveAllowedResendMessageType(status: RegistrationStatus): EmailMessageType | null {

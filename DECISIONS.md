@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.53-2026-10-01 -->
+<!-- PROJECT_BASELINE: BR-V2.54-2026-10-01 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.53-2026-10-01`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.54-2026-10-01`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -22430,3 +22430,41 @@ Baseline `BR-V2.52-2026-09-27`.
 *Rejected:* slowing the job's cadence — the after-response drain and «Trimite acum» would still burst a hundred in a minute; a cap in the Mailgun plan catalogue — the probation is the account's, not the plan's, and it ends when support lifts it; treating every 400 as a pause — a bad address, the sandbox's refusal or an unverified domain must stay permanent, or the outbox retries a hopeless message forever.
 
 Baseline `BR-V2.53-2026-10-01`.
+
+## 606. One press resends the declaration to everyone who has not signed (amending §540)
+
+**2026-10-01. Amends §540; applies §79, §588 and §592.** The owner, after the Mailgun probation held the outbox and the declaration requests went out behind time: «Sunt multe persoane care aparent așteaptă semnarea mailului, cumva trebuie să pot retrimite ca și batch». Until now the backoffice could resend the declaration only one registration at a time (§79, §540), from each registration's page or row — on a day with dozens waiting, a press per person.
+
+### The decision
+
+**One verb, on the event.** «Retrimite declarația tuturor care nu au semnat» / "Resend the declaration to everyone who has not signed" sits on the event's backoffice page, in «Înscrierile primite», just above the queue panel whose «Rezervate» counts exactly these people. The event page rather than the registrations list filtered to the event and `PENDING_DECLARATION`: the press is per event (its limit is per event), the event is where staff look at the registrations by state, and the list's filters would make the verb depend on what somebody had typed into them. Administrator only, as the single resend (`canManageRegistrations`): asked by the page that draws the button, by the action that receives the press, and by the service that performs it (BR-REQ-060-01).
+
+**Who gets it.** Every registration of the event in `PENDING_DECLARATION`, whatever its kind (§12.6: a test row is resent exactly as a real one, and counted apart). Two are skipped, and counted:
+- a registration whose own `COMPLETE_DECLARATION` email is still in the outbox (waiting, deferred or being sent) or left within the last sixty minutes — it has an email coming, or has just had one, and a person who just got the link must not get a second one in the same hour;
+- a registration whose own resend limit (`admin-resend`, five an hour, BR-REQ-037-02 criterion 5) is already spent — a spent limit is a spent limit, and the bulk press does not spend a refused attempt on it.
+
+A cancelled, completed or started event is refused before anything is written: the declaration can no longer be signed there (`signDeclaration` refuses anything but a scheduled event, and the link lives until the start, §160).
+
+**One path, not two.** The single resend's core — the registration's hourly limit with its refusal row, the enqueue marked `isManualResend` with the acting Administrator, the «now» row of §540 when it applies — is now one function (`queueManualResend`) that the single press and the bulk press both call, so a bulk press is exactly N single resends under «Pune la coadă». The idempotency key stays per registration and per press instant (`registration:<id>:manual-resend:<now>`). The press adds: one audit row `registration.bulk_resend` on the event (the Administrator, and the counts `queued`, `skippedRecent`, `skippedLimited` of the real registrations, the test ones apart — never a name or an address); one drain after the response for the whole press, not one per row; and a limit of its own, `admin-bulk-resend`, three presses an hour per event, counted after the event check and before the candidate reads (so a refusal for a closed event spends none), whose refusal is recorded as `registration.bulk_resend_rate_limited`. The press queues; the emails leave through the outbox at the road's pace (§443, §513) — Gmail's seconds between messages, Mailgun's hourly allowance.
+
+**What the Administrator reads.** Before the press, the dialog (§384), with the press's own query read live: «2 persoane așteaptă semnarea; 1 va fi sărită: 1 cu email în ultima oră sau încă în coadă, 0 la limita de retrimiteri. Fiecare primește un link nou — cel vechi nu mai merge. Emailurile pleacă la ritmul drumului.» (the brief's parentheses became a colon and a dash: §511 allows no parenthesis over six words), and the usual «Se va trimite un email către N participanți». After it, the banner «La coadă: X · sărite: Y — Z cu email recent, W la limita de retrimiteri.» and a toast. A press the server would refuse — the event closed, or the hour's three presses spent — keeps its button and shows an «i» beside it with the refusal banner's own sentence (§592: one text for both).
+
+**The old link stops working.** The link is minted when the email is sent (`issueActionToken`, in the renderer), and minting it invalidates the registration's earlier live declaration link (§12.8). Each resent email carries a new link; the one in the earlier email no longer opens the declaration.
+
+**Nothing else moves.** No registration's state, hold or deadline changes (§79: a resend never changes state — a resend's declaration email does not move the hold either, §513); the single resend keeps its behaviour and its tests; the page's read writes nothing (GET mutates nothing).
+
+**A family on one address.** Each pending person gets their own email, as a single resend gives them today: the limits, the idempotency key, the «recent» test and the counts are all per registration, and the renderer already names the address's other unsigned declarations in each message, whose one link signs them all (§471). An address with three pending people therefore gets three messages, each with a working link, and the newest link kills the earlier ones (§12.8). Accepted: collapsing them to one message per address would make the counts count addresses, and the press would stop being N single resends.
+
+**Two Administrators at once.** Each press reads the candidates before the other's rows commit, so two presses in the same second can both queue everyone, and the second email kills the first link. Bounded by three presses an hour per event and five resends an hour per registration, not prevented; accepted rather than holding a lock on the event across the queueing.
+
+### Tests
+
+`tests/integration/registrations/bulk-resend.test.ts` (PGlite): five waiting, one confirmed, one whose email left ten minutes ago and one still queued — the press queues `COMPLETE_DECLARATION` for exactly the five, each a manual resend with the Administrator and its own key, and audits `{ queued: 5, skippedRecent: 2, skippedLimited: 0 }`; the preview's counts are the press's and reading spends nothing; no state, hold or deadline moves; a second press within the hour queues nothing (the first press's emails are still queued, or left within the hour); three registrations with their hour spent are skipped and counted, their counters untouched; the fourth press in an hour is refused and recorded; an Organizer and every role below the Administrator are refused; a cancelled, completed or started event is refused, spending no press; a test registration is sent to and counted apart; the single resend still works beside it; and the rendered resend carries a working link while the earlier link is refused. `no-raw-role-checks`, `confirmed-actions` and `action-icons` gain the new verb. e2e: `resend-declaration-all.spec.ts` walks the event page — the press, the dialog's text, the banner — compiled, not run.
+
+*Rejected:*
+- **One email per address in a press.** See above: the press is N single resends, counted per registration.
+- **Resending to everyone regardless of the last hour.** On the very day the outbox delivered late, the people whose email had just arrived would get a second one minutes later, with the first link already dead.
+- **Extending the hold or the deadline with the resend.** A resend never changes state (§79); a deadline is the allocator's and the club's «Termene», not a side effect of an email.
+- **An automatic re-send on a timer.** The deadline reminders already exist; this is the operator's hand, on purpose, pressed when the operator knows the emails went astray.
+
+Baseline `BR-V2.54-2026-10-01`.

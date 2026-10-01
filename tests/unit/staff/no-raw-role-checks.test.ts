@@ -111,7 +111,7 @@ describe("§450 no raw role checks outside roles.ts and the door", () => {
     expect(tasksPage).toMatch(/canManageClubSettings\(actor\.role\) && <OlderPicturesPanel/);
   });
 
-  it("the declaration resent to everyone asks the single resend's predicate at the page, the action and the service (§NNN)", () => {
+  it("the declaration resent to everyone asks the single resend's predicate at the page, the action and the service (§606)", () => {
     // One answer to "who may resend": `canManageRegistrations`, wherever the bulk press is drawn,
     // posted or performed — never a role of its own, and never only the hidden button.
     const service = readFileSync(path.join(ROOT, "src/modules/registrations/admin-service.ts"), "utf8").replace(/\r\n/g, "\n");

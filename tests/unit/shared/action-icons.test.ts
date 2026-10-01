@@ -161,7 +161,7 @@ const SAME_VERB: Array<{ glyph: string; keys: string[] }> = [
   },
   { glyph: "send", keys: ["outbox.sendNow", "thanks.send", "registrations.sendReminder"] },
   // An email sent again, whoever it is for: a registration's, a staff invitation, a password reset —
-  // and to everyone at once too: the declaration to everyone who has not signed (§NNN).
+  // and to everyone at once too: the declaration to everyone who has not signed (§606).
   { glyph: "resend", keys: ["registrations.resend", "staff.resendInvite", "staff.passwordReset", "bulkResend.button"] },
 ];
 

@@ -44,7 +44,7 @@ export const RATE_LIMITS: Record<RateLimitScope, { limit: number; windowMs: numb
   // BR-REQ-037-02 criterion 5. Per registration, not per administrator: it protects one inbox.
   "admin-resend": { limit: 5, windowMs: 60 * 60_000 },
   /**
-   * «Retrimite declarația tuturor care nu au semnat» (§NNN), keyed on the event: each press can put
+   * «Retrimite declarația tuturor care nu au semnat» (§606), keyed on the event: each press can put
    * an email in every pending inbox at once, so three presses an hour, whoever presses. Every row
    * it queues still spends that registration's own `admin-resend` above.
    */
@@ -131,7 +131,7 @@ export async function consumeRateLimit<T extends Record<string, unknown>>(
 
 /**
  * How many attempts each key has made in `now`'s window, without counting one — for a page that says
- * before a press which keys the press would find spent (§NNN), and for the press that skips them
+ * before a press which keys the press would find spent (§606), and for the press that skips them
  * rather than spending a refused attempt on each. A key with no row has made none. One read.
  */
 export async function readRateLimitCounts<T extends Record<string, unknown>>(

@@ -21,7 +21,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-037-02, §NNN (amending §540) — «Retrimite declarația tuturor care nu au semnat»: one press
+ * BR-REQ-037-02, §606 (amending §540) — «Retrimite declarația tuturor care nu au semnat»: one press
  * queues a fresh `COMPLETE_DECLARATION` for every registration of the event still waiting to sign,
  * through the single resend's own path (the registration's hourly limit, `isManualResend`), skipping
  * — and counting — those whose declaration email is still queued or left within the hour, and those
@@ -31,7 +31,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 const NOW = new Date("2026-09-04T10:05:00.000Z");
 const MINUTE = 60_000;
 
-describe("§NNN the declaration resent to everyone who has not signed, in one press", () => {
+describe("§606 the declaration resent to everyone who has not signed, in one press", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let adminId: string;

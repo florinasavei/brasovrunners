@@ -966,7 +966,7 @@ export async function sendEventThanksAction(_previous: FormOutcome | null, form:
 }
 
 /**
- * «Retrimite declarația tuturor care nu au semnat» (§NNN): a fresh signing link to every pending
+ * «Retrimite declarația tuturor care nu au semnat» (§606): a fresh signing link to every pending
  * registration of the event, in one press. Administrator only — asked here, at the door, and again in
  * the service (BR-REQ-060-01). The banner names what was queued and what was skipped and why; a press
  * refused by a closed event or by the event's hourly limit lands on the sentence the button's «i»

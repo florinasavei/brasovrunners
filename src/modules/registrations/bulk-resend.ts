@@ -8,7 +8,7 @@ import { type BulkResendCounts, canResendDeclarationToAll, RECENT_DECLARATION_EM
 import { findEventForAllocation } from "./repository";
 
 /**
- * «Retrimite declarația tuturor care nu au semnat» (§NNN) — the read half: who the press reaches and
+ * «Retrimite declarația tuturor care nu au semnat» (§606) — the read half: who the press reaches and
  * who it leaves out, read by the event page for its question and by the press itself, one query for
  * both, so the dialog's numbers are the press's. Nothing here writes; the press is
  * `resendDeclarationToAllPending` in `admin-service.ts`.
@@ -52,7 +52,7 @@ export async function listDeclarationResendCandidates<T extends Record<string, u
     .orderBy(asc(registrations.submittedAt), asc(registrations.id));
 }
 
-/** Whether the `admin-resend` hour of each registration is already spent (§NNN): a spent limit is a spent limit. */
+/** Whether the `admin-resend` hour of each registration is already spent (§606): a spent limit is a spent limit. */
 export async function spentResendLimits<T extends Record<string, unknown>>(
   db: Database<T>,
   registrationIds: readonly string[],
@@ -63,7 +63,7 @@ export async function spentResendLimits<T extends Record<string, unknown>>(
   return new Set(registrationIds.filter((id) => (counts.get(id) ?? 0) >= limit));
 }
 
-/** Why a press would be refused before it reached anybody (§NNN), as the page says it ahead (§592). */
+/** Why a press would be refused before it reached anybody (§606), as the page says it ahead (§592). */
 export type DeclarationResendRefusal = "closed" | "limited";
 
 export type DeclarationResendPreview = {
@@ -90,7 +90,7 @@ export function sortCandidates(candidates: readonly DeclarationResendCandidate[]
 }
 
 /**
- * The question's numbers, read live with the press's own query (§NNN, §384): how many wait to sign,
+ * The question's numbers, read live with the press's own query (§606, §384): how many wait to sign,
  * how many the press would skip and why, and whether the press would be refused — the event no longer
  * signable, or the event's three presses of the hour spent — so the page can say so before the press
  * (§592). Null for an unknown event. Reads only: GET mutates nothing.
