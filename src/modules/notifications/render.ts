@@ -53,7 +53,7 @@ import {
 } from "@/modules/registrations/family-entries";
 import { familyReservationHoldsAt, reservedUntilPhrase } from "@/modules/registrations/domain/family-reservation";
 import { events } from "@/db/schema/events";
-import { countEligibleWaitlisted, countOccupied } from "@/modules/registrations/repository";
+import { countEligibleWaitlisted, countOccupied, readWaitlistPosition } from "@/modules/registrations/repository";
 import { computeOccupied, computePublicAvailability } from "@/modules/registrations/domain/capacity";
 import { waitlistHasRoom } from "@/modules/registrations/domain/waitlist";
 import type { FamilySitting, PendingFamilyEntry } from "@/db/schema/family-entries";
@@ -438,6 +438,17 @@ async function renderRow(
   if (row.messageType === "VERIFY_REGISTRATION_EMAIL" && registration && !clubCopy) {
     const others = await registeredOnAddressWithStates(db, registration.eventId, registration.participantId, [registration.id]);
     if (others.length > 0) data.familyOnAddress = others;
+  }
+  /*
+    Where the person stands in the line (§NNN), read now, at render time, with the registration the
+    row already names — the template has no database of its own, and the line moves between the
+    queueing and the sending (a resend, a delayed outbox), so a number written into the payload at
+    queue time would be older than the email. The same reader as the registration's own page
+    (`readWaitlistPosition`); null once the person is no longer waiting, and then the message says nothing of it.
+  */
+  if (row.messageType === "WAITLIST_JOINED" && registration) {
+    const standing = await readWaitlistPosition(db, registration.id);
+    if (standing) data.waitlistStanding = { position: standing.position, length: standing.length };
   }
   /*
     One cancellation email per person (§547): whether the person held a place or waited in line —

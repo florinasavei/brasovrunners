@@ -6903,6 +6903,15 @@
         "other": "Cu această adresă, la acest eveniment: {count} din cel mult {max} de persoane."
       }
     },
+    "waitlist": {
+      "position": {
+        "one": "Ești pe locul {position} din {length} persoană de pe lista de așteptare.",
+        "few": "Ești pe locul {position} din {length} persoane de pe lista de așteptare.",
+        "other": "Ești pe locul {position} din {length} de persoane de pe lista de așteptare."
+      },
+      "orderAuto": "Locurile eliberate se oferă în ordine.",
+      "orderClub": "Clubul alege cui oferă un loc eliberat."
+    },
     "manage": {
       "title": "Gestionează înscrierea",
       "prompt": "Poți anula această înscriere. Locul va fi eliberat imediat.",

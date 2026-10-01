@@ -41,6 +41,7 @@ import {
 import { declarationStateKey, isSignable } from "@/modules/registrations/domain/family-signing";
 import { DENSITY } from "@/theme/density";
 import FamilyChip from "@/modules/registrations/ui/FamilyChip";
+import { waitlistStandingPhrase } from "@/modules/registrations/ui/waitlist-position-words";
 import { replacedLinkWords } from "@/modules/registrations/ui/link-wait-words";
 import { readReplacedActionLink } from "@/modules/registrations/token-actions";
 import QrWithName, { type QrWords } from "@/modules/registrations/ui/QrWithName";
@@ -365,6 +366,12 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
                 mele” arată starea declarației fiecăruia»): signed with its day, to sign, asked after
                 the address is confirmed, or asked when the waiting list offers a place.
               */}
+              {/* Where a waiting person stands (§NNN): «Ești pe locul 3 din 10 persoane…», under the state and the date. */}
+              {item.status === "WAITLISTED" && item.waitlistStanding && (
+                <Typography variant="body2" sx={{ mb: 1.5 }} data-testid="waitlist-position">
+                  {waitlistStandingPhrase(t, locale, item.waitlistStanding)}
+                </Typography>
+              )}
               {declarationLine(item) && (
                 <Typography variant="body2" sx={{ mb: 1.5 }} data-testid="my-registration-declaration">
                   {declarationLine(item)}

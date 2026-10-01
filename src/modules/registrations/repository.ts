@@ -171,6 +171,50 @@ export async function offersWaitlistAutomatically<T extends Record<string, unkno
 }
 
 /**
+ * Where a waiting registration stands in its event's line, and how long the line is (§NNN; the owner:
+ * «Ești pe locul 3 din 10 pe lista de așteptare»): the one reader behind the registration's own page,
+ * «Toate înscrierile mele» and the `WAITLIST_JOINED` email, so the three can never say different numbers.
+ *
+ * **The order is `lockOldestWaitlisted`'s own** — `waitlisted_at` ascending, `id` for a tie — the order
+ * the allocator offers places by (`fillAvailableSpots`), taken as a window over the same rows, so the
+ * position is the number of `WAITLISTED` rows ahead plus one with no second statement of the rule. The
+ * length is every `WAITLISTED` row of the event. A person offered a place (`WAITLIST_OFFERED`) has left
+ * the line and is not in either number; a cancelled or expired row never was. `kind` appears in no
+ * condition: a `TEST` row stands in the line exactly as a real one does (`AGENTS.md` §12.6), as
+ * `countEligibleWaitlisted` counts it.
+ *
+ * `autoOffer` is the event's `waitlist_auto_offer` (§615), so the sentence can say whether freed places
+ * go in order or the club chooses — one read of the event, in the same call, rather than a second one
+ * per page. Null when the registration is not `WAITLISTED` (or does not exist): nobody stands anywhere.
+ * Two statements, no lock: a number that is one place stale the instant it renders is the same as the
+ * public counts, and nothing is decided from it.
+ */
+export async function readWaitlistPosition<T extends Record<string, unknown>>(
+  db: Database<T>,
+  registrationId: string,
+): Promise<{ position: number; length: number; autoOffer: boolean } | null> {
+  const [own] = await db
+    .select({ eventId: registrations.eventId, status: registrations.status, autoOffer: events.waitlistAutoOffer })
+    .from(registrations)
+    .innerJoin(events, eq(events.id, registrations.eventId))
+    .where(eq(registrations.id, registrationId))
+    .limit(1);
+  if (!own || own.status !== "WAITLISTED") return null;
+  const line = db
+    .select({
+      id: registrations.id,
+      position: sql<number>`(row_number() over (order by ${registrations.waitlistedAt} asc, ${registrations.id} asc))::int`.as("position"),
+      length: sql<number>`(count(*) over ())::int`.as("length"),
+    })
+    .from(registrations)
+    .where(and(eq(registrations.eventId, own.eventId), eq(registrations.status, "WAITLISTED")))
+    .as("waitlist_line");
+  const [row] = await db.select({ position: line.position, length: line.length }).from(line).where(eq(line.id, registrationId));
+  // The row left the line between the two statements: it is no longer waiting.
+  return row ? { position: row.position, length: row.length, autoOffer: own.autoOffer } : null;
+}
+
+/**
  * One event's row, unlocked — what the backoffice needs to build an `EventForRegistration`
  * before handing it to the allocator.
  *

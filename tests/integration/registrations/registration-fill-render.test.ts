@@ -250,6 +250,56 @@ describe("§346 the fill line beside the register button, from the cached count"
     expect(html).not.toContain("în curs de confirmare");
   });
 
+  it("§NNN says how many wait on the places line, once, while places are free beside the line (automatic offers off)", async () => {
+    const event = await openRace(10);
+    await db.update(events).set({ waitlistAutoOffer: false }).where(eq(events.id, event.id));
+    await confirm(event.id, 4);
+    await confirm(event.id, 2, "WAITLISTED", 4);
+    const html = await render("cros-plin");
+    expect(html).toContain("4 înscriși din 10 locuri — 2 locuri păstrate pentru lista de așteptare, 2 pe lista de așteptare</p>");
+    // The number is in the card once: the separate line of its own is gone where the places line carries it.
+    expect(html).not.toContain('data-testid="waitlist-waiting"');
+    expect(html.match(/2 pe lista de așteptare/g)).toHaveLength(1);
+    locale = "en";
+    const en = await render("full-cross");
+    expect(en).toContain("4 registered of 10 places — 2 places kept for the waiting list, 2 on the waiting list</p>");
+  });
+
+  it("§NNN leaves the places line as it was when nobody waits", async () => {
+    const event = await openRace(10);
+    await confirm(event.id, 4);
+    const html = await render("cros-plin");
+    expect(html).toContain("4 înscriși din 10 locuri</p>");
+    expect(html).not.toContain("pe lista de așteptare");
+  });
+
+  it("§NNN counts a waiting TEST row like a real one: the page reads the same count the allocator does", async () => {
+    const event = await openRace(10);
+    await confirm(event.id, 4);
+    await confirm(event.id, 1, "WAITLISTED", 4);
+    await db.update(registrations).set({ kind: "TEST" }).where(eq(registrations.status, "WAITLISTED"));
+    const html = await render("cros-plin");
+    expect(html).toContain("1 pe lista de așteptare</p>");
+  });
+
+  it("§NNN keeps the full state's lead as the one place the number is said: the places line leaves it out", async () => {
+    const event = await openRace(2, 5);
+    await confirm(event.id, 2);
+    await confirm(event.id, 3, "WAITLISTED", 2);
+    const html = await render("cros-plin");
+    expect(html).toContain("Mulțumim! Toate cele 2 locuri s-au ocupat — 3 așteaptă deja un loc.");
+    expect(html).toContain('data-testid="registration-fill">2 înscriși din 2 locuri</p>');
+    expect(html).not.toContain("3 pe lista de așteptare");
+  });
+
+  it("§NNN says how many wait when the line is full too, where no lead says it", async () => {
+    const event = await openRace(2, 1);
+    await confirm(event.id, 2);
+    await confirm(event.id, 1, "WAITLISTED", 2);
+    const html = await render("cros-plin");
+    expect(html).toContain("2 înscriși din 2 locuri — 1 pe lista de așteptare</p>");
+  });
+
   it("says it in natural English from the same numbers", async () => {
     const event = await openRace(50);
     await confirm(event.id, 12);

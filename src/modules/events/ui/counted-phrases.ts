@@ -17,7 +17,7 @@ type Say = (key: string, values?: Record<string, string | number>) => string;
  * "12 înscriși din 50 de locuri" / "12 of 50 places taken" — each language's own word order
  * from the same two numbers: the catalogue decides where the words go, this only picks the forms.
  */
-export function fillPhrase(say: Say, locale: string, fill: PublicFill): string {
+export function fillPhrase(say: Say, locale: string, fill: PublicFill, options: { withWaiting?: boolean } = {}): string {
   const taken = say(`cta.fillTaken.${countForm(fill.taken, locale)}`, { count: fill.taken });
   const places = say(`cta.fillPlaces.${countForm(fill.capacity, locale)}`, { count: fill.capacity });
   /*
@@ -33,6 +33,13 @@ export function fillPhrase(say: Say, locale: string, fill: PublicFill): string {
     parts.push(say("cta.fillInProgress", { count: progress }));
   }
   if (fill.kept !== undefined && fill.kept > 0) parts.push(say(`cta.fillKept.${countForm(fill.kept, locale)}`, { count: fill.kept }));
+  /*
+    The people waiting, last (§NNN; the owner: the event page says how many wait): «… , 10 pe lista de
+    așteptare» whenever anybody does, so the number is on the places line in every state that draws it.
+    The full state's lead already says it («3 așteaptă deja un loc», §587), and the page does not say a
+    number twice in one card: it asks for the line without it (`withWaiting: false`).
+  */
+  if (options.withWaiting !== false && fill.waitlisted !== undefined && fill.waitlisted > 0) parts.push(waitingPhrase(say, fill.waitlisted));
   if (parts.length === 0) return say("cta.fill", { taken, places });
   return say("cta.fillParts", { taken, places, parts: parts.join(", ") });
 }
