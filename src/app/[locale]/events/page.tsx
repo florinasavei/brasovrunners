@@ -1,4 +1,3 @@
-import HistoryIcon from "@mui/icons-material/History";
 import Alert from "@mui/material/Alert";
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
@@ -13,8 +12,10 @@ import SeriesCard from "@/modules/events/ui/SeriesCard";
 import { forecastsForEvents } from "@/modules/weather/source";
 import { groupSeries, seriesLookup } from "@/modules/events/domain/series";
 import { listingSections } from "@/modules/events/domain/listing";
+import PastEvents from "@/modules/events/ui/PastEvents";
 import {
   activeFilterCount,
+  listingFilterRows,
   matchesListingFilter,
   offeredFilters,
   offersAnything,
@@ -33,7 +34,6 @@ import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
 import { sportsOrganizationJsonLd } from "@/modules/events/structured-data";
 import { pageAlternates, staticRouteUrl, staticRouteUrls } from "@/modules/seo/alternates";
 import { env } from "@/shared/config/env";
-import { DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import JsonLd from "@/shared/ui/JsonLd";
 import Wordmark from "@/shared/ui/Wordmark";
 import type { listUpcomingEvents, PublicEvent, PublicEventPage } from "@/modules/events/repository";
@@ -209,7 +209,7 @@ export default async function EventsPage({ params, query: asked }: Props) {
         {t("intro")}
       </Typography>
 
-      <ListingLead events={events} undated={undatedRows} hasUpcoming={hasUpcoming} filter={filter} facts={facts} layout={layout} locale={locale} />
+      <ListingLead events={events} undated={undatedRows} past={pastRows} hasUpcoming={hasUpcoming} filter={filter} facts={facts} layout={layout} locale={locale} />
 
       {/* The calendar moved to its own page in §251 — a tab after the events, because the
           front page is for "what is on next" and a grid of squares is what somebody planning a
@@ -248,6 +248,7 @@ export default async function EventsPage({ params, query: asked }: Props) {
 async function ListingLead({
   events,
   undated,
+  past,
   hasUpcoming,
   filter,
   facts,
@@ -256,6 +257,8 @@ async function ListingLead({
 }: Listing & {
   /** The events whose date is to be announced (§533): the panel offers their values too. */
   undated: readonly PublicEventPage[];
+  /** The past section's window (§267), which the same filters narrow (§602): its values are offered too. */
+  past: readonly PublicEventPage[];
   /** The filters the address names (§413): OR within a group, AND across groups. */
   filter: ListingFilter;
   /** The night and door answers, per row, the page read once (§394, §413). */
@@ -267,7 +270,10 @@ async function ListingLead({
   // What the panel offers (§413, §133's rule generalised): a box only where ticking it would change
   // what the page shows — read off every row, the lead's included, never off the filtered rows —
   // or where the address already ticks it, so a filtered page can say what it is filtered by.
-  const offer = offeredFilters<PublicEventPage>([...events, ...undated], filter, facts);
+  // The past section narrows by the same boxes (§602), so its window is read too: a value only a
+  // past event carries is a box that changes what the page shows. Each row once — between seasons
+  // the lead is the past window's first row (§167).
+  const offer = offeredFilters<PublicEventPage>(listingFilterRows<PublicEventPage>(events, undated, past), filter, facts);
 
   return (
     <>
@@ -300,15 +306,6 @@ async function ListingLead({
     </>
   );
 }
-
-/**
- * How many finished events the foot of the listing carries (§267).
- *
- * A weekly run is fifty rows a year, so this is a window rather than an archive: twelve is
- * about a season of Mondays, and the calendar — which shows any month of any year (§116) — is
- * where the rest lives. The section says so in its own words rather than growing a pager.
- */
-const PAST_EVENTS_SHOWN = 12;
 
 /**
  * The events whose date is to be announced (§533), or none when they cannot be read: like the past
@@ -369,82 +366,6 @@ async function readPastEvents(locale: EventLocale, now: Date): Promise<PublicEve
     console.error("[events] could not read the past events", error);
     return [];
   }
-}
-
-/**
- * The events that have already happened, at the bottom, in their own category (§267).
- *
- * The owner: "old or closed events must be shown at the bottom on a different category". The
- * listing is "what is on next" and that is right, but an event the club held was reachable only
- * through the calendar's month view — so a runner looking for last month's race, or for the page
- * with its photographs, had nowhere obvious to go.
- *
- * **Folded at every width, unlike the "other events" fold above it**, which opens from `sm` up
- * (§78). That difference is the whole point: what is to come is what the page is for, and what
- * is past is something a reader goes looking for. A closed `<details>` is also a section that
- * costs a phone nothing to scroll past.
- *
- * Between seasons the lead already shows the club's last event with a notice (§167), so this
- * section skips that one row: it would be the same card twice on one page.
- */
-async function PastEvents({
-  rows,
-  now,
-  filter,
-  facts,
-  shownAbove,
-}: {
-  /** `PAST_EVENTS_WINDOW` rows, newest first, read by the page beside the listing's own. */
-  rows: PublicEvent[];
-  now: Date;
-  /** The filters above (§272, §413) — the past narrows by them too, in memory. */
-  filter: ListingFilter;
-  facts: FilterFacts<PublicEvent>;
-  /** The past event the lead already shows between seasons (§167), if any. */
-  shownAbove: string | undefined;
-}) {
-  const filtered = activeFilterCount(filter) > 0;
-  // The heading names the kind when one kind is all that is ticked, as `?type=` always did (§272).
-  const sourceType = filter.type.length === 1 ? filter.type[0] : undefined;
-  // The one the lead is already showing, when there is nothing to come (§167) — by its id, so it
-  // is left out wherever the filter puts it.
-  const events = rows.filter((event) => event.id !== shownAbove && matchesListingFilter(event, filter, facts));
-  if (events.length === 0) return null;
-
-  const t = await getTranslations("Events");
-  const tEvent = await getTranslations("Event");
-  // A repeated event is one card here too (§113) — "Happy Monday" is one line, not eleven.
-  const cards = groupSeries(events.slice(0, PAST_EVENTS_SHOWN));
-  // A date left alone on its card by the filter or the cut still wears its series' rhythm (§486):
-  // the series is read off every past row the page holds, before either.
-  const seriesOf = seriesLookup(rows);
-  const onlyOneType = sourceType !== undefined && activeFilterCount(filter) === 1;
-
-  return (
-    <Box component="details" data-testid="past-events" sx={{ mt: { xs: DENSITY.sectionGapLg, sm: 4 } }}>
-      <Typography
-        component="summary"
-        variant="h2"
-        sx={{ ...DISCLOSURE_SUMMARY_SX, fontSize: "1.25rem", mb: 1.5 }}
-      >
-        <HistoryIcon aria-hidden sx={FOLD_GLYPH_SX} />
-        {onlyOneType
-          ? t("pastCountOfType", { count: cards.length, type: tEvent(`type.${sourceType}`) })
-          : filtered
-            ? t("pastCountFiltered", { count: cards.length })
-            : t("pastCount", { count: cards.length })}
-      </Typography>
-      <Box component="ul" sx={CARD_GRID_SX}>
-        {cards.map((series, index) =>
-          series.members.length > 1 ? (
-            <SeriesCard key={series.key} members={series.members} index={index} now={now} />
-          ) : (
-            <EventCard key={series.key} event={series.members[0]} index={index} now={now} seriesDates={seriesOf(series.members[0])} />
-          ),
-        )}
-      </Box>
-    </Box>
-  );
 }
 
 /**

@@ -8,6 +8,12 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.51-2026-09-27
+
+- **A race card's two times line up on a phone** — where the «când» row wraps, the date, «08:30 (start eveniment)» and «11:00 (start cursă)» each take a line, start at one edge, with the calendar, the clock and the flag in one column and no dangling dots; the event page and the hero do the same below `sm`. §600.
+- **A tap on a picture in a description opens it large over the page, and two fingers zoom it** — pinch 1–4×, pan, a double tap for 2×; the ✕ «Închide», Escape, a tap or the phone's Back closes it; the same stored picture, loaded only on the first tap. §601.
+- **The filters reach the past events** — the «Filtre» panel offers what the past events carry too, and with a filter on, the «Din trecut, după filtre» fold opens with the matching events (the latest twelve of the sixty the page reads). §602.
+- **The phone card says the weekday short** — «sâm., 21 nov. · 10:00 (start eveniment)» stays one line on most phones; the wrap of #307 remains the safety net at 320 px (a hotfix straight to production). §603.
 ## BR-V2.50-2026-09-27
 
 - **A cancelled place reaches the waiting list at once** — the next person's offer email leaves right after the cancellation, the erasure or the lapse, not at the next scheduled pass. §596.
