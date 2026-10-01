@@ -14,15 +14,13 @@ const FOLD_REACH = 44 - FOLD_LINE.xs;
 /**
  * When this site was built — and, for the club's own people, the way in.
  *
- * **The fold's own line below `md`, and pinned to the bar's own bottom-right corner from `md`
- * (`SiteFooter`, §372).** On a phone the stamp stays inside "Despre club": §365 took it off the bar
- * after it had become a third line of footer under a bar that was already two, and nobody the
- * public site is for has a use for it there. On a desktop the owner asked for it back in the bar's
- * corner (2026-09-24), where it costs nothing — the bar is one line with room to spare. So the rule
- * is split by width, `display: { xs: "flex", md: "none" }` on the fold's copy and the reverse on
- * the pinned one, and `/api/health` and `/devs` report the same values exactly. QA says it is QA in
- * words above the header (`EnvironmentNotice`), so the stamp's "qa ·" prefix was never the only
- * place that fact was read.
+ * **One copy, the last line of the «Despre club» fold's panel, at every width (`SiteFooter`,
+ * §NNN).** §365 took the stamp off the bar after it had become a third line of footer under a bar
+ * that was already two, and nobody the public site is for has a use for it. §372 pinned a second
+ * copy to the bar's corner from `md`; the owner took that back (2026-10-01: it is a bother to
+ * visitors), so the stamp is on screen only once somebody opens the fold. `/api/health` and
+ * `/devs` report the same values exactly. QA says it is QA in words above the header
+ * (`EnvironmentNotice`), so the stamp's "qa ·" prefix was never the only place that fact was read.
  *
  * The visible text is deliberately short: which deployment this is, and when the code behind it
  * last changed. The exact build — the baseline and the commit — is in the `title` and the
@@ -77,7 +75,7 @@ export default async function BuildBadge({ phoneTarget = false }: { phoneTarget?
    * and a reach there would lengthen the page by its twenty pixels. From `sm` the box is 44 with no
    * reach. `content-box`, said here, because the fold's content is slotted into the `<details>`'s
    * shadow tree, where MUI's `box-sizing: inherit` does not reach (§366): the padding is always
-   * on top of the line. The pinned copy on the bar's corner from `md` keeps its plain 44.
+   * on top of the line.
    */
   const sx = {
     alignSelf: "flex-start",

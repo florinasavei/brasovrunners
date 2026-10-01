@@ -6,7 +6,7 @@ import { describe, expect, it, vi } from "vitest";
 
 /**
  * BR-REQ-041-01 (§372) — the footer as the server sends it: one row on every width, the build
- * stamp inside the "Despre club" fold below `md` and pinned to the bar's own corner from `md`,
+ * stamp only inside the "Despre club" fold at every width (§NNN),
  * RO and EN side by side, and the privacy notice and the language on the always-visible bar.
  *
  * The owner, 2026-09-24: one row on a phone, every item kept but not every word — the privacy
@@ -134,33 +134,26 @@ function expectBarTarget(rules: string, properties: readonly string[], what: str
   expect(rules, `${what}: no open-ended 360 rule`).not.toMatch(/@media \(min-width:360px\)\{/);
 }
 
-describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's two doors", () => {
-  it("renders the build stamp twice: once in the fold's panel, once pinned to the bar's corner", async () => {
+describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's one door", () => {
+  it("renders the build stamp once, inside the fold's panel, and pins none to the bar", async () => {
     const html = markupOnly(await renderFooter());
     const label = 'aria-label="Versiunea site-ului';
-    const stamps = html.split(label).length - 1;
-    // One instance below `md`, one from `md` pinned to the bar's own corner — mutually
-    // exclusive by `display`, both present in the markup so CSS alone decides which one shows.
-    expect(stamps, "two build stamps in the footer's markup").toBe(2);
+    expect(html.split(label).length - 1, "one build stamp in the footer's markup").toBe(1);
+    expect(html.split("app-ver").length - 1, "`app-ver` once in the markup").toBe(1);
+    expect(html).not.toContain("footer-build-badge-pinned");
 
-    // The panel is the fold's own content again (review finding 4): inside `<details>`, after
-    // its `<summary>`. The pinned copy is outside it.
+    // Inside `<details>`, after its `<summary>`.
     const detailsStart = html.indexOf("<details");
     const summaryEnd = html.indexOf("</summary>");
     const detailsEnd = html.indexOf("</details>");
     const panelStart = html.indexOf('data-testid="footer-about-panel"');
-    const pinnedStart = html.indexOf('data-testid="footer-build-badge-pinned"');
     expect(detailsStart).toBeGreaterThanOrEqual(0);
     expect(panelStart).toBeGreaterThan(summaryEnd);
     expect(panelStart).toBeLessThan(detailsEnd);
-    expect(pinnedStart).toBeGreaterThan(detailsEnd);
 
-    const first = html.indexOf(label);
-    const second = html.indexOf(label, first + 1);
-    // The first copy is inside the panel, inside the fold; the second is the pinned corner's.
-    expect(first).toBeGreaterThan(panelStart);
-    expect(first).toBeLessThan(detailsEnd);
-    expect(second).toBeGreaterThan(pinnedStart);
+    const stamp = html.indexOf(label);
+    expect(stamp).toBeGreaterThan(panelStart);
+    expect(stamp).toBeLessThan(detailsEnd);
     // Still the build and still the staff entrance (§34): the version in the title, the way in
     // named for a screen reader.
     expect(html).toMatch(/title="(BR-V\d+\.\d+|dev)[^"]*"/);
@@ -455,7 +448,7 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's two doo
     const html = await renderFooter();
     const markup = markupOnly(html);
     const css = cssOnly(html);
-    for (const testId of ["footer-build-badge-panel", "footer-build-badge-pinned"]) {
+    for (const testId of ["footer-build-badge-panel"]) {
       const start = markup.indexOf(`data-testid="${testId}"`);
       const copy = markup.slice(start, markup.indexOf("</p>", start) + 4);
       // The staff entrance (dev-switcher in tests): a button with the build in its name and title.
@@ -475,22 +468,18 @@ describe("BR-REQ-041-01 §372 the footer's one row and the build stamp's two doo
       expect(chipRules).toMatch(/color:rgba\(0, 0, 0, 0\.6\);/);
       expect(chipRules).toMatch(/height:auto;/);
       expect(chipRules).toMatch(/\.MuiChip-label\{[^}]*white-space:normal;/);
-      // The box a long press is aimed at: 44px on the bar's corner (BR-REQ-041-01 criterion 6);
-      // in the fold, the fold's 24-pixel line on a phone with twenty more pixels of reach above it,
-      // given back as a negative margin so the line stays 24, and a plain 44 from `sm` (§480, the
-      // 360-px density pass, amending §385).
+      // The box a long press is aimed at: in the fold, the fold's 24-pixel line on a phone with
+      // twenty more pixels of reach above it, given back as a negative margin so the line stays
+      // 24, and a plain 44 from `sm` (§480, the 360-px density pass, amending §385).
       const box = rulesOf(css, emotionClassOf(copy, 'role="button"'));
-      if (testId === "footer-build-badge-pinned") expect(box).toMatch(/(^|[;{])min-height:44px;/);
-      else {
-        expect(box).toMatch(/(^|[;{])box-sizing:content-box;/);
-        expect(box).toMatch(/(^|[;{])min-height:24px;/);
-        expect(box).toMatch(/(^|[;{])padding-top:20px;/);
-        expect(box).toMatch(/(^|[;{])margin-top:-20px;/);
-        expect(box).toMatch(/@media \(min-width:600px\)\{[^{]*\{[^}]*min-height:44px;/);
-        expect(box).toMatch(/@media \(min-width:600px\)\{[^{]*\{[^}]*padding-top:0(px)?;/);
-        expect(box).toMatch(/@media \(min-width:600px\)\{[^{]*\{[^}]*margin-top:0(px)?;/);
-        expect(box, "no 28px band in the fold").not.toMatch(/min-height:28px;/);
-      }
+      expect(box).toMatch(/(^|[;{])box-sizing:content-box;/);
+      expect(box).toMatch(/(^|[;{])min-height:24px;/);
+      expect(box).toMatch(/(^|[;{])padding-top:20px;/);
+      expect(box).toMatch(/(^|[;{])margin-top:-20px;/);
+      expect(box).toMatch(/@media \(min-width:600px\)\{[^{]*\{[^}]*min-height:44px;/);
+      expect(box).toMatch(/@media \(min-width:600px\)\{[^{]*\{[^}]*padding-top:0(px)?;/);
+      expect(box).toMatch(/@media \(min-width:600px\)\{[^{]*\{[^}]*margin-top:0(px)?;/);
+      expect(box, "no 28px band in the fold").not.toMatch(/min-height:28px;/);
     }
   });
 

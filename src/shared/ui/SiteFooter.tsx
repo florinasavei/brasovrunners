@@ -23,14 +23,6 @@ import SocialIcon from "./SocialIcon";
 import ThemeModeToggle from "./ThemeModeToggle";
 
 /**
- * The height of the bar from `sm` up, and of the fold's links and stamp from `sm` up. 44px is what
- * BR-REQ-041-01 asks of a control; the bar is one line of them. On a phone the bar's items are the
- * bar's own target instead (`footerTargetSx`, §372): 24px below 360, 28px up to `sm`; and since
- * §480 (the 360-px density pass) the fold's lines are 24px at every phone width (`foldLineSx`).
- */
-const BAR_HEIGHT = 44;
-
-/**
  * The footer: one thin row on every width, with everything on it.
  *
  * History: §323 put the privacy notice on the bar, outside the fold, read by its own name.
@@ -138,16 +130,16 @@ const BAR_HEIGHT = 44;
  * 34 pixels in, the panel ends 32 pixels short of the edge below 360 and 34 from 360 — the switch
  * there is 24 or 28 pixels rather than 44.
  *
- * ## The build stamp: in the fold below `md`, pinned to the bar's corner from `md`
+ * ## The build stamp: one copy, in the fold, at every width (§NNN)
  *
- * §365 put it nowhere on screen until the fold opened, at every width — the owner's complaint
- * then was a phone showing it "by default". The owner, now, of the desktop site: "I liked when I
- * saw the app on the bottom right." Two renders of `BuildBadge`, mutually exclusive by
- * `display`: one inside the panel (below `md`, unchanged from §365), one outside the fold,
- * absolutely positioned at the bar's own bottom-right corner and shown only from `md`, anchored
- * to the bar — which the footer's own `position: sticky` makes a containing block for — rather
- * than floating over the page as it did before §365. Both are a small outlined chip since §385
- * (`BuildBadge`), inside the same 44-pixel staff entrance.
+ * §365 (2026-09-24) put it nowhere on screen until the fold opened, at every width; §372 added a
+ * second copy pinned to the bar's corner from `md`. The owner, 2026-10-01, from his phone, with a
+ * screenshot of the desktop bar: "vreau ca pill-ul cu versiunea sa apara doar cand fac expand la
+ * footer. e un pic deranjant pt vizitatori". Seen from a visitor's side the pinned chip was noise
+ * on every page, and the stamp is for staff and for whoever asks which site this is, both of whom
+ * can open the fold. So §NNN supersedes §372's pinned copy and returns to §365's rule: one render
+ * of `BuildBadge`, the last line of the panel, on screen at no width until somebody opens the
+ * fold. It is the same small outlined chip (§385) inside the same 44-pixel staff entrance.
  *
  * ## Sticky at the bottom
  *
@@ -453,11 +445,10 @@ export default async function SiteFooter() {
                 <MuiLink href={OPEN_METEO_SITE} target="_blank" rel="noopener noreferrer" data-testid="footer-weather-credit">
                   {weatherCredit}
                 </MuiLink>
-                {/* The build stamp and the staff entrance (§34), a chip since §385: below `md` this
-                    is the only place it shows, opened on purpose, and the panel's last item. From
-                    `md` a second copy is pinned to the bar's own corner (below), so this one steps
-                    aside there rather than repeat it. */}
-                <Box data-testid="footer-build-badge-panel" sx={{ display: { xs: "flex", md: "none" }, maxWidth: "100%" }}>
+                {/* The build stamp and the staff entrance (§34), a chip since §385: the only copy,
+                    shown at every width and only here, opened on purpose, the panel's last item
+                    (§NNN, the owner, 2026-10-01; it supersedes §372's pinned desktop copy). */}
+                <Box data-testid="footer-build-badge-panel" sx={{ display: "flex", maxWidth: "100%" }}>
                   <BuildBadge phoneTarget />
                 </Box>
               </Box>
@@ -561,30 +552,6 @@ export default async function SiteFooter() {
           />
           <LocaleSwitcher />
         </Box>
-      </Box>
-
-      {/* The build stamp's second copy, from `md` up: pinned to the bar's own bottom-right
-          corner (the owner: "on the desktop version I liked when I saw the app on the bottom
-          right"), on screen without opening anything. Absolutely positioned against the footer
-          box above — `position: sticky` on it is already a containing block for this — so it
-          never takes width away from the row, and the row's items never move to make room for
-          it. Below `md` this copy steps aside; the fold's own copy (above) is the only door to
-          it there. */}
-      <Box
-        data-testid="footer-build-badge-pinned"
-        sx={{
-          display: { xs: "none", md: "flex" },
-          position: "absolute",
-          right: 16,
-          top: 0,
-          // The bar's own height, not the whole footer's: opening "Despre club" on a desktop
-          // grows the box below the bar, and this stays pinned to the bar's row rather than
-          // drifting to the middle of a now-taller footer.
-          height: BAR_HEIGHT,
-          alignItems: "center",
-        }}
-      >
-        <BuildBadge />
       </Box>
     </Box>
   );
