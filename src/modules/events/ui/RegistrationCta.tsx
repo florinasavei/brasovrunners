@@ -109,7 +109,9 @@ export default async function RegistrationCta({
 
         {/*
           Once anybody is in the line (§587, amending §346), from the counts the door made: an open offer
-          named as offered, then the people with no offer yet (§612) — the card's order and words.
+          named as offered (§612) — the card's words. The people with no offer yet are the places line's
+          last part now (§NNN), so on this page they are said before the offer, not after it as on the
+          listing card, which has no places line (BR-REQ-035-01 criterion 14 amended).
         */}
         {cta.offered > 0 && (
           <Typography variant="body2" color="text.secondary" data-testid="waitlist-offered">

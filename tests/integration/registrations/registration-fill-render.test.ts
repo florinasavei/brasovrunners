@@ -67,7 +67,7 @@ async function openRace(capacity: number | null, waitlistCapacity: number | null
   return event;
 }
 
-async function confirm(eventId: string, n: number, status: "CONFIRMED" | "WAITLISTED" | "PENDING_DECLARATION" = "CONFIRMED", from = 0) {
+async function confirm(eventId: string, n: number, status: "CONFIRMED" | "WAITLISTED" | "WAITLIST_OFFERED" | "PENDING_DECLARATION" = "CONFIRMED", from = 0) {
   for (let i = from; i < from + n; i += 1) {
     const email = `runner${i}@example.org`;
     const [participant] = await db
@@ -88,7 +88,7 @@ async function confirm(eventId: string, n: number, status: "CONFIRMED" | "WAITLI
       resultsConsentVersion: 1,
       listOptOut: false,
       confirmedAt: status === "CONFIRMED" ? NOW : null,
-      holdExpiresAt: status === "PENDING_DECLARATION" ? new Date("2026-10-02T10:00:00.000Z") : null,
+      holdExpiresAt: status === "PENDING_DECLARATION" || status === "WAITLIST_OFFERED" ? new Date("2026-10-02T10:00:00.000Z") : null,
     });
   }
 }
@@ -263,6 +263,21 @@ describe("§346 the fill line beside the register button, from the cached count"
     locale = "en";
     const en = await render("full-cross");
     expect(en).toContain("4 registered of 10 places — 2 places kept for the waiting list, 2 on the waiting list</p>");
+  });
+
+  it("§NNN reads waiting before offered on the page: the places line carries the waiting, the offer's own line follows it", async () => {
+    const event = await openRace(10);
+    await confirm(event.id, 4);
+    await confirm(event.id, 1, "WAITLIST_OFFERED", 4);
+    await confirm(event.id, 3, "WAITLISTED", 5);
+    const html = await render("cros-plin");
+    const waiting = html.indexOf("3 pe lista de așteptare");
+    const offered = html.indexOf('data-testid="waitlist-offered"');
+    expect(waiting).toBeGreaterThan(-1);
+    expect(offered).toBeGreaterThan(-1);
+    expect(waiting).toBeLessThan(offered);
+    expect(html).toContain("1 loc oferit din lista de așteptare");
+    expect(html.match(/3 pe lista de așteptare/g)).toHaveLength(1);
   });
 
   it("§NNN leaves the places line as it was when nobody waits", async () => {
