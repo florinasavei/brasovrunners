@@ -148,7 +148,7 @@ describe("§598 «Aproximativ» on the event's distance", () => {
 
     const t = createTranslator({ locale: "ro", messages: ro, namespace: "Event" }) as unknown as (key: string, values?: Record<string, string | number>) => string;
     const format = createFormatter({ locale: "ro", timeZone: "Europe/Bucharest" });
-    expect(routePillParts(page, t, format).distance).toMatchObject({ label: "≈ 12 km", srLabel: "circa 12 km (aproximativ)" });
+    expect(routePillParts(page, t, format).distance).toMatchObject({ label: "≈ 12 km", srLabel: "circa 12 km" });
 
     const course = pageSectionStates({ event: row, texts: translations, night: false }).find((section) => section.id === "course");
     expect(course?.isDrawn).toBe(true);

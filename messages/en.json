@@ -168,11 +168,11 @@
     "distance": "Distance",
     "distanceKm": "{km} km",
     "distanceKmApproximate": "≈ {km} km",
-    "distanceKmApproximateLong": "about {km} km (approximate)",
+    "distanceKmApproximateLong": "about {km} km",
     "elevation": "Elevation gain",
     "elevationM": "{m} m elevation gain",
     "elevationShort": "{m} m climb",
-    "elevationMEstimated": "about {m} m of elevation gain (estimated)",
+    "elevationMEstimated": "about {m} m of elevation gain",
     "elevationShortEstimated": "≈ {m} m climb",
     "night": {
       "chip": "Night",

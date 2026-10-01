@@ -99,7 +99,8 @@ function rows(html: string) {
 
 /**
  * Every rule Emotion emitted for a tag's `css-` class inside the «când» container query of the
- * given threshold (`@container when (max-width: 23em)` / `32em`, §600 amended §NNN) — each block
+ * given threshold (`@container when (max-width: 23em)` / `32em` on the card's short date, `27em` /
+ * `36em` on the long one, §600 amended §NNN) — each block
  * read whole, braces balanced, since the page's hang nests a breakpoint inside it.
  */
 function containerRulesOf(html: string, tag: string, threshold: string) {
@@ -324,8 +325,12 @@ describe("BR-REQ-041-01 «când» is one line with its weekday (§356, §349)", 
     // The answer's own box is the container; no viewport media query decides the list any more.
     expect(html).toContain("container-name:when");
     expect(html).not.toContain("599.95px){.css");
+    // The page always shows the long date: its thresholds alone, never the card's short-date ones.
+    expect(html).toContain("@container when (max-width: 36em){");
+    expect(html).not.toContain("max-width: 32em");
+    expect(html).not.toContain("max-width: 23em");
     for (const tag of times) {
-      const rules = containerRulesOf(html, tag, "32em");
+      const rules = containerRulesOf(html, tag, "36em");
       expect(rules).toContain("flex-basis:100%");
       // Hung by the glyph column below `sm`, where the answer is indented by it; from `sm` up the
       // label column stands there, so the glyph keeps its own seat.
@@ -730,7 +735,11 @@ describe("BR-REQ-041-01 the listing card's facts: glyph-led lines and the page's
     const pieceTags = [...when.matchAll(/<span\b[^>]*data-when-line="(\w+)"[^>]*>/g)];
     // The date, then the two times: three pieces, each a line of its own below the threshold.
     expect(pieceTags.map((match) => match[1])).toEqual(["date", "time", "time"]);
+    // The short date («Sâm., 26 sept.») shows below `sm`, the long one from `sm` up: each its own threshold.
+    expect(html).toContain("@media (max-width:599.95px){@container when (max-width: 32em){");
+    expect(html).toContain("@media (min-width:600px){@container when (max-width: 36em){");
     for (const [tag] of pieceTags) expect(containerRulesOf(html, tag, "32em")).toContain("flex-basis:100%");
+    for (const [tag] of pieceTags) expect(containerRulesOf(html, tag, "36em")).toContain("flex-basis:100%");
     // Each time's leading glyph — the clock, then the flag — hangs back by the glyph column
     // (twenty pixels and their eight-pixel gap), so «09:00» and «10:00» start where the date does.
     const [, first, second] = pieceTags.map(([tag]) => tag);
@@ -757,7 +766,11 @@ describe("BR-REQ-041-01 the listing card's facts: glyph-led lines and the page's
     expect(whenColumnRule(html)).toContain("container-name:when");
     const pieceTags = [...when.matchAll(/<span\b[^>]*data-when-line="(\w+)"[^>]*>/g)];
     expect(pieceTags.map((match) => match[1])).toEqual(["date", "time"]);
+    expect(html).toContain("@media (max-width:599.95px){@container when (max-width: 23em){");
+    expect(html).toContain("@media (min-width:600px){@container when (max-width: 27em){");
     for (const [tag] of pieceTags) expect(containerRulesOf(html, tag, "23em")).toContain("flex-basis:100%");
+    for (const [tag] of pieceTags) expect(containerRulesOf(html, tag, "27em")).toContain("flex-basis:100%");
+    expect(containerRulesOf(html, pieceTags[1]![0], "27em")).toMatch(/>svg:first-of-type\{margin-left:-28px;margin-right:8px;?\}/);
     expect(containerRulesOf(html, pieceTags[1]![0], "23em")).toMatch(/>svg:first-of-type\{margin-left:-28px;margin-right:8px;?\}/);
     const timePiece = when.slice(pieceTags[1]?.index ?? 0);
     expect(timePiece.indexOf('data-testid="ScheduleIcon"')).toBeGreaterThan(-1);
@@ -765,13 +778,27 @@ describe("BR-REQ-041-01 the listing card's facts: glyph-led lines and the page's
     const separators = [...when.matchAll(/<span\b[^>]*data-when-separator=""[^>]*>/g)].map(([tag]) => tag);
     expect(separators).toHaveLength(1);
     expect(containerRulesOf(html, separators[0]!, "23em")).toContain("display:none");
-    // Not the two-times threshold: one named time is a shorter row.
-    expect(html).not.toContain("@container when (max-width: 28em)");
+    // Not the two-times thresholds: one named time is a shorter row.
+    expect(html).not.toContain("max-width: 32em");
+    expect(html).not.toContain("max-width: 36em");
     // A plain run: a bare time, no name, no list and no container.
     const run = await card({ type: "GROUP_RUN" });
     expect(run).not.toContain("data-when-line");
     expect(run).not.toContain("@container");
     expect(run).not.toContain("container-name:when");
+  });
+
+  it("the hero shows the long date, so it takes the long thresholds alone: 27em with one named time, 36em with two (§NNN)", async () => {
+    const one = renderToStaticMarkup(await EventFacts({ event: event({ startsAt: new Date("2026-09-26T07:00:00Z"), raceStartsAt: null }), now: NOW }));
+    expect(one).toContain("@container when (max-width: 27em){");
+    for (const threshold of ["23em", "32em", "36em"]) expect(one).not.toContain(`max-width: ${threshold}`);
+    const two = renderToStaticMarkup(await EventFacts({ event: event({ startsAt: new Date("2026-09-26T06:00:00Z"), raceStartsAt: new Date("2026-09-26T07:00:00Z") }), now: NOW }));
+    expect(two).toContain("@container when (max-width: 36em){");
+    for (const threshold of ["23em", "27em", "32em"]) expect(two).not.toContain(`max-width: ${threshold}`);
+    // The page with one named time: the long set too.
+    const pageOne = await page({ startsAt: new Date("2026-09-26T07:00:00Z"), raceStartsAt: null });
+    expect(pageOne).toContain("@container when (max-width: 27em){");
+    for (const threshold of ["23em", "32em", "36em"]) expect(pageOne).not.toContain(`max-width: ${threshold}`);
   });
 
   it("keeps the inline row where it fits, and every other card's row as it was (§600 amended §NNN)", async () => {

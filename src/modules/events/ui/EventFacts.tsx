@@ -142,12 +142,25 @@ const RACE_ROW_GAP = 0.5;
  * reader's larger font moves the threshold with the words; English is shorter, so the same em hold. A browser
  * without container queries shows the inline row, as before. A bare time (a group run, a series)
  * has no name and no list.
+ *
+ * The thresholds follow the DATE's form too (a review, §NNN): 23em / 32em were measured on the
+ * card's SHORT date («Sâm., 21 nov.», `dateShort`, below `sm` only). The LONG date («Sâmbătă,
+ * 21 nov. 2026 · », about 75 pixels wider at sixteen) — the card from `sm` up, the page's «Când»
+ * and the hero — needs 187 + 24 + 166 ≈ 377 pixels (23.6em) for one named time and
+ * 187 + 178 + 140 ≈ 505 (31.6em) for two, so it is a list below 27em and 36em, the same margin
+ * above. On the card the form follows the breakpoint that picks the date (`WHEN_BELOW_SM` /
+ * `WHEN_FROM_SM` wrap the container rule); the page and the hero always show the long date.
  */
 const WHEN_CONTAINER = { containerType: "inline-size", containerName: "when" } as const;
-/** The container query under which a race's «când» is a list (§600, amended §NNN), by its count of named times. */
-function whenListQuery(namedTimes: number): string | null {
-  if (namedTimes >= 2) return "@container when (max-width: 32em)";
-  if (namedTimes === 1) return "@container when (max-width: 23em)";
+/** The theme's `down("sm")` and `up("sm")` (`src/theme/theme.ts`: `sm` is 600): where the card shows `dateShort`, and where `dateLong`. */
+const WHEN_BELOW_SM = "@media (max-width:599.95px)";
+const WHEN_FROM_SM = "@media (min-width:600px)";
+/** The date's form the row carries: the card's phone date («Sâm., 21 nov.») or the long one («Sâmbătă, 21 nov. 2026»). */
+type WhenDate = "short" | "long";
+/** The container query under which a race's «când» is a list (§600, amended §NNN), by its count of named times and its date's form. */
+function whenListQuery(namedTimes: number, date: WhenDate): string | null {
+  if (namedTimes >= 2) return `@container when (max-width: ${date === "short" ? 32 : 36}em)`;
+  if (namedTimes === 1) return `@container when (max-width: ${date === "short" ? 23 : 27}em)`;
   return null;
 }
 /** The row's glyph column: the twenty-pixel glyph and its eight-pixel gap (`ROW_ICON_SX`; the page's `pl` 3.5). */
@@ -158,7 +171,7 @@ const GLYPH_COLUMN_PX = ROW_ICON_SX.fontSize + 8 * ROW_ICON_SX.mr;
  * indented by that column, `pl` 3.5; from `sm` up the label column stands there instead, so the
  * glyph keeps its seat), never in the hero (no glyph column under its label).
  */
-type WhenList = { query: string; hang: "always" | "belowSm" | false };
+type WhenList = { at: (rules: Record<string, unknown>) => Record<string, unknown>; hang: "always" | "belowSm" | false };
 
 // The weather row is one line since §469; the hours strip, details and place line went with it.
 
@@ -480,8 +493,14 @@ export default async function EventFacts({
   const raceStartLater = startsAt !== null && whenTimes({ type: event.type, startsAt, raceStartsAt: event.raceStartsAt }).raceStartLater;
   // A race's named times — one or both (§597, #305) — make the row the list form is for (§600, amended §NNN).
   const namedTimes = startsAt === null ? 0 : whenTimes({ type: event.type, startsAt, raceStartsAt: event.raceStartsAt }).times.filter(({ key }) => key !== null).length;
-  const listQuery = whenListQuery(namedTimes);
-  const whenList = (hang: WhenList["hang"]): WhenList | undefined => (listQuery ? { query: listQuery, hang } : undefined);
+  // The page and the hero always show the long date; the card shows the short one below `sm` when it has one (`dateShort`).
+  const listQuery = whenListQuery(namedTimes, "long");
+  const whenList = (hang: WhenList["hang"]): WhenList | undefined => (listQuery ? { at: (rules) => ({ [listQuery]: rules }), hang } : undefined);
+  const cardShortQuery = dateShort ? whenListQuery(namedTimes, "short") : null;
+  const cardWhenList: WhenList | undefined =
+    listQuery && cardShortQuery
+      ? { at: (rules) => ({ [WHEN_BELOW_SM]: { [cardShortQuery]: rules }, [WHEN_FROM_SM]: { [listQuery]: rules } }), hang: "always" }
+      : whenList("always");
   const raceStartNote =
     raceStartLater ? (
       <Typography component="div" variant="body2" color="text.secondary" data-testid="race-start-later">
@@ -566,12 +585,12 @@ export default async function EventFacts({
       {items.map((item, index) => (
         <Fragment key={index}>
           {index > 0 && (
-            <Box component="span" aria-hidden="true" data-when-separator={list ? "" : undefined} sx={{ color: "text.disabled", ...(list ? { [list.query]: { display: "none" } } : {}) }}>
+            <Box component="span" aria-hidden="true" data-when-separator={list ? "" : undefined} sx={{ color: "text.disabled", ...(list ? list.at({ display: "none" }) : {}) }}>
               ·
             </Box>
           )}
           {list ? (
-            <Box component="span" data-when-line={index === 0 ? "date" : "time"} sx={{ [list.query]: { flexBasis: "100%" } }}>
+            <Box component="span" data-when-line={index === 0 ? "date" : "time"} sx={list.at({ flexBasis: "100%" })}>
               {item}
             </Box>
           ) : (
@@ -631,7 +650,7 @@ export default async function EventFacts({
             component="span"
             aria-hidden="true"
             data-when-separator={list ? "" : undefined}
-            sx={{ color: "text.disabled", ml: card?.tight ? RACE_ROW_GAP : 0.75, ...(list ? { [list.query]: { display: "none" } } : {}) }}
+            sx={{ color: "text.disabled", ml: card?.tight ? RACE_ROW_GAP : 0.75, ...(list ? list.at({ display: "none" }) : {}) }}
           >
             ·
           </Box>
@@ -651,12 +670,10 @@ export default async function EventFacts({
             component="span"
             data-when-line={index === 0 ? "date" : "time"}
             style={whole}
-            sx={{
-              [list.query]: {
-                flexBasis: "100%",
-                ...(index > 0 && hung ? { "& > svg:first-of-type": hung } : {}),
-              },
-            }}
+            sx={list.at({
+              flexBasis: "100%",
+              ...(index > 0 && hung ? { "& > svg:first-of-type": hung } : {}),
+            })}
           >
             {item}
             {separator}
@@ -808,7 +825,7 @@ export default async function EventFacts({
             a race's gathering and start time, or a date that keeps its year on a phone (no
             `dateShort`: past, or more than a year out), may still wrap between whole pieces rather
             than be clipped (§366, amended §375). */}
-        {cardLine("when", CalendarMonthIcon, flow(whenPieces(CLOCK_SX, true), { lead: whenLead, wrap: !!event.raceStartsAt || (compact && !dateShort) || raceStartLater, tight: !!event.raceStartsAt }, whenList("always")), !!listQuery)}
+        {cardLine("when", CalendarMonthIcon, flow(whenPieces(CLOCK_SX, true), { lead: whenLead, wrap: !!event.raceStartsAt || (compact && !dateShort) || raceStartLater, tight: !!event.raceStartsAt }, cardWhenList), !!listQuery)}
         {place && cardLine("where", PlaceIcon, place)}
         {/* A group of its own, so a group's gap above it rather than a line's (§366). */}
         {pillsRow && (

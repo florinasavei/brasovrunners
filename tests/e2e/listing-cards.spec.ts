@@ -937,17 +937,38 @@ test.describe("BR-REQ-041-01 the listing's cards (§366)", () => {
                 // `innerText` leaves out the rendering `display: none` hides: the date as shown.
                 shown: (line as HTMLElement).innerText,
                 // The list form itself (§NNN), not merely two lines — the old wrap measured two too:
-                // every «·» hidden and every time's piece starting at the date's left edge (its glyph
-                // hung back under the calendar), against the wrap's clock inside the column.
+                // every «·» hidden; each time's leading glyph (the clock, the flag) hung back under the
+                // calendar — its left within 2 pixels of the calendar glyph's — and each time's words
+                // starting at the date's left edge, against the wrap's clock inside the text column.
                 listForm: (() => {
+                  const calendar = line.querySelector(":scope > svg");
                   const date = line.querySelector('[data-when-line="date"]');
                   const times = [...line.querySelectorAll('[data-when-line="time"]')];
-                  if (!date || times.length === 0) return false;
+                  if (!calendar || !date || times.length === 0) return false;
                   const dots = [...line.querySelectorAll("[data-when-separator]")];
-                  const left = date.getBoundingClientRect().left;
+                  const glyphLeft = calendar.getBoundingClientRect().left;
+                  const dateLeft = date.getBoundingClientRect().left;
+                  /** Where a piece's first visible words start: the first non-blank text node's box. */
+                  const wordsLeft = (piece: Element) => {
+                    const walker = document.createTreeWalker(piece, NodeFilter.SHOW_TEXT, {
+                      acceptNode: (node) => ((node.textContent ?? "").trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT),
+                    });
+                    const first = walker.nextNode();
+                    if (!first) return Number.NaN;
+                    const range = document.createRange();
+                    range.selectNodeContents(first);
+                    return range.getBoundingClientRect().left;
+                  };
                   return (
                     dots.every((dot) => getComputedStyle(dot).display === "none") &&
-                    times.every((time) => Math.abs(time.getBoundingClientRect().left - left) <= 0.5)
+                    times.every((time) => {
+                      const glyph = time.querySelector("svg");
+                      return (
+                        !!glyph &&
+                        Math.abs(glyph.getBoundingClientRect().left - glyphLeft) <= 2 &&
+                        Math.abs(wordsLeft(time) - dateLeft) <= 2
+                      );
+                    })
                   );
                 })(),
               };
