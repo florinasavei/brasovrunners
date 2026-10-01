@@ -159,9 +159,16 @@ export type ShareCardColours = {
   circle: string;
   /** The words. */
   text: string;
-  /** The type pill: the accent nearly opaque, ink on it (white on a dark accent). */
+  /**
+   * The type pill: a tint of the words' colour with a line round it, the words in their colour — quiet,
+   * so that the one solid accent pill on the card is the cancelled one's (§NNN).
+   */
   pill: string;
+  pillBorder: string;
   pillText: string;
+  /** The cancelled pill: the accent solid, ink on it (white on a dark accent). */
+  cancelledPill: string;
+  cancelledPillText: string;
   /** The rule under the title, the dot in the date, the tagline. */
   accent: string;
   /** The route chips. */
@@ -203,8 +210,11 @@ export function shareCardColours(design: ShareCardDesign, hasPicture: boolean): 
     glowFade: withAlpha(glow, 0),
     circle: withAlpha(accent, dark ? 0.14 : 0.1),
     text,
-    pill: withAlpha(accent, 0.92),
-    pillText: textOnAccent(accent),
+    pill: withAlpha(text, 0.14),
+    pillBorder: withAlpha(text, 0.45),
+    pillText: text,
+    cancelledPill: accent,
+    cancelledPillText: textOnAccent(accent),
     accent,
     chip: dark ? withAlpha(COLOR.surface, 0.14) : withAlpha(COLOR.blue, 0.08),
     chipBorder: withAlpha(text, 0.3),

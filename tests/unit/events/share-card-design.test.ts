@@ -84,9 +84,12 @@ describe("shareCardColours — the palette, the accent and a picture, as colours
     expect(colours).toMatchObject({ palette: "brand", base: COLOR.blueInk, text: COLOR.surface, band: COLOR.paper, bandText: COLOR.blue, logo: "white", mark: "blue" });
     expect(colours.gradient).toContain(COLOR.blue);
     expect(colours.overlay).toBeNull();
-    // The pill is the accent, nearly opaque, with ink on it — never white on a tint.
-    expect(colours.pill).toBe(withAlpha(COLOR.orange, 0.92));
-    expect(colours.pillText).toBe(COLOR.ink);
+    // The type pill is a tint of the words with the words' colour; only the cancelled pill is solid accent.
+    expect(colours.pill).toBe(withAlpha(COLOR.surface, 0.14));
+    expect(colours.pillText).toBe(COLOR.surface);
+    expect(colours.cancelledPill).toBe(COLOR.orange);
+    expect(colours.cancelledPillText).toBe(COLOR.ink);
+    expect(colours.cancelledPill).not.toBe(colours.pill);
   });
 
   it("draws the ink card on near-black and the paper card in ink with a blue band", () => {
@@ -109,10 +112,10 @@ describe("shareCardColours — the palette, the accent and a picture, as colours
     expect(paper).toMatchObject({ palette: "brand", text: COLOR.surface, logo: "white" });
   });
 
-  it("carries the club's accent into the pill, the rule and the circle", () => {
+  it("carries the club's accent into the cancelled pill, the rule and the circle", () => {
     const colours = shareCardColours({ ...DEFAULT_SHARE_CARD_DESIGN, accent: "#00aa55" }, false);
     expect(colours.accent).toBe("#00aa55");
-    expect(colours.pill).toBe("rgba(0,170,85,0.92)");
+    expect(colours.cancelledPill).toBe("#00aa55");
     expect(colours.circle).toBe("rgba(0,170,85,0.14)");
   });
 });

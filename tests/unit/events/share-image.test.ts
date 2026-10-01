@@ -117,6 +117,11 @@ describe("shareTitleSize — the title's size by its length, three lines at most
     expect(shareTitleSize("Trail to Road cu Brașov Running Festival", "og")).toBe(72);
   });
 
+  it("gives an all-capitals title of about sixty characters a size whose three lines fit", () => {
+    const caps = "MARATONUL INTERNAȚIONAL AL BRAȘOVULUI PE TÂMPA ȘI ÎN ȘCHEI";
+    expect(shareTitleSize(caps, "square")).toBeLessThanOrEqual(64);
+  });
+
   it("keeps the clamped longest title at a size whose three lines fit the card's width", () => {
     const longest = clampTitle("x ".repeat(80));
     expect(shareTitleSize(longest, "square")).toBe(44);

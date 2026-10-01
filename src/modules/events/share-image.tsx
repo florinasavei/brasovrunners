@@ -74,10 +74,20 @@ const TITLE = {
   og: { steps: [72, 64, 56, 50, 46, 42], width: 1200 - 2 * 56, box: 160 },
 } as const;
 
+/**
+ * The title's width in ems: lower case and spaces at half an em, capitals and wide letters at
+ * 0.65 (Roboto Bold's capitals run 0.62–0.65), so an upper-case title is not drawn four lines high.
+ */
+function titleEms(title: string): number {
+  let ems = 0;
+  for (const character of title) ems += character !== character.toLowerCase() || /[mwMW@%]/.test(character) ? 0.65 : 0.5;
+  return ems;
+}
+
 export function shareTitleSize(title: string, shape: ShareShape): number {
   const { steps, width, box } = TITLE[shape];
-  const length = Array.from(title).length;
-  const fits = (size: number) => length * 0.5 * size <= Math.min(3, Math.floor(box / (size * 1.05))) * width * 0.88;
+  const length = titleEms(title);
+  const fits = (size: number) => length * size <= Math.min(3, Math.floor(box / (size * 1.05))) * width * 0.88;
   return steps.find(fits) ?? steps[steps.length - 1];
 }
 
@@ -136,12 +146,26 @@ async function backgroundPicture(url: string | null): Promise<string | null> {
   if (/^data:image\/(png|jpeg|webp|gif);base64,/i.test(url)) return url;
   if (!url.startsWith("https://")) return null;
   try {
-    const response = await fetch(url, { signal: AbortSignal.timeout(PICTURE_DEADLINE_MS) });
+    // A redirect is refused: it could lead from https to anything (§NNN).
+    const response = await fetch(url, { signal: AbortSignal.timeout(PICTURE_DEADLINE_MS), redirect: "error" });
     const type = response.headers.get("content-type")?.split(";")[0]?.trim() ?? "";
-    if (!response.ok || !/^image\/(png|jpeg|webp|gif)$/.test(type)) return null;
-    const bytes = Buffer.from(await response.arrayBuffer());
-    if (bytes.byteLength > PICTURE_MAX_BYTES) return null;
-    return `data:${type};base64,${bytes.toString("base64")}`;
+    if (!response.ok || !response.body || !/^image\/(png|jpeg|webp|gif)$/.test(type)) return null;
+    // The ceiling is checked on the announced length first, then while reading, so a large body is never buffered whole.
+    if (Number(response.headers.get("content-length") ?? 0) > PICTURE_MAX_BYTES) return null;
+    const chunks: Uint8Array[] = [];
+    let total = 0;
+    const reader = response.body.getReader();
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > PICTURE_MAX_BYTES) {
+        await reader.cancel();
+        return null;
+      }
+      chunks.push(value);
+    }
+    return `data:${type};base64,${Buffer.concat(chunks).toString("base64")}`;
   } catch {
     return null;
   }
@@ -248,7 +272,7 @@ export async function eventShareImage(
   const picture = await backgroundPicture(design.backgroundPictureUrl);
   const colours = shareCardColours(design, picture !== null);
   const [fonts, logo, mark] = await Promise.all([
-    tagline ? Promise.all([brandFonts(), handwritingFont()]).then(([roboto, caveat]) => [...roboto, caveat]) : brandFonts(),
+    tagline ? Promise.all([brandFonts(), handwritingFont()]).then(([roboto, caveat]) => (caveat ? [...roboto, caveat] : roboto)) : brandFonts(),
     design.showLogo ? lockup(colours.logo) : Promise.resolve(null),
     design.showLogo ? mountains(colours.mark) : Promise.resolve(null),
   ]);
@@ -336,8 +360,10 @@ export async function eventShareImage(
                     display: "flex",
                     padding: shape === "square" ? "12px 26px" : "9px 20px",
                     borderRadius: 999,
-                    backgroundColor: cancelled ? colours.accent : colours.pill,
-                    color: colours.pillText,
+                    // A cancelled event is the one solid accent pill; a type is a quiet tint (§NNN).
+                    backgroundColor: cancelled ? colours.cancelledPill : colours.pill,
+                    border: `1.5px solid ${cancelled ? colours.cancelledPill : colours.pillBorder}`,
+                    color: cancelled ? colours.cancelledPillText : colours.pillText,
                     fontSize: size.pill,
                     fontWeight: 700,
                     textTransform: "uppercase",
@@ -364,7 +390,7 @@ export async function eventShareImage(
               >
                 <div style={{ display: "flex", flexShrink: 0, width: 120, height: 6, borderRadius: 3, backgroundColor: colours.accent }} />
                 {tagline && (
-                  <div style={{ display: "flex", fontFamily: "Caveat", fontSize: size.tagline, lineHeight: 1, color: colours.accent }}>{tagline}</div>
+                  <div style={{ display: "flex", fontFamily: "Caveat, Roboto", fontSize: size.tagline, lineHeight: 1, color: colours.accent }}>{tagline}</div>
                 )}
               </div>
             </div>

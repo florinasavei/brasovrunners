@@ -22,7 +22,7 @@ export function brandFonts(): Promise<OgFont[]> {
   return fonts;
 }
 
-let handwriting: Promise<OgFont> | undefined;
+let handwriting: Promise<OgFont | null> | undefined;
 
 /**
  * Caveat, the site's handwriting face — the one the signed declaration's PDF already embeds — for
@@ -30,13 +30,12 @@ let handwriting: Promise<OgFont> | undefined;
  * the file is six times Roboto's, Satori parses every font it is handed on every picture, and
  * only a card that carries a tagline draws a letter of it — the bibs and the plain card never do.
  */
-export function handwritingFont(): Promise<OgFont> {
-  handwriting ??= readFile(path.join(process.cwd(), "src", "theme", "pdf", "Caveat-Regular.ttf")).then((data) => ({
-    name: "Caveat",
-    data: toArrayBuffer(data),
-    weight: 400,
-    style: "normal",
-  }));
+export function handwritingFont(): Promise<OgFont | null> {
+  // A file that cannot be read is null, and the card draws its tagline in Roboto rather than failing.
+  handwriting ??= readFile(path.join(process.cwd(), "src", "theme", "pdf", "Caveat-Regular.ttf")).then(
+    (data) => ({ name: "Caveat", data: toArrayBuffer(data), weight: 400, style: "normal" }) as OgFont,
+    () => null,
+  );
   return handwriting;
 }
 
