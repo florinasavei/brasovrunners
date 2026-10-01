@@ -89,7 +89,7 @@ vi.mock("@/modules/registrations/bot-check", () => ({
   },
 }));
 vi.mock("@/modules/public-cache/reads", () => ({
-  // The emails are on time (§NNN): the late notice draws nothing.
+  // The emails are on time (§623): the late notice draws nothing.
   cachedEmailDelay: async () => null,
   cachedAddressCap: async () => ({ registrationsPerAddress: 4 }),
   cachedFamilyRegistrationOpen: async () => true,

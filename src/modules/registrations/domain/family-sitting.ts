@@ -63,7 +63,7 @@ export const SITTING_HELD = "sittingHeld";
 export const FAMILY_HELD = "familyHeld";
 
 /**
- * The instant a family's held message is let go (§NNN), written beside its marker wherever the family's
+ * The instant a family's held message is let go (§623), written beside its marker wherever the family's
  * path writes the row's not-before — the hold (the window's end, the wizard's half hour) and «Gata»
  * (now) — and nowhere on the sending path. The public notice of a late email (`public-delay.ts`) reads
  * a released row's wait from it: the not-before itself is the outbox's, and a failed attempt moves it

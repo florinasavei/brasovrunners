@@ -740,7 +740,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                 {tr("registrations.cancelAction")}
               </GlyphButton>
             </Stack>
-            {/* The club's refusal under the terms (§NNN): ticked, the reason is the ground and the
+            {/* The club's refusal under the terms (§618): ticked, the reason is the ground and the
                 cancellation email names it — the box's own words say so before the press. */}
             <CheckboxField name="refusedByOrganizer" help={tr("registrations.refusedByOrganizerHelp")}>
               {tr("registrations.refusedByOrganizer")}

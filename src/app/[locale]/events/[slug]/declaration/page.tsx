@@ -114,7 +114,7 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
         <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
           {t("groupRunDeclaration.page.doneTitle")}
         </Typography>
-        {/* While the club's emails are late (§NNN): the signed copy is one of them. */}
+        {/* While the club's emails are late (§623): the signed copy is one of them. */}
         {await emailDelayNotice({ variant: "plain", sx: { mb: 2 } })}
         {/* The same words whether a row was written or the one already kept was sent again (§523):
             the page tells nobody whether the address had signed before. */}

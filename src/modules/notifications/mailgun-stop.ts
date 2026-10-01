@@ -6,7 +6,7 @@ import { ALLOWANCE_DEFERRED_ERROR_PREFIX, type MailgunStop, stopInForce } from "
 import { RATE_PAUSE_ERROR_PREFIX } from "./domain/hourly-pace";
 
 /**
- * Whether Mailgun's road is closed now, and until when (§NNN, `domain/mailgun-stop.ts`).
+ * Whether Mailgun's road is closed now, and until when (§622, `domain/mailgun-stop.ts`).
  *
  * Two witnesses, read in **one query**:
  *
@@ -28,7 +28,7 @@ export function heldByMailgunCondition(): SQL {
 }
 
 /**
- * A row no family sitting may move (§NNN, the review of BR-V2.53): one that carries a provider's
+ * A row no family sitting may move (§622, the review of BR-V2.53): one that carries a provider's
  * stop. Holding it to the sitting's window would stretch the pause it marks; releasing it at «Gata»
  * would end the pause early. So the sitting's hold and release statements leave its turn alone. The
  * replace may delete it: the stop is recorded apart from the row (`recordMailgunStop`), so its going
@@ -89,7 +89,7 @@ function safeJson(text: string): unknown {
 }
 
 /**
- * Write the stop Mailgun just announced (§NNN). One upsert, keeping whichever stop ends later — an
+ * Write the stop Mailgun just announced (§622). One upsert, keeping whichever stop ends later — an
  * allowance spent until midnight is not shortened by a fifteen-minute pause met on the way, and a
  * pause is not written over a longer one of its own kind — and replacing one that has already ended.
  */

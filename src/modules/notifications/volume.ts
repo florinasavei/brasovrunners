@@ -182,21 +182,21 @@ export type EmailVolumeToday = {
   /** Whether that failure is inside the last 24 hours: a warning then, history after. */
   gmailFailedLastDay: boolean;
   /**
-   * Mailgun said stop (§NNN): a pause it asked for, or its allowance spent, and until when — null
+   * Mailgun said stop (§622): a pause it asked for, or its allowance spent, and until when — null
    * while its road is open. Read as the claim reads it (`mailgun-stop.ts`), on Mailgun's road.
    */
   mailgunStop: MailgunStop | null;
   /**
    * «Gmail preia când Mailgun se oprește» as it acts: on, Gmail configured, and the privacy notice in
-   * force naming `{{gmailFallback}}` in every language (§NNN, `fallbackActive`).
+   * force naming `{{gmailFallback}}` in every language (§622, `fallbackActive`).
    */
   fallbackToGmail: boolean;
-  /** Whether the privacy notice in force names `{{gmailFallback}}` (§NNN): the panel greys the switch until it does. */
+  /** Whether the privacy notice in force names `{{gmailFallback}}` (§622): the panel greys the switch until it does. */
   fallbackDisclosed: boolean;
   /** Recipients Gmail's rolling day still has room for (§443); 0 where Gmail is not configured. */
   gmailRoom: number;
   /**
-   * What a due Mailgun row does now (§NNN, `routeWhileStopped`): Mailgun's road, Gmail carrying for it,
+   * What a due Mailgun row does now (§622, `routeWhileStopped`): Mailgun's road, Gmail carrying for it,
    * or waiting — with the reason the queue panel's header, «Trimite acum» and «Sarcini» each say.
    */
   whileStopped: StopRoute;
@@ -303,7 +303,7 @@ export async function readEmailVolumeToday<T extends Record<string, unknown>>(
   const headroom = emailHeadroom(ceilings, sentMessages, sentThisMonth);
   // The hour, counted the way the claim counts it (`hourly-pace.ts`), on Mailgun's road as the claim
   // splits it: one more query, always — the page shows it.
-  // The notice's gate for the fallback (§NNN): read on every page that shows the switch or the stop.
+  // The notice's gate for the fallback (§622): read on every page that shows the switch or the stop.
   const fallbackDisclosed = await noticeDescribesGmailFallback(db, now);
   const roads = outboxRoadsFor(transport, gmail.configured, fallbackDisclosed);
   const mailgunRoad = roads ? not(gmailRoadCondition(roads)) : undefined;
@@ -312,7 +312,7 @@ export async function readEmailVolumeToday<T extends Record<string, unknown>>(
     alwaysCount: true,
     ...(mailgunRoad ? { mailgunRoad } : {}),
   });
-  // Mailgun's stop and who carries for it (§NNN): one more query, the claim's own.
+  // Mailgun's stop and who carries for it (§622): one more query, the claim's own.
   const mailgunStop = await readMailgunStop(db, now, mailgunRoad);
   const fallbackToGmail = fallbackActive(transport, gmail.configured, fallbackDisclosed);
   const gmailRoom = gmail.configured ? Math.max(0, transport.gmailDailyCap - gmail.sentLastDay) : 0;

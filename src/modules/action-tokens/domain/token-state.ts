@@ -12,7 +12,7 @@ export type EvaluatedToken = {
   expiresAt: Date;
   usedAt: Date | null;
   invalidatedAt: Date | null;
-  /** Set only on a row a newer token of the same purpose and scope replaced (§NNN). */
+  /** Set only on a row a newer token of the same purpose and scope replaced (§619). */
   supersededByTokenId: string | null;
 };
 
@@ -21,7 +21,7 @@ export type EvaluatedToken = {
  * answer with more than one generic invalid-or-expired response (AGENTS.md §13.2;
  * `registrations/domain/link-status.ts` argues both): `ALREADY_USED` and `SUPERSEDED`.
  *
- * `SUPERSEDED` and `INVALIDATED` are the two facts `invalidated_at` holds (§NNN): replaced by a
+ * `SUPERSEDED` and `INVALIDATED` are the two facts `invalidated_at` holds (§619): replaced by a
  * newer token of the same purpose and scope (`superseded_by_token_id` set), or revoked for cause.
  */
 export type TokenRejectionReason =
@@ -63,7 +63,7 @@ export function evaluateActionToken(
     return { ok: false, code: "TOKEN_INVALID", reason: "PURPOSE_MISMATCH" };
   }
   if (token.invalidatedAt !== null) {
-    // Replaced by a newer email (§NNN), or revoked for cause: only the first may be told so.
+    // Replaced by a newer email (§619), or revoked for cause: only the first may be told so.
     const reason = token.supersededByTokenId !== null ? "SUPERSEDED" : "INVALIDATED";
     return { ok: false, code: "TOKEN_INVALID", reason };
   }

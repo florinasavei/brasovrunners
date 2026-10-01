@@ -234,7 +234,7 @@ export async function updateEmailTransport<T extends Record<string, unknown>>(
   }
   const before = await readEmailTransport(db);
   /*
-    «Gmail preia când Mailgun se oprește» (§NNN): a form without it — greyed where Gmail is not
+    «Gmail preia când Mailgun se oprește» (§622): a form without it — greyed where Gmail is not
     configured, so the browser posts nothing — keeps what is stored, never turns it off by omission.
   */
   const next = { ...parsed.data, fallbackToGmail: parsed.data.fallbackToGmail ?? before.fallbackToGmail ?? true };

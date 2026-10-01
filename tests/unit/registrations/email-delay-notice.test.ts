@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { EmailDelay } from "@/modules/notifications/domain/email-delay";
 
 /**
- * §NNN — the pages that wait for an email say when the club's emails are late, above their own wait
+ * §623 — the pages that wait for an email say when the club's emails are late, above their own wait
  * sentence, in both languages; and while nothing is late each page's markup is exactly the markup
  * without the notice (the late page with the notice cut out, byte for byte). Rendered with the real
  * catalogues; the delay itself is stood in for (`cachedEmailDelay`), the read is
@@ -143,7 +143,7 @@ async function holds(name: string, render: () => Promise<string>, above?: string
 
 const page = (element: unknown) => markup(element as ReactElement);
 
-describe("§NNN the pages that wait for an email say when the club's emails are late", () => {
+describe("§623 the pages that wait for an email say when the club's emails are late", () => {
   it("the screen after the registration form, full and short", async () => {
     const screen = (offer: boolean) => async () =>
       page(

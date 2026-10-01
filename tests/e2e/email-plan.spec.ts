@@ -218,7 +218,7 @@ test.describe("BR-REQ-080-02 the Mailgun plan on «Setări» → «Emailuri»", 
     await switchTo(from);
   });
 
-  test("an Administrator finds «Gmail preia când Mailgun se oprește», greyed with its reason where Gmail is not configured or the notice does not name it (§NNN)", async ({ page }) => {
+  test("an Administrator finds «Gmail preia când Mailgun se oprește», greyed with its reason where Gmail is not configured or the notice does not name it (§622)", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin/settings/emails");
     const main = page.locator("#main");

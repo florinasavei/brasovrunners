@@ -7,7 +7,7 @@ import { DECLARATION_TOKENS } from "@/modules/legal-documents/templates/tokens";
 import { gmailFallbackClause, gmailFallbackMergeValues } from "@/modules/notifications/fallback-notice-words";
 
 /**
- * §NNN (amending §443) — «Gmail preia când Mailgun se oprește» sends a participant's message through
+ * §622 (amending §443) — «Gmail preia când Mailgun se oprește» sends a participant's message through
  * Google only under a privacy notice that says so: the notice's marker `{{gmailFallback}}`, the words
  * it is filled with, and the sentence of section 6 that carries it. The gate itself is
  * `tests/unit/notifications/mailgun-stop.test.ts` and `tests/integration/notifications/email-fail-safes.test.ts`.
@@ -15,7 +15,7 @@ import { gmailFallbackClause, gmailFallbackMergeValues } from "@/modules/notific
 const text = (paragraph: string) => ({ sections: [{ paragraphs: [paragraph] }] });
 const paragraphs = (body: typeof privacyNoticeRo) => body.sections.flatMap((section) => section.paragraphs);
 
-describe("§NNN the privacy notice's marker for Gmail carrying while Mailgun is stopped", () => {
+describe("§622 the privacy notice's marker for Gmail carrying while Mailgun is stopped", () => {
   it("is a merge field the platform's notice carries in both languages, and the legend lists", () => {
     expect(isMergeField("gmailFallback")).toBe(true);
     expect(describesGmailFallback(privacyNoticeRo)).toBe(true);

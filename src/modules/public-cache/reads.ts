@@ -716,7 +716,7 @@ export async function cachedEmailWaitMinutes(now: Date): Promise<number | null> 
 
 /**
  * The wait promised a message queued at `instant` (§513), from the two settings: the pinger's cadence
- * is the instant's (§NNN: a reset at 02:05 waits for the night's hourly tick, whoever looks by day),
+ * is the instant's (§623: a reset at 02:05 waits for the night's hourly tick, whoever looks by day),
  * the governor's floor is now's — this instance's memory knows no other.
  */
 function promisedWaitAt(settings: { timing: DeliveryTiming; intervalMinutes: number }, instant: Date, now: Date): number | null {
@@ -745,7 +745,7 @@ export async function cachedEmailLeavesAt(now: Date): Promise<Date | null> {
 }
 
 /**
- * How long the email queue's answer stands (§NNN): a minute — the queue moves with the clock, and
+ * How long the email queue's answer stands (§623): a minute — the queue moves with the clock, and
  * nothing announces a message that has merely waited longer — so a page that waits for an email costs
  * at most one query a minute, and nothing while the entry is warm. A batch that sent, deferred or gave
  * up on a message expires it at once (`processOutboxBatch`, the `email` tag).
@@ -753,7 +753,7 @@ export async function cachedEmailLeavesAt(now: Date): Promise<Date | null> {
 export const EMAIL_DELAY_SECONDS = 60;
 
 /**
- * Whether the club's emails are late (§NNN, `readEmailDelay`), for the pages that wait for one: the
+ * Whether the club's emails are late (§623, `readEmailDelay`), for the pages that wait for one: the
  * outbox's facts from the data cache, judged now against the wait the platform promises
  * (`cachedEmailWaitMinutes`). Null when it cannot be told — the database away, a red month's miss —
  * and a page then says nothing about it, exactly as on a day nothing is late.
@@ -773,7 +773,7 @@ export async function cachedEmailDelay(now: Date): Promise<EmailDelay | null> {
       ? await publicRead(["email.delay-page"], ["email"], () => readEmailDelayFacts(getDb(), now))
       : await publicRead(["email.delay"], ["email"], () => readEmailDelayFacts(getDb(), now), EMAIL_DELAY_SECONDS);
     const settings = await cachedEmailTiming();
-    // The wait a message queued at an instant is promised: the cadence is the instant's, not now's (§NNN).
+    // The wait a message queued at an instant is promised: the cadence is the instant's, not now's (§623).
     return judgeEmailDelay(facts, promisedWaitAt(settings, now, now), now, (instant) => promisedWaitAt(settings, instant, now));
   } catch {
     return null;

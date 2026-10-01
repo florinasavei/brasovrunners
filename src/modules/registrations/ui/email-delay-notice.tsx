@@ -6,14 +6,14 @@ import { countForm } from "@/i18n/count-form";
 import { durationPhrase, minutesPhrase } from "@/modules/deadlines/domain/duration-words";
 import { cachedEmailDelay } from "@/modules/public-cache/reads";
 
-/** Above this many minutes a wait is said in whole hours (§NNN). */
+/** Above this many minutes a wait is said in whole hours (§623). */
 export const LONG_WAIT_MINUTES = 90;
 
 /** Each shape of the full notice, its message (`Delay`). */
 const FULL_KEYS = { full: "full", link: "fullLink", subscribe: "fullSubscribe", resend: "fullResend", plain: "fullPlain" } as const;
 
 /**
- * «Emailurile noastre întârzie acum» (§NNN; the owner, 2026-10-01: «In caz că mai pică sau avem coadă
+ * «Emailurile noastre întârzie acum» (§623; the owner, 2026-10-01: «In caz că mai pică sau avem coadă
  * de mailuri, userii trebuie să vadă»): what a page that waits for an email says while the club's
  * emails are late — and nothing at all otherwise (null), so a normal day's page is exactly what it was.
  *

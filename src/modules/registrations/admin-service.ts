@@ -1040,7 +1040,7 @@ export async function correctRegisteredName<T extends Record<string, unknown>>(
  * guard exists so nobody cancels their way out of a race they are running, and an organizer
  * tidying up afterwards is the case it would otherwise block.
  *
- * **The club's refusal under the terms** (§NNN, `kind: "REFUSED_BY_ORGANIZER"`): the same verb and
+ * **The club's refusal under the terms** (§618, `kind: "REFUSED_BY_ORGANIZER"`): the same verb and
  * the same allocator, not a new one. What differs is who is told what — the reason the
  * Administrator typed is the ground, and it goes to the person in the cancellation email, under a
  * box that said so before the press; the audit row records the kind beside the reason. A refusal

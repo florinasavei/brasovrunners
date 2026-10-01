@@ -93,7 +93,7 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
         <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
           {t("confirm.doneTitle")}
         </Typography>
-        {/* While the club's emails are late (§NNN): the declaration's email is one of them. */}
+        {/* While the club's emails are late (§623): the declaration's email is one of them. */}
         {await emailDelayNotice({ sx: { mb: 2 } })}
         {/* Confirmed is not finished: the declaration is still to sign, and the hold that
             protects their place is running. Saying "done" alone loses people here. */}
@@ -117,7 +117,7 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
             </ul>
           </Alert>
         )}
-        {/* After the people list, which names the email still to come: where to look for it (§NNN). */}
+        {/* After the people list, which names the email still to come: where to look for it (§619). */}
         <Alert severity="info" sx={{ mt: 2 }} data-testid="spam-hint">
           {await spamHintWords()}
         </Alert>
@@ -143,7 +143,7 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
         locale,
         new Date(),
       );
-  // A newer email replaced this link (§NNN): said so, in place of the generic refusal.
+  // A newer email replaced this link (§619): said so, in place of the generic refusal.
   const replaced = context.ok
     ? null
     : await readReplacedActionLink(token, [{ purpose: "VERIFY_REGISTRATION_EMAIL", reason: context.reason }], locale, new Date());

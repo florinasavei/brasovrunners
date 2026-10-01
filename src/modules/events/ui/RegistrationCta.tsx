@@ -60,7 +60,7 @@ export default async function RegistrationCta({
   const { cta, fill } = door;
   if (cta.kind === "NONE") return null;
   /*
-    Under the club's own button only (§NNN): «Confirmarea pe email întârzie azi», while the club's
+    Under the club's own button only (§623): «Confirmarea pe email întârzie azi», while the club's
     emails are late, so a person knows before pressing. This page is static (§549): the line reads
     the queue's own cache entry, which the outbox expires with the page (`cachedEmailDelay`). Never
     in the editor's preview, which sends nothing. Read only for the two states that draw it.

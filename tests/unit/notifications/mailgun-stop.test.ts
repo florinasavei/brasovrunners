@@ -17,7 +17,7 @@ import { DEFAULT_EMAIL_TRANSPORT, emailTransportSettingSchema } from "@/modules/
 import { MAX_RETRY_DELAY_MS, MAX_SEND_ATTEMPTS, nextAttemptDelayMs } from "@/modules/notifications/domain/retry";
 
 /**
- * BR-REQ-080-02 (§NNN) — email fail-safes, the pure half: which refusal ends a message and which
+ * BR-REQ-080-02 (§622) — email fail-safes, the pure half: which refusal ends a message and which
  * never does, what a stop is, and which road a due Mailgun row takes while Mailgun says stop.
  */
 const NOW = new Date("2026-10-01T09:30:00.000Z");
@@ -25,7 +25,7 @@ const MINUTE = 60_000;
 const PAUSE = { kind: "paused" as const, until: new Date(NOW.getTime() + 15 * MINUTE) };
 const ALLOWANCE = { kind: "allowance" as const, until: new Date("2026-10-02T00:05:00.000Z") };
 
-describe("§NNN the classification: only a refusal of the message ends it", () => {
+describe("§622 the classification: only a refusal of the message ends it", () => {
   it("keeps a transient refusal retrying past the sixth attempt, hourly", () => {
     // The backoff's own ceiling is the hourly turn a row keeps once past the six attempts.
     expect(nextAttemptDelayMs(MAX_SEND_ATTEMPTS + 1)).toBe(MAX_RETRY_DELAY_MS);
@@ -65,7 +65,7 @@ describe("§NNN the classification: only a refusal of the message ends it", () =
   });
 });
 
-describe("§NNN the stop and its marks", () => {
+describe("§622 the stop and its marks", () => {
   it("reads a row Mailgun held back by its mark, and no other", () => {
     expect(heldByMailgun(`${RATE_PAUSE_ERROR_PREFIX}mailgun 429: slow down`)).toBe(true);
     expect(heldByMailgun(`${ALLOWANCE_DEFERRED_ERROR_PREFIX}mailgun 420: limit exceeded`)).toBe(true);
@@ -94,7 +94,7 @@ describe("§NNN the stop and its marks", () => {
   });
 
   /*
-    The notice's gate (§NNN, §443): a participant's message leaves through Google only under a privacy
+    The notice's gate (§622, §443): a participant's message leaves through Google only under a privacy
     notice that names `{{gmailFallback}}` — the switch on, Gmail configured and the notice: three states.
   */
   it("acts only while the notice in force names the fallback, whatever the switch says", () => {
@@ -120,7 +120,7 @@ describe("§NNN the stop and its marks", () => {
   });
 });
 
-describe("§NNN the route while Mailgun is stopped: stopped × switch × Gmail's room", () => {
+describe("§622 the route while Mailgun is stopped: stopped × switch × Gmail's room", () => {
   const base = { fallbackToGmail: true, noticeNamesFallback: true, gmailConfigured: true, gmailRoom: 50 };
 
   it("is Mailgun's road while Mailgun is not stopped, whatever the switch", () => {
@@ -137,7 +137,7 @@ describe("§NNN the route while Mailgun is stopped: stopped × switch × Gmail's
     expect(routeWhileStopped({ ...base, stop: PAUSE, fallbackToGmail: false })).toEqual({ road: "wait", stop: PAUSE, reason: "fallbackOff" });
     expect(routeWhileStopped({ ...base, stop: PAUSE, gmailRoom: 0 })).toEqual({ road: "wait", stop: PAUSE, reason: "gmailCapSpent" });
     expect(routeWhileStopped({ ...base, stop: ALLOWANCE, gmailRoom: 3, needed: 4 })).toEqual({ road: "wait", stop: ALLOWANCE, reason: "gmailCapSpent" });
-    // The notice not naming the fallback (§NNN): its own reason, the remedy being the notice, after the switch's.
+    // The notice not naming the fallback (§622): its own reason, the remedy being the notice, after the switch's.
     expect(routeWhileStopped({ ...base, stop: PAUSE, noticeNamesFallback: false })).toEqual({ road: "wait", stop: PAUSE, reason: "noticeMissing" });
     expect(routeWhileStopped({ ...base, stop: PAUSE, noticeNamesFallback: false, fallbackToGmail: false })).toEqual({ road: "wait", stop: PAUSE, reason: "fallbackOff" });
     // Not configured is said before the switch: a deployment without the account cannot turn it on.

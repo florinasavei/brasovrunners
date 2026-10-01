@@ -23,7 +23,7 @@ import type { OutboxRoads } from "./outbox";
 import { fallbackNoticeForOutbox, outboxRoadsFor } from "./outbox-roads";
 
 /**
- * «Emailurile noastre întârzie acum» (§NNN): the outbox as a public page reads it — how many messages
+ * «Emailurile noastre întârzie acum» (§623): the outbox as a public page reads it — how many messages
  * people wait for, since when, and whether Mailgun's road is stopped. The judgement is pure
  * (`domain/email-delay.ts`); this is the read, and the public pages ask it through the data cache
  * (`cachedEmailDelay`, a minute), never directly.
@@ -214,7 +214,7 @@ async function promisedWaitMinutes<T extends Record<string, unknown>>(db: Databa
 }
 
 /**
- * Whether the club's emails are late now (§NNN): the facts, judged against the wait the platform
+ * Whether the club's emails are late now (§623): the facts, judged against the wait the platform
  * promises. `promisedWait` is that wait when the caller already has it (`cachedEmailWaitMinutes`);
  * absent, it is read from the settings.
  */

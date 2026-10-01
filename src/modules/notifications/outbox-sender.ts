@@ -19,7 +19,7 @@ import { fallbackNoticeForOutbox, outboxRoadsFor } from "./outbox-roads";
  *
  * Two small reads before the batch: the club's transport setting and the shown contact address
  * (one row by key each) — and, while «Gmail preia când Mailgun se oprește» is on where Gmail is
- * configured, the privacy notice in force in each language (§NNN). Gmail's usage is not read here: the sender asks the database's ledger
+ * configured, the privacy notice in force in each language (§622). Gmail's usage is not read here: the sender asks the database's ledger
  * before every Gmail message, so the pace and the cap hold across drains and instances (§443 review).
  */
 export type OutboxRoute = (row: OutboxRow) => EmailTransportName;
@@ -30,7 +30,7 @@ export async function createOutboxSender<T extends Record<string, unknown>>(
   // The Reply-To the club chose to show (§442), read once per batch; the renderer's "or reply" line follows it.
   const [setting, replyTo] = await Promise.all([readEmailTransport(db), replyToInForce(db)]);
   const configured = gmailIsConfigured();
-  // The fallback acts only under a notice that names it (§NNN): read once per batch, and only when the switch could act.
+  // The fallback acts only under a notice that names it (§622): read once per batch, and only when the switch could act.
   const noticeNamesFallback = await fallbackNoticeForOutbox(db, setting, configured, new Date());
   const { sender } = createEmailSenderForEnvironment(env, {
     replyTo,
@@ -40,7 +40,7 @@ export async function createOutboxSender<T extends Record<string, unknown>>(
       atGmailCap: setting.atGmailCap,
       /*
         A Mailgun refusal of the account spills to Gmail when the club lets it (§443), and always while
-        «Gmail preia când Mailgun se oprește» is on (§NNN): the message Mailgun just refused is the
+        «Gmail preia când Mailgun se oprește» is on (§622): the message Mailgun just refused is the
         first the fallback carries, and the stop it announced closes Mailgun's road for the rest.
       */
       overflowToGmail: setting.overflowToGmail || fallbackActive(setting, configured, noticeNamesFallback),

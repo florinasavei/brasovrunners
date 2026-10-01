@@ -231,7 +231,7 @@ describe("§519 one person in a sitting", () => {
     const [row] = await outbox();
     expect(row.nextAttemptAt?.toISOString()).toBe(new Date(at(1).getTime() + WINDOW_MS).toISOString());
     // «Da» took it in while it still waited, so it is marked held now, and only now (nit F1).
-    // With the instant it is let go (`heldUntil`, §NNN): the window's end, as its not-before.
+    // With the instant it is let go (`heldUntil`, §623): the window's end, as its not-before.
     expect(row.payloadJson).toEqual({ startsDeadline: true, sittingHeld: true, heldUntil: new Date(at(1).getTime() + WINDOW_MS).toISOString() });
     const [open] = await db.select().from(familySittings);
     expect(open.heldOutboxIds).toEqual([row.id]);
@@ -240,7 +240,7 @@ describe("§519 one person in a sitting", () => {
     await releaseFamilySitting(db, sittingId!, at(2));
     const [released] = await outbox();
     expect(released.nextAttemptAt?.toISOString()).toBe(at(2).toISOString());
-    // «Gata» rewrites the release instant to now (§NNN): the public notice counts the wait from here.
+    // «Gata» rewrites the release instant to now (§623): the public notice counts the wait from here.
     expect(released.payloadJson).toEqual({ startsDeadline: true, sittingHeld: true, heldUntil: at(2).toISOString() });
     const [sitting] = await db.select().from(familySittings);
     expect(sitting.releasedAt?.toISOString()).toBe(at(2).toISOString());
@@ -785,7 +785,7 @@ describe("§519 the fix round of 2026-09-27", () => {
     // One confirmation for the family, never one each; everybody signed, so it is due at the last signature.
     const confirmations = (await outbox()).filter((row) => row.messageType === "REGISTRATION_CONFIRMED" && row.participantId !== null);
     expect(confirmations).toHaveLength(1);
-    // Its release instant moved with each signature, to the last one's (§NNN).
+    // Its release instant moved with each signature, to the last one's (§623).
     expect(confirmations[0].payloadJson).toEqual({ familySittingId: sittingId, heldUntil: at(25).toISOString() });
     expect(confirmations[0].nextAttemptAt?.toISOString()).toBe(at(25).toISOString());
 
@@ -844,12 +844,12 @@ describe("§519 the fix round of 2026-09-27", () => {
 });
 
 /*
-  §NNN (BR-V2.53's review nit): a family sitting neither stretches nor cuts a pause Mailgun asked for.
+  §622 (BR-V2.53's review nit): a family sitting neither stretches nor cuts a pause Mailgun asked for.
   The hold and release statements leave a row carrying the rate-pause mark at its turn — Mailgun's
   pause. The replace deletes it like any never-tried row: the stop is recorded apart from the row
   (`platform_settings.mailgunStop`), so its going ends no pause, and the family message says it all.
 */
-describe("§NNN a sitting leaves a row Mailgun paused alone", () => {
+describe("§622 a sitting leaves a row Mailgun paused alone", () => {
   const PAUSED = `${RATE_PAUSE_ERROR_PREFIX}mailgun 429: Too Many Requests`;
 
   it("«Da» does not hold a paused first email to the sitting's window, and «Gata» does not send it before the pause ends", async () => {

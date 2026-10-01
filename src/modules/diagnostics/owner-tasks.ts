@@ -200,7 +200,7 @@ export type OwnerTaskInputs = {
   newsletterDescribed: boolean;
   /**
    * Does the notice in force, in every language, say a message may leave through the club's Gmail
-   * while Mailgun is stopped (§NNN, `noticeDescribesGmailFallback`)? Until it does, «Gmail preia când
+   * while Mailgun is stopped (§622, `noticeDescribesGmailFallback`)? Until it does, «Gmail preia când
    * Mailgun se oprește» is greyed and a Mailgun stop holds participants' mail.
    */
   gmailFallbackDescribed: boolean;
@@ -231,7 +231,7 @@ export type OwnerTaskInputs = {
   /** Which deployment this is: off production, `allowlist` is the finished state (§16.4). */
   appEnv: "local" | "test" | "qa" | "production";
   /**
-   * Email that nothing is carrying (§NNN), from `/api/health`'s own counts (`checkEmailHealth`):
+   * Email that nothing is carrying (§622), from `/api/health`'s own counts (`checkEmailHealth`):
    * `stoppedLong` — Mailgun-road rows stopped (paused, deferred to the reset, or waiting because Gmail
    * could not carry them) and queued longer ago than the overdue allowance, with the fallback off or
    * Gmail's cap spent; `failed` — FAILED rows of the last seven days; `retryingLate` — rows a transient
@@ -415,7 +415,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
       state: input.newsletterDescribed ? "done" : "open",
     });
     /*
-      Gmail carrying while Mailgun is stopped (§NNN), the same shape: open, never blocking — nothing is
+      Gmail carrying while Mailgun is stopped (§622), the same shape: open, never blocking — nothing is
       refused, a Mailgun stop simply holds the mail as it always did — and done by itself the day a
       notice naming `{{gmailFallback}}` takes effect. Its words say what to approve and why: a
       participant's name, links and signed PDF reach Google only under a notice that says so (§443).
@@ -467,7 +467,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
   // row would read "blocking" for ever there and mean nothing. Off production the task is done
   // when the provider is configured at all; the detail still names the mode.
   /*
-    Email nothing is carrying (§NNN): red while a Mailgun-road row has waited past ninety minutes
+    Email nothing is carrying (§622): red while a Mailgun-road row has waited past ninety minutes
     stopped with nobody to carry it, a transient refusal keeps a row retrying past six attempts, or a
     message FAILED in the last seven days; green otherwise — the row stays on the list, so the club sees
     the fail-safes are there before it needs them. Its steps name the remedies: the switch, Gmail's cap,

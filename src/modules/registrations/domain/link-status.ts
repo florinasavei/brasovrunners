@@ -45,10 +45,10 @@ import type { TokenRejectionReason } from "@/modules/action-tokens/domain/token-
  *   to say except "ask for a new link" — which is exactly what the generic message says, and
  *   which is now said with a working link to the resend form rather than with a sentence
  *   pointing vaguely at the event page.
- * - **SUPERSEDED** (§NNN) was `INVALIDATED`'s innocent half, and it now has a column of its own:
+ * - **SUPERSEDED** (§619) was `INVALIDATED`'s innocent half, and it now has a column of its own:
  *   `superseded_by_token_id`, set by `issueActionToken` on exactly the rows a newer token of the
  *   same purpose and scope replaced. Somebody pressed an older email after a resend — common, and
- *   until §NNN answered with "invalid or expired", which reads as "something broke". The argument
+ *   until §619 answered with "invalid or expired", which reads as "something broke". The argument
  *   is `ALREADY_USED`'s: only an exact match on `token_hash` reaches the row, so whoever reached it
  *   holds the secret from that email, and "a newer email has the working link — open the latest
  *   one, look in Spam and Promotions" tells them nothing the email in their hand did not, except
@@ -173,7 +173,7 @@ export function mayReportState(
 }
 
 /**
- * Whether a refused token may be answered with "a newer email has the working link" (§NNN).
+ * Whether a refused token may be answered with "a newer email has the working link" (§619).
  *
  * The other security half, beside `mayReportState`: `SUPERSEDED` only — never a revoked, unknown,
  * mismatched or expired link — and any purpose whose earlier links a newer one replaces.

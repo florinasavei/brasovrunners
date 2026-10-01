@@ -127,7 +127,7 @@ export const emailTransportSettingSchema = z
      */
     overflowToGmail: z.boolean(),
     /**
-     * «Gmail preia când Mailgun se oprește» (§NNN): while Mailgun's road is stopped — a pause it asked
+     * «Gmail preia când Mailgun se oprește» (§622): while Mailgun's road is stopped — a pause it asked
      * for, or its allowance spent — every group's due mail leaves on Gmail's road, inside Gmail's own
      * cap and pace, and returns to Mailgun's on its own when the pause ends or the reset comes.
      * Absent in a value stored before the switch existed, and read as on (`fallbackActive`): a stop
@@ -161,7 +161,7 @@ export type EmailTransportSetting = z.infer<typeof emailTransportSettingSchema>;
  * - **6 seconds apart** (ten a minute, jittered): an account that sends like a script is what Google
  *   suspends.
  * - **overflow off**: the same notice question as the participant groups.
- * - **the fallback on** (§NNN): a stop is Mailgun's, not the runner's — while Mailgun says stop, Gmail
+ * - **the fallback on** (§622): a stop is Mailgun's, not the runner's — while Mailgun says stop, Gmail
  *   carries every group rather than a confirmation waiting out a pause or a day. Off, today's wait. It
  *   acts only once the privacy notice in force names `{{gmailFallback}}` (`fallbackActive`): for the
  *   participant groups that is the same notice question as above, answered by the notice.

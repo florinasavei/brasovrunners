@@ -103,7 +103,7 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   resendDeclarationToAllAction: [],
   sendOutboxNowAction: [],
   sendOutboxNowFromEmailsAction: [],
-  // «Reîncearcă emailurile eșuate» (§NNN): the week's failed emails back in the queue, after the count.
+  // «Reîncearcă emailurile eșuate» (§622): the week's failed emails back in the queue, after the count.
   retryFailedEmailsFromEmailsAction: [],
   // Legal.
   approvePlatformTemplatesAction: [],

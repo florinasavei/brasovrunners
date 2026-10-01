@@ -182,7 +182,7 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     messageKey: PROMOTIONAL_MATERIALS_SHARED_MERGE_FIELD,
     example: inBoth((locale) => promotionalMaterialsSharedClause(locale)),
   },
-  // The privacy notice's marker for Gmail carrying while Mailgun is stopped (§NNN): the switch's own
+  // The privacy notice's marker for Gmail carrying while Mailgun is stopped (§622): the switch's own
   // words, and its precondition — «Gmail preia când Mailgun se oprește» acts only while it is named.
   {
     token: `{{${GMAIL_FALLBACK_MERGE_FIELD}}}`,

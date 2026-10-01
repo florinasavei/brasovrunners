@@ -42,9 +42,9 @@ import type { EmailAdapter, OutgoingEmail, SendResult } from "./adapter";
  *   paid plan and opened registrations, an account on Mailgun's probation (domains limited to a
  *   hundred messages an hour) would have lost every confirmation past the hour's hundredth, and kept knocking while
  *   Mailgun asked it to stop, which is what gets a probation account disabled.
- * - **5xx and any network error** — transient. Outages pass — and since §NNN a transient refusal is
+ * - **5xx and any network error** — transient. Outages pass — and since §622 a transient refusal is
  *   never the end of a message: past the sixth attempt it is retried hourly, never FAILED.
- * - **Which permanent refusals are the address's** (§NNN): only a 400 that names the address or the
+ * - **Which permanent refusals are the address's** (§622): only a 400 that names the address or the
  *   recipient is BOUNCED; 401, 403 and every other permanent 400 carry `notTheAddress` and the outbox
  *   marks them FAILED — the club's to fix, then «Reîncearcă emailurile eșuate» sends them again.
  *
@@ -126,7 +126,7 @@ const NOT_ALLOWED_TO_SEND = /not allowed to send/i;
 const RATE_PAUSED = /temporarily|account (is )?disabled|probation|too fast|rate limit/i;
 
 /**
- * A 400 about the recipient (§NNN): "'to' parameter is not a valid address", a sandbox's "… is not
+ * A 400 about the recipient (§622): "'to' parameter is not a valid address", a sandbox's "… is not
  * among the authorized recipients". Only these stay BOUNCED; every other permanent 400 is the
  * account's or the message's, and FAILED.
  */
@@ -184,7 +184,7 @@ export function classifyMailgunFailure(
   now: Date = new Date(),
 ): MailgunFailure {
   // Credentials, or a sending domain that is not verified. Every retry fails identically — and it is
-  // the account, not the runner's address: FAILED, kept for «Reîncearcă emailurile eșuate» (§NNN).
+  // the account, not the runner's address: FAILED, kept for «Reîncearcă emailurile eșuate» (§622).
   if (status === 401 || status === 403) return { outcome: "permanent_failure", notTheAddress: true };
 
   // Mailgun's own code for a refused send against a spent allowance, and the payment/plan
@@ -200,7 +200,7 @@ export function classifyMailgunFailure(
     if (ALLOWANCE_SPENT.test(body)) return { outcome: "throttled" };
     // The address itself — not a valid address, a sandbox's unauthorized recipient — is the bounce it
     // always was; anything else (an unverified or closed domain, a malformed message) is the club's to
-    // fix, FAILED and retried by a person once fixed (§NNN), never thrown away as a bad address.
+    // fix, FAILED and retried by a person once fixed (§622), never thrown away as a bad address.
     return ADDRESS_REFUSED.test(body) && !SENDER_REFUSED.test(body) ? { outcome: "permanent_failure" } : { outcome: "permanent_failure", notTheAddress: true };
   }
 

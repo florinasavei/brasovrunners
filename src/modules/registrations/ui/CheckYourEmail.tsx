@@ -75,7 +75,7 @@ type Props = {
  *
  * Warmth, not cuteness: a first name in the heading when there is one, the event and its date,
  * the address the message went to (§224), three short steps with a glyph each, the wait in
- * bold and once (§224, §513), Spam and Promotions in a visible box (§NNN), how long the link lives — the club's own hours (§377),
+ * bold and once (§224, §513), Spam and Promotions in a visible box (§619), how long the link lives — the club's own hours (§377),
  * the very number the link just sent was given, so this cannot promise what the platform does
  * not keep — and the sentence that keeps it true
  * for somebody who was already registered (§229). Then the two ways out when nothing arrives
@@ -96,7 +96,7 @@ type Props = {
  * press, «Înscriu încă o persoană cu această adresă», with at most one sentence under it (the owner,
  * 2026-09-28: «pare că încurajăm asta… când e doar o excepție»). No steps and no wait box: the
  * leaving time is said once, in one shape, and nothing contradicts it. The one thing under the
- * leaving line is the Spam box (§NNN), worded without a time so that it never contradicts it.
+ * leaving line is the Spam box (§619), worded without a time so that it never contradicts it.
  */
 export default async function CheckYourEmail({ eventTitle, whenLabel, eventHref, slug, facts, window, offer }: Props) {
   const t = await getTranslations("Registration");
@@ -160,7 +160,7 @@ export default async function CheckYourEmail({ eventTitle, whenLabel, eventHref,
       <Stack spacing={3} data-testid="check-email-short">
         <Box>
           {heading(false)}
-          {/* While the club's emails are late (§NNN), above the hour this screen promises. */}
+          {/* While the club's emails are late (§623), above the hour this screen promises. */}
           {await emailDelayNotice({ sx: { my: 1 } })}
           <Typography variant="body1" data-testid="check-email-form-in">
             {facts?.firstName ? t("done.formIn", { name: facts.firstName }) : t("done.formInUnnamed")}
@@ -169,7 +169,7 @@ export default async function CheckYourEmail({ eventTitle, whenLabel, eventHref,
             {leavesLine}
           </Typography>
         </Box>
-        {/* The same box as the full screen's, with no time in it: the leaving line above may say the email has not left yet (§NNN). */}
+        {/* The same box as the full screen's, with no time in it: the leaving line above may say the email has not left yet (§619). */}
         <Alert severity="info" data-testid="spam-hint">
           {await spamHintWords()}
         </Alert>
@@ -227,7 +227,7 @@ export default async function CheckYourEmail({ eventTitle, whenLabel, eventHref,
             </Box>
           </Typography>
         )}
-        {/* While the club's emails are late (§NNN): before the steps and the wait they promise. */}
+        {/* While the club's emails are late (§623): before the steps and the wait they promise. */}
         {await emailDelayNotice({ sx: { mt: 2 } })}
       </Box>
 
@@ -284,7 +284,7 @@ export default async function CheckYourEmail({ eventTitle, whenLabel, eventHref,
         </Typography>
       </Box>
 
-      {/* Spam and Promotions, in a box of its own rather than a grey line (§NNN): the person whose
+      {/* Spam and Promotions, in a box of its own rather than a grey line (§619): the person whose
           email went there is the one who needs it, and never reads a hint inside the email. */}
       <Alert severity="info" data-testid="spam-hint">
         {await spamHintWords()}

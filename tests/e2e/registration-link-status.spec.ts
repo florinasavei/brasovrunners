@@ -128,7 +128,7 @@ test.describe("§420 a lapsed or moved-on registration link never shows the wron
   });
 
   /**
-   * §NNN: a second link of the same purpose — what a resend's email carries — replaces the first,
+   * §619: a second link of the same purpose — what a resend's email carries — replaces the first,
    * and the first email's page says a newer email has the working link, rather than the generic
    * "no longer valid" a guessed address gets. Nothing is pressed: the refusal is the GET's.
    */

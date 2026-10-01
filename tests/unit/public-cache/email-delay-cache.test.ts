@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { EmailDelayFacts } from "@/modules/notifications/domain/email-delay";
 
 /**
- * §NNN — the email queue as a public page reads it (`cachedEmailDelay`): from the data cache under
+ * §623 — the email queue as a public page reads it (`cachedEmailDelay`): from the data cache under
  * its own tag, `public:email`, for a minute on a page rendered per request — so a page that waits for
  * an email costs one query a minute at most and none while the entry is warm — and at the day's
  * ceiling, under a key of its own, in a kept (static) render, so the event page is never held to a
@@ -79,7 +79,7 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-describe("§NNN cachedEmailDelay", () => {
+describe("§623 cachedEmailDelay", () => {
   it("reads once a minute under its own tag on a page rendered per request, and judges the facts now", async () => {
     expect(EMAIL_DELAY_SECONDS).toBe(60);
     const delay = await cachedEmailDelay(NOW);

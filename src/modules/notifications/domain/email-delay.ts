@@ -2,7 +2,7 @@ import type { EmailMessageType } from "@/db/schema/email-outbox";
 import { BULK_MESSAGE_TYPES } from "./bulk";
 
 /**
- * Whether the club's emails are late, as a person waiting for one is told (§NNN, amending §513 and
+ * Whether the club's emails are late, as a person waiting for one is told (§623, amending §513 and
  * §547) — pure: the judgement. The outbox's facts are read by `public-delay.ts`, once a minute at
  * most, from the data cache.
  *
@@ -98,7 +98,7 @@ export type EmailDelayFacts = {
 };
 
 /**
- * The judgement (§NNN).
+ * The judgement (§623).
  *
  * - Nothing waits: not late, whatever else is true — a page never says «0 mesaje așteaptă».
  * - **paused**: Mailgun told its road to wait and a waited-for message is on that road.

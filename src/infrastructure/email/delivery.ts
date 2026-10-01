@@ -219,7 +219,7 @@ export function createEmailSender(config: {
     if (!admission.admitted) {
       // At the cap and the club said wait: deferred to the moment the oldest send leaves the
       // rolling day, as a spent Mailgun allowance is deferred (§40) — never discarded.
-      // A message Mailgun's stop handed to Gmail (§NNN) waits at the cap whatever the club chose: Mailgun's road is closed.
+      // A message Mailgun's stop handed to Gmail (§622) waits at the cap whatever the club chose: Mailgun's road is closed.
       if (admission.reason === "cap" && (mustDefer || (chosen && gmail.atGmailCap === "defer"))) {
         return { outcome: "throttled", error: GMAIL_CAP_DEFERRED_ERROR, retryAfter: admission.roomAt };
       }
@@ -347,7 +347,7 @@ export function createEmailSender(config: {
            it spill over and Gmail can take it; otherwise the refusal stands and the outbox defers.
       */
       /*
-        3. Mailgun said stop and the club's switch is on (§NNN, `gmailOnly`): Gmail, or the message is
+        3. Mailgun said stop and the club's switch is on (§622, `gmailOnly`): Gmail, or the message is
            handed back for the outbox to hold — never Mailgun's road during the stop, whatever Gmail
            answers, and at Gmail's cap it waits whatever the club chose for its own groups.
       */
@@ -366,7 +366,7 @@ export function createEmailSender(config: {
       if (result.outcome === "sent") return { ...result, transport: "mailgun", recipients: transmit ? recipientsOf(outgoing) : 0 };
       if (result.outcome === "throttled" && gmail?.overflowToGmail && outgoing.transport !== "gmail" && !outgoing.bulk) {
         // Carried, or handed back for the pace — either is sooner than Mailgun's reset. Mailgun's own
-        // stop rides on every answer the spill ends with (§NNN) — sent, paced, a refused address, a
+        // stop rides on every answer the spill ends with (§622) — sent, paced, a refused address, a
         // connection that broke where Gmail may have taken it — so the outbox still records it and
         // closes Mailgun's road until it ends, whatever became of this one message.
         const spilled = await viaGmail(outgoing, transmit, false);

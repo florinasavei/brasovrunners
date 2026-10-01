@@ -57,7 +57,7 @@ export default async function RegistrationInterestForm({
           <Alert severity="success" role="status">
             {t("interest.done")}
           </Alert>
-          {/* The announcement is an email still to come: where to look for it (§NNN). */}
+          {/* The announcement is an email still to come: where to look for it (§619). */}
           <Alert severity="info" sx={{ mt: 1.5 }} data-testid="spam-hint">
             {await spamHintWords()}
           </Alert>

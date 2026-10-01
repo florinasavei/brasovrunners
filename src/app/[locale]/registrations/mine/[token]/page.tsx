@@ -122,7 +122,7 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
   // One token read for the page — throttled per presented token.
   const now = new Date();
   const context = invalid ? { ok: false as const } : await readMyRegistrations(getDb(), token, locale, now);
-  // A newer «Înscrierile mele» email replaced this link (§NNN): said so, in place of the generic refusal.
+  // A newer «Înscrierile mele» email replaced this link (§619): said so, in place of the generic refusal.
   const replaced =
     !context.ok && "reason" in context
       ? await readReplacedActionLink(token, [{ purpose: "MANAGE_PROFILE", reason: context.reason }], locale, now)

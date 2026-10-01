@@ -79,7 +79,7 @@ export const emailActionTokens = pgTable(
     // Set when a newer token supersedes this one, or when staff revoke it.
     invalidatedAt: timestamp("invalidated_at", { withTimezone: true }),
     /*
-      Which of the two `invalidated_at` means (§NNN): the newer token of the same purpose and scope
+      Which of the two `invalidated_at` means (§619): the newer token of the same purpose and scope
       that replaced this one, set by `issueActionToken` on exactly the rows it invalidated. Null on
       an invalidated row means revoked for cause, and that link keeps the one generic refusal
       (§13.2); a superseded one may say a newer email exists, because only the holder of this

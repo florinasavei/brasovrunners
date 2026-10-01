@@ -295,7 +295,7 @@ describe("BR-REQ-036-02 email action tokens", () => {
       expect((await rowFor(row.id)).usedAt).toBeNull();
     });
 
-    it("rejects a token that a reissue invalidated, naming it superseded (§NNN)", async () => {
+    it("rejects a token that a reissue invalidated, naming it superseded (§619)", async () => {
       const first = await issue();
       await issue();
 
@@ -308,7 +308,7 @@ describe("BR-REQ-036-02 email action tokens", () => {
       ).toEqual({ ok: false, code: "TOKEN_INVALID", reason: "SUPERSEDED" });
     });
 
-    it("rejects a token revoked for cause as invalidated, not superseded (§NNN)", async () => {
+    it("rejects a token revoked for cause as invalidated, not superseded (§619)", async () => {
       const { secret, token } = await issue();
       // No code path revokes today; the column keeps the two facts apart for the day one does.
       await db.update(emailActionTokens).set({ invalidatedAt: NOW }).where(eq(emailActionTokens.id, token.id));
@@ -559,11 +559,11 @@ describe("BR-REQ-036-02 email action tokens", () => {
   });
 
   /**
-   * §NNN — `invalidated_at` held two facts; `superseded_by_token_id` tells them apart. Set by
+   * §619 — `invalidated_at` held two facts; `superseded_by_token_id` tells them apart. Set by
    * `issueActionToken` on exactly the rows it invalidated, and read back only for the holder of the
    * superseded row's own secret.
    */
-  describe("§NNN which invalidated tokens a newer one superseded", () => {
+  describe("§619 which invalidated tokens a newer one superseded", () => {
     it("marks the previous token superseded by the new one, and only that row", async () => {
       const manage = await issue("MANAGE_REGISTRATION");
       const first = await issue("COMPLETE_DECLARATION");
@@ -619,7 +619,7 @@ describe("BR-REQ-036-02 email action tokens", () => {
       }
       const before = await rowFor(first.token.id);
 
-      // The time of the row the column names, the token that actually replaced it (§NNN).
+      // The time of the row the column names, the token that actually replaced it (§619).
       expect(
         await readSupersededActionTokenScope(db, { secret: first.secret, purpose: "MANAGE_REGISTRATION", now: thirdAt }),
       ).toEqual({ participantId, registrationId: REGISTRATION_ID, purpose: "MANAGE_REGISTRATION", replacedAt: secondAt });

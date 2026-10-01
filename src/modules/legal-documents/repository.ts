@@ -284,7 +284,7 @@ export async function noticeDescribesPromotionalMaterialsShared<T extends Record
 
 /**
  * Whether the privacy notice in force says a message may leave through the club's Gmail while
- * Mailgun is stopped (§NNN, `describesGmailFallback`) — in every language, like the offers. The
+ * Mailgun is stopped (§622, `describesGmailFallback`) — in every language, like the offers. The
  * precondition of «Gmail preia când Mailgun se oprește»: the outbox's claim and sender, `/api/health`,
  * the emails page and «Sarcini» (`gmailFallbackNotice`) read it, never a public page, so it has no
  * cached twin. False while no notice is approved.

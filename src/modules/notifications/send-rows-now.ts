@@ -46,7 +46,7 @@ export async function sendOutboxRowsNow(
       recordRun: false,
     });
     for (const key of OUTBOX_SUMMARY_COUNTS) total[key] += summary[key];
-    // Gmail carried for a stopped Mailgun (§NNN): the press's own rows left that way, said with the stop.
+    // Gmail carried for a stopped Mailgun (§622): the press's own rows left that way, said with the stop.
     if (summary.carried) total.carried = { stop: summary.carried.stop, viaGmail: (total.carried?.viaGmail ?? 0) + summary.carried.viaGmail };
     // A batch that was not full took the last of the press's rows: no empty batch after it.
     if (summary.claimed < OUTBOX_BATCH_SIZE) break;

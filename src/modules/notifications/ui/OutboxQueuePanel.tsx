@@ -51,14 +51,14 @@ type Props = {
   /** Why the fold opens by itself, as the page knows it: "send now" or the switch just answered (§336). */
   openWhen?: FoldOpenWhen;
   /**
-   * The FAILED rows of the last seven days «Reîncearcă emailurile eșuate» would put back (§NNN): the
+   * The FAILED rows of the last seven days «Reîncearcă emailurile eșuate» would put back (§622): the
    * dialog's live count, read with the page. 0 draws no button.
    */
   failedRetryable?: number;
 };
 
 /**
- * Mailgun's stop as the queue panel's header says it (§NNN): «Mailgun în pauză până la 10:15 — Gmail
+ * Mailgun's stop as the queue panel's header says it (§622): «Mailgun în pauză până la 10:15 — Gmail
  * preia», «Cota Mailgun epuizată până la … — Gmail nu e configurat». The hour is today's «10:15», or the
  * short day with its hour (`emailLeavesWords`). Null while Mailgun's road is open.
  */
@@ -102,7 +102,7 @@ export function stopHeadline(
 export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit, delivery, now, mayEditTiming, openWhen, failedRetryable = 0 }: Props) {
   const t = await getTranslations("Admin");
   const stop = stopHeadline(volume, now, locale, (key, values) => t(key, values));
-  // While Gmail carries for a stopped Mailgun (§NNN), Mailgun's day does not stop «Trimite acum».
+  // While Gmail carries for a stopped Mailgun (§622), Mailgun's day does not stop «Trimite acum».
   const roomToSend = volume.whileStopped.road === "gmail" || volume.remaining === null || volume.remaining > 0;
   const words = await confirmWords();
   // Inside the row's sentence ("În coadă din joi, 24 sept. 2026, 18:05"), short (§349).
@@ -187,7 +187,7 @@ export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit,
       data-testid="outbox-queue"
     >
       {/*
-        Mailgun said stop (§NNN): the header names the stop, until when, and who carries for it —
+        Mailgun said stop (§622): the header names the stop, until when, and who carries for it —
         Gmail, or nobody and why — to every reader of the queue. Info while Gmail carries, a warning
         while nothing does; the remedies are «Prin ce pleacă emailurile» above and «Sarcini».
       */}
@@ -290,7 +290,7 @@ export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit,
       </Stack>
 
       {/*
-        «Reîncearcă emailurile eșuate» (§NNN): the week's FAILED rows back in the queue in one press, for
+        «Reîncearcă emailurile eșuate» (§622): the week's FAILED rows back in the queue in one press, for
         whoever may press «Trimite acum» — the service asserts the same role. The question says how many,
         counted with the page; BOUNCED is an address that does not exist and is not offered.
       */}

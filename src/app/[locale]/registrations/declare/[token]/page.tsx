@@ -221,13 +221,13 @@ export default async function DeclarePage({ params, searchParams }: Props) {
         <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
           {t("declare.doneTitle")}
         </Typography>
-        {/* While the club's emails are late (§NNN): the confirmation and its QR are one of them. */}
+        {/* While the club's emails are late (§623): the confirmation and its QR are one of them. */}
         {await emailDelayNotice({ variant: "plain", sx: { mb: 2 } })}
         {/* Waitlisted is not the end of the journey — it is a place in a queue, and the
             declaration is already signed — so both outcomes render the finished stepper. */}
         <RegistrationJourney current="done" />
         <Alert severity="success">{done === "waitlisted" ? t("declare.doneWaitlisted") : t("declare.doneConfirmed")}</Alert>
-        {/* The confirmation email (with the QR) or the waiting list's offer is on its way (§NNN). */}
+        {/* The confirmation email (with the QR) or the waiting list's offer is on its way (§619). */}
         <Alert severity="info" sx={{ mt: 2 }} data-testid="spam-hint">
           {await spamHintWords()}
         </Alert>
@@ -302,7 +302,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
   const familyMode = passSteps !== null && isFamilyWizard(passSteps);
 
   const spent = context.ok || familyMode ? null : await readSpentRegistrationLink(token, refusals, locale, now);
-  // A newer email replaced this link (§NNN): said so, in place of the generic refusal.
+  // A newer email replaced this link (§619): said so, in place of the generic refusal.
   const replaced = context.ok || familyMode || spent ? null : await readReplacedActionLink(token, refusals, locale, now);
   /*
     A spent link with no pass that holds (§471, nit found in review): lapsed, done elsewhere, or

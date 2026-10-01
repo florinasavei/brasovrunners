@@ -17,7 +17,7 @@ import {
  *
  * Which entry point a route uses is a security decision:
  *   issueActionToken       writes a token and kills the previous ones for that scope, marking
- *                          each as superseded by the new one (§NNN).
+ *                          each as superseded by the new one (§619).
  *   readActionTokenContext what a GET may do. Runs in a read-only transaction.
  *   consumeActionToken     what a POST does. One statement, single use, no second winner.
  *
@@ -62,7 +62,7 @@ const CONTEXT_COLUMNS = {
 /**
  * Issue a token for one purpose and scope, invalidating the previous live ones in the same
  * transaction, so a resend never leaves two working links (BR-REQ-036-02 criterion 5). Each row it
- * invalidates is also marked superseded by the new one (§NNN) — so its page can say a newer email
+ * invalidates is also marked superseded by the new one (§619) — so its page can say a newer email
  * exists — and only those rows: an invalidation from anywhere else is a revocation, and stays generic.
  *
  * `db` is normally the caller's open transaction (registration, token and outbox row together,
@@ -135,7 +135,7 @@ export async function issueActionToken<T extends Record<string, unknown>>(
       .returning(CONTEXT_COLUMNS);
 
     /*
-      Which rows a newer email replaced (§NNN): exactly the ones the UPDATE above invalidated, by id,
+      Which rows a newer email replaced (§619): exactly the ones the UPDATE above invalidated, by id,
       after the insert because the column points at the new row. Two statements rather than one, so
       the reference is never to a row that does not exist yet; the transaction makes them one fact.
     */
@@ -254,7 +254,7 @@ export async function readSpentActionTokenScope<T extends Record<string, unknown
 
 /**
  * The scope of a token a newer one *replaced*, and when the token that replaced it was issued, so a
- * page can say "a newer email has the working link" (§NNN; `registrations/domain/link-status.ts`).
+ * page can say "a newer email has the working link" (§619; `registrations/domain/link-status.ts`).
  * The sibling of `readSpentActionTokenScope`, with the same three properties:
  *
  * - Answers only for `SUPERSEDED`, re-evaluated here; a purpose mismatch, a revoked row, an

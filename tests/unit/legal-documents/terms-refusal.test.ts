@@ -7,7 +7,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * BR-REQ-053-01 (§NNN, amending §418) — the terms say the club may refuse or cancel a registration
+ * BR-REQ-053-01 (§618, amending §418) — the terms say the club may refuse or cancel a registration
  * only on the objective grounds they name, that the person is told the ground by email and the place
  * goes to the waiting list by the ordinary rules, that a free event has nothing to refund, and that no
  * registration is refused on a ground the law forbids — in both languages, in §3, which §1 lists among
@@ -69,7 +69,7 @@ const refusalParagraph = (locale: Locale) => {
   return found[0];
 };
 
-describe("§NNN — the terms' template says the club may refuse or cancel a registration, on objective grounds only", () => {
+describe("§618 — the terms' template says the club may refuse or cancel a registration, on objective grounds only", () => {
   it.each(["ro", "en"] as const)("%s: one paragraph in §3 names every ground, the email, the queue, the refund and the law", (locale) => {
     expect(BODY[locale].sections[2].heading).toBe(locale === "ro" ? "3. Anularea" : "3. Cancelling");
     const paragraph = refusalParagraph(locale);
@@ -103,7 +103,7 @@ describe("§NNN — the terms' template says the club may refuse or cancel a reg
   });
 });
 
-describe("§NNN — the staff cancel's refusal box says the reason goes to the person", () => {
+describe("§618 — the staff cancel's refusal box says the reason goes to the person", () => {
   it("is in both catalogues, and says it before the press", () => {
     expect(ro.Admin.registrations.refusedByOrganizer).toContain("îi este trimis persoanei pe e-mail");
     expect(en.Admin.registrations.refusedByOrganizer).toContain("is emailed to the person");

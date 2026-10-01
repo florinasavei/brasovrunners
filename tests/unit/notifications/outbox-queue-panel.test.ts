@@ -327,7 +327,7 @@ describe("OutboxQueuePanel for a reader who cannot send (§529)", () => {
   });
 });
 
-describe("§NNN the queue panel says Mailgun's stop, who carries for it, and offers the failed back", () => {
+describe("§622 the queue panel says Mailgun's stop, who carries for it, and offers the failed back", () => {
   const paused = { kind: "paused" as const, until: new Date(NOW.getTime() + 15 * 60_000) };
 
   it("says «Mailgun în pauză până la HH:MM — Gmail preia» while Gmail carries, as information", async () => {

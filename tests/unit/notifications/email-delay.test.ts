@@ -9,7 +9,7 @@ import {
 } from "@/modules/notifications/domain/email-delay";
 
 /**
- * §NNN — when the pages that wait for an email say the club's emails are late: the thresholds
+ * §623 — when the pages that wait for an email say the club's emails are late: the thresholds
  * (the promised wait plus ten minutes, ten under `immediate`), the three reasons in their order,
  * the estimate's arithmetic, and which messages count at all.
  */
@@ -32,7 +32,7 @@ const facts = (overrides: Partial<EmailDelayFacts> = {}): EmailDelayFacts => ({
   ...overrides,
 });
 
-describe("§NNN judgeEmailDelay", () => {
+describe("§623 judgeEmailDelay", () => {
   it("is quiet when nothing waits, whatever else is true", () => {
     const quiet = judgeEmailDelay(facts({ queued: 0, queuedOnMailgun: 0, oldestWaitingSince: null, pausedUntil: ahead(30), hourlyRemaining: 0 }), 15, NOW);
     expect(quiet).toEqual({ late: false, reason: null, queued: 0, oldestWaitMinutes: 0, estimateMinutes: null });

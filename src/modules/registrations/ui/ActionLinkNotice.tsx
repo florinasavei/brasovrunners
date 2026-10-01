@@ -24,7 +24,7 @@ import { replacedLinkWords } from "./link-wait-words";
  * - **`status` null** — the generic invalid-or-expired refusal §13.2 requires, now with the
  *   resend path §13.2 also requires and which the sentence only ever gestured at ("you can ask
  *   for a new one from the event page" — from a page that did not link to one).
- * - **`replaced` given** (§NNN), with `status` null — a newer email replaced this link: the
+ * - **`replaced` given** (§619), with `status` null — a newer email replaced this link: the
  *   generic page's shape, its sentence swapped for "a newer email has the working link", and the
  *   same resend path under it.
  *
@@ -47,7 +47,7 @@ export default async function ActionLinkNotice({
 }: {
   locale: Locale;
   status: SpentRegistrationLink | null;
-  /** A link a newer one of the same purpose superseded (§NNN); read only when `status` is null. */
+  /** A link a newer one of the same purpose superseded (§619); read only when `status` is null. */
   replaced?: ReplacedActionLink | null;
 }) {
   const t = await getTranslations("Registrations");
@@ -66,7 +66,7 @@ export default async function ActionLinkNotice({
   if (!status) {
     return (
       <Stack spacing={2} sx={{ alignItems: "flex-start" }}>
-        {/* Replaced by a newer email (§NNN): `info`, since nothing broke and there is one email to open. */}
+        {/* Replaced by a newer email (§619): `info`, since nothing broke and there is one email to open. */}
         {replaced ? (
           <Alert severity="info" sx={{ alignSelf: "stretch" }} data-testid="link-replaced">
             {await replacedLinkWords(locale, replaced.issuedAt)}

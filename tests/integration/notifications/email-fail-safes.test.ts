@@ -26,7 +26,7 @@ import { RATE_LIMITS } from "@/modules/rate-limit/service";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN (amending §40, §100, §163, §443 and §605) — email fail-safes. BR-REQ-080-02.
+ * §622 (amending §40, §100, §163, §443 and §605) — email fail-safes. BR-REQ-080-02.
  *
  * The day of the probation: Mailgun paused the account, 148 confirmations waited, and the owner
  * released them by SQL from a phone and set Gmail by hand. Now, while Mailgun says stop — a pause it
@@ -160,7 +160,7 @@ async function gmailCapSpent() {
   await db.insert(emailOutbox).values(row({ status: "SENT", sentAt: new Date(NOW.getTime() - 60 * MINUTE), transport: "gmail", recipientCount: 50 }));
 }
 
-describe("§NNN Gmail takes over while Mailgun is paused, with the switch on", () => {
+describe("§622 Gmail takes over while Mailgun is paused, with the switch on", () => {
   it("claims the paused row at once and the fresh ones on Gmail's road, and sends them with transport = gmail", async () => {
     expect((await readOutboxRoads(db))?.fallbackToGmail).toBe(true);
     const [paused] = await db.insert(emailOutbox).values(pausedRow()).returning();
@@ -205,7 +205,7 @@ describe("§NNN Gmail takes over while Mailgun is paused, with the switch on", (
   });
 });
 
-describe("§NNN a spill that does not end in «sent» still records Mailgun's stop", () => {
+describe("§622 a spill that does not end in «sent» still records Mailgun's stop", () => {
   it("records the pause from a spill Gmail refused for the address, and holds the batch's next Mailgun row", async () => {
     await switchOff();
     let first = true;
@@ -225,7 +225,7 @@ describe("§NNN a spill that does not end in «sent» still records Mailgun's st
   });
 });
 
-describe("§NNN with the switch off, today's behaviour", () => {
+describe("§622 with the switch off, today's behaviour", () => {
   it("moves nothing on Mailgun's road during a pause, and Gmail's own groups still go", async () => {
     await switchOff({ announcements: "gmail" });
     const [paused] = await db.insert(emailOutbox).values(pausedRow()).returning();
@@ -244,7 +244,7 @@ describe("§NNN with the switch off, today's behaviour", () => {
   });
 });
 
-describe("§NNN Mailgun's allowance spent, with the switch on", () => {
+describe("§622 Mailgun's allowance spent, with the switch on", () => {
   it("sends the rows deferred to the reset on Gmail's road at once", async () => {
     await db.insert(emailOutbox).values([deferredRow(), deferredRow()]);
 
@@ -282,7 +282,7 @@ describe("§NNN Mailgun's allowance spent, with the switch on", () => {
   });
 });
 
-describe("§NNN Gmail's cap spent while Mailgun is stopped", () => {
+describe("§622 Gmail's cap spent while Mailgun is stopped", () => {
   it("holds the rows for Gmail's room or Mailgun's return, never Mailgun during its stop, with their attempts", async () => {
     roads.gmail = () => ({ outcome: "throttled", error: GMAIL_CAP_DEFERRED_ERROR, retryAfter: new Date(NOW.getTime() + 6 * 60 * MINUTE) });
     await db.insert(emailOutbox).values(pausedRow());
@@ -307,7 +307,7 @@ describe("§NNN Gmail's cap spent while Mailgun is stopped", () => {
   });
 });
 
-describe("§NNN the newsletter is not Gmail's to carry", () => {
+describe("§622 the newsletter is not Gmail's to carry", () => {
   it("leaves a newsletter row PENDING during a stop while a confirmation leaves by Gmail", async () => {
     await recordMailgunStop(db, { kind: "paused", until: PAUSE_UNTIL }, NOW);
     const [news] = await db.insert(emailOutbox).values(row({ messageType: "NEWSLETTER", idempotencyKey: "news:1" })).returning();
@@ -323,7 +323,7 @@ describe("§NNN the newsletter is not Gmail's to carry", () => {
   });
 });
 
-describe("§NNN saving the Mailgun plan reopens the road after an allowance stop", () => {
+describe("§622 saving the Mailgun plan reopens the road after an allowance stop", () => {
   it("lets Mailgun take the next claim again, and clears the deferred rows' wait", async () => {
     await recordMailgunStop(db, { kind: "allowance", until: RESET }, NOW);
     await db.insert(emailOutbox).values(deferredRow());
@@ -339,7 +339,7 @@ describe("§NNN saving the Mailgun plan reopens the road after an allowance stop
   });
 });
 
-describe("§NNN the pause holds the road with no pace", () => {
+describe("§622 the pause holds the road with no pace", () => {
   it("claims nothing from Mailgun's road during a pause when «Limita pe oră» is cleared", async () => {
     await switchOff();
     await db.insert(emailOutbox).values([pausedRow(), row({ createdAt: NOW })]);
@@ -357,7 +357,7 @@ describe("§NNN the pause holds the road with no pace", () => {
   });
 });
 
-describe("§NNN no message is lost to a refusal that is not about it", () => {
+describe("§622 no message is lost to a refusal that is not about it", () => {
   it("keeps a transient refusal PENDING past the sixth attempt, retried hourly, its attempts counted", async () => {
     await switchOff();
     roads.mailgun = () => ({ outcome: "transient_failure", error: "mailgun 502: Bad Gateway" });
@@ -389,7 +389,7 @@ describe("§NNN no message is lost to a refusal that is not about it", () => {
   });
 });
 
-describe("§NNN «Trimite acum» during a stop says what it did", () => {
+describe("§622 «Trimite acum» during a stop says what it did", () => {
   it("sends through Gmail and says how many and why, with the switch on", async () => {
     await db.insert(emailOutbox).values([pausedRow(), row({ createdAt: NOW })]);
     const result = await sendOutboxNow(db, admin, new Date(NOW.getTime() + MINUTE));
@@ -446,7 +446,7 @@ describe("§NNN «Trimite acum» during a stop says what it did", () => {
   });
 });
 
-describe("§NNN «Reîncearcă emailurile eșuate»", () => {
+describe("§622 «Reîncearcă emailurile eșuate»", () => {
   it("puts the week's FAILED rows back, due now, from the first attempt, their reason kept — BOUNCED untouched — and audits it", async () => {
     const old = new Date(NOW.getTime() - EMAIL_HEALTH_THRESHOLDS.FAILED_WINDOW_MS - MINUTE);
     await db.insert(emailOutbox).values([
@@ -479,7 +479,7 @@ describe("§NNN «Reîncearcă emailurile eșuate»", () => {
   });
 });
 
-describe("§NNN health and «Sarcini» name the remedy", () => {
+describe("§622 health and «Sarcini» name the remedy", () => {
   it("is degraded, not stalled, while Gmail carries Mailgun's groups — a deferral it carries is not a stall", async () => {
     await db.insert(emailOutbox).values([pausedRow(), deferredRow()]);
     const health = await checkEmailHealth(db, NOW);
@@ -529,12 +529,12 @@ describe("§NNN health and «Sarcini» name the remedy", () => {
 });
 
 /*
-  §NNN (the review's blocker): a transient refusal is retried hourly for ever, its turn always minutes
+  §622 (the review's blocker): a transient refusal is retried hourly for ever, its turn always minutes
   ahead, so neither the overdue count nor the deferred one ever saw it — before this branch it reached
   FAILED within two hours and raised the alarm. `retryingLate` counts it, the way `pausedLate` counts a
   pause that does not end.
 */
-describe("§NNN a transient refusal retried for ever is a stall", () => {
+describe("§622 a transient refusal retried for ever is a stall", () => {
   it("is stalled, with the reason, for a row past six transient attempts while the scheduler runs; a third attempt is not", async () => {
     const reason = "mailgun 404: Not Found";
     // Past six attempts, its next hourly turn minutes ahead: the scheduler is running, the provider keeps refusing.
@@ -565,12 +565,12 @@ describe("§NNN a transient refusal retried for ever is a stall", () => {
 });
 
 /*
-  §NNN (the review, the orchestrator's decision): Gmail carries a participant's message only under a
+  §622 (the review, the orchestrator's decision): Gmail carries a participant's message only under a
   privacy notice that says so (§443) — the notice in force must name `{{gmailFallback}}` in every
   language. Three states: the notice does not name it; it names it and the switch is on; it names it
   and the club turned the switch off.
 */
-describe("§NNN the fallback waits for a notice that names it", () => {
+describe("§622 the fallback waits for a notice that names it", () => {
   async function noticeWithout() {
     // The club approves a notice that does not name the field, in force from a second ago.
     await approveNotice(2, "Mesajele pleacă prin Mailgun.", new Date(NOW.getTime() - 1000));

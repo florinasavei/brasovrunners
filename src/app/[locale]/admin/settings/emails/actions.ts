@@ -105,7 +105,7 @@ export async function updateEmailTransportAction(_previous: FormOutcome | null, 
         gmailPaceSeconds: whole("gmailPaceSeconds"),
         atGmailCap: choice("atGmailCap"),
         overflowToGmail: form.get("overflowToGmail") === "yes",
-        // «Gmail preia când Mailgun se oprește» (§NNN): greyed — not posted — where Gmail is not configured; the service keeps it then.
+        // «Gmail preia când Mailgun se oprește» (§622): greyed — not posted — where Gmail is not configured; the service keeps it then.
         ...(form.has("fallbackToGmail") ? { fallbackToGmail: form.get("fallbackToGmail") === "yes" } : {}),
       },
       new Date(),
@@ -133,14 +133,14 @@ export async function sendOutboxNowFromEmailsAction(_previous: FormOutcome | nul
     // The registrations list's own verb (§80): the same predicate here, there and in the service.
     const actor = await requireStaffCapability(canManageRegistrations);
     const result = await sendOutboxNow(getDb(), actor, new Date());
-    // Gmail carried for a stopped Mailgun (§NNN): the page says how many, why and until when.
-    // The queue's header says a stop nobody carries; the sentence says only what Gmail carried (§NNN).
+    // Gmail carried for a stopped Mailgun (§622): the page says how many, why and until when.
+    // The queue's header says a stop nobody carries; the sentence says only what Gmail carried (§622).
     const carried = result.stop && result.carriedByGmail ? `&gmail=${result.viaGmail}&stop=${result.stop.kind}&until=${encodeURIComponent(result.stop.until.toISOString())}` : "";
     outcome = `saved=outboxSent&sent=${result.sent}${carried}`;
     await flashOutcome({ saved: "outboxSent", sent: String(result.sent) });
   } catch (error) {
     if (!isDomainError(error)) throw error;
-    // Mailgun's hour spent is its own sentence (§605), its stop too, with when it ends (§NNN); every other refusal its code.
+    // Mailgun's hour spent is its own sentence (§605), its stop too, with when it ends (§622); every other refusal its code.
     const until = error instanceof SendNowRefused && error.until ? `&until=${encodeURIComponent(error.until.toISOString())}` : "";
     outcome = `error=${sendNowRefusalCode(error)}${until}`;
   }
@@ -151,7 +151,7 @@ export async function sendOutboxNowFromEmailsAction(_previous: FormOutcome | nul
 }
 
 /**
- * «Reîncearcă emailurile eșuate» (§NNN): the week's FAILED rows back in the queue, from the queue
+ * «Reîncearcă emailurile eșuate» (§622): the week's FAILED rows back in the queue, from the queue
  * panel. The service is where the gate (`canManageRegistrations`), the three-an-hour throttle and the
  * audit row live; this is where to land, with the count.
  */

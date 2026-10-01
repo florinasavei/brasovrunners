@@ -492,7 +492,7 @@ describe("BR-REQ-037-03 cancelling on the club's behalf", () => {
     expect(rendered.text).not.toContain("Clubul a refuzat");
   });
 
-  it("§NNN — the club's refusal under the terms: the ground goes to the person, the place to the queue, the kind to the log", async () => {
+  it("§618 — the club's refusal under the terms: the ground goes to the person, the place to the queue, the kind to the log", async () => {
     const event = await createInternalEvent(1);
     const holder = await registerPublicly(event, "refused@example.org", NOW);
     const waiting = await registerPublicly(event, "next@example.org", new Date(NOW.getTime() + 1_000));
@@ -531,7 +531,7 @@ describe("BR-REQ-037-03 cancelling on the club's behalf", () => {
     expect(rendered.text).toMatch(/Terms and conditions: \S+\/en\/terms/);
   });
 
-  it("§NNN — refuses a refusal under the terms with no ground, and changes nothing", async () => {
+  it("§618 — refuses a refusal under the terms with no ground, and changes nothing", async () => {
     const event = await createInternalEvent(10);
     const holder = await registerPublicly(event, "noground@example.org", NOW);
 

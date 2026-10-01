@@ -56,7 +56,7 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
    * role that may send it (`canManageRegistrations`); absent, no row carries the button.
    */
   offerAction?: (previous: FormOutcome | null, form: FormData) => Promise<FormOutcome | null>;
-  /** The event's `countOccupied`, when the page has already read it (§NNN) — one aggregate, not two. */
+  /** The event's `countOccupied`, when the page has already read it (§621) — one aggregate, not two. */
   counts?: Awaited<ReturnType<typeof countOccupied>>;
 }) {
   const t = await getTranslations("Admin");

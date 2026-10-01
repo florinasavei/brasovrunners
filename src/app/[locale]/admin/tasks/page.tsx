@@ -437,7 +437,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       legalTextIsSample: /EXEMPLU|SAMPLE/i.test(privacyNotice?.title ?? ""),
       emailDeliveryMode: env.EMAIL_DELIVERY_MODE,
       appEnv: env.APP_ENV,
-      // Email nothing is carrying (§NNN): the health check's own counts, read above for the red banner.
+      // Email nothing is carrying (§622): the health check's own counts, read above for the red banner.
       emailFailSafe: { stoppedLong: email.stoppedLong, failed: email.failed, retryingLate: email.retryingLate },
       staleJobNames,
       failingJobNames,

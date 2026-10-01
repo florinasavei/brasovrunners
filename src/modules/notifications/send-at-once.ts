@@ -32,7 +32,7 @@ export const SEND_NOW_ALLOWANCE_SPENT = "SEND_NOW_ALLOWANCE_SPENT";
 export const SEND_NOW_HOUR_SPENT = "SEND_NOW_HOUR_SPENT";
 
 /**
- * Mailgun said stop and Gmail cannot carry the press (§NNN): one sentence per remedy, in
+ * Mailgun said stop and Gmail cannot carry the press (§622): one sentence per remedy, in
  * `Admin.errors` — turn the switch on, configure Gmail, approve the notice that names the fallback,
  * raise Gmail's cap — each saying that waiting for Mailgun's return is the other answer. Never
  * «0 trimise» in silence.
@@ -51,7 +51,7 @@ type SendNowRefusalReason =
 
 /**
  * A press that asked to send now past what Mailgun still holds (§80, §540): the day's allowance, or
- * since §605 the hour's pace, or since §NNN Mailgun's stop with nothing to carry for it. `reason`
+ * since §605 the hour's pace, or since §622 Mailgun's stop with nothing to carry for it. `reason`
  * names which, and is the sentence's key; `until` is when Mailgun's road opens again, for the page
  * that can say it.
  */
@@ -66,7 +66,7 @@ export class SendNowRefused extends DomainError {
   }
 }
 
-/** The refusal of a press while Mailgun is stopped and Gmail cannot carry it (§NNN). */
+/** The refusal of a press while Mailgun is stopped and Gmail cannot carry it (§622). */
 export function stoppedRefusal(route: Extract<StopRoute, { road: "wait" }>): SendNowRefused {
   return new SendNowRefused(
     `Mailgun is stopped (${route.stop.kind}) until ${route.stop.until.toISOString()} and Gmail cannot carry the press: ${route.reason}`,
@@ -104,7 +104,7 @@ export async function assertRoomToSendNow<T extends Record<string, unknown>>(
     messageTypes.filter((type) => roads[type] === "mailgun").length + clubCopyTypes.filter((type) => copyRoad(type) === "mailgun").length;
   if (mailgunMessages === 0) return;
   /*
-    Mailgun said stop (§NNN): the claim reads the same facts. With «Gmail preia când Mailgun se oprește»
+    Mailgun said stop (§622): the claim reads the same facts. With «Gmail preia când Mailgun se oprește»
     on and room in Gmail's day for every message of the press, Gmail carries it — the day's and the
     hour's Mailgun figures are not asked, nothing of the press goes to Mailgun. Otherwise refused with
     the sentence that names the remedy, and the moment Mailgun's road opens again.

@@ -96,7 +96,7 @@ export async function updateEmailPlan<T extends Record<string, unknown>>(
         set: { value: next, updatedAt: now, updatedByStaffUserId: actor.id },
       });
     /*
-      Saving the plan reopens Mailgun's road after an allowance stop (§NNN): a club that upgrades
+      Saving the plan reopens Mailgun's road after an allowance stop (§622): a club that upgrades
       mid-day has the allowance back, and neither the record nor the marked rows may keep Gmail
       carrying until midnight. A pause Mailgun asked for is not the plan's and stays.
     */

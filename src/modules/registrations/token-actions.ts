@@ -218,7 +218,7 @@ export async function readSpentRegistrationLink(
   });
 }
 
-/** What a page shows for a link a newer email replaced (§NNN, `domain/link-status.ts`). */
+/** What a page shows for a link a newer email replaced (§619, `domain/link-status.ts`). */
 export type ReplacedActionLink = {
   /** When the email that replaced this link was issued; null when it cannot be read. */
   issuedAt: Date | null;
@@ -228,7 +228,7 @@ export type ReplacedActionLink = {
 
 /**
  * "This link was replaced: a newer email has the working one" — when the link pressed was
- * superseded by a newer link of the same purpose and scope (§NNN).
+ * superseded by a newer link of the same purpose and scope (§619).
  *
  * Null whenever the page must keep §13.2's one generic refusal: every reason but `SUPERSEDED`,
  * and `SUPERSEDED` itself when `readSupersededActionTokenScope`, re-checking the row, disagrees.

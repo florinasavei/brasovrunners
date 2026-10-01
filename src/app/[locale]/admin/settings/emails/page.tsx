@@ -181,11 +181,11 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
       the last real run, what holds the round back, each row's departure and the switch (§529).
     */
     readNeonBudget(now).then((budget) => readOutboxDelivery(db, now, budget.effects.jobFloorMinutes)),
-    // «Reîncearcă emailurile eșuate» (§NNN): the week's FAILED rows its question counts, for whoever may press it.
+    // «Reîncearcă emailurile eșuate» (§622): the week's FAILED rows its question counts, for whoever may press it.
     maySendNow ? countRetryableFailed(db, now) : 0,
   ]);
   /*
-    What «Trimite acum» said about Mailgun's stop (§NNN): how many Gmail carried and until when Mailgun
+    What «Trimite acum» said about Mailgun's stop (§622): how many Gmail carried and until when Mailgun
     is stopped, or — refused — when it reopens. From the action's own address; anything unreadable
     says nothing rather than a wrong hour.
   */
@@ -311,7 +311,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
         {error && (
           <Alert severity="error">
             {t(`errors.${error}`)}
-            {/* A press refused for Mailgun's stop says when Mailgun's road opens again (§NNN). */}
+            {/* A press refused for Mailgun's stop says when Mailgun's road opens again (§622). */}
             {untilAt && ` ${resumesWords(untilAt, now, locale, (key, values) => t(key, values))}`}
           </Alert>
         )}
@@ -320,7 +320,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
         {saved === "outboxSent" && (
           <Alert severity="success" data-testid="outbox-sent-now">
             {t("outbox.sentNow", { count: sent ?? "0" })}
-            {/* Gmail carried for a stopped Mailgun (§NNN): «N prin Gmail — Mailgun în pauză până la HH:MM». */}
+            {/* Gmail carried for a stopped Mailgun (§622): «N prin Gmail — Mailgun în pauză până la HH:MM». */}
             {carriedKind &&
               carriedCount !== null &&
               untilAt &&

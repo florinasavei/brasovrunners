@@ -306,7 +306,7 @@ async function deepHealth(now: Date): Promise<Response> {
           anyJobStale ||
           schemaDegraded ||
           // Email that needs a person (§98). The email block's own `degraded` — Gmail carrying every group
-          // while Mailgun says stop (§NNN) — is reported in the body and moves no status: nothing is late.
+          // while Mailgun says stop (§622) — is reported in the body and moves no status: nothing is late.
           email?.status === "stalled" ||
           neonQuota.status === "near-limit" ||
           turnstile === "misconfigured" ||

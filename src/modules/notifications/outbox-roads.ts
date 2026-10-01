@@ -15,7 +15,7 @@ import { OUTBOX_BATCH_SIZE, type OutboxRoads } from "./outbox";
  */
 export function outboxRoadsFor(setting: EmailTransportSetting, configured: boolean, noticeNamesFallback: boolean): OutboxRoads | undefined {
   const gmail = gmailRoadRows(setting);
-  // «Gmail preia când Mailgun se oprește» (§NNN): Gmail's road exists for a stop even when no group is Gmail's —
+  // «Gmail preia când Mailgun se oprește» (§622): Gmail's road exists for a stop even when no group is Gmail's —
   // once the notice in force names the fallback.
   const fallback = fallbackActive(setting, configured, noticeNamesFallback);
   if (!configured || (gmail.messageTypes.length === 0 && !gmail.clubCopies && !fallback)) return undefined;
@@ -28,7 +28,7 @@ export function outboxRoadsFor(setting: EmailTransportSetting, configured: boole
 }
 
 /**
- * Whether the privacy notice in force lets the fallback carry (§NNN, `noticeDescribesGmailFallback`),
+ * Whether the privacy notice in force lets the fallback carry (§622, `noticeDescribesGmailFallback`),
  * for the outbox's own readers — the claim's roads, the sender, `/api/health`. Asked only where it can
  * change something: with Gmail not configured, or the switch off, the answer cannot make Gmail carry,
  * so the two reads of the notice are not made on every batch for nothing.

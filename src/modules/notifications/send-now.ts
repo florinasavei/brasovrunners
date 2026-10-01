@@ -45,17 +45,17 @@ export type SendNowResult = OutboxBatchSummary & {
   allowance: number | null;
   remaining: number | null;
   /**
-   * Gmail carried for a stopped Mailgun (§NNN): how many of `sent` left by Gmail for it —
+   * Gmail carried for a stopped Mailgun (§622): how many of `sent` left by Gmail for it —
    * «N prin Gmail — Mailgun în pauză până la HH:MM» on the page. 0 when nothing was carried.
    */
   viaGmail: number;
   /**
-   * Mailgun's stop whenever one was in force for the press (§NNN), carried or not: with `carriedByGmail`
+   * Mailgun's stop whenever one was in force for the press (§622), carried or not: with `carriedByGmail`
    * false the press sent only Gmail's own rows and Mailgun's still wait — the registrations list says
    * «Mailgun reia la HH:MM», having no queue header to say it. Null while Mailgun's road was open.
    */
   stop: MailgunStop | null;
-  /** Whether Gmail carried Mailgun's groups for `stop` (§NNN). */
+  /** Whether Gmail carried Mailgun's groups for `stop` (§622). */
   carriedByGmail: boolean;
 };
 
@@ -94,7 +94,7 @@ export async function sendOutboxNow(
   // Gmail's cap and pace from the database before each Gmail message.
   const { sender, route, roads, replyTo } = await createOutboxSender(db);
   /*
-    Mailgun said stop (§NNN): with «Gmail preia când Mailgun se oprește» on and room in Gmail's day,
+    Mailgun said stop (§622): with «Gmail preia când Mailgun se oprește» on and room in Gmail's day,
     the press sends through Gmail — the claim's own rule — and says so. Otherwise it is refused with
     the sentence that names the cause and the remedy, unless a message on Gmail's own road is due,
     which the stop does not hold. Read before the throttle, like every refusal that only read something.
@@ -118,7 +118,7 @@ export async function sendOutboxNow(
   let batches = 0;
   let volume = before;
   let viaGmail = 0;
-  // The stop in force whether Gmail carries it or not (§NNN): a press that sent only Gmail's own rows still says Mailgun's wait.
+  // The stop in force whether Gmail carries it or not (§622): a press that sent only Gmail's own rows still says Mailgun's wait.
   let stop: MailgunStop | null = whileStopped.road === "mailgun" ? null : whileStopped.stop;
   let carriedByGmail = carrying;
   // Mailgun's day is not Gmail's: while Gmail carries for it, the day's counter does not stop the press.
@@ -149,7 +149,7 @@ export async function sendOutboxNow(
     if (summary.deferred > 0) break;
   }
   /*
-    Mailgun said stop during the press and nobody carried it (§NNN, the review of round three): the
+    Mailgun said stop during the press and nobody carried it (§622, the review of round three): the
     switch off or the notice missing, the batch records the stop but carries nothing, so `carried`
     is unset. The stop is read back — the volume re-read after the batch holds it — so the list still
     says «Mailgun reia la HH:MM» rather than the count alone.
@@ -169,7 +169,7 @@ export async function sendOutboxNow(
       batches,
       sentToday: volume.sentMessages,
       remaining: volume.remaining,
-      // What Gmail carried for a stopped Mailgun (§NNN): counts and the stop's kind, never an address.
+      // What Gmail carried for a stopped Mailgun (§622): counts and the stop's kind, never an address.
       ...(stop ? { viaGmail, mailgunStop: stop.kind, mailgunStopUntil: stop.until.toISOString(), carriedByGmail } : {}),
     },
     now,

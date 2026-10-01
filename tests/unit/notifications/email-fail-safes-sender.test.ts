@@ -4,7 +4,7 @@ import { createEmailSender } from "@/infrastructure/email/delivery";
 import { GMAIL_CAP_DEFERRED_ERROR, gmailAdmission, type GmailLedger } from "@/modules/notifications/domain/email-transport";
 
 /**
- * §NNN — the sender's side of «Gmail preia când Mailgun se oprește» (BR-REQ-080-02): `gmailOnly`
+ * §622 — the sender's side of «Gmail preia când Mailgun se oprește» (BR-REQ-080-02): `gmailOnly`
  * never reaches Mailgun, a refused message spills to Gmail carrying Mailgun's stop, and a bulk
  * message is never spilled. Stub adapters and ledger; no database.
  */
@@ -74,7 +74,7 @@ const message = (extra: Partial<OutgoingEmail> = {}): OutgoingEmail => ({
 
 const paused: SendResult = { outcome: "throttled", error: "mailgun 429", paced: true, rateRefused: true, retryAfter: RETRY };
 
-describe("§NNN the sender while Mailgun is stopped", () => {
+describe("§622 the sender while Mailgun is stopped", () => {
   it("hands a gmailOnly message back at Gmail's cap, even when the club chose Mailgun at the cap, and never calls Mailgun", async () => {
     const { sender, mailgun, gmail } = build({ mailgun: { outcome: "sent", providerMessageId: "mg" }, sentLastDay: 50, atGmailCap: "mailgun" });
     const result = await sender.send(message({ transport: "gmail", gmailOnly: true }));

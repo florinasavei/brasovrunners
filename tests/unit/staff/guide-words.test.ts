@@ -211,12 +211,12 @@ describe("BR-REQ-060-01 criterion 38 the guide quotes the screen's own words", (
   });
 
   /*
-    The October releases (§NNN): the owner, 2026-10-01, «Trebuie să actualizăm și documentația live
+    The October releases (§620): the owner, 2026-10-01, «Trebuie să actualizăm și documentația live
     pt voluntari». The hourly limit and the Gmail road, the bulk resend and the chosen offers are
     the Administrator's jobs, each named by the screen's own button; and the hard limits say that
     nobody is seated without their own signature. Pinned so a later rewrite cannot drop them quietly.
   */
-  it("carries the October jobs, each with the screen's own words, in both languages (§NNN)", () => {
+  it("carries the October jobs, each with the screen's own words, in both languages (§620)", () => {
     const jobs = {
       ro: {
         "Planul Mailgun, înainte și după cursă": ["«Limita pe oră»", "«Prin ce pleacă emailurile: Mailgun sau Gmail-ul clubului»", "«Cât costă»"],

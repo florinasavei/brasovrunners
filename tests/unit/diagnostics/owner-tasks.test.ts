@@ -336,7 +336,7 @@ describe("owner tasks", () => {
     ]);
   });
 
-  // §NNN: email nothing is carrying — red with the remedies, green otherwise, and always on the list.
+  // §622: email nothing is carrying — red with the remedies, green otherwise, and always on the list.
   it("turns the email fail-safe row red while a stopped row waits past ninety minutes or a message failed this week", () => {
     expect(ownerTasks(LAUNCHED).find((task) => task.id === "emailFailSafe")).toMatchObject({ owner: "club", kind: "check", state: "done" });
     expect(ownerTasks({ ...LAUNCHED, emailFailSafe: { stoppedLong: 2, failed: 0, retryingLate: 0 } }).find((task) => task.id === "emailFailSafe")).toMatchObject({
@@ -344,7 +344,7 @@ describe("owner tasks", () => {
       text: "broken",
     });
     expect(stateOf({ ...LAUNCHED, emailFailSafe: { stoppedLong: 0, failed: 1, retryingLate: 0 } }, "emailFailSafe")).toBe("broken");
-    // A transient refusal retried for ever (§NNN): red, and the steps name the refusal that does not pass.
+    // A transient refusal retried for ever (§622): red, and the steps name the refusal that does not pass.
     expect(stateOf({ ...LAUNCHED, emailFailSafe: { stoppedLong: 0, failed: 0, retryingLate: 1 } }, "emailFailSafe")).toBe("broken");
     for (const catalogue of [ro, en]) {
       const item = catalogue.Admin.tasks.items.emailFailSafe;
@@ -353,7 +353,7 @@ describe("owner tasks", () => {
     }
   });
 
-  /** §NNN — Gmail carrying while Mailgun is stopped waits on a notice that names it; open, never blocking. */
+  /** §622 — Gmail carrying while Mailgun is stopped waits on a notice that names it; open, never blocking. */
   it("keeps the Gmail-fallback notice row open while the notice in force does not name it, and says what to approve and why", () => {
     expect(stateOf({ ...LAUNCHED, gmailFallbackDescribed: false }, "gmailFallbackNotice")).toBe("open");
     expect(stateOf(LAUNCHED, "gmailFallbackNotice")).toBe("done");

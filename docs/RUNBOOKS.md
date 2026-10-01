@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V2.55-2026-10-01`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V2.56-2026-10-01`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -646,7 +646,7 @@ are the run's to open, merge and approve.
 The monitor mail from cron-job.org says `/api/health?deep=1` failed (the daily 04:02 check; the
 hourly `/api/health` is shallow since §577 and says only whether the site answers), or
 `/admin/tasks` is red at the top (`DECISIONS.md` §98), or its row «Emailuri pe care nu le duce nimeni»
-is red (§NNN). First look at «Setări» → «Emailuri» → «Coada de trimitere»: its header says whether
+is red (§622). First look at «Setări» → «Emailuri» → «Coada de trimitere»: its header says whether
 Mailgun has said stop, until when, and who carries the mail meanwhile («Mailgun în pauză până la 10:15 —
 Gmail preia», «… — Gmail nu e configurat»). **The switch:** «Prin ce pleacă emailurile» → «Gmail preia când
 Mailgun se oprește» → Da → «Salvează drumurile» (greyed «până la aprobarea notei din șablonul nou» until the
@@ -658,7 +658,7 @@ the one that is full), and returns to Mailgun on its own afterwards. While Gmail
 Meanwhile the public pages say it themselves,
 for as long as it lasts: every page that waits for an email shows «Emailurile noastre întârzie acum»
 with how many messages wait, the oldest's wait, the estimate when there is one and that the deadline
-runs from the send, and the event page and the form say it in one line (§NNN) — nothing to switch on
+runs from the send, and the event page and the form say it in one line (§623) — nothing to switch on
 or off; it goes when the queue is through. Four causes, told apart by the same page:
 
 1. **Deferred by the allowance** — Mailgun Free's 100 messages a day are spent. Nothing is
@@ -666,10 +666,10 @@ or off; it goes when the queue is through. Four causes, told apart by the same p
    If it is registration day and people are waiting for confirmations: Mailgun → Billing →
    Basic removes the daily limit the moment it is paid; then «Setări» → «Emailuri» (`/admin/settings/emails`, §516) → "The Mailgun
    plan" → Basic → save, so the counters and "Trimite acum" stop counting against a hundred
-   (`DECISIONS.md` §100) — saving also reopens Mailgun's road at once and makes the allowance-deferred rows due, so Gmail stops carrying (§NNN); the next scheduler tick — or "Trimite acum" — sends everything. When
+   (`DECISIONS.md` §100) — saving also reopens Mailgun's road at once and makes the allowance-deferred rows due, so Gmail stops carrying (§622); the next scheduler tick — or "Trimite acum" — sends everything. When
    the month is over and the plan is cancelled, set it back to Free there. `docs/PLATFORM.md`
    has the price. With «Gmail preia când Mailgun se oprește» on, the deferred rows leave through Gmail
-   at once instead (§NNN), and «Trimite acum» says «N prin Gmail — cota Mailgun epuizată până la …».
+   at once instead (§622), and «Trimite acum» says «N prin Gmail — cota Mailgun epuizată până la …».
 2. **Overdue** — messages waited more than ninety minutes for a scheduler. cron-job.org →
    the two job monitors: paused, disabled after failures, or the `JOB_SECRET` changed. Run
    `yarn smoke` on the environment; `jobs[].status` names which one is stale. Pressing
@@ -680,11 +680,11 @@ or off; it goes when the queue is through. Four causes, told apart by the same p
    attempt is spent, and no other Mailgun message is tried until the pause ends, so nothing fails.
    A row paused recently and queued longer ago than the overdue allowance turns **overdue**: ask
    Mailgun's support to lift the probation or check Sending → Logs, and lower «Limita pe oră» (90 while
-   the probation lasts). With the switch on, Gmail carries the queue during the pause (§NNN) — no SQL,
+   the probation lasts). With the switch on, Gmail carries the queue during the pause (§622) — no SQL,
    no setting by hand. Mailgun rows only waiting for the
    hour's pace (`hourPaced` in `/api/health`, «Limita pe oră» on «Emailuri») are not an alert while
    Mailgun's hour is full; a Gmail row, or a Mailgun row behind an hour with room, is.
-4. **Failed** — since §NNN only a refusal *of the message or the account*: a `401` or `403` (the
+4. **Failed** — since §622 only a refusal *of the message or the account*: a `401` or `403` (the
    `MAILGUN_API_KEY`, an unverified domain), a `400` that is not about the address ("not allowed to
    send" without the probation's words: an unverified or closed domain, an account under review), or a
    message that could not be rendered. A transient refusal (a 5xx, a timeout, a 404 — `SETUP.md` §35:

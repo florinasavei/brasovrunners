@@ -84,7 +84,7 @@
  * as a legal claim needs it, the three-year limitation period in view — never «three years from the
  * signing», which was untrue of a declaration still active.
  *
- * `{{gmailFallback}}` in section 6 (§NNN, amending §443) says that while Mailgun refuses or delays
+ * `{{gmailFallback}}` in section 6 (§622, amending §443) says that while Mailgun refuses or delays
  * sending, a message may leave through the club's Gmail mailbox (Google Ireland Ltd.) with the same
  * content and data, for the same purpose; filled with the switch's own words, quoted, and the switch's
  * precondition — «Gmail preia când Mailgun se oprește» carries a participant's message through Google

@@ -12,7 +12,7 @@ import { readEmailDelay, readEmailDelayFacts } from "@/modules/notifications/pub
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — the outbox as the pages that wait for an email read it (`readEmailDelay`), on PGlite: seeded
+ * §623 — the outbox as the pages that wait for an email read it (`readEmailDelay`), on PGlite: seeded
  * rows make it late or not, for each reason; the newsletter, the club's copies and a family's held
  * row (told by its markers) never count, while a row handed to a later run — a pace, a pause — does,
  * from its creation; a paused batch leaves `/admin/emails` and `/api/health` as they were; and the
@@ -62,7 +62,7 @@ async function insert(...rows: Array<Partial<typeof emailOutbox.$inferInsert>>) 
   await db.insert(emailOutbox).values(rows.map((overrides) => row(overrides)));
 }
 
-describe("§NNN readEmailDelay", () => {
+describe("§623 readEmailDelay", () => {
   it("is quiet on an empty outbox and on a queue inside the promised wait", async () => {
     expect(await readEmailDelay(db, NOW, 15)).toEqual({ late: false, reason: null, queued: 0, oldestWaitMinutes: 0, estimateMinutes: null });
     await insert({ createdAt: ago(20) }, { createdAt: ago(3) });
@@ -178,7 +178,7 @@ const renderAny = async (r: OutboxRow): Promise<OutgoingEmail> => ({
   idempotencyKey: r.idempotencyKey,
 });
 
-describe("§NNN a batch held behind Mailgun's pause", () => {
+describe("§623 a batch held behind Mailgun's pause", () => {
   beforeEach(() => {
     vi.stubEnv("NEXT_RUNTIME", "nodejs");
   });
@@ -212,7 +212,7 @@ describe("§NNN a batch held behind Mailgun's pause", () => {
   });
 });
 
-describe("§NNN a row Gmail's pace handed to the next run", () => {
+describe("§623 a row Gmail's pace handed to the next run", () => {
   const ROADS: OutboxRoads = { gmailMessageTypes: ["VERIFY_REGISTRATION_EMAIL"], gmailClubCopies: false, gmailBatchSize: 20 };
 
   beforeEach(() => {
@@ -245,7 +245,7 @@ describe("§NNN a row Gmail's pace handed to the next run", () => {
   });
 });
 
-describe("§NNN the outbox expires the delay's cache tag once per batch that moved the queue", () => {
+describe("§623 the outbox expires the delay's cache tag once per batch that moved the queue", () => {
   async function render(outboxRow: OutboxRow): Promise<OutgoingEmail> {
     return { to: outboxRow.recipientEmail, subject: "x", html: "<p>x</p>", text: "x", locale: outboxRow.locale, idempotencyKey: outboxRow.idempotencyKey };
   }

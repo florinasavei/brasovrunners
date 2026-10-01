@@ -145,7 +145,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
           new Date(),
         )
       : null;
-  // A newer email replaced this link (§NNN): said so, in place of the generic refusal.
+  // A newer email replaced this link (§619): said so, in place of the generic refusal.
   const replaced =
     context && !context.ok
       ? await readReplacedActionLink(token, [{ purpose: "MANAGE_REGISTRATION" as const, reason: context.reason }], locale, new Date())

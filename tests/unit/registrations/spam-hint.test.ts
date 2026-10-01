@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 /**
- * §NNN — the pages that wait for an email name Spam and Promotions in one
+ * §619 — the pages that wait for an email name Spam and Promotions in one
  * visible box, the same words everywhere — the list below is the authority on which pages.
  * Rendered with the real catalogues, in both languages.
  */
@@ -122,7 +122,7 @@ async function checkYourEmail(locale: "ro" | "en", offer?: boolean): Promise<str
   );
 }
 
-describe("§NNN the pages that wait for an email point at Spam and Promotions, visibly", () => {
+describe("§619 the pages that wait for an email point at Spam and Promotions, visibly", () => {
   it("the screen after the registration form shows the box, in Romanian and in English", async () => {
     const ro = await checkYourEmail("ro");
     expect(spamBox(ro)).toContain(SPAM_RO);

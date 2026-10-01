@@ -837,7 +837,7 @@ async function enqueueAllocationEmail<T extends Record<string, unknown>>(
     locale: allocated.locale,
     recipientEmail,
     // The declaration's message starts the hold (§513); a family's held request says so too (`familyHeld`).
-    // Held, with the instant it is let go (`familyHeldUntil`, §NNN).
+    // Held, with the instant it is let go (`familyHeldUntil`, §623).
     payload: messageType === "COMPLETE_DECLARATION" ? startingDeadline(held ? { [FAMILY_HELD]: true, ...familyHeldUntil(declarationNotBefore) } : {}) : {},
     idempotencyKey,
     now,
@@ -3395,7 +3395,7 @@ export async function unregister<T extends Record<string, unknown>>(
      */
     reason?: CancelReason;
     /**
-     * A staff cancellation that is the club refusing the registration under the terms (§NNN): the
+     * A staff cancellation that is the club refusing the registration under the terms (§618): the
      * ground the Administrator typed under a box that said it goes to the person. Written into the
      * message's payload, so the cancellation email names it; never on the row.
      */

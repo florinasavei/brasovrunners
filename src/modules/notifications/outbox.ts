@@ -336,7 +336,7 @@ export type OutboxRoads = {
   gmailClubCopies: boolean;
   gmailBatchSize: number;
   /**
-   * «Gmail preia când Mailgun se oprește» as it acts (§NNN, `fallbackActive`): while Mailgun's road is
+   * «Gmail preia când Mailgun se oprește» as it acts (§622, `fallbackActive`): while Mailgun's road is
    * stopped, every group's due rows are claimed on Gmail's road. Absent or false, a stop holds Mailgun's
    * rows as before.
    */
@@ -405,7 +405,7 @@ export async function claimOutboxBatch(db: Db, params: ClaimParams): Promise<Out
 type ClaimParams = Parameters<typeof claimOutboxBatchWithStop>[1];
 
 /**
- * The claim itself, with what it read about Mailgun's road (§NNN): the stop in force, and whether
+ * The claim itself, with what it read about Mailgun's road (§622): the stop in force, and whether
  * this claim put every group on Gmail's road for it (`carried`). `claimOutboxBatch` is this, rows only;
  * `processOutboxBatch` needs the rest to send the carried rows by Gmail alone. One claim, one lock.
  */
@@ -502,13 +502,13 @@ async function claimOutboxBatchWithStop(
       SKIP LOCKED, together going over the hour — what disables an account on probation. A
       transaction-scoped advisory lock, taken before the count, makes the second claimer wait the
       few milliseconds the first needs to commit; its count then sees the first's PROCESSING rows as
-      in flight. Released at commit or rollback. Since §NNN taken whether a pace is set or not: the
+      in flight. Released at commit or rollback. Since §622 taken whether a pace is set or not: the
       stop below is read under it too, so a pause holds the road with no pace as with one.
     */
     await tx.execute(sql`select pg_advisory_xact_lock(${MAILGUN_HOUR_LOCK_KEY})`);
     const hour = hourlyAllowance === null ? null : await readMailgunHour(tx, now, { mailgunRoad, hourlyAllowance });
     /*
-      Mailgun said stop (§605, §NNN): a pause it asked for, or its allowance spent — read from the
+      Mailgun said stop (§605, §622): a pause it asked for, or its allowance spent — read from the
       waiting rows' marks and the stop record, in one query under the same lock, **whatever the pace**
       (BR-V2.53 read it only with a pace set, so a club that cleared «Limita pe oră» knocked on through
       a pause). A pause holds Mailgun's whole road — not only the batch the refusal happened in: knocking
@@ -517,7 +517,7 @@ async function claimOutboxBatchWithStop(
     const stop = await readMailgunStop(tx, now, mailgunRoad);
     /*
       And while it is stopped, with «Gmail preia când Mailgun se oprește» on, Gmail carries every group
-      (§NNN): Mailgun's road takes nothing, and Gmail's claim takes every due row — Mailgun's held rows
+      (§622): Mailgun's road takes nothing, and Gmail's claim takes every due row — Mailgun's held rows
       at once, their `next_attempt_at` being Mailgun's deferral, not the message's turn — as many as
       Gmail's pace lets one batch send. Its cap is the sender's to keep, row by row. With the switch
       off, BR-V2.53's road: a pause holds Mailgun's rows, a spent allowance does not (the provider's own
@@ -530,7 +530,7 @@ async function claimOutboxBatchWithStop(
     const gmailLimit = Math.min(batchSize, roads?.gmailBatchSize ?? batchSize);
     const heldNow = and(eq(emailOutbox.status, "PENDING"), heldByMailgunCondition(), params.ids ? inArray(emailOutbox.id, [...params.ids]) : undefined);
     const gmail = carried
-      ? // The newsletter and the new-event alert stay on Mailgun's road during a stop unless the club routed them to Gmail (§443, §NNN).
+      ? // The newsletter and the new-event alert stay on Mailgun's road during a stop unless the club routed them to Gmail (§443, §622).
         await claimRoadWhere(and(or(due, heldNow), gmailRoad ? or(not(bulk), gmailRoad) : not(bulk)), gmailLimit)
       : gmailRoad
         ? await claimRoad(gmailRoad, gmailLimit, null)
@@ -581,7 +581,7 @@ export type OutboxBatchSummary = {
   failed: number;
   bounced: number;
   /**
-   * Gmail carried for Mailgun in this batch (§NNN): the stop it carried for, and how many it sent.
+   * Gmail carried for Mailgun in this batch (§622): the stop it carried for, and how many it sent.
    * Absent when no stop was carried — the ordinary batch, whose summary is the six counts above.
    */
   carried?: { stop: MailgunStop; viaGmail: number };
@@ -673,11 +673,11 @@ export async function processOutboxBatch(
     the same instant, with the same reason and their attempt given back. Gmail's rows still go.
   */
   let mailgunPause: { until: Date; error: string } | null = null;
-  // Messages withdrawn in this batch (deleted unsent): they leave the queue the public delay counts (§NNN).
+  // Messages withdrawn in this batch (deleted unsent): they leave the queue the public delay counts (§623).
   let withdrawn = 0;
 
   /*
-    Gmail carries for Mailgun (§NNN): the stop the claim read, when it put every group on Gmail's road
+    Gmail carries for Mailgun (§622): the stop the claim read, when it put every group on Gmail's road
     — or one Mailgun announces during this batch, with «Gmail preia când Mailgun se oprește» on. While
     it is set, every row of the batch leaves by Gmail alone (`gmailOnly`): Gmail's cap and pace as ever,
     and a row Gmail cannot take now is held for Gmail's room or Mailgun's return, never sent to Mailgun.
@@ -685,9 +685,9 @@ export async function processOutboxBatch(
   const fallbackOn = roads?.fallbackToGmail === true;
   let viaGmail = 0;
   let carrying: MailgunStop | null = claim.carried ? claim.stop : null;
-  // Whether this batch has written the stop it carries for as the record (§NNN: before a relabel, below).
+  // Whether this batch has written the stop it carries for as the record (§622: before a relabel, below).
   let stopKept = false;
-  /** Mailgun refused the account (§NNN): the stop is recorded, and with the switch on Gmail carries the rest. */
+  /** Mailgun refused the account (§622): the stop is recorded, and with the switch on Gmail carries the rest. */
   const mailgunStopped = async (stop: MailgunStop): Promise<void> => {
     await recordMailgunStop(db, stop, clock()).catch((error: unknown) => {
       console.error("[email-outbox] the stop could not be recorded", error);
@@ -707,7 +707,7 @@ export async function processOutboxBatch(
         continue;
       }
       if (carrying && isBulkMessage(row.messageType) && !(roads && onGmailRoad(row, roads))) {
-        // Mailgun's stop began mid-batch: a bulk row waits for Mailgun, never a personal Gmail (§443, §NNN).
+        // Mailgun's stop began mid-batch: a bulk row waits for Mailgun, never a personal Gmail (§443, §622).
         await releaseForPause(db, row, carrying.until, null);
         summary.deferred += 1;
         continue;
@@ -748,7 +748,7 @@ export async function processOutboxBatch(
       }
 
       /*
-        Mailgun refused the account and the message spilled to Gmail (§NNN): whatever Gmail answered —
+        Mailgun refused the account and the message spilled to Gmail (§622): whatever Gmail answered —
         sent, paced, a refused address, a connection that broke — the stop Mailgun announced still
         closes its road. Recorded before the outcome is handled, so the next claim neither knocks on
         Mailgun during it nor reads an open road because the refused row has left or was closed.
@@ -815,7 +815,7 @@ export async function processOutboxBatch(
       const error = sanitizeProviderError(result.error);
 
       /*
-        Mailgun is stopped and Gmail could not take this one now (§NNN): its cap is spent, or it refused
+        Mailgun is stopped and Gmail could not take this one now (§622): its cap is spent, or it refused
         the connection in this batch. Not a refusal of the message — the attempt is given back — and
         not Mailgun's to try during its stop: the row waits for Gmail's room or a quarter of an hour,
         never past the moment Mailgun's road opens again, where it is Mailgun's once more. Its reason
@@ -854,7 +854,7 @@ export async function processOutboxBatch(
         Paused by Mailgun for the rate (§605): the attempt given back, as for Gmail's pace below, so no
         number of pauses ever spends an attempt — `MAX_SEND_ATTEMPTS` counts refusals of the message,
         and this is not one. The reason stays on the row (marked, for `/api/health`), the row is due
-        again when Mailgun said, and the stop is recorded (§NNN): the batch's other Mailgun rows wait
+        again when Mailgun said, and the stop is recorded (§622): the batch's other Mailgun rows wait
         with it — and so does every other Mailgun row until then, the claim's own rule — unless the
         club's switch hands them to Gmail, which then carries the rest of this batch and the next
         claim takes this one at once on Gmail's road. Counted as deferred, like the daily allowance:
@@ -893,7 +893,7 @@ export async function processOutboxBatch(
        * The allowance is spent, not the message rejected. Nothing was transmitted.
        *
        * Scheduled for the reset the adapter names, or the next daily one, instead of the
-       * one-to-thirty-two-minute backoff below. Since §NNN marked (`ALLOWANCE_DEFERRED_ERROR_PREFIX`)
+       * one-to-thirty-two-minute backoff below. Since §622 marked (`ALLOWANCE_DEFERRED_ERROR_PREFIX`)
        * and recorded as Mailgun's stop: with «Gmail preia când Mailgun se oprește» on, the next claim
        * takes it at once on Gmail's road, and the rest of this batch goes by Gmail. A row waiting out
        * Gmail's own cap because the club chose to wait (`GMAIL_CAP_DEFERRED_ERROR`, §493) is the
@@ -920,7 +920,7 @@ export async function processOutboxBatch(
         /*
           BR-REQ-080-02 criterion 4: a permanent failure is not retried. Suppressing *further* messages
           to that address needs the provider's webhook verdict (BR-REQ-080-04), which is not built; this
-          half — never retrying this message — is. Since §NNN only the address's own refusal is BOUNCED:
+          half — never retrying this message — is. Since §622 only the address's own refusal is BOUNCED:
           a refusal of the account or the message (bad credentials, an unverified or closed domain, a
           malformed message) is FAILED — the club's to fix, then «Reîncearcă emailurile eșuate».
         */
@@ -936,7 +936,7 @@ export async function processOutboxBatch(
 
       /*
         A transient refusal — a 5xx, a timeout, a dropped connection — is never the end of a message
-        (§NNN, amending §40): a message is the club's promise to a runner, and an outage is the
+        (§622, amending §40): a message is the club's promise to a runner, and an outage is the
         provider's problem, not the runner's. Past `MAX_SEND_ATTEMPTS` the row stays PENDING and is
         tried again hourly (the backoff's own ceiling, `MAX_RETRY_DELAY_MS`), its attempt count kept
         for the record; `/api/health`'s «overdue» is the alarm for one that stays stuck. FAILED is for
@@ -973,7 +973,7 @@ export async function processOutboxBatch(
   }
 
   /*
-    The pages that wait for an email say when the queue is late (§NNN, `cachedEmailDelay`): once per
+    The pages that wait for an email say when the queue is late (§623, `cachedEmailDelay`): once per
     batch that moved it — a send, a pause or a deferral, a message given up on or withdrawn — never per row, and
     nothing for a batch that claimed nothing or only scheduled a retry.
   */

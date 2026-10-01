@@ -50,7 +50,7 @@ export default async function EmailTransportPanel({ locale, setting, volume, may
   const viaGmail = EMAIL_GROUPS.filter((group) => setting.groups[group] === "gmail").length;
   // Recent: within the rolling day Gmail's cap counts — older, it is history, not a warning.
   const recentFailure = volume.gmailFailedLastDay;
-  // The switch as it acts, and why it is greyed (§NNN): Gmail not configured here, or the notice in force not naming it yet.
+  // The switch as it acts, and why it is greyed (§622): Gmail not configured here, or the notice in force not naming it yet.
   const fallbackOn = fallbackActive(setting, volume.gmailConfigured, volume.fallbackDisclosed);
   const fallbackGreyed = fallbackUnavailable(volume.gmailConfigured, volume.fallbackDisclosed);
   const namesOf = (group: (typeof EMAIL_GROUPS)[number]) =>
@@ -119,7 +119,7 @@ export default async function EmailTransportPanel({ locale, setting, volume, may
                 {t(`emails.transport.groups.${group}.label`)}: {t(`emails.transport.options.${setting.groups[group]}`)}
               </Typography>
             ))}
-            {/* The switch, said to whoever only reads (§NNN). */}
+            {/* The switch, said to whoever only reads (§622). */}
             <Typography component="li" variant="body2" data-testid="email-transport-fallback-state">
               {t("emails.transport.fallback")}: {t(`emails.transport.fallbackOptions.${fallbackOn ? "yes" : "no"}`)}
               {fallbackGreyed === "noticeMissing" && ` — ${t("emails.transport.fallbackNotice")}`}
@@ -225,7 +225,7 @@ export default async function EmailTransportPanel({ locale, setting, volume, may
                 <option value="no">{t("emails.transport.overflowOptions.no")}</option>
               </RecallField>
               {/*
-                «Gmail preia când Mailgun se oprește» (§NNN): on by default where Gmail is configured and the
+                «Gmail preia când Mailgun se oprește» (§622): on by default where Gmail is configured and the
                 privacy notice in force names it, and greyed with the reason otherwise — Gmail not configured,
                 or «până la aprobarea notei din șablonul nou». A disabled box posts nothing, and the service
                 then keeps what is stored rather than reading the grey as «no».

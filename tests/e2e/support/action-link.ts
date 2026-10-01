@@ -176,7 +176,7 @@ export async function mintActionLink(
       // One live token per registration and purpose (the partial unique index): supersede, then add —
       // for every purpose but the family link, which the index leaves out and the real send never
       // supersedes (§389, §420). The superseded rows point at the new one, as `issueActionToken`
-      // leaves them (§NNN), so their pages say a newer email replaced them.
+      // leaves them (§619), so their pages say a newer email replaced them.
       const superseded =
         purpose === "REGISTER_ANOTHER_PERSON"
           ? []

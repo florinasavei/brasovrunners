@@ -38,7 +38,7 @@ export const TASK_TARGETS: Partial<Record<TaskId, TaskTarget>> = {
   inviteStaff: { kind: "section", section: "staff" },
   // The race is one save and a publish on «Evenimente» (`SETUP.md` §39).
   publishEvents: { kind: "section", section: "events" },
-  // The queue, its stop header and «Reîncearcă emailurile eșuate» (§NNN); the switch and the cap are the panel above it.
+  // The queue, its stop header and «Reîncearcă emailurile eșuate» (§622); the switch and the cap are the panel above it.
   emailFailSafe: { kind: "settings", tab: "emails", hash: "outbox-queue" },
   // What each job did and how often it may run (§334).
   scheduler: { kind: "settings", tab: "costs", hash: "job-cadence" },

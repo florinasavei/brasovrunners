@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.55-2026-10-01 -->
+<!-- PROJECT_BASELINE: BR-V2.56-2026-10-01 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V2.55-2026-10-01`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.56-2026-10-01`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -2234,7 +2234,7 @@ Token pages:
 - tokens redacted from logs/errors/traces;
 - generic invalid/expired response with resend path.
 
-Two refusals say more, by the same argument — each is reachable only by an exact match on the token's hash, so it tells the holder nothing the email in their hand did not: a spent link says where the registration stands (`DECISIONS.md` §202), and a link superseded by a newer one of the same purpose and scope (`superseded_by_token_id`) says a newer email has the working link, when it was sent, and to look in Spam and Promotions (§NNN), while every other refusal — an unknown token, another endpoint's, one revoked for cause, an expired one — keeps the one generic response.
+Two refusals say more, by the same argument — each is reachable only by an exact match on the token's hash, so it tells the holder nothing the email in their hand did not: a spent link says where the registration stands (`DECISIONS.md` §202), and a link superseded by a newer one of the same purpose and scope (`superseded_by_token_id`) says a newer email has the working link, when it was sent, and to look in Spam and Promotions (§619), while every other refusal — an unknown token, another endpoint's, one revoked for cause, an expired one — keeps the one generic response.
 
 ### 13.3 Participant action authorization
 

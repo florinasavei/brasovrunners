@@ -381,7 +381,7 @@ export async function correctRegisteredNameAction(_previous: FormOutcome | null,
 
 /**
  * Cancel, with a reason. A refusal keeps the reason typed (§315). The box «Clubul refuză
- * înscrierea, potrivit termenilor» (§NNN) makes it the club's refusal: the reason goes to the
+ * înscrierea, potrivit termenilor» (§618) makes it the club's refusal: the reason goes to the
  * person as the ground — the box's own words say so before the press. Only the page's form has the
  * box; the list's row menu posts none, so it stays an ordinary cancellation.
  */
@@ -744,7 +744,7 @@ export async function sendOutboxNowAction(_previous: FormOutcome | null, form: F
   const returnTo = listQuery ? `${listPath}?${listQuery}` : listPath;
 
   let sent = 0;
-  // Gmail carried for a stopped Mailgun (§NNN): how many, why and until when, as the emails page says it.
+  // Gmail carried for a stopped Mailgun (§622): how many, why and until when, as the emails page says it.
   let carried = "";
   try {
     const actor = await requireStaffCapability(canManageRegistrations);

@@ -129,12 +129,12 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
 
   const current = await searchParams;
   const { eventId, status, clubMember, bounced, promo, q, saved, error, cancelled, erased, failed, sent, erase, marked, voided, test } = current;
-  // What «Trimite acum» said about Mailgun's stop (§NNN): from the action's own address; unreadable says nothing.
+  // What «Trimite acum» said about Mailgun's stop (§622): from the action's own address; unreadable says nothing.
   const untilParsed = current.until ? new Date(current.until) : null;
   const untilAt = untilParsed && !Number.isNaN(untilParsed.getTime()) ? untilParsed : null;
   const carriedKind = current.stop === "paused" || current.stop === "allowance" ? current.stop : null;
   const carriedCount = current.gmail && /^\d{1,9}$/.test(current.gmail) ? Number(current.gmail) : null;
-  // A press during a stop nobody carried (§NNN): Mailgun's rows still wait, and this list has no queue header to say so.
+  // A press during a stop nobody carried (§622): Mailgun's rows still wait, and this list has no queue header to say so.
   const mailgunHeld = current.held === "1";
   const stopNow = new Date();
   // The printed numbers a bulk cancel just made void (§311), as the action wrote them: digits

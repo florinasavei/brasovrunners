@@ -21,7 +21,7 @@
  * the list's states only where the notice the runner was given does (§396). §10 has no compulsory
  * pre-litigation step and no forum at the club's seat, and points to ANSPDCP, not SAL-ANPC.
  *
- * §3's last paragraph (§NNN, amending §418): the club refuses or cancels a registration only on the
+ * §3's last paragraph (§618, amending §418): the club refuses or cancels a registration only on the
  * objective grounds it names, says the ground by email (the staff cancel's «Clubul refuză
  * înscrierea…» box), releases the place by the ordinary rules, and never on a ground the law
  * forbids. It sits in §3, which §1 lists among the clauses accepted expressly (art. 1203: cancelling

@@ -50,7 +50,7 @@ export default async function ListConsentPage({ params, searchParams }: Props) {
   // One token read for the page — throttled per presented token. After a refused POST the
   // link is known to be dead, so it is not charged a second attempt for saying so.
   const context = invalid ? null : await readListConsent(getDb(), token, locale, new Date());
-  // A newer email replaced this link (§NNN) — a resent confirmation carries a new one: said so.
+  // A newer email replaced this link (§619) — a resent confirmation carries a new one: said so.
   const replaced =
     context && !context.ok
       ? await readReplacedActionLink(token, [{ purpose: "LIST_CONSENT", reason: context.reason }], locale, new Date())

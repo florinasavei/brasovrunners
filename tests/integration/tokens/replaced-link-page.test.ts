@@ -14,7 +14,7 @@ import { withClientWords } from "../../helpers/client-words";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — a link a newer email replaced says so (BR-REQ-036-02).
+ * §619 — a link a newer email replaced says so (BR-REQ-036-02).
  *
  * What happened: a resend mints a new link at send time (`notifications/render.ts`) and invalidates
  * the older one; the person who then pressed the older email read «Acest link nu mai este valabil»,
@@ -90,7 +90,7 @@ async function confirmPage(token: string, locale: "ro" | "en"): Promise<string> 
   return await html(element);
 }
 
-describe("BR-REQ-036-02 §NNN a link a newer email replaced", () => {
+describe("BR-REQ-036-02 §619 a link a newer email replaced", () => {
   let participantId: string;
   let registrationId: string;
   let adminId: string;

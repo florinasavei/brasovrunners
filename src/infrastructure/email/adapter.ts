@@ -46,7 +46,7 @@ export type OutgoingEmail = {
    */
   transport?: EmailTransportName;
   /**
-   * Mailgun said stop and the club's switch hands its mail to Gmail (§NNN): Gmail's road or none —
+   * Mailgun said stop and the club's switch hands its mail to Gmail (§622): Gmail's road or none —
    * never Mailgun's, whatever Gmail answers. A message Gmail cannot take now (its cap, a refused
    * login) is handed back for the outbox to hold, rather than knocking on Mailgun during its pause.
    */
@@ -59,7 +59,7 @@ export type OutgoingEmail = {
 };
 
 /**
- * Mailgun's own refusal of the account (§NNN), carried on a result the sender got elsewhere — Gmail
+ * Mailgun's own refusal of the account (§622), carried on a result the sender got elsewhere — Gmail
  * took the message after Mailgun said stop — so the outbox still learns that Mailgun's road is
  * closed and until when, and does not knock on it with the next message.
  */
@@ -109,7 +109,7 @@ export type SendResult =
        * moment the send returned (§605), never the batch's start.
        */
       acceptedAt?: Date;
-      /** Mailgun refused it first, for the account and not the message (§NNN); Gmail carried it. */
+      /** Mailgun refused it first, for the account and not the message (§622); Gmail carried it. */
       mailgunStopped?: MailgunStopped;
     }
   | {
@@ -130,7 +130,7 @@ export type SendResult =
       /** How many recipients the server took all the same — the copies — for Gmail's daily ledger. */
       acceptedRecipients?: number;
       /**
-       * Mailgun refused it first, for the account (§NNN), and the spill to Gmail ended here — the
+       * Mailgun refused it first, for the account (§622), and the spill to Gmail ended here — the
        * connection broke where Gmail may have taken it. The stop still closes Mailgun's road.
        */
       mailgunStopped?: MailgunStopped;
@@ -158,14 +158,14 @@ export type SendResult =
        * know", and the outbox falls back to the next daily reset.
        */
       retryAfter?: Date;
-      /** Mailgun refused it first, for the account (§NNN), and Gmail handed it back for its pace. */
+      /** Mailgun refused it first, for the account (§622), and Gmail handed it back for its pace. */
       mailgunStopped?: MailgunStopped;
     }
   | {
       outcome: "permanent_failure";
       error: string;
       /**
-       * The refusal is about the account or the message, not the recipient's address (§NNN): bad
+       * The refusal is about the account or the message, not the recipient's address (§622): bad
        * credentials, an unverified or closed domain, a malformed message. The outbox marks it FAILED —
        * a person can fix it and press «Reîncearcă emailurile eșuate» — rather than BOUNCED, which is
        * an address that does not exist and is never tried again.
@@ -177,7 +177,7 @@ export type SendResult =
        */
       acceptedRecipients?: number;
       /**
-       * Mailgun refused it first, for the account (§NNN), and Gmail then refused the address for good.
+       * Mailgun refused it first, for the account (§622), and Gmail then refused the address for good.
        * The message is BOUNCED; the stop Mailgun announced still closes its road.
        */
       mailgunStopped?: MailgunStopped;

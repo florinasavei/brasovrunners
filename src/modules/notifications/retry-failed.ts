@@ -10,7 +10,7 @@ import { drainOutboxAfterResponse } from "./drain";
 import { EMAIL_HEALTH_THRESHOLDS } from "./health";
 
 /**
- * «Reîncearcă emailurile eșuate» (§NNN): an Administrator's button on the queue panel instead of the
+ * «Reîncearcă emailurile eșuate» (§622): an Administrator's button on the queue panel instead of the
  * SQL the owner ran from a phone on the probation's day. Every FAILED row of the last seven days —
  * `/api/health`'s own window, so the button empties exactly what the alarm counts — goes back to the
  * queue: PENDING, its attempt count back to 0, due now, its `last_error` kept so the queue still says

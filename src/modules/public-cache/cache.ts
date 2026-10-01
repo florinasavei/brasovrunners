@@ -76,7 +76,7 @@ export type PublicContent =
   /** The settings a public page reads: who receives the contact form, the bot check and the club's deadlines ("Termene", §377). */
   | "settings"
   /**
-   * Whether the club's emails are late (§NNN, `cachedEmailDelay`): the outbox's queue as the pages
+   * Whether the club's emails are late (§623, `cachedEmailDelay`): the outbox's queue as the pages
    * that wait for an email say it. Expired by the outbox itself, once per batch that sent, deferred
    * or gave up on a message (`processOutboxBatch`) — never per row.
    */
@@ -157,7 +157,7 @@ export async function publicRead<T>(
   load: () => Promise<T>,
   /**
    * A shorter ceiling than the day's, in seconds, for an answer that changes with time and no write
-   * announces it: the email queue's (§NNN), a minute. Stretched by the month's budget like the day's.
+   * announces it: the email queue's (§623), a minute. Stretched by the month's budget like the day's.
    */
   ceilingSeconds: number = PUBLIC_CACHE_CEILING_SECONDS,
 ): Promise<T> {
@@ -180,7 +180,7 @@ export async function publicRead<T>(
     for what registrations change — free places and the start list: a stale "3 locuri libere" is a
     form filled in for a place that is gone, and a stale list shows a name its owner withdrew
     (AGENTS.md §10.6, §281). Those miss honestly and their pages say they cannot tell just now.
-    Nor for the email queue (§NNN): an old «emailurile întârzie» is as wrong as an old silence, and a
+    Nor for the email queue (§623): an old «emailurile întârzie» is as wrong as an old silence, and a
     page that cannot ask says nothing about it.
   */
   const copyKey = contents.includes("places") || contents.includes("email") ? null : `cache:${key.map(String).join(":")}`;

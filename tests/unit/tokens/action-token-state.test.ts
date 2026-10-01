@@ -72,7 +72,7 @@ describe("BR-REQ-036-02 when an action token may be acted on", () => {
       ).toEqual({ ok: false, code: "TOKEN_INVALID", reason: "ALREADY_USED" });
     });
 
-    it("rejects a token that a newer one superseded, and names it SUPERSEDED (§NNN)", () => {
+    it("rejects a token that a newer one superseded, and names it SUPERSEDED (§619)", () => {
       expect(
         evaluateActionToken(
           token({ invalidatedAt: new Date("2026-09-02T10:00:00.000Z"), supersededByTokenId: NEWER_ID }),
@@ -82,7 +82,7 @@ describe("BR-REQ-036-02 when an action token may be acted on", () => {
       ).toEqual({ ok: false, code: "TOKEN_INVALID", reason: "SUPERSEDED" });
     });
 
-    it("rejects a token revoked for cause as INVALIDATED — never SUPERSEDED without the column (§NNN)", () => {
+    it("rejects a token revoked for cause as INVALIDATED — never SUPERSEDED without the column (§619)", () => {
       expect(
         evaluateActionToken(
           token({ invalidatedAt: new Date("2026-09-02T10:00:00.000Z") }),
@@ -92,7 +92,7 @@ describe("BR-REQ-036-02 when an action token may be acted on", () => {
       ).toEqual({ ok: false, code: "TOKEN_INVALID", reason: "INVALIDATED" });
     });
 
-    it("still reports a purpose mismatch before a superseded row, so a replayed link names nothing (§NNN)", () => {
+    it("still reports a purpose mismatch before a superseded row, so a replayed link names nothing (§619)", () => {
       const superseded = token({ invalidatedAt: new Date("2026-09-02T10:00:00.000Z"), supersededByTokenId: NEWER_ID });
       expect(evaluateActionToken(superseded, "COMPLETE_DECLARATION", NOW)).toEqual({
         ok: false,
@@ -101,7 +101,7 @@ describe("BR-REQ-036-02 when an action token may be acted on", () => {
       });
     });
 
-    it("reports a superseded token past its expiry as superseded: the newer email is still the answer (§NNN)", () => {
+    it("reports a superseded token past its expiry as superseded: the newer email is still the answer (§619)", () => {
       const supersededAndExpired = token({
         invalidatedAt: new Date("2026-09-02T10:00:00.000Z"),
         supersededByTokenId: NEWER_ID,

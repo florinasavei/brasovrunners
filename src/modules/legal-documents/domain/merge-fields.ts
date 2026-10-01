@@ -247,7 +247,7 @@ export const PROMOTIONAL_MATERIALS_SHARED_MERGE_FIELD = "promotionalMaterialsSha
 
 /**
  * The privacy notice's marker for Gmail carrying the platform's mail while Mailgun is stopped
- * (§NNN, amending §443): a notice that names it says that when the club's email provider refuses or
+ * (§622, amending §443): a notice that names it says that when the club's email provider refuses or
  * delays sending, a message may leave through the club's Gmail mailbox (Google Ireland Ltd.) with
  * the same content and data, for the same purpose. Filled with the switch's own words, quoted
  * (`notifications/fallback-notice-words.ts`), the same two-in-one as `{{promotionalMaterials}}`:
@@ -506,7 +506,7 @@ export function describesPromotionalMaterialsShared(body: unknown): boolean {
 
 /**
  * Whether a privacy notice says a message may leave through the club's Gmail while Mailgun is
- * stopped (§NNN): it names `{{gmailFallback}}`. The gate for «Gmail preia când Mailgun se oprește» —
+ * stopped (§622): it names `{{gmailFallback}}`. The gate for «Gmail preia când Mailgun se oprește» —
  * the club's approval of such a text is the switch's precondition, as for the list's states (§396).
  * Pure; the caller asks it of the notice in force, in every language.
  */

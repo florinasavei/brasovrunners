@@ -173,7 +173,7 @@ export type AuditAction =
   /** The outbox drained by hand from the backoffice, within the day's allowance (`DECISIONS.md` §80). */
   | "outbox.sent_by_staff"
   /**
-   * «Reîncearcă emailurile eșuate» (§NNN): the week's FAILED rows put back in the queue — how many and
+   * «Reîncearcă emailurile eșuate» (§622): the week's FAILED rows put back in the queue — how many and
    * who pressed, never an address or a message.
    */
   | "email_outbox.retry_failed"

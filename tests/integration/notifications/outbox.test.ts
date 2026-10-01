@@ -283,7 +283,7 @@ describe("BR-REQ-080-02 transactional outbox", () => {
       expect(sender.calls).toHaveLength(2);
     });
 
-    it("keeps a transient refusal past the attempt ceiling waiting, retried hourly, never FAILED (§NNN)", async () => {
+    it("keeps a transient refusal past the attempt ceiling waiting, retried hourly, never FAILED (§622)", async () => {
       await queueOne();
       const sender = recordingSender({ outcome: "transient_failure", error: "502" });
       let clock = NOW;

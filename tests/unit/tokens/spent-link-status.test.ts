@@ -72,7 +72,7 @@ describe("BR-REQ-036-02 which refusals may report where the person is", () => {
    * The four reasons that stay generic, each for its own reason (`link-status.ts` argues them):
    * NOT_FOUND has no state to report; PURPOSE_MISMATCH must stay indistinguishable from it;
    * EXPIRED was never used, so nothing was done; INVALIDATED is a link revoked for cause.
-   * SUPERSEDED reports no state either: its own sentence is `mayReportReplaced`'s (§NNN).
+   * SUPERSEDED reports no state either: its own sentence is `mayReportReplaced`'s (§619).
    */
   it.each(["NOT_FOUND", "PURPOSE_MISMATCH", "SUPERSEDED", "INVALIDATED", "EXPIRED"] as const)(
     "keeps %s generic for every purpose and every registration state",
@@ -95,10 +95,10 @@ describe("BR-REQ-036-02 which refusals may report where the person is", () => {
 });
 
 /**
- * §NNN — a link a newer email replaced says so; every other refusal keeps the generic answer. The
+ * §619 — a link a newer email replaced says so; every other refusal keeps the generic answer. The
  * same table shape as the state half above, for the same reason: the security half is one boolean.
  */
-describe("BR-REQ-036-02 which refusals may say a newer email replaced the link (§NNN)", () => {
+describe("BR-REQ-036-02 which refusals may say a newer email replaced the link (§619)", () => {
   const ALL_PURPOSES: readonly EmailActionTokenPurpose[] = [...PURPOSES, "LIST_CONSENT", "REGISTER_ANOTHER_PERSON"];
 
   it("opens for SUPERSEDED on every purpose a newer link can replace, and for nothing else", () => {

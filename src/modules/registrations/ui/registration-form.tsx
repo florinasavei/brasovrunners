@@ -1257,7 +1257,7 @@ export async function registrationForm({
             fullWidth
           />
           )}
-          {/* Under the send button, while the club's emails are late (§NNN): one line, before the press. */}
+          {/* Under the send button, while the club's emails are late (§623): one line, before the press. */}
           {!preview && !resting && (await emailDelayNotice({ variant: "short" }))}
         </Stack>
         </Box>

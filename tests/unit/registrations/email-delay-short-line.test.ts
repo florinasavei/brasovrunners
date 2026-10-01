@@ -8,7 +8,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN — before anybody asks for an email: the event page's registration box and the form's send
+ * §623 — before anybody asks for an email: the event page's registration box and the form's send
  * button say it in one line, «Confirmarea pe email întârzie azi», while the club's emails are late —
  * under the club's own button only, never in the editor's preview — and nothing otherwise, the markup
  * byte for byte what it is without the line. The form is rendered as `form-helpers.test.ts` renders
@@ -141,7 +141,7 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-describe("§NNN one line before anybody presses", () => {
+describe("§623 one line before anybody presses", () => {
   for (const locale of ["ro", "en"] as const) {
     it(`under the form's send button, and nothing when the emails are on time (${locale})`, async () => {
       state.locale = locale;

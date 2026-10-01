@@ -62,7 +62,7 @@ export function forgetRegisteredBadgeCount(): void {
 
 /**
  * One upcoming event's share of the badge: its title in the reader's language, how many people
- * have an active registration, and who among them holds a place (§255, amended by §NNN). `count` is always `withPlace + awaitingEmail + waitlisted`.
+ * have an active registration, and who among them holds a place (§255, amended by §621). `count` is always `withPlace + awaitingEmail + waitlisted`.
  *
  * `withPlace` is what the allocator's `computeOccupied` counts for the event's registrations: CONFIRMED,
  * PENDING_DECLARATION, a WAITLIST_OFFERED that has not lapsed, and a family's reservation (§543), which is
@@ -190,7 +190,7 @@ export type BadgeHintWords = {
 };
 
 /**
- * The tab's tooltip text (§NNN): what the number is and is not, then each upcoming
+ * The tab's tooltip text (§621): what the number is and is not, then each upcoming
  * event with its total and who holds a place — "153 — 144 of 150 places taken, 9 awaiting the
  * email confirmation" — a zero part omitted except the places; the first `BADGE_HINT_EVENTS` by
  * start and how many more after them. Pure, so both languages are tested against the catalogues.
