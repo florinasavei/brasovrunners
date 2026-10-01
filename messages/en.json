@@ -6348,8 +6348,18 @@
       "now": {
         "details": "We will then email you to confirm your address.",
         "confirm": "We have sent you a confirmation link.",
-        "declare": "One step left: read and sign the declaration — here, or on paper at the registration desk on race day. Your place is held. Once you sign, we email you the signed declaration (PDF) and your race number — usually within a few minutes, within the hour at the latest.",
-        "declareScheduled": "One step left: read and sign the declaration — here, or on paper at the registration desk on race day. Your place is held. Once you sign, we email you the signed declaration (PDF) and your race number — it leaves on the platform's scheduled round, within {wait} at the most.",
+        "declare": {
+          "emailJustSent": "One step left: read and sign the declaration from the email we have just sent you — or on paper at the registration desk on race day. Your place is held. Once you sign, we email you the signed declaration (PDF) and your race number — usually within a few minutes, within the hour at the latest.",
+          "emailHeldUntil": "Your place is held. We ask for the declaration by email {opens} before the start — you sign it then, online or on paper at the registration desk; once you sign, we email you the signed declaration (PDF) and your race number — usually within a few minutes, within the hour at the latest.",
+          "onThisPage": "One step left: read and sign the declaration below — or on paper at the registration desk on race day. Your place is held. Once you sign, we email you the signed declaration (PDF) and your race number — usually within a few minutes, within the hour at the latest.",
+          "emailReceived": "One step left: read and sign the declaration from the email you received — or on paper at the registration desk on race day. Your place is held. Once you sign, we email you the signed declaration (PDF) and your race number — usually within a few minutes, within the hour at the latest."
+        },
+        "declareScheduled": {
+          "emailJustSent": "One step left: read and sign the declaration from the email on its way to you — it leaves within {wait} at the most — or on paper at the registration desk on race day. Your place is held. Once you sign, we email you the signed declaration (PDF) and your race number.",
+          "emailHeldUntil": "Your place is held. We ask for the declaration by email {opens} before the start — you sign it then, online or on paper at the registration desk; once you sign, we email you the signed declaration (PDF) and your race number — it leaves on the platform's scheduled round, within {wait} at the most.",
+          "onThisPage": "One step left: read and sign the declaration below — or on paper at the registration desk on race day. Your place is held. Once you sign, we email you the signed declaration (PDF) and your race number — it leaves on the platform's scheduled round, within {wait} at the most.",
+          "emailReceived": "One step left: read and sign the declaration from the email you received — or on paper at the registration desk on race day. Your place is held. Once you sign, we email you the signed declaration (PDF) and your race number — it leaves on the platform's scheduled round, within {wait} at the most."
+        },
         "done": "Your registration is confirmed. See you at the start!"
       }
     },
@@ -6524,6 +6534,7 @@
       "pending": "Confirming…",
       "done": "Your email address has been confirmed.",
       "doneTitle": "Your email address is confirmed",
+      "doneWaitlist": "You are on the waiting list. If a place frees up, we email you what to do next.",
       "eventOff": "The event has been cancelled or is over, so the registration does not go on: no place was held for you and there is nothing you need to do.",
       "waitlistFull": "The places and the waiting list are full, so your address was not confirmed and nothing was held for you. The link in your email stays valid for {confirmation} from when you sent the form: if a place opens on the waiting list in the meantime, open it again.",
       "noWaitlist": "Every place has been taken and the event has no waiting list, so your address was not confirmed and nothing was held for you. The link in your email stays valid for {confirmation} from when you sent the form: if a place frees up in the meantime, open it again.",

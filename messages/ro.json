@@ -6348,8 +6348,18 @@
       "now": {
         "details": "După trimitere îți scriem pe email ca să confirmi adresa.",
         "confirm": "Ți-am trimis un email cu un link de confirmare.",
-        "declare": "Mai rămâne un pas: citește și semnează declarația — aici, sau pe hârtie la masa de înscrieri în ziua cursei. Locul tău este rezervat. După ce semnezi, îți trimitem pe email declarația semnată (PDF) și numărul de concurs — de obicei în câteva minute, cel târziu într-o oră.",
-        "declareScheduled": "Mai rămâne un pas: citește și semnează declarația — aici, sau pe hârtie la masa de înscrieri în ziua cursei. Locul tău este rezervat. După ce semnezi, îți trimitem pe email declarația semnată (PDF) și numărul de concurs — pleacă la trecerea programată a platformei, în cel mult {wait}.",
+        "declare": {
+          "emailJustSent": "Mai rămâne un pas: citește și semnează declarația din emailul pe care tocmai ți l-am trimis — sau pe hârtie la masa de înscrieri în ziua cursei. Locul tău este rezervat. După ce semnezi, îți trimitem pe email declarația semnată (PDF) și numărul de concurs — de obicei în câteva minute, cel târziu într-o oră.",
+          "emailHeldUntil": "Locul tău este rezervat. Declarația ți-o cerem pe email cu {opens} înainte de start — o semnezi atunci, online sau pe hârtie la masa de înscrieri; după ce semnezi, îți trimitem declarația semnată (PDF) și numărul de concurs — de obicei în câteva minute, cel târziu într-o oră.",
+          "onThisPage": "Mai rămâne un pas: citește și semnează declarația mai jos — sau pe hârtie la masa de înscrieri în ziua cursei. Locul tău este rezervat. După ce semnezi, îți trimitem pe email declarația semnată (PDF) și numărul de concurs — de obicei în câteva minute, cel târziu într-o oră.",
+          "emailReceived": "Mai rămâne un pas: citește și semnează declarația din emailul pe care l-ai primit — sau pe hârtie la masa de înscrieri în ziua cursei. Locul tău este rezervat. După ce semnezi, îți trimitem pe email declarația semnată (PDF) și numărul de concurs — de obicei în câteva minute, cel târziu într-o oră."
+        },
+        "declareScheduled": {
+          "emailJustSent": "Mai rămâne un pas: citește și semnează declarația din emailul care pleacă spre tine în cel mult {wait} — sau pe hârtie la masa de înscrieri în ziua cursei. Locul tău este rezervat. După ce semnezi, îți trimitem pe email declarația semnată (PDF) și numărul de concurs.",
+          "emailHeldUntil": "Locul tău este rezervat. Declarația ți-o cerem pe email cu {opens} înainte de start — o semnezi atunci, online sau pe hârtie la masa de înscrieri; după ce semnezi, îți trimitem declarația semnată (PDF) și numărul de concurs — pleacă la trecerea programată a platformei, în cel mult {wait}.",
+          "onThisPage": "Mai rămâne un pas: citește și semnează declarația mai jos — sau pe hârtie la masa de înscrieri în ziua cursei. Locul tău este rezervat. După ce semnezi, îți trimitem pe email declarația semnată (PDF) și numărul de concurs — pleacă la trecerea programată a platformei, în cel mult {wait}.",
+          "emailReceived": "Mai rămâne un pas: citește și semnează declarația din emailul pe care l-ai primit — sau pe hârtie la masa de înscrieri în ziua cursei. Locul tău este rezervat. După ce semnezi, îți trimitem pe email declarația semnată (PDF) și numărul de concurs — pleacă la trecerea programată a platformei, în cel mult {wait}."
+        },
         "done": "Înscrierea ta este confirmată. Ne vedem la start!"
       }
     },
@@ -6524,6 +6534,7 @@
       "pending": "Se confirmă…",
       "done": "Adresa de email a fost confirmată.",
       "doneTitle": "Adresa a fost confirmată",
+      "doneWaitlist": "Ești pe lista de așteptare. Dacă se eliberează un loc, îți scriem pe email cu ce ai de făcut.",
       "eventOff": "Evenimentul a fost anulat sau s-a încheiat, așa că înscrierea nu mai continuă: nu ți-am rezervat un loc și nu trebuie să faci nimic.",
       "waitlistFull": "Locurile și lista de așteptare sunt pline, așa că adresa nu a fost confirmată și nu ți-am rezervat nimic. Linkul din email rămâne valabil {confirmation} de la trimiterea formularului: dacă între timp se eliberează un loc pe lista de așteptare, deschide-l din nou.",
       "noWaitlist": "Toate locurile au fost ocupate și evenimentul nu are listă de așteptare, așa că adresa nu a fost confirmată și nu ți-am rezervat nimic. Linkul din email rămâne valabil {confirmation} de la trimiterea formularului: dacă între timp se eliberează un loc, deschide-l din nou.",

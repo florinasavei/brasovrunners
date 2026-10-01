@@ -79,7 +79,7 @@ export default async function FamilyConfirmPage({ params, searchParams }: Props)
         <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
           {t("family.doneTitle")}
         </Typography>
-        {done === "declare" && <RegistrationJourney current="declare" />}
+        {done === "declare" && <RegistrationJourney current="declare" declaration="emailJustSent" />}
         {/* The inbox is not named: that would put the address in the URL (§14.5). It is the one the email came to. */}
         <Alert severity="success" data-testid="family-confirmed">
           {done === "declare" ? t("family.done") : t("family.doneWaitlist")}
@@ -112,7 +112,8 @@ export default async function FamilyConfirmPage({ params, searchParams }: Props)
         <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
           {nobodyJoined ? t("familySitting.nobodyTitle") : t("familySitting.doneTitle")}
         </Typography>
-        {!nobodyJoined && <RegistrationJourney current="declare" />}
+        {/* Somebody has a declaration to sign only when the wizard is on the page; everyone on the waiting list gets no stepper (§202). */}
+        {!nobodyJoined && wizard === "1" && <RegistrationJourney current="declare" declaration="onThisPage" />}
         <Stack spacing={2}>
           {nobodyJoined ? (
             <Alert severity="info" data-testid="family-sitting-nobody">
