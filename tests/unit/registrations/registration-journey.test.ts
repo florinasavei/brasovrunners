@@ -28,9 +28,10 @@ const { default: RegistrationJourney } = await import("@/modules/registrations/u
 type Where = "emailJustSent" | "onThisPage" | "emailReceived";
 
 async function render(locale: "ro" | "en", declaration: Where | "emailHeldUntil", wait: number | null = null): Promise<string> {
+  const opens = locale === "ro" ? "7 zile" : "7 days";
   state.locale = locale;
   state.wait = wait;
-  const props = declaration === "emailHeldUntil" ? ({ current: "declare", declaration, opens: "7 zile" } as const) : ({ current: "declare", declaration } as const);
+  const props = declaration === "emailHeldUntil" ? ({ current: "declare", declaration, opens } as const) : ({ current: "declare", declaration } as const);
   const element = (await RegistrationJourney(props)) as ReactElement;
   return renderToStaticMarkup(createElement("div", null, element)).replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
 }
@@ -44,7 +45,7 @@ const PHRASES: Record<"ro" | "en", Record<Where | "emailHeldUntil", string>> = {
   },
   en: {
     emailJustSent: "from the email we have just sent you",
-    emailHeldUntil: "We ask for the declaration by email 7 zile before the start",
+    emailHeldUntil: "We ask for the declaration by email 7 days before the start",
     onThisPage: "declaration below",
     emailReceived: "from the email you received",
   },

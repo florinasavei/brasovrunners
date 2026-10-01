@@ -88,7 +88,7 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
         </Typography>
         {/* Confirmed is not finished: the declaration is still to sign, and the hold that
             protects their place is running. Saying "done" alone loses people here. */}
-        <RegistrationJourney current="declare" declaration="emailJustSent" />
+        {done !== "waitlist" && <RegistrationJourney current="declare" declaration="emailJustSent" />}
         <Alert severity="success">{t("confirm.done")}</Alert>
         {people.length > 1 && (
           <Alert severity="info" icon={false} sx={{ mt: 2 }} data-testid="confirm-address-people">

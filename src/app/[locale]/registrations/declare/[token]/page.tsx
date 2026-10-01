@@ -391,6 +391,8 @@ export default async function DeclarePage({ params, searchParams }: Props) {
     ? { ...movedOn, step: stepForSpentLink(movedOn.message), eventTitle: ownLocale?.title ?? null, eventSlug: ownLocale?.slug ?? null }
     : null;
   const notice = spent ?? movedOnNotice;
+  // The form renders only when neither the family's «nobody left» card nor the refusal notice takes its place.
+  const formBelow = !(familyMode && !familyCurrent && passSteps && walking) && !(blocked || !declaration || movedOnNotice);
   const journeyStep = familyMode && !familyCurrent ? ("done" as const) : notice ? notice.step : ("declare" as const);
 
   /**
@@ -521,8 +523,13 @@ export default async function DeclarePage({ params, searchParams }: Props) {
       {/* Where the registration actually is when the link is spent; the declaration step
           otherwise. Cancelled and lapsed get no stepper: there is no journey left. */}
       {journeyStep === "declare" ? (
-        // The form is below on a live link; a spent or moved-on one points at the email the link came in (§NNN).
-        <RegistrationJourney current="declare" declaration={notice ? "emailReceived" : "onThisPage"} />
+        // «Mai jos» only where the form is below (the render's own condition, below); a spent or moved-on link points at the
+        // email it came in, and a refused link with no notice has no journey to show (§NNN).
+        formBelow ? (
+          <RegistrationJourney current="declare" declaration="onThisPage" />
+        ) : notice ? (
+          <RegistrationJourney current="declare" declaration="emailReceived" />
+        ) : null
       ) : (
         journeyStep && <RegistrationJourney current={journeyStep} />
       )}

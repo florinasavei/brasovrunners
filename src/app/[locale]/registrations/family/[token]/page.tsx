@@ -112,8 +112,8 @@ export default async function FamilyConfirmPage({ params, searchParams }: Props)
         <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
           {nobodyJoined ? t("familySitting.nobodyTitle") : t("familySitting.doneTitle")}
         </Typography>
-        {/* The wizard's button is below when somebody has a declaration to sign; otherwise the email is the way (§NNN). */}
-        {!nobodyJoined && <RegistrationJourney current="declare" declaration={wizard === "1" ? "onThisPage" : "emailJustSent"} />}
+        {/* Somebody has a declaration to sign only when the wizard is on the page; everyone on the waiting list gets no stepper (§202). */}
+        {!nobodyJoined && wizard === "1" && <RegistrationJourney current="declare" declaration="onThisPage" />}
         <Stack spacing={2}>
           {nobodyJoined ? (
             <Alert severity="info" data-testid="family-sitting-nobody">
