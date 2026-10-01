@@ -17,6 +17,7 @@ import { parseRichText, type ImageCrop } from "@/modules/content/rich-text/domai
 import RichText from "@/modules/content/rich-text/ui/RichText";
 import EventExcerpt from "@/modules/events/ui/EventExcerpt";
 import { CARD_FRAME_SX, cardCoverSx, cardFrameGeometry } from "@/modules/content/rich-text/ui/image-layout";
+import { withClientWords } from "../../helpers/client-words";
 
 /**
  * BR-REQ-041-01, BR-REQ-050-03, `DECISIONS.md` §454 — every listing card draws its picture in the
@@ -208,7 +209,7 @@ describe("§454 the card draws the frame, the page does not", () => {
     const card = renderToStaticMarkup(createElement(RichText, { body: doc, links: false, pictures: "card" }));
     expect(card).toContain('data-testid="card-picture"');
     expect(card).toContain('alt="Alergătoare la start"');
-    const page = renderToStaticMarkup(createElement(RichText, { body: doc }));
+    const page = renderToStaticMarkup(withClientWords(createElement(RichText, { body: doc })));
     expect(page).not.toContain("card-picture");
     expect(page).toContain('height="4000"');
   });
@@ -246,7 +247,7 @@ describe("§454 the card draws the frame, the page does not", () => {
     const card = renderToStaticMarkup(createElement(EventExcerpt, { excerptJson: doc, excerpt: null, place: "card" }));
     expect(card).toContain('data-testid="card-picture"');
     expect(card).toContain("aspect-ratio:16/9");
-    const page = renderToStaticMarkup(createElement(EventExcerpt, { excerptJson: doc, excerpt: null }));
+    const page = renderToStaticMarkup(withClientWords(createElement(EventExcerpt, { excerptJson: doc, excerpt: null })));
     expect(page).not.toContain("card-picture");
     // The lead event is an `EventCard` with `featured` since §470 — one card, one summary, no third place.
     const cardSource = readFileSync(path.join(process.cwd(), "src", "modules", "events", "ui", "EventCard.tsx"), "utf8");

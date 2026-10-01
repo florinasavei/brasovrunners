@@ -7041,6 +7041,12 @@
     "photoCount": "{count} photos",
     "photoAlt": "Photo {n} of {total}: {title}"
   },
+  "Picture": {
+    "open": "Enlarge the picture",
+    "openNamed": "Enlarge the picture: {alt}",
+    "title": "The picture, enlarged",
+    "close": "Close"
+  },
   "Contact": {
     "title": "Write to us",
     "intro": "A question about a run, a registration or the club? We answer by email.",
