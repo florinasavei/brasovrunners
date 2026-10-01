@@ -104,6 +104,10 @@ describe("owner tasks", () => {
       const item = catalogue.Admin.tasks.items.listNumbersNotice;
       expect(item.title && item.todo && item.done && item.how.length > 0).toBeTruthy();
       expect(item.how.join("\n")).toContain("/admin/legal");
+      // §421: the step says who is covered, never "every list" or "no other setting".
+      expect(item.how[2]).toContain("—");
+      expect(item.how[2]).not.toMatch(/no other setting|fără altă setare/);
+      expect(item.how.every((step) => step.length <= 200)).toBe(true);
     }
   });
 

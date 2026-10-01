@@ -2914,7 +2914,8 @@
           "done": "The notice in force describes the race number: the list shows it in a “No.” column for confirmed runners registered under such a notice; the others show “—”.",
           "how": [
             "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. The section on the public list describes the race number beside the names of the confirmed.",
-            "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish”. Once it is in force in both languages, every public list shows the “No.” column, with no other setting.",
+            "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish”.",
+            "From then on, the list shows the “No.” column for the confirmed who register under it; earlier registrations show “—”.",
             "Approve the terms from the template as well, if not already, so they say the same about the list."
           ]
         },
