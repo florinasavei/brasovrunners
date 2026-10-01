@@ -31,10 +31,14 @@ let handwriting: Promise<OgFont | null> | undefined;
  * only a card that carries a tagline draws a letter of it — the bibs and the plain card never do.
  */
 export function handwritingFont(): Promise<OgFont | null> {
-  // A file that cannot be read is null, and the card draws its tagline in Roboto rather than failing.
+  // A file that cannot be read is null, and the card draws its tagline in Roboto rather than failing;
+  // the failure is not remembered, so the next card reads the file again (§NNN).
   handwriting ??= readFile(path.join(process.cwd(), "src", "theme", "pdf", "Caveat-Regular.ttf")).then(
     (data) => ({ name: "Caveat", data: toArrayBuffer(data), weight: 400, style: "normal" }) as OgFont,
-    () => null,
+    () => {
+      handwriting = undefined;
+      return null;
+    },
   );
   return handwriting;
 }

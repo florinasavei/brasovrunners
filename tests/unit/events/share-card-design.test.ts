@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
+  clampPlace,
   clampTitle,
   DEFAULT_SHARE_CARD_DESIGN,
   readShareCardDesign,
   SHARE_CARD_PALETTES,
   SHARE_CARD_TAGLINE_MAX,
+  SHARE_PICTURE_VEIL,
   shareCardColours,
   textOnAccent,
   withAlpha,
@@ -107,7 +109,12 @@ describe("shareCardColours — the palette, the accent and a picture, as colours
 
   it("draws a picture under a veil of the palette's colour, and paper under a picture as brand", () => {
     const brand = shareCardColours({ ...DEFAULT_SHARE_CARD_DESIGN }, true);
-    expect(brand.overlay).toBe(`linear-gradient(180deg, ${withAlpha(COLOR.blueInk, 0.25)} 0%, ${withAlpha(COLOR.blueInk, 0.85)} 100%)`);
+    expect(brand.overlay).toBe(
+      `linear-gradient(180deg, ${withAlpha(COLOR.blueInk, 0.72)} 0%, ${withAlpha(COLOR.blueInk, 0.72)} 25%, ${withAlpha(COLOR.blueInk, 0.6)} 50%, ${withAlpha(COLOR.blueInk, 0.88)} 100%)`,
+    );
+    // No radial light over a picture, and the pill a shade of the base rather than a tint of white.
+    expect(brand.glow).toBe(withAlpha(COLOR.surface, 0));
+    expect(brand.pill).toBe(withAlpha(COLOR.blueInk, 0.55));
     const paper = shareCardColours({ ...DEFAULT_SHARE_CARD_DESIGN, palette: "paper" }, true);
     expect(paper).toMatchObject({ palette: "brand", text: COLOR.surface, logo: "white" });
   });
@@ -117,6 +124,26 @@ describe("shareCardColours — the palette, the accent and a picture, as colours
     expect(colours.accent).toBe("#00aa55");
     expect(colours.cancelledPill).toBe("#00aa55");
     expect(colours.circle).toBe("rgba(0,170,85,0.14)");
+  });
+});
+
+describe("SHARE_PICTURE_VEIL — white words read over any photograph (§NNN)", () => {
+  /** The base at an opacity over pure white, as the veil draws it over the lightest picture there is. */
+  function overWhite(hex: string, alpha: number): number {
+    const channel = (at: number) => {
+      const value = (255 * (1 - alpha) + Number.parseInt(hex.slice(at, at + 2), 16) * alpha) / 255;
+      return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+    };
+    const luminance = 0.2126 * channel(1) + 0.7152 * channel(3) + 0.0722 * channel(5);
+    return 1.05 / (luminance + 0.05);
+  }
+
+  it("gives white 4.5:1 behind the logo and the pill, and 3:1 behind the title, on the dark palettes over pure white", () => {
+    for (const base of [COLOR.blueInk, COLOR.ink]) {
+      expect(overWhite(base, SHARE_PICTURE_VEIL.top), base).toBeGreaterThanOrEqual(4.5);
+      expect(overWhite(base, SHARE_PICTURE_VEIL.middle), base).toBeGreaterThanOrEqual(3);
+      expect(overWhite(base, SHARE_PICTURE_VEIL.foot), base).toBeGreaterThanOrEqual(4.5);
+    }
   });
 });
 
@@ -148,5 +175,28 @@ describe("clampTitle — at most 110 characters, cut at a word", () => {
   it("drops the punctuation the cut leaves behind, and cuts a title with no space mid-word", () => {
     expect(clampTitle("Unu doi, trei patru", 12)).toBe("Unu doi…");
     expect(clampTitle("x".repeat(200))).toBe(`${"x".repeat(109)}…`);
+  });
+});
+
+describe("clampPlace — at most 60 characters, cut at a word, on one line (§NNN)", () => {
+  it("leaves a place of 60 characters or fewer untouched, its whitespace on one line", () => {
+    expect(clampPlace("Piața Sfatului")).toBe("Piața Sfatului");
+    const exactly = `${"a".repeat(30)} ${"b".repeat(29)}`;
+    expect(exactly).toHaveLength(60);
+    expect(clampPlace(exactly)).toBe(exactly);
+    expect(clampPlace("  Piața\n Sfatului ")).toBe("Piața Sfatului");
+  });
+
+  it("cuts a longer place at the last word that fits and adds «…»", () => {
+    const place = "Parcarea de lângă baza pârtiei Bradu din Poiana Brașov, la intrarea dinspre Drumul Poienii 21";
+    const clamped = clampPlace(place);
+    expect(clamped).toBe("Parcarea de lângă baza pârtiei Bradu din Poiana Brașov, la…");
+    expect(Array.from(clamped).length).toBeLessThanOrEqual(61);
+    expect(place.startsWith(clamped.slice(0, -1))).toBe(true);
+  });
+
+  it("drops the punctuation the cut leaves behind, and cuts a place with no space mid-word", () => {
+    expect(clampPlace("Strada Lungă, nr. 5", 14)).toBe("Strada Lungă…");
+    expect(clampPlace("x".repeat(90))).toBe(`${"x".repeat(59)}…`);
   });
 });

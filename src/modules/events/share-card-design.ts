@@ -180,9 +180,22 @@ export type ShareCardColours = {
   /** Which lockup goes at the top and which mountains in the band. */
   logo: "white" | "blue";
   mark: "white" | "blue";
-  /** Over a picture: the vertical overlay that keeps the words legible; null without one. */
+  /**
+   * Over a picture: the vertical veil that keeps the words legible; null without one. It is
+   * strongest where the white words are smallest — `SHARE_PICTURE_VEIL` — so the logo's wordmark
+   * and the pill read on any photograph, a near-white one included (§NNN): at a quarter of the base,
+   * the review measured them at about 1.5:1.
+   */
   overlay: string | null;
 };
+
+/**
+ * The veil over a picture, as the base colour's opacity: 0.72 over the top quarter, behind the logo
+ * and the pill (white on a white photograph under it reads at about 5:1, and the radial light is
+ * left off), easing to 0.6 at the middle where the photograph shows most and the title is large,
+ * and 0.88 at the foot behind the date, the place and the chips.
+ */
+export const SHARE_PICTURE_VEIL = { top: 0.72, middle: 0.6, foot: 0.88 } as const;
 
 /**
  * The palette, the accent and whether a picture is drawn, as colours. `brand` and `ink` are
@@ -206,11 +219,13 @@ export function shareCardColours(design: ShareCardDesign, hasPicture: boolean): 
         : palette === "ink"
           ? `linear-gradient(135deg, ${COLOR.ink} 0%, ${withAlpha(COLOR.ink, 0.92)} 55%, ${withAlpha(COLOR.blueInk, 0.9)} 100%)`
           : null,
-    glow: withAlpha(glow, palette === "brand" ? 0.18 : palette === "ink" ? 0.42 : 0.07),
+    // No light over a picture: it would whiten the corner the pill sits in.
+    glow: withAlpha(glow, hasPicture ? 0 : palette === "brand" ? 0.18 : palette === "ink" ? 0.42 : 0.07),
     glowFade: withAlpha(glow, 0),
     circle: withAlpha(accent, dark ? 0.14 : 0.1),
     text,
-    pill: withAlpha(text, 0.14),
+    // Over a picture the pill is a shade of the base rather than a tint of the words, which would lighten it.
+    pill: hasPicture ? withAlpha(base, 0.55) : withAlpha(text, 0.14),
     pillBorder: withAlpha(text, 0.45),
     pillText: text,
     cancelledPill: accent,
@@ -222,8 +237,20 @@ export function shareCardColours(design: ShareCardDesign, hasPicture: boolean): 
     bandText: dark ? COLOR.blue : COLOR.paper,
     logo: dark ? "white" : "blue",
     mark: dark ? "blue" : "white",
-    overlay: hasPicture ? `linear-gradient(180deg, ${withAlpha(base, 0.25)} 0%, ${withAlpha(base, 0.85)} 100%)` : null,
+    overlay: hasPicture
+      ? `linear-gradient(180deg, ${withAlpha(base, SHARE_PICTURE_VEIL.top)} 0%, ${withAlpha(base, SHARE_PICTURE_VEIL.top)} 25%, ${withAlpha(base, SHARE_PICTURE_VEIL.middle)} 50%, ${withAlpha(base, SHARE_PICTURE_VEIL.foot)} 100%)`
+      : null,
   };
+}
+
+/** A text of at most `max` characters, cut at its last word that fits with «…», or mid-word without one. */
+function clampAtWord(text: string, max: number): string {
+  const characters = Array.from(text);
+  if (characters.length <= max) return text;
+  const head = characters.slice(0, max).join("");
+  const space = head.lastIndexOf(" ");
+  const cut = space > 0 ? head.slice(0, space) : characters.slice(0, max - 1).join("");
+  return `${cut.replace(/[\s,;:.–—-]+$/u, "")}…`;
 }
 
 /**
@@ -234,10 +261,17 @@ export function shareCardColours(design: ShareCardDesign, hasPicture: boolean): 
 export const SHARE_CARD_TITLE_MAX = 110;
 
 export function clampTitle(title: string, max: number = SHARE_CARD_TITLE_MAX): string {
-  const characters = Array.from(title);
-  if (characters.length <= max) return title;
-  const head = characters.slice(0, max).join("");
-  const space = head.lastIndexOf(" ");
-  const cut = space > 0 ? head.slice(0, space) : characters.slice(0, max - 1).join("");
-  return `${cut.replace(/[\s,;:.–—-]+$/u, "")}…`;
+  return clampAtWord(title, max);
+}
+
+/**
+ * The meeting point, at most `max` characters, cut the same way (§NNN): `location_name` is free
+ * text, and a place that wraps to a second line pushes the facts under it off the wide card. The
+ * drawing keeps the place to one line as well (`whiteSpace: nowrap`, an ellipsis where it would
+ * overflow), so a place of sixty wide letters is cut there rather than wrapped.
+ */
+export const SHARE_CARD_PLACE_MAX = 60;
+
+export function clampPlace(place: string, max: number = SHARE_CARD_PLACE_MAX): string {
+  return clampAtWord(place.replace(/\s+/g, " ").trim(), max);
 }

@@ -9,7 +9,8 @@ import { distanceWords } from "./domain/distance";
 import { elevationWords } from "./domain/elevation";
 import { announcedDayInstant } from "./domain/dated";
 import type { PublicEventPage } from "./repository";
-import { clampTitle, DEFAULT_SHARE_CARD_DESIGN, type ShareCardDesign, shareCardColours } from "./share-card-design";
+import { clampTitle, DEFAULT_SHARE_CARD_DESIGN, readShareCardDesign, type ShareCardDesign, shareCardColours } from "./share-card-design";
+import { placeOnOneLine, SHARE_CHIP_GAP, SHARE_LAYOUT, SHARE_LINE, SHARE_RULE, shareTitleSize, titleRoom } from "./share-card-layout";
 
 /**
  * The picture an event becomes when its link is pasted into Facebook, WhatsApp or a message —
@@ -25,13 +26,14 @@ import { clampTitle, DEFAULT_SHARE_CARD_DESIGN, type ShareCardDesign, shareCardC
  *
  * `next/og` renders JSX to PNG through Satori, and its limits shaped the layout: flexbox only,
  * every element with children `display: flex`, no line clamp the title can rely on (it is cut by
- * its length, `clampTitle`), pictures and fonts handed over as data rather than fetched.
+ * its length, `clampTitle`, and sized by the room the rest of the card leaves it,
+ * `share-card-layout.ts`), pictures and fonts handed over as data rather than fetched.
  */
 export const SHARE_SHAPES = {
   /** Open Graph: what Facebook, WhatsApp, LinkedIn and X show under a link. */
-  og: { width: 1200, height: 630 },
+  og: { width: SHARE_LAYOUT.og.width, height: SHARE_LAYOUT.og.height },
   /** Instagram's feed: a square, downloaded and posted by hand. */
-  square: { width: 1080, height: 1080 },
+  square: { width: SHARE_LAYOUT.square.width, height: SHARE_LAYOUT.square.height },
 } as const;
 
 export type ShareShape = keyof typeof SHARE_SHAPES;
@@ -52,45 +54,6 @@ export type ShareImageEvent = Pick<
 > &
   Partial<Pick<PublicEventPage, "elevationGainEstimated" | "distanceEstimated">>;
 
-/**
- * Every size of the layout, per shape — one layout, two sets of numbers. The square has room for
- * the facts under each other; the wide card is 630 pixels tall, so its facts are tighter.
- */
-const SIZES = {
-  square: { pad: 72, padTop: 72, logo: 100, pill: 30, gap: 30, date: 40, time: 60, place: 36, chip: 32, glyph: 34, band: 104, host: 34, mark: 44, tagline: 48 },
-  og: { pad: 56, padTop: 46, logo: 68, pill: 24, gap: 18, date: 32, time: 46, place: 30, chip: 26, glyph: 28, band: 80, host: 28, mark: 36, tagline: 38 },
-} as const;
-
-/**
- * The title's size by its length, measured rather than guessed (§NNN). Satori draws every line it
- * is given, so the size is chosen before it draws: the largest step at which the title, at half an
- * em a character (Roboto 700 runs about 0.45 em in Romanian and English, spaces included, so half
- * an em leaves room for the words that wrap early), fills no more of the box than its lines allow,
- * with a margin for `textWrap: balance`. The square has room for three lines at any size; the wide
- * card's 630 pixels keep a title to two lines from 56 px up and three below.
- */
-const TITLE = {
-  square: { steps: [92, 80, 72, 64, 56, 50, 44], width: 1080 - 2 * 72, box: 300 },
-  og: { steps: [72, 64, 56, 50, 46, 42], width: 1200 - 2 * 56, box: 160 },
-} as const;
-
-/**
- * The title's width in ems: lower case and spaces at half an em, capitals and wide letters at
- * 0.65 (Roboto Bold's capitals run 0.62–0.65), so an upper-case title is not drawn four lines high.
- */
-function titleEms(title: string): number {
-  let ems = 0;
-  for (const character of title) ems += character !== character.toLowerCase() || /[mwMW@%]/.test(character) ? 0.65 : 0.5;
-  return ems;
-}
-
-export function shareTitleSize(title: string, shape: ShareShape): number {
-  const { steps, width, box } = TITLE[shape];
-  const length = titleEms(title);
-  const fits = (size: number) => length * size <= Math.min(3, Math.floor(box / (size * 1.05))) * width * 0.88;
-  return steps.find(fits) ?? steps[steps.length - 1];
-}
-
 /** The lockup's proportion and the mountains' (`LOGO` in `theme/brand.ts`). */
 const LOCKUP_RATIO = LOGO.lockup.width / LOGO.lockup.height;
 const MARK_RATIO = LOGO.mark.width / LOGO.mark.height;
@@ -108,7 +71,12 @@ function asDataUrl(key: string, read: () => Promise<Buffer>, mime: string): Prom
   if (!pending) {
     pending = read().then(
       (buffer) => `data:${mime};base64,${buffer.toString("base64")}`,
-      () => null,
+      () => {
+        // A failed read is not remembered: one transient error at a cold start would otherwise draw
+        // every card of the instance without the club's logo (§NNN). The next card reads again.
+        artwork.delete(key);
+        return null;
+      },
     );
     artwork.set(key, pending);
   }
@@ -139,19 +107,21 @@ const PICTURE_DEADLINE_MS = 5000;
 /**
  * The design's picture as data Satori draws without a request of its own, or null for the plain
  * card: anything that is not a picture, too large, too slow or unreachable draws the card without
- * one rather than no card. A `data:image/` address — a test's fixture — is handed over as it is.
+ * one rather than no card. Only an `https:` address is fetched — the design has been through
+ * `readShareCardDesign`, which refuses every other, and this refuses them again.
  */
 async function backgroundPicture(url: string | null): Promise<string | null> {
-  if (!url) return null;
-  if (/^data:image\/(png|jpeg|webp|gif);base64,/i.test(url)) return url;
-  if (!url.startsWith("https://")) return null;
+  if (!url?.startsWith("https://")) return null;
   try {
     // A redirect is refused: it could lead from https to anything (§NNN).
     const response = await fetch(url, { signal: AbortSignal.timeout(PICTURE_DEADLINE_MS), redirect: "error" });
     const type = response.headers.get("content-type")?.split(";")[0]?.trim() ?? "";
-    if (!response.ok || !response.body || !/^image\/(png|jpeg|webp|gif)$/.test(type)) return null;
     // The ceiling is checked on the announced length first, then while reading, so a large body is never buffered whole.
-    if (Number(response.headers.get("content-length") ?? 0) > PICTURE_MAX_BYTES) return null;
+    if (Number(response.headers.get("content-length") ?? 0) > PICTURE_MAX_BYTES) {
+      await response.body?.cancel();
+      return null;
+    }
+    if (!response.ok || !response.body || !/^image\/(png|jpeg|webp|gif)$/.test(type)) return null;
     const chunks: Uint8Array[] = [];
     let total = 0;
     const reader = response.body.getReader();
@@ -225,16 +195,26 @@ export async function eventShareImage(
     t: (key: string, values?: Record<string, string | number>) => string;
   },
   /** The club's choices for the card (§NNN); the platform's until something stores them. */
-  design: ShareCardDesign = DEFAULT_SHARE_CARD_DESIGN,
+  given: ShareCardDesign = DEFAULT_SHARE_CARD_DESIGN,
 ): Promise<ImageResponse> {
-  const { width, height } = SHARE_SHAPES[shape];
-  const size = SIZES[shape];
+  // Whatever the caller hands over is read as a design first, so a stored one never skips its rules
+  // (an `https:` picture only, a hex accent, a one-line tagline) on its way to the drawing (§NNN).
+  const design = readShareCardDesign(given);
+  const size = SHARE_LAYOUT[shape];
+  const { width, height } = size;
   const intl = locale === "ro" ? "ro-RO" : "en-GB";
   const cancelled = event.eventStatus === "CANCELLED";
 
   // A picture outlives the page it was made from — it is saved, posted, forwarded — so a place
   // not yet announced is said as such, and the query has withheld the typed one (§328).
-  const place = design.showPlace ? (event.locationToBeAnnounced ? labels.locationToBeAnnounced : event.locationName) : null;
+  // A typed place is cut at a word, sixty characters at most, so it stays on one line (§NNN).
+  const place = design.showPlace
+    ? event.locationToBeAnnounced
+      ? labels.locationToBeAnnounced
+      : event.locationName
+        ? placeOnOneLine(event.locationName, shape)
+        : null
+    : null;
   /*
     The date and the time (§349, §533). Dated: the long day «Sâmbătă, 21 nov. 2026» and the time
     as the headline beside it. While the time is held back, one line «day · Ora se anunță în
@@ -266,7 +246,6 @@ export async function eventShareImage(
   const host = design.showHost ? new URL(env.APP_BASE_URL).host : null;
   const pillWords = cancelled ? labels.cancelled : design.showType ? labels.type : null;
   const title = clampTitle(event.title);
-  const titleSize = shareTitleSize(title, shape);
   const tagline = design.tagline.trim() || null;
 
   const picture = await backgroundPicture(design.backgroundPictureUrl);
@@ -277,6 +256,12 @@ export async function eventShareImage(
     design.showLogo ? mountains(colours.mark) : Promise.resolve(null),
   ]);
   const showBand = host !== null || mark !== null;
+  // The title takes what the rest of the card leaves it, at three lines at most (§NNN).
+  const titleSize = shareTitleSize(
+    title,
+    shape,
+    titleRoom(shape, { logo: logo !== null, pill: pillWords, tagline, heldBack, place, chips: route.map((chip) => chip.words), band: showBand }),
+  );
   // The light and the accent's circle, as fractions of the card's width (§NNN).
   const glow = Math.round(width * 1.2);
   const circle = Math.round(width * 0.55);
@@ -332,9 +317,11 @@ export async function eventShareImage(
         />
 
         {/*
-          The facts sit at the foot of the card and the logo and the pill at its head: the head row
-          grows into the space between, so a card with neither keeps its facts where they were
-          rather than floating to the top (an element switched off leaves no gap, §NNN).
+          The facts sit at the foot of the card and the logo and the pill at its head: the head grows
+          into the space between, so a card with neither keeps its facts where they were rather than
+          floating to the top (an element switched off leaves no gap, §NNN). The title's size leaves
+          room for all of it (`titleRoom`); should anything still run long, this column clips it
+          rather than push the band off the card's foot.
         */}
         <div
           style={{
@@ -342,78 +329,104 @@ export async function eventShareImage(
             flexDirection: "column",
             justifyContent: "flex-end",
             flexGrow: 1,
+            flexShrink: 1,
             minHeight: 0,
+            overflow: "hidden",
             padding: `${size.padTop}px ${size.pad}px`,
           }}
         >
           {(logo || pillWords) && (
-            <div style={{ display: "flex", flexGrow: 1, alignItems: "flex-start", justifyContent: "space-between", paddingBottom: size.gap }}>
-              {logo ? (
-                // eslint-disable-next-line @next/next/no-img-element -- Satori draws an <img>, not next/image
-                <img src={logo} alt="" width={Math.round(size.logo * LOCKUP_RATIO)} height={size.logo} />
-              ) : (
-                <div style={{ display: "flex" }} />
-              )}
-              {pillWords && (
-                <div
-                  style={{
-                    display: "flex",
-                    padding: shape === "square" ? "12px 26px" : "9px 20px",
-                    borderRadius: 999,
-                    // A cancelled event is the one solid accent pill; a type is a quiet tint (§NNN).
-                    backgroundColor: cancelled ? colours.cancelledPill : colours.pill,
-                    border: `1.5px solid ${cancelled ? colours.cancelledPill : colours.pillBorder}`,
-                    color: cancelled ? colours.cancelledPillText : colours.pillText,
-                    fontSize: size.pill,
-                    fontWeight: 700,
-                    textTransform: "uppercase",
-                    letterSpacing: 2,
-                  }}
-                >
-                  {pillWords}
-                </div>
-              )}
+            <div style={{ display: "flex", flexDirection: "column", flexGrow: 1, flexShrink: 0, paddingBottom: size.gap }}>
+              {/* The pill is centred on the logo's height, not on the space the head grows into. */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: size.gap }}>
+                {logo ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- Satori draws an <img>, not next/image
+                  <img src={logo} alt="" width={Math.round(size.logo * LOCKUP_RATIO)} height={size.logo} style={{ flexShrink: 0 }} />
+                ) : (
+                  <div style={{ display: "flex" }} />
+                )}
+                {pillWords && (
+                  <div
+                    style={{
+                      display: "flex",
+                      padding: `${size.pillPadY}px ${size.pillPadX}px`,
+                      borderRadius: 999,
+                      // A cancelled event is the one solid accent pill; a type is a quiet tint (§NNN).
+                      backgroundColor: cancelled ? colours.cancelledPill : colours.pill,
+                      border: `1.5px solid ${cancelled ? colours.cancelledPill : colours.pillBorder}`,
+                      color: cancelled ? colours.cancelledPillText : colours.pillText,
+                      fontSize: size.pill,
+                      fontWeight: 700,
+                      lineHeight: SHARE_LINE.text,
+                      textTransform: "uppercase",
+                      letterSpacing: 2,
+                    }}
+                  >
+                    {pillWords}
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
-          <div style={{ display: "flex", flexDirection: "column", gap: size.gap }}>
-            <div style={{ display: "flex", flexDirection: "column", gap: shape === "square" ? 26 : 16 }}>
-              <div style={{ display: "flex", fontSize: titleSize, fontWeight: 700, lineHeight: 1.05, textWrap: "balance" }}>{title}</div>
+          <div style={{ display: "flex", flexDirection: "column", flexShrink: 0, gap: size.gap }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: size.titleGap }}>
+              <div
+                style={{ display: "flex", fontSize: titleSize, fontWeight: 700, lineHeight: SHARE_LINE.title, textWrap: "balance", wordBreak: "break-word" }}
+              >
+                {title}
+              </div>
               {/* The rule, and the tagline in the club's hand: under it on the square, beside it on the wide card. */}
               <div
                 style={{
                   display: "flex",
                   flexDirection: shape === "square" ? "column" : "row",
                   alignItems: shape === "square" ? "flex-start" : "center",
-                  gap: shape === "square" ? 22 : 24,
+                  gap: size.taglineGap,
                 }}
               >
-                <div style={{ display: "flex", flexShrink: 0, width: 120, height: 6, borderRadius: 3, backgroundColor: colours.accent }} />
+                <div
+                  style={{
+                    display: "flex",
+                    flexShrink: 0,
+                    width: SHARE_RULE.width,
+                    height: SHARE_RULE.height,
+                    borderRadius: SHARE_RULE.height / 2,
+                    backgroundColor: colours.accent,
+                  }}
+                />
                 {tagline && (
-                  <div style={{ display: "flex", fontFamily: "Caveat, Roboto", fontSize: size.tagline, lineHeight: 1, color: colours.accent }}>{tagline}</div>
+                  <div
+                    style={{ display: "flex", fontFamily: "Caveat, Roboto", fontSize: size.tagline, lineHeight: SHARE_LINE.tagline, color: colours.accent }}
+                  >
+                    {tagline}
+                  </div>
                 )}
               </div>
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: shape === "square" ? 18 : 10 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: size.factsGap }}>
               {heldBack !== null ? (
-                <div style={{ display: "flex", fontSize: size.date }}>{heldBack}</div>
+                <div style={{ display: "flex", fontSize: size.date, lineHeight: SHARE_LINE.text }}>{heldBack}</div>
               ) : (
                 <div style={{ display: "flex", alignItems: "baseline", gap: 14 }}>
-                  <div style={{ display: "flex", fontSize: size.date }}>{day}</div>
+                  <div style={{ display: "flex", fontSize: size.date, lineHeight: SHARE_LINE.text }}>{day}</div>
                   {/* A middle dot in the accent, as a letter so it sits on the line's own baseline. */}
                   <div style={{ display: "flex", fontSize: size.time, fontWeight: 700, lineHeight: 1, color: colours.accent }}>·</div>
                   <div style={{ display: "flex", fontSize: size.time, fontWeight: 700, lineHeight: 1 }}>{time}</div>
                 </div>
               )}
               {place && (
-                <div style={{ display: "flex", alignItems: "center", gap: 12, fontSize: size.place }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, fontSize: size.place, lineHeight: SHARE_LINE.text }}>
                   <PinGlyph size={size.glyph} colour={colours.accent} />
-                  <div style={{ display: "flex" }}>{place}</div>
+                  {/* One line, whatever the place: cut at a word already, and an ellipsis should it still overflow. */}
+                  <div style={{ display: "flex", flexShrink: 1, minWidth: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {place}
+                  </div>
                 </div>
               )}
               {route.length > 0 && (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 14, marginTop: shape === "square" ? 8 : 4 }}>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: SHARE_CHIP_GAP, marginTop: size.chipsTop }}>
                   {route.map((chip) => (
                     <div
                       key={chip.glyph}
@@ -421,11 +434,12 @@ export async function eventShareImage(
                         display: "flex",
                         alignItems: "center",
                         gap: 10,
-                        padding: shape === "square" ? "10px 22px 10px 16px" : "7px 18px 7px 13px",
+                        padding: `${size.chipPadY}px ${size.chipPadRight}px ${size.chipPadY}px ${size.chipPadLeft}px`,
                         borderRadius: 999,
                         backgroundColor: colours.chip,
                         border: `1.5px solid ${colours.chipBorder}`,
                         fontSize: size.chip,
+                        lineHeight: SHARE_LINE.text,
                       }}
                     >
                       {chip.glyph === "route" ? (
