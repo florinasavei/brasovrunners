@@ -2992,11 +2992,13 @@
         "listNumbersNotice": {
           "title": "Nota de confidențialitate: numărul de concurs pe lista publică",
           "todo": "Nota în vigoare nu descrie încă numărul de concurs pe lista publică, așa că lista nu arată numerele, până când clubul aprobă o notă care îl descrie.",
-          "done": "Nota în vigoare descrie numărul de concurs: lista îl arată într-o coloană „Nr.” pentru cei confirmați înscriși sub o notă care îl descrie; ceilalți au „—”.",
+          "done": "Nota în vigoare descrie numărul de concurs: lista îl arată într-o coloană „Nr.” pentru toți cei confirmați care au număr; cei fără număr au „—”.",
           "how": [
+            "Înainte de aprobare, scrie celor deja înscriși: /admin/events → evenimentul → „Trimite un mesaj participanților”. Spune că numărul lor apare lângă nume la „Cine vine” și cum renunță (următorul pas).",
+            "Renunțarea: din „Înscrierile mele” (sau linkul din email) apasă „Nu vreau să apar pe lista de participanți & rezultate”; numărul dispare odată cu numele.",
             "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Secțiunea despre lista publică descrie numărul de concurs de lângă numele celor confirmați.",
             "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”.",
-            "De atunci încolo, lista arată coloana „Nr.” pentru cei confirmați care se înscriu sub noua notă; înscrierile de dinainte arată „—”.",
+            "De atunci încolo, lista arată coloana „Nr.” pentru toți cei confirmați care au număr, indiferent de nota sub care s-au înscris.",
             "Aprobă și termenii din șablon, dacă nu i-ai aprobat deja, ca să spună același lucru despre listă."
           ]
         },

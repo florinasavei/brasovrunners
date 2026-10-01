@@ -2992,11 +2992,13 @@
         "listNumbersNotice": {
           "title": "Privacy notice: the race number on the public list",
           "todo": "The notice in force does not yet describe the race number on the public list, so the list shows no numbers until the club approves a notice that describes it.",
-          "done": "The notice in force describes the race number: the list shows it in a “No.” column for confirmed runners registered under such a notice; the others show “—”.",
+          "done": "The notice in force describes the race number: the list shows it in a “No.” column for every confirmed runner who has one; those without show “—”.",
           "how": [
+            "Before approving, write to the registered: /admin/events → event → “Send a message to participants”. Say their number will appear beside their name in “Who's coming” and how to withdraw (next step).",
+            "Withdrawing: in “My registrations” (or the link in the email) press “I do not want to appear on the participants & results list”; the number leaves with the name.",
             "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. The section on the public list describes the race number beside the names of the confirmed.",
             "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish”.",
-            "From then on, the list shows the “No.” column for the confirmed who register under it; earlier registrations show “—”.",
+            "From then on, the list shows the “No.” column for every confirmed runner who has a number, whichever notice they registered under.",
             "Approve the terms from the template as well, if not already, so they say the same about the list."
           ]
         },
