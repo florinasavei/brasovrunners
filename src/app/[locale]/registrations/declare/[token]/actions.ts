@@ -202,9 +202,10 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
       await stashDraftValues(declarationDraftOf(form), path);
       redirect(`${path}?invalid=document#${DECLARATION_ERROR_SUMMARY_ID}`);
     }
-    // The checkbox is HTML-required, so this is only a client that bypassed it — treated the
-    // same as an invalid token rather than as a server error, since nothing was consumed (the
-    // whole transaction, including the token spend, rolled back with the validation failure).
+    // An unticked box never reaches here (it is refused above with `invalid=accept`, §NNN). What
+    // does is a validation failure on another field the client let through — treated the same as
+    // an invalid token rather than as a server error, since nothing was consumed (the whole
+    // transaction, including the token spend, rolled back with the validation failure).
     if (isDomainError(error) && error.code === "VALIDATION_ERROR") redirect(`${path}?invalid=1`);
     // The text changed between reading and signing (BR-REQ-033-02 criterion 6). Nothing was
     // recorded and the token was not spent, so the same page shows the current text again.

@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { NextIntlClientProvider } from "next-intl";
-import { createElement, type ReactElement, type ReactNode } from "react";
+import { createElement, type ComponentProps, type ReactElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { events, eventTranslations } from "@/db/schema/events";
@@ -165,7 +165,7 @@ async function pageAfter(locale: "ro" | "en", invalid: string): Promise<string> 
   language = locale;
   const page = (await DeclarePage({ params: Promise.resolve({ locale, token: secret }), searchParams: Promise.resolve({ invalid }) })) as ReactElement;
   // The client islands (the signature box) read the catalogue the way the layout provides it.
-  return renderToStaticMarkup(createElement(NextIntlClientProvider, { locale, messages: locale === "ro" ? ro : en, children: page }));
+  return renderToStaticMarkup(createElement(NextIntlClientProvider, { locale, messages: locale === "ro" ? ro : en } as unknown as ComponentProps<typeof NextIntlClientProvider>, page));
 }
 
 describe("§NNN the declaration's acceptance box, unticked", () => {

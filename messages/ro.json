@@ -6461,7 +6461,7 @@
         "Linkul are termen; dacă nu confirmi la timp, locul merge mai departe.",
         "Poți renunța oricând din emailul primit."
       ],
-      "pressFailed": "Nu am putut înregistra semnătura. Bifează că ai citit declarația și încearcă din nou — linkul tău este în regulă.",
+      "pressFailed": "Nu am putut înregistra semnătura. Încearcă din nou — linkul tău este în regulă.",
       "acceptSummary": "Bifează caseta „Am citit și accept declarația…” ca să poți semna.",
       "acceptInline": "Bifează această casetă ca să poți semna.",
       "idDocumentType": "Ce act prezinți",

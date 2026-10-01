@@ -42,7 +42,9 @@ export default function UntickedBoxSummary({
       if ((event.target as HTMLElement | null)?.id !== boxId) return;
       event.preventDefault();
       setShown(true);
-      setPresses((count) => count + 1);
+      // Take focus only when the box is the first invalid control; otherwise the browser's own
+      // bubble for the earlier field stays and is not dismissed by the summary.
+      if (form.querySelector(":invalid") === event.target) setPresses((count) => count + 1);
     };
     const onChange = (event: Event) => {
       const target = event.target as HTMLInputElement | null;

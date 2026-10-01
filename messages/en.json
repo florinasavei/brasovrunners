@@ -6501,7 +6501,7 @@
         "The link has a deadline; if you do not confirm in time, the place moves on.",
         "You can withdraw at any time from the email you received."
       ],
-      "pressFailed": "We could not record the signature. Tick that you have read the declaration and try again — your link is fine.",
+      "pressFailed": "We could not record the signature. Try again — your link is fine.",
       "acceptSummary": "Tick the box “I have read and accept the declaration…” so you can sign.",
       "acceptInline": "Tick this box so you can sign.",
       "idDocumentType": "Which document you will show",

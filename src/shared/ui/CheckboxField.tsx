@@ -154,9 +154,13 @@ export default function CheckboxField({
           required={dense ? undefined : required}
           defaultChecked={checked}
           disabled={disabled}
-          onChange={errorMessage ? (event) => {
+          onChange={
+            errorMessage
+              ? (event) => {
                   if (event.target.checked) setFlagged(false);
-                } : undefined}
+                }
+              : undefined
+          }
           size={dense ? CONSENT_DENSITY.checkboxSize : undefined}
           slotProps={Object.keys(inputSlot).length > 0 ? { input: inputSlot } : undefined}
           sx={CHECKBOX_TAP_TARGET}

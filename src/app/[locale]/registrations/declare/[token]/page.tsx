@@ -302,7 +302,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
 
   /**
    * A live token plus `invalid=1` means the press failed for a reason that is **not** the token
-   * — an unticked box bypassed on the client, which rolls the whole transaction back and spends
+   * — a validation failure on a field the client let through (the unticked box has its own `invalid=accept`, §NNN), which rolls the whole transaction back and spends
    * nothing.
    *
    * That is not a dead link, and it must not be reported as one (§202, found in review): the
