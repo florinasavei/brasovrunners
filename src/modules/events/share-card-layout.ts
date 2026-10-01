@@ -207,6 +207,8 @@ export type ShareCardContent = {
   /** The type's or the cancelled pill's words, or null for no pill. */
   pill: string | null;
   tagline: string | null;
+  /** Whether the tagline is drawn in Caveat; false when that file could not be read and Roboto, wider, stands in. Default true. */
+  handwriting?: boolean;
   /** The one held-back sentence where the day and the time would be, or null when both are drawn. */
   heldBack: string | null;
   place: string | null;
@@ -249,10 +251,11 @@ export function chipRows(chips: readonly string[], shape: ShareLayoutShape): num
 }
 
 /** The tagline's lines: under the rule on the square, beside it on the wide card. */
-function taglineLines(tagline: string, shape: ShareLayoutShape): number {
+function taglineLines(tagline: string, shape: ShareLayoutShape, handwriting: boolean): number {
   const size = SHARE_LAYOUT[shape];
   const inner = size.width - 2 * size.pad;
   const room = shape === "square" ? inner : inner - SHARE_RULE.width - size.taglineGap;
+  if (!handwriting) return Math.max(1, Math.ceil(textWidth(tagline, size.tagline) / room));
   let ems = 0;
   for (const letter of tagline) ems += letter !== letter.toUpperCase() || letter === " " ? CAVEAT_EM.lower : CAVEAT_EM.other;
   return Math.max(1, Math.ceil((ems * size.tagline) / room));
@@ -267,7 +270,7 @@ export function titleRoom(shape: ShareLayoutShape, content: ShareCardContent): n
   const size = SHARE_LAYOUT[shape];
   const inner = size.width - 2 * size.pad;
   const head = content.logo || content.pill ? Math.max(content.logo ? size.logo : 0, content.pill ? pillHeight(shape) : 0) + size.gap : 0;
-  const tagline = content.tagline ? taglineLines(content.tagline, shape) * size.tagline * SHARE_LINE.tagline : 0;
+  const tagline = content.tagline ? taglineLines(content.tagline, shape, content.handwriting ?? true) * size.tagline * SHARE_LINE.tagline : 0;
   const rule =
     size.titleGap +
     (shape === "square" ? SHARE_RULE.height + (tagline > 0 ? size.taglineGap + tagline : 0) : Math.max(SHARE_RULE.height, tagline));

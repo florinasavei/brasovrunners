@@ -107,6 +107,14 @@ describe("shareTitleSize — the largest size whose three lines fit the room the
     expect(withTagline).toBeLessThanOrEqual(without);
   });
 
+  it("budgets the tagline in Roboto, which is wider, when Caveat did not load", () => {
+    // On the wide card the sixty-character tagline is one line in Caveat and two in Roboto, so the title has less room.
+    const caveat = titleRoom("og", { ...PLAIN, tagline: TAGLINE });
+    const roboto = titleRoom("og", { ...PLAIN, tagline: TAGLINE, handwriting: false });
+    expect(roboto).toBeLessThan(caveat);
+    expect(titleRoom("og", { ...PLAIN, tagline: TAGLINE, handwriting: true })).toBe(caveat);
+  });
+
   /*
     The review's cases on the wide card, and the same on the square: whatever the title, the place
     and the tagline, the title's lines at its size fit the room, so nothing pushes the band.

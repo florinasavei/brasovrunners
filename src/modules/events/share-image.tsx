@@ -121,7 +121,11 @@ async function backgroundPicture(url: string | null): Promise<string | null> {
       await response.body?.cancel();
       return null;
     }
-    if (!response.ok || !response.body || !/^image\/(png|jpeg|webp|gif)$/.test(type)) return null;
+    if (!response.ok || !response.body || !/^image\/(png|jpeg|webp|gif)$/.test(type)) {
+      // Not a picture: release the connection rather than leave the body open until it is collected.
+      await response.body?.cancel().catch(() => undefined);
+      return null;
+    }
     const chunks: Uint8Array[] = [];
     let total = 0;
     const reader = response.body.getReader();
@@ -250,8 +254,15 @@ export async function eventShareImage(
 
   const picture = await backgroundPicture(design.backgroundPictureUrl);
   const colours = shareCardColours(design, picture !== null);
+  // Whether Caveat loaded: without it the tagline is drawn in Roboto, which is wider, and the layout budgets for that.
+  let handwriting = true;
   const [fonts, logo, mark] = await Promise.all([
-    tagline ? Promise.all([brandFonts(), handwritingFont()]).then(([roboto, caveat]) => (caveat ? [...roboto, caveat] : roboto)) : brandFonts(),
+    tagline
+      ? Promise.all([brandFonts(), handwritingFont()]).then(([roboto, caveat]) => {
+          handwriting = Boolean(caveat);
+          return caveat ? [...roboto, caveat] : roboto;
+        })
+      : brandFonts(),
     design.showLogo ? lockup(colours.logo) : Promise.resolve(null),
     design.showLogo ? mountains(colours.mark) : Promise.resolve(null),
   ]);
@@ -260,7 +271,7 @@ export async function eventShareImage(
   const titleSize = shareTitleSize(
     title,
     shape,
-    titleRoom(shape, { logo: logo !== null, pill: pillWords, tagline, heldBack, place, chips: route.map((chip) => chip.words), band: showBand }),
+    titleRoom(shape, { logo: logo !== null, pill: pillWords, tagline, handwriting, heldBack, place, chips: route.map((chip) => chip.words), band: showBand }),
   );
   // The light and the accent's circle, as fractions of the card's width (§NNN).
   const glow = Math.round(width * 1.2);
@@ -397,7 +408,7 @@ export async function eventShareImage(
                 />
                 {tagline && (
                   <div
-                    style={{ display: "flex", fontFamily: "Caveat, Roboto", fontSize: size.tagline, lineHeight: SHARE_LINE.tagline, color: colours.accent }}
+                    style={{ display: "flex", fontFamily: "Caveat, Roboto", textWrap: "balance", fontSize: size.tagline, lineHeight: SHARE_LINE.tagline, color: colours.accent }}
                   >
                     {tagline}
                   </div>
