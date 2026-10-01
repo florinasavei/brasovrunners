@@ -1048,7 +1048,14 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         id="registrations-filters"
         data-testid="registrations-filters"
       >
-      <Box component="form" method="get" action={basePath}>
+      {/*
+        Keyed by the address the list was resolved from. A pill of the summary strip is a soft
+        navigation (`next/link`), so this client tree stays mounted, and MUI's select reads its
+        `defaultValue` once: without a key the select kept saying «Toate» after «Pe lista de
+        așteptare» was pressed, and the next «Filtrează» sent `status=` and dropped the filter the
+        pill had set (§NNN). A new address is a new form; the fields start from what the address says.
+      */}
+      <Box component="form" key={listQueryString} method="get" action={basePath}>
         <input type="hidden" name="sort" value={query.sort} />
         <input type="hidden" name="dir" value={query.dir} />
         <input type="hidden" name="perPage" value={String(query.perPage)} />
