@@ -6,7 +6,7 @@ import { openRegistrationClosing, registrationState } from "../domain/registrati
 import type { PublicEvent } from "../repository";
 import { GROUP_GAP, LINE_GAP, ROW_ICON_SX } from "./card-layout";
 import { countForm } from "@/i18n/count-form";
-import { fullThanksPhrase, waitingPhrase, waitlistRoomPhrase } from "./counted-phrases";
+import { fullThanksPhrase, openLinePhrases, waitlistRoomPhrase } from "./counted-phrases";
 import type { RegistrationDoor } from "./registration-door";
 import RegistrationDoorButton, { type ButtonCta, doorButtonLabel, hasDoorButton } from "./RegistrationDoorButton";
 
@@ -119,8 +119,14 @@ export function cardRegistrationLine(
         free !== null && fill
           ? factParts(say, "cta.freeOfCard", { places: fill.capacity }, "free", say(`cta.freeCount.${countForm(free, locale)}`, { count: free }))
           : null;
-      // Once anybody waits (§587, amending §346): "· 2 pe lista de așteptare", after the places, not bold.
-      const withWaiting = detailParts && cta.waiting > 0 ? { ...detailParts, after: `${detailParts.after} · ${waitingPhrase(say, cta.waiting)}` } : detailParts;
+      /*
+        Once anybody is in the line (§587, amending §346), after the places and not bold: an open offer
+        named as offered, then the people with no offer yet (§NNN) — «2 locuri libere din 10 · 1 loc
+        oferit din lista de așteptare · 1 pe lista de așteptare». Before §NNN an offer read as one more
+        person «pe lista de așteptare» beside free places, which looked like a place nobody was given.
+      */
+      const line = openLinePhrases(say, locale, cta);
+      const withWaiting = detailParts && line.length > 0 ? { ...detailParts, after: [detailParts.after, ...line].join(" · ") } : detailParts;
       return { lead: openUntil, leadParts: untilParts, detail: withWaiting && whole(withWaiting), detailParts: withWaiting, bold: true, button };
     }
     case "FULL": {

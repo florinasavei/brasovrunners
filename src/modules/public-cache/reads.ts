@@ -275,7 +275,9 @@ function groupById<T extends { locale: Locale; slug: string }>(
  * - `waitlistRoom`: how many more the waiting list takes (§350 waiting-list length), `null` when
  *   it has no limit, counted from the same two counts as the places — an offer lapsing, the key's
  *   clock, frees a slot in the line exactly when it frees a place;
- * - `waitlistCapacity`: the limit itself, `null` for none and 0 for no waiting list at all.
+ * - `waitlistCapacity`: the limit itself, `null` for none and 0 for no waiting list at all;
+ * - `waiting`, `offered`, `waitlisted`: the line's length and its two halves — the open offers and
+ *   the people with no offer yet (§587, §NNN) — from the same two counts.
  *
  * `null` for an uncapped event, which shows no number and never waitlists anybody, and for one
  * that no longer exists.
@@ -297,6 +299,8 @@ export async function cachedPublicAvailability(eventId: string, now: Date): Prom
       waitlistRoom: places.waitlistRoom,
       waitlistCapacity: event.waitlistCapacity,
       waiting: places.waiting,
+      offered: places.offered,
+      waitlisted: places.waitlisted,
     };
   });
 }
@@ -312,6 +316,13 @@ export type PublicAvailability = {
   waitlistCapacity: number | null;
   /** How many are in the waiting list's line (§587); absent in an entry cached before it was counted. */
   waiting?: number;
+  /**
+   * The line's two halves (§NNN): the offers still open, and the people waiting with no offer yet —
+   * `readPublicPlaces`'s own two counts. Absent in an entry cached before this release, which reads
+   * them as nought until it next expires.
+   */
+  offered?: number;
+  waitlisted?: number;
 };
 
 /** The two counts the public start list pages by (§250): named, and left off at their request. */

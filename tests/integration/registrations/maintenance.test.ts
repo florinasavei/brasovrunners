@@ -8,13 +8,16 @@ import { staffUsers } from "@/db/schema/staff-users";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { runRegistrationMaintenance } from "@/modules/registrations/maintenance";
+import type { RegistrationKind } from "@/db/schema/registrations";
 import {
   confirmByStaff,
   confirmEmail,
   type EventForRegistration,
   readPublicAvailability,
+  readPublicPlaces,
   signDeclaration,
   submitRegistration,
+  unregister,
 } from "@/modules/registrations/service";
 import { signingInput } from "../../helpers/declaration-signing";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
@@ -362,5 +365,130 @@ describe("AGENTS.md §16.2 registration maintenance", () => {
     // Still pending email confirmation — maintenance never touches capacity for a status that
     // does not hold a place, and the hold clock has not started.
     expect(after.status).toBe("PENDING_EMAIL_CONFIRMATION");
+  });
+});
+
+/**
+ * §NNN (amending §104 and §587) — a free place while somebody waits is swept. Every other clause of
+ * the job's scan names a row whose deadline has passed; a place given back while the event was
+ * cancelled (`fillAvailableSpots` offers nothing then, §331), or a family's reservation that lapsed
+ * with no write (§543), left a place nobody held and nobody was offered, and nothing woke for it. The
+ * scan now also selects a scheduled, capped event before its close with a `WAITLISTED` row and fewer
+ * places occupied than its capacity, and hands it to the same locked `fillAvailableSpots` — so no
+ * offer after the close, none on a cancelled event, and never more offers than places.
+ */
+describe("§NNN the job sweeps a free place while somebody waits", () => {
+  let db: TestDatabase;
+  let close: () => Promise<void>;
+
+  beforeAll(async () => {
+    ({ db, close } = await createTestDatabase());
+  });
+  afterAll(async () => close());
+
+  beforeEach(async () => {
+    await resetTables(db);
+    await approvePrivacyNotice(db, NOW);
+  });
+
+  const minutes = (n: number) => new Date(NOW.getTime() + n * 60_000);
+
+  /**
+   * A race of one place: Ana holds it (her declaration to sign), Bogdan and Carmen wait. The race is
+   * cancelled, Ana withdraws while it is — the place is released and, the event being cancelled,
+   * offered to nobody (§331) — and the race is put back on. `waitingKind` is Bogdan's and Carmen's kind.
+   */
+  async function freedWhileCancelled(waitingKind: RegistrationKind = "REAL", closesAt: Date | null = null) {
+    const event = await createInternalEvent(db, { capacity: 1 });
+    if (closesAt) await db.update(events).set({ registrationClosesAt: closesAt }).where(eq(events.id, event.id));
+    const withClose = { ...event, registrationClosesAt: closesAt };
+    const ids: Record<string, string> = {};
+    for (const [index, [name, kind]] of ([["ana", "REAL"], ["bogdan", waitingKind], ["carmen", waitingKind]] as const).entries()) {
+      await submitRegistration(db, withClose, submissionInput(`${name}@example.ro`), NOW, kind);
+      const fresh = (await db.select().from(registrations).where(eq(registrations.eventId, event.id))).find((row) => !Object.values(ids).includes(row.id))!;
+      // A second apart, so the line's order is Bogdan then Carmen, never a tie broken by id.
+      await confirmEmail(db, withClose, fresh.id, new Date(NOW.getTime() + index * 1000));
+      ids[name] = fresh.id;
+    }
+    await sendHoldEmails(db, NOW);
+    const statusOf = async (name: string) => (await db.select().from(registrations).where(eq(registrations.id, ids[name])))[0].status;
+    expect([await statusOf("ana"), await statusOf("bogdan"), await statusOf("carmen")]).toEqual(["PENDING_DECLARATION", "WAITLISTED", "WAITLISTED"]);
+
+    await db.update(events).set({ eventStatus: "CANCELLED" }).where(eq(events.id, event.id));
+    await unregister(db, { ...withClose, eventStatus: "CANCELLED" }, ids.ana, "PARTICIPANT", minutes(1));
+    // Nobody offered while the race is off (§331): the place is free and Bogdan still waits.
+    expect(await statusOf("bogdan")).toBe("WAITLISTED");
+    return { event: withClose, ids, statusOf };
+  }
+
+  const offers = async () => db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "WAITLIST_SPOT_OFFER"));
+
+  it("offers the place to the head of the line on the next run once a cancelled race is put back on, and to nobody else", async () => {
+    const { event, statusOf } = await freedWhileCancelled();
+    await db.update(events).set({ eventStatus: "SCHEDULED" }).where(eq(events.id, event.id));
+    // Put back on: a free place and two waiting. the public count reads full with two waiting, though a place is free.
+    expect(await readPublicPlaces(db, { id: event.id, capacity: 1, waitlistCapacity: null }, minutes(2))).toMatchObject({ availablePlaces: 0, offered: 0, waitlisted: 2 });
+
+    const result = await runRegistrationMaintenance(db, minutes(2));
+    expect(result.eventsProcessed).toBe(1);
+    expect(result.errorCount).toBe(0);
+    // One place, one offer: Bogdan, the oldest; Carmen still waits.
+    expect([await statusOf("bogdan"), await statusOf("carmen")]).toEqual(["WAITLIST_OFFERED", "WAITLISTED"]);
+    expect(await offers()).toHaveLength(1);
+    expect(await readPublicPlaces(db, { id: event.id, capacity: 1, waitlistCapacity: null }, minutes(2))).toMatchObject({ availablePlaces: 0, offered: 1, waitlisted: 1 });
+
+    // The next run finds nothing to sweep: the place is promised, not free.
+    expect((await runRegistrationMaintenance(db, minutes(3))).eventsProcessed).toBe(0);
+    expect(await offers()).toHaveLength(1);
+  });
+
+  it("offers nothing once registration has closed, the line left as it stands (§420)", async () => {
+    const { event, statusOf } = await freedWhileCancelled("REAL", minutes(30));
+    await db.update(events).set({ eventStatus: "SCHEDULED" }).where(eq(events.id, event.id));
+
+    expect((await runRegistrationMaintenance(db, minutes(31))).eventsProcessed).toBe(0);
+    expect([await statusOf("bogdan"), await statusOf("carmen")]).toEqual(["WAITLISTED", "WAITLISTED"]);
+    expect(await offers()).toHaveLength(0);
+  });
+
+  it("offers nothing on a race that stays cancelled (§331)", async () => {
+    const { statusOf } = await freedWhileCancelled();
+
+    expect((await runRegistrationMaintenance(db, minutes(2))).eventsProcessed).toBe(0);
+    expect([await statusOf("bogdan"), await statusOf("carmen")]).toEqual(["WAITLISTED", "WAITLISTED"]);
+    expect(await offers()).toHaveLength(0);
+  });
+
+  it("sweeps a test registration exactly as a real one: kind is in no count and no condition (§30, BR-REQ-037-04)", async () => {
+    const transitions: Record<RegistrationKind, string[]> = { REAL: [], TEST: [] };
+    const places: Record<RegistrationKind, unknown> = { REAL: null, TEST: null };
+    for (const kind of ["REAL", "TEST"] as const) {
+      await resetTables(db);
+      await approvePrivacyNotice(db, NOW);
+      const { event, statusOf } = await freedWhileCancelled(kind);
+      await db.update(events).set({ eventStatus: "SCHEDULED" }).where(eq(events.id, event.id));
+      const result = await runRegistrationMaintenance(db, minutes(2));
+      transitions[kind] = [String(result.eventsProcessed), await statusOf("bogdan"), await statusOf("carmen")];
+      places[kind] = await readPublicPlaces(db, { id: event.id, capacity: 1, waitlistCapacity: null }, minutes(2));
+    }
+    expect(transitions.TEST).toEqual(transitions.REAL);
+    expect(transitions.REAL).toEqual(["1", "WAITLIST_OFFERED", "WAITLISTED"]);
+    expect(places.TEST).toEqual(places.REAL);
+  });
+
+  it("leaves a full race alone: a place held is not free, whoever waits", async () => {
+    const event = await createInternalEvent(db, { capacity: 1 });
+    for (const email of ["ana@example.ro", "bogdan@example.ro"]) {
+      await submitRegistration(db, event, submissionInput(email), NOW);
+    }
+    const [ana, bogdan] = await db.select().from(registrations).where(eq(registrations.eventId, event.id)).orderBy(registrations.createdAt);
+    await confirmEmail(db, event, ana.id, NOW);
+    expect((await confirmEmail(db, event, bogdan.id, NOW)).status).toBe("WAITLISTED");
+    await sendHoldEmails(db, NOW);
+
+    // Ana's hold is live: the one place is occupied, and the sweep reads it so and selects nothing.
+    expect((await runRegistrationMaintenance(db, minutes(5))).eventsProcessed).toBe(0);
+    const [still] = await db.select().from(registrations).where(eq(registrations.id, bogdan.id));
+    expect(still.status).toBe("WAITLISTED");
   });
 });

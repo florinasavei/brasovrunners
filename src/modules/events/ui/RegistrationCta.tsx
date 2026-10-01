@@ -11,7 +11,7 @@ import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { DENSITY } from "@/theme/density";
 import type { PublicEventPage } from "../repository";
 import { cachedDeadlines } from "@/modules/public-cache/reads";
-import { fillPhrase, fullThanksPhrase, waitingPhrase, waitlistOfferPhrase, waitlistRoomPhrase } from "./counted-phrases";
+import { fillPhrase, fullThanksPhrase, offeredPhrase, waitingPhrase, waitlistOfferPhrase, waitlistRoomPhrase } from "./counted-phrases";
 import { type PreviewDoor, readRegistrationDoor } from "./registration-door";
 import RegistrationDoorButton, { doorButtonLabel } from "./RegistrationDoorButton";
 
@@ -87,10 +87,18 @@ export default async function RegistrationCta({
           </Typography>
         )}
 
-        {/* Once anybody waits (§587, amending §346): the line's length, from the count the door made. */}
-        {cta.waiting > 0 && (
+        {/*
+          Once anybody is in the line (§587, amending §346), from the counts the door made: an open offer
+          named as offered, then the people with no offer yet (§NNN) — the card's order and words.
+        */}
+        {cta.offered > 0 && (
+          <Typography variant="body2" color="text.secondary" data-testid="waitlist-offered">
+            {offeredPhrase(t, locale, cta.offered)}
+          </Typography>
+        )}
+        {cta.waitlisted > 0 && (
           <Typography variant="body2" color="text.secondary" data-testid="waitlist-waiting">
-            {waitingPhrase(t, cta.waiting)}
+            {waitingPhrase(t, cta.waitlisted)}
           </Typography>
         )}
       </Stack>

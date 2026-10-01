@@ -1,6 +1,7 @@
 import { and, eq, gt, inArray, or, sql } from "drizzle-orm";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { events } from "@/db/schema/events";
+import { familyPlaceHolds } from "@/db/schema/family-entries";
 import { registrationInterests } from "@/db/schema/registration-interests";
 import { registrations } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
@@ -90,6 +91,12 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
     the job's, and waking the database at each of them would be a real run that does nothing
     (§334, jobs sleep when nothing is due). An event put back on is a save, and the save wakes the
     job itself.
+
+    A family's reservation (§543) too, since §NNN: a `PENDING_EMAIL_CONFIRMATION` row a sitting's
+    form reserved, until the sitting's fixed deadline. Before, the form's save woke the job once, the
+    run that followed planned its quiet without the deadline, and the job slept through the lapse to
+    the daily window — the place came back in the count, but nobody waiting was offered it until the
+    next sign-up or 04:00. A row with no reservation has no `hold_expires_at` and is not read here.
   */
   const [holds] = await any
     .select({ next: sql<unknown>`min(${registrations.holdExpiresAt})` })
@@ -97,11 +104,25 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
     .innerJoin(events, eq(events.id, registrations.eventId))
     .where(
       and(
-        inArray(registrations.status, ["WAITLIST_OFFERED", "PENDING_DECLARATION"]),
+        inArray(registrations.status, ["WAITLIST_OFFERED", "PENDING_DECLARATION", "PENDING_EMAIL_CONFIRMATION"]),
         eq(events.eventStatus, "SCHEDULED"),
         gt(registrations.holdExpiresAt, now),
       ),
     );
+
+  /*
+    …and a family sitting's held place for a form that wrote no registration (§543), at the same
+    deadline (§NNN): `expireStaleHolds` deletes it then, and the place is the next in line's. Only a
+    row that holds a place — a person sent while none was free holds none and frees none (round six)
+    — and only on a scheduled event, as above (§331). Like the reservation read above, it does not look
+    for a waiting person: a deadline on an event where nobody waits wakes the job once for nothing
+    (§334), which a join before it would have replanned anyway.
+  */
+  const [placeHolds] = await any
+    .select({ next: sql<unknown>`min(${familyPlaceHolds.expiresAt})` })
+    .from(familyPlaceHolds)
+    .innerJoin(events, eq(events.id, familyPlaceHolds.eventId))
+    .where(and(eq(familyPlaceHolds.holdsPlace, true), eq(events.eventStatus, "SCHEDULED"), gt(familyPlaceHolds.expiresAt, now)));
 
   /*
     The instants of each event still ahead that has anybody on it: its start (holds end, the
@@ -221,7 +242,7 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
   // `purgeLapsedFamilyEntries` (§446): another person's kept form, deleted once its window passes.
   const familyLapse = await nextFamilyEntryLapse(db, now);
 
-  return earliest([emailLapses, toDate(holds?.next), ...eventInstants, ...lateReminders, ...interestInstants, familyLapse]);
+  return earliest([emailLapses, toDate(holds?.next), toDate(placeHolds?.next), ...eventInstants, ...lateReminders, ...interestInstants, familyLapse]);
 }
 
 /**

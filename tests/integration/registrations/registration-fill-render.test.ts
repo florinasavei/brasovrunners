@@ -116,6 +116,9 @@ describe("§346 the fill line beside the register button, from the cached count"
       waitlistRoom: null,
       waitlistCapacity: null,
       waiting: 0,
+      // The line's two halves, from the same read (§NNN).
+      offered: 0,
+      waitlisted: 0,
     });
   });
 
@@ -129,6 +132,9 @@ describe("§346 the fill line beside the register button, from the cached count"
       waitlistRoom: 2,
       waitlistCapacity: 3,
       waiting: 1,
+      // One waiting with no offer yet (§NNN).
+      offered: 0,
+      waitlisted: 1,
     });
   });
 

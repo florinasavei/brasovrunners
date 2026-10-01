@@ -304,6 +304,11 @@
         "other": "Mulțumim! Toate cele {capacity} de locuri s-au ocupat. Fii primul pe lista de așteptare."
       },
       "waitingCount": "{count} pe lista de așteptare",
+      "offeredCount": {
+        "one": "{count} loc oferit din lista de așteptare",
+        "few": "{count} locuri oferite din lista de așteptare",
+        "other": "{count} de locuri oferite din lista de așteptare"
+      },
       "fullJoin": "Intră pe lista de așteptare — te anunțăm pe email când se eliberează un loc.",
       "fullOffer": "Când se eliberează un loc, primești un email și ai {hours} să confirmi — altfel locul trece mai departe.",
       "waitlistFull": "Locurile s-au ocupat și lista de așteptare e plină — ne pare rău.",
@@ -2114,6 +2119,7 @@
       "confirmed": "Confirmate",
       "holds": "Rezervate",
       "free": "Libere",
+      "offeredFigure": "Oferite",
       "waiting": "În așteptare",
       "holdsHelp": "„Rezervate” sunt locurile ținute cât cineva semnează declarația ({hold}) sau răspunde la o ofertă ({offer}). Libere = locuri − confirmate − rezervate.",
       "lineTitle": "Lista de așteptare ({count})",

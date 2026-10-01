@@ -33,6 +33,13 @@ export type RegistrationCtaInput = RegistrationWindowInput & {
   waitlistCapacity?: number | null;
   /** How many are in the waiting list's line now (§587), from the same count; absent is nought. */
   waiting?: number;
+  /**
+   * The line's two halves while places are free (§NNN, amending §587): the offers still open and the
+   * people waiting with no offer yet (`readPublicPlaces`'s `offered` and `waitlisted`); absent is
+   * nought, as in a cache entry written before they were counted.
+   */
+  offered?: number;
+  waitlisted?: number;
 };
 
 export type RegistrationCta =
@@ -45,8 +52,13 @@ export type RegistrationCta =
   /** `opensAt` is null when the organizer announced "soon" with no date (§451). */
   | { kind: "NOT_YET_OPEN"; opensAt: Date | null }
   | { kind: "CLOSED" }
-  /** `availablePlaces` is null for an uncapped event — open, with no number to show. */
-  | { kind: "OPEN"; availablePlaces: number | null; waiting: number }
+  /**
+   * `availablePlaces` is null for an uncapped event — open, with no number to show. `offered` and
+   * `waitlisted` say the line beside the free places (§NNN): «1 loc oferit din lista de așteptare»
+   * for a place promised to the head of the line, «2 pe lista de așteptare» for the people with no
+   * offer yet — never the person offered counted as still waiting.
+   */
+  | { kind: "OPEN"; availablePlaces: number | null; offered: number; waitlisted: number }
   /**
    * No place, and the waiting list takes people: its button. `waitlistRoom` is how many more it
    * takes when it has a limit (§348) — "Mai sunt 3 locuri pe lista de așteptare" — and null when
@@ -96,7 +108,9 @@ export function registrationCta(event: RegistrationCtaInput, now: Date): Registr
     case "OPEN":
       // Zero free places is the waiting list, not a refusal: BR-REQ-035-01. `null` is an
       // uncapped event, which is never full.
-      if (event.availablePlaces !== 0) return { kind: "OPEN", availablePlaces: event.availablePlaces, waiting: event.waiting ?? 0 };
+      if (event.availablePlaces !== 0) {
+        return { kind: "OPEN", availablePlaces: event.availablePlaces, offered: event.offered ?? 0, waitlisted: event.waitlisted ?? 0 };
+      }
       // …unless the event keeps no waiting list, or keeps one that is full (§348): then there is
       // nothing to join, and a button would lead to a form that refuses at the end of it.
       if (event.waitlistCapacity === 0) return { kind: "FULL_NO_WAITLIST" };

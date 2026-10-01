@@ -974,6 +974,15 @@ export type PublicPlaces = {
   waitlistRoom: number | null;
   /** How many are in the line right now (`domain/waitlist.ts#waitlistLength`, §587): 0 for an uncapped event. */
   waiting: number;
+  /**
+   * The two halves of `waiting` (§NNN, amending §587): the offers still open — a place promised to
+   * the head of the line, counted as occupied (`OccupiedCounts.unexpiredWaitlistOfferedHolds`) — and
+   * the `WAITLISTED` rows with no offer yet (`countEligibleWaitlisted`). The same two counts the
+   * line's length is made of, so the card can say «1 loc oferit din lista de așteptare» instead of
+   * counting the person offered as still waiting. 0 for an uncapped event.
+   */
+  offered: number;
+  waitlisted: number;
 };
 
 /**
@@ -993,7 +1002,7 @@ export async function readPublicPlaces<T extends Record<string, unknown>>(
   event: { id: string; capacity: number | null; waitlistCapacity: number | null },
   now: Date,
 ): Promise<PublicPlaces> {
-  if (event.capacity === null) return { availablePlaces: null, waitlistRoom: null, waiting: 0 };
+  if (event.capacity === null) return { availablePlaces: null, waitlistRoom: null, waiting: 0, offered: 0, waitlisted: 0 };
 
   const counts = await repo.countOccupied(db, event.id, now);
   const eligibleWaitlisted = await repo.countEligibleWaitlisted(db, event.id);
@@ -1006,6 +1015,9 @@ export async function readPublicPlaces<T extends Record<string, unknown>>(
     }),
     waitlistRoom: waitlistRoom(line),
     waiting: waitlistLength(line),
+    // The line's two halves, from the same two counts — no query of their own (§NNN).
+    offered: line.openOffers,
+    waitlisted: line.waitlisted,
   };
 }
 
