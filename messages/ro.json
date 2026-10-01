@@ -168,11 +168,11 @@
     "distance": "Distanță",
     "distanceKm": "{km} km",
     "distanceKmApproximate": "≈ {km} km",
-    "distanceKmApproximateLong": "circa {km} km (aproximativ)",
+    "distanceKmApproximateLong": "circa {km} km",
     "elevation": "Diferență de nivel",
     "elevationM": "{m} m diferență de nivel",
     "elevationShort": "{m} m D+",
-    "elevationMEstimated": "circa {m} m diferență de nivel (estimativ)",
+    "elevationMEstimated": "circa {m} m diferență de nivel",
     "elevationShortEstimated": "≈ {m} m D+",
     "night": {
       "chip": "Noapte",

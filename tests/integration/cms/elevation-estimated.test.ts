@@ -148,7 +148,7 @@ describe("§585 «Estimativ» on the event's climb", () => {
 
     const t = createTranslator({ locale: "ro", messages: ro, namespace: "Event" }) as unknown as (key: string, values?: Record<string, string | number>) => string;
     const format = createFormatter({ locale: "ro", timeZone: "Europe/Bucharest" });
-    expect(routePillParts(page, t, format).elevation).toMatchObject({ label: "≈ 350 m D+", srLabel: "circa 350 m diferență de nivel (estimativ)" });
+    expect(routePillParts(page, t, format).elevation).toMatchObject({ label: "≈ 350 m D+", srLabel: "circa 350 m diferență de nivel" });
 
     const course = pageSectionStates({ event: row, texts: translations, night: false }).find((section) => section.id === "course");
     expect(course?.isDrawn).toBe(true);
