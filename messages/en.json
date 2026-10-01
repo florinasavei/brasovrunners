@@ -4760,7 +4760,7 @@
                 "«Registrations»: who signed up, with filters, the export and each registration's page.",
                 "«Race day»: the number pickup desk, on a phone.",
                 "«Gallery» and «Pages» (the standard pages — «Contact», «The team», «FAQ», «Members» — and the club's own pages).",
-                "«Settings»: «Emails» (what participants receive, the Mailgun plan), «Deadlines», «Appearance», «Costs», «Anti-bot» and, at the end of the row, «Configuration» (for the Technical role and the Administrators).",
+                "«Settings»: «Emails» (what participants receive, the Mailgun plan, the hourly limit, the Gmail routes, the sending queue), «Deadlines», «Appearance», «Costs», «Anti-bot» and, at the end of the row, «Configuration» (for the Technical role and the Administrators).",
                 "«Tasks» → «Club»: what the club still has to do, read from the system, with the steps under each row. «Tasks» → «To do»: the club's list, typed and ticked by hand — add a line, give it to somebody, set a due day, tick it when it is done.",
                 "«Legal documents»: the terms, the privacy notice (GDPR) and the declarations.",
                 "«Staff» and «Guide» (this page)."
@@ -4793,7 +4793,8 @@
                 "Nobody merges two registrations into one.",
                 "Nobody on the team signs the declaration for the participant: at the desk you only record the paper declaration they signed themselves.",
                 "No legal text takes effect without an approved version; without approved terms, notice and declaration nobody can register.",
-                "Nobody goes past the number of places: there is no registration over capacity, not by hand and not at the desk. A place is given only when it is free."
+                "Nobody goes past the number of places: there is no registration over capacity, not by hand and not at the desk. A place is given only when it is free.",
+                "Nobody gets a place without their own signature (a parent's, for a minor): a waiting-list offer is accepted and signed by the person, from their email, and at the desk «Give a place» confirms only on the paper declaration they sign there, in person."
               ]
             }
           ]
@@ -4864,7 +4865,7 @@
                 "«Number given now» already holds the next spare number. Take that bib from the spare pile and write their name on its empty line in marker. Handing out another number? Change it in the box. No spares left? Type the number you hand out, or leave the box empty and the site picks one.",
                 "Press «Add the registration» and confirm in the window.",
                 "Give them the paper declaration to sign, then «Mark present» and hand them the bib.",
-                "Event full? They join the waiting list, like anyone. «Give a place» works only once a place has freed up."
+                "Event full, or somebody already on the waiting list? The person joins the list, like anyone. «Give a place» works only when a place is free, and confirms them on the paper declaration they sign at the desk."
               ]
             },
             {
@@ -4967,7 +4968,10 @@
                 "Under «Events» pick the event (or «All events»), under «Status» what you need, then «Filter».",
                 "Looking for someone: type part of the name in «Search by name» and press «Filter». With no event chosen, it looks in every event.",
                 "The «How far» column says each person's step. Press a name to open the registration: «The registration's journey» and «Timeline» say everything that happened.",
-                "The top says once what you cannot change here. The Tehnic role does not see registrations at all."
+                "The top says once what you cannot change here. The Tehnic role does not see registrations at all.",
+                "On the event's public page, the first number counts the registrations holding a place: the confirmed plus those still in progress — a declaration not signed yet, a waiting-list offer not accepted yet, a place a family holds. After the dash the line names only what exists: how many are confirmed and how many in progress, and how many free places are kept for the waiting list, for example “6 registered of 10 places — 4 confirmed, 2 completing their registration, 4 places kept for the waiting list”.",
+                "Places kept are free places the waiting list claims, and the card shows them in two ways. With more places free than people waiting, the card says «Places are given from the waiting list» and counts no free place. When the list claims every free place, as in the example, the card says the places are taken — “Thank you! All 10 places are taken — … already waiting.” — and offers «Join the waiting list», while the places line still names “4 places kept for the waiting list”. Either way those places are free: with «Waiting-list offers go out automatically» on «No» the club hands them out, with «Send them the offer»; on «Yes» the queue does, to the first on the list.",
+                "The «Who's coming» list holds only those who ticked that they want to appear on it, mostly the confirmed, so the first number and the list differ. On the card, “1 place offered from the waiting list” is a place sent to somebody on the list who has not accepted it yet."
               ]
             },
             {
@@ -5000,7 +5004,8 @@
                 "«Download every number (PDF)»: two A5 numbers on each A4 sheet, with the cut line. «One per page» for a single one, centred on A4.",
                 "Print at actual size (100%) and cut on the line.",
                 "Numbers go in order of confirmation, from «Race numbers (BIB) start at». «Assign numbers» is the Administrator's.",
-                "The desk's spares: «Reprint the free spares (PDF)» prints again the ones not yet given. Only the Administrator reserves new spare numbers."
+                "The desk's spares: «Reprint the free spares (PDF)» prints again the ones not yet given. Only the Administrator reserves new spare numbers.",
+                "On the site, the «Who's coming» list shows the «No.» column once the club approves the new privacy notice. Before that, the Administrator writes to those already registered with «Send a message to participants»; anyone who does not want to appear presses «I do not want to appear on the participants & results list» in «My registrations», and the number leaves with the name. From the approval on, the column shows the number of every confirmed runner who has one, whichever notice they registered under; a confirmed runner without one shows “—”."
               ]
             },
             {
@@ -5072,7 +5077,7 @@
               "title": "What the Administrator does, not you",
               "steps": [
                 "Creating, changing, publishing, duplicating and cancelling events, and telling the participants about a change.",
-                "Cancelling or erasing registrations, resending emails, «Assign numbers», marking numbers printed and sending the thank-you. Tell them what needs doing."
+                "Cancelling or erasing registrations, resending emails (and the declaration to everyone who has not signed), sending waiting-list offers («Send them the offer»), «Assign numbers», marking numbers printed and sending the thank-you. Tell them what needs doing."
               ]
             }
           ]
@@ -5169,12 +5174,26 @@
               "steps": [
                 "«Events» → «Edit» → the «Taking part and registration» card.",
                 "«Registration mode» → «Înscrieri pe site» (registration on the site).",
-                "«Capacity» and «Maximum waiting-list length» (empty = no limit, 0 = no list).",
+                "«Capacity» and «Maximum waiting-list length» (empty = no limit, 0 = no list). Below them, «Waiting-list offers go out automatically»: «Yes» gives every freed or added place to the first on the list; «No» if you want to choose (see “Choose who gets a freed place”).",
                 "«Registration period»: «Registration opens» and «Registration closes».",
                 "«Confirmation window»: «Participation confirmation: asked how many days before» and, in the box beside it, how many days before it is due (0 = the place never lapses before the start).",
                 "«Programme, rules and declaration» → «Rules»: «Minimum age to take part» (14 unless you change it, never under 14), on every type of event. The declaration: «Programme, rules and declaration» → «Self-declaration» → «Declaration a participant signs».",
                 "«Race numbers (bibs)»: «Race numbers (BIB) start at».",
                 "Press «Save», then publish the event. Nobody can register while the terms, the privacy notice and the declaration are not approved."
+              ]
+            },
+            {
+              "title": "Choose who gets a freed place",
+              "steps": [
+                "«Events» → «Edit» on the race's row → the «Taking part and registration» card.",
+                "Under «Waiting-list offers go out automatically» choose «No» and press «Save». On «No», a freed or added place stays free until you hand it out.",
+                "Only then raise «Capacity», by as many places as you want to hand out now. On «Yes», added places go at once, as offers, to the first on the list.",
+                "The «Registrations received» card → «Registration queue»: on the chosen person's waiting-list row press «Send them the offer». The same button is on their registration's page too.",
+                "The window says until when they have; press «Send them the offer» again. They get the ordinary «A place has freed up» email, with the ordinary deadline, {offer}: from the email they press «Confirm the place» and sign the declaration, if they have not yet.",
+                "Not accepted in time? The offer lapses and the place is free again, for whoever you choose.",
+                "A free place is needed: a cancellation, or more places. On a full event the press is refused, and an “i” beside the button says why. After registration closes no offer is sent: at the desk, with the person there, «Give a place» confirms them on the paper declaration.",
+                "The others stay on the waiting list and receive nothing. On the site, the card says «Places are given from the waiting list», and newcomers join the list too while anyone waits. How many may wait is «Maximum waiting-list length».",
+                "Mind the end of the line: once nobody is left on the waiting list — somebody holding an offer is no longer on it —, the places still free go to whoever registers next."
               ]
             },
             {
@@ -5202,10 +5221,23 @@
               "steps": [
                 "«Registrations» → find the person → press their name.",
                 "Wrong name: under «Correct the name» type the right one → «Save the name».",
-                "Not coming any more: «Cancel the registration», write the «Reason», press «Cancel the registration» and confirm. The place goes to the waiting list.",
+                "Not coming any more: «Cancel the registration», write the «Reason», press «Cancel the registration» and confirm. The place goes to the first on the waiting list; if the event's offers do not go out automatically, it stays free until you hand it out.",
                 "The email never arrived: «Resend email» → «Send now, without waiting for the scheduled round».",
                 "They ask for their data to be erased: «Delete permanently», write the «Reason for deletion», tick «I confirm this deletion is permanent» and press «Delete permanently».",
                 "Several at once: tick the rows on the list → «Cancel the ticked ones»."
+              ]
+            },
+            {
+              "title": "Resend the declaration to those who have not signed",
+              "steps": [
+                "«Events» → «Edit» on the race's row → the «Registrations received» card.",
+                "Above the queue press «Resend the declaration to everyone who has not signed». The button is grey when nobody waits: under it it says «Nobody is waiting to sign the declaration.»",
+                "The window says how many are waiting to sign and how many it skips: those whose declaration email left in the last hour or is still queued, and those at the resend limit. Read it, then press «Resend the declaration to everyone who has not signed» again.",
+                "«Queued:» appears at the top with how many get the email and how many were skipped. The emails leave through the sending queue, at its pace (see “Emails are late, or Mailgun refused”).",
+                "Mind: each gets a new link, and the link in the earlier email stops working. Tell them to open the newest email.",
+                "Tell them to look for the email in Spam and in Promotions too.",
+                "At most three presses an hour per event. An “i” beside the button says when a press would be refused: the event is cancelled, finished or has started, or the hour's presses are spent.",
+                "One person only: open their registration → «Resend email»."
               ]
             },
             {
@@ -5232,8 +5264,23 @@
                 "First pay for the plan in the Mailgun account.",
                 "«Settings» → «Emails» → «The Mailgun plan, and how much we can still send».",
                 "Under «The plan the Mailgun account is on» pick Basic; under «Note (why, until when)» write why and until when.",
-                "Press «Save the plan» and confirm. The figures on «Costs» and the «Send now» button follow it.",
-                "After the race: cancel in Mailgun, then put Free back here and «Save the plan»."
+                "«Hourly limit»: how many emails leave through Mailgun in an hour; the rest wait in the queue and leave on their own, none lost. While Mailgun keeps the account limited, write 90 (the text under the box asks the same); on QA, which shares the domain with production, set much less, about 10. Once Mailgun lifts the limit, raise the number or clear the box.",
+                "Press «Save the plan» and confirm. The figures on «Costs», the «Sent in the last hour:» line and the «Send now» button follow it.",
+                "Further down, «How emails leave: Mailgun or the club's Gmail»: for each group of emails choose «Mailgun» or «The club's Gmail». Gmail costs nothing, but Google blocks bulk sending: under each group it says what is recommended.",
+                "«Gmail limit per day (recipients)» and «Pause between two Gmail messages (seconds)» say how much leaves through Gmail, and how slowly. Press «Save the routes» and confirm.",
+                "«Settings» → «Costs» → «What it costs»: each service per month and per year, with the totals. Took Vercel Pro for the race? On the same page, under «The Vercel plan» pick Pro, then «Save the Vercel plan» and confirm; the day you drop it, Hobby.",
+                "After the race: cancel in Mailgun, then put Free back here and «Save the plan». Under «Hourly limit» keep what Mailgun asks of you."
+              ]
+            },
+            {
+              "title": "Emails are late, or Mailgun refused",
+              "steps": [
+                "«Settings» → «Emails». Under «The Mailgun plan, and how much we can still send», the «Sent in the last hour:» line says how many left through Mailgun in the last hour, out of the «Hourly limit». When the hour is full, the rest waits in the queue and leaves on its own once the hour has room. Nothing is lost.",
+                "Open «The sending queue»: «In the queue:» says how many wait, and each row says when it leaves. A red row, «Late: it should have left already…», is past its time.",
+                "Mailgun asked for a pause, because we are sending too fast: on the row, «The provider's last answer:» starts with “paused by the provider”. The emails through Mailgun wait as long as Mailgun asked, spending no attempt, then leave on their own.",
+                "«Send now» sends what is due at once. It helps for the emails through the club's Gmail and while Mailgun's hour has room; while the hour is full or the pause lasts it sends nothing through Mailgun, however often you press — and under the button or in a banner it says why.",
+                "To participants who ask: the email is coming, only later; they should look in Spam and in Promotions too. Those without their declaration link: “Resend the declaration to those who have not signed”.",
+                "Write to a Superadministrator (or the club's owner), with a picture of the screen, if a row shows «Stopped after every attempt», if the red rows are still there an hour later, or if «Sent in the last hour:» stays at 0 while the queue grows."
               ]
             },
             {
@@ -5395,6 +5442,8 @@
                 "What is in force for each text: the card's head says «In force: version…» or «No version in force»; the filters «In force», «Replaced» and «Withdrawn» show the rest.",
                 "Without approved terms, notice and a race declaration nobody can register. For a road race the editor picks the road declaration once it is approved, the mountain event one until then. A group run offers its declaration only when it ticks it and its text (asphalt or trail) is approved.",
                 "Until you approve the new notice, the public participant list shows the confirmed only.",
+                "The «No.» column on the «Who's coming» list (the race number) appears once you approve the privacy notice from the new template. First write to those already registered: «Events» → «Open» → the «Registrations received» card → «Send a message to participants»; tell them their number will appear beside their name and that, if they do not want it, they press «I do not want to appear on the participants & results list» in «My registrations» (the number leaves with the name).",
+                "Then approve the notice: the «GDPR» card → «Regenerate from the template» → the draft → «Save draft» → «Approve and publish». From then on the column shows the number of every confirmed runner who has one, whichever notice they registered under; a confirmed runner without one shows “—”. «Tasks» → «Club» carries its row until then.",
                 "Drafts or versions you no longer need: tick them in the table, press «Delete the ticked versions» and check the list. Drafts only: «Delete the drafts» and confirm. With an approved version in the list: under «Confirmation» type the text asked for (for example “DELETE 2”), under «Reason» why, then «Delete the versions».",
                 "The signed declarations of a group run, when the signer asks for them to be erased: «Events» → «Edit» on the run → «Signed declarations (group run)» → «Erase several at once»: tick them, fill in «Why it is erased» once, press «Erase the ticked ones» and confirm. The log keeps your name and the reason, not the signer's."
               ]
@@ -5457,7 +5506,7 @@
                 "Fill in the form. For a race: «Read the race conditions», scroll to the end, then «I have read them and I agree». Tick the terms too.",
                 "Press «Submit registration». If something is missing, «Still missing:» appears above the button with each item — tap one and it takes you there.",
                 "In the email press «Confirm your email». The link is valid for {confirmation}.",
-                "Sign the declaration: on the page that opens, or from the «Sign the declaration» email → «Sign».",
+                "Once confirmed, the page tells them the declaration comes by email. From the «Sign the declaration» email → tick «I have read and accept the declaration…» → «Sign». Without the tick, the page says right under the box what is missing.",
                 "They get the confirmation with the QR code and the race number, plus the signed declaration as a PDF.",
                 "Check in the backoffice: «Registrations» → search the name → the status «Confirmată» (confirmed)."
               ]
@@ -5466,7 +5515,7 @@
               "title": "Their place and deadlines",
               "steps": [
                 "Once the address is confirmed, the place is held for {hold} (or until the confirmation deadline, for an event further away than its window). The deadline matters only if somebody is waiting for a place; otherwise the place stays theirs until the start.",
-                "Event full: they join the waiting list. When a place frees up they get an email and have {offer} to sign the declaration.",
+                "Event full, or somebody already waiting: they join the waiting list. When a place comes to them — by itself, or chosen by the club, as the event is set — they get the «A place has freed up» email and have {offer} to accept it and sign the declaration.",
                 "From {checkin} before the start, from «Manage your registration» they can press «I have arrived — mark me as here». They still pick up the number at the desk."
               ]
             },
@@ -5475,7 +5524,7 @@
               "steps": [
                 "From any email about their registration: «I can't make it any more» → at «Why are you cancelling?» choose the reason (for «Another reason» they write it in short) → «Cancel the registration for…» (with the person's name) → «Yes, cancel».",
                 "On a family's email, the button opens «My registrations», with each person: «Withdraw from this registration», with the reason chosen too. The same any time, from the site, with their address.",
-                "In a family's declarations: «Withdraw the registration for…», with the reason chosen too. The place goes to the waiting list at once.",
+                "In a family's declarations: «Withdraw the registration for…», with the reason chosen too. The place goes to the waiting list at once, or stays free for the club, if that event's offers do not go out automatically.",
                 "The reason shows on the registration's page, in the export and in the club's copy of the cancellation email."
               ]
             },
@@ -5513,7 +5562,7 @@
               "steps": [
                 "The first person registers with the form, like anyone.",
                 "The form is sent again with the same address for a different person — another name and another birth date than every person already registered, or, on a registered person's birth date, another name and the other sex (a brother and a sister born on the same day). Nobody is registered yet: the screen shows the same “check your email” as always, so nobody learns from the form who is registered.",
-                "With «Yes, one more person» on the screen after the form, each next form reserves that person’s place at once. The address then gets one email for everybody, with one button.",
+                "With «Yes, one more person» on the screen after the form, each next form reserves that person’s place at once. The address then gets one email for everybody, with one button. While anyone is on the waiting list nothing is reserved: the whole family joins the list once the address is confirmed.",
                 "The address gets the email “Registering one more person?”, with who is already registered and the person from the form, and one button, «I confirm I am registering another person».",
                 "The page it opens shows the details again; for an adult it asks one tick (the person declares their own health when they sign). The confirmation registers them straight away — no second confirmation link. The link is valid for {confirmation} and works once; unconfirmed details are deleted by themselves after that.",
                 "If only the name or only the birth date differs — or another name on a registered person's birth date, of the same sex — nobody is registered: the address gets the existing registration's email, with one sentence on how to register someone else.",
