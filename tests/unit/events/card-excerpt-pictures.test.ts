@@ -3,6 +3,7 @@ import { renderToReadableStream } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import type { RichTextBlock, RichTextDoc } from "@/modules/content/rich-text/domain/schema";
 import type { PublicEvent } from "@/modules/events/repository";
+import { withClientWords } from "../../helpers/client-words";
 
 /**
  * BR-REQ-041-01 (§417) — a picture in the short description is on the listing card whatever the
@@ -75,7 +76,7 @@ const LONG = [
 const withoutStyles = (html: string) => html.replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
 
 async function markup(node: ReactNode): Promise<string> {
-  const stream = await renderToReadableStream(node);
+  const stream = await renderToReadableStream(withClientWords(node));
   await stream.allReady;
   return new Response(stream).text();
 }

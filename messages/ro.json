@@ -7041,6 +7041,12 @@
     "photoCount": "{count} fotografii",
     "photoAlt": "Fotografia {n} din {total}: {title}"
   },
+  "Picture": {
+    "open": "Mărește poza",
+    "openNamed": "Mărește poza: {alt}",
+    "title": "Poza, mărită",
+    "close": "Închide"
+  },
   "Contact": {
     "title": "Scrie-ne",
     "intro": "O întrebare despre o alergare, o înscriere sau club? Îți răspundem pe e-mail.",

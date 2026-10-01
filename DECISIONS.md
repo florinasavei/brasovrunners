@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.50-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.51-2026-09-27 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V2.50-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.51-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -22308,3 +22308,81 @@ Baseline `BR-V2.50-2026-09-27`.
 **The path.** A hotfix straight to `main` (`docs/RUNBOOKS.md` § Hotfix): typecheck, eslint on the file, `yarn secrets:check`, the two touched unit tests (55 green), PR #307 merged into `main`, `main` back into `qa` by PR #308; this entry lands with the next batch.
 
 Baseline `BR-V2.50-2026-09-27`.
+
+## 600. A race's two named times are a tidy list where the «când» row wraps (amends §597)
+
+**The owner, 2026-10-01, from his phone, of the race's card on QA:** "nu îmi place că lucrurile nu sunt aliniate când sunt ambele ore prezente, ar trebui să fie cumva mai aliniate." The card's «când» row with both named times (§597) wrapped on a phone into «Sâmbătă, 21 nov. ·» / «[clock] 08:30 (start eveniment) ·» / «[flag] 11:00 (start cursă)»: the calendar in the card's glyph column, the clock and the flag inside the text column, so the times started further right than the date and a middle dot hung at the end of two lines.
+
+**Decision.** Where the row would wrap, a race with both named times is drawn as a list: each piece — the date, the event start, the race start — on a line of its own (`flex-basis: 100%`), no middle dots (a dot binds pieces that share a line), and the clock and the flag hung back into the row's glyph column (the twenty-pixel glyph and its eight-pixel gap, `ROW_ICON_SX`), under the calendar. The date, «08:30 (start eveniment)» and «11:00 (start cursă)» start at one left edge; the three glyphs stand in one column. The bold day and the bold digits stay. CSS only: the markup is the same at every width and a media query decides, so nothing is measured in the browser.
+
+- **The card:** below 412 pixels — §597's measurement, the row 228/268/298 pixels at 320/360/390 against the two times' 178 + 140 — so the list is three lines at 320–390, as `listing-cards.spec.ts` already bounds it; from 412 up the row is the flow it was (two lines at 412, one where it fits).
+- **The event page's «Când»:** below MUI's `sm`, where the answer stands under the question indented by that same glyph column (`pl` 3.5) and where the two times at sixteen pixels never share a line with the date; the glyphs hang in that indent, under the calendar. From `sm` up the label column is back and the row is untouched.
+- **The listing's hero:** below `sm` the same list, but the glyphs lead their own lines instead of hanging — the hero has no glyph column under its label to hang them in.
+- A race with one named time, a group run and a series are unchanged everywhere; the emails and the `.ics` are plain text and unchanged. No words, no catalogue key, no migration, no dependency.
+
+**Refused.** A container query keyed to the one-line width of the row: it would also turn the 412–470-pixel phones and narrow desktop cards into the list, but it changes what §597's line bounds measure at 412 and needs a browser measurement this change did not take; the 412 breakpoint is the one already measured.
+
+Baseline `BR-V2.51-2026-09-27`.
+
+## 601. A picture in a rich text opens large in place, pinch-zooms, and Back closes it
+
+**2026-10-01.** **The owner, from his phone:** «în descrierea full, când dau click pe o poză, vreau să se facă mare (dar nu deschisă ca și poză) și să o pot închide apoi» — «vreau un photo preview când sunt în full description mode». A picture in an event's description (§266's figure in the flow, §241's crop window) was drawn at its column size, and nothing happened on a tap; the only way to see it larger was to open the image file, which leaves the page.
+
+**Decision.**
+
+- **One client island in the renderer's image case** (`src/modules/content/rich-text/ui/PictureLightbox.tsx`). `RichText` still renders the `<figure>`, the lazy `<img>` with its stored size, `srcset` and `sizes`, and the caption on the server; the island receives that markup as `children` and wraps it in a `<button>` named «Mărește poza: <alt>» / "Enlarge the picture: <alt>". Its props are plain values — the address, its ladder, the alt and the caption (§318). One place covers every rich text the site renders: the event page's description, programme, route and rules, §579's preview, the standing pages, the members' zone, the FAQ, the team page. A listing card's picture (§454) is left alone: the card is a link already. The editor's own rich text is untouched.
+- **A cropped picture's window is a block `<span>`**, not a `<div>`, because a button holds phrasing content only; it draws exactly as before.
+- **The preview** (`PictureLightboxDialog.tsx`) is a full-screen MUI dialog over a dark layer: the ✕ with its word «Închide» / "Close" at the top right, 44 pixels high (§498, BR-REQ-041-01 criterion 6); the picture `object-fit: contain` in what is left of the screen; the caption under it. `aria-modal`, the alt as the dialog's name (a hidden heading; «Poza, mărită» when the picture has no alt), the focus held inside and given back to the picture, and the page not scrolling behind it are the dialog's own. It closes on the ✕, on Escape, on a tap anywhere on the layer, and on Back; it pinch-zooms (below).
+- **Back closes it instead of leaving the page** (`picture-preview-history.ts`): opening pushes one history entry at the same address — the current state with a flag added, because the App Router reloads on an entry without its own fields — and a `popstate` that lands off that entry closes the preview. Closing any other way takes the entry back off with `history.back()`, only while it is still on top, so the history never keeps a dead step.
+- **The large picture is the file the page already stores**: the figure's own `srcset` with `sizes="100vw"`, so the browser takes the rung as wide as the screen, up to the master (§414, §437). Nothing new is uploaded or kept, and a picture from before the ladder shows its one address.
+- **Nothing is fetched until a tap** (§577): the dialog is a separate chunk (`React.lazy`), loaded the first time a picture is pressed; the page carries only the trigger's few lines. The island's four words are a new `Picture` namespace on the public client list (§353).
+
+**Pinch-zoom.** The owner, the same night, right after the preview: «Și să pot face zoom pinch pe poze». The browser's own pinch-zoom does not reach inside the preview — a full-screen fixed layer with the page's scroll locked: it either does nothing, zooms the whole dark layer with the ✕ out of reach, or (iOS Safari) is swallowed — so the layer has its own, in the lazily loaded dialog and nothing in the trigger (§577). The picture sits in a frame with `overflow: hidden`, its wrapper `touch-action: none` (the layer is modal, so nothing behind it needs a finger), and Pointer Events drive a pure module, `picture-zoom.ts`: two fingers scale by the distance ratio against the pinch's start, clamped to 1–4, about the start's midpoint, which follows the fingers (a pinch pans as it zooms); one finger pans a zoomed picture, clamped so the scaled picture keeps covering the frame and never leaves the screen; a double tap (two taps within 300 ms and 24 px) toggles 2× about the tap and back to 1×; a trackpad's pinch, a wheel with ctrlKey, zooms around the cursor (a non-passive native listener, so the page itself does not zoom). The zoom is one CSS transform, `translate(x, y) scale(s)` from the top left, with `will-change` only while zoomed — no re-layout. It starts at 1× every time: MUI unmounts the layer once the dialog has closed.
+
+**Only a tap closes.** The layer's tap-to-close was a click handler, which a pinch or a pan ending on the picture would also have fired. It is now the pointer-up of a TAP — one pointer, down and up within 300 ms and 10 px, the scale unchanged (`isTap`) — and it waits 300 ms, so the first tap of a double tap does not close the preview. The ✕ (its pointer-down kept out of the gestures), Escape and Back close as before. **No dependency**: Pointer Events and one transform are about eighty lines, and a zoom library would be the larger download for one gesture. The picture's frame is not a button; the ✕ keeps its 44 pixels and the hidden title stays.
+
+**A tap just before a gesture.** The review found that a single tap's pending close (the 300 ms wait for a second tap) kept running when a second finger or a pan began within those 300 ms, so the preview closed mid-pinch. Every pointer-down now cancels a pending close first; a double tap still zooms, since the first tap is still remembered and the second's end decides, and a second single tap arms the wait again. `touch-action: none` is also on the whole layer, not only on the picture's wrapper, so a pinch begun with one finger on the caption or the ✕ row is not taken by the browser (the layer is modal, so nothing behind it needs a finger).
+
+**Refused.** A gallery swipe between the description's pictures (not asked for); a new dependency, for the zoom or anything else; showing the organizer's crop in the preview — it shows the whole picture, the crop being a layout choice for the column.
+
+**Verification:** unit `content/picture-lightbox.test.ts` (the figure's server markup with the trigger, the crop window, no trigger on a card; the history rules on open, Back and close; the dialog's name, ✕ and contained picture with MUI's portal replaced; both languages; the zoom wrapper's `touch-action: none` and its transform) and `content/picture-zoom.test.ts` (a pinch from 100 to 200 px is 2× about its midpoint; the clamp at 4 and at 1; a pan at 2× clamped to the frame; the double tap 2× then 1×; the trackpad's pinch; the 300 ms / 10 px tap that a pinch's or a pan's end is not). The repository has no browser environment for Vitest and the brief forbids a dependency, so the click-to-open, Escape and the gestures' wiring are covered by MUI's own dialog and a source check rather than a jsdom test. Existing tests that render a body with a picture now render it inside the client provider (`tests/helpers/client-words.ts`). No e2e run, no build.
+
+Baseline `BR-V2.51-2026-09-27`.
+
+## 602. The listing's filters reach the past events: the panel offers what they carry, and a filtered page opens their fold (amending §413 and §267)
+
+**The owner, 2026-10-01, on QA:** «Mi-ar trebui aceleași filtre și pentru evenimentele din trecut».
+
+**What was there.** The past section already went through the filter. It read the page's one cached window of the latest 60 past events, kept the rows `matchesListingFilter` let through, drew the first twelve, and its heading said «Din trecut, după filtre (N)» (§413). Two things hid that:
+- **The panel never offered a box only the past carried.** `offeredFilters` read the dated and the undated cards and nothing else. With one kind of event ahead, a «Cursă» box for last spring's races did not exist. With nothing ahead to choose between, the panel did not render at all.
+- **The fold came back closed.** A filtered address is the live twin (§549), a route of its own, so a tick remounts the page. A fold the reader had opened was closed again, and the matches sat behind a heading nobody reads twice.
+
+**Decision.**
+- One function, `matchingPastEvents` (`events/domain/listing-filter.ts`): the same parsed address and the same predicate as the cards above, over the same window. The row the lead already shows between seasons (§167) is still left out by its id.
+- The panel reads its offer off the dated cards, the undated ones and the past window, each row once (`listingFilterRows`). §413's rule still holds: a box is offered only where ticking it changes what the page shows, and the past section is on the page. One effect: «Înscrieri deschise» is offered whenever there is a past event, even when every card ahead has a door, because ticking it hides the past.
+- With a filter on, the past fold is open (`open` on the `<details>`, `data-filtered`). Unfiltered, it stays closed, as §267 has it. The heading keeps its words: «Din trecut, după filtre (N)» / "Past, filtered (N)", and «Din trecut — Cursă (N)» for one ticked kind.
+- When nothing ahead matches, «Niciun eveniment nu se potrivește filtrelor alese.» stays, and the past matches are under it, as before.
+- The section moved out of `events/page.tsx` into `events/ui/PastEvents.tsx`, with `PAST_EVENTS_SHOWN`.
+
+**The window is not wider.** Still 60 rows read and 12 cards shown. A filter that matches more than twelve of the sixty shows the newest twelve. Older matches are in the calendar's months. There is no new query, no new data-cache key and no new render: the offer and the narrowing are in memory, over rows the page already read (§577).
+
+**The calendar is left alone.** Its period views (§574, §575) do not draw this section. They list their own period through the calendar's components, with the filter slot of §575.
+
+*Rejected:*
+- A second filter for the past, or a panel of its own. That would be two states for one address.
+- A wider window or a pager. Either costs a read, and the calendar is the archive.
+- Opening the fold always. What is past is something a reader goes looking for (§267).
+
+**Tests.** Unit `events/past-events-filter.test.ts`: a filter that matches two of five past events, and leaves out the lead's row by id; a box only the past carries is offered; the rendered section with a filter on is open, draws only the matching card, and says «Din trecut, după filtre (1)» / "Past, filtered (1)"; with nothing ticked it is closed and counts every row; with no match it draws nothing. The source-reading tests in `featured-card.test.ts` and `theme/density.test.ts` follow the section to its module.
+
+Baseline `BR-V2.51-2026-09-27`.
+
+## 603. The phone card says the weekday short — «sâm., 21 nov.» (amending §375)
+
+**The owner, 2026-10-01 ~03:10, of the race's card on production after the hotfix #307:** the row wrapped on his phone — «Sâmbătă, 21 nov.» on one line, «10:00 (start eveniment)» under it — «nu ai făcut prescurtarea datei».
+
+**Decision (amending §375).** Within the coming twelve months the phone card already drops the year (§375); now it also says the weekday short, through the formatter's own short style (`src/i18n/dates.ts`, `style: "short"` → «sâm., 21 nov.», capitalised at the line's start as every weekday is): «Sâm., 21 nov. · 10:00 (start eveniment)» fits one line on most phones (from about 360 pixels), and the wrap of #307 stays the safety net at 320 pixels, where even the short form is wider than the row. The desktop card keeps the full weekday and the year as before; the page's «Când» row and the hero are unchanged.
+
+**The path.** A hotfix straight to `main` (`docs/RUNBOOKS.md` § Hotfix): one option changed in `EventFacts.tsx`'s `dateShort`, the three unit expectations that pinned the long weekday on the phone span updated; typecheck, eslint, `yarn secrets:check`, the events unit tests (989) green; the PR merged into `main`, `main` back into `qa`; this entry lands with the next batch.
+
+Baseline `BR-V2.51-2026-09-27`.
