@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.54-2026-10-01
+
+- **One press resends the declaration to everyone who has not signed** — on the event's registrations, the Administrator sends a fresh signing link to every pending registration at once, skipping those whose email left in the last hour or is still queued; each earlier link stops working. §606.
 ## BR-V2.53-2026-10-01
 
 - **Mailgun's hourly limit is respected** — the outbox sends at most the hour's allowance (100 by default, set on «Emailuri»; 90 is advised during Mailgun's probation), stops Mailgun's road while Mailgun asks it to wait and pauses on a rate refusal instead of giving up, so an account on probation is not knocked on again and no confirmation email is lost. §605.

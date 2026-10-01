@@ -111,6 +111,21 @@ describe("§450 no raw role checks outside roles.ts and the door", () => {
     expect(tasksPage).toMatch(/canManageClubSettings\(actor\.role\) && <OlderPicturesPanel/);
   });
 
+  it("the declaration resent to everyone asks the single resend's predicate at the page, the action and the service (§606)", () => {
+    // One answer to "who may resend": `canManageRegistrations`, wherever the bulk press is drawn,
+    // posted or performed — never a role of its own, and never only the hidden button.
+    const service = readFileSync(path.join(ROOT, "src/modules/registrations/admin-service.ts"), "utf8").replace(/\r\n/g, "\n");
+    // The function's first statement, before anything is read.
+    const bulk = service.slice(service.indexOf("export async function resendDeclarationToAllPending"));
+    expect(bulk.slice(bulk.indexOf("{\n") + 2).trimStart()).toMatch(/^assertAdministrator\(actor\);/);
+    expect(service).toMatch(/function assertAdministrator[^]*?if \(!canManageRegistrations\(actor\.role\)\)/);
+    const actions = readFileSync(path.join(ROOT, "src/app/[locale]/admin/actions.ts"), "utf8");
+    const action = actions.slice(actions.indexOf("export async function resendDeclarationToAllAction"));
+    expect(action.slice(0, action.indexOf("resendDeclarationToAllPending("))).toContain("await requireStaffCapability(canManageRegistrations);");
+    const page = readFileSync(path.join(ROOT, "src/app/[locale]/admin/events/[id]/page.tsx"), "utf8");
+    expect(page).toMatch(/const declarationResend = canManageRegistrations\(staffUser\.role\) && internal \?/);
+  });
+
   it("the door takes a predicate, not a role", () => {
     const session = readFileSync(path.join(ROOT, "src/modules/staff-identity/session.ts"), "utf8");
     expect(session).toMatch(/export async function requireStaffCapability\(capability: \(role: StaffRole\) => boolean\)/);
