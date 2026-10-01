@@ -9,7 +9,7 @@ import { currentDeadlines } from "@/modules/deadlines/deadlines";
 import { reminderHoursFor } from "@/modules/deadlines/domain/deadlines";
 import { findEventForRegistrationById } from "@/modules/events/repository";
 import { clearFormDraft, stashDraftValues } from "@/modules/registrations/form-draft";
-import { DECLARATION_ERROR_SUMMARY_ID } from "@/modules/registrations/form-errors";
+import { DECLARATION_ACCEPT_BOX_ID, DECLARATION_ERROR_SUMMARY_ID } from "@/modules/registrations/form-errors";
 import { NO_WAITLIST, waitlistRefusalOf } from "@/modules/registrations/domain/waitlist";
 import { parseCancelReason } from "@/modules/registrations/domain/cancel-reason";
 import {
@@ -45,6 +45,19 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
   const now = new Date();
   const familyRegistrationId = String(form.get("registrationId") ?? "");
   const pass = await readFamilySigningPass(now);
+
+  /*
+    The box left unticked (§NNN): its own refusal, decided from the form before the service is
+    called — the form already says so. The browser's `required` stops this press first, but MUI
+    hides the native input and its bubble does not show on a phone, so a press that does reach here
+    is told at the box. The page says it twice (the summary and under the box); the generic
+    sentence is no longer for this case. Nothing was recorded and the token was not spent; what was
+    typed comes back, so the one thing left is the tick.
+  */
+  if (form.get("accepted") !== "on") {
+    await stashDraftValues(declarationDraftOf(form), path);
+    redirect(`${path}?invalid=accept#${DECLARATION_ACCEPT_BOX_ID}`);
+  }
 
   try {
     const t = await getTranslations({ locale, namespace: "Registrations" });
@@ -189,9 +202,10 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
       await stashDraftValues(declarationDraftOf(form), path);
       redirect(`${path}?invalid=document#${DECLARATION_ERROR_SUMMARY_ID}`);
     }
-    // The checkbox is HTML-required, so this is only a client that bypassed it — treated the
-    // same as an invalid token rather than as a server error, since nothing was consumed (the
-    // whole transaction, including the token spend, rolled back with the validation failure).
+    // An unticked box never reaches here (it is refused above with `invalid=accept`, §NNN). What
+    // does is a validation failure on another field the client let through — treated the same as
+    // an invalid token rather than as a server error, since nothing was consumed (the whole
+    // transaction, including the token spend, rolled back with the validation failure).
     if (isDomainError(error) && error.code === "VALIDATION_ERROR") redirect(`${path}?invalid=1`);
     // The text changed between reading and signing (BR-REQ-033-02 criterion 6). Nothing was
     // recorded and the token was not spent, so the same page shows the current text again.

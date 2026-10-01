@@ -39,7 +39,8 @@ import LegalDocumentBody from "@/modules/legal-documents/ui/LegalDocumentBody";
 import { expectedSignatures, mismatchedSignatures, type SignatureBox } from "@/modules/registrations/domain/signature-name";
 import LegalLink from "@/shared/ui/LegalLink";
 import { readFormDraft } from "@/modules/registrations/form-draft";
-import { DECLARATION_ERROR_SUMMARY_ID } from "@/modules/registrations/form-errors";
+import { DECLARATION_ACCEPT_BOX_ID, DECLARATION_ERROR_SUMMARY_ID } from "@/modules/registrations/form-errors";
+import UntickedBoxSummary from "@/modules/registrations/ui/UntickedBoxSummary";
 import { countEligibleWaitlisted, findRegistrationById } from "@/modules/registrations/repository";
 import { confirmationDueAtStart } from "@/modules/registrations/domain/hold-deadlines";
 import { declarantValues, identityDocumentValues } from "@/modules/registrations/signed-declaration";
@@ -301,7 +302,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
 
   /**
    * A live token plus `invalid=1` means the press failed for a reason that is **not** the token
-   * — an unticked box bypassed on the client, which rolls the whole transaction back and spends
+   * — a validation failure on a field the client let through (the unticked box has its own `invalid=accept`, §NNN), which rolls the whole transaction back and spends
    * nothing.
    *
    * That is not a dead link, and it must not be reported as one (§202, found in review): the
@@ -315,17 +316,23 @@ export default async function DeclarePage({ params, searchParams }: Props) {
   const signing = context.ok || familyCurrent !== null;
   /*
     `invalid=name` is the signature that was not the declarant's name (§314): its own refusal,
-    said beside the box with the name it wants — never the generic sentence above, which was
-    written for an unticked box, and never anything that reads as a broken link.
+    said beside the box with the name it wants — never the generic sentence above, which is
+    for a press that failed on another field, and never anything that reads as a broken link.
   */
   const nameRefused = signing && invalid === "name";
   /*
     `invalid=document` is an identity document the text asks for and the press left out, or typed
     as something that is not a series and number (§330, found in review) — past the browser's own
-    check. Its own refusal for the same reason: the generic sentence asks for a tick.
+    check. Its own refusal for the same reason: the generic sentence is for another field's failure, not for this one.
   */
   const documentRefused = signing && invalid === "document";
-  const pressFailed = signing && Boolean(invalid) && !nameRefused && !documentRefused;
+  /*
+    `invalid=accept` is the box left unticked (§NNN): the action decides it from the form before the
+    service is called, and the page says it at the box and in the summary — the generic sentence
+    below was written for it and said it a screen away from the box.
+  */
+  const acceptRefused = signing && invalid === "accept";
+  const pressFailed = signing && Boolean(invalid) && !nameRefused && !documentRefused && !acceptRefused;
 
   /**
    * Which event, and by when — the two facts BR-REQ-041-01 criterion 3 and AGENTS.md §18.5
@@ -479,7 +486,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
     succeeds clears it (`signDeclarationAction`); whoever can open this path holds the link that
     signs anyway, so an island whose only job is deleting it would not earn its JavaScript.
   */
-  const draft = nameRefused || documentRefused ? await readFormDraft() : null;
+  const draft = nameRefused || documentRefused || acceptRefused ? await readFormDraft() : null;
   const draftKind = (value: string | undefined) => ID_DOCUMENT_TYPES.find((kind) => kind === value) ?? "ID_CARD";
   const documentKinds = ID_DOCUMENT_TYPES.map((kind) => ({ kind, label: t(`declare.idDocumentTypes.${kind}`) }));
   const contact = (chunks: ReactNode) => <MuiLink href={contactHref}>{chunks}</MuiLink>;
@@ -703,6 +710,17 @@ export default async function DeclarePage({ params, searchParams }: Props) {
               ))}
             </Alert>
           )}
+          {/*
+            The unticked box (§NNN): its summary line, a link to the box. The same component says it
+            before the press where a script runs (the browser's own bubble does not show on MUI's
+            hidden input), so the sentence is one and the id is one.
+          */}
+          <UntickedBoxSummary
+            boxId={DECLARATION_ACCEPT_BOX_ID}
+            summaryId={`${DECLARATION_ACCEPT_BOX_ID}-summary`}
+            message={t("declare.acceptSummary")}
+            initial={acceptRefused}
+          />
           <form action={signDeclarationAction}>
             <Stack spacing={2} sx={{ mt: 3 }}>
               <input type="hidden" name="locale" value={locale} />
@@ -717,7 +735,15 @@ export default async function DeclarePage({ params, searchParams }: Props) {
               <input type="hidden" name="contentSha256" value={declaration?.contentSha256 ?? ""} />
               {/* The box names the liability paragraph, so its limits are accepted expressly (§418, Civil Code art. 1203). */}
               {/* The glyph leads the words, as on every box of the form's «Acorduri» (§570 round 2). */}
-              <CheckboxField name="accepted" required dense defaultChecked={draft?.accepted === "on"}>
+              <CheckboxField
+                id={DECLARATION_ACCEPT_BOX_ID}
+                name="accepted"
+                required
+                dense
+                defaultChecked={draft?.accepted === "on"}
+                error={acceptRefused ? t("declare.acceptInline") : undefined}
+                requiredMessage={t("declare.acceptInline")}
+              >
                 <HistoryEduIcon aria-hidden data-testid="consent-glyph" />
                 {t("declare.accept")}
               </CheckboxField>

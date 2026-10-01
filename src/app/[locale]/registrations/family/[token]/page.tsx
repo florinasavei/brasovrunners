@@ -294,7 +294,13 @@ export default async function FamilyConfirmPage({ params, searchParams }: Props)
           <Stack spacing={1.5} sx={{ alignItems: "flex-start" }}>
             {/* Another adult's fitness is theirs to declare, when they sign (§421): the holder acknowledges it. */}
             {link.adult && (
-              <CheckboxField id="fitnessAcknowledged" name="fitnessAcknowledged" required>
+              <CheckboxField
+                id="fitnessAcknowledged"
+                name="fitnessAcknowledged"
+                required
+                error={refused === "fitnessAcknowledged" ? t("family.fitnessMissing") : undefined}
+                requiredMessage={t("family.fitnessMissing")}
+              >
                 {t("family.fitnessAcknowledged")}
               </CheckboxField>
             )}

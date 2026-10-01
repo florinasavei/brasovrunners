@@ -3,8 +3,9 @@
 import Box from "@mui/material/Box";
 import Checkbox from "@mui/material/Checkbox";
 import FormControlLabel from "@mui/material/FormControlLabel";
+import FormHelperText from "@mui/material/FormHelperText";
 import Typography from "@mui/material/Typography";
-import { useId, type ReactNode } from "react";
+import { useId, useState, type ReactNode } from "react";
 import { useRecall } from "@/shared/forms/recall";
 import { CONSENT_DENSITY } from "./consent-density";
 import { CHECKBOX_TAP_TARGET } from "./tap-target";
@@ -37,6 +38,15 @@ import { CHECKBOX_TAP_TARGET } from "./tap-target";
  * answered with a refusal, the tick is whether this box's value was posted — an unticked box
  * posts nothing, so "not posted" is "unticked", never the page's default. A disabled box posts
  * nothing either and keeps the page's word; the caller carries its value in a hidden field.
+ *
+ * ## When a required box is left unticked (§NNN)
+ *
+ * MUI hides the native input, so the browser's own "tick this box" bubble does not show on a phone
+ * or vanishes at once. `error` is the server's refusal said at the box (the page passes it after a
+ * press that came back unticked); `requiredMessage` is the same sentence said by the browser
+ * before any round trip, when the input fires `invalid`. Either draws a `FormHelperText` in the
+ * error colour under the box, referenced by `aria-describedby`, with `aria-invalid` on the input;
+ * ticking the box takes it away. Without either prop the markup is exactly what it always was.
  */
 export default function CheckboxField({
   name,
@@ -49,6 +59,8 @@ export default function CheckboxField({
   help,
   helpTestId,
   optional,
+  error,
+  requiredMessage,
   children,
 }: {
   name: string;
@@ -73,6 +85,10 @@ export default function CheckboxField({
    * in the label's own flow (round 2 of §570): the same words on every optional box of the block.
    */
   optional?: string;
+  /** The server's refusal of this box, said under it (§NNN): the page passes it after a press that came back unticked. */
+  error?: string;
+  /** What the box says under itself when the browser finds it required and unticked, before the press is sent (§NNN). */
+  requiredMessage?: string;
   /**
    * The label, which may contain a link. With `dense`, its first child is the box's glyph — an
    * `@mui/icons-material` element with `aria-hidden`, made by the Server Component that renders
@@ -82,6 +98,12 @@ export default function CheckboxField({
 }) {
   const recall = useRecall();
   const helpId = useId();
+  const errorId = useId();
+  // The unticked-box message is on screen: from the server's refusal, or from the browser's `invalid` (§NNN).
+  const [flagged, setFlagged] = useState(Boolean(error));
+  const errorMessage = error ?? requiredMessage;
+  const showError = flagged && Boolean(errorMessage);
+  const describedBy = [help ? helpId : null, showError ? errorId : null].filter(Boolean).join(" ");
   const checked =
     recall.has && !disabled ? (recall.all(name)?.includes(value ?? "on") ?? false) : defaultChecked;
   // A single box the refusal named carries the id its summary links to (§47, §315) — "confirm
@@ -97,7 +119,9 @@ export default function CheckboxField({
     browser's check, the missing-fields list and the error summary read the same `required` input.
   */
   const inputSlot = {
-    ...(help ? { "aria-describedby": helpId } : {}),
+    ...(describedBy ? { "aria-describedby": describedBy } : {}),
+    ...(showError ? { "aria-invalid": true } : {}),
+    ...(requiredMessage ? { onInvalid: () => setFlagged(true) } : {}),
     ...(dense && required ? { required: true } : {}),
   };
   const label = dense ? (
@@ -130,6 +154,13 @@ export default function CheckboxField({
           required={dense ? undefined : required}
           defaultChecked={checked}
           disabled={disabled}
+          onChange={
+            errorMessage
+              ? (event) => {
+                  if (event.target.checked) setFlagged(false);
+                }
+              : undefined
+          }
           size={dense ? CONSENT_DENSITY.checkboxSize : undefined}
           slotProps={Object.keys(inputSlot).length > 0 ? { input: inputSlot } : undefined}
           sx={CHECKBOX_TAP_TARGET}
@@ -140,13 +171,24 @@ export default function CheckboxField({
       sx={dense ? CONSENT_DENSITY.rowSx : undefined}
     />
   );
-  if (!help) return field;
+  const errorText = showError ? (
+    <FormHelperText id={errorId} error data-testid="checkbox-error" sx={dense ? CONSENT_DENSITY.helpSx : { mt: 0 }}>
+      {errorMessage}
+    </FormHelperText>
+  ) : null;
+  // A box that can ever show a message keeps the same root whether or not it shows one now: React
+  // compares element types at the root, so switching between the bare label and a wrapper on
+  // `flagged` would unmount the uncontrolled input and lose the tick (§NNN).
+  if (!help && !error && !requiredMessage) return field;
   return (
     <Box>
       {field}
-      <Typography id={helpId} variant="caption" color="text.secondary" data-testid={helpTestId} sx={dense ? CONSENT_DENSITY.helpSx : { display: "block" }}>
-        {help}
-      </Typography>
+      {help && (
+        <Typography id={helpId} variant="caption" color="text.secondary" data-testid={helpTestId} sx={dense ? CONSENT_DENSITY.helpSx : { display: "block" }}>
+          {help}
+        </Typography>
+      )}
+      {errorText}
     </Box>
   );
 }
