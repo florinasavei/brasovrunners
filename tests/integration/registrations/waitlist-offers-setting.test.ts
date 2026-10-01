@@ -11,7 +11,7 @@ import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { computeOccupied, NoFreePlaceError } from "@/modules/registrations/domain/capacity";
-import { OFFER_AFTER_CLOSE, offerRefusalCode } from "@/modules/registrations/domain/waitlist";
+import { OFFER_AFTER_CLOSE, offerRefusalCode, WAITLIST_FULL, waitlistRefusalOf } from "@/modules/registrations/domain/waitlist";
 import { isDomainError } from "@/shared/errors/domain-error";
 import ro from "../../../messages/ro.json";
 import en from "../../../messages/en.json";
@@ -84,7 +84,7 @@ beforeEach(async () => {
 const at = (minutes: number) => new Date(NOW.getTime() + minutes * 60_000);
 const PUBLIC = { source: "PUBLIC" as const, createdByStaffUserId: null };
 
-async function createEvent(capacity: number, options: { auto?: boolean; closesAt?: Date | null } = {}): Promise<EventInput> {
+async function createEvent(capacity: number, options: { auto?: boolean; closesAt?: Date | null; waitlistCapacity?: number | null } = {}): Promise<EventInput> {
   const [event] = await db
     .insert(events)
     .values({
@@ -94,6 +94,7 @@ async function createEvent(capacity: number, options: { auto?: boolean; closesAt
       capacity,
       registrationClosesAt: options.closesAt ?? null,
       waitlistAutoOffer: options.auto ?? true,
+      ...(options.waitlistCapacity !== undefined ? { waitlistCapacity: options.waitlistCapacity } : {}),
       locationName: "Parcul Tractorul",
       editorialStatus: "PUBLISHED",
       publishedAt: NOW,
@@ -276,6 +277,24 @@ describe("§NNN newcomers queue while anyone waits, whatever the setting", () =>
       const newcomer = await confirmedAddress(wider, "Radu", 3);
       expect(newcomer.status, `auto ${auto}`).toBe("PENDING_DECLARATION");
     }
+  });
+
+  it("the form's own first check agrees with the allocator: a full line with places raised past it refuses at submit, before any email", async () => {
+    const event = await createEvent(2, { auto: false, waitlistCapacity: 1 });
+    await confirmedAddress(event, "Ana", 0);
+    await confirmedAddress(event, "Bogdan", 1);
+    expect((await confirmedAddress(event, "Elena", 2)).status).toBe("WAITLISTED");
+    // The recipe of SETUP: «Nu», then the places raised past what the line holds — a place is free, the line is full.
+    await db.update(events).set({ capacity: 4 }).where(eq(events.id, event.id));
+    const queued = (await db.select().from(emailOutbox)).length;
+    let refusal: unknown = null;
+    try {
+      await submitRegistration(db, { ...event, capacity: 4 }, submission("Luca", "luca@example.ro", at(10)), at(10), "REAL", PUBLIC);
+    } catch (error) {
+      refusal = waitlistRefusalOf(error);
+    }
+    expect(refusal).toBe(WAITLIST_FULL);
+    expect(await db.select().from(emailOutbox)).toHaveLength(queued);
   });
 
   it("with nobody in the line a newcomer takes a free place directly, as before", async () => {

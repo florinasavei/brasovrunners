@@ -22,6 +22,7 @@ import {
 } from "@/modules/public-cache/reads";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
 import { isColdMiss, throughBreaker } from "@/modules/resilience/breaker";
+import { newcomerWouldQueue } from "@/modules/events/domain/registration-cta";
 import { NO_WAITLIST, WAITLIST_FULL } from "@/modules/registrations/domain/waitlist";
 import { formatDay } from "@/i18n/dates";
 import { getPathname } from "@/i18n/navigation";
@@ -256,11 +257,11 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   if (!submitted && !error && !resting) {
     try {
       const places = await cachedPublicAvailability(event.id, now);
-      if (places?.available === 0) {
+      if (places && newcomerWouldQueue({ availablePlaces: places.available, waitlisted: places.waitlisted, waiting: places.waiting })) {
         fullNotice = places.waitlistCapacity === 0 ? NO_WAITLIST : places.waitlistRoom === 0 ? WAITLIST_FULL : "WAITLIST";
         if (fullNotice === "WAITLIST") {
           offerHours = (await cachedDeadlines()).offerHours;
-          fullCounts = { capacity: places.capacity, waiting: places.waiting ?? 0 };
+          fullCounts = { capacity: places.capacity, waiting: places.waiting ?? places.waitlisted ?? 0 };
         }
       }
     } catch (failure) {

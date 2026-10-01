@@ -1094,7 +1094,8 @@ async function assertWaitlistCanTakeOneMore<T extends Record<string, unknown>>(
   const line = { waitlistCapacity: row.waitlistCapacity, waitlisted, openOffers: counts.unexpiredWaitlistOfferedHolds };
   if (waitlistHasRoom(line)) return;
   const occupied = occupiedForNewcomer({ ...line, occupied: computeOccupied(counts), lapsedDeclarationHolds: counts.lapsedDeclarationHolds });
-  if (hasDirectAvailability({ capacity: row.capacity, occupied, eligibleWaitlisted: waitlisted })) return;
+  // Somebody waiting: a newcomer joins the line whatever is free (`newcomerJoinsLine`), and the line is full.
+  if (!newcomerJoinsLine({ waitlisted }) && hasDirectAvailability({ capacity: row.capacity, occupied, eligibleWaitlisted: waitlisted })) return;
   throw waitlistFullError(row.waitlistCapacity);
 }
 

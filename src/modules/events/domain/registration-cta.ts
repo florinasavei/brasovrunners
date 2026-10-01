@@ -76,6 +76,16 @@ export type RegistrationCta =
   /** No place on an event with no waiting list (a limit of 0, §348): closed as full, no button. */
   | { kind: "FULL_NO_WAITLIST" };
 
+/**
+ * Whether a newcomer would be sent to the waiting list on this event (§NNN): no free place, or
+ * somebody waiting in the line — a person with no place yet, or in a cache entry written before the
+ * halves were counted, the line's length alone (§587). The card and the registration form ask it
+ * alike, so neither says what the allocator will not do.
+ */
+export function newcomerWouldQueue(places: { availablePlaces: number | null; waitlisted?: number; waiting?: number }): boolean {
+  return places.availablePlaces === 0 || (places.waitlisted ?? places.waiting ?? 0) > 0;
+}
+
 export function registrationCta(event: RegistrationCtaInput, now: Date): RegistrationCta {
   // An event nobody registers for gets no control and no explanation. `EventFacts` already
   // states the registration requirement in words; a second line saying the same thing is noise

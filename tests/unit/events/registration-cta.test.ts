@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  newcomerWouldQueue,
   publicFill,
   registrationCta,
   type RegistrationCtaInput,
@@ -285,5 +286,21 @@ describe("§346 publicFill — capacity minus the allocator's own free-place cou
     // capacity, but the clamp holds anyway rather than trust that between two reads of the row.
     expect(publicFill(50, 55)).toEqual({ taken: 0, capacity: 50 }); // more "free" than capacity
     expect(publicFill(50, -5)).toEqual({ taken: 50, capacity: 50 }); // a negative free count
+  });
+});
+
+describe("§NNN newcomerWouldQueue — the card's rule, which the registration form asks too", () => {
+  it("is true with no free place, and with places free while somebody is WAITLISTED", () => {
+    expect(newcomerWouldQueue({ availablePlaces: 0 })).toBe(true);
+    expect(newcomerWouldQueue({ availablePlaces: 3, waitlisted: 1, waiting: 1 })).toBe(true);
+  });
+
+  it("reads a cache entry from before the halves were counted by the line's length", () => {
+    expect(newcomerWouldQueue({ availablePlaces: 3, waiting: 2 })).toBe(true);
+  });
+
+  it("is false with places free and nobody waiting — an open offer alone included", () => {
+    expect(newcomerWouldQueue({ availablePlaces: 3, waitlisted: 0, waiting: 1 })).toBe(false);
+    expect(newcomerWouldQueue({ availablePlaces: 3 })).toBe(false);
   });
 });
