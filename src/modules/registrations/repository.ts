@@ -159,7 +159,7 @@ export async function lockEventForCapacity<T extends Record<string, unknown>>(
 }
 
 /**
- * Whether the event offers its freed and added places to the waiting list on its own (§NNN):
+ * Whether the event offers its freed and added places to the waiting list on its own (§615):
  * `events.waitlist_auto_offer`, read by `fillAvailableSpots` inside the caller's transaction, after
  * the caller locked the row — so the answer is the row's as it stands under the lock, whatever copy
  * of the event the caller carries (a fixture's partial row, the editor's row from before the save).
@@ -372,7 +372,7 @@ export async function transitionRegistration<T extends Record<string, unknown>>(
  * A row of the public list: the display name and the club — and, only when the caller asked for
  * the socials behind the notice's gate (§500), the runner's Strava link and Instagram username,
  * each null unless that runner ticked «Arată și Strava și Instagram» (`registrations.list_socials`);
- * and, only when the caller asked for the numbers behind theirs (§NNN), a confirmed runner's race
+ * and, only when the caller asked for the numbers behind theirs (§613), a confirmed runner's race
  * number, null while it has none.
  */
 export type PublicStartListRow = {
@@ -402,24 +402,21 @@ function publicSocialColumns(socials: boolean | undefined): Record<string, SQL<s
 }
 
 /**
- * The race-number column a public list may add (§NNN, amending §396), or none.
+ * The race-number column a public list may add (§613, amending §396), or none.
  *
  * Asked for only by `StartList`, only while the privacy notice in force names
- * `{{participantListNumbers}}` (`cachedListNumbersDisclosed`), and only for a registration that recorded the first notice naming it or a later one (§421's line,
- * `findFirstNumbersNoticeVersion`; an older consent gets null), and only on the confirmed list —
+ * `{{participantListNumbers}}` (`cachedListNumbersDisclosed`), and only on the confirmed list —
  * `listPublicStartListOthers` never selects it: a pending or waiting registration has no number
- * (§548). **`bib_number` and never `provisional_bib_number`** (§214): the provisional number was
- * printed nowhere and emailed to nobody precisely so that it could move, and a number published
- * beside a name is a number that cannot. Since §548 nothing writes the provisional column any
- * more, which changes nothing here: the public select never names it
- * (`tests/privacy/public-surface.test.ts`).
+ * (§548). It is selected for every confirmed runner, whichever privacy notice their registration
+ * recorded: the owner decided so on 2026-10-01 (§613), the club telling the earlier registrations
+ * beforehand, where §421's per-runner line still holds for the states. **`bib_number` and never
+ * `provisional_bib_number`** (§214): the provisional number was printed nowhere and emailed to
+ * nobody precisely so that it could move, and a number published beside a name is a number that
+ * cannot. Since §548 nothing writes the provisional column any more, which changes nothing here:
+ * the public select never names it (`tests/privacy/public-surface.test.ts`).
  */
-function publicNumberColumns(firstNumbersNoticeVersion: number | null | undefined): Record<string, ReturnType<typeof sql<number | null>>> {
-  if (firstNumbersNoticeVersion === null || firstNumbersNoticeVersion === undefined) return {};
-  // §421's line: the number of a runner who registered under an older notice stays unread.
-  return {
-    bibNumber: sql<number | null>`case when ${registrations.privacyNoticeVersion} >= ${firstNumbersNoticeVersion} then ${registrations.bibNumber} end`,
-  };
+function publicNumberColumns(numbers: boolean | undefined): Record<string, typeof registrations.bibNumber> {
+  return numbers ? { bibNumber: registrations.bibNumber } : {};
 }
 
 /**
@@ -452,9 +449,9 @@ export async function listPublicStartList<T extends Record<string, unknown>>(
   page?: { offset: number; limit: number },
   /**
    * Only behind the notice's gates: the socials (§500, `publicSocialColumns`) and the race number
-   * (§NNN, `publicNumberColumns`). Without either, the select is exactly the name and the club.
+   * (§613, `publicNumberColumns`). Without either, the select is exactly the name and the club.
    */
-  options: { socials?: boolean; firstNumbersNoticeVersion?: number | null } = {},
+  options: { socials?: boolean; numbers?: boolean } = {},
 ): Promise<PublicStartListRow[]> {
   const query = db
     // BR-REQ-039-02: the display name, never the legal one, and the club they wrote (§85).
@@ -464,7 +461,7 @@ export async function listPublicStartList<T extends Record<string, unknown>>(
       displayName: registrations.displayName,
       clubName: registrations.clubName,
       ...publicSocialColumns(options.socials),
-      ...publicNumberColumns(options.firstNumbersNoticeVersion),
+      ...publicNumberColumns(options.numbers),
     })
     .from(registrations)
     .where(
@@ -1190,7 +1187,7 @@ export async function lockOldestWaitlisted<T extends Record<string, unknown>>(
  * look at: an offer past its deadline, a lapsed declaration hold that somebody is waiting for
  * (§160 — with nobody waiting the hold is kept, and the job would lock the event to do
  * nothing, on every run until the race), a hold or waiting-list entry left open on an event
- * that has started, or numbers to settle — and, since §NNN, a free place on a capped event before
+ * that has started, or numbers to settle — and, since §612, a free place on a capped event before
  * its close while somebody waits. Never a cancelled or completed event (§331, §82).
  *
  * A liveness query, not a correctness one — §16.2 is explicit that the job exists to send
@@ -1248,7 +1245,7 @@ export async function findEventsNeedingMaintenance<T extends Record<string, unkn
   const due = new Set(rows.map((row) => row.eventId));
 
   /*
-    A free place while somebody waits (§NNN, amending §104 and §587): a scheduled, capped event,
+    A free place while somebody waits (§612, amending §104 and §587): a scheduled, capped event,
     before its close, with a `WAITLISTED` row and fewer places occupied than its capacity. Every
     clause above names a row whose deadline has passed; this one names the result — a place nobody
     holds and nobody was offered — whatever freed it: a family's reservation or held place that lapsed
@@ -1263,7 +1260,7 @@ export async function findEventsNeedingMaintenance<T extends Record<string, unkn
     somebody waiting, per run — on a full race with a waiting list, one `countOccupied` each run while
     the line stands; on every other event, nothing. `kind` is in no condition here (§30).
 
-    Only an event that offers on its own (`waitlist_auto_offer`, §NNN): on one whose organizer hands
+    Only an event that offers on its own (`waitlist_auto_offer`, §615): on one whose organizer hands
     out the places («Nu»), a free place while people wait is the organizer's to give and
     `fillAvailableSpots` would offer nothing — so the sweep does not select it, rather than locking it
     on every run to do nothing.

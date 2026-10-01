@@ -175,7 +175,7 @@ export default async function AdminCostsPage({ params, searchParams }: Props) {
   // the plan stated on this panel when it did not. Free's ceilings, or Launch's rates.
   const neonPlan = await readNeonPlan(db);
   const neonInForce = effectiveNeonPlan(neonPlan.plan, neon.ok ? neon.consumption.reportedPlan : null);
-  // The Vercel plan the club states (§NNN): Hobby, or Pro and its seats — the cost table, the month
+  // The Vercel plan the club states (§610): Hobby, or Pro and its seats — the cost table, the month
   // card and the yearly sentence price it. Vercel's own answer is not asked (§326's shape is the follow-up).
   const vercelPlan = await readVercelPlan(db);
   const neonBlock = describeNeonBlock({
@@ -282,7 +282,7 @@ export default async function AdminCostsPage({ params, searchParams }: Props) {
     storageRate: neonBlock.rates?.usdPerGbMonth ?? NEON_LAUNCH_USD_PER_GB_MONTH,
   };
   /*
-    Every amount of «Cât costă» per month and per year (§NNN; the owner: «la costuri vreau să văd
+    Every amount of «Cât costă» per month and per year (§610; the owner: «la costuri vreau să văd
     defalcat pe lună și per serviciu!» — «aici nu e clar ca e per an»): in the vendor's currency,
     two decimals, «+ TVA» where VAT comes on top, «≈» where it is an estimate.
   */
@@ -306,7 +306,7 @@ export default async function AdminCostsPage({ params, searchParams }: Props) {
   };
   // The seats as a counted phrase («1 loc», «2 locuri»): the Vercel row's sentences and the verdict's name for it.
   const seatsPhrase = (count: number) => t(`vercelPlan.seats.${countForm(count, locale)}`, { count });
-  // The verdict that names what is paid (§NNN): each paying row's short name with its plan, in the locale's list.
+  // The verdict that names what is paid (§610): each paying row's short name with its plan, in the locale's list.
   const paidNames = new Intl.ListFormat(locale, { type: "conjunction" }).format(
     payingRows(services).map((row) => t(`freeVerdict.paidName.${row.id}`, { plan: row.planToday ?? "", seats: seatsPhrase(row.seats ?? 1) })),
   );
@@ -442,7 +442,7 @@ export default async function AdminCostsPage({ params, searchParams }: Props) {
         </Stack>
       </Panel>
 
-      {/* Which Vercel plan the club is on (§NNN), after the database's and before «Cât costă», which prices it. */}
+      {/* Which Vercel plan the club is on (§610), after the database's and before «Cât costă», which prices it. */}
       <VercelPlanPanel locale={locale} plan={vercelPlan} mayEdit={canManageClubSettings(actor.role)} />
 
       {/* «Tradu din română»'s daily allowance (§464): what DeepL Free may spend a day, and today's spend. */}
@@ -470,7 +470,7 @@ export default async function AdminCostsPage({ params, searchParams }: Props) {
           severity={verdict === "freeExceptDomain" ? "success" : verdict === "paysForUsage" || verdict === "paysForPlans" ? "info" : "warning"}
           sx={{ mb: 2 }}
         >
-          {/* Per month and per year, in one sentence (§NNN): «circa» only when a figure in it is an estimate. */}
+          {/* Per month and per year, in one sentence (§610): «circa» only when a figure in it is an estimate. */}
           <Typography variant="body2" sx={{ fontWeight: 500 }} data-testid="cost-today">
             {paidToday.length === 0
               ? t("costToday.nothing")
@@ -485,7 +485,7 @@ export default async function AdminCostsPage({ params, searchParams }: Props) {
               {t("costToday.estimated")}
             </Typography>
           )}
-          {/* The next thing to cost money — or, once everything on that list is paid for, a sentence that says so (§NNN). */}
+          {/* The next thing to cost money — or, once everything on that list is paid for, a sentence that says so (§610). */}
           {next ? (
             <Typography variant="body2" sx={{ mt: 0.5 }} data-testid="next-spend">
               {t(`nextSpend.${next.id}`, { cost: next.nextCost ?? "" })}
@@ -498,7 +498,7 @@ export default async function AdminCostsPage({ params, searchParams }: Props) {
           )}
         </Alert>
 
-        {/* Each service per month and per year, then the total (§NNN): the sentence above, broken down. */}
+        {/* Each service per month and per year, then the total (§610): the sentence above, broken down. */}
         <PlanCostTable
           locale={locale}
           rows={services}

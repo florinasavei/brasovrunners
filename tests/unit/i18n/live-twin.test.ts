@@ -109,12 +109,12 @@ describe("§577 the twin answers only the questions the page itself reads", () =
 });
 
 /*
-  §NNN (amending §602): the listing's past section has its own «Filtre», the same names under `past-`
+  §611 (amending §602): the listing's past section has its own «Filtre», the same names under `past-`
   in the same address. A past tick changes what the listing shows, so it is the listing's twin — or
   the CDN's static page would ignore it. The calendar draws no past section: a `past-` name is
   nothing to it.
 */
-describe("§NNN a tick in the past section's own filter is the listing's twin", () => {
+describe("§611 a tick in the past section's own filter is the listing's twin", () => {
   it("sends a past tick to the listing's twin, in each shape the page reads it", () => {
     for (const query of ["past-type=RACE", "past-type=race,hike", "past-type=RACE&past-type=HIKE", "past-surface=TRAIL", "past-partner=1", "past-night=1"]) {
       expect(liveTwinPathname("/ro/events", search(query), false), query).toBe(`/ro/${LIVE_SEGMENT}/events`);

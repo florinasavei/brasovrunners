@@ -130,14 +130,14 @@ import ThemeModeToggle from "./ThemeModeToggle";
  * 34 pixels in, the panel ends 32 pixels short of the edge below 360 and 34 from 360 — the switch
  * there is 24 or 28 pixels rather than 44.
  *
- * ## The build stamp: one copy, in the fold, at every width (§NNN)
+ * ## The build stamp: one copy, in the fold, at every width (§608)
  *
  * §365 (2026-09-24) put it nowhere on screen until the fold opened, at every width; §372 added a
  * second copy pinned to the bar's corner from `md`. The owner, 2026-10-01, from his phone, with a
  * screenshot of the desktop bar: "vreau ca pill-ul cu versiunea sa apara doar cand fac expand la
  * footer. e un pic deranjant pt vizitatori". Seen from a visitor's side the pinned chip was noise
  * on every page, and the stamp is for staff and for whoever asks which site this is, both of whom
- * can open the fold. So §NNN supersedes §372's pinned copy and returns to §365's rule: one render
+ * can open the fold. So §608 supersedes §372's pinned copy and returns to §365's rule: one render
  * of `BuildBadge`, the last line of the panel, on screen at no width until somebody opens the
  * fold. It is the same small outlined chip (§385) inside the same 44-pixel staff entrance.
  *
@@ -447,7 +447,7 @@ export default async function SiteFooter() {
                 </MuiLink>
                 {/* The build stamp and the staff entrance (§34), a chip since §385: the only copy,
                     shown at every width and only here, opened on purpose, the panel's last item
-                    (§NNN, the owner, 2026-10-01; it supersedes §372's pinned desktop copy). */}
+                    (§608, the owner, 2026-10-01; it supersedes §372's pinned desktop copy). */}
                 <Box data-testid="footer-build-badge-panel" sx={{ display: "flex", maxWidth: "100%" }}>
                   <BuildBadge />
                 </Box>

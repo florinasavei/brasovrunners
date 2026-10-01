@@ -109,7 +109,7 @@ export function acceptanceAfterRefusal(input: {
 }
 
 /**
- * The declaration's acceptance box (§NNN): the `id` of the box, the target of the redirect after a
+ * The declaration's acceptance box (§616): the `id` of the box, the target of the redirect after a
  * press with it unticked (`?invalid=accept#accepted`) and of the link in the summary line.
  */
 export const DECLARATION_ACCEPT_BOX_ID = "accepted";

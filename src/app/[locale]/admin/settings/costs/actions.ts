@@ -57,7 +57,7 @@ export async function updateNeonPlanAction(_previous: FormOutcome | null, form: 
 }
 
 /**
- * "The Vercel plan we are on" (§NNN), from the card after the database's: Hobby, or Pro with its
+ * "The Vercel plan we are on" (§610), from the card after the database's: Hobby, or Pro with its
  * developer seats. The Neon plan's twin — the same gate, the service asserting the role again and
  * writing the audit row, a refusal handed back as the form's state with what was chosen (§315) —
  * and it lands back on Costuri, whose cost table, month card and yearly sentence price it.

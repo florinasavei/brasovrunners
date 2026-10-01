@@ -174,7 +174,7 @@ describe("§420 BR-REQ-031-03 criterion 2 the confirmation page of a lapsed regi
   });
 });
 
-describe("§NNN the confirmation of a registration that lands on the waiting list", () => {
+describe("§614 the confirmation of a registration that lands on the waiting list", () => {
   it("redirects to ?done=waitlist and queues the waiting-list email, not the declaration", async () => {
     const event = await createEvent(30);
     await db.update(events).set({ capacity: 1 }).where(eq(events.id, event.id));

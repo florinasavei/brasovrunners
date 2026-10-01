@@ -595,7 +595,7 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
     // «Kit de participare» → «Tricou» (§554), by the same discipline: a caller that did not post the
     // card writes nothing, so no save takes the shirt off an event by not mentioning it.
     ...(fields.kitShirt === undefined ? {} : { kitShirt: fields.kitShirt }),
-    // «Ofertele din lista de așteptare pleacă automat» (§NNN), by the same discipline: a caller that
+    // «Ofertele din lista de așteptare pleacă automat» (§615), by the same discipline: a caller that
     // did not post the select writes nothing, so no save changes who hands out the places by omission.
     ...(fields.waitlistAutoOffer === undefined ? {} : { waitlistAutoOffer: fields.waitlistAutoOffer }),
     // «Informații medicale» (§557), by the same discipline: a caller that did not post the card
@@ -1775,7 +1775,7 @@ const SERIES_COLUMNS = [
   // The waiting list's length, like the places (§348). No lock and no allocation when it moves:
   // raising it offers nobody anything, and lowering it removes nobody already waiting.
   "waitlistCapacity",
-  // Who hands out a freed place (§NNN), like the places themselves: "from this date" makes every later
+  // Who hands out a freed place (§615), like the places themselves: "from this date" makes every later
   // date of the series offer its places on its own, or leave them to the organizer. No lock and no
   // offer when it moves — switching it on offers nothing until a place is next freed or added.
   "waitlistAutoOffer",
@@ -2072,7 +2072,7 @@ async function applyToSeries<T extends Record<string, unknown>>(
 }
 
 /**
- * The trail of «Ofertele din lista de așteptare pleacă automat» (§NNN): who switched it, on which
+ * The trail of «Ofertele din lista de așteptare pleacă automat» (§615): who switched it, on which
  * date, from and to — written in the save's transaction, only when the value moved. Switching the
  * offers on offers nothing by itself: the next place freed or added goes to the line.
  */
@@ -3038,7 +3038,7 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     // The waiting list's length goes with the places it queues for (§348): a copy, and every
     // date of a series, queue as many as the source does.
     waitlistCapacity: source.waitlistCapacity,
-    // Who hands out a freed place goes with the places (§NNN): a copy, and every date of a series.
+    // Who hands out a freed place goes with the places (§615): a copy, and every date of a series.
     waitlistAutoOffer: source.waitlistAutoOffer,
     // The race kit goes with the race (§554): a copy, and every date of a series, give the same shirt.
     kitShirt: source.kitShirt,

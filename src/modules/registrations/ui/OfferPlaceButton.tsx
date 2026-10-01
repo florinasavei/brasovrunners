@@ -6,7 +6,7 @@ import { givePlaceRefusalAhead } from "../give-place-tip";
 
 /**
  * «Trimite-i oferta», the submit of the form its page renders — on each waiting row of «Coada de
- * înscrieri» and on the registration's own page, beside «Dă-i un loc» (§NNN). The same free-place
+ * înscrieri» and on the registration's own page, beside «Dă-i un loc» (§615). The same free-place
  * question as «Dă-i un loc» (`offerPlaceToByStaff` refuses a full event with §589's sentence), so the
  * same «i» says why before the press on a full event (§592), read once per event per request; with a
  * place free there is no «i». The server decides whatever this says. 44 pixels tall.

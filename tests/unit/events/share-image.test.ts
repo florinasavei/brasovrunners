@@ -6,7 +6,7 @@ import { SHARE_LAYOUT } from "@/modules/events/share-card-layout";
 import { COLOR } from "@/theme/brand";
 
 /**
- * BR-REQ-052-02 criterion 8 (`DECISIONS.md` §90, §NNN) — the card is really drawn: `next/og` turns
+ * BR-REQ-052-02 criterion 8 (`DECISIONS.md` §90, §609) — the card is really drawn: `next/og` turns
  * the layout into a PNG here, with the bundled fonts and the club's logo, in both shapes and in
  * every variant the design object and the event can produce. Satori refuses a layout it cannot
  * draw (an element with children and no `display: flex`, a picture it cannot read) by throwing,
@@ -195,7 +195,7 @@ describe("eventShareImage — the card is drawn, in both shapes", () => {
   });
 });
 
-describe("eventShareImage — every fact stays on the card, the band whole at its foot (§NNN)", () => {
+describe("eventShareImage — every fact stays on the card, the band whole at its foot (§609)", () => {
   /** 116 characters, 110 once clamped, and a place of 93: the review's overflow on the wide card. */
   const LONG_TITLE =
     "Crosul de toamnă al Brașovului pe Tâmpa și pe aleile de sub Tâmpa cu start și sosire în Piața Sfatului ediția a doua";
@@ -222,7 +222,7 @@ describe("eventShareImage — every fact stays on the card, the band whole at it
   );
 });
 
-describe("eventShareImage — the picture is fetched over https, never taken as data (§NNN)", () => {
+describe("eventShareImage — the picture is fetched over https, never taken as data (§609)", () => {
   it("refuses a data: address handed over in the design, drawing the plain card without a request", async () => {
     const plain = (await png("og")).bytes;
     const refused = (await png("og", EVENT, { backgroundPictureUrl: `data:image/png;base64,${PICTURES[DARK]}` })).bytes;

@@ -251,7 +251,7 @@ export async function noticeDescribesListSocials<T extends Record<string, unknow
 
 /**
  * Whether the privacy notice in force describes the race number beside a confirmed name on the
- * public list (§NNN, `describesListNumbers`) — in every language, like `noticeDescribesListStates`.
+ * public list (§613, `describesListNumbers`) — in every language, like `noticeDescribesListStates`.
  * For `/admin/tasks`; a public page asks through the public cache (`cachedListNumbersDisclosed`).
  */
 export async function noticeDescribesListNumbers<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
@@ -359,24 +359,6 @@ export async function noticeDescribesTeamPage<T extends Record<string, unknown>>
  * with `inArray(privacyNoticeVersion, set)` instead of a single lower bound.
  */
 export async function findFirstStatesNoticeVersion<T extends Record<string, unknown>>(db: Database<T>): Promise<number | null> {
-  return findFirstNoticeVersionDescribing(db, describesListStates);
-}
-
-/**
- * The lowest approved, not withdrawn privacy notice version that names `{{participantListNumbers}}`
- * in **every** language (`describesListNumbers`), or null (§NNN, after §421): a runner whose
- * registration recorded an older notice agreed to a list of names and clubs, and their race number
- * is not published beside it. Same reading, same documented assumption (the marker is never dropped
- * from a later version) as `findFirstStatesNoticeVersion`.
- */
-export async function findFirstNumbersNoticeVersion<T extends Record<string, unknown>>(db: Database<T>): Promise<number | null> {
-  return findFirstNoticeVersionDescribing(db, describesListNumbers);
-}
-
-async function findFirstNoticeVersionDescribing<T extends Record<string, unknown>>(
-  db: Database<T>,
-  describes: (body: unknown) => boolean,
-): Promise<number | null> {
   const rows = await db
     .select({ version: legalDocuments.version, locale: legalDocumentTranslations.locale, body: legalDocumentTranslations.bodyJson })
     .from(legalDocuments)
@@ -390,7 +372,7 @@ async function findFirstNoticeVersionDescribing<T extends Record<string, unknown
     byVersion.set(row.version, bodies);
   }
   for (const [version, bodies] of [...byVersion.entries()].sort(([a], [b]) => a - b)) {
-    if (routing.locales.every((locale) => bodies.has(locale) && describes(bodies.get(locale)))) return version;
+    if (routing.locales.every((locale) => bodies.has(locale) && describesListStates(bodies.get(locale)))) return version;
   }
   return null;
 }

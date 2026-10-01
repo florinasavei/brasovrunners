@@ -439,7 +439,7 @@ export async function assignBibNumbers<T extends Record<string, unknown>>(
       test: Number(skipped?.test ?? 0),
     };
   });
-  // The public list may show these numbers (§NNN): expire its cached pages, after the commit.
+  // The public list may show these numbers (§613): expire its cached pages, after the commit.
   if (result.assigned > 0) revalidatePublicContent("places");
   return result;
 }

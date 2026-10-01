@@ -123,7 +123,7 @@ export type MonthCostFacts = {
   /** Hobby's build minutes a month — the ceiling the usage meets on Hobby only. */
   vercelBuildMinutesPerMonth: number;
   /**
-   * The Vercel plan the club states (§NNN): Hobby, or Pro with its seats and the catalogue's seat
+   * The Vercel plan the club states (§610): Hobby, or Pro with its seats and the catalogue's seat
    * price (`domain/vercel-plan.ts`), which this file multiplies and never quotes.
    */
   vercelPlan: { plan: VercelPlanId; seats: number; usdPerSeatPerMonth: number };
@@ -323,7 +323,7 @@ function mailgunLine(facts: MonthCostFacts): MonthCostLine {
 
 /**
  * Vercel. On Hobby: free; the build minutes are the ceiling a busy month of pushes meets (§101).
- * On Pro (§NNN): the seats' price, billed whole for the month like Mailgun's, so so far and at the
+ * On Pro (§610): the seats' price, billed whole for the month like Mailgun's, so so far and at the
  * end are the same figure, with VAT on top as the invoice decides; last month is the same plan's
  * price, as Mailgun's is — the plan is today's. The build minutes are still counted, with no
  * ceiling: Pro's is not recorded here, and none is invented.

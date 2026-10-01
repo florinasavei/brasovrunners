@@ -14,7 +14,7 @@ import {
 } from "@/modules/events/share-card-layout";
 
 /**
- * BR-REQ-052-02 criterion 8 (`DECISIONS.md` §NNN) — the shared card's layout budget: the title is
+ * BR-REQ-052-02 criterion 8 (`DECISIONS.md` §609) — the shared card's layout budget: the title is
  * sized by the room the rest of the card leaves it, three lines at most, so the facts and the band
  * stay on the card. `share-image.test.ts` proves the same on drawn PNGs; this pins the arithmetic.
  */

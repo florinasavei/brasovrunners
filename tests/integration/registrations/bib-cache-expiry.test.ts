@@ -10,7 +10,7 @@ import { runRegistrationMaintenance } from "@/modules/registrations/maintenance"
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-039-01, `DECISIONS.md` §NNN (with §549's static pages) — the public list may show a race
+ * BR-REQ-039-01, `DECISIONS.md` §613 (with §549's static pages) — the public list may show a race
  * number, so every write of one expires the cached "places" pages: a hand-typed number, «Alocă
  * numerele» when it assigns at least one, and the one-off step that keeps a legacy number. Nothing
  * expires when nothing was written.

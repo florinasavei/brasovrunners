@@ -104,7 +104,7 @@ export const LIST_SOCIALS_MERGE_FIELD = "participantListSocials";
 
 /**
  * The privacy notice's marker for the race number beside a confirmed name on the public list
- * (§NNN, amending §396; the owner: "I also want to show the BID as a column"). The same two-in-one
+ * (§613, amending §396; the owner: "I also want to show the BID as a column"). The same two-in-one
  * as the states and the socials above: filled, when the notice is shown, with the words of the
  * column's own heading, quoted (`registrations/list-number-words.ts`) — «numărul de concurs» /
  * «race number» — and the switch: the list shows its «Nr.» column only while the notice in force,
@@ -449,7 +449,7 @@ export function describesListSocials(body: unknown): boolean {
 
 /**
  * Whether a privacy notice describes the race number beside a confirmed name on the public list
- * (§NNN): it names `{{participantListNumbers}}`. The gate for the list's «Nr.» column — the club's
+ * (§613): it names `{{participantListNumbers}}`. The gate for the list's «Nr.» column — the club's
  * approval of such a text is the switch, as for the states (§396) and the socials (§500). Pure.
  */
 export function describesListNumbers(body: unknown): boolean {

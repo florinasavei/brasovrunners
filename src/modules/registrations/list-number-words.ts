@@ -2,7 +2,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * What the privacy notice's `{{participantListNumbers}}` becomes (§NNN): the public list's own
+ * What the privacy notice's `{{participantListNumbers}}` becomes (§613): the public list's own
  * words for its «Nr.» column, quoted, in that language — „numărul de concurs” / “race number” —
  * read from the catalogue the column's heading reads (`Event.startList.columnNumberFull`), so the
  * approved sentence and the list name the same thing. Outside a request, like

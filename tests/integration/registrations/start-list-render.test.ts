@@ -149,7 +149,7 @@ describe("§346 the rendered start list carries a name only for those who ticked
   });
 
   /*
-    §NNN: the race number is a column only behind the privacy notice's marker. With no notice that
+    §613: the race number is a column only behind the privacy notice's marker. With no notice that
     names it — here, none at all — a named runner who wears a number is still a three-column row.
   */
   it("shows no race-number column and no number without a notice that describes it", async () => {

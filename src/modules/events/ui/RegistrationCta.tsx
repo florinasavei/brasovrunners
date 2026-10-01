@@ -73,7 +73,7 @@ export default async function RegistrationCta({
     return (
       <Stack spacing={1} sx={{ mt: { xs: DENSITY.gapSm, sm: 3 }, alignItems: "flex-start" }}>
         {/*
-          Somebody waits in the line (§NNN): a newcomer joins it whatever is free, so the page says how
+          Somebody waits in the line (§615): a newcomer joins it whatever is free, so the page says how
           places are given — the card's words — before the button, which is the line's.
         */}
         {cta.fromWaitlist && (
@@ -91,7 +91,7 @@ export default async function RegistrationCta({
         )}
 
         {/* An uncapped event shows no number at all (BR-REQ-034-01 criterion 4); nor does one whose
-            places are given from the waiting list (§NNN): they are not a newcomer's to take. */}
+            places are given from the waiting list (§615): they are not a newcomer's to take. */}
         {cta.availablePlaces !== null && !cta.fromWaitlist && (
           <Typography variant="body2" color="text.secondary">
             {t("cta.placesRemaining", { count: cta.availablePlaces })}
@@ -100,7 +100,7 @@ export default async function RegistrationCta({
 
         {/*
           Once anybody is in the line (§587, amending §346), from the counts the door made: an open offer
-          named as offered, then the people with no offer yet (§NNN) — the card's order and words.
+          named as offered, then the people with no offer yet (§612) — the card's order and words.
         */}
         {cta.offered > 0 && (
           <Typography variant="body2" color="text.secondary" data-testid="waitlist-offered">

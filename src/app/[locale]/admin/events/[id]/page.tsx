@@ -558,7 +558,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
         )}
 
         <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
-          {/* «Trimite-i oferta» on a full event (§NNN) says who holds the places, as «Dă-i un loc» (§589). */}
+          {/* «Trimite-i oferta» on a full event (§615) says who holds the places, as «Dă-i un loc» (§589). */}
           {error && <Alert severity="error">{t(`errors.${error}`, noFreePlaceValues(error, query))}</Alert>}
           {saved === "bibsAssigned" && (
             /* Nothing assigned is an answer too (§286). */

@@ -2,7 +2,7 @@ import { z } from "zod";
 
 /**
  * The Vercel plans, as the club can be on them — and the one Vercel price the pages print, with
- * the date it was checked (§NNN).
+ * the date it was checked (§610).
  *
  * `docs/PLATFORM.md` § "Subscriptions, limits and cost", checked 2026-09-05: Hobby is free and for
  * non-commercial use; Pro is **$20 a month per developer seat**, viewer seats free, with $20 of
@@ -28,7 +28,7 @@ export type VercelPlanCatalogueEntry = {
   usdPerSeatPerMonth: number;
   /**
    * The usage credit the plan includes a month, in USD: usage up to it costs nothing more, usage
-   * beyond it is billed on top. Part of the seat's price, never a cost of its own (§NNN).
+   * beyond it is billed on top. Part of the seat's price, never a cost of its own (§610).
    */
   usdUsageCreditPerMonth: number;
 };

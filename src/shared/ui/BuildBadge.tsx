@@ -15,7 +15,7 @@ const FOLD_REACH = 44 - FOLD_LINE.xs;
  * When this site was built — and, for the club's own people, the way in.
  *
  * **One copy, the last line of the «Despre club» fold's panel, at every width (`SiteFooter`,
- * §NNN).** §365 took the stamp off the bar after it had become a third line of footer under a bar
+ * §608).** §365 took the stamp off the bar after it had become a third line of footer under a bar
  * that was already two, and nobody the public site is for has a use for it. §372 pinned a second
  * copy to the bar's corner from `md`; the owner took that back (2026-10-01: it is a bother to
  * visitors), so the stamp is on screen only once somebody opens the fold. `/api/health` and

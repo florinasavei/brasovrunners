@@ -49,7 +49,7 @@ export type MonthCostInputs = {
     dailyAllowance: number | null;
   };
   vercelBuildMinutesPerMonth: number;
-  /** The Vercel plan the club states on Costuri (`readVercelPlan`, §NNN): Hobby, or Pro and its seats. */
+  /** The Vercel plan the club states on Costuri (`readVercelPlan`, §610): Hobby, or Pro and its seats. */
   vercelPlan: { plan: VercelPlanId; seats: number };
   domain: { planName: string; usdPerYear: number; expiresOn: string | null };
 };

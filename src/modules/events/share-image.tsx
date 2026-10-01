@@ -18,7 +18,7 @@ import { placeOnOneLine, SHARE_CHIP_GAP, SHARE_LAYOUT, SHARE_LINE, SHARE_RULE, s
  *
  * Drawn on the server from the event's own facts: no photograph is needed, because a card that
  * says when and where is what a runner wants from a share, and an event has no cover picture.
- * Since §NNN it is a brand card rather than a plain one — the club's lockup, the blue with depth
+ * Since §609 it is a brand card rather than a plain one — the club's lockup, the blue with depth
  * and the kit's orange in it, the time as the headline, the route as chips, a paper band with
  * the site's host — and every colour and every optional element comes from one design object
  * (`share-card-design.ts`) whose defaults are the platform's, so the club can be given the
@@ -73,7 +73,7 @@ function asDataUrl(key: string, read: () => Promise<Buffer>, mime: string): Prom
       (buffer) => `data:${mime};base64,${buffer.toString("base64")}`,
       () => {
         // A failed read is not remembered: one transient error at a cold start would otherwise draw
-        // every card of the instance without the club's logo (§NNN). The next card reads again.
+        // every card of the instance without the club's logo (§609). The next card reads again.
         artwork.delete(key);
         return null;
       },
@@ -113,7 +113,7 @@ const PICTURE_DEADLINE_MS = 5000;
 async function backgroundPicture(url: string | null): Promise<string | null> {
   if (!url?.startsWith("https://")) return null;
   try {
-    // A redirect is refused: it could lead from https to anything (§NNN).
+    // A redirect is refused: it could lead from https to anything (§609).
     const response = await fetch(url, { signal: AbortSignal.timeout(PICTURE_DEADLINE_MS), redirect: "error" });
     const type = response.headers.get("content-type")?.split(";")[0]?.trim() ?? "";
     // The ceiling is checked on the announced length first, then while reading, so a large body is never buffered whole.
@@ -198,11 +198,11 @@ export async function eventShareImage(
      */
     t: (key: string, values?: Record<string, string | number>) => string;
   },
-  /** The club's choices for the card (§NNN); the platform's until something stores them. */
+  /** The club's choices for the card (§609); the platform's until something stores them. */
   given: ShareCardDesign = DEFAULT_SHARE_CARD_DESIGN,
 ): Promise<ImageResponse> {
   // Whatever the caller hands over is read as a design first, so a stored one never skips its rules
-  // (an `https:` picture only, a hex accent, a one-line tagline) on its way to the drawing (§NNN).
+  // (an `https:` picture only, a hex accent, a one-line tagline) on its way to the drawing (§609).
   const design = readShareCardDesign(given);
   const size = SHARE_LAYOUT[shape];
   const { width, height } = size;
@@ -211,7 +211,7 @@ export async function eventShareImage(
 
   // A picture outlives the page it was made from — it is saved, posted, forwarded — so a place
   // not yet announced is said as such, and the query has withheld the typed one (§328).
-  // A typed place is cut at a word, sixty characters at most, so it stays on one line (§NNN).
+  // A typed place is cut at a word, sixty characters at most, so it stays on one line (§609).
   const place = design.showPlace
     ? event.locationToBeAnnounced
       ? labels.locationToBeAnnounced
@@ -267,13 +267,13 @@ export async function eventShareImage(
     design.showLogo ? mountains(colours.mark) : Promise.resolve(null),
   ]);
   const showBand = host !== null || mark !== null;
-  // The title takes what the rest of the card leaves it, at three lines at most (§NNN).
+  // The title takes what the rest of the card leaves it, at three lines at most (§609).
   const titleSize = shareTitleSize(
     title,
     shape,
     titleRoom(shape, { logo: logo !== null, pill: pillWords, tagline, handwriting, heldBack, place, chips: route.map((chip) => chip.words), band: showBand }),
   );
-  // The light and the accent's circle, as fractions of the card's width (§NNN).
+  // The light and the accent's circle, as fractions of the card's width (§609).
   const glow = Math.round(width * 1.2);
   const circle = Math.round(width * 0.55);
 
@@ -330,7 +330,7 @@ export async function eventShareImage(
         {/*
           The facts sit at the foot of the card and the logo and the pill at its head: the head grows
           into the space between, so a card with neither keeps its facts where they were rather than
-          floating to the top (an element switched off leaves no gap, §NNN). The title's size leaves
+          floating to the top (an element switched off leaves no gap, §609). The title's size leaves
           room for all of it (`titleRoom`); should anything still run long, this column clips it
           rather than push the band off the card's foot.
         */}
@@ -362,7 +362,7 @@ export async function eventShareImage(
                       display: "flex",
                       padding: `${size.pillPadY}px ${size.pillPadX}px`,
                       borderRadius: 999,
-                      // A cancelled event is the one solid accent pill; a type is a quiet tint (§NNN).
+                      // A cancelled event is the one solid accent pill; a type is a quiet tint (§609).
                       backgroundColor: cancelled ? colours.cancelledPill : colours.pill,
                       border: `1.5px solid ${cancelled ? colours.cancelledPill : colours.pillBorder}`,
                       color: cancelled ? colours.cancelledPillText : colours.pillText,

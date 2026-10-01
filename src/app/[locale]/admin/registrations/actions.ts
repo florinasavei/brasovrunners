@@ -108,7 +108,7 @@ function returnTo(
   registrationId: string,
 ): { path: string; params: Record<string, string | undefined> } {
   const back = text(form, "back");
-  // «Coada de înscrieri» on the event's page (§NNN): back to the event, the panel's verb answered there.
+  // «Coada de înscrieri» on the event's page (§615): back to the event, the panel's verb answered there.
   if (back === "event" && text(form, "eventId")) {
     return {
       path: getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: text(form, "eventId") } } }),
@@ -177,7 +177,7 @@ export async function promoteRegistrationAction(_previous: FormOutcome | null, f
 }
 
 /**
- * «Trimite-i oferta» (§NNN): the ordinary offer, with its email and its deadline, to the waiting-list
+ * «Trimite-i oferta» (§615): the ordinary offer, with its email and its deadline, to the waiting-list
  * registration the organizer pressed it on — from «Coada de înscrieri» on the event's page or from the
  * registration's own page. The Administrator's (`canManageRegistrations`), asserted here and again in
  * the service. A full event says who holds the places (§589's sentence); a closed registration says

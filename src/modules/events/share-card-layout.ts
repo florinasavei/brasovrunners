@@ -1,5 +1,5 @@
 /**
- * The shared card's geometry, and the arithmetic that keeps every fact on it (`DECISIONS.md` §NNN).
+ * The shared card's geometry, and the arithmetic that keeps every fact on it (`DECISIONS.md` §609).
  *
  * Satori draws every line it is given and never shrinks a text to fit, so a title, a place or a
  * tagline that runs longer than the card pushes the facts under it — and the band with the site's

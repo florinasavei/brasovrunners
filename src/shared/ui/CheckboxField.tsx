@@ -39,7 +39,7 @@ import { CHECKBOX_TAP_TARGET } from "./tap-target";
  * posts nothing, so "not posted" is "unticked", never the page's default. A disabled box posts
  * nothing either and keeps the page's word; the caller carries its value in a hidden field.
  *
- * ## When a required box is left unticked (§NNN)
+ * ## When a required box is left unticked (§616)
  *
  * MUI hides the native input, so the browser's own "tick this box" bubble does not show on a phone
  * or vanishes at once. `error` is the server's refusal said at the box (the page passes it after a
@@ -85,9 +85,9 @@ export default function CheckboxField({
    * in the label's own flow (round 2 of §570): the same words on every optional box of the block.
    */
   optional?: string;
-  /** The server's refusal of this box, said under it (§NNN): the page passes it after a press that came back unticked. */
+  /** The server's refusal of this box, said under it (§616): the page passes it after a press that came back unticked. */
   error?: string;
-  /** What the box says under itself when the browser finds it required and unticked, before the press is sent (§NNN). */
+  /** What the box says under itself when the browser finds it required and unticked, before the press is sent (§616). */
   requiredMessage?: string;
   /**
    * The label, which may contain a link. With `dense`, its first child is the box's glyph — an
@@ -99,7 +99,7 @@ export default function CheckboxField({
   const recall = useRecall();
   const helpId = useId();
   const errorId = useId();
-  // The unticked-box message is on screen: from the server's refusal, or from the browser's `invalid` (§NNN).
+  // The unticked-box message is on screen: from the server's refusal, or from the browser's `invalid` (§616).
   const [flagged, setFlagged] = useState(Boolean(error));
   const errorMessage = error ?? requiredMessage;
   const showError = flagged && Boolean(errorMessage);
@@ -178,7 +178,7 @@ export default function CheckboxField({
   ) : null;
   // A box that can ever show a message keeps the same root whether or not it shows one now: React
   // compares element types at the root, so switching between the bare label and a wrapper on
-  // `flagged` would unmount the uncontrolled input and lose the tick (§NNN).
+  // `flagged` would unmount the uncontrolled input and lose the tick (§616).
   if (!help && !error && !requiredMessage) return field;
   return (
     <Box>

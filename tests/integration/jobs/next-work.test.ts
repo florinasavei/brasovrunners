@@ -149,11 +149,11 @@ describe("BR-REQ-090-03 criterion 10 the maintenance job's next work, duty by du
   });
 
   /**
-   * §NNN (§543): a family's reservation frees its place at the sitting's fixed deadline, with no write;
-   * the job clears it then and offers the place to whoever waits. Until §NNN the plan did not know the
+   * §612 (§543): a family's reservation frees its place at the sitting's fixed deadline, with no write;
+   * the job clears it then and offers the place to whoever waits. Until §612 the plan did not know the
    * deadline, so the run after the form's save promised a quiet to the daily window and slept through it.
    */
-  it("is a family's reservation deadline, well before the address's link lapses (§543, §NNN)", async () => {
+  it("is a family's reservation deadline, well before the address's link lapses (§543, §612)", async () => {
     const event = await createEvent();
     // A sitting's form: waiting for the address (48 hours), its place reserved until the sitting's deadline.
     await register(event, { holdExpiresAt: new Date(NOW.getTime() + 40 * MINUTE) });
@@ -163,7 +163,7 @@ describe("BR-REQ-090-03 criterion 10 the maintenance job's next work, duty by du
     expect(planQuiet({ ranAt: NOW, nextWorkAt: next, cadenceMinutes: 0, failed: false }).quietUntil).toEqual(new Date(NOW.getTime() + 40 * MINUTE));
   });
 
-  it("is a family sitting's held place deadline, for a form that wrote no registration (§543, §NNN)", async () => {
+  it("is a family sitting's held place deadline, for a form that wrote no registration (§543, §612)", async () => {
     const event = await createEvent();
     const sittingKey = randomUUID();
     await db.insert(familyPlaceHolds).values([
@@ -174,7 +174,7 @@ describe("BR-REQ-090-03 criterion 10 the maintenance job's next work, duty by du
     expect(await nextMaintenanceWork(db, NOW)).toEqual(new Date(NOW.getTime() + 25 * MINUTE));
   });
 
-  it("schedules neither on a cancelled event, whose queue stands still (§331, §NNN)", async () => {
+  it("schedules neither on a cancelled event, whose queue stands still (§331, §612)", async () => {
     const event = await createEvent();
     await register(event, { holdExpiresAt: new Date(NOW.getTime() + 40 * MINUTE) }, new Date(NOW.getTime() - 40 * HOUR));
     await db.insert(familyPlaceHolds).values({ eventId: event.id, sittingKey: randomUUID(), slot: "held", expiresAt: new Date(NOW.getTime() + 25 * MINUTE), holdsPlace: true, createdAt: NOW });

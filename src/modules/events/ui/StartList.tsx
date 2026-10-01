@@ -8,7 +8,6 @@ import { publicListClosesAt, publicListStillOpen } from "@/modules/deadlines/dom
 import { holdPageUntil } from "@/modules/public-cache/page-lifetime";
 import {
   cachedDeadlines,
-  cachedFirstNumbersNoticeVersion,
   cachedFirstStatesNoticeVersion,
   cachedListNumbersDisclosed,
   cachedListSocialsDisclosed,
@@ -104,7 +103,7 @@ const NO_NUMBER = "—";
  * only for them; a hidden row never has any, because nothing about it is read. Without that notice
  * the list reads no social at all.
  *
- * ## The race number, behind the notice (§NNN, amending §396)
+ * ## The race number, behind the notice (§613, amending §396)
  *
  * The owner: "in the public participants list, I also want to show the BID as a column, not just
  * the index in the table". Once the privacy notice in force names `{{participantListNumbers}}`
@@ -158,7 +157,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
   const statesOn = await cachedListStatesDisclosed(now);
   // The socials' gate (§500), the same reading: off, no Strava or Instagram is even selected.
   const socialsOn = await cachedListSocialsDisclosed(now);
-  // The race number's gate (§NNN), the same reading: off, no number is even selected.
+  // The race number's gate (§613), the same reading: off, no number is even selected.
   const numbersOn = await cachedListNumbersDisclosed(now);
   /*
     …and only for the ticks given under a notice that described them (§421): a registration that
@@ -166,12 +165,11 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
     before. With the gate on there is always such a notice; null only if the two reads disagree for
     a moment, and then nobody beyond the confirmed is read.
   */
-  const firstNumbersNotice = numbersOn ? await cachedFirstNumbersNoticeVersion() : null;
   const firstStatesNotice = statesOn ? await cachedFirstStatesNoticeVersion() : null;
   const others = firstStatesNotice !== null ? await cachedStartListOthersCounts(event.id, firstStatesNotice) : { pending: 0, waitlisted: 0 };
   const view = startListPage(named, anonymous, requestedPage, START_LIST_PAGE_SIZE, others.pending + others.waitlisted);
   const [participants, otherRows] = await Promise.all([
-    view.namedLimit > 0 ? cachedStartListPage(event.id, view.namedOffset, view.namedLimit, socialsOn, firstNumbersNotice) : [],
+    view.namedLimit > 0 ? cachedStartListPage(event.id, view.namedOffset, view.namedLimit, socialsOn, numbersOn) : [],
     firstStatesNotice !== null && view.othersLimit > 0
       ? cachedStartListOthersPage(event.id, firstStatesNotice, view.othersOffset, view.othersLimit, socialsOn)
       : [],
@@ -209,11 +207,11 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
     statesOn ? <ListStateLabel group={group} label={t(`startList.states.${LIST_STATE_KEYS[group]}`)} help={helpOf(group)} /> : null;
 
   /*
-    The «Nr.» column (§NNN): behind the gate, and only when this page's confirmed rows carry a number
+    The «Nr.» column (§613): behind the gate, and only when this page's confirmed rows carry a number
     — a column that would read «—» on every row says nothing to a reader, so the table stays as it
     was. `bibNumber` is absent from every row without the gate (the query did not select it).
   */
-  const numbersShown = firstNumbersNotice !== null && participants.some((participant) => typeof participant.bibNumber === "number");
+  const numbersShown = numbersOn && participants.some((participant) => typeof participant.bibNumber === "number");
   /** The number's cell: the number, or «—» for a row that has none. A hidden row has an empty cell instead. */
   const numberCell = (bibNumber: number | null | undefined) =>
     numbersShown ? (
@@ -221,7 +219,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
         {typeof bibNumber === "number" ? bibNumber : NO_NUMBER}
       </Box>
     ) : null;
-  // The caption names the number only when the column is there (§NNN).
+  // The caption names the number only when the column is there (§613).
   const caption = statesOn
     ? numbersShown
       ? t("startList.captionStatesNumbers")
@@ -295,7 +293,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
                 "& th, & td": { textAlign: "left", py: 1, px: 1, borderBottom: 1, borderColor: "divider", verticalAlign: "top" },
                 "& th": { fontWeight: 600, fontSize: "0.875rem", color: "text.secondary", whiteSpace: "nowrap" },
                 "& td:first-of-type, & th:first-of-type": { width: "3rem", color: "text.secondary" },
-                // The race number (§NNN): right-aligned figures of one width, as narrow as its widest
+                // The race number (§613): right-aligned figures of one width, as narrow as its widest
                 // number, so the name keeps the room it had at 320 pixels.
                 "& [data-col='number']": { textAlign: "right", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap", width: "1%" },
               }}

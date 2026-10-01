@@ -14,7 +14,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN, BR-REQ-033-02 — a press with the declaration's acceptance box unticked is refused at the
+ * §616, BR-REQ-033-02 — a press with the declaration's acceptance box unticked is refused at the
  * box: the action sends the browser to `?invalid=accept#accepted` before the service is called
  * (the box is MUI's hidden native input, whose own bubble does not show on a phone), and the page
  * it lands on says it twice, in either language — one summary line linking to the box and a helper
@@ -168,7 +168,7 @@ async function pageAfter(locale: "ro" | "en", invalid: string): Promise<string> 
   return renderToStaticMarkup(createElement(NextIntlClientProvider, { locale, messages: locale === "ro" ? ro : en } as unknown as ComponentProps<typeof NextIntlClientProvider>, page));
 }
 
-describe("§NNN the declaration's acceptance box, unticked", () => {
+describe("§616 the declaration's acceptance box, unticked", () => {
   it("is refused at the box before the service is called, and nothing is spent", async () => {
     for (const locale of ["ro", "en"] as const) {
       const to = await redirectOf(signDeclarationAction(formOf(locale, false)));

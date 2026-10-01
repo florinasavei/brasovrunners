@@ -48,7 +48,7 @@ export type CurrencyCode = "EUR" | "USD";
 export type ServiceId = "domain" | "mailgun" | "vercel" | "neon" | "zitadel" | "scheduler";
 
 /**
- * What this service costs the club right now, in the vendor's own billing period (§NNN).
+ * What this service costs the club right now, in the vendor's own billing period (§610).
  *
  * A paid plan carries the figure its invoice carries — the domain's year, Mailgun's month, Vercel
  * Pro's month — and says which (`billed`); `perMonth` and `perYear` below derive the other figure,
@@ -183,7 +183,7 @@ export type ServiceRow = {
    * ceiling, what crossing it does, the way back down): `services.<id>.<variant>.*` when set,
    * `services.<id>.*` otherwise. Set only where the plan in force changes what is true — the
    * Neon row on Launch, whose "first limit" is no longer a limit, and the Vercel row on Pro,
-   * whose non-commercial clause no longer applies (§NNN).
+   * whose non-commercial clause no longer applies (§610).
    */
   variant?: "launch" | "pro";
   /** The Vercel row on Pro only: the developer seats the plan is priced by, for its sentences. */
@@ -270,7 +270,7 @@ export type PlatformFacts = {
   /** How far into the month that figure is, in hours, so it can be projected to a full month. */
   neonHoursElapsed?: number | null;
   /**
-   * The Vercel plan the club says it is on (`diagnostics/vercel-plan.ts`, §NNN) and its developer
+   * The Vercel plan the club says it is on (`diagnostics/vercel-plan.ts`, §610) and its developer
    * seats; Hobby and one seat when absent — the setting's own default, and the page as it was.
    */
   vercelPlan?: VercelPlanId;
@@ -342,7 +342,7 @@ export function platformServices(input: PlatformFacts): ServiceRow[] {
     {
       id: "mailgun",
       // The plan the club says it is on (§100): the name, and its monthly price as Mailgun bills it
-      // (§NNN) — `perYear` makes the year of it, which reads as a year's worth until the plan is
+      // (§610) — `perYear` makes the year of it, which reads as a year's worth until the plan is
       // switched back: the honest figure for "what does today's setup cost".
       planToday: input.emailPlanName ?? "Free",
       costToday: emailUsd > 0 ? { kind: "paid", amount: emailUsd, billed: "monthly", currency: "USD", plusVat: true } : { kind: "free" },
@@ -396,7 +396,7 @@ export function platformServices(input: PlatformFacts): ServiceRow[] {
 }
 
 /**
- * The Vercel row, which follows the plan the club states (`vercelPlan`, §NNN).
+ * The Vercel row, which follows the plan the club states (`vercelPlan`, §610).
  *
  * **Hobby:** free, and the ceiling that matters is the non-commercial clause, derived from
  * `cost_type = 'PAID'` on anything published — not "does this site take money" (it takes none)
@@ -541,7 +541,7 @@ export function annualCostToday(rows: readonly ServiceRow[]): CostTotal[] {
 
 /**
  * What the club pays per month today, per currency — each row's `perMonth`, summed: a monthly
- * invoice as it is, a yearly one's twelfth, a usage plan at this month's pace (§NNN).
+ * invoice as it is, a yearly one's twelfth, a usage plan at this month's pace (§610).
  */
 export function monthlyCostToday(rows: readonly ServiceRow[]): CostTotal[] {
   return costTotals(rows, perMonth);
@@ -549,7 +549,7 @@ export function monthlyCostToday(rows: readonly ServiceRow[]): CostTotal[] {
 
 /**
  * The rows the club pays for today — a plan's price or its usage — in the table's order: what the
- * verdict names when anything besides the domain is paid (`paysForPlans`, §NNN).
+ * verdict names when anything besides the domain is paid (`paysForPlans`, §610).
  */
 export function payingRows(rows: readonly ServiceRow[]): ServiceRow[] {
   return rows.filter((row) => row.costToday.kind === "paid" || row.costToday.kind === "usage");
@@ -562,7 +562,7 @@ export function payingRows(rows: readonly ServiceRow[]): ServiceRow[] {
  * the first real race, then a Vercel paid plan if and only if the repository moves to a club
  * organization or the club starts charging entry" — walked against what this deployment reports
  * rather than restated. Null only when everything on that list is already paid for — the page
- * then says so in its own sentence (`nextSpend.none`, §NNN) rather than printing nothing.
+ * then says so in its own sentence (`nextSpend.none`, §610) rather than printing nothing.
  */
 export function nextSpend(rows: readonly ServiceRow[]): ServiceRow | null {
   const order: ServiceId[] = ["domain", "mailgun", "vercel"];
@@ -684,7 +684,7 @@ export const OPERATIONAL_LIMITS: readonly OperationalLimit[] = [
  * since 2026-09-22 the database is on a plan the club *chose* to pay for by the hour, which is
  * neither a limit reached nor a problem: `paysForUsage` says so, and the page reads it calmly.
  *
- * `paysForPlans` (§NNN) is the club paying a plan's price besides the domain's — Mailgun's month,
+ * `paysForPlans` (§610) is the club paying a plan's price besides the domain's — Mailgun's month,
  * Vercel Pro's seats — where `paysForUsage`'s «the domain and the database, the rest free» would be
  * false. Its sentence is built from the paying rows (`payingRows`), never fixed.
  */

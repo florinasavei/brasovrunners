@@ -7,7 +7,7 @@ import { expect, test } from "@playwright/test";
  * that, read by every visitor on every page. §365 (the owner, 2026-09-24: "version shows by
  * default") put it inside the footer's "Despre club" fold: on screen at no width until
  * somebody opened it. §372 added a second copy pinned to the bar's corner from `md`. The owner,
- * 2026-10-01 (§NNN): "vreau ca pill-ul cu versiunea sa apara doar cand fac expand la footer" — so
+ * 2026-10-01 (§608): "vreau ca pill-ul cu versiunea sa apara doar cand fac expand la footer" — so
  * one copy exists, inside the fold (`footer-build-badge-panel`), at every width, and nothing is
  * pinned to the bar. Every test that presses it opens the fold first, the way a person would.
  *
@@ -92,7 +92,7 @@ test.describe("the build badge", () => {
   });
 
   test("is not on screen until the footer's fold is opened, at every width", async ({ page }) => {
-    // §365, restored at every width by §NNN: the copy is on screen at no width until
+    // §365, restored at every width by §608: the copy is on screen at no width until
     // "Despre club" is opened, and nothing is pinned to the bar.
     await page.goto("/ro/evenimente", { waitUntil: "networkidle" });
     await expect(panelBadge(page)).toBeHidden();
@@ -203,7 +203,7 @@ test.describe("the build badge", () => {
     await page.goto("/ro/evenimente");
 
     // The badge used to sit over the footer's corner, and the link had to stay clickable under
-    // it; it is in the fold (§365, §NNN), and
+    // it; it is in the fold (§365, §608), and
     // the link is on the bar's one row, on screen at every scroll position — the word "GDPR",
     // named for the notice (§378, §385). The privacy notice is on the bar since §323, so nothing has
     // to be opened to reach it.

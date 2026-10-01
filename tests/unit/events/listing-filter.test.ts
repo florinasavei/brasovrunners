@@ -345,11 +345,11 @@ describe("offeredFilters offers a box only where ticking it would change the pag
 });
 
 /*
-  §NNN, amending §602 — the owner, 2026-10-01: «Am zis că vreau un filtru și la evenimentele trecute,
+  §611, amending §602 — the owner, 2026-10-01: «Am zis că vreau un filtru și la evenimentele trecute,
   la fel ca la cele curente». Two states in one address: the cards ahead read the names §413 gave
   them, the past section the same names under `past-`. Neither scope reads the other's.
 */
-describe("§NNN two scopes in one address: the cards ahead and the past section", () => {
+describe("§611 two scopes in one address: the cards ahead and the past section", () => {
   it("names the two scopes", () => {
     expect(FILTER_SCOPES).toEqual(["upcoming", "past"]);
   });
@@ -415,7 +415,7 @@ describe("§NNN two scopes in one address: the cards ahead and the past section"
 
   it("offers the top panel the cards ahead alone: a box only the past carries is not offered there any more", () => {
     // §602 read the past window into the top panel's offer, because the past section then narrowed
-    // by the same boxes: a value only a past event carried changed what the page showed. Since §NNN
+    // by the same boxes: a value only a past event carried changed what the page showed. Since §611
     // the past section has its own panel and its own state, so above the cards such a box would
     // narrow nothing — and «Înscrieri deschise» was offered whenever a past event existed.
     const ahead = [row("a", { type: "GROUP_RUN", door: true }), row("b", { type: "GROUP_RUN", door: true })];

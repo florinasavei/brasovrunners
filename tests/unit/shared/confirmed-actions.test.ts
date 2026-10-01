@@ -86,7 +86,7 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   // Registrations.
   confirmRegistrationNowAction: [],
   promoteRegistrationAction: [],
-  // «Trimite-i oferta» (§NNN): an email to the runner, asked first on the queue's rows and the registration's page.
+  // «Trimite-i oferta» (§615): an email to the runner, asked first on the queue's rows and the registration's page.
   offerPlaceAction: ["offerAction"],
   setBibNumberAction: [],
   createRegistrationAction: [],
@@ -162,7 +162,7 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   // Asks for "Revino la textul implicit" (`reset=1`) only; saving the wording is an editorial save.
   updateEmailCopyAction: [],
   updateNeonPlanAction: [],
-  // The Vercel plan and its seats (§NNN): every cost on «Costuri» is priced from it.
+  // The Vercel plan and its seats (§610): every cost on «Costuri» is priced from it.
   updateVercelPlanAction: [],
   updateBotCheckAction: [],
   updateJobCadenceAction: [],

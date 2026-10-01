@@ -9,12 +9,12 @@ import { MESSAGES_PER_COMPLETED_REGISTRATION } from "@/modules/notifications/vol
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-090-05, §NNN — the Vercel plan is a setting an Administrator changes on «Costuri»,
+ * BR-REQ-090-05, §610 — the Vercel plan is a setting an Administrator changes on «Costuri»,
  * audited like the Neon plan (§306) and the Mailgun plan (§100), and the cost table prices it.
  */
 const NOW = new Date("2026-09-30T10:00:00.000Z");
 
-describe("§NNN the Vercel plan setting", () => {
+describe("§610 the Vercel plan setting", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;

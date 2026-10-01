@@ -123,7 +123,7 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ["pdfkit"],
   outputFileTracingIncludes: {
     "/api/admin/legal/**": ["./src/theme/pdf/*"],
-    // The event's share card reads the lockup, the mountains and its fonts at runtime (§NNN).
+    // The event's share card reads the lockup, the mountains and its fonts at runtime (§609).
     "/[locale]/events/[slug]/share-image": ["./public/brand/logo*.svg", "./src/theme/pdf/*"],
     "/[locale]/events/[slug]/opengraph-image": ["./public/brand/logo*.svg", "./src/theme/pdf/*"],
     // `/devs/docs/<name>` reads the repository's Markdown at runtime (`modules/diagnostics/repo-docs.ts`).

@@ -371,7 +371,7 @@ async function placeForNewcomer<T extends Record<string, unknown>>(
   const counts = await repo.countOccupied(db, event.id, now);
   const eligibleWaitlisted = await repo.countEligibleWaitlisted(db, event.id);
   /*
-    Newcomers queue while anybody waits (§NNN, amending §104 and §587): one `WAITLISTED` row, and the
+    Newcomers queue while anybody waits (§615, amending §104 and §587): one `WAITLISTED` row, and the
     newcomer joins the line even with a place free — under the same lock, from the count just taken.
     Unconditional, whatever the event's `waitlist_auto_offer`: with automatic offers on it is almost
     never seen, because a freed place is offered in the transaction that frees it, so nobody is left
@@ -734,7 +734,7 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
     if (counts.lapsedDeclarationHolds > 0) {
       await repo.expireStaleHolds(db, event, now, { wanting: 1 });
       const after = await repo.countOccupied(db, event.id, now);
-      // Never past somebody waiting (§NNN): a full line with people waiting in it refuses, as above.
+      // Never past somebody waiting (§615): a full line with people waiting in it refuses, as above.
       direct = !newcomerJoinsLine({ waitlisted: eligibleWaitlisted }) && hasDirectAvailability({ capacity: event.capacity, occupied: computeOccupied(after), eligibleWaitlisted });
     }
     if (!direct) throw waitlistFullError(event.waitlistCapacity);
@@ -878,7 +878,7 @@ export async function fillAvailableSpots<T extends Record<string, unknown>>(
   // A completed event is over: its lapsed holds go as before, and nobody is offered a place in it.
   if (event.eventStatus !== "SCHEDULED") return 0;
   /*
-    «Ofertele din lista de așteptare pleacă automat» — «Nu» (§NNN, amending §104, §587 and §589): the
+    «Ofertele din lista de așteptare pleacă automat» — «Nu» (§615, amending §104, §587 and §589): the
     organizer hands out every freed or added place, to the person of their choice («Trimite-i oferta»,
     `offerPlaceToByStaff`) or to a walk-in at the desk («Dă-i un loc»). The one gate, here and nowhere
     else: every path that frees or adds a place — a cancellation, an offer's expiry or decline, an
@@ -951,7 +951,7 @@ export async function fillAvailableSpots<T extends Record<string, unknown>>(
  * The offer's email (`WAITLIST_SPOT_OFFER`, «S-a eliberat un loc pentru tine»), queued in the
  * transaction that made the offer — the one message every offer sends, whoever made it: the line's
  * turn (`fillAvailableSpots`) or the organizer's choice («Trimite-i oferta», `offerPlaceToByStaff`,
- * §NNN). Returns the outbox rows it wrote, for the caller's drain after the response.
+ * §615). Returns the outbox rows it wrote, for the caller's drain after the response.
  */
 async function queueSpotOffer<T extends Record<string, unknown>>(db: Transaction<T>, offered: Registration, now: Date): Promise<string[]> {
   const idempotencyKey = `registration:${offered.id}:waitlist-offered:${now.toISOString()}`;
@@ -1017,7 +1017,7 @@ export type PublicPlaces = {
   /** How many are in the line right now (`domain/waitlist.ts#waitlistLength`, §587): 0 for an uncapped event. */
   waiting: number;
   /**
-   * The two halves of `waiting` (§NNN, amending §587): the offers still open — a place promised to
+   * The two halves of `waiting` (§612, amending §587): the offers still open — a place promised to
    * the head of the line, counted as occupied (`OccupiedCounts.unexpiredWaitlistOfferedHolds`) — and
    * the `WAITLISTED` rows with no offer yet (`countEligibleWaitlisted`). The same two counts the
    * line's length is made of, so the card can say «1 loc oferit din lista de așteptare» instead of
@@ -1026,11 +1026,20 @@ export type PublicPlaces = {
   offered: number;
   waitlisted: number;
   /**
-   * The confirmed registrations alone (`OccupiedCounts.confirmed`, §NNN), from the same count: the
+   * The confirmed registrations alone (`OccupiedCounts.confirmed`, §615), from the same count: the
    * rest of the occupied places — a pending declaration, an open offer, a family's hold — are in
    * progress. `kind` is in no condition. 0 for an uncapped event.
    */
   confirmed: number;
+  /**
+   * The occupied places as `occupiedForNewcomer` counts them (`computeOccupied`, §615, less the lapsed
+   * declaration holds when the waiting list has no room): confirmed, a pending declaration, an open
+   * offer and a family's hold. The same count `availablePlaces` is built on; the display's first
+   * number is this value clamped to the capacity. The places line's «în curs de confirmare» is this
+   * minus `confirmed`.
+   * 0 for an uncapped event.
+   */
+  occupied: number;
 };
 
 /**
@@ -1050,23 +1059,24 @@ export async function readPublicPlaces<T extends Record<string, unknown>>(
   event: { id: string; capacity: number | null; waitlistCapacity: number | null },
   now: Date,
 ): Promise<PublicPlaces> {
-  if (event.capacity === null) return { availablePlaces: null, waitlistRoom: null, waiting: 0, offered: 0, waitlisted: 0, confirmed: 0 };
+  if (event.capacity === null) return { availablePlaces: null, waitlistRoom: null, waiting: 0, offered: 0, waitlisted: 0, confirmed: 0, occupied: 0 };
 
   const counts = await repo.countOccupied(db, event.id, now);
   const eligibleWaitlisted = await repo.countEligibleWaitlisted(db, event.id);
   const line = { waitlistCapacity: event.waitlistCapacity, waitlisted: eligibleWaitlisted, openOffers: counts.unexpiredWaitlistOfferedHolds };
+  // The count the free places are built on, carried to the display as it is (§615): a lapsed
+  // declaration hold the line has no room to wait behind is free, not occupied, so the places
+  // line and the free line add up to the capacity.
+  const occupied = occupiedForNewcomer({ ...line, occupied: computeOccupied(counts), lapsedDeclarationHolds: counts.lapsedDeclarationHolds });
   return {
-    availablePlaces: computePublicAvailability({
-      capacity: event.capacity,
-      occupied: occupiedForNewcomer({ ...line, occupied: computeOccupied(counts), lapsedDeclarationHolds: counts.lapsedDeclarationHolds }),
-      eligibleWaitlisted,
-    }),
+    availablePlaces: computePublicAvailability({ capacity: event.capacity, occupied, eligibleWaitlisted }),
     waitlistRoom: waitlistRoom(line),
     waiting: waitlistLength(line),
-    // The line's two halves, from the same two counts — no query of their own (§NNN).
+    // The line's two halves, from the same two counts — no query of their own (§612).
     offered: line.openOffers,
     waitlisted: line.waitlisted,
     confirmed: counts.confirmed,
+    occupied,
   };
 }
 
@@ -3205,7 +3215,7 @@ export async function promoteFromWaitlistByStaff<T extends Record<string, unknow
 }
 
 /**
- * «Trimite-i oferta» (§NNN, amending §589): the organizer sends a free place to the waiting-list
+ * «Trimite-i oferta» (§615, amending §589): the organizer sends a free place to the waiting-list
  * registration of their choice — the ordinary offer, with the ordinary deadline and email, ahead of
  * the people before them in the line. The verb for an event whose places are handed out by hand
  * (`events.waitlist_auto_offer` false, «Nu»), and it works on either.
@@ -3290,7 +3300,7 @@ export async function offerPlaceToByStaff<T extends Record<string, unknown>>(
       now,
     });
     // As in `promoteFromWaitlistByStaff`: the expiry above may have released another lapsed hold, and
-    // this transaction holds the lock that can offer it; on «Nu» the gate makes it a no-op (§NNN).
+    // this transaction holds the lock that can offer it; on «Nu» the gate makes it a no-op (§615).
     await fillAvailableSpots(tx, locked, now, settings);
     return { offered, leaveNow, holdExpiresAt };
   });

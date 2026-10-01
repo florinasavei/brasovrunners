@@ -303,7 +303,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
 
   /**
    * A live token plus `invalid=1` means the press failed for a reason that is **not** the token
-   * — a validation failure on a field the client let through (the unticked box has its own `invalid=accept`, §NNN), which rolls the whole transaction back and spends
+   * — a validation failure on a field the client let through (the unticked box has its own `invalid=accept`, §616), which rolls the whole transaction back and spends
    * nothing.
    *
    * That is not a dead link, and it must not be reported as one (§202, found in review): the
@@ -328,7 +328,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
   */
   const documentRefused = signing && invalid === "document";
   /*
-    `invalid=accept` is the box left unticked (§NNN): the action decides it from the form before the
+    `invalid=accept` is the box left unticked (§616): the action decides it from the form before the
     service is called, and the page says it at the box and in the summary — the generic sentence
     below was written for it and said it a screen away from the box.
   */
@@ -532,7 +532,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
           otherwise. Cancelled and lapsed get no stepper: there is no journey left. */}
       {journeyStep === "declare" ? (
         // «Mai jos» only where the form is below (the render's own condition, below); a spent or moved-on link points at the
-        // email it came in, and a refused link with no notice has no journey to show (§NNN).
+        // email it came in, and a refused link with no notice has no journey to show (§614).
         formBelow ? (
           <RegistrationJourney current="declare" declaration="onThisPage" />
         ) : notice ? (
@@ -712,7 +712,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
             </Alert>
           )}
           {/*
-            The unticked box (§NNN): its summary line, a link to the box. The same component says it
+            The unticked box (§616): its summary line, a link to the box. The same component says it
             before the press where a script runs (the browser's own bubble does not show on MUI's
             hidden input), so the sentence is one and the id is one.
           */}

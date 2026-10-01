@@ -98,7 +98,7 @@ test.describe("§420 a lapsed or moved-on registration link never shows the wron
     await page.goto(`/ro/inregistrari/confirmare/${await mintActionLink(registration, "VERIFY_REGISTRATION_EMAIL")}`);
     await expect(page).toHaveURL(/done=1/, { timeout: 30_000 });
     expect(await registrationStatus(registration.id)).toBe("PENDING_DECLARATION");
-    // The page after confirming has no form: the third step says the declaration is in the email, never a «aici» (§NNN).
+    // The page after confirming has no form: the third step says the declaration is in the email, never a «aici» (§614).
     await expect(page.getByText("din emailul pe care tocmai ți l-am trimis")).toBeVisible();
     await expect(page.getByText("— aici")).toHaveCount(0);
 
@@ -110,7 +110,7 @@ test.describe("§420 a lapsed or moved-on registration link never shows the wron
     // Never the signing form: no tick box, no "type your name" field.
     await expect(page.locator('[name="accepted"]')).toHaveCount(0);
     await expect(page.locator('[name="typedName"]')).toHaveCount(0);
-    // A refused page has no form below, so no step may say «mai jos» (§NNN).
+    // A refused page has no form below, so no step may say «mai jos» (§614).
     await expect(page.getByText("declarația mai jos")).toHaveCount(0);
   });
 

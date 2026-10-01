@@ -2,7 +2,7 @@ import { z } from "zod";
 import { COLOR } from "@/theme/brand";
 
 /**
- * What an event's shared card looks like (`DECISIONS.md` §NNN; the owner, 2026-10-01: «poza
+ * What an event's shared card looks like (`DECISIONS.md` §609; the owner, 2026-10-01: «poza
  * descărcată pentru Instagram trebuie să fie un pic mai frumoasă, și pe viitor configurabilă»).
  *
  * `share-image.tsx` draws the card in two shapes — the square «Instagram» download and the
@@ -161,7 +161,7 @@ export type ShareCardColours = {
   text: string;
   /**
    * The type pill: a tint of the words' colour with a line round it, the words in their colour — quiet,
-   * so that the one solid accent pill on the card is the cancelled one's (§NNN).
+   * so that the one solid accent pill on the card is the cancelled one's (§609).
    */
   pill: string;
   pillBorder: string;
@@ -183,7 +183,7 @@ export type ShareCardColours = {
   /**
    * Over a picture: the vertical veil that keeps the words legible; null without one. It is
    * strongest where the white words are smallest — `SHARE_PICTURE_VEIL` — so the logo's wordmark
-   * and the pill read on any photograph, a near-white one included (§NNN): at a quarter of the base,
+   * and the pill read on any photograph, a near-white one included (§609): at a quarter of the base,
    * the review measured them at about 1.5:1.
    */
   overlay: string | null;
@@ -265,7 +265,7 @@ export function clampTitle(title: string, max: number = SHARE_CARD_TITLE_MAX): s
 }
 
 /**
- * The meeting point, at most `max` characters, cut the same way (§NNN): `location_name` is free
+ * The meeting point, at most `max` characters, cut the same way (§609): `location_name` is free
  * text, and a place that wraps to a second line pushes the facts under it off the wide card. The
  * drawing keeps the place to one line as well (`whiteSpace: nowrap`, an ellipsis where it would
  * overflow), so a place of sixty wide letters is cut there rather than wrapped.

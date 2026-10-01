@@ -1,3 +1,4 @@
+import { eq } from "drizzle-orm";
 import { createFormatter, createTranslator } from "next-intl";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
@@ -66,7 +67,7 @@ async function openRace(capacity: number | null, waitlistCapacity: number | null
   return event;
 }
 
-async function confirm(eventId: string, n: number, status: "CONFIRMED" | "WAITLISTED" = "CONFIRMED", from = 0) {
+async function confirm(eventId: string, n: number, status: "CONFIRMED" | "WAITLISTED" | "PENDING_DECLARATION" = "CONFIRMED", from = 0) {
   for (let i = from; i < from + n; i += 1) {
     const email = `runner${i}@example.org`;
     const [participant] = await db
@@ -87,6 +88,7 @@ async function confirm(eventId: string, n: number, status: "CONFIRMED" | "WAITLI
       resultsConsentVersion: 1,
       listOptOut: false,
       confirmedAt: status === "CONFIRMED" ? NOW : null,
+      holdExpiresAt: status === "PENDING_DECLARATION" ? new Date("2026-10-02T10:00:00.000Z") : null,
     });
   }
 }
@@ -116,9 +118,11 @@ describe("§346 the fill line beside the register button, from the cached count"
       waitlistRoom: null,
       waitlistCapacity: null,
       waiting: 0,
-      // The line's two halves, from the same read (§NNN).
+      // The line's two halves, from the same read (§612).
       offered: 0,
       waitlisted: 0,
+      confirmed: 12,
+      occupied: 12,
     });
   });
 
@@ -132,9 +136,11 @@ describe("§346 the fill line beside the register button, from the cached count"
       waitlistRoom: 2,
       waitlistCapacity: 3,
       waiting: 1,
-      // One waiting with no offer yet (§NNN).
+      // One waiting with no offer yet (§612).
       offered: 0,
       waitlisted: 1,
+      confirmed: 2,
+      occupied: 2,
     });
   });
 
@@ -185,8 +191,63 @@ describe("§346 the fill line beside the register button, from the cached count"
     const event = await openRace(50);
     await confirm(event.id, 12);
     const html = await render("cros-plin");
-    expect(html).toContain("12 înscriși din 50 de locuri");
+    expect(html).toContain("12 înscriși din 50 de locuri</p>");
     expect(html).toContain("38 de locuri libere");
+  });
+
+  it("§615 says how many are confirmed and how many in progress, from the cache through the door", async () => {
+    const event = await openRace(50);
+    await confirm(event.id, 12);
+    await confirm(event.id, 3, "PENDING_DECLARATION", 12);
+    const html = await render("cros-plin");
+    expect(html).toContain("15 înscriși din 50 de locuri — 12 confirmați, 3 în curs de confirmare");
+  });
+
+  it("§615 keeps the clause on a full race with somebody in the line", async () => {
+    const event = await openRace(5, 3);
+    await confirm(event.id, 3);
+    await confirm(event.id, 2, "PENDING_DECLARATION", 3);
+    await confirm(event.id, 1, "WAITLISTED", 5);
+    const html = await render("cros-plin");
+    expect(html).toContain("5 înscriși din 5 locuri — 3 confirmați, 2 în curs de confirmare");
+  });
+
+  it("§615 adds up while people wait beside free places, automatic offers off", async () => {
+    const event = await openRace(10);
+    await db.update(events).set({ waitlistAutoOffer: false }).where(eq(events.id, event.id));
+    await confirm(event.id, 4);
+    await confirm(event.id, 2, "PENDING_DECLARATION", 4);
+    await confirm(event.id, 4, "WAITLISTED", 6);
+    const html = await render("cros-plin");
+    expect(html).toContain("6 înscriși din 10 locuri — 4 confirmați, 2 în curs de confirmare, 4 locuri păstrate pentru lista de așteptare");
+    expect(html).toContain("Mulțumim! Toate cele 10 locuri s-au ocupat — 4 așteaptă deja un loc.");
+    locale = "en";
+    const en = await render("full-cross");
+    expect(en).toContain("6 registered of 10 places — 4 confirmed, 2 completing their registration, 4 places kept for the waiting list");
+  });
+
+  it("§615 keeps the first number at 6 with nothing pending, and names the claim", async () => {
+    const event = await openRace(10);
+    await db.update(events).set({ waitlistAutoOffer: false }).where(eq(events.id, event.id));
+    await confirm(event.id, 6);
+    await confirm(event.id, 4, "WAITLISTED", 6);
+    const html = await render("cros-plin");
+    expect(html).toContain("6 înscriși din 10 locuri — 4 locuri păstrate pentru lista de așteptare");
+    expect(html).toContain("Mulțumim! Toate cele 10 locuri s-au ocupat — 4 așteaptă deja un loc.");
+    locale = "en";
+    const en = await render("full-cross");
+    expect(en).toContain("6 registered of 10 places — 4 places kept for the waiting list");
+  });
+
+  it("§615 counts a lapsed declaration hold as free when the line has no room: places plus free add up", async () => {
+    const event = await openRace(10, 0);
+    await confirm(event.id, 6);
+    await confirm(event.id, 2, "PENDING_DECLARATION", 6);
+    await db.update(registrations).set({ holdExpiresAt: new Date("2026-09-20T10:00:00.000Z") }).where(eq(registrations.status, "PENDING_DECLARATION"));
+    const html = await render("cros-plin");
+    expect(html).toContain("6 înscriși din 10 locuri</p>");
+    expect(html).toContain("4 locuri libere");
+    expect(html).not.toContain("în curs de confirmare");
   });
 
   it("says it in natural English from the same numbers", async () => {

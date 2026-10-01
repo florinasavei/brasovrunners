@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { REOPEN_WINDOW_MS, rememberTick, spendTick, wasTicked } from "@/modules/events/ui/filter-reopen";
 
-/** BR-REQ-041-01 — the panel's reopen memory expires by itself (`DECISIONS.md` §NNN, §549). */
-describe("§NNN the filter panel's reopen memory", () => {
+/** BR-REQ-041-01 — the panel's reopen memory expires by itself (`DECISIONS.md` §611, §549). */
+describe("§611 the filter panel's reopen memory", () => {
   it("opens the ticked scope's panel on the address the tick went to, and no other scope's", () => {
     rememberTick("past", "/ro/evenimente?past-type=RACE", 1000);
     expect(wasTicked("past", "/ro/evenimente?past-type=RACE", 1500)).toBe(true);

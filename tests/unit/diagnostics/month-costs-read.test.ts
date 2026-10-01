@@ -68,7 +68,7 @@ describe("BR-REQ-090-07 «Luna aceasta» assembled from its readers", () => {
     expect(Object.values(reading.reasons.current).every((reason) => reason === null)).toBe(true);
   });
 
-  it("§NNN prices the Vercel plan the club states from the one catalogue: Hobby free, Pro the seats' month", async () => {
+  it("§610 prices the Vercel plan the club states from the one catalogue: Hobby free, Pro the seats' month", async () => {
     expect(line(await readMonthCosts(inputs(), readers()), "vercel")).toMatchObject({ plan: "Hobby", billing: "free", soFarUsd: 0 });
     const pro = await readMonthCosts(inputs({ vercelPlan: { plan: "PRO", seats: 3 } }), readers());
     expect(line(pro, "vercel")).toMatchObject({ plan: "Pro", billing: "monthly", soFarUsd: 60, projectedUsd: 60, plusVat: true });

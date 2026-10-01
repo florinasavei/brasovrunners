@@ -44,7 +44,7 @@ export const PAST_EVENTS_SHOWN = 12;
  * is past is something a reader goes looking for. A closed `<details>` is also a section that
  * costs a phone nothing to scroll past.
  *
- * **Its own «Filtre»** (§NNN, amending §602 — the owner, 2026-10-01: «Mi-ar trebui aceleași filtre
+ * **Its own «Filtre»** (§611, amending §602 — the owner, 2026-10-01: «Mi-ar trebui aceleași filtre
  * și pentru evenimentele din trecut», and once §602 had shipped: «Am zis că vreau un filtru și la
  * evenimentele trecute, la fel ca la cele curente»). The same panel as the cards ahead, inside this
  * fold right under its heading, over the address's `past-` names (`?past-type=RACE`): its own ticks,
@@ -59,7 +59,7 @@ export const PAST_EVENTS_SHOWN = 12;
  * box only where ticking it narrows the window, or where the address ticks it. But a past window may be uniform
  * — one series alone — and a control that vanishes then reads as missing, not as honest; so the «Filtre» button
  * stays and its fold says, in one sentence, what the events all share (`singleValues`) and that there is nothing
- * to narrow. The cards ahead's panel keeps criterion 75's rendering rule as it was (§NNN).
+ * to narrow. The cards ahead's panel keeps criterion 75's rendering rule as it was (§611).
  *
  * Between seasons the lead already shows the club's last event with a notice (§167), so this
  * section skips that one row: it would be the same card twice on one page.
@@ -77,7 +77,7 @@ export default async function PastEvents({
   /** The page's past window (§413), newest first, read beside the listing's own rows. */
   rows: readonly PublicEvent[];
   now: Date;
-  /** The past section's own filter, the address's `past-` scope (§NNN). */
+  /** The past section's own filter, the address's `past-` scope (§611). */
   filter: ListingFilter;
   facts: FilterFacts<PublicEvent>;
   /** The past event the lead already shows between seasons (§167), if any. */

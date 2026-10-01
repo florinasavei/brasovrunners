@@ -92,7 +92,7 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
     (§334, jobs sleep when nothing is due). An event put back on is a save, and the save wakes the
     job itself.
 
-    A family's reservation (§543) too, since §NNN: a `PENDING_EMAIL_CONFIRMATION` row a sitting's
+    A family's reservation (§543) too, since §612: a `PENDING_EMAIL_CONFIRMATION` row a sitting's
     form reserved, until the sitting's fixed deadline. Before, the form's save woke the job once, the
     run that followed planned its quiet without the deadline, and the job slept through the lapse to
     the daily window — the place came back in the count, but nobody waiting was offered it until the
@@ -112,7 +112,7 @@ export async function nextMaintenanceWork<T extends Record<string, unknown>>(db:
 
   /*
     …and a family sitting's held place for a form that wrote no registration (§543), at the same
-    deadline (§NNN): `expireStaleHolds` deletes it then, and the place is the next in line's. Only a
+    deadline (§612): `expireStaleHolds` deletes it then, and the place is the next in line's. Only a
     row that holds a place — a person sent while none was free holds none and frees none (round six)
     — and only on a scheduled event, as above (§331). Like the reservation read above, it does not look
     for a waiting person: a deadline on an event where nobody waits wakes the job once for nothing

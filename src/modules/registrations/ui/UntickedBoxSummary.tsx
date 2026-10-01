@@ -5,7 +5,7 @@ import MuiLink from "@mui/material/Link";
 import { useEffect, useRef, useState } from "react";
 
 /**
- * The error summary for a required acceptance box left unticked (§NNN): one line, a link to the box.
+ * The error summary for a required acceptance box left unticked (§616): one line, a link to the box.
  *
  * It is the page's summary in both ways it can appear. After a press the server refused
  * (`?invalid=accept`) the page renders it with `initial`, so it is in the HTML with no script. With

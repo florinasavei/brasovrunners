@@ -32,7 +32,7 @@ import { offerDeadlineIfMadeNow } from "../give-place-tip";
  * Administrator only, because it names people; rendered on the event page beside the test
  * registrations, which is the one way to fill it without ten mailboxes.
  *
- * Each waiting row carries «Trimite-i oferta» for the Administrator (`offerAction`, §NNN): the ordinary
+ * Each waiting row carries «Trimite-i oferta» for the Administrator (`offerAction`, §615): the ordinary
  * offer to the person chosen, ahead of the line — the way places are handed out on an event whose
  * offers do not go out on their own. Drawn while registration is open (an offer after the close would
  * already be lapsed); the service asserts the role and decides again under the lock.
@@ -51,7 +51,7 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
   waiting: number;
   now: Date;
   /**
-   * «Trimite-i oferta» on each waiting row (§NNN): the page hands its Server Action down only to a
+   * «Trimite-i oferta» on each waiting row (§615): the page hands its Server Action down only to a
    * role that may send it (`canManageRegistrations`); absent, no row carries the button.
    */
   offerAction?: (previous: FormOutcome | null, form: FormData) => Promise<FormOutcome | null>;
@@ -95,7 +95,7 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
     the limit's box holds.
   */
   const limit = event.capacity === null ? null : event.waitlistCapacity;
-  // «Trimite-i oferta»'s deadline and the dialog's words (§NNN), read once for every row, and only
+  // «Trimite-i oferta»'s deadline and the dialog's words (§615), read once for every row, and only
   // where a row can carry the button: null after the close, when no row does.
   const offerUntil = offerAction && line.some((row) => row.status === "WAITLISTED") ? await offerDeadlineIfMadeNow(event.id, locale) : null;
   const dialog = offerUntil ? await confirmWords() : null;
@@ -119,7 +119,7 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
         {figure(t("queue.holds"), holds)}
         {figure(t("queue.free"), free ?? "∞")}
         {/*
-          The open offers (§NNN), beside the free places and the people waiting: the count the public
+          The open offers (§612), beside the free places and the people waiting: the count the public
           card reads «1 loc oferit din lista de așteptare» from (`readPublicPlaces`'s `offered`, the
           same `countOccupied` field), so the panel and the card agree. Already among «Rezervate».
         */}

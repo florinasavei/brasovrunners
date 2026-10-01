@@ -741,7 +741,7 @@ export async function promoteRegistrationByStaff<T extends Record<string, unknow
 }
 
 /**
- * «Trimite-i oferta» (§NNN): a free place offered to the waiting-list registration the organizer
+ * «Trimite-i oferta» (§615): a free place offered to the waiting-list registration the organizer
  * chose — the ordinary offer and its email, never a confirmation. The Administrator's
  * (`canManageRegistrations`, §289), not the desk's: it changes a registration the Organizer only
  * reads. Asserted here, before anything is read, and again in the service, which writes the audit
@@ -916,7 +916,7 @@ export async function setBibNumberByStaff<T extends Record<string, unknown>>(
     throw error;
   }
   /*
-    The public list may show this number (§NNN, behind the privacy notice): a number typed by hand
+    The public list may show this number (§613, behind the privacy notice): a number typed by hand
     is a write that is not a change of state, so `transitionRegistration` does not expire the list's
     cached page for it — this does, after the commit, or the old number would stay up for a while.
   */

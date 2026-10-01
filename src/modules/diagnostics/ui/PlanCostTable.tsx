@@ -38,7 +38,7 @@ type Props = {
 type Cell = { text: string; quiet: boolean };
 
 /**
- * «Cât costă»'s breakdown (§NNN; the owner: «la costuri vreau să văd defalcat pe lună și per
+ * «Cât costă»'s breakdown (§610; the owner: «la costuri vreau să văd defalcat pe lună și per
  * serviciu»): one line per service in the cost table's order — «Serviciu» · «Pe lună» · «Pe an» —
  * then the «Total». Each amount is the vendor's own figure or the one derived from it
  * (`perMonth`, `perYear`), in the vendor's currency; an estimate is marked «≈», VAT is named per

@@ -165,7 +165,7 @@ describe("§535 which change a placeholder line belongs to", () => {
   });
 });
 
-describe("§NNN a line a merge commit wrote is numbered by hand, never by the one change in the release", () => {
+describe("§607 a line a merge commit wrote is numbered by hand, never by the one change in the release", () => {
   const uncommitted = "0".repeat(40);
   const merges = new Set(["merge"]);
   const inBatch = new Set(["aaa", "merge"]);
