@@ -46,11 +46,13 @@ import { countEligibleWaitlisted, findRegistrationById } from "@/modules/registr
 import { confirmationDueAtStart } from "@/modules/registrations/domain/hold-deadlines";
 import { declarantValues, identityDocumentValues } from "@/modules/registrations/signed-declaration";
 import ActionLinkNotice from "@/modules/registrations/ui/ActionLinkNotice";
+import { spamHintWords } from "@/modules/registrations/ui/link-wait-words";
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
 import SignatureField from "@/modules/registrations/ui/SignatureField";
 import IdDocumentFields, { type DocumentBox, ID_DOCUMENT_TYPES } from "@/modules/registrations/ui/IdDocumentFields";
 import {
   readRegistrationTokenContext,
+  readReplacedActionLink,
   readSpentRegistrationLink,
   type SpentRegistrationLink,
 } from "@/modules/registrations/token-actions";
@@ -221,6 +223,10 @@ export default async function DeclarePage({ params, searchParams }: Props) {
             declaration is already signed — so both outcomes render the finished stepper. */}
         <RegistrationJourney current="done" />
         <Alert severity="success">{done === "waitlisted" ? t("declare.doneWaitlisted") : t("declare.doneConfirmed")}</Alert>
+        {/* The confirmation email (with the QR) or the waiting list's offer is on its way (§NNN). */}
+        <Alert severity="info" sx={{ mt: 2 }} data-testid="spam-hint">
+          {await spamHintWords()}
+        </Alert>
         {held && familySteps && isFamilyWizard(familySteps) && (
           <FamilyDone steps={familySteps} doneHref={await familyDoneHref(held.eventId, locale)} />
         )}
@@ -292,6 +298,8 @@ export default async function DeclarePage({ params, searchParams }: Props) {
   const familyMode = passSteps !== null && isFamilyWizard(passSteps);
 
   const spent = context.ok || familyMode ? null : await readSpentRegistrationLink(token, refusals, locale, now);
+  // A newer email replaced this link (§NNN): said so, in place of the generic refusal.
+  const replaced = context.ok || familyMode || spent ? null : await readReplacedActionLink(token, refusals, locale, now);
   /*
     A spent link with no pass that holds (§471, nit found in review): lapsed, done elsewhere, or
     another device. When the address still has declarations to sign at the event, one line says each
@@ -549,7 +557,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
         <FamilyDone steps={passSteps} doneHref={await familyDoneHref(walking.eventId, locale)} />
       ) : blocked || !declaration || movedOnNotice ? (
         <>
-          <ActionLinkNotice locale={locale} status={notice} />
+          <ActionLinkNotice locale={locale} status={notice} replaced={notice ? null : replaced} />
           {familyLeft && (
             <Alert severity="info" sx={{ mt: 2 }} data-testid="family-own-links">
               {t("declare.family.ownLinksStillWork")}

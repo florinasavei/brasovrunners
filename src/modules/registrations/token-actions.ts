@@ -7,6 +7,7 @@ import {
   consumeActionToken,
   readActionTokenContext,
   readSpentActionTokenScope,
+  readSupersededActionTokenScope,
 } from "@/modules/action-tokens/repository";
 import { tokenAttemptAllowed } from "@/modules/action-tokens/throttle";
 import { currentDeadlines } from "@/modules/deadlines/deadlines";
@@ -15,6 +16,7 @@ import { findEventForRegistrationById, findEventNotificationDetails } from "@/mo
 import { DomainError } from "@/shared/errors/domain-error";
 import {
   describeActionLink,
+  mayReportReplaced,
   mayReportState,
   type SpentLinkMessage,
   type SpentLinkNext,
@@ -213,6 +215,45 @@ export async function readSpentRegistrationLink(
       eventTitle: event?.locale === locale ? event.title : null,
       eventSlug: event?.locale === locale ? event.slug : null,
     };
+  });
+}
+
+/** What a page shows for a link a newer email replaced (§NNN, `domain/link-status.ts`). */
+export type ReplacedActionLink = {
+  /** When the email that replaced this link was issued; null when it cannot be read. */
+  issuedAt: Date | null;
+  /** For the "ask for it again" link, in this locale's own words only; null otherwise. */
+  eventSlug: string | null;
+};
+
+/**
+ * "This link was replaced: a newer email has the working one" — when the link pressed was
+ * superseded by a newer link of the same purpose and scope (§NNN).
+ *
+ * Null whenever the page must keep §13.2's one generic refusal: every reason but `SUPERSEDED`,
+ * and `SUPERSEDED` itself when `readSupersededActionTokenScope`, re-checking the row, disagrees.
+ * Like `readSpentRegistrationLink`: reached from a GET, read-only throughout, nothing consumed or
+ * minted, and no throttle charge of its own — the page's own read already paid for this request.
+ * `refusals` is a list for the declaration page's two purposes; the first eligible one wins.
+ */
+export async function readReplacedActionLink(
+  secret: string,
+  refusals: readonly { purpose: EmailActionTokenPurpose; reason: TokenRejectionReason }[],
+  locale: Locale,
+  now: Date,
+): Promise<ReplacedActionLink | null> {
+  const eligible = refusals.find((refusal) => mayReportReplaced(refusal.purpose, refusal.reason));
+  if (!eligible) return null;
+
+  return inReadOnlyTransaction(getDb(), async (tx) => {
+    const scope = await readSupersededActionTokenScope(tx, { secret, purpose: eligible.purpose, now });
+    if (!scope) return null;
+
+    // The event only for the resend form's narrowing, and only in this locale's words (§202).
+    const registration = scope.registrationId ? await findRegistrationById(tx, scope.registrationId) : undefined;
+    const event = registration ? await findEventNotificationDetails(tx, registration.eventId, locale) : undefined;
+
+    return { issuedAt: scope.replacedAt, eventSlug: event?.locale === locale ? event.slug : null };
   });
 }
 

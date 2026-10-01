@@ -14,6 +14,7 @@ import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { minutesPhrase } from "@/modules/deadlines/domain/duration-words";
 import { cachedEmailWaitMinutes } from "@/modules/public-cache/reads";
+import { spamHintWords } from "@/modules/registrations/ui/link-wait-words";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { requestRegistrationLinkAction } from "./actions";
 import { DENSITY } from "@/theme/density";
@@ -59,9 +60,15 @@ export default async function ResendPage({ params, searchParams }: Props) {
       </Typography>
 
       {sent ? (
-        <Alert severity="success">
-          {waitMinutes === null ? t("resend.sent") : t("resend.sentScheduled", { wait: minutesPhrase(locale, waitMinutes) })}
-        </Alert>
+        <>
+          <Alert severity="success">
+            {waitMinutes === null ? t("resend.sent") : t("resend.sentScheduled", { wait: minutesPhrase(locale, waitMinutes) })}
+          </Alert>
+          {/* Where a resent email most often hides (§NNN), in its own box under the sentence. */}
+          <Alert severity="info" sx={{ mt: 2 }} data-testid="spam-hint">
+            {await spamHintWords()}
+          </Alert>
+        </>
       ) : (
         <form action={requestRegistrationLinkAction}>
           <Stack spacing={2}>

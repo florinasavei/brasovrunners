@@ -6227,7 +6227,6 @@
       },
       "delay": "It arrives within five minutes.",
       "delayScheduled": "It arrives within {wait}.",
-      "notArrived": "Not there? Look in Spam too.",
       "backToEvent": "Back to the event",
       "family": "One email, for everybody: {names}.",
       "familyEach": "Each person gets their own email."
@@ -6349,8 +6348,8 @@
       "intro": "If our message did not arrive, enter the address you registered with and we will send the link again. Check your spam folder too.",
       "emailHelp": "The address you used when registering.",
       "submit": "Send the link",
-      "sent": "If that address has a registration, we have just sent the link there. Check your spam folder too.",
-      "sentScheduled": "If there is a registration on this address, the link leaves for it on the platform's next scheduled round, within {wait} at the most. Check your spam folder as well.",
+      "sent": "If that address has a registration, we have just sent the link there.",
+      "sentScheduled": "If there is a registration on this address, the link leaves for it on the platform's next scheduled round, within {wait} at the most.",
       "prompt": "Did the message not arrive?",
       "linkLabel": "Send it again",
       "stillNothing": "Nothing arrived even after asking again?",
@@ -6561,6 +6560,11 @@
   },
   "Registrations": {
     "invalidOrExpired": "This link is no longer valid. We can send you a new one, to the same email address.",
+    "replaced": "This link has been replaced. We sent you a newer email with a working link. Open the latest email from us — if you cannot find it, check Spam and Promotions.",
+    "replacedAt": "This link has been replaced. We sent you a newer email with a working link (sent {issuedAt}). Open the latest email from us — if you cannot find it, check Spam and Promotions.",
+    "spamHint": {
+      "body": "Can't find our email? Look in Spam and Promotions and move us to your inbox so the next ones arrive."
+    },
     "cancelKeepsRecord": "Cancelling frees your place; we keep the registration for three years as a record. Want to see, correct or erase your data? <contact>Write to us</contact>.",
     "cancelReason": {
       "label": "Why are you cancelling?",
@@ -6739,7 +6743,7 @@
       "intro": "Type the address you registered with and we send you one link to all your registrations.",
       "email": "Email address",
       "submit": "Send me the link",
-      "sent": "If that address has registrations, we have just sent the link there. Check the spam folder too.",
+      "sent": "If that address has registrations, we have just sent the link there.",
       "listTitle": "Your registrations",
       "empty": "You have no active registration at the moment.",
       "cancel": "Withdraw from this registration",
@@ -6766,7 +6770,7 @@
         "body": "At {event}, the declarations of {names} are waiting for a signature. You can sign them all here, one after the other.",
         "action": "Sign the declarations"
       },
-      "sentScheduled": "If that address has registrations, the link leaves for it within {wait} at the most. Check the spam folder too.",
+      "sentScheduled": "If that address has registrations, the link leaves for it within {wait} at the most.",
       "declaration": {
         "signed": "Declaration: signed — {when}",
         "toSign": "Declaration: to sign",
@@ -7775,8 +7779,8 @@
     "submitting": "Sending…",
     "sent": {
       "title": "Check your inbox",
-      "body": "If the address is right, within a few minutes you receive an email with a link. The subscription starts only once you press it. Can't find it? Look in the Spam folder too.",
-      "bodyScheduled": "If the address is right, you get an email with a link within {wait} at the most. The subscription starts only once you press the link. Can't find it? Look in your Spam folder too."
+      "body": "If the address is right, within a few minutes you receive an email with a link. The subscription starts only once you press it.",
+      "bodyScheduled": "If the address is right, you get an email with a link within {wait} at the most. The subscription starts only once you press the link."
     },
     "errors": {
       "title": "The subscription has not started yet",

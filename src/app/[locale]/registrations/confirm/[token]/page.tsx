@@ -10,8 +10,14 @@ import { hoursPhrase } from "@/modules/deadlines/domain/duration-words";
 import { cachedDeadlines } from "@/modules/public-cache/reads";
 import ActionLinkNotice from "@/modules/registrations/ui/ActionLinkNotice";
 import ConfirmOnArrival from "@/modules/registrations/ui/ConfirmOnArrival";
+import { spamHintWords } from "@/modules/registrations/ui/link-wait-words";
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
-import { readConfirmedOnAddress, readRegistrationTokenContext, readSpentRegistrationLink } from "@/modules/registrations/token-actions";
+import {
+  readConfirmedOnAddress,
+  readRegistrationTokenContext,
+  readReplacedActionLink,
+  readSpentRegistrationLink,
+} from "@/modules/registrations/token-actions";
 import { confirmEmailAction } from "./actions";
 import { DENSITY } from "@/theme/density";
 
@@ -108,6 +114,10 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
             </ul>
           </Alert>
         )}
+        {/* After the people list, which names the email still to come: where to look for it (§NNN). */}
+        <Alert severity="info" sx={{ mt: 2 }} data-testid="spam-hint">
+          {await spamHintWords()}
+        </Alert>
       </Container>
     );
   }
@@ -130,6 +140,10 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
         locale,
         new Date(),
       );
+  // A newer email replaced this link (§NNN): said so, in place of the generic refusal.
+  const replaced = context.ok
+    ? null
+    : await readReplacedActionLink(token, [{ purpose: "VERIFY_REGISTRATION_EMAIL", reason: context.reason }], locale, new Date());
 
   const journeyStep = spent ? spent.step : ("confirm" as const);
 
@@ -148,7 +162,7 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
       )}
 
       {!context.ok || invalid ? (
-        <ActionLinkNotice locale={locale} status={spent} />
+        <ActionLinkNotice locale={locale} status={spent} replaced={replaced} />
       ) : (
         <form action={confirmEmailAction}>
           <input type="hidden" name="locale" value={locale} />

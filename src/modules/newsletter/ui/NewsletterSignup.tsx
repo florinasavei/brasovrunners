@@ -16,6 +16,7 @@ import type { Locale } from "@/i18n/routing";
 import { minutesPhrase } from "@/modules/deadlines/domain/duration-words";
 import { cachedEmailWaitMinutes } from "@/modules/public-cache/reads";
 import BotCheck from "@/modules/registrations/ui/BotCheck";
+import { spamHintWords } from "@/modules/registrations/ui/link-wait-words";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { DENSITY } from "@/theme/density";
@@ -84,6 +85,8 @@ export default async function NewsletterSignup({ locale, outcome, refused, typed
   // The confirmation link leaves on the scheduler's tick by default (§513): the sentence says that
   // wait, or "a few minutes" when the club sends right after the request. Read only on "sent".
   const waitMinutes = outcome === "sent" ? await cachedEmailWaitMinutes(new Date()) : null;
+  // Spam and Promotions, the box every page that waits for an email shows (§NNN): read only when one is waited for.
+  const spamHint = outcome === "sent" || leaveOutcome === "sent" ? await spamHintWords() : null;
   const errorText =
     outcome === "invalid"
       ? null
@@ -112,10 +115,16 @@ export default async function NewsletterSignup({ locale, outcome, refused, typed
       </Typography>
 
       {outcome === "sent" && (
-        <Alert severity="success" role="status" sx={{ mb: 2 }} data-testid="newsletter-sent">
-          <AlertTitle>{t("sent.title")}</AlertTitle>
-          {waitMinutes === null ? t("sent.body") : t("sent.bodyScheduled", { wait: minutesPhrase(locale, waitMinutes) })}
-        </Alert>
+        <>
+          <Alert severity="success" role="status" sx={{ mb: 1 }} data-testid="newsletter-sent">
+            <AlertTitle>{t("sent.title")}</AlertTitle>
+            {waitMinutes === null ? t("sent.body") : t("sent.bodyScheduled", { wait: minutesPhrase(locale, waitMinutes) })}
+          </Alert>
+          {/* Where the confirmation link most often hides (§NNN): the same box every waiting page shows. */}
+          <Alert severity="info" sx={{ mb: 2 }} data-testid="spam-hint">
+            {spamHint}
+          </Alert>
+        </>
       )}
       {outcome === "unavailable" && (
         <Alert severity="warning" sx={{ mb: 2 }}>
@@ -354,9 +363,14 @@ export default async function NewsletterSignup({ locale, outcome, refused, typed
         whatever the address is, and the link to leave goes to the mailbox, never to this page.
       */}
       {leaveOutcome === "sent" && (
-        <Alert severity="info" role="status" sx={{ mt: 2 }} data-testid="newsletter-leave-sent">
-          {t("leave.sent")}
-        </Alert>
+        <>
+          <Alert severity="info" role="status" sx={{ mt: 2 }} data-testid="newsletter-leave-sent">
+            {t("leave.sent")}
+          </Alert>
+          <Alert severity="info" sx={{ mt: 1 }} data-testid="spam-hint">
+            {spamHint}
+          </Alert>
+        </>
       )}
       <Box
         component="details"

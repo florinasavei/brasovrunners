@@ -28,8 +28,9 @@ import type { TokenRejectionReason } from "@/modules/action-tokens/domain/token-
  *
  * §13.2 asks for "one generic invalid/expired response with resend path", because telling a
  * stranger with a guessed URL whether a token exists describes the system to somebody who has
- * proven nothing. `ALREADY_USED` is the one reason where that argument does not apply, and the
- * reason it does not apply is structural rather than a judgement about how helpful we feel:
+ * proven nothing. `ALREADY_USED` and `SUPERSEDED` are the two reasons where that argument does not
+ * apply, and the reason it does not apply is structural rather than a judgement about how helpful
+ * we feel:
  *
  * - **ALREADY_USED** is only reachable by an exact match on `token_hash`, which is SHA-256 of
  *   32 random bytes. Whoever reached it is holding the secret from the email. Telling them
@@ -44,23 +45,33 @@ import type { TokenRejectionReason } from "@/modules/action-tokens/domain/token-
  *   to say except "ask for a new link" — which is exactly what the generic message says, and
  *   which is now said with a working link to the resend form rather than with a sentence
  *   pointing vaguely at the event page.
- * - **INVALIDATED** is the hard one, and it stays generic on purpose. `invalidated_at` holds
- *   two different facts with no column to tell them apart: a token superseded because a newer
- *   one was issued (§12.8's partial unique indexes), and a token revoked for cause. The first
- *   is innocent and common — somebody pressed an older email after asking for a fresh link —
- *   and the second is a decision to stop a link working. A friendly page that coached its
- *   holder toward a fresh link would treat both the same, so the strictest reading wins until
- *   the column can say which happened. And the superseded case loses nothing by it: the work
- *   was *not* done, the state has not advanced, and the only true next step is the resend path
- *   the generic message now carries.
+ * - **SUPERSEDED** (§NNN) was `INVALIDATED`'s innocent half, and it now has a column of its own:
+ *   `superseded_by_token_id`, set by `issueActionToken` on exactly the rows a newer token of the
+ *   same purpose and scope replaced. Somebody pressed an older email after a resend — common, and
+ *   until §NNN answered with "invalid or expired", which reads as "something broke". The argument
+ *   is `ALREADY_USED`'s: only an exact match on `token_hash` reaches the row, so whoever reached it
+ *   holds the secret from that email, and "a newer email has the working link — open the latest
+ *   one, look in Spam and Promotions" tells them nothing the email in their hand did not, except
+ *   which email to open. It says no state and shows nothing of the registration: one sentence,
+ *   the replacing email's time, and the resend path — which carries the event's slug, as the spent
+ *   page's does, so the form narrows to it (`mayReportReplaced`; `token-actions.ts`).
+ * - **INVALIDATED** is now only the other half — a link revoked for cause — and stays generic on
+ *   purpose: it is a decision to stop a link working, and a friendly page that coached its holder
+ *   toward a fresh link would undo it. No code path revokes today; the column keeps the two apart
+ *   for the day one does. A superseded row whose newer row was swept (§322) has its pointer set to
+ *   null and reads as this — the strict reading, and long past anybody's inbox by then.
  *
  * ## Which purposes
  *
- * The four registration-scoped purposes. `MANAGE_PROFILE` is deliberately excluded: it is
- * scoped to a participant rather than to one registration, so the truthful "where are you"
- * for a spent profile link is the whole list of that person's registrations — which is the
- * page the live link opens. Re-serving a spent link's own content is the thing this module
+ * For a spent link, the four registration-scoped purposes. `MANAGE_PROFILE` is deliberately
+ * excluded: it is scoped to a participant rather than to one registration, so the truthful "where
+ * are you" for a spent profile link is the whole list of that person's registrations — which is
+ * the page the live link opens. Re-serving a spent link's own content is the thing this module
  * exists not to do, and `/registrations/mine` is one form away.
+ *
+ * For a replaced link, every purpose a newer link can replace — the four, `LIST_CONSENT` and
+ * `MANAGE_PROFILE` too, since the sentence reports no state. Not `REGISTER_ANOTHER_PERSON`: its
+ * earlier links stay live (§420), so none is ever superseded.
  */
 export type SpentLinkMessage =
   /** Still waiting on the address to be confirmed. */
@@ -159,6 +170,19 @@ export function mayReportState(
     purpose === "WAITLIST_OFFER" ||
     purpose === "MANAGE_REGISTRATION"
   );
+}
+
+/**
+ * Whether a refused token may be answered with "a newer email has the working link" (§NNN).
+ *
+ * The other security half, beside `mayReportState`: `SUPERSEDED` only — never a revoked, unknown,
+ * mismatched or expired link — and any purpose whose earlier links a newer one replaces.
+ */
+export function mayReportReplaced(
+  purpose: EmailActionTokenPurpose,
+  reason: TokenRejectionReason,
+): boolean {
+  return reason === "SUPERSEDED" && purpose !== "REGISTER_ANOTHER_PERSON";
 }
 
 /**

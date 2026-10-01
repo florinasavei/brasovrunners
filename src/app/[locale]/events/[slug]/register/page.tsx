@@ -408,7 +408,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
         /*
           "Aproape gata, Ana!" — the screen after the form, in `CheckYourEmail.tsx`. It carries
           every fact the receipt it replaced had: the address (§224), the wait in bold and once
-          (§224), the spam folder, the sentence that keeps it true for somebody already
+          (§224), the Spam and Promotions box, the sentence that keeps it true for somebody already
           registered (§229), the resend and the contact form (§205) — and adds the first name,
           the event and its date, what happens next in three steps, and the way back.
           The owner: it "should be more fun". It reads the same for a first and a repeat
