@@ -165,6 +165,10 @@ export default async function CheckYourEmail({ eventTitle, whenLabel, eventHref,
             {leavesLine}
           </Typography>
         </Box>
+        {/* The same box as the full screen's: this is the page most people wait on (§NNN). */}
+        <Alert severity="info" data-testid="spam-hint">
+          {await spamHintWords()}
+        </Alert>
         {/* After the main content, quiet (§547): another person on the address is the exception. */}
         <FamilySittingOffer
           words={{

@@ -26,6 +26,7 @@ vi.mock("next-intl/server", async () => {
 vi.mock("@/i18n/navigation", async () => {
   const { createElement } = await import("react");
   return {
+    getPathname: ({ locale, href }: { locale: string; href: string }) => `/${locale}${href}`,
     Link: ({ href, children }: { href: unknown; children: ReactNode }) => createElement("a", { href: typeof href === "string" ? href : "#" }, children),
   };
 });
@@ -36,11 +37,17 @@ vi.mock("@/modules/public-cache/reads", () => ({
 }));
 // The forms' server actions are never pressed here.
 vi.mock("@/app/[locale]/registrations/resend/actions", () => ({ requestRegistrationLinkAction: async () => {} }));
+vi.mock("@/app/[locale]/contact/actions", () => ({
+  requestNewsletterManageLinkAction: async () => {},
+  submitNewsletterAction: async () => {},
+}));
 vi.mock("@/app/[locale]/registrations/mine/actions", () => ({ requestMyRegistrationsLinkAction: async () => {} }));
 
 const { default: CheckYourEmail } = await import("@/modules/registrations/ui/CheckYourEmail");
 const { default: ResendPage } = await import("@/app/[locale]/registrations/resend/page");
 const { default: MyRegistrationsRequestPage } = await import("@/app/[locale]/registrations/mine/page");
+
+const { default: NewsletterSignup } = await import("@/modules/newsletter/ui/NewsletterSignup");
 
 const SPAM_RO = "Nu a venit în câteva minute? Caută în Spam și în Promoții și mută-ne în Inbox, ca să primești și următoarele.";
 const SPAM_EN = "Nothing after a few minutes? Look in Spam and Promotions and move us to your inbox so the next ones arrive.";
@@ -57,7 +64,7 @@ function spamBox(html: string): string | null {
   return match ? match[1].replace(/<[^>]+>/g, "") : null;
 }
 
-async function checkYourEmail(locale: "ro" | "en"): Promise<string> {
+async function checkYourEmail(locale: "ro" | "en", offer?: boolean): Promise<string> {
   lang.current = locale;
   return markup(
     (await CheckYourEmail({
@@ -67,6 +74,18 @@ async function checkYourEmail(locale: "ro" | "en"): Promise<string> {
       slug: "crosul-tampei",
       facts: { email: "ana@example.ro", firstName: "Ana" },
       window: null,
+      ...(offer
+        ? {
+            offer: {
+              email: "ana@example.ro",
+              atOnce: false,
+              leavesAt: null,
+              submittedAt: new Date(),
+              windowMinutes: 10,
+              continueAction: async () => {},
+            },
+          }
+        : {}),
     })) as ReactElement,
   );
 }
@@ -110,5 +129,39 @@ describe("§NNN the pages that wait for an email point at Spam and Promotions, v
     );
     expect(sent).toContain("Dacă există înscrieri pe această adresă, linkul pleacă acolo");
     expect(spamBox(sent)).toContain(SPAM_RO);
+  });
+
+  it("the short screen after a first form shows it too, in both languages", async () => {
+    const ro = await checkYourEmail("ro", true);
+    expect(ro).toContain('data-testid="check-email-short"');
+    expect(spamBox(ro)).toContain(SPAM_RO);
+    const en = await checkYourEmail("en", true);
+    expect(en).toContain('data-testid="check-email-short"');
+    expect(spamBox(en)).toContain(SPAM_EN);
+  });
+
+  it("the newsletter shows it after the sign-up and after the unsubscribe answer, and not before", async () => {
+    const render = async (locale: "ro" | "en", outcome: "sent" | null, leaveOutcome: "sent" | null) => {
+      lang.current = locale;
+      return markup(
+        (await NewsletterSignup({
+          locale,
+          outcome,
+          refused: [],
+          typed: {},
+          siteKey: undefined,
+          renderedAt: new Date().toISOString(),
+          attempt: "a",
+          leaveOutcome,
+          leaveTyped: undefined,
+        })) as ReactElement,
+      );
+    };
+    for (const locale of ["ro", "en"] as const) {
+      const expected = locale === "ro" ? SPAM_RO : SPAM_EN;
+      expect(spamBox(await render(locale, "sent", null))).toContain(expected);
+      expect(spamBox(await render(locale, null, "sent"))).toContain(expected);
+      expect(await render(locale, null, null)).not.toContain('data-testid="spam-hint"');
+    }
   });
 });

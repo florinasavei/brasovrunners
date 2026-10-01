@@ -1,5 +1,5 @@
 {
-  "id": "7f39e94e-7fdc-4064-8438-094f7553f9ba",
+  "id": "07244cb4-3d36-4001-99fa-7c778962d887",
   "prevId": "0753f984-f3f2-486c-81e6-ee27dc84f592",
   "version": "7",
   "dialect": "postgresql",
@@ -438,6 +438,22 @@
         }
       },
       "indexes": {
+        "email_action_tokens_superseded_by_idx": {
+          "name": "email_action_tokens_superseded_by_idx",
+          "columns": [
+            {
+              "expression": "superseded_by_token_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"email_action_tokens\".\"superseded_by_token_id\" IS NOT NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "email_action_tokens_one_active_per_registration_purpose": {
           "name": "email_action_tokens_one_active_per_registration_purpose",
           "columns": [
