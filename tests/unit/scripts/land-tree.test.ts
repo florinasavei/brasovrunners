@@ -154,14 +154,32 @@ describe("§535 which change a placeholder line belongs to", () => {
     expect(numberForLine({ sha: "aaa", numberOf, inBatch, uncommitted, onlyNumber: null })).toBe(530);
   });
 
-  it("with one change in the release, every line this batch wrote — the merge with qa included — is that change's", () => {
+  it("with one change in the release, every line this batch wrote is that change's", () => {
     expect(numberForLine({ sha: "mmm", numberOf, inBatch, uncommitted, onlyNumber: 530 })).toBe(530);
     expect(numberForLine({ sha: uncommitted, numberOf, inBatch, uncommitted, onlyNumber: 530 })).toBe(530);
   });
 
-  it("leaves a line already on the base alone, and a merge's line for a person when several changes land", () => {
+  it("leaves a line already on the base alone, and a line no branch wrote for a person when several changes land", () => {
     expect(numberForLine({ sha: "old", numberOf, inBatch, uncommitted, onlyNumber: 530 })).toBeNull();
     expect(numberForLine({ sha: "mmm", numberOf, inBatch, uncommitted, onlyNumber: null })).toBeNull();
+  });
+});
+
+describe("§NNN a line a merge commit wrote is numbered by hand, never by the one change in the release", () => {
+  const uncommitted = "0".repeat(40);
+  const merges = new Set(["merge"]);
+  const inBatch = new Set(["aaa", "merge"]);
+
+  it("with one change, the merge's line is left for a person while the change's own lines are numbered", () => {
+    const numberOf = new Map([["aaa", 530]]);
+    expect(numberForLine({ sha: "merge", numberOf, inBatch, uncommitted, onlyNumber: 530, merges })).toBeNull();
+    expect(numberForLine({ sha: "aaa", numberOf, inBatch, uncommitted, onlyNumber: 530, merges })).toBe(530);
+    expect(numberForLine({ sha: uncommitted, numberOf, inBatch, uncommitted, onlyNumber: 530, merges })).toBe(530);
+  });
+
+  it("a merge commit that a branch carries (qa merged in before the landing) does not number its lines either", () => {
+    const numberOf = new Map([["aaa", 530], ["merge", 530]]);
+    expect(numberForLine({ sha: "merge", numberOf, inBatch, uncommitted, onlyNumber: null, merges })).toBeNull();
   });
 });
 
