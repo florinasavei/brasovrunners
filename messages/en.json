@@ -238,7 +238,7 @@
         "other": "{count} confirmed participants"
       },
       "columnPosition": "#",
-      "columnNumber": "No.",
+      "columnNumber": "BIB",
       "columnNumberFull": "race number",
       "columnName": "Name",
       "columnClub": "Club",
@@ -3015,13 +3015,13 @@
         "listNumbersNotice": {
           "title": "Privacy notice: the race number on the public list",
           "todo": "The notice in force does not yet describe the race number on the public list, so the list shows no numbers until the club approves a notice that describes it.",
-          "done": "The notice in force describes the race number: the list shows it in a “No.” column for every confirmed runner who has one; those without show “—”.",
+          "done": "The notice in force describes the race number: the list shows it in a “BIB” column for every confirmed runner who has one; those without show “—”.",
           "how": [
             "Before approving, write to the registered: /admin/events → event → “Send a message to participants”. Say their number will appear beside their name in “Who's coming” and how to withdraw (next step).",
             "Withdrawing: in “My registrations” (or the link in the email) press “I do not want to appear on the participants & results list”; the number leaves with the name.",
             "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. The section on the public list describes the race number beside the names of the confirmed.",
             "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish”.",
-            "From then on, the list shows the “No.” column for every confirmed runner who has a number, whichever notice they registered under.",
+            "From then on, the list shows the “BIB” column for every confirmed runner who has a number, whichever notice they registered under.",
             "Approve the terms from the template as well, if not already, so they say the same about the list."
           ]
         },
@@ -4070,7 +4070,7 @@
       "print": "Print",
       "help": "Every confirmed participant, checked in or not. The health note deletes itself seven days after the event; after that the column is empty. Opening this page is recorded in the audit trail.",
       "helpNoHealth": "Every confirmed participant, checked in or not. Opening this page is recorded in the audit trail.",
-      "columnBib": "No.",
+      "columnBib": "BIB",
       "columnName": "Name",
       "columnPhone": "Phone",
       "columnContact": "Emergency contact",
@@ -5069,7 +5069,7 @@
                 "Print at actual size (100%) and cut on the line.",
                 "Numbers go in order of confirmation, from «Race numbers (BIB) start at». «Assign numbers» is the Administrator's.",
                 "The desk's spares: «Reprint the free spares (PDF)» prints again the ones not yet given. Only the Administrator reserves new spare numbers.",
-                "On the site, the «Who's coming» list shows the «No.» column once the club approves the new privacy notice. Before that, the Administrator writes to those already registered with «Send a message to participants»; anyone who does not want to appear presses «I do not want to appear on the participants & results list» in «My registrations», and the number leaves with the name. From the approval on, the column shows the number of every confirmed runner who has one, whichever notice they registered under; a confirmed runner without one shows “—”."
+                "On the site, the «Who's coming» list shows the «BIB» column once the club approves the new privacy notice. Before that, the Administrator writes to those already registered with «Send a message to participants»; anyone who does not want to appear presses «I do not want to appear on the participants & results list» in «My registrations», and the number leaves with the name. From the approval on, the column shows the number of every confirmed runner who has one, whichever notice they registered under; a confirmed runner without one shows “—”."
               ]
             },
             {
@@ -5506,7 +5506,7 @@
                 "What is in force for each text: the card's head says «In force: version…» or «No version in force»; the filters «In force», «Replaced» and «Withdrawn» show the rest.",
                 "Without approved terms, notice and a race declaration nobody can register. For a road race the editor picks the road declaration once it is approved, the mountain event one until then. A group run offers its declaration only when it ticks it and its text (asphalt or trail) is approved.",
                 "Until you approve the new notice, the public participant list shows the confirmed only.",
-                "The «No.» column on the «Who's coming» list (the race number) appears once you approve the privacy notice from the new template. First write to those already registered: «Events» → «Open» → the «Registrations received» card → «Send a message to participants»; tell them their number will appear beside their name and that, if they do not want it, they press «I do not want to appear on the participants & results list» in «My registrations» (the number leaves with the name).",
+                "The «BIB» column on the «Who's coming» list (the race number) appears once you approve the privacy notice from the new template. First write to those already registered: «Events» → «Open» → the «Registrations received» card → «Send a message to participants»; tell them their number will appear beside their name and that, if they do not want it, they press «I do not want to appear on the participants & results list» in «My registrations» (the number leaves with the name).",
                 "Then approve the notice: the «GDPR» card → «Regenerate from the template» → the draft → «Save draft» → «Approve and publish». From then on the column shows the number of every confirmed runner who has one, whichever notice they registered under; a confirmed runner without one shows “—”. «Tasks» → «Club» carries its row until then.",
                 "Drafts or versions you no longer need: tick them in the table, press «Delete the ticked versions» and check the list. Drafts only: «Delete the drafts» and confirm. With an approved version in the list: under «Confirmation» type the text asked for (for example “DELETE 2”), under «Reason» why, then «Delete the versions».",
                 "The signed declarations of a group run, when the signer asks for them to be erased: «Events» → «Edit» on the run → «Signed declarations (group run)» → «Erase several at once»: tick them, fill in «Why it is erased» once, press «Erase the ticked ones» and confirm. The log keeps your name and the reason, not the signer's."

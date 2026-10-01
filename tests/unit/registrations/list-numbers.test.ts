@@ -17,7 +17,7 @@ import { listNumbersClause, listNumbersMergeValues } from "@/modules/registratio
 
 /**
  * §613 (amending §396) — the race number beside a confirmed name on the public list: the privacy
- * notice's marker that switches the «Nr.» column on, and the words it is filled with.
+ * notice's marker that switches the «BIB» column on, and the words it is filled with.
  */
 describe("§613 the privacy notice's marker for the race number", () => {
   const text = (paragraph: string) => ({ sections: [{ paragraphs: [paragraph] }] });
@@ -78,8 +78,8 @@ describe("§613 the privacy notice's marker for the race number", () => {
   });
 
   it("names the column's short heading in both languages, never as an ICU plural", () => {
-    expect(ro.Event.startList.columnNumber).toBe("Nr.");
-    expect(en.Event.startList.columnNumber).toBe("No.");
+    expect(ro.Event.startList.columnNumber).toBe("BIB");
+    expect(en.Event.startList.columnNumber).toBe("BIB");
     for (const catalogue of [ro, en]) {
       for (const key of ["captionNumbers", "captionStatesNumbers"] as const) {
         expect(catalogue.Event.startList[key]).toBeTruthy();
