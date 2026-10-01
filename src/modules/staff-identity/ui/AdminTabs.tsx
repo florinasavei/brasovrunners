@@ -6,6 +6,7 @@ import Tabs from "@mui/material/Tabs";
 import Tooltip from "@mui/material/Tooltip";
 import { readingTimeMs, TOOLTIP_TEXT_SX } from "@/shared/ui/tooltip-text";
 import { usePathname } from "next/navigation";
+import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import { activeAdminTabHref } from "../domain/admin-tab-match";
 import type { AdminSection } from "../domain/roles";
 import { useEffect, useRef } from "react";
@@ -29,6 +30,10 @@ export type AdminTab = {
   count?: number | null;
   /** What that figure counts, as the tab's tooltip (§277). */
   countHint?: string;
+  /** The people waiting on a list: a second, smaller pill with the hourglass, beside the figure, only above zero (§NNN). */
+  countWaiting?: number;
+  /** What a screen reader says for that pill — «10 pe lista de așteptare»; the glyph and the number are drawn only. */
+  countWaitingLabel?: string;
   /**
    * Other addresses this tab stands for — «Setări» on `/devs`, the row's «Configurație» tab that
    * lives outside `/admin/settings` (§520) — so the bar still says where the reader is.
@@ -147,7 +152,7 @@ export default function AdminTabs({ items }: { items: readonly AdminTab[] }) {
                     word (the owner, 2026-09-22). Orange under dark ink is the one accent pair
                     `theme.ts` keeps identical in both schemes, so this needs no dark variant.
                   */}
-                  <CountBadge count={item.count} hint={item.countHint} />
+                  <CountBadge count={item.count} hint={item.countHint} waiting={item.countWaiting} waitingLabel={item.countWaitingLabel} />
                 </>
               ) : (
                 item.label
@@ -171,23 +176,58 @@ export default function AdminTabs({ items }: { items: readonly AdminTab[] }) {
  * makes the text its one description, so a keyboard or a screen reader reaches it; a tap opens
  * it on a phone.
  */
-function CountBadge({ count, hint }: { count: number; hint?: string }) {
+function CountBadge({ count, hint, waiting, waitingLabel }: { count: number; hint?: string; waiting?: number; waitingLabel?: string }) {
+  const WaitingIcon = ACTION_ICONS.waiting;
   const pill = (
-    <Box
-      component="span"
-      sx={{
-        bgcolor: "secondary.main",
-        color: "secondary.contrastText",
-        borderRadius: 5,
-        px: 0.75,
-        ml: 0.25,
-        fontWeight: 700,
-        fontSize: "0.75rem",
-        lineHeight: 1.6,
-      }}
-    >
-      {count}
-    </Box>
+    <>
+      <Box
+        component="span"
+        sx={{
+          bgcolor: "secondary.main",
+          color: "secondary.contrastText",
+          borderRadius: 5,
+          px: 0.75,
+          ml: 0.25,
+          fontWeight: 700,
+          fontSize: "0.75rem",
+          lineHeight: 1.6,
+        }}
+      >
+        {count}
+      </Box>
+      {/*
+        The people waiting (§NNN; the owner: «pune pilluri cu iconițe și cu numerele»): the same pill's
+        shape, outlined so it reads as the lesser figure, the waiting list's hourglass before the number. It
+        is one more word-wide chunk inside the tab, and the tab bar scrolls (`variant="scrollable"`), so at
+        320 pixels it lengthens the row and never the page. Drawn only above zero; its name is the label.
+      */}
+      {typeof waiting === "number" && waiting > 0 && (
+        <Box
+          component="span"
+          role="img"
+          aria-label={waitingLabel ?? String(waiting)}
+          data-testid="registered-waiting-pill"
+          sx={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 0.25,
+            border: 1,
+            borderColor: "secondary.main",
+            color: "text.primary",
+            borderRadius: 5,
+            px: 0.5,
+            ml: 0.5,
+            fontWeight: 700,
+            fontSize: "0.75rem",
+            lineHeight: 1.5,
+            verticalAlign: "middle",
+          }}
+        >
+          <WaitingIcon aria-hidden="true" sx={{ fontSize: "0.875rem" }} />
+          {waiting}
+        </Box>
+      )}
+    </>
   );
   if (!hint) return pill;
   return (

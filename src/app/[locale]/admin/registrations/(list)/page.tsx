@@ -34,6 +34,7 @@ import { printedNumbersACancelWouldVoid, raceNumberOf } from "@/modules/registra
 import { deriveAllowedResendMessageType } from "@/modules/registrations/domain/resend";
 import StaffJourney from "@/modules/registrations/ui/StaffJourney";
 import FamilyChip from "@/modules/registrations/ui/FamilyChip";
+import SummaryStrip from "@/modules/registrations/ui/SummaryStrip";
 import GlyphChip from "@/modules/events/ui/GlyphChip";
 import { familiesTogether, familyOf } from "@/modules/registrations/family-marker";
 import { canExportSponsorList, canManageRegistrations, canMessageParticipants, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
@@ -930,35 +931,29 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         }
         data-testid="registrations-summary"
       >
-      <Stack
-        direction="row"
-        spacing={1}
-        sx={{ flexWrap: "wrap", gap: 1, alignItems: "center" }}
+      {/*
+        Every pill a filter (§NNN; the owner: «Și aceste pilluri trebuie să fie clickabile (filtre)»): a link to
+        this page with `status` in the address, the one in force pressed and pressing it again clears it.
+        The counts stay blind to the status (§246) — `summary` above was grouped without it.
+      */}
+      <SummaryStrip
+        basePath={basePath}
+        query={listParams}
+        active={isRegistrationStatus(status) ? status : null}
+        statuses={registrationStatus.enumValues}
+        summary={summary}
+        totalLabel={t("registrations.summaryTotal", { count: summary.real })}
+        testLabel={t("registrations.summaryTest", { count: summary.test })}
+        statusLabel={REGISTRATION_STATUS_LABEL}
       >
         {/* For the members alone (§552): the chip the events list wears, on the event this list shows. */}
         {events.find((event) => event.id === filters.eventId)?.membersOnly && (
           <GlyphChip glyph="membersOnly" color="primary" label={t("events.membersOnlyChip")} />
         )}
-        <Typography variant="body2" sx={{ fontWeight: 600 }}>
-          {t("registrations.summaryTotal", { count: summary.real })}
-        </Typography>
-        {registrationStatus.enumValues
-          .filter((value) => (summary.byStatus[value] ?? 0) > 0)
-          .map((value) => (
-            <Chip
-              key={value}
-              size="small"
-              variant="outlined"
-              label={`${REGISTRATION_STATUS_LABEL[value]}: ${summary.byStatus[value]}`}
-            />
-          ))}
-        {summary.test > 0 && (
-          <Chip size="small" variant="outlined" color="warning" label={t("registrations.summaryTest", { count: summary.test })} />
-        )}
-      </Stack>
+      </SummaryStrip>
       {/*
-        Why this number and the tab's badge can differ (§277). The badge counts everybody signed
-        up for anything still to come; this list opens on one event. Both are right and the pair
+        Why this number and the tab's badge can differ (§277). The badge counts the confirmed at
+        everything still to come (§NNN); this list opens on one event, in every state. Both are right and the pair
         reads as a contradiction, so the screen says which it is showing and offers the other.
       */}
       {filters.eventId && (
@@ -1135,7 +1130,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             select
             name="status"
             label={t("registrations.statusLabel")}
-            defaultValue={status ?? ""}
+            // The same reading of the address the summary's pills use (§NNN): a pill and this select never disagree about the state in force.
+            defaultValue={isRegistrationStatus(status) ? status : ""}
             sx={{ minWidth: 220 }}
           >
             <MenuItem value="">{t("registrations.filterAll")}</MenuItem>

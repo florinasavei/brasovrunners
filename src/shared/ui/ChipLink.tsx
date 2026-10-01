@@ -42,6 +42,7 @@ export default function ChipLink({
   ariaLabel,
   closeMark = false,
   keepScroll = false,
+  wrap = false,
 }: {
   href: string;
   label: string;
@@ -59,9 +60,15 @@ export default function ChipLink({
   closeMark?: boolean;
   /** Stay where the reader is on the page rather than scroll to the top — a filter changed under their thumb. */
   keepScroll?: boolean;
+  /** A long sentence in the pill (the registrations summary's total, §NNN): the word wraps onto lines instead of being cut at the screen's edge. */
+  wrap?: boolean;
 }) {
   const look = { color: active ? ("primary" as const) : ("default" as const), variant: active ? ("filled" as const) : ("outlined" as const) };
-  const sx = strike ? { textDecoration: "line-through", color: "text.secondary" } : undefined;
+  const sx = strike
+    ? { textDecoration: "line-through", color: "text.secondary" }
+    : wrap
+      ? { height: "auto", py: 0.5, "& .MuiChip-label": { whiteSpace: "normal" } }
+      : undefined;
   return (
     <Box
       component={Link}
@@ -71,7 +78,7 @@ export default function ChipLink({
       aria-current={current}
       aria-label={ariaLabel}
       title={title}
-      sx={{ display: "inline-flex", alignItems: "center", minHeight: 44, textDecoration: "none", color: "inherit" }}
+      sx={{ display: "inline-flex", alignItems: "center", minHeight: 44, textDecoration: "none", color: "inherit", ...(wrap ? { maxWidth: "100%" } : {}) }}
     >
       {glyph ? (
         <GlyphChip glyph={glyph} label={label} {...look} sx={sx} closeMark={closeMark} />
