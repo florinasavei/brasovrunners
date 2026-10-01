@@ -67,8 +67,6 @@ Where things stand at 09:20 on 2026-10-01, written so that a session with no acc
 
 - `yarn npm audit` leftovers: `esbuild` 0.18 through `drizzle-kit`, ESLint 9.39's end of support — major upgrades of two
   dev dependencies, each its own change, after the owner's yes (§584).
-- `scripts/land-batch.mjs`: a `§NNN` line written by a merge commit should be listed for hand numbering instead of
-  taking one entry's number (the `BR-V2.44` landing gave §577 to two merge lines; corrected in §582).
 - Measure Neon after §577: `yarn idle:measure` on production on 2026-10-01 (5.7 CU-hours a day before it); the
   cron-job.org job pings are the next suspect if it does not fall below 2.
 - After the 21 November race: Vercel production back from Pro to Hobby (moved to Pro on 2026-09-30 for the function
