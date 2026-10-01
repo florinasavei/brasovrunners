@@ -5,7 +5,12 @@ import Typography from "@mui/material/Typography";
 import Panel from "@/shared/ui/Panel";
 import type { FoldOpenWhen } from "@/shared/ui/fold";
 import { getTranslations } from "next-intl/server";
-import { sendOutboxNowFromEmailsAction, updateDeliveryTimingFromEmailsAction } from "@/app/[locale]/admin/settings/emails/actions";
+import Alert from "@mui/material/Alert";
+import {
+  retryFailedEmailsFromEmailsAction,
+  sendOutboxNowFromEmailsAction,
+  updateDeliveryTimingFromEmailsAction,
+} from "@/app/[locale]/admin/settings/emails/actions";
 import type { Locale } from "@/i18n/routing";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { minutesPhrase } from "@/modules/deadlines/domain/duration-words";
@@ -22,6 +27,7 @@ import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import DeliveryTimingSwitch from "@/modules/notifications/ui/DeliveryTimingSwitch";
+import { stopWords } from "@/modules/notifications/ui/stop-words";
 
 type Props = {
   locale: Locale;
@@ -44,7 +50,31 @@ type Props = {
   mayEditTiming: boolean;
   /** Why the fold opens by itself, as the page knows it: "send now" or the switch just answered (§336). */
   openWhen?: FoldOpenWhen;
+  /**
+   * The FAILED rows of the last seven days «Reîncearcă emailurile eșuate» would put back (§NNN): the
+   * dialog's live count, read with the page. 0 draws no button.
+   */
+  failedRetryable?: number;
 };
+
+/**
+ * Mailgun's stop as the queue panel's header says it (§NNN): «Mailgun în pauză până la 10:15 — Gmail
+ * preia», «Cota Mailgun epuizată până la … — Gmail nu e configurat». The hour is today's «10:15», or the
+ * short day with its hour (`emailLeavesWords`). Null while Mailgun's road is open.
+ */
+export function stopHeadline(
+  volume: Pick<EmailVolumeToday, "mailgunStop" | "whileStopped">,
+  now: Date,
+  locale: Locale,
+  t: (key: string, values?: Record<string, string | number>) => string,
+): { text: string; carried: boolean } | null {
+  const stop = volume.mailgunStop;
+  if (!stop) return null;
+  const route = volume.whileStopped;
+  const carried = route.road === "gmail";
+  const who = route.road === "wait" ? t(`emails.queue.stop.carried.${route.reason}`) : t("emails.queue.stop.carried.gmail");
+  return { text: t("emails.queue.stop.line", { stop: stopWords(stop.kind, stop.until, now, locale, t), carried: who }), carried };
+}
 
 /**
  * The queue itself, on the club's own screen (`DECISIONS.md` §243).
@@ -69,8 +99,11 @@ type Props = {
  * message do not fit a table at 320 pixels, and a table that scrolls sideways is worse than a
  * paragraph (the same reasoning §196 applied to the one place a table is unavoidable).
  */
-export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit, delivery, now, mayEditTiming, openWhen }: Props) {
+export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit, delivery, now, mayEditTiming, openWhen, failedRetryable = 0 }: Props) {
   const t = await getTranslations("Admin");
+  const stop = stopHeadline(volume, now, locale, (key, values) => t(key, values));
+  // While Gmail carries for a stopped Mailgun (§NNN), Mailgun's day does not stop «Trimite acum».
+  const roomToSend = volume.whileStopped.road === "gmail" || volume.remaining === null || volume.remaining > 0;
   const words = await confirmWords();
   // Inside the row's sentence ("În coadă din joi, 24 sept. 2026, 18:05"), short (§349).
   const when = { format: (at: Date) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" }) };
@@ -149,10 +182,20 @@ export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit,
       aside={t("outbox.waitingShort", { count: queue.total })}
       collapsible
       // Open while something waits (§269), and after "send now" or the switch answered — sent or refused (§336).
-      openWhen={{ ...openWhen, attention: queue.total > 0 }}
+      openWhen={{ ...openWhen, attention: queue.total > 0 || stop !== null || failedRetryable > 0 }}
       id="outbox-queue"
       data-testid="outbox-queue"
     >
+      {/*
+        Mailgun said stop (§NNN): the header names the stop, until when, and who carries for it —
+        Gmail, or nobody and why — to every reader of the queue. Info while Gmail carries, a warning
+        while nothing does; the remedies are «Prin ce pleacă emailurile» above and «Sarcini».
+      */}
+      {stop && (
+        <Alert severity={stop.carried ? "info" : "warning"} sx={{ mb: 2 }} data-testid="outbox-stop" data-carried={stop.carried ? "gmail" : "none"}>
+          {stop.text}
+        </Alert>
+      )}
       {/*
         When the queue leaves (§529): the switch, the mode in force in one sentence, the next and the
         last real run, and what holds the round back. Said to every reader of the queue; the switch
@@ -224,7 +267,7 @@ export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit,
             were never offered. "Something to send" is a due row (§529): a queue held entirely —
             a family still signing, a retry, the newsletter's reserve — sends nothing on a press,
             and the sentence says so instead. */}
-        {!mayEdit ? null : queue.due > 0 && (volume.remaining === null || volume.remaining > 0) ? (
+        {!mayEdit ? null : queue.due > 0 && roomToSend ? (
           <ActionForm
             action={sendOutboxNowFromEmailsAction}
             confirm={{ title: t("confirm.sendNowTitle"), body: sendNowBody, email: words.queue(queue.due), confirmLabel: t("outbox.sendNow"), cancelLabel: words.cancel }}
@@ -245,6 +288,33 @@ export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit,
           </Typography>
         )}
       </Stack>
+
+      {/*
+        «Reîncearcă emailurile eșuate» (§NNN): the week's FAILED rows back in the queue in one press, for
+        whoever may press «Trimite acum» — the service asserts the same role. The question says how many,
+        counted with the page; BOUNCED is an address that does not exist and is not offered.
+      */}
+      {mayEdit && failedRetryable > 0 && (
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} sx={{ alignItems: { sm: "center" }, mb: 1.5 }} data-testid="retry-failed">
+          <Typography variant="body2" sx={{ flex: 1 }}>
+            {t("emails.queue.retryFailed.count", { count: failedRetryable })}
+          </Typography>
+          <ActionForm
+            action={retryFailedEmailsFromEmailsAction}
+            confirm={{
+              title: t("emails.queue.retryFailed.title"),
+              body: t("emails.queue.retryFailed.body", { count: failedRetryable }),
+              confirmLabel: t("emails.queue.retryFailed.button"),
+              cancelLabel: words.cancel,
+            }}
+            scope="retry-failed"
+            data-testid="retry-failed-form"
+          >
+            <input type="hidden" name="uiLocale" value={locale} />
+            <GlyphSubmitButton label={t("emails.queue.retryFailed.button")} pendingLabel={t("emails.queue.retryFailed.pending")} icon="resend" />
+          </ActionForm>
+        </Stack>
+      )}
 
       {queue.rows.length > 0 && (
         <Stack component="ul" spacing={1} sx={{ listStyle: "none", p: 0, m: 0 }}>

@@ -16,6 +16,7 @@ import {
   GMAIL_PACE_SECONDS_MAX,
 } from "@/modules/notifications/domain/email-transport";
 import type { EmailTransportState } from "@/modules/notifications/email-transport";
+import { fallbackActive } from "@/modules/notifications/domain/mailgun-stop";
 import type { EmailVolumeToday } from "@/modules/notifications/volume";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
@@ -115,6 +116,10 @@ export default async function EmailTransportPanel({ locale, setting, volume, may
                 {t(`emails.transport.groups.${group}.label`)}: {t(`emails.transport.options.${setting.groups[group]}`)}
               </Typography>
             ))}
+            {/* The switch, said to whoever only reads (§NNN). */}
+            <Typography component="li" variant="body2" data-testid="email-transport-fallback-state">
+              {t("emails.transport.fallback")}: {t(`emails.transport.fallbackOptions.${fallbackActive(setting, volume.gmailConfigured) ? "yes" : "no"}`)}
+            </Typography>
           </Stack>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
             {t("emails.transport.readOnly")}
@@ -135,6 +140,7 @@ export default async function EmailTransportPanel({ locale, setting, volume, may
               gmailPaceSeconds: t("emails.transport.pace"),
               atGmailCap: t("emails.transport.atCap"),
               overflowToGmail: t("emails.transport.overflow"),
+              fallbackToGmail: t("emails.transport.fallback"),
             })}
             confirm={{
               title: t("confirm.emailTransportTitle"),
@@ -213,6 +219,25 @@ export default async function EmailTransportPanel({ locale, setting, volume, may
               >
                 <option value="yes">{t("emails.transport.overflowOptions.yes")}</option>
                 <option value="no">{t("emails.transport.overflowOptions.no")}</option>
+              </RecallField>
+              {/*
+                «Gmail preia când Mailgun se oprește» (§NNN): on by default where Gmail is configured, and
+                greyed with the reason where it is not — a disabled box posts nothing, and the service then
+                keeps what is stored rather than reading the grey as «no».
+              */}
+              <RecallField
+                select
+                name="fallbackToGmail"
+                label={t("emails.transport.fallback")}
+                defaultValue={fallbackActive(setting, volume.gmailConfigured) ? "yes" : "no"}
+                size="small"
+                disabled={!volume.gmailConfigured}
+                slotProps={{ select: { native: true } }}
+                helperText={volume.gmailConfigured ? t("emails.transport.fallbackHelp") : t("emails.transport.fallbackUnconfigured")}
+                data-testid="email-transport-fallback"
+              >
+                <option value="yes">{t("emails.transport.fallbackOptions.yes")}</option>
+                <option value="no">{t("emails.transport.fallbackOptions.no")}</option>
               </RecallField>
               <Box>
                 <GlyphSubmitButton label={t("emails.transport.save")} pendingLabel={t("emails.transport.saving")} icon="save" />

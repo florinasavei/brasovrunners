@@ -7,11 +7,12 @@ import { recordAuditEvent } from "@/modules/audit/repository";
 import { consumeRateLimit } from "@/modules/rate-limit/service";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
-import { gmailRoadCondition, type OutboxBatchSummary, type OutboxRoads, processOutboxBatch } from "./outbox";
+import { gmailRoadCondition, type OutboxBatchSummary, OUTBOX_SUMMARY_COUNTS, type OutboxRoads, processOutboxBatch } from "./outbox";
+import type { MailgunStop } from "./domain/mailgun-stop";
 import { createOutboxSender } from "./outbox-sender";
 import { createOutboxRenderer } from "./render";
 import { readEmailVolumeToday } from "./volume";
-import { SEND_NOW_HOUR_SPENT, SendNowRefused } from "./send-at-once";
+import { SEND_NOW_HOUR_SPENT, SendNowRefused, stoppedRefusal } from "./send-at-once";
 
 /**
  * "Send now": the outbox drained from the backoffice, without waiting for the monitor
@@ -43,6 +44,12 @@ export type SendNowResult = OutboxBatchSummary & {
   /** Null when the plan has no ceiling (§100). */
   allowance: number | null;
   remaining: number | null;
+  /**
+   * Gmail carried for a stopped Mailgun (§NNN): how many of `sent` left by Gmail for it, and the stop —
+   * «N prin Gmail — Mailgun în pauză până la HH:MM» on the page. 0 and null when Mailgun's road was open.
+   */
+  viaGmail: number;
+  stop: MailgunStop | null;
 };
 
 /** What the worker and the counter read; any fuller schema — the app's, the tests' — fits. */
@@ -79,7 +86,16 @@ export async function sendOutboxNow(
   // The club's road per group and the Reply-To it chose to show (§442): one sender for the press;
   // Gmail's cap and pace from the database before each Gmail message.
   const { sender, route, roads, replyTo } = await createOutboxSender(db);
-  if (before.hourRemaining === 0 && !(await gmailRowDue(db, roads, now))) {
+  /*
+    Mailgun said stop (§NNN): with «Gmail preia când Mailgun se oprește» on and room in Gmail's day,
+    the press sends through Gmail — the claim's own rule — and says so. Otherwise it is refused with
+    the sentence that names the cause and the remedy, unless a message on Gmail's own road is due,
+    which the stop does not hold. Read before the throttle, like every refusal that only read something.
+  */
+  const whileStopped = before.whileStopped;
+  const carrying = whileStopped.road === "gmail";
+  if (whileStopped.road === "wait" && !(await gmailRowDue(db, roads, now))) throw stoppedRefusal(whileStopped);
+  if (!carrying && before.hourRemaining === 0 && !(await gmailRowDue(db, roads, now))) {
     throw new SendNowRefused(`Mailgun's hourly pace is spent: ${before.sentLastHour} of ${before.hourlyAllowance} in the last hour`, SEND_NOW_HOUR_SPENT);
   }
 
@@ -94,8 +110,12 @@ export async function sendOutboxNow(
   const total: OutboxBatchSummary = { claimed: 0, sent: 0, retrying: 0, deferred: 0, failed: 0, bounced: 0 };
   let batches = 0;
   let volume = before;
+  let viaGmail = 0;
+  let stop: MailgunStop | null = carrying ? whileStopped.stop : null;
+  // Mailgun's day is not Gmail's: while Gmail carries for it, the day's counter does not stop the press.
+  const room = () => (stop !== null || volume.remaining === null ? null : volume.remaining);
 
-  while (batches < MAX_BATCHES && (volume.remaining === null || volume.remaining > 0)) {
+  while (batches < MAX_BATCHES && (room() === null || (room() ?? 0) > 0)) {
     const summary = await processOutboxBatch(db, {
       sender,
       route,
@@ -104,12 +124,16 @@ export async function sendOutboxNow(
       render: createOutboxRenderer({ replyTo }),
       now,
       // Never past what the day still allows: the counter is the ceiling, not a display.
-      batchSize: Math.min(20, volume.remaining ?? 20),
+      batchSize: Math.min(20, room() ?? 20),
     });
     // An empty claim is not a batch: nothing was waiting, and nothing is counted.
     if (summary.claimed === 0) break;
     batches += 1;
-    for (const key of Object.keys(total) as (keyof OutboxBatchSummary)[]) total[key] += summary[key];
+    for (const key of OUTBOX_SUMMARY_COUNTS) total[key] += summary[key];
+    if (summary.carried) {
+      viaGmail += summary.carried.viaGmail;
+      stop = summary.carried.stop;
+    }
     volume = await readEmailVolumeToday(db, now);
     // The provider said stop (a spent cap defers the rest): no point in another batch.
     if (summary.deferred > 0) break;
@@ -120,9 +144,16 @@ export async function sendOutboxNow(
     action: "outbox.sent_by_staff",
     entityType: "email_outbox",
     entityId: actor.id,
-    metadata: { ...total, batches, sentToday: volume.sentMessages, remaining: volume.remaining },
+    metadata: {
+      ...total,
+      batches,
+      sentToday: volume.sentMessages,
+      remaining: volume.remaining,
+      // What Gmail carried for a stopped Mailgun (§NNN): counts and the stop's kind, never an address.
+      ...(stop ? { viaGmail, mailgunStop: stop.kind, mailgunStopUntil: stop.until.toISOString() } : {}),
+    },
     now,
   });
 
-  return { ...total, batches, sentToday: volume.sentMessages, allowance: volume.allowance, remaining: volume.remaining };
+  return { ...total, batches, sentToday: volume.sentMessages, allowance: volume.allowance, remaining: volume.remaining, viaGmail, stop };
 }

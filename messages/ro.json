@@ -561,7 +561,10 @@
       "sending": "Se trimit…",
       "sendNowLong": "Trimite acum emailurile din coadă, fără să aștepți monitorul; se oprește la limita zilnică",
       "sentNow": "Emailuri trimise acum: {count}.",
-      "waitingShort": "{count} în așteptare"
+      "waitingShort": "{count} în așteptare",
+      "sentViaGmail": "Dintre ele, {gmail} prin Gmail — {stop}.",
+      "stopResumes": "Mailgun reia la {hour}.",
+      "stopResumesOn": "Mailgun reia {until}."
     },
     "registrations": {
       "empty": "Nu există nicio înscriere.",
@@ -1137,7 +1140,10 @@
       "LEGAL_RETIRE_NEEDS_REASON": "Scrie motivul, între 3 și 200 de caractere. Rămâne lângă versiune, în «Versiuni șterse».",
       "LEGAL_NOTHING_DEPENDS": "Nu s-a șters nimic: între timp nu mai depinde nimic de această versiune. Reîncarcă pagina și șterge-o definitiv.",
       "LEGAL_RETIRE_IN_FORCE": "Nu s-a șters nimic: aceasta este versiunea în vigoare. Aprobă întâi versiunea următoare, apoi o poți șterge.",
-      "LEGAL_ALREADY_DELETED": "Versiunea a fost deja ștearsă din listă. Textul ei rămâne în arhivă."
+      "LEGAL_ALREADY_DELETED": "Versiunea a fost deja ștearsă din listă. Textul ei rămâne în arhivă.",
+      "SEND_NOW_MAILGUN_STOPPED_FALLBACK_OFF": "Nu s-a trimis nimic: Mailgun e oprit, iar «Gmail preia când Mailgun se oprește» e pe Nu. Pune-l pe Da în «Emailuri», sau alege «Pune la coadă»: pleacă singur când Mailgun reia.",
+      "SEND_NOW_MAILGUN_STOPPED_NO_GMAIL": "Nu s-a trimis nimic: Mailgun e oprit, iar Gmail-ul clubului nu e configurat aici. Alege «Pune la coadă»: emailul pleacă singur când Mailgun reia.",
+      "SEND_NOW_MAILGUN_STOPPED_GMAIL_FULL": "Nu s-a trimis nimic: Mailgun e oprit, iar Gmail și-a atins limita pe zi. Ridic-o în «Emailuri» (cel mult 500), sau alege «Pune la coadă»: pleacă singur când Mailgun reia."
     },
     "editor": {
       "draftPreview": {
@@ -2633,7 +2639,7 @@
       "emailStalled": {
         "title": "Emailurile nu pleacă.",
         "deferred": "Mesaje care așteaptă: {count}. Limita zilnică Mailgun ({allowance} de mesaje pe zi) s-a consumat. Pleacă singure {resumesAt} (ora României); nimic nu s-a pierdut.",
-        "failed": "Mesaje netrimise în ultimele 7 zile: {count} — motivul Mailgun: „{reason}”. Vezi Mailgun → Sending → Logs.",
+        "failed": "Mesaje netrimise în ultimele 7 zile: {count} — motivul Mailgun: „{reason}”. După ce repari cauza: «Setări» → «Emailuri» → «Reîncearcă emailurile eșuate».",
         "overdue": "Mesaje cu rândul trecut de peste 90 de minute: {count} — monitoarele nu rulează. Vezi rândul „Monitoarele” de mai jos.",
         "notify": "Ca să afli de asta fără să deschizi pagina: un monitor zilnic pe cron-job.org către /api/health?deep=1, cu notificare la eșec — pasul din rândul „Monitoarele”."
       },
@@ -2989,6 +2995,19 @@
             "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Secțiunile 5 și 6 spun că partenerii pot primi prenumele, numele și adresa.",
             "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”.",
             "Lista ia doar acordurile date sub nota nouă. Cine a bifat sub o notă mai veche nu ajunge la parteneri."
+          ]
+        },
+        "emailFailSafe": {
+          "title": "Emailuri pe care nu le duce nimeni",
+          "todo": "Mailgun a spus stop de peste 90 de minute și nimic nu duce emailurile, sau un email a eșuat în ultimele 7 zile.",
+          "broken": "Mailgun a spus stop de peste 90 de minute și nimic nu duce emailurile, sau un email a eșuat în ultimele 7 zile. Nimic nu s-a pierdut: așteaptă în coadă.",
+          "done": "Niciun email blocat sau eșuat. Dacă Mailgun spune stop, Gmail preia (când comutatorul e pornit).",
+          "how": [
+            "«Setări» → «Emailuri» → «Prin ce pleacă emailurile» → «Gmail preia când Mailgun se oprește»: Da → «Salvează drumurile». Cât timp Mailgun e în pauză sau fără cotă, Gmail duce toate grupurile.",
+            "Dacă Gmail și-a atins limita: tot acolo, «Limita Gmail pe zi» mai sus (cel mult 500, din care oamenii clubului mai trimit și de mână).",
+            "Emailurile eșuate: «Setări» → «Emailuri» → «Coada de trimitere» → «Reîncearcă emailurile eșuate». Le pune înapoi în coadă, de la prima încercare.",
+            "Dacă Mailgun a cerut pauza pentru ritm (proba): «Setări» → «Emailuri» → planul Mailgun → «Limita pe oră» — 90 cât ține proba.",
+            "Antetul cozii spune până când e Mailgun oprit și cine preia."
           ]
         }
       },
@@ -4196,6 +4215,27 @@
             "reserve": "rezerva pentru newsletter: {count}"
           },
           "nothingDue": "Niciun email nu e la rând acum: cele din coadă sunt ținute până la ora lor, se trimit chiar acum sau și-au consumat încercările."
+        },
+        "stop": {
+          "paused": "Mailgun în pauză până la {hour}",
+          "allowance": "Cota Mailgun epuizată până la {hour}",
+          "line": "{stop} — {carried}.",
+          "carried": {
+            "gmail": "Gmail preia",
+            "fallbackOff": "Gmail nu preia: «Gmail preia când Mailgun se oprește» e oprit",
+            "gmailUnconfigured": "Gmail nu e configurat",
+            "gmailCapSpent": "Gmail și-a atins limita pe zi"
+          },
+          "pausedOn": "Mailgun în pauză până {until}",
+          "allowanceOn": "Cota Mailgun epuizată până {until}"
+        },
+        "retryFailed": {
+          "count": "Emailuri eșuate în ultimele 7 zile: {count}.",
+          "title": "Reîncerci emailurile eșuate?",
+          "body": "Emailurile eșuate în ultimele 7 zile (de toate: {count}) se pun înapoi în coadă și pleacă la următoarea trecere; motivul rămâne scris. Cele respinse pentru adresă rămân cum sunt.",
+          "button": "Reîncearcă emailurile eșuate",
+          "pending": "Se pun înapoi…",
+          "done": "Emailuri eșuate puse înapoi în coadă: {count}."
         }
       },
       "copy": {
@@ -4370,7 +4410,14 @@
         "saving": "Se salvează…",
         "saved": "Setarea a fost salvată. Următoarele emailuri pleacă pe drumurile alese.",
         "readOnly": "Setarea o schimbă Administratorul.",
-        "updatedAt": "Setat {when}."
+        "updatedAt": "Setat {when}.",
+        "fallback": "Gmail preia când Mailgun se oprește",
+        "fallbackHelp": "Cât timp Mailgun a cerut o pauză sau cota lui e epuizată, toate grupurile pleacă prin Gmail, în limita și ritmul lui; când Mailgun reia, grupurile lui se întorc singure la el.",
+        "fallbackUnconfigured": "Indisponibil: Gmail-ul clubului nu e configurat pe acest mediu (CONTACT_SMTP_USER și CONTACT_SMTP_PASSWORD).",
+        "fallbackOptions": {
+          "yes": "Da, Gmail preia",
+          "no": "Nu, emailurile așteaptă Mailgun"
+        }
       },
       "contacts": {
         "title": "Cine primește mesajele de contact",
@@ -6890,7 +6937,8 @@
     },
     "emailHealth": {
       "ok": "Trimiterea funcționează: nimic amânat, întârziat sau eșuat. /api/health?deep=1 răspunde 200.",
-      "stalled": "Trimiterea s-a oprit — amânate (limita zilnică): {deferred}; întârziate: {overdue}; eșuate în 7 zile: {failed}. Motiv: „{reason}”. /api/health?deep=1 răspunde 503 până se rezolvă."
+      "stalled": "Trimiterea s-a oprit — amânate (limita zilnică): {deferred}; întârziate: {overdue}; eșuate în 7 zile: {failed}. Motiv: „{reason}”. /api/health?deep=1 răspunde 503 până se rezolvă.",
+      "degraded": "Mailgun a spus stop și Gmail duce toate grupurile până reia; nimic întârziat sau eșuat. /api/health?deep=1 răspunde 200 și o spune în blocul „email”."
     },
     "registrationsToday": "Înscrieri astăzi",
     "testRegistrations": "de test",
@@ -7505,7 +7553,12 @@
       "memberCodeDeleted": "Codul a fost șters.",
       "declarationHeld": "Declarația e păstrată. Nu se mai șterge până scoți păstrarea.",
       "declarationReleased": "Păstrarea a fost scoasă.",
-      "menuOrder": "Ordinea meniului a fost salvată."
+      "menuOrder": "Ordinea meniului a fost salvată.",
+      "failedRetried": {
+        "one": "{count} email eșuat pus înapoi în coadă.",
+        "few": "{count} emailuri eșuate puse înapoi în coadă.",
+        "other": "{count} de emailuri eșuate puse înapoi în coadă."
+      }
     }
   },
   "Network": {

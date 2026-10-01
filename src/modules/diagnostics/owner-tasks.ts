@@ -64,6 +64,7 @@ export type TaskId =
   | "raceDeclarations"
   | "groupRunSeriesTexts"
   | "liveEmail"
+  | "emailFailSafe"
   | "scheduler"
   | "retentionSweep"
   | "inviteStaff"
@@ -94,6 +95,7 @@ export const TASK_KIND: Record<TaskId, TaskKind> = {
   raceDeclarations: "text",
   groupRunSeriesTexts: "text",
   liveEmail: "account",
+  emailFailSafe: "check",
   scheduler: "check",
   retentionSweep: "check",
   inviteStaff: "account",
@@ -213,6 +215,13 @@ export type OwnerTaskInputs = {
   emailDeliveryMode: "capture" | "allowlist" | "live";
   /** Which deployment this is: off production, `allowlist` is the finished state (§16.4). */
   appEnv: "local" | "test" | "qa" | "production";
+  /**
+   * Email that nothing is carrying (§NNN), from `/api/health`'s own counts (`checkEmailHealth`):
+   * `stoppedLong` — Mailgun-road rows stopped (paused, deferred to the reset, or waiting because Gmail
+   * could not carry them) and queued longer ago than the overdue allowance, with the fallback off or
+   * Gmail's cap spent; `failed` — FAILED rows of the last seven days.
+   */
+  emailFailSafe: { stoppedLong: number; failed: number };
   /**
    * Each scheduled job's own liveness, not one boolean for all of them.
    *
@@ -422,6 +431,20 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
   // On QA the mode is `allowlist` by rule (§16.4: live is refused outside production), so the
   // row would read "blocking" for ever there and mean nothing. Off production the task is done
   // when the provider is configured at all; the detail still names the mode.
+  /*
+    Email nothing is carrying (§NNN): red while a Mailgun-road row has waited past ninety minutes
+    stopped with nobody to carry it, or a message FAILED in the last seven days; green otherwise —
+    the row stays on the list, so the club sees the fail-safes are there before it needs them. Its
+    steps name the four remedies: the switch, Gmail's cap, «Reîncearcă emailurile eșuate» and
+    «Limita pe oră».
+  */
+  const stoppedOrFailed = input.emailFailSafe.stoppedLong > 0 || input.emailFailSafe.failed > 0;
+  push("emailFailSafe", {
+    owner: "club",
+    state: stoppedOrFailed ? "broken" : "done",
+    ...(stoppedOrFailed ? { text: "broken" } : {}),
+  });
+
   const emailDone =
     input.emailDeliveryMode === "live" ||
     (input.appEnv !== "production" && input.emailDeliveryMode === "allowlist");

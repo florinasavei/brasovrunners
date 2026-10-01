@@ -6,6 +6,7 @@ import { replyToInForce } from "@/modules/contact/shown-address";
 import { env } from "@/shared/config/env";
 import { isClubCopy } from "./domain/club-notices";
 import { preferredTransport } from "./domain/email-transport";
+import { fallbackActive } from "./domain/mailgun-stop";
 import { createGmailLedger, gmailIsConfigured, readEmailTransport, recordGmailFailure } from "./email-transport";
 import type { OutboxRoads, OutboxRow } from "./outbox";
 import { outboxRoadsFor } from "./outbox-roads";
@@ -34,7 +35,12 @@ export async function createOutboxSender<T extends Record<string, unknown>>(
       dailyCap: setting.gmailDailyCap,
       paceSeconds: setting.gmailPaceSeconds,
       atGmailCap: setting.atGmailCap,
-      overflowToGmail: setting.overflowToGmail,
+      /*
+        A Mailgun refusal of the account spills to Gmail when the club lets it (§443), and always while
+        «Gmail preia când Mailgun se oprește» is on (§NNN): the message Mailgun just refused is the
+        first the fallback carries, and the stop it announced closes Mailgun's road for the rest.
+      */
+      overflowToGmail: setting.overflowToGmail || fallbackActive(setting, configured),
       ledger: createGmailLedger(db),
       // Every Gmail failure is kept for /admin/emails and /api/health (§443), not only fallen back from.
       onFailure: (error, at) => recordGmailFailure(db, error, at),

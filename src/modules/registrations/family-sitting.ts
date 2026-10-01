@@ -5,6 +5,7 @@ import { type Registration, registrations } from "@/db/schema/registrations";
 import type { Database, Transaction } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
 import { drainOutboxAfterResponse } from "@/modules/notifications/drain";
+import { notHeldByMailgun } from "@/modules/notifications/mailgun-stop";
 import { enqueueEmail } from "@/modules/notifications/outbox";
 import { isUuid } from "@/shared/ids";
 import { FAMILY_HELD, isFamilySitting, SITTING_HELD, type SittingSeed, sittingLinkExpiresAt } from "./domain/family-sitting";
@@ -181,20 +182,22 @@ export async function settleSitting<T extends Record<string, unknown>>(
     const familyId =
       queued?.id ?? (await tx.select({ id: emailOutbox.id }).from(emailOutbox).where(eq(emailOutbox.idempotencyKey, key)).limit(1))[0]?.id;
     const replaced = held.filter((id) => id !== familyId);
-    // Only rows still waiting and never tried: a message that has left is not taken back.
+    // Only rows still waiting and never tried: a message that has left is not taken back. Nor one
+    // Mailgun stopped (§NNN): it carries the stop's mark, and deleting it would end the pause early.
     if (replaced.length > 0) {
       await tx
         .delete(emailOutbox)
-        .where(and(inArray(emailOutbox.id, replaced), eq(emailOutbox.status, "PENDING"), eq(emailOutbox.attemptCount, 0)));
+        .where(and(inArray(emailOutbox.id, replaced), eq(emailOutbox.status, "PENDING"), eq(emailOutbox.attemptCount, 0), notHeldByMailgun()));
     }
     held = familyId ? [familyId] : [];
   }
 
   if (held.length > 0) {
+    // A row Mailgun stopped keeps its turn (§NNN): held to the sitting's window, its pause would be stretched to it.
     await tx
       .update(emailOutbox)
       .set({ nextAttemptAt: heldUntil })
-      .where(and(inArray(emailOutbox.id, held), eq(emailOutbox.status, "PENDING"), eq(emailOutbox.attemptCount, 0)));
+      .where(and(inArray(emailOutbox.id, held), eq(emailOutbox.status, "PENDING"), eq(emailOutbox.attemptCount, 0), notHeldByMailgun()));
   }
   const expiresAt =
     sittingLinkExpiresAt([...pending.map((row) => row.emailLinkExpiresAt), ...entries.map((entry) => entry.expiresAt), sitting.expiresAt, heldUntil], now) ?? heldUntil;
@@ -214,10 +217,11 @@ export async function releaseFamilySitting<T extends Record<string, unknown>>(db
     const [row] = await tx.select().from(familySittings).where(eq(familySittings.id, sittingId)).limit(1).for("update");
     if (!row || row.releasedAt !== null || row.confirmedAt !== null) return false;
     if (row.heldOutboxIds.length > 0) {
+      // «Gata» does not end a pause Mailgun asked for (§NNN): a row carrying the stop's mark keeps its turn.
       await tx
         .update(emailOutbox)
         .set({ nextAttemptAt: now })
-        .where(and(inArray(emailOutbox.id, [...row.heldOutboxIds]), eq(emailOutbox.status, "PENDING"), eq(emailOutbox.attemptCount, 0)));
+        .where(and(inArray(emailOutbox.id, [...row.heldOutboxIds]), eq(emailOutbox.status, "PENDING"), eq(emailOutbox.attemptCount, 0), notHeldByMailgun()));
     }
     await tx
       .update(familySittings)
@@ -271,7 +275,7 @@ export async function continueFamilySitting<T extends Record<string, unknown>>(
           await tx
             .update(emailOutbox)
             .set({ nextAttemptAt: heldUntil })
-            .where(and(inArray(emailOutbox.id, [...row.heldOutboxIds]), eq(emailOutbox.status, "PENDING"), eq(emailOutbox.attemptCount, 0)));
+            .where(and(inArray(emailOutbox.id, [...row.heldOutboxIds]), eq(emailOutbox.status, "PENDING"), eq(emailOutbox.attemptCount, 0), notHeldByMailgun()));
         }
         await tx
           .update(familySittings)
@@ -324,7 +328,7 @@ async function holdSeedMessage<T extends Record<string, unknown>>(
       payloadJson: sql`${emailOutbox.payloadJson} || ${JSON.stringify({ [mark]: true })}::jsonb`,
     })
     .where(
-      and(eq(emailOutbox.id, outboxId), eq(emailOutbox.registrationId, registrationId), eq(emailOutbox.status, "PENDING"), eq(emailOutbox.attemptCount, 0)),
+      and(eq(emailOutbox.id, outboxId), eq(emailOutbox.registrationId, registrationId), eq(emailOutbox.status, "PENDING"), eq(emailOutbox.attemptCount, 0), notHeldByMailgun()),
     )
     .returning({ id: emailOutbox.id });
   return row?.id ?? null;
@@ -473,7 +477,14 @@ export async function queueFamilyConfirmed<T extends Record<string, unknown>>(
       await tx
         .update(emailOutbox)
         .set({ nextAttemptAt: releaseAt })
-        .where(and(or(eq(emailOutbox.idempotencyKey, key), like(emailOutbox.idempotencyKey, `${key}:club-copy:%`)), eq(emailOutbox.status, "PENDING"), eq(emailOutbox.attemptCount, 0)));
+        .where(
+          and(
+            or(eq(emailOutbox.idempotencyKey, key), like(emailOutbox.idempotencyKey, `${key}:club-copy:%`)),
+            eq(emailOutbox.status, "PENDING"),
+            eq(emailOutbox.attemptCount, 0),
+            notHeldByMailgun(),
+          ),
+        );
       if (releaseAt.getTime() <= now.getTime()) drainOutboxAfterResponse();
     }
     return true;

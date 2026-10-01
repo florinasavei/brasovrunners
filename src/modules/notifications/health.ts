@@ -1,4 +1,4 @@
-import { and, count, desc, eq, gt, inArray, isNotNull, lt, not, or, sql } from "drizzle-orm";
+import { and, count, desc, eq, gt, inArray, isNotNull, lt, not, or, type SQL, sql } from "drizzle-orm";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { BULK_MESSAGE_TYPES } from "./domain/bulk";
 import { GMAIL_CAP_DEFERRED_ERROR } from "./domain/email-transport";
@@ -8,7 +8,9 @@ import { gmailRoadCondition } from "./outbox";
 import { readOutboxRoads } from "./outbox-roads";
 import type { Database } from "@/db/types";
 import { readJobCadence } from "@/modules/jobs/cadence";
-import { checkGmailHealth, type GmailHealth } from "./email-transport";
+import { checkGmailHealth, type GmailHealth, readEmailTransport } from "./email-transport";
+import { FALLBACK_WAITING_ERROR_PREFIX, fallbackActive, type MailgunStopKind, routeWhileStopped, type StopWaitReason } from "./domain/mailgun-stop";
+import { heldByMailgunCondition, readMailgunStop } from "./mailgun-stop";
 import { type OutboxDelivery, outboxOverdueCadenceMinutes, readOutboxDelivery } from "./outbox-delivery";
 
 /**
@@ -29,8 +31,10 @@ import { type OutboxDelivery, outboxOverdueCadenceMinutes, readOutboxDelivery } 
  *              the scheduler is not draining them — unless Mailgun's hourly pace binds and
  *              they ride Mailgun's road (§605, `hourPaced`); and rows Mailgun paused recently
  *              for the rate, past the same allowance since they were queued.
- *   failed     rows that spent every attempt, in the last seven days: the provider said no
- *              six times, or the message could not be rendered.
+ *   failed     rows the provider refused for the message or the account, in the last seven
+ *              days, or that could not be rendered. Since §NNN a transient refusal never lands
+ *              here: it is retried hourly and shows as overdue instead; «Reîncearcă emailurile
+ *              eșuate» puts these back in the queue.
  *
  * Any of the three above zero is `stalled`, and `stalled` is a `degraded` health answer with
  * a 503, which is what turns a monitor into a notification. Bounces are not here: a bounce is
@@ -53,7 +57,15 @@ const DEFERRED_BEYOND_MS = 60 * 60_000;
 const FAILED_WINDOW_MS = 7 * 24 * 3_600_000;
 
 export type EmailHealth = {
-  status: "ok" | "stalled";
+  /**
+   * `stalled` — something needs a person: a deferral, an overdue row, a failure (§98); `/api/health`
+   * answers `degraded` and a 503 for it, and the monitor emails the owner. `degraded` (§NNN) — Mailgun
+   * said stop and Gmail is carrying every group for it: reported here and on «Sarcini», and not a 503 —
+   * a monitor that emailed the owner every time Mailgun paused for a quarter of an hour would be
+   * emailing about the platform doing what it was built to do. Nothing overdue, deferred or failed
+   * stands behind it, or it would be `stalled`.
+   */
+  status: "ok" | "degraded" | "stalled";
   /** Rows not yet delivered — pending or claimed — whatever the reason. */
   waiting: number;
   deferred: number;
@@ -86,6 +98,18 @@ export type EmailHealth = {
    * for the tick is the setting working, and `overdue` above already says when it is not.
    */
   delivery: OutboxDelivery;
+  /**
+   * Mailgun said stop (§NNN): a pause or its allowance spent, until when, and who carries for it —
+   * Gmail, or nobody and why (the switch off, Gmail not configured, its cap spent). Null while
+   * Mailgun's road is open.
+   */
+  mailgunStop: { kind: MailgunStopKind; until: string; carriedBy: "gmail" | null; waitReason: StopWaitReason | null } | null;
+  /**
+   * Waiting rows Mailgun stopped — paused, deferred to its reset, or waiting because Gmail could not
+   * carry them — that were queued longer ago than the overdue allowance, while nothing carries them
+   * (§NNN): what «Sarcini» turns red for, with the remedies named.
+   */
+  stoppedLong: number;
 };
 
 /**
@@ -166,27 +190,62 @@ export async function checkEmailHealth<T extends Record<string, unknown>>(
   */
   const roads = await readOutboxRoads(db);
   const gmailRoad = roads ? gmailRoadCondition(roads) : sql`false`;
+  /*
+    Mailgun's stop and who carries for it (§NNN), as the claim reads them: while Gmail carries every
+    group, the rows Mailgun held back are Gmail's to send at once — not deferred to Mailgun's reset and
+    not paused — so they count in neither; a row Gmail could not carry, queued longer ago than the
+    overdue allowance, is overdue whatever the switch says: nothing is carrying it.
+  */
+  const gmailHealth = await checkGmailHealth(db, now);
+  const [transport, stop] = await Promise.all([
+    readEmailTransport(db),
+    readMailgunStop(db, now, roads ? not(gmailRoadCondition(roads)) : undefined),
+  ]);
+  const whileStopped = routeWhileStopped({
+    stop,
+    fallbackToGmail: fallbackActive(transport, gmailHealth.configured),
+    gmailConfigured: gmailHealth.configured,
+    gmailRoom: Math.max(0, gmailHealth.cap - gmailHealth.sentLastDay),
+  });
+  const carried = whileStopped.road === "gmail";
+  const held = heldByMailgunCondition();
+  const fallbackWaiting = sql`${emailOutbox.lastError} LIKE ${`${FALLBACK_WAITING_ERROR_PREFIX}%`}`;
+  const notCarried = (where: SQL | undefined) => (carried ? and(where, sql`NOT coalesce(${held}, false)`) : where);
   const evidenceSince = new Date(now.getTime() - PACE_EVIDENCE_MS);
   const recentPause = sql`(${emailOutbox.lastError} LIKE ${`${RATE_PAUSE_ERROR_PREFIX}%`} AND ${emailOutbox.nextAttemptAt} > ${evidenceSince.toISOString()}::timestamptz)`;
   const lateWhere = and(overdueWhere, sql`NOT coalesce(${recentPause}, false)`);
   // Not one already counted as deferred: a `Retry-After` over an hour away is that, and says when.
-  const pausedLateWhere = and(
+  const pausedLateWhere = notCarried(
+    and(pending, recentPause, lt(emailOutbox.createdAt, overdueBefore), sql`${emailOutbox.nextAttemptAt} <= ${deferredFrom.toISOString()}::timestamptz`),
+  );
+  // Gmail could not carry it while Mailgun was stopped (§NNN), and it was queued past the allowance: nothing is carrying it.
+  const stoppedLateWhere = and(
     pending,
-    recentPause,
+    fallbackWaiting,
     lt(emailOutbox.createdAt, overdueBefore),
     sql`${emailOutbox.nextAttemptAt} <= ${deferredFrom.toISOString()}::timestamptz`,
+  );
+  const deferredCounted = notCarried(deferredWhere);
+  // «Sarcini»'s red row (§NNN): stopped rows queued past the allowance that nothing carries now.
+  // A Mailgun mark counts only while a stop is in force and nothing carries it; an old mark past its stop is a row waiting its turn.
+  const stoppedLongWhere = and(
+    pending,
+    lt(emailOutbox.createdAt, overdueBefore),
+    stop && !carried ? sql`(coalesce(${held}, false) OR ${fallbackWaiting})` : fallbackWaiting,
   );
 
   const [[row], hour] = await Promise.all([
     db
       .select({
         waiting: count(sql`case when ${emailOutbox.status} in ('PENDING', 'PROCESSING') then 1 end`),
-        deferred: count(sql`case when ${deferredWhere} then 1 end`),
+        deferred: count(sql`case when ${deferredCounted} then 1 end`),
+        stoppedLate: count(sql`case when ${stoppedLateWhere} then 1 end`),
+        stoppedLong: count(sql`case when ${stoppedLongWhere} then 1 end`),
         late: count(sql`case when ${lateWhere} then 1 end`),
         lateOnGmail: count(sql`case when ${and(lateWhere, gmailRoad)} then 1 end`),
         pausedLate: count(sql`case when ${pausedLateWhere} then 1 end`),
         failed: count(sql`case when ${failedWhere} then 1 end`),
-        resumesAt: sql<Date | null>`min(case when ${deferredWhere} then ${emailOutbox.nextAttemptAt} end)`,
+        resumesAt: sql<Date | null>`min(case when ${deferredCounted} then ${emailOutbox.nextAttemptAt} end)`,
         gmailDeferred: count(sql`case when ${gmailDeferredWhere} then 1 end`),
         gmailResumesAt: sql<Date | null>`min(case when ${gmailDeferredWhere} then ${emailOutbox.nextAttemptAt} end)`,
       })
@@ -197,7 +256,7 @@ export async function checkEmailHealth<T extends Record<string, unknown>>(
 
   const holds = paceHolds({ hourlyAllowance: hour.allowance, carriedRecently: hour.carriedRecently, inFlight: hour.inFlight });
   const hourPaced = holds ? row.late - row.lateOnGmail : 0;
-  const overdue = row.late - hourPaced + row.pausedLate;
+  const overdue = row.late - hourPaced + row.pausedLate + row.stoppedLate;
   const stalled = row.deferred > 0 || overdue > 0 || row.failed > 0;
 
   // The reason, from the most recent row that has one among those that count. One more query
@@ -207,7 +266,7 @@ export async function checkEmailHealth<T extends Record<string, unknown>>(
     const [latest] = await db
       .select({ lastError: emailOutbox.lastError })
       .from(emailOutbox)
-      .where(and(or(deferredWhere, holds ? and(lateWhere, gmailRoad) : lateWhere, pausedLateWhere, failedWhere), isNotNull(emailOutbox.lastError)))
+      .where(and(or(deferredCounted, holds ? and(lateWhere, gmailRoad) : lateWhere, pausedLateWhere, stoppedLateWhere, failedWhere), isNotNull(emailOutbox.lastError)))
       .orderBy(desc(emailOutbox.createdAt))
       .limit(1);
     lastError = latest?.lastError ?? null;
@@ -217,7 +276,7 @@ export async function checkEmailHealth<T extends Record<string, unknown>>(
   const gmailResumesAt = row.gmailResumesAt ? new Date(row.gmailResumesAt) : null;
   const delivery = await readOutboxDelivery(db, now, governorFloorMinutes);
   return {
-    status: stalled ? "stalled" : "ok",
+    status: stalled ? "stalled" : carried ? "degraded" : "ok",
     waiting: row.waiting,
     deferred: row.deferred,
     overdue,
@@ -226,11 +285,20 @@ export async function checkEmailHealth<T extends Record<string, unknown>>(
     resumesAt: resumesAt ? resumesAt.toISOString() : null,
     lastError,
     gmail: {
-      ...(await checkGmailHealth(db, now)),
+      ...gmailHealth,
       deferred: row.gmailDeferred,
       resumesAt: gmailResumesAt ? gmailResumesAt.toISOString() : null,
     },
     delivery,
+    mailgunStop: stop
+      ? {
+          kind: stop.kind,
+          until: stop.until.toISOString(),
+          carriedBy: carried ? "gmail" : null,
+          waitReason: whileStopped.road === "wait" ? whileStopped.reason : null,
+        }
+      : null,
+    stoppedLong: row.stoppedLong,
   };
 }
 

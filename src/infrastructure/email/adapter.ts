@@ -45,7 +45,20 @@ export type OutgoingEmail = {
    * means Mailgun.
    */
   transport?: EmailTransportName;
+  /**
+   * Mailgun said stop and the club's switch hands its mail to Gmail (§NNN): Gmail's road or none —
+   * never Mailgun's, whatever Gmail answers. A message Gmail cannot take now (its cap, a refused
+   * login) is handed back for the outbox to hold, rather than knocking on Mailgun during its pause.
+   */
+  gmailOnly?: true;
 };
+
+/**
+ * Mailgun's own refusal of the account (§NNN), carried on a result the sender got elsewhere — Gmail
+ * took the message after Mailgun said stop — so the outbox still learns that Mailgun's road is
+ * closed and until when, and does not knock on it with the next message.
+ */
+export type MailgunStopped = { kind: "paused" | "allowance"; until?: Date };
 
 /** The two roads out (§443): the provider's HTTP API, or the club's own Gmail over SMTP. */
 export type EmailTransportName = "mailgun" | "gmail";
@@ -91,6 +104,8 @@ export type SendResult =
        * moment the send returned (§605), never the batch's start.
        */
       acceptedAt?: Date;
+      /** Mailgun refused it first, for the account and not the message (§NNN); Gmail carried it. */
+      mailgunStopped?: MailgunStopped;
     }
   | {
       outcome: "transient_failure";
@@ -133,10 +148,19 @@ export type SendResult =
        * know", and the outbox falls back to the next daily reset.
        */
       retryAfter?: Date;
+      /** Mailgun refused it first, for the account (§NNN), and Gmail handed it back for its pace. */
+      mailgunStopped?: MailgunStopped;
     }
   | {
       outcome: "permanent_failure";
       error: string;
+      /**
+       * The refusal is about the account or the message, not the recipient's address (§NNN): bad
+       * credentials, an unverified or closed domain, a malformed message. The outbox marks it FAILED —
+       * a person can fix it and press «Reîncearcă emailurile eșuate» — rather than BOUNCED, which is
+       * an address that does not exist and is never tried again.
+       */
+      notTheAddress?: true;
       /**
        * How many recipients the server took before refusing the address (Gmail, §443): the club's
        * copies left and count against Google's daily cap, so the sender credits the ledger with them.

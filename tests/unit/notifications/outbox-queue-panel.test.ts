@@ -25,6 +25,7 @@ vi.mock("next-intl/server", async () => {
 vi.mock("@/app/[locale]/admin/settings/emails/actions", () => ({
   sendOutboxNowFromEmailsAction: async () => null,
   updateDeliveryTimingFromEmailsAction: async () => null,
+  retryFailedEmailsFromEmailsAction: async () => null,
 }));
 
 const { default: OutboxQueuePanel } = await import("@/modules/notifications/ui/OutboxQueuePanel");
@@ -95,7 +96,7 @@ const QUEUE: Props["queue"] = {
   ],
 };
 
-const VOLUME = { remaining: 90 } as Props["volume"];
+const VOLUME = { remaining: 90, mailgunStop: null, whileStopped: { road: "mailgun" } } as Props["volume"];
 
 /** The element carrying `data-testid` in the panel's tree, before rendering: its props are what a client island receives. */
 function findByTestId(node: unknown, testId: string): { props: Record<string, unknown> } | null {
@@ -323,5 +324,47 @@ describe("OutboxQueuePanel for a reader who cannot send (§529)", () => {
     const paced = { ...QUEUE.rows[0]!, id: "p", nextAttemptAt: new Date(NOW.getTime() + 30_000) };
     const again = await render("ro", { queue: { ...QUEUE, total: 1, due: 0, rows: [paced] } });
     expect(again).not.toContain("Ținut până");
+  });
+});
+
+describe("§NNN the queue panel says Mailgun's stop, who carries for it, and offers the failed back", () => {
+  const paused = { kind: "paused" as const, until: new Date(NOW.getTime() + 15 * 60_000) };
+
+  it("says «Mailgun în pauză până la HH:MM — Gmail preia» while Gmail carries, as information", async () => {
+    const volume = { ...VOLUME, mailgunStop: paused, whileStopped: { road: "gmail", stop: paused } } as Props["volume"];
+    const html = await render("ro", { volume });
+    expect(html).toMatch(/data-testid="outbox-stop"[^>]*data-carried="gmail"/);
+    expect(html).toMatch(/Mailgun în pauză până la \d{2}:\d{2} — Gmail preia\./);
+    const english = await render("en", { volume });
+    expect(english).toMatch(/Mailgun paused until \d{2}:\d{2} — Gmail takes over\./);
+  });
+
+  it("names why nothing carries it, as a warning: the switch, the account, the cap", async () => {
+    const allowance = { kind: "allowance" as const, until: new Date("2026-10-02T00:05:00.000Z") };
+    const unconfigured = { ...VOLUME, mailgunStop: allowance, whileStopped: { road: "wait", stop: allowance, reason: "gmailUnconfigured" } } as Props["volume"];
+    const html = await render("ro", { volume: unconfigured });
+    expect(html).toMatch(/data-testid="outbox-stop"[^>]*data-carried="none"/);
+    // Another day: the helper's date carries its own «la» (§452), never «până la joi».
+    expect(html).toMatch(/Cota Mailgun epuizată până vin\., 2 oct\. 2026, la 03:05 — Gmail nu e configurat\./);
+    const off = { ...VOLUME, mailgunStop: paused, whileStopped: { road: "wait", stop: paused, reason: "fallbackOff" } } as Props["volume"];
+    expect(await render("ro", { volume: off })).toContain("«Gmail preia când Mailgun se oprește» e oprit");
+    expect(await render("en", { volume: off })).toContain("«Gmail takes over when Mailgun stops» is off");
+    const full = { ...VOLUME, mailgunStop: paused, whileStopped: { road: "wait", stop: paused, reason: "gmailCapSpent" } } as Props["volume"];
+    expect(await render("ro", { volume: full })).toContain("Gmail și-a atins limita pe zi");
+  });
+
+  it("says nothing while Mailgun's road is open", async () => {
+    expect(await render("ro")).not.toContain('data-testid="outbox-stop"');
+  });
+
+  it("offers «Reîncearcă emailurile eșuate» with the live count, asking first, to whoever may send — and nobody else", async () => {
+    state.locale = "ro";
+    const element = await OutboxQueuePanel({ locale: "ro", queue: QUEUE, volume: VOLUME, mayEdit: true, delivery: DELIVERY, now: NOW, mayEditTiming: true, failedRetryable: 3 });
+    const form = findByTestId(element, "retry-failed-form");
+    expect(form?.props.confirm).toMatchObject({ title: ro.Admin.emails.queue.retryFailed.title, confirmLabel: ro.Admin.emails.queue.retryFailed.button });
+    expect((form?.props.confirm as { body: string }).body).toContain("(de toate: 3)");
+    expect(await render("ro", { failedRetryable: 3, mayEdit: false })).not.toContain("retry-failed");
+    expect(await render("ro", { failedRetryable: 0 })).not.toContain("retry-failed");
+    expect(en.Admin.emails.queue.retryFailed.button).toBe("Retry the failed emails");
   });
 });

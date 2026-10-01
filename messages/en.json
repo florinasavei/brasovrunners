@@ -561,7 +561,10 @@
       "sending": "Sending…",
       "sendNowLong": "Send the queued emails now, without waiting for the monitor; stops at the daily allowance",
       "sentNow": "Emails sent just now: {count}.",
-      "waitingShort": "{count} waiting"
+      "waitingShort": "{count} waiting",
+      "sentViaGmail": "Of them, {gmail} through Gmail — {stop}.",
+      "stopResumes": "Mailgun resumes at {hour}.",
+      "stopResumesOn": "Mailgun resumes on {until}."
     },
     "registrations": {
       "empty": "There are no registrations.",
@@ -1137,7 +1140,10 @@
       "LEGAL_RETIRE_NEEDS_REASON": "Type the reason, 3 to 200 characters. It stays beside the version, under “Deleted versions”.",
       "LEGAL_NOTHING_DEPENDS": "Nothing was deleted: meanwhile nothing depends on this version any more. Reload the page and delete it permanently.",
       "LEGAL_RETIRE_IN_FORCE": "Nothing was deleted: this is the version in force. Approve the next version first, then you can delete this one.",
-      "LEGAL_ALREADY_DELETED": "This version has already been deleted from the list. Its text stays in the archive."
+      "LEGAL_ALREADY_DELETED": "This version has already been deleted from the list. Its text stays in the archive.",
+      "SEND_NOW_MAILGUN_STOPPED_FALLBACK_OFF": "Nothing was sent: Mailgun is stopped and «Gmail takes over when Mailgun stops» is set to No. Set it to Yes under «Emails», or choose «Queue it»: it leaves when Mailgun resumes.",
+      "SEND_NOW_MAILGUN_STOPPED_NO_GMAIL": "Nothing was sent: Mailgun is stopped and the club's Gmail is not configured here. Choose «Queue it»: the email leaves on its own when Mailgun resumes.",
+      "SEND_NOW_MAILGUN_STOPPED_GMAIL_FULL": "Nothing was sent: Mailgun is stopped and Gmail has reached its daily limit. Raise it under «Emails» (500 at most), or choose «Queue it»: it leaves when Mailgun resumes."
     },
     "editor": {
       "draftPreview": {
@@ -2633,7 +2639,7 @@
       "emailStalled": {
         "title": "Emails are not going out.",
         "deferred": "Messages waiting: {count}. Mailgun's daily allowance ({allowance} messages a day) is spent. They go out by themselves on {resumesAt} (Romania time); nothing is lost.",
-        "failed": "Messages not sent in the last 7 days: {count} — Mailgun's reason: “{reason}”. See Mailgun → Sending → Logs.",
+        "failed": "Messages not sent in the last 7 days: {count} — Mailgun's reason: “{reason}”. Once the cause is fixed: «Settings» → «Emails» → «Retry the failed emails».",
         "overdue": "Messages whose turn passed more than 90 minutes ago: {count} — the monitors are not running. See the “Monitors” row below.",
         "notify": "To hear about this without opening the page: a daily cron-job.org monitor on /api/health?deep=1 with failure notifications on — the step in the “Monitors” row."
       },
@@ -2989,6 +2995,19 @@
             "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. Sections 5 and 6 say partners may receive the first name, last name and address.",
             "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish”.",
             "The list takes only the consents given under the new notice. Whoever ticked under an older notice never reaches a partner."
+          ]
+        },
+        "emailFailSafe": {
+          "title": "Emails nothing is carrying",
+          "todo": "Mailgun said stop more than 90 minutes ago and nothing is carrying the emails, or an email failed in the last 7 days.",
+          "broken": "Mailgun said stop more than 90 minutes ago and nothing is carrying the emails, or an email failed in the last 7 days. Nothing is lost: they wait in the queue.",
+          "done": "No email stuck or failed. If Mailgun says stop, Gmail takes over (when the switch is on).",
+          "how": [
+            "«Settings» → «Emails» → «How emails leave» → «Gmail takes over when Mailgun stops»: Yes → «Save the routes». While Mailgun is paused or out of allowance, Gmail carries every group.",
+            "If Gmail has reached its limit: in the same place, «Gmail limit per day» above it (500 at most, and the club's people also send by hand from that account).",
+            "The failed emails: «Settings» → «Emails» → «The sending queue» → «Retry the failed emails». It puts them back in the queue, from the first attempt.",
+            "If Mailgun asked for the pause for the pace (the probation): «Settings» → «Emails» → the Mailgun plan → «Hourly limit» — 90 while the probation lasts.",
+            "The queue's header says until when Mailgun is stopped and who takes over."
           ]
         }
       },
@@ -4196,6 +4215,27 @@
             "reserve": "the newsletter's reserve: {count}"
           },
           "nothingDue": "No email is due now: the queued ones are held until their time, being sent right now, or out of attempts."
+        },
+        "stop": {
+          "paused": "Mailgun paused until {hour}",
+          "allowance": "Mailgun's allowance spent until {hour}",
+          "line": "{stop} — {carried}.",
+          "carried": {
+            "gmail": "Gmail takes over",
+            "fallbackOff": "Gmail does not take over: «Gmail takes over when Mailgun stops» is off",
+            "gmailUnconfigured": "Gmail is not configured",
+            "gmailCapSpent": "Gmail has reached its daily limit"
+          },
+          "pausedOn": "Mailgun paused until {until}",
+          "allowanceOn": "Mailgun's allowance spent until {until}"
+        },
+        "retryFailed": {
+          "count": "Emails failed in the last 7 days: {count}.",
+          "title": "Retry the failed emails?",
+          "body": "The emails that failed in the last 7 days (all of them: {count}) go back in the queue and leave on the next pass; the reason stays written. Those refused for their address stay as they are.",
+          "button": "Retry the failed emails",
+          "pending": "Putting them back…",
+          "done": "Failed emails put back in the queue: {count}."
         }
       },
       "copy": {
@@ -4370,7 +4410,14 @@
         "saving": "Saving…",
         "saved": "The setting was saved. The next emails leave by the routes chosen.",
         "readOnly": "An Administrator changes this setting.",
-        "updatedAt": "Set {when}."
+        "updatedAt": "Set {when}.",
+        "fallback": "Gmail takes over when Mailgun stops",
+        "fallbackHelp": "While Mailgun has asked for a pause or its allowance is spent, every group leaves through Gmail, within its limit and pace; when Mailgun resumes, its groups return to it on their own.",
+        "fallbackUnconfigured": "Unavailable: the club's Gmail is not configured on this environment (CONTACT_SMTP_USER and CONTACT_SMTP_PASSWORD).",
+        "fallbackOptions": {
+          "yes": "Yes, Gmail takes over",
+          "no": "No, emails wait for Mailgun"
+        }
       },
       "contacts": {
         "title": "Who receives the contact messages",
@@ -6890,7 +6937,8 @@
     },
     "emailHealth": {
       "ok": "Sending works: nothing deferred, overdue or failed. /api/health?deep=1 answers 200.",
-      "stalled": "Sending has stopped — deferred (daily allowance): {deferred}; overdue: {overdue}; failed in 7 days: {failed}. Reason: “{reason}”. /api/health?deep=1 answers 503 until this clears."
+      "stalled": "Sending has stopped — deferred (daily allowance): {deferred}; overdue: {overdue}; failed in 7 days: {failed}. Reason: “{reason}”. /api/health?deep=1 answers 503 until this clears.",
+      "degraded": "Mailgun said stop and Gmail carries every group until it resumes; nothing overdue or failed. /api/health?deep=1 answers 200 and says so in its “email” block."
     },
     "registrationsToday": "Registrations today",
     "testRegistrations": "test",
@@ -7505,7 +7553,12 @@
       "memberCodeDeleted": "The code was deleted.",
       "declarationHeld": "The declaration is kept. It is not deleted until you remove the keep.",
       "declarationReleased": "The keep was removed.",
-      "menuOrder": "The menu order was saved."
+      "menuOrder": "The menu order was saved.",
+      "failedRetried": {
+        "one": "{count} failed email put back in the queue.",
+        "few": "{count} failed emails put back in the queue.",
+        "other": "{count} failed emails put back in the queue."
+      }
     }
   },
   "Network": {

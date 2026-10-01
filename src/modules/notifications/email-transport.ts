@@ -232,8 +232,12 @@ export async function updateEmailTransport<T extends Record<string, unknown>>(
       parsed.error.issues.map((issue) => String(issue.path.at(-1) ?? "")),
     );
   }
-  const next = parsed.data;
   const before = await readEmailTransport(db);
+  /*
+    «Gmail preia când Mailgun se oprește» (§NNN): a form without it — greyed where Gmail is not
+    configured, so the browser posts nothing — keeps what is stored, never turns it off by omission.
+  */
+  const next = { ...parsed.data, fallbackToGmail: parsed.data.fallbackToGmail ?? before.fallbackToGmail ?? true };
 
   await db.transaction(async (tx) => {
     await tx
@@ -255,6 +259,7 @@ export async function updateEmailTransport<T extends Record<string, unknown>>(
           gmailPaceSeconds: before.gmailPaceSeconds,
           atGmailCap: before.atGmailCap,
           overflowToGmail: before.overflowToGmail,
+          fallbackToGmail: before.fallbackToGmail ?? true,
         },
         to: next,
       },

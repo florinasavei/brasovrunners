@@ -7,6 +7,7 @@ import { clubCopyRecipients, isCopiedPerMessage, participantMessageBcc } from ".
 import { roomToSendNow, SENT_NOW_FLAG } from "./domain/send-at-once";
 import { preferredTransport, roadsByMessageType } from "./domain/email-transport";
 import { gmailIsConfigured, readEmailTransport } from "./email-transport";
+import { routeWhileStopped, type StopRoute, type StopWaitReason } from "./domain/mailgun-stop";
 import { readEmailVolumeToday } from "./volume";
 
 /**
@@ -31,16 +32,45 @@ export const SEND_NOW_ALLOWANCE_SPENT = "SEND_NOW_ALLOWANCE_SPENT";
 export const SEND_NOW_HOUR_SPENT = "SEND_NOW_HOUR_SPENT";
 
 /**
+ * Mailgun said stop and Gmail cannot carry the press (§NNN): one sentence per remedy, in
+ * `Admin.errors` — turn the switch on, configure Gmail, raise Gmail's cap — each saying that waiting
+ * for Mailgun's return is the other answer. Never «0 trimise» in silence.
+ */
+export const SEND_NOW_STOPPED_REFUSALS = {
+  fallbackOff: "SEND_NOW_MAILGUN_STOPPED_FALLBACK_OFF",
+  gmailUnconfigured: "SEND_NOW_MAILGUN_STOPPED_NO_GMAIL",
+  gmailCapSpent: "SEND_NOW_MAILGUN_STOPPED_GMAIL_FULL",
+} as const satisfies Record<StopWaitReason, string>;
+
+type SendNowRefusalReason =
+  | typeof SEND_NOW_ALLOWANCE_SPENT
+  | typeof SEND_NOW_HOUR_SPENT
+  | (typeof SEND_NOW_STOPPED_REFUSALS)[StopWaitReason];
+
+/**
  * A press that asked to send now past what Mailgun still holds (§80, §540): the day's allowance, or
- * since §605 the hour's pace. `reason` names which, and is the sentence's key.
+ * since §605 the hour's pace, or since §NNN Mailgun's stop with nothing to carry for it. `reason`
+ * names which, and is the sentence's key; `until` is when Mailgun's road opens again, for the page
+ * that can say it.
  */
 export class SendNowRefused extends DomainError {
-  readonly reason: typeof SEND_NOW_ALLOWANCE_SPENT | typeof SEND_NOW_HOUR_SPENT;
-  constructor(message: string, reason: typeof SEND_NOW_ALLOWANCE_SPENT | typeof SEND_NOW_HOUR_SPENT = SEND_NOW_ALLOWANCE_SPENT) {
+  readonly reason: SendNowRefusalReason;
+  readonly until: Date | null;
+  constructor(message: string, reason: SendNowRefusalReason = SEND_NOW_ALLOWANCE_SPENT, until: Date | null = null) {
     super("VALIDATION_ERROR", message);
     this.name = "SendNowRefused";
     this.reason = reason;
+    this.until = until;
   }
+}
+
+/** The refusal of a press while Mailgun is stopped and Gmail cannot carry it (§NNN). */
+export function stoppedRefusal(route: Extract<StopRoute, { road: "wait" }>): SendNowRefused {
+  return new SendNowRefused(
+    `Mailgun is stopped (${route.stop.kind}) until ${route.stop.until.toISOString()} and Gmail cannot carry the press: ${route.reason}`,
+    SEND_NOW_STOPPED_REFUSALS[route.reason],
+    route.stop.until,
+  );
 }
 
 /** The code a backoffice action lands on: the allowance's own sentence, or the domain code. */
@@ -70,7 +100,30 @@ export async function assertRoomToSendNow<T extends Record<string, unknown>>(
   const copyRoad = (type: EmailMessageType) => (gmail ? preferredTransport(setting, type, true) : "mailgun");
   const mailgunMessages =
     messageTypes.filter((type) => roads[type] === "mailgun").length + clubCopyTypes.filter((type) => copyRoad(type) === "mailgun").length;
-  if (!roomToSendNow({ remaining: volume.remaining, mailgunMessages })) {
+  if (mailgunMessages === 0) return;
+  /*
+    Mailgun said stop (§NNN): the claim reads the same facts. With «Gmail preia când Mailgun se oprește»
+    on and room in Gmail's day for every message of the press, Gmail carries it — the day's and the
+    hour's Mailgun figures are not asked, nothing of the press goes to Mailgun. Otherwise refused with
+    the sentence that names the remedy, and the moment Mailgun's road opens again.
+  */
+  const total = messageTypes.length + clubCopyTypes.length;
+  const whileStopped = routeWhileStopped({
+    stop: volume.mailgunStop,
+    fallbackToGmail: volume.fallbackToGmail,
+    gmailConfigured: volume.gmailConfigured,
+    gmailRoom: volume.gmailRoom,
+    needed: total,
+  });
+  if (whileStopped.road === "gmail") return;
+  if (whileStopped.road === "wait") throw stoppedRefusal(whileStopped);
+  /*
+    The day's counter spent but Mailgun has not said so yet: with the switch on and room in Gmail's
+    day, the press goes — Mailgun's refusal of the account hands it to Gmail at once (`delivery.ts`)
+    and closes Mailgun's road behind it.
+  */
+  const gmailCovers = volume.fallbackToGmail && volume.gmailRoom >= total;
+  if (!gmailCovers && !roomToSendNow({ remaining: volume.remaining, mailgunMessages })) {
     throw new SendNowRefused(`the day's Mailgun allowance has ${volume.remaining} left; ${mailgunMessages} would be sent now`);
   }
   if (!roomToSendNow({ remaining: volume.hourRemaining, mailgunMessages })) {

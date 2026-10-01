@@ -14,6 +14,8 @@ import { outboxRoadsFor } from "./outbox-roads";
 import { paceHolds } from "./domain/hourly-pace";
 import { GMAIL_WINDOW_MS, mailgunMessagesPerCompletedRegistration } from "./domain/email-transport";
 import { type GmailFailure, readEmailTransport, readGmailLastFailure, readGmailUsage } from "./email-transport";
+import { fallbackActive, type MailgunStop, routeWhileStopped, type StopRoute } from "./domain/mailgun-stop";
+import { readMailgunStop } from "./mailgun-stop";
 
 /**
  * How much email today is going to cost, before the day proves it (AGENTS.md §16, §19).
@@ -178,6 +180,20 @@ export type EmailVolumeToday = {
   gmailLastFailure: GmailFailure | null;
   /** Whether that failure is inside the last 24 hours: a warning then, history after. */
   gmailFailedLastDay: boolean;
+  /**
+   * Mailgun said stop (§NNN): a pause it asked for, or its allowance spent, and until when — null
+   * while its road is open. Read as the claim reads it (`mailgun-stop.ts`), on Mailgun's road.
+   */
+  mailgunStop: MailgunStop | null;
+  /** «Gmail preia când Mailgun se oprește» as it acts: on, and Gmail configured (§NNN, `fallbackActive`). */
+  fallbackToGmail: boolean;
+  /** Recipients Gmail's rolling day still has room for (§443); 0 where Gmail is not configured. */
+  gmailRoom: number;
+  /**
+   * What a due Mailgun row does now (§NNN, `routeWhileStopped`): Mailgun's road, Gmail carrying for it,
+   * or waiting — with the reason the queue panel's header, «Trimite acum» and «Sarcini» each say.
+   */
+  whileStopped: StopRoute;
 };
 
 /**
@@ -282,11 +298,16 @@ export async function readEmailVolumeToday<T extends Record<string, unknown>>(
   // The hour, counted the way the claim counts it (`hourly-pace.ts`), on Mailgun's road as the claim
   // splits it: one more query, always — the page shows it.
   const roads = outboxRoadsFor(transport, gmail.configured);
+  const mailgunRoad = roads ? not(gmailRoadCondition(roads)) : undefined;
   const hour = await readMailgunHour(db, now, {
     hourlyAllowance: setting.hourlyAllowance,
     alwaysCount: true,
-    ...(roads ? { mailgunRoad: not(gmailRoadCondition(roads)) } : {}),
+    ...(mailgunRoad ? { mailgunRoad } : {}),
   });
+  // Mailgun's stop and who carries for it (§NNN): one more query, the claim's own.
+  const mailgunStop = await readMailgunStop(db, now, mailgunRoad);
+  const fallbackToGmail = fallbackActive(transport, gmail.configured);
+  const gmailRoom = gmail.configured ? Math.max(0, transport.gmailDailyCap - gmail.sentLastDay) : 0;
 
   return {
     realRegistrations,
@@ -315,5 +336,9 @@ export async function readEmailVolumeToday<T extends Record<string, unknown>>(
     sentLastHour: hour.sentLastHour,
     hourRemaining: hour.remaining,
     hourPaceHolds: paceHolds({ hourlyAllowance: hour.allowance, carriedRecently: hour.carriedRecently, inFlight: hour.inFlight }),
+    mailgunStop,
+    fallbackToGmail,
+    gmailRoom,
+    whileStopped: routeWhileStopped({ stop: mailgunStop, fallbackToGmail, gmailConfigured: gmail.configured, gmailRoom }),
   };
 }

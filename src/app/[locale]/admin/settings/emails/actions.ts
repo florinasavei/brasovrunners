@@ -15,7 +15,8 @@ import { updateEmailCopy } from "@/modules/notifications/email-copy";
 import { updateEmailPlan } from "@/modules/notifications/email-plan";
 import { updateEmailTransport } from "@/modules/notifications/email-transport";
 import { sendOutboxNow } from "@/modules/notifications/send-now";
-import { sendNowRefusalCode } from "@/modules/notifications/send-at-once";
+import { SendNowRefused, sendNowRefusalCode } from "@/modules/notifications/send-at-once";
+import { retryFailedEmails } from "@/modules/notifications/retry-failed";
 import { updateDeliveryTiming } from "@/modules/notifications/delivery-timing";
 import { requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
 import { canManageClubSettings, canManageRegistrations } from "@/modules/staff-identity/domain/roles";
@@ -104,6 +105,8 @@ export async function updateEmailTransportAction(_previous: FormOutcome | null, 
         gmailPaceSeconds: whole("gmailPaceSeconds"),
         atGmailCap: choice("atGmailCap"),
         overflowToGmail: form.get("overflowToGmail") === "yes",
+        // «Gmail preia când Mailgun se oprește» (§NNN): greyed — not posted — where Gmail is not configured; the service keeps it then.
+        ...(form.has("fallbackToGmail") ? { fallbackToGmail: form.get("fallbackToGmail") === "yes" } : {}),
       },
       new Date(),
     );
@@ -130,15 +133,41 @@ export async function sendOutboxNowFromEmailsAction(_previous: FormOutcome | nul
     // The registrations list's own verb (§80): the same predicate here, there and in the service.
     const actor = await requireStaffCapability(canManageRegistrations);
     const result = await sendOutboxNow(getDb(), actor, new Date());
-    outcome = `saved=outboxSent&sent=${result.sent}`;
+    // Gmail carried for a stopped Mailgun (§NNN): the page says how many, why and until when.
+    const carried = result.stop ? `&gmail=${result.viaGmail}&stop=${result.stop.kind}&until=${encodeURIComponent(result.stop.until.toISOString())}` : "";
+    outcome = `saved=outboxSent&sent=${result.sent}${carried}`;
     await flashOutcome({ saved: "outboxSent", sent: String(result.sent) });
   } catch (error) {
     if (!isDomainError(error)) throw error;
-    // Mailgun's hour spent is its own sentence (§605); every other refusal its code, as before.
-    outcome = `error=${sendNowRefusalCode(error)}`;
+    // Mailgun's hour spent is its own sentence (§605), its stop too, with when it ends (§NNN); every other refusal its code.
+    const until = error instanceof SendNowRefused && error.until ? `&until=${encodeURIComponent(error.until.toISOString())}` : "";
+    outcome = `error=${sendNowRefusalCode(error)}${until}`;
   }
   // The queue the page is about has just changed; without this the panel comes back showing
   // the rows it showed before the press (the same trap §164 and §100 documented above).
+  revalidatePath(path);
+  redirect(`${path}?${outcome}#admin-alert`);
+}
+
+/**
+ * «Reîncearcă emailurile eșuate» (§NNN): the week's FAILED rows back in the queue, from the queue
+ * panel. The service is where the gate (`canManageRegistrations`), the three-an-hour throttle and the
+ * audit row live; this is where to land, with the count.
+ */
+export async function retryFailedEmailsFromEmailsAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = localeOf(form);
+  const path = getPathname({ locale, href: "/admin/settings/emails" });
+
+  let outcome: string;
+  try {
+    const actor = await requireStaffCapability(canManageRegistrations);
+    const { retried } = await retryFailedEmails(getDb(), actor, new Date());
+    outcome = `saved=failedRetried&sent=${retried}`;
+    await flashOutcome({ saved: "failedRetried", sent: String(retried) });
+  } catch (error) {
+    if (!isDomainError(error)) throw error;
+    outcome = `error=${error.code}`;
+  }
   revalidatePath(path);
   redirect(`${path}?${outcome}#admin-alert`);
 }

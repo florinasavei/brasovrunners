@@ -35,6 +35,7 @@ const LAUNCHED: OwnerTaskInputs = {
   legalTextIsSample: false,
   emailDeliveryMode: "live",
   appEnv: "production",
+  emailFailSafe: { stoppedLong: 0, failed: 0 },
   staleJobNames: [],
   failingJobNames: [],
   staffCount: 3,
@@ -290,6 +291,7 @@ describe("owner tasks", () => {
       "teamPageNotice",
       "raceDeclarations",
       "groupRunSeriesTexts",
+      "emailFailSafe",
       "liveEmail",
       "inviteStaff",
       "inviteKey",
@@ -303,6 +305,16 @@ describe("owner tasks", () => {
       "domainRenewal",
       "neonLimits",
     ]);
+  });
+
+  // §NNN: email nothing is carrying — red with the remedies, green otherwise, and always on the list.
+  it("turns the email fail-safe row red while a stopped row waits past ninety minutes or a message failed this week", () => {
+    expect(ownerTasks(LAUNCHED).find((task) => task.id === "emailFailSafe")).toMatchObject({ owner: "club", kind: "check", state: "done" });
+    expect(ownerTasks({ ...LAUNCHED, emailFailSafe: { stoppedLong: 2, failed: 0 } }).find((task) => task.id === "emailFailSafe")).toMatchObject({
+      state: "broken",
+      text: "broken",
+    });
+    expect(stateOf({ ...LAUNCHED, emailFailSafe: { stoppedLong: 0, failed: 1 } }, "emailFailSafe")).toBe("broken");
   });
 
   // §523: the group-run declarations written for one signature per series, approved again.

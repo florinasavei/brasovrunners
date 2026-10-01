@@ -17,6 +17,7 @@ export type RateLimitScope =
   | "token-validate"
   | "job-invoke"
   | "admin-send-now"
+  | "admin-retry-failed"
   | "contact-message"
   | "group-run-declaration"
   | "newsletter-subscribe"
@@ -55,6 +56,8 @@ export const RATE_LIMITS: Record<RateLimitScope, { limit: number; windowMs: numb
   "job-invoke": { limit: 30, windowMs: 60 * 60_000 },
   /** "Send now" (§80): per Administrator, so the button and the monitor never share a bucket. */
   "admin-send-now": { limit: 10, windowMs: 60 * 60_000 },
+  /** «Reîncearcă emailurile eșuate» (§NNN): per Administrator, three an hour — a press that empties a week of failures. */
+  "admin-retry-failed": { limit: 3, windowMs: 60 * 60_000 },
   /**
    * The contact form (§149), keyed on a hash of the canonical email (the form keeps no copy of the
    * address). Every message is an immediate SMTP send; a refused send is refunded (`refundRateLimit`).

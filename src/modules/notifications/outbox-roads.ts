@@ -1,6 +1,7 @@
 import { GMAIL_PACE_BUDGET_MS } from "@/infrastructure/email/delivery";
 import type { Database } from "@/db/types";
 import { type EmailTransportSetting, gmailClaimSize, gmailRoadRows } from "./domain/email-transport";
+import { fallbackActive } from "./domain/mailgun-stop";
 import { gmailIsConfigured, readEmailTransport } from "./email-transport";
 import { OUTBOX_BATCH_SIZE, type OutboxRoads } from "./outbox";
 
@@ -13,11 +14,14 @@ import { OUTBOX_BATCH_SIZE, type OutboxRoads } from "./outbox";
  */
 export function outboxRoadsFor(setting: EmailTransportSetting, configured: boolean): OutboxRoads | undefined {
   const gmail = gmailRoadRows(setting);
-  if (!configured || (gmail.messageTypes.length === 0 && !gmail.clubCopies)) return undefined;
+  // «Gmail preia când Mailgun se oprește» (§NNN): Gmail's road exists for a stop even when no group is Gmail's.
+  const fallback = fallbackActive(setting, configured);
+  if (!configured || (gmail.messageTypes.length === 0 && !gmail.clubCopies && !fallback)) return undefined;
   return {
     gmailMessageTypes: gmail.messageTypes,
     gmailClubCopies: gmail.clubCopies,
     gmailBatchSize: gmailClaimSize(setting.gmailPaceSeconds, GMAIL_PACE_BUDGET_MS, OUTBOX_BATCH_SIZE),
+    fallbackToGmail: fallback,
   };
 }
 

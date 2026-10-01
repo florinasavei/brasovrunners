@@ -12,6 +12,7 @@ import { computeContentHash, type LegalDocumentTranslationInput } from "@/module
 import { findCurrentApprovedDocument, insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { declarationTrailEn, declarationTrailRo } from "@/modules/legal-documents/templates/declaration";
 import { isDomainError } from "@/shared/errors/domain-error";
+import { RATE_PAUSE_ERROR_PREFIX } from "@/modules/notifications/domain/hourly-pace";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
@@ -835,5 +836,45 @@ describe("§519 the fix round of 2026-09-27", () => {
     const confirmations = (await outbox()).filter((row) => row.messageType === "REGISTRATION_CONFIRMED" && row.participantId !== null);
     expect(confirmations).toHaveLength(2);
     expect(confirmations.find((row) => row.id !== family.id)).toMatchObject({ registrationId: ionId, payloadJson: {} });
+  });
+});
+
+/*
+  §NNN (BR-V2.53's review nit): a family sitting neither stretches nor cuts a pause Mailgun asked for.
+  The hold, release and replace statements leave a row carrying the rate-pause mark as it was — its
+  turn is Mailgun's pause, and the claim reads Mailgun's road as stopped while it waits.
+*/
+describe("§NNN a sitting leaves a row Mailgun paused alone", () => {
+  const PAUSED = `${RATE_PAUSE_ERROR_PREFIX}mailgun 429: Too Many Requests`;
+
+  it("«Da» does not hold a paused first email to the sitting's window, and «Gata» does not send it before the pause ends", async () => {
+    const event = await createEvent();
+    const { seed } = await first(event, "Ana", 0);
+    const [row] = await outbox();
+    // Mailgun paused it until minute 5, the attempt given back (`releaseForPause`).
+    await db.update(emailOutbox).set({ lastError: PAUSED, nextAttemptAt: at(5) }).where(eq(emailOutbox.id, row.id));
+
+    const sittingId = await yes(event, { seed }, 1);
+    const [held] = await outbox();
+    expect(held.nextAttemptAt?.toISOString()).toBe(at(5).toISOString());
+
+    await releaseFamilySitting(db, sittingId!, at(2));
+    const [released] = await outbox();
+    expect(released.nextAttemptAt?.toISOString()).toBe(at(5).toISOString());
+    expect(released.lastError).toBe(PAUSED);
+  });
+
+  it("a second «Da» does not stretch a held row's pause to the new window, and «Gata» does not end it", async () => {
+    const event = await createEvent();
+    const sittingId = await start(event, "Ana", 0);
+    const [row] = await outbox();
+    // Held by the sitting, then paused by Mailgun until minute 4 on its way out.
+    await db.update(emailOutbox).set({ lastError: PAUSED, nextAttemptAt: at(4) }).where(eq(emailOutbox.id, row.id));
+
+    await yes(event, { sittingId }, 3);
+    expect((await outbox())[0].nextAttemptAt?.toISOString()).toBe(at(4).toISOString());
+
+    await releaseFamilySitting(db, sittingId!, at(3));
+    expect((await outbox())[0].nextAttemptAt?.toISOString()).toBe(at(4).toISOString());
   });
 });

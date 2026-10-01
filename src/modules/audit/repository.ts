@@ -157,6 +157,11 @@ export type AuditAction =
   | "participant.data_exported"
   /** The outbox drained by hand from the backoffice, within the day's allowance (`DECISIONS.md` §80). */
   | "outbox.sent_by_staff"
+  /**
+   * «Reîncearcă emailurile eșuate» (§NNN): the week's FAILED rows put back in the queue — how many and
+   * who pressed, never an address or a message.
+   */
+  | "email_outbox.retry_failed"
   /** The thank-you sent once per event to everyone checked in — the event and the count, never who (§82). */
   | "event.thanks_sent"
   /**

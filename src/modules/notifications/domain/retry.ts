@@ -5,7 +5,12 @@
  */
 
 /**
- * After this many attempts a message is FAILED and the worker stops.
+ * The attempts the backoff schedule below spans. Since §NNN it is no longer a ceiling: a transient
+ * refusal past it keeps the row PENDING and is tried again hourly (`MAX_RETRY_DELAY_MS`), because an
+ * outage is the provider's problem, not the runner's, and `/api/health`'s «overdue» is the alarm for a
+ * row that stays stuck. The history below is why the number is six.
+ *
+ * Before §NNN: after this many attempts a message was FAILED and the worker stopped.
  *
  * Six attempts spread over the schedule below is a little under two hours of trying. The
  * ceiling exists because an unbounded retry against a provider that is rejecting messages is
