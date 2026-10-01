@@ -316,14 +316,14 @@ export default async function DeclarePage({ params, searchParams }: Props) {
   const signing = context.ok || familyCurrent !== null;
   /*
     `invalid=name` is the signature that was not the declarant's name (§314): its own refusal,
-    said beside the box with the name it wants — never the generic sentence above, which was
-    written for an unticked box, and never anything that reads as a broken link.
+    said beside the box with the name it wants — never the generic sentence above, which is
+    for a press that failed on another field, and never anything that reads as a broken link.
   */
   const nameRefused = signing && invalid === "name";
   /*
     `invalid=document` is an identity document the text asks for and the press left out, or typed
     as something that is not a series and number (§330, found in review) — past the browser's own
-    check. Its own refusal for the same reason: the generic sentence asks for a tick.
+    check. Its own refusal for the same reason: the generic sentence is for another field's failure, not for this one.
   */
   const documentRefused = signing && invalid === "document";
   /*

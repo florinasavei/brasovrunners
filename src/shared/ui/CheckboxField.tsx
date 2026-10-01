@@ -176,7 +176,10 @@ export default function CheckboxField({
       {errorMessage}
     </FormHelperText>
   ) : null;
-  if (!help && !errorText) return field;
+  // A box that can ever show a message keeps the same root whether or not it shows one now: React
+  // compares element types at the root, so switching between the bare label and a wrapper on
+  // `flagged` would unmount the uncontrolled input and lose the tick (§NNN).
+  if (!help && !error && !requiredMessage) return field;
   return (
     <Box>
       {field}

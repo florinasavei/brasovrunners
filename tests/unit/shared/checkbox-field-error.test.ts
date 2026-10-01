@@ -22,10 +22,18 @@ describe("CheckboxField without an error", () => {
     expect(renderToStaticMarkup(box({ name: "x", help: "Help" }))).toBe(golden.help);
   });
 
-  it("prints the same with a requiredMessage that has not been triggered: the browser says it, the server did not", () => {
-    expect(
-      renderToStaticMarkup(box({ name: "accepted", id: "accepted", required: true, dense: true, requiredMessage: "Bifează" })),
-    ).toBe(golden.dense);
+  it("keeps one root for a box that can show a message: the same markup inside a wrapper, so a flag never swaps the root (§NNN)", () => {
+    const html = renderToStaticMarkup(box({ name: "accepted", id: "accepted", required: true, dense: true, requiredMessage: "Bifează" }));
+    const wrapper = /^<div class="MuiBox-root[^"]*">([\s\S]*)<\/div>$/.exec(html);
+    expect(wrapper).not.toBeNull();
+    expect(wrapper![1]).toBe(golden.dense);
+  });
+
+  it("has the same root element before and after the server's error is shown", () => {
+    const quiet = renderToStaticMarkup(box({ name: "x", requiredMessage: "Bifează" }));
+    const shown = renderToStaticMarkup(box({ name: "x", error: "Bifează" }));
+    expect(/^<div class="MuiBox-root[^"]*">/.exec(quiet)).not.toBeNull();
+    expect(/^<div class="MuiBox-root[^"]*">/.exec(shown)).not.toBeNull();
   });
 });
 
