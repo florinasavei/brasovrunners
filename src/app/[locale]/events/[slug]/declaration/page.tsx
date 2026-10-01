@@ -38,6 +38,7 @@ import BirthDateField from "@/modules/registrations/ui/BirthDateField";
 import IdDocumentFields, { ID_DOCUMENT_TYPES } from "@/modules/registrations/ui/IdDocumentFields";
 import SignatureField from "@/modules/registrations/ui/SignatureField";
 import BotCheck from "@/modules/registrations/ui/BotCheck";
+import UntickedBoxSummary from "@/modules/registrations/ui/UntickedBoxSummary";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import LegalLink from "@/shared/ui/LegalLink";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
@@ -247,6 +248,10 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
         </Alert>
       )}
 
+      {/* The unticked box, said before the press where a script runs (§616); after a server refusal the summary above names it. */}
+      {!refused.includes("accepted") && (
+        <UntickedBoxSummary boxId="accepted" summaryId="accepted-summary" message={t("groupRunDeclaration.page.acceptSummary")} />
+      )}
       <form action={signGroupRunDeclarationAction}>
         <Stack spacing={2} sx={{ mt: 3 }}>
           <input type="hidden" name="locale" value={locale} />
@@ -320,7 +325,14 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
             autoComplete="email"
           />
           {/* The consent box repeats the run's age, the one the text states through {{minimumAge}} (§515). */}
-          <CheckboxField id="accepted" name="accepted" required defaultChecked={draft?.accepted === "on"}>
+          <CheckboxField
+            id="accepted"
+            name="accepted"
+            required
+            defaultChecked={draft?.accepted === "on"}
+            error={refused.includes("accepted") ? t("groupRunDeclaration.page.acceptInline") : undefined}
+            requiredMessage={t("groupRunDeclaration.page.acceptInline")}
+          >
             {t("groupRunDeclaration.page.accept", minimumAge)}
           </CheckboxField>
           {/* The signature in a hand (§86): the name typed is the signature itself. */}

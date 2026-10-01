@@ -29,15 +29,13 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
  * The widths are set here rather than taken from the project: 320 is the requirement's floor,
  * 360 the owner's screenshot and the second size's first width, 393 the Pixel phone, 640 and
  * 768 the band where the marks used to land on the summary and the badge, and 1280 a desktop,
- * where the build stamp is pinned to the bar's own corner (§372).
+ * where the build stamp is still in the fold, not on the bar (§608).
  */
 type Box = { x: number; y: number; width: number; height: number };
 
 const WIDTHS = [320, 359, 360, 393, 640, 768, 1280] as const;
 /** MUI's `sm` breakpoint: the bar's items are 44px at and above it. */
 const SM = 600;
-/** MUI's `md` breakpoint: where the build stamp's pinned copy takes over from the fold's. */
-const MD = 900;
 
 /** The bar's target at a width (`shared/ui/footer-target.ts`): 24, 28 from 360, 44 from `sm`. */
 const targetAt = (width: number) => (width >= SM ? 44 : width >= 360 ? 28 : 24);
@@ -75,10 +73,8 @@ function controls(page: Page, where: (typeof PAGES)[number] = PAGES[0]) {
     language,
     current: language.locator('[aria-current="true"]'),
     other: language.getByRole("link", { name: where.other, exact: true }),
-    // Two copies, mutually exclusive by width (§372): the fold's, below `md`, and the one
-    // pinned to the bar's corner, from `md`.
+    // The one copy, in the fold at every width (§608).
     panelBadge: page.getByTestId("footer-build-badge-panel").getByLabel(/versiunea site-ului|website version/i),
-    pinnedBadge: page.getByTestId("footer-build-badge-pinned").getByLabel(/versiunea site-ului|website version/i),
   };
 }
 
@@ -196,7 +192,7 @@ test.describe("BR-REQ-041-01 the footer's one row, at every width", () => {
     test(`at ${width}px every item is on one row, nothing overlaps, and every target is its size`, async ({ page }) => {
       await page.setViewportSize({ width, height: 720 });
       await page.goto("/ro/evenimente", { waitUntil: "networkidle" });
-      const { footer, summary, privacy, word, rule, marks, language, current, other, panelBadge, pinnedBadge } = controls(page);
+      const { footer, summary, privacy, word, rule, marks, language, current, other, panelBadge } = controls(page);
       const count = await marks.count();
       test.skip(count === 0, "no social address is configured for this server");
       await restAtTheEnd(page);
@@ -249,13 +245,7 @@ test.describe("BR-REQ-041-01 the footer's one row, at every width", () => {
       expect(bar.height, `the bar's height at ${width}px`).toBeLessThanOrEqual(target + 2);
       await expect(summary).toBeVisible();
 
-      // The build stamp: whichever copy applies at this width is not on screen — the fold is
-      // closed, and a desktop's pinned copy only shows from `md`.
-      if (width >= MD) {
-        await expect(pinnedBadge).toBeVisible();
-      } else {
-        await expect(pinnedBadge).toBeHidden();
-      }
+      // The build stamp: the fold is closed, so it is on screen at no width (§608).
       await expect(panelBadge).toBeHidden();
       expectDisjoint(items, width);
 
@@ -480,27 +470,22 @@ test.describe("§372 §378 §385 one row on a phone, in both languages, fold clo
   });
 });
 
-test.describe("§372 the desktop build stamp, pinned to the bar's own corner", () => {
-  test("from md, is visible at the bar's right end without opening anything", async ({ page }) => {
+test.describe("§608 the build stamp shows only in the open fold, on a 1280-px desktop too", () => {
+  test("is hidden with the fold closed, and a line of the footer once it is open", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 720 });
     await page.goto("/ro/evenimente", { waitUntil: "networkidle" });
-    const { footer, pinnedBadge, panelBadge } = controls(page);
+    const { footer, summary, panelBadge } = controls(page);
 
-    await expect(pinnedBadge).toBeVisible();
+    // Closed: nothing on screen, and no pinned copy anywhere on the page (§372 is superseded).
     await expect(panelBadge).toBeHidden();
+    await expect(page.getByTestId("footer-build-badge-pinned")).toHaveCount(0);
 
+    await summary.click();
+    await expect(panelBadge).toBeVisible();
     const bar = await boxOf(footer, "the footer");
-    const stamp = await boxOf(pinnedBadge, "the pinned build stamp");
-    // Inside the bar, at its right end, never past the viewport.
+    const stamp = await boxOf(panelBadge, "the build stamp");
     expect(stamp.y).toBeGreaterThanOrEqual(bar.y);
-    expect(stamp.y + stamp.height).toBeLessThanOrEqual(bar.y + bar.height + 1);
     expect(stamp.x + stamp.width).toBeLessThanOrEqual(1280);
-    expect(stamp.x).toBeGreaterThan(bar.x + bar.width / 2);
-
-    // It does not widen the page, and it does not sit on top of the row's own items.
-    for (const [name, box] of await rowItems(page, PAGES[0], false)) {
-      expect(intersects(box, stamp), `${name} and the pinned build stamp overlap`).toBe(false);
-    }
 
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(0);

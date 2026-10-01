@@ -4,10 +4,11 @@ import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { hasLocale } from "next-intl";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { getDb } from "@/db/client";
+import { countForm } from "@/i18n/count-form";
 import { formatCalendarDay } from "@/i18n/dates";
 import { routing } from "@/i18n/routing";
 import { listPublishedEvents, listUndatedPublishedEvents } from "@/modules/events/repository";
@@ -15,18 +16,24 @@ import { checkJobHealth } from "@/modules/jobs/health";
 import { storedMediaBytes } from "@/modules/media/references";
 import {
   annualCostToday,
+  type CostTotal,
   DOMAIN_PRICE_USD_PER_YEAR,
   freeTierVerdict,
+  monthlyCostToday,
   NEON_LAUNCH_USD_PER_CU_HOUR,
   NEON_LAUNCH_USD_PER_GB_MONTH,
   neonCuHoursPerDay,
   nextSpend,
   oldestCheckDate,
+  payingRows,
+  perMonth,
+  perYear,
   platformServices,
   priceFreshness,
   projectedNeonLaunchUsdPerMonth,
   registrationsLeftToday,
   ROMANIAN_VAT_PERCENT,
+  type ServiceId,
   type ServiceRow,
   type ServiceSeverity,
 } from "@/modules/diagnostics/platform-plans";
@@ -41,6 +48,10 @@ import MonthCostsPanel from "@/modules/diagnostics/ui/MonthCostsPanel";
 import NeonBudgetPanel from "@/modules/diagnostics/ui/NeonBudgetPanel";
 import NeonLimitsPanel from "@/modules/diagnostics/ui/NeonLimitsPanel";
 import NeonPlanPanel from "@/modules/diagnostics/ui/NeonPlanPanel";
+import PlanCostTable from "@/modules/diagnostics/ui/PlanCostTable";
+import VercelPlanPanel from "@/modules/diagnostics/ui/VercelPlanPanel";
+import { readVercelPlan } from "@/modules/diagnostics/vercel-plan";
+import { VERCEL_PLANS } from "@/modules/diagnostics/domain/vercel-plan";
 import { readVercelMonthForCosts, VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH } from "@/modules/diagnostics/vercel";
 import Panel from "@/shared/ui/Panel";
 import QuietHelp from "@/shared/ui/QuietHelp";
@@ -123,6 +134,7 @@ export default async function AdminCostsPage({ params, searchParams }: Props) {
 
   const query = await searchParams;
   const t = await getTranslations("Admin.tasks");
+  const format = await getFormatter();
   // The refusal codes (`?error=FORBIDDEN|VALIDATION_ERROR`) are `Admin.errors.*`, shared by every backoffice page.
   const tErrors = await getTranslations("Admin.errors");
 
@@ -163,6 +175,9 @@ export default async function AdminCostsPage({ params, searchParams }: Props) {
   // the plan stated on this panel when it did not. Free's ceilings, or Launch's rates.
   const neonPlan = await readNeonPlan(db);
   const neonInForce = effectiveNeonPlan(neonPlan.plan, neon.ok ? neon.consumption.reportedPlan : null);
+  // The Vercel plan the club states (§610): Hobby, or Pro and its seats — the cost table, the month
+  // card and the yearly sentence price it. Vercel's own answer is not asked (§326's shape is the follow-up).
+  const vercelPlan = await readVercelPlan(db);
   const neonBlock = describeNeonBlock({
     plan: neonInForce.plan,
     databaseBytes,
@@ -213,6 +228,7 @@ export default async function AdminCostsPage({ params, searchParams }: Props) {
         dailyAllowance: emailPlanCeilings.dailyAllowance,
       },
       vercelBuildMinutesPerMonth: VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH,
+      vercelPlan: { plan: vercelPlan.plan, seats: vercelPlan.seats },
       domain: { planName: ".com", usdPerYear: DOMAIN_PRICE_USD_PER_YEAR, expiresOn: domain.status === "unknown" ? null : domain.expiresOn },
     },
     {
@@ -229,6 +245,8 @@ export default async function AdminCostsPage({ params, searchParams }: Props) {
     neonPlan: neonInForce.plan,
     neonCuHoursThisMonth: neon.ok ? neon.consumption.cuHours : null,
     neonHoursElapsed: neon.ok ? (now.getTime() - neon.consumption.periodStart.getTime()) / 3_600_000 : null,
+    vercelPlan: vercelPlan.plan,
+    vercelSeats: vercelPlan.seats,
     emailAllowance: volume.allowance,
     // Over the period that binds: today on Free, this month on a paid plan.
     emailSentToday: volume.period === "month" ? volume.sentThisMonth : volume.sentMessages,
@@ -247,6 +265,7 @@ export default async function AdminCostsPage({ params, searchParams }: Props) {
   const verdict = freeTierVerdict(facts);
   const registrationsLeft = registrationsLeftToday(facts);
   const paidToday = annualCostToday(services);
+  const paidMonthly = monthlyCostToday(services);
   const next = nextSpend(services);
   const freshness = priceFreshness(oldestCheckDate(services), now);
 
@@ -262,6 +281,36 @@ export default async function AdminCostsPage({ params, searchParams }: Props) {
     rate: neonBlock.rates?.usdPerCuHour ?? NEON_LAUNCH_USD_PER_CU_HOUR,
     storageRate: neonBlock.rates?.usdPerGbMonth ?? NEON_LAUNCH_USD_PER_GB_MONTH,
   };
+  /*
+    Every amount of «Cât costă» per month and per year (§610; the owner: «la costuri vreau să văd
+    defalcat pe lună și per serviciu!» — «aici nu e clar ca e per an»): in the vendor's currency,
+    two decimals, «+ TVA» where VAT comes on top, «≈» where it is an estimate.
+  */
+  const money = (value: number) => format.number(value, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const totalText = (total: CostTotal) =>
+    t(total.plusVat ? "costToday.amountPlusVat" : "costToday.amount", { amount: money(total.amount), currency: total.currency });
+  const totalsText = (totals: readonly CostTotal[]) => totals.map(totalText).join(", ");
+  const estimatedToday = paidToday.some((total) => total.estimated);
+  // A row's «Cost azi»: both figures, the one the vendor bills first.
+  const costTodayText = (row: ServiceRow): string => {
+    const cost = row.costToday;
+    if (cost.kind === "free") return t("costToday.free");
+    if (cost.kind === "notTaken") return t("costToday.notTaken");
+    const month = perMonth(cost);
+    const year = perYear(cost);
+    if (month === null || year === null) return t("costToday.usageUnknown");
+    const values = { month: money(month), year: money(year), currency: cost.currency };
+    if (cost.kind === "usage") return t("costToday.usageBoth", values);
+    if (cost.billed === "monthly") return t(cost.plusVat ? "costToday.billedMonthlyPlusVat" : "costToday.billedMonthly", values);
+    return t(cost.plusVat ? "costToday.billedYearlyPlusVat" : "costToday.billedYearly", values);
+  };
+  // The seats as a counted phrase («1 loc», «2 locuri»): the Vercel row's sentences and the verdict's name for it.
+  const seatsPhrase = (count: number) => t(`vercelPlan.seats.${countForm(count, locale)}`, { count });
+  // The verdict that names what is paid (§610): each paying row's short name with its plan, in the locale's list.
+  const paidNames = new Intl.ListFormat(locale, { type: "conjunction" }).format(
+    payingRows(services).map((row) => t(`freeVerdict.paidName.${row.id}`, { plan: row.planToday ?? "", seats: seatsPhrase(row.seats ?? 1) })),
+  );
+  const shortNames = Object.fromEntries(services.map((row) => [row.id, t(`costTable.name.${row.id}`)])) as Record<ServiceId, string>;
   const howClose = (row: ServiceRow): { text: string; more: string | null } => {
     if (row.headroom.kind === "measured") {
       const text = t(row.id === "mailgun" && volume.period === "month" ? "services.mailgun.closeMeasuredMonth" : `services.${row.id}.closeMeasured`, {
@@ -295,13 +344,20 @@ export default async function AdminCostsPage({ params, searchParams }: Props) {
             }
           : { text: t("services.neon.launch.closeUnknown"), more: t("services.neon.launch.closeMore", neonRates) };
       }
+      // Vercel on Pro: the non-commercial clause no longer applies, whatever an event charges.
+      if (row.id === "vercel" && row.variant === "pro") return { text: t("services.vercel.pro.close"), more: null };
       return { text: t(`services.${row.id}.${row.headroom.reached ? "closeYes" : "closeNo"}`), more: null };
     }
     return { text: t(`services.${row.id}.closeUnknown`), more: null };
   };
   /** The row's fixed sentences, read under the plan's own wording where the plan changes what is true. */
   const wording = (row: ServiceRow, key: "freeGives" | "ceiling" | "whenCrossed" | "bumpBack" | "more") =>
-    t(row.variant ? `services.${row.id}.${row.variant}.${key}` : `services.${row.id}.${key}`);
+    t(row.variant ? `services.${row.id}.${row.variant}.${key}` : `services.${row.id}.${key}`, {
+      // Vercel Pro's sentences quote the seats and the catalogue's prices; every other sentence ignores them.
+      seats: seatsPhrase(row.seats ?? 1),
+      seatPrice: money(VERCEL_PLANS.PRO.usdPerSeatPerMonth),
+      credit: money(VERCEL_PLANS.PRO.usdUsageCreditPerMonth),
+    });
   // The verdicts and the counts that carry a detail beyond their one sentence (§511): their «?».
   const verdictMore: Partial<Record<typeof verdict, string>> = {
     paysForUsage: t("freeVerdict.paysForUsageMore"),
@@ -317,6 +373,7 @@ export default async function AdminCostsPage({ params, searchParams }: Props) {
 
       <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
         {query.saved === "neonPlan" && <Alert severity="success">{t("neonPlan.saved")}</Alert>}
+        {query.saved === "vercelPlan" && <Alert severity="success">{t("vercelPlan.saved")}</Alert>}
         {query.saved === "jobCadence" && <Alert severity="success">{t("jobCadence.saved")}</Alert>}
         {query.saved === "budgetThresholds" && <Alert severity="success">{t("budgetThresholds.saved")}</Alert>}
         {query.saved === "neonLimits" && <Alert severity="success">{t("neonLimits.saved")}</Alert>}
@@ -385,6 +442,9 @@ export default async function AdminCostsPage({ params, searchParams }: Props) {
         </Stack>
       </Panel>
 
+      {/* Which Vercel plan the club is on (§610), after the database's and before «Cât costă», which prices it. */}
+      <VercelPlanPanel locale={locale} plan={vercelPlan} mayEdit={canManageClubSettings(actor.role)} />
+
       {/* «Tradu din română»'s daily allowance (§464): what DeepL Free may spend a day, and today's spend. */}
       <TranslationBudgetPanel
         locale={locale}
@@ -406,45 +466,64 @@ export default async function AdminCostsPage({ params, searchParams }: Props) {
         </Typography>
 
         {/* Green while nothing is paid monthly; blue for a plan the club chose to pay by the hour; amber for a limit met. */}
-        <Alert severity={verdict === "freeExceptDomain" ? "success" : verdict === "paysForUsage" ? "info" : "warning"} sx={{ mb: 2 }}>
-          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+        <Alert
+          severity={verdict === "freeExceptDomain" ? "success" : verdict === "paysForUsage" || verdict === "paysForPlans" ? "info" : "warning"}
+          sx={{ mb: 2 }}
+        >
+          {/* Per month and per year, in one sentence (§610): «circa» only when a figure in it is an estimate. */}
+          <Typography variant="body2" sx={{ fontWeight: 500 }} data-testid="cost-today">
             {paidToday.length === 0
               ? t("costToday.nothing")
-              : t("costToday.total", {
-                  total: paidToday
-                    .map((total) =>
-                      total.plusVat
-                        ? t("costToday.amountPlusVat", {
-                            amount: total.amount,
-                            currency: total.currency,
-                          })
-                        : t("costToday.amount", {
-                            amount: total.amount,
-                            currency: total.currency,
-                          }),
-                    )
-                    .join(", "),
+              : t(estimatedToday ? "costToday.sentenceEstimated" : "costToday.sentence", {
+                  month: totalsText(paidMonthly),
+                  year: totalsText(paidToday),
                 })}
           </Typography>
           {/* A total with a projection in it is not an invoice, and the line under it says so (one sentence a line, §511). */}
-          {paidToday.some((total) => total.estimated) && (
+          {estimatedToday && (
             <Typography variant="body2" sx={{ mt: 0.5 }}>
               {t("costToday.estimated")}
             </Typography>
           )}
-          {next && (
-            <Typography variant="body2" sx={{ mt: 0.5 }}>
+          {/* The next thing to cost money — or, once everything on that list is paid for, a sentence that says so (§610). */}
+          {next ? (
+            <Typography variant="body2" sx={{ mt: 0.5 }} data-testid="next-spend">
               {t(`nextSpend.${next.id}`, { cost: next.nextCost ?? "" })}
               <QuietHelp text={t(`nextSpend.${next.id}More`)} />
             </Typography>
+          ) : (
+            <Typography variant="body2" sx={{ mt: 0.5 }} data-testid="next-spend">
+              {t("nextSpend.none")}
+            </Typography>
           )}
         </Alert>
+
+        {/* Each service per month and per year, then the total (§610): the sentence above, broken down. */}
+        <PlanCostTable
+          locale={locale}
+          rows={services}
+          monthly={paidMonthly}
+          yearly={paidToday}
+          labels={{
+            caption: t("costTable.caption"),
+            service: t("costTable.service"),
+            perMonth: t("costTable.perMonth"),
+            perYear: t("costTable.perYear"),
+            total: t("costTable.total"),
+            free: t("costToday.free"),
+            notTaken: t("costToday.notTaken"),
+            unmeasured: t("costTable.unmeasured"),
+            plusVat: t("costTable.plusVat"),
+            help: t("costTable.help"),
+            names: shortNames,
+          }}
+        />
 
         {/* The verdict on the free plans, and the one figure that turns this page from reading
             into acting: how many more people can register today before the free allowance stops
             sending confirmations. Understated on purpose — a waitlisted entrant costs more. */}
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-          {t(`freeVerdict.${verdict}`)}
+          {verdict === "paysForPlans" ? t("freeVerdict.paysForPlans", { services: paidNames }) : t(`freeVerdict.${verdict}`)}
           {verdictMore[verdict] && <QuietHelp text={verdictMore[verdict]} />}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
@@ -515,28 +594,7 @@ export default async function AdminCostsPage({ params, searchParams }: Props) {
               >
                 <Fact label={t("field.planToday")}>{row.planToday ?? t("planNone")}</Fact>
                 <Fact label={t("field.costToday")}>
-                  <strong>
-                    {row.costToday.kind === "free"
-                      ? t("costToday.free")
-                      : row.costToday.kind === "notTaken"
-                        ? t("costToday.notTaken")
-                        : row.costToday.kind === "usage"
-                          ? row.costToday.estimatedPerMonth === null
-                            ? t("costToday.usageUnknown")
-                            : t("costToday.usage", {
-                                amount: row.costToday.estimatedPerMonth.toFixed(2),
-                                currency: row.costToday.currency,
-                              })
-                          : row.costToday.plusVat
-                            ? t("costToday.amountPlusVat", {
-                                amount: row.costToday.amount,
-                                currency: row.costToday.currency,
-                              })
-                            : t("costToday.amount", {
-                                amount: row.costToday.amount,
-                                currency: row.costToday.currency,
-                              })}
-                  </strong>
+                  <strong>{costTodayText(row)}</strong>
                 </Fact>
                 <Fact label={t("field.howClose")}>
                   {(() => {

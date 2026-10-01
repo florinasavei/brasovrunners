@@ -3,7 +3,10 @@ import { getTranslations } from "next-intl/server";
 import { cache } from "react";
 import { getDb } from "@/db/client";
 import { events } from "@/db/schema/events";
+import { formatDay } from "@/i18n/dates";
+import { deadlinesForThisRequest } from "@/modules/deadlines/request";
 import { noFreePlace, type PlacesTaken, placesTakenValues } from "./domain/capacity";
+import { computeWaitlistOfferExpiry } from "./domain/hold-deadlines";
 import { countOccupied } from "./repository";
 
 /**
@@ -32,3 +35,25 @@ export async function givePlaceRefusalAhead(eventId: string): Promise<string | n
   const [places, t] = await Promise.all([placesTakenIfFull(eventId), getTranslations("Admin")]);
   return places ? t("errors.NO_FREE_PLACE", placesTakenValues(places)) : null;
 }
+
+/**
+ * «Trimite-i oferta»'s question (§615): until when the runner would have to sign if the press were
+ * made now — the ordinary offer's deadline (`computeWaitlistOfferExpiry`: the club's window from
+ * «Termene», capped by the close and the start), in the event's own zone and the page's words, as the
+ * email names it. Null once registration has closed, when the press is refused: an offer then would
+ * already be lapsed. Once per event per request. A forecast: the email's send re-bases the offer
+ * (§513), and the server computes it again under the lock.
+ */
+export const offerDeadlineIfMadeNow = cache(async (eventId: string, locale: string): Promise<string | null> => {
+  const db = getDb();
+  const [row] = await db
+    .select({ registrationClosesAt: events.registrationClosesAt, startsAt: events.startsAt, timezone: events.timezone })
+    .from(events)
+    .where(eq(events.id, eventId))
+    .limit(1);
+  if (!row) return null;
+  const now = new Date();
+  const at = computeWaitlistOfferExpiry({ now, registrationClosesAt: row.registrationClosesAt, eventStartsAt: row.startsAt, deadlines: await deadlinesForThisRequest() });
+  if (at.getTime() <= now.getTime()) return null;
+  return formatDay(at, { locale, timeZone: row.timezone, style: "short", withTime: true, position: "inline" });
+});

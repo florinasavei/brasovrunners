@@ -256,8 +256,10 @@ const MENTIONS = new Set(["scripts/land-batch.mjs", "docs/DISPATCHER.md", ".clau
 const mentionsOnPurpose = (file) => MENTIONS.has(file) || file.startsWith(`${ENTRY_DIR}/`);
 // A line already on the base mentions the placeholder on purpose too; only this batch's lines are numbered.
 const inBatch = new Set(git("rev-list", `${BASE}..HEAD`).trim().split("\n").filter(Boolean));
+// A line a merge commit wrote resolved a conflict: no branch wrote it, so it is never numbered here.
+const merges = new Set(git("rev-list", "--merges", `${BASE}..HEAD`).trim().split("\n").filter(Boolean));
 const UNCOMMITTED = "0".repeat(40);
-// One item: every line this batch wrote is its own, the merge with qa included.
+// One item: every line this batch wrote is its own — except a merge's.
 const onlyNumber = entries.length === 1 ? entries[0].n : null;
 const manual = [];
 let grep = "";
@@ -276,7 +278,7 @@ for (const file of grep.trim().split("\n").filter((f) => f && !mentionsOnPurpose
   lines.forEach((line, i) => {
     if (!line.includes("§NNN")) return;
     const sha = shas[i];
-    const n = numberForLine({ sha, numberOf, inBatch, uncommitted: UNCOMMITTED, onlyNumber });
+    const n = numberForLine({ sha, numberOf, inBatch, uncommitted: UNCOMMITTED, onlyNumber, merges });
     if (n) lines[i] = line.replaceAll("§NNN", `§${n}`);
     else if (sha === UNCOMMITTED || inBatch.has(sha)) manual.push(`${file}:${i + 1} [${sha === UNCOMMITTED ? "uncommitted" : sha.slice(0, 7)}] ${line.trim().slice(0, 140)}`);
   });

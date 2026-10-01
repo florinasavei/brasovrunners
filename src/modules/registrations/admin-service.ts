@@ -48,6 +48,7 @@ import {
   checkIn,
   confirmByStaff,
   type EventForRegistration,
+  offerPlaceToByStaff,
   promoteFromWaitlistByStaff,
   submitRegistration,
   undoCheckIn,
@@ -740,6 +741,28 @@ export async function promoteRegistrationByStaff<T extends Record<string, unknow
 }
 
 /**
+ * «Trimite-i oferta» (§615): a free place offered to the waiting-list registration the organizer
+ * chose — the ordinary offer and its email, never a confirmation. The Administrator's
+ * (`canManageRegistrations`, §289), not the desk's: it changes a registration the Organizer only
+ * reads. Asserted here, before anything is read, and again in the service, which writes the audit
+ * row in the offer's own transaction.
+ */
+export async function offerPlaceByStaff<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  registrationId: string,
+  now: Date,
+): Promise<Registration> {
+  if (!canManageRegistrations(actor.role)) {
+    throw new DomainError("FORBIDDEN", `role ${actor.role} may not send a waiting-list offer`);
+  }
+  const current = await findRegistrationById(db, registrationId);
+  if (!current) throw new DomainError("NOT_FOUND", "no such registration");
+  const event = await eventForRegistration(db, current.eventId);
+  return offerPlaceToByStaff(db, event, registrationId, actor, now);
+}
+
+/**
  * One race number by hand (BR-REQ-038-01 criterion 7): §105's preferential number, or a desk spare
  * (§444). The partial unique index is what refuses two runners with one number; here that
  * surfaces as a sentence.
@@ -892,6 +915,12 @@ export async function setBibNumberByStaff<T extends Record<string, unknown>>(
     }
     throw error;
   }
+  /*
+    The public list may show this number (§613, behind the privacy notice): a number typed by hand
+    is a write that is not a change of state, so `transitionRegistration` does not expire the list's
+    cached page for it — this does, after the commit, or the old number would stay up for a while.
+  */
+  revalidatePublicContent("places");
   // The runner is told (§105): the confirmation carried the old number, or none. A number at a
   // race that will not run is not news (§331): it is written, and nobody is mailed.
   const event = await findEventForAllocation(db, updated.eventId);

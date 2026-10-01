@@ -79,7 +79,7 @@ describe("§357 no hardcoded value in the emails' own sentences", () => {
   it("names the club through the constant in the email Zitadel sends for us and in the bib sheet's metadata", () => {
     // Zitadel's invitation carries `applicationName` into its own email; the bib sheet's PDF
     // carries its Author. Neither is one of our templates, and both still leave with the name.
-    // The From line's default, the share picture's heading, the calendar's product id and file
+    // The From line's default, the share picture's lockup (the club's name is its artwork, §609), the calendar's product id and file
     // name, and a legal document PDF's Author are the same kind of thing (§369): each leaves the
     // platform with the name on it.
     for (const file of [

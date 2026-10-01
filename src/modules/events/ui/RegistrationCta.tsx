@@ -11,7 +11,7 @@ import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { DENSITY } from "@/theme/density";
 import type { PublicEventPage } from "../repository";
 import { cachedDeadlines } from "@/modules/public-cache/reads";
-import { fillPhrase, fullThanksPhrase, waitingPhrase, waitlistOfferPhrase, waitlistRoomPhrase } from "./counted-phrases";
+import { fillPhrase, fullThanksPhrase, offeredPhrase, waitingPhrase, waitlistOfferPhrase, waitlistRoomPhrase } from "./counted-phrases";
 import { type PreviewDoor, readRegistrationDoor } from "./registration-door";
 import RegistrationDoorButton, { doorButtonLabel } from "./RegistrationDoorButton";
 
@@ -72,6 +72,16 @@ export default async function RegistrationCta({
     // rendered — for an uncapped event, which shows no number at all (BR-REQ-034-01 criterion 4).
     return (
       <Stack spacing={1} sx={{ mt: { xs: DENSITY.gapSm, sm: 3 }, alignItems: "flex-start" }}>
+        {/*
+          Somebody waits in the line (§615): a newcomer joins it whatever is free, so the page says how
+          places are given — the card's words — before the button, which is the line's.
+        */}
+        {cta.fromWaitlist && (
+          <Typography variant="body1" component="p" data-testid="registration-from-waitlist" sx={{ fontWeight: 700 }}>
+            {t("cta.fromWaitlist")}
+          </Typography>
+        )}
+
         <RegistrationDoorButton slug={event.slug} cta={cta} label={doorButtonLabel(t, cta)} preview={preview} />
 
         {fill && (
@@ -80,17 +90,26 @@ export default async function RegistrationCta({
           </Typography>
         )}
 
-        {/* An uncapped event shows no number at all (BR-REQ-034-01 criterion 4). */}
-        {cta.availablePlaces !== null && (
+        {/* An uncapped event shows no number at all (BR-REQ-034-01 criterion 4); nor does one whose
+            places are given from the waiting list (§615): they are not a newcomer's to take. */}
+        {cta.availablePlaces !== null && !cta.fromWaitlist && (
           <Typography variant="body2" color="text.secondary">
             {t("cta.placesRemaining", { count: cta.availablePlaces })}
           </Typography>
         )}
 
-        {/* Once anybody waits (§587, amending §346): the line's length, from the count the door made. */}
-        {cta.waiting > 0 && (
+        {/*
+          Once anybody is in the line (§587, amending §346), from the counts the door made: an open offer
+          named as offered, then the people with no offer yet (§612) — the card's order and words.
+        */}
+        {cta.offered > 0 && (
+          <Typography variant="body2" color="text.secondary" data-testid="waitlist-offered">
+            {offeredPhrase(t, locale, cta.offered)}
+          </Typography>
+        )}
+        {cta.waitlisted > 0 && (
           <Typography variant="body2" color="text.secondary" data-testid="waitlist-waiting">
-            {waitingPhrase(t, cta.waiting)}
+            {waitingPhrase(t, cta.waitlisted)}
           </Typography>
         )}
       </Stack>

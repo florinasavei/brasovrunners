@@ -1,7 +1,9 @@
+import { randomUUID } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { events } from "@/db/schema/events";
+import { familyPlaceHolds } from "@/db/schema/family-entries";
 import { registrationInterests } from "@/db/schema/registration-interests";
 import { registrations } from "@/db/schema/registrations";
 import { nextMaintenanceWork, nextOutboxWork } from "@/modules/jobs/next-work";
@@ -31,6 +33,7 @@ beforeAll(async () => {
 afterAll(async () => close());
 beforeEach(async () => {
   await resetTables(db);
+  await db.delete(familyPlaceHolds);
   const translations: LegalDocumentTranslationInput[] = [
     { locale: "ro", title: "Confidențialitate", body: { sections: [{ paragraphs: ["p"] }] } },
     { locale: "en", title: "Privacy", body: { sections: [{ paragraphs: ["p"] }] } },
@@ -143,6 +146,41 @@ describe("BR-REQ-090-03 criterion 10 the maintenance job's next work, duty by du
     const event = await createEvent();
     await register(event, { status: "WAITLIST_OFFERED", holdExpiresAt: new Date(NOW.getTime() + 3 * HOUR) });
     expect(await nextMaintenanceWork(db, NOW)).toEqual(new Date(NOW.getTime() + 3 * HOUR));
+  });
+
+  /**
+   * §612 (§543): a family's reservation frees its place at the sitting's fixed deadline, with no write;
+   * the job clears it then and offers the place to whoever waits. Until §612 the plan did not know the
+   * deadline, so the run after the form's save promised a quiet to the daily window and slept through it.
+   */
+  it("is a family's reservation deadline, well before the address's link lapses (§543, §612)", async () => {
+    const event = await createEvent();
+    // A sitting's form: waiting for the address (48 hours), its place reserved until the sitting's deadline.
+    await register(event, { holdExpiresAt: new Date(NOW.getTime() + 40 * MINUTE) });
+    const next = await nextMaintenanceWork(db, NOW);
+    expect(next).toEqual(new Date(NOW.getTime() + 40 * MINUTE));
+    // …and the run's promised quiet ends there, not at the daily window.
+    expect(planQuiet({ ranAt: NOW, nextWorkAt: next, cadenceMinutes: 0, failed: false }).quietUntil).toEqual(new Date(NOW.getTime() + 40 * MINUTE));
+  });
+
+  it("is a family sitting's held place deadline, for a form that wrote no registration (§543, §612)", async () => {
+    const event = await createEvent();
+    const sittingKey = randomUUID();
+    await db.insert(familyPlaceHolds).values([
+      { eventId: event.id, sittingKey, slot: "held", expiresAt: new Date(NOW.getTime() + 25 * MINUTE), holdsPlace: true, createdAt: NOW },
+      // A person sent while no place was free holds none, frees none, and is no work (round six).
+      { eventId: event.id, sittingKey, slot: "sent", expiresAt: new Date(NOW.getTime() + 10 * MINUTE), holdsPlace: false, createdAt: NOW },
+    ]);
+    expect(await nextMaintenanceWork(db, NOW)).toEqual(new Date(NOW.getTime() + 25 * MINUTE));
+  });
+
+  it("schedules neither on a cancelled event, whose queue stands still (§331, §612)", async () => {
+    const event = await createEvent();
+    await register(event, { holdExpiresAt: new Date(NOW.getTime() + 40 * MINUTE) }, new Date(NOW.getTime() - 40 * HOUR));
+    await db.insert(familyPlaceHolds).values({ eventId: event.id, sittingKey: randomUUID(), slot: "held", expiresAt: new Date(NOW.getTime() + 25 * MINUTE), holdsPlace: true, createdAt: NOW });
+    await db.update(events).set({ eventStatus: "CANCELLED" }).where(eq(events.id, event.id));
+    // What is left is the address's own link, which lapses whatever the event is (event-blind, §377).
+    expect(await nextMaintenanceWork(db, NOW)).toEqual(new Date(NOW.getTime() + 8 * HOUR));
   });
 
   it("is the start of an event somebody is waiting for, when the waiting list closes", async () => {

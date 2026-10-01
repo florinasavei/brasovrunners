@@ -76,6 +76,12 @@ export type AuditAction =
   | "registration.confirmed_by_staff"
   /** Given a place ahead of the queue, into a free one (BR-REQ-037-07). */
   | "registration.promoted_by_staff"
+  /**
+   * «Trimite-i oferta» (§615): a free place offered by the organizer to the waiting-list registration
+   * of their choice — the ordinary offer and its email, no confirmation. From and to, and how many
+   * waited before this person in the line (`aheadOf`) — never a name.
+   */
+  | "registration.offered_by_staff"
   /** The participant is here (BR-REQ-037-08); by staff, or by themselves. */
   | "registration.checked_in"
   | "registration.checkin_undone"
@@ -222,12 +228,19 @@ export type AuditAction =
    * itself every week, so the trail says who made it.
    */
   | "event.repeat_publish_changed"
+  /**
+   * «Ofertele din lista de așteptare pleacă automat» switched (§615): from and to, on every date a
+   * save changed it — the editor's own date and each date of a series the scoped save carried it to.
+   */
+  | "event.waitlist_auto_offer_changed"
   /** The Mailgun plan the club says it is on, from and to, with the note (§100). */
   | "email_plan.changed"
   /** Which road each group of emails takes, Gmail's cap and pace, the overflow (§443): from and to. */
   | "email_transport.changed"
   /** The Neon plan the club says it is on — Free or Launch — from and to, with the note (§280's follow-up). */
   | "neon_plan.changed"
+  /** The Vercel plan the club says it is on — Hobby or Pro — and its seats, from and to, with the note (§610). */
+  | "vercel_plan.changed"
   /** The minimum minutes between two real runs of each scheduled job, from and to (§334). */
   | "job_cadence.changed"
   /** The shares of the Neon quota that turn the month's budget amber and red, from and to (§447). */

@@ -48,6 +48,7 @@
     "pastCountFiltered": "Din trecut, după filtre ({count})",
     "filter": {
       "label": "Filtrele evenimentelor",
+      "labelPast": "Filtrele evenimentelor trecute",
       "button": "Filtre",
       "buttonCount": "Filtre ({count})",
       "groups": {
@@ -71,7 +72,9 @@
       "clear": "Șterge filtrele",
       "remove": "Scoate filtrul",
       "active": "Filtre active",
-      "none": "Niciun eveniment nu se potrivește filtrelor alese."
+      "activePast": "Filtre active pentru evenimentele trecute",
+      "none": "Niciun eveniment nu se potrivește filtrelor alese.",
+      "pastNothingToNarrow": "Toate evenimentele trecute sunt la fel — {values} — așa că nu e nimic de filtrat aici."
     },
     "calendar": {
       "previous": "Luna anterioară",
@@ -235,6 +238,8 @@
         "other": "{count} de participanți confirmați"
       },
       "columnPosition": "#",
+      "columnNumber": "Nr.",
+      "columnNumberFull": "numărul de concurs",
       "columnName": "Nume",
       "columnClub": "Club",
       "previous": "← Pagina anterioară",
@@ -250,6 +255,8 @@
         "instagram": "{name} pe Instagram"
       },
       "captionStates": "Întâi participanții confirmați — cei cu numele afișat, în ordinea confirmării, apoi ceilalți —, apoi cei înscriși care nu au confirmat încă și cei de pe lista de așteptare, în ordinea listei.",
+      "captionNumbers": "Participanții confirmați, cu numărul de concurs: întâi cei cu numele afișat, în ordinea confirmării, apoi ceilalți.",
+      "captionStatesNumbers": "Întâi participanții confirmați, cu numărul de concurs — cei cu numele afișat, în ordinea confirmării, apoi ceilalți —, apoi cei înscriși care nu au confirmat încă și cei de pe lista de așteptare, în ordinea listei.",
       "noteStates": "Aici sunt numărați toți participanții confirmați. Numele apare doar pentru cei care au bifat „Vreau să apar pe lista de participanți & rezultate”; ceilalți confirmați apar ca „Participant (nume ascuns)”, fără niciun alt detaliu. Cei înscriși care nu au confirmat încă și cei de pe lista de așteptare apar doar dacă au bifat, cu stadiul înscrierii lângă nume; o înscriere anulată sau expirată nu apare. Alegerea se poate schimba oricând din emailul de confirmare sau din „Înscrierile mele”.",
       "socialsNote": "Strava și Instagram apar doar lângă numele celor care au ales asta la înscriere.",
       "othersLead": "Apar cu numele și:",
@@ -284,6 +291,18 @@
         "few": "{count} înscriși",
         "other": "{count} de înscriși"
       },
+      "fillParts": "{taken} din {places} — {parts}",
+      "fillInProgress": "{count} în curs de confirmare",
+      "fillKept": {
+        "one": "{count} loc păstrat pentru lista de așteptare",
+        "few": "{count} locuri păstrate pentru lista de așteptare",
+        "other": "{count} de locuri păstrate pentru lista de așteptare"
+      },
+      "fillConfirmed": {
+        "one": "{count} confirmat",
+        "few": "{count} confirmați",
+        "other": "{count} de confirmați"
+      },
       "fillPlaces": {
         "one": "{count} loc",
         "few": "{count} locuri",
@@ -301,6 +320,11 @@
         "other": "Mulțumim! Toate cele {capacity} de locuri s-au ocupat. Fii primul pe lista de așteptare."
       },
       "waitingCount": "{count} pe lista de așteptare",
+      "offeredCount": {
+        "one": "{count} loc oferit din lista de așteptare",
+        "few": "{count} locuri oferite din lista de așteptare",
+        "other": "{count} de locuri oferite din lista de așteptare"
+      },
       "fullJoin": "Intră pe lista de așteptare — te anunțăm pe email când se eliberează un loc.",
       "fullOffer": "Când se eliberează un loc, primești un email și ai {hours} să confirmi — altfel locul trece mai departe.",
       "waitlistFull": "Locurile s-au ocupat și lista de așteptare e plină — ne pare rău.",
@@ -324,7 +348,8 @@
       "closed": "Înscrierile s-au închis pentru acest eveniment.",
       "closedRaceWeek": "Înscrierile s-au închis — vino la masă cu QR-ul din email.",
       "cancelled": "Evenimentul a fost anulat, așa că înscrierile s-au oprit.",
-      "completed": "Evenimentul s-a încheiat."
+      "completed": "Evenimentul s-a încheiat.",
+      "fromWaitlist": "Locurile se dau din lista de așteptare"
     },
     "registrationState": {
       "NOT_APPLICABLE": "Nu este necesară înscrierea",
@@ -457,6 +482,8 @@
         "languageNote": "Declarația se semnează în limba acestei pagini, iar PDF-ul și emailul sunt tot în ea. Pentru cealaltă limbă, schimbă limba din antet înainte să semnezi.",
         "adultsOnly": "O semnezi doar pentru tine, dacă ai împlinit {age} în ziua alergării; nu o semnezi în numele altcuiva, nici al unui minor.",
         "accept": "Am cel puțin {age} împliniți, am citit declarația de mai sus și o semnez pe propria răspundere",
+        "acceptInline": "Bifează această casetă ca să poți semna.",
+        "acceptSummary": "Bifează caseta de acceptare a declarației ca să poți semna.",
         "typedNameHelp": "Scrie numele tău complet. Apare ca o semnătură.",
         "birthDateHelp": "Pentru vârsta minimă a alergării: {age}, împliniți în ziua alergării. Nu o păstrăm și nu apare în declarație.",
         "tooYoung": "Vârsta minimă pentru această alergare este {age}, împliniți în ziua alergării. Declarația nu se poate semna.",
@@ -673,7 +700,8 @@
           "declaration_hold_set": "Declarație păstrată pentru o reclamație sau un litigiu",
           "declaration_hold_cleared": "Păstrarea declarației a fost scoasă",
           "promo_consent_changed": "Acordul pentru oferte și beneficii schimbat",
-          "family_resent": "Email retrimis familiei"
+          "family_resent": "Email retrimis familiei",
+          "offered_by_staff": "Ofertă trimisă înaintea listei de așteptare («Trimite-i oferta»)"
         }
       },
       "locale": {
@@ -1063,6 +1091,8 @@
       "neonLimitsTitle": "Salvezi limitele Neon?",
       "neonPlanTitle": "Schimbi planul Neon?",
       "neonPlanBody": "Costurile și limitele de pe această pagină se calculează după planul ales ori de câte ori Neon nu își spune singur planul.",
+      "vercelPlanTitle": "Schimbi planul Vercel?",
+      "vercelPlanBody": "Costurile de pe această pagină se calculează după planul și locurile alese.",
       "olderPicturesTitle": "Faci mărimile pentru telefon?",
       "olderPicturesBody": "Imaginile din lot primesc mărimile mai mici; adresa veche merge în continuare. Durează cam douăzeci de secunde. Un editor deschis pe o pagină cu ele va cere reîncărcarea.",
       "shownAddressTitle": "Schimbi adresa de contact afișată?",
@@ -1087,7 +1117,9 @@
       "menuOrderTitle": "Schimbi ordinea meniului?",
       "menuOrderBody": "Meniul site-ului și subsolul arată paginile în ordinea nouă, pentru toți vizitatorii, de la următoarea pagină deschisă.",
       "resendFamilyTitle": "Retrimiți emailul familiei?",
-      "resendFamilyBody": "Pleacă un singur email către adresa lor, pentru toți: {names}. Fiecare primește pasul la care a rămas, cu un link nou; linkurile din emailurile vechi nu mai merg."
+      "resendFamilyBody": "Pleacă un singur email către adresa lor, pentru toți: {names}. Fiecare primește pasul la care a rămas, cu un link nou; linkurile din emailurile vechi nu mai merg.",
+      "offerPlaceTitle": "Îi trimiți oferta?",
+      "offerPlaceBody": "{name} primește emailul «{message}» și are până {deadline} să semneze; sare înaintea celor dinaintea lui."
     },
     "errors": {
       "PICTURE_IN_USE": "Imaginea este folosită într-o pagină, într-un eveniment sau într-un album. Scoate-o de acolo mai întâi.",
@@ -1139,7 +1171,8 @@
       "LEGAL_NOTHING_DEPENDS": "Nu s-a șters nimic: între timp nu mai depinde nimic de această versiune. Reîncarcă pagina și șterge-o definitiv.",
       "LEGAL_RETIRE_IN_FORCE": "Nu s-a șters nimic: aceasta este versiunea în vigoare. Aprobă întâi versiunea următoare, apoi o poți șterge.",
       "LEGAL_ALREADY_DELETED": "Versiunea a fost deja ștearsă din listă. Textul ei rămâne în arhivă.",
-      "SEND_NOW_HOUR_SPENT": "Nu s-a trimis nimic: limita pe oră a Mailgun («Limita pe oră» din «Emailuri») nu mai are loc acum. Alege «Pune la coadă»; emailul pleacă singur când ora are din nou loc."
+      "SEND_NOW_HOUR_SPENT": "Nu s-a trimis nimic: limita pe oră a Mailgun («Limita pe oră» din «Emailuri») nu mai are loc acum. Alege «Pune la coadă»; emailul pleacă singur când ora are din nou loc.",
+      "OFFER_AFTER_CLOSE": "Înscrierile s-au închis, deci o ofertă ar expira pe loc; nu s-a schimbat nimic. La masă, folosește «Dă-i un loc»."
     },
     "editor": {
       "draftPreview": {
@@ -2005,7 +2038,12 @@
       },
       "membersOnly": "Doar pentru membrii BVR",
       "membersOnlyHelp": "Îl văd doar membrii autentificați, nu apare pe site. Înscrierile făcute rămân.",
-      "membersOnlyShort": "Doar membri"
+      "membersOnlyShort": "Doar membri",
+      "waitlistAutoOffer": "Ofertele din lista de așteptare pleacă automat",
+      "waitlistAutoOfferYes": "Da",
+      "waitlistAutoOfferNo": "Nu",
+      "waitlistAutoOfferHelp": "Pe „Da”, un loc eliberat sau adăugat se oferă pe loc primului din lista de așteptare. Pe „Nu”, locurile rămân libere până le dai tu.",
+      "waitlistAutoOfferHelpMore": "Le dai din «Coada de înscrieri», cu «Trimite-i oferta», sau, la masă, cu «Dă-i un loc». Cât timp cineva așteaptă, cei noi intră tot pe listă."
     },
     "preview": {
       "notice": "Previzualizare pentru echipă. Starea acestui text este: {status}. Pagina nu este publică și nu este indexată.",
@@ -2109,6 +2147,7 @@
       "confirmed": "Confirmate",
       "holds": "Rezervate",
       "free": "Libere",
+      "offeredFigure": "Oferite",
       "waiting": "În așteptare",
       "holdsHelp": "„Rezervate” sunt locurile ținute cât cineva semnează declarația ({hold}) sau răspunde la o ofertă ({offer}). Libere = locuri − confirmate − rezervate.",
       "lineTitle": "Lista de așteptare ({count})",
@@ -2299,6 +2338,7 @@
         "minimumAge": "Vârsta minimă a evenimentului, cu unitatea („16 ani”): la un concurs cel puțin 14 ani, la o alergare de grup cel puțin 18. Fiecare declarație o spune într-o propoziție a ei",
         "participantListStates": "Doar în nota de confidențialitate: cele trei stadii de lângă nume pe lista publică. Fără el în nota în vigoare, doar numele confirmate",
         "participantListSocials": "Doar în nota de confidențialitate: bifa cu care cineva își arată Strava și Instagram pe lista publică. Fără el în nota în vigoare, niciodată",
+        "participantListNumbers": "Doar în nota de confidențialitate (și în termeni): numărul de concurs de lângă numele celor confirmați pe lista publică. Fără el în nota în vigoare, lista nu arată niciun număr",
         "publicListPeriod": "Doar în nota de confidențialitate: cât rămâne pe site lista publică de participanți după eveniment, din „Termene”, cu unitatea inclusă; după aceea lista se închide singură",
         "newsletterTopics": "Doar în nota de confidențialitate: temele abonării de pe pagina de contact. Fără el în nota în vigoare, abonarea nu apare",
         "teamPage": "Doar în nota de confidențialitate: numele paginii Echipa, între ghilimele. Cu el în nota în vigoare, /admin/tasks consideră pagina descrisă",
@@ -2352,6 +2392,7 @@
         "redo": "Înainte"
       },
       "listSocialsMissing": "Nota în vigoare nu descrie încă Strava și Instagram pe lista publică, deci nu apar. Aprobă o notă nouă din șablon.",
+      "listNumbersMissing": "Nota în vigoare nu descrie încă numărul de concurs pe lista publică, deci lista nu arată numere. Aprobă o notă nouă din șablon.",
       "listStatesMissing": "Nota în vigoare nu descrie încă stadiile de pe lista publică, deci lista arată doar confirmații. Aprobă o notă nouă din șablon.",
       "batch": {
         "toolsTitle": "Toate textele deodată",
@@ -2567,6 +2608,37 @@
         "estimateMore": "Sunt calculate din consumul citit de la Neon. Factura are în plus spațiul și istoricul de restaurare.",
         "fieldHelpMore": "Tarifele și limitele vin din consola Neon și de pe neon.com/pricing. Contul are amândouă proiectele, QA și producția.",
         "decemberMore": "Alege Free doar dacă facturile spun asta, și verifică înainte limitele Free din acel moment, pe amândouă proiectele."
+      },
+      "vercelPlan": {
+        "title": "Planul Vercel (găzduirea)",
+        "intro": "Planul Vercel îl spune clubul aici; costurile de pe pagină se calculează după el.",
+        "introMore": "Site-ul nu întreabă Vercel ce plan are contul. Când schimbați planul în contul Vercel, schimbați-l și aici.",
+        "inForce": {
+          "HOBBY": "Vercel: Hobby, gratuit.",
+          "PRO": "Vercel: Pro, {seats}, {price} USD pe lună + TVA."
+        },
+        "seats": {
+          "one": "{count} loc",
+          "few": "{count} locuri",
+          "other": "{count} de locuri"
+        },
+        "updated": "Setat de {who}, {when}. Notă: {note}",
+        "updatedNoWho": "Setat {when}. Notă: {note}",
+        "field": "Planul Vercel",
+        "fieldHelp": "Prețuri verificate {checkedOn}; se setează pe fiecare mediu în parte.",
+        "fieldHelpMore": "Pro se plătește pe loc de dezvoltator; locurile doar pentru vizualizare sunt gratuite.",
+        "option": {
+          "HOBBY": "{name} — gratuit, doar pentru folosire necomercială",
+          "PRO": "{name} — {price} USD pe loc, pe lună, + TVA"
+        },
+        "seatsField": "Locuri de dezvoltator",
+        "seatsHelp": "Câte persoane publică site-ul; contează doar pe Pro, de la 1 la {max}.",
+        "note": "Notă (de ce, până când)",
+        "back": "În ziua în care renunțați la Pro, alegeți aici Hobby.",
+        "save": "Salvează planul Vercel",
+        "saving": "Se salvează…",
+        "saved": "Planul Vercel a fost salvat; costurile de pe pagină îl folosesc de acum.",
+        "readOnly": "Planul îl schimbă Administratorul; cifrele de mai sus sunt la zi."
       },
       "neonLimits": {
         "title": "Limitele bazei de date",
@@ -2923,6 +2995,19 @@
             "Aprobă și termenii din șablon, dacă nu i-ai aprobat deja, ca să spună același lucru despre listă."
           ]
         },
+        "listNumbersNotice": {
+          "title": "Nota de confidențialitate: numărul de concurs pe lista publică",
+          "todo": "Nota în vigoare nu descrie încă numărul de concurs pe lista publică, așa că lista nu arată numerele, până când clubul aprobă o notă care îl descrie.",
+          "done": "Nota în vigoare descrie numărul de concurs: lista îl arată într-o coloană „Nr.” pentru toți cei confirmați care au număr; cei fără număr au „—”.",
+          "how": [
+            "Înainte de aprobare, scrie celor deja înscriși: /admin/events → evenimentul → „Trimite un mesaj participanților”. Spune că numărul lor apare lângă nume la „Cine vine” și cum renunță (următorul pas).",
+            "Renunțarea: din „Înscrierile mele” (sau linkul din email) apasă „Nu vreau să apar pe lista de participanți & rezultate”; numărul dispare odată cu numele.",
+            "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Secțiunea despre lista publică descrie numărul de concurs de lângă numele celor confirmați.",
+            "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”.",
+            "De atunci încolo, lista arată coloana „Nr.” pentru toți cei confirmați care au număr, indiferent de nota sub care s-au înscris.",
+            "Aprobă și termenii din șablon, dacă nu i-ai aprobat deja, ca să spună același lucru despre listă."
+          ]
+        },
         "newsletterNotice": {
           "title": "Nota de confidențialitate: newsletterul",
           "todo": "Nota în vigoare nu descrie încă newsletterul, așa că pagina de contact nu arată abonarea la noutăți și nu păstrăm nicio adresă pentru el, până când clubul aprobă o notă care îl descrie.",
@@ -3015,27 +3100,58 @@
       "freeVerdict": {
         "freeExceptDomain": "Da, în afară de domeniu: toate serviciile sunt pe planuri gratuite și nu se plătește nimic lunar.",
         "paysForUsage": "Aproape: se plătesc domeniul și baza de date (Neon Launch, la consum), iar restul serviciilor sunt pe planuri gratuite.",
+        "paysForPlans": "Se plătesc: {services}; restul serviciilor sunt pe planuri gratuite.",
         "freeButAtALimit": "Da, dar e-mailurile gratuite de azi s-au terminat, iar cele rămase pleacă după miezul nopții.",
         "notFree": "Atenție: e publicat un eveniment cu taxă, iar planurile gratuite nu țin cont că suntem ONG.",
         "paysForUsageMore": "Launch e fără abonament și a fost ales de club pe 22 septembrie 2026.",
         "freeButAtALimitMore": "Nu se pierde nimic. Dacă deschizi înscrierile acum, confirmările ajung mâine dimineață.",
-        "notFreeMore": "Nu e neapărat o problemă: o donație e permisă, o taxă obligatorie nu, chiar dacă acoperă doar costurile."
+        "notFreeMore": "Nu e neapărat o problemă: o donație e permisă, o taxă obligatorie nu, chiar dacă acoperă doar costurile.",
+        "paidName": {
+          "domain": "domeniul (.com)",
+          "mailgun": "e-mailurile (Mailgun {plan})",
+          "vercel": "găzduirea (Vercel {plan}, {seats})",
+          "neon": "baza de date (Neon {plan}, la consum)"
+        }
       },
       "costTitle": "Cât costă",
       "costToday": {
         "nothing": "Astăzi clubul nu plătește nimic: toate serviciile sunt pe planuri gratuite.",
-        "total": "Astăzi clubul plătește {total} pe an.",
+        "sentence": "Astăzi clubul plătește {month} pe lună, adică {year} pe an.",
+        "sentenceEstimated": "Astăzi clubul plătește circa {month} pe lună, adică {year} pe an.",
         "amount": "{amount} {currency}",
         "amountPlusVat": "{amount} {currency} + TVA",
         "free": "gratuit",
         "notTaken": "nimic încă",
-        "usage": "circa {amount} {currency}/lună, la consum",
         "usageUnknown": "la consum — ritmul nu e măsurat aici",
-        "estimated": "Din care baza de date e o estimare la ritmul lunii (× 12), nu o factură."
+        "billedMonthly": "{month} {currency}/lună, facturat lunar · {year} {currency} pe an",
+        "billedMonthlyPlusVat": "{month} {currency}/lună + TVA, facturat lunar · {year} {currency} pe an + TVA",
+        "billedYearly": "{year} {currency} pe an, facturat anual · circa {month} {currency}/lună",
+        "billedYearlyPlusVat": "{year} {currency} pe an + TVA, facturat anual · circa {month} {currency}/lună + TVA",
+        "usageBoth": "circa {month} {currency}/lună, la consum · circa {year} {currency} pe an",
+        "estimated": "Din care baza de date e o estimare la ritmul lunii, nu o factură."
+      },
+      "costTable": {
+        "caption": "Costul fiecărui serviciu, pe lună și pe an",
+        "service": "Serviciu",
+        "perMonth": "Pe lună",
+        "perYear": "Pe an",
+        "total": "Total",
+        "unmeasured": "ritm nemăsurat",
+        "plusVat": "+ TVA",
+        "help": "„Pe lună” și „Pe an”: unul e suma din factura firmei, celălalt e calculat din ea. „≈” e o estimare la ritmul lunii.",
+        "name": {
+          "domain": "Domeniul",
+          "mailgun": "Mailgun",
+          "vercel": "Vercel",
+          "neon": "Neon",
+          "zitadel": "Zitadel",
+          "scheduler": "cron-job.org + GitHub"
+        }
       },
       "nextSpend": {
         "mailgun": "Prima cheltuială care urmează: o lună de Mailgun Basic, {cost}.",
         "vercel": "Prima cheltuială care urmează: Vercel Pro, {cost}.",
+        "none": "Nu urmează nicio cheltuială nouă: ce e luat temporar se poate opri după cursă.",
         "mailgunMore": "Se cumpără pentru o singură cursă, atunci când într-o zi se așteaptă mai multe înscrieri decât acoperă e-mailurile gratuite.",
         "vercelMore": "Apare doar dacă site-ul începe să ceară bani pentru participare sau dacă codul site-ului se mută pe contul clubului."
       },
@@ -3095,7 +3211,15 @@
           "closeYes": "Este publicat un eveniment cu taxă — verifică cum este formulat.",
           "closeNo": "Niciun eveniment publicat nu cere bani.",
           "bumpBack": "Nu se dă înapoi: e o schimbare a felului în care e folosit site-ul, nu un vârf de trafic.",
-          "more": "Peste o limită a planului gratuit, funcția se oprește 30 de zile, fără plată care s-o repornească: urcați planul înainte de o cursă, nu în timpul ei."
+          "more": "Peste o limită a planului gratuit, funcția se oprește 30 de zile, fără plată care s-o repornească: urcați planul înainte de o cursă, nu în timpul ei.",
+          "pro": {
+            "freeGives": "Pro: {seats}, câte {seatPrice} USD pe lună, cu {credit} USD de consum inclus.",
+            "ceiling": "Nu are o limită măsurată aici: creditul de consum se vede în contul Vercel.",
+            "whenCrossed": "Consumul peste credit se plătește în plus, pe aceeași factură.",
+            "bumpBack": "Se ia pentru lunile cursei și se poate da înapoi după ea; nota de pe card spune când și de ce.",
+            "more": "Pro se ia ca funcțiile site-ului să nu se oprească înainte de cursă; nota de pe card spune când a fost luat.",
+            "close": "Pe Pro, regula „doar necomercial” nu se mai aplică."
+          }
         },
         "neon": {
           "name": "Neon (baza de date)",
@@ -4015,7 +4139,8 @@
       "handedBibNoSpares": "Scrie numărul pe care i-l dai, sau lasă gol și site-ul alege singur unul.",
       "handedBibFastTrackOnly": "Doar pentru cine e confirmat aici, la masă (bifa de mai sus).",
       "nextSpare": "Rezerva următoare: {number}",
-      "sparesOut": "Numerele de rezervă s-au terminat: scrie numărul pe care i-l dai, sau lasă gol și site-ul alege singur unul."
+      "sparesOut": "Numerele de rezervă s-au terminat: scrie numărul pe care i-l dai, sau lasă gol și site-ul alege singur unul.",
+      "offerPlace": "Trimite-i oferta"
     },
     "emails": {
       "title": "Emailurile trimise participanților",
@@ -6267,8 +6392,18 @@
       "now": {
         "details": "După trimitere îți scriem pe email ca să confirmi adresa.",
         "confirm": "Ți-am trimis un email cu un link de confirmare.",
-        "declare": "Mai rămâne un pas: citește și semnează declarația — aici, sau pe hârtie la masa de înscrieri în ziua cursei. Locul tău este rezervat. După ce semnezi, îți trimitem pe email declarația semnată (PDF) și numărul de concurs — de obicei în câteva minute, cel târziu într-o oră.",
-        "declareScheduled": "Mai rămâne un pas: citește și semnează declarația — aici, sau pe hârtie la masa de înscrieri în ziua cursei. Locul tău este rezervat. După ce semnezi, îți trimitem pe email declarația semnată (PDF) și numărul de concurs — pleacă la trecerea programată a platformei, în cel mult {wait}.",
+        "declare": {
+          "emailJustSent": "Mai rămâne un pas: citește și semnează declarația din emailul pe care tocmai ți l-am trimis — sau pe hârtie la masa de înscrieri în ziua cursei. Locul tău este rezervat. După ce semnezi, îți trimitem pe email declarația semnată (PDF) și numărul de concurs — de obicei în câteva minute, cel târziu într-o oră.",
+          "emailHeldUntil": "Locul tău este rezervat. Declarația ți-o cerem pe email cu {opens} înainte de start — o semnezi atunci, online sau pe hârtie la masa de înscrieri; după ce semnezi, îți trimitem declarația semnată (PDF) și numărul de concurs — de obicei în câteva minute, cel târziu într-o oră.",
+          "onThisPage": "Mai rămâne un pas: citește și semnează declarația mai jos — sau pe hârtie la masa de înscrieri în ziua cursei. Locul tău este rezervat. După ce semnezi, îți trimitem pe email declarația semnată (PDF) și numărul de concurs — de obicei în câteva minute, cel târziu într-o oră.",
+          "emailReceived": "Mai rămâne un pas: citește și semnează declarația din emailul pe care l-ai primit — sau pe hârtie la masa de înscrieri în ziua cursei. Locul tău este rezervat. După ce semnezi, îți trimitem pe email declarația semnată (PDF) și numărul de concurs — de obicei în câteva minute, cel târziu într-o oră."
+        },
+        "declareScheduled": {
+          "emailJustSent": "Mai rămâne un pas: citește și semnează declarația din emailul care pleacă spre tine în cel mult {wait} — sau pe hârtie la masa de înscrieri în ziua cursei. Locul tău este rezervat. După ce semnezi, îți trimitem pe email declarația semnată (PDF) și numărul de concurs.",
+          "emailHeldUntil": "Locul tău este rezervat. Declarația ți-o cerem pe email cu {opens} înainte de start — o semnezi atunci, online sau pe hârtie la masa de înscrieri; după ce semnezi, îți trimitem declarația semnată (PDF) și numărul de concurs — pleacă la trecerea programată a platformei, în cel mult {wait}.",
+          "onThisPage": "Mai rămâne un pas: citește și semnează declarația mai jos — sau pe hârtie la masa de înscrieri în ziua cursei. Locul tău este rezervat. După ce semnezi, îți trimitem pe email declarația semnată (PDF) și numărul de concurs — pleacă la trecerea programată a platformei, în cel mult {wait}.",
+          "emailReceived": "Mai rămâne un pas: citește și semnează declarația din emailul pe care l-ai primit — sau pe hârtie la masa de înscrieri în ziua cursei. Locul tău este rezervat. După ce semnezi, îți trimitem pe email declarația semnată (PDF) și numărul de concurs — pleacă la trecerea programată a platformei, în cel mult {wait}."
+        },
         "done": "Înscrierea ta este confirmată. Ne vedem la start!"
       }
     },
@@ -6443,6 +6578,7 @@
       "pending": "Se confirmă…",
       "done": "Adresa de email a fost confirmată.",
       "doneTitle": "Adresa a fost confirmată",
+      "doneWaitlist": "Ești pe lista de așteptare. Dacă se eliberează un loc, îți scriem pe email cu ce ai de făcut.",
       "eventOff": "Evenimentul a fost anulat sau s-a încheiat, așa că înscrierea nu mai continuă: nu ți-am rezervat un loc și nu trebuie să faci nimic.",
       "waitlistFull": "Locurile și lista de așteptare sunt pline, așa că adresa nu a fost confirmată și nu ți-am rezervat nimic. Linkul din email rămâne valabil {confirmation} de la trimiterea formularului: dacă între timp se eliberează un loc pe lista de așteptare, deschide-l din nou.",
       "noWaitlist": "Toate locurile au fost ocupate și evenimentul nu are listă de așteptare, așa că adresa nu a fost confirmată și nu ți-am rezervat nimic. Linkul din email rămâne valabil {confirmation} de la trimiterea formularului: dacă între timp se eliberează un loc, deschide-l din nou.",
@@ -6485,7 +6621,9 @@
         "Linkul are termen; dacă nu confirmi la timp, locul merge mai departe.",
         "Poți renunța oricând din emailul primit."
       ],
-      "pressFailed": "Nu am putut înregistra semnătura. Bifează că ai citit declarația și încearcă din nou — linkul tău este în regulă.",
+      "pressFailed": "Nu am putut înregistra semnătura. Încearcă din nou — linkul tău este în regulă.",
+      "acceptSummary": "Bifează caseta „Am citit și accept declarația…” ca să poți semna.",
+      "acceptInline": "Bifează această casetă ca să poți semna.",
       "idDocumentType": "Ce act prezinți",
       "idDocumentTypeHelp": "Alege tipul actului — apare în declarație, împreună cu seria și numărul.",
       "typedNameHelpWithName": "Te-ai înscris ca <strong>{name}</strong> — scrie exact acest nume. Apare ca semnătură.",
@@ -7402,6 +7540,7 @@
       "honeypotOn": "Honeypot: pornit.",
       "honeypotOff": "Honeypot: oprit.",
       "neonPlan": "Plan Neon salvat.",
+      "vercelPlan": "Plan Vercel salvat.",
       "jobCadence": "Interval salvat.",
       "budgetThresholds": "Pragurile bugetului salvate.",
       "deadlines": "Termene salvate.",
@@ -7530,7 +7669,8 @@
       "memberCodeDeleted": "Codul a fost șters.",
       "declarationHeld": "Declarația e păstrată. Nu se mai șterge până scoți păstrarea.",
       "declarationReleased": "Păstrarea a fost scoasă.",
-      "menuOrder": "Ordinea meniului a fost salvată."
+      "menuOrder": "Ordinea meniului a fost salvată.",
+      "registrationOffered": "Oferta e trimisă: are termenul obișnuit ca să semneze declarația."
     }
   },
   "Network": {

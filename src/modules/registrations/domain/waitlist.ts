@@ -36,6 +36,23 @@ export function waitlistLength(input: Pick<WaitlistInput, "waitlisted" | "openOf
 }
 
 /**
+ * Whether a newcomer must join the line rather than take a free place (§615): somebody is waiting in
+ * it — a `WAITLISTED` row, a person with no place yet. A free place is given from the line while
+ * anybody waits there, whether the event offers its places on its own or its organizer hands them
+ * out (`events.waitlist_auto_offer`): a newcomer who could take a free place past the people waiting
+ * would make a queue nobody can trust.
+ *
+ * An open offer is not somebody waiting (§160): its holder already has a place, which the offer
+ * occupies, and a newcomer taking a *different* free place overtakes nobody. Counting offers here
+ * would change what «Da» does — a full line's lapsed hold could no longer go to a newcomer (§160),
+ * and a newcomer after a raise past the line would be offered a place instead of holding one — for
+ * no one's benefit. `kind` is in no condition (§30): only the count.
+ */
+export function newcomerJoinsLine(input: Pick<WaitlistInput, "waitlisted">): boolean {
+  return input.waitlisted > 0;
+}
+
+/**
  * How many more the waiting list takes, or `null` when it has no limit.
  *
  * Never below nought. A limit lowered under the length of the line removes nobody — the people
@@ -141,4 +158,22 @@ export function waitlistRefusalCode(error: unknown): "WAITLIST_FULL" | "NO_WAITL
   }
   const refusal = waitlistRefusalOf(error);
   return refusal === null ? null : refusal === NO_WAITLIST ? "NO_WAITLIST" : "WAITLIST_FULL";
+}
+
+/**
+ * «Trimite-i oferta» refused because the registration has closed (§615): an offer made now would be
+ * born lapsed — its deadline is capped by the close and the start (§420), already behind — as the
+ * automatic offer refuses to make one then (`fillAvailableSpots`). The desk's «Dă-i un loc», which
+ * confirms on paper at once, is the verb for after the close. A marker, like the others above; the
+ * backoffice says `Admin.errors.OFFER_AFTER_CLOSE`.
+ */
+export const OFFER_AFTER_CLOSE = "OFFER_AFTER_CLOSE";
+
+export function offerAfterCloseError(): DomainError {
+  return new DomainError("VALIDATION_ERROR", "OFFER_AFTER_CLOSE: registration has closed, so an offer made now would already be lapsed", [OFFER_AFTER_CLOSE]);
+}
+
+/** The backoffice's word for that refusal, or null for any other error. */
+export function offerRefusalCode(error: unknown): typeof OFFER_AFTER_CLOSE | null {
+  return error instanceof DomainError && error.code === "VALIDATION_ERROR" && error.fields.includes(OFFER_AFTER_CLOSE) ? OFFER_AFTER_CLOSE : null;
 }

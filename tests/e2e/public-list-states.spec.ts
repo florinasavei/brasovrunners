@@ -40,12 +40,20 @@ import { hydrated, signIn } from "./support/featured-event";
  * exists only on an event with a list and under a notice that names the marker — this spec seeds
  * the one and holds the lock on the other; a form spec reading the notice while this one flips it
  * would flake.
+ *
+ * The notice the local seed approves from the current template also names
+ * `{{participantListNumbers}}` (§613), which puts a «Nr.» column on the list — but only when a listed
+ * confirmed runner wears a race number. The runners seeded here are written straight to the table
+ * with none, so the table must stay the three columns it was: one step says so, on both projects.
+ * The column itself is proven by `tests/integration/registrations/start-list-numbers.test.ts`.
  */
 
 const LOCK_KEY = 390_039_001;
 const MARKER = "{{participantListStates}}";
 /** The socials beside a name (§500): the platform's template carries it beside the states' marker. */
 const SOCIALS_MARKER = "{{participantListSocials}}";
+/** The race number beside a confirmed name (§613): the template carries it beside the other two. */
+const NUMBERS_MARKER = "{{participantListNumbers}}";
 const LINK_REL = "noopener noreferrer nofollow ugc";
 
 function databaseUrl(): string {
@@ -422,6 +430,14 @@ test.describe("BR-REQ-039-01 the public list's states, behind the privacy notice
         ).toHaveAccessibleName(`Ana Confirmata ${tag} on Strava`);
       });
 
+      await test.step("nobody listed wears a race number: no «Nr.» column, whatever the notice names (§613)", async () => {
+        const ro = await readList(page, `/ro/evenimente/${event.slug}-ro`, tag);
+        await expect(ro.list.getByRole("columnheader")).toHaveText(["#", "Nume", "Club"]);
+        await expect(ro.list.locator('[data-col="number"]')).toHaveCount(0);
+        const en = await readList(page, `/en/events/${event.slug}-en`, tag);
+        await expect(en.list.getByRole("columnheader")).toHaveText(["#", "Name", "Club"]);
+      });
+
       await test.step("the form's «Vreau să apar» says what the list will show beside the name", async () => {
         await page.goto(`/ro/evenimente/${event.slug}-ro/inscriere`);
         // The tick names the list and the results as one disclosure (§570).
@@ -470,13 +486,17 @@ test.describe("BR-REQ-039-01 the public list's states, behind the privacy notice
         const current = await withDatabase(noticeInForce);
         const withoutMarker = current.translations.map((translation) => ({
           ...translation,
-          body: JSON.parse(JSON.stringify(translation.body).split(MARKER).join("").split(SOCIALS_MARKER).join("")),
+          // The race number's marker too (§613), so `/admin/legal` names all three missing.
+          body: JSON.parse(
+            JSON.stringify(translation.body).split(MARKER).join("").split(SOCIALS_MARKER).join("").split(NUMBERS_MARKER).join(""),
+          ),
         }));
         await asSuperadmin(page);
         await approve(page, await withDatabase((client) => insertDraft(client, withoutMarker)));
         await page.goto("/ro/admin/legal");
         await expect(page.locator("#main").getByTestId("legal-list-states-missing")).toBeVisible();
         await expect(page.locator("#main").getByTestId("legal-list-socials-missing")).toBeVisible();
+        await expect(page.locator("#main").getByTestId("legal-list-numbers-missing")).toBeVisible();
       });
 
       await test.step("without the marker: confirmed names alone, no words, in both languages", async () => {

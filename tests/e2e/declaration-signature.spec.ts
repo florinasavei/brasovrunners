@@ -88,6 +88,38 @@ test.describe("BR-REQ-033-02 §314 the signature is the registered name", () => 
     if (await idDocument.count()) await idDocument.fill("BV 123456");
   }
 
+  test("§616 pressing «Semnează» with the acceptance box unticked names the box in the summary and under it", async ({ page }) => {
+    const registration = await awaitingDeclaration(page, "unticked");
+    await page.goto(registration.link);
+    await hydrated(page);
+    const declarationUrl = page.url();
+
+    // Everything but the tick: the signature typed, the press made.
+    await page.locator('[name="typedName"]').fill(registration.registeredName);
+    const idDocument = page.locator('[name="idDocument"]');
+    if (await idDocument.count()) await idDocument.fill("BV 123456");
+    await page.getByRole("button", { name: "Semnează", exact: true }).click();
+
+    // No round trip: the same page, the summary naming the box, the helper under it, the input marked invalid.
+    const summary = page.getByTestId("unticked-box-summary");
+    await expect(summary).toBeVisible();
+    await expect(summary).toContainText("Bifează caseta");
+    await expect(summary).toBeFocused();
+    const helper = page.getByTestId("checkbox-error");
+    await expect(helper).toBeVisible();
+    await expect(helper).toContainText("Bifează această casetă ca să poți semna.");
+    await expect(page.locator('[name="accepted"]')).toHaveAttribute("aria-invalid", "true");
+    expect(page.url()).toBe(declarationUrl);
+    expect(await registrationStatus(registration.id)).toBe("PENDING_DECLARATION");
+
+    // Ticked, both go away; and the press signs.
+    await page.locator('[name="accepted"]').check();
+    await expect(summary).toBeHidden();
+    await expect(helper).toBeHidden();
+    await page.getByRole("button", { name: "Semnează", exact: true }).click();
+    await expect(page).toHaveURL(/done=confirmed/, { timeout: 30_000 });
+  });
+
   test("the browser refuses a name that is not the registered one, and the right one in lower case signs", async ({ page }) => {
     const registration = await awaitingDeclaration(page, "js");
     await page.goto(registration.link);

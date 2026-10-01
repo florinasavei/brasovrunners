@@ -165,9 +165,12 @@ export function withReleasedRow(text, { to, clauses }) {
 
 /**
  * The item number for a placeholder line: the item whose commits include the line's commit; with
- * one item, every line this batch wrote (its merge with `qa` included). Null when not this batch's.
+ * one item, every line this batch wrote. Null when not this batch's — and null for a line a merge
+ * commit wrote (a conflict a merge resolved), whatever the item count: nobody's branch wrote it,
+ * so it is listed for a hand decision rather than given the one item's number (§607).
  */
-export function numberForLine({ sha, numberOf, inBatch, uncommitted, onlyNumber }) {
+export function numberForLine({ sha, numberOf, inBatch, uncommitted, onlyNumber, merges = new Set() }) {
+  if (merges.has(sha)) return null;
   if (sha && numberOf.has(sha)) return numberOf.get(sha);
   const ours = sha === uncommitted || inBatch.has(sha);
   if (ours && onlyNumber != null) return onlyNumber;

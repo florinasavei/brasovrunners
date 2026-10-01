@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useTransition } from "react";
+import { rememberTick, spendTick, wasTicked } from "./filter-reopen";
 
 /**
  * The listing's filter panel, applied on each tick (§413) — an enhancement, never the mechanism.
@@ -25,10 +26,29 @@ import { useEffect, useRef, useTransition } from "react";
  * and the `<details>` would shut under the reader's finger. The tick itself says the panel was
  * open: it is remembered here, in the island's own module (which a soft navigation keeps), and the
  * next mount opens its panel again, once.
+ *
+ * The memory is `filter-reopen.ts`: the scope ticked and the address it goes to, so a note nobody took
+ * (the ticked panel stopped rendering) expires by itself — a later mount on another address ignores it.
+ *
+ * **Which panel** (§611): the listing draws two — the cards ahead's and the past section's, inside
+ * that section's own fold — so what is remembered is the `scope` that was ticked, and only that
+ * panel reopens; the other is left as its page drew it. The past panel's fold sits inside the
+ * section's `<details>`: `closest("details")` from the form is the panel's own fold, and reopening it
+ * opens every fold around it too, so a reader who unticked the section's last box is not left with
+ * its fold shut over the panel they were using.
  */
-let reopenAfterTick = false;
+function takeReopen(scope: string): boolean {
+  const mine = wasTicked(scope, window.location.pathname + window.location.search);
+  setTimeout(spendTick, 0);
+  return mine;
+}
 
-export default function FilterAutoApply({ ticked }: { ticked: string[] }) {
+/** The panel's own fold, and every `<details>` around it, open. */
+function openFolds(fold: HTMLDetailsElement | null) {
+  for (let details = fold; details; details = details.parentElement?.closest("details") ?? null) details.open = true;
+}
+
+export default function FilterAutoApply({ scope, ticked }: { scope: string; ticked: string[] }) {
   const anchor = useRef<HTMLSpanElement>(null);
   const router = useRouter();
   const [, startTransition] = useTransition();
@@ -37,35 +57,36 @@ export default function FilterAutoApply({ ticked }: { ticked: string[] }) {
     const form = anchor.current?.closest("form");
     if (!form) return;
     form.dataset.enhanced = "true";
-    const fold = form.closest("details");
-    if (reopenAfterTick && fold) fold.open = true;
-    reopenAfterTick = false;
+    if (takeReopen(scope)) openFolds(form.closest("details"));
     const apply = () => {
-      reopenAfterTick = true;
       const params = new URLSearchParams();
       for (const [name, value] of new FormData(form)) if (typeof value === "string") params.append(name, value);
       const action = form.getAttribute("action") ?? window.location.pathname;
       const query = params.toString();
-      startTransition(() => router.push(query ? `${action}?${query}` : action, { scroll: false }));
+      const target = query ? `${action}?${query}` : action;
+      const to = new URL(target, window.location.href);
+      rememberTick(scope, to.pathname + to.search);
+      startTransition(() => router.push(target, { scroll: false }));
     };
     form.addEventListener("change", apply);
     return () => {
       form.removeEventListener("change", apply);
       delete form.dataset.enhanced;
     };
-  }, [router]);
+  }, [router, scope]);
 
   const key = ticked.join("&");
   useEffect(() => {
-    // The tick landed on this same page (no fresh mount): nothing left to reopen later.
-    reopenAfterTick = false;
     const form = anchor.current?.closest("form");
     if (!form) return;
+    // The tick landed on this same page (no fresh mount): nothing left to reopen later — but a fold
+    // around the panel may have followed the new state shut (the past section's, §611).
+    if (takeReopen(scope)) openFolds(form.closest("details"));
     const state = new Set(key ? key.split("&") : []);
     for (const box of form.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')) {
       box.checked = state.has(`${box.name}=${box.value}`);
     }
-  }, [key]);
+  }, [key, scope]);
 
   return <span ref={anchor} hidden />;
 }

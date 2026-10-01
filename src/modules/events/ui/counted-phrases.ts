@@ -18,10 +18,23 @@ type Say = (key: string, values?: Record<string, string | number>) => string;
  * from the same two numbers: the catalogue decides where the words go, this only picks the forms.
  */
 export function fillPhrase(say: Say, locale: string, fill: PublicFill): string {
-  return say("cta.fill", {
-    taken: say(`cta.fillTaken.${countForm(fill.taken, locale)}`, { count: fill.taken }),
-    places: say(`cta.fillPlaces.${countForm(fill.capacity, locale)}`, { count: fill.capacity }),
-  });
+  const taken = say(`cta.fillTaken.${countForm(fill.taken, locale)}`, { count: fill.taken });
+  const places = say(`cta.fillPlaces.${countForm(fill.capacity, locale)}`, { count: fill.capacity });
+  /*
+    The parts after the dash (§615; the owner read «105 înscriși» beside 86 confirmed names as an
+    inconsistency): the confirmed and those in progress when anything is in progress, and the places
+    kept for the waiting list when it has a claim — «6 înscriși din 10 locuri — 4 confirmați, 2 în curs
+    de confirmare, 4 locuri păstrate pentru lista de așteptare». Only the parts that exist.
+  */
+  const parts: string[] = [];
+  const progress = fill.confirmed === undefined ? 0 : fill.taken - fill.confirmed;
+  if (fill.confirmed !== undefined && progress > 0) {
+    parts.push(say(`cta.fillConfirmed.${countForm(fill.confirmed, locale)}`, { count: fill.confirmed }));
+    parts.push(say("cta.fillInProgress", { count: progress }));
+  }
+  if (fill.kept !== undefined && fill.kept > 0) parts.push(say(`cta.fillKept.${countForm(fill.kept, locale)}`, { count: fill.kept }));
+  if (parts.length === 0) return say("cta.fill", { taken, places });
+  return say("cta.fillParts", { taken, places, parts: parts.join(", ") });
 }
 
 /**
@@ -46,6 +59,28 @@ export function fullThanksPhrase(say: Say, locale: string, capacity: number, wai
 /** "3 pe lista de așteptare" (§587, amending §346): beside the free places, once anybody waits. */
 export function waitingPhrase(say: Say, waiting: number): string {
   return say("cta.waitingCount", { count: waiting });
+}
+
+/**
+ * "1 loc oferit din lista de așteptare" / "1 place offered from the waiting list" (§612): a place
+ * promised to the head of the line, which `computeOccupied` counts as taken and is not free — but is
+ * not somebody still waiting either. Romanian's three forms through `countForm`: «1 loc oferit»,
+ * «2 locuri oferite», «20 de locuri oferite».
+ */
+export function offeredPhrase(say: Say, locale: string, offered: number): string {
+  return say(`cta.offeredCount.${countForm(offered, locale)}`, { count: offered });
+}
+
+/**
+ * What an open event says about its line after the free places (§612, amending §587): the offers
+ * still open, then the people waiting with no offer yet — each only when it has anybody, in that
+ * order. The card joins them with a middle dot; the event page draws one line each.
+ */
+export function openLinePhrases(say: Say, locale: string, line: { offered: number; waitlisted: number }): string[] {
+  const phrases: string[] = [];
+  if (line.offered > 0) phrases.push(offeredPhrase(say, locale, line.offered));
+  if (line.waitlisted > 0) phrases.push(waitingPhrase(say, line.waitlisted));
+  return phrases;
 }
 
 /**

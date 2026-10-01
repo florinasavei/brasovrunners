@@ -148,6 +148,23 @@ describe("§346 the rendered start list carries a name only for those who ticked
     expect(html).not.toMatch(/<details[^>]*data-nosnippet=""/);
   });
 
+  /*
+    §613: the race number is a column only behind the privacy notice's marker. With no notice that
+    names it — here, none at all — a named runner who wears a number is still a three-column row.
+  */
+  it("shows no race-number column and no number without a notice that describes it", async () => {
+    const event = await createEvent();
+    await createRegistration(event.id, { name: "Ana Popescu", email: "ana@example.org", bibNumber: 317, listOptOut: false });
+
+    const html = renderToStaticMarkup(await StartList({ event }));
+
+    expect(html).toContain("Ana Popescu");
+    expect(html).not.toContain("317");
+    expect(html).not.toContain('data-col="number"');
+    expect(html).not.toContain(ro.Event.startList.columnNumberFull);
+    expect(html).toContain(ro.Event.startList.caption);
+  });
+
   it("renders nothing at all when the club has not switched the list on", async () => {
     const event = { id: "00000000-0000-0000-0000-000000000000", participantListVisibility: "HIDDEN" } as unknown as PublicEvent;
     expect(await StartList({ event })).toBeNull();

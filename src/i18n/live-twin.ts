@@ -11,7 +11,8 @@ import { PREFETCHED_PATHNAMES } from "./prefetch";
  * they show depend on the request instead, and those requests go to a twin of the same page,
  * rendered per request exactly as every public page was before (`app/[locale]/live/…`):
  *
- * - **the address's own question** — the filters (`?type=`, `?surface=`, … §413; the calendar's
+ * - **the address's own question** — the filters (`?type=`, `?surface=`, … §413, and the listing's
+ *   past section's `?past-type=`, … §611; the calendar's
  *   month, year and layout are its path since §574, `/ro/calendar/2026-10`, and the old `?month=`,
  *   `?year=`, `?view=` are redirected there by the proxy before this is asked), an event page's start-list
  *   page (`?lista=` §250), the interest box's outcome (`?interest=`, `?since=` §146) and the
@@ -37,10 +38,11 @@ export const LIVE_SEGMENT = "live";
   a MISS each time. The rule is now the page's own: a twin only when what the page would read from
   the address changes what it shows.
 
-  - **The listing**: a filter that ticks something (`parseListingFilter`, §413 — the same parser the
-    page runs, so a value it drops is dropped here too) or the list layout (`?view=list`, first value,
-    as the page reads it).
-  - **The bare calendar**: the same filters, and its old `?month=`, `?year=`, `?view=` should one get
+  - **The listing**: a filter that ticks something in either of its two scopes (`parseListingFilter`,
+    §413 — the same parser the page runs, so a value it drops is dropped here too): the cards ahead
+    (`?type=RACE`) or, since §611, the past section's own (`?past-type=RACE`; `?past-foo=1` and
+    `?past-type=FOO` name nothing) — or the list layout (`?view=list`, first value, as the page reads it).
+  - **The bare calendar**: the same filters, the cards-ahead scope only (it draws no past section), and its old `?month=`, `?year=`, `?view=` should one get
     past the proxy's redirect to the period's path (§574, the calendar's own).
   - **A calendar period's path**: the filters.
   - **An event page**: its four keys, whatever their value — the start list's page (`?lista=`, §250),
@@ -58,9 +60,15 @@ function asParams(search: URLSearchParams): Record<string, string[]> {
   return params;
 }
 
-/** Whether the address ticks any filter the listing and the calendar offer (§413). */
+/** Whether the address ticks any filter the calendar offers (§413): the `upcoming` scope, the names it reads. */
 function asksAFilter(search: URLSearchParams): boolean {
-  return activeFilterCount(parseListingFilter(asParams(search))) > 0;
+  return activeFilterCount(parseListingFilter(asParams(search), "upcoming")) > 0;
+}
+
+/** Whether the address ticks any filter the listing offers: the cards ahead's, or the past section's own (§611). */
+function asksAListingFilter(search: URLSearchParams): boolean {
+  const params = asParams(search);
+  return activeFilterCount(parseListingFilter(params, "upcoming")) + activeFilterCount(parseListingFilter(params, "past")) > 0;
 }
 
 /**
@@ -86,7 +94,7 @@ type Twin = {
 
 /** The internal paths (after next-intl's rewrite) that have a twin, and what sends a visitor there. */
 const TWINS: readonly Twin[] = [
-  { pattern: /^\/(ro|en)\/events$/, signedIn: false, asks: (search) => asksAFilter(search) || search.get("view") === "list" },
+  { pattern: /^\/(ro|en)\/events$/, signedIn: false, asks: (search) => asksAListingFilter(search) || search.get("view") === "list" },
   { pattern: /^\/(ro|en)\/calendar$/, signedIn: false, asks: (search) => asksAFilter(search) || LEGACY_CALENDAR_KEYS.some((key) => search.has(key)) },
   // A period's own path (`/ro/calendar/2026-10`, §574): static too, and a filter on it is its twin.
   { pattern: /^\/(ro|en)\/calendar\/.+$/, signedIn: false, asks: asksAFilter },

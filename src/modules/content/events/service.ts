@@ -595,6 +595,9 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
     // «Kit de participare» → «Tricou» (§554), by the same discipline: a caller that did not post the
     // card writes nothing, so no save takes the shirt off an event by not mentioning it.
     ...(fields.kitShirt === undefined ? {} : { kitShirt: fields.kitShirt }),
+    // «Ofertele din lista de așteptare pleacă automat» (§615), by the same discipline: a caller that
+    // did not post the select writes nothing, so no save changes who hands out the places by omission.
+    ...(fields.waitlistAutoOffer === undefined ? {} : { waitlistAutoOffer: fields.waitlistAutoOffer }),
     // «Informații medicale» (§557), by the same discipline: a caller that did not post the card
     // writes nothing, so no save switches the health note on or off by not mentioning it.
     ...(fields.askHealthNote === undefined ? {} : { askHealthNote: fields.askHealthNote }),
@@ -1651,6 +1654,7 @@ export async function saveEventFields<T extends Record<string, unknown>>(
       { ...eventColumnsFrom(fields, times), updatedByStaffUserId: input.actor.id },
       now,
     );
+    await auditWaitlistAutoOffer(tx, input.actor, current, saved, now);
     // The place's name in each language is the event's (§362): written with the row, under its version.
     // An older event's English name follows its Romanian one when only the Romanian moved, which
     // needs the rows as they were (`namesAfterSave`) — the notice compares the same rows.
@@ -1771,6 +1775,10 @@ const SERIES_COLUMNS = [
   // The waiting list's length, like the places (§348). No lock and no allocation when it moves:
   // raising it offers nobody anything, and lowering it removes nobody already waiting.
   "waitlistCapacity",
+  // Who hands out a freed place (§615), like the places themselves: "from this date" makes every later
+  // date of the series offer its places on its own, or leave them to the organizer. No lock and no
+  // offer when it moves — switching it on offers nothing until a place is next freed or added.
+  "waitlistAutoOffer",
   // The race kit (§554), like the headlamp once did (§382): "from this date" gives every later date
   // of the series the same T-shirt question.
   "kitShirt",
@@ -2012,6 +2020,9 @@ async function applyToSeries<T extends Record<string, unknown>>(
         .set({ ...changes, version: sql`${events.version} + 1`, updatedAt: now, updatedByStaffUserId: input.actor.id })
         .where(eq(events.id, member.id));
       touched = true;
+      if (changes.waitlistAutoOffer !== undefined) {
+        await auditWaitlistAutoOffer(tx, input.actor, member, { id: member.id, waitlistAutoOffer: changes.waitlistAutoOffer }, now);
+      }
       // Each date has its own queue, checked against its own places (§147): the new capacity
       // is the source's, the raise is measured against what this date had, and the status is
       // this date's as it now stands — a cancelled date offers nothing.
@@ -2058,6 +2069,29 @@ async function applyToSeries<T extends Record<string, unknown>>(
     }
   }
   return { applied, offered, dates };
+}
+
+/**
+ * The trail of «Ofertele din lista de așteptare pleacă automat» (§615): who switched it, on which
+ * date, from and to — written in the save's transaction, only when the value moved. Switching the
+ * offers on offers nothing by itself: the next place freed or added goes to the line.
+ */
+async function auditWaitlistAutoOffer<T extends Record<string, unknown>>(
+  tx: Database<T> | Transaction<T>,
+  actor: Actor,
+  before: { id: string; waitlistAutoOffer: boolean },
+  after: { id: string; waitlistAutoOffer: boolean },
+  now: Date,
+): Promise<void> {
+  if (before.waitlistAutoOffer === after.waitlistAutoOffer) return;
+  await recordAuditEvent(tx, {
+    actorStaffUserId: actor.id,
+    action: "event.waitlist_auto_offer_changed",
+    entityType: "event",
+    entityId: after.id,
+    metadata: { from: before.waitlistAutoOffer, to: after.waitlistAutoOffer },
+    now,
+  });
 }
 
 /**
@@ -2217,6 +2251,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
         { ...eventColumnsFrom(parsedEventFields, times), updatedByStaffUserId: input.actor.id },
         now,
       );
+      await auditWaitlistAutoOffer(tx, input.actor, current, savedEvent, now);
       // Before the words, so each row a text save writes back already carries its new name.
       await writePlaceNames(tx, input.eventId, names);
       // Before the translations loop: a settings-only save (an Organizer without text rights)
@@ -2412,6 +2447,7 @@ function blankEventRow(now: Date): EditableEvent {
     bibsSettledAt: null,
     capacity: null,
     waitlistCapacity: null,
+    waitlistAutoOffer: true,
     confirmationOpensDaysBefore: 7,
     confirmationDeadlineDaysBefore: 2,
     reminderHoursBefore: null,
@@ -3002,6 +3038,8 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     // The waiting list's length goes with the places it queues for (§348): a copy, and every
     // date of a series, queue as many as the source does.
     waitlistCapacity: source.waitlistCapacity,
+    // Who hands out a freed place goes with the places (§615): a copy, and every date of a series.
+    waitlistAutoOffer: source.waitlistAutoOffer,
     // The race kit goes with the race (§554): a copy, and every date of a series, give the same shirt.
     kitShirt: source.kitShirt,
     // What the race number looks like goes with the race (§560): the band's colour and the club's

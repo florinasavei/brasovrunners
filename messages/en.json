@@ -48,6 +48,7 @@
     "pastCountFiltered": "Past, filtered ({count})",
     "filter": {
       "label": "Event filters",
+      "labelPast": "Filters for past events",
       "button": "Filters",
       "buttonCount": "Filters ({count})",
       "groups": {
@@ -71,7 +72,9 @@
       "clear": "Clear filters",
       "remove": "Remove filter",
       "active": "Active filters",
-      "none": "No event matches the filters you chose."
+      "activePast": "Active filters for past events",
+      "none": "No event matches the filters you chose.",
+      "pastNothingToNarrow": "Every past event is the same — {values} — so there is nothing to narrow here."
     },
     "calendar": {
       "previous": "Previous month",
@@ -235,6 +238,8 @@
         "other": "{count} confirmed participants"
       },
       "columnPosition": "#",
+      "columnNumber": "No.",
+      "columnNumberFull": "race number",
       "columnName": "Name",
       "columnClub": "Club",
       "previous": "← Previous page",
@@ -250,6 +255,8 @@
         "instagram": "{name} on Instagram"
       },
       "captionStates": "First the confirmed participants — those whose name is shown, in the order they confirmed, then the others — then those registered who have not confirmed yet and those on the waiting list, in the list's order.",
+      "captionNumbers": "The confirmed participants, with their race number: first those whose name is shown, in the order they confirmed, then the others.",
+      "captionStatesNumbers": "First the confirmed participants, with their race number — those whose name is shown, in the order they confirmed, then the others — then those registered who have not confirmed yet and those on the waiting list, in the list's order.",
       "noteStates": "Every confirmed participant is counted here. A name is shown only for those who ticked “I want to appear on the participants & results list”; the other confirmed participants appear as “Participant (name hidden)”, with nothing else about them. Those registered who have not confirmed yet and those on the waiting list appear only if they ticked it, with the registration's stage beside the name; a cancelled or expired registration does not appear. The choice can be changed at any time from the confirmation email or from “My registrations”.",
       "socialsNote": "Strava and Instagram appear only beside the names of those who chose it when registering.",
       "othersLead": "Also listed by name:",
@@ -284,6 +291,18 @@
         "few": "{count}",
         "other": "{count}"
       },
+      "fillParts": "{taken} registered of {places} — {parts}",
+      "fillInProgress": "{count} completing their registration",
+      "fillKept": {
+        "one": "{count} place kept for the waiting list",
+        "few": "{count} places kept for the waiting list",
+        "other": "{count} places kept for the waiting list"
+      },
+      "fillConfirmed": {
+        "one": "{count} confirmed",
+        "few": "{count} confirmed",
+        "other": "{count} confirmed"
+      },
       "fillPlaces": {
         "one": "{count} place",
         "few": "{count} places",
@@ -301,6 +320,11 @@
         "other": "Thank you! All {capacity} places are taken. Be the first on the waiting list."
       },
       "waitingCount": "{count} on the waiting list",
+      "offeredCount": {
+        "one": "{count} place offered from the waiting list",
+        "few": "{count} places offered from the waiting list",
+        "other": "{count} places offered from the waiting list"
+      },
       "fullJoin": "Join the waiting list — we email you when a place frees up.",
       "fullOffer": "When a place frees up, you get an email and {hours} to confirm — then it passes on.",
       "waitlistFull": "All places are taken and the waiting list is full — sorry.",
@@ -324,7 +348,8 @@
       "closed": "Registration has closed for this event.",
       "closedRaceWeek": "Registration has closed — come to the desk with the QR from your email.",
       "cancelled": "The event has been cancelled, so registration has stopped.",
-      "completed": "The event has finished."
+      "completed": "The event has finished.",
+      "fromWaitlist": "Places are given from the waiting list"
     },
     "registrationState": {
       "NOT_APPLICABLE": "No registration needed",
@@ -457,6 +482,8 @@
         "languageNote": "The declaration is signed in this page's language, and the PDF and the email are in it too. For the other language, switch the language in the header before you sign.",
         "adultsOnly": "Sign it only for yourself, if you are at least {age} old on the day of the run; never on behalf of someone else, nor of a minor.",
         "accept": "I am at least {age} old, I have read the declaration above and sign it on my own responsibility",
+        "acceptInline": "Tick this box so you can sign.",
+        "acceptSummary": "Tick the box accepting the declaration so you can sign.",
         "typedNameHelp": "Type your full name. It appears as a signature.",
         "birthDateHelp": "For the run's minimum age: {age}, reached by the day of the run. We do not keep it and it is not in the declaration.",
         "tooYoung": "The minimum age for this run is {age}, reached by the day of the run. The declaration cannot be signed.",
@@ -673,7 +700,8 @@
           "declaration_hold_set": "Declaration kept for a complaint or a dispute",
           "declaration_hold_cleared": "Keep removed from the declaration",
           "promo_consent_changed": "Consent to offers and benefits changed",
-          "family_resent": "Email resent to the family"
+          "family_resent": "Email resent to the family",
+          "offered_by_staff": "Offer sent ahead of the waiting list (“Send them the offer”)"
         }
       },
       "locale": {
@@ -1063,6 +1091,8 @@
       "neonLimitsTitle": "Save the Neon limits?",
       "neonPlanTitle": "Change the Neon plan?",
       "neonPlanBody": "The costs and limits on this page are worked out from the plan chosen whenever Neon does not state its own plan.",
+      "vercelPlanTitle": "Change the Vercel plan?",
+      "vercelPlanBody": "The costs on this page are worked out from the plan and the seats chosen.",
       "olderPicturesTitle": "Make the phone sizes?",
       "olderPicturesBody": "The pictures in this batch get their smaller sizes; the old address keeps working. It takes about twenty seconds. An editor open on a page using them will ask for a reload.",
       "shownAddressTitle": "Change the contact address shown?",
@@ -1087,7 +1117,9 @@
       "menuOrderTitle": "Change the menu order?",
       "menuOrderBody": "The site's menu and footer show the pages in the new order, for every visitor, from the next page they open.",
       "resendFamilyTitle": "Resend the family's email?",
-      "resendFamilyBody": "One email goes to their address, for everybody: {names}. Each gets the step they are at, with a new link; the links in the old emails stop working."
+      "resendFamilyBody": "One email goes to their address, for everybody: {names}. Each gets the step they are at, with a new link; the links in the old emails stop working.",
+      "offerPlaceTitle": "Send them the offer?",
+      "offerPlaceBody": "{name} gets the email “{message}” and has until {deadline} to sign; they go ahead of the people before them."
     },
     "errors": {
       "PICTURE_IN_USE": "The picture is used on a page, an event or in an album. Take it out of there first.",
@@ -1139,7 +1171,8 @@
       "LEGAL_NOTHING_DEPENDS": "Nothing was deleted: meanwhile nothing depends on this version any more. Reload the page and delete it permanently.",
       "LEGAL_RETIRE_IN_FORCE": "Nothing was deleted: this is the version in force. Approve the next version first, then you can delete this one.",
       "LEGAL_ALREADY_DELETED": "This version has already been deleted from the list. Its text stays in the archive.",
-      "SEND_NOW_HOUR_SPENT": "Nothing was sent: Mailgun's hourly limit («Hourly limit» under «Emails») has no room right now. Choose «Queue it»; the email leaves on its own once the hour has room again."
+      "SEND_NOW_HOUR_SPENT": "Nothing was sent: Mailgun's hourly limit («Hourly limit» under «Emails») has no room right now. Choose «Queue it»; the email leaves on its own once the hour has room again.",
+      "OFFER_AFTER_CLOSE": "Registration has closed, so an offer would lapse at once; nothing changed. At the desk, use “Give a place”."
     },
     "editor": {
       "draftPreview": {
@@ -2005,7 +2038,12 @@
       },
       "membersOnly": "BVR members only",
       "membersOnlyHelp": "Only signed-in members see it; it is not on the public site. Existing registrations stay.",
-      "membersOnlyShort": "Members only"
+      "membersOnlyShort": "Members only",
+      "waitlistAutoOffer": "Waiting-list offers go out automatically",
+      "waitlistAutoOfferYes": "Yes",
+      "waitlistAutoOfferNo": "No",
+      "waitlistAutoOfferHelp": "On “Yes”, a place that frees up or is added is offered at once to the first person on the waiting list. On “No”, places stay free until you hand them out.",
+      "waitlistAutoOfferHelpMore": "You hand them out from the “Registration queue” with “Send them the offer”, or at the desk with “Give a place”. While anyone waits, newcomers join the list too."
     },
     "preview": {
       "notice": "Staff preview. The status of this text is: {status}. This page is not public and is not indexed.",
@@ -2109,6 +2147,7 @@
       "confirmed": "Confirmed",
       "holds": "Held",
       "free": "Free",
+      "offeredFigure": "Offered",
       "waiting": "Waiting",
       "holdsHelp": "“Held” are the places kept while somebody signs the declaration ({hold}) or answers an offer ({offer}). Free = places − confirmed − held.",
       "lineTitle": "Waiting list ({count})",
@@ -2299,6 +2338,7 @@
         "minimumAge": "The event's minimum age, with its unit (“16 years”): at least 14 for a race, at least 18 for a group run. Every declaration states it in a sentence of its own",
         "participantListStates": "Privacy notice only: the three stages beside a name on the public list. Without it in the notice in force, only confirmed names",
         "participantListSocials": "Privacy notice only: the tick with which someone shows their Strava and Instagram on the public list. Without it in the notice in force, never",
+        "participantListNumbers": "Privacy notice only (and the terms): the race number beside the names of the confirmed on the public list. Without it in the notice in force, the list shows no number",
         "publicListPeriod": "Privacy notice only: how long the public participant list stays up after the event, from “Deadlines”, unit included; after that the list closes by itself",
         "newsletterTopics": "Privacy notice only: the topics of the contact page's subscription. Without it in the notice in force, the subscription does not show",
         "teamPage": "Privacy notice only: the team page's name, in quotation marks. With it in the notice in force, /admin/tasks counts the page as described",
@@ -2352,6 +2392,7 @@
         "redo": "Redo"
       },
       "listSocialsMissing": "The notice in force does not yet describe Strava and Instagram on the public list, so they do not show. Approve a new notice from the template.",
+      "listNumbersMissing": "The notice in force does not yet describe the race number on the public list, so the list shows no numbers. Approve a new notice from the template.",
       "listStatesMissing": "The notice in force does not yet describe the stages on the public list, so it shows only the confirmed. Approve a new notice from the template.",
       "batch": {
         "toolsTitle": "Every text at once",
@@ -2567,6 +2608,37 @@
         "estimateMore": "They are worked out from the consumption read from Neon. The invoice adds storage and restore history.",
         "fieldHelpMore": "The rates and limits come from the Neon console and neon.com/pricing. The account holds both projects, QA and production.",
         "decemberMore": "Choose Free only if the invoices say so, and check Free's limits at that time first, on both projects."
+      },
+      "vercelPlan": {
+        "title": "The Vercel plan (hosting)",
+        "intro": "The club states the Vercel plan here; the costs on this page are worked out from it.",
+        "introMore": "The site does not ask Vercel which plan the account is on. When you change the plan in the Vercel account, change it here too.",
+        "inForce": {
+          "HOBBY": "Vercel: Hobby, free.",
+          "PRO": "Vercel: Pro, {seats}, {price} USD a month + VAT."
+        },
+        "seats": {
+          "one": "{count} seat",
+          "few": "{count} seats",
+          "other": "{count} seats"
+        },
+        "updated": "Set by {who}, {when}. Note: {note}",
+        "updatedNoWho": "Set {when}. Note: {note}",
+        "field": "The Vercel plan",
+        "fieldHelp": "Prices checked {checkedOn}; set on each environment separately.",
+        "fieldHelpMore": "Pro is paid per developer seat; view-only seats are free.",
+        "option": {
+          "HOBBY": "{name} — free, for non-commercial use only",
+          "PRO": "{name} — {price} USD per seat, a month, + VAT"
+        },
+        "seatsField": "Developer seats",
+        "seatsHelp": "How many people deploy the site; counts on Pro only, from 1 to {max}.",
+        "note": "Note (why, until when)",
+        "back": "On the day you drop Pro, choose Hobby here.",
+        "save": "Save the Vercel plan",
+        "saving": "Saving…",
+        "saved": "The Vercel plan was saved; the costs on this page use it from now on.",
+        "readOnly": "The Administrator changes the plan; the figures above are current."
       },
       "neonLimits": {
         "title": "The database's limits",
@@ -2923,6 +2995,19 @@
             "Approve the terms from the template as well, if not already, so they say the same about the list."
           ]
         },
+        "listNumbersNotice": {
+          "title": "Privacy notice: the race number on the public list",
+          "todo": "The notice in force does not yet describe the race number on the public list, so the list shows no numbers until the club approves a notice that describes it.",
+          "done": "The notice in force describes the race number: the list shows it in a “No.” column for every confirmed runner who has one; those without show “—”.",
+          "how": [
+            "Before approving, write to the registered: /admin/events → event → “Send a message to participants”. Say their number will appear beside their name in “Who's coming” and how to withdraw (next step).",
+            "Withdrawing: in “My registrations” (or the link in the email) press “I do not want to appear on the participants & results list”; the number leaves with the name.",
+            "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. The section on the public list describes the race number beside the names of the confirmed.",
+            "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish”.",
+            "From then on, the list shows the “No.” column for every confirmed runner who has a number, whichever notice they registered under.",
+            "Approve the terms from the template as well, if not already, so they say the same about the list."
+          ]
+        },
         "newsletterNotice": {
           "title": "Privacy notice: the newsletter",
           "todo": "The notice in force does not describe the newsletter yet, so the contact page offers no news subscription and we keep no address for it, until the club approves a notice that describes it.",
@@ -3015,27 +3100,58 @@
       "freeVerdict": {
         "freeExceptDomain": "Yes, apart from the domain: every service is on a free plan and nothing is paid monthly.",
         "paysForUsage": "Almost: the domain and the database are paid for (Neon Launch, by usage), and every other service is on a free plan.",
+        "paysForPlans": "Paid for: {services}; every other service is on a free plan.",
         "freeButAtALimit": "Yes, but today's free emails are used up, and the rest go out after midnight.",
         "notFree": "Careful: a published event charges a fee, and the free plans do not care that we are a non-profit.",
         "paysForUsageMore": "Launch has no subscription and was chosen by the club on 22 September 2026.",
         "freeButAtALimitMore": "Nothing is lost. If you open entries now, the confirmations arrive tomorrow morning.",
-        "notFreeMore": "Not necessarily a problem: a donation is allowed, a compulsory fee is not, even if it only covers costs."
+        "notFreeMore": "Not necessarily a problem: a donation is allowed, a compulsory fee is not, even if it only covers costs.",
+        "paidName": {
+          "domain": "the domain (.com)",
+          "mailgun": "email (Mailgun {plan})",
+          "vercel": "hosting (Vercel {plan}, {seats})",
+          "neon": "the database (Neon {plan}, by usage)"
+        }
       },
       "costTitle": "What it costs",
       "costToday": {
         "nothing": "Today the club pays nothing at all: every service is on a free plan.",
-        "total": "Today the club pays {total} a year.",
+        "sentence": "Today the club pays {month} a month, that is {year} a year.",
+        "sentenceEstimated": "Today the club pays about {month} a month, that is {year} a year.",
         "amount": "{amount} {currency}",
         "amountPlusVat": "{amount} {currency} + VAT",
         "free": "free",
         "notTaken": "nothing yet",
-        "usage": "about {amount} {currency}/month, by usage",
         "usageUnknown": "by usage — the pace is not measured here",
-        "estimated": "Of which the database is an estimate at this month's pace (× 12), not an invoice."
+        "billedMonthly": "{month} {currency}/month, billed monthly · {year} {currency} a year",
+        "billedMonthlyPlusVat": "{month} {currency}/month + VAT, billed monthly · {year} {currency} a year + VAT",
+        "billedYearly": "{year} {currency} a year, billed yearly · about {month} {currency}/month",
+        "billedYearlyPlusVat": "{year} {currency} a year + VAT, billed yearly · about {month} {currency}/month + VAT",
+        "usageBoth": "about {month} {currency}/month, by usage · about {year} {currency} a year",
+        "estimated": "Of which the database is an estimate at this month's pace, not an invoice."
+      },
+      "costTable": {
+        "caption": "What each service costs, per month and per year",
+        "service": "Service",
+        "perMonth": "Per month",
+        "perYear": "Per year",
+        "total": "Total",
+        "unmeasured": "pace not measured",
+        "plusVat": "+ VAT",
+        "help": "“Per month” and “Per year”: one is the amount on the vendor's invoice, the other is worked out from it. “≈” is an estimate at this month's pace.",
+        "name": {
+          "domain": "Domain",
+          "mailgun": "Mailgun",
+          "vercel": "Vercel",
+          "neon": "Neon",
+          "zitadel": "Zitadel",
+          "scheduler": "cron-job.org + GitHub"
+        }
       },
       "nextSpend": {
         "mailgun": "The next thing to cost money: one month of Mailgun Basic, {cost}.",
         "vercel": "The next thing to cost money: Vercel Pro, {cost}.",
+        "none": "No new spend is coming: what is taken for now can be dropped after the race.",
         "mailgunMore": "Bought for a single race, when a day is expected to bring more entries than the free emails cover.",
         "vercelMore": "It arrives only if the site starts asking for money to take part, or if the site's code moves to the club's own account."
       },
@@ -3095,7 +3211,15 @@
           "closeYes": "A published event is marked as charging a fee — check how it is worded.",
           "closeNo": "No published event asks for money.",
           "bumpBack": "This one does not come back down: it is a change in how the site is used, not a busy weekend.",
-          "more": "Over a free-plan limit, the feature stops for 30 days and no payment restarts it: move up before a race, not during one."
+          "more": "Over a free-plan limit, the feature stops for 30 days and no payment restarts it: move up before a race, not during one.",
+          "pro": {
+            "freeGives": "Pro: {seats} at {seatPrice} USD a month each, with {credit} USD of usage included.",
+            "ceiling": "No limit measured here: the usage credit is on the Vercel dashboard.",
+            "whenCrossed": "Usage beyond the credit is billed on top, on the same invoice.",
+            "bumpBack": "Taken for the race's months and can be given back after it; the card's note says when and why.",
+            "more": "Pro is taken so the site's functions do not stop before the race; the card's note says when it was taken.",
+            "close": "On Pro, the “non-commercial only” rule no longer applies."
+          }
         },
         "neon": {
           "name": "Neon (the database)",
@@ -4015,7 +4139,8 @@
       "handedBibNoSpares": "Type the number you hand them, or leave it empty and the site picks one.",
       "handedBibFastTrackOnly": "Only for someone confirmed here, at the desk (the tick above).",
       "nextSpare": "Next spare: {number}",
-      "sparesOut": "The spare numbers have run out: type the number you hand them, or leave it empty and the site picks one."
+      "sparesOut": "The spare numbers have run out: type the number you hand them, or leave it empty and the site picks one.",
+      "offerPlace": "Send them the offer"
     },
     "emails": {
       "title": "The emails participants receive",
@@ -6267,8 +6392,18 @@
       "now": {
         "details": "We will then email you to confirm your address.",
         "confirm": "We have sent you a confirmation link.",
-        "declare": "One step left: read and sign the declaration — here, or on paper at the registration desk on race day. Your place is held. Once you sign, we email you the signed declaration (PDF) and your race number — usually within a few minutes, within the hour at the latest.",
-        "declareScheduled": "One step left: read and sign the declaration — here, or on paper at the registration desk on race day. Your place is held. Once you sign, we email you the signed declaration (PDF) and your race number — it leaves on the platform's scheduled round, within {wait} at the most.",
+        "declare": {
+          "emailJustSent": "One step left: read and sign the declaration from the email we have just sent you — or on paper at the registration desk on race day. Your place is held. Once you sign, we email you the signed declaration (PDF) and your race number — usually within a few minutes, within the hour at the latest.",
+          "emailHeldUntil": "Your place is held. We ask for the declaration by email {opens} before the start — you sign it then, online or on paper at the registration desk; once you sign, we email you the signed declaration (PDF) and your race number — usually within a few minutes, within the hour at the latest.",
+          "onThisPage": "One step left: read and sign the declaration below — or on paper at the registration desk on race day. Your place is held. Once you sign, we email you the signed declaration (PDF) and your race number — usually within a few minutes, within the hour at the latest.",
+          "emailReceived": "One step left: read and sign the declaration from the email you received — or on paper at the registration desk on race day. Your place is held. Once you sign, we email you the signed declaration (PDF) and your race number — usually within a few minutes, within the hour at the latest."
+        },
+        "declareScheduled": {
+          "emailJustSent": "One step left: read and sign the declaration from the email on its way to you — it leaves within {wait} at the most — or on paper at the registration desk on race day. Your place is held. Once you sign, we email you the signed declaration (PDF) and your race number.",
+          "emailHeldUntil": "Your place is held. We ask for the declaration by email {opens} before the start — you sign it then, online or on paper at the registration desk; once you sign, we email you the signed declaration (PDF) and your race number — it leaves on the platform's scheduled round, within {wait} at the most.",
+          "onThisPage": "One step left: read and sign the declaration below — or on paper at the registration desk on race day. Your place is held. Once you sign, we email you the signed declaration (PDF) and your race number — it leaves on the platform's scheduled round, within {wait} at the most.",
+          "emailReceived": "One step left: read and sign the declaration from the email you received — or on paper at the registration desk on race day. Your place is held. Once you sign, we email you the signed declaration (PDF) and your race number — it leaves on the platform's scheduled round, within {wait} at the most."
+        },
         "done": "Your registration is confirmed. See you at the start!"
       }
     },
@@ -6443,6 +6578,7 @@
       "pending": "Confirming…",
       "done": "Your email address has been confirmed.",
       "doneTitle": "Your email address is confirmed",
+      "doneWaitlist": "You are on the waiting list. If a place frees up, we email you what to do next.",
       "eventOff": "The event has been cancelled or is over, so the registration does not go on: no place was held for you and there is nothing you need to do.",
       "waitlistFull": "The places and the waiting list are full, so your address was not confirmed and nothing was held for you. The link in your email stays valid for {confirmation} from when you sent the form: if a place opens on the waiting list in the meantime, open it again.",
       "noWaitlist": "Every place has been taken and the event has no waiting list, so your address was not confirmed and nothing was held for you. The link in your email stays valid for {confirmation} from when you sent the form: if a place frees up in the meantime, open it again.",
@@ -6525,7 +6661,9 @@
         "The link has a deadline; if you do not confirm in time, the place moves on.",
         "You can withdraw at any time from the email you received."
       ],
-      "pressFailed": "We could not record the signature. Tick that you have read the declaration and try again — your link is fine.",
+      "pressFailed": "We could not record the signature. Try again — your link is fine.",
+      "acceptSummary": "Tick the box “I have read and accept the declaration…” so you can sign.",
+      "acceptInline": "Tick this box so you can sign.",
       "idDocumentType": "Which document you will show",
       "idDocumentTypeHelp": "Choose the kind of document — it appears in the declaration with the series and number.",
       "typedNameHelpWithName": "You registered as <strong>{name}</strong> — type exactly this name. It appears as a signature.",
@@ -7402,6 +7540,7 @@
       "honeypotOn": "Honeypot: on.",
       "honeypotOff": "Honeypot: off.",
       "neonPlan": "Neon plan saved.",
+      "vercelPlan": "Vercel plan saved.",
       "jobCadence": "Interval saved.",
       "budgetThresholds": "Budget thresholds saved.",
       "deadlines": "Deadlines saved.",
@@ -7530,7 +7669,8 @@
       "memberCodeDeleted": "The code was deleted.",
       "declarationHeld": "The declaration is kept. It is not deleted until you remove the keep.",
       "declarationReleased": "The keep was removed.",
-      "menuOrder": "The menu order was saved."
+      "menuOrder": "The menu order was saved.",
+      "registrationOffered": "The offer is sent: they have the usual time to sign the declaration."
     }
   },
   "Network": {

@@ -8,6 +8,7 @@ import { routing, type Locale } from "@/i18n/routing";
 import { updateBudgetThresholds } from "@/modules/diagnostics/budget-thresholds";
 import { NeonLimitsRefusal, updateNeonLimits } from "@/modules/diagnostics/neon-limits";
 import { updateNeonPlan } from "@/modules/diagnostics/neon-plan";
+import { updateVercelPlan } from "@/modules/diagnostics/vercel-plan";
 import { updateJobCadence } from "@/modules/jobs/cadence";
 import { requireStaffCapability } from "@/modules/staff-identity/session";
 import { canManageClubSettings, canManagePlatform } from "@/modules/staff-identity/domain/roles";
@@ -53,6 +54,38 @@ export async function updateNeonPlanAction(_previous: FormOutcome | null, form: 
   revalidatePath(path);
   await flashOutcome({ saved: "neonPlan" });
   redirect(`${path}?saved=neonPlan#admin-alert`);
+}
+
+/**
+ * "The Vercel plan we are on" (§610), from the card after the database's: Hobby, or Pro with its
+ * developer seats. The Neon plan's twin — the same gate, the service asserting the role again and
+ * writing the audit row, a refusal handed back as the form's state with what was chosen (§315) —
+ * and it lands back on Costuri, whose cost table, month card and yearly sentence price it.
+ */
+export async function updateVercelPlanAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = localeOf(form);
+  const path = getPathname({ locale, href: "/admin/settings/costs" });
+
+  try {
+    const actor = await requireStaffCapability(canManageClubSettings);
+    const seats = form.get("seats");
+    await updateVercelPlan(
+      getDb(),
+      actor,
+      {
+        plan: form.get("plan"),
+        // A whole number from the box; an empty or unreadable box is refused by the schema, never read as one seat.
+        seats: typeof seats === "string" && seats.trim() !== "" ? Number(seats) : seats === null ? undefined : Number.NaN,
+        note: typeof form.get("note") === "string" ? form.get("note") : "",
+      },
+      new Date(),
+    );
+  } catch (error) {
+    return refused(error, form);
+  }
+  revalidatePath(path);
+  await flashOutcome({ saved: "vercelPlan" });
+  redirect(`${path}?saved=vercelPlan#admin-alert`);
 }
 
 /**

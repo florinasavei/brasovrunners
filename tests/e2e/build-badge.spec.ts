@@ -6,12 +6,10 @@ import { expect, test } from "@playwright/test";
  * It was a fixed label in the bottom-right corner from `md` and a line under the footer below
  * that, read by every visitor on every page. §365 (the owner, 2026-09-24: "version shows by
  * default") put it inside the footer's "Despre club" fold: on screen at no width until
- * somebody opened it, at every width. §372 split it by width again, the owner's later word on
- * the desktop site: "I liked when I saw the app on the bottom right." Two copies exist in the
- * markup now, mutually exclusive by `display` and each with its own test id: the phone's, still
- * inside the fold (`footer-build-badge-panel`, shown below `md`), and the desktop's, pinned to
- * the bar's own corner without opening anything (`footer-build-badge-pinned`, shown from `md`).
- * Every test that presses the phone's copy still opens the fold first, the way a person would.
+ * somebody opened it. §372 added a second copy pinned to the bar's corner from `md`. The owner,
+ * 2026-10-01 (§608): "vreau ca pill-ul cu versiunea sa apara doar cand fac expand la footer" — so
+ * one copy exists, inside the fold (`footer-build-badge-panel`), at every width, and nothing is
+ * pinned to the bar. Every test that presses it opens the fold first, the way a person would.
  *
  * It is also the staff entrance — a double-click, a long press, or `Enter` when focused — and
  * what keeps it from being a trap is that one tap does nothing at all.
@@ -19,15 +17,11 @@ import { expect, test } from "@playwright/test";
  * These run against the seeded database, so `docker compose up -d db && yarn db:seed` first.
  */
 
-/** The phone's copy, inside the "Despre club" fold — hidden by CSS from `md` up. */
+/** The one copy, inside the "Despre club" fold — hidden until the fold is opened. */
 const panelBadge = (page: import("@playwright/test").Page) =>
   page.getByTestId("footer-build-badge-panel").getByLabel(/versiunea site-ului|website version/i);
 
-/** The desktop's copy, pinned to the bar's own corner — hidden by CSS below `md`. */
-const pinnedBadge = (page: import("@playwright/test").Page) =>
-  page.getByTestId("footer-build-badge-pinned").getByLabel(/versiunea site-ului|website version/i);
-
-/** "Despre club", the fold the phone's copy is in. */
+/** "Despre club", the fold the copy is in. */
 async function openTheFold(page: import("@playwright/test").Page) {
   await page.getByRole("contentinfo").locator("summary").click();
   await expect(panelBadge(page)).toBeVisible();
@@ -35,7 +29,7 @@ async function openTheFold(page: import("@playwright/test").Page) {
 
 /**
  * The other half of "which site am I looking at": the badge answers it for whoever knows to
- * look in the corner, and this answers it for a visitor who does not.
+ * open the fold, and this answers it for a visitor who does not.
  */
 test.describe("the environment notice", () => {
   test("tells a visitor this is not the club's real site, in both languages", async ({ page }) => {
@@ -97,11 +91,9 @@ test.describe("the build badge", () => {
     await expect(panelBadge(page)).toHaveText(/^(local|test|qa) · /);
   });
 
-  test("on a phone, is not on screen until the footer's fold is opened", async ({ page }, testInfo) => {
-    // §365, still true below `md` (§372): the phone's own copy is on screen at no width until
-    // "Despre club" is opened. From `md` the entrance is the pinned copy instead (below), which
-    // shows without opening anything — that is the point of §372, not a regression of this.
-    test.skip(testInfo.project.name !== "mobile", "the panel copy only shows below md");
+  test("is not on screen until the footer's fold is opened, at every width", async ({ page }) => {
+    // §365, restored at every width by §608: the copy is on screen at no width until
+    // "Despre club" is opened, and nothing is pinned to the bar.
     await page.goto("/ro/evenimente", { waitUntil: "networkidle" });
     await expect(panelBadge(page)).toBeHidden();
     await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
@@ -118,51 +110,30 @@ test.describe("the build badge", () => {
     expect(box!.x + box!.width).toBeLessThanOrEqual(viewport!.width);
   });
 
-  test("from md, the pinned copy is visible at the bar's corner without opening anything", async ({ page }, testInfo) => {
-    // §372, the owner: "on the desktop version I liked when I saw the app on the bottom right."
-    test.skip(testInfo.project.name !== "desktop", "the pinned copy only shows from md");
+  test("on a desktop, is the staff entrance in the open fold: a double-click opens sign-in, and so does Enter", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "the desktop project drives the pointer and the keyboard");
     await page.goto("/ro/evenimente", { waitUntil: "networkidle" });
-    await expect(pinnedBadge(page)).toBeVisible();
-    // The panel copy stays out of the way here — one build stamp doing the showing at a time.
     await expect(panelBadge(page)).toBeHidden();
-
-    const box = await pinnedBadge(page).boundingBox();
-    const footer = await page.getByRole("contentinfo").boundingBox();
-    const viewport = page.viewportSize();
-    expect(box).not.toBeNull();
-    expect(footer).not.toBeNull();
-    // At the bar's own corner: inside the footer, at its right end.
-    expect(box!.y).toBeGreaterThanOrEqual(footer!.y);
-    expect(box!.x + box!.width).toBeLessThanOrEqual(viewport!.width);
-    expect(box!.x + box!.width).toBeGreaterThan((footer!.x + footer!.width) / 2);
-  });
-
-  test("is the staff entrance from md too: a double-click opens sign-in, and so does Enter", async ({ page }, testInfo) => {
-    // Review finding 5: the only staff-entrance tests skipped unless the project was "mobile",
-    // driving the panel copy. From `md` the entrance is the pinned copy instead, and the PR CI
-    // run (desktop project only, §209) checked no staff entrance at all.
-    test.skip(testInfo.project.name !== "desktop", "the pinned copy only shows from md");
-    await page.goto("/ro/evenimente", { waitUntil: "networkidle" });
-    // One click does nothing here either: it is never a trap for a pointer passing over it.
-    await pinnedBadge(page).click();
+    await openTheFold(page);
+    // One click does nothing: it is never a trap for a pointer passing over it.
+    await panelBadge(page).click();
     await expect(page).toHaveURL(/\/ro\/evenimente$/);
-    await pinnedBadge(page).dblclick();
+    await panelBadge(page).dblclick();
     await expect(page).toHaveURL(/\/ro\/autentificare$/);
 
     await page.goto("/ro/evenimente", { waitUntil: "networkidle" });
-    await pinnedBadge(page).focus();
-    await expect(pinnedBadge(page)).toBeFocused();
+    await openTheFold(page);
+    await panelBadge(page).focus();
+    await expect(panelBadge(page)).toBeFocused();
     await page.keyboard.press("Enter");
     await expect(page).toHaveURL(/\/ro\/autentificare$/);
   });
 
-  test("is a small outlined chip inside its target box, and the chip itself is the staff entrance", async ({ page }, testInfo) => {
-    // §385, the owner, 2026-09-25: "Version must be within a chip." Both projects: the phone's
-    // copy in the opened fold, the desktop's pinned to the bar's corner.
+  test("is a small outlined chip inside its target box, and the chip itself is the staff entrance", async ({ page }) => {
+    // §385, the owner, 2026-09-25: "Version must be within a chip." Both projects, in the opened fold.
     await page.goto("/ro/evenimente", { waitUntil: "networkidle" });
-    const mobile = testInfo.project.name === "mobile";
-    if (mobile) await openTheFold(page);
-    const badge = mobile ? panelBadge(page) : pinnedBadge(page);
+    await openTheFold(page);
+    const badge = panelBadge(page);
     const chip = badge.getByTestId("build-badge-chip");
     await expect(chip).toBeVisible();
     await expect(chip).toHaveClass(/MuiChip-outlined/);
@@ -170,9 +141,9 @@ test.describe("the build badge", () => {
     // The same words as the stamp always had, and the exact build in the box's title.
     await expect(chip).toHaveText(/app-ver/);
     await expect(badge).toHaveAttribute("title", /BR-V\d+\.\d+|dev/);
-    // The chip is the 24px you see; the box around it is the 44px a long press is aimed at, on
-    // the bar's corner (criterion 6) and in the phone's fold alike — there its line is the fold's
-    // 24px and the rest of the 44 reaches up over the line above (§480, amending §385).
+    // The chip is the 24px you see; the box around it is the 44px a long press is aimed at
+    // (criterion 6): on a phone its line is the fold's 24px plus a 20px reach up over the line
+    // above (§480, amending §385), from `sm` a plain 44.
     const box = await badge.boundingBox();
     const drawn = await chip.boundingBox();
     expect(box!.height).toBeGreaterThanOrEqual(43.5);
@@ -189,39 +160,8 @@ test.describe("the build badge", () => {
     await expect(page).toHaveURL(/\/ro\/autentificare$/);
   });
 
-  test("does nothing on a single tap", async ({ page }, testInfo) => {
-    test.skip(testInfo.project.name !== "mobile", "the panel copy only shows below md");
-    await page.goto("/ro/evenimente", { waitUntil: "networkidle" });
-    await openTheFold(page);
-
-    // The badge receives pointer events, because a double-click on it opens staff sign-in.
-    // What keeps it from being a trap for somebody who opened the fold for the links above it
-    // is that one tap does nothing at all.
-    await panelBadge(page).click();
-    await expect(page).toHaveURL(/\/ro\/evenimente$/);
-  });
-
-  test("is the staff entrance: a double-click opens sign-in, and so does Enter", async ({
-    page,
-  }, testInfo) => {
-    test.skip(testInfo.project.name !== "mobile", "the panel copy only shows below md");
-    // The footer's "Staff" link is gone; this replaced it. Not a security measure — the
-    // backoffice is guarded on the server on every request — but the club's public pages no
-    // longer advertise a backoffice to everybody who reads them.
-    await page.goto("/ro/evenimente", { waitUntil: "networkidle" });
-    await openTheFold(page);
-    await panelBadge(page).dblclick();
-    await expect(page).toHaveURL(/\/ro\/autentificare$/);
-
-    await page.goto("/ro/evenimente", { waitUntil: "networkidle" });
-    await openTheFold(page);
-    await panelBadge(page).focus();
-    await page.keyboard.press("Enter");
-    await expect(page).toHaveURL(/\/ro\/autentificare$/);
-  });
-
   test("is the staff entrance on a phone too: press and hold opens sign-in", async ({ page }, testInfo) => {
-    test.skip(testInfo.project.name !== "mobile", "the panel copy only shows below md");
+    test.skip(testInfo.project.name !== "mobile", "a phone's long press; the desktop project has its own test above");
     // A double-tap is unreliable on a phone and often zooms instead; a long press is the gesture
     // a thumb can do on purpose and a scroll never does by accident.
     await page.goto("/ro/evenimente", { waitUntil: "networkidle" });
@@ -251,7 +191,7 @@ test.describe("the build badge", () => {
   test("does not widen the document past the viewport", async ({ page }) => {
     await page.goto("/ro/evenimente");
 
-    // BR-REQ-041-01 criterion 1, restated for the one element positioned outside the flow.
+    // BR-REQ-041-01 criterion 1, restated for the stamp in the fold.
     const overflow = await page.evaluate(() => ({
       documentWidth: document.documentElement.scrollWidth,
       viewportWidth: document.documentElement.clientWidth,
@@ -263,7 +203,7 @@ test.describe("the build badge", () => {
     await page.goto("/ro/evenimente");
 
     // The badge used to sit over the footer's corner, and the link had to stay clickable under
-    // it; it is in the fold below `md` (§365) and pinned beside the row from `md` (§372), and
+    // it; it is in the fold (§365, §608), and
     // the link is on the bar's one row, on screen at every scroll position — the word "GDPR",
     // named for the notice (§378, §385). The privacy notice is on the bar since §323, so nothing has
     // to be opened to reach it.

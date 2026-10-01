@@ -264,6 +264,29 @@ export default async function RegistrationBox({
                     />
                   </Stack>
 
+                  {/*
+                    Who hands out a freed or added place (§615): the line, at once («Da», the default
+                    and every event before it), or the organizer, from «Coada de înscrieri» with
+                    «Trimite-i oferta» and at the desk with «Dă-i un loc» («Nu»). Under the capacity,
+                    because it says what a raise of the capacity does. A native select of the two
+                    answers, as the reminder's: it always posts one, so the save reads it.
+                  */}
+                  <Stack spacing={1}>
+                    <RecallField
+                      select
+                      name="event.waitlistAutoOffer"
+                      label={t("editor.waitlistAutoOffer")}
+                      defaultValue={event?.waitlistAutoOffer === false ? "false" : "true"}
+                      slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
+                      sx={{ width: { sm: 320 } }}
+                      data-testid="waitlist-auto-offer"
+                    >
+                      <option value="true">{t("editor.waitlistAutoOfferYes")}</option>
+                      <option value="false">{t("editor.waitlistAutoOfferNo")}</option>
+                    </RecallField>
+                    <BoxNote more={t("editor.waitlistAutoOfferHelpMore")}>{t("editor.waitlistAutoOfferHelp")}</BoxNote>
+                  </Stack>
+
                   {/* 8.1 — from when until when. */}
                   <Panel glyph="window" collapsible level={3} id="box-registration-window" title={t("editor.boxes.registrationWindow.title")} aside={registrationWindowSummary(words, event, locale)}>
                     <Stack spacing={1}>

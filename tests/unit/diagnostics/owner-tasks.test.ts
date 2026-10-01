@@ -26,6 +26,7 @@ const LAUNCHED: OwnerTaskInputs = {
   hasApprovedPrivacyNotice: true,
   listStatesDescribed: true,
   listSocialsDescribed: true,
+  listNumbersDescribed: true,
   promoDescribed: true,
   sponsorShareDescribed: true,
   newsletterDescribed: true,
@@ -88,6 +89,31 @@ describe("owner tasks", () => {
       const item = catalogue.Admin.tasks.items.listStatesNotice;
       expect(item.title && item.todo && item.done && item.how.length > 0).toBeTruthy();
       expect(item.how.join("\n")).toContain("/admin/legal");
+    }
+  });
+
+  /** §613 — the race number beside a confirmed name waits on the club's notice, like the states; open, never blocking. */
+  it("keeps the list-numbers row open while the notice in force does not describe the number, and never blocking", () => {
+    expect(stateOf({ ...LAUNCHED, listNumbersDescribed: false }, "listNumbersNotice")).toBe("open");
+    expect(stateOf(LAUNCHED, "listNumbersNotice")).toBe("done");
+    // Its own answer, not the states' or the socials': a notice naming those and not the number leaves it open.
+    expect(stateOf({ ...LAUNCHED, listNumbersDescribed: false }, "listStatesNotice")).toBe("done");
+    expect(stateOf({ ...LAUNCHED, listStatesDescribed: false, listSocialsDescribed: false }, "listNumbersNotice")).toBe("done");
+    expect(ownerTasks({ ...LAUNCHED, hasApprovedPrivacyNotice: false }).some((task) => task.id === "listNumbersNotice")).toBe(false);
+    for (const catalogue of [ro, en]) {
+      const item = catalogue.Admin.tasks.items.listNumbersNotice;
+      expect(item.title && item.todo && item.done && item.how.length > 0).toBeTruthy();
+      expect(item.how.join("\n")).toContain("/admin/legal");
+      // §613: the club writes to the runners registered under the earlier notice BEFORE it approves the new one,
+      // with the backoffice's own message, and names the participant's own control for withdrawing.
+      const approveStep = item.how.findIndex((step) => /Aprobă și publică|Approve and publish/.test(step));
+      const messageStep = item.how.findIndex((step) => step.includes(catalogue.Admin.participantMessages.link));
+      expect(messageStep).toBeGreaterThanOrEqual(0);
+      expect(messageStep).toBeLessThan(approveStep);
+      expect(item.how.join("\n")).toContain(catalogue.Registrations.list.optOut);
+      expect(item.how.join("\n")).not.toContain("„—”");
+      expect(item.how.join("\n")).not.toContain("“—”");
+      expect(item.how.every((step) => step.length <= 200)).toBe(true);
     }
   });
 
@@ -284,6 +310,7 @@ describe("owner tasks", () => {
       "approveLegalText",
       "listStatesNotice",
       "listSocialsNotice",
+      "listNumbersNotice",
       "promoNotice",
       "sponsorNotice",
       "newsletterNotice",

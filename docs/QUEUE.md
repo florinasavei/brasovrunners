@@ -67,8 +67,6 @@ Where things stand at 09:20 on 2026-10-01, written so that a session with no acc
 
 - `yarn npm audit` leftovers: `esbuild` 0.18 through `drizzle-kit`, ESLint 9.39's end of support — major upgrades of two
   dev dependencies, each its own change, after the owner's yes (§584).
-- `scripts/land-batch.mjs`: a `§NNN` line written by a merge commit should be listed for hand numbering instead of
-  taking one entry's number (the `BR-V2.44` landing gave §577 to two merge lines; corrected in §582).
 - Measure Neon after §577: `yarn idle:measure` on production on 2026-10-01 (5.7 CU-hours a day before it); the
   cron-job.org job pings are the next suspect if it does not fall below 2.
 - After the 21 November race: Vercel production back from Pro to Hobby (moved to Pro on 2026-09-30 for the function
@@ -121,6 +119,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Baseline | What |
 | --- | --- |
+| `BR-V2.55` | a merge's placeholder line is numbered by hand (§607) · the version stamp shows only in the open fold, on the desktop too (§608) · a prettier shared card, drawn from a design object (§609) · the money page per month and per service, and Vercel's plan as a setting (§610) · the past events' own «Filtre» (§611) · an offered place named on the card; the queue wakes at a family's lapse (§612) · the race number on the public list, behind the notice (§613) · the third step says where the declaration is (§614) · automatic waiting-list offers as a setting, and offers by choice (§615) · the unticked declaration box is named (§616) · the running cost written down: three paid plans and the consoles' readings (§617) |
 | `BR-V2.54` | the declaration resent to everyone who has not signed, in one press (§606) |
 | `BR-V2.53` | the outbox paces Mailgun to 100 an hour; a rate refusal is a pause (§605) |
 | `BR-V2.52` | the race’s card, hero and page draw the date and each named time on a line of their own, the clock and the flag under the calendar, wherever the row’s own box is too narrow for one line (a container query in em, by the date’s form), one named time too; the pills’ tooltips say «circa 10 km» and «circa 350 m diferență de nivel» without «(aproximativ)»/«(estimativ)» (§604) |

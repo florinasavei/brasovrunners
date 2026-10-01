@@ -9,6 +9,7 @@ import { holdPageUntil } from "@/modules/public-cache/page-lifetime";
 import {
   cachedDeadlines,
   cachedFirstStatesNoticeVersion,
+  cachedListNumbersDisclosed,
   cachedListSocialsDisclosed,
   cachedListStatesDisclosed,
   cachedStartListCounts,
@@ -27,6 +28,9 @@ import { listStateLegend } from "./list-state-legend";
 import ListStateLabel from "./ListStateLabel";
 import StartListSocials from "./StartListSocials";
 import { readOrWhileAway } from "@/modules/resilience/optional-read";
+
+/** What the «Nr.» column says for a listed runner with no number: the backoffice's own dash (§548). */
+const NO_NUMBER = "—";
 
 /**
  * Who is coming (BR-REQ-039-01, BR-REQ-039-02; `DECISIONS.md` §32, §85, §186, §250, §346): every
@@ -51,7 +55,7 @@ import { readOrWhileAway } from "@/modules/resilience/optional-read";
  *
  * What is *not* in the table is the guarantee: the display name and the club, which is what the
  * repository's select list carries and what `tests/privacy/public-surface.test.ts` refuses to
- * let widen. No number, no address, no state.
+ * let widen. No address, and no number or state but behind the privacy notice's own gates (below).
  *
  * ## The hidden names (§186, §346)
  *
@@ -99,6 +103,18 @@ import { readOrWhileAway } from "@/modules/resilience/optional-read";
  * only for them; a hidden row never has any, because nothing about it is read. Without that notice
  * the list reads no social at all.
  *
+ * ## The race number, behind the notice (§613, amending §396)
+ *
+ * The owner: "in the public participants list, I also want to show the BID as a column, not just
+ * the index in the table". Once the privacy notice in force names `{{participantListNumbers}}`
+ * (`cachedListNumbersDisclosed`), a «Nr.» column sits between the position and the name: a named
+ * confirmed runner's race number — the one their confirmation drew (§548), `bib_number`, never the
+ * old provisional column (§214: a published number is a number that cannot move) — «—» for a
+ * confirmed runner who has none and for the pending and waiting rows (they have none, §548), and
+ * nothing at all on a hidden row (§186: nothing about it is read). The column shows only when the
+ * page's rows carry at least one number: an event that numbers nobody keeps today's table rather
+ * than a column of dashes. Without that notice no number is even selected.
+ *
  * ## While the database is away
  *
  * Nothing, rather than the event page's error (§447): the list is never served from a copy — a
@@ -141,6 +157,8 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
   const statesOn = await cachedListStatesDisclosed(now);
   // The socials' gate (§500), the same reading: off, no Strava or Instagram is even selected.
   const socialsOn = await cachedListSocialsDisclosed(now);
+  // The race number's gate (§613), the same reading: off, no number is even selected.
+  const numbersOn = await cachedListNumbersDisclosed(now);
   /*
     …and only for the ticks given under a notice that described them (§421): a registration that
     recorded an older notice agreed to a list of confirmed names, and appears once confirmed, as
@@ -151,7 +169,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
   const others = firstStatesNotice !== null ? await cachedStartListOthersCounts(event.id, firstStatesNotice) : { pending: 0, waitlisted: 0 };
   const view = startListPage(named, anonymous, requestedPage, START_LIST_PAGE_SIZE, others.pending + others.waitlisted);
   const [participants, otherRows] = await Promise.all([
-    view.namedLimit > 0 ? cachedStartListPage(event.id, view.namedOffset, view.namedLimit, socialsOn) : [],
+    view.namedLimit > 0 ? cachedStartListPage(event.id, view.namedOffset, view.namedLimit, socialsOn, numbersOn) : [],
     firstStatesNotice !== null && view.othersLimit > 0
       ? cachedStartListOthersPage(event.id, firstStatesNotice, view.othersOffset, view.othersLimit, socialsOn)
       : [],
@@ -187,6 +205,28 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
   /** The word beside a name — only behind the gate; without it a row carries no state. */
   const stateOf = (group: PublicListGroup) =>
     statesOn ? <ListStateLabel group={group} label={t(`startList.states.${LIST_STATE_KEYS[group]}`)} help={helpOf(group)} /> : null;
+
+  /*
+    The «Nr.» column (§613): behind the gate, and only when this page's confirmed rows carry a number
+    — a column that would read «—» on every row says nothing to a reader, so the table stays as it
+    was. `bibNumber` is absent from every row without the gate (the query did not select it).
+  */
+  const numbersShown = numbersOn && participants.some((participant) => typeof participant.bibNumber === "number");
+  /** The number's cell: the number, or «—» for a row that has none. A hidden row has an empty cell instead. */
+  const numberCell = (bibNumber: number | null | undefined) =>
+    numbersShown ? (
+      <Box component="td" data-col="number" data-testid="start-list-number">
+        {typeof bibNumber === "number" ? bibNumber : NO_NUMBER}
+      </Box>
+    ) : null;
+  // The caption names the number only when the column is there (§613).
+  const caption = statesOn
+    ? numbersShown
+      ? t("startList.captionStatesNumbers")
+      : t("startList.captionStates")
+    : numbersShown
+      ? t("startList.captionNumbers")
+      : t("startList.caption");
 
   /** A relative query, so the link stays on this event whatever its address is (§8). */
   const pageHref = (page: number) => `?lista=${page}#start-list-title`;
@@ -253,16 +293,27 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
                 "& th, & td": { textAlign: "left", py: 1, px: 1, borderBottom: 1, borderColor: "divider", verticalAlign: "top" },
                 "& th": { fontWeight: 600, fontSize: "0.875rem", color: "text.secondary", whiteSpace: "nowrap" },
                 "& td:first-of-type, & th:first-of-type": { width: "3rem", color: "text.secondary" },
+                // The race number (§613): right-aligned figures of one width, as narrow as its widest
+                // number, so the name keeps the room it had at 320 pixels.
+                "& [data-col='number']": { textAlign: "right", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap", width: "1%" },
               }}
             >
               <Box component="caption" sx={{ captionSide: "top", textAlign: "left", py: 1, fontSize: "0.875rem", color: "text.secondary" }}>
-                {statesOn ? t("startList.captionStates") : t("startList.caption")}
+                {caption}
               </Box>
               <Box component="thead">
                 <Box component="tr">
                   <Box component="th" scope="col">
                     {t("startList.columnPosition")}
                   </Box>
+                  {numbersShown && (
+                    // «Nr.» on the screen, the whole word for a screen reader and on hover.
+                    <Box component="th" scope="col" data-col="number" aria-label={t("startList.columnNumberFull")}>
+                      <Box component="abbr" title={t("startList.columnNumberFull")} sx={{ textDecoration: "none" }}>
+                        {t("startList.columnNumber")}
+                      </Box>
+                    </Box>
+                  )}
                   <Box component="th" scope="col">
                     {t("startList.columnName")}
                   </Box>
@@ -277,6 +328,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
                   // so the position in the confirmed order is what identifies the row.
                   <Box component="tr" key={`${view.namedOffset + index}-${participant.displayName}`} data-testid="start-list-named">
                     <Box component="td">{view.firstPosition + index}</Box>
+                    {numberCell(participant.bibNumber)}
                     <Box component="td">
                       {participant.displayName}
                       {socialsOf(participant)}
@@ -300,6 +352,8 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
                 {Array.from({ length: view.anonymousOnPage }, (_, index) => (
                   <Box component="tr" key={`anonymous-${index}`} data-testid="start-list-anonymous">
                     <Box component="td" />
+                    {/* Nothing about a hidden runner is read (§186), so no number and no «—» either. */}
+                    {numbersShown && <Box component="td" data-col="number" />}
                     <Box component="td" sx={{ color: "text.secondary", fontStyle: "italic" }}>
                       {t("startList.anonymous")}
                       {stateOf("CONFIRMED")}
@@ -321,6 +375,8 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
                     data-group={row.group}
                   >
                     <Box component="td" />
+                    {/* Pending or waiting: no number exists before the confirmation (§548), and none is selected. */}
+                    {numberCell(null)}
                     <Box component="td">
                       {row.displayName}
                       {socialsOf(row)}
