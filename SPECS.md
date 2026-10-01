@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.51-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.52-2026-09-27 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V2.51-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.52-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -380,6 +380,8 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 179. The large preview zooms on its own: two fingers scale the picture 1–4× about their midpoint, one finger pans a zoomed picture without it leaving the screen, a double tap toggles 2× and back, a trackpad's pinch zooms around the cursor; only a tap (one pointer, within 300 ms and 10 px, the scale unchanged) closes the layer, never a pinch's or a pan's end, nor a tap followed within 300 ms by a pinch or a pan, and the preview opens at 1× every time (2026-10-01, `DECISIONS.md` §601).
 180. The listing's past section passes through the same parsed filter and the same predicate as the upcoming cards; the filter panel offers a value that only a past event in the page's window carries; with a filter on, the past fold is open and its heading reads «Din trecut, după filtre (N)» / "Past, filtered (N)"; with nothing ticked it stays closed (2026-10-01, `DECISIONS.md` §602).
 181. On a phone, a listing card whose date is within the coming twelve months says the weekday short and no year («sâm., 21 nov.»); the desktop card keeps the full weekday and the year (2026-10-01, `DECISIONS.md` §603).
+182. Wherever a race's «când» row is narrower than its one-line width — measured on the row's own box, in the row's own font-size: below 23em with one named time and 32em with two where the date is the card's short phone date («Sâm., 21 nov.», below `sm`), below 27em and 36em where it is the long one (the card from `sm` up, the event page, the hero) — the card, the hero and the event page draw it as a list: the date and each named time on a line of their own, no middle dot, and on the card (and on the page below `sm`) the clock and the flag hung in the glyph column under the calendar (their left within 2 pixels of the calendar glyph's) so the date and every time's words start at one left edge; where the row fits it flows inline, and a bare time (a group run, a series) has no list (2026-10-01, `DECISIONS.md` §604).
+183. An approximate distance and an estimated climb say «circa» once in their long form and no parenthetical after it — «circa 10 km» / «about 10 km», «circa 350 m diferență de nivel» / «about 350 m of elevation gain» — wherever they stand alone (the pill's tooltip and screen-reader label, the page's facts, the emails, the calendar entry); the pill keeps «≈ 10 km» and «≈ 350 m D+» (2026-10-01, `DECISIONS.md` §604).
 
 **Verification:** e2e `registration-form.spec.ts` and `registration-entry.spec.ts` under both Playwright viewport projects, `event-pages.spec.ts` (criterion 12); unit `registrations/form-errors.test.ts`, `events/listing.test.ts`, `theme/brand.test.ts`; release check on a real device
 

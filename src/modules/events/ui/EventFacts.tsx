@@ -125,12 +125,53 @@ const RACE_ROW_GAP = 0.5;
  * at sixteen pixels never share a line with the date); the hero has no glyph column under its
  * label, so there the glyphs lead their own lines instead of hanging. CSS alone: the markup is the
  * same at every width, a media query decides.
+ *
+ * Amended §604 (the owner, 2026-10-01, of the production race's card with ONE named time:
+ * «Iconițele astea tot nu sunt aliniate» — «Sâm., 21 nov. ·» / «[clock] 10:00 (start eveniment)»,
+ * the clock inside the text column, a dot dangling): the list is for every race's «când» — one
+ * named time or two — and it is decided by the row's OWN width, not the viewport's. A CSS container
+ * query on the box that holds the row (`WHEN_CONTAINER`: the card's text column beside the glyph
+ * column, the hero's answer, the page's answer) switches to the list below the row's one-line
+ * width. The thresholds are in the container's OWN em (css-contain-3 resolves a container
+ * condition's em against the query container's font-size), and that differs per surface: the card's
+ * column sits inside `cardLine`'s `body2`, 14 pixels; the hero's and the page's answers are `body1`,
+ * 16. On the 14-pixel card the row is one line at («Sâm., 21 nov. · » 112 + the clock 24
+ * + «10:00 (start eveniment)» 166 + the gaps, ≈ 22em; with two times 112 + 178 + 140 + the gaps,
+ * ≈ 31.5em, §597); so one named time is a list below 23em and two below 32em — 322 and 448 pixels
+ * on the card, 368 and 512 on the hero and the page, where the larger words need the room. A
+ * reader's larger font moves the threshold with the words; English is shorter, so the same em hold. A browser
+ * without container queries shows the inline row, as before. A bare time (a group run, a series)
+ * has no name and no list.
+ *
+ * The thresholds follow the DATE's form too (a review, §604): 23em / 32em were measured on the
+ * card's SHORT date («Sâm., 21 nov.», `dateShort`, below `sm` only). The LONG date («Sâmbătă,
+ * 21 nov. 2026 · », about 75 pixels wider at sixteen) — the card from `sm` up, the page's «Când»
+ * and the hero — needs 187 + 24 + 166 ≈ 377 pixels (23.6em) for one named time and
+ * 187 + 178 + 140 ≈ 505 (31.6em) for two, so it is a list below 27em and 36em, the same margin
+ * above. On the card the form follows the breakpoint that picks the date (`WHEN_BELOW_SM` /
+ * `WHEN_FROM_SM` wrap the container rule); the page and the hero always show the long date.
  */
-const CARD_LIST_BELOW_412 = "@media (max-width: 411.95px)";
-const LIST_BELOW_SM = "@media (max-width: 599.95px)";
+const WHEN_CONTAINER = { containerType: "inline-size", containerName: "when" } as const;
+/** The theme's `down("sm")` and `up("sm")` (`src/theme/theme.ts`: `sm` is 600): where the card shows `dateShort`, and where `dateLong`. */
+const WHEN_BELOW_SM = "@media (max-width:599.95px)";
+const WHEN_FROM_SM = "@media (min-width:600px)";
+/** The date's form the row carries: the card's phone date («Sâm., 21 nov.») or the long one («Sâmbătă, 21 nov. 2026»). */
+type WhenDate = "short" | "long";
+/** The container query under which a race's «când» is a list (§600, amended §604), by its count of named times and its date's form. */
+function whenListQuery(namedTimes: number, date: WhenDate): string | null {
+  if (namedTimes >= 2) return `@container when (max-width: ${date === "short" ? 32 : 36}em)`;
+  if (namedTimes === 1) return `@container when (max-width: ${date === "short" ? 23 : 27}em)`;
+  return null;
+}
 /** The row's glyph column: the twenty-pixel glyph and its eight-pixel gap (`ROW_ICON_SX`; the page's `pl` 3.5). */
 const GLYPH_COLUMN_PX = ROW_ICON_SX.fontSize + 8 * ROW_ICON_SX.mr;
-type WhenList = { media: string; hang: boolean };
+/**
+ * `hang`: where a time's leading glyph hangs back into the glyph column — always on the card (its
+ * calendar glyph stands beside the text column), only below `sm` on the page (where the answer is
+ * indented by that column, `pl` 3.5; from `sm` up the label column stands there instead, so the
+ * glyph keeps its seat), never in the hero (no glyph column under its label).
+ */
+type WhenList = { at: (rules: Record<string, unknown>) => Record<string, unknown>; hang: "always" | "belowSm" | false };
 
 // The weather row is one line since §469; the hours strip, details and place line went with it.
 
@@ -450,8 +491,16 @@ export default async function EventFacts({
   // A race with no race start says «10:00 (start eveniment)» (#305): longer than the one-line row of §375 allows on a
   // phone, so that row may wrap between its whole pieces rather than let the card's overflow clip the time.
   const raceStartLater = startsAt !== null && whenTimes({ type: event.type, startsAt, raceStartsAt: event.raceStartsAt }).raceStartLater;
-  // A race with both its named times (§597) is the row the list form is for (`CARD_LIST_BELOW_412`, §600).
-  const twoNamedTimes = startsAt !== null && whenTimes({ type: event.type, startsAt, raceStartsAt: event.raceStartsAt }).times.length === 2;
+  // A race's named times — one or both (§597, #305) — make the row the list form is for (§600, amended §604).
+  const namedTimes = startsAt === null ? 0 : whenTimes({ type: event.type, startsAt, raceStartsAt: event.raceStartsAt }).times.filter(({ key }) => key !== null).length;
+  // The page and the hero always show the long date; the card shows the short one below `sm` when it has one (`dateShort`).
+  const listQuery = whenListQuery(namedTimes, "long");
+  const whenList = (hang: WhenList["hang"]): WhenList | undefined => (listQuery ? { at: (rules) => ({ [listQuery]: rules }), hang } : undefined);
+  const cardShortQuery = dateShort ? whenListQuery(namedTimes, "short") : null;
+  const cardWhenList: WhenList | undefined =
+    listQuery && cardShortQuery
+      ? { at: (rules) => ({ [WHEN_BELOW_SM]: { [cardShortQuery]: rules }, [WHEN_FROM_SM]: { [listQuery]: rules } }), hang: "always" }
+      : whenList("always");
   const raceStartNote =
     raceStartLater ? (
       <Typography component="div" variant="body2" color="text.secondary" data-testid="race-start-later">
@@ -536,12 +585,12 @@ export default async function EventFacts({
       {items.map((item, index) => (
         <Fragment key={index}>
           {index > 0 && (
-            <Box component="span" aria-hidden="true" data-when-separator={list ? "" : undefined} sx={{ color: "text.disabled", ...(list ? { [list.media]: { display: "none" } } : {}) }}>
+            <Box component="span" aria-hidden="true" data-when-separator={list ? "" : undefined} sx={{ color: "text.disabled", ...(list ? list.at({ display: "none" }) : {}) }}>
               ·
             </Box>
           )}
           {list ? (
-            <Box component="span" data-when-line={index === 0 ? "date" : "time"} sx={{ [list.media]: { flexBasis: "100%" } }}>
+            <Box component="span" data-when-line={index === 0 ? "date" : "time"} sx={list.at({ flexBasis: "100%" })}>
               {item}
             </Box>
           ) : (
@@ -601,26 +650,30 @@ export default async function EventFacts({
             component="span"
             aria-hidden="true"
             data-when-separator={list ? "" : undefined}
-            sx={{ color: "text.disabled", ml: card?.tight ? RACE_ROW_GAP : 0.75, ...(list ? { [list.media]: { display: "none" } } : {}) }}
+            sx={{ color: "text.disabled", ml: card?.tight ? RACE_ROW_GAP : 0.75, ...(list ? list.at({ display: "none" }) : {}) }}
           >
             ·
           </Box>
         );
         const whole = card ? { whiteSpace: "nowrap", flexShrink: 0 } as const : undefined;
-        // The list form (`CARD_LIST_BELOW_412`, above): a line per piece, and a time's leading
+        // The list form (`WHEN_CONTAINER`, above): a line per piece, and a time's leading
         // glyph hung in the glyph column so its words start at the date's left edge.
+        const hung =
+          list?.hang === "always"
+            ? { ml: `-${GLYPH_COLUMN_PX}px`, mr: ROW_ICON_SX.mr }
+            : list?.hang === "belowSm"
+              ? { ml: { xs: `-${GLYPH_COLUMN_PX}px`, sm: 0 }, mr: { xs: ROW_ICON_SX.mr, sm: CLOCK_SX.mr } }
+              : null;
         return list ? (
           <Box
             key={index}
             component="span"
             data-when-line={index === 0 ? "date" : "time"}
             style={whole}
-            sx={{
-              [list.media]: {
-                flexBasis: "100%",
-                ...(index > 0 && list.hang ? { "& > svg:first-of-type": { ml: `-${GLYPH_COLUMN_PX}px`, mr: ROW_ICON_SX.mr } } : {}),
-              },
-            }}
+            sx={list.at({
+              flexBasis: "100%",
+              ...(index > 0 && hung ? { "& > svg:first-of-type": hung } : {}),
+            })}
           >
             {item}
             {separator}
@@ -747,7 +800,9 @@ export default async function EventFacts({
 
     // One line of the card: its glyph, then its words beside it — the glyph on the first line.
     // The registration line draws the same shape in `CardRegistration` (§409).
-    const cardLine = (key: string, Icon: Glyph, value: ReactNode) => (
+    // The «când» row's text column is its list's container (`WHEN_CONTAINER`, §604): it fills the
+    // line beside the glyph (`flex: 1 1 auto` — a size-contained box has no content width of its own).
+    const cardLine = (key: string, Icon: Glyph, value: ReactNode, container = false) => (
       <Typography
         component="div"
         variant="body2"
@@ -756,7 +811,7 @@ export default async function EventFacts({
         sx={{ display: "flex", alignItems: "flex-start", minWidth: 0 }}
       >
         <Icon aria-hidden="true" sx={ROW_ICON_SX} />
-        <Box sx={{ minWidth: 0, overflowWrap: "anywhere" }}>{value}</Box>
+        <Box sx={{ minWidth: 0, overflowWrap: "anywhere", ...(container ? { ...WHEN_CONTAINER, flex: "1 1 auto" } : {}) }}>{value}</Box>
       </Typography>
     );
 
@@ -770,7 +825,7 @@ export default async function EventFacts({
             a race's gathering and start time, or a date that keeps its year on a phone (no
             `dateShort`: past, or more than a year out), may still wrap between whole pieces rather
             than be clipped (§366, amended §375). */}
-        {cardLine("when", CalendarMonthIcon, flow(whenPieces(CLOCK_SX, true), { lead: whenLead, wrap: !!event.raceStartsAt || (compact && !dateShort) || raceStartLater, tight: !!event.raceStartsAt }, twoNamedTimes ? { media: CARD_LIST_BELOW_412, hang: true } : undefined))}
+        {cardLine("when", CalendarMonthIcon, flow(whenPieces(CLOCK_SX, true), { lead: whenLead, wrap: !!event.raceStartsAt || (compact && !dateShort) || raceStartLater, tight: !!event.raceStartsAt }, cardWhenList), !!listQuery)}
         {place && cardLine("where", PlaceIcon, place)}
         {/* A group of its own, so a group's gap above it rather than a line's (§366). */}
         {pillsRow && (
@@ -894,9 +949,13 @@ export default async function EventFacts({
         label: t("when"),
         icon: CalendarMonthIcon,
         value: whenPieces(HERO_GLYPH_SX),
-        node: raceStartNote || twoNamedTimes ? (
+        node: raceStartNote || listQuery ? (
           <>
-            {pieces(whenPieces(HERO_GLYPH_SX), twoNamedTimes ? { media: LIST_BELOW_SM, hang: false } : undefined)}
+            {listQuery ? (
+              <Box sx={WHEN_CONTAINER}>{pieces(whenPieces(HERO_GLYPH_SX), whenList(false))}</Box>
+            ) : (
+              pieces(whenPieces(HERO_GLYPH_SX))
+            )}
             {raceStartNote}
           </>
         ) : undefined,
@@ -999,7 +1058,7 @@ export default async function EventFacts({
       icon: CalendarMonthIcon,
       value: (
         <>
-          {flow(whenPieces(CLOCK_SX), undefined, twoNamedTimes ? { media: LIST_BELOW_SM, hang: true } : undefined)}
+          {listQuery ? <Box sx={WHEN_CONTAINER}>{flow(whenPieces(CLOCK_SX), undefined, whenList("belowSm"))}</Box> : flow(whenPieces(CLOCK_SX))}
           {raceStartNote}
         </>
       ),

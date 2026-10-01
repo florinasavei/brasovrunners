@@ -191,7 +191,7 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     // With a route to show, the surface completes the row as its pill, beside the link (§356).
     const routeRow = page.locator("dt").filter({ hasText: /^Traseu$/ }).locator("xpath=following-sibling::dd[1]");
     // The climb ticked «Estimativ» (§585): «≈ 350 m D+» on the pill, and the chip's name in words.
-    await expect(routeRow.locator(".MuiChip-root")).toHaveText(["Trail", /^≈ 350 m D\+circa 350 m diferență de nivel \(estimativ\)$/]);
+    await expect(routeRow.locator(".MuiChip-root")).toHaveText(["Trail", /^≈ 350 m D\+circa 350 m diferență de nivel$/]);
 
     const route = page.getByRole("link", { name: "Vezi traseul" });
     await expect(route).toHaveAttribute("href", ROUTE_LINK);
@@ -218,7 +218,7 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     // The English page says the same kind in English, from the same row.
     await page.goto(`/en/events/route-race-${suffix}`);
     await expect(page.locator("section#links").getByRole("link", { name: /Route \(GPX\)/ })).toHaveAttribute("href", GPX_LINK);
-    await expect(page.locator(".MuiChip-root").filter({ hasText: "about 350 m of elevation gain (estimated)" }).first()).toContainText("≈ 350 m climb");
+    await expect(page.locator(".MuiChip-root").filter({ hasText: "about 350 m of elevation gain" }).first()).toContainText("≈ 350 m climb");
     await page.goto(`/ro/evenimente/${slug}`);
 
     // Criterion 1: a long pasted URL must not widen the document.

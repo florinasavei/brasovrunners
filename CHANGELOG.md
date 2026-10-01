@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.52-2026-09-27
+
+- **The race's «când» lines up with one time too** — the race's card, hero and page draw the date and each named time on a line of their own, the clock and the flag under the calendar, wherever the row's own box is too narrow for one line (a container query, in em, sized for the short and the long date), not only for two times below 412 pixels; and the pills' tooltips say «circa 10 km» without «(aproximativ)», «circa 350 m diferență de nivel» without «(estimativ)». §604.
 ## BR-V2.51-2026-09-27
 
 - **A race card's two times line up on a phone** — where the «când» row wraps, the date, «08:30 (start eveniment)» and «11:00 (start cursă)» each take a line, start at one edge, with the calendar, the clock and the flag in one column and no dangling dots; the event page and the hero do the same below `sm`. §600.

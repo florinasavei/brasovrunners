@@ -32,7 +32,7 @@ Where things stand at the end of 2026-09-30, written so that a session with no a
   again:** it is on production already.
 - **The release** is the owner's «ok release» after checking QA: from the phone, the label `ship` on the last batch PR into
   qa runs the landing and the release on GitHub Actions (`docs/RUNBOOKS.md` § Every release: the label); from a PC,
-  `node scripts/ship.mjs <batch PR> BR-V2.51-2026-09-27 BR-V2.46-2026-09-27 "<title>"`. No migration is due
+  `node scripts/ship.mjs <batch PR> BR-V2.52-2026-09-27 BR-V2.46-2026-09-27 "<title>"`. No migration is due
   after `0115` (the elevation tick, in `BR-V2.47`).
 - **Decided today, recorded in the sections:** a full race never gets a place from the desk — raise the capacity first
   (§589, §592); the address is confirmed for all or for none, the declaration per person, a cancellation per person
@@ -72,7 +72,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Item | Branch |
 | --- | --- |
-| — | nothing waiting: the last ready items shipped in `BR-V2.51` |
+| — | nothing waiting: the last ready items shipped in `BR-V2.52` |
 
 ## Next, queued
 
@@ -109,6 +109,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Baseline | What |
 | --- | --- |
+| `BR-V2.52` | the race’s card, hero and page draw the date and each named time on a line of their own, the clock and the flag under the calendar, wherever the row’s own box is too narrow for one line (a container query in em, by the date’s form), one named time too; the pills’ tooltips say «circa 10 km» and «circa 350 m diferență de nivel» without «(aproximativ)»/«(estimativ)» (§604) |
 | `BR-V2.51` | when the card’s «când» row wraps with two named times it becomes a tidy list — the date, then «08:30 (start eveniment)», then «11:00 (start cursă)», left-aligned, the clock and the flag in one column, no dangling «·»; where the row fits on one line it stays inline (§600) · a picture in an event’s full description opens large in place on a tap — a lightbox over the page with a ✕, closed by ✕, Escape, a tap on the backdrop or Back, pinch-zoom on the picture — never the image file; one small client island on the existing figure, nothing loaded in idle (§601) · the listing’s «Filtre» apply to the past events too — the same parsed filter and predicate, the matching past events shown in the past section with its heading saying so, nothing new read in idle (§602) · the phone card says the weekday short — «sâm., 21 nov. · 10:00 (start eveniment)» stays one line on most phones, the wrap of #307 the safety net at 320 px (a hotfix straight to production, #312) (§603) |
 | `BR-V2.50` | a cancellation — by staff, by the participant, by an erasure or an expiry — offers the freed place at once to the first person on the waiting list, through the one allocator, with the offer email sent from that request, and the backoffice shows the offered state; the cause of the silence on QA found and fixed at the root (§596) · a race with both times says «08:30 (start eveniment) · 10:00 (start cursă)» on every surface, the race start with a racing-flag glyph on the card, the page and the hero; the single-time race keeps «(start eveniment)» (§597) · the event’s distance can be marked «aproximativ» — a tick beside the number in the editor (migration 0116), «≈ 10 km» on the pills and «circa 10 km (aproximativ)» wherever the distance stands alone, through one domain function, on every surface the elevation’s estimate covers (§598) · the card’s «când» row is never clipped — when the race start is not set, the date stays on its line and «10:00 (start eveniment)» wraps under it on a phone (a hotfix straight to production, #307) (§599) |
 | `BR-V2.49` | the listing card’s full state also says the room left on a capped waiting list («Mai sunt N locuri pe lista de așteptare»), the same phrase the event page uses, from the door read the card already has (§594) · a race with no race start says «10:00 (start eveniment)» on the card, the page, the emails and the calendar — never a bare time that reads as the race start; the page keeps «Ora startului cursei se anunță.» (a hotfix straight to production, #305) (§595) |
