@@ -12,6 +12,7 @@ import { hasRouteDescription, isRouteLinkKind, partitionEventLinks } from "@/mod
 import type { PublicEvent } from "@/modules/events/repository";
 import EventLinks from "@/modules/events/ui/EventLinks";
 import EventRoute from "@/modules/events/ui/EventRoute";
+import { withClientWords } from "../../helpers/client-words";
 
 /**
  * BR-REQ-011-01 (`DECISIONS.md` §387) — "Traseul" / "The route" on the event page, under `#route`:
@@ -70,15 +71,18 @@ const kindLabels = (locale: "ro" | "en") => words(locale).links.kinds as Record<
 
 const routeSection = (descriptionJson: unknown, { locale = "ro", routeUrl = null as string | null, links = EVERY_KIND as unknown } = {}) =>
   renderToStaticMarkup(
-    createElement(EventRoute, {
-      descriptionJson,
-      links,
-      routeUrl,
-      locale: locale as "ro" | "en",
-      heading: words(locale as "ro" | "en").routeSection,
-      openRouteLabel: words(locale as "ro" | "en").openRoute,
-      kindLabels: kindLabels(locale as "ro" | "en"),
-    }),
+    withClientWords(
+      createElement(EventRoute, {
+        descriptionJson,
+        links,
+        routeUrl,
+        locale: locale as "ro" | "en",
+        heading: words(locale as "ro" | "en").routeSection,
+        openRouteLabel: words(locale as "ro" | "en").openRoute,
+        kindLabels: kindLabels(locale as "ro" | "en"),
+      }),
+      locale as "ro" | "en",
+    ),
   );
 
 const linksSection = (routeSectionShown: boolean, links: unknown = EVERY_KIND, locale: "ro" | "en" = "ro") =>

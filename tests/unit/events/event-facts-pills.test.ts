@@ -294,6 +294,25 @@ describe("BR-REQ-041-01 «când» is one line with its weekday (§356, §349)", 
     expect(when).toContain('aria-label="race start"');
   });
 
+  it("on a phone, the page's two times are a list too: a line each, the glyphs hung in the answer's indent under the calendar (§600)", async () => {
+    const html = await page({ startsAt: new Date("2026-09-26T06:00:00Z"), raceStartsAt: new Date("2026-09-26T07:00:00Z") });
+    const dd = /<dd\b[^>]*>[\s\S]*?<\/dd>/.exec(html.slice(html.indexOf("<dt")))?.[0] ?? "";
+    const times = [...dd.matchAll(/<span\b[^>]*data-when-line="time"[^>]*>/g)].map(([tag]) => tag);
+    expect(times).toHaveLength(2);
+    // Below MUI's `sm`, where the answer stands under the question, indented by the glyph column.
+    const rulesFor = (tag: string) => {
+      const cls = /class="[^"]*\b(css-[\w-]+)"/.exec(tag)?.[1] ?? "";
+      const block = [...html.matchAll(/@media \(max-width: ?599\.95px\)\{((?:[^{}]+\{[^}]*\})+)\}/g)].map((m) => m[1] ?? "").join("");
+      return [...block.matchAll(/([^{}]+)\{([^}]*)\}/g)].filter((rule) => (rule[1] ?? "").includes(cls)).map((rule) => `${rule[1]}{${rule[2]}}`).join("");
+    };
+    for (const tag of times) {
+      expect(rulesFor(tag)).toContain("flex-basis:100%");
+      expect(rulesFor(tag)).toMatch(/>svg:first-of-type\{margin-left:-28px;margin-right:8px;?\}/);
+    }
+    // A plain run's «Când» is untouched.
+    expect(await page({ type: "GROUP_RUN" })).not.toContain("data-when-line");
+  });
+
   it("puts a clock in front of the time, as the listing card does (§366): «[calendar] Sâmbătă, 26 sept. 2026 · [clock] 08:00»", async () => {
     const html = await page();
     const when = row(html, "Când").dd;
@@ -672,6 +691,55 @@ describe("BR-REQ-041-01 the listing card's facts: glyph-led lines and the page's
     expect(plainRowTag).not.toBe("");
     // Since #305 a race with no race start says «10:00 (start eveniment)», longer than one phone line: it wraps too.
     expect(ruleOf(plain, plainRowTag)).toContain("flex-wrap:wrap");
+  });
+
+  /** Every rule Emotion emitted for a tag's `css-` class inside the media query that names `width`. */
+  function mediaRulesOf(html: string, tag: string, width: string) {
+    const cls = /class="[^"]*\b(css-[\w-]+)"/.exec(tag)?.[1] ?? "";
+    const blocks = [...html.matchAll(/@media[^{]*\{((?:[^{}]+\{[^}]*\})+)\}/g)].filter((match) => match[0].includes(width));
+    return blocks.flatMap((block) => [...(block[1] ?? "").matchAll(/([^{}]+)\{([^}]*)\}/g)].filter((rule) => (rule[1] ?? "").includes(cls)).map((rule) => `${rule[1]}{${rule[2]}}`)).join("");
+  }
+
+  it("lists a race's two named times below 412 pixels — a line each, no dots, the clock and the flag hung in the glyph column under the calendar (§600)", async () => {
+    const html = await card({ startsAt: new Date("2026-09-26T06:00:00Z"), raceStartsAt: new Date("2026-09-26T07:00:00Z") });
+    const when = line(html, "when").inner;
+    const pieceTags = [...when.matchAll(/<span\b[^>]*data-when-line="(\w+)"[^>]*>/g)];
+    // The date, then the two times: three pieces, each a line of its own below the breakpoint.
+    expect(pieceTags.map((match) => match[1])).toEqual(["date", "time", "time"]);
+    for (const [tag] of pieceTags) expect(mediaRulesOf(html, tag, "411.95px")).toContain("flex-basis:100%");
+    // Each time's leading glyph — the clock, then the flag — hangs back by the glyph column
+    // (twenty pixels and their eight-pixel gap), so «09:00» and «10:00» start where the date does.
+    const [, first, second] = pieceTags.map(([tag]) => tag);
+    for (const tag of [first!, second!]) {
+      expect(mediaRulesOf(html, tag, "411.95px")).toMatch(/>svg:first-of-type\{margin-left:-28px;margin-right:8px;?\}/);
+    }
+    const [firstAt, secondAt] = [pieceTags[1]?.index ?? -1, pieceTags[2]?.index ?? -1];
+    const firstPiece = when.slice(firstAt, secondAt);
+    expect(firstPiece.indexOf('data-testid="ScheduleIcon"')).toBeGreaterThan(-1);
+    expect(firstPiece.indexOf('data-testid="ScheduleIcon"')).toBeLessThan(firstPiece.indexOf("09:00"));
+    const secondPiece = when.slice(secondAt);
+    expect(secondPiece.indexOf('data-testid="race-start-flag"')).toBeGreaterThan(-1);
+    expect(secondPiece.indexOf('data-testid="race-start-flag"')).toBeLessThan(secondPiece.indexOf("10:00"));
+    // The two dots go below the breakpoint: a dot binds pieces that share a line.
+    const separators = [...when.matchAll(/<span\b[^>]*data-when-separator=""[^>]*>/g)].map(([tag]) => tag);
+    expect(separators).toHaveLength(2);
+    for (const tag of separators) expect(mediaRulesOf(html, tag, "411.95px")).toContain("display:none");
+  });
+
+  it("keeps the inline row from 412 pixels up, and every other card's row as it was (§600)", async () => {
+    const html = await card({ startsAt: new Date("2026-09-26T06:00:00Z"), raceStartsAt: new Date("2026-09-26T07:00:00Z") });
+    const when = line(html, "when").inner;
+    // Outside the media query nothing changes: the pieces flow, the dots show, the glyphs keep their seat.
+    const outsideMedia = html.replace(/@media[^{]*\{(?:[^{}]+\{[^}]*\})+\}/g, "");
+    for (const [tag] of when.matchAll(/<span\b[^>]*data-when-line="\w+"[^>]*>/g)) expect(ruleOf(outsideMedia, tag)).not.toContain("flex-basis");
+    for (const [tag] of when.matchAll(/<span\b[^>]*data-when-separator=""[^>]*>/g)) expect(ruleOf(outsideMedia, tag)).not.toContain("display:none");
+    expect(outsideMedia).not.toContain("margin-left:-28px");
+    expect(text(when)).toBe("Sâmbătă, 26 sept. 2026Sâm., 26 sept.·09:00 (start eveniment)·10:00 (start cursă)");
+    // A race with one named time, and a plain run: no list at all.
+    for (const other of [await card({ raceStartsAt: null }), await card({ type: "GROUP_RUN" })]) {
+      expect(other).not.toContain("data-when-line");
+      expect(other).not.toContain("411.95px");
+    }
   });
 
   it("draws the route and the cost as the page's small outlined pills — surface, difficulty, distance, climb, cost", async () => {

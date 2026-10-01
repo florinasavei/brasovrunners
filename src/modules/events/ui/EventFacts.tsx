@@ -111,6 +111,27 @@ const WHEN_LEAD_HIDDEN_BELOW_376 = {
  */
 const RACE_ROW_GAP = 0.5;
 
+/**
+ * A race's two named times as a tidy list where the row would wrap (§600 — the owner, 2026-10-01,
+ * of the race's card on a phone, «Sâmbătă, 21 nov. ·» / «[clock] 08:30 (start eveniment) ·» /
+ * «[flag] 11:00 (start cursă)»: "nu îmi place că lucrurile nu sunt aliniate când sunt ambele ore
+ * prezente"). Below the width the row no longer fits — 412 pixels on the card, §597's measurement
+ * (the row 228/268/298 pixels at 320/360/390, the two times 178 + 140) — each piece takes a line of
+ * its own (`flex-basis: 100%`), the middle dots go (a dot binds pieces that share a line), and the
+ * clock and the flag hang in the row's glyph column under the calendar: the date and both times
+ * start at one left edge, the three glyphs stand in one column. From 412 up the row is today's
+ * flow, untouched. The event page's «Când» takes the same list on a phone (below MUI's `sm`, where
+ * its answer stands under the question indented by that same glyph column, and where the two times
+ * at sixteen pixels never share a line with the date); the hero has no glyph column under its
+ * label, so there the glyphs lead their own lines instead of hanging. CSS alone: the markup is the
+ * same at every width, a media query decides.
+ */
+const CARD_LIST_BELOW_412 = "@media (max-width: 411.95px)";
+const LIST_BELOW_SM = "@media (max-width: 599.95px)";
+/** The row's glyph column: the twenty-pixel glyph and its eight-pixel gap (`ROW_ICON_SX`; the page's `pl` 3.5). */
+const GLYPH_COLUMN_PX = ROW_ICON_SX.fontSize + 8 * ROW_ICON_SX.mr;
+type WhenList = { media: string; hang: boolean };
+
 // The weather row is one line since §469; the hours strip, details and place line went with it.
 
 /**
@@ -429,6 +450,8 @@ export default async function EventFacts({
   // A race with no race start says «10:00 (start eveniment)» (#305): longer than the one-line row of §375 allows on a
   // phone, so that row may wrap between its whole pieces rather than let the card's overflow clip the time.
   const raceStartLater = startsAt !== null && whenTimes({ type: event.type, startsAt, raceStartsAt: event.raceStartsAt }).raceStartLater;
+  // A race with both its named times (§597) is the row the list form is for (`CARD_LIST_BELOW_412`, §600).
+  const twoNamedTimes = startsAt !== null && whenTimes({ type: event.type, startsAt, raceStartsAt: event.raceStartsAt }).times.length === 2;
   const raceStartNote =
     raceStartLater ? (
       <Typography component="div" variant="body2" color="text.secondary" data-testid="race-start-later">
@@ -508,16 +531,22 @@ export default async function EventFacts({
     );
   };
 
-  const pieces = (items: ReactNode[]) => (
+  const pieces = (items: ReactNode[], list?: WhenList) => (
     <Box component="span" sx={{ display: "inline-flex", flexWrap: "wrap", alignItems: "center", columnGap: 1 }}>
       {items.map((item, index) => (
         <Fragment key={index}>
           {index > 0 && (
-            <Box component="span" aria-hidden="true" sx={{ color: "text.disabled" }}>
+            <Box component="span" aria-hidden="true" data-when-separator={list ? "" : undefined} sx={{ color: "text.disabled", ...(list ? { [list.media]: { display: "none" } } : {}) }}>
               ·
             </Box>
           )}
-          <span>{item}</span>
+          {list ? (
+            <Box component="span" data-when-line={index === 0 ? "date" : "time"} sx={{ [list.media]: { flexBasis: "100%" } }}>
+              {item}
+            </Box>
+          ) : (
+            <span>{item}</span>
+          )}
         </Fragment>
       ))}
     </Box>
@@ -559,23 +588,50 @@ export default async function EventFacts({
     reader still reads it; the date's year is swapped with `display` instead, two renderings of
     which one shows.
   */
-  const flow = (items: ReactNode[], card?: { lead?: string; wrap?: boolean; tight?: boolean }) => (
+  const flow = (items: ReactNode[], card?: { lead?: string; wrap?: boolean; tight?: boolean }, list?: WhenList) => (
     <Box sx={{ display: "flex", flexWrap: card && !card.wrap ? "nowrap" : "wrap", alignItems: "baseline", columnGap: card?.tight ? RACE_ROW_GAP : 0.75, minWidth: 0 }}>
       {card?.lead && (
         <Box component="span" sx={{ color: "text.secondary", whiteSpace: "nowrap", flexShrink: 0, ...WHEN_LEAD_HIDDEN_BELOW_376 }}>
           {card.lead}
         </Box>
       )}
-      {items.map((item, index) => (
-        <span key={index} style={card ? { whiteSpace: "nowrap", flexShrink: 0 } : undefined}>
-          {item}
-          {index < items.length - 1 && (
-            <Box component="span" aria-hidden="true" sx={{ color: "text.disabled", ml: card?.tight ? RACE_ROW_GAP : 0.75 }}>
-              ·
-            </Box>
-          )}
-        </span>
-      ))}
+      {items.map((item, index) => {
+        const separator = index < items.length - 1 && (
+          <Box
+            component="span"
+            aria-hidden="true"
+            data-when-separator={list ? "" : undefined}
+            sx={{ color: "text.disabled", ml: card?.tight ? RACE_ROW_GAP : 0.75, ...(list ? { [list.media]: { display: "none" } } : {}) }}
+          >
+            ·
+          </Box>
+        );
+        const whole = card ? { whiteSpace: "nowrap", flexShrink: 0 } as const : undefined;
+        // The list form (`CARD_LIST_BELOW_412`, above): a line per piece, and a time's leading
+        // glyph hung in the glyph column so its words start at the date's left edge.
+        return list ? (
+          <Box
+            key={index}
+            component="span"
+            data-when-line={index === 0 ? "date" : "time"}
+            style={whole}
+            sx={{
+              [list.media]: {
+                flexBasis: "100%",
+                ...(index > 0 && list.hang ? { "& > svg:first-of-type": { ml: `-${GLYPH_COLUMN_PX}px`, mr: ROW_ICON_SX.mr } } : {}),
+              },
+            }}
+          >
+            {item}
+            {separator}
+          </Box>
+        ) : (
+          <span key={index} style={whole}>
+            {item}
+            {separator}
+          </span>
+        );
+      })}
     </Box>
   );
 
@@ -714,7 +770,7 @@ export default async function EventFacts({
             a race's gathering and start time, or a date that keeps its year on a phone (no
             `dateShort`: past, or more than a year out), may still wrap between whole pieces rather
             than be clipped (§366, amended §375). */}
-        {cardLine("when", CalendarMonthIcon, flow(whenPieces(CLOCK_SX, true), { lead: whenLead, wrap: !!event.raceStartsAt || (compact && !dateShort) || raceStartLater, tight: !!event.raceStartsAt }))}
+        {cardLine("when", CalendarMonthIcon, flow(whenPieces(CLOCK_SX, true), { lead: whenLead, wrap: !!event.raceStartsAt || (compact && !dateShort) || raceStartLater, tight: !!event.raceStartsAt }, twoNamedTimes ? { media: CARD_LIST_BELOW_412, hang: true } : undefined))}
         {place && cardLine("where", PlaceIcon, place)}
         {/* A group of its own, so a group's gap above it rather than a line's (§366). */}
         {pillsRow && (
@@ -838,9 +894,9 @@ export default async function EventFacts({
         label: t("when"),
         icon: CalendarMonthIcon,
         value: whenPieces(HERO_GLYPH_SX),
-        node: raceStartNote ? (
+        node: raceStartNote || twoNamedTimes ? (
           <>
-            {pieces(whenPieces(HERO_GLYPH_SX))}
+            {pieces(whenPieces(HERO_GLYPH_SX), twoNamedTimes ? { media: LIST_BELOW_SM, hang: false } : undefined)}
             {raceStartNote}
           </>
         ) : undefined,
@@ -943,7 +999,7 @@ export default async function EventFacts({
       icon: CalendarMonthIcon,
       value: (
         <>
-          {flow(whenPieces(CLOCK_SX))}
+          {flow(whenPieces(CLOCK_SX), undefined, twoNamedTimes ? { media: LIST_BELOW_SM, hang: true } : undefined)}
           {raceStartNote}
         </>
       ),
