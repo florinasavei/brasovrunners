@@ -158,7 +158,9 @@ export type PublicFill = {
   /**
    * The confirmed registrations among `taken` (§NNN), when the line should say how many are still in
    * progress: a pending declaration, an open offer and a family's hold occupy a place and are not
-   * confirmed. Absent when the count is unknown (a cache entry from before it) or somebody waits.
+   * confirmed. Present only when something is in progress, and then `taken` is the occupied places,
+   * so the three numbers add up in every state. Absent when the count is unknown (a cache entry from
+   * before it) or nothing is in progress.
    */
   confirmed?: number;
 };
@@ -198,8 +200,21 @@ export type PublicFill = {
  * against a mixed REAL/TEST event on a real database, the same way it proves every other §30
  * property.
  */
-export function publicFill(capacity: number | null, availablePlaces: number | null, confirmed?: number): PublicFill | null {
+export function publicFill(
+  capacity: number | null,
+  availablePlaces: number | null,
+  held?: { occupied?: number; confirmed?: number },
+): PublicFill | null {
   if (capacity === null || availablePlaces === null) return null;
   const taken = Math.min(Math.max(capacity - availablePlaces, 0), capacity);
-  return confirmed === undefined ? { taken, capacity } : { taken, capacity, confirmed: Math.min(confirmed, taken) };
+  /*
+    The clause is computed from the occupied places, never from `taken` (§NNN): a waiting list's
+    claim on free places raises `taken` without being anybody's registration. In progress is the
+    occupied places (at most the capacity) less the confirmed; when there is any, the first number
+    is the occupied count too, so «105 înscriși din 150 de locuri — 86 confirmați, 19 în curs» adds up.
+  */
+  if (held?.occupied === undefined || held.confirmed === undefined) return { taken, capacity };
+  const occupied = Math.max(Math.min(held.occupied, capacity), 0);
+  const confirmed = Math.min(held.confirmed, occupied);
+  return occupied - confirmed > 0 ? { taken: occupied, capacity, confirmed } : { taken, capacity };
 }

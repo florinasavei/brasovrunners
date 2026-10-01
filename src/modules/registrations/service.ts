@@ -1031,6 +1031,13 @@ export type PublicPlaces = {
    * progress. `kind` is in no condition. 0 for an uncapped event.
    */
   confirmed: number;
+  /**
+   * The occupied places (`computeOccupied`, §NNN): confirmed, a pending declaration, an open offer
+   * and a family's hold — not clamped, and not the display's «taken», which a waiting list's claim
+   * on free places raises. The places line's «în curs de confirmare» is this minus `confirmed`.
+   * 0 for an uncapped event.
+   */
+  occupied: number;
 };
 
 /**
@@ -1050,7 +1057,7 @@ export async function readPublicPlaces<T extends Record<string, unknown>>(
   event: { id: string; capacity: number | null; waitlistCapacity: number | null },
   now: Date,
 ): Promise<PublicPlaces> {
-  if (event.capacity === null) return { availablePlaces: null, waitlistRoom: null, waiting: 0, offered: 0, waitlisted: 0, confirmed: 0 };
+  if (event.capacity === null) return { availablePlaces: null, waitlistRoom: null, waiting: 0, offered: 0, waitlisted: 0, confirmed: 0, occupied: 0 };
 
   const counts = await repo.countOccupied(db, event.id, now);
   const eligibleWaitlisted = await repo.countEligibleWaitlisted(db, event.id);
@@ -1067,6 +1074,7 @@ export async function readPublicPlaces<T extends Record<string, unknown>>(
     offered: line.openOffers,
     waitlisted: line.waitlisted,
     confirmed: counts.confirmed,
+    occupied: computeOccupied(counts),
   };
 }
 

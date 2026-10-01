@@ -49,6 +49,7 @@ export async function readRegistrationDoor(event: PublicEventPage, now: Date): P
   let offered = 0;
   let waitlisted = 0;
   let confirmed: number | undefined;
+  let occupied: number | undefined;
   /*
     Every page that shows a door is kept no longer than the door's next change (§549): the window
     opening or closing, the start, the confirmation window, the weather window — the page's card,
@@ -68,6 +69,7 @@ export async function readRegistrationDoor(event: PublicEventPage, now: Date): P
         offered = availability.offered ?? 0;
         waitlisted = availability.waitlisted ?? 0;
         confirmed = availability.confirmed;
+        occupied = availability.occupied;
       }
     } catch (error) {
       /*
@@ -90,8 +92,8 @@ export async function readRegistrationDoor(event: PublicEventPage, now: Date): P
   return {
     kind: "KNOWN",
     cta: registrationCta({ ...event, availablePlaces, waitlistRoom, waitlistCapacity, waiting, offered, waitlisted }, now),
-    // Somebody waiting claims free places in the count, which are nobody's registration in progress.
-    fill: publicFill(capacity, availablePlaces, waitlisted > 0 ? undefined : confirmed),
+    // In progress is counted from the occupied places, in every state (§NNN).
+    fill: publicFill(capacity, availablePlaces, { occupied, confirmed }),
   };
 }
 
@@ -121,6 +123,7 @@ export async function draftRegistrationDoor<T extends Record<string, unknown>>(
   let offered = 0;
   let waitlisted = 0;
   let confirmed: number | undefined;
+  let occupied: number | undefined;
   if (event.registrationMode === "INTERNAL" && registrationState(event, now) === "OPEN") {
     const places = await readPublicPlaces(db, { id: event.id, ...limits }, now);
     availablePlaces = places.availablePlaces;
@@ -129,11 +132,12 @@ export async function draftRegistrationDoor<T extends Record<string, unknown>>(
     offered = places.offered;
     waitlisted = places.waitlisted;
     confirmed = places.confirmed;
+    occupied = places.occupied;
   }
   return {
     kind: "KNOWN",
     cta: registrationCta({ ...event, availablePlaces, waitlistRoom, waitlistCapacity: limits.waitlistCapacity, waiting, offered, waitlisted }, now),
-    fill: publicFill(limits.capacity, availablePlaces, waitlisted > 0 ? undefined : confirmed),
+    fill: publicFill(limits.capacity, availablePlaces, { occupied, confirmed }),
   };
 }
 

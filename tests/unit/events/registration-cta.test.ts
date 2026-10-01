@@ -251,6 +251,22 @@ describe("BR-REQ-035-01 a full event whose waiting list has a limit (§348)", ()
   });
 });
 
+describe("§NNN publicFill — in progress counted from the occupied places, never from taken", () => {
+  it("adds up on a full race with somebody waiting: occupied 150, confirmed 130", () => {
+    expect(publicFill(150, 0, { occupied: 150, confirmed: 130 })).toEqual({ taken: 150, capacity: 150, confirmed: 130 });
+  });
+
+  it("makes the first number the occupied count when a line's claim zeroes the free places", () => {
+    expect(publicFill(150, 0, { occupied: 105, confirmed: 86 })).toEqual({ taken: 105, capacity: 150, confirmed: 86 });
+  });
+
+  it("is the plain line when nothing is in progress, or the entry is older than the count", () => {
+    expect(publicFill(150, 0, { occupied: 105, confirmed: 105 })).toEqual({ taken: 150, capacity: 150 });
+    expect(publicFill(150, 45, { confirmed: 86 })).toEqual({ taken: 105, capacity: 150 });
+    expect(publicFill(150, 45)).toEqual({ taken: 105, capacity: 150 });
+  });
+});
+
 /**
  * §346 — how full a capped event is, read from the exact two numbers the button already uses:
  * never a second query, never a second formula.
