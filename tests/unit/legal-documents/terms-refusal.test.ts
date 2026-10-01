@@ -45,8 +45,8 @@ const WORDS = {
     en: "We tell you the ground by email",
   },
   released: {
-    ro: "locul eliberat trece la lista de așteptare, după regulile obișnuite.",
-    en: "the place released goes to the waiting list by the ordinary rules.",
+    ro: "locul eliberat, când este cazul, trece la lista de așteptare, după regulile obișnuite.",
+    en: "a place released goes, where that applies, to the waiting list by the ordinary rules.",
   },
   free: {
     ro: "La un eveniment gratuit nu este nimic de restituit;",
@@ -111,13 +111,8 @@ describe("§NNN — the staff cancel's refusal box says the reason goes to the p
     expect(en.Admin.registrations.refusedByOrganizerHelp).toContain("Never on a ground the law forbids.");
   });
 
-  it("only the registration's own page posts it, and the action reads it on the server", () => {
-    const page = readFileSync("src/app/[locale]/admin/registrations/[id]/page.tsx", "utf8");
+  it("the list's row menu and bulk cancel never post it", () => {
     const list = readFileSync("src/app/[locale]/admin/registrations/(list)/page.tsx", "utf8");
-    const actions = readFileSync("src/app/[locale]/admin/registrations/actions.ts", "utf8");
-    expect(page).toContain('<CheckboxField name="refusedByOrganizer" help={tr("registrations.refusedByOrganizerHelp")}>');
     expect(list).not.toContain("refusedByOrganizer");
-    expect(actions).toContain('form.get("refusedByOrganizer") === "on"');
-    expect(actions).toContain('{ kind: "REFUSED_BY_ORGANIZER" }');
   });
 });

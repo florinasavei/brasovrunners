@@ -707,7 +707,7 @@
       "emptyFiltered": "No registration matches these filters. Clear them to see all of them.",
       "selectRow": "Select the registration for {name}",
       "bulkCancelTitle": "Cancel the ticked registrations",
-      "bulkCancelHelp": "Each ticked registration is cancelled separately, with the same reason, and each place goes to the first person on the waiting list. Permanent erasure is never done in bulk.",
+      "bulkCancelHelp": "Each ticked registration is cancelled separately, with the same reason, and each place goes to the first person on the waiting list. Permanent erasure is never done in bulk. A refusal under the terms is made from the registration's own page, where its ground is emailed to the person.",
       "bulkCancelAction": "Cancel the ticked ones",
       "bulkCancelPending": "Cancelling…",
       "bulkCancelPrinted": "Numbers already printed on this page: {numbers}. If you tick them, after cancelling they stay retired — never given to anybody else — and must be pulled out of the pile.",

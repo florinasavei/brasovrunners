@@ -522,10 +522,10 @@ describe("BR-REQ-037-03 cancelling on the club's behalf", () => {
     expect(message.payloadJson).toEqual({ previousStatus: "PENDING_DECLARATION", refusedGround: ground });
     const rendered = await renderOutboxMessage({ ...message, status: "PROCESSING", attemptCount: 1, lockedAt: NOW }, db, NOW);
     expect(rendered.text).toContain(
-      `Clubul a refuzat această înscriere potrivit termenilor și condițiilor, care îi permit să refuze sau să anuleze o înscriere doar pe un motiv obiectiv. Motivul: „${ground}”.`,
+      `Clubul a refuzat această înscriere. Motivul: „${ground}”.`,
     );
     expect(rendered.text).toContain("Locul a fost eliberat.");
-    expect(rendered.text).toContain(`The club refused this registration under the terms and conditions, which allow it to refuse or cancel a registration only on an objective ground. The ground: “${ground}”.`);
+    expect(rendered.text).toContain(`The club refused this registration. The ground: “${ground}”.`);
     expect(rendered.text).toContain("The place has been released.");
     expect(rendered.text).toMatch(/Termenii și condițiile: \S+\/ro\/termeni/);
     expect(rendered.text).toMatch(/Terms and conditions: \S+\/en\/terms/);

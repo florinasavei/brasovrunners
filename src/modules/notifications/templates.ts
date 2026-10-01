@@ -1897,7 +1897,7 @@ const T = {
       `Motivul anulării: ${CANCEL_REASON_WORDS.ro[kind]}${kind === "OTHER" && text ? ` — „${text}”` : ""}.`,
     /** The club's refusal under the terms (§NNN): what the terms allow, and the ground the club gave. */
     refusedByClub: (ground: string) =>
-      `Clubul a refuzat această înscriere potrivit termenilor și condițiilor, care îi permit să refuze sau să anuleze o înscriere doar pe un motiv obiectiv. Motivul: „${ground}”.`,
+      `Clubul a refuzat această înscriere. Motivul: „${ground}”.`,
     termsLink: "Termenii și condițiile",
     footer: "Răspunde la acest email pentru întrebări.",
     /** The club's copy of a participant's message (§320): in front of the subject, and the first line. */
@@ -2430,7 +2430,7 @@ const T = {
     cancelReason: (kind: RegistrationCancelReasonKind, text: string | undefined) =>
       `Cancellation reason: ${CANCEL_REASON_WORDS.en[kind]}${kind === "OTHER" && text ? ` — “${text}”` : ""}.`,
     refusedByClub: (ground: string) =>
-      `The club refused this registration under the terms and conditions, which allow it to refuse or cancel a registration only on an objective ground. The ground: “${ground}”.`,
+      `The club refused this registration. The ground: “${ground}”.`,
     termsLink: "Terms and conditions",
     footer: "Reply to this email with questions.",
     clubCopy: {

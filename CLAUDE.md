@@ -229,7 +229,7 @@ it is the authority, this is the summary):
     Since §568 the four declarations name serious injury and death among the inherent risks and waive the claims for them
     «în limitele permise de lege» (never for harm the club causes: Codul civil art. 1355) — the lawyer reads that paragraph first.
     Since §NNN the terms' template says the club may refuse or cancel a registration on objective grounds only, told by email with the
-    ground — approve the terms from the new template (`/admin/legal` → «Șablon nou»; the lawyer reads §3's last paragraph first).
+    ground — approve the terms from the new template (`/admin/legal` → «Șablon nou»; the lawyer reads §3's last paragraph first, and decides whether the form's express-acceptance box, whose words (§425) name only the club's cancelling or changing of the event, must also name the cancelling of a registration).
 17. **Re-grade every event's difficulty** — migration `0104` put each event in the middle step of its old band (§526). Open each
     event in `/admin/events` and choose the band and «Nivelul» (one of the band's three levels, 1–15 in order); the guide («Ghid») explains the scale.
 18. **Open the members' zone and the FAQ** — approve the members' zone address, `/ro/zona-membri` (it sits outside the backoffice,

@@ -707,7 +707,7 @@
       "emptyFiltered": "Nicio înscriere nu corespunde filtrelor. Șterge filtrele ca să le vezi pe toate.",
       "selectRow": "Selectează înscrierea lui {name}",
       "bulkCancelTitle": "Anulează înscrierile bifate",
-      "bulkCancelHelp": "Fiecare înscriere bifată este anulată separat, cu același motiv, iar locul fiecăreia merge la primul de pe lista de așteptare. Ștergerea definitivă nu se face în grup.",
+      "bulkCancelHelp": "Fiecare înscriere bifată este anulată separat, cu același motiv, iar locul fiecăreia merge la primul de pe lista de așteptare. Ștergerea definitivă nu se face în grup. Un refuz potrivit termenilor se face din pagina înscrierii, de unde motivul îi este trimis persoanei pe e-mail.",
       "bulkCancelAction": "Anulează cele bifate",
       "bulkCancelPending": "Se anulează…",
       "bulkCancelPrinted": "Pe această pagină sunt numere deja tipărite: {numbers}. Dacă le bifezi, după anulare rămân retrase — nu se dau altcuiva — și trebuie scoase din teanc.",
