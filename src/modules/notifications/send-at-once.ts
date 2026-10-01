@@ -118,12 +118,11 @@ export async function assertRoomToSendNow<T extends Record<string, unknown>>(
   if (whileStopped.road === "gmail") return;
   if (whileStopped.road === "wait") throw stoppedRefusal(whileStopped);
   /*
-    The day's counter spent but Mailgun has not said so yet: with the switch on and room in Gmail's
-    day, the press goes — Mailgun's refusal of the account hands it to Gmail at once (`delivery.ts`)
-    and closes Mailgun's road behind it.
+    The day's counter spent but Mailgun has not said so yet: refused, as §100 has it. A press that went
+    to Mailgun on a paid plan would be billed as overage rather than refused, so nothing here assumes
+    Gmail will catch it; the scheduled drain does that, and Mailgun's own refusal records the stop.
   */
-  const gmailCovers = volume.fallbackToGmail && volume.gmailRoom >= total;
-  if (!gmailCovers && !roomToSendNow({ remaining: volume.remaining, mailgunMessages })) {
+  if (!roomToSendNow({ remaining: volume.remaining, mailgunMessages })) {
     throw new SendNowRefused(`the day's Mailgun allowance has ${volume.remaining} left; ${mailgunMessages} would be sent now`);
   }
   if (!roomToSendNow({ remaining: volume.hourRemaining, mailgunMessages })) {

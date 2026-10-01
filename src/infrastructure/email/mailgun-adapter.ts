@@ -131,6 +131,8 @@ const RATE_PAUSED = /temporarily|account (is )?disabled|probation|too fast|rate 
  * account's or the message's, and FAILED.
  */
 const ADDRESS_REFUSED = /address|recipient/i;
+/** The sender's own parameter ("'from' parameter is not a valid address") is the club's configuration, not a bad recipient. */
+const SENDER_REFUSED = /'?from'?\s+parameter|sender/i;
 
 /** How long a pause lasts when Mailgun does not say: the outbox job's daytime cadence (§68). */
 export const MAILGUN_PAUSE_MS = 15 * 60_000;
@@ -199,7 +201,7 @@ export function classifyMailgunFailure(
     // The address itself — not a valid address, a sandbox's unauthorized recipient — is the bounce it
     // always was; anything else (an unverified or closed domain, a malformed message) is the club's to
     // fix, FAILED and retried by a person once fixed (§NNN), never thrown away as a bad address.
-    return ADDRESS_REFUSED.test(body) ? { outcome: "permanent_failure" } : { outcome: "permanent_failure", notTheAddress: true };
+    return ADDRESS_REFUSED.test(body) && !SENDER_REFUSED.test(body) ? { outcome: "permanent_failure" } : { outcome: "permanent_failure", notTheAddress: true };
   }
 
   // 404, 5xx, anything unrecognised. Conservative in the safe direction, which is the

@@ -31,6 +31,17 @@ export async function countRetryableFailed<T extends Record<string, unknown>>(db
   return row?.value ?? 0;
 }
 
+/** The three-an-hour refusal, with its own sentence on the page (`Admin.errors.RETRY_FAILED_THROTTLED`). */
+export const RETRY_FAILED_THROTTLED = "RETRY_FAILED_THROTTLED";
+
+export class RetryFailedThrottled extends DomainError {
+  readonly reason = RETRY_FAILED_THROTTLED;
+  constructor(message: string) {
+    super("VALIDATION_ERROR", message);
+    this.name = "RetryFailedThrottled";
+  }
+}
+
 export async function retryFailedEmails<T extends Record<string, unknown>>(
   db: Database<T>,
   actor: Pick<StaffUser, "id" | "role">,
@@ -41,10 +52,7 @@ export async function retryFailedEmails<T extends Record<string, unknown>>(
   }
   const verdict = await consumeRateLimit(db, "admin-retry-failed", actor.id, now);
   if (!verdict.allowed) {
-    throw new DomainError(
-      "VALIDATION_ERROR",
-      `failed emails were put back ${verdict.count} times in the last hour; wait ${verdict.retryAfter} seconds`,
-    );
+    throw new RetryFailedThrottled(`failed emails were put back ${verdict.count} times in the last hour; wait ${verdict.retryAfter} seconds`);
   }
   const retried = await db.transaction(async (tx) => {
     const rows = await tx

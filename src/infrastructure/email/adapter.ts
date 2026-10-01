@@ -51,6 +51,11 @@ export type OutgoingEmail = {
    * login) is handed back for the outbox to hold, rather than knocking on Mailgun during its pause.
    */
   gmailOnly?: true;
+  /**
+   * A newsletter or a new-event alert (§443): never spilled to Gmail when Mailgun refuses, unless
+   * the club chose Gmail for the group — a bulk send from a personal Gmail is what Google restricts.
+   */
+  bulk?: true;
 };
 
 /**

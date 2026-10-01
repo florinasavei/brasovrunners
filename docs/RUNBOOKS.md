@@ -660,7 +660,7 @@ the one that is full), and returns to Mailgun on its own afterwards. While Gmail
    If it is registration day and people are waiting for confirmations: Mailgun → Billing →
    Basic removes the daily limit the moment it is paid; then «Setări» → «Emailuri» (`/admin/settings/emails`, §516) → "The Mailgun
    plan" → Basic → save, so the counters and "Trimite acum" stop counting against a hundred
-   (`DECISIONS.md` §100); the next scheduler tick — or "Trimite acum" — sends everything. When
+   (`DECISIONS.md` §100) — saving also reopens Mailgun's road at once and makes the allowance-deferred rows due, so Gmail stops carrying (§NNN); the next scheduler tick — or "Trimite acum" — sends everything. When
    the month is over and the plan is cancelled, set it back to Free there. `docs/PLATFORM.md`
    has the price. With «Gmail preia când Mailgun se oprește» on, the deferred rows leave through Gmail
    at once instead (§NNN), and «Trimite acum» says «N prin Gmail — cota Mailgun epuizată până la …».

@@ -9,6 +9,7 @@ import { DEFAULT_EMAIL_TRANSPORT, GMAIL_CAP_DEFERRED_ERROR } from "@/modules/not
 import { RATE_PAUSE_ERROR_PREFIX } from "@/modules/notifications/domain/hourly-pace";
 import { ALLOWANCE_DEFERRED_ERROR_PREFIX, FALLBACK_WAITING_ERROR_PREFIX } from "@/modules/notifications/domain/mailgun-stop";
 import { MAX_SEND_ATTEMPTS } from "@/modules/notifications/domain/retry";
+import { updateEmailPlan } from "@/modules/notifications/email-plan";
 import { updateEmailTransport } from "@/modules/notifications/email-transport";
 import { checkEmailHealth, EMAIL_HEALTH_THRESHOLDS } from "@/modules/notifications/health";
 import { readMailgunStop, recordMailgunStop } from "@/modules/notifications/mailgun-stop";
@@ -264,6 +265,38 @@ describe("§NNN Gmail's cap spent while Mailgun is stopped", () => {
     expect((await rows()).map((r) => r.attemptCount).sort()).toEqual([0, 2]);
     // Not taken back at once as a row Mailgun held: it waits for its turn.
     expect(await claimOutboxBatch(db, { now: new Date(NOW.getTime() + 2 * MINUTE), batchSize: 20, roads: await readOutboxRoads(db) })).toHaveLength(0);
+  });
+});
+
+describe("§NNN the newsletter is not Gmail's to carry", () => {
+  it("leaves a newsletter row PENDING during a stop while a confirmation leaves by Gmail", async () => {
+    await recordMailgunStop(db, { kind: "paused", until: PAUSE_UNTIL }, NOW);
+    const [news] = await db.insert(emailOutbox).values(row({ messageType: "NEWSLETTER", idempotencyKey: "news:1" })).returning();
+    const [confirmation] = await db.insert(emailOutbox).values(row()).returning();
+
+    const summary = await batch(new Date(NOW.getTime() + MINUTE));
+
+    expect(summary).toMatchObject({ claimed: 1, sent: 1 });
+    const after = await rows();
+    expect(after.find((r) => r.id === confirmation.id)).toMatchObject({ status: "SENT", transport: "gmail" });
+    expect(after.find((r) => r.id === news.id)).toMatchObject({ status: "PENDING", attemptCount: 0 });
+    expect(roads.calls.gmail.some((message) => message.idempotencyKey === "news:1")).toBe(false);
+  });
+});
+
+describe("§NNN saving the Mailgun plan reopens the road after an allowance stop", () => {
+  it("lets Mailgun take the next claim again, and clears the deferred rows' wait", async () => {
+    await recordMailgunStop(db, { kind: "allowance", until: RESET }, NOW);
+    await db.insert(emailOutbox).values(deferredRow());
+    expect((await readMailgunStop(db, NOW))?.kind).toBe("allowance");
+
+    await updateEmailPlan(db, admin, { plan: "BASIC" }, NOW);
+
+    expect(await readMailgunStop(db, NOW)).toBeNull();
+    const summary = await batch(new Date(NOW.getTime() + MINUTE));
+    expect(summary).toMatchObject({ claimed: 1, sent: 1 });
+    expect(roads.calls.mailgun).toHaveLength(1);
+    expect(roads.calls.gmail).toHaveLength(0);
   });
 });
 

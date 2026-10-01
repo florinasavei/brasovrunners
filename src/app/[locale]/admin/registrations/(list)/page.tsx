@@ -60,6 +60,7 @@ import { bulkCancelRegistrationsAction, bulkDeleteRegistrationsAction, markBibsP
 import { resendFamilyEmailAction, resendRegistrationEmailAction } from "../[id]/actions";
 import { withSendNowChoice } from "@/modules/notifications/domain/send-at-once";
 import { sendNowChoiceFor } from "@/modules/notifications/send-now-choice";
+import { resumesWords, stopWords } from "@/modules/notifications/ui/stop-words";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import type { EmailCount } from "@/shared/feedback/notice";
 import ActionForm from "@/shared/forms/ActionForm";
@@ -128,6 +129,12 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
 
   const current = await searchParams;
   const { eventId, status, clubMember, bounced, promo, q, saved, error, cancelled, erased, failed, sent, erase, marked, voided, test } = current;
+  // What «Trimite acum» said about Mailgun's stop (§NNN): from the action's own address; unreadable says nothing.
+  const untilParsed = current.until ? new Date(current.until) : null;
+  const untilAt = untilParsed && !Number.isNaN(untilParsed.getTime()) ? untilParsed : null;
+  const carriedKind = current.stop === "paused" || current.stop === "allowance" ? current.stop : null;
+  const carriedCount = current.gmail && /^\d{1,9}$/.test(current.gmail) ? Number(current.gmail) : null;
+  const stopNow = new Date();
   // The printed numbers a bulk cancel just made void (§311), as the action wrote them: digits
   // and commas only, whatever the address bar says, and a race's worth at most.
   // A repeated key (`?voided=1&voided=2`) arrives as a list at runtime; only digits are ever read back.
@@ -506,7 +513,12 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           to `#admin-alert` so the browser lands on the outcome. The theme gives `html` a
           `scroll-padding-top` so the sticky site header cannot cover it after a long list. */}
       <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
-        {error && <Alert severity="error">{t(`errors.${error}`)}</Alert>}
+        {error && (
+          <Alert severity="error">
+            {t(`errors.${error}`)}
+            {untilAt && ` ${resumesWords(untilAt, stopNow, locale, (key, values) => t(key, values))}`}
+          </Alert>
+        )}
         {saved === "registrationsErased" && (
           <Alert severity={Number(failed) > 0 ? "warning" : "success"}>
             {t("registrations.registrationsErased", { erased: erased ?? "0", failed: failed ?? "0" })}
@@ -541,7 +553,13 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           </Alert>
         )}
         {saved === "outboxSent" && (
-          <Alert severity="success">{t("outbox.sentNow", { count: Number(sent ?? "0") })}</Alert>
+          <Alert severity="success">
+            {t("outbox.sentNow", { count: Number(sent ?? "0") })}
+            {carriedKind &&
+              carriedCount !== null &&
+              untilAt &&
+              ` ${t("outbox.sentViaGmail", { gmail: carriedCount, stop: stopWords(carriedKind, untilAt, stopNow, locale, (key, values) => t(key, values)) })}`}
+          </Alert>
         )}
         {saved === "registrationDeleted" && (
           <Alert severity="success">{t("registrations.registrationDeleted")}</Alert>

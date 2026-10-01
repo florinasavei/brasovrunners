@@ -364,7 +364,7 @@ export function createEmailSender(config: {
 
       const result = await adapter.send(outgoing);
       if (result.outcome === "sent") return { ...result, transport: "mailgun", recipients: transmit ? recipientsOf(outgoing) : 0 };
-      if (result.outcome === "throttled" && gmail?.overflowToGmail && outgoing.transport !== "gmail") {
+      if (result.outcome === "throttled" && gmail?.overflowToGmail && outgoing.transport !== "gmail" && !outgoing.bulk) {
         // Carried, or handed back for the pace — either is sooner than Mailgun's reset. Mailgun's own
         // stop rides on the answer (§NNN), so the outbox still closes Mailgun's road until it ends.
         const spilled = await viaGmail(outgoing, transmit, false);

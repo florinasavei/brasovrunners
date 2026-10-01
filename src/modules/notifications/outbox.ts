@@ -529,7 +529,8 @@ async function claimOutboxBatchWithStop(
     const gmailLimit = Math.min(batchSize, roads?.gmailBatchSize ?? batchSize);
     const heldNow = and(eq(emailOutbox.status, "PENDING"), heldByMailgunCondition(), params.ids ? inArray(emailOutbox.id, [...params.ids]) : undefined);
     const gmail = carried
-      ? await claimRoadWhere(or(due, heldNow), gmailLimit)
+      ? // The newsletter and the new-event alert stay on Mailgun's road during a stop unless the club routed them to Gmail (§443, §NNN).
+        await claimRoadWhere(and(or(due, heldNow), gmailRoad ? or(not(bulk), gmailRoad) : not(bulk)), gmailLimit)
       : gmailRoad
         ? await claimRoad(gmailRoad, gmailLimit, null)
         : { first: [], second: [] };
@@ -700,6 +701,12 @@ export async function processOutboxBatch(
         summary.deferred += 1;
         continue;
       }
+      if (carrying && isBulkMessage(row.messageType) && !(roads && onGmailRoad(row, roads))) {
+        // Mailgun's stop began mid-batch: a bulk row waits for Mailgun, never a personal Gmail (§443, §NNN).
+        await releaseForPause(db, row, carrying.until, null);
+        summary.deferred += 1;
+        continue;
+      }
       const gmailOnly = carrying;
       let message: OutgoingEmail;
       /*
@@ -713,6 +720,7 @@ export async function processOutboxBatch(
         message = await render(row, db, now, rebase);
         if (route) message = { ...message, transport: route(row) };
         if (gmailOnly) message = { ...message, transport: "gmail", gmailOnly: true };
+        else if (isBulkMessage(row.messageType)) message = { ...message, bulk: true };
       } catch (error) {
         if (error instanceof OutboxMessageWithdrawn) {
           await db.delete(emailOutbox).where(eq(emailOutbox.id, row.id));

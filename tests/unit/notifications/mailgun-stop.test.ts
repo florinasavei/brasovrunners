@@ -45,6 +45,13 @@ describe("§NNN the classification: only a refusal of the message ends it", () =
     });
   });
 
+  it("calls a refused sender the club's configuration, FAILED — not a bounce", () => {
+    expect(classifyMailgunFailure(400, "'from' parameter is not a valid address. please check documentation")).toEqual({
+      outcome: "permanent_failure",
+      notTheAddress: true,
+    });
+  });
+
   it("keeps an address problem a bounce", () => {
     expect(classifyMailgunFailure(400, "'to' parameter is not a valid address. please check documentation")).toEqual({ outcome: "permanent_failure" });
     expect(classifyMailgunFailure(400, "'ana@example.org' is not among the authorized recipients")).toEqual({ outcome: "permanent_failure" });

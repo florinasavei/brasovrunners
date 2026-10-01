@@ -16,7 +16,7 @@ import { updateEmailPlan } from "@/modules/notifications/email-plan";
 import { updateEmailTransport } from "@/modules/notifications/email-transport";
 import { sendOutboxNow } from "@/modules/notifications/send-now";
 import { SendNowRefused, sendNowRefusalCode } from "@/modules/notifications/send-at-once";
-import { retryFailedEmails } from "@/modules/notifications/retry-failed";
+import { RetryFailedThrottled, retryFailedEmails } from "@/modules/notifications/retry-failed";
 import { updateDeliveryTiming } from "@/modules/notifications/delivery-timing";
 import { requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
 import { canManageClubSettings, canManageRegistrations } from "@/modules/staff-identity/domain/roles";
@@ -166,7 +166,7 @@ export async function retryFailedEmailsFromEmailsAction(_previous: FormOutcome |
     await flashOutcome({ saved: "failedRetried", sent: String(retried) });
   } catch (error) {
     if (!isDomainError(error)) throw error;
-    outcome = `error=${error.code}`;
+    outcome = `error=${error instanceof RetryFailedThrottled ? error.reason : error.code}`;
   }
   revalidatePath(path);
   redirect(`${path}?${outcome}#admin-alert`);
