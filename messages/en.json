@@ -547,7 +547,7 @@
       "registeredHint": "People with a registration in progress on the upcoming events — not places. Somebody awaiting the email confirmation or on the waiting list is counted here but holds no place.",
       "registeredEvent": "{title}: {count} — {parts}",
       "registeredWithPlace": "{count} with a place",
-      "registeredWithPlaceOf": "{count} with a place of {capacity}",
+      "registeredWithPlaceOf": "{count} of {capacity} places taken",
       "registeredAwaitingEmail": "{count} awaiting the email confirmation",
       "registeredWaitlisted": "{count} on the waiting list",
       "registeredMoreEvents": "+{count} more",

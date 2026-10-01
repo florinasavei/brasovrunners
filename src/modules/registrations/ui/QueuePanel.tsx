@@ -32,6 +32,7 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
   event,
   waiting,
   now,
+  counts: knownCounts,
 }: {
   db: Database<T>;
   /** `timezone` is the event's own zone, which every time on the panel is written in (§349). */
@@ -39,6 +40,8 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
   /** WAITLISTED rows — the page reads it once, for this panel and for the capacity field (§147). */
   waiting: number;
   now: Date;
+  /** The event's `countOccupied`, when the page has already read it (§NNN) — one aggregate, not two. */
+  counts?: Awaited<ReturnType<typeof countOccupied>>;
 }) {
   const t = await getTranslations("Admin");
   const locale = await getLocale();
@@ -51,7 +54,7 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
     club's clock beside it would put two hours on one deadline for an event held elsewhere.
   */
   const when = (at: Date) => formatDay(at, { locale, timeZone: event.timezone, style: "short", withTime: true, position: "inline" });
-  const counts = await countOccupied(db, event.id, now);
+  const counts = knownCounts ?? (await countOccupied(db, event.id, now));
   const occupied = computeOccupied(counts);
   const rows = await listQueueForEvent(db, event.id, now);
   const free = event.capacity === null ? null : Math.max(0, event.capacity - occupied);

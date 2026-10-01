@@ -215,7 +215,7 @@ describe("§255 how many are signed up", () => {
   it("the tooltip's words, in Romanian and in English: the rule, five events, how many more", () => {
     const rows = Array.from({ length: 7 }, (_, i) => row(i + 1));
     expect(registeredBadgeHint(rows, words("ro")).split("\n")).toEqual([
-      "Oameni cu o înscriere în curs pe evenimentele viitoare — nu locuri. Cine așteaptă confirmarea emailului sau stă pe lista de așteptare e numărat aici, dar nu ține un loc.",
+      "Oameni cu o înscriere în curs la evenimentele viitoare — nu locuri. Cine așteaptă confirmarea emailului sau e pe lista de așteptare e numărat aici, dar nu ocupă încă un loc.",
       "Cros 1: 1 — 1 cu loc",
       "Cros 2: 2 — 2 cu loc",
       "Cros 3: 3 — 3 cu loc",
@@ -246,8 +246,8 @@ describe("§255 how many are signed up", () => {
       "Fără loc: 1 — 0 cu loc din 10, 1 pe lista de așteptare",
     ]);
     expect(registeredBadgeHint([owner, full], words("en")).split("\n").slice(1)).toEqual([
-      "Cursa: 153 — 144 with a place of 150, 9 awaiting the email confirmation",
-      "Alt cros: 5 — 2 with a place of 20, 1 awaiting the email confirmation, 2 on the waiting list",
+      "Cursa: 153 — 144 of 150 places taken, 9 awaiting the email confirmation",
+      "Alt cros: 5 — 2 of 20 places taken, 1 awaiting the email confirmation, 2 on the waiting list",
     ]);
   });
 });

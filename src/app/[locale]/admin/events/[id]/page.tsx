@@ -246,10 +246,9 @@ export default async function EditEventPage({ params, searchParams }: Props) {
     queue panel read, a family's reservation included — one more aggregate over the event's own rows, only when
     there is a limit to say it against.
   */
-  const placesTaken =
-    internal && event.capacity !== null && canReadRegistrations(staffUser.role)
-      ? computeOccupied(await countOccupied(db, event.id, now))
-      : null;
+  const occupiedCounts =
+    internal && event.capacity !== null && canReadRegistrations(staffUser.role) ? await countOccupied(db, event.id, now) : null;
+  const placesTaken = occupiedCounts === null ? null : computeOccupied(occupiedCounts);
 
   /*
     "Anunță participanții despre schimbare", and the cancellation's "tell them" (§331): how many
@@ -1081,6 +1080,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                           event={{ id: event.id, capacity: event.capacity, waitlistCapacity: event.waitlistCapacity, timezone: event.timezone }}
                           waiting={waiting}
                           now={now}
+                          counts={occupiedCounts ?? undefined}
                         />
                         {interestsWaiting !== null && (
                           <Box sx={{ mt: 3 }}>

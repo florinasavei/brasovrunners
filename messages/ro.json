@@ -544,7 +544,7 @@
       "checkin": "Ziua cursei",
       "settings": "Setări",
       "guide": "Ghid",
-      "registeredHint": "Oameni cu o înscriere în curs pe evenimentele viitoare — nu locuri. Cine așteaptă confirmarea emailului sau stă pe lista de așteptare e numărat aici, dar nu ține un loc.",
+      "registeredHint": "Oameni cu o înscriere în curs la evenimentele viitoare — nu locuri. Cine așteaptă confirmarea emailului sau e pe lista de așteptare e numărat aici, dar nu ocupă încă un loc.",
       "registeredEvent": "{title}: {count} — {parts}",
       "registeredWithPlace": "{count} cu loc",
       "registeredWithPlaceOf": "{count} cu loc din {capacity}",

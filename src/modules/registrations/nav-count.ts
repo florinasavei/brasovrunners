@@ -69,8 +69,7 @@ export function forgetRegisteredBadgeCount(): void {
  * a PENDING_EMAIL_CONFIRMATION row with an unexpired `hold_expires_at`. `awaitingEmail` is every other
  * PENDING_EMAIL_CONFIRMATION row. `waitlisted` is WAITLISTED, plus an offer that has lapsed and not yet been
  * swept: it holds no place and is going back to the list. Only `family_place_holds` rows, which carry no
- * person, are in no part.
- `capacity` is `null` for an
+ * person, are in no part. `capacity` is `null` for an
  * event without a limit.
  */
 export type RegisteredOnEvent = {
@@ -116,6 +115,7 @@ export async function countRegisteredPerUpcomingEvent<T extends Record<string, u
       eventId: events.id,
       title: eventTranslations.title,
       capacity: events.capacity,
+      // Must stay the FOURTH field: the GROUP BY below names it by position (`4`), because the bound `now`s of its expression cannot be repeated in a GROUP BY.
       bucket,
       value: count(),
     })
@@ -191,7 +191,7 @@ export type BadgeHintWords = {
 
 /**
  * The tab's tooltip text (§NNN): what the number is and is not, then each upcoming
- * event with its total and who holds a place — "153 — 144 with a place of 150, 9 awaiting the
+ * event with its total and who holds a place — "153 — 144 of 150 places taken, 9 awaiting the
  * email confirmation" — a zero part omitted except the places; the first `BADGE_HINT_EVENTS` by
  * start and how many more after them. Pure, so both languages are tested against the catalogues.
  */
