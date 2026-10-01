@@ -360,6 +360,37 @@ describe("§NNN «Trimite-i oferta»: the ordinary offer, to the person chosen, 
     expect(await occupied(event.id, at(11))).toBe(1);
   });
 
+  it("a staff offer also sweeps the other place its expiry released: offered to the next in line on «Da», left free on «Nu»", async () => {
+    for (const auto of [true, false]) {
+      await resetTables(db);
+      await db.delete(familyPlaceHolds);
+      [admin] = await db.insert(staffUsers).values({ email: "admin@example.ro", displayName: "Admin", role: "ADMIN" }).returning();
+      const pair: LegalDocumentTranslationInput[] = [
+        { locale: "ro", title: "Document", body: { sections: [{ paragraphs: ["p"] }] } },
+        { locale: "en", title: "Document", body: { sections: [{ paragraphs: ["p"] }] } },
+      ];
+      for (const key of ["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION"] as const) {
+        await insertLegalDocumentVersion(db, { key, version: 1, effectiveAt: new Date("2026-01-01T00:00:00Z"), isApproved: true, contentSha256: computeContentHash(pair), translations: pair, now: NOW });
+      }
+      // Two places held, four waiting; both holders cancel, so the first two waiting hold offers.
+      const event = await createEvent(2);
+      for (const [i, name] of ["Ana", "Bea"].entries()) expect((await confirmedAddress(event, name, i)).status).toBe("PENDING_DECLARATION");
+      for (const [i, name] of ["Elena", "Luca", "Mara", "Dora"].entries()) expect((await confirmedAddress(event, name, 2 + i)).status).toBe("WAITLISTED");
+      await cancelRegistrationByStaff(db, admin, (await rowOf("Ana")).id, "nu mai vine", at(10));
+      await cancelRegistrationByStaff(db, admin, (await rowOf("Bea")).id, "nu mai vine", at(10));
+      expect([(await rowOf("Elena")).status, (await rowOf("Luca")).status]).toEqual(["WAITLIST_OFFERED", "WAITLIST_OFFERED"]);
+      // Both offers' emails left and their clocks ran out unseen: no job has run since.
+      await db.update(emailOutbox).set({ status: "SENT", sentAt: at(10), attemptCount: 1 });
+      const lapse = new Date((await rowOf("Luca")).holdExpiresAt!.getTime() + 60_000);
+      await setAuto(event.id, auto);
+      const offered = await offerPlaceToByStaff(db, event, (await rowOf("Mara")).id, admin, lapse);
+      expect(offered.status).toBe("WAITLIST_OFFERED");
+      // Mara has one of the two released places; the other is the next in line's on «Da», free on «Nu».
+      expect((await rowOf("Dora")).status).toBe(auto ? "WAITLIST_OFFERED" : "WAITLISTED");
+      expect(await occupied(event.id, lapse)).toBe(auto ? 2 : 1);
+    }
+  });
+
   it("two offers in a row for one free place: the second is refused with who holds the places", async () => {
     await oneHeldTwoWaiting();
     await cancelRegistrationByStaff(db, admin, (await rowOf("Ana")).id, "nu mai vine", at(10));

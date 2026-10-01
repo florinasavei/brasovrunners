@@ -3282,6 +3282,9 @@ export async function offerPlaceToByStaff<T extends Record<string, unknown>>(
       metadata: { from: current.status, to: offered.status, aheadOf: ahead?.count ?? 0 },
       now,
     });
+    // As in `promoteFromWaitlistByStaff`: the expiry above may have released another lapsed hold, and
+    // this transaction holds the lock that can offer it; on «Nu» the gate makes it a no-op (§NNN).
+    await fillAvailableSpots(tx, locked, now, settings);
     return { offered, leaveNow, holdExpiresAt };
   });
   // After this request's response, once the offer has committed (§596), as the automatic offer's.
