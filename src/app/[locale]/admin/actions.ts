@@ -351,6 +351,9 @@ function eventFieldsFrom(form: FormData) {
     // A checkbox, so an absent value is HIDDEN — the safe half of a disclosure switch.
     participantListVisibility:
       form.get("event.participantListVisibility") === "on" ? "NAMES" : "HIDDEN",
+    // «Lista de așteptare e publică» (§NNN), a checkbox beside it, read the same safe way: absent
+    // is off. The service keeps it off anyway unless the list above is on (`waitlistPublicColumn`).
+    waitlistPublic: form.get("event.waitlistPublic") === "on",
     externalProvider: value("externalProvider"),
     externalRegistrationUrl: value("externalRegistrationUrl"),
   };

@@ -31,6 +31,7 @@ export type RegistrationFormEvent = Pick<
   | "askHealthNote"
   | "minAge"
   | "participantListVisibility"
+  | "waitlistPublic"
   | "confirmationOpensDaysBefore"
   | "confirmationDeadlineDaysBefore"
   | "reminderHoursBefore"
@@ -56,6 +57,11 @@ export type RegistrationFormView = {
   askHealth: boolean;
   /** The event publishes a start list (§143): the «Vreau să apar» tick is asked. */
   publishesList: boolean;
+  /**
+   * The published list may also draw the waiting list (§NNN, «Lista de așteptare e publică»): the
+   * tick's caption names the «Pe lista de așteptare» stage only then (`listOptInStatesKey`).
+   */
+  listShowsWaitlist: boolean;
   /** The host a runner recognises in the cost's link (§343), or null. */
   costHost: string | null;
   /** The participation window's days while it is still ahead (§104), for the five steps. */
@@ -98,7 +104,17 @@ export function formViewOf(event: RegistrationFormEvent, now: Date): Registratio
     askShirt: event.kitShirt === true,
     askHealth: event.askHealthNote === true,
     publishesList: event.participantListVisibility === "NAMES",
+    listShowsWaitlist: event.participantListVisibility === "NAMES" && event.waitlistPublic === true,
     costHost: event.costUrl ? costUrlHost(event.costUrl) : null,
     stepsWindow,
   };
+}
+
+/**
+ * The caption under «Vreau să apar» while the privacy notice describes the states (§396): which of
+ * the two sentences (§NNN). The form never promises a stage the list will not print, so an event whose
+ * waiting list is not public says «Înscris, în așteptarea confirmării» and «Confirmat» only.
+ */
+export function listOptInStatesKey(view: Pick<RegistrationFormView, "listShowsWaitlist">): "listOptInStates" | "listOptInStatesNoWaitlist" {
+  return view.listShowsWaitlist ? "listOptInStates" : "listOptInStatesNoWaitlist";
 }

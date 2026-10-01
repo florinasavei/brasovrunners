@@ -257,7 +257,10 @@
       "captionStates": "Întâi participanții confirmați — cei cu numele afișat, în ordinea confirmării, apoi ceilalți —, apoi cei înscriși care nu au confirmat încă și cei de pe lista de așteptare, în ordinea listei.",
       "captionNumbers": "Participanții confirmați, cu numărul de concurs: întâi cei cu numele afișat, în ordinea confirmării, apoi ceilalți.",
       "captionStatesNumbers": "Întâi participanții confirmați, cu numărul de concurs — cei cu numele afișat, în ordinea confirmării, apoi ceilalți —, apoi cei înscriși care nu au confirmat încă și cei de pe lista de așteptare, în ordinea listei.",
+      "captionStatesNoWaitlist": "Întâi participanții confirmați — cei cu numele afișat, în ordinea confirmării, apoi ceilalți —, apoi cei înscriși care nu au confirmat încă.",
+      "captionStatesNumbersNoWaitlist": "Întâi participanții confirmați, cu numărul de concurs — cei cu numele afișat, în ordinea confirmării, apoi ceilalți —, apoi cei înscriși care nu au confirmat încă.",
       "noteStates": "Aici sunt numărați toți participanții confirmați. Numele apare doar pentru cei care au bifat „Vreau să apar pe lista de participanți & rezultate”; ceilalți confirmați apar ca „Participant (nume ascuns)”, fără niciun alt detaliu. Cei înscriși care nu au confirmat încă și cei de pe lista de așteptare apar doar dacă au bifat, cu stadiul înscrierii lângă nume; o înscriere anulată sau expirată nu apare. Alegerea se poate schimba oricând din emailul de confirmare sau din „Înscrierile mele”.",
+      "noteStatesNoWaitlist": "Aici sunt numărați toți participanții confirmați. Numele apare doar pentru cei care au bifat „Vreau să apar pe lista de participanți & rezultate”; ceilalți confirmați apar ca „Participant (nume ascuns)”, fără niciun alt detaliu. Cei înscriși care nu au confirmat încă apar doar dacă au bifat, cu stadiul înscrierii lângă nume; lista de așteptare nu e publică la acest eveniment, iar o înscriere anulată sau expirată nu apare. Alegerea se poate schimba oricând din emailul de confirmare sau din „Înscrierile mele”.",
       "socialsNote": "Strava și Instagram apar doar lângă numele celor care au ales asta la înscriere.",
       "othersLead": "Apar cu numele și:",
       "pendingCount": {
@@ -1356,6 +1359,9 @@
       "declarationUnset": "Niciuna",
       "participantList": "Publică lista participanților pe pagina evenimentului",
       "participantListHelp": "Publică numele celor confirmați care au bifat „Vreau să apar pe lista de participanți & rezultate”, fără adrese de email.",
+      "waitlistPublic": "Lista de așteptare e publică",
+      "waitlistPublicHelp": "Pe lista publică apar și cei de pe lista de așteptare care au bifat „Vreau să apar”, în ordinea listei, fără poziție — doar cât timp nota de confidențialitate în vigoare descrie stadiile.",
+      "waitlistPublicHelpMore": "Are efect doar cu lista participanților publicată, deasupra. Debifată, nimeni de pe lista de așteptare nu apare, nici numărat.",
       "externalProvider": "Organizator extern",
       "externalRegistrationUrl": "Link de înscriere extern",
       "externalHelp": "Amândouă doar pentru un eveniment cu înscriere în altă parte. Linkul trebuie să înceapă cu https://.",
@@ -1938,7 +1944,8 @@
           },
           "startList": {
             "hidden": "Ascunsă",
-            "shown": "Publică — doar numele celor confirmați care au ales să apară"
+            "shown": "Publică — doar numele celor confirmați care au ales să apară",
+            "shownWithWaitlist": "Publică · cu lista de așteptare — doar numele celor care au ales să apară"
           },
           "course": {
             "route": "traseu",
@@ -2994,10 +3001,10 @@
         "listStatesNotice": {
           "title": "Nota de confidențialitate: stadiile de pe lista publică",
           "todo": "Nota în vigoare nu descrie stadiile listei publice de participanți, așa că lista arată doar participanții confirmați, până când clubul aprobă o notă care le descrie.",
-          "done": "Nota în vigoare descrie stadiile: lista publică arată lângă fiecare nume dacă e confirmat, înscris în așteptarea confirmării sau pe lista de așteptare.",
+          "done": "Nota în vigoare descrie stadiile: lângă fiecare nume, confirmat sau înscris în așteptarea confirmării; „pe lista de așteptare” doar unde evenimentul are «Lista de așteptare e publică».",
           "how": [
             "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Secțiunea despre lista publică descrie stadiile.",
-            "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”. Odată în vigoare, fiecare listă publică pornită arată stadiile, fără altă setare.",
+            "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”. Odată în vigoare, fiecare listă publică pornită arată stadiile.",
             "Aprobă și termenii și declarația din șabloanele lor, dacă nu le-ai aprobat deja, ca toate să spună același lucru."
           ]
         },
@@ -5505,7 +5512,7 @@
                 "Înapoi pe «Documente legale»: «Aprobă ciornele» și confirmă. Ciornele gata de aprobat intră în vigoare împreună; ce nu se poate aproba deodată e scris sub buton, cu motivul.",
                 "Ce e în vigoare la fiecare text: capul cardului spune «În vigoare: versiunea…» sau «Nicio versiune în vigoare»; filtrele «În vigoare», «Înlocuite» și «Retrase» arată restul.",
                 "Fără termeni, notă și o declarație de cursă aprobate nu se poate înscrie nimeni. Pentru o cursă pe asfalt editorul alege declarația de asfalt, dacă e aprobată, altfel pe cea pentru eveniment montan. O alergare de grup oferă declarația doar dacă o bifează și dacă textul ei (asfalt sau teren accidentat) e aprobat.",
-                "Până aprobi nota nouă, lista publică de participanți arată doar confirmații.",
+                "Până aprobi nota nouă, lista publică de participanți arată doar confirmații; după aceea, lista de așteptare apare doar la evenimentele cu «Lista de așteptare e publică» bifat.",
                 "Coloana «Nr.» din lista «Cine vine» (numărul de concurs) apare după ce aprobi nota de confidențialitate din șablonul nou. Mai întâi scrie-le celor deja înscriși: «Evenimente» → «Deschide» → cardul «Înscrierile primite» → «Trimite un mesaj participanților»; spune-le că numărul lor va apărea lângă nume și că, dacă nu vor, apasă «Nu vreau să apar pe lista de participanți & rezultate» în «Înscrierile mele» (numărul dispare odată cu numele).",
                 "Apoi aprobi nota: cardul «GDPR» → «Regenerează din șablon» → ciorna → «Salvează ciorna» → «Aprobă și publică». De atunci coloana arată numărul fiecărui confirmat care are număr, oricare ar fi nota sub care s-a înscris; un confirmat fără număr are „—”. «Sarcini» → «Club» are rândul ei până atunci.",
                 "Ciorne sau versiuni de care nu mai ai nevoie: bifează-le în tabel, apasă «Șterge versiunile bifate» și verifică lista. Doar ciorne: «Șterge ciornele» și confirmă. Cu o versiune aprobată în listă: la «Confirmarea» scrii textul cerut (de exemplu „DELETE 2”), la «Motivul» de ce, apoi «Șterge versiunile».",
@@ -6582,6 +6589,7 @@
     "botCheckWait": "Se verifică… trimitem noi înscrierea imediat ce răspunde; nu mai apăsa.",
     "submitSlow": "Durează mai mult decât de obicei. Mai așteaptă câteva secunde și nu apăsa din nou — a doua apăsare s-ar așeza în spatele primei.",
     "listOptInStates": "Lista arată și stadiul înscrierii: „{pending}” după ce îți confirmi adresa, „{waitlisted}” cât aștepți un loc și „{confirmed}” după declarație. O înscriere anulată nu apare.",
+    "listOptInStatesNoWaitlist": "Lista arată și stadiul înscrierii: „{pending}” după ce îți confirmi adresa și „{confirmed}” după declarație. Cât aștepți un loc pe lista de așteptare nu apari pe ea. O înscriere anulată nu apare.",
     "another": {
       "linkGone": "Linkul acesta pentru încă o persoană nu mai este folosit. Trimite din nou formularul de mai jos cu adresa ta, numele complet și data nașterii persoanei: primești un email în care confirmi înscrierea ei cu un singur buton."
     },

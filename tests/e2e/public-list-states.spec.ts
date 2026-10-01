@@ -138,8 +138,9 @@ async function seedEvent(tag: string): Promise<Seeded> {
   return withDatabase(async (client) => {
     const slug = `stari-${tag}`;
     const { rows } = await client.query<{ id: string }>(
-      `INSERT INTO events (type, starts_at, registration_mode, capacity, editorial_status, published_at, location_name, participant_list_visibility)
-       VALUES ('RACE', now() + interval '60 days', 'INTERNAL', 3, 'PUBLISHED', now() - interval '1 day', 'Parcul Tractorul', 'NAMES')
+      // «Lista de așteptare e publică» on (§NNN): the waiting group below is on the list only with it.
+      `INSERT INTO events (type, starts_at, registration_mode, capacity, editorial_status, published_at, location_name, participant_list_visibility, waitlist_public)
+       VALUES ('RACE', now() + interval '60 days', 'INTERNAL', 3, 'PUBLISHED', now() - interval '1 day', 'Parcul Tractorul', 'NAMES', true)
        RETURNING id`,
     );
     const eventId = rows[0].id;

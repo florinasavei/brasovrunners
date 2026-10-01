@@ -64,6 +64,7 @@ export function previewPageOf(event: EditableEvent, translation: EditableTransla
     externalRegistrationUrl: event.externalRegistrationUrl,
     externalProvider: event.externalProvider,
     participantListVisibility: event.participantListVisibility,
+    waitlistPublic: event.waitlistPublic,
     // The place's name in this language (§362), else the event's, exactly as `PUBLIC_COLUMNS`
     // reads it — one rule, `placeNameIn`; the address and the rest from the event row (§36).
     locationName: placeLater ? null : placeNameIn(event, translation.locationName),

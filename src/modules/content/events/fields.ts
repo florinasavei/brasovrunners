@@ -863,6 +863,14 @@ export const eventFieldsSchema = z
      * database.
      */
     participantListVisibility: z.enum(["HIDDEN", "NAMES"]),
+    /**
+     * «Lista de așteptare e publică» (§NNN): whether the published list also shows the ticked
+     * waiting-list rows, behind the privacy notice's gates as before. Optional, and absent means
+     * "this caller is not editing it", the discipline `kitShirt` follows; the service stores false
+     * whatever was posted unless the list itself is published on an INTERNAL event
+     * (`service.ts#waitlistPublicColumn`).
+     */
+    waitlistPublic: z.boolean().optional(),
     externalProvider: optionalText(120),
     externalRegistrationUrl: httpsUrl("an external registration link must start with https://"),
   })

@@ -80,7 +80,8 @@ export type SummaryWords = {
   health: { asked: string; notAsked: string };
   bibs: { from: string; clubColour: string; allocated: string; toPrint: string; spares: string };
   bibDesign: { parts: string; footer: string };
-  startList: { hidden: string; shown: string };
+  /** The public list's closed line; `shownWithWaitlist` once «Lista de așteptare e publică» is on too (§NNN). */
+  startList: { hidden: string; shown: string; shownWithWaitlist: string };
   course: {
     route: string;
     km: string;
@@ -508,9 +509,14 @@ export function bibDesignSummary(
   ]) || words.nothing;
 }
 
-/** Sub-card 8.5: `Ascunsă`, or what a published list shows. */
-export function startListSummary(words: SummaryWords, visibility: string | null | undefined): string {
-  return visibility === "NAMES" ? words.startList.shown : words.startList.hidden;
+/**
+ * Sub-card 8.5: `Ascunsă`, or what a published list shows — and, with «Lista de așteptare e publică»
+ * (§NNN), that the waiting list is on it too. The switch alone, beside a hidden list, says nothing:
+ * the list is what is published, and the service stores the switch off there anyway.
+ */
+export function startListSummary(words: SummaryWords, visibility: string | null | undefined, waitlistPublic?: boolean | null): string {
+  if (visibility !== "NAMES") return words.startList.hidden;
+  return waitlistPublic === true ? words.startList.shownWithWaitlist : words.startList.shown;
 }
 
 type CourseEvent = Pick<EditableEvent, "distanceMeters" | "elevationGainMeters" | "routeUrl" | "nightOverride"> &

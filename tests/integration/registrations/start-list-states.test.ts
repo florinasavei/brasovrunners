@@ -66,7 +66,8 @@ const OLDER_NOTICE = {
   en: { sections: [{ heading: "4. Public list", paragraphs: ["The public list shows only the names of confirmed participants who ticked."] }] },
 };
 
-async function createEvent(): Promise<PublicEvent> {
+/** `waitlistPublic` (§NNN): on unless said, so the tests below read §396's whole list as written. */
+async function createEvent(waitlistPublic = true): Promise<PublicEvent> {
   const [event] = await db
     .insert(events)
     .values({
@@ -76,6 +77,7 @@ async function createEvent(): Promise<PublicEvent> {
       editorialStatus: "PUBLISHED",
       publishedAt: NOW,
       participantListVisibility: "NAMES",
+      waitlistPublic,
     })
     .returning();
   await db.insert(eventTranslations).values([
@@ -83,7 +85,7 @@ async function createEvent(): Promise<PublicEvent> {
     { eventId: event.id, locale: "en", slug: "cross-states", title: "Cross" },
   ]);
   // The two dates the list's period counts from (§421), beside what the list itself reads.
-  return { id: event.id, participantListVisibility: "NAMES", startsAt: event.startsAt, endsAt: event.endsAt } as unknown as PublicEvent;
+  return { id: event.id, participantListVisibility: "NAMES", waitlistPublic: event.waitlistPublic, startsAt: event.startsAt, endsAt: event.endsAt } as unknown as PublicEvent;
 }
 
 async function register(
@@ -137,8 +139,8 @@ async function register(
  * One event with somebody in every state, ticked and not: the list must pick exactly the right
  * rows, in the right order, in the right groups.
  */
-async function mixedEvent(): Promise<PublicEvent> {
-  const event = await createEvent();
+async function mixedEvent(waitlistPublic = true): Promise<PublicEvent> {
+  const event = await createEvent(waitlistPublic);
   await register(event.id, { name: "Bogdan Ionescu", status: "CONFIRMED", confirmedAt: at(2), club: "CS Tâmpa" });
   await register(event.id, { name: "Ana Popescu", status: "CONFIRMED", confirmedAt: at(1) });
   await register(event.id, { name: "Ascuns Confirmat", status: "CONFIRMED", confirmedAt: at(3), listOptOut: true });
@@ -259,6 +261,59 @@ describe("§396 with a notice approved before it", () => {
 
     expect(rowNames(html)).toEqual(["Ana Popescu", "Bogdan Ionescu"]);
     expect(stateWords(html)).toEqual([]);
+  });
+});
+
+/**
+ * §NNN — «Lista de așteptare e publică» off: the same notice, the same runners, and the waiting list is
+ * nowhere — no row, no word, no count, no legend sentence, no clause in the caption or the note. The
+ * pending group is the notice's alone and is unchanged.
+ */
+describe("§NNN with the event's waiting list private", () => {
+  it("lists the confirmed and the pending, and nobody waiting", async () => {
+    await approveNotice({ ro: privacyNoticeRo, en: privacyNoticeEn });
+    const event = await mixedEvent(false);
+
+    const html = renderToStaticMarkup(await StartList({ event }));
+
+    expect(rowNames(html)).toEqual(["Ana Popescu", "Bogdan Ionescu", "Dan Oferta", "Carmen Semneaza"]);
+    expect(stateWords(html)).toEqual(["CONFIRMED", "CONFIRMED", "CONFIRMED", "PENDING", "PENDING"]);
+    expect(html).not.toContain("Pe lista de așteptare");
+    expect(html).not.toContain('data-group="WAITLISTED"');
+    expect(html).not.toContain('data-state="WAITLISTED"');
+    expect(html).toContain("Apar cu numele și: 2 înscriși în așteptarea confirmării<");
+    expect(html).not.toContain("Club Munte");
+    for (const name of ["Elena", "Florin", ...NEVER]) expect(html).not.toContain(name);
+    expect(html).toContain(ro.Event.startList.captionStatesNoWaitlist);
+    expect(html).not.toContain(ro.Event.startList.captionStates);
+    expect(html).toContain(ro.Event.startList.noteStatesNoWaitlist.slice(-80));
+  });
+
+  it("says the same in English", async () => {
+    await approveNotice({ ro: privacyNoticeRo, en: privacyNoticeEn });
+    const event = await mixedEvent(false);
+    locale = "en";
+
+    const html = renderToStaticMarkup(await StartList({ event }));
+
+    expect(rowNames(html)).toEqual(["Ana Popescu", "Bogdan Ionescu", "Dan Oferta", "Carmen Semneaza"]);
+    expect(html).not.toContain("On the waiting list");
+    expect(html).not.toContain("on the waiting list");
+    expect(html).toContain(en.Event.startList.captionStatesNoWaitlist);
+  });
+
+  it("with the older notice, the list is the confirmed alone, whichever way the switch is", async () => {
+    for (const waitlistPublic of [true, false]) {
+      await resetTables(db);
+      await approveNotice(OLDER_NOTICE);
+      const event = await mixedEvent(waitlistPublic);
+
+      const html = renderToStaticMarkup(await StartList({ event }));
+
+      expect(rowNames(html), String(waitlistPublic)).toEqual(["Ana Popescu", "Bogdan Ionescu"]);
+      expect(stateWords(html)).toEqual([]);
+      expect(html).not.toContain("start-list-others-summary");
+    }
   });
 });
 

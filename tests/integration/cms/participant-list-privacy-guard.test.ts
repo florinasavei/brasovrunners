@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { events } from "@/db/schema/events";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
-import { createEvent } from "@/modules/content/events/service";
+import { createEvent, saveEventFields } from "@/modules/content/events/service";
 import { computeContentHash } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { isDomainError } from "@/shared/errors/domain-error";
@@ -165,5 +165,69 @@ describe("§346 the participant list is refused without an approved, effective p
     const created = await createEvent(db, { actor: organizer, fields: hidden, now: NOW });
     const [saved] = await db.select().from(events).where(eq(events.id, created.id));
     expect(saved.participantListVisibility).toBe("HIDDEN");
+  });
+});
+
+/**
+ * §NNN — «Lista de așteptare e publică» is stored true only beside a published list on an event that
+ * takes registrations here: anything else stores false, whatever was posted, so the column never holds
+ * a truth the list cannot act on and a list switched on later never finds the waiting list already public.
+ */
+describe("§NNN the waiting-list switch is stored only beside a published list", () => {
+  beforeEach(async () => {
+    const translations = [
+      { locale: "ro" as const, title: "Confidențialitate", body: { sections: [{ paragraphs: ["Text."] }] } },
+      { locale: "en" as const, title: "Privacy", body: { sections: [{ paragraphs: ["Text."] }] } },
+    ];
+    await insertLegalDocumentVersion(db, {
+      key: "PRIVACY_NOTICE",
+      version: 1,
+      effectiveAt: NOW,
+      isApproved: true,
+      contentSha256: computeContentHash(translations),
+      translations,
+      now: NOW,
+    });
+  });
+
+  const stored = async (id: string) => (await db.select().from(events).where(eq(events.id, id)))[0];
+  /** The event row's fields as a save posts them — a save carries no translations. */
+  const rowFields = (extra: Record<string, unknown> = {}) =>
+    Object.fromEntries(Object.entries({ ...RACE_FIELDS(declarationId), ...extra }).filter(([key]) => key !== "translations"));
+
+  it("keeps true beside NAMES on an internal event", async () => {
+    const created = await createEvent(db, { actor: organizer, fields: { ...RACE_FIELDS(declarationId), waitlistPublic: true }, now: NOW });
+    expect((await stored(created.id)).waitlistPublic).toBe(true);
+  });
+
+  it("stores false for a ticked switch beside a hidden list", async () => {
+    const fields = { ...RACE_FIELDS(declarationId), participantListVisibility: "HIDDEN" as const, waitlistPublic: true };
+    const created = await createEvent(db, { actor: organizer, fields, now: NOW });
+    expect((await stored(created.id)).waitlistPublic).toBe(false);
+  });
+
+  it("is off by default, and a caller that does not post it changes nothing beside a published list", async () => {
+    const created = await createEvent(db, { actor: organizer, fields: RACE_FIELDS(declarationId), now: NOW });
+    expect((await stored(created.id)).waitlistPublic).toBe(false);
+    const on = await saveEventFields(db, { actor: organizer, eventId: created.id, expectedVersion: created.version, fields: rowFields({ waitlistPublic: true }), now: NOW });
+    expect(on.waitlistPublic).toBe(true);
+    const untouched = await saveEventFields(db, { actor: organizer, eventId: created.id, expectedVersion: on.version, fields: rowFields({ capacity: "60" }), now: NOW });
+    expect(untouched.waitlistPublic).toBe(true);
+  });
+
+  it("switching the list off switches the waiting list off with it, even if the box stayed ticked", async () => {
+    const created = await createEvent(db, { actor: organizer, fields: { ...RACE_FIELDS(declarationId), waitlistPublic: true }, now: NOW });
+    const hidden = await saveEventFields(db, {
+      actor: organizer,
+      eventId: created.id,
+      expectedVersion: created.version,
+      fields: rowFields({ participantListVisibility: "HIDDEN", waitlistPublic: true }),
+      now: NOW,
+    });
+    expect(hidden.waitlistPublic).toBe(false);
+    // Switched back on without the box: still off — nobody decided again.
+    const again = await saveEventFields(db, { actor: organizer, eventId: created.id, expectedVersion: hidden.version, fields: rowFields(), now: NOW });
+    expect(again.participantListVisibility).toBe("NAMES");
+    expect(again.waitlistPublic).toBe(false);
   });
 });

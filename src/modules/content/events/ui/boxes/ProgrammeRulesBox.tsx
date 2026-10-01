@@ -73,7 +73,7 @@ export default async function ProgrammeRulesBox({
         line.text,
         asksOnForm ? healthNoteSummary(words, event?.askHealthNote ?? false) : null,
         // «lista publică: Ascunsă» — the public list's own line, named, last (§512).
-        t("editor.boxes.programmeRules.startListLine", { state: startListSummary(words, event?.participantListVisibility) }),
+        t("editor.boxes.programmeRules.startListLine", { state: startListSummary(words, event?.participantListVisibility, event?.waitlistPublic) }),
       ]
         .filter(Boolean)
         .join(words.separator)}

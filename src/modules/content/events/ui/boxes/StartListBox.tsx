@@ -35,7 +35,7 @@ export default async function StartListBox({ event, mayEditSettings }: Pick<BoxP
     glyph: "startList",
     level: 3,
     title: t("editor.boxes.startList.title"),
-    aside: startListSummary(words, event?.participantListVisibility),
+    aside: startListSummary(words, event?.participantListVisibility, event?.waitlistPublic),
   } as const;
   if (!mayEditSettings) return <Panel {...card} />;
   return (
@@ -48,6 +48,17 @@ export default async function StartListBox({ event, mayEditSettings }: Pick<BoxP
                 {t("editor.participantList")}
               </CheckboxField>
               <BoxNote more={t("editor.participantListHelpMore")}>{t("editor.participantListHelp")}</BoxNote>
+              {/*
+                «Lista de așteptare e publică» (§NNN): a narrowing of the list above, so it sits under it,
+                indented — the owner's "încă o setare". It adds a condition to the waiting-list rows and
+                opens no gate of the privacy notice's; the service stores it off unless the list is on.
+              */}
+              <Box data-testid="waitlist-public" sx={{ mt: 1, pl: 3.5, borderLeft: 2, borderColor: "divider" }}>
+                <CheckboxField name="event.waitlistPublic" defaultChecked={event?.participantListVisibility === "NAMES" && event?.waitlistPublic === true}>
+                  {t("editor.waitlistPublic")}
+                </CheckboxField>
+                <BoxNote more={t("editor.waitlistPublicHelpMore")}>{t("editor.waitlistPublicHelp")}</BoxNote>
+              </Box>
             </Box>
           </OnlyForMode>
           <OnlyForMode mode={["NONE", "EXTERNAL"]} initialMode={initialMode}>
