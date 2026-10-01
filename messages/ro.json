@@ -2058,7 +2058,7 @@
       "waitlistAutoOffer": "Locurile din lista de așteptare se alocă automat",
       "waitlistAutoOfferYes": "Da",
       "waitlistAutoOfferNo": "Nu",
-      "waitlistAutoOfferHelp": "Pe „Da”, un loc eliberat sau adăugat se alocă pe loc primului de pe lista de așteptare. Pe „Nu”, locurile rămân libere până le dai tu, cu „Trimite-i oferta”.",
+      "waitlistAutoOfferHelp": "Pe „Da”, un loc eliberat sau adăugat se alocă pe loc primului de pe lista de așteptare: primește oferta pe email și o confirmă până la termen. Pe „Nu”, locurile rămân libere până le dai tu.",
       "waitlistAutoOfferHelpMore": "Le dai din «Coada de înscrieri», cu «Trimite-i oferta», sau, la masă, cu «Dă-i un loc». Cât timp cineva așteaptă, cei noi intră tot pe listă."
     },
     "preview": {
