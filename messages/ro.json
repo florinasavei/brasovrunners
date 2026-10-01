@@ -4745,7 +4745,7 @@
                 "«Înscrieri»: cine s-a înscris, cu filtre, export și pagina fiecărei înscrieri.",
                 "«Ziua cursei»: masa de ridicare a numerelor, pe telefon.",
                 "«Galerie» și «Pagini» (paginile standard — «Contact», «Echipa», «Întrebări frecvente», «Membri» — și paginile clubului).",
-                "«Setări»: «Emailuri» (ce primesc participanții, planul Mailgun), «Termene», «Aspect», «Costuri», «Anti-robot» și, la sfârșitul rândului, «Configurație» (pentru rolul Tehnic și Administratori).",
+                "«Setări»: «Emailuri» (ce primesc participanții, planul Mailgun, limita pe oră, drumurile prin Gmail, coada de trimitere), «Termene», «Aspect», «Costuri», «Anti-robot» și, la sfârșitul rândului, «Configurație» (pentru rolul Tehnic și Administratori).",
                 "«Sarcini» → «Club»: ce mai are clubul de făcut, citit din sistem, cu pașii sub fiecare rând. «Sarcini» → «De făcut»: lista clubului, scrisă și bifată de mână — adaugi un rând, îl dai cuiva, îi pui un termen, îl bifezi când e gata.",
                 "«Documente legale»: termenii, nota de confidențialitate (GDPR) și declarațiile.",
                 "«Echipa» și «Ghid» (pagina aceasta)."
@@ -4778,7 +4778,8 @@
                 "Nimeni nu unește două înscrieri într-una.",
                 "Nimeni din echipă nu semnează declarația în locul participantului: la masă înregistrezi doar declarația de hârtie pe care a semnat-o el.",
                 "Niciun text legal nu intră în vigoare fără o versiune aprobată; fără termeni, notă și declarație aprobate nu se poate înscrie nimeni.",
-                "Nimeni nu trece peste numărul de locuri: nu există înscriere peste capacitate, nici de mână, nici la masă. Un loc se dă doar când e liber."
+                "Nimeni nu trece peste numărul de locuri: nu există înscriere peste capacitate, nici de mână, nici la masă. Un loc se dă doar când e liber.",
+                "Nimeni nu primește un loc fără semnătura lui: o ofertă din lista de așteptare o acceptă și o semnează persoana, din emailul ei, iar la masă «Dă-i un loc» confirmă doar pe declarația de hârtie semnată de ea, de față."
               ]
             }
           ]
@@ -4849,7 +4850,7 @@
                 "În «Numărul dat acum» e deja scris următorul număr de rezervă. Ia BID-ul acela din teancul de rezervă și scrie-i numele cu markerul pe linia goală. Dai alt număr? Schimbă-l în căsuță. Nu mai sunt rezerve? Scrie numărul pe care i-l dai sau las-o goală, și site-ul alege unul.",
                 "Apasă «Adaugă înscrierea» și confirmă în fereastră.",
                 "Îi dai declarația pe hârtie s-o semneze, apoi «Marchează prezent» și îi dai BID-ul.",
-                "Evenimentul e plin? Intră pe lista de așteptare, ca oricine. «Dă-i un loc» merge doar dacă s-a eliberat unul."
+                "Evenimentul e plin, sau așteaptă deja cineva pe lista de așteptare? Persoana intră pe listă, ca oricine. «Dă-i un loc» merge doar când e un loc liber, și o confirmă pe declarația de hârtie pe care o semnează ea, la masă."
               ]
             },
             {
@@ -4952,7 +4953,8 @@
                 "La «Evenimente» alege evenimentul (sau «Toate evenimentele»), la «Stare» ce te interesează, apoi «Filtrează».",
                 "Cauți pe cineva: scrie o parte din nume în «Caută după nume» și apasă «Filtrează». Fără un eveniment ales, caută în toate.",
                 "Coloana «Unde a ajuns» spune pasul fiecăruia. Apasă pe nume ca să deschizi înscrierea: «Parcursul înscrierii» și «Cronologie» spun tot ce s-a întâmplat.",
-                "Sus scrie o dată ce nu poți modifica aici. Rolul Tehnic nu vede înscrierile deloc."
+                "Sus scrie o dată ce nu poți modifica aici. Rolul Tehnic nu vede înscrierile deloc.",
+                "Pagina publică a evenimentului numără locurile ocupate: confirmații plus cei în curs — o declarație încă nesemnată, o ofertă din lista de așteptare, locul ținut de o familie. Când sunt și dintre aceștia, linia spune de exemplu „105 înscriși din 150 de locuri — 86 de confirmați, 19 în curs de confirmare”. Lista «Cine vine» are doar pe cei care au bifat că vor să apară pe ea, mai ales confirmații, așa că cele două cifre diferă. Pe card, „1 loc oferit din lista de așteptare” e un loc trimis cuiva de pe listă, care încă nu l-a acceptat."
               ]
             },
             {
@@ -4985,7 +4987,8 @@
                 "«Descarcă toate numerele (PDF)»: câte două numere A5 pe o foaie A4, cu linia de tăiere. «Câte unul pe pagină» dacă vrei unul singur, centrat pe A4.",
                 "Tipărește la mărimea reală (100%) și taie pe linie.",
                 "Numerele se dau în ordinea confirmării, de la «Numerele de concurs (BIB) încep de la». «Alocă numerele» e al Administratorului.",
-                "Rezervele pentru masă: «Retipărește rezervele libere (PDF)» le tipărește din nou pe cele încă nedate. Numere de rezervă noi pune doar Administratorul."
+                "Rezervele pentru masă: «Retipărește rezervele libere (PDF)» le tipărește din nou pe cele încă nedate. Numere de rezervă noi pune doar Administratorul.",
+                "Pe site, lista «Cine vine» arată numărul fiecărui confirmat în coloana «Nr.» după ce clubul aprobă nota de confidențialitate nouă — doar la cei înscriși sub ea și doar numerele date; ceilalți au „—”."
               ]
             },
             {
@@ -5057,7 +5060,7 @@
               "title": "Ce face Administratorul, nu tu",
               "steps": [
                 "Creează, schimbă, publică, duplică și anulează evenimentele și anunță participanții despre o schimbare.",
-                "Anulează sau șterge înscrieri, retrimite emailuri, «Alocă numerele», marchează numerele tipărite și trimite mulțumirile. Spune-i ce trebuie făcut."
+                "Anulează sau șterge înscrieri, retrimite emailuri (și declarația tuturor celor care nu au semnat), trimite oferte din lista de așteptare («Trimite-i oferta»), «Alocă numerele», marchează numerele tipărite și trimite mulțumirile. Spune-i ce trebuie făcut."
               ]
             }
           ]
@@ -5154,12 +5157,26 @@
               "steps": [
                 "«Evenimente» → «Editează» → cardul «Participare și înscrieri».",
                 "«Modul de înscriere» → «Înscrieri pe site».",
-                "«Număr de locuri» și «Lungimea maximă a listei de așteptare» (gol = fără limită, 0 = fără listă).",
+                "«Număr de locuri» și «Lungimea maximă a listei de așteptare» (gol = fără limită, 0 = fără listă). Sub ele, «Ofertele din lista de așteptare pleacă automat»: «Da» dă fiecare loc eliberat sau adăugat primului de pe listă; «Nu», dacă vrei să alegi tu (vezi „Alege tu cine primește un loc eliberat”).",
                 "«Perioada de înscriere»: «Înscrierile se deschid» și «Înscrierile se închid».",
                 "«Fereastra de confirmare»: «Confirmarea participării: cu câte zile înainte se cere» și, în căsuța de lângă, cu câte zile înainte expiră (0 = locul nu expiră până la start).",
                 "«Program, regulament și declarație» → «Regulamentul»: «Vârsta minimă de participare» (14 dacă nu o schimbi, niciodată sub 14), la orice tip de eveniment. Declarația: «Program, regulament și declarație» → «Declarația pe propria răspundere» → «Declarația pe care o semnează participantul».",
                 "«Numere de concurs (BIB)»: «Numerele de concurs (BIB) încep de la».",
                 "Apasă «Salvează», apoi publică evenimentul. Nimeni nu se poate înscrie cât termenii, nota de confidențialitate și declarația nu sunt aprobate."
+              ]
+            },
+            {
+              "title": "Alege tu cine primește un loc eliberat",
+              "steps": [
+                "«Evenimente» → «Editează» pe rândul cursei → cardul «Participare și înscrieri».",
+                "La «Ofertele din lista de așteptare pleacă automat» alege «Nu» și apasă «Salvează». Pe «Nu», un loc eliberat sau adăugat rămâne liber până îl dai tu.",
+                "Abia apoi mărește «Număr de locuri», cu atâtea locuri câte vrei să dai acum. Pe «Da», locurile adăugate pleacă pe loc, ca oferte, la primii de pe listă.",
+                "Cardul «Înscrierile primite» → «Coada de înscrieri»: pe rândul persoanei alese din lista de așteptare apasă «Trimite-i oferta». Același buton e și pe pagina înscrierii ei.",
+                "Fereastra spune până când are timp; apasă din nou «Trimite-i oferta». Primește emailul obișnuit «S-a eliberat un loc», cu termenul obișnuit, {offer}: din email apasă «Confirmă locul» și semnează declarația, dacă nu a semnat-o încă.",
+                "Nu acceptă la timp? Oferta expiră și locul e din nou liber, pentru cine alegi tu.",
+                "Trebuie un loc liber: o anulare sau mai multe locuri. Pe un eveniment plin apăsarea e refuzată, iar un „i” lângă buton spune de ce. După închiderea înscrierilor nu se mai trimit oferte: la masă, cu persoana de față, «Dă-i un loc» o confirmă pe declarația de hârtie.",
+                "Ceilalți rămân pe lista de așteptare și nu primesc nimic. Pe site, cardul spune «Locurile se dau din lista de așteptare», iar cine se înscrie acum intră tot pe listă cât timp așteaptă cineva. Câți pot aștepta spune «Lungimea maximă a listei de așteptare».",
+                "Atenție la capătul listei: când nu mai e nimeni pe lista de așteptare — cine are o ofertă nu mai e pe ea —, locurile încă libere le ia următorul care se înscrie."
               ]
             },
             {
@@ -5187,10 +5204,23 @@
               "steps": [
                 "«Înscrieri» → caută persoana → apasă pe numele ei.",
                 "Nume greșit: la «Corectează numele» scrie numele bun → «Salvează numele».",
-                "Nu mai vine: «Anulează înscrierea», scrie «Motivul», apasă «Anulează înscrierea» și confirmă. Locul trece la lista de așteptare.",
+                "Nu mai vine: «Anulează înscrierea», scrie «Motivul», apasă «Anulează înscrierea» și confirmă. Locul trece la primul de pe lista de așteptare; dacă la eveniment ofertele nu pleacă automat, rămâne liber până îl dai tu.",
                 "Nu a primit emailul: «Retrimite emailul» → «Trimite acum, fără să aștepte trecerea programată».",
                 "Cere ștergerea datelor: «Șterge definitiv», scrie «Motivul ștergerii», bifează «Confirm că această ștergere este definitivă» și apasă «Șterge definitiv».",
                 "Mai multe deodată: pe listă bifează rândurile → «Anulează cele bifate»."
+              ]
+            },
+            {
+              "title": "Retrimite declarația celor care nu au semnat",
+              "steps": [
+                "«Evenimente» → «Editează» pe rândul cursei → cardul «Înscrierile primite».",
+                "Deasupra cozii apasă «Retrimite declarația tuturor care nu au semnat». Butonul e gri când nu așteaptă nimeni: sub el scrie «Nimeni nu așteaptă semnarea declarației.»",
+                "Fereastra spune câți așteaptă semnarea și pe câți îi sare: pe cei al căror email cu declarația a plecat în ultima oră sau e încă în coadă, și pe cei ajunși la limita de retrimiteri. Citește, apoi apasă din nou «Retrimite declarația tuturor care nu au semnat».",
+                "Sus apare «La coadă:» cu câți primesc emailul și câți au fost săriți. Emailurile pleacă prin coada de trimitere, în ritmul ei (vezi „Emailurile întârzie sau Mailgun a refuzat”).",
+                "Atenție: fiecare primește un link nou, iar linkul din emailul de dinainte nu mai merge. Spune-le să deschidă emailul cel mai nou.",
+                "Spune-le să caute emailul și în Spam și în Promoții.",
+                "Cel mult trei apăsări pe oră la un eveniment. Un „i” lângă buton spune când o apăsare ar fi refuzată: evenimentul e anulat, încheiat sau a început, ori s-au consumat apăsările orei.",
+                "O singură persoană: deschide înscrierea ei → «Retrimite emailul»."
               ]
             },
             {
@@ -5217,8 +5247,23 @@
                 "Întâi plătești planul în contul Mailgun.",
                 "«Setări» → «Emailuri» → «Planul Mailgun și cât mai putem trimite».",
                 "La «Planul pe care e contul Mailgun» alege Basic; la «Notă (de ce, până când)» scrie de ce și până când.",
-                "Apasă «Salvează planul» și confirmă. Cifrele din «Costuri» și butonul «Trimite acum» se iau după el.",
-                "După cursă: anulezi în Mailgun, apoi aici pui Free la loc și «Salvează planul»."
+                "«Limita pe oră»: câte emailuri pleacă prin Mailgun într-o oră; restul așteaptă la coadă și pleacă singure, fără să se piardă vreunul. Cât timp Mailgun ține contul limitat, lasă 90, cum scrie sub căsuță; când Mailgun ridică limita, mărește numărul sau golește căsuța.",
+                "Apasă «Salvează planul» și confirmă. Cifrele din «Costuri», linia «Trimise în ultima oră:» și butonul «Trimite acum» se iau după el.",
+                "Mai jos, «Prin ce pleacă emailurile: Mailgun sau Gmail-ul clubului»: pentru fiecare grup de emailuri alegi «Mailgun» sau «Gmail-ul clubului». Gmail-ul nu costă nimic, dar Google blochează trimiterile în masă: sub fiecare grup scrie ce e recomandat.",
+                "«Limita Gmail pe zi (destinatari)» și «Pauza între două mesaje Gmail (secunde)» spun cât și cât de rar pleacă prin Gmail. Apasă «Salvează drumurile» și confirmă.",
+                "«Setări» → «Costuri» → «Cât costă»: fiecare serviciu pe lună și pe an, cu totalurile. Ați luat Vercel Pro pentru cursă? Tot acolo, la «Planul Vercel» alege Pro, apoi «Salvează planul Vercel» și confirmă; în ziua în care renunțați, Hobby.",
+                "După cursă: anulezi în Mailgun, apoi aici pui Free la loc și «Salvează planul». La «Limita pe oră» lasă cât îți cere Mailgun."
+              ]
+            },
+            {
+              "title": "Emailurile întârzie sau Mailgun a refuzat",
+              "steps": [
+                "«Setări» → «Emailuri». La «Planul Mailgun și cât mai putem trimite», linia «Trimise în ultima oră:» spune câte au plecat prin Mailgun în ultima oră, din «Limita pe oră». Când ora e plină, restul așteaptă la coadă și pleacă singur când ora are iar loc. Nu se pierde nimic.",
+                "Deschide «Coada de trimitere»: «În coadă:» spune câte așteaptă, iar fiecare rând spune când pleacă. Un rând roșu, «Întârziat: trebuia să fi plecat deja…», a trecut de ora lui.",
+                "Mailgun a cerut o pauză, pentru că trimitem prea repede: pe rând, «Ultimul răspuns al furnizorului:» începe cu „paused by the provider”. Emailurile prin Mailgun așteaptă cât a cerut Mailgun, fără să consume vreo încercare, apoi pleacă singure.",
+                "«Trimite acum» trimite pe loc ce e la rând. Ajută pentru emailurile prin Gmail-ul clubului și cât timp ora Mailgun mai are loc; cât ora e plină sau pauza ține, nu trimite nimic prin Mailgun, oricât ai apăsa — iar sub buton sau într-un chenar scrie de ce.",
+                "Participanților care întreabă: emailul vine, doar mai târziu; să caute și în Spam și în Promoții. Cine nu are linkul de declarație: „Retrimite declarația celor care nu au semnat”.",
+                "Scrie proprietarului clubului, cu o poză a ecranului, dacă un rând arată «Oprit după toate încercările», dacă rândurile roșii rămân și după o oră sau dacă «Trimise în ultima oră:» stă pe 0 în timp ce coada crește."
               ]
             },
             {
@@ -5380,6 +5425,7 @@
                 "Ce e în vigoare la fiecare text: capul cardului spune «În vigoare: versiunea…» sau «Nicio versiune în vigoare»; filtrele «În vigoare», «Înlocuite» și «Retrase» arată restul.",
                 "Fără termeni, notă și o declarație de cursă aprobate nu se poate înscrie nimeni. Pentru o cursă pe asfalt editorul alege declarația de asfalt, dacă e aprobată, altfel pe cea pentru eveniment montan. O alergare de grup oferă declarația doar dacă o bifează și dacă textul ei (asfalt sau teren accidentat) e aprobat.",
                 "Până aprobi nota nouă, lista publică de participanți arată doar confirmații.",
+                "Coloana «Nr.» din lista «Cine vine» (numărul de concurs) apare după ce aprobi nota de confidențialitate din șablonul nou: cardul «GDPR» → «Regenerează din șablon» → ciorna → «Salvează ciorna» → «Aprobă și publică». Numărul apare doar la cei înscriși sub nota nouă; ceilalți au „—”. «Sarcini» → «Club» are rândul ei până atunci.",
                 "Ciorne sau versiuni de care nu mai ai nevoie: bifează-le în tabel, apasă «Șterge versiunile bifate» și verifică lista. Doar ciorne: «Șterge ciornele» și confirmă. Cu o versiune aprobată în listă: la «Confirmarea» scrii textul cerut (de exemplu „DELETE 2”), la «Motivul» de ce, apoi «Șterge versiunile».",
                 "Declarațiile semnate la o alergare de grup, când semnatarul cere ștergerea: «Evenimente» → «Editează» la alergare → «Declarații semnate (alergare de grup)» → «Șterge mai multe deodată»: bifează-le, completează o dată «Motivul ștergerii», apasă «Șterge cele bifate» și confirmă. În jurnal rămân numele tău și motivul, nu și al celui care a semnat."
               ]
@@ -5442,7 +5488,7 @@
                 "Completează formularul. La o cursă: «Citește condițiile concursului», derulează până la capăt, apoi «Am citit și sunt de acord». Bifează și termenii.",
                 "Apasă «Trimite înscrierea». Dacă lipsește ceva, deasupra butonului apare «Mai lipsesc:» cu fiecare lucru — atinge-l și te duce la el.",
                 "În email apasă «Confirmă adresa de email». Linkul e valabil {confirmation}.",
-                "Semnează declarația: pe pagina care se deschide sau din emailul «Semnează declarația» → «Semnează».",
+                "După confirmare, pagina îi spune că declarația vine pe email. Din emailul «Semnează declarația» → bifează «Am citit și accept declarația…» → «Semnează». Fără bifă, pagina spune chiar sub casetă ce lipsește.",
                 "Primește confirmarea cu codul QR și numărul de concurs, plus declarația semnată ca PDF.",
                 "Verifică în backoffice: «Înscrieri» → caută numele → starea «Confirmată»."
               ]
@@ -5451,7 +5497,7 @@
               "title": "Locul și termenele lui",
               "steps": [
                 "După confirmarea adresei, locul e ținut {hold} (sau până la termenul de confirmare, la un eveniment mai departe de fereastra lui). Termenul contează doar dacă așteaptă cineva un loc; altfel locul rămâne al lui până la start.",
-                "Evenimentul e plin: intră pe lista de așteptare. Când se eliberează un loc primește un email și are {offer} să semneze declarația.",
+                "Evenimentul e plin, sau așteaptă deja cineva: intră pe lista de așteptare. Când primește un loc — singur, sau ales de club, după setarea evenimentului — primește emailul «S-a eliberat un loc» și are {offer} să-l accepte și să semneze declarația.",
                 "Cu {checkin} înainte de start, din «Gestionează înscrierea» poate apăsa «Am ajuns — marchează-mă prezent». Numărul îl ridică tot de la masă."
               ]
             },
@@ -5460,7 +5506,7 @@
               "steps": [
                 "Din orice email despre înscrierea lui: «Nu mai pot ajunge» → la «De ce anulezi?» alege motivul (pentru «Alt motiv» îl scrie pe scurt) → «Anulează înscrierea pentru…» (cu numele persoanei) → «Da, anulează».",
                 "Pe emailul unei familii, butonul deschide «Înscrierile mele», cu fiecare persoană: «Renunț la această înscriere», tot cu motivul ales. Tot așa oricând, de pe site, cu adresa lui.",
-                "În declarațiile unei familii: «Renunț la înscrierea pentru…», tot cu motivul ales. Locul trece imediat la lista de așteptare.",
+                "În declarațiile unei familii: «Renunț la înscrierea pentru…», tot cu motivul ales. Locul trece imediat la lista de așteptare, sau rămâne liber pentru club, dacă ofertele nu pleacă automat la acel eveniment.",
                 "Motivul apare pe pagina înscrierii, în export și în copia clubului a emailului de anulare."
               ]
             },
@@ -5498,7 +5544,7 @@
               "steps": [
                 "Prima persoană se înscrie cu formularul, ca oricine.",
                 "Formularul se trimite din nou cu aceeași adresă pentru o persoană diferită — alt nume și altă dată a nașterii decât ale fiecărei persoane deja înscrise, sau, pe data nașterii cuiva înscris, alt nume și celălalt sex (un frate și o soră născuți în aceeași zi). Încă nu se înscrie nimeni: pe ecran apare același „verifică-ți emailul” ca oricând, ca nimeni să nu afle din formular cine e înscris.",
-                "Cu «Da, încă o persoană» pe ecranul de după formular, fiecare formular următor rezervă pe loc locul persoanei. Adresa primește apoi un email pentru toți, cu un singur buton.",
+                "Cu «Da, încă o persoană» pe ecranul de după formular, fiecare formular următor rezervă pe loc locul persoanei. Adresa primește apoi un email pentru toți, cu un singur buton. Cât timp așteaptă cineva pe lista de așteptare nu se rezervă nimic: toată familia intră pe listă după ce adresa e confirmată.",
                 "Adresa primește emailul „Înscrii încă o persoană?”, cu cine e deja înscris și cu persoana din formular, și un singur buton, «Confirm că înscriu altă persoană».",
                 "Pagina care se deschide arată din nou datele; pentru un adult cere o bifă (persoana își declară singură starea de sănătate la semnare). Confirmarea o înscrie direct — fără alt link de confirmare. Linkul e valabil {confirmation} și merge o singură dată; datele neconfirmate se șterg singure după aceea.",
                 "Dacă doar numele sau doar data nașterii diferă — sau alt nume pe data cuiva înscris, de același sex —, nu se înscrie nimeni: adresa primește emailul înscrierii existente, cu o propoziție despre cum se înscrie altcineva.",
