@@ -544,8 +544,12 @@
       "checkin": "Ziua cursei",
       "settings": "Setări",
       "guide": "Ghid",
-      "registeredHint": "Înscrieri active (fără anulate și teste) la evenimentele care urmează:",
-      "registeredEvent": "{title}: {count}",
+      "registeredHint": "Oameni cu o înscriere în curs pe evenimentele viitoare — nu locuri. Cine așteaptă confirmarea emailului sau stă pe lista de așteptare e numărat aici, dar nu ține un loc.",
+      "registeredEvent": "{title}: {count} — {parts}",
+      "registeredWithPlace": "{count} cu loc",
+      "registeredWithPlaceOf": "{count} cu loc din {capacity}",
+      "registeredAwaitingEmail": "{count} așteaptă confirmarea emailului",
+      "registeredWaitlisted": "{count} pe lista de așteptare",
       "registeredMoreEvents": "+{count} altele",
       "newsletter": "Newsletter"
     },
@@ -568,7 +572,7 @@
       "filterAll": "Toate evenimentele",
       "filter": "Filtrează",
       "statusLabel": "Stare",
-      "summaryTotal": "Înscrieri: {count}",
+      "summaryTotal": "Înscrieri: {count} (toate stările, anulate și expirate incluse)",
       "summaryTest": "De test: {count}",
       "export": "Exportă CSV",
       "personLink": "Toate datele unei persoane",
@@ -1769,7 +1773,8 @@
         },
         "received": {
           "title": "Înscrierile primite",
-          "summary": "înscrieri reale: {count} · pe lista de așteptare: {waiting}"
+          "summary": "înscrieri reale: {count} · pe lista de așteptare: {waiting}",
+          "summaryPlaces": "înscrieri reale: {count} · pe lista de așteptare: {waiting} · locuri ocupate: {occupied} din {capacity}"
         },
         "queue": {
           "title": "Coada de înscrieri",

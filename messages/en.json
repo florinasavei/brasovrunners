@@ -544,8 +544,12 @@
       "checkin": "Race day",
       "settings": "Settings",
       "guide": "Guide",
-      "registeredHint": "Active registrations (no cancelled, no tests) on the events still to come:",
-      "registeredEvent": "{title}: {count}",
+      "registeredHint": "People with a registration in progress on the upcoming events — not places. Somebody awaiting the email confirmation or on the waiting list is counted here but holds no place.",
+      "registeredEvent": "{title}: {count} — {parts}",
+      "registeredWithPlace": "{count} with a place",
+      "registeredWithPlaceOf": "{count} with a place of {capacity}",
+      "registeredAwaitingEmail": "{count} awaiting the email confirmation",
+      "registeredWaitlisted": "{count} on the waiting list",
       "registeredMoreEvents": "+{count} more",
       "newsletter": "Newsletter"
     },
@@ -568,7 +572,7 @@
       "filterAll": "All events",
       "filter": "Filter",
       "statusLabel": "Status",
-      "summaryTotal": "Registrations: {count}",
+      "summaryTotal": "Registrations: {count} (all states, cancelled and expired included)",
       "summaryTest": "Test: {count}",
       "export": "Export CSV",
       "personLink": "Everything held about a person",
@@ -1769,7 +1773,8 @@
         },
         "received": {
           "title": "Registrations received",
-          "summary": "real registrations: {count} · on the waiting list: {waiting}"
+          "summary": "real registrations: {count} · on the waiting list: {waiting}",
+          "summaryPlaces": "real registrations: {count} · on the waiting list: {waiting} · places taken: {occupied} of {capacity}"
         },
         "queue": {
           "title": "Registration queue",

@@ -59,16 +59,36 @@ export function forgetRegisteredBadgeCount(): void {
   cachedBreakdown.clear();
 }
 
-/** One upcoming event's share of the badge: its title in the reader's language, and how many. */
-export type RegisteredOnEvent = { eventId: string; title: string; count: number };
+/**
+ * One upcoming event's share of the badge: its title in the reader's language, how many people
+ * have an active registration, and who among them holds a place (§255, amended by the 2026-10-01
+ * decision). `count` is always `withPlace + awaitingEmail + waitlisted`.
+ *
+ * `withPlace` is CONFIRMED, PENDING_DECLARATION and WAITLIST_OFFERED — the rows the allocator's
+ * `computeOccupied` counts. A family's reservation is not a registration row and is not here;
+ * the event's own box, which reads the allocator, includes it. `capacity` is `null` for an
+ * event without a limit.
+ */
+export type RegisteredOnEvent = {
+  eventId: string;
+  title: string;
+  count: number;
+  withPlace: number;
+  awaitingEmail: number;
+  waitlisted: number;
+  capacity: number | null;
+};
+
+const PLACE_STATUSES: readonly string[] = ["CONFIRMED", "PENDING_DECLARATION", "WAITLIST_OFFERED"];
 
 /**
  * The badge's figure split per event (§476): the same filter as `countRegisteredForUpcoming`,
- * grouped by event and ordered by start, so the tab's tooltip says *what* it counts — each
- * upcoming event with its number — instead of a sum nobody can check against the list.
+ * grouped by event **and status** — a handful of rows for a few dozen events, still one indexed
+ * query — so the tab's tooltip says what the number is made of: people with a place, people
+ * awaiting their email, people on the waiting list. The total is the sum of the split.
  *
- * Still one indexed query over a few dozen events. The title is the reader's own language's;
- * an event with no translation in it shows a dash, never the other language's title.
+ * The title is the reader's own language's; an event with no translation in it shows a dash,
+ * never the other language's title.
  */
 export async function countRegisteredPerUpcomingEvent<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -76,7 +96,13 @@ export async function countRegisteredPerUpcomingEvent<T extends Record<string, u
   locale: Locale,
 ): Promise<RegisteredOnEvent[]> {
   const rows = await db
-    .select({ eventId: events.id, title: eventTranslations.title, value: count() })
+    .select({
+      eventId: events.id,
+      title: eventTranslations.title,
+      capacity: events.capacity,
+      status: registrations.status,
+      value: count(),
+    })
     .from(registrations)
     .innerJoin(events, eq(events.id, registrations.eventId))
     .leftJoin(eventTranslations, and(eq(eventTranslations.eventId, events.id), eq(eventTranslations.locale, locale)))
@@ -88,9 +114,20 @@ export async function countRegisteredPerUpcomingEvent<T extends Record<string, u
         inArray(registrations.status, [...ACTIVE_STATUSES]),
       ),
     )
-    .groupBy(events.id, events.startsAt, eventTranslations.title)
+    .groupBy(events.id, events.startsAt, events.capacity, eventTranslations.title, registrations.status)
     .orderBy(asc(events.startsAt));
-  return rows.map((row) => ({ eventId: row.eventId, title: row.title ?? "—", count: row.value }));
+  const perEvent = new Map<string, RegisteredOnEvent>();
+  for (const row of rows) {
+    const entry =
+      perEvent.get(row.eventId) ??
+      { eventId: row.eventId, title: row.title ?? "—", count: 0, withPlace: 0, awaitingEmail: 0, waitlisted: 0, capacity: row.capacity };
+    entry.count += row.value;
+    if (PLACE_STATUSES.includes(row.status)) entry.withPlace += row.value;
+    else if (row.status === "PENDING_EMAIL_CONFIRMATION") entry.awaitingEmail += row.value;
+    else if (row.status === "WAITLISTED") entry.waitlisted += row.value;
+    perEvent.set(row.eventId, entry);
+  }
+  return [...perEvent.values()];
 }
 
 const cachedBreakdown = new Map<Locale, { at: number; value: RegisteredOnEvent[] }>();
@@ -127,17 +164,30 @@ export const BADGE_HINT_EVENTS = 5;
 /** The words the hint is built from, in the reader's language — the `Admin.nav` entries. */
 export type BadgeHintWords = {
   rule: string;
-  event: (title: string, count: number) => string;
+  /** "{title}: {count} — {parts}". */
+  event: (title: string, count: number, parts: string) => string;
+  withPlace: (count: number) => string;
+  withPlaceOf: (count: number, capacity: number) => string;
+  awaitingEmail: (count: number) => string;
+  waitlisted: (count: number) => string;
   more: (count: number) => string;
 };
 
 /**
- * The tab's tooltip text (§476): the rule in one line, then each upcoming event with its number,
- * the first `BADGE_HINT_EVENTS` by start and how many more after them. Pure, so both languages
- * are tested against the catalogues.
+ * The tab's tooltip text (§476, amended): what the number is and is not, then each upcoming
+ * event with its total and who holds a place — "153 — 144 with a place of 150, 9 awaiting the
+ * email confirmation" — a zero part omitted except the places; the first `BADGE_HINT_EVENTS` by
+ * start and how many more after them. Pure, so both languages are tested against the catalogues.
  */
 export function registeredBadgeHint(events: readonly RegisteredOnEvent[], words: BadgeHintWords): string {
-  const shown = events.slice(0, BADGE_HINT_EVENTS).map((row) => words.event(row.title, row.count));
+  const shown = events.slice(0, BADGE_HINT_EVENTS).map((row) => {
+    const parts = [
+      row.capacity === null ? words.withPlace(row.withPlace) : words.withPlaceOf(row.withPlace, row.capacity),
+      ...(row.awaitingEmail > 0 ? [words.awaitingEmail(row.awaitingEmail)] : []),
+      ...(row.waitlisted > 0 ? [words.waitlisted(row.waitlisted)] : []),
+    ].join(", ");
+    return words.event(row.title, row.count, parts);
+  });
   const rest = events.length - BADGE_HINT_EVENTS;
   return [words.rule, ...shown, ...(rest > 0 ? [words.more(rest)] : [])].join("\n");
 }

@@ -91,7 +91,8 @@ import { previewDeclarationResend } from "@/modules/registrations/bulk-resend";
 import { countBibs, spareCardState } from "@/modules/registrations/bibs";
 import { SPARE_BIBS_PER_PRINT, spareRangeOfQuery } from "@/modules/registrations/domain/spare-bibs";
 import { countInterests } from "@/modules/registrations/interest";
-import { countEligibleWaitlisted, countRegistrationsForEvent, countTestRegistrationsForEvent } from "@/modules/registrations/repository";
+import { computeOccupied } from "@/modules/registrations/domain/capacity";
+import { countEligibleWaitlisted, countOccupied, countRegistrationsForEvent, countTestRegistrationsForEvent } from "@/modules/registrations/repository";
 import QueuePanel from "@/modules/registrations/ui/QueuePanel";
 import GroupRunDeclarationsPanel from "@/modules/group-run-declarations/ui/GroupRunDeclarationsPanel";
 import { listGroupRunDeclarations } from "@/modules/group-run-declarations/repository";
@@ -240,6 +241,15 @@ export default async function EditEventPage({ params, searchParams }: Props) {
 
   // The waiting list's length, for the queue and for the sentence under "Număr de locuri" (§147).
   const waiting = internal && (maySaveSettings || canReadRegistrations(staffUser.role)) ? await countEligibleWaitlisted(db, event.id) : 0;
+  /*
+    The places the allocator counts as taken (§255 amended): the number the public line "N înscriși din C" and the
+    queue panel read, a family's reservation included — one more aggregate over the event's own rows, only when
+    there is a limit to say it against.
+  */
+  const placesTaken =
+    internal && event.capacity !== null && (maySaveSettings || canReadRegistrations(staffUser.role))
+      ? computeOccupied(await countOccupied(db, event.id, now))
+      : null;
 
   /*
     "Anunță participanții despre schimbare", and the cancellation's "tell them" (§331): how many
@@ -984,7 +994,11 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                     collapsible
                     id="box-received"
                     title={t("editor.boxes.received.title")}
-                    aside={t("editor.boxes.received.summary", { count: realCount, waiting })}
+                    aside={
+                      placesTaken !== null && event.capacity !== null
+                        ? t("editor.boxes.received.summaryPlaces", { count: realCount, waiting, occupied: placesTaken, capacity: event.capacity })
+                        : t("editor.boxes.received.summary", { count: realCount, waiting })
+                    }
                     openWhen={{ attention: thanksDue && !event.thanksSentAt }}
                   >
                     <Stack spacing={2}>
