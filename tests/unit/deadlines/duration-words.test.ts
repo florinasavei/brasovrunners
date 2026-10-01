@@ -46,6 +46,10 @@ describe("§377 durations as words", () => {
     expect(leadPhrase("ro", 36)).toBe("36 de ore");
     expect(leadPhrase("ro", 168)).toBe("o săptămână");
     expect(leadPhrase("en", 72)).toBe("3 days");
+    expect(leadPhrase("ro", 96)).toBe("4 zile");
+    expect(leadPhrase("ro", 120)).toBe("5 zile");
+    expect(leadPhrase("en", 96)).toBe("4 days");
+    expect(leadPhrase("en", 120)).toBe("5 days");
     expect(daysPhrase("ro", 56)).toBe("8 săptămâni");
     expect(daysPhrase("ro", 10)).toBe("10 zile");
     expect(daysPhrase("en", 14)).toBe("2 weeks");

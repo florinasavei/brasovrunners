@@ -348,8 +348,8 @@ export default async function RegistrationBox({
 
                   {/*
                     8.3b — the reminder before the start (§81, §377): the club's lead unless this
-                    event says otherwise. A native select of the owner's four choices — "as usual",
-                    24, 48, 72 hours, none — and the stored number too when a script set another,
+                    event says otherwise. A native select of the owner's choices — "as usual",
+                    24, 48, 72, 96, 120 hours, none — and the stored number too when a script set another,
                     so a save never quietly changes it.
                   */}
                   <Panel glyph="reminder" collapsible level={3} id="box-reminder" title={t("editor.boxes.reminder.title")} aside={reminderSummary}>
