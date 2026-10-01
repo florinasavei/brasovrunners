@@ -1454,7 +1454,8 @@ QA                    0.25 CU fixed    30 CU-hours  (108000)  ≈  $3.20 at most
 ```
 
 Together they sit under the $15 spending notification on Neon's Billing page (organisation-wide,
-kept). **A project that reaches its limit is suspended by Neon until the next billing period
+kept; it stood at $0.14 of $15 on 2026-10-01, the first day of the October period —
+`docs/PLATFORM.md` § Cost keeps the readings). **A project that reaches its limit is suspended by Neon until the next billing period
 starts** — on production that is the site down: registrations, the desk, the emails. So the
 limit leaves room (production used 6.3 CU-hours in the first 37 hours, most of it two people
 testing all day), and «Setări» → «Costuri» (`/admin/settings/costs`, §516) shows the month's hours. To raise a limit before
