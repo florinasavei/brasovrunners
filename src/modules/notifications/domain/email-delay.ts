@@ -115,7 +115,7 @@ export type EmailDelayFacts = {
  * **And the scheduler's tick on each:** when a pause ends, an hour frees or an allowance resets,
  * nothing leaves until the next run (`wakeJobs` only forgets the cached quiet), so the promised wait
  * (the pinger's tick under `scheduled`, nothing under `immediate`) is added to every known estimate —
- * a pause ending at 01:05 under the hourly night cadence is «cel mult 60 de minute», not 5. **The tick
+ * a pause ending at 01:05 under the hourly night cadence is «cel mult 65 de minute», not 5. **The tick
  * is the cadence at that instant** (`promisedWaitAt`, the caller's `pingerCadenceMinutes(instant)`),
  * not at the visitor's: the allowance resets at 02:05 or 03:05 club time, always in the hourly quiet
  * hours, so a daytime visitor is told reset + 60, not reset + 15; a pause or an hour freeing that

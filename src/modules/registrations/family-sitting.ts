@@ -7,7 +7,7 @@ import type { Locale } from "@/i18n/routing";
 import { drainOutboxAfterResponse } from "@/modules/notifications/drain";
 import { enqueueEmail } from "@/modules/notifications/outbox";
 import { isUuid } from "@/shared/ids";
-import { FAMILY_HELD, isFamilySitting, SITTING_HELD, type SittingSeed, sittingLinkExpiresAt } from "./domain/family-sitting";
+import { FAMILY_HELD, familyHeldUntil, isFamilySitting, SITTING_HELD, type SittingSeed, sittingLinkExpiresAt } from "./domain/family-sitting";
 import { FAMILY_PASS_MINUTES, SIGNABLE_STATUSES } from "./domain/family-signing";
 import { liveSittingEntries } from "./family-entries";
 
@@ -148,6 +148,15 @@ export async function sittingHasMessageToLeave<T extends Record<string, unknown>
 }
 
 /**
+ * A held row's payload with the instant it is let go (`FAMILY_HELD_UNTIL`, §NNN), written in the same
+ * statement as every not-before the family's path sets — the hold, its move, «Gata» — so the two never
+ * disagree. Only here: the outbox's own writes (a retry, a pause, a deferral) leave it as it is.
+ */
+function withHeldUntil(at: Date) {
+  return sql`${emailOutbox.payloadJson} || ${JSON.stringify(familyHeldUntil(at))}::jsonb`;
+}
+
+/**
  * After each form of the sitting (§519), under the event's lock: the window moves to `heldUntil`,
  * and from the second person on the held messages become the one family message. Every message the
  * sitting still holds waits until `heldUntil`; the row learns when its link's last lapse is.
@@ -173,7 +182,7 @@ export async function settleSitting<T extends Record<string, unknown>>(
       recipientEmail: params.recipientEmail,
       // `FAMILY_HELD` (§540): held until «Gata» or the window, the queue panel (§529) counts it as the
       // family's hold, not as a retry. The renderer ignores the flag on this message.
-      payload: { familySittingId: sitting.id, [FAMILY_HELD]: true },
+      payload: { familySittingId: sitting.id, [FAMILY_HELD]: true, ...familyHeldUntil(heldUntil) },
       idempotencyKey: key,
       now,
       notBefore: heldUntil,
@@ -193,7 +202,7 @@ export async function settleSitting<T extends Record<string, unknown>>(
   if (held.length > 0) {
     await tx
       .update(emailOutbox)
-      .set({ nextAttemptAt: heldUntil })
+      .set({ nextAttemptAt: heldUntil, payloadJson: withHeldUntil(heldUntil) })
       .where(and(inArray(emailOutbox.id, held), eq(emailOutbox.status, "PENDING"), eq(emailOutbox.attemptCount, 0)));
   }
   const expiresAt =
@@ -216,7 +225,8 @@ export async function releaseFamilySitting<T extends Record<string, unknown>>(db
     if (row.heldOutboxIds.length > 0) {
       await tx
         .update(emailOutbox)
-        .set({ nextAttemptAt: now })
+        // Let go now: the release instant the public notice counts a wait from (§NNN).
+        .set({ nextAttemptAt: now, payloadJson: withHeldUntil(now) })
         .where(and(inArray(emailOutbox.id, [...row.heldOutboxIds]), eq(emailOutbox.status, "PENDING"), eq(emailOutbox.attemptCount, 0)));
     }
     await tx
@@ -270,7 +280,7 @@ export async function continueFamilySitting<T extends Record<string, unknown>>(
         if (row.heldOutboxIds.length > 0) {
           await tx
             .update(emailOutbox)
-            .set({ nextAttemptAt: heldUntil })
+            .set({ nextAttemptAt: heldUntil, payloadJson: withHeldUntil(heldUntil) })
             .where(and(inArray(emailOutbox.id, [...row.heldOutboxIds]), eq(emailOutbox.status, "PENDING"), eq(emailOutbox.attemptCount, 0)));
         }
         await tx
@@ -321,7 +331,7 @@ async function holdSeedMessage<T extends Record<string, unknown>>(
     .update(emailOutbox)
     .set({
       nextAttemptAt: heldUntil,
-      payloadJson: sql`${emailOutbox.payloadJson} || ${JSON.stringify({ [mark]: true })}::jsonb`,
+      payloadJson: sql`${emailOutbox.payloadJson} || ${JSON.stringify({ [mark]: true, ...familyHeldUntil(heldUntil) })}::jsonb`,
     })
     .where(
       and(eq(emailOutbox.id, outboxId), eq(emailOutbox.registrationId, registrationId), eq(emailOutbox.status, "PENDING"), eq(emailOutbox.attemptCount, 0)),
@@ -472,7 +482,7 @@ export async function queueFamilyConfirmed<T extends Record<string, unknown>>(
       // The participant's message and its club copies, which carry the key as their prefix.
       await tx
         .update(emailOutbox)
-        .set({ nextAttemptAt: releaseAt })
+        .set({ nextAttemptAt: releaseAt, payloadJson: withHeldUntil(releaseAt) })
         .where(and(or(eq(emailOutbox.idempotencyKey, key), like(emailOutbox.idempotencyKey, `${key}:club-copy:%`)), eq(emailOutbox.status, "PENDING"), eq(emailOutbox.attemptCount, 0)));
       if (releaseAt.getTime() <= now.getTime()) drainOutboxAfterResponse();
     }
@@ -486,7 +496,7 @@ export async function queueFamilyConfirmed<T extends Record<string, unknown>>(
     locale: sitting.locale,
     recipientEmail,
     // The sitting by its id alone — never a name or a number in the outbox (§12.12).
-    payload: { familySittingId: sitting.id },
+    payload: { familySittingId: sitting.id, ...familyHeldUntil(releaseAt) },
     idempotencyKey: key,
     now,
     notBefore: releaseAt,

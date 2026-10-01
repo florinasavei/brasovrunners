@@ -678,10 +678,18 @@ export async function cachedDeadlines(): Promise<Deadlines> {
  * environment's default timing and no interval: the page still renders, and says the pinger's wait.
  */
 export async function cachedEmailWaitMinutes(now: Date): Promise<number | null> {
-  const settings = await cachedEmailTiming();
+  return promisedWaitAt(await cachedEmailTiming(), now, now);
+}
+
+/**
+ * The wait promised a message queued at `instant` (§513), from the two settings: the pinger's cadence
+ * is the instant's (§NNN: a reset at 02:05 waits for the night's hourly tick, whoever looks by day),
+ * the governor's floor is now's — this instance's memory knows no other.
+ */
+function promisedWaitAt(settings: { timing: DeliveryTiming; intervalMinutes: number }, instant: Date, now: Date): number | null {
   return emailWaitMinutes({
     timing: settings.timing,
-    pingerMinutes: pingerCadenceMinutes(now),
+    pingerMinutes: pingerCadenceMinutes(instant),
     intervalMinutes: settings.intervalMinutes,
     governorFloorMinutes: governorEffects(peekNeonBudgetLevel(now)).jobFloorMinutes,
   });
@@ -733,14 +741,7 @@ export async function cachedEmailDelay(now: Date): Promise<EmailDelay | null> {
       : await publicRead(["email.delay"], ["email"], () => readEmailDelayFacts(getDb(), now), EMAIL_DELAY_SECONDS);
     const settings = await cachedEmailTiming();
     // The wait a message queued at an instant is promised: the cadence is the instant's, not now's (§NNN).
-    const waitAt = (instant: Date) =>
-      emailWaitMinutes({
-        timing: settings.timing,
-        pingerMinutes: pingerCadenceMinutes(instant),
-        intervalMinutes: settings.intervalMinutes,
-        governorFloorMinutes: governorEffects(peekNeonBudgetLevel(now)).jobFloorMinutes,
-      });
-    return judgeEmailDelay(facts, waitAt(now), now, waitAt);
+    return judgeEmailDelay(facts, promisedWaitAt(settings, now, now), now, (instant) => promisedWaitAt(settings, instant, now));
   } catch {
     return null;
   }

@@ -5,7 +5,7 @@ import { governorEffects } from "@/modules/diagnostics/domain/neon-budget";
 import { peekNeonBudgetLevel } from "@/modules/diagnostics/budget-level";
 import { readJobCadence } from "@/modules/jobs/cadence";
 import { pingerCadenceMinutes } from "@/modules/jobs/quiet-hours";
-import { FAMILY_HELD, SITTING_HELD } from "@/modules/registrations/domain/family-sitting";
+import { FAMILY_HELD, FAMILY_HELD_UNTIL, SITTING_HELD } from "@/modules/registrations/domain/family-sitting";
 import { env } from "@/shared/config/env";
 import { isBulkMessage } from "./domain/bulk";
 import { CLUB_COPY_FLAG } from "./domain/club-notices";
@@ -78,10 +78,19 @@ export async function readEmailDelayFacts<T extends Record<string, unknown>>(db:
   const waiting = sql`(${emailOutbox.status} IN ('PENDING', 'PROCESSING') AND NOT ${clubHold})`;
   /*
     Since its creation — a hand-off to a later run never restarts the wait. A family's row, its hold
-    over, from the hold's end (its not-before, or «Gata»): the person was told that hour — whatever
-    came after, a failed attempt included (a retry moves the not-before, never the creation).
+    over, from the instant it was let go: the person was told that hour. That instant is the one the
+    family's path wrote into the payload with the not-before (`heldUntil`: the window's end, the
+    wizard's half hour, or «Gata»), never `next_attempt_at` itself — a failed attempt rewrites that to
+    the retry's turn, usually ahead, and the wait would read nothing while the family waited on. A
+    marked row queued before `heldUntil` was written keeps the earlier rule — its not-before while no
+    provider gave it a reason, else its creation — which over-reports a failed one's wait by at most
+    one hold window, and only for rows already in the queue when this deployed.
   */
-  const waitedSince = sql`(CASE WHEN ${familyMark} AND ${emailOutbox.nextAttemptAt} > ${emailOutbox.createdAt} THEN ${emailOutbox.nextAttemptAt} ELSE ${emailOutbox.createdAt} END)`;
+  const releasedAt = sql`(${emailOutbox.payloadJson} ->> ${FAMILY_HELD_UNTIL}::text)::timestamptz`;
+  const waitedSince = sql`(CASE
+    WHEN ${familyMark} AND (${emailOutbox.payloadJson} ->> ${FAMILY_HELD_UNTIL}::text) IS NOT NULL THEN greatest(${emailOutbox.createdAt}, ${releasedAt})
+    WHEN ${familyMark} AND ${emailOutbox.lastError} IS NULL AND ${emailOutbox.nextAttemptAt} > ${emailOutbox.createdAt} THEN ${emailOutbox.nextAttemptAt}
+    ELSE ${emailOutbox.createdAt} END)`;
   // Put off by a provider, with its reason, past the hour: an allowance's reset.
   const deferred = sql`(${emailOutbox.status} = 'PENDING' AND ${emailOutbox.lastError} IS NOT NULL AND ${emailOutbox.nextAttemptAt} > ${at(DEFERRED_BEYOND_MS)})`;
   // The mark only the row Mailgun refused carries (`outbox.ts`, `releaseForPause`), its pause not over.

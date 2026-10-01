@@ -90,6 +90,8 @@ describe("§NNN readEmailDelay", () => {
 
   it("never counts a row the club holds for a family's window — by either kind of marker — nor a sent or failed one", async () => {
     await insert(
+      // A hold as the family's path now writes it: the release instant ahead, beside the marker.
+      { createdAt: ago(40), nextAttemptAt: ahead(5), payloadJson: { sittingHeld: true, heldUntil: ahead(5).toISOString() } },
       // The payload flags (`sittingHeld` on a verification email, `familyHeld` on any other message).
       { createdAt: ago(40), nextAttemptAt: ahead(5), payloadJson: { sittingHeld: true } },
       { messageType: "COMPLETE_DECLARATION", createdAt: ago(40), nextAttemptAt: ahead(5), payloadJson: { familyHeld: true } },
@@ -102,17 +104,32 @@ describe("§NNN readEmailDelay", () => {
     expect(await readEmailDelay(db, NOW, 15)).toMatchObject({ late: false, queued: 0 });
   });
 
-  it("counts a released family row from its release, not its creation", async () => {
+  it("counts a released family row from its release (`heldUntil`), not its creation", async () => {
     await insert(
-      { createdAt: ago(40), nextAttemptAt: ago(4), payloadJson: { sittingHeld: true } },
-      { messageType: "REGISTRATION_CONFIRMED", createdAt: ago(40), nextAttemptAt: ago(3), payloadJson: { familySittingId: "sitting-1" } },
+      { createdAt: ago(40), nextAttemptAt: ago(4), payloadJson: { sittingHeld: true, heldUntil: ago(4).toISOString() } },
+      { messageType: "REGISTRATION_CONFIRMED", createdAt: ago(40), nextAttemptAt: ago(3), payloadJson: { familySittingId: "sitting-1", heldUntil: ago(3).toISOString() } },
     );
     expect(await readEmailDelay(db, NOW, 15)).toMatchObject({ late: false, queued: 2, oldestWaitMinutes: 4 });
   });
 
-  it("counts a released family row from its release even after one failed attempt", async () => {
-    await insert({ createdAt: ago(30), nextAttemptAt: ago(1), attemptCount: 1, lastError: "transient 503", payloadJson: { sittingHeld: true } });
+  it("counts a released family row from its release after a failed attempt, its retry ahead", async () => {
+    // Let go a minute ago, tried once, refused: the backoff puts its next turn ahead, as the outbox writes it.
+    await insert({ createdAt: ago(30), nextAttemptAt: ahead(1), attemptCount: 1, lastError: "transient 503", payloadJson: { sittingHeld: true, heldUntil: ago(1).toISOString() } });
     expect(await readEmailDelay(db, NOW, 15)).toMatchObject({ late: false, queued: 1, oldestWaitMinutes: 1 });
+  });
+
+  it("counts a family row released half an hour ago and failing since as a backlog — every retry leaves the release where it was", async () => {
+    await insert({ createdAt: ago(45), nextAttemptAt: ahead(4), attemptCount: 3, lastError: "transient 503", payloadJson: { sittingHeld: true, heldUntil: ago(30).toISOString() } });
+    expect(await readEmailDelay(db, NOW, 15)).toMatchObject({ late: true, reason: "backlog", queued: 1, oldestWaitMinutes: 30 });
+  });
+
+  it("reads a marked row queued before `heldUntil` was written by the earlier rule: its not-before with no reason, else its creation", async () => {
+    await insert({ createdAt: ago(40), nextAttemptAt: ago(4), payloadJson: { sittingHeld: true } });
+    expect(await readEmailDelay(db, NOW, 15)).toMatchObject({ late: false, queued: 1, oldestWaitMinutes: 4 });
+    await resetTables(db);
+    // Failed after its release: no instant to read, so its creation — an over-report of one hold window at most.
+    await insert({ createdAt: ago(40), nextAttemptAt: ahead(4), attemptCount: 1, lastError: "transient 503", payloadJson: { familyHeld: true } });
+    expect(await readEmailDelay(db, NOW, 15)).toMatchObject({ late: true, reason: "backlog", queued: 1, oldestWaitMinutes: 40 });
   });
 
   it("counts an unmarked row with a future turn and no reason as waiting, from its creation — it is not a family's hold", async () => {
