@@ -132,17 +132,22 @@ const RACE_ROW_GAP = 0.5;
  * named time or two — and it is decided by the row's OWN width, not the viewport's. A CSS container
  * query on the box that holds the row (`WHEN_CONTAINER`: the card's text column beside the glyph
  * column, the hero's answer, the page's answer) switches to the list below the row's one-line
- * width, in em so a larger reader font moves it too: one named time below 20em («Sâm., 21 nov. · »
- * 112 + the clock 24 + «10:00 (start eveniment)» 166 = 302 pixels at sixteen, plus a margin), two
- * below 28em (112 + 178 + 140 = 430, §597). English is shorter, so the same numbers hold. A browser
+ * width. The thresholds are in the container's OWN em (css-contain-3 resolves a container
+ * condition's em against the query container's font-size), and that differs per surface: the card's
+ * column sits inside `cardLine`'s `body2`, 14 pixels; the hero's and the page's answers are `body1`,
+ * 16. On the 14-pixel card the row is one line at («Sâm., 21 nov. · » 112 + the clock 24
+ * + «10:00 (start eveniment)» 166 + the gaps, ≈ 22em; with two times 112 + 178 + 140 + the gaps,
+ * ≈ 31.5em, §597); so one named time is a list below 23em and two below 32em — 322 and 448 pixels
+ * on the card, 368 and 512 on the hero and the page, where the larger words need the room. A
+ * reader's larger font moves the threshold with the words; English is shorter, so the same em hold. A browser
  * without container queries shows the inline row, as before. A bare time (a group run, a series)
  * has no name and no list.
  */
 const WHEN_CONTAINER = { containerType: "inline-size", containerName: "when" } as const;
 /** The container query under which a race's «când» is a list (§600, amended §NNN), by its count of named times. */
 function whenListQuery(namedTimes: number): string | null {
-  if (namedTimes >= 2) return "@container when (max-width: 28em)";
-  if (namedTimes === 1) return "@container when (max-width: 20em)";
+  if (namedTimes >= 2) return "@container when (max-width: 32em)";
+  if (namedTimes === 1) return "@container when (max-width: 23em)";
   return null;
 }
 /** The row's glyph column: the twenty-pixel glyph and its eight-pixel gap (`ROW_ICON_SX`; the page's `pl` 3.5). */
