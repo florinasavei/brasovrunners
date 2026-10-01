@@ -9,7 +9,7 @@ import type { Locale } from "@/i18n/routing";
  */
 
 /**
- * "Nothing after a few minutes? Look in Spam and Promotions and move us to your inbox…" — the one
+ * "Can't find it? Look in Spam and Promotions and move us to your inbox…" — the one
  * visible box on every page that tells somebody to wait for an email from us: the screen after the
  * registration form, the two "send me the link again" forms once sent, the newsletter's. A box
  * rather than a grey line, because the person who needs it is the one whose email went to Spam or
@@ -25,7 +25,7 @@ export async function spamHintWords(): Promise<string> {
  * "This link has been replaced: we sent you a newer email with a working link (sent …). Open the
  * latest…" — what a link a newer link of the same purpose superseded says, in place of the generic
  * "no longer valid" (§NNN; `domain/link-status.ts` argues why it may). The sentence names Spam and
- * Promotions itself, so no second box goes under it. The time is the newest email's, on Romania's
+ * Promotions itself, so no second box goes under it. The time is the replacing email's, on Romania's
  * clock — a platform instant (`i18n/dates.ts`) — inside the sentence: «(trimis marți, 29 sept.
  * 2026, la 10:00)». Two keys rather than an ICU select, the second only when the time was read.
  */

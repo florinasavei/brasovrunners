@@ -53,7 +53,7 @@ import type { TokenRejectionReason } from "@/modules/action-tokens/domain/token-
  *   holds the secret from that email, and "a newer email has the working link — open the latest
  *   one, look in Spam and Promotions" tells them nothing the email in their hand did not, except
  *   which email to open. It says no state and shows nothing of the registration: one sentence,
- *   the newest email's time, and the resend path — which carries the event's slug, as the spent
+ *   the replacing email's time, and the resend path — which carries the event's slug, as the spent
  *   page's does, so the form narrows to it (`mayReportReplaced`; `token-actions.ts`).
  * - **INVALIDATED** is now only the other half — a link revoked for cause — and stays generic on
  *   purpose: it is a decision to stop a link working, and a friendly page that coached its holder

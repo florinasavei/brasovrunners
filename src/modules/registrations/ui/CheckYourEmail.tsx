@@ -94,7 +94,8 @@ type Props = {
  * is in, and when its email leaves, the screen's point — and after them, since §547 one quiet text
  * press, «Înscriu încă o persoană cu această adresă», with at most one sentence under it (the owner,
  * 2026-09-28: «pare că încurajăm asta… când e doar o excepție»). No steps and no wait box: the
- * leaving time is said once, in one shape, and nothing contradicts it.
+ * leaving time is said once, in one shape, and nothing contradicts it. The one thing under the
+ * leaving line is the Spam box (§NNN), worded without a time so that it never contradicts it.
  */
 export default async function CheckYourEmail({ eventTitle, whenLabel, eventHref, slug, facts, window, offer }: Props) {
   const t = await getTranslations("Registration");
@@ -165,7 +166,7 @@ export default async function CheckYourEmail({ eventTitle, whenLabel, eventHref,
             {leavesLine}
           </Typography>
         </Box>
-        {/* The same box as the full screen's: this is the page most people wait on (§NNN). */}
+        {/* The same box as the full screen's, with no time in it: the leaving line above may say the email has not left yet (§NNN). */}
         <Alert severity="info" data-testid="spam-hint">
           {await spamHintWords()}
         </Alert>

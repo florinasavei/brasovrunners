@@ -6395,7 +6395,7 @@
     "replaced": "Acest link a fost înlocuit. Ți-am trimis un email mai nou, cu un link valabil. Deschide cel mai recent email de la noi — dacă nu-l găsești, caută în Spam și în Promoții.",
     "replacedAt": "Acest link a fost înlocuit. Ți-am trimis un email mai nou, cu un link valabil (trimis {issuedAt}). Deschide cel mai recent email de la noi — dacă nu-l găsești, caută în Spam și în Promoții.",
     "spamHint": {
-      "body": "Nu a venit în câteva minute? Caută în Spam și în Promoții și mută-ne în Inbox, ca să primești și următoarele."
+      "body": "Nu îl găsești? Caută în Spam și în Promoții și mută-ne în Inbox, ca să primești și următoarele."
     },
     "cancelKeepsRecord": "Renunțarea eliberează locul; înscrierea o păstrăm trei ani, ca dovadă. Vrei să-ți vezi, corectezi sau ștergi datele? <contact>Scrie-ne</contact>.",
     "cancelReason": {

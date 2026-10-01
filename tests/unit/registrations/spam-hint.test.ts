@@ -30,11 +30,6 @@ vi.mock("@/i18n/navigation", async () => {
     Link: ({ href, children }: { href: unknown; children: ReactNode }) => createElement("a", { href: typeof href === "string" ? href : "#" }, children),
   };
 });
-vi.mock("@/modules/public-cache/reads", () => ({
-  cachedDeadlines: async () => ({ confirmationHours: 48, familySittingMinutes: 10 }),
-  cachedEmailWaitMinutes: async () => 15,
-  cachedEmailLeavesAt: async () => null,
-}));
 // The forms' server actions are never pressed here.
 vi.mock("@/app/[locale]/registrations/resend/actions", () => ({ requestRegistrationLinkAction: async () => {} }));
 vi.mock("@/app/[locale]/contact/actions", () => ({
@@ -42,15 +37,38 @@ vi.mock("@/app/[locale]/contact/actions", () => ({
   submitNewsletterAction: async () => {},
 }));
 vi.mock("@/app/[locale]/registrations/mine/actions", () => ({ requestMyRegistrationsLinkAction: async () => {} }));
+vi.mock("@/app/[locale]/registrations/family/[token]/actions", () => ({
+  confirmFamilyEntryAction: async () => {},
+  confirmFamilySittingAction: async () => {},
+  declineFamilyEntryAction: async () => {},
+}));
+vi.mock("@/modules/registrations/ui/RegistrationJourney", () => ({ default: () => null }));
+// The group run's declaration page: only its done branch is rendered, with a dated trail run.
+vi.mock("@/db/client", () => ({ getDb: () => ({}) }));
+vi.mock("@/modules/resilience/event-copy", () => ({
+  formEventBySlug: async () => ({ title: "Alergare de grup", slug: "alergare", groupRunDeclaration: "GROUP_RUN_DECLARATION_TRAIL", startsAt: new Date("2026-11-21T08:00:00Z") }),
+}));
+vi.mock("@/modules/events/members-only", () => ({ membersEventBySlug: async () => null }));
+vi.mock("@/modules/events/domain/dated", () => ({ datedOrNull: (event: unknown) => event }));
+vi.mock("@/modules/legal-documents/domain/keys", () => ({ offeredGroupRunDeclarationKey: () => "GROUP_RUN_DECLARATION_TRAIL" }));
+vi.mock("@/modules/public-cache/reads", () => ({
+  cachedDeadlines: async () => ({ confirmationHours: 48, familySittingMinutes: 10 }),
+  cachedEmailWaitMinutes: async () => 15,
+  cachedEmailLeavesAt: async () => null,
+  cachedCurrentApprovedDocument: async () => undefined,
+  cachedBotCheckSiteKey: async () => undefined,
+}));
 
 const { default: CheckYourEmail } = await import("@/modules/registrations/ui/CheckYourEmail");
 const { default: ResendPage } = await import("@/app/[locale]/registrations/resend/page");
 const { default: MyRegistrationsRequestPage } = await import("@/app/[locale]/registrations/mine/page");
 
+const { default: FamilyConfirmPage } = await import("@/app/[locale]/registrations/family/[token]/page");
+const { default: GroupRunDeclarationPage } = await import("@/app/[locale]/events/[slug]/declaration/page");
 const { default: NewsletterSignup } = await import("@/modules/newsletter/ui/NewsletterSignup");
 
-const SPAM_RO = "Nu a venit în câteva minute? Caută în Spam și în Promoții și mută-ne în Inbox, ca să primești și următoarele.";
-const SPAM_EN = "Nothing after a few minutes? Look in Spam and Promotions and move us to your inbox so the next ones arrive.";
+const SPAM_RO = "Nu îl găsești? Caută în Spam și în Promoții și mută-ne în Inbox, ca să primești și următoarele.";
+const SPAM_EN = "Can't find it? Look in Spam and Promotions and move us to your inbox so the next ones arrive.";
 
 function markup(element: ReactElement): string {
   return renderToStaticMarkup(element)
@@ -162,6 +180,28 @@ describe("§NNN the pages that wait for an email point at Spam and Promotions, v
       expect(spamBox(await render(locale, "sent", null))).toContain(expected);
       expect(spamBox(await render(locale, null, "sent"))).toContain(expected);
       expect(await render(locale, null, null)).not.toContain('data-testid="spam-hint"');
+    }
+  });
+
+  it("the family's confirmation page shows it under both answers, and the group run's done page too", async () => {
+    for (const locale of ["ro", "en"] as const) {
+      lang.current = locale;
+      const expected = locale === "ro" ? SPAM_RO : SPAM_EN;
+      for (const done of ["declare", "waitlist"]) {
+        const page = markup(
+          (await FamilyConfirmPage({ params: Promise.resolve({ locale, token: "t" }), searchParams: Promise.resolve({ done }) })) as ReactElement,
+        );
+        expect(page).toContain('data-testid="family-confirmed"');
+        expect(spamBox(page), `${locale} ${done}`).toContain(expected);
+      }
+      const declared = markup(
+        (await GroupRunDeclarationPage({
+          params: Promise.resolve({ locale, slug: "alergare" }),
+          searchParams: Promise.resolve({ done: "1" }),
+        })) as ReactElement,
+      );
+      expect(declared).toContain('data-testid="group-run-declaration-done"');
+      expect(spamBox(declared), `${locale} declaration`).toContain(expected);
     }
   });
 });

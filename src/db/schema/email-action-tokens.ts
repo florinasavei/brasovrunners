@@ -100,15 +100,6 @@ export const emailActionTokens = pgTable(
      * generates are 43 characters of base64url, which contains uppercase letters, `-` and
      * `_` — no raw secret can satisfy this pattern. Storing one is a write that fails.
      */
-    /*
-      The referential action of `superseded_by_token_id` (`set null`) runs, for every deleted row
-      (the retention sweep, the erasure cascades), as an UPDATE on this column: without an index it
-      scans the whole table, which grows with every email sent (§327, §549). Partial: most rows are null.
-    */
-    index("email_action_tokens_superseded_by_idx")
-      .on(t.supersededByTokenId)
-      .where(sql`${t.supersededByTokenId} IS NOT NULL`),
-
     check("email_action_tokens_hash_is_sha256_hex", sql`${t.tokenHash} ~ '^[0-9a-f]{64}$'`),
 
     // A token that expires before it was created is either a clock bug or a mistaken unit.
@@ -167,5 +158,14 @@ export const emailActionTokens = pgTable(
       t.purpose,
       t.expiresAt,
     ),
+
+    /*
+      The referential action of `superseded_by_token_id` (`set null`) runs, for every deleted row
+      (the retention sweep, the erasure cascades), as an UPDATE on this column: without an index it
+      scans the whole table, which grows with every email sent (§327, §549). Partial: most rows are null.
+    */
+    index("email_action_tokens_superseded_by_idx")
+      .on(t.supersededByTokenId)
+      .where(sql`${t.supersededByTokenId} IS NOT NULL`),
   ],
 );

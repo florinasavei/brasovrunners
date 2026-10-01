@@ -1,4 +1,4 @@
-import { and, desc, eq, gt, inArray, isNull, ne } from "drizzle-orm";
+import { and, eq, gt, inArray, isNull } from "drizzle-orm";
 import { inReadOnlyTransaction } from "@/db/read-only";
 import {
   type EmailActionTokenPurpose,
@@ -260,16 +260,17 @@ export async function readSpentActionTokenScope<T extends Record<string, unknown
  * - Answers only for `SUPERSEDED`, re-evaluated here; a purpose mismatch, a revoked row, an
  *   unknown secret all return null — the caller falls back to the one generic refusal (§13.2).
  * - A read-only transaction: reached from a GET.
- * - Reveals the scope the holder's secret was issued for and one instant — when the newest token
- *   of the same purpose and scope was created, which is when its email was rendered (links are
- *   minted at send time, `notifications/render.ts`). Never the newer token's id, hash or secret.
+ * - Reveals the scope the holder's secret was issued for and one instant — when the token
+ *   `superseded_by_token_id` names, the one that actually replaced this link, was created, which
+ *   is when its email was rendered (links are minted at send time, `notifications/render.ts`).
+ *   Never the newer token's id, hash or secret.
  *
- * The newest, not merely the row `superseded_by_token_id` names: after two resends the person is
- * told to open the latest email, so the time given is the latest email's.
+ * The named row, not the newest of the scope: a token minted for a redirect rather than an email
+ * (the list switch's press, `list-consent.ts`) would otherwise be reported as an email «sent».
  */
 export type SupersededActionTokenScope = SpentActionTokenScope & {
-  /** When the newest token of this purpose and scope was issued; null when none can be read. */
-  newestIssuedAt: Date | null;
+  /** When the token that replaced this one was issued; null when it cannot be read. */
+  replacedAt: Date | null;
 };
 
 export async function readSupersededActionTokenScope<T extends Record<string, unknown>>(
@@ -303,26 +304,19 @@ export async function readSupersededActionTokenScope<T extends Record<string, un
     const evaluation = evaluateActionToken(row, purpose, now);
     if (evaluation.ok || evaluation.reason !== "SUPERSEDED") return null;
 
-    const [newest] = await tx
-      .select({ createdAt: emailActionTokens.createdAt })
-      .from(emailActionTokens)
-      .where(
-        and(
-          eq(emailActionTokens.purpose, row.purpose),
-          ne(emailActionTokens.id, row.id),
-          row.registrationId === null
-            ? and(eq(emailActionTokens.participantId, row.participantId), isNull(emailActionTokens.registrationId))
-            : eq(emailActionTokens.registrationId, row.registrationId),
-        ),
-      )
-      .orderBy(desc(emailActionTokens.createdAt))
-      .limit(1);
+    const [replacement] = row.supersededByTokenId
+      ? await tx
+          .select({ createdAt: emailActionTokens.createdAt })
+          .from(emailActionTokens)
+          .where(eq(emailActionTokens.id, row.supersededByTokenId))
+          .limit(1)
+      : [];
 
     return {
       participantId: row.participantId,
       registrationId: row.registrationId,
       purpose: row.purpose,
-      newestIssuedAt: newest?.createdAt ?? null,
+      replacedAt: replacement?.createdAt ?? null,
     };
   });
 }

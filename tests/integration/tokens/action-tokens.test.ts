@@ -610,7 +610,7 @@ describe("BR-REQ-036-02 email action tokens", () => {
       expect(row.supersededByTokenId).toBeNull();
     });
 
-    it("reads a superseded token's scope and when the newest email of its kind was issued", async () => {
+    it("reads a superseded token's scope and when the email that replaced it was issued", async () => {
       const first = await issue();
       const secondAt = new Date(NOW.getTime() + 60_000);
       const thirdAt = new Date(NOW.getTime() + 120_000);
@@ -619,10 +619,10 @@ describe("BR-REQ-036-02 email action tokens", () => {
       }
       const before = await rowFor(first.token.id);
 
-      // The latest email's time, not the one the column names: the page says "open the latest".
+      // The time of the row the column names, the token that actually replaced it (§NNN).
       expect(
         await readSupersededActionTokenScope(db, { secret: first.secret, purpose: "MANAGE_REGISTRATION", now: thirdAt }),
-      ).toEqual({ participantId, registrationId: REGISTRATION_ID, purpose: "MANAGE_REGISTRATION", newestIssuedAt: thirdAt });
+      ).toEqual({ participantId, registrationId: REGISTRATION_ID, purpose: "MANAGE_REGISTRATION", replacedAt: secondAt });
       // A GET's read: nothing changed.
       expect(await rowFor(first.token.id)).toEqual(before);
     });

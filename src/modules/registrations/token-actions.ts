@@ -220,7 +220,7 @@ export async function readSpentRegistrationLink(
 
 /** What a page shows for a link a newer email replaced (§NNN, `domain/link-status.ts`). */
 export type ReplacedActionLink = {
-  /** When the newest email of the same kind was issued; null when it cannot be read. */
+  /** When the email that replaced this link was issued; null when it cannot be read. */
   issuedAt: Date | null;
   /** For the "ask for it again" link, in this locale's own words only; null otherwise. */
   eventSlug: string | null;
@@ -253,7 +253,7 @@ export async function readReplacedActionLink(
     const registration = scope.registrationId ? await findRegistrationById(tx, scope.registrationId) : undefined;
     const event = registration ? await findEventNotificationDetails(tx, registration.eventId, locale) : undefined;
 
-    return { issuedAt: scope.newestIssuedAt, eventSlug: event?.locale === locale ? event.slug : null };
+    return { issuedAt: scope.replacedAt, eventSlug: event?.locale === locale ? event.slug : null };
   });
 }
 

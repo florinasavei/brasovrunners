@@ -18,6 +18,7 @@ import DrawIcon from "@mui/icons-material/Draw";
 import Button from "@mui/material/Button";
 import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
+import { spamHintWords } from "@/modules/registrations/ui/link-wait-words";
 import ActionLinkNotice from "@/modules/registrations/ui/ActionLinkNotice";
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
 import CheckboxField from "@/shared/ui/CheckboxField";
@@ -81,9 +82,15 @@ export default async function FamilyConfirmPage({ params, searchParams }: Props)
         </Typography>
         {done === "declare" && <RegistrationJourney current="declare" />}
         {/* The inbox is not named: that would put the address in the URL (§14.5). It is the one the email came to. */}
-        <Alert severity="success" data-testid="family-confirmed">
-          {done === "declare" ? t("family.done") : t("family.doneWaitlist")}
-        </Alert>
+        <Stack spacing={2}>
+          <Alert severity="success" data-testid="family-confirmed">
+            {done === "declare" ? t("family.done") : t("family.doneWaitlist")}
+          </Alert>
+          {/* Both wait for an email with a link to press (the declaration's, the offer's): §NNN. */}
+          <Alert severity="info" data-testid="spam-hint">
+            {await spamHintWords()}
+          </Alert>
+        </Stack>
       </Container>
     );
   }

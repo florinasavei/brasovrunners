@@ -6395,7 +6395,7 @@
     "replaced": "This link has been replaced. We sent you a newer email with a working link. Open the latest email from us — if you cannot find it, check Spam and Promotions.",
     "replacedAt": "This link has been replaced. We sent you a newer email with a working link (sent {issuedAt}). Open the latest email from us — if you cannot find it, check Spam and Promotions.",
     "spamHint": {
-      "body": "Nothing after a few minutes? Look in Spam and Promotions and move us to your inbox so the next ones arrive."
+      "body": "Can't find it? Look in Spam and Promotions and move us to your inbox so the next ones arrive."
     },
     "cancelKeepsRecord": "Cancelling frees your place; we keep the registration for three years as a record. Want to see, correct or erase your data? <contact>Write to us</contact>.",
     "cancelReason": {
