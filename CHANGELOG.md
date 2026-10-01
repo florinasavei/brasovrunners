@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.53-2026-10-01
+
+- **Mailgun's hourly limit is respected** — the outbox sends at most the hour's allowance (100 by default, set on «Emailuri»; 90 is advised during Mailgun's probation), stops Mailgun's road while Mailgun asks it to wait and pauses on a rate refusal instead of giving up, so an account on probation is not knocked on again and no confirmation email is lost. §605.
 ## BR-V2.52-2026-09-27
 
 - **The race's «când» lines up with one time too** — the race's card, hero and page draw the date and each named time on a line of their own, the clock and the flag under the calendar, wherever the row's own box is too narrow for one line (a container query, in em, sized for the short and the long date), not only for two times below 412 pixels; and the pills' tooltips say «circa 10 km» without «(aproximativ)», «circa 350 m diferență de nivel» without «(estimativ)». §604.

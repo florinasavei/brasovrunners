@@ -15,6 +15,7 @@ import { updateEmailCopy } from "@/modules/notifications/email-copy";
 import { updateEmailPlan } from "@/modules/notifications/email-plan";
 import { updateEmailTransport } from "@/modules/notifications/email-transport";
 import { sendOutboxNow } from "@/modules/notifications/send-now";
+import { sendNowRefusalCode } from "@/modules/notifications/send-at-once";
 import { updateDeliveryTiming } from "@/modules/notifications/delivery-timing";
 import { requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
 import { canManageClubSettings, canManageRegistrations } from "@/modules/staff-identity/domain/roles";
@@ -53,6 +54,8 @@ export async function updateEmailPlanAction(_previous: FormOutcome | null, form:
         plan: form.get("plan"),
         dailyAllowance: number("dailyAllowance"),
         monthlyAllowance: number("monthlyAllowance"),
+        // «Limita pe oră» (§605): empty is no pace; a form without the box (a page from before it) is the default.
+        hourlyAllowance: form.has("hourlyAllowance") ? number("hourlyAllowance") : undefined,
         note: typeof form.get("note") === "string" ? form.get("note") : "",
       },
       new Date(),
@@ -131,7 +134,8 @@ export async function sendOutboxNowFromEmailsAction(_previous: FormOutcome | nul
     await flashOutcome({ saved: "outboxSent", sent: String(result.sent) });
   } catch (error) {
     if (!isDomainError(error)) throw error;
-    outcome = `error=${error.code}`;
+    // Mailgun's hour spent is its own sentence (§605); every other refusal its code, as before.
+    outcome = `error=${sendNowRefusalCode(error)}`;
   }
   // The queue the page is about has just changed; without this the panel comes back showing
   // the rows it showed before the press (the same trap §164 and §100 documented above).

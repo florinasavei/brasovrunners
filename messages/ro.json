@@ -1138,7 +1138,8 @@
       "LEGAL_RETIRE_NEEDS_REASON": "Scrie motivul, între 3 și 200 de caractere. Rămâne lângă versiune, în «Versiuni șterse».",
       "LEGAL_NOTHING_DEPENDS": "Nu s-a șters nimic: între timp nu mai depinde nimic de această versiune. Reîncarcă pagina și șterge-o definitiv.",
       "LEGAL_RETIRE_IN_FORCE": "Nu s-a șters nimic: aceasta este versiunea în vigoare. Aprobă întâi versiunea următoare, apoi o poți șterge.",
-      "LEGAL_ALREADY_DELETED": "Versiunea a fost deja ștearsă din listă. Textul ei rămâne în arhivă."
+      "LEGAL_ALREADY_DELETED": "Versiunea a fost deja ștearsă din listă. Textul ei rămâne în arhivă.",
+      "SEND_NOW_HOUR_SPENT": "Nu s-a trimis nimic: limita pe oră a Mailgun («Limita pe oră» din «Emailuri») nu mai are loc acum. Alege «Pune la coadă»; emailul pleacă singur când ora are din nou loc."
     },
     "editor": {
       "draftPreview": {
@@ -4317,7 +4318,12 @@
         "forecastUnlimited": "O înscriere dusă până la confirmare costă circa {count} mesaje.",
         "forecastBcc": "Din ele, {extra} sunt copiile ascunse — câte una pentru fiecare adresă de la „Copiile clubului” (acum {bcc}) la fiecare email către participant.",
         "forecastGmail": "Alte {count} pleacă prin Gmail-ul clubului și nu costă nimic la Mailgun.",
-        "bulkWaiting": "Din cele din coadă, {count} sunt newslettere și anunțuri de eveniment nou: pleacă ultimele, doar din ce rămâne după rezerva pentru înscrieri, și pot aștepta până revine alocația."
+        "bulkWaiting": "Din cele din coadă, {count} sunt newslettere și anunțuri de eveniment nou: pleacă ultimele, doar din ce rămâne după rezerva pentru înscrieri, și pot aștepta până revine alocația.",
+        "hourlyAllowance": "Limita pe oră",
+        "hourlyHelp": "Outbox-ul trimite cel mult atât pe oră și amână restul. Cât durează limita Mailgun, pune 90: 100 este chiar limita, fără nicio rezervă. Apoi mărește sau șterge.",
+        "hourlyHelpMore": "Mailgun a pus contul într-o «perioadă de probă»: domeniile sunt limitate la 100 de mesaje pe oră, iar peste, contul e oprit temporar.",
+        "lastHour": "Trimise în ultima oră: {sent} din {allowance}.",
+        "lastHourUnlimited": "Trimise în ultima oră: {sent}; fără limită pe oră."
       },
       "transport": {
         "title": "Prin ce pleacă emailurile: Mailgun sau Gmail-ul clubului",

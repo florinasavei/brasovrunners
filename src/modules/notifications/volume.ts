@@ -1,4 +1,4 @@
-import { and, count, gte, lt, sql } from "drizzle-orm";
+import { and, count, gte, lt, not, sql } from "drizzle-orm";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { registrations } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
@@ -8,6 +8,10 @@ import { BULK_MESSAGE_TYPES } from "./domain/bulk";
 import { declarationArchiveIsConfigured, participantMessageBcc } from "./domain/club-notices";
 import { type EmailPlanId, EMAIL_PLANS, emailCeilings, emailHeadroom } from "./domain/email-plan";
 import { readEmailPlan } from "./email-plan";
+import { readMailgunHour } from "./hourly-pace";
+import { gmailRoadCondition } from "./outbox";
+import { outboxRoadsFor } from "./outbox-roads";
+import { paceHolds } from "./domain/hourly-pace";
 import { GMAIL_WINDOW_MS, mailgunMessagesPerCompletedRegistration } from "./domain/email-transport";
 import { type GmailFailure, readEmailTransport, readGmailLastFailure, readGmailUsage } from "./email-transport";
 
@@ -140,6 +144,19 @@ export type EmailVolumeToday = {
   allowance: number | null;
   /** `allowance − sent` over the binding period, never below zero; null when nothing binds. */
   remaining: number | null;
+  /**
+   * Mailgun's hourly pace (§605): the setting's `hourlyAllowance` (null — no pace), what Mailgun
+   * carried in the window (`PACE_WINDOW_MS`, in recipients), and the room left (`allowance − sent − in flight`, null with
+   * no pace) — «trimise în ultima oră: N din …» on «Emailuri», and «Trimite acum»'s second stop.
+   */
+  hourlyAllowance: number | null;
+  sentLastHour: number;
+  hourRemaining: number | null;
+  /**
+   * Whether Mailgun's hour binds (`paceHolds`): the queue panel's «late» then says what
+   * `/api/health`'s `overdue` says — a Mailgun-road row held for the hour is not late (§529, §605).
+   */
+  hourPaceHolds: boolean;
   /** Whether a signed declaration also reaches the club, which is the sixth message's seventh (§244). */
   archiveConfigured: boolean;
   /** How many club addresses receive a hidden copy of every participant message (2026-09-22). */
@@ -262,6 +279,14 @@ export async function readEmailVolumeToday<T extends Record<string, unknown>>(
   });
   const ceilings = emailCeilings(setting);
   const headroom = emailHeadroom(ceilings, sentMessages, sentThisMonth);
+  // The hour, counted the way the claim counts it (`hourly-pace.ts`), on Mailgun's road as the claim
+  // splits it: one more query, always — the page shows it.
+  const roads = outboxRoadsFor(transport, gmail.configured);
+  const hour = await readMailgunHour(db, now, {
+    hourlyAllowance: setting.hourlyAllowance,
+    alwaysCount: true,
+    ...(roads ? { mailgunRoad: not(gmailRoadCondition(roads)) } : {}),
+  });
 
   return {
     realRegistrations,
@@ -286,5 +311,9 @@ export async function readEmailVolumeToday<T extends Record<string, unknown>>(
     period: headroom.period,
     allowance: headroom.allowance,
     remaining: headroom.remaining,
+    hourlyAllowance: hour.allowance,
+    sentLastHour: hour.sentLastHour,
+    hourRemaining: hour.remaining,
+    hourPaceHolds: paceHolds({ hourlyAllowance: hour.allowance, carriedRecently: hour.carriedRecently, inFlight: hour.inFlight }),
   };
 }
