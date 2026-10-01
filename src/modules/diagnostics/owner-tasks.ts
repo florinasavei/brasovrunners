@@ -57,6 +57,7 @@ export type TaskId =
   | "approveLegalText"
   | "listStatesNotice"
   | "listSocialsNotice"
+  | "listNumbersNotice"
   | "promoNotice"
   | "sponsorNotice"
   | "newsletterNotice"
@@ -87,6 +88,7 @@ export const TASK_KIND: Record<TaskId, TaskKind> = {
   approveLegalText: "text",
   listStatesNotice: "text",
   listSocialsNotice: "text",
+  listNumbersNotice: "text",
   promoNotice: "text",
   sponsorNotice: "text",
   newsletterNotice: "text",
@@ -171,6 +173,11 @@ export type OwnerTaskInputs = {
    * the tick and the list prints them for nobody.
    */
   listSocialsDescribed: boolean;
+  /**
+   * Does the notice in force, in every language, describe the race number beside a confirmed name
+   * on the public list (§NNN, `noticeDescribesListNumbers`)? Until it does, the list shows no number.
+   */
+  listNumbersDescribed: boolean;
   /**
    * Does the notice in force, in every language, describe the offers and benefits (§562,
    * `noticeDescribesPromotionalMaterials`)? Until it does, no form offers the box and nothing is kept.
@@ -352,6 +359,15 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
     push("listSocialsNotice", {
       owner: "club",
       state: input.listSocialsDescribed ? "done" : "open",
+    });
+    /*
+      The race number beside a confirmed name (§NNN), the same shape: open, never blocking — nothing
+      is refused, the list simply shows no «Nr.» column — and done by itself the day a notice naming
+      `{{participantListNumbers}}` takes effect.
+    */
+    push("listNumbersNotice", {
+      owner: "club",
+      state: input.listNumbersDescribed ? "done" : "open",
     });
     /*
       The offers and benefits (§562), the same shape: open, never blocking — nothing is refused,

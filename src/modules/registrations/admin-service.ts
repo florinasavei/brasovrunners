@@ -768,6 +768,12 @@ export async function setBibNumberByStaff<T extends Record<string, unknown>>(
     }
     throw error;
   }
+  /*
+    The public list may show this number (§NNN, behind the privacy notice): a number typed by hand
+    is a write that is not a change of state, so `transitionRegistration` does not expire the list's
+    cached page for it — this does, after the commit, or the old number would stay up for a while.
+  */
+  revalidatePublicContent("places");
   // The runner is told (§105): the confirmation carried the old number, or none. A number at a
   // race that will not run is not news (§331): it is written, and nobody is mailed.
   const event = await findEventForAllocation(db, updated.eventId);

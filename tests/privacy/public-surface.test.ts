@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { events, eventTranslations } from "@/db/schema/events";
@@ -79,6 +80,8 @@ async function createRegistration(
     stravaUrl?: string;
     instagramHandle?: string;
     listSocials?: boolean;
+    bibNumber?: number;
+    provisionalBibNumber?: number;
   },
 ) {
   const [participant] = await db
@@ -112,6 +115,8 @@ async function createRegistration(
     stravaUrl: input.stravaUrl ?? null,
     instagramHandle: input.instagramHandle ?? null,
     listSocials: input.listSocials ?? false,
+    bibNumber: input.bibNumber ?? null,
+    provisionalBibNumber: input.provisionalBibNumber ?? null,
   });
 }
 
@@ -423,6 +428,89 @@ describe("§500 what the socials beside a name may contain", () => {
     const [row] = await listPublicStartList(db, event.id, undefined, { socials: true });
     expect(Object.keys(row)).toEqual(["displayName", "clubName", "stravaUrl", "instagramHandle"]);
     expect(JSON.stringify(row)).not.toContain("@example.org");
+  });
+});
+
+/**
+ * §NNN (amending §396) — the race number beside a confirmed name. A deliberate widening, and the
+ * narrowest there is: one key, `bibNumber`, only when the caller asks (the page does only while the
+ * privacy notice in force names `{{participantListNumbers}}`), only on the confirmed list, and only
+ * the settled column. Without the option the keys are exactly the ones pinned above.
+ */
+describe("§NNN what the race number on the public list may contain", () => {
+  const at = (hour: number) => new Date(Date.UTC(2026, 8, 3, hour));
+
+  it("returns no number key at all unless asked, whatever the rows hold", async () => {
+    const event = await createEvent();
+    await createRegistration(event.id, { name: "Ana Pop", email: "ana@example.org", bibNumber: 7 });
+    await createRegistration(event.id, { name: "Carmen Pop", email: "carmen@example.org", status: "WAITLISTED", confirmedAt: undefined, waitlistedAt: at(1) });
+
+    const [confirmed] = await listPublicStartList(db, event.id);
+    expect(Object.keys(confirmed)).toEqual(["displayName", "clubName"]);
+    expect(JSON.stringify(confirmed)).not.toContain("7");
+    // With the socials alone, the socials' keys alone: one gate never opens the other.
+    const [withSocials] = await listPublicStartList(db, event.id, undefined, { socials: true });
+    expect(Object.keys(withSocials)).toEqual(["displayName", "clubName", "stravaUrl", "instagramHandle"]);
+    // The others' query has no number to give at all (§548: none before the confirmation).
+    const [waiting] = await listPublicStartListOthers(db, event.id, 1);
+    expect(Object.keys(waiting)).toEqual(["displayName", "clubName", "group"]);
+  });
+
+  it("asked, adds `bibNumber` and nothing else — the settled number, null for a runner with none", async () => {
+    const event = await createEvent();
+    await createRegistration(event.id, { name: "Ana Pop", email: "ana@example.org", confirmedAt: at(1), bibNumber: 7 });
+    await createRegistration(event.id, { name: "Bogdan Ion", email: "bogdan@example.org", confirmedAt: at(2) });
+    // Off the list: not a row, so its number is never read (§186).
+    await createRegistration(event.id, { name: "Nu Vrea", email: "optout@example.org", confirmedAt: at(3), bibNumber: 9, listOptOut: true });
+
+    expect(await listPublicStartList(db, event.id, undefined, { numbers: true })).toEqual([
+      { displayName: "Ana Pop", clubName: null, bibNumber: 7 },
+      { displayName: "Bogdan Ion", clubName: null, bibNumber: null },
+    ]);
+    const [row] = await listPublicStartList(db, event.id, undefined, { numbers: true });
+    expect(Object.keys(row)).toEqual(["displayName", "clubName", "bibNumber"]);
+    const [both] = await listPublicStartList(db, event.id, undefined, { socials: true, numbers: true });
+    expect(Object.keys(both)).toEqual(["displayName", "clubName", "stravaUrl", "instagramHandle", "bibNumber"]);
+    expect(JSON.stringify(await listPublicStartList(db, event.id, undefined, { numbers: true }))).not.toContain("9");
+  });
+
+  /*
+    Never the provisional number (§214, kept by §548): it was printed nowhere and emailed to nobody so
+    that it could move — a number published beside a name is a number that cannot. Nothing writes the
+    column since §548, which is no reason to let a public read name it.
+  */
+  it("never reads `provisional_bib_number`, not even for a row that still holds one", async () => {
+    const event = await createEvent();
+    await createRegistration(event.id, { name: "Ana Pop", email: "ana@example.org", provisionalBibNumber: 4321 });
+
+    const listed = await listPublicStartList(db, event.id, undefined, { socials: true, numbers: true });
+    expect(listed).toEqual([{ displayName: "Ana Pop", clubName: null, stravaUrl: null, instagramHandle: null, bibNumber: null }]);
+    expect(JSON.stringify(listed)).not.toContain("4321");
+  });
+
+  it("names `provisionalBibNumber` in no public start-list query's source", () => {
+    const source = readFileSync("src/modules/registrations/repository.ts", "utf8");
+    // Each public query, and the two helpers their gated columns come from: from its declaration to the next one.
+    const publicReads = [
+      "function publicSocialColumns",
+      "function publicNumberColumns",
+      "export async function listPublicStartList<",
+      "export async function countPublicStartList<",
+      "export async function countAnonymousStartListEntries<",
+      "export async function listPublicStartListOthers<",
+      "export async function countPublicStartListOthers<",
+    ];
+    for (const start of publicReads) {
+      const at = source.indexOf(start);
+      expect(at, start).toBeGreaterThan(-1);
+      const next = source.slice(at + start.length).search(/\n(export )?(async )?function /);
+      const body = next === -1 ? source.slice(at) : source.slice(at, at + start.length + next);
+      // The code, not the comments: the next declaration's doc comment may well explain why the column is refused.
+      const code = body.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+      expect(code, start).not.toMatch(/provisionalBibNumber|provisional_bib_number/);
+      // And the select list it guards is in the slice: a slice that missed the query would prove nothing.
+      if (start.startsWith("export")) expect(code, start).toMatch(/\.select\(/);
+    }
   });
 });
 

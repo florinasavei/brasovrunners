@@ -26,6 +26,7 @@ const LAUNCHED: OwnerTaskInputs = {
   hasApprovedPrivacyNotice: true,
   listStatesDescribed: true,
   listSocialsDescribed: true,
+  listNumbersDescribed: true,
   promoDescribed: true,
   sponsorShareDescribed: true,
   newsletterDescribed: true,
@@ -86,6 +87,21 @@ describe("owner tasks", () => {
     expect(ownerTasks({ ...LAUNCHED, hasApprovedPrivacyNotice: false }).some((task) => task.id === "listStatesNotice")).toBe(false);
     for (const catalogue of [ro, en]) {
       const item = catalogue.Admin.tasks.items.listStatesNotice;
+      expect(item.title && item.todo && item.done && item.how.length > 0).toBeTruthy();
+      expect(item.how.join("\n")).toContain("/admin/legal");
+    }
+  });
+
+  /** §NNN — the race number beside a confirmed name waits on the club's notice, like the states; open, never blocking. */
+  it("keeps the list-numbers row open while the notice in force does not describe the number, and never blocking", () => {
+    expect(stateOf({ ...LAUNCHED, listNumbersDescribed: false }, "listNumbersNotice")).toBe("open");
+    expect(stateOf(LAUNCHED, "listNumbersNotice")).toBe("done");
+    // Its own answer, not the states' or the socials': a notice naming those and not the number leaves it open.
+    expect(stateOf({ ...LAUNCHED, listNumbersDescribed: false }, "listStatesNotice")).toBe("done");
+    expect(stateOf({ ...LAUNCHED, listStatesDescribed: false, listSocialsDescribed: false }, "listNumbersNotice")).toBe("done");
+    expect(ownerTasks({ ...LAUNCHED, hasApprovedPrivacyNotice: false }).some((task) => task.id === "listNumbersNotice")).toBe(false);
+    for (const catalogue of [ro, en]) {
+      const item = catalogue.Admin.tasks.items.listNumbersNotice;
       expect(item.title && item.todo && item.done && item.how.length > 0).toBeTruthy();
       expect(item.how.join("\n")).toContain("/admin/legal");
     }
@@ -284,6 +300,7 @@ describe("owner tasks", () => {
       "approveLegalText",
       "listStatesNotice",
       "listSocialsNotice",
+      "listNumbersNotice",
       "promoNotice",
       "sponsorNotice",
       "newsletterNotice",

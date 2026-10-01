@@ -235,6 +235,8 @@
         "other": "{count} de participanți confirmați"
       },
       "columnPosition": "#",
+      "columnNumber": "Nr.",
+      "columnNumberFull": "numărul de concurs",
       "columnName": "Nume",
       "columnClub": "Club",
       "previous": "← Pagina anterioară",
@@ -250,6 +252,8 @@
         "instagram": "{name} pe Instagram"
       },
       "captionStates": "Întâi participanții confirmați — cei cu numele afișat, în ordinea confirmării, apoi ceilalți —, apoi cei înscriși care nu au confirmat încă și cei de pe lista de așteptare, în ordinea listei.",
+      "captionNumbers": "Participanții confirmați, cu numărul de concurs: întâi cei cu numele afișat, în ordinea confirmării, apoi ceilalți.",
+      "captionStatesNumbers": "Întâi participanții confirmați, cu numărul de concurs — cei cu numele afișat, în ordinea confirmării, apoi ceilalți —, apoi cei înscriși care nu au confirmat încă și cei de pe lista de așteptare, în ordinea listei.",
       "noteStates": "Aici sunt numărați toți participanții confirmați. Numele apare doar pentru cei care au bifat „Vreau să apar pe lista de participanți & rezultate”; ceilalți confirmați apar ca „Participant (nume ascuns)”, fără niciun alt detaliu. Cei înscriși care nu au confirmat încă și cei de pe lista de așteptare apar doar dacă au bifat, cu stadiul înscrierii lângă nume; o înscriere anulată sau expirată nu apare. Alegerea se poate schimba oricând din emailul de confirmare sau din „Înscrierile mele”.",
       "socialsNote": "Strava și Instagram apar doar lângă numele celor care au ales asta la înscriere.",
       "othersLead": "Apar cu numele și:",
@@ -2278,6 +2282,7 @@
         "minimumAge": "Vârsta minimă a evenimentului, cu unitatea („16 ani”): la un concurs cel puțin 14 ani, la o alergare de grup cel puțin 18. Fiecare declarație o spune într-o propoziție a ei",
         "participantListStates": "Doar în nota de confidențialitate: cele trei stadii de lângă nume pe lista publică. Fără el în nota în vigoare, doar numele confirmate",
         "participantListSocials": "Doar în nota de confidențialitate: bifa cu care cineva își arată Strava și Instagram pe lista publică. Fără el în nota în vigoare, niciodată",
+        "participantListNumbers": "Doar în nota de confidențialitate (și în termeni): numărul de concurs de lângă numele celor confirmați pe lista publică. Fără el în nota în vigoare, lista nu arată niciun număr",
         "publicListPeriod": "Doar în nota de confidențialitate: cât rămâne pe site lista publică de participanți după eveniment, din „Termene”, cu unitatea inclusă; după aceea lista se închide singură",
         "newsletterTopics": "Doar în nota de confidențialitate: temele abonării de pe pagina de contact. Fără el în nota în vigoare, abonarea nu apare",
         "teamPage": "Doar în nota de confidențialitate: numele paginii Echipa, între ghilimele. Cu el în nota în vigoare, /admin/tasks consideră pagina descrisă",
@@ -2331,6 +2336,7 @@
         "redo": "Înainte"
       },
       "listSocialsMissing": "Nota în vigoare nu descrie încă Strava și Instagram pe lista publică, deci nu apar. Aprobă o notă nouă din șablon.",
+      "listNumbersMissing": "Nota în vigoare nu descrie încă numărul de concurs pe lista publică, deci lista nu arată numere. Aprobă o notă nouă din șablon.",
       "listStatesMissing": "Nota în vigoare nu descrie încă stadiile de pe lista publică, deci lista arată doar confirmații. Aprobă o notă nouă din șablon.",
       "batch": {
         "toolsTitle": "Toate textele deodată",
@@ -2899,6 +2905,16 @@
             "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Secțiunea despre lista publică descrie Strava și Instagram lângă nume.",
             "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”.",
             "Din momentul în care intră în vigoare, formularul oferă bifa, fără altă setare; lista le arată doar celor care se înscriu de atunci și bifează.",
+            "Aprobă și termenii din șablon, dacă nu i-ai aprobat deja, ca să spună același lucru despre listă."
+          ]
+        },
+        "listNumbersNotice": {
+          "title": "Nota de confidențialitate: numărul de concurs pe lista publică",
+          "todo": "Nota în vigoare nu descrie încă numărul de concurs pe lista publică, așa că lista nu arată numerele, până când clubul aprobă o notă care îl descrie.",
+          "done": "Nota în vigoare descrie numărul de concurs: lista publică arată, într-o coloană „Nr.”, numărul fiecărui participant confirmat afișat cu numele.",
+          "how": [
+            "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Secțiunea despre lista publică descrie numărul de concurs de lângă numele celor confirmați.",
+            "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”. Odată în vigoare în ambele limbi, fiecare listă publică pornită arată coloana „Nr.”, fără altă setare.",
             "Aprobă și termenii din șablon, dacă nu i-ai aprobat deja, ca să spună același lucru despre listă."
           ]
         },

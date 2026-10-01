@@ -359,13 +359,16 @@ export async function transitionRegistration<T extends Record<string, unknown>>(
 /**
  * A row of the public list: the display name and the club — and, only when the caller asked for
  * the socials behind the notice's gate (§500), the runner's Strava link and Instagram username,
- * each null unless that runner ticked «Arată și Strava și Instagram» (`registrations.list_socials`).
+ * each null unless that runner ticked «Arată și Strava și Instagram» (`registrations.list_socials`);
+ * and, only when the caller asked for the numbers behind theirs (§NNN), a confirmed runner's race
+ * number, null while it has none.
  */
 export type PublicStartListRow = {
   displayName: string;
   clubName: string | null;
   stravaUrl?: string | null;
   instagramHandle?: string | null;
+  bibNumber?: number | null;
 };
 
 /**
@@ -384,6 +387,23 @@ function publicSocialColumns(socials: boolean | undefined): Record<string, SQL<s
     stravaUrl: sql<string | null>`case when ${registrations.listSocials} then ${registrations.stravaUrl} end`,
     instagramHandle: sql<string | null>`case when ${registrations.listSocials} then ${registrations.instagramHandle} end`,
   };
+}
+
+/**
+ * The race-number column a public list may add (§NNN, amending §396), or none.
+ *
+ * Asked for only by `StartList`, only while the privacy notice in force names
+ * `{{participantListNumbers}}` (`cachedListNumbersDisclosed`), and only on the confirmed list —
+ * `listPublicStartListOthers` never selects it: a pending or waiting registration has no number
+ * (§548). **`bib_number` and never `provisional_bib_number`** (§214): the provisional number was
+ * printed nowhere and emailed to nobody precisely so that it could move, and a number published
+ * beside a name is a number that cannot. Since §548 nothing writes the provisional column any
+ * more, which changes nothing here: the public select never names it
+ * (`tests/privacy/public-surface.test.ts`).
+ */
+function publicNumberColumns(numbers: boolean | undefined): Record<string, typeof registrations.bibNumber> {
+  if (!numbers) return {};
+  return { bibNumber: registrations.bibNumber };
 }
 
 /**
@@ -414,14 +434,22 @@ export async function listPublicStartList<T extends Record<string, unknown>>(
    * the page existed asked for, and what the privacy test still reads.
    */
   page?: { offset: number; limit: number },
-  /** Only behind the notice's gate (§500): see `publicSocialColumns`. */
-  options: { socials?: boolean } = {},
+  /**
+   * Only behind the notice's gates: the socials (§500, `publicSocialColumns`) and the race number
+   * (§NNN, `publicNumberColumns`). Without either, the select is exactly the name and the club.
+   */
+  options: { socials?: boolean; numbers?: boolean } = {},
 ): Promise<PublicStartListRow[]> {
   const query = db
     // BR-REQ-039-02: the display name, never the legal one, and the club they wrote (§85).
     // The select list is the guarantee — widening it is what
     // tests/privacy/public-surface.test.ts refuses.
-    .select({ displayName: registrations.displayName, clubName: registrations.clubName, ...publicSocialColumns(options.socials) })
+    .select({
+      displayName: registrations.displayName,
+      clubName: registrations.clubName,
+      ...publicSocialColumns(options.socials),
+      ...publicNumberColumns(options.numbers),
+    })
     .from(registrations)
     .where(
       and(
@@ -436,8 +464,8 @@ export async function listPublicStartList<T extends Record<string, unknown>>(
   // The order is what makes a page meaningful: a runner keeps their position and their page
   // however often the list is read, because both columns of the sort are fixed at confirmation.
   const rows = await (page ? query.limit(page.limit).offset(page.offset) : query);
-  // The socials' spread widens Drizzle's inferred row to an index signature; the select above is
-  // exactly `PublicStartListRow`'s keys, the two socials present only when asked for.
+  // The gated spreads widen Drizzle's inferred row to an index signature; the select above is
+  // exactly `PublicStartListRow`'s keys, the two socials and the number present only when asked for.
   return rows as unknown as PublicStartListRow[];
 }
 

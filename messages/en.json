@@ -235,6 +235,8 @@
         "other": "{count} confirmed participants"
       },
       "columnPosition": "#",
+      "columnNumber": "No.",
+      "columnNumberFull": "race number",
       "columnName": "Name",
       "columnClub": "Club",
       "previous": "← Previous page",
@@ -250,6 +252,8 @@
         "instagram": "{name} on Instagram"
       },
       "captionStates": "First the confirmed participants — those whose name is shown, in the order they confirmed, then the others — then those registered who have not confirmed yet and those on the waiting list, in the list's order.",
+      "captionNumbers": "The confirmed participants, with their race number: first those whose name is shown, in the order they confirmed, then the others.",
+      "captionStatesNumbers": "First the confirmed participants, with their race number — those whose name is shown, in the order they confirmed, then the others — then those registered who have not confirmed yet and those on the waiting list, in the list's order.",
       "noteStates": "Every confirmed participant is counted here. A name is shown only for those who ticked “I want to appear on the participants & results list”; the other confirmed participants appear as “Participant (name hidden)”, with nothing else about them. Those registered who have not confirmed yet and those on the waiting list appear only if they ticked it, with the registration's stage beside the name; a cancelled or expired registration does not appear. The choice can be changed at any time from the confirmation email or from “My registrations”.",
       "socialsNote": "Strava and Instagram appear only beside the names of those who chose it when registering.",
       "othersLead": "Also listed by name:",
@@ -2278,6 +2282,7 @@
         "minimumAge": "The event's minimum age, with its unit (“16 years”): at least 14 for a race, at least 18 for a group run. Every declaration states it in a sentence of its own",
         "participantListStates": "Privacy notice only: the three stages beside a name on the public list. Without it in the notice in force, only confirmed names",
         "participantListSocials": "Privacy notice only: the tick with which someone shows their Strava and Instagram on the public list. Without it in the notice in force, never",
+        "participantListNumbers": "Privacy notice only (and the terms): the race number beside the names of the confirmed on the public list. Without it in the notice in force, the list shows no number",
         "publicListPeriod": "Privacy notice only: how long the public participant list stays up after the event, from “Deadlines”, unit included; after that the list closes by itself",
         "newsletterTopics": "Privacy notice only: the topics of the contact page's subscription. Without it in the notice in force, the subscription does not show",
         "teamPage": "Privacy notice only: the team page's name, in quotation marks. With it in the notice in force, /admin/tasks counts the page as described",
@@ -2331,6 +2336,7 @@
         "redo": "Redo"
       },
       "listSocialsMissing": "The notice in force does not yet describe Strava and Instagram on the public list, so they do not show. Approve a new notice from the template.",
+      "listNumbersMissing": "The notice in force does not yet describe the race number on the public list, so the list shows no numbers. Approve a new notice from the template.",
       "listStatesMissing": "The notice in force does not yet describe the stages on the public list, so it shows only the confirmed. Approve a new notice from the template.",
       "batch": {
         "toolsTitle": "Every text at once",
@@ -2899,6 +2905,16 @@
             "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. The section on the public list describes Strava and Instagram beside a name.",
             "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish”.",
             "From the moment it takes effect, the form offers the tick, with no other setting; the list shows them only for those who register from then on and tick it.",
+            "Approve the terms from the template as well, if not already, so they say the same about the list."
+          ]
+        },
+        "listNumbersNotice": {
+          "title": "Privacy notice: the race number on the public list",
+          "todo": "The notice in force does not yet describe the race number on the public list, so the list shows no numbers until the club approves a notice that describes it.",
+          "done": "The notice in force describes the race number: the public list shows, in a “No.” column, the number of every confirmed participant listed by name.",
+          "how": [
+            "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. The section on the public list describes the race number beside the names of the confirmed.",
+            "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish”. Once it is in force in both languages, every public list shows the “No.” column, with no other setting.",
             "Approve the terms from the template as well, if not already, so they say the same about the list."
           ]
         },

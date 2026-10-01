@@ -53,6 +53,7 @@ import { readDeliveryTiming } from "@/modules/notifications/delivery-timing";
 import { type DeliveryTiming, defaultDeliveryTiming } from "@/modules/notifications/domain/delivery-timing";
 import { emailLeavesAt, emailWaitMinutes } from "@/modules/notifications/domain/email-wait";
 import {
+  describesListNumbers,
   describesListSocials,
   describesListStates,
   describesNewsletter,
@@ -325,12 +326,17 @@ export async function cachedStartListCounts(eventId: string): Promise<{ named: n
 
 /**
  * One page of `listPublicStartList` — names and clubs, and, only with `socials` (the notice in force
- * describes them, §500), each ticked runner's Strava and Instagram. The flag is in the key, so a
- * page read without the gate is never served to a reader with it, or the other way round.
+ * describes them, §500), each ticked runner's Strava and Instagram, and only with `numbers` (§NNN)
+ * each runner's race number. Both flags are in the key, so a page read without a gate is never
+ * served to a reader with it, or the other way round. A number is written by a confirmation, which
+ * is a change of state and expires "places" (`transitionRegistration`), and by the hand-typed
+ * change and «Alocă numerele» (`setBibNumberByStaff`, `assignBibNumbers`), which expire it too.
  */
-export async function cachedStartListPage(eventId: string, offset: number, limit: number, socials = false) {
-  return publicRead(["places.start-list", eventId, offset, limit, socials ? "socials" : "names"], ["places", "events"], () =>
-    listPublicStartList(getDb(), eventId, { offset, limit }, { socials }),
+export async function cachedStartListPage(eventId: string, offset: number, limit: number, socials = false, numbers = false) {
+  return publicRead(
+    ["places.start-list", eventId, offset, limit, socials ? "socials" : "names", numbers ? "numbers" : "unnumbered"],
+    ["places", "events"],
+    () => listPublicStartList(getDb(), eventId, { offset, limit }, { socials, numbers }),
   );
 }
 
@@ -386,6 +392,16 @@ export async function cachedListStatesDisclosed(now: Date): Promise<boolean> {
 export async function cachedListSocialsDisclosed(now: Date): Promise<boolean> {
   const notices = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now)));
   return notices.every((notice) => notice !== undefined && describesListSocials(notice.body));
+}
+
+/**
+ * Whether the public list may show the race number beside a confirmed name (§NNN): the privacy
+ * notice in force describes it (`describesListNumbers`), in every language — the same reading as
+ * the states and the socials above. `noticeDescribesListNumbers` is the backoffice's uncached twin.
+ */
+export async function cachedListNumbersDisclosed(now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesListNumbers(notice.body));
 }
 
 /**

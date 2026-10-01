@@ -33,6 +33,7 @@ import { asksForIdDocument, asksForMinorSignature, deadlineMergeValues, minimumA
 import { effectiveMinimumAge } from "@/modules/registrations/domain/age";
 import { listStatesMergeValues } from "@/modules/registrations/list-state-words";
 import { listSocialsMergeValues } from "@/modules/registrations/list-socials-words";
+import { listNumbersMergeValues } from "@/modules/registrations/list-number-words";
 import { promotionalMaterialsMergeValues } from "@/modules/registrations/promo-consent-words";
 import { newsletterMergeValues } from "@/modules/newsletter/topic-words";
 import LegalDocumentBody from "@/modules/legal-documents/ui/LegalDocumentBody";
@@ -627,7 +628,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
               // The club's deadlines and the public list's period (§377, §421) — as the PDF fills them.
               ...deadlineMergeValues(locale, await cachedDeadlines()),
               // The list-states marker, should the declaration name it (§396) — as the PDF fills it.
-              ...listStatesMergeValues(locale), ...listSocialsMergeValues(locale), ...promotionalMaterialsMergeValues(locale),
+              ...listStatesMergeValues(locale), ...listSocialsMergeValues(locale), ...listNumbersMergeValues(locale), ...promotionalMaterialsMergeValues(locale),
               ...newsletterMergeValues(locale),
             }}
           />

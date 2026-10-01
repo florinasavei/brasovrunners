@@ -4,6 +4,7 @@ import { ADDRESS_CAP_RULE } from "@/modules/registrations/domain/address-cap";
 import { teamPageClause } from "@/modules/content/team/notice-words";
 import { listStatesClause } from "@/modules/registrations/list-state-words";
 import { listSocialsClause } from "@/modules/registrations/list-socials-words";
+import { listNumbersClause } from "@/modules/registrations/list-number-words";
 import { promotionalMaterialsClause, promotionalMaterialsSharedClause } from "@/modules/registrations/promo-consent-words";
 import { yearsPhrase } from "@/modules/registrations/domain/age";
 import {
@@ -11,6 +12,7 @@ import {
   addressCapMergeValues,
   DEADLINE_MERGE_FIELDS,
   deadlineMergeValues,
+  LIST_NUMBERS_MERGE_FIELD,
   LIST_SOCIALS_MERGE_FIELD,
   LIST_STATES_MERGE_FIELD,
   MINIMUM_AGE_MERGE_FIELD,
@@ -142,6 +144,13 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     token: `{{${LIST_SOCIALS_MERGE_FIELD}}}`,
     messageKey: LIST_SOCIALS_MERGE_FIELD,
     example: inBoth((locale) => listSocialsClause(locale)),
+  },
+  // The privacy notice's marker for the race number beside a confirmed name (§NNN): filled with the
+  // column's own words, and the switch that lets the list show its «Nr.» column (`describesListNumbers`).
+  {
+    token: `{{${LIST_NUMBERS_MERGE_FIELD}}}`,
+    messageKey: LIST_NUMBERS_MERGE_FIELD,
+    example: inBoth((locale) => listNumbersClause(locale)),
   },
   // The privacy notice's marker for the newsletter (§445): filled with the pop-up's topics, and the
   // switch that lets the contact page offer it (`describesNewsletter`).
