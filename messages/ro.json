@@ -3013,14 +3013,14 @@
         },
         "emailFailSafe": {
           "title": "Emailuri pe care nu le duce nimeni",
-          "todo": "Mailgun a spus stop de peste 90 de minute și nimic nu duce emailurile, un email e refuzat temporar de peste 90 de minute sau unul a eșuat în ultimele 7 zile.",
-          "broken": "Mailgun a spus stop de peste 90 de minute și nimic nu duce emailurile, un email e refuzat temporar de peste 90 de minute sau unul a eșuat în 7 zile. Nimic nu s-a pierdut.",
+          "todo": "Mailgun a spus stop de peste 90 de minute și nimic nu duce emailurile, un email e refuzat temporar și după șase încercări sau unul a eșuat în ultimele 7 zile.",
+          "broken": "Mailgun a spus stop de peste 90 de minute și nimic nu duce emailurile, un email e refuzat temporar și după șase încercări sau unul a eșuat în 7 zile. Nimic nu s-a pierdut.",
           "done": "Niciun email blocat sau eșuat. Dacă Mailgun spune stop, Gmail preia (când comutatorul e pornit).",
           "how": [
             "«Setări» → «Emailuri» → «Prin ce pleacă emailurile» → «Gmail preia când Mailgun se oprește»: Da → «Salvează drumurile». Cât timp Mailgun e în pauză sau fără cotă, Gmail duce toate grupurile.",
             "Dacă Gmail și-a atins limita: tot acolo, «Limita Gmail pe zi» mai sus (cel mult 500, din care oamenii clubului mai trimit și de mână).",
             "Emailurile eșuate: «Setări» → «Emailuri» → «Coada de trimitere» → «Reîncearcă emailurile eșuate». Le pune înapoi în coadă, de la prima încercare.",
-            "Un email refuzat temporar (5xx, 404) se reîncearcă singur în fiecare oră; motivul e pe rândul lui din coadă. Un 404 care nu trece: verifică MAILGUN_API_BASE și MAILGUN_DOMAIN pe Vercel.",
+            "Un email refuzat temporar (5xx, 404) se reîncearcă singur în fiecare oră; motivul e pe rândul lui din coadă. Un 404 care nu trece: verifică MAILGUN_API_BASE_URL și MAILGUN_DOMAIN pe Vercel.",
             "Dacă Mailgun a cerut pauza pentru ritm (proba): «Setări» → «Emailuri» → planul Mailgun → «Limita pe oră» — 90 cât ține proba.",
             "Antetul cozii spune până când e Mailgun oprit și cine preia."
           ]

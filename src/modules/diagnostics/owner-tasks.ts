@@ -228,7 +228,7 @@ export type OwnerTaskInputs = {
    * `stoppedLong` — Mailgun-road rows stopped (paused, deferred to the reset, or waiting because Gmail
    * could not carry them) and queued longer ago than the overdue allowance, with the fallback off or
    * Gmail's cap spent; `failed` — FAILED rows of the last seven days; `retryingLate` — rows a transient
-   * refusal keeps retrying hourly past six attempts or ninety minutes (`/api/health`'s own count).
+   * refusal keeps retrying hourly past six attempts (`/api/health`'s own count).
    */
   emailFailSafe: { stoppedLong: number; failed: number; retryingLate: number };
   /**
@@ -452,11 +452,10 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
   // when the provider is configured at all; the detail still names the mode.
   /*
     Email nothing is carrying (§NNN): red while a Mailgun-road row has waited past ninety minutes
-    stopped with nobody to carry it, a transient refusal keeps a row retrying past six attempts or
-    ninety minutes, or a message FAILED in the last seven days; green otherwise — the row stays on the
-    list, so the club sees the fail-safes are there before it needs them. Its steps name the remedies:
-    the switch, Gmail's cap, the refusal that does not pass (the API base, the domain, Mailgun's logs),
-    «Reîncearcă emailurile eșuate» and «Limita pe oră».
+    stopped with nobody to carry it, a transient refusal keeps a row retrying past six attempts, or a
+    message FAILED in the last seven days; green otherwise — the row stays on the list, so the club sees
+    the fail-safes are there before it needs them. Its steps name the remedies: the switch, Gmail's cap,
+    the refusal that does not pass (the API base, the domain, Mailgun's logs), «Reîncearcă emailurile eșuate» and «Limita pe oră».
   */
   const stoppedOrFailed = input.emailFailSafe.stoppedLong > 0 || input.emailFailSafe.failed > 0 || input.emailFailSafe.retryingLate > 0;
   push("emailFailSafe", {

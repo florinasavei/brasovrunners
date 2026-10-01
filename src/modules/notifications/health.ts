@@ -250,9 +250,12 @@ export async function checkEmailHealth<T extends Record<string, unknown>>(
     passes by ninety minutes while the scheduler runs) nor deferred (never more than an hour ahead) nor
     FAILED, and would be counted nowhere: the blind spot `pausedLate` closed for the pause (§605). So a
     row carrying a plain provider error — no stop mark, no Gmail-cap wait — that has spent the backoff's
-    six attempts or was queued past the overdue allowance is overdue, pace or no pace: a provider that
-    keeps refusing needs a person, and `lastError` says which refusal (a 404 is usually the API base or
-    the domain). A row whose turn has already passed by the allowance is in `late` as before, not here.
+    six attempts (its own two hours of trying) is overdue, pace or no pace: a provider that keeps
+    refusing needs a person, and `lastError` says which refusal (a 404 is usually the API base or the
+    domain). Not its age (the review of round three): an old row met by one transient refusal is in
+    its backoff, not stuck, and counting it here would ring for ninety minutes and then go quiet in
+    `late`, which the pace exempts. A row whose turn has already passed by the allowance is in `late`
+    as before, not here.
   */
   const plainError = sql`(${emailOutbox.lastError} IS NOT NULL
     AND ${emailOutbox.lastError} NOT LIKE ${`${RATE_PAUSE_ERROR_PREFIX}%`}
@@ -262,7 +265,7 @@ export async function checkEmailHealth<T extends Record<string, unknown>>(
   const retryingLateWhere = and(
     pending,
     plainError,
-    or(sql`${emailOutbox.attemptCount} >= ${MAX_SEND_ATTEMPTS}`, lt(emailOutbox.createdAt, overdueBefore)),
+    sql`${emailOutbox.attemptCount} >= ${MAX_SEND_ATTEMPTS}`,
     turnWithinDeferral,
     sql`${emailOutbox.nextAttemptAt} >= ${overdueBefore.toISOString()}::timestamptz`,
   );

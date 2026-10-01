@@ -302,7 +302,8 @@ function liveSittingWhere(eventId: string, now: Date) {
 
 /**
  * The first form's message, held until the window's end (§536) — only while it is still waiting and
- * never tried, and only the one the seed named for this registration. Null when it has left.
+ * never tried, and only the one the seed named for this registration. Null when it has left. A row
+ * Mailgun paused is still returned, so the sitting tracks it, but keeps its turn and goes unmarked (§NNN).
  *
  * The message taken in is marked held here, and only here — the first form queued it unmarked, so a
  * first form nobody pressed «Da» after reads as what it was:
@@ -322,17 +323,20 @@ async function holdSeedMessage<T extends Record<string, unknown>>(
   mark: typeof SITTING_HELD | typeof FAMILY_HELD,
 ): Promise<string | null> {
   if (!outboxId || !isUuid(outboxId)) return null;
-  const [row] = await tx
+  const waiting = and(eq(emailOutbox.id, outboxId), eq(emailOutbox.registrationId, registrationId), eq(emailOutbox.status, "PENDING"), eq(emailOutbox.attemptCount, 0));
+  // Tracked whether or not Mailgun paused it (§NNN, the review of round three): a paused seed still
+  // lands in `heldOutboxIds`, so the family message replaces it and the address gets one message.
+  const [row] = await tx.select({ id: emailOutbox.id }).from(emailOutbox).where(waiting).limit(1).for("update");
+  if (!row) return null;
+  // Held and marked only when no provider's stop is on it: its turn is then Mailgun's pause, left alone.
+  await tx
     .update(emailOutbox)
     .set({
       nextAttemptAt: heldUntil,
       payloadJson: sql`${emailOutbox.payloadJson} || ${JSON.stringify({ [mark]: true })}::jsonb`,
     })
-    .where(
-      and(eq(emailOutbox.id, outboxId), eq(emailOutbox.registrationId, registrationId), eq(emailOutbox.status, "PENDING"), eq(emailOutbox.attemptCount, 0), notHeldByMailgun()),
-    )
-    .returning({ id: emailOutbox.id });
-  return row?.id ?? null;
+    .where(and(waiting, notHeldByMailgun()));
+  return row.id;
 }
 
 /** The sitting «Da» opens from the first form (§536): its registration or kept form, and its message while still waiting. */

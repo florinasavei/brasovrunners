@@ -322,7 +322,7 @@ describe("owner tasks", () => {
     for (const catalogue of [ro, en]) {
       const item = catalogue.Admin.tasks.items.emailFailSafe;
       expect(item.broken).toContain("90");
-      expect(item.how.join("\n")).toContain("MAILGUN_API_BASE");
+      expect(item.how.join("\n")).toContain("MAILGUN_API_BASE_URL");
     }
   });
 

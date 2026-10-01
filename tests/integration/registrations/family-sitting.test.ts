@@ -892,4 +892,24 @@ describe("§NNN a sitting leaves a row Mailgun paused alone", () => {
     expect(rows.map((candidate) => candidate.messageType)).toEqual(["REGISTER_ANOTHER_PERSON"]);
     expect(rows.some((candidate) => candidate.id === row.id)).toBe(false);
   });
+
+  it("a first email Mailgun paused before «Da» is still the sitting's: the second form replaces it, one message to the address", async () => {
+    const event = await createEvent();
+    const { seed } = await first(event, "Ana", 0);
+    const [row] = await outbox();
+    // Paused before «Da» was pressed, the attempt given back (`releaseForPause`).
+    await db.update(emailOutbox).set({ lastError: PAUSED, nextAttemptAt: at(5) }).where(eq(emailOutbox.id, row.id));
+
+    const sittingId = await yes(event, { seed }, 1);
+    const [tracked] = await db.select({ heldOutboxIds: familySittings.heldOutboxIds }).from(familySittings).where(eq(familySittings.id, sittingId!));
+    expect(tracked.heldOutboxIds).toEqual([row.id]);
+    const [kept] = await outbox();
+    // Tracked, not held: its turn is still Mailgun's pause, and it carries no sitting's mark.
+    expect(kept.nextAttemptAt?.toISOString()).toBe(at(5).toISOString());
+    expect(kept.payloadJson).not.toHaveProperty("sittingHeld");
+
+    expect(await send(event, "Ion", 2, sittingId)).toBe(sittingId);
+    const rows = await outbox();
+    expect(rows.map((candidate) => candidate.messageType)).toEqual(["REGISTER_ANOTHER_PERSON"]);
+  });
 });

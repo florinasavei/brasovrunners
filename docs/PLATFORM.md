@@ -470,7 +470,7 @@ records which road each row left on. The stop is recorded (`platform_settings.ma
 stays closed after the refused row itself has left by Gmail, and Mailgun's groups return to Mailgun on
 their own when the pause ends or the reset comes. Off, under a notice that does not name it, or with
 Gmail's cap spent, the rows wait as they always did, and the queue panel's header and «Sarcini» say so
-with the remedy. A transient refusal retried hourly past six attempts or ninety minutes is counted as
+with the remedy. A transient refusal retried hourly past six attempts (whatever its age) is counted as
 overdue (`retryingLate`), so `/api/health?deep=1` answers 503 for it as it did when such a row was FAILED.
 
 The patterns that move a 400 out of permanent are **narrow on purpose** and must stay narrow.

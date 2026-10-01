@@ -148,6 +148,16 @@ export async function sendOutboxNow(
     // The provider said stop (a spent cap defers the rest): no point in another batch.
     if (summary.deferred > 0) break;
   }
+  /*
+    Mailgun said stop during the press and nobody carried it (§NNN, the review of round three): the
+    switch off or the notice missing, the batch records the stop but carries nothing, so `carried`
+    is unset. The stop is read back — the volume re-read after the batch holds it — so the list still
+    says «Mailgun reia la HH:MM» rather than the count alone.
+  */
+  if (stop === null && total.deferred > 0) {
+    stop = volume.mailgunStop;
+    carriedByGmail = false;
+  }
 
   await recordAuditEvent(db, {
     actorStaffUserId: actor.id,

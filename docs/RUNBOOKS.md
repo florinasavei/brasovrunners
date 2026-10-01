@@ -684,7 +684,7 @@ the one that is full), and returns to Mailgun on its own afterwards. While Gmail
    send" without the probation's words: an unverified or closed domain, an account under review), or a
    message that could not be rendered. A transient refusal (a 5xx, a timeout, a 404 — `SETUP.md` §35:
    EU domains answer at `api.eu.mailgun.net`) is never FAILED any more: it is retried hourly and shows
-   as **overdue** instead (`retryingLate`, once past six attempts or ninety minutes), and «Sarcini» turns
+   as **overdue** instead (`retryingLate`, once past six attempts), and «Sarcini» turns
    red for it with the reason on the row. The alert carries the last reason; open Mailgun → Sending → Logs. Once the
    cause is fixed: «Setări» → «Emailuri» → «Coada de trimitere» → **«Reîncearcă emailurile eșuate»**
    puts every FAILED message of the last seven days back in the queue, from the first attempt, in one

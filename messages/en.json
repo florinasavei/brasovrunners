@@ -3013,14 +3013,14 @@
         },
         "emailFailSafe": {
           "title": "Emails nothing is carrying",
-          "todo": "Mailgun said stop over 90 minutes ago and nothing carries the emails, an email has been refused for now for over 90 minutes, or one failed in the last 7 days.",
-          "broken": "Mailgun said stop over 90 minutes ago and nothing carries the emails, an email has been refused for now for over 90 minutes, or one failed in 7 days. Nothing is lost.",
+          "todo": "Mailgun said stop over 90 minutes ago and nothing carries the emails, an email is still refused for now after six attempts, or one failed in the last 7 days.",
+          "broken": "Mailgun said stop over 90 minutes ago and nothing carries the emails, an email is still refused for now after six attempts, or one failed in 7 days. Nothing is lost.",
           "done": "No email stuck or failed. If Mailgun says stop, Gmail takes over (when the switch is on).",
           "how": [
             "«Settings» → «Emails» → «How emails leave» → «Gmail takes over when Mailgun stops»: Yes → «Save the routes». While Mailgun is paused or out of allowance, Gmail carries every group.",
             "If Gmail has reached its limit: in the same place, «Gmail limit per day» above it (500 at most, and the club's people also send by hand from that account).",
             "The failed emails: «Settings» → «Emails» → «The sending queue» → «Retry the failed emails». It puts them back in the queue, from the first attempt.",
-            "An email refused for now (5xx, 404) is retried on its own every hour; its reason is on its row in the queue. A 404 that does not pass: check MAILGUN_API_BASE and MAILGUN_DOMAIN on Vercel.",
+            "An email refused for now (5xx, 404) is retried on its own every hour; its reason is on its row in the queue. A 404 that does not pass: check MAILGUN_API_BASE_URL and MAILGUN_DOMAIN on Vercel.",
             "If Mailgun asked for the pause for the pace (the probation): «Settings» → «Emails» → the Mailgun plan → «Hourly limit» — 90 while the probation lasts.",
             "The queue's header says until when Mailgun is stopped and who takes over."
           ]

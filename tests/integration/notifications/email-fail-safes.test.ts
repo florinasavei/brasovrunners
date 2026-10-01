@@ -423,6 +423,17 @@ describe("§NNN «Trimite acum» during a stop says what it did", () => {
     expect(roads.calls.mailgun).toHaveLength(0);
   });
 
+  it("says Mailgun's stop when Mailgun pauses during the press, the switch off", async () => {
+    await switchOff();
+    roads.mailgun = () => ({ outcome: "throttled", error: "mailgun 429: Too Many Requests", paced: true, rateRefused: true, retryAfter: PAUSE_UNTIL });
+    await db.insert(emailOutbox).values([row(), row()]);
+    const result = await sendOutboxNow(db, admin, NOW);
+    // The press found the road open; Mailgun paused it on the first knock; the second row is held back, nothing carries either.
+    expect(result).toMatchObject({ sent: 0, deferred: 2, viaGmail: 0, carriedByGmail: false, stop: { kind: "paused", until: PAUSE_UNTIL } });
+    expect(roads.calls.mailgun).toHaveLength(1);
+    expect(roads.calls.gmail).toHaveLength(0);
+  });
+
   it("lets a resend's «now» through on Gmail's room, and refuses it with the stop's sentence otherwise", async () => {
     await recordMailgunStop(db, { kind: "allowance", until: RESET }, NOW);
     await expect(assertRoomToSendNow(db, ["REGISTRATION_STATE_NOTICE"], NOW)).resolves.toBeUndefined();
@@ -537,13 +548,18 @@ describe("§NNN a transient refusal retried for ever is a stall", () => {
     expect(await checkEmailHealth(db, NOW)).toMatchObject({ status: "ok", overdue: 0, retryingLate: 0 });
   });
 
-  it("counts a row queued past the allowance that is still being refused, and never one a stop or Gmail's cap holds", async () => {
+  it("counts by attempts, not by age: an old row met by one refusal is in its backoff; never one a stop or Gmail's cap holds", async () => {
     const late = new Date(NOW.getTime() - EMAIL_HEALTH_THRESHOLDS.OVERDUE_AFTER_MS - 5 * MINUTE);
+    // Queued long ago, refused twice, its turn minutes ahead: the backoff working, not a stall (the review of round three).
     await db.insert(emailOutbox).values([
       row({ createdAt: late, attemptCount: 2, lastError: "mailgun 503: Service Unavailable", nextAttemptAt: new Date(NOW.getTime() + 2 * MINUTE) }),
       // Gmail's cap, the club's own choice (§493): its own count, never a retry.
       row({ createdAt: late, attemptCount: 1, lastError: GMAIL_CAP_DEFERRED_ERROR, nextAttemptAt: new Date(NOW.getTime() + 30 * MINUTE) }),
     ]);
+    expect(await checkEmailHealth(db, NOW)).toMatchObject({ status: "ok", overdue: 0, retryingLate: 0 });
+
+    // The same old row past the backoff's six attempts: a provider that keeps refusing, stalled.
+    await db.update(emailOutbox).set({ attemptCount: MAX_SEND_ATTEMPTS }).where(eq(emailOutbox.lastError, "mailgun 503: Service Unavailable"));
     expect(await checkEmailHealth(db, NOW)).toMatchObject({ status: "stalled", overdue: 1, retryingLate: 1 });
   });
 });
