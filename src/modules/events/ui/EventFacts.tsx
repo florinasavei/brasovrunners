@@ -125,12 +125,35 @@ const RACE_ROW_GAP = 0.5;
  * at sixteen pixels never share a line with the date); the hero has no glyph column under its
  * label, so there the glyphs lead their own lines instead of hanging. CSS alone: the markup is the
  * same at every width, a media query decides.
+ *
+ * Amended §NNN (the owner, 2026-10-01, of the production race's card with ONE named time:
+ * «Iconițele astea tot nu sunt aliniate» — «Sâm., 21 nov. ·» / «[clock] 10:00 (start eveniment)»,
+ * the clock inside the text column, a dot dangling): the list is for every race's «când» — one
+ * named time or two — and it is decided by the row's OWN width, not the viewport's. A CSS container
+ * query on the box that holds the row (`WHEN_CONTAINER`: the card's text column beside the glyph
+ * column, the hero's answer, the page's answer) switches to the list below the row's one-line
+ * width, in em so a larger reader font moves it too: one named time below 20em («Sâm., 21 nov. · »
+ * 112 + the clock 24 + «10:00 (start eveniment)» 166 = 302 pixels at sixteen, plus a margin), two
+ * below 28em (112 + 178 + 140 = 430, §597). English is shorter, so the same numbers hold. A browser
+ * without container queries shows the inline row, as before. A bare time (a group run, a series)
+ * has no name and no list.
  */
-const CARD_LIST_BELOW_412 = "@media (max-width: 411.95px)";
-const LIST_BELOW_SM = "@media (max-width: 599.95px)";
+const WHEN_CONTAINER = { containerType: "inline-size", containerName: "when" } as const;
+/** The container query under which a race's «când» is a list (§600, amended §NNN), by its count of named times. */
+function whenListQuery(namedTimes: number): string | null {
+  if (namedTimes >= 2) return "@container when (max-width: 28em)";
+  if (namedTimes === 1) return "@container when (max-width: 20em)";
+  return null;
+}
 /** The row's glyph column: the twenty-pixel glyph and its eight-pixel gap (`ROW_ICON_SX`; the page's `pl` 3.5). */
 const GLYPH_COLUMN_PX = ROW_ICON_SX.fontSize + 8 * ROW_ICON_SX.mr;
-type WhenList = { media: string; hang: boolean };
+/**
+ * `hang`: where a time's leading glyph hangs back into the glyph column — always on the card (its
+ * calendar glyph stands beside the text column), only below `sm` on the page (where the answer is
+ * indented by that column, `pl` 3.5; from `sm` up the label column stands there instead, so the
+ * glyph keeps its seat), never in the hero (no glyph column under its label).
+ */
+type WhenList = { query: string; hang: "always" | "belowSm" | false };
 
 // The weather row is one line since §469; the hours strip, details and place line went with it.
 
@@ -450,8 +473,10 @@ export default async function EventFacts({
   // A race with no race start says «10:00 (start eveniment)» (#305): longer than the one-line row of §375 allows on a
   // phone, so that row may wrap between its whole pieces rather than let the card's overflow clip the time.
   const raceStartLater = startsAt !== null && whenTimes({ type: event.type, startsAt, raceStartsAt: event.raceStartsAt }).raceStartLater;
-  // A race with both its named times (§597) is the row the list form is for (`CARD_LIST_BELOW_412`, §600).
-  const twoNamedTimes = startsAt !== null && whenTimes({ type: event.type, startsAt, raceStartsAt: event.raceStartsAt }).times.length === 2;
+  // A race's named times — one or both (§597, #305) — make the row the list form is for (§600, amended §NNN).
+  const namedTimes = startsAt === null ? 0 : whenTimes({ type: event.type, startsAt, raceStartsAt: event.raceStartsAt }).times.filter(({ key }) => key !== null).length;
+  const listQuery = whenListQuery(namedTimes);
+  const whenList = (hang: WhenList["hang"]): WhenList | undefined => (listQuery ? { query: listQuery, hang } : undefined);
   const raceStartNote =
     raceStartLater ? (
       <Typography component="div" variant="body2" color="text.secondary" data-testid="race-start-later">
@@ -536,12 +561,12 @@ export default async function EventFacts({
       {items.map((item, index) => (
         <Fragment key={index}>
           {index > 0 && (
-            <Box component="span" aria-hidden="true" data-when-separator={list ? "" : undefined} sx={{ color: "text.disabled", ...(list ? { [list.media]: { display: "none" } } : {}) }}>
+            <Box component="span" aria-hidden="true" data-when-separator={list ? "" : undefined} sx={{ color: "text.disabled", ...(list ? { [list.query]: { display: "none" } } : {}) }}>
               ·
             </Box>
           )}
           {list ? (
-            <Box component="span" data-when-line={index === 0 ? "date" : "time"} sx={{ [list.media]: { flexBasis: "100%" } }}>
+            <Box component="span" data-when-line={index === 0 ? "date" : "time"} sx={{ [list.query]: { flexBasis: "100%" } }}>
               {item}
             </Box>
           ) : (
@@ -601,14 +626,20 @@ export default async function EventFacts({
             component="span"
             aria-hidden="true"
             data-when-separator={list ? "" : undefined}
-            sx={{ color: "text.disabled", ml: card?.tight ? RACE_ROW_GAP : 0.75, ...(list ? { [list.media]: { display: "none" } } : {}) }}
+            sx={{ color: "text.disabled", ml: card?.tight ? RACE_ROW_GAP : 0.75, ...(list ? { [list.query]: { display: "none" } } : {}) }}
           >
             ·
           </Box>
         );
         const whole = card ? { whiteSpace: "nowrap", flexShrink: 0 } as const : undefined;
-        // The list form (`CARD_LIST_BELOW_412`, above): a line per piece, and a time's leading
+        // The list form (`WHEN_CONTAINER`, above): a line per piece, and a time's leading
         // glyph hung in the glyph column so its words start at the date's left edge.
+        const hung =
+          list?.hang === "always"
+            ? { ml: `-${GLYPH_COLUMN_PX}px`, mr: ROW_ICON_SX.mr }
+            : list?.hang === "belowSm"
+              ? { ml: { xs: `-${GLYPH_COLUMN_PX}px`, sm: 0 }, mr: { xs: ROW_ICON_SX.mr, sm: CLOCK_SX.mr } }
+              : null;
         return list ? (
           <Box
             key={index}
@@ -616,9 +647,9 @@ export default async function EventFacts({
             data-when-line={index === 0 ? "date" : "time"}
             style={whole}
             sx={{
-              [list.media]: {
+              [list.query]: {
                 flexBasis: "100%",
-                ...(index > 0 && list.hang ? { "& > svg:first-of-type": { ml: `-${GLYPH_COLUMN_PX}px`, mr: ROW_ICON_SX.mr } } : {}),
+                ...(index > 0 && hung ? { "& > svg:first-of-type": hung } : {}),
               },
             }}
           >
@@ -747,7 +778,9 @@ export default async function EventFacts({
 
     // One line of the card: its glyph, then its words beside it — the glyph on the first line.
     // The registration line draws the same shape in `CardRegistration` (§409).
-    const cardLine = (key: string, Icon: Glyph, value: ReactNode) => (
+    // The «când» row's text column is its list's container (`WHEN_CONTAINER`, §NNN): it fills the
+    // line beside the glyph (`flex: 1 1 auto` — a size-contained box has no content width of its own).
+    const cardLine = (key: string, Icon: Glyph, value: ReactNode, container = false) => (
       <Typography
         component="div"
         variant="body2"
@@ -756,7 +789,7 @@ export default async function EventFacts({
         sx={{ display: "flex", alignItems: "flex-start", minWidth: 0 }}
       >
         <Icon aria-hidden="true" sx={ROW_ICON_SX} />
-        <Box sx={{ minWidth: 0, overflowWrap: "anywhere" }}>{value}</Box>
+        <Box sx={{ minWidth: 0, overflowWrap: "anywhere", ...(container ? { ...WHEN_CONTAINER, flex: "1 1 auto" } : {}) }}>{value}</Box>
       </Typography>
     );
 
@@ -770,7 +803,7 @@ export default async function EventFacts({
             a race's gathering and start time, or a date that keeps its year on a phone (no
             `dateShort`: past, or more than a year out), may still wrap between whole pieces rather
             than be clipped (§366, amended §375). */}
-        {cardLine("when", CalendarMonthIcon, flow(whenPieces(CLOCK_SX, true), { lead: whenLead, wrap: !!event.raceStartsAt || (compact && !dateShort) || raceStartLater, tight: !!event.raceStartsAt }, twoNamedTimes ? { media: CARD_LIST_BELOW_412, hang: true } : undefined))}
+        {cardLine("when", CalendarMonthIcon, flow(whenPieces(CLOCK_SX, true), { lead: whenLead, wrap: !!event.raceStartsAt || (compact && !dateShort) || raceStartLater, tight: !!event.raceStartsAt }, whenList("always")), !!listQuery)}
         {place && cardLine("where", PlaceIcon, place)}
         {/* A group of its own, so a group's gap above it rather than a line's (§366). */}
         {pillsRow && (
@@ -894,9 +927,13 @@ export default async function EventFacts({
         label: t("when"),
         icon: CalendarMonthIcon,
         value: whenPieces(HERO_GLYPH_SX),
-        node: raceStartNote || twoNamedTimes ? (
+        node: raceStartNote || listQuery ? (
           <>
-            {pieces(whenPieces(HERO_GLYPH_SX), twoNamedTimes ? { media: LIST_BELOW_SM, hang: false } : undefined)}
+            {listQuery ? (
+              <Box sx={WHEN_CONTAINER}>{pieces(whenPieces(HERO_GLYPH_SX), whenList(false))}</Box>
+            ) : (
+              pieces(whenPieces(HERO_GLYPH_SX))
+            )}
             {raceStartNote}
           </>
         ) : undefined,
@@ -999,7 +1036,7 @@ export default async function EventFacts({
       icon: CalendarMonthIcon,
       value: (
         <>
-          {flow(whenPieces(CLOCK_SX), undefined, twoNamedTimes ? { media: LIST_BELOW_SM, hang: true } : undefined)}
+          {listQuery ? <Box sx={WHEN_CONTAINER}>{flow(whenPieces(CLOCK_SX), undefined, whenList("belowSm"))}</Box> : flow(whenPieces(CLOCK_SX))}
           {raceStartNote}
         </>
       ),

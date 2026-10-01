@@ -902,10 +902,13 @@ test.describe("BR-REQ-041-01 the listing's cards (§366)", () => {
       const TOLERANCE = 0.5;
       // A race's two named times (§597): «09:00 (start eveniment) ·» measures 178 pixels and
       // «[flag] 10:00 (start cursă)» 140, 322 with the row's gap, against a row of 228 at 320, 268 at
-      // 360 and 298 at 390 — so below 412 the date, then each time whole on its own, take three
-      // lines, and at 412 the two times share the second. The bound follows what was measured;
-      // every piece stays whole (`pieceLines`, below), which is what §375's exception asks.
-      const RACE_LINES = (width: number) => (width < 412 ? 3 : 2);
+      // 360 and 298 at 390 — so the date, then each time whole on its own, take three lines. Since
+      // §NNN the list form is a container query on the row's own text column (below 28em with two
+      // named times, 20em with one): at every phone width here, 412 included, that column is at
+      // most 320 pixels, so a two-times race is the three-line list everywhere (at 412 it was two)
+      // and a one-named-time race the two-line list below 412. Every piece stays whole
+      // (`pieceLines`, below), which is what §375's exception asks.
+      const RACE_LINES = 3;
 
       for (const width of [320, 360, 390, 412] as const) {
         await page.setViewportSize({ width, height: 720 });
@@ -953,15 +956,16 @@ test.describe("BR-REQ-041-01 the listing's cards (§366)", () => {
             expect.soft(row.overflow, `${name}: nothing past the card (${at})`).toBeLessThanOrEqual(TOLERANCE);
           }
 
-          // The race: both times whole, on three lines below 412 pixels and two from it (§597).
+          // The race: both times whole, on three lines at every phone width (§597, §600 amended §NNN).
           const raceCard = byTitle(race);
           await expect(raceCard, `race present (${at})`).toHaveCount(1);
           const raceRow = await measure(raceCard);
           expect.soft(raceRow.shown, `race: its gathering time (${at})`).toContain("08:00");
           expect.soft(raceRow.shown, `race: its start time (${at})`).toContain("09:00");
           // Since §597 the two times read «08:00 (start eveniment) · [flag] 09:00 (start cursă)»: at
-          // 320, 360 and 390 pixels the date, then each named time, take a line each — three, every piece whole.
-          expect.soft(raceRow.lines, `race: ${RACE_LINES(width)} lines at most (${at})`).toBeLessThanOrEqual(RACE_LINES(width) + 0.5);
+          // 320, 360, 390 and 412 pixels the date, then each named time, take a line each — three, every piece whole.
+          expect.soft(raceRow.lines, `race: ${RACE_LINES} lines (${at})`).toBeLessThanOrEqual(RACE_LINES + 0.5);
+          expect.soft(raceRow.lines, `race: ${RACE_LINES} lines (${at})`).toBeGreaterThan(RACE_LINES - 0.5);
           expect.soft(raceRow.pieceLines, `race: every piece whole (${at})`).toBeLessThanOrEqual(1.5);
           expect.soft(raceRow.overflow, `race: nothing past the card (${at})`).toBeLessThanOrEqual(TOLERANCE);
 
@@ -983,12 +987,16 @@ test.describe("BR-REQ-041-01 the listing's cards (§366)", () => {
             const row = await measure(card);
             const twoTimes = /\d{2}:\d{2}[\s\S]*\d{2}:\d{2}/.test(row.shown);
             const withYear = /\b20\d{2}\b/.test(row.shown);
-            // A race's one time, named «(start eveniment)» (#305, §597), may wrap once between whole
-            // pieces like a date with its year: 117 + 178 pixels against a row of 228 at 320.
+            // A race's one time, named «(start eveniment)» (#305, §597), is the two-line list below
+            // 412 (§NNN: the row's column is under 20em there), the date and the time a line each;
+            // at 412 the column is about 320 pixels, at the threshold, so it may be either form.
             const namedTime = /\(start eveniment\)|\(event start\)/.test(row.shown);
             expect
               .soft(row.lines, `card ${i} «${row.shown}» (${at}): lines`)
-              .toBeLessThanOrEqual(twoTimes ? RACE_LINES(width) + 0.5 : withYear || namedTime ? 2.5 : 1.5);
+              .toBeLessThanOrEqual(twoTimes ? RACE_LINES + 0.5 : withYear || namedTime ? 2.5 : 1.5);
+            if (namedTime && (twoTimes || width < 412)) {
+              expect.soft(row.lines, `card ${i} «${row.shown}» (${at}): the list's lines`).toBeGreaterThan((twoTimes ? RACE_LINES : 2) - 0.5);
+            }
             expect.soft(row.pieceLines, `card ${i} «${row.shown}» (${at}): every piece whole`).toBeLessThanOrEqual(1.5);
             expect.soft(row.overflow, `card ${i} «${row.shown}» (${at}): nothing past the card`).toBeLessThanOrEqual(TOLERANCE);
           }
