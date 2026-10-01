@@ -24,8 +24,8 @@ import type { EmailAdapter, OutgoingEmail, SendResult } from "./adapter";
  *   fails identically, and the deployment needs a person, not another attempt.
  * - **400** — permanent, *unless the body says the account is paused or its allowance spent*.
  *   See below; this is the one that was wrong, twice. A body that says "not allowed to send"
- *   together with the probation's words (`RATE_PAUSED`: disabled, probation, too fast, rate
- *   limit, temporarily) is a **pause** — throttled, `paced`, tried again in fifteen minutes
+ *   together with the probation's words (`RATE_PAUSED`: temporarily, account disabled, probation, too fast,
+ *   rate limit; a bare "domain disabled" stays permanent) is a **pause** — throttled, `paced`, tried again in fifteen minutes
  *   without spending an attempt (§NNN). A body with limit language (`ALLOWANCE_SPENT`) is the
  *   daily allowance — throttled, to the reset. Otherwise a malformed message, an unauthorized
  *   sandbox recipient («Sandbox subdomains are for test purposes only»), an unverified domain,
@@ -39,8 +39,8 @@ import type { EmailAdapter, OutgoingEmail, SendResult } from "./adapter";
  *   `paced`, due again when Mailgun's `Retry-After` says (seconds or an HTTP date), or in fifteen
  *   minutes without one, and the attempt given back. It was the ordinary backoff — one, two,
  *   four … minutes, six attempts in about an hour, then FAILED: on the morning the club took a
- *   paid plan and opened registrations, an account on Mailgun's probation (a hundred messages an
- *   hour) would have lost every confirmation past the hour's hundredth, and kept knocking while
+ *   paid plan and opened registrations, an account on Mailgun's probation (domains limited to a
+ *   hundred messages an hour) would have lost every confirmation past the hour's hundredth, and kept knocking while
  *   Mailgun asked it to stop, which is what gets a probation account disabled.
  * - **5xx and any network error** — transient. Outages pass.
  *
@@ -109,15 +109,17 @@ const REQUEST_TIMEOUT_MS = 15_000;
 const ALLOWANCE_SPENT = /limit exceeded|exceeded your|sending limit|daily limit|quota/i;
 
 /**
- * The account held back for its pace, not the message refused (§NNN): Mailgun's probation — a new
- * account, or one just moved to a paid plan, may send a hundred messages an hour per domain, and
- * past that the account is "temporarily disabled". Both halves must match: "not allowed to send"
+ * The account held back for its pace, not the message refused (§NNN): Mailgun's probation — domains
+ * are limited to a hundred messages an hour, and sending faster "temporarily disables" the account
+ * (the notice's words; the 400's body shape is anticipated, not yet observed). Both halves must match: "not allowed to send"
  * alone is also a sandbox's refusal and an unverified domain's, which waiting does not fix, and the
  * probation's words alone could be anything. Checked before `ALLOWANCE_SPENT`, because "rate limit
  * exceeded" is the hour's limit, not the day's.
  */
 const NOT_ALLOWED_TO_SEND = /not allowed to send/i;
-const RATE_PAUSED = /disabled|probation|too fast|rate limit|temporarily/i;
+// A bare "domain disabled" is deliberately not here: Mailgun uses it for a domain it has closed for good,
+// which waiting does not fix — it stays permanent and a person is told (§NNN review).
+const RATE_PAUSED = /temporarily|account (is )?disabled|probation|too fast|rate limit/i;
 
 /** How long a pause lasts when Mailgun does not say: the outbox job's daytime cadence (§68). */
 export const MAILGUN_PAUSE_MS = 15 * 60_000;

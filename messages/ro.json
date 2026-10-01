@@ -4301,7 +4301,7 @@
         "bulkWaiting": "Din cele din coadă, {count} sunt newslettere și anunțuri de eveniment nou: pleacă ultimele, doar din ce rămâne după rezerva pentru înscrieri, și pot aștepta până revine alocația.",
         "hourlyAllowance": "Limita pe oră",
         "hourlyHelp": "Outbox-ul trimite cel mult atât pe oră și amână restul. Lasă 100 până când Mailgun ridică limita, apoi mărește sau șterge.",
-        "hourlyHelpMore": "Mailgun ține conturile noi, și pe cele abia trecute pe un plan plătit, în „probation”: cel mult 100 de mesaje pe oră pe domeniu; peste, contul e oprit temporar.",
+        "hourlyHelpMore": "Mailgun a pus contul într-o «perioadă de probă»: domeniile sunt limitate la 100 de mesaje pe oră, iar peste, contul e oprit temporar.",
         "lastHour": "Trimise în ultima oră: {sent} din {allowance}.",
         "lastHourUnlimited": "Trimise în ultima oră: {sent}; fără limită pe oră."
       },

@@ -56,7 +56,9 @@ export async function countMailgunHour<T extends Record<string, unknown>>(
   const held = and(eq(emailOutbox.status, "PROCESSING"), gt(emailOutbox.lockedAt, staleBefore), mailgunRoad) as SQL;
   const [row] = await db
     .select({
-      sentLastHour: count(sql`case when ${emailOutbox.sentAt} > ${windowStart.toISOString()}::timestamptz then 1 end`),
+      // Mailgun bills every recipient as a message (§320): a row with copies (the declaration archive's,
+      // an envelope's cc/bcc) counts as many as `recipient_count` says; a null count predates the column.
+      sentLastHour: sql<number>`coalesce(sum(case when ${emailOutbox.sentAt} > ${windowStart.toISOString()}::timestamptz then coalesce(${emailOutbox.recipientCount}, 1) end), 0)::int`,
       carriedRecently: count(sql`case when ${emailOutbox.sentAt} > ${evidenceStart.toISOString()}::timestamptz then 1 end`),
       inFlight: count(sql`case when ${held} then 1 end`),
     })

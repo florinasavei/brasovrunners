@@ -330,7 +330,7 @@ export type OutboxRoads = {
 };
 
 /** A row whose road is Gmail, as SQL: a club copy when the club's mail goes by Gmail, or a listed type. */
-function gmailRoadCondition(roads: OutboxRoads): SQL {
+export function gmailRoadCondition(roads: OutboxRoads): SQL {
   // `::text`: jsonb has `->` for a key and for an index, and an untyped parameter matches both.
   const clubCopy = sql`coalesce(${emailOutbox.payloadJson} -> ${CLUB_COPY_FLAG}::text = 'true'::jsonb, false)`;
   const listed = roads.gmailMessageTypes.length > 0 ? inArray(emailOutbox.messageType, [...roads.gmailMessageTypes]) : sql`false`;
@@ -356,6 +356,9 @@ export class OutboxMessageWithdrawn extends Error {
     this.name = "OutboxMessageWithdrawn";
   }
 }
+
+/** The advisory lock that serialises Mailgun's hourly count with its claim (§NNN): 'MGHR' as an integer. */
+const MAILGUN_HOUR_LOCK_KEY = 0x4d474852;
 
 /**
  * Take ownership of up to `batchSize` messages.
@@ -467,6 +470,17 @@ export async function claimOutboxBatch(
       or job run (every fifteen minutes by day) takes it when the hour has room. One query
       (`countMailgunHour`), inside this transaction, and only when a pace is set.
     */
+    if (hourlyAllowance !== null) {
+      /*
+        Serialised: the count and the claim run in READ COMMITTED, so two workers (two after-response
+        drains on registration morning) could read the same room and each claim up to it through
+        SKIP LOCKED, together going over the hour — what disables an account on probation. A
+        transaction-scoped advisory lock, taken before the count, makes the second claimer wait the
+        few milliseconds the first needs to commit; its count then sees the first's PROCESSING rows as
+        in flight. Released at commit or rollback; one statement, only when a pace is set.
+      */
+      await tx.execute(sql`select pg_advisory_xact_lock(${MAILGUN_HOUR_LOCK_KEY})`);
+    }
     const hour = hourlyAllowance === null ? null : await readMailgunHour(tx, now, { mailgunRoad, hourlyAllowance });
     const mailgunLimit = hour?.remaining == null ? batchSize : Math.min(batchSize, hour.remaining);
     const mailgun = await claimRoad(mailgunRoad, mailgunLimit, bulkLimit);
@@ -609,7 +623,7 @@ export async function processOutboxBatch(
   try {
     for (const row of claimed) {
       if (mailgunPause && !(roads && onGmailRoad(row, roads))) {
-        await releaseForPause(db, row, mailgunPause.until, mailgunPause.error);
+        await releaseForPause(db, row, mailgunPause.until, null);
         summary.deferred += 1;
         continue;
       }
@@ -800,10 +814,15 @@ export async function processOutboxBatch(
  * A row handed back for a provider's pause (§NNN): waiting again, due at `until`, its reason kept and
  * the attempt the claim counted given back — a pause is never one of the six.
  */
-async function releaseForPause(db: Db, row: OutboxRow, until: Date, error: string): Promise<void> {
+/**
+ * `error` is the reason, written only on the row Mailgun actually refused: its batch-mates are held
+ * without it (null), so they never carry the rate-pause mark that `/api/health` reads as «paused by
+ * the provider» — they are waiting their turn under the pace, not refused.
+ */
+async function releaseForPause(db: Db, row: OutboxRow, until: Date, error: string | null): Promise<void> {
   await db
     .update(emailOutbox)
-    .set({ status: "PENDING", lockedAt: null, attemptCount: Math.max(0, row.attemptCount - 1), nextAttemptAt: until, lastError: error })
+    .set({ status: "PENDING", lockedAt: null, attemptCount: Math.max(0, row.attemptCount - 1), nextAttemptAt: until, ...(error === null ? {} : { lastError: error }) })
     .where(eq(emailOutbox.id, row.id));
 }
 

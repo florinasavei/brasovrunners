@@ -14,7 +14,7 @@ import { DEFAULT_HOURLY_ALLOWANCE, MAX_HOURLY_ALLOWANCE } from "./hourly-pace";
  * how old they are, and the page that shows them says so too.
  *
  * No plan here carries an hourly ceiling, on purpose (§NNN): Mailgun's hundred an hour is the
- * *account's* probation — a new account, or one just moved to a paid plan — not a fact of any plan,
+ * *account's* probation — an account Mailgun put on probation — not a fact of any plan,
  * and it ends when Mailgun's support lifts it. So it is the setting's own field, `hourlyAllowance`,
  * whatever plan is chosen.
  */

@@ -1132,7 +1132,7 @@
       "LEGAL_BATCH_CONFIRMATION_MISMATCH": "The typed confirmation is not the one asked for. Nothing was deleted — type exactly the text under the box, for example \"DELETE 2\".",
       "LEGAL_BATCH_VERSION_BLOCKED": "Nothing was deleted: meanwhile, {version} can no longer be deleted. Reload the page: it is listed under what stays, with the reason; the others go on the next press.",
       "SEND_NOW_ALLOWANCE_SPENT": "Nothing was sent: the Mailgun plan's limit for today is reached. Choose «Queue it»; the email leaves after the reset.",
-      "SEND_NOW_HOUR_SPENT": "Nothing was sent: Mailgun's hourly limit (“Hourly limit” under «Emails») has no room right now. Choose «Queue it»; the email leaves on its own once the hour has room again.",
+      "SEND_NOW_HOUR_SPENT": "Nothing was sent: Mailgun's hourly limit («Hourly limit» under «Emails») has no room right now. Choose «Queue it»; the email leaves on its own once the hour has room again.",
       "LEGAL_NUMBER_MISMATCH": "The number you typed is not this version's. Nothing was deleted — type only the number, for example “6”.",
       "LEGAL_RETIRE_NEEDS_REASON": "Type the reason, 3 to 200 characters. It stays beside the version, under “Deleted versions”.",
       "LEGAL_NOTHING_DEPENDS": "Nothing was deleted: meanwhile nothing depends on this version any more. Reload the page and delete it permanently.",
@@ -4301,7 +4301,7 @@
         "bulkWaiting": "Of those in the queue, {count} are newsletters and new-event announcements: they go last, only from what is left after the reserve for registrations, and may wait until the allowance comes back.",
         "hourlyAllowance": "Hourly limit",
         "hourlyHelp": "The outbox sends at most this many an hour and holds the rest back. Leave 100 until Mailgun lifts the limit, then raise it or clear it.",
-        "hourlyHelpMore": "Mailgun keeps new accounts, and those just moved to a paid plan, on “probation”: at most 100 messages an hour per domain; past that, the account is stopped for a while.",
+        "hourlyHelpMore": "Mailgun put the account on «probation»: domains are limited to 100 messages an hour, and sending faster stops the account for a while.",
         "lastHour": "Sent in the last hour: {sent} of {allowance}.",
         "lastHourUnlimited": "Sent in the last hour: {sent}; no hourly limit."
       },

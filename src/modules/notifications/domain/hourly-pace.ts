@@ -2,9 +2,9 @@
  * Mailgun's hourly pace (§NNN, amending §100): how many messages Mailgun's road may still carry in
  * the trailing sixty minutes.
  *
- * Mailgun keeps a new account, and one just moved to a paid plan, on "probation": at most a hundred
- * messages an hour per domain, and past that the account is disabled for a while. The day the club
- * took a paid plan and opened registrations, nothing here knew: the outbox sent as fast as the queue
+ * Mailgun put the club's account on "probation": its notice said domains are limited to 100 messages
+ * an hour, and that sending faster temporarily disables the account. The day the club opened
+ * registrations, nothing here knew: the outbox sent as fast as the queue
  * filled, and every refusal past the hundredth was retried six times in an hour and then FAILED.
  * So the outbox paces itself to `hourlyAllowance` (the email plan setting, 100 by default), and a
  * rate refusal is a pause (`mailgun-adapter.ts`), never a loss.

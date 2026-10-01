@@ -124,6 +124,16 @@ describe("the claim keeps Mailgun's road inside the hour", () => {
     expect(claimed.map((r) => r.id)).toEqual(oldest.map((r) => r.id));
   });
 
+  it("counts every recipient of a row as a message: copies spend the hour too", async () => {
+    await db.insert(emailOutbox).values(row({ status: "SENT", sentAt: new Date(NOW.getTime() - 10 * MINUTE), transport: "mailgun", recipientCount: 3 }));
+    await sent(96, new Date(NOW.getTime() - 10 * MINUTE));
+    await due(10);
+
+    const claimed = await claimOutboxBatch(db, { now: NOW, batchSize: 20, hourlyAllowance: 100 });
+
+    expect(claimed).toHaveLength(1);
+  });
+
   it("takes a full batch once the hundred left more than an hour ago", async () => {
     await sent(100, new Date(NOW.getTime() - 61 * MINUTE));
     await due(25);
@@ -174,8 +184,9 @@ describe("a rate refusal is a pause, never a loss", () => {
       expect(r.status).toBe("PENDING");
       expect(r.attemptCount).toBe(0);
       expect(r.nextAttemptAt?.toISOString()).toBe(new Date(NOW.getTime() + 14 * MINUTE).toISOString());
-      expect(r.lastError?.startsWith(RATE_PAUSE_ERROR_PREFIX)).toBe(true);
     }
+    // Only the row Mailgun refused carries the reason; its batch-mates are waiting, not refused.
+    expect(rows.filter((r) => r.lastError?.startsWith(RATE_PAUSE_ERROR_PREFIX))).toHaveLength(1);
     // While the pause lasts, nothing is claimed.
     expect(await claimOutboxBatch(db, { now: new Date(NOW.getTime() + 5 * MINUTE), batchSize: 20, hourlyAllowance: 100 })).toHaveLength(0);
   });

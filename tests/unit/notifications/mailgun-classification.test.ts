@@ -120,9 +120,11 @@ describe("BR-REQ-080-03 Mailgun failure classification", () => {
       expect(
         classifyMailgunFailure(400, "Domain mail.example.test is not allowed to send: The account is temporarily disabled", undefined, NOW),
       ).toEqual({ outcome: "throttled", paced: true, rateRefused: true, retryAfter: new Date(NOW.getTime() + 15 * 60_000) });
-      for (const words of ["account on probation", "sending too fast", "rate limit exceeded", "domain disabled"]) {
+      for (const words of ["account on probation", "sending too fast", "rate limit exceeded"]) {
         expect(classifyMailgunFailure(400, `Domain x is not allowed to send: ${words}`, undefined, NOW)).toMatchObject({ outcome: "throttled", paced: true });
       }
+      // A domain Mailgun has closed for good is not the probation: waiting would retry it forever.
+      expect(outcomeOf(400, "Domain x is not allowed to send: domain disabled")).toBe("permanent_failure");
     });
   });
 
