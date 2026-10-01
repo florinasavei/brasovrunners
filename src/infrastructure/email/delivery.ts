@@ -194,7 +194,7 @@ export function createEmailSender(config: {
    * `chosen` is whether the club chose Gmail for this message's group — only then does "defer at
    * the cap" apply; a spill-over from Mailgun keeps Mailgun's own deferral.
    */
-  async function viaGmail(message: OutgoingEmail, transmit: boolean, chosen: boolean): Promise<SendResult | null> {
+  async function viaGmail(message: OutgoingEmail, transmit: boolean, chosen: boolean, mustDefer = false): Promise<SendResult | null> {
     if (!gmail || gmailDown) return null;
     if (!transmit) {
       const captured = await config.capture.send(message);
@@ -219,7 +219,8 @@ export function createEmailSender(config: {
     if (!admission.admitted) {
       // At the cap and the club said wait: deferred to the moment the oldest send leaves the
       // rolling day, as a spent Mailgun allowance is deferred (§40) — never discarded.
-      if (admission.reason === "cap" && chosen && gmail.atGmailCap === "defer") {
+      // A message Mailgun's stop handed to Gmail (§NNN) waits at the cap whatever the club chose: Mailgun's road is closed.
+      if (admission.reason === "cap" && (mustDefer || (chosen && gmail.atGmailCap === "defer"))) {
         return { outcome: "throttled", error: GMAIL_CAP_DEFERRED_ERROR, retryAfter: admission.roomAt };
       }
       return null;
@@ -345,6 +346,17 @@ export function createEmailSender(config: {
         2. Mailgun refuses because the plan's allowance is spent (§40): Gmail, when the club lets
            it spill over and Gmail can take it; otherwise the refusal stands and the outbox defers.
       */
+      /*
+        3. Mailgun said stop and the club's switch is on (§NNN, `gmailOnly`): Gmail, or the message is
+           handed back for the outbox to hold — never Mailgun's road during the stop, whatever Gmail
+           answers, and at Gmail's cap it waits whatever the club chose for its own groups.
+      */
+      if (outgoing.gmailOnly) {
+        const carried = await viaGmail(outgoing, transmit, true, true);
+        if (carried) return carried;
+        return { outcome: "throttled", error: gmail ? "gmail is not taking messages in this batch" : "gmail is not configured" };
+      }
+
       if (outgoing.transport === "gmail") {
         const carried = await viaGmail(outgoing, transmit, true);
         if (carried) return carried;
@@ -352,10 +364,16 @@ export function createEmailSender(config: {
 
       const result = await adapter.send(outgoing);
       if (result.outcome === "sent") return { ...result, transport: "mailgun", recipients: transmit ? recipientsOf(outgoing) : 0 };
-      if (result.outcome === "throttled" && gmail?.overflowToGmail && outgoing.transport !== "gmail") {
-        // Carried, or handed back for the pace — either is sooner than Mailgun's reset.
+      if (result.outcome === "throttled" && gmail?.overflowToGmail && outgoing.transport !== "gmail" && !outgoing.bulk) {
+        // Carried, or handed back for the pace — either is sooner than Mailgun's reset. Mailgun's own
+        // stop rides on every answer the spill ends with (§NNN) — sent, paced, a refused address, a
+        // connection that broke where Gmail may have taken it — so the outbox still records it and
+        // closes Mailgun's road until it ends, whatever became of this one message.
         const spilled = await viaGmail(outgoing, transmit, false);
-        if (spilled) return spilled;
+        if (spilled) {
+          const kind = result.paced && result.rateRefused ? "paused" : "allowance";
+          return { ...spilled, mailgunStopped: { kind, ...(result.retryAfter ? { until: result.retryAfter } : {}) } };
+        }
       }
       return result;
     },

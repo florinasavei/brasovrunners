@@ -460,13 +460,33 @@ only 400, 401, 403, 404, 429 and 500, so anything else here is observed rather t
 
 | Status | Treated as | Why |
 | --- | --- | --- |
-| 401, 403 | permanent | Bad credentials, or a sending domain that is not verified. Every retry fails identically |
-| 400 with limit wording | **throttled** | The allowance, not the message. Retry after the reset |
-| 400 otherwise | permanent | A malformed message, or a sandbox recipient who is not authorized. Waiting authorizes nobody |
+| 401, 403 | permanent, **FAILED** (§NNN) | Bad credentials, or a sending domain that is not verified. Every retry fails identically; it is the account, not the address, so the row is `FAILED` and «Reîncearcă emailurile eșuate» sends it again once the key or the domain is fixed |
+| 400 with limit wording | **throttled** | The allowance, not the message. Retry after the reset — or at once on Gmail's road while «Gmail preia când Mailgun se oprește» is on (§NNN) |
+| 400 naming the address or the recipient | permanent, **BOUNCED** | Not a valid address, or a sandbox recipient who is not authorized. Waiting authorizes nobody |
+| 400 otherwise | permanent, **FAILED** (§NNN) | A malformed message, an unverified or closed domain: the club's to fix, then «Reîncearcă emailurile eșuate» |
 | 402, 420 | **throttled** | Undocumented by Mailgun. 420 is its own code for "not allowed to send: … limit exceeded"; 402 is a plan or payment refusal |
 | 429 | **throttled, a pause** (§605) | The rate limit, hourly or the probation's. Due again at `Retry-After` (seconds or an HTTP date; at most a day) or in fifteen minutes; the attempt is given back, so no number of pauses FAILS a message. It was ordinary backoff and six attempts in an hour |
 | 400 "not allowed to send" *and* probation wording | **throttled, a pause** (§605) | Mailgun's probation: domains limited to 100 messages an hour, the account "temporarily disabled". Fifteen minutes, attempt given back. The body's shape is anticipated from the notice, not yet observed |
-| 404, 5xx, network | transient | Not clearly the caller's fault |
+| 404, 5xx, network | transient, **never FAILED** (§NNN) | Not clearly the caller's fault. Backoff of one to thirty-two minutes, then hourly for as long as it takes, the attempt count kept for the record; `/api/health`'s «overdue» (ninety minutes) is the alarm for a row that stays stuck |
+
+**Transient is never the end of a message (§NNN).** Before it, a transient refusal reached
+`FAILED` after six attempts, about an hour: an outage longer than that lost the confirmations queued
+behind it. Now only a refusal *of the message* ends it — `FAILED` for the account's or the message's
+own fault, `BOUNCED` for the address — and everything else waits.
+
+**The fallback road (§NNN).** While Mailgun's road is stopped — a pause it asked for (a 429, the
+probation), or its daily or monthly allowance spent — and «Setări» → «Emailuri» → «Prin ce pleacă
+emailurile» → «Gmail preia când Mailgun se oprește» is on (the default wherever the club's Gmail is
+configured) and the privacy notice in force names `{{gmailFallback}}` in every language (a participant's
+name, links and signed PDF reach Google only under a notice that says so, §443), the outbox claims **every** group's due mail on Gmail's road, inside Gmail's own cap
+(«Limita Gmail pe zi», at most 500 recipients in a rolling day, shared with the people who send from
+that account by hand) and pace. The rows Mailgun held back leave at once; the `transport` column
+records which road each row left on. The stop is recorded (`platform_settings.mailgunStop`) so the road
+stays closed after the refused row itself has left by Gmail, and Mailgun's groups return to Mailgun on
+their own when the pause ends or the reset comes. Off, under a notice that does not name it, or with
+Gmail's cap spent, the rows wait as they always did, and the queue panel's header and «Sarcini» say so
+with the remedy. A transient refusal retried hourly past six attempts (whatever its age) is counted as
+overdue (`retryingLate`), so `/api/health?deep=1` answers 503 for it as it did when such a row was FAILED.
 
 The patterns that move a 400 out of permanent are **narrow on purpose** and must stay narrow.
 The daily allowance's is limit wording alone. The probation's (§605) is two parts that must both

@@ -13,6 +13,7 @@ import {
   DEADLINE_MERGE_FIELDS,
   deadlineMergeValues,
   LIST_NUMBERS_MERGE_FIELD,
+  GMAIL_FALLBACK_MERGE_FIELD,
   LIST_SOCIALS_MERGE_FIELD,
   LIST_STATES_MERGE_FIELD,
   MINIMUM_AGE_MERGE_FIELD,
@@ -23,6 +24,7 @@ import {
 } from "../domain/merge-fields";
 import { seriesRhythmPhrase } from "@/modules/group-run-declarations/series";
 import { newsletterMergeValues } from "@/modules/newsletter/topic-words";
+import { gmailFallbackClause } from "@/modules/notifications/fallback-notice-words";
 
 /**
  * The declaration's merge fields, in one list (`DECISIONS.md` §190).
@@ -179,6 +181,13 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     token: `{{${PROMOTIONAL_MATERIALS_SHARED_MERGE_FIELD}}}`,
     messageKey: PROMOTIONAL_MATERIALS_SHARED_MERGE_FIELD,
     example: inBoth((locale) => promotionalMaterialsSharedClause(locale)),
+  },
+  // The privacy notice's marker for Gmail carrying while Mailgun is stopped (§NNN): the switch's own
+  // words, and its precondition — «Gmail preia când Mailgun se oprește» acts only while it is named.
+  {
+    token: `{{${GMAIL_FALLBACK_MERGE_FIELD}}}`,
+    messageKey: GMAIL_FALLBACK_MERGE_FIELD,
+    example: inBoth((locale) => gmailFallbackClause(locale)),
   },
 ];
 

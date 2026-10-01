@@ -126,6 +126,14 @@ export const emailTransportSettingSchema = z
      * inside its own cap — instead of the message waiting for the reset.
      */
     overflowToGmail: z.boolean(),
+    /**
+     * «Gmail preia când Mailgun se oprește» (§NNN): while Mailgun's road is stopped — a pause it asked
+     * for, or its allowance spent — every group's due mail leaves on Gmail's road, inside Gmail's own
+     * cap and pace, and returns to Mailgun's on its own when the pause ends or the reset comes.
+     * Absent in a value stored before the switch existed, and read as on (`fallbackActive`): a stop
+     * that loses nobody's email is the default; where Gmail is not configured it carries nothing.
+     */
+    fallbackToGmail: z.boolean().optional(),
   })
   .strict();
 
@@ -153,6 +161,10 @@ export type EmailTransportSetting = z.infer<typeof emailTransportSettingSchema>;
  * - **6 seconds apart** (ten a minute, jittered): an account that sends like a script is what Google
  *   suspends.
  * - **overflow off**: the same notice question as the participant groups.
+ * - **the fallback on** (§NNN): a stop is Mailgun's, not the runner's — while Mailgun says stop, Gmail
+ *   carries every group rather than a confirmation waiting out a pause or a day. Off, today's wait. It
+ *   acts only once the privacy notice in force names `{{gmailFallback}}` (`fallbackActive`): for the
+ *   participant groups that is the same notice question as above, answered by the notice.
  * - **200 a day on production, 50 elsewhere**: one Gmail account serves both environments and the
  *   people answering by hand; 250 of Google's 500 leaves them the rest.
  */
@@ -169,6 +181,7 @@ export const DEFAULT_EMAIL_TRANSPORT: EmailTransportSetting = {
   gmailPaceSeconds: 6,
   atGmailCap: "defer",
   overflowToGmail: false,
+  fallbackToGmail: true,
 };
 
 /** Every environment but production shares production's Gmail account, and gets a smaller share of it. */

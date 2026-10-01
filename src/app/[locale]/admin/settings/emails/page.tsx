@@ -31,6 +31,8 @@ import { NEVER_QUEUED_MESSAGE_TYPES } from "@/modules/notifications/domain/never
 import { readEmailCopy } from "@/modules/notifications/email-copy";
 import { readEmailPlan } from "@/modules/notifications/email-plan";
 import { OUTBOX_QUEUE_LIMIT, readOutboxQueue } from "@/modules/notifications/queue";
+import { countRetryableFailed } from "@/modules/notifications/retry-failed";
+import { resumesWords, stopWords } from "@/modules/notifications/ui/stop-words";
 import EmailCopyEditor from "@/modules/notifications/ui/EmailCopyEditor";
 import EmailPlanPanel from "@/modules/notifications/ui/EmailPlanPanel";
 import EmailTransportPanel from "@/modules/notifications/ui/EmailTransportPanel";
@@ -56,7 +58,7 @@ import { env } from "@/shared/config/env";
 
 type Props = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ lang?: string; saved?: string; error?: string; sent?: string; message?: string }>;
+  searchParams: Promise<{ lang?: string; saved?: string; error?: string; sent?: string; message?: string; gmail?: string; stop?: string; until?: string }>;
 };
 
 /** Nothing queues these any more (§331, `domain/never-queued.ts`): listed last, and said so. */
@@ -102,7 +104,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
   setRequestLocale(locale);
   const staff = await requireStaff();
   if (!canOpenSettingsTab(staff.role, "emails")) notFound();
-  const { lang, saved, error, sent, message } = await searchParams;
+  const { lang, saved, error, sent, message, gmail: viaGmail, stop: stopKind, until } = await searchParams;
   const emailLocale: EmailLocale = lang === "en" ? "en" : lang === "ro" ? "ro" : locale;
   /*
     Every type, as it would go out — and the three that nothing queues any more said to be so and
@@ -144,7 +146,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
   // The club's deadlines (§377), straight through like the words: the panel that sets them, the
   // when-lines that state them, the previews that print them and the forecast (§383), as they now stand.
   const deadlinesRead = readDeadlines(db);
-  const [plan, transport, volume, queue, notices, written, deadlines, forecast, addressCap, shownAddress, outboxDelivery] = await Promise.all([
+  const [plan, transport, volume, queue, notices, written, deadlines, forecast, addressCap, shownAddress, outboxDelivery, failedRetryable] = await Promise.all([
     readEmailPlan(db),
     // Which road each group takes, Gmail's cap and pace (§443), beside the plan it spends less of.
     readEmailTransport(db),
@@ -179,7 +181,18 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
       the last real run, what holds the round back, each row's departure and the switch (§529).
     */
     readNeonBudget(now).then((budget) => readOutboxDelivery(db, now, budget.effects.jobFloorMinutes)),
+    // «Reîncearcă emailurile eșuate» (§NNN): the week's FAILED rows its question counts, for whoever may press it.
+    maySendNow ? countRetryableFailed(db, now) : 0,
   ]);
+  /*
+    What «Trimite acum» said about Mailgun's stop (§NNN): how many Gmail carried and until when Mailgun
+    is stopped, or — refused — when it reopens. From the action's own address; anything unreadable
+    says nothing rather than a wrong hour.
+  */
+  const untilParsed = until ? new Date(until) : null;
+  const untilAt = untilParsed && !Number.isNaN(untilParsed.getTime()) ? untilParsed : null;
+  const carriedKind = stopKind === "paused" || stopKind === "allowance" ? stopKind : null;
+  const carriedCount = viaGmail && /^\d{1,9}$/.test(viaGmail) ? Number(viaGmail) : null;
   const t = await getTranslations("Admin");
   // The page's own sentences in the page's language; the previews carry the numbers in `timings`.
   const pageWords = deadlineWords(locale, deadlines.deadlines);
@@ -295,10 +308,30 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
       <MovedFragmentHop />
 
       <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
-        {error && <Alert severity="error">{t(`errors.${error}`)}</Alert>}
+        {error && (
+          <Alert severity="error">
+            {t(`errors.${error}`)}
+            {/* A press refused for Mailgun's stop says when Mailgun's road opens again (§NNN). */}
+            {untilAt && ` ${resumesWords(untilAt, now, locale, (key, values) => t(key, values))}`}
+          </Alert>
+        )}
         {saved === "emailPlan" && <Alert severity="success">{t("emails.plan.saved")}</Alert>}
         {saved === "emailTransport" && <Alert severity="success">{t("emails.transport.saved")}</Alert>}
-        {saved === "outboxSent" && <Alert severity="success">{t("outbox.sentNow", { count: sent ?? "0" })}</Alert>}
+        {saved === "outboxSent" && (
+          <Alert severity="success" data-testid="outbox-sent-now">
+            {t("outbox.sentNow", { count: sent ?? "0" })}
+            {/* Gmail carried for a stopped Mailgun (§NNN): «N prin Gmail — Mailgun în pauză până la HH:MM». */}
+            {carriedKind &&
+              carriedCount !== null &&
+              untilAt &&
+              ` ${t("outbox.sentViaGmail", { gmail: carriedCount, stop: stopWords(carriedKind, untilAt, now, locale, (key, values) => t(key, values)) })}`}
+          </Alert>
+        )}
+        {saved === "failedRetried" && (
+          <Alert severity="success" data-testid="failed-retried">
+            {t("emails.queue.retryFailed.done", { count: sent ?? "0" })}
+          </Alert>
+        )}
         {saved === "deliveryTiming" && <Alert severity="success">{t("emails.deliveryTiming.saved")}</Alert>}
         {saved === "clubNotices" && <Alert severity="success">{t("emails.clubNotices.saved")}</Alert>}
         {saved === "emailCopy" && <Alert severity="success">{t("emails.copy.saved")}</Alert>}
@@ -336,7 +369,8 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
           now={now}
           // «Trimitere programată» on/off (§529): the «Termene» setting, the Administrator's (§513).
           mayEditTiming={mayEditEmail}
-          openWhen={{ saved: saved === "outboxSent" || saved === "deliveryTiming", refused: Boolean(error) }}
+          openWhen={{ saved: saved === "outboxSent" || saved === "deliveryTiming" || saved === "failedRetried", refused: Boolean(error) }}
+          failedRetryable={failedRetryable}
         />
       )}
 

@@ -42,7 +42,11 @@ import type { EmailAdapter, OutgoingEmail, SendResult } from "./adapter";
  *   paid plan and opened registrations, an account on Mailgun's probation (domains limited to a
  *   hundred messages an hour) would have lost every confirmation past the hour's hundredth, and kept knocking while
  *   Mailgun asked it to stop, which is what gets a probation account disabled.
- * - **5xx and any network error** — transient. Outages pass.
+ * - **5xx and any network error** — transient. Outages pass — and since §NNN a transient refusal is
+ *   never the end of a message: past the sixth attempt it is retried hourly, never FAILED.
+ * - **Which permanent refusals are the address's** (§NNN): only a 400 that names the address or the
+ *   recipient is BOUNCED; 401, 403 and every other permanent 400 carry `notTheAddress` and the outbox
+ *   marks them FAILED — the club's to fix, then «Reîncearcă emailurile eșuate» sends them again.
  *
  * ## The 400 that is not the caller's fault, and why it mattered
  *
@@ -121,6 +125,15 @@ const NOT_ALLOWED_TO_SEND = /not allowed to send/i;
 // which waiting does not fix — it stays permanent and a person is told (§605 review).
 const RATE_PAUSED = /temporarily|account (is )?disabled|probation|too fast|rate limit/i;
 
+/**
+ * A 400 about the recipient (§NNN): "'to' parameter is not a valid address", a sandbox's "… is not
+ * among the authorized recipients". Only these stay BOUNCED; every other permanent 400 is the
+ * account's or the message's, and FAILED.
+ */
+const ADDRESS_REFUSED = /address|recipient/i;
+/** The sender's own parameter ("'from' parameter is not a valid address") is the club's configuration, not a bad recipient. */
+const SENDER_REFUSED = /'?from'?\s+parameter|sender/i;
+
 /** How long a pause lasts when Mailgun does not say: the outbox job's daytime cadence (§68). */
 export const MAILGUN_PAUSE_MS = 15 * 60_000;
 
@@ -147,7 +160,7 @@ export function mailgunRetryAfter(headers: Headers | undefined, now: Date): Date
 
 /** What a refusal means to the outbox: the outcome, and for a pause, that it is one and until when. */
 export type MailgunFailure =
-  | { outcome: "permanent_failure" }
+  | { outcome: "permanent_failure"; notTheAddress?: true }
   | { outcome: "transient_failure" }
   | { outcome: "throttled"; paced?: true; rateRefused?: true; retryAfter?: Date };
 
@@ -170,8 +183,9 @@ export function classifyMailgunFailure(
   headers?: Headers,
   now: Date = new Date(),
 ): MailgunFailure {
-  // Credentials, or a sending domain that is not verified. Every retry fails identically.
-  if (status === 401 || status === 403) return { outcome: "permanent_failure" };
+  // Credentials, or a sending domain that is not verified. Every retry fails identically — and it is
+  // the account, not the runner's address: FAILED, kept for «Reîncearcă emailurile eșuate» (§NNN).
+  if (status === 401 || status === 403) return { outcome: "permanent_failure", notTheAddress: true };
 
   // Mailgun's own code for a refused send against a spent allowance, and the payment/plan
   // refusal. Neither appears in the documented status table; both are observed. To the reset.
@@ -183,7 +197,11 @@ export function classifyMailgunFailure(
   if (status === 400) {
     // The probation's "temporarily disabled": a pause of fifteen minutes, never a bounce.
     if (NOT_ALLOWED_TO_SEND.test(body) && RATE_PAUSED.test(body)) return paused(new Date(now.getTime() + MAILGUN_PAUSE_MS));
-    return ALLOWANCE_SPENT.test(body) ? { outcome: "throttled" } : { outcome: "permanent_failure" };
+    if (ALLOWANCE_SPENT.test(body)) return { outcome: "throttled" };
+    // The address itself — not a valid address, a sandbox's unauthorized recipient — is the bounce it
+    // always was; anything else (an unverified or closed domain, a malformed message) is the club's to
+    // fix, FAILED and retried by a person once fixed (§NNN), never thrown away as a bad address.
+    return ADDRESS_REFUSED.test(body) && !SENDER_REFUSED.test(body) ? { outcome: "permanent_failure" } : { outcome: "permanent_failure", notTheAddress: true };
   }
 
   // 404, 5xx, anything unrecognised. Conservative in the safe direction, which is the

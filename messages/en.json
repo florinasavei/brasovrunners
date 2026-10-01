@@ -592,7 +592,11 @@
       "sending": "Sending…",
       "sendNowLong": "Send the queued emails now, without waiting for the monitor; stops at the daily allowance",
       "sentNow": "Emails sent just now: {count}.",
-      "waitingShort": "{count} waiting"
+      "waitingShort": "{count} waiting",
+      "sentViaGmail": "Of them, {gmail} through Gmail — {stop}.",
+      "stopResumes": "Mailgun resumes at {hour}.",
+      "stopResumesOn": "Mailgun resumes on {until}.",
+      "stopHeld": "Those on Mailgun's road stay in the queue: Mailgun is stopped."
     },
     "registrations": {
       "empty": "There are no registrations.",
@@ -1178,7 +1182,12 @@
       "LEGAL_RETIRE_IN_FORCE": "Nothing was deleted: this is the version in force. Approve the next version first, then you can delete this one.",
       "LEGAL_ALREADY_DELETED": "This version has already been deleted from the list. Its text stays in the archive.",
       "SEND_NOW_HOUR_SPENT": "Nothing was sent: Mailgun's hourly limit («Hourly limit» under «Emails») has no room right now. Choose «Queue it»; the email leaves on its own once the hour has room again.",
-      "OFFER_AFTER_CLOSE": "Registration has closed, so an offer would lapse at once; nothing changed. At the desk, use “Give a place”."
+      "OFFER_AFTER_CLOSE": "Registration has closed, so an offer would lapse at once; nothing changed. At the desk, use “Give a place”.",
+      "RETRY_FAILED_THROTTLED": "Nothing was put back: the failed emails were already retried 3 times in the last hour. Wait a while, and look at why they failed before pressing again.",
+      "SEND_NOW_MAILGUN_STOPPED_FALLBACK_OFF": "Nothing was sent: Mailgun is stopped and «Gmail takes over when Mailgun stops» is set to No. Set it to Yes under «Emails», or choose «Queue it»: it leaves when Mailgun resumes.",
+      "SEND_NOW_MAILGUN_STOPPED_NO_GMAIL": "Nothing was sent: Mailgun is stopped and the club's Gmail is not configured here. Choose «Queue it»: the email leaves on its own when Mailgun resumes.",
+      "SEND_NOW_MAILGUN_STOPPED_GMAIL_FULL": "Nothing was sent: Mailgun is stopped and Gmail has reached its daily limit. Raise it under «Emails» (500 at most), or choose «Queue it»: it leaves when Mailgun resumes.",
+      "SEND_NOW_MAILGUN_STOPPED_NOTICE": "Nothing was sent: Mailgun is stopped, and Gmail takes over only once you approve the privacy notice from the new template. Until then choose «Queue it»."
     },
     "editor": {
       "draftPreview": {
@@ -2354,7 +2363,8 @@
         "seriesPlace": "Only in the group-run declarations: the series' usual starting place",
         "promotionalMaterials": "Only in the privacy notice: the optional box for offers and benefits from the club and its partners. Without it in the notice in force, the form does not offer it",
         "promotionalMaterialsShared": "Only in the privacy notice: what data the club's partners may receive from those who ticked offers and benefits. Without it in the notice in force, the list for sponsors is off",
-        "registrationsPerAddress": "Terms only: how many people may register with the same email address for one event, with the unit (“4 people”), from Settings → “Deadlines”"
+        "registrationsPerAddress": "Terms only: how many people may register with the same email address for one event, with the unit (“4 people”), from Settings → “Deadlines”",
+        "gmailFallback": "Only in the privacy notice: the name of the switch «Gmail takes over when Mailgun stops», quoted. Without it in the notice in force, the switch is off and messages wait for Mailgun"
       },
       "removeBlockedReferenced": "Can neither be withdrawn nor deleted permanently: {signatures}, {events} and {acknowledgements} depend on it. “Delete” on its row takes it off the list.",
       "removeBlockedCurrent": "In force right now — it can neither be withdrawn nor deleted. Approve its successor first; then this one can go.",
@@ -2732,7 +2742,7 @@
       "emailStalled": {
         "title": "Emails are not going out.",
         "deferred": "Messages waiting: {count}. Mailgun's daily allowance ({allowance} messages a day) is spent. They go out by themselves on {resumesAt} (Romania time); nothing is lost.",
-        "failed": "Messages not sent in the last 7 days: {count} — Mailgun's reason: “{reason}”. See Mailgun → Sending → Logs.",
+        "failed": "Messages not sent in the last 7 days: {count} — Mailgun's reason: “{reason}”. Once the cause is fixed: «Settings» → «Emails» → «Retry the failed emails».",
         "overdue": "Messages whose turn passed more than 90 minutes ago: {count} — the monitors are not running. See the “Monitors” row below.",
         "notify": "To hear about this without opening the page: a daily cron-job.org monitor on /api/health?deep=1 with failure notifications on — the step in the “Monitors” row."
       },
@@ -3101,6 +3111,30 @@
             "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. Sections 5 and 6 say partners may receive the first name, last name and address.",
             "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish”.",
             "The list takes only the consents given under the new notice. Whoever ticked under an older notice never reaches a partner."
+          ]
+        },
+        "gmailFallbackNotice": {
+          "title": "Privacy notice: Gmail takes over when Mailgun stops",
+          "todo": "The notice in force does not yet say a message may leave through Gmail while Mailgun is stopped: «Gmail takes over when Mailgun stops» stays off, and emails wait for Mailgun.",
+          "done": "The notice in force says a message may leave through Gmail while Mailgun is stopped: «Gmail takes over when Mailgun stops» works, as the Administrator leaves it.",
+          "how": [
+            "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. Section 6 says a message may leave through the club's Gmail (Google) when Mailgun refuses or delays.",
+            "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish”.",
+            "Why: a participant's name, links and signed PDF then reach Google, and the notice has to say so first. Once it is approved the switch is no longer grey."
+          ]
+        },
+        "emailFailSafe": {
+          "title": "Emails nothing is carrying",
+          "todo": "Mailgun said stop over 90 minutes ago and nothing carries the emails, an email is still refused for now after six attempts, or one failed in the last 7 days.",
+          "broken": "Mailgun said stop over 90 minutes ago and nothing carries the emails, an email is still refused for now after six attempts, or one failed in 7 days. Nothing is lost.",
+          "done": "No email stuck or failed. If Mailgun says stop, Gmail takes over (when the switch is on).",
+          "how": [
+            "«Settings» → «Emails» → «How emails leave» → «Gmail takes over when Mailgun stops»: Yes → «Save the routes». While Mailgun is paused or out of allowance, Gmail carries every group.",
+            "If Gmail has reached its limit: in the same place, «Gmail limit per day» above it (500 at most, and the club's people also send by hand from that account).",
+            "The failed emails: «Settings» → «Emails» → «The sending queue» → «Retry the failed emails». It puts them back in the queue, from the first attempt.",
+            "An email refused for now (5xx, 404) is retried on its own every hour; its reason is on its row in the queue. A 404 that does not pass: check MAILGUN_API_BASE_URL and MAILGUN_DOMAIN on Vercel.",
+            "If Mailgun asked for the pause for the pace (the probation): «Settings» → «Emails» → the Mailgun plan → «Hourly limit» — 90 while the probation lasts.",
+            "The queue's header says until when Mailgun is stopped and who takes over."
           ]
         }
       },
@@ -4348,6 +4382,28 @@
             "reserve": "the newsletter's reserve: {count}"
           },
           "nothingDue": "No email is due now: the queued ones are held until their time, being sent right now, or out of attempts."
+        },
+        "stop": {
+          "paused": "Mailgun paused until {hour}",
+          "allowance": "Mailgun's allowance spent until {hour}",
+          "line": "{stop} — {carried}.",
+          "carried": {
+            "gmail": "Gmail takes over",
+            "fallbackOff": "Gmail does not take over: «Gmail takes over when Mailgun stops» is off",
+            "gmailUnconfigured": "Gmail is not configured",
+            "gmailCapSpent": "Gmail has reached its daily limit",
+            "noticeMissing": "Gmail does not take over: the privacy notice in force does not say so yet"
+          },
+          "pausedOn": "Mailgun paused until {until}",
+          "allowanceOn": "Mailgun's allowance spent until {until}"
+        },
+        "retryFailed": {
+          "count": "Emails failed in the last 7 days: {count}.",
+          "title": "Retry the failed emails?",
+          "body": "The emails that failed in the last 7 days (all of them: {count}) go back in the queue and leave on the next pass; the reason stays written. Those refused for their address stay as they are.",
+          "button": "Retry the failed emails",
+          "pending": "Putting them back…",
+          "done": "Failed emails put back in the queue: {count}."
         }
       },
       "copy": {
@@ -4522,7 +4578,15 @@
         "saving": "Saving…",
         "saved": "The setting was saved. The next emails leave by the routes chosen.",
         "readOnly": "An Administrator changes this setting.",
-        "updatedAt": "Set {when}."
+        "updatedAt": "Set {when}.",
+        "fallback": "Gmail takes over when Mailgun stops",
+        "fallbackHelp": "While Mailgun has asked for a pause or its allowance is spent, every group leaves through Gmail, within its limit and pace; when Mailgun resumes, its groups return to it on their own.",
+        "fallbackUnconfigured": "Unavailable: the club's Gmail is not configured on this environment (CONTACT_SMTP_USER and CONTACT_SMTP_PASSWORD).",
+        "fallbackNotice": "Off until the notice from the new template is approved: the notice in force does not yet say a message may leave through Gmail. It turns on by itself once approved.",
+        "fallbackOptions": {
+          "yes": "Yes, Gmail takes over",
+          "no": "No, emails wait for Mailgun"
+        }
       },
       "contacts": {
         "title": "Who receives the contact messages",
@@ -7108,7 +7172,8 @@
     },
     "emailHealth": {
       "ok": "Sending works: nothing deferred, overdue or failed. /api/health?deep=1 answers 200.",
-      "stalled": "Sending has stopped — deferred (daily allowance): {deferred}; overdue: {overdue}; failed in 7 days: {failed}. Reason: “{reason}”. /api/health?deep=1 answers 503 until this clears."
+      "stalled": "Sending has stopped — deferred (daily allowance): {deferred}; overdue: {overdue}; failed in 7 days: {failed}. Reason: “{reason}”. /api/health?deep=1 answers 503 until this clears.",
+      "degraded": "Mailgun said stop and Gmail carries every group until it resumes; nothing overdue or failed. /api/health?deep=1 answers 200 and says so in its “email” block."
     },
     "registrationsToday": "Registrations today",
     "testRegistrations": "test",
@@ -7745,7 +7810,12 @@
       "declarationHeld": "The declaration is kept. It is not deleted until you remove the keep.",
       "declarationReleased": "The keep was removed.",
       "menuOrder": "The menu order was saved.",
-      "registrationOffered": "The offer is sent: they have the usual time to sign the declaration."
+      "registrationOffered": "The offer is sent: they have the usual time to sign the declaration.",
+      "failedRetried": {
+        "one": "{count} failed email put back in the queue.",
+        "few": "{count} failed emails put back in the queue.",
+        "other": "{count} failed emails put back in the queue."
+      }
     }
   },
   "Network": {

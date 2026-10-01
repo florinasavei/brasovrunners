@@ -31,12 +31,15 @@ export const TASK_TARGETS: Partial<Record<TaskId, TaskTarget>> = {
   promoNotice: { kind: "section", section: "legal" },
   sponsorNotice: { kind: "section", section: "legal" },
   newsletterNotice: { kind: "section", section: "legal" },
+  gmailFallbackNotice: { kind: "section", section: "legal" },
   teamPageNotice: { kind: "section", section: "legal" },
   groupRunSeriesTexts: { kind: "section", section: "legal" },
   // The people are invited on «Echipa» (§450).
   inviteStaff: { kind: "section", section: "staff" },
   // The race is one save and a publish on «Evenimente» (`SETUP.md` §39).
   publishEvents: { kind: "section", section: "events" },
+  // The queue, its stop header and «Reîncearcă emailurile eșuate» (§NNN); the switch and the cap are the panel above it.
+  emailFailSafe: { kind: "settings", tab: "emails", hash: "outbox-queue" },
   // What each job did and how often it may run (§334).
   scheduler: { kind: "settings", tab: "costs", hash: "job-cadence" },
   // The switch and the hidden trap (§254, §282).

@@ -592,7 +592,11 @@
       "sending": "Se trimit…",
       "sendNowLong": "Trimite acum emailurile din coadă, fără să aștepți monitorul; se oprește la limita zilnică",
       "sentNow": "Emailuri trimise acum: {count}.",
-      "waitingShort": "{count} în așteptare"
+      "waitingShort": "{count} în așteptare",
+      "sentViaGmail": "Dintre ele, {gmail} prin Gmail — {stop}.",
+      "stopResumes": "Mailgun reia la {hour}.",
+      "stopResumesOn": "Mailgun reia {until}.",
+      "stopHeld": "Cele de pe drumul Mailgun rămân în coadă: Mailgun e oprit."
     },
     "registrations": {
       "empty": "Nu există nicio înscriere.",
@@ -1178,7 +1182,12 @@
       "LEGAL_RETIRE_IN_FORCE": "Nu s-a șters nimic: aceasta este versiunea în vigoare. Aprobă întâi versiunea următoare, apoi o poți șterge.",
       "LEGAL_ALREADY_DELETED": "Versiunea a fost deja ștearsă din listă. Textul ei rămâne în arhivă.",
       "SEND_NOW_HOUR_SPENT": "Nu s-a trimis nimic: limita pe oră a Mailgun («Limita pe oră» din «Emailuri») nu mai are loc acum. Alege «Pune la coadă»; emailul pleacă singur când ora are din nou loc.",
-      "OFFER_AFTER_CLOSE": "Înscrierile s-au închis, deci o ofertă ar expira pe loc; nu s-a schimbat nimic. La masă, folosește «Dă-i un loc»."
+      "OFFER_AFTER_CLOSE": "Înscrierile s-au închis, deci o ofertă ar expira pe loc; nu s-a schimbat nimic. La masă, folosește «Dă-i un loc».",
+      "RETRY_FAILED_THROTTLED": "Nu s-a pus nimic înapoi: emailurile eșuate au fost deja reîncercate de 3 ori în ultima oră. Așteaptă puțin și uită-te de ce au eșuat înainte să apeși din nou.",
+      "SEND_NOW_MAILGUN_STOPPED_FALLBACK_OFF": "Nu s-a trimis nimic: Mailgun e oprit, iar «Gmail preia când Mailgun se oprește» e pe Nu. Pune-l pe Da în «Emailuri», sau alege «Pune la coadă»: pleacă singur când Mailgun reia.",
+      "SEND_NOW_MAILGUN_STOPPED_NO_GMAIL": "Nu s-a trimis nimic: Mailgun e oprit, iar Gmail-ul clubului nu e configurat aici. Alege «Pune la coadă»: emailul pleacă singur când Mailgun reia.",
+      "SEND_NOW_MAILGUN_STOPPED_GMAIL_FULL": "Nu s-a trimis nimic: Mailgun e oprit, iar Gmail și-a atins limita pe zi. Ridic-o în «Emailuri» (cel mult 500), sau alege «Pune la coadă»: pleacă singur când Mailgun reia.",
+      "SEND_NOW_MAILGUN_STOPPED_NOTICE": "Nu s-a trimis nimic: Mailgun e oprit, iar Gmail preia abia după ce aprobi nota de confidențialitate din șablonul nou. Până atunci alege «Pune la coadă»."
     },
     "editor": {
       "draftPreview": {
@@ -2354,7 +2363,8 @@
         "seriesPlace": "Doar în declarațiile alergărilor de grup: locul de plecare obișnuit al seriei",
         "promotionalMaterials": "Doar în nota de confidențialitate: bifa opțională pentru oferte și beneficii de la club și de la partenerii săi. Fără el în nota în vigoare, formularul nu o oferă",
         "promotionalMaterialsShared": "Doar în nota de confidențialitate: ce date pot primi partenerii clubului de la cei care au bifat oferte și beneficii. Fără el în nota în vigoare, lista pentru sponsori e oprită",
-        "registrationsPerAddress": "Doar în termeni: câte persoane se pot înscrie cu aceeași adresă de email la un eveniment, cu unitatea („4 persoane”), din Setări → „Termene”"
+        "registrationsPerAddress": "Doar în termeni: câte persoane se pot înscrie cu aceeași adresă de email la un eveniment, cu unitatea („4 persoane”), din Setări → „Termene”",
+        "gmailFallback": "Doar în nota de confidențialitate: numele comutatorului «Gmail preia când Mailgun se oprește», între ghilimele. Fără el în nota în vigoare, comutatorul e oprit și mesajele așteaptă Mailgun"
       },
       "removeBlockedReferenced": "Nu se poate nici retrage, nici șterge definitiv: {signatures}, {events} și {acknowledgements} depind de ea. «Șterge» de pe rândul ei o scoate din listă.",
       "removeBlockedCurrent": "În vigoare acum — nu se poate nici retrage, nici șterge. Aprobă întâi versiunea următoare; apoi aceasta se poate scoate.",
@@ -2732,7 +2742,7 @@
       "emailStalled": {
         "title": "Emailurile nu pleacă.",
         "deferred": "Mesaje care așteaptă: {count}. Limita zilnică Mailgun ({allowance} de mesaje pe zi) s-a consumat. Pleacă singure {resumesAt} (ora României); nimic nu s-a pierdut.",
-        "failed": "Mesaje netrimise în ultimele 7 zile: {count} — motivul Mailgun: „{reason}”. Vezi Mailgun → Sending → Logs.",
+        "failed": "Mesaje netrimise în ultimele 7 zile: {count} — motivul Mailgun: „{reason}”. După ce repari cauza: «Setări» → «Emailuri» → «Reîncearcă emailurile eșuate».",
         "overdue": "Mesaje cu rândul trecut de peste 90 de minute: {count} — monitoarele nu rulează. Vezi rândul „Monitoarele” de mai jos.",
         "notify": "Ca să afli de asta fără să deschizi pagina: un monitor zilnic pe cron-job.org către /api/health?deep=1, cu notificare la eșec — pasul din rândul „Monitoarele”."
       },
@@ -3101,6 +3111,30 @@
             "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Secțiunile 5 și 6 spun că partenerii pot primi prenumele, numele și adresa.",
             "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”.",
             "Lista ia doar acordurile date sub nota nouă. Cine a bifat sub o notă mai veche nu ajunge la parteneri."
+          ]
+        },
+        "gmailFallbackNotice": {
+          "title": "Nota de confidențialitate: Gmail preia când Mailgun se oprește",
+          "todo": "Nota în vigoare nu spune încă că un mesaj poate pleca prin Gmail cât timp Mailgun e oprit: «Gmail preia când Mailgun se oprește» rămâne oprit, iar emailurile așteaptă Mailgun.",
+          "done": "Nota în vigoare spune că un mesaj poate pleca prin Gmail cât timp Mailgun e oprit: «Gmail preia când Mailgun se oprește» funcționează, cum îl lasă Administratorul.",
+          "how": [
+            "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Secțiunea 6 spune că un mesaj poate pleca prin Gmail-ul clubului (Google) când Mailgun refuză sau amână.",
+            "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”.",
+            "De ce: numele, linkurile și PDF-ul semnat al unui participant ajung atunci la Google, iar nota trebuie s-o spună înainte. După aprobare comutatorul nu mai e gri."
+          ]
+        },
+        "emailFailSafe": {
+          "title": "Emailuri pe care nu le duce nimeni",
+          "todo": "Mailgun a spus stop de peste 90 de minute și nimic nu duce emailurile, un email e refuzat temporar și după șase încercări sau unul a eșuat în ultimele 7 zile.",
+          "broken": "Mailgun a spus stop de peste 90 de minute și nimic nu duce emailurile, un email e refuzat temporar și după șase încercări sau unul a eșuat în 7 zile. Nimic nu s-a pierdut.",
+          "done": "Niciun email blocat sau eșuat. Dacă Mailgun spune stop, Gmail preia (când comutatorul e pornit).",
+          "how": [
+            "«Setări» → «Emailuri» → «Prin ce pleacă emailurile» → «Gmail preia când Mailgun se oprește»: Da → «Salvează drumurile». Cât timp Mailgun e în pauză sau fără cotă, Gmail duce toate grupurile.",
+            "Dacă Gmail și-a atins limita: tot acolo, «Limita Gmail pe zi» mai sus (cel mult 500, din care oamenii clubului mai trimit și de mână).",
+            "Emailurile eșuate: «Setări» → «Emailuri» → «Coada de trimitere» → «Reîncearcă emailurile eșuate». Le pune înapoi în coadă, de la prima încercare.",
+            "Un email refuzat temporar (5xx, 404) se reîncearcă singur în fiecare oră; motivul e pe rândul lui din coadă. Un 404 care nu trece: verifică MAILGUN_API_BASE_URL și MAILGUN_DOMAIN pe Vercel.",
+            "Dacă Mailgun a cerut pauza pentru ritm (proba): «Setări» → «Emailuri» → planul Mailgun → «Limita pe oră» — 90 cât ține proba.",
+            "Antetul cozii spune până când e Mailgun oprit și cine preia."
           ]
         }
       },
@@ -4348,6 +4382,28 @@
             "reserve": "rezerva pentru newsletter: {count}"
           },
           "nothingDue": "Niciun email nu e la rând acum: cele din coadă sunt ținute până la ora lor, se trimit chiar acum sau și-au consumat încercările."
+        },
+        "stop": {
+          "paused": "Mailgun în pauză până la {hour}",
+          "allowance": "Cota Mailgun epuizată până la {hour}",
+          "line": "{stop} — {carried}.",
+          "carried": {
+            "gmail": "Gmail preia",
+            "fallbackOff": "Gmail nu preia: «Gmail preia când Mailgun se oprește» e oprit",
+            "gmailUnconfigured": "Gmail nu e configurat",
+            "gmailCapSpent": "Gmail și-a atins limita pe zi",
+            "noticeMissing": "Gmail nu preia: nota de confidențialitate în vigoare nu o spune încă"
+          },
+          "pausedOn": "Mailgun în pauză până {until}",
+          "allowanceOn": "Cota Mailgun epuizată până {until}"
+        },
+        "retryFailed": {
+          "count": "Emailuri eșuate în ultimele 7 zile: {count}.",
+          "title": "Reîncerci emailurile eșuate?",
+          "body": "Emailurile eșuate în ultimele 7 zile (de toate: {count}) se pun înapoi în coadă și pleacă la următoarea trecere; motivul rămâne scris. Cele respinse pentru adresă rămân cum sunt.",
+          "button": "Reîncearcă emailurile eșuate",
+          "pending": "Se pun înapoi…",
+          "done": "Emailuri eșuate puse înapoi în coadă: {count}."
         }
       },
       "copy": {
@@ -4522,7 +4578,15 @@
         "saving": "Se salvează…",
         "saved": "Setarea a fost salvată. Următoarele emailuri pleacă pe drumurile alese.",
         "readOnly": "Setarea o schimbă Administratorul.",
-        "updatedAt": "Setat {when}."
+        "updatedAt": "Setat {when}.",
+        "fallback": "Gmail preia când Mailgun se oprește",
+        "fallbackHelp": "Cât timp Mailgun a cerut o pauză sau cota lui e epuizată, toate grupurile pleacă prin Gmail, în limita și ritmul lui; când Mailgun reia, grupurile lui se întorc singure la el.",
+        "fallbackUnconfigured": "Indisponibil: Gmail-ul clubului nu e configurat pe acest mediu (CONTACT_SMTP_USER și CONTACT_SMTP_PASSWORD).",
+        "fallbackNotice": "Oprit până la aprobarea notei din șablonul nou: nota în vigoare nu spune încă că un mesaj poate pleca prin Gmail. Pornește singur după aprobare.",
+        "fallbackOptions": {
+          "yes": "Da, Gmail preia",
+          "no": "Nu, emailurile așteaptă Mailgun"
+        }
       },
       "contacts": {
         "title": "Cine primește mesajele de contact",
@@ -7108,7 +7172,8 @@
     },
     "emailHealth": {
       "ok": "Trimiterea funcționează: nimic amânat, întârziat sau eșuat. /api/health?deep=1 răspunde 200.",
-      "stalled": "Trimiterea s-a oprit — amânate (limita zilnică): {deferred}; întârziate: {overdue}; eșuate în 7 zile: {failed}. Motiv: „{reason}”. /api/health?deep=1 răspunde 503 până se rezolvă."
+      "stalled": "Trimiterea s-a oprit — amânate (limita zilnică): {deferred}; întârziate: {overdue}; eșuate în 7 zile: {failed}. Motiv: „{reason}”. /api/health?deep=1 răspunde 503 până se rezolvă.",
+      "degraded": "Mailgun a spus stop și Gmail duce toate grupurile până reia; nimic întârziat sau eșuat. /api/health?deep=1 răspunde 200 și o spune în blocul „email”."
     },
     "registrationsToday": "Înscrieri astăzi",
     "testRegistrations": "de test",
@@ -7745,7 +7810,12 @@
       "declarationHeld": "Declarația e păstrată. Nu se mai șterge până scoți păstrarea.",
       "declarationReleased": "Păstrarea a fost scoasă.",
       "menuOrder": "Ordinea meniului a fost salvată.",
-      "registrationOffered": "Oferta e trimisă: are termenul obișnuit ca să semneze declarația."
+      "registrationOffered": "Oferta e trimisă: are termenul obișnuit ca să semneze declarația.",
+      "failedRetried": {
+        "one": "{count} email eșuat pus înapoi în coadă.",
+        "few": "{count} emailuri eșuate puse înapoi în coadă.",
+        "other": "{count} de emailuri eșuate puse înapoi în coadă."
+      }
     }
   },
   "Network": {

@@ -29,7 +29,7 @@ import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS } from "@/modules/registrations/doma
 import { offerRefusalCode, waitlistRefusalCode } from "@/modules/registrations/domain/waitlist";
 import { noFreePlaceOutcome } from "@/modules/registrations/domain/capacity";
 import { sendOutboxNow } from "@/modules/notifications/send-now";
-import { sendNowRefusalCode } from "@/modules/notifications/send-at-once";
+import { SendNowRefused, sendNowRefusalCode } from "@/modules/notifications/send-at-once";
 import { requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
@@ -744,15 +744,27 @@ export async function sendOutboxNowAction(_previous: FormOutcome | null, form: F
   const returnTo = listQuery ? `${listPath}?${listQuery}` : listPath;
 
   let sent = 0;
+  // Gmail carried for a stopped Mailgun (§NNN): how many, why and until when, as the emails page says it.
+  let carried = "";
   try {
     const actor = await requireStaffCapability(canManageRegistrations);
     const result = await sendOutboxNow(getDb(), actor, new Date());
     sent = result.sent;
+    // Carried: how many by Gmail and until when; not carried (Gmail's own rows only): when Mailgun reopens.
+    if (result.stop) {
+      const until = `&until=${encodeURIComponent(result.stop.until.toISOString())}`;
+      carried = result.carriedByGmail ? `&gmail=${result.viaGmail}&stop=${result.stop.kind}${until}` : `&held=1${until}`;
+    }
   } catch (error) {
-    // Mailgun's hour spent says so in its own sentence (§605), not as a bare validation error.
-    return backTo(returnTo, isDomainError(error) ? { error: sendNowRefusalCode(error) } : outcomeOf(error));
+    // Mailgun's hour spent says so in its own sentence (§605), not as a bare validation error; a stop says when Mailgun reopens.
+    if (isDomainError(error)) {
+      const until = error instanceof SendNowRefused && error.until ? `&until=${encodeURIComponent(error.until.toISOString())}` : "";
+      await flashOutcome({ error: sendNowRefusalCode(error) });
+      redirect(`${returnTo}${returnTo.includes("?") ? "&" : "?"}error=${sendNowRefusalCode(error)}${until}#admin-alert`);
+    }
+    return backTo(returnTo, outcomeOf(error));
   }
   await flashOutcome({ saved: "outboxSent", sent: String(sent) });
-  redirect(`${returnTo}${returnTo.includes("?") ? "&" : "?"}saved=outboxSent&sent=${sent}#admin-alert`);
+  redirect(`${returnTo}${returnTo.includes("?") ? "&" : "?"}saved=outboxSent&sent=${sent}${carried}#admin-alert`);
 }
 

@@ -218,6 +218,25 @@ test.describe("BR-REQ-080-02 the Mailgun plan on «Setări» → «Emailuri»", 
     await switchTo(from);
   });
 
+  test("an Administrator finds «Gmail preia când Mailgun se oprește», greyed with its reason where Gmail is not configured or the notice does not name it (§NNN)", async ({ page }) => {
+    await signIn(page, "Dev Administrator");
+    await page.goto("/ro/admin/settings/emails");
+    const main = page.locator("#main");
+    const transport = main.getByTestId("email-transport");
+    await openFold(transport);
+    const fallback = transport.getByLabel("Gmail preia când Mailgun se oprește");
+    await expect(fallback).toBeVisible();
+    if (await fallback.isDisabled()) {
+      // No Gmail on this deployment, or a privacy notice in force that does not name the fallback yet:
+      // the reason, never a switch that cannot act.
+      await expect(transport.getByText(/Indisponibil: Gmail-ul clubului nu e configurat|Oprit până la aprobarea notei din șablonul nou/)).toBeVisible();
+      return;
+    }
+    // On by default where Gmail is configured; the help says what it does.
+    await expect(fallback).toHaveValue(/^(yes|no)$/);
+    await expect(transport.getByText(/toate grupurile pleacă prin Gmail/)).toBeVisible();
+  });
+
   test("a Redactor reads the figures and neither the queue nor the club's copies", async ({ page }) => {
     // The other side of the §289 line: the queue names recipients and the copies name the
     // club's addresses for a participant's signed declaration — participant data both, so the

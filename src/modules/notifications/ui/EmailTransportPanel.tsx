@@ -16,6 +16,7 @@ import {
   GMAIL_PACE_SECONDS_MAX,
 } from "@/modules/notifications/domain/email-transport";
 import type { EmailTransportState } from "@/modules/notifications/email-transport";
+import { fallbackActive, fallbackUnavailable } from "@/modules/notifications/domain/mailgun-stop";
 import type { EmailVolumeToday } from "@/modules/notifications/volume";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
@@ -49,6 +50,9 @@ export default async function EmailTransportPanel({ locale, setting, volume, may
   const viaGmail = EMAIL_GROUPS.filter((group) => setting.groups[group] === "gmail").length;
   // Recent: within the rolling day Gmail's cap counts — older, it is history, not a warning.
   const recentFailure = volume.gmailFailedLastDay;
+  // The switch as it acts, and why it is greyed (§NNN): Gmail not configured here, or the notice in force not naming it yet.
+  const fallbackOn = fallbackActive(setting, volume.gmailConfigured, volume.fallbackDisclosed);
+  const fallbackGreyed = fallbackUnavailable(volume.gmailConfigured, volume.fallbackDisclosed);
   const namesOf = (group: (typeof EMAIL_GROUPS)[number]) =>
     (Object.keys(EMAIL_GROUP_OF) as EmailMessageType[])
       .filter((type) => EMAIL_GROUP_OF[type] === group && !neverQueued.has(type))
@@ -115,6 +119,11 @@ export default async function EmailTransportPanel({ locale, setting, volume, may
                 {t(`emails.transport.groups.${group}.label`)}: {t(`emails.transport.options.${setting.groups[group]}`)}
               </Typography>
             ))}
+            {/* The switch, said to whoever only reads (§NNN). */}
+            <Typography component="li" variant="body2" data-testid="email-transport-fallback-state">
+              {t("emails.transport.fallback")}: {t(`emails.transport.fallbackOptions.${fallbackOn ? "yes" : "no"}`)}
+              {fallbackGreyed === "noticeMissing" && ` — ${t("emails.transport.fallbackNotice")}`}
+            </Typography>
           </Stack>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
             {t("emails.transport.readOnly")}
@@ -135,6 +144,7 @@ export default async function EmailTransportPanel({ locale, setting, volume, may
               gmailPaceSeconds: t("emails.transport.pace"),
               atGmailCap: t("emails.transport.atCap"),
               overflowToGmail: t("emails.transport.overflow"),
+              fallbackToGmail: t("emails.transport.fallback"),
             })}
             confirm={{
               title: t("confirm.emailTransportTitle"),
@@ -213,6 +223,32 @@ export default async function EmailTransportPanel({ locale, setting, volume, may
               >
                 <option value="yes">{t("emails.transport.overflowOptions.yes")}</option>
                 <option value="no">{t("emails.transport.overflowOptions.no")}</option>
+              </RecallField>
+              {/*
+                «Gmail preia când Mailgun se oprește» (§NNN): on by default where Gmail is configured and the
+                privacy notice in force names it, and greyed with the reason otherwise — Gmail not configured,
+                or «până la aprobarea notei din șablonul nou». A disabled box posts nothing, and the service
+                then keeps what is stored rather than reading the grey as «no».
+              */}
+              <RecallField
+                select
+                name="fallbackToGmail"
+                label={t("emails.transport.fallback")}
+                defaultValue={fallbackOn ? "yes" : "no"}
+                size="small"
+                disabled={fallbackGreyed !== null}
+                slotProps={{ select: { native: true } }}
+                helperText={
+                  fallbackGreyed === "gmailUnconfigured"
+                    ? t("emails.transport.fallbackUnconfigured")
+                    : fallbackGreyed === "noticeMissing"
+                      ? t("emails.transport.fallbackNotice")
+                      : t("emails.transport.fallbackHelp")
+                }
+                data-testid="email-transport-fallback"
+              >
+                <option value="yes">{t("emails.transport.fallbackOptions.yes")}</option>
+                <option value="no">{t("emails.transport.fallbackOptions.no")}</option>
               </RecallField>
               <Box>
                 <GlyphSubmitButton label={t("emails.transport.save")} pendingLabel={t("emails.transport.saving")} icon="save" />

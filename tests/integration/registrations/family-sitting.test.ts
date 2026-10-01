@@ -12,6 +12,7 @@ import { computeContentHash, type LegalDocumentTranslationInput } from "@/module
 import { findCurrentApprovedDocument, insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { declarationTrailEn, declarationTrailRo } from "@/modules/legal-documents/templates/declaration";
 import { isDomainError } from "@/shared/errors/domain-error";
+import { RATE_PAUSE_ERROR_PREFIX } from "@/modules/notifications/domain/hourly-pace";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
@@ -839,5 +840,80 @@ describe("§519 the fix round of 2026-09-27", () => {
     const confirmations = (await outbox()).filter((row) => row.messageType === "REGISTRATION_CONFIRMED" && row.participantId !== null);
     expect(confirmations).toHaveLength(2);
     expect(confirmations.find((row) => row.id !== family.id)).toMatchObject({ registrationId: ionId, payloadJson: {} });
+  });
+});
+
+/*
+  §NNN (BR-V2.53's review nit): a family sitting neither stretches nor cuts a pause Mailgun asked for.
+  The hold and release statements leave a row carrying the rate-pause mark at its turn — Mailgun's
+  pause. The replace deletes it like any never-tried row: the stop is recorded apart from the row
+  (`platform_settings.mailgunStop`), so its going ends no pause, and the family message says it all.
+*/
+describe("§NNN a sitting leaves a row Mailgun paused alone", () => {
+  const PAUSED = `${RATE_PAUSE_ERROR_PREFIX}mailgun 429: Too Many Requests`;
+
+  it("«Da» does not hold a paused first email to the sitting's window, and «Gata» does not send it before the pause ends", async () => {
+    const event = await createEvent();
+    const { seed } = await first(event, "Ana", 0);
+    const [row] = await outbox();
+    // Mailgun paused it until minute 5, the attempt given back (`releaseForPause`).
+    await db.update(emailOutbox).set({ lastError: PAUSED, nextAttemptAt: at(5) }).where(eq(emailOutbox.id, row.id));
+
+    const sittingId = await yes(event, { seed }, 1);
+    const [held] = await outbox();
+    expect(held.nextAttemptAt?.toISOString()).toBe(at(5).toISOString());
+
+    await releaseFamilySitting(db, sittingId!, at(2));
+    const [released] = await outbox();
+    expect(released.nextAttemptAt?.toISOString()).toBe(at(5).toISOString());
+    expect(released.lastError).toBe(PAUSED);
+  });
+
+  it("a second «Da» does not stretch a held row's pause to the new window, and «Gata» does not end it", async () => {
+    const event = await createEvent();
+    const sittingId = await start(event, "Ana", 0);
+    const [row] = await outbox();
+    // Held by the sitting, then paused by Mailgun until minute 4 on its way out.
+    await db.update(emailOutbox).set({ lastError: PAUSED, nextAttemptAt: at(4) }).where(eq(emailOutbox.id, row.id));
+
+    await yes(event, { sittingId }, 3);
+    expect((await outbox())[0].nextAttemptAt?.toISOString()).toBe(at(4).toISOString());
+
+    await releaseFamilySitting(db, sittingId!, at(3));
+    expect((await outbox())[0].nextAttemptAt?.toISOString()).toBe(at(4).toISOString());
+  });
+
+  it("the family message replaces a paused first email: one message to the address, never both", async () => {
+    const event = await createEvent();
+    const sittingId = await start(event, "Ana", 0);
+    const [row] = await outbox();
+    // Mailgun paused Ana's held email until minute 5, its attempt given back.
+    await db.update(emailOutbox).set({ lastError: PAUSED, nextAttemptAt: at(5) }).where(eq(emailOutbox.id, row.id));
+
+    expect(await send(event, "Ion", 1, sittingId)).toBe(sittingId);
+
+    const rows = await outbox();
+    expect(rows.map((candidate) => candidate.messageType)).toEqual(["REGISTER_ANOTHER_PERSON"]);
+    expect(rows.some((candidate) => candidate.id === row.id)).toBe(false);
+  });
+
+  it("a first email Mailgun paused before «Da» is still the sitting's: the second form replaces it, one message to the address", async () => {
+    const event = await createEvent();
+    const { seed } = await first(event, "Ana", 0);
+    const [row] = await outbox();
+    // Paused before «Da» was pressed, the attempt given back (`releaseForPause`).
+    await db.update(emailOutbox).set({ lastError: PAUSED, nextAttemptAt: at(5) }).where(eq(emailOutbox.id, row.id));
+
+    const sittingId = await yes(event, { seed }, 1);
+    const [tracked] = await db.select({ heldOutboxIds: familySittings.heldOutboxIds }).from(familySittings).where(eq(familySittings.id, sittingId!));
+    expect(tracked.heldOutboxIds).toEqual([row.id]);
+    const [kept] = await outbox();
+    // Tracked, not held: its turn is still Mailgun's pause, and it carries no sitting's mark.
+    expect(kept.nextAttemptAt?.toISOString()).toBe(at(5).toISOString());
+    expect(kept.payloadJson).not.toHaveProperty("sittingHeld");
+
+    expect(await send(event, "Ion", 2, sittingId)).toBe(sittingId);
+    const rows = await outbox();
+    expect(rows.map((candidate) => candidate.messageType)).toEqual(["REGISTER_ANOTHER_PERSON"]);
   });
 });
