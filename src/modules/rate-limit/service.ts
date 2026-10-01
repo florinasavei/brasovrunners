@@ -1,4 +1,4 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { rateLimitBuckets } from "@/db/schema/rate-limit";
 import type { Database } from "@/db/types";
 import { retryAfterSeconds, windowStart } from "./domain/window";
@@ -14,6 +14,7 @@ export type RateLimitScope =
   | "registration-link-submit"
   | "link-request"
   | "admin-resend"
+  | "admin-bulk-resend"
   | "token-validate"
   | "job-invoke"
   | "admin-send-now"
@@ -42,6 +43,12 @@ export const RATE_LIMITS: Record<RateLimitScope, { limit: number; windowMs: numb
   "link-request": { limit: 3, windowMs: 60 * 60_000 },
   // BR-REQ-037-02 criterion 5. Per registration, not per administrator: it protects one inbox.
   "admin-resend": { limit: 5, windowMs: 60 * 60_000 },
+  /**
+   * «Retrimite declarația tuturor care nu au semnat» (§606), keyed on the event: each press can put
+   * an email in every pending inbox at once, so three presses an hour, whoever presses. Every row
+   * it queues still spends that registration's own `admin-resend` above.
+   */
+  "admin-bulk-resend": { limit: 3, windowMs: 60 * 60_000 },
   /**
    * BR-REQ-036-02, §19.4. Keyed on the presented token's hash (`action-tokens/throttle.ts`): no new
    * secret at rest, no IP. Guards one token being hammered; 32 random bytes are not guessed.
@@ -120,6 +127,33 @@ export async function consumeRateLimit<T extends Record<string, unknown>>(
     limit,
     retryAfter: retryAfterSeconds(now, windowMs),
   };
+}
+
+/**
+ * How many attempts each key has made in `now`'s window, without counting one — for a page that says
+ * before a press which keys the press would find spent (§606), and for the press that skips them
+ * rather than spending a refused attempt on each. A key with no row has made none. One read.
+ */
+export async function readRateLimitCounts<T extends Record<string, unknown>>(
+  db: Database<T>,
+  scope: RateLimitScope,
+  keys: readonly string[],
+  now: Date,
+): Promise<Map<string, number>> {
+  const counts = new Map<string, number>();
+  if (keys.length === 0) return counts;
+  const rows = await db
+    .select({ key: rateLimitBuckets.key, count: rateLimitBuckets.count })
+    .from(rateLimitBuckets)
+    .where(
+      and(
+        eq(rateLimitBuckets.scope, scope),
+        inArray(rateLimitBuckets.key, [...keys]),
+        eq(rateLimitBuckets.windowStartsAt, windowStart(now, RATE_LIMITS[scope].windowMs)),
+      ),
+    );
+  for (const row of rows) counts.set(row.key, row.count);
+  return counts;
 }
 
 /**

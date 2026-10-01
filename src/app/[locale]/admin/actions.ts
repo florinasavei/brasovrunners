@@ -49,6 +49,7 @@ import { countAccountLines, createMemberAccounts, type MemberAccountLine } from 
 import { invalidAddresses } from "@/modules/contact/domain/recipients";
 import { canDeleteEvent, canHardDeleteEvent, canManageRegistrations, canManageStaff, canManageTestRegistrations, type EditorialStatus, isBackofficeRole, type StaffRole } from "@/modules/staff-identity/domain/roles";
 import { sendEventThanks } from "@/modules/notifications/event-mail";
+import { BULK_RESEND_CLOSED, BULK_RESEND_LIMITED, resendDeclarationToAllPending } from "@/modules/registrations/admin-service";
 import { DELIVERY_CHOICE_FIELD, deliveryChoiceOf } from "@/modules/notifications/domain/send-at-once";
 import { sendNowRefusalCode } from "@/modules/notifications/send-at-once";
 import { DEV_STAFF_COOKIE, requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
@@ -962,6 +963,36 @@ export async function sendEventThanksAction(_previous: FormOutcome | null, form:
     return refused(error, form);
   }
   return backTo(editorPath(locale, eventId), outcome);
+}
+
+/**
+ * «Retrimite declarația tuturor care nu au semnat» (§606): a fresh signing link to every pending
+ * registration of the event, in one press. Administrator only — asked here, at the door, and again in
+ * the service (BR-REQ-060-01). The banner names what was queued and what was skipped and why; a press
+ * refused by a closed event or by the event's hourly limit lands on the sentence the button's «i»
+ * said before the press (§592).
+ */
+export async function resendDeclarationToAllAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = toLocale(form.get("uiLocale"));
+  const eventId = text(form, "eventId");
+  let outcome: Record<string, string>;
+  try {
+    const actor = await requireStaffCapability(canManageRegistrations);
+    const result = await resendDeclarationToAllPending(getDb(), actor, eventId, new Date());
+    outcome = {
+      saved: "declarationResent",
+      queued: String(result.queued),
+      recent: String(result.skippedRecent),
+      limited: String(result.skippedLimited),
+      testQueued: String(result.test.queued),
+    };
+  } catch (error) {
+    if (!isDomainError(error)) throw error;
+    outcome = {
+      error: error.fields.includes(BULK_RESEND_CLOSED) ? "BULK_RESEND_CLOSED" : error.fields.includes(BULK_RESEND_LIMITED) ? "BULK_RESEND_LIMITED" : error.code,
+    };
+  }
+  return backTo(`${editorPath(locale, eventId)}`, outcome);
 }
 
 export async function deleteEventAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {

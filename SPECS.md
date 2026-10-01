@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.53-2026-10-01 -->
+<!-- PROJECT_BASELINE: BR-V2.54-2026-10-01 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V2.53-2026-10-01`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.54-2026-10-01`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -1423,6 +1423,7 @@ registration — and it lists registrations and never changes an address.
 8. A «now» the day's Mailgun allowance cannot hold, the club's copies counted, is refused with its own sentence, queues nothing and spends none of the hour's resends (2026-09-27, `DECISIONS.md` §540).
 9. «Retrimite invitația» with «Trimite acum» whose Zitadel password link failed or is unconfigured shows no green toast (2026-09-27, `DECISIONS.md` §540).
 10. Given a registration whose address holds others at the event, when an Administrator presses «Retrimite familiei», then one email is queued for the address at the family's earliest step (the earliest waiting person's verification link, else a declaration request, else one confirmation with every confirmed person's QR), the press is audited as `registration.family_resent`, any other role is refused on the server, and the list shows the family's rows next to each other where its first row falls (2026-09-30, `DECISIONS.md` §588). Verification: integration `registrations/one-click-family.test.ts`.
+11. Given an event, when an Administrator presses «Retrimite declarația tuturor care nu au semnat», then every PENDING_DECLARATION registration whose declaration email is neither queued nor sent within the last hour and whose resend limit is not spent gets one COMPLETE_DECLARATION email with a fresh link (the earlier link invalidated), through the same path as the single resend; the press is audited with its counts, rate-limited to three an hour per event, Administrator-only, and changes no registration's state (2026-10-01, `DECISIONS.md` §606).
 
 **Verification:** integration `backoffice/resend.test.ts`
 
