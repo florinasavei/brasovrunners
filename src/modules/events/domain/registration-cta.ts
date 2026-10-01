@@ -54,11 +54,17 @@ export type RegistrationCta =
   | { kind: "CLOSED" }
   /**
    * `availablePlaces` is null for an uncapped event — open, with no number to show. `offered` and
-   * `waitlisted` say the line beside the free places (§NNN): «1 loc oferit din lista de așteptare»
-   * for a place promised to the head of the line, «2 pe lista de așteptare» for the people with no
-   * offer yet — never the person offered counted as still waiting.
+   * `waitlisted` say the line (§NNN): «1 loc oferit din lista de așteptare» for a place promised to
+   * somebody in the line, «2 pe lista de așteptare» for the people with no offer yet — never the
+   * person offered counted as still waiting.
+   *
+   * `fromWaitlist` (§NNN): somebody is waiting in the line, so a newcomer joins it whatever is free
+   * (`registrations/domain/waitlist.ts#newcomerJoinsLine`, the allocator's own rule). The door is the
+   * waiting list's — its words and its glyph, as `FULL` — and the free places are not advertised:
+   * «Locurile se dau din lista de așteptare» stands where «N locuri libere din C» stood. False with
+   * nobody waiting — an open offer alone included, since its holder has a place: today's line and door.
    */
-  | { kind: "OPEN"; availablePlaces: number | null; offered: number; waitlisted: number }
+  | { kind: "OPEN"; availablePlaces: number | null; offered: number; waitlisted: number; fromWaitlist: boolean }
   /**
    * No place, and the waiting list takes people: its button. `waitlistRoom` is how many more it
    * takes when it has a limit (§348) — "Mai sunt 3 locuri pe lista de așteptare" — and null when
@@ -105,17 +111,30 @@ export function registrationCta(event: RegistrationCtaInput, now: Date): Registr
     case "CLOSED":
       return { kind: "CLOSED" };
 
-    case "OPEN":
+    case "OPEN": {
+      const offered = event.offered ?? 0;
+      const waitlisted = event.waitlisted ?? 0;
+      /*
+        Somebody waiting (§NNN): a person in the line with no place yet — or, in a cache entry written
+        before the halves were counted, the line's length alone (§587), until it next expires. Then a
+        newcomer joins the line whatever is free (`newcomerJoinsLine`), so the door is the line's. The
+        same rule the allocator follows, so the door never promises what the press will not give.
+      */
+      const fromWaitlist = (event.waitlisted ?? event.waiting ?? 0) > 0;
       // Zero free places is the waiting list, not a refusal: BR-REQ-035-01. `null` is an
       // uncapped event, which is never full.
-      if (event.availablePlaces !== 0) {
-        return { kind: "OPEN", availablePlaces: event.availablePlaces, offered: event.offered ?? 0, waitlisted: event.waitlisted ?? 0 };
+      if (event.availablePlaces !== 0 && !fromWaitlist) {
+        return { kind: "OPEN", availablePlaces: event.availablePlaces, offered, waitlisted, fromWaitlist: false };
       }
       // …unless the event keeps no waiting list, or keeps one that is full (§348): then there is
-      // nothing to join, and a button would lead to a form that refuses at the end of it.
+      // nothing to join, and a button would lead to a form that refuses at the end of it — with
+      // places free too, since a newcomer is not given one past the line (§NNN).
       if (event.waitlistCapacity === 0) return { kind: "FULL_NO_WAITLIST" };
       if (event.waitlistRoom === 0) return { kind: "WAITLIST_FULL" };
+      // Places free while somebody is in the line (§NNN): open, through the line's door.
+      if (event.availablePlaces !== 0) return { kind: "OPEN", availablePlaces: event.availablePlaces, offered, waitlisted, fromWaitlist: true };
       return { kind: "FULL", waitlistRoom: event.waitlistRoom ?? null, waiting: event.waiting ?? 0 };
+    }
 
     case "NOT_APPLICABLE":
       return { kind: "NONE" };

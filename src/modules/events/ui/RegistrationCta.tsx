@@ -72,6 +72,16 @@ export default async function RegistrationCta({
     // rendered — for an uncapped event, which shows no number at all (BR-REQ-034-01 criterion 4).
     return (
       <Stack spacing={1} sx={{ mt: { xs: DENSITY.gapSm, sm: 3 }, alignItems: "flex-start" }}>
+        {/*
+          Somebody waits in the line (§NNN): a newcomer joins it whatever is free, so the page says how
+          places are given — the card's words — before the button, which is the line's.
+        */}
+        {cta.fromWaitlist && (
+          <Typography variant="body1" component="p" data-testid="registration-from-waitlist" sx={{ fontWeight: 700 }}>
+            {t("cta.fromWaitlist")}
+          </Typography>
+        )}
+
         <RegistrationDoorButton slug={event.slug} cta={cta} label={doorButtonLabel(t, cta)} preview={preview} />
 
         {fill && (
@@ -80,8 +90,9 @@ export default async function RegistrationCta({
           </Typography>
         )}
 
-        {/* An uncapped event shows no number at all (BR-REQ-034-01 criterion 4). */}
-        {cta.availablePlaces !== null && (
+        {/* An uncapped event shows no number at all (BR-REQ-034-01 criterion 4); nor does one whose
+            places are given from the waiting list (§NNN): they are not a newcomer's to take. */}
+        {cta.availablePlaces !== null && !cta.fromWaitlist && (
           <Typography variant="body2" color="text.secondary">
             {t("cta.placesRemaining", { count: cta.availablePlaces })}
           </Typography>

@@ -91,6 +91,7 @@ import { SPARE_BIBS_PER_PRINT, spareRangeOfQuery } from "@/modules/registrations
 import { countInterests } from "@/modules/registrations/interest";
 import { countEligibleWaitlisted, countRegistrationsForEvent, countTestRegistrationsForEvent } from "@/modules/registrations/repository";
 import QueuePanel from "@/modules/registrations/ui/QueuePanel";
+import { noFreePlaceValues, type PlacesTaken } from "@/modules/registrations/domain/capacity";
 import GroupRunDeclarationsPanel from "@/modules/group-run-declarations/ui/GroupRunDeclarationsPanel";
 import { listGroupRunDeclarations } from "@/modules/group-run-declarations/repository";
 import { showsGroupRunDeclarationsFold } from "@/modules/group-run-declarations/domain";
@@ -114,6 +115,7 @@ import {
   stopRepeatAction,
   transitionEventAction,
 } from "../../actions";
+import { offerPlaceAction } from "../../registrations/actions";
 import { countForm } from "@/i18n/count-form";
 import { daysPhrase } from "@/modules/deadlines/domain/duration-words";
 import { registrationState } from "@/modules/events/domain/registration-window";
@@ -125,7 +127,7 @@ import { startBoxValues, typedStartOrNull } from "@/modules/events/domain/provis
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
-  searchParams: Promise<{ error?: string; saved?: string; assigned?: string; total?: string; created?: string; applied?: string; offered?: string; notConfirmed?: string; test?: string; notPublished?: string; announced?: string; notice?: string; queued?: string; count?: string; from?: string; to?: string; erased?: string }>;
+  searchParams: Promise<{ error?: string; saved?: string; assigned?: string; total?: string; created?: string; applied?: string; offered?: string; notConfirmed?: string; test?: string; notPublished?: string; announced?: string; notice?: string; queued?: string; count?: string; from?: string; to?: string; erased?: string } & Partial<Record<keyof PlacesTaken, string>>>;
 };
 
 export const dynamic = "force-dynamic";
@@ -172,7 +174,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   if (!canReadContent(staffUser.role)) redirect(getPathname({ locale, href: "/admin" }));
   // A malformed id is the same 404 an unknown one gets, not the query Postgres refuses (§376).
   if (!isUuid(id)) notFound();
-  const { error, saved, assigned, total, notConfirmed, test, created, applied, offered, notPublished: notPublishedParam, announced, notice: noticeParam, queued, from: spareFrom, to: spareTo, erased } = await searchParams;
+  const query = await searchParams;
+  const { error, saved, assigned, total, notConfirmed, test, created, applied, offered, notPublished: notPublishedParam, announced, notice: noticeParam, queued, from: spareFrom, to: spareTo, erased } = query;
   // What the save told the participants (§331), matched against the words there are — the query
   // string is typed by anybody, and it reaches `t("editor.notice.<x>")`.
   const noticeOutcome = (["update", "none", "cancelled", "cancelledQuiet", "cancelledNobody"] as const).find((kind) => kind === noticeParam);
@@ -525,7 +528,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
         )}
 
         <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
-          {error && <Alert severity="error">{t(`errors.${error}`)}</Alert>}
+          {/* «Trimite-i oferta» on a full event (§NNN) says who holds the places, as «Dă-i un loc» (§589). */}
+          {error && <Alert severity="error">{t(`errors.${error}`, noFreePlaceValues(error, query))}</Alert>}
           {saved === "bibsAssigned" && (
             /* Nothing assigned is an answer too (§286). */
             <Alert severity={assigned === "0" ? "info" : "success"}>
@@ -1003,6 +1007,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                           event={{ id: event.id, capacity: event.capacity, waitlistCapacity: event.waitlistCapacity, timezone: event.timezone }}
                           waiting={waiting}
                           now={now}
+                          offerAction={canManageRegistrations(staffUser.role) ? offerPlaceAction : undefined}
                         />
                         {interestsWaiting !== null && (
                           <Box sx={{ mt: 3 }}>

@@ -159,6 +159,18 @@ export async function lockEventForCapacity<T extends Record<string, unknown>>(
 }
 
 /**
+ * Whether the event offers its freed and added places to the waiting list on its own (§NNN):
+ * `events.waitlist_auto_offer`, read by `fillAvailableSpots` inside the caller's transaction, after
+ * the caller locked the row — so the answer is the row's as it stands under the lock, whatever copy
+ * of the event the caller carries (a fixture's partial row, the editor's row from before the save).
+ * A row that does not exist offers nothing.
+ */
+export async function offersWaitlistAutomatically<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<boolean> {
+  const [row] = await db.select({ auto: events.waitlistAutoOffer }).from(events).where(eq(events.id, eventId)).limit(1);
+  return row?.auto ?? false;
+}
+
+/**
  * One event's row, unlocked — what the backoffice needs to build an `EventForRegistration`
  * before handing it to the allocator.
  *
@@ -1218,6 +1230,11 @@ export async function findEventsNeedingMaintenance<T extends Record<string, unkn
     lock, never a second formula in SQL. **What it costs:** one read per scheduled capped event with
     somebody waiting, per run — on a full race with a waiting list, one `countOccupied` each run while
     the line stands; on every other event, nothing. `kind` is in no condition here (§30).
+
+    Only an event that offers on its own (`waitlist_auto_offer`, §NNN): on one whose organizer hands
+    out the places («Nu»), a free place while people wait is the organizer's to give and
+    `fillAvailableSpots` would offer nothing — so the sweep does not select it, rather than locking it
+    on every run to do nothing.
   */
   const waitedFor = await db
     .selectDistinct({ eventId: events.id, capacity: events.capacity })
@@ -1226,6 +1243,7 @@ export async function findEventsNeedingMaintenance<T extends Record<string, unkn
     .where(
       and(
         sql`${events.eventStatus} = 'SCHEDULED'`,
+        eq(events.waitlistAutoOffer, true),
         isNotNull(events.capacity),
         // Before the close — or the start, when there is no close or it is later (`capHoldExpiry`'s instant, §420).
         sql`${now} < least(coalesce(${events.registrationClosesAt}, ${events.startsAt}), ${events.startsAt})`,

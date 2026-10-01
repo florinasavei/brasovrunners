@@ -86,6 +86,8 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   // Registrations.
   confirmRegistrationNowAction: [],
   promoteRegistrationAction: [],
+  // «Trimite-i oferta» (§NNN): an email to the runner, asked first on the queue's rows and the registration's page.
+  offerPlaceAction: ["offerAction"],
   setBibNumberAction: [],
   createRegistrationAction: [],
   correctRegisteredNameAction: [],

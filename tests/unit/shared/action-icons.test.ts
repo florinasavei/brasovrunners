@@ -159,7 +159,8 @@ const SAME_VERB: Array<{ glyph: string; keys: string[] }> = [
       "tasks.neonPlan.save",
     ],
   },
-  { glyph: "send", keys: ["outbox.sendNow", "thanks.send", "registrations.sendReminder"] },
+  // «Trimite-i oferta» (§NNN) sends the offer's email: the same verb, the same glyph.
+  { glyph: "send", keys: ["outbox.sendNow", "thanks.send", "registrations.sendReminder", "desk.offerPlace"] },
   // An email sent again, whoever it is for: a registration's, a staff invitation, a password reset.
   { glyph: "resend", keys: ["registrations.resend", "staff.resendInvite", "staff.passwordReset"] },
 ];
