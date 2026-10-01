@@ -10,6 +10,7 @@ import { hoursPhrase } from "@/modules/deadlines/domain/duration-words";
 import { cachedDeadlines } from "@/modules/public-cache/reads";
 import ActionLinkNotice from "@/modules/registrations/ui/ActionLinkNotice";
 import ConfirmOnArrival from "@/modules/registrations/ui/ConfirmOnArrival";
+import { emailDelayNotice } from "@/modules/registrations/ui/email-delay-notice";
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
 import { readConfirmedOnAddress, readRegistrationTokenContext, readSpentRegistrationLink } from "@/modules/registrations/token-actions";
 import { confirmEmailAction } from "./actions";
@@ -86,6 +87,8 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
         <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
           {t("confirm.doneTitle")}
         </Typography>
+        {/* While the club's emails are late (§NNN): the declaration's email is one of them. */}
+        {await emailDelayNotice({ sx: { mb: 2 } })}
         {/* Confirmed is not finished: the declaration is still to sign, and the hold that
             protects their place is running. Saying "done" alone loses people here. */}
         <RegistrationJourney current="declare" />

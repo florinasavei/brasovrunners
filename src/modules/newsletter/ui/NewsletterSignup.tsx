@@ -16,6 +16,7 @@ import type { Locale } from "@/i18n/routing";
 import { minutesPhrase } from "@/modules/deadlines/domain/duration-words";
 import { cachedEmailWaitMinutes } from "@/modules/public-cache/reads";
 import BotCheck from "@/modules/registrations/ui/BotCheck";
+import { emailDelayNotice } from "@/modules/registrations/ui/email-delay-notice";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { DENSITY } from "@/theme/density";
@@ -112,10 +113,14 @@ export default async function NewsletterSignup({ locale, outcome, refused, typed
       </Typography>
 
       {outcome === "sent" && (
-        <Alert severity="success" role="status" sx={{ mb: 2 }} data-testid="newsletter-sent">
-          <AlertTitle>{t("sent.title")}</AlertTitle>
-          {waitMinutes === null ? t("sent.body") : t("sent.bodyScheduled", { wait: minutesPhrase(locale, waitMinutes) })}
-        </Alert>
+        <>
+          {/* While the club's emails are late (§NNN), above the wait the answer promises. */}
+          {await emailDelayNotice({ sx: { mb: 2 } })}
+          <Alert severity="success" role="status" sx={{ mb: 2 }} data-testid="newsletter-sent">
+            <AlertTitle>{t("sent.title")}</AlertTitle>
+            {waitMinutes === null ? t("sent.body") : t("sent.bodyScheduled", { wait: minutesPhrase(locale, waitMinutes) })}
+          </Alert>
+        </>
       )}
       {outcome === "unavailable" && (
         <Alert severity="warning" sx={{ mb: 2 }}>
@@ -354,9 +359,13 @@ export default async function NewsletterSignup({ locale, outcome, refused, typed
         whatever the address is, and the link to leave goes to the mailbox, never to this page.
       */}
       {leaveOutcome === "sent" && (
-        <Alert severity="info" role="status" sx={{ mt: 2 }} data-testid="newsletter-leave-sent">
-          {t("leave.sent")}
-        </Alert>
+        <>
+          {/* While the club's emails are late (§NNN): the link to leave is one of them. */}
+          {await emailDelayNotice({ sx: { mt: 2 } })}
+          <Alert severity="info" role="status" sx={{ mt: 2 }} data-testid="newsletter-leave-sent">
+            {t("leave.sent")}
+          </Alert>
+        </>
       )}
       <Box
         component="details"

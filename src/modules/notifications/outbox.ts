@@ -9,6 +9,7 @@ import type { Database, Transaction } from "@/db/types";
 import type { EmailTransportName, OutgoingEmail } from "@/infrastructure/email/adapter";
 import type { EmailSender } from "@/infrastructure/email/delivery";
 import { finishJobRun, startJobRun } from "@/modules/jobs/repository";
+import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { readClubNotices } from "./club-notices";
 import {
   BULK_COPY_RECIPIENTS,
@@ -819,6 +820,13 @@ export async function processOutboxBatch(
       new Date(),
     );
   }
+
+  /*
+    The pages that wait for an email say when the queue is late (§NNN, `cachedEmailDelay`): once per
+    batch that moved it — a send, a pause or a deferral, a message given up on — never per row, and
+    nothing for a batch that claimed nothing or only scheduled a retry.
+  */
+  if (summary.sent + summary.deferred + summary.failed + summary.bounced > 0) revalidatePublicContent("email");
 
   return summary;
 }

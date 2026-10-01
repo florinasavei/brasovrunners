@@ -13,6 +13,7 @@ import { INTEREST_BOX_ID, type InterestOutcome } from "../interest-box";
 import { BOT_CHECK_SLOT_SX } from "../domain/turnstile-widget";
 import { turnstileSiteKey } from "../turnstile";
 import BotCheck from "./BotCheck";
+import { emailDelayNotice } from "./email-delay-notice";
 
 /**
  * "Anunță-mă când se deschid înscrierile" (`DECISIONS.md` §146): one address, one button, one
@@ -52,9 +53,13 @@ export default async function RegistrationInterestForm({
       {outcome === "done" ? (
         // The same sentence whether the address was new or already on the list (BR-REQ-031-01
         // criterion 3): the box is not an oracle for who signed up.
-        <Alert severity="success" role="status">
-          {t("interest.done")}
-        </Alert>
+        <>
+          {/* While the club's emails are late (§NNN), above the answer. */}
+          {await emailDelayNotice({ sx: { mb: 1.5 } })}
+          <Alert severity="success" role="status">
+            {t("interest.done")}
+          </Alert>
+        </>
       ) : (
         <form action={registerInterestAction}>
           <Stack spacing={1.5}>

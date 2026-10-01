@@ -7162,6 +7162,16 @@
     "reloadingBody": "Site-ul își ia acum datele doar din copiile salvate, iar pagina aceasta nu avea încă una. O pregătim chiar acum; pagina se reîncarcă singură în câteva minute.",
     "reloadingLink": "Încearcă din nou acum"
   },
+  "Delay": {
+    "full": "Emailurile noastre întârzie acum: {queued}, cel mai vechi de {minutes}{estimate}. Al tău pleacă la rând — termenul lui curge de când pleacă, nu de acum. Nu te înscrie din nou.",
+    "short": "Confirmarea pe email întârzie azi{estimate}.",
+    "estimate": "; estimăm cel mult {estimate}",
+    "queued": {
+      "one": "{count} mesaj așteaptă",
+      "few": "{count} mesaje așteaptă",
+      "other": "{count} de mesaje așteaptă"
+    }
+  },
   "Weather": {
     "label": "Vremea",
     "temperature": "{degrees} °C",
