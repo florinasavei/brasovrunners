@@ -242,12 +242,12 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   // The waiting list's length, for the queue and for the sentence under "Număr de locuri" (§147).
   const waiting = internal && (maySaveSettings || canReadRegistrations(staffUser.role)) ? await countEligibleWaitlisted(db, event.id) : 0;
   /*
-    The places the allocator counts as taken (§255 amended): the number the public line "N înscriși din C" and the
+    The places the allocator counts as taken (§NNN): the number the public line "N înscriși din C" and the
     queue panel read, a family's reservation included — one more aggregate over the event's own rows, only when
     there is a limit to say it against.
   */
   const placesTaken =
-    internal && event.capacity !== null && (maySaveSettings || canReadRegistrations(staffUser.role))
+    internal && event.capacity !== null && canReadRegistrations(staffUser.role)
       ? computeOccupied(await countOccupied(db, event.id, now))
       : null;
 

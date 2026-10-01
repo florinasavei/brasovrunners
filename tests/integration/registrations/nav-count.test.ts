@@ -2,6 +2,8 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { events, eventTranslations } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { registrations, type RegistrationStatus } from "@/db/schema/registrations";
+import { computeOccupied } from "@/modules/registrations/domain/capacity";
+import { countOccupied } from "@/modules/registrations/repository";
 import { createTranslator } from "next-intl";
 import enMessages from "../../../messages/en.json";
 import roMessages from "../../../messages/ro.json";
@@ -52,7 +54,7 @@ describe("§255 how many are signed up", () => {
   });
 
   let counter = 0;
-  async function enter(eventId: string, status: RegistrationStatus, kind: "REAL" | "TEST" = "REAL") {
+  async function enter(eventId: string, status: RegistrationStatus, kind: "REAL" | "TEST" = "REAL", holdExpiresAt: Date | null = null) {
     counter += 1;
     const email = `runner-${counter}@example.test`;
     const [participant] = await db
@@ -64,6 +66,7 @@ describe("§255 how many are signed up", () => {
       participantId: participant.id,
       status,
       kind,
+      holdExpiresAt,
       locale: "ro",
       registeredName: `Runner ${counter}`,
       displayName: `Runner ${counter}`,
@@ -150,7 +153,7 @@ describe("§255 how many are signed up", () => {
     await enter(upcoming, "CONFIRMED");
     await enter(upcoming, "CONFIRMED");
     await enter(upcoming, "PENDING_DECLARATION");
-    await enter(upcoming, "WAITLIST_OFFERED");
+    await enter(upcoming, "WAITLIST_OFFERED", "REAL", new Date(NOW.getTime() + DAY));
     await enter(upcoming, "PENDING_EMAIL_CONFIRMATION");
     await enter(upcoming, "PENDING_EMAIL_CONFIRMATION");
     await enter(upcoming, "PENDING_EMAIL_CONFIRMATION");
@@ -162,6 +165,19 @@ describe("§255 how many are signed up", () => {
       { eventId: upcoming, title: "—", count: 8, withPlace: 4, awaitingEmail: 3, waitlisted: 1, capacity: 100 },
     ]);
     expect(split?.total).toBe(await countRegisteredForUpcoming(db, NOW));
+  });
+
+  it("§543 a family's reservation holds a place like the allocator says; a lapsed offer holds none", async () => {
+    await enter(upcoming, "CONFIRMED");
+    await enter(upcoming, "PENDING_EMAIL_CONFIRMATION", "REAL", new Date(NOW.getTime() + DAY)); // reserved
+    await enter(upcoming, "PENDING_EMAIL_CONFIRMATION", "REAL", new Date(NOW.getTime() - DAY)); // reservation lapsed
+    await enter(upcoming, "PENDING_EMAIL_CONFIRMATION"); // no reservation
+    await enter(upcoming, "WAITLIST_OFFERED", "REAL", new Date(NOW.getTime() - DAY)); // lapsed offer
+    const split = await registeredBadgeBreakdown(db, NOW, "ro");
+    expect(split?.events).toEqual([
+      { eventId: upcoming, title: "—", count: 5, withPlace: 2, awaitingEmail: 2, waitlisted: 1, capacity: 100 },
+    ]);
+    expect(split?.events[0].withPlace).toBe(computeOccupied(await countOccupied(db, upcoming, NOW)));
   });
 
   it("an event without a limit carries a null capacity", async () => {

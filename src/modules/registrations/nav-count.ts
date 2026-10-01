@@ -4,6 +4,7 @@ import type { Locale } from "@/i18n/routing";
 import { registrations } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
 import { ACTIVE_STATUSES } from "./domain/state-machine";
+import { familyReservationHolds, offerAwaitingItsFirstEmail } from "./repository";
 
 /**
  * How many people are signed up, for the badge on the backoffice's "Înscrieri" tab
@@ -61,12 +62,15 @@ export function forgetRegisteredBadgeCount(): void {
 
 /**
  * One upcoming event's share of the badge: its title in the reader's language, how many people
- * have an active registration, and who among them holds a place (§255, amended by the 2026-10-01
- * decision). `count` is always `withPlace + awaitingEmail + waitlisted`.
+ * have an active registration, and who among them holds a place (§255, amended by §NNN). `count` is always `withPlace + awaitingEmail + waitlisted`.
  *
- * `withPlace` is CONFIRMED, PENDING_DECLARATION and WAITLIST_OFFERED — the rows the allocator's
- * `computeOccupied` counts. A family's reservation is not a registration row and is not here;
- * the event's own box, which reads the allocator, includes it. `capacity` is `null` for an
+ * `withPlace` is what the allocator's `computeOccupied` counts for the event's registrations: CONFIRMED,
+ * PENDING_DECLARATION, a WAITLIST_OFFERED that has not lapsed, and a family's reservation (§543), which is
+ * a PENDING_EMAIL_CONFIRMATION row with an unexpired `hold_expires_at`. `awaitingEmail` is every other
+ * PENDING_EMAIL_CONFIRMATION row. `waitlisted` is WAITLISTED, plus an offer that has lapsed and not yet been
+ * swept: it holds no place and is going back to the list. Only `family_place_holds` rows, which carry no
+ * person, are in no part.
+ `capacity` is `null` for an
  * event without a limit.
  */
 export type RegisteredOnEvent = {
@@ -79,11 +83,22 @@ export type RegisteredOnEvent = {
   capacity: number | null;
 };
 
-const PLACE_STATUSES: readonly string[] = ["CONFIRMED", "PENDING_DECLARATION", "WAITLIST_OFFERED"];
+/**
+ * The bucket a row falls in, by the allocator's own predicates (`computeOccupied`'s), so «cu loc» is the
+ * allocator's count of people and never a guess from the status alone.
+ */
+function badgeBucket(now: Date) {
+  return sql<"place" | "awaitingEmail" | "waitlisted">`case
+    when ${registrations.status} in ('CONFIRMED', 'PENDING_DECLARATION')
+      or (${registrations.status} = 'WAITLIST_OFFERED' and (${registrations.holdExpiresAt} > ${now} or ${offerAwaitingItsFirstEmail(now)}))
+      or ${familyReservationHolds(now)} then 'place'
+    when ${registrations.status} = 'PENDING_EMAIL_CONFIRMATION' then 'awaitingEmail'
+    else 'waitlisted' end`;
+}
 
 /**
  * The badge's figure split per event (§476): the same filter as `countRegisteredForUpcoming`,
- * grouped by event **and status** — a handful of rows for a few dozen events, still one indexed
+ * grouped by event **and bucket** (`badgeBucket`) — a handful of rows for a few dozen events, still one indexed
  * query — so the tab's tooltip says what the number is made of: people with a place, people
  * awaiting their email, people on the waiting list. The total is the sum of the split.
  *
@@ -95,12 +110,13 @@ export async function countRegisteredPerUpcomingEvent<T extends Record<string, u
   now: Date,
   locale: Locale,
 ): Promise<RegisteredOnEvent[]> {
+  const bucket = badgeBucket(now);
   const rows = await db
     .select({
       eventId: events.id,
       title: eventTranslations.title,
       capacity: events.capacity,
-      status: registrations.status,
+      bucket,
       value: count(),
     })
     .from(registrations)
@@ -114,7 +130,7 @@ export async function countRegisteredPerUpcomingEvent<T extends Record<string, u
         inArray(registrations.status, [...ACTIVE_STATUSES]),
       ),
     )
-    .groupBy(events.id, events.startsAt, events.capacity, eventTranslations.title, registrations.status)
+    .groupBy(events.id, events.startsAt, events.capacity, eventTranslations.title, sql`4`) // the bucket, by position: its bound `now`s cannot be repeated in a GROUP BY expression
     .orderBy(asc(events.startsAt));
   const perEvent = new Map<string, RegisteredOnEvent>();
   for (const row of rows) {
@@ -122,9 +138,9 @@ export async function countRegisteredPerUpcomingEvent<T extends Record<string, u
       perEvent.get(row.eventId) ??
       { eventId: row.eventId, title: row.title ?? "—", count: 0, withPlace: 0, awaitingEmail: 0, waitlisted: 0, capacity: row.capacity };
     entry.count += row.value;
-    if (PLACE_STATUSES.includes(row.status)) entry.withPlace += row.value;
-    else if (row.status === "PENDING_EMAIL_CONFIRMATION") entry.awaitingEmail += row.value;
-    else if (row.status === "WAITLISTED") entry.waitlisted += row.value;
+    if (row.bucket === "place") entry.withPlace += row.value;
+    else if (row.bucket === "awaitingEmail") entry.awaitingEmail += row.value;
+    else entry.waitlisted += row.value;
     perEvent.set(row.eventId, entry);
   }
   return [...perEvent.values()];
@@ -174,7 +190,7 @@ export type BadgeHintWords = {
 };
 
 /**
- * The tab's tooltip text (§476, amended): what the number is and is not, then each upcoming
+ * The tab's tooltip text (§NNN): what the number is and is not, then each upcoming
  * event with its total and who holds a place — "153 — 144 with a place of 150, 9 awaiting the
  * email confirmation" — a zero part omitted except the places; the first `BADGE_HINT_EVENTS` by
  * start and how many more after them. Pure, so both languages are tested against the catalogues.
