@@ -1039,15 +1039,30 @@ export async function correctRegisteredName<T extends Record<string, unknown>>(
  * Unlike a participant's own cancellation, this is allowed after the event has started. That
  * guard exists so nobody cancels their way out of a race they are running, and an organizer
  * tidying up afterwards is the case it would otherwise block.
+ *
+ * **The club's refusal under the terms** (§NNN, `kind: "REFUSED_BY_ORGANIZER"`): the same verb and
+ * the same allocator, not a new one. What differs is who is told what — the reason the
+ * Administrator typed is the ground, and it goes to the person in the cancellation email, under a
+ * box that said so before the press; the audit row records the kind beside the reason. A refusal
+ * without a ground is refused: the terms promise the person is told why.
  */
+export type StaffCancelKind = "REFUSED_BY_ORGANIZER";
+
 export async function cancelRegistrationByStaff<T extends Record<string, unknown>>(
   db: Database<T>,
   actor: Pick<StaffUser, "id" | "role">,
   registrationId: string,
   reason: string,
   now: Date,
+  options: { kind?: StaffCancelKind } = {},
 ): Promise<Registration> {
   assertAdministrator(actor);
+
+  const ground = reason.trim().slice(0, 500);
+  const refused = options.kind === "REFUSED_BY_ORGANIZER";
+  if (refused && ground === "") {
+    throw new DomainError("VALIDATION_ERROR", "a refusal under the terms names its ground", ["reason"]);
+  }
 
   const current = await findRegistrationById(db, registrationId);
   if (!current) throw new DomainError("NOT_FOUND", "no such registration");
@@ -1069,7 +1084,7 @@ export async function cancelRegistrationByStaff<T extends Record<string, unknown
   }
 
   const event = await eventForRegistration(db, current.eventId);
-  const cancelled = await unregister(db, event, registrationId, "ADMIN", now);
+  const cancelled = await unregister(db, event, registrationId, "ADMIN", now, refused ? { refusedGround: ground } : {});
 
   /*
     A printed bib going void is written into the row's own record (§311; the owner: "trebuie sa
@@ -1091,7 +1106,7 @@ export async function cancelRegistrationByStaff<T extends Record<string, unknown
     action: "registration.cancelled_by_staff",
     entityType: "registration",
     entityId: registrationId,
-    metadata: { from: current.status, reason: reason.trim().slice(0, 500), ...printedBib },
+    metadata: { from: current.status, reason: ground, ...(refused ? { kind: options.kind } : {}), ...printedBib },
     now,
   });
 

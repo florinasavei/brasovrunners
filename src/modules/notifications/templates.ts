@@ -1072,6 +1072,11 @@ export type TemplateData = {
   cancelReasonKind?: RegistrationCancelReasonKind;
   cancelReasonText?: string;
   /**
+   * The club's refusal under the terms (§NNN): the ground the Administrator typed, under a box that
+   * said it is emailed to the person. Absent for every other cancellation.
+   */
+  refusedGround?: string;
+  /**
    * A minor's registration (§108): the parent's or guardian's name, as typed on the form. The
    * message greets them and says whose registration it is about (§419) — the address is theirs.
    */
@@ -1890,6 +1895,10 @@ const T = {
     /** The club's copy of a cancellation (§558): the reason the participant gave, their words quoted. */
     cancelReason: (kind: RegistrationCancelReasonKind, text: string | undefined) =>
       `Motivul anulării: ${CANCEL_REASON_WORDS.ro[kind]}${kind === "OTHER" && text ? ` — „${text}”` : ""}.`,
+    /** The club's refusal under the terms (§NNN): the fact and the ground the club gave. */
+    refusedByClub: (ground: string) =>
+      `Clubul a refuzat această înscriere. Motivul: „${ground}”.`,
+    termsLink: "Termenii și condițiile",
     footer: "Răspunde la acest email pentru întrebări.",
     /** The club's copy of a participant's message (§320): in front of the subject, and the first line. */
     clubCopy: {
@@ -2420,6 +2429,9 @@ const T = {
       `Still registered on this address: ${others.map((other) => `${other.name} (${EARLIER_STATE_WORDS.en[other.state]})`).join(", ")}.`,
     cancelReason: (kind: RegistrationCancelReasonKind, text: string | undefined) =>
       `Cancellation reason: ${CANCEL_REASON_WORDS.en[kind]}${kind === "OTHER" && text ? ` — “${text}”` : ""}.`,
+    refusedByClub: (ground: string) =>
+      `The club refused this registration. The ground: “${ground}”.`,
+    termsLink: "Terms and conditions",
     footer: "Reply to this email with questions.",
     clubCopy: {
       subject: "[Club copy] ",
@@ -2794,7 +2806,11 @@ export function buildTemplateContent(
           : messageType === "EVENT_UPDATE_NOTICE" && changes.length > 0
             ? changes
             : messageType === "REGISTRATION_CANCELLED"
-              ? [...(own.highlight ?? []), copy.cancelledReleased(data.participantName, data.cancelledFromWaitlist === true)]
+              ? [
+                  ...(own.highlight ?? []),
+                  ...(data.refusedGround ? [copy.refusedByClub(data.refusedGround)] : []),
+                  copy.cancelledReleased(data.participantName, data.cancelledFromWaitlist === true),
+                ]
               : own.highlight,
         quiet: [...(own.quiet ?? []), ...(messageType === "GROUP_RUN_DECLARATION_SIGNED" ? [copy.groupRunNotYou(data.contactUrl)] : [])],
       };
@@ -2933,6 +2949,8 @@ export function buildTemplateContent(
         A cancellation's facts (§547), after the body whoever wrote it: the place released — or the
         waiting list left — and who the address still holds at the event, with their states.
       */
+      // The club's refusal under the terms (§NNN): the fact and the ground the club gave, before the place released.
+      ...(messageType === "REGISTRATION_CANCELLED" && data.refusedGround ? [copy.refusedByClub(data.refusedGround)] : []),
       ...(messageType === "REGISTRATION_CANCELLED" ? [copy.cancelledReleased(data.participantName, data.cancelledFromWaitlist === true)] : []),
       ...(messageType === "REGISTRATION_CANCELLED" && data.cancelledOthers && data.cancelledOthers.length > 0
         ? [copy.cancelledOthers(data.cancelledOthers)]
@@ -3027,6 +3045,8 @@ export function buildTemplateContent(
         // «Toate înscrierile mele» first under a family's button (§519): each person's state, before and after the press.
         ...(familySittingShape && data.familyMineUrl ? [{ label: copy.familySitting.mine, url: data.familyMineUrl }] : []),
         ...(entry.links?.(linkData) ?? []),
+        // The club's refusal (§NNN): the terms it was made under, in this half's language, from `APP_BASE_URL`.
+        ...(messageType === "REGISTRATION_CANCELLED" && data.refusedGround ? [{ label: copy.termsLink, url: termsUrl(locale) }] : []),
         // Every newsletter message's way out (§445; Legea 506/2004 art. 12(2)): the subscriber's own page.
         ...((messageType === "NEWSLETTER" || messageType === "NEW_EVENT_ALERT") && data.newsletterManageUrl
           ? [{ label: copy.newsletterWords.manage, url: data.newsletterManageUrl }]
@@ -3154,6 +3174,11 @@ function controllerName(): string {
 /** The privacy notice's address in one language, from `APP_BASE_URL` like every link here (§8). */
 function privacyNoticeUrl(locale: EmailLocale): string {
   return `${env.APP_BASE_URL}${getPathname({ locale, href: "/legal/privacy" })}`;
+}
+
+/** The terms' address in one language (§NNN), the same way. */
+function termsUrl(locale: EmailLocale): string {
+  return `${env.APP_BASE_URL}${getPathname({ locale, href: "/legal/terms" })}`;
 }
 
 export function buildOutgoingEmail(params: {
