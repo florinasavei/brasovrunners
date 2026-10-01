@@ -97,6 +97,8 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   bulkDeleteRegistrationsAction: [],
   resendRegistrationEmailAction: [],
   resendFamilyEmailAction: [],
+  // «Retrimite declarația tuturor care nu au semnat» (§NNN): asks, counting who is emailed and who is skipped.
+  resendDeclarationToAllAction: [],
   sendOutboxNowAction: [],
   sendOutboxNowFromEmailsAction: [],
   // Legal.

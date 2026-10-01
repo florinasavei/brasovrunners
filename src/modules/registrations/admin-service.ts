@@ -1,5 +1,6 @@
 import { and, asc, count, eq, isNull, or } from "drizzle-orm";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
+import type { EmailMessageType } from "@/db/schema/email-outbox";
 import { events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { type Registration, registrations } from "@/db/schema/registrations";
@@ -9,7 +10,7 @@ import type { Locale } from "@/i18n/routing";
 import { recordAuditEvent, scrubParticipantFromAudit, scrubRegistrationFromAudit } from "@/modules/audit/repository";
 import { consumeRateLimit } from "@/modules/rate-limit/service";
 import { enqueueEmail } from "@/modules/notifications/outbox";
-import { drainOutboxRowsAfterResponse } from "@/modules/notifications/drain";
+import { drainOutboxAfterResponse, drainOutboxRowsAfterResponse } from "@/modules/notifications/drain";
 import { type DeliveryChoice, markedForNow } from "@/modules/notifications/domain/send-at-once";
 import { assertRoomToSendNow, clubCopyTypesFor, outboxIdsForKey } from "@/modules/notifications/send-at-once";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
@@ -30,7 +31,8 @@ import type { SexChoice } from "./domain/sex";
 import { heldRefusal, refuseIfRegistrationHeld, registrationIsHeld } from "./declaration-hold";
 import { bibNumberInUse, isEventSpareNumber, retiredBibNumbers } from "./bibs";
 import { BIB_NUMBER_MAX, handsSpareAtConfirm } from "./domain/spare-bibs";
-import { canResendReminder, deriveAllowedResendMessageType } from "./domain/resend";
+import { type BulkResendCounts, canResendDeclarationToAll, canResendReminder, deriveAllowedResendMessageType } from "./domain/resend";
+import { listDeclarationResendCandidates, sortCandidates, spentResendLimits } from "./bulk-resend";
 import { canTransition, isActiveStatus, isTerminalStatus } from "./domain/state-machine";
 import { waitlistRefusalOf, walkInLeftUnconfirmedError } from "./domain/waitlist";
 import { registrationNameKey, sameRunner } from "./domain/name-key";
@@ -146,37 +148,68 @@ export async function resendRegistrationMessage<T extends Record<string, unknown
     await assertRoomToSendNow(db, [messageType], now, copies);
   }
 
-  /**
-   * BR-REQ-037-02 criterion 5: "repeated resends... a rate limit applies and the refusal is
-   * recorded."
-   *
-   * Keyed on the registration rather than the administrator, because what is being protected is
-   * one participant's inbox — two organizers both clicking resend is exactly the case to catch,
-   * and it is invisible if each of them has their own allowance.
-   *
-   * Checked after everything that only reads — the message type, the event, the day's allowance
-   * for a «now» (§540) — so a press refused for any of those spends none of the hour's resends and
-   * the «Pune la coadă» the allowance's refusal suggests is still allowed; a throttled resend
-   * queues nothing at all. Refused with a real error rather than a generic success: this caller
-   * is an authenticated Administrator looking at the screen, so there is nothing to leak and
-   * everything to gain from saying what happened.
-   */
-  const verdict = await consumeRateLimit(db, "admin-resend", registrationId, now);
+  const outcome = await queueManualResend(db, actor, registration, participant.deliveryEmail, messageType, now, {
+    delivery,
+    extraPayload,
+    // Sent now by its own drain below, not by the timing's (§540); queued, the timing's as before.
+    drainAfter: delivery !== "now",
+  });
+  if (!outcome.queued) {
+    throw new DomainError(
+      "VALIDATION_ERROR",
+      `this registration has had ${outcome.count} resends in the last hour; wait ${outcome.retryAfter} seconds`,
+    );
+  }
+  // The message and its club copies, after this response, whatever «Când pleacă emailurile» says.
+  if (delivery === "now") drainOutboxRowsAfterResponse(await outboxIdsForKey(db, outcome.idempotencyKey));
+}
+
+type ManualResendOutcome =
+  | { queued: true; idempotencyKey: string }
+  | { queued: false; count: number; limit: number; retryAfter: number };
+
+/**
+ * One registration's manual resend, past every check that only reads — the one path the single
+ * press and the bulk press both take (§NNN): the registration's hourly limit, the enqueue marked
+ * `isManualResend`, and the registration's own trail. A bulk press is exactly N of these.
+ *
+ * BR-REQ-037-02 criterion 5: "repeated resends... a rate limit applies and the refusal is
+ * recorded." Keyed on the registration rather than the administrator, because what is being
+ * protected is one participant's inbox — two organizers both clicking resend is exactly the case to
+ * catch, and it is invisible if each of them has their own allowance.
+ *
+ * The caller checks everything that only reads first — the message type, the event, the day's
+ * allowance for a «now» (§540) — so a press refused for any of those spends none of the hour's
+ * resends and the «Pune la coadă» the allowance's refusal suggests is still allowed; a throttled
+ * resend queues nothing at all and answers `queued: false`, which the single press turns into a real
+ * error (an authenticated Administrator looking at the screen: nothing to leak, everything to gain
+ * from saying what happened) and the bulk press counts as skipped.
+ *
+ * The idempotency key is the registration and the press's instant: a deliberate resend is a new
+ * trigger (§12.11), and the same press never queues one registration twice. Never a state change
+ * (§79): the only writes are the limit's counter, the outbox row and an audit row.
+ */
+async function queueManualResend<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id">,
+  registration: Pick<Registration, "id" | "participantId" | "locale">,
+  recipientEmail: string,
+  messageType: EmailMessageType,
+  now: Date,
+  options: { delivery: DeliveryChoice; extraPayload: Record<string, unknown>; drainAfter: boolean },
+): Promise<ManualResendOutcome> {
+  const verdict = await consumeRateLimit(db, "admin-resend", registration.id, now);
   if (!verdict.allowed) {
     await recordAuditEvent(db, {
       actorStaffUserId: actor.id,
       participantId: registration.participantId,
       action: "registration.resend_rate_limited",
       entityType: "registration",
-      entityId: registrationId,
+      entityId: registration.id,
       metadata: { count: verdict.count, limit: verdict.limit },
       now,
     });
-
-    throw new DomainError(
-      "VALIDATION_ERROR",
-      `this registration has had ${verdict.count} resends in the last hour; wait ${verdict.retryAfter} seconds`,
-    );
+    return { queued: false, count: verdict.count, limit: verdict.limit, retryAfter: verdict.retryAfter };
   }
 
   const idempotencyKey = `registration:${registration.id}:manual-resend:${now.toISOString()}`;
@@ -186,18 +219,17 @@ export async function resendRegistrationMessage<T extends Record<string, unknown
       registrationId: registration.id,
       messageType,
       locale: registration.locale,
-      recipientEmail: participant.deliveryEmail,
+      recipientEmail,
       // Marked for the queue panel's «Pleacă acum» (§540); the club's copies carry the mark with it.
-      payload: markedForNow({ ...extraPayload }, delivery),
+      payload: markedForNow({ ...options.extraPayload }, options.delivery),
       idempotencyKey,
       requestedByStaffUserId: actor.id,
       isManualResend: true,
       now,
-      // Sent now by its own drain below, not by the timing's (§540); queued, the timing's as before.
-      drainAfter: delivery !== "now",
+      drainAfter: options.drainAfter,
     });
     // The press, on the registration's trail (§540): who, which message, and that it passed the round.
-    if (delivery === "now" && queued) {
+    if (options.delivery === "now" && queued) {
       await recordAuditEvent(tx, {
         actorStaffUserId: actor.id,
         participantId: registration.participantId,
@@ -209,8 +241,100 @@ export async function resendRegistrationMessage<T extends Record<string, unknown
       });
     }
   });
-  // The message and its club copies, after this response, whatever «Când pleacă emailurile» says.
-  if (delivery === "now") drainOutboxRowsAfterResponse(await outboxIdsForKey(db, idempotencyKey));
+  return { queued: true, idempotencyKey };
+}
+
+/** The marker on a bulk press refused because nothing can be signed any more (§NNN). */
+export const BULK_RESEND_CLOSED = "bulkResendClosed";
+/** The marker on a bulk press refused by the event's own hourly limit (§NNN). */
+export const BULK_RESEND_LIMITED = "bulkResendLimited";
+
+/** What one bulk press did (§NNN): the real registrations' counts, the test ones apart (§12.6). */
+export type BulkResendResult = BulkResendCounts & { test: BulkResendCounts };
+
+/**
+ * «Retrimite declarația tuturor care nu au semnat» (§NNN, amending §540): a fresh signing link to
+ * every registration of the event still `PENDING_DECLARATION`, in one press — Administrator only,
+ * the single resend's rule, asserted here as in the action.
+ *
+ * Who is left out, and counted: a registration whose declaration email is still queued or left
+ * within the hour (it has an email coming, or just got one — never two in the hour), and one whose
+ * own `admin-resend` hour is spent (a spent limit is a spent limit). No condition on `kind`.
+ *
+ * Refused before anything is written when the declaration can no longer be signed — the event
+ * cancelled, completed or started — and when the event's three presses of the hour are spent
+ * (`admin-bulk-resend`, counted after the reads, so a refusal for a closed event spends none).
+ *
+ * Each registration goes through `queueManualResend`, the single press's own path; the press adds
+ * one audit row with its counts and one drain after the response for the whole press. It queues; the
+ * outbox sends at the road's pace (§443, §513). Nothing else moves: no state, hold or deadline (§79).
+ */
+export async function resendDeclarationToAllPending<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  eventId: string,
+  now: Date,
+): Promise<BulkResendResult> {
+  assertAdministrator(actor);
+  const event = await findEventForAllocation(db, eventId);
+  if (!event) throw new DomainError("NOT_FOUND", "no such event");
+  if (!canResendDeclarationToAll(event.eventStatus, event.startsAt, now)) {
+    throw new DomainError("VALIDATION_ERROR", `the event is ${event.eventStatus} or has started; nothing can be signed`, [BULK_RESEND_CLOSED]);
+  }
+
+  const verdict = await consumeRateLimit(db, "admin-bulk-resend", eventId, now);
+  if (!verdict.allowed) {
+    await recordAuditEvent(db, {
+      actorStaffUserId: actor.id,
+      action: "registration.bulk_resend_rate_limited",
+      entityType: "event",
+      entityId: eventId,
+      metadata: { count: verdict.count, limit: verdict.limit },
+      now,
+    });
+    throw new DomainError(
+      "VALIDATION_ERROR",
+      `this event has had ${verdict.count} resends to everyone in the last hour; wait ${verdict.retryAfter} seconds`,
+      [BULK_RESEND_LIMITED],
+    );
+  }
+
+  const candidates = await listDeclarationResendCandidates(db, eventId, now);
+  const spent = await spentResendLimits(
+    db,
+    candidates.map((candidate) => candidate.registration.id),
+    now,
+  );
+  const { send, recent, limited } = sortCandidates(candidates, spent);
+  const queued: typeof send = [];
+  for (const candidate of send) {
+    const outcome = await queueManualResend(db, actor, candidate.registration, candidate.deliveryEmail, "COMPLETE_DECLARATION", now, {
+      delivery: "queue",
+      extraPayload: {},
+      drainAfter: false,
+    });
+    // A single press in the moment between the read and this one may have spent the hour: skipped, like the others.
+    if (outcome.queued) queued.push(candidate);
+    else limited.push(candidate);
+  }
+
+  const tally = (kind: "REAL" | "TEST"): BulkResendCounts => {
+    const of = (rows: typeof send) => rows.filter((row) => row.registration.kind === kind).length;
+    return { queued: of(queued), skippedRecent: of(recent), skippedLimited: of(limited) };
+  };
+  const result: BulkResendResult = { ...tally("REAL"), test: tally("TEST") };
+  // The press, on the event: who, and the counts — never a name or an address.
+  await recordAuditEvent(db, {
+    actorStaffUserId: actor.id,
+    action: "registration.bulk_resend",
+    entityType: "event",
+    entityId: eventId,
+    metadata: { ...result, messageType: "COMPLETE_DECLARATION" },
+    now,
+  });
+  // One drain for the whole press (§68), never one per row; under the scheduled timing it wakes the job.
+  if (queued.length > 0) drainOutboxAfterResponse();
+  return result;
 }
 
 /**

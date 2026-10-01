@@ -1132,6 +1132,8 @@
       "LEGAL_BATCH_CONFIRMATION_MISMATCH": "Confirmarea scrisă nu este cea cerută. Nu s-a șters nimic — scrie exact textul de sub casetă, de exemplu „DELETE 2”.",
       "LEGAL_BATCH_VERSION_BLOCKED": "Nu s-a șters nimic: între timp, {version} nu se mai poate șterge. Reîncarcă pagina: apare la „Rămân”, cu motivul; celelalte se șterg la apăsarea următoare.",
       "SEND_NOW_ALLOWANCE_SPENT": "Nu s-a trimis nimic: limita planului Mailgun pe azi este atinsă. Alege «Pune la coadă»; emailul pleacă după resetare.",
+      "BULK_RESEND_CLOSED": "Declarația nu se mai poate semna: evenimentul e anulat, încheiat sau a început deja. Nu se retrimite nimic.",
+      "BULK_RESEND_LIMITED": "Retrimiterea către toți a atins limita pe oră pentru acest eveniment. Emailurile de la apăsările de până acum sunt în coadă; încearcă din nou peste o oră.",
       "LEGAL_NUMBER_MISMATCH": "Numărul scris nu este al acestei versiuni. Nu s-a șters nimic — scrie doar numărul, de exemplu „6”.",
       "LEGAL_RETIRE_NEEDS_REASON": "Scrie motivul, între 3 și 200 de caractere. Rămâne lângă versiune, în «Versiuni șterse».",
       "LEGAL_NOTHING_DEPENDS": "Nu s-a șters nimic: între timp nu mai depinde nimic de această versiune. Reîncarcă pagina și șterge-o definitiv.",
@@ -2138,6 +2140,24 @@
         "few": "{count} locuri ținute de familii pentru formulare fără înscriere, până la termenele lor",
         "other": "{count} de locuri ținute de familii pentru formulare fără înscriere, până la termenele lor"
       }
+    },
+    "bulkResend": {
+      "button": "Retrimite declarația tuturor care nu au semnat",
+      "help": "Un link nou de semnare pentru fiecare înscriere care așteaptă declarația; sare peste cei cu email în ultima oră sau încă în coadă.",
+      "nobody": "Nimeni nu așteaptă semnarea declarației.",
+      "confirmTitle": "Retrimiți declarația tuturor celor care nu au semnat?",
+      "waiting": {
+        "one": "{count} persoană așteaptă semnarea",
+        "few": "{count} persoane așteaptă semnarea",
+        "other": "{count} de persoane așteaptă semnarea"
+      },
+      "skipped": {
+        "one": "{count} va fi sărită",
+        "few": "{count} vor fi sărite",
+        "other": "{count} vor fi sărite"
+      },
+      "body": "{waiting}; {skipped}: {recent} cu email în ultima oră sau încă în coadă, {limited} la limita de retrimiteri. Fiecare primește un link nou — cel vechi nu mai merge. Emailurile pleacă la ritmul drumului.",
+      "done": "La coadă: {queued} · sărite: {skipped} — {recent} cu email recent, {limited} la limita de retrimiteri."
     },
     "testRegistrations": {
       "title": "Înscrieri de test",
@@ -7477,6 +7497,11 @@
         "other": "{count} de versiuni șterse."
       },
       "resentNow": "Emailul pleacă acum, fără să aștepte trecerea programată.",
+      "declarationResent": {
+        "one": "Declarația a fost pusă la coadă pentru {count} persoană.",
+        "few": "Declarația a fost pusă la coadă pentru {count} persoane.",
+        "other": "Declarația a fost pusă la coadă pentru {count} de persoane."
+      },
       "reminderSentNow": "Reminderul pleacă acum, fără să aștepte trecerea programată.",
       "reinvitedNow": "Invitația pleacă acum, fără să aștepte trecerea programată.",
       "participantMessageSentNow": {

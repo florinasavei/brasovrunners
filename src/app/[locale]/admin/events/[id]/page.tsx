@@ -86,6 +86,8 @@ import TranslateAllButton from "@/modules/translate/ui/TranslateAllButton";
 import RecallField, { RecallHidden } from "@/shared/forms/recall";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import Panel from "@/shared/ui/Panel";
+import InfoTip from "@/shared/ui/InfoTip";
+import { previewDeclarationResend } from "@/modules/registrations/bulk-resend";
 import { countBibs, spareCardState } from "@/modules/registrations/bibs";
 import { SPARE_BIBS_PER_PRINT, spareRangeOfQuery } from "@/modules/registrations/domain/spare-bibs";
 import { countInterests } from "@/modules/registrations/interest";
@@ -108,6 +110,7 @@ import {
   groupRunDeclarationHoldAction,
   repeatEventAction,
   removeTestRegistrationsAction,
+  resendDeclarationToAllAction,
   saveEventAndTranslationsAction,
   setRepeatPublishAction,
   withdrawInterestAction,
@@ -125,7 +128,7 @@ import { startBoxValues, typedStartOrNull } from "@/modules/events/domain/provis
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
-  searchParams: Promise<{ error?: string; saved?: string; assigned?: string; total?: string; created?: string; applied?: string; offered?: string; notConfirmed?: string; test?: string; notPublished?: string; announced?: string; notice?: string; queued?: string; count?: string; from?: string; to?: string; erased?: string }>;
+  searchParams: Promise<{ error?: string; saved?: string; assigned?: string; total?: string; created?: string; applied?: string; offered?: string; notConfirmed?: string; test?: string; notPublished?: string; announced?: string; notice?: string; queued?: string; count?: string; from?: string; to?: string; erased?: string; recent?: string; limited?: string; testQueued?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -172,7 +175,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   if (!canReadContent(staffUser.role)) redirect(getPathname({ locale, href: "/admin" }));
   // A malformed id is the same 404 an unknown one gets, not the query Postgres refuses (§376).
   if (!isUuid(id)) notFound();
-  const { error, saved, assigned, total, notConfirmed, test, created, applied, offered, notPublished: notPublishedParam, announced, notice: noticeParam, queued, from: spareFrom, to: spareTo, erased } = await searchParams;
+  const { error, saved, assigned, total, notConfirmed, test, created, applied, offered, notPublished: notPublishedParam, announced, notice: noticeParam, queued, from: spareFrom, to: spareTo, erased, recent, limited, testQueued } = await searchParams;
   // What the save told the participants (§331), matched against the words there are — the query
   // string is typed by anybody, and it reaches `t("editor.notice.<x>")`.
   const noticeOutcome = (["update", "none", "cancelled", "cancelledQuiet", "cancelledNobody"] as const).find((kind) => kind === noticeParam);
@@ -419,6 +422,33 @@ export default async function EditEventPage({ params, searchParams }: Props) {
     cancelLabel: words.cancel,
   };
   /*
+    «Retrimite declarația tuturor care nu au semnat» (§NNN): Administrator only, as the single resend.
+    The question's numbers are the press's own query read now (`previewDeclarationResend`): who waits
+    to sign, who would be skipped and why; the real registrations counted, the test ones named apart
+    (§12.6). A press the server would refuse — the event closed, the hour's presses spent — keeps its
+    button and says why beside it, in the refusal banner's own sentence (§592).
+  */
+  const declarationResend = canManageRegistrations(staffUser.role) && internal ? await previewDeclarationResend(db, event.id, now) : null;
+  const declarationResendConfirm: ConfirmSpec | null = declarationResend
+    ? (() => {
+        const { counts, testCounts } = declarationResend;
+        const skipped = counts.skippedRecent + counts.skippedLimited;
+        const body = t("bulkResend.body", {
+          waiting: t(`bulkResend.waiting.${countForm(declarationResend.pending, locale)}`, { count: declarationResend.pending }),
+          skipped: t(`bulkResend.skipped.${countForm(skipped, locale)}`, { count: skipped }),
+          recent: String(counts.skippedRecent),
+          limited: String(counts.skippedLimited),
+        });
+        return {
+          title: t("bulkResend.confirmTitle"),
+          body: testCounts.queued > 0 ? `${body} ${t("participantMessages.testLine", { test: String(testCounts.queued) })}` : body,
+          ...(counts.queued > 0 ? { email: words.email(counts.queued) } : {}),
+          confirmLabel: t("bulkResend.button"),
+          cancelLabel: words.cancel,
+        };
+      })()
+    : null;
+  /*
     A series save tells every date it reaches (§331): the email line is summed in the browser over
     the dates ticked at the press, from each later date's own count — a date already run is told
     nothing and is left out; the date being edited is the base.
@@ -597,6 +627,18 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             </Alert>
           )}
           {saved === "interestNotFound" && <Alert severity="info">{t("queue.interestNotFound")}</Alert>}
+          {/* The declaration resent to everyone who has not signed (§NNN): what was queued, what was skipped and why. */}
+          {saved === "declarationResent" && (
+            <Alert severity={countOf(queued) > 0 ? "success" : "info"} data-testid="declaration-resent">
+              {t("bulkResend.done", {
+                queued: String(countOf(queued)),
+                skipped: String(countOf(recent) + countOf(limited)),
+                recent: String(countOf(recent)),
+                limited: String(countOf(limited)),
+              })}
+              {countOf(testQueued) > 0 ? ` ${t("participantMessages.testLine", { test: String(countOf(testQueued)) })}` : ""}
+            </Alert>
+          )}
           {saved === "eventSeries" && (
             <Alert severity="success">
               {offered
@@ -618,7 +660,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             </Alert>
           )}
           {saved &&
-            !["bibsAssigned", "sparesReserved", "eventsRepeated", "repeatStopped", "repeatPublishOn", "repeatPublishOff", "eventSeries", "interestRemoved", "interestNotFound", "createdPublished", "testRegistrationsStopped", "groupRunDeclarationErased", "groupRunDeclarationsErased"].includes(saved) &&
+            !["bibsAssigned", "sparesReserved", "eventsRepeated", "repeatStopped", "repeatPublishOn", "repeatPublishOff", "eventSeries", "interestRemoved", "interestNotFound", "createdPublished", "testRegistrationsStopped", "groupRunDeclarationErased", "groupRunDeclarationsErased", "declarationResent"].includes(saved) &&
             !(saved === "created" && (created || notPublished)) &&
             !(saved === "event" && offered) && <Alert severity="success">{t("saved")}</Alert>}
           {/* The save that announced the place (§328): public from now on, and nobody was told. */}
@@ -995,6 +1037,28 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                           {t("desk.title")}
                         </GlyphButton>
                       </Stack>
+
+                      {/* 16.0 — the declaration again, to everyone who has not signed (§NNN): beside the queue,
+                          whose «Rezervate» counts them; one press, Administrator only, asks first. */}
+                      {declarationResend && declarationResendConfirm && (
+                        <Box data-testid="bulk-resend">
+                          <Stack direction="row" spacing={0.5} sx={{ alignItems: "center", flexWrap: "wrap" }}>
+                            <ActionForm action={resendDeclarationToAllAction} confirm={declarationResendConfirm} data-testid="bulk-resend-form">
+                              <input type="hidden" name="uiLocale" value={locale} />
+                              <input type="hidden" name="eventId" value={event.id} />
+                              <GlyphButton icon="resend" type="submit" variant="outlined" size="small" disabled={declarationResend.pending + declarationResend.testPending === 0} sx={{ minHeight: 44 }}>
+                                {t("bulkResend.button")}
+                              </GlyphButton>
+                            </ActionForm>
+                            {declarationResend.refusal && (
+                              <InfoTip text={t(declarationResend.refusal === "closed" ? "errors.BULK_RESEND_CLOSED" : "errors.BULK_RESEND_LIMITED")} />
+                            )}
+                          </Stack>
+                          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                            {declarationResend.pending + declarationResend.testPending === 0 ? t("bulkResend.nobody") : t("bulkResend.help")}
+                          </Typography>
+                        </Box>
+                      )}
 
                       {/* 16.1 — the queue as the allocator sees it, and the waiting list in its order (§92). */}
                       <Panel glyph="queue" collapsible level={3} id="box-queue" title={t("editor.boxes.queue.title")} aside={waiting > 0 ? t("editor.boxes.queue.waiting", { waiting }) : undefined}>

@@ -48,6 +48,15 @@ export type AuditAction =
   | "registration.sent_now"
   /** «Retrimite familiei» (§588): one email for every person on the address at the event; the row it was sent for, never a name. */
   | "registration.family_resent"
+  /**
+   * «Retrimite declarația tuturor care nu au semnat» (§NNN): one row for the press, on the event —
+   * the Administrator (the actor) and the counts `{ queued, skippedRecent, skippedLimited }` of real
+   * registrations, the test ones apart under `test`; never a name or an address. Each row it queued
+   * is a manual resend on its own registration's outbox history, as a single press leaves it.
+   */
+  | "registration.bulk_resend"
+  /** The same press refused by its own hourly limit per event (§NNN), recorded as BR-REQ-037-02 criterion 5 asks. */
+  | "registration.bulk_resend_rate_limited"
   /** Race numbers given to an event's confirmed registrations, as a batch (BR-REQ-038-01). */
   | "registration.bibs_assigned"
   // The desk's spare numbers reserved by a print (§444): the range, never a name.

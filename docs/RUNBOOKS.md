@@ -669,6 +669,14 @@ The health page answers 200 again on its own once no row is deferred, overdue or
 the last seven days; a failed row that is not resent keeps the alert up for those seven days,
 which is deliberate — it is the one the club still owes somebody.
 
+**People waiting for their declaration link** after the email was late or lost: the event's page
+in the backoffice (`/admin/events/<id>` → «Înscrierile primite») →
+«Retrimite declarația tuturor care nu au semnat», Administrator only (`DECISIONS.md` §NNN). The
+dialog says how many wait to sign and how many it skips — anyone whose declaration email is still
+queued or left in the last hour, and anyone whose five resends of the hour are spent — and every
+email it queues carries a new link, so the link in the earlier email stops working. It queues;
+the outbox sends at the road's pace. Three presses an hour per event; no state or deadline moves.
+
 ## Legal document version
 
 Applies to the privacy notice, the terms, and the event declaration. All three share the
