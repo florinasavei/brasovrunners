@@ -731,7 +731,16 @@ export async function cachedEmailDelay(now: Date): Promise<EmailDelay | null> {
     const facts = kept
       ? await publicRead(["email.delay-page"], ["email"], () => readEmailDelayFacts(getDb(), now))
       : await publicRead(["email.delay"], ["email"], () => readEmailDelayFacts(getDb(), now), EMAIL_DELAY_SECONDS);
-    return judgeEmailDelay(facts, await cachedEmailWaitMinutes(now), now);
+    const settings = await cachedEmailTiming();
+    // The wait a message queued at an instant is promised: the cadence is the instant's, not now's (§NNN).
+    const waitAt = (instant: Date) =>
+      emailWaitMinutes({
+        timing: settings.timing,
+        pingerMinutes: pingerCadenceMinutes(instant),
+        intervalMinutes: settings.intervalMinutes,
+        governorFloorMinutes: governorEffects(peekNeonBudgetLevel(now)).jobFloorMinutes,
+      });
+    return judgeEmailDelay(facts, waitAt(now), now, waitAt);
   } catch {
     return null;
   }

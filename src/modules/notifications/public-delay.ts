@@ -78,9 +78,10 @@ export async function readEmailDelayFacts<T extends Record<string, unknown>>(db:
   const waiting = sql`(${emailOutbox.status} IN ('PENDING', 'PROCESSING') AND NOT ${clubHold})`;
   /*
     Since its creation — a hand-off to a later run never restarts the wait. A family's row, its hold
-    over, from the hold's end (its not-before, or «Gata»): the person was told that hour.
+    over, from the hold's end (its not-before, or «Gata»): the person was told that hour — whatever
+    came after, a failed attempt included (a retry moves the not-before, never the creation).
   */
-  const waitedSince = sql`(CASE WHEN ${familyMark} AND ${emailOutbox.lastError} IS NULL AND ${emailOutbox.nextAttemptAt} > ${emailOutbox.createdAt} THEN ${emailOutbox.nextAttemptAt} ELSE ${emailOutbox.createdAt} END)`;
+  const waitedSince = sql`(CASE WHEN ${familyMark} AND ${emailOutbox.nextAttemptAt} > ${emailOutbox.createdAt} THEN ${emailOutbox.nextAttemptAt} ELSE ${emailOutbox.createdAt} END)`;
   // Put off by a provider, with its reason, past the hour: an allowance's reset.
   const deferred = sql`(${emailOutbox.status} = 'PENDING' AND ${emailOutbox.lastError} IS NOT NULL AND ${emailOutbox.nextAttemptAt} > ${at(DEFERRED_BEYOND_MS)})`;
   // The mark only the row Mailgun refused carries (`outbox.ts`, `releaseForPause`), its pause not over.

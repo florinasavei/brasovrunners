@@ -114,13 +114,21 @@ export type EmailDelayFacts = {
  * deferred — the reset; a backlog while the pace binds — the queue at the pace; else unknown.
  * **And the scheduler's tick on each:** when a pause ends, an hour frees or an allowance resets,
  * nothing leaves until the next run (`wakeJobs` only forgets the cached quiet), so the promised wait
- * (`promisedWaitMinutes`: the pinger's tick under `scheduled`, nothing under `immediate`) is added to
- * every known estimate — a pause ending at 01:05 under the hourly night cadence is «cel mult 60 de
- * minute», not 5. A queue spread over several runs ends at a run too, so the pace's estimate carries
- * the tick as well. Rounded up to five minutes, never under five: «cel mult» is a ceiling, and a
+ * (the pinger's tick under `scheduled`, nothing under `immediate`) is added to every known estimate —
+ * a pause ending at 01:05 under the hourly night cadence is «cel mult 60 de minute», not 5. **The tick
+ * is the cadence at that instant** (`promisedWaitAt`, the caller's `pingerCadenceMinutes(instant)`),
+ * not at the visitor's: the allowance resets at 02:05 or 03:05 club time, always in the hourly quiet
+ * hours, so a daytime visitor is told reset + 60, not reset + 15; a pause or an hour freeing that
+ * crosses 23:00 is the same. A queue spread over several runs ends at a run too, so the pace's
+ * estimate carries the tick of now (`promisedWaitMinutes`: it drains over the coming runs). Rounded up to five minutes, never under five: «cel mult» is a ceiling, and a
  * precise number would read as a promise.
  */
-export function judgeEmailDelay(facts: EmailDelayFacts, promisedWaitMinutes: number | null, now: Date): EmailDelay {
+export function judgeEmailDelay(
+  facts: EmailDelayFacts,
+  promisedWaitMinutes: number | null,
+  now: Date,
+  promisedWaitAt: (instant: Date) => number | null = () => promisedWaitMinutes,
+): EmailDelay {
   if (facts.queued <= 0 || facts.oldestWaitingSince === null) return { ...NO_EMAIL_DELAY };
   const at = now.getTime();
   const oldestWaitMinutes = Math.max(0, Math.floor((at - facts.oldestWaitingSince.getTime()) / 60_000));
@@ -137,22 +145,30 @@ export function judgeEmailDelay(facts: EmailDelayFacts, promisedWaitMinutes: num
   const paceMinutes = facts.hourlyAllowance !== null && (facts.paceBinding || hourSpent) && facts.aheadOnMailgun > 0 ? atPace : null;
   const untilMinutes = (instant: Date | null) => (instant === null ? null : Math.max(0, (instant.getTime() - at) / 60_000));
   const untilHourFrees = hourSpent ? (untilMinutes(facts.hourFreesAt) ?? 0) : 0;
+  // The next run after an instant waited for: nothing leaves between two runs (above). The tick is the
+  // cadence AT that instant — a reset at 02:05 is met by the night's hourly run, whatever the visitor's hour.
+  const tickAt = (instant: Date) => Math.max(0, promisedWaitAt(instant) ?? 0);
+  const afterNow = (minutes: number) => new Date(at + minutes * 60_000);
   let estimate: number | null;
   if (reason === "paused") {
     const untilPause = untilMinutes(facts.pausedUntil);
     const overHour = facts.hourlyAllowance !== null && facts.aheadOnMailgun > facts.hourlyAllowance;
-    estimate = untilPause === null ? null : Math.max(untilPause, untilHourFrees) + (overHour || hourSpent ? atPace : 0);
+    if (untilPause === null) estimate = null;
+    else {
+      const until = Math.max(untilPause, untilHourFrees);
+      estimate = until + tickAt(afterNow(until)) + (overHour || hourSpent ? atPace : 0);
+    }
   } else if (deferred) {
-    estimate = untilMinutes(facts.deferredUntil);
+    const until = untilMinutes(facts.deferredUntil) ?? 0;
+    estimate = until + tickAt(afterNow(until));
   } else if (hourSpent) {
-    estimate = paceMinutes === null ? null : untilHourFrees + paceMinutes;
+    estimate = paceMinutes === null ? null : untilHourFrees + tickAt(afterNow(untilHourFrees)) + paceMinutes;
   } else {
-    estimate = paceMinutes;
+    // The queue drains over the coming runs, at the cadence of now.
+    estimate = paceMinutes === null ? null : paceMinutes + Math.max(0, promisedWaitMinutes ?? 0);
   }
-  // The next run after the instant waited for: nothing leaves between two runs (above).
-  const tick = Math.max(0, promisedWaitMinutes ?? 0);
 
-  return { late: true, reason, queued: facts.queued, oldestWaitMinutes, estimateMinutes: estimate === null ? null : roundUpToFive(estimate + tick) };
+  return { late: true, reason, queued: facts.queued, oldestWaitMinutes, estimateMinutes: estimate === null ? null : roundUpToFive(estimate) };
 }
 
 /** Up to the next five minutes, never under five: 0 → 5, 12 → 15, 15 → 15, 90.2 → 95. */

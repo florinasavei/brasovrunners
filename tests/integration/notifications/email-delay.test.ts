@@ -110,6 +110,11 @@ describe("§NNN readEmailDelay", () => {
     expect(await readEmailDelay(db, NOW, 15)).toMatchObject({ late: false, queued: 2, oldestWaitMinutes: 4 });
   });
 
+  it("counts a released family row from its release even after one failed attempt", async () => {
+    await insert({ createdAt: ago(30), nextAttemptAt: ago(1), attemptCount: 1, lastError: "transient 503", payloadJson: { sittingHeld: true } });
+    expect(await readEmailDelay(db, NOW, 15)).toMatchObject({ late: false, queued: 1, oldestWaitMinutes: 1 });
+  });
+
   it("counts an unmarked row with a future turn and no reason as waiting, from its creation — it is not a family's hold", async () => {
     await insert({ createdAt: ago(40), nextAttemptAt: ahead(5) });
     expect(await readEmailDelay(db, NOW, 15)).toMatchObject({ late: true, reason: "backlog", queued: 1, oldestWaitMinutes: 40 });

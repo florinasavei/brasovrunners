@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { pingerCadenceMinutes } from "@/modules/jobs/quiet-hours";
 import {
   type EmailDelayFacts,
   isWaitedFor,
@@ -109,6 +110,20 @@ describe("§NNN judgeEmailDelay", () => {
     // Under the immediate timing, unchanged: the pause's end alone, never under five.
     expect(judgeEmailDelay(facts({ pausedUntil: ahead(5), oldestWaitingSince: ago(1) }), null, NOW).estimateMinutes).toBe(5);
     expect(judgeEmailDelay(facts({ pausedUntil: ahead(12), oldestWaitingSince: ago(1) }), null, NOW).estimateMinutes).toBe(15);
+  });
+
+  it("takes the tick at the instant waited for, not at the visitor's hour", () => {
+    // Seen at 12:30 club time (day cadence, 15). The allowance resets at 02:05 club time: the night's hourly run follows.
+    const waitAt = (instant: Date) => pingerCadenceMinutes(instant, 15);
+    const reset = judgeEmailDelay(facts({ deferredUntil: ahead(815) }), 15, NOW, waitAt);
+    expect(reset.estimateMinutes).toBe(875);
+    expect(judgeEmailDelay(facts({ deferredUntil: ahead(815) }), 15, NOW).estimateMinutes).toBe(830);
+    // A pause ending in the daytime keeps the day tick: 5 + 15.
+    expect(judgeEmailDelay(facts({ pausedUntil: ahead(5), oldestWaitingSince: ago(1) }), 15, NOW, waitAt).estimateMinutes).toBe(20);
+    // A pause ending at 23:30 club time (night): 5h+ later, the hourly tick.
+    expect(judgeEmailDelay(facts({ pausedUntil: ahead(660), oldestWaitingSince: ago(1) }), 15, NOW, waitAt).estimateMinutes).toBe(720);
+    // Immediate: no tick anywhere.
+    expect(judgeEmailDelay(facts({ deferredUntil: ahead(815) }), null, NOW, () => null).estimateMinutes).toBe(815);
   });
 
   it("rounds an estimate up to five minutes, never under five", () => {
