@@ -56,6 +56,7 @@ import {
   confirmRegistrationNowAction,
   correctRegisteredNameAction,
   deleteRegistrationAction,
+  offerPlaceAction,
   promoteRegistrationAction,
   setBibNumberAction,
   withdrawConsentAction,
@@ -68,6 +69,8 @@ import { shortTextHash } from "@/modules/legal-documents/domain/signed-text";
 import { withSendNowChoice } from "@/modules/notifications/domain/send-at-once";
 import { sendNowChoiceFor } from "@/modules/notifications/send-now-choice";
 import GivePlaceButton from "@/modules/registrations/ui/GivePlaceButton";
+import OfferPlaceButton from "@/modules/registrations/ui/OfferPlaceButton";
+import { offerDeadlineIfMadeNow } from "@/modules/registrations/give-place-tip";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
@@ -123,6 +126,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   const sendNow = mayManage ? await sendNowChoiceFor(db, locale) : null;
   // Every verb here asks first and says who is emailed (§384); the service decides, as before.
   const words = await confirmWords();
+  // «Trimite-i oferta»'s deadline in its question (§NNN): read only where the button can be drawn.
+  const offerDeadline = registration.status === "WAITLISTED" && mayManage ? await offerDeadlineIfMadeNow(registration.eventId, locale) : null;
   // The timeline's short form with the time (§349): a value beside its label, so capitalised;
   // `dtInline` inside a sentence.
   const dt = (value: Date | null) => (value ? formatDay(value, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true }) : null);
@@ -486,6 +491,27 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
               {deskHidden}
               {/* On a full race, an «i» says why the press will be refused (§592). */}
               <GivePlaceButton eventId={registration.eventId} />
+            </ActionForm>
+          )}
+          {/*
+            «Trimite-i oferta» (§NNN): the ordinary offer, by the organizer's choice — the email and the
+            deadline, no confirmation. The Administrator's; offered while registration is open, since an
+            offer made after the close would already be lapsed (the desk's «Dă-i un loc» is for then).
+          */}
+          {registration.status === "WAITLISTED" && mayManage && offerDeadline !== null && (
+            <ActionForm
+              action={offerPlaceAction}
+              confirm={{
+                title: tr("confirm.offerPlaceTitle"),
+                body: tr("confirm.offerPlaceBody", { name: registration.registeredName, message: tr("emails.types.WAITLIST_SPOT_OFFER"), deadline: offerDeadline }),
+                ...(registration.kind === "TEST" ? {} : { email: words.email(1) }),
+                confirmLabel: tr("desk.offerPlace"),
+                cancelLabel: words.cancel,
+              }}
+              data-testid="offer-place-form"
+            >
+              {deskHidden}
+              <OfferPlaceButton eventId={registration.eventId} />
             </ActionForm>
           )}
           {registration.status === "CONFIRMED" && (

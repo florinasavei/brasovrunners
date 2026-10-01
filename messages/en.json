@@ -291,6 +291,12 @@
         "few": "{count}",
         "other": "{count}"
       },
+      "fillProgress": "{taken} registered of {places} — {confirmed} confirmed, {progress} completing their registration",
+      "fillConfirmed": {
+        "one": "{count}",
+        "few": "{count}",
+        "other": "{count}"
+      },
       "fillPlaces": {
         "one": "{count} place",
         "few": "{count} places",
@@ -336,7 +342,8 @@
       "closed": "Registration has closed for this event.",
       "closedRaceWeek": "Registration has closed — come to the desk with the QR from your email.",
       "cancelled": "The event has been cancelled, so registration has stopped.",
-      "completed": "The event has finished."
+      "completed": "The event has finished.",
+      "fromWaitlist": "Places are given from the waiting list"
     },
     "registrationState": {
       "NOT_APPLICABLE": "No registration needed",
@@ -687,7 +694,8 @@
           "declaration_hold_set": "Declaration kept for a complaint or a dispute",
           "declaration_hold_cleared": "Keep removed from the declaration",
           "promo_consent_changed": "Consent to offers and benefits changed",
-          "family_resent": "Email resent to the family"
+          "family_resent": "Email resent to the family",
+          "offered_by_staff": "Offer sent ahead of the waiting list (“Send them the offer”)"
         }
       },
       "locale": {
@@ -1103,7 +1111,9 @@
       "menuOrderTitle": "Change the menu order?",
       "menuOrderBody": "The site's menu and footer show the pages in the new order, for every visitor, from the next page they open.",
       "resendFamilyTitle": "Resend the family's email?",
-      "resendFamilyBody": "One email goes to their address, for everybody: {names}. Each gets the step they are at, with a new link; the links in the old emails stop working."
+      "resendFamilyBody": "One email goes to their address, for everybody: {names}. Each gets the step they are at, with a new link; the links in the old emails stop working.",
+      "offerPlaceTitle": "Send them the offer?",
+      "offerPlaceBody": "{name} gets the email “{message}” and has until {deadline} to sign; they go ahead of the people before them."
     },
     "errors": {
       "PICTURE_IN_USE": "The picture is used on a page, an event or in an album. Take it out of there first.",
@@ -1155,7 +1165,8 @@
       "LEGAL_NOTHING_DEPENDS": "Nothing was deleted: meanwhile nothing depends on this version any more. Reload the page and delete it permanently.",
       "LEGAL_RETIRE_IN_FORCE": "Nothing was deleted: this is the version in force. Approve the next version first, then you can delete this one.",
       "LEGAL_ALREADY_DELETED": "This version has already been deleted from the list. Its text stays in the archive.",
-      "SEND_NOW_HOUR_SPENT": "Nothing was sent: Mailgun's hourly limit («Hourly limit» under «Emails») has no room right now. Choose «Queue it»; the email leaves on its own once the hour has room again."
+      "SEND_NOW_HOUR_SPENT": "Nothing was sent: Mailgun's hourly limit («Hourly limit» under «Emails») has no room right now. Choose «Queue it»; the email leaves on its own once the hour has room again.",
+      "OFFER_AFTER_CLOSE": "Registration has closed, so an offer would lapse at once; nothing changed. At the desk, use “Give a place”."
     },
     "editor": {
       "draftPreview": {
@@ -2021,7 +2032,12 @@
       },
       "membersOnly": "BVR members only",
       "membersOnlyHelp": "Only signed-in members see it; it is not on the public site. Existing registrations stay.",
-      "membersOnlyShort": "Members only"
+      "membersOnlyShort": "Members only",
+      "waitlistAutoOffer": "Waiting-list offers go out automatically",
+      "waitlistAutoOfferYes": "Yes",
+      "waitlistAutoOfferNo": "No",
+      "waitlistAutoOfferHelp": "On “Yes”, a place that frees up or is added is offered at once to the first person on the waiting list. On “No”, places stay free until you hand them out.",
+      "waitlistAutoOfferHelpMore": "You hand them out from the “Registration queue” with “Send them the offer”, or at the desk with “Give a place”. While anyone waits, newcomers join the list too."
     },
     "preview": {
       "notice": "Staff preview. The status of this text is: {status}. This page is not public and is not indexed.",
@@ -4115,7 +4131,8 @@
       "handedBibNoSpares": "Type the number you hand them, or leave it empty and the site picks one.",
       "handedBibFastTrackOnly": "Only for someone confirmed here, at the desk (the tick above).",
       "nextSpare": "Next spare: {number}",
-      "sparesOut": "The spare numbers have run out: type the number you hand them, or leave it empty and the site picks one."
+      "sparesOut": "The spare numbers have run out: type the number you hand them, or leave it empty and the site picks one.",
+      "offerPlace": "Send them the offer"
     },
     "emails": {
       "title": "The emails participants receive",
@@ -7644,7 +7661,8 @@
       "memberCodeDeleted": "The code was deleted.",
       "declarationHeld": "The declaration is kept. It is not deleted until you remove the keep.",
       "declarationReleased": "The keep was removed.",
-      "menuOrder": "The menu order was saved."
+      "menuOrder": "The menu order was saved.",
+      "registrationOffered": "The offer is sent: they have the usual time to sign the declaration."
     }
   },
   "Network": {

@@ -46,6 +46,6 @@ describe("§384 a TEST row's dialog names no participant email", () => {
     const page = read("src/app/[locale]/admin/registrations/[id]/page.tsx");
     expect(singleEmailCalls(page).every((call) => call.includes('registration.kind === "TEST"'))).toBe(true);
     const gated = (page.match(/registration\.kind === "TEST" \? \{\} : \{ email: words\.email\(1\) \}/g) ?? []).length;
-    expect(gated).toBe(6); // resend, reminder, confirm-on-paper, give-a-place, set-bib, cancel
+    expect(gated).toBe(7); // resend, reminder, confirm-on-paper, give-a-place, send-the-offer (§NNN), set-bib, cancel
   });
 });

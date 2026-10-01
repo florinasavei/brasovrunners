@@ -48,6 +48,7 @@ import {
   checkIn,
   confirmByStaff,
   type EventForRegistration,
+  offerPlaceToByStaff,
   promoteFromWaitlistByStaff,
   submitRegistration,
   undoCheckIn,
@@ -737,6 +738,28 @@ export async function promoteRegistrationByStaff<T extends Record<string, unknow
     now,
   });
   return result;
+}
+
+/**
+ * «Trimite-i oferta» (§NNN): a free place offered to the waiting-list registration the organizer
+ * chose — the ordinary offer and its email, never a confirmation. The Administrator's
+ * (`canManageRegistrations`, §289), not the desk's: it changes a registration the Organizer only
+ * reads. Asserted here, before anything is read, and again in the service, which writes the audit
+ * row in the offer's own transaction.
+ */
+export async function offerPlaceByStaff<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  registrationId: string,
+  now: Date,
+): Promise<Registration> {
+  if (!canManageRegistrations(actor.role)) {
+    throw new DomainError("FORBIDDEN", `role ${actor.role} may not send a waiting-list offer`);
+  }
+  const current = await findRegistrationById(db, registrationId);
+  if (!current) throw new DomainError("NOT_FOUND", "no such registration");
+  const event = await eventForRegistration(db, current.eventId);
+  return offerPlaceToByStaff(db, event, registrationId, actor, now);
 }
 
 /**

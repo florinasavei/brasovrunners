@@ -291,6 +291,12 @@
         "few": "{count} înscriși",
         "other": "{count} de înscriși"
       },
+      "fillProgress": "{taken} din {places} — {confirmed}, {progress} în curs de confirmare",
+      "fillConfirmed": {
+        "one": "{count} confirmat",
+        "few": "{count} confirmați",
+        "other": "{count} de confirmați"
+      },
       "fillPlaces": {
         "one": "{count} loc",
         "few": "{count} locuri",
@@ -336,7 +342,8 @@
       "closed": "Înscrierile s-au închis pentru acest eveniment.",
       "closedRaceWeek": "Înscrierile s-au închis — vino la masă cu QR-ul din email.",
       "cancelled": "Evenimentul a fost anulat, așa că înscrierile s-au oprit.",
-      "completed": "Evenimentul s-a încheiat."
+      "completed": "Evenimentul s-a încheiat.",
+      "fromWaitlist": "Locurile se dau din lista de așteptare"
     },
     "registrationState": {
       "NOT_APPLICABLE": "Nu este necesară înscrierea",
@@ -687,7 +694,8 @@
           "declaration_hold_set": "Declarație păstrată pentru o reclamație sau un litigiu",
           "declaration_hold_cleared": "Păstrarea declarației a fost scoasă",
           "promo_consent_changed": "Acordul pentru oferte și beneficii schimbat",
-          "family_resent": "Email retrimis familiei"
+          "family_resent": "Email retrimis familiei",
+          "offered_by_staff": "Ofertă trimisă înaintea listei de așteptare («Trimite-i oferta»)"
         }
       },
       "locale": {
@@ -1103,7 +1111,9 @@
       "menuOrderTitle": "Schimbi ordinea meniului?",
       "menuOrderBody": "Meniul site-ului și subsolul arată paginile în ordinea nouă, pentru toți vizitatorii, de la următoarea pagină deschisă.",
       "resendFamilyTitle": "Retrimiți emailul familiei?",
-      "resendFamilyBody": "Pleacă un singur email către adresa lor, pentru toți: {names}. Fiecare primește pasul la care a rămas, cu un link nou; linkurile din emailurile vechi nu mai merg."
+      "resendFamilyBody": "Pleacă un singur email către adresa lor, pentru toți: {names}. Fiecare primește pasul la care a rămas, cu un link nou; linkurile din emailurile vechi nu mai merg.",
+      "offerPlaceTitle": "Îi trimiți oferta?",
+      "offerPlaceBody": "{name} primește emailul «{message}» și are până {deadline} să semneze; sare înaintea celor dinaintea lui."
     },
     "errors": {
       "PICTURE_IN_USE": "Imaginea este folosită într-o pagină, într-un eveniment sau într-un album. Scoate-o de acolo mai întâi.",
@@ -1155,7 +1165,8 @@
       "LEGAL_NOTHING_DEPENDS": "Nu s-a șters nimic: între timp nu mai depinde nimic de această versiune. Reîncarcă pagina și șterge-o definitiv.",
       "LEGAL_RETIRE_IN_FORCE": "Nu s-a șters nimic: aceasta este versiunea în vigoare. Aprobă întâi versiunea următoare, apoi o poți șterge.",
       "LEGAL_ALREADY_DELETED": "Versiunea a fost deja ștearsă din listă. Textul ei rămâne în arhivă.",
-      "SEND_NOW_HOUR_SPENT": "Nu s-a trimis nimic: limita pe oră a Mailgun («Limita pe oră» din «Emailuri») nu mai are loc acum. Alege «Pune la coadă»; emailul pleacă singur când ora are din nou loc."
+      "SEND_NOW_HOUR_SPENT": "Nu s-a trimis nimic: limita pe oră a Mailgun («Limita pe oră» din «Emailuri») nu mai are loc acum. Alege «Pune la coadă»; emailul pleacă singur când ora are din nou loc.",
+      "OFFER_AFTER_CLOSE": "Înscrierile s-au închis, deci o ofertă ar expira pe loc; nu s-a schimbat nimic. La masă, folosește «Dă-i un loc»."
     },
     "editor": {
       "draftPreview": {
@@ -2021,7 +2032,12 @@
       },
       "membersOnly": "Doar pentru membrii BVR",
       "membersOnlyHelp": "Îl văd doar membrii autentificați, nu apare pe site. Înscrierile făcute rămân.",
-      "membersOnlyShort": "Doar membri"
+      "membersOnlyShort": "Doar membri",
+      "waitlistAutoOffer": "Ofertele din lista de așteptare pleacă automat",
+      "waitlistAutoOfferYes": "Da",
+      "waitlistAutoOfferNo": "Nu",
+      "waitlistAutoOfferHelp": "Pe „Da”, un loc eliberat sau adăugat se oferă pe loc primului din lista de așteptare. Pe „Nu”, locurile rămân libere până le dai tu.",
+      "waitlistAutoOfferHelpMore": "Le dai din «Coada de înscrieri», cu «Trimite-i oferta», sau, la masă, cu «Dă-i un loc». Cât timp cineva așteaptă, cei noi intră tot pe listă."
     },
     "preview": {
       "notice": "Previzualizare pentru echipă. Starea acestui text este: {status}. Pagina nu este publică și nu este indexată.",
@@ -4115,7 +4131,8 @@
       "handedBibNoSpares": "Scrie numărul pe care i-l dai, sau lasă gol și site-ul alege singur unul.",
       "handedBibFastTrackOnly": "Doar pentru cine e confirmat aici, la masă (bifa de mai sus).",
       "nextSpare": "Rezerva următoare: {number}",
-      "sparesOut": "Numerele de rezervă s-au terminat: scrie numărul pe care i-l dai, sau lasă gol și site-ul alege singur unul."
+      "sparesOut": "Numerele de rezervă s-au terminat: scrie numărul pe care i-l dai, sau lasă gol și site-ul alege singur unul.",
+      "offerPlace": "Trimite-i oferta"
     },
     "emails": {
       "title": "Emailurile trimise participanților",
@@ -7644,7 +7661,8 @@
       "memberCodeDeleted": "Codul a fost șters.",
       "declarationHeld": "Declarația e păstrată. Nu se mai șterge până scoți păstrarea.",
       "declarationReleased": "Păstrarea a fost scoasă.",
-      "menuOrder": "Ordinea meniului a fost salvată."
+      "menuOrder": "Ordinea meniului a fost salvată.",
+      "registrationOffered": "Oferta e trimisă: are termenul obișnuit ca să semneze declarația."
     }
   },
   "Network": {

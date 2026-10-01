@@ -2,9 +2,12 @@ import { eq, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { auditLogs } from "@/db/schema/audit-logs";
 import { events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
+import { staffUsers } from "@/db/schema/staff-users";
+import { NoFreePlaceError } from "@/modules/registrations/domain/capacity";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
@@ -12,6 +15,7 @@ import { WAITLIST_FULL, waitlistRefusalOf } from "@/modules/registrations/domain
 import {
   confirmEmail,
   type EventForRegistration,
+  offerPlaceToByStaff,
   submitRegistration,
   unregister,
 } from "@/modules/registrations/service";
@@ -49,6 +53,8 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
   let eventCounter = 0;
   const createdEventIds: string[] = [];
   const createdParticipantIds: string[] = [];
+  /** The Administrator who sends the offers of §NNN's case, made by that case and removed after. */
+  let staffId: string | null = null;
 
   beforeAll(async () => {
     const translations: LegalDocumentTranslationInput[] = [
@@ -80,9 +86,18 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
   afterAll(async () => {
     // Only this suite's own rows, in FK order — a developer's local database may hold seeded
     // or hand-created events with the same `kind` that must survive this suite running.
+    // The staff offers' trail (§NNN): its rows name this suite's registrations and its own staff user.
+    const ownRegistrations = await db.select({ id: registrations.id }).from(registrations).where(inArray(registrations.eventId, createdEventIds));
+    if (ownRegistrations.length > 0) {
+      await db.delete(auditLogs).where(inArray(auditLogs.entityId, ownRegistrations.map((row) => row.id)));
+    }
     await db.delete(registrations).where(inArray(registrations.eventId, createdEventIds));
     await db.delete(events).where(inArray(events.id, createdEventIds));
     await db.delete(participants).where(inArray(participants.id, createdParticipantIds));
+    if (staffId) {
+      await db.delete(auditLogs).where(eq(auditLogs.actorStaffUserId, staffId));
+      await db.delete(staffUsers).where(eq(staffUsers.id, staffId));
+    }
     await pool.end();
   });
 
@@ -324,6 +339,47 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
       expect(rows.filter((r) => r.status === "CONFIRMED")).toHaveLength(1);
       // The refused ones wrote nothing: they are exactly as they were before the press.
       expect(rows.filter((r) => r.status === "PENDING_EMAIL_CONFIRMATION")).toHaveLength(19);
+    },
+    30_000,
+  );
+
+  it(
+    "§NNN: offers by hand («Nu») and one free place — two staff offers racing for it, exactly one is made",
+    async () => {
+      const event = await createInternalEvent(1);
+      await db.update(events).set({ waitlistAutoOffer: false }).where(eq(events.id, event.id));
+      const [staff] = await db
+        .insert(staffUsers)
+        .values({ email: `offer.race.${Date.now()}@example.ro`, displayName: "Offers", role: "ADMIN" })
+        .returning();
+      staffId = staff.id;
+      const actor = { id: staff.id, role: staff.role };
+
+      // The one place free, nobody offered it (the setting is «Nu»), and two people waiting.
+      const waiting = await Promise.all(["first", "second"].map((name) => createPendingRegistration(event.id, `offer-${name}`)));
+      for (const [index, row] of waiting.entries()) {
+        await db
+          .update(registrations)
+          .set({ status: "WAITLISTED", waitlistedAt: new Date(NOW.getTime() + index * 1000) })
+          .where(eq(registrations.id, row.id));
+      }
+
+      // Two organizers press «Trimite-i oferta» at once, each on a different person.
+      const outcomes = await Promise.allSettled(waiting.map((row) => offerPlaceToByStaff(db, event, row.id, actor, NOW)));
+
+      const made = outcomes.filter((outcome) => outcome.status === "fulfilled");
+      const refused = outcomes.filter((outcome) => outcome.status === "rejected");
+      expect(made).toHaveLength(1);
+      expect(refused).toHaveLength(1);
+      // The loser met the full count under the lock: the place was already promised.
+      expect((refused[0] as PromiseRejectedResult).reason).toBeInstanceOf(NoFreePlaceError);
+
+      const rows = await statusesFor(event.id);
+      expect(rows.filter((r) => r.status === "WAITLIST_OFFERED")).toHaveLength(1);
+      expect(rows.filter((r) => r.status === "WAITLISTED")).toHaveLength(1);
+      // One trail row, for the one offer made.
+      const trail = await db.select().from(auditLogs).where(inArray(auditLogs.entityId, waiting.map((row) => row.id)));
+      expect(trail.filter((row) => row.action === "registration.offered_by_staff")).toHaveLength(1);
     },
     30_000,
   );

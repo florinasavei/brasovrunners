@@ -14,6 +14,7 @@ import {
   createRegistrationByStaff,
   deleteRegistrationByStaff,
   handedBibRefusalCode,
+  offerPlaceByStaff,
   promoteRegistrationByStaff,
   bulkDeleteRegistrationsByStaff,
   setBibNumberByStaff,
@@ -25,7 +26,7 @@ import { findEventForRegistrationById } from "@/modules/events/repository";
 import { effectiveMinimumAge, yearsPhrase } from "@/modules/registrations/domain/age";
 import { UNDER_MINIMUM_AGE } from "@/modules/registrations/fields";
 import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS } from "@/modules/registrations/domain/family";
-import { waitlistRefusalCode } from "@/modules/registrations/domain/waitlist";
+import { offerRefusalCode, waitlistRefusalCode } from "@/modules/registrations/domain/waitlist";
 import { noFreePlaceOutcome } from "@/modules/registrations/domain/capacity";
 import { sendOutboxNow } from "@/modules/notifications/send-now";
 import { sendNowRefusalCode } from "@/modules/notifications/send-at-once";
@@ -107,6 +108,13 @@ function returnTo(
   registrationId: string,
 ): { path: string; params: Record<string, string | undefined> } {
   const back = text(form, "back");
+  // «Coada de înscrieri» on the event's page (§NNN): back to the event, the panel's verb answered there.
+  if (back === "event" && text(form, "eventId")) {
+    return {
+      path: getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: text(form, "eventId") } } }),
+      params: {},
+    };
+  }
   if (back === "desk") {
     return {
       path: getPathname({ locale, href: "/admin/checkin" }),
@@ -164,6 +172,29 @@ export async function promoteRegistrationAction(_previous: FormOutcome | null, f
   } catch (error) {
     // No place free (§589): the sentence names who holds the places, by number, not "check the data".
     outcome = noFreePlaceOutcome(error) ?? outcomeOf(error);
+  }
+  return backToDesk(form, locale, registrationId, outcome);
+}
+
+/**
+ * «Trimite-i oferta» (§NNN): the ordinary offer, with its email and its deadline, to the waiting-list
+ * registration the organizer pressed it on — from «Coada de înscrieri» on the event's page or from the
+ * registration's own page. The Administrator's (`canManageRegistrations`), asserted here and again in
+ * the service. A full event says who holds the places (§589's sentence); a closed registration says
+ * that an offer would already be lapsed.
+ */
+export async function offerPlaceAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = toLocale(form.get("uiLocale"));
+  const registrationId = text(form, "registrationId");
+
+  let outcome: Record<string, string | undefined>;
+  try {
+    const actor = await requireStaffCapability(canManageRegistrations);
+    await offerPlaceByStaff(getDb(), actor, registrationId, new Date());
+    outcome = { saved: "registrationOffered" };
+  } catch (error) {
+    const afterClose = offerRefusalCode(error);
+    outcome = noFreePlaceOutcome(error) ?? (afterClose ? { error: afterClose } : outcomeOf(error));
   }
   return backToDesk(form, locale, registrationId, outcome);
 }

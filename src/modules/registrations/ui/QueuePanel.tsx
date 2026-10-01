@@ -15,7 +15,12 @@ import { countOccupied } from "../repository";
 import { listFamilyReservationsForEvent, listQueueForEvent } from "../admin-repository";
 import { familyOf } from "../family-marker";
 import FamilyChip from "./FamilyChip";
+import OfferPlaceButton from "./OfferPlaceButton";
 import QuietHelp from "@/shared/ui/QuietHelp";
+import ActionForm from "@/shared/forms/ActionForm";
+import { confirmWords } from "@/shared/feedback/confirm-words";
+import type { FormOutcome } from "@/shared/forms/outcome";
+import { offerDeadlineIfMadeNow } from "../give-place-tip";
 
 /**
  * The queue of one event as the allocator sees it (`DECISIONS.md` §92; the owner: "I need to
@@ -26,12 +31,18 @@ import QuietHelp from "@/shared/ui/QuietHelp";
  *
  * Administrator only, because it names people; rendered on the event page beside the test
  * registrations, which is the one way to fill it without ten mailboxes.
+ *
+ * Each waiting row carries «Trimite-i oferta» for the Administrator (`offerAction`, §NNN): the ordinary
+ * offer to the person chosen, ahead of the line — the way places are handed out on an event whose
+ * offers do not go out on their own. Drawn while registration is open (an offer after the close would
+ * already be lapsed); the service asserts the role and decides again under the lock.
  */
 export default async function QueuePanel<T extends Record<string, unknown>>({
   db,
   event,
   waiting,
   now,
+  offerAction,
 }: {
   db: Database<T>;
   /** `timezone` is the event's own zone, which every time on the panel is written in (§349). */
@@ -39,6 +50,11 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
   /** WAITLISTED rows — the page reads it once, for this panel and for the capacity field (§147). */
   waiting: number;
   now: Date;
+  /**
+   * «Trimite-i oferta» on each waiting row (§NNN): the page hands its Server Action down only to a
+   * role that may send it (`canManageRegistrations`); absent, no row carries the button.
+   */
+  offerAction?: (previous: FormOutcome | null, form: FormData) => Promise<FormOutcome | null>;
 }) {
   const t = await getTranslations("Admin");
   const locale = await getLocale();
@@ -79,6 +95,10 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
     the limit's box holds.
   */
   const limit = event.capacity === null ? null : event.waitlistCapacity;
+  // «Trimite-i oferta»'s deadline and the dialog's words (§NNN), read once for every row, and only
+  // where a row can carry the button: null after the close, when no row does.
+  const offerUntil = offerAction && line.some((row) => row.status === "WAITLISTED") ? await offerDeadlineIfMadeNow(event.id, locale) : null;
+  const dialog = offerUntil ? await confirmWords() : null;
 
   const figure = (label: string, value: string | number) => (
     <Box sx={{ minWidth: 96 }}>
@@ -195,6 +215,26 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
                     ? t("queue.since", { when: when(row.waitlistedAt) })
                     : ""}
                 </Typography>
+              )}
+              {row.status === "WAITLISTED" && offerAction && offerUntil && dialog && (
+                <ActionForm
+                  action={offerAction}
+                  confirm={{
+                    title: t("confirm.offerPlaceTitle"),
+                    body: t("confirm.offerPlaceBody", { name: row.registeredName, message: t("emails.types.WAITLIST_SPOT_OFFER"), deadline: offerUntil }),
+                    ...(row.kind === "TEST" ? {} : { email: dialog.email(1) }),
+                    confirmLabel: t("desk.offerPlace"),
+                    cancelLabel: dialog.cancel,
+                  }}
+                  data-testid="queue-offer-form"
+                >
+                  <input type="hidden" name="uiLocale" value={locale} />
+                  <input type="hidden" name="registrationId" value={row.id} />
+                  <input type="hidden" name="eventId" value={event.id} />
+                  <input type="hidden" name="back" value="event" />
+                  {/* On a full event, an «i» says why the press will be refused (§592): one read per event. */}
+                  <OfferPlaceButton eventId={event.id} size="small" />
+                </ActionForm>
               )}
             </Box>
           ))}

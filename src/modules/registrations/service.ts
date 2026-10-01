@@ -1,4 +1,4 @@
-import { and, eq, gt, lte } from "drizzle-orm";
+import { and, count, eq, gt, lt, lte } from "drizzle-orm";
 import { type Participant, participants } from "@/db/schema/participants";
 import { familyPlaceHolds, familySittings } from "@/db/schema/family-entries";
 import type {
@@ -47,7 +47,8 @@ import { CLUB_NAME } from "@/theme/brand";
 import { DomainError } from "@/shared/errors/domain-error";
 import { computeOccupied, computePublicAvailability, hasDirectAvailability, NoFreePlaceError } from "./domain/capacity";
 import { computeDeclarationHoldExpiry, computeFamilyReservationExpiry, computeWaitlistOfferExpiry, confirmationWindow } from "./domain/hold-deadlines";
-import { occupiedForNewcomer, waitlistFullError, waitlistHasRoom, waitlistLength, waitlistRoom } from "./domain/waitlist";
+import { newcomerJoinsLine, occupiedForNewcomer, offerAfterCloseError, waitlistFullError, waitlistHasRoom, waitlistLength, waitlistRoom } from "./domain/waitlist";
+import { canManageRegistrations, type StaffRole } from "@/modules/staff-identity/domain/roles";
 import { deriveAllowedResendMessageType } from "./domain/resend";
 import { expectedSignatures, mismatchedSignatures } from "./domain/signature-name";
 import { allowedFromStatuses, holdsAPlace, isActiveStatus } from "./domain/state-machine";
@@ -369,7 +370,24 @@ async function placeForNewcomer<T extends Record<string, unknown>>(
   await fillAvailableSpots(db, event, now, settings);
   const counts = await repo.countOccupied(db, event.id, now);
   const eligibleWaitlisted = await repo.countEligibleWaitlisted(db, event.id);
-  return { free: hasDirectAvailability({ capacity: event.capacity, occupied: computeOccupied(counts), eligibleWaitlisted }), counts, eligibleWaitlisted };
+  /*
+    Newcomers queue while anybody waits (§NNN, amending §104 and §587): one `WAITLISTED` row, and the
+    newcomer joins the line even with a place free — under the same lock, from the count just taken.
+    Unconditional, whatever the event's `waitlist_auto_offer`: with automatic offers on it is almost
+    never seen, because a freed place is offered in the transaction that frees it, so nobody is left
+    waiting beside a free place (only after the close, when no offer is made, does a desk walk-in now
+    queue behind them); with offers off it is the rule that keeps the queue honest, since a place the
+    organizer has not handed out yet is not the next stranger's. An open offer is not somebody waiting
+    (`newcomerJoinsLine`). A family's form (§543) asks the same question here, so a family that arrives
+    while anybody waits reserves nothing and joins the line whole once its address is confirmed. The
+    capacity formula is untouched; this only says who a free place is for.
+  */
+  const lineFirst = newcomerJoinsLine({ waitlisted: eligibleWaitlisted });
+  return {
+    free: !lineFirst && hasDirectAvailability({ capacity: event.capacity, occupied: computeOccupied(counts), eligibleWaitlisted }),
+    counts,
+    eligibleWaitlisted,
+  };
 }
 
 /** What a family's form got (§543): a reserved place, or the waiting list once the address is confirmed. */
@@ -716,7 +734,8 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
     if (counts.lapsedDeclarationHolds > 0) {
       await repo.expireStaleHolds(db, event, now, { wanting: 1 });
       const after = await repo.countOccupied(db, event.id, now);
-      direct = hasDirectAvailability({ capacity: event.capacity, occupied: computeOccupied(after), eligibleWaitlisted });
+      // Never past somebody waiting (§NNN): a full line with people waiting in it refuses, as above.
+      direct = !newcomerJoinsLine({ waitlisted: eligibleWaitlisted }) && hasDirectAvailability({ capacity: event.capacity, occupied: computeOccupied(after), eligibleWaitlisted });
     }
     if (!direct) throw waitlistFullError(event.waitlistCapacity);
   }
@@ -858,6 +877,20 @@ export async function fillAvailableSpots<T extends Record<string, unknown>>(
   await repo.expireStaleHolds(db, event, now);
   // A completed event is over: its lapsed holds go as before, and nobody is offered a place in it.
   if (event.eventStatus !== "SCHEDULED") return 0;
+  /*
+    «Ofertele din lista de așteptare pleacă automat» — «Nu» (§NNN, amending §104, §587 and §589): the
+    organizer hands out every freed or added place, to the person of their choice («Trimite-i oferta»,
+    `offerPlaceToByStaff`) or to a walk-in at the desk («Dă-i un loc»). The one gate, here and nowhere
+    else: every path that frees or adds a place — a cancellation, an offer's expiry or decline, an
+    erasure, a late signature's release, the capacity raised in the editor (§147), the maintenance
+    job's sweep — reaches the line only through this function, so each obeys it with no check of its
+    own. Read off the event's row inside the caller's transaction, after the caller took the lock, so
+    a setting changed a moment ago is the one obeyed and no caller's copy of the event can be stale.
+    What expired above stays expired: a lapsed offer or hold frees its place either way; the place
+    then waits for the organizer, and newcomers queue behind the people already waiting
+    (`placeForNewcomer`).
+  */
+  if (!(await repo.offersWaitlistAutomatically(db, event.id))) return 0;
 
   /*
     The offer's deadline, once for every candidate (§420): the club's offer window (§377) at the
@@ -901,29 +934,7 @@ export async function fillAvailableSpots<T extends Record<string, unknown>>(
     });
     if (!offered) continue;
     // An offer carries no race number; accepting it is a confirmation, which draws one (§548).
-
-    const idempotencyKey = `registration:${offered.id}:waitlist-offered:${now.toISOString()}`;
-    await enqueueEmail(db, {
-      participantId: offered.participantId,
-      registrationId: offered.id,
-      messageType: "WAITLIST_SPOT_OFFER",
-      locale: offered.locale,
-      recipientEmail: await deliveryEmailOf(db, offered.participantId),
-      /*
-        The offer's own first message: its send re-bases the offer once (§513); a resend never does.
-        Marked as leaving now (§540), because it does: a freed place is the waiting runner's the
-        moment it frees, and under «La trecerea programată» (QA's and production's default) the offer
-        sat in the queue until the outbox job's next pass — up to an hour or two on QA — while the
-        backoffice already said «Ofertă activă» (§596; the owner, 2026-09-30: «când anulez pe cineva,
-        iau automat pe altcineva de pe lista de așteptare»).
-      */
-      payload: markedForNow(startingDeadline(), "now"),
-      idempotencyKey,
-      now,
-      // Sent by the drain below, whatever the timing says; the timing's own drain is not needed for it.
-      drainAfter: false,
-    });
-    leaveNow.push(...(await outboxIdsForKey(db, idempotencyKey)));
+    leaveNow.push(...(await queueSpotOffer(db, offered, now)));
     offers += 1;
   }
   /*
@@ -934,6 +945,37 @@ export async function fillAvailableSpots<T extends Record<string, unknown>>(
   */
   drainOutboxRowsAfterResponse(leaveNow);
   return offers;
+}
+
+/**
+ * The offer's email (`WAITLIST_SPOT_OFFER`, «S-a eliberat un loc pentru tine»), queued in the
+ * transaction that made the offer — the one message every offer sends, whoever made it: the line's
+ * turn (`fillAvailableSpots`) or the organizer's choice («Trimite-i oferta», `offerPlaceToByStaff`,
+ * §NNN). Returns the outbox rows it wrote, for the caller's drain after the response.
+ */
+async function queueSpotOffer<T extends Record<string, unknown>>(db: Transaction<T>, offered: Registration, now: Date): Promise<string[]> {
+  const idempotencyKey = `registration:${offered.id}:waitlist-offered:${now.toISOString()}`;
+  await enqueueEmail(db, {
+    participantId: offered.participantId,
+    registrationId: offered.id,
+    messageType: "WAITLIST_SPOT_OFFER",
+    locale: offered.locale,
+    recipientEmail: await deliveryEmailOf(db, offered.participantId),
+    /*
+      The offer's own first message: its send re-bases the offer once (§513); a resend never does.
+      Marked as leaving now (§540), because it does: a freed place is the waiting runner's the
+      moment it frees, and under «La trecerea programată» (QA's and production's default) the offer
+      sat in the queue until the outbox job's next pass — up to an hour or two on QA — while the
+      backoffice already said «Ofertă activă» (§596; the owner, 2026-09-30: «când anulez pe cineva,
+      iau automat pe altcineva de pe lista de așteptare»).
+    */
+    payload: markedForNow(startingDeadline(), "now"),
+    idempotencyKey,
+    now,
+    // Sent by the caller's drain, whatever the timing says; the timing's own drain is not needed for it.
+    drainAfter: false,
+  });
+  return outboxIdsForKey(db, idempotencyKey);
 }
 
 // --- §10.6 The public free-place count ---------------------------------------------------------
@@ -983,6 +1025,12 @@ export type PublicPlaces = {
    */
   offered: number;
   waitlisted: number;
+  /**
+   * The confirmed registrations alone (`OccupiedCounts.confirmed`, §NNN), from the same count: the
+   * rest of the occupied places — a pending declaration, an open offer, a family's hold — are in
+   * progress. `kind` is in no condition. 0 for an uncapped event.
+   */
+  confirmed: number;
 };
 
 /**
@@ -1002,7 +1050,7 @@ export async function readPublicPlaces<T extends Record<string, unknown>>(
   event: { id: string; capacity: number | null; waitlistCapacity: number | null },
   now: Date,
 ): Promise<PublicPlaces> {
-  if (event.capacity === null) return { availablePlaces: null, waitlistRoom: null, waiting: 0, offered: 0, waitlisted: 0 };
+  if (event.capacity === null) return { availablePlaces: null, waitlistRoom: null, waiting: 0, offered: 0, waitlisted: 0, confirmed: 0 };
 
   const counts = await repo.countOccupied(db, event.id, now);
   const eligibleWaitlisted = await repo.countEligibleWaitlisted(db, event.id);
@@ -1018,6 +1066,7 @@ export async function readPublicPlaces<T extends Record<string, unknown>>(
     // The line's two halves, from the same two counts — no query of their own (§NNN).
     offered: line.openOffers,
     waitlisted: line.waitlisted,
+    confirmed: counts.confirmed,
   };
 }
 
@@ -1052,7 +1101,8 @@ async function assertWaitlistCanTakeOneMore<T extends Record<string, unknown>>(
   const line = { waitlistCapacity: row.waitlistCapacity, waitlisted, openOffers: counts.unexpiredWaitlistOfferedHolds };
   if (waitlistHasRoom(line)) return;
   const occupied = occupiedForNewcomer({ ...line, occupied: computeOccupied(counts), lapsedDeclarationHolds: counts.lapsedDeclarationHolds });
-  if (hasDirectAvailability({ capacity: row.capacity, occupied, eligibleWaitlisted: waitlisted })) return;
+  // Somebody waiting: a newcomer joins the line whatever is free (`newcomerJoinsLine`), and the line is full.
+  if (!newcomerJoinsLine({ waitlisted }) && hasDirectAvailability({ capacity: row.capacity, occupied, eligibleWaitlisted: waitlisted })) return;
   throw waitlistFullError(row.waitlistCapacity);
 }
 
@@ -3152,6 +3202,102 @@ export async function promoteFromWaitlistByStaff<T extends Record<string, unknow
   });
   wakeMaintenance(event, now, settings, promoted.offersMade > 0 ? offerDeadline(event, now, settings) : null);
   return promoted.registration;
+}
+
+/**
+ * «Trimite-i oferta» (§NNN, amending §589): the organizer sends a free place to the waiting-list
+ * registration of their choice — the ordinary offer, with the ordinary deadline and email, ahead of
+ * the people before them in the line. The verb for an event whose places are handed out by hand
+ * (`events.waitlist_auto_offer` false, «Nu»), and it works on either.
+ *
+ * `promoteFromWaitlistByStaff` up to the transition, and nothing past it: under the event lock, a
+ * cancelled or finished event refused, the lapsed holds expired, the registration `WAITLISTED`, the
+ * registration still open (an offer made after the close would be born lapsed — `fillAvailableSpots`
+ * refuses to make one then too), and a counted free place — `computeOccupied(counts) < capacity`, the
+ * allocator's own count, else the same `NoFreePlaceError` and its sentence (§589, §592). Then the
+ * row becomes `WAITLIST_OFFERED` with `offerDeadline`'s instant, the offer's email is queued exactly
+ * as an automatic offer's (`queueSpotOffer`), the audit row names who offered, to whom and how many
+ * waited before them, and the maintenance job is told the deadline. It confirms nothing: the runner
+ * signs the declaration from the email, as any offer — the paper confirmation is «Dă-i un loc»'s.
+ *
+ * Never two promises for one place: the offer occupies the place it was given (`countOccupied`
+ * counts an open offer), so a second press for the same place, by anybody, meets the full count under
+ * the same lock. `kind` is in no condition here (§30). The Administrator's (`canManageRegistrations`,
+ * §289): it changes a registration, which the Organizer reads and does not change — asserted here and
+ * again by the action.
+ */
+export async function offerPlaceToByStaff<T extends Record<string, unknown>>(
+  db: Database<T>,
+  event: EventForRegistration,
+  registrationId: string,
+  actor: { id: string; role: StaffRole },
+  now: Date,
+): Promise<Registration> {
+  if (!canManageRegistrations(actor.role)) {
+    throw new DomainError("FORBIDDEN", `role ${actor.role} may not send a waiting-list offer`);
+  }
+  // The club's offer length (§377), before the lock and from the memo when it is fresh.
+  const settings = await currentDeadlines(db);
+  const result = await db.transaction(async (tx) => {
+    const lockedEvent = await repo.lockEventForCapacity(tx, event.id);
+    if (!lockedEvent) throw new DomainError("NOT_FOUND", "no such event");
+    const locked = withLockedRow(event, lockedEvent);
+    // As «Dă-i un loc» (§331): nobody is offered a place in a race that will not run, or is over.
+    if (locked.eventStatus !== "SCHEDULED") {
+      throw new DomainError("VALIDATION_ERROR", `the event is ${locked.eventStatus}`);
+    }
+    await repo.expireStaleHolds(tx, locked, now);
+
+    const current = await repo.findRegistrationById(tx, registrationId);
+    if (!current || current.eventId !== event.id) throw new DomainError("NOT_FOUND", "no such registration");
+    if (current.status !== "WAITLISTED") {
+      throw new DomainError("CONFLICT", `only a waiting-list registration can be offered a place; this one is ${current.status}`);
+    }
+    // The ordinary offer's deadline (§420): the club's window, capped by the close and the start.
+    const holdExpiresAt = offerDeadline(locked, now, settings);
+    if (holdExpiresAt.getTime() <= now.getTime()) throw offerAfterCloseError();
+    const counts = await repo.countOccupied(tx, event.id, now);
+    if (lockedEvent.capacity !== null && computeOccupied(counts) >= lockedEvent.capacity) {
+      // Who holds the places, by the same counts and in the same sentence as «Dă-i un loc» (§589, §592).
+      throw new NoFreePlaceError(lockedEvent.capacity, counts);
+    }
+
+    // How many waited before this person, for the trail: the line's own order (`lockOldestWaitlisted`).
+    const [ahead] = current.waitlistedAt
+      ? await tx
+          .select({ count: count() })
+          .from(registrations)
+          .where(and(eq(registrations.eventId, event.id), eq(registrations.status, "WAITLISTED"), lt(registrations.waitlistedAt, current.waitlistedAt)))
+      : [{ count: 0 }];
+
+    const offered = await repo.transitionRegistration(tx, {
+      id: current.id,
+      to: "WAITLIST_OFFERED",
+      fromStatuses: ["WAITLISTED"],
+      changes: { offerCreatedAt: now, holdExpiresAt },
+      now,
+    });
+    if (!offered) throw new DomainError("CONFLICT", "this registration changed state concurrently");
+    // An offer carries no race number; accepting it is a confirmation, which draws one (§548).
+    const leaveNow = await queueSpotOffer(tx, offered, now);
+    await recordAuditEvent(tx, {
+      actorStaffUserId: actor.id,
+      participantId: offered.participantId,
+      action: "registration.offered_by_staff",
+      entityType: "registration",
+      entityId: offered.id,
+      metadata: { from: current.status, to: offered.status, aheadOf: ahead?.count ?? 0 },
+      now,
+    });
+    // As in `promoteFromWaitlistByStaff`: the expiry above may have released another lapsed hold, and
+    // this transaction holds the lock that can offer it; on «Nu» the gate makes it a no-op (§NNN).
+    await fillAvailableSpots(tx, locked, now, settings);
+    return { offered, leaveNow, holdExpiresAt };
+  });
+  // After this request's response, once the offer has committed (§596), as the automatic offer's.
+  drainOutboxRowsAfterResponse(result.leaveNow);
+  wakeMaintenance(event, now, settings, result.holdExpiresAt);
+  return result.offered;
 }
 
 /**

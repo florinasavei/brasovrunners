@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  newcomerWouldQueue,
   publicFill,
   registrationCta,
   type RegistrationCtaInput,
@@ -140,18 +141,47 @@ describe("BR-REQ-034-01 an open event", () => {
       availablePlaces: 4,
       offered: 0,
       waitlisted: 0,
+      fromWaitlist: false,
     });
   });
 
-  it("§NNN carries the line's two halves while places are free: the open offers and the people with no offer yet", () => {
+  it("§NNN carries the line's two halves while places are free, and gives the places from the line", () => {
     expect(registrationCta(event({ availablePlaces: 2, waiting: 3, offered: 1, waitlisted: 2 }), DURING)).toEqual({
       kind: "OPEN",
       availablePlaces: 2,
       offered: 1,
       waitlisted: 2,
+      fromWaitlist: true,
     });
-    // A cache entry written before §NNN has neither: nought, never a guess from `waiting`.
-    expect(registrationCta(event({ availablePlaces: 2, waiting: 3 }), DURING)).toEqual({ kind: "OPEN", availablePlaces: 2, offered: 0, waitlisted: 0 });
+    // A cache entry written before the halves were counted: no halves to name, but the line's
+    // length says somebody is in it, so the door is the line's all the same.
+    expect(registrationCta(event({ availablePlaces: 2, waiting: 3 }), DURING)).toEqual({
+      kind: "OPEN",
+      availablePlaces: 2,
+      offered: 0,
+      waitlisted: 0,
+      fromWaitlist: true,
+    });
+  });
+
+  it("§NNN gives the places from the line for people waiting, never for an open offer alone (its holder has a place)", () => {
+    expect(registrationCta(event({ availablePlaces: 3, offered: 0, waitlisted: 1, waiting: 1 }), DURING)).toMatchObject({ kind: "OPEN", fromWaitlist: true });
+    // An offer is not somebody waiting (§160, `newcomerJoinsLine`): the free places are a newcomer's, and say so.
+    expect(registrationCta(event({ availablePlaces: 3, offered: 1, waitlisted: 0, waiting: 1 }), DURING)).toEqual({
+      kind: "OPEN",
+      availablePlaces: 3,
+      offered: 1,
+      waitlisted: 0,
+      fromWaitlist: false,
+    });
+    // An uncapped event with somebody still waiting (a cap lifted while offers are the organizer's): the line's door too.
+    expect(registrationCta(event({ availablePlaces: null, waitlisted: 2, waiting: 2 }), DURING)).toMatchObject({ kind: "OPEN", availablePlaces: null, fromWaitlist: true });
+  });
+
+  it("§NNN offers nothing to join when the line in front of the free places is at its limit, or the event keeps no list", () => {
+    // A newcomer is not given a free place past the line (`newcomerJoinsLine`), and the line takes nobody more.
+    expect(registrationCta(event({ availablePlaces: 2, waitlisted: 3, waiting: 3, waitlistCapacity: 3, waitlistRoom: 0 }), DURING)).toEqual({ kind: "WAITLIST_FULL" });
+    expect(registrationCta(event({ availablePlaces: 2, waitlisted: 1, waiting: 1, waitlistCapacity: 0, waitlistRoom: 0 }), DURING)).toEqual({ kind: "FULL_NO_WAITLIST" });
   });
 
   it("shows no number for an uncapped event", () => {
@@ -161,6 +191,7 @@ describe("BR-REQ-034-01 an open event", () => {
       availablePlaces: null,
       offered: 0,
       waitlisted: 0,
+      fromWaitlist: false,
     });
   });
 });
@@ -209,6 +240,7 @@ describe("BR-REQ-035-01 a full event whose waiting list has a limit (§348)", ()
       availablePlaces: 2,
       offered: 0,
       waitlisted: 0,
+      fromWaitlist: false,
     });
   });
 
@@ -254,5 +286,21 @@ describe("§346 publicFill — capacity minus the allocator's own free-place cou
     // capacity, but the clamp holds anyway rather than trust that between two reads of the row.
     expect(publicFill(50, 55)).toEqual({ taken: 0, capacity: 50 }); // more "free" than capacity
     expect(publicFill(50, -5)).toEqual({ taken: 50, capacity: 50 }); // a negative free count
+  });
+});
+
+describe("§NNN newcomerWouldQueue — the card's rule, which the registration form asks too", () => {
+  it("is true with no free place, and with places free while somebody is WAITLISTED", () => {
+    expect(newcomerWouldQueue({ availablePlaces: 0 })).toBe(true);
+    expect(newcomerWouldQueue({ availablePlaces: 3, waitlisted: 1, waiting: 1 })).toBe(true);
+  });
+
+  it("reads a cache entry from before the halves were counted by the line's length", () => {
+    expect(newcomerWouldQueue({ availablePlaces: 3, waiting: 2 })).toBe(true);
+  });
+
+  it("is false with places free and nobody waiting — an open offer alone included", () => {
+    expect(newcomerWouldQueue({ availablePlaces: 3, waitlisted: 0, waiting: 1 })).toBe(false);
+    expect(newcomerWouldQueue({ availablePlaces: 3 })).toBe(false);
   });
 });
