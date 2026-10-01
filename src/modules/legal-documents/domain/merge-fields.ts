@@ -103,6 +103,17 @@ export const LIST_STATES_MERGE_FIELD = "participantListStates";
 export const LIST_SOCIALS_MERGE_FIELD = "participantListSocials";
 
 /**
+ * The privacy notice's marker for the race number beside a confirmed name on the public list
+ * (§NNN, amending §396; the owner: "I also want to show the BID as a column"). The same two-in-one
+ * as the states and the socials above: filled, when the notice is shown, with the words of the
+ * column's own heading, quoted (`registrations/list-number-words.ts`) — «numărul de concurs» /
+ * «race number» — and the switch: the list shows its «Nr.» column only while the notice in force,
+ * in every language, names it (`describesListNumbers`). A notice approved before it does not, and
+ * the list under it is exactly what it was.
+ */
+export const LIST_NUMBERS_MERGE_FIELD = "participantListNumbers";
+
+/**
  * The event's own minimum age (§329) as a merge field (§440, amending §393): "16 ani" / "16
  * years", the unit included like `{{holdMinutes}}` so Romanian's "20 de ani" comes out right
  * (`yearsPhrase`). The group-run declarations state it in a sentence of its own — "Declar că am
@@ -288,6 +299,7 @@ export const MERGE_FIELDS = [
   ...DEADLINE_MERGE_FIELDS,
   LIST_STATES_MERGE_FIELD,
   LIST_SOCIALS_MERGE_FIELD,
+  LIST_NUMBERS_MERGE_FIELD,
   NEWSLETTER_MERGE_FIELD,
   TEAM_PAGE_MERGE_FIELD,
   PROMOTIONAL_MATERIALS_MERGE_FIELD,
@@ -433,6 +445,15 @@ export function describesListStates(body: unknown): boolean {
  */
 export function describesListSocials(body: unknown): boolean {
   return mergeFieldsIn(body).has(LIST_SOCIALS_MERGE_FIELD);
+}
+
+/**
+ * Whether a privacy notice describes the race number beside a confirmed name on the public list
+ * (§NNN): it names `{{participantListNumbers}}`. The gate for the list's «Nr.» column — the club's
+ * approval of such a text is the switch, as for the states (§396) and the socials (§500). Pure.
+ */
+export function describesListNumbers(body: unknown): boolean {
+  return mergeFieldsIn(body).has(LIST_NUMBERS_MERGE_FIELD);
 }
 
 /**

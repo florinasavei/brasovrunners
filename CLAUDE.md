@@ -228,6 +228,8 @@ it is the authority, this is the summary):
     for the ground, not one «trail» — «Regenerează din șabloane» makes the drafts; the texts in force keep their words until approved.
     Since §568 the four declarations name serious injury and death among the inherent risks and waive the claims for them
     «în limitele permise de lege» (never for harm the club causes: Codul civil art. 1355) — the lawyer reads that paragraph first.
+    Since §NNN the notice's template also names the race number on the public list (`{{participantListNumbers}}`); until a
+    notice from that template is approved, the list shows no numbers (`/admin/tasks` carries the row `listNumbersNotice`).
 17. **Re-grade every event's difficulty** — migration `0104` put each event in the middle step of its old band (§526). Open each
     event in `/admin/events` and choose the band and «Nivelul» (one of the band's three levels, 1–15 in order); the guide («Ghid») explains the scale.
 18. **Open the members' zone and the FAQ** — approve the members' zone address, `/ro/zona-membri` (it sits outside the backoffice,
