@@ -227,7 +227,7 @@ describe("registrations.kind — a test registration is a real one to the queue"
     it("pushes N synthetic participants through submission and confirmation", async () => {
       const event = await createInternalEvent(db, 2);
 
-      const result = await addTestRegistrations(db, admin, { eventId: event.id, count: 3 });
+      const result = await addTestRegistrations(db, admin, { eventId: event.id, count: 3, now: NOW });
       expect(result.created).toBe(3);
 
       const rows = await db
@@ -244,7 +244,7 @@ describe("registrations.kind — a test registration is a real one to the queue"
 
     it("gives every synthetic participant a distinct address in the reserved domain", async () => {
       const event = await createInternalEvent(db, null);
-      await addTestRegistrations(db, admin, { eventId: event.id, count: 4 });
+      await addTestRegistrations(db, admin, { eventId: event.id, count: 4, now: NOW });
 
       const rows = await db.select().from(participants);
       expect(rows).toHaveLength(4);
@@ -259,7 +259,7 @@ describe("registrations.kind — a test registration is a real one to the queue"
     it("refuses an Editor: registrations are the Administrator's (§10.2)", async () => {
       const event = await createInternalEvent(db, null);
       expect(
-        await codeOf(addTestRegistrations(db, editor, { eventId: event.id, count: 1 })),
+        await codeOf(addTestRegistrations(db, editor, { eventId: event.id, count: 1, now: NOW })),
       ).toBe("FORBIDDEN");
     });
 
@@ -267,12 +267,12 @@ describe("registrations.kind — a test registration is a real one to the queue"
       const event = await createInternalEvent(db, null);
       for (const count of [0, -1, 999]) {
         expect(
-          await codeOf(addTestRegistrations(db, admin, { eventId: event.id, count })),
+          await codeOf(addTestRegistrations(db, admin, { eventId: event.id, count, now: NOW })),
           String(count),
         ).toBe("VALIDATION_ERROR");
       }
       // Named, so the editor's form points at the count box and keeps what was typed (§315).
-      const refused = await addTestRegistrations(db, admin, { eventId: event.id, count: 0 }).catch((error: unknown) => error);
+      const refused = await addTestRegistrations(db, admin, { eventId: event.id, count: 0, now: NOW }).catch((error: unknown) => error);
       expect(isDomainError(refused) && refused.fields).toEqual(["count"]);
     });
   });
@@ -282,7 +282,7 @@ describe("registrations.kind — a test registration is a real one to the queue"
       const event = await createInternalEvent(db, null);
 
       const real = await registerAndConfirm(db, event, "ana@example.test", "REAL");
-      await addTestRegistrations(db, admin, { eventId: event.id, count: 3 });
+      await addTestRegistrations(db, admin, { eventId: event.id, count: 3, now: NOW });
 
       const removed = await removeTestRegistrations(db, admin, event.id);
       expect(removed.registrationsRemoved).toBe(3);
@@ -300,7 +300,7 @@ describe("registrations.kind — a test registration is a real one to the queue"
 
     it("is repeatable: removing twice is not an error", async () => {
       const event = await createInternalEvent(db, null);
-      await addTestRegistrations(db, admin, { eventId: event.id, count: 2 });
+      await addTestRegistrations(db, admin, { eventId: event.id, count: 2, now: NOW });
 
       await removeTestRegistrations(db, admin, event.id);
       const second = await removeTestRegistrations(db, admin, event.id);
@@ -323,7 +323,7 @@ describe("registrations.kind — a test registration is a real one to the queue"
     it("omits test rows from the export and keeps them in the backoffice list", async () => {
       const event = await createInternalEvent(db, null);
       await registerAndConfirm(db, event, "ana@example.test", "REAL");
-      await addTestRegistrations(db, admin, { eventId: event.id, count: 2 });
+      await addTestRegistrations(db, admin, { eventId: event.id, count: 2, now: NOW });
 
       const exported = await listRegistrationsForAdmin(db, { excludeTest: true });
       expect(exported).toHaveLength(1);
