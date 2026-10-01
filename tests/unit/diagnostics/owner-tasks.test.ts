@@ -104,9 +104,15 @@ describe("owner tasks", () => {
       const item = catalogue.Admin.tasks.items.listNumbersNotice;
       expect(item.title && item.todo && item.done && item.how.length > 0).toBeTruthy();
       expect(item.how.join("\n")).toContain("/admin/legal");
-      // §421: the step says who is covered, never "every list" or "no other setting".
-      expect(item.how[2]).toContain("—");
-      expect(item.how[2]).not.toMatch(/no other setting|fără altă setare/);
+      // §NNN: the club writes to the runners registered under the earlier notice BEFORE it approves the new one,
+      // with the backoffice's own message, and names the participant's own control for withdrawing.
+      const approveStep = item.how.findIndex((step) => /Aprobă și publică|Approve and publish/.test(step));
+      const messageStep = item.how.findIndex((step) => step.includes(catalogue.Admin.participantMessages.link));
+      expect(messageStep).toBeGreaterThanOrEqual(0);
+      expect(messageStep).toBeLessThan(approveStep);
+      expect(item.how.join("\n")).toContain(catalogue.Registrations.list.optOut);
+      expect(item.how.join("\n")).not.toContain("„—”");
+      expect(item.how.join("\n")).not.toContain("“—”");
       expect(item.how.every((step) => step.length <= 200)).toBe(true);
     }
   });

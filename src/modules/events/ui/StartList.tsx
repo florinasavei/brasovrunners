@@ -8,7 +8,6 @@ import { publicListClosesAt, publicListStillOpen } from "@/modules/deadlines/dom
 import { holdPageUntil } from "@/modules/public-cache/page-lifetime";
 import {
   cachedDeadlines,
-  cachedFirstNumbersNoticeVersion,
   cachedFirstStatesNoticeVersion,
   cachedListNumbersDisclosed,
   cachedListSocialsDisclosed,
@@ -166,12 +165,11 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
     before. With the gate on there is always such a notice; null only if the two reads disagree for
     a moment, and then nobody beyond the confirmed is read.
   */
-  const firstNumbersNotice = numbersOn ? await cachedFirstNumbersNoticeVersion() : null;
   const firstStatesNotice = statesOn ? await cachedFirstStatesNoticeVersion() : null;
   const others = firstStatesNotice !== null ? await cachedStartListOthersCounts(event.id, firstStatesNotice) : { pending: 0, waitlisted: 0 };
   const view = startListPage(named, anonymous, requestedPage, START_LIST_PAGE_SIZE, others.pending + others.waitlisted);
   const [participants, otherRows] = await Promise.all([
-    view.namedLimit > 0 ? cachedStartListPage(event.id, view.namedOffset, view.namedLimit, socialsOn, firstNumbersNotice) : [],
+    view.namedLimit > 0 ? cachedStartListPage(event.id, view.namedOffset, view.namedLimit, socialsOn, numbersOn) : [],
     firstStatesNotice !== null && view.othersLimit > 0
       ? cachedStartListOthersPage(event.id, firstStatesNotice, view.othersOffset, view.othersLimit, socialsOn)
       : [],
@@ -213,7 +211,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
     — a column that would read «—» on every row says nothing to a reader, so the table stays as it
     was. `bibNumber` is absent from every row without the gate (the query did not select it).
   */
-  const numbersShown = firstNumbersNotice !== null && participants.some((participant) => typeof participant.bibNumber === "number");
+  const numbersShown = numbersOn && participants.some((participant) => typeof participant.bibNumber === "number");
   /** The number's cell: the number, or «—» for a row that has none. A hidden row has an empty cell instead. */
   const numberCell = (bibNumber: number | null | undefined) =>
     numbersShown ? (
