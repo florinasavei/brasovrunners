@@ -1,6 +1,6 @@
 {
   "id": "07244cb4-3d36-4001-99fa-7c778962d887",
-  "prevId": "0753f984-f3f2-486c-81e6-ee27dc84f592",
+  "prevId": "d046bc80-4c4d-4fd6-b097-889ad880f489",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -423,37 +423,21 @@
           "primaryKey": false,
           "notNull": false
         },
-        "superseded_by_token_id": {
-          "name": "superseded_by_token_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "superseded_by_token_id": {
+          "name": "superseded_by_token_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {
-        "email_action_tokens_superseded_by_idx": {
-          "name": "email_action_tokens_superseded_by_idx",
-          "columns": [
-            {
-              "expression": "superseded_by_token_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "where": "\"email_action_tokens\".\"superseded_by_token_id\" IS NOT NULL",
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
         "email_action_tokens_one_active_per_registration_purpose": {
           "name": "email_action_tokens_one_active_per_registration_purpose",
           "columns": [
@@ -548,6 +532,22 @@
             }
           ],
           "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "email_action_tokens_superseded_by_idx": {
+          "name": "email_action_tokens_superseded_by_idx",
+          "columns": [
+            {
+              "expression": "superseded_by_token_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"email_action_tokens\".\"superseded_by_token_id\" IS NOT NULL",
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -1447,6 +1447,13 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": false
+        },
+        "waitlist_auto_offer": {
+          "name": "waitlist_auto_offer",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
         },
         "confirmation_opens_days_before": {
           "name": "confirmation_opens_days_before",
