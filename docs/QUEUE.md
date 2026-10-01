@@ -14,16 +14,22 @@ decision or a click only the club can make · **released** — on production, wi
 Where things stand at the end of 2026-09-30, written so that a session with no access to the laptop can carry on
 (the dispatcher's own notes lived under `D:/tmp/handoff/` on the laptop; from here on this page is the queue).
 
-- **Production:** `BR-V2.48` plus two hotfixes straight to `main` (#305 «10:00 (start eveniment)», #307 the card's
-  «când» row never clipped). **qa and QA:** `BR-V2.50` (02:24 on 2026-10-01; smoke ok) — §594–§599 on top of §585–§593:
-  the full card says the room left on the waiting list, a cancellation's offer email leaves at once, both starts named
-  with a chequered flag, the distance marked «aproximativ» (migration `0116`), the two hotfixes' decision entries.
-- **The morning, from the phone (2026-10-01):** open the QA site (its address: SETUP.md §26) and look at the race's card and page (the
-  two times, «≈» on a distance you tick, a cancellation on the QA race → the next person's offer email leaves at once).
-  Then release everything that is in qa: GitHub app → the repository → **Actions** → **release** → **Run workflow** →
-  `pr` = `310` (the last batch pull request, already merged: the run continues from the release step), `baseline` empty
-  → Run. It merges `qa` into `main`, runs the production migration (`0116`) and waits for production's health; the
-  run's Summary page says each step. Twenty to thirty minutes. Nothing on the laptop is needed.
+- **Production:** `BR-V2.50` plus the hotfix #312 (the phone card's short weekday) — since 03:36 on 2026-10-01, and
+  not by plan: the merge watcher brought the main → qa pull request #313 «up to date» with `gh pr update-branch`, which
+  merges the base into the head — qa into main — so the release of `BR-V2.50` happened by itself; the gated production
+  migration (`0116`) was approved under the standing «approve / deploy prod for me», production's health answered ok,
+  and the watcher now never updates a pull request whose head is `main`. **Nothing of `BR-V2.50` is left to release.**
+  **qa and QA:** `BR-V2.50` + the docs of #311/#313; the batch `BR-V2.51` (pull request #314: the race card's two times
+  aligned as a list where the row wraps, a picture in a description opens large in place with pinch-zoom, the listing's
+  filters reach the past events, the hotfix #312's entry) merges into qa on green — the laptop's watcher does it, and if
+  the laptop is off, the «Merge» button on #314 does the same once its checks are green.
+- **The morning, from the phone (2026-10-01):** open the QA site (its address: SETUP.md §26) once #314 is merged
+  (the card's «când» row on the race, a tap on a picture in the description, a filter with the past events).
+  Then release it: GitHub app → the repository → **Actions** → **release** → **Run workflow** → `pr` = `314`
+  (already merged: the run continues from the release step), `baseline` empty → Run. It merges `qa` into `main`
+  (no migration is due: the newest is `0116`, already on production) and waits for production's health; the run's
+  Summary page says each step. Twenty to thirty minutes. Nothing on the laptop is needed. **Do not run `pr 310`
+  again:** it is on production already.
 - **The release** is the owner's «ok release» after checking QA: from the phone, the label `ship` on the last batch PR into
   qa runs the landing and the release on GitHub Actions (`docs/RUNBOOKS.md` § Every release: the label); from a PC,
   `node scripts/ship.mjs <batch PR> BR-V2.50-2026-09-27 BR-V2.46-2026-09-27 "<title>"`. No migration is due
