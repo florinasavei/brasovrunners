@@ -76,7 +76,7 @@ describe("§NNN «Cât costă» per service, per month and per year", () => {
     expect(html).toContain(" · Pro");
     // A CSS grid of three columns, never a `<table>` that scrolls sideways on a phone.
     expect(html).not.toContain("<table");
-    expect(html).toContain("grid-template-columns:minmax(0, 1fr) auto auto");
+    expect(html).toContain("grid-template-columns:minmax(min-content, 1fr) auto auto");
   });
 
   it("says each amount in both periods, VAT named per amount and the estimate marked", () => {
@@ -131,6 +131,6 @@ describe("§NNN «Cât costă» per service, per month and per year", () => {
     expect(cell(html, "plan-cost-zitadel-year")).toBe("free");
     expect(cell(html, "plan-cost-scheduler-month")).toBe("free");
     expect(html).toContain('data-testid="quiet-help"');
-    expect(html).toContain("twelve times the monthly price");
+    expect(html).toContain("the other is worked out from it");
   });
 });

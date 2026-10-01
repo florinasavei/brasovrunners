@@ -3050,10 +3050,10 @@
         "free": "gratuit",
         "notTaken": "nimic încă",
         "usageUnknown": "la consum — ritmul nu e măsurat aici",
-        "billedMonthly": "{month} {currency}/lună · {year} {currency} pe an",
-        "billedMonthlyPlusVat": "{month} {currency}/lună + TVA · {year} {currency} pe an",
-        "billedYearly": "{year} {currency} pe an · circa {month} {currency}/lună",
-        "billedYearlyPlusVat": "{year} {currency} pe an + TVA · circa {month} {currency}/lună",
+        "billedMonthly": "{month} {currency}/lună, facturat lunar · {year} {currency} pe an",
+        "billedMonthlyPlusVat": "{month} {currency}/lună + TVA, facturat lunar · {year} {currency} pe an + TVA",
+        "billedYearly": "{year} {currency} pe an, facturat anual · circa {month} {currency}/lună",
+        "billedYearlyPlusVat": "{year} {currency} pe an + TVA, facturat anual · circa {month} {currency}/lună + TVA",
         "usageBoth": "circa {month} {currency}/lună, la consum · circa {year} {currency} pe an",
         "estimated": "Din care baza de date e o estimare la ritmul lunii, nu o factură."
       },
@@ -3065,7 +3065,7 @@
         "total": "Total",
         "unmeasured": "ritm nemăsurat",
         "plusVat": "+ TVA",
-        "help": "„Pe lună” e prețul lunar al firmei sau a douăsprezecea parte din factura pe an. „Pe an” e de 12 ori prețul lunar. „≈” e o estimare la ritmul lunii.",
+        "help": "„Pe lună” și „Pe an”: unul e suma din factura firmei, celălalt e calculat din ea. „≈” e o estimare la ritmul lunii.",
         "name": {
           "domain": "Domeniul",
           "mailgun": "Mailgun",
@@ -3078,7 +3078,7 @@
       "nextSpend": {
         "mailgun": "Prima cheltuială care urmează: o lună de Mailgun Basic, {cost}.",
         "vercel": "Prima cheltuială care urmează: Vercel Pro, {cost}.",
-        "none": "Nu urmează nicio cheltuială nouă: ce e luat temporar (Mailgun, Vercel Pro) se oprește după cursă.",
+        "none": "Nu urmează nicio cheltuială nouă: ce e luat temporar se poate opri după cursă.",
         "mailgunMore": "Se cumpără pentru o singură cursă, atunci când într-o zi se așteaptă mai multe înscrieri decât acoperă e-mailurile gratuite.",
         "vercelMore": "Apare doar dacă site-ul începe să ceară bani pentru participare sau dacă codul site-ului se mută pe contul clubului."
       },
@@ -3143,8 +3143,8 @@
             "freeGives": "Pro: {seats}, câte {seatPrice} USD pe lună, cu {credit} USD de consum inclus.",
             "ceiling": "Nu are o limită măsurată aici: creditul de consum se vede în contul Vercel.",
             "whenCrossed": "Consumul peste credit se plătește în plus, pe aceeași factură.",
-            "bumpBack": "Se ia pentru lunile cursei; după cursa din 21 noiembrie se revine la Hobby.",
-            "more": "Pro a fost luat pe 30 septembrie 2026, ca funcțiile site-ului să nu se oprească înainte de cursă.",
+            "bumpBack": "Se ia pentru lunile cursei și se poate da înapoi după ea; nota de pe card spune când și de ce.",
+            "more": "Pro se ia ca funcțiile site-ului să nu se oprească înainte de cursă; nota de pe card spune când a fost luat.",
             "close": "Pe Pro, regula „doar necomercial” nu se mai aplică."
           }
         },

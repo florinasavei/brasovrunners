@@ -69,7 +69,7 @@ export default function PlanCostTable({ locale, rows, monthly, yearly, labels }:
       ? { text: labels.free, quiet: true }
       : { text: totals.map((t) => amount(t.amount, t.currency, t.estimated, t.plusVat)).join(", "), quiet: false };
 
-  const figure = { textAlign: "right", fontVariantNumeric: "tabular-nums", overflowWrap: "anywhere" } as const;
+  const figure = { textAlign: "right", fontVariantNumeric: "tabular-nums" } as const;
   // The total line opens with a rule across all three cells.
   const ruled = { borderTop: 1, borderColor: "divider", pt: 0.75 } as const;
   const amountCell = (value: Cell, testId: string, last = false) => (
@@ -98,7 +98,7 @@ export default function PlanCostTable({ locale, rows, monthly, yearly, labels }:
       data-testid="plan-cost-table"
       sx={{
         display: "grid",
-        gridTemplateColumns: "minmax(0, 1fr) auto auto",
+        gridTemplateColumns: "minmax(min-content, 1fr) auto auto",
         columnGap: 2,
         rowGap: 0.75,
         alignItems: "baseline",
@@ -117,7 +117,7 @@ export default function PlanCostTable({ locale, rows, monthly, yearly, labels }:
       </Box>
       {rows.map((row) => (
         <Box role="row" key={row.id} data-testid={`plan-cost-${row.id}`} sx={{ display: "contents" }}>
-          <Typography variant="body2" component="div" role="rowheader" sx={{ overflowWrap: "anywhere" }}>
+          <Typography variant="body2" component="div" role="rowheader" >
             {labels.names[row.id]}
             {row.planToday && (
               <Typography component="span" variant="caption" color="text.secondary">

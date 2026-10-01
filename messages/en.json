@@ -3050,10 +3050,10 @@
         "free": "free",
         "notTaken": "nothing yet",
         "usageUnknown": "by usage — the pace is not measured here",
-        "billedMonthly": "{month} {currency}/month · {year} {currency} a year",
-        "billedMonthlyPlusVat": "{month} {currency}/month + VAT · {year} {currency} a year",
-        "billedYearly": "{year} {currency} a year · about {month} {currency}/month",
-        "billedYearlyPlusVat": "{year} {currency} a year + VAT · about {month} {currency}/month",
+        "billedMonthly": "{month} {currency}/month, billed monthly · {year} {currency} a year",
+        "billedMonthlyPlusVat": "{month} {currency}/month + VAT, billed monthly · {year} {currency} a year + VAT",
+        "billedYearly": "{year} {currency} a year, billed yearly · about {month} {currency}/month",
+        "billedYearlyPlusVat": "{year} {currency} a year + VAT, billed yearly · about {month} {currency}/month + VAT",
         "usageBoth": "about {month} {currency}/month, by usage · about {year} {currency} a year",
         "estimated": "Of which the database is an estimate at this month's pace, not an invoice."
       },
@@ -3065,7 +3065,7 @@
         "total": "Total",
         "unmeasured": "pace not measured",
         "plusVat": "+ VAT",
-        "help": "“Per month” is the vendor's monthly price or a twelfth of its yearly invoice. “Per year” is twelve times the monthly price. “≈” is an estimate at this month's pace.",
+        "help": "“Per month” and “Per year”: one is the amount on the vendor's invoice, the other is worked out from it. “≈” is an estimate at this month's pace.",
         "name": {
           "domain": "Domain",
           "mailgun": "Mailgun",
@@ -3078,7 +3078,7 @@
       "nextSpend": {
         "mailgun": "The next thing to cost money: one month of Mailgun Basic, {cost}.",
         "vercel": "The next thing to cost money: Vercel Pro, {cost}.",
-        "none": "No new spend is coming: what is taken for now (Mailgun, Vercel Pro) stops after the race.",
+        "none": "No new spend is coming: what is taken for now can be dropped after the race.",
         "mailgunMore": "Bought for a single race, when a day is expected to bring more entries than the free emails cover.",
         "vercelMore": "It arrives only if the site starts asking for money to take part, or if the site's code moves to the club's own account."
       },
@@ -3143,8 +3143,8 @@
             "freeGives": "Pro: {seats} at {seatPrice} USD a month each, with {credit} USD of usage included.",
             "ceiling": "No limit measured here: the usage credit is on the Vercel dashboard.",
             "whenCrossed": "Usage beyond the credit is billed on top, on the same invoice.",
-            "bumpBack": "Taken for the race's months; back to Hobby after the 21 November race.",
-            "more": "Pro was taken on 30 September 2026 so the site's functions do not stop before the race.",
+            "bumpBack": "Taken for the race's months and can be given back after it; the card's note says when and why.",
+            "more": "Pro is taken so the site's functions do not stop before the race; the card's note says when it was taken.",
             "close": "On Pro, the “non-commercial only” rule no longer applies."
           }
         },
