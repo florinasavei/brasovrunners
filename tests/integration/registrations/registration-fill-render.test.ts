@@ -191,7 +191,7 @@ describe("§346 the fill line beside the register button, from the cached count"
     const event = await openRace(50);
     await confirm(event.id, 12);
     const html = await render("cros-plin");
-    expect(html).toContain("12 înscriși din 50 de locuri");
+    expect(html).toContain("12 înscriși din 50 de locuri</p>");
     expect(html).toContain("38 de locuri libere");
   });
 
@@ -245,7 +245,7 @@ describe("§346 the fill line beside the register button, from the cached count"
     await confirm(event.id, 2, "PENDING_DECLARATION", 6);
     await db.update(registrations).set({ holdExpiresAt: new Date("2026-09-20T10:00:00.000Z") }).where(eq(registrations.status, "PENDING_DECLARATION"));
     const html = await render("cros-plin");
-    expect(html).toContain("6 înscriși din 10 locuri");
+    expect(html).toContain("6 înscriși din 10 locuri</p>");
     expect(html).toContain("4 locuri libere");
     expect(html).not.toContain("în curs de confirmare");
   });

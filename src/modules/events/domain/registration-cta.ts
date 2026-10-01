@@ -172,13 +172,14 @@ export type PublicFill = {
  * "12 înscriși din 50 de locuri" — the free places read the other way round (§346; the owner:
  * "I need to show the total number registered out of the available places").
  *
- * **Not a second count.** `taken` is the event's places minus the free places the button
- * already shows, and those come from `readPublicAvailability`, the allocator's own formula
- * (AGENTS.md §10.6). So the two lines beside the button can never disagree — "12 of 50" beside
- * "38 places left" is one number read twice — and what "taken" means is exactly what the
- * formula means by occupied: confirmed places, held places (a declaration still to sign, a
- * waiting-list offer still open) and the waiting list's claim on anything free. A form sent but
- * not yet confirmed by email takes no place and is not counted (BR-REQ-034-01 criterion 5).
+ * **Not a second count.** The first number is the occupied count the free places are built on
+ * (`occupiedForNewcomer`, from `readPublicAvailability`, the allocator's own formula, AGENTS.md
+ * §10.6), at most the capacity: confirmed places and held places (a declaration still to sign, a
+ * waiting-list offer still open, a family's hold). The waiting list's claim on free places is not
+ * in it; it is reported separately as `kept = (capacity - free) - occupied`, floored at nought, so
+ * taken + kept + free = capacity whenever a free line shows and the lines beside the button never
+ * disagree. An entry cached before the counts existed falls back to capacity - free. A form sent
+ * but not yet confirmed by email takes no place and is not counted (BR-REQ-034-01 criterion 5).
  *
  * It says nothing the page did not say already: with the free places public, the taken places
  * are the event's size minus them. What is new is the size, and the size is a fact about the

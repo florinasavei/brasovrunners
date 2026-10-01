@@ -1032,9 +1032,11 @@ export type PublicPlaces = {
    */
   confirmed: number;
   /**
-   * The occupied places (`computeOccupied`, §NNN): confirmed, a pending declaration, an open offer
-   * and a family's hold — not clamped, and not the display's «taken», which a waiting list's claim
-   * on free places raises. The places line's «în curs de confirmare» is this minus `confirmed`.
+   * The occupied places as `occupiedForNewcomer` counts them (`computeOccupied`, §NNN, less the lapsed
+   * declaration holds when the waiting list has no room): confirmed, a pending declaration, an open
+   * offer and a family's hold. The same count `availablePlaces` is built on; the display's first
+   * number is this value clamped to the capacity. The places line's «în curs de confirmare» is this
+   * minus `confirmed`.
    * 0 for an uncapped event.
    */
   occupied: number;
