@@ -12,7 +12,7 @@ import { emailSampleEventFacts } from "@/modules/notifications/email-copy-fields
 /**
  * §585 (amending §388 and §392) — the owner, 2026-09-30: «la elevație, trebuie să pot pune
  * "estimativ"». One function, `elevationWords`, says the climb on every surface: «≈ 350 m D+» on
- * the pill, «circa 350 m diferență de nivel (estimativ)» wherever the words stand alone — the
+ * the pill, «circa 350 m diferență de nivel» wherever the words stand alone — the
  * pill's tooltip and what a screen reader hears, the emails' facts block and its text twin, the
  * calendar entry — and never the bare number for a climb the club ticked «Estimativ».
  */
@@ -35,7 +35,7 @@ afterEach(() => {
   currentLocale = "ro";
 });
 
-const LONG = { ro: "circa 350 m diferență de nivel (estimativ)", en: "about 350 m of elevation gain (estimated)" } as const;
+const LONG = { ro: "circa 350 m diferență de nivel", en: "about 350 m of elevation gain" } as const;
 const SHORT = { ro: "≈ 350 m D+", en: "≈ 350 m climb" } as const;
 const EXACT = { ro: { short: "350 m D+", long: "350 m diferență de nivel" }, en: { short: "350 m climb", long: "350 m elevation gain" } } as const;
 
@@ -180,7 +180,7 @@ describe("§585 the calendar entry's facts line (§107, §159)", () => {
     nightOverride: false,
   };
 
-  it("writes «↗ circa 350 m diferență de nivel (estimativ)» in each language", () => {
+  it("writes «↗ circa 350 m diferență de nivel» in each language", () => {
     expect(calendarDescription(event, { locale: "ro", t: translator(ro) })).toContain(`↗ ${LONG.ro}`);
     expect(calendarDescription(event, { locale: "en", t: translator(en) })).toContain(`↗ ${LONG.en}`);
     expect(calendarDescription({ ...event, elevationGainEstimated: false }, { locale: "ro", t: translator(ro) })).toContain(`↗ ${EXACT.ro.long}`);

@@ -13,7 +13,7 @@ import { emailSampleEventFacts } from "@/modules/notifications/email-copy-fields
 /**
  * §598 (the twin of §585, amending §388 and §392) — the owner, 2026-09-30: «la distanță vreau să
  * pot pune aproximativ, ca și la elevație, tot așa cu bifă». One function, `distanceWords`, says the
- * distance on every surface: «≈ 10 km» on the pill, «circa 10 km (aproximativ)» wherever the words
+ * distance on every surface: «≈ 10 km» on the pill, «circa 10 km» wherever the words
  * stand alone — the pill's tooltip and what a screen reader hears, the emails' facts block and its
  * text twin, the calendar entry, the share picture — and an exact distance exactly as before.
  */
@@ -36,7 +36,7 @@ afterEach(() => {
   currentLocale = "ro";
 });
 
-const LONG = { ro: "circa 12 km (aproximativ)", en: "about 12 km (approximate)" } as const;
+const LONG = { ro: "circa 12 km", en: "about 12 km" } as const;
 const SHORT = "≈ 12 km";
 const EXACT = "12 km";
 
@@ -89,7 +89,7 @@ describe("§598 distanceWords — the one source of the distance's words", () =>
     const tEn = await getTranslations("Event");
     const formatEn = await getFormatter();
     expect(distanceWords({ distanceMeters: 10_500, distanceEstimated: true }, tEn, (value) => formatEn.number(value, { maximumFractionDigits: 1 }))?.long).toBe(
-      "about 10.5 km (approximate)",
+      "about 10.5 km",
     );
   });
 });
@@ -181,11 +181,11 @@ describe("§598 the calendar entry's facts line (§107, §159)", () => {
     nightOverride: false,
   };
 
-  it("writes «🏃 circa 12 km (aproximativ)» in each language, and «🏃 12 km» when exact", () => {
+  it("writes «🏃 circa 12 km» in each language, and «🏃 12 km» when exact", () => {
     expect(calendarDescription(event, { locale: "ro", t: translator(ro) })).toContain(`🏃 ${LONG.ro}`);
     expect(calendarDescription(event, { locale: "en", t: translator(en) })).toContain(`🏃 ${LONG.en}`);
     const exact = calendarDescription({ ...event, distanceEstimated: false }, { locale: "ro", t: translator(ro) });
     expect(exact).toContain(`🏃 ${EXACT}`);
-    expect(exact).not.toContain("aproximativ");
+    expect(exact).not.toContain(LONG.ro);
   });
 });
