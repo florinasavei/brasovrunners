@@ -65,11 +65,20 @@ describe("RegistrationJourney, the declaration step (§NNN)", () => {
     it(`${locale} · the scheduled-delivery clause stays when the outbox waits`, async () => {
       for (const where of ["emailJustSent", "emailHeldUntil", "onThisPage", "emailReceived"] as const) {
         const html = await render(locale, where, 30);
-        expect(html).toContain(PHRASES[locale][where]);
+        if (where !== "emailJustSent") expect(html).toContain(PHRASES[locale][where]);
         expect(html).toMatch(locale === "ro" ? /în cel mult 30 de minute/ : /within 30 minutes at the most/);
       }
     });
   }
+
+  it("the scheduled emailJustSent says the email is on its way, names the wait once, and never says it was just sent", async () => {
+    for (const locale of ["ro", "en"] as const) {
+      const html = await render(locale, "emailJustSent", 30);
+      expect(html).toContain(locale === "ro" ? "din emailul care pleacă spre tine în cel mult 30 de minute" : "from the email on its way to you");
+      expect(html.match(/30 (de minute|minutes)/g)).toHaveLength(1);
+      expect(html).not.toMatch(/tocmai|just sent|have just/);
+    }
+  });
 
   it("the held variant carries the phrase it was given", async () => {
     expect(await render("ro", "emailHeldUntil")).toContain("cu 7 zile înainte de start");
