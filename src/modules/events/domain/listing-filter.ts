@@ -318,7 +318,7 @@ export function offersAnything(offer: FilterOffer): boolean {
 }
 
 /**
- * The past section's rows under the listing's filter (§267, §413, §NNN): the very predicate the
+ * The past section's rows under the listing's filter (§267, §413, §602): the very predicate the
  * upcoming cards pass through (`matchesListingFilter`), over the one cached window the page read,
  * the row the lead already shows between seasons (§167) left out by its id. Every match comes back,
  * newest first as the window is; the section draws the first twelve of them.
@@ -333,7 +333,7 @@ export function matchingPastEvents<T extends FilterableEvent & { id: string }>(
 }
 
 /**
- * Every row the listing's panel reads its offer off (§413, §NNN): the dated cards, the undated ones
+ * Every row the listing's panel reads its offer off (§413, §602): the dated cards, the undated ones
  * and the past window, each once by id. The past section narrows by the same boxes, so a value only
  * a past event carries — last spring's trail race — is a box that changes what the page shows.
  */

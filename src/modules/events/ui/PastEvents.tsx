@@ -33,7 +33,7 @@ export const PAST_EVENTS_SHOWN = 12;
  * is past is something a reader goes looking for. A closed `<details>` is also a section that
  * costs a phone nothing to scroll past.
  *
- * **The listing's filters reach it** (§413, §NNN — the owner, 2026-10-01: «Mi-ar trebui aceleași
+ * **The listing's filters reach it** (§413, §602 — the owner, 2026-10-01: «Mi-ar trebui aceleași
  * filtre și pentru evenimentele din trecut»): the same parsed address and the same predicate as the
  * cards above (`matchingPastEvents`), over the page's one cached window, and a filtered page opens
  * the fold. A filtered address is the live twin (§549), a route of its own, so a tick remounts the

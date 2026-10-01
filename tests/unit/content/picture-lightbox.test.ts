@@ -17,7 +17,7 @@ import {
 import { withClientWords } from "../../helpers/client-words";
 
 /**
- * BR-REQ-041-01, `DECISIONS.md` §NNN — a picture in an event's description (and every other rich
+ * BR-REQ-041-01, `DECISIONS.md` §601 — a picture in an event's description (and every other rich
  * text the site renders) opens large in place on a tap, and Back, Escape, the ✕ or a tap closes it.
  * The owner, 2026-10-01: «în descrierea full, când dau click pe o poză, vreau să se facă mare (dar
  * nu deschisă ca și poză) și să o pot închide apoi».
@@ -40,7 +40,7 @@ const doc = (attrs: Record<string, unknown>) => ({
 });
 const withoutStyles = (html: string) => html.replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
 
-describe("§NNN the figure keeps its server markup and gains the preview's button", () => {
+describe("§601 the figure keeps its server markup and gains the preview's button", () => {
   it("wraps the same lazy <img> in a button named by the picture, with no dialog in the page", () => {
     const html = withoutStyles(renderToStaticMarkup(withClientWords(createElement(RichText, { body: doc({}) }))));
     expect(html).toMatch(/^<figure/);
@@ -102,7 +102,7 @@ function fakeHistory(initial: unknown = { __NA: true, tree: "page" }) {
   return history;
 }
 
-describe("§NNN Back closes the preview instead of leaving the page", () => {
+describe("§601 Back closes the preview instead of leaving the page", () => {
   it("pushes one entry on open that keeps the router's own state", () => {
     const history = fakeHistory();
     pushPreviewEntry(history);
@@ -144,7 +144,7 @@ describe("§NNN Back closes the preview instead of leaving the page", () => {
   });
 });
 
-describe("§NNN the preview itself", () => {
+describe("§601 the preview itself", () => {
   it("is a modal dialog named by the picture, with the ✕ and its word, the picture contained", async () => {
     const { default: PictureLightboxDialog } = await import("@/modules/content/rich-text/ui/PictureLightboxDialog");
     const html = withoutStyles(

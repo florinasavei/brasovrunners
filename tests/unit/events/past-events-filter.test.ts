@@ -12,7 +12,7 @@ import {
 import type { PublicEvent } from "@/modules/events/repository";
 
 /**
- * BR-REQ-041-01 — the listing's filters reach the past section (`DECISIONS.md` §NNN, amending §413;
+ * BR-REQ-041-01 — the listing's filters reach the past section (`DECISIONS.md` §602, amending §413;
  * the owner, 2026-10-01: «Mi-ar trebui aceleași filtre și pentru evenimentele din trecut»). One parsed
  * address, one predicate (`matchesListingFilter`, through `matchingPastEvents`), over the page's one
  * past window; the panel offers what the past carries too; a filtered page opens the fold and its
@@ -113,7 +113,7 @@ const past = (query: Record<string, string>) =>
   markup(createElement(PastEvents, { rows: PAST, now: NOW, filter: parseListingFilter(query), facts, shownAbove: undefined })).then(withoutStyles);
 const summary = (html: string) => (/<summary[^>]*>([\s\S]*?)<\/summary>/.exec(html)?.[1] ?? "").replace(/<[^>]+>/g, "");
 
-describe("§NNN the past section passes through the listing's own filter", () => {
+describe("§602 the past section passes through the listing's own filter", () => {
   it("keeps the two of five past events a filter matches, newest first, and leaves out the one the lead shows", () => {
     const filter = parseListingFilter({ type: "RACE", surface: "TRAIL" });
     expect(matchingPastEvents(PAST, filter, facts).map((event) => event.title)).toEqual(["Cursa de toamnă", "Cursa de primăvară"]);

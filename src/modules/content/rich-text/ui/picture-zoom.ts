@@ -1,5 +1,5 @@
 /**
- * The large preview's pinch-zoom (§NNN), as plain arithmetic the dialog calls from its Pointer
+ * The large preview's pinch-zoom (§601), as plain arithmetic the dialog calls from its Pointer
  * Events: no React, no DOM, so the gestures are proven in a unit test. The owner, 2026-10-01: «Și
  * să pot face zoom pinch pe poze».
  *

@@ -13,14 +13,14 @@ import {
 } from "@/modules/content/rich-text/ui/picture-zoom";
 
 /**
- * BR-REQ-041-01, `DECISIONS.md` §NNN — the large preview's own pinch-zoom. The owner, 2026-10-01:
+ * BR-REQ-041-01, `DECISIONS.md` §601 — the large preview's own pinch-zoom. The owner, 2026-10-01:
  * «Și să pot face zoom pinch pe poze». The arithmetic the dialog's Pointer Events call, proven
  * without a browser.
  */
 
 const SIZE = { width: 400, height: 800 };
 
-describe("§NNN two fingers zoom about their midpoint, within 1–4", () => {
+describe("§601 two fingers zoom about their midpoint, within 1–4", () => {
   it("doubles the scale when two fingers 100 px apart move to 200 px, the midpoint staying put", () => {
     const zoom = pinch(IDENTITY, [{ x: 150, y: 400 }, { x: 250, y: 400 }], [{ x: 100, y: 400 }, { x: 300, y: 400 }], SIZE);
     expect(zoom.scale).toBe(2);
@@ -45,7 +45,7 @@ describe("§NNN two fingers zoom about their midpoint, within 1–4", () => {
   });
 });
 
-describe("§NNN one finger pans a zoomed picture, never out of the frame", () => {
+describe("§601 one finger pans a zoomed picture, never out of the frame", () => {
   it("moves the picture by the finger's travel at 2×", () => {
     expect(pan({ scale: 2, x: -100, y: -100 }, { x: 50, y: 50 }, { x: 80, y: 20 }, SIZE)).toEqual({ scale: 2, x: -70, y: -130 });
   });
@@ -60,7 +60,7 @@ describe("§NNN one finger pans a zoomed picture, never out of the frame", () =>
   });
 });
 
-describe("§NNN a double tap toggles 2× and back", () => {
+describe("§601 a double tap toggles 2× and back", () => {
   it("zooms to 2× about the tap, then back to 1×", () => {
     const zoomed = toggleZoom(IDENTITY, { x: 100, y: 200 }, SIZE);
     expect(zoomed).toEqual({ scale: 2, x: -100, y: -200 });
@@ -79,7 +79,7 @@ describe("§NNN a double tap toggles 2× and back", () => {
   });
 });
 
-describe("§NNN only a tap closes the preview — a pinch's or a pan's end never does", () => {
+describe("§601 only a tap closes the preview — a pinch's or a pan's end never does", () => {
   const down = { x: 100, y: 100, time: 1000 };
 
   it("is a tap within 300 ms and 10 px", () => {

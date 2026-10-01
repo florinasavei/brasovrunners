@@ -7,12 +7,12 @@ import { leavePreviewEntry, previewPopListener, pushPreviewEntry } from "./pictu
 
 /**
  * The large preview's own layer, fetched the first time a reader taps a picture: until then the
- * page carries this file's trigger and nothing of the dialog (§NNN, §577 — no request in idle).
+ * page carries this file's trigger and nothing of the dialog (§601, §577 — no request in idle).
  */
 const PictureLightboxDialog = lazy(() => import("./PictureLightboxDialog"));
 
 /**
- * A description picture that opens large in place (§NNN): the owner, 2026-10-01, «în descrierea
+ * A description picture that opens large in place (§601): the owner, 2026-10-01, «în descrierea
  * full, când dau click pe o poză, vreau să se facă mare (dar nu deschisă ca și poză) și să o pot
  * închide apoi».
  *

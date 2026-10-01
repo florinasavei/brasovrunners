@@ -188,7 +188,7 @@ describe("§470 the listing draws the lead as the first card of its one grid", (
   });
 
   it("gives the upcoming grid, the «Data se anunță» section (§533) and the past fold one grid (`CARD_GRID_SX`): one to three equal columns", () => {
-    // The past fold moved to a module of its own (§NNN), the same grid.
+    // The past fold moved to a module of its own (§602), the same grid.
     const pastFold = readFileSync("src/modules/events/ui/PastEvents.tsx", "utf8");
     expect(page.match(/sx=\{CARD_GRID_SX\}/g)).toHaveLength(2);
     expect(pastFold.match(/sx=\{CARD_GRID_SX\}/g)).toHaveLength(1);

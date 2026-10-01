@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.50-2026-09-27 -->
+<!-- PROJECT_BASELINE: BR-V2.51-2026-09-27 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V2.50-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.51-2026-09-27`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -375,6 +375,11 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 174. Amends criterion 164. The club's identity is one line inside the footer's «Despre club, contact și termeni» fold, after its links and before the weather credit and the build stamp — «<legal name> (<site name>) · CIF <CIF>» at the panel's own size and colour — drawn at most once on a page, and nothing follows the `<footer>`: the bar's marks show once, on the bar, and «Scrie-ne» with the shown address once, in the fold; with the legal name unset nothing of it shows. Tested in tests/integration/contact/club-identity-render.test.ts, tests/unit/shared/site-footer.test.ts and tests/e2e/footer.spec.ts (2026-09-30, `DECISIONS.md` §582).
 175. The public menu — the header's row and its ☰ menu — carries no link to the members' zone; the footer's «Despre club, contact și termeni» fold carries «Zona membrilor» / "Members' zone" with its glyph after the standing links, only while «Beneficiile membrilor» is published with its benefits written, and «Ordinea meniului» no longer lists «Membri» (2026-09-30, `DECISIONS.md` §591).
 176. On a phone the listing card's «când» row stays one line where it fits and wraps between its whole pieces — the date, then the time — for a race with two named times or with no race start yet; the card never clips a time (2026-10-01, `DECISIONS.md` §599).
+177. On a listing card narrower than 412 pixels, a race with both named times draws its «când» row as a list: the date, the event start and the race start each on its own line, no middle dot between them, and the clock and the flag in the row's glyph column under the calendar, so the three start at one left edge; from 412 pixels up the row flows as before, and the event page's «Când» takes the same list below `sm` (2026-10-01, `DECISIONS.md` §600).
+178. A picture in a rendered rich text (an event's description, a standing page, the members' zone) is a button that opens it large in place over the page, the whole picture contained in the screen with its caption; the ✕ with its word (44 px), Escape, a tap on the layer and the browser's Back close it, Back without leaving the page, and the focus returns to the picture. The page's markup keeps the figure and its lazy picture, a listing card's picture opens nothing, and nothing is fetched until the first tap (2026-10-01, `DECISIONS.md` §601).
+179. The large preview zooms on its own: two fingers scale the picture 1–4× about their midpoint, one finger pans a zoomed picture without it leaving the screen, a double tap toggles 2× and back, a trackpad's pinch zooms around the cursor; only a tap (one pointer, within 300 ms and 10 px, the scale unchanged) closes the layer, never a pinch's or a pan's end, nor a tap followed within 300 ms by a pinch or a pan, and the preview opens at 1× every time (2026-10-01, `DECISIONS.md` §601).
+180. The listing's past section passes through the same parsed filter and the same predicate as the upcoming cards; the filter panel offers a value that only a past event in the page's window carries; with a filter on, the past fold is open and its heading reads «Din trecut, după filtre (N)» / "Past, filtered (N)"; with nothing ticked it stays closed (2026-10-01, `DECISIONS.md` §602).
+181. On a phone, a listing card whose date is within the coming twelve months says the weekday short and no year («sâm., 21 nov.»); the desktop card keeps the full weekday and the year (2026-10-01, `DECISIONS.md` §603).
 
 **Verification:** e2e `registration-form.spec.ts` and `registration-entry.spec.ts` under both Playwright viewport projects, `event-pages.spec.ts` (criterion 12); unit `registrations/form-errors.test.ts`, `events/listing.test.ts`, `theme/brand.test.ts`; release check on a real device
 

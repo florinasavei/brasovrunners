@@ -35,7 +35,7 @@ export const PUBLIC_CLIENT_MESSAGES = [
   "Site.newBuild",
   // `[locale]/error.tsx` — the boundary every route's failure reaches, the backoffice's included.
   "Error",
-  // PictureLightbox (§NNN): a picture in a rich text that opens large — its name and the ✕.
+  // PictureLightbox (§601): a picture in a rich text that opens large — its name and the ✕.
   "Picture",
   // SignatureField, on the declaration page: the hint, the refusal and the wrong-name sentence,
   // for each of the three signers (an adult, a minor's parent, the minor).

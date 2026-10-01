@@ -23,7 +23,7 @@ import {
 } from "./picture-zoom";
 
 /**
- * The large preview of a description picture (§NNN), loaded only once a reader taps one
+ * The large preview of a description picture (§601), loaded only once a reader taps one
  * (`PictureLightbox`). It carries no words of its own: they come translated from the trigger,
  * which is the one file that reads the catalogue (§353).
  *

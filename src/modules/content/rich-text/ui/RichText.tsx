@@ -138,7 +138,7 @@ function renderBlock(
         ? pictureSizes(pictures, block.attrs.widthPercent, crop && block.attrs.crop ? 1 / block.attrs.crop.w : 1)
         : undefined;
       /*
-        A tap opens the picture large over the page (§NNN, `PictureLightbox`): the same <img> as
+        A tap opens the picture large over the page (§601, `PictureLightbox`): the same <img> as
         before, inside the island's button, which takes only plain values (§318). The crop window
         is a <span> drawn as a block, because a button holds phrasing content only.
       */

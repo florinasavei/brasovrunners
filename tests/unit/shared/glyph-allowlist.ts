@@ -38,7 +38,7 @@ export const WITHOUT_GLYPH: ReadonlyArray<{ file: string; words: string; reason:
   {
     file: "src/modules/content/rich-text/ui/PictureLightbox.tsx",
     words: 'data-testid="picture-preview-trigger"',
-    reason: "§NNN: a picture in a rich text that opens large; the picture itself is the face.",
+    reason: "§601: a picture in a rich text that opens large; the picture itself is the face.",
   },
   {
     file: "src/modules/media/ui/GalleryPicker.tsx",

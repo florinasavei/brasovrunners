@@ -294,7 +294,7 @@ describe("BR-REQ-041-01 «când» is one line with its weekday (§356, §349)", 
     expect(when).toContain('aria-label="race start"');
   });
 
-  it("on a phone, the page's two times are a list too: a line each, the glyphs hung in the answer's indent under the calendar (§NNN)", async () => {
+  it("on a phone, the page's two times are a list too: a line each, the glyphs hung in the answer's indent under the calendar (§600)", async () => {
     const html = await page({ startsAt: new Date("2026-09-26T06:00:00Z"), raceStartsAt: new Date("2026-09-26T07:00:00Z") });
     const dd = /<dd\b[^>]*>[\s\S]*?<\/dd>/.exec(html.slice(html.indexOf("<dt")))?.[0] ?? "";
     const times = [...dd.matchAll(/<span\b[^>]*data-when-line="time"[^>]*>/g)].map(([tag]) => tag);
@@ -700,7 +700,7 @@ describe("BR-REQ-041-01 the listing card's facts: glyph-led lines and the page's
     return blocks.flatMap((block) => [...(block[1] ?? "").matchAll(/([^{}]+)\{([^}]*)\}/g)].filter((rule) => (rule[1] ?? "").includes(cls)).map((rule) => `${rule[1]}{${rule[2]}}`)).join("");
   }
 
-  it("lists a race's two named times below 412 pixels — a line each, no dots, the clock and the flag hung in the glyph column under the calendar (§NNN)", async () => {
+  it("lists a race's two named times below 412 pixels — a line each, no dots, the clock and the flag hung in the glyph column under the calendar (§600)", async () => {
     const html = await card({ startsAt: new Date("2026-09-26T06:00:00Z"), raceStartsAt: new Date("2026-09-26T07:00:00Z") });
     const when = line(html, "when").inner;
     const pieceTags = [...when.matchAll(/<span\b[^>]*data-when-line="(\w+)"[^>]*>/g)];
@@ -726,7 +726,7 @@ describe("BR-REQ-041-01 the listing card's facts: glyph-led lines and the page's
     for (const tag of separators) expect(mediaRulesOf(html, tag, "411.95px")).toContain("display:none");
   });
 
-  it("keeps the inline row from 412 pixels up, and every other card's row as it was (§NNN)", async () => {
+  it("keeps the inline row from 412 pixels up, and every other card's row as it was (§600)", async () => {
     const html = await card({ startsAt: new Date("2026-09-26T06:00:00Z"), raceStartsAt: new Date("2026-09-26T07:00:00Z") });
     const when = line(html, "when").inner;
     // Outside the media query nothing changes: the pieces flow, the dots show, the glyphs keep their seat.

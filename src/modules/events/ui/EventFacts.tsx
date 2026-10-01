@@ -112,7 +112,7 @@ const WHEN_LEAD_HIDDEN_BELOW_376 = {
 const RACE_ROW_GAP = 0.5;
 
 /**
- * A race's two named times as a tidy list where the row would wrap (§NNN — the owner, 2026-10-01,
+ * A race's two named times as a tidy list where the row would wrap (§600 — the owner, 2026-10-01,
  * of the race's card on a phone, «Sâmbătă, 21 nov. ·» / «[clock] 08:30 (start eveniment) ·» /
  * «[flag] 11:00 (start cursă)»: "nu îmi place că lucrurile nu sunt aliniate când sunt ambele ore
  * prezente"). Below the width the row no longer fits — 412 pixels on the card, §597's measurement
@@ -450,7 +450,7 @@ export default async function EventFacts({
   // A race with no race start says «10:00 (start eveniment)» (#305): longer than the one-line row of §375 allows on a
   // phone, so that row may wrap between its whole pieces rather than let the card's overflow clip the time.
   const raceStartLater = startsAt !== null && whenTimes({ type: event.type, startsAt, raceStartsAt: event.raceStartsAt }).raceStartLater;
-  // A race with both its named times (§597) is the row the list form is for (`CARD_LIST_BELOW_412`, §NNN).
+  // A race with both its named times (§597) is the row the list form is for (`CARD_LIST_BELOW_412`, §600).
   const twoNamedTimes = startsAt !== null && whenTimes({ type: event.type, startsAt, raceStartsAt: event.raceStartsAt }).times.length === 2;
   const raceStartNote =
     raceStartLater ? (

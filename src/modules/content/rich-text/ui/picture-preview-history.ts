@@ -1,5 +1,5 @@
 /**
- * The browser history behind a description picture's large preview (§NNN, `PictureLightbox`).
+ * The browser history behind a description picture's large preview (§601, `PictureLightbox`).
  *
  * The preview is a layer over the page, not a page, so a phone's Back gesture must close it
  * rather than leave the event. Opening pushes one entry with the page's own address; Back pops it

@@ -257,7 +257,7 @@ async function ListingLead({
 }: Listing & {
   /** The events whose date is to be announced (§533): the panel offers their values too. */
   undated: readonly PublicEventPage[];
-  /** The past section's window (§267), which the same filters narrow (§NNN): its values are offered too. */
+  /** The past section's window (§267), which the same filters narrow (§602): its values are offered too. */
   past: readonly PublicEventPage[];
   /** The filters the address names (§413): OR within a group, AND across groups. */
   filter: ListingFilter;
@@ -270,7 +270,7 @@ async function ListingLead({
   // What the panel offers (§413, §133's rule generalised): a box only where ticking it would change
   // what the page shows — read off every row, the lead's included, never off the filtered rows —
   // or where the address already ticks it, so a filtered page can say what it is filtered by.
-  // The past section narrows by the same boxes (§NNN), so its window is read too: a value only a
+  // The past section narrows by the same boxes (§602), so its window is read too: a value only a
   // past event carries is a box that changes what the page shows. Each row once — between seasons
   // the lead is the past window's first row (§167).
   const offer = offeredFilters<PublicEventPage>(listingFilterRows<PublicEventPage>(events, undated, past), filter, facts);
