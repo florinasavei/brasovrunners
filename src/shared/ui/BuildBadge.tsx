@@ -14,30 +14,28 @@ const FOLD_REACH = 44 - FOLD_LINE.xs;
 /**
  * When this site was built — and, for the club's own people, the way in.
  *
- * **The fold's own line below `md`, and pinned to the bar's own bottom-right corner from `md`
- * (`SiteFooter`, §372).** On a phone the stamp stays inside "Despre club": §365 took it off the bar
- * after it had become a third line of footer under a bar that was already two, and nobody the
- * public site is for has a use for it there. On a desktop the owner asked for it back in the bar's
- * corner (2026-09-24), where it costs nothing — the bar is one line with room to spare. So the rule
- * is split by width, `display: { xs: "flex", md: "none" }` on the fold's copy and the reverse on
- * the pinned one, and `/api/health` and `/devs` report the same values exactly. QA says it is QA in
- * words above the header (`EnvironmentNotice`), so the stamp's "qa ·" prefix was never the only
- * place that fact was read.
+ * **One copy, the last line of the «Despre club» fold's panel, at every width (`SiteFooter`,
+ * §NNN).** §365 took the stamp off the bar after it had become a third line of footer under a bar
+ * that was already two, and nobody the public site is for has a use for it. §372 pinned a second
+ * copy to the bar's corner from `md`; the owner took that back (2026-10-01: it is a bother to
+ * visitors), so the stamp is on screen only once somebody opens the fold. `/api/health` and
+ * `/devs` report the same values exactly. QA says it is QA in words above the header
+ * (`EnvironmentNotice`), so the stamp's "qa ·" prefix was never the only place that fact was read.
  *
  * The visible text is deliberately short: which deployment this is, and when the code behind it
  * last changed. The exact build — the baseline and the commit — is in the `title` and the
- * accessible name too. Since §385 it is drawn as a small outlined chip, in both places.
+ * accessible name too. Since §385 it is drawn as a small outlined chip.
  *
  * Where a staff sign-in exists, this is also the entrance: a double-click, a long press on a
  * phone, or `Enter` when it has focus, opens it (`BuildBadgeLink`, §34). That replaced a "Staff"
- * link in the footer — a permanent invitation on a page every visitor reads — and, below `md`, the fold
+ * link in the footer — a permanent invitation on a page every visitor reads — and the fold
  * keeps it one step further out of a visitor's way. Where `STAFF_AUTH_MODE=disabled` there is no door
  * at all, so the stamp is a label with `pointerEvents: "none"`.
  *
  * A Server Component either way: the values are inlined at build time and never change while
  * the page is open. Only the interactive half is a client island, and only where it is real.
  */
-export default async function BuildBadge({ phoneTarget = false }: { phoneTarget?: boolean } = {}) {
+export default async function BuildBadge() {
   const locale = await getLocale();
   const t = await getTranslations("Site");
 
@@ -60,13 +58,13 @@ export default async function BuildBadge({ phoneTarget = false }: { phoneTarget?
   const text = parts.join(" · ");
 
   /**
-   * The box the chip stands in: as wide as the chip (`alignSelf`, so a press beside it — on the
-   * panel, or on the bar's corner from `md` — is not a press on it), never wider than its line,
-   * and 44 pixels tall, like everything else in the panel below `md`, because a long press is
+   * The box the chip stands in: as wide as the chip (`alignSelf`, so a press beside it on the
+   * panel is not a press on it), never wider than its line,
+   * and its reach is 44 pixels, because a long press is
    * aimed at it (BR-REQ-041-01 criterion 6). The chip is the 24 pixels you see; this box is the
    * 44 a thumb hits. It carries the name and the `title`, the same as before the chip (§385).
    *
-   * `phoneTarget` — the fold's copy (§480, the 360-px density pass, amending §385): on a phone
+   * The fold's box (§480, the 360-px density pass, amending §385): on a phone
    * every line of the fold is 24 pixels (`FOLD_LINE`, `footer-target.ts`), and a 44-pixel box here
    * was the one line the fold could not lose. So the box still reaches 44 — a long press is aimed
    * at it — but the twenty pixels above its line are padding given back as an equal negative
@@ -77,7 +75,7 @@ export default async function BuildBadge({ phoneTarget = false }: { phoneTarget?
    * and a reach there would lengthen the page by its twenty pixels. From `sm` the box is 44 with no
    * reach. `content-box`, said here, because the fold's content is slotted into the `<details>`'s
    * shadow tree, where MUI's `box-sizing: inherit` does not reach (§366): the padding is always
-   * on top of the line. The pinned copy on the bar's corner from `md` keeps its plain 44.
+   * on top of the line.
    */
   const sx = {
     alignSelf: "flex-start",
@@ -85,14 +83,10 @@ export default async function BuildBadge({ phoneTarget = false }: { phoneTarget?
     alignItems: "center",
     maxWidth: "100%",
     m: 0,
-    ...(phoneTarget
-      ? {
-          boxSizing: "content-box",
-          ...foldLineSx(["minHeight"]),
-          pt: { xs: `${FOLD_REACH}px`, sm: 0 },
-          mt: { xs: `-${FOLD_REACH}px`, sm: 0 },
-        }
-      : { minHeight: 44 }),
+    boxSizing: "content-box",
+    ...foldLineSx(["minHeight"]),
+    pt: { xs: `${FOLD_REACH}px`, sm: 0 },
+    mt: { xs: `-${FOLD_REACH}px`, sm: 0 },
     pointerEvents: "none",
   };
 
