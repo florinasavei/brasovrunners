@@ -263,7 +263,7 @@ export type BulkResendResult = BulkResendCounts & { test: BulkResendCounts };
  *
  * Refused before anything is written when the declaration can no longer be signed — the event
  * cancelled, completed or started — and when the event's three presses of the hour are spent
- * (`admin-bulk-resend`, counted after the reads, so a refusal for a closed event spends none).
+ * (`admin-bulk-resend`, counted after the event check and before the candidate reads, so a refusal for a closed event spends none).
  *
  * Each registration goes through `queueManualResend`, the single press's own path; the press adds
  * one audit row with its counts and one drain after the response for the whole press. It queues; the

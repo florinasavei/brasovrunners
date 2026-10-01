@@ -32,7 +32,7 @@ async function withDatabase<T>(work: (client: pg.Client) => Promise<T>): Promise
   }
 }
 
-/** A race a month away with two runners waiting to sign, one of whose declaration email is still queued. */
+/** A race a month away with two runners waiting to sign, one of whose declaration email left minutes ago. */
 async function seedEvent(tag: string): Promise<{ eventId: string; registrationIds: string[] }> {
   return withDatabase(async (client) => {
     const { rows: eventRows } = await client.query<{ id: string }>(
@@ -60,10 +60,11 @@ async function seedEvent(tag: string): Promise<{ eventId: string; registrationId
       );
       registrationIds.push(rows[0].id);
     }
-    // Ion's declaration email has not left yet: the press skips him.
+    // Ion's declaration email left five minutes ago: the press skips him as recent. SENT, not PENDING,
+    // so no other spec's drain can claim it and change the counts.
     await client.query(
-      `INSERT INTO email_outbox (participant_id, registration_id, message_type, locale, recipient_email, payload_json, idempotency_key, status)
-       SELECT participant_id, id, 'COMPLETE_DECLARATION', 'ro', $2, '{}'::jsonb, $3, 'PENDING' FROM registrations WHERE id = $1`,
+      `INSERT INTO email_outbox (participant_id, registration_id, message_type, locale, recipient_email, payload_json, idempotency_key, status, sent_at)
+       SELECT participant_id, id, 'COMPLETE_DECLARATION', 'ro', $2, '{}'::jsonb, $3, 'SENT', now() - interval '5 minutes' FROM registrations WHERE id = $1`,
       [registrationIds[1], `bulk-resend-ion-${tag}@test.invalid`, `bulk-resend-spec:${tag}`],
     );
     return { eventId, registrationIds };
