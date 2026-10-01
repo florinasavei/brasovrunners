@@ -61,6 +61,7 @@ const QUEUE: Props["queue"] = {
       isManualResend: false,
       familyHeld: false,
       sentNow: false,
+      onMailgunRoad: true,
     },
     {
       id: "b",
@@ -75,6 +76,7 @@ const QUEUE: Props["queue"] = {
       isManualResend: false,
       familyHeld: false,
       sentNow: false,
+      onMailgunRoad: true,
     },
     {
       id: "c",
@@ -88,6 +90,7 @@ const QUEUE: Props["queue"] = {
       isManualResend: false,
       familyHeld: false,
       sentNow: false,
+      onMailgunRoad: true,
     },
   ],
 };
@@ -231,6 +234,30 @@ describe("§529 the queue panel says when the emails leave", () => {
     expect(strict).toMatch(/data-testid="outbox-row-leaves"[^>]*>Întârziat/);
     const planned = await render("ro", { queue, delivery: { ...DELIVERY, overdueCadenceMinutes: 180 } });
     expect(planned).not.toContain("Întârziat");
+  });
+
+  it("does not mark a Mailgun row late while Mailgun's hour binds, and still marks a Gmail row (§NNN, as health counts)", async () => {
+    const late = { ...QUEUE.rows[0]!, id: "m", createdAt: new Date(NOW.getTime() - 300 * 60_000) };
+    const gmail = { ...late, id: "g", onMailgunRoad: false };
+    const queue = { ...QUEUE, total: 2, rows: [late, gmail] };
+    const html = await render("ro", { queue, volume: { ...VOLUME, hourPaceHolds: true } });
+    const leaves = [...html.matchAll(/data-testid="outbox-row-leaves"[^>]*>([^<]*)</g)].map((match) => match[1]);
+    expect(leaves[0]).not.toMatch(/^Întârziat/);
+    expect(leaves[1]).toMatch(/^Întârziat/);
+    // A hour with room holds nothing back: both are late.
+    const open = await render("ro", { queue, volume: { ...VOLUME, hourPaceHolds: false } });
+    expect([...open.matchAll(/data-testid="outbox-row-leaves"[^>]*>Întârziat/g)]).toHaveLength(2);
+  });
+
+  it("marks a row Mailgun paused recently late once queued long ago, and an old pause mark like any waiting row", async () => {
+    const lastError = "paused by the provider: mailgun 429: Too Many Requests";
+    const recent = { ...QUEUE.rows[0]!, id: "r", lastError, createdAt: new Date(NOW.getTime() - 300 * 60_000), nextAttemptAt: new Date(NOW.getTime() + 10 * 60_000) };
+    const stale = { ...recent, id: "s", nextAttemptAt: new Date(NOW.getTime() - 120 * 60_000) };
+    const html = await render("ro", { queue: { ...QUEUE, total: 2, rows: [recent, stale] }, volume: { ...VOLUME, hourPaceHolds: true } });
+    const leaves = [...html.matchAll(/data-testid="outbox-row-leaves"[^>]*>([^<]*)</g)].map((match) => match[1]);
+    expect(leaves[0]).toMatch(/^Întârziat/);
+    // Waiting its turn under a binding hour, on Mailgun's road: not late.
+    expect(leaves[1]).not.toMatch(/^Întârziat/);
   });
 
   it("says a family's held row waits until its hold ends, then the round after it", async () => {

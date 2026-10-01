@@ -405,7 +405,7 @@ export async function claimOutboxBatch(
      */
     ids?: readonly string[];
     /**
-     * Mailgun's hourly pace (§NNN): the most its road may carry in any sixty minutes. Absent, the
+     * Mailgun's hourly pace (§NNN): the most its road may carry in any hour (`PACE_WINDOW_MS`). Absent, the
      * email plan setting's (100 by default); null, no pace. Gmail's road is not held to it.
      */
     hourlyAllowance?: number | null;
@@ -465,7 +465,7 @@ export async function claimOutboxBatch(
     const mailgunRoad = gmailRoad ? not(gmailRoad) : undefined;
     /*
       Mailgun's hour (§NNN): no more than the pace leaves — the allowance less what Mailgun carried in
-      the trailing sixty minutes and what another worker holds for it now — oldest first, as always.
+      the trailing window (`PACE_WINDOW_MS`, in recipients) and what another worker holds for it now — oldest first, as always.
       What is not claimed is simply not claimed: its `next_attempt_at` is untouched, and the next drain
       or job run (every fifteen minutes by day) takes it when the hour has room. One query
       (`countMailgunHour`), inside this transaction, and only when a pace is set.
@@ -482,7 +482,14 @@ export async function claimOutboxBatch(
       await tx.execute(sql`select pg_advisory_xact_lock(${MAILGUN_HOUR_LOCK_KEY})`);
     }
     const hour = hourlyAllowance === null ? null : await readMailgunHour(tx, now, { mailgunRoad, hourlyAllowance });
-    const mailgunLimit = hour?.remaining == null ? batchSize : Math.min(batchSize, hour.remaining);
+    /*
+      Mailgun said stop (§NNN): a row it paused for the rate, the pause not over, holds the whole road —
+      not only the batch the refusal happened in. Without this, every registration's after-response
+      drain would claim the next due Mailgun row and send it into the same refusal while the account
+      is disabled, and knocking during the pause is what gets an account on probation disabled for
+      longer. Counted in the same query, under the same lock; Gmail's road is claimed as ever.
+    */
+    const mailgunLimit = hour === null ? batchSize : hour.paused ? 0 : Math.min(batchSize, hour.remaining ?? batchSize);
     const mailgun = await claimRoad(mailgunRoad, mailgunLimit, bulkLimit);
     const gmail = gmailRoad
       ? await claimRoad(gmailRoad, Math.min(batchSize, roads?.gmailBatchSize ?? batchSize), null)
@@ -661,8 +668,13 @@ export async function processOutboxBatch(
       if (result.outcome === "sent") {
         const sentValues = {
           status: "SENT",
-          // The moment Gmail took it when it did (§443 review): the pace runs from here in every sender.
-          sentAt: result.acceptedAt ?? now,
+          /*
+            The moment the provider took it (§443 review, §NNN): Gmail's sender says when; for Mailgun
+            it is now, read right after the call returned, on the batch's own clock — never the batch's
+            start, which would make a batch's last sends look minutes older than they are and drop
+            them out of Mailgun's hour early (`hourly-pace.ts`).
+          */
+          sentAt: result.acceptedAt ?? clock(),
           providerMessageId: result.providerMessageId,
           // Which road carried it (§443): Gmail's cap and Mailgun's allowance are counted from this.
           transport: result.transport ?? "mailgun",
@@ -706,6 +718,22 @@ export async function processOutboxBatch(
 
       const error = sanitizeProviderError(result.error);
 
+      /*
+        Paused by Mailgun for the rate (§NNN): the attempt given back, as for Gmail's pace below, so no
+        number of pauses ever spends the six attempts and marks a confirmation FAILED —
+        `MAX_SEND_ATTEMPTS` counts refusals of the message, and this is not one. The reason stays on
+        the row (marked, for `/api/health`), the row is due again when Mailgun said, and the batch's
+        other Mailgun rows wait with it — and so does every other Mailgun row until then, the claim's
+        own rule (`claimOutboxBatch`). Counted as deferred, like the daily allowance: the provider
+        said stop, so «Trimite acum» stops too.
+      */
+      if (result.outcome === "throttled" && result.paced && result.rateRefused) {
+        mailgunPause = { until: result.retryAfter ?? now, error: `${RATE_PAUSE_ERROR_PREFIX}${error}`.slice(0, 500) };
+        await releaseForPause(db, row, mailgunPause.until, mailgunPause.error);
+        summary.deferred += 1;
+        continue;
+      }
+
       /**
        * The allowance is spent, not the message rejected. Nothing was transmitted.
        *
@@ -716,21 +744,6 @@ export async function processOutboxBatch(
        *
        * Checked before `permanent_failure` only for reading order; the outcomes are disjoint.
        */
-      /*
-        Paused by Mailgun for the rate (§NNN): the attempt given back, as for Gmail's pace below, so no
-        number of pauses ever spends the six attempts and marks a confirmation FAILED —
-        `MAX_SEND_ATTEMPTS` counts refusals of the message, and this is not one. The reason stays on
-        the row (marked, for `/api/health`), the row is due again when Mailgun said, and the batch's
-        other Mailgun rows wait with it. Counted as deferred, like the daily allowance: the provider
-        said stop, so «Trimite acum» stops too.
-      */
-      if (result.outcome === "throttled" && result.paced && result.rateRefused) {
-        mailgunPause = { until: result.retryAfter ?? now, error: `${RATE_PAUSE_ERROR_PREFIX}${error}`.slice(0, 500) };
-        await releaseForPause(db, row, mailgunPause.until, mailgunPause.error);
-        summary.deferred += 1;
-        continue;
-      }
-
       /*
         Held back by Gmail's pace, not refused (§443): nothing was tried, so the attempt the claim
         counted is given back, and the row is due again in the few seconds the pace asks for — the
@@ -811,13 +824,11 @@ export async function processOutboxBatch(
 }
 
 /**
- * A row handed back for a provider's pause (§NNN): waiting again, due at `until`, its reason kept and
- * the attempt the claim counted given back — a pause is never one of the six.
- */
-/**
- * `error` is the reason, written only on the row Mailgun actually refused: its batch-mates are held
- * without it (null), so they never carry the rate-pause mark that `/api/health` reads as «paused by
- * the provider» — they are waiting their turn under the pace, not refused.
+ * A row handed back for a provider's pause (§NNN): waiting again, due at `until`, and the attempt the
+ * claim counted given back — a pause is never one of the six. `error` is the reason, written only on
+ * the row Mailgun actually refused: its batch-mates are held without it (null), so they never carry
+ * the rate-pause mark that `/api/health` reads as «paused by the provider» and the claim reads as the
+ * road's stop — they are waiting their turn, not refused.
  */
 async function releaseForPause(db: Db, row: OutboxRow, until: Date, error: string | null): Promise<void> {
   await db

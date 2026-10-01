@@ -1204,10 +1204,14 @@ webhooks point at production, so a QA bounce is recorded on production's outbox,
 fast. Your account is on probation and domains are limited to 100 messages / hour. To maintain
 the rate the account has been temporarily disabled. The account will be enabled in 847 seconds.» The outbox paces to «Limita pe oră» on
 «Setări» → «Emailuri» (default 100; `DECISIONS.md` §NNN): Mailgun's road sends at most that many
-in any sixty minutes, the rest wait for the next pass, and a refusal for the rate (a 429, or
-"temporarily disabled") pauses the message instead of failing it. The page shows «Trimise în
-ultima oră: N din 100» beside the day's count. Each environment counts only its own outbox and QA
-shares the domain, so QA's box defaults to 100 too, so the two together could send 200 in Mailgun's hour: set QA's «Limita pe oră» to about 10 now, and keep its rehearsals small while the probation lasts.
+in any sixty-one minutes, counted in recipients (a copy is a message to Mailgun), the rest wait for
+the next pass, and a refusal for the rate (a 429, or "temporarily disabled") pauses the message —
+and every other Mailgun message until the pause ends — instead of failing it. The page shows
+«Trimise în ultima oră: N din 100» beside the day's count. The default 100 has no margin beyond the
+extra minute and the send's own timestamp, so set production's box to 90 while the probation lasts.
+Each environment counts only its own outbox, and QA shares the domain and its box defaults to 100
+too: together the two could send 200 in Mailgun's hour. Set QA's «Limita pe oră» to about 10 now,
+and keep its rehearsals small while the probation lasts.
 Ask Mailgun's support to lift the probation, then raise or clear the field on production.
 
 ## 36. The anti-bot check and the health monitors — done (2026-09-19)

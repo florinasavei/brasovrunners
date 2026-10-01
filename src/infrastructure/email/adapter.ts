@@ -87,7 +87,8 @@ export type SendResult =
       recipients?: number;
       /**
        * When the server took the message (§443 review), set by the sender for Gmail: the row's
-       * `sent_at`, which every other sender paces from. Absent is the batch's own time.
+       * `sent_at`, which every other sender paces from. Absent, the outbox reads its own clock the
+       * moment the send returned (§NNN), never the batch's start.
        */
       acceptedAt?: Date;
     }

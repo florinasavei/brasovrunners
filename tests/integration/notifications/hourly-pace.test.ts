@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { platformSettings } from "@/db/schema/platform-settings";
@@ -15,6 +15,30 @@ import { assertRoomToSendNow, SEND_NOW_HOUR_SPENT, SendNowRefused } from "@/modu
 import { sendOutboxNow } from "@/modules/notifications/send-now";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
+
+/*
+  The press's sender, swapped by one test for a deployment with the club's Gmail (§443): this
+  environment has no Gmail account, so `createOutboxSender` would put every row on Mailgun's road.
+*/
+const gmailDeployment = vi.hoisted(() => ({ current: null as null | { roads: OutboxRoads; sender: EmailSender } }));
+vi.mock("@/modules/notifications/outbox-sender", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/modules/notifications/outbox-sender")>();
+  return {
+    ...actual,
+    createOutboxSender: async (...args: Parameters<typeof actual.createOutboxSender>) => {
+      const made = await actual.createOutboxSender(...args);
+      const swap = gmailDeployment.current;
+      return swap ? { ...made, roads: swap.roads, sender: swap.sender, route: () => "gmail" as const } : made;
+    },
+  };
+});
+vi.mock("@/modules/notifications/outbox-roads", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/modules/notifications/outbox-roads")>();
+  return {
+    ...actual,
+    readOutboxRoads: async (...args: Parameters<typeof actual.readOutboxRoads>) => gmailDeployment.current?.roads ?? actual.readOutboxRoads(...args),
+  };
+});
 
 /**
  * §NNN (amending §100 and §163) — the outbox paces Mailgun to an hourly allowance, and a rate
@@ -39,6 +63,9 @@ beforeAll(async () => {
   ({ db, close } = await createTestDatabase());
 });
 afterAll(async () => close());
+afterEach(() => {
+  gmailDeployment.current = null;
+});
 beforeEach(async () => {
   await resetTables(db);
   [admin] = await db.insert(staffUsers).values({ email: "admin@dev.test", displayName: "Admin", role: "ADMIN" }).returning();
@@ -124,6 +151,17 @@ describe("the claim keeps Mailgun's road inside the hour", () => {
     expect(claimed.map((r) => r.id)).toEqual(oldest.map((r) => r.id));
   });
 
+  it("counts a two-recipient row as two and a row in flight as one", async () => {
+    // The declaration archive's copy: one row, two messages to Mailgun.
+    await db.insert(emailOutbox).values(row({ status: "SENT", sentAt: new Date(NOW.getTime() - 10 * MINUTE), transport: "mailgun", recipientCount: 2 }));
+    await sent(95, new Date(NOW.getTime() - 10 * MINUTE));
+    await db.insert(emailOutbox).values(row({ status: "PROCESSING", lockedAt: new Date(NOW.getTime() - MINUTE), attemptCount: 1 }));
+    await due(10);
+
+    // 2 + 95 + 1 in flight = 98: room for two.
+    expect(await claimOutboxBatch(db, { now: NOW, batchSize: 20, hourlyAllowance: 100 })).toHaveLength(2);
+  });
+
   it("counts every recipient of a row as a message: copies spend the hour too", async () => {
     await db.insert(emailOutbox).values(row({ status: "SENT", sentAt: new Date(NOW.getTime() - 10 * MINUTE), transport: "mailgun", recipientCount: 3 }));
     await sent(96, new Date(NOW.getTime() - 10 * MINUTE));
@@ -134,11 +172,32 @@ describe("the claim keeps Mailgun's road inside the hour", () => {
     expect(claimed).toHaveLength(1);
   });
 
-  it("takes a full batch once the hundred left more than an hour ago", async () => {
-    await sent(100, new Date(NOW.getTime() - 61 * MINUTE));
+  it("keeps the hundred in the hour for a minute more than Mailgun's sixty, then takes a full batch", async () => {
+    await sent(100, new Date(NOW.getTime() - 60.5 * MINUTE));
     await due(25);
+    // Sixty and a half minutes ago: past Mailgun's hour by our clock, still inside the window's margin.
+    expect(await claimOutboxBatch(db, { now: NOW, batchSize: 20, hourlyAllowance: 100 })).toHaveLength(0);
 
-    expect(await claimOutboxBatch(db, { now: NOW, batchSize: 20, hourlyAllowance: 100 })).toHaveLength(20);
+    expect(await claimOutboxBatch(db, { now: new Date(NOW.getTime() + MINUTE), batchSize: 20, hourlyAllowance: 100 })).toHaveLength(20);
+  });
+
+  it("stamps a Mailgun send when Mailgun took it, not when its batch started", async () => {
+    await due(3);
+    // A provider that takes forty milliseconds a message: the third leaves eighty after the first.
+    const slow: EmailSender = {
+      async send() {
+        await new Promise((resolve) => setTimeout(resolve, 40));
+        return { outcome: "sent", providerMessageId: "slow" };
+      },
+    };
+    await processOutboxBatch(db, { sender: slow, render, now: NOW });
+
+    const stamps = (await db.select().from(emailOutbox)).map((r) => r.sentAt!.getTime()).sort((a, b) => a - b);
+    expect(stamps).toHaveLength(3);
+    expect(stamps[0]).toBeGreaterThanOrEqual(NOW.getTime() + 40);
+    expect(stamps[2] - stamps[0]).toBeGreaterThanOrEqual(80);
+    // On the batch's own clock: `now` moved on by the real time elapsed, never the machine's date.
+    expect(stamps[2]).toBeLessThan(NOW.getTime() + 60_000);
   });
 
   it("counts a batch another worker holds right now, and paces nothing when the pace is cleared", async () => {
@@ -191,6 +250,22 @@ describe("a rate refusal is a pause, never a loss", () => {
     expect(await claimOutboxBatch(db, { now: new Date(NOW.getTime() + 5 * MINUTE), batchSize: 20, hourlyAllowance: 100 })).toHaveLength(0);
   });
 
+  it("holds Mailgun's whole road while the pause lasts, not only the batch it happened in; Gmail's road still goes", async () => {
+    const [paused] = await due(1);
+    await processOutboxBatch(db, { sender: sender(() => pause(14)), render, now: NOW });
+    // A fresh registration's confirmation, due now, and an organizer's message on Gmail's road.
+    const [fresh] = await db.insert(emailOutbox).values(row({ createdAt: NOW })).returning();
+    const [organizer] = await db.insert(emailOutbox).values(row({ messageType: "ORGANIZER_MESSAGE", createdAt: NOW })).returning();
+
+    const during = await claimOutboxBatch(db, { now: new Date(NOW.getTime() + MINUTE), batchSize: 20, roads: ROADS, hourlyAllowance: 100 });
+    expect(during.map((r) => r.id)).toEqual([organizer.id]);
+    expect((await db.select().from(emailOutbox).where(eq(emailOutbox.id, fresh.id)))[0]).toMatchObject({ status: "PENDING", attemptCount: 0 });
+
+    const after = await claimOutboxBatch(db, { now: new Date(NOW.getTime() + 15 * MINUTE), batchSize: 20, roads: ROADS, hourlyAllowance: 100 });
+    // Both of Mailgun's rows (the organizer's message, its lock past the timeout, is Gmail's to retake).
+    expect(after.filter((r) => r.messageType !== "ORGANIZER_MESSAGE").map((r) => r.id).sort()).toEqual([paused.id, fresh.id].sort());
+  });
+
   it("never marks a message FAILED, however many times Mailgun pauses it", async () => {
     await due(1);
     let at = NOW;
@@ -231,6 +306,23 @@ describe("«send now» against the hour", () => {
     expect((await db.select().from(emailOutbox).where(eq(emailOutbox.status, "PENDING")))).toHaveLength(3);
   });
 
+  it("lets a press send Gmail's waiting rows while Mailgun's hour is spent", async () => {
+    await sent(100, new Date(NOW.getTime() - 10 * MINUTE));
+    const [mailgunRow] = await due(2);
+    await due(2, { messageType: "ORGANIZER_MESSAGE" });
+    const gmail = sender(() => ({ outcome: "sent", providerMessageId: "gmail", transport: "gmail", recipients: 1 }));
+    gmailDeployment.current = { roads: ROADS, sender: gmail };
+
+    const result = await sendOutboxNow(db, admin, NOW);
+
+    expect(result).toMatchObject({ claimed: 2, sent: 2 });
+    expect(gmail.calls).toBe(2);
+    const organizerRows = await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "ORGANIZER_MESSAGE"));
+    expect(organizerRows.every((r) => r.status === "SENT" && r.transport === "gmail")).toBe(true);
+    // Mailgun's rows wait for the hour, untouched.
+    expect((await db.select().from(emailOutbox).where(eq(emailOutbox.id, mailgunRow.id)))[0]).toMatchObject({ status: "PENDING", attemptCount: 0 });
+  });
+
   it("lets a press through while the hour has room, and stops at it", async () => {
     await sent(98, new Date(NOW.getTime() - 10 * MINUTE));
     await due(5);
@@ -249,7 +341,7 @@ describe("«send now» against the hour", () => {
 describe("health while the pace holds", () => {
   const late = new Date(NOW.getTime() - EMAIL_HEALTH_THRESHOLDS.OVERDUE_AFTER_MS - 10 * MINUTE);
 
-  it("counts rows held for the hour as waiting, not overdue, while Mailgun is carrying mail", async () => {
+  it("counts Mailgun rows held for the hour as waiting, not overdue, while the hour is full", async () => {
     await sent(100, new Date(NOW.getTime() - 10 * MINUTE));
     await db.insert(emailOutbox).values([row({ createdAt: late }), row({ createdAt: late })]);
 
@@ -260,8 +352,12 @@ describe("health while the pace holds", () => {
     expect(health.waiting).toBe(2);
   });
 
-  it("calls the same rows overdue when nothing has left in ninety minutes, or when no pace is set", async () => {
+  it("calls the same rows overdue when nothing has left in ninety minutes, when the hour has room, or when no pace is set", async () => {
     await db.insert(emailOutbox).values([row({ createdAt: late }), row({ createdAt: late })]);
+    expect(await checkEmailHealth(db, NOW)).toMatchObject({ status: "stalled", overdue: 2, hourPaced: 0 });
+
+    // A message or two carried is not the pace: the hour has room, and these were not taken.
+    await sent(3, new Date(NOW.getTime() - 10 * MINUTE));
     expect(await checkEmailHealth(db, NOW)).toMatchObject({ status: "stalled", overdue: 2, hourPaced: 0 });
 
     await sent(10, new Date(NOW.getTime() - 10 * MINUTE));
@@ -280,6 +376,21 @@ describe("health while the pace holds", () => {
     ]);
     const health = await checkEmailHealth(db, NOW);
     expect(health).toMatchObject({ status: "stalled", overdue: 1, hourPaced: 0, lastError: reason });
+  });
+
+  it("judges a row whose pause ended long ago as any waiting row: held for a full hour, not overdue", async () => {
+    await sent(100, new Date(NOW.getTime() - 10 * MINUTE));
+    const reason = `${RATE_PAUSE_ERROR_PREFIX}mailgun 429: Too Many Requests`;
+    // Paused once, the pause over for two hours: now only waiting its turn under the pace.
+    await db.insert(emailOutbox).values(row({ createdAt: new Date(NOW.getTime() - 4 * 60 * MINUTE), nextAttemptAt: new Date(NOW.getTime() - 120 * MINUTE), lastError: reason }));
+    expect(await checkEmailHealth(db, NOW)).toMatchObject({ status: "ok", overdue: 0, hourPaced: 1 });
+  });
+
+  it("calls a late Gmail row overdue even while Mailgun's hour is full: the pace does not hold that road", async () => {
+    gmailDeployment.current = { roads: ROADS, sender: sender(() => ({ outcome: "sent", providerMessageId: "unused" })) };
+    await sent(100, new Date(NOW.getTime() - 10 * MINUTE));
+    await db.insert(emailOutbox).values([row({ createdAt: late }), row({ createdAt: late, messageType: "ORGANIZER_MESSAGE" })]);
+    expect(await checkEmailHealth(db, NOW)).toMatchObject({ status: "stalled", overdue: 1, hourPaced: 1 });
   });
 });
 
@@ -320,6 +431,9 @@ describe("the setting and its figure", () => {
     await sent(12, new Date(NOW.getTime() - 20 * MINUTE), "gmail");
     await sent(30, new Date(NOW.getTime() - 70 * MINUTE));
 
-    expect(await readEmailVolumeToday(db, NOW)).toMatchObject({ hourlyAllowance: 100, sentLastHour: 37, hourRemaining: 63, hourPaceHolds: true });
+    // 67 carried in ninety minutes: the hour does not bind, so a late row on this page is late.
+    expect(await readEmailVolumeToday(db, NOW)).toMatchObject({ hourlyAllowance: 100, sentLastHour: 37, hourRemaining: 63, hourPaceHolds: false });
+    await sent(33, new Date(NOW.getTime() - 5 * MINUTE));
+    expect(await readEmailVolumeToday(db, NOW)).toMatchObject({ sentLastHour: 70, hourRemaining: 30, hourPaceHolds: true });
   });
 });

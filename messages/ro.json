@@ -1132,7 +1132,7 @@
       "LEGAL_BATCH_CONFIRMATION_MISMATCH": "Confirmarea scrisă nu este cea cerută. Nu s-a șters nimic — scrie exact textul de sub casetă, de exemplu „DELETE 2”.",
       "LEGAL_BATCH_VERSION_BLOCKED": "Nu s-a șters nimic: între timp, {version} nu se mai poate șterge. Reîncarcă pagina: apare la „Rămân”, cu motivul; celelalte se șterg la apăsarea următoare.",
       "SEND_NOW_ALLOWANCE_SPENT": "Nu s-a trimis nimic: limita planului Mailgun pe azi este atinsă. Alege «Pune la coadă»; emailul pleacă după resetare.",
-      "SEND_NOW_HOUR_SPENT": "Nu s-a trimis nimic: limita pe oră a Mailgun („Limita pe oră” din «Emailuri») nu mai are loc acum. Alege «Pune la coadă»; emailul pleacă singur când ora are din nou loc.",
+      "SEND_NOW_HOUR_SPENT": "Nu s-a trimis nimic: limita pe oră a Mailgun («Limita pe oră» din «Emailuri») nu mai are loc acum. Alege «Pune la coadă»; emailul pleacă singur când ora are din nou loc.",
       "LEGAL_NUMBER_MISMATCH": "Numărul scris nu este al acestei versiuni. Nu s-a șters nimic — scrie doar numărul, de exemplu „6”.",
       "LEGAL_RETIRE_NEEDS_REASON": "Scrie motivul, între 3 și 200 de caractere. Rămâne lângă versiune, în «Versiuni șterse».",
       "LEGAL_NOTHING_DEPENDS": "Nu s-a șters nimic: între timp nu mai depinde nimic de această versiune. Reîncarcă pagina și șterge-o definitiv.",
@@ -4300,7 +4300,7 @@
         "forecastGmail": "Alte {count} pleacă prin Gmail-ul clubului și nu costă nimic la Mailgun.",
         "bulkWaiting": "Din cele din coadă, {count} sunt newslettere și anunțuri de eveniment nou: pleacă ultimele, doar din ce rămâne după rezerva pentru înscrieri, și pot aștepta până revine alocația.",
         "hourlyAllowance": "Limita pe oră",
-        "hourlyHelp": "Outbox-ul trimite cel mult atât pe oră și amână restul. Lasă 100 până când Mailgun ridică limita, apoi mărește sau șterge.",
+        "hourlyHelp": "Outbox-ul trimite cel mult atât pe oră și amână restul. Cât durează limita Mailgun, pune 90: 100 este chiar limita, fără nicio rezervă. Apoi mărește sau șterge.",
         "hourlyHelpMore": "Mailgun a pus contul într-o «perioadă de probă»: domeniile sunt limitate la 100 de mesaje pe oră, iar peste, contul e oprit temporar.",
         "lastHour": "Trimise în ultima oră: {sent} din {allowance}.",
         "lastHourUnlimited": "Trimise în ultima oră: {sent}; fără limită pe oră."

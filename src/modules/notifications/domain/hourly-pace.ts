@@ -1,6 +1,6 @@
 /**
  * Mailgun's hourly pace (§NNN, amending §100): how many messages Mailgun's road may still carry in
- * the trailing sixty minutes.
+ * the trailing hour (`PACE_WINDOW_MS`: sixty-one minutes, for the margin it explains).
  *
  * Mailgun put the club's account on "probation": its notice said domains are limited to 100 messages
  * an hour, and that sending faster temporarily disables the account. The day the club opened
@@ -22,8 +22,14 @@ export const DEFAULT_HOURLY_ALLOWANCE = 100;
 /** The most the box takes: far beyond any plan the club could be on, and a bound on a typo. */
 export const MAX_HOURLY_ALLOWANCE = 100_000;
 
-/** The trailing window the pace is counted over: Mailgun's own hour. */
-export const PACE_WINDOW_MS = 60 * 60_000;
+/**
+ * The trailing window the pace is counted over: Mailgun's hour and one minute more. The default is
+ * exactly Mailgun's hard hundred, so the count must never read lower than Mailgun's: a send is
+ * stamped when Mailgun took it (`outbox.ts`), but Mailgun's clock and ours are not the same clock,
+ * and a request in flight lands a moment after we stamp it. The minute costs the club at most a
+ * minute's wait for the next message; reading one message short costs the account.
+ */
+export const PACE_WINDOW_MS = 61 * 60_000;
 
 /**
  * How recently Mailgun must have carried a message for a backlog to read as the pace working
@@ -54,10 +60,24 @@ export function hourlyRoom(hourlyAllowance: number | null, usedLastHour: number)
 }
 
 /**
- * Whether a backlog is the pace working (§NNN): a pace is set and Mailgun carried at least one
- * message in the last `PACE_EVIDENCE_MS`. Then rows whose turn passed are waiting for the hour, not
- * overdue; without a recent send they are overdue as before — the outbox is not moving.
+ * Whether a backlog is the pace working (§NNN): a pace is set and the hour binds — Mailgun's road
+ * carried a full allowance (in recipients, as the claim counts) in the last `PACE_EVIDENCE_MS`, or
+ * is carrying the rest of it now. Then a Mailgun row whose turn passed is waiting for the hour, not
+ * overdue. Mailgun carrying a message or two is not the pace: a late row behind an hour with room is
+ * a stall, and says so. The trade-off: a backlog the batch size holds back rather than the hour (twenty
+ * a run on an hourly night pinger, under a hundred an hour) reads overdue — the queue really is slower
+ * than its inflow there, and that is worth a person's look; the pace is never what hides it.
  */
-export function paceHolds(input: { hourlyAllowance: number | null; carriedRecently: number }): boolean {
-  return input.hourlyAllowance !== null && input.carriedRecently > 0;
+export function paceHolds(input: { hourlyAllowance: number | null; carriedRecently: number; inFlight: number }): boolean {
+  return input.hourlyAllowance !== null && input.carriedRecently + input.inFlight >= input.hourlyAllowance;
+}
+
+/**
+ * Whether a row's rate pause (§NNN) is its own and recent: the mark is on it and the pause ended (or
+ * ends) less than `PACE_EVIDENCE_MS` ago. A row whose mark is older is merely waiting its turn under
+ * the pace — the mark is the last thing the provider said, not what holds it now — and is judged as
+ * any other waiting row (`health.ts`, the queue panel, §529).
+ */
+export function pauseIsRecent(row: { lastError: string | null; nextAttemptAt: Date | null }, now: Date): boolean {
+  return isRatePaused(row.lastError) && row.nextAttemptAt !== null && row.nextAttemptAt.getTime() > now.getTime() - PACE_EVIDENCE_MS;
 }

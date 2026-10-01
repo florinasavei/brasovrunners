@@ -3,6 +3,8 @@ import { emailOutbox, type EmailMessageType, type EmailOutboxStatus } from "@/db
 import type { Database } from "@/db/types";
 import { BULK_MESSAGE_TYPES } from "./domain/bulk";
 import { SENT_NOW_FLAG } from "./domain/send-at-once";
+import { gmailRoadCondition } from "./outbox";
+import { readOutboxRoads } from "./outbox-roads";
 
 /**
  * What is actually queued, for the club rather than for a developer (`DECISIONS.md` §243; the
@@ -44,6 +46,11 @@ export type QueuedMessage = {
   familyHeld: boolean;
   /** A press asked for it now, past the scheduled pass (§540): the payload's `sentNow` flag. */
   sentNow: boolean;
+  /**
+   * Whether the claim takes it on Mailgun's road (§442, `outboxRoadsFor`): only such a row waits for
+   * Mailgun's hour, so only it is «not late» while the hour binds (§NNN, as `/api/health` counts it).
+   */
+  onMailgunRoad: boolean;
 };
 
 /** The statuses that mean "still owed": waiting, mid-flight, or out of retries. */
@@ -89,6 +96,8 @@ export async function readOutboxQueue<T extends Record<string, unknown>>(
     looser than the «and» it is put inside, so a flagged row counted as a retry too, and a row with
     neither key made `not(…)` null, so a real retry counted nowhere.
   */
+  // The roads as the claim splits them: one row by key, and the panel's «late» reads them (§NNN).
+  const roads = await readOutboxRoads(db);
   const familyFlag = sql`coalesce((${emailOutbox.payloadJson} ->> 'sittingHeld') = 'true' or (${emailOutbox.payloadJson} ->> 'familyHeld') = 'true', false)`;
   const rows = await db
     .select({
@@ -103,6 +112,7 @@ export async function readOutboxQueue<T extends Record<string, unknown>>(
       isManualResend: emailOutbox.isManualResend,
       familyHeld: sql<boolean>`coalesce((${familyFlag}), false)`,
       sentNow: sql<boolean>`coalesce((${emailOutbox.payloadJson} ->> ${SENT_NOW_FLAG}::text) = 'true', false)`,
+      onMailgunRoad: roads ? sql<boolean>`not coalesce((${gmailRoadCondition(roads)}), false)` : sql<boolean>`true`,
     })
     .from(emailOutbox)
     .where(inArray(emailOutbox.status, UNSENT))

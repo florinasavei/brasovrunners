@@ -4300,7 +4300,7 @@
         "forecastGmail": "Another {count} leave through the club's Gmail and cost nothing on Mailgun.",
         "bulkWaiting": "Of those in the queue, {count} are newsletters and new-event announcements: they go last, only from what is left after the reserve for registrations, and may wait until the allowance comes back.",
         "hourlyAllowance": "Hourly limit",
-        "hourlyHelp": "The outbox sends at most this many an hour and holds the rest back. Leave 100 until Mailgun lifts the limit, then raise it or clear it.",
+        "hourlyHelp": "The outbox sends at most this many an hour and holds the rest back. While Mailgun's limit lasts, set 90: 100 is the limit itself, with no margin. Then raise it or clear it.",
         "hourlyHelpMore": "Mailgun put the account on «probation»: domains are limited to 100 messages an hour, and sending faster stops the account for a while.",
         "lastHour": "Sent in the last hour: {sent} of {allowance}.",
         "lastHourUnlimited": "Sent in the last hour: {sent}; no hourly limit."

@@ -662,10 +662,11 @@ hourly `/api/health` is shallow since §577 and says only whether the site answe
 3. **Paused by the provider** (§NNN) — `lastError` starts "paused by the provider:". Mailgun
    answered 429, or 400 "not allowed to send" with the probation's words («You are sending too fast.
    Your account is on probation…»): the message waits, due at `Retry-After` or fifteen minutes, and no
-   attempt is spent, so nothing fails. A row paused longer than the overdue allowance since it was
-   queued turns **overdue**: ask Mailgun's support to lift the probation or check Sending → Logs.
-   Rows only waiting for the hour's pace (`hourPaced` in `/api/health`, «Limita pe oră» on «Emailuri»)
-   are not an alert while Mailgun is carrying mail.
+   attempt is spent, and no other Mailgun message is tried until the pause ends, so nothing fails.
+   A row paused recently and queued longer ago than the overdue allowance turns **overdue**: ask
+   Mailgun's support to lift the probation or check Sending → Logs. Mailgun rows only waiting for the
+   hour's pace (`hourPaced` in `/api/health`, «Limita pe oră» on «Emailuri») are not an alert while
+   Mailgun's hour is full; a Gmail row, or a Mailgun row behind an hour with room, is.
 4. **Failed** — Mailgun refused six times. The alert carries the last reason. A `401` is the
    `MAILGUN_API_KEY`; a `404` is the domain or the API base (`SETUP.md` §35: EU domains
    answer at `api.eu.mailgun.net`); "not allowed to send" without the probation's words is the sandbox, an unverified domain or an account under review — open

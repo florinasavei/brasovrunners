@@ -11,7 +11,7 @@ import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { minutesPhrase } from "@/modules/deadlines/domain/duration-words";
 import { pingerCadenceMinutes } from "@/modules/jobs/quiet-hours";
 import { isBulkMessage } from "@/modules/notifications/domain/bulk";
-import { isRatePaused } from "@/modules/notifications/domain/hourly-pace";
+import { pauseIsRecent } from "@/modules/notifications/domain/hourly-pace";
 import { leavesNow } from "@/modules/notifications/domain/send-at-once";
 import { emailLeavesWords, outboxRowLeavesAt, outboxRowOverdue } from "@/modules/notifications/domain/email-wait";
 import { EMAIL_HEALTH_THRESHOLDS } from "@/modules/notifications/health";
@@ -104,16 +104,17 @@ export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit,
     const dueAt = row.nextAttemptAt ?? row.createdAt;
     // Late by health's own number (§98, §447): `overdueCadenceMinutes` is the cadence `/api/health`
     // adds to its ninety minutes, the planned interval included — one judgement, two screens (§529).
-    // Since §NNN, as health counts it too: a row held for Mailgun's hour is not late while the pace
-    // holds, and a row Mailgun keeps pausing is late once it has waited past the allowance since it
-    // was queued (unless its pause runs past the hour, which is a deferral).
+    // Since §NNN, as health counts it too: a Mailgun-road row is not late while Mailgun's hour binds
+    // (a Gmail row never waits for it), and a row Mailgun paused recently is late once it has waited
+    // past the allowance since it was queued (unless its pause runs past the hour, a deferral); a row
+    // whose pause mark is older is judged like any other waiting row.
     const overdueSince = (at: Date) =>
       outboxRowOverdue({ now, dueAt: at, overdueAfterMs: EMAIL_HEALTH_THRESHOLDS.OVERDUE_AFTER_MS, intervalMinutes: delivery.overdueCadenceMinutes });
     const late =
       !isBulkMessage(row.messageType) &&
-      (isRatePaused(row.lastError)
-        ? overdueSince(row.createdAt) && (row.nextAttemptAt === null || row.nextAttemptAt.getTime() <= now.getTime() + EMAIL_HEALTH_THRESHOLDS.DEFERRED_BEYOND_MS)
-        : !volume.hourPaceHolds && overdueSince(dueAt));
+      (pauseIsRecent(row, now)
+        ? overdueSince(row.createdAt) && row.nextAttemptAt !== null && row.nextAttemptAt.getTime() <= now.getTime() + EMAIL_HEALTH_THRESHOLDS.DEFERRED_BEYOND_MS
+        : !(volume.hourPaceHolds && row.onMailgunRoad) && overdueSince(dueAt));
     const leavesAt = outboxRowLeavesAt({ dueAt, nextTickAt, intervalMinutes: runInterval, pingerMinutesAt: (instant) => pingerCadenceMinutes(instant) });
     // The departure in the words the screen after the registration form uses for the same message
     // (`emailLeavesWords`, §536): «10:15» today, the short day with its «la» and hour otherwise.

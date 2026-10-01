@@ -48,7 +48,7 @@ export const emailPlanSettingSchema = z
     dailyAllowance: z.number().int().min(1).max(1_000_000).nullable().default(null),
     monthlyAllowance: z.number().int().min(1).max(10_000_000).nullable().default(null),
     /**
-     * The most Mailgun's road sends in any sixty minutes (§NNN), whatever the plan: Mailgun's
+     * The most Mailgun's road sends in any hour (§NNN, counted over `PACE_WINDOW_MS`), whatever the plan: Mailgun's
      * probation. A stored value written before the field existed has none and reads 100, so
      * production paces from the first deploy; null — the box cleared — is no pace at all.
      */

@@ -14,7 +14,9 @@ import {
   hourlyRoom,
   isRatePaused,
   PACE_EVIDENCE_MS,
+  PACE_WINDOW_MS,
   paceHolds,
+  pauseIsRecent,
   RATE_PAUSE_ERROR_PREFIX,
 } from "@/modules/notifications/domain/hourly-pace";
 import { EMAIL_HEALTH_THRESHOLDS } from "@/modules/notifications/health";
@@ -88,17 +90,35 @@ describe("the hourly pace", () => {
     expect(hourlyRoom(null, 500)).toBeNull();
   });
 
-  it("calls a backlog the pace working only while a pace is set and Mailgun carried something lately", () => {
-    expect(paceHolds({ hourlyAllowance: 100, carriedRecently: 1 })).toBe(true);
-    expect(paceHolds({ hourlyAllowance: 100, carriedRecently: 0 })).toBe(false);
-    expect(paceHolds({ hourlyAllowance: null, carriedRecently: 40 })).toBe(false);
+  it("calls a backlog the pace working only while a pace is set and the hour binds", () => {
+    expect(paceHolds({ hourlyAllowance: 100, carriedRecently: 100, inFlight: 0 })).toBe(true);
+    expect(paceHolds({ hourlyAllowance: 100, carriedRecently: 90, inFlight: 10 })).toBe(true);
+    // Mailgun carrying a message or two is not the pace: an hour with room holds nothing back.
+    expect(paceHolds({ hourlyAllowance: 100, carriedRecently: 1, inFlight: 0 })).toBe(false);
+    expect(paceHolds({ hourlyAllowance: 100, carriedRecently: 99, inFlight: 0 })).toBe(false);
+    expect(paceHolds({ hourlyAllowance: null, carriedRecently: 400, inFlight: 0 })).toBe(false);
     // The evidence window is `/api/health`'s own ninety minutes (§98).
     expect(PACE_EVIDENCE_MS).toBe(EMAIL_HEALTH_THRESHOLDS.OVERDUE_AFTER_MS);
+  });
+
+  it("counts the hour over sixty-one minutes: a minute of margin against Mailgun's own clock", () => {
+    expect(PACE_WINDOW_MS).toBe(61 * 60_000);
   });
 
   it("tells a provider's pause from any other reason on the row", () => {
     expect(isRatePaused(`${RATE_PAUSE_ERROR_PREFIX}mailgun 429: Too Many Requests`)).toBe(true);
     expect(isRatePaused("mailgun 500: Internal Server Error")).toBe(false);
     expect(isRatePaused(null)).toBe(false);
+  });
+
+  it("calls a pause recent only while it ended less than the evidence window ago", () => {
+    const now = new Date("2026-10-01T09:30:00.000Z");
+    const lastError = `${RATE_PAUSE_ERROR_PREFIX}mailgun 429: Too Many Requests`;
+    const at = (minutes: number) => new Date(now.getTime() + minutes * 60_000);
+    expect(pauseIsRecent({ lastError, nextAttemptAt: at(10) }, now)).toBe(true);
+    expect(pauseIsRecent({ lastError, nextAttemptAt: at(-89) }, now)).toBe(true);
+    expect(pauseIsRecent({ lastError, nextAttemptAt: at(-91) }, now)).toBe(false);
+    expect(pauseIsRecent({ lastError, nextAttemptAt: null }, now)).toBe(false);
+    expect(pauseIsRecent({ lastError: "mailgun 500", nextAttemptAt: at(10) }, now)).toBe(false);
   });
 });

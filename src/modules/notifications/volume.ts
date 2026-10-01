@@ -1,4 +1,4 @@
-import { and, count, gte, lt, sql } from "drizzle-orm";
+import { and, count, gte, lt, not, sql } from "drizzle-orm";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { registrations } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
@@ -9,6 +9,8 @@ import { declarationArchiveIsConfigured, participantMessageBcc } from "./domain/
 import { type EmailPlanId, EMAIL_PLANS, emailCeilings, emailHeadroom } from "./domain/email-plan";
 import { readEmailPlan } from "./email-plan";
 import { readMailgunHour } from "./hourly-pace";
+import { gmailRoadCondition } from "./outbox";
+import { outboxRoadsFor } from "./outbox-roads";
 import { paceHolds } from "./domain/hourly-pace";
 import { GMAIL_WINDOW_MS, mailgunMessagesPerCompletedRegistration } from "./domain/email-transport";
 import { type GmailFailure, readEmailTransport, readGmailLastFailure, readGmailUsage } from "./email-transport";
@@ -144,15 +146,15 @@ export type EmailVolumeToday = {
   remaining: number | null;
   /**
    * Mailgun's hourly pace (§NNN): the setting's `hourlyAllowance` (null — no pace), what Mailgun
-   * carried in the last sixty minutes, and the room left (`allowance − sent − in flight`, null with
+   * carried in the window (`PACE_WINDOW_MS`, in recipients), and the room left (`allowance − sent − in flight`, null with
    * no pace) — «trimise în ultima oră: N din …» on «Emailuri», and «Trimite acum»'s second stop.
    */
   hourlyAllowance: number | null;
   sentLastHour: number;
   hourRemaining: number | null;
   /**
-   * Whether a backlog is the pace working (`paceHolds`): the queue panel's «late» then says what
-   * `/api/health`'s `overdue` says — a row held for the hour is not late (§529, §NNN).
+   * Whether Mailgun's hour binds (`paceHolds`): the queue panel's «late» then says what
+   * `/api/health`'s `overdue` says — a Mailgun-road row held for the hour is not late (§529, §NNN).
    */
   hourPaceHolds: boolean;
   /** Whether a signed declaration also reaches the club, which is the sixth message's seventh (§244). */
@@ -277,8 +279,14 @@ export async function readEmailVolumeToday<T extends Record<string, unknown>>(
   });
   const ceilings = emailCeilings(setting);
   const headroom = emailHeadroom(ceilings, sentMessages, sentThisMonth);
-  // The hour, counted the way the claim counts it (`hourly-pace.ts`): one more query, always — the page shows it.
-  const hour = await readMailgunHour(db, now, { hourlyAllowance: setting.hourlyAllowance, alwaysCount: true });
+  // The hour, counted the way the claim counts it (`hourly-pace.ts`), on Mailgun's road as the claim
+  // splits it: one more query, always — the page shows it.
+  const roads = outboxRoadsFor(transport, gmail.configured);
+  const hour = await readMailgunHour(db, now, {
+    hourlyAllowance: setting.hourlyAllowance,
+    alwaysCount: true,
+    ...(roads ? { mailgunRoad: not(gmailRoadCondition(roads)) } : {}),
+  });
 
   return {
     realRegistrations,
@@ -306,6 +314,6 @@ export async function readEmailVolumeToday<T extends Record<string, unknown>>(
     hourlyAllowance: hour.allowance,
     sentLastHour: hour.sentLastHour,
     hourRemaining: hour.remaining,
-    hourPaceHolds: paceHolds({ hourlyAllowance: hour.allowance, carriedRecently: hour.carriedRecently }),
+    hourPaceHolds: paceHolds({ hourlyAllowance: hour.allowance, carriedRecently: hour.carriedRecently, inFlight: hour.inFlight }),
   };
 }
