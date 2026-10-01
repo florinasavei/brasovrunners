@@ -1,13 +1,14 @@
 import type { EmailTransportName } from "@/infrastructure/email/adapter";
-import { type EmailSender, GMAIL_PACE_BUDGET_MS } from "@/infrastructure/email/delivery";
+import type { EmailSender } from "@/infrastructure/email/delivery";
 import { createEmailSenderForEnvironment } from "@/infrastructure/email/sender";
 import type { Database } from "@/db/types";
 import { replyToInForce } from "@/modules/contact/shown-address";
 import { env } from "@/shared/config/env";
 import { isClubCopy } from "./domain/club-notices";
-import { gmailClaimSize, gmailRoadRows, preferredTransport } from "./domain/email-transport";
+import { preferredTransport } from "./domain/email-transport";
 import { createGmailLedger, gmailIsConfigured, readEmailTransport, recordGmailFailure } from "./email-transport";
-import { OUTBOX_BATCH_SIZE, type OutboxRoads, type OutboxRow } from "./outbox";
+import type { OutboxRoads, OutboxRow } from "./outbox";
+import { outboxRoadsFor } from "./outbox-roads";
 
 /**
  * The sender a batch of the outbox goes out through, the road each row asks for, how the claim
@@ -39,23 +40,11 @@ export async function createOutboxSender<T extends Record<string, unknown>>(
       onFailure: (error, at) => recordGmailFailure(db, error, at),
     },
   });
-  const gmail = gmailRoadRows(setting);
+  const roads = outboxRoadsFor(setting, configured);
   return {
     sender,
     replyTo,
     route: (row) => preferredTransport(setting, row.messageType, isClubCopy(row.payloadJson)),
-    /*
-      Claimed apart only where Gmail can carry anything (§443 review): without the account every
-      row takes Mailgun's road, and one claim, oldest first, is the whole story.
-    */
-    ...(configured && (gmail.messageTypes.length > 0 || gmail.clubCopies)
-      ? {
-          roads: {
-            gmailMessageTypes: gmail.messageTypes,
-            gmailClubCopies: gmail.clubCopies,
-            gmailBatchSize: gmailClaimSize(setting.gmailPaceSeconds, GMAIL_PACE_BUDGET_MS, OUTBOX_BATCH_SIZE),
-          },
-        }
-      : {}),
+    ...(roads ? { roads } : {}),
   };
 }
