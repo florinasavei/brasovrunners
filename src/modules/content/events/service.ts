@@ -595,7 +595,7 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
     // «Kit de participare» → «Tricou» (§554), by the same discipline: a caller that did not post the
     // card writes nothing, so no save takes the shirt off an event by not mentioning it.
     ...(fields.kitShirt === undefined ? {} : { kitShirt: fields.kitShirt }),
-    // «Ofertele din lista de așteptare pleacă automat» (§615), by the same discipline: a caller that
+    // «Locurile din lista de așteptare se alocă automat» (§615), by the same discipline: a caller that
     // did not post the select writes nothing, so no save changes who hands out the places by omission.
     ...(fields.waitlistAutoOffer === undefined ? {} : { waitlistAutoOffer: fields.waitlistAutoOffer }),
     // «Informații medicale» (§557), by the same discipline: a caller that did not post the card
@@ -2072,7 +2072,7 @@ async function applyToSeries<T extends Record<string, unknown>>(
 }
 
 /**
- * The trail of «Ofertele din lista de așteptare pleacă automat» (§615): who switched it, on which
+ * The trail of «Locurile din lista de așteptare se alocă automat» (§615): who switched it, on which
  * date, from and to — written in the save's transaction, only when the value moved. Switching the
  * offers on offers nothing by itself: the next place freed or added goes to the line.
  */

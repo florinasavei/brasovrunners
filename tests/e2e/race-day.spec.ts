@@ -192,7 +192,7 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
     /*
       The handed-bib box (§444) suggests the next desk spare only where somebody printed spares for
       this event. A spare is on paper already, so the page would say «E tipărit» and the list would
-      offer no «Marchează BID-ul ca printat». Emptied, the confirmation draws the next number in
+      offer no «Marchează BIB-ul ca printat». Emptied, the confirmation draws the next number in
       order (§548) — the path this story is about, whatever a shared database holds.
     */
     const handedBib = page.locator('input[name="bibNumber"]');
@@ -222,7 +222,7 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
     await page.goto(`/ro/admin/registrations?q=${encodeURIComponent(suffix)}`);
     await hydrated(page);
     await page.getByRole("button", { name: `Acțiuni pentru ${name}` }).click();
-    await page.getByRole("menuitem", { name: "Marchează BID-ul ca printat" }).click();
+    await page.getByRole("menuitem", { name: "Marchează BIB-ul ca printat" }).click();
     await page.waitForURL(/saved=bibsPrinted/);
 
     // The bulk cancel names the printed number among the rows it shows, before any press. (The
@@ -245,8 +245,8 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
     // The day it was cancelled, as the desk and the list write it: the weekday's short date with
     // no «pe» before it (§452) — "Înscriere anulată sâm., 26 sept. 2026".
     const cancelledOn = formatDay(new Date(), { locale: "ro", timeZone: CLUB_TIME_ZONE, style: "short", position: "inline" });
-    await expect(page.getByTestId("void-bib")).toContainText(`BID ${bib} tipărit`);
-    await expect(page.getByText(/Anulată:/)).toContainText(`BID ${bib} tipărit`);
+    await expect(page.getByTestId("void-bib")).toContainText(`BIB ${bib} tipărit`);
+    await expect(page.getByText(/Anulată:/)).toContainText(`BIB ${bib} tipărit`);
 
     // The desk, scanned: red first, and nothing to press.
     await page.goto(`/ro/admin/checkin/${code}`);

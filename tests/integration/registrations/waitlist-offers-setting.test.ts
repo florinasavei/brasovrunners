@@ -22,7 +22,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * 150 places; once the list forms, the organizer wants to hand the margin out to the people of their
  * choice rather than let it go to the head of the line at once. So:
  *
- * - **the setting** — `events.waitlist_auto_offer`, «Ofertele din lista de așteptare pleacă automat»:
+ * - **the setting** — `events.waitlist_auto_offer`, «Locurile din lista de așteptare se alocă automat»:
  *   with «Nu», `fillAvailableSpots` offers nothing, the one gate every caller obeys — a cancellation,
  *   an erasure, an offer's expiry, the maintenance job's sweep (the capacity raise is in
  *   `tests/integration/cms/capacity-raise.test.ts`);
