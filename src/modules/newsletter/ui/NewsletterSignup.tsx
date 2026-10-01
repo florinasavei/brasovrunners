@@ -115,7 +115,7 @@ export default async function NewsletterSignup({ locale, outcome, refused, typed
       {outcome === "sent" && (
         <>
           {/* While the club's emails are late (§NNN), above the wait the answer promises. */}
-          {await emailDelayNotice({ sx: { mb: 2 } })}
+          {await emailDelayNotice({ variant: "subscribe", sx: { mb: 2 } })}
           <Alert severity="success" role="status" sx={{ mb: 2 }} data-testid="newsletter-sent">
             <AlertTitle>{t("sent.title")}</AlertTitle>
             {waitMinutes === null ? t("sent.body") : t("sent.bodyScheduled", { wait: minutesPhrase(locale, waitMinutes) })}

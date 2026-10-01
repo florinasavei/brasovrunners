@@ -112,8 +112,13 @@ export type EmailDelayFacts = {
  * later) plus, when more waits than an hour carries, the queue at the pace; a spent hour — the
  * first place freeing (`hourFreesAt`) plus the queue at the pace, `aheadOnMailgun ÷ allowance × 60`;
  * deferred — the reset; a backlog while the pace binds — the queue at the pace; else unknown.
- * Rounded up to five minutes, never under five: «cel mult» is a ceiling, and a precise number would
- * read as a promise.
+ * **And the scheduler's tick on each:** when a pause ends, an hour frees or an allowance resets,
+ * nothing leaves until the next run (`wakeJobs` only forgets the cached quiet), so the promised wait
+ * (`promisedWaitMinutes`: the pinger's tick under `scheduled`, nothing under `immediate`) is added to
+ * every known estimate — a pause ending at 01:05 under the hourly night cadence is «cel mult 60 de
+ * minute», not 5. A queue spread over several runs ends at a run too, so the pace's estimate carries
+ * the tick as well. Rounded up to five minutes, never under five: «cel mult» is a ceiling, and a
+ * precise number would read as a promise.
  */
 export function judgeEmailDelay(facts: EmailDelayFacts, promisedWaitMinutes: number | null, now: Date): EmailDelay {
   if (facts.queued <= 0 || facts.oldestWaitingSince === null) return { ...NO_EMAIL_DELAY };
@@ -144,8 +149,10 @@ export function judgeEmailDelay(facts: EmailDelayFacts, promisedWaitMinutes: num
   } else {
     estimate = paceMinutes;
   }
+  // The next run after the instant waited for: nothing leaves between two runs (above).
+  const tick = Math.max(0, promisedWaitMinutes ?? 0);
 
-  return { late: true, reason, queued: facts.queued, oldestWaitMinutes, estimateMinutes: estimate === null ? null : roundUpToFive(estimate) };
+  return { late: true, reason, queued: facts.queued, oldestWaitMinutes, estimateMinutes: estimate === null ? null : roundUpToFive(estimate + tick) };
 }
 
 /** Up to the next five minutes, never under five: 0 → 5, 12 → 15, 15 → 15, 90.2 → 95. */

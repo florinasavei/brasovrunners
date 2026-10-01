@@ -24,7 +24,7 @@ import {
 import { readBulkLimit } from "./bulk-budget";
 import { readEmailPlan } from "./email-plan";
 import { readMailgunHour } from "./hourly-pace";
-import { PAUSE_HELD_ERROR, RATE_PAUSE_ERROR_PREFIX } from "./domain/hourly-pace";
+import { RATE_PAUSE_ERROR_PREFIX } from "./domain/hourly-pace";
 import { applyDeadlineRebase, type DeadlineRebase, planDeadlineRebase } from "./deadline-rebase";
 import { BULK_MESSAGE_TYPES, isBulkMessage } from "./domain/bulk";
 import { drainOutboxAfterResponse } from "./drain";
@@ -839,13 +839,12 @@ export async function processOutboxBatch(
  * claim counted given back — a pause is never one of the six. `error` is the reason, written only on
  * the row Mailgun actually refused: its batch-mates are held without it (null), so they never carry
  * the rate-pause mark that `/api/health` reads as «paused by the provider» and the claim reads as the
- * road's stop — they are waiting their turn, not refused. They carry `PAUSE_HELD_ERROR` instead, so
- * that the public delay (§NNN) tells them from a family's held row, which has no reason at all.
+ * road's stop — they are waiting their turn, not refused.
  */
 async function releaseForPause(db: Db, row: OutboxRow, until: Date, error: string | null): Promise<void> {
   await db
     .update(emailOutbox)
-    .set({ status: "PENDING", lockedAt: null, attemptCount: Math.max(0, row.attemptCount - 1), nextAttemptAt: until, lastError: error ?? PAUSE_HELD_ERROR })
+    .set({ status: "PENDING", lockedAt: null, attemptCount: Math.max(0, row.attemptCount - 1), nextAttemptAt: until, ...(error === null ? {} : { lastError: error }) })
     .where(eq(emailOutbox.id, row.id));
 }
 

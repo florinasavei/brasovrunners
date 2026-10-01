@@ -5,6 +5,7 @@ import { governorEffects } from "@/modules/diagnostics/domain/neon-budget";
 import { peekNeonBudgetLevel } from "@/modules/diagnostics/budget-level";
 import { readJobCadence } from "@/modules/jobs/cadence";
 import { pingerCadenceMinutes } from "@/modules/jobs/quiet-hours";
+import { FAMILY_HELD, SITTING_HELD } from "@/modules/registrations/domain/family-sitting";
 import { env } from "@/shared/config/env";
 import { isBulkMessage } from "./domain/bulk";
 import { CLUB_COPY_FLAG } from "./domain/club-notices";
@@ -12,7 +13,7 @@ import { type EmailDelay, type EmailDelayFacts, isWaitedFor, judgeEmailDelay } f
 import { DEFAULT_EMAIL_PLAN, emailPlanSettingSchema } from "./domain/email-plan";
 import { defaultEmailTransportFor, emailTransportSettingSchema } from "./domain/email-transport";
 import { emailWaitMinutes } from "./domain/email-wait";
-import { hourlyRoom, PACE_EVIDENCE_MS, PACE_WINDOW_MS, paceHolds, PAUSE_HELD_ERROR, RATE_PAUSE_ERROR_PREFIX } from "./domain/hourly-pace";
+import { hourlyRoom, PACE_EVIDENCE_MS, PACE_WINDOW_MS, paceHolds, RATE_PAUSE_ERROR_PREFIX } from "./domain/hourly-pace";
 import { PROCESSING_LOCK_TIMEOUT_MS } from "./domain/retry";
 import { readDeliveryTiming } from "./delivery-timing";
 import { EMAIL_PLAN_SETTING_KEY } from "./email-plan";
@@ -61,17 +62,27 @@ export async function readEmailDelayFacts<T extends Record<string, unknown>>(db:
   // The flag as a literal (a code constant), so the select and the GROUP BY are the same expression.
   const clubCopy = sql<boolean>`coalesce(${emailOutbox.payloadJson} -> ${sql.raw(`'${CLUB_COPY_FLAG}'`)} = 'true'::jsonb, false)`;
   /*
-    Waiting: not sent yet — due, being sent, or held by a provider (a pause, a deferral, a retry: the
-    row carries the reason, and a batch-mate held behind a pause carries `PAUSE_HELD_ERROR`). Not a
-    row the club itself holds for later with no reason on it — a
-    family's sitting window (§519), whose screen already named the hour it leaves.
+    The club's own hold, told by its markers and nothing else (§519, §540): a row a family's sitting
+    holds says so in its payload — `sittingHeld` on a verification email, `familyHeld` on any other
+    message, as the queue panel reads them (`queue.ts`) — and a family's one confirmation is the
+    `REGISTRATION_CONFIRMED` that names its sitting (`familySittingId`, `queueFamilyConfirmed`). Club
+    copies carry their participant's payload, and so the same marks. While such a row's not-before is
+    ahead and no provider gave it a reason, the family's screen already named the hour it leaves.
+    Never inferred from a row's shape: a row Gmail's pace or Mailgun's pause handed to a later run
+    looks the same — a future `next_attempt_at`, no reason — and is waiting, not held.
   */
+  const familyMark = sql`coalesce((${emailOutbox.payloadJson} ->> ${SITTING_HELD}::text) = 'true' OR (${emailOutbox.payloadJson} ->> ${FAMILY_HELD}::text) = 'true' OR (${emailOutbox.messageType} = 'REGISTRATION_CONFIRMED' AND (${emailOutbox.payloadJson} ->> 'familySittingId') IS NOT NULL), false)`;
   // `coalesce`: a row never touched has no `next_attempt_at`, and NOT of a NULL comparison is NULL, not true.
-  const waiting = sql`(${emailOutbox.status} IN ('PENDING', 'PROCESSING') AND NOT coalesce(${emailOutbox.status} = 'PENDING' AND ${emailOutbox.nextAttemptAt} > ${nowSql} AND ${emailOutbox.lastError} IS NULL, false))`;
-  // Since its creation, or since a hold the club chose ended: the person was told that hour.
-  const waitedSince = sql`(CASE WHEN ${emailOutbox.lastError} IS NULL AND ${emailOutbox.nextAttemptAt} > ${emailOutbox.createdAt} THEN ${emailOutbox.nextAttemptAt} ELSE ${emailOutbox.createdAt} END)`;
-  // A batch-mate held behind a pause is waiting for the pause, not for an allowance's reset.
-  const deferred = sql`(${emailOutbox.status} = 'PENDING' AND ${emailOutbox.lastError} IS NOT NULL AND ${emailOutbox.lastError} <> ${PAUSE_HELD_ERROR} AND ${emailOutbox.nextAttemptAt} > ${at(DEFERRED_BEYOND_MS)})`;
+  const clubHold = sql`coalesce(${emailOutbox.status} = 'PENDING' AND ${emailOutbox.nextAttemptAt} > ${nowSql} AND ${emailOutbox.lastError} IS NULL AND ${familyMark}, false)`;
+  // Waiting: not sent yet — due, being sent, or handed to a later run (a pace, a pause, a deferral, a retry).
+  const waiting = sql`(${emailOutbox.status} IN ('PENDING', 'PROCESSING') AND NOT ${clubHold})`;
+  /*
+    Since its creation — a hand-off to a later run never restarts the wait. A family's row, its hold
+    over, from the hold's end (its not-before, or «Gata»): the person was told that hour.
+  */
+  const waitedSince = sql`(CASE WHEN ${familyMark} AND ${emailOutbox.lastError} IS NULL AND ${emailOutbox.nextAttemptAt} > ${emailOutbox.createdAt} THEN ${emailOutbox.nextAttemptAt} ELSE ${emailOutbox.createdAt} END)`;
+  // Put off by a provider, with its reason, past the hour: an allowance's reset.
+  const deferred = sql`(${emailOutbox.status} = 'PENDING' AND ${emailOutbox.lastError} IS NOT NULL AND ${emailOutbox.nextAttemptAt} > ${at(DEFERRED_BEYOND_MS)})`;
   // The mark only the row Mailgun refused carries (`outbox.ts`, `releaseForPause`), its pause not over.
   const pausedRow = sql`(${emailOutbox.status} = 'PENDING' AND ${emailOutbox.lastError} LIKE ${`${RATE_PAUSE_ERROR_PREFIX}%`} AND ${emailOutbox.nextAttemptAt} > ${nowSql})`;
   // Claimed and still held: leaving now, so already spent from the hour (`countMailgunHour`).

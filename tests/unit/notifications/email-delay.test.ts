@@ -52,31 +52,34 @@ describe("§NNN judgeEmailDelay", () => {
     expect(judgeEmailDelay(facts({ oldestWaitingSince: ago(11) }), null, NOW)).toMatchObject({ late: true, reason: "backlog" });
   });
 
-  it("a Mailgun pause is late at once, and the estimate is the pause's end", () => {
+  it("a Mailgun pause is late at once, and the estimate is the pause's end plus the next run", () => {
+    // 12 minutes of pause, then the pinger's 15-minute tick: 27 → 30.
     const paused = judgeEmailDelay(facts({ pausedUntil: ahead(12), oldestWaitingSince: ago(1) }), 15, NOW);
-    expect(paused).toEqual({ late: true, reason: "paused", queued: 3, oldestWaitMinutes: 1, estimateMinutes: 15 });
+    expect(paused).toEqual({ late: true, reason: "paused", queued: 3, oldestWaitMinutes: 1, estimateMinutes: 30 });
+    // More waiting than an hour carries: the pause's end plus the queue at the pace plus the tick (12 + 150 ÷ 100 × 60 + 15 = 117).
+    expect(judgeEmailDelay(facts({ pausedUntil: ahead(12), aheadOnMailgun: 150, queued: 150, oldestWaitingSince: ago(1) }), 15, NOW).estimateMinutes).toBe(120);
     // A pause that ended, or one with nothing of ours on its road, says nothing.
-    // More waiting than an hour carries: the pause's end plus the queue at the pace (12 + 150 ÷ 100 × 60 = 102).
-    expect(judgeEmailDelay(facts({ pausedUntil: ahead(12), aheadOnMailgun: 150, queued: 150, oldestWaitingSince: ago(1) }), 15, NOW).estimateMinutes).toBe(105);
     expect(judgeEmailDelay(facts({ pausedUntil: ago(1), oldestWaitingSince: ago(1) }), 15, NOW).late).toBe(false);
     expect(judgeEmailDelay(facts({ pausedUntil: ahead(12), queuedOnMailgun: 0, oldestWaitingSince: ago(1) }), 15, NOW).late).toBe(false);
   });
 
   it("a spent hour is late, and the estimate is the queue at the pace", () => {
-    // The first place frees in 41 minutes, then 150 ÷ 100 × 60 = 90 at the pace: 131 → 135.
+    // The first place frees in 41 minutes, then 150 ÷ 100 × 60 = 90 at the pace, then the 15-minute tick: 146 → 150.
     const spent = judgeEmailDelay(facts({ hourlyRemaining: 0, aheadOnMailgun: 150, queued: 120, oldestWaitingSince: ago(2), hourFreesAt: ahead(41) }), 15, NOW);
-    expect(spent).toEqual({ late: true, reason: "allowance", queued: 120, oldestWaitMinutes: 2, estimateMinutes: 135 });
-    // Seven behind a spent hour: nothing leaves for 41 minutes, however few they are — never «5 minutes».
-    expect(judgeEmailDelay(facts({ hourlyRemaining: 0, aheadOnMailgun: 7, hourFreesAt: ahead(41) }), 15, NOW).estimateMinutes).toBe(50);
+    expect(spent).toEqual({ late: true, reason: "allowance", queued: 120, oldestWaitMinutes: 2, estimateMinutes: 150 });
+    // Seven behind a spent hour: nothing leaves for 41 minutes, however few they are — never «5 minutes» (41 + 4.2 + 15 → 65).
+    expect(judgeEmailDelay(facts({ hourlyRemaining: 0, aheadOnMailgun: 7, hourFreesAt: ahead(41) }), 15, NOW).estimateMinutes).toBe(65);
     // Rows on Gmail's road only: Mailgun's hour holds none of them.
     expect(judgeEmailDelay(facts({ hourlyRemaining: 0, queuedOnMailgun: 0 }), 15, NOW).late).toBe(false);
     // No pace set: nothing to spend.
     expect(judgeEmailDelay(facts({ hourlyAllowance: null, hourlyRemaining: null }), 15, NOW).late).toBe(false);
   });
 
-  it("a deferral to the allowance's reset is late, and the estimate is the reset", () => {
+  it("a deferral to the allowance's reset is late, and the estimate is the reset plus the next run", () => {
     const deferred = judgeEmailDelay(facts({ deferredUntil: ahead(121) }), 15, NOW);
-    expect(deferred).toMatchObject({ late: true, reason: "allowance", estimateMinutes: 125 });
+    expect(deferred).toMatchObject({ late: true, reason: "allowance", estimateMinutes: 140 });
+    // Under the immediate timing there is no tick to wait for: the reset alone, 121 → 125.
+    expect(judgeEmailDelay(facts({ deferredUntil: ahead(121) }), null, NOW).estimateMinutes).toBe(125);
   });
 
   it("names the dominant reason: a pause before a spent allowance before a backlog", () => {
@@ -89,7 +92,23 @@ describe("§NNN judgeEmailDelay", () => {
   it("estimates a backlog only while the pace binds", () => {
     const behind = facts({ oldestWaitingSince: ago(40), aheadOnMailgun: 240 });
     expect(judgeEmailDelay(behind, 15, NOW).estimateMinutes).toBeNull();
-    expect(judgeEmailDelay({ ...behind, paceBinding: true }, 15, NOW).estimateMinutes).toBe(145);
+    // 240 ÷ 100 × 60 = 144 at the pace, and the queue's last run a tick later: 159 → 160.
+    expect(judgeEmailDelay({ ...behind, paceBinding: true }, 15, NOW).estimateMinutes).toBe(160);
+  });
+
+  it("adds the scheduler's tick to the instant waited for: nothing leaves between two runs", () => {
+    // The hourly night cadence, a pause ending in five minutes: the next send is at the next run, not in five.
+    const night = judgeEmailDelay(facts({ pausedUntil: ahead(5), oldestWaitingSince: ago(1) }), 60, NOW);
+    expect(night.estimateMinutes).toBeGreaterThanOrEqual(65);
+    expect(night.estimateMinutes).toBe(65);
+    // The hour's freeing and the reset carry it too.
+    expect(judgeEmailDelay(facts({ hourlyRemaining: 0, aheadOnMailgun: 7, hourFreesAt: ahead(41) }), 60, NOW).estimateMinutes).toBe(110);
+    expect(judgeEmailDelay(facts({ deferredUntil: ahead(121) }), 60, NOW).estimateMinutes).toBe(185);
+    // A queue that fits in one pass, while the pace binds: its few minutes at the pace, then the tick (3 ÷ 100 × 60 + 60 → 65).
+    expect(judgeEmailDelay(facts({ oldestWaitingSince: ago(80), paceBinding: true }), 60, NOW).estimateMinutes).toBe(65);
+    // Under the immediate timing, unchanged: the pause's end alone, never under five.
+    expect(judgeEmailDelay(facts({ pausedUntil: ahead(5), oldestWaitingSince: ago(1) }), null, NOW).estimateMinutes).toBe(5);
+    expect(judgeEmailDelay(facts({ pausedUntil: ahead(12), oldestWaitingSince: ago(1) }), null, NOW).estimateMinutes).toBe(15);
   });
 
   it("rounds an estimate up to five minutes, never under five", () => {

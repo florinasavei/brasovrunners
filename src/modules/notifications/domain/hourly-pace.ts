@@ -45,15 +45,6 @@ export const PACE_EVIDENCE_MS = 90 * 60_000;
  */
 export const RATE_PAUSE_ERROR_PREFIX = "paused by the provider: ";
 
-/**
- * What `last_error` says on a row that was NOT refused but handed back with the batch that was
- * (§605, `releaseForPause`): waiting behind the pause. It is not the rate-pause mark (health and the
- * claim read that one as the road's stop); it exists so that a row held for the pause is told apart
- * from a row the club holds for a family's window, which also has a future `next_attempt_at` and no
- * reason (§NNN, `public-delay.ts`).
- */
-export const PAUSE_HELD_ERROR = "waiting behind the provider's pause";
-
 /** Whether a row's `last_error` is a provider's rate pause (§605), as the outbox wrote it. */
 export function isRatePaused(lastError: string | null): boolean {
   return lastError !== null && lastError.startsWith(RATE_PAUSE_ERROR_PREFIX);

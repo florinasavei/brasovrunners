@@ -55,7 +55,7 @@ export default async function MyRegistrationsRequestPage({ params, searchParams 
       {sent ? (
         <>
           {/* While the club's emails are late (§NNN), above the wait the sentence below promises. */}
-          {await emailDelayNotice({ sx: { mb: 2 } })}
+          {await emailDelayNotice({ variant: "link", sx: { mb: 2 } })}
           <Alert severity="success">
             {waitMinutes === null ? t("mine.sent") : t("mine.sentScheduled", { wait: minutesPhrase(locale, waitMinutes) })}
           </Alert>

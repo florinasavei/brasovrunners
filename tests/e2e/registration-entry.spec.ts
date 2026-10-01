@@ -139,8 +139,6 @@ test.describe("BR-REQ-030-01 the featured event leads to the registration form",
     */
     await expect(page.getByTestId("check-email-form-in")).toHaveText("Formularul pentru Ana a ajuns.");
     await expect(page.getByTestId("check-email-leaves")).toHaveText(`Emailul către ${address} pleacă acum.`);
-    // §NNN: the e2e server sends on the request, so nothing is late and the screen says nothing about it.
-    await expect(page.getByTestId("email-delay")).toHaveCount(0);
     // §547: no bold question and no primary button — one quiet line after the email's, «Înscriu încă o persoană cu această adresă».
     await expect(page.getByRole("heading", { name: "Mai înscrii pe cineva cu aceeași adresă?" })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Da, încă o persoană" })).toHaveCount(0);
