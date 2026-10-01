@@ -463,15 +463,28 @@ describe("§NNN what the race number on the public list may contain", () => {
     // Off the list: not a row, so its number is never read (§186).
     await createRegistration(event.id, { name: "Nu Vrea", email: "optout@example.org", confirmedAt: at(3), bibNumber: 9, listOptOut: true });
 
-    expect(await listPublicStartList(db, event.id, undefined, { numbers: true })).toEqual([
+    expect(await listPublicStartList(db, event.id, undefined, { firstNumbersNoticeVersion: 1 })).toEqual([
       { displayName: "Ana Pop", clubName: null, bibNumber: 7 },
       { displayName: "Bogdan Ion", clubName: null, bibNumber: null },
     ]);
-    const [row] = await listPublicStartList(db, event.id, undefined, { numbers: true });
+    const [row] = await listPublicStartList(db, event.id, undefined, { firstNumbersNoticeVersion: 1 });
     expect(Object.keys(row)).toEqual(["displayName", "clubName", "bibNumber"]);
-    const [both] = await listPublicStartList(db, event.id, undefined, { socials: true, numbers: true });
+    const [both] = await listPublicStartList(db, event.id, undefined, { socials: true, firstNumbersNoticeVersion: 1 });
     expect(Object.keys(both)).toEqual(["displayName", "clubName", "stravaUrl", "instagramHandle", "bibNumber"]);
-    expect(JSON.stringify(await listPublicStartList(db, event.id, undefined, { numbers: true }))).not.toContain("9");
+    expect(JSON.stringify(await listPublicStartList(db, event.id, undefined, { firstNumbersNoticeVersion: 1 }))).not.toContain("9");
+  });
+
+  it("gives null for a runner who registered under a notice older than the first naming the number (§421)", async () => {
+    const event = await createEvent();
+    await createRegistration(event.id, { name: "Ana Pop", email: "ana@example.org", confirmedAt: at(1), bibNumber: 7, privacyNoticeVersion: 1 });
+    await createRegistration(event.id, { name: "Bogdan Ion", email: "bogdan@example.org", confirmedAt: at(2), bibNumber: 8, privacyNoticeVersion: 2 });
+
+    const listed = await listPublicStartList(db, event.id, undefined, { firstNumbersNoticeVersion: 2 });
+    expect(listed).toEqual([
+      { displayName: "Ana Pop", clubName: null, bibNumber: null },
+      { displayName: "Bogdan Ion", clubName: null, bibNumber: 8 },
+    ]);
+    expect(JSON.stringify(listed)).not.toContain("7");
   });
 
   /*
@@ -483,7 +496,7 @@ describe("§NNN what the race number on the public list may contain", () => {
     const event = await createEvent();
     await createRegistration(event.id, { name: "Ana Pop", email: "ana@example.org", provisionalBibNumber: 4321 });
 
-    const listed = await listPublicStartList(db, event.id, undefined, { socials: true, numbers: true });
+    const listed = await listPublicStartList(db, event.id, undefined, { socials: true, firstNumbersNoticeVersion: 1 });
     expect(listed).toEqual([{ displayName: "Ana Pop", clubName: null, stravaUrl: null, instagramHandle: null, bibNumber: null }]);
     expect(JSON.stringify(listed)).not.toContain("4321");
   });

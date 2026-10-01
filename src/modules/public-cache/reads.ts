@@ -60,7 +60,7 @@ import {
   describesPromotionalMaterials,
   describesPromotionalMaterialsShared,
 } from "@/modules/legal-documents/domain/merge-fields";
-import { findCurrentApprovedDocument, findFirstStatesNoticeVersion, listEffectiveDates } from "@/modules/legal-documents/repository";
+import { findCurrentApprovedDocument, findFirstNumbersNoticeVersion, findFirstStatesNoticeVersion, listEffectiveDates } from "@/modules/legal-documents/repository";
 import { DEFAULT_BOT_CHECK, readBotCheck } from "@/modules/registrations/bot-check";
 import {
   countAnonymousStartListEntries,
@@ -327,16 +327,16 @@ export async function cachedStartListCounts(eventId: string): Promise<{ named: n
 /**
  * One page of `listPublicStartList` — names and clubs, and, only with `socials` (the notice in force
  * describes them, §500), each ticked runner's Strava and Instagram, and only with `numbers` (§NNN)
- * each runner's race number. Both flags are in the key, so a page read without a gate is never
+ * each runner's race number, only for registrations that recorded the first notice naming it or a later one (§421's line, `cachedFirstNumbersNoticeVersion`). The socials flag and that version are in the key, so a page read without a gate is never
  * served to a reader with it, or the other way round. A number is written by a confirmation, which
  * is a change of state and expires "places" (`transitionRegistration`), and by the hand-typed
  * change and «Alocă numerele» (`setBibNumberByStaff`, `assignBibNumbers`), which expire it too.
  */
-export async function cachedStartListPage(eventId: string, offset: number, limit: number, socials = false, numbers = false) {
+export async function cachedStartListPage(eventId: string, offset: number, limit: number, socials = false, firstNumbersNoticeVersion: number | null = null) {
   return publicRead(
-    ["places.start-list", eventId, offset, limit, socials ? "socials" : "names", numbers ? "numbers" : "unnumbered"],
+    ["places.start-list", eventId, offset, limit, socials ? "socials" : "names", firstNumbersNoticeVersion === null ? "unnumbered" : `numbers-from-${firstNumbersNoticeVersion}`],
     ["places", "events"],
-    () => listPublicStartList(getDb(), eventId, { offset, limit }, { socials, numbers }),
+    () => listPublicStartList(getDb(), eventId, { offset, limit }, { socials, firstNumbersNoticeVersion }),
   );
 }
 
@@ -392,6 +392,15 @@ export async function cachedListStatesDisclosed(now: Date): Promise<boolean> {
 export async function cachedListSocialsDisclosed(now: Date): Promise<boolean> {
   const notices = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now)));
   return notices.every((notice) => notice !== undefined && describesListSocials(notice.body));
+}
+
+/**
+ * The first approved privacy notice that named the race number beside a name
+ * (`findFirstNumbersNoticeVersion`, §NNN), or null — the line below which a tick was given under a
+ * notice promising names and clubs only. Expired with every legal text.
+ */
+export async function cachedFirstNumbersNoticeVersion(): Promise<number | null> {
+  return publicRead(["legal.first-numbers-notice"], ["legal"], () => findFirstNumbersNoticeVersion(getDb()));
 }
 
 /**

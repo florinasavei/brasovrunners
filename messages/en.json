@@ -2911,7 +2911,7 @@
         "listNumbersNotice": {
           "title": "Privacy notice: the race number on the public list",
           "todo": "The notice in force does not yet describe the race number on the public list, so the list shows no numbers until the club approves a notice that describes it.",
-          "done": "The notice in force describes the race number: the public list shows, in a “No.” column, the number of every confirmed participant listed by name.",
+          "done": "The notice in force describes the race number: the public list shows, in a “No.” column, the race number beside the confirmed participants listed by name who registered under a notice that describes it; anyone who registered under an older one shows “—”.",
           "how": [
             "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. The section on the public list describes the race number beside the names of the confirmed.",
             "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish”. Once it is in force in both languages, every public list shows the “No.” column, with no other setting.",

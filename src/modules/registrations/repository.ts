@@ -393,7 +393,8 @@ function publicSocialColumns(socials: boolean | undefined): Record<string, SQL<s
  * The race-number column a public list may add (§NNN, amending §396), or none.
  *
  * Asked for only by `StartList`, only while the privacy notice in force names
- * `{{participantListNumbers}}` (`cachedListNumbersDisclosed`), and only on the confirmed list —
+ * `{{participantListNumbers}}` (`cachedListNumbersDisclosed`), and only for a registration that recorded the first notice naming it or a later one (§421's line,
+ * `findFirstNumbersNoticeVersion`; an older consent gets null), and only on the confirmed list —
  * `listPublicStartListOthers` never selects it: a pending or waiting registration has no number
  * (§548). **`bib_number` and never `provisional_bib_number`** (§214): the provisional number was
  * printed nowhere and emailed to nobody precisely so that it could move, and a number published
@@ -401,9 +402,12 @@ function publicSocialColumns(socials: boolean | undefined): Record<string, SQL<s
  * more, which changes nothing here: the public select never names it
  * (`tests/privacy/public-surface.test.ts`).
  */
-function publicNumberColumns(numbers: boolean | undefined): Record<string, typeof registrations.bibNumber> {
-  if (!numbers) return {};
-  return { bibNumber: registrations.bibNumber };
+function publicNumberColumns(firstNumbersNoticeVersion: number | null | undefined): Record<string, ReturnType<typeof sql<number | null>>> {
+  if (firstNumbersNoticeVersion === null || firstNumbersNoticeVersion === undefined) return {};
+  // §421's line: the number of a runner who registered under an older notice stays unread.
+  return {
+    bibNumber: sql<number | null>`case when ${registrations.privacyNoticeVersion} >= ${firstNumbersNoticeVersion} then ${registrations.bibNumber} end`,
+  };
 }
 
 /**
@@ -438,7 +442,7 @@ export async function listPublicStartList<T extends Record<string, unknown>>(
    * Only behind the notice's gates: the socials (§500, `publicSocialColumns`) and the race number
    * (§NNN, `publicNumberColumns`). Without either, the select is exactly the name and the club.
    */
-  options: { socials?: boolean; numbers?: boolean } = {},
+  options: { socials?: boolean; firstNumbersNoticeVersion?: number | null } = {},
 ): Promise<PublicStartListRow[]> {
   const query = db
     // BR-REQ-039-02: the display name, never the legal one, and the club they wrote (§85).
@@ -448,7 +452,7 @@ export async function listPublicStartList<T extends Record<string, unknown>>(
       displayName: registrations.displayName,
       clubName: registrations.clubName,
       ...publicSocialColumns(options.socials),
-      ...publicNumberColumns(options.numbers),
+      ...publicNumberColumns(options.firstNumbersNoticeVersion),
     })
     .from(registrations)
     .where(

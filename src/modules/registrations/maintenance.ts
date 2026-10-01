@@ -8,6 +8,7 @@ import { queueEventReminders, queueParticipationConfirmations } from "@/modules/
 import { AUTOMATIC_SEND_KEYS } from "@/modules/notifications/domain/automatic-sends";
 import { enqueueEmail } from "@/modules/notifications/outbox";
 import { releaseLegacyHeldNumbers } from "./bibs";
+import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { queueNewEventAlerts } from "@/modules/newsletter/service";
 import { purgeLapsedFamilyEntries } from "./family-entries";
 import { purgeLapsedFamilySittings } from "./family-sitting";
@@ -84,6 +85,8 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
   let legacyFailed = false;
   try {
     kept = (await releaseLegacyHeldNumbers(db, now)).kept;
+    // The public list may show a kept number (§NNN): a one-off step that wrote some expires the cached pages.
+    if (kept.length > 0) revalidatePublicContent("places");
   } catch {
     legacyFailed = true;
   }

@@ -106,6 +106,7 @@ async function register(
     emailConfirmedAt?: Date;
     bibNumber?: number;
     provisionalBibNumber?: number;
+    privacyNoticeVersion?: number;
   },
 ) {
   const email = `${input.name.toLowerCase().replace(/[^a-z]+/g, ".")}@example.org`;
@@ -122,7 +123,7 @@ async function register(
     registeredName: input.name,
     displayName: resolveDisplayName({ legalName: input.name }),
     clubName: input.name === "Ana Popescu" ? "CS Rapid" : null,
-    privacyNoticeVersion: 1,
+    privacyNoticeVersion: input.privacyNoticeVersion ?? 1,
     privacyAcknowledgedAt: NOW,
     resultsNameConsent: false,
     resultsConsentVersion: 1,
@@ -268,6 +269,38 @@ describe("§NNN with a notice that describes the race number", () => {
     expect(headers(html)).toEqual(["#", "Nume", "Club"]);
     expect(html).not.toContain('data-col="number"');
     expect(caption(html)).toBe(ro.Event.startList.captionStates);
+  });
+});
+
+describe("§NNN a runner who registered under an older notice (§421)", () => {
+  it("shows «—» for a number whose owner registered before the first notice naming it, in both languages", async () => {
+    // Version 1 does not name the number; version 2 does.
+    await approveNotice(without(MARKER));
+    await approveNotice({ ro: privacyNoticeRo, en: privacyNoticeEn });
+    const event = await createEvent();
+    await register(event.id, { name: "Ana Popescu", confirmedAt: at(1), bibNumber: 117, privacyNoticeVersion: 1 });
+    await register(event.id, { name: "Bogdan Ionescu", confirmedAt: at(2), bibNumber: 118, privacyNoticeVersion: 2 });
+
+    const ro_ = renderToStaticMarkup(await StartList({ event }));
+    expect(rows(ro_).map((row) => row[1])).toEqual(["—", "118"]);
+    expect(markup(ro_)).not.toContain("117");
+    locale = "en";
+    const en_ = renderToStaticMarkup(await StartList({ event }));
+    expect(headers(en_)).toEqual(["#", "No.", "Name", "Club"]);
+    expect(rows(en_).map((row) => row[1])).toEqual(["—", "118"]);
+    expect(markup(en_)).not.toContain("117");
+  });
+
+  it("keeps today's table when nobody on the page registered under a notice that names the number", async () => {
+    await approveNotice(without(MARKER));
+    await approveNotice({ ro: privacyNoticeRo, en: privacyNoticeEn });
+    const event = await createEvent();
+    await register(event.id, { name: "Ana Popescu", confirmedAt: at(1), bibNumber: 117, privacyNoticeVersion: 1 });
+
+    const html = renderToStaticMarkup(await StartList({ event }));
+
+    expect(headers(html)).toEqual(["#", "Nume", "Club"]);
+    expect(markup(html)).not.toContain("117");
   });
 });
 
