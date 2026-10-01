@@ -3225,6 +3225,12 @@ export async function unregister<T extends Record<string, unknown>>(
      * the words, which are the person's own and may name them.
      */
     reason?: CancelReason;
+    /**
+     * A staff cancellation that is the club refusing the registration under the terms (§NNN): the
+     * ground the Administrator typed under a box that said it goes to the person. Written into the
+     * message's payload, so the cancellation email names it; never on the row.
+     */
+    refusedGround?: string;
   } = {},
 ): Promise<Registration> {
   // The club's hold and offer lengths (§377), before the lock and from the memo when it is fresh.
@@ -3284,7 +3290,10 @@ export async function unregister<T extends Record<string, unknown>>(
           the person left the waiting list — «Înscrierea pentru <nume> … a fost anulată», one per
           person, whoever pressed it.
         */
-        payload: { previousStatus: current.status },
+        payload: {
+          previousStatus: current.status,
+          ...(source === "ADMIN" && options.refusedGround ? { refusedGround: options.refusedGround } : {}),
+        },
         idempotencyKey: `registration:${cancelled.id}:cancelled:${now.toISOString()}`,
         now,
       });

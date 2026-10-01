@@ -632,6 +632,8 @@
       "cancelReason": "Motivul",
       "cancelAction": "Anulează înscrierea",
       "cancelHelp": "Înscrierea nu se șterge niciodată — rămâne ca dovadă a ce a acceptat persoana și când. Anularea eliberează locul, iar acesta merge la primul de pe lista de așteptare.",
+      "refusedByOrganizer": "Clubul refuză înscrierea, potrivit termenilor: motivul scris mai sus îi este trimis persoanei pe e-mail",
+      "refusedByOrganizerHelp": "Doar pe un motiv obiectiv din termeni: condiții neîndeplinite, date false, capacitate sau siguranță, conduită. Niciodată pe un criteriu interzis de lege. Nebifat, motivul rămâne doar în jurnal.",
       "withdraw": {
         "title": "Retrage consimțământul",
         "help": "Pentru cine a cerut în scris ștergerea datelor date cu acord. Se șterge doar ce bifezi; înscrierea rămâne, iar persoana nu primește niciun mesaj.",

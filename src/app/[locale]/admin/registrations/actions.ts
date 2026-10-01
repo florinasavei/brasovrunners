@@ -347,14 +347,27 @@ export async function correctRegisteredNameAction(_previous: FormOutcome | null,
   return backTo(detailPath(locale, registrationId), { saved: "nameCorrected" });
 }
 
-/** Cancel, with a reason. A refusal keeps the reason typed (§315). */
+/**
+ * Cancel, with a reason. A refusal keeps the reason typed (§315). The box «Clubul refuză
+ * înscrierea, potrivit termenilor» (§NNN) makes it the club's refusal: the reason goes to the
+ * person as the ground — the box's own words say so before the press. Only the page's form has the
+ * box; the list's row menu posts none, so it stays an ordinary cancellation.
+ */
 export async function cancelRegistrationAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
   const registrationId = text(form, "registrationId");
+  const byOrganizer = form.get("refusedByOrganizer") === "on";
 
   try {
     const actor = await requireStaffCapability(canManageRegistrations);
-    await cancelRegistrationByStaff(getDb(), actor, registrationId, text(form, "reason"), new Date());
+    await cancelRegistrationByStaff(
+      getDb(),
+      actor,
+      registrationId,
+      text(form, "reason"),
+      new Date(),
+      byOrganizer ? { kind: "REFUSED_BY_ORGANIZER" } : {},
+    );
   } catch (error) {
     return refused(error, form);
   }

@@ -632,6 +632,8 @@
       "cancelReason": "Reason",
       "cancelAction": "Cancel the registration",
       "cancelHelp": "A registration is never deleted — it records what somebody agreed to and when. Cancelling releases the place, and it goes to the first person on the waiting list.",
+      "refusedByOrganizer": "The club refuses the registration under the terms: the reason typed above is emailed to the person",
+      "refusedByOrganizerHelp": "Only on an objective ground the terms name: conditions not met, false details, capacity or safety, conduct. Never on a ground the law forbids. Unticked, the reason stays in the log only.",
       "withdraw": {
         "title": "Withdraw consent",
         "help": "For a person who asked in writing to delete what they gave on consent. Only what you tick is deleted; the registration stays and the person is sent no message.",
