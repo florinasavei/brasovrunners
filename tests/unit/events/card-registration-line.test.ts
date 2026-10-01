@@ -48,19 +48,19 @@ const known = (cta: Extract<RegistrationDoor, { kind: "KNOWN" }>["cta"], fill: {
 
 describe("§409 cardRegistrationLine — the card's registration, in words", () => {
   it("says the window and the free places, in bold, with the page's register button", () => {
-    const line = cardRegistrationLine(translator("ro"), "ro", race(), NOW, known({ kind: "OPEN", availablePlaces: 7, waiting: 0 }, { taken: 3, capacity: 10 }));
+    const line = cardRegistrationLine(translator("ro"), "ro", race(), NOW, known({ kind: "OPEN", availablePlaces: 7, offered: 0, waitlisted: 0 }, { taken: 3, capacity: 10 }));
     expect(line).toEqual({
       lead: "Înscrieri deschise până sâm., 26 sept. 2026, la 10:00",
       leadParts: { before: "Înscrieri deschise până ", fact: "sâm., 26 sept. 2026, la 10:00", after: "" },
       detail: "7 locuri libere din 10",
       detailParts: { before: "", fact: "7 locuri libere", after: " din 10" },
       bold: true,
-      button: { cta: { kind: "OPEN", availablePlaces: 7, waiting: 0 }, label: "Înscrie-te la eveniment" },
+      button: { cta: { kind: "OPEN", availablePlaces: 7, offered: 0, waitlisted: 0 }, label: "Înscrie-te la eveniment" },
     });
   });
 
   it("shows no number for an uncapped race, and still the button (BR-REQ-034-01 criterion 4)", () => {
-    const line = cardRegistrationLine(translator("en"), "en", race(), NOW, known({ kind: "OPEN", availablePlaces: null, waiting: 0 }));
+    const line = cardRegistrationLine(translator("en"), "en", race(), NOW, known({ kind: "OPEN", availablePlaces: null, offered: 0, waitlisted: 0 }));
     expect(line.detail).toBeNull();
     expect(line.bold).toBe(true);
     expect(line.button?.label).toBe("Register for this event");
@@ -99,8 +99,46 @@ describe("§409 cardRegistrationLine — the card's registration, in words", () 
   });
 
   it("§587 says how many wait beside the free places, once anybody does", () => {
-    const line = cardRegistrationLine(translator("ro"), "ro", race(), NOW, known({ kind: "OPEN", availablePlaces: 1, waiting: 2 }, { taken: 9, capacity: 10 }));
+    // Since §NNN the line's length is said in its two halves: these two wait with no offer yet, so the
+    // words are §587's; an open offer is named as offered (below), never counted as one more waiting.
+    const line = cardRegistrationLine(translator("ro"), "ro", race(), NOW, known({ kind: "OPEN", availablePlaces: 1, offered: 0, waitlisted: 2 }, { taken: 9, capacity: 10 }));
     expect(line.detail).toBe("1 loc liber din 10 · 2 pe lista de așteptare");
+  });
+
+  /**
+   * §NNN (the owner, 2026-10-01, of the card of a race with 10 places, 7 taken and one offer open:
+   * «2 locuri libere din 10 · 1 pe lista de așteptare» read as a free place nobody was given). An
+   * offered place is promised, so it is not free and not counted among the free places; the person
+   * holding it is not waiting either. The card names it as offered, before anybody still waiting.
+   */
+  it("§NNN names an open offer as a place offered from the waiting list, not one more person waiting", () => {
+    const ro = cardRegistrationLine(translator("ro"), "ro", race(), NOW, known({ kind: "OPEN", availablePlaces: 2, offered: 1, waitlisted: 0 }, { taken: 8, capacity: 10 }));
+    expect(ro.detail).toBe("2 locuri libere din 10 · 1 loc oferit din lista de așteptare");
+    // The free places alone stay bold (§472); the offer is said after them, not bold.
+    expect(ro.detailParts).toEqual({ before: "", fact: "2 locuri libere", after: " din 10 · 1 loc oferit din lista de așteptare" });
+    const en = cardRegistrationLine(translator("en"), "en", race(), NOW, known({ kind: "OPEN", availablePlaces: 2, offered: 1, waitlisted: 0 }, { taken: 8, capacity: 10 }));
+    expect(en.detail).toBe("2 places left out of 10 · 1 place offered from the waiting list");
+  });
+
+  it("§NNN says the people with no offer yet as before, and both — offered first — when both are there", () => {
+    const waiting = cardRegistrationLine(translator("ro"), "ro", race(), NOW, known({ kind: "OPEN", availablePlaces: 2, offered: 0, waitlisted: 1 }, { taken: 8, capacity: 10 }));
+    expect(waiting.detail).toBe("2 locuri libere din 10 · 1 pe lista de așteptare");
+    const both = cardRegistrationLine(translator("ro"), "ro", race(), NOW, known({ kind: "OPEN", availablePlaces: 1, offered: 2, waitlisted: 3 }, { taken: 9, capacity: 10 }));
+    expect(both.detail).toBe("1 loc liber din 10 · 2 locuri oferite din lista de așteptare · 3 pe lista de așteptare");
+    const many = cardRegistrationLine(translator("ro"), "ro", race(), NOW, known({ kind: "OPEN", availablePlaces: 5, offered: 20, waitlisted: 0 }, { taken: 95, capacity: 100 }));
+    expect(many.detail).toBe("5 locuri libere din 100 · 20 de locuri oferite din lista de așteptare");
+    const en = cardRegistrationLine(translator("en"), "en", race(), NOW, known({ kind: "OPEN", availablePlaces: 1, offered: 2, waitlisted: 3 }, { taken: 9, capacity: 10 }));
+    expect(en.detail).toBe("1 place left out of 10 · 2 places offered from the waiting list · 3 on the waiting list");
+  });
+
+  it("§NNN keeps the offered words short enough for a phone, in both languages and every form", () => {
+    for (const locale of ["ro", "en"] as const) {
+      for (const form of ["one", "few", "other"]) {
+        const words = translator(locale)(`cta.offeredCount.${form}`, { count: 1 });
+        expect(words.length, `${locale} ${form}`).toBeLessThanOrEqual(60);
+        expect(words, `${locale} ${form}`).toMatch(locale === "ro" ? /oferit/ : /offered/);
+      }
+    }
   });
 
   it("§587 keeps the full event's words short enough for a phone", () => {
@@ -137,8 +175,8 @@ describe("§409 cardRegistrationLine — the card's registration, in words", () 
     const en = cardRegistrationLine(translator("en"), "en", closedRace, NOW, known({ kind: "CLOSED" }), true);
     expect(en.lead).toBe("Registration has closed — come to the desk with the QR from your email.");
     // Race week changes nothing but the closed sentence: an open window reads as it always did.
-    const open = cardRegistrationLine(translator("ro"), "ro", race(), NOW, known({ kind: "OPEN", availablePlaces: null, waiting: 0 }), true);
-    expect(open).toEqual(cardRegistrationLine(translator("ro"), "ro", race(), NOW, known({ kind: "OPEN", availablePlaces: null, waiting: 0 })));
+    const open = cardRegistrationLine(translator("ro"), "ro", race(), NOW, known({ kind: "OPEN", availablePlaces: null, offered: 0, waitlisted: 0 }), true);
+    expect(open).toEqual(cardRegistrationLine(translator("ro"), "ro", race(), NOW, known({ kind: "OPEN", availablePlaces: null, offered: 0, waitlisted: 0 })));
   });
 
   it("says «soon», bold and with no button, when the opening has no date yet (§451)", () => {
@@ -164,13 +202,19 @@ describe("§472 CardRegistration — only the date, the hour and the free places
   // The button (a client island with its own intl context) is §409's, unchanged; the line is what is read here.
 
   it("bolds the closing date with its hour and «7 locuri libere», never the words around them (RO)", () => {
-    const html = render("ro", known({ kind: "OPEN", availablePlaces: 7, waiting: 0 }, { taken: 3, capacity: 10 }));
+    const html = render("ro", known({ kind: "OPEN", availablePlaces: 7, offered: 0, waitlisted: 0 }, { taken: 3, capacity: 10 }));
     expect(strongs(html)).toEqual(["sâm., 26 sept. 2026, la 10:00", "7 locuri libere"]);
     expect(text(html)).toContain("Înscrieri deschise până sâm., 26 sept. 2026, la 10:00 · 7 locuri libere din 10");
   });
 
+  it("§NNN bolds the free places alone when an offer is named after them", () => {
+    const html = render("ro", known({ kind: "OPEN", availablePlaces: 2, offered: 1, waitlisted: 1 }, { taken: 8, capacity: 10 }));
+    expect(strongs(html)).toEqual(["sâm., 26 sept. 2026, la 10:00", "2 locuri libere"]);
+    expect(text(html)).toContain("· 2 locuri libere din 10 · 1 loc oferit din lista de așteptare · 1 pe lista de așteptare");
+  });
+
   it("does the same in English", () => {
-    const html = render("en", known({ kind: "OPEN", availablePlaces: 1, waiting: 0 }, { taken: 9, capacity: 10 }));
+    const html = render("en", known({ kind: "OPEN", availablePlaces: 1, offered: 0, waitlisted: 0 }, { taken: 9, capacity: 10 }));
     expect(strongs(html)).toHaveLength(2);
     expect(strongs(html)[1]).toBe("1 place left");
     expect(text(html)).toContain(`${strongs(html)[1]} out of 10`);

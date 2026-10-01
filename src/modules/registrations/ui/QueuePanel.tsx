@@ -98,6 +98,12 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
         {figure(t("queue.confirmed"), counts.confirmed)}
         {figure(t("queue.holds"), holds)}
         {figure(t("queue.free"), free ?? "∞")}
+        {/*
+          The open offers (§NNN), beside the free places and the people waiting: the count the public
+          card reads «1 loc oferit din lista de așteptare» from (`readPublicPlaces`'s `offered`, the
+          same `countOccupied` field), so the panel and the card agree. Already among «Rezervate».
+        */}
+        {figure(t("queue.offeredFigure"), counts.unexpiredWaitlistOfferedHolds)}
         {figure(t("queue.waiting"), waiting)}
       </Stack>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>

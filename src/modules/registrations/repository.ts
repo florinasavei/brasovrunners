@@ -1146,7 +1146,8 @@ export async function lockOldestWaitlisted<T extends Record<string, unknown>>(
  * look at: an offer past its deadline, a lapsed declaration hold that somebody is waiting for
  * (§160 — with nobody waiting the hold is kept, and the job would lock the event to do
  * nothing, on every run until the race), a hold or waiting-list entry left open on an event
- * that has started, or numbers to settle. Never a cancelled or completed event (§331, §82).
+ * that has started, or numbers to settle — and, since §NNN, a free place on a capped event before
+ * its close while somebody waits. Never a cancelled or completed event (§331, §82).
  *
  * A liveness query, not a correctness one — §16.2 is explicit that the job exists to send
  * expiry messages and retry delivery, not to make capacity correct, so missing an event here
@@ -1200,7 +1201,42 @@ export async function findEventsNeedingMaintenance<T extends Record<string, unkn
         ),
       ),
     );
-  return rows.map((row) => row.eventId);
+  const due = new Set(rows.map((row) => row.eventId));
+
+  /*
+    A free place while somebody waits (§NNN, amending §104 and §587): a scheduled, capped event,
+    before its close, with a `WAITLISTED` row and fewer places occupied than its capacity. Every
+    clause above names a row whose deadline has passed; this one names the result — a place nobody
+    holds and nobody was offered — whatever freed it: a family's reservation or held place that lapsed
+    with no write (§543, cleared only by a sweep), or a place given back while the event was cancelled,
+    when `fillAvailableSpots` offers nothing (§331), and found free once the race is put back on. Such
+    an event goes through the same locked `fillAvailableSpots` as every other (`maintenance.ts`), which
+    counts again under the lock and keeps every rule: no offer after the close, none on a cancelled
+    event, never more offers than free places. Nothing is decided here; this only says where to look.
+
+    The occupied count is the allocator's own (`countOccupied` → `computeOccupied`), read without the
+    lock, never a second formula in SQL. **What it costs:** one read per scheduled capped event with
+    somebody waiting, per run — on a full race with a waiting list, one `countOccupied` each run while
+    the line stands; on every other event, nothing. `kind` is in no condition here (§30).
+  */
+  const waitedFor = await db
+    .selectDistinct({ eventId: events.id, capacity: events.capacity })
+    .from(events)
+    .innerJoin(registrations, and(eq(registrations.eventId, events.id), eq(registrations.status, "WAITLISTED")))
+    .where(
+      and(
+        sql`${events.eventStatus} = 'SCHEDULED'`,
+        isNotNull(events.capacity),
+        // Before the close — or the start, when there is no close or it is later (`capHoldExpiry`'s instant, §420).
+        sql`${now} < least(coalesce(${events.registrationClosesAt}, ${events.startsAt}), ${events.startsAt})`,
+      ),
+    );
+  for (const candidate of waitedFor) {
+    if (due.has(candidate.eventId) || candidate.capacity === null) continue;
+    const occupied = computeOccupied(await countOccupied(db, candidate.eventId, now));
+    if (occupied < candidate.capacity) due.add(candidate.eventId);
+  }
+  return [...due];
 }
 
 /**

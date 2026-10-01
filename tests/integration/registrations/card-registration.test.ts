@@ -1,3 +1,4 @@
+import { eq } from "drizzle-orm";
 import { createFormatter, createTranslator } from "next-intl";
 import { createElement, type ReactNode } from "react";
 import { renderToReadableStream } from "react-dom/server";
@@ -169,6 +170,32 @@ describe("BR-REQ-041-01 the race's card carries the page's registration door, th
     const onPage = await page();
     expect(onPage).toContain("1 loc liber");
     expect(onPage).toContain("9 înscriși din 10 locuri");
+  });
+
+  /**
+   * §NNN — the owner's card: 10 places, 7 taken, one place offered to the head of the line. The free
+   * places are 2 (an offer is promised, not free), and the person offered is not «pe lista de
+   * așteptare» any more: the card and the page name the place as offered, read through the public
+   * cache's one entry (`cachedPublicAvailability`) from the allocator's own counts.
+   */
+  it("§NNN names an open offer as a place offered from the waiting list, on the card and the page alike", async () => {
+    const event = await publish({ capacity: 10 });
+    await take(event.id, 7);
+    await take(event.id, 1, "WAITLISTED", 7);
+    await take(event.id, 1, "WAITLISTED", 8);
+    // The first in the line holds an offer until tomorrow; the second still waits.
+    const [offered] = await db.select().from(registrations).where(eq(registrations.registeredName, "Runner 7"));
+    await db.update(registrations).set({ status: "WAITLIST_OFFERED", offerCreatedAt: NOW, holdExpiresAt: new Date(NOW.getTime() + 24 * HOUR) }).where(eq(registrations.id, offered.id));
+
+    // 10 − 7 confirmed − 1 offered − 1 waiting = 1 free: the waiting person's claim comes first (§10.6).
+    expect(line(await card()).words).toBe(
+      "Înscrieri deschise până sâm., 26 sept. 2026, la 10:00 · 1 loc liber din 10 · 1 loc oferit din lista de așteptare · 1 pe lista de așteptare",
+    );
+    const onPage = text(await page());
+    expect(onPage).toContain("1 loc oferit din lista de așteptare");
+    expect(onPage).toContain("1 pe lista de așteptare");
+    locale = "en";
+    expect(line(await card()).words).toMatch(/· 1 place left out of 10 · 1 place offered from the waiting list · 1 on the waiting list$/);
   });
 
   it("uses Romanian's «de» from twenty on, and English's own order", async () => {

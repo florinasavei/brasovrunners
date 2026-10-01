@@ -138,8 +138,20 @@ describe("BR-REQ-034-01 an open event", () => {
     expect(registrationCta(event({ availablePlaces: 4 }), DURING)).toEqual({
       kind: "OPEN",
       availablePlaces: 4,
-      waiting: 0,
+      offered: 0,
+      waitlisted: 0,
     });
+  });
+
+  it("§NNN carries the line's two halves while places are free: the open offers and the people with no offer yet", () => {
+    expect(registrationCta(event({ availablePlaces: 2, waiting: 3, offered: 1, waitlisted: 2 }), DURING)).toEqual({
+      kind: "OPEN",
+      availablePlaces: 2,
+      offered: 1,
+      waitlisted: 2,
+    });
+    // A cache entry written before §NNN has neither: nought, never a guess from `waiting`.
+    expect(registrationCta(event({ availablePlaces: 2, waiting: 3 }), DURING)).toEqual({ kind: "OPEN", availablePlaces: 2, offered: 0, waitlisted: 0 });
   });
 
   it("shows no number for an uncapped event", () => {
@@ -147,7 +159,8 @@ describe("BR-REQ-034-01 an open event", () => {
     expect(registrationCta(event({ availablePlaces: null }), DURING)).toEqual({
       kind: "OPEN",
       availablePlaces: null,
-      waiting: 0,
+      offered: 0,
+      waitlisted: 0,
     });
   });
 });
@@ -194,7 +207,8 @@ describe("BR-REQ-035-01 a full event whose waiting list has a limit (§348)", ()
     expect(registrationCta(event({ availablePlaces: 2, waitlistCapacity: 0, waitlistRoom: 0 }), DURING)).toEqual({
       kind: "OPEN",
       availablePlaces: 2,
-      waiting: 0,
+      offered: 0,
+      waitlisted: 0,
     });
   });
 

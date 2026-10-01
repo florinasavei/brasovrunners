@@ -46,6 +46,8 @@ export async function readRegistrationDoor(event: PublicEventPage, now: Date): P
   let waitlistRoom: number | null = null;
   let waitlistCapacity: number | null = null;
   let waiting = 0;
+  let offered = 0;
+  let waitlisted = 0;
   /*
     Every page that shows a door is kept no longer than the door's next change (§549): the window
     opening or closing, the start, the confirmation window, the weather window — the page's card,
@@ -61,6 +63,9 @@ export async function readRegistrationDoor(event: PublicEventPage, now: Date): P
         waitlistRoom = availability.waitlistRoom;
         waitlistCapacity = availability.waitlistCapacity;
         waiting = availability.waiting ?? 0;
+        // An entry cached before §NNN has neither: nought until it next expires.
+        offered = availability.offered ?? 0;
+        waitlisted = availability.waitlisted ?? 0;
       }
     } catch (error) {
       /*
@@ -82,7 +87,7 @@ export async function readRegistrationDoor(event: PublicEventPage, now: Date): P
 
   return {
     kind: "KNOWN",
-    cta: registrationCta({ ...event, availablePlaces, waitlistRoom, waitlistCapacity, waiting }, now),
+    cta: registrationCta({ ...event, availablePlaces, waitlistRoom, waitlistCapacity, waiting, offered, waitlisted }, now),
     fill: publicFill(capacity, availablePlaces),
   };
 }
@@ -110,15 +115,19 @@ export async function draftRegistrationDoor<T extends Record<string, unknown>>(
   let availablePlaces: number | null = null;
   let waitlistRoom: number | null = null;
   let waiting = 0;
+  let offered = 0;
+  let waitlisted = 0;
   if (event.registrationMode === "INTERNAL" && registrationState(event, now) === "OPEN") {
     const places = await readPublicPlaces(db, { id: event.id, ...limits }, now);
     availablePlaces = places.availablePlaces;
     waitlistRoom = places.waitlistRoom;
     waiting = places.waiting;
+    offered = places.offered;
+    waitlisted = places.waitlisted;
   }
   return {
     kind: "KNOWN",
-    cta: registrationCta({ ...event, availablePlaces, waitlistRoom, waitlistCapacity: limits.waitlistCapacity, waiting }, now),
+    cta: registrationCta({ ...event, availablePlaces, waitlistRoom, waitlistCapacity: limits.waitlistCapacity, waiting, offered, waitlisted }, now),
     fill: publicFill(limits.capacity, availablePlaces),
   };
 }

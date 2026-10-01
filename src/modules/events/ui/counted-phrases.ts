@@ -49,6 +49,28 @@ export function waitingPhrase(say: Say, waiting: number): string {
 }
 
 /**
+ * "1 loc oferit din lista de așteptare" / "1 place offered from the waiting list" (§NNN): a place
+ * promised to the head of the line, which `computeOccupied` counts as taken and is not free — but is
+ * not somebody still waiting either. Romanian's three forms through `countForm`: «1 loc oferit»,
+ * «2 locuri oferite», «20 de locuri oferite».
+ */
+export function offeredPhrase(say: Say, locale: string, offered: number): string {
+  return say(`cta.offeredCount.${countForm(offered, locale)}`, { count: offered });
+}
+
+/**
+ * What an open event says about its line after the free places (§NNN, amending §587): the offers
+ * still open, then the people waiting with no offer yet — each only when it has anybody, in that
+ * order. The card joins them with a middle dot; the event page draws one line each.
+ */
+export function openLinePhrases(say: Say, locale: string, line: { offered: number; waitlisted: number }): string[] {
+  const phrases: string[] = [];
+  if (line.offered > 0) phrases.push(offeredPhrase(say, locale, line.offered));
+  if (line.waitlisted > 0) phrases.push(waitingPhrase(say, line.waitlisted));
+  return phrases;
+}
+
+/**
  * "Când se eliberează un loc, primești un email și ai 24 de ore să confirmi — altfel locul trece
  * mai departe." (§587, amending §348): how a waiting-list offer works, under the full event's
  * button and above the join form — with the club's own offer window («Termene», `offerHours`,
