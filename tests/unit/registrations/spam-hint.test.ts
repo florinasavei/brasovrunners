@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 /**
- * §NNN — every page that tells somebody to wait for an email names Spam and Promotions in one
+ * §NNN — the pages that wait for an email name Spam and Promotions in one
  * visible box, the same words everywhere — the list below is the authority on which pages.
  * Rendered with the real catalogues, in both languages.
  */
@@ -160,6 +160,12 @@ describe("§NNN the pages that wait for an email point at Spam and Promotions, v
     );
     expect(sent).toContain("Dacă există înscrieri pe această adresă, linkul pleacă acolo");
     expect(spamBox(sent)).toContain(SPAM_RO);
+
+    lang.current = "en";
+    const sentEn = markup(
+      (await MyRegistrationsRequestPage({ params: Promise.resolve({ locale: "en" }), searchParams: Promise.resolve({ sent: "1" }) })) as ReactElement,
+    );
+    expect(spamBox(sentEn)).toContain(SPAM_EN);
   });
 
   it("the short screen after a first form shows it too, in both languages", async () => {

@@ -9,8 +9,8 @@ import type { Locale } from "@/i18n/routing";
  */
 
 /**
- * "Can't find it? Look in Spam and Promotions and move us to your inbox…" — the one
- * visible box on every page that tells somebody to wait for an email from us; which pages show it
+ * "Can't find our email? Look in Spam and Promotions and move us to your inbox…" — the one
+ * visible box on the pages that wait for an email from us; which pages show it
  * is `tests/unit/registrations/spam-hint.test.ts`, the authority. A box
  * rather than a grey line, because the person who needs it is the one whose email went to Spam or
  * Promotions — and that person never reads a hint printed inside the email itself. "Move us to your
