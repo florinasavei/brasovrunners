@@ -269,12 +269,29 @@ describe("BR-REQ-041-01 «când» is one line with its weekday (§356, §349)", 
     expect(when.match(/data-testid="race-start-later"/g)).toHaveLength(1);
   });
 
-  it("a race's two times, each named, on the same line", async () => {
+  it("a race's two times, each named, on the same line, the race start behind a chequered flag (§597)", async () => {
     const when = row(await page({ startsAt: new Date("2026-09-26T06:00:00Z"), raceStartsAt: new Date("2026-09-26T07:00:00Z") }), "Când").dd;
-    expect(text(when)).toBe("Sâmbătă, 26 sept. 2026·întâlnire la 09:00·start la 10:00");
+    expect(text(when)).toBe("Sâmbătă, 26 sept. 2026·09:00 (start eveniment)·10:00 (start cursă)");
     // One clock, in front of the first time: the two read as one group (§366).
     expect(when.match(/data-testid="ScheduleIcon"/g)).toHaveLength(1);
-    expect(when.indexOf('data-testid="ScheduleIcon"')).toBeLessThan(when.indexOf("întâlnire"));
+    expect(when.indexOf('data-testid="ScheduleIcon"')).toBeLessThan(when.indexOf("09:00"));
+    // One flag, named, right before the race start's time and nowhere else.
+    expect(when.match(/data-testid="race-start-flag"/g)).toHaveLength(1);
+    expect(when).toMatch(/aria-label="start cursă"[^>]*data-testid="race-start-flag"|data-testid="race-start-flag"[^>]*aria-label="start cursă"/);
+    expect(when.indexOf('data-testid="race-start-flag"')).toBeGreaterThan(when.indexOf("(start eveniment)"));
+    expect(when.indexOf('data-testid="race-start-flag"')).toBeLessThan(when.indexOf("10:00"));
+  });
+
+  it("the flag is drawn only beside a race start: never on a lone event start or a bare time (§597)", async () => {
+    expect(row(await page({ raceStartsAt: null }), "Când").dd).not.toContain("race-start-flag");
+    expect(row(await page({ type: "GROUP_RUN" }), "Când").dd).not.toContain("race-start-flag");
+  });
+
+  it("in English, the two times say «(event start)» and «(race start)» (§597)", async () => {
+    currentLocale = "en";
+    const when = row(await page({ startsAt: new Date("2026-09-26T06:00:00Z"), raceStartsAt: new Date("2026-09-26T07:00:00Z") }), "When").dd;
+    expect(text(when)).toMatch(/·09:00 \(event start\)·10:00 \(race start\)$/);
+    expect(when).toContain('aria-label="race start"');
   });
 
   it("puts a clock in front of the time, as the listing card does (§366): «[calendar] Sâmbătă, 26 sept. 2026 · [clock] 08:00»", async () => {

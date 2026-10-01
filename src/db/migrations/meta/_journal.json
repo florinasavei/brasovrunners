@@ -792,6 +792,13 @@
       "when": 1790777012954,
       "tag": "0115_elevation_gain_estimated",
       "breakpoints": true
+    },
+    {
+      "idx": 113,
+      "version": "7",
+      "when": 1790803825785,
+      "tag": "0116_distance_estimated",
+      "breakpoints": true
     }
   ]
 }

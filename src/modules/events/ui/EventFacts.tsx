@@ -4,6 +4,7 @@ import PaymentsIcon from "@mui/icons-material/Payments";
 import PlaceIcon from "@mui/icons-material/Place";
 import RouteIcon from "@mui/icons-material/Route";
 import ScheduleIcon from "@mui/icons-material/Schedule";
+import SportsScoreIcon from "@mui/icons-material/SportsScore";
 import UmbrellaIcon from "@mui/icons-material/Umbrella";
 import Box from "@mui/material/Box";
 import Link from "@mui/material/Link";
@@ -103,7 +104,10 @@ const WHEN_LEAD_HIDDEN_BELOW_376 = {
  * now 222.83 pixels at 320 in Romanian (215.14 in English), two lines in all; from 360 up the
  * date and the gathering time share the first line and the start time takes the second, in both
  * languages, at 360, 390 and 412. The series row and `WHEN_LEAD_HIDDEN_BELOW_376` are untouched —
- * they never wrap, and their breakpoint was measured with the six-pixel gap.
+ * they never wrap, and their breakpoint was measured with the six-pixel gap. Since §597 the two
+ * times read "[clock] 08:00 (start eveniment) · [flag] 09:00 (start cursă)", longer than that line:
+ * on a narrow phone each time takes a line of its own, whole — the row still wraps between whole
+ * pieces, never clipped (not re-measured).
  */
 const RACE_ROW_GAP = 0.5;
 
@@ -359,8 +363,8 @@ export default async function EventFacts({
      `boldTime` (§375 amended — the owner, 2026-09-25, of the listing card's row: "The time can
      be bolded here as well") gives the bare time the date's own weight, `<strong>` like `day`
      above, on the compact card row only — the card's own caller passes it, the page's and the
-     hero's do not. A race's two named times ("gather at 08:00", "start at 09:00") carry a word
-     before the number, so bolding the plain-time key would bold that word too; `gatheringAtBold`
+     hero's do not. A race's two named times ("08:00 (event start)", "09:00 (race start)", §597)
+     carry words beside the number, so bolding the plain-time key would bold them too; `eventStartAtBold`
      / `raceStartAtBold` wrap only `{time}` in `<strong>`, so the launch race's card matches the
      weekly-run cards without the word going bold with it. `ical.ts`'s calendar description
      keeps the plain keys — no markup belongs in an `.ics` `DESCRIPTION` line.
@@ -388,16 +392,29 @@ export default async function EventFacts({
         : [day];
     }
     // Which times, and their names, from the one rule every surface asks (`whenTimes`, §590): a race
-    // with no gun time yet says «start la 08:30», never «întâlnire la» with nothing after it.
-    const said = whenTimes({ type: event.type, startsAt, raceStartsAt: event.raceStartsAt }).times.map(({ key, at }) =>
-      key === null
-        ? boldTime
-          ? <strong>{time(at)}</strong>
-          : time(at)
-        : boldTime
-          ? t.rich(key === "gatheringAt" ? "gatheringAtBold" : key === "raceStartAt" ? "raceStartAtBold" : "eventStartAtBold", { time: time(at), strong })
-          : t(key, { time: time(at) }),
-    );
+    // with no gun time yet says «08:30 (start eveniment)» (#305), one with both «08:30 (start
+    // eveniment) · 10:00 (start cursă)» (§597).
+    const said = whenTimes({ type: event.type, startsAt, raceStartsAt: event.raceStartsAt }).times.map(({ key, at }) => {
+      const words =
+        key === null
+          ? boldTime
+            ? <strong>{time(at)}</strong>
+            : time(at)
+          : boldTime
+            ? t.rich(key === "raceStartAt" ? "raceStartAtBold" : "eventStartAtBold", { time: time(at), strong })
+            : t(key, { time: time(at) });
+      // The race start's time is led by a chequered flag (§597; the owner wrote 🏁 — on the site
+      // it is the glyph, never the emoji), in the clock's own size and seat; the emails and the
+      // `.ics` keep the words alone. `whenTimes` says `raceStartAt` only beside the event start.
+      return key === "raceStartAt" ? (
+        <>
+          <SportsScoreIcon role="img" aria-hidden={false} aria-label={t("raceStartFlag")} data-testid="race-start-flag" sx={clockSx} />
+          {words}
+        </>
+      ) : (
+        words
+      );
+    });
     return [
       day,
       <>
@@ -526,8 +543,8 @@ export default async function EventFacts({
     wrapped to a second line: "This should be on a single line on a phone") is `nowrap` on the row,
     every piece kept whole — except where `card.wrap` says the row may need a second line, and there
     it breaks between whole pieces exactly as the page does. Two cases set it: a race's two named
-    times — at 320 pixels "[calendar] Sâmbătă … · [clock] întâlnire la 09:00 · start la 10:00" is
-    about 390 pixels against the card's 226, and `nowrap` would have the card's own
+    times — at 320 pixels "[calendar] Sâmbătă … · [clock] 09:00 (start eveniment) · [flag] 10:00 (start cursă)"
+    (§597) is well over 390 pixels against the card's 226, and `nowrap` would have the card's own
     `overflow: hidden` clip the start time silently, the one time a runner must not miss — and a
     date that keeps its year on a phone (`dateShort` absent: a past date, or one more than a year
     out; measured above). Flex wrapping breaks only a row that does not fit.

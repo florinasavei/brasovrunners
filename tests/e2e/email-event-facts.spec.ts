@@ -23,7 +23,7 @@ test.describe("the event's facts in the confirmed email's preview", () => {
 
     const ro = facts.nth(0);
     for (const label of ["Când", "Unde", "Program", "Traseu", "Cost", "Linkuri"]) await expect(ro).toContainText(label);
-    await expect(ro).toContainText("întâlnire la 09:00 · start la 09:30");
+    await expect(ro).toContainText("09:00 (start eveniment) · 09:30 (start cursă)");
     await expect(ro).toContainText("Stația de telecabină Tâmpa");
     await expect(ro).toContainText("Aleea Tiberiu Brediceanu");
     await expect(ro).toContainText("Ridicarea numerelor");

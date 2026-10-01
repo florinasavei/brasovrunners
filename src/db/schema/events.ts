@@ -179,8 +179,8 @@ export const events = pgTable(
      *
      * `starts_at` keeps its meaning exactly: when the event begins — the gathering — and it is
      * what the ordering, the upcoming/past cut-off, the sitemap and the listing all read. A
-     * runner needs both times, and they are not the same fact: gather at 09:00, start at
-     * 10:00. Null when the club has stated only one time; the page then shows only that one
+     * runner needs both times, and they are not the same fact: 09:00 (event start),
+     * 10:00 (race start). Null when the club has stated only one time; the page then shows only that one
      * rather than inventing a gathering an hour before.
      */
     raceStartsAt: timestamp("race_starts_at", { withTimezone: true }),
@@ -318,6 +318,14 @@ export const events = pgTable(
     scheduleItems: jsonb("schedule_items"),
 
     distanceMeters: integer("distance_meters"),
+    /**
+     * «Aproximativ» beside «Distanță (m)» (§598, the twin of §585's climb; the owner, 2026-09-30:
+     * «la distanță vreau să pot pune aproximativ, ca și la elevație»): the club knows the length only
+     * roughly and says so. Every surface then reads «≈ 10 km» and «circa 10 km (aproximativ)»
+     * through `distanceWords`, never a bare number. Meaningless without a distance: the editor saves
+     * it false when the box is empty.
+     */
+    distanceEstimated: boolean("distance_estimated").notNull().default(false),
     elevationGainMeters: integer("elevation_gain_meters"),
     /**
      * «Estimativ» beside «Diferență de nivel (m)» (§585; the owner, 2026-09-30: «la elevație,

@@ -8,6 +8,16 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.50-2026-09-27
+
+- **A cancelled place reaches the waiting list at once** — the next person's offer email leaves right after the cancellation, the erasure or the lapse, not at the next scheduled pass. §596.
+- **A race's two times say «start eveniment» and «start cursă»** — «08:30 (start eveniment) · 10:00 (start cursă)» on the card, the page, the hero, the emails and the calendar file, with a chequered-flag glyph before the race start on the site. §597.
+- **«Aproximativ» beside the distance** — a tick under «Distanță (m)» in the editor's «Traseu» card, like the climb's «Estimativ»; the site then says «≈ 10 km» on the route pill and «circa 10 km (aproximativ)» in its tooltip, the emails, the calendar entry and the share picture. §598.
+- **The card's «când» row is never clipped** — when the race start is not set, «Sâmbătă, 21 nov.» stays on its line and «10:00 (start eveniment)» wraps under it on a phone (a hotfix straight to production, #307). §599.
+## BR-V2.49-2026-09-27
+
+- **The full event's card says how many places are left on the waiting list** — «Mai sunt 4 locuri pe lista de așteptare» under the join sentence, the event page's own words, only when the list has a limit. §594.
+- **A race with no race start says «10:00 (start eveniment)»** on the card, the page, the emails and the calendar — never a bare time that reads as the race start; the page keeps «Ora startului cursei se anunță.» (a hotfix straight to production, #305). §595.
 ## BR-V2.48-2026-09-27
 
 - **«Dă-i un loc» says why before the press** — on a full race the button stays, with an «i» (a tooltip on the list's ⋮ item) that gives the refusal's own numbers and «Mărește întâi capacitatea evenimentului.»; the refusal banner ends with the same sentence; the public README is English throughout. §592.

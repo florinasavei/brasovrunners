@@ -592,7 +592,10 @@ test.describe("BR-REQ-041-01 the listing's cards (§366)", () => {
       By place, not by name: MUI names its icons (`data-testid="ScheduleIcon"`) only outside a
       production build, and this suite runs one — `listing-card.test.ts` checks the names. The
       line's own glyph, the calendar, leads it; the one glyph among its words is the clock, in the
-      same piece as the time it stands before.
+      same piece as the time it stands before. A race with two times has a second glyph among them
+      since §597, the chequered flag before the race start's time — its own test id, so the clock is
+      the one glyph that is not the flag, and the flag is counted apart: there beside two times,
+      named «start cursă», and on no card with one.
     */
     const list = await cards(page);
     const count = await list.count();
@@ -600,10 +603,20 @@ test.describe("BR-REQ-041-01 the listing's cards (§366)", () => {
     for (let i = 0; i < count; i += 1) {
       const when = list.nth(i).locator('[data-fact="when"]');
       await expect(when.locator(":scope > svg")).toHaveCount(1);
-      const clock = when.locator(":scope > div svg");
+      const clock = when.locator(':scope > div svg:not([data-testid="race-start-flag"])');
       await expect(clock).toHaveCount(1);
       expect(Math.round((await clock.boundingBox())?.width ?? 0)).toBe(20);
       expect(await clock.evaluate((svg) => svg.parentElement?.textContent ?? "")).toMatch(/\d{1,2}:\d{2}/);
+      const flag = when.locator('[data-testid="race-start-flag"]');
+      const twoTimes = /\d{1,2}:\d{2}[\s\S]*\d{1,2}:\d{2}/.test(await when.innerText());
+      if (twoTimes) {
+        await expect(flag).toHaveCount(1);
+        await expect(flag).toHaveAttribute("role", "img");
+        await expect(flag).toHaveAccessibleName("start cursă");
+        expect(Math.round((await flag.boundingBox())?.width ?? 0)).toBe(20);
+      } else {
+        await expect(flag).toHaveCount(0);
+      }
     }
   });
 
@@ -887,6 +900,12 @@ test.describe("BR-REQ-041-01 the listing's cards (§366)", () => {
       // Half a pixel, no more: a fitting row measures 0, and the defect this guards measured 1.2 at
       // its smallest (the seed's past Sunday under the old `nowrap`, at 320 pixels).
       const TOLERANCE = 0.5;
+      // A race's two named times (§597): «09:00 (start eveniment) ·» measures 178 pixels and
+      // «[flag] 10:00 (start cursă)» 140, 322 with the row's gap, against a row of 228 at 320, 268 at
+      // 360 and 298 at 390 — so below 412 the date, then each time whole on its own, take three
+      // lines, and at 412 the two times share the second. The bound follows what was measured;
+      // every piece stays whole (`pieceLines`, below), which is what §375's exception asks.
+      const RACE_LINES = (width: number) => (width < 412 ? 3 : 2);
 
       for (const width of [320, 360, 390, 412] as const) {
         await page.setViewportSize({ width, height: 720 });
@@ -909,6 +928,8 @@ test.describe("BR-REQ-041-01 the listing's cards (§366)", () => {
               const right = Math.max(...pieces.map((piece) => piece.getBoundingClientRect().right));
               return {
                 lines: box.height / lineHeight,
+                // The tallest piece, in lines: a piece is whole (`nowrap`), so never more than one.
+                pieceLines: Math.max(...pieces.map((piece) => piece.getBoundingClientRect().height)) / lineHeight,
                 overflow: Math.max(line.scrollWidth - line.clientWidth, right - box.right),
                 // `innerText` leaves out the rendering `display: none` hides: the date as shown.
                 shown: (line as HTMLElement).innerText,
@@ -932,13 +953,16 @@ test.describe("BR-REQ-041-01 the listing's cards (§366)", () => {
             expect.soft(row.overflow, `${name}: nothing past the card (${at})`).toBeLessThanOrEqual(TOLERANCE);
           }
 
-          // The race: both times whole, on two lines at most.
+          // The race: both times whole, on three lines below 412 pixels and two from it (§597).
           const raceCard = byTitle(race);
           await expect(raceCard, `race present (${at})`).toHaveCount(1);
           const raceRow = await measure(raceCard);
           expect.soft(raceRow.shown, `race: its gathering time (${at})`).toContain("08:00");
           expect.soft(raceRow.shown, `race: its start time (${at})`).toContain("09:00");
-          expect.soft(raceRow.lines, `race: two lines at most (${at})`).toBeLessThanOrEqual(2.5);
+          // Since §597 the two times read «08:00 (start eveniment) · [flag] 09:00 (start cursă)»: at
+          // 320, 360 and 390 pixels the date, then each named time, take a line each — three, every piece whole.
+          expect.soft(raceRow.lines, `race: ${RACE_LINES(width)} lines at most (${at})`).toBeLessThanOrEqual(RACE_LINES(width) + 0.5);
+          expect.soft(raceRow.pieceLines, `race: every piece whole (${at})`).toBeLessThanOrEqual(1.5);
           expect.soft(raceRow.overflow, `race: nothing past the card (${at})`).toBeLessThanOrEqual(TOLERANCE);
 
           // A year out and a past date: the year kept, a wrap allowed, nothing past the card.
@@ -959,7 +983,13 @@ test.describe("BR-REQ-041-01 the listing's cards (§366)", () => {
             const row = await measure(card);
             const twoTimes = /\d{2}:\d{2}[\s\S]*\d{2}:\d{2}/.test(row.shown);
             const withYear = /\b20\d{2}\b/.test(row.shown);
-            expect.soft(row.lines, `card ${i} «${row.shown}» (${at}): lines`).toBeLessThanOrEqual(twoTimes || withYear ? 2.5 : 1.5);
+            // A race's one time, named «(start eveniment)» (#305, §597), may wrap once between whole
+            // pieces like a date with its year: 117 + 178 pixels against a row of 228 at 320.
+            const namedTime = /\(start eveniment\)|\(event start\)/.test(row.shown);
+            expect
+              .soft(row.lines, `card ${i} «${row.shown}» (${at}): lines`)
+              .toBeLessThanOrEqual(twoTimes ? RACE_LINES(width) + 0.5 : withYear || namedTime ? 2.5 : 1.5);
+            expect.soft(row.pieceLines, `card ${i} «${row.shown}» (${at}): every piece whole`).toBeLessThanOrEqual(1.5);
             expect.soft(row.overflow, `card ${i} «${row.shown}» (${at}): nothing past the card`).toBeLessThanOrEqual(TOLERANCE);
           }
           const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);

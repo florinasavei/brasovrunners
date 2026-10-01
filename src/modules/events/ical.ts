@@ -2,8 +2,9 @@ import { isRichTextEmpty, readRichText, richTextToPlainText } from "@/modules/co
 import { type CoHost, primaryCoHostLink } from "./domain/co-hosts";
 import { costUrlHost, type EventCostType } from "./domain/cost";
 import { difficultyLevelOf, difficultyWords } from "./domain/difficulty";
+import { distanceWords } from "./domain/distance";
 import { elevationWords } from "./domain/elevation";
-import { distanceInKm, type EventSurface, type EventType } from "./domain/event-type";
+import { type EventSurface, type EventType } from "./domain/event-type";
 import { type RegistrationWindowInput, registrationState } from "./domain/registration-window";
 import { type ProgrammeRow, programmeLines } from "./domain/schedule";
 import { whenTimes } from "./domain/when-times";
@@ -67,7 +68,7 @@ export type CalendarEvent = {
   endsAt: Date | null;
   /** Cancelled: `STATUS:CANCELLED` and the page's notice first in the description (§159); finished: the notice. */
   eventStatus?: "SCHEDULED" | "CANCELLED" | "COMPLETED";
-  /** The gun time, when it differs from the gathering (§159): "întâlnire la 08:00 · start la 09:00", the page's words. */
+  /** The gun time, when it differs from the gathering (§159): "08:00 (start eveniment) · 09:00 (start cursă)", the page's words (§597). */
   raceStartsAt?: Date | null;
   /** What the event is (§112): the page's overline, the first word of the facts line. */
   type?: EventType | null;
@@ -99,6 +100,8 @@ export type CalendarEvent = {
   timezone?: string;
   /** The facts line (§159): what the page's facts say, in the calendar's language through `labels.t`. */
   distanceMeters?: number | null;
+  /** «Aproximativ» (§598): the facts line says «circa 10 km (aproximativ)». */
+  distanceEstimated?: boolean | null;
   elevationGainMeters?: number | null;
   /** «Estimativ» (§585): the facts line says «circa 350 m diferență de nivel (estimativ)». */
   elevationGainEstimated?: boolean | null;
@@ -382,9 +385,10 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
   // The page's own sentence for an event that will not happen or has happened (BR-REQ-020-01 criteria 2 and 4).
   const notice = event.eventStatus === "CANCELLED" ? t("cancelledNotice") : event.eventStatus === "COMPLETED" ? t("completedNotice") : "";
 
-  // "întâlnire la 08:00 · start la 09:00": the page's two times when the race has a gun time.
+  // "08:00 (start eveniment) · 09:00 (start cursă)": the page's two times when the race has a gun
+  // time, in words alone — no flag, no emoji, in an `.ics` line (§597).
   const time = (at: Date) => formatTime(at, { locale, timeZone });
-  // The page's own rule (`whenTimes`, §590): a race with no gun time yet reads "start la 08:00 · Ora
+  // The page's own rule (`whenTimes`, §590): a race with no gun time yet reads "08:00 (start eveniment) · Ora
   // startului cursei se anunță."; a bare time is the calendar's own, and is not repeated.
   const when = whenTimes(event);
   const named = when.times.flatMap(({ key, at }) => (key === null ? [] : [t(key, { time: time(at) })]));
@@ -437,12 +441,13 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
   const nightLine = night.night ? nightWords(night, t, event.type === "GROUP_RUN", "ics") : "";
 
   // "Concurs · 🏃 10 km · ↗ 300 m urcare · Trail · Mediu · Gratuit": the page's own words (§112), one line.
-  const km = distanceInKm(event.distanceMeters ?? null);
+  // The distance in its long form (§598), an approximate one said as one: «circa 10 km (aproximativ)».
+  const distance = distanceWords(event, t, (km) => new Intl.NumberFormat(intl, { maximumFractionDigits: 1 }).format(km));
   // The climb in its long form (§585), an estimate said as one: «circa 350 m diferență de nivel (estimativ)».
   const climb = elevationWords(event, t, (value) => new Intl.NumberFormat(intl).format(value));
   const facts = [
     event.type ? t(`type.${event.type}`) : "",
-    km !== null ? `🏃 ${t("distanceKm", { km: new Intl.NumberFormat(intl, { maximumFractionDigits: 1 }).format(km) })}` : "",
+    distance ? `🏃 ${distance.long}` : "",
     climb ? `↗ ${climb.long}` : "",
     event.surface ? t(`surface.${event.surface}`) : "",
     difficultyLine(event, t),

@@ -31,7 +31,6 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
     locationToBeAnnounced: t("locationToBeAnnounced"),
     dateToBeAnnounced: t("dateToBeAnnounced"),
     timeToBeAnnounced: t("timeToBeAnnounced"),
-    distanceKm: (km) => t("distanceKm", { km }),
     t: (key, values) => t(key, values),
   });
 }

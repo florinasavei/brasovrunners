@@ -14,14 +14,19 @@ decision or a click only the club can make · **released** — on production, wi
 Where things stand at the end of 2026-09-30, written so that a session with no access to the laptop can carry on
 (the dispatcher's own notes lived under `D:/tmp/handoff/` on the laptop; from here on this page is the queue).
 
-- **Production:** `BR-V2.46` (released 16:49). **qa and QA:** `BR-V2.47` (#302, 21:14) and `BR-V2.48` (#303) once its
-  checks are green — the two carry §585–§593: «estimativ» beside the elevation, the preview's «Formular» tab, the full
-  race's thank-you and its counts, one click confirms the whole family and «Retrimite familiei», «Dă-i un loc» explained
-  before and after the press, an undefined race start, the members' link in the footer, the contact form's one-line note
-  and no gap before the anti-bot check, the README in English.
+- **Production:** `BR-V2.48` plus two hotfixes straight to `main` (#305 «10:00 (start eveniment)», #307 the card's
+  «când» row never clipped). **qa and QA:** `BR-V2.50` (02:24 on 2026-10-01; smoke ok) — §594–§599 on top of §585–§593:
+  the full card says the room left on the waiting list, a cancellation's offer email leaves at once, both starts named
+  with a chequered flag, the distance marked «aproximativ» (migration `0116`), the two hotfixes' decision entries.
+- **The morning, from the phone (2026-10-01):** open the QA site (its address: SETUP.md §26) and look at the race's card and page (the
+  two times, «≈» on a distance you tick, a cancellation on the QA race → the next person's offer email leaves at once).
+  Then release everything that is in qa: GitHub app → the repository → **Actions** → **release** → **Run workflow** →
+  `pr` = `310` (the last batch pull request, already merged: the run continues from the release step), `baseline` empty
+  → Run. It merges `qa` into `main`, runs the production migration (`0116`) and waits for production's health; the
+  run's Summary page says each step. Twenty to thirty minutes. Nothing on the laptop is needed.
 - **The release** is the owner's «ok release» after checking QA: from the phone, the label `ship` on the last batch PR into
   qa runs the landing and the release on GitHub Actions (`docs/RUNBOOKS.md` § Every release: the label); from a PC,
-  `node scripts/ship.mjs <batch PR> BR-V2.48-2026-09-27 BR-V2.46-2026-09-27 "<title>"`. No migration is due
+  `node scripts/ship.mjs <batch PR> BR-V2.50-2026-09-27 BR-V2.46-2026-09-27 "<title>"`. No migration is due
   after `0115` (the elevation tick, in `BR-V2.47`).
 - **Decided today, recorded in the sections:** a full race never gets a place from the desk — raise the capacity first
   (§589, §592); the address is confirmed for all or for none, the declaration per person, a cancellation per person
@@ -32,6 +37,14 @@ Where things stand at the end of 2026-09-30, written so that a session with no a
   The owner's standing words: plain words, both languages or neither, a glyph on every button and fold, free tiers,
   fewer CI runs, fewer tests («cut the bullshit and tests»), no Romanian in the README.
 
+- **From 2026-10-01 12:00 the owner works remote from GitHub, on holiday** (his word, 2026-09-30 23:20). What works
+  without the laptop: a change is built by a remote agent that branches from `origin/qa`, runs the tests (PGlite, no
+  database), writes its `.release/<branch>.json`, pushes and opens a pull request into `qa`; the landing and the release
+  are the label `ship` on that pull request (`docs/RUNBOOKS.md` § Every release: the label — one pull request at a time,
+  straight to production; `dry_run` by hand shows the diff only). The night of 2026-09-30 ran three changes that way:
+  a cancellation offers the freed place to the waiting list, both starts named with a racing flag, the distance marked
+  «aproximativ»; their pull requests are on GitHub. The laptop's own kits (`premerge`/`land` scripts under
+  `D:/tmp/handoff/`) are not needed for that path.
 ### Follow-ups, in order (none blocks the race)
 
 - `yarn npm audit` leftovers: `esbuild` 0.18 through `drizzle-kit`, ESLint 9.39's end of support — major upgrades of two
@@ -53,7 +66,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Item | Branch |
 | --- | --- |
-| — | nothing waiting: the last ready items shipped in `BR-V2.48` |
+| — | nothing waiting: the last ready items shipped in `BR-V2.50` |
 
 ## Next, queued
 
@@ -90,6 +103,8 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Baseline | What |
 | --- | --- |
+| `BR-V2.50` | a cancellation — by staff, by the participant, by an erasure or an expiry — offers the freed place at once to the first person on the waiting list, through the one allocator, with the offer email sent from that request, and the backoffice shows the offered state; the cause of the silence on QA found and fixed at the root (§596) · a race with both times says «08:30 (start eveniment) · 10:00 (start cursă)» on every surface, the race start with a racing-flag glyph on the card, the page and the hero; the single-time race keeps «(start eveniment)» (§597) · the event’s distance can be marked «aproximativ» — a tick beside the number in the editor (migration 0116), «≈ 10 km» on the pills and «circa 10 km (aproximativ)» wherever the distance stands alone, through one domain function, on every surface the elevation’s estimate covers (§598) · the card’s «când» row is never clipped — when the race start is not set, the date stays on its line and «10:00 (start eveniment)» wraps under it on a phone (a hotfix straight to production, #307) (§599) |
+| `BR-V2.49` | the listing card’s full state also says the room left on a capped waiting list («Mai sunt N locuri pe lista de așteptare»), the same phrase the event page uses, from the door read the card already has (§594) · a race with no race start says «10:00 (start eveniment)» on the card, the page, the emails and the calendar — never a bare time that reads as the race start; the page keeps «Ora startului cursei se anunță.» (a hotfix straight to production, #305) (§595) |
 | `BR-V2.48` | «Dă-i un loc» stays visible on a full race with a tooltip that says why the press will be refused — the allocator’s counts and «Mărește întâi capacitatea evenimentului» — and the refusal banner says it too (no place is ever given past the capacity); the family rule recorded (the address is confirmed for all or for none, the declaration per person, a cancellation per person); the public README carries no Romanian but the club’s name; two SPECS criteria on «Membri», three stale comments, one literal «§NNN» and the partner-marker spec tidied (§592) · the contact form’s note is one short line («Îți răspundem pe e-mail. Păstrăm mesajul cel mult 12 luni.» and the privacy link) and the anti-bot check leaves no blank gap and no Cloudflare sentence until it loads on the first touch (§577) — then one short sentence with the widget (§593) |
 | `BR-V2.47` | the elevation gain can be marked «estimativ» in the editor — one tick beside the number, one boolean on the event (migration 0115) — and every surface that shows the D+ says so through the one domain function that words it: «≈ 350 m D+» on the card’s pills and the calendar, «circa 350 m diferență de nivel (estimativ)» on the page, in the emails’ facts block, in the .ics and the feed, in both languages; a tick without a number is ignored (§585) · the event editor’s «Previzualizare» gets a third tab «Formular» — the public registration form as a participant would see it for this event, drawn from the unsaved values by the same form components the register page uses (every box the event’s settings switch on, the door state, the «Acorduri» ticks and the texts in force), in preview state: nothing written, the submit button disabled with «previzualizare», no anti-bot script; RO | EN, phone | desktop, painted on a press (§586) · when the places are taken, the registration door says it kindly and completely on every surface — the card («Locurile s-au ocupat.» in bold, «Intră pe lista de așteptare — te anunțăm pe email când se eliberează un loc.», the open-until line kept quiet), the event page (the same, the room left, and how the offer works with the event’s own hours), the register page’s waiting-list mode — and the two closed states get the same tone, in both languages (§587) · one click on a verification link proves the address for everyone registered on it for that event and submitted before the click — each moved on through the one allocator, in order, the page naming them — while a later submission still waits for its own click; the backoffice list groups a family’s rows together, with one «Retrimite familiei» that sends the address one email naming every member’s next step (§588) · «Dă-i un loc» from the waiting list works again — the cause found and fixed at the root, through the allocator; a refusal, if any, names its reason (§589) · the race start may be left undefined — a tick «Startul cursei nu e stabilit» in the editor saves it null, every surface shows only the event start («start la 08:30») and the page says the race start time is announced later (§590) · the members’ zone link leaves the header and the phone menu and sits in the footer’s «Despre club, contact și termeni» fold, with its glyph, while the zone is published (§591) |
 | `BR-V2.46` | housekeeping — the 18 literal «§NNN» left on qa by earlier merges carry their section numbers (and two lines the BR-V2.44 landing had numbered §577 read §575 and §574 again), the six `Identity.*` catalogue keys the footer hotfix orphaned are gone, the partner-marker e2e spec reads the listing’s live twin instead of a static page a render can store stale, the resend’s plain-text test no longer reads `__` out of a link’s token (a unit test pins the marker’s stripping), the footer hotfix of 2026-09-29 (the legal identity inside the footer’s fold, straight to main) is recorded as an amendment of §565, the six older difficulty criteria in SPECS say the level of fifteen, and a PGlite case proves the FAQ delete expires the tag the link reads — nothing a visitor sees changes (§582) · a publish is on the listing and the calendar for the next visitor — a render in flight during the publish could store the old rows as a fresh copy (Next 16.3.4 compares nothing with a render’s start, so the stale copy could live up to a day), so every write expires its tags once more from its own request, three seconds after the response (or once the same request’s outbox drain has finished); no cron, no poll, nothing in idle (§583) · the twelve Dependabot alerts closed — `undici` 8.11.2 and `brace-expansion` 1.1.21 / 5.0.12 in the lock, inside the ranges their parents already declare; both were install and lint tooling (node-gyp, minimatch), never in the site’s runtime; what audit still lists (esbuild through drizzle-kit, ESLint’s end of support) is a major upgrade for its own change (§584) |

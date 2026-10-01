@@ -1,8 +1,8 @@
 import type { events } from "@/db/schema/events";
 import { costPaidToExternalOrganizer } from "../domain/cost";
 import { difficultyLevelOf, difficultyWords, type DifficultyTooltipBlock, type StoredDifficulty } from "../domain/difficulty";
+import { distanceWords, type DistanceSource } from "../domain/distance";
 import { elevationWords, type ElevationSource } from "../domain/elevation";
-import { distanceInKm } from "../domain/event-type";
 import { clubNightEvent, nightTooltip } from "../night-event";
 import { difficultyLevelGlyph } from "./difficulty-glyphs";
 import type { GlyphName } from "./glyphs";
@@ -65,7 +65,9 @@ export type RouteFactsSource = Pick<
   // `StoredDifficulty`'s, for a cached row from before it.
   Pick<StoredDifficulty, "difficultyLevel"> &
   // «Estimativ» (§585): optional for the same reason — a cached row from before it reads as exact.
-  Pick<ElevationSource, "elevationGainEstimated"> & {
+  Pick<ElevationSource, "elevationGainEstimated"> &
+  // «Aproximativ» (§598), the distance's twin: optional, a cached row from before it reads as exact.
+  Pick<DistanceSource, "distanceEstimated"> & {
     /** Null on an event page while the date is to be announced (§533): no date, so no night pill. */
     startsAt: Date | null;
   };
@@ -119,14 +121,25 @@ export function routePillParts(
   t: Translate,
   format: FormatNumber,
 ): { surface: Pill | null; difficulty: Pill | null; distance: Pill | null; elevation: Pill | null; headlamp: Pill | null } {
-  const distance = distanceInKm(event.distanceMeters);
-  const distancePill: Pill | null =
-    distance !== null ? { glyph: "distance", label: t("distanceKm", { km: format.number(distance, { maximumFractionDigits: 1 }) }) } : null;
+  const distancePill = distancePillOf(event, t, format);
   const elevationPill = elevationPillOf(event, t, format);
   const level = difficultyLevelOf(event);
   const difficultyPill: Pill | null = level !== null ? difficultyPillOf(level, t) : null;
   const surfacePill: Pill | null = event.surface ? { glyph: `surface:${event.surface}`, label: t(`surface.${event.surface}`) } : null;
   return { surface: surfacePill, difficulty: difficultyPill, distance: distancePill, elevation: elevationPill, headlamp: nightPill(event, t) };
+}
+
+/**
+ * The distance's pill (§356, §598): «10 km», or «≈ 10 km» when the club ticked «Aproximativ» — the
+ * words from `distanceWords`, the one function every surface reads. An approximate distance also
+ * carries the long form, «circa 10 km (aproximativ)», as its tooltip, as what a screen reader hears
+ * (`srLabel`) and as the emails' words (`plain`, §392), exactly as the climb's pill does (§585).
+ */
+function distancePillOf(event: RouteFactsSource, t: Translate, format: FormatNumber): Pill | null {
+  const words = distanceWords(event, t, (km) => format.number(km, { maximumFractionDigits: 1 }));
+  if (!words) return null;
+  if (!words.estimated) return { glyph: "distance", label: words.short };
+  return { glyph: "distance", label: words.short, tooltip: words.long, srLabel: words.long, plain: words.long };
 }
 
 /**

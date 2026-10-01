@@ -1,0 +1,1 @@
+ALTER TABLE "events" ADD COLUMN "distance_estimated" boolean DEFAULT false NOT NULL;

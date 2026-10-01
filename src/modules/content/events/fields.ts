@@ -730,6 +730,12 @@ export const eventFieldsSchema = z
     */
     // 500 km is longer than any run the club will hold and shorter than a typo's extra zero.
     distanceMeters: optionalWholeNumber({ min: 0, max: 500_000 }),
+    /**
+     * «Aproximativ» beside the distance (§598, the twin of `elevationGainEstimated`): the length is
+     * known only roughly. Optional for a caller from before it, which means exact; never a refusal —
+     * a tick with no distance is dropped at the write (`estimatedDistance`).
+     */
+    distanceEstimated: z.boolean().optional().default(false),
     elevationGainMeters: optionalWholeNumber({ min: 0, max: 20_000 }),
     /**
      * «Estimativ» beside the climb (§585): the number is a guess. Optional for a caller from before
