@@ -4,9 +4,8 @@ import { describe, expect, it, vi } from "vitest";
 
 /**
  * §NNN — every page that tells somebody to wait for an email names Spam and Promotions in one
- * visible box, the same words everywhere: the screen after the registration form, and the two
- * "send me the link again" forms once sent (the registration's and «Înscrierile mele»). Rendered
- * with the real catalogues, in both languages.
+ * visible box, the same words everywhere — the list below is the authority on which pages.
+ * Rendered with the real catalogues, in both languages.
  */
 const lang = vi.hoisted(() => ({ current: "ro" as "ro" | "en" }));
 
@@ -43,6 +42,16 @@ vi.mock("@/app/[locale]/registrations/family/[token]/actions", () => ({
   declineFamilyEntryAction: async () => {},
 }));
 vi.mock("@/modules/registrations/ui/RegistrationJourney", () => ({ default: () => null }));
+// The two done pages (address confirmed, race declaration): no database, no cookies, no family pass.
+vi.mock("@/modules/registrations/token-actions", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/modules/registrations/token-actions")>()),
+  readConfirmedOnAddress: async () => [],
+}));
+vi.mock("@/modules/registrations/family-signing", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/modules/registrations/family-signing")>()),
+  readFamilySigningPass: async () => null,
+}));
+vi.mock("@/shared/feedback/PublicFlash", () => ({ default: () => null }));
 // The group run's declaration page: only its done branch is rendered, with a dated trail run.
 vi.mock("@/db/client", () => ({ getDb: () => ({}) }));
 vi.mock("@/modules/resilience/event-copy", () => ({
@@ -65,6 +74,8 @@ const { default: MyRegistrationsRequestPage } = await import("@/app/[locale]/reg
 
 const { default: FamilyConfirmPage } = await import("@/app/[locale]/registrations/family/[token]/page");
 const { default: GroupRunDeclarationPage } = await import("@/app/[locale]/events/[slug]/declaration/page");
+const { default: ConfirmEmailPage } = await import("@/app/[locale]/registrations/confirm/[token]/page");
+const { default: DeclarePage } = await import("@/app/[locale]/registrations/declare/[token]/page");
 const { default: NewsletterSignup } = await import("@/modules/newsletter/ui/NewsletterSignup");
 
 const SPAM_RO = "Nu îl găsești? Caută în Spam și în Promoții și mută-ne în Inbox, ca să primești și următoarele.";
@@ -202,6 +213,25 @@ describe("§NNN the pages that wait for an email point at Spam and Promotions, v
       );
       expect(declared).toContain('data-testid="group-run-declaration-done"');
       expect(spamBox(declared), `${locale} declaration`).toContain(expected);
+    }
+  });
+
+  it("the address-confirmed page and the race declaration's done page show it, on every outcome", async () => {
+    for (const locale of ["ro", "en"] as const) {
+      lang.current = locale;
+      const expected = locale === "ro" ? SPAM_RO : SPAM_EN;
+      for (const done of ["1", "waitlist"]) {
+        const page = markup(
+          (await ConfirmEmailPage({ params: Promise.resolve({ locale, token: "t" }), searchParams: Promise.resolve({ done }) })) as ReactElement,
+        );
+        expect(spamBox(page), `${locale} confirm ${done}`).toContain(expected);
+      }
+      for (const done of ["confirmed", "waitlisted"]) {
+        const page = markup(
+          (await DeclarePage({ params: Promise.resolve({ locale, token: "t" }), searchParams: Promise.resolve({ done }) })) as ReactElement,
+        );
+        expect(spamBox(page), `${locale} declare ${done}`).toContain(expected);
+      }
     }
   });
 });

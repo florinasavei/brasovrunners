@@ -253,7 +253,7 @@ export async function readSpentActionTokenScope<T extends Record<string, unknown
 }
 
 /**
- * The scope of a token a newer one *replaced*, and when the newest of its kind was issued, so a
+ * The scope of a token a newer one *replaced*, and when the token that replaced it was issued, so a
  * page can say "a newer email has the working link" (§NNN; `registrations/domain/link-status.ts`).
  * The sibling of `readSpentActionTokenScope`, with the same three properties:
  *

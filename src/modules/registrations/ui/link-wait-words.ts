@@ -10,8 +10,8 @@ import type { Locale } from "@/i18n/routing";
 
 /**
  * "Can't find it? Look in Spam and Promotions and move us to your inbox…" — the one
- * visible box on every page that tells somebody to wait for an email from us: the screen after the
- * registration form, the two "send me the link again" forms once sent, the newsletter's. A box
+ * visible box on every page that tells somebody to wait for an email from us; which pages show it
+ * is `tests/unit/registrations/spam-hint.test.ts`, the authority. A box
  * rather than a grey line, because the person who needs it is the one whose email went to Spam or
  * Promotions — and that person never reads a hint printed inside the email itself. "Move us to your
  * inbox" is the part that saves the next message too: the declaration, the offer, the QR.

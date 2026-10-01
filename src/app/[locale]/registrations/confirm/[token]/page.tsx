@@ -10,6 +10,7 @@ import { hoursPhrase } from "@/modules/deadlines/domain/duration-words";
 import { cachedDeadlines } from "@/modules/public-cache/reads";
 import ActionLinkNotice from "@/modules/registrations/ui/ActionLinkNotice";
 import ConfirmOnArrival from "@/modules/registrations/ui/ConfirmOnArrival";
+import { spamHintWords } from "@/modules/registrations/ui/link-wait-words";
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
 import {
   readConfirmedOnAddress,
@@ -95,6 +96,10 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
             protects their place is running. Saying "done" alone loses people here. */}
         <RegistrationJourney current="declare" />
         <Alert severity="success">{t("confirm.done")}</Alert>
+        {/* The declaration's email (or the offer's) is still to come: where to look for it (§NNN). */}
+        <Alert severity="info" sx={{ mt: 2 }} data-testid="spam-hint">
+          {await spamHintWords()}
+        </Alert>
         {people.length > 1 && (
           <Alert severity="info" icon={false} sx={{ mt: 2 }} data-testid="confirm-address-people">
             <Typography sx={{ fontWeight: 600 }}>{t("confirm.doneFor")}</Typography>

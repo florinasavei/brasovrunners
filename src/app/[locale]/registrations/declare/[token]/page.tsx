@@ -44,6 +44,7 @@ import { countEligibleWaitlisted, findRegistrationById } from "@/modules/registr
 import { confirmationDueAtStart } from "@/modules/registrations/domain/hold-deadlines";
 import { declarantValues, identityDocumentValues } from "@/modules/registrations/signed-declaration";
 import ActionLinkNotice from "@/modules/registrations/ui/ActionLinkNotice";
+import { spamHintWords } from "@/modules/registrations/ui/link-wait-words";
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
 import SignatureField from "@/modules/registrations/ui/SignatureField";
 import IdDocumentFields, { type DocumentBox, ID_DOCUMENT_TYPES } from "@/modules/registrations/ui/IdDocumentFields";
@@ -220,6 +221,10 @@ export default async function DeclarePage({ params, searchParams }: Props) {
             declaration is already signed — so both outcomes render the finished stepper. */}
         <RegistrationJourney current="done" />
         <Alert severity="success">{done === "waitlisted" ? t("declare.doneWaitlisted") : t("declare.doneConfirmed")}</Alert>
+        {/* The confirmation email (with the QR) or the waiting list's offer is on its way (§NNN). */}
+        <Alert severity="info" sx={{ mt: 2 }} data-testid="spam-hint">
+          {await spamHintWords()}
+        </Alert>
         {held && familySteps && isFamilyWizard(familySteps) && (
           <FamilyDone steps={familySteps} doneHref={await familyDoneHref(held.eventId, locale)} />
         )}
