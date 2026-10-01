@@ -21,14 +21,20 @@ export function fillPhrase(say: Say, locale: string, fill: PublicFill): string {
   const taken = say(`cta.fillTaken.${countForm(fill.taken, locale)}`, { count: fill.taken });
   const places = say(`cta.fillPlaces.${countForm(fill.capacity, locale)}`, { count: fill.capacity });
   /*
-    Places held and not yet confirmed (§NNN; the owner read «105 înscriși» beside 86 confirmed names as
-    an inconsistency): when more are taken than confirmed, the line says the two parts —
-    «105 înscriși din 150 de locuri — 86 confirmați, 19 în curs de confirmare».
+    The parts after the dash (§NNN; the owner read «105 înscriși» beside 86 confirmed names as an
+    inconsistency): the confirmed and those in progress when anything is in progress, and the places
+    kept for the waiting list when it has a claim — «6 înscriși din 10 locuri — 4 confirmați, 2 în curs
+    de confirmare, 4 locuri păstrate pentru lista de așteptare». Only the parts that exist.
   */
+  const parts: string[] = [];
   const progress = fill.confirmed === undefined ? 0 : fill.taken - fill.confirmed;
-  if (fill.confirmed === undefined || progress <= 0) return say("cta.fill", { taken, places });
-  const confirmed = say(`cta.fillConfirmed.${countForm(fill.confirmed, locale)}`, { count: fill.confirmed });
-  return say("cta.fillProgress", { taken, places, confirmed, progress });
+  if (fill.confirmed !== undefined && progress > 0) {
+    parts.push(say(`cta.fillConfirmed.${countForm(fill.confirmed, locale)}`, { count: fill.confirmed }));
+    parts.push(say("cta.fillInProgress", { count: progress }));
+  }
+  if (fill.kept !== undefined && fill.kept > 0) parts.push(say(`cta.fillKept.${countForm(fill.kept, locale)}`, { count: fill.kept }));
+  if (parts.length === 0) return say("cta.fill", { taken, places });
+  return say("cta.fillParts", { taken, places, parts: parts.join(", ") });
 }
 
 /**

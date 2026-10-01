@@ -284,11 +284,17 @@
         "few": "{count}",
         "other": "{count}"
       },
-      "fillProgress": "{taken} registered of {places} — {confirmed} confirmed, {progress} completing their registration",
+      "fillParts": "{taken} registered of {places} — {parts}",
+      "fillInProgress": "{count} completing their registration",
+      "fillKept": {
+        "one": "{count} place kept for the waiting list",
+        "few": "{count} places kept for the waiting list",
+        "other": "{count} places kept for the waiting list"
+      },
       "fillConfirmed": {
-        "one": "{count}",
-        "few": "{count}",
-        "other": "{count}"
+        "one": "{count} confirmed",
+        "few": "{count} confirmed",
+        "other": "{count} confirmed"
       },
       "fillPlaces": {
         "one": "{count} place",

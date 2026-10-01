@@ -1062,19 +1062,19 @@ export async function readPublicPlaces<T extends Record<string, unknown>>(
   const counts = await repo.countOccupied(db, event.id, now);
   const eligibleWaitlisted = await repo.countEligibleWaitlisted(db, event.id);
   const line = { waitlistCapacity: event.waitlistCapacity, waitlisted: eligibleWaitlisted, openOffers: counts.unexpiredWaitlistOfferedHolds };
+  // The count the free places are built on, carried to the display as it is (§NNN): a lapsed
+  // declaration hold the line has no room to wait behind is free, not occupied, so the places
+  // line and the free line add up to the capacity.
+  const occupied = occupiedForNewcomer({ ...line, occupied: computeOccupied(counts), lapsedDeclarationHolds: counts.lapsedDeclarationHolds });
   return {
-    availablePlaces: computePublicAvailability({
-      capacity: event.capacity,
-      occupied: occupiedForNewcomer({ ...line, occupied: computeOccupied(counts), lapsedDeclarationHolds: counts.lapsedDeclarationHolds }),
-      eligibleWaitlisted,
-    }),
+    availablePlaces: computePublicAvailability({ capacity: event.capacity, occupied, eligibleWaitlisted }),
     waitlistRoom: waitlistRoom(line),
     waiting: waitlistLength(line),
     // The line's two halves, from the same two counts — no query of their own (§NNN).
     offered: line.openOffers,
     waitlisted: line.waitlisted,
     confirmed: counts.confirmed,
-    occupied: computeOccupied(counts),
+    occupied,
   };
 }
 

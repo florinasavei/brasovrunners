@@ -61,6 +61,17 @@ describe("§NNN fillPhrase — the places held and not yet confirmed", () => {
     expect(fillPhrase(say, "ro", { taken: 12, capacity: 50 })).toBe("12 înscriși din 50 de locuri");
   });
 
+  it("names the places kept for the waiting list, with or without anybody in progress (§NNN)", () => {
+    const say = translator("ro");
+    expect(fillPhrase(say, "ro", { taken: 6, capacity: 10, confirmed: 4, kept: 4 })).toBe("6 înscriși din 10 locuri — 4 confirmați, 2 în curs de confirmare, 4 locuri păstrate pentru lista de așteptare");
+    expect(fillPhrase(say, "ro", { taken: 6, capacity: 10, confirmed: 6, kept: 4 })).toBe("6 înscriși din 10 locuri — 4 locuri păstrate pentru lista de așteptare");
+    expect(fillPhrase(say, "ro", { taken: 6, capacity: 30, confirmed: 6, kept: 1 })).toBe("6 înscriși din 30 de locuri — 1 loc păstrat pentru lista de așteptare");
+    expect(fillPhrase(say, "ro", { taken: 6, capacity: 30, confirmed: 6, kept: 20 })).toBe("6 înscriși din 30 de locuri — 20 de locuri păstrate pentru lista de așteptare");
+    const en = translator("en");
+    expect(fillPhrase(en, "en", { taken: 6, capacity: 10, confirmed: 4, kept: 4 })).toBe("6 registered of 10 places — 4 confirmed, 2 completing their registration, 4 places kept for the waiting list");
+    expect(fillPhrase(en, "en", { taken: 6, capacity: 10, confirmed: 6, kept: 4 })).toBe("6 registered of 10 places — 4 places kept for the waiting list");
+  });
+
   it("says them in English, and the same numbers as Romanian", () => {
     const say = translator("en");
     expect(fillPhrase(say, "en", { taken: 105, capacity: 150, confirmed: 86 })).toBe("105 registered of 150 places — 86 confirmed, 19 completing their registration");

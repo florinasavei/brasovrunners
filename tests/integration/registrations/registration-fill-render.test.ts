@@ -217,9 +217,37 @@ describe("§346 the fill line beside the register button, from the cached count"
     await db.update(events).set({ waitlistAutoOffer: false }).where(eq(events.id, event.id));
     await confirm(event.id, 4);
     await confirm(event.id, 2, "PENDING_DECLARATION", 4);
-    await confirm(event.id, 1, "WAITLISTED", 6);
+    await confirm(event.id, 4, "WAITLISTED", 6);
     const html = await render("cros-plin");
-    expect(html).toContain("6 înscriși din 10 locuri — 4 confirmați, 2 în curs de confirmare");
+    expect(html).toContain("6 înscriși din 10 locuri — 4 confirmați, 2 în curs de confirmare, 4 locuri păstrate pentru lista de așteptare");
+    expect(html).toContain("Mulțumim! Toate cele 10 locuri s-au ocupat — 4 așteaptă deja un loc.");
+    locale = "en";
+    const en = await render("full-cross");
+    expect(en).toContain("6 registered of 10 places — 4 confirmed, 2 completing their registration, 4 places kept for the waiting list");
+  });
+
+  it("§NNN keeps the first number at 6 with nothing pending, and names the claim", async () => {
+    const event = await openRace(10);
+    await db.update(events).set({ waitlistAutoOffer: false }).where(eq(events.id, event.id));
+    await confirm(event.id, 6);
+    await confirm(event.id, 4, "WAITLISTED", 6);
+    const html = await render("cros-plin");
+    expect(html).toContain("6 înscriși din 10 locuri — 4 locuri păstrate pentru lista de așteptare");
+    expect(html).toContain("Mulțumim! Toate cele 10 locuri s-au ocupat — 4 așteaptă deja un loc.");
+    locale = "en";
+    const en = await render("full-cross");
+    expect(en).toContain("6 registered of 10 places — 4 places kept for the waiting list");
+  });
+
+  it("§NNN counts a lapsed declaration hold as free when the line has no room: places plus free add up", async () => {
+    const event = await openRace(10, 0);
+    await confirm(event.id, 6);
+    await confirm(event.id, 2, "PENDING_DECLARATION", 6);
+    await db.update(registrations).set({ holdExpiresAt: new Date("2026-09-20T10:00:00.000Z") }).where(eq(registrations.status, "PENDING_DECLARATION"));
+    const html = await render("cros-plin");
+    expect(html).toContain("6 înscriși din 10 locuri");
+    expect(html).toContain("4 locuri libere");
+    expect(html).not.toContain("în curs de confirmare");
   });
 
   it("says it in natural English from the same numbers", async () => {

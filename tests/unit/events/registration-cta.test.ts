@@ -257,11 +257,21 @@ describe("§NNN publicFill — in progress counted from the occupied places, nev
   });
 
   it("makes the first number the occupied count when a line's claim zeroes the free places", () => {
-    expect(publicFill(150, 0, { occupied: 105, confirmed: 86 })).toEqual({ taken: 105, capacity: 150, confirmed: 86 });
+    expect(publicFill(150, 0, { occupied: 105, confirmed: 86 })).toEqual({ taken: 105, capacity: 150, confirmed: 86, kept: 45 });
+  });
+
+  it("names the waiting list's claim as kept places: 4 confirmed, 2 pending, 4 waiting, capacity 10", () => {
+    expect(publicFill(10, 0, { occupied: 6, confirmed: 4 })).toEqual({ taken: 6, capacity: 10, confirmed: 4, kept: 4 });
+    expect(publicFill(10, 0, { occupied: 6, confirmed: 6 })).toEqual({ taken: 6, capacity: 10, confirmed: 6, kept: 4 });
+  });
+
+  it("keeps nothing on an open race, and never a negative claim", () => {
+    expect(publicFill(150, 45, { occupied: 105, confirmed: 105 })).toEqual({ taken: 105, capacity: 150, confirmed: 105 });
+    expect(publicFill(10, 5, { occupied: 6, confirmed: 6 })).toEqual({ taken: 6, capacity: 10, confirmed: 6 });
   });
 
   it("is the plain line when nothing is in progress, or the entry is older than the count", () => {
-    expect(publicFill(150, 0, { occupied: 105, confirmed: 105 })).toEqual({ taken: 150, capacity: 150 });
+    expect(publicFill(150, 0, { occupied: 105, confirmed: 105 })).toEqual({ taken: 105, capacity: 150, confirmed: 105, kept: 45 });
     expect(publicFill(150, 45, { confirmed: 86 })).toEqual({ taken: 105, capacity: 150 });
     expect(publicFill(150, 45)).toEqual({ taken: 105, capacity: 150 });
   });
