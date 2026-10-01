@@ -1,4 +1,5 @@
-import type { emailOutbox } from "@/db/schema/email-outbox";
+import { and, eq, isNull, lte, or } from "drizzle-orm";
+import { emailOutbox } from "@/db/schema/email-outbox";
 import type { registrations } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
 import type { StaffUser } from "@/db/schema/staff-users";
@@ -6,10 +7,11 @@ import { recordAuditEvent } from "@/modules/audit/repository";
 import { consumeRateLimit } from "@/modules/rate-limit/service";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
-import { type OutboxBatchSummary, processOutboxBatch } from "./outbox";
+import { gmailRoadCondition, type OutboxBatchSummary, type OutboxRoads, processOutboxBatch } from "./outbox";
 import { createOutboxSender } from "./outbox-sender";
 import { createOutboxRenderer } from "./render";
 import { readEmailVolumeToday } from "./volume";
+import { SEND_NOW_HOUR_SPENT, SendNowRefused } from "./send-at-once";
 
 /**
  * "Send now": the outbox drained from the backoffice, without waiting for the monitor
@@ -46,6 +48,17 @@ export type SendNowResult = OutboxBatchSummary & {
 /** What the worker and the counter read; any fuller schema — the app's, the tests' — fits. */
 type Db = Database<{ emailOutbox: typeof emailOutbox; registrations: typeof registrations }>;
 
+/** Whether a PENDING message due now rides Gmail's road, which Mailgun's hourly pace does not hold. */
+async function gmailRowDue(db: Db, roads: OutboxRoads | undefined, now: Date): Promise<boolean> {
+  if (!roads) return false;
+  const [found] = await db
+    .select({ id: emailOutbox.id })
+    .from(emailOutbox)
+    .where(and(eq(emailOutbox.status, "PENDING"), or(isNull(emailOutbox.nextAttemptAt), lte(emailOutbox.nextAttemptAt, now)), gmailRoadCondition(roads)))
+    .limit(1);
+  return found !== undefined;
+}
+
 export async function sendOutboxNow(
   db: Db,
   actor: Pick<StaffUser, "id" | "role">,
@@ -53,6 +66,21 @@ export async function sendOutboxNow(
 ): Promise<SendNowResult> {
   if (!canManageRegistrations(actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not send the outbox by hand`);
+  }
+
+  /*
+    Mailgun's hour (§605): with no room left in it, the press is told so with its sentence rather
+    than claiming nothing in silence — and spends none of the hour's presses, like every refusal
+    that only read something. Unless a message on Gmail's road is waiting: the pace does not hold
+    that road, so the press has something to send. With room, the claim itself keeps every batch
+    inside the hour.
+  */
+  const before = await readEmailVolumeToday(db, now);
+  // The club's road per group and the Reply-To it chose to show (§442): one sender for the press;
+  // Gmail's cap and pace from the database before each Gmail message.
+  const { sender, route, roads, replyTo } = await createOutboxSender(db);
+  if (before.hourRemaining === 0 && !(await gmailRowDue(db, roads, now))) {
+    throw new SendNowRefused(`Mailgun's hourly pace is spent: ${before.sentLastHour} of ${before.hourlyAllowance} in the last hour`, SEND_NOW_HOUR_SPENT);
   }
 
   const verdict = await consumeRateLimit(db, "admin-send-now", actor.id, now);
@@ -65,11 +93,8 @@ export async function sendOutboxNow(
 
   const total: OutboxBatchSummary = { claimed: 0, sent: 0, retrying: 0, deferred: 0, failed: 0, bounced: 0 };
   let batches = 0;
-  let volume = await readEmailVolumeToday(db, now);
+  let volume = before;
 
-  // The club's road per group and the Reply-To it chose to show (§442): one sender for the press;
-  // Gmail's cap and pace from the database before each Gmail message.
-  const { sender, route, roads, replyTo } = await createOutboxSender(db);
   while (batches < MAX_BATCHES && (volume.remaining === null || volume.remaining > 0)) {
     const summary = await processOutboxBatch(db, {
       sender,

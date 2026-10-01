@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { DEFAULT_HOURLY_ALLOWANCE, MAX_HOURLY_ALLOWANCE } from "./hourly-pace";
 
 /**
  * The Mailgun plans, as the club can be on them (`DECISIONS.md` §100).
@@ -11,6 +12,11 @@ import { z } from "zod";
  *
  * The numbers are a fact about the vendor, not configuration; `EMAIL_PLANS_CHECKED_ON` says
  * how old they are, and the page that shows them says so too.
+ *
+ * No plan here carries an hourly ceiling, on purpose (§605): Mailgun's hundred an hour is the
+ * *account's* probation — an account Mailgun put on probation — not a fact of any plan,
+ * and it ends when Mailgun's support lifts it. So it is the setting's own field, `hourlyAllowance`,
+ * whatever plan is chosen.
  */
 export const EMAIL_PLAN_IDS = ["FREE", "BASIC", "FOUNDATION", "SCALE", "CUSTOM"] as const;
 export type EmailPlanId = (typeof EMAIL_PLAN_IDS)[number];
@@ -41,6 +47,12 @@ export const emailPlanSettingSchema = z
     /** Only read for `CUSTOM`; the catalogue answers for the others. Null means no ceiling. */
     dailyAllowance: z.number().int().min(1).max(1_000_000).nullable().default(null),
     monthlyAllowance: z.number().int().min(1).max(10_000_000).nullable().default(null),
+    /**
+     * The most Mailgun's road sends in any hour (§605, counted over `PACE_WINDOW_MS`), whatever the plan: Mailgun's
+     * probation. A stored value written before the field existed has none and reads 100, so
+     * production paces from the first deploy; null — the box cleared — is no pace at all.
+     */
+    hourlyAllowance: z.number().int().min(1).max(MAX_HOURLY_ALLOWANCE).nullable().default(DEFAULT_HOURLY_ALLOWANCE),
     /** Why, for the next person: "Basic for October's race, cancel on the 20th". */
     note: z.string().trim().max(200).default(""),
   })
@@ -52,6 +64,7 @@ export const DEFAULT_EMAIL_PLAN: EmailPlanSetting = {
   plan: "FREE",
   dailyAllowance: null,
   monthlyAllowance: null,
+  hourlyAllowance: DEFAULT_HOURLY_ALLOWANCE,
   note: "",
 };
 
@@ -75,7 +88,10 @@ export type EmailCeilings = {
   usdPerMonth: number;
 };
 
-export function emailCeilings(setting: EmailPlanSetting): EmailCeilings {
+export function emailCeilings(
+  // The hourly pace is not a ceiling of the plan (§605): a setting written without it still answers.
+  setting: Pick<EmailPlanSetting, "plan" | "dailyAllowance" | "monthlyAllowance"> & Partial<EmailPlanSetting>,
+): EmailCeilings {
   if (setting.plan === "CUSTOM") {
     return {
       planName: "Custom",

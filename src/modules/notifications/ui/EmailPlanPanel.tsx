@@ -96,6 +96,12 @@ export default async function EmailPlanPanel({ locale, plan, volume, mayEdit, op
           waiting: volume.waitingMessages,
         })}
       </Typography>
+      {/* Mailgun's hour beside the day (§605): what the outbox paces against while the probation lasts. */}
+      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} data-testid="email-last-hour">
+        {volume.hourlyAllowance === null
+          ? t("emails.plan.lastHourUnlimited", { sent: volume.sentLastHour })
+          : t("emails.plan.lastHour", { sent: volume.sentLastHour, allowance: ceiling(volume.hourlyAllowance) })}
+      </Typography>
       {/* The subscribers' mail in that queue (§445): last in line, in what the reserve leaves. */}
       {volume.bulkWaitingMessages > 0 && (
         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} data-testid="email-bulk-waiting">
@@ -141,6 +147,7 @@ export default async function EmailPlanPanel({ locale, plan, volume, mayEdit, op
           plan: t("emails.plan.field"),
           dailyAllowance: t("emails.plan.dailyAllowance"),
           monthlyAllowance: t("emails.plan.monthlyAllowance"),
+          hourlyAllowance: t("emails.plan.hourlyAllowance"),
           note: t("emails.plan.note"),
         })}
         // Three forms share /admin/emails; each summary and box id carries its own prefix (`fieldId`).
@@ -202,6 +209,21 @@ export default async function EmailPlanPanel({ locale, plan, volume, mayEdit, op
           <Typography variant="caption" color="text.secondary">
             {t("emails.plan.customHelp")}
           </Typography>
+          {/*
+            «Limita pe oră» (§605): whatever the plan, so outside the typed-ceilings row and always
+            shown. Plain text with a numeric keyboard like the boxes above; empty is no pace, and the
+            service checks the range and names the box.
+          */}
+          <RecallField
+            name="hourlyAllowance"
+            label={t("emails.plan.hourlyAllowance")}
+            defaultValue={plan.hourlyAllowance === null ? "" : plan.hourlyAllowance}
+            size="small"
+            slotProps={{ htmlInput: { inputMode: "numeric", maxLength: 6 } }}
+            helperText={t("emails.plan.hourlyHelp")}
+            helpMore={t("emails.plan.hourlyHelpMore")}
+            data-testid="email-plan-hourly"
+          />
           <RecallField name="note" label={t("emails.plan.note")} defaultValue={plan.note} size="small" slotProps={{ htmlInput: { maxLength: 200 } }} />
           <Box>
             <GlyphSubmitButton label={t("emails.plan.save")} pendingLabel={t("emails.plan.saving")} icon="save" />
