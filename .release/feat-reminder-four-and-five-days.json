@@ -1,0 +1,14 @@
+{
+  "branch": "feat/reminder-four-and-five-days",
+  "decisionsTitle": "The event's reminder can go four or five days before the start (amending §377)",
+  "decisionsSection": "The owner, 2026-10-01, from his phone: «De asemenea, pentru reminderul evenimentului, vreau și opțiunea de 4 și 5 zile ca să pot da șansa oamenilor care nu mai ajung să elibereze locul pentru alții».\n\n**Why.** The reminder goes once to the confirmed and carries «Nu mai pot veni»; the earlier it goes, the more time a person who cannot come has to free the place for the waiting list.\n\n**Decision.** `EVENT_REMINDER_CHOICES` is now 24, 48, 72, 96 and 120 hours, so the event editor's «Reminderul dinaintea startului» offers «cu 4 zile înainte de start» / \"4 days before the start\" and the same for 5. The words need no change: `leadPhrase` already says a whole number of days as days (a unit test pins 96 and 120 in both languages). A lead outside the list (a number a script stored, or the club's own default) is still added to the dropdown as it is. No migration: `events.reminder_hours_before` already allows 0–168. When the email is sent (`reminderHoursFor`, `eventReminderDueAt`) is untouched.",
+  "changelogLine": "- **The event's reminder can go 4 or 5 days before the start** — «Reminderul dinaintea startului» now offers 96 and 120 hours beside 24, 48 and 72, so people who cannot come have time to free their place for the waiting list. §NNN.",
+  "specsCriteria": [
+    {
+      "requirement": "BR-REQ-050-02",
+      "text": "The event editor's reminder lead offers 24, 48, 72, 96 and 120 hours beside the club's setting and «Fără reminder», each worded in whole days in both languages («cu 4 zile înainte de start» / \"4 days before the start\"); a stored lead outside the list is still shown as it is, and when the email is sent does not change (2026-10-01, `DECISIONS.md` §NNN)."
+    }
+  ],
+  "docsNotes": "",
+  "batchLine": "the event's reminder can go 4 or 5 days before the start"
+}

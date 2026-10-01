@@ -55,7 +55,7 @@ describe("§377 the club's deadlines, unset", () => {
       expect(rule.default, key).toBeLessThanOrEqual(rule.max);
     }
     expect(EVENT_REMINDER_MAX_HOURS).toBe(168);
-    expect([...EVENT_REMINDER_CHOICES]).toEqual([24, 48, 72]);
+    expect([...EVENT_REMINDER_CHOICES]).toEqual([24, 48, 72, 96, 120]);
   });
 
   it("keep a declaration hold well under a day, which is what tells it apart from a window's hold (§104)", () => {
