@@ -1600,3 +1600,25 @@ with its number, as here with **dry_run** off.
 
 **When the token expires** the run stops at its first step and says so; generate a new one the
 same way and replace the secret's value (**Secrets** → `SHIP_TOKEN` → **Update**).
+
+## 42. Vercel's plan on «Setări» → «Costuri»
+
+The money page prices Vercel from a setting, not from Vercel: the site does not ask Vercel's API
+which plan the account is on. So when the club takes **Pro** — as on 2026-09-30, for the function
+quota before the 21 November race — an Administrator opens **«Setări» → «Costuri»** on each
+environment, finds the card **«Planul Vercel (găzduirea)»** under the database's card, chooses
+**Pro**, types the number of **developer seats** (the people who deploy; view-only seats are
+free), writes a note (why, until when) and saves. The day the club drops Pro, the same card goes
+back to **Hobby**. A deployment that never set it reads Hobby, which is what the page said before
+the card existed. Each save is audited (`vercel_plan.changed`, with the seats before and after).
+
+Three places read it: the «Cât costă» sentence (per month and per year), the table under it
+(each service per month and per year, and the total) and the Vercel line of «Luna aceasta».
+On Pro the Vercel row costs the seats' price a month, with Romanian VAT on top as for Mailgun,
+and its build minutes are counted with no ceiling, because Pro's is not recorded here.
+
+The price it quotes is the one `docs/PLATFORM.md` § Subscriptions records, checked 2026-09-05:
+**$20 a month per developer seat**, with $20 of usage credit included and usage beyond it billed
+on top; the catalogue is `src/modules/diagnostics/domain/vercel-plan.ts`. Re-check it with the
+other vendors' prices. Reading the plan from Vercel's own answer first, with this setting as the
+fallback — the way the Neon plan works since `DECISIONS.md` §326 — is the follow-up.

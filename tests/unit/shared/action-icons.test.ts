@@ -157,6 +157,7 @@ const SAME_VERB: Array<{ glyph: string; keys: string[] }> = [
       "emails.contacts.save",
       "emails.clubNotices.save",
       "tasks.neonPlan.save",
+      "tasks.vercelPlan.save",
     ],
   },
   { glyph: "send", keys: ["outbox.sendNow", "thanks.send", "registrations.sendReminder"] },

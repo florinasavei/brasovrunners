@@ -41,29 +41,71 @@
  */
 
 import { NEON_PLANS, type NeonPlanId, NEON_PLANS_CHECKED_ON, roundUsd } from "./domain/neon-plan";
+import { VERCEL_PLANS, VERCEL_PLANS_CHECKED_ON, type VercelPlanId, vercelUsdPerMonth } from "./domain/vercel-plan";
 
 export type CurrencyCode = "EUR" | "USD";
 
 export type ServiceId = "domain" | "mailgun" | "vercel" | "neon" | "zitadel" | "scheduler";
 
 /**
- * What this service costs the club per year, right now.
+ * What this service costs the club right now, in the vendor's own billing period (§NNN).
+ *
+ * A paid plan carries the figure its invoice carries — the domain's year, Mailgun's month, Vercel
+ * Pro's month — and says which (`billed`); `perMonth` and `perYear` below derive the other figure,
+ * so the page can say both without anybody multiplying a monthly invoice by twelve and calling it
+ * the price. (It used to be `AnnualCost`, with Mailgun's month stored × 12: the owner read
+ * «180 USD + TVA» as a bare number nobody is ever invoiced.)
  *
  * `notTaken` is not `free`: nothing is bought, so nothing is being paid — but there is no free
  * plan to stay on either. No row carries it today, since the domain was bought on 2026-09-16 and
  * the `.ro` is not bought at all (the owner, 2026-09-26: one address for search engines); it stays
  * in the type for a paid service the club has not taken yet.
  */
-export type AnnualCost =
+export type PlanCost =
   | { kind: "free" }
   | { kind: "notTaken" }
-  | { kind: "paid"; amount: number; currency: CurrencyCode; plusVat: boolean }
+  | { kind: "paid"; amount: number; billed: "monthly" | "yearly"; currency: CurrencyCode; plusVat: boolean }
   /**
    * Billed on what is used, with no fixed price to quote: the Neon Launch row. The figure is
    * this month's pace projected to a full month at the vendor's rate, or null when nothing
    * measures the pace (no API key) — and the page prints the word for that, never a zero.
    */
   | { kind: "usage"; currency: CurrencyCode; estimatedPerMonth: number | null };
+
+/**
+ * What a cost comes to in one month: nothing for a free or untaken plan; a monthly invoice as it
+ * is; a yearly invoice's twelfth, to the cent; a usage plan's estimate at this month's pace — or
+ * null when nothing measures that pace, which the page says in words rather than as a zero.
+ */
+export function perMonth(cost: PlanCost): number | null {
+  switch (cost.kind) {
+    case "free":
+    case "notTaken":
+      return 0;
+    case "paid":
+      return cost.billed === "monthly" ? cost.amount : roundUsd(cost.amount / 12);
+    case "usage":
+      return cost.estimatedPerMonth;
+  }
+}
+
+/**
+ * What a cost comes to in one year: nothing for a free or untaken plan; a yearly invoice as it is;
+ * twelve monthly invoices; twelve months of a usage plan at this month's pace — or null when nothing
+ * measures that pace. A plan taken for a month or two reads as a year of it until it is dropped:
+ * the honest answer to "what does today's setup cost".
+ */
+export function perYear(cost: PlanCost): number | null {
+  switch (cost.kind) {
+    case "free":
+    case "notTaken":
+      return 0;
+    case "paid":
+      return cost.billed === "yearly" ? cost.amount : roundUsd(cost.amount * 12);
+    case "usage":
+      return cost.estimatedPerMonth === null ? null : roundUsd(cost.estimatedPerMonth * 12);
+  }
+}
 
 /**
  * How close this deployment is to the ceiling, right now.
@@ -126,7 +168,7 @@ export type ServiceRow = {
   id: ServiceId;
   /** The plan held today, or null where no provider has been chosen at all. */
   planToday: string | null;
-  costToday: AnnualCost;
+  costToday: PlanCost;
   /** The date the figures in *this* row were last checked against the vendor's own page. */
   checkedOn: string;
   headroom: Headroom;
@@ -140,9 +182,12 @@ export type ServiceRow = {
    * Which wording the page reads for this row's fixed sentences (what the plan gives, its
    * ceiling, what crossing it does, the way back down): `services.<id>.<variant>.*` when set,
    * `services.<id>.*` otherwise. Set only where the plan in force changes what is true — the
-   * Neon row on Launch, whose "first limit" is no longer a limit.
+   * Neon row on Launch, whose "first limit" is no longer a limit, and the Vercel row on Pro,
+   * whose non-commercial clause no longer applies (§NNN).
    */
-  variant?: "launch";
+  variant?: "launch" | "pro";
+  /** The Vercel row on Pro only: the developer seats the plan is priced by, for its sentences. */
+  seats?: number;
 };
 
 /**
@@ -224,6 +269,12 @@ export type PlatformFacts = {
   neonCuHoursThisMonth?: number | null;
   /** How far into the month that figure is, in hours, so it can be projected to a full month. */
   neonHoursElapsed?: number | null;
+  /**
+   * The Vercel plan the club says it is on (`diagnostics/vercel-plan.ts`, §NNN) and its developer
+   * seats; Hobby and one seat when absent — the setting's own default, and the page as it was.
+   */
+  vercelPlan?: VercelPlanId;
+  vercelSeats?: number;
   /** Is any published event charging an entry fee? `events.cost_type = 'PAID'`. */
   hasPaidEvent: boolean;
   /**
@@ -277,7 +328,7 @@ export function platformServices(input: PlatformFacts): ServiceRow[] {
       // Bought on 2026-09-16 (`DECISIONS.md` §55, §56), so it is paid whichever hostname this
       // deployment answers on: QA runs on a subdomain of the same purchase. The registry price,
       // for the reason the constant's comment gives; the registrar's lei invoice is the club's.
-      costToday: { kind: "paid", amount: DOMAIN_PRICE_USD_PER_YEAR, currency: "USD", plusVat: true },
+      costToday: { kind: "paid", amount: DOMAIN_PRICE_USD_PER_YEAR, billed: "yearly", currency: "USD", plusVat: true },
       checkedOn: DOMAIN_PRICE_CHECKED_ON,
       // The one fact about the domain the software can read: is *this* deployment on it.
       headroom: { kind: "derived", reached: input.clubDomainBound },
@@ -290,11 +341,11 @@ export function platformServices(input: PlatformFacts): ServiceRow[] {
     },
     {
       id: "mailgun",
-      // The plan the club says it is on (§100): the name, and a year of its monthly price when
-      // it has one — a temporary month of Basic reads as a year's worth until it is switched back,
-      // which is the honest figure for "what does today's setup cost".
+      // The plan the club says it is on (§100): the name, and its monthly price as Mailgun bills it
+      // (§NNN) — `perYear` makes the year of it, which reads as a year's worth until the plan is
+      // switched back: the honest figure for "what does today's setup cost".
       planToday: input.emailPlanName ?? "Free",
-      costToday: emailUsd > 0 ? { kind: "paid", amount: emailUsd * 12, currency: "USD", plusVat: true } : { kind: "free" },
+      costToday: emailUsd > 0 ? { kind: "paid", amount: emailUsd, billed: "monthly", currency: "USD", plusVat: true } : { kind: "free" },
       checkedOn: VENDOR_PLANS_CHECKED_ON,
       // The one ceiling on this page read from the deployment's own data rather than quoted.
       headroom:
@@ -311,21 +362,7 @@ export function platformServices(input: PlatformFacts): ServiceRow[] {
       nextCost: input.emailNextPlan === undefined ? "$15/mo" : input.emailNextPlan ? `$${input.emailNextPlan.usdPerMonth}/mo` : null,
       bump: "temporary",
     },
-    {
-      id: "vercel",
-      planToday: "Hobby",
-      costToday: { kind: "free" },
-      checkedOn: VENDOR_PLANS_CHECKED_ON,
-      // The commercial clause, derived from `cost_type = 'PAID'` on anything published. Not
-      // "does this site take money" — it takes none — but whether a page announces a priced
-      // service (`DECISIONS.md` §50).
-      headroom: { kind: "derived", reached: input.hasPaidEvent },
-      // A caution and not a breach: §50 records the owner's answer that the club sells nothing.
-      severity: input.hasPaidEvent ? "watch" : "ok",
-      nextPlan: "Pro",
-      nextCost: "$20/mo per seat",
-      bump: "permanent",
-    },
+    vercelRow(input),
     neonRow(input),
     {
       id: "zitadel",
@@ -356,6 +393,53 @@ export function platformServices(input: PlatformFacts): ServiceRow[] {
       bump: null,
     },
   ];
+}
+
+/**
+ * The Vercel row, which follows the plan the club states (`vercelPlan`, §NNN).
+ *
+ * **Hobby:** free, and the ceiling that matters is the non-commercial clause, derived from
+ * `cost_type = 'PAID'` on anything published — not "does this site take money" (it takes none)
+ * but whether a page announces a priced service (`DECISIONS.md` §50); a caution, not a breach.
+ * The next step is Pro, per seat, and it is permanent: charging entry is not a spike to ride out.
+ *
+ * **Pro:** the seat price times the seats, billed monthly. VAT is the invoice's to decide; the
+ * treasurer adds it as for Mailgun, so the row says «+ TVA». The clause no longer applies on Pro
+ * (`docs/PLATFORM.md` names Pro as its lift), so nothing here is reached and the row reads "ok".
+ * No next plan: none is recorded. The bump is temporary — taken for the race's months, to be
+ * dropped after it — and the row's wording says so.
+ */
+function vercelRow(input: PlatformFacts): ServiceRow {
+  const plan = input.vercelPlan ?? "HOBBY";
+  if (plan === "PRO") {
+    const seats = input.vercelSeats ?? 1;
+    return {
+      id: "vercel",
+      planToday: VERCEL_PLANS.PRO.name,
+      // The invoice decides VAT; like Mailgun's, the treasurer adds Romania's on top.
+      costToday: { kind: "paid", amount: vercelUsdPerMonth({ plan, seats }), billed: "monthly", currency: "USD", plusVat: true },
+      checkedOn: VERCEL_PLANS_CHECKED_ON,
+      headroom: { kind: "derived", reached: false },
+      severity: "ok",
+      nextPlan: null,
+      nextCost: null,
+      bump: "temporary",
+      variant: "pro",
+      seats,
+    };
+  }
+  return {
+    id: "vercel",
+    planToday: VERCEL_PLANS.HOBBY.name,
+    costToday: { kind: "free" },
+    checkedOn: VENDOR_PLANS_CHECKED_ON,
+    headroom: { kind: "derived", reached: input.hasPaidEvent },
+    // A caution and not a breach: §50 records the owner's answer that the club sells nothing.
+    severity: input.hasPaidEvent ? "watch" : "ok",
+    nextPlan: VERCEL_PLANS.PRO.name,
+    nextCost: `$${VERCEL_PLANS.PRO.usdPerSeatPerMonth}/mo per seat`,
+    bump: "permanent",
+  };
 }
 
 /**
@@ -416,45 +500,59 @@ function neonRow(input: PlatformFacts): ServiceRow {
   };
 }
 
+/** One currency's total of what the club pays today, over one period. */
+export type CostTotal = { currency: CurrencyCode; amount: number; plusVat: boolean; estimated: boolean };
+
 /**
- * What the club pays per year today, per currency.
+ * The rows' total over one period (`perMonth` or `perYear`), per currency.
  *
  * An empty array is the honest answer while nothing has been bought, and the page then says
  * "nothing at all" rather than printing a zero that invites the reader to wonder which currency
  * it is in. Grouped by currency because no exchange rate is applied here; see the header.
  *
- * A usage row (Neon Launch) adds twelve of its monthly estimate and marks the total
- * `estimated`, because a projection is not a price and the sentence has to say so; a usage row
- * whose pace nothing measures adds nothing and still marks it — the total is then known to be
- * incomplete, which is more useful than a total that looks whole.
+ * A usage row (Neon Launch) adds its estimate and marks the total `estimated`, because a
+ * projection is not a price and the sentence has to say so; a usage row whose pace nothing
+ * measures adds nothing and still marks it — the total is then known to be incomplete, which is
+ * more useful than a total that looks whole.
  */
-export function annualCostToday(
-  rows: readonly ServiceRow[],
-): { currency: CurrencyCode; amount: number; plusVat: boolean; estimated: boolean }[] {
+function costTotals(rows: readonly ServiceRow[], period: (cost: PlanCost) => number | null): CostTotal[] {
   const totals = new Map<CurrencyCode, { amount: number; plusVat: boolean; estimated: boolean }>();
 
   for (const row of rows) {
     const cost = row.costToday;
     if (cost.kind !== "paid" && cost.kind !== "usage") continue;
     const running = totals.get(cost.currency) ?? { amount: 0, plusVat: false, estimated: false };
-    if (cost.kind === "paid") {
-      totals.set(cost.currency, {
-        amount: roundUsd(running.amount + cost.amount),
-        // One VAT-exclusive component makes the whole total VAT-exclusive; saying so is cheaper
-        // than a treasurer discovering it on the invoice.
-        plusVat: running.plusVat || cost.plusVat,
-        estimated: running.estimated,
-      });
-    } else {
-      totals.set(cost.currency, {
-        amount: roundUsd(running.amount + (cost.estimatedPerMonth ?? 0) * 12),
-        plusVat: running.plusVat,
-        estimated: true,
-      });
-    }
+    totals.set(cost.currency, {
+      amount: roundUsd(running.amount + (period(cost) ?? 0)),
+      // One VAT-exclusive component makes the whole total VAT-exclusive; saying so is cheaper
+      // than a treasurer discovering it on the invoice.
+      plusVat: running.plusVat || (cost.kind === "paid" && cost.plusVat),
+      estimated: running.estimated || cost.kind === "usage",
+    });
   }
 
   return [...totals.entries()].map(([currency, total]) => ({ currency, ...total }));
+}
+
+/** What the club pays per year today, per currency — each row's `perYear`, summed. */
+export function annualCostToday(rows: readonly ServiceRow[]): CostTotal[] {
+  return costTotals(rows, perYear);
+}
+
+/**
+ * What the club pays per month today, per currency — each row's `perMonth`, summed: a monthly
+ * invoice as it is, a yearly one's twelfth, a usage plan at this month's pace (§NNN).
+ */
+export function monthlyCostToday(rows: readonly ServiceRow[]): CostTotal[] {
+  return costTotals(rows, perMonth);
+}
+
+/**
+ * The rows the club pays for today — a plan's price or its usage — in the table's order: what the
+ * verdict names when anything besides the domain is paid (`paysForPlans`, §NNN).
+ */
+export function payingRows(rows: readonly ServiceRow[]): ServiceRow[] {
+  return rows.filter((row) => row.costToday.kind === "paid" || row.costToday.kind === "usage");
 }
 
 /**
@@ -463,7 +561,8 @@ export function annualCostToday(
  * The order is `docs/PLATFORM.md`'s own — "the domain, then one month of Mailgun Basic around
  * the first real race, then a Vercel paid plan if and only if the repository moves to a club
  * organization or the club starts charging entry" — walked against what this deployment reports
- * rather than restated. Null only when everything on that list is already paid for.
+ * rather than restated. Null only when everything on that list is already paid for — the page
+ * then says so in its own sentence (`nextSpend.none`, §NNN) rather than printing nothing.
  */
 export function nextSpend(rows: readonly ServiceRow[]): ServiceRow | null {
   const order: ServiceId[] = ["domain", "mailgun", "vercel"];
@@ -584,13 +683,18 @@ export const OPERATIONAL_LIMITS: readonly OperationalLimit[] = [
  * one line with no free plan under it, there are named events that end the arrangement — and
  * since 2026-09-22 the database is on a plan the club *chose* to pay for by the hour, which is
  * neither a limit reached nor a problem: `paysForUsage` says so, and the page reads it calmly.
+ *
+ * `paysForPlans` (§NNN) is the club paying a plan's price besides the domain's — Mailgun's month,
+ * Vercel Pro's seats — where `paysForUsage`'s «the domain and the database, the rest free» would be
+ * false. Its sentence is built from the paying rows (`payingRows`), never fixed.
  */
-export type FreeTierVerdict = "freeExceptDomain" | "freeButAtALimit" | "notFree" | "paysForUsage";
+export type FreeTierVerdict = "freeExceptDomain" | "freeButAtALimit" | "notFree" | "paysForUsage" | "paysForPlans";
 
 export function freeTierVerdict(input: PlatformFacts): FreeTierVerdict {
   // Charging entry is the one that ends it outright rather than pressing on a ceiling: the
   // deployment is then outside Vercel's fair-use terms, not merely close to a cap.
   if (input.hasPaidEvent) return "notFree";
   if (registrationsLeftToday(input) === 0) return "freeButAtALimit";
+  if (platformServices(input).some((row) => row.id !== "domain" && row.costToday.kind === "paid")) return "paysForPlans";
   return (input.neonPlan ?? "FREE") === "FREE" ? "freeExceptDomain" : "paysForUsage";
 }

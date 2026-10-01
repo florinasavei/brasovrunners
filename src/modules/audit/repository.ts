@@ -219,6 +219,8 @@ export type AuditAction =
   | "email_transport.changed"
   /** The Neon plan the club says it is on — Free or Launch — from and to, with the note (§280's follow-up). */
   | "neon_plan.changed"
+  /** The Vercel plan the club says it is on — Hobby or Pro — and its seats, from and to, with the note (§NNN). */
+  | "vercel_plan.changed"
   /** The minimum minutes between two real runs of each scheduled job, from and to (§334). */
   | "job_cadence.changed"
   /** The shares of the Neon quota that turn the month's budget amber and red, from and to (§447). */

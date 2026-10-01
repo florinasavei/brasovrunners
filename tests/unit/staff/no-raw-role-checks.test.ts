@@ -98,6 +98,7 @@ describe("§450 no raw role checks outside roles.ts and the door", () => {
       // «Când pleacă emailurile», in «Termene» since §513 (was the Superadministrator's, §221/§450).
       "src/modules/notifications/delivery-timing.ts",
       "src/modules/diagnostics/neon-plan.ts",
+      "src/modules/diagnostics/vercel-plan.ts",
       "src/modules/media/older-pictures.ts",
     ];
     for (const file of services) {

@@ -1063,6 +1063,8 @@
       "neonLimitsTitle": "Salvezi limitele Neon?",
       "neonPlanTitle": "Schimbi planul Neon?",
       "neonPlanBody": "Costurile și limitele de pe această pagină se calculează după planul ales ori de câte ori Neon nu își spune singur planul.",
+      "vercelPlanTitle": "Schimbi planul Vercel?",
+      "vercelPlanBody": "Costurile de pe această pagină se calculează după planul și locurile alese.",
       "olderPicturesTitle": "Faci mărimile pentru telefon?",
       "olderPicturesBody": "Imaginile din lot primesc mărimile mai mici; adresa veche merge în continuare. Durează cam douăzeci de secunde. Un editor deschis pe o pagină cu ele va cere reîncărcarea.",
       "shownAddressTitle": "Schimbi adresa de contact afișată?",
@@ -2547,6 +2549,37 @@
         "fieldHelpMore": "Tarifele și limitele vin din consola Neon și de pe neon.com/pricing. Contul are amândouă proiectele, QA și producția.",
         "decemberMore": "Alege Free doar dacă facturile spun asta, și verifică înainte limitele Free din acel moment, pe amândouă proiectele."
       },
+      "vercelPlan": {
+        "title": "Planul Vercel (găzduirea)",
+        "intro": "Planul Vercel îl spune clubul aici; costurile de pe pagină se calculează după el.",
+        "introMore": "Site-ul nu întreabă Vercel ce plan are contul. Când schimbați planul în contul Vercel, schimbați-l și aici.",
+        "inForce": {
+          "HOBBY": "Vercel: Hobby, gratuit.",
+          "PRO": "Vercel: Pro, {seats}, {price} USD pe lună + TVA."
+        },
+        "seats": {
+          "one": "{count} loc",
+          "few": "{count} locuri",
+          "other": "{count} de locuri"
+        },
+        "updated": "Setat de {who}, {when}. Notă: {note}",
+        "updatedNoWho": "Setat {when}. Notă: {note}",
+        "field": "Planul Vercel",
+        "fieldHelp": "Prețuri verificate {checkedOn}; se setează pe fiecare mediu în parte.",
+        "fieldHelpMore": "Pro se plătește pe loc de dezvoltator; locurile doar pentru vizualizare sunt gratuite.",
+        "option": {
+          "HOBBY": "{name} — gratuit, doar pentru folosire necomercială",
+          "PRO": "{name} — {price} USD pe loc, pe lună, + TVA"
+        },
+        "seatsField": "Locuri de dezvoltator",
+        "seatsHelp": "Câte persoane publică site-ul; contează doar pe Pro, de la 1 la {max}.",
+        "note": "Notă (de ce, până când)",
+        "back": "În ziua în care renunțați la Pro, alegeți aici Hobby.",
+        "save": "Salvează planul Vercel",
+        "saving": "Se salvează…",
+        "saved": "Planul Vercel a fost salvat; costurile de pe pagină îl folosesc de acum.",
+        "readOnly": "Planul îl schimbă Administratorul; cifrele de mai sus sunt la zi."
+      },
       "neonLimits": {
         "title": "Limitele bazei de date",
         "intro": "Două frâne pentru factura Neon, puse direct în Neon: mărimea bazei de date și orele-CU pe perioadă.",
@@ -2994,27 +3027,58 @@
       "freeVerdict": {
         "freeExceptDomain": "Da, în afară de domeniu: toate serviciile sunt pe planuri gratuite și nu se plătește nimic lunar.",
         "paysForUsage": "Aproape: se plătesc domeniul și baza de date (Neon Launch, la consum), iar restul serviciilor sunt pe planuri gratuite.",
+        "paysForPlans": "Se plătesc: {services}; restul serviciilor sunt pe planuri gratuite.",
         "freeButAtALimit": "Da, dar e-mailurile gratuite de azi s-au terminat, iar cele rămase pleacă după miezul nopții.",
         "notFree": "Atenție: e publicat un eveniment cu taxă, iar planurile gratuite nu țin cont că suntem ONG.",
         "paysForUsageMore": "Launch e fără abonament și a fost ales de club pe 22 septembrie 2026.",
         "freeButAtALimitMore": "Nu se pierde nimic. Dacă deschizi înscrierile acum, confirmările ajung mâine dimineață.",
-        "notFreeMore": "Nu e neapărat o problemă: o donație e permisă, o taxă obligatorie nu, chiar dacă acoperă doar costurile."
+        "notFreeMore": "Nu e neapărat o problemă: o donație e permisă, o taxă obligatorie nu, chiar dacă acoperă doar costurile.",
+        "paidName": {
+          "domain": "domeniul (.com)",
+          "mailgun": "e-mailurile (Mailgun {plan})",
+          "vercel": "găzduirea (Vercel {plan}, {seats})",
+          "neon": "baza de date (Neon {plan}, la consum)"
+        }
       },
       "costTitle": "Cât costă",
       "costToday": {
         "nothing": "Astăzi clubul nu plătește nimic: toate serviciile sunt pe planuri gratuite.",
-        "total": "Astăzi clubul plătește {total} pe an.",
+        "sentence": "Astăzi clubul plătește {month} pe lună, adică {year} pe an.",
+        "sentenceEstimated": "Astăzi clubul plătește circa {month} pe lună, adică {year} pe an.",
         "amount": "{amount} {currency}",
         "amountPlusVat": "{amount} {currency} + TVA",
         "free": "gratuit",
         "notTaken": "nimic încă",
-        "usage": "circa {amount} {currency}/lună, la consum",
         "usageUnknown": "la consum — ritmul nu e măsurat aici",
-        "estimated": "Din care baza de date e o estimare la ritmul lunii (× 12), nu o factură."
+        "billedMonthly": "{month} {currency}/lună · {year} {currency} pe an",
+        "billedMonthlyPlusVat": "{month} {currency}/lună + TVA · {year} {currency} pe an",
+        "billedYearly": "{year} {currency} pe an · circa {month} {currency}/lună",
+        "billedYearlyPlusVat": "{year} {currency} pe an + TVA · circa {month} {currency}/lună",
+        "usageBoth": "circa {month} {currency}/lună, la consum · circa {year} {currency} pe an",
+        "estimated": "Din care baza de date e o estimare la ritmul lunii, nu o factură."
+      },
+      "costTable": {
+        "caption": "Costul fiecărui serviciu, pe lună și pe an",
+        "service": "Serviciu",
+        "perMonth": "Pe lună",
+        "perYear": "Pe an",
+        "total": "Total",
+        "unmeasured": "ritm nemăsurat",
+        "plusVat": "+ TVA",
+        "help": "„Pe lună” e prețul lunar al firmei sau a douăsprezecea parte din factura pe an. „Pe an” e de 12 ori prețul lunar. „≈” e o estimare la ritmul lunii.",
+        "name": {
+          "domain": "Domeniul",
+          "mailgun": "Mailgun",
+          "vercel": "Vercel",
+          "neon": "Neon",
+          "zitadel": "Zitadel",
+          "scheduler": "cron-job.org + GitHub"
+        }
       },
       "nextSpend": {
         "mailgun": "Prima cheltuială care urmează: o lună de Mailgun Basic, {cost}.",
         "vercel": "Prima cheltuială care urmează: Vercel Pro, {cost}.",
+        "none": "Nu urmează nicio cheltuială nouă: ce e luat temporar (Mailgun, Vercel Pro) se oprește după cursă.",
         "mailgunMore": "Se cumpără pentru o singură cursă, atunci când într-o zi se așteaptă mai multe înscrieri decât acoperă e-mailurile gratuite.",
         "vercelMore": "Apare doar dacă site-ul începe să ceară bani pentru participare sau dacă codul site-ului se mută pe contul clubului."
       },
@@ -3074,7 +3138,15 @@
           "closeYes": "Este publicat un eveniment cu taxă — verifică cum este formulat.",
           "closeNo": "Niciun eveniment publicat nu cere bani.",
           "bumpBack": "Nu se dă înapoi: e o schimbare a felului în care e folosit site-ul, nu un vârf de trafic.",
-          "more": "Peste o limită a planului gratuit, funcția se oprește 30 de zile, fără plată care s-o repornească: urcați planul înainte de o cursă, nu în timpul ei."
+          "more": "Peste o limită a planului gratuit, funcția se oprește 30 de zile, fără plată care s-o repornească: urcați planul înainte de o cursă, nu în timpul ei.",
+          "pro": {
+            "freeGives": "Pro: {seats}, câte {seatPrice} USD pe lună, cu {credit} USD de consum inclus.",
+            "ceiling": "Nu are o limită măsurată aici: creditul de consum se vede în contul Vercel.",
+            "whenCrossed": "Consumul peste credit se plătește în plus, pe aceeași factură.",
+            "bumpBack": "Se ia pentru lunile cursei; după cursa din 21 noiembrie se revine la Hobby.",
+            "more": "Pro a fost luat pe 30 septembrie 2026, ca funcțiile site-ului să nu se oprească înainte de cursă.",
+            "close": "Pe Pro, regula „doar necomercial” nu se mai aplică."
+          }
         },
         "neon": {
           "name": "Neon (baza de date)",
@@ -7376,6 +7448,7 @@
       "honeypotOn": "Honeypot: pornit.",
       "honeypotOff": "Honeypot: oprit.",
       "neonPlan": "Plan Neon salvat.",
+      "vercelPlan": "Plan Vercel salvat.",
       "jobCadence": "Interval salvat.",
       "budgetThresholds": "Pragurile bugetului salvate.",
       "deadlines": "Termene salvate.",
