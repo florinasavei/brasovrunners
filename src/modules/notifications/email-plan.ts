@@ -97,7 +97,7 @@ export async function updateEmailPlan<T extends Record<string, unknown>>(
       action: "email_plan.changed",
       entityType: "platform_setting",
       entityId: EMAIL_PLAN_SETTING_ENTITY_ID,
-      // The hourly pace beside the ceilings (§NNN): from what, to what, like the other fields.
+      // The hourly pace beside the ceilings (§605): from what, to what, like the other fields.
       metadata: {
         from: { plan: before.plan, ...emailCeilings(before), hourlyAllowance: before.hourlyAllowance },
         to: { plan: next.plan, ...emailCeilings(next), hourlyAllowance: next.hourlyAllowance },

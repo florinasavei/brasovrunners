@@ -27,7 +27,7 @@ import { type OutboxDelivery, outboxOverdueCadenceMinutes, readOutboxDelivery } 
  *   deferred   PENDING rows the provider refused for the day; they go at the allowance reset.
  *   overdue    PENDING rows whose turn came and passed, by more than the backoff can explain:
  *              the scheduler is not draining them — unless Mailgun's hourly pace binds and
- *              they ride Mailgun's road (§NNN, `hourPaced`); and rows Mailgun paused recently
+ *              they ride Mailgun's road (§605, `hourPaced`); and rows Mailgun paused recently
  *              for the rate, past the same allowance since they were queued.
  *   failed     rows that spent every attempt, in the last seven days: the provider said no
  *              six times, or the message could not be rendered.
@@ -59,7 +59,7 @@ export type EmailHealth = {
   deferred: number;
   overdue: number;
   /**
-   * Mailgun-road rows whose turn passed while Mailgun's hour binds (§NNN, `paceHolds`): waiting for
+   * Mailgun-road rows whose turn passed while Mailgun's hour binds (§605, `paceHolds`): waiting for
    * the hour, the pace working — counted here, never in `overdue`, and never a status of their own.
    */
   hourPaced: number;
@@ -149,7 +149,7 @@ export async function checkEmailHealth<T extends Record<string, unknown>>(
   const failedWhere = and(eq(emailOutbox.status, "FAILED"), gt(emailOutbox.createdAt, failedSince));
 
   /*
-    Mailgun's hourly pace (§NNN). A queue held back for the hour is the pace working: while the hour
+    Mailgun's hourly pace (§605). A queue held back for the hour is the pace working: while the hour
     binds — Mailgun's road carried a full allowance in the last ninety minutes or is carrying the rest
     of it now (`paceHolds`) — a Mailgun row whose turn passed is waiting for the hour, `hourPaced`,
     not `overdue`, exactly as a row held for Gmail's cap or the newsletter's reserve is not. A row on

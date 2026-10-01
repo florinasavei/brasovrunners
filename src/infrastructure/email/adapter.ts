@@ -88,7 +88,7 @@ export type SendResult =
       /**
        * When the server took the message (§443 review), set by the sender for Gmail: the row's
        * `sent_at`, which every other sender paces from. Absent, the outbox reads its own clock the
-       * moment the send returned (§NNN), never the batch's start.
+       * moment the send returned (§605), never the batch's start.
        */
       acceptedAt?: Date;
     }
@@ -115,13 +115,13 @@ export type SendResult =
       error: string;
       /**
        * A pause, not a refusal of the message: held back by Gmail's pace (§443), where nothing was
-       * tried, or by Mailgun's rate limit (§NNN: a 429, the probation's "temporarily disabled"),
+       * tried, or by Mailgun's rate limit (§605: a 429, the probation's "temporarily disabled"),
        * where nothing was taken. The outbox gives the attempt back rather than spending one of six
        * on a wait, so no number of pauses ever marks a message FAILED.
        */
       paced?: true;
       /**
-       * The provider refused for the rate (§NNN), as opposed to the club's own pace: the outbox keeps
+       * The provider refused for the rate (§605), as opposed to the club's own pace: the outbox keeps
        * the reason on the row, holds the rest of the batch's Mailgun messages until `retryAfter`
        * rather than knocking again at once, and `/api/health` counts a message held this way past
        * the overdue allowance as overdue — a pause that never ends needs a person.

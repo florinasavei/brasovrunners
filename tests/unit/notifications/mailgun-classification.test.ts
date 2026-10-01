@@ -12,7 +12,7 @@ import { nextAllowanceResetAt } from "@/modules/notifications/domain/retry";
  * against a 100/day allowance (`docs/PLATFORM.md`, limit 1), every message queued after the cap
  * would have been marked BOUNCED and thrown away. The tests below are the fence around that.
  *
- * And a second (§NNN): Mailgun's probation — a hundred messages an hour on a new or newly paid
+ * And a second (§605): Mailgun's probation — a hundred messages an hour on a new or newly paid
  * account — answers past the hour with a 429, or with a 400 saying the account is "temporarily
  * disabled". The first was retried six times in an hour and FAILED; the second was a bounce. Both
  * are pauses now: throttled, `paced` (the attempt given back), due again when Mailgun says.
@@ -66,7 +66,7 @@ describe("BR-REQ-080-03 Mailgun failure classification", () => {
       ).toBe("permanent_failure");
     });
 
-    it("keeps the sandbox refusal permanent when Mailgun says it is not allowed to send (§NNN)", () => {
+    it("keeps the sandbox refusal permanent when Mailgun says it is not allowed to send (§605)", () => {
       // "not allowed to send" alone is not a pause: the probation's words must be there too.
       expect(outcomeOf(400, "Domain sandbox.example.test is not allowed to send: Sandbox subdomains are for test purposes only")).toBe(
         "permanent_failure",
@@ -86,7 +86,7 @@ describe("BR-REQ-080-03 Mailgun failure classification", () => {
     });
   });
 
-  describe("Mailgun asks us to wait — a pause, never an attempt spent (§NNN)", () => {
+  describe("Mailgun asks us to wait — a pause, never an attempt spent (§605)", () => {
     it("pauses a 429 for exactly the seconds its Retry-After names", () => {
       expect(classifyMailgunFailure(429, "Too Many Requests", new Headers({ "Retry-After": "847" }), NOW)).toEqual({
         outcome: "throttled",

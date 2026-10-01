@@ -106,7 +106,7 @@ describe("the email plan setting", () => {
 
   it("lets 'send now' run past a hundred on a plan with no daily ceiling", async () => {
     // A hundred already sent today would stop the Free loop before its first batch — two hours ago,
-    // so the day binds and not Mailgun's hourly pace (§NNN).
+    // so the day binds and not Mailgun's hourly pace (§605).
     await db.insert(emailOutbox).values(sentRows(100, new Date(NOW.getTime() - 2 * 3_600_000)));
     const pending = Array.from({ length: 3 }, (_, i) => ({
       participantId: null,

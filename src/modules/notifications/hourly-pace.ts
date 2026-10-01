@@ -6,7 +6,7 @@ import { hourlyRoom, PACE_EVIDENCE_MS, PACE_WINDOW_MS, RATE_PAUSE_ERROR_PREFIX }
 import { readEmailPlan } from "./email-plan";
 
 /**
- * Mailgun's hour as the outbox counts it (§NNN, `domain/hourly-pace.ts`): what Mailgun's road
+ * Mailgun's hour as the outbox counts it (§605, `domain/hourly-pace.ts`): what Mailgun's road
  * carried in the trailing window (`PACE_WINDOW_MS`, the hour and a minute), what it is carrying now,
  * the room the pace leaves, and whether Mailgun itself has told the road to wait.
  */
@@ -25,7 +25,7 @@ export type MailgunHour = {
   /** Messages Mailgun carried in the last ninety minutes, in recipients: whether the pace, not a stall, holds a backlog. */
   carriedRecently: number;
   /**
-   * Whether a waiting Mailgun row carries a provider's rate pause that has not ended (§NNN): Mailgun
+   * Whether a waiting Mailgun row carries a provider's rate pause that has not ended (§605): Mailgun
    * said stop, and until it said, the road knocks on nothing — not even a row that was not in the
    * refused batch.
    */

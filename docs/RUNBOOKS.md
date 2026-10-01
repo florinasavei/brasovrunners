@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V2.52-2026-09-27`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V2.53-2026-10-01`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -659,7 +659,7 @@ hourly `/api/health` is shallow since §577 and says only whether the site answe
    the two job monitors: paused, disabled after failures, or the `JOB_SECRET` changed. Run
    `yarn smoke` on the environment; `jobs[].status` names which one is stale. Pressing
    "Trimite acum" on `/admin/registrations` drains the outbox by hand meanwhile.
-3. **Paused by the provider** (§NNN) — `lastError` starts "paused by the provider:". Mailgun
+3. **Paused by the provider** (§605) — `lastError` starts "paused by the provider:". Mailgun
    answered 429, or 400 "not allowed to send" with the probation's words («You are sending too fast.
    Your account is on probation…»): the message waits, due at `Retry-After` or fifteen minutes, and no
    attempt is spent, and no other Mailgun message is tried until the pause ends, so nothing fails.

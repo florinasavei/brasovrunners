@@ -54,7 +54,7 @@ export async function updateEmailPlanAction(_previous: FormOutcome | null, form:
         plan: form.get("plan"),
         dailyAllowance: number("dailyAllowance"),
         monthlyAllowance: number("monthlyAllowance"),
-        // «Limita pe oră» (§NNN): empty is no pace; a form without the box (a page from before it) is the default.
+        // «Limita pe oră» (§605): empty is no pace; a form without the box (a page from before it) is the default.
         hourlyAllowance: form.has("hourlyAllowance") ? number("hourlyAllowance") : undefined,
         note: typeof form.get("note") === "string" ? form.get("note") : "",
       },
@@ -134,7 +134,7 @@ export async function sendOutboxNowFromEmailsAction(_previous: FormOutcome | nul
     await flashOutcome({ saved: "outboxSent", sent: String(result.sent) });
   } catch (error) {
     if (!isDomainError(error)) throw error;
-    // Mailgun's hour spent is its own sentence (§NNN); every other refusal its code, as before.
+    // Mailgun's hour spent is its own sentence (§605); every other refusal its code, as before.
     outcome = `error=${sendNowRefusalCode(error)}`;
   }
   // The queue the page is about has just changed; without this the panel comes back showing

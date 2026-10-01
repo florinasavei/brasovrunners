@@ -96,7 +96,7 @@ export default async function EmailPlanPanel({ locale, plan, volume, mayEdit, op
           waiting: volume.waitingMessages,
         })}
       </Typography>
-      {/* Mailgun's hour beside the day (§NNN): what the outbox paces against while the probation lasts. */}
+      {/* Mailgun's hour beside the day (§605): what the outbox paces against while the probation lasts. */}
       <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} data-testid="email-last-hour">
         {volume.hourlyAllowance === null
           ? t("emails.plan.lastHourUnlimited", { sent: volume.sentLastHour })
@@ -210,7 +210,7 @@ export default async function EmailPlanPanel({ locale, plan, volume, mayEdit, op
             {t("emails.plan.customHelp")}
           </Typography>
           {/*
-            «Limita pe oră» (§NNN): whatever the plan, so outside the typed-ceilings row and always
+            «Limita pe oră» (§605): whatever the plan, so outside the typed-ceilings row and always
             shown. Plain text with a numeric keyboard like the boxes above; empty is no pace, and the
             service checks the range and names the box.
           */}

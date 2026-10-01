@@ -705,7 +705,7 @@ export async function sendOutboxNowAction(_previous: FormOutcome | null, form: F
     const result = await sendOutboxNow(getDb(), actor, new Date());
     sent = result.sent;
   } catch (error) {
-    // Mailgun's hour spent says so in its own sentence (§NNN), not as a bare validation error.
+    // Mailgun's hour spent says so in its own sentence (§605), not as a bare validation error.
     return backTo(returnTo, isDomainError(error) ? { error: sendNowRefusalCode(error) } : outcomeOf(error));
   }
   await flashOutcome({ saved: "outboxSent", sent: String(sent) });

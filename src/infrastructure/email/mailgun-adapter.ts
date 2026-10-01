@@ -26,7 +26,7 @@ import type { EmailAdapter, OutgoingEmail, SendResult } from "./adapter";
  *   See below; this is the one that was wrong, twice. A body that says "not allowed to send"
  *   together with the probation's words (`RATE_PAUSED`: temporarily, account disabled, probation, too fast,
  *   rate limit; a bare "domain disabled" stays permanent) is a **pause** — throttled, `paced`, tried again in fifteen minutes
- *   without spending an attempt (§NNN). A body with limit language (`ALLOWANCE_SPENT`) is the
+ *   without spending an attempt (§605). A body with limit language (`ALLOWANCE_SPENT`) is the
  *   daily allowance — throttled, to the reset. Otherwise a malformed message, an unauthorized
  *   sandbox recipient («Sandbox subdomains are for test purposes only»), an unverified domain,
  *   an address Mailgun refuses — retrying an unchanged message already refused is pointless.
@@ -35,7 +35,7 @@ import type { EmailAdapter, OutgoingEmail, SendResult } from "./adapter";
  *   surfaces as 402. Neither is documented in Mailgun's status-code table, which lists only 400,
  *   401, 403, 404, 429 and 500 — so neither may be inferred from the documentation, and both are
  *   handled because they are observed.
- * - **429** — a **pause** (§NNN, amending §40's reading of it as transient): throttled,
+ * - **429** — a **pause** (§605, amending §40's reading of it as transient): throttled,
  *   `paced`, due again when Mailgun's `Retry-After` says (seconds or an HTTP date), or in fifteen
  *   minutes without one, and the attempt given back. It was the ordinary backoff — one, two,
  *   four … minutes, six attempts in about an hour, then FAILED: on the morning the club took a
@@ -109,7 +109,7 @@ const REQUEST_TIMEOUT_MS = 15_000;
 const ALLOWANCE_SPENT = /limit exceeded|exceeded your|sending limit|daily limit|quota/i;
 
 /**
- * The account held back for its pace, not the message refused (§NNN): Mailgun's probation — domains
+ * The account held back for its pace, not the message refused (§605): Mailgun's probation — domains
  * are limited to a hundred messages an hour, and sending faster "temporarily disables" the account
  * (the notice's words; the 400's body shape is anticipated, not yet observed). Both halves must match: "not allowed to send"
  * alone is also a sandbox's refusal and an unverified domain's, which waiting does not fix, and the
@@ -118,7 +118,7 @@ const ALLOWANCE_SPENT = /limit exceeded|exceeded your|sending limit|daily limit|
  */
 const NOT_ALLOWED_TO_SEND = /not allowed to send/i;
 // A bare "domain disabled" is deliberately not here: Mailgun uses it for a domain it has closed for good,
-// which waiting does not fix — it stays permanent and a person is told (§NNN review).
+// which waiting does not fix — it stays permanent and a person is told (§605 review).
 const RATE_PAUSED = /temporarily|account (is )?disabled|probation|too fast|rate limit/i;
 
 /** How long a pause lasts when Mailgun does not say: the outbox job's daytime cadence (§68). */
@@ -151,7 +151,7 @@ export type MailgunFailure =
   | { outcome: "transient_failure" }
   | { outcome: "throttled"; paced?: true; rateRefused?: true; retryAfter?: Date };
 
-/** A pause (§NNN): throttled, the attempt given back, due again at `retryAfter`. */
+/** A pause (§605): throttled, the attempt given back, due again at `retryAfter`. */
 function paused(retryAfter: Date): MailgunFailure {
   return { outcome: "throttled", paced: true, rateRefused: true, retryAfter };
 }
@@ -177,7 +177,7 @@ export function classifyMailgunFailure(
   // refusal. Neither appears in the documented status table; both are observed. To the reset.
   if (status === 402 || status === 420) return { outcome: "throttled" };
 
-  // The rate limit (§NNN): a pause, for as long as Mailgun says, never an attempt spent.
+  // The rate limit (§605): a pause, for as long as Mailgun says, never an attempt spent.
   if (status === 429) return paused(mailgunRetryAfter(headers, now));
 
   if (status === 400) {
@@ -313,7 +313,7 @@ export function createMailgunAdapter(config: MailgunConfig): EmailAdapter {
       }
 
       const body = await response.text().catch(() => "");
-      // The response's headers go with it: a 429's `Retry-After` is when Mailgun wants us back (§NNN).
+      // The response's headers go with it: a 429's `Retry-After` is when Mailgun wants us back (§605).
       const failure = classifyMailgunFailure(response.status, body, response.headers);
       return { ...failure, error: sanitizeError(response.status, body, config.apiKey) };
     },

@@ -449,12 +449,12 @@ only 400, 401, 403, 404, 429 and 500, so anything else here is observed rather t
 | 400 with limit wording | **throttled** | The allowance, not the message. Retry after the reset |
 | 400 otherwise | permanent | A malformed message, or a sandbox recipient who is not authorized. Waiting authorizes nobody |
 | 402, 420 | **throttled** | Undocumented by Mailgun. 420 is its own code for "not allowed to send: … limit exceeded"; 402 is a plan or payment refusal |
-| 429 | **throttled, a pause** (§NNN) | The rate limit, hourly or the probation's. Due again at `Retry-After` (seconds or an HTTP date; at most a day) or in fifteen minutes; the attempt is given back, so no number of pauses FAILS a message. It was ordinary backoff and six attempts in an hour |
-| 400 "not allowed to send" *and* probation wording | **throttled, a pause** (§NNN) | Mailgun's probation: domains limited to 100 messages an hour, the account "temporarily disabled". Fifteen minutes, attempt given back. The body's shape is anticipated from the notice, not yet observed |
+| 429 | **throttled, a pause** (§605) | The rate limit, hourly or the probation's. Due again at `Retry-After` (seconds or an HTTP date; at most a day) or in fifteen minutes; the attempt is given back, so no number of pauses FAILS a message. It was ordinary backoff and six attempts in an hour |
+| 400 "not allowed to send" *and* probation wording | **throttled, a pause** (§605) | Mailgun's probation: domains limited to 100 messages an hour, the account "temporarily disabled". Fifteen minutes, attempt given back. The body's shape is anticipated from the notice, not yet observed |
 | 404, 5xx, network | transient | Not clearly the caller's fault |
 
 The patterns that move a 400 out of permanent are **narrow on purpose** and must stay narrow.
-The daily allowance's is limit wording alone. The probation's (§NNN) is two parts that must both
+The daily allowance's is limit wording alone. The probation's (§605) is two parts that must both
 match: "not allowed to send" *and* one of temporarily, account disabled, probation, too fast, rate
 limit. "Not allowed to send" alone is also the sandbox's refusal and an unverified domain's, and a
 bare "domain disabled" is a domain Mailgun closed for good: waiting fixes none of them, and

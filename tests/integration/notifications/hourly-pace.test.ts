@@ -41,7 +41,7 @@ vi.mock("@/modules/notifications/outbox-roads", async (importOriginal) => {
 });
 
 /**
- * §NNN (amending §100 and §163) — the outbox paces Mailgun to an hourly allowance, and a rate
+ * §605 (amending §100 and §163) — the outbox paces Mailgun to an hourly allowance, and a rate
  * refusal is a pause, never a loss.
  *
  * Mailgun's probation: a hundred messages an hour per domain on a new or newly paid account, and

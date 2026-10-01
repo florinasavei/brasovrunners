@@ -139,7 +139,7 @@ describe("BR-REQ-080-03 transient and permanent are not the same failure", () =>
     expect(result.outcome).toBe("transient_failure");
   });
 
-  it("pauses a 429 until the response's Retry-After, which reaches the classifier (§NNN)", async () => {
+  it("pauses a 429 until the response's Retry-After, which reaches the classifier (§605)", async () => {
     globalThis.fetch = (async (url: string | URL | Request, init?: RequestInit) => {
       calls.push({ url: String(url), init: init ?? {} });
       return new Response("Too Many Requests", { status: 429, headers: { "Retry-After": "600" } });

@@ -145,7 +145,7 @@ export type EmailVolumeToday = {
   /** `allowance − sent` over the binding period, never below zero; null when nothing binds. */
   remaining: number | null;
   /**
-   * Mailgun's hourly pace (§NNN): the setting's `hourlyAllowance` (null — no pace), what Mailgun
+   * Mailgun's hourly pace (§605): the setting's `hourlyAllowance` (null — no pace), what Mailgun
    * carried in the window (`PACE_WINDOW_MS`, in recipients), and the room left (`allowance − sent − in flight`, null with
    * no pace) — «trimise în ultima oră: N din …» on «Emailuri», and «Trimite acum»'s second stop.
    */
@@ -154,7 +154,7 @@ export type EmailVolumeToday = {
   hourRemaining: number | null;
   /**
    * Whether Mailgun's hour binds (`paceHolds`): the queue panel's «late» then says what
-   * `/api/health`'s `overdue` says — a Mailgun-road row held for the hour is not late (§529, §NNN).
+   * `/api/health`'s `overdue` says — a Mailgun-road row held for the hour is not late (§529, §605).
    */
   hourPaceHolds: boolean;
   /** Whether a signed declaration also reaches the club, which is the sixth message's seventh (§244). */

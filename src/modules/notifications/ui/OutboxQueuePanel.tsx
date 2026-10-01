@@ -104,7 +104,7 @@ export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit,
     const dueAt = row.nextAttemptAt ?? row.createdAt;
     // Late by health's own number (§98, §447): `overdueCadenceMinutes` is the cadence `/api/health`
     // adds to its ninety minutes, the planned interval included — one judgement, two screens (§529).
-    // Since §NNN, as health counts it too: a Mailgun-road row is not late while Mailgun's hour binds
+    // Since §605, as health counts it too: a Mailgun-road row is not late while Mailgun's hour binds
     // (a Gmail row never waits for it), and a row Mailgun paused recently is late once it has waited
     // past the allowance since it was queued (unless its pause runs past the hour, a deferral); a row
     // whose pause mark is older is judged like any other waiting row.

@@ -9,7 +9,7 @@ import { OUTBOX_BATCH_SIZE, type OutboxRoads } from "./outbox";
  * Mailgun's. Claimed apart only where Gmail can carry anything (§443 review): without the account
  * every row takes Mailgun's road, and one claim, oldest first, is the whole story — undefined.
  * The one rule the sender (`outbox-sender.ts`), `/api/health`, the page's hour and the queue
- * panel read the roads by (§NNN, §529).
+ * panel read the roads by (§605, §529).
  */
 export function outboxRoadsFor(setting: EmailTransportSetting, configured: boolean): OutboxRoads | undefined {
   const gmail = gmailRoadRows(setting);

@@ -6,7 +6,7 @@ import { registrations } from "@/db/schema/registrations";
 import { claimOutboxBatch } from "@/modules/notifications/outbox";
 
 /**
- * §NNN — Mailgun's hourly pace holds under two workers claiming at the same moment.
+ * §605 — Mailgun's hourly pace holds under two workers claiming at the same moment.
  *
  * The count and the claim run in READ COMMITTED; without the advisory lock the claim takes first,
  * two after-response drains on registration morning read the same room (3) and each claim up to it
@@ -16,7 +16,7 @@ import { claimOutboxBatch } from "@/modules/notifications/outbox";
 const DATABASE_URL = process.env.DATABASE_URL;
 if (!DATABASE_URL) throw new Error("tests/concurrency needs a real PostgreSQL: set DATABASE_URL and migrate first.");
 
-describe("§NNN two workers claiming Mailgun's hour at once, on two connections", () => {
+describe("§605 two workers claiming Mailgun's hour at once, on two connections", () => {
   const pool = new pg.Pool({ connectionString: DATABASE_URL, max: 10 });
   const db = drizzle(pool, { schema: { emailOutbox, registrations } });
   const NOW = new Date("2026-10-01T09:30:00.000Z");

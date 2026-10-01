@@ -1,5 +1,5 @@
 /**
- * Mailgun's hourly pace (§NNN, amending §100): how many messages Mailgun's road may still carry in
+ * Mailgun's hourly pace (§605, amending §100): how many messages Mailgun's road may still carry in
  * the trailing hour (`PACE_WINDOW_MS`: sixty-one minutes, for the margin it explains).
  *
  * Mailgun put the club's account on "probation": its notice said domains are limited to 100 messages
@@ -40,12 +40,12 @@ export const PACE_WINDOW_MS = 61 * 60_000;
 export const PACE_EVIDENCE_MS = 90 * 60_000;
 
 /**
- * What a provider's rate refusal leaves on the row's `last_error` (§NNN): the mark health reads to
+ * What a provider's rate refusal leaves on the row's `last_error` (§605): the mark health reads to
  * tell a pause from a backoff retry, followed by the provider's sanitized reason.
  */
 export const RATE_PAUSE_ERROR_PREFIX = "paused by the provider: ";
 
-/** Whether a row's `last_error` is a provider's rate pause (§NNN), as the outbox wrote it. */
+/** Whether a row's `last_error` is a provider's rate pause (§605), as the outbox wrote it. */
 export function isRatePaused(lastError: string | null): boolean {
   return lastError !== null && lastError.startsWith(RATE_PAUSE_ERROR_PREFIX);
 }
@@ -60,7 +60,7 @@ export function hourlyRoom(hourlyAllowance: number | null, usedLastHour: number)
 }
 
 /**
- * Whether a backlog is the pace working (§NNN): a pace is set and the hour binds — Mailgun's road
+ * Whether a backlog is the pace working (§605): a pace is set and the hour binds — Mailgun's road
  * carried a full allowance (in recipients, as the claim counts) in the last `PACE_EVIDENCE_MS`, or
  * is carrying the rest of it now. Then a Mailgun row whose turn passed is waiting for the hour, not
  * overdue. Mailgun carrying a message or two is not the pace: a late row behind an hour with room is
@@ -73,7 +73,7 @@ export function paceHolds(input: { hourlyAllowance: number | null; carriedRecent
 }
 
 /**
- * Whether a row's rate pause (§NNN) is its own and recent: the mark is on it and the pause ended (or
+ * Whether a row's rate pause (§605) is its own and recent: the mark is on it and the pause ended (or
  * ends) less than `PACE_EVIDENCE_MS` ago. A row whose mark is older is merely waiting its turn under
  * the pace — the mark is the last thing the provider said, not what holds it now — and is judged as
  * any other waiting row (`health.ts`, the queue panel, §529).

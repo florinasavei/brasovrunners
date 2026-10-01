@@ -57,13 +57,13 @@ describe("the email plan catalogue", () => {
     expect(emailPlanSettingSchema.safeParse({ plan: "CUSTOM", dailyAllowance: 2.5 }).success).toBe(false);
     expect(emailPlanSettingSchema.safeParse({ plan: "BASIC", note: "x".repeat(201) }).success).toBe(false);
     const ok = emailPlanSettingSchema.parse({ plan: "BASIC" });
-    // No hourly pace stored reads Mailgun's probation, a hundred an hour (§NNN).
+    // No hourly pace stored reads Mailgun's probation, a hundred an hour (§605).
     expect(ok).toEqual({ plan: "BASIC", dailyAllowance: null, monthlyAllowance: null, hourlyAllowance: 100, note: "" });
     expect(EMAIL_PLAN_IDS).toContain("CUSTOM");
   });
 });
 
-/** §NNN — Mailgun's hourly pace: the setting's own field, whatever the plan, never a plan's fact. */
+/** §605 — Mailgun's hourly pace: the setting's own field, whatever the plan, never a plan's fact. */
 describe("the hourly pace", () => {
   it("reads 100 from a value stored before the field existed, and keeps a cleared one cleared", () => {
     // What production holds today: the setting as §100 wrote it, no hourly field.

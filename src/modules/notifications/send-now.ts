@@ -69,7 +69,7 @@ export async function sendOutboxNow(
   }
 
   /*
-    Mailgun's hour (§NNN): with no room left in it, the press is told so with its sentence rather
+    Mailgun's hour (§605): with no room left in it, the press is told so with its sentence rather
     than claiming nothing in silence — and spends none of the hour's presses, like every refusal
     that only read something. Unless a message on Gmail's road is waiting: the pace does not hold
     that road, so the press has something to send. With room, the claim itself keeps every batch

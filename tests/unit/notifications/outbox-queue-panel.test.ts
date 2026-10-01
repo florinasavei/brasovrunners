@@ -236,7 +236,7 @@ describe("§529 the queue panel says when the emails leave", () => {
     expect(planned).not.toContain("Întârziat");
   });
 
-  it("does not mark a Mailgun row late while Mailgun's hour binds, and still marks a Gmail row (§NNN, as health counts)", async () => {
+  it("does not mark a Mailgun row late while Mailgun's hour binds, and still marks a Gmail row (§605, as health counts)", async () => {
     const late = { ...QUEUE.rows[0]!, id: "m", createdAt: new Date(NOW.getTime() - 300 * 60_000) };
     const gmail = { ...late, id: "g", onMailgunRoad: false };
     const queue = { ...QUEUE, total: 2, rows: [late, gmail] };

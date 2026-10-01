@@ -48,7 +48,7 @@ export type QueuedMessage = {
   sentNow: boolean;
   /**
    * Whether the claim takes it on Mailgun's road (§442, `outboxRoadsFor`): only such a row waits for
-   * Mailgun's hour, so only it is «not late» while the hour binds (§NNN, as `/api/health` counts it).
+   * Mailgun's hour, so only it is «not late» while the hour binds (§605, as `/api/health` counts it).
    */
   onMailgunRoad: boolean;
 };
@@ -96,7 +96,7 @@ export async function readOutboxQueue<T extends Record<string, unknown>>(
     looser than the «and» it is put inside, so a flagged row counted as a retry too, and a row with
     neither key made `not(…)` null, so a real retry counted nowhere.
   */
-  // The roads as the claim splits them: one row by key, and the panel's «late» reads them (§NNN).
+  // The roads as the claim splits them: one row by key, and the panel's «late» reads them (§605).
   const roads = await readOutboxRoads(db);
   const familyFlag = sql`coalesce((${emailOutbox.payloadJson} ->> 'sittingHeld') = 'true' or (${emailOutbox.payloadJson} ->> 'familyHeld') = 'true', false)`;
   const rows = await db

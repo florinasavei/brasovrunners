@@ -212,7 +212,7 @@ describe("BR-REQ-080-02 transactional outbox", () => {
       expect(summary).toEqual({ claimed: 1, sent: 1, retrying: 0, deferred: 0, failed: 0, bounced: 0 });
       const [row] = await db.select().from(emailOutbox);
       expect(row.status).toBe("SENT");
-      // The moment the provider took it, on the batch's clock (§NNN): `NOW` moved on by the real time elapsed.
+      // The moment the provider took it, on the batch's clock (§605): `NOW` moved on by the real time elapsed.
       expect(row.sentAt!.getTime()).toBeGreaterThanOrEqual(NOW.getTime());
       expect(row.sentAt!.getTime()).toBeLessThan(NOW.getTime() + 60_000);
       expect(row.attemptCount).toBe(1);

@@ -27,12 +27,12 @@ import { readEmailVolumeToday } from "./volume";
 
 /** The refusal's code, a sentence in `Admin.errors` (§540). */
 export const SEND_NOW_ALLOWANCE_SPENT = "SEND_NOW_ALLOWANCE_SPENT";
-/** The hour's refusal (§NNN): Mailgun's hourly pace has no room for the press; a sentence in `Admin.errors`. */
+/** The hour's refusal (§605): Mailgun's hourly pace has no room for the press; a sentence in `Admin.errors`. */
 export const SEND_NOW_HOUR_SPENT = "SEND_NOW_HOUR_SPENT";
 
 /**
  * A press that asked to send now past what Mailgun still holds (§80, §540): the day's allowance, or
- * since §NNN the hour's pace. `reason` names which, and is the sentence's key.
+ * since §605 the hour's pace. `reason` names which, and is the sentence's key.
  */
 export class SendNowRefused extends DomainError {
   readonly reason: typeof SEND_NOW_ALLOWANCE_SPENT | typeof SEND_NOW_HOUR_SPENT;
@@ -53,7 +53,7 @@ export function sendNowRefusalCode(error: DomainError): string {
  * club's copies that ride on them (`clubCopyTypes`), each on its own group's road. Gmail's road costs
  * the allowance nothing (§443); a road that is Gmail's where Gmail is not configured is Mailgun's.
  *
- * And, since §NNN, the hour: a press whose Mailgun messages the hourly pace has no room for is
+ * And, since §605, the hour: a press whose Mailgun messages the hourly pace has no room for is
  * refused the same way, with its own sentence — the claim would hold them back anyway, and a «now»
  * that leaves in forty minutes is not what the person pressed. «Pune la coadă» is the answer.
  */
