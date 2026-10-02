@@ -135,7 +135,9 @@ describe("§331 a cancelled event allocates nothing and mails nothing on its own
   const statusOf = async (id: string) => (await db.select().from(registrations).where(eq(registrations.id, id)))[0];
   const queuedOf = async (messageType: EmailMessageType) =>
     (await db.select().from(emailOutbox).where(and(eq(emailOutbox.messageType, messageType), isNotNull(emailOutbox.participantId)))).length;
-  const allQueued = async () => (await db.select().from(emailOutbox)).length;
+  // Every message about the event. The Administrators' notice of a moved legal template (§NNN) is the
+  // job's too, and this file's sample texts are not the templates' words: it is about no event.
+  const allQueued = async () => (await db.select().from(emailOutbox)).filter((row) => row.messageType !== "LEGAL_TEMPLATES_CHANGED").length;
 
   async function codeOf(attempt: Promise<unknown>) {
     try {

@@ -827,6 +827,13 @@
       "when": 1790914841373,
       "tag": "0120_waitlist_count_public",
       "breakpoints": true
+    },
+    {
+      "idx": 118,
+      "version": "7",
+      "when": 1790934459462,
+      "tag": "0122_legal_templates_changed",
+      "breakpoints": true
     }
   ]
 }

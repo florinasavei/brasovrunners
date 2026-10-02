@@ -57,6 +57,8 @@ const NOT_WAITED_FOR: ReadonlySet<EmailMessageType> = new Set<EmailMessageType>(
   "CLUB_CONFIRMATION_NOTICE",
   "STAFF_INVITATION",
   "MEMBER_INVITATION",
+  // The Administrators' notice of a moved legal template (§NNN): nobody on a public page waits for it.
+  "LEGAL_TEMPLATES_CHANGED",
 ]);
 
 /** Whether somebody on a public page may be waiting for a message of this type (not a club copy). */

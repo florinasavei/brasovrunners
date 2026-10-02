@@ -146,6 +146,8 @@ describe("BR-REQ-033-02 criterion 12 the club's hidden copy of every participant
       "STAFF_INVITATION",
       // A club member's account (§524): to a member, about no registration.
       "MEMBER_INVITATION",
+      // The Administrators' notice of a moved legal template (§NNN): to the staff.
+      "LEGAL_TEMPLATES_CHANGED",
       "REGISTRATION_OPENED",
       // The newsletter's three (§445): to a subscriber, never about a registration.
       "NEWSLETTER_CONFIRM",

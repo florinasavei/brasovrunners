@@ -75,6 +75,8 @@ const EXPECTED: Record<EditedType, EmailCopyPlaceholder[]> = {
   STAFF_INVITATION: ["staffRole", "inviterName"],
   // A member's account (§524): who made it; never a role, which a member does not read as one.
   MEMBER_INVITATION: ["inviterName"],
+  // The Administrators' notice of a moved template (§NNN): the texts are its bold line, not a field.
+  LEGAL_TEMPLATES_CHANGED: [],
   REGISTRATION_OPENED: ["eventTitle"],
   CLUB_CONFIRMATION_NOTICE: ["participantName", "eventTitle", "eventStartsAtFormatted", "bibNumber"],
   EVENT_UPDATE_NOTICE: ["eventTitle"],

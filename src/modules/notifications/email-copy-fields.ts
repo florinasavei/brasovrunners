@@ -108,6 +108,8 @@ export function emailSampleData(locale: EmailLocale): TemplateData {
     eventScheduleUrl: `${base}/${locale}/EXAMPLE-event#schedule`,
     // "Linkuri și fișiere" (§332): the sample event has some, so the preview shows the line.
     eventLinksUrl: `${base}/${locale}/EXAMPLE-event#links`,
+    // «Șabloanele textelor legale s-au schimbat» (§NNN): two texts whose template moved, for its preview.
+    legalTemplateKeys: ["PRIVACY_NOTICE", "TERMS"],
     // The facts block (§392), each half in its own language, from the sample event — never a fact typed here.
     eventFacts: emailSampleEventFacts(locale),
     eventFactsOther: emailSampleEventFacts(OTHER[locale]),
@@ -319,13 +321,22 @@ const NO_PERSON: ReadonlySet<EmailMessageType> = new Set([
  * alert, the newsletter's third, is about its event.
  */
 // A member's invitation (§524) is about the club's members' zone, like the colleague's about the team.
-const NO_EVENT: ReadonlySet<EmailMessageType> = new Set(["PROFILE_MANAGE_LINK", "STAFF_INVITATION", "MEMBER_INVITATION", "NEWSLETTER_CONFIRM", "NEWSLETTER"]);
+// The Administrators' notice of a moved legal template (§NNN) is about the club's texts, no event.
+const NO_EVENT: ReadonlySet<EmailMessageType> = new Set([
+  "PROFILE_MANAGE_LINK",
+  "STAFF_INVITATION",
+  "MEMBER_INVITATION",
+  "NEWSLETTER_CONFIRM",
+  "NEWSLETTER",
+  "LEGAL_TEMPLATES_CHANGED",
+]);
 /** Messages about no one registration: the two above, and "registration is open". */
 // A group run's self-declaration (§393) is about a signature, never a registration: no status to state.
 const NO_REGISTRATION: ReadonlySet<EmailMessageType> = new Set([
   "PROFILE_MANAGE_LINK",
   "STAFF_INVITATION",
   "MEMBER_INVITATION",
+  "LEGAL_TEMPLATES_CHANGED",
   "REGISTRATION_OPENED",
   "GROUP_RUN_DECLARATION_SIGNED",
   "GROUP_RUN_DECLARATION_ARCHIVE",

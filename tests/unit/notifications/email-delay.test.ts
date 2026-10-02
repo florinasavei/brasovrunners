@@ -135,7 +135,16 @@ describe("§623 judgeEmailDelay", () => {
     expect(isWaitedFor("REGISTRATION_MANAGE_LINK", false)).toBe(true);
     expect(isWaitedFor("NEWSLETTER_CONFIRM", false)).toBe(true);
     expect(isWaitedFor("REGISTRATION_CONFIRMED", true)).toBe(false);
-    for (const type of ["NEWSLETTER", "NEW_EVENT_ALERT", "DECLARATION_ARCHIVE", "GROUP_RUN_DECLARATION_ARCHIVE", "CLUB_CONFIRMATION_NOTICE", "STAFF_INVITATION", "MEMBER_INVITATION"] as const) {
+    for (const type of [
+      "NEWSLETTER",
+      "NEW_EVENT_ALERT",
+      "DECLARATION_ARCHIVE",
+      "GROUP_RUN_DECLARATION_ARCHIVE",
+      "CLUB_CONFIRMATION_NOTICE",
+      "STAFF_INVITATION",
+      "MEMBER_INVITATION",
+      "LEGAL_TEMPLATES_CHANGED",
+    ] as const) {
       expect(isWaitedFor(type, false), type).toBe(false);
     }
   });

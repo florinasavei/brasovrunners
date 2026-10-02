@@ -218,6 +218,8 @@ it is the authority, this is the summary):
     and a privacy notice that describes the members' zone (§524). `/admin/legal` → «Aprobă acum textele care lipsesc…» approves
     in one press every text that has no approved version; a text already in force is «Versiune nouă» → «Pornește de la șablon»,
     one at a time. A Romanian lawyer should read the declarations first. This covers items 8 and 14 too.
+    Since §NNN every Administrator and Superadministrator is emailed «Șabloanele textelor legale s-au schimbat» once per
+    change, by the maintenance job's first run after a release that moves a template; `/admin/tasks` keeps the rows.
     Since §550 the notice's template also says that only the club's organizers and administrators see the newsletter's
     subscriber list with the addresses and may download it — approve that notice before an Organizer reads the addresses
     on production.

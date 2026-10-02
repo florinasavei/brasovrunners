@@ -87,6 +87,11 @@ export const emailMessageType = pgEnum("email_message_type", [
   // A club member added on Echipa (§524): who added them and where to sign in for the members'
   // zone — never "the team that runs the site", which is the staff invitation's sentence. No token.
   "MEMBER_INVITATION",
+  // "The legal templates changed: regenerate and approve" (§NNN): queued by the maintenance job, once
+  // per change of the templates, to every active Administrator and Superadministrator with an
+  // address. To a colleague, like the invitation: no participant, no token; the action is
+  // `/admin/legal/new`, behind the sign-in.
+  "LEGAL_TEMPLATES_CHANGED",
 ]);
 
 export type EmailMessageType = (typeof emailMessageType.enumValues)[number];

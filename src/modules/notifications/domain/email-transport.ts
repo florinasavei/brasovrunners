@@ -70,6 +70,8 @@ export const EMAIL_GROUP_OF: Readonly<Record<EmailMessageType, EmailGroup>> = {
   STAFF_INVITATION: "club",
   // A member's invitation (§524) takes the colleague's road: one message, from the club, to a person it knows.
   MEMBER_INVITATION: "club",
+  // The Administrators' notice of a moved legal template (§NNN): to the club's own people, as the invitation.
+  LEGAL_TEMPLATES_CHANGED: "club",
   NEWSLETTER_CONFIRM: "newsletter",
   NEWSLETTER: "newsletter",
   NEW_EVENT_ALERT: "newsletter",

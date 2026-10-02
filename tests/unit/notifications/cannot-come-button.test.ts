@@ -40,6 +40,8 @@ const EVERY_MESSAGE: Record<EmailMessageType, { button: boolean; why: string }> 
   NEWSLETTER: { button: false, why: "the newsletter" },
   NEW_EVENT_ALERT: { button: false, why: "the newsletter" },
   MEMBER_INVITATION: { button: false, why: "no registration" },
+  // To the Administrators about the club's legal texts (§NNN).
+  LEGAL_TEMPLATES_CHANGED: { button: false, why: "no registration" },
 };
 
 const TYPES = Object.keys(EVERY_MESSAGE) as EmailMessageType[];
