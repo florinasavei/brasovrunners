@@ -5,6 +5,8 @@ import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { eventInputConstraints } from "@/modules/content/events/constraints";
+import { waitlistLimitSchema } from "@/modules/content/events/fields";
+import { htmlConstraints } from "@/shared/forms/constraints";
 import {
   createEvent,
   duplicateEvent,
@@ -224,6 +226,123 @@ describe("BR-REQ-035-01 saving the waiting list's length (§348)", () => {
     expect((await reload(event.id)).waitlistCapacity).toBe(0);
     const [after] = await db.select().from(registrations).where(eq(registrations.id, waiting.id));
     expect(after.status).toBe("WAITLISTED");
+  });
+});
+
+/*
+  §NNN — «Lista de așteptare» is a choice in words. The owner typed 0 believing it meant unlimited,
+  on a race whose line held twenty people; until now that closed the list. The editor posts the
+  answer (`waitlistMode`) beside the number, and the service folds the two into the one stored value
+  before its schema reads them: «Nelimitată» null, «Limitată…» the number, «Fără listă» 0 — and a 0
+  or an empty box under «Limitată» is unlimited, never "no list".
+*/
+describe("BR-REQ-035-01 the waiting list as a choice in words (§NNN)", () => {
+  it("stores null for «Nelimitată», the number for «Limitată» and 0 for «Fără listă de așteptare»", async () => {
+    const event = await createDraft();
+    await save(event.id, event.version, { ...FIELDS(), waitlistMode: "LIMITED", waitlistCapacity: "20" });
+    expect((await reload(event.id)).waitlistCapacity).toBe(20);
+
+    await save(event.id, (await reload(event.id)).version, { ...FIELDS(), waitlistMode: "NONE", waitlistCapacity: "20" });
+    expect((await reload(event.id)).waitlistCapacity).toBe(0);
+
+    await save(event.id, (await reload(event.id)).version, { ...FIELDS(), waitlistMode: "UNLIMITED", waitlistCapacity: "20" });
+    expect((await reload(event.id)).waitlistCapacity).toBeNull();
+  });
+
+  it("saves «Limitată» with a 0 or an empty box as unlimited, never as no waiting list", async () => {
+    const event = await createDraft();
+    for (const typed of ["0", "00", " 0 ", "", "   "]) {
+      await save(event.id, (await reload(event.id)).version, { ...FIELDS(), waitlistMode: "LIMITED", waitlistCapacity: "5" });
+      expect((await reload(event.id)).waitlistCapacity, typed).toBe(5);
+      await save(event.id, (await reload(event.id)).version, { ...FIELDS(), waitlistMode: "LIMITED", waitlistCapacity: typed });
+      expect((await reload(event.id)).waitlistCapacity, JSON.stringify(typed)).toBeNull();
+    }
+    // «Limitată» with no number posted at all is the same: no limit.
+    await save(event.id, (await reload(event.id)).version, { ...FIELDS(), waitlistMode: "LIMITED" });
+    expect((await reload(event.id)).waitlistCapacity).toBeNull();
+  });
+
+  it("stores 0 only by the explicit «Fără listă de așteptare», whatever its hidden box holds", async () => {
+    const event = await createDraft();
+    for (const typed of ["", "0", "12", "zece", "-3"]) {
+      await save(event.id, (await reload(event.id)).version, { ...FIELDS(), waitlistMode: "UNLIMITED", waitlistCapacity: "7" });
+      await save(event.id, (await reload(event.id)).version, { ...FIELDS(), waitlistMode: "NONE", waitlistCapacity: typed });
+      expect((await reload(event.id)).waitlistCapacity, typed).toBe(0);
+    }
+  });
+
+  it("under «Limitată» refuses what is not a count of people, naming the number box", async () => {
+    const event = await createDraft();
+    for (const value of ["-1", "2.5", "zece", "100001"]) {
+      const refusal = await refusalOf(save(event.id, (await reload(event.id)).version, { ...FIELDS(), waitlistMode: "LIMITED", waitlistCapacity: value }));
+      expect(refusal?.code, value).toBe("VALIDATION_ERROR");
+      expect(refusal?.fields, value).toEqual(["waitlistCapacity"]);
+    }
+    expect((await reload(event.id)).waitlistCapacity).toBeNull();
+  });
+
+  it("refuses an answer that is none of the three, naming the select, and writes nothing", async () => {
+    const event = await createDraft();
+    await save(event.id, event.version, { ...FIELDS(), waitlistCapacity: "9" });
+    const refusal = await refusalOf(save(event.id, (await reload(event.id)).version, { ...FIELDS(), waitlistMode: "INFINITE", waitlistCapacity: "" }));
+    expect(refusal?.code).toBe("VALIDATION_ERROR");
+    expect(refusal?.fields).toContain("waitlistMode");
+    expect((await reload(event.id)).waitlistCapacity).toBe(9);
+  });
+
+  it("gives the number under «Limitată» a minimum of one person, while the row keeps 0 for a caller that sends no choice", () => {
+    expect(htmlConstraints(waitlistLimitSchema)).toMatchObject({ type: "number", min: 1, max: 100_000, step: 1 });
+    expect(htmlConstraints(waitlistLimitSchema).required).toBeUndefined();
+    expect(eventInputConstraints("waitlistCapacity")).toMatchObject({ min: 0 });
+  });
+
+  it("keeps a service caller that sends only the number on its meaning: empty no limit, 0 no list, N a limit", async () => {
+    const event = await createDraft();
+    for (const [typed, stored] of [["3", 3], ["0", 0], ["", null]] as const) {
+      await save(event.id, (await reload(event.id)).version, { ...FIELDS(), waitlistCapacity: typed });
+      expect((await reload(event.id)).waitlistCapacity, typed).toBe(stored);
+    }
+  });
+
+  it("stores no length behind «Fără înscrieri» or on a group run, whatever the choice says", async () => {
+    const event = await createDraft();
+    await save(event.id, event.version, { ...FIELDS(), waitlistMode: "LIMITED", waitlistCapacity: "6" });
+    await save(event.id, (await reload(event.id)).version, {
+      ...FIELDS(),
+      registrationMode: "NONE",
+      capacity: "",
+      declarationDocumentId: "",
+      waitlistMode: "NONE",
+      waitlistCapacity: "6",
+    });
+    expect((await reload(event.id)).waitlistCapacity).toBeNull();
+
+    await save(event.id, (await reload(event.id)).version, { ...FIELDS(), waitlistMode: "LIMITED", waitlistCapacity: "6" });
+    await save(event.id, (await reload(event.id)).version, { ...FIELDS(), type: "GROUP_RUN", waitlistMode: "NONE", waitlistCapacity: "6" });
+    expect((await reload(event.id)).waitlistCapacity).toBeNull();
+  });
+
+  it("is set by the create form's choice, and carried by a series edit and a duplicate as the stored value", async () => {
+    const translations = (slug: string) => ({
+      ro: { slug: `${slug}-ro`, title: "Crosul", excerpt: "Cursa clubului." },
+      en: { slug: `${slug}-en`, title: "The cross", excerpt: "The club's race." },
+    });
+    const none = await createEvent(db, { actor: organizer, fields: { ...FIELDS(), waitlistMode: "NONE", waitlistCapacity: "", translations: translations("fara") } });
+    expect(none.waitlistCapacity).toBe(0);
+    const zero = await createEvent(db, { actor: organizer, fields: { ...FIELDS(), waitlistMode: "LIMITED", waitlistCapacity: "0", translations: translations("zero") } });
+    expect(zero.waitlistCapacity).toBeNull();
+    expect((await duplicateEvent(db, { actor: organizer, eventId: none.id })).waitlistCapacity).toBe(0);
+
+    const event = await createDraft("seria");
+    await save(event.id, event.version, { ...FIELDS() });
+    await repeatEvent(db, { actor: organizer, eventId: event.id, rule: { cadence: "WEEKLY", weekdays: [], until: "2026-11-01", publish: false }, now: NOW });
+    const dates = await db.select().from(events).where(eq(events.repeatOf, event.id)).orderBy(asc(events.startsAt));
+    const source = await reload(event.id);
+    await save(source.id, source.version, { ...FIELDS(), waitlistMode: "NONE", waitlistCapacity: "" }, "all");
+    for (const date of dates) expect((await reload(date.id)).waitlistCapacity).toBe(0);
+    const again = await reload(event.id);
+    await save(again.id, again.version, { ...FIELDS(), waitlistMode: "LIMITED", waitlistCapacity: "0" }, "all");
+    for (const date of dates) expect((await reload(date.id)).waitlistCapacity).toBeNull();
   });
 });
 

@@ -55,6 +55,8 @@ const NOT_A_BOX = new Set([
   "kitShirt",
   // «Locurile din lista de așteptare se alocă automat» (§615): a «Da»/«Nu» select of two answers, both valid, under the capacity.
   "waitlistAutoOffer",
+  // «Lista de așteptare» (§NNN): a native select of three answers, all valid, beside the places; its number reads `waitlistLimitSchema`.
+  "waitlistMode",
   // «Condiții de participare» → «Informații medicale» (§557): a tick in «Program, regulament și declarație».
   "askHealthNote",
   // «Estimativ» beside «Diferență de nivel (m)» (§585): a tick in «Traseu».
