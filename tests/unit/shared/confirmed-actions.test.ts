@@ -88,7 +88,7 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   promoteRegistrationAction: [],
   // «Trimite-i oferta» (§615): an email to the runner, asked first on the queue's rows and the registration's page.
   offerPlaceAction: ["offerAction"],
-  // «Dă-i un loc acum» (§NNN): a place and the declaration email, asked first on the registration's page.
+  // «Dă-i un loc acum» (§637): a place and the declaration email, asked first on the registration's page.
   givePlaceNowAction: [],
   setBibNumberAction: [],
   createRegistrationAction: [],

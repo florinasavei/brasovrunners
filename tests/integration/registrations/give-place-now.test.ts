@@ -21,7 +21,7 @@ import { signingInput } from "../../helpers/declaration-signing";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * «Dă-i un loc acum» (§NNN; BR-REQ-037-07, BR-REQ-034-01; `AGENTS.md` §10.5 rule 3, §15.11). The
+ * «Dă-i un loc acum» (§637; BR-REQ-037-07, BR-REQ-034-01; `AGENTS.md` §10.5 rule 3, §15.11). The
  * owner, 2026-10-02, of a member whose verification email left late in the outage and whose press
  * then met a full race and a full line: «Acestei doamne ghinioniste vreau să-i aloc direct loc și să
  * îi trimit declarația» — «Nu vreau să mai facă ea nimic!! Nu mai vreau să risc».
@@ -227,7 +227,7 @@ async function oneFreeTwoWaiting() {
   return { event: { ...event, capacity: 2 }, mara };
 }
 
-describe("§NNN «Dă-i un loc acum»: the address vouched for, the place given ahead of the line", () => {
+describe("§637 «Dă-i un loc acum»: the address vouched for, the place given ahead of the line", () => {
   it("a free place and people waiting: the row holds the place until the window's deadline, the declaration email leaves now, the line does not move", async () => {
     const { event, mara } = await oneFreeTwoWaiting();
     const lineBefore = await db.select({ id: registrations.id, status: registrations.status, waitlistedAt: registrations.waitlistedAt }).from(registrations).where(eq(registrations.status, "WAITLISTED"));

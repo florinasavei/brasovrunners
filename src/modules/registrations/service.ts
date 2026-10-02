@@ -2732,7 +2732,7 @@ export async function confirmEmailOnAddress<T extends Record<string, unknown>>(
 }
 
 /**
- * «Dă-i un loc acum» (§NNN; the owner, 2026-10-02: «Nu vreau să mai facă ea nimic!! Nu mai vreau să
+ * «Dă-i un loc acum» (§637; the owner, 2026-10-02: «Nu vreau să mai facă ea nimic!! Nu mai vreau să
  * risc»; «trebuie să avem mereu portițe și scurtături din back-office»). A registration still waiting
  * for its address — the verification email late, in Spam, or pressed when the line was already full
  * (§348) — is given a place by an Administrator, remotely, in one press: the first half of the desk's

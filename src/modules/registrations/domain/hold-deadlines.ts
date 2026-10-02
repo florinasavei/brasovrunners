@@ -169,7 +169,7 @@ export function computeFamilyReservationExpiry(params: {
 }
 
 /**
- * Until when a place the club gave by «Dă-i un loc acum» waits for the declaration (§NNN): an
+ * Until when a place the club gave by «Dă-i un loc acum» waits for the declaration (§637): an
  * Administrator vouched for the address of a person who is not at the form, and gave the place
  * ahead of the line.
  *

@@ -201,7 +201,7 @@ export async function offerPlaceAction(_previous: FormOutcome | null, form: Form
 }
 
 /**
- * «Dă-i un loc acum» (§NNN): on a registration still waiting for its address, the Administrator
+ * «Dă-i un loc acum» (§637): on a registration still waiting for its address, the Administrator
  * vouches for the address and gives the place now, ahead of the waiting list; the declaration email
  * leaves at once. The Administrator's (`canManageRegistrations`), asserted here and again in the
  * service. A full event says who holds the places (§589's sentence) and nothing is written.

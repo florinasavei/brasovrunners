@@ -130,7 +130,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   // «Trimite-i oferta»'s deadline in its question (§615): read only where the button can be drawn.
   const offerDeadline = registration.status === "WAITLISTED" && mayManage ? await offerDeadlineIfMadeNow(registration.eventId, locale) : null;
   /*
-    «Dă-i un loc acum» (§NNN): the Administrator's, on a row still waiting for its address, and drawn only
+    «Dă-i un loc acum» (§637): the Administrator's, on a row still waiting for its address, and drawn only
     where the press can succeed — a local, scheduled event with a date that has not started. Its question
     says beforehand when no place is free — the allocator's counts, read once per event (§592's forecast),
     a lapsed declaration hold not counted against her (§160); a family's live reservation is the row's
@@ -270,7 +270,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
         {/* Sent now, past the scheduled pass (§540), or queued for it, as before. */}
         {resent && <Alert severity="success">{resent === "now" ? tr("registrations.resendSentNow") : tr("registrations.resendSent")}</Alert>}
-        {/* «Dă-i un loc acum» (§NNN): the place given, and until when it waits for the declaration. */}
+        {/* «Dă-i un loc acum» (§637): the place given, and until when it waits for the declaration. */}
         {saved === "placeGiven" && registration.holdExpiresAt ? (
           <Alert severity="success" data-testid="place-given">
             {tr("registrations.placeGiven", { deadline: dtInline(registration.holdExpiresAt) ?? "" })}
@@ -422,7 +422,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       </Stack>
 
       {/*
-        «Dă-i un loc acum» (§NNN): the address vouched for by the Administrator and the place given now,
+        «Dă-i un loc acum» (§637): the address vouched for by the Administrator and the place given now,
         ahead of the waiting list, for a registration still waiting for its address. The person signs the
         declaration herself, online or on paper at the desk. Its own block, beside the messages above
         and apart from the race-day box below.

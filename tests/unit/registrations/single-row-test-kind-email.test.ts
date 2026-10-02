@@ -46,6 +46,6 @@ describe("§384 a TEST row's dialog names no participant email", () => {
     const page = read("src/app/[locale]/admin/registrations/[id]/page.tsx");
     expect(singleEmailCalls(page).every((call) => call.includes('registration.kind === "TEST"'))).toBe(true);
     const gated = (page.match(/registration\.kind === "TEST" \? \{\} : \{ email: words\.email\(1\) \}/g) ?? []).length;
-    expect(gated).toBe(8); // resend, reminder, give-a-place-now (§NNN), confirm-on-paper, give-a-place, send-the-offer (§615), set-bib, cancel
+    expect(gated).toBe(8); // resend, reminder, give-a-place-now (§637), confirm-on-paper, give-a-place, send-the-offer (§615), set-bib, cancel
   });
 });

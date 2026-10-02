@@ -252,7 +252,7 @@ async function renderRow(
   }
 
   /*
-    A verification email for an address the club has since vouched for (§NNN «Dă-i un loc acum», §67's
+    A verification email for an address the club has since vouched for (§637 «Dă-i un loc acum», §67's
     paper at the desk): the registration has moved on and its link would confirm nothing, so a late
     «confirm your address, valid 48 hours» is withdrawn rather than sent (the review of 2026-10-02,
     finding 2). The press deletes such a row never tried; this catches one being retried. A row still

@@ -83,7 +83,7 @@ export type AuditAction =
    */
   | "registration.offered_by_staff"
   /**
-   * «Dă-i un loc acum» (§NNN): an Administrator vouched for the address of a registration still
+   * «Dă-i un loc acum» (§637): an Administrator vouched for the address of a registration still
    * waiting for it and gave it a place ahead of the line, the declaration still the person's to sign.
    * From and to, how many waited at that moment (`waiting`), and `familyReservation` when the place
    * was the family's own reserved one — never a name or an address.

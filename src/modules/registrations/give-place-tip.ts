@@ -28,7 +28,7 @@ export const placesTakenIfFull = cache(async (eventId: string): Promise<PlacesTa
 });
 
 /**
- * «Dă-i un loc acum» before the press (§NNN): null where the press is always refused — an event that
+ * «Dă-i un loc acum» before the press (§637): null where the press is always refused — an event that
  * is not local, not `SCHEDULED`, whose date is to be announced (§533) or that has started, the
  * service's own refusals (`givePlaceNowByStaff`), so the button is not drawn there — and otherwise
  * whether the question must say no place is free. Full reads as the service decides under the lock:

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.59-2026-10-02 -->
+<!-- PROJECT_BASELINE: BR-V2.60-2026-10-02 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V2.59-2026-10-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.60-2026-10-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1217,7 +1217,7 @@ Core invariants:
 
 1. one row per event/participant;
 2. unique database constraint;
-3. no place consumed before email confirmation — except an Administrator vouching for the address with «Dă-i un loc acum» (`DECISIONS.md` §NNN), audited by name, into a counted free place, the declaration still the participant's to sign;
+3. no place consumed before email confirmation — except an Administrator vouching for the address with «Dă-i un loc acum» (`DECISIONS.md` §637), audited by name, into a counted free place, the declaration still the participant's to sign;
 4. declaration required before Confirmed;
 5. Confirmed plus holds consume capacity: every `PENDING_DECLARATION` hold, and every unexpired `WAITLIST_OFFERED` hold — a declaration hold past its deadline is kept, and keeps its place, until a place is wanted for somebody waiting, or the event starts or is `COMPLETED` (`DECISIONS.md` §160) — a `CANCELLED` event's holds are left standing, like the rest of its queue (§331); one waiter releases one hold, the oldest deadline first, never the event's whole stock of kept places;
 6. Pending email and Waitlisted do not occupy capacity, but eligible Waitlisted entries have allocation priority over later registrations — the one exception is rule 3's «Dă-i un loc acum», an Administrator's audited press into a counted free place, which moves nobody in the line;
@@ -2630,7 +2630,7 @@ BR-REQ-037-05):
      desk decides) and nothing else — a cancelled event and a non-local mode still refuse.
    - **A place ahead of the queue.** `promoteFromWaitlistByStaff` is the exceptional promotion
      of §2, only into a place that is free under the lock; "full" is refused with a sentence.
-   - **The address vouched for remotely** (`DECISIONS.md` §NNN). «Dă-i un loc acum» on a
+   - **The address vouched for remotely** (`DECISIONS.md` §637). «Dă-i un loc acum» on a
      `PENDING_EMAIL_CONFIRMATION` row, the Administrator's alone (`canManageRegistrations`):
      `givePlaceNowByStaff` writes the desk's vouching (`email_confirmed_by_staff_user_id`), spends
      the row's verification link, and gives the place ahead of the waiting list under the event

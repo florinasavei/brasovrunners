@@ -718,7 +718,7 @@ export async function confirmRegistrationByStaff<T extends Record<string, unknow
 }
 
 /**
- * «Dă-i un loc acum» (§NNN): an Administrator vouches for the address of a registration still waiting
+ * «Dă-i un loc acum» (§637): an Administrator vouches for the address of a registration still waiting
  * for it and gives the place now, ahead of the line — `service.ts#givePlaceNowByStaff` says how, and
  * writes the audit row in the same transaction. The Administrator's (`canManageRegistrations`, §289),
  * asserted here before anything is read, and again in the service.
