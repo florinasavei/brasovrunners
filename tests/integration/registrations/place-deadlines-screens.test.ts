@@ -7,12 +7,17 @@ import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { resolveDisplayName } from "@/modules/registrations/names";
+import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
+import { eq } from "drizzle-orm";
+import { emailOutbox } from "@/db/schema/email-outbox";
+import { STARTS_DEADLINE } from "@/modules/notifications/domain/deadline-rebase";
+import { readPlaceDeadlines } from "@/modules/registrations/admin-repository";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Când pierde lumea locul? Trebuie să apară asta în back-office» (the owner, 2026-10-02): where
+ * §NNN — «Când pierde lumea locul? Trebuie să apară asta in back-office» (the owner, 2026-10-02): where
  * the sentences show, read from a real database.
  *
  * - the registrations list scoped to one event carries «Când se pierde un loc» under «Cine s-a
@@ -55,6 +60,17 @@ vi.mock("@/app/[locale]/admin/registrations/actions", () => ({
   bulkDeleteRegistrationsAction: vi.fn(),
   markBibsPrintedAction: vi.fn(),
   sendOutboxNowAction: vi.fn(),
+  // The registration's own page (§NNN's timeline).
+  cancelRegistrationAction: vi.fn(),
+  checkInAction: vi.fn(),
+  confirmRegistrationNowAction: vi.fn(),
+  correctRegisteredNameAction: vi.fn(),
+  deleteRegistrationAction: vi.fn(),
+  offerPlaceAction: vi.fn(),
+  promoteRegistrationAction: vi.fn(),
+  setBibNumberAction: vi.fn(),
+  withdrawConsentAction: vi.fn(),
+  declarationHoldAction: vi.fn(),
 }));
 vi.mock("@/app/[locale]/admin/registrations/[id]/actions", () => ({
   resendFamilyEmailAction: vi.fn(),
@@ -66,6 +82,7 @@ const { default: AdminRegistrationsPage } = await import("@/app/[locale]/admin/r
 const { default: PlaceDeadlines } = await import("@/modules/registrations/ui/PlaceDeadlines");
 const { default: QueuePanel } = await import("@/modules/registrations/ui/QueuePanel");
 const { default: EditEventPage } = await import("@/app/[locale]/admin/events/[id]/page");
+const { default: RegistrationDetailPage } = await import("@/app/[locale]/admin/registrations/[id]/page");
 
 type Props = Record<string, unknown> & { children?: ReactNode };
 
@@ -126,7 +143,7 @@ async function register(eventId: string, row: Partial<typeof registrations.$infe
     .insert(participants)
     .values({ deliveryEmail: email, normalizedEmail: email, canonicalEmail: email, canonicalizationVersion: 1, defaultName: `Runner ${serial}`, preferredLocale: "ro" })
     .returning();
-  await db.insert(registrations).values({
+  const [created] = await db.insert(registrations).values({
     eventId,
     participantId: participant.id,
     kind: "REAL",
@@ -139,7 +156,8 @@ async function register(eventId: string, row: Partial<typeof registrations.$infe
     resultsConsentVersion: 1,
     status: "CONFIRMED",
     ...row,
-  });
+  }).returning({ id: registrations.id });
+  return created.id;
 }
 
 async function staff(role: "ADMIN" | "MODERATOR" | "DEV"): Promise<StaffUser> {
@@ -237,6 +255,76 @@ describe("§NNN «Înscrierile primite» on the event's page", () => {
     expect(rendered).toContain("O persoană are o ofertă din lista de așteptare, valabilă cel mult 24 de ore");
     const panel = below.find((element) => element.type === QueuePanel);
     expect(panel?.props.placeDeadlines).toEqual(block!.props.event ? { event: block!.props.event, counts: block!.props.counts } : undefined);
+  });
+});
+
+describe("§NNN the counts: past the deadline as the sweep reads it", () => {
+  it("a hold whose first declaration email is still queued is not past its deadline (§513)", async () => {
+    const race = await createRace("Crosul");
+    const past = new Date(Date.now() - 60 * 60_000);
+    await register(race.id, { status: "PENDING_DECLARATION", holdExpiresAt: past });
+    const queued = await register(race.id, { status: "PENDING_DECLARATION", holdExpiresAt: past });
+    const [row] = await db.select({ participantId: registrations.participantId }).from(registrations).where(eq(registrations.id, queued));
+    await db.insert(emailOutbox).values({
+      participantId: row.participantId,
+      registrationId: queued,
+      messageType: "COMPLETE_DECLARATION",
+      locale: "ro",
+      recipientEmail: "queued@example.org",
+      payloadJson: { [STARTS_DEADLINE]: true },
+      idempotencyKey: `queued-${queued}`,
+    });
+    const facts = await readPlaceDeadlines(db, race.id, new Date());
+    // Both hold a place; only the one whose email has left is past its deadline — its send re-bases the other's.
+    expect(facts?.counts.held).toBe(2);
+    expect(facts?.counts.heldPast).toBe(1);
+  });
+});
+
+describe("§NNN the registration's page: the timeline names the deadline its state waits on", () => {
+  /** The timeline's «label: value» lines, as the page writes them. */
+  async function timeline(id: string): Promise<string> {
+    const tree = await RegistrationDetailPage({ params: Promise.resolve({ locale: "ro", id }), searchParams: Promise.resolve({}) } as never);
+    const lines: string[] = [];
+    for (const element of elements(tree)) {
+      const children: unknown = element.props.children;
+      if (Array.isArray(children) && children.length === 3 && children[1] === ": ") lines.push(children.join(""));
+    }
+    return lines.join("\n");
+  }
+
+  it("a live hold, one past its deadline, a row waiting for its address, an ended row", async () => {
+    const race = await createRace("Crosul");
+    state.actor = await staff("ADMIN");
+    const ahead = new Date("2099-11-19T08:00:00.000Z");
+    const past = new Date(Date.now() - 60 * 60_000);
+    const day = (value: Date) => formatDay(value, { locale: "ro", timeZone: CLUB_TIME_ZONE, style: "short", withTime: true });
+
+    // A place held for the declaration: «Ține locul până», the deadline alone.
+    const live = await timeline(await register(race.id, { status: "PENDING_DECLARATION", holdExpiresAt: ahead }));
+    expect(live).toContain(`Ține locul până: ${day(ahead)}`);
+    expect(live).not.toContain("Rezervarea expiră");
+    expect(live).not.toContain("Linkul din email expiră");
+    expect(live).not.toContain("termen depășit");
+
+    // Past it, the place is kept while nobody asks for it (§160): the journey's kept words beside the date.
+    const kept = await timeline(await register(race.id, { status: "PENDING_DECLARATION", holdExpiresAt: past }));
+    expect(kept).toContain(`Ține locul până: ${day(past)} — termen depășit, locul se ține cât nu-l cere nimeni`);
+
+    // Waiting for its address: the email's link, and no hold.
+    const link = new Date("2099-11-10T08:00:00.000Z");
+    const waiting = await timeline(await register(race.id, { status: "PENDING_EMAIL_CONFIRMATION", emailLinkExpiresAt: link }));
+    expect(waiting).toContain(`Linkul din email expiră: ${day(link)}`);
+    expect(waiting).not.toContain("Ține locul până");
+
+    // An ended row keeps «Rezervarea expiră», and names no link.
+    const ended = await timeline(
+      await register(race.id, { status: "EXPIRED", holdExpiresAt: past, emailLinkExpiresAt: link, expiredAt: new Date(), expiryReason: "DECLARATION_HOLD_LAPSED" }),
+    );
+    expect(ended).toContain(`Rezervarea expiră: ${day(past)}`);
+    expect(ended).not.toContain("Ține locul până");
+    expect(ended).not.toContain("Linkul din email expiră");
+    expect(ended).not.toContain("termen depășit");
   });
 });
 

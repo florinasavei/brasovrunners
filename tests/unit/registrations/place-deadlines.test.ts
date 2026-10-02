@@ -11,7 +11,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN — «Când pierde lumea locul? Trebuie să apară asta în back-office» (the owner, 2026-10-02): the
+ * §NNN — «Când pierde lumea locul? Trebuie să apară asta in back-office» (the owner, 2026-10-02): the
  * sentences under «Cine s-a înscris», in «Înscrierile primite» and beside the queue's «Rezervate»,
  * built from the event's window (§104, §407), the club's «Termene» (§377), the waiting-list setting
  * (§615) and the counts — read here through the real catalogues, in both languages.

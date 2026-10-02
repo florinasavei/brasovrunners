@@ -17,7 +17,7 @@ import { staffUsers } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
 import { alias } from "drizzle-orm/pg-core";
-import { familyEmailQueued, familyReservationHolds, offerAwaitingItsFirstEmail } from "./repository";
+import { awaitingItsFirstEmail, familyEmailQueued, familyReservationHolds, offerAwaitingItsFirstEmail } from "./repository";
 import { promoListed } from "./sponsor-list";
 import { healthNoteShown } from "./domain/health-note";
 import type { QueueOrder } from "./domain/waitlist";
@@ -1287,14 +1287,16 @@ export async function listQueueForEvent<T extends Record<string, unknown>>(db: D
 
 /**
  * What «Când se pierde un loc» needs about one event (§NNN; the owner, 2026-10-02: «Când pierde lumea
- * locul? Trebuie să apară asta în back-office»): the event's window, limits, setting and close, and how
+ * locul? Trebuie să apară asta in back-office»): the event's window, limits, setting and close, and how
  * many real registrations wait on each deadline — `domain/place-deadlines.ts` turns them into words.
  *
  * **One query**, the event's row with its registrations grouped by filtered counts, read once per page
  * that shows the sentences: the list scoped to an event, the event's «Înscrierile primite», which hands
  * it to the queue panel. Never per row. Real rows only: a test registration is in no number the club is
  * given (§12.6) — this is a display count, never the allocator's (`countOccupied`, where `kind` is in
- * no condition). The held places count by status, deadline or none, as `countOccupied` does (§160); an
+ * no condition). The held places count by status, deadline or none, as `countOccupied` does (§160); a
+ * hold counts as past its deadline as the sweep reads it — not while its first declaration email is
+ * still queued, since the send re-bases the deadline (§513, `lapsedDeclarationHoldsToRelease`); an
  * offer counts while its deadline is ahead or its email is still queued (§520), as the queue lists it.
  * Null when the event does not exist.
  */
@@ -1314,7 +1316,7 @@ export async function readPlaceDeadlines<T extends Record<string, unknown>>(
       waitlistCapacity: events.waitlistCapacity,
       waitlistAutoOffer: events.waitlistAutoOffer,
       held: sql<number>`count(${registrations.id}) filter (where ${registrations.status} = 'PENDING_DECLARATION')::int`,
-      heldPast: sql<number>`count(${registrations.id}) filter (where ${registrations.status} = 'PENDING_DECLARATION' and ${registrations.holdExpiresAt} <= ${now})::int`,
+      heldPast: sql<number>`count(${registrations.id}) filter (where ${registrations.status} = 'PENDING_DECLARATION' and ${registrations.holdExpiresAt} <= ${now} and not ${awaitingItsFirstEmail()})::int`,
       awaitingEmail: sql<number>`count(${registrations.id}) filter (where ${registrations.status} = 'PENDING_EMAIL_CONFIRMATION')::int`,
       familyReserved: sql<number>`count(${registrations.id}) filter (where ${familyReservationHolds(now)})::int`,
       offered: sql<number>`count(${registrations.id}) filter (where ${registrations.status} = 'WAITLIST_OFFERED' and (${registrations.holdExpiresAt} > ${now} or ${offerAwaitingItsFirstEmail(now)}))::int`,

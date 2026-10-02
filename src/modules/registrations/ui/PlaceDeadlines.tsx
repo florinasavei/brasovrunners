@@ -12,7 +12,7 @@ import {
 
 /**
  * «Când se pierde un loc» (§NNN; the owner, 2026-10-02: «Când pierde lumea locul? Trebuie să apară asta
- * în back-office»): the sentences of `domain/place-deadlines.ts`, one per line, for one event — under
+ * in back-office»): the sentences of `domain/place-deadlines.ts`, one per line, for one event — under
  * «Cine s-a înscris» on the list scoped to it, in the event's «Înscrierile primite», and (the held
  * places' alone) beside the queue's «Rezervate». Server-rendered text, nothing to press. Nothing at all
  * when no count has a sentence.

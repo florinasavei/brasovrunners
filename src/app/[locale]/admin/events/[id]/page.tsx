@@ -1059,7 +1059,9 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                         </GlyphButton>
                       </Stack>
 
-                      {/* «Când se pierde un loc» (§NNN): until when this event's people keep their place, and after. */}
+                      {/* «Când se pierde un loc» (§NNN): until when this event's people keep their place, and after —
+                          every part, the held places' too, although the queue panel below repeats those beside
+                          «Rezervate»: that fold starts closed (§336), and this block is the answer read without opening it. */}
                       {placeDeadlines && <PlaceDeadlines event={placeDeadlines.event} counts={placeDeadlines.counts} deadlines={deadlines} now={now} timeZone={event.timezone} />}
 
                       {/* 16.0 — the declaration again, to everyone who has not signed (§606): beside the queue,
