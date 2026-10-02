@@ -1,0 +1,1 @@
+ALTER TABLE "events" ADD COLUMN "waitlist_count_public" boolean DEFAULT true NOT NULL;

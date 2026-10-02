@@ -62,6 +62,7 @@ import {
   describesPromotionalMaterials,
   describesPromotionalMaterialsShared,
 } from "@/modules/legal-documents/domain/merge-fields";
+import { describesRefusal } from "@/modules/legal-documents/domain/refusal-clause";
 import { findCurrentApprovedDocument, findFirstStatesNoticeVersion, listEffectiveDates } from "@/modules/legal-documents/repository";
 import { DEFAULT_BOT_CHECK, readBotCheck } from "@/modules/registrations/bot-check";
 import {
@@ -280,7 +281,11 @@ function groupById<T extends { locale: Locale; slug: string }>(
  *   clock, frees a slot in the line exactly when it frees a place;
  * - `waitlistCapacity`: the limit itself, `null` for none and 0 for no waiting list at all;
  * - `waiting`, `offered`, `waitlisted`: the line's length and its two halves — the open offers and
- *   the people with no offer yet (§587, §612) — from the same two counts.
+ *   the people with no offer yet (§587, §612) — from the same two counts;
+ * - `waitlistCountPublic`: «Arată public câți așteaptă» (§634), off the same row, so the line's count
+ *   and the switch that withholds it come from one read and one moment — never a count from one entry
+ *   beside a switch from another. The counts are still in the entry (the door decides from them who
+ *   queues); the switch says only whether a sentence may print the people waiting.
  *
  * `null` for an uncapped event, which shows no number and never waitlists anybody, and for one
  * that no longer exists.
@@ -290,7 +295,12 @@ export async function cachedPublicAvailability(eventId: string, now: Date): Prom
     listPlaceCountInstants(getDb(), eventId),
   );
   const window = await heldClockWindow(instants, now, "reached");
-  return publicRead(["places.available", eventId, window], ["places", "events"], async () => {
+  /*
+    "count-switch" (§634): the entry's shape gained `waitlistCountPublic`, so its key changed with it, as
+    the start list's keys did for §628 — no entry written without the switch is ever read by code that
+    asks for it.
+  */
+  return publicRead(["places.available", eventId, window, "count-switch"], ["places", "events"], async () => {
     const db = getDb();
     const event = await findEventForRegistrationById(db, eventId);
     if (!event || event.capacity === null) return null;
@@ -306,6 +316,7 @@ export async function cachedPublicAvailability(eventId: string, now: Date): Prom
       waitlisted: places.waitlisted,
       confirmed: places.confirmed,
       occupied: places.occupied,
+      waitlistCountPublic: event.waitlistCountPublic,
     };
   });
 }
@@ -332,6 +343,13 @@ export type PublicAvailability = {
   confirmed?: number;
   /** The occupied places, `readPublicPlaces`'s (§615); absent in an entry cached before it was counted: the plain line. */
   occupied?: number;
+  /**
+   * «Arată public câți așteaptă» (§634), off the row the counts were taken against: false withholds the
+   * people waiting from every public sentence (`registrationCta`, `publicFill`). Always written by
+   * `cachedPublicAvailability` (its key changed with it); optional only for a test's stand-in, which
+   * reads as on — today's sentences.
+   */
+  waitlistCountPublic?: boolean;
 };
 
 /** The two counts the public start list pages by (§250): named, and left off at their request. */
@@ -479,6 +497,18 @@ export async function cachedPromotionalMaterialsShared(now: Date): Promise<boole
 export async function cachedNewsletterOffered(now: Date): Promise<boolean> {
   const notices = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now)));
   return notices.every((notice) => notice !== undefined && describesNewsletter(notice.body));
+}
+
+/**
+ * Whether the form's express box names the club refusing or cancelling a registration, and the fold
+ * «Cum funcționează înscrierea» says the club may refuse (§636, §618): the terms in force carry the
+ * clause (`describesRefusal`), in every language — the same reading as the notice's fields above, so
+ * an approval switches both on the moment the terms themselves change on `/termeni`, never before.
+ * `termsDescribeRefusal` is the backoffice's uncached twin.
+ */
+export async function cachedRefusalDisclosed(now: Date): Promise<boolean> {
+  const terms = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("TERMS", locale, now)));
+  return terms.every((document) => document !== undefined && describesRefusal(document.body));
 }
 
 // --- Legal texts ------------------------------------------------------------------------------

@@ -56,7 +56,9 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     "event.coordinates": inWhenWhere(t("editor.coordinates")),
     "event.registrationMode": inBox("registration", t("editor.registrationMode")),
     "event.capacity": inBox("registration", t("editor.capacity")),
-    "event.waitlistCapacity": inBox("registration", t("editor.waitlistCapacity")),
+    // «Lista de așteptare» and, under «Limitată», its number (§633).
+    "event.waitlistMode": inBox("registration", t("editor.waitlistMode")),
+    "event.waitlistCapacity": inBox("registration", `${t("editor.waitlistMode")} › ${t("editor.waitlistCapacity")}`),
     // One box for every type, in «Regulamentul» since §505 (was «Condiții de participare», and a
     // group run's own in «Traseul», §440).
     "event.minAge": inProgrammeRules("rules", t("editor.minAge")),
@@ -75,6 +77,8 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     "event.participantListVisibility": inProgrammeRules("startList", t("editor.participantList")),
     // «Lista de așteptare e publică» (§628), under the list it narrows.
     "event.waitlistPublic": inProgrammeRules("startList", t("editor.waitlistPublic")),
+    // «Arată public câți așteaptă» (§634), under it, in the same card.
+    "event.waitlistCountPublic": inProgrammeRules("startList", t("editor.waitlistCountPublic")),
     "event.externalProvider": inBox("registration", t("editor.externalProvider")),
     "event.externalRegistrationUrl": inBox("registration", t("editor.externalRegistrationUrl")),
     // Both in «Ce fel de eveniment», side by side (§526).

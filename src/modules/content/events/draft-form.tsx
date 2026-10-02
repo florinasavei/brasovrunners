@@ -33,7 +33,7 @@ import RegistrationSteps from "@/modules/registrations/ui/RegistrationSteps";
  */
 export async function readDraftFormSettings<T extends Record<string, unknown>>(
   db: Database<T>,
-  input: { locale: Locale; now: Date; membersOnly: boolean; familyOpen: boolean },
+  input: { locale: Locale; now: Date; membersOnly: boolean; familyOpen: boolean; refusalOn: boolean },
 ): Promise<RegistrationFormSettings> {
   const [terms, notices, addressCap] = await Promise.all([
     findCurrentApprovedDocument(db, "TERMS", input.locale, input.now),
@@ -44,6 +44,8 @@ export async function readDraftFormSettings<T extends Record<string, unknown>>(
   const everyNotice = (describes: (body: unknown) => boolean) => notices.every((notice) => notice !== undefined && describes(notice.body));
   return {
     termsVersion: terms?.version ?? null,
+    // §636: whether the terms in force carry the club's right to refuse — read once by the preview, for the steps and the box.
+    refusalOn: input.refusalOn,
     listStatesOn: everyNotice(describesListStates),
     listSocialsOn: everyNotice(describesListSocials),
     promoOn: everyNotice(describesPromotionalMaterials),
@@ -92,7 +94,7 @@ export async function renderDraftForm<T extends Record<string, unknown>>(
     locale: Locale;
     now: Date;
     word: string;
-    steps: { deadlines: Deadlines; familyOpen: boolean };
+    steps: { deadlines: Deadlines; familyOpen: boolean; refusalOn: boolean };
   },
 ): Promise<ReactNode> {
   const { view, door, locale, now, word, steps } = input;
@@ -116,7 +118,7 @@ export async function renderDraftForm<T extends Record<string, unknown>>(
   }
 
   const formView = formViewOf(dated, now);
-  const settings = await readDraftFormSettings(db, { locale, now, membersOnly: view.membersOnly, familyOpen: steps.familyOpen });
+  const settings = await readDraftFormSettings(db, { locale, now, membersOnly: view.membersOnly, familyOpen: steps.familyOpen, refusalOn: steps.refusalOn });
   const cta = door.kind === "KNOWN" ? door.cta : null;
   const closed = cta ? closedDoorSentence(tEvent, cta, locale, dated.timezone) : null;
   // No place and nothing to join (§348): the real form's own notice above the first field. No place

@@ -59,6 +59,19 @@ export default async function StartListBox({ event, mayEditSettings }: Pick<BoxP
                 </CheckboxField>
                 <BoxNote more={t("editor.waitlistPublicHelpMore")}>{t("editor.waitlistPublicHelp")}</BoxNote>
               </Box>
+              {/*
+                «Arată public câți așteaptă» (§634): the line's NUMBER, on the card, the page and in each
+                waiting person's own sentence — not indented, because it does not depend on the list above
+                (it hides a number, never a name) and shows whatever the names switch says. On by default;
+                the marker tells "unticked" from "a form without the box", which must change nothing.
+              */}
+              <Box data-testid="waitlist-count-public" sx={{ mt: 1 }}>
+                <input type="hidden" name="event.waitlistCountPublic.present" value="1" />
+                <CheckboxField name="event.waitlistCountPublic" defaultChecked={event?.waitlistCountPublic ?? true}>
+                  {t("editor.waitlistCountPublic")}
+                </CheckboxField>
+                <BoxNote>{t("editor.waitlistCountPublicHelp")}</BoxNote>
+              </Box>
             </Box>
           </OnlyForMode>
           <OnlyForMode mode={["NONE", "EXTERNAL"]} initialMode={initialMode}>
