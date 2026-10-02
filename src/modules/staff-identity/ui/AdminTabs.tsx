@@ -43,9 +43,10 @@ export type AdminTab = {
 };
 
 /**
- * Which group a small pill beside the «Înscrieri» figure stands for (§626, §NNN; the owner, 2026-10-02:
- * «Tot pe acest pill trebuie să afișăm și pe cei care așteaptă confirmarea mailului sau semnarea
- * declarației»): those completing their registration with a place — a declaration to sign, an open offer,
+ * Which group a small pill beside the «Înscrieri» figure stands for (§626, §NNN; the owner, 2026-10-02,
+ * verbatim: «Tot pe acest pull [sic] trebuie să afișăm și pe cei care aștept [sic] confirmarea mailului sau
+ * semnarea declarației», read as this tab's pill — an interpretation his screenshot of the tab backs):
+ * those completing their registration with a place — a declaration to sign, an open offer,
  * a family's hold, a part OF the figure — those awaiting the email confirmation, and the waiting list,
  * both outside it.
  */

@@ -23,8 +23,9 @@ import { familyReservationHolds, offerAwaitingItsFirstEmail } from "./repository
  * The badge is **everyone with a place** — the allocator's people: confirmed, a declaration to sign, an
  * open offer, a family's hold (the owner, 2026-10-02: «pune-o și pe cei care trebuie să confirme
  * înregistrarea»; §626 had made it the confirmed alone). Beside it, a small outlined pill per group still
- * in progress, each only above zero («Tot pe acest pill trebuie să afișăm și pe cei care așteaptă
- * confirmarea mailului sau semnarea declarației»): those completing their registration with a place
+ * in progress, each only above zero (the owner, verbatim: «Tot pe acest pull [sic] trebuie să afișăm și pe
+ * cei care aștept [sic] confirmarea mailului sau semnarea declarației» — read as this tab's pill, an
+ * interpretation the screenshot he sent of the tab backs): those completing their registration with a place
  * (`withPlace - confirmed`, the pen — a part OF the badge's figure), those awaiting the email
  * confirmation (the envelope — outside it, no place yet) and the waiting list (the hourglass — outside
  * it too). The tooltip's first line says the badge's figure and its split (confirmed, completing their

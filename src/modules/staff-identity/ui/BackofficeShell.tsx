@@ -78,8 +78,9 @@ export default async function BackofficeShell({
     The badge says who has a place (§NNN, amending §626's confirmed alone; the owner, 2026-10-02: «pune-o și
     pe cei care trebuie să confirme înregistrarea»), and a pill per group still in progress follows it: those
     completing their registration with a place (part of the badge), those awaiting the email confirmation
-    and the waiting list (both outside it) — «Tot pe acest pill trebuie să afișăm și pe cei care așteaptă
-    confirmarea mailului sau semnarea declarației». The tooltip says every figure.
+    and the waiting list (both outside it) — the owner, verbatim: «Tot pe acest pull [sic] trebuie să afișăm
+    și pe cei care aștept [sic] confirmarea mailului sau semnarea declarației», read as this tab's pill (an
+    interpretation his screenshot of the tab backs). The tooltip says every figure.
   */
   const registered = breakdown?.withPlace ?? null;
   const pillCounts = breakdown

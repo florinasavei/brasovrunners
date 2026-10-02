@@ -202,7 +202,10 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
     places line says are completing their registration. The places come from the door's own cached read
     (`readRegistrationDoor`: the entry the page's `RegistrationCta` reads, for an open internal event
     only), so this costs no query of its own; a door that read nothing (uncapped, closed, unreadable)
-    leaves the confirmed alone, today's title and line.
+    leaves the confirmed alone, today's title and line. Accepted knowingly: when that read fails, the
+    request memo forgets the failed promise, so this call asks the database once more and logs a second
+    «[registration-door] could not read the availability» after the card's — the breaker fails fast once
+    open, and threading the card's door down to the list would couple two islands for a log line.
   */
   const door = await readRegistrationDoor(event, now);
   const headline = startListHeadline(t, locale, { confirmed: view.confirmed, named }, door.kind === "KNOWN" ? door.fill : null);

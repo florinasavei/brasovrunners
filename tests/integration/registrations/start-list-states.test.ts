@@ -421,6 +421,20 @@ describe("§NNN the title counts everyone with a place on a capped event", () =>
     expect(summary(html)).toBe("4 participanți confirmați — 3 cu numele afișat");
   });
 
+  it("with nobody confirmed yet, the title counts those in progress and the line says so above the empty sentence", async () => {
+    await approveNotice(OLDER_NOTICE);
+    const eventId = await openEvent(10);
+    await register(eventId, { name: "Semnatura Lipsa a", status: "PENDING_DECLARATION", emailConfirmedAt: at(5) });
+    await register(eventId, { name: "Semnatura Lipsa b", status: "PENDING_DECLARATION", emailConfirmedAt: at(6) });
+
+    const html = await renderList("cros-cu-loc");
+
+    expect(html).toContain("Cine vine (2)");
+    expect(summary(html)).toBe("2 înscriși — 0 confirmați (0 cu numele afișat), 2 în curs de confirmare");
+    expect(html).toContain("Încă nu și-a confirmat nimeni participarea.");
+    expect(html).not.toContain("Semnatura Lipsa");
+  });
+
   it("an event with no number of places keeps the confirmed alone (§32), whoever is in progress", async () => {
     await approveNotice(OLDER_NOTICE);
     await people(await openEvent(null), 2);
