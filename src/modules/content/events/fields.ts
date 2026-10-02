@@ -930,11 +930,13 @@ export const eventFieldsSchema = z
      */
     waitlistCountPublic: z.boolean().optional(),
     /**
-     * «Lista ascunsă» (§NNN, amending §643): the event's switch, the hidden list's own number series,
-     * and the two ticks over the public «Cine vine» numbers. Each optional, and absent means "this
-     * caller is not editing it" (the kit's discipline, §554): the editor posts the four with one
-     * marker, and a form without the group changes none of them. Stored as posted whatever the switch
-     * says — the club's choices survive switching it off and on — and acted on only while it is on.
+     * «Lista ascunsă» (§NNN, amending §643): the event's switch, the hidden list's own number series
+     * and «Numără și lista ascunsă», with «Arată public numărătoarea» beside them. Each optional, and
+     * absent means "this caller is not editing it" (the kit's discipline, §554): the editor posts the
+     * group's three with one marker and the count's tick with its own, and a form without them changes
+     * none of them. Stored as posted whatever the switch says — the club's choices survive switching it
+     * off and on. The group's three act only while the switch is on; «Arată public numărătoarea» on
+     * every event (`hiddenListCounting`).
      */
     hiddenListEnabled: z.boolean().optional(),
     hiddenListBibStart: optionalWholeNumber({ min: 1, max: 99_000 }).optional(),

@@ -1423,10 +1423,12 @@ languages go live together; that is the rule, not a setting.
      everybody; set (say 900), the hidden list has its own series from there up, in confirmation
      order. The save refuses a start inside the race's series (the first number and as many after
      it as there are places) or inside the desk's spare numbers;
-   - **«Arată public numărătoarea»** — ticked by default; unticked, «Cine vine» shows the names only,
-     with no count and no position;
    - **«Numără și lista ascunsă»** — unticked by default, «Cine vine» counts the race's places only;
      ticked, it counts the hidden list too. The places line and the free places never do.
+
+   Beside «Arată public câți așteaptă», on this and every event whether or not the hidden list is
+   on, **«Arată public numărătoarea»** — ticked by default; unticked, «Cine vine» shows the names
+   only, with no count in its title, no «confirmați» line and no position.
 
    Then they register like anybody (or are entered from «Înscrierile primite»), and an
    Administrator opens each registration → «Lista ascunsă» → chooses «Pe lista ascunsă» and

@@ -19,7 +19,8 @@ import type { PublicEvent } from "@/modules/events/repository";
  * - «Arată public numărătoarea» off: the title has no number, no counted line and no position column —
  *   only the names;
  * - the rows never change with either tick (§32: the ticks change numbers, never which names appear),
- *   and an event whose switch is off reads as before, whatever the two ticks say.
+ *   an event whose switch is off never counts the hidden list, and «Arată public numărătoarea» acts
+ *   on every event, the hidden list on or off.
  */
 let db: TestDatabase;
 let close: () => Promise<void>;
@@ -154,12 +155,25 @@ describe("§NNN «Cine vine» and the hidden list's two ticks", () => {
     expect(rows(html)).toBe(3);
   });
 
-  it("an event whose switch is off reads as before, whatever its two ticks say", async () => {
+  it("an event whose switch is off never counts the hidden list, whatever «Numără și lista ascunsă» says", async () => {
     const id = await seeded();
-    const html = await render(asPublic(id, { hiddenListEnabled: false, participantCountPublic: false, hiddenListCounted: true }));
+    const html = await render(asPublic(id, { hiddenListEnabled: false, participantCountPublic: true, hiddenListCounted: true }));
     expect(html).toContain("Cine vine (2)");
     expect(html).toContain("2 participanți confirmați");
     expect(html).toContain(`>${ro.Event.startList.columnPosition}<`);
+    expect(rows(html)).toBe(3);
+  });
+
+  it("«Arată public numărătoarea» acts on every event: the hidden list off and the tick off leave only the names", async () => {
+    const id = await seeded();
+    const html = await render(asPublic(id, { hiddenListEnabled: false, participantCountPublic: false, hiddenListCounted: false }));
+    expect(html).toContain(`>${ro.Event.startList.title}</`);
+    expect(html).not.toMatch(/Cine vine \(\d+\)/);
+    expect(html).not.toContain('data-testid="start-list-summary"');
+    expect(html).not.toContain("participanți confirmați");
+    expect(html).not.toContain(`>${ro.Event.startList.columnPosition}<`);
+    expect(html).toContain("Ana Popescu");
+    expect(html).toContain("Ioana Pacemaker");
     expect(rows(html)).toBe(3);
   });
 });

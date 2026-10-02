@@ -43,14 +43,14 @@ async function render(event: EditableEvent | null) {
   return new Response(stream).text();
 }
 
-/** The block `ShownWhen` draws around the three dependent fields, from its opening tag. */
+/** The block `ShownWhen` draws around the two dependent fields, from its opening tag. */
 const detailsBlock = (html: string) => {
   const at = html.indexOf('data-testid="hidden-list-details"');
   return html.slice(html.lastIndexOf("<div", html.lastIndexOf("<div", at) - 1), at);
 };
 
 describe("§NNN the «Lista ascunsă» group in the editor", () => {
-  it("draws the switch with its marker and help after the count box, and the three fields under it", async () => {
+  it("draws «Arată public numărătoarea» on its own, then the switch with its marker and help, and the two fields under it", async () => {
     const html = await render(RACE);
     expect(html.indexOf('data-testid="waitlist-count-public"')).toBeLessThan(html.indexOf('data-testid="hidden-list-settings"'));
     expect(html).toMatch(/<input[^>]*type="hidden"[^>]*name="event.hiddenList.present"[^>]*value="1"/);
@@ -62,12 +62,19 @@ describe("§NNN the «Lista ascunsă» group in the editor", () => {
     expect(html).toContain('name="event.hiddenListBibStart"');
     // «Arată public numărătoarea» starts ticked, «Numără și lista ascunsă» not.
     expect(html).toMatch(/<input[^>]*name="event.participantCountPublic"[^>]*checked/);
+    // «Arată public numărătoarea» is outside the group (it acts on every event): beside «Arată public câți
+    // așteaptă», before the switch, never in the hidden block, with its own marker.
+    const countAt = html.indexOf('data-testid="participant-count-public"');
+    expect(countAt).toBeGreaterThan(html.indexOf('data-testid="waitlist-count-public"'));
+    expect(countAt).toBeLessThan(html.indexOf('data-testid="hidden-list-settings"'));
+    expect(html.indexOf('name="event.participantCountPublic"')).toBeLessThan(html.indexOf('data-testid="hidden-list-settings"'));
+    expect(html).toMatch(/<input[^>]*type="hidden"[^>]*name="event.participantCountPublic.present"[^>]*value="1"/);
     expect(html).not.toMatch(/<input[^>]*name="event.hiddenListCounted"[^>]*checked/);
     // Hidden while the switch is off: in the page, posted, but not shown.
     expect(detailsBlock(html)).toContain("data-hidden-block");
   });
 
-  it("shows the three fields with the switch ticked, with the event's values", async () => {
+  it("shows the two fields with the switch ticked, with the event's values", async () => {
     const html = await render({ ...RACE, hiddenListEnabled: true, hiddenListBibStart: 900, participantCountPublic: false, hiddenListCounted: true } as unknown as EditableEvent);
     expect(html).toMatch(/<input[^>]*name="event.hiddenListEnabled"[^>]*checked/);
     expect(detailsBlock(html)).not.toContain("data-hidden-block");

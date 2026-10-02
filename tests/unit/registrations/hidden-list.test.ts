@@ -20,9 +20,11 @@ const radio = (html: string, value: string) => (html.match(/<input[^>]*>/g) ?? [
 const read = (relative: string) => readFileSync(path.join(ROOT, relative), "utf8").replace(/\r\n/g, "\n");
 
 describe("§NNN the event's settings, as read", () => {
-  it("acts only while «Folosește lista ascunsă» is on: off, today's numbers and the race's one series", () => {
+  it("the hidden list acts only while «Folosește lista ascunsă» is on; «Arată public numărătoarea» on every event", () => {
     expect(hiddenListCounting(null)).toEqual({ countPublic: true, countHidden: false });
-    expect(hiddenListCounting({ hiddenListEnabled: false, participantCountPublic: false, hiddenListCounted: true })).toEqual({ countPublic: true, countHidden: false });
+    // «Arată public numărătoarea» acts on every event; «Numără și lista ascunsă» only with the switch on.
+    expect(hiddenListCounting({ hiddenListEnabled: false, participantCountPublic: false, hiddenListCounted: true })).toEqual({ countPublic: false, countHidden: false });
+    expect(hiddenListCounting({ hiddenListEnabled: false, participantCountPublic: true, hiddenListCounted: true })).toEqual({ countPublic: true, countHidden: false });
     expect(hiddenListCounting({ hiddenListEnabled: true, participantCountPublic: false, hiddenListCounted: true })).toEqual({ countPublic: false, countHidden: true });
     expect(hiddenListCounting({ hiddenListEnabled: true, participantCountPublic: true, hiddenListCounted: false })).toEqual({ countPublic: true, countHidden: false });
     expect(hiddenListBibStartOf({ hiddenListEnabled: true, hiddenListBibStart: 900, participantCountPublic: true, hiddenListCounted: false })).toBe(900);

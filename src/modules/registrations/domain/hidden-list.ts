@@ -4,10 +4,10 @@
  * The owner, 2026-10-02: «Trebuie ca acest feature să se numească „Pune pe lista ascunsă” […] și la
  * numărate trebuie să am bife dacă vreau să îi includ sau nu» — and «direct din setările evenimentului
  * să pot avea „folosește lista ascunsă”». The registration's mark is still `registrations.outside_capacity`
- * (§643: no place, every capacity count leaves it out); the event gained four columns, and the three
- * below the switch act only while it is on. Off, the event reads exactly as before the group existed —
- * the race's one number series, «Cine vine» with its numbers, the hidden list out of them — and the rows
- * already on the list stay on it.
+ * (§643: no place, every capacity count leaves it out); the event gained four columns: the switch and
+ * the two below it act only while it is on, and «Arată public numărătoarea» acts on every event. Off, the
+ * event reads as before the group existed — the race's one number series, the hidden list out of
+ * «Cine vine»'s numbers — and the rows already on the list stay on it.
  */
 
 /** The marker a refusal carries when somebody is put on the list of an event whose switch is off. */
@@ -23,13 +23,14 @@ export type HiddenListSettings = {
 
 /**
  * What «Cine vine» does with its numbers (§NNN): whether it says them at all («Arată public
- * numărătoarea»), and whether the hidden list is in them («Numără și lista ascunsă»). Defaults — the
- * numbers said, the hidden list out — for an event whose switch is off, and for a caller with no row.
- * The places line and the free places never read this: the hidden list takes no place.
+ * numărătoarea» — on every event, whatever the switch says), and whether the hidden list is in them
+ * («Numără și lista ascunsă» — only while the switch is on). Defaults — the numbers said, the hidden
+ * list out — for a caller with no row. The places line and the free places never read this: the
+ * hidden list takes no place.
  */
 export function hiddenListCounting(event: Partial<HiddenListSettings> | null | undefined): { countPublic: boolean; countHidden: boolean } {
-  if (!event || event.hiddenListEnabled !== true) return { countPublic: true, countHidden: false };
-  return { countPublic: event.participantCountPublic !== false, countHidden: event.hiddenListCounted === true };
+  const countPublic = event?.participantCountPublic !== false;
+  return { countPublic, countHidden: event?.hiddenListEnabled === true && event.hiddenListCounted === true };
 }
 
 /**

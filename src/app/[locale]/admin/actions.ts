@@ -155,17 +155,16 @@ const eventFormFieldNames = (error: DomainError) => error.fields.map((field) => 
  * both languages together (the editor's boxes, `ui/boxes/`, and `ui/TranslationFields.tsx`).
  */
 /**
- * «Lista ascunsă» (§NNN): the event's switch, the hidden list's first number and the two ticks over
- * the public counts — one marker for the four (`HiddenListBox`), so a form without the group, the
- * create form or a fixture, edits none of them. «Arată public numărătoarea» is on by default, which is
- * why an unticked box is read here as `false` only beside the marker.
+ * «Lista ascunsă» (§NNN): the event's switch, the hidden list's first number and «Numără și lista
+ * ascunsă» — one marker for the three (`StartListBox`), so a form without the group, the create form
+ * or a fixture, edits none of them. «Arată public numărătoarea» is not in the group — it acts on every
+ * event — and carries its own marker, read beside «Arată public câți așteaptă».
  */
 function hiddenListFrom(form: FormData, value: (field: string) => string) {
   if (form.get("event.hiddenList.present") !== "1") return {};
   return {
     hiddenListEnabled: form.get("event.hiddenListEnabled") === "on",
     hiddenListBibStart: value("hiddenListBibStart"),
-    participantCountPublic: form.get("event.participantCountPublic") === "on",
     hiddenListCounted: form.get("event.hiddenListCounted") === "on",
   };
 }
@@ -378,6 +377,9 @@ function eventFieldsFrom(form: FormData) {
     // the kit's (§554) — on by default, so a form without the box must read "not editing it", never "hidden".
     waitlistCountPublic:
       form.get("event.waitlistCountPublic.present") === "1" ? form.get("event.waitlistCountPublic") === "on" : undefined,
+    // «Arată public numărătoarea» (§NNN): on by default, so an unticked box is `false` only beside its marker.
+    participantCountPublic:
+      form.get("event.participantCountPublic.present") === "1" ? form.get("event.participantCountPublic") === "on" : undefined,
     // «Lista ascunsă» (§NNN): the group's four, read only when the form carried its marker — a form
     // without the group is "not editing it", never "switched off" or "no series".
     ...hiddenListFrom(form, value),

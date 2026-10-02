@@ -643,7 +643,8 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
     // box writes nothing, so no save hides or shows the waiting list's count by not mentioning it.
     ...(fields.waitlistCountPublic === undefined ? {} : { waitlistCountPublic: fields.waitlistCountPublic }),
     // «Lista ascunsă» (§NNN), each by the partners' discipline: a caller that did not post the group
-    // writes nothing, so no save switches the hidden list, its series or its two ticks by omission.
+    // writes nothing, so no save switches the hidden list, its series, its count tick or «Arată public
+    // numărătoarea» (its own marker, on every event) by omission.
     ...(fields.hiddenListEnabled === undefined ? {} : { hiddenListEnabled: fields.hiddenListEnabled }),
     ...(fields.hiddenListBibStart === undefined ? {} : { hiddenListBibStart: fields.hiddenListBibStart }),
     ...(fields.participantCountPublic === undefined ? {} : { participantCountPublic: fields.participantCountPublic }),
@@ -1840,7 +1841,8 @@ const SERIES_COLUMNS = [
   // Whether the waiting list's count is public (§634) travels like the line's own settings above.
   "waitlistCountPublic",
   // «Lista ascunsă» (§NNN): one race, one hidden list — the switch, its series beside the race's own
-  // band, and the two ticks over the public counts travel together.
+  // band, and the two ticks over the public counts (one of them, «Arată public numărătoarea», acting on
+  // every event) travel together.
   "hiddenListEnabled",
   "hiddenListBibStart",
   "participantCountPublic",

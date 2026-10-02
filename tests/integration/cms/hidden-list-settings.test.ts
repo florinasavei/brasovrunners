@@ -119,7 +119,7 @@ const trail = (eventId: string) =>
 
 type Group = { enabled?: boolean; start?: string; countPublic?: boolean; counted?: boolean } | "absent";
 
-/** The editor's settings as they post, plus the «Lista ascunsă» group (one marker for the four). */
+/** The editor's settings as they post, plus the «Lista ascunsă» group (one marker for the three) and the count's tick. */
 function settingsForm(eventId: string, expectedVersion: number, group: Group): FormData {
   const form = new FormData();
   form.set("uiLocale", "ro");
@@ -132,8 +132,10 @@ function settingsForm(eventId: string, expectedVersion: number, group: Group): F
     form.set("event.hiddenList.present", "1");
     if (group.enabled) form.set("event.hiddenListEnabled", "on");
     form.set("event.hiddenListBibStart", group.start ?? "");
-    if (group.countPublic) form.set("event.participantCountPublic", "on");
     if (group.counted) form.set("event.hiddenListCounted", "on");
+    // «Arată public numărătoarea» (§NNN) is outside the group, with its own marker, as the editor posts it.
+    form.set("event.participantCountPublic.present", "1");
+    if (group.countPublic) form.set("event.participantCountPublic", "on");
   }
   return form;
 }
@@ -199,6 +201,22 @@ describe("§NNN «Lista ascunsă» on the event", () => {
     expect(await postSave(settingsForm(source.id, (await reloadEvent(source.id)).version, { enabled: false, start: "900", countPublic: false, counted: true }))).toBe("redirected");
     expect(settled(await reloadEvent(source.id))).toEqual({ enabled: false, start: 900, countPublic: false, counted: true });
     expect((await trail(source.id)).at(-1)?.metadataJson).toEqual({ from: { hiddenListEnabled: true }, to: { hiddenListEnabled: false } });
+  });
+
+  it("«Arată public numărătoarea» is saved by its own marker, on an event whose hidden list stays off", async () => {
+    const source = await createEvent(db, { actor: admin, fields: { ...FIELDS, translations: TRANSLATIONS }, now: NOW });
+    // The count's tick alone, unticked, without the hidden list's group: the hidden list is untouched.
+    const form = settingsForm(source.id, (await reloadEvent(source.id)).version, "absent");
+    form.set("event.participantCountPublic.present", "1");
+    expect(await postSave(form)).toBe("redirected");
+    expect(settled(await reloadEvent(source.id))).toEqual({ enabled: false, start: null, countPublic: false, counted: false });
+    expect((await trail(source.id)).at(-1)?.metadataJson).toEqual({ from: { participantCountPublic: true }, to: { participantCountPublic: false } });
+    // Ticked again by the same marker.
+    const again = settingsForm(source.id, (await reloadEvent(source.id)).version, "absent");
+    again.set("event.participantCountPublic.present", "1");
+    again.set("event.participantCountPublic", "on");
+    expect(await postSave(again)).toBe("redirected");
+    expect(settled(await reloadEvent(source.id))).toEqual({ enabled: false, start: null, countPublic: true, counted: false });
   });
 
   it("refuses a hidden-list series starting inside the race's series, names the box, and accepts one below or past it", async () => {

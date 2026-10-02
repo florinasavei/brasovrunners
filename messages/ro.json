@@ -5461,7 +5461,7 @@
                 "De pe lista de așteptare sau dintr-o ofertă deschisă primește un loc acum, pe lista ascunsă: emailul declarației, cu termenul obișnuit, nu al ofertei.",
                 "Confirmat sau cu declarația de semnat, își păstrează starea, numărul și emailurile. Apare pe lista publică doar dacă a bifat, fără niciun semn.",
                 "Cu «Numerele listei ascunse încep de la» lista ascunsă are seria ei de numere de concurs, în ordinea confirmării; un număr deja dat rămâne.",
-                "Pe site, «Cine vine» îi numără doar cu «Numără și lista ascunsă»; locurile și locurile libere nu îi numără niciodată. «Arată public numărătoarea» debifat lasă doar numele.",
+                "Pe site, «Cine vine» îi numără doar cu «Numără și lista ascunsă»; locurile și locurile libere nu îi numără niciodată. «Arată public numărătoarea», lângă «Arată public câți așteaptă», e pe orice eveniment, cu sau fără lista ascunsă: debifat, lasă doar numele.",
                 "Cu «Folosește lista ascunsă» bifat, pagina evenimentului spune lângă locuri, fără niciun nume, că organizatorii, voluntarii și invitații pot fi la start în afara locurilor anunțate.",
                 "«Se numără între locurile evenimentului» o întoarce doar dacă e un loc liber; altfel apăsarea e refuzată și spune cine ține locurile.",
                 "În lista înscrierilor, pilula «Lista ascunsă» îi arată pe toți; exportul are o coloană pentru ei."

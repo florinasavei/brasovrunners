@@ -116,7 +116,7 @@ test.describe("§NNN «Lista ascunsă» as a radio", () => {
     await expect(page.getByTestId("outside-capacity").getByRole("radio", { name: "Pe lista ascunsă" })).toBeChecked();
   });
 
-  test("the event's group: the three settings under «Folosește lista ascunsă» show only while it is ticked", async ({ page }) => {
+  test("the event's group: the two settings under «Folosește lista ascunsă» show only while it is ticked, «Arată public numărătoarea» always", async ({ page }) => {
     const tag = `${test.info().project.name}-editor-${Date.now().toString(36)}`;
     const { eventId } = await seed(tag);
     await withDatabase((client) => client.query("UPDATE events SET hidden_list_enabled = false WHERE id = $1", [eventId]));
@@ -128,9 +128,13 @@ test.describe("§NNN «Lista ascunsă» as a radio", () => {
     const start = group.getByLabel("Numerele listei ascunse încep de la");
     await expect(group.getByText("Folosește lista ascunsă", { exact: true })).toBeVisible();
     await expect(start).toBeHidden();
+    // «Arată public numărătoarea» (§NNN) acts on every event: shown and ticked with the switch off, outside the group.
+    const countTick = box.getByTestId("participant-count-public").getByRole("checkbox", { name: "Arată public numărătoarea" });
+    await expect(countTick).toBeVisible();
+    await expect(countTick).toBeChecked();
+    await expect(group.getByRole("checkbox", { name: "Arată public numărătoarea" })).toHaveCount(0);
     await group.getByRole("checkbox", { name: "Folosește lista ascunsă" }).check();
     await expect(start).toBeVisible();
-    await expect(group.getByRole("checkbox", { name: "Arată public numărătoarea" })).toBeChecked();
     await expect(group.getByRole("checkbox", { name: "Numără și lista ascunsă" })).not.toBeChecked();
     // Inside the screen at every width the projects use, 320 pixels included.
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);

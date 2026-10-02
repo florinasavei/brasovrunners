@@ -78,10 +78,24 @@ export default async function StartListBox({ event, mayEditSettings }: Pick<BoxP
                 <BoxNote>{t("editor.waitlistCountPublicHelp")}</BoxNote>
               </Box>
               {/*
+                «Arată public numărătoarea» (§NNN): «Cine vine»'s own numbers — the title's «(N)», «N confirmați
+                — M cu numele afișat», «în curs» — on every event, whatever the hidden list's switch says (the
+                owner: «mai punem bifă pentru afișarea numărătorii»). It hides numbers, never a name, so it sits
+                beside «Arată public câți așteaptă», not indented. On by default; its own marker tells "unticked"
+                from "a form without the box".
+              */}
+              <Box data-testid="participant-count-public" sx={{ mt: 1 }}>
+                <input type="hidden" name="event.participantCountPublic.present" value="1" />
+                <CheckboxField name="event.participantCountPublic" defaultChecked={event?.participantCountPublic ?? true}>
+                  {t("editor.participantCountPublic")}
+                </CheckboxField>
+                <BoxNote>{t("editor.participantCountPublicHelp")}</BoxNote>
+              </Box>
+              {/*
                 «Lista ascunsă» (§NNN; the owner, 2026-10-02: «direct din setările evenimentului să pot avea
                 „folosește lista ascunsă” dedicată pentru BIB-uri date pe invitații»): the switch that lets the
                 registrations be put on the hidden list, and — shown only while it is ticked — the hidden list's
-                own number series and the two ticks over «Cine vine»'s numbers. One marker for the four, so a
+                own number series and «Numără și lista ascunsă». One marker for the three, so a
                 form without the group edits none of them; the service validates them whatever this shows.
               */}
               <Box data-testid="hidden-list-settings" sx={{ mt: 2 }}>
@@ -103,10 +117,6 @@ export default async function StartListBox({ event, mayEditSettings }: Pick<BoxP
                       {...textFieldConstraints(eventInputConstraints("hiddenListBibStart"), { inputMode: "numeric" })}
                       sx={{ width: { xs: "100%", sm: 320 }, my: 1 }}
                     />
-                    <CheckboxField name="event.participantCountPublic" defaultChecked={event?.participantCountPublic ?? true}>
-                      {t("editor.participantCountPublic")}
-                    </CheckboxField>
-                    <BoxNote>{t("editor.participantCountPublicHelp")}</BoxNote>
                     <CheckboxField name="event.hiddenListCounted" defaultChecked={event?.hiddenListCounted ?? false}>
                       {t("editor.hiddenListCounted")}
                     </CheckboxField>

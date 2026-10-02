@@ -141,11 +141,11 @@ const NO_NUMBER = "—";
  * ## The hidden list's two ticks (§NNN, amending §632 and §643)
  *
  * The owner, 2026-10-02: «nu vreau să scot pe nimeni de pe listă, ci doar să nu se pună la socoteală;
- * de fapt mai punem bifă pentru „afișarea numărătorii”». Two ticks of the event's «Lista ascunsă»
- * group, acting only while its «Folosește lista ascunsă» is on (`hiddenListCounting`): «Arată public
- * numărătoarea» off leaves the names alone — no number in the title, no counted line, no position
- * column (a running position is a count); «Numără și lista ascunsă» on puts everybody on the hidden list
- * with a place into the title and «confirmați» (`countHiddenListWithPlace`: ticked or not, real only;
+ * de fapt mai punem bifă pentru „afișarea numărătorii”». Two ticks of the event's
+ * (`hiddenListCounting`): «Arată public numărătoarea», on every event whatever «Folosește lista
+ * ascunsă» says, off leaves the names alone — no number in the title, no counted line, no position
+ * column (a running position is a count); «Numără și lista ascunsă», only while the switch is on,
+ * puts everybody on the hidden list with a place into the title and «confirmați» (`countHiddenListWithPlace`: ticked or not, real only;
  * its holds into «în curs de confirmare» only where the places line is known). Neither changes a row:
  * which names appear is the person's tick and the notice's gates alone. The places line never counts
  * the hidden list — it takes no place.
@@ -189,8 +189,8 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
   const { named, anonymous, outsideNamed, hidden } = await cachedStartListCounts(event.id);
   /*
     «Lista ascunsă» (§NNN): whether the list says its numbers at all («Arată public numărătoarea»), and
-    whether they count the hidden list («Numără și lista ascunsă») — the event's two ticks, acting only
-    while its switch is on. Numbers only: which rows the table holds never depends on them (§32).
+    whether they count the hidden list («Numără și lista ascunsă») — the first on every event, the second
+    only while the hidden list's switch is on. Numbers only: which rows the table holds never depends on them (§32).
   */
   const { countPublic, countHidden } = hiddenListCounting(event);
   // The gate (§396): the notice in force, in every language, describes the states. Off, nothing

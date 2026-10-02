@@ -5461,7 +5461,7 @@
                 "From the waiting list or an open offer they get a place now, on the hidden list: the declaration email, with the usual deadline, not the offer's.",
                 "Confirmed or with a declaration to sign, they keep their state, number and emails. They appear on the public list only if they ticked, unmarked.",
                 "With «The hidden list's numbers start at» the hidden list has its own series of race numbers, in confirmation order; a number already given stays.",
-                "On the site, «Who's coming» counts them only with «Count the hidden list too»; the places and the free places never count them. «Show the count publicly» unticked leaves only the names.",
+                "On the site, «Who's coming» counts them only with «Count the hidden list too»; the places and the free places never count them. «Show the count publicly», beside «Show publicly how many are waiting», is on every event, with or without the hidden list: unticked, it leaves only the names.",
                 "With «Use the hidden list» ticked, the event page says beside the places, naming nobody, that organisers, volunteers and invited runners may be at the start outside the advertised places.",
                 "«Counted among the event's places» turns it back only if a place is free; otherwise the press is refused and says who holds the places.",
                 "In the registrations list, the pill «Hidden list» shows them all; the export has a column for them."

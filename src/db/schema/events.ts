@@ -673,19 +673,20 @@ export const events = pgTable(
     waitlistCountPublic: boolean("waitlist_count_public").notNull().default(true),
 
     /**
-     * «Lista ascunsă» (§NNN, amending §643): the event's own group of four.
+     * «Lista ascunsă» (§NNN, amending §643): four columns — the hidden list's group of three, and «Arată public numărătoarea», which acts on every event.
      *
      * - `hidden_list_enabled` — «Folosește lista ascunsă»: whether the registration page offers
      *   «Pune pe lista ascunsă» at all. Off by default; the migration switched it on for every event
      *   that already had a row on the list (`registrations.outside_capacity`), so nothing it showed
      *   disappears. Off again, nothing changes for the rows already on the list — they stay off the
-     *   places — and the three below stop acting until it is on.
+     *   places — and the two below it that name the hidden list stop acting until it is on.
      * - `hidden_list_bib_start` — «Numerele listei ascunse încep de la»: null, the hidden list draws
      *   from the race's own series, as every row did; set, its own series from there upward, in
      *   confirmation order (`bibs.ts#pickBibNumber`). The save refuses a start inside the race's
      *   series or the desk's spares (`fields.ts`).
      * - `participant_count_public` — «Arată public numărătoarea»: off, «Cine vine» shows the names with
-     *   no number at all (no count in the title, no counted line, no position).
+     *   no number at all (no count in the title, no counted line, no position). On every event,
+     *   whatever the switch says: it is the editor's tick beside «Arată public câți așteaptă».
      * - `hidden_list_counted` — «Numără și lista ascunsă»: on, «Cine vine» and «confirmați» count the
      *   hidden list too. Never the places line or the free places: the hidden list takes no place.
      *

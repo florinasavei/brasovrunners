@@ -208,8 +208,8 @@ export async function cachedPublishedEventsBetween(locale: Locale, from: Date, t
 /**
  * `findPublishedEventBySlug`: the event page, its metadata, its pictures and its `.ics`.
  *
- * `"hidden-list"` (§NNN): the row gained the hidden list's switch and its two ticks, which «Cine vine»
- * and the places line's sentence read — so no entry written without them is read by code that asks.
+ * `"hidden-list"` (§NNN): the row gained the hidden list's switch, its count tick and «Arată public
+ * numărătoarea», which «Cine vine» and the places line's sentence read — so no entry written without them is read by code that asks.
  */
 export async function cachedPublishedEventBySlug(locale: Locale, slug: string) {
   return readBySlug(slug, ["events.by-slug", locale, slug, "hidden-list"], ["events"], () => findPublishedEventBySlug(getDb(), locale, slug));
