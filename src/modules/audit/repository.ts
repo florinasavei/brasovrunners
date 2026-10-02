@@ -78,7 +78,7 @@ export type AuditAction =
   | "registration.promoted_by_staff"
   /**
    * «Trimite-i oferta» (§615): a free place offered by the organizer to the waiting-list registration
-   * of their choice — the ordinary offer and its email, no confirmation. From and to, and how many
+   * (a named one) — the ordinary offer and its email, no confirmation. From and to, and how many
    * waited before this person in the line (`aheadOf`) — never a name.
    */
   | "registration.offered_by_staff"

@@ -22,14 +22,13 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 
 /**
  * «Dă-i un loc acum» (§637; BR-REQ-037-07, BR-REQ-034-01; `AGENTS.md` §10.5 rule 3, §15.11). The
- * owner, 2026-10-02, of a member whose verification email left late in the outage and whose press
- * then met a full race and a full line: «Acestei doamne ghinioniste vreau să-i aloc direct loc și să
- * îi trimit declarația» — «Nu vreau să mai facă ea nimic!! Nu mai vreau să risc».
+ * owner, 2026-10-02: a registration whose verification email the outage delayed met a full race; he
+ * asked for a way to seat it directly and send the declaration with no further step from the person.
  *
  * An Administrator vouches for the address of a `PENDING_EMAIL_CONFIRMATION` row and gives it a place
  * now, ahead of the waiting list, under the event lock — from a counted free place, or, on a full race,
  * from one supplementary place the press adds, audited (§642, as «Trimite-i oferta»); the person
- * receives the ordinary declaration email and signs it herself — online, or on paper at the desk.
+ * receives the ordinary declaration email and signs it themselves — online, or on paper at the desk.
  */
 const NOW = new Date("2026-09-25T10:00:00.000Z");
 const STARTS = new Date("2026-10-11T07:00:00.000Z");

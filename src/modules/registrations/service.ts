@@ -911,7 +911,7 @@ export async function fillAvailableSpots<T extends Record<string, unknown>>(
   if (event.eventStatus !== "SCHEDULED") return 0;
   /*
     «Locurile din lista de așteptare se alocă automat» — «Nu» (§615, amending §104, §587 and §589): the
-    organizer hands out every freed or added place, to the person of their choice («Trimite-i oferta»,
+    organizer hands out every freed or added place, to a named person («Trimite-i oferta»,
     `offerPlaceToByStaff`) or to a walk-in at the desk («Dă-i un loc»). The one gate, here and nowhere
     else: every path that frees or adds a place — a cancellation, an offer's expiry or decline, an
     erasure, a late signature's release, the capacity raised in the editor (§147), the maintenance
@@ -2861,8 +2861,8 @@ export type PlacedByStaff = Registration & { capacityRaisedTo: number | null };
 export type StaffPlaceOptions = { addPlaceTo?: number | null };
 
 /**
- * «Dă-i un loc acum» (§637; the owner, 2026-10-02: «Nu vreau să mai facă ea nimic!! Nu mai vreau să
- * risc»; «trebuie să avem mereu portițe și scurtături din back-office»). A registration still waiting
+ * «Dă-i un loc acum» (§637; the owner, 2026-10-02: no further step from the person, and a
+ * back-office way round when an email goes wrong). A registration still waiting
  * for its address — the verification email late, in Spam, or pressed when the line was already full
  * (§348) — is given a place by an Administrator, remotely, in one press: the first half of the desk's
  * «Confirmă pe hârtie» (§67), without the paper.
@@ -3012,7 +3012,7 @@ export async function givePlaceNowByStaff<T extends Record<string, unknown>>(
       And a verification email not yet sent is withdrawn (the review of 2026-10-02, finding 2): one the
       outage, a Mailgun pause, the daily allowance or a family sitting (`SITTING_HELD`) kept waiting would
       mint its link at render time and ask her, after the declaration's email, to confirm an address the
-      club has vouched for — the very step the owner wanted gone («Nu vreau să mai facă ea nimic»). Only
+      club has vouched for — the very step the owner wanted gone (no further step from the person). Only
       rows still waiting and never tried, as `family-sitting.ts` takes one back: a message that may have
       left is not taken back here; the renderer withdraws a retry of it (`render.ts`, `OutboxMessageWithdrawn`).
       Its club copy goes with it. A family sitting that held it reads the missing row as gone.
@@ -3552,8 +3552,8 @@ export async function promoteFromWaitlistByStaff<T extends Record<string, unknow
 }
 
 /**
- * «Trimite-i oferta» (§615, amended by §642): the Administrator sends a place to the waiting-list
- * registration of their choice — the ordinary offer and its email, ahead of the people before them in
+ * «Trimite-i oferta» (§615, amended by §642): the Administrator sends a place to the waiting list,
+ * a named registration — the ordinary offer and its email, ahead of the people before them in
  * the line — at any moment before the start, and on a full event by adding the place it needs. The
  * owner, 2026-10-02: «Vreau să pot „oferi loc” în orice moment, chiar și pe liste suplimentare».
  *
