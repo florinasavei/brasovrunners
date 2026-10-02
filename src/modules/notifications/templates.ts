@@ -1059,10 +1059,10 @@ export type TemplateData = {
    */
   familyOnAddress?: ReadonlyArray<{ name: string; state: FamilyEarlierState }>;
   /**
-   * Where the person stood in the waiting list's line when this message was rendered (§NNN), on
+   * Where the person stood in the waiting list's line when this message was rendered (§629), on
    * `WAITLIST_JOINED` only: «Când am trimis acest email, erai pe locul 3 din 10.» while the event offers
    * freed places in order (`autoOffer`), and without any position, «… pe lista de așteptare mai
-   * așteptau alte 9 persoane.», while the club chooses whom to offer one (§NNN, amending §615). Read at
+   * așteptau alte 9 persoane.», while the club chooses whom to offer one (§629, amending §615). Read at
    * render time from `readWaitlistPosition` — the same reader the registration's own page uses — and
    * worded as of that moment, since the line moves after the email is read. Absent when the
    * registration is no longer waiting or its event is cancelled, or for any other message. Numbers only; nobody else is named.
@@ -1894,7 +1894,7 @@ const T = {
     /** After the body of a declaration request, on an address with more to sign (§471): the one link signs them all. */
     familyToSign: (names: readonly string[]) =>
       `Pe această adresă mai așteaptă semnătura declarațiile pentru: ${names.join(", ")}. Le poți semna pe toate din acest link, una după alta: câte o persoană la fiecare pas.`,
-    /** `WAITLIST_JOINED`'s one added sentence (§NNN): the place in the line, as of the moment the message was rendered. */
+    /** `WAITLIST_JOINED`'s one added sentence (§629): the place in the line, as of the moment the message was rendered. */
     waitlistPosition: (standing: { position: number; length: number; autoOffer: boolean }) => waitlistPositionLine("ro", standing),
     // A cancellation (§547): what the cancelled person held, and who else the address still holds.
     cancelledReleased: (name: string, fromWaitlist: boolean) =>
@@ -2546,7 +2546,7 @@ function participantsPhrase(locale: EmailLocale, count: number): string {
 }
 
 /**
- * What the `WAITLIST_JOINED` email adds about the line (§NNN, amending §615), worded as of the moment
+ * What the `WAITLIST_JOINED` email adds about the line (§629, amending §615), worded as of the moment
  * the message was rendered, because an email is read later and the line moves — never «ești», which
  * would be a promise the line has already broken.
  *
@@ -2993,7 +2993,7 @@ export function buildTemplateContent(
       ...(messageType === "COMPLETE_DECLARATION" && data.familyToSign && data.familyToSign.length > 0
         ? [copy.familyToSign(data.familyToSign)]
         : []),
-      // Where the person stood in the line when this was rendered (§NNN), after the body whoever wrote it.
+      // Where the person stood in the line when this was rendered (§629), after the body whoever wrote it.
       ...(messageType === "WAITLIST_JOINED" && data.waitlistStanding ? [copy.waitlistPosition(data.waitlistStanding)] : []),
       // The verification link's other people on the address (§588): its one click confirms everybody waiting.
       ...(messageType === "VERIFY_REGISTRATION_EMAIL" && data.familyOnAddress && data.familyOnAddress.length > 0

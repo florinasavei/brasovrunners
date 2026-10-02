@@ -5,7 +5,7 @@ type Say = (key: string, values?: Record<string, string | number>) => string;
 
 /**
  * What a person waiting is told about the line, put together from the catalogue's words under
- * `Registrations.waitlist` (§NNN, amending §615; the owner: «E ok să aștepte, ei nu vor afla când
+ * `Registrations.waitlist` (§629, amending §615; the owner: «E ok să aștepte, ei nu vor afla când
  * s-au înscris restul pe listă și noi putem alege pe cine să luăm din listă»).
  *
  * - **Offers go out on their own** (`autoOffer`): the place, «Ești pe locul 3 din 10 persoane de pe

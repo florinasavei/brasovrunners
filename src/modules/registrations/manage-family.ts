@@ -61,7 +61,7 @@ export type ManagedPerson = {
   /** The registration the link itself names. */
   own: boolean;
   /**
-   * Where a waiting person stands in the line (§NNN, `readWaitlistPosition`): their place, the line's
+   * Where a waiting person stands in the line (§629, `readWaitlistPosition`): their place, the line's
    * length and how freed places are given. Null unless the registration is `WAITLISTED`.
    */
   waitlistStanding: WaitlistStanding | null;
@@ -107,7 +107,7 @@ export async function listManagedPeople<T extends Record<string, unknown>>(db: D
     for (const row of acceptances) if (row.registrationId && !methods.has(row.registrationId)) methods.set(row.registrationId, row.method);
   }
   const ordered = withFamilyRank(rows, await sittingOrderFor(db, own.participantId, own.eventId)).sort(compareFamilyOrder);
-  // Only a waiting row asks where it stands (§NNN): one read each, from the one reader the other pages use.
+  // Only a waiting row asks where it stands (§629): one read each, from the one reader the other pages use.
   const standings = new Map<string, WaitlistStanding | null>(
     await Promise.all(ordered.filter((row) => row.status === "WAITLISTED").map(async (row) => [row.id, await readWaitlistPosition(db, row.id)] as const)),
   );

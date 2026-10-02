@@ -11,7 +11,7 @@ import { withClientWords } from "../../helpers/client-words";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-035-01, BR-REQ-035-02 (§NNN) — „Ești pe locul 3 din 10”: the
+ * BR-REQ-035-01, BR-REQ-035-02 (§629) — „Ești pe locul 3 din 10”: the
  * `WAITLIST_JOINED` email says where the person stood when it was rendered, worded as of that moment,
  * and the registration's own page says where they stand now. Both read the position from the one
  * reader (`readWaitlistPosition`) at render time, so the line moving between the queueing and the
@@ -140,7 +140,7 @@ function row(messageType: EmailMessageType, registrationId: string, participantI
   };
 }
 
-describe("§NNN the WAITLIST_JOINED email says where the person stood when it was rendered", () => {
+describe("§629 the WAITLIST_JOINED email says where the person stood when it was rendered", () => {
   it("adds one sentence after the existing text, in both halves, worded as of that moment", async () => {
     await person("WAITLISTED", at(1));
     const mine = await person("WAITLISTED", at(2));
@@ -242,7 +242,7 @@ describe("§NNN the WAITLIST_JOINED email says where the person stood when it wa
   });
 });
 
-describe("§NNN the registration's own page says where the person stands, and how freed places go", () => {
+describe("§629 the registration's own page says where the person stands, and how freed places go", () => {
   async function manage(registrationId: string, participantId: string) {
     const { secret } = await issueActionToken(db, {
       purpose: "MANAGE_REGISTRATION",

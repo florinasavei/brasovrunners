@@ -232,7 +232,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                 )}
 
                 {/*
-                  Where a waiting person stands (§NNN; the owner: „Ești pe locul 3 din 10”): the state's own words as the heading of a
+                  Where a waiting person stands (§629; the owner: „Ești pe locul 3 din 10”): the state's own words as the heading of a
                   one-person page — a family's card has the state chip — and the sentence under it. The
                   place only while offers go out in order; when the club chooses, only how many others wait.
                   Nobody else is named.

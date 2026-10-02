@@ -171,7 +171,7 @@ export async function offersWaitlistAutomatically<T extends Record<string, unkno
 }
 
 /**
- * Where a waiting registration stands in its event's line, and how long the line is (§NNN; the owner:
+ * Where a waiting registration stands in its event's line, and how long the line is (§629; the owner:
  * „Ești pe locul 3 din 10”): the one reader behind the registration's own page,
  * «Toate înscrierile mele» and the `WAITLIST_JOINED` email, so the three can never say different numbers.
  *

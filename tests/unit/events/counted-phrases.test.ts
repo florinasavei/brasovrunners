@@ -82,7 +82,7 @@ describe("§615 fillPhrase — the places held and not yet confirmed", () => {
   });
 });
 
-describe("§NNN fillPhrase — the people waiting, the places line's last part", () => {
+describe("§629 fillPhrase — the people waiting, the places line's last part", () => {
   it("adds «N pe lista de așteptare» after the other parts, or alone, when anybody waits", () => {
     const say = translator("ro");
     expect(fillPhrase(say, "ro", { taken: 150, capacity: 150, confirmed: 133, waitlisted: 10 })).toBe(

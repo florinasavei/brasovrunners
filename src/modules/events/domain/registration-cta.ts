@@ -167,7 +167,7 @@ export type PublicFill = {
    */
   kept?: number;
   /**
-   * The people waiting in the line with no offer yet (§NNN, `readPublicPlaces`'s `waitlisted`): the places
+   * The people waiting in the line with no offer yet (§629, `readPublicPlaces`'s `waitlisted`): the places
    * line's last part, «10 pe lista de așteptare», so the number is present wherever the line shows. From
    * the same count the door already reads — no query of its own, and the same one every public count is
    * (a `TEST` row stands in the line as a real one, `AGENTS.md` §12.6; production has none). Absent when
@@ -219,7 +219,7 @@ export function publicFill(
 ): PublicFill | null {
   if (capacity === null || availablePlaces === null) return null;
   const claimed = Math.min(Math.max(capacity - availablePlaces, 0), capacity);
-  // The line's length, the places line's last part (§NNN): only when anybody waits.
+  // The line's length, the places line's last part (§629): only when anybody waits.
   const waiting = held?.waitlisted !== undefined && held.waitlisted > 0 ? { waitlisted: held.waitlisted } : {};
   /*
     The first number is the occupied count in every state (§615): the registrations holding places,

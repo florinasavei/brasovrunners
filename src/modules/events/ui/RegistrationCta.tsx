@@ -110,7 +110,7 @@ export default async function RegistrationCta({
         {/*
           Once anybody is in the line (§587, amending §346), from the counts the door made: an open offer
           named as offered (§612) — the card's words. The people with no offer yet are the places line's
-          last part now (§NNN), so on this page they are said before the offer, not after it as on the
+          last part now (§629), so on this page they are said before the offer, not after it as on the
           listing card, which has no places line (BR-REQ-035-01 criterion 14 amended).
         */}
         {cta.offered > 0 && (
@@ -118,7 +118,7 @@ export default async function RegistrationCta({
             {offeredPhrase(t, locale, cta.offered)}
           </Typography>
         )}
-        {/* The people waiting are the places line's last part now (§NNN), «… , 10 pe lista de așteptare»;
+        {/* The people waiting are the places line's last part now (§629), «… , 10 pe lista de așteptare»;
             said here on a line of its own only when there is no places line to carry it, so the number
             is in the card once. */}
         {cta.waitlisted > 0 && !fill && (
@@ -153,7 +153,7 @@ export default async function RegistrationCta({
         <RegistrationDoorButton slug={event.slug} cta={cta} label={doorButtonLabel(t, cta)} preview={preview} />
         {lateLine}
 
-        {/* The lead above says how many wait («3 așteaptă deja un loc», §587): the places line leaves the number out (§NNN). */}
+        {/* The lead above says how many wait («3 așteaptă deja un loc», §587): the places line leaves the number out (§629). */}
         {fill && (
           <Typography variant="body2" data-testid="registration-fill" sx={{ fontWeight: 600 }}>
             {fillPhrase(t, locale, fill, { withWaiting: false })}

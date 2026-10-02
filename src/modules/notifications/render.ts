@@ -440,7 +440,7 @@ async function renderRow(
     if (others.length > 0) data.familyOnAddress = others;
   }
   /*
-    Where the person stands in the line (§NNN), read now, at render time, with the registration the
+    Where the person stands in the line (§629), read now, at render time, with the registration the
     row already names — the template has no database of its own, and the line moves between the
     queueing and the sending (a resend, a delayed outbox), so a number written into the payload at
     queue time would be older than the email. The same reader as the registration's own page

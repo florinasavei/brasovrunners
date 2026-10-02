@@ -250,7 +250,7 @@ describe("§346 the fill line beside the register button, from the cached count"
     expect(html).not.toContain("în curs de confirmare");
   });
 
-  it("§NNN says how many wait on the places line, once, while places are free beside the line (automatic offers off)", async () => {
+  it("§629 says how many wait on the places line, once, while places are free beside the line (automatic offers off)", async () => {
     const event = await openRace(10);
     await db.update(events).set({ waitlistAutoOffer: false }).where(eq(events.id, event.id));
     await confirm(event.id, 4);
@@ -265,7 +265,7 @@ describe("§346 the fill line beside the register button, from the cached count"
     expect(en).toContain("4 registered of 10 places — 2 places kept for the waiting list, 2 on the waiting list</p>");
   });
 
-  it("§NNN reads waiting before offered on the page: the places line carries the waiting, the offer's own line follows it", async () => {
+  it("§629 reads waiting before offered on the page: the places line carries the waiting, the offer's own line follows it", async () => {
     const event = await openRace(10);
     await confirm(event.id, 4);
     await confirm(event.id, 1, "WAITLIST_OFFERED", 4);
@@ -280,7 +280,7 @@ describe("§346 the fill line beside the register button, from the cached count"
     expect(html.match(/3 pe lista de așteptare/g)).toHaveLength(1);
   });
 
-  it("§NNN leaves the places line as it was when nobody waits", async () => {
+  it("§629 leaves the places line as it was when nobody waits", async () => {
     const event = await openRace(10);
     await confirm(event.id, 4);
     const html = await render("cros-plin");
@@ -288,7 +288,7 @@ describe("§346 the fill line beside the register button, from the cached count"
     expect(html).not.toContain("pe lista de așteptare");
   });
 
-  it("§NNN counts a waiting TEST row like a real one: the page reads the same count the allocator does", async () => {
+  it("§629 counts a waiting TEST row like a real one: the page reads the same count the allocator does", async () => {
     const event = await openRace(10);
     await confirm(event.id, 4);
     await confirm(event.id, 1, "WAITLISTED", 4);
@@ -297,7 +297,7 @@ describe("§346 the fill line beside the register button, from the cached count"
     expect(html).toContain("1 pe lista de așteptare</p>");
   });
 
-  it("§NNN keeps the full state's lead as the one place the number is said: the places line leaves it out", async () => {
+  it("§629 keeps the full state's lead as the one place the number is said: the places line leaves it out", async () => {
     const event = await openRace(2, 5);
     await confirm(event.id, 2);
     await confirm(event.id, 3, "WAITLISTED", 2);
@@ -307,7 +307,7 @@ describe("§346 the fill line beside the register button, from the cached count"
     expect(html).not.toContain("3 pe lista de așteptare");
   });
 
-  it("§NNN says how many wait when the line is full too, where no lead says it", async () => {
+  it("§629 says how many wait when the line is full too, where no lead says it", async () => {
     const event = await openRace(2, 1);
     await confirm(event.id, 2);
     await confirm(event.id, 1, "WAITLISTED", 2);

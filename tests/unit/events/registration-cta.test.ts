@@ -277,7 +277,7 @@ describe("§615 publicFill — in progress counted from the occupied places, nev
   });
 });
 
-describe("§NNN publicFill — the people waiting ride on the fill, from the count the door already read", () => {
+describe("§629 publicFill — the people waiting ride on the fill, from the count the door already read", () => {
   it("carries the waiting count beside the places, whatever else the entry knows", () => {
     expect(publicFill(150, 0, { occupied: 150, confirmed: 133, waitlisted: 10 })).toEqual({ taken: 150, capacity: 150, confirmed: 133, waitlisted: 10 });
     expect(publicFill(10, 0, { occupied: 6, confirmed: 4, waitlisted: 4 })).toEqual({ taken: 6, capacity: 10, confirmed: 4, kept: 4, waitlisted: 4 });

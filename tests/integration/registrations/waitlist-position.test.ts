@@ -9,7 +9,7 @@ import { findRegistrationById, readWaitlistPosition } from "@/modules/registrati
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-035-01, BR-REQ-035-02 (§NNN) — where a waiting registration stands: `readWaitlistPosition`,
+ * BR-REQ-035-01, BR-REQ-035-02 (§629) — where a waiting registration stands: `readWaitlistPosition`,
  * the one reader behind the registration's own page, «Toate înscrierile mele» and the
  * `WAITLIST_JOINED` email.
  *
@@ -82,7 +82,7 @@ async function person(eventId: string, status: RegistrationStatus, waitlistedAt:
   return row;
 }
 
-describe("§NNN readWaitlistPosition — the line in queue order", () => {
+describe("§629 readWaitlistPosition — the line in queue order", () => {
   it("is 1 + the waiting rows ahead by waitlisted_at, and the line's length is every waiting row", async () => {
     const e = await event();
     // Inserted out of order, so the answer is the queue's and not the table's.
@@ -163,7 +163,7 @@ describe("§NNN readWaitlistPosition — the line in queue order", () => {
   });
 });
 
-describe("§NNN the pages' reads carry the standing of a waiting row only", () => {
+describe("§629 the pages' reads carry the standing of a waiting row only", () => {
   it("«Gestionează înscrierea» lists it per person, null for a row that is not waiting", async () => {
     const e = await event();
     await person(e.id, "WAITLISTED", at(1));

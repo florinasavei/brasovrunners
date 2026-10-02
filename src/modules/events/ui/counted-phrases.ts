@@ -34,7 +34,7 @@ export function fillPhrase(say: Say, locale: string, fill: PublicFill, options: 
   }
   if (fill.kept !== undefined && fill.kept > 0) parts.push(say(`cta.fillKept.${countForm(fill.kept, locale)}`, { count: fill.kept }));
   /*
-    The people waiting, last (§NNN; the owner: the event page says how many wait): «… , 10 pe lista de
+    The people waiting, last (§629; the owner: the event page says how many wait): «… , 10 pe lista de
     așteptare» whenever anybody does, so the number is on the places line in every state that draws it.
     The full state's lead already says it («3 așteaptă deja un loc», §587), and the page does not say a
     number twice in one card: it asks for the line without it (`withWaiting: false`).

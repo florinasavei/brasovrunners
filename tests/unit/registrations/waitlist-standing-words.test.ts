@@ -5,7 +5,7 @@ import ro from "../../../messages/ro.json";
 import { waitlistStandingPhrase } from "@/modules/registrations/ui/waitlist-position-words";
 
 /**
- * BR-REQ-035-01, BR-REQ-035-02 (§NNN) — „Ești pe locul 3 din 10” while offers go out in order, the count
+ * BR-REQ-035-01, BR-REQ-035-02 (§629) — „Ești pe locul 3 din 10” while offers go out in order, the count
  * of the others while the club chooses, put together from the real catalogues.
  *
  * `createTranslator` builds the same `t` a page gets from `getTranslations("Registrations")`, so a
@@ -20,7 +20,7 @@ function translator(locale: "ro" | "en") {
   ) => string;
 }
 
-describe("§NNN waitlistStandingPhrase — the place in the line and the line's length", () => {
+describe("§629 waitlistStandingPhrase — the place in the line and the line's length", () => {
   it("reads Romanian's forms from the line's length: a few, and 'de' from twenty on", () => {
     const say = translator("ro");
     expect(waitlistStandingPhrase(say, "ro", { position: 1, length: 2, autoOffer: true })).toBe(
