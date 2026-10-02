@@ -6915,6 +6915,21 @@
         "other": "On this address, for this event: {count} of at most {max} people."
       }
     },
+    "waitlist": {
+      "position": {
+        "one": "You are number {position} of {length} on the waiting list.",
+        "few": "You are number {position} of {length} on the waiting list.",
+        "other": "You are number {position} of {length} on the waiting list."
+      },
+      "others": {
+        "one": "You are on the waiting list, with 1 other.",
+        "few": "You are on the waiting list, with {others} others.",
+        "other": "You are on the waiting list, with {others} others."
+      },
+      "alone": "You are the only person on the waiting list.",
+      "orderAuto": "Freed places are offered in order.",
+      "orderClub": "The club chooses whom to offer a freed place."
+    },
     "manage": {
       "title": "Manage your registration",
       "prompt": "You can cancel this registration. The place will be released immediately.",

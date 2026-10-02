@@ -82,6 +82,41 @@ describe("§615 fillPhrase — the places held and not yet confirmed", () => {
   });
 });
 
+describe("§NNN fillPhrase — the people waiting, the places line's last part", () => {
+  it("adds «N pe lista de așteptare» after the other parts, or alone, when anybody waits", () => {
+    const say = translator("ro");
+    expect(fillPhrase(say, "ro", { taken: 150, capacity: 150, confirmed: 133, waitlisted: 10 })).toBe(
+      "150 de înscriși din 150 de locuri — 133 de confirmați, 17 în curs de confirmare, 10 pe lista de așteptare",
+    );
+    expect(fillPhrase(say, "ro", { taken: 150, capacity: 150, confirmed: 133, kept: 4, waitlisted: 10 })).toBe(
+      "150 de înscriși din 150 de locuri — 133 de confirmați, 17 în curs de confirmare, 4 locuri păstrate pentru lista de așteptare, 10 pe lista de așteptare",
+    );
+    expect(fillPhrase(say, "ro", { taken: 12, capacity: 50, confirmed: 12, waitlisted: 3 })).toBe("12 înscriși din 50 de locuri — 3 pe lista de așteptare");
+    // No confirmed count at all (a cache entry from before it): the plain line, then the line's length.
+    expect(fillPhrase(say, "ro", { taken: 12, capacity: 50, waitlisted: 1 })).toBe("12 înscriși din 50 de locuri — 1 pe lista de așteptare");
+    const en = translator("en");
+    expect(fillPhrase(en, "en", { taken: 12, capacity: 50, confirmed: 12, waitlisted: 3 })).toBe("12 registered of 50 places — 3 on the waiting list");
+    expect(fillPhrase(en, "en", { taken: 12, capacity: 50, confirmed: 10, waitlisted: 3 })).toBe(
+      "12 registered of 50 places — 10 confirmed, 2 completing their registration, 3 on the waiting list",
+    );
+  });
+
+  it("adds nothing when nobody waits, and the line is as it was", () => {
+    const say = translator("ro");
+    expect(fillPhrase(say, "ro", { taken: 12, capacity: 50, confirmed: 12 })).toBe("12 înscriși din 50 de locuri");
+    expect(fillPhrase(say, "ro", { taken: 12, capacity: 50, confirmed: 12, waitlisted: 0 })).toBe("12 înscriși din 50 de locuri");
+    expect(fillPhrase(say, "ro", { taken: 12, capacity: 50, confirmed: 10, waitlisted: 0 })).toBe(
+      "12 înscriși din 50 de locuri — 10 confirmați, 2 în curs de confirmare",
+    );
+  });
+
+  it("leaves the number out when the page asks (the full state's lead already says it, §587)", () => {
+    const say = translator("ro");
+    expect(fillPhrase(say, "ro", { taken: 150, capacity: 150, confirmed: 150, waitlisted: 10 }, { withWaiting: false })).toBe("150 de înscriși din 150 de locuri");
+    expect(fillPhrase(say, "ro", { taken: 150, capacity: 150, confirmed: 150, waitlisted: 10 }, { withWaiting: true })).toContain("10 pe lista de așteptare");
+  });
+});
+
 describe("§348 waitlistRoomPhrase — the room a capped waiting list has left", () => {
   it("reads Romanian's singular, its plural and its 'de' from twenty on", () => {
     const say = translator("ro");

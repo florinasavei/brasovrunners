@@ -166,6 +166,14 @@ export type PublicFill = {
    * button shows less `taken`. Absent when nought or unknown.
    */
   kept?: number;
+  /**
+   * The people waiting in the line with no offer yet (§NNN, `readPublicPlaces`'s `waitlisted`): the places
+   * line's last part, «10 pe lista de așteptare», so the number is present wherever the line shows. From
+   * the same count the door already reads — no query of its own, and the same one every public count is
+   * (a `TEST` row stands in the line as a real one, `AGENTS.md` §12.6; production has none). Absent when
+   * nobody waits, and in a cache entry from before the halves were counted.
+   */
+  waitlisted?: number;
 };
 
 /**
@@ -207,10 +215,12 @@ export type PublicFill = {
 export function publicFill(
   capacity: number | null,
   availablePlaces: number | null,
-  held?: { occupied?: number; confirmed?: number },
+  held?: { occupied?: number; confirmed?: number; waitlisted?: number },
 ): PublicFill | null {
   if (capacity === null || availablePlaces === null) return null;
   const claimed = Math.min(Math.max(capacity - availablePlaces, 0), capacity);
+  // The line's length, the places line's last part (§NNN): only when anybody waits.
+  const waiting = held?.waitlisted !== undefined && held.waitlisted > 0 ? { waitlisted: held.waitlisted } : {};
   /*
     The first number is the occupied count in every state (§615): the registrations holding places,
     confirmed and in progress — the count `availablePlaces` is built on — never the capacity less the
@@ -218,9 +228,9 @@ export function publicFill(
     its own part of the clause, so «6 înscriși din 10 locuri — 4 confirmați, 2 în curs, 4 păstrate» adds up.
     An entry cached before the counts existed has only the free places: the plain line.
   */
-  if (held?.occupied === undefined || held.confirmed === undefined) return { taken: claimed, capacity };
+  if (held?.occupied === undefined || held.confirmed === undefined) return { taken: claimed, capacity, ...waiting };
   const taken = Math.max(Math.min(held.occupied, capacity), 0);
   const confirmed = Math.min(held.confirmed, taken);
   const kept = Math.max(claimed - taken, 0);
-  return { taken, capacity, confirmed, ...(kept > 0 ? { kept } : {}) };
+  return { taken, capacity, confirmed, ...(kept > 0 ? { kept } : {}), ...waiting };
 }
