@@ -6,7 +6,7 @@ import AdminTabs, { type AdminTab, type CountPill } from "@/modules/staff-identi
 vi.mock("next/navigation", () => ({ usePathname: () => "/ro/admin/registrations" }));
 
 /**
- * BR-REQ-041-01, `DECISIONS.md` §626, §NNN — the «Înscrieri» tab: the badge is everyone with a place,
+ * BR-REQ-041-01, `DECISIONS.md` §626, §632 — the «Înscrieri» tab: the badge is everyone with a place,
  * and each group still in progress has a small pill of its own beside it, glyph and number —
  * «Înscrieri [150] [✍ 16] [✉ 7] [⏳ 10]»: those completing their registration with a place (the pen,
  * a part of the 150), those awaiting the email confirmation (the envelope) and the waiting list (the
@@ -43,7 +43,7 @@ function pillOf(html: string, testId: string) {
   return new RegExp(`<span[^>]*data-testid="${testId}"[^>]*>([\\s\\S]*?)</span>`).exec(html);
 }
 
-describe("§NNN the tab's pills: everyone with a place, then each group in progress", () => {
+describe("§632 the tab's pills: everyone with a place, then each group in progress", () => {
   it("draws the figure with a place and, beside it, a pill per group with its glyph, its number and its name", () => {
     const html = render([tab({ countPills: OWNER_PILLS })]);
     expect(html).toContain(">150<");

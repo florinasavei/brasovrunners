@@ -32,7 +32,7 @@ export type AdminTab = {
   countHint?: string;
   /**
    * The groups still in progress, each a smaller outlined pill beside the figure, only above zero (§626,
-   * §NNN): drawn in `COUNT_PILL_ORDER` whatever order they arrive in.
+   * §632): drawn in `COUNT_PILL_ORDER` whatever order they arrive in.
    */
   countPills?: readonly CountPill[];
   /**
@@ -43,7 +43,7 @@ export type AdminTab = {
 };
 
 /**
- * Which group a small pill beside the «Înscrieri» figure stands for (§626, §NNN; the owner, 2026-10-02,
+ * Which group a small pill beside the «Înscrieri» figure stands for (§626, §632; the owner, 2026-10-02,
  * verbatim: «Tot pe acest pull [sic] trebuie să afișăm și pe cei care aștept [sic] confirmarea mailului sau
  * semnarea declarației», read as this tab's pill — an interpretation his screenshot of the tab backs):
  * those completing their registration with a place — a declaration to sign, an open offer,
@@ -204,7 +204,7 @@ export default function AdminTabs({ items }: { items: readonly AdminTab[] }) {
  * makes the text its one description, so a keyboard or a screen reader reaches it; a tap opens
  * it on a phone.
  *
- * On «Înscrieri» the figure is everyone with a place (§NNN, amending §626's confirmed alone), and the
+ * On «Înscrieri» the figure is everyone with a place (§632, amending §626's confirmed alone), and the
  * groups still in progress follow it as smaller pills — «Înscrieri [150] [✍ 16] [✉ 7] [⏳ 10]». They
  * are not links: the tab is already an anchor, and a link inside one is invalid HTML; the summary
  * strip's pills on the list page are the filters (§626).
@@ -229,7 +229,7 @@ function CountBadge({ count, hint, pills = [] }: { count: number; hint?: string;
         {count}
       </Box>
       {/*
-        The groups in progress (§626, §NNN; the owner: «pune pilluri cu iconițe și cu numerele»): the same
+        The groups in progress (§626, §632; the owner: «pune pilluri cu iconițe și cu numerele»): the same
         pill's shape, outlined so each reads as a lesser figure, its glyph before the number. Each is one more
         word-wide chunk inside the tab, and the tab bar scrolls (`variant="scrollable"`), so at 320 pixels
         they lengthen the row and never the page — glyph and number only, the words are the name. Drawn

@@ -7,7 +7,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN — every row of «Cine s-a înscris» says, after its step, the deadline its state waits on: a held
+ * §635 — every row of «Cine s-a înscris» says, after its step, the deadline its state waits on: a held
  * place «ține locul până …», or past it the kept words (§160); an open offer; the first email's link;
  * a family's reservation (§543). The cell keeps its hover title; the registration's page says the same
  * in the full journey. `next-intl/server` is the real translator over the real catalogues.
@@ -69,7 +69,7 @@ beforeEach(() => {
 });
 afterEach(() => vi.useRealTimers());
 
-describe("§NNN the list's step cell names the deadline the row waits on", () => {
+describe("§635 the list's step cell names the deadline the row waits on", () => {
   it("a held place, before its deadline: «ține locul până …»", async () => {
     const text = await cell(row({ status: "PENDING_DECLARATION", emailVerifiedAt: VERIFIED, holdExpiresAt: DUE }));
     expect(text).toBe(`3/6 · Loc rezervat · ține locul până ${day(DUE)}`);

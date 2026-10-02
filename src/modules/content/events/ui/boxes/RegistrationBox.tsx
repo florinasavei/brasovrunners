@@ -87,7 +87,7 @@ function box(field: EventFieldName, extra: Record<string, unknown> = {}) {
  * are read-only, so a `min` or a `pattern` left unmet out of sight never stops the save (`ShownWhen`).
  *
  * The waiting list sits beside the capacity (§350, the waiting-list cap), and "not here" stores no
- * length either. Since §NNN it is a select of three answers in words, with the number shown only
+ * length either. Since §633 it is a select of three answers in words, with the number shown only
  * under «Limitată la un număr de locuri».
  */
 export default async function RegistrationBox({
@@ -123,7 +123,7 @@ export default async function RegistrationBox({
   const zone = event?.timezone ?? DEFAULT_TIMEZONE;
   const initialType = event?.type ?? "GROUP_RUN";
   const initialMode = event?.registrationMode ?? "NONE";
-  // «Lista de așteptare» opens on what is stored (§NNN): null «Nelimitată», 0 «Fără listă», a count «Limitată».
+  // «Lista de așteptare» opens on what is stored (§633): null «Nelimitată», 0 «Fără listă», a count «Limitată».
   const initialWaitlistChoice = waitlistChoiceOf(event?.waitlistCapacity);
   const declaration = declarations.find((option) => option.id === event?.declarationDocumentId) ?? null;
   const colour = BIB_COLOURS.find((choice) => choice.hex === event?.bibColour);
@@ -247,7 +247,7 @@ export default async function RegistrationBox({
                 <Stack spacing={2}>
                   {/* The places and the waiting list side by side (§350, the waiting-list cap): the
                       second only means anything once the first is set, and a row says they are one
-                      question. Stacked on a phone. Since §NNN the waiting list is a choice in words —
+                      question. Stacked on a phone. Since §633 the waiting list is a choice in words —
                       «Nelimitată», «Limitată la un număr de locuri», «Fără listă de așteptare» — and
                       the number shows only under «Limitată» (`WaitlistLimitOnly`), where an empty box
                       or a 0 means unlimited: a 0 never closes the list by accident. The select is

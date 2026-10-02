@@ -44,7 +44,7 @@ export async function readDraftFormSettings<T extends Record<string, unknown>>(
   const everyNotice = (describes: (body: unknown) => boolean) => notices.every((notice) => notice !== undefined && describes(notice.body));
   return {
     termsVersion: terms?.version ?? null,
-    // §NNN: whether the terms in force carry the club's right to refuse — read once by the preview, for the steps and the box.
+    // §636: whether the terms in force carry the club's right to refuse — read once by the preview, for the steps and the box.
     refusalOn: input.refusalOn,
     listStatesOn: everyNotice(describesListStates),
     listSocialsOn: everyNotice(describesListSocials),

@@ -282,7 +282,7 @@ function groupById<T extends { locale: Locale; slug: string }>(
  * - `waitlistCapacity`: the limit itself, `null` for none and 0 for no waiting list at all;
  * - `waiting`, `offered`, `waitlisted`: the line's length and its two halves — the open offers and
  *   the people with no offer yet (§587, §612) — from the same two counts;
- * - `waitlistCountPublic`: «Arată public câți așteaptă» (§NNN), off the same row, so the line's count
+ * - `waitlistCountPublic`: «Arată public câți așteaptă» (§634), off the same row, so the line's count
  *   and the switch that withholds it come from one read and one moment — never a count from one entry
  *   beside a switch from another. The counts are still in the entry (the door decides from them who
  *   queues); the switch says only whether a sentence may print the people waiting.
@@ -296,7 +296,7 @@ export async function cachedPublicAvailability(eventId: string, now: Date): Prom
   );
   const window = await heldClockWindow(instants, now, "reached");
   /*
-    "count-switch" (§NNN): the entry's shape gained `waitlistCountPublic`, so its key changed with it, as
+    "count-switch" (§634): the entry's shape gained `waitlistCountPublic`, so its key changed with it, as
     the start list's keys did for §628 — no entry written without the switch is ever read by code that
     asks for it.
   */
@@ -344,7 +344,7 @@ export type PublicAvailability = {
   /** The occupied places, `readPublicPlaces`'s (§615); absent in an entry cached before it was counted: the plain line. */
   occupied?: number;
   /**
-   * «Arată public câți așteaptă» (§NNN), off the row the counts were taken against: false withholds the
+   * «Arată public câți așteaptă» (§634), off the row the counts were taken against: false withholds the
    * people waiting from every public sentence (`registrationCta`, `publicFill`). Always written by
    * `cachedPublicAvailability` (its key changed with it); optional only for a test's stand-in, which
    * reads as on — today's sentences.
@@ -501,7 +501,7 @@ export async function cachedNewsletterOffered(now: Date): Promise<boolean> {
 
 /**
  * Whether the form's express box names the club refusing or cancelling a registration, and the fold
- * «Cum funcționează înscrierea» says the club may refuse (§NNN, §618): the terms in force carry the
+ * «Cum funcționează înscrierea» says the club may refuse (§636, §618): the terms in force carry the
  * clause (`describesRefusal`), in every language — the same reading as the notice's fields above, so
  * an approval switches both on the moment the terms themselves change on `/termeni`, never before.
  * `termsDescribeRefusal` is the backoffice's uncached twin.

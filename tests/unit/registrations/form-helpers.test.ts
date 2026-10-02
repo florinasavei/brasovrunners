@@ -23,7 +23,7 @@ import ro from "../../../messages/ro.json";
  * `register-page-resting.test.ts` shape.
  */
 /** `waitlist`: the event's «Lista de așteptare e publică» (§628), on unless a test says otherwise. */
-/** `refusal`: the terms in force carry the club's right to refuse (§NNN), off unless a test says otherwise. */
+/** `refusal`: the terms in force carry the club's right to refuse (§636), off unless a test says otherwise. */
 const state = vi.hoisted(() => ({ locale: "ro" as "ro" | "en", list: false, familyOpen: false, waitlist: true, refusal: false }));
 
 const EVENT = {
@@ -246,7 +246,7 @@ describe("§546 the registration form says only what a label cannot", () => {
   });
 
   /*
-    §NNN — the express box names the club refusing or cancelling a registration only while the terms in
+    §636 — the express box names the club refusing or cancelling a registration only while the terms in
     force carry it; otherwise §421's words, exactly. The version the tick names and the hidden field
     that posts it are the same either way, and no help text is added.
   */

@@ -6,7 +6,7 @@ import ro from "../../../messages/ro.json";
 import type { EditableEvent } from "@/modules/content/events/repository";
 
 /**
- * §NNN — «Arată public câți așteaptă» in the public list's card, directly under «Lista de așteptare e
+ * §634 — «Arată public câți așteaptă» in the public list's card, directly under «Lista de așteptare e
  * publică»: a tick with its marker (a form without the box is "not editing it"), on by default, and drawn
  * whatever the names switch says — it hides a number, never a name. One sentence of help, under 200
  * characters in both catalogues (§511).
@@ -41,7 +41,7 @@ async function render(event: EditableEvent | null) {
   return new Response(stream).text();
 }
 
-describe("§NNN the «Arată public câți așteaptă» box", () => {
+describe("§634 the «Arată public câți așteaptă» box", () => {
   it("is ticked by default, with its marker and its help, under the waiting list's names switch", async () => {
     const html = await render(RACE);
     expect(html).toContain('data-testid="waitlist-count-public"');

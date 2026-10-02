@@ -20,7 +20,7 @@ vi.mock("next-intl/server", async () => {
 });
 // Whether a second runner may be registered on one address yet (§389, `family-gate.ts`).
 const gate = { open: false };
-// Whether the terms in force carry the club's right to refuse (§NNN, `cachedRefusalDisclosed`); `fails` stands for an unread cache.
+// Whether the terms in force carry the club's right to refuse (§636, `cachedRefusalDisclosed`); `fails` stands for an unread cache.
 const refusal = { on: false, fails: false };
 vi.mock("@/modules/public-cache/reads", () => ({
   cachedDeadlines: async () => deadlines,
@@ -89,10 +89,10 @@ describe("§389 the five steps say how a family registers on one address", () =>
 });
 
 /**
- * §NNN — the club's right to refuse a registration, one step at the end of the fold, only while the
+ * §636 — the club's right to refuse a registration, one step at the end of the fold, only while the
  * terms in force carry it (§618: nothing is said that the terms in force do not say).
  */
-describe("§NNN the fold says the club may refuse, behind the terms in force", () => {
+describe("§636 the fold says the club may refuse, behind the terms in force", () => {
   beforeEach(() => {
     gate.open = false;
     refusal.on = false;

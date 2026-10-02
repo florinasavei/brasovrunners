@@ -161,7 +161,7 @@ const PUBLIC_COLUMNS = {
   // «Lista de așteptare e publică» (§628): whether that list may also draw the ticked waiting-list
   // rows, on top of the privacy notice's two gates (§396, §421). Off, none is even read.
   waitlistPublic: events.waitlistPublic,
-  // «Arată public câți așteaptă» (§NNN): whether the door says how many wait. The live door reads it
+  // «Arată public câți așteaptă» (§634): whether the door says how many wait. The live door reads it
   // from the availability entry it counts with (`cachedPublicAvailability`), so the number and its
   // switch come off one row; the editor's preview draws it from here.
   waitlistCountPublic: events.waitlistCountPublic,

@@ -230,13 +230,13 @@ describe("BR-REQ-035-01 saving the waiting list's length (§348)", () => {
 });
 
 /*
-  §NNN — «Lista de așteptare» is a choice in words. The owner typed 0 believing it meant unlimited,
+  §633 — «Lista de așteptare» is a choice in words. The owner typed 0 believing it meant unlimited,
   on a race whose line held twenty people; until now that closed the list. The editor posts the
   answer (`waitlistMode`) beside the number, and the service folds the two into the one stored value
   before its schema reads them: «Nelimitată» null, «Limitată…» the number, «Fără listă» 0 — and a 0
   or an empty box under «Limitată» is unlimited, never "no list".
 */
-describe("BR-REQ-035-01 the waiting list as a choice in words (§NNN)", () => {
+describe("BR-REQ-035-01 the waiting list as a choice in words (§633)", () => {
   it("stores null for «Nelimitată», the number for «Limitată» and 0 for «Fără listă de așteptare»", async () => {
     const event = await createDraft();
     await save(event.id, event.version, { ...FIELDS(), waitlistMode: "LIMITED", waitlistCapacity: "20" });

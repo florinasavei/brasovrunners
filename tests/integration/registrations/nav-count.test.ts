@@ -185,7 +185,7 @@ describe("§255 how many are signed up", () => {
     expect(split?.events[0].withPlace).toBe(computeOccupied(await countOccupied(db, upcoming, NOW)));
   });
 
-  it("§NNN the badge's figure is everyone with a place (§626 had the confirmed alone), the pills the groups in progress; a test row is in none", async () => {
+  it("§632 the badge's figure is everyone with a place (§626 had the confirmed alone), the pills the groups in progress; a test row is in none", async () => {
     const [later] = await db
       .insert(events)
       .values({ type: "RACE", startsAt: new Date(NOW.getTime() + 14 * DAY), registrationMode: "INTERNAL", capacity: 100 })
@@ -301,7 +301,7 @@ describe("§255 how many are signed up", () => {
     expect(registeredBadgeHint(figures(rows.slice(0, 5)), words("en")).split("\n")).toHaveLength(6);
   });
 
-  it("§NNN the first line says every figure, a zero included, and each Romanian number its own form", () => {
+  it("§632 the first line says every figure, a zero included, and each Romanian number its own form", () => {
     expect(registeredBadgeHint(figures([], 1, 1, 0, 0), words("ro"))).toBe(
       "Cu loc: 1 — 1 confirmat, 0 în curs de confirmare · așteaptă confirmarea emailului: 0 · pe lista de așteptare: 0",
     );

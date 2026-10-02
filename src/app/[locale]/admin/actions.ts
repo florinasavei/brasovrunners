@@ -309,7 +309,7 @@ function eventFieldsFrom(form: FormData) {
     // The waiting list's length (§348), only when the form carried its box: an empty box is "no
     // limit", and a form without the box is "not editing it" — `fields.ts` tells the two apart.
     waitlistCapacity: form.has("event.waitlistCapacity") ? value("waitlistCapacity") : undefined,
-    // «Lista de așteptare» (§NNN): what the length means, in words — «Nelimitată», «Limitată…» or
+    // «Lista de așteptare» (§633): what the length means, in words — «Nelimitată», «Limitată…» or
     // «Fără listă». The service folds it into the length before its schema runs, so a 0 under
     // «Limitată» is unlimited and only «Fără listă» stores 0. Absent, the number keeps §348's meaning.
     waitlistMode: form.has("event.waitlistMode") ? value("waitlistMode") : undefined,
@@ -358,7 +358,7 @@ function eventFieldsFrom(form: FormData) {
     // «Lista de așteptare e publică» (§628), a checkbox beside it, read the same safe way: absent
     // is off. The service keeps it off anyway unless the list above is on (`waitlistPublicColumn`).
     waitlistPublic: form.get("event.waitlistPublic") === "on",
-    // «Arată public câți așteaptă» (§NNN): a checkbox read only when the form carried its marker, as
+    // «Arată public câți așteaptă» (§634): a checkbox read only when the form carried its marker, as
     // the kit's (§554) — on by default, so a form without the box must read "not editing it", never "hidden".
     waitlistCountPublic:
       form.get("event.waitlistCountPublic.present") === "1" ? form.get("event.waitlistCountPublic") === "on" : undefined,

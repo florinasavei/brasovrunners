@@ -13,7 +13,7 @@ import {
 } from "@/modules/content/events/waitlist-choice";
 
 /**
- * BR-REQ-035-01 (§NNN) — «Lista de așteptare» in the editor is a choice in words. The owner, 2026-10-02:
+ * BR-REQ-035-01 (§633) — «Lista de așteptare» in the editor is a choice in words. The owner, 2026-10-02:
  * «Trebuie tooltip și în back-office că 0 înseamnă listă de așteptare infinită + ceva bifă care să
  * fie mai explicită, dacă pun 0 să se bifeze automat listă infinită». Until now an empty box was
  * "no limit" and 0 "no waiting list", the opposite of what he meant. The select now says which:
@@ -104,7 +104,7 @@ function numberHidden(html: string): boolean {
   return html.slice(block, at).includes("data-hidden-block");
 }
 
-describe("BR-REQ-035-01 «Lista de așteptare» in the editor (§NNN)", () => {
+describe("BR-REQ-035-01 «Lista de așteptare» in the editor (§633)", () => {
   it("opens on «Nelimitată» for no limit, «Fără listă» for 0 and «Limitată» for a count — the number shown only then", async () => {
     const unlimited = await render(RACE);
     expect(selectedChoice(unlimited)).toBe("UNLIMITED");
@@ -182,7 +182,7 @@ describe("BR-REQ-035-01 «Lista de așteptare» in the editor (§NNN)", () => {
   });
 });
 
-describe("BR-REQ-035-01 the rule the island and the server share (§NNN)", () => {
+describe("BR-REQ-035-01 the rule the island and the server share (§633)", () => {
   it("reads the stored value as the answer the select opens on", () => {
     expect(waitlistChoiceOf(null)).toBe("UNLIMITED");
     expect(waitlistChoiceOf(undefined)).toBe("UNLIMITED");

@@ -28,7 +28,7 @@
  * a registration is a unilateral termination); the form's box keeps its reviewed words (§421) until
  * the lawyer says whether they must name it. A lawyer reads that paragraph first.
  *
- * Its five grounds are also the switch (§NNN; the owner, 2026-10-02: «La edițiile următoare trebuie
+ * Its five grounds are also the switch (§636; the owner, 2026-10-02: «La edițiile următoare trebuie
  * sa aducă [= să apară] că organizatorul își rezervă dreptul de a refuza înscrieri»): while the terms
  * in force, in every language, spell them word for word (`describesRefusal`,
  * `legal-documents/domain/refusal-clause.ts`, which a test holds to this paragraph), the form's

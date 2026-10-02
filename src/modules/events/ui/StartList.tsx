@@ -73,7 +73,7 @@ const NO_NUMBER = "—";
  * from the same two counts the rows are drawn from, so it matches the confirmed count the club
  * sees in the backoffice, test registrations excluded (`AGENTS.md` §12.6).
  *
- * ## The title counts everyone with a place (§NNN, amending §346)
+ * ## The title counts everyone with a place (§632, amending §346)
  *
  * The owner, 2026-10-02: «pune-o și pe cei care trebuie să confirme înregistrarea». On a capped
  * event whose places line says some are «în curs de confirmare», the title adds them — «Cine vine
@@ -198,7 +198,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
     firstStatesNotice !== null ? await cachedStartListOthersCounts(event.id, firstStatesNotice, waitlistOn) : { pending: 0, waitlisted: 0 };
   const view = startListPage(named, anonymous, requestedPage, START_LIST_PAGE_SIZE, others.pending + others.waitlisted);
   /*
-    The title's number and the line under it (§NNN): the confirmed, plus — on a capped event — those the
+    The title's number and the line under it (§632): the confirmed, plus — on a capped event — those the
     places line says are completing their registration. The places come from the door's own cached read
     (`readRegistrationDoor`: the entry the page's `RegistrationCta` reads, for an open internal event
     only), so this costs no query of its own; a door that read nothing (uncapped, closed, unreadable)
@@ -301,7 +301,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
 
       {view.total === 0 ? (
         <>
-          {/* Nobody confirmed yet, somebody completing their registration (§NNN): the title counts them,
+          {/* Nobody confirmed yet, somebody completing their registration (§632): the title counts them,
               so the line says who they are before the sentence that nobody has confirmed. */}
           {headline.inProgress > 0 && (
             <Typography variant="body2" data-testid="start-list-summary" sx={{ fontWeight: 600, pb: 0.5 }}>
@@ -315,7 +315,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
       ) : (
         <>
           {/* How many are confirmed, and how many of them are named (§346), and on a capped event
-              those completing their registration, whom the title counts too (§NNN) — left out when
+              those completing their registration, whom the title counts too (§632) — left out when
               nobody is confirmed or in progress yet and the rows below are all pending or waiting,
               where "0 confirmed — 0 named" would only be noise above them. */}
           {(view.confirmed > 0 || headline.inProgress > 0 || extra.length === 0) && (

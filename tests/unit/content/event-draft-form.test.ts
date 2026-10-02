@@ -211,7 +211,7 @@ describe("§579 amended — which boxes the draft's settings switch on", () => {
     expect(html).toContain("(versiunea —)");
   });
 
-  /** §NNN — the express box names the club's refusal only while the terms in force carry it; §421's words otherwise. */
+  /** §636 — the express box names the club's refusal only while the terms in force carry it; §421's words otherwise. */
   it("the terms in force with the refusal clause: the box names it, in both languages; without it, §421's words exactly", async () => {
     const without = await render(draft());
     expect(without).toContain("clauzele despre anularea sau modificarea evenimentului de către club, oprirea sau excluderea de pe traseu");

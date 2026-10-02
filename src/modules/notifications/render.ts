@@ -448,7 +448,7 @@ async function renderRow(
   */
   if (row.messageType === "WAITLIST_JOINED" && registration) {
     const standing = await readWaitlistPosition(db, registration.id);
-    // With the count kept private (§NNN) the sentence says what the page says: `countPublic` travels with the rest.
+    // With the count kept private (§634) the sentence says what the page says: `countPublic` travels with the rest.
     if (standing) data.waitlistStanding = { position: standing.position, length: standing.length, autoOffer: standing.autoOffer, countPublic: standing.countPublic };
   }
   /*

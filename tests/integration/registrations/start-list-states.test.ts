@@ -318,7 +318,7 @@ describe("§628 with the event's waiting list private", () => {
 });
 
 /**
- * §NNN (amending §346) — the title counts everyone with a place. The owner, 2026-10-02, of a page
+ * §632 (amending §346) — the title counts everyone with a place. The owner, 2026-10-02, of a page
  * reading «150 de înscriși din 150 de locuri — 134 de confirmați, 16 în curs de confirmare» above
  * «Cine vine (134)»: «pune-o și pe cei care trebuie să confirme înregistrarea». On a capped event whose
  * registration is open, the people completing their registration — the places line's own «în curs de
@@ -327,7 +327,7 @@ describe("§628 with the event's waiting list private", () => {
  * These events are read as the page reads them (`findPublishedEventBySlug`) and dated from the real
  * clock, because the list asks the door with the request's own `new Date()`.
  */
-describe("§NNN the title counts everyone with a place on a capped event", () => {
+describe("§632 the title counts everyone with a place on a capped event", () => {
   const DAY = 86_400_000;
 
   async function openEvent(capacity: number | null) {

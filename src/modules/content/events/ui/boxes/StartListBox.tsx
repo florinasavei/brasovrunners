@@ -60,7 +60,7 @@ export default async function StartListBox({ event, mayEditSettings }: Pick<BoxP
                 <BoxNote more={t("editor.waitlistPublicHelpMore")}>{t("editor.waitlistPublicHelp")}</BoxNote>
               </Box>
               {/*
-                «Arată public câți așteaptă» (§NNN): the line's NUMBER, on the card, the page and in each
+                «Arată public câți așteaptă» (§634): the line's NUMBER, on the card, the page and in each
                 waiting person's own sentence — not indented, because it does not depend on the list above
                 (it hides a number, never a name) and shows whatever the names switch says. On by default;
                 the marker tells "unticked" from "a form without the box", which must change nothing.

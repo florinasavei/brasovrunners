@@ -115,11 +115,11 @@ describe("§629 waitlistStandingPhrase — the place in the line and the line's 
 });
 
 /**
- * §NNN — «Arată public câți așteaptă» off: a person on the list is outside the backoffice, so a count
+ * §634 — «Arată public câți așteaptă» off: a person on the list is outside the backoffice, so a count
  * told to them is told to anyone who joins. No length of the line and no position in either reading —
  * whoever has just joined is last, so their place is the line's length; «singura persoană» says one, so it goes too.
  */
-describe("§NNN waitlistStandingPhrase with the count kept private", () => {
+describe("§634 waitlistStandingPhrase with the count kept private", () => {
   const numbers = (text: string) => text.match(/\d+/g);
 
   it("with offers in order, says no place and no number, only the order, in both languages", () => {

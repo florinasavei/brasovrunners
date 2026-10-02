@@ -74,7 +74,7 @@ describe("§347 one event form for five features, on both pages", () => {
     const capacityRow = registration.slice(registration.indexOf('data-testid="capacity-row"'), registration.indexOf("</Stack>", registration.indexOf('data-testid="capacity-row"')));
     expect(capacityRow).toContain('name="event.capacity"');
     expect(capacityRow).toContain('name="event.waitlistCapacity"');
-    // Since §NNN the length is a choice in words beside the places, its number under «Limitată».
+    // Since §633 the length is a choice in words beside the places, its number under «Limitată».
     expect(capacityRow).toContain('name="event.waitlistMode"');
     expect(capacityRow).toContain("<WaitlistLimitOnly");
     // Every wall-clock instant goes through the pickers' field.

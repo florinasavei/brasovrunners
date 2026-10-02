@@ -306,7 +306,7 @@ describe("§587 the join form says the event page's message once, above the form
     expect(html.indexOf(thanks)).toBeLessThan(html.indexOf('name="firstName"'));
   });
 
-  it("§NNN says no number in the title when the event keeps the line's count private", async () => {
+  it("§634 says no number in the title when the event keeps the line's count private", async () => {
     state.availability = { available: 0, capacity: 10, waitlistRoom: 4, waitlistCapacity: 5, waiting: 3, waitlistCountPublic: false };
     const html = await render();
     expect(html).toContain('data-testid="registration-waitlist-notice"');

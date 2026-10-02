@@ -163,7 +163,7 @@ describe("§350 the waiting list's length, the capacity's kin (the waiting-list 
   });
 
   /*
-    §NNN: the number shows only under «Limitată la un număr de locuri». Under «Nelimitată» or «Fără
+    §633: the number shows only under «Limitată la un număr de locuri». Under «Nelimitată» or «Fără
     listă de așteptare» it is a hidden box, and what it holds — wrong included — never matters.
   */
   it("«Nelimitată» ignores the hidden number, even one below nought", async () => {

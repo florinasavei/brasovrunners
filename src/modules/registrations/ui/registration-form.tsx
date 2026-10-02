@@ -97,7 +97,7 @@ export type RegistrationFormSettings = {
   termsVersion: number | null;
   /**
    * The terms in force, in every language, carry the club's right to refuse or cancel a registration
-   * (§NNN, §618, `describesRefusal`): the express box then names that clause too.
+   * (§636, §618, `describesRefusal`): the express box then names that clause too.
    */
   refusalOn: boolean;
   /** The notice in force describes the public list's states (§396). */
@@ -315,7 +315,7 @@ export async function registrationForm({
   // in the browser broke hydration.
   const phoneOrder = phoneCountryOrder(locale);
   const phoneNames = phoneCountryLabels(locale);
-  // The express box's version and link (§421), for either of its two wordings (§NNN).
+  // The express box's version and link (§421), for either of its two wordings (§636).
   const expressBoxValues = {
     version: termsVersion ?? "—",
     // The words as one string: `LegalLink` names itself from a string child.
@@ -1069,7 +1069,7 @@ export async function registrationForm({
           <CheckboxField id={fieldId("termsAccepted")} name="termsAccepted" required dense defaultChecked={acceptance.ticked}>
             <DescriptionIcon aria-hidden data-testid="consent-glyph" />
             {/*
-              While the terms in force carry the club's right to refuse (§NNN, `describesRefusal`), the
+              While the terms in force carry the club's right to refuse (§636, `describesRefusal`), the
               clauses accepted expressly name it too — a second key, so §421's reviewed words stay
               exactly as they were whenever the terms in force do not say it (§618).
             */}

@@ -254,7 +254,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const occupiedCounts =
     internal && event.capacity !== null && canReadRegistrations(staffUser.role) ? await countOccupied(db, event.id, now) : null;
   const placesTaken = occupiedCounts === null ? null : computeOccupied(occupiedCounts);
-  // «Când se pierde un loc» (§NNN): the real rows waiting on each deadline, one grouped count, for the box and the queue panel.
+  // «Când se pierde un loc» (§635): the real rows waiting on each deadline, one grouped count, for the box and the queue panel.
   const placeDeadlines = internal && canReadRegistrations(staffUser.role) ? await readPlaceDeadlines(db, event.id, now) : null;
 
   /*
@@ -1059,7 +1059,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                         </GlyphButton>
                       </Stack>
 
-                      {/* «Când se pierde un loc» (§NNN): until when this event's people keep their place, and after —
+                      {/* «Când se pierde un loc» (§635): until when this event's people keep their place, and after —
                           every part, the held places' too, although the queue panel below repeats those beside
                           «Rezervate»: that fold starts closed (§336), and this block is the answer read without opening it. */}
                       {placeDeadlines && <PlaceDeadlines event={placeDeadlines.event} counts={placeDeadlines.counts} deadlines={deadlines} now={now} timeZone={event.timezone} />}

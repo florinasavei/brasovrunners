@@ -11,7 +11,7 @@ function choiceSelect(): HTMLSelectElement | null {
 }
 
 /**
- * What «Lista de așteptare» says right now (§NNN). `useSelectedValue`'s twin for a native select,
+ * What «Lista de așteptare» says right now (§633). `useSelectedValue`'s twin for a native select,
  * which fires a `change` event where MUI's own select only rewrites a hidden input; renewed on every
  * answer of a kept form (§315), because the select re-mounts from what was posted.
  */
@@ -33,7 +33,7 @@ function useWaitlistChoice(initialChoice: WaitlistChoice): string {
 }
 
 /**
- * The number under «Limitată la un număr de locuri» (§NNN, the owner: «dacă pun 0 să se bifeze
+ * The number under «Limitată la un număr de locuri» (§633, the owner: «dacă pun 0 să se bifeze
  * automat listă infinită»), shown only while that is the answer — `OnlyForMode`'s sibling, over the
  * waiting list's select, through the same `ShownWhen`, so the box is read-only while hidden and its
  * `min` never stops the save.

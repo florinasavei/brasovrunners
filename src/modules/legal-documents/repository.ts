@@ -297,7 +297,7 @@ export async function noticeDescribesGmailFallback<T extends Record<string, unkn
 
 /**
  * Whether the terms in force carry the club's right to refuse or cancel a registration on objective
- * grounds (§NNN, §618, `describesRefusal`) — in every language, like the notice's fields: a runner
+ * grounds (§636, §618, `describesRefusal`) — in every language, like the notice's fields: a runner
  * who registers in English accepts the English terms, and the box names only what they say. For
  * `/admin/tasks` (`refusalTerms`), `/admin/legal` and the editor's preview; a public page asks
  * through the public cache (`cachedRefusalDisclosed`). False while no terms are approved.

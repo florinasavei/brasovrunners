@@ -121,7 +121,7 @@ describe("owner tasks", () => {
     }
   });
 
-  /** §NNN — the club's right to refuse a registration waits on the terms in force, like the notice's rows; open, never blocking. */
+  /** §636 — the club's right to refuse a registration waits on the terms in force, like the notice's rows; open, never blocking. */
   it("keeps the refusal row open while the terms in force do not carry the grounds, and done once they do", () => {
     expect(stateOf({ ...LAUNCHED, refusalDescribed: false }, "refusalTerms")).toBe("open");
     expect(stateOf(LAUNCHED, "refusalTerms")).toBe("done");

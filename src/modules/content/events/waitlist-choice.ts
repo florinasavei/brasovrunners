@@ -1,5 +1,5 @@
 /**
- * «Lista de așteptare» in the editor (§NNN, amending §348 and §350's box): how long the waiting list
+ * «Lista de așteptare» in the editor (§633, amending §348 and §350's box): how long the waiting list
  * may grow is a choice **in words**, never a number that means two things.
  *
  * Until now the box «Lungimea maximă a listei de așteptare» stored an empty box as "no limit" and

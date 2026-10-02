@@ -67,7 +67,7 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
   offerAction?: (previous: FormOutcome | null, form: FormData) => Promise<FormOutcome | null>;
   /** The event's `countOccupied`, when the page has already read it (§621) — one aggregate, not two. */
   counts?: Awaited<ReturnType<typeof countOccupied>>;
-  /** «Când se pierde un loc» (§NNN), when the page has already read it — the held places' sentences beside «Rezervate». */
+  /** «Când se pierde un loc» (§635), when the page has already read it — the held places' sentences beside «Rezervate». */
   placeDeadlines?: NonNullable<Awaited<ReturnType<typeof readPlaceDeadlines>>>;
 }) {
   const t = await getTranslations("Admin");
@@ -75,7 +75,7 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
   // The hold and the offer the help sentences name: the club's (§377), the lengths new ones get.
   const clubDeadlines = await deadlinesForThisRequest();
   const words = deadlineWords(locale, clubDeadlines);
-  // «Când se pierde un loc» (§NNN): the held places' part alone, in the event's zone like every time on the panel.
+  // «Când se pierde un loc» (§635): the held places' part alone, in the event's zone like every time on the panel.
   const heldDeadlines = knownPlaceDeadlines ?? (await readPlaceDeadlines(db, event.id, now));
   const heldLines = heldDeadlines
     ? placeDeadlineLines({ ...heldDeadlines, deadlines: clubDeadlines, now, timeZone: event.timezone, groups: ["held"], locale, t: (key, values) => t(key, values) })
@@ -148,7 +148,7 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
         {figure(t("queue.offeredFigure"), counts.unexpiredWaitlistOfferedHolds)}
         {figure(t("queue.waiting"), waiting)}
       </Stack>
-      {/* Beside «Rezervate»: until when the held places are kept, and what a passed deadline does (§NNN). */}
+      {/* Beside «Rezervate»: until when the held places are kept, and what a passed deadline does (§635). */}
       {heldLines.length > 0 && (
         <Box sx={{ mb: 1 }}>
           <PlaceDeadlineText lines={heldLines} testId="queue-place-deadlines" />

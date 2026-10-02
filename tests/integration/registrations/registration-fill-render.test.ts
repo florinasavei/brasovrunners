@@ -123,7 +123,7 @@ describe("§346 the fill line beside the register button, from the cached count"
       waitlisted: 0,
       confirmed: 12,
       occupied: 12,
-      // «Arată public câți așteaptă» (§NNN), off the same row: on by default.
+      // «Arată public câți așteaptă» (§634), off the same row: on by default.
       waitlistCountPublic: true,
     });
   });
@@ -143,7 +143,7 @@ describe("§346 the fill line beside the register button, from the cached count"
       waitlisted: 1,
       confirmed: 2,
       occupied: 2,
-      // «Arată public câți așteaptă» (§NNN), off the same row: on by default.
+      // «Arată public câți așteaptă» (§634), off the same row: on by default.
       waitlistCountPublic: true,
     });
   });
@@ -336,7 +336,7 @@ describe("§346 the fill line beside the register button, from the cached count"
 });
 
 /**
- * §NNN — «Arată public câți așteaptă» (the owner, 2026-10-02: «O să avem o bifă și dacă să afișăm sau
+ * §634 — «Arată public câți așteaptă» (the owner, 2026-10-02: «O să avem o bifă și dacă să afișăm sau
  * nu câți sunt pe lista de așteptare»). Off, the card and the page say that a waiting list exists and how
  * to join it, never how many are on it — in every state that showed the number; the room left in a
  * capped list stays (a fact about the list's size, like the capacity). On, every sentence is today's.
@@ -346,7 +346,7 @@ const { readRegistrationDoor } = await import("@/modules/events/ui/registration-
 const { cardRegistrationLine } = await import("@/modules/events/ui/CardRegistration");
 const { datedOrNull } = await import("@/modules/events/domain/dated");
 
-describe("§NNN the waiting list's count kept private, on the event page and the listing card", () => {
+describe("§634 the waiting list's count kept private, on the event page and the listing card", () => {
   const say = (l: "ro" | "en") =>
     createTranslator({ locale: l, messages: l === "ro" ? ro.Event : en.Event, namespace: undefined }) as unknown as (
       key: string,

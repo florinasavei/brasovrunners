@@ -382,12 +382,12 @@ describe("§629 the registration's own page says where the person stands, and ho
 });
 
 /**
- * §NNN — «Arată public câți așteaptă» off (the owner, 2026-10-02: «să nu le zicem oamenilor al câtelea
+ * §634 — «Arată public câți așteaptă» off (the owner, 2026-10-02: «să nu le zicem oamenilor al câtelea
  * sunt în listă»): the waiting person's own sentences say no length of the line and no place in it, in
  * either reading — the newest is last, so their place would be the length; only that they wait, and the
  * setting's sentence. «Ești singura persoană» says one, so it is not said either. The email says what the page says.
  */
-describe("§NNN the count kept private: the person's own page, «Toate înscrierile mele» and the email", () => {
+describe("§634 the count kept private: the person's own page, «Toate înscrierile mele» and the email", () => {
   async function manage(registrationId: string, participantId: string) {
     const { secret } = await issueActionToken(db, {
       purpose: "MANAGE_REGISTRATION",

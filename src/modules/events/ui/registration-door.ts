@@ -50,7 +50,7 @@ export async function readRegistrationDoor(event: PublicEventPage, now: Date): P
   let waitlisted = 0;
   let confirmed: number | undefined;
   let occupied: number | undefined;
-  // «Arată public câți așteaptă» (§NNN), read from the entry the counts come from, so the two are one moment.
+  // «Arată public câți așteaptă» (§634), read from the entry the counts come from, so the two are one moment.
   let waitlistCountPublic = true;
   /*
     Every page that shows a door is kept no longer than the door's next change (§549): the window
@@ -139,7 +139,7 @@ export async function draftRegistrationDoor<T extends Record<string, unknown>>(
   }
   return {
     kind: "KNOWN",
-    // The draft's own «Arată public câți așteaptă» (§NNN): the preview says the count only as the saved page would.
+    // The draft's own «Arată public câți așteaptă» (§634): the preview says the count only as the saved page would.
     cta: registrationCta(
       { ...event, availablePlaces, waitlistRoom, waitlistCapacity: limits.waitlistCapacity, waiting, offered, waitlisted, waitlistCountPublic: event.waitlistCountPublic },
       now,

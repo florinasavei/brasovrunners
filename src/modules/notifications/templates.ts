@@ -728,7 +728,7 @@ type NightReminderLine = {
 
 /**
  * Where the person stood in the line when `WAITLIST_JOINED` was rendered (§629): the position, the line's
- * length, whether offers go in order, and whether the club says the count publicly (§NNN; absent is on).
+ * length, whether offers go in order, and whether the club says the count publicly (§634; absent is on).
  */
 type WaitlistStandingLine = { position: number; length: number; autoOffer: boolean; countPublic?: boolean };
 
@@ -1072,7 +1072,7 @@ export type TemplateData = {
    * render time from `readWaitlistPosition` — the same reader the registration's own page uses — and
    * worded as of that moment, since the line moves after the email is read. Absent when the
    * registration is no longer waiting or its event is cancelled, or for any other message. Numbers only; nobody else is named.
-   * With the event's «Arată public câți așteaptă» off (`countPublic: false`, §NNN), no length: the place
+   * With the event's «Arată public câți așteaptă» off (`countPublic: false`, §634), no length: the place
    * alone with offers in order, else only that the person was on the list and that the club chooses.
    */
   waitlistStanding?: WaitlistStandingLine;
@@ -2570,7 +2570,7 @@ function participantsPhrase(locale: EmailLocale, count: number): string {
 function waitlistPositionLine(locale: EmailLocale, standing: WaitlistStandingLine): string {
   const ro = locale === "ro";
   /*
-    The count kept private (§NNN): what the registration's page says at this moment, in the email's
+    The count kept private (§634): what the registration's page says at this moment, in the email's
     register — that they were on the list, and the setting's sentence. No position in either reading:
     the person who has just joined is last, so their place is the line's length. Never «singura persoană» either.
   */

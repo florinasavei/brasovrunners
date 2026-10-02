@@ -254,7 +254,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   */
   let fullNotice: typeof WAITLIST_FULL | typeof NO_WAITLIST | "WAITLIST" | null = null;
   let offerHours: number | null = null;
-  // `waiting` null: the club keeps the line's count private (§NNN), and the title says no number.
+  // `waiting` null: the club keeps the line's count private (§634), and the title says no number.
   let fullCounts: { capacity: number; waiting: number | null } | null = null;
   if (!submitted && !error && !resting) {
     try {
@@ -309,7 +309,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
     }
   }
   /*
-    §NNN: while the terms in force carry the club's right to refuse a registration (§618's grounds,
+    §636: while the terms in force carry the club's right to refuse a registration (§618's grounds,
     word for word, every language), the express box names that clause too. Off (or unread),
     the box keeps §421's words exactly.
   */

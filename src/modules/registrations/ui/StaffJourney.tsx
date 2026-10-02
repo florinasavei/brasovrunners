@@ -53,7 +53,7 @@ export default async function StaffJourney({ journey, bibNumber, variant }: Prop
          * component — rendered once per row of a list that spans many events — does not read.
          */
         if (!journey.outcome && step.until <= now) return t("registrations.journey.heldKept");
-        // A live hold says whose the place is and until when (§NNN); an ended one only the deadline it had.
+        // A live hold says whose the place is and until when (§635); an ended one only the deadline it had.
         return journey.outcome
           ? t("registrations.journey.held", { until: when(step.until) ?? "" })
           : t("registrations.journey.holding", { until: when(step.until) ?? "" });
@@ -92,7 +92,7 @@ export default async function StaffJourney({ journey, bibNumber, variant }: Prop
     // says what comes next.
     const word = journey.done === total ? (detailOf(last) ?? label[last.key]) : label[journey.reached];
     /*
-      «Când pierde lumea locul?» (§NNN): after the step, the deadline the row's state waits on — the
+      «Când pierde lumea locul?» (§635): after the step, the deadline the row's state waits on — the
       hold («ține locul până …», or kept past it, §160), the offer, the email's link or a family's
       reservation. Only on a live row: how an ended one ended is the status chip's and the title's.
     */
@@ -106,7 +106,7 @@ export default async function StaffJourney({ journey, bibNumber, variant }: Prop
 
     return (
       <Box component="span" title={title} sx={{ color: journey.outcome ? "text.secondary" : "text.primary" }}>
-        {/* The step stays on one line; the deadline after it may wrap at 320 px (§NNN). */}
+        {/* The step stays on one line; the deadline after it may wrap at 320 px (§635). */}
         <Box component="span" sx={{ whiteSpace: "nowrap" }}>
           {journey.done}/{total} · {word}
         </Box>

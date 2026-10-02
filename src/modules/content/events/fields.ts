@@ -191,7 +191,7 @@ const optionalWholeNumber = (options: { min: number; max: number }) =>
 const MAX_WAITLIST_LENGTH = 100_000;
 
 /**
- * The number under «Limitată la un număr de locuri» (§NNN): at least one person, because nought
+ * The number under «Limitată la un număr de locuri» (§633): at least one person, because nought
  * under «Limitată» means the limit was taken away and is saved as «Nelimitată»
  * (`waitlist-choice.ts`). The box reads its `min` here, so the browser asks for 1 or more; the
  * row's own `waitlistCapacity` below keeps 0, which a caller that sends no choice still means as
@@ -792,13 +792,13 @@ export const eventFieldsSchema = z
      * Optional, and absent means "this caller is not editing it" — the service writes nothing
      * then, so a save from anything that does not post the box keeps the limit the organizer set.
      *
-     * Since §NNN the editor never posts the number alone: it posts the choice below, and the service
+     * Since §633 the editor never posts the number alone: it posts the choice below, and the service
      * turns the two into this one value before the schema reads it (`ignoreHiddenFields`). A caller
      * that sends only the number — a script, a fixture — keeps the meaning above.
      */
     waitlistCapacity: optionalWholeNumber({ min: 0, max: MAX_WAITLIST_LENGTH }).optional(),
     /**
-     * «Lista de așteptare» (§NNN): «Nelimitată», «Limitată la un număr de locuri» or «Fără listă de
+     * «Lista de așteptare» (§633): «Nelimitată», «Limitată la un număr de locuri» or «Fără listă de
      * așteptare» — what the length means, said in words. Read before this schema runs and folded into
      * `waitlistCapacity` (`service.ts#ignoreHiddenFields`, `waitlist-choice.ts#waitlistLengthPosted`);
      * here so a posted answer that is none of the three is refused naming the select. Absent means
@@ -897,7 +897,7 @@ export const eventFieldsSchema = z
      */
     waitlistPublic: z.boolean().optional(),
     /**
-     * «Arată public câți așteaptă» (§NNN): whether the card, the page and each person waiting are
+     * «Arată public câți așteaptă» (§634): whether the card, the page and each person waiting are
      * told how many wait. Optional, and absent means "this caller is not editing it", the discipline
      * `kitShirt` follows — so no save hides or shows the count by not mentioning it. Independent of
      * the list above: it hides a number, never a name, and is stored whatever the list says.

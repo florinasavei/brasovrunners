@@ -60,12 +60,12 @@ type Props = {
 /**
  * What the editor's preview reads from the database for the steps (§579): the club's deadlines,
  * whether the family flow is on, and whether the terms in force carry the club's right to refuse a
- * registration (§NNN, `termsDescribeRefusal`).
+ * registration (§636, `termsDescribeRefusal`).
  */
 export type RegistrationStepsSettings = { deadlines: Deadlines; familyOpen: boolean; refusalOn: boolean };
 
 /**
- * Whether the terms in force carry the club's right to refuse (§NNN), for a visitor: the public
+ * Whether the terms in force carry the club's right to refuse (§636), for a visitor: the public
  * cache's reading. Optional, like the form's other gated sentences: unread, the fold is today's.
  */
 async function refusalDisclosed(): Promise<boolean> {
@@ -175,7 +175,7 @@ export default async function RegistrationSteps({ folded = false, window = null,
         </Box>
       )}
       {/*
-        The club's right to refuse a registration (§NNN; the owner, 2026-10-02: «La edițiile următoare
+        The club's right to refuse a registration (§636; the owner, 2026-10-02: «La edițiile următoare
         trebuie sa aducă [= să apară] că organizatorul își rezervă dreptul de a refuza înscrieri»), the
         terms' five grounds summed up — said only while the terms in force, in every language, carry them
         (`describesRefusal`; §618: nothing is said that the terms in force do not say). Without them

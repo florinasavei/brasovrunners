@@ -639,7 +639,7 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
     declarationDocumentId: fields.declarationDocumentId,
     participantListVisibility: fields.participantListVisibility,
     ...waitlistPublicColumn(fields),
-    // «Arată public câți așteaptă» (§NNN), by the partners' discipline: a caller that did not post the
+    // «Arată public câți așteaptă» (§634), by the partners' discipline: a caller that did not post the
     // box writes nothing, so no save hides or shows the waiting list's count by not mentioning it.
     ...(fields.waitlistCountPublic === undefined ? {} : { waitlistCountPublic: fields.waitlistCountPublic }),
     externalProvider: fields.externalProvider,
@@ -758,7 +758,7 @@ export function ignoreHiddenFields(raw: unknown): unknown {
       : {};
   const replaced = { ...posted };
   /*
-    «Lista de așteptare» (§NNN): the answer in words decides the length, and the number box shows
+    «Lista de așteptare» (§633): the answer in words decides the length, and the number box shows
     only under «Limitată», so what it holds under the other two is never read — the same rule as a
     box the mode hides. «Limitată» with an empty box or a 0 is the limit taken away: unlimited, never
     "no list". An answer that is none of the three is left for the schema to refuse by name. Before
@@ -1829,7 +1829,7 @@ const SERIES_COLUMNS = [
   "participantListVisibility",
   // Whether the published list also shows the waiting list (§628) travels with the list it qualifies.
   "waitlistPublic",
-  // Whether the waiting list's count is public (§NNN) travels like the line's own settings above.
+  // Whether the waiting list's count is public (§634) travels like the line's own settings above.
   "waitlistCountPublic",
   "externalProvider",
   "externalRegistrationUrl",
@@ -2132,7 +2132,7 @@ async function auditWaitlistAutoOffer<T extends Record<string, unknown>>(
 }
 
 /**
- * The trail of «Arată public câți așteaptă» (§NNN): who switched it, on which date, from and to — in the
+ * The trail of «Arată public câți așteaptă» (§634): who switched it, on which date, from and to — in the
  * save's transaction, only when the value moved. A display switch, but one over what the public is told
  * about the line, so the trail says who decided it.
  */
@@ -3129,7 +3129,7 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     participantListVisibility: "HIDDEN" as const,
     // A copy never inherits the list (AGENTS.md §10.10), so nor the waiting list's place on it (§628).
     waitlistPublic: false,
-    // Whether the line's count is public (§NNN) goes with the line's other settings: a copy, and every
+    // Whether the line's count is public (§634) goes with the line's other settings: a copy, and every
     // date of a series. It publishes no name, so the list's rule above does not bind it.
     waitlistCountPublic: source.waitlistCountPublic,
     externalProvider: source.externalProvider,

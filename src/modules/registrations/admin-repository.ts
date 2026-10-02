@@ -105,7 +105,7 @@ export type RegistrationListRow = {
   waitlistedAt: Date | null;
   offerCreatedAt: Date | null;
   holdExpiresAt: Date | null;
-  /** When the first email's link lapses (§377): the journey's «linkul expiră …» on a row waiting for it (§NNN). A column of the row, no join. */
+  /** When the first email's link lapses (§377): the journey's «linkul expiră …» on a row waiting for it (§635). A column of the row, no join. */
   emailLinkExpiresAt: Date | null;
   declarationAcceptedAt: Date | null;
   cancelledAt: Date | null;
@@ -565,7 +565,7 @@ export type RegistrationDetail = {
   waitlistedAt: Date | null;
   offerCreatedAt: Date | null;
   holdExpiresAt: Date | null;
-  /** When the first email's link lapses (§377), for the timeline's «Linkul din email expiră» on a row still waiting for it (§NNN). */
+  /** When the first email's link lapses (§377), for the timeline's «Linkul din email expiră» on a row still waiting for it (§635). */
   emailLinkExpiresAt: Date | null;
   confirmedAt: Date | null;
   cancelledAt: Date | null;
@@ -1286,7 +1286,7 @@ export async function listQueueForEvent<T extends Record<string, unknown>>(db: D
 
 
 /**
- * What «Când se pierde un loc» needs about one event (§NNN; the owner, 2026-10-02: «Când pierde lumea
+ * What «Când se pierde un loc» needs about one event (§635; the owner, 2026-10-02: «Când pierde lumea
  * locul? Trebuie să apară asta in back-office»): the event's window, limits, setting and close, and how
  * many real registrations wait on each deadline — `domain/place-deadlines.ts` turns them into words.
  *

@@ -57,7 +57,7 @@ export function waitlistRoomPhrase(say: Say, locale: string, room: number): stri
  * "Mulțumim! Toate cele 50 de locuri s-au ocupat — 3 așteaptă deja un loc." (§587, amending
  * §348): the full event's thank-you lead, from the event's size and the line's length the door
  * already counted; an empty line says «Fii primul pe lista de așteptare.» instead of a nought.
- * `waiting` null is a count the club keeps private (§NNN): «… s-au ocupat. Intră pe lista de
+ * `waiting` null is a count the club keeps private (§634): «… s-au ocupat. Intră pe lista de
  * așteptare.», which says neither the number nor that nobody waits.
  */
 export function fullThanksPhrase(say: Say, locale: string, capacity: number, waiting: number | null): string {
@@ -117,7 +117,7 @@ export function confirmedPhrase(say: Say, locale: string, counts: { confirmed: n
 }
 
 /**
- * The «Cine vine» fold's two headline readings (§NNN, amending §346): the number in its title and
+ * The «Cine vine» fold's two headline readings (§632, amending §346): the number in its title and
  * the bold line under it.
  *
  * The owner, 2026-10-02, of a page reading «150 de înscriși din 150 de locuri — 134 de confirmați, 16

@@ -15,7 +15,7 @@ type Say = (key: string, values?: Record<string, string | number>) => string;
  *   «Ești pe lista de așteptare, împreună cu alte 9 persoane. Clubul alege cui oferă un loc eliberat.»,
  *   or «Ești singura persoană pe lista de așteptare.» alone — nobody learns an order the club does not keep.
  *
- * - **The count kept private** (`countPublic: false`, §NNN): nothing that says the line's length — no
+ * - **The count kept private** (`countPublic: false`, §634): nothing that says the line's length — no
  *   «din 10 persoane», no «cu alte 9», not «singura persoană», which says one, and no position either,
  *   in either reading: whoever has just joined is last, so their place IS the line's length. Only
  *   «Ești pe lista de așteptare.», then the setting's sentence, as always.
@@ -27,7 +27,7 @@ type Say = (key: string, values?: Record<string, string | number>) => string;
  */
 export function waitlistStandingPhrase(say: Say, locale: string, standing: WaitlistStanding): string {
   const order = say(standing.autoOffer ? "waitlist.orderAuto" : "waitlist.orderClub");
-  // The count kept private (§NNN): only that they wait — no position, since a newcomer's place is the line's length.
+  // The count kept private (§634): only that they wait — no position, since a newcomer's place is the line's length.
   if (standing.countPublic === false) return `${say("waitlist.onList")} ${order}`;
   const others = standing.length - 1;
   // Alone in the line, «locul 1 din 1 persoană» is not how anybody says it: the same words in both readings of the setting.

@@ -220,7 +220,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     filters.eventId ? voidBibsFor(db, filters.eventId) : Promise.resolve([]),
     // «Descarcă lista pentru sponsori» for the chosen event (§570): the count only, for the roles that may take it.
     filters.eventId && canExportSponsorList(actor.role) ? sponsorListSummary(db, actor, { eventId: filters.eventId, now: new Date() }) : Promise.resolve(null),
-    // «Când se pierde un loc» (§NNN): one grouped count of the event's real rows, and the club's deadlines — one event only.
+    // «Când se pierde un loc» (§635): one grouped count of the event's real rows, and the club's deadlines — one event only.
     filters.eventId
       ? Promise.all([readPlaceDeadlines(db, filters.eventId, deadlinesNow), deadlinesForThisRequest()]).then(([facts, deadlines]) => (facts ? { ...facts, deadlines } : null))
       : Promise.resolve(null),
@@ -960,7 +960,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         )}
       </SummaryStrip>
       {/*
-        «Când pierde lumea locul?» (§NNN; the owner, 2026-10-02): until when the people of this event
+        «Când pierde lumea locul?» (§635; the owner, 2026-10-02): until when the people of this event
         keep their place, and what a passed deadline does — right under the counts, and only when the list
         is about one event; spanning all events, no single window or setting is true of every row.
       */}
@@ -969,7 +969,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       )}
       {/*
         Why this number and the tab's badge can differ (§277). The badge counts everyone with a place at
-        everything still to come (§626, §NNN); this list opens on one event, in every state. Both are right and the pair
+        everything still to come (§626, §632); this list opens on one event, in every state. Both are right and the pair
         reads as a contradiction, so the screen says which it is showing and offers the other.
       */}
       {filters.eventId && (

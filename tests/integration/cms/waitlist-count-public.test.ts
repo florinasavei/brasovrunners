@@ -10,7 +10,7 @@ import { findPublishedEventBySlug } from "@/modules/events/repository";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Arată public câți așteaptă» (`events.waitlist_count_public`), mirroring §628's switch and the
+ * §634 — «Arată public câți așteaptă» (`events.waitlist_count_public`), mirroring §628's switch and the
  * kit's discipline (§554): on for every event that exists and every new one; saved through the editor's
  * real action by its marker, so a form without the box never hides the count; every change written to
  * the trail with from and to; carried to every date a series makes, by a scoped series edit (each
@@ -129,7 +129,7 @@ const wordsFor = (row: { slug: string; title: string; excerpt: string | null }) 
   seoDescription: "",
 });
 
-describe("§NNN «Arată public câți așteaptă» on the event", () => {
+describe("§634 «Arată public câți așteaptă» on the event", () => {
   it("is an expand-only migration with a default of on, so every existing event keeps its sentences", async () => {
     const sql = readFileSync(join(process.cwd(), "src/db/migrations/0120_waitlist_count_public.sql"), "utf8").trim();
     expect(sql).toBe('ALTER TABLE "events" ADD COLUMN "waitlist_count_public" boolean DEFAULT true NOT NULL;');

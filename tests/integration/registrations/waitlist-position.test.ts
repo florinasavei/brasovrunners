@@ -153,7 +153,7 @@ describe("§629 readWaitlistPosition — the line in queue order", () => {
     expect((await readWaitlistPosition(db, waiting.id))?.autoOffer).toBe(true);
   });
 
-  it("§NNN carries «Arată public câți așteaptă» from the same read, as it stands now, and still counts the line", async () => {
+  it("§634 carries «Arată public câți așteaptă» from the same read, as it stands now, and still counts the line", async () => {
     const e = await event();
     await person(e.id, "WAITLISTED", at(1));
     const me = await person(e.id, "WAITLISTED", at(2));

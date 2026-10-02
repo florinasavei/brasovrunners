@@ -233,7 +233,7 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
   const promoMissing = !missingKeys.includes("PRIVACY_NOTICE") && !(await noticeDescribesPromotionalMaterials(getDb(), now));
   // §570: the list for sponsors, off until the notice in force names `{{promotionalMaterialsShared}}`.
   const sponsorMissing = !missingKeys.includes("PRIVACY_NOTICE") && !(await noticeDescribesPromotionalMaterialsShared(getDb(), now));
-  // §NNN: the form's box and the fold name the club's right to refuse only once the terms in force spell §618's grounds.
+  // §636: the form's box and the fold name the club's right to refuse only once the terms in force spell §618's grounds.
   const refusalMissing = !missingKeys.includes("TERMS") && !(await termsDescribeRefusal(getDb(), now));
   /*
     What the service would answer about each row, asked of the service before anything is drawn

@@ -75,7 +75,7 @@ export default async function BackofficeShell({
     ? await registeredBadgeBreakdown(getDb(), new Date(), locale)
     : null;
   /*
-    The badge says who has a place (§NNN, amending §626's confirmed alone; the owner, 2026-10-02: «pune-o și
+    The badge says who has a place (§632, amending §626's confirmed alone; the owner, 2026-10-02: «pune-o și
     pe cei care trebuie să confirme înregistrarea»), and a pill per group still in progress follows it: those
     completing their registration with a place (part of the badge), those awaiting the email confirmation
     and the waiting list (both outside it) — the owner, verbatim: «Tot pe acest pull [sic] trebuie să afișăm
@@ -93,7 +93,7 @@ export default async function BackofficeShell({
     { kind: "waiting" as const, count: pillCounts.waiting, label: t("nav.registeredWaitingLabel", { count: pillCounts.waiting }) },
   ].filter((pill) => pill.count > 0);
   /*
-    The tooltip says what the figures count, per event (§476): the badge's figure, its split and the rest in one line (§NNN), then
+    The tooltip says what the figures count, per event (§476): the badge's figure, its split and the rest in one line (§632), then
     each upcoming event with its number, the first five by start and how many more after them — so
     a reader whose list disagrees with the badge sees which event the difference is on.
   */

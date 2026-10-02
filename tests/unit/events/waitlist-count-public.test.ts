@@ -6,7 +6,7 @@ import { publicFill, registrationCta, type RegistrationCtaInput } from "@/module
 import { fillPhrase, fullThanksPhrase } from "@/modules/events/ui/counted-phrases";
 
 /**
- * BR-REQ-035-01, BR-REQ-039-01 (§NNN) — «Arată public câți așteaptă». The owner, 2026-10-02: «Trebuie să
+ * BR-REQ-035-01, BR-REQ-039-01 (§634) — «Arată public câți așteaptă». The owner, 2026-10-02: «Trebuie să
  * avem mare grijă să nu afișăm lista de așteptare și să nu le zicem oamenilor al câtelea sunt în listă»,
  * then «O să avem o bifă și dacă să afișăm sau nu câți sunt pe lista de așteptare».
  *
@@ -41,7 +41,7 @@ function translator(locale: "ro" | "en") {
   ) => string;
 }
 
-describe("§NNN registrationCta with the count kept private", () => {
+describe("§634 registrationCta with the count kept private", () => {
   it("full: the same door, the room kept, the line's length said as null", () => {
     const full = event({ availablePlaces: 0, waitlistRoom: 4, waitlistCapacity: 10, waiting: 6, waitlisted: 6 });
     expect(registrationCta({ ...full, waitlistCountPublic: false }, DURING)).toEqual({ kind: "FULL", waitlistRoom: 4, waiting: null });
@@ -69,7 +69,7 @@ describe("§NNN registrationCta with the count kept private", () => {
   });
 });
 
-describe("§NNN publicFill and the places line with the count kept private", () => {
+describe("§634 publicFill and the places line with the count kept private", () => {
   it("drops the people waiting, and the places kept for them while places are still free", () => {
     // Places free beside the line: kept is exactly the people waiting, so it goes with them.
     expect(publicFill(10, 4, { occupied: 4, confirmed: 4, waitlisted: 2, waitlistCountPublic: false })).toEqual({ taken: 4, capacity: 10, confirmed: 4 });
@@ -91,7 +91,7 @@ describe("§NNN publicFill and the places line with the count kept private", () 
   });
 });
 
-describe("§NNN fullThanksPhrase without the line's length", () => {
+describe("§634 fullThanksPhrase without the line's length", () => {
   it("reads the three Romanian forms of the capacity, and English", () => {
     const say = translator("ro");
     expect(fullThanksPhrase(say, "ro", 1, null)).toBe("Mulțumim! Singurul loc s-a ocupat. Intră pe lista de așteptare.");

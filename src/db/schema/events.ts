@@ -664,7 +664,7 @@ export const events = pgTable(
     waitlistPublic: boolean("waitlist_public").notNull().default(false),
 
     /**
-     * «Arată public câți așteaptă» (§NNN): whether the public card, the event page and each person
+     * «Arată public câți așteaptă» (§634): whether the public card, the event page and each person
      * on the waiting list are told how many wait. On by default — every event that exists keeps
      * the sentences it had — and the club unticks it per event. A display switch over counts that
      * exist anyway: the allocator and every queue read ignore it, and the backoffice counts stay.

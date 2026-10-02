@@ -2,7 +2,7 @@ import { isLegalDocumentBody } from "./content-hash";
 
 /**
  * Whether the terms carry the club's right to refuse or cancel a registration on objective grounds
- * (§NNN, on §618's paragraph; the owner, 2026-10-02: «La edițiile următoare trebuie sa aducă
+ * (§636, on §618's paragraph; the owner, 2026-10-02: «La edițiile următoare trebuie sa aducă
  * [= să apară] că organizatorul își rezervă dreptul de a refuza înscrieri»).
  *
  * The five grounds of the terms' §3, last paragraph, in each language, exactly as the template

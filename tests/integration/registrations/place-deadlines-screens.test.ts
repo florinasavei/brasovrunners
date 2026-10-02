@@ -17,7 +17,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Când pierde lumea locul? Trebuie să apară asta in back-office» (the owner, 2026-10-02): where
+ * §635 — «Când pierde lumea locul? Trebuie să apară asta in back-office» (the owner, 2026-10-02): where
  * the sentences show, read from a real database.
  *
  * - the registrations list scoped to one event carries «Când se pierde un loc» under «Cine s-a
@@ -60,7 +60,7 @@ vi.mock("@/app/[locale]/admin/registrations/actions", () => ({
   bulkDeleteRegistrationsAction: vi.fn(),
   markBibsPrintedAction: vi.fn(),
   sendOutboxNowAction: vi.fn(),
-  // The registration's own page (§NNN's timeline).
+  // The registration's own page (§635's timeline).
   cancelRegistrationAction: vi.fn(),
   checkInAction: vi.fn(),
   confirmRegistrationNowAction: vi.fn(),
@@ -179,7 +179,7 @@ beforeEach(async () => {
   state.locale = "ro";
 });
 
-describe("§NNN «Când se pierde un loc» on the registrations list", () => {
+describe("§635 «Când se pierde un loc» on the registrations list", () => {
   it("scoped to one event: the block under «Cine s-a înscris», real rows only — for the Administrator and the Organizer", async () => {
     const race = await createRace("Crosul");
     const later = new Date(Date.now() + 2 * 24 * 60 * 60_000);
@@ -217,7 +217,7 @@ describe("§NNN «Când se pierde un loc» on the registrations list", () => {
   });
 });
 
-describe("§NNN the queue panel: the held places' sentences beside «Rezervate»", () => {
+describe("§635 the queue panel: the held places' sentences beside «Rezervate»", () => {
   it("only the held part, in the event's zone, with the setting's words", async () => {
     const race = await createRace("Crosul");
     await register(race.id, { status: "PENDING_DECLARATION", holdExpiresAt: new Date("2099-11-19T08:00:00.000Z") });
@@ -238,7 +238,7 @@ describe("§NNN the queue panel: the held places' sentences beside «Rezervate»
   });
 });
 
-describe("§NNN «Înscrierile primite» on the event's page", () => {
+describe("§635 «Înscrierile primite» on the event's page", () => {
   it("carries every sentence, and hands the queue panel the same counts — one read", async () => {
     const race = await createRace("Crosul");
     await register(race.id, { status: "PENDING_DECLARATION", holdExpiresAt: new Date("2099-11-19T08:00:00.000Z") });
@@ -258,7 +258,7 @@ describe("§NNN «Înscrierile primite» on the event's page", () => {
   });
 });
 
-describe("§NNN the counts: past the deadline as the sweep reads it", () => {
+describe("§635 the counts: past the deadline as the sweep reads it", () => {
   it("a hold whose first declaration email is still queued is not past its deadline (§513)", async () => {
     const race = await createRace("Crosul");
     const past = new Date(Date.now() - 60 * 60_000);
@@ -281,7 +281,7 @@ describe("§NNN the counts: past the deadline as the sweep reads it", () => {
   });
 });
 
-describe("§NNN the registration's page: the timeline names the deadline its state waits on", () => {
+describe("§635 the registration's page: the timeline names the deadline its state waits on", () => {
   /** The timeline's «label: value» lines, as the page writes them. */
   async function timeline(id: string): Promise<string> {
     const tree = await RegistrationDetailPage({ params: Promise.resolve({ locale: "ro", id }), searchParams: Promise.resolve({}) } as never);

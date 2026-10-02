@@ -48,7 +48,7 @@ export type JourneyStepState = "done" | "current" | "pending" | "skipped";
  *   person is marked present (BR-REQ-037-08), so the check-in is the pickup.
  * - `link`: the address is not confirmed yet; the first email's link lapses at `until` (§377),
  *   and a family's reservation, when the row holds one, at `reservedUntil` (§543) — what the row
- *   waits on, said beside its step (§NNN).
+ *   waits on, said beside its step (§635).
  */
 export type JourneyStepDetail = "held" | "offered" | "waitlisted" | "bib" | "pickedUp" | "link";
 
@@ -96,7 +96,7 @@ export type JourneyInput = {
   holdExpiresAt: Date | null;
   /**
    * `registrations.email_link_expires_at` (§377): when the first email's link lapses, said on a row
-   * still waiting for its address (§NNN). Optional: a caller that has not read it says nothing of it.
+   * still waiting for its address (§635). Optional: a caller that has not read it says nothing of it.
    */
   emailLinkExpiresAt?: Date | null;
   /** The latest declaration acceptance's `accepted_at`, online or on paper; null when none. */
@@ -221,7 +221,7 @@ export function journeyOf(input: JourneyInput): Journey {
   switch (input.status) {
     case "PENDING_EMAIL_CONFIRMATION":
       markDone(1);
-      // What the row waits on (§NNN): the link's lapse, and a family's reservation when it holds one (§543).
+      // What the row waits on (§635): the link's lapse, and a family's reservation when it holds one (§543).
       markCurrent(1, { detail: "link", until: input.emailLinkExpiresAt ?? null, reservedUntil: input.holdExpiresAt });
       break;
     case "WAITLISTED":

@@ -41,7 +41,7 @@ export type RegistrationCtaInput = RegistrationWindowInput & {
   offered?: number;
   waitlisted?: number;
   /**
-   * «Arată public câți așteaptă» (§NNN): false withholds the people waiting from what the door says —
+   * «Arată public câți așteaptă» (§634): false withholds the people waiting from what the door says —
    * `waitlisted` on `OPEN` is said as nought and `waiting` on `FULL` as null. Absent is on, today's
    * sentences. It changes no decision: who queues is still read from the counts above.
    */
@@ -70,7 +70,7 @@ export type RegistrationCta =
    * «Locurile se dau din lista de așteptare» stands where «N locuri libere din C» stood. False with
    * nobody waiting — an open offer alone included, since its holder has a place: today's line and door.
    *
-   * `waitlisted` is the number the door may SAY: nought when the club keeps the count private (§NNN),
+   * `waitlisted` is the number the door may SAY: nought when the club keeps the count private (§634),
    * whatever the line holds — `fromWaitlist` is decided before, from the real count.
    */
   | { kind: "OPEN"; availablePlaces: number | null; offered: number; waitlisted: number; fromWaitlist: boolean }
@@ -79,7 +79,7 @@ export type RegistrationCta =
    * takes when it has a limit (§348) — "Mai sunt 3 locuri pe lista de așteptare" — and null when
    * it has none, which says no number, as today.
    *
-   * `waiting` is the line's length the lead may say, or null when the club keeps it private (§NNN): the
+   * `waiting` is the line's length the lead may say, or null when the club keeps it private (§634): the
    * lead is then «Mulțumim! Toate cele 150 de locuri s-au ocupat. Intră pe lista de așteptare.», which
    * says neither a number nor «Fii primul» (which would say nought). The room stays: it is a fact about
    * the list's size, like the capacity (§32's reasoning), not a count of people.
@@ -138,7 +138,7 @@ export function registrationCta(event: RegistrationCtaInput, now: Date): Registr
     case "OPEN": {
       const offered = event.offered ?? 0;
       /*
-        «Arată public câți așteaptă» off (§NNN): the people waiting are said as nobody — the card's and the
+        «Arată public câți așteaptă» off (§634): the people waiting are said as nobody — the card's and the
         page's «N pe lista de așteptare» go, the offered places and «Locurile se dau din lista de așteptare»
         stay. Applied here, once, so no surface can forget it; the door below is still chosen from the
         real count. The public list's own waiting group («Cine vine», `StartList.tsx`) is §628's switch,
@@ -185,7 +185,7 @@ export type PublicFill = {
   confirmed?: number;
   /**
    * The free places the waiting list has a claim on (§615, §617): the capacity less the free places the
-   * button shows less `taken`. Absent when nought or unknown — and, with the count kept private (§NNN),
+   * button shows less `taken`. Absent when nought or unknown — and, with the count kept private (§634),
    * while places are still free, since it is then exactly the number of people waiting.
    */
   kept?: number;
@@ -195,7 +195,7 @@ export type PublicFill = {
    * the same count the door already reads — no query of its own, and the same one every public count is
    * (a `TEST` row stands in the line as a real one, `AGENTS.md` §12.6; production has none). Absent when
    * nobody waits, and in a cache entry from before the halves were counted — and absent too when the
-   * club keeps the count private (§NNN, `waitlistCountPublic: false`): the line then ends where it did.
+   * club keeps the count private (§634, `waitlistCountPublic: false`): the line then ends where it did.
    */
   waitlisted?: number;
 };
@@ -244,7 +244,7 @@ export function publicFill(
   if (capacity === null || availablePlaces === null) return null;
   const claimed = Math.min(Math.max(capacity - availablePlaces, 0), capacity);
   // The line's length, the places line's last part (§629): only when anybody waits, and only while the
-  // club says it publicly (§NNN) — off, «, 10 pe lista de așteptare» is not drawn; every other part stays.
+  // club says it publicly (§634) — off, «, 10 pe lista de așteptare» is not drawn; every other part stays.
   const said = held?.waitlistCountPublic !== false;
   const waiting = said && held?.waitlisted !== undefined && held.waitlisted > 0 ? { waitlisted: held.waitlisted } : {};
   /*
@@ -258,7 +258,7 @@ export function publicFill(
   const taken = Math.max(Math.min(held.occupied, capacity), 0);
   const confirmed = Math.min(held.confirmed, taken);
   /*
-    The count kept private (§NNN): while places are still free beside the line, the places kept for it
+    The count kept private (§634): while places are still free beside the line, the places kept for it
     are exactly the people waiting (the formula keeps one free place per person waiting), so the part is
     withheld with the count. Once no place is free, kept is every free place the line claims — a number
     about places, the line being at least as long — and it stays, so the line still adds up to «Toate

@@ -9,7 +9,7 @@ import { termsEn, termsRo } from "@/modules/legal-documents/templates/terms";
 import { DECLARATION_TOKENS } from "@/modules/legal-documents/templates/tokens";
 
 /**
- * §NNN (on §618) — the terms' grounds for the club refusing or cancelling a registration, the switch
+ * §636 (on §618) — the terms' grounds for the club refusing or cancelling a registration, the switch
  * for the form's express box and the fold's step: literal words in the template (never a merge
  * field, so the draft the club and its lawyer review shows them in full), and the detector that
  * reads them in the terms in force.
@@ -25,7 +25,7 @@ const PARAGRAPH_BEFORE: Record<Locale, string> = {
 
 const text = (...paragraphs: string[]): LegalDocumentBody => ({ sections: [{ heading: "3. Anularea", paragraphs }] });
 
-describe("§NNN the refusal grounds' words", () => {
+describe("§636 the refusal grounds' words", () => {
   it.each(["ro", "en"] as const)("%s: five grounds, joined by semicolons, from the conditions to the terms, no full stop", (locale) => {
     expect(refusalGrounds(locale)).toHaveLength(5);
     const clause = refusalGroundsClause(locale);
@@ -35,7 +35,7 @@ describe("§NNN the refusal grounds' words", () => {
   });
 });
 
-describe("§NNN the terms' template spells the grounds as words, §618's paragraph byte for byte", () => {
+describe("§636 the terms' template spells the grounds as words, §618's paragraph byte for byte", () => {
   it.each(["ro", "en"] as const)("%s: the last paragraph of §3 is §618's text and carries the detector's clause", (locale) => {
     const paragraph = BODY[locale].sections[2].paragraphs.at(-1);
     expect(paragraph).toBe(PARAGRAPH_BEFORE[locale]);
@@ -50,7 +50,7 @@ describe("§NNN the terms' template spells the grounds as words, §618's paragra
   });
 });
 
-describe("§NNN describesRefusal — whether the terms carry the club's right to refuse", () => {
+describe("§636 describesRefusal — whether the terms carry the club's right to refuse", () => {
   it("is on for the platform's terms in both languages, and off for the privacy notice", () => {
     expect(describesRefusal(termsRo)).toBe(true);
     expect(describesRefusal(termsEn)).toBe(true);
@@ -78,7 +78,7 @@ describe("§NNN describesRefusal — whether the terms carry the club's right to
   });
 });
 
-describe("§NNN the express box's second wording", () => {
+describe("§636 the express box's second wording", () => {
   it("names the refusal between the event's cancelling and the course, and is otherwise §421's words exactly", () => {
     expect(ro.Registration.terms.acceptWithRefusal).toBe(
       ro.Registration.terms.accept.replace("de către club, oprirea", "de către club, refuzarea sau anularea unei înscrieri de către club, oprirea"),

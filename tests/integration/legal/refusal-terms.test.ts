@@ -5,7 +5,7 @@ import { termsEn, termsRo } from "@/modules/legal-documents/templates/terms";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN (on §618) — the terms in force switch the form's express box and the fold's step on: only an
+ * §636 (on §618) — the terms in force switch the form's express box and the fold's step on: only an
  * approved version in force, and in every language. The backoffice's reading (`termsDescribeRefusal`,
  * for `/admin/tasks` and `/admin/legal`) and the public cache's (`cachedRefusalDisclosed`, for the
  * register page and the event page) answer the same, on this test's PGlite database.
@@ -51,7 +51,7 @@ beforeEach(async () => {
   await resetTables(db);
 });
 
-describe("§NNN the terms in force carry the club's right to refuse", () => {
+describe("§636 the terms in force carry the club's right to refuse", () => {
   it("is off with no terms, off with older ones, on with the platform's template, off again if the next version drops it", async () => {
     expect(await both()).toEqual([false, false]);
     await insertTerms(OLDER_TERMS, 1);

@@ -69,7 +69,7 @@ export type EventPageVisit = {
  */
 export type EventPagePreview = {
   door: PreviewDoor;
-  /** And whether the terms in force carry the club's right to refuse (§NNN), from the database too. */
+  /** And whether the terms in force carry the club's right to refuse (§636), from the database too. */
   steps: { deadlines: Deadlines; familyOpen: boolean; refusalOn: boolean };
 };
 

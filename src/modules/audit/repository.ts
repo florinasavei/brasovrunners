@@ -239,7 +239,7 @@ export type AuditAction =
    */
   | "event.waitlist_auto_offer_changed"
   /**
-   * «Arată public câți așteaptă» switched (§NNN): from and to, on every date a save changed it — the
+   * «Arată public câți așteaptă» switched (§634): from and to, on every date a save changed it — the
    * editor's own date and each date of a series the scoped save carried it to.
    */
   | "event.waitlist_count_public_changed"

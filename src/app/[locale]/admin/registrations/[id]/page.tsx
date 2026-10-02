@@ -134,7 +134,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   const dtInline = (value: Date | null) =>
     value ? formatDay(value, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" }) : null;
   /*
-    The deadline a live row waits on, in the timeline (§NNN): «Ține locul până» on a place held for the
+    The deadline a live row waits on, in the timeline (§635): «Ține locul până» on a place held for the
     declaration, an open offer or a family's reservation — past a declaration's deadline with the
     journey's kept words, since the place is released only when somebody wants it (§160) — and the
     first email's link on a row still waiting for its address. An ended row keeps «Rezervarea expiră».

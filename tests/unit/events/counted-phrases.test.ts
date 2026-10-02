@@ -184,7 +184,7 @@ describe("§346 confirmedPhrase — the start list's own header line", () => {
   });
 });
 
-describe("§NNN startListHeadline — the «Cine vine» title and line count everyone with a place", () => {
+describe("§632 startListHeadline — the «Cine vine» title and line count everyone with a place", () => {
   it("adds those completing their registration on a capped event, and says the split, in Romanian", () => {
     const say = translator("ro");
     // The owner's race of 2026-10-02.

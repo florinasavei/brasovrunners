@@ -151,9 +151,9 @@ export type ActionIconName =
   | "number"
   // The people on the waiting list (§626): the hourglass «Coada» wears on its panel (`panel-glyphs.ts`) and the queue's line title, beside the «Înscrieri» tab's badge.
   | "waiting"
-  // Those holding a place who still have to finish (§NNN): the pen the participant's own declaration step wears (`RegistrationSteps`), in the «Înscrieri» tab's pill.
+  // Those holding a place who still have to finish (§632): the pen the participant's own declaration step wears (`RegistrationSteps`), in the «Înscrieri» tab's pill.
   | "declaration"
-  // Those whose address is not confirmed yet (§NNN): the envelope with the tick the participant's own email step wears, in the «Înscrieri» tab's pill.
+  // Those whose address is not confirmed yet (§632): the envelope with the tick the participant's own email step wears, in the «Înscrieri» tab's pill.
   | "emailConfirmation"
   // The emergency details and the emergency sheet (§322): the first-aid case, never on the desk.
   | "emergency"

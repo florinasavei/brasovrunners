@@ -55,7 +55,7 @@ const NOT_A_BOX = new Set([
   "kitShirt",
   // «Locurile din lista de așteptare se alocă automat» (§615): a «Da»/«Nu» select of two answers, both valid, under the capacity.
   "waitlistAutoOffer",
-  // «Lista de așteptare» (§NNN): a native select of three answers, all valid, beside the places; its number reads `waitlistLimitSchema`.
+  // «Lista de așteptare» (§633): a native select of three answers, all valid, beside the places; its number reads `waitlistLimitSchema`.
   "waitlistMode",
   // «Condiții de participare» → «Informații medicale» (§557): a tick in «Program, regulament și declarație».
   "askHealthNote",
@@ -65,7 +65,7 @@ const NOT_A_BOX = new Set([
   "distanceEstimated",
   // «Lista de așteptare e publică» (§628): a tick under the public list's own.
   "waitlistPublic",
-  // «Arată public câți așteaptă» (§NNN): a tick under it, on by default.
+  // «Arată public câți așteaptă» (§634): a tick under it, on by default.
   "waitlistCountPublic",
 ]);
 
