@@ -28,7 +28,7 @@ import { ageRuleVariant, yearsPhrase } from "@/modules/registrations/domain/age"
 import { NO_WAITLIST, WAITLIST_FULL } from "@/modules/registrations/domain/waitlist";
 import { countryOptions } from "@/modules/registrations/countries";
 import { SECOND_ATTEMPT_FIELD } from "@/modules/registrations/fields";
-import { fieldId, REGISTRATION_FORM_ID, type RegistrationFormView } from "@/modules/registrations/form-view";
+import { fieldId, listOptInStatesKey, REGISTRATION_FORM_ID, type RegistrationFormView } from "@/modules/registrations/form-view";
 import { acceptanceAfterRefusal, REGISTRATION_FORM_FIELDS } from "@/modules/registrations/form-errors";
 import { countryName } from "@/modules/registrations/names";
 import { phoneCountryLabels, phoneCountryOrder } from "@/modules/registrations/phone";
@@ -1096,7 +1096,8 @@ export async function registrationForm({
                     defaultChecked={prefill("listOptIn") === "on"}
                     help={
                       listStatesOn
-                        ? t("listOptInStates", {
+                        ? // The waiting-list stage only where the list prints it (§628): never a promise the page breaks.
+                          t(listOptInStatesKey(view), {
                             pending: tEvent("startList.states.pending"),
                             waitlisted: tEvent("startList.states.waitlisted"),
                             confirmed: tEvent("startList.states.confirmed"),

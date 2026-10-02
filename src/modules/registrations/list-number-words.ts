@@ -3,7 +3,7 @@ import ro from "../../../messages/ro.json";
 
 /**
  * What the privacy notice's `{{participantListNumbers}}` becomes (§613): the public list's own
- * words for its «Nr.» column, quoted, in that language — „numărul de concurs” / “race number” —
+ * words for its «BIB» column, quoted, in that language — „numărul de concurs” / “race number” —
  * read from the catalogue the column's heading reads (`Event.startList.columnNumberFull`), so the
  * approved sentence and the list name the same thing. Outside a request, like
  * `list-state-words.ts`, for the legal pages, the declaration and the legal editor's token legend.

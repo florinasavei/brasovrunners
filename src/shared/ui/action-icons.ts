@@ -22,6 +22,7 @@ import FamilyRestroomIcon from "@mui/icons-material/FamilyRestroom";
 import ForwardToInboxIcon from "@mui/icons-material/ForwardToInbox";
 import GridOnIcon from "@mui/icons-material/GridOn";
 import HandshakeIcon from "@mui/icons-material/Handshake";
+import HourglassTopIcon from "@mui/icons-material/HourglassTop";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
 import ImageIcon from "@mui/icons-material/Image";
 import ListAltIcon from "@mui/icons-material/ListAlt";
@@ -146,6 +147,8 @@ export type ActionIconName =
   | "checkIn"
   | "undo"
   | "number"
+  // The people on the waiting list (§626): the hourglass «Coada» wears on its panel (`panel-glyphs.ts`) and the queue's line title, beside the «Înscrieri» tab's badge.
+  | "waiting"
   // The emergency details and the emergency sheet (§322): the first-aid case, never on the desk.
   | "emergency"
   // Everything held about one address (§322), the Administrator's page for an access request.
@@ -231,6 +234,7 @@ export const ACTION_ICONS: Record<ActionIconName, ComponentType<SvgIconProps>> =
   checkIn: HowToRegIcon,
   undo: UndoIcon,
   number: ConfirmationNumberIcon,
+  waiting: HourglassTopIcon,
   emergency: MedicalServicesIcon,
   personData: PersonSearchIcon,
   hold: LockIcon,

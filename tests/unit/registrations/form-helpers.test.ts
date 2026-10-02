@@ -22,7 +22,8 @@ import ro from "../../../messages/ro.json";
  * under a box. The database and the async parts not about the words are stood in for, the
  * `register-page-resting.test.ts` shape.
  */
-const state = vi.hoisted(() => ({ locale: "ro" as "ro" | "en", list: false, familyOpen: false }));
+/** `waitlist`: the event's «Lista de așteptare e publică» (§628), on unless a test says otherwise. */
+const state = vi.hoisted(() => ({ locale: "ro" as "ro" | "en", list: false, familyOpen: false, waitlist: true }));
 
 const EVENT = {
   id: "00000000-0000-4000-8000-000000000001",
@@ -62,7 +63,7 @@ vi.mock("@/db/client", () => ({
     ),
 }));
 vi.mock("@/modules/events/repository", () => ({
-  findPublishedEventBySlug: async () => ({ ...EVENT, participantListVisibility: state.list ? "NAMES" : "HIDDEN" }),
+  findPublishedEventBySlug: async () => ({ ...EVENT, participantListVisibility: state.list ? "NAMES" : "HIDDEN", waitlistPublic: state.waitlist }),
 }));
 vi.mock("@/modules/diagnostics/neon-budget", () => ({
   readNeonBudget: async () => ({ level: "green", budget: { spent: false }, meter: null }),
@@ -78,7 +79,7 @@ vi.mock("@/modules/public-cache/reads", () => ({
   cachedListStatesDisclosed: async () => state.list,
   cachedListSocialsDisclosed: async () => state.list,
   cachedPublicAvailability: async () => null,
-  cachedPublishedEventBySlug: async () => ({ ...EVENT, participantListVisibility: state.list ? "NAMES" : "HIDDEN" }),
+  cachedPublishedEventBySlug: async () => ({ ...EVENT, participantListVisibility: state.list ? "NAMES" : "HIDDEN", waitlistPublic: state.waitlist }),
 }));
 vi.mock("@/modules/registrations/form-draft", () => ({
   readFormDraft: async () => null,
@@ -178,6 +179,7 @@ const PLAIN_FIELD_HELPERS = ["f-emergencyContactName", "f-guardianName", "f-phon
 
 beforeEach(() => {
   state.list = false;
+  state.waitlist = true;
   state.familyOpen = false;
   forgetLastGood();
   vi.spyOn(console, "error").mockImplementation(() => {});
@@ -203,6 +205,27 @@ describe("§546 the registration form says only what a label cannot", () => {
       expect(shown).toEqual(
         [...PLAIN_FORM_HELP.filter((key) => key !== "privacyBanner" && key !== "socialsHelp"), "privacyBannerWithList", "socialsHelpList", "listOptInStates", "listSocialsHelp"].sort(),
       );
+    });
+  }
+
+  /*
+    §628 — the tick's caption never promises a stage the list will not print: on an event whose waiting
+    list is not public, it names the pending and the confirmed stages only.
+  */
+  for (const [locale, catalogue] of [["ro", ro], ["en", en]] as const) {
+    it(`names the waiting-list stage under «Vreau să apar» only where the waiting list is public (${locale})`, async () => {
+      state.locale = locale;
+      state.list = true;
+      const words = catalogue.Event.startList.states;
+      const fill = (sentence: string) =>
+        sentence.replace("{pending}", words.pending).replace("{waitlisted}", words.waitlisted).replace("{confirmed}", words.confirmed);
+      const on = textOf(await render());
+      expect(on).toContain(fill(catalogue.Registration.listOptInStates));
+      state.waitlist = false;
+      const off = textOf(await render());
+      expect(off).toContain(fill(catalogue.Registration.listOptInStatesNoWaitlist));
+      expect(off).not.toContain(fill(catalogue.Registration.listOptInStates));
+      expect(catalogue.Registration.listOptInStatesNoWaitlist).not.toContain("{waitlisted}");
     });
   }
 

@@ -637,9 +637,26 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
     registrationClosesAt: times.registrationClosesAt,
     declarationDocumentId: fields.declarationDocumentId,
     participantListVisibility: fields.participantListVisibility,
+    ...waitlistPublicColumn(fields),
     externalProvider: fields.externalProvider,
     externalRegistrationUrl: fields.externalRegistrationUrl,
   };
+}
+
+/**
+ * «Lista de așteptare e publică» (§628), as stored: never a truth the list cannot act on. The switch
+ * means something only beside a published list on an event that takes registrations here
+ * (`participantListVisibility = NAMES`, mode INTERNAL — the refusal in `assertCoherentRegistrationBlock`
+ * names the same pair), so anything else stores false, whatever was posted: a list switched off and
+ * on again later never finds the waiting list already published. Beside a published list, by the
+ * partners' discipline: a caller that did not post the box writes nothing, so no save publishes or
+ * hides the waiting list by not mentioning it. The editor always posts it.
+ */
+export function waitlistPublicColumn(
+  fields: Pick<EventFieldsInput, "participantListVisibility" | "registrationMode" | "waitlistPublic">,
+): { waitlistPublic?: boolean } {
+  if (fields.participantListVisibility !== "NAMES" || fields.registrationMode !== "INTERNAL") return { waitlistPublic: false };
+  return fields.waitlistPublic === undefined ? {} : { waitlistPublic: fields.waitlistPublic };
 }
 
 /**
@@ -1797,6 +1814,8 @@ const SERIES_COLUMNS = [
   "reminderHoursBefore",
   "declarationDocumentId",
   "participantListVisibility",
+  // Whether the published list also shows the waiting list (§628) travels with the list it qualifies.
+  "waitlistPublic",
   "externalProvider",
   "externalRegistrationUrl",
   // A recurring Strava club event and a Facebook event with several dates each keep one address
@@ -2462,6 +2481,7 @@ function blankEventRow(now: Date): EditableEvent {
     externalProvider: null,
     externalRegistrationUrl: null,
     participantListVisibility: "HIDDEN",
+    waitlistPublic: false,
     createdByStaffUserId: null,
     updatedByStaffUserId: null,
     createdAt: now,
@@ -3064,6 +3084,8 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     registrationClosesAt: source.registrationClosesAt,
     declarationDocumentId: source.declarationDocumentId,
     participantListVisibility: "HIDDEN" as const,
+    // A copy never inherits the list (AGENTS.md §10.10), so nor the waiting list's place on it (§628).
+    waitlistPublic: false,
     externalProvider: source.externalProvider,
     externalRegistrationUrl: source.externalRegistrationUrl,
     editorialStatus: "DRAFT" as const,

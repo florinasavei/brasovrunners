@@ -33,7 +33,7 @@ import { readEmergencyDetails } from "@/modules/registrations/admin-service";
 import { sealPersonLookup } from "@/modules/registrations/person-data";
 import { instagramProfileUrl } from "@/modules/registrations/social-links";
 import { suggestFreeBibNumbers } from "@/modules/registrations/bibs";
-import { journeyOf } from "@/modules/registrations/domain/journey";
+import { formSentAt, journeyOf } from "@/modules/registrations/domain/journey";
 import { countryName } from "@/modules/registrations/names";
 import SexAndShirtLine from "@/modules/registrations/ui/SexAndShirtLine";
 import { raceNumberOf } from "@/modules/registrations/domain/race-number";
@@ -872,7 +872,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           {tr("registrations.timeline")}
         </Typography>
         <Typography variant="body2">
-          {tr("registrations.submitted")}: {dt(registration.submittedAt)}
+          {tr("registrations.submitted")}: {dt(formSentAt(registration.submittedAt, registration.cycleStartedAt))}
         </Typography>
         {/*
           The two legal texts this cycle's form was sent under (§425), one line each and in the same

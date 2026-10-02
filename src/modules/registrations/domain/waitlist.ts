@@ -177,3 +177,24 @@ export function offerAfterCloseError(): DomainError {
 export function offerRefusalCode(error: unknown): typeof OFFER_AFTER_CLOSE | null {
   return error instanceof DomainError && error.code === "VALIDATION_ERROR" && error.fields.includes(OFFER_AFTER_CLOSE) ? OFFER_AFTER_CLOSE : null;
 }
+
+/**
+ * The order the queue panel lists the people waiting in (§627; the owner: the club hands places
+ * out by hand, in the order the forms were sent): a pure choice over `events.waitlist_auto_offer`,
+ * so the panel and its reader cannot disagree about it.
+ *
+ * - `SUBMITTED` — when the current form was sent: the journey's `formSentAt`, the later of
+ *   `submitted_at` and `privacy_acknowledged_at` (a restart rewrites only the second), the criterion
+ *   a club that hands places out by hand follows (`waitlist_auto_offer` false).
+ * - `LINE` — `waitlisted_at`, when the person joined the line: `lockOldestWaitlisted`'s own order,
+ *   the one every automatic offer follows (`waitlist_auto_offer` true), so the panel never shows an
+ *   order the allocator will not honour.
+ *
+ * Display only: the allocator, the capacity formula and every automatic offer keep `waitlisted_at`,
+ * and `kind` is in no condition (§30).
+ */
+export type QueueOrder = "SUBMITTED" | "LINE";
+
+export function queueOrderFor(waitlistAutoOffer: boolean): QueueOrder {
+  return waitlistAutoOffer ? "LINE" : "SUBMITTED";
+}

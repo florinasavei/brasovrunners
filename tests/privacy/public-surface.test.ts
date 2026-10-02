@@ -304,24 +304,24 @@ describe("§396 what the pending and waiting rows may contain", () => {
     const other = await createEvent();
     await createRegistration(other.id, { name: "Alt Eveniment", email: "elsewhere@example.org", status: "WAITLISTED", confirmedAt: undefined, waitlistedAt: at(1) });
 
-    const rows = await listPublicStartListOthers(db, event.id, 1);
+    const rows = await listPublicStartListOthers(db, event.id, 1, true);
     expect(rows).toEqual([
       { displayName: "Dan Oferit", clubName: null, group: "PENDING" },
       { displayName: "Carmen Pop", clubName: null, group: "PENDING" },
       { displayName: "Florin Unu", clubName: null, group: "WAITLISTED" },
       { displayName: "Elena Doi", clubName: null, group: "WAITLISTED" },
     ]);
-    expect(await countPublicStartListOthers(db, event.id, 1)).toEqual({ pending: 2, waitlisted: 2 });
+    expect(await countPublicStartListOthers(db, event.id, 1, true)).toEqual({ pending: 2, waitlisted: 2 });
 
     // A page is a slice of the same order.
-    expect((await listPublicStartListOthers(db, event.id, 1, { offset: 1, limit: 2 })).map((row) => row.displayName)).toEqual(["Carmen Pop", "Florin Unu"]);
+    expect((await listPublicStartListOthers(db, event.id, 1, true, { offset: 1, limit: 2 })).map((row) => row.displayName)).toEqual(["Carmen Pop", "Florin Unu"]);
   });
 
   it("returns the name, the club and the group — no state, no date, no identifier, no address", async () => {
     const event = await createEvent();
     await createRegistration(event.id, { name: "Carmen Pop", email: "carmen@example.org", status: "WAITLIST_OFFERED", confirmedAt: undefined, emailConfirmedAt: NOW });
 
-    const [row] = await listPublicStartListOthers(db, event.id, 1);
+    const [row] = await listPublicStartListOthers(db, event.id, 1, true);
     expect(Object.keys(row)).toEqual(["displayName", "clubName", "group"]);
     // The group, never the lifecycle's own word: an offer is the club's business.
     expect(row.group).toBe("PENDING");
@@ -367,8 +367,8 @@ describe("§421 the pending and waiting rows follow the notice each runner was g
     // A confirmed runner under the old notice is on the confirmed list, as that notice said.
     await createRegistration(event.id, { name: "Vechi Confirmat", email: "old-confirmed@example.org", privacyNoticeVersion: 1 });
 
-    expect((await listPublicStartListOthers(db, event.id, 2)).map((row) => row.displayName)).toEqual(["Nou Asteapta", "Mai Nou Lista"]);
-    expect(await countPublicStartListOthers(db, event.id, 2)).toEqual({ pending: 1, waitlisted: 1 });
+    expect((await listPublicStartListOthers(db, event.id, 2, true)).map((row) => row.displayName)).toEqual(["Nou Asteapta", "Mai Nou Lista"]);
+    expect(await countPublicStartListOthers(db, event.id, 2, true)).toEqual({ pending: 1, waitlisted: 1 });
     expect((await listPublicStartList(db, event.id)).map((row) => row.displayName)).toEqual(["Vechi Confirmat"]);
   });
 
@@ -383,6 +383,53 @@ describe("§421 the pending and waiting rows follow the notice each runner was g
     await approveNotice(4, { ro: statesBody, en: statesBody });
     await approveNotice(5, { ro: statesBody, en: statesBody });
     expect(await findFirstStatesNoticeVersion(db)).toBe(4);
+  });
+});
+
+/**
+ * §628 (narrowing §396) — «Lista de așteptare e publică»: the waiting list is a group the event's own
+ * switch adds, on top of the notice's gates. Off, the readers hold no waiting row and count none —
+ * the pending group is unchanged; on, they are exactly §396's and §421's rows.
+ */
+describe("§628 the waiting-list rows follow the event's own switch", () => {
+  const at = (hour: number) => new Date(Date.UTC(2026, 8, 3, hour));
+
+  async function waitingAndPending() {
+    const event = await createEvent();
+    await createRegistration(event.id, { name: "Carmen Pop", email: "carmen@example.org", status: "PENDING_DECLARATION", confirmedAt: undefined, emailConfirmedAt: at(3), privacyNoticeVersion: 2 });
+    await createRegistration(event.id, { name: "Florin Unu", email: "florin@example.org", status: "WAITLISTED", confirmedAt: undefined, waitlistedAt: at(5), privacyNoticeVersion: 2 });
+    // Under the older notice (§421): never a row, whatever the switch says.
+    await createRegistration(event.id, { name: "Vechi Lista", email: "old-waiting@example.org", status: "WAITLISTED", confirmedAt: undefined, waitlistedAt: at(1), privacyNoticeVersion: 1 });
+    // Did not tick: never a row either.
+    await createRegistration(event.id, { name: "Nu Vrea", email: "optout@example.org", status: "WAITLISTED", confirmedAt: undefined, waitlistedAt: at(2), listOptOut: true, privacyNoticeVersion: 2 });
+    return event;
+  }
+
+  it("off, reads and counts no waiting row — the pending one is there", async () => {
+    const event = await waitingAndPending();
+    const rows = await listPublicStartListOthers(db, event.id, 2, false);
+    expect(rows).toEqual([{ displayName: "Carmen Pop", clubName: null, group: "PENDING" }]);
+    expect(JSON.stringify(rows)).not.toContain("WAITLISTED");
+    expect(await countPublicStartListOthers(db, event.id, 2, false)).toEqual({ pending: 1, waitlisted: 0 });
+    // The same select list as ever: the switch widens nothing.
+    expect(Object.keys(rows[0])).toEqual(["displayName", "clubName", "group"]);
+  });
+
+  it("on, the ticked waiting row under a states-naming notice joins — and still nobody else", async () => {
+    const event = await waitingAndPending();
+    expect(await listPublicStartListOthers(db, event.id, 2, true)).toEqual([
+      { displayName: "Carmen Pop", clubName: null, group: "PENDING" },
+      { displayName: "Florin Unu", clubName: null, group: "WAITLISTED" },
+    ]);
+    expect(await countPublicStartListOthers(db, event.id, 2, true)).toEqual({ pending: 1, waitlisted: 1 });
+  });
+
+  it("a stored switch is read from the event row, and the public event query carries it", async () => {
+    const event = await createEvent({ participantListVisibility: "NAMES", editorialStatus: "PUBLISHED", publishedAt: NOW });
+    expect(event.waitlistPublic).toBe(false);
+    await db.insert(eventTranslations).values({ eventId: event.id, locale: "ro", slug: "lista", title: "Lista" });
+    await db.update(events).set({ waitlistPublic: true }).where(eq(events.id, event.id));
+    expect((await findPublishedEventBySlug(db, "ro", "lista"))?.waitlistPublic).toBe(true);
   });
 });
 
@@ -403,7 +450,7 @@ describe("§500 what the socials beside a name may contain", () => {
 
     const [confirmed] = await listPublicStartList(db, event.id);
     expect(Object.keys(confirmed)).toEqual(["displayName", "clubName"]);
-    const [waiting] = await listPublicStartListOthers(db, event.id, 1);
+    const [waiting] = await listPublicStartListOthers(db, event.id, 1, true);
     expect(Object.keys(waiting)).toEqual(["displayName", "clubName", "group"]);
   });
 
@@ -420,7 +467,7 @@ describe("§500 what the socials beside a name may contain", () => {
       { displayName: "Ana Pop", clubName: null, stravaUrl: strava, instagramHandle: "ana.pop" },
       { displayName: "Bogdan Ion", clubName: null, stravaUrl: null, instagramHandle: null },
     ]);
-    expect(await listPublicStartListOthers(db, event.id, 1, undefined, { socials: true })).toEqual([
+    expect(await listPublicStartListOthers(db, event.id, 1, true, undefined, { socials: true })).toEqual([
       { displayName: "Carmen Pop", clubName: null, group: "WAITLISTED", stravaUrl: null, instagramHandle: "carmen" },
       { displayName: "Dan Oferit", clubName: null, group: "WAITLISTED", stravaUrl: null, instagramHandle: null },
     ]);
@@ -452,7 +499,7 @@ describe("§613 what the race number on the public list may contain", () => {
     const [withSocials] = await listPublicStartList(db, event.id, undefined, { socials: true });
     expect(Object.keys(withSocials)).toEqual(["displayName", "clubName", "stravaUrl", "instagramHandle"]);
     // The others' query has no number to give at all (§548: none before the confirmation).
-    const [waiting] = await listPublicStartListOthers(db, event.id, 1);
+    const [waiting] = await listPublicStartListOthers(db, event.id, 1, true);
     expect(Object.keys(waiting)).toEqual(["displayName", "clubName", "group"]);
   });
 

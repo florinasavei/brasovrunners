@@ -100,7 +100,7 @@ async function register(eventId: string, name: string, row: Partial<typeof regis
 async function renderPanel(event: Awaited<ReturnType<typeof createEvent>>) {
   const element = await QueuePanel({
     db,
-    event: { id: event.id, capacity: event.capacity, waitlistCapacity: event.waitlistCapacity, timezone: event.timezone },
+    event: { id: event.id, capacity: event.capacity, waitlistCapacity: event.waitlistCapacity, timezone: event.timezone, waitlistAutoOffer: event.waitlistAutoOffer },
     waiting: 1,
     now: NOW,
   });
@@ -136,7 +136,7 @@ describe("§369 the queue panel's times are the event's own", () => {
       // The words around the times, from the real catalogue, so a wrong key fails here too.
       const words = (language === "ro" ? ro : en).Admin.queue;
       expect(html).toContain(words.offered.replace("{until}", inZone(OFFER_UNTIL, NEW_YORK)));
-      expect(html).toContain(words.since.replace("{when}", inZone(WAITLISTED_AT, NEW_YORK)));
+      expect(html).toContain(words.joined.replace("{when}", inZone(WAITLISTED_AT, NEW_YORK)));
       // 11:30 and 10:05 in New York; never the club's 18:30 and 17:05.
       expect(html).toContain("11:30");
       expect(html).toContain("10:05");

@@ -570,6 +570,13 @@ export async function listPublicStartListOthers<T extends Record<string, unknown
    * once confirmed, as before. Required, so no caller can forget it.
    */
   firstStatesNoticeVersion: number,
+  /**
+   * The event's «Lista de așteptare e publică» (§628, `events.waitlist_public`): false, and the
+   * waiting list is in no condition here — not a row, not a count — so an event that keeps it
+   * private never reads one. A narrowing on top of the notice's gates, never a way round them.
+   * Required, like the version above, so no caller can forget it.
+   */
+  includeWaitlisted: boolean,
   page?: { offset: number; limit: number },
   /** Only behind the notice's gate (§500): see `publicSocialColumns`. */
   options: { socials?: boolean } = {},
@@ -586,7 +593,7 @@ export async function listPublicStartListOthers<T extends Record<string, unknown
     .where(
       and(
         eq(registrations.eventId, eventId),
-        inArray(registrations.status, [...PENDING_LIST_STATUSES, ...WAITLISTED_LIST_STATUSES]),
+        inArray(registrations.status, publicOtherStatuses(includeWaitlisted)),
         eq(registrations.kind, "REAL"),
         eq(registrations.listOptOut, false),
         gte(registrations.privacyNoticeVersion, firstStatesNoticeVersion),
@@ -611,6 +618,8 @@ export async function countPublicStartListOthers<T extends Record<string, unknow
   eventId: string,
   /** As `listPublicStartListOthers` (§421): consent given under an older notice is not counted here. */
   firstStatesNoticeVersion: number,
+  /** As `listPublicStartListOthers` (§628): false, and the waiting list is not counted either — `waitlisted` is 0. */
+  includeWaitlisted: boolean,
 ): Promise<{ pending: number; waitlisted: number }> {
   const [row] = await db
     .select({
@@ -621,13 +630,22 @@ export async function countPublicStartListOthers<T extends Record<string, unknow
     .where(
       and(
         eq(registrations.eventId, eventId),
-        inArray(registrations.status, [...PENDING_LIST_STATUSES, ...WAITLISTED_LIST_STATUSES]),
+        inArray(registrations.status, publicOtherStatuses(includeWaitlisted)),
         eq(registrations.kind, "REAL"),
         eq(registrations.listOptOut, false),
         gte(registrations.privacyNoticeVersion, firstStatesNoticeVersion),
       ),
     );
   return { pending: Number(row?.pending ?? 0), waitlisted: Number(row?.waitlisted ?? 0) };
+}
+
+/**
+ * The states the two queries above may read (§396): the pending always, the waiting list only for
+ * an event whose «Lista de așteptare e publică» is on (§628). One list, so the page and its count
+ * cannot disagree about who is in it.
+ */
+function publicOtherStatuses(includeWaitlisted: boolean): RegistrationStatus[] {
+  return includeWaitlisted ? [...PENDING_LIST_STATUSES, ...WAITLISTED_LIST_STATUSES] : [...PENDING_LIST_STATUSES];
 }
 
 export type OccupiedCountsRow = {

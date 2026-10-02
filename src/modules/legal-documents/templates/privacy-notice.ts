@@ -40,7 +40,7 @@
  * at it; the withdrawal it names — deleting the socials, or leaving the list — clears the tick.
  *
  * `{{participantListNumbers}}` in section 4 (§613, amending §396) is the same two-in-one for the
- * race number beside a confirmed name: the list's own word for its «Nr.» column, quoted, filled from
+ * race number beside a confirmed name: the list's own word for its «BIB» column, quoted, filled from
  * the catalogue (`list-number-words.ts`), and the switch — the list shows the column only while the
  * notice in force, in every language, names it (`describesListNumbers`). Only the number a
  * confirmation drew (`bib_number`), never one held before it (§214, §548).

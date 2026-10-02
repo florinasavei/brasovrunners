@@ -23,14 +23,14 @@ function databaseUrl(): string {
 
 type Seeded = { eventId: string; registrationIds: string[]; participantIds: string[]; tag: string };
 
-async function seed(tag: string): Promise<Seeded> {
+async function seed(tag: string, options: { waiting?: boolean } = {}): Promise<Seeded> {
   const client = new pg.Client({ connectionString: databaseUrl() });
   await client.connect();
   try {
     const { rows: eventRows } = await client.query<{ id: string }>("SELECT event_id AS id FROM event_translations WHERE slug = $1 LIMIT 1", [FEATURED.slug]);
     const eventId = eventRows[0].id;
     const seeded: Seeded = { eventId, registrationIds: [], participantIds: [], tag };
-    const insert = async (who: string, promo: boolean, listOptOut: boolean) => {
+    const insert = async (who: string, promo: boolean, listOptOut: boolean, status = "CONFIRMED") => {
       const email = `promo-${who}-${tag}@test.invalid`;
       const name = `Oferte ${who} ${tag}`;
       const { rows: participantRows } = await client.query<{ id: string }>(
@@ -42,15 +42,17 @@ async function seed(tag: string): Promise<Seeded> {
         `INSERT INTO registrations (event_id, participant_id, status, locale, registered_name, display_name, source,
            privacy_notice_version, privacy_acknowledged_at, results_name_consent, results_consent_version, list_opt_out,
            promo_consent, promo_consent_at, confirmed_at)
-         VALUES ($1, $2, 'CONFIRMED', 'ro', $3, $3, 'PUBLIC', 1, now(), false, 1, $4, $5, $6, now())
+         VALUES ($1, $2, $7::registration_status, 'ro', $3, $3, 'PUBLIC', 1, now(), false, 1, $4, $5, $6, now())
          RETURNING id`,
-        [eventId, participantRows[0].id, name, listOptOut, promo, promo ? new Date().toISOString() : null],
+        [eventId, participantRows[0].id, name, listOptOut, promo, promo ? new Date().toISOString() : null, status],
       );
       seeded.participantIds.push(participantRows[0].id);
       seeded.registrationIds.push(rows[0].id);
     };
     await insert("da", true, false);
     await insert("nu", false, true);
+    // One person on the waiting list, for the summary pills' spec: a state the other two are not in.
+    if (options.waiting) await insert("lista", false, false, "WAITLISTED");
     return seeded;
   } finally {
     await client.end();
@@ -118,6 +120,73 @@ test.describe("§581 «Doar cu oferte și beneficii»: the list and its export",
       const at = header.split(",").indexOf("Public list & results");
       expect(header.split(",")[at - 1]).toBe("Socials on the public list");
       expect(lines.find((line) => line.includes(`Oferte da ${seeded.tag}`))?.split(",")[at]).toBe("Yes");
+    } finally {
+      await cleanup(seeded);
+    }
+  });
+});
+
+/**
+ * The summary strip's pills are filters (§626; the owner, 2026-10-01: «Și aceste pilluri trebuie
+ * să fie clickabile (filtre)»), and the panel's status select has to say what the pressed pill
+ * says. The pills are `next/link`s, so a press is a soft navigation and the page's client tree
+ * stays mounted — the select reads its `defaultValue` once, and without the form's key it kept
+ * saying «Toate» and the next «Filtrează» dropped the state the pill had set. Component tests
+ * render the strip alone and cannot see that; this walks it in the running app, at 320 px on the
+ * mobile project and on the laptop's, with the same three people in the database.
+ */
+test.describe("§626 the summary's pills filter the list, and the select agrees", () => {
+  test("a state pill narrows the rows, is pressed, the select follows, «Filtrează» keeps it, a second press clears it", async ({ page }) => {
+    test.setTimeout(120_000);
+    const seeded = await seed(`${test.info().project.name}-${Date.now().toString(36)}-p`, { waiting: true });
+    try {
+      await signIn(page, "Dev Administrator");
+      await page.goto(`/ro/admin/registrations?eventId=${seeded.eventId}&q=${encodeURIComponent(seeded.tag)}`);
+      await hydrated(page);
+      const main = page.locator("#main");
+      const rows = main.getByRole("link", { name: new RegExp(`^Deschide înscrierea lui Oferte (da|nu|lista) ${seeded.tag}$`) });
+      await expect(rows).toHaveCount(3);
+
+      const strip = main.getByTestId("registrations-summary-pills");
+      const waitingPill = strip.getByRole("link", { name: /^Pe lista de așteptare: \d+$/ });
+      const totalPill = strip.getByRole("link", { name: /^Înscrieri: \d+/ });
+      const stateInSelect = main.getByTestId("registrations-filters").locator('input[name="status"]');
+      await expect(totalPill).toHaveAttribute("aria-current", "page");
+      await expect(waitingPill).not.toHaveAttribute("aria-current", "page");
+      await expect(stateInSelect).toHaveValue("");
+
+      // 44 px to press (BR-REQ-041-01 criterion 6), and no sideways scroll for the page at 320 px.
+      const box = await waitingPill.boundingBox();
+      expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
+      const totalBox = await totalPill.boundingBox();
+      expect(totalBox?.height ?? 0).toBeGreaterThanOrEqual(44);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+
+      // A press narrows the list to that state, draws the pill pressed and moves the select with it.
+      await waitingPill.click();
+      await expect(page).toHaveURL(/[?&]status=WAITLISTED/);
+      // The search travels with it (the tag is letters, digits and hyphens: nothing to escape).
+      await expect(page).toHaveURL(new RegExp(`[?&]q=${seeded.tag}`));
+      await expect(rows).toHaveCount(1);
+      await expect(main.getByRole("link", { name: `Deschide înscrierea lui Oferte lista ${seeded.tag}`, exact: true })).toBeVisible();
+      await expect(waitingPill).toHaveAttribute("aria-current", "page");
+      await expect(totalPill).not.toHaveAttribute("aria-current", "page");
+      await expect(stateInSelect).toHaveValue("WAITLISTED");
+
+      // «Filtrează» sends what the select says, which is the pill's state: nothing is silently dropped.
+      await main.getByRole("button", { name: "Filtrează" }).click();
+      await expect(page).toHaveURL(/[?&]status=WAITLISTED/);
+      await hydrated(page);
+      await expect(rows).toHaveCount(1);
+      await expect(stateInSelect).toHaveValue("WAITLISTED");
+
+      // The same press again clears it: the three are back and the select says «Toate» again.
+      await waitingPill.click();
+      await expect(page).not.toHaveURL(/status=/);
+      await expect(rows).toHaveCount(3);
+      await expect(waitingPill).not.toHaveAttribute("aria-current", "page");
+      await expect(totalPill).toHaveAttribute("aria-current", "page");
+      await expect(stateInSelect).toHaveValue("");
     } finally {
       await cleanup(seeded);
     }

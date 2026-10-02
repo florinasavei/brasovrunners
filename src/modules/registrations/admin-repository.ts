@@ -20,6 +20,7 @@ import { alias } from "drizzle-orm/pg-core";
 import { familyEmailQueued, familyReservationHolds, offerAwaitingItsFirstEmail } from "./repository";
 import { promoListed } from "./sponsor-list";
 import { healthNoteShown } from "./domain/health-note";
+import type { QueueOrder } from "./domain/waitlist";
 
 /**
  * Read queries for the Administrator-only backoffice (AGENTS.md §15.8, §15.10; BR-REQ-060-01,
@@ -1242,14 +1243,26 @@ export async function listFamilyReservationsForEvent<T extends Record<string, un
     .orderBy(asc(registrations.submittedAt), asc(registrations.id));
 }
 
-export async function listQueueForEvent<T extends Record<string, unknown>>(db: Database<T>, eventId: string, now: Date) {
+/**
+ * The line the queue panel draws (§92), in the order it was asked to show (§627, `queueOrderFor`):
+ * `SUBMITTED` — when this cycle's form was sent, for an event whose places are handed out by hand —
+ * or `LINE` — `waitlisted_at`, the allocator's own. `id` breaks a tie either way. Display only: no
+ * offer is made from this order, and the allocator reads its own (`lockOldestWaitlisted`).
+ *
+ * `formSentAt` is `greatest(submitted_at, privacy_acknowledged_at)`, the journey's own rule
+ * (`domain/journey.ts`, `formSentAt`): a restart rewrites `privacy_acknowledged_at` and never
+ * `submitted_at`, so a person who sent the form again after their link lapsed is dated by the
+ * second form, not the first, and does not jump to the head of a hand-picked line.
+ */
+export async function listQueueForEvent<T extends Record<string, unknown>>(db: Database<T>, eventId: string, now: Date, order: QueueOrder) {
+  const formSentAt = sql<Date>`greatest(${registrations.submittedAt}, ${registrations.privacyAcknowledgedAt})`.mapWith(registrations.submittedAt);
   return db
     .select({
       id: registrations.id,
       status: registrations.status,
       kind: registrations.kind,
       registeredName: registrations.registeredName,
-      submittedAt: registrations.submittedAt,
+      formSentAt,
       waitlistedAt: registrations.waitlistedAt,
       holdExpiresAt: registrations.holdExpiresAt,
       offerEmailQueued: sql<boolean>`(${registrations.status} = 'WAITLIST_OFFERED' and ${offerAwaitingItsFirstEmail(now)})`,
@@ -1261,6 +1274,6 @@ export async function listQueueForEvent<T extends Record<string, unknown>>(db: D
         sql`${registrations.status} in ('PENDING_DECLARATION', 'WAITLISTED', 'WAITLIST_OFFERED', 'CONFIRMED')`,
       ),
     )
-    .orderBy(asc(registrations.waitlistedAt), asc(registrations.id));
+    .orderBy(asc(order === "SUBMITTED" ? formSentAt : registrations.waitlistedAt), asc(registrations.id));
 }
 

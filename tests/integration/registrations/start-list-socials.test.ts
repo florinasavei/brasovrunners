@@ -73,13 +73,15 @@ async function createEvent(): Promise<PublicEvent> {
       editorialStatus: "PUBLISHED",
       publishedAt: NOW,
       participantListVisibility: "NAMES",
+      // The waiting row below is on the list only with the event's own switch (§628).
+      waitlistPublic: true,
     })
     .returning();
   await db.insert(eventTranslations).values([
     { eventId: event.id, locale: "ro", slug: "cros-social", title: "Cros" },
     { eventId: event.id, locale: "en", slug: "cross-social", title: "Cross" },
   ]);
-  return { id: event.id, participantListVisibility: "NAMES", startsAt: event.startsAt, endsAt: event.endsAt } as unknown as PublicEvent;
+  return { id: event.id, participantListVisibility: "NAMES", waitlistPublic: true, startsAt: event.startsAt, endsAt: event.endsAt } as unknown as PublicEvent;
 }
 
 async function register(

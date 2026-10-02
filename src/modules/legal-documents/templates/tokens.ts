@@ -148,7 +148,7 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     example: inBoth((locale) => listSocialsClause(locale)),
   },
   // The privacy notice's marker for the race number beside a confirmed name (§613): filled with the
-  // column's own words, and the switch that lets the list show its «Nr.» column (`describesListNumbers`).
+  // column's own words, and the switch that lets the list show its «BIB» column (`describesListNumbers`).
   {
     token: `{{${LIST_NUMBERS_MERGE_FIELD}}}`,
     messageKey: LIST_NUMBERS_MERGE_FIELD,
