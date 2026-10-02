@@ -1393,6 +1393,7 @@ else's: they are marked **YOURS**. Everything else below is a value, not a place
 | Înscrieri | Culoarea numerelor de concurs (BIB) | the band colour on the printed bib; any of the palette's |
 | Înscrieri | Declarația pe care o semnează participantul | the approved **EVENT_DECLARATION** — the only entry in the list on production |
 | Înscrieri | Publică lista participanților | leave **off**. It goes on only once the privacy notice describes it |
+| Înscrieri | Arată public câți așteaptă | suggested for the race: **untick it**. The card, the page and each person on the list then learn only that a waiting list exists and how to join it — no count and no place in the line (the newest is always last, so a place would be the count); you still see every number in the backoffice (§NNN) |
 | Traseu și detalii | Distanță, Denivelare, Dificultate, Suprafață, Cost | as the race is |
 | Română / English | Titlu, Adresa paginii, Rezumat | both languages — the event cannot be published with either missing |
 | Română / English | Regulamentul evenimentului | the race rules. Every entrant ticks "am citit regulamentul", and the emails link here |

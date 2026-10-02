@@ -89,9 +89,9 @@ describe("§629 readWaitlistPosition — the line in queue order", () => {
     const third = await person(e.id, "WAITLISTED", at(30));
     const first = await person(e.id, "WAITLISTED", at(10));
     const second = await person(e.id, "WAITLISTED", at(20));
-    expect(await readWaitlistPosition(db, first.id)).toEqual({ position: 1, length: 3, autoOffer: true });
-    expect(await readWaitlistPosition(db, second.id)).toEqual({ position: 2, length: 3, autoOffer: true });
-    expect(await readWaitlistPosition(db, third.id)).toEqual({ position: 3, length: 3, autoOffer: true });
+    expect(await readWaitlistPosition(db, first.id)).toEqual({ position: 1, length: 3, autoOffer: true, countPublic: true });
+    expect(await readWaitlistPosition(db, second.id)).toEqual({ position: 2, length: 3, autoOffer: true, countPublic: true });
+    expect(await readWaitlistPosition(db, third.id)).toEqual({ position: 3, length: 3, autoOffer: true, countPublic: true });
   });
 
   it("breaks a tie on the same instant by id, as lockOldestWaitlisted does", async () => {
@@ -108,7 +108,7 @@ describe("§629 readWaitlistPosition — the line in queue order", () => {
     await person(e.id, "CANCELLED", at(2));
     await person(e.id, "EXPIRED", at(3));
     const waiting = await person(e.id, "WAITLISTED", at(4));
-    expect(await readWaitlistPosition(db, waiting.id)).toEqual({ position: 1, length: 1, autoOffer: true });
+    expect(await readWaitlistPosition(db, waiting.id)).toEqual({ position: 1, length: 1, autoOffer: true, countPublic: true });
   });
 
   it("counts a TEST row in the line like a real one: kind is in no condition (§12.6)", async () => {
@@ -116,7 +116,7 @@ describe("§629 readWaitlistPosition — the line in queue order", () => {
     await person(e.id, "WAITLISTED", at(1), { kind: "TEST" });
     const real = await person(e.id, "WAITLISTED", at(2));
     await person(e.id, "WAITLISTED", at(3), { kind: "TEST" });
-    expect(await readWaitlistPosition(db, real.id)).toEqual({ position: 2, length: 3, autoOffer: true });
+    expect(await readWaitlistPosition(db, real.id)).toEqual({ position: 2, length: 3, autoOffer: true, countPublic: true });
   });
 
   it("counts only its own event's line", async () => {
@@ -125,7 +125,7 @@ describe("§629 readWaitlistPosition — the line in queue order", () => {
     await person(other.id, "WAITLISTED", at(1));
     await person(other.id, "WAITLISTED", at(2));
     const mine = await person(e.id, "WAITLISTED", at(3));
-    expect(await readWaitlistPosition(db, mine.id)).toEqual({ position: 1, length: 1, autoOffer: true });
+    expect(await readWaitlistPosition(db, mine.id)).toEqual({ position: 1, length: 1, autoOffer: true, countPublic: true });
   });
 
   it("is null for a row that is not waiting, and for none at all", async () => {
@@ -148,18 +148,28 @@ describe("§629 readWaitlistPosition — the line in queue order", () => {
   it("carries the event's setting for automatic offers, as it stands now (§615)", async () => {
     const e = await event(false);
     const waiting = await person(e.id, "WAITLISTED", at(1));
-    expect(await readWaitlistPosition(db, waiting.id)).toEqual({ position: 1, length: 1, autoOffer: false });
+    expect(await readWaitlistPosition(db, waiting.id)).toEqual({ position: 1, length: 1, autoOffer: false, countPublic: true });
     await db.update(events).set({ waitlistAutoOffer: true }).where(eq(events.id, e.id));
     expect((await readWaitlistPosition(db, waiting.id))?.autoOffer).toBe(true);
+  });
+
+  it("§NNN carries «Arată public câți așteaptă» from the same read, as it stands now, and still counts the line", async () => {
+    const e = await event();
+    await person(e.id, "WAITLISTED", at(1));
+    const me = await person(e.id, "WAITLISTED", at(2));
+    expect((await readWaitlistPosition(db, me.id))?.countPublic).toBe(true);
+    await db.update(events).set({ waitlistCountPublic: false }).where(eq(events.id, e.id));
+    // The numbers are still read — the surfaces decide what to say — so nothing about the line changed.
+    expect(await readWaitlistPosition(db, me.id)).toEqual({ position: 2, length: 2, autoOffer: true, countPublic: false });
   });
 
   it("moves up when the person ahead leaves the line", async () => {
     const e = await event();
     const ahead = await person(e.id, "WAITLISTED", at(1));
     const me = await person(e.id, "WAITLISTED", at(2));
-    expect(await readWaitlistPosition(db, me.id)).toEqual({ position: 2, length: 2, autoOffer: true });
+    expect(await readWaitlistPosition(db, me.id)).toEqual({ position: 2, length: 2, autoOffer: true, countPublic: true });
     await db.update(registrations).set({ status: "WAITLIST_OFFERED" }).where(eq(registrations.id, ahead.id));
-    expect(await readWaitlistPosition(db, me.id)).toEqual({ position: 1, length: 1, autoOffer: true });
+    expect(await readWaitlistPosition(db, me.id)).toEqual({ position: 1, length: 1, autoOffer: true, countPublic: true });
   });
 });
 
@@ -171,7 +181,7 @@ describe("§629 the pages' reads carry the standing of a waiting row only", () =
     const confirmedToo = await person(e.id, "CONFIRMED", null, { participantId: mine.participantId });
     const own = (await findRegistrationById(db, mine.id))!;
     const people = await listManagedPeople(db, own, NOW);
-    expect(people.find((one) => one.id === mine.id)?.waitlistStanding).toEqual({ position: 2, length: 2, autoOffer: true });
+    expect(people.find((one) => one.id === mine.id)?.waitlistStanding).toEqual({ position: 2, length: 2, autoOffer: true, countPublic: true });
     expect(people.find((one) => one.id === confirmedToo.id)?.waitlistStanding).toBeNull();
   });
 
@@ -180,6 +190,6 @@ describe("§629 the pages' reads carry the standing of a waiting row only", () =
     await person(e.id, "WAITLISTED", at(1));
     const mine = await person(e.id, "WAITLISTED", at(2));
     const items = await listActiveRegistrationsForParticipant(db, mine.participantId, "ro", NOW);
-    expect(items.map((item) => item.waitlistStanding)).toEqual([{ position: 2, length: 2, autoOffer: false }]);
+    expect(items.map((item) => item.waitlistStanding)).toEqual([{ position: 2, length: 2, autoOffer: false, countPublic: true }]);
   });
 });

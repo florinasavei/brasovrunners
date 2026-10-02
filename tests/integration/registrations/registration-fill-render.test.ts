@@ -123,6 +123,8 @@ describe("§346 the fill line beside the register button, from the cached count"
       waitlisted: 0,
       confirmed: 12,
       occupied: 12,
+      // «Arată public câți așteaptă» (§NNN), off the same row: on by default.
+      waitlistCountPublic: true,
     });
   });
 
@@ -141,6 +143,8 @@ describe("§346 the fill line beside the register button, from the cached count"
       waitlisted: 1,
       confirmed: 2,
       occupied: 2,
+      // «Arată public câți așteaptă» (§NNN), off the same row: on by default.
+      waitlistCountPublic: true,
     });
   });
 
@@ -328,5 +332,160 @@ describe("§346 the fill line beside the register button, from the cached count"
     const html = await render("cros-plin");
     expect(html).not.toContain('data-testid="registration-fill"');
     expect(html).not.toMatch(/\d+ (de )?înscri/);
+  });
+});
+
+/**
+ * §NNN — «Arată public câți așteaptă» (the owner, 2026-10-02: «O să avem o bifă și dacă să afișăm sau
+ * nu câți sunt pe lista de așteptare»). Off, the card and the page say that a waiting list exists and how
+ * to join it, never how many are on it — in every state that showed the number; the room left in a
+ * capped list stays (a fact about the list's size, like the capacity). On, every sentence is today's.
+ * From a real database through the cached read and the door, as the page and the listing card read it.
+ */
+const { readRegistrationDoor } = await import("@/modules/events/ui/registration-door");
+const { cardRegistrationLine } = await import("@/modules/events/ui/CardRegistration");
+const { datedOrNull } = await import("@/modules/events/domain/dated");
+
+describe("§NNN the waiting list's count kept private, on the event page and the listing card", () => {
+  const say = (l: "ro" | "en") =>
+    createTranslator({ locale: l, messages: l === "ro" ? ro.Event : en.Event, namespace: undefined }) as unknown as (
+      key: string,
+      values?: Record<string, string | number>,
+    ) => string;
+  const hide = (id: string) => db.update(events).set({ waitlistCountPublic: false }).where(eq(events.id, id));
+  async function card(slug: string) {
+    const event = await findPublishedEventBySlug(db, locale, slug);
+    const dated = event && datedOrNull(event);
+    if (!event || !dated) throw new Error("the event did not publish");
+    return cardRegistrationLine(say(locale), locale, dated, NOW, await readRegistrationDoor(event, NOW));
+  }
+
+  it("the column is on by default: an event saved without it says the count as before", async () => {
+    const event = await openRace(2, 5);
+    expect(event.waitlistCountPublic).toBe(true);
+    expect((await findPublishedEventBySlug(db, "ro", "cros-plin"))?.waitlistCountPublic).toBe(true);
+    expect((await cachedPublicAvailability(event.id, NOW))?.waitlistCountPublic).toBe(true);
+  });
+
+  it("full, the list taking people: the thank-you lead without the number, the room line kept, in both languages", async () => {
+    const event = await openRace(2, 5);
+    await confirm(event.id, 2);
+    await confirm(event.id, 3, "WAITLISTED", 2);
+    const on = await render("cros-plin");
+    const cardOn = await card("cros-plin");
+    await hide(event.id);
+    const html = await render("cros-plin");
+    expect(html).toContain("Mulțumim! Toate cele 2 locuri s-au ocupat. Intră pe lista de așteptare.");
+    expect(html).not.toContain("așteaptă deja");
+    expect(html).not.toContain("3 pe lista de așteptare");
+    expect(html).not.toContain("Fii primul");
+    expect(html).toContain('data-testid="registration-fill">2 înscriși din 2 locuri</p>');
+    // The room a capped list has left stays: a fact about the event's size (§348), not a count of people.
+    expect(html).toContain("Mai sunt 2 locuri pe lista de așteptare");
+    expect(html).toContain(">Intră pe lista de așteptare<");
+    const cardOff = await card("cros-plin");
+    expect(cardOff.lead).toBe("Mulțumim! Toate cele 2 locuri s-au ocupat. Intră pe lista de așteptare.");
+    expect(cardOff.roomLine).toBe("Mai sunt 2 locuri pe lista de așteptare");
+    expect(cardOff.button?.label).toBe("Intră pe lista de așteptare");
+    // Only the number went: the same page with the switch on said today's lead.
+    expect(on).toContain("Mulțumim! Toate cele 2 locuri s-au ocupat — 3 așteaptă deja un loc.");
+    expect(cardOn.lead).toBe("Mulțumim! Toate cele 2 locuri s-au ocupat — 3 așteaptă deja un loc.");
+    locale = "en";
+    const enHtml = await render("full-cross");
+    expect(enHtml).toContain("Thank you! All 2 places are taken. Join the waiting list.");
+    expect(enHtml).not.toContain("already waiting");
+    expect(enHtml).toContain("2 places left on the waiting list");
+    expect((await card("full-cross")).lead).toBe("Thank you! All 2 places are taken. Join the waiting list.");
+  });
+
+  it("full with nobody waiting yet: never «Fii primul», which would say nought", async () => {
+    const event = await openRace(2, 5);
+    await confirm(event.id, 2);
+    await hide(event.id);
+    const html = await render("cros-plin");
+    expect(html).toContain("Mulțumim! Toate cele 2 locuri s-au ocupat. Intră pe lista de așteptare.");
+    expect(html).not.toContain("Fii primul");
+    locale = "en";
+    expect(await render("full-cross")).not.toContain("Be the first");
+  });
+
+  it("places given from the waiting list: the line and the door stay, the people waiting and the places kept for them go", async () => {
+    const event = await openRace(10);
+    await db.update(events).set({ waitlistAutoOffer: false }).where(eq(events.id, event.id));
+    await confirm(event.id, 4);
+    await confirm(event.id, 1, "WAITLIST_OFFERED", 4);
+    await confirm(event.id, 2, "WAITLISTED", 5);
+    await hide(event.id);
+    const html = await render("cros-plin");
+    expect(html).toContain('data-testid="registration-from-waitlist"');
+    expect(html).toContain("Locurile se dau din lista de așteptare");
+    // The offered place stays: it is a place, not a person waiting.
+    expect(html).toContain("1 loc oferit din lista de așteptare");
+    expect(html).not.toContain("2 pe lista de așteptare");
+    expect(html).not.toContain('data-testid="waitlist-waiting"');
+    // «2 locuri păstrate pentru lista de așteptare» would be exactly the people waiting while places are free.
+    expect(html).not.toContain("păstrate");
+    expect(html).toContain("5 înscriși din 10 locuri — 4 confirmați, 1 în curs de confirmare</p>");
+    const cardOff = await card("cros-plin");
+    expect(cardOff.detail).toBe("Locurile se dau din lista de așteptare · 1 loc oferit din lista de așteptare");
+    expect(cardOff.button?.label).toBe("Intră pe lista de așteptare");
+    locale = "en";
+    const enHtml = await render("full-cross");
+    expect(enHtml).toContain("Places are given from the waiting list");
+    expect(enHtml).not.toContain("2 on the waiting list");
+    expect(enHtml).not.toContain("kept for the waiting list");
+    expect((await card("full-cross")).detail).toBe("Places are given from the waiting list · 1 place offered from the waiting list");
+  });
+
+  it("the line full: the refusal and the places line without the people waiting", async () => {
+    const event = await openRace(2, 1);
+    await confirm(event.id, 2);
+    await confirm(event.id, 1, "WAITLISTED", 2);
+    await hide(event.id);
+    const html = await render("cros-plin");
+    expect(html).toContain("Locurile s-au ocupat și lista de așteptare e plină — ne pare rău.");
+    expect(html).toContain("2 înscriși din 2 locuri</p>");
+    expect(html).not.toContain("1 pe lista de așteptare");
+    expect((await card("cros-plin")).lead).toBe(ro.Event.cta.waitlistFull);
+    locale = "en";
+    expect(await render("full-cross")).not.toContain("1 on the waiting list");
+  });
+
+  it("full with places the line claims: those places stay on the line, a fact about places once none is free", async () => {
+    const event = await openRace(10);
+    await db.update(events).set({ waitlistAutoOffer: false }).where(eq(events.id, event.id));
+    await confirm(event.id, 6);
+    await confirm(event.id, 5, "WAITLISTED", 6);
+    await hide(event.id);
+    const html = await render("cros-plin");
+    expect(html).toContain("Mulțumim! Toate cele 10 locuri s-au ocupat. Intră pe lista de așteptare.");
+    expect(html).toContain("6 înscriși din 10 locuri — 4 locuri păstrate pentru lista de așteptare</p>");
+    expect(html).not.toContain("5 pe lista");
+    expect(html).not.toContain("5 așteaptă");
+  });
+
+  it("counts a waiting TEST row like a real one: the door still sends a newcomer to the line (§12.6)", async () => {
+    const event = await openRace(10);
+    await confirm(event.id, 4);
+    await confirm(event.id, 1, "WAITLISTED", 4);
+    await db.update(registrations).set({ kind: "TEST" }).where(eq(registrations.status, "WAITLISTED"));
+    await hide(event.id);
+    expect(await cachedPublicAvailability(event.id, NOW)).toMatchObject({ waitlisted: 1, waiting: 1, waitlistCountPublic: false });
+    const html = await render("cros-plin");
+    expect(html).toContain("Locurile se dau din lista de așteptare");
+    expect(html).not.toContain("1 pe lista de așteptare");
+  });
+
+  it("switched on again, every sentence is today's, byte for byte", async () => {
+    const event = await openRace(2, 5);
+    await confirm(event.id, 2);
+    await confirm(event.id, 3, "WAITLISTED", 2);
+    const before = await render("cros-plin");
+    const cardBefore = await card("cros-plin");
+    await hide(event.id);
+    expect(await render("cros-plin")).not.toBe(before);
+    await db.update(events).set({ waitlistCountPublic: true }).where(eq(events.id, event.id));
+    expect(await render("cros-plin")).toBe(before);
+    expect(await card("cros-plin")).toEqual(cardBefore);
   });
 });

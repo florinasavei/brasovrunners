@@ -896,6 +896,13 @@ export const eventFieldsSchema = z
      * (`service.ts#waitlistPublicColumn`).
      */
     waitlistPublic: z.boolean().optional(),
+    /**
+     * «Arată public câți așteaptă» (§NNN): whether the card, the page and each person waiting are
+     * told how many wait. Optional, and absent means "this caller is not editing it", the discipline
+     * `kitShirt` follows — so no save hides or shows the count by not mentioning it. Independent of
+     * the list above: it hides a number, never a name, and is stored whatever the list says.
+     */
+    waitlistCountPublic: z.boolean().optional(),
     externalProvider: optionalText(120),
     externalRegistrationUrl: httpsUrl("an external registration link must start with https://"),
   })

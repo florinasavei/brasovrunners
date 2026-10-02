@@ -65,6 +65,8 @@ const NOT_A_BOX = new Set([
   "distanceEstimated",
   // «Lista de așteptare e publică» (§628): a tick under the public list's own.
   "waitlistPublic",
+  // «Arată public câți așteaptă» (§NNN): a tick under it, on by default.
+  "waitlistCountPublic",
 ]);
 
 describe("the event form's constraints are the schema's (§315)", () => {

@@ -246,7 +246,7 @@ export type RegistrationFormInput = {
    */
   fullNotice: typeof WAITLIST_FULL | typeof NO_WAITLIST | "WAITLIST" | null;
   /** For `WAITLIST`: the event's places and how many already wait, for the thank-you lead (§587). */
-  fullCounts: { capacity: number; waiting: number } | null;
+  fullCounts: { capacity: number; waiting: number | null } | null;
   /** For `WAITLIST`: the club's offer window («Termene», `offerHours`, §377); null says no offer sentence. */
   offerHours: number | null;
   /** The family sitting's next form (§519): who was sent so far, above the form. */

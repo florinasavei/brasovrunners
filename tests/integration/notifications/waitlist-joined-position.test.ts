@@ -380,3 +380,130 @@ describe("§629 the registration's own page says where the person stands, and ho
     expect(html).not.toContain(other.registration.registeredName);
   });
 });
+
+/**
+ * §NNN — «Arată public câți așteaptă» off (the owner, 2026-10-02: «să nu le zicem oamenilor al câtelea
+ * sunt în listă»): the waiting person's own sentences say no length of the line and no place in it, in
+ * either reading — the newest is last, so their place would be the length; only that they wait, and the
+ * setting's sentence. «Ești singura persoană» says one, so it is not said either. The email says what the page says.
+ */
+describe("§NNN the count kept private: the person's own page, «Toate înscrierile mele» and the email", () => {
+  async function manage(registrationId: string, participantId: string) {
+    const { secret } = await issueActionToken(db, {
+      purpose: "MANAGE_REGISTRATION",
+      participantId,
+      registrationId,
+      expiresAt: new Date("2026-10-11T07:00:00.000Z"),
+      now: NOW,
+    });
+    const element = (await ManageRegistrationPage({ params: Promise.resolve({ locale, token: secret }), searchParams: Promise.resolve({}) })) as ReactElement;
+    return renderToStaticMarkup(element);
+  }
+  async function mine(participantId: string) {
+    const { secret } = await issueActionToken(db, {
+      purpose: "MANAGE_PROFILE",
+      participantId,
+      registrationId: null,
+      expiresAt: new Date("2026-10-11T07:00:00.000Z"),
+      now: NOW,
+    });
+    const element = (await MyRegistrationsPage({ params: Promise.resolve({ locale, token: secret }), searchParams: Promise.resolve({}) })) as ReactElement;
+    const stream = await renderToReadableStream(withClientWords(element, locale));
+    await stream.allReady;
+    return (await new Response(stream).text()).replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
+  }
+  const hidden = () => db.update(events).set({ waitlistCountPublic: false }).where(eq(events.id, eventId));
+
+  it("with offers in order, says no place and no «din N», on both pages and in the email, in both languages", async () => {
+    await hidden();
+    await person("WAITLISTED", at(1));
+    await person("WAITLISTED", at(2));
+    // The newest is last: their place would be the line's length, so no place is said.
+    const me = await person("WAITLISTED", at(3));
+    const page = await manage(me.registration.id, me.participant.id);
+    expect(page).toContain("Ești pe lista de așteptare. Locurile eliberate se oferă în ordine.");
+    expect(page).not.toContain("locul 3");
+    expect(page).not.toContain("din 3");
+    const list = await mine(me.participant.id);
+    expect(list).toContain("Ești pe lista de așteptare. Locurile eliberate se oferă în ordine.");
+    expect(list).not.toContain("locul 3");
+    const message = await renderOutboxMessage(row("WAITLIST_JOINED", me.registration.id, me.participant.id), db, NOW);
+    expect(message.text).toContain("Când am trimis acest email, erai pe lista de așteptare; locurile eliberate se oferă în ordine.");
+    expect(message.text).toContain("When we sent this email, you were on the waiting list; freed places are offered in order.");
+    expect(message.html).toContain("erai pe lista de așteptare; locurile eliberate se oferă în ordine.");
+    expect(message.text).not.toContain("locul 3");
+    expect(message.text).not.toContain("number 3");
+    expect(message.text).not.toContain("din 3");
+    expect(message.text).not.toContain("of 3");
+    locale = "en";
+    expect(await manage(me.registration.id, me.participant.id)).toContain("You are on the waiting list. Freed places are offered in order.");
+    expect(await mine(me.participant.id)).toContain("You are on the waiting list. Freed places are offered in order.");
+  });
+
+  it("with the club choosing, says no position and no count of others, on both pages and in the email", async () => {
+    await hidden();
+    await db.update(events).set({ waitlistAutoOffer: false }).where(eq(events.id, eventId));
+    await person("WAITLISTED", at(1));
+    const me = await person("WAITLISTED", at(2));
+    await person("WAITLISTED", at(3));
+    const page = await manage(me.registration.id, me.participant.id);
+    expect(page).toContain("Ești pe lista de așteptare. Clubul alege cui oferă un loc eliberat.");
+    expect(page).not.toContain("împreună cu");
+    expect(page).not.toContain("locul 2");
+    expect(await mine(me.participant.id)).toContain("Ești pe lista de așteptare. Clubul alege cui oferă un loc eliberat.");
+    const message = await renderOutboxMessage(row("WAITLIST_JOINED", me.registration.id, me.participant.id), db, NOW);
+    expect(message.text).toContain("Când am trimis acest email, erai pe lista de așteptare; clubul alege cui oferă un loc eliberat.");
+    expect(message.text).toContain("When we sent this email, you were on the waiting list; the club chooses whom to offer a freed place.");
+    expect(message.text).not.toContain("alte 2");
+    expect(message.text).not.toContain("2 other");
+    locale = "en";
+    const en = await manage(me.registration.id, me.participant.id);
+    expect(en).toContain("You are on the waiting list. The club chooses whom to offer a freed place.");
+    expect(en).not.toContain("with 2 others");
+  });
+
+  it("alone in the line, never says «singura persoană» nor «locul 1» — each is a count of one", async () => {
+    await hidden();
+    const me = await person("WAITLISTED", at(1));
+    const page = await manage(me.registration.id, me.participant.id);
+    expect(page).toContain("Ești pe lista de așteptare. Locurile eliberate se oferă în ordine.");
+    expect(page).not.toContain("singura persoană");
+    expect(page).not.toContain("locul 1");
+    const auto = await renderOutboxMessage(row("WAITLIST_JOINED", me.registration.id, me.participant.id), db, NOW);
+    expect(auto.text).toContain("Când am trimis acest email, erai pe lista de așteptare; locurile eliberate se oferă în ordine.");
+    expect(auto.text).not.toContain("locul 1");
+    expect(auto.text).not.toContain("singura persoană");
+    expect(auto.text).not.toContain("only person");
+    await db.update(events).set({ waitlistAutoOffer: false }).where(eq(events.id, eventId));
+    expect(await manage(me.registration.id, me.participant.id)).toContain("Ești pe lista de așteptare. Clubul alege cui oferă un loc eliberat.");
+    const club = await renderOutboxMessage(row("WAITLIST_JOINED", me.registration.id, me.participant.id), db, NOW);
+    expect(club.text).toContain("Când am trimis acest email, erai pe lista de așteptare; clubul alege cui oferă un loc eliberat.");
+    expect(club.text).not.toContain("singura persoană");
+  });
+
+  it("says the same behind a TEST row as behind a real one (§12.6)", async () => {
+    await hidden();
+    const test = await person("WAITLISTED", at(1));
+    await db.update(registrations).set({ kind: "TEST" }).where(eq(registrations.id, test.registration.id));
+    const me = await person("WAITLISTED", at(2));
+    const page = await manage(me.registration.id, me.participant.id);
+    expect(page).toContain("Ești pe lista de așteptare. Locurile eliberate se oferă în ordine.");
+    expect(page).not.toContain("locul 2");
+    const message = await renderOutboxMessage(row("WAITLIST_JOINED", me.registration.id, me.participant.id), db, NOW);
+    expect(message.text).toContain("erai pe lista de așteptare; locurile eliberate se oferă în ordine.");
+    expect(message.text).not.toContain("locul 2");
+  });
+
+  it("switched on again, says today's sentences byte for byte", async () => {
+    await hidden();
+    await db.update(events).set({ waitlistCountPublic: true }).where(eq(events.id, eventId));
+    await person("WAITLISTED", at(1));
+    const me = await person("WAITLISTED", at(2));
+    expect(await manage(me.registration.id, me.participant.id)).toContain(
+      "Ești pe locul 2 din 2 persoane de pe lista de așteptare. Locurile eliberate se oferă în ordine.",
+    );
+    expect((await renderOutboxMessage(row("WAITLIST_JOINED", me.registration.id, me.participant.id), db, NOW)).text).toContain(
+      "Când am trimis acest email, erai pe locul 2 din 2.",
+    );
+  });
+});

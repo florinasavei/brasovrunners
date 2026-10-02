@@ -57,10 +57,12 @@ export function waitlistRoomPhrase(say: Say, locale: string, room: number): stri
  * "Mulțumim! Toate cele 50 de locuri s-au ocupat — 3 așteaptă deja un loc." (§587, amending
  * §348): the full event's thank-you lead, from the event's size and the line's length the door
  * already counted; an empty line says «Fii primul pe lista de așteptare.» instead of a nought.
+ * `waiting` null is a count the club keeps private (§NNN): «… s-au ocupat. Intră pe lista de
+ * așteptare.», which says neither the number nor that nobody waits.
  */
-export function fullThanksPhrase(say: Say, locale: string, capacity: number, waiting: number): string {
-  const key = waiting > 0 ? "cta.fullThanks" : "cta.fullThanksFirst";
-  return say(`${key}.${countForm(capacity, locale)}`, { capacity, waiting });
+export function fullThanksPhrase(say: Say, locale: string, capacity: number, waiting: number | null): string {
+  const key = waiting === null ? "cta.fullThanksJoin" : waiting > 0 ? "cta.fullThanks" : "cta.fullThanksFirst";
+  return say(`${key}.${countForm(capacity, locale)}`, waiting === null ? { capacity } : { capacity, waiting });
 }
 
 /** "3 pe lista de așteptare" (§587, amending §346): beside the free places, once anybody waits. */

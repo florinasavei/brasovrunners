@@ -358,6 +358,10 @@ function eventFieldsFrom(form: FormData) {
     // «Lista de așteptare e publică» (§628), a checkbox beside it, read the same safe way: absent
     // is off. The service keeps it off anyway unless the list above is on (`waitlistPublicColumn`).
     waitlistPublic: form.get("event.waitlistPublic") === "on",
+    // «Arată public câți așteaptă» (§NNN): a checkbox read only when the form carried its marker, as
+    // the kit's (§554) — on by default, so a form without the box must read "not editing it", never "hidden".
+    waitlistCountPublic:
+      form.get("event.waitlistCountPublic.present") === "1" ? form.get("event.waitlistCountPublic") === "on" : undefined,
     externalProvider: value("externalProvider"),
     externalRegistrationUrl: value("externalRegistrationUrl"),
   };

@@ -726,6 +726,12 @@ type NightReminderLine = {
   after: boolean;
 };
 
+/**
+ * Where the person stood in the line when `WAITLIST_JOINED` was rendered (§629): the position, the line's
+ * length, whether offers go in order, and whether the club says the count publicly (§NNN; absent is on).
+ */
+type WaitlistStandingLine = { position: number; length: number; autoOffer: boolean; countPublic?: boolean };
+
 /** What every template needs beyond the locale — never a rendered body, never a token. */
 export type TemplateData = {
   participantName: string;
@@ -1066,8 +1072,10 @@ export type TemplateData = {
    * render time from `readWaitlistPosition` — the same reader the registration's own page uses — and
    * worded as of that moment, since the line moves after the email is read. Absent when the
    * registration is no longer waiting or its event is cancelled, or for any other message. Numbers only; nobody else is named.
+   * With the event's «Arată public câți așteaptă» off (`countPublic: false`, §NNN), no length: the place
+   * alone with offers in order, else only that the person was on the list and that the club chooses.
    */
-  waitlistStanding?: { position: number; length: number; autoOffer: boolean };
+  waitlistStanding?: WaitlistStandingLine;
   /**
    * A cancellation (§547): whether the person was on the waiting list rather than holding a place,
    * from the state the registration left (the row's payload), and who else the address still holds
@@ -1895,7 +1903,7 @@ const T = {
     familyToSign: (names: readonly string[]) =>
       `Pe această adresă mai așteaptă semnătura declarațiile pentru: ${names.join(", ")}. Le poți semna pe toate din acest link, una după alta: câte o persoană la fiecare pas.`,
     /** `WAITLIST_JOINED`'s one added sentence (§629): the place in the line, as of the moment the message was rendered. */
-    waitlistPosition: (standing: { position: number; length: number; autoOffer: boolean }) => waitlistPositionLine("ro", standing),
+    waitlistPosition: (standing: WaitlistStandingLine) => waitlistPositionLine("ro", standing),
     // A cancellation (§547): what the cancelled person held, and who else the address still holds.
     cancelledReleased: (name: string, fromWaitlist: boolean) =>
       fromWaitlist ? `${name || "Persoana"} nu mai este pe lista de așteptare.` : "Locul a fost eliberat.",
@@ -2433,7 +2441,7 @@ const T = {
     /** After the body of a declaration request, on an address with more to sign (§471): the one link signs them all. */
     familyToSign: (names: readonly string[]) =>
       `The declarations of ${names.join(", ")} on this address are waiting for a signature too. You can sign them all from this link, one after the other: one person per step.`,
-    waitlistPosition: (standing: { position: number; length: number; autoOffer: boolean }) => waitlistPositionLine("en", standing),
+    waitlistPosition: (standing: WaitlistStandingLine) => waitlistPositionLine("en", standing),
     cancelledReleased: (name: string, fromWaitlist: boolean) =>
       fromWaitlist ? `${name || "The person"} is no longer on the waiting list.` : "The place has been released.",
     verifyCoversFamily: (others: ReadonlyArray<{ name: string; state: FamilyEarlierState }>) =>
@@ -2559,8 +2567,23 @@ function participantsPhrase(locale: EmailLocale, count: number): string {
  *
  * Counted words through `countForm`, no ICU plural.
  */
-function waitlistPositionLine(locale: EmailLocale, standing: { position: number; length: number; autoOffer: boolean }): string {
+function waitlistPositionLine(locale: EmailLocale, standing: WaitlistStandingLine): string {
   const ro = locale === "ro";
+  /*
+    The count kept private (§NNN): what the registration's page says at this moment, in the email's
+    register — that they were on the list, and the setting's sentence. No position in either reading:
+    the person who has just joined is last, so their place is the line's length. Never «singura persoană» either.
+  */
+  if (standing.countPublic === false) {
+    if (standing.autoOffer) {
+      return ro
+        ? "Când am trimis acest email, erai pe lista de așteptare; locurile eliberate se oferă în ordine."
+        : "When we sent this email, you were on the waiting list; freed places are offered in order.";
+    }
+    return ro
+      ? "Când am trimis acest email, erai pe lista de așteptare; clubul alege cui oferă un loc eliberat."
+      : "When we sent this email, you were on the waiting list; the club chooses whom to offer a freed place.";
+  }
   const others = standing.length - 1;
   // Alone in the line, in either reading of the setting (the page's wording too): never «locul 1 din 1».
   if (others <= 0) {
