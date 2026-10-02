@@ -29,7 +29,7 @@ export type EmailTransport = (typeof EMAIL_TRANSPORTS)[number];
  * - **announcements** (C) — what the organizers decide to say: the update notice, the
  *   cancellation, the organizer's message, "registration is open". Rare, and paced.
  * - **confirmations** — the answers to a runner's own step: confirmed, on the waiting list,
- *   cancelled, an offer that lapsed, a number given, the signed copy.
+ *   cancelled, an offer that lapsed, a held place that lapsed (§638), a number given, the signed copy.
  * - **club** (D) — mail to the club's own mailboxes: the club's copies, the declaration archive,
  *   "somebody confirmed", a colleague's invitation. To people who know the sender: Gmail's case.
  * - **newsletter** (E) — the newsletter's own mail (§445): the subscription's confirmation link,
@@ -54,6 +54,8 @@ export const EMAIL_GROUP_OF: Readonly<Record<EmailMessageType, EmailGroup>> = {
   WAITLIST_JOINED: "confirmations",
   REGISTRATION_CANCELLED: "confirmations",
   WAITLIST_OFFER_EXPIRED: "confirmations",
+  // A held place that lapsed to somebody else (§638): the answer to the runner's own unsigned hold, as a cancellation is.
+  DECLARATION_HOLD_EXPIRED: "confirmations",
   REGISTRATION_STATE_NOTICE: "confirmations",
   BIB_ASSIGNED: "confirmations",
   DECLARATION_SIGNED: "confirmations",
@@ -70,6 +72,8 @@ export const EMAIL_GROUP_OF: Readonly<Record<EmailMessageType, EmailGroup>> = {
   STAFF_INVITATION: "club",
   // A member's invitation (§524) takes the colleague's road: one message, from the club, to a person it knows.
   MEMBER_INVITATION: "club",
+  // The Administrators' notice of a moved legal template (§639): to the club's own people, as the invitation.
+  LEGAL_TEMPLATES_CHANGED: "club",
   NEWSLETTER_CONFIRM: "newsletter",
   NEWSLETTER: "newsletter",
   NEW_EVENT_ALERT: "newsletter",

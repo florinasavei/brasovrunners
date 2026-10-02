@@ -10,6 +10,7 @@ import { enqueueEmail } from "@/modules/notifications/outbox";
 import { releaseLegacyHeldNumbers } from "./bibs";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { queueNewEventAlerts } from "@/modules/newsletter/service";
+import { announceLegalTemplateChanges, legalFactsInForce } from "@/modules/legal-documents/templates-notice";
 import { purgeLapsedFamilyEntries } from "./family-entries";
 import { purgeLapsedFamilySittings } from "./family-sitting";
 import { queueRegistrationOpenedMessages } from "./interest";
@@ -55,6 +56,11 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
   legacyNumbersKept: number;
   /** Another person's kept forms nobody confirmed in time, deleted this run (§446). */
   familyEntriesPurged: number;
+  /**
+   * «Șabloanele textelor legale s-au schimbat» queued this run (§639): one per Administrator and
+   * Superadministrator when a release moved a legal template, zero on every other run.
+   */
+  legalTemplatesNoticesQueued: number;
   /**
    * The failures the very next run could repair — an event's queue work, a reminder, a
    * confirmation, an announcement, a retention step — as opposed to the tidying ones (pictures,
@@ -233,6 +239,21 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
   }
 
   /**
+   * The Administrators' notice of a moved legal template (§639): at most one read of the legal texts'
+   * overview an hour, whatever the pinger does (§479), and one email per Administrator and
+   * Superadministrator per change of the templates. Caught on its own and never retryable: a template
+   * that cannot be read is logged by its kind — never the error's text — and counted, and the job's
+   * other work goes on; the step itself tries again at its next hour, not at the next ping.
+   */
+  let legalTemplatesNoticesQueued = 0;
+  try {
+    legalTemplatesNoticesQueued = (await announceLegalTemplateChanges(db, () => legalFactsInForce(db), now)).queued;
+  } catch (error) {
+    console.error("[legal-templates] the check of the legal templates failed", failureKind(error));
+    errorCount += 1;
+  }
+
+  /**
    * The retention sweep, last and in its own try/catch.
    *
    * It rides on this job because it needs no scheduler of its own. Last, because expiring a
@@ -310,6 +331,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
         confirmationsQueued +
         interestsNotified +
         eventAlertsQueued +
+        legalTemplatesNoticesQueued +
         occurrencesCreated,
       errorCount,
       // The retention steps that failed, by name (§322) — the one error this run writes down,
@@ -329,6 +351,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
     interestsNotified,
     legacyNumbersKept,
     familyEntriesPurged,
+    legalTemplatesNoticesQueued,
     retryableErrorCount,
   };
 }

@@ -23,7 +23,15 @@ const DATA: TemplateData = {
 };
 
 // A member's invitation (§524) says what the account keeps in its own body, as the colleague's does.
-const CLUB_MAIL: readonly EmailMessageType[] = ["DECLARATION_ARCHIVE", "GROUP_RUN_DECLARATION_ARCHIVE", "CLUB_CONFIRMATION_NOTICE", "STAFF_INVITATION", "MEMBER_INVITATION"];
+// The Administrators' notice of a moved legal template (§639) is about nobody's data either.
+const CLUB_MAIL: readonly EmailMessageType[] = [
+  "DECLARATION_ARCHIVE",
+  "GROUP_RUN_DECLARATION_ARCHIVE",
+  "CLUB_CONFIRMATION_NOTICE",
+  "STAFF_INVITATION",
+  "MEMBER_INVITATION",
+  "LEGAL_TEMPLATES_CHANGED",
+];
 
 const noticeUrl = (locale: "ro" | "en") => `${env.APP_BASE_URL}${getPathname({ locale, href: "/legal/privacy" })}`;
 
