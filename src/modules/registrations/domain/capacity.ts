@@ -35,11 +35,24 @@ export type OccupiedCounts = {
    * as it does for a fresh address. Optional, like `familyReservations`.
    */
   familyPlaceHolds?: number;
+  /**
+   * Live invitations (§NNN): a place the club keeps for a named person it emailed, from the send
+   * until the invitation's deadline, its acceptance or its withdrawal — counted like a family's
+   * reservation, and like it never released for somebody waiting before its deadline (the club's
+   * choice). Not one sent «În afara locurilor» (§643). At the acceptance the count moves from this
+   * bucket to the registration's declaration hold in the same transaction. Optional, like the two above.
+   */
+  invitationHolds?: number;
 };
 
 export function computeOccupied(counts: OccupiedCounts): number {
   return (
-    counts.confirmed + counts.pendingDeclarationHolds + counts.unexpiredWaitlistOfferedHolds + (counts.familyReservations ?? 0) + (counts.familyPlaceHolds ?? 0)
+    counts.confirmed +
+    counts.pendingDeclarationHolds +
+    counts.unexpiredWaitlistOfferedHolds +
+    (counts.familyReservations ?? 0) +
+    (counts.familyPlaceHolds ?? 0) +
+    (counts.invitationHolds ?? 0)
   );
 }
 
@@ -103,9 +116,11 @@ export type PlacesTaken = {
   declaration: number;
   offered: number;
   family: number;
+  /** Kept for the people the club invited (§NNN). */
+  invited: number;
 };
 
-const PLACES_TAKEN_KEYS = ["capacity", "confirmed", "declaration", "offered", "family"] as const satisfies ReadonlyArray<keyof PlacesTaken>;
+const PLACES_TAKEN_KEYS = ["capacity", "confirmed", "declaration", "offered", "family", "invited"] as const satisfies ReadonlyArray<keyof PlacesTaken>;
 
 export class NoFreePlaceError extends DomainError {
   readonly places: PlacesTaken;
@@ -118,7 +133,7 @@ export class NoFreePlaceError extends DomainError {
   }
 }
 
-/** Who holds an event's places, as the five numbers the sentence says (§589). */
+/** Who holds an event's places, as the six numbers the sentence says (§589; the invitations since §NNN). */
 export function placesTaken(capacity: number, counts: OccupiedCounts): PlacesTaken {
   return {
     capacity,
@@ -126,11 +141,12 @@ export function placesTaken(capacity: number, counts: OccupiedCounts): PlacesTak
     declaration: counts.pendingDeclarationHolds,
     offered: counts.unexpiredWaitlistOfferedHolds,
     family: (counts.familyReservations ?? 0) + (counts.familyPlaceHolds ?? 0),
+    invited: counts.invitationHolds ?? 0,
   };
 }
 
 /**
- * The press's own test, before the press (§592): the five numbers when «Dă-i un loc» would meet
+ * The press's own test, before the press (§592): the six numbers when «Dă-i un loc» would meet
  * `NoFreePlaceError`, null when a place is free or the event is uncapped — the comparison
  * `promoteFromWaitlistByStaff` makes under the lock. The page's read is a forecast for the
  * tooltip; the server still decides, and still refuses.
@@ -145,7 +161,7 @@ export function placesTakenValues(places: PlacesTaken): Record<keyof PlacesTaken
   return Object.fromEntries(PLACES_TAKEN_KEYS.map((key) => [key, String(places[key])])) as Record<keyof PlacesTaken, string>;
 }
 
-/** The redirect's outcome for that refusal: the code and the five numbers, as strings. */
+/** The redirect's outcome for that refusal: the code and the six numbers, as strings. */
 export function noFreePlaceOutcome(error: unknown): Record<string, string> | null {
   if (!(error instanceof NoFreePlaceError)) return null;
   return { error: NO_FREE_PLACE, ...placesTakenValues(error.places) };

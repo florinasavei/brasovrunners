@@ -260,6 +260,23 @@ export type AuditAction =
   /** The same supplementary place, added by «Dă-i un loc acum» on a full event (§637, §642): same metadata. */
   | "event.capacity_raised_for_place_now"
   /**
+   * The same supplementary place, added by a send of invitations on a full event (§NNN, §642): from and
+   * to, and the invitation it was added for (`invitationId`, an id, never a name or an address).
+   */
+  | "event.capacity_raised_for_invitation"
+  /**
+   * Invitations (§NNN), each row about one invitation of the event (the entity), by its id in the
+   * metadata — never the name or the address, which the invitation row keeps and the retention erases:
+   * sent (the deadline, «În afara locurilor», whether a place was added, and the member's account when
+   * one was picked), resent (the deadline before and after), withdrawn, expired (no actor: the
+   * maintenance job), and accepted (no actor: the person, from the link; the registration's id).
+   */
+  | "event.invitation_sent"
+  | "event.invitation_resent"
+  | "event.invitation_withdrawn"
+  | "event.invitation_expired"
+  | "event.invitation_accepted"
+  /**
    * «Arată public câți așteaptă» switched (§634): from and to, on every date a save changed it — the
    * editor's own date and each date of a series the scoped save carried it to.
    */

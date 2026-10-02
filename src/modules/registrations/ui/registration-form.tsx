@@ -114,11 +114,15 @@ export type RegistrationFormSettings = {
   siteKey: string | undefined;
 };
 
-/** Whose address the form takes: typed twice (§206), a member's account (§552), or the family sitting's (§519). */
+/**
+ * Whose address the form takes: typed twice (§206), a member's account (§552), the family sitting's
+ * (§519), or an invitation's (§NNN) — the address the club sent it to, which the link proves.
+ */
 export type RegistrationFormAddress =
   | { kind: "typed" }
   | { kind: "member"; email: string }
-  | { kind: "sitting"; email: string; peopleSoFar: number };
+  | { kind: "sitting"; email: string; peopleSoFar: number }
+  | { kind: "invitation"; email: string; token: string };
 
 /**
  * **What the register page and the editor's preview both draw above the form (§102)**: the title,
@@ -299,6 +303,7 @@ export async function registrationForm({
   const { tooYoung, emergencySame, captchaFailed, tooFast, retry } = refusal;
   const member = address.kind === "member" ? address : null;
   const sitting = address.kind === "sitting" ? address : null;
+  const invitation = address.kind === "invitation" ? address : null;
   const familyForm = sitting !== null;
   const t = await getTranslations("Registration");
   const tEvent = await getTranslations("Event");
@@ -627,7 +632,28 @@ export async function registrationForm({
             The next form of a family sitting (§519): the address is the sitting's, said back in
             bold and not asked again — the server takes it from the browser's sealed half.
           */}
-          {member ? (
+          {invitation ? (
+            /*
+              An invitation's form (§NNN): the address the club sent the invitation to, said back in bold
+              and not asked — the server takes it from the invitation the token names, whatever is posted.
+            */
+            <Box data-testid="invitation-address">
+              {!preview && (
+                <>
+                  <input type="hidden" name="email" value={invitation.email} />
+                  <input type="hidden" name="emailConfirm" value={invitation.email} />
+                  <input type="hidden" name="invitationToken" value={invitation.token} />
+                </>
+              )}
+              <Typography variant="body2" color="text.secondary">
+                {t("invitation.addressLabel")}
+              </Typography>
+              <Typography sx={{ fontWeight: 700, wordBreak: "break-all" }}>{invitation.email}</Typography>
+              <Typography variant="body2" color="text.secondary">
+                {t("invitation.addressHelp")}
+              </Typography>
+            </Box>
+          ) : member ? (
             /*
               A members' event (§552): the account's own address, said back in bold and not asked —
               the server takes it from the session, whatever is posted. One person per account.

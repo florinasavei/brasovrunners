@@ -114,6 +114,16 @@ export const LIST_SOCIALS_MERGE_FIELD = "participantListSocials";
 export const LIST_NUMBERS_MERGE_FIELD = "participantListNumbers";
 
 /**
+ * The privacy notice's marker for the club's invitations by email (§NNN): the backoffice section's own
+ * name, quoted (`registrations/invitation-words.ts`) — «Invitații» / “Invitations” — in the sentence
+ * that says the club may enter an invited person's name and address to send one invitation. Like the
+ * states (§396) it is also what `/admin/tasks` reads: the row `invitationsNotice` stays open until a
+ * notice naming it is in force in every language. Unlike them it switches nothing off: the club may
+ * invite meanwhile, as it may register another person on one's own address (§389).
+ */
+export const EVENT_INVITATIONS_MERGE_FIELD = "eventInvitations";
+
+/**
  * The event's own minimum age (§329) as a merge field (§440, amending §393): "16 ani" / "16
  * years", the unit included like `{{holdMinutes}}` so Romanian's "20 de ani" comes out right
  * (`yearsPhrase`). The group-run declarations state it in a sentence of its own — "Declar că am
@@ -318,6 +328,7 @@ export const MERGE_FIELDS = [
   PROMOTIONAL_MATERIALS_SHARED_MERGE_FIELD,
   GMAIL_FALLBACK_MERGE_FIELD,
   ADDRESS_CAP_MERGE_FIELD,
+  EVENT_INVITATIONS_MERGE_FIELD,
 ] as const;
 
 /**
@@ -467,6 +478,14 @@ export function describesListSocials(body: unknown): boolean {
  */
 export function describesListNumbers(body: unknown): boolean {
   return mergeFieldsIn(body).has(LIST_NUMBERS_MERGE_FIELD);
+}
+
+/**
+ * Whether a privacy notice describes the club's invitations by email (§NNN): it names
+ * `{{eventInvitations}}`. What `/admin/tasks`' row `invitationsNotice` reads. Pure.
+ */
+export function describesEventInvitations(body: unknown): boolean {
+  return mergeFieldsIn(body).has(EVENT_INVITATIONS_MERGE_FIELD);
 }
 
 /**

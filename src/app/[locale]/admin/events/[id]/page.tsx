@@ -92,6 +92,7 @@ import { countBibs, spareCardState } from "@/modules/registrations/bibs";
 import { SPARE_BIBS_PER_PRINT, spareRangeOfQuery } from "@/modules/registrations/domain/spare-bibs";
 import { countInterests } from "@/modules/registrations/interest";
 import { computeOccupied } from "@/modules/registrations/domain/capacity";
+import { countPendingInvitations } from "@/modules/registrations/invitation-repository";
 import { countEligibleWaitlisted, countOccupied, countOutsideCapacity, countRegistrationsForEvent, countTestRegistrationsForEvent } from "@/modules/registrations/repository";
 import QueuePanel from "@/modules/registrations/ui/QueuePanel";
 import PlaceDeadlines from "@/modules/registrations/ui/PlaceDeadlines";
@@ -256,6 +257,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const placesTaken = occupiedCounts === null ? null : computeOccupied(occupiedCounts);
   // Seated «În afara locurilor» (§643): beside the occupied places, which leave them out; read only where those are said.
   const outsideCount = occupiedCounts === null ? 0 : await countOutsideCapacity(db, event.id);
+  // Invitations still waiting for an answer (§NNN): «invitații în așteptare: N» beside the counts.
+  const pendingInvitations = internal && canReadRegistrations(staffUser.role) ? await countPendingInvitations(db, event.id, now) : 0;
   // «Când se pierde un loc» (§635): the real rows waiting on each deadline, one grouped count, for the box and the queue panel.
   const placeDeadlines = internal && canReadRegistrations(staffUser.role) ? await readPlaceDeadlines(db, event.id, now) : null;
 
@@ -1003,13 +1006,13 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                     collapsible
                     id="box-received"
                     title={t("editor.boxes.received.title")}
-                    aside={
+                    aside={`${
                       placesTaken !== null && event.capacity !== null
                         ? `${t("editor.boxes.received.summaryPlaces", { count: realCount, waiting, occupied: placesTaken, capacity: event.capacity })}${
                             outsideCount > 0 ? ` · ${t("editor.boxes.received.outside", { count: outsideCount })}` : ""
                           }`
                         : t("editor.boxes.received.summary", { count: realCount, waiting })
-                    }
+                    }${pendingInvitations > 0 ? ` · ${t("editor.boxes.received.invitations", { count: pendingInvitations })}` : ""}`}
                     openWhen={{ attention: thanksDue && !event.thanksSentAt }}
                   >
                     <Stack spacing={2}>
@@ -1021,6 +1024,10 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                         )}
                         <GlyphButton icon="registrations" href={`${getPathname({ locale, href: "/admin/registrations" })}?eventId=${event.id}`} variant="text" size="small" sx={{ minHeight: 44 }}>
                           {t("registrations.viewForEvent")}
+                        </GlyphButton>
+                        {/* Invitations by email (§NNN): the section on this event's registrations list. */}
+                        <GlyphButton icon="send" href={`${getPathname({ locale, href: "/admin/registrations" })}?eventId=${event.id}#registrations-invitations`} variant="text" size="small" sx={{ minHeight: 44 }}>
+                          {t("invitations.link")}
                         </GlyphButton>
                         {/* A message of the organizer's own to this event's registrants (§364): bad
                             weather, a changed start — its own page, with the preview and the history. */}

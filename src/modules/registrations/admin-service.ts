@@ -50,7 +50,12 @@ import {
   confirmByStaff,
   type EventForRegistration,
   givePlaceNowByStaff,
+  type InvitationSendInput,
+  type InvitationSendResult,
+  inviteToEventByStaff,
   offerPlaceToByStaff,
+  resendInvitationByStaff,
+  withdrawInvitationByStaff,
   promoteFromWaitlistByStaff,
   setOutsideCapacityByStaff,
   type PlacedByStaff,
@@ -743,6 +748,46 @@ export async function givePlaceToUnconfirmedByStaff<T extends Record<string, unk
   if (!current) throw new DomainError("NOT_FOUND", "no such registration");
   const event = await eventForRegistration(db, current.eventId);
   return givePlaceNowByStaff(db, event, registrationId, actor, now, settings, options);
+}
+
+/**
+ * «Trimite invitațiile» (§NNN): the Administrator's alone (`canManageRegistrations`, §289), asserted
+ * here before anything is read and again in the service, which does the whole send under the event
+ * lock (`service.ts#inviteToEventByStaff`).
+ */
+export async function inviteToEvent<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  eventId: string,
+  input: InvitationSendInput,
+  now: Date,
+): Promise<InvitationSendResult> {
+  if (!canManageRegistrations(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not invite anybody`);
+  const event = await eventForRegistration(db, eventId);
+  return inviteToEventByStaff(db, event, input, actor, now);
+}
+
+/** «Retrimite» on an invitation (§NNN): the Administrator's alone, asserted here and in the service. */
+export async function resendInvitation<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  invitationId: string,
+  days: number | null,
+  now: Date,
+): Promise<{ expiresAt: Date }> {
+  if (!canManageRegistrations(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not resend an invitation`);
+  return resendInvitationByStaff(db, invitationId, { days }, actor, now);
+}
+
+/** «Retrage» an invitation (§NNN): the Administrator's alone, asserted here and in the service. */
+export async function withdrawInvitation<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  invitationId: string,
+  now: Date,
+): Promise<void> {
+  if (!canManageRegistrations(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not withdraw an invitation`);
+  await withdrawInvitationByStaff(db, invitationId, actor, now);
 }
 
 /** A place ahead of the queue, into a free one (BR-REQ-037-07); refused when full. */

@@ -321,7 +321,15 @@ For a capped event:
   club's organizers, pacemakers and invited runners run without taking one of the announced places.
   It still has a declaration, a race number and — if the person ticked — a row on the public list,
   and it enters no public number. Only an Administrator marks or unmarks one, and every change is
-  written to the journal (`DECISIONS.md` §643).
+  written to the journal (`DECISIONS.md` §643);
+- an **invitation** (*invitație*) is a place the club keeps for a person it names — a member, a
+  partner, a guest — and emails one personal link to: it consumes a place from the moment it is sent
+  until it is accepted, withdrawn, or its deadline passes (seven days by default, never after
+  registration closes), and is never released earlier for somebody waiting, because it is the club's
+  choice. It is not a registration: the invited person opens the form from the link, fills in the rest
+  and signs the declaration themselves; accepting moves the kept place to their registration. On a full
+  race each invitation that needs a place adds one supplementary place, which the Administrator
+  confirms before the send; one sent «în afara locurilor» keeps none (`DECISIONS.md` §NNN).
 
 The initial direct declaration hold is the club's setting (30 minutes by default, "Termene"), capped by registration closing and event start. For an event further away than its **participation window** (per event; default: asked 7 days before, due 2 days before the start), the place is instead held until the window's deadline and the declaration is the participant's confirmation that they are still coming — the race is free, and a place taken in June by somebody who forgot by October is a place nobody ran on (`DECISIONS.md` §104). Either deadline is enforced only when it protects somebody: with nobody on the waiting list, the person who forgot keeps the place and their number, and signs on race day at the desk; the declaration is asked once more two days before the start, and a race called off refuses the signature and releases the place (`DECISIONS.md` §160).
 

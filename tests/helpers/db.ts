@@ -5,6 +5,7 @@ import { auditLogs } from "@/db/schema/audit-logs";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailActionTokens } from "@/db/schema/email-action-tokens";
 import { emailOutbox } from "@/db/schema/email-outbox";
+import { eventInvitations } from "@/db/schema/event-invitations";
 import { eventTranslations, events } from "@/db/schema/events";
 import { pendingFamilyEntries } from "@/db/schema/family-entries";
 import { jobRuns } from "@/db/schema/job-runs";
@@ -100,6 +101,8 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   // Another person waiting for the address's confirmation (§446): it points at a token and a registration.
   await db.delete(pendingFamilyEntries);
   await db.delete(emailActionTokens);
+  // The invitations by email (§NNN): they reference the event, the address and the staff; their links went above.
+  await db.delete(eventInvitations);
   await db.delete(emailOutbox);
   // «Echipa»'s cards (§459) reference a photo: before the assets.
   await db.delete(teamMembers);

@@ -14,9 +14,11 @@ import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { WAITLIST_FULL, waitlistRefusalOf } from "@/modules/registrations/domain/waitlist";
 import { SUPPLEMENTARY_PLACE_UNCONFIRMED, supplementaryPlaceRefusalOutcome } from "@/modules/registrations/domain/capacity";
+import { eventInvitations } from "@/db/schema/event-invitations";
 import {
   confirmEmail,
   type EventForRegistration,
+  inviteToEventByStaff,
   offerPlaceToByStaff,
   setOutsideCapacityByStaff,
   submitRegistration,
@@ -109,6 +111,8 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
     await db.delete(registrations).where(inArray(registrations.eventId, createdEventIds));
     await db.delete(events).where(inArray(events.id, createdEventIds));
     await db.delete(participants).where(inArray(participants.id, createdParticipantIds));
+    // The invitations' addresses (§NNN): the send made their participant rows; the events' deletion took the invitations.
+    if (invitedAddresses.length > 0) await db.delete(participants).where(inArray(participants.canonicalEmail, invitedAddresses));
     for (const id of [staffId, outsideStaffId]) {
       if (!id) continue;
       await db.delete(auditLogs).where(eq(auditLogs.actorStaffUserId, id));
@@ -116,6 +120,9 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
     }
     await pool.end();
   });
+
+  /** The addresses the invitations' case invited (§NNN), removed after with the participant rows the send made. */
+  const invitedAddresses: string[] = [];
 
   /** A fresh, uniquely-named event for each test, never reused across tests. */
   async function createInternalEvent(capacity: number | null, waitlistCapacity: number | null = null): Promise<EventForRegistration> {
@@ -451,6 +458,44 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
       expect(raised[0].metadataJson).toMatchObject({ from: 1, to: 2, registrationId: made[0].value.id });
       const trail = await db.select().from(auditLogs).where(inArray(auditLogs.entityId, waiting.map((row) => row.id)));
       expect(trail.filter((row) => row.action === "registration.offered_by_staff")).toHaveLength(1);
+    },
+    30_000,
+  );
+
+  it(
+    "§NNN two Administrators inviting onto the last free place at once: one invitation holds it, the other press is refused, and pressed again adds exactly one place",
+    async () => {
+      // Two places, one confirmed: one place free, read by both pages — neither question names a raise.
+      const event = await createInternalEvent(2);
+      await db.update(events).set({ editorialStatus: "PUBLISHED", publishedAt: NOW, waitlistAutoOffer: false }).where(eq(events.id, event.id));
+      const actor = await administrator();
+      const holder = await createPendingRegistration(event.id, "invite-holder");
+      await db.update(registrations).set({ status: "CONFIRMED", confirmedAt: NOW }).where(eq(registrations.id, holder.id));
+      const people = ["ana", "bogdan"].map((name) => ({ name: `Invited ${name}`, email: `invited.${name}.${Date.now()}@example.invalid` }));
+      invitedAddresses.push(...people.map((person) => canonicalizeEmail(person.email).canonicalEmail));
+
+      const outcomes = await Promise.allSettled(
+        people.map((person) => inviteToEventByStaff(db, event, { people: [person], days: 7, outsideCapacity: false }, actor, NOW)),
+      );
+      const sent = outcomes.filter((outcome) => outcome.status === "fulfilled");
+      const refused = outcomes.filter((outcome) => outcome.status === "rejected") as PromiseRejectedResult[];
+      expect(sent).toHaveLength(1);
+      expect(refused).toHaveLength(1);
+      expect(supplementaryPlaceRefusalOutcome(refused[0].reason)).toEqual({ error: SUPPLEMENTARY_PLACE_UNCONFIRMED });
+      // One place, one invitation: never two promises on it, and the capacity untouched.
+      expect(computeOccupied(await countOccupied(db, event.id, NOW))).toBe(2);
+      expect(await db.select().from(eventInvitations).where(eq(eventInvitations.eventId, event.id))).toHaveLength(1);
+      const [{ capacity }] = await db.select({ capacity: events.capacity }).from(events).where(eq(events.id, event.id));
+      expect(capacity).toBe(2);
+
+      // Pressed again from the page drawn now — «capacitatea devine 3» — it adds exactly that one place.
+      const refusedIndex = outcomes.findIndex((outcome) => outcome.status === "rejected");
+      const again = await inviteToEventByStaff(db, event, { people: [people[refusedIndex]], days: 7, outsideCapacity: false, addPlaceTo: 3 }, actor, NOW);
+      expect(again.capacityRaisedTo).toBe(3);
+      expect(computeOccupied(await countOccupied(db, event.id, NOW))).toBe(3);
+      const raised = (await db.select().from(auditLogs).where(eq(auditLogs.entityId, event.id))).filter((row) => row.action === "event.capacity_raised_for_invitation");
+      expect(raised).toHaveLength(1);
+      expect(raised[0].metadataJson).toMatchObject({ from: 2, to: 3 });
     },
     30_000,
   );

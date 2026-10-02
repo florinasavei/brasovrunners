@@ -111,7 +111,9 @@ export async function resolveLocaleSwitch(
     // The newsletter's two link pages (§445), the same rule.
     parsed.route === "/newsletter/confirm/[token]" ||
     parsed.route === "/newsletter/manage/[token]" ||
-    parsed.route === "/registrations/family/[token]"
+    parsed.route === "/registrations/family/[token]" ||
+    // An invitation's link (§NNN), the same rule.
+    parsed.route === "/registrations/invitation/[token]"
   ) {
     const token = parsed.params.token;
     if (!token) return listing;

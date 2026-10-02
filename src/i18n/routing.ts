@@ -84,6 +84,14 @@ export const routing = defineRouting({
       en: "/registrations/family/[token]",
     },
     /**
+     * A personal invitation to an event (§NNN): the page an `ACCEPT_INVITATION` token opens — the
+     * registration form prefilled with the invited name and address, sent with the token.
+     */
+    "/registrations/invitation/[token]": {
+      ro: "/inregistrari/invitatie/[token]",
+      en: "/registrations/invitation/[token]",
+    },
+    /**
      * "Send me that link again" (§19.4's second surface). No token in the path — this is the
      * route somebody reaches precisely because they have no token, so it takes an address and
      * answers the same way whatever that address turns out to mean.

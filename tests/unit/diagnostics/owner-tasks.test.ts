@@ -28,6 +28,7 @@ const LAUNCHED: OwnerTaskInputs = {
   listStatesDescribed: true,
   listSocialsDescribed: true,
   listNumbersDescribed: true,
+  invitationsDescribed: true,
   promoDescribed: true,
   sponsorShareDescribed: true,
   newsletterDescribed: true,
@@ -91,6 +92,18 @@ describe("owner tasks", () => {
     expect(ownerTasks({ ...LAUNCHED, hasApprovedPrivacyNotice: false }).some((task) => task.id === "listStatesNotice")).toBe(false);
     for (const catalogue of [ro, en]) {
       const item = catalogue.Admin.tasks.items.listStatesNotice;
+      expect(item.title && item.todo && item.done && item.how.length > 0).toBeTruthy();
+      expect(item.how.join("\n")).toContain("/admin/legal");
+    }
+  });
+
+  /** §NNN — the invitations by email: the club may invite meanwhile; the row says what the notice owes, open, never blocking. */
+  it("keeps the invitations row open while the notice in force does not describe them, and never blocking", () => {
+    expect(stateOf({ ...LAUNCHED, invitationsDescribed: false }, "invitationsNotice")).toBe("open");
+    expect(stateOf(LAUNCHED, "invitationsNotice")).toBe("done");
+    expect(ownerTasks({ ...LAUNCHED, hasApprovedPrivacyNotice: false }).some((task) => task.id === "invitationsNotice")).toBe(false);
+    for (const catalogue of [ro, en]) {
+      const item = catalogue.Admin.tasks.items.invitationsNotice;
       expect(item.title && item.todo && item.done && item.how.length > 0).toBeTruthy();
       expect(item.how.join("\n")).toContain("/admin/legal");
     }
@@ -339,6 +352,7 @@ describe("owner tasks", () => {
       "listStatesNotice",
       "listSocialsNotice",
       "listNumbersNotice",
+      "invitationsNotice",
       "promoNotice",
       "sponsorNotice",
       "newsletterNotice",

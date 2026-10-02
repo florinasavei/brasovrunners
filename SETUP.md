@@ -1421,6 +1421,24 @@ languages go live together; that is the rule, not a setting.
    «Locurile evenimentului» → «Pune în afara locurilor». They keep a declaration, a race number
    and their row on the public list if they ticked, and take none of the announced places; a
    place one of them held is given back to the line (§643, `AGENTS.md` §15.11).
+6. **Invitations by email** — members, partners, guests the club wants at the start, without asking
+   them to fight the public form (§NNN). «Evenimente» → «Editează» on the race → «Înscrierile primite»
+   → «Trimite invitații» opens the «Invitații» section of the race's registrations list:
+   - tick members from the members' zone (search by name or address), and/or type other people one per
+     line — the name, then the email address;
+   - «Zile până expiră» (7 by default; never past **Înscrierile se închid** or the start);
+   - «În afara locurilor» for organizers and pacemakers: their invitations keep none of the 150;
+   - «Trimite invitațiile» asks first: how many invitations, how many places are free and — on a full
+     race — how many supplementary places it adds and what the capacity becomes; the button names the
+     places it adds. Each person gets one email, «Acceptă invitația», which opens the form with their
+     name and address filled in; they fill in the rest, accept the terms and sign the declaration
+     themselves, from the email that follows.
+   - Each invitation keeps its place until its deadline; unaccepted, the place goes back to the line by
+     itself. On the invitation's row: «Retrimite» (a new link, the deadline moved later if you type more
+     days) and «Retrage» (the place goes back at once). The Organizer sees the list, not the buttons.
+   - The privacy notice describes invitations once the club approves it from the template:
+     `/admin/tasks` shows the row «Nota de confidențialitate: invitațiile pe email» until then.
+     Invitations work meanwhile.
 
 ### If somebody says the site is blocked at work
 

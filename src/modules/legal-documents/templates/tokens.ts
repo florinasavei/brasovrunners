@@ -10,6 +10,7 @@ import { yearsPhrase } from "@/modules/registrations/domain/age";
 import {
   ADDRESS_CAP_MERGE_FIELD,
   addressCapMergeValues,
+  EVENT_INVITATIONS_MERGE_FIELD,
   DEADLINE_MERGE_FIELDS,
   deadlineMergeValues,
   LIST_NUMBERS_MERGE_FIELD,
@@ -25,6 +26,7 @@ import {
 import { seriesRhythmPhrase } from "@/modules/group-run-declarations/series";
 import { newsletterMergeValues } from "@/modules/newsletter/topic-words";
 import { gmailFallbackClause } from "@/modules/notifications/fallback-notice-words";
+import { eventInvitationsClause } from "@/modules/registrations/invitation-words";
 
 /**
  * The declaration's merge fields, in one list (`DECISIONS.md` §190).
@@ -188,6 +190,13 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     token: `{{${GMAIL_FALLBACK_MERGE_FIELD}}}`,
     messageKey: GMAIL_FALLBACK_MERGE_FIELD,
     example: inBoth((locale) => gmailFallbackClause(locale)),
+  },
+  // The privacy notice's marker for the invitations by email (§NNN): the backoffice section's name,
+  // and what `/admin/tasks`' row `invitationsNotice` reads (`describesEventInvitations`).
+  {
+    token: `{{${EVENT_INVITATIONS_MERGE_FIELD}}}`,
+    messageKey: EVENT_INVITATIONS_MERGE_FIELD,
+    example: inBoth((locale) => eventInvitationsClause(locale)),
   },
 ];
 

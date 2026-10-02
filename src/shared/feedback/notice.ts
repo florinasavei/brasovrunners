@@ -96,6 +96,8 @@ const SENTENCES: Readonly<Record<string, { count?: string; values?: Readonly<Rec
   picturesLadderedFailed: { count: "count", values: { left: "left", failed: "failed" } },
   // The desk's spares a print reserved (§444): how many, and the first and last number.
   sparesReserved: { count: "count", values: { from: "from", to: "to" } },
+  // A send of invitations that added supplementary places (§NNN): how many invited, and the capacity now.
+  invitationsSentRaised: { count: "count", values: { capacity: "capacity" } },
 };
 
 /**

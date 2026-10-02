@@ -10,6 +10,7 @@ import {
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
+import { eventInvitations } from "./event-invitations";
 import { participants } from "./participants";
 import { registrations } from "./registrations";
 
@@ -35,6 +36,9 @@ export const emailActionTokenPurpose = pgEnum("email_action_token_purpose", [
   // address already holds at the event, which names the event and the participant; spent by the
   // submission that creates the other person's registration, never by opening the page.
   "REGISTER_ANOTHER_PERSON",
+  // A personal invitation to an event (§NNN): scoped to the invitation (`invitation_id`), which names
+  // the event and the address; spent by the registration form it opens, never by opening the page.
+  "ACCEPT_INVITATION",
 ]);
 
 export type EmailActionTokenPurpose = (typeof emailActionTokenPurpose.enumValues)[number];
@@ -68,6 +72,13 @@ export const emailActionTokens = pgTable(
     }),
 
     purpose: emailActionTokenPurpose("purpose").notNull(),
+
+    /*
+      The invitation an `ACCEPT_INVITATION` link opens (§NNN): no registration exists yet, so the scope
+      is the invitation, and the participant is the address it was sent to. Null for every other
+      purpose; the CHECK below makes both halves an invariant. Gone with the invitation.
+    */
+    invitationId: uuid("invitation_id").references(() => eventInvitations.id, { onDelete: "cascade" }),
 
     // SHA-256 of the base64url secret, hex encoded. Never the secret.
     tokenHash: text("token_hash").notNull().unique(),
@@ -112,10 +123,17 @@ export const emailActionTokens = pgTable(
      * token cannot carry a registration, and a registration token cannot omit one — so a
      * scope check upstream can never be handed a row that has nothing to check against.
      */
+    /*
+      Since §NNN `ACCEPT_INVITATION` is a third scope: an invitation, before any registration exists —
+      no registration, and the invitation named. Compared as text, so the CHECK does not name an enum
+      value a migration added in the same deployment (PostgreSQL refuses an enum value used in the
+      transaction that added it).
+    */
     check(
       "email_action_tokens_registration_scope_matches_purpose",
-      sql`(${t.purpose} = 'MANAGE_PROFILE') = (${t.registrationId} IS NULL)`,
+      sql`(${t.purpose}::text in ('MANAGE_PROFILE', 'ACCEPT_INVITATION')) = (${t.registrationId} IS NULL)`,
     ),
+    check("email_action_tokens_invitation_scope_matches_purpose", sql`(${t.purpose}::text = 'ACCEPT_INVITATION') = (${t.invitationId} IS NOT NULL)`),
 
     /**
      * BR-REQ-036-02 criterion 5, enforced by the database.
@@ -143,9 +161,14 @@ export const emailActionTokens = pgTable(
       .where(
         sql`"used_at" IS NULL AND "invalidated_at" IS NULL AND "registration_id" IS NOT NULL AND "purpose" <> 'REGISTER_ANOTHER_PERSON'`,
       ),
+    // Not an invitation's link (§NNN): one address may be invited to several events at once, one live link each.
     uniqueIndex("email_action_tokens_one_active_per_participant_purpose")
       .on(t.participantId, t.purpose)
-      .where(sql`"used_at" IS NULL AND "invalidated_at" IS NULL AND "registration_id" IS NULL`),
+      .where(sql`"used_at" IS NULL AND "invalidated_at" IS NULL AND "registration_id" IS NULL AND "invitation_id" IS NULL`),
+    // An invitation's one live link (§NNN): a resend supersedes the earlier one (§619).
+    uniqueIndex("email_action_tokens_one_active_per_invitation")
+      .on(t.invitationId)
+      .where(sql`"used_at" IS NULL AND "invalidated_at" IS NULL AND "invitation_id" IS NOT NULL`),
 
     // AGENTS.md §12.8 names both indexes: expiry sweeps and per-scope lookups.
     index("email_action_tokens_participant_purpose_expiry_idx").on(

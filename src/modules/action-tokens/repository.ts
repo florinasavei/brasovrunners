@@ -30,6 +30,8 @@ export type ActionTokenContext = {
   id: string;
   participantId: string;
   registrationId: string | null;
+  /** The invitation an `ACCEPT_INVITATION` link opens (§NNN); null for every other purpose. */
+  invitationId: string | null;
   purpose: EmailActionTokenPurpose;
   expiresAt: Date;
 };
@@ -55,6 +57,7 @@ const CONTEXT_COLUMNS = {
   id: emailActionTokens.id,
   participantId: emailActionTokens.participantId,
   registrationId: emailActionTokens.registrationId,
+  invitationId: emailActionTokens.invitationId,
   purpose: emailActionTokens.purpose,
   expiresAt: emailActionTokens.expiresAt,
 };
@@ -85,19 +88,25 @@ export async function issueActionToken<T extends Record<string, unknown>>(
     now: Date;
     /** Other purposes, of this same registration, whose live links this one replaces (§643). */
     alsoReplaces?: readonly EmailActionTokenPurpose[];
+    /** `ACCEPT_INVITATION` only (§NNN): the invitation the link opens — its scope, as a registration is the others'. */
+    invitationId?: string | null;
   },
 ): Promise<IssuedActionToken> {
   const { participantId, registrationId, purpose, expiresAt, now } = params;
+  const invitationId = params.invitationId ?? null;
   const replaced = [purpose, ...(registrationId === null ? [] : (params.alsoReplaces ?? []).filter((other) => other !== "REGISTER_ANOTHER_PERSON"))];
 
   if (expiresAt.getTime() <= now.getTime()) {
     throw new ActionTokenError("the expiry must be in the future");
   }
-  // Mirrors the CHECK constraint, as a named domain error.
-  if ((purpose === "MANAGE_PROFILE") !== (registrationId === null)) {
+  // Mirrors the CHECK constraints, as a named domain error.
+  if ((purpose === "MANAGE_PROFILE" || purpose === "ACCEPT_INVITATION") !== (registrationId === null)) {
     throw new ActionTokenError(
-      "MANAGE_PROFILE is scoped to a participant and every other purpose to one registration",
+      "MANAGE_PROFILE is scoped to a participant, ACCEPT_INVITATION to an invitation, and every other purpose to one registration",
     );
+  }
+  if ((purpose === "ACCEPT_INVITATION") !== (invitationId !== null)) {
+    throw new ActionTokenError("ACCEPT_INVITATION, and only it, is scoped to an invitation");
   }
 
   const secret = generateTokenSecret();
@@ -120,12 +129,16 @@ export async function issueActionToken<T extends Record<string, unknown>>(
                 inArray(emailActionTokens.purpose, replaced),
                 isNull(emailActionTokens.usedAt),
                 isNull(emailActionTokens.invalidatedAt),
-                registrationId === null
-                  ? and(
-                      eq(emailActionTokens.participantId, participantId),
-                      isNull(emailActionTokens.registrationId),
-                    )
-                  : eq(emailActionTokens.registrationId, registrationId),
+                // An invitation's link replaces the invitation's earlier one (§NNN), never another invitation's.
+                invitationId !== null
+                  ? eq(emailActionTokens.invitationId, invitationId)
+                  : registrationId === null
+                    ? and(
+                        eq(emailActionTokens.participantId, participantId),
+                        isNull(emailActionTokens.registrationId),
+                        isNull(emailActionTokens.invitationId),
+                      )
+                    : eq(emailActionTokens.registrationId, registrationId),
               ),
             )
             .returning({ id: emailActionTokens.id });
@@ -135,6 +148,7 @@ export async function issueActionToken<T extends Record<string, unknown>>(
       .values({
         participantId,
         registrationId,
+        invitationId,
         purpose,
         tokenHash,
         expiresAt,
@@ -201,6 +215,7 @@ export async function readActionTokenContext<T extends Record<string, unknown>>(
         id: row.id,
         participantId: row.participantId,
         registrationId: row.registrationId,
+        invitationId: row.invitationId,
         purpose: row.purpose,
         expiresAt: row.expiresAt,
       },

@@ -183,6 +183,8 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   // Another person confirmed from the inbox (§446): born on the scale, its three containers.
   // Two more since §519: the family sitting's list and its outcome, the same page padding.
   { file: "src/app/[locale]/registrations/family/[token]/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2, count: 7 },
+  // An invitation's link (§NNN): born on the scale — the ended or accepted answer, and the form.
+  { file: "src/app/[locale]/registrations/invitation/[token]/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2, count: 2 },
   { file: "src/app/[locale]/registrations/list/[token]/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
   { file: "src/app/[locale]/registrations/manage/[token]/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2, count: 2 },
   { file: "src/app/[locale]/registrations/mine/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },

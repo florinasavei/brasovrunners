@@ -151,7 +151,8 @@ describe("the declaration's merge fields", () => {
         // declaration grew once more, by seven sentences, when the inherent risks came to name death and the
         // claims for them were waived within the law's limits, the heirs and the minor's guardian included (§568). And once more by the list for partners (§570): a paragraph in section 5, the exception in 6, the retention in 7.
         // The terms have their own since §3 says when the club may refuse or cancel a registration (§618): one paragraph.
-        const ceiling = key === "EVENT_DECLARATION" ? 10300 : key === "PRIVACY_NOTICE" ? 31000 : key === "TERMS" ? 12000 : 11000;
+        // The notice grew once more by a paragraph in section 2 for the invitations by email (§NNN).
+        const ceiling = key === "EVENT_DECLARATION" ? 10300 : key === "PRIVACY_NOTICE" ? 31800 : key === "TERMS" ? 12000 : 11000;
         expect(text.length, `${key} ${locale}`).toBeGreaterThan(key === "EVENT_DECLARATION" ? 1500 : 2500);
         expect(text.length, `${key} ${locale}`).toBeLessThan(ceiling);
       }
