@@ -520,7 +520,9 @@ describe("§359 \"Înlocuiește cu câmpurile\" rewrites a saved text to its fie
   // The thank-you's "results at the link below" is the one branch the sample takes and the starting
   // text does not; the hold's deadline and the time of signing have a sample value since the email
   // follow-up (§373), so the declaration's three messages come back as today's starting text too.
-  const STRUCTURAL = new Set<EmailMessageType>(["EVENT_THANKS"]);
+  // The legal templates' message (§NNN) names whom a lawyer should read from the texts that moved: the
+  // sample's two texts ask for "the terms above all", the starting text, which names none, the changed texts.
+  const STRUCTURAL = new Set<EmailMessageType>(["EVENT_THANKS", "LEGAL_TEMPLATES_CHANGED"]);
 
   /** What the old editor handed a Redactor: the platform's words rendered with the page's sample. */
   function oldStartingText(messageType: EmailMessageType, locale: "ro" | "en") {
@@ -551,7 +553,7 @@ describe("§359 \"Înlocuiește cu câmpurile\" rewrites a saved text to its fie
         expect(emailSchemaAccepts(messageType, locale, formatted)).toBe(true);
         // Where the old text was the platform's sentence for sentence, the result is today's starting
         // text. Not where the old one took another branch: the thank-you's "results at the link
-        // below", which the sample has and the starting text does not (`STRUCTURAL`).
+        // below", which the sample has and the starting text does not, and the legal templates' lawyer line (`STRUCTURAL`).
         if (!STRUCTURAL.has(messageType)) {
           expect(formatted.paragraphs).toEqual(prefill.paragraphs);
           expect(body.content).toHaveLength(prefill.paragraphs.length);

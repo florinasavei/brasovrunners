@@ -243,7 +243,9 @@ describe("§NNN the Administrators are emailed when a release moves a legal temp
     expect(ro.text).toContain("New template: GDPR · Racing TOS");
     expect(ro.text).toContain("«Documente legale» → «Versiune nouă» → «Regenerează toate»");
     expect(ro.text).toContain("«O ciornă așteaptă deja»");
-    expect(ro.text).toContain("un jurist ar trebui să citească declarațiile și ultimul paragraf din secțiunea 3 a termenilor");
+    // Only the terms and the notice moved: the lawyer is asked for the changed texts, the terms above all, never the declarations.
+    expect(ro.text).toContain("Înainte de aprobare, un jurist ar trebui să citească textele schimbate, mai ales termenii.");
+    expect(ro.text).not.toContain("citească declarațiile");
     expect(ro.text).toContain("Textele în vigoare rămân cum sunt");
     expect(ro.html).toContain(`${env.APP_BASE_URL}${getPathname({ locale: "ro", href: "/admin/legal/new" })}`);
     // No token, no participant's privacy line, no participant's links.
@@ -255,7 +257,7 @@ describe("§NNN the Administrators are emailed when a release moves a legal temp
     expect(en.subject).toBe("The legal templates changed: regenerate and approve / Șabloanele textelor legale s-au schimbat: regenerează și aprobă");
     expect(en.text).toContain("Hi John,");
     expect(en.text).toContain("«Legal documents» → «New version» → «Regenerate all»");
-    expect(en.text).toContain("a lawyer should read the declarations and the last paragraph of section 3 of the terms");
+    expect(en.text).toContain("Before approving, a lawyer should read the changed texts, above all the terms.");
     expect(en.html).toContain(`${env.APP_BASE_URL}${getPathname({ locale: "en", href: "/admin/legal/new" })}`);
   });
 });

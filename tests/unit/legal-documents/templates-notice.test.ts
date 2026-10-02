@@ -21,7 +21,7 @@ import { isParticipantMessage } from "@/modules/notifications/domain/club-notice
 import { NEVER_QUEUED_MESSAGE_TYPES } from "@/modules/notifications/domain/never-queued";
 import { emailSampleFor, placeholdersFilledBy } from "@/modules/notifications/email-copy-fields";
 import { legalTemplateNames, legalTemplatesWords } from "@/modules/notifications/legal-templates-words";
-import { renderBilingual } from "@/modules/notifications/templates";
+import { lawyerReads, renderBilingual } from "@/modules/notifications/templates";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
@@ -167,5 +167,22 @@ describe("§NNN the email quotes the backoffice's own words", () => {
   it("names the texts as /admin/legal lists them, in its order, dropping a key it does not know", () => {
     expect(legalTemplateNames("ro", ["TERMS", "PRIVACY_NOTICE", "NOT_A_TEXT"])).toEqual([ro.Admin.legal.keys.PRIVACY_NOTICE, ro.Admin.legal.keys.TERMS]);
     expect(legalTemplateNames("en", ["EVENT_DECLARATION_ROAD"])).toEqual([en.Admin.legal.keys.EVENT_DECLARATION_ROAD]);
+  });
+});
+
+describe("§NNN whom the email asks a lawyer to read", () => {
+  it("names the declarations and the terms only when they moved, and the changed texts otherwise", () => {
+    expect(lawyerReads("ro", ["PRIVACY_NOTICE"])).toBe("Înainte de aprobare, un jurist ar trebui să citească textele schimbate.");
+    expect(lawyerReads("en", ["PRIVACY_NOTICE"])).toBe("Before approving, a lawyer should read the changed texts.");
+    expect(lawyerReads("ro", ["TERMS"])).toBe("Înainte de aprobare, un jurist ar trebui să citească termenii.");
+    expect(lawyerReads("ro", ["EVENT_DECLARATION_ROAD", "GROUP_RUN_DECLARATION_TRAIL"])).toBe("Înainte de aprobare, un jurist ar trebui să citească declarațiile.");
+    expect(lawyerReads("en", ["TERMS", "EVENT_DECLARATION"])).toBe("Before approving, a lawyer should read the declarations and the terms.");
+    expect(lawyerReads("ro", ["PRIVACY_NOTICE", "TERMS"])).toBe("Înainte de aprobare, un jurist ar trebui să citească textele schimbate, mai ales termenii.");
+    expect(lawyerReads("en", ["PRIVACY_NOTICE", "EVENT_DECLARATION", "TERMS"])).toBe("Before approving, a lawyer should read the changed texts, above all the declarations and the terms.");
+    // A key the catalogue does not know is ignored, as on the bold line; no section of any text is named.
+    expect(lawyerReads("ro", ["NOT_A_TEXT"])).toBe("Înainte de aprobare, un jurist ar trebui să citească textele schimbate.");
+    for (const locale of ["ro", "en"] as const) {
+      expect(lawyerReads(locale, ["TERMS", "EVENT_DECLARATION", "PRIVACY_NOTICE"])).not.toMatch(/secțiunea|section/);
+    }
   });
 });
