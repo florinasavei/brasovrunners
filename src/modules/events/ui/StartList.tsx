@@ -84,6 +84,15 @@ const NO_NUMBER = "—";
  * exactly what it was: confirmed names, no words, no other rows — the same component, one
  * boolean.
  *
+ * ## The waiting list, by the event's own switch (§NNN)
+ *
+ * The owner, 2026-10-01: "Acum mai am nevoie de încă o setare cu «lista de așteptare e publică»". The
+ * waiting-list group — its rows, its word, its legend sentence, its count in the line above the
+ * table, its clause in the caption and the note — is drawn only for an event whose «Lista de
+ * așteptare e publică» is on (`event.waitlistPublic`), on top of the notice's two gates; off, the
+ * readers below are asked without it, so no waiting row is even read. The pending group is the
+ * notice's alone, as before.
+ *
  * ## What the words mean (§556)
  *
  * The owner, 2026-09-29, of a list reading «Confirmat» and «Înscris, în așteptarea confirmării»:
@@ -166,12 +175,19 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
     a moment, and then nobody beyond the confirmed is read.
   */
   const firstStatesNotice = statesOn ? await cachedFirstStatesNoticeVersion() : null;
-  const others = firstStatesNotice !== null ? await cachedStartListOthersCounts(event.id, firstStatesNotice) : { pending: 0, waitlisted: 0 };
+  /*
+    …and the waiting list only where the club made it public for this event (§NNN, «Lista de așteptare
+    e publică»): a third condition on that one group, never a way round the two above. Off, no waiting
+    row is read, counted, worded or explained — the list is the confirmed and the ticked pending.
+  */
+  const waitlistOn = event.waitlistPublic === true;
+  const others =
+    firstStatesNotice !== null ? await cachedStartListOthersCounts(event.id, firstStatesNotice, waitlistOn) : { pending: 0, waitlisted: 0 };
   const view = startListPage(named, anonymous, requestedPage, START_LIST_PAGE_SIZE, others.pending + others.waitlisted);
   const [participants, otherRows] = await Promise.all([
     view.namedLimit > 0 ? cachedStartListPage(event.id, view.namedOffset, view.namedLimit, socialsOn, numbersOn) : [],
     firstStatesNotice !== null && view.othersLimit > 0
-      ? cachedStartListOthersPage(event.id, firstStatesNotice, view.othersOffset, view.othersLimit, socialsOn)
+      ? cachedStartListOthersPage(event.id, firstStatesNotice, waitlistOn, view.othersOffset, view.othersLimit, socialsOn)
       : [],
   ]);
   /** The marks beside a name — only behind the gate, and only what the row carries. */
@@ -219,11 +235,12 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
         {typeof bibNumber === "number" ? bibNumber : NO_NUMBER}
       </Box>
     ) : null;
-  // The caption names the number only when the column is there (§613).
+  // The caption names the number only when the column is there (§613), and the waiting list only
+  // where it is public (§NNN).
   const caption = statesOn
     ? numbersShown
-      ? t("startList.captionStatesNumbers")
-      : t("startList.captionStates")
+      ? t(waitlistOn ? "startList.captionStatesNumbers" : "startList.captionStatesNumbersNoWaitlist")
+      : t(waitlistOn ? "startList.captionStates" : "startList.captionStatesNoWaitlist")
     : numbersShown
       ? t("startList.captionNumbers")
       : t("startList.caption");
@@ -432,7 +449,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
               name here should be able to see, without leaving, that it was their choice and how
               to change it. */}
           <Typography variant="body2" color="text.secondary" sx={{ mt: 2, pb: 2 }}>
-            {statesOn ? t("startList.noteStates") : t("startList.note")}
+            {statesOn ? t(waitlistOn ? "startList.noteStates" : "startList.noteStatesNoWaitlist") : t("startList.note")}
             {socialsOn ? ` ${t("startList.socialsNote")}` : null}
           </Typography>
         </>

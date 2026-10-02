@@ -651,6 +651,18 @@ export const events = pgTable(
       .notNull()
       .default("HIDDEN"),
 
+    /**
+     * «Lista de așteptare e publică» (§NNN): off, until the club decides otherwise for one event.
+     *
+     * A narrowing of the public list's states (§396, §421), never a widening: with it on, the
+     * ticked waiting-list rows appear only behind both of the privacy notice's gates as before;
+     * with it off — the default for every event that exists and every one created after this
+     * column — no waiting row is read at all. The editor stores `true` only beside
+     * `participant_list_visibility = NAMES` on an internal event, so it never holds a truth the
+     * list cannot act on.
+     */
+    waitlistPublic: boolean("waitlist_public").notNull().default(false),
+
     // AGENTS.md §12.3. Nullable because every row that exists today was written by a seed
     // rather than by a person, and inventing an author for it would be a lie in the trail.
     createdByStaffUserId: uuid("created_by_staff_user_id").references(() => staffUsers.id, {

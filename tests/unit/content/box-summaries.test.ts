@@ -249,6 +249,11 @@ describe("§350 each box's summary, empty and filled", () => {
     expect(bibsSummary(wordsEn, 1, null, null, { from: 900, to: 949 })).toMatch(/spares 900–949$/);
     expect(startListSummary(words, "HIDDEN")).toBe("Ascunsă");
     expect(startListSummary(words, "NAMES")).toBe(words.startList.shown);
+    // §NNN: «Lista de așteptare e publică» adds its words to a published list, and to nothing else.
+    expect(startListSummary(words, "NAMES", true)).toBe("Publică · cu lista de așteptare — doar numele celor care au ales să apară");
+    expect(startListSummary(wordsEn, "NAMES", true)).toBe("Public · with the waiting list — only the names of those who chose to appear");
+    expect(startListSummary(words, "NAMES", false)).toBe(words.startList.shown);
+    expect(startListSummary(words, "HIDDEN", true)).toBe("Ascunsă");
   });
 
   it("Traseul, Linkuri, Parteneri, Evidențiere — and the empty state of each", () => {

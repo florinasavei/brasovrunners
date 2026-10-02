@@ -366,18 +366,43 @@ export async function cachedStartListPage(eventId: string, offset: number, limit
  * described the states, or a later one (§421): the version is in the key, so the approval of a
  * notice can never serve a count computed against another line.
  */
-export async function cachedStartListOthersCounts(eventId: string, firstStatesNoticeVersion: number): Promise<{ pending: number; waitlisted: number }> {
-  return publicRead(["places.start-list-others-counts", eventId, firstStatesNoticeVersion], ["places", "events"], () =>
-    countPublicStartListOthers(getDb(), eventId, firstStatesNoticeVersion),
+export async function cachedStartListOthersCounts(
+  eventId: string,
+  firstStatesNoticeVersion: number,
+  /** The event's «Lista de așteptare e publică» (§NNN): in the key, so a count with the waiting list is never served without it. */
+  includeWaitlisted: boolean,
+): Promise<{ pending: number; waitlisted: number }> {
+  return publicRead(
+    ["places.start-list-others-counts", eventId, firstStatesNoticeVersion, includeWaitlisted ? "waitlist" : "no-waitlist"],
+    ["places", "events"],
+    () => countPublicStartListOthers(getDb(), eventId, firstStatesNoticeVersion, includeWaitlisted),
   );
 }
 
-/** One page of `listPublicStartListOthers` — a name, a club and a group, and the socials as above. */
-export async function cachedStartListOthersPage(eventId: string, firstStatesNoticeVersion: number, offset: number, limit: number, socials = false) {
+/**
+ * One page of `listPublicStartListOthers` — a name, a club and a group, and the socials as above;
+ * the waiting list only with `includeWaitlisted` (§NNN), which is in the key like the version.
+ */
+export async function cachedStartListOthersPage(
+  eventId: string,
+  firstStatesNoticeVersion: number,
+  includeWaitlisted: boolean,
+  offset: number,
+  limit: number,
+  socials = false,
+) {
   return publicRead(
-    ["places.start-list-others", eventId, firstStatesNoticeVersion, offset, limit, socials ? "socials" : "names"],
+    [
+      "places.start-list-others",
+      eventId,
+      firstStatesNoticeVersion,
+      includeWaitlisted ? "waitlist" : "no-waitlist",
+      offset,
+      limit,
+      socials ? "socials" : "names",
+    ],
     ["places", "events"],
-    () => listPublicStartListOthers(getDb(), eventId, firstStatesNoticeVersion, { offset, limit }, { socials }),
+    () => listPublicStartListOthers(getDb(), eventId, firstStatesNoticeVersion, includeWaitlisted, { offset, limit }, { socials }),
   );
 }
 

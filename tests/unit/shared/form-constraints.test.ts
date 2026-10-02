@@ -61,6 +61,8 @@ const NOT_A_BOX = new Set([
   "elevationGainEstimated",
   // «Aproximativ» beside «Distanță (m)» (§598): a tick in «Traseu».
   "distanceEstimated",
+  // «Lista de așteptare e publică» (§NNN): a tick under the public list's own.
+  "waitlistPublic",
 ]);
 
 describe("the event form's constraints are the schema's (§315)", () => {

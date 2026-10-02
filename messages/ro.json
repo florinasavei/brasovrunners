@@ -277,7 +277,10 @@
         "pendingWindow": "are loc păstrat, declarația nesemnată. Se cere la înscriere și cu {opens} înainte; se semnează până {due}, altfel pierde locul.",
         "pendingHold": "are loc păstrat {hold} de la înscriere, până semnează declarația; altfel locul se eliberează.",
         "waitlisted": "nu are încă loc. Când se eliberează unul, primul primește o ofertă pe email și are {offer} ca să semneze declarația."
-      }
+      },
+      "captionStatesNoWaitlist": "Întâi participanții confirmați — cei cu numele afișat, în ordinea confirmării, apoi ceilalți —, apoi cei înscriși care nu au confirmat încă.",
+      "captionStatesNumbersNoWaitlist": "Întâi participanții confirmați, cu numărul de concurs — cei cu numele afișat, în ordinea confirmării, apoi ceilalți —, apoi cei înscriși care nu au confirmat încă.",
+      "noteStatesNoWaitlist": "Aici sunt numărați toți participanții confirmați. Numele apare doar pentru cei care au bifat „Vreau să apar pe lista de participanți & rezultate”; ceilalți confirmați apar ca „Participant (nume ascuns)”, fără niciun alt detaliu. Cei înscriși care nu au confirmat încă apar doar dacă au bifat, cu stadiul înscrierii lângă nume; lista de așteptare nu e publică la acest eveniment, iar o înscriere anulată sau expirată nu apare. Alegerea se poate schimba oricând din emailul de confirmare sau din „Înscrierile mele”."
     },
     "cta": {
       "register": "Înscrie-te la eveniment",
@@ -1357,6 +1360,9 @@
       "declarationUnset": "Niciuna",
       "participantList": "Publică lista participanților pe pagina evenimentului",
       "participantListHelp": "Publică numele celor confirmați care au bifat „Vreau să apar pe lista de participanți & rezultate”, fără adrese de email.",
+      "waitlistPublic": "Lista de așteptare e publică",
+      "waitlistPublicHelp": "Pe lista publică apar și cei de pe lista de așteptare care au bifat „Vreau să apar”, în ordinea listei, fără poziție — doar cât timp nota de confidențialitate în vigoare descrie stadiile.",
+      "waitlistPublicHelpMore": "Are efect doar cu lista participanților publicată, deasupra. Debifată, nimeni de pe lista de așteptare nu apare, nici numărat.",
       "externalProvider": "Organizator extern",
       "externalRegistrationUrl": "Link de înscriere extern",
       "externalHelp": "Amândouă doar pentru un eveniment cu înscriere în altă parte. Linkul trebuie să înceapă cu https://.",
@@ -1939,7 +1945,8 @@
           },
           "startList": {
             "hidden": "Ascunsă",
-            "shown": "Publică — doar numele celor confirmați care au ales să apară"
+            "shown": "Publică — doar numele celor confirmați care au ales să apară",
+            "shownWithWaitlist": "Publică · cu lista de așteptare — doar numele celor care au ales să apară"
           },
           "course": {
             "route": "traseu",
@@ -2998,10 +3005,10 @@
         "listStatesNotice": {
           "title": "Nota de confidențialitate: stadiile de pe lista publică",
           "todo": "Nota în vigoare nu descrie stadiile listei publice de participanți, așa că lista arată doar participanții confirmați, până când clubul aprobă o notă care le descrie.",
-          "done": "Nota în vigoare descrie stadiile: lista publică arată lângă fiecare nume dacă e confirmat, înscris în așteptarea confirmării sau pe lista de așteptare.",
+          "done": "Nota în vigoare descrie stadiile: lângă fiecare nume, confirmat sau înscris în așteptarea confirmării; „pe lista de așteptare” doar unde evenimentul are «Lista de așteptare e publică».",
           "how": [
             "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Secțiunea despre lista publică descrie stadiile.",
-            "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”. Odată în vigoare, fiecare listă publică pornită arată stadiile, fără altă setare.",
+            "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”. Odată în vigoare, fiecare listă publică pornită arată stadiile.",
             "Aprobă și termenii și declarația din șabloanele lor, dacă nu le-ai aprobat deja, ca toate să spună același lucru."
           ]
         },
@@ -5073,7 +5080,7 @@
                 "Tipărește la mărimea reală (100%) și taie pe linie.",
                 "Numerele se dau în ordinea confirmării, de la «Numerele de concurs (BIB) încep de la». «Alocă numerele» e al Administratorului.",
                 "Rezervele pentru masă: «Retipărește rezervele libere (PDF)» le tipărește din nou pe cele încă nedate. Numere de rezervă noi pune doar Administratorul.",
-                "Pe site, lista «Cine vine» arată coloana «BIB» după ce clubul aprobă nota de confidențialitate nouă. Înainte, Administratorul le scrie celor deja înscriși cu «Trimite un mesaj participanților»; cine nu vrea să apară apasă «Nu vreau să apar pe lista de participanți & rezultate» în «Înscrierile mele», iar numărul dispare odată cu numele. De la aprobare, coloana arată numărul fiecărui confirmat care are număr, oricare ar fi nota sub care s-a înscris; un confirmat fără număr are „—”."
+                "Pe site, lista «Cine vine» arată coloana «Nr.» după ce clubul aprobă nota de confidențialitate nouă. Înainte, Administratorul le scrie celor deja înscriși cu «Trimite un mesaj participanților»; cine nu vrea să apară apasă «Nu vreau să apar pe lista de participanți & rezultate» în «Înscrierile mele», iar numărul dispare odată cu numele. De la aprobare, coloana arată numărul fiecărui confirmat care are număr, oricare ar fi nota sub care s-a înscris; un confirmat fără număr are „—”."
               ]
             },
             {
@@ -5509,8 +5516,8 @@
                 "Înapoi pe «Documente legale»: «Aprobă ciornele» și confirmă. Ciornele gata de aprobat intră în vigoare împreună; ce nu se poate aproba deodată e scris sub buton, cu motivul.",
                 "Ce e în vigoare la fiecare text: capul cardului spune «În vigoare: versiunea…» sau «Nicio versiune în vigoare»; filtrele «În vigoare», «Înlocuite» și «Retrase» arată restul.",
                 "Fără termeni, notă și o declarație de cursă aprobate nu se poate înscrie nimeni. Pentru o cursă pe asfalt editorul alege declarația de asfalt, dacă e aprobată, altfel pe cea pentru eveniment montan. O alergare de grup oferă declarația doar dacă o bifează și dacă textul ei (asfalt sau teren accidentat) e aprobat.",
-                "Până aprobi nota nouă, lista publică de participanți arată doar confirmații.",
-                "Coloana «BIB» din lista «Cine vine» (numărul de concurs) apare după ce aprobi nota de confidențialitate din șablonul nou. Mai întâi scrie-le celor deja înscriși: «Evenimente» → «Deschide» → cardul «Înscrierile primite» → «Trimite un mesaj participanților»; spune-le că numărul lor va apărea lângă nume și că, dacă nu vor, apasă «Nu vreau să apar pe lista de participanți & rezultate» în «Înscrierile mele» (numărul dispare odată cu numele).",
+                "Până aprobi nota nouă, lista publică de participanți arată doar confirmații; după aceea, lista de așteptare apare doar la evenimentele cu «Lista de așteptare e publică» bifat.",
+                "Coloana «Nr.» din lista «Cine vine» (numărul de concurs) apare după ce aprobi nota de confidențialitate din șablonul nou. Mai întâi scrie-le celor deja înscriși: «Evenimente» → «Deschide» → cardul «Înscrierile primite» → «Trimite un mesaj participanților»; spune-le că numărul lor va apărea lângă nume și că, dacă nu vor, apasă «Nu vreau să apar pe lista de participanți & rezultate» în «Înscrierile mele» (numărul dispare odată cu numele).",
                 "Apoi aprobi nota: cardul «GDPR» → «Regenerează din șablon» → ciorna → «Salvează ciorna» → «Aprobă și publică». De atunci coloana arată numărul fiecărui confirmat care are număr, oricare ar fi nota sub care s-a înscris; un confirmat fără număr are „—”. «Sarcini» → «Club» are rândul ei până atunci.",
                 "Ciorne sau versiuni de care nu mai ai nevoie: bifează-le în tabel, apasă «Șterge versiunile bifate» și verifică lista. Doar ciorne: «Șterge ciornele» și confirmă. Cu o versiune aprobată în listă: la «Confirmarea» scrii textul cerut (de exemplu „DELETE 2”), la «Motivul» de ce, apoi «Șterge versiunile».",
                 "Declarațiile semnate la o alergare de grup, când semnatarul cere ștergerea: «Evenimente» → «Editează» la alergare → «Declarații semnate (alergare de grup)» → «Șterge mai multe deodată»: bifează-le, completează o dată «Motivul ștergerii», apasă «Șterge cele bifate» și confirmă. În jurnal rămân numele tău și motivul, nu și al celui care a semnat."
@@ -6586,6 +6593,7 @@
     "botCheckWait": "Se verifică… trimitem noi înscrierea imediat ce răspunde; nu mai apăsa.",
     "submitSlow": "Durează mai mult decât de obicei. Mai așteaptă câteva secunde și nu apăsa din nou — a doua apăsare s-ar așeza în spatele primei.",
     "listOptInStates": "Lista arată și stadiul înscrierii: „{pending}” după ce îți confirmi adresa, „{waitlisted}” cât aștepți un loc și „{confirmed}” după declarație. O înscriere anulată nu apare.",
+    "listOptInStatesNoWaitlist": "Lista arată și stadiul înscrierii: „{pending}” după ce îți confirmi adresa și „{confirmed}” după declarație. Cât aștepți un loc pe lista de așteptare, nu apari pe lista publică. O înscriere anulată nu apare.",
     "another": {
       "linkGone": "Linkul acesta pentru încă o persoană nu mai este folosit. Trimite din nou formularul de mai jos cu adresa ta, numele complet și data nașterii persoanei: primești un email în care confirmi înscrierea ei cu un singur buton."
     },

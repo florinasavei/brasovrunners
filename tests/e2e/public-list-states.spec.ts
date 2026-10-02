@@ -134,13 +134,15 @@ type Seeded = { eventId: string; slug: string };
  * A published race with its list switched on and somebody in every state. Names carry the
  * project's tag, so the two projects' events never share a word.
  */
-async function seedEvent(tag: string): Promise<Seeded> {
+async function seedEvent(tag: string, waitlistPublic = true): Promise<Seeded> {
   return withDatabase(async (client) => {
     const slug = `stari-${tag}`;
     const { rows } = await client.query<{ id: string }>(
-      `INSERT INTO events (type, starts_at, registration_mode, capacity, editorial_status, published_at, location_name, participant_list_visibility)
-       VALUES ('RACE', now() + interval '60 days', 'INTERNAL', 3, 'PUBLISHED', now() - interval '1 day', 'Parcul Tractorul', 'NAMES')
+      // «Lista de așteptare e publică» (§NNN): the waiting group below is on the list only with it on.
+      `INSERT INTO events (type, starts_at, registration_mode, capacity, editorial_status, published_at, location_name, participant_list_visibility, waitlist_public)
+       VALUES ('RACE', now() + interval '60 days', 'INTERNAL', 3, 'PUBLISHED', now() - interval '1 day', 'Parcul Tractorul', 'NAMES', $1)
        RETURNING id`,
+      [waitlistPublic],
     );
     const eventId = rows[0].id;
     for (const locale of ["ro", "en"]) {
@@ -322,6 +324,9 @@ test.describe("BR-REQ-039-01 the public list's states, behind the privacy notice
     await lock.connect();
     await lock.query("SELECT pg_advisory_lock($1)", [LOCK_KEY]);
     const event = await seedEvent(tag);
+    // The same list with «Lista de așteptare e publică» left at its default, off (§NNN).
+    const privateWaitlistTag = `${tag}-np`;
+    const privateWaitlist = await seedEvent(privateWaitlistTag, false);
     try {
       await test.step("the notice in force carries both markers", async () => {
         await restoreMarker(page);
@@ -431,6 +436,28 @@ test.describe("BR-REQ-039-01 the public list's states, behind the privacy notice
       });
 
       await test.step("nobody listed wears a race number: no «BIB» column, whatever the notice names (§613)", async () => {
+      await test.step("with the marker but the waiting list private (the default): the pending still listed, no waiting row, count, legend line or word (§NNN)", async () => {
+        const ro = await readList(page, `/ro/evenimente/${privateWaitlist.slug}-ro`, privateWaitlistTag);
+        expect(ro.states).toEqual(["CONFIRMED", "CONFIRMED", "CONFIRMED", "PENDING"]);
+        await expect(ro.list).toContainText("Carmen Semneaza");
+        await expect(ro.list).toContainText("Înscris, în așteptarea confirmării");
+        await expect(ro.list).not.toContainText("Pe lista de așteptare");
+        for (const never of ["Florin", "Elena"]) await expect(ro.list).not.toContainText(never);
+        await expect(ro.list.getByTestId("start-list-others-summary")).toHaveText("Apar cu numele și: 1 înscris în așteptarea confirmării");
+        const lines = ro.list.getByTestId("start-list-legend-line");
+        expect(await lines.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-state")))).toEqual(["CONFIRMED", "PENDING"]);
+        const en = await readList(page, `/en/events/${privateWaitlist.slug}-en`, privateWaitlistTag);
+        expect(en.states).toEqual(["CONFIRMED", "CONFIRMED", "CONFIRMED", "PENDING"]);
+        await expect(en.list).not.toContainText("On the waiting list");
+        await expect(en.list.getByTestId("start-list-others-summary")).toHaveText("Also listed by name: 1 registered, awaiting confirmation");
+        // The form's caption names no waiting-list stage either.
+        await page.goto(`/ro/evenimente/${privateWaitlist.slug}-ro/inscriere`);
+        await expect(page.getByTestId("list-opt-in-states")).toContainText("„Înscris, în așteptarea confirmării”");
+        await expect(page.getByTestId("list-opt-in-states")).not.toContainText("„Pe lista de așteptare”");
+        await expect(page.getByTestId("list-opt-in-states")).toContainText("nu apari pe lista publică");
+      });
+
+      await test.step("nobody listed wears a race number: no «Nr.» column, whatever the notice names (§613)", async () => {
         const ro = await readList(page, `/ro/evenimente/${event.slug}-ro`, tag);
         await expect(ro.list.getByRole("columnheader")).toHaveText(["#", "Nume", "Club"]);
         await expect(ro.list.locator('[data-col="number"]')).toHaveCount(0);
@@ -531,6 +558,7 @@ test.describe("BR-REQ-039-01 the public list's states, behind the privacy notice
         await restoreMarker(page);
       } finally {
         await removeEvent(event.eventId);
+        await removeEvent(privateWaitlist.eventId);
         await lock.query("SELECT pg_advisory_unlock($1)", [LOCK_KEY]);
         await lock.end();
       }
