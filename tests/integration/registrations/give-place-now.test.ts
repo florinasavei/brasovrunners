@@ -323,6 +323,8 @@ describe("§637 «Dă-i un loc acum»: the address vouched for, the place given 
     const event = await createEvent(1);
     await confirmedAddress(event, "Ana", 0);
     const mara = await unconfirmed(event, "Mara", 1);
+    const link = await verificationLink(mara.id, mara.participantId, at(1));
+    const outboxBefore = (await db.select().from(emailOutbox)).length;
     // The page was read while a place was free: the plain question, no `addPlace`.
     const unasked = await refusal(givePlaceToUnconfirmedByStaff(db, admin, mara.id, at(5)));
     expect(supplementaryPlaceRefusalOutcome(unasked)).toEqual({ error: SUPPLEMENTARY_PLACE_UNCONFIRMED });
@@ -331,9 +333,20 @@ describe("§637 «Dă-i un loc acum»: the address vouched for, the place given 
     expect(supplementaryPlaceRefusalOutcome(stale)).toEqual({ error: SUPPLEMENTARY_PLACE_UNCONFIRMED });
     expect(await capacityOf(event.id)).toBe(1);
     expect(await raises(event.id)).toEqual([]);
-    expect((await rowOf("Mara")).status).toBe("PENDING_EMAIL_CONFIRMATION");
+    const after = await rowOf("Mara");
+    expect(after.status).toBe("PENDING_EMAIL_CONFIRMATION");
+    expect(after.emailConfirmedAt).toBeNull();
+    expect(after.emailConfirmedByStaffUserId).toBeNull();
+    expect(after.holdExpiresAt).toBeNull();
     expect(await vouchedTrail(mara.id)).toEqual([]);
     expect(await declarationEmails(mara.id)).toEqual([]);
+    expect((await db.select().from(emailOutbox)).length).toBe(outboxBefore);
+    expect(sentNow).toEqual([]);
+    // Her own link is untouched by the refused raise: still unspent, and it confirms her address as before.
+    const [token] = await db.select().from(emailActionTokens).where(eq(emailActionTokens.registrationId, mara.id));
+    expect(token.usedAt).toBeNull();
+    expect(token.invalidatedAt).toBeNull();
+    expect(await consumeAndConfirmEmail(link, at(6))).toMatchObject({ ok: true });
   });
 
   it("an uncapped event never lacks a place: nothing is raised", async () => {

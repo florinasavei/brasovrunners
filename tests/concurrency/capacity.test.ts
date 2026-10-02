@@ -53,8 +53,18 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
   let eventCounter = 0;
   const createdEventIds: string[] = [];
   const createdParticipantIds: string[] = [];
-  /** The Administrator who sends the offers of §615's case, made by that case and removed after. */
+  /** The Administrator who sends the offers of §615's and §NNN's cases, made once by the first and removed after. */
   let staffId: string | null = null;
+  async function administrator(): Promise<{ id: string; role: "ADMIN" }> {
+    if (!staffId) {
+      const [staff] = await db
+        .insert(staffUsers)
+        .values({ email: `offer.race.${Date.now()}@example.ro`, displayName: "Offers", role: "ADMIN" })
+        .returning();
+      staffId = staff.id;
+    }
+    return { id: staffId, role: "ADMIN" };
+  }
 
   beforeAll(async () => {
     const translations: LegalDocumentTranslationInput[] = [
@@ -348,12 +358,7 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
     async () => {
       const event = await createInternalEvent(1);
       await db.update(events).set({ waitlistAutoOffer: false }).where(eq(events.id, event.id));
-      const [staff] = await db
-        .insert(staffUsers)
-        .values({ email: `offer.race.${Date.now()}@example.ro`, displayName: "Offers", role: "ADMIN" })
-        .returning();
-      staffId = staff.id;
-      const actor = { id: staff.id, role: staff.role };
+      const actor = await administrator();
 
       // The one place free, nobody offered it (the setting is «Nu»), and two people waiting.
       const waiting = await Promise.all(["first", "second"].map((name) => createPendingRegistration(event.id, `offer-${name}`)));
@@ -395,6 +400,51 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
       const trail = await db.select().from(auditLogs).where(inArray(auditLogs.entityId, waiting.map((row) => row.id)));
       expect(trail.filter((row) => row.action === "registration.offered_by_staff")).toHaveLength(2);
       expect(await raisedRows()).toHaveLength(1);
+    },
+    30_000,
+  );
+
+  it(
+    "§NNN: a full race and two Administrators confirming the same supplementary place at once — «capacitatea devine 2» on both pages: one raise and one offer, the other refused, never 3",
+    async () => {
+      const event = await createInternalEvent(1);
+      await db.update(events).set({ waitlistAutoOffer: false }).where(eq(events.id, event.id));
+      const actor = await administrator();
+
+      // The one place confirmed, and two people waiting: the race is full.
+      const holder = await createPendingRegistration(event.id, "raise-holder");
+      await db.update(registrations).set({ status: "CONFIRMED", confirmedAt: NOW }).where(eq(registrations.id, holder.id));
+      const waiting = await Promise.all(["first", "second"].map((name) => createPendingRegistration(event.id, `raise-${name}`)));
+      for (const [index, row] of waiting.entries()) {
+        await db
+          .update(registrations)
+          .set({ status: "WAITLISTED", waitlistedAt: new Date(NOW.getTime() + index * 1000) })
+          .where(eq(registrations.id, row.id));
+      }
+
+      // Both pages were drawn on the full race of one place: each question named 2, each form posts it.
+      const outcomes = await Promise.allSettled(waiting.map((row) => offerPlaceToByStaff(db, event, row.id, actor, NOW, { addPlaceTo: 2 })));
+
+      // The first under the lock adds the place and offers it; the second finds 2 of 2 taken, and 2 is not 2 + 1.
+      const made = outcomes.filter((outcome) => outcome.status === "fulfilled") as PromiseFulfilledResult<Awaited<ReturnType<typeof offerPlaceToByStaff>>>[];
+      expect(made).toHaveLength(1);
+      expect(made[0].value.capacityRaisedTo).toBe(2);
+      const refused = outcomes.filter((outcome) => outcome.status === "rejected") as PromiseRejectedResult[];
+      expect(refused).toHaveLength(1);
+      expect(supplementaryPlaceRefusalOutcome(refused[0].reason)).toEqual({ error: SUPPLEMENTARY_PLACE_UNCONFIRMED });
+
+      const rows = await statusesFor(event.id);
+      expect(rows.filter((r) => r.status === "CONFIRMED")).toHaveLength(1);
+      expect(rows.filter((r) => r.status === "WAITLIST_OFFERED")).toHaveLength(1);
+      expect(rows.filter((r) => r.status === "WAITLISTED")).toHaveLength(1);
+      // One place added, by one confirmed press: two promises, two places.
+      const [{ capacity }] = await db.select({ capacity: events.capacity }).from(events).where(eq(events.id, event.id));
+      expect(capacity).toBe(2);
+      const raised = (await db.select().from(auditLogs).where(eq(auditLogs.entityId, event.id))).filter((row) => row.action === "event.capacity_raised_for_offer");
+      expect(raised).toHaveLength(1);
+      expect(raised[0].metadataJson).toMatchObject({ from: 1, to: 2, registrationId: made[0].value.id });
+      const trail = await db.select().from(auditLogs).where(inArray(auditLogs.entityId, waiting.map((row) => row.id)));
+      expect(trail.filter((row) => row.action === "registration.offered_by_staff")).toHaveLength(1);
     },
     30_000,
   );

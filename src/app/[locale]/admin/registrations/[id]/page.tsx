@@ -115,7 +115,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   const [acceptances, outboxHistory, auditTrail, freeBibs, minorSigns, family, partnerShares] = await Promise.all([
     listDeclarationAcceptances(db, id),
     listOutboxHistory(db, id),
-    listAuditTrail(db, "registration", id),
+    // With its event: the supplementary place added for it is a row about the event (§NNN), found by the index.
+    listAuditTrail(db, "registration", id, registration.eventId),
     // The first free numbers, for a preferential one picked rather than guessed (§105).
     suggestFreeBibNumbers(db, registration.eventId),
     /*

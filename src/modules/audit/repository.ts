@@ -598,11 +598,19 @@ export async function listPartnerShares<T extends Record<string, unknown>>(db: D
  * the event for it (`event.capacity_raised_for_offer`, `event.capacity_raised_for_place_now`, §NNN): a
  * row about the event that names the registration in its metadata, so the registration's page says who
  * added the place and from how many to how many.
+ *
+ * Both halves name the indexed key (`audit_logs_entity_idx`, entity type and id): the registration's
+ * own rows, and its event's rows narrowed to the two actions and the registration in the metadata. A
+ * test on the metadata alone could use no index and would read the whole table on every page view, a
+ * cost on the database's month (§327); with the event's id the planner ORs two index scans, and another
+ * event's raises are never read.
  */
 export async function listAuditTrail<T extends Record<string, unknown>>(
   db: Database<T>,
   entityType: "registration",
   entityId: string,
+  /** The registration's event: the entity of the raise rows that name it (§NNN). */
+  eventId: string,
 ): Promise<AuditEntry[]> {
   return db
     .select({
@@ -618,6 +626,8 @@ export async function listAuditTrail<T extends Record<string, unknown>>(
       or(
         and(eq(auditLogs.entityType, entityType), eq(auditLogs.entityId, entityId)),
         and(
+          eq(auditLogs.entityType, "event"),
+          eq(auditLogs.entityId, eventId),
           inArray(auditLogs.action, ["event.capacity_raised_for_offer", "event.capacity_raised_for_place_now"]),
           sql`(${auditLogs.metadataJson} ->> 'registrationId') = ${entityId}`,
         ),

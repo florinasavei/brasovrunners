@@ -59,7 +59,7 @@ const { cancelRegistrationByStaff, offerPlaceByStaff } = await import("@/modules
 const { countOccupied, findEventsNeedingMaintenance } = await import("@/modules/registrations/repository");
 const { forgetCachedDeadlines } = await import("@/modules/deadlines/memo");
 const { runRegistrationMaintenance } = await import("@/modules/registrations/maintenance");
-const { listAuditTrail } = await import("@/modules/audit/repository");
+const { listAuditTrail, recordAuditEvent } = await import("@/modules/audit/repository");
 const { planDeadlineRebase } = await import("@/modules/notifications/deadline-rebase");
 
 type EventInput = Parameters<typeof submitRegistration>[1];
@@ -242,17 +242,43 @@ describe("§NNN «Trimite-i oferta» on a full event: one supplementary place, e
     const [raised] = await raises(event.id);
     expect(raised).toMatchObject({ actorStaffUserId: admin.id, entityType: "event", participantId: null, metadataJson: { from: 1, to: 2, registrationId: luca.id } });
     // The registration's page reads it among its own trail.
-    expect((await listAuditTrail(db, "registration", luca.id)).map((entry) => entry.action)).toEqual(
+    expect((await listAuditTrail(db, "registration", luca.id, event.id)).map((entry) => entry.action)).toEqual(
       expect.arrayContaining(["event.capacity_raised_for_offer", "registration.offered_by_staff"]),
     );
     // Elena's page does not: the place was added for Luca.
-    expect((await listAuditTrail(db, "registration", (await rowOf("Elena")).id)).map((entry) => entry.action)).not.toContain("event.capacity_raised_for_offer");
+    expect((await listAuditTrail(db, "registration", (await rowOf("Elena")).id, event.id)).map((entry) => entry.action)).not.toContain("event.capacity_raised_for_offer");
 
     // The public count: two places, both taken — Ana's hold and Luca's offer — Elena still waiting.
     const places = await readPublicPlaces(db, { id: event.id, capacity: 2, waitlistCapacity: null }, at(5));
     expect(places).toMatchObject({ availablePlaces: 0, offered: 1, occupied: 2, waitlisted: 1 });
     expect(expired).toContainEqual(["places"]);
     expect((await rowOf("Elena")).status).toBe("WAITLISTED");
+  });
+
+  it("the registration's page reads its own event's raises only: another event's are never listed (§NNN)", async () => {
+    const event = await fullWithTwoWaiting();
+    const luca = await rowOf("Luca");
+    await offerPlaceByStaff(db, admin, luca.id, at(5), { addPlaceTo: 2 });
+    // Another full race, with its own raise for its own waiting runner.
+    const other = await createEvent(1);
+    expect((await confirmedAddress(other, "Ioana", 6)).status).toBe("PENDING_DECLARATION");
+    expect((await confirmedAddress(other, "Radu", 7)).status).toBe("WAITLISTED");
+    await offerPlaceByStaff(db, admin, (await rowOf("Radu")).id, at(8), { addPlaceTo: 2 });
+    // And a row about that other event naming Luca, which no path writes: the trail reads his event's rows alone.
+    await recordAuditEvent(db, {
+      actorStaffUserId: admin.id,
+      participantId: null,
+      action: "event.capacity_raised_for_offer",
+      entityType: "event",
+      entityId: other.id,
+      metadata: { from: 2, to: 3, registrationId: luca.id },
+      now: at(9),
+    });
+
+    const raisedFor = async (registrationId: string, eventId: string) =>
+      (await listAuditTrail(db, "registration", registrationId, eventId)).filter((entry) => entry.action === "event.capacity_raised_for_offer").map((entry) => entry.metadataJson);
+    expect(await raisedFor(luca.id, event.id)).toEqual([{ from: 1, to: 2, registrationId: luca.id }]);
+    expect(await raisedFor((await rowOf("Radu")).id, other.id)).toEqual([{ from: 1, to: 2, registrationId: (await rowOf("Radu")).id }]);
   });
 
   it("with «Da», the chosen person gets the new place, not the head of the line", async () => {
