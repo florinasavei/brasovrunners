@@ -8,7 +8,7 @@ import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { findFamilyEntryById } from "@/modules/registrations/family-entries";
 import { lockEventForCapacity } from "@/modules/registrations/repository";
 import { isClubCopy } from "./domain/club-notices";
-import { DEADLINE_KIND_BY_MESSAGE, REBASE_MIN_WAIT_MS, rebasedDeadline, startsItsDeadline } from "./domain/deadline-rebase";
+import { DEADLINE_KIND_BY_MESSAGE, offerLastsUntilStart, REBASE_MIN_WAIT_MS, rebasedDeadline, startsItsDeadline } from "./domain/deadline-rebase";
 import type { OutboxRow } from "./outbox";
 
 /**
@@ -92,6 +92,8 @@ export async function planDeadlineRebase<T extends Record<string, unknown>>(
     queuedAt: row.createdAt,
     sentAt,
     event: { registrationClosesAt: found.registrationClosesAt, startsAt: found.startsAt },
+    // «Trimite-i oferta»'s offer (§NNN): the start is its one cap, at the send as when it was made.
+    capByClose: !(kind === "offer" && offerLastsUntilStart(row.payloadJson)),
   });
   return to ? { kind, registrationId: row.registrationId, eventId: found.eventId, from: stored, to, waitMs } : null;
 }

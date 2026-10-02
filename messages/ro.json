@@ -731,6 +731,10 @@
           "family_resent": "Email retrimis familiei",
           "offered_by_staff": "Ofertă trimisă înaintea listei de așteptare («Trimite-i oferta»)",
           "address_vouched_by_staff": "Adresă garantată de echipă; loc dat înaintea listei de așteptare («Dă-i un loc acum»)"
+        },
+        "event": {
+          "capacity_raised_for_offer": "Loc suplimentar adăugat pentru o ofertă («Trimite-i oferta»): {from} → {to}",
+          "capacity_raised_for_place_now": "Loc suplimentar adăugat pentru un loc dat acum («Dă-i un loc acum»): {from} → {to}"
         }
       },
       "locale": {
@@ -921,7 +925,7 @@
         },
         "releaseAuto": "După termen locul nu se pierde singur: se eliberează doar când cineva de pe lista de așteptare n-are alt loc liber, și i se oferă primului din listă.",
         "releaseManual": "După termen locul nu se pierde singur: se eliberează doar când cineva de pe lista de așteptare n-are alt loc liber, apoi stă liber pentru «Trimite-i oferta» sau «Dă-i un loc».",
-        "releaseClosed": "După termen locul nu se pierde singur: se eliberează doar când cineva de pe lista de așteptare n-are alt loc liber; înscrierile s-au închis, deci îl dai la masă cu «Dă-i un loc».",
+        "releaseClosed": "După termen locul nu se pierde singur: se eliberează doar când cineva de pe listă n-are alt loc liber; înscrierile s-au închis: îl dai cu «Trimite-i oferta» sau, la masă, cu «Dă-i un loc».",
         "releaseNoList": "După termen locul nu se pierde singur: se eliberează doar când îl cere cineva nou și nu mai e alt loc liber.",
         "releaseNever": "După termen locul nu se pierde: evenimentul nu are limită de locuri.",
         "atStart": "La start, cine n-a semnat pierde locul; la masă poate fi confirmat pe hârtie, dacă mai e un loc liber.",
@@ -1211,7 +1215,11 @@
       "givePlaceNowTitle": "Îi dai un loc acum?",
       "givePlaceNowBody": "Garantezi adresa {email} și îi dai un loc înaintea listei de așteptare.",
       "givePlaceNowBodyMore": "Primește pe loc emailul cu declarația; o semnează online oricând până la termen, sau pe hârtie la masă. Nu mai are de confirmat nimic.",
-      "givePlaceNowFull": "Nu e niciun loc liber. Pe «Da» la alocarea automată, un loc adăugat merge întâi la lista de așteptare: pune «Nu», ridică «Număr de locuri» cu 1, apoi apasă din nou."
+      "givePlaceNowFull": "Nu e niciun loc liber: apăsând, adaugi un loc suplimentar peste limită, capacitatea devine {n}.",
+      "givePlaceNowRaiseConfirm": "Adaugă un loc și dă-i locul",
+      "offerPlaceRaise": "Nu e niciun loc liber: apăsând, adaugi un loc suplimentar peste limită, capacitatea devine {n}.",
+      "offerPlaceRaiseConfirm": "Adaugă un loc și trimite oferta",
+      "offerPlaceAfterClose": "Înscrierile s-au închis: oferta e valabilă cel mult până la start."
     },
     "errors": {
       "PICTURE_IN_USE": "Imaginea este folosită într-o pagină, într-un eveniment sau într-un album. Scoate-o de acolo mai întâi.",
@@ -1264,7 +1272,6 @@
       "LEGAL_RETIRE_IN_FORCE": "Nu s-a șters nimic: aceasta este versiunea în vigoare. Aprobă întâi versiunea următoare, apoi o poți șterge.",
       "LEGAL_ALREADY_DELETED": "Versiunea a fost deja ștearsă din listă. Textul ei rămâne în arhivă.",
       "SEND_NOW_HOUR_SPENT": "Nu s-a trimis nimic: limita pe oră a Mailgun («Limita pe oră» din «Emailuri») nu mai are loc acum. Alege «Pune la coadă»; emailul pleacă singur când ora are din nou loc.",
-      "OFFER_AFTER_CLOSE": "Înscrierile s-au închis, deci o ofertă ar expira pe loc; nu s-a schimbat nimic. La masă, folosește «Dă-i un loc».",
       "RETRY_FAILED_THROTTLED": "Nu s-a pus nimic înapoi: emailurile eșuate au fost deja reîncercate de 3 ori în ultima oră. Așteaptă puțin și uită-te de ce au eșuat înainte să apeși din nou.",
       "SEND_NOW_MAILGUN_STOPPED_FALLBACK_OFF": "Nu s-a trimis nimic: Mailgun e oprit, iar «Gmail preia când Mailgun se oprește» e pe Nu. Pune-l pe Da în «Emailuri», sau alege «Pune la coadă»: pleacă singur când Mailgun reia.",
       "SEND_NOW_MAILGUN_STOPPED_NO_GMAIL": "Nu s-a trimis nimic: Mailgun e oprit, iar Gmail-ul clubului nu e configurat aici. Alege «Pune la coadă»: emailul pleacă singur când Mailgun reia.",
@@ -4967,7 +4974,7 @@
                 "Nimeni nu unește două înscrieri într-una.",
                 "Nimeni din echipă nu semnează declarația în locul participantului: la masă înregistrezi doar declarația de hârtie pe care a semnat-o el.",
                 "Niciun text legal nu intră în vigoare fără o versiune aprobată; fără termeni, notă și declarație aprobate nu se poate înscrie nimeni.",
-                "Nimeni nu trece peste numărul de locuri: nu există înscriere peste capacitate, nici de mână, nici la masă. Un loc se dă doar când e liber.",
+                "Nimeni nu trece peste numărul de locuri: nu există înscriere peste capacitate, nici de mână, nici la masă. Un loc se dă doar când e liber; când nu e niciunul, «Trimite-i oferta» și «Dă-i un loc acum» adaugă la vedere, după ce confirmi, un singur loc suplimentar, scris în jurnal.",
                 "Nimeni nu primește un loc fără semnătura lui (la un minor, a părintelui): o ofertă din lista de așteptare o acceptă și o semnează persoana, din emailul ei, iar la masă «Dă-i un loc» confirmă doar pe declarația de hârtie semnată acolo, de față."
               ]
             }
@@ -5361,11 +5368,11 @@
               "steps": [
                 "«Evenimente» → «Editează» pe rândul cursei → cardul «Participare și înscrieri».",
                 "La «Locurile din lista de așteptare se alocă automat» alege «Nu» și apasă «Salvează». Pe «Nu», un loc eliberat sau adăugat rămâne liber până îl dai tu.",
-                "Abia apoi mărește «Număr de locuri», cu atâtea locuri câte vrei să dai acum. Pe «Da», locurile adăugate pleacă pe loc, ca oferte, la primii de pe listă.",
+                "Nu e nevoie să mărești «Număr de locuri»: dacă nu e niciun loc liber, «Trimite-i oferta» adaugă un loc suplimentar, după ce confirmi (capacitatea crește cu unu, iar jurnalul înscrierii spune cine l-a adăugat și pentru cine).",
                 "Cardul «Înscrierile primite» → «Coada de înscrieri»: pe rândul persoanei alese din lista de așteptare apasă «Trimite-i oferta». Același buton e și pe pagina înscrierii ei.",
-                "Fereastra spune până când are timp; apasă din nou «Trimite-i oferta». Primește emailul obișnuit «S-a eliberat un loc», cu termenul obișnuit, {offer}: din email apasă «Confirmă locul» și semnează declarația, dacă nu a semnat-o încă.",
+                "Fereastra spune până când are timp și, dacă nu e niciun loc liber, că adaugi unul; apasă «Trimite-i oferta» sau, pe un eveniment plin, «Adaugă un loc și trimite oferta». Primește emailul obișnuit «S-a eliberat un loc», cu termenul obișnuit, {offer}: din email apasă «Confirmă locul» și semnează declarația, dacă nu a semnat-o încă.",
                 "Nu acceptă la timp? Oferta expiră și locul e din nou liber, pentru cine alegi tu.",
-                "Trebuie un loc liber: o anulare sau mai multe locuri. Pe un eveniment plin apăsarea e refuzată, iar un „i” lângă buton spune de ce. După închiderea înscrierilor nu se mai trimit oferte: la masă, cu persoana de față, «Dă-i un loc» o confirmă pe declarația de hârtie.",
+                "Merge oricând până la start, și după închiderea înscrierilor: oferta e valabilă atunci cel mult până la start. La masă, cu persoana de față, «Dă-i un loc» o confirmă pe declarația de hârtie, dar doar într-un loc liber; pe un eveniment plin un „i” lângă el spune de ce.",
                 "Ceilalți rămân pe lista de așteptare și nu primesc nimic. Pe site, cardul spune «Locurile se dau din lista de așteptare», iar cine se înscrie acum intră tot pe listă cât timp așteaptă cineva. Câți pot aștepta spune «Lista de așteptare», lângă «Număr de locuri».",
                 "Atenție la capătul listei: când nu mai e nimeni pe lista de așteptare — cine are o ofertă nu mai e pe ea —, locurile încă libere le ia următorul care se înscrie."
               ]
@@ -5374,11 +5381,11 @@
               "title": "Dă un loc cuiva care nu și-a confirmat adresa",
               "steps": [
                 "Deschide înscrierea: pe ea scrie «Așteaptă confirmarea emailului» (emailul n-a ajuns, a intrat în Spam sau, când a apăsat linkul, locurile erau pline).",
-                "Apasă «Dă-i un loc acum». Fereastra spune adresa pe care o garantezi; apasă din nou «Dă-i un loc acum».",
+                "Apasă «Dă-i un loc acum». Fereastra spune adresa pe care o garantezi; apasă din nou «Dă-i un loc acum» sau, pe un eveniment plin, «Adaugă un loc și dă-i locul».",
                 "Persoana primește imediat locul și emailul cu declarația, cu termenul scris în el. Linkul vechi de confirmare nu mai confirmă nimic, iar un email de confirmare încă la coadă nu mai pleacă.",
                 "Ea semnează declarația: online, din email, sau pe hârtie la masă, unde voluntarul apasă «Confirmă pe hârtie». Declarația nu o semnează nimeni în locul ei.",
-                "Trebuie un loc liber: dacă nu e niciunul, apăsarea e refuzată. Pe «Da» la «Locurile din lista de așteptare se alocă automat», un loc adăugat merge întâi la lista de așteptare.",
-                "Pune «Nu» acolo și salvează, mărește «Număr de locuri» cu 1 și apasă din nou «Dă-i un loc acum»; pe urmă poți pune iar «Da».",
+                "Dacă nu e niciun loc liber, fereastra spune dinainte că adaugi un loc suplimentar peste limită și cât devine capacitatea; nu mai trebuie să mărești «Număr de locuri» și nici să pui «Nu» la alocarea automată.",
+                "Locul adăugat e al ei din aceeași apăsare: nu ajunge la lista de așteptare. Jurnalul înscrierii spune cine l-a adăugat, pentru cine, și de la cât la cât.",
                 "Cei de pe lista de așteptare rămân unde sunt. Verifică adresa înainte: o adresă greșită ține locul până la termen."
               ]
             },
@@ -7957,6 +7964,16 @@
       "menuOrder": "Ordinea meniului a fost salvată.",
       "registrationOffered": "Oferta e trimisă: are termenul obișnuit ca să semneze declarația.",
       "placeGiven": "Loc dat; emailul cu declarația a plecat.",
+      "registrationOfferedRaised": {
+        "one": "Ofertă trimisă; loc suplimentar adăugat: {count} loc.",
+        "few": "Ofertă trimisă; loc suplimentar adăugat: {count} locuri.",
+        "other": "Ofertă trimisă; loc suplimentar adăugat: {count} de locuri."
+      },
+      "placeGivenRaised": {
+        "one": "Loc dat; loc suplimentar adăugat: {count} loc. Emailul cu declarația a plecat.",
+        "few": "Loc dat; loc suplimentar adăugat: {count} locuri. Emailul cu declarația a plecat.",
+        "other": "Loc dat; loc suplimentar adăugat: {count} de locuri. Emailul cu declarația a plecat."
+      },
       "failedRetried": {
         "one": "{count} email eșuat pus înapoi în coadă.",
         "few": "{count} emailuri eșuate puse înapoi în coadă.",

@@ -731,6 +731,10 @@
           "family_resent": "Email resent to the family",
           "offered_by_staff": "Offer sent ahead of the waiting list (“Send them the offer”)",
           "address_vouched_by_staff": "Address vouched for by the team; place given ahead of the waiting list (“Give them a place now”)"
+        },
+        "event": {
+          "capacity_raised_for_offer": "Supplementary place added for an offer (“Send them the offer”): {from} → {to}",
+          "capacity_raised_for_place_now": "Supplementary place added for a place given now (“Give them a place now”): {from} → {to}"
         }
       },
       "locale": {
@@ -921,7 +925,7 @@
         },
         "releaseAuto": "Past the deadline a place is not lost by itself: it is released only when someone on the waiting list has no other free place, and offered to the first in line.",
         "releaseManual": "Past the deadline a place is not lost by itself: it is released only when someone on the waiting list has no other free place, then stays free for «Send them the offer» or «Give a place».",
-        "releaseClosed": "Past the deadline a place is not lost by itself: it is released only when someone on the waiting list has no other free place; registration has closed, so give it at the desk with «Give a place».",
+        "releaseClosed": "Past the deadline a place is not lost by itself: it is freed only when someone waiting has no other free place; registration has closed: «Send them the offer», or «Give a place» at the desk.",
         "releaseNoList": "Past the deadline a place is not lost by itself: it is released only when someone new asks for it and no other place is free.",
         "releaseNever": "Past the deadline a place is not lost: the event has no limit of places.",
         "atStart": "At the start, whoever has not signed loses the place; at the desk they can be confirmed on paper, if a place is still free.",
@@ -1211,7 +1215,11 @@
       "givePlaceNowTitle": "Give them a place now?",
       "givePlaceNowBody": "You vouch for the address {email} and give them a place ahead of the waiting list.",
       "givePlaceNowBodyMore": "They get the declaration email at once and sign it online any time before the deadline, or on paper at the desk. They have nothing else to confirm.",
-      "givePlaceNowFull": "No place is free. On «Yes» for automatic offers, an added place goes to the waiting list first: set «No», raise «Capacity» by 1, then press again."
+      "givePlaceNowFull": "No place is free: pressing adds one supplementary place over the limit; the capacity becomes {n}.",
+      "givePlaceNowRaiseConfirm": "Add a place and give it to them",
+      "offerPlaceRaise": "No place is free: pressing adds one supplementary place over the limit; the capacity becomes {n}.",
+      "offerPlaceRaiseConfirm": "Add a place and send the offer",
+      "offerPlaceAfterClose": "Registration has closed: the offer holds until the start at the latest."
     },
     "errors": {
       "PICTURE_IN_USE": "The picture is used on a page, an event or in an album. Take it out of there first.",
@@ -1264,7 +1272,6 @@
       "LEGAL_RETIRE_IN_FORCE": "Nothing was deleted: this is the version in force. Approve the next version first, then you can delete this one.",
       "LEGAL_ALREADY_DELETED": "This version has already been deleted from the list. Its text stays in the archive.",
       "SEND_NOW_HOUR_SPENT": "Nothing was sent: Mailgun's hourly limit («Hourly limit» under «Emails») has no room right now. Choose «Queue it»; the email leaves on its own once the hour has room again.",
-      "OFFER_AFTER_CLOSE": "Registration has closed, so an offer would lapse at once; nothing changed. At the desk, use “Give a place”.",
       "RETRY_FAILED_THROTTLED": "Nothing was put back: the failed emails were already retried 3 times in the last hour. Wait a while, and look at why they failed before pressing again.",
       "SEND_NOW_MAILGUN_STOPPED_FALLBACK_OFF": "Nothing was sent: Mailgun is stopped and «Gmail takes over when Mailgun stops» is set to No. Set it to Yes under «Emails», or choose «Queue it»: it leaves when Mailgun resumes.",
       "SEND_NOW_MAILGUN_STOPPED_NO_GMAIL": "Nothing was sent: Mailgun is stopped and the club's Gmail is not configured here. Choose «Queue it»: the email leaves on its own when Mailgun resumes.",
@@ -4967,7 +4974,7 @@
                 "Nobody merges two registrations into one.",
                 "Nobody on the team signs the declaration for the participant: at the desk you only record the paper declaration they signed themselves.",
                 "No legal text takes effect without an approved version; without approved terms, notice and declaration nobody can register.",
-                "Nobody goes past the number of places: there is no registration over capacity, not by hand and not at the desk. A place is given only when it is free.",
+                "Nobody goes past the number of places: there is no registration over capacity, not by hand and not at the desk. A place is given only when it is free; when none is, «Send them the offer» and «Give them a place now» add, once you confirm, a single supplementary place, in the open, written in the trail.",
                 "Nobody gets a place without their own signature (a parent's, for a minor): a waiting-list offer is accepted and signed by the person, from their email, and at the desk «Give a place» confirms only on the paper declaration they sign there, in person."
               ]
             }
@@ -5361,11 +5368,11 @@
               "steps": [
                 "«Events» → «Edit» on the race's row → the «Taking part and registration» card.",
                 "Under «Places from the waiting list are allocated automatically» choose «No» and press «Save». On «No», a freed or added place stays free until you hand it out.",
-                "Only then raise «Capacity», by as many places as you want to hand out now. On «Yes», added places go at once, as offers, to the first on the list.",
+                "No need to raise «Capacity»: when no place is free, «Send them the offer» adds one supplementary place once you confirm (the capacity grows by one, and the registration's trail says who added it and for whom).",
                 "The «Registrations received» card → «Registration queue»: on the chosen person's waiting-list row press «Send them the offer». The same button is on their registration's page too.",
-                "The window says until when they have; press «Send them the offer» again. They get the ordinary «A place has freed up» email, with the ordinary deadline, {offer}: from the email they press «Confirm the place» and sign the declaration, if they have not yet.",
+                "The window says until when they have and, when no place is free, that you add one; press «Send them the offer» or, on a full event, «Add a place and send the offer». They get the ordinary «A place has freed up» email, with the ordinary deadline, {offer}: from the email they press «Confirm the place» and sign the declaration, if they have not yet.",
                 "Not accepted in time? The offer lapses and the place is free again, for whoever you choose.",
-                "A free place is needed: a cancellation, or more places. On a full event the press is refused, and an “i” beside the button says why. After registration closes no offer is sent: at the desk, with the person there, «Give a place» confirms them on the paper declaration.",
+                "It works at any moment until the start, after registration closes too: the offer then holds until the start at the latest. At the desk, with the person there, «Give a place» confirms them on the paper declaration, but only into a free place; on a full event an “i” beside it says why.",
                 "The others stay on the waiting list and receive nothing. On the site, the card says «Places are given from the waiting list», and newcomers join the list too while anyone waits. How many may wait is «Waiting list», beside «Capacity».",
                 "Mind the end of the line: once nobody is left on the waiting list — somebody holding an offer is no longer on it —, the places still free go to whoever registers next."
               ]
@@ -5374,11 +5381,11 @@
               "title": "Give a place to someone who did not confirm the address",
               "steps": [
                 "Open the registration: it says «Awaiting email confirmation» (the email never arrived, went to Spam, or the places were full when they pressed the link).",
-                "Press «Give them a place now». The window names the address you vouch for; press «Give them a place now» again.",
+                "Press «Give them a place now». The window names the address you vouch for; press «Give them a place now» again or, on a full event, «Add a place and give it to them».",
                 "The person gets the place and the declaration email at once, with the deadline in it. The old confirmation link no longer confirms anything, and a confirmation email still queued is not sent.",
                 "They sign the declaration: online, from the email, or on paper at the desk, where the volunteer presses «Confirm on paper». Nobody signs the declaration for them.",
-                "A free place is needed: with none, the press is refused. On «Yes» for «Places from the waiting list are allocated automatically», an added place goes to the waiting list first.",
-                "Set «No» there and save, raise «Capacity» by 1 and press «Give them a place now» again; afterwards you can set «Yes» back.",
+                "When no place is free, the window says beforehand that you add one supplementary place over the limit and what the capacity becomes; there is no need to raise «Capacity» or to set the automatic allocation to «No».",
+                "The added place is theirs in the same press: it never reaches the waiting list. The registration's trail says who added it, for whom, and from how many to how many.",
                 "The people on the waiting list stay where they are. Check the address first: a wrong address holds the place until the deadline."
               ]
             },
@@ -7957,6 +7964,16 @@
       "menuOrder": "The menu order was saved.",
       "registrationOffered": "The offer is sent: they have the usual time to sign the declaration.",
       "placeGiven": "Place given; the declaration email has left.",
+      "placeGivenRaised": {
+        "one": "Place given; a supplementary place added: {count} place. The declaration email has left.",
+        "few": "Place given; a supplementary place added: {count} places. The declaration email has left.",
+        "other": "Place given; a supplementary place added: {count} places. The declaration email has left."
+      },
+      "registrationOfferedRaised": {
+        "one": "Offer sent; a supplementary place added: {count} place.",
+        "few": "Offer sent; a supplementary place added: {count} places.",
+        "other": "Offer sent; a supplementary place added: {count} places."
+      },
       "failedRetried": {
         "one": "{count} failed email put back in the queue.",
         "few": "{count} failed emails put back in the queue.",

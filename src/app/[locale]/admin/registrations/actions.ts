@@ -27,7 +27,7 @@ import { findEventForRegistrationById } from "@/modules/events/repository";
 import { effectiveMinimumAge, yearsPhrase } from "@/modules/registrations/domain/age";
 import { UNDER_MINIMUM_AGE } from "@/modules/registrations/fields";
 import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS } from "@/modules/registrations/domain/family";
-import { offerRefusalCode, waitlistRefusalCode } from "@/modules/registrations/domain/waitlist";
+import { waitlistRefusalCode } from "@/modules/registrations/domain/waitlist";
 import { noFreePlaceOutcome } from "@/modules/registrations/domain/capacity";
 import { sendOutboxNow } from "@/modules/notifications/send-now";
 import { SendNowRefused, sendNowRefusalCode } from "@/modules/notifications/send-at-once";
@@ -191,11 +191,12 @@ export async function offerPlaceAction(_previous: FormOutcome | null, form: Form
   let outcome: Record<string, string | undefined>;
   try {
     const actor = await requireStaffCapability(canManageRegistrations);
-    await offerPlaceByStaff(getDb(), actor, registrationId, new Date());
-    outcome = { saved: "registrationOffered" };
+    const offered = await offerPlaceByStaff(getDb(), actor, registrationId, new Date());
+    // The server decided under the lock whether a supplementary place was needed (§NNN); the toast says which.
+    outcome = offered.capacityRaisedTo === null ? { saved: "registrationOffered" } : { saved: "registrationOfferedRaised", count: String(offered.capacityRaisedTo) };
   } catch (error) {
-    const afterClose = offerRefusalCode(error);
-    outcome = noFreePlaceOutcome(error) ?? (afterClose ? { error: afterClose } : outcomeOf(error));
+    // A full count after the one place added (no path writes one) keeps §589's sentence; nothing was written.
+    outcome = noFreePlaceOutcome(error) ?? outcomeOf(error);
   }
   return backToDesk(form, locale, registrationId, outcome);
 }
@@ -204,7 +205,8 @@ export async function offerPlaceAction(_previous: FormOutcome | null, form: Form
  * «Dă-i un loc acum» (§637): on a registration still waiting for its address, the Administrator
  * vouches for the address and gives the place now, ahead of the waiting list; the declaration email
  * leaves at once. The Administrator's (`canManageRegistrations`), asserted here and again in the
- * service. A full event says who holds the places (§589's sentence) and nothing is written.
+ * service. On a full event it adds one supplementary place (§NNN), as its question said; the banner
+ * names the new capacity.
  */
 export async function givePlaceNowAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = toLocale(form.get("uiLocale"));
@@ -213,8 +215,9 @@ export async function givePlaceNowAction(_previous: FormOutcome | null, form: Fo
   let outcome: Record<string, string | undefined>;
   try {
     const actor = await requireStaffCapability(canManageRegistrations);
-    await givePlaceToUnconfirmedByStaff(getDb(), actor, registrationId, new Date());
-    outcome = { saved: "placeGiven" };
+    const placed = await givePlaceToUnconfirmedByStaff(getDb(), actor, registrationId, new Date());
+    // The server decided under the lock whether a supplementary place was needed (§NNN); the banner says which.
+    outcome = placed.capacityRaisedTo === null ? { saved: "placeGiven" } : { saved: "placeGivenRaised", count: String(placed.capacityRaisedTo) };
   } catch (error) {
     outcome = noFreePlaceOutcome(error) ?? outcomeOf(error);
   }
