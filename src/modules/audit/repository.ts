@@ -89,6 +89,11 @@ export type AuditAction =
    * was the family's own reserved one — never a name or an address.
    */
   | "registration.address_vouched_by_staff"
+  /**
+   * «În afara locurilor» set or cleared by an Administrator (§NNN): `from` and `to` (the flag before
+   * and after), the state the row was in and, when the change moved it, the state after — never a name.
+   */
+  | "registration.outside_capacity_changed"
   /** The participant is here (BR-REQ-037-08); by staff, or by themselves. */
   | "registration.checked_in"
   | "registration.checkin_undone"

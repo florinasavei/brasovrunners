@@ -3,7 +3,7 @@ import Stack from "@mui/material/Stack";
 import type { ReactNode } from "react";
 import type { RegistrationStatus } from "@/db/schema/registrations";
 import ChipLink from "@/shared/ui/ChipLink";
-import { summaryPillHref, type SummaryQuery } from "../domain/summary-filter-links";
+import { outsidePillHref, summaryPillHref, type SummaryQuery } from "../domain/summary-filter-links";
 
 /**
  * The registrations list's summary strip: how many there are, each state they are made of and the
@@ -21,6 +21,11 @@ import { summaryPillHref, type SummaryQuery } from "../domain/summary-filter-lin
  * so the page hands in the numbers it grouped without it, and a pill's count never moves with the
  * pill pressed. A state with nobody in it is not drawn, as before — unless it is the one in force, so the filter that emptied the list can always be pressed off. The test rows' pill is a label, not a
  * filter: `kind` is no status.
+ *
+ * «În afara locurilor» (§NNN) is a pill of its own after the states, a filter like them (`outside=1`,
+ * kept beside the state in force): the real rows seated outside the places, drawn while there are
+ * any or while it is pressed. They are inside the total and the state pills too — they are
+ * registrations — and outside every count of places.
  */
 export default function SummaryStrip({
   basePath,
@@ -31,6 +36,7 @@ export default function SummaryStrip({
   totalLabel,
   testLabel,
   statusLabel,
+  outsideLabel = null,
   children,
 }: {
   basePath: string;
@@ -40,11 +46,13 @@ export default function SummaryStrip({
   active: RegistrationStatus | null;
   /** Every state, in the order the pills show them. */
   statuses: readonly RegistrationStatus[];
-  summary: { real: number; byStatus: Partial<Record<RegistrationStatus, number>>; test: number };
+  summary: { real: number; byStatus: Partial<Record<RegistrationStatus, number>>; test: number; outside?: number };
   totalLabel: string;
   /** The test rows' label, or `null` to leave them out. */
   testLabel: string | null;
   statusLabel: Record<RegistrationStatus, string>;
+  /** «În afara locurilor: N» (§NNN), worded by the page; `null` leaves the pill out. */
+  outsideLabel?: string | null;
   /** What comes before the pills — the event's «Doar pentru membri» chip. */
   children?: ReactNode;
 }) {
@@ -71,6 +79,15 @@ export default function SummaryStrip({
             keepScroll
           />
         ))}
+      {outsideLabel !== null && ((summary.outside ?? 0) > 0 || query.outside === "1") && (
+        <ChipLink
+          href={outsidePillHref(basePath, query)}
+          label={outsideLabel}
+          active={query.outside === "1"}
+          current={query.outside === "1" ? "page" : undefined}
+          keepScroll
+        />
+      )}
       {testLabel !== null && summary.test > 0 && <Chip size="small" variant="outlined" color="warning" label={testLabel} />}
     </Stack>
   );

@@ -67,6 +67,7 @@ import { findCurrentApprovedDocument, findFirstStatesNoticeVersion, listEffectiv
 import { DEFAULT_BOT_CHECK, readBotCheck } from "@/modules/registrations/bot-check";
 import {
   countAnonymousStartListEntries,
+  countOutsideOnPublicStartList,
   countPublicStartList,
   countPublicStartListOthers,
   listPlaceCountInstants,
@@ -352,12 +353,21 @@ export type PublicAvailability = {
   waitlistCountPublic?: boolean;
 };
 
-/** The two counts the public start list pages by (§250): named, and left off at their request. */
-export async function cachedStartListCounts(eventId: string): Promise<{ named: number; anonymous: number }> {
-  return publicRead(["places.start-list-counts", eventId], ["places", "events"], async () => {
+/**
+ * The two counts the public start list pages by (§250): named, and left off at their request — and,
+ * of the named, those seated «În afara locurilor» (§NNN), whom the title and the summary line leave
+ * out while the table keeps their rows. The key gained `"outside"` with the shape, so no entry written
+ * without the third count is read by code that asks for it.
+ */
+export async function cachedStartListCounts(eventId: string): Promise<{ named: number; anonymous: number; outsideNamed: number }> {
+  return publicRead(["places.start-list-counts", eventId, "outside"], ["places", "events"], async () => {
     const db = getDb();
-    const [named, anonymous] = await Promise.all([countPublicStartList(db, eventId), countAnonymousStartListEntries(db, eventId)]);
-    return { named, anonymous };
+    const [named, anonymous, outsideNamed] = await Promise.all([
+      countPublicStartList(db, eventId),
+      countAnonymousStartListEntries(db, eventId),
+      countOutsideOnPublicStartList(db, eventId),
+    ]);
+    return { named, anonymous, outsideNamed };
   });
 }
 
@@ -389,9 +399,10 @@ export async function cachedStartListOthersCounts(
   firstStatesNoticeVersion: number,
   /** The event's «Lista de așteptare e publică» (§628): in the key, so a count with the waiting list is never served without it. */
   includeWaitlisted: boolean,
-): Promise<{ pending: number; waitlisted: number }> {
+): Promise<{ pending: number; waitlisted: number; outsidePending: number }> {
   return publicRead(
-    ["places.start-list-others-counts", eventId, firstStatesNoticeVersion, includeWaitlisted ? "waitlist" : "no-waitlist"],
+    // `"outside"`: the entry carries `outsidePending` (§NNN), so none written without it is read.
+    ["places.start-list-others-counts", eventId, firstStatesNoticeVersion, includeWaitlisted ? "waitlist" : "no-waitlist", "outside"],
     ["places", "events"],
     () => countPublicStartListOthers(getDb(), eventId, firstStatesNoticeVersion, includeWaitlisted),
   );

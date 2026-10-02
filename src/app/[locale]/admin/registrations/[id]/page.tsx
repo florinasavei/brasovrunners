@@ -60,6 +60,7 @@ import {
   offerPlaceAction,
   promoteRegistrationAction,
   setBibNumberAction,
+  setOutsideCapacityAction,
   withdrawConsentAction,
   declarationHoldAction,
 } from "../actions";
@@ -135,11 +136,12 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
     where the press can succeed — a local, scheduled event with a date that has not started. Its question
     says beforehand when no place is free — the allocator's counts, read once per event (§592's forecast),
     a lapsed declaration hold not counted against her (§160); a family's live reservation is the row's
-    own place, so it is never "full" for it. The server decides.
+    own place, so it is never "full" for it; nor is a row «În afara locurilor» (§NNN), which needs no
+    counted place. The server decides.
   */
   const givePlaceNowFacts = mayManage && registration.status === "PENDING_EMAIL_CONFIRMATION" ? await givePlaceNowAhead(registration.eventId) : null;
   const givePlaceNow = givePlaceNowFacts
-    ? { full: givePlaceNowFacts.full && !(registration.holdExpiresAt !== null && registration.holdExpiresAt > new Date()) }
+    ? { full: givePlaceNowFacts.full && !registration.outsideCapacity && !(registration.holdExpiresAt !== null && registration.holdExpiresAt > new Date()) }
     : null;
   // The timeline's short form with the time (§349): a value beside its label, so capitalised;
   // `dtInline` inside a sentence.
@@ -295,6 +297,10 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         )}
         {registration.kind === "TEST" && (
           <Chip size="small" color="warning" label={tr("registrations.testKind")} />
+        )}
+        {/* Seated outside the places (§NNN): read by every role that reads this page. */}
+        {registration.outsideCapacity && (
+          <Chip size="small" color="secondary" variant="outlined" label={tr("registrations.outside.chip")} data-testid="outside-chip" />
         )}
         <FamilyChip
           label={tr("registrations.familyChip")}
@@ -515,6 +521,72 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
             </Typography>
           </Stack>
         )}
+      </Box>
+
+      {/*
+        «În afara locurilor» (§NNN; the owner, 2026-10-02: «Vreau și o bifă de „ascunde la numărare” per
+        fiecare participant»): whether this registration takes one of the event's places. Every role that
+        reads the page reads the line; only the Administrator marks or unmarks (`canManageRegistrations`,
+        asserted again by the action and the service), and only while the registration is active — an
+        ended row's flag is read, never changed. The dialog says what the press does in this row's state.
+      */}
+      <Box component="section" data-testid="outside-capacity">
+        <Typography variant="h3" sx={{ fontSize: "1rem", mb: 1 }}>
+          {tr("registrations.outside.title")}
+        </Typography>
+        <Stack spacing={1} sx={{ alignItems: "flex-start" }}>
+          <Typography variant="body2">
+            {tr(registration.outsideCapacity ? "registrations.outside.isOutside" : "registrations.outside.isCounted")}
+          </Typography>
+          {mayManage && !isTerminalStatus(registration.status) && (
+            <ActionForm
+              action={setOutsideCapacityAction}
+              confirm={
+                registration.outsideCapacity
+                  ? {
+                      title: tr("confirm.outsideUnmarkTitle"),
+                      body: tr("confirm.outsideUnmarkBody", { name: registration.registeredName }),
+                      confirmLabel: tr("registrations.outside.unmark"),
+                      cancelLabel: words.cancel,
+                    }
+                  : {
+                      title: tr("confirm.outsideMarkTitle"),
+                      /*
+                        A waiting runner, or an open offer (the review of 2026-10-02), is seated now with the
+                        declaration's email; a TEST row's dialog names no email, in its body as in its bold line (§384).
+                      */
+                      body:
+                        registration.status === "WAITLISTED"
+                          ? registration.kind === "TEST"
+                            ? tr("confirm.outsideMarkBodyWaitlistedTest", { name: registration.registeredName })
+                            : tr("confirm.outsideMarkBodyWaitlisted", { name: registration.registeredName, message: tr("emails.types.COMPLETE_DECLARATION") })
+                          : registration.status === "WAITLIST_OFFERED"
+                            ? registration.kind === "TEST"
+                              ? tr("confirm.outsideMarkBodyOfferedTest", { name: registration.registeredName })
+                              : tr("confirm.outsideMarkBodyOffered", { name: registration.registeredName, message: tr("emails.types.COMPLETE_DECLARATION") })
+                            : registration.status === "PENDING_EMAIL_CONFIRMATION"
+                              ? tr("confirm.outsideMarkBodyPendingEmail", { name: registration.registeredName })
+                              : tr("confirm.outsideMarkBody", { name: registration.registeredName }),
+                      ...(registration.status !== "WAITLISTED" && registration.status !== "WAITLIST_OFFERED"
+                        ? {}
+                        : registration.kind === "TEST" ? {} : { email: words.email(1) }),
+                      confirmLabel: tr("registrations.outside.mark"),
+                      cancelLabel: words.cancel,
+                    }
+              }
+              data-testid="outside-capacity-form"
+            >
+              {deskHidden}
+              <input type="hidden" name="outside" value={registration.outsideCapacity ? "false" : "true"} />
+              <GlyphButton icon={registration.outsideCapacity ? "turnOff" : "turnOn"} type="submit" variant="outlined" sx={{ minHeight: 44 }}>
+                {tr(registration.outsideCapacity ? "registrations.outside.unmark" : "registrations.outside.mark")}
+              </GlyphButton>
+            </ActionForm>
+          )}
+          <Typography variant="caption" color="text.secondary">
+            {tr("registrations.outside.help")}
+          </Typography>
+        </Stack>
       </Box>
 
       <Divider />

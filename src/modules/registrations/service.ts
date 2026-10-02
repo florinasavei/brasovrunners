@@ -58,6 +58,7 @@ import { isUuid } from "@/shared/ids";
 import { dayIn, MIN_PARTICIPANT_AGE } from "./domain/age";
 import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS, ANOTHER_LINK_INVALID, decideSubmission } from "./domain/family";
 import { registrationNameKey } from "./domain/name-key";
+import { forgetRegisteredBadgeCount } from "./nav-count";
 import { currentAddressCap } from "./address-cap";
 import { familyEntryFields, insertFamilyEntry, liveSittingEntries, personOfEntry, replaceFamilyEntry } from "./family-entries";
 import {
@@ -715,8 +716,15 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
     had lapsed. It goes before the count, so the person's own held place is never counted against them.
   */
   await releaseOwnFamilyPlaceHold(db, event.id, registrationId);
+  /*
+    «În afara locurilor» (§NNN): a registration the club seats outside the places consumes none, so it
+    is given its place directly whatever the counts — never waitlisted for want of one, never refused by
+    a full line. The stale holds still expire and the line is still served first (`placeForNewcomer`),
+    as in every capacity-changing transaction; the column is the one condition, `kind` none (§30).
+  */
+  const outside = await repo.isOutsideCapacity(db, registrationId);
   const { free, counts, eligibleWaitlisted } = await placeForNewcomer(db, event, now, settings);
-  let direct = reserved || free;
+  let direct = outside || reserved || free;
 
   // No place: this registration would join the line, and the line may be full (§348).
   if (
@@ -746,6 +754,11 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
     ? await repo.transitionRegistration(db, {
         id: registrationId,
         to: "PENDING_DECLARATION",
+        /*
+          Out of the line, or out of an open offer, straight to a declaration only outside the places
+          (§NNN): a counted place reaches the line as an offer, and an offer it made is signed or lapses.
+        */
+        fromStatuses: allowedFromStatuses("PENDING_DECLARATION").filter((from) => outside || (from !== "WAITLISTED" && from !== "WAITLIST_OFFERED")),
         changes: {
           holdExpiresAt: computeDeclarationHoldExpiry({
             now,
@@ -2466,9 +2479,29 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       // who put an earlier, cancelled one here months ago.
       source: origin.source,
       createdByStaffUserId: origin.createdByStaffUserId ?? null,
+      /*
+        «În afara locurilor» does not survive a restart (§NNN; the review of 2026-10-02, finding 6): the
+        mark is an Administrator's audited act on a registration, and a seat beyond the announced places
+        is given only by an Administrator acting at the time. A cancelled or expired row the person
+        restarts through the form is a new cycle that queues and counts like anybody's; the club marks it
+        again if it still wants to.
+      */
+      outsideCapacity: false,
     };
 
     if (existing) {
+      // The mark's end is written in the journal too, by nobody (the person restarted), never a name.
+      if (existing.outsideCapacity) {
+        await recordAuditEvent(tx, {
+          actorStaffUserId: null,
+          participantId: participant.id,
+          action: "registration.outside_capacity_changed",
+          entityType: "registration",
+          entityId: existing.id,
+          metadata: { from: true, to: false, status: existing.status, restarted: true },
+          now,
+        });
+      }
       // A restart of a Cancelled or Expired registration (AGENTS.md §10.5). Never leapfrogs
       // the waiting list and never lands directly on Confirmed — `allocateOrWaitlist` is the
       // same allocator a first-time registration uses.
@@ -2766,6 +2799,8 @@ export async function confirmEmailOnAddress<T extends Record<string, unknown>>(
  *    waiting list is not consulted for this row**: «while anybody waits every newcomer joins the line»
  *    (§615 criterion 6) is the public door's rule; this is the club choosing a person, as «Trimite-i
  *    oferta» is (§615 criterion 19). Nobody in the line moves and no place promised to anybody is taken.
+ *    A row «În afara locurilor» (§NNN) needs no counted place at all: like a family's reserved one, it
+ *    is given its place whatever the counts.
  * 4. **No counted free place**: the whole press is refused with `NoFreePlaceError` and its sentence
  *    (§589, §592), and nothing is written — the Administrator raises «Număr de locuri» first. (The
  *    sibling change `feat/offer-a-place-any-time-with-a-supplementary-place` adds an audited
@@ -2813,14 +2848,19 @@ export async function givePlaceNowByStaff<T extends Record<string, unknown>>(
     const reserved = await repo.holdsFamilyReservation(tx, current.id, now);
     await releaseOwnFamilyPlaceHold(tx, event.id, current.id);
     await repo.expireStaleHolds(tx, locked, now);
+    /*
+      A row «În afara locurilor» (§NNN) takes no counted place — the allocator seats it whatever the
+      counts — so, like a family's reserved place, it needs no room and lets no lapsed hold go for it.
+    */
+    const needsNoRoom = reserved || current.outsideCapacity;
     let counts = await repo.countOccupied(tx, event.id, now);
     const hasRoom = () => locked.capacity === null || computeOccupied(counts) < locked.capacity;
-    if (!reserved && !hasRoom() && counts.lapsedDeclarationHolds > 0) {
+    if (!needsNoRoom && !hasRoom() && counts.lapsedDeclarationHolds > 0) {
       // One more person wanting a place who is not in the line (§160): one lapsed hold may go for her.
       await repo.expireStaleHolds(tx, locked, now, { wanting: 1 });
       counts = await repo.countOccupied(tx, event.id, now);
     }
-    if (!reserved && !hasRoom()) {
+    if (!needsNoRoom && !hasRoom()) {
       // No place beyond capacity, ever (§10.6, §592): the Administrator raises the places first.
       throw new NoFreePlaceError(locked.capacity ?? 0, counts);
     }
@@ -3490,6 +3530,132 @@ export async function offerPlaceToByStaff<T extends Record<string, unknown>>(
   drainOutboxRowsAfterResponse(result.leaveNow);
   wakeMaintenance(event, now, settings, result.holdExpiresAt);
   return result.offered;
+}
+
+/**
+ * Whether a registration in this state holds, or would hold once counted, one of the event's places:
+ * confirmed, a declaration to sign, an offer, or a family's live reservation (§543) — what
+ * `countOccupied` counts for a row that is not «În afara locurilor» (§NNN).
+ */
+function wouldHoldACountedPlace(registration: Pick<Registration, "status" | "holdExpiresAt">, now: Date): boolean {
+  if (registration.status === "CONFIRMED" || registration.status === "PENDING_DECLARATION" || registration.status === "WAITLIST_OFFERED") return true;
+  return registration.status === "PENDING_EMAIL_CONFIRMATION" && registration.holdExpiresAt !== null && registration.holdExpiresAt.getTime() > now.getTime();
+}
+
+/**
+ * «În afara locurilor» set or cleared by an Administrator (§NNN; the owner, 2026-10-02: «Vreau și o
+ * bifă de „ascunde la numărare” per fiecare participant» — for organizers, pacemakers, invited
+ * runners). Everything under the event lock, after the stale holds expire and the line is served
+ * (§10.6: `fillAvailableSpots`, as `placeForNewcomer`), in one transaction with its audit row (`registration.outside_capacity_changed`, from → to, who):
+ *
+ * - **Marking** releases a counted place, if the row held one (confirmed, a declaration, an offer, a
+ *   family's reservation), and the usual refill follows (`fillAvailableSpots`: with «Da» the first in
+ *   line is offered it; with «Nu» it stays free). A confirmed row or a declaration hold keeps its
+ *   state, number and emails. A `WAITLISTED` row leaves the line and is given a place outside the
+ *   places now, through the one allocator (`allocateOrWaitlist`): a declaration to sign with the
+ *   ordinary deadline and email. An open offer the same (the review of 2026-10-02): an offer is a
+ *   promise to the line, with the line's short deadline, and `expireStaleHolds` lapses every offer at
+ *   it — so the row becomes the declaration hold an outside row is given, its email queued, a queued
+ *   offer email never tried withdrawn, and the offer's link replaced by the declaration's when that
+ *   email leaves (§619, `issueActionToken`). A row waiting for its address is seated outside when
+ *   the address is confirmed.
+ * - **Unmarking** a row that would then hold a counted place is allowed only while one is free —
+ *   `computeOccupied(counts) < capacity`, the allocator's own count — else `NoFreePlaceError` and
+ *   §589's sentence; the row then takes it.
+ * - A cancelled or expired row's flag is read, never changed; nor anything on an event not scheduled.
+ *
+ * The column is the one condition (`kind` none, §30): a `TEST` row is marked exactly as a real one.
+ */
+export async function setOutsideCapacityByStaff<T extends Record<string, unknown>>(
+  db: Database<T>,
+  event: EventForRegistration,
+  registrationId: string,
+  outside: boolean,
+  actor: { id: string; role: StaffRole },
+  now: Date,
+): Promise<Registration> {
+  if (!canManageRegistrations(actor.role)) {
+    throw new DomainError("FORBIDDEN", `role ${actor.role} may not seat a registration outside the places`);
+  }
+  const settings = await currentDeadlines(db);
+  const result = await db.transaction(async (tx) => {
+    const lockedEvent = await repo.lockEventForCapacity(tx, event.id);
+    if (!lockedEvent) throw new DomainError("NOT_FOUND", "no such event");
+    const locked = withLockedRow(event, lockedEvent);
+    if (locked.eventStatus !== "SCHEDULED") {
+      throw new DomainError("VALIDATION_ERROR", `the event is ${locked.eventStatus}`);
+    }
+    /*
+      Stale holds first, and the line served at once (§10.6, invariant 7; the review of 2026-10-02,
+      finding 1), as `placeForNewcomer` does: a kept declaration hold `expireStaleHolds` lets go
+      because somebody waits is that person's place, offered to them in this transaction — so an
+      unmarking below can take only a place nobody in line is owed, and even a press that changes
+      nothing leaves no lapsed offer's place unoffered. A no-op on «Nu» (§615).
+    */
+    await repo.expireStaleHolds(tx, locked, now);
+    const servedFirst = await fillAvailableSpots(tx, locked, now, settings);
+
+    const current = await repo.findRegistrationById(tx, registrationId);
+    if (!current || current.eventId !== event.id) throw new DomainError("NOT_FOUND", "no such registration");
+    if (!isActiveStatus(current.status)) {
+      throw new DomainError("CONFLICT", `a ${current.status} registration's place cannot be changed`);
+    }
+    if (current.outsideCapacity === outside) return { registration: current, offered: servedFirst };
+
+    if (!outside && lockedEvent.capacity !== null && wouldHoldACountedPlace(current, now)) {
+      const counts = await repo.countOccupied(tx, event.id, now);
+      if (computeOccupied(counts) >= lockedEvent.capacity) throw new NoFreePlaceError(lockedEvent.capacity, counts);
+    }
+
+    let registration = await repo.writeOutsideCapacity(tx, current.id, outside, now);
+    if (!registration) throw new DomainError("CONFLICT", "this registration changed state concurrently");
+
+    // A place the row held is free now: the line's, with «Da»; the organizer's, with «Nu» (§615).
+    const refilled = outside ? await fillAvailableSpots(tx, locked, now, settings) : 0;
+
+    /*
+      Out of the line, or out of an open offer, into a place outside the places: the one allocator,
+      then its declaration email (§NNN). An offer kept as an offer would lapse at the line's deadline
+      (`expireStaleHolds` lapses every offer, §10.5) and end the invited runner's registration; as a
+      declaration hold outside the places nothing releases it for anybody. Its offer email, if still
+      queued and never tried, is withdrawn — the declaration's email says everything now — as «Dă-i un
+      loc acum» withdraws a verification email (§637); the offer's link is replaced when the declaration's
+      email leaves (§619, `issueActionToken`), so one link signs. Withdrawn only after the allocator: while
+      it is queued an offer past its stored deadline is not lapsed (§520), and the allocator's own sweep
+      must still see it so.
+    */
+    if (outside && (registration.status === "WAITLISTED" || registration.status === "WAITLIST_OFFERED")) {
+      registration = await allocateOrWaitlist(tx, locked, registration.id, now, settings);
+      if (current.status === "WAITLIST_OFFERED") {
+        await tx
+          .delete(emailOutbox)
+          .where(
+            and(
+              eq(emailOutbox.registrationId, registration.id),
+              eq(emailOutbox.messageType, "WAITLIST_SPOT_OFFER"),
+              eq(emailOutbox.status, "PENDING"),
+              eq(emailOutbox.attemptCount, 0),
+            ),
+          );
+      }
+      await enqueueAllocationEmail(tx, registration, await deliveryEmailOf(tx, registration.participantId), `registration:${registration.id}:outside:${now.toISOString()}`, now);
+    }
+
+    await recordAuditEvent(tx, {
+      actorStaffUserId: actor.id,
+      participantId: current.participantId,
+      action: "registration.outside_capacity_changed",
+      entityType: "registration",
+      entityId: current.id,
+      metadata: { from: current.outsideCapacity, to: outside, status: current.status, ...(registration.status !== current.status ? { statusAfter: registration.status } : {}) },
+      now,
+    });
+
+    return { registration, offered: servedFirst + refilled };
+  });
+  forgetRegisteredBadgeCount();
+  wakeMaintenance(event, now, settings, result.registration.holdExpiresAt, result.offered > 0 ? offerDeadline(event, now, settings) : null);
+  return result.registration;
 }
 
 /**

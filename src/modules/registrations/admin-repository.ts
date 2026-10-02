@@ -37,6 +37,8 @@ export type RegistrationListRow = {
   participantId: string;
   status: RegistrationStatus;
   kind: RegistrationKind;
+  /** «În afara locurilor» (§NNN): seated outside the event's places — the row's chip and the export's column. */
+  outsideCapacity: boolean;
   /** PUBLIC when the participant submitted it, STAFF when an organizer entered it for them. */
   source: RegistrationSource;
   registeredName: string;
@@ -130,6 +132,8 @@ export type RegistrationListFilters = {
    * on a real registration that still stands, the one truth of who consented. Narrows only.
    */
   promoConsented?: boolean;
+  /** «În afara locurilor» (§NNN): only the rows seated outside the places — the summary strip's pill. Narrows only. */
+  outsideCapacity?: boolean;
 };
 
 /**
@@ -264,6 +268,7 @@ function registrationConditions(filters: RegistrationListFilters): SQL[] {
     filters.emailBounced ? sql`${emailRejectedReason} IS NOT NULL` : undefined,
     // The same condition as the club's list on «Newsletter» and the sponsor list's candidates (§570, §581).
     filters.promoConsented ? promoListed() : undefined,
+    filters.outsideCapacity ? eq(registrations.outsideCapacity, true) : undefined,
     /*
       Name only, and deliberately not the email address. An organizer at a desk is holding a
       person who just said their name out loud; matching addresses as well would turn this box
@@ -328,6 +333,7 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       participantId: registrations.participantId,
       status: registrations.status,
       kind: registrations.kind,
+      outsideCapacity: registrations.outsideCapacity,
       source: registrations.source,
       registeredName: registrations.registeredName,
       firstName: registrations.firstName,
@@ -418,6 +424,11 @@ export type RegistrationSummary = {
   real: number;
   /** Test registrations in any state (§12.6): shown apart, and only when there are any. */
   test: number;
+  /**
+   * Real registrations seated «În afara locurilor» (§NNN), in any state — counted in `real` and
+   * `byStatus` like anybody (they are registrations), and apart here, as the strip's own pill.
+   */
+  outside: number;
 };
 
 export async function summariseRegistrationsForAdmin<T extends Record<string, unknown>>(
@@ -427,7 +438,7 @@ export async function summariseRegistrationsForAdmin<T extends Record<string, un
   const conditions = registrationConditions(filters);
 
   const rows = await db
-    .select({ status: registrations.status, kind: registrations.kind, total: count() })
+    .select({ status: registrations.status, kind: registrations.kind, outside: registrations.outsideCapacity, total: count() })
     .from(registrations)
     .innerJoin(participants, eq(participants.id, registrations.participantId))
     .leftJoin(
@@ -438,15 +449,16 @@ export async function summariseRegistrationsForAdmin<T extends Record<string, un
       ),
     )
     .where(conditions.length > 0 ? and(...conditions) : undefined)
-    .groupBy(registrations.status, registrations.kind);
+    .groupBy(registrations.status, registrations.kind, registrations.outsideCapacity);
 
-  const summary: RegistrationSummary = { byStatus: {}, real: 0, test: 0 };
+  const summary: RegistrationSummary = { byStatus: {}, real: 0, test: 0, outside: 0 };
   for (const row of rows) {
     if (row.kind === "TEST") {
       summary.test += row.total;
       continue;
     }
     summary.real += row.total;
+    if (row.outside) summary.outside += row.total;
     summary.byStatus[row.status] = (summary.byStatus[row.status] ?? 0) + row.total;
   }
   return summary;
@@ -526,6 +538,8 @@ export type RegistrationDetail = {
   id: string;
   status: RegistrationStatus;
   kind: RegistrationKind;
+  /** «În afara locurilor» (§NNN): read by every role that reads the page, changed by the Administrator only. */
+  outsideCapacity: boolean;
   /** PUBLIC when the participant submitted it, STAFF when an organizer entered it for them. */
   source: RegistrationSource;
   registeredName: string;
@@ -639,6 +653,7 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       id: registrations.id,
       status: registrations.status,
       kind: registrations.kind,
+      outsideCapacity: registrations.outsideCapacity,
       source: registrations.source,
       registeredName: registrations.registeredName,
       participantEmail: participants.deliveryEmail,
@@ -1298,6 +1313,8 @@ export async function listQueueForEvent<T extends Record<string, unknown>>(db: D
  * hold counts as past its deadline as the sweep reads it — not while its first declaration email is
  * still queued, since the send re-bases the deadline (§513, `lapsedDeclarationHoldsToRelease`); an
  * offer counts while its deadline is ahead or its email is still queued (§520), as the queue lists it.
+ * A row «În afara locurilor» (§NNN) is in no place's count — it holds none to lose, and no sweep
+ * releases its hold for anybody — though its address link still lapses like anyone's (`awaitingEmail`).
  * Null when the event does not exist.
  */
 export async function readPlaceDeadlines<T extends Record<string, unknown>>(
@@ -1315,11 +1332,11 @@ export async function readPlaceDeadlines<T extends Record<string, unknown>>(
       capacity: events.capacity,
       waitlistCapacity: events.waitlistCapacity,
       waitlistAutoOffer: events.waitlistAutoOffer,
-      held: sql<number>`count(${registrations.id}) filter (where ${registrations.status} = 'PENDING_DECLARATION')::int`,
-      heldPast: sql<number>`count(${registrations.id}) filter (where ${registrations.status} = 'PENDING_DECLARATION' and ${registrations.holdExpiresAt} <= ${now} and not ${awaitingItsFirstEmail()})::int`,
+      held: sql<number>`count(${registrations.id}) filter (where ${registrations.status} = 'PENDING_DECLARATION' and not ${registrations.outsideCapacity})::int`,
+      heldPast: sql<number>`count(${registrations.id}) filter (where ${registrations.status} = 'PENDING_DECLARATION' and not ${registrations.outsideCapacity} and ${registrations.holdExpiresAt} <= ${now} and not ${awaitingItsFirstEmail()})::int`,
       awaitingEmail: sql<number>`count(${registrations.id}) filter (where ${registrations.status} = 'PENDING_EMAIL_CONFIRMATION')::int`,
-      familyReserved: sql<number>`count(${registrations.id}) filter (where ${familyReservationHolds(now)})::int`,
-      offered: sql<number>`count(${registrations.id}) filter (where ${registrations.status} = 'WAITLIST_OFFERED' and (${registrations.holdExpiresAt} > ${now} or ${offerAwaitingItsFirstEmail(now)}))::int`,
+      familyReserved: sql<number>`count(${registrations.id}) filter (where ${familyReservationHolds(now)} and not ${registrations.outsideCapacity})::int`,
+      offered: sql<number>`count(${registrations.id}) filter (where ${registrations.status} = 'WAITLIST_OFFERED' and not ${registrations.outsideCapacity} and (${registrations.holdExpiresAt} > ${now} or ${offerAwaitingItsFirstEmail(now)}))::int`,
     })
     .from(events)
     .leftJoin(registrations, and(eq(registrations.eventId, events.id), eq(registrations.kind, "REAL")))

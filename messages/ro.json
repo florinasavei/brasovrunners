@@ -260,6 +260,7 @@
       "captionStatesNumbers": "Întâi participanții confirmați, cu numărul de concurs — cei cu numele afișat, în ordinea confirmării, apoi ceilalți —, apoi cei înscriși care nu au confirmat încă și cei de pe lista de așteptare, în ordinea listei.",
       "noteStates": "Numărul din titlu îi cuprinde pe confirmați și, cât timp înscrierile sunt deschise la un eveniment cu număr de locuri, pe cei în curs de confirmare. Numele apare doar pentru cei care au bifat „Vreau să apar pe lista de participanți & rezultate”; ceilalți confirmați apar ca „Participant (nume ascuns)”, fără niciun alt detaliu. Cei înscriși care nu au confirmat încă și cei de pe lista de așteptare apar doar dacă au bifat, cu stadiul înscrierii lângă nume; o înscriere anulată sau expirată nu apare. Alegerea se poate schimba oricând din emailul de confirmare sau din „Înscrierile mele”.",
       "socialsNote": "Strava și Instagram apar doar lângă numele celor care au ales asta la înscriere.",
+      "outsideNote": "Organizatorii și invitații clubului apar în tabel fără să fie numărați: numerele de mai sus numără locurile.",
       "othersLead": "Apar cu numele și:",
       "pendingCount": {
         "one": "{count} înscris în așteptarea confirmării",
@@ -593,6 +594,7 @@
       "registeredWithPlaceOf": "{count} cu loc din {capacity}",
       "registeredAwaitingEmail": "{count} așteaptă confirmarea emailului",
       "registeredWaitlisted": "{count} pe lista de așteptare",
+      "registeredOutside": "{count} în afara locurilor",
       "registeredMoreEvents": "+{count} altele",
       "newsletter": "Newsletter"
     },
@@ -621,6 +623,16 @@
       "statusLabel": "Stare",
       "summaryTotal": "Înscrieri: {count} (toate stările, anulate și expirate incluse)",
       "summaryTest": "De test: {count}",
+      "outside": {
+        "pill": "În afara locurilor: {count}",
+        "chip": "În afara locurilor",
+        "title": "Locurile evenimentului",
+        "isOutside": "În afara locurilor: nu ocupă niciunul dintre locurile evenimentului și nu intră în niciun număr public.",
+        "isCounted": "Se numără între locurile evenimentului, ca oricine.",
+        "mark": "Pune în afara locurilor",
+        "unmark": "Numără între locuri",
+        "help": "Pentru organizatori, pacemakeri, invitați: au declarație, număr și apar pe listă dacă au bifat, fără să ia un loc."
+      },
       "export": "Exportă CSV",
       "personLink": "Toate datele unei persoane",
       "personThis": "Toate datele acestei persoane",
@@ -730,7 +742,8 @@
           "promo_consent_changed": "Acordul pentru oferte și beneficii schimbat",
           "family_resent": "Email retrimis familiei",
           "offered_by_staff": "Ofertă trimisă înaintea listei de așteptare («Trimite-i oferta»)",
-          "address_vouched_by_staff": "Adresă garantată de echipă; loc dat înaintea listei de așteptare («Dă-i un loc acum»)"
+          "address_vouched_by_staff": "Adresă garantată de echipă; loc dat înaintea listei de așteptare («Dă-i un loc acum»)",
+          "outside_capacity_changed": "Pus în afara locurilor sau numărat din nou între locuri"
         }
       },
       "locale": {
@@ -1219,7 +1232,16 @@
       "givePlaceNowTitle": "Îi dai un loc acum?",
       "givePlaceNowBody": "Garantezi adresa {email} și îi dai un loc înaintea listei de așteptare.",
       "givePlaceNowBodyMore": "Primește pe loc emailul cu declarația; o semnează online oricând până la termen, sau pe hârtie la masă. Nu mai are de confirmat nimic.",
-      "givePlaceNowFull": "Nu e niciun loc liber. Pe «Da» la alocarea automată, un loc adăugat merge întâi la lista de așteptare: pune «Nu», ridică «Număr de locuri» cu 1, apoi apasă din nou."
+      "givePlaceNowFull": "Nu e niciun loc liber. Pe «Da» la alocarea automată, un loc adăugat merge întâi la lista de așteptare: pune «Nu», ridică «Număr de locuri» cu 1, apoi apasă din nou.",
+      "outsideMarkTitle": "Pui înscrierea în afara locurilor?",
+      "outsideMarkBody": "{name} nu mai ocupă un loc; locul eliberat merge primului din listă dacă ofertele pleacă automat. Starea, numărul și emailurile rămân.",
+      "outsideMarkBodyWaitlisted": "{name} iese de pe lista de așteptare și primește acum un loc în afara locurilor: emailul «{message}», cu termenul obișnuit.",
+      "outsideMarkBodyWaitlistedTest": "{name} iese de pe lista de așteptare și primește acum un loc în afara locurilor: declarația de semnat, cu termenul obișnuit.",
+      "outsideMarkBodyOffered": "În locul ofertei, {name} primește acum un loc în afara locurilor: emailul «{message}», cu termenul obișnuit. Locul ofertei se eliberează.",
+      "outsideMarkBodyOfferedTest": "În locul ofertei, {name} primește acum un loc în afara locurilor: declarația de semnat, cu termenul obișnuit. Locul ofertei se eliberează.",
+      "outsideMarkBodyPendingEmail": "{name} primește un loc în afara locurilor când își confirmă adresa; până atunci nu se schimbă nimic.",
+      "outsideUnmarkTitle": "Numeri înscrierea între locuri?",
+      "outsideUnmarkBody": "{name} va ocupa unul dintre locurile evenimentului. Dacă niciunul nu e liber, nu se schimbă nimic."
     },
     "errors": {
       "PICTURE_IN_USE": "Imaginea este folosită într-o pagină, într-un eveniment sau într-un album. Scoate-o de acolo mai întâi.",
@@ -1919,7 +1941,8 @@
         "received": {
           "title": "Înscrierile primite",
           "summary": "înscrieri reale: {count} · pe lista de așteptare: {waiting}",
-          "summaryPlaces": "înscrieri reale: {count} · pe lista de așteptare: {waiting} · locuri ocupate: {occupied} din {capacity}"
+          "summaryPlaces": "înscrieri reale: {count} · pe lista de așteptare: {waiting} · locuri ocupate: {occupied} din {capacity}",
+          "outside": "în afara locurilor: {count}"
         },
         "queue": {
           "title": "Coada de înscrieri",
@@ -5404,6 +5427,18 @@
               ]
             },
             {
+              "title": "Un loc în afara locurilor: organizatori, pacemakeri, invitați",
+              "steps": [
+                "Pentru cine aleargă din partea clubului: organizatori, pacemakeri, invitați. Nu iau niciunul dintre locurile anunțate.",
+                "Deschide înscrierea persoanei → «Locurile evenimentului» → «Pune în afara locurilor» și confirmă.",
+                "Dacă ocupa un loc, locul se eliberează: pe «Da» merge primului de pe lista de așteptare; pe «Nu» rămâne liber până îl dai tu.",
+                "De pe lista de așteptare sau dintr-o ofertă deschisă primește un loc acum, în afara locurilor: emailul declarației, cu termenul obișnuit, nu al ofertei.",
+                "Confirmat sau cu declarația de semnat, își păstrează starea, numărul și emailurile. Pe site nu intră în niciun număr; apare pe listă doar dacă a bifat, fără niciun semn.",
+                "«Numără între locuri» o întoarce doar dacă e un loc liber; altfel apăsarea e refuzată și spune cine ține locurile.",
+                "În lista înscrierilor, pilula «În afara locurilor» îi arată pe toți; exportul are o coloană pentru ei."
+              ]
+            },
+            {
               "title": "Anunță participanții despre o schimbare",
               "steps": [
                 "Schimbă locul, ora sau programul în cardul lor.",
@@ -7979,6 +8014,8 @@
       "menuOrder": "Ordinea meniului a fost salvată.",
       "registrationOffered": "Oferta e trimisă: are termenul obișnuit ca să semneze declarația.",
       "placeGiven": "Loc dat; emailul cu declarația a plecat.",
+      "outsideMarked": "Înscrierea e în afara locurilor: nu mai ocupă niciun loc al evenimentului.",
+      "outsideUnmarked": "Înscrierea se numără din nou între locurile evenimentului.",
       "failedRetried": {
         "one": "{count} email eșuat pus înapoi în coadă.",
         "few": "{count} emailuri eșuate puse înapoi în coadă.",

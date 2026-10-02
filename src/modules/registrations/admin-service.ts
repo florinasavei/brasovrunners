@@ -52,6 +52,7 @@ import {
   givePlaceNowByStaff,
   offerPlaceToByStaff,
   promoteFromWaitlistByStaff,
+  setOutsideCapacityByStaff,
   submitRegistration,
   undoCheckIn,
   unregister,
@@ -785,6 +786,28 @@ export async function offerPlaceByStaff<T extends Record<string, unknown>>(
   if (!current) throw new DomainError("NOT_FOUND", "no such registration");
   const event = await eventForRegistration(db, current.eventId);
   return offerPlaceToByStaff(db, event, registrationId, actor, now);
+}
+
+/**
+ * «În afara locurilor» (§NNN): an Administrator seats a registration outside the event's places, or
+ * back inside them. `canManageRegistrations` (§289), asserted here before anything is read and again
+ * in the service, which does the rest under the event lock and writes the audit row in the same
+ * transaction. The Organizer reads the chip and the pill and changes nothing.
+ */
+export async function setOutsideCapacity<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  registrationId: string,
+  outside: boolean,
+  now: Date,
+): Promise<Registration> {
+  if (!canManageRegistrations(actor.role)) {
+    throw new DomainError("FORBIDDEN", `role ${actor.role} may not seat a registration outside the places`);
+  }
+  const current = await findRegistrationById(db, registrationId);
+  if (!current) throw new DomainError("NOT_FOUND", "no such registration");
+  const event = await eventForRegistration(db, current.eventId);
+  return setOutsideCapacityByStaff(db, event, registrationId, outside, actor, now);
 }
 
 /**

@@ -54,7 +54,9 @@ import type { TokenRejectionReason } from "@/modules/action-tokens/domain/token-
  *   one, look in Spam and Promotions" tells them nothing the email in their hand did not, except
  *   which email to open. It says no state and shows nothing of the registration: one sentence,
  *   the replacing email's time, and the resend path — which carries the event's slug, as the spent
- *   page's does, so the form narrows to it (`mayReportReplaced`; `token-actions.ts`).
+ *   page's does, so the form narrows to it (`mayReportReplaced`; `token-actions.ts`). One row of
+ *   another purpose is marked so too (§NNN): an offer link that a newer declaration link of the
+ *   same registration replaced, the offer over — seated outside the places, or ended and restarted.
  * - **INVALIDATED** is now only the other half — a link revoked for cause — and stays generic on
  *   purpose: it is a decision to stop a link working, and a friendly page that coached its holder
  *   toward a fresh link would undo it. No code path revokes today; the column keeps the two apart
