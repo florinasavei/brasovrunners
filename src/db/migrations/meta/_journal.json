@@ -841,6 +841,13 @@
       "when": 1790934459462,
       "tag": "0122_legal_templates_changed",
       "breakpoints": true
+    },
+    {
+      "idx": 120,
+      "version": "7",
+      "when": 1790944115471,
+      "tag": "0123_registration_outside_capacity",
+      "breakpoints": true
     }
   ]
 }

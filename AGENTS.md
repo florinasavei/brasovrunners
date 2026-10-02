@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.61-2026-10-02 -->
+<!-- PROJECT_BASELINE: BR-V2.62-2026-10-02 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V2.61-2026-10-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.62-2026-10-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1217,10 +1217,10 @@ Core invariants:
 
 1. one row per event/participant;
 2. unique database constraint;
-3. no place consumed before email confirmation — except an Administrator vouching for the address with «Dă-i un loc acum» (`DECISIONS.md` §637), audited by name, into a counted free place, the declaration still the participant's to sign;
+3. no place consumed before email confirmation — except an Administrator vouching for the address with «Dă-i un loc acum» (`DECISIONS.md` §637), audited by name, into a counted free place or, on a full race, one supplementary place the press adds, confirmed and audited (`DECISIONS.md` §642), the declaration still the participant's to sign;
 4. declaration required before Confirmed;
-5. Confirmed plus holds consume capacity: every `PENDING_DECLARATION` hold, and every unexpired `WAITLIST_OFFERED` hold — a declaration hold past its deadline is kept, and keeps its place, until a place is wanted for somebody waiting, or the event starts or is `COMPLETED` (`DECISIONS.md` §160) — a `CANCELLED` event's holds are left standing, like the rest of its queue (§331); one waiter releases one hold, the oldest deadline first, never the event's whole stock of kept places;
-6. Pending email and Waitlisted do not occupy capacity, but eligible Waitlisted entries have allocation priority over later registrations — the one exception is rule 3's «Dă-i un loc acum», an Administrator's audited press into a counted free place, which moves nobody in the line;
+5. Confirmed plus holds consume capacity: every `PENDING_DECLARATION` hold, and every unexpired `WAITLIST_OFFERED` hold — a declaration hold past its deadline is kept, and keeps its place, until a place is wanted for somebody waiting, or the event starts or is `COMPLETED` (`DECISIONS.md` §160) — a `CANCELLED` event's holds are left standing, like the rest of its queue (§331); one waiter releases one hold, the oldest deadline first, never the event's whole stock of kept places — and a registration marked «În afara locurilor» (`registrations.outside_capacity`, §643) consumes none, in any state, so no hold of its is released for somebody waiting;
+6. Pending email and Waitlisted do not occupy capacity, but eligible Waitlisted entries have allocation priority over later registrations — the one exception is rule 3's «Dă-i un loc acum», an Administrator's audited press into a counted free place or the one supplementary place it adds (§642), which moves nobody in the line;
 7. no capacity-changing transaction may let a later registration bypass that queue;
 8. cancellation is idempotent;
 9. self-cancellation allowed before event start, with the participant's reason — one of three answers, and a short text for «Alt motiv» — at every door (`DECISIONS.md` §558);
@@ -1240,8 +1240,12 @@ PENDING_DECLARATION        -> WAITLISTED
 PENDING_DECLARATION        -> CANCELLED
 PENDING_DECLARATION        -> EXPIRED
 WAITLISTED                 -> WAITLIST_OFFERED
+WAITLISTED                 -> PENDING_DECLARATION
+                              only when an Administrator seats the row «În afara locurilor» (§643)
 WAITLISTED                 -> CANCELLED
 WAITLIST_OFFERED           -> CONFIRMED
+WAITLIST_OFFERED           -> PENDING_DECLARATION
+                              only when an Administrator seats the row «În afara locurilor» (§643)
 WAITLIST_OFFERED           -> CANCELLED
 WAITLIST_OFFERED           -> EXPIRED
 WAITLISTED                 -> EXPIRED
@@ -1279,6 +1283,17 @@ and nobody is offered a place. The registrations keep their status as the record
 entered, and a race put back on finds its queue where it left it. Every read still counts an
 offer past its deadline as lapsed, so nothing is overbooked by the rows staying as they were.
 
+`WAITLISTED -> PENDING_DECLARATION` is the one move out of the line that is not an offer, and
+`WAITLIST_OFFERED -> PENDING_DECLARATION` the one way an offer ends other than signed, cancelled or
+lapsed; both exist for one reason (§643): an Administrator seats a waiting runner, or one holding an
+open offer, outside the places, which consumes no place, so the allocator gives them one at once — a
+declaration to sign with the ordinary deadline and email. An offer kept as an offer would lapse at the
+line's short deadline, as every offer does, and end the registration; the offer's queued email never
+tried is withdrawn, and its link is replaced by the declaration's when that email leaves (§619). The
+allocator guards both on the column (`fromStatuses` excludes `WAITLISTED` and `WAITLIST_OFFERED`
+unless the row is outside), so a counted place still reaches the line only as an offer, and an offer
+of one is signed, cancelled or lapses.
+
 Any other transition requires explicit reviewed rule.
 
 ### 10.6 Capacity
@@ -1290,6 +1305,7 @@ occupied =
   confirmed registrations
   + PENDING_DECLARATION holds (kept past their deadline while nobody waits — §160)
   + unexpired WAITLIST_OFFERED holds
+  (each term: registrations NOT marked outside_capacity)
 
 publicDirectAvailability =
   max(capacity - occupied - eligible WAITLISTED registrations, 0)
@@ -1297,12 +1313,29 @@ publicDirectAvailability =
 
 Rules:
 
+- a registration marked «În afara locurilor» consumes no place, §643 — in no term of the formula, in
+  any state; the one explicit exclusion, on that audited column only (`kind` stays in no condition,
+  §12.6). Such a row is given its place directly by the allocator whatever the counts, is never
+  waitlisted and never offered anything, and no stale-hold sweep releases its hold for somebody
+  waiting (it holds no counted place); it expires at the start like any hold — never an offer's
+  lapse, because an open offer marked outside becomes that declaration hold at once (§10.5). Marking
+  a row that holds a counted place releases it under the event lock and the ordinary refill follows;
+  unmarking serves the line first and then needs `occupied < capacity` under the lock; a restart of a
+  cancelled or expired row through the form clears the mark;
 - public count means places a new registrant can receive after active holds and existing waiting-list priority;
 - every capacity-changing transaction expires stale holds and calls the queue allocator before giving a place to a later registration; a lapsed declaration hold is stale only as far as the queue wants its place, or once the event has started or is `COMPLETED` (`DECISIONS.md` §160) — a `CANCELLED` event's holds are left standing (§331) — and a registration that waits behind a kept hold is offered that place in the same transaction;
 - event row lock or equivalent safe serialization protects capacity and FIFO allocation;
 - public read may subtract eligible waiting entries as a conservative safeguard while maintenance is catching up, but it never mutates state;
 - scheduled maintenance expires holds and allocates released places;
 - increasing capacity allocates the queue first;
+- the capacity changes in three places only: the event editor's save, and an Administrator's
+  press for one chosen person on a full event — «Trimite-i oferta» or «Dă-i un loc acum» — which,
+  when the dialog said so, its button named the added place and the form carried the capacity it
+  named (`addPlace`, exactly the locked capacity + 1), adds exactly one supplementary place to that
+  one event row under the event lock, in the transaction whose offer or place then occupies it,
+  audited with who and for whom (`DECISIONS.md` §642) — never the allocator on its own, and never a
+  press that did not confirm it: one made through the plain question on a race that filled since the
+  page was read is refused (`SUPPLEMENTARY_PLACE_UNCONFIRMED`) and writes nothing;
 - decreasing capacity below occupied places is rejected;
 - no cached free count is a source of truth;
 - no capacity or queue decision may depend on the maintenance job having run; every read
@@ -1318,7 +1351,7 @@ Rules:
 - existing eligible waiting entries always have priority over later direct registrations;
 - one active registration per runner per participant/event (§389: a family on one address, up to the club's limit per address; the runner is keyed by `name_key`, `foldName` of `registered_name`);
 - promotion creates `WAITLIST_OFFERED` and `hold_expires_at`;
-- offer deadline: the club's offer window ("Termene", §377; 24 h by default), capped by close/start;
+- offer deadline: the club's offer window ("Termene", §377; 24 h by default), capped by close/start — an Administrator's chosen offer («Trimite-i oferta») by the start alone (§642);
 - signing declaration confirms;
 - decline/cancel/expiry releases hold;
 - expiry leaves active queue; user may rejoin at end;
@@ -2636,9 +2669,24 @@ BR-REQ-037-05):
      `PENDING_EMAIL_CONFIRMATION` row, the Administrator's alone (`canManageRegistrations`):
      `givePlaceNowByStaff` writes the desk's vouching (`email_confirmed_by_staff_user_id`), spends
      the row's verification link, and gives the place ahead of the waiting list under the event
-     lock — only a counted free place, else §589's refusal — as `PENDING_DECLARATION` with the
+     lock — a counted free place, or on a full race one supplementary place added as «Trimite-i
+     oferta» adds it (`event.capacity_raised_for_place_now`, §642); a row «În afara locurilor» needs
+     none (§643) — as `PENDING_DECLARATION` with the
      ordinary declaration email. Audited (`registration.address_vouched_by_staff`) under the
      Administrator's id. The participant still signs their own declaration, online or on paper.
+   - **An offer to a chosen person** («Trimite-i oferta», `offerPlaceToByStaff`, `DECISIONS.md`
+     §615, §642). Administrator only (`canManageRegistrations`). The ordinary offer and its email
+     to the waiting-list entry the Administrator picks, at any moment before the start — after the
+     close too, its deadline then capped by the start alone. When no place is free it adds exactly
+     one supplementary place (`capacity + 1` on that one event row, never a series' other dates),
+     under the event lock, in the transaction that makes the offer, audited as
+     `event.capacity_raised_for_offer` with who and for whom; the offer occupies that place before
+     the queue is filled. The dialog says so before the press and its button names the added place
+     («Adaugă un loc și trimite oferta»), and the form posts the capacity it named; the server adds
+     the place only for that confirmation, so a raise is never silent — a press through the plain
+     question on a race that filled since the page was read is refused
+     (`SUPPLEMENTARY_PLACE_UNCONFIRMED`), nothing written. It confirms nothing: the runner signs from
+     the email. The desk's «Dă-i un loc» still needs a free place (§589).
    - **A number by hand** (BR-REQ-038-01 criterion 7) and **check-in** (`checked_in_at`, by
      whom or by the participant from their own link). The code the QR encodes is
      `registrations.checkin_code`: an identifier, stored in clear, that confers nothing — the
@@ -2650,15 +2698,21 @@ BR-REQ-037-05):
      erase, rename, resend and the printing mark stay Administrator-only
      (`canManageRegistrations`). Each verb is audited under the volunteer's own id.
 
-6. **The self-declared member tick (2026-10-02, `DECISIONS.md` §NNN).** An Administrator may
-   clear or set `club_member_declared` («Nu e membru» / «E membru», on the registration's page
-   and in the list's row menu), one row at a time or in one sweep from the list filtered to the
-   members («Curăță bifele celor care nu sunt membri»: a preview of the ticked registrations whose
-   canonical address (§10.4) is no live `staff_users` account's, any role; one transaction). A
-   field edit like the name: no state, no place, no email; the club name is blanked only when the
-   tick wrote it. Audited per row (`registration.club_member_tick_changed`, `{ from, to }`) and
-   once per sweep (`registrations.member_ticks_cleared`). The Organizer reads the chip and
-   changes nothing.
+6. **«În afara locurilor» (2026-10-02, §643).** The Administrator (`canManageRegistrations`; the
+   Organizer reads the chip and the pill and changes nothing) marks or unmarks a registration on its
+   own page — for organizers, pacemakers and invited runners, who run without taking one of the
+   announced places. `setOutsideCapacityByStaff`, under the event lock, after the stale holds expire
+   and the line is served (`fillAvailableSpots`, as `placeForNewcomer`, so an unmarking takes only a
+   place nobody in line is owed): marking a row that holds a counted place frees it
+   (`fillAvailableSpots` offers it on «Da», keeps it free on «Nu»), a confirmed row or a declaration
+   hold keeping its state, number and emails; marking a `WAITLISTED` row, or a `WAITLIST_OFFERED` one
+   (the review of 2026-10-02: an offer would lapse at its short deadline), seats it now through the
+   allocator — a declaration hold with the ordinary deadline and its email, an offer's queued email
+   never tried withdrawn and its link replaced by the declaration's (§619); marking a row waiting for
+   its address applies when the address is confirmed; unmarking a row that would then hold a counted place
+   is refused while none is free (§589's sentence). An ended row's flag is read, never changed, and a
+   restart of it through the form clears it (the club marks the new cycle again if it wants). Audited
+   as `registration.outside_capacity_changed` with `from` and `to`.
 
 Every one of the six writes an `audit_logs` row (§12.12). MUST NOT: a second write path into
 `registrations`, a staff-signed declaration (a paper one is the participant's, recorded), a

@@ -26,6 +26,7 @@ import { declarationAsksMinorToSignByLocale } from "@/modules/legal-documents/re
 import { spareStates } from "@/modules/registrations/bibs";
 import { isCheckinCode, normalizeCheckinCode } from "@/modules/registrations/checkin-code";
 import DeskRow from "@/modules/registrations/ui/DeskRow";
+import PaperConfirmationTip from "@/modules/registrations/ui/PaperConfirmationTip";
 import { familyOf } from "@/modules/registrations/family-marker";
 import QrScanButton from "@/modules/registrations/ui/QrScanButton";
 import { canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
@@ -200,9 +201,13 @@ export default async function DeskPage({ params, searchParams }: Props) {
       {/* What the buttons on a row do, in one line, always visible (the owner: "I do not
           understand what to do here"). The folded steps above are the long version. */}
       {counts && !closed && (
-        <Typography variant="body2" color="text.secondary">
-          {t("desk.rowHelp")}
-        </Typography>
+        <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
+          <Typography variant="body2" color="text.secondary">
+            {t("desk.rowHelp")}
+          </Typography>
+          {/* What the paper confirmation does, once for every row rather than an «i» on each (§640). */}
+          <PaperConfirmationTip />
+        </Stack>
       )}
       {closed && <Alert severity="info">{t("desk.closed")}</Alert>}
       {byCode && <Alert severity="info">{t("desk.foundByCode")}</Alert>}

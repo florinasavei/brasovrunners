@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.61-2026-10-02 -->
+<!-- PROJECT_BASELINE: BR-V2.62-2026-10-02 -->
 
 # Brașov Runners — Business Guide
 
-**Baseline `BR-V2.61-2026-10-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.62-2026-10-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Club organizers, event coordinators, content contributors, sponsors, and other non-technical stakeholders.
@@ -316,7 +316,12 @@ For a capped event:
 - pending email confirmations do not consume places;
 - cancellations and expired holds release places; a declaration hold past its deadline expires only as far as the queue wants its place — one person waiting releases one hold, the one whose deadline passed first — or once the event has started or been cancelled (`DECISIONS.md` §160); otherwise the place stays the participant's until the start, and the declaration may still be signed online or on paper at the desk;
 - every capacity-changing action promotes eligible waiting participants before allocating a direct place to a later registrant;
-- concurrent actions must never exceed capacity or let a later registrant jump the queue.
+- concurrent actions must never exceed capacity or let a later registrant jump the queue;
+- a registration **«în afara locurilor»** (*outside the places*) consumes no place in any state: the
+  club's organizers, pacemakers and invited runners run without taking one of the announced places.
+  It still has a declaration, a race number and — if the person ticked — a row on the public list,
+  and it enters no public number. Only an Administrator marks or unmarks one, and every change is
+  written to the journal (`DECISIONS.md` §643).
 
 The initial direct declaration hold is the club's setting (30 minutes by default, "Termene"), capped by registration closing and event start. For an event further away than its **participation window** (per event; default: asked 7 days before, due 2 days before the start), the place is instead held until the window's deadline and the declaration is the participant's confirmation that they are still coming — the race is free, and a place taken in June by somebody who forgot by October is a place nobody ran on (`DECISIONS.md` §104). Either deadline is enforced only when it protects somebody: with nobody on the waiting list, the person who forgot keeps the place and their number, and signs on race day at the desk; the declaration is asked once more two days before the start, and a race called off refuses the signature and releases the place (`DECISIONS.md` §160).
 

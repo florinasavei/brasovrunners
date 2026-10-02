@@ -260,6 +260,7 @@
       "captionStatesNumbers": "First the confirmed participants, with their race number — those whose name is shown, in the order they confirmed, then the others — then those registered who have not confirmed yet and those on the waiting list, in the list's order.",
       "noteStates": "The number in the title counts the confirmed and, while registration is open at an event with a set number of places, those completing their registration. A name is shown only for those who ticked “I want to appear on the participants & results list”; the other confirmed participants appear as “Participant (name hidden)”, with nothing else about them. Those registered who have not confirmed yet and those on the waiting list appear only if they ticked it, with the registration's stage beside the name; a cancelled or expired registration does not appear. The choice can be changed at any time from the confirmation email or from “My registrations”.",
       "socialsNote": "Strava and Instagram appear only beside the names of those who chose it when registering.",
+      "outsideNote": "The club's organizers and invited runners appear in the table without being counted: the numbers above count the places.",
       "othersLead": "Also listed by name:",
       "pendingCount": {
         "one": "{count} registered, awaiting confirmation",
@@ -593,6 +594,7 @@
       "registeredWithPlaceOf": "{count} of {capacity} places taken",
       "registeredAwaitingEmail": "{count} awaiting the email confirmation",
       "registeredWaitlisted": "{count} on the waiting list",
+      "registeredOutside": "{count} outside the places",
       "registeredMoreEvents": "+{count} more",
       "newsletter": "Newsletter"
     },
@@ -621,6 +623,16 @@
       "statusLabel": "Status",
       "summaryTotal": "Registrations: {count} (all states, cancelled and expired included)",
       "summaryTest": "Test: {count}",
+      "outside": {
+        "pill": "Outside the places: {count}",
+        "chip": "Outside the places",
+        "title": "The event's places",
+        "isOutside": "Outside the places: takes none of the event's places and is in no public number.",
+        "isCounted": "Counted among the event's places, like anybody.",
+        "mark": "Seat outside the places",
+        "unmark": "Count among the places",
+        "help": "For organizers, pacemakers, invited runners: a declaration, a number and a row on the list if they ticked, without taking a place."
+      },
       "export": "Export CSV",
       "personLink": "Everything held about a person",
       "personThis": "Everything held about this person",
@@ -767,7 +779,11 @@
           "family_resent": "Email resent to the family",
           "offered_by_staff": "Offer sent ahead of the waiting list (“Send them the offer”)",
           "address_vouched_by_staff": "Address vouched for by the team; place given ahead of the waiting list (“Give them a place now”)",
-          "club_member_tick_changed": "Member tick changed by staff"
+          "outside_capacity_changed": "Seated outside the places, or counted among them again"
+        },
+        "event": {
+          "capacity_raised_for_offer": "Supplementary place added for an offer (“Send them the offer”): {from} → {to}",
+          "capacity_raised_for_place_now": "Supplementary place added for a place given now (“Give them a place now”): {from} → {to}"
         }
       },
       "locale": {
@@ -847,7 +863,7 @@
       "declarationPaper": "on paper, recorded by {who}",
       "signedByMinor": "the minor",
       "signedByGuardian": "the parent or guardian",
-      "confirmOnPaperBodyMinor": "You confirm the minor and the parent ({guardian}) both signed the declaration on paper, at the desk. Only with the paper carrying both signatures in front of you.",
+      "confirmOnPaperBodyMinor": "You confirm the minor and parent ({guardian}) both signed on paper. Only with the two-signature paper in front of you. Then the confirmation email; if no place, the waiting list, no email yet.",
       "emailVouched": "address vouched for by {who}",
       "journey": {
         "title": "The registration's journey",
@@ -895,7 +911,7 @@
       "openRow": "Open the registration",
       "cancel": "Cancel the registration",
       "cancelBody": "The person is emailed. It cannot be undone. The place is offered to the first on the waiting list or stays free, by the setting. A refusal, with its reason, is made from the registration's page.",
-      "confirmOnPaperBody": "You confirm the participant signed the declaration on paper, at the desk. They get the place and a number. Only with the signed paper in front of you.",
+      "confirmOnPaperBody": "You confirm the participant signed the declaration on paper, at the desk. Only with the signed paper in front of you. Then the confirmation email; if no place, the waiting list, with no email yet.",
       "downloadBib": "Download the race number (BIB)",
       "notOnPublicList": "Not shown publicly",
       "erase": "Erase permanently",
@@ -958,7 +974,7 @@
         },
         "releaseAuto": "Past the deadline a place is not lost by itself: it is released only when someone on the waiting list has no other free place, and offered to the first in line.",
         "releaseManual": "Past the deadline a place is not lost by itself: it is released only when someone on the waiting list has no other free place, then stays free for «Send them the offer» or «Give a place».",
-        "releaseClosed": "Past the deadline a place is not lost by itself: it is released only when someone on the waiting list has no other free place; registration has closed, so give it at the desk with «Give a place».",
+        "releaseClosed": "Past the deadline a place is not lost by itself: it is freed only when someone waiting has no other free place; registration has closed: «Send them the offer», or «Give a place» at the desk.",
         "releaseNoList": "Past the deadline a place is not lost by itself: it is released only when someone new asks for it and no other place is free.",
         "releaseNever": "Past the deadline a place is not lost: the event has no limit of places.",
         "atStart": "At the start, whoever has not signed loses the place; at the desk they can be confirmed on paper, if a place is still free.",
@@ -985,7 +1001,8 @@
       },
       "givePlaceNow": "Give them a place now",
       "givePlaceNowHelp": "For someone who did not manage to confirm the address: you vouch for it, and they get the place and the declaration email.",
-      "placeGiven": "Place given; the declaration email has left. Deadline: {deadline}."
+      "placeGiven": "Place given; the declaration email has left. Deadline: {deadline}.",
+      "placeGivenRaised": "Place given, on a supplementary place: the capacity is now {n}. The declaration email has left. Deadline: {deadline}."
     },
     "events": {
       "empty": "There is no event in the database.",
@@ -1164,7 +1181,15 @@
       "setBibTitle": "Save the number?",
       "setBibBody": "The person is emailed the number. A number once given is never given to anybody else.",
       "resendTitle": "Send the email again?",
-      "resendBody": "The email for the current state goes to {name} again, with a new link; the link in the old email stops working.",
+      "resendWhat": {
+        "PENDING_EMAIL_CONFIRMATION": "{name} gets the link to confirm the address again; the link in the old email stops working.",
+        "PENDING_DECLARATION": "{name} gets the link to sign the declaration again; the link in the old email stops working.",
+        "WAITLISTED": "{name} gets the waiting-list email again, with where the line stands now; the link in the old email stops working.",
+        "WAITLIST_OFFERED": "{name} gets the offer of a place again; the link in the old email stops working.",
+        "CONFIRMED": "{name} gets the confirmation with the QR code again; the link in the old email stops working.",
+        "CANCELLED": "{name} gets the notice about the state of the registration again.",
+        "EXPIRED": "{name} gets the notice about the state of the registration again."
+      },
       "reminderTitle": "Send the reminder?",
       "reminderBody": "{name} receives the pre-race reminder now.",
       "createRegistrationTitle": "Add the registration?",
@@ -1258,7 +1283,20 @@
       "givePlaceNowTitle": "Give them a place now?",
       "givePlaceNowBody": "You vouch for the address {email} and give them a place ahead of the waiting list.",
       "givePlaceNowBodyMore": "They get the declaration email at once and sign it online any time before the deadline, or on paper at the desk. They have nothing else to confirm.",
-      "givePlaceNowFull": "No place is free. On «Yes» for automatic offers, an added place goes to the waiting list first: set «No», raise «Capacity» by 1, then press again."
+      "givePlaceNowFull": "No place is free: pressing adds one supplementary place over the limit; the capacity becomes {n}.",
+      "outsideMarkTitle": "Seat this registration outside the places?",
+      "outsideMarkBody": "{name} no longer takes a place; the freed place goes to the first in line if offers go out automatically. State, number and emails stay.",
+      "outsideMarkBodyWaitlisted": "{name} leaves the waiting list and gets a place outside the places now: the email “{message}”, with the usual deadline.",
+      "outsideMarkBodyWaitlistedTest": "{name} leaves the waiting list and gets a place outside the places now: the declaration to sign, with the usual deadline.",
+      "outsideMarkBodyOffered": "Instead of the offer, {name} gets a place outside the places now: the email “{message}”, with the usual deadline. The offer's place is freed.",
+      "outsideMarkBodyOfferedTest": "Instead of the offer, {name} gets a place outside the places now: the declaration to sign, with the usual deadline. The offer's place is freed.",
+      "outsideMarkBodyPendingEmail": "{name} gets a place outside the places once they confirm their address; nothing changes until then.",
+      "outsideUnmarkTitle": "Count this registration among the places?",
+      "outsideUnmarkBody": "{name} will take one of the event's places. If none is free, nothing changes.",
+      "givePlaceNowRaiseConfirm": "Add a place and give it to them",
+      "offerPlaceRaise": "No place is free: pressing adds one supplementary place over the limit; the capacity becomes {n}.",
+      "offerPlaceRaiseConfirm": "Add a place and send the offer",
+      "offerPlaceAfterClose": "Registration has closed: the offer holds until the start at the latest."
     },
     "errors": {
       "PICTURE_IN_USE": "The picture is used on a page, an event or in an album. Take it out of there first.",
@@ -1291,6 +1329,7 @@
       "NO_WAITLIST": "Every place is taken and the event has no waiting list, so nothing changed.",
       "WALK_IN_LEFT_UNCONFIRMED": "The person is entered, but the last place just went, so they are unconfirmed and got no email. Confirm them on paper once a place frees up.",
       "NO_FREE_PLACE": "The race is full: places {capacity}, confirmed {confirmed}, declarations to sign {declaration}, offered {offered}, reserved for families {family}. Raise the event's capacity first.",
+      "SUPPLEMENTARY_PLACE_UNCONFIRMED": "Nothing was changed: the places changed since you opened the page, and the question did not say this supplementary place would be added. Press again: the question now says what the capacity becomes.",
       "NO_RECIPIENTS": "Nothing was sent: nobody is in the chosen group right now. Choose another group.",
       "MESSAGE_UNKNOWN_PLACEHOLDER": "Nothing was sent: {names} is not a field we can fill in this message. The fields you can use are listed under the boxes.",
       "SAMPLE_VALUE_IN_EMAIL": "The text contains the sample value “{value}” — use {placeholder}.",
@@ -1311,7 +1350,6 @@
       "LEGAL_RETIRE_IN_FORCE": "Nothing was deleted: this is the version in force. Approve the next version first, then you can delete this one.",
       "LEGAL_ALREADY_DELETED": "This version has already been deleted from the list. Its text stays in the archive.",
       "SEND_NOW_HOUR_SPENT": "Nothing was sent: Mailgun's hourly limit («Hourly limit» under «Emails») has no room right now. Choose «Queue it»; the email leaves on its own once the hour has room again.",
-      "OFFER_AFTER_CLOSE": "Registration has closed, so an offer would lapse at once; nothing changed. At the desk, use “Give a place”.",
       "RETRY_FAILED_THROTTLED": "Nothing was put back: the failed emails were already retried 3 times in the last hour. Wait a while, and look at why they failed before pressing again.",
       "SEND_NOW_MAILGUN_STOPPED_FALLBACK_OFF": "Nothing was sent: Mailgun is stopped and «Gmail takes over when Mailgun stops» is set to No. Set it to Yes under «Emails», or choose «Queue it»: it leaves when Mailgun resumes.",
       "SEND_NOW_MAILGUN_STOPPED_NO_GMAIL": "Nothing was sent: Mailgun is stopped and the club's Gmail is not configured here. Choose «Queue it»: the email leaves on its own when Mailgun resumes.",
@@ -1958,7 +1996,8 @@
         "received": {
           "title": "Registrations received",
           "summary": "real registrations: {count} · on the waiting list: {waiting}",
-          "summaryPlaces": "real registrations: {count} · on the waiting list: {waiting} · places taken: {occupied} of {capacity}"
+          "summaryPlaces": "real registrations: {count} · on the waiting list: {waiting} · places taken: {occupied} of {capacity}",
+          "outside": "outside the places: {count}"
         },
         "queue": {
           "title": "Registration queue",
@@ -4313,7 +4352,11 @@
       "checkedInAt": "Here since {time} · {who}",
       "bySelf": "themselves",
       "fastTrack": "This person is at the desk: I vouch for the address, and the declaration is signed on paper now.",
-      "fastTrackHelp": "The registration is confirmed on the spot, with no email; the participant signs the paper declaration and you record it. If full, they join the waiting list.",
+      "fastTrackHelp": "Confirmed on the spot, without the email link: the participant signs the declaration on paper in front of you; you record it. If full, they join the waiting list; else they get the confirmation.",
+      "paperWhen": "Only at the desk, with the declaration the participant signed on paper in front of you. The declaration and, if the address was not confirmed, the address are recorded on your name; you never sign.",
+      "paperPlace": "Someone without a place yet gets one as always: if the event is full or somebody is waiting, they join the waiting list, and a full waiting list refuses the press.",
+      "paperEmail": "With a place: confirmation email with QR, number and declaration copy. Waiting list: no email now; the offer by email if offered a place; declaration not recorded. Unconfirmed address: on your name.",
+      "paperNot": "It is no shortcut before the race, without the person there. If the email did not arrive, an Administrator presses «Resend email» on the registration.",
       "saved": {
         "registrationCreated": "Added — the person is listed below, in the state they landed in.",
         "registrationConfirmed": "Confirmed. You can give the number and mark them here.",
@@ -5022,7 +5065,7 @@
                 "Nobody merges two registrations into one.",
                 "Nobody on the team signs the declaration for the participant: at the desk you only record the paper declaration they signed themselves.",
                 "No legal text takes effect without an approved version; without approved terms, notice and declaration nobody can register.",
-                "Nobody goes past the number of places: there is no registration over capacity, not by hand and not at the desk. A place is given only when it is free.",
+                "Nobody goes past the number of places: there is no registration over capacity, not by hand and not at the desk. A place is given only when it is free; when none is, «Send them the offer» and «Give them a place now» add, once you confirm, a single supplementary place, in the open, written in the trail.",
                 "Nobody gets a place without their own signature (a parent's, for a minor): a waiting-list offer is accepted and signed by the person, from their email, and at the desk «Give a place» confirms only on the paper declaration they sign there, in person."
               ]
             }
@@ -5074,6 +5117,7 @@
                 "The row says «Așteaptă semnarea declarației» (awaiting the declaration) or «Așteaptă confirmarea emailului» (awaiting the email confirmation).",
                 "Give them the printed declaration form. They read it and sign it themselves. A minor: the parent or guardian signs too, each with their own document.",
                 "Press «Confirm on paper», then «Confirm on paper» again in the window.",
+                "If the person gets the place, they get the confirmation email, with the QR code, the number and the copy of the declaration; the sign-the-declaration email is not sent. If there is no place, they go on the waiting list, get no email now, and the offer comes by email if they are offered a place.",
                 "Then «Mark present» and the number. Keep the signed sheet for the organizer."
               ]
             },
@@ -5416,11 +5460,12 @@
               "steps": [
                 "«Events» → «Edit» on the race's row → the «Taking part and registration» card.",
                 "Under «Places from the waiting list are allocated automatically» choose «No» and press «Save». On «No», a freed or added place stays free until you hand it out.",
-                "Only then raise «Capacity», by as many places as you want to hand out now. On «Yes», added places go at once, as offers, to the first on the list.",
+                "No need to raise «Capacity»: when no place is free, «Send them the offer» adds one supplementary place once you confirm (the capacity grows by one, and the registration's trail says who added it and for whom).",
                 "The «Registrations received» card → «Registration queue»: on the chosen person's waiting-list row press «Send them the offer». The same button is on their registration's page too.",
-                "The window says until when they have; press «Send them the offer» again. They get the ordinary «A place has freed up» email, with the ordinary deadline, {offer}: from the email they press «Confirm the place» and sign the declaration, if they have not yet.",
+                "The window says until when they have and, when no place is free, that you add one; press «Send them the offer» or, on a full event, «Add a place and send the offer». They get the ordinary «A place has freed up» email, with the ordinary deadline, {offer}: from the email they press «Confirm the place» and sign the declaration, if they have not yet.",
                 "Not accepted in time? The offer lapses and the place is free again, for whoever you choose.",
-                "A free place is needed: a cancellation, or more places. On a full event the press is refused, and an “i” beside the button says why. After registration closes no offer is sent: at the desk, with the person there, «Give a place» confirms them on the paper declaration.",
+                "A place added with «Add a place and send the offer» stays in the capacity: unused, on «Yes» and before registration closes it goes to the first in line; otherwise it stays free until you give it.",
+                "It works at any moment until the start, after registration closes too: the offer then holds until the start at the latest. At the desk, with the person there, «Give a place» confirms them on the paper declaration, but only into a free place; on a full event an “i” beside it says why.",
                 "The others stay on the waiting list and receive nothing. On the site, the card says «Places are given from the waiting list», and newcomers join the list too while anyone waits. How many may wait is «Waiting list», beside «Capacity».",
                 "Mind the end of the line: once nobody is left on the waiting list — somebody holding an offer is no longer on it —, the places still free go to whoever registers next."
               ]
@@ -5429,12 +5474,24 @@
               "title": "Give a place to someone who did not confirm the address",
               "steps": [
                 "Open the registration: it says «Awaiting email confirmation» (the email never arrived, went to Spam, or the places were full when they pressed the link).",
-                "Press «Give them a place now». The window names the address you vouch for; press «Give them a place now» again.",
+                "Press «Give them a place now». The window names the address you vouch for; press «Give them a place now» again or, on a full event, «Add a place and give it to them».",
                 "The person gets the place and the declaration email at once, with the deadline in it. The old confirmation link no longer confirms anything, and a confirmation email still queued is not sent.",
                 "They sign the declaration: online, from the email, or on paper at the desk, where the volunteer presses «Confirm on paper». Nobody signs the declaration for them.",
-                "A free place is needed: with none, the press is refused. On «Yes» for «Places from the waiting list are allocated automatically», an added place goes to the waiting list first.",
-                "Set «No» there and save, raise «Capacity» by 1 and press «Give them a place now» again; afterwards you can set «Yes» back.",
+                "When no place is free, the window says beforehand that you add one supplementary place over the limit and what the capacity becomes; there is no need to raise «Capacity» or to set the automatic allocation to «No».",
+                "The added place is theirs in the same press: it never reaches the waiting list. The registration's trail says who added it, for whom, and from how many to how many.",
                 "The people on the waiting list stay where they are. Check the address first: a wrong address holds the place until the deadline."
+              ]
+            },
+            {
+              "title": "A place outside the places: organizers, pacemakers, invited runners",
+              "steps": [
+                "For whoever runs on the club's side: organizers, pacemakers, invited runners. They take none of the announced places.",
+                "Open the person's registration → «The event's places» → «Seat outside the places» and confirm.",
+                "If they held a place, it frees up: on «Yes» it goes to the first on the waiting list; on «No» it stays free until you hand it out.",
+                "From the waiting list or an open offer they get a place now, outside the places: the declaration email, with the usual deadline, not the offer's.",
+                "Confirmed or with a declaration to sign, they keep their state, number and emails. On the site they are in no number; they appear on the list only if they ticked, unmarked.",
+                "«Count among the places» turns it back only if a place is free; otherwise the press is refused and says who holds the places.",
+                "In the registrations list, the pill «Outside the places» shows them all; the export has a column for them."
               ]
             },
             {
@@ -5463,7 +5520,7 @@
                 "«Registrations» → find the person → press their name.",
                 "Wrong name: under «Correct the name» type the right one → «Save the name».",
                 "Not coming any more: «Cancel the registration», write the «Reason», press «Cancel the registration» and confirm. The place goes to the first on the waiting list; if the event's places are not allocated automatically, it stays free until you hand it out.",
-                "The email never arrived: «Resend email» → «Send now, without waiting for the scheduled round».",
+                "The email never arrived: «Resend email» → «Send now, without waiting for the scheduled round». It works on the waiting list too: the email says where the line stands now.",
                 "They ask for their data to be erased: «Delete permanently», write the «Reason for deletion», tick «I confirm this deletion is permanent» and press «Delete permanently».",
                 "Several at once: tick the rows on the list → «Cancel the ticked ones»."
               ]
@@ -5488,7 +5545,7 @@
                 "Mind: each gets a new link, and the link in the earlier email stops working. Tell them to open the newest email.",
                 "Tell them to look for the email in Spam and in Promotions too.",
                 "At most three presses an hour per event. An “i” beside the button says when a press would be refused: the event is cancelled, finished or has started, or the hour's presses are spent.",
-                "Who loses a place, and when: in «Registrations», a race's list says under «Who has signed up» until when places are kept and what follows the deadline; the «How far» column has each one's. Whoever loses the place after the deadline gets an email that says so and what they can still do.",
+                "Who loses a place, and when: in «Registrations», a race's list says under «Who has signed up» until when places are kept and what follows the deadline; the «How far» column has each one's.",
                 "One person only: open their registration → «Resend email»."
               ]
             },
@@ -5688,7 +5745,6 @@
               "title": "The club's legal texts",
               "steps": [
                 "«Legal documents»: if the box «One step: approve the templates with the club's facts» is at the top, check the club's facts in it and press «Approve the missing texts now…»: each text not yet approved gets version 1, from its template, with the club's facts. A text already approved is not touched.",
-                "When a new release of the site changes a template, every Administrator and Superadministrator receives the email «The legal templates changed» once, naming the texts, with a button to «New version»: at the next check of the scheduled jobs, at the latest the next morning. «Tasks» shows the same rows until you approve the texts.",
                 "One text: on its card in «Legal documents» press «Regenerate from the template» and confirm. All at once: under «Every text at once» press «Regenerate from the templates», or on «New version» press «Regenerate all». One draft is made for each; nothing takes effect yet, and the list opens on «Drafts».",
                 "Open each draft (the «Drafts» filter shows them all), read it and fill in what is left written <…>, in Romanian and in English; «Save draft».",
                 "Back on «Legal documents»: «Approve the drafts» and confirm. The drafts ready to approve take effect together; what cannot be approved at once is written under the button, with the reason.",
@@ -8030,10 +8086,22 @@
       "menuOrder": "The menu order was saved.",
       "registrationOffered": "The offer is sent: they have the usual time to sign the declaration.",
       "placeGiven": "Place given; the declaration email has left.",
+      "outsideMarked": "The registration is outside the places: it takes none of the event's places now.",
+      "outsideUnmarked": "The registration counts among the event's places again.",
       "failedRetried": {
         "one": "{count} failed email put back in the queue.",
         "few": "{count} failed emails put back in the queue.",
         "other": "{count} failed emails put back in the queue."
+      },
+      "placeGivenRaised": {
+        "one": "Place given; a supplementary place added: {count} place. The declaration email has left.",
+        "few": "Place given; a supplementary place added: {count} places. The declaration email has left.",
+        "other": "Place given; a supplementary place added: {count} places. The declaration email has left."
+      },
+      "registrationOfferedRaised": {
+        "one": "Offer sent; a supplementary place added: {count} place.",
+        "few": "Offer sent; a supplementary place added: {count} places.",
+        "other": "Offer sent; a supplementary place added: {count} places."
       }
     }
   },

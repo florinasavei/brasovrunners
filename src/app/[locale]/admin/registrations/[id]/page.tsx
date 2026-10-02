@@ -61,6 +61,7 @@ import {
   promoteRegistrationAction,
   setBibNumberAction,
   setClubMemberDeclaredAction,
+  setOutsideCapacityAction,
   withdrawConsentAction,
   declarationHoldAction,
 } from "../actions";
@@ -72,15 +73,26 @@ import { shortTextHash } from "@/modules/legal-documents/domain/signed-text";
 import { withSendNowChoice } from "@/modules/notifications/domain/send-at-once";
 import { sendNowChoiceFor } from "@/modules/notifications/send-now-choice";
 import GivePlaceButton from "@/modules/registrations/ui/GivePlaceButton";
+import PaperConfirmationTip from "@/modules/registrations/ui/PaperConfirmationTip";
 import OfferPlaceButton from "@/modules/registrations/ui/OfferPlaceButton";
-import { givePlaceNowAhead, offerDeadlineIfMadeNow } from "@/modules/registrations/give-place-tip";
+import { givePlaceNowAhead, staffOfferIfMadeNow, staffOfferQuestion } from "@/modules/registrations/give-place-tip";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
-  searchParams: Promise<{ resent?: string; saved?: string; error?: string; health?: string } & Partial<Record<keyof PlacesTaken, string>>>;
+  searchParams: Promise<{ resent?: string; saved?: string; error?: string; health?: string; count?: string } & Partial<Record<keyof PlacesTaken, string>>>;
 };
 
 export const dynamic = "force-dynamic";
+
+/**
+ * The numbers a trail row's label names (§642: «Loc suplimentar adăugat…: {from} → {to}»): `from` and
+ * `to` when both are whole numbers, nothing otherwise — a label with no placeholder ignores them, and a
+ * name correction's `from` and `to`, which are names, never reach a label.
+ */
+function auditLabelValues(metadata: unknown): Record<string, string> | undefined {
+  const { from, to } = (metadata ?? {}) as { from?: unknown; to?: unknown };
+  return Number.isInteger(from) && Number.isInteger(to) ? { from: String(from), to: String(to) } : undefined;
+}
 
 /**
  * One registration's full timeline (AGENTS.md §15.8). The same gate as the list: whoever may
@@ -107,7 +119,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   const [acceptances, outboxHistory, auditTrail, freeBibs, minorSigns, family, partnerShares] = await Promise.all([
     listDeclarationAcceptances(db, id),
     listOutboxHistory(db, id),
-    listAuditTrail(db, "registration", id),
+    // With its event: the supplementary place added for it is a row about the event (§642), found by the index.
+    listAuditTrail(db, "registration", id, registration.eventId),
     // The first free numbers, for a preferential one picked rather than guessed (§105).
     suggestFreeBibNumbers(db, registration.eventId),
     /*
@@ -129,19 +142,20 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   const sendNow = mayManage ? await sendNowChoiceFor(db, locale) : null;
   // Every verb here asks first and says who is emailed (§384); the service decides, as before.
   const words = await confirmWords();
-  // «Trimite-i oferta»'s deadline in its question (§615): read only where the button can be drawn.
-  const offerDeadline = registration.status === "WAITLISTED" && mayManage ? await offerDeadlineIfMadeNow(registration.eventId, locale) : null;
   /*
     «Dă-i un loc acum» (§637): the Administrator's, on a row still waiting for its address, and drawn only
     where the press can succeed — a local, scheduled event with a date that has not started. Its question
-    says beforehand when no place is free — the allocator's counts, read once per event (§592's forecast),
-    a lapsed declaration hold not counted against her (§160); a family's live reservation is the row's
-    own place, so it is never "full" for it. The server decides.
+    says beforehand when no place is free, and the capacity the supplementary place raises it to (§642) —
+    the allocator's counts, read once per event (§592's forecast), a lapsed declaration hold not counted
+    against her (§160); a family's live reservation is the row's own place, so it is never "full" for it;
+    nor is a row «În afara locurilor» (§643), which needs no counted place. The server decides.
   */
   const givePlaceNowFacts = mayManage && registration.status === "PENDING_EMAIL_CONFIRMATION" ? await givePlaceNowAhead(registration.eventId) : null;
   const givePlaceNow = givePlaceNowFacts
-    ? { full: givePlaceNowFacts.full && !(registration.holdExpiresAt !== null && registration.holdExpiresAt > new Date()) }
+    ? { raisedTo: givePlaceNowFacts.full && !registration.outsideCapacity && !(registration.holdExpiresAt !== null && registration.holdExpiresAt > new Date()) ? givePlaceNowFacts.raisedTo : null }
     : null;
+  // «Trimite-i oferta»'s question (§615, §642): the deadline, a supplementary place, the close — read only where the button can be drawn.
+  const offerForecast = registration.status === "WAITLISTED" && mayManage ? await staffOfferIfMadeNow(registration.eventId, locale) : null;
   // The timeline's short form with the time (§349): a value beside its label, so capitalised;
   // `dtInline` inside a sentence.
   const dt = (value: Date | null) => (value ? formatDay(value, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true }) : null);
@@ -273,9 +287,12 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         {/* Sent now, past the scheduled pass (§540), or queued for it, as before. */}
         {resent && <Alert severity="success">{resent === "now" ? tr("registrations.resendSentNow") : tr("registrations.resendSent")}</Alert>}
         {/* «Dă-i un loc acum» (§637): the place given, and until when it waits for the declaration. */}
-        {saved === "placeGiven" && registration.holdExpiresAt ? (
+        {(saved === "placeGiven" || saved === "placeGivenRaised") && registration.holdExpiresAt ? (
           <Alert severity="success" data-testid="place-given">
-            {tr("registrations.placeGiven", { deadline: dtInline(registration.holdExpiresAt) ?? "" })}
+            {/* On a supplementary place (§642) the alert names the capacity it raised, as the toast does. */}
+            {saved === "placeGivenRaised" && typeof query.count === "string" && /^\d{1,6}$/.test(query.count)
+              ? tr("registrations.placeGivenRaised", { n: query.count, deadline: dtInline(registration.holdExpiresAt) ?? "" })
+              : tr("registrations.placeGiven", { deadline: dtInline(registration.holdExpiresAt) ?? "" })}
           </Alert>
         ) : (
           saved && <Alert severity="success">{tr("saved")}</Alert>
@@ -296,6 +313,10 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         )}
         {registration.kind === "TEST" && (
           <Chip size="small" color="warning" label={tr("registrations.testKind")} />
+        )}
+        {/* Seated outside the places (§643): read by every role that reads this page. */}
+        {registration.outsideCapacity && (
+          <Chip size="small" color="secondary" variant="outlined" label={tr("registrations.outside.chip")} data-testid="outside-chip" />
         )}
         <FamilyChip
           label={tr("registrations.familyChip")}
@@ -384,7 +405,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           <ActionForm
             action={resendRegistrationEmailAction}
             confirm={withSendNowChoice(
-              { title: tr("confirm.resendTitle"), body: tr("confirm.resendBody", { name: registration.registeredName }), ...(registration.kind === "TEST" ? {} : { email: words.email(1) }), confirmLabel: tr("registrations.resend"), cancelLabel: words.cancel },
+              { title: tr("confirm.resendTitle"), body: tr(`confirm.resendWhat.${registration.status}`, { name: registration.registeredName }), ...(registration.kind === "TEST" ? {} : { email: words.email(1) }), confirmLabel: tr("registrations.resend"), cancelLabel: words.cancel },
               sendNow,
             )}
             data-testid="resend-form"
@@ -437,15 +458,18 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
             body: [
               tr("confirm.givePlaceNowBody", { email: registration.participantEmail }),
               tr("confirm.givePlaceNowBodyMore"),
-              ...(givePlaceNow.full ? [tr("confirm.givePlaceNowFull")] : []),
+              // A full race (§642): the press adds one supplementary place, said beforehand and named on the button.
+              ...(givePlaceNow.raisedTo !== null ? [tr("confirm.givePlaceNowFull", { n: String(givePlaceNow.raisedTo) })] : []),
             ].join(" "),
             ...(registration.kind === "TEST" ? {} : { email: words.email(1) }),
-            confirmLabel: tr("registrations.givePlaceNow"),
+            confirmLabel: givePlaceNow.raisedTo !== null ? tr("confirm.givePlaceNowRaiseConfirm") : tr("registrations.givePlaceNow"),
             cancelLabel: words.cancel,
           }}
           data-testid="give-place-now-form"
         >
           {deskHidden}
+          {/* The capacity the question named (§642): the server adds that one place and no other, and none unasked. */}
+          {givePlaceNow.raisedTo !== null && <input type="hidden" name="addPlace" value={givePlaceNow.raisedTo} />}
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "center" } }}>
             <GlyphButton icon="place" type="submit" variant="outlined" sx={{ minHeight: 44, flexShrink: 0 }}>
               {tr("registrations.givePlaceNow")}
@@ -518,6 +542,72 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         )}
       </Box>
 
+      {/*
+        «În afara locurilor» (§643; the owner, 2026-10-02: «Vreau și o bifă de „ascunde la numărare” per
+        fiecare participant»): whether this registration takes one of the event's places. Every role that
+        reads the page reads the line; only the Administrator marks or unmarks (`canManageRegistrations`,
+        asserted again by the action and the service), and only while the registration is active — an
+        ended row's flag is read, never changed. The dialog says what the press does in this row's state.
+      */}
+      <Box component="section" data-testid="outside-capacity">
+        <Typography variant="h3" sx={{ fontSize: "1rem", mb: 1 }}>
+          {tr("registrations.outside.title")}
+        </Typography>
+        <Stack spacing={1} sx={{ alignItems: "flex-start" }}>
+          <Typography variant="body2">
+            {tr(registration.outsideCapacity ? "registrations.outside.isOutside" : "registrations.outside.isCounted")}
+          </Typography>
+          {mayManage && !isTerminalStatus(registration.status) && (
+            <ActionForm
+              action={setOutsideCapacityAction}
+              confirm={
+                registration.outsideCapacity
+                  ? {
+                      title: tr("confirm.outsideUnmarkTitle"),
+                      body: tr("confirm.outsideUnmarkBody", { name: registration.registeredName }),
+                      confirmLabel: tr("registrations.outside.unmark"),
+                      cancelLabel: words.cancel,
+                    }
+                  : {
+                      title: tr("confirm.outsideMarkTitle"),
+                      /*
+                        A waiting runner, or an open offer (the review of 2026-10-02), is seated now with the
+                        declaration's email; a TEST row's dialog names no email, in its body as in its bold line (§384).
+                      */
+                      body:
+                        registration.status === "WAITLISTED"
+                          ? registration.kind === "TEST"
+                            ? tr("confirm.outsideMarkBodyWaitlistedTest", { name: registration.registeredName })
+                            : tr("confirm.outsideMarkBodyWaitlisted", { name: registration.registeredName, message: tr("emails.types.COMPLETE_DECLARATION") })
+                          : registration.status === "WAITLIST_OFFERED"
+                            ? registration.kind === "TEST"
+                              ? tr("confirm.outsideMarkBodyOfferedTest", { name: registration.registeredName })
+                              : tr("confirm.outsideMarkBodyOffered", { name: registration.registeredName, message: tr("emails.types.COMPLETE_DECLARATION") })
+                            : registration.status === "PENDING_EMAIL_CONFIRMATION"
+                              ? tr("confirm.outsideMarkBodyPendingEmail", { name: registration.registeredName })
+                              : tr("confirm.outsideMarkBody", { name: registration.registeredName }),
+                      ...(registration.status !== "WAITLISTED" && registration.status !== "WAITLIST_OFFERED"
+                        ? {}
+                        : registration.kind === "TEST" ? {} : { email: words.email(1) }),
+                      confirmLabel: tr("registrations.outside.mark"),
+                      cancelLabel: words.cancel,
+                    }
+              }
+              data-testid="outside-capacity-form"
+            >
+              {deskHidden}
+              <input type="hidden" name="outside" value={registration.outsideCapacity ? "false" : "true"} />
+              <GlyphButton icon={registration.outsideCapacity ? "turnOff" : "turnOn"} type="submit" variant="outlined" sx={{ minHeight: 44 }}>
+                {tr(registration.outsideCapacity ? "registrations.outside.unmark" : "registrations.outside.mark")}
+              </GlyphButton>
+            </ActionForm>
+          )}
+          <Typography variant="caption" color="text.secondary">
+            {tr("registrations.outside.help")}
+          </Typography>
+        </Stack>
+      </Box>
+
       <Divider />
 
       {/*
@@ -527,9 +617,13 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         can be given it again from a screen.
       */}
       <Box component="section">
-        <Typography variant="h3" sx={{ fontSize: "1rem", mb: 1 }}>
-          {tr("registrations.raceDayTitle")}
-        </Typography>
+        <Stack direction="row" spacing={0.5} sx={{ alignItems: "center", mb: 1 }}>
+          <Typography variant="h3" sx={{ fontSize: "1rem" }}>
+            {tr("registrations.raceDayTitle")}
+          </Typography>
+          {/* What the paper confirmation is for, does and sends (§640): only where the button is. */}
+          {canConfirmNow && <PaperConfirmationTip />}
+        </Stack>
         <Stack spacing={2}>
           {canConfirmNow && (
             <ActionForm
@@ -549,7 +643,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                   {tr("desk.confirmHere")}
                 </GlyphButton>
                 <Typography variant="body2" color="text.secondary">
-                  {tr("desk.fastTrackHelp")}
+                  {/* When, what the person gets, what it is not; the «i» beside the title adds the place's rule (§640). */}
+                  {tr("desk.paperWhen")} {tr("desk.paperEmail")} {tr("desk.paperNot")}
                   {/* A minor's paper is signed by the minor and the parent, and the press attests both
                       (§330) — where the declaration in effect asks the minor to sign. */}
                   {registration.guardianName && minorSigns && <> {tr("desk.confirmMinorNote", { guardian: registration.guardianName })}</>}
@@ -570,23 +665,24 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           )}
           {/*
             «Trimite-i oferta» (§615): the ordinary offer, by the organizer's choice — the email and the
-            deadline, no confirmation. The Administrator's; offered while registration is open, since an
-            offer made after the close would already be lapsed (the desk's «Dă-i un loc» is for then).
+            deadline, no confirmation. The Administrator's; offered at any moment before the start, after
+            the close too, and on a full event it adds one supplementary place (§642), as the dialog says.
           */}
-          {registration.status === "WAITLISTED" && mayManage && offerDeadline !== null && (
+          {registration.status === "WAITLISTED" && mayManage && offerForecast !== null && (
             <ActionForm
               action={offerPlaceAction}
               confirm={{
                 title: tr("confirm.offerPlaceTitle"),
-                body: tr("confirm.offerPlaceBody", { name: registration.registeredName, message: tr("emails.types.WAITLIST_SPOT_OFFER"), deadline: offerDeadline }),
+                ...staffOfferQuestion((key, values) => tr(key, values), registration.registeredName, offerForecast),
                 ...(registration.kind === "TEST" ? {} : { email: words.email(1) }),
-                confirmLabel: tr("desk.offerPlace"),
                 cancelLabel: words.cancel,
               }}
               data-testid="offer-place-form"
             >
               {deskHidden}
-              <OfferPlaceButton eventId={registration.eventId} />
+              {/* The capacity the question named (§642): the server adds that one place and no other, and none unasked. */}
+              {offerForecast.raisedTo !== null && <input type="hidden" name="addPlace" value={offerForecast.raisedTo} />}
+              <OfferPlaceButton />
             </ActionForm>
           )}
           {registration.status === "CONFIRMED" && (
@@ -1153,7 +1249,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           </Typography>
           {staffTrail.map((entry, index) => (
             <Typography key={index} variant="body2">
-              {dt(entry.createdAt)} · {tr(`registrations.audit.${entry.action}`)} ·{" "}
+              {dt(entry.createdAt)} · {tr(`registrations.audit.${entry.action}`, auditLabelValues(entry.metadataJson))} ·{" "}
               {entry.actorName ??
                 (entry.actorStaffUserId === null
                   ? tr("registrations.auditActorParticipant")

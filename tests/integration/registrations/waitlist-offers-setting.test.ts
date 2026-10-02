@@ -11,7 +11,7 @@ import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { computeOccupied, NoFreePlaceError } from "@/modules/registrations/domain/capacity";
-import { OFFER_AFTER_CLOSE, offerRefusalCode, WAITLIST_FULL, waitlistRefusalOf } from "@/modules/registrations/domain/waitlist";
+import { WAITLIST_FULL, waitlistRefusalOf } from "@/modules/registrations/domain/waitlist";
 import { isDomainError } from "@/shared/errors/domain-error";
 import ro from "../../../messages/ro.json";
 import en from "../../../messages/en.json";
@@ -391,25 +391,23 @@ describe("§615 «Trimite-i oferta»: the ordinary offer, to the person chosen, 
     }
   });
 
-  it("two offers in a row for one free place: the second is refused with who holds the places", async () => {
-    await oneHeldTwoWaiting();
+  it("two offers in a row for one free place: the first takes it, the second adds a supplementary place (§642) — never two on one place", async () => {
+    const event = await oneHeldTwoWaiting();
     await cancelRegistrationByStaff(db, admin, (await rowOf("Ana")).id, "nu mai vine", at(10));
-    await offerPlaceByStaff(db, admin, (await rowOf("Luca")).id, at(11));
-    const refusal = await offerPlaceByStaff(db, admin, (await rowOf("Elena")).id, at(12)).then(
-      () => null,
-      (error: unknown) => error,
-    );
-    expect(refusal).toBeInstanceOf(NoFreePlaceError);
-    expect((refusal as NoFreePlaceError).places).toEqual({ capacity: 1, confirmed: 0, declaration: 0, offered: 1, family: 0 });
-    expect((await rowOf("Elena")).status).toBe("WAITLISTED");
-    expect(await offersQueued()).toHaveLength(1);
+    expect((await offerPlaceByStaff(db, admin, (await rowOf("Luca")).id, at(11))).capacityRaisedTo).toBeNull();
+    // The page drawn after the first offer asks «capacitatea devine 2», and the form posts it.
+    const second = await offerPlaceByStaff(db, admin, (await rowOf("Elena")).id, at(12), { addPlaceTo: 2 });
+    expect(second.status).toBe("WAITLIST_OFFERED");
+    expect(second.capacityRaisedTo).toBe(2);
+    const [row] = await db.select({ capacity: events.capacity }).from(events).where(eq(events.id, event.id));
+    expect(row.capacity).toBe(2);
+    // Two offers, two places: the count equals the capacity, never above it.
+    expect(await occupied(event.id, at(12))).toBe(2);
+    expect(await offersQueued()).toHaveLength(2);
   });
 
-  it("refuses a full event, a row that is not waiting, a cancelled event and an event past its close", async () => {
+  it("refuses a row that is not waiting and a cancelled event; a full event and an event past its close no longer refuse (§642)", async () => {
     const event = await oneHeldTwoWaiting();
-    // Full: Ana holds the one place.
-    const full = await offerPlaceByStaff(db, admin, (await rowOf("Elena")).id, at(5)).then(() => null, (error: unknown) => error);
-    expect(full).toBeInstanceOf(NoFreePlaceError);
     // Not waiting: Ana's own row.
     const notWaiting = await offerPlaceByStaff(db, admin, (await rowOf("Ana")).id, at(5)).then(() => null, (error: unknown) => error);
     expect(isDomainError(notWaiting) && notWaiting.code).toBe("CONFLICT");
@@ -419,16 +417,17 @@ describe("§615 «Trimite-i oferta»: the ordinary offer, to the person chosen, 
     await db.update(events).set({ eventStatus: "CANCELLED" }).where(eq(events.id, event.id));
     const cancelled = await offerPlaceByStaff(db, admin, (await rowOf("Elena")).id, at(11)).then(() => null, (error: unknown) => error);
     expect(isDomainError(cancelled) && cancelled.code).toBe("VALIDATION_ERROR");
-    expect(offerRefusalCode(cancelled)).toBeNull();
-
-    // Past the close: an offer then would already be lapsed.
-    await db.update(events).set({ eventStatus: "SCHEDULED", registrationClosesAt: at(12) }).where(eq(events.id, event.id));
-    const late = await offerPlaceByStaff(db, admin, (await rowOf("Elena")).id, at(13)).then(() => null, (error: unknown) => error);
-    expect(offerRefusalCode(late)).toBe(OFFER_AFTER_CLOSE);
     expect([(await rowOf("Elena")).status, (await rowOf("Luca")).status]).toEqual(["WAITLISTED", "WAITLISTED"]);
     expect(await offersQueued()).toHaveLength(0);
-    // The desk's «Dă-i un loc» still seats a walk-in then: the paper confirmation into the free place.
-    expect((await promoteRegistrationByStaff(db, admin, (await rowOf("Elena")).id, at(13))).status).toBe("CONFIRMED");
+
+    // Past the close: the offer goes, capped by the start alone.
+    await db.update(events).set({ eventStatus: "SCHEDULED", registrationClosesAt: at(12) }).where(eq(events.id, event.id));
+    const late = await offerPlaceByStaff(db, admin, (await rowOf("Elena")).id, at(13));
+    expect(late.status).toBe("WAITLIST_OFFERED");
+    expect(late.holdExpiresAt).toEqual(new Date(at(13).getTime() + 24 * HOUR));
+    // The desk's «Dă-i un loc» is unchanged: on the place Elena's offer now occupies, it refuses Luca with §589's sentence.
+    const desk = await promoteRegistrationByStaff(db, admin, (await rowOf("Luca")).id, at(14)).then(() => null, (error: unknown) => error);
+    expect(desk).toBeInstanceOf(NoFreePlaceError);
   });
 
   it("is the Administrator's: the Organizer, who reads the list, is refused before anything is written", async () => {
@@ -476,7 +475,18 @@ describe("§615 «Trimite-i oferta»: the ordinary offer, to the person chosen, 
       expect(body).toContain("Elena Munteanu");
       expect(body).toContain(say("emails.types.WAITLIST_SPOT_OFFER"));
       expect(body.length).toBeLessThanOrEqual(200);
-      expect(say("errors.OFFER_AFTER_CLOSE").length).toBeLessThanOrEqual(200);
+      // §642: the two sentences a full event and a closed registration add, each its own string.
+      expect(say("confirm.offerPlaceRaise", { n: "151" })).toContain("151");
+      expect(say("confirm.offerPlaceRaise", { n: "151" }).length).toBeLessThanOrEqual(200);
+      expect(say("confirm.offerPlaceAfterClose").length).toBeLessThanOrEqual(200);
+      // The owner: «vreau confirmare când depășesc limita» — the button that raises names the added place.
+      expect(say("confirm.offerPlaceRaiseConfirm")).toBe(locale === "ro" ? "Adaugă un loc și trimite oferta" : "Add a place and send the offer");
+      expect(say("confirm.givePlaceNowFull", { n: "151" })).toContain("151");
+      expect(say("confirm.givePlaceNowFull", { n: "151" }).length).toBeLessThanOrEqual(200);
+      expect(say("confirm.givePlaceNowRaiseConfirm")).toBe(locale === "ro" ? "Adaugă un loc și dă-i locul" : "Add a place and give it to them");
+      // A press the question did not confirm is refused, and says to press again from the page drawn now (§642).
+      expect(say("errors.SUPPLEMENTARY_PLACE_UNCONFIRMED").length).toBeLessThanOrEqual(200);
+      expect(say("registrations.placeGivenRaised", { n: "151", deadline: "joi, 1 oct., 10:00" })).toContain("151");
       expect(say("desk.offerPlace")).toBe(locale === "ro" ? "Trimite-i oferta" : "Send them the offer");
       expect(say("confirm.offerPlaceTitle")).toBe(locale === "ro" ? "Îi trimiți oferta?" : "Send them the offer?");
     }

@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import { clubCopyPayload } from "@/modules/notifications/domain/club-notices";
 import {
   DEADLINE_KIND_BY_MESSAGE,
+  OFFER_UNTIL_START,
+  offerLastsUntilStart,
   rebasedDeadline,
   STARTS_DEADLINE,
   startingDeadline,
@@ -61,6 +63,25 @@ describe("§513 rebasedDeadline", () => {
     expect(
       rebasedDeadline({ kind: "offer", stored: closes, queuedAt: QUEUED, sentAt: at(20 * MINUTE), event: { registrationClosesAt: closes, startsAt: EVENT.startsAt } }),
     ).toBeNull();
+  });
+
+  it("re-bases «Trimite-i oferta»'s offer past the close, capped by the start alone (§642); the automatic offer keeps the close", () => {
+    const closed = { registrationClosesAt: QUEUED, startsAt: at(30 * HOUR) };
+    // Made after the close: stored 24 hours on, sent two hours late — 26 hours, still before the start.
+    expect(rebasedDeadline({ kind: "offer", stored: at(24 * HOUR), queuedAt: QUEUED, sentAt: at(2 * HOUR), event: closed, capByClose: false })).toEqual(at(26 * HOUR));
+    // Ten hours late: the start is the one cap.
+    expect(rebasedDeadline({ kind: "offer", stored: at(24 * HOUR), queuedAt: QUEUED, sentAt: at(10 * HOUR), event: closed, capByClose: false })).toEqual(at(30 * HOUR));
+    // The same row without the mark: the close caps it, so nothing moves.
+    expect(rebasedDeadline({ kind: "offer", stored: at(24 * HOUR), queuedAt: QUEUED, sentAt: at(2 * HOUR), event: closed })).toBeNull();
+    // The mark is the offer's alone: a declaration hold keeps its close.
+    expect(rebasedDeadline({ kind: "declarationHold", stored: at(30 * MINUTE), queuedAt: QUEUED, sentAt: at(HOUR), event: { registrationClosesAt: at(40 * MINUTE), startsAt: at(30 * HOUR) }, capByClose: false })).toEqual(at(40 * MINUTE));
+  });
+
+  it("reads the staff offer's mark from the message's payload, and nothing else carries it (§642)", () => {
+    expect(offerLastsUntilStart(startingDeadline({ [OFFER_UNTIL_START]: true }))).toBe(true);
+    expect(offerLastsUntilStart(startingDeadline())).toBe(false);
+    expect(offerLastsUntilStart({ [OFFER_UNTIL_START]: "true" })).toBe(false);
+    expect(offerLastsUntilStart(null)).toBe(false);
   });
 
   it("re-bases an offer and a declaration hold past their stored deadline at the send — the queue kept both (§520)", () => {
