@@ -414,6 +414,8 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   const tasks = sortTasks(
     ownerTasks({
       hasApprovedPrivacyNotice: Boolean(privacyNotice),
+      // §NNN: the refusal row's own gate — terms in force, in the reader's language, as the notice's row above.
+      hasApprovedTerms: Boolean(await findCurrentApprovedDocument(db, "TERMS", locale, now)),
       // §396: the text in force switches the public list's states on, in every language.
       listStatesDescribed: await noticeDescribesListStates(db, now),
       // §500: the same switch for Strava and Instagram beside a name on the public list.

@@ -57,7 +57,6 @@ vi.mock("@/modules/legal-documents/domain/merge-fields", () => ({
   describesListSocials: () => state.noticeDescribesEverything,
   describesPromotionalMaterials: () => state.noticeDescribesEverything,
   describesPromotionalMaterialsShared: () => state.noticeDescribesEverything,
-  describesRefusal: () => state.termsDescribeRefusal,
 }));
 vi.mock("@/modules/registrations/address-cap", () => ({ readAddressCap: async () => ({ cap: { registrationsPerAddress: 4 }, updatedAt: null }) }));
 vi.mock("@/modules/registrations/ui/EmailDeliveryNotice", () => ({ default: () => null }));

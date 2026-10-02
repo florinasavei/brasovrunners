@@ -2,7 +2,6 @@ import type { Deadlines } from "@/modules/deadlines/domain/deadlines";
 import { daysPhrase, hoursPhrase, leadPhrase, minutesPhrase } from "@/modules/deadlines/domain/duration-words";
 import { yearsPhrase } from "@/modules/registrations/domain/age";
 import { peoplePhrase } from "@/modules/registrations/domain/address-cap";
-import { REFUSAL_GROUNDS_CLAUSES } from "@/modules/registrations/refusal-grounds-words";
 import { isLegalDocumentBody, type LegalDocumentBody } from "./content-hash";
 
 /**
@@ -259,18 +258,6 @@ export const PROMOTIONAL_MATERIALS_SHARED_MERGE_FIELD = "promotionalMaterialsSha
 export const GMAIL_FALLBACK_MERGE_FIELD = "gmailFallback";
 
 /**
- * The terms' marker for the club's right to refuse or cancel a registration on objective grounds
- * (§NNN, on §618's paragraph; the owner, 2026-10-02: «La edițiile următoare trebuie să apară că
- * organizatorul își rezervă dreptul de a refuza înscrieri»). The same two-in-one as the notice's
- * fields above, in the terms: filled, when the text is shown, with the five grounds exactly as §618
- * wrote them (`registrations/refusal-grounds-words.ts`), and the switch — the form's express box
- * names «refuzarea sau anularea unei înscrieri de către club» and the fold «Cum funcționează
- * înscrierea» says the club may refuse, only while the terms in force, in every language, carry it
- * (`describesRefusal`). Nothing is said to a participant that the terms in force do not say (§618).
- */
-export const REFUSAL_GROUNDS_MERGE_FIELD = "refusalGrounds";
-
-/**
  * The club's limit per address (§389, §576; the owner, 2026-09-30: up to four people on one email
  * address, and the limit said): how many people one email address may register for one event —
  * "4 persoane" / "4 people", with the unit, in the words every page and email says it with
@@ -331,7 +318,6 @@ export const MERGE_FIELDS = [
   PROMOTIONAL_MATERIALS_SHARED_MERGE_FIELD,
   GMAIL_FALLBACK_MERGE_FIELD,
   ADDRESS_CAP_MERGE_FIELD,
-  REFUSAL_GROUNDS_MERGE_FIELD,
 ] as const;
 
 /**
@@ -526,19 +512,6 @@ export function describesPromotionalMaterialsShared(body: unknown): boolean {
  */
 export function describesGmailFallback(body: unknown): boolean {
   return mergeFieldsIn(body).has(GMAIL_FALLBACK_MERGE_FIELD);
-}
-
-/**
- * Whether the terms carry the club's right to refuse or cancel a registration on objective grounds
- * (§NNN, §618): they name `{{refusalGrounds}}`, or — a version the club approved from §618's template
- * before the field existed — they spell its grounds word for word, in either language, in one
- * paragraph. The gate for the form's second express-box wording and the fold's step; a text that
- * says neither keeps both exactly as they were. Pure; the caller asks it of the terms in force.
- */
-export function describesRefusal(body: unknown): boolean {
-  if (mergeFieldsIn(body).has(REFUSAL_GROUNDS_MERGE_FIELD)) return true;
-  const sections = isLegalDocumentBody(body) ? body.sections : [];
-  return sections.some((section) => section.paragraphs.some((paragraph) => REFUSAL_GROUNDS_CLAUSES.some((clause) => paragraph.includes(clause))));
 }
 
 export function isMergeField(name: string): name is MergeField {

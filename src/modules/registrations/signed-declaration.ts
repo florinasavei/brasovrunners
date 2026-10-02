@@ -18,7 +18,6 @@ import { effectiveMinimumAge } from "./domain/age";
 import { listStatesMergeValues } from "./list-state-words";
 import { listSocialsMergeValues } from "./list-socials-words";
 import { listNumbersMergeValues } from "./list-number-words";
-import { refusalMergeValues } from "./refusal-grounds-words";
 import { promotionalMaterialsMergeValues } from "./promo-consent-words";
 import { gmailFallbackMergeValues } from "@/modules/notifications/fallback-notice-words";
 import { newsletterMergeValues } from "@/modules/newsletter/topic-words";
@@ -219,8 +218,6 @@ export async function eventMergeValues<T extends Record<string, unknown>>(
       // it, so a declaration that names it is filled here too rather than signed with a blank.
       ...listStatesMergeValues(locale), ...listSocialsMergeValues(locale), ...listNumbersMergeValues(locale), ...gmailFallbackMergeValues(locale), ...promotionalMaterialsMergeValues(locale),
       ...newsletterMergeValues(locale),
-      // The terms' refusal grounds (§NNN), a general field like the ones above: filled, never a blank.
-      ...refusalMergeValues(locale),
     },
     title: event.title,
     timezone: event.timezone,

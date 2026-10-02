@@ -176,8 +176,8 @@ export default async function RegistrationSteps({ folded = false, window = null,
       )}
       {/*
         The club's right to refuse a registration (§NNN; the owner, 2026-10-02: «La edițiile următoare
-        trebuie să apară că organizatorul își rezervă dreptul de a refuza înscrieri»), the terms' own
-        grounds summed up — said only while the terms in force, in every language, carry them
+        trebuie sa aducă [= să apară] că organizatorul își rezervă dreptul de a refuza înscrieri»), the
+        terms' five grounds summed up — said only while the terms in force, in every language, carry them
         (`describesRefusal`; §618: nothing is said that the terms in force do not say). Without them
         the fold is exactly what it was.
       */}

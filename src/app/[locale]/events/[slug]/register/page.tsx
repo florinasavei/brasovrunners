@@ -308,8 +308,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
     }
   }
   /*
-    §NNN: while the terms in force carry the club's right to refuse a registration (§618's paragraph,
-    `{{refusalGrounds}}`, every language), the express box names that clause too. Off (or unread),
+    §NNN: while the terms in force carry the club's right to refuse a registration (§618's grounds,
+    word for word, every language), the express box names that clause too. Off (or unread),
     the box keeps §421's words exactly.
   */
   let refusalOn = false;

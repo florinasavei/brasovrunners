@@ -2375,8 +2375,7 @@
         "promotionalMaterials": "Doar în nota de confidențialitate: bifa opțională pentru oferte și beneficii de la club și de la partenerii săi. Fără el în nota în vigoare, formularul nu o oferă",
         "promotionalMaterialsShared": "Doar în nota de confidențialitate: ce date pot primi partenerii clubului de la cei care au bifat oferte și beneficii. Fără el în nota în vigoare, lista pentru sponsori e oprită",
         "registrationsPerAddress": "Doar în termeni: câte persoane se pot înscrie cu aceeași adresă de email la un eveniment, cu unitatea („4 persoane”), din Setări → „Termene”",
-        "gmailFallback": "Doar în nota de confidențialitate: numele comutatorului «Gmail preia când Mailgun se oprește», între ghilimele. Fără el în nota în vigoare, comutatorul e oprit și mesajele așteaptă Mailgun",
-        "refusalGrounds": "Doar în termeni (secțiunea 3): cele cinci motive obiective pentru care clubul poate refuza o înscriere. Fără el în termenii în vigoare, formularul și pașii nu spun nimic de refuz"
+        "gmailFallback": "Doar în nota de confidențialitate: numele comutatorului «Gmail preia când Mailgun se oprește», între ghilimele. Fără el în nota în vigoare, comutatorul e oprit și mesajele așteaptă Mailgun"
       },
       "removeBlockedReferenced": "Nu se poate nici retrage, nici șterge definitiv: {signatures}, {events} și {acknowledgements} depind de ea. «Șterge» de pe rândul ei o scoate din listă.",
       "removeBlockedCurrent": "În vigoare acum — nu se poate nici retrage, nici șterge. Aprobă întâi versiunea următoare; apoi aceasta se poate scoate.",
@@ -6526,7 +6525,7 @@
       },
       "refusal": {
         "title": "Clubul poate refuza o înscriere",
-        "body": "Doar pe un motiv obiectiv din termeni: condiții de participare neîndeplinite, date false, capacitate sau siguranță, conduită. Îți spunem motivul pe email. Niciodată pe un criteriu interzis de lege."
+        "body": "Doar pe un motiv obiectiv din termeni (condiții neîndeplinite, date false sau incomplete, capacitate, siguranță, conduită, încălcarea termenilor), spus pe email — niciodată pe unul interzis de lege."
       }
     },
     "journey": {

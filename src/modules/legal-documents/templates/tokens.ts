@@ -7,7 +7,6 @@ import { listSocialsClause } from "@/modules/registrations/list-socials-words";
 import { listNumbersClause } from "@/modules/registrations/list-number-words";
 import { promotionalMaterialsClause, promotionalMaterialsSharedClause } from "@/modules/registrations/promo-consent-words";
 import { yearsPhrase } from "@/modules/registrations/domain/age";
-import { refusalGroundsClause } from "@/modules/registrations/refusal-grounds-words";
 import {
   ADDRESS_CAP_MERGE_FIELD,
   addressCapMergeValues,
@@ -21,7 +20,6 @@ import {
   NEWSLETTER_MERGE_FIELD,
   PROMOTIONAL_MATERIALS_MERGE_FIELD,
   PROMOTIONAL_MATERIALS_SHARED_MERGE_FIELD,
-  REFUSAL_GROUNDS_MERGE_FIELD,
   TEAM_PAGE_MERGE_FIELD,
 } from "../domain/merge-fields";
 import { seriesRhythmPhrase } from "@/modules/group-run-declarations/series";
@@ -190,13 +188,6 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     token: `{{${GMAIL_FALLBACK_MERGE_FIELD}}}`,
     messageKey: GMAIL_FALLBACK_MERGE_FIELD,
     example: inBoth((locale) => gmailFallbackClause(locale)),
-  },
-  // The terms' marker for the club's right to refuse a registration (§NNN, §618): the five objective
-  // grounds as §3 states them, and the switch for the form's express box and the fold's step (`describesRefusal`).
-  {
-    token: `{{${REFUSAL_GROUNDS_MERGE_FIELD}}}`,
-    messageKey: REFUSAL_GROUNDS_MERGE_FIELD,
-    example: inBoth((locale) => refusalGroundsClause(locale)),
   },
 ];
 

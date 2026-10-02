@@ -15,7 +15,6 @@ import {
   describesListStates,
   describesPromotionalMaterials,
   describesPromotionalMaterialsShared,
-  describesRefusal,
 } from "@/modules/legal-documents/domain/merge-fields";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
 import { readAddressCap } from "@/modules/registrations/address-cap";
@@ -34,20 +33,19 @@ import RegistrationSteps from "@/modules/registrations/ui/RegistrationSteps";
  */
 export async function readDraftFormSettings<T extends Record<string, unknown>>(
   db: Database<T>,
-  input: { locale: Locale; now: Date; membersOnly: boolean; familyOpen: boolean },
+  input: { locale: Locale; now: Date; membersOnly: boolean; familyOpen: boolean; refusalOn: boolean },
 ): Promise<RegistrationFormSettings> {
-  const [everyTerms, notices, addressCap] = await Promise.all([
-    Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "TERMS", locale, input.now))),
+  const [terms, notices, addressCap] = await Promise.all([
+    findCurrentApprovedDocument(db, "TERMS", input.locale, input.now),
     Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, input.now))),
     readAddressCap(db),
   ]);
-  const terms = everyTerms[routing.locales.indexOf(input.locale)];
   // The notice in force, in every language, describes it — the public cache's reading (`reads.ts`).
   const everyNotice = (describes: (body: unknown) => boolean) => notices.every((notice) => notice !== undefined && describes(notice.body));
   return {
     termsVersion: terms?.version ?? null,
-    // §NNN: the terms in force, in every language, carry the club's right to refuse — the public cache's reading.
-    refusalOn: everyTerms.every((document) => document !== undefined && describesRefusal(document.body)),
+    // §NNN: whether the terms in force carry the club's right to refuse — read once by the preview, for the steps and the box.
+    refusalOn: input.refusalOn,
     listStatesOn: everyNotice(describesListStates),
     listSocialsOn: everyNotice(describesListSocials),
     promoOn: everyNotice(describesPromotionalMaterials),
@@ -120,7 +118,7 @@ export async function renderDraftForm<T extends Record<string, unknown>>(
   }
 
   const formView = formViewOf(dated, now);
-  const settings = await readDraftFormSettings(db, { locale, now, membersOnly: view.membersOnly, familyOpen: steps.familyOpen });
+  const settings = await readDraftFormSettings(db, { locale, now, membersOnly: view.membersOnly, familyOpen: steps.familyOpen, refusalOn: steps.refusalOn });
   const cta = door.kind === "KNOWN" ? door.cta : null;
   const closed = cta ? closedDoorSentence(tEvent, cta, locale, dated.timezone) : null;
   // No place and nothing to join (§348): the real form's own notice above the first field. No place

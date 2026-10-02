@@ -168,6 +168,8 @@ export type OwnerTaskInputs = {
   legalTextIsSample: boolean;
   /** Does an approved privacy notice exist at all? Without one, registration refuses everyone. */
   hasApprovedPrivacyNotice: boolean;
+  /** Are terms in force at all (§421)? The refusal row (§NNN) asks for new ones only where some exist. */
+  hasApprovedTerms: boolean;
   /**
    * Does the notice in force, in every language, describe the public list's states (§396,
    * `noticeDescribesListStates`)? Until it does, every public list shows confirmed names only.
@@ -432,11 +434,16 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
       owner: "club",
       state: input.gmailFallbackDescribed ? "done" : "open",
     });
-    /*
-      The club's right to refuse a registration (§NNN, §618), the same shape in the terms: open,
-      never blocking — nothing is refused, the form's box and the fold simply say nothing of a
-      refusal — and done by itself the day terms naming `{{refusalGrounds}}` take effect.
-    */
+  }
+
+  /*
+    The club's right to refuse a registration (§NNN, §618), the same shape in the terms: open,
+    never blocking — nothing is refused, the form's box and the fold simply say nothing of a
+    refusal — and done by itself the day terms spelling §618's grounds take effect in every
+    language. Its own gate, the terms in force, not the notice's: without terms there is nothing
+    to amend, and the terms are what it asks the club to approve.
+  */
+  if (input.hasApprovedTerms) {
     push("refusalTerms", {
       owner: "club",
       state: input.refusalDescribed ? "done" : "open",

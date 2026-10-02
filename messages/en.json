@@ -2375,8 +2375,7 @@
         "promotionalMaterials": "Only in the privacy notice: the optional box for offers and benefits from the club and its partners. Without it in the notice in force, the form does not offer it",
         "promotionalMaterialsShared": "Only in the privacy notice: what data the club's partners may receive from those who ticked offers and benefits. Without it in the notice in force, the list for sponsors is off",
         "registrationsPerAddress": "Terms only: how many people may register with the same email address for one event, with the unit (“4 people”), from Settings → “Deadlines”",
-        "gmailFallback": "Only in the privacy notice: the name of the switch «Gmail takes over when Mailgun stops», quoted. Without it in the notice in force, the switch is off and messages wait for Mailgun",
-        "refusalGrounds": "Terms only (section 3): the five objective grounds on which the club may refuse a registration. Without it in the terms in force, the form and the steps say nothing of a refusal"
+        "gmailFallback": "Only in the privacy notice: the name of the switch «Gmail takes over when Mailgun stops», quoted. Without it in the notice in force, the switch is off and messages wait for Mailgun"
       },
       "removeBlockedReferenced": "Can neither be withdrawn nor deleted permanently: {signatures}, {events} and {acknowledgements} depend on it. “Delete” on its row takes it off the list.",
       "removeBlockedCurrent": "In force right now — it can neither be withdrawn nor deleted. Approve its successor first; then this one can go.",
@@ -6526,7 +6525,7 @@
       },
       "refusal": {
         "title": "The club may refuse a registration",
-        "body": "Only on an objective ground in the terms: participation conditions not met, false details, capacity or safety, conduct. We tell you the ground by email. Never on a ground the law forbids."
+        "body": "Only on an objective ground in the terms (conditions not met, false or incomplete details, capacity, safety, conduct, a breach of the terms), told by email — never on a ground the law forbids."
       }
     },
     "journey": {

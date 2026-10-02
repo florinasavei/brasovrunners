@@ -24,6 +24,7 @@ import {
  */
 const LAUNCHED: OwnerTaskInputs = {
   hasApprovedPrivacyNotice: true,
+  hasApprovedTerms: true,
   listStatesDescribed: true,
   listSocialsDescribed: true,
   listNumbersDescribed: true,
@@ -127,6 +128,9 @@ describe("owner tasks", () => {
     // Its own answer: a notice that names every field leaves it open while the terms do not.
     expect(stateOf({ ...LAUNCHED, refusalDescribed: false }, "listStatesNotice")).toBe("done");
     expect(ownerTasks({ ...LAUNCHED, refusalDescribed: false }).some((task) => task.state === "blocking")).toBe(false);
+    // Its own gate, the terms in force: shown without a notice, hidden without terms.
+    expect(stateOf({ ...LAUNCHED, hasApprovedPrivacyNotice: false, refusalDescribed: false }, "refusalTerms")).toBe("open");
+    expect(ownerTasks({ ...LAUNCHED, hasApprovedTerms: false, refusalDescribed: false }).some((task) => task.id === "refusalTerms")).toBe(false);
     for (const catalogue of [ro, en]) {
       const item = catalogue.Admin.tasks.items.refusalTerms;
       expect(item.title && item.todo && item.done && item.how.length > 0).toBeTruthy();

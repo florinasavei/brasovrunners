@@ -105,7 +105,7 @@ describe("§NNN the fold says the club may refuse, behind the terms in force", (
     expect(html).toContain('data-testid="steps-refusal"');
     expect(html).toContain("Clubul poate refuza o înscriere");
     expect(html).toContain("Doar pe un motiv obiectiv din termeni");
-    expect(html).toContain("Niciodată pe un criteriu interzis de lege.");
+    expect(html).toContain("niciodată pe unul interzis de lege.");
     // The last item of the list, after the waiting list.
     expect(html.indexOf("steps-refusal")).toBeGreaterThan(html.indexOf("Dacă nu mai sunt locuri"));
   });
@@ -133,5 +133,20 @@ describe("§NNN the fold says the club may refuse, behind the terms in force", (
     for (const catalogue of [ro, en]) {
       for (const text of Object.values(catalogue.Registration.steps.refusal)) expect(text.length).toBeLessThan(200);
     }
+  });
+
+  /**
+   * The summary says «Doar» / "Only", so it is read as the whole list: it names each of the terms'
+   * five grounds, briefly, and none the terms do not have (§618's paragraph, `refusal-clause.ts`).
+   */
+  it("names all five of the terms' grounds, in both languages", async () => {
+    const ro = (await import("../../../messages/ro.json")).default;
+    const en = (await import("../../../messages/en.json")).default;
+    const words = {
+      ro: ["condiții neîndeplinite", "date false sau incomplete", "capacitate", "siguranță", "conduită", "încălcarea termenilor"],
+      en: ["conditions not met", "false or incomplete details", "capacity", "safety", "conduct", "a breach of the terms"],
+    };
+    for (const word of words.ro) expect(ro.Registration.steps.refusal.body).toContain(word);
+    for (const word of words.en) expect(en.Registration.steps.refusal.body).toContain(word);
   });
 });
