@@ -4,7 +4,7 @@ import { calendarDayWords } from "@/i18n/dates";
 import { isoWeekdayOf, ruleSentenceFrom } from "@/modules/content/events/ui/RepeatRuleFields";
 import { followingIds, presetIds, presetOf, shownPreset } from "@/modules/content/events/ui/SeriesScope";
 import { slugFromTitle } from "@/modules/content/events/ui/slug";
-import { ignoreHiddenFields, normalizeForMode } from "@/modules/content/events/service";
+import { ignoreHiddenFields, normalizeForMode, waitlistPublicColumn } from "@/modules/content/events/service";
 import { weekdayNames } from "@/modules/events/ui/series-sentence";
 import { isBlankValue } from "@/shared/forms/blank-value";
 
@@ -203,5 +203,25 @@ describe("§350 normalizeForMode and the waiting list's length (the waiting-list
     expect(normalizeForMode({ ...base, waitlistCapacity: 10 } as unknown as Parameters<typeof normalizeForMode>[0])).toMatchObject({ waitlistCapacity: null });
     expect(normalizeForMode(base as unknown as Parameters<typeof normalizeForMode>[0]).waitlistCapacity).toBeUndefined();
     expect(normalizeForMode({ ...base, registrationMode: "INTERNAL", waitlistCapacity: 10 } as unknown as Parameters<typeof normalizeForMode>[0])).toMatchObject({ waitlistCapacity: 10 });
+  });
+});
+
+/**
+ * §628 — «Lista de așteptare e publică» as the service stores it: never a truth the list cannot act on.
+ * True only beside a published list on an internal event; anything else false, whatever was posted;
+ * beside a published list, a caller that did not post the box writes nothing.
+ */
+describe("§628 waitlistPublicColumn", () => {
+  it("stores false for a ticked switch beside a hidden list, or on an event that takes no registrations here", () => {
+    expect(waitlistPublicColumn({ participantListVisibility: "HIDDEN", registrationMode: "INTERNAL", waitlistPublic: true })).toEqual({ waitlistPublic: false });
+    expect(waitlistPublicColumn({ participantListVisibility: "NAMES", registrationMode: "EXTERNAL", waitlistPublic: true })).toEqual({ waitlistPublic: false });
+    expect(waitlistPublicColumn({ participantListVisibility: "NAMES", registrationMode: "NONE", waitlistPublic: true })).toEqual({ waitlistPublic: false });
+    expect(waitlistPublicColumn({ participantListVisibility: "HIDDEN", registrationMode: "INTERNAL", waitlistPublic: undefined })).toEqual({ waitlistPublic: false });
+  });
+
+  it("beside a published list on an internal event, stores what was posted, and nothing when nothing was", () => {
+    expect(waitlistPublicColumn({ participantListVisibility: "NAMES", registrationMode: "INTERNAL", waitlistPublic: true })).toEqual({ waitlistPublic: true });
+    expect(waitlistPublicColumn({ participantListVisibility: "NAMES", registrationMode: "INTERNAL", waitlistPublic: false })).toEqual({ waitlistPublic: false });
+    expect(waitlistPublicColumn({ participantListVisibility: "NAMES", registrationMode: "INTERNAL", waitlistPublic: undefined })).toEqual({});
   });
 });

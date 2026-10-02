@@ -1081,7 +1081,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                       <Panel glyph="queue" collapsible level={3} id="box-queue" title={t("editor.boxes.queue.title")} aside={waiting > 0 ? t("editor.boxes.queue.waiting", { waiting }) : undefined}>
                         <QueuePanel
                           db={db}
-                          event={{ id: event.id, capacity: event.capacity, waitlistCapacity: event.waitlistCapacity, timezone: event.timezone }}
+                          event={{ id: event.id, capacity: event.capacity, waitlistCapacity: event.waitlistCapacity, timezone: event.timezone, waitlistAutoOffer: event.waitlistAutoOffer }}
                           waiting={waiting}
                           now={now}
                           offerAction={canManageRegistrations(staffUser.role) ? offerPlaceAction : undefined}

@@ -380,7 +380,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
     });
     /*
       The race number beside a confirmed name (§613), the same shape: open, never blocking — nothing
-      is refused, the list simply shows no «Nr.» column — and done by itself the day a notice naming
+      is refused, the list simply shows no «BIB» column — and done by itself the day a notice naming
       `{{participantListNumbers}}` takes effect.
     */
     push("listNumbersNotice", {

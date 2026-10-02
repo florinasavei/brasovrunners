@@ -158,6 +158,9 @@ const PUBLIC_COLUMNS = {
   // Whether this event publishes a start list at all (BR-REQ-039-01). The names themselves are
   // a separate query, made only when this says NAMES.
   participantListVisibility: events.participantListVisibility,
+  // «Lista de așteptare e publică» (§628): whether that list may also draw the ticked waiting-list
+  // rows, on top of the privacy notice's two gates (§396, §421). Off, none is even read.
+  waitlistPublic: events.waitlistPublic,
   // The meeting point is one fact on the event row (`DECISIONS.md` §36); its *name* is read in
   // the page's language when the club gave it one (migration `0058`), else in the club's own
   // words as before. Never the other language's: a blank name reads the event, not the other

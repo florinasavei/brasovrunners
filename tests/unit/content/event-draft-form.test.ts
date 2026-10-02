@@ -8,7 +8,7 @@ import type { PublicEventPage } from "@/modules/events/repository";
 import type { RegistrationDoor } from "@/modules/events/ui/registration-door";
 import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
 import { SECOND_ATTEMPT_FIELD } from "@/modules/registrations/fields";
-import { formViewOf } from "@/modules/registrations/form-view";
+import { formViewOf, listOptInStatesKey } from "@/modules/registrations/form-view";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
@@ -265,6 +265,18 @@ describe("§579 amended — formViewOf, what the form takes from the event", () 
     expect(view.birthDate.earliest).toBe("1906-10-01");
     // A week before the race is still ahead: the steps say «confirm a week before».
     expect(view.stepsWindow).toEqual({ opensDays: 7, deadlineDays: 2 });
+  });
+
+  it("§628 names the waiting-list stage under the tick only where the published list shows it", () => {
+    const on = formViewOf(draft({ participantListVisibility: "NAMES", waitlistPublic: true } as Partial<Draft>) as never, NOW);
+    expect(on.listShowsWaitlist).toBe(true);
+    expect(listOptInStatesKey(on)).toBe("listOptInStates");
+    const off = formViewOf(draft({ participantListVisibility: "NAMES", waitlistPublic: false } as Partial<Draft>) as never, NOW);
+    expect(off.listShowsWaitlist).toBe(false);
+    expect(listOptInStatesKey(off)).toBe("listOptInStatesNoWaitlist");
+    // A row from before the column, and a stored truth beside a hidden list, promise nothing either.
+    expect(formViewOf(draft({ participantListVisibility: "NAMES" }) as never, NOW).listShowsWaitlist).toBe(false);
+    expect(formViewOf(draft({ participantListVisibility: "HIDDEN", waitlistPublic: true } as Partial<Draft>) as never, NOW).listShowsWaitlist).toBe(false);
   });
 
   it("never under fourteen, and no box a copy without the columns cannot answer", () => {
