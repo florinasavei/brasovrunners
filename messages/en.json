@@ -708,7 +708,7 @@
         },
         "displayNameHelp": "Empty: the first and last name.",
         "phoneHelp": "With the country code (+40 712 345 678); a Romanian number also works with a leading 0.",
-        "guardianHelp": "Required for a minor.",
+        "guardianHelp": "Only for someone who was a minor when they registered, and then required. A birth date corrected to an adult's clears it.",
         "guardianSignedHelp": "The declaration is signed and names them: it does not change here.",
         "clubNameHelp": "While the member tick is on, the club is {club}.",
         "memberHelp": "Unticked, the club {club} also goes from the list.",
@@ -1401,7 +1401,10 @@
       "ANSWER_UNDER_MINIMUM_AGE": "The date of birth was not saved: the person would not be {age} on race day, the event's minimum age.",
       "ANSWER_EMERGENCY_SAME": "The emergency contact's phone was not saved: it is the participant's own number. Type someone else's.",
       "ANSWER_GUARDIAN_SIGNED": "The parent or guardian was not changed: the signed declaration names the one who signed it.",
-      "ANSWER_SOCIALS_MINOR_AT_REGISTRATION": "Strava and Instagram were not saved: the person was a minor when they registered, and the maintenance sweep would delete them. Leave them empty."
+      "ANSWER_SOCIALS_MINOR_AT_REGISTRATION": "Strava and Instagram were not saved: the person was a minor when they registered, and the maintenance sweep would delete them. Leave them empty.",
+      "ANSWER_BIRTH_DATE_MINOR_AT_REGISTRATION": "The birth date was not saved: the person would have been a minor when they registered; empty Strava and Instagram first.",
+      "ANSWER_BIRTH_DATE_GUARDIAN_SIGNED": "The birth date was not saved: it would make the person a minor, and the declaration was signed with no parent or guardian, who cannot be added now.",
+      "ANSWER_GUARDIAN_ADULT": "The parent or guardian was not saved: the person was not a minor when they registered. Only a minor's registration names a parent or guardian."
     },
     "editor": {
       "draftPreview": {

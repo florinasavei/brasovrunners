@@ -40,6 +40,9 @@ import { suggestFreeBibNumbers } from "@/modules/registrations/bibs";
 import { formSentAt, journeyOf } from "@/modules/registrations/domain/journey";
 import { countryName } from "@/modules/registrations/names";
 import SexAndShirtLine from "@/modules/registrations/ui/SexAndShirtLine";
+import GuardianForMinor from "@/modules/registrations/ui/GuardianForMinor";
+import { isMinorOn } from "@/modules/registrations/domain/age";
+import { fieldId } from "@/shared/forms/outcome";
 import { raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { canResendReminder, deriveAllowedResendMessageType } from "@/modules/registrations/domain/resend";
 import { canTransition, isTerminalStatus } from "@/modules/registrations/domain/state-machine";
@@ -220,6 +223,13 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
     `GUARDIAN_SIGNED`): the box shown greyed with why, and no twin, so nothing posts it.
   */
   const guardianSigned = acceptances.length > 0;
+  /*
+    Only a minor has a guardian (§108; `answers.ts#GUARDIAN_ADULT`, §NNN): the box opens when the date in
+    the birth-date box made the person a minor on the day the row was written — the server's own test —
+    and stays open when the row is a minor's or holds a guardian already, so a guardian a corrected date
+    will clear is in view. Without JavaScript it is always there (`GuardianForMinor`).
+  */
+  const guardianOpen = Boolean(answers?.guardianName) || (typeof answers?.birthDate === "string" && isMinorOn(answers.birthDate, answers.createdAt));
   // An older row kept only the name of record (BR-REQ-031-04 criterion 6): its two boxes start empty and
   // are not required, or the browser would block every other correction until both were typed.
   const namesRequired = Boolean(answers?.firstName || answers?.lastName);
@@ -992,14 +1002,17 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                       helperText={tr("registrations.answers.phoneHelp")}
                       slotProps={{ htmlInput: { maxLength: 30 } }}
                     />
-                    <RecallField
-                      name="guardianName"
-                      label={answerLabels.guardianName}
-                      defaultValue={answerValues.guardianName}
-                      disabled={guardianSigned}
-                      helperText={tr(guardianSigned ? "registrations.answers.guardianSignedHelp" : "registrations.answers.guardianHelp")}
-                      slotProps={{ htmlInput: { maxLength: 200 } }}
-                    />
+                    <GuardianForMinor birthDateId={fieldId("birthDate", "answers")} forceOpen={guardianOpen} minorOn={answers.createdAt.toISOString()}>
+                      <RecallField
+                        name="guardianName"
+                        label={answerLabels.guardianName}
+                        defaultValue={answerValues.guardianName}
+                        disabled={guardianSigned}
+                        fullWidth
+                        helperText={tr(guardianSigned ? "registrations.answers.guardianSignedHelp" : "registrations.answers.guardianHelp")}
+                        slotProps={{ htmlInput: { maxLength: 200 } }}
+                      />
+                    </GuardianForMinor>
                     <RecallField name="emergencyContactName" label={answerLabels.emergencyContactName} defaultValue={answerValues.emergencyContactName} slotProps={{ htmlInput: { maxLength: 200 } }} />
                     <RecallField
                       name="emergencyContactPhone"

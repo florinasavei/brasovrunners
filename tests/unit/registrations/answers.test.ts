@@ -1,6 +1,19 @@
 import { describe, expect, it } from "vitest";
 import type { Registration } from "@/db/schema/registrations";
-import { ANSWERS_UNCHANGED, EDITABLE_ANSWERS, EMERGENCY_SAME, GUARDIAN_SIGNED, LOCKED_ANSWER_KINDS, MINOR_AT_REGISTRATION, planAnswerEdit, typedPhone } from "@/modules/registrations/answers";
+import en from "../../../messages/en.json";
+import ro from "../../../messages/ro.json";
+import {
+  ANSWERS_UNCHANGED,
+  answersRefusalCode,
+  EDITABLE_ANSWERS,
+  EMERGENCY_SAME,
+  GUARDIAN_ADULT,
+  GUARDIAN_SIGNED,
+  LOCKED_ANSWER_KINDS,
+  MINOR_AT_REGISTRATION,
+  planAnswerEdit,
+  typedPhone,
+} from "@/modules/registrations/answers";
 import { type ConfirmSpec, resolveChangedFields } from "@/shared/feedback/notice";
 import { CLUB_NAME } from "@/theme/brand";
 
@@ -115,6 +128,75 @@ describe("BR-REQ-037-03 criterion 12: the rules that say which one refused", () 
     // Clearing them is always allowed.
     const withSocials = { ...grownUp, instagramHandle: "ana.pop" } as unknown as Registration;
     expect(planAnswerEdit(withSocials, { instagramHandle: "" }, context).set).toEqual({ instagramHandle: null });
+  });
+});
+
+describe("BR-REQ-037-03 criterion 12: only a minor's row names a guardian (§108)", () => {
+  const minor = { ...current, birthDate: "2012-03-01", guardianName: "Maria Pop" } as unknown as Registration;
+  const noMinAge = { ...context, minAge: null };
+
+  it("refuses a guardian typed on an adult's row with its own marker", () => {
+    expect(refusalOf(() => planAnswerEdit(current, { guardianName: "Maria Pop" }, context))).toEqual(["guardianName", GUARDIAN_ADULT]);
+    // An adult's birth date and a guardian in the same press: still an adult's row.
+    expect(refusalOf(() => planAnswerEdit(minor, { birthDate: "1990-05-01", guardianName: "Elena Pop" }, noMinAge))).toEqual(["guardianName", GUARDIAN_ADULT]);
+  });
+
+  it("clears the guardian when a corrected birth date makes the row an adult's on the day it was written, audited", () => {
+    const plan = planAnswerEdit(minor, { birthDate: "1990-05-01" }, noMinAge);
+    expect(plan.set).toEqual({ birthDate: "1990-05-01", guardianName: null });
+    expect(plan.corrected).toEqual([
+      { field: "birthDate", from: "2012-03-01", to: "1990-05-01" },
+      { field: "guardianName", from: "Maria Pop", to: null },
+    ]);
+  });
+
+  it("keeps the guardian of a row a minor's when written, though the person is an adult today", () => {
+    // Eighteen on 2026-09-15: a minor on 2026-09-01, when the row was written.
+    const grownUp = { ...current, birthDate: "2008-09-15", guardianName: "Maria Pop" } as unknown as Registration;
+    expect(planAnswerEdit(grownUp, { birthDate: "2008-09-10" }, context).set).toEqual({ birthDate: "2008-09-10" });
+    expect(planAnswerEdit(grownUp, { guardianName: "Elena Pop" }, context).set).toEqual({ guardianName: "Elena Pop" });
+  });
+
+  it("under a signed declaration the guardian stays, and a birth date that would need one is refused on the birth date", () => {
+    const signed = { ...noMinAge, declarationSigned: true };
+    // An adult's date on a signed minor's row: the declaration still names the guardian who signed.
+    expect(planAnswerEdit(minor, { birthDate: "1990-05-01" }, signed).set).toEqual({ birthDate: "1990-05-01" });
+    // A minor's date on an adult's signed row: no guardian can be added under the signature.
+    expect(refusalOf(() => planAnswerEdit(current, { birthDate: "2012-03-01" }, signed))).toEqual(["birthDate", GUARDIAN_SIGNED]);
+  });
+});
+
+describe("BR-REQ-037-03 criterion 12: the page's sentence names the rule, and the box that moved", () => {
+  it("names the birth date when only the birth date moved and the row still holds socials", () => {
+    const withSocials = { ...current, instagramHandle: "ana.pop" } as unknown as Registration;
+    // A minor's when written (2026-09-01), an adult today.
+    expect(refusalOf(() => planAnswerEdit(withSocials, { birthDate: "2008-09-15", guardianName: "Maria Pop" }, context))).toEqual(["birthDate", MINOR_AT_REGISTRATION]);
+    // A minor today too: the same sentence, the birth date is what moved.
+    expect(refusalOf(() => planAnswerEdit(withSocials, { birthDate: "2012-03-01", guardianName: "Maria Pop" }, { ...context, minAge: null }))).toEqual(["birthDate", MINOR_AT_REGISTRATION]);
+  });
+
+  it("maps each marker to its sentence, the birth date's own where the birth date is the box refused", () => {
+    expect(answersRefusalCode([ANSWERS_UNCHANGED])).toBe("ANSWERS_UNCHANGED");
+    expect(answersRefusalCode(["emergencyContactPhone", EMERGENCY_SAME])).toBe("ANSWER_EMERGENCY_SAME");
+    expect(answersRefusalCode(["guardianName", GUARDIAN_SIGNED])).toBe("ANSWER_GUARDIAN_SIGNED");
+    expect(answersRefusalCode(["birthDate", GUARDIAN_SIGNED])).toBe("ANSWER_BIRTH_DATE_GUARDIAN_SIGNED");
+    expect(answersRefusalCode(["guardianName", GUARDIAN_ADULT])).toBe("ANSWER_GUARDIAN_ADULT");
+    expect(answersRefusalCode(["stravaUrl", MINOR_AT_REGISTRATION])).toBe("ANSWER_SOCIALS_MINOR_AT_REGISTRATION");
+    expect(answersRefusalCode(["birthDate", MINOR_AT_REGISTRATION])).toBe("ANSWER_BIRTH_DATE_MINOR_AT_REGISTRATION");
+    expect(answersRefusalCode(["city"])).toBeNull();
+  });
+
+  it("has every sentence in both languages, under 200 characters, the birth date's naming it", () => {
+    const codes = ["ANSWER_GUARDIAN_SIGNED", "ANSWER_BIRTH_DATE_GUARDIAN_SIGNED", "ANSWER_GUARDIAN_ADULT", "ANSWER_SOCIALS_MINOR_AT_REGISTRATION", "ANSWER_BIRTH_DATE_MINOR_AT_REGISTRATION"];
+    for (const [catalogue, word] of [[ro, "Data nașterii"], [en, "birth date"]] as const) {
+      const errors = catalogue.Admin.errors as Record<string, string>;
+      for (const code of codes) {
+        expect(errors[code], code).toBeTruthy();
+        expect(errors[code].length, code).toBeLessThan(200);
+      }
+      expect(errors.ANSWER_BIRTH_DATE_MINOR_AT_REGISTRATION).toContain(word);
+      expect(errors.ANSWER_BIRTH_DATE_GUARDIAN_SIGNED).toContain(word);
+    }
   });
 });
 

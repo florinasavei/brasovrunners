@@ -89,6 +89,7 @@ vi.mock("@/modules/notifications/send-now-choice", () => ({ sendNowChoiceFor: as
 const { default: AdminRegistrationsPage } = await import("@/app/[locale]/admin/registrations/(list)/page");
 const { default: RegistrationDetailPage } = await import("@/app/[locale]/admin/registrations/[id]/page");
 const { default: AdminTable } = await import("@/modules/staff-identity/ui/AdminTable");
+const { default: GuardianForMinor } = await import("@/modules/registrations/ui/GuardianForMinor");
 const actions = await import("@/app/[locale]/admin/registrations/actions");
 
 type Props = Record<string, unknown> & { children?: ReactNode };
@@ -256,6 +257,25 @@ describe("BR-REQ-037-03 criterion 12: «Datele înscrierii» on the registration
     expect(byTestId(tree, "answers-locked")).toHaveLength(1);
     // The chip still says what the person declared.
     expect(elements(tree).some((element) => element.props.label === "Membru (declarat)")).toBe(true);
+  });
+
+  it("shows the guardian's box only for a minor's row, or once the birth-date box makes it one on the day the row was written (§108)", async () => {
+    const race = await createRace("Crosul");
+    state.actor = await staff("ADMIN");
+    const guardianBox = async (id: string) => {
+      const [form] = byTestId(await detailPage(id, { answers: "1" }), "answers-form");
+      const [block] = elements(form).filter((element) => element.type === GuardianForMinor);
+      expect(elements(block.props.children).some((element) => element.props.name === "guardianName")).toBe(true);
+      return block.props as { birthDateId: string; forceOpen: boolean; minorOn: string };
+    };
+
+    // An adult's row: closed, opened in the browser by the date typed into the birth-date box.
+    const adult = await register(race.id, { birthDate: "1990-05-01" });
+    const [written] = await db.select({ createdAt: registrations.createdAt }).from(registrations).where(eq(registrations.id, adult));
+    expect(await guardianBox(adult)).toMatchObject({ birthDateId: "field-answers-birthDate", forceOpen: false, minorOn: written.createdAt.toISOString() });
+    // A minor's row: open, the guardian in view.
+    const minor = await register(race.id, { birthDate: "2012-03-01", guardianName: "Maria Pop", clubMemberDeclared: false, clubName: null });
+    expect((await guardianBox(minor)).forceOpen).toBe(true);
   });
 });
 

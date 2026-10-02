@@ -708,7 +708,7 @@
         },
         "displayNameHelp": "Gol: prenumele și numele.",
         "phoneHelp": "Cu prefixul țării (+40 712 345 678); un număr românesc merge și cu 0 în față.",
-        "guardianHelp": "Obligatoriu pentru un minor.",
+        "guardianHelp": "Doar pentru cine era minor la înscriere, și atunci obligatoriu. O dată a nașterii corectată la a unui major îl șterge.",
         "guardianSignedHelp": "Declarația e semnată și îl numește: nu se schimbă de aici.",
         "clubNameHelp": "Cât timp bifa de membru e pusă, clubul e {club}.",
         "memberHelp": "Debifată, clubul {club} dispare și de pe listă.",
@@ -1401,7 +1401,10 @@
       "ANSWER_UNDER_MINIMUM_AGE": "Data nașterii nu s-a salvat: persoana nu ar avea {age} împliniți în ziua cursei, vârsta minimă a evenimentului.",
       "ANSWER_EMERGENCY_SAME": "Telefonul persoanei de contact nu s-a salvat: e chiar numărul participantului. Scrie numărul altcuiva.",
       "ANSWER_GUARDIAN_SIGNED": "Părintele sau tutorele nu s-a schimbat: declarația semnată îl numește pe cel care a semnat-o.",
-      "ANSWER_SOCIALS_MINOR_AT_REGISTRATION": "Strava și Instagram nu s-au salvat: persoana era minoră la înscriere, iar curățenia de întreținere le-ar șterge. Lasă-le goale."
+      "ANSWER_SOCIALS_MINOR_AT_REGISTRATION": "Strava și Instagram nu s-au salvat: persoana era minoră la înscriere, iar curățenia de întreținere le-ar șterge. Lasă-le goale.",
+      "ANSWER_BIRTH_DATE_MINOR_AT_REGISTRATION": "Data nașterii nu s-a salvat: persoana ar fi fost minoră la înscriere; golește întâi Strava și Instagram.",
+      "ANSWER_BIRTH_DATE_GUARDIAN_SIGNED": "Data nașterii nu s-a salvat: ar face din persoană un minor, iar declarația e semnată fără părinte sau tutore, care nu se mai poate adăuga.",
+      "ANSWER_GUARDIAN_ADULT": "Părintele sau tutorele nu s-a salvat: persoana nu era minoră la înscriere. Doar înscrierea unui minor numește un părinte sau tutore."
     },
     "editor": {
       "draftPreview": {

@@ -162,8 +162,11 @@ describe("BR-REQ-037-03 criterion 12: «Modifică datele» writes only what chan
         { field: "city", from: "Brasov", to: "Brașov" },
         { field: "phone", from: "+40711111111", to: "+40733333333" },
         { field: "instagramHandle", from: null, to: "ana.runs" },
+        { field: "birthDate", from: "1990-05-01", to: "1991-05-01" },
+        { field: "nationality", from: "RO", to: "MD" },
       ]),
     );
+    expect(await corrections()).toHaveLength(5);
     const [audit] = await db.select().from(auditLogs).where(eq(auditLogs.action, "registration.answer_corrected")).limit(1);
     expect(audit).toMatchObject({ actorStaffUserId: admin.id, participantId, entityType: "registration", entityId: id });
   });
@@ -174,11 +177,19 @@ describe("BR-REQ-037-03 criterion 12: «Modifică datele» writes only what chan
     expect(await rowOf(id)).toMatchObject({ lastName: "Popescu", registeredName: "Ana Popescu", nameKey: "ana popescu", displayName: "Ana Popescu" });
     const [renamed] = await db.select().from(auditLogs).where(eq(auditLogs.action, "registration.name_corrected"));
     expect(renamed.metadataJson).toEqual({ from: "Ana Pop", to: "Ana Popescu" });
+    // The last name's own row, and the derived list name's that followed it.
+    expect(await corrections()).toEqual([
+      { field: "lastName", from: "Pop", to: "Popescu" },
+      { field: "displayName", from: "Ana Pop", to: "Ana Popescu" },
+    ]);
 
     // A list name the person chose is theirs and stays.
     const chosen = await seed({ registeredName: "Ion Pop", nameKey: "ion pop", firstName: "Ion", displayName: "Ionuț", bibNumber: 18 });
     await editRegistrationAnswers(db, admin, chosen, { firstName: "Ioan" }, NOW);
     expect(await rowOf(chosen)).toMatchObject({ registeredName: "Ioan Pop", displayName: "Ionuț" });
+    // The first name's row; the chosen list name has none, it did not move.
+    expect(await corrections()).toContainEqual({ field: "firstName", from: "Ion", to: "Ioan" });
+    expect(await corrections()).toHaveLength(3);
   });
 
   it("clears an optional answer with an empty value, and refuses to empty a required one", async () => {
@@ -187,6 +198,7 @@ describe("BR-REQ-037-03 criterion 12: «Modifică datele» writes only what chan
     // The socials-on-the-list tick goes with the last social: a tick about nothing.
     expect(await rowOf(id)).toMatchObject({ stravaUrl: null, listSocials: false });
     expect(await corrections()).toContainEqual({ field: "listSocials", from: true, to: false });
+    expect(await corrections()).toContainEqual({ field: "stravaUrl", from: "https://www.strava.com/athletes/12345", to: null });
 
     expect(await refusal(editRegistrationAnswers(db, admin, id, { firstName: "  " }, NOW))).toEqual({ code: "VALIDATION_ERROR", fields: ["firstName"] });
     expect(await refusal(editRegistrationAnswers(db, admin, id, { country: "" }, NOW))).toEqual({ code: "VALIDATION_ERROR", fields: ["country"] });
@@ -210,9 +222,17 @@ describe("BR-REQ-037-03 criterion 12: «Modifică datele» writes only what chan
     const id = await seed({ instagramHandle: "ana.pop" });
     // Sixteen on the race day: a minor, so a guardian is owed and the socials must go first.
     expect((await refusal(editRegistrationAnswers(db, admin, id, { birthDate: "2010-01-01" }, NOW))).fields).toEqual(["guardianName"]);
-    expect((await refusal(editRegistrationAnswers(db, admin, id, { birthDate: "2010-01-01", guardianName: "Ion Pop" }, NOW))).fields).toEqual(["instagramHandle"]);
+    // Only the birth date moved among the three: the refusal names it, not the socials nobody typed (§NNN).
+    expect((await refusal(editRegistrationAnswers(db, admin, id, { birthDate: "2010-01-01", guardianName: "Ion Pop" }, NOW))).fields).toEqual(["birthDate", "minorAtRegistration"]);
     await editRegistrationAnswers(db, admin, id, { birthDate: "2010-01-01", guardianName: "Ion Pop", instagramHandle: "" }, NOW);
     expect(await rowOf(id)).toMatchObject({ birthDate: "2010-01-01", guardianName: "Ion Pop", instagramHandle: null });
+    expect(await corrections()).toEqual(
+      expect.arrayContaining([
+        { field: "birthDate", from: "1990-05-01", to: "2010-01-01" },
+        { field: "guardianName", from: null, to: "Ion Pop" },
+        { field: "instagramHandle", from: "ana.pop", to: null },
+      ]),
+    );
     // Under the event's fourteen on the race day.
     expect((await refusal(editRegistrationAnswers(db, admin, id, { birthDate: "2015-01-01" }, NOW))).fields).toContain("birthDate");
   });
@@ -293,6 +313,7 @@ describe("BR-REQ-037-03 criterion 12: the person sees the corrected answers; the
   it("seven days after the event the emergency contact's corrected values go, the other corrections stay", async () => {
     const id = await seed();
     await editRegistrationAnswers(db, admin, id, { emergencyContactPhone: "+40733333333", city: "Sibiu" }, NOW);
+    expect(await corrections()).toContainEqual({ field: "emergencyContactPhone", from: "+40722222222", to: "+40733333333" });
     await pruneExpiredRows(db, new Date(RACE_DAY.getTime() + 8 * 24 * 3_600_000));
     const left = await corrections();
     expect(left).toContainEqual({ field: "emergencyContactPhone" });
@@ -349,6 +370,51 @@ describe("BR-REQ-037-03 criterion 12: a signed declaration keeps the guardian it
     const id = await seed({ status: "PENDING_DECLARATION", confirmedAt: null, bibNumber: null, birthDate: "2012-03-01", guardianName: "Maria Pop", clubMemberDeclared: false, clubName: null });
     await editRegistrationAnswers(db, admin, id, { guardianName: "Elena Pop" }, NOW);
     expect((await rowOf(id)).guardianName).toBe("Elena Pop");
+    expect(await corrections()).toEqual([{ field: "guardianName", from: "Maria Pop", to: "Elena Pop" }]);
+  });
+
+  it("refuses a minor's birth date on an adult's signed declaration, naming the birth date and the signature", async () => {
+    const adult = await seed();
+    await sign(adult, "Ana Pop");
+    expect(await refusal(editRegistrationAnswers(db, admin, adult, { birthDate: "2012-03-01" }, NOW))).toEqual({
+      code: "VALIDATION_ERROR",
+      fields: ["birthDate", "guardianSigned"],
+    });
+    expect((await rowOf(adult)).birthDate).toBe("1990-05-01");
+  });
+
+  it("keeps a signed minor's guardian when the birth date is corrected to an adult's", async () => {
+    const minor = await seed({ birthDate: "2012-03-01", guardianName: "Maria Pop", registeredName: "Ioana Pop", nameKey: "ioana pop", firstName: "Ioana", displayName: "Ioana Pop", clubMemberDeclared: false, clubName: null });
+    await sign(minor, "Maria Pop", "Ioana Pop");
+    await editRegistrationAnswers(db, admin, minor, { birthDate: "2008-01-01" }, NOW);
+    expect(await rowOf(minor)).toMatchObject({ birthDate: "2008-01-01", guardianName: "Maria Pop" });
+    expect((await findSignedDeclaration(db, minor))?.guardianName).toBe("Maria Pop");
+  });
+});
+
+describe("BR-REQ-037-03 criterion 12: only a minor's row names a guardian (§108)", () => {
+  it("refuses a guardian typed on an adult's row with its own marker, writing nothing", async () => {
+    const id = await seed();
+    expect(await refusal(editRegistrationAnswers(db, admin, id, { guardianName: "Maria Pop" }, NOW))).toEqual({
+      code: "VALIDATION_ERROR",
+      fields: ["guardianName", "guardianAdult"],
+    });
+    expect((await rowOf(id)).guardianName).toBeNull();
+    expect(await db.select().from(auditLogs)).toHaveLength(0);
+  });
+
+  it("clears the guardian when a birth date corrected before any declaration makes the row an adult's, with its own audit row", async () => {
+    const id = await seed({ status: "PENDING_DECLARATION", confirmedAt: null, bibNumber: null, birthDate: "2012-03-01", guardianName: "Maria Pop", clubMemberDeclared: false, clubName: null });
+    const { corrected } = await editRegistrationAnswers(db, admin, id, { birthDate: "1990-05-01" }, NOW);
+    expect(corrected.sort()).toEqual(["birthDate", "guardianName"]);
+    expect(await rowOf(id)).toMatchObject({ birthDate: "1990-05-01", guardianName: null });
+    expect(await corrections()).toEqual(
+      expect.arrayContaining([
+        { field: "birthDate", from: "2012-03-01", to: "1990-05-01" },
+        { field: "guardianName", from: "Maria Pop", to: null },
+      ]),
+    );
+    expect(await corrections()).toHaveLength(2);
   });
 });
 

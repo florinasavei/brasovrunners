@@ -104,6 +104,8 @@ export const EMERGENCY_SAME = "emergencySame";
  * (§NNN): the signed text names its declarant and its second signature from the guardian
  * (`signed-declaration.ts`), so correcting or clearing the guardian would rewrite who signed it — and
  * the typed signature and the stored hash are the old text's. A wrong guardian is a new declaration.
+ * Beside `birthDate` it says the other way round: a birth date that would make the signer of an
+ * adult's declaration a minor, who would then need a guardian the signed text cannot gain.
  */
 export const GUARDIAN_SIGNED = "guardianSigned";
 
@@ -115,6 +117,33 @@ export const GUARDIAN_SIGNED = "guardianSigned";
  * maintenance run — the page says so rather than accepting a correction that silently will not last.
  */
 export const MINOR_AT_REGISTRATION = "minorAtRegistration";
+
+/**
+ * The marker a refusal carries beside `guardianName` when the row would not be a minor's (§NNN): the
+ * form keeps a guardian only for a minor on the day the row was written (`submitRegistration`), and
+ * everywhere else a guardian on the row means «a minor» — the declarant the signed text names
+ * (`signature-name.ts`), its second signature (§330). A guardian typed on an adult's row would change
+ * who has to sign, so it is refused with its own sentence rather than kept.
+ */
+export const GUARDIAN_ADULT = "guardianAdult";
+
+/** The markers a refusal carries beside its fields — never fields themselves, so the page drops them from the summary. */
+export const ANSWER_MARKERS: readonly string[] = [ANSWERS_UNCHANGED, EMERGENCY_SAME, GUARDIAN_SIGNED, MINOR_AT_REGISTRATION, GUARDIAN_ADULT];
+
+/**
+ * The page's sentence for a refusal that carries a marker (`Admin.errors.*`), or null for the plain
+ * «not valid» summary: which rule refused, and — where the refused box is the birth date rather than
+ * the one the rule is about — a sentence naming the birth date, so the page never blames a box
+ * nobody typed in (§NNN).
+ */
+export function answersRefusalCode(fields: readonly string[]): string | null {
+  if (fields.includes(ANSWERS_UNCHANGED)) return "ANSWERS_UNCHANGED";
+  if (fields.includes(EMERGENCY_SAME)) return "ANSWER_EMERGENCY_SAME";
+  if (fields.includes(GUARDIAN_SIGNED)) return fields.includes("birthDate") ? "ANSWER_BIRTH_DATE_GUARDIAN_SIGNED" : "ANSWER_GUARDIAN_SIGNED";
+  if (fields.includes(GUARDIAN_ADULT)) return "ANSWER_GUARDIAN_ADULT";
+  if (fields.includes(MINOR_AT_REGISTRATION)) return fields.includes("birthDate") ? "ANSWER_BIRTH_DATE_MINOR_AT_REGISTRATION" : "ANSWER_SOCIALS_MINOR_AT_REGISTRATION";
+  return null;
+}
 
 /** The answers whose old and new values the trail shows only beside the emergency details (§322). */
 export const EMERGENCY_ANSWERS: ReadonlySet<string> = new Set(["phone", "emergencyContactName", "emergencyContactPhone"]);
@@ -196,9 +225,9 @@ const same = (a: unknown, b: unknown) => (a ?? null) === (b ?? null);
  * rule is tested without a database. Refuses (VALIDATION_ERROR naming the key): a key outside the
  * allowlist, an invalid value, an empty change, a change that changes nothing (`ANSWERS_UNCHANGED`),
  * and the form's cross-field rules on the row as it would be — the emergency contact is somebody
- * else (§228), a minor has a guardian (§108) and no socials (§323) — the socials judged, as the minors'
- * sweep judges them, against the day the row was written (`MINOR_AT_REGISTRATION`) — and the event's
- * minimum age (§321).
+ * else (§228), a minor has a guardian (§108) and only a minor has one (`GUARDIAN_ADULT`), a minor has
+ * no socials (§323) — the socials judged, as the minors' sweep judges them, against the day the row
+ * was written (`MINOR_AT_REGISTRATION`) — and the event's minimum age (§321).
  *
  * Carried with the answers, as the form carries them:
  * - the **name of record** is composed from the two names (BR-REQ-031-04 criterion 6), with its key
@@ -206,7 +235,10 @@ const same = (a: unknown, b: unknown) => (a ?? null) === (b ?? null);
  * - the **member tick** writes the club's own name (§215) and, cleared, blanks the club only when it
  *   still holds that name; a club typed while the tick stays on is refused, since the tick is the club;
  * - the **socials-on-the-list** tick goes when both socials are cleared — a tick about nothing;
- * - the **T-shirt** is kept only where the event gives one (`shirtSizeKept`).
+ * - the **T-shirt** is kept only where the event gives one (`shirtSizeKept`);
+ * - the **guardian** goes when a corrected birth date makes the row an adult's on the day it was
+ *   written, as the form never keeps one for an adult (§NNN) — audited like any other column; under a
+ *   signed declaration it stays, the declaration's (`GUARDIAN_SIGNED`).
  */
 export function planAnswerEdit(
   current: Current,
@@ -293,7 +325,19 @@ export function planAnswerEdit(
   if ((posted.has("phone") || posted.has("emergencyContactPhone")) && next.phone && next.phone === next.emergencyContactPhone) {
     refuse("the emergency contact must be somebody other than the participant", ["emergencyContactPhone", EMERGENCY_SAME]);
   }
+  // Only a minor has a guardian (§108): the form's own test, a minor on the day the row was written
+  // (`submitRegistration`). A guardian typed on an adult's row is refused; a birth date corrected to an
+  // adult's takes the guardian with it — unless a declaration names them (`GUARDIAN_SIGNED`).
+  if (!context.declarationSigned && !minorAtRegistration) {
+    if (posted.has("guardianName") && posted.get("guardianName") !== null) {
+      refuse("only a minor's registration names a parent or guardian", ["guardianName", GUARDIAN_ADULT]);
+    }
+    if (posted.has("birthDate")) next.guardianName = null;
+  }
   if ((posted.has("birthDate") || posted.has("guardianName")) && minor && !next.guardianName) {
+    // Under a signed declaration no guardian can be added (the box is the declaration's): say so on the
+    // birth date, the box that moved, rather than point at the greyed guardian.
+    if (context.declarationSigned) refuse("a minor's birth date on a declaration signed with no guardian", ["birthDate", GUARDIAN_SIGNED]);
     refuse("a participant under eighteen is registered by a parent or legal guardian", ["guardianName"]);
   }
   if (posted.has("birthDate") && typeof next.birthDate === "string" && isUnderMinimumAge(next.birthDate, context.eventDay, effectiveMinimumAge(context.minAge))) {
@@ -301,6 +345,10 @@ export function planAnswerEdit(
   }
   if ((posted.has("birthDate") || posted.has("stravaUrl") || posted.has("instagramHandle")) && (minor || minorAtRegistration)) {
     const socials = (["stravaUrl", "instagramHandle"] as const).filter((field) => next[field]);
+    // Only the birth date moved: the refusal names it, not the socials nobody typed in (§NNN).
+    if (socials.length > 0 && !posted.has("stravaUrl") && !posted.has("instagramHandle")) {
+      refuse("the corrected birth date makes the row a minor's when written, and it still holds socials", ["birthDate", MINOR_AT_REGISTRATION]);
+    }
     if (socials.length > 0 && minor) refuse("the club keeps no socials of a minor", socials);
     // An adult today on a row a minor's when written: the sweep would clear them at its next run (§323).
     if (socials.length > 0) refuse("the row was a minor's when written and keeps no socials", [...socials, MINOR_AT_REGISTRATION]);
