@@ -30,16 +30,44 @@ export type AdminTab = {
   count?: number | null;
   /** What that figure counts, as the tab's tooltip (§277). */
   countHint?: string;
-  /** The people waiting on a list: a second, smaller pill with the hourglass, beside the figure, only above zero (§626). */
-  countWaiting?: number;
-  /** What a screen reader says for that pill — «10 pe lista de așteptare»; the glyph and the number are drawn only. */
-  countWaitingLabel?: string;
+  /**
+   * The groups still in progress, each a smaller outlined pill beside the figure, only above zero (§626,
+   * §NNN): drawn in `COUNT_PILL_ORDER` whatever order they arrive in.
+   */
+  countPills?: readonly CountPill[];
   /**
    * Other addresses this tab stands for — «Setări» on `/devs`, the row's «Configurație» tab that
    * lives outside `/admin/settings` (§520) — so the bar still says where the reader is.
    */
   alsoActiveOn?: readonly string[];
 };
+
+/**
+ * Which group a small pill beside the «Înscrieri» figure stands for (§626, §NNN; the owner, 2026-10-02,
+ * verbatim: «Tot pe acest pull [sic] trebuie să afișăm și pe cei care aștept [sic] confirmarea mailului sau
+ * semnarea declarației», read as this tab's pill — an interpretation his screenshot of the tab backs):
+ * those completing their registration with a place — a declaration to sign, an open offer,
+ * a family's hold, a part OF the figure — those awaiting the email confirmation, and the waiting list,
+ * both outside it.
+ */
+export type CountPillKind = "inProgress" | "awaitingEmail" | "waiting";
+
+/** One pill: its group, how many, and what a screen reader says for it — «16 în curs de confirmare». */
+export type CountPill = { kind: CountPillKind; count: number; label: string };
+
+/** The pills' order: the part of the figure first, then the two outside it, nearest a place first. */
+const COUNT_PILL_ORDER: readonly CountPillKind[] = ["inProgress", "awaitingEmail", "waiting"];
+
+/**
+ * Each group's glyph, the one the participant's own steps wear for that step (`RegistrationSteps`: the
+ * pen for the declaration, the envelope with the tick for the address) and the waiting list's hourglass.
+ * Named in the registry, never imported here (§318).
+ */
+const COUNT_PILL_GLYPH = {
+  inProgress: ACTION_ICONS.declaration,
+  awaitingEmail: ACTION_ICONS.emailConfirmation,
+  waiting: ACTION_ICONS.waiting,
+} satisfies Record<CountPillKind, unknown>;
 
 /**
  * One icon per section (the owner, 2026-09-18: "icons for each tab"), from the icon package
@@ -152,7 +180,7 @@ export default function AdminTabs({ items }: { items: readonly AdminTab[] }) {
                     word (the owner, 2026-09-22). Orange under dark ink is the one accent pair
                     `theme.ts` keeps identical in both schemes, so this needs no dark variant.
                   */}
-                  <CountBadge count={item.count} hint={item.countHint} waiting={item.countWaiting} waitingLabel={item.countWaitingLabel} />
+                  <CountBadge count={item.count} hint={item.countHint} pills={item.countPills} />
                 </>
               ) : (
                 item.label
@@ -175,9 +203,14 @@ export default function AdminTabs({ items }: { items: readonly AdminTab[] }) {
  * one line per upcoming event. The pill is focusable and MUI's `describeChild`
  * makes the text its one description, so a keyboard or a screen reader reaches it; a tap opens
  * it on a phone.
+ *
+ * On «Înscrieri» the figure is everyone with a place (§NNN, amending §626's confirmed alone), and the
+ * groups still in progress follow it as smaller pills — «Înscrieri [150] [✍ 16] [✉ 7] [⏳ 10]». They
+ * are not links: the tab is already an anchor, and a link inside one is invalid HTML; the summary
+ * strip's pills on the list page are the filters (§626).
  */
-function CountBadge({ count, hint, waiting, waitingLabel }: { count: number; hint?: string; waiting?: number; waitingLabel?: string }) {
-  const WaitingIcon = ACTION_ICONS.waiting;
+function CountBadge({ count, hint, pills = [] }: { count: number; hint?: string; pills?: readonly CountPill[] }) {
+  const drawn = COUNT_PILL_ORDER.flatMap((kind) => pills.filter((pill) => pill.kind === kind && pill.count > 0));
   const pill = (
     <>
       <Box
@@ -196,37 +229,42 @@ function CountBadge({ count, hint, waiting, waitingLabel }: { count: number; hin
         {count}
       </Box>
       {/*
-        The people waiting (§626; the owner: «pune pilluri cu iconițe și cu numerele»): the same pill's
-        shape, outlined so it reads as the lesser figure, the waiting list's hourglass before the number. It
-        is one more word-wide chunk inside the tab, and the tab bar scrolls (`variant="scrollable"`), so at
-        320 pixels it lengthens the row and never the page. Drawn only above zero; its name is the label.
+        The groups in progress (§626, §NNN; the owner: «pune pilluri cu iconițe și cu numerele»): the same
+        pill's shape, outlined so each reads as a lesser figure, its glyph before the number. Each is one more
+        word-wide chunk inside the tab, and the tab bar scrolls (`variant="scrollable"`), so at 320 pixels
+        they lengthen the row and never the page — glyph and number only, the words are the name. Drawn
+        only above zero.
       */}
-      {typeof waiting === "number" && waiting > 0 && (
-        <Box
-          component="span"
-          role="img"
-          aria-label={waitingLabel ?? String(waiting)}
-          data-testid="registered-waiting-pill"
-          sx={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 0.25,
-            border: 1,
-            borderColor: "secondary.main",
-            color: "text.primary",
-            borderRadius: 5,
-            px: 0.5,
-            ml: 0.5,
-            fontWeight: 700,
-            fontSize: "0.75rem",
-            lineHeight: 1.5,
-            verticalAlign: "middle",
-          }}
-        >
-          <WaitingIcon aria-hidden="true" sx={{ fontSize: "0.875rem" }} />
-          {waiting}
-        </Box>
-      )}
+      {drawn.map(({ kind, count: groupCount, label }) => {
+        const Glyph = COUNT_PILL_GLYPH[kind];
+        return (
+          <Box
+            key={kind}
+            component="span"
+            role="img"
+            aria-label={label}
+            data-testid={`registered-${kind}-pill`}
+            sx={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 0.25,
+              border: 1,
+              borderColor: "secondary.main",
+              color: "text.primary",
+              borderRadius: 5,
+              px: 0.5,
+              ml: 0.5,
+              fontWeight: 700,
+              fontSize: "0.75rem",
+              lineHeight: 1.5,
+              verticalAlign: "middle",
+            }}
+          >
+            <Glyph aria-hidden="true" sx={{ fontSize: "0.875rem" }} />
+            {groupCount}
+          </Box>
+        );
+      })}
     </>
   );
   if (!hint) return pill;

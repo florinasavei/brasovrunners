@@ -952,8 +952,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         )}
       </SummaryStrip>
       {/*
-        Why this number and the tab's badge can differ (§277). The badge counts the confirmed at
-        everything still to come (§626); this list opens on one event, in every state. Both are right and the pair
+        Why this number and the tab's badge can differ (§277). The badge counts everyone with a place at
+        everything still to come (§626, §NNN); this list opens on one event, in every state. Both are right and the pair
         reads as a contradiction, so the screen says which it is showing and offers the other.
       */}
       {filters.eventId && (

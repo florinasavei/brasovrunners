@@ -4,7 +4,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 import { events, eventTranslations } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { registrations, type RegistrationStatus } from "@/db/schema/registrations";
-import type { PublicEvent } from "@/modules/events/repository";
+import { findPublishedEventBySlug, type PublicEvent } from "@/modules/events/repository";
 import { computeContentHash, type LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion, noticeDescribesListStates } from "@/modules/legal-documents/repository";
 import { privacyNoticeEn, privacyNoticeRo } from "@/modules/legal-documents/templates/privacy-notice";
@@ -314,6 +314,135 @@ describe("§628 with the event's waiting list private", () => {
       expect(stateWords(html)).toEqual([]);
       expect(html).not.toContain("start-list-others-summary");
     }
+  });
+});
+
+/**
+ * §NNN (amending §346) — the title counts everyone with a place. The owner, 2026-10-02, of a page
+ * reading «150 de înscriși din 150 de locuri — 134 de confirmați, 16 în curs de confirmare» above
+ * «Cine vine (134)»: «pune-o și pe cei care trebuie să confirme înregistrarea». On a capped event whose
+ * registration is open, the people completing their registration — the places line's own «în curs de
+ * confirmare», from the door's cached read — join the title, and the line under it says the split.
+ *
+ * These events are read as the page reads them (`findPublishedEventBySlug`) and dated from the real
+ * clock, because the list asks the door with the request's own `new Date()`.
+ */
+describe("§NNN the title counts everyone with a place on a capped event", () => {
+  const DAY = 86_400_000;
+
+  async function openEvent(capacity: number | null) {
+    const [event] = await db
+      .insert(events)
+      .values({
+        type: "RACE",
+        startsAt: new Date(Date.now() + 60 * DAY),
+        registrationMode: "INTERNAL",
+        capacity,
+        editorialStatus: "PUBLISHED",
+        publishedAt: new Date(Date.now() - DAY),
+        participantListVisibility: "NAMES",
+      })
+      .returning();
+    await db.insert(eventTranslations).values([
+      { eventId: event.id, locale: "ro", slug: "cros-cu-loc", title: "Cros" },
+      { eventId: event.id, locale: "en", slug: "cross-with-place", title: "Cross" },
+    ]);
+    return event.id;
+  }
+
+  /** Four confirmed (three named), and as many as asked holding a place with a declaration to sign. */
+  async function people(eventId: string, pending: number) {
+    await register(eventId, { name: "Ana Popescu", status: "CONFIRMED", confirmedAt: at(1) });
+    await register(eventId, { name: "Bogdan Ionescu", status: "CONFIRMED", confirmedAt: at(2) });
+    await register(eventId, { name: "Carmen Doi", status: "CONFIRMED", confirmedAt: at(3) });
+    await register(eventId, { name: "Ascuns Confirmat", status: "CONFIRMED", confirmedAt: at(4), listOptOut: true });
+    for (let i = 0; i < pending; i += 1) {
+      await register(eventId, { name: `Semnatura Lipsa ${String.fromCharCode(97 + i)}`, status: "PENDING_DECLARATION", emailConfirmedAt: at(5) });
+    }
+    // Neither holds a place, so neither is in the title: an address not confirmed, the waiting list.
+    await register(eventId, { name: "Adresa Nedovedita", status: "PENDING_EMAIL_CONFIRMATION" });
+    await register(eventId, { name: "Elena Asteapta", status: "WAITLISTED", waitlistedAt: at(9) });
+  }
+
+  async function renderList(slug: string) {
+    const event = await findPublishedEventBySlug(db, locale, slug);
+    if (!event) throw new Error("the event did not publish");
+    return renderToStaticMarkup(await StartList({ event: event as unknown as PublicEvent }));
+  }
+
+  const summary = (html: string) => /data-testid="start-list-summary"[^>]*>([^<]*)</.exec(html)?.[1];
+
+  it("adds those completing their registration to the title, and says the split, in Romanian", async () => {
+    await approveNotice(OLDER_NOTICE);
+    await people(await openEvent(10), 2);
+
+    const html = await renderList("cros-cu-loc");
+
+    expect(html).toContain("Cine vine (6)");
+    expect(summary(html)).toBe("6 înscriși — 4 confirmați (3 cu numele afișat), 2 în curs de confirmare");
+    // The rows are unchanged: the confirmed names alone without the states notice (§396).
+    expect(html).not.toContain("Semnatura Lipsa");
+    expect(html).not.toContain("Adresa Nedovedita");
+    expect(html).not.toContain("Elena Asteapta");
+  });
+
+  it("says the same in English", async () => {
+    await approveNotice(OLDER_NOTICE);
+    await people(await openEvent(10), 2);
+    locale = "en";
+
+    const html = await renderList("cross-with-place");
+
+    expect(html).toContain("Who&#x27;s coming (6)");
+    expect(summary(html)).toBe("6 registered — 4 confirmed (3 with their name shown), 2 completing their registration");
+  });
+
+  it("keeps the pending rows behind the notice's gate, and the title still counts them", async () => {
+    await approveNotice({ ro: privacyNoticeRo, en: privacyNoticeEn });
+    await people(await openEvent(10), 2);
+
+    const html = await renderList("cros-cu-loc");
+
+    expect(html).toContain("Cine vine (6)");
+    expect(summary(html)).toBe("6 înscriși — 4 confirmați (3 cu numele afișat), 2 în curs de confirmare");
+    // The ticked pending by name, as before; the waiting list stays behind the event's own switch (§628), off here.
+    expect(html).toContain("Apar cu numele și: 2 înscriși în așteptarea confirmării<");
+    expect(html).toContain("Semnatura Lipsa a");
+    expect(html).not.toContain("Elena Asteapta");
+  });
+
+  it("with nobody in progress, the title and the line are today's: the confirmed", async () => {
+    await approveNotice(OLDER_NOTICE);
+    await people(await openEvent(10), 0);
+
+    const html = await renderList("cros-cu-loc");
+
+    expect(html).toContain("Cine vine (4)");
+    expect(summary(html)).toBe("4 participanți confirmați — 3 cu numele afișat");
+  });
+
+  it("with nobody confirmed yet, the title counts those in progress and the line says so above the empty sentence", async () => {
+    await approveNotice(OLDER_NOTICE);
+    const eventId = await openEvent(10);
+    await register(eventId, { name: "Semnatura Lipsa a", status: "PENDING_DECLARATION", emailConfirmedAt: at(5) });
+    await register(eventId, { name: "Semnatura Lipsa b", status: "PENDING_DECLARATION", emailConfirmedAt: at(6) });
+
+    const html = await renderList("cros-cu-loc");
+
+    expect(html).toContain("Cine vine (2)");
+    expect(summary(html)).toBe("2 înscriși — 0 confirmați (0 cu numele afișat), 2 în curs de confirmare");
+    expect(html).toContain("Încă nu și-a confirmat nimeni participarea.");
+    expect(html).not.toContain("Semnatura Lipsa");
+  });
+
+  it("an event with no number of places keeps the confirmed alone (§32), whoever is in progress", async () => {
+    await approveNotice(OLDER_NOTICE);
+    await people(await openEvent(null), 2);
+
+    const html = await renderList("cros-cu-loc");
+
+    expect(html).toContain("Cine vine (4)");
+    expect(summary(html)).toBe("4 participanți confirmați — 3 cu numele afișat");
   });
 });
 

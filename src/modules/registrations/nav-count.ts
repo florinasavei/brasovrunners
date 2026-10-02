@@ -18,11 +18,19 @@ import { familyReservationHolds, offerAwaitingItsFirstEmail } from "./repository
  * is the number "how many are signed up" means to a club: cancellations are gone, last month's
  * race is history, and a synthetic runner is never inside a number the club is given (§12.6).
  *
- * ## What the tab shows of it (§626)
+ * ## What the tab shows of it (§626, amended by §NNN)
  *
- * The badge is the **confirmed** — «cine are loc sigur» — and a small pill beside it, with the waiting
- * list's hourglass, the people waiting; the tooltip says all three figures (the confirmed, the waiting
- * and everybody in progress between them). `countRegisteredForUpcoming` below is the whole of them, the sum the split must reach.
+ * The badge is **everyone with a place** — the allocator's people: confirmed, a declaration to sign, an
+ * open offer, a family's hold (the owner, 2026-10-02: «pune-o și pe cei care trebuie să confirme
+ * înregistrarea»; §626 had made it the confirmed alone). Beside it, a small outlined pill per group still
+ * in progress, each only above zero (the owner, verbatim: «Tot pe acest pull [sic] trebuie să afișăm și pe
+ * cei care aștept [sic] confirmarea mailului sau semnarea declarației» — read as this tab's pill, an
+ * interpretation the screenshot he sent of the tab backs): those completing their registration with a place
+ * (`withPlace - confirmed`, the pen — a part OF the badge's figure), those awaiting the email
+ * confirmation (the envelope — outside it, no place yet) and the waiting list (the hourglass — outside
+ * it too). The tooltip's first line says the badge's figure and its split (confirmed, completing their
+ * registration), then those awaiting the email and the waiting: figures that are the whole.
+ * `countRegisteredForUpcoming` below is that whole, the sum the split must reach.
  *
  * ## Why it is cheap enough to sit on every backoffice page
  *
@@ -82,7 +90,7 @@ export type RegisteredOnEvent = {
   eventId: string;
   title: string;
   count: number;
-  /** CONFIRMED alone (§626): the figure the tab's badge shows. Always part of `withPlace`. */
+  /** CONFIRMED alone (§626): the first part of the badge's split (§NNN). Always part of `withPlace`. */
   confirmed: number;
   withPlace: number;
   awaitingEmail: number;
@@ -147,7 +155,7 @@ export async function countRegisteredPerUpcomingEvent<T extends Record<string, u
       perEvent.get(row.eventId) ??
       { eventId: row.eventId, title: row.title ?? "—", count: 0, confirmed: 0, withPlace: 0, awaitingEmail: 0, waitlisted: 0, capacity: row.capacity };
     entry.count += row.value;
-    // A confirmed person holds a place, so «cu loc» keeps counting them (§621) and the badge reads the part alone (§626).
+    // A confirmed person holds a place, so «cu loc» keeps counting them (§621) and the tooltip splits them out (§626, §NNN).
     if (row.bucket === "confirmed") {
       entry.confirmed += row.value;
       entry.withPlace += row.value;
@@ -162,16 +170,19 @@ export async function countRegisteredPerUpcomingEvent<T extends Record<string, u
 const cachedBreakdown = new Map<Locale, { at: number; value: RegisteredOnEvent[] }>();
 
 /**
- * The tab's three figures and the per-event split they come from (§626): the people **confirmed** (the
- * badge), the people **waiting** on a list, and everybody **in progress** between the two —
- * awaiting the email, awaiting the signature, holding an offer or a family's reservation. The three
- * add up to `total`, the people with an active registration at an upcoming event.
+ * The tab's figures and the per-event split they come from (§626, amended by §NNN): the people **with a
+ * place** (the badge) and, among them, the **confirmed**; `withPlace - confirmed` are completing their
+ * registration (a declaration to sign, an open offer, a family's hold — the pen pill); those **awaiting
+ * the email** confirmation, who hold no place yet (the envelope pill); and the people **waiting** on a
+ * list (the hourglass pill). `withPlace + awaitingEmail + waitlisted` is `total`, the people with an
+ * active registration at an upcoming event.
  */
 export type RegisteredBreakdown = {
   total: number;
+  withPlace: number;
   confirmed: number;
   waitlisted: number;
-  inProgress: number;
+  awaitingEmail: number;
   events: RegisteredOnEvent[];
 };
 
@@ -198,10 +209,15 @@ export async function registeredBadgeBreakdown<T extends Record<string, unknown>
     }
     cachedBreakdown.set(locale, { at: now.getTime(), value });
   }
-  const total = value.reduce((sum, row) => sum + row.count, 0);
-  const confirmed = value.reduce((sum, row) => sum + row.confirmed, 0);
-  const waitlisted = value.reduce((sum, row) => sum + row.waitlisted, 0);
-  return { total, confirmed, waitlisted, inProgress: total - confirmed - waitlisted, events: value };
+  const sum = (part: (row: RegisteredOnEvent) => number) => value.reduce((total, row) => total + part(row), 0);
+  return {
+    total: sum((row) => row.count),
+    withPlace: sum((row) => row.withPlace),
+    confirmed: sum((row) => row.confirmed),
+    waitlisted: sum((row) => row.waitlisted),
+    awaitingEmail: sum((row) => row.awaitingEmail),
+    events: value,
+  };
 }
 
 /** How many events the tooltip names before it says how many more — a tooltip is not a list. */
@@ -209,8 +225,12 @@ export const BADGE_HINT_EVENTS = 5;
 
 /** The words the hint is built from, in the reader's language — the `Admin.nav` entries. */
 export type BadgeHintWords = {
-  /** «Confirmați: 133 · pe lista de așteptare: 10 · în curs: 24» (§626). */
-  rule: (confirmed: number, waitlisted: number, inProgress: number) => string;
+  /**
+   * «Cu loc: 150 — 134 de confirmați, 16 în curs de confirmare · așteaptă confirmarea emailului: 7 · pe
+   * lista de așteptare: 10» (§NNN): the badge's figure, its split, then the pills outside it, in the tab's
+   * order. Every figure, even a zero.
+   */
+  rule: (figures: { withPlace: number; confirmed: number; pendingPlace: number; waitlisted: number; awaitingEmail: number }) => string;
   /** "{title}: {count} — {parts}". */
   event: (title: string, count: number, parts: string) => string;
   withPlace: (count: number) => string;
@@ -221,14 +241,14 @@ export type BadgeHintWords = {
 };
 
 /**
- * The tab's tooltip text (§621, §626): the three figures the tab is made of in one line — the badge is the
- * first, the pill beside it the second — then each upcoming
+ * The tab's tooltip text (§621, §626, §NNN): the figures the tab is made of in one line — the badge's
+ * figure and its split, then those awaiting the email, then the waiting — then each upcoming
  * event with its total and who holds a place — "153 — 144 of 150 places taken, 9 awaiting the
  * email confirmation" — a zero part omitted except the places; the first `BADGE_HINT_EVENTS` by
  * start and how many more after them. Pure, so both languages are tested against the catalogues.
  */
 export function registeredBadgeHint(
-  figures: Pick<RegisteredBreakdown, "confirmed" | "waitlisted" | "inProgress" | "events">,
+  figures: Pick<RegisteredBreakdown, "withPlace" | "confirmed" | "waitlisted" | "awaitingEmail" | "events">,
   words: BadgeHintWords,
 ): string {
   const { events } = figures;
@@ -241,5 +261,12 @@ export function registeredBadgeHint(
     return words.event(row.title, row.count, parts);
   });
   const rest = events.length - BADGE_HINT_EVENTS;
-  return [words.rule(figures.confirmed, figures.waitlisted, figures.inProgress), ...shown, ...(rest > 0 ? [words.more(rest)] : [])].join("\n");
+  const rule = words.rule({
+    withPlace: figures.withPlace,
+    confirmed: figures.confirmed,
+    pendingPlace: figures.withPlace - figures.confirmed,
+    waitlisted: figures.waitlisted,
+    awaitingEmail: figures.awaitingEmail,
+  });
+  return [rule, ...shown, ...(rest > 0 ? [words.more(rest)] : [])].join("\n");
 }

@@ -9,6 +9,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import DoneAllIcon from "@mui/icons-material/DoneAll";
 import DownloadIcon from "@mui/icons-material/Download";
+import DrawIcon from "@mui/icons-material/Draw";
 import DriveFileRenameOutlineIcon from "@mui/icons-material/DriveFileRenameOutline";
 import EditIcon from "@mui/icons-material/Edit";
 import EditNoteIcon from "@mui/icons-material/EditNote";
@@ -30,6 +31,7 @@ import LockIcon from "@mui/icons-material/Lock";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import LogoutIcon from "@mui/icons-material/Logout";
 import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
+import MarkEmailReadIcon from "@mui/icons-material/MarkEmailRead";
 import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import PersonOffIcon from "@mui/icons-material/PersonOff";
@@ -149,6 +151,10 @@ export type ActionIconName =
   | "number"
   // The people on the waiting list (§626): the hourglass «Coada» wears on its panel (`panel-glyphs.ts`) and the queue's line title, beside the «Înscrieri» tab's badge.
   | "waiting"
+  // Those holding a place who still have to finish (§NNN): the pen the participant's own declaration step wears (`RegistrationSteps`), in the «Înscrieri» tab's pill.
+  | "declaration"
+  // Those whose address is not confirmed yet (§NNN): the envelope with the tick the participant's own email step wears, in the «Înscrieri» tab's pill.
+  | "emailConfirmation"
   // The emergency details and the emergency sheet (§322): the first-aid case, never on the desk.
   | "emergency"
   // Everything held about one address (§322), the Administrator's page for an access request.
@@ -235,6 +241,8 @@ export const ACTION_ICONS: Record<ActionIconName, ComponentType<SvgIconProps>> =
   undo: UndoIcon,
   number: ConfirmationNumberIcon,
   waiting: HourglassTopIcon,
+  declaration: DrawIcon,
+  emailConfirmation: MarkEmailReadIcon,
   emergency: MedicalServicesIcon,
   personData: PersonSearchIcon,
   hold: LockIcon,

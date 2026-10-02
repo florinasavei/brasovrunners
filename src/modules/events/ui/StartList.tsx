@@ -23,7 +23,8 @@ import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_SX } from "@/s
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { DENSITY } from "@/theme/density";
 import type { PublicEvent } from "../repository";
-import { confirmedPhrase, othersPhrases } from "./counted-phrases";
+import { othersPhrases, startListHeadline } from "./counted-phrases";
+import { readRegistrationDoor } from "./registration-door";
 import { listStateLegend } from "./list-state-legend";
 import ListStateLabel from "./ListStateLabel";
 import StartListSocials from "./StartListSocials";
@@ -71,6 +72,18 @@ const NO_NUMBER = "—";
  * The line above the table counts both — "42 de participanți confirmați — 39 cu numele afișat" —
  * from the same two counts the rows are drawn from, so it matches the confirmed count the club
  * sees in the backoffice, test registrations excluded (`AGENTS.md` §12.6).
+ *
+ * ## The title counts everyone with a place (§NNN, amending §346)
+ *
+ * The owner, 2026-10-02: «pune-o și pe cei care trebuie să confirme înregistrarea». On a capped
+ * event whose places line says some are «în curs de confirmare», the title adds them — «Cine vine
+ * (150)» — and the line says the split: «150 de înscriși — 134 de confirmați (120 cu numele afișat),
+ * 16 în curs de confirmare». The figure is the places line's own, from the page's one cached read
+ * (`readRegistrationDoor`, the entry `RegistrationCta` has just read: no query of the list's own,
+ * §250); with nothing in progress, on an uncapped event (§32: no head count of held places without
+ * an «out of») or when the door read no counts, the title and line are the confirmed alone, as before.
+ * `startListHeadline` says why the two counts it adds come from two reads. The rows do not change:
+ * the pending appear by name only behind §396's gate, and only those who ticked.
  *
  * ## The states, behind the privacy notice (§396)
  *
@@ -184,6 +197,18 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
   const others =
     firstStatesNotice !== null ? await cachedStartListOthersCounts(event.id, firstStatesNotice, waitlistOn) : { pending: 0, waitlisted: 0 };
   const view = startListPage(named, anonymous, requestedPage, START_LIST_PAGE_SIZE, others.pending + others.waitlisted);
+  /*
+    The title's number and the line under it (§NNN): the confirmed, plus — on a capped event — those the
+    places line says are completing their registration. The places come from the door's own cached read
+    (`readRegistrationDoor`: the entry the page's `RegistrationCta` reads, for an open internal event
+    only), so this costs no query of its own; a door that read nothing (uncapped, closed, unreadable)
+    leaves the confirmed alone, today's title and line. Accepted knowingly: when that read fails, the
+    request memo forgets the failed promise, so this call asks the database once more and logs a second
+    «[registration-door] could not read the availability» after the card's — the breaker fails fast once
+    open, and threading the card's door down to the list would couple two islands for a log line.
+  */
+  const door = await readRegistrationDoor(event, now);
+  const headline = startListHeadline(t, locale, { confirmed: view.confirmed, named }, door.kind === "KNOWN" ? door.fill : null);
   const [participants, otherRows] = await Promise.all([
     view.namedLimit > 0 ? cachedStartListPage(event.id, view.namedOffset, view.namedLimit, socialsOn, numbersOn) : [],
     firstStatesNotice !== null && view.othersLimit > 0
@@ -271,21 +296,31 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
     >
       <Typography component="summary" id="start-list-title" variant="h2" sx={{ fontSize: "1.25rem" }}>
         <GroupsIcon aria-hidden sx={FOLD_GLYPH_SX} />
-        {t("startList.titleCount", { count: view.confirmed })}
+        {t("startList.titleCount", { count: headline.count })}
       </Typography>
 
       {view.total === 0 ? (
-        <Typography variant="body2" color="text.secondary" sx={{ pb: 2 }}>
-          {t("startList.empty")}
-        </Typography>
+        <>
+          {/* Nobody confirmed yet, somebody completing their registration (§NNN): the title counts them,
+              so the line says who they are before the sentence that nobody has confirmed. */}
+          {headline.inProgress > 0 && (
+            <Typography variant="body2" data-testid="start-list-summary" sx={{ fontWeight: 600, pb: 0.5 }}>
+              {headline.line}
+            </Typography>
+          )}
+          <Typography variant="body2" color="text.secondary" sx={{ pb: 2 }}>
+            {t("startList.empty")}
+          </Typography>
+        </>
       ) : (
         <>
-          {/* How many are confirmed, and how many of them are named (§346) — left out when nobody
-              is confirmed yet and the rows below are all pending or waiting, where "0 confirmed —
-              0 named" would only be noise above them. */}
-          {(view.confirmed > 0 || extra.length === 0) && (
+          {/* How many are confirmed, and how many of them are named (§346), and on a capped event
+              those completing their registration, whom the title counts too (§NNN) — left out when
+              nobody is confirmed or in progress yet and the rows below are all pending or waiting,
+              where "0 confirmed — 0 named" would only be noise above them. */}
+          {(view.confirmed > 0 || headline.inProgress > 0 || extra.length === 0) && (
             <Typography variant="body2" data-testid="start-list-summary" sx={{ fontWeight: 600, pb: extra.length > 0 ? 0.5 : 1 }}>
-              {confirmedPhrase(t, locale, { confirmed: view.confirmed, named })}
+              {headline.line}
             </Typography>
           )}
           {/* Behind the notice's gate (§396): how many of the rows after the confirmed ones are

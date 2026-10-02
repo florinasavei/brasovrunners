@@ -228,10 +228,11 @@
       "title": "Cine vine",
       "titleCount": "Cine vine ({count})",
       "empty": "Încă nu și-a confirmat nimeni participarea.",
-      "note": "Aici sunt numărați toți participanții confirmați. Numele apare doar pentru cei care au bifat „Vreau să apar pe lista de participanți & rezultate”; ceilalți apar ca „Participant (nume ascuns)”, fără niciun alt detaliu. Alegerea se poate schimba oricând din emailul de confirmare sau din „Înscrierile mele”.",
+      "note": "Numărul din titlu îi cuprinde pe confirmați și, cât timp înscrierile sunt deschise la un eveniment cu număr de locuri, pe cei în curs de confirmare; în tabel apar confirmații. Numele apare doar pentru cei care au bifat „Vreau să apar pe lista de participanți & rezultate”; ceilalți apar ca „Participant (nume ascuns)”, fără niciun alt detaliu. Alegerea se poate schimba oricând din emailul de confirmare sau din „Înscrierile mele”.",
       "anonymous": "Participant (nume ascuns)",
       "caption": "Participanții confirmați: întâi cei cu numele afișat, în ordinea confirmării, apoi ceilalți.",
       "summary": "{confirmed} — {named} cu numele afișat",
+      "summaryInProgress": "{taken} — {confirmed} ({named} cu numele afișat), {inProgress}",
       "confirmed": {
         "one": "{count} participant confirmat",
         "few": "{count} participanți confirmați",
@@ -257,7 +258,7 @@
       "captionStates": "Întâi participanții confirmați — cei cu numele afișat, în ordinea confirmării, apoi ceilalți —, apoi cei înscriși care nu au confirmat încă și cei de pe lista de așteptare, în ordinea listei.",
       "captionNumbers": "Participanții confirmați, cu numărul de concurs: întâi cei cu numele afișat, în ordinea confirmării, apoi ceilalți.",
       "captionStatesNumbers": "Întâi participanții confirmați, cu numărul de concurs — cei cu numele afișat, în ordinea confirmării, apoi ceilalți —, apoi cei înscriși care nu au confirmat încă și cei de pe lista de așteptare, în ordinea listei.",
-      "noteStates": "Aici sunt numărați toți participanții confirmați. Numele apare doar pentru cei care au bifat „Vreau să apar pe lista de participanți & rezultate”; ceilalți confirmați apar ca „Participant (nume ascuns)”, fără niciun alt detaliu. Cei înscriși care nu au confirmat încă și cei de pe lista de așteptare apar doar dacă au bifat, cu stadiul înscrierii lângă nume; o înscriere anulată sau expirată nu apare. Alegerea se poate schimba oricând din emailul de confirmare sau din „Înscrierile mele”.",
+      "noteStates": "Numărul din titlu îi cuprinde pe confirmați și, cât timp înscrierile sunt deschise la un eveniment cu număr de locuri, pe cei în curs de confirmare. Numele apare doar pentru cei care au bifat „Vreau să apar pe lista de participanți & rezultate”; ceilalți confirmați apar ca „Participant (nume ascuns)”, fără niciun alt detaliu. Cei înscriși care nu au confirmat încă și cei de pe lista de așteptare apar doar dacă au bifat, cu stadiul înscrierii lângă nume; o înscriere anulată sau expirată nu apare. Alegerea se poate schimba oricând din emailul de confirmare sau din „Înscrierile mele”.",
       "socialsNote": "Strava și Instagram apar doar lângă numele celor care au ales asta la înscriere.",
       "othersLead": "Apar cu numele și:",
       "pendingCount": {
@@ -280,7 +281,7 @@
       },
       "captionStatesNoWaitlist": "Întâi participanții confirmați — cei cu numele afișat, în ordinea confirmării, apoi ceilalți —, apoi cei înscriși care nu au confirmat încă.",
       "captionStatesNumbersNoWaitlist": "Întâi participanții confirmați, cu numărul de concurs — cei cu numele afișat, în ordinea confirmării, apoi ceilalți —, apoi cei înscriși care nu au confirmat încă.",
-      "noteStatesNoWaitlist": "Aici sunt numărați toți participanții confirmați. Numele apare doar pentru cei care au bifat „Vreau să apar pe lista de participanți & rezultate”; ceilalți confirmați apar ca „Participant (nume ascuns)”, fără niciun alt detaliu. Cei înscriși care nu au confirmat încă apar doar dacă au bifat, cu stadiul înscrierii lângă nume; lista de așteptare nu e publică la acest eveniment, iar o înscriere anulată sau expirată nu apare. Alegerea se poate schimba oricând din emailul de confirmare sau din „Înscrierile mele”."
+      "noteStatesNoWaitlist": "Numărul din titlu îi cuprinde pe confirmați și, cât timp înscrierile sunt deschise la un eveniment cu număr de locuri, pe cei în curs de confirmare. Numele apare doar pentru cei care au bifat „Vreau să apar pe lista de participanți & rezultate”; ceilalți confirmați apar ca „Participant (nume ascuns)”, fără niciun alt detaliu. Cei înscriși care nu au confirmat încă apar doar dacă au bifat, cu stadiul înscrierii lângă nume; lista de așteptare nu e publică la acest eveniment, iar o înscriere anulată sau expirată nu apare. Alegerea se poate schimba oricând din emailul de confirmare sau din „Înscrierile mele”."
     },
     "cta": {
       "register": "Înscrie-te la eveniment",
@@ -574,7 +575,13 @@
       "checkin": "Ziua cursei",
       "settings": "Setări",
       "guide": "Ghid",
-      "registeredHint": "Confirmați: {confirmed} · pe lista de așteptare: {waitlisted} · în curs: {inProgress}",
+      "registeredHint": "Cu loc: {withPlace} — {confirmed}, {pendingPlace} în curs de confirmare · așteaptă confirmarea emailului: {awaitingEmail} · pe lista de așteptare: {waitlisted}",
+      "registeredConfirmed": {
+        "one": "{count} confirmat",
+        "few": "{count} confirmați",
+        "other": "{count} de confirmați"
+      },
+      "registeredInProgressLabel": "{count} în curs de confirmare",
       "registeredWaitingLabel": "{count} pe lista de așteptare",
       "registeredEvent": "{title}: {count} — {parts}",
       "registeredWithPlace": "{count} cu loc",
@@ -5046,7 +5053,7 @@
                 "Sus scrie o dată ce nu poți modifica aici. Rolul Tehnic nu vede înscrierile deloc.",
                 "Pe pagina publică a evenimentului, prima cifră numără înscrierile care țin un loc: confirmații plus cei încă în curs — o declarație nesemnată, o ofertă din lista de așteptare neacceptată, locul ținut de o familie. După liniuță, linia spune doar ce există: câți sunt confirmați și câți în curs, și câte locuri libere sunt păstrate pentru lista de așteptare, de exemplu „6 înscriși din 10 locuri — 4 confirmați, 2 în curs de confirmare, 4 locuri păstrate pentru lista de așteptare”.",
                 "Locurile păstrate sunt locuri libere pe care le cere lista de așteptare, iar cardul le arată în două feluri. Dacă sunt mai multe locuri libere decât oameni care așteaptă, cardul spune «Locurile se dau din lista de așteptare» și nu numără niciun loc liber. Dacă lista cere toate locurile libere, ca în exemplu, cardul spune că locurile s-au ocupat — „Mulțumim! Toate cele 10 locuri s-au ocupat — … așteaptă deja un loc.” — și oferă «Intră pe lista de așteptare», deși linia locurilor numește încă „4 locuri păstrate pentru lista de așteptare”. În ambele cazuri locurile acelea sunt libere: cu «Locurile din lista de așteptare se alocă automat» pe «Nu» le dă clubul, cu «Trimite-i oferta»; pe «Da» le dă coada, primilor de pe listă.",
-                "Lista «Cine vine» are doar pe cei care au bifat că vor să apară pe ea, mai ales confirmații, așa că prima cifră și lista diferă. Pe card, „1 loc oferit din lista de așteptare” e un loc trimis cuiva de pe listă, care încă nu l-a acceptat."
+                "La un eveniment cu număr de locuri, titlul «Cine vine (N)» numără, ca prima cifră, pe toți cei cu loc cât timp înscrierile sunt deschise. În tabel apar doar cei care au bifat că vor să apară, mai ales confirmații, așa că titlul și rândurile diferă. Pe card, „1 loc oferit din lista de așteptare” e un loc trimis cuiva de pe listă, care încă nu l-a acceptat."
               ]
             },
             {
