@@ -44,9 +44,10 @@ describe("the resend dialog's words", () => {
 
     it(`${locale}: a link that is minted again says the old one stops working, and the others do not`, () => {
       const stops = (status: string) => /(nu mai merge|stops working)/.test(words[status]);
-      for (const status of ["PENDING_EMAIL_CONFIRMATION", "PENDING_DECLARATION", "WAITLIST_OFFERED", "CONFIRMED"]) expect(stops(status), status).toBe(true);
-      // The waiting list's email and the state notice carry no link of theirs (the renderer mints none for them).
-      for (const status of ["WAITLISTED", "CANCELLED", "EXPIRED"]) expect(stops(status), status).toBe(false);
+      // The waiting-list email carries a fresh «Nu mai pot ajunge» manage link, which supersedes the older one (BR-REQ-036-02 c5, §558).
+      for (const status of ["PENDING_EMAIL_CONFIRMATION", "PENDING_DECLARATION", "WAITLISTED", "WAITLIST_OFFERED", "CONFIRMED"]) expect(stops(status), status).toBe(true);
+      // Only the state notice carries no link of its own (AGENTS.md §16.3, BR-REQ-037-02 c4).
+      for (const status of ["CANCELLED", "EXPIRED"]) expect(stops(status), status).toBe(false);
     });
   }
 });

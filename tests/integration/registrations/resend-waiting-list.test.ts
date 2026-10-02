@@ -1,8 +1,9 @@
 import { isValidElement, type ReactElement, type ReactNode } from "react";
 import { createTranslator } from "next-intl";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { auditLogs } from "@/db/schema/audit-logs";
+import { emailActionTokens } from "@/db/schema/email-action-tokens";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { events, eventTranslations } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
@@ -189,6 +190,49 @@ describe("§NNN the resend of a waiting row", () => {
     expect(message.text).not.toContain("locul 3 din 4");
   });
 
+  it("mints a new «Nu mai pot ajunge» manage link and supersedes the earlier email's, changing no state (BR-REQ-036-02 c5, §558)", async () => {
+    await person("WAITLISTED", at(-3));
+    const mine = await person("WAITLISTED", at(-2));
+    const tokens = () =>
+      db
+        .select()
+        .from(emailActionTokens)
+        .where(and(eq(emailActionTokens.registrationId, mine.id), eq(emailActionTokens.purpose, "MANAGE_REGISTRATION")))
+        .orderBy(emailActionTokens.createdAt);
+
+    await resendRegistrationMessage(db, admin(), mine.id, NOW);
+    const [first] = await outboxOf(mine.id);
+    expect((await renderOutboxMessage(first, db, NOW)).text).toContain("Nu mai pot");
+    const afterFirst = await tokens();
+    expect(afterFirst).toHaveLength(1);
+    expect(afterFirst[0].invalidatedAt).toBeNull();
+
+    await resendRegistrationMessage(db, admin(), mine.id, at(2));
+    const rows = await outboxOf(mine.id);
+    expect((await renderOutboxMessage(rows[1], db, at(2))).text).toContain("Nu mai pot");
+    const afterSecond = await tokens();
+    expect(afterSecond).toHaveLength(2);
+    expect(afterSecond[0].invalidatedAt).not.toBeNull();
+    expect(afterSecond[0].supersededByTokenId).toBe(afterSecond[1].id);
+    expect(afterSecond[1].invalidatedAt).toBeNull();
+
+    const [after] = await db.select().from(registrations).where(eq(registrations.id, mine.id));
+    expect(after.status).toBe("WAITLISTED");
+  });
+
+  it("with the count kept private (§634), the resent email says neither a place nor a count", async () => {
+    await db.update(events).set({ waitlistCountPublic: false }).where(eq(events.id, eventId));
+    await person("WAITLISTED", at(-3));
+    await person("WAITLISTED", at(-2));
+    const mine = await person("WAITLISTED", at(-1));
+    await resendRegistrationMessage(db, admin(), mine.id, NOW);
+    const [row] = await outboxOf(mine.id);
+    const { text } = await renderOutboxMessage(row, db, NOW);
+    expect(text).toContain("erai pe lista de așteptare; locurile eliberate se oferă în ordine.");
+    expect(text).not.toContain("erai pe locul");
+    expect(text).not.toMatch(/din 3|singura persoană|mai aștept/);
+  });
+
   it("with the club choosing whom to offer, says how many others wait and no position (§629)", async () => {
     await db.update(events).set({ waitlistAutoOffer: false }).where(eq(events.id, eventId));
     await person("WAITLISTED", at(-3));
@@ -247,10 +291,10 @@ describe("§NNN the registration's page", () => {
     expect(button?.props.disabled).toBeFalsy();
     const confirm = form!.props.confirm as { title: string; body: string };
     expect(confirm.title).toBe("Retrimiți emailul?");
-    expect(confirm.body).toBe("Runner 1 primește din nou emailul de pe lista de așteptare, cu situația cozii de acum.");
+    expect(confirm.body).toBe("Runner 1 primește din nou emailul de pe lista de așteptare, cu situația cozii de acum; linkul din emailul vechi nu mai merge.");
 
     const english = await resendForm(mine.id, "en");
-    expect((english.form!.props.confirm as { body: string }).body).toBe("Runner 1 gets the waiting-list email again, with where the line stands now.");
+    expect((english.form!.props.confirm as { body: string }).body).toBe("Runner 1 gets the waiting-list email again, with where the line stands now; the link in the old email stops working.");
   });
 
   it("names the email of every other state too", async () => {

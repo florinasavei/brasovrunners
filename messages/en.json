@@ -1126,7 +1126,7 @@
       "resendWhat": {
         "PENDING_EMAIL_CONFIRMATION": "{name} gets the link to confirm the address again; the link in the old email stops working.",
         "PENDING_DECLARATION": "{name} gets the link to sign the declaration again; the link in the old email stops working.",
-        "WAITLISTED": "{name} gets the waiting-list email again, with where the line stands now.",
+        "WAITLISTED": "{name} gets the waiting-list email again, with where the line stands now; the link in the old email stops working.",
         "WAITLIST_OFFERED": "{name} gets the offer of a place again; the link in the old email stops working.",
         "CONFIRMED": "{name} gets the confirmation with the QR code again; the link in the old email stops working.",
         "CANCELLED": "{name} gets the notice about the state of the registration again.",
