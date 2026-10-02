@@ -435,7 +435,6 @@ test.describe("BR-REQ-039-01 the public list's states, behind the privacy notice
         ).toHaveAccessibleName(`Ana Confirmata ${tag} on Strava`);
       });
 
-      await test.step("nobody listed wears a race number: no «BIB» column, whatever the notice names (§613)", async () => {
       await test.step("with the marker but the waiting list private (the default): the pending still listed, no waiting row, count, legend line or word (§NNN)", async () => {
         const ro = await readList(page, `/ro/evenimente/${privateWaitlist.slug}-ro`, privateWaitlistTag);
         expect(ro.states).toEqual(["CONFIRMED", "CONFIRMED", "CONFIRMED", "PENDING"]);
@@ -457,7 +456,7 @@ test.describe("BR-REQ-039-01 the public list's states, behind the privacy notice
         await expect(page.getByTestId("list-opt-in-states")).toContainText("nu apari pe lista publică");
       });
 
-      await test.step("nobody listed wears a race number: no «Nr.» column, whatever the notice names (§613)", async () => {
+      await test.step("nobody listed wears a race number: no «BIB» column, whatever the notice names (§613)", async () => {
         const ro = await readList(page, `/ro/evenimente/${event.slug}-ro`, tag);
         await expect(ro.list.getByRole("columnheader")).toHaveText(["#", "Nume", "Club"]);
         await expect(ro.list.locator('[data-col="number"]')).toHaveCount(0);
