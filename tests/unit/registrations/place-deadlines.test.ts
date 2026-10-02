@@ -136,13 +136,13 @@ describe("§635 when a place is lost — the sentences", () => {
     ]);
   });
 
-  it("after the close no offer is made in either setting: the desk's «Dă-i un loc», and no new hold to speak of", () => {
+  it("after the close no automatic offer is made in either setting: «Trimite-i oferta» (§642) or the desk's «Dă-i un loc», and no new hold to speak of", () => {
     const closed = { registrationClosesAt: new Date("2026-11-11T22:00:00.000Z") };
     const now = new Date("2026-11-15T10:00:00.000Z");
     for (const waitlistAutoOffer of [true, false]) {
       const lines = texts(sentences("ro", { now, event: { ...closed, waitlistAutoOffer }, counts: { held: 4 } }));
       expect(lines).toContain(
-        "După termen locul nu se pierde singur: se eliberează doar când cineva de pe lista de așteptare n-are alt loc liber; înscrierile s-au închis, deci îl dai la masă cu «Dă-i un loc».",
+        "După termen locul nu se pierde singur: se eliberează doar când cineva de pe listă n-are alt loc liber; înscrierile s-au închis: îl dai cu «Trimite-i oferta» sau, la masă, cu «Dă-i un loc».",
       );
       expect(lines.some((line) => line.startsWith("Cine își confirmă adresa de acum"))).toBe(false);
     }

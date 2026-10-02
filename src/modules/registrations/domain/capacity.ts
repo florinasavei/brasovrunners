@@ -164,3 +164,38 @@ export function noFreePlaceValues(error: string | undefined, query: Readonly<Rec
     }),
   );
 }
+
+/**
+ * A supplementary place nobody confirmed (§642; the owner, 2026-10-02: «vreau confirmare când depășesc
+ * limita»). «Trimite-i oferta» and «Dă-i un loc acum» add one place to a full event only when the
+ * dialog the Administrator pressed through said so: the form posts `addPlace` with the capacity the
+ * question named («capacitatea devine {n}»), and the service raises the capacity under the lock only
+ * when that is exactly `capacity + 1` of the locked row. A page read before the last free place went —
+ * the plain question, the plain button — or before another Administrator's own raise, meets this
+ * refusal and nothing is written; the page it lands on asks the question again with the numbers of
+ * now. A marker, like §589's; the backoffice says `Admin.errors.SUPPLEMENTARY_PLACE_UNCONFIRMED`.
+ */
+export const SUPPLEMENTARY_PLACE_UNCONFIRMED = "SUPPLEMENTARY_PLACE_UNCONFIRMED";
+
+export function supplementaryPlaceUnconfirmedError(capacity: number, confirmedTo: number | null): DomainError {
+  return new DomainError(
+    "CONFLICT",
+    `SUPPLEMENTARY_PLACE_UNCONFIRMED: no place is free on capacity ${capacity}, and the press confirmed ${confirmedTo === null ? "no supplementary place" : `a capacity of ${confirmedTo}`}`,
+    [SUPPLEMENTARY_PLACE_UNCONFIRMED],
+  );
+}
+
+/** Whether the press confirmed the one place a full event of `capacity` needs: the question named `capacity + 1`. */
+export function confirmsSupplementaryPlace(capacity: number, confirmedTo: number | null): boolean {
+  return confirmedTo !== null && confirmedTo === capacity + 1;
+}
+
+/** The form's `addPlace`: the capacity the question named, a whole number, or null when it named none. */
+export function confirmedCapacityOf(value: unknown): number | null {
+  return typeof value === "string" && /^\d{1,6}$/.test(value) ? Number(value) : null;
+}
+
+/** The redirect's outcome for that refusal, or null for any other error. */
+export function supplementaryPlaceRefusalOutcome(error: unknown): { error: typeof SUPPLEMENTARY_PLACE_UNCONFIRMED } | null {
+  return error instanceof DomainError && error.fields.includes(SUPPLEMENTARY_PLACE_UNCONFIRMED) ? { error: SUPPLEMENTARY_PLACE_UNCONFIRMED } : null;
+}

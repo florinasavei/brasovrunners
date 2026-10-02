@@ -1,0 +1,1 @@
+ALTER TABLE "registrations" ADD COLUMN "outside_capacity" boolean DEFAULT false NOT NULL;

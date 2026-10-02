@@ -40,7 +40,8 @@ import { capHoldExpiry } from "@/modules/registrations/domain/hold-deadlines";
  *   `sentAt − queuedAt` — the same length the club's setting gave at the time (§377: a later change
  *   of «Termene» never moves a deadline already given), counted from the send instead.
  * - **Capped as the allocator caps it** (`capHoldExpiry`): a hold or an offer never outlives the
- *   close or the start, re-based or not.
+ *   close or the start, re-based or not — except «Trimite-i oferta»'s offer, which the allocator
+ *   caps by the start alone and the re-base likewise (`OFFER_UNTIL_START`, §642).
  * - **A wait under a minute changes nothing**: the deadlines are stated to the minute, and under the
  *   `immediate` timing a message leaves within seconds — no write, no lock, as before.
  * - **Nothing is revived that the queue had already let go**: a deadline already behind the moment
@@ -89,6 +90,21 @@ export function startsItsDeadline(payload: unknown): boolean {
   return typeof payload === "object" && payload !== null && (payload as Record<string, unknown>)[STARTS_DEADLINE] === true;
 }
 
+/**
+ * The payload key of «Trimite-i oferta»'s first message (§642): the offer the Administrator chose to
+ * make is capped by the event's start alone, never by the close — made after the close, it is the
+ * club's offer window from the send, up to the start. Read by the send's re-base (`rebasedDeadline`'s
+ * `capByClose`) and by the lapsed-offer guard (`registrations/repository.ts#offerAwaitingItsFirstEmail`),
+ * so the email's departure moves such an offer as it moves any other, with the start as its one cap.
+ * The automatic offers carry no such key and keep §420's cap by the close.
+ */
+export const OFFER_UNTIL_START = "untilStart";
+
+/** Whether a queued offer's message is a staff-chosen offer's, capped by the start alone (§642). */
+export function offerLastsUntilStart(payload: unknown): boolean {
+  return typeof payload === "object" && payload !== null && (payload as Record<string, unknown>)[OFFER_UNTIL_START] === true;
+}
+
 /** A message that left within this long of being queued moves no deadline. */
 export const REBASE_MIN_WAIT_MS = 60_000;
 
@@ -107,6 +123,8 @@ export function rebasedDeadline(input: {
   queuedAt: Date;
   sentAt: Date;
   event?: { registrationClosesAt: Date | null; startsAt: Date } | null;
+  /** False for a staff-chosen offer (`OFFER_UNTIL_START`, §642): capped by the start alone. */
+  capByClose?: boolean;
 }): Date | null {
   const { kind, stored, queuedAt, sentAt, event } = input;
   const wait = sentAt.getTime() - queuedAt.getTime();
@@ -119,7 +137,8 @@ export function rebasedDeadline(input: {
   let next = new Date(stored.getTime() + wait);
   if (kind === "declarationHold" || kind === "offer") {
     if (!event) return null;
-    next = capHoldExpiry({ naiveExpiresAt: next, registrationClosesAt: event.registrationClosesAt, eventStartsAt: event.startsAt });
+    const closesAt = kind === "offer" && input.capByClose === false ? null : event.registrationClosesAt;
+    next = capHoldExpiry({ naiveExpiresAt: next, registrationClosesAt: closesAt, eventStartsAt: event.startsAt });
   }
   return next.getTime() > stored.getTime() ? next : null;
 }

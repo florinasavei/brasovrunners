@@ -85,6 +85,11 @@ export function forgetRegisteredBadgeCount(): void {
  * swept: it holds no place and is going back to the list. Only `family_place_holds` rows, which carry no
  * person, are in no part. `capacity` is `null` for an
  * event without a limit.
+ *
+ * `outside` (§643): a registration seated «În afara locurilor» that is confirmed, holds a declaration or an
+ * offer — in no place, as the allocator counts none for it, so neither in `withPlace` nor in `confirmed`;
+ * a part of `count` of its own, said in the tooltip's event line when above zero. One waiting for its
+ * address is still `awaitingEmail`. `count` is `withPlace + awaitingEmail + waitlisted + outside`.
  */
 export type RegisteredOnEvent = {
   eventId: string;
@@ -95,6 +100,8 @@ export type RegisteredOnEvent = {
   withPlace: number;
   awaitingEmail: number;
   waitlisted: number;
+  /** Seated outside the places (§643), with a place outside them: confirmed, a declaration, an offer. */
+  outside?: number;
   capacity: number | null;
 };
 
@@ -103,11 +110,12 @@ export type RegisteredOnEvent = {
  * allocator's count of people and never a guess from the status alone.
  */
 function badgeBucket(now: Date) {
-  return sql<"confirmed" | "place" | "awaitingEmail" | "waitlisted">`case
+  return sql<"confirmed" | "place" | "awaitingEmail" | "waitlisted" | "outside">`case
+    when ${registrations.outsideCapacity} and ${registrations.status} in ('CONFIRMED', 'PENDING_DECLARATION', 'WAITLIST_OFFERED') then 'outside'
     when ${registrations.status} = 'CONFIRMED' then 'confirmed'
     when ${registrations.status} = 'PENDING_DECLARATION'
       or (${registrations.status} = 'WAITLIST_OFFERED' and (${registrations.holdExpiresAt} > ${now} or ${offerAwaitingItsFirstEmail(now)}))
-      or ${familyReservationHolds(now)} then 'place'
+      or (${familyReservationHolds(now)} and not ${registrations.outsideCapacity}) then 'place'
     when ${registrations.status} = 'PENDING_EMAIL_CONFIRMATION' then 'awaitingEmail'
     else 'waitlisted' end`;
 }
@@ -161,6 +169,7 @@ export async function countRegisteredPerUpcomingEvent<T extends Record<string, u
       entry.withPlace += row.value;
     } else if (row.bucket === "place") entry.withPlace += row.value;
     else if (row.bucket === "awaitingEmail") entry.awaitingEmail += row.value;
+    else if (row.bucket === "outside") entry.outside = (entry.outside ?? 0) + row.value;
     else entry.waitlisted += row.value;
     perEvent.set(row.eventId, entry);
   }
@@ -237,6 +246,8 @@ export type BadgeHintWords = {
   withPlaceOf: (count: number, capacity: number) => string;
   awaitingEmail: (count: number) => string;
   waitlisted: (count: number) => string;
+  /** «N în afara locurilor» (§643): the event line's last part, only above zero. Optional for a caller that predates it. */
+  outside?: (count: number) => string;
   more: (count: number) => string;
 };
 
@@ -257,6 +268,7 @@ export function registeredBadgeHint(
       row.capacity === null ? words.withPlace(row.withPlace) : words.withPlaceOf(row.withPlace, row.capacity),
       ...(row.awaitingEmail > 0 ? [words.awaitingEmail(row.awaitingEmail)] : []),
       ...(row.waitlisted > 0 ? [words.waitlisted(row.waitlisted)] : []),
+      ...((row.outside ?? 0) > 0 && words.outside ? [words.outside(row.outside ?? 0)] : []),
     ].join(", ");
     return words.event(row.title, row.count, parts);
   });

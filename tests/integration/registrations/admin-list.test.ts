@@ -423,6 +423,8 @@ describe("the counter above the list (§246)", () => {
       byStatus: { CONFIRMED: 2, WAITLISTED: 1, CANCELLED: 1 },
       real: 4,
       test: 1,
+      // Nobody seated «În afara locurilor» (§643): the strip's own pill counts them apart.
+      outside: 0,
     });
   });
 
@@ -434,12 +436,14 @@ describe("the counter above the list (§246)", () => {
       byStatus: { CONFIRMED: 1 },
       real: 1,
       test: 0,
+      outside: 0,
     });
     // An event with nothing on it is four zeroes rather than an absence.
     expect(await summariseRegistrationsForAdmin(db, { eventId: crypto.randomUUID() })).toEqual({
       byStatus: {},
       real: 0,
       test: 0,
+      outside: 0,
     });
   });
 });

@@ -2,14 +2,6 @@ import type { EmailMessageType } from "@/db/schema/email-outbox";
 import type { RegistrationStatus } from "@/db/schema/registrations";
 
 /**
- * What an Admin resend may send for a given status (AGENTS.md §15.8): "derive allowed message
- * type from state" and "refuse meaningless/unsafe resend." Pure, so the refusal for a status
- * with nothing to resend is a fact about the state machine, not a route's judgment call.
- *
- * `WAITLISTED` has no resend: nothing is waiting on the participant to act — they are simply
- * queued — so there is no link to hand them again.
- */
-/**
  * The reminder may be resent by hand while the registration is confirmed and the event is
  * still ahead (`DECISIONS.md` §81): after the start there is nothing to remind anybody of.
  */
@@ -35,6 +27,17 @@ export const RECENT_DECLARATION_EMAIL_MS = 60 * 60_000;
 /** The counts one bulk press reports, for one kind of registration (§606). */
 export type BulkResendCounts = { queued: number; skippedRecent: number; skippedLimited: number };
 
+/**
+ * What an Admin resend may send for a given status (AGENTS.md §15.8): "derive allowed message
+ * type from state" and "refuse meaningless/unsafe resend." Pure, so the refusal for a status
+ * with nothing to resend is a fact about the state machine, not a route's judgment call.
+ *
+ * `WAITLISTED` resends the message that put the person on the list (§641): there
+ * is no link to hand them again, but the email says where they stand and that the club chooses or
+ * offers in order (§619, §629), and a person who lost it asks the club for it. Every other
+ * message stays the state's own: a declaration link to a confirmed person, or a verification to a
+ * waiting one, is refused here (§15.8, "refuse a meaningless resend").
+ */
 export function deriveAllowedResendMessageType(status: RegistrationStatus): EmailMessageType | null {
   switch (status) {
     case "PENDING_EMAIL_CONFIRMATION":
@@ -52,7 +55,8 @@ export function deriveAllowedResendMessageType(status: RegistrationStatus): Emai
     case "EXPIRED":
       return "REGISTRATION_STATE_NOTICE";
     case "WAITLISTED":
-      return null;
+      // Rendered at send time, so it says where the person stands now, not where they stood then (§629).
+      return "WAITLIST_JOINED";
     default:
       return null;
   }

@@ -162,6 +162,16 @@ export const registrations = pgTable(
     // REAL by default, so every row written before this column existed — and every row written
     // by the ordinary public form — is somebody's registration without anything having to say so.
     kind: registrationKind("kind").notNull().default("REAL"),
+    /**
+     * «În afara locurilor» (§643): a registration the club seats outside the event's places — an
+     * organizer, a pacemaker, an invited runner. It consumes no place in any state (the capacity
+     * formula's one explicit exclusion, `AGENTS.md` §10.6: `countOccupied` leaves it out), is never
+     * waitlisted and never offered anything, and enters no public number; it still has a
+     * declaration, a race number and, when the person ticked, a row on the public list. Set and
+     * cleared by an Administrator only, each change written to the journal with from → to. Not
+     * `kind`: a `TEST` row is in every count (§30); this is the one condition the allocator reads.
+     */
+    outsideCapacity: boolean("outside_capacity").notNull().default(false),
 
     // PUBLIC by default, so every row written before this column existed — and every row the
     // public form writes — says how it arrived without anything having to set it.

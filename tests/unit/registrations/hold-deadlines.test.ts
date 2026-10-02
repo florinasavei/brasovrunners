@@ -61,6 +61,17 @@ describe("hold deadlines", () => {
     expect(expiry).toEqual(eventStartsAt);
   });
 
+  it("caps «Trimite-i oferta»'s offer by the start alone (§642): after the close it is the club's window, never lapsed", () => {
+    const registrationClosesAt = new Date(NOW.getTime() - HOUR);
+    const eventStartsAt = new Date(NOW.getTime() + 30 * HOUR);
+    // The automatic offer, made now, would be born lapsed: its cap, the close, is behind.
+    expect(computeWaitlistOfferExpiry({ now: NOW, registrationClosesAt, eventStartsAt, deadlines })).toEqual(registrationClosesAt);
+    expect(computeWaitlistOfferExpiry({ now: NOW, registrationClosesAt, eventStartsAt, deadlines, capByClose: false })).toEqual(new Date(NOW.getTime() + 24 * HOUR));
+    // …and still never past the start.
+    const soon = new Date(NOW.getTime() + 3 * HOUR);
+    expect(computeWaitlistOfferExpiry({ now: NOW, registrationClosesAt, eventStartsAt: soon, deadlines, capByClose: false })).toEqual(soon);
+  });
+
   it("gives the lengths the club set (§377), still capped by the close and the start", () => {
     const eventStartsAt = new Date("2026-10-01T09:00:00.000Z");
     expect(computeDeclarationHoldExpiry({ now: NOW, registrationClosesAt: null, eventStartsAt, deadlines: { holdMinutes: 90 } })).toEqual(
