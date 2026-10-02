@@ -15,6 +15,7 @@ import {
   describesListStates,
   describesPromotionalMaterials,
   describesPromotionalMaterialsShared,
+  describesRefusal,
 } from "@/modules/legal-documents/domain/merge-fields";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
 import { readAddressCap } from "@/modules/registrations/address-cap";
@@ -35,15 +36,18 @@ export async function readDraftFormSettings<T extends Record<string, unknown>>(
   db: Database<T>,
   input: { locale: Locale; now: Date; membersOnly: boolean; familyOpen: boolean },
 ): Promise<RegistrationFormSettings> {
-  const [terms, notices, addressCap] = await Promise.all([
-    findCurrentApprovedDocument(db, "TERMS", input.locale, input.now),
+  const [everyTerms, notices, addressCap] = await Promise.all([
+    Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "TERMS", locale, input.now))),
     Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, input.now))),
     readAddressCap(db),
   ]);
+  const terms = everyTerms[routing.locales.indexOf(input.locale)];
   // The notice in force, in every language, describes it — the public cache's reading (`reads.ts`).
   const everyNotice = (describes: (body: unknown) => boolean) => notices.every((notice) => notice !== undefined && describes(notice.body));
   return {
     termsVersion: terms?.version ?? null,
+    // §NNN: the terms in force, in every language, carry the club's right to refuse — the public cache's reading.
+    refusalOn: everyTerms.every((document) => document !== undefined && describesRefusal(document.body)),
     listStatesOn: everyNotice(describesListStates),
     listSocialsOn: everyNotice(describesListSocials),
     promoOn: everyNotice(describesPromotionalMaterials),
@@ -92,7 +96,7 @@ export async function renderDraftForm<T extends Record<string, unknown>>(
     locale: Locale;
     now: Date;
     word: string;
-    steps: { deadlines: Deadlines; familyOpen: boolean };
+    steps: { deadlines: Deadlines; familyOpen: boolean; refusalOn: boolean };
   },
 ): Promise<ReactNode> {
   const { view, door, locale, now, word, steps } = input;

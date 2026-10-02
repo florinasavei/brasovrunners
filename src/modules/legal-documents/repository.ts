@@ -23,6 +23,7 @@ import {
   describesNewsletter,
   describesPromotionalMaterials,
   describesPromotionalMaterialsShared,
+  describesRefusal,
   describesTeamPage,
   MINIMUM_AGE_MERGE_FIELD,
   mergeFieldsIn,
@@ -292,6 +293,18 @@ export async function noticeDescribesPromotionalMaterialsShared<T extends Record
 export async function noticeDescribesGmailFallback<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
   const notices = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now)));
   return notices.every((notice) => notice !== undefined && describesGmailFallback(notice.body));
+}
+
+/**
+ * Whether the terms in force carry the club's right to refuse or cancel a registration on objective
+ * grounds (§NNN, §618, `describesRefusal`) — in every language, like the notice's fields: a runner
+ * who registers in English accepts the English terms, and the box names only what they say. For
+ * `/admin/tasks` (`refusalTerms`), `/admin/legal` and the editor's preview; a public page asks
+ * through the public cache (`cachedRefusalDisclosed`). False while no terms are approved.
+ */
+export async function termsDescribeRefusal<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
+  const terms = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "TERMS", locale, now)));
+  return terms.every((document) => document !== undefined && describesRefusal(document.body));
 }
 
 /**

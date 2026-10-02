@@ -27,6 +27,7 @@ import {
   noticeDescribesListStates,
   noticeDescribesNewsletter,
   noticeDescribesTeamPage,
+  termsDescribeRefusal,
   raceDeclarationsCurrent,
   groupRunDeclarationsSeriesCurrent,
 } from "@/modules/legal-documents/repository";
@@ -425,6 +426,8 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       // §445: the same switch for the newsletter's pop-up on the contact page.
       newsletterDescribed: await noticeDescribesNewsletter(db, now),
       gmailFallbackDescribed: await noticeDescribesGmailFallback(db, now),
+      // §NNN: the terms in force carry the club's right to refuse a registration, in every language.
+      refusalDescribed: await termsDescribeRefusal(db, now),
       // §459: the team page's names and photographs, described by the notice in force.
       teamPageDescribed: await noticeDescribesTeamPage(db, now),
       // §515: both race declarations, trail and road or park, from the platform's shared body.

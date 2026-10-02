@@ -2375,7 +2375,8 @@
         "promotionalMaterials": "Only in the privacy notice: the optional box for offers and benefits from the club and its partners. Without it in the notice in force, the form does not offer it",
         "promotionalMaterialsShared": "Only in the privacy notice: what data the club's partners may receive from those who ticked offers and benefits. Without it in the notice in force, the list for sponsors is off",
         "registrationsPerAddress": "Terms only: how many people may register with the same email address for one event, with the unit (“4 people”), from Settings → “Deadlines”",
-        "gmailFallback": "Only in the privacy notice: the name of the switch «Gmail takes over when Mailgun stops», quoted. Without it in the notice in force, the switch is off and messages wait for Mailgun"
+        "gmailFallback": "Only in the privacy notice: the name of the switch «Gmail takes over when Mailgun stops», quoted. Without it in the notice in force, the switch is off and messages wait for Mailgun",
+        "refusalGrounds": "Terms only (section 3): the five objective grounds on which the club may refuse a registration. Without it in the terms in force, the form and the steps say nothing of a refusal"
       },
       "removeBlockedReferenced": "Can neither be withdrawn nor deleted permanently: {signatures}, {events} and {acknowledgements} depend on it. “Delete” on its row takes it off the list.",
       "removeBlockedCurrent": "In force right now — it can neither be withdrawn nor deleted. Approve its successor first; then this one can go.",
@@ -2533,6 +2534,7 @@
       "tableCaptionOf": "The versions of {kind}, with their state and what depends on each",
       "promoMissing": "The notice in force does not yet describe offers and benefits, so the form does not offer the box. Approve a new notice from the template.",
       "sponsorMissing": "The notice in force does not yet say the list for sponsors may be given to partners, so its button is off. Approve a new notice from the template.",
+      "refusalMissing": "The terms in force do not yet say on what grounds the club may refuse a registration, so the form and the registration steps do not say it. Approve new terms from the template.",
       "counted": {
         "signatures": {
           "one": "{count} signature",
@@ -3000,6 +3002,16 @@
             "That key is enough when it is project-scoped: Neon gives such a key Editor access to its project, which reads and writes the limits.",
             "If Neon refuses the write, the card says so and names the key that would do.",
             "Check: after saving, the readout above the form is what Neon now holds, never what was sent. This row turns green under 80% of the limit, and red at or past it."
+          ]
+        },
+        "refusalTerms": {
+          "title": "Terms: the club's right to refuse a registration",
+          "todo": "The terms in force do not yet say on what grounds the club may refuse a registration, so the form's box and the registration steps say nothing of it until the club approves terms from the template.",
+          "done": "The terms in force state the grounds: the form's box also names the club refusing or cancelling a registration, and the registration steps say the club may refuse only on an objective ground.",
+          "how": [
+            "/admin/legal → the “Terms” card (it says «New template») → “Regenerate from the template” → confirm. Section 3 states the grounds on which the club may refuse a registration.",
+            "A lawyer reads the last paragraph of section 3 first. Then open the draft, fill in what is left, “Save draft”, then “Approve and publish”.",
+            "Once in force, in both languages, the form's box and the registration steps state the club's right to refuse, with no other setting."
           ]
         },
         "listStatesNotice": {
@@ -6511,6 +6523,10 @@
       "family": {
         "title": "Registering someone else on the same address?",
         "body": "Send the form again with the person's full name and birth date — you get an email where you confirm with one button."
+      },
+      "refusal": {
+        "title": "The club may refuse a registration",
+        "body": "Only on an objective ground in the terms: participation conditions not met, false details, capacity or safety, conduct. We tell you the ground by email. Never on a ground the law forbids."
       }
     },
     "journey": {
@@ -6599,6 +6615,7 @@
     },
     "terms": {
       "accept": "I have read and accept the <terms>Terms and conditions</terms> (version {version}), including, expressly, the clauses on the club cancelling or changing an event, being stopped or excluded on the course, the limits of the club's liability, the governing law and the competent court.",
+      "acceptWithRefusal": "I have read and accept the <terms>Terms and conditions</terms> (version {version}), including, expressly, the clauses on the club cancelling or changing an event, the club refusing or cancelling a registration, being stopped or excluded on the course, the limits of the club's liability, the governing law and the competent court.",
       "missing": "We cannot take registrations just now: the club has no approved terms and conditions yet. Please come back soon.",
       "changed": "The terms and conditions changed while you were filling in the form. Read the version named below and tick the box again."
     },

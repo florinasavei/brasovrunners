@@ -69,7 +69,8 @@ export type EventPageVisit = {
  */
 export type EventPagePreview = {
   door: PreviewDoor;
-  steps: { deadlines: Deadlines; familyOpen: boolean };
+  /** And whether the terms in force carry the club's right to refuse (§NNN), from the database too. */
+  steps: { deadlines: Deadlines; familyOpen: boolean; refusalOn: boolean };
 };
 
 function TypeGlyph({ type }: { type: keyof typeof TYPE_GLYPH }) {

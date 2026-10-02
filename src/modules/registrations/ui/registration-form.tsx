@@ -95,6 +95,11 @@ export type RegistrationFormPreview = { word: string };
 export type RegistrationFormSettings = {
   /** The terms in force (§421): their version, named by the tick; null while none is approved. */
   termsVersion: number | null;
+  /**
+   * The terms in force, in every language, carry the club's right to refuse or cancel a registration
+   * (§NNN, §618, `describesRefusal`): the express box then names that clause too.
+   */
+  refusalOn: boolean;
   /** The notice in force describes the public list's states (§396). */
   listStatesOn: boolean;
   /** The notice in force describes the socials on the list (§500). */
@@ -289,7 +294,7 @@ export async function registrationForm({
   preview,
 }: RegistrationFormInput): Promise<ReactNode> {
   const { event, hasRules, askShirt, askHealth, minAge } = view;
-  const { termsVersion, listStatesOn, listSocialsOn, promoOn, promoShared, capMax, familyOpen } = settings;
+  const { termsVersion, refusalOn, listStatesOn, listSocialsOn, promoOn, promoShared, capMax, familyOpen } = settings;
   const siteKey = preview ? undefined : settings.siteKey;
   const { tooYoung, emergencySame, captchaFailed, tooFast, retry } = refusal;
   const member = address.kind === "member" ? address : null;
@@ -310,6 +315,16 @@ export async function registrationForm({
   // in the browser broke hydration.
   const phoneOrder = phoneCountryOrder(locale);
   const phoneNames = phoneCountryLabels(locale);
+  // The express box's version and link (§421), for either of its two wordings (§NNN).
+  const expressBoxValues = {
+    version: termsVersion ?? "—",
+    // The words as one string: `LegalLink` names itself from a string child.
+    terms: (chunks: ReactNode) => (
+      <LegalLink href="/legal/terms" newTabLabel={t("opensInNewTab")}>
+        {[chunks].flat().join("")}
+      </LegalLink>
+    ),
+  };
   // The two country pickers' search words (§463), as plain strings for the islands (§353).
   const countrySearchWords = {
     search: t("countrySearch.search"),
@@ -1053,15 +1068,12 @@ export async function registrationForm({
           )}
           <CheckboxField id={fieldId("termsAccepted")} name="termsAccepted" required dense defaultChecked={acceptance.ticked}>
             <DescriptionIcon aria-hidden data-testid="consent-glyph" />
-            {t.rich("terms.accept", {
-              version: termsVersion ?? "—",
-              // The words as one string: `LegalLink` names itself from a string child.
-              terms: (chunks) => (
-                <LegalLink href="/legal/terms" newTabLabel={t("opensInNewTab")}>
-                  {[chunks].flat().join("")}
-                </LegalLink>
-              ),
-            })}
+            {/*
+              While the terms in force carry the club's right to refuse (§NNN, `describesRefusal`), the
+              clauses accepted expressly name it too — a second key, so §421's reviewed words stay
+              exactly as they were whenever the terms in force do not say it (§618).
+            */}
+            {refusalOn ? t.rich("terms.acceptWithRefusal", expressBoxValues) : t.rich("terms.accept", expressBoxValues)}
           </CheckboxField>
           <CheckboxField id={fieldId("fitnessDeclared")} name="fitnessDeclared" required dense defaultChecked={prefill("fitnessDeclared") === "on"}>
             <MedicalServicesIcon aria-hidden data-testid="consent-glyph" />

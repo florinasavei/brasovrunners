@@ -1,8 +1,10 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import type { LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
+import { mergeText } from "@/modules/legal-documents/domain/merge-fields";
 import { LEGAL_TEMPLATES } from "@/modules/legal-documents/templates/catalogue";
 import { termsEn, termsRo } from "@/modules/legal-documents/templates/terms";
+import { refusalMergeValues } from "@/modules/registrations/refusal-grounds-words";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
@@ -62,11 +64,16 @@ const WORDS = {
   },
 } as const;
 
+/**
+ * The paragraph as a reader sees it: since §NNN its grounds are the merge field `{{refusalGrounds}}`,
+ * filled on the terms page from `refusal-grounds-words.ts` — the only field the paragraph names.
+ */
 const refusalParagraph = (locale: Locale) => {
   const cancelling = BODY[locale].sections[2];
   const found = cancelling.paragraphs.filter((paragraph) => paragraph.startsWith(WORDS.opens[locale]));
   expect(found).toHaveLength(1);
-  return found[0];
+  expect([...found[0].matchAll(/\{\{\s*(\w+)\s*\}\}/g)].map((match) => match[1])).toEqual(["refusalGrounds"]);
+  return mergeText(found[0], refusalMergeValues(locale));
 };
 
 describe("§618 — the terms' template says the club may refuse or cancel a registration, on objective grounds only", () => {
@@ -78,7 +85,7 @@ describe("§618 — the terms' template says the club may refuse or cancel a reg
     expect(paragraph).toContain(WORDS.released[locale]);
     expect(paragraph).toContain(WORDS.free[locale]);
     expect(paragraph.endsWith(WORDS.lawful[locale])).toBe(true);
-    // Plain and short: no article number, no club fact, no merge field in it.
+    // Plain and short: no article number, no club fact, and merged, no field left in it.
     expect(paragraph).not.toMatch(/articol|article|<[A-ZĂÂÎȘȚ]|\{\{/);
     expect(paragraph.length).toBeLessThan(1100);
   });

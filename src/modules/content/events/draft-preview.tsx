@@ -7,6 +7,7 @@ import { type Locale, routing } from "@/i18n/routing";
 import { readDeadlines } from "@/modules/deadlines/deadlines";
 import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
 import { familyRegistrationOpen } from "@/modules/registrations/family-gate";
+import { termsDescribeRefusal } from "@/modules/legal-documents/repository";
 import { CARD_GRID_SX } from "@/modules/events/ui/card-layout";
 import EventCard from "@/modules/events/ui/EventCard";
 import EventPageView from "@/modules/events/ui/EventPageView";
@@ -103,7 +104,8 @@ export async function renderEventDraftPreview<T extends Record<string, unknown>>
   };
   // The club's deadlines and family switch, from their rows (the page reads them through the cache).
   const { deadlines } = await readDeadlines(db);
-  const steps = { deadlines: { ...DEFAULT_DEADLINES, ...deadlines }, familyOpen: await familyRegistrationOpen(db) };
+  // And whether the terms in force carry the club's right to refuse (§NNN): the fold's last step.
+  const steps = { deadlines: { ...DEFAULT_DEADLINES, ...deadlines }, familyOpen: await familyRegistrationOpen(db), refusalOn: await termsDescribeRefusal(db, now) };
   // The lead event's frame and, in race week, its countdown (§470) — as the listing draws it.
   const featured = view.featured ? { raceWeekDays: steps.deadlines.raceWeekDays } : undefined;
   // A date of a repeated event wears its rhythm on its card (§486): the series as stored.

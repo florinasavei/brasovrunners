@@ -61,6 +61,7 @@ import {
   describesNewsletter,
   describesPromotionalMaterials,
   describesPromotionalMaterialsShared,
+  describesRefusal,
 } from "@/modules/legal-documents/domain/merge-fields";
 import { findCurrentApprovedDocument, findFirstStatesNoticeVersion, listEffectiveDates } from "@/modules/legal-documents/repository";
 import { DEFAULT_BOT_CHECK, readBotCheck } from "@/modules/registrations/bot-check";
@@ -479,6 +480,18 @@ export async function cachedPromotionalMaterialsShared(now: Date): Promise<boole
 export async function cachedNewsletterOffered(now: Date): Promise<boolean> {
   const notices = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now)));
   return notices.every((notice) => notice !== undefined && describesNewsletter(notice.body));
+}
+
+/**
+ * Whether the form's express box names the club refusing or cancelling a registration, and the fold
+ * «Cum funcționează înscrierea» says the club may refuse (§NNN, §618): the terms in force carry the
+ * clause (`describesRefusal`), in every language — the same reading as the notice's fields above, so
+ * an approval switches both on the moment the terms themselves change on `/termeni`, never before.
+ * `termsDescribeRefusal` is the backoffice's uncached twin.
+ */
+export async function cachedRefusalDisclosed(now: Date): Promise<boolean> {
+  const terms = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("TERMS", locale, now)));
+  return terms.every((document) => document !== undefined && describesRefusal(document.body));
 }
 
 // --- Legal texts ------------------------------------------------------------------------------

@@ -232,6 +232,7 @@ it is the authority, this is the summary):
     notice from that template is approved, the list shows no numbers (`/admin/tasks` carries the row `listNumbersNotice`).
     Since §618 the terms' template says the club may refuse or cancel a registration on objective grounds only, told by email with the
     ground — approve the terms from the new template (`/admin/legal` → «Șablon nou»; the lawyer reads §3's last paragraph first, and decides whether the form's express-acceptance box, whose words (§421) name only the club's cancelling or changing of the event, must also name the cancelling of a registration).
+    Since §NNN the owner decided it must, and the template's grounds are the field `{{refusalGrounds}}`: once terms from that template are in force in both languages, the form's box also names «refuzarea sau anularea unei înscrieri de către club» and the fold «Cum funcționează înscrierea» says the club may refuse — until then `/admin/tasks` carries the row `refusalTerms`.
 17. **Re-grade every event's difficulty** — migration `0104` put each event in the middle step of its old band (§526). Open each
     event in `/admin/events` and choose the band and «Nivelul» (one of the band's three levels, 1–15 in order); the guide («Ghid») explains the scale.
 18. **Open the members' zone and the FAQ** — approve the members' zone address, `/ro/zona-membri` (it sits outside the backoffice,

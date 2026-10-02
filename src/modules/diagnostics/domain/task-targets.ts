@@ -32,6 +32,7 @@ export const TASK_TARGETS: Partial<Record<TaskId, TaskTarget>> = {
   sponsorNotice: { kind: "section", section: "legal" },
   newsletterNotice: { kind: "section", section: "legal" },
   gmailFallbackNotice: { kind: "section", section: "legal" },
+  refusalTerms: { kind: "section", section: "legal" },
   teamPageNotice: { kind: "section", section: "legal" },
   groupRunSeriesTexts: { kind: "section", section: "legal" },
   // The people are invited on «Echipa» (§450).
