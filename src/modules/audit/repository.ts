@@ -77,8 +77,8 @@ export type AuditAction =
   /** Given a place ahead of the queue, into a free one (BR-REQ-037-07). */
   | "registration.promoted_by_staff"
   /**
-   * «Trimite-i oferta» (§615): a free place offered by the organizer to the waiting-list registration
-   * (a named one) — the ordinary offer and its email, no confirmation. From and to, and how many
+   * «Trimite-i oferta» (§615): a free place offered by the organizer to a named waiting-list
+   * registration — the ordinary offer and its email, no confirmation. From and to, and how many
    * waited before this person in the line (`aheadOf`) — never a name.
    */
   | "registration.offered_by_staff"

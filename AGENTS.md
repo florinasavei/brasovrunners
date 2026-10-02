@@ -1329,7 +1329,7 @@ Rules:
 - scheduled maintenance expires holds and allocates released places;
 - increasing capacity allocates the queue first;
 - the capacity changes in three places only: the event editor's save, and an Administrator's
-  press for one chosen person on a full event — «Trimite-i oferta» or «Dă-i un loc acum» — which,
+  press for one named person on a full event — «Trimite-i oferta» or «Dă-i un loc acum» — which,
   when the dialog said so, its button named the added place and the form carried the capacity it
   named (`addPlace`, exactly the locked capacity + 1), adds exactly one supplementary place to that
   one event row under the event lock, in the transaction whose offer or place then occupies it,
@@ -2674,7 +2674,7 @@ BR-REQ-037-05):
      none (§643) — as `PENDING_DECLARATION` with the
      ordinary declaration email. Audited (`registration.address_vouched_by_staff`) under the
      Administrator's id. The participant still signs their own declaration, online or on paper.
-   - **An offer to a chosen person** («Trimite-i oferta», `offerPlaceToByStaff`, `DECISIONS.md`
+   - **An offer to a named person** («Trimite-i oferta», `offerPlaceToByStaff`, `DECISIONS.md`
      §615, §642). Administrator only (`canManageRegistrations`). The ordinary offer and its email
      to the waiting-list entry the Administrator picks, at any moment before the start — after the
      close too, its deadline then capped by the start alone. When no place is free it adds exactly

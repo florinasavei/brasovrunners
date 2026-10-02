@@ -22706,7 +22706,7 @@ Baseline `BR-V2.55-2026-10-01`.
 
 ## 615. Automatic offers from the waiting list are a setting; «Trimite-i oferta» hands a place to the person the organizers name; newcomers queue while anyone waits (amending §104, §587, §589)
 
-**The owner, 2026-10-01**, in his own words, as relayed with the request: «The option to auto-assign from the waiting list should be a config, because now if I increase the limits from 150 to 200 it will auto-draw from the waiting list, right?» · «noi avem 200 de medalii (oficial am zis că sunt 150) dar cu marjă de eroare».
+**The owner, 2026-10-01**, in his own words, as relayed with the request: «The option to auto-assign from the waiting list should be a config, because now if I increase the limits from 150 to 200 it will auto-draw from the waiting list, right?».
 
 **The owner, 2026-10-01** (in three points, as relayed with the request): the race has **200 medals** and announces **150 places**, a margin the club keeps on purpose; once the waiting list forms, the places beyond 150 should be handed out by the organizers rather than go to the head of the line the moment they exist; and the people who are waiting must not be overtaken by somebody who registers later.
 
@@ -22850,9 +22850,9 @@ The interest form's done answer reads a little awkwardly with it: no email exist
 
 Baseline `BR-V2.56-2026-10-01`.
 
-## 620. The guide covers the October releases: the hourly limit and the Gmail road, the bulk resend, the chosen offers, the places line, the numbers column (amending §441)
+## 620. The guide covers the October releases: the hourly limit and the Gmail road, the bulk resend, the offers by the organizers, the places line, the numbers column (amending §441)
 
-**Amends §441.** The owner, 2026-10-01, on the race's first day of registrations, from his phone: «Trebuie să actualizăm și documentația live pt voluntari». Three releases had shipped or were shipping that night — the outbox's hourly pace for Mailgun (§605), the bulk resend of the declaration (§606) and the batch with the costs page (§610), the offered place on the card (§612), the numbers column (§613), the journey's step (§614), the chosen offers and the places line (§615) and the declaration box (§616) — and «Ghid» said nothing of any of them. Of the chosen offers he had said the same morning: «Basically I wanna hand pick people from the waiting list and give them a seat».
+**Amends §441.** The owner, 2026-10-01, on the race's first day of registrations, from his phone: «Trebuie să actualizăm și documentația live pt voluntari». Three releases had shipped or were shipping that night — the outbox's hourly pace for Mailgun (§605), the bulk resend of the declaration (§606) and the batch with the costs page (§610), the offered place on the card (§612), the numbers column (§613), the journey's step (§614), the offers by the organizers and the places line (§615) and the declaration box (§616) — and «Ghid» said nothing of any of them. Of the offers he had said the same morning that the organizers must be able to offer a waiting-list place to a named person while automatic offers are off.
 
 **Decision.** «Ghid» (`/admin/guide`, `Admin.guide` in both catalogues) describes exactly what this tree does, as §441's jobs — a title and short numbered steps, the screen's own words in «…», roles never people — and nothing that is not built (no Gmail takeover, no public delay notice, no page for a replaced link).
 
@@ -23009,7 +23009,7 @@ Baseline `BR-V2.57-2026-10-02`.
 
 ## 627. «Coada de înscrieri» says when each waiting person sent the form, and lists them in that order when the club hands places out by hand
 
-**The owner, 2026-10-01:** "Problema e că mulți au stat să confirme mailul… au căutat în SPAM și s-au înscris mulți în același timp" — many sent the form together and confirmed their address late, after looking for the email in Spam, so the line (`waitlisted_at`, the moment the address was confirmed and the place refused) no longer follows the order the forms were sent in. "E ok să aștepte, ei nu vor afla când s-au înscris restul pe listă și noi putem alege pe cine să luăm din listă" — the club hands places out by hand (`events.waitlist_auto_offer` «Nu», §615), choosing from the list, and nobody else learns when the rest registered. The panel did not show the order the forms were sent in: it listed the line by `waitlisted_at` and wrote only that moment.
+**The owner, 2026-10-01:** "Problema e că mulți au stat să confirme mailul… au căutat în SPAM și s-au înscris mulți în același timp" — many sent the form together and confirmed their address late, after looking for the email in Spam, so the line (`waitlisted_at`, the moment the address was confirmed and the place refused) no longer follows the order the forms were sent in. He asked that the people waiting be shown no position while the organizers hand out freed places (`events.waitlist_auto_offer` «Nu», §615): a position would promise an order the club does not follow then. The panel did not show the order the forms were sent in: it listed the line by `waitlisted_at` and wrote only that moment.
 
 **Decision.**
 
@@ -23019,7 +23019,7 @@ Baseline `BR-V2.57-2026-10-02`.
 
 3. **Display only.** The allocator, the capacity formula, `lockOldestWaitlisted` and every automatic offer are untouched; `kind` is in no new condition; no migration.
 
-4. **Never public.** The owner's «ei nu vor afla când s-au înscris restul pe listă»: the form's time is a backoffice line, for the club that chooses. The public list's select (`listPublicStartListOthers`) is not widened and `tests/privacy/public-surface.test.ts` stays as it was; the participant's own pages show nobody else's time.
+4. **Never public.** The form's time is a backoffice line, for the organizers who hand out freed places; nobody else learns when the rest registered. The public list's select (`listPublicStartListOthers`) is not widened and `tests/privacy/public-surface.test.ts` stays as it was; the participant's own pages show nobody else's time.
 
 **Refused.** Ordering and dating by the raw `submitted_at`, the first form ever sent: the club picks among forms that are alive, and a person who sent a new one after the link lapsed is not the earliest of them. Changing the allocator to offer by `submitted_at`: the line's position is the moment a place was refused, and the club's rule for offers on their own is §615's. Showing the form's time only on a hand-run event: the same fact helps either way, and the lead line already says which order is shown. Writing the clock in Romania's zone for an event held elsewhere: the panel reads the event's zone since §369, and a second clock on one row would be the confusion that section removed.
 
@@ -23053,9 +23053,9 @@ Baseline `BR-V2.57-2026-10-02`.
 
 ## 629. Each person waiting sees where they stand in the line, and the event page says how many wait (amending §348, §587, §612, §615)
 
-**The owner, 2026-10-01**, in his own words. He asked: «Acum mai am nevoie de încă o setare cu "lista de așteptare e publică"». The dispatcher asked what that meant, and he answered two of its three options: «Fiecare își vede locul» and «Doar numărul, pe pagina evenimentului» (the third, «Setare pe eveniment: lista de așteptare publică», is the sibling branch `feat/waiting-list-public-switch`, not this one). He then narrowed the first: «E ok să aștepte, ei nu vor afla când s-au înscris restul pe listă și noi putem alege pe cine să luăm din listă».
+**The owner, 2026-10-01**, in his own words. He asked: «Acum mai am nevoie de încă o setare cu "lista de așteptare e publică"». The dispatcher asked what that meant, and he answered two of its three options: «Fiecare își vede locul» and «Doar numărul, pe pagina evenimentului» (the third, «Setare pe eveniment: lista de așteptare publică», is the sibling branch `feat/waiting-list-public-switch`, not this one). He then narrowed the first: while the organizers hand out freed places (automatic offers off), the people waiting are shown no position, because a position would promise an order the club does not follow then.
 
-**The rule as built.** Each person waiting is told where they stand **only while the event's `waitlist_auto_offer` is true**, because then a freed place really goes in order. With it false — the club decides whom to offer a place (an invited runner, an organizer who runs, a pacemaker, a partner, a registration an outage disrupted), so nobody learns when the rest of the line registered — the person is told only **how many others wait and that the club chooses**: no position, no length of the line as a place in it. And the event page says how many wait. Nothing here makes the list of names more public.
+**The rule as built.** Each person waiting is told where they stand **only while the event's `waitlist_auto_offer` is true**, because then a freed place really goes in order. With it false — the club decides whom to offer a place (an invited runner, an organizer who runs, a pacemaker, a partner, a registration an outage disrupted), so a position would promise an order the club does not follow — the person is told only **how many others wait and that the club chooses**: no position, no length of the line as a place in it. And the event page says how many wait. Nothing here makes the list of names more public.
 
 ### What happened until now
 
@@ -23092,7 +23092,7 @@ A person on the waiting list was told they were «Pe lista de așteptare» and n
 - **A position on the public list.** The list shows the confirmed, and — behind the notice (§396) — the ticked pending and waiting, each with its state and no position; a position beside a name is a disclosure the privacy notice does not describe. Not touched.
 - **A position written into the email's payload at queue time.** Stale at the first retry; see above.
 - **A promise of order in the email.** The setting can change before the email is read; the email says only what the line was when it was rendered.
-- **The position whatever the setting.** The first version of this branch told everybody their place and said, for the club's choice, that the club chooses; the owner's narrowing («ei nu vor afla când s-au înscris restul pe listă») makes the place itself the thing withheld.
+- **The position whatever the setting.** The first version of this branch told everybody their place and said, for automatic offers off, that the organizers offer the places; the owner's narrowing — no position while the organizers hand out freed places, since it would promise an order the club does not follow — makes the place itself the thing withheld.
 - **A second count query for the event page.** `waitlisted` is already in the cached read.
 - **A new setting for any of this.** None needed: the sentence follows the setting that exists.
 
@@ -23425,7 +23425,7 @@ Baseline `BR-V2.62-2026-10-02`.
 
 ## 642. «Trimite-i oferta» at any moment, with a supplementary place when none is free (amending §615, §420, §637)
 
-**The owner, 2026-10-02.** The race was full (150), its waiting list capped, and a registrant the organizers wanted to seat — a registrant whose registration the email outage had disrupted — was waiting. The owner was told the by-hand path of §615 — open the list, set the automatic offers to «Nu», raise «Număr de locuri» in the editor, then «Trimite-i oferta» — and that the offer is refused after the registration close. He answered: «Vreau să pot „oferi loc” în orice moment, chiar și pe liste suplimentare». Asked what to change, he chose: «Trimite-i oferta» works at any time, and when no place is free it adds a supplementary place — the capacity grows by one, written in the journal, who and for whom — with no overbooking: the place is created explicitly by the Administrator's press. After the first launch he added: «vreau confirmare când depășesc limita» — the dialog says so beforehand and asks for an explicit confirmation whose button names the added place; a raise is never silent. His example: somebody who registered among the first but whose confirmation email was late in the outage, now on the waiting list.
+**The owner, 2026-10-02.** The race was full (150), its waiting list capped, and a registration the email outage had disrupted was on the waiting list. The owner was told the by-hand path of §615 — open the list, set the automatic offers to «Nu», raise «Număr de locuri» in the editor, then «Trimite-i oferta» — and that the offer is refused after the registration close. He answered: «Vreau să pot „oferi loc” în orice moment, chiar și pe liste suplimentare». Asked what to change, he chose: «Trimite-i oferta» works at any time, and when no place is free it adds a supplementary place — the capacity grows by one, written in the journal, who and for whom — with no overbooking: the place is created explicitly by the Administrator's press. After the first launch he added: «vreau confirmare când depășesc limita» — the dialog says so beforehand and asks for an explicit confirmation whose button names the added place; a raise is never silent. His example: somebody who registered among the first but whose confirmation email was late in the outage, now on the waiting list.
 
 ### The detour it replaces
 

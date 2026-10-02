@@ -231,7 +231,7 @@ describe("§642 «Trimite-i oferta» after the close: capped by the start alone;
 });
 
 describe("§642 «Trimite-i oferta» on a full event: one supplementary place, explicit and audited", () => {
-  it("raises the capacity by one, writes who and for whom, offers the chosen person, and the public count reads 2 of 2 with the offer", async () => {
+  it("raises the capacity by one, writes who and for whom, offers the named person, and the public count reads 2 of 2 with the offer", async () => {
     const event = await fullWithTwoWaiting();
     const luca = await rowOf("Luca");
     const offered = await offerPlaceByStaff(db, admin, luca.id, at(5), { addPlaceTo: 2 });
@@ -281,7 +281,7 @@ describe("§642 «Trimite-i oferta» on a full event: one supplementary place, e
     expect(await raisedFor((await rowOf("Radu")).id, other.id)).toEqual([{ from: 1, to: 2, registrationId: (await rowOf("Radu")).id }]);
   });
 
-  it("with «Da», the chosen person gets the new place, not the head of the line", async () => {
+  it("with «Da», the named person gets the new place, not the head of the line", async () => {
     const event = await fullWithTwoWaiting({ auto: true });
     await offerPlaceByStaff(db, admin, (await rowOf("Luca")).id, at(5), { addPlaceTo: 2 });
     expect([(await rowOf("Elena")).status, (await rowOf("Luca")).status]).toEqual(["WAITLISTED", "WAITLIST_OFFERED"]);

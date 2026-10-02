@@ -145,7 +145,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
     where the press can succeed — a local, scheduled event with a date that has not started. Its question
     says beforehand when no place is free, and the capacity the supplementary place raises it to (§642) —
     the allocator's counts, read once per event (§592's forecast), a lapsed declaration hold not counted
-    against her (§160); a family's live reservation is the row's own place, so it is never "full" for it;
+    against the row (§160); a family's live reservation is the row's own place, so it is never "full" for it;
     nor is a row «În afara locurilor» (§643), which needs no counted place. The server decides.
   */
   const givePlaceNowFacts = mayManage && registration.status === "PENDING_EMAIL_CONFIRMATION" ? await givePlaceNowAhead(registration.eventId) : null;
@@ -211,7 +211,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
     The form filled again with the same address (§312), out of the trail and into the timeline,
     oldest first like the lines around them. They are what the person did, not what the team
     did, so they leave "Ce a făcut echipa" to the team. Each says the state it found — "still
-    waiting for the email link" is usually the whole answer to "she says she registered" — and
+    waiting for the email link" is usually the whole answer to "they say they registered" — and
     what went out, in the words `/admin/emails` uses for that message.
   */
   const resubmissions = auditTrail
@@ -445,7 +445,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       {/*
         «Dă-i un loc acum» (§637): the address vouched for by the Administrator and the place given now,
         ahead of the waiting list, for a registration still waiting for its address. The person signs the
-        declaration herself, online or on paper at the desk. Its own block, beside the messages above
+        declaration themselves, online or on paper at the desk. Its own block, beside the messages above
         and apart from the race-day box below.
       */}
       {givePlaceNow && (

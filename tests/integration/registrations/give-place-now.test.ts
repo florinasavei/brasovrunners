@@ -218,7 +218,7 @@ async function refusal(work: Promise<unknown>): Promise<unknown> {
   throw new Error("expected a refusal");
 }
 
-/** A race of two places: Ana holds one, Elena and Luca wait, and Mara never confirmed her address. */
+/** A race of two places: Ana holds one, Elena and Luca wait, and Mara never confirmed the address. */
 async function oneFreeTwoWaiting() {
   const event = await createEvent(1);
   expect((await confirmedAddress(event, "Ana", 0)).status).toBe("PENDING_DECLARATION");
@@ -234,7 +234,7 @@ describe("§637 «Dă-i un loc acum»: the address vouched for, the place given 
   it("a free place and people waiting: the row holds the place until the window's deadline, the declaration email leaves now, the line does not move", async () => {
     const { event, mara } = await oneFreeTwoWaiting();
     const lineBefore = await db.select({ id: registrations.id, status: registrations.status, waitlistedAt: registrations.waitlistedAt }).from(registrations).where(eq(registrations.status, "WAITLISTED"));
-    // The public door would have put her in the line (§615 criterion 6).
+    // The public door would have put the registration in the line (§615 criterion 6).
     const placed = await givePlaceToUnconfirmedByStaff(db, admin, mara.id, at(10));
 
     expect(placed.status).toBe("PENDING_DECLARATION");
@@ -281,7 +281,7 @@ describe("§637 «Dă-i un loc acum»: the address vouched for, the place given 
     expect((await readPublicPlaces(db, { id: event.id, capacity: 2, waitlistCapacity: null }, at(3))).availablePlaces).toBe(0);
   });
 
-  it("no counted free place (§642): one supplementary place, on this event alone, audited with who and for whom, and she takes it", async () => {
+  it("no counted free place (§642): one supplementary place, on this event alone, audited with who and for whom, and the registration takes it", async () => {
     const event = await createEvent(1);
     await confirmedAddress(event, "Ana", 0);
     const other = await createEvent(1);
@@ -300,12 +300,12 @@ describe("§637 «Dă-i un loc acum»: the address vouched for, the place given 
     expect(raised).toMatchObject({ actorStaffUserId: admin.id, entityType: "event", participantId: null, metadataJson: { from: 1, to: 2, registrationId: mara.id } });
     expect(await vouchedTrail(mara.id)).toHaveLength(1);
     expect(await declarationEmails(mara.id)).toHaveLength(1);
-    // Two places, both taken — Ana's hold and hers: never above the capacity.
+    // Two places, both taken — Ana's hold and Mara's: never above the capacity.
     const places = await readPublicPlaces(db, { id: event.id, capacity: 2, waitlistCapacity: null }, at(6));
     expect(places).toMatchObject({ occupied: 2, availablePlaces: 0 });
   });
 
-  it("with «Da» and people waiting, the added place is hers, not the first in line's (§642)", async () => {
+  it("with «Da» and people waiting, the added place is the registration's, not the first in line's (§642)", async () => {
     const event = await createEvent(1, { auto: true });
     await confirmedAddress(event, "Ana", 0);
     expect((await confirmedAddress(event, "Elena", 1)).status).toBe("WAITLISTED");
@@ -318,7 +318,7 @@ describe("§637 «Dă-i un loc acum»: the address vouched for, the place given 
     expect(await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "WAITLIST_SPOT_OFFER"))).toEqual([]);
   });
 
-  it("a press the question did not confirm adds no place on a full race: refused, her row and link untouched (§642)", async () => {
+  it("a press the question did not confirm adds no place on a full race: refused, the row and its link untouched (§642)", async () => {
     const event = await createEvent(1);
     await confirmedAddress(event, "Ana", 0);
     const mara = await unconfirmed(event, "Mara", 1);
@@ -341,7 +341,7 @@ describe("§637 «Dă-i un loc acum»: the address vouched for, the place given 
     expect(await declarationEmails(mara.id)).toEqual([]);
     expect((await db.select().from(emailOutbox)).length).toBe(outboxBefore);
     expect(sentNow).toEqual([]);
-    // Her own link is untouched by the refused raise: still unspent, and it confirms her address as before.
+    // The row's own link is untouched by the refused raise: still unspent, and it confirms the address as before.
     const [token] = await db.select().from(emailActionTokens).where(eq(emailActionTokens.registrationId, mara.id));
     expect(token.usedAt).toBeNull();
     expect(token.invalidatedAt).toBeNull();
@@ -357,7 +357,7 @@ describe("§637 «Dă-i un loc acum»: the address vouched for, the place given 
     expect(await raises(event.id)).toEqual([]);
   });
 
-  it("a refusal writes nothing: her link is untouched, no place is added", async () => {
+  it("a refusal writes nothing: the row's link is untouched, no place is added", async () => {
     const event = await createEvent(1);
     await confirmedAddress(event, "Ana", 0);
     const mara = await unconfirmed(event, "Mara", 1);
@@ -378,7 +378,7 @@ describe("§637 «Dă-i un loc acum»: the address vouched for, the place given 
     expect((await db.select().from(emailOutbox)).length).toBe(outboxBefore);
     expect(await vouchedTrail(mara.id)).toEqual([]);
     expect(sentNow).toEqual([]);
-    // Her own link is untouched: still unspent, and it confirms her address as before.
+    // The row's own link is untouched: still unspent, and it confirms the address as before.
     const [token] = await db.select().from(emailActionTokens).where(eq(emailActionTokens.registrationId, mara.id));
     expect(token.usedAt).toBeNull();
     expect(token.invalidatedAt).toBeNull();
@@ -424,7 +424,7 @@ describe("§637 «Dă-i un loc acum»: the address vouched for, the place given 
     expect(token.usedAt?.toISOString()).toBe(at(5).toISOString());
   });
 
-  it("she signs the declaration from the email and is confirmed as usual", async () => {
+  it("the person signs the declaration from the email and is confirmed as usual", async () => {
     const event = await createEvent(3);
     const mara = await unconfirmed(event, "Mara", 0);
     await givePlaceToUnconfirmedByStaff(db, admin, mara.id, at(5));
@@ -491,7 +491,7 @@ describe("§637 «Dă-i un loc acum»: the address vouched for, the place given 
   it("a verification email still waiting in the outbox is withdrawn: after the declaration, no late «confirm your address» (review finding 2)", async () => {
     const event = await createEvent(3);
     const mara = await unconfirmed(event, "Mara", 0);
-    // The outage's backlog: her verification email queued and never tried.
+    // The outage's backlog: the verification email queued and never tried.
     const [queued] = await verificationEmails(mara.id);
     expect(queued).toMatchObject({ status: "PENDING", attemptCount: 0 });
 
@@ -502,7 +502,7 @@ describe("§637 «Dă-i un loc acum»: the address vouched for, the place given 
     await processOutboxBatch(db, { sender: mail, render: createOutboxRenderer(), now: at(60) });
     const keys = mail.calls.map((call) => call.idempotencyKey);
     expect(keys).not.toContain(queued.idempotencyKey);
-    // The declaration's email is what she receives.
+    // The declaration's email is what the person receives.
     const [declaration] = await declarationEmails(mara.id);
     expect(keys).toContain(declaration.idempotencyKey);
   });
@@ -523,13 +523,13 @@ describe("§637 «Dă-i un loc acum»: the address vouched for, the place given 
     expect(await verificationEmails(mara.id)).toEqual([]);
   });
 
-  it("a full race with a lapsed declaration hold and nobody waiting: the lapsed hold goes for her (§160), and the question does not say «full»", async () => {
+  it("a full race with a lapsed declaration hold and nobody waiting: the lapsed hold goes for the registration (§160), and the question does not say «full»", async () => {
     const event = await createEvent(1);
     const ana = await confirmedAddress(event, "Ana", 0);
     expect(ana.status).toBe("PENDING_DECLARATION");
     await lapse(ana.id, at(1));
     const mara = await unconfirmed(event, "Mara", 2);
-    // The forecast agrees with the press: one lapsed hold may go, so the race is not "full" for her.
+    // The forecast agrees with the press: one lapsed hold may go, so the race is not "full" for the registration.
     expect(await atTheClock(at(4), () => givePlaceNowAhead(event.id))).toEqual({ full: false, raisedTo: null });
 
     const placed = await givePlaceToUnconfirmedByStaff(db, admin, mara.id, at(5));
