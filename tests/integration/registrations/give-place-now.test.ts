@@ -11,12 +11,12 @@ import { registrations } from "@/db/schema/registrations";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
-import { NoFreePlaceError } from "@/modules/registrations/domain/capacity";
 import { STARTS_DEADLINE } from "@/modules/notifications/domain/deadline-rebase";
 import { SENT_NOW_FLAG } from "@/modules/notifications/domain/send-at-once";
 import type { OutgoingEmail } from "@/infrastructure/email/adapter";
 import type { EmailSender } from "@/infrastructure/email/delivery";
 import { isDomainError } from "@/shared/errors/domain-error";
+import { SUPPLEMENTARY_PLACE_UNCONFIRMED, supplementaryPlaceRefusalOutcome } from "@/modules/registrations/domain/capacity";
 import { signingInput } from "../../helpers/declaration-signing";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
@@ -27,7 +27,8 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * îi trimit declarația» — «Nu vreau să mai facă ea nimic!! Nu mai vreau să risc».
  *
  * An Administrator vouches for the address of a `PENDING_EMAIL_CONFIRMATION` row and gives it a place
- * now, ahead of the waiting list, under the event lock, from a counted free place only; the person
+ * now, ahead of the waiting list, under the event lock — from a counted free place, or, on a full race,
+ * from one supplementary place the press adds, audited (§NNN, as «Trimite-i oferta»); the person
  * receives the ordinary declaration email and signs it herself — online, or on paper at the desk.
  */
 const NOW = new Date("2026-09-25T10:00:00.000Z");
@@ -171,6 +172,9 @@ async function verificationLink(registrationId: string, participantId: string, n
 
 const declarationEmails = (registrationId: string) =>
   db.select().from(emailOutbox).where(and(eq(emailOutbox.registrationId, registrationId), eq(emailOutbox.messageType, "COMPLETE_DECLARATION")));
+const raises = (eventId: string) =>
+  db.select().from(auditLogs).where(and(eq(auditLogs.action, "event.capacity_raised_for_place_now"), eq(auditLogs.entityId, eventId)));
+const capacityOf = async (eventId: string) => (await db.select({ capacity: events.capacity }).from(events).where(eq(events.id, eventId)))[0].capacity;
 const vouchedTrail = (registrationId: string) =>
   db.select().from(auditLogs).where(and(eq(auditLogs.action, "registration.address_vouched_by_staff"), eq(auditLogs.entityId, registrationId)));
 
@@ -278,16 +282,94 @@ describe("§637 «Dă-i un loc acum»: the address vouched for, the place given 
     expect((await readPublicPlaces(db, { id: event.id, capacity: 2, waitlistCapacity: null }, at(3))).availablePlaces).toBe(0);
   });
 
-  it("no counted free place: refused with §589's sentence, and nothing is written", async () => {
+  it("no counted free place (§NNN): one supplementary place, on this event alone, audited with who and for whom, and she takes it", async () => {
+    const event = await createEvent(1);
+    await confirmedAddress(event, "Ana", 0);
+    const other = await createEvent(1);
+    const mara = await unconfirmed(event, "Mara", 1);
+    // The forecast the question reads: full, and what the capacity becomes.
+    expect(await atTheClock(at(4), () => givePlaceNowAhead(event.id))).toEqual({ full: true, raisedTo: 2 });
+
+    // The form posts the capacity the question named (`addPlace`).
+    const placed = await givePlaceToUnconfirmedByStaff(db, admin, mara.id, at(5), undefined, { addPlaceTo: 2 });
+    expect(placed.status).toBe("PENDING_DECLARATION");
+    expect(placed.capacityRaisedTo).toBe(2);
+    expect(await capacityOf(event.id)).toBe(2);
+    // Another event's capacity is not touched.
+    expect(await capacityOf(other.id)).toBe(1);
+    const [raised] = await raises(event.id);
+    expect(raised).toMatchObject({ actorStaffUserId: admin.id, entityType: "event", participantId: null, metadataJson: { from: 1, to: 2, registrationId: mara.id } });
+    expect(await vouchedTrail(mara.id)).toHaveLength(1);
+    expect(await declarationEmails(mara.id)).toHaveLength(1);
+    // Two places, both taken — Ana's hold and hers: never above the capacity.
+    const places = await readPublicPlaces(db, { id: event.id, capacity: 2, waitlistCapacity: null }, at(6));
+    expect(places).toMatchObject({ occupied: 2, availablePlaces: 0 });
+  });
+
+  it("with «Da» and people waiting, the added place is hers, not the first in line's (§NNN)", async () => {
+    const event = await createEvent(1, { auto: true });
+    await confirmedAddress(event, "Ana", 0);
+    expect((await confirmedAddress(event, "Elena", 1)).status).toBe("WAITLISTED");
+    const mara = await unconfirmed(event, "Mara", 2);
+
+    const placed = await givePlaceToUnconfirmedByStaff(db, admin, mara.id, at(5), undefined, { addPlaceTo: 2 });
+    expect(placed.status).toBe("PENDING_DECLARATION");
+    expect(placed.capacityRaisedTo).toBe(2);
+    expect((await rowOf("Elena")).status).toBe("WAITLISTED");
+    expect(await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "WAITLIST_SPOT_OFFER"))).toEqual([]);
+  });
+
+  it("a press the question did not confirm adds no place on a full race: refused, her row and link untouched (§NNN)", async () => {
+    const event = await createEvent(1);
+    await confirmedAddress(event, "Ana", 0);
+    const mara = await unconfirmed(event, "Mara", 1);
+    const link = await verificationLink(mara.id, mara.participantId, at(1));
+    const outboxBefore = (await db.select().from(emailOutbox)).length;
+    // The page was read while a place was free: the plain question, no `addPlace`.
+    const unasked = await refusal(givePlaceToUnconfirmedByStaff(db, admin, mara.id, at(5)));
+    expect(supplementaryPlaceRefusalOutcome(unasked)).toEqual({ error: SUPPLEMENTARY_PLACE_UNCONFIRMED });
+    // A question that named another capacity is not this raise either.
+    const stale = await refusal(givePlaceToUnconfirmedByStaff(db, admin, mara.id, at(5), undefined, { addPlaceTo: 3 }));
+    expect(supplementaryPlaceRefusalOutcome(stale)).toEqual({ error: SUPPLEMENTARY_PLACE_UNCONFIRMED });
+    expect(await capacityOf(event.id)).toBe(1);
+    expect(await raises(event.id)).toEqual([]);
+    const after = await rowOf("Mara");
+    expect(after.status).toBe("PENDING_EMAIL_CONFIRMATION");
+    expect(after.emailConfirmedAt).toBeNull();
+    expect(after.emailConfirmedByStaffUserId).toBeNull();
+    expect(after.holdExpiresAt).toBeNull();
+    expect(await vouchedTrail(mara.id)).toEqual([]);
+    expect(await declarationEmails(mara.id)).toEqual([]);
+    expect((await db.select().from(emailOutbox)).length).toBe(outboxBefore);
+    expect(sentNow).toEqual([]);
+    // Her own link is untouched by the refused raise: still unspent, and it confirms her address as before.
+    const [token] = await db.select().from(emailActionTokens).where(eq(emailActionTokens.registrationId, mara.id));
+    expect(token.usedAt).toBeNull();
+    expect(token.invalidatedAt).toBeNull();
+    expect(await consumeAndConfirmEmail(link, at(6))).toMatchObject({ ok: true });
+  });
+
+  it("an uncapped event never lacks a place: nothing is raised", async () => {
+    const event = await createEvent(null);
+    const mara = await unconfirmed(event, "Mara", 1);
+    const placed = await givePlaceToUnconfirmedByStaff(db, admin, mara.id, at(5));
+    expect(placed.capacityRaisedTo).toBeNull();
+    expect(await capacityOf(event.id)).toBeNull();
+    expect(await raises(event.id)).toEqual([]);
+  });
+
+  it("a refusal writes nothing: her link is untouched, no place is added", async () => {
     const event = await createEvent(1);
     await confirmedAddress(event, "Ana", 0);
     const mara = await unconfirmed(event, "Mara", 1);
     const link = await verificationLink(mara.id, mara.participantId, at(1));
     const outboxBefore = (await db.select().from(emailOutbox)).length;
 
-    const error = await refusal(givePlaceToUnconfirmedByStaff(db, admin, mara.id, at(5)));
-    expect(error).toBeInstanceOf(NoFreePlaceError);
-    expect((error as NoFreePlaceError).places).toMatchObject({ capacity: 1, declaration: 1 });
+    // The Organizer, on a full race: refused before the lock, and the capacity stays.
+    const error = await refusal(givePlaceToUnconfirmedByStaff(db, organizer, mara.id, at(5)));
+    expect(isDomainError(error) && error.code).toBe("FORBIDDEN");
+    expect(await capacityOf(event.id)).toBe(1);
+    expect(await raises(event.id)).toEqual([]);
 
     const after = await rowOf("Mara");
     expect(after.status).toBe("PENDING_EMAIL_CONFIRMATION");
@@ -366,9 +448,9 @@ describe("§637 «Dă-i un loc acum»: the address vouched for, the place given 
     const placed = await givePlaceToUnconfirmedByStaff(db, admin, mara.id, at(5));
     expect(placed.status).toBe("PENDING_DECLARATION");
     expect(placed.holdExpiresAt?.toISOString()).toBe(WINDOW_DEADLINE.toISOString());
-    // …and it occupies the place like a real one: the next person finds the race full.
+    // …and it occupies the place like a real one: the next person finds the race full, and his press adds a place.
     const radu = await unconfirmed(event, "Radu", 6);
-    expect(await refusal(givePlaceToUnconfirmedByStaff(db, admin, radu.id, at(7)))).toBeInstanceOf(NoFreePlaceError);
+    expect((await givePlaceToUnconfirmedByStaff(db, admin, radu.id, at(7), undefined, { addPlaceTo: 2 })).capacityRaisedTo).toBe(2);
   });
 
   it("inside the window, or with none, the place waits for the window's deadline or the start — never the club's minutes", async () => {
@@ -394,17 +476,17 @@ describe("§637 «Dă-i un loc acum»: the address vouched for, the place given 
     expect(pressed.place).toBe("reserved");
     const second = await submitRegistration(db, event, submission("Mihai", "familia@example.ro", at(1)), at(1), "REAL", { ...PUBLIC, sitting: { id: pressed.sittingId ?? cookieId, joined: true, newPerson: true } });
     expect(second.sittingPlace).toBe("reserved");
-    // Both places are the family's: a stranger is refused, the family's own row is not.
+    // Both places are the family's: a stranger meets a full race — his press adds a place (§NNN), never takes theirs.
     const radu = await unconfirmed(event, "Radu", 2);
-    expect(await refusal(givePlaceToUnconfirmedByStaff(db, admin, radu.id, at(3)))).toBeInstanceOf(NoFreePlaceError);
+    expect((await givePlaceToUnconfirmedByStaff(db, admin, radu.id, at(3), undefined, { addPlaceTo: 3 })).capacityRaisedTo).toBe(3);
 
     const ioana = await rowOf("Ioana");
     const placed = await givePlaceToUnconfirmedByStaff(db, admin, ioana.id, at(3));
     expect(placed.status).toBe("PENDING_DECLARATION");
     const [trail] = await vouchedTrail(ioana.id);
     expect(trail.metadataJson).toMatchObject({ familyReservation: true });
-    // Mihai keeps his reserved place: still two places taken, not three.
-    expect((await readPublicPlaces(db, { id: event.id, capacity: 2, waitlistCapacity: null }, at(4))).occupied).toBe(2);
+    // Mihai keeps his reserved place: three places taken of three — Radu's added one, Ioana's and Mihai's — not four.
+    expect((await readPublicPlaces(db, { id: event.id, capacity: 3, waitlistCapacity: null }, at(4))).occupied).toBe(3);
   });
 
   it("a verification email still waiting in the outbox is withdrawn: after the declaration, no late «confirm your address» (review finding 2)", async () => {
@@ -449,7 +531,7 @@ describe("§637 «Dă-i un loc acum»: the address vouched for, the place given 
     await lapse(ana.id, at(1));
     const mara = await unconfirmed(event, "Mara", 2);
     // The forecast agrees with the press: one lapsed hold may go, so the race is not "full" for her.
-    expect(await atTheClock(at(4), () => givePlaceNowAhead(event.id))).toEqual({ full: false });
+    expect(await atTheClock(at(4), () => givePlaceNowAhead(event.id))).toEqual({ full: false, raisedTo: null });
 
     const placed = await givePlaceToUnconfirmedByStaff(db, admin, mara.id, at(5));
     expect(placed.status).toBe("PENDING_DECLARATION");
@@ -462,9 +544,9 @@ describe("§637 «Dă-i un loc acum»: the address vouched for, the place given 
     await confirmedAddress(event, "Ana", 0);
     const ahead = (eventId: string) => atTheClock(at(5), () => givePlaceNowAhead(eventId));
     // A held place still within its deadline: full, and nothing lapsed to release.
-    expect(await ahead(event.id)).toEqual({ full: true });
+    expect(await ahead(event.id)).toEqual({ full: true, raisedTo: 2 });
     await db.update(events).set({ capacity: 2 }).where(eq(events.id, event.id));
-    expect(await ahead(event.id)).toEqual({ full: false });
+    expect(await ahead(event.id)).toEqual({ full: false, raisedTo: null });
 
     // A started, cancelled, date-to-be-announced or not local event: no button.
     const started = await createEvent(2, { startsAt: at(1) });

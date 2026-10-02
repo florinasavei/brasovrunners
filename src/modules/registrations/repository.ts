@@ -14,7 +14,7 @@ import {
 } from "@/db/schema/registrations";
 import type { Database, Transaction } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
-import { STARTS_DEADLINE } from "@/modules/notifications/domain/deadline-rebase";
+import { OFFER_UNTIL_START, STARTS_DEADLINE } from "@/modules/notifications/domain/deadline-rebase";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { env } from "@/shared/config/env";
 import { DomainError } from "@/shared/errors/domain-error";
@@ -157,6 +157,29 @@ export async function lockEventForCapacity<T extends Record<string, unknown>>(
 ) {
   const [row] = await db.select().from(events).where(eq(events.id, eventId)).for("update");
   return row;
+}
+
+/**
+ * «Trimite-i oferta» on a full event (§NNN): one supplementary place, on this one event row — never a
+ * series' other dates — written by the caller under the event lock it already holds, in the
+ * transaction that then makes the offer into it. `capacity + 1` in SQL, so the number written is the
+ * locked row's plus one whatever the caller's copy says; the row's `version` moves like any save's
+ * (AGENTS.md §11.5), so an editor opened before the press is told the event changed rather than
+ * writing the old capacity back. The new capacity, or null for an uncapped event, which never lacks a
+ * place and is never written.
+ */
+export async function addSupplementaryPlace<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+  actorStaffUserId: string,
+  now: Date,
+): Promise<number | null> {
+  const [row] = await db
+    .update(events)
+    .set({ capacity: sql`${events.capacity} + 1`, version: sql`${events.version} + 1`, updatedAt: now, updatedByStaffUserId: actorStaffUserId })
+    .where(and(eq(events.id, eventId), isNotNull(events.capacity)))
+    .returning({ capacity: events.capacity });
+  return row?.capacity ?? null;
 }
 
 /**
@@ -938,18 +961,22 @@ export function awaitingItsFirstEmail(): SQL {
   return firstEmailQueued("COMPLETE_DECLARATION");
 }
 
-function firstEmailQueued(messageType: "COMPLETE_DECLARATION" | "WAITLIST_SPOT_OFFER"): SQL {
-  return sql`exists (select 1 from ${emailOutbox} where ${emailOutbox.registrationId} = ${registrations.id} and ${emailOutbox.messageType} = ${messageType} and ${emailOutbox.participantId} is not null and ${emailOutbox.status} in ('PENDING', 'PROCESSING') and (${emailOutbox.payloadJson} ->> ${STARTS_DEADLINE}) = 'true')`;
+function firstEmailQueued(messageType: "COMPLETE_DECLARATION" | "WAITLIST_SPOT_OFFER", { untilStart = false }: { untilStart?: boolean } = {}): SQL {
+  // `untilStart`: only «Trimite-i oferta»'s message, the offer capped by the start alone (§NNN).
+  const staffChosen = untilStart ? sql` and (${emailOutbox.payloadJson} ->> ${OFFER_UNTIL_START}) = 'true'` : sql``;
+  return sql`exists (select 1 from ${emailOutbox} where ${emailOutbox.registrationId} = ${registrations.id} and ${emailOutbox.messageType} = ${messageType} and ${emailOutbox.participantId} is not null and ${emailOutbox.status} in ('PENDING', 'PROCESSING') and (${emailOutbox.payloadJson} ->> ${STARTS_DEADLINE}) = 'true'${staffChosen})`;
 }
 
 /**
  * The offer's guard (§520): its `WAITLIST_SPOT_OFFER` still queued — and only while the send could
- * still move the deadline. An offer never outlives the close or the start (`capHoldExpiry`), so from
- * that instant on its send re-bases nothing and keeping it would only delay a lapse that is final: at
- * the close it lapses and is handed to nobody (§420), as before.
+ * still move the deadline. An automatic offer never outlives the close or the start (`capHoldExpiry`),
+ * so from that instant on its send re-bases nothing and keeping it would only delay a lapse that is
+ * final: at the close it lapses and is handed to nobody (§420), as before. «Trimite-i oferta»'s offer
+ * is capped by the start alone (§NNN, `OFFER_UNTIL_START` in its message), so its guard holds until
+ * the start: made after the close, its send still moves its deadline.
  */
 export function offerAwaitingItsFirstEmail(now: Date): SQL {
-  return sql`(${firstEmailQueued("WAITLIST_SPOT_OFFER")} and exists (select 1 from ${events} where ${events.id} = ${registrations.eventId} and ${now} < least(coalesce(${events.registrationClosesAt}, ${events.startsAt}), ${events.startsAt})))`;
+  return sql`(${firstEmailQueued("WAITLIST_SPOT_OFFER")} and exists (select 1 from ${events} where ${events.id} = ${registrations.eventId} and (${now} < least(coalesce(${events.registrationClosesAt}, ${events.startsAt}), ${events.startsAt}) or (${now} < ${events.startsAt} and ${firstEmailQueued("WAITLIST_SPOT_OFFER", { untilStart: true })}))))`;
 }
 
 /** Either hold whose first email is still queued (§520): the declaration hold's or the offer's own message. */

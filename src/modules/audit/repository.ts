@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, ne, sql, type SQLWrapper } from "drizzle-orm";
+import { and, desc, eq, inArray, ne, or, sql, type SQLWrapper } from "drizzle-orm";
 import { type AuditLog, auditLogs } from "@/db/schema/audit-logs";
 import { staffUsers } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
@@ -250,6 +250,15 @@ export type AuditAction =
    * save changed it — the editor's own date and each date of a series the scoped save carried it to.
    */
   | "event.waitlist_auto_offer_changed"
+  /**
+   * One supplementary place added by «Trimite-i oferta» on a full event (§NNN): the capacity from and
+   * to, the Administrator (the actor), the event (the entity) and the registration offered the place
+   * (`registrationId`, an id, never a name) — written in the transaction that makes the offer, under
+   * the event lock. Shown on that registration's page among «Ce a făcut echipa» (`listAuditTrail`).
+   */
+  | "event.capacity_raised_for_offer"
+  /** The same supplementary place, added by «Dă-i un loc acum» on a full event (§637, §NNN): same metadata. */
+  | "event.capacity_raised_for_place_now"
   /**
    * «Arată public câți așteaptă» switched (§634): from and to, on every date a save changed it — the
    * editor's own date and each date of a series the scoped save carried it to.
@@ -588,11 +597,25 @@ export async function listPartnerShares<T extends Record<string, unknown>>(db: D
   });
 }
 
-/** Everything that happened to one entity, newest first, with the actor named where there is one. */
+/**
+ * Everything that happened to one entity, newest first, with the actor named where there is one —
+ * and, for a registration, the supplementary place «Trimite-i oferta» or «Dă-i un loc acum» added to
+ * the event for it (`event.capacity_raised_for_offer`, `event.capacity_raised_for_place_now`, §NNN): a
+ * row about the event that names the registration in its metadata, so the registration's page says who
+ * added the place and from how many to how many.
+ *
+ * Both halves name the indexed key (`audit_logs_entity_idx`, entity type and id): the registration's
+ * own rows, and its event's rows narrowed to the two actions and the registration in the metadata. A
+ * test on the metadata alone could use no index and would read the whole table on every page view, a
+ * cost on the database's month (§327); with the event's id the planner ORs two index scans, and another
+ * event's raises are never read.
+ */
 export async function listAuditTrail<T extends Record<string, unknown>>(
   db: Database<T>,
   entityType: "registration",
   entityId: string,
+  /** The registration's event: the entity of the raise rows that name it (§NNN). */
+  eventId: string,
 ): Promise<AuditEntry[]> {
   return db
     .select({
@@ -604,6 +627,16 @@ export async function listAuditTrail<T extends Record<string, unknown>>(
     })
     .from(auditLogs)
     .leftJoin(staffUsers, eq(staffUsers.id, auditLogs.actorStaffUserId))
-    .where(and(eq(auditLogs.entityType, entityType), eq(auditLogs.entityId, entityId)))
+    .where(
+      or(
+        and(eq(auditLogs.entityType, entityType), eq(auditLogs.entityId, entityId)),
+        and(
+          eq(auditLogs.entityType, "event"),
+          eq(auditLogs.entityId, eventId),
+          inArray(auditLogs.action, ["event.capacity_raised_for_offer", "event.capacity_raised_for_place_now"]),
+          sql`(${auditLogs.metadataJson} ->> 'registrationId') = ${entityId}`,
+        ),
+      ),
+    )
     .orderBy(desc(auditLogs.createdAt));
 }

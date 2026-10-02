@@ -53,6 +53,8 @@ import {
   offerPlaceToByStaff,
   promoteFromWaitlistByStaff,
   setOutsideCapacityByStaff,
+  type PlacedByStaff,
+  type StaffPlaceOptions,
   submitRegistration,
   undoCheckIn,
   unregister,
@@ -722,8 +724,9 @@ export async function confirmRegistrationByStaff<T extends Record<string, unknow
 /**
  * «Dă-i un loc acum» (§637): an Administrator vouches for the address of a registration still waiting
  * for it and gives the place now, ahead of the line — `service.ts#givePlaceNowByStaff` says how, and
- * writes the audit row in the same transaction. The Administrator's (`canManageRegistrations`, §289),
- * asserted here before anything is read, and again in the service.
+ * writes the audit row in the same transaction — with one supplementary place when none is free
+ * and the press confirmed it (`options.addPlaceTo`, §NNN). The Administrator's (`canManageRegistrations`, §289), asserted here before anything is read,
+ * and again in the service.
  */
 export async function givePlaceToUnconfirmedByStaff<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -731,14 +734,15 @@ export async function givePlaceToUnconfirmedByStaff<T extends Record<string, unk
   registrationId: string,
   now: Date,
   settings?: Deadlines,
-): Promise<Registration> {
+  options: StaffPlaceOptions = {},
+): Promise<PlacedByStaff> {
   if (!canManageRegistrations(actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not give a place to an unconfirmed registration`);
   }
   const current = await findRegistrationById(db, registrationId);
   if (!current) throw new DomainError("NOT_FOUND", "no such registration");
   const event = await eventForRegistration(db, current.eventId);
-  return givePlaceNowByStaff(db, event, registrationId, actor, now, settings);
+  return givePlaceNowByStaff(db, event, registrationId, actor, now, settings, options);
 }
 
 /** A place ahead of the queue, into a free one (BR-REQ-037-07); refused when full. */
@@ -767,25 +771,28 @@ export async function promoteRegistrationByStaff<T extends Record<string, unknow
 }
 
 /**
- * «Trimite-i oferta» (§615): a free place offered to the waiting-list registration the organizer
- * chose — the ordinary offer and its email, never a confirmation. The Administrator's
- * (`canManageRegistrations`, §289), not the desk's: it changes a registration the Organizer only
- * reads. Asserted here, before anything is read, and again in the service, which writes the audit
- * row in the offer's own transaction.
+ * «Trimite-i oferta» (§615, §NNN): a place offered to the waiting-list registration the organizer
+ * chose — the ordinary offer and its email, never a confirmation — at any moment before the start,
+ * with one supplementary place added to the event when none is free and the press confirmed it
+ * (`options.addPlaceTo`, §NNN). The Administrator's
+ * (`canManageRegistrations`, §289), not the desk's: it changes a registration and the capacity the
+ * Organizer only reads. Asserted here, before anything is read, and again in the service, which
+ * writes the audit rows in the offer's own transaction.
  */
 export async function offerPlaceByStaff<T extends Record<string, unknown>>(
   db: Database<T>,
   actor: Pick<StaffUser, "id" | "role">,
   registrationId: string,
   now: Date,
-): Promise<Registration> {
+  options: StaffPlaceOptions = {},
+): Promise<PlacedByStaff> {
   if (!canManageRegistrations(actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not send a waiting-list offer`);
   }
   const current = await findRegistrationById(db, registrationId);
   if (!current) throw new DomainError("NOT_FOUND", "no such registration");
   const event = await eventForRegistration(db, current.eventId);
-  return offerPlaceToByStaff(db, event, registrationId, actor, now);
+  return offerPlaceToByStaff(db, event, registrationId, actor, now, options);
 }
 
 /**

@@ -1217,10 +1217,10 @@ Core invariants:
 
 1. one row per event/participant;
 2. unique database constraint;
-3. no place consumed before email confirmation — except an Administrator vouching for the address with «Dă-i un loc acum» (`DECISIONS.md` §637), audited by name, into a counted free place, the declaration still the participant's to sign;
+3. no place consumed before email confirmation — except an Administrator vouching for the address with «Dă-i un loc acum» (`DECISIONS.md` §637), audited by name, into a counted free place or, on a full race, one supplementary place the press adds, confirmed and audited (`DECISIONS.md` §NNN), the declaration still the participant's to sign;
 4. declaration required before Confirmed;
 5. Confirmed plus holds consume capacity: every `PENDING_DECLARATION` hold, and every unexpired `WAITLIST_OFFERED` hold — a declaration hold past its deadline is kept, and keeps its place, until a place is wanted for somebody waiting, or the event starts or is `COMPLETED` (`DECISIONS.md` §160) — a `CANCELLED` event's holds are left standing, like the rest of its queue (§331); one waiter releases one hold, the oldest deadline first, never the event's whole stock of kept places — and a registration marked «În afara locurilor» (`registrations.outside_capacity`, §NNN) consumes none, in any state, so no hold of its is released for somebody waiting;
-6. Pending email and Waitlisted do not occupy capacity, but eligible Waitlisted entries have allocation priority over later registrations — the one exception is rule 3's «Dă-i un loc acum», an Administrator's audited press into a counted free place, which moves nobody in the line;
+6. Pending email and Waitlisted do not occupy capacity, but eligible Waitlisted entries have allocation priority over later registrations — the one exception is rule 3's «Dă-i un loc acum», an Administrator's audited press into a counted free place or the one supplementary place it adds (§NNN), which moves nobody in the line;
 7. no capacity-changing transaction may let a later registration bypass that queue;
 8. cancellation is idempotent;
 9. self-cancellation allowed before event start, with the participant's reason — one of three answers, and a short text for «Alt motiv» — at every door (`DECISIONS.md` §558);
@@ -1328,6 +1328,14 @@ Rules:
 - public read may subtract eligible waiting entries as a conservative safeguard while maintenance is catching up, but it never mutates state;
 - scheduled maintenance expires holds and allocates released places;
 - increasing capacity allocates the queue first;
+- the capacity changes in three places only: the event editor's save, and an Administrator's
+  press for one chosen person on a full event — «Trimite-i oferta» or «Dă-i un loc acum» — which,
+  when the dialog said so, its button named the added place and the form carried the capacity it
+  named (`addPlace`, exactly the locked capacity + 1), adds exactly one supplementary place to that
+  one event row under the event lock, in the transaction whose offer or place then occupies it,
+  audited with who and for whom (`DECISIONS.md` §NNN) — never the allocator on its own, and never a
+  press that did not confirm it: one made through the plain question on a race that filled since the
+  page was read is refused (`SUPPLEMENTARY_PLACE_UNCONFIRMED`) and writes nothing;
 - decreasing capacity below occupied places is rejected;
 - no cached free count is a source of truth;
 - no capacity or queue decision may depend on the maintenance job having run; every read
@@ -1343,7 +1351,7 @@ Rules:
 - existing eligible waiting entries always have priority over later direct registrations;
 - one active registration per runner per participant/event (§389: a family on one address, up to the club's limit per address; the runner is keyed by `name_key`, `foldName` of `registered_name`);
 - promotion creates `WAITLIST_OFFERED` and `hold_expires_at`;
-- offer deadline: the club's offer window ("Termene", §377; 24 h by default), capped by close/start;
+- offer deadline: the club's offer window ("Termene", §377; 24 h by default), capped by close/start — an Administrator's chosen offer («Trimite-i oferta») by the start alone (§NNN);
 - signing declaration confirms;
 - decline/cancel/expiry releases hold;
 - expiry leaves active queue; user may rejoin at end;
@@ -2661,10 +2669,24 @@ BR-REQ-037-05):
      `PENDING_EMAIL_CONFIRMATION` row, the Administrator's alone (`canManageRegistrations`):
      `givePlaceNowByStaff` writes the desk's vouching (`email_confirmed_by_staff_user_id`), spends
      the row's verification link, and gives the place ahead of the waiting list under the event
-     lock — only a counted free place, else §589's refusal; a row «În afara locurilor» needs none
-     (§NNN) — as `PENDING_DECLARATION` with the
+     lock — a counted free place, or on a full race one supplementary place added as «Trimite-i
+     oferta» adds it (`event.capacity_raised_for_place_now`, §NNN); a row «În afara locurilor» needs
+     none (§NNN) — as `PENDING_DECLARATION` with the
      ordinary declaration email. Audited (`registration.address_vouched_by_staff`) under the
      Administrator's id. The participant still signs their own declaration, online or on paper.
+   - **An offer to a chosen person** («Trimite-i oferta», `offerPlaceToByStaff`, `DECISIONS.md`
+     §615, §NNN). Administrator only (`canManageRegistrations`). The ordinary offer and its email
+     to the waiting-list entry the Administrator picks, at any moment before the start — after the
+     close too, its deadline then capped by the start alone. When no place is free it adds exactly
+     one supplementary place (`capacity + 1` on that one event row, never a series' other dates),
+     under the event lock, in the transaction that makes the offer, audited as
+     `event.capacity_raised_for_offer` with who and for whom; the offer occupies that place before
+     the queue is filled. The dialog says so before the press and its button names the added place
+     («Adaugă un loc și trimite oferta»), and the form posts the capacity it named; the server adds
+     the place only for that confirmation, so a raise is never silent — a press through the plain
+     question on a race that filled since the page was read is refused
+     (`SUPPLEMENTARY_PLACE_UNCONFIRMED`), nothing written. It confirms nothing: the runner signs from
+     the email. The desk's «Dă-i un loc» still needs a free place (§589).
    - **A number by hand** (BR-REQ-038-01 criterion 7) and **check-in** (`checked_in_at`, by
      whom or by the participant from their own link). The code the QR encodes is
      `registrations.checkin_code`: an identifier, stored in clear, that confers nothing — the
