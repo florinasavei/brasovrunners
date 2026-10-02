@@ -41,7 +41,9 @@ import { selectDeclarationCandidates, selectReminderCandidates } from "./event-m
  * nothing for an event that sends none), the participation confirmation when the window opens
  * (§104), the last call to sign at the reminder's lead (§160), the offer to the next in line when
  * a waiting-list offer or a declaration hold lapses with somebody waiting, before registration
- * closes (§160, AGENTS.md §10.5, §420), and "registration is open" to the addresses left on the
+ * closes (§160, AGENTS.md §10.5, §420), the «Locul tău … a expirat» to the person whose declaration
+ * hold that lapse releases, before the start (§638 — never for a lapsed offer, §331), and
+ * "registration is open" to the addresses left on the
  * event's page (§146). No race number is sent on its own since §548: it rides on the confirmation.
  *
  * **And what already waits for the subscribers** (§445): a newsletter or a new-event alert that
@@ -67,6 +69,8 @@ export type AutomaticSend =
   | "lastCall"
   | "participation"
   | "nextInLine"
+  // The person whose declaration hold a lapse releases to somebody waiting (§638).
+  | "holdLapsed"
   | "registrationOpened"
   // The subscribers' sends, already queued (§445).
   | "newsletter"
@@ -106,6 +110,7 @@ const TYPE_OF: Record<AutomaticSend, EmailMessageType> = {
   lastCall: "COMPLETE_DECLARATION",
   participation: "COMPLETE_DECLARATION",
   nextInLine: "WAITLIST_SPOT_OFFER",
+  holdLapsed: "DECLARATION_HOLD_EXPIRED",
   registrationOpened: "REGISTRATION_OPENED",
   newsletter: "NEWSLETTER",
   newEventAlert: "NEW_EVENT_ALERT",
@@ -113,6 +118,8 @@ const TYPE_OF: Record<AutomaticSend, EmailMessageType> = {
 
 /** The order of sends due at one instant: the order a run of the job queues them in — the subscribers' last (`domain/bulk.ts`). */
 const RUN_ORDER: AutomaticSend[] = [
+  // The release queues its message before the place is offered on (`expireStaleHolds`, then `fillAvailableSpots`).
+  "holdLapsed",
   "nextInLine",
   "reminder",
   "lastCall",
@@ -160,6 +167,7 @@ export async function forecastAutomaticEmails<T extends Record<string, unknown>>
       holdExpiresAt: registrations.holdExpiresAt,
       registrationId: registrations.id,
       kind: registrations.kind,
+      status: registrations.status,
     })
     .from(registrations)
     .innerJoin(events, eq(events.id, registrations.eventId))
@@ -210,7 +218,13 @@ export async function forecastAutomaticEmails<T extends Record<string, unknown>>
       const consumed = nextInLineReleases(lapsing).reduce((sum, release) => sum + release.count, 0);
       const offers = nextInLineOffers(lapsing);
       for (const row of rows.slice(0, consumed)) {
-        if (row.holdExpiresAt) consumedByNextInLine.set(row.registrationId, notBeforeNow(row.holdExpiresAt));
+        if (!row.holdExpiresAt) continue;
+        const releasedAt = notBeforeNow(row.holdExpiresAt);
+        consumedByNextInLine.set(row.registrationId, releasedAt);
+        // The person who held it is told (§638): a declaration hold only — an offer's lapse is silent (§331).
+        if (row.status === "PENDING_DECLARATION") {
+          nextInLinePending.push({ at: releasedAt, eventId, send: "holdLapsed", registrationId: row.registrationId, kind: row.kind });
+        }
       }
       let next = 0;
       for (const offer of offers) {

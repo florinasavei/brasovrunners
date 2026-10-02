@@ -87,6 +87,15 @@ export const emailMessageType = pgEnum("email_message_type", [
   // A club member added on Echipa (§524): who added them and where to sign in for the members'
   // zone — never "the team that runs the site", which is the staff invitation's sentence. No token.
   "MEMBER_INVITATION",
+  // "Locul tău la {event} a expirat" (§638): a declaration hold released to somebody who wanted the
+  // place (§160) — the person who held it unsigned is told, once per lapsed hold, whatever path
+  // released it. Not an offer's lapse: that stays silent (§331, `WAITLIST_OFFER_EXPIRED`). No token.
+  "DECLARATION_HOLD_EXPIRED",
+  // "The legal templates changed: regenerate and approve" (§639): queued by the maintenance job, once
+  // per change of the templates, to every active Administrator and Superadministrator with an
+  // address. To a colleague, like the invitation: no participant, no token; the action is
+  // `/admin/legal/new`, behind the sign-in.
+  "LEGAL_TEMPLATES_CHANGED",
 ]);
 
 export type EmailMessageType = (typeof emailMessageType.enumValues)[number];

@@ -8,6 +8,10 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.61-2026-10-02
+
+- **The person who loses a held place is told by email** — when a declaration left unsigned past its deadline loses its place to somebody who wanted it, by any path, «Locul tău la … a expirat» says the deadline that passed, where the place went, and whether they can join the waiting list, register again, or only try the desk on the day; once for each place lost — a restarted registration that lapses again is told again — never after the start or for a cancelled event, never for a lapsed offer; `/admin/emails` lists it and forecasts it. §638.
+- **Administrators are emailed when a release moves a legal template** — «Șabloanele textelor legale s-au schimbat: regenerează și aprobă», once per change, to every Administrator and Superadministrator in their own language: which texts show «Șablon nou», the clicks to regenerate and approve, which of them a lawyer should read first, and a button to «Versiune nouă». Sent by the maintenance job's first run after such a release; nothing is approved by the platform. §639.
 ## BR-V2.60-2026-10-02
 
 - **«Dă-i un loc acum» for someone whose address was never confirmed** — an Administrator vouches for the address on the registration's page and gives a counted free place at once, ahead of the waiting list; the declaration email leaves straight away and the person only signs (online or on paper at the desk). A full race refuses it until a place is free: raise the capacity with the automatic offers on «Nu», or the added place goes to the waiting list. §637.

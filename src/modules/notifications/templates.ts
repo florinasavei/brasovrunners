@@ -23,6 +23,9 @@ import { CLUB_LOCALITY } from "@/modules/events/domain/place";
 import { type EventForecast, forecastPlaceName } from "@/modules/weather/domain/forecast";
 import { weatherSpanWords } from "@/modules/weather/words";
 import { CANNOT_COME_GLYPH_PATH, CANNOT_COME_MESSAGES } from "./domain/cannot-come";
+import type { HoldLapsedNext } from "./domain/hold-lapsed";
+import { legalTemplateNames, legalTemplatesWords } from "./legal-templates-words";
+import { LEGAL_DOCUMENT_KEYS } from "@/modules/legal-documents/domain/keys";
 
 /**
  * The twelve message types of AGENTS.md §16.3 (BR-REQ-080-01), in Romanian and English.
@@ -942,6 +945,12 @@ export type TemplateData = {
   staffEmail?: string;
   signInUrl?: string;
   /**
+   * «Șabloanele textelor legale s-au schimbat» (§639): the keys of the texts whose template is newer
+   * than the text in force, as the maintenance job found them. Each half names them in its own
+   * language, from the catalogue `/admin/legal` lists them by (`legal-templates-words.ts`).
+   */
+  legalTemplateKeys?: readonly string[];
+  /**
    * "Detalii actualizate" (§331): which facts the save changed — the place, the start, the
    * programme, the event on again. The values are the event's as it stands at send time, in the
    * fields above; this says which of them to name as new.
@@ -1083,6 +1092,14 @@ export type TemplateData = {
    */
   cancelledFromWaitlist?: boolean;
   cancelledOthers?: ReadonlyArray<{ name: string; state: FamilyEarlierState }>;
+  /**
+   * A released declaration hold (§638), on `DECLARATION_HOLD_EXPIRED` only: whether somebody on the
+   * waiting list wanted the place (a fact of the release, from the row's payload) — else a newcomer
+   * the line had no room for took it — and what the person can do now, read at the send
+   * (`domain/hold-lapsed.ts`). The deadline that passed is `holdExpiresAtFormatted`.
+   */
+  holdLapsedToWaitlist?: boolean;
+  holdLapsedNext?: HoldLapsedNext;
   /**
    * Why the participant cancelled (§558), from the row: the answer, and the words of «Alt motiv».
    * Quoted on the club's copy of the cancellation only — the person knows why.
@@ -1285,6 +1302,37 @@ function anotherPersonEmphasis(d: TemplateData, b: readonly string[]): Emphasis 
 function newsletterConfirmEmphasis(d: TemplateData, b: readonly string[]): Emphasis {
   if (d.newsletterAlready && !d.newsletterManageRequest) return { highlight: [b[0]], actionAfter: b[1] };
   return { highlight: [b[1]], actionAfter: b[1] };
+}
+
+/**
+ * The texts whose template moved (§639), on the message's bold line: «Șablon nou: GDPR · Termeni de
+ * concurs», the chip's own words and the names `/admin/legal` lists, in this half's language. None
+ * when the payload names no text the catalogue knows.
+ */
+function legalTemplatesFacts(locale: EmailLocale, d: TemplateData): TemplateContent["facts"] {
+  const names = legalTemplateNames(locale, d.legalTemplateKeys ?? []);
+  if (names.length === 0) return undefined;
+  return { line: `${legalTemplatesWords(locale).templateNew}: ${names.join(" · ")}`, links: [] };
+}
+
+/**
+ * Whom a lawyer should read first (§639), from the texts that moved and nothing else: the declarations
+ * when one of them is among them, the terms when they are, and otherwise the changed texts — so a later
+ * change of the privacy notice alone never asks for the declarations or the terms. A key the catalogue
+ * does not know is ignored, as on the bold line.
+ */
+export function lawyerReads(locale: EmailLocale, keys: readonly string[]): string {
+  const moved = LEGAL_DOCUMENT_KEYS.filter((key) => keys.includes(key));
+  const declarations = moved.some((key) => key !== "TERMS" && key !== "PRIVACY_NOTICE");
+  const terms = moved.includes("TERMS");
+  const words = locale === "ro"
+    ? { declarations: "declarațiile", terms: "termenii", and: " și ", changed: "textele schimbate", first: "mai ales", lead: "Înainte de aprobare, un jurist ar trebui să citească" }
+    : { declarations: "the declarations", terms: "the terms", and: " and ", changed: "the changed texts", first: "above all", lead: "Before approving, a lawyer should read" };
+  const named = [declarations ? words.declarations : null, terms ? words.terms : null].filter((w): w is string => w !== null).join(words.and);
+  const nothingElse = moved.every((key) => key !== "PRIVACY_NOTICE");
+  if (!named) return `${words.lead} ${words.changed}.`;
+  if (nothingElse) return `${words.lead} ${named}.`;
+  return `${words.lead} ${words.changed}, ${words.first} ${named}.`;
 }
 
 const T = {
@@ -1536,6 +1584,24 @@ const T = {
       action: "Intră în zona membrilor",
       links: (d: TemplateData) => (d.privacyUrl ? [{ label: "Nota de confidențialitate", url: d.privacyUrl }] : []),
     },
+    // To an Administrator or a Superadministrator (§639): a release moved a legal template. The texts are
+    // named on the bold line, the platform's (a club text for this message keeps them); the words ask a
+    // person to regenerate and approve — the platform approves nothing (§29, AGENTS.md §10.8).
+    legalTemplatesChanged: {
+      subject: "Șabloanele textelor legale s-au schimbat: regenerează și aprobă",
+      facts: (d: TemplateData) => legalTemplatesFacts("ro", d),
+      body: (d: TemplateData) => {
+        const w = legalTemplatesWords("ro");
+        return [
+          `Șabloanele textelor de mai sus nu mai spun ce spun textele în vigoare: pe «${w.documents}» au «${w.templateNew}». Textele în vigoare rămân cum sunt, cu cuvintele lor, până când clubul aprobă versiuni noi: platforma nu aprobă nimic în locul clubului.`,
+          `Ce ai de făcut: «${w.documents}» → «${w.newVersion}» → «${w.regenerateAll}» (butonul de mai jos te duce acolo). Se face câte o ciornă pentru fiecare text; deschide-le pe rând, citește-le și completează ce a rămas de forma <…>, în română și în engleză, apoi apasă «${w.approveDrafts}» pe «${w.documents}».`,
+          `Un text care are deja o ciornă în așteptare arată «${w.draftExists}»: aprob-o sau șterge-o mai întâi, apoi regenerează-l.`,
+          lawyerReads("ro", d.legalTemplateKeys ?? []),
+          `«${w.tasks}» arată aceleași rânduri până când textele sunt aprobate. Mesajul acesta vine o singură dată pentru fiecare schimbare a șabloanelor, fiecărui Administrator și Superadministrator.`,
+        ];
+      },
+      action: "Deschide documentele legale",
+    },
     registrationOpened: {
       // To an address, not a participant (§146): the greeting names nobody.
       subject: (d: TemplateData) => `Înscrierile la ${d.eventTitle ?? "eveniment"} s-au deschis`,
@@ -1564,6 +1630,21 @@ const T = {
         `Înscrierea${d.participantName ? ` pentru ${d.participantName}` : ""} la ${d.eventTitle ?? "eveniment"}${d.eventStartsAtFormatted ? `, ${d.eventStartsAtFormatted},` : ""} **a fost anulată**.`,
       ],
       // The fact first, and what it released under it on the same band (`cancelledReleased`, §580).
+      emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
+    },
+    /*
+      A declaration hold released to somebody who wanted the place (§638; the owner, 2026-10-02: «Da, fă
+      emailul pentru cel care pierde locul»): the fact, in the second person. When it lapsed and where the
+      place went, and what the person can do now, are the platform's lines after the body
+      (`holdLapsed`, `holdLapsedNext`), facts of this send whoever wrote the words.
+    */
+    declarationHoldExpired: {
+      subject: (d: TemplateData) => `Locul tău la ${d.eventTitle ?? "eveniment"} a expirat`,
+      body: (d: TemplateData) => [
+        `Locul tău la ${d.eventTitle ?? "eveniment"}${d.eventStartsAtFormatted ? `, ${d.eventStartsAtFormatted},` : ""} **a expirat**: declarația nu a fost semnată la timp.`,
+      ],
+      // The button exists only when the form would take the person (`render.ts`): never on «desk».
+      action: (d: TemplateData) => (d.holdLapsedNext === "register" ? "Înscrie-te din nou" : "Intră pe lista de așteptare"),
       emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
     },
     waitlistOfferExpired: {
@@ -1907,6 +1988,20 @@ const T = {
     // A cancellation (§547): what the cancelled person held, and who else the address still holds.
     cancelledReleased: (name: string, fromWaitlist: boolean) =>
       fromWaitlist ? `${name || "Persoana"} nu mai este pe lista de așteptare.` : "Locul a fost eliberat.",
+    /**
+     * A released declaration hold (§638): the deadline that passed (§377), and where the place went. On
+     * the band with the body's first line; no bold inside, so the editor's «Înlocuiește cu câmpurile»
+     * recognises it as the platform's line (`framingSentencesOf`).
+     */
+    holdLapsed: (deadline: string | undefined, toWaitlist: boolean) =>
+      `Termenul pentru semnare a fost ${deadline ?? "depășit"}. ${toWaitlist ? "Altcineva aștepta un loc, așa că locul tău a trecut la lista de așteptare." : "Altcineva a cerut un loc, așa că locul tău a devenit liber."}`,
+    /** …and what the person can do now, by the event as it stands at the send (`holdLapsedNext`). */
+    holdLapsedNext: (next: HoldLapsedNext) =>
+      next === "register"
+        ? "Dacă mai vrei să vii, te poți înscrie din nou: mai sunt locuri libere."
+        : next === "waitlist"
+          ? "Dacă mai vrei să vii, poți intra pe lista de așteptare."
+          : "Online nu se mai poate face nimic. Dacă în ziua evenimentului rămân locuri libere, le dă masa de înscriere.",
     /** A verification link on an address with others at the event (§588): the one link confirms everybody waiting. */
     verifyCoversFamily: (others: ReadonlyArray<{ name: string; state: FamilyEarlierState }>) =>
       `Pe această adresă sunt înscriși și: ${others.map((other) => `${other.name} (${EARLIER_STATE_WORDS.ro[other.state]})`).join(", ")}. Butonul de mai sus confirmă adresa pentru toți cei care o așteaptă.`,
@@ -2127,6 +2222,21 @@ const T = {
       action: "Open the members' area",
       links: (d: TemplateData) => (d.privacyUrl ? [{ label: "Privacy notice", url: d.privacyUrl }] : []),
     },
+    legalTemplatesChanged: {
+      subject: "The legal templates changed: regenerate and approve",
+      facts: (d: TemplateData) => legalTemplatesFacts("en", d),
+      body: (d: TemplateData) => {
+        const w = legalTemplatesWords("en");
+        return [
+          `The templates of the texts above no longer say what the texts in force say: on «${w.documents}» they show «${w.templateNew}». The texts in force keep their words until the club approves new versions: the platform approves nothing in the club's place.`,
+          `What to do: «${w.documents}» → «${w.newVersion}» → «${w.regenerateAll}» (the button below takes you there). One draft is made for each text; open each one, read it and fill in what is left written <…>, in Romanian and in English, then press «${w.approveDrafts}» on «${w.documents}».`,
+          `A text that already has a draft waiting shows «${w.draftExists}»: approve it or delete it first, then regenerate it.`,
+          lawyerReads("en", d.legalTemplateKeys ?? []),
+          `«${w.tasks}» shows the same rows until the texts are approved. This message comes once for each change of the templates, to every Administrator and Superadministrator.`,
+        ];
+      },
+      action: "Open the legal documents",
+    },
     registrationOpened: {
       subject: (d: TemplateData) => `Registration for ${d.eventTitle ?? "the event"} is open`,
       greeting: () => "Hello,",
@@ -2176,6 +2286,14 @@ const T = {
       body: (d: TemplateData) => [
         `The registration${d.participantName ? ` for ${d.participantName}` : ""} at ${d.eventTitle ?? "the event"}${d.eventStartsAtFormatted ? `, ${d.eventStartsAtFormatted},` : ""} **has been cancelled**.`,
       ],
+      emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
+    },
+    declarationHoldExpired: {
+      subject: (d: TemplateData) => `Your place at ${d.eventTitle ?? "the event"} has expired`,
+      body: (d: TemplateData) => [
+        `Your place at ${d.eventTitle ?? "the event"}${d.eventStartsAtFormatted ? `, ${d.eventStartsAtFormatted},` : ""} **has expired**: the declaration was not signed in time.`,
+      ],
+      action: (d: TemplateData) => (d.holdLapsedNext === "register" ? "Register again" : "Join the waiting list"),
       emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
     },
     waitlistOfferExpired: {
@@ -2444,6 +2562,14 @@ const T = {
     waitlistPosition: (standing: WaitlistStandingLine) => waitlistPositionLine("en", standing),
     cancelledReleased: (name: string, fromWaitlist: boolean) =>
       fromWaitlist ? `${name || "The person"} is no longer on the waiting list.` : "The place has been released.",
+    holdLapsed: (deadline: string | undefined, toWaitlist: boolean) =>
+      `The deadline to sign was ${deadline ?? "missed"}. ${toWaitlist ? "Somebody was waiting for a place, so yours went to the waiting list." : "Somebody else asked for a place, so yours has been released."}`,
+    holdLapsedNext: (next: HoldLapsedNext) =>
+      next === "register"
+        ? "If you still want to come, you can register again: there are places free."
+        : next === "waitlist"
+          ? "If you still want to come, you can join the waiting list."
+          : "Nothing more can be done online. If places are left on the day of the event, the registration desk gives them out.",
     verifyCoversFamily: (others: ReadonlyArray<{ name: string; state: FamilyEarlierState }>) =>
       `Also registered on this address: ${others.map((other) => `${other.name} (${EARLIER_STATE_WORDS.en[other.state]})`).join(", ")}. The button above confirms the address for everybody waiting for it.`,
     cancelledOthers: (others: ReadonlyArray<{ name: string; state: FamilyEarlierState }>) =>
@@ -2488,6 +2614,7 @@ const KEY_BY_MESSAGE_TYPE: Record<EmailMessageType, keyof typeof T.ro> = {
   REGISTRATION_CONFIRMED: "registrationConfirmed",
   REGISTRATION_CANCELLED: "registrationCancelled",
   WAITLIST_OFFER_EXPIRED: "waitlistOfferExpired",
+  DECLARATION_HOLD_EXPIRED: "declarationHoldExpired",
   REGISTRATION_MANAGE_LINK: "registrationManageLink",
   PROFILE_MANAGE_LINK: "profileManageLink",
   REGISTRATION_STATE_NOTICE: "registrationStateNotice",
@@ -2509,6 +2636,7 @@ const KEY_BY_MESSAGE_TYPE: Record<EmailMessageType, keyof typeof T.ro> = {
   NEWSLETTER: "newsletter",
   NEW_EVENT_ALERT: "newEventAlert",
   MEMBER_INVITATION: "memberInvitation",
+  LEGAL_TEMPLATES_CHANGED: "legalTemplatesChanged",
 };
 
 /** The newsletter's three messages (§445): to an address, never about a registration. */
@@ -2886,7 +3014,9 @@ export function buildTemplateContent(
                   ...(data.refusedGround ? [copy.refusedByClub(data.refusedGround)] : []),
                   copy.cancelledReleased(data.participantName, data.cancelledFromWaitlist === true),
                 ]
-              : own.highlight,
+              : messageType === "DECLARATION_HOLD_EXPIRED"
+                ? [...(own.highlight ?? []), copy.holdLapsed(data.holdExpiresAtFormatted, data.holdLapsedToWaitlist === true)]
+                : own.highlight,
         quiet: [...(own.quiet ?? []), ...(messageType === "GROUP_RUN_DECLARATION_SIGNED" ? [copy.groupRunNotYou(data.contactUrl)] : [])],
       };
 
@@ -3032,6 +3162,12 @@ export function buildTemplateContent(
       ...(messageType === "REGISTRATION_CANCELLED" && data.cancelledOthers && data.cancelledOthers.length > 0
         ? [copy.cancelledOthers(data.cancelledOthers)]
         : []),
+      /*
+        A released declaration hold's facts (§638), after the body whoever wrote it: the deadline that
+        passed and where the place went, then what the person can do now — one sentence, read at the send.
+      */
+      ...(messageType === "DECLARATION_HOLD_EXPIRED" ? [copy.holdLapsed(data.holdExpiresAtFormatted, data.holdLapsedToWaitlist === true)] : []),
+      ...(messageType === "DECLARATION_HOLD_EXPIRED" && data.holdLapsedNext ? [copy.holdLapsedNext(data.holdLapsedNext)] : []),
       // The participant's reason (§558), on the club's copy only: the club asked for it, the person knows it.
       ...(messageType === "REGISTRATION_CANCELLED" && clubCopy && data.cancelReasonKind
         ? [copy.cancelReason(data.cancelReasonKind, data.cancelReasonText)]
@@ -3135,7 +3271,9 @@ export function buildTemplateContent(
         messageType === "GROUP_RUN_DECLARATION_ARCHIVE" ||
         messageType === "STAFF_INVITATION" ||
         // …nor a member's invitation (§524): no event, no registration, nothing of a participant's to link.
-        messageType === "MEMBER_INVITATION"
+        messageType === "MEMBER_INVITATION" ||
+        // …nor the Administrators' notice of a moved template (§639): its one link is its button.
+        messageType === "LEGAL_TEMPLATES_CHANGED"
       ) {
         return own.length > 0 ? own : undefined;
       }
@@ -3237,6 +3375,8 @@ const NOT_A_PARTICIPANT_MESSAGE: ReadonlySet<EmailMessageType> = new Set([
   "STAFF_INVITATION",
   // A member's invitation (§524) says what the account keeps in its own body, as the colleague's does.
   "MEMBER_INVITATION",
+  // To the club's Administrators about its legal texts (§639): about nobody's data.
+  "LEGAL_TEMPLATES_CHANGED",
 ]);
 
 /**

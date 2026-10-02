@@ -12,7 +12,7 @@ import {
   type RegistrationStatus,
   registrations,
 } from "@/db/schema/registrations";
-import type { Database } from "@/db/types";
+import type { Database, Transaction } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
 import { STARTS_DEADLINE } from "@/modules/notifications/domain/deadline-rebase";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
@@ -22,6 +22,7 @@ import { computeOccupied, wantedLapsedHoldReleases } from "./domain/capacity";
 import { registrationNameKey } from "./domain/name-key";
 import { PENDING_LIST_STATUSES, WAITLISTED_LIST_STATUSES } from "./domain/public-list-states";
 import { allowedFromStatuses } from "./domain/state-machine";
+import { queueHoldLapsedEmails } from "./hold-lapsed-email";
 import { resolveDisplayName, type RegistrationEntryDetails } from "./names";
 
 /**
@@ -1173,9 +1174,14 @@ async function lapsedDeclarationHoldsToRelease<T extends Record<string, unknown>
  *
  * `wanting` counts a newcomer the waiting list has no room for as one more person wanting a
  * place (§348) — `allocateOrWaitlist` alone passes it; every other caller wants the default.
+ *
+ * A declaration hold released here queues its one «Locul tău … a expirat» (§638,
+ * `hold-lapsed-email.ts`) in the same transaction — which is why this takes a `Transaction`: every
+ * path that releases one comes through here, so every one of them tells the person. A lapsed offer
+ * stays silent (§331).
  */
 export async function expireStaleHolds<T extends Record<string, unknown>>(
-  db: Database<T>,
+  db: Transaction<T>,
   event: EventForExpiry,
   now: Date,
   { wanting = 0 }: { wanting?: number } = {},
@@ -1222,10 +1228,32 @@ export async function expireStaleHolds<T extends Record<string, unknown>>(
 
   const releasing = await lapsedDeclarationHoldsToRelease(db, event, now, wanting);
   if (releasing.length > 0) {
-    await db
+    const released = await db
       .update(registrations)
       .set({ status: "EXPIRED", expiredAt: now, expiryReason: "DECLARATION_HOLD_LAPSED", updatedAt: now })
-      .where(and(eq(registrations.eventId, event.id), inArray(registrations.id, releasing)));
+      .where(and(eq(registrations.eventId, event.id), inArray(registrations.id, releasing)))
+      .returning({
+        id: registrations.id,
+        participantId: registrations.participantId,
+        locale: registrations.locale,
+        holdExpiresAt: registrations.holdExpiresAt,
+      });
+    /*
+      The person who held the place is told (§638), in this transaction, once per lapsed hold — but
+      not when the race has started or the event is no longer scheduled (`over`): every hold goes
+      then, nobody wanted the place, and there is nothing left to do about it. A cancelled event is
+      quiet (§331), and a hold that lapses with the start is the end of the event's registration,
+      not a place taken by somebody else.
+    */
+    if (!over) {
+      await queueHoldLapsedEmails(db, {
+        eventId: event.id,
+        released,
+        // Somebody in the line wanted it, rather than a newcomer the line had no room for (§348).
+        toWaitlist: (await countEligibleWaitlisted(db, event.id)) > 0,
+        now,
+      });
+    }
   }
   // A bulk sweep, beside `transitionRegistration` rather than through it, so it tells the public
   // cache itself (§333): the places these rows held are counted as free from now on.

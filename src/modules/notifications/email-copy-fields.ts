@@ -108,6 +108,8 @@ export function emailSampleData(locale: EmailLocale): TemplateData {
     eventScheduleUrl: `${base}/${locale}/EXAMPLE-event#schedule`,
     // "Linkuri și fișiere" (§332): the sample event has some, so the preview shows the line.
     eventLinksUrl: `${base}/${locale}/EXAMPLE-event#links`,
+    // «Șabloanele textelor legale s-au schimbat» (§639): two texts whose template moved, for its preview.
+    legalTemplateKeys: ["PRIVACY_NOTICE", "TERMS"],
     // The facts block (§392), each half in its own language, from the sample event — never a fact typed here.
     eventFacts: emailSampleEventFacts(locale),
     eventFactsOther: emailSampleEventFacts(OTHER[locale]),
@@ -119,6 +121,9 @@ export function emailSampleData(locale: EmailLocale): TemplateData {
     // The public list's switch on the confirmation (§143): the sample runner is on the list.
     listConsentUrl: `${base}/${locale}/EXAMPLE-list`,
     listed: true,
+    // A held place that lapsed (§638): the sample runner's went to the waiting list, which still takes people.
+    holdLapsedToWaitlist: true,
+    holdLapsedNext: "waitlist",
     // The staff invitation (§141): a made-up colleague, added by a made-up administrator.
     staffRole: sample.staffRole,
     inviterName: sample.inviterName,
@@ -319,13 +324,22 @@ const NO_PERSON: ReadonlySet<EmailMessageType> = new Set([
  * alert, the newsletter's third, is about its event.
  */
 // A member's invitation (§524) is about the club's members' zone, like the colleague's about the team.
-const NO_EVENT: ReadonlySet<EmailMessageType> = new Set(["PROFILE_MANAGE_LINK", "STAFF_INVITATION", "MEMBER_INVITATION", "NEWSLETTER_CONFIRM", "NEWSLETTER"]);
+// The Administrators' notice of a moved legal template (§639) is about the club's texts, no event.
+const NO_EVENT: ReadonlySet<EmailMessageType> = new Set([
+  "PROFILE_MANAGE_LINK",
+  "STAFF_INVITATION",
+  "MEMBER_INVITATION",
+  "NEWSLETTER_CONFIRM",
+  "NEWSLETTER",
+  "LEGAL_TEMPLATES_CHANGED",
+]);
 /** Messages about no one registration: the two above, and "registration is open". */
 // A group run's self-declaration (§393) is about a signature, never a registration: no status to state.
 const NO_REGISTRATION: ReadonlySet<EmailMessageType> = new Set([
   "PROFILE_MANAGE_LINK",
   "STAFF_INVITATION",
   "MEMBER_INVITATION",
+  "LEGAL_TEMPLATES_CHANGED",
   "REGISTRATION_OPENED",
   "GROUP_RUN_DECLARATION_SIGNED",
   "GROUP_RUN_DECLARATION_ARCHIVE",
@@ -339,7 +353,8 @@ const ONLY_IN: Partial<Record<EmailCopyPlaceholder, readonly EmailMessageType[]>
   bibNumber: ["REGISTRATION_CONFIRMED", "EVENT_REMINDER", "BIB_ASSIGNED", "CLUB_CONFIRMATION_NOTICE"],
   checkinCode: ["REGISTRATION_CONFIRMED", "EVENT_REMINDER", "BIB_ASSIGNED"],
   // The offer's own deadline on the freed place too (§419): the same column, the offer's hold.
-  holdExpiresAtFormatted: ["COMPLETE_DECLARATION", "WAITLIST_SPOT_OFFER"],
+  // …and the deadline that passed on a held place that lapsed (§638).
+  holdExpiresAtFormatted: ["COMPLETE_DECLARATION", "WAITLIST_SPOT_OFFER", "DECLARATION_HOLD_EXPIRED"],
   signedAtFormatted: ["REGISTRATION_CONFIRMED", "DECLARATION_SIGNED", "DECLARATION_ARCHIVE", "GROUP_RUN_DECLARATION_SIGNED", "GROUP_RUN_DECLARATION_ARCHIVE"],
   staffRole: ["STAFF_INVITATION"],
   inviterName: ["STAFF_INVITATION", "MEMBER_INVITATION"],
@@ -359,7 +374,8 @@ const ONLY_IN: Partial<Record<EmailCopyPlaceholder, readonly EmailMessageType[]>
  * - the number: the confirmation, the reminder, the number given by hand, the club's notice (§245);
  * - the desk code: the confirmation, the reminder and the number given by hand — never on a club
  *   copy (§320);
- * - the hold's deadline: the declaration request (§104) and the freed place's offer (§419);
+ * - the hold's deadline: the declaration request (§104), the freed place's offer (§419) and the held
+ *   place that lapsed (§638), which names the deadline that passed;
  * - the time of signing: the confirmation, the signed declaration and its archive copy (§95);
  * - the role and the inviter: the staff invitation (§141).
  *
