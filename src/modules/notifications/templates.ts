@@ -2571,14 +2571,14 @@ function waitlistPositionLine(locale: EmailLocale, standing: WaitlistStandingLin
   const ro = locale === "ro";
   /*
     The count kept private (§NNN): what the registration's page says at this moment, in the email's
-    register — the place alone with offers in order (the person's own; the order is mechanical), else
-    that they were on the list and the club chooses. Never the length, nor «singura persoană», which says one.
+    register — that they were on the list, and the setting's sentence. No position in either reading:
+    the person who has just joined is last, so their place is the line's length. Never «singura persoană» either.
   */
   if (standing.countPublic === false) {
     if (standing.autoOffer) {
       return ro
-        ? `Când am trimis acest email, erai pe locul ${standing.position} pe lista de așteptare.`
-        : `When we sent this email, you were number ${standing.position} on the waiting list.`;
+        ? "Când am trimis acest email, erai pe lista de așteptare; locurile eliberate se oferă în ordine."
+        : "When we sent this email, you were on the waiting list; freed places are offered in order.";
     }
     return ro
       ? "Când am trimis acest email, erai pe lista de așteptare; clubul alege cui oferă un loc eliberat."

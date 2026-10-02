@@ -1369,7 +1369,7 @@
       "waitlistPublicHelp": "The public list also shows those on the waiting list who ticked “I want to appear”, in the list's order, with no position — only while the privacy notice in force describes the stages.",
       "waitlistPublicHelpMore": "It applies only with the participant list published, above. Unticked, nobody on the waiting list appears, not even as a count.",
       "waitlistCountPublic": "Show publicly how many are waiting",
-      "waitlistCountPublicHelp": "Ticked: the card, the page and each person on the list learn how many are waiting. Unticked: the pages say only that there is a waiting list and how to join it; the club sees the number everywhere.",
+      "waitlistCountPublicHelp": "Ticked: the card, the page and each person on the list learn how many are waiting. Unticked: the pages say only that there is a waiting list and how to join it; the club sees it in the backoffice.",
       "externalProvider": "External organiser",
       "externalRegistrationUrl": "External registration link",
       "externalHelp": "Both only for an event registered elsewhere. The link must start with https://.",
@@ -6934,7 +6934,6 @@
         "other": "You are on the waiting list, with {others} others."
       },
       "alone": "You are the only person on the waiting list.",
-      "placeOnly": "You are number {position} on the waiting list.",
       "onList": "You are on the waiting list.",
       "orderAuto": "Freed places are offered in order.",
       "orderClub": "The club chooses whom to offer a freed place."

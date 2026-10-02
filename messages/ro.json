@@ -1369,7 +1369,7 @@
       "waitlistPublicHelp": "Pe lista publică apar și cei de pe lista de așteptare care au bifat „Vreau să apar”, în ordinea listei, fără poziție — doar cât timp nota de confidențialitate în vigoare descrie stadiile.",
       "waitlistPublicHelpMore": "Are efect doar cu lista participanților publicată, deasupra. Debifată, nimeni de pe lista de așteptare nu apare, nici numărat.",
       "waitlistCountPublic": "Arată public câți așteaptă",
-      "waitlistCountPublicHelp": "Bifat: cardul, pagina și fiecare persoană de pe listă află câți așteaptă. Debifat: paginile spun doar că există o listă de așteptare și cum intri pe ea; clubul vede numărul oriunde.",
+      "waitlistCountPublicHelp": "Bifat: cardul, pagina și fiecare persoană de pe listă află câți așteaptă. Debifat: paginile spun doar că există o listă de așteptare și cum intri pe ea; clubul vede numărul în administrare.",
       "externalProvider": "Organizator extern",
       "externalRegistrationUrl": "Link de înscriere extern",
       "externalHelp": "Amândouă doar pentru un eveniment cu înscriere în altă parte. Linkul trebuie să înceapă cu https://.",
@@ -6934,7 +6934,6 @@
         "other": "Ești pe lista de așteptare, împreună cu alte {others} de persoane."
       },
       "alone": "Ești singura persoană pe lista de așteptare.",
-      "placeOnly": "Ești pe locul {position} pe lista de așteptare.",
       "onList": "Ești pe lista de așteptare.",
       "orderAuto": "Locurile eliberate se oferă în ordine.",
       "orderClub": "Clubul alege cui oferă un loc eliberat."

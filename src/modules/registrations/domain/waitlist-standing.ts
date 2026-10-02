@@ -12,9 +12,9 @@
  * - `autoOffer` — the event's «Ofertele din lista de așteptare pleacă automat» (§615): whether a
  *   freed place goes to the head of the line on its own, or the club chooses who is offered it.
  * - `countPublic` — the event's «Arată public câți așteaptă» (§NNN): false, and no surface says the
- *   line's length or how many others wait — only the position, with offers in order, which is the
- *   person's own. A person on the list is outside the backoffice, so a count told to them is told to
- *   anyone who joins. Absent reads as on (a caller from before the switch).
+ *   line's length, how many others wait, or the person's position — whoever has just joined is last,
+ *   so their place is the length. A person on the list is outside the backoffice, so a count told to
+ *   them is told to anyone who joins. Absent reads as on (a caller from before the switch).
  *
  * No name and no other person's data: a number is all the line says about anybody else.
  */

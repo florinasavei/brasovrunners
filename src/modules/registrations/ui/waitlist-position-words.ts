@@ -16,10 +16,9 @@ type Say = (key: string, values?: Record<string, string | number>) => string;
  *   or «Ești singura persoană pe lista de așteptare.» alone — nobody learns an order the club does not keep.
  *
  * - **The count kept private** (`countPublic: false`, §NNN): nothing that says the line's length — no
- *   «din 10 persoane», no «cu alte 9», and not «singura persoană» either, which says one. With offers
- *   in order the place stays, «Ești pe locul 3 pe lista de așteptare.» — it is the person's own, and
- *   the order is mechanical; with the club choosing, «Ești pe lista de așteptare.» Then the setting's
- *   sentence, as always.
+ *   «din 10 persoane», no «cu alte 9», not «singura persoană», which says one, and no position either,
+ *   in either reading: whoever has just joined is last, so their place IS the line's length. Only
+ *   «Ești pe lista de așteptare.», then the setting's sentence, as always.
  *
  * `say` is the page's translator under `Registrations`. The counted words pick their form from the
  * number they follow (`countForm`): Romanian's «din 1 persoană», «din 10 persoane», «din 20 de
@@ -28,10 +27,8 @@ type Say = (key: string, values?: Record<string, string | number>) => string;
  */
 export function waitlistStandingPhrase(say: Say, locale: string, standing: WaitlistStanding): string {
   const order = say(standing.autoOffer ? "waitlist.orderAuto" : "waitlist.orderClub");
-  // The count kept private (§NNN): the place alone with offers in order, else only that they wait — alone or not.
-  if (standing.countPublic === false) {
-    return `${standing.autoOffer ? say("waitlist.placeOnly", { position: standing.position }) : say("waitlist.onList")} ${order}`;
-  }
+  // The count kept private (§NNN): only that they wait — no position, since a newcomer's place is the line's length.
+  if (standing.countPublic === false) return `${say("waitlist.onList")} ${order}`;
   const others = standing.length - 1;
   // Alone in the line, «locul 1 din 1 persoană» is not how anybody says it: the same words in both readings of the setting.
   if (others <= 0) return `${say("waitlist.alone")} ${order}`;
