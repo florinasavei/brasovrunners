@@ -199,6 +199,28 @@ describe("§NNN the tip's four lines", () => {
   }
 });
 
+describe("§NNN the lines are true of every row the press is offered on", () => {
+  const waiting = { ro: "listei de așteptare", en: "waiting list" } as const;
+  for (const locale of ["ro", "en"] as const) {
+    it(`${locale}: the email lines say the waiting list gets its own email; none says nothing is recorded or promises the confirmation unconditionally`, () => {
+      const email = desk(locale, "paperEmail");
+      // A row waiting for its address gets it recorded on the staff member's name before the allocator may waitlist it.
+      expect(email, "the address is recorded either way").toMatch(locale === "ro" ? /oricum/ : /either way/);
+      expect(email, "the waiting list is named").toContain(locale === "ro" ? "lista de așteptare" : waiting[locale]);
+      expect(email.toLowerCase(), "never «nothing is recorded»").not.toMatch(/nu se înregistrează nimic|nothing is recorded/);
+      expect(email.length).toBeLessThan(200);
+      const dialog = catalogues[locale].Admin.registrations as unknown as Record<string, string>;
+      for (const key of ["confirmOnPaperBody", "confirmOnPaperBodyMinor"]) {
+        expect(dialog[key].length, `${key} length`).toBeLessThan(200);
+        expect(dialog[key], key).toContain(waiting[locale]);
+        expect(dialog[key], key).not.toMatch(/pleacă emailul de confirmare\.|confirmation email goes out\./);
+      }
+      const guide = JSON.stringify(catalogues[locale]);
+      expect(guide).toContain(locale === "ro" ? "sau pe cel de pe lista de așteptare dacă nu e loc. Emailul de semnare" : "or the waiting-list one if there is no place. The sign-the-declaration email");
+    });
+  }
+});
+
 describe("§NNN the registration's «Ziua cursei» box", () => {
   for (const locale of ["ro", "en"] as const) {
     it(`${locale}: the «i» beside the title and the caption under the button, on a registration the button is for`, async () => {
