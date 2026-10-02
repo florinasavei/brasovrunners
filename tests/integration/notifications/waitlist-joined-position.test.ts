@@ -150,9 +150,9 @@ describe("§NNN the WAITLIST_JOINED email says where the person stood when it wa
     expect(message.text).toContain("este complet momentan, așa că te-am adăugat pe lista de așteptare");
     expect(message.text).toContain("Te vom anunța dacă se eliberează un loc.");
     // The new sentence: of that moment, never «ești», in each half's own language.
-    expect(message.text).toContain("Când am trimis acest email erai pe locul 2 din 3.");
-    expect(message.text).toContain("When we sent this email you were number 2 of 3.");
-    expect(message.html).toContain("Când am trimis acest email erai pe locul 2 din 3.");
+    expect(message.text).toContain("Când am trimis acest email, erai pe locul 2 din 3.");
+    expect(message.text).toContain("When we sent this email, you were number 2 of 3.");
+    expect(message.html).toContain("Când am trimis acest email, erai pe locul 2 din 3.");
     expect(message.text).not.toContain("Ești pe locul");
     // After the body, before the button's own words.
     expect(message.text.indexOf("Te vom anunța")).toBeLessThan(message.text.indexOf("Când am trimis acest email"));
@@ -165,14 +165,17 @@ describe("§NNN the WAITLIST_JOINED email says where the person stood when it wa
     expect((await renderOutboxMessage(queued, db, NOW)).text).toContain("erai pe locul 2 din 2.");
     // The person ahead is offered the place; the same outbox row, rendered again, says the line as it is.
     await db.update(registrations).set({ status: "WAITLIST_OFFERED" }).where(eq(registrations.id, ahead.registration.id));
-    expect((await renderOutboxMessage(queued, db, NOW)).text).toContain("erai pe locul 1 din 1.");
+    // Alone in the line, in either reading of the setting: never «locul 1 din 1».
+    const alone = (await renderOutboxMessage(queued, db, NOW)).text;
+    expect(alone).toContain("Când am trimis acest email, erai singura persoană pe lista de așteptare.");
+    expect(alone).not.toContain("locul 1 din 1");
   });
 
   it("says it in English for an English registration, and names nobody else", async () => {
     await person("WAITLISTED", at(1));
     const mine = await person("WAITLISTED", at(2));
     const message = await renderOutboxMessage(row("WAITLIST_JOINED", mine.registration.id, mine.participant.id, "en"), db, NOW);
-    expect(message.text).toContain("When we sent this email you were number 2 of 2.");
+    expect(message.text).toContain("When we sent this email, you were number 2 of 2.");
     expect(message.text).not.toContain("Runner 1");
   });
 
@@ -214,6 +217,20 @@ describe("§NNN the WAITLIST_JOINED email says where the person stood when it wa
     const other = await person("WAITLISTED", at(2));
     const offerExpired = await renderOutboxMessage(row("WAITLIST_OFFER_EXPIRED", other.registration.id, other.participant.id), db, NOW);
     expect(offerExpired.text).not.toContain("Când am trimis acest email");
+  });
+
+  it("says nothing of the line once the event is cancelled: no offer will go out (§331)", async () => {
+    await person("WAITLISTED", at(1));
+    const mine = await person("WAITLISTED", at(2));
+    const queued = row("WAITLIST_JOINED", mine.registration.id, mine.participant.id);
+    expect((await renderOutboxMessage(queued, db, NOW)).text).toContain("erai pe locul 2 din 2.");
+    // The cancellation keeps the registration waiting (§331.6); the email, rendered after it, has no sentence about the line.
+    await db.update(events).set({ eventStatus: "CANCELLED" }).where(eq(events.id, eventId));
+    const message = await renderOutboxMessage(queued, db, NOW);
+    expect(message.text).toContain("Te vom anunța dacă se eliberează un loc.");
+    expect(message.text).not.toContain("Când am trimis acest email");
+    expect(message.text).not.toContain("When we sent this email");
+    expect(message.html).not.toContain("Când am trimis acest email");
   });
 
   it("counts a TEST registration in the line like a real one (§12.6)", async () => {
@@ -324,6 +341,35 @@ describe("§NNN the registration's own page says where the person stands, and ho
     expect(html).not.toContain("locul 2");
     locale = "en";
     expect(await page()).toContain("You are on the waiting list, with 1 other. The club chooses whom to offer a freed place.");
+  });
+
+  it("on a cancelled event the page says it is cancelled and no sentence about the line or about freed places", async () => {
+    await person("WAITLISTED", at(1));
+    const mine = await person("WAITLISTED", at(2));
+    await db.update(events).set({ eventStatus: "CANCELLED" }).where(eq(events.id, eventId));
+    const html = await manage(mine.registration.id, mine.participant.id);
+    expect(html).not.toContain("waitlist-position");
+    expect(html).not.toContain("locul 2");
+    expect(html).not.toContain("se oferă în ordine");
+    expect(html).not.toContain("Clubul alege");
+    // «Toate înscrierile mele» says none either, in either reading of the setting.
+    const { secret } = await issueActionToken(db, {
+      purpose: "MANAGE_PROFILE",
+      participantId: mine.participant.id,
+      registrationId: null,
+      expiresAt: new Date("2026-10-11T07:00:00.000Z"),
+      now: NOW,
+    });
+    const page = async () => {
+      const element = (await MyRegistrationsPage({ params: Promise.resolve({ locale, token: secret }), searchParams: Promise.resolve({}) })) as ReactElement;
+      const stream = await renderToReadableStream(withClientWords(element, locale));
+      await stream.allReady;
+      return (await new Response(stream).text()).replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
+    };
+    expect(await page()).not.toContain("waitlist-position");
+    await db.update(events).set({ waitlistAutoOffer: false }).where(eq(events.id, eventId));
+    expect(await page()).not.toContain("waitlist-position");
+    expect(await manage(mine.registration.id, mine.participant.id)).not.toContain("waitlist-position");
   });
 
   it("says nothing of a line for a registration that is not waiting, and no name of another person", async () => {

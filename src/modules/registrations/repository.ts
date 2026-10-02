@@ -186,6 +186,10 @@ export async function offersWaitlistAutomatically<T extends Record<string, unkno
  * `autoOffer` is the event's `waitlist_auto_offer` (§615), so the sentence can say whether freed places
  * go in order or the club chooses — one read of the event, in the same call, rather than a second one
  * per page. Null when the registration is not `WAITLISTED` (or does not exist): nobody stands anywhere.
+ * Null too when the event is cancelled: a cancellation keeps every registration in its state (§331) and
+ * the allocator offers nothing (`fillAvailableSpots`), so a sentence about a place in a line, or about
+ * freed places going in order, would promise what will not happen — the page already says the event is
+ * cancelled, and the three surfaces say nothing of the line.
  * Two statements, no lock: a number that is one place stale the instant it renders is the same as the
  * public counts, and nothing is decided from it.
  */
@@ -194,12 +198,12 @@ export async function readWaitlistPosition<T extends Record<string, unknown>>(
   registrationId: string,
 ): Promise<{ position: number; length: number; autoOffer: boolean } | null> {
   const [own] = await db
-    .select({ eventId: registrations.eventId, status: registrations.status, autoOffer: events.waitlistAutoOffer })
+    .select({ eventId: registrations.eventId, status: registrations.status, autoOffer: events.waitlistAutoOffer, eventStatus: events.eventStatus })
     .from(registrations)
     .innerJoin(events, eq(events.id, registrations.eventId))
     .where(eq(registrations.id, registrationId))
     .limit(1);
-  if (!own || own.status !== "WAITLISTED") return null;
+  if (!own || own.status !== "WAITLISTED" || own.eventStatus === "CANCELLED") return null;
   const line = db
     .select({
       id: registrations.id,

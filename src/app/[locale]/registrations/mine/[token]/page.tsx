@@ -361,17 +361,17 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
               <Typography variant="body2" color="text.secondary" sx={{ mb: declarationLine(item) ? 0.5 : 1.5 }}>
                 {formatDay(item.eventStartsAt, { locale, timeZone: item.eventTimezone, style: "long", withTime: true })}
               </Typography>
-              {/*
-                Where this person's declaration stands (§519; the owner: «pagina „Toate înscrierile
-                mele” arată starea declarației fiecăruia»): signed with its day, to sign, asked after
-                the address is confirmed, or asked when the waiting list offers a place.
-              */}
-              {/* Where a waiting person stands (§NNN): «Ești pe locul 3 din 10 persoane…», under the state and the date. */}
+              {/* Where a waiting person stands (§NNN): «Ești pe locul 3 din 10 persoane…», under the state and the date; none on a cancelled event, whose row the reader leaves out. */}
               {item.status === "WAITLISTED" && item.waitlistStanding && (
                 <Typography variant="body2" sx={{ mb: 1.5 }} data-testid="waitlist-position">
                   {waitlistStandingPhrase(t, locale, item.waitlistStanding)}
                 </Typography>
               )}
+              {/*
+                Where this person's declaration stands (§519; the owner: «pagina „Toate înscrierile
+                mele” arată starea declarației fiecăruia»): signed with its day, to sign, asked after
+                the address is confirmed, or asked when the waiting list offers a place.
+              */}
               {declarationLine(item) && (
                 <Typography variant="body2" sx={{ mb: 1.5 }} data-testid="my-registration-declaration">
                   {declarationLine(item)}

@@ -21,10 +21,10 @@ function translator(locale: "ro" | "en") {
 }
 
 describe("§NNN waitlistStandingPhrase — the place in the line and the line's length", () => {
-  it("reads Romanian's three forms from the line's length: one, a few, and 'de' from twenty on", () => {
+  it("reads Romanian's forms from the line's length: a few, and 'de' from twenty on", () => {
     const say = translator("ro");
-    expect(waitlistStandingPhrase(say, "ro", { position: 1, length: 1, autoOffer: true })).toBe(
-      "Ești pe locul 1 din 1 persoană de pe lista de așteptare. Locurile eliberate se oferă în ordine.",
+    expect(waitlistStandingPhrase(say, "ro", { position: 1, length: 2, autoOffer: true })).toBe(
+      "Ești pe locul 1 din 2 persoane de pe lista de așteptare. Locurile eliberate se oferă în ordine.",
     );
     expect(waitlistStandingPhrase(say, "ro", { position: 3, length: 10, autoOffer: true })).toBe(
       "Ești pe locul 3 din 10 persoane de pe lista de așteptare. Locurile eliberate se oferă în ordine.",
@@ -41,7 +41,7 @@ describe("§NNN waitlistStandingPhrase — the place in the line and the line's 
     expect(waitlistStandingPhrase(say, "en", { position: 3, length: 10, autoOffer: true })).toBe(
       "You are number 3 of 10 on the waiting list. Freed places are offered in order.",
     );
-    expect(waitlistStandingPhrase(say, "en", { position: 1, length: 1, autoOffer: true })).toContain("number 1 of 1");
+    expect(waitlistStandingPhrase(say, "en", { position: 1, length: 2, autoOffer: true })).toContain("number 1 of 2");
     expect(waitlistStandingPhrase(say, "en", { position: 4, length: 20, autoOffer: true })).toContain("number 4 of 20");
   });
 
@@ -65,6 +65,20 @@ describe("§NNN waitlistStandingPhrase — the place in the line and the line's 
     expect(waitlistStandingPhrase(say, "ro", { position: 1, length: 1, autoOffer: false })).toBe(
       "Ești singura persoană pe lista de așteptare. Clubul alege cui oferă un loc eliberat.",
     );
+  });
+
+  it("alone in the line, says so in both readings of the setting, never «locul 1 din 1 persoană»", () => {
+    const alone = { position: 1, length: 1 };
+    expect(waitlistStandingPhrase(translator("ro"), "ro", { ...alone, autoOffer: true })).toBe(
+      "Ești singura persoană pe lista de așteptare. Locurile eliberate se oferă în ordine.",
+    );
+    expect(waitlistStandingPhrase(translator("ro"), "ro", { ...alone, autoOffer: false })).toBe(
+      "Ești singura persoană pe lista de așteptare. Clubul alege cui oferă un loc eliberat.",
+    );
+    expect(waitlistStandingPhrase(translator("en"), "en", { ...alone, autoOffer: true })).toBe(
+      "You are the only person on the waiting list. Freed places are offered in order.",
+    );
+    expect(waitlistStandingPhrase(translator("ro"), "ro", { ...alone, autoOffer: true })).not.toContain("locul 1");
   });
 
   it("says the same in English", () => {

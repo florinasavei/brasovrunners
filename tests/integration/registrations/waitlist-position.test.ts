@@ -137,6 +137,14 @@ describe("§NNN readWaitlistPosition — the line in queue order", () => {
     expect(await readWaitlistPosition(db, "00000000-0000-4000-8000-0000000000ff")).toBeNull();
   });
 
+  it("is null once the event is cancelled: the row stays waiting (§331.6) and nothing will be offered (§331.7)", async () => {
+    const e = await event();
+    const waiting = await person(e.id, "WAITLISTED", at(1));
+    expect(await readWaitlistPosition(db, waiting.id)).not.toBeNull();
+    await db.update(events).set({ eventStatus: "CANCELLED" }).where(eq(events.id, e.id));
+    expect(await readWaitlistPosition(db, waiting.id)).toBeNull();
+  });
+
   it("carries the event's setting for automatic offers, as it stands now (§615)", async () => {
     const e = await event(false);
     const waiting = await person(e.id, "WAITLISTED", at(1));

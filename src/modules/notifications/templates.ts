@@ -1060,12 +1060,12 @@ export type TemplateData = {
   familyOnAddress?: ReadonlyArray<{ name: string; state: FamilyEarlierState }>;
   /**
    * Where the person stood in the waiting list's line when this message was rendered (§NNN), on
-   * `WAITLIST_JOINED` only: «Când am trimis acest email erai pe locul 3 din 10.» while the event offers
+   * `WAITLIST_JOINED` only: «Când am trimis acest email, erai pe locul 3 din 10.» while the event offers
    * freed places in order (`autoOffer`), and without any position, «… pe lista de așteptare mai
    * așteptau alte 9 persoane.», while the club chooses whom to offer one (§NNN, amending §615). Read at
    * render time from `readWaitlistPosition` — the same reader the registration's own page uses — and
    * worded as of that moment, since the line moves after the email is read. Absent when the
-   * registration is no longer waiting, or for any other message. Numbers only; nobody else is named.
+   * registration is no longer waiting or its event is cancelled, or for any other message. Numbers only; nobody else is named.
    */
   waitlistStanding?: { position: number; length: number; autoOffer: boolean };
   /**
@@ -2550,8 +2550,8 @@ function participantsPhrase(locale: EmailLocale, count: number): string {
  * the message was rendered, because an email is read later and the line moves — never «ești», which
  * would be a promise the line has already broken.
  *
- * - **Offers go out in order** (`autoOffer`): «Când am trimis acest email erai pe locul 3 din 10.» /
- *   "When we sent this email you were number 3 of 10."
+ * - **Offers go out in order** (`autoOffer`): «Când am trimis acest email, erai pe locul 3 din 10.» /
+ *   "When we sent this email, you were number 3 of 10."
  * - **The club chooses** (the owner: nobody learns an order the club does not keep): no position, only
  *   how many others waited — «Când am trimis acest email, pe lista de așteptare mai așteptau alte 9
  *   persoane.» / "When we sent this email, 9 other people were on the waiting list." — or, alone,
@@ -2561,16 +2561,17 @@ function participantsPhrase(locale: EmailLocale, count: number): string {
  */
 function waitlistPositionLine(locale: EmailLocale, standing: { position: number; length: number; autoOffer: boolean }): string {
   const ro = locale === "ro";
-  if (standing.autoOffer) {
-    return ro
-      ? `Când am trimis acest email erai pe locul ${standing.position} din ${standing.length}.`
-      : `When we sent this email you were number ${standing.position} of ${standing.length}.`;
-  }
   const others = standing.length - 1;
+  // Alone in the line, in either reading of the setting (the page's wording too): never «locul 1 din 1».
   if (others <= 0) {
     return ro
       ? "Când am trimis acest email, erai singura persoană pe lista de așteptare."
       : "When we sent this email, you were the only person on the waiting list.";
+  }
+  if (standing.autoOffer) {
+    return ro
+      ? `Când am trimis acest email, erai pe locul ${standing.position} din ${standing.length}.`
+      : `When we sent this email, you were number ${standing.position} of ${standing.length}.`;
   }
   const form = countForm(others, locale);
   if (ro) {
