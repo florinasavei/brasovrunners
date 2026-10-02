@@ -1343,8 +1343,16 @@
       "capacity": "Capacity",
       "capacityHelp": "Leave empty for unlimited. It cannot be lowered below the places already taken.",
       "capacityWaiting": "On the waiting list: {waiting}. If you raise the number, the new places are offered at once, in order, {offer} each.",
-      "waitlistCapacity": "Maximum waiting-list length",
-      "waitlistCapacityHelp": "Empty: unlimited; 0: no waiting list. Lowered below how many already wait, it removes nobody; it just takes no one new.",
+      "waitlistMode": "Waiting list",
+      "waitlistModeHelp": "What happens once the places are taken.",
+      "waitlistModeTip": "Unlimited: anyone may join the list once the places are taken. Limited: at most this many people. No waiting list: a full event turns everyone away.",
+      "waitlistModeChoices": {
+        "UNLIMITED": "Unlimited",
+        "LIMITED": "Limited to a number of places",
+        "NONE": "No waiting list"
+      },
+      "waitlistCapacity": "At most this many people on the list",
+      "waitlistCapacityHelp": "Lowered below how many already wait, it removes nobody; it just takes no one new. Empty or 0: the list becomes unlimited.",
       "registrationOpensAt": "Registration opens",
       "registrationOpensSoon": "Registration opens soon (no date yet)",
       "registrationOpensSoonHelp": "Ticked, the page says “Registration opens soon” and the form stays closed. Untick it to open: the people who asked to be told get the email.",
@@ -5249,7 +5257,7 @@
               "steps": [
                 "«Events» → «Edit» → the «Taking part and registration» card.",
                 "«Registration mode» → «Înscrieri pe site» (registration on the site).",
-                "«Capacity» and «Maximum waiting-list length» (empty = no limit, 0 = no list). Below them, «Places from the waiting list are allocated automatically»: «Yes» gives every freed or added place to the first on the list; «No» if you want to choose (see “Choose who gets a freed place”).",
+                "«Capacity» and, beside it, «Waiting list»: «Unlimited», «Limited to a number of places», with as many people as you type, or «No waiting list». Under «Limited», empty or 0 makes it unlimited; only «No waiting list» closes the list. Below them, «Places from the waiting list are allocated automatically»: «Yes» gives every freed or added place to the first on the list; «No» if you want to choose (see “Choose who gets a freed place”).",
                 "«Registration period»: «Registration opens» and «Registration closes».",
                 "«Confirmation window»: «Participation confirmation: asked how many days before» and, in the box beside it, how many days before it is due (0 = the place never lapses before the start).",
                 "«Programme, rules and declaration» → «Rules»: «Minimum age to take part» (14 unless you change it, never under 14), on every type of event. The declaration: «Programme, rules and declaration» → «Self-declaration» → «Declaration a participant signs».",
@@ -5267,7 +5275,7 @@
                 "The window says until when they have; press «Send them the offer» again. They get the ordinary «A place has freed up» email, with the ordinary deadline, {offer}: from the email they press «Confirm the place» and sign the declaration, if they have not yet.",
                 "Not accepted in time? The offer lapses and the place is free again, for whoever you choose.",
                 "A free place is needed: a cancellation, or more places. On a full event the press is refused, and an “i” beside the button says why. After registration closes no offer is sent: at the desk, with the person there, «Give a place» confirms them on the paper declaration.",
-                "The others stay on the waiting list and receive nothing. On the site, the card says «Places are given from the waiting list», and newcomers join the list too while anyone waits. How many may wait is «Maximum waiting-list length».",
+                "The others stay on the waiting list and receive nothing. On the site, the card says «Places are given from the waiting list», and newcomers join the list too while anyone waits. How many may wait is «Waiting list», beside «Capacity».",
                 "Mind the end of the line: once nobody is left on the waiting list — somebody holding an offer is no longer on it —, the places still free go to whoever registers next."
               ]
             },

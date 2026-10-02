@@ -161,6 +161,37 @@ describe("§350 the waiting list's length, the capacity's kin (the waiting-list 
     const here = await create({ waitlistCapacity: "12" });
     expect((await reload(here.id)).waitlistCapacity).toBe(12);
   });
+
+  /*
+    §NNN: the number shows only under «Limitată la un număr de locuri». Under «Nelimitată» or «Fără
+    listă de așteptare» it is a hidden box, and what it holds — wrong included — never matters.
+  */
+  it("«Nelimitată» ignores the hidden number, even one below nought", async () => {
+    const unlimited = await create({ waitlistMode: "UNLIMITED", waitlistCapacity: "-4" });
+    expect((await reload(unlimited.id)).waitlistCapacity).toBeNull();
+  });
+
+  it("«Fără listă de așteptare» ignores the hidden number, even one that is not a number", async () => {
+    const none = await create({ waitlistMode: "NONE", waitlistCapacity: "zece" });
+    expect((await reload(none.id)).waitlistCapacity).toBe(0);
+  });
+
+  it("«Limitată» reads the number as typed", async () => {
+    const limited = await create({ waitlistMode: "LIMITED", waitlistCapacity: "12" });
+    expect((await reload(limited.id)).waitlistCapacity).toBe(12);
+  });
+
+  it("'La organizator' ignores the choice with the number: no length on an event that takes no registrations here", async () => {
+    const elsewhere = await create({
+      registrationMode: "EXTERNAL",
+      capacity: "",
+      waitlistMode: "NONE",
+      waitlistCapacity: "",
+      externalProvider: "Asociația X",
+      externalRegistrationUrl: "https://entries.example.test",
+    });
+    expect((await reload(elsewhere.id)).waitlistCapacity).toBeNull();
+  });
 });
 
 describe("§328, §350 a map link the place switch hides cannot refuse the save", () => {

@@ -54,6 +54,7 @@ import {
 } from "@/modules/staff-identity/domain/roles";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
 import { resolveStart, type StartSwitches } from "./start";
+import { isWaitlistChoice, waitlistLengthPosted } from "./waitlist-choice";
 import { isBlankValue } from "@/shared/forms/blank-value";
 import { type BilingualText, isWrittenText, missingLanguage, type TextLanguage } from "@/shared/forms/both-languages";
 import { hasRichTextContent, parseRichText, type RichTextDoc, richTextToPlainText } from "@/modules/content/rich-text/domain/schema";
@@ -753,6 +754,14 @@ export function ignoreHiddenFields(raw: unknown): unknown {
       ? hiddenByMode(mode)
       : {};
   const replaced = { ...posted };
+  /*
+    «Lista de așteptare» (§NNN): the answer in words decides the length, and the number box shows
+    only under «Limitată», so what it holds under the other two is never read — the same rule as a
+    box the mode hides. «Limitată» with an empty box or a 0 is the limit taken away: unlimited, never
+    "no list". An answer that is none of the three is left for the schema to refuse by name. Before
+    the mode's rule below, which still stores no length on an event that takes no registrations here.
+  */
+  if (isWaitlistChoice(posted.waitlistMode)) replaced.waitlistCapacity = waitlistLengthPosted(posted.waitlistMode, posted.waitlistCapacity);
   for (const [key, value] of Object.entries(hidden)) if (key in replaced) replaced[key] = value;
   /*
     The place behind "Locația se anunță mai târziu" (§328; §350, the editor's boxes, found by

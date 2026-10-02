@@ -309,6 +309,10 @@ function eventFieldsFrom(form: FormData) {
     // The waiting list's length (§348), only when the form carried its box: an empty box is "no
     // limit", and a form without the box is "not editing it" — `fields.ts` tells the two apart.
     waitlistCapacity: form.has("event.waitlistCapacity") ? value("waitlistCapacity") : undefined,
+    // «Lista de așteptare» (§NNN): what the length means, in words — «Nelimitată», «Limitată…» or
+    // «Fără listă». The service folds it into the length before its schema runs, so a 0 under
+    // «Limitată» is unlimited and only «Fără listă» stores 0. Absent, the number keeps §348's meaning.
+    waitlistMode: form.has("event.waitlistMode") ? value("waitlistMode") : undefined,
     // «Kit de participare» → «Tricou» (§554): a checkbox, read only when the form carried its marker,
     // so a form without the card is "not editing it" rather than "no shirt".
     kitShirt: form.get("event.kitShirt.present") === "1" ? form.get("event.kitShirt") === "on" : undefined,

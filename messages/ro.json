@@ -1343,8 +1343,16 @@
       "capacity": "Număr de locuri",
       "capacityHelp": "Lasă gol pentru nelimitat. Nu poate fi coborât sub locurile deja ocupate.",
       "capacityWaiting": "Pe lista de așteptare: {waiting}. Dacă mărești numărul, locurile noi se oferă imediat, în ordine, câte {offer} fiecare.",
-      "waitlistCapacity": "Lungimea maximă a listei de așteptare",
-      "waitlistCapacityHelp": "Gol: nelimitat; 0: fără listă de așteptare. Coborâtă sub câți așteaptă deja, nu scoate pe nimeni, doar nu mai primește alții.",
+      "waitlistMode": "Lista de așteptare",
+      "waitlistModeHelp": "Ce se întâmplă când locurile s-au ocupat.",
+      "waitlistModeTip": "Nelimitată: oricine poate intra pe listă când locurile s-au ocupat. Limitată: cel mult atâtea persoane. Fără listă: evenimentul plin refuză pe toată lumea.",
+      "waitlistModeChoices": {
+        "UNLIMITED": "Nelimitată",
+        "LIMITED": "Limitată la un număr de locuri",
+        "NONE": "Fără listă de așteptare"
+      },
+      "waitlistCapacity": "Cel mult atâtea persoane pe listă",
+      "waitlistCapacityHelp": "Coborât sub câți așteaptă deja, nu scoate pe nimeni, doar nu mai primește alții. Gol sau 0: lista devine nelimitată.",
       "registrationOpensAt": "Înscrierile se deschid",
       "registrationOpensSoon": "Înscrierile se deschid în curând (fără dată)",
       "registrationOpensSoonHelp": "Bifat, pagina spune „Înscrierile se deschid în curând” și formularul rămâne închis. Debifează când deschizi: cei de la „Anunță-mă” primesc emailul.",
@@ -5249,7 +5257,7 @@
               "steps": [
                 "«Evenimente» → «Editează» → cardul «Participare și înscrieri».",
                 "«Modul de înscriere» → «Înscrieri pe site».",
-                "«Număr de locuri» și «Lungimea maximă a listei de așteptare» (gol = fără limită, 0 = fără listă). Sub ele, «Locurile din lista de așteptare se alocă automat»: «Da» dă fiecare loc eliberat sau adăugat primului de pe listă; «Nu», dacă vrei să alegi tu (vezi „Alege tu cine primește un loc eliberat”).",
+                "«Număr de locuri» și, lângă el, «Lista de așteptare»: «Nelimitată», «Limitată la un număr de locuri», cu câte persoane scrii tu, sau «Fără listă de așteptare». Sub «Limitată», gol sau 0 o face nelimitată; doar «Fără listă de așteptare» închide lista. Sub ele, «Locurile din lista de așteptare se alocă automat»: «Da» dă fiecare loc eliberat sau adăugat primului de pe listă; «Nu», dacă vrei să alegi tu (vezi „Alege tu cine primește un loc eliberat”).",
                 "«Perioada de înscriere»: «Înscrierile se deschid» și «Înscrierile se închid».",
                 "«Fereastra de confirmare»: «Confirmarea participării: cu câte zile înainte se cere» și, în căsuța de lângă, cu câte zile înainte expiră (0 = locul nu expiră până la start).",
                 "«Program, regulament și declarație» → «Regulamentul»: «Vârsta minimă de participare» (14 dacă nu o schimbi, niciodată sub 14), la orice tip de eveniment. Declarația: «Program, regulament și declarație» → «Declarația pe propria răspundere» → «Declarația pe care o semnează participantul».",
@@ -5267,7 +5275,7 @@
                 "Fereastra spune până când are timp; apasă din nou «Trimite-i oferta». Primește emailul obișnuit «S-a eliberat un loc», cu termenul obișnuit, {offer}: din email apasă «Confirmă locul» și semnează declarația, dacă nu a semnat-o încă.",
                 "Nu acceptă la timp? Oferta expiră și locul e din nou liber, pentru cine alegi tu.",
                 "Trebuie un loc liber: o anulare sau mai multe locuri. Pe un eveniment plin apăsarea e refuzată, iar un „i” lângă buton spune de ce. După închiderea înscrierilor nu se mai trimit oferte: la masă, cu persoana de față, «Dă-i un loc» o confirmă pe declarația de hârtie.",
-                "Ceilalți rămân pe lista de așteptare și nu primesc nimic. Pe site, cardul spune «Locurile se dau din lista de așteptare», iar cine se înscrie acum intră tot pe listă cât timp așteaptă cineva. Câți pot aștepta spune «Lungimea maximă a listei de așteptare».",
+                "Ceilalți rămân pe lista de așteptare și nu primesc nimic. Pe site, cardul spune «Locurile se dau din lista de așteptare», iar cine se înscrie acum intră tot pe listă cât timp așteaptă cineva. Câți pot aștepta spune «Lista de așteptare», lângă «Număr de locuri».",
                 "Atenție la capătul listei: când nu mai e nimeni pe lista de așteptare — cine are o ofertă nu mai e pe ea —, locurile încă libere le ia următorul care se înscrie."
               ]
             },

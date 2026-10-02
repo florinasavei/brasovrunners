@@ -21,6 +21,7 @@ import {
   normalizeCoHostUrl,
 } from "@/modules/events/domain/co-hosts";
 import { refuseOneLanguage } from "@/shared/forms/both-languages";
+import { WAITLIST_CHOICES } from "./waitlist-choice";
 import { EVENT_COST_TYPES, type EventCostType, MAX_DISCOUNT_NOTE, MAX_EVENT_COST_AMOUNT } from "@/modules/events/domain/cost";
 import {
   DEFAULT_EVENT_LINK_KIND,
@@ -185,6 +186,18 @@ const optionalWholeNumber = (options: { min: number; max: number }) =>
     // them; said once more here, on the schema itself, so the box carries `min`, `max` and
     // `step` and the browser refuses "0 places" before the server does (§315).
     .meta({ html: { type: "number", min: options.min, max: options.max, step: 1 } });
+
+/** The longest waiting list a box may ask for: the database's CHECK has no ceiling, the form has this one (§348). */
+const MAX_WAITLIST_LENGTH = 100_000;
+
+/**
+ * The number under «Limitată la un număr de locuri» (§NNN): at least one person, because nought
+ * under «Limitată» means the limit was taken away and is saved as «Nelimitată»
+ * (`waitlist-choice.ts`). The box reads its `min` here, so the browser asks for 1 or more; the
+ * row's own `waitlistCapacity` below keeps 0, which a caller that sends no choice still means as
+ * "no waiting list" (§348).
+ */
+export const waitlistLimitSchema = optionalWholeNumber({ min: 1, max: MAX_WAITLIST_LENGTH });
 
 /** As `optionalWholeNumber`, with a default for an absent or empty value rather than null. */
 const wholeNumberWithDefault = (fallback: number, options: { min: number; max: number }) =>
@@ -778,8 +791,20 @@ export const eventFieldsSchema = z
      * all, and the bounds are the database's CHECK said again so the box carries `min` (§315).
      * Optional, and absent means "this caller is not editing it" — the service writes nothing
      * then, so a save from anything that does not post the box keeps the limit the organizer set.
+     *
+     * Since §NNN the editor never posts the number alone: it posts the choice below, and the service
+     * turns the two into this one value before the schema reads it (`ignoreHiddenFields`). A caller
+     * that sends only the number — a script, a fixture — keeps the meaning above.
      */
-    waitlistCapacity: optionalWholeNumber({ min: 0, max: 100_000 }).optional(),
+    waitlistCapacity: optionalWholeNumber({ min: 0, max: MAX_WAITLIST_LENGTH }).optional(),
+    /**
+     * «Lista de așteptare» (§NNN): «Nelimitată», «Limitată la un număr de locuri» or «Fără listă de
+     * așteptare» — what the length means, said in words. Read before this schema runs and folded into
+     * `waitlistCapacity` (`service.ts#ignoreHiddenFields`, `waitlist-choice.ts#waitlistLengthPosted`);
+     * here so a posted answer that is none of the three is refused naming the select. Absent means
+     * the caller did not post the select, and the number keeps its meaning of §348.
+     */
+    waitlistMode: z.enum(WAITLIST_CHOICES).optional(),
     /**
      * «Kit de participare» → «Tricou» (§554): the event gives a T-shirt, so the form asks the size.
      * Absent means this caller is not editing it — the partners' discipline, as «Se deschid în
