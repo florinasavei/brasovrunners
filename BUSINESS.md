@@ -732,6 +732,7 @@ Messages include:
 - registration confirmed;
 - registration cancelled;
 - waiting-list offer expired;
+- a held place that lapsed: once for each place lost, to the person who had not signed the declaration by the deadline when somebody else wanted the place, with what they can still do — never after the start or for a cancelled event (`DECISIONS.md` §NNN);
 - secure registration-management link;
 - secure public-profile management link;
 - current registration status notice for a cancelled or expired registration;

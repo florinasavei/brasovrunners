@@ -4324,7 +4324,8 @@
         "NEWSLETTER_CONFIRM": "Confirming a news subscription",
         "NEWSLETTER": "Newsletter",
         "NEW_EVENT_ALERT": "Announcement: a new event on the calendar",
-        "MEMBER_INVITATION": "The member invitation"
+        "MEMBER_INVITATION": "The member invitation",
+        "DECLARATION_HOLD_EXPIRED": "The held place expired"
       },
       "when": {
         "VERIFY_REGISTRATION_EMAIL": "After the form is sent. The link lasts {confirmation}, from when the email leaves.",
@@ -4354,7 +4355,8 @@
         "NEWSLETTER_CONFIRM": "When someone subscribes on the contact page: the link that confirms the subscription, valid for {confirmation}.",
         "NEWSLETTER": "Only when an organizer sends a newsletter from the backoffice, to the chosen topic's subscribers. It leaves after every other email, from what is left of the allowance.",
         "NEW_EVENT_ALERT": "Once for each new event published (never the weekly run), to those subscribed to new events and to its topics.",
-        "MEMBER_INVITATION": "When an administrator adds somebody on Echipa with the role Membru, and on \"Resend the invitation\" until their first sign-in. No token: the button leads to the sign-in, then to the members' area."
+        "MEMBER_INVITATION": "When an administrator adds somebody on Echipa with the role Membru, and on \"Resend the invitation\" until their first sign-in. No token: the button leads to the sign-in, then to the members' area.",
+        "DECLARATION_HOLD_EXPIRED": "When somebody who did not sign the declaration in time loses the place to somebody who wanted it. Once per place lost, with what they can still do. Not after the start or for a cancelled event."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "after the form is sent",
@@ -4384,7 +4386,8 @@
         "NEWSLETTER_CONFIRM": "when someone subscribes",
         "NEWSLETTER": "only when an organizer sends a newsletter",
         "NEW_EVENT_ALERT": "automatically, when a new event is published",
-        "MEMBER_INVITATION": "when a member is added"
+        "MEMBER_INVITATION": "when a member is added",
+        "DECLARATION_HOLD_EXPIRED": "when an unsigned place goes to somebody else"
       },
       "clubNotices": {
         "title": "The club's copies",
@@ -4785,6 +4788,7 @@
           "lastCall": "the last call to sign, to those who have not signed yet",
           "participation": "the participation confirmation opens, to those who have not signed yet",
           "nextInLine": "a held place lapses; it goes to the next on the waiting list",
+          "holdLapsed": "a held place lapses; to the one who did not sign, that it went to somebody else",
           "registrationOpened": "registration opens, to the addresses left on the event's page",
           "newEventAlert": "the new-event announcement, to the subscribers of its topics",
           "newsletter": "the newsletter, to the topic's subscribers"
@@ -5403,7 +5407,7 @@
                 "Mind: each gets a new link, and the link in the earlier email stops working. Tell them to open the newest email.",
                 "Tell them to look for the email in Spam and in Promotions too.",
                 "At most three presses an hour per event. An “i” beside the button says when a press would be refused: the event is cancelled, finished or has started, or the hour's presses are spent.",
-                "Who loses a place, and when: in «Registrations», a race's list says under «Who has signed up» until when places are kept and what follows the deadline; the «How far» column has each one's.",
+                "Who loses a place, and when: in «Registrations», a race's list says under «Who has signed up» until when places are kept and what follows the deadline; the «How far» column has each one's. Whoever loses the place after the deadline gets an email that says so and what they can still do.",
                 "One person only: open their registration → «Resend email»."
               ]
             },

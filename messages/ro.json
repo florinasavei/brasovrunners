@@ -4324,7 +4324,8 @@
         "NEWSLETTER_CONFIRM": "Confirmarea abonării la noutăți",
         "NEWSLETTER": "Newsletter",
         "NEW_EVENT_ALERT": "Anunț: eveniment nou în calendar",
-        "MEMBER_INVITATION": "Invitația de membru"
+        "MEMBER_INVITATION": "Invitația de membru",
+        "DECLARATION_HOLD_EXPIRED": "Locul ținut a expirat"
       },
       "when": {
         "VERIFY_REGISTRATION_EMAIL": "După trimiterea formularului. Linkul e valabil {confirmation}, de când pleacă emailul.",
@@ -4354,7 +4355,8 @@
         "NEWSLETTER_CONFIRM": "Când cineva se abonează de pe pagina de contact: linkul care confirmă abonarea, valabil {confirmation}.",
         "NEWSLETTER": "Doar când un organizator trimite un newsletter din backoffice, către abonații temei alese. Pleacă după celelalte emailuri, din ce rămâne din limită.",
         "NEW_EVENT_ALERT": "O dată pentru fiecare eveniment nou publicat (nu alergarea săptămânală), către abonații la evenimente noi și la temele lui.",
-        "MEMBER_INVITATION": "Când un administrator adaugă pe Echipa pe cineva cu rolul Membru, și la „Retrimite invitația” până la prima autentificare. Fără token: butonul duce la autentificare, apoi în zona membrilor."
+        "MEMBER_INVITATION": "Când un administrator adaugă pe Echipa pe cineva cu rolul Membru, și la „Retrimite invitația” până la prima autentificare. Fără token: butonul duce la autentificare, apoi în zona membrilor.",
+        "DECLARATION_HOLD_EXPIRED": "Când locul cuiva care nu a semnat declarația la termen trece la altcineva care îl voia. O singură dată pentru fiecare loc pierdut, cu ce mai poate face. Nu după start și nu la un eveniment anulat."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "după trimiterea formularului",
@@ -4384,7 +4386,8 @@
         "NEWSLETTER_CONFIRM": "când cineva se abonează",
         "NEWSLETTER": "doar când un organizator trimite un newsletter",
         "NEW_EVENT_ALERT": "automat, la publicarea unui eveniment nou",
-        "MEMBER_INVITATION": "când e adăugat un membru"
+        "MEMBER_INVITATION": "când e adăugat un membru",
+        "DECLARATION_HOLD_EXPIRED": "când un loc nesemnat trece la altcineva"
       },
       "clubNotices": {
         "title": "Copiile clubului",
@@ -4785,6 +4788,7 @@
           "lastCall": "ultimul apel la semnat, către cei care nu au semnat încă",
           "participation": "se deschide confirmarea participării, către cei care nu au semnat încă",
           "nextInLine": "expiră un loc ținut; locul trece la următorul de pe lista de așteptare",
+          "holdLapsed": "expiră un loc ținut; celui care nu a semnat, că locul a trecut la altcineva",
           "registrationOpened": "se deschid înscrierile, către adresele lăsate pe pagina evenimentului",
           "newEventAlert": "anunțul de eveniment nou, către abonații temelor lui",
           "newsletter": "newsletterul, către abonații temei"
@@ -5403,7 +5407,7 @@
                 "Atenție: fiecare primește un link nou, iar linkul din emailul de dinainte nu mai merge. Spune-le să deschidă emailul cel mai nou.",
                 "Spune-le să caute emailul și în Spam și în Promoții.",
                 "Cel mult trei apăsări pe oră la un eveniment. Un „i” lângă buton spune când o apăsare ar fi refuzată: evenimentul e anulat, încheiat sau a început, ori s-au consumat apăsările orei.",
-                "Cine pierde locul și când: în «Înscrieri», lista unei curse spune sub «Cine s-a înscris» până când își țin oamenii locul și ce urmează după termen; coloana «Unde a ajuns» are termenul fiecăruia.",
+                "Cine pierde locul și când: în «Înscrieri», lista unei curse spune sub «Cine s-a înscris» până când își țin oamenii locul și ce urmează după termen; coloana «Unde a ajuns» are termenul fiecăruia. Cine pierde locul după termen primește un email care îi spune asta și ce mai poate face.",
                 "O singură persoană: deschide înscrierea ei → «Retrimite emailul»."
               ]
             },

@@ -119,6 +119,9 @@ export function emailSampleData(locale: EmailLocale): TemplateData {
     // The public list's switch on the confirmation (§143): the sample runner is on the list.
     listConsentUrl: `${base}/${locale}/EXAMPLE-list`,
     listed: true,
+    // A held place that lapsed (§NNN): the sample runner's went to the waiting list, which still takes people.
+    holdLapsedToWaitlist: true,
+    holdLapsedNext: "waitlist",
     // The staff invitation (§141): a made-up colleague, added by a made-up administrator.
     staffRole: sample.staffRole,
     inviterName: sample.inviterName,
@@ -339,7 +342,8 @@ const ONLY_IN: Partial<Record<EmailCopyPlaceholder, readonly EmailMessageType[]>
   bibNumber: ["REGISTRATION_CONFIRMED", "EVENT_REMINDER", "BIB_ASSIGNED", "CLUB_CONFIRMATION_NOTICE"],
   checkinCode: ["REGISTRATION_CONFIRMED", "EVENT_REMINDER", "BIB_ASSIGNED"],
   // The offer's own deadline on the freed place too (§419): the same column, the offer's hold.
-  holdExpiresAtFormatted: ["COMPLETE_DECLARATION", "WAITLIST_SPOT_OFFER"],
+  // …and the deadline that passed on a held place that lapsed (§NNN).
+  holdExpiresAtFormatted: ["COMPLETE_DECLARATION", "WAITLIST_SPOT_OFFER", "DECLARATION_HOLD_EXPIRED"],
   signedAtFormatted: ["REGISTRATION_CONFIRMED", "DECLARATION_SIGNED", "DECLARATION_ARCHIVE", "GROUP_RUN_DECLARATION_SIGNED", "GROUP_RUN_DECLARATION_ARCHIVE"],
   staffRole: ["STAFF_INVITATION"],
   inviterName: ["STAFF_INVITATION", "MEMBER_INVITATION"],
@@ -359,7 +363,8 @@ const ONLY_IN: Partial<Record<EmailCopyPlaceholder, readonly EmailMessageType[]>
  * - the number: the confirmation, the reminder, the number given by hand, the club's notice (§245);
  * - the desk code: the confirmation, the reminder and the number given by hand — never on a club
  *   copy (§320);
- * - the hold's deadline: the declaration request (§104) and the freed place's offer (§419);
+ * - the hold's deadline: the declaration request (§104), the freed place's offer (§419) and the held
+ *   place that lapsed (§NNN), which names the deadline that passed;
  * - the time of signing: the confirmation, the signed declaration and its archive copy (§95);
  * - the role and the inviter: the staff invitation (§141).
  *

@@ -35,6 +35,8 @@ import { seriesRhythmPhrase } from "@/modules/group-run-declarations/series";
 import { generateTokenSecret, hashTokenSecret } from "@/modules/action-tokens/domain/token-secret";
 import { bulkCopyRecipients, declarationPdfAudience, isClubCopy, isParticipantMessage } from "./domain/club-notices";
 import { CANNOT_COME_MESSAGES, cannotComeApplies, cannotComeUrlOf } from "./domain/cannot-come";
+import { type HoldLapsedNext, holdLapsedNext } from "./domain/hold-lapsed";
+import { registrationState } from "@/modules/events/domain/registration-window";
 import { declarationAsksMinorToSign } from "@/modules/legal-documents/repository";
 import { readOrganizerMessagePayload } from "./domain/organizer-message";
 import { registrationStatusWords } from "./domain/registration-status-words";
@@ -706,6 +708,30 @@ async function renderRow(
   if (row.messageType === "REGISTRATION_OPENED" && eventDetails?.slug) {
     payloadActionUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/events/[slug]/register", params: { slug: eventDetails.slug } } })}`;
   }
+  /*
+    «Locul tău la … a expirat» (§NNN): the deadline that passed, from the payload `expireStaleHolds`
+    wrote (the row's own column otherwise), each half in its own words (§377: a stated deadline says
+    the date); whether the place went to the waiting list, a fact of the release; and what the person
+    can do now, read off the event as it stands at the send (`holdLapsedNext` says why not at the
+    queueing). The button is the ordinary registration page — no token (§12.8), and absent from a club
+    copy like every action (§320) — and only when the form would take them.
+  */
+  if (row.messageType === "DECLARATION_HOLD_EXPIRED" && registration) {
+    const lapsed = await describeLapsedHold(db, row, registration, now);
+    // §331 at the moment of sending, as `OutboxMessageWithdrawn` says: a race cancelled or started since,
+    // or a registration that moved on (restarted, signed late, or a newer hold lapsed), has nothing left to tell.
+    if (!lapsed) throw new OutboxMessageWithdrawn("the lapsed hold's event is over or cancelled, or the registration moved on from that hold");
+    const zone = eventDetails?.timezone ?? CLUB_TIME_ZONE;
+    if (lapsed.deadline) {
+      data.holdExpiresAtFormatted = formatDeadlineInSentence(lapsed.deadline, zone, locale);
+      data.holdExpiresAtFormattedOther = formatDeadlineInSentence(lapsed.deadline, zone, otherLocale(locale));
+    }
+    data.holdLapsedToWaitlist = lapsed.toWaitlist;
+    data.holdLapsedNext = lapsed.next;
+    if (lapsed.next !== "desk" && eventDetails?.slug) {
+      payloadActionUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/events/[slug]/register", params: { slug: eventDetails.slug } } })}`;
+    }
+  }
   // The desk code on the confirmation and the reminder (BR-REQ-037-08). A confirmed
   // registration made before codes existed gets one here, so a resent confirmation carries it too.
   // The club's own notice (§245) needs the number and nothing else the runner's copy carries:
@@ -1359,6 +1385,60 @@ async function waitlistTakesNewcomer(db: RendererDb, eventId: string, now: Date)
   const waiting = await countEligibleWaitlisted(db, eventId);
   const full = computePublicAvailability({ capacity: event.capacity, occupied: computeOccupied(counts), eligibleWaitlisted: waiting }) === 0;
   return full && waitlistHasRoom({ waitlistCapacity: event.waitlistCapacity, waitlisted: waiting, openOffers: counts.unexpiredWaitlistOfferedHolds });
+}
+
+/**
+ * A released declaration hold's message (§NNN): the deadline that passed, whether the place went to the
+ * waiting list, and what the person can do now (`holdLapsedNext`) — or null when there is nothing to
+ * tell any more: the event was cancelled or has started since the release (§331, the sweep's own
+ * `over`), or the registration is no longer this lapsed hold — restarted or signed late in the meantime,
+ * expired since for another reason, or lapsed again with a newer deadline, whose own message (its own
+ * key, `holdLapsedIdempotencyKey`) says so instead of this older one.
+ */
+async function describeLapsedHold(
+  db: RendererDb,
+  row: OutboxRow,
+  registration: Registration,
+  now: Date,
+): Promise<{ deadline: Date | null; toWaitlist: boolean; next: HoldLapsedNext } | null> {
+  if (registration.status !== "EXPIRED" || registration.expiryReason !== "DECLARATION_HOLD_LAPSED") return null;
+  const payload = (row.payloadJson ?? {}) as { deadline?: unknown; toWaitlist?: unknown };
+  const fromPayload = typeof payload.deadline === "string" ? new Date(payload.deadline) : null;
+  const queuedFor = fromPayload && !Number.isNaN(fromPayload.getTime()) ? fromPayload : null;
+  if (queuedFor && registration.holdExpiresAt?.getTime() !== queuedFor.getTime()) return null;
+  const [event] = await db
+    .select({
+      registrationMode: events.registrationMode,
+      eventStatus: events.eventStatus,
+      startsAt: events.startsAt,
+      dateToBeAnnounced: events.dateToBeAnnounced,
+      timeToBeAnnounced: events.timeToBeAnnounced,
+      registrationOpensAt: events.registrationOpensAt,
+      registrationOpensSoon: events.registrationOpensSoon,
+      registrationClosesAt: events.registrationClosesAt,
+      publishedAt: events.publishedAt,
+      capacity: events.capacity,
+      waitlistCapacity: events.waitlistCapacity,
+    })
+    .from(events)
+    .where(eq(events.id, registration.eventId))
+    .limit(1);
+  if (!event || event.eventStatus !== "SCHEDULED" || event.startsAt.getTime() <= now.getTime()) return null;
+  const deadline = queuedFor ?? registration.holdExpiresAt;
+  const counts = await countOccupied(db, registration.eventId, now);
+  const waitlisted = await countEligibleWaitlisted(db, registration.eventId);
+  return {
+    deadline,
+    toWaitlist: payload.toWaitlist === true,
+    next: holdLapsedNext({
+      registrationOpen: registrationState(event, now) === "OPEN",
+      capacity: event.capacity,
+      occupied: computeOccupied(counts),
+      waitlisted,
+      openOffers: counts.unexpiredWaitlistOfferedHolds,
+      waitlistCapacity: event.waitlistCapacity,
+    }),
+  };
 }
 
 /**

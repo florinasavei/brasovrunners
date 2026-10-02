@@ -64,6 +64,8 @@ const EXPECTED: Record<EditedType, EmailCopyPlaceholder[]> = {
   // Whose registration, at which event and when (§547): one message per cancelled person.
   REGISTRATION_CANCELLED: ["participantName", "eventTitle", "eventStartsAtFormatted"],
   WAITLIST_OFFER_EXPIRED: ["eventTitle"],
+  // A held place that lapsed (§NNN): the event and its start; the deadline that passed is the platform's line after the words.
+  DECLARATION_HOLD_EXPIRED: ["eventTitle", "eventStartsAtFormatted"],
   REGISTRATION_MANAGE_LINK: [],
   PROFILE_MANAGE_LINK: [],
   REGISTRATION_STATE_NOTICE: ["eventTitle", "currentStatus"],
