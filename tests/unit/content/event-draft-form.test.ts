@@ -267,7 +267,7 @@ describe("§579 amended — formViewOf, what the form takes from the event", () 
     expect(view.stepsWindow).toEqual({ opensDays: 7, deadlineDays: 2 });
   });
 
-  it("§NNN names the waiting-list stage under the tick only where the published list shows it", () => {
+  it("§628 names the waiting-list stage under the tick only where the published list shows it", () => {
     const on = formViewOf(draft({ participantListVisibility: "NAMES", waitlistPublic: true } as Partial<Draft>) as never, NOW);
     expect(on.listShowsWaitlist).toBe(true);
     expect(listOptInStatesKey(on)).toBe("listOptInStates");

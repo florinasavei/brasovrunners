@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.56-2026-10-01 -->
+<!-- PROJECT_BASELINE: BR-V2.57-2026-10-02 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V2.56-2026-10-01`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.57-2026-10-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1376,7 +1376,7 @@ below exists because of that (BR-BUS-039, BR-REQ-039-01).
 - `NAMES` is refused unless `registration_mode = INTERNAL`, in the service and again as a CHECK.
   For `NONE` there is nobody to list; for `EXTERNAL` the entrants are another organizer's;
 - the published set is exactly `status = CONFIRMED AND kind = 'REAL' AND list_opt_out = false`,
-  ordered by `confirmed_at` then `id`. The public list shows the display name and club of registrations that ticked «Vreau să apar»: the confirmed always. Only while the privacy notice in force names `{{participantListStates}}` in every language (`describesListStates`, §396) does it also show the pending (`PENDING_DECLARATION`, `WAITLIST_OFFERED`) and the waiting list, each with its state word and without a position. The waiting list shows only when the event's «Lista de așteptare e publică» (`events.waitlist_public`, off by default, stored true only beside `NAMES`; §NNN) is on as well — a narrowing on top of the notice's gates, never a way round them. It never shows `PENDING_EMAIL_CONFIRMATION`, `CANCELLED`, `EXPIRED` or `TEST` rows, and never the raw lifecycle state;
+  ordered by `confirmed_at` then `id`. The public list shows the display name and club of registrations that ticked «Vreau să apar»: the confirmed always. Only while the privacy notice in force names `{{participantListStates}}` in every language (`describesListStates`, §396) does it also show the pending (`PENDING_DECLARATION`, `WAITLIST_OFFERED`) and the waiting list, each with its state word and without a position. The waiting list shows only when the event's «Lista de așteptare e publică» (`events.waitlist_public`, off by default, stored true only beside `NAMES`; §628) is on as well — a narrowing on top of the notice's gates, never a way round them. It never shows `PENDING_EMAIL_CONFIRMATION`, `CANCELLED`, `EXPIRED` or `TEST` rows, and never the raw lifecycle state;
 - `registrations.list_opt_out` is the participant's own answer, the opposite of the tick "I want
   to appear on the participants & results list" (`DECISIONS.md` §143, §570: one tick for the list
   and, once they are published, the results): no tick, no listing. Asked on the

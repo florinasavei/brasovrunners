@@ -33,7 +33,7 @@ import { queueOrderFor } from "../domain/waitlist";
  * Administrator only, because it names people; rendered on the event page beside the test
  * registrations, which is the one way to fill it without ten mailboxes.
  *
- * **The order the line is listed in (§NNN)** follows how the club hands places out: with offers on their
+ * **The order the line is listed in (§627)** follows how the club hands places out: with offers on their
  * own (`events.waitlist_auto_offer`) it is the allocator's — when each person joined the line — and
  * with them off, where the club picks by hand, it is when each form was sent. Each waiting row says
  * both times, and the lead line says which order is shown, so the panel never presents an order the
@@ -79,7 +79,7 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
   const when = (at: Date) => formatDay(at, { locale, timeZone: event.timezone, style: "short", withTime: true, position: "inline" });
   const counts = knownCounts ?? (await countOccupied(db, event.id, now));
   const occupied = computeOccupied(counts);
-  // Which order the line is listed in (§NNN): the setting decides; the allocator is not asked.
+  // Which order the line is listed in (§627): the setting decides; the allocator is not asked.
   const order = queueOrderFor(event.waitlistAutoOffer);
   const rows = await listQueueForEvent(db, event.id, now, order);
   const free = event.capacity === null ? null : Math.max(0, event.capacity - occupied);
@@ -193,7 +193,7 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
         <HourglassTopIcon fontSize="small" aria-hidden="true" />
         {limit === null ? t("queue.lineTitle", { count: line.length }) : t("queue.lineTitleLimited", { count: line.length, limit })}
       </Typography>
-      {/* The lead line (§NNN): which order the rows below are in — the form's, or the line's own. */}
+      {/* The lead line (§627): which order the rows below are in — the form's, or the line's own. */}
       {line.length > 0 && (
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }} data-testid="queue-order">
           {t(order === "SUBMITTED" ? "queue.orderSubmitted" : "queue.orderLine")}
@@ -228,7 +228,7 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
                   label={t("queue.offered", { until: when(row.holdExpiresAt) })}
                 />
               ) : (
-                // The two times, each labelled (§NNN): when the form was sent, and when the person joined the line.
+                // The two times, each labelled (§627): when the form was sent, and when the person joined the line.
                 <Typography variant="body2" color="text.secondary" data-testid="queue-times">
                   {t("queue.sent", { when: when(row.formSentAt) })}
                   {row.waitlistedAt ? ` · ${t("queue.joined", { when: when(row.waitlistedAt) })}` : ""}

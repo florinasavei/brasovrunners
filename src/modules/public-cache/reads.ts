@@ -369,7 +369,7 @@ export async function cachedStartListPage(eventId: string, offset: number, limit
 export async function cachedStartListOthersCounts(
   eventId: string,
   firstStatesNoticeVersion: number,
-  /** The event's «Lista de așteptare e publică» (§NNN): in the key, so a count with the waiting list is never served without it. */
+  /** The event's «Lista de așteptare e publică» (§628): in the key, so a count with the waiting list is never served without it. */
   includeWaitlisted: boolean,
 ): Promise<{ pending: number; waitlisted: number }> {
   return publicRead(
@@ -381,7 +381,7 @@ export async function cachedStartListOthersCounts(
 
 /**
  * One page of `listPublicStartListOthers` — a name, a club and a group, and the socials as above;
- * the waiting list only with `includeWaitlisted` (§NNN), which is in the key like the version.
+ * the waiting list only with `includeWaitlisted` (§628), which is in the key like the version.
  */
 export async function cachedStartListOthersPage(
   eventId: string,

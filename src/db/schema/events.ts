@@ -652,7 +652,7 @@ export const events = pgTable(
       .default("HIDDEN"),
 
     /**
-     * «Lista de așteptare e publică» (§NNN): off, until the club decides otherwise for one event.
+     * «Lista de așteptare e publică» (§628): off, until the club decides otherwise for one event.
      *
      * A narrowing of the public list's states (§396, §421), never a widening: with it on, the
      * ticked waiting-list rows appear only behind both of the privacy notice's gates as before;

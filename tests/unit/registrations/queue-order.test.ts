@@ -6,11 +6,11 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN — the queue panel lists the people waiting in the order the club hands places out by:
+ * §627 — the queue panel lists the people waiting in the order the club hands places out by:
  * when the form was sent where the club picks by hand, the line's own order where offers go out on
  * their own. A pure choice over `events.waitlist_auto_offer`; the allocator reads its own order.
  */
-describe("§NNN which order the queue panel lists", () => {
+describe("§627 which order the queue panel lists", () => {
   it("lists by when the form was sent when the club hands places out by hand", () => {
     expect(queueOrderFor(false)).toBe("SUBMITTED");
   });
@@ -20,7 +20,7 @@ describe("§NNN which order the queue panel lists", () => {
   });
 });
 
-describe("§NNN the words on a waiting row", () => {
+describe("§627 the words on a waiting row", () => {
   // 1 October 2026, 19:42 in Brașov (16:42 UTC; EEST is UTC+3).
   const SENT = new Date("2026-10-01T16:42:00.000Z");
   const phrase = (locale: "ro" | "en", key: "sent" | "joined") => {
@@ -53,7 +53,7 @@ describe("§NNN the words on a waiting row", () => {
   });
 });
 
-describe("§NNN when a form was sent", () => {
+describe("§627 when a form was sent", () => {
   const first = new Date("2026-09-30T08:00:00.000Z");
   const again = new Date("2026-10-01T09:00:00.000Z");
 

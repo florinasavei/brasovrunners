@@ -80,7 +80,7 @@ export type SummaryWords = {
   health: { asked: string; notAsked: string };
   bibs: { from: string; clubColour: string; allocated: string; toPrint: string; spares: string };
   bibDesign: { parts: string; footer: string };
-  /** The public list's closed line; `shownWithWaitlist` once «Lista de așteptare e publică» is on too (§NNN). */
+  /** The public list's closed line; `shownWithWaitlist` once «Lista de așteptare e publică» is on too (§628). */
   startList: { hidden: string; shown: string; shownWithWaitlist: string };
   course: {
     route: string;
@@ -511,7 +511,7 @@ export function bibDesignSummary(
 
 /**
  * Sub-card 8.5: `Ascunsă`, or what a published list shows — and, with «Lista de așteptare e publică»
- * (§NNN), that the waiting list is on it too. The switch alone, beside a hidden list, says nothing:
+ * (§628), that the waiting list is on it too. The switch alone, beside a hidden list, says nothing:
  * the list is what is published, and the service stores the switch off there anyway.
  */
 export function startListSummary(words: SummaryWords, visibility: string | null | undefined, waitlistPublic?: boolean | null): string {

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { summaryPillHref } from "@/modules/registrations/domain/summary-filter-links";
 
 /**
- * BR-REQ-041-01, `DECISIONS.md` §NNN — where a pill of the registrations list's summary strip leads.
+ * BR-REQ-041-01, `DECISIONS.md` §626 — where a pill of the registrations list's summary strip leads.
  *
  * Every pill is a filter written into the address. What matters is what goes into that address
  * and what stays out: the list's own filters travel, the page's one-shot messages never do, and
@@ -10,7 +10,7 @@ import { summaryPillHref } from "@/modules/registrations/domain/summary-filter-l
  */
 const BASE = "/ro/admin/registrations";
 
-describe("§NNN a summary pill's address", () => {
+describe("§626 a summary pill's address", () => {
   it("sets the state and keeps the list's other filters", () => {
     const current = { eventId: "e1", q: "ana", clubMember: "1", bounced: "1", promo: "1", sort: "name", dir: "asc", perPage: "50" };
     const href = summaryPillHref(BASE, current, "CONFIRMED");

@@ -2,7 +2,7 @@ import type { RegistrationStatus } from "@/db/schema/registrations";
 import { buildListHref } from "@/modules/staff-identity/domain/admin-list-query";
 
 /**
- * Where a pill of the registrations list's summary strip leads (§NNN; the owner, 2026-10-01, on
+ * Where a pill of the registrations list's summary strip leads (§626; the owner, 2026-10-01, on
  * the strip: «Și aceste pilluri trebuie să fie clickable (filtre)»).
  *
  * Every pill is a link to the same page with `status` set — a filter, written in the address like

@@ -8,6 +8,12 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.57-2026-10-02
+
+- **The race number's column says «BIB»** — on «Cine vine» and the desk's printed list, the technical term the backoffice already uses. §625.
+- **«Înscrieri» counts the confirmed, with the waiting beside it; the summary's pills are filters** — the tab's badge is the confirmed (133, not 167) and a small hourglass pill beside it says how many wait; its tooltip reads «Confirmați: 133 · pe lista de așteptare: 10 · în curs: 24». On the list, every pill of «Cine s-a înscris» is a link to that state, the pressed one clears it. §626.
+- **«Coada de înscrieri» says when each waiting person sent the form** — «Formular trimis: …» beside when they joined the line, and where the club hands places out by hand the line is listed in the order the forms were sent, with a lead line saying which order is shown; the allocator and the automatic offers are untouched, and nothing is added to the public list. §627.
+- **«Lista de așteptare e publică», a switch per event** — under «Publică lista participanților» in the event editor, off by default: the public list shows the waiting list (those who ticked «Vreau să apar», in the list's order, no position) only for an event where it is on, and still only while the privacy notice describes the states; the form's caption under the tick names the waiting-list stage only there. §628.
 ## BR-V2.56-2026-10-01
 
 - **The terms say the club may refuse or cancel a registration** — on objective grounds only (conditions not met, false data, capacity or safety, conduct), told by email with the ground, never on a ground the law forbids; the club approves the terms from the new template in /admin/legal. §618.

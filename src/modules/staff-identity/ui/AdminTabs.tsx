@@ -30,7 +30,7 @@ export type AdminTab = {
   count?: number | null;
   /** What that figure counts, as the tab's tooltip (§277). */
   countHint?: string;
-  /** The people waiting on a list: a second, smaller pill with the hourglass, beside the figure, only above zero (§NNN). */
+  /** The people waiting on a list: a second, smaller pill with the hourglass, beside the figure, only above zero (§626). */
   countWaiting?: number;
   /** What a screen reader says for that pill — «10 pe lista de așteptare»; the glyph and the number are drawn only. */
   countWaitingLabel?: string;
@@ -196,7 +196,7 @@ function CountBadge({ count, hint, waiting, waitingLabel }: { count: number; hin
         {count}
       </Box>
       {/*
-        The people waiting (§NNN; the owner: «pune pilluri cu iconițe și cu numerele»): the same pill's
+        The people waiting (§626; the owner: «pune pilluri cu iconițe și cu numerele»): the same pill's
         shape, outlined so it reads as the lesser figure, the waiting list's hourglass before the number. It
         is one more word-wide chunk inside the tab, and the tab bar scrolls (`variant="scrollable"`), so at
         320 pixels it lengthens the row and never the page. Drawn only above zero; its name is the label.

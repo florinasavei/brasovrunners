@@ -73,7 +73,7 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     "event.bibDesign": inBox("bibs", t("editor.bibDesign.title")),
     "event.declarationDocumentId": inProgrammeRules("declaration", t("editor.declarationDocument")),
     "event.participantListVisibility": inProgrammeRules("startList", t("editor.participantList")),
-    // «Lista de așteptare e publică» (§NNN), under the list it narrows.
+    // «Lista de așteptare e publică» (§628), under the list it narrows.
     "event.waitlistPublic": inProgrammeRules("startList", t("editor.waitlistPublic")),
     "event.externalProvider": inBox("registration", t("editor.externalProvider")),
     "event.externalRegistrationUrl": inBox("registration", t("editor.externalRegistrationUrl")),

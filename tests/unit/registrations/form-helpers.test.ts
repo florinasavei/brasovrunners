@@ -22,7 +22,7 @@ import ro from "../../../messages/ro.json";
  * under a box. The database and the async parts not about the words are stood in for, the
  * `register-page-resting.test.ts` shape.
  */
-/** `waitlist`: the event's «Lista de așteptare e publică» (§NNN), on unless a test says otherwise. */
+/** `waitlist`: the event's «Lista de așteptare e publică» (§628), on unless a test says otherwise. */
 const state = vi.hoisted(() => ({ locale: "ro" as "ro" | "en", list: false, familyOpen: false, waitlist: true }));
 
 const EVENT = {
@@ -209,7 +209,7 @@ describe("§546 the registration form says only what a label cannot", () => {
   }
 
   /*
-    §NNN — the tick's caption never promises a stage the list will not print: on an event whose waiting
+    §628 — the tick's caption never promises a stage the list will not print: on an event whose waiting
     list is not public, it names the pending and the confirmed stages only.
   */
   for (const [locale, catalogue] of [["ro", ro], ["en", en]] as const) {

@@ -7,7 +7,7 @@ import { summaryPillHref, type SummaryQuery } from "../domain/summary-filter-lin
 
 /**
  * The registrations list's summary strip: how many there are, each state they are made of and the
- * test rows apart (§246) — and every pill a **filter** (§NNN; the owner, 2026-10-01: «Și aceste
+ * test rows apart (§246) — and every pill a **filter** (§626; the owner, 2026-10-01: «Și aceste
  * pilluri trebuie să fie clickabile (filtre)»).
  *
  * A Server Component with no island of its own: each pill is a `ChipLink`, an ordinary `<a>` with

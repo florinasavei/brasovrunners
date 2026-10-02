@@ -1096,7 +1096,7 @@ export async function registrationForm({
                     defaultChecked={prefill("listOptIn") === "on"}
                     help={
                       listStatesOn
-                        ? // The waiting-list stage only where the list prints it (§NNN): never a promise the page breaks.
+                        ? // The waiting-list stage only where the list prints it (§628): never a promise the page breaks.
                           t(listOptInStatesKey(view), {
                             pending: tEvent("startList.states.pending"),
                             waitlisted: tEvent("startList.states.waitlisted"),

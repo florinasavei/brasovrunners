@@ -60,7 +60,7 @@ export default function ChipLink({
   closeMark?: boolean;
   /** Stay where the reader is on the page rather than scroll to the top — a filter changed under their thumb. */
   keepScroll?: boolean;
-  /** A long sentence in the pill (the registrations summary's total, §NNN): the word wraps onto lines instead of being cut at the screen's edge. */
+  /** A long sentence in the pill (the registrations summary's total, §626): the word wraps onto lines instead of being cut at the screen's edge. */
   wrap?: boolean;
 }) {
   const look = { color: active ? ("primary" as const) : ("default" as const), variant: active ? ("filled" as const) : ("outlined" as const) };

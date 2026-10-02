@@ -1244,7 +1244,7 @@ export async function listFamilyReservationsForEvent<T extends Record<string, un
 }
 
 /**
- * The line the queue panel draws (§92), in the order it was asked to show (§NNN, `queueOrderFor`):
+ * The line the queue panel draws (§92), in the order it was asked to show (§627, `queueOrderFor`):
  * `SUBMITTED` — when this cycle's form was sent, for an event whose places are handed out by hand —
  * or `LINE` — `waitlisted_at`, the allocator's own. `id` breaks a tie either way. Display only: no
  * offer is made from this order, and the allocator reads its own (`lockOldestWaitlisted`).

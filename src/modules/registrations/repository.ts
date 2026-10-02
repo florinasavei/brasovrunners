@@ -619,7 +619,7 @@ export async function listPublicStartListOthers<T extends Record<string, unknown
    */
   firstStatesNoticeVersion: number,
   /**
-   * The event's «Lista de așteptare e publică» (§NNN, `events.waitlist_public`): false, and the
+   * The event's «Lista de așteptare e publică» (§628, `events.waitlist_public`): false, and the
    * waiting list is in no condition here — not a row, not a count — so an event that keeps it
    * private never reads one. A narrowing on top of the notice's gates, never a way round them.
    * Required, like the version above, so no caller can forget it.
@@ -666,7 +666,7 @@ export async function countPublicStartListOthers<T extends Record<string, unknow
   eventId: string,
   /** As `listPublicStartListOthers` (§421): consent given under an older notice is not counted here. */
   firstStatesNoticeVersion: number,
-  /** As `listPublicStartListOthers` (§NNN): false, and the waiting list is not counted either — `waitlisted` is 0. */
+  /** As `listPublicStartListOthers` (§628): false, and the waiting list is not counted either — `waitlisted` is 0. */
   includeWaitlisted: boolean,
 ): Promise<{ pending: number; waitlisted: number }> {
   const [row] = await db
@@ -689,7 +689,7 @@ export async function countPublicStartListOthers<T extends Record<string, unknow
 
 /**
  * The states the two queries above may read (§396): the pending always, the waiting list only for
- * an event whose «Lista de așteptare e publică» is on (§NNN). One list, so the page and its count
+ * an event whose «Lista de așteptare e publică» is on (§628). One list, so the page and its count
  * cannot disagree about who is in it.
  */
 function publicOtherStatuses(includeWaitlisted: boolean): RegistrationStatus[] {

@@ -147,7 +147,7 @@ export type ActionIconName =
   | "checkIn"
   | "undo"
   | "number"
-  // The people on the waiting list (§NNN): the hourglass «Coada» wears on its panel (`panel-glyphs.ts`) and the queue's line title, beside the «Înscrieri» tab's badge.
+  // The people on the waiting list (§626): the hourglass «Coada» wears on its panel (`panel-glyphs.ts`) and the queue's line title, beside the «Înscrieri» tab's badge.
   | "waiting"
   // The emergency details and the emergency sheet (§322): the first-aid case, never on the desk.
   | "emergency"

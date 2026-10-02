@@ -18,7 +18,7 @@ import { familyReservationHolds, offerAwaitingItsFirstEmail } from "./repository
  * is the number "how many are signed up" means to a club: cancellations are gone, last month's
  * race is history, and a synthetic runner is never inside a number the club is given (§12.6).
  *
- * ## What the tab shows of it (§NNN)
+ * ## What the tab shows of it (§626)
  *
  * The badge is the **confirmed** — «cine are loc sigur» — and a small pill beside it, with the waiting
  * list's hourglass, the people waiting; the tooltip says all three figures (the confirmed, the waiting
@@ -82,7 +82,7 @@ export type RegisteredOnEvent = {
   eventId: string;
   title: string;
   count: number;
-  /** CONFIRMED alone (§NNN): the figure the tab's badge shows. Always part of `withPlace`. */
+  /** CONFIRMED alone (§626): the figure the tab's badge shows. Always part of `withPlace`. */
   confirmed: number;
   withPlace: number;
   awaitingEmail: number;
@@ -147,7 +147,7 @@ export async function countRegisteredPerUpcomingEvent<T extends Record<string, u
       perEvent.get(row.eventId) ??
       { eventId: row.eventId, title: row.title ?? "—", count: 0, confirmed: 0, withPlace: 0, awaitingEmail: 0, waitlisted: 0, capacity: row.capacity };
     entry.count += row.value;
-    // A confirmed person holds a place, so «cu loc» keeps counting them (§621) and the badge reads the part alone (§NNN).
+    // A confirmed person holds a place, so «cu loc» keeps counting them (§621) and the badge reads the part alone (§626).
     if (row.bucket === "confirmed") {
       entry.confirmed += row.value;
       entry.withPlace += row.value;
@@ -162,7 +162,7 @@ export async function countRegisteredPerUpcomingEvent<T extends Record<string, u
 const cachedBreakdown = new Map<Locale, { at: number; value: RegisteredOnEvent[] }>();
 
 /**
- * The tab's three figures and the per-event split they come from (§NNN): the people **confirmed** (the
+ * The tab's three figures and the per-event split they come from (§626): the people **confirmed** (the
  * badge), the people **waiting** on a list, and everybody **in progress** between the two —
  * awaiting the email, awaiting the signature, holding an offer or a family's reservation. The three
  * add up to `total`, the people with an active registration at an upcoming event.
@@ -209,7 +209,7 @@ export const BADGE_HINT_EVENTS = 5;
 
 /** The words the hint is built from, in the reader's language — the `Admin.nav` entries. */
 export type BadgeHintWords = {
-  /** «Confirmați: 133 · pe lista de așteptare: 10 · în curs: 24» (§NNN). */
+  /** «Confirmați: 133 · pe lista de așteptare: 10 · în curs: 24» (§626). */
   rule: (confirmed: number, waitlisted: number, inProgress: number) => string;
   /** "{title}: {count} — {parts}". */
   event: (title: string, count: number, parts: string) => string;
@@ -221,7 +221,7 @@ export type BadgeHintWords = {
 };
 
 /**
- * The tab's tooltip text (§621, §NNN): the three figures the tab is made of in one line — the badge is the
+ * The tab's tooltip text (§621, §626): the three figures the tab is made of in one line — the badge is the
  * first, the pill beside it the second — then each upcoming
  * event with its total and who holds a place — "153 — 144 of 150 places taken, 9 awaiting the
  * email confirmation" — a zero part omitted except the places; the first `BADGE_HINT_EVENTS` by

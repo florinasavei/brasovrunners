@@ -61,7 +61,7 @@ const NOT_A_BOX = new Set([
   "elevationGainEstimated",
   // «Aproximativ» beside «Distanță (m)» (§598): a tick in «Traseu».
   "distanceEstimated",
-  // «Lista de așteptare e publică» (§NNN): a tick under the public list's own.
+  // «Lista de așteptare e publică» (§628): a tick under the public list's own.
   "waitlistPublic",
 ]);
 
