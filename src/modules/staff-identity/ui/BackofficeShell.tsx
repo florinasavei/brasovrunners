@@ -4,6 +4,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
+import { countForm } from "@/i18n/count-form";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import type { StaffUser } from "@/db/schema/staff-users";
@@ -11,7 +12,7 @@ import { getDb } from "@/db/client";
 import { registeredBadgeBreakdown, registeredBadgeHint } from "@/modules/registrations/nav-count";
 import { type AdminSection, canReadRegistrations, visibleAdminSections } from "../domain/roles";
 import { STAFF_ROLE_LABEL } from "../domain/staff-labels";
-import AdminTabs, { type AdminTab } from "./AdminTabs";
+import AdminTabs, { type AdminTab, type CountPill } from "./AdminTabs";
 import { PAGE_WIDTH } from "@/theme/brand";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import OpenFoldFromHash from "@/shared/ui/OpenFoldFromHash";
@@ -73,17 +74,38 @@ export default async function BackofficeShell({
   const breakdown = canReadRegistrations(staffUser.role)
     ? await registeredBadgeBreakdown(getDb(), new Date(), locale)
     : null;
-  // The badge says who is confirmed, the pill beside it who waits (§626); the rest are in progress, and only the tooltip says them.
-  const registered = breakdown?.confirmed ?? null;
-  const waiting = breakdown?.waitlisted ?? 0;
   /*
-    The tooltip says what the figures count, per event (§476): the three figures in one line, then
+    The badge says who has a place (§NNN, amending §626's confirmed alone; the owner, 2026-10-02: «pune-o și
+    pe cei care trebuie să confirme înregistrarea»), and a pill per group still in progress follows it: those
+    completing their registration with a place (part of the badge), those awaiting the email confirmation
+    and the waiting list (both outside it) — «Tot pe acest pill trebuie să afișăm și pe cei care așteaptă
+    confirmarea mailului sau semnarea declarației». The tooltip says every figure.
+  */
+  const registered = breakdown?.withPlace ?? null;
+  const pillCounts = breakdown
+    ? { inProgress: breakdown.withPlace - breakdown.confirmed, awaitingEmail: breakdown.awaitingEmail, waiting: breakdown.waitlisted }
+    : { inProgress: 0, awaitingEmail: 0, waiting: 0 };
+  // Only above zero, each with the words a screen reader says for its glyph and number.
+  const countPills: CountPill[] = [
+    { kind: "inProgress" as const, count: pillCounts.inProgress, label: t("nav.registeredInProgressLabel", { count: pillCounts.inProgress }) },
+    { kind: "awaitingEmail" as const, count: pillCounts.awaitingEmail, label: t("nav.registeredAwaitingEmail", { count: pillCounts.awaitingEmail }) },
+    { kind: "waiting" as const, count: pillCounts.waiting, label: t("nav.registeredWaitingLabel", { count: pillCounts.waiting }) },
+  ].filter((pill) => pill.count > 0);
+  /*
+    The tooltip says what the figures count, per event (§476): the badge's figure, its split and the rest in one line (§NNN), then
     each upcoming event with its number, the first five by start and how many more after them — so
     a reader whose list disagrees with the badge sees which event the difference is on.
   */
   const registeredHint = breakdown
     ? registeredBadgeHint(breakdown, {
-        rule: (confirmed, waitlisted, inProgress) => t("nav.registeredHint", { confirmed, waitlisted, inProgress }),
+        rule: ({ withPlace, confirmed, pendingPlace, waitlisted, awaitingEmail }) =>
+          t("nav.registeredHint", {
+            withPlace,
+            confirmed: t(`nav.registeredConfirmed.${countForm(confirmed, locale)}`, { count: confirmed }),
+            pendingPlace,
+            waitlisted,
+            awaitingEmail,
+          }),
         event: (title, count, parts) => t("nav.registeredEvent", { title, count, parts }),
         withPlace: (count) => t("nav.registeredWithPlace", { count }),
         withPlaceOf: (count, capacity) => t("nav.registeredWithPlaceOf", { count, capacity }),
@@ -100,8 +122,7 @@ export default async function BackofficeShell({
     ...(section === "registrations" ? {
           count: registered,
           countHint: registeredHint,
-          // Only above zero, with the words a screen reader says for the glyph and the number (§626).
-          ...(waiting > 0 ? { countWaiting: waiting, countWaitingLabel: t("nav.registeredWaitingLabel", { count: waiting }) } : {}),
+          ...(countPills.length > 0 ? { countPills } : {}),
         } : {}),
     // `/devs` is «Setări»'s last tab and no section of its own (§520): the bar lights «Setări» there.
     ...(section === "settings" ? { alsoActiveOn: [getPathname({ locale, href: "/devs" })] } : {}),

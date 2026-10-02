@@ -115,6 +115,53 @@ export function confirmedPhrase(say: Say, locale: string, counts: { confirmed: n
 }
 
 /**
+ * The «Cine vine» fold's two headline readings (§NNN, amending §346): the number in its title and
+ * the bold line under it.
+ *
+ * The owner, 2026-10-02, of a page reading «150 de înscriși din 150 de locuri — 134 de confirmați, 16
+ * în curs de confirmare» above «Cine vine (134)»: «pune-o și pe cei care trebuie să confirme
+ * înregistrarea». So, for a **capped** event whose cached public read knows the counts (`fill`
+ * with `confirmed`), the people completing their registration — `fill.taken - fill.confirmed`, the
+ * places line's own «în curs de confirmare» — are added to the title, and the line says the split:
+ * «150 de înscriși — 134 de confirmați (120 cu numele afișat), 16 în curs de confirmare».
+ *
+ * Everything else reads exactly as before — «Cine vine (134)» over «134 de participanți confirmați —
+ * 120 cu numele afișat»:
+ * - **nothing in progress**: the two readings are the same number;
+ * - **an uncapped event** (`fill` null): on purpose. §32 declined to publish a head count of held
+ *   places with no «out of» beside it, and the places line does not show there either, so the page
+ *   has no in-progress number to repeat;
+ * - **a cache entry from before the counts** (`confirmed` absent): no split to say.
+ *
+ * `confirmed` is the start list's own count — REAL rows only (`countPublicStartList`) — while the
+ * in-progress figure is the places line's, from the allocator's kind-blind count (`readPublicPlaces`,
+ * `AGENTS.md` §12.6). On QA a TEST row can therefore make the two reads differ by the test rows, as
+ * §615 already accepts for the places line beside the title; production has no TEST row. The number
+ * comes from the page's one cached read (`readRegistrationDoor`), never a query of this list's own.
+ */
+export function startListHeadline(
+  say: Say,
+  locale: string,
+  counts: { confirmed: number; named: number },
+  fill: PublicFill | null,
+): { count: number; inProgress: number; line: string } {
+  const inProgress = fill && fill.confirmed !== undefined ? Math.max(fill.taken - fill.confirmed, 0) : 0;
+  if (inProgress === 0) return { count: counts.confirmed, inProgress, line: confirmedPhrase(say, locale, counts) };
+  const count = counts.confirmed + inProgress;
+  return {
+    count,
+    inProgress,
+    // The places line's own words for each part (`cta.fill*`), so the page says one thing one way.
+    line: say("startList.summaryInProgress", {
+      taken: say(`cta.fillTaken.${countForm(count, locale)}`, { count }),
+      confirmed: say(`cta.fillConfirmed.${countForm(counts.confirmed, locale)}`, { count: counts.confirmed }),
+      named: counts.named,
+      inProgress: say("cta.fillInProgress", { count: inProgress }),
+    }),
+  };
+}
+
+/**
  * "3 înscriși în așteptarea confirmării", "5 pe lista de așteptare" (§396): the rows the list
  * gains behind the privacy notice's gate, each group in its own words, and only the groups that
  * have anybody — "0 pe lista de așteptare" is a sentence about nobody. Counted from the same
