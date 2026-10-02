@@ -810,7 +810,7 @@
       "declarationPaper": "pe hârtie, înregistrată de {who}",
       "signedByMinor": "minorul",
       "signedByGuardian": "părintele sau tutorele",
-      "confirmOnPaperBodyMinor": "Confirmi că minorul și părintele ({guardian}) au semnat amândoi declarația pe hârtie, la masă. Doar cu hârtia cu ambele semnături în față.",
+      "confirmOnPaperBodyMinor": "Confirmi că minorul și părintele ({guardian}) au semnat amândoi pe hârtie. Doar cu hârtia cu ambele semnături în față. Apoi emailul de confirmare; dacă nu e loc, lista de așteptare, fără email acum.",
       "emailVouched": "adresă garantată de {who}",
       "journey": {
         "title": "Parcursul înscrierii",
@@ -858,7 +858,7 @@
       "openRow": "Deschide înscrierea",
       "cancel": "Anulează înscrierea",
       "cancelBody": "Persoana primește un email. Nu se poate desface. Locul se oferă primului de pe lista de așteptare sau rămâne liber, după setare. Refuzul, cu motivul lui, se face din pagina înscrierii.",
-      "confirmOnPaperBody": "Confirmi că participantul a semnat declarația pe hârtie, la masă. Primește locul și numărul. Doar cu hârtia semnată în față.",
+      "confirmOnPaperBody": "Confirmi că participantul a semnat declarația pe hârtie, la masă. Doar cu hârtia semnată în față. Apoi primește emailul de confirmare; dacă nu e loc, intră pe lista de așteptare, fără email acum.",
       "downloadBib": "Descarcă numărul de concurs (BIB)",
       "notOnPublicList": "Nu apare public",
       "erase": "Șterge definitiv",
@@ -4266,7 +4266,11 @@
       "checkedInAt": "Prezent la {time} · {who}",
       "bySelf": "singur",
       "fastTrack": "Persoana este la masă: confirm eu adresa, iar declarația se semnează pe hârtie acum.",
-      "fastTrackHelp": "Înscrierea e confirmată pe loc, fără email; participantul semnează declarația pe hârtie, iar tu o înregistrezi. Dacă e plin, intră pe lista de așteptare.",
+      "fastTrackHelp": "Confirmată pe loc, fără link din email: participantul semnează declarația pe hârtie în fața ta, iar tu o înregistrezi. Dacă e plin, intră pe lista de așteptare; altfel primește emailul de confirmare.",
+      "paperWhen": "Doar la masă, cu declarația semnată pe hârtie de participant în fața ta. Declarația și, dacă adresa nu era confirmată, adresa se înregistrează pe numele tău; nu semnezi tu.",
+      "paperPlace": "Cine nu are încă loc îl primește ca oricând: dacă evenimentul e plin sau cineva așteaptă, intră pe lista de așteptare, iar o listă plină refuză apăsarea.",
+      "paperEmail": "Cu loc: emailul de confirmare cu QR, număr și copia declarației. Pe listă: niciun email acum, oferta vine pe email când primește un loc; declarație neînregistrată. Adresa neconfirmată, pe numele tău.",
+      "paperNot": "Nu e o scurtătură înainte de cursă, fără persoana de față. Dacă emailul n-a ajuns, un administrator apasă «Retrimite emailul» pe înscriere.",
       "saved": {
         "registrationCreated": "Persoana a fost adăugată — o vezi mai jos, cu starea în care a ajuns.",
         "registrationConfirmed": "Confirmat. Poți da numărul și marca prezența.",
@@ -5027,6 +5031,7 @@
                 "Pe rând scrie «Așteaptă semnarea declarației» sau «Așteaptă confirmarea emailului».",
                 "Dă-i formularul de declarație tipărit. Îl citește și îl semnează el. Un minor: semnează și părintele sau tutorele, fiecare cu actul lui.",
                 "Apasă «Confirmă pe hârtie», apoi în fereastră din nou «Confirmă pe hârtie».",
+                "Dacă persoana primește locul, primește emailul de confirmare, cu codul QR, numărul și copia declarației; emailul de semnare nu mai pleacă. Dacă nu e loc, intră pe lista de așteptare, nu primește niciun email acum și oferta vine pe email când primește un loc.",
                 "Apoi «Marchează prezent» și numărul. Foaia semnată o păstrezi pentru organizator."
               ]
             },

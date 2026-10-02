@@ -70,6 +70,7 @@ import { shortTextHash } from "@/modules/legal-documents/domain/signed-text";
 import { withSendNowChoice } from "@/modules/notifications/domain/send-at-once";
 import { sendNowChoiceFor } from "@/modules/notifications/send-now-choice";
 import GivePlaceButton from "@/modules/registrations/ui/GivePlaceButton";
+import PaperConfirmationTip from "@/modules/registrations/ui/PaperConfirmationTip";
 import OfferPlaceButton from "@/modules/registrations/ui/OfferPlaceButton";
 import { givePlaceNowAhead, offerDeadlineIfMadeNow } from "@/modules/registrations/give-place-tip";
 
@@ -525,9 +526,13 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         can be given it again from a screen.
       */}
       <Box component="section">
-        <Typography variant="h3" sx={{ fontSize: "1rem", mb: 1 }}>
-          {tr("registrations.raceDayTitle")}
-        </Typography>
+        <Stack direction="row" spacing={0.5} sx={{ alignItems: "center", mb: 1 }}>
+          <Typography variant="h3" sx={{ fontSize: "1rem" }}>
+            {tr("registrations.raceDayTitle")}
+          </Typography>
+          {/* What the paper confirmation is for, does and sends (§NNN): only where the button is. */}
+          {canConfirmNow && <PaperConfirmationTip />}
+        </Stack>
         <Stack spacing={2}>
           {canConfirmNow && (
             <ActionForm
@@ -547,7 +552,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                   {tr("desk.confirmHere")}
                 </GlyphButton>
                 <Typography variant="body2" color="text.secondary">
-                  {tr("desk.fastTrackHelp")}
+                  {/* When, what the person gets, what it is not; the «i» beside the title adds the place's rule (§NNN). */}
+                  {tr("desk.paperWhen")} {tr("desk.paperEmail")} {tr("desk.paperNot")}
                   {/* A minor's paper is signed by the minor and the parent, and the press attests both
                       (§330) — where the declaration in effect asks the minor to sign. */}
                   {registration.guardianName && minorSigns && <> {tr("desk.confirmMinorNote", { guardian: registration.guardianName })}</>}

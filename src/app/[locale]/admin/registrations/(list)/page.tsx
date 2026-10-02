@@ -81,6 +81,7 @@ import {
 import { ALL_EVENTS, AUTOMATIC, defaultEventFilter } from "@/modules/registrations/domain/default-event-filter";
 import { rowVerbsFor } from "@/modules/registrations/domain/row-verbs";
 import { givePlaceRefusalAhead } from "@/modules/registrations/give-place-tip";
+import { paperConfirmationText } from "@/modules/registrations/ui/PaperConfirmationTip";
 import RegistrationRowMenu, { type RegistrationMenuItem } from "@/modules/registrations/ui/RegistrationRowMenu";
 import { CLUB_NAME } from "@/theme/brand";
 import { actionKeyOf } from "@/shared/forms/action-key";
@@ -1341,6 +1342,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                   icon: "confirm",
                   label: t("desk.confirmOnPaper"),
                   formId: `confirm-${row.id}`,
+                  // What the press is for and what the person receives: the registration page's «i», word for word (§NNN).
+                  hint: paperConfirmationText(t),
                 });
               }
               if (verbs.includes("givePlace")) {
