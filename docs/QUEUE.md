@@ -125,6 +125,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Baseline | What |
 | --- | --- |
+| `BR-V2.60` | «Dă-i un loc acum»: an Administrator vouches for an unconfirmed address and gives the place ahead of the line (§637) |
 | `BR-V2.59` | the headline numbers count everyone with a place: «Cine vine (N)» and the «Înscrieri» badge with a pill per group in progress (§632) · the waiting list's length is a choice in words; a typed 0 never closes a list (§633) · «Arată public câți așteaptă»: a per-event tick that keeps the waiting list's count — and each person's place in it — off the public pages and the waiting person's own sentences (§634) · the backoffice says when each person loses the place (§635) · the club's right to refuse is on the form and the steps once the terms in force carry it (§636) |
 | `BR-V2.58` | each person on the waiting list sees where they stand; the places line says how many wait (§629) · waiting-list setting renamed «Locurile din lista de așteptare se alocă automat»; «BID» → «BIB» in the catalogues (§630) (§630) · the cancel dialog says the person is emailed (§631) |
 | `BR-V2.57` | the race number's column says «BIB» (§625) · the «Înscrieri» badge counts the confirmed with the waiting beside it; the summary's pills are filters (§626) · the queue panel says when each waiting form was sent and lists them in that order when places are handed out by hand (§627) · a per-event switch «Lista de așteptare e publică» for the public list's waiting list (§628) |

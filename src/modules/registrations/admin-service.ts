@@ -6,6 +6,7 @@ import { participants } from "@/db/schema/participants";
 import { type Registration, registrations } from "@/db/schema/registrations";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
+import type { Deadlines } from "@/modules/deadlines/domain/deadlines";
 import type { Locale } from "@/i18n/routing";
 import { recordAuditEvent, scrubParticipantFromAudit, scrubRegistrationFromAudit } from "@/modules/audit/repository";
 import { consumeRateLimit } from "@/modules/rate-limit/service";
@@ -48,6 +49,7 @@ import {
   checkIn,
   confirmByStaff,
   type EventForRegistration,
+  givePlaceNowByStaff,
   offerPlaceToByStaff,
   promoteFromWaitlistByStaff,
   submitRegistration,
@@ -713,6 +715,28 @@ export async function confirmRegistrationByStaff<T extends Record<string, unknow
     now,
   });
   return result;
+}
+
+/**
+ * «Dă-i un loc acum» (§637): an Administrator vouches for the address of a registration still waiting
+ * for it and gives the place now, ahead of the line — `service.ts#givePlaceNowByStaff` says how, and
+ * writes the audit row in the same transaction. The Administrator's (`canManageRegistrations`, §289),
+ * asserted here before anything is read, and again in the service.
+ */
+export async function givePlaceToUnconfirmedByStaff<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  registrationId: string,
+  now: Date,
+  settings?: Deadlines,
+): Promise<Registration> {
+  if (!canManageRegistrations(actor.role)) {
+    throw new DomainError("FORBIDDEN", `role ${actor.role} may not give a place to an unconfirmed registration`);
+  }
+  const current = await findRegistrationById(db, registrationId);
+  if (!current) throw new DomainError("NOT_FOUND", "no such registration");
+  const event = await eventForRegistration(db, current.eventId);
+  return givePlaceNowByStaff(db, event, registrationId, actor, now, settings);
 }
 
 /** A place ahead of the queue, into a free one (BR-REQ-037-07); refused when full. */

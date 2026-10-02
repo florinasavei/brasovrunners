@@ -252,6 +252,22 @@ async function renderRow(
   }
 
   /*
+    A verification email for an address the club has since vouched for (§637 «Dă-i un loc acum», §67's
+    paper at the desk): the registration has moved on and its link would confirm nothing, so a late
+    «confirm your address, valid 48 hours» is withdrawn rather than sent (the review of 2026-10-02,
+    finding 2). The press deletes such a row never tried; this catches one being retried. A row still
+    waiting for its address is untouched.
+  */
+  if (
+    row.messageType === "VERIFY_REGISTRATION_EMAIL" &&
+    registration &&
+    registration.status !== "PENDING_EMAIL_CONFIRMATION" &&
+    registration.emailConfirmedByStaffUserId !== null
+  ) {
+    throw new OutboxMessageWithdrawn("the club vouched for the address: there is nothing left to confirm");
+  }
+
+  /*
     A family's one confirmation (§519, `queueFamilyConfirmed`): everybody the family's one button
     confirmed who is confirmed now, read at send time, in the order the forms were sent — each with
     their QR code, desk code and race number. Nobody confirmed any more (cancelled, erased): nothing

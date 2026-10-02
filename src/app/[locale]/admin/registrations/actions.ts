@@ -13,6 +13,7 @@ import {
   correctRegisteredName,
   createRegistrationByStaff,
   deleteRegistrationByStaff,
+  givePlaceToUnconfirmedByStaff,
   handedBibRefusalCode,
   offerPlaceByStaff,
   promoteRegistrationByStaff,
@@ -197,6 +198,27 @@ export async function offerPlaceAction(_previous: FormOutcome | null, form: Form
     outcome = noFreePlaceOutcome(error) ?? (afterClose ? { error: afterClose } : outcomeOf(error));
   }
   return backToDesk(form, locale, registrationId, outcome);
+}
+
+/**
+ * «Dă-i un loc acum» (§637): on a registration still waiting for its address, the Administrator
+ * vouches for the address and gives the place now, ahead of the waiting list; the declaration email
+ * leaves at once. The Administrator's (`canManageRegistrations`), asserted here and again in the
+ * service. A full event says who holds the places (§589's sentence) and nothing is written.
+ */
+export async function givePlaceNowAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = toLocale(form.get("uiLocale"));
+  const registrationId = text(form, "registrationId");
+
+  let outcome: Record<string, string | undefined>;
+  try {
+    const actor = await requireStaffCapability(canManageRegistrations);
+    await givePlaceToUnconfirmedByStaff(getDb(), actor, registrationId, new Date());
+    outcome = { saved: "placeGiven" };
+  } catch (error) {
+    outcome = noFreePlaceOutcome(error) ?? outcomeOf(error);
+  }
+  return backTo(detailPath(locale, registrationId), outcome);
 }
 
 /**
