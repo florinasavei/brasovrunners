@@ -563,7 +563,7 @@ export const events = pgTable(
     waitlistCapacity: integer("waitlist_capacity"),
     /**
      * Whether a freed or added place is offered to the waiting list on its own (§615, amending §104,
-     * §587 and §589): «Ofertele din lista de așteptare pleacă automat» — «Da» or «Nu» under the
+     * §587 and §589): «Locurile din lista de așteptare se alocă automat» — «Da» or «Nu» under the
      * capacity. True, the default and every event before the column, is what `fillAvailableSpots`
      * has always done: the place goes to the head of the line in the transaction that frees it. False,
      * `fillAvailableSpots` offers nothing — the one gate, read off the locked row — and the organizer

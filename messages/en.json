@@ -2063,10 +2063,10 @@
       "membersOnly": "BVR members only",
       "membersOnlyHelp": "Only signed-in members see it; it is not on the public site. Existing registrations stay.",
       "membersOnlyShort": "Members only",
-      "waitlistAutoOffer": "Waiting-list offers go out automatically",
+      "waitlistAutoOffer": "Places from the waiting list are allocated automatically",
       "waitlistAutoOfferYes": "Yes",
       "waitlistAutoOfferNo": "No",
-      "waitlistAutoOfferHelp": "On “Yes”, a place that frees up or is added is offered at once to the first person on the waiting list. On “No”, places stay free until you hand them out.",
+      "waitlistAutoOfferHelp": "On “Yes”, a freed or added place is offered at once, by email and with a deadline, to the first on the waiting list. On “No”, places stay free until you hand them out.",
       "waitlistAutoOfferHelpMore": "You hand them out from the “Registration queue” with “Send them the offer”, or at the desk with “Give a place”. While anyone waits, newcomers join the list too."
     },
     "preview": {
@@ -4181,8 +4181,8 @@
       "bibFree": "Free numbers at this event: {numbers}. The saved number reaches the participant by email, with the QR code; a number somebody else already wears is refused.",
       "guardian": "Minor — parent/guardian: {name}",
       "confirmOnPaper": "Confirm on paper",
-      "showBib": "Show the race number (BID)",
-      "bibAlt": "Race number (BID) {number}",
+      "showBib": "Show the race number (BIB)",
+      "bibAlt": "Race number (BIB) {number}",
       "voidCancelled": "Registration cancelled on {date}",
       "voidExpired": "Registration expired on {date}",
       "voidPrinted": "Number {number} has been printed — do not hand it out. Numbers are never reused.",
@@ -4902,7 +4902,7 @@
                 "Press «Scan» and hold the code in the frame (it works on Android). On an iPhone: open the Camera app, point it at the code and tap the link that appears.",
                 "The person's row opens: check the name with them.",
                 "Press «Mark present». It asks nothing; a message appears at the bottom.",
-                "Hand over the race number from the pile — the number is shown large on the row. To see the number drawn: «Show the race number (BID)».",
+                "Hand over the race number from the pile — the number is shown large on the row. To see the number drawn: «Show the race number (BIB)».",
                 "For the next one: «Back to the desk»."
               ]
             },
@@ -5045,7 +5045,7 @@
                 "The «How far» column says each person's step. Press a name to open the registration: «The registration's journey» and «Timeline» say everything that happened.",
                 "The top says once what you cannot change here. The Tehnic role does not see registrations at all.",
                 "On the event's public page, the first number counts the registrations holding a place: the confirmed plus those still in progress — a declaration not signed yet, a waiting-list offer not accepted yet, a place a family holds. After the dash the line names only what exists: how many are confirmed and how many in progress, and how many free places are kept for the waiting list, for example “6 registered of 10 places — 4 confirmed, 2 completing their registration, 4 places kept for the waiting list”.",
-                "Places kept are free places the waiting list claims, and the card shows them in two ways. With more places free than people waiting, the card says «Places are given from the waiting list» and counts no free place. When the list claims every free place, as in the example, the card says the places are taken — “Thank you! All 10 places are taken — … already waiting.” — and offers «Join the waiting list», while the places line still names “4 places kept for the waiting list”. Either way those places are free: with «Waiting-list offers go out automatically» on «No» the club hands them out, with «Send them the offer»; on «Yes» the queue does, to the first on the list.",
+                "Places kept are free places the waiting list claims, and the card shows them in two ways. With more places free than people waiting, the card says «Places are given from the waiting list» and counts no free place. When the list claims every free place, as in the example, the card says the places are taken — “Thank you! All 10 places are taken — … already waiting.” — and offers «Join the waiting list», while the places line still names “4 places kept for the waiting list”. Either way those places are free: with «Places from the waiting list are allocated automatically» on «No» the club hands them out, with «Send them the offer»; on «Yes» the queue does, to the first on the list.",
                 "The «Who's coming» list holds only those who ticked that they want to appear on it, mostly the confirmed, so the first number and the list differ. On the card, “1 place offered from the waiting list” is a place sent to somebody on the list who has not accepted it yet."
               ]
             },
@@ -5249,7 +5249,7 @@
               "steps": [
                 "«Events» → «Edit» → the «Taking part and registration» card.",
                 "«Registration mode» → «Înscrieri pe site» (registration on the site).",
-                "«Capacity» and «Maximum waiting-list length» (empty = no limit, 0 = no list). Below them, «Waiting-list offers go out automatically»: «Yes» gives every freed or added place to the first on the list; «No» if you want to choose (see “Choose who gets a freed place”).",
+                "«Capacity» and «Maximum waiting-list length» (empty = no limit, 0 = no list). Below them, «Places from the waiting list are allocated automatically»: «Yes» gives every freed or added place to the first on the list; «No» if you want to choose (see “Choose who gets a freed place”).",
                 "«Registration period»: «Registration opens» and «Registration closes».",
                 "«Confirmation window»: «Participation confirmation: asked how many days before» and, in the box beside it, how many days before it is due (0 = the place never lapses before the start).",
                 "«Programme, rules and declaration» → «Rules»: «Minimum age to take part» (14 unless you change it, never under 14), on every type of event. The declaration: «Programme, rules and declaration» → «Self-declaration» → «Declaration a participant signs».",
@@ -5261,7 +5261,7 @@
               "title": "Choose who gets a freed place",
               "steps": [
                 "«Events» → «Edit» on the race's row → the «Taking part and registration» card.",
-                "Under «Waiting-list offers go out automatically» choose «No» and press «Save». On «No», a freed or added place stays free until you hand it out.",
+                "Under «Places from the waiting list are allocated automatically» choose «No» and press «Save». On «No», a freed or added place stays free until you hand it out.",
                 "Only then raise «Capacity», by as many places as you want to hand out now. On «Yes», added places go at once, as offers, to the first on the list.",
                 "The «Registrations received» card → «Registration queue»: on the chosen person's waiting-list row press «Send them the offer». The same button is on their registration's page too.",
                 "The window says until when they have; press «Send them the offer» again. They get the ordinary «A place has freed up» email, with the ordinary deadline, {offer}: from the email they press «Confirm the place» and sign the declaration, if they have not yet.",
@@ -5296,7 +5296,7 @@
               "steps": [
                 "«Registrations» → find the person → press their name.",
                 "Wrong name: under «Correct the name» type the right one → «Save the name».",
-                "Not coming any more: «Cancel the registration», write the «Reason», press «Cancel the registration» and confirm. The place goes to the first on the waiting list; if the event's offers do not go out automatically, it stays free until you hand it out.",
+                "Not coming any more: «Cancel the registration», write the «Reason», press «Cancel the registration» and confirm. The place goes to the first on the waiting list; if the event's places are not allocated automatically, it stays free until you hand it out.",
                 "The email never arrived: «Resend email» → «Send now, without waiting for the scheduled round».",
                 "They ask for their data to be erased: «Delete permanently», write the «Reason for deletion», tick «I confirm this deletion is permanent» and press «Delete permanently».",
                 "Several at once: tick the rows on the list → «Cancel the ticked ones»."
@@ -5599,7 +5599,7 @@
               "steps": [
                 "From any email about their registration: «I can't make it any more» → at «Why are you cancelling?» choose the reason (for «Another reason» they write it in short) → «Cancel the registration for…» (with the person's name) → «Yes, cancel».",
                 "On a family's email, the button opens «My registrations», with each person: «Withdraw from this registration», with the reason chosen too. The same any time, from the site, with their address.",
-                "In a family's declarations: «Withdraw the registration for…», with the reason chosen too. The place goes to the waiting list at once, or stays free for the club, if that event's offers do not go out automatically.",
+                "In a family's declarations: «Withdraw the registration for…», with the reason chosen too. The place goes to the waiting list at once, or stays free for the club, if that event's places are not allocated automatically.",
                 "The reason shows on the registration's page, in the export and in the club's copy of the cancellation email."
               ]
             },
