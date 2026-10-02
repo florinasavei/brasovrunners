@@ -27,6 +27,7 @@ import {
   noticeDescribesListStates,
   noticeDescribesNewsletter,
   noticeDescribesTeamPage,
+  termsDescribeRefusal,
   raceDeclarationsCurrent,
   groupRunDeclarationsSeriesCurrent,
 } from "@/modules/legal-documents/repository";
@@ -413,6 +414,8 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   const tasks = sortTasks(
     ownerTasks({
       hasApprovedPrivacyNotice: Boolean(privacyNotice),
+      // §NNN: the refusal row's own gate — terms in force, in the reader's language, as the notice's row above.
+      hasApprovedTerms: Boolean(await findCurrentApprovedDocument(db, "TERMS", locale, now)),
       // §396: the text in force switches the public list's states on, in every language.
       listStatesDescribed: await noticeDescribesListStates(db, now),
       // §500: the same switch for Strava and Instagram beside a name on the public list.
@@ -425,6 +428,8 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       // §445: the same switch for the newsletter's pop-up on the contact page.
       newsletterDescribed: await noticeDescribesNewsletter(db, now),
       gmailFallbackDescribed: await noticeDescribesGmailFallback(db, now),
+      // §NNN: the terms in force carry the club's right to refuse a registration, in every language.
+      refusalDescribed: await termsDescribeRefusal(db, now),
       // §459: the team page's names and photographs, described by the notice in force.
       teamPageDescribed: await noticeDescribesTeamPage(db, now),
       // §515: both race declarations, trail and road or park, from the platform's shared body.

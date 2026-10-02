@@ -28,6 +28,14 @@
  * a registration is a unilateral termination); the form's box keeps its reviewed words (§421) until
  * the lawyer says whether they must name it. A lawyer reads that paragraph first.
  *
+ * Its five grounds are also the switch (§NNN; the owner, 2026-10-02: «La edițiile următoare trebuie
+ * sa aducă [= să apară] că organizatorul își rezervă dreptul de a refuza înscrieri»): while the terms
+ * in force, in every language, spell them word for word (`describesRefusal`,
+ * `legal-documents/domain/refusal-clause.ts`, which a test holds to this paragraph), the form's
+ * express box names the refusal (`Registration.terms.acceptWithRefusal`) and the fold «Cum
+ * funcționează înscrierea» says it. They stay literal words here, not a merge field, so the draft
+ * the club and its lawyer read in `/admin/legal` and its PDF shows them in full.
+ *
  * §1's separate box and the version §9 records are `Registration.terms.accept` on the form and `registrations.terms_version` (§421).
  */
 import type { LegalDocumentBody } from "../domain/content-hash";

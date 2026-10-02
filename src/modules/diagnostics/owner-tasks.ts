@@ -62,6 +62,7 @@ export type TaskId =
   | "sponsorNotice"
   | "newsletterNotice"
   | "gmailFallbackNotice"
+  | "refusalTerms"
   | "teamPageNotice"
   | "raceDeclarations"
   | "groupRunSeriesTexts"
@@ -95,6 +96,7 @@ export const TASK_KIND: Record<TaskId, TaskKind> = {
   sponsorNotice: "text",
   newsletterNotice: "text",
   gmailFallbackNotice: "text",
+  refusalTerms: "text",
   teamPageNotice: "text",
   raceDeclarations: "text",
   groupRunSeriesTexts: "text",
@@ -166,6 +168,8 @@ export type OwnerTaskInputs = {
   legalTextIsSample: boolean;
   /** Does an approved privacy notice exist at all? Without one, registration refuses everyone. */
   hasApprovedPrivacyNotice: boolean;
+  /** Are terms in force at all (§421)? The refusal row (§NNN) asks for new ones only where some exist. */
+  hasApprovedTerms: boolean;
   /**
    * Does the notice in force, in every language, describe the public list's states (§396,
    * `noticeDescribesListStates`)? Until it does, every public list shows confirmed names only.
@@ -204,6 +208,12 @@ export type OwnerTaskInputs = {
    * Mailgun se oprește» is greyed and a Mailgun stop holds participants' mail.
    */
   gmailFallbackDescribed: boolean;
+  /**
+   * Do the terms in force, in every language, carry the club's right to refuse a registration on
+   * objective grounds (§NNN, §618, `termsDescribeRefusal`)? Until they do, the form's express box and
+   * the fold «Cum funcționează înscrierea» say nothing of a refusal.
+   */
+  refusalDescribed: boolean;
   /**
    * Does the notice in force, in every language, describe «Echipa» (§459, `noticeDescribesTeamPage`)?
    * The page shows staff and volunteers' names and photographs; the notice has to say so.
@@ -423,6 +433,20 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
     push("gmailFallbackNotice", {
       owner: "club",
       state: input.gmailFallbackDescribed ? "done" : "open",
+    });
+  }
+
+  /*
+    The club's right to refuse a registration (§NNN, §618), the same shape in the terms: open,
+    never blocking — nothing is refused, the form's box and the fold simply say nothing of a
+    refusal — and done by itself the day terms spelling §618's grounds take effect in every
+    language. Its own gate, the terms in force, not the notice's: without terms there is nothing
+    to amend, and the terms are what it asks the club to approve.
+  */
+  if (input.hasApprovedTerms) {
+    push("refusalTerms", {
+      owner: "club",
+      state: input.refusalDescribed ? "done" : "open",
     });
   }
 

@@ -24,6 +24,7 @@ import {
  */
 const LAUNCHED: OwnerTaskInputs = {
   hasApprovedPrivacyNotice: true,
+  hasApprovedTerms: true,
   listStatesDescribed: true,
   listSocialsDescribed: true,
   listNumbersDescribed: true,
@@ -31,6 +32,7 @@ const LAUNCHED: OwnerTaskInputs = {
   sponsorShareDescribed: true,
   newsletterDescribed: true,
   gmailFallbackDescribed: true,
+  refusalDescribed: true,
   teamPageDescribed: true,
   raceDeclarationsCurrent: true,
   groupRunSeriesTextsCurrent: true,
@@ -116,6 +118,30 @@ describe("owner tasks", () => {
       expect(item.how.join("\n")).not.toContain("„—”");
       expect(item.how.join("\n")).not.toContain("“—”");
       expect(item.how.every((step) => step.length <= 200)).toBe(true);
+    }
+  });
+
+  /** §NNN — the club's right to refuse a registration waits on the terms in force, like the notice's rows; open, never blocking. */
+  it("keeps the refusal row open while the terms in force do not carry the grounds, and done once they do", () => {
+    expect(stateOf({ ...LAUNCHED, refusalDescribed: false }, "refusalTerms")).toBe("open");
+    expect(stateOf(LAUNCHED, "refusalTerms")).toBe("done");
+    // Its own answer: a notice that names every field leaves it open while the terms do not.
+    expect(stateOf({ ...LAUNCHED, refusalDescribed: false }, "listStatesNotice")).toBe("done");
+    expect(ownerTasks({ ...LAUNCHED, refusalDescribed: false }).some((task) => task.state === "blocking")).toBe(false);
+    // Its own gate, the terms in force: shown without a notice, hidden without terms.
+    expect(stateOf({ ...LAUNCHED, hasApprovedPrivacyNotice: false, refusalDescribed: false }, "refusalTerms")).toBe("open");
+    expect(ownerTasks({ ...LAUNCHED, hasApprovedTerms: false, refusalDescribed: false }).some((task) => task.id === "refusalTerms")).toBe(false);
+    for (const catalogue of [ro, en]) {
+      const item = catalogue.Admin.tasks.items.refusalTerms;
+      expect(item.title && item.todo && item.done && item.how.length > 0).toBeTruthy();
+      expect(item.how.join("\n")).toContain("/admin/legal");
+      // The click: the terms' card, the new template, the approval.
+      expect(item.how[0]).toContain(catalogue.Admin.legal.shortKeys.TERMS);
+      expect(item.how[0]).toContain(catalogue.Admin.legal.kinds.templateNew);
+      expect(item.how.join("\n")).toMatch(/Aprobă și publică|Approve and publish/);
+      // What is missing on the sites while it is open: the form's box and the steps.
+      expect(item.todo).toMatch(/formular|form/);
+      for (const text of [item.title, item.todo, item.done, ...item.how]) expect(text.length).toBeLessThanOrEqual(200);
     }
   });
 
@@ -317,6 +343,7 @@ describe("owner tasks", () => {
       "sponsorNotice",
       "newsletterNotice",
       "gmailFallbackNotice",
+      "refusalTerms",
       "teamPageNotice",
       "raceDeclarations",
       "groupRunSeriesTexts",

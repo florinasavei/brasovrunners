@@ -2613,6 +2613,7 @@
       "tableCaptionOf": "Versiunile textului {kind}, cu starea și ce depinde de fiecare",
       "promoMissing": "Nota în vigoare nu descrie încă ofertele și beneficiile, deci formularul nu oferă bifa. Aprobă o notă nouă din șablon.",
       "sponsorMissing": "Nota în vigoare nu spune încă că lista pentru sponsori poate fi dată partenerilor, deci butonul ei e oprit. Aprobă o notă nouă din șablon.",
+      "refusalMissing": "Termenii în vigoare nu spun încă pe ce motive poate refuza clubul o înscriere, deci formularul și pașii înscrierii nu o spun. Aprobă termeni noi din șablon.",
       "counted": {
         "signatures": {
           "one": "{count} semnătură",
@@ -3080,6 +3081,16 @@
             "Cheia aceea e de ajuns dacă e „Project-scoped”: Neon îi dă acces de Editor pe proiectul ei, care citește și scrie limitele.",
             "Dacă Neon refuză scrierea, cardul spune asta și numește cheia care merge.",
             "Verifică: după salvare, cifrele de deasupra formularului sunt ce ține Neon acum, niciodată ce a fost trimis. Rândul devine verde sub 80% din limită, și roșu la sau peste ea."
+          ]
+        },
+        "refusalTerms": {
+          "title": "Termenii: dreptul clubului de a refuza o înscriere",
+          "todo": "Termenii în vigoare nu spun încă pe ce motive poate refuza clubul o înscriere, așa că bifa din formular și pașii înscrierii nu spun nimic despre refuz, până când clubul aprobă termenii din șablon.",
+          "done": "Termenii în vigoare spun motivele: bifa din formular numește și refuzarea sau anularea unei înscrieri de către club, iar pașii înscrierii spun că clubul poate refuza doar pe un motiv obiectiv.",
+          "how": [
+            "/admin/legal → cardul „Termeni” (scrie «Șablon nou») → „Regenerează din șablon” → confirmă. Secțiunea 3 spune motivele pentru care clubul poate refuza o înscriere.",
+            "Un avocat citește întâi ultimul paragraf al secțiunii 3. Apoi deschide ciorna, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”.",
+            "Odată în vigoare, în ambele limbi, bifa din formular și pașii înscrierii spun dreptul clubului de a refuza, fără altă setare."
           ]
         },
         "listStatesNotice": {
@@ -6592,6 +6603,10 @@
       "family": {
         "title": "Înscrii pe altcineva cu aceeași adresă?",
         "body": "Trimite din nou formularul cu numele complet și data nașterii persoanei — primești un email în care confirmi cu un buton."
+      },
+      "refusal": {
+        "title": "Clubul poate refuza o înscriere",
+        "body": "Doar pe un motiv obiectiv din termeni (condiții neîndeplinite, date false sau incomplete, capacitate, siguranță, conduită, încălcarea termenilor), spus pe email — niciodată pe unul interzis de lege."
       }
     },
     "journey": {
@@ -6680,6 +6695,7 @@
     },
     "terms": {
       "accept": "Am citit și accept <terms>Termenii și condițiile</terms> (versiunea {version}), inclusiv, în mod expres, clauzele despre anularea sau modificarea evenimentului de către club, oprirea sau excluderea de pe traseu, limitele răspunderii clubului, legea aplicabilă și instanța competentă.",
+      "acceptWithRefusal": "Am citit și accept <terms>Termenii și condițiile</terms> (versiunea {version}), inclusiv, în mod expres, clauzele despre anularea sau modificarea evenimentului de către club, refuzarea sau anularea unei înscrieri de către club, oprirea sau excluderea de pe traseu, limitele răspunderii clubului, legea aplicabilă și instanța competentă.",
       "missing": "Deocamdată nu putem primi înscrieri: clubul nu are încă termeni și condiții aprobați. Revino în curând.",
       "changed": "Termenii și condițiile s-au schimbat cât completai formularul. Citește versiunea numită mai jos și bifează din nou."
     },

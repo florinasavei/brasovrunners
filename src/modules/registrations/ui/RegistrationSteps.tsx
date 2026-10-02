@@ -2,6 +2,7 @@ import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber";
 import DrawIcon from "@mui/icons-material/Draw";
 import FamilyRestroomIcon from "@mui/icons-material/FamilyRestroom";
 import FormatListNumberedIcon from "@mui/icons-material/FormatListNumbered";
+import GavelIcon from "@mui/icons-material/Gavel";
 import HourglassTopIcon from "@mui/icons-material/HourglassTop";
 import MarkEmailReadIcon from "@mui/icons-material/MarkEmailRead";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
@@ -10,9 +11,10 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getLocale, getTranslations } from "next-intl/server";
+import { unstable_rethrow } from "next/navigation";
 import { type Deadlines, reminderHoursFor } from "@/modules/deadlines/domain/deadlines";
 import { daysPhrase, deadlineWords, leadPhrase } from "@/modules/deadlines/domain/duration-words";
-import { cachedDeadlines, cachedFamilyRegistrationOpen } from "@/modules/public-cache/reads";
+import { cachedDeadlines, cachedFamilyRegistrationOpen, cachedRefusalDisclosed } from "@/modules/public-cache/reads";
 import { confirmationDueAtStart, confirmationDueWords } from "@/modules/registrations/domain/hold-deadlines";
 import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 
@@ -52,13 +54,35 @@ type Props = {
    * preview before saving (§579), which reads them from the database and never through the public
    * cache. Absent everywhere a visitor reads: the data cache's, as above.
    */
-  settings?: { deadlines: Deadlines; familyOpen: boolean };
+  settings?: RegistrationStepsSettings;
 };
+
+/**
+ * What the editor's preview reads from the database for the steps (§579): the club's deadlines,
+ * whether the family flow is on, and whether the terms in force carry the club's right to refuse a
+ * registration (§NNN, `termsDescribeRefusal`).
+ */
+export type RegistrationStepsSettings = { deadlines: Deadlines; familyOpen: boolean; refusalOn: boolean };
+
+/**
+ * Whether the terms in force carry the club's right to refuse (§NNN), for a visitor: the public
+ * cache's reading. Optional, like the form's other gated sentences: unread, the fold is today's.
+ */
+async function refusalDisclosed(): Promise<boolean> {
+  try {
+    return await cachedRefusalDisclosed(new Date());
+  } catch (failure) {
+    unstable_rethrow(failure);
+    return false;
+  }
+}
 
 export default async function RegistrationSteps({ folded = false, window = null, reminderHoursBefore = null, settings }: Props) {
   const t = await getTranslations("Registration");
   const locale = await getLocale();
-  const [deadlines, familyOpen] = settings ? [settings.deadlines, settings.familyOpen] : await Promise.all([cachedDeadlines(), cachedFamilyRegistrationOpen()]);
+  const [deadlines, familyOpen, refusalOn] = settings
+    ? [settings.deadlines, settings.familyOpen, settings.refusalOn]
+    : await Promise.all([cachedDeadlines(), cachedFamilyRegistrationOpen(), refusalDisclosed()]);
   const words = deadlineWords(locale, deadlines);
   const reminderHours = reminderHoursFor({ reminderHoursBefore }, deadlines);
   const values = {
@@ -146,6 +170,31 @@ export default async function RegistrationSteps({ folded = false, window = null,
             </Typography>
             <Typography variant="body2" color="text.secondary">
               {t("steps.family.body")}
+            </Typography>
+          </Box>
+        </Box>
+      )}
+      {/*
+        The club's right to refuse a registration (§NNN; the owner, 2026-10-02: «La edițiile următoare
+        trebuie sa aducă [= să apară] că organizatorul își rezervă dreptul de a refuza înscrieri»), the
+        terms' five grounds summed up — said only while the terms in force, in every language, carry them
+        (`describesRefusal`; §618: nothing is said that the terms in force do not say). Without them
+        the fold is exactly what it was.
+      */}
+      {refusalOn && (
+        <Box component="li" sx={{ display: "grid", gridTemplateColumns: "40px 1fr", columnGap: 1.5, alignItems: "start" }} data-testid="steps-refusal">
+          <Box
+            sx={{ width: 40, height: 40, borderRadius: "50%", bgcolor: "action.selected", display: "flex", alignItems: "center", justifyContent: "center" }}
+            aria-hidden="true"
+          >
+            <GavelIcon fontSize="small" />
+          </Box>
+          <Box>
+            <Typography variant="body1" sx={{ fontWeight: 600 }}>
+              {t("steps.refusal.title")}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {t("steps.refusal.body")}
             </Typography>
           </Box>
         </Box>
