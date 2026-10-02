@@ -125,8 +125,8 @@ export default async function ActionLinkNotice({
         </Stack>
       )}
 
-      {/* Waitlisted: nothing to press. `deriveAllowedResendMessageType` returns nothing for
-          that status, so a "send it again" button would promise an email nobody queues. */}
+      {/* Waitlisted: nothing to press. The form a "send it again" button opens
+          (`requestRegistrationLink`) queues nothing for that status, so it would promise an email nobody queues. */}
       {status.next === "NONE" && <Typography variant="body2">{t("spent.waitHelp")}</Typography>}
     </Stack>
   );

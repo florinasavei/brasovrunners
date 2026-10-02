@@ -1123,7 +1123,15 @@
       "setBibTitle": "Save the number?",
       "setBibBody": "The person is emailed the number. A number once given is never given to anybody else.",
       "resendTitle": "Send the email again?",
-      "resendBody": "The email for the current state goes to {name} again, with a new link; the link in the old email stops working.",
+      "resendWhat": {
+        "PENDING_EMAIL_CONFIRMATION": "{name} gets the link to confirm the address again; the link in the old email stops working.",
+        "PENDING_DECLARATION": "{name} gets the link to sign the declaration again; the link in the old email stops working.",
+        "WAITLISTED": "{name} gets the waiting-list email again, with where the line stands now.",
+        "WAITLIST_OFFERED": "{name} gets the offer of a place again; the link in the old email stops working.",
+        "CONFIRMED": "{name} gets the confirmation with the QR code again; the link in the old email stops working.",
+        "CANCELLED": "{name} gets the notice about the state of the registration again.",
+        "EXPIRED": "{name} gets the notice about the state of the registration again."
+      },
       "reminderTitle": "Send the reminder?",
       "reminderBody": "{name} receives the pre-race reminder now.",
       "createRegistrationTitle": "Add the registration?",
@@ -5388,7 +5396,7 @@
                 "«Registrations» → find the person → press their name.",
                 "Wrong name: under «Correct the name» type the right one → «Save the name».",
                 "Not coming any more: «Cancel the registration», write the «Reason», press «Cancel the registration» and confirm. The place goes to the first on the waiting list; if the event's places are not allocated automatically, it stays free until you hand it out.",
-                "The email never arrived: «Resend email» → «Send now, without waiting for the scheduled round».",
+                "The email never arrived: «Resend email» → «Send now, without waiting for the scheduled round». It works on the waiting list too: the email says where the line stands now.",
                 "They ask for their data to be erased: «Delete permanently», write the «Reason for deletion», tick «I confirm this deletion is permanent» and press «Delete permanently».",
                 "Several at once: tick the rows on the list → «Cancel the ticked ones»."
               ]

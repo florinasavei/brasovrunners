@@ -363,7 +363,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           <ActionForm
             action={resendRegistrationEmailAction}
             confirm={withSendNowChoice(
-              { title: tr("confirm.resendTitle"), body: tr("confirm.resendBody", { name: registration.registeredName }), ...(registration.kind === "TEST" ? {} : { email: words.email(1) }), confirmLabel: tr("registrations.resend"), cancelLabel: words.cancel },
+              { title: tr("confirm.resendTitle"), body: tr(`confirm.resendWhat.${registration.status}`, { name: registration.registeredName }), ...(registration.kind === "TEST" ? {} : { email: words.email(1) }), confirmLabel: tr("registrations.resend"), cancelLabel: words.cancel },
               sendNow,
             )}
             data-testid="resend-form"

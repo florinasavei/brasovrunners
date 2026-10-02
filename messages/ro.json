@@ -1123,7 +1123,15 @@
       "setBibTitle": "Salvezi numărul?",
       "setBibBody": "Persoana primește numărul pe email. Un număr dat o dată nu se mai dă altcuiva.",
       "resendTitle": "Retrimiți emailul?",
-      "resendBody": "Emailul stării curente pleacă din nou către {name}, cu un link nou; linkul din emailul vechi nu mai merge.",
+      "resendWhat": {
+        "PENDING_EMAIL_CONFIRMATION": "{name} primește din nou linkul de confirmare a adresei; linkul din emailul vechi nu mai merge.",
+        "PENDING_DECLARATION": "{name} primește din nou linkul pentru semnarea declarației; linkul din emailul vechi nu mai merge.",
+        "WAITLISTED": "{name} primește din nou emailul de pe lista de așteptare, cu situația cozii de acum.",
+        "WAITLIST_OFFERED": "{name} primește din nou oferta de loc; linkul din emailul vechi nu mai merge.",
+        "CONFIRMED": "{name} primește din nou confirmarea cu codul QR; linkul din emailul vechi nu mai merge.",
+        "CANCELLED": "{name} primește din nou înștiințarea despre starea înscrierii.",
+        "EXPIRED": "{name} primește din nou înștiințarea despre starea înscrierii."
+      },
       "reminderTitle": "Trimiți reminderul?",
       "reminderBody": "{name} primește acum reminderul dinaintea cursei.",
       "createRegistrationTitle": "Adaugi înscrierea?",
@@ -5388,7 +5396,7 @@
                 "«Înscrieri» → caută persoana → apasă pe numele ei.",
                 "Nume greșit: la «Corectează numele» scrie numele bun → «Salvează numele».",
                 "Nu mai vine: «Anulează înscrierea», scrie «Motivul», apasă «Anulează înscrierea» și confirmă. Locul trece la primul de pe lista de așteptare; dacă la eveniment locurile nu se alocă automat, rămâne liber până îl dai tu.",
-                "Nu a primit emailul: «Retrimite emailul» → «Trimite acum, fără să aștepte trecerea programată».",
+                "Nu a primit emailul: «Retrimite emailul» → «Trimite acum, fără să aștepte trecerea programată». Merge și pe lista de așteptare: pleacă emailul cu situația cozii de acum.",
                 "Cere ștergerea datelor: «Șterge definitiv», scrie «Motivul ștergerii», bifează «Confirm că această ștergere este definitivă» și apasă «Șterge definitiv».",
                 "Mai multe deodată: pe listă bifează rândurile → «Anulează cele bifate»."
               ]
