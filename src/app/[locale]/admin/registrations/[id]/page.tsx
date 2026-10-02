@@ -56,6 +56,7 @@ import {
   confirmRegistrationNowAction,
   correctRegisteredNameAction,
   deleteRegistrationAction,
+  givePlaceNowAction,
   offerPlaceAction,
   promoteRegistrationAction,
   setBibNumberAction,
@@ -70,7 +71,7 @@ import { withSendNowChoice } from "@/modules/notifications/domain/send-at-once";
 import { sendNowChoiceFor } from "@/modules/notifications/send-now-choice";
 import GivePlaceButton from "@/modules/registrations/ui/GivePlaceButton";
 import OfferPlaceButton from "@/modules/registrations/ui/OfferPlaceButton";
-import { offerDeadlineIfMadeNow } from "@/modules/registrations/give-place-tip";
+import { offerDeadlineIfMadeNow, placesTakenIfFull } from "@/modules/registrations/give-place-tip";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
@@ -128,6 +129,19 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   const words = await confirmWords();
   // «Trimite-i oferta»'s deadline in its question (§615): read only where the button can be drawn.
   const offerDeadline = registration.status === "WAITLISTED" && mayManage ? await offerDeadlineIfMadeNow(registration.eventId, locale) : null;
+  /*
+    «Dă-i un loc acum» (§NNN): the Administrator's, on a row still waiting for its address. Its question
+    says beforehand when no place is free — the panel's counts, read once per event (§592's forecast);
+    a family's live reservation is the row's own place, so it is never "full" for it. The server decides.
+  */
+  const givePlaceNow =
+    mayManage && registration.status === "PENDING_EMAIL_CONFIRMATION"
+      ? {
+          full:
+            !(registration.holdExpiresAt !== null && registration.holdExpiresAt > new Date()) &&
+            (await placesTakenIfFull(registration.eventId)) !== null,
+        }
+      : null;
   // The timeline's short form with the time (§349): a value beside its label, so capitalised;
   // `dtInline` inside a sentence.
   const dt = (value: Date | null) => (value ? formatDay(value, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true }) : null);
@@ -258,7 +272,14 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
         {/* Sent now, past the scheduled pass (§540), or queued for it, as before. */}
         {resent && <Alert severity="success">{resent === "now" ? tr("registrations.resendSentNow") : tr("registrations.resendSent")}</Alert>}
-        {saved && <Alert severity="success">{tr("saved")}</Alert>}
+        {/* «Dă-i un loc acum» (§NNN): the place given, and until when it waits for the declaration. */}
+        {saved === "placeGiven" && registration.holdExpiresAt ? (
+          <Alert severity="success" data-testid="place-given">
+            {tr("registrations.placeGiven", { deadline: dtInline(registration.holdExpiresAt) ?? "" })}
+          </Alert>
+        ) : (
+          saved && <Alert severity="success">{tr("saved")}</Alert>
+        )}
       {/* The action redirects with a language-neutral code (AGENTS.md 14.3); this is where it
           becomes a sentence. */}
         {error && <Alert severity="error">{tr(`errors.${error}`, noFreePlaceValues(error, query))}</Alert>}
@@ -401,6 +422,40 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           </GlyphButton>
         )}
       </Stack>
+
+      {/*
+        «Dă-i un loc acum» (§NNN): the address vouched for by the Administrator and the place given now,
+        ahead of the waiting list, for a registration still waiting for its address. The person signs the
+        declaration herself, online or on paper at the desk. Its own block, beside the messages above
+        and apart from the race-day box below.
+      */}
+      {givePlaceNow && (
+        <ActionForm
+          action={givePlaceNowAction}
+          confirm={{
+            title: tr("confirm.givePlaceNowTitle"),
+            body: [
+              tr("confirm.givePlaceNowBody", { email: registration.participantEmail }),
+              tr("confirm.givePlaceNowBodyMore"),
+              ...(givePlaceNow.full ? [tr("confirm.givePlaceNowFull")] : []),
+            ].join(" "),
+            ...(registration.kind === "TEST" ? {} : { email: words.email(1) }),
+            confirmLabel: tr("registrations.givePlaceNow"),
+            cancelLabel: words.cancel,
+          }}
+          data-testid="give-place-now-form"
+        >
+          {deskHidden}
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "center" } }}>
+            <GlyphButton icon="place" type="submit" variant="outlined" sx={{ minHeight: 44, flexShrink: 0 }}>
+              {tr("registrations.givePlaceNow")}
+            </GlyphButton>
+            <Typography variant="body2" color="text.secondary">
+              {tr("registrations.givePlaceNowHelp")}
+            </Typography>
+          </Stack>
+        </ActionForm>
+      )}
 
       {/*
         Emergency and health (§322): for the people they are for, and only when asked. Folded

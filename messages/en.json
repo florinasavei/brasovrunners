@@ -729,7 +729,8 @@
           "declaration_hold_cleared": "Keep removed from the declaration",
           "promo_consent_changed": "Consent to offers and benefits changed",
           "family_resent": "Email resent to the family",
-          "offered_by_staff": "Offer sent ahead of the waiting list (“Send them the offer”)"
+          "offered_by_staff": "Offer sent ahead of the waiting list (“Send them the offer”)",
+          "address_vouched_by_staff": "Address vouched for by the team; place given ahead of the waiting list (“Give them a place now”)"
         }
       },
       "locale": {
@@ -944,7 +945,10 @@
           "few": "{count} people have an offer from the waiting list, each valid for at most {hours} from when the email leaves; unsigned in time, the place stays free until you give it.",
           "other": "{count} people have an offer from the waiting list, each valid for at most {hours} from when the email leaves; unsigned in time, the place stays free until you give it."
         }
-      }
+      },
+      "givePlaceNow": "Give them a place now",
+      "givePlaceNowHelp": "For someone who did not manage to confirm the address: you vouch for it, and they get the place and the declaration email.",
+      "placeGiven": "Place given; the declaration email has left. Deadline: {deadline}."
     },
     "events": {
       "empty": "There is no event in the database.",
@@ -1203,7 +1207,11 @@
       "resendFamilyTitle": "Resend the family's email?",
       "resendFamilyBody": "One email goes to their address, for everybody: {names}. Each gets the step they are at, with a new link; the links in the old emails stop working.",
       "offerPlaceTitle": "Send them the offer?",
-      "offerPlaceBody": "{name} gets the email “{message}” and has until {deadline} to sign; they go ahead of the people before them."
+      "offerPlaceBody": "{name} gets the email “{message}” and has until {deadline} to sign; they go ahead of the people before them.",
+      "givePlaceNowTitle": "Give them a place now?",
+      "givePlaceNowBody": "You vouch for the address {email} and give them a place ahead of the waiting list.",
+      "givePlaceNowBodyMore": "They get the declaration email at once and sign it online any time before the deadline, or on paper at the desk. They have nothing else to confirm.",
+      "givePlaceNowFull": "No place is free: raise «Capacity» first."
     },
     "errors": {
       "PICTURE_IN_USE": "The picture is used on a page, an event or in an album. Take it out of there first.",
@@ -5363,6 +5371,17 @@
               ]
             },
             {
+              "title": "Give a place to someone who did not confirm the address",
+              "steps": [
+                "Open the registration: it says «Așteaptă confirmarea emailului» (the email never arrived, went to Spam, or the places were full when they pressed the link).",
+                "Press «Give them a place now». The window names the address you vouch for; press «Give them a place now» again.",
+                "The person gets the place and the declaration email at once, with the deadline in it. The old confirmation link no longer confirms anything.",
+                "They sign the declaration: online, from the email, or on paper at the desk, where the volunteer presses «Confirm on paper». Nobody signs the declaration for them.",
+                "A free place is needed: with none, the press is refused. Raise «Capacity» first, then press again.",
+                "The people on the waiting list stay where they are. Check the address first: a wrong address holds the place until the deadline."
+              ]
+            },
+            {
               "title": "Tell the participants about a change",
               "steps": [
                 "Change the place, the time or the programme in their card.",
@@ -7936,6 +7955,7 @@
       "declarationReleased": "The keep was removed.",
       "menuOrder": "The menu order was saved.",
       "registrationOffered": "The offer is sent: they have the usual time to sign the declaration.",
+      "placeGiven": "Place given; the declaration email has left.",
       "failedRetried": {
         "one": "{count} failed email put back in the queue.",
         "few": "{count} failed emails put back in the queue.",

@@ -167,3 +167,32 @@ export function computeFamilyReservationExpiry(params: {
     eventStartsAt: params.eventStartsAt,
   });
 }
+
+/**
+ * Until when a place the club gave by «Dă-i un loc acum» waits for the declaration (§NNN): an
+ * Administrator vouched for the address of a person who is not at the form, and gave the place
+ * ahead of the line.
+ *
+ * Before the participation window opens it is exactly what a public confirmation gets
+ * (`computeDeclarationHoldExpiry`: the window's deadline, never after the start). From then on the
+ * public door would give the club's minutes («Termene»), which are made for a person who has just
+ * pressed the link and is reading the email — not for one the club chose because her emails went
+ * astray. So the place waits for the window's deadline while it is still ahead, and otherwise — an
+ * event with no window, or a window whose deadline has passed — for the start, the latest a
+ * declaration can be signed anyway (on paper at the desk). Not capped by the registration close: the
+ * close is the public door's, and a confirmation is owed after it (§104).
+ */
+export function computeVouchedPlaceExpiry(params: {
+  now: Date;
+  registrationClosesAt: Date | null;
+  eventStartsAt: Date;
+  window?: { opensAt: Date; deadline: Date } | null;
+  deadlines: Pick<Deadlines, "holdMinutes">;
+}): Date {
+  const window = params.window ?? null;
+  if (window && params.now.getTime() < window.opensAt.getTime()) return computeDeclarationHoldExpiry(params);
+  if (window && params.now.getTime() < window.deadline.getTime()) {
+    return new Date(Math.min(window.deadline.getTime(), params.eventStartsAt.getTime()));
+  }
+  return params.eventStartsAt;
+}

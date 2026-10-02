@@ -729,7 +729,8 @@
           "declaration_hold_cleared": "Păstrarea declarației a fost scoasă",
           "promo_consent_changed": "Acordul pentru oferte și beneficii schimbat",
           "family_resent": "Email retrimis familiei",
-          "offered_by_staff": "Ofertă trimisă înaintea listei de așteptare («Trimite-i oferta»)"
+          "offered_by_staff": "Ofertă trimisă înaintea listei de așteptare («Trimite-i oferta»)",
+          "address_vouched_by_staff": "Adresă garantată de echipă; loc dat înaintea listei de așteptare («Dă-i un loc acum»)"
         }
       },
       "locale": {
@@ -944,7 +945,10 @@
           "few": "{count} persoane au câte o ofertă din lista de așteptare, valabilă cel mult {hours} de când pleacă emailul; nesemnată la timp, locul rămâne liber până îl dai tu.",
           "other": "{count} de persoane au câte o ofertă din lista de așteptare, valabilă cel mult {hours} de când pleacă emailul; nesemnată la timp, locul rămâne liber până îl dai tu."
         }
-      }
+      },
+      "givePlaceNow": "Dă-i un loc acum",
+      "givePlaceNowHelp": "Pentru cine nu a apucat să confirme adresa: o garantezi tu, iar persoana primește locul și emailul cu declarația.",
+      "placeGiven": "Loc dat; emailul cu declarația a plecat. Termen: {deadline}."
     },
     "events": {
       "empty": "Nu există niciun eveniment în baza de date.",
@@ -1203,7 +1207,11 @@
       "resendFamilyTitle": "Retrimiți emailul familiei?",
       "resendFamilyBody": "Pleacă un singur email către adresa lor, pentru toți: {names}. Fiecare primește pasul la care a rămas, cu un link nou; linkurile din emailurile vechi nu mai merg.",
       "offerPlaceTitle": "Îi trimiți oferta?",
-      "offerPlaceBody": "{name} primește emailul «{message}» și are până {deadline} să semneze; sare înaintea celor dinaintea lui."
+      "offerPlaceBody": "{name} primește emailul «{message}» și are până {deadline} să semneze; sare înaintea celor dinaintea lui.",
+      "givePlaceNowTitle": "Îi dai un loc acum?",
+      "givePlaceNowBody": "Garantezi adresa {email} și îi dai un loc înaintea listei de așteptare.",
+      "givePlaceNowBodyMore": "Primește pe loc emailul cu declarația; o semnează online oricând până la termen, sau pe hârtie la masă. Nu mai are de confirmat nimic.",
+      "givePlaceNowFull": "Nu e niciun loc liber: ridică întâi «Număr de locuri»."
     },
     "errors": {
       "PICTURE_IN_USE": "Imaginea este folosită într-o pagină, într-un eveniment sau într-un album. Scoate-o de acolo mai întâi.",
@@ -5363,6 +5371,17 @@
               ]
             },
             {
+              "title": "Dă un loc cuiva care nu și-a confirmat adresa",
+              "steps": [
+                "Deschide înscrierea: pe ea scrie «Așteaptă confirmarea emailului» (emailul n-a ajuns, a intrat în Spam sau, când a apăsat linkul, locurile erau pline).",
+                "Apasă «Dă-i un loc acum». Fereastra spune adresa pe care o garantezi; apasă din nou «Dă-i un loc acum».",
+                "Persoana primește imediat locul și emailul cu declarația, cu termenul scris în el. Linkul vechi de confirmare nu mai confirmă nimic.",
+                "Ea semnează declarația: online, din email, sau pe hârtie la masă, unde voluntarul apasă «Confirmă pe hârtie». Declarația nu o semnează nimeni în locul ei.",
+                "Trebuie un loc liber: dacă nu e niciunul, apăsarea e refuzată. Mărește întâi «Număr de locuri», apoi apasă din nou.",
+                "Cei de pe lista de așteptare rămân unde sunt. Verifică adresa înainte: o adresă greșită ține locul până la termen."
+              ]
+            },
+            {
               "title": "Anunță participanții despre o schimbare",
               "steps": [
                 "Schimbă locul, ora sau programul în cardul lor.",
@@ -7936,6 +7955,7 @@
       "declarationReleased": "Păstrarea a fost scoasă.",
       "menuOrder": "Ordinea meniului a fost salvată.",
       "registrationOffered": "Oferta e trimisă: are termenul obișnuit ca să semneze declarația.",
+      "placeGiven": "Loc dat; emailul cu declarația a plecat.",
       "failedRetried": {
         "one": "{count} email eșuat pus înapoi în coadă.",
         "few": "{count} emailuri eșuate puse înapoi în coadă.",
