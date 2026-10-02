@@ -311,7 +311,7 @@ describe("§396 what the pending and waiting rows may contain", () => {
       { displayName: "Florin Unu", clubName: null, group: "WAITLISTED" },
       { displayName: "Elena Doi", clubName: null, group: "WAITLISTED" },
     ]);
-    expect(await countPublicStartListOthers(db, event.id, 1, true)).toEqual({ pending: 2, waitlisted: 2 });
+    expect(await countPublicStartListOthers(db, event.id, 1, true)).toEqual({ pending: 2, waitlisted: 2, outsidePending: 0 });
 
     // A page is a slice of the same order.
     expect((await listPublicStartListOthers(db, event.id, 1, true, { offset: 1, limit: 2 })).map((row) => row.displayName)).toEqual(["Carmen Pop", "Florin Unu"]);
@@ -368,7 +368,7 @@ describe("§421 the pending and waiting rows follow the notice each runner was g
     await createRegistration(event.id, { name: "Vechi Confirmat", email: "old-confirmed@example.org", privacyNoticeVersion: 1 });
 
     expect((await listPublicStartListOthers(db, event.id, 2, true)).map((row) => row.displayName)).toEqual(["Nou Asteapta", "Mai Nou Lista"]);
-    expect(await countPublicStartListOthers(db, event.id, 2, true)).toEqual({ pending: 1, waitlisted: 1 });
+    expect(await countPublicStartListOthers(db, event.id, 2, true)).toEqual({ pending: 1, waitlisted: 1, outsidePending: 0 });
     expect((await listPublicStartList(db, event.id)).map((row) => row.displayName)).toEqual(["Vechi Confirmat"]);
   });
 
@@ -410,7 +410,7 @@ describe("§628 the waiting-list rows follow the event's own switch", () => {
     const rows = await listPublicStartListOthers(db, event.id, 2, false);
     expect(rows).toEqual([{ displayName: "Carmen Pop", clubName: null, group: "PENDING" }]);
     expect(JSON.stringify(rows)).not.toContain("WAITLISTED");
-    expect(await countPublicStartListOthers(db, event.id, 2, false)).toEqual({ pending: 1, waitlisted: 0 });
+    expect(await countPublicStartListOthers(db, event.id, 2, false)).toEqual({ pending: 1, waitlisted: 0, outsidePending: 0 });
     // The same select list as ever: the switch widens nothing.
     expect(Object.keys(rows[0])).toEqual(["displayName", "clubName", "group"]);
   });
@@ -421,7 +421,7 @@ describe("§628 the waiting-list rows follow the event's own switch", () => {
       { displayName: "Carmen Pop", clubName: null, group: "PENDING" },
       { displayName: "Florin Unu", clubName: null, group: "WAITLISTED" },
     ]);
-    expect(await countPublicStartListOthers(db, event.id, 2, true)).toEqual({ pending: 1, waitlisted: 1 });
+    expect(await countPublicStartListOthers(db, event.id, 2, true)).toEqual({ pending: 1, waitlisted: 1, outsidePending: 0 });
   });
 
   it("a stored switch is read from the event row, and the public event query carries it", async () => {

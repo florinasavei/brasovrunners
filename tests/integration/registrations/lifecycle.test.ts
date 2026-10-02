@@ -496,10 +496,10 @@ describe("BR-REQ-033-01 registration lifecycle", () => {
 
   it("answers a waitlisted person who fills the form again, instead of promising an email (§217)", async () => {
     /*
-      `deriveAllowedResendMessageType` returns null for WAITLISTED and is right to — the
-      backoffice's "send it again" hands over a link, and a queued person has none. But this
-      is somebody typing their address a second time because they are not sure the first
-      worked, and the answer to that is the message that says they are on the list.
+      A queued person has no link to be sent again, so «send me my link»
+      (`requestRegistrationLink`) leaves them out. But this is somebody typing their address
+      a second time because they are not sure the first worked, and the answer to that is the
+      message that says they are on the list.
     */
     const event = await createInternalEvent(db, { capacity: 1 });
     await submitRegistration(db, event, submissionInput({ email: "first@example.ro" }), NOW);

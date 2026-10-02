@@ -160,23 +160,11 @@ export function waitlistRefusalCode(error: unknown): "WAITLIST_FULL" | "NO_WAITL
   return refusal === null ? null : refusal === NO_WAITLIST ? "NO_WAITLIST" : "WAITLIST_FULL";
 }
 
-/**
- * «Trimite-i oferta» refused because the registration has closed (§615): an offer made now would be
- * born lapsed — its deadline is capped by the close and the start (§420), already behind — as the
- * automatic offer refuses to make one then (`fillAvailableSpots`). The desk's «Dă-i un loc», which
- * confirms on paper at once, is the verb for after the close. A marker, like the others above; the
- * backoffice says `Admin.errors.OFFER_AFTER_CLOSE`.
- */
-export const OFFER_AFTER_CLOSE = "OFFER_AFTER_CLOSE";
-
-export function offerAfterCloseError(): DomainError {
-  return new DomainError("VALIDATION_ERROR", "OFFER_AFTER_CLOSE: registration has closed, so an offer made now would already be lapsed", [OFFER_AFTER_CLOSE]);
-}
-
-/** The backoffice's word for that refusal, or null for any other error. */
-export function offerRefusalCode(error: unknown): typeof OFFER_AFTER_CLOSE | null {
-  return error instanceof DomainError && error.code === "VALIDATION_ERROR" && error.fields.includes(OFFER_AFTER_CLOSE) ? OFFER_AFTER_CLOSE : null;
-}
+/*
+  `OFFER_AFTER_CLOSE` (§615) is retired (§642): «Trimite-i oferta» was its one thrower, and its offer is
+  now capped by the start alone, so it is never refused after the close. The automatic offers never
+  threw it — after the close they simply make none (`fillAvailableSpots`).
+*/
 
 /**
  * The order the queue panel lists the people waiting in (§627; the owner: the club hands places

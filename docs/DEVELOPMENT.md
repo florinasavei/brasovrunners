@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.61-2026-10-02 -->
+<!-- PROJECT_BASELINE: BR-V2.62-2026-10-02 -->
 
 # Running this locally
 
-**Baseline `BR-V2.61-2026-10-02`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
+**Baseline `BR-V2.62-2026-10-02`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
 
 Everything here is a command that exists today. If a command is in this file it is in
 `package.json`; if it is not, it has not been built yet.
@@ -187,6 +187,14 @@ nothing connected is worse than no suite at all.
 docker compose up -d db && yarn db:migrate
 yarn test:concurrency
 ```
+
+**A failure one run in eight can be a plan, not a race.** The planner's choice follows the
+table's statistics, and the suite's own deletes and inserts move them — autovacuum on a table
+just emptied leaves "no rows" over pages that remain. `UPDATE … WHERE id IN (SELECT … LIMIT n FOR
+UPDATE SKIP LOCKED)` took more than `n` rows under exactly that (§644): never write a limited,
+locking sub-select inside an UPDATE; select the ids, then update those. A test of such a limit
+makes the statistics itself (`vacuum (truncate false, analyze)` on the emptied table, as
+`hourly-pace.test.ts` does), so the bad plan is there on every run, and puts them back after.
 
 **End-to-end tests are separate.** `yarn test:e2e` builds the app, starts the production
 server and drives a real browser at 320px and at desktop width, so it needs the database

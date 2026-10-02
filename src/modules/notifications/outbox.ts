@@ -377,7 +377,7 @@ const MAILGUN_HOUR_LOCK_KEY = 0x4d474852;
 /**
  * Take ownership of up to `batchSize` messages.
  *
- * `FOR UPDATE SKIP LOCKED` inside the sub-select is what makes concurrent workers safe
+ * `FOR UPDATE SKIP LOCKED` on the SELECT that picks the rows is what makes concurrent workers safe
  * (BR-REQ-080-02 criterion 3): each worker locks the rows it selects and skips rows another
  * worker already holds, so two workers claim disjoint sets and no message is sent twice. The
  * claim commits before any provider call, so a row is never "being sent" and uncommitted at
@@ -450,15 +450,26 @@ async function claimOutboxBatchWithStop(
   const bulk = inArray(emailOutbox.messageType, [...BULK_MESSAGE_TYPES]);
 
   return db.transaction(async (tx) => {
+    /*
+      Two statements, never `UPDATE … WHERE id IN (SELECT … LIMIT n FOR UPDATE SKIP LOCKED)` (§644).
+      In one statement the planner may put the sub-select on the inner side of a nested-loop semi
+      join — it does when the table's statistics say it is nearly empty, as after autovacuum on a
+      drained outbox — and re-run it for every outer row; each re-run skips the rows this same
+      UPDATE has just changed (they are "updated by this command" to the row lock) and returns the
+      next ones, so the claim took four to nine rows under a limit of three, and the batch size, the
+      hour's room and the newsletter's cap with it. A SELECT on its own is run once: it locks and
+      returns at most `limit` ids, and the UPDATE changes exactly those, already ours.
+    */
     const claim = async (where: SQL | undefined, limit: number): Promise<OutboxRow[]> => {
       if (limit <= 0) return [];
-      const claimable = tx
+      const picked = await tx
         .select({ id: emailOutbox.id })
         .from(emailOutbox)
         .where(where)
         .orderBy(asc(emailOutbox.createdAt))
         .limit(limit)
         .for("update", { skipLocked: true });
+      if (picked.length === 0) return [];
       return tx
         .update(emailOutbox)
         .set({
@@ -466,7 +477,7 @@ async function claimOutboxBatchWithStop(
           lockedAt: now,
           attemptCount: sql`${emailOutbox.attemptCount} + 1`,
         })
-        .where(inArray(emailOutbox.id, claimable))
+        .where(inArray(emailOutbox.id, picked.map((row) => row.id)))
         .returning();
     };
 
@@ -536,7 +547,7 @@ async function claimOutboxBatchWithStop(
         ? await claimRoad(gmailRoad, gmailLimit, null)
         : { first: [], second: [] };
 
-    // The sub-select orders which rows are claimed; RETURNING has no defined order at all.
+    // The picking SELECT orders which rows are claimed; RETURNING has no defined order at all.
     // Sorting here makes the batch oldest-first for the worker too, so a participant who has
     // been waiting longest is not overtaken within a batch — each half on its own, the bulk last.
     const byAge = (a: OutboxRow, b: OutboxRow) => a.createdAt.getTime() - b.createdAt.getTime();

@@ -169,12 +169,11 @@ describe("BR-REQ-037-05 the verbs a registration row offers", () => {
    * Resend follows the one derivation the whole product uses (`deriveAllowedResendMessageType`),
    * so the row and the registration's own page can never disagree about whether there is
    * anything to send. Note what that means: a cancelled or expired registration *does* have a
-   * message — the state notice telling the person where they stand — and somebody merely on the
-   * waiting list has none, because nothing has been sent them to send again.
+   * message — the state notice telling the person where they stand — and so does somebody on the
+   * waiting list: the email that says where they stand (§641).
    */
   it("offers resend exactly where a message exists to resend", () => {
-    expect(rowVerbsFor("WAITLISTED", "ADMIN", { checkedIn: false })).not.toContain("resend");
-    for (const status of ALL.filter((s) => s !== "WAITLISTED")) {
+    for (const status of ALL) {
       expect(rowVerbsFor(status, "ADMIN", { checkedIn: false }), status).toContain("resend");
     }
     // And the mapping itself is the authority, not a list copied here.

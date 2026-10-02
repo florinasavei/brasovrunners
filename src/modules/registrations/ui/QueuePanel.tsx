@@ -21,7 +21,7 @@ import QuietHelp from "@/shared/ui/QuietHelp";
 import ActionForm from "@/shared/forms/ActionForm";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import type { FormOutcome } from "@/shared/forms/outcome";
-import { offerDeadlineIfMadeNow } from "../give-place-tip";
+import { staffOfferIfMadeNow, staffOfferQuestion } from "../give-place-tip";
 import { queueOrderFor } from "../domain/waitlist";
 
 /**
@@ -42,8 +42,9 @@ import { queueOrderFor } from "../domain/waitlist";
  *
  * Each waiting row carries «Trimite-i oferta» for the Administrator (`offerAction`, §615): the ordinary
  * offer to the person chosen, ahead of the line — the way places are handed out on an event where
- * places from the waiting list are allocated by hand. Drawn while registration is open (an offer after the close would
- * already be lapsed); the service asserts the role and decides again under the lock.
+ * places from the waiting list are allocated by hand. Drawn at any moment before the start, before the
+ * close and after it (§642): on a full event the press adds one supplementary place, and the dialog
+ * says so; the service asserts the role and decides again under the lock.
  */
 export default async function QueuePanel<T extends Record<string, unknown>>({
   db,
@@ -117,10 +118,10 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
     the limit's box holds.
   */
   const limit = event.capacity === null ? null : event.waitlistCapacity;
-  // «Trimite-i oferta»'s deadline and the dialog's words (§615), read once for every row, and only
-  // where a row can carry the button: null after the close, when no row does.
-  const offerUntil = offerAction && line.some((row) => row.status === "WAITLISTED") ? await offerDeadlineIfMadeNow(event.id, locale) : null;
-  const dialog = offerUntil ? await confirmWords() : null;
+  // «Trimite-i oferta»'s deadline, the supplementary place and the close (§615, §642), read once for
+  // every row, and only where a row can carry the button: null once the event has started.
+  const offerForecast = offerAction && line.some((row) => row.status === "WAITLISTED") ? await staffOfferIfMadeNow(event.id, locale) : null;
+  const dialog = offerForecast ? await confirmWords() : null;
 
   const figure = (label: string, value: string | number) => (
     <Box sx={{ minWidth: 96 }}>
@@ -250,14 +251,13 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
                   {row.waitlistedAt ? ` · ${t("queue.joined", { when: when(row.waitlistedAt) })}` : ""}
                 </Typography>
               )}
-              {row.status === "WAITLISTED" && offerAction && offerUntil && dialog && (
+              {row.status === "WAITLISTED" && offerAction && offerForecast && dialog && (
                 <ActionForm
                   action={offerAction}
                   confirm={{
                     title: t("confirm.offerPlaceTitle"),
-                    body: t("confirm.offerPlaceBody", { name: row.registeredName, message: t("emails.types.WAITLIST_SPOT_OFFER"), deadline: offerUntil }),
+                    ...staffOfferQuestion((key, values) => t(key, values), row.registeredName, offerForecast),
                     ...(row.kind === "TEST" ? {} : { email: dialog.email(1) }),
-                    confirmLabel: t("desk.offerPlace"),
                     cancelLabel: dialog.cancel,
                   }}
                   data-testid="queue-offer-form"
@@ -266,8 +266,10 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
                   <input type="hidden" name="registrationId" value={row.id} />
                   <input type="hidden" name="eventId" value={event.id} />
                   <input type="hidden" name="back" value="event" />
-                  {/* On a full event, an «i» says why the press will be refused (§592): one read per event. */}
-                  <OfferPlaceButton eventId={event.id} size="small" />
+                  {/* The capacity the question named (§642): the server adds that one place and no other, and none unasked. */}
+                  {offerForecast.raisedTo !== null && <input type="hidden" name="addPlace" value={offerForecast.raisedTo} />}
+                  {/* A full event adds a place rather than refusing (§642): the dialog says so, no «i». */}
+                  <OfferPlaceButton size="small" />
                 </ActionForm>
               )}
             </Box>

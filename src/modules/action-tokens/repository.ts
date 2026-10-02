@@ -65,6 +65,13 @@ const CONTEXT_COLUMNS = {
  * invalidates is also marked superseded by the new one (§619) — so its page can say a newer email
  * exists — and only those rows: an invalidation from anywhere else is a revocation, and stays generic.
  *
+ * `alsoReplaces` names other purposes of the same registration whose live links the new one replaces
+ * the same way (§643). One caller: the renderer, for a declaration link minted while the registration
+ * holds a declaration, which replaces any earlier offer link of it — both open the same page and sign
+ * the same registration, and that offer is over: an Administrator seated it outside the places, where
+ * it became this declaration, or it ended before the registration was restarted. Never for a
+ * participant-scoped token, and never `REGISTER_ANOTHER_PERSON`, whose links stay live.
+ *
  * `db` is normally the caller's open transaction (registration, token and outbox row together,
  * §15.1). The scope matched mirrors the partial unique indexes; if they drift, the insert fails.
  */
@@ -76,9 +83,12 @@ export async function issueActionToken<T extends Record<string, unknown>>(
     purpose: EmailActionTokenPurpose;
     expiresAt: Date;
     now: Date;
+    /** Other purposes, of this same registration, whose live links this one replaces (§643). */
+    alsoReplaces?: readonly EmailActionTokenPurpose[];
   },
 ): Promise<IssuedActionToken> {
   const { participantId, registrationId, purpose, expiresAt, now } = params;
+  const replaced = [purpose, ...(registrationId === null ? [] : (params.alsoReplaces ?? []).filter((other) => other !== "REGISTER_ANOTHER_PERSON"))];
 
   if (expiresAt.getTime() <= now.getTime()) {
     throw new ActionTokenError("the expiry must be in the future");
@@ -107,7 +117,7 @@ export async function issueActionToken<T extends Record<string, unknown>>(
             .set({ invalidatedAt: now })
             .where(
               and(
-                eq(emailActionTokens.purpose, purpose),
+                inArray(emailActionTokens.purpose, replaced),
                 isNull(emailActionTokens.usedAt),
                 isNull(emailActionTokens.invalidatedAt),
                 registrationId === null

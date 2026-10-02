@@ -112,6 +112,7 @@ export default async function BackofficeShell({
         withPlaceOf: (count, capacity) => t("nav.registeredWithPlaceOf", { count, capacity }),
         awaitingEmail: (count) => t("nav.registeredAwaitingEmail", { count }),
         waitlisted: (count) => t("nav.registeredWaitlisted", { count }),
+        outside: (count) => t("nav.registeredOutside", { count }),
         more: (count) => t("nav.registeredMoreEvents", { count }),
       })
     : undefined;

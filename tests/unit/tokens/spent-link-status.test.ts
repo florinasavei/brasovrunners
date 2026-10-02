@@ -172,9 +172,9 @@ describe("BR-REQ-036-02 what a spent registration link says", () => {
   });
 
   /**
-   * Nothing waits on a waitlisted participant, so `deriveAllowedResendMessageType` has nothing
-   * to send them. Offering "send it again" would show a success message for an email that is
-   * never queued — a worse lie than the one this replaces.
+   * Nothing waits on a waitlisted participant, so the form a spent link's «send it again» opens
+   * (`requestRegistrationLink`) queues nothing for them. Offering it would show a success message
+   * for an email that is never queued — a worse lie than the one this replaces.
    */
   it("offers no resend to somebody who is simply in the queue", () => {
     const view = describeActionLink({

@@ -260,6 +260,7 @@
       "captionStatesNumbers": "Întâi participanții confirmați, cu numărul de concurs — cei cu numele afișat, în ordinea confirmării, apoi ceilalți —, apoi cei înscriși care nu au confirmat încă și cei de pe lista de așteptare, în ordinea listei.",
       "noteStates": "Numărul din titlu îi cuprinde pe confirmați și, cât timp înscrierile sunt deschise la un eveniment cu număr de locuri, pe cei în curs de confirmare. Numele apare doar pentru cei care au bifat „Vreau să apar pe lista de participanți & rezultate”; ceilalți confirmați apar ca „Participant (nume ascuns)”, fără niciun alt detaliu. Cei înscriși care nu au confirmat încă și cei de pe lista de așteptare apar doar dacă au bifat, cu stadiul înscrierii lângă nume; o înscriere anulată sau expirată nu apare. Alegerea se poate schimba oricând din emailul de confirmare sau din „Înscrierile mele”.",
       "socialsNote": "Strava și Instagram apar doar lângă numele celor care au ales asta la înscriere.",
+      "outsideNote": "Organizatorii și invitații clubului apar în tabel fără să fie numărați: numerele de mai sus numără locurile.",
       "othersLead": "Apar cu numele și:",
       "pendingCount": {
         "one": "{count} înscris în așteptarea confirmării",
@@ -593,6 +594,7 @@
       "registeredWithPlaceOf": "{count} cu loc din {capacity}",
       "registeredAwaitingEmail": "{count} așteaptă confirmarea emailului",
       "registeredWaitlisted": "{count} pe lista de așteptare",
+      "registeredOutside": "{count} în afara locurilor",
       "registeredMoreEvents": "+{count} altele",
       "newsletter": "Newsletter"
     },
@@ -621,6 +623,16 @@
       "statusLabel": "Stare",
       "summaryTotal": "Înscrieri: {count} (toate stările, anulate și expirate incluse)",
       "summaryTest": "De test: {count}",
+      "outside": {
+        "pill": "În afara locurilor: {count}",
+        "chip": "În afara locurilor",
+        "title": "Locurile evenimentului",
+        "isOutside": "În afara locurilor: nu ocupă niciunul dintre locurile evenimentului și nu intră în niciun număr public.",
+        "isCounted": "Se numără între locurile evenimentului, ca oricine.",
+        "mark": "Pune în afara locurilor",
+        "unmark": "Numără între locuri",
+        "help": "Pentru organizatori, pacemakeri, invitați: au declarație, număr și apar pe listă dacă au bifat, fără să ia un loc."
+      },
       "export": "Exportă CSV",
       "personLink": "Toate datele unei persoane",
       "personThis": "Toate datele acestei persoane",
@@ -730,7 +742,12 @@
           "promo_consent_changed": "Acordul pentru oferte și beneficii schimbat",
           "family_resent": "Email retrimis familiei",
           "offered_by_staff": "Ofertă trimisă înaintea listei de așteptare («Trimite-i oferta»)",
-          "address_vouched_by_staff": "Adresă garantată de echipă; loc dat înaintea listei de așteptare («Dă-i un loc acum»)"
+          "address_vouched_by_staff": "Adresă garantată de echipă; loc dat înaintea listei de așteptare («Dă-i un loc acum»)",
+          "outside_capacity_changed": "Pus în afara locurilor sau numărat din nou între locuri"
+        },
+        "event": {
+          "capacity_raised_for_offer": "Loc suplimentar adăugat pentru o ofertă («Trimite-i oferta»): {from} → {to}",
+          "capacity_raised_for_place_now": "Loc suplimentar adăugat pentru un loc dat acum («Dă-i un loc acum»): {from} → {to}"
         }
       },
       "locale": {
@@ -810,7 +827,7 @@
       "declarationPaper": "pe hârtie, înregistrată de {who}",
       "signedByMinor": "minorul",
       "signedByGuardian": "părintele sau tutorele",
-      "confirmOnPaperBodyMinor": "Confirmi că minorul și părintele ({guardian}) au semnat amândoi declarația pe hârtie, la masă. Doar cu hârtia cu ambele semnături în față.",
+      "confirmOnPaperBodyMinor": "Confirmi că minorul și părintele ({guardian}) au semnat amândoi pe hârtie. Doar cu hârtia cu ambele semnături în față. Apoi emailul de confirmare; dacă nu e loc, lista de așteptare, fără email acum.",
       "emailVouched": "adresă garantată de {who}",
       "journey": {
         "title": "Parcursul înscrierii",
@@ -858,7 +875,7 @@
       "openRow": "Deschide înscrierea",
       "cancel": "Anulează înscrierea",
       "cancelBody": "Persoana primește un email. Nu se poate desface. Locul se oferă primului de pe lista de așteptare sau rămâne liber, după setare. Refuzul, cu motivul lui, se face din pagina înscrierii.",
-      "confirmOnPaperBody": "Confirmi că participantul a semnat declarația pe hârtie, la masă. Primește locul și numărul. Doar cu hârtia semnată în față.",
+      "confirmOnPaperBody": "Confirmi că participantul a semnat declarația pe hârtie, la masă. Doar cu hârtia semnată în față. Apoi primește emailul de confirmare; dacă nu e loc, intră pe lista de așteptare, fără email acum.",
       "downloadBib": "Descarcă numărul de concurs (BIB)",
       "notOnPublicList": "Nu apare public",
       "erase": "Șterge definitiv",
@@ -921,7 +938,7 @@
         },
         "releaseAuto": "După termen locul nu se pierde singur: se eliberează doar când cineva de pe lista de așteptare n-are alt loc liber, și i se oferă primului din listă.",
         "releaseManual": "După termen locul nu se pierde singur: se eliberează doar când cineva de pe lista de așteptare n-are alt loc liber, apoi stă liber pentru «Trimite-i oferta» sau «Dă-i un loc».",
-        "releaseClosed": "După termen locul nu se pierde singur: se eliberează doar când cineva de pe lista de așteptare n-are alt loc liber; înscrierile s-au închis, deci îl dai la masă cu «Dă-i un loc».",
+        "releaseClosed": "După termen locul nu se pierde singur: se eliberează doar când cineva de pe listă n-are alt loc liber; înscrierile s-au închis: îl dai cu «Trimite-i oferta» sau, la masă, cu «Dă-i un loc».",
         "releaseNoList": "După termen locul nu se pierde singur: se eliberează doar când îl cere cineva nou și nu mai e alt loc liber.",
         "releaseNever": "După termen locul nu se pierde: evenimentul nu are limită de locuri.",
         "atStart": "La start, cine n-a semnat pierde locul; la masă poate fi confirmat pe hârtie, dacă mai e un loc liber.",
@@ -948,7 +965,8 @@
       },
       "givePlaceNow": "Dă-i un loc acum",
       "givePlaceNowHelp": "Pentru cine nu a apucat să confirme adresa: o garantezi tu, iar persoana primește locul și emailul cu declarația.",
-      "placeGiven": "Loc dat; emailul cu declarația a plecat. Termen: {deadline}."
+      "placeGiven": "Loc dat; emailul cu declarația a plecat. Termen: {deadline}.",
+      "placeGivenRaised": "Loc dat, pe un loc suplimentar: capacitatea e acum {n}. Emailul cu declarația a plecat. Termen: {deadline}."
     },
     "events": {
       "empty": "Nu există niciun eveniment în baza de date.",
@@ -1127,7 +1145,15 @@
       "setBibTitle": "Salvezi numărul?",
       "setBibBody": "Persoana primește numărul pe email. Un număr dat o dată nu se mai dă altcuiva.",
       "resendTitle": "Retrimiți emailul?",
-      "resendBody": "Emailul stării curente pleacă din nou către {name}, cu un link nou; linkul din emailul vechi nu mai merge.",
+      "resendWhat": {
+        "PENDING_EMAIL_CONFIRMATION": "{name} primește din nou linkul de confirmare a adresei; linkul din emailul vechi nu mai merge.",
+        "PENDING_DECLARATION": "{name} primește din nou linkul pentru semnarea declarației; linkul din emailul vechi nu mai merge.",
+        "WAITLISTED": "{name} primește din nou emailul de pe lista de așteptare, cu situația cozii de acum; linkul din emailul vechi nu mai merge.",
+        "WAITLIST_OFFERED": "{name} primește din nou oferta de loc; linkul din emailul vechi nu mai merge.",
+        "CONFIRMED": "{name} primește din nou confirmarea cu codul QR; linkul din emailul vechi nu mai merge.",
+        "CANCELLED": "{name} primește din nou înștiințarea despre starea înscrierii.",
+        "EXPIRED": "{name} primește din nou înștiințarea despre starea înscrierii."
+      },
       "reminderTitle": "Trimiți reminderul?",
       "reminderBody": "{name} primește acum reminderul dinaintea cursei.",
       "createRegistrationTitle": "Adaugi înscrierea?",
@@ -1211,7 +1237,20 @@
       "givePlaceNowTitle": "Îi dai un loc acum?",
       "givePlaceNowBody": "Garantezi adresa {email} și îi dai un loc înaintea listei de așteptare.",
       "givePlaceNowBodyMore": "Primește pe loc emailul cu declarația; o semnează online oricând până la termen, sau pe hârtie la masă. Nu mai are de confirmat nimic.",
-      "givePlaceNowFull": "Nu e niciun loc liber. Pe «Da» la alocarea automată, un loc adăugat merge întâi la lista de așteptare: pune «Nu», ridică «Număr de locuri» cu 1, apoi apasă din nou."
+      "givePlaceNowFull": "Nu e niciun loc liber: apăsând, adaugi un loc suplimentar peste limită, capacitatea devine {n}.",
+      "outsideMarkTitle": "Pui înscrierea în afara locurilor?",
+      "outsideMarkBody": "{name} nu mai ocupă un loc; locul eliberat merge primului din listă dacă ofertele pleacă automat. Starea, numărul și emailurile rămân.",
+      "outsideMarkBodyWaitlisted": "{name} iese de pe lista de așteptare și primește acum un loc în afara locurilor: emailul «{message}», cu termenul obișnuit.",
+      "outsideMarkBodyWaitlistedTest": "{name} iese de pe lista de așteptare și primește acum un loc în afara locurilor: declarația de semnat, cu termenul obișnuit.",
+      "outsideMarkBodyOffered": "În locul ofertei, {name} primește acum un loc în afara locurilor: emailul «{message}», cu termenul obișnuit. Locul ofertei se eliberează.",
+      "outsideMarkBodyOfferedTest": "În locul ofertei, {name} primește acum un loc în afara locurilor: declarația de semnat, cu termenul obișnuit. Locul ofertei se eliberează.",
+      "outsideMarkBodyPendingEmail": "{name} primește un loc în afara locurilor când își confirmă adresa; până atunci nu se schimbă nimic.",
+      "outsideUnmarkTitle": "Numeri înscrierea între locuri?",
+      "outsideUnmarkBody": "{name} va ocupa unul dintre locurile evenimentului. Dacă niciunul nu e liber, nu se schimbă nimic.",
+      "givePlaceNowRaiseConfirm": "Adaugă un loc și dă-i locul",
+      "offerPlaceRaise": "Nu e niciun loc liber: apăsând, adaugi un loc suplimentar peste limită, capacitatea devine {n}.",
+      "offerPlaceRaiseConfirm": "Adaugă un loc și trimite oferta",
+      "offerPlaceAfterClose": "Înscrierile s-au închis: oferta e valabilă cel mult până la start."
     },
     "errors": {
       "PICTURE_IN_USE": "Imaginea este folosită într-o pagină, într-un eveniment sau într-un album. Scoate-o de acolo mai întâi.",
@@ -1244,6 +1283,7 @@
       "NO_WAITLIST": "Toate locurile sunt ocupate și evenimentul nu are listă de așteptare, așa că nu s-a schimbat nimic.",
       "WALK_IN_LEFT_UNCONFIRMED": "Persoana e înscrisă, dar tocmai s-a ocupat ultimul loc, deci e neconfirmată și nu a primit email. Confirm-o pe hârtie când se eliberează un loc.",
       "NO_FREE_PLACE": "Cursa e plină: locuri {capacity}, confirmați {confirmed}, declarații de semnat {declaration}, oferite {offered}, rezervate familiilor {family}. Mărește întâi capacitatea evenimentului.",
+      "SUPPLEMENTARY_PLACE_UNCONFIRMED": "Nu s-a schimbat nimic: locurile s-au schimbat de când ai deschis pagina, iar întrebarea nu spunea că adaugi acest loc suplimentar. Apasă din nou: întrebarea spune acum cât devine capacitatea.",
       "NO_RECIPIENTS": "Nu s-a trimis nimic: nu e nimeni în grupul ales acum. Alege alt grup.",
       "MESSAGE_UNKNOWN_PLACEHOLDER": "Nu s-a trimis nimic: {names} nu este un câmp pe care îl putem completa în acest mesaj. Câmpurile folosibile sunt scrise sub casete.",
       "SAMPLE_VALUE_IN_EMAIL": "Textul conține valoarea de exemplu „{value}” — folosește {placeholder}.",
@@ -1264,7 +1304,6 @@
       "LEGAL_RETIRE_IN_FORCE": "Nu s-a șters nimic: aceasta este versiunea în vigoare. Aprobă întâi versiunea următoare, apoi o poți șterge.",
       "LEGAL_ALREADY_DELETED": "Versiunea a fost deja ștearsă din listă. Textul ei rămâne în arhivă.",
       "SEND_NOW_HOUR_SPENT": "Nu s-a trimis nimic: limita pe oră a Mailgun («Limita pe oră» din «Emailuri») nu mai are loc acum. Alege «Pune la coadă»; emailul pleacă singur când ora are din nou loc.",
-      "OFFER_AFTER_CLOSE": "Înscrierile s-au închis, deci o ofertă ar expira pe loc; nu s-a schimbat nimic. La masă, folosește «Dă-i un loc».",
       "RETRY_FAILED_THROTTLED": "Nu s-a pus nimic înapoi: emailurile eșuate au fost deja reîncercate de 3 ori în ultima oră. Așteaptă puțin și uită-te de ce au eșuat înainte să apeși din nou.",
       "SEND_NOW_MAILGUN_STOPPED_FALLBACK_OFF": "Nu s-a trimis nimic: Mailgun e oprit, iar «Gmail preia când Mailgun se oprește» e pe Nu. Pune-l pe Da în «Emailuri», sau alege «Pune la coadă»: pleacă singur când Mailgun reia.",
       "SEND_NOW_MAILGUN_STOPPED_NO_GMAIL": "Nu s-a trimis nimic: Mailgun e oprit, iar Gmail-ul clubului nu e configurat aici. Alege «Pune la coadă»: emailul pleacă singur când Mailgun reia.",
@@ -1911,7 +1950,8 @@
         "received": {
           "title": "Înscrierile primite",
           "summary": "înscrieri reale: {count} · pe lista de așteptare: {waiting}",
-          "summaryPlaces": "înscrieri reale: {count} · pe lista de așteptare: {waiting} · locuri ocupate: {occupied} din {capacity}"
+          "summaryPlaces": "înscrieri reale: {count} · pe lista de așteptare: {waiting} · locuri ocupate: {occupied} din {capacity}",
+          "outside": "în afara locurilor: {count}"
         },
         "queue": {
           "title": "Coada de înscrieri",
@@ -4266,7 +4306,11 @@
       "checkedInAt": "Prezent la {time} · {who}",
       "bySelf": "singur",
       "fastTrack": "Persoana este la masă: confirm eu adresa, iar declarația se semnează pe hârtie acum.",
-      "fastTrackHelp": "Înscrierea e confirmată pe loc, fără email; participantul semnează declarația pe hârtie, iar tu o înregistrezi. Dacă e plin, intră pe lista de așteptare.",
+      "fastTrackHelp": "Confirmată pe loc, fără link din email: participantul semnează declarația pe hârtie în fața ta, iar tu o înregistrezi. Dacă e plin, intră pe lista de așteptare; altfel primește emailul de confirmare.",
+      "paperWhen": "Doar la masă, cu declarația semnată pe hârtie de participant în fața ta. Declarația și, dacă adresa nu era confirmată, adresa se înregistrează pe numele tău; nu semnezi tu.",
+      "paperPlace": "Cine nu are încă loc îl primește ca oricând: dacă evenimentul e plin sau cineva așteaptă, intră pe lista de așteptare, iar o listă plină refuză apăsarea.",
+      "paperEmail": "Cu loc: emailul de confirmare cu QR, număr și copia declarației. Pe listă: niciun email acum, oferta vine pe email dacă i se oferă loc; declarație neînregistrată. Adresa neconfirmată, pe numele tău.",
+      "paperNot": "Nu e o scurtătură înainte de cursă, fără persoana de față. Dacă emailul n-a ajuns, un administrator apasă «Retrimite emailul» pe înscriere.",
       "saved": {
         "registrationCreated": "Persoana a fost adăugată — o vezi mai jos, cu starea în care a ajuns.",
         "registrationConfirmed": "Confirmat. Poți da numărul și marca prezența.",
@@ -4975,7 +5019,7 @@
                 "Nimeni nu unește două înscrieri într-una.",
                 "Nimeni din echipă nu semnează declarația în locul participantului: la masă înregistrezi doar declarația de hârtie pe care a semnat-o el.",
                 "Niciun text legal nu intră în vigoare fără o versiune aprobată; fără termeni, notă și declarație aprobate nu se poate înscrie nimeni.",
-                "Nimeni nu trece peste numărul de locuri: nu există înscriere peste capacitate, nici de mână, nici la masă. Un loc se dă doar când e liber.",
+                "Nimeni nu trece peste numărul de locuri: nu există înscriere peste capacitate, nici de mână, nici la masă. Un loc se dă doar când e liber; când nu e niciunul, «Trimite-i oferta» și «Dă-i un loc acum» adaugă la vedere, după ce confirmi, un singur loc suplimentar, scris în jurnal.",
                 "Nimeni nu primește un loc fără semnătura lui (la un minor, a părintelui): o ofertă din lista de așteptare o acceptă și o semnează persoana, din emailul ei, iar la masă «Dă-i un loc» confirmă doar pe declarația de hârtie semnată acolo, de față."
               ]
             }
@@ -5027,6 +5071,7 @@
                 "Pe rând scrie «Așteaptă semnarea declarației» sau «Așteaptă confirmarea emailului».",
                 "Dă-i formularul de declarație tipărit. Îl citește și îl semnează el. Un minor: semnează și părintele sau tutorele, fiecare cu actul lui.",
                 "Apasă «Confirmă pe hârtie», apoi în fereastră din nou «Confirmă pe hârtie».",
+                "Dacă persoana primește locul, primește emailul de confirmare, cu codul QR, numărul și copia declarației; emailul de semnare nu mai pleacă. Dacă nu e loc, intră pe lista de așteptare, nu primește niciun email acum și oferta vine pe email dacă i se oferă loc.",
                 "Apoi «Marchează prezent» și numărul. Foaia semnată o păstrezi pentru organizator."
               ]
             },
@@ -5369,11 +5414,12 @@
               "steps": [
                 "«Evenimente» → «Editează» pe rândul cursei → cardul «Participare și înscrieri».",
                 "La «Locurile din lista de așteptare se alocă automat» alege «Nu» și apasă «Salvează». Pe «Nu», un loc eliberat sau adăugat rămâne liber până îl dai tu.",
-                "Abia apoi mărește «Număr de locuri», cu atâtea locuri câte vrei să dai acum. Pe «Da», locurile adăugate pleacă pe loc, ca oferte, la primii de pe listă.",
+                "Nu e nevoie să mărești «Număr de locuri»: dacă nu e niciun loc liber, «Trimite-i oferta» adaugă un loc suplimentar, după ce confirmi (capacitatea crește cu unu, iar jurnalul înscrierii spune cine l-a adăugat și pentru cine).",
                 "Cardul «Înscrierile primite» → «Coada de înscrieri»: pe rândul persoanei alese din lista de așteptare apasă «Trimite-i oferta». Același buton e și pe pagina înscrierii ei.",
-                "Fereastra spune până când are timp; apasă din nou «Trimite-i oferta». Primește emailul obișnuit «S-a eliberat un loc», cu termenul obișnuit, {offer}: din email apasă «Confirmă locul» și semnează declarația, dacă nu a semnat-o încă.",
+                "Fereastra spune până când are timp și, dacă nu e niciun loc liber, că adaugi unul; apasă «Trimite-i oferta» sau, pe un eveniment plin, «Adaugă un loc și trimite oferta». Primește emailul obișnuit «S-a eliberat un loc», cu termenul obișnuit, {offer}: din email apasă «Confirmă locul» și semnează declarația, dacă nu a semnat-o încă.",
                 "Nu acceptă la timp? Oferta expiră și locul e din nou liber, pentru cine alegi tu.",
-                "Trebuie un loc liber: o anulare sau mai multe locuri. Pe un eveniment plin apăsarea e refuzată, iar un „i” lângă buton spune de ce. După închiderea înscrierilor nu se mai trimit oferte: la masă, cu persoana de față, «Dă-i un loc» o confirmă pe declarația de hârtie.",
+                "Un loc adăugat cu «Adaugă un loc și trimite oferta» rămâne în capacitate: nefolosit, pe «Da» și înainte de închiderea înscrierilor merge la primul de pe listă; altfel stă liber până îl dai tu.",
+                "Merge oricând până la start, și după închiderea înscrierilor: oferta e valabilă atunci cel mult până la start. La masă, cu persoana de față, «Dă-i un loc» o confirmă pe declarația de hârtie, dar doar într-un loc liber; pe un eveniment plin un „i” lângă el spune de ce.",
                 "Ceilalți rămân pe lista de așteptare și nu primesc nimic. Pe site, cardul spune «Locurile se dau din lista de așteptare», iar cine se înscrie acum intră tot pe listă cât timp așteaptă cineva. Câți pot aștepta spune «Lista de așteptare», lângă «Număr de locuri».",
                 "Atenție la capătul listei: când nu mai e nimeni pe lista de așteptare — cine are o ofertă nu mai e pe ea —, locurile încă libere le ia următorul care se înscrie."
               ]
@@ -5382,12 +5428,24 @@
               "title": "Dă un loc cuiva care nu și-a confirmat adresa",
               "steps": [
                 "Deschide înscrierea: pe ea scrie «Așteaptă confirmarea emailului» (emailul n-a ajuns, a intrat în Spam sau, când a apăsat linkul, locurile erau pline).",
-                "Apasă «Dă-i un loc acum». Fereastra spune adresa pe care o garantezi; apasă din nou «Dă-i un loc acum».",
+                "Apasă «Dă-i un loc acum». Fereastra spune adresa pe care o garantezi; apasă din nou «Dă-i un loc acum» sau, pe un eveniment plin, «Adaugă un loc și dă-i locul».",
                 "Persoana primește imediat locul și emailul cu declarația, cu termenul scris în el. Linkul vechi de confirmare nu mai confirmă nimic, iar un email de confirmare încă la coadă nu mai pleacă.",
                 "Ea semnează declarația: online, din email, sau pe hârtie la masă, unde voluntarul apasă «Confirmă pe hârtie». Declarația nu o semnează nimeni în locul ei.",
-                "Trebuie un loc liber: dacă nu e niciunul, apăsarea e refuzată. Pe «Da» la «Locurile din lista de așteptare se alocă automat», un loc adăugat merge întâi la lista de așteptare.",
-                "Pune «Nu» acolo și salvează, mărește «Număr de locuri» cu 1 și apasă din nou «Dă-i un loc acum»; pe urmă poți pune iar «Da».",
+                "Dacă nu e niciun loc liber, fereastra spune dinainte că adaugi un loc suplimentar peste limită și cât devine capacitatea; nu mai trebuie să mărești «Număr de locuri» și nici să pui «Nu» la alocarea automată.",
+                "Locul adăugat e al ei din aceeași apăsare: nu ajunge la lista de așteptare. Jurnalul înscrierii spune cine l-a adăugat, pentru cine, și de la cât la cât.",
                 "Cei de pe lista de așteptare rămân unde sunt. Verifică adresa înainte: o adresă greșită ține locul până la termen."
+              ]
+            },
+            {
+              "title": "Un loc în afara locurilor: organizatori, pacemakeri, invitați",
+              "steps": [
+                "Pentru cine aleargă din partea clubului: organizatori, pacemakeri, invitați. Nu iau niciunul dintre locurile anunțate.",
+                "Deschide înscrierea persoanei → «Locurile evenimentului» → «Pune în afara locurilor» și confirmă.",
+                "Dacă ocupa un loc, locul se eliberează: pe «Da» merge primului de pe lista de așteptare; pe «Nu» rămâne liber până îl dai tu.",
+                "De pe lista de așteptare sau dintr-o ofertă deschisă primește un loc acum, în afara locurilor: emailul declarației, cu termenul obișnuit, nu al ofertei.",
+                "Confirmat sau cu declarația de semnat, își păstrează starea, numărul și emailurile. Pe site nu intră în niciun număr; apare pe listă doar dacă a bifat, fără niciun semn.",
+                "«Numără între locuri» o întoarce doar dacă e un loc liber; altfel apăsarea e refuzată și spune cine ține locurile.",
+                "În lista înscrierilor, pilula «În afara locurilor» îi arată pe toți; exportul are o coloană pentru ei."
               ]
             },
             {
@@ -5416,7 +5474,7 @@
                 "«Înscrieri» → caută persoana → apasă pe numele ei.",
                 "Nume greșit: la «Corectează numele» scrie numele bun → «Salvează numele».",
                 "Nu mai vine: «Anulează înscrierea», scrie «Motivul», apasă «Anulează înscrierea» și confirmă. Locul trece la primul de pe lista de așteptare; dacă la eveniment locurile nu se alocă automat, rămâne liber până îl dai tu.",
-                "Nu a primit emailul: «Retrimite emailul» → «Trimite acum, fără să aștepte trecerea programată».",
+                "Nu a primit emailul: «Retrimite emailul» → «Trimite acum, fără să aștepte trecerea programată». Merge și pe lista de așteptare: pleacă emailul cu situația cozii de acum.",
                 "Cere ștergerea datelor: «Șterge definitiv», scrie «Motivul ștergerii», bifează «Confirm că această ștergere este definitivă» și apasă «Șterge definitiv».",
                 "Mai multe deodată: pe listă bifează rândurile → «Anulează cele bifate»."
               ]
@@ -5431,7 +5489,7 @@
                 "Atenție: fiecare primește un link nou, iar linkul din emailul de dinainte nu mai merge. Spune-le să deschidă emailul cel mai nou.",
                 "Spune-le să caute emailul și în Spam și în Promoții.",
                 "Cel mult trei apăsări pe oră la un eveniment. Un „i” lângă buton spune când o apăsare ar fi refuzată: evenimentul e anulat, încheiat sau a început, ori s-au consumat apăsările orei.",
-                "Cine pierde locul și când: în «Înscrieri», lista unei curse spune sub «Cine s-a înscris» până când își țin oamenii locul și ce urmează după termen; coloana «Unde a ajuns» are termenul fiecăruia. Cine pierde locul după termen primește un email care îi spune asta și ce mai poate face.",
+                "Cine pierde locul și când: în «Înscrieri», lista unei curse spune sub «Cine s-a înscris» până când își țin oamenii locul și ce urmează după termen; coloana «Unde a ajuns» are termenul fiecăruia.",
                 "O singură persoană: deschide înscrierea ei → «Retrimite emailul»."
               ]
             },
@@ -5631,7 +5689,6 @@
               "title": "Textele legale ale clubului",
               "steps": [
                 "«Documente legale»: dacă sus e caseta «Într-un pas: aprobă șabloanele cu datele clubului», verifică datele clubului din ea și apasă «Aprobă acum textele care lipsesc…»: fiecare text încă neaprobat primește versiunea 1, din șablon, cu datele clubului. Un text deja aprobat nu e atins.",
-                "Când o versiune nouă a site-ului schimbă un șablon, fiecare Administrator și Superadministrator primește o singură dată emailul «Șabloanele textelor legale s-au schimbat», cu textele schimbate și un buton spre «Versiune nouă»: la următoarea verificare a sarcinilor programate, cel târziu a doua zi dimineață. «Sarcini» arată aceleași rânduri până aprobi textele.",
                 "Un singur text: pe cardul lui din «Documente legale» apasă «Regenerează din șablon» și confirmă. Toate deodată: la «Toate textele deodată» apasă «Regenerează din șabloane», sau pe «Versiune nouă» apasă «Regenerează toate». Se face câte o ciornă; nimic nu intră încă în vigoare, iar lista se deschide la «Ciorne».",
                 "Deschide fiecare ciornă (filtrul «Ciorne» le arată pe toate), citește-o și completează ce a rămas de forma <…>, în română și în engleză; «Salvează ciorna».",
                 "Înapoi pe «Documente legale»: «Aprobă ciornele» și confirmă. Ciornele gata de aprobat intră în vigoare împreună; ce nu se poate aproba deodată e scris sub buton, cu motivul.",
@@ -7966,10 +8023,22 @@
       "menuOrder": "Ordinea meniului a fost salvată.",
       "registrationOffered": "Oferta e trimisă: are termenul obișnuit ca să semneze declarația.",
       "placeGiven": "Loc dat; emailul cu declarația a plecat.",
+      "outsideMarked": "Înscrierea e în afara locurilor: nu mai ocupă niciun loc al evenimentului.",
+      "outsideUnmarked": "Înscrierea se numără din nou între locurile evenimentului.",
       "failedRetried": {
         "one": "{count} email eșuat pus înapoi în coadă.",
         "few": "{count} emailuri eșuate puse înapoi în coadă.",
         "other": "{count} de emailuri eșuate puse înapoi în coadă."
+      },
+      "registrationOfferedRaised": {
+        "one": "Ofertă trimisă; loc suplimentar adăugat: {count} loc.",
+        "few": "Ofertă trimisă; loc suplimentar adăugat: {count} locuri.",
+        "other": "Ofertă trimisă; loc suplimentar adăugat: {count} de locuri."
+      },
+      "placeGivenRaised": {
+        "one": "Loc dat; loc suplimentar adăugat: {count} loc. Emailul cu declarația a plecat.",
+        "few": "Loc dat; loc suplimentar adăugat: {count} locuri. Emailul cu declarația a plecat.",
+        "other": "Loc dat; loc suplimentar adăugat: {count} de locuri. Emailul cu declarația a plecat."
       }
     }
   },

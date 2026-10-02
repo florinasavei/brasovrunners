@@ -176,6 +176,12 @@ export async function forecastAutomaticEmails<T extends Record<string, unknown>>
         eq(events.eventStatus, "SCHEDULED"),
         isNotNull(events.capacity),
         inArray(registrations.status, ["WAITLIST_OFFERED", "PENDING_DECLARATION"]),
+        /*
+          Not a hold «În afara locurilor» (§643): it holds no counted place, so its lapse offers the
+          line nothing and the job never releases it for anybody (`lapsedDeclarationHoldsToRelease`) —
+          its own last call is sent, as anybody's whose hold is not consumed.
+        */
+        eq(registrations.outsideCapacity, false),
         lte(registrations.holdExpiresAt, until),
         /*
           Not a hold or an offer whose first email is still queued (§520): it does not lapse at its
@@ -199,7 +205,7 @@ export async function forecastAutomaticEmails<T extends Record<string, unknown>>
     const line = await db
       .select({ id: registrations.id, eventId: registrations.eventId, kind: registrations.kind })
       .from(registrations)
-      .where(and(inArray(registrations.eventId, eventIds), eq(registrations.status, "WAITLISTED")))
+      .where(and(inArray(registrations.eventId, eventIds), eq(registrations.status, "WAITLISTED"), eq(registrations.outsideCapacity, false)))
       .orderBy(asc(registrations.waitlistedAt), asc(registrations.id));
     for (const eventId of eventIds) {
       const rows = holds

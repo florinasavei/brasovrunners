@@ -21,7 +21,7 @@ import { confirmationDueAtStart, confirmationDueWords, confirmationWindow } from
  *   maintenance job runs while somebody `WAITLISTED` has no free place — in both settings of
  *   «Locurile din lista de așteptare se alocă automat». With «Da», and before the close, the place is
  *   offered to the first in line in the same transaction (`fillAvailableSpots`); with «Nu», or after
- *   the close, it stays free for «Trimite-i oferta» (before the close) or the desk's «Dă-i un loc».
+ *   the close, it stays free for «Trimite-i oferta» (before the close and after it, §642) or the desk's «Dă-i un loc».
  *   With no waiting list (a limit of 0) the one who wants it is a newcomer with no other free place
  *   (§348). An uncapped event never releases one. At the start every unsigned hold goes. Nothing is
  *   emailed when a hold is released (no message type is queued for it);
