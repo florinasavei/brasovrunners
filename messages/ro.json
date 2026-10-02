@@ -4261,7 +4261,7 @@
       "fastTrackHelp": "Confirmată pe loc, fără link din email: participantul semnează declarația pe hârtie în fața ta, iar tu o înregistrezi. Dacă e plin, intră pe lista de așteptare; altfel primește emailul de confirmare.",
       "paperWhen": "Doar la masă, cu declarația semnată pe hârtie de participant în fața ta. Declarația și, dacă adresa nu era confirmată, adresa se înregistrează pe numele tău; nu semnezi tu.",
       "paperPlace": "Cine nu are încă loc îl primește ca oricând: dacă evenimentul e plin sau cineva așteaptă, intră pe lista de așteptare, iar o listă plină refuză apăsarea.",
-      "paperEmail": "Cu loc: emailul de confirmare, cu QR, numărul și copia declarației. Pe lista de așteptare: niciun email acum, oferta vine la un loc liber; declarația neînregistrată. Adresa, pe numele tău oricum.",
+      "paperEmail": "Cu loc: emailul de confirmare cu QR, număr și copia declarației. Pe listă: niciun email acum, oferta vine pe email când primește un loc; declarație neînregistrată. Adresa neconfirmată, pe numele tău.",
       "paperNot": "Nu e o scurtătură înainte de cursă, fără persoana de față. Dacă emailul n-a ajuns, un administrator apasă «Retrimite emailul» pe înscriere.",
       "saved": {
         "registrationCreated": "Persoana a fost adăugată — o vezi mai jos, cu starea în care a ajuns.",
@@ -5015,7 +5015,7 @@
                 "Pe rând scrie «Așteaptă semnarea declarației» sau «Așteaptă confirmarea emailului».",
                 "Dă-i formularul de declarație tipărit. Îl citește și îl semnează el. Un minor: semnează și părintele sau tutorele, fiecare cu actul lui.",
                 "Apasă «Confirmă pe hârtie», apoi în fereastră din nou «Confirmă pe hârtie».",
-                "Dacă persoana primește locul, primește emailul de confirmare, cu codul QR, numărul și copia declarației; emailul de semnare nu mai pleacă. Dacă nu e loc, intră pe lista de așteptare, nu primește niciun email acum și primește oferta pe email când se eliberează un loc.",
+                "Dacă persoana primește locul, primește emailul de confirmare, cu codul QR, numărul și copia declarației; emailul de semnare nu mai pleacă. Dacă nu e loc, intră pe lista de așteptare, nu primește niciun email acum și oferta vine pe email când primește un loc.",
                 "Apoi «Marchează prezent» și numărul. Foaia semnată o păstrezi pentru organizator."
               ]
             },
