@@ -73,11 +73,15 @@ import { refusalMessages } from "@/shared/forms/refusal-messages";
 import {
   cancelRegistrationFromRowAction,
   checkInAction,
+  clearMemberTicksAction,
   confirmRegistrationNowAction,
   eraseRegistrationFromListAction,
   promoteRegistrationAction,
   setBibPrintedAction,
+  setClubMemberDeclaredAction,
 } from "../actions";
+import { previewMemberTickSweep } from "@/modules/registrations/admin-service";
+import { countForm, type CountForm } from "@/i18n/count-form";
 import { ALL_EVENTS, AUTOMATIC, defaultEventFilter } from "@/modules/registrations/domain/default-event-filter";
 import { rowVerbsFor } from "@/modules/registrations/domain/row-verbs";
 import { givePlaceRefusalAhead } from "@/modules/registrations/give-place-tip";
@@ -132,7 +136,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   if (!canReadRegistrations(actor.role)) notFound();
 
   const current = await searchParams;
-  const { eventId, status, clubMember, bounced, promo, q, saved, error, cancelled, erased, failed, sent, erase, marked, voided, test } = current;
+  const { eventId, status, clubMember, bounced, promo, q, saved, error, cancelled, erased, failed, sent, erase, marked, voided, test, memberSweep } = current;
   // What «Trimite acum» said about Mailgun's stop (§622): from the action's own address; unreadable says nothing.
   const untilParsed = current.until ? new Date(current.until) : null;
   const untilAt = untilParsed && !Number.isNaN(untilParsed.getTime()) ? untilParsed : null;
@@ -329,6 +333,17 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     complaint that started §289's sibling fix.
   */
   const mayManage = canManageRegistrations(actor.role);
+  /*
+    «Curăță bifele celor care nu sunt membri» (§NNN): the preview, read only while it is open and only
+    for the role that may press it — the scope the list was resolved to (one event, or every event that
+    has not started), never the page of rows on screen. The service asks the role again.
+  */
+  const sweepOpen = mayManage && memberSweep === "1";
+  const sweepRows = sweepOpen ? await previewMemberTickSweep(db, actor, { eventId: filters.eventId }, new Date()) : [];
+  const sweepEvent = filters.eventId ? (events.find((event) => event.id === filters.eventId)?.title ?? filters.eventId) : null;
+  // The sweep's dialog counts the rows still ticked at the press (`bodyCount`, §532's shape).
+  const sweepBodyForms = t.raw("confirm.memberSweepBody") as Record<CountForm, string>;
+  const sweepCloseHref = buildListHref(basePath, listParams, { memberSweep: undefined, page: current.page });
   // A row's resend asks «Trimite acum» or «Pune la coadă» (§540): read once, for every row.
   const sendNow = mayManage ? await sendNowChoiceFor(db, locale) : null;
   // What the bulk cancel would void among the rows it is showing (§311); said beside its help.
@@ -579,6 +594,12 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         {saved === "registrationDeleted" && (
           <Alert severity="success">{t("registrations.registrationDeleted")}</Alert>
         )}
+        {/* The sweep's count (§NNN): how many ticks went, and that nothing else did. */}
+        {saved === "memberTicksCleared" && (
+          <Alert severity={Number(current.count ?? "0") > 0 ? "success" : "info"} data-testid="member-ticks-cleared">
+            {t(`registrations.memberSweep.cleared.${countForm(Number(current.count ?? "0"), locale)}`, { count: Number(current.count ?? "0") })}
+          </Alert>
+        )}
         {/* How many bibs the mark actually touched (§264) — "Salvat." would leave the club
             wondering whether it hit the batch it had just downloaded. */}
         {(saved === "bibsPrinted" || saved === "bibsUnprinted") && (
@@ -593,6 +614,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           saved !== "registrationsErased" &&
           saved !== "outboxSent" &&
           saved !== "registrationDeleted" &&
+          saved !== "memberTicksCleared" &&
           saved !== "bibsPrinted" &&
           saved !== "bibsUnprinted" && <Alert severity="success">{t("saved")}</Alert>}
       </Box>
@@ -1186,6 +1208,104 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         </Alert>
       )}
 
+      {/*
+        «Curăță bifele celor care nu sunt membri» (§NNN; the owner, 2026-10-02: «Vreau să pot „curăța” și
+        să debifez cei care au bifat că sunt membri Brașov Runners dar nu sunt»). The button shows while
+        the list is filtered to the people who ticked the box — the filter, or any summary pill pressed
+        with it, which keeps the key (§626). It opens the preview in place: a plain link, a server-rendered
+        form, the same with JavaScript and without it (§180's shape). The Administrator's alone.
+      */}
+      {mayManage && clubMember === "1" && !sweepOpen && (
+        <Box>
+          <GlyphButton
+            icon="sweep"
+            href={`${buildListHref(basePath, listParams, { memberSweep: "1", page: current.page })}#member-sweep`}
+            variant="outlined"
+            size="small"
+            sx={TAP_TARGET}
+          >
+            {t("registrations.memberSweep.open")}
+          </GlyphButton>
+        </Box>
+      )}
+      {sweepOpen && (
+        <Box
+          component="section"
+          id="member-sweep"
+          tabIndex={-1}
+          data-testid="member-sweep"
+          sx={{ border: 1, borderColor: "warning.main", borderRadius: 1, px: 2, py: 2, scrollMarginTop: 16 }}
+        >
+          <Typography variant="h3" sx={{ fontSize: "1rem", mb: 1 }}>
+            {t("registrations.memberSweep.title")}
+          </Typography>
+          <Typography variant="body2" sx={{ mb: 1 }}>
+            {sweepEvent !== null ? t("registrations.memberSweep.scopeEvent", { event: sweepEvent }) : t("registrations.memberSweep.scopeAll")}{" "}
+            {t("registrations.memberSweep.who")}
+          </Typography>
+          {sweepRows.length === 0 ? (
+            <Stack spacing={1.5}>
+              <Alert severity="info" data-testid="member-sweep-empty">
+                <strong>{t("registrations.memberSweep.empty")}</strong> {t("registrations.memberSweep.emptyHelp")}
+              </Alert>
+              <Box>
+                <GlyphButton icon="dismiss" href={sweepCloseHref} variant="text" sx={TAP_TARGET}>
+                  {t("confirm.cancel")}
+                </GlyphButton>
+              </Box>
+            </Stack>
+          ) : (
+            <ActionForm
+              action={clearMemberTicksAction}
+              messages={await refusalMessages({ registrationId: t("registrations.memberSweep.ticked") })}
+              confirm={{
+                title: t("confirm.memberSweepTitle"),
+                body: sweepBodyForms.other.replace("{count}", String(sweepRows.length)),
+                bodyCount: { field: "registrationId", forms: sweepBodyForms, locale },
+                confirmLabel: t(`registrations.memberSweep.submit.${countForm(sweepRows.length, locale)}`, { count: sweepRows.length }),
+                cancelLabel: words.cancel,
+              }}
+              scope="member-sweep"
+              data-testid="member-sweep-form"
+            >
+              <input type="hidden" name="uiLocale" value={locale} />
+              {/* The scope the list was resolved to: the event, or empty for every event not started. */}
+              <input type="hidden" name="eventId" value={filters.eventId ?? ""} />
+              {/* Only the query, never a path: `actions.ts` rebuilds the path (§180). */}
+              <input type="hidden" name="listQuery" value={listQueryString} />
+              <Stack spacing={1.5}>
+                <Typography variant="body2" sx={{ fontWeight: 600 }} data-testid="member-sweep-count">
+                  {t(`registrations.memberSweep.count.${countForm(sweepRows.length, locale)}`, { count: sweepRows.length })}
+                </Typography>
+                <Alert severity="warning">{t("registrations.memberSweep.otherAddress")}</Alert>
+                {/* One box per row, ticked: untick a member who registered with another address. */}
+                <Stack component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
+                  {sweepRows.map((row) => (
+                    <Box component="li" key={row.id} data-testid="member-sweep-row">
+                      <CheckboxField name="registrationId" value={row.id} defaultChecked dense>
+                        {`${row.registeredName} · ${row.eventTitle ?? row.eventId} · ${row.participantEmail}`}
+                      </CheckboxField>
+                    </Box>
+                  ))}
+                </Stack>
+                <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1 }}>
+                  <GlyphSubmitButton
+                    label={t(`registrations.memberSweep.submit.${countForm(sweepRows.length, locale)}`, { count: sweepRows.length })}
+                    pendingLabel={t("registrations.memberSweep.pending")}
+                    icon="memberOff"
+                    color="warning"
+                    variant="contained"
+                  />
+                  <GlyphButton icon="dismiss" href={sweepCloseHref} variant="text" sx={TAP_TARGET}>
+                    {t("confirm.cancel")}
+                  </GlyphButton>
+                </Stack>
+              </Stack>
+            </ActionForm>
+          )}
+        </Box>
+      )}
+
       <AdminTable
         caption={t("registrations.tableCaption")}
         columns={columns}
@@ -1369,6 +1489,14 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                   formId: `bib-printed-${row.id}`,
                 });
               }
+              // «Nu e membru» / «E membru» (§NNN): the row's own tick decides which word.
+              if (verbs.includes("memberTick")) {
+                items.push(
+                  row.clubMemberDeclared
+                    ? { kind: "submit", icon: "memberOff", label: t("registrations.memberTick.clear"), formId: `member-${row.id}` }
+                    : { kind: "submit", icon: "memberOn", label: t("registrations.memberTick.set"), formId: `member-${row.id}` },
+                );
+              }
               if (verbs.includes("cancel")) {
                 items.push({
                   kind: "submit",
@@ -1455,6 +1583,24 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                       }}
                     >
                       {hidden}
+                    </ActionForm>
+                  )}
+                  {verbs.includes("memberTick") && (
+                    <ActionForm
+                      id={`member-${row.id}`}
+                      action={setClubMemberDeclaredAction}
+                      hidden
+                      // One line naming the person (§NNN): a tick, nothing else, no email.
+                      confirm={
+                        row.clubMemberDeclared
+                          ? { title: t("confirm.memberClearTitle"), body: t("confirm.memberClearBody", { name: row.registeredName }), confirmLabel: t("registrations.memberTick.clear"), cancelLabel: words.cancel }
+                          : { title: t("confirm.memberSetTitle"), body: t("confirm.memberSetBody", { name: row.registeredName, club: CLUB_NAME }), confirmLabel: t("registrations.memberTick.set"), cancelLabel: words.cancel }
+                      }
+                    >
+                      {hidden}
+                      <input type="hidden" name="to" value={row.clubMemberDeclared ? "0" : "1"} />
+                      {/* Back to this list, as it stands (§180): only the query travels. */}
+                      <input type="hidden" name="listQuery" value={listQueryString} />
                     </ActionForm>
                   )}
                   {(verbs.includes("markBibPrinted") || verbs.includes("unmarkBibPrinted")) && (

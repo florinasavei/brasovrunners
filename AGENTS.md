@@ -2650,7 +2650,17 @@ BR-REQ-037-05):
      erase, rename, resend and the printing mark stay Administrator-only
      (`canManageRegistrations`). Each verb is audited under the volunteer's own id.
 
-Every one of the five writes an `audit_logs` row (§12.12). MUST NOT: a second write path into
+6. **The self-declared member tick (2026-10-02, `DECISIONS.md` §NNN).** An Administrator may
+   clear or set `club_member_declared` («Nu e membru» / «E membru», on the registration's page
+   and in the list's row menu), one row at a time or in one sweep from the list filtered to the
+   members («Curăță bifele celor care nu sunt membri»: a preview of the ticked registrations whose
+   canonical address (§10.4) is no live `staff_users` account's, any role; one transaction). A
+   field edit like the name: no state, no place, no email; the club name is blanked only when the
+   tick wrote it. Audited per row (`registration.club_member_tick_changed`, `{ from, to }`) and
+   once per sweep (`registrations.member_ticks_cleared`). The Organizer reads the chip and
+   changes nothing.
+
+Every one of the six writes an `audit_logs` row (§12.12). MUST NOT: a second write path into
 `registrations`, a staff-signed declaration (a paper one is the participant's, recorded), a
 confirmation that bypasses the allocator or the approved declaration, a staff-entered row that is
 allocated ahead of anybody already waiting, or a delete that skips the allocator and strands the

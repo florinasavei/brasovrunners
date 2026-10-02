@@ -1,4 +1,4 @@
-import { and, count, eq, gt, isNull, lt, lte } from "drizzle-orm";
+import { and, count, eq, gt, isNull, lt, lte, sql } from "drizzle-orm";
 import { emailActionTokens } from "@/db/schema/email-action-tokens";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { type Participant, participants } from "@/db/schema/participants";
@@ -3653,4 +3653,64 @@ export async function unregister<T extends Record<string, unknown>>(
   // The freed place went to the front of the queue as an offer, whose deadline the job keeps.
   wakeMaintenance(event, now, settings, unregistered.offered > 0 ? offerDeadline(event, now, settings) : null);
   return unregistered.registration;
+}
+
+/**
+ * «Nu e membru» / «E membru» (§NNN; the owner, 2026-10-02: «Vreau să pot „curăța” și să debifez cei
+ * care au bifat că sunt membri Brașov Runners dar nu sunt»): the self-declared member tick
+ * (`club_member_declared`, BR-REQ-031-06) cleared or set by an Administrator.
+ *
+ * The tick grants nothing (§48) and the allocator never reads it, so this is a field edit like the
+ * name correction, not a state change: no place moves, no status, no email. What it does carry is
+ * the club's name, which the form writes into `club_name` with the tick (§215) and the public start
+ * list prints — so clearing it blanks `club_name` **only** when it still holds the club's own name
+ * (the tick wrote it; a name the runner typed stays), and setting it writes the club's name exactly
+ * as the form does.
+ *
+ * Administrator-only (`canManageRegistrations`), asserted here as well as in `admin-service.ts` and
+ * the action (BR-REQ-060-01; the Organizer reads the chip and changes nothing, §289). Refused with
+ * CONFLICT when the row already says `to` — a stale page, or a colleague's press first: the guarded
+ * UPDATE is the check, so two presses cannot both write. Any status; an erased row is gone, NOT_FOUND.
+ * The audit row `registration.club_member_tick_changed` `{ from, to }` is written in the same
+ * transaction as the change. `db` may be a caller's transaction: the sweep runs one per row inside
+ * its own (Drizzle makes the inner transaction a savepoint).
+ */
+export async function setClubMemberDeclaredByStaff<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: { id: string; role: StaffRole },
+  registrationId: string,
+  to: boolean,
+  now: Date,
+): Promise<Registration> {
+  if (!canManageRegistrations(actor.role)) {
+    throw new DomainError("FORBIDDEN", `role ${actor.role} may not change a registration's member tick`);
+  }
+  if (!isUuid(registrationId)) throw new DomainError("NOT_FOUND", "no such registration");
+  return db.transaction(async (tx) => {
+    const [changed] = await tx
+      .update(registrations)
+      .set({
+        clubMemberDeclared: to,
+        // The tick's own words go with it; a club the runner typed by hand is theirs and stays.
+        clubName: to ? CLUB_NAME : sql`CASE WHEN ${registrations.clubName} = ${CLUB_NAME} THEN NULL ELSE ${registrations.clubName} END`,
+        updatedAt: now,
+      })
+      .where(and(eq(registrations.id, registrationId), eq(registrations.clubMemberDeclared, !to)))
+      .returning();
+    if (!changed) {
+      const current = await repo.findRegistrationById(tx, registrationId);
+      if (!current) throw new DomainError("NOT_FOUND", "no such registration");
+      throw new DomainError("CONFLICT", `the member tick is already ${to ? "set" : "cleared"}`);
+    }
+    await recordAuditEvent(tx, {
+      actorStaffUserId: actor.id,
+      participantId: changed.participantId,
+      action: "registration.club_member_tick_changed",
+      entityType: "registration",
+      entityId: changed.id,
+      metadata: { from: !to, to },
+      now,
+    });
+    return changed;
+  });
 }

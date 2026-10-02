@@ -60,9 +60,11 @@ import {
   offerPlaceAction,
   promoteRegistrationAction,
   setBibNumberAction,
+  setClubMemberDeclaredAction,
   withdrawConsentAction,
   declarationHoldAction,
 } from "../actions";
+import { CLUB_NAME } from "@/theme/brand";
 import { resendRegistrationEmailAction } from "./actions";
 import DeclarationHoldForm from "@/modules/registrations/ui/DeclarationHoldForm";
 import TextHashTip from "@/modules/registrations/ui/TextHashTip";
@@ -765,6 +767,60 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           {tr("registrations.correctNameHelp")}
         </Typography>
       </Box>
+      )}
+
+      {/*
+        «Bifa de membru» (§NNN; the owner, 2026-10-02: «Vreau să pot „curăța” și să debifez cei care au
+        bifat că sunt membri Brașov Runners dar nu sunt»): the self-declared tick, cleared or set. Its own
+        block beside the name, never inside the desk's or the places' — it moves no place and no state,
+        and emails nobody. The Administrator's; the Organizer reads the chip above and nothing here
+        (§289), and the action and both services refuse anybody else (BR-REQ-060-01).
+      */}
+      {mayManage && (
+        <Box component="section" data-testid="member-tick">
+          <Typography variant="h3" sx={{ fontSize: "1rem", mb: 1 }}>
+            {tr("registrations.memberTick.title")}
+          </Typography>
+          <Typography variant="body2" sx={{ mb: 1 }}>
+            {registration.clubMemberDeclared
+              ? tr("registrations.memberTick.ticked")
+              : tr("registrations.memberTick.unticked", { club: CLUB_NAME })}
+          </Typography>
+          <ActionForm
+            action={setClubMemberDeclaredAction}
+            confirm={
+              registration.clubMemberDeclared
+                ? {
+                    title: tr("confirm.memberClearTitle"),
+                    body: tr("confirm.memberClearBody", { name: registration.registeredName }),
+                    confirmLabel: tr("registrations.memberTick.clear"),
+                    cancelLabel: words.cancel,
+                  }
+                : {
+                    title: tr("confirm.memberSetTitle"),
+                    body: tr("confirm.memberSetBody", { name: registration.registeredName, club: CLUB_NAME }),
+                    confirmLabel: tr("registrations.memberTick.set"),
+                    cancelLabel: words.cancel,
+                  }
+            }
+            data-testid="member-tick-form"
+          >
+            <input type="hidden" name="uiLocale" value={locale} />
+            <input type="hidden" name="registrationId" value={registration.id} />
+            <input type="hidden" name="to" value={registration.clubMemberDeclared ? "0" : "1"} />
+            <GlyphButton
+              icon={registration.clubMemberDeclared ? "memberOff" : "memberOn"}
+              type="submit"
+              variant="outlined"
+              sx={{ minHeight: 44 }}
+            >
+              {registration.clubMemberDeclared ? tr("registrations.memberTick.clear") : tr("registrations.memberTick.set")}
+            </GlyphButton>
+          </ActionForm>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            {tr("registrations.memberTick.help")}
+          </Typography>
+        </Box>
       )}
 
       {/*

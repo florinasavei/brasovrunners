@@ -679,7 +679,43 @@
       "create": "Add the registration",
       "viewForEvent": "See this event's registrations",
       "correctName": "Correct the name",
-      "correctNameHelp": "Only the name can be corrected. The email address is the participant's identity and is never changed here: for a wrong address, cancel the registration and add it again with the right one.",
+      "correctNameHelp": "The name is corrected here; the member tick is below. The email address is the participant's identity: for a wrong address, cancel the registration and add it again with the right one.",
+      "memberTick": {
+        "title": "The member tick",
+        "ticked": "They ticked that they are a club member. If they are not, clear it: the club the tick set goes from the list too.",
+        "unticked": "They did not tick that they are a club member. If they are, set it: their club on the list becomes {club}.",
+        "help": "Nothing else changes: no state, no place, no email. The change stays in the log.",
+        "clear": "Not a member",
+        "set": "Is a member"
+      },
+      "memberSweep": {
+        "open": "Clear the ticks of those who are not members",
+        "title": "Member ticks with no member account",
+        "count": {
+          "one": "{count} registration with the member tick and no member account",
+          "few": "{count} registrations with the member tick and no member account",
+          "other": "{count} registrations with the member tick and no member account"
+        },
+        "scopeEvent": "At {event}.",
+        "scopeAll": "At every event that has not started.",
+        "who": "A member is an account on Staff, with any role, matched by email address. A revoked account is no longer a member.",
+        "otherAddress": "A member registered with another address than their account's appears here too: untick them to keep their tick.",
+        "rowLabel": "Clear the tick: {name}",
+        "submit": {
+          "one": "Clear the tick on {count} registration",
+          "few": "Clear the ticks on all {count}",
+          "other": "Clear the ticks on all {count}"
+        },
+        "pending": "Clearing the ticks…",
+        "empty": "No tick to clear",
+        "emptyHelp": "Every ticked registration has a member account with the same address.",
+        "ticked": "The ticked registrations",
+        "cleared": {
+          "one": "Cleared the member tick on {count} registration. Nothing else changed.",
+          "few": "Cleared the member tick on {count} registrations. Nothing else changed.",
+          "other": "Cleared the member tick on {count} registrations. Nothing else changed."
+        }
+      },
       "saveName": "Save the name",
       "cancelTitle": "Cancel the registration",
       "cancelReason": "Reason",
@@ -730,7 +766,8 @@
           "promo_consent_changed": "Consent to offers and benefits changed",
           "family_resent": "Email resent to the family",
           "offered_by_staff": "Offer sent ahead of the waiting list (“Send them the offer”)",
-          "address_vouched_by_staff": "Address vouched for by the team; place given ahead of the waiting list (“Give them a place now”)"
+          "address_vouched_by_staff": "Address vouched for by the team; place given ahead of the waiting list (“Give them a place now”)",
+          "club_member_tick_changed": "Member tick changed by staff"
         }
       },
       "locale": {
@@ -1134,6 +1171,16 @@
       "createRegistrationBody": "The person is registered for the event on their behalf, at their request, and receives the email for the next step.",
       "renameTitle": "Change the name?",
       "renameBody": "The new name appears on the list, on the race number and in the emails; the old one stays in the log.",
+      "memberClearTitle": "Clear the member tick?",
+      "memberClearBody": "You clear the member tick from {name}; nothing else changes, no email.",
+      "memberSetTitle": "Set the member tick?",
+      "memberSetBody": "You set the member tick on {name}; their club on the list becomes {club}. Nothing else changes, no email.",
+      "memberSweepTitle": "Clear the member ticks?",
+      "memberSweepBody": {
+        "one": "You clear the member tick on {count} registration; nothing else changes, no email.",
+        "few": "You clear the member tick on {count} registrations; nothing else changes, no email.",
+        "other": "You clear the member tick on {count} registrations; nothing else changes, no email."
+      },
       "withdrawConsentTitle": "Erase the ticked data?",
       "withdrawConsentBody": "The ticked data disappears from the registration for good; the reason stays in the log, without the person's name.",
       "eraseRegistrationTitle": "Erase the registration for good?",
@@ -5422,6 +5469,16 @@
               ]
             },
             {
+              "title": "Clear the member tick of those who are not members",
+              "steps": [
+                "When: before a members' race, so that only the club's members stay ticked. The participant ticks it on the form; the club does not check it.",
+                "One at a time: «Registrations» → press the name → under «The member tick» press «Not a member» and confirm. On the list, the same «Not a member» is in the row's ⋮ menu.",
+                "All at once: «Registrations» → «Search and filter» → for members choose «Only those who declared membership» → «Filter» → «Clear the ticks of those who are not members».",
+                "The list shows the ticked registrations whose address is no account's on «Staff». A member registered with another address appears too: untick them. Then «Clear the ticks on all» … and confirm.",
+                "What it does not do: it cancels no registration, moves no place and sends no email. The club on the list is cleared only if the tick had set it. Every change stays in the log."
+              ]
+            },
+            {
               "title": "Resend the declaration to those who have not signed",
               "steps": [
                 "«Events» → «Edit» on the race's row → the «Registrations received» card.",
@@ -7768,6 +7825,13 @@
       "checkinUndone": "No longer checked in.",
       "registrationCreated": "The person was added; the email is queued.",
       "nameCorrected": "The name was changed.",
+      "memberTickCleared": "Member tick cleared.",
+      "memberTickSet": "Member tick set.",
+      "memberTicksCleared": {
+        "one": "Member tick cleared on {count} registration.",
+        "few": "Member tick cleared on {count} registrations.",
+        "other": "Member tick cleared on {count} registrations."
+      },
       "registrationCancelled": "The registration was cancelled; the email is queued.",
       "consentWithdrawn": "The ticked data was erased.",
       "bibsPrinted": "Marked as printed.",

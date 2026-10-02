@@ -26,6 +26,18 @@ import type { Database } from "@/db/types";
 export type AuditAction =
   | "registration.created_by_staff"
   | "registration.name_corrected"
+  /**
+   * The self-declared member tick cleared or set by an Administrator (§NNN): `{ from, to }`, two
+   * booleans and nothing else — never a name, an address or the club name it carried. One per row,
+   * whether pressed on the row or by the sweep below.
+   */
+  | "registration.club_member_tick_changed"
+  /**
+   * «Scoate bifa la cele {n}» (§NNN): one row per sweep, beside each registration's own
+   * `registration.club_member_tick_changed` — `{ count, eventId }`, the event the list was scoped to
+   * or null for every event that has not started. Never who.
+   */
+  | "registrations.member_ticks_cleared"
   | "registration.cancelled_by_staff"
   /**
    * A participant cancelled their own registration (§547): from their manage link, «Înscrierile

@@ -19,6 +19,7 @@ import { findParticipantByCanonicalEmail } from "@/modules/participants/reposito
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { canManageRegistrations, canReadRegistrations, canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
+import { isUuid } from "@/shared/ids";
 import {
   type EmergencyDetails,
   type EmergencySheetRow,
@@ -52,10 +53,12 @@ import {
   givePlaceNowByStaff,
   offerPlaceToByStaff,
   promoteFromWaitlistByStaff,
+  setClubMemberDeclaredByStaff,
   submitRegistration,
   undoCheckIn,
   unregister,
 } from "./service";
+import { listMemberTickCandidates, type MemberTickCandidate, type MemberTickScope } from "./member-ticks";
 
 /**
  * Admin resend (AGENTS.md §15.8; BR-REQ-060-01, BR-REQ-070-01). Administrator only — §10.2
@@ -1049,6 +1052,97 @@ export async function correctRegisteredName<T extends Record<string, unknown>>(
   });
 
   return updated;
+}
+
+/**
+ * «Nu e membru» / «E membru» on one registration (§NNN): the self-declared member tick, cleared or
+ * set. The Administrator's (`assertAdministrator` here, the service's own check and the action's
+ * gate: three times, BR-REQ-060-01). The work and its audit row are `setClubMemberDeclaredByStaff`
+ * in one transaction; this adds the public cache, because the club name the tick carries is printed
+ * on the public start list.
+ */
+export async function setClubMemberDeclared<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  registrationId: string,
+  to: boolean,
+  now: Date,
+): Promise<Registration> {
+  assertAdministrator(actor);
+  const changed = await setClubMemberDeclaredByStaff(db, actor, registrationId, to, now);
+  revalidatePublicContent("places");
+  return changed;
+}
+
+/**
+ * The preview of «Curăță bifele celor care nu sunt membri» (§NNN): every ticked registration in the
+ * list's scope whose address matches no member account (`member-ticks.ts` says who counts). A read,
+ * but of addresses for a verb only the Administrator has, so it is the Administrator's too.
+ */
+export async function previewMemberTickSweep<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "role">,
+  scope: MemberTickScope,
+  now: Date,
+): Promise<MemberTickCandidate[]> {
+  assertAdministrator(actor);
+  return listMemberTickCandidates(db, scope, now);
+}
+
+/**
+ * «Scoate bifa la cele {n}» (§NNN): the sweep, confirmed — the shape of §606's bulk verb (preview,
+ * confirm, one transaction, the audit).
+ *
+ * `registrationIds` are the rows the preview left ticked: the Administrator unticks a member who
+ * registered with another address. **The candidates are read again inside the transaction**, and only
+ * a posted id that is still one is cleared: a row that became a member's (an account added since the
+ * preview), was unticked meanwhile or is outside the scope is skipped, never cleared because a form
+ * said so. Each cleared row is the single verb exactly — `setClubMemberDeclaredByStaff`, its own
+ * audit row, the club name blanked only where the tick wrote it — and one summary row
+ * `registrations.member_ticks_cleared` `{ count, eventId }` says the sweep happened. No email, no
+ * state, no place. A row a colleague changed in the same moment is skipped and counted out.
+ */
+export async function clearMemberTicksByStaff<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  input: { scope: MemberTickScope; registrationIds: readonly string[] },
+  now: Date,
+): Promise<{ cleared: number }> {
+  assertAdministrator(actor);
+  if (input.scope.eventId !== undefined && !isUuid(input.scope.eventId)) {
+    throw new DomainError("NOT_FOUND", "no such event");
+  }
+  const wanted = new Set(input.registrationIds.filter(isUuid));
+  if (wanted.size === 0) throw new DomainError("VALIDATION_ERROR", "nothing selected", ["registrationId"]);
+
+  const cleared = await db.transaction(async (tx) => {
+    const candidates = await listMemberTickCandidates(tx, input.scope, now);
+    let count = 0;
+    for (const candidate of candidates) {
+      if (!wanted.has(candidate.id)) continue;
+      try {
+        await setClubMemberDeclaredByStaff(tx, actor, candidate.id, false, now);
+        count += 1;
+      } catch (error) {
+        // A colleague's press between the read and this row (CONFLICT), or an erase (NOT_FOUND).
+        if (!isDomainError(error) || (error.code !== "CONFLICT" && error.code !== "NOT_FOUND")) throw error;
+      }
+    }
+    if (count > 0) {
+      await recordAuditEvent(tx, {
+        actorStaffUserId: actor.id,
+        participantId: null,
+        action: "registrations.member_ticks_cleared",
+        entityType: "event",
+        entityId: input.scope.eventId ?? null,
+        metadata: { count, eventId: input.scope.eventId ?? null },
+        now,
+      });
+    }
+    return count;
+  });
+  if (cleared > 0) revalidatePublicContent("places");
+  return { cleared };
 }
 
 /**

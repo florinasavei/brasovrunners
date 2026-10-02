@@ -679,7 +679,43 @@
       "create": "Adaugă înscrierea",
       "viewForEvent": "Vezi înscrierile acestui eveniment",
       "correctName": "Corectează numele",
-      "correctNameHelp": "Se poate corecta doar numele. Adresa de e-mail este identitatea participantului și nu se schimbă de aici: pentru o adresă greșită, anulează înscrierea și adaug-o din nou cu adresa corectă.",
+      "correctNameHelp": "Aici se corectează numele; bifa de membru e mai jos. Adresa de e-mail e identitatea participantului: pentru o adresă greșită, anulează înscrierea și adaug-o din nou cu adresa corectă.",
+      "memberTick": {
+        "title": "Bifa de membru",
+        "ticked": "A bifat că e membru al clubului. Dacă nu e, scoate bifa: clubul pus de bifă dispare și de pe listă.",
+        "unticked": "Nu a bifat că e membru al clubului. Dacă este, pune bifa: pe listă clubul devine {club}.",
+        "help": "Nimic altceva nu se schimbă: nici starea, nici locul, niciun email. Schimbarea rămâne în jurnal.",
+        "clear": "Nu e membru",
+        "set": "E membru"
+      },
+      "memberSweep": {
+        "open": "Curăță bifele celor care nu sunt membri",
+        "title": "Bife de membru fără cont de membru",
+        "count": {
+          "one": "{count} înscriere cu bifa de membru fără cont de membru",
+          "few": "{count} înscrieri cu bifa de membru fără cont de membru",
+          "other": "{count} de înscrieri cu bifa de membru fără cont de membru"
+        },
+        "scopeEvent": "La {event}.",
+        "scopeAll": "La toate evenimentele care nu au început.",
+        "who": "Membru înseamnă un cont din Echipa, cu orice rol, comparat după adresa de email. Un cont retras nu mai e membru.",
+        "otherAddress": "Un membru înscris cu altă adresă decât cea din cont apare și el aici: debifează-l, ca să-și păstreze bifa.",
+        "rowLabel": "Scoate bifa: {name}",
+        "submit": {
+          "one": "Scoate bifa la {count} înscriere",
+          "few": "Scoate bifa la cele {count}",
+          "other": "Scoate bifa la cele {count}"
+        },
+        "pending": "Se scot bifele…",
+        "empty": "Nicio bifă de scos",
+        "emptyHelp": "Fiecare înscriere bifată are un cont de membru cu aceeași adresă.",
+        "ticked": "Înscrierile bifate",
+        "cleared": {
+          "one": "Am scos bifa de membru la {count} înscriere. Nimic altceva nu s-a schimbat.",
+          "few": "Am scos bifa de membru la {count} înscrieri. Nimic altceva nu s-a schimbat.",
+          "other": "Am scos bifa de membru la {count} de înscrieri. Nimic altceva nu s-a schimbat."
+        }
+      },
       "saveName": "Salvează numele",
       "cancelTitle": "Anulează înscrierea",
       "cancelReason": "Motivul",
@@ -730,7 +766,8 @@
           "promo_consent_changed": "Acordul pentru oferte și beneficii schimbat",
           "family_resent": "Email retrimis familiei",
           "offered_by_staff": "Ofertă trimisă înaintea listei de așteptare («Trimite-i oferta»)",
-          "address_vouched_by_staff": "Adresă garantată de echipă; loc dat înaintea listei de așteptare («Dă-i un loc acum»)"
+          "address_vouched_by_staff": "Adresă garantată de echipă; loc dat înaintea listei de așteptare («Dă-i un loc acum»)",
+          "club_member_tick_changed": "Bifa de membru schimbată de echipă"
         }
       },
       "locale": {
@@ -1134,6 +1171,16 @@
       "createRegistrationBody": "Persoana este înscrisă la eveniment în numele ei, la cererea ei, și primește emailul pasului următor.",
       "renameTitle": "Schimbi numele?",
       "renameBody": "Numele nou apare pe listă, pe numărul de concurs și în emailuri; cel vechi rămâne în jurnal.",
+      "memberClearTitle": "Scoți bifa de membru?",
+      "memberClearBody": "Scoți bifa de membru de la {name}; nimic altceva nu se schimbă, niciun email.",
+      "memberSetTitle": "Pui bifa de membru?",
+      "memberSetBody": "Pui bifa de membru la {name}; pe listă clubul devine {club}. Nimic altceva nu se schimbă, niciun email.",
+      "memberSweepTitle": "Scoți bifele de membru?",
+      "memberSweepBody": {
+        "one": "Scoți bifa de membru la {count} înscriere; nimic altceva nu se schimbă, niciun email.",
+        "few": "Scoți bifa de membru la {count} înscrieri; nimic altceva nu se schimbă, niciun email.",
+        "other": "Scoți bifa de membru la {count} de înscrieri; nimic altceva nu se schimbă, niciun email."
+      },
       "withdrawConsentTitle": "Ștergi datele bifate?",
       "withdrawConsentBody": "Datele bifate dispar definitiv din înscriere; motivul rămâne în jurnal, fără numele persoanei.",
       "eraseRegistrationTitle": "Ștergi definitiv înscrierea?",
@@ -5422,6 +5469,16 @@
               ]
             },
             {
+              "title": "Scoate bifa de membru celor care nu sunt membri",
+              "steps": [
+                "Când: înainte de o cursă pentru membri, ca să rămână bifați doar membrii clubului. Bifa o pune participantul în formular; clubul nu o verifică.",
+                "Unul câte unul: «Înscrieri» → apasă pe nume → la «Bifa de membru» apasă «Nu e membru» și confirmă. Pe listă, același «Nu e membru» e în meniul ⋮ al rândului.",
+                "Toți deodată: «Înscrieri» → «Caută și filtrează» → la membri alege «Doar cei care s-au declarat membri» → «Filtrează» → «Curăță bifele celor care nu sunt membri».",
+                "Lista arată înscrierile bifate a căror adresă nu e a niciunui cont din «Echipa». Un membru înscris cu altă adresă apare și el: debifează-l. Apoi «Scoate bifa la cele» … și confirmă.",
+                "Ce nu face: nu anulează nicio înscriere, nu mută niciun loc, nu trimite niciun email. Clubul de pe listă se șterge doar dacă era cel pus de bifă. Fiecare schimbare rămâne în jurnal."
+              ]
+            },
+            {
               "title": "Retrimite declarația celor care nu au semnat",
               "steps": [
                 "«Evenimente» → «Editează» pe rândul cursei → cardul «Înscrierile primite».",
@@ -7768,6 +7825,13 @@
       "checkinUndone": "Nu mai e marcat prezent.",
       "registrationCreated": "Persoana a fost adăugată; emailul e pus la coadă.",
       "nameCorrected": "Numele a fost schimbat.",
+      "memberTickCleared": "Bifa de membru a fost scoasă.",
+      "memberTickSet": "Bifa de membru a fost pusă.",
+      "memberTicksCleared": {
+        "one": "Bifa de membru scoasă la {count} înscriere.",
+        "few": "Bifa de membru scoasă la {count} înscrieri.",
+        "other": "Bifa de membru scoasă la {count} de înscrieri."
+      },
       "registrationCancelled": "Înscrierea a fost anulată; emailul e pus la coadă.",
       "consentWithdrawn": "Datele bifate au fost șterse.",
       "bibsPrinted": "Marcat ca printat.",

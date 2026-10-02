@@ -9,6 +9,7 @@ import {
   bulkCancelRegistrationsByStaff,
   cancelRegistrationByStaff,
   checkInByStaff,
+  clearMemberTicksByStaff,
   confirmRegistrationByStaff,
   correctRegisteredName,
   createRegistrationByStaff,
@@ -19,6 +20,7 @@ import {
   promoteRegistrationByStaff,
   bulkDeleteRegistrationsByStaff,
   setBibNumberByStaff,
+  setClubMemberDeclared,
   withdrawOptionalData,
 } from "@/modules/registrations/admin-service";
 import { markBibsPrinted, setBibPrinted } from "@/modules/registrations/bibs";
@@ -399,6 +401,72 @@ export async function correctRegisteredNameAction(_previous: FormOutcome | null,
   }
 
   return backTo(detailPath(locale, registrationId), { saved: "nameCorrected" });
+}
+
+/**
+ * The list's own query, with the outcome in it (§180's shape): only the query travels in a field and
+ * the path is rebuilt here, so the field can choose which rows come back and never where the browser
+ * goes. The keys that would reopen a panel or repeat an old outcome are dropped first.
+ */
+async function backToList(locale: Locale, listQuery: string, outcome: Record<string, string>): Promise<never> {
+  const params = new URLSearchParams(listQuery);
+  for (const key of ["erase", "memberSweep", "error", "saved", "count", "cancelled", "erased", "failed", "test", "voided"]) params.delete(key);
+  for (const [key, value] of Object.entries(outcome)) params.set(key, value);
+  await flashOutcome(outcome);
+  redirect(`${getPathname({ locale, href: "/admin/registrations" })}?${params.toString()}#admin-alert`);
+}
+
+/**
+ * «Nu e membru» / «E membru» (§NNN): the self-declared member tick, cleared or set on one row — from
+ * the registration's page, or from the list's "⋮" (which posts `listQuery` and comes back to the
+ * list). The coarse gate here, `admin-service.ts` and the service assert it again (BR-REQ-060-01).
+ * Nothing typed, so nothing to keep: a refusal is a code on the page it came from.
+ */
+export async function setClubMemberDeclaredAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = toLocale(form.get("uiLocale"));
+  const registrationId = text(form, "registrationId");
+  const ticked = text(form, "to") === "1";
+  const listQuery = form.get("listQuery");
+
+  let outcome: { error?: string; saved?: string };
+  try {
+    const actor = await requireStaffCapability(canManageRegistrations);
+    await setClubMemberDeclared(getDb(), actor, registrationId, ticked, new Date());
+    outcome = { saved: ticked ? "memberTickSet" : "memberTickCleared" };
+  } catch (error) {
+    outcome = outcomeOf(error);
+  }
+
+  if (typeof listQuery === "string") {
+    return backToList(locale, listQuery, Object.fromEntries(Object.entries(outcome).filter(([, value]) => value !== undefined)) as Record<string, string>);
+  }
+  return backTo(detailPath(locale, registrationId), outcome);
+}
+
+/**
+ * «Scoate bifa la cele {n}» (§NNN): the sweep the preview on the list confirms. The rows still ticked
+ * in the preview are posted; the service reads the candidates again in its transaction and clears
+ * only those that still are (`clearMemberTicksByStaff`). The scope is the list's, posted as the
+ * event the list was resolved to (empty: every event that has not started). Back to the list with
+ * the count; a refusal stays in the preview's own summary.
+ */
+export async function clearMemberTicksAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = toLocale(form.get("uiLocale"));
+  const ids = form.getAll("registrationId").filter((value): value is string => typeof value === "string" && value !== "");
+  const eventId = text(form, "eventId") || undefined;
+
+  let cleared: number;
+  try {
+    const actor = await requireStaffCapability(canManageRegistrations);
+    ({ cleared } = await clearMemberTicksByStaff(getDb(), actor, { scope: { eventId }, registrationIds: ids }, new Date()));
+  } catch (error) {
+    const failure = refused(error, form);
+    // Every row unticked in the preview: the list's own sentence for an empty selection.
+    const nothing = isDomainError(error) && error.code === "VALIDATION_ERROR" && error.fields.includes("registrationId");
+    return nothing ? { ...failure, error: "NOTHING_SELECTED", fields: [] } : failure;
+  }
+
+  return backToList(locale, text(form, "listQuery"), { saved: "memberTicksCleared", count: String(cleared) });
 }
 
 /**

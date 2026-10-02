@@ -93,6 +93,9 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   setBibNumberAction: [],
   createRegistrationAction: [],
   correctRegisteredNameAction: [],
+  // «Nu e membru» / «E membru» and the sweep «Scoate bifa la cele {n}» (§NNN): each names whom it changes.
+  setClubMemberDeclaredAction: [],
+  clearMemberTicksAction: [],
   cancelRegistrationAction: [],
   cancelRegistrationFromRowAction: [],
   withdrawConsentAction: [],
