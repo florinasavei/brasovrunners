@@ -42,7 +42,7 @@ import { hydrated, signIn } from "./support/featured-event";
  * would flake.
  *
  * The notice the local seed approves from the current template also names
- * `{{participantListNumbers}}` (§613), which puts a «Nr.» column on the list — but only when a listed
+ * `{{participantListNumbers}}` (§613), which puts a «BIB» column on the list — but only when a listed
  * confirmed runner wears a race number. The runners seeded here are written straight to the table
  * with none, so the table must stay the three columns it was: one step says so, on both projects.
  * The column itself is proven by `tests/integration/registrations/start-list-numbers.test.ts`.
@@ -430,7 +430,7 @@ test.describe("BR-REQ-039-01 the public list's states, behind the privacy notice
         ).toHaveAccessibleName(`Ana Confirmata ${tag} on Strava`);
       });
 
-      await test.step("nobody listed wears a race number: no «Nr.» column, whatever the notice names (§613)", async () => {
+      await test.step("nobody listed wears a race number: no «BIB» column, whatever the notice names (§613)", async () => {
         const ro = await readList(page, `/ro/evenimente/${event.slug}-ro`, tag);
         await expect(ro.list.getByRole("columnheader")).toHaveText(["#", "Nume", "Club"]);
         await expect(ro.list.locator('[data-col="number"]')).toHaveCount(0);

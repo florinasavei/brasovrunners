@@ -238,7 +238,7 @@
         "other": "{count} de participanți confirmați"
       },
       "columnPosition": "#",
-      "columnNumber": "Nr.",
+      "columnNumber": "BIB",
       "columnNumberFull": "numărul de concurs",
       "columnName": "Nume",
       "columnClub": "Club",
@@ -3015,13 +3015,13 @@
         "listNumbersNotice": {
           "title": "Nota de confidențialitate: numărul de concurs pe lista publică",
           "todo": "Nota în vigoare nu descrie încă numărul de concurs pe lista publică, așa că lista nu arată numerele, până când clubul aprobă o notă care îl descrie.",
-          "done": "Nota în vigoare descrie numărul de concurs: lista îl arată într-o coloană „Nr.” pentru toți cei confirmați care au număr; cei fără număr au „—”.",
+          "done": "Nota în vigoare descrie numărul de concurs: lista îl arată într-o coloană „BIB” pentru toți cei confirmați care au număr; cei fără număr au „—”.",
           "how": [
             "Înainte de aprobare, scrie celor deja înscriși: /admin/events → evenimentul → „Trimite un mesaj participanților”. Spune că numărul lor apare lângă nume la „Cine vine” și cum renunță (următorul pas).",
             "Renunțarea: din „Înscrierile mele” (sau linkul din email) apasă „Nu vreau să apar pe lista de participanți & rezultate”; numărul dispare odată cu numele.",
             "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Secțiunea despre lista publică descrie numărul de concurs de lângă numele celor confirmați.",
             "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”.",
-            "De atunci încolo, lista arată coloana „Nr.” pentru toți cei confirmați care au număr, indiferent de nota sub care s-au înscris.",
+            "De atunci încolo, lista arată coloana „BIB” pentru toți cei confirmați care au număr, indiferent de nota sub care s-au înscris.",
             "Aprobă și termenii din șablon, dacă nu i-ai aprobat deja, ca să spună același lucru despre listă."
           ]
         },
@@ -4070,7 +4070,7 @@
       "print": "Tipărește",
       "help": "Toți participanții confirmați, prezenți sau nu. Nota medicală se șterge singură la șapte zile după eveniment; după aceea coloana e goală. Deschiderea acestei pagini se înregistrează în jurnal.",
       "helpNoHealth": "Toți participanții confirmați, prezenți sau nu. Deschiderea acestei pagini se înregistrează în jurnal.",
-      "columnBib": "Nr.",
+      "columnBib": "BIB",
       "columnName": "Nume",
       "columnPhone": "Telefon",
       "columnContact": "Persoană de contact",
@@ -5069,7 +5069,7 @@
                 "Tipărește la mărimea reală (100%) și taie pe linie.",
                 "Numerele se dau în ordinea confirmării, de la «Numerele de concurs (BIB) încep de la». «Alocă numerele» e al Administratorului.",
                 "Rezervele pentru masă: «Retipărește rezervele libere (PDF)» le tipărește din nou pe cele încă nedate. Numere de rezervă noi pune doar Administratorul.",
-                "Pe site, lista «Cine vine» arată coloana «Nr.» după ce clubul aprobă nota de confidențialitate nouă. Înainte, Administratorul le scrie celor deja înscriși cu «Trimite un mesaj participanților»; cine nu vrea să apară apasă «Nu vreau să apar pe lista de participanți & rezultate» în «Înscrierile mele», iar numărul dispare odată cu numele. De la aprobare, coloana arată numărul fiecărui confirmat care are număr, oricare ar fi nota sub care s-a înscris; un confirmat fără număr are „—”."
+                "Pe site, lista «Cine vine» arată coloana «BIB» după ce clubul aprobă nota de confidențialitate nouă. Înainte, Administratorul le scrie celor deja înscriși cu «Trimite un mesaj participanților»; cine nu vrea să apară apasă «Nu vreau să apar pe lista de participanți & rezultate» în «Înscrierile mele», iar numărul dispare odată cu numele. De la aprobare, coloana arată numărul fiecărui confirmat care are număr, oricare ar fi nota sub care s-a înscris; un confirmat fără număr are „—”."
               ]
             },
             {
@@ -5506,7 +5506,7 @@
                 "Ce e în vigoare la fiecare text: capul cardului spune «În vigoare: versiunea…» sau «Nicio versiune în vigoare»; filtrele «În vigoare», «Înlocuite» și «Retrase» arată restul.",
                 "Fără termeni, notă și o declarație de cursă aprobate nu se poate înscrie nimeni. Pentru o cursă pe asfalt editorul alege declarația de asfalt, dacă e aprobată, altfel pe cea pentru eveniment montan. O alergare de grup oferă declarația doar dacă o bifează și dacă textul ei (asfalt sau teren accidentat) e aprobat.",
                 "Până aprobi nota nouă, lista publică de participanți arată doar confirmații.",
-                "Coloana «Nr.» din lista «Cine vine» (numărul de concurs) apare după ce aprobi nota de confidențialitate din șablonul nou. Mai întâi scrie-le celor deja înscriși: «Evenimente» → «Deschide» → cardul «Înscrierile primite» → «Trimite un mesaj participanților»; spune-le că numărul lor va apărea lângă nume și că, dacă nu vor, apasă «Nu vreau să apar pe lista de participanți & rezultate» în «Înscrierile mele» (numărul dispare odată cu numele).",
+                "Coloana «BIB» din lista «Cine vine» (numărul de concurs) apare după ce aprobi nota de confidențialitate din șablonul nou. Mai întâi scrie-le celor deja înscriși: «Evenimente» → «Deschide» → cardul «Înscrierile primite» → «Trimite un mesaj participanților»; spune-le că numărul lor va apărea lângă nume și că, dacă nu vor, apasă «Nu vreau să apar pe lista de participanți & rezultate» în «Înscrierile mele» (numărul dispare odată cu numele).",
                 "Apoi aprobi nota: cardul «GDPR» → «Regenerează din șablon» → ciorna → «Salvează ciorna» → «Aprobă și publică». De atunci coloana arată numărul fiecărui confirmat care are număr, oricare ar fi nota sub care s-a înscris; un confirmat fără număr are „—”. «Sarcini» → «Club» are rândul ei până atunci.",
                 "Ciorne sau versiuni de care nu mai ai nevoie: bifează-le în tabel, apasă «Șterge versiunile bifate» și verifică lista. Doar ciorne: «Șterge ciornele» și confirmă. Cu o versiune aprobată în listă: la «Confirmarea» scrii textul cerut (de exemplu „DELETE 2”), la «Motivul» de ce, apoi «Șterge versiunile».",
                 "Declarațiile semnate la o alergare de grup, când semnatarul cere ștergerea: «Evenimente» → «Editează» la alergare → «Declarații semnate (alergare de grup)» → «Șterge mai multe deodată»: bifează-le, completează o dată «Motivul ștergerii», apasă «Șterge cele bifate» și confirmă. În jurnal rămân numele tău și motivul, nu și al celui care a semnat."

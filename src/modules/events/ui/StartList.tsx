@@ -29,7 +29,7 @@ import ListStateLabel from "./ListStateLabel";
 import StartListSocials from "./StartListSocials";
 import { readOrWhileAway } from "@/modules/resilience/optional-read";
 
-/** What the «Nr.» column says for a listed runner with no number: the backoffice's own dash (§548). */
+/** What the «BIB» column says for a listed runner with no number: the backoffice's own dash (§548). */
 const NO_NUMBER = "—";
 
 /**
@@ -107,7 +107,7 @@ const NO_NUMBER = "—";
  *
  * The owner: "in the public participants list, I also want to show the BID as a column, not just
  * the index in the table". Once the privacy notice in force names `{{participantListNumbers}}`
- * (`cachedListNumbersDisclosed`), a «Nr.» column sits between the position and the name: a named
+ * (`cachedListNumbersDisclosed`), a «BIB» column sits between the position and the name: a named
  * confirmed runner's race number — the one their confirmation drew (§548), `bib_number`, never the
  * old provisional column (§214: a published number is a number that cannot move) — «—» for a
  * confirmed runner who has none and for the pending and waiting rows (they have none, §548), and
@@ -207,7 +207,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
     statesOn ? <ListStateLabel group={group} label={t(`startList.states.${LIST_STATE_KEYS[group]}`)} help={helpOf(group)} /> : null;
 
   /*
-    The «Nr.» column (§613): behind the gate, and only when this page's confirmed rows carry a number
+    The «BIB» column (§613): behind the gate, and only when this page's confirmed rows carry a number
     — a column that would read «—» on every row says nothing to a reader, so the table stays as it
     was. `bibNumber` is absent from every row without the gate (the query did not select it).
   */
@@ -307,7 +307,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
                     {t("startList.columnPosition")}
                   </Box>
                   {numbersShown && (
-                    // «Nr.» on the screen, the whole word for a screen reader and on hover.
+                    // «BIB» on the screen, the whole word for a screen reader and on hover.
                     <Box component="th" scope="col" data-col="number" aria-label={t("startList.columnNumberFull")}>
                       <Box component="abbr" title={t("startList.columnNumberFull")} sx={{ textDecoration: "none" }}>
                         {t("startList.columnNumber")}

@@ -1,0 +1,11 @@
+{
+  "branch": "fix/race-number-column-says-bib",
+  "decisionsTitle": "The race number's column is headed «BIB», not «Nr.» (amending §613)",
+  "decisionsSection": "**The owner:** \"Aici în loc de Nr. Scrie BID, ăsta e termenul tehnic\" (BIB, as the brief spells the term).\n\n**Decision.** The public list's race-number column (`Event.startList.columnNumber`) and the desk's printable confirmed list (`columnBib`) are headed «BIB» in both languages, the technical term the backoffice already uses («Număr de concurs (BIB)»). The accessible full name stays `columnNumberFull`, «numărul de concurs» / «race number», and so does the legal merge value `listNumbersClause`, which names the column by its full words; the legal templates' visible text is untouched. The two guide texts and the two task texts that describe the column say «BIB», and the code comments that named it «Nr.» now name «BIB». BR-REQ-039-01 criterion 24 is amended to the new heading.\n\n**Refused.** Keeping «Nr.»: it abbreviates a Romanian word, while «BIB» is what runners, timekeepers and the backoffice call the number. Changing the full accessible name: «numărul de concurs» is what a screen reader and the notice should say in words.",
+  "changelogLine": "- **The race number's column says «BIB»** — on «Cine vine» and the desk's printed list, the technical term the backoffice already uses. §NNN.",
+  "specsCriteria": [
+    { "requirement": "BR-REQ-039-01", "text": "Criterion 24 amended: the race-number column's heading is «BIB» in both languages, its accessible full name stays «numărul de concurs» / «race number», and the desk's printable confirmed list heads its number column «BIB» too (2026-10-01, `DECISIONS.md` §NNN)." }
+  ],
+  "docsNotes": "",
+  "batchLine": "the race number's column says «BIB»"
+}

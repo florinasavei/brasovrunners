@@ -16,7 +16,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 
 /**
  * BR-REQ-039-01, `DECISIONS.md` §613 (amending §396) — the rendered public list with the race
- * number in a «Nr.» column, both faces of the gate.
+ * number in a «BIB» column, both faces of the gate.
  *
  * With the platform's privacy notice in force — it names `{{participantListNumbers}}` — and at
  * least one listed confirmed runner wearing a number, the table gains a column between the
@@ -190,16 +190,16 @@ beforeEach(async () => {
 });
 
 describe("§613 with a notice that describes the race number", () => {
-  it("shows a «Nr.» column after the position: the number, «—» without one or before the confirmation, nothing on a hidden row", async () => {
+  it("shows a «BIB» column after the position: the number, «—» without one or before the confirmation, nothing on a hidden row", async () => {
     await approveNotice({ ro: privacyNoticeRo, en: privacyNoticeEn });
     const event = await mixedEvent();
 
     const html = renderToStaticMarkup(await StartList({ event }));
 
-    expect(headers(html)).toEqual(["#", "Nr.", "Nume", "Club"]);
+    expect(headers(html)).toEqual(["#", "BIB", "Nume", "Club"]);
     // The whole word, for a screen reader and on hover.
     expect(html).toMatch(/<th[^>]*aria-label="numărul de concurs"/);
-    expect(html).toMatch(/<abbr[^>]*title="numărul de concurs"[^>]*>Nr\.<\/abbr>/);
+    expect(html).toMatch(/<abbr[^>]*title="numărul de concurs"[^>]*>BIB<\/abbr>/);
     expect(rows(html)).toEqual([
       ["1", "117", "Ana Popescu Confirmat", "CS Rapid"],
       ["2", "—", "Bogdan Ionescu Confirmat", ""],
@@ -221,7 +221,7 @@ describe("§613 with a notice that describes the race number", () => {
 
     const html = renderToStaticMarkup(await StartList({ event }));
 
-    expect(headers(html)).toEqual(["#", "No.", "Name", "Club"]);
+    expect(headers(html)).toEqual(["#", "BIB", "Name", "Club"]);
     expect(html).toMatch(/<th[^>]*aria-label="race number"/);
     expect(rows(html).map((row) => row[1])).toEqual(["117", "—", "", "—", "—"]);
     expect(caption(html)).toBe(en.Event.startList.captionStatesNumbers);
@@ -233,7 +233,7 @@ describe("§613 with a notice that describes the race number", () => {
 
     const html = renderToStaticMarkup(await StartList({ event }));
 
-    expect(headers(html)).toEqual(["#", "Nr.", "Nume", "Club"]);
+    expect(headers(html)).toEqual(["#", "BIB", "Nume", "Club"]);
     expect(rows(html)).toEqual([
       ["1", "117", "Ana Popescu", "CS Rapid"],
       ["2", "—", "Bogdan Ionescu", ""],
@@ -285,7 +285,7 @@ describe("§613 a runner who registered under an older notice shows the number t
     expect(rows(ro_).map((row) => row[1])).toEqual(["117", "118"]);
     locale = "en";
     const en_ = renderToStaticMarkup(await StartList({ event }));
-    expect(headers(en_)).toEqual(["#", "No.", "Name", "Club"]);
+    expect(headers(en_)).toEqual(["#", "BIB", "Name", "Club"]);
     expect(rows(en_).map((row) => row[1])).toEqual(["117", "118"]);
   });
 
