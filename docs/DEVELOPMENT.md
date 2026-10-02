@@ -188,6 +188,14 @@ docker compose up -d db && yarn db:migrate
 yarn test:concurrency
 ```
 
+**A failure one run in eight is usually a plan, not a race.** The planner's choice follows the
+table's statistics, and the suite's own deletes and inserts move them — autovacuum on a table
+just emptied leaves "no rows" over pages that remain. `UPDATE … WHERE id IN (SELECT … LIMIT n FOR
+UPDATE SKIP LOCKED)` took more than `n` rows under exactly that (§NNN): never write a limited,
+locking sub-select inside an UPDATE; select the ids, then update those. A test of such a limit
+makes the statistics itself (`vacuum (truncate false, analyze)` on the emptied table, as
+`hourly-pace.test.ts` does), so the bad plan is there on every run, and puts them back after.
+
 **End-to-end tests are separate.** `yarn test:e2e` builds the app, starts the production
 server and drives a real browser at 320px and at desktop width, so it needs the database
 running and a seeded set of events. It is deliberately **not** part of `yarn check`: that gate
