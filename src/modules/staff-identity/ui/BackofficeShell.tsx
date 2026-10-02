@@ -73,15 +73,17 @@ export default async function BackofficeShell({
   const breakdown = canReadRegistrations(staffUser.role)
     ? await registeredBadgeBreakdown(getDb(), new Date(), locale)
     : null;
-  const registered = breakdown?.total ?? null;
+  // The badge says who is confirmed, the pill beside it who waits (§NNN); the rest are in progress, and only the tooltip says them.
+  const registered = breakdown?.confirmed ?? null;
+  const waiting = breakdown?.waitlisted ?? 0;
   /*
-    The tooltip says what the figure counts, per event (§476): the rule in one line, then each
-    upcoming event with its number, the first five by start and how many more after them — so
+    The tooltip says what the figures count, per event (§476): the three figures in one line, then
+    each upcoming event with its number, the first five by start and how many more after them — so
     a reader whose list disagrees with the badge sees which event the difference is on.
   */
   const registeredHint = breakdown
-    ? registeredBadgeHint(breakdown.events, {
-        rule: t("nav.registeredHint"),
+    ? registeredBadgeHint(breakdown, {
+        rule: (confirmed, waitlisted, inProgress) => t("nav.registeredHint", { confirmed, waitlisted, inProgress }),
         event: (title, count, parts) => t("nav.registeredEvent", { title, count, parts }),
         withPlace: (count) => t("nav.registeredWithPlace", { count }),
         withPlaceOf: (count, capacity) => t("nav.registeredWithPlaceOf", { count, capacity }),
@@ -95,7 +97,12 @@ export default async function BackofficeShell({
     href: SECTION_HREF[section],
     label: t(`nav.${section}`),
     section,
-    ...(section === "registrations" ? { count: registered, countHint: registeredHint } : {}),
+    ...(section === "registrations" ? {
+          count: registered,
+          countHint: registeredHint,
+          // Only above zero, with the words a screen reader says for the glyph and the number (§NNN).
+          ...(waiting > 0 ? { countWaiting: waiting, countWaitingLabel: t("nav.registeredWaitingLabel", { count: waiting }) } : {}),
+        } : {}),
     // `/devs` is «Setări»'s last tab and no section of its own (§520): the bar lights «Setări» there.
     ...(section === "settings" ? { alsoActiveOn: [getPathname({ locale, href: "/devs" })] } : {}),
   }));

@@ -18,6 +18,12 @@ import { familyReservationHolds, offerAwaitingItsFirstEmail } from "./repository
  * is the number "how many are signed up" means to a club: cancellations are gone, last month's
  * race is history, and a synthetic runner is never inside a number the club is given (§12.6).
  *
+ * ## What the tab shows of it (§NNN)
+ *
+ * The badge is the **confirmed** — «cine are loc sigur» — and a small pill beside it, with the waiting
+ * list's hourglass, the people waiting; the tooltip says all three figures (the confirmed, the waiting
+ * and everybody in progress between them). `countRegisteredForUpcoming` below is the whole of them, the sum the split must reach.
+ *
  * ## Why it is cheap enough to sit on every backoffice page
  *
  * The badge renders in the shell, so a naive read would be one query per page view. Two things
@@ -76,6 +82,8 @@ export type RegisteredOnEvent = {
   eventId: string;
   title: string;
   count: number;
+  /** CONFIRMED alone (§NNN): the figure the tab's badge shows. Always part of `withPlace`. */
+  confirmed: number;
   withPlace: number;
   awaitingEmail: number;
   waitlisted: number;
@@ -87,8 +95,9 @@ export type RegisteredOnEvent = {
  * allocator's count of people and never a guess from the status alone.
  */
 function badgeBucket(now: Date) {
-  return sql<"place" | "awaitingEmail" | "waitlisted">`case
-    when ${registrations.status} in ('CONFIRMED', 'PENDING_DECLARATION')
+  return sql<"confirmed" | "place" | "awaitingEmail" | "waitlisted">`case
+    when ${registrations.status} = 'CONFIRMED' then 'confirmed'
+    when ${registrations.status} = 'PENDING_DECLARATION'
       or (${registrations.status} = 'WAITLIST_OFFERED' and (${registrations.holdExpiresAt} > ${now} or ${offerAwaitingItsFirstEmail(now)}))
       or ${familyReservationHolds(now)} then 'place'
     when ${registrations.status} = 'PENDING_EMAIL_CONFIRMATION' then 'awaitingEmail'
@@ -136,9 +145,13 @@ export async function countRegisteredPerUpcomingEvent<T extends Record<string, u
   for (const row of rows) {
     const entry =
       perEvent.get(row.eventId) ??
-      { eventId: row.eventId, title: row.title ?? "—", count: 0, withPlace: 0, awaitingEmail: 0, waitlisted: 0, capacity: row.capacity };
+      { eventId: row.eventId, title: row.title ?? "—", count: 0, confirmed: 0, withPlace: 0, awaitingEmail: 0, waitlisted: 0, capacity: row.capacity };
     entry.count += row.value;
-    if (row.bucket === "place") entry.withPlace += row.value;
+    // A confirmed person holds a place, so «cu loc» keeps counting them (§621) and the badge reads the part alone (§NNN).
+    if (row.bucket === "confirmed") {
+      entry.confirmed += row.value;
+      entry.withPlace += row.value;
+    } else if (row.bucket === "place") entry.withPlace += row.value;
     else if (row.bucket === "awaitingEmail") entry.awaitingEmail += row.value;
     else entry.waitlisted += row.value;
     perEvent.set(row.eventId, entry);
@@ -149,16 +162,30 @@ export async function countRegisteredPerUpcomingEvent<T extends Record<string, u
 const cachedBreakdown = new Map<Locale, { at: number; value: RegisteredOnEvent[] }>();
 
 /**
- * The badge's figure and its per-event split, memoized a minute per language, and `null` when
+ * The tab's three figures and the per-event split they come from (§NNN): the people **confirmed** (the
+ * badge), the people **waiting** on a list, and everybody **in progress** between the two —
+ * awaiting the email, awaiting the signature, holding an offer or a family's reservation. The three
+ * add up to `total`, the people with an active registration at an upcoming event.
+ */
+export type RegisteredBreakdown = {
+  total: number;
+  confirmed: number;
+  waitlisted: number;
+  inProgress: number;
+  events: RegisteredOnEvent[];
+};
+
+/**
+ * The badge's figures and the per-event split, memoized a minute per language, and `null` when
  * the database is away: the shell renders on every backoffice page, `/admin/tasks` and `/devs`
  * included, and a badge is not worth a 500.
- * The total is the sum of the split, so the tab and its tooltip can never disagree.
+ * Every figure is a sum of the split, so the tab and its tooltip can never disagree.
  */
 export async function registeredBadgeBreakdown<T extends Record<string, unknown>>(
   db: Database<T>,
   now: Date,
   locale: Locale,
-): Promise<{ total: number; events: RegisteredOnEvent[] } | null> {
+): Promise<RegisteredBreakdown | null> {
   const hit = cachedBreakdown.get(locale);
   let value: RegisteredOnEvent[];
   if (hit && now.getTime() - hit.at < CACHE_MS) {
@@ -171,7 +198,10 @@ export async function registeredBadgeBreakdown<T extends Record<string, unknown>
     }
     cachedBreakdown.set(locale, { at: now.getTime(), value });
   }
-  return { total: value.reduce((sum, row) => sum + row.count, 0), events: value };
+  const total = value.reduce((sum, row) => sum + row.count, 0);
+  const confirmed = value.reduce((sum, row) => sum + row.confirmed, 0);
+  const waitlisted = value.reduce((sum, row) => sum + row.waitlisted, 0);
+  return { total, confirmed, waitlisted, inProgress: total - confirmed - waitlisted, events: value };
 }
 
 /** How many events the tooltip names before it says how many more — a tooltip is not a list. */
@@ -179,7 +209,8 @@ export const BADGE_HINT_EVENTS = 5;
 
 /** The words the hint is built from, in the reader's language — the `Admin.nav` entries. */
 export type BadgeHintWords = {
-  rule: string;
+  /** «Confirmați: 133 · pe lista de așteptare: 10 · în curs: 24» (§NNN). */
+  rule: (confirmed: number, waitlisted: number, inProgress: number) => string;
   /** "{title}: {count} — {parts}". */
   event: (title: string, count: number, parts: string) => string;
   withPlace: (count: number) => string;
@@ -190,12 +221,17 @@ export type BadgeHintWords = {
 };
 
 /**
- * The tab's tooltip text (§621): what the number is and is not, then each upcoming
+ * The tab's tooltip text (§621, §NNN): the three figures the tab is made of in one line — the badge is the
+ * first, the pill beside it the second — then each upcoming
  * event with its total and who holds a place — "153 — 144 of 150 places taken, 9 awaiting the
  * email confirmation" — a zero part omitted except the places; the first `BADGE_HINT_EVENTS` by
  * start and how many more after them. Pure, so both languages are tested against the catalogues.
  */
-export function registeredBadgeHint(events: readonly RegisteredOnEvent[], words: BadgeHintWords): string {
+export function registeredBadgeHint(
+  figures: Pick<RegisteredBreakdown, "confirmed" | "waitlisted" | "inProgress" | "events">,
+  words: BadgeHintWords,
+): string {
+  const { events } = figures;
   const shown = events.slice(0, BADGE_HINT_EVENTS).map((row) => {
     const parts = [
       row.capacity === null ? words.withPlace(row.withPlace) : words.withPlaceOf(row.withPlace, row.capacity),
@@ -205,5 +241,5 @@ export function registeredBadgeHint(events: readonly RegisteredOnEvent[], words:
     return words.event(row.title, row.count, parts);
   });
   const rest = events.length - BADGE_HINT_EVENTS;
-  return [words.rule, ...shown, ...(rest > 0 ? [words.more(rest)] : [])].join("\n");
+  return [words.rule(figures.confirmed, figures.waitlisted, figures.inProgress), ...shown, ...(rest > 0 ? [words.more(rest)] : [])].join("\n");
 }
