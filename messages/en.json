@@ -6589,7 +6589,7 @@
     "botCheckWait": "Checking… we send the form ourselves as soon as it answers; no need to press again.",
     "submitSlow": "This is taking longer than usual. Give it a few more seconds and do not press again — a second press would only queue behind the first.",
     "listOptInStates": "The list also shows where your registration stands: “{pending}” once your address is confirmed, “{waitlisted}” while you wait for a place, and “{confirmed}” after the declaration. A cancelled registration does not appear.",
-    "listOptInStatesNoWaitlist": "The list also shows where your registration stands: “{pending}” once your address is confirmed and “{confirmed}” after the declaration. While you wait for a place on the waiting list you do not appear on it. A cancelled registration does not appear.",
+    "listOptInStatesNoWaitlist": "The list also shows where your registration stands: “{pending}” once your address is confirmed and “{confirmed}” after the declaration. While you wait for a place on the waiting list, you do not appear on the public list. A cancelled registration does not appear.",
     "another": {
       "linkGone": "This link for another person is no longer used. Send the form below again with your address and the person's full name and birth date: you get an email where you confirm their registration with one button."
     },

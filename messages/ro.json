@@ -6589,7 +6589,7 @@
     "botCheckWait": "Se verifică… trimitem noi înscrierea imediat ce răspunde; nu mai apăsa.",
     "submitSlow": "Durează mai mult decât de obicei. Mai așteaptă câteva secunde și nu apăsa din nou — a doua apăsare s-ar așeza în spatele primei.",
     "listOptInStates": "Lista arată și stadiul înscrierii: „{pending}” după ce îți confirmi adresa, „{waitlisted}” cât aștepți un loc și „{confirmed}” după declarație. O înscriere anulată nu apare.",
-    "listOptInStatesNoWaitlist": "Lista arată și stadiul înscrierii: „{pending}” după ce îți confirmi adresa și „{confirmed}” după declarație. Cât aștepți un loc pe lista de așteptare nu apari pe ea. O înscriere anulată nu apare.",
+    "listOptInStatesNoWaitlist": "Lista arată și stadiul înscrierii: „{pending}” după ce îți confirmi adresa și „{confirmed}” după declarație. Cât aștepți un loc pe lista de așteptare, nu apari pe lista publică. O înscriere anulată nu apare.",
     "another": {
       "linkGone": "Linkul acesta pentru încă o persoană nu mai este folosit. Trimite din nou formularul de mai jos cu adresa ta, numele complet și data nașterii persoanei: primești un email în care confirmi înscrierea ei cu un singur buton."
     },
