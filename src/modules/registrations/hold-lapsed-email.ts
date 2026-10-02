@@ -8,13 +8,19 @@ export type ReleasedHold = {
   id: string;
   participantId: string;
   locale: "ro" | "en";
-  /** The deadline that passed: the hold's own, as written on the row before the release. */
+  /** The deadline that passed: the hold's own, as the row carried it at the release (it stays on the row). */
   holdExpiresAt: Date | null;
 };
 
-/** The outbox's key for the one message a released hold is owed (§NNN): one per registration, ever. */
-export function holdLapsedIdempotencyKey(registrationId: string): string {
-  return `registration:${registrationId}:hold-lapsed`;
+/**
+ * The outbox's key for the one message a released hold is owed (§NNN): one per lapsed hold. It names
+ * the hold by its deadline, not the registration alone — a restarted registration (the email's own
+ * buttons lead back to the form, which restarts the same row, `domain/family.ts`) gets a new hold with
+ * a new deadline, and if that one lapses too the person is told again. The release itself
+ * (`PENDING_DECLARATION -> EXPIRED`) happens once per hold, so a second sweep still queues nothing.
+ */
+export function holdLapsedIdempotencyKey(registrationId: string, holdExpiresAt: Date): string {
+  return `registration:${registrationId}:hold-lapsed:${holdExpiresAt.toISOString()}`;
 }
 
 /**
@@ -27,9 +33,10 @@ export function holdLapsedIdempotencyKey(registrationId: string): string {
  *   signature's sweep, «Trimite-i oferta», the desk's «Dă-i un loc», the editor's capacity raise and the
  *   maintenance job (`fillAvailableSpots`) — so each of them now tells the person, and none needs a line
  *   of its own.
- * - **Once.** The key names the registration and nothing else, so a second sweep, a retried request or
- *   a second path finds the row already queued (`onConflictDoNothing`): one email per registration,
- *   whatever released it and however often.
+ * - **Once per lapsed hold.** The key names the registration and the hold's deadline
+ *   (`holdLapsedIdempotencyKey`), so a second sweep, a retried request or a second path finds the row
+ *   already queued (`onConflictDoNothing`), while a restarted registration whose new hold lapses as well
+ *   is told again.
  * - **Never inline.** The outbox row commits with the release; the drain after the response sends it
  *   (§513), and a failed send never takes the release back (`AGENTS.md` §10.5 rule 10).
  * - **TEST rows** are told like real ones (`AGENTS.md` §12.6: `kind` is in no condition here); their
@@ -70,7 +77,9 @@ export async function queueHoldLapsedEmails<T extends Record<string, unknown>>(
         ...(hold.holdExpiresAt ? { deadline: hold.holdExpiresAt.toISOString() } : {}),
         toWaitlist,
       },
-      idempotencyKey: holdLapsedIdempotencyKey(hold.id),
+      // A hold with no deadline is never released as lapsed (`lapsedDeclarationHoldsToRelease`); the
+      // instant of the release stands in, which is as unique, since a hold is released once.
+      idempotencyKey: holdLapsedIdempotencyKey(hold.id, hold.holdExpiresAt ?? now),
       now,
     });
   }

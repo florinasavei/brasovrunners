@@ -88,7 +88,7 @@ export const emailMessageType = pgEnum("email_message_type", [
   // zone — never "the team that runs the site", which is the staff invitation's sentence. No token.
   "MEMBER_INVITATION",
   // "Locul tău la {event} a expirat" (§NNN): a declaration hold released to somebody who wanted the
-  // place (§160) — the person who held it unsigned is told, once per registration, whatever path
+  // place (§160) — the person who held it unsigned is told, once per lapsed hold, whatever path
   // released it. Not an offer's lapse: that stays silent (§331, `WAITLIST_OFFER_EXPIRED`). No token.
   "DECLARATION_HOLD_EXPIRED",
 ]);

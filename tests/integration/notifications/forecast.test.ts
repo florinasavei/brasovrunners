@@ -362,7 +362,7 @@ describe("§383 the forecast of automatic emails", () => {
       // The person whose hold the same run releases (§NNN).
       case "holdLapsed": {
         await runRegistrationMaintenance(db, when);
-        return participantOnly("DECLARATION_HOLD_EXPIRED", ":hold-lapsed");
+        return participantOnly("DECLARATION_HOLD_EXPIRED", ":hold-lapsed:%");
       }
       case "registrationOpened": {
         const { queued: count } = await queueRegistrationOpenedMessages(db, when);

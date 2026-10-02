@@ -4356,7 +4356,7 @@
         "NEWSLETTER": "Only when an organizer sends a newsletter from the backoffice, to the chosen topic's subscribers. It leaves after every other email, from what is left of the allowance.",
         "NEW_EVENT_ALERT": "Once for each new event published (never the weekly run), to those subscribed to new events and to its topics.",
         "MEMBER_INVITATION": "When an administrator adds somebody on Echipa with the role Membru, and on \"Resend the invitation\" until their first sign-in. No token: the button leads to the sign-in, then to the members' area.",
-        "DECLARATION_HOLD_EXPIRED": "When the place of somebody who did not sign the declaration by the deadline goes to somebody who wanted it. Once, with what they can still do. Not after the start, not for a cancelled event."
+        "DECLARATION_HOLD_EXPIRED": "When somebody who did not sign the declaration in time loses the place to somebody who wanted it. Once per place lost, with what they can still do. Not after the start or for a cancelled event."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "after the form is sent",

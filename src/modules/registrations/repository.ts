@@ -1239,7 +1239,7 @@ export async function expireStaleHolds<T extends Record<string, unknown>>(
         holdExpiresAt: registrations.holdExpiresAt,
       });
     /*
-      The person who held the place is told (§NNN), in this transaction, once per registration — but
+      The person who held the place is told (§NNN), in this transaction, once per lapsed hold — but
       not when the race has started or the event is no longer scheduled (`over`): every hold goes
       then, nobody wanted the place, and there is nothing left to do about it. A cancelled event is
       quiet (§331), and a hold that lapses with the start is the end of the event's registration,

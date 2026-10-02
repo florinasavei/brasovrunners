@@ -719,8 +719,8 @@ async function renderRow(
   if (row.messageType === "DECLARATION_HOLD_EXPIRED" && registration) {
     const lapsed = await describeLapsedHold(db, row, registration, now);
     // §331 at the moment of sending, as `OutboxMessageWithdrawn` says: a race cancelled or started since,
-    // or a registration that moved on (restarted), has nothing left to tell.
-    if (!lapsed) throw new OutboxMessageWithdrawn("the lapsed hold's event is over or cancelled, or the registration moved on");
+    // or a registration that moved on (restarted, signed late, or a newer hold lapsed), has nothing left to tell.
+    if (!lapsed) throw new OutboxMessageWithdrawn("the lapsed hold's event is over or cancelled, or the registration moved on from that hold");
     const zone = eventDetails?.timezone ?? CLUB_TIME_ZONE;
     if (lapsed.deadline) {
       data.holdExpiresAtFormatted = formatDeadlineInSentence(lapsed.deadline, zone, locale);
@@ -1391,7 +1391,9 @@ async function waitlistTakesNewcomer(db: RendererDb, eventId: string, now: Date)
  * A released declaration hold's message (§NNN): the deadline that passed, whether the place went to the
  * waiting list, and what the person can do now (`holdLapsedNext`) — or null when there is nothing to
  * tell any more: the event was cancelled or has started since the release (§331, the sweep's own
- * `over`), or the registration is no longer the expired one (restarted in the meantime).
+ * `over`), or the registration is no longer this lapsed hold — restarted or signed late in the meantime,
+ * expired since for another reason, or lapsed again with a newer deadline, whose own message (its own
+ * key, `holdLapsedIdempotencyKey`) says so instead of this older one.
  */
 async function describeLapsedHold(
   db: RendererDb,
@@ -1399,7 +1401,11 @@ async function describeLapsedHold(
   registration: Registration,
   now: Date,
 ): Promise<{ deadline: Date | null; toWaitlist: boolean; next: HoldLapsedNext } | null> {
-  if (registration.status !== "EXPIRED") return null;
+  if (registration.status !== "EXPIRED" || registration.expiryReason !== "DECLARATION_HOLD_LAPSED") return null;
+  const payload = (row.payloadJson ?? {}) as { deadline?: unknown; toWaitlist?: unknown };
+  const fromPayload = typeof payload.deadline === "string" ? new Date(payload.deadline) : null;
+  const queuedFor = fromPayload && !Number.isNaN(fromPayload.getTime()) ? fromPayload : null;
+  if (queuedFor && registration.holdExpiresAt?.getTime() !== queuedFor.getTime()) return null;
   const [event] = await db
     .select({
       registrationMode: events.registrationMode,
@@ -1418,9 +1424,7 @@ async function describeLapsedHold(
     .where(eq(events.id, registration.eventId))
     .limit(1);
   if (!event || event.eventStatus !== "SCHEDULED" || event.startsAt.getTime() <= now.getTime()) return null;
-  const payload = (row.payloadJson ?? {}) as { deadline?: unknown; toWaitlist?: unknown };
-  const fromPayload = typeof payload.deadline === "string" ? new Date(payload.deadline) : null;
-  const deadline = fromPayload && !Number.isNaN(fromPayload.getTime()) ? fromPayload : registration.holdExpiresAt;
+  const deadline = queuedFor ?? registration.holdExpiresAt;
   const counts = await countOccupied(db, registration.eventId, now);
   const waitlisted = await countEligibleWaitlisted(db, registration.eventId);
   return {

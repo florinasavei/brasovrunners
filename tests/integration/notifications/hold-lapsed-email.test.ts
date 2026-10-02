@@ -13,7 +13,8 @@ import { OutboxMessageWithdrawn } from "@/modules/notifications/outbox";
 import { formatDeadlineInSentence, renderOutboxMessage } from "@/modules/notifications/render";
 import { holdLapsedIdempotencyKey, queueHoldLapsedEmails } from "@/modules/registrations/hold-lapsed-email";
 import { runRegistrationMaintenance } from "@/modules/registrations/maintenance";
-import { confirmEmail, type EventForRegistration, submitRegistration, unregister } from "@/modules/registrations/service";
+import { confirmEmail, type EventForRegistration, signDeclaration, submitRegistration, unregister } from "@/modules/registrations/service";
+import { signingInput } from "../../helpers/declaration-signing";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 import { sendHoldEmails } from "../../helpers/outbox";
 
@@ -21,8 +22,9 @@ import { sendHoldEmails } from "../../helpers/outbox";
  * §NNN — «Da, fă emailul pentru cel care pierde locul» (the owner, 2026-10-02). A declaration hold
  * released to somebody who wanted the place (§160) queues one `DECLARATION_HOLD_EXPIRED` for the person
  * who held it, in the transaction that released it, whatever path released it and however often a
- * sweep runs (`registration:<id>:hold-lapsed`). A lapsed offer stays silent (§331); a hold the start
- * releases, or a cancelled event's, is told nothing.
+ * sweep runs — once per lapsed hold (`registration:<id>:hold-lapsed:<deadline>`), so a restarted
+ * registration whose new hold lapses too is told again. A lapsed offer stays silent (§331); a hold the
+ * start releases, or a cancelled event's, is told nothing.
  */
 const NOW = new Date("2026-09-04T10:00:00.000Z");
 const minutes = (n: number) => new Date(NOW.getTime() + n * 60_000);
@@ -43,7 +45,7 @@ describe("§NNN the person whose held place lapses is told by email", () => {
       { locale: "ro", title: "Confidențialitate", body: { sections: [{ paragraphs: ["p"] }] } },
       { locale: "en", title: "Privacy", body: { sections: [{ paragraphs: ["p"] }] } },
     ];
-    for (const key of ["PRIVACY_NOTICE", "TERMS"] as const) {
+    for (const key of ["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION"] as const) {
       await insertLegalDocumentVersion(db, {
         key,
         version: 1,
@@ -144,7 +146,7 @@ describe("§NNN the person whose held place lapses is told by email", () => {
       locale: "en",
       recipientEmail: participant.deliveryEmail,
       status: "PENDING",
-      idempotencyKey: holdLapsedIdempotencyKey(held.id),
+      idempotencyKey: holdLapsedIdempotencyKey(held.id, held.holdExpiresAt!),
     });
     expect(rows[0].payloadJson).toEqual({ eventId: event.id, deadline: held.holdExpiresAt?.toISOString(), toWaitlist: true });
 
@@ -152,7 +154,7 @@ describe("§NNN the person whose held place lapses is told by email", () => {
     await runRegistrationMaintenance(db, minutes(32));
     await runRegistrationMaintenance(db, minutes(120));
     expect(await lapsedEmails()).toHaveLength(1);
-    // The same trigger queued twice by hand: still one (the key is the registration's).
+    // The same trigger queued twice by hand: still one (the key is the hold's).
     await db.transaction(async (tx) => {
       await queueHoldLapsedEmails(tx, {
         eventId: event.id,
@@ -247,6 +249,63 @@ describe("§NNN the person whose held place lapses is told by email", () => {
     const rows = await lapsedEmails();
     expect(rows).toHaveLength(1);
     expect(rows[0].registrationId).toBe(held.id);
+  });
+
+  it("a restarted registration whose new hold lapses too is told again — and the older message, unsent, is withdrawn rather than sent for the newer lapse", async () => {
+    const event = await createEvent({ capacity: 1 });
+    const held = await join(event, "ana@example.ro", NOW);
+    await join(event, "bogdan@example.ro", NOW);
+    await sendHoldEmails(db, NOW);
+    await runRegistrationMaintenance(db, minutes(31));
+    expect((await statusOf(held.id)).status).toBe("EXPIRED");
+    const [first] = await lapsedEmails();
+    expect(first.idempotencyKey).toBe(holdLapsedIdempotencyKey(held.id, held.holdExpiresAt!));
+
+    // A second place; Ana follows the email's «Înscrie-te din nou» before the drain sent it. The form
+    // restarts the same row (§10.5) into a new hold with a new deadline.
+    await db.update(events).set({ capacity: 2 }).where(eq(events.id, event.id));
+    await submitRegistration(db, { ...event, capacity: 2 }, input("ana@example.ro", minutes(35)), minutes(35));
+    const restarted = await statusOf(held.id);
+    expect(restarted.status).toBe("PENDING_DECLARATION");
+    expect(restarted.holdExpiresAt?.getTime()).not.toBe(held.holdExpiresAt?.getTime());
+    // The first message is now about a hold that is no longer the row's: withdrawn at the send.
+    await expect(renderOutboxMessage(first, db, minutes(36))).rejects.toBeInstanceOf(OutboxMessageWithdrawn);
+
+    // Somebody waits again, and the new hold lapses as well: a second message, for the second hold.
+    await join(event, "carmen@example.ro", minutes(36));
+    await sendHoldEmails(db, minutes(36));
+    const later = new Date(restarted.holdExpiresAt!.getTime() + 60_000);
+    await runRegistrationMaintenance(db, later);
+    expect((await statusOf(held.id)).status).toBe("EXPIRED");
+    const rows = await lapsedEmails();
+    expect(rows).toHaveLength(2);
+    const second = rows.find((row) => row.id !== first.id)!;
+    expect(second.idempotencyKey).toBe(holdLapsedIdempotencyKey(held.id, restarted.holdExpiresAt!));
+    expect(second.payloadJson).toMatchObject({ deadline: restarted.holdExpiresAt!.toISOString() });
+    const told = await renderOutboxMessage(second, db, new Date(later.getTime() + 60_000));
+    expect(told.text).toContain(`Termenul pentru semnare a fost ${formatDeadlineInSentence(restarted.holdExpiresAt!, ZONE, "ro")}.`);
+    // And the older one still says nothing about the newer lapse.
+    await expect(renderOutboxMessage(first, db, new Date(later.getTime() + 60_000))).rejects.toBeInstanceOf(OutboxMessageWithdrawn);
+    // Swept again: nothing more.
+    await runRegistrationMaintenance(db, new Date(later.getTime() + 120_000));
+    expect(await lapsedEmails()).toHaveLength(2);
+  });
+
+  it("a late signature whose own hold the sweep releases moves on to the line, and the message queued for it is withdrawn, never sent", async () => {
+    const event = await createEvent({ capacity: 1 });
+    const held = await join(event, "ana@example.ro", NOW);
+    await join(event, "bogdan@example.ro", NOW);
+    await sendHoldEmails(db, NOW);
+
+    // Ana signs past her deadline while Bogdan waits: `signDeclaration`'s own sweep releases the hold
+    // (and queues this message), then re-allocates her (§15.3 step 7).
+    await signDeclaration(db, event, held.id, await signingInput(db, minutes(31), "ana Pop"), minutes(31));
+    const after = await statusOf(held.id);
+    expect(["WAITLISTED", "CONFIRMED"]).toContain(after.status);
+
+    const [row] = await lapsedEmails();
+    expect(row.registrationId).toBe(held.id);
+    await expect(renderOutboxMessage(row, db, minutes(32))).rejects.toBeInstanceOf(OutboxMessageWithdrawn);
   });
 
   it("a lapsed offer stays silent (§331): only the declaration hold's holder is told", async () => {
