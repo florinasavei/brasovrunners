@@ -809,7 +809,7 @@
       "declarationPaper": "on paper, recorded by {who}",
       "signedByMinor": "the minor",
       "signedByGuardian": "the parent or guardian",
-      "confirmOnPaperBodyMinor": "You confirm the minor and the parent ({guardian}) both signed the declaration on paper, at the desk. Only with the paper carrying both signatures in front of you.",
+      "confirmOnPaperBodyMinor": "You confirm the minor and the parent ({guardian}) both signed the declaration on paper, at the desk. Only with the paper carrying both signatures in front of you. Then the confirmation email goes out.",
       "emailVouched": "address vouched for by {who}",
       "journey": {
         "title": "The registration's journey",
@@ -857,7 +857,7 @@
       "openRow": "Open the registration",
       "cancel": "Cancel the registration",
       "cancelBody": "The person is emailed. It cannot be undone. The place is offered to the first on the waiting list or stays free, by the setting. A refusal, with its reason, is made from the registration's page.",
-      "confirmOnPaperBody": "You confirm the participant signed the declaration on paper, at the desk. They get the place and a number. Only with the signed paper in front of you.",
+      "confirmOnPaperBody": "You confirm the participant signed the declaration on paper, at the desk. They get the place and a number. Only with the signed paper in front of you. Then the confirmation email goes out.",
       "downloadBib": "Download the race number (BIB)",
       "notOnPublicList": "Not shown publicly",
       "erase": "Erase permanently",
@@ -4258,7 +4258,11 @@
       "checkedInAt": "Here since {time} · {who}",
       "bySelf": "themselves",
       "fastTrack": "This person is at the desk: I vouch for the address, and the declaration is signed on paper now.",
-      "fastTrackHelp": "The registration is confirmed on the spot, with no email; the participant signs the paper declaration and you record it. If full, they join the waiting list.",
+      "fastTrackHelp": "Confirmed on the spot, without the email link: the participant signs on paper in front of you and you record it. Then they get the confirmation email. If full, they join the waiting list.",
+      "paperWhen": "Only at the desk, with the declaration the participant signed on paper in front of you. The declaration and the email address are recorded on your name; you never sign for them.",
+      "paperPlace": "The place is given as always: if the event is full or somebody is waiting, the person joins the waiting list, and a full waiting list refuses the press.",
+      "paperEmail": "Then the person gets the confirmation email, with the QR code, the number and the copy of the declaration. The sign-the-declaration email is not sent: there is nothing left to sign.",
+      "paperNot": "It is no shortcut before the race, without the person there. If the email did not arrive, an Administrator presses «Resend email» on the registration.",
       "saved": {
         "registrationCreated": "Added — the person is listed below, in the state they landed in.",
         "registrationConfirmed": "Confirmed. You can give the number and mark them here.",
@@ -5011,6 +5015,7 @@
                 "The row says «Așteaptă semnarea declarației» (awaiting the declaration) or «Așteaptă confirmarea emailului» (awaiting the email confirmation).",
                 "Give them the printed declaration form. They read it and sign it themselves. A minor: the parent or guardian signs too, each with their own document.",
                 "Press «Confirm on paper», then «Confirm on paper» again in the window.",
+                "The person then gets the confirmation email, with the QR code, the number and the copy of the declaration. The sign-the-declaration email is not sent: there is nothing left to sign.",
                 "Then «Mark present» and the number. Keep the signed sheet for the organizer."
               ]
             },
