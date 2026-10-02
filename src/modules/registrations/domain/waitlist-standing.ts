@@ -1,6 +1,6 @@
 /**
- * Where a person waiting stands in the event's line (§NNN; the owner: «Ești pe locul 3 din 10 pe
- * lista de așteptare»): the three numbers every surface that says it reads, from the one reader
+ * Where a person waiting stands in the event's line (§NNN; the owner:
+ * „Ești pe locul 3 din 10”): the three numbers every surface that says it reads, from the one reader
  * (`repository.ts#readWaitlistPosition`) — the registration's own page, «Toate înscrierile mele» and
  * the `WAITLIST_JOINED` email.
  *

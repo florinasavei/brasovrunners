@@ -11,7 +11,7 @@ import { withClientWords } from "../../helpers/client-words";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-035-01, BR-REQ-035-02 (§NNN) — «Ești pe locul 3 din 10 pe lista de așteptare»: the
+ * BR-REQ-035-01, BR-REQ-035-02 (§NNN) — „Ești pe locul 3 din 10”: the
  * `WAITLIST_JOINED` email says where the person stood when it was rendered, worded as of that moment,
  * and the registration's own page says where they stand now. Both read the position from the one
  * reader (`readWaitlistPosition`) at render time, so the line moving between the queueing and the
@@ -176,6 +176,36 @@ describe("§NNN the WAITLIST_JOINED email says where the person stood when it wa
     expect(message.text).not.toContain("Runner 1");
   });
 
+  it("with offers handed out by hand, says how many others waited and no position, in both halves", async () => {
+    await db.update(events).set({ waitlistAutoOffer: false }).where(eq(events.id, eventId));
+    await person("WAITLISTED", at(1));
+    const mine = await person("WAITLISTED", at(2));
+    await person("WAITLISTED", at(3));
+    const message = await renderOutboxMessage(row("WAITLIST_JOINED", mine.registration.id, mine.participant.id), db, NOW);
+    expect(message.text).toContain("Când am trimis acest email, pe lista de așteptare mai așteptau alte 2 persoane.");
+    expect(message.text).toContain("When we sent this email, 2 other people were on the waiting list.");
+    expect(message.html).toContain("pe lista de așteptare mai așteptau alte 2 persoane.");
+    expect(message.text).not.toContain("erai pe locul");
+    expect(message.text).not.toContain("you were number");
+    expect(message.text).not.toContain("Ești pe");
+  });
+
+  it("with offers by hand, reads Romanian's forms of the others' count and the alone case", async () => {
+    await db.update(events).set({ waitlistAutoOffer: false }).where(eq(events.id, eventId));
+    const mine = await person("WAITLISTED", at(1));
+    const queued = row("WAITLIST_JOINED", mine.registration.id, mine.participant.id);
+    expect((await renderOutboxMessage(queued, db, NOW)).text).toContain("Când am trimis acest email, erai singura persoană pe lista de așteptare.");
+    expect((await renderOutboxMessage({ ...queued, locale: "en" }, db, NOW)).text).toContain("you were the only person on the waiting list.");
+    await person("WAITLISTED", at(2));
+    const one = await renderOutboxMessage(queued, db, NOW);
+    expect(one.text).toContain("mai aștepta o altă persoană.");
+    expect((await renderOutboxMessage({ ...queued, locale: "en" }, db, NOW)).text).toContain("1 other person was on the waiting list.");
+    for (let i = 0; i < 18; i += 1) await person("WAITLISTED", at(3 + i));
+    expect((await renderOutboxMessage(queued, db, NOW)).text).toContain("mai așteptau alte 19 persoane.");
+    await person("WAITLISTED", at(30));
+    expect((await renderOutboxMessage(queued, db, NOW)).text).toContain("mai așteptau alte 20 de persoane.");
+  });
+
   it("says nothing of the line once the person is no longer waiting, and on no other message", async () => {
     const mine = await person("WAITLISTED", at(1));
     await db.update(registrations).set({ status: "CANCELLED" }).where(eq(registrations.id, mine.registration.id));
@@ -224,8 +254,24 @@ describe("§NNN the registration's own page says where the person stands, and ho
     await db.update(events).set({ waitlistAutoOffer: false }).where(eq(events.id, eventId));
     const mine = await person("WAITLISTED", at(1));
     const html = await manage(mine.registration.id, mine.participant.id);
-    expect(html).toContain("Ești pe locul 1 din 1 persoană de pe lista de așteptare. Clubul alege cui oferă un loc eliberat.");
+    expect(html).toContain("Ești singura persoană pe lista de așteptare. Clubul alege cui oferă un loc eliberat.");
     expect(html).not.toContain("se oferă în ordine");
+    expect(html).not.toContain("locul 1");
+  });
+
+  it("with offers by hand, shows the count of others and no position, in both languages", async () => {
+    await db.update(events).set({ waitlistAutoOffer: false }).where(eq(events.id, eventId));
+    await person("WAITLISTED", at(1));
+    const mine = await person("WAITLISTED", at(2));
+    await person("WAITLISTED", at(3));
+    const html = await manage(mine.registration.id, mine.participant.id);
+    expect(html).toContain("Ești pe lista de așteptare, împreună cu alte 2 persoane. Clubul alege cui oferă un loc eliberat.");
+    expect(html).not.toContain("locul 2");
+    expect(html).not.toContain("din 3");
+    locale = "en";
+    const en = await manage(mine.registration.id, mine.participant.id);
+    expect(en).toContain("You are on the waiting list, with 2 others. The club chooses whom to offer a freed place.");
+    expect(en).not.toContain("number 2");
   });
 
   it("«Toate înscrierile mele» says the same sentence on a waiting row, and none on a row that is not", async () => {
@@ -254,6 +300,30 @@ describe("§NNN the registration's own page says where the person stands, and ho
     locale = "ro";
     await db.update(registrations).set({ status: "WAITLIST_OFFERED", holdExpiresAt: at(60 * 24) }).where(eq(registrations.id, mine.registration.id));
     expect(await page()).not.toContain("waitlist-position");
+  });
+
+  it("«Toate înscrierile mele» gives no position either when the club chooses", async () => {
+    await db.update(events).set({ waitlistAutoOffer: false }).where(eq(events.id, eventId));
+    await person("WAITLISTED", at(1));
+    const mine = await person("WAITLISTED", at(2));
+    const { secret } = await issueActionToken(db, {
+      purpose: "MANAGE_PROFILE",
+      participantId: mine.participant.id,
+      registrationId: null,
+      expiresAt: new Date("2026-10-11T07:00:00.000Z"),
+      now: NOW,
+    });
+    const page = async () => {
+      const element = (await MyRegistrationsPage({ params: Promise.resolve({ locale, token: secret }), searchParams: Promise.resolve({}) })) as ReactElement;
+      const stream = await renderToReadableStream(withClientWords(element, locale));
+      await stream.allReady;
+      return (await new Response(stream).text()).replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
+    };
+    const html = await page();
+    expect(html).toContain("Ești pe lista de așteptare, împreună cu o altă persoană. Clubul alege cui oferă un loc eliberat.");
+    expect(html).not.toContain("locul 2");
+    locale = "en";
+    expect(await page()).toContain("You are on the waiting list, with 1 other. The club chooses whom to offer a freed place.");
   });
 
   it("says nothing of a line for a registration that is not waiting, and no name of another person", async () => {

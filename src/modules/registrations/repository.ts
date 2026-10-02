@@ -172,7 +172,7 @@ export async function offersWaitlistAutomatically<T extends Record<string, unkno
 
 /**
  * Where a waiting registration stands in its event's line, and how long the line is (§NNN; the owner:
- * «Ești pe locul 3 din 10 pe lista de așteptare»): the one reader behind the registration's own page,
+ * „Ești pe locul 3 din 10”): the one reader behind the registration's own page,
  * «Toate înscrierile mele» and the `WAITLIST_JOINED` email, so the three can never say different numbers.
  *
  * **The order is `lockOldestWaitlisted`'s own** — `waitlisted_at` ascending, `id` for a tie — the order

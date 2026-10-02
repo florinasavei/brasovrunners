@@ -232,10 +232,10 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                 )}
 
                 {/*
-                  Where a waiting person stands (§NNN; the owner: «Ești pe locul 3 din 10 pe lista de
-                  așteptare»): the state's own words as the heading of a one-person page — a family's
-                  card has the state chip — and the sentence under it. Only this person's place and the
-                  line's length; nobody else is named.
+                  Where a waiting person stands (§NNN; the owner: „Ești pe locul 3 din 10”): the state's own words as the heading of a
+                  one-person page — a family's card has the state chip — and the sentence under it. The
+                  place only while offers go out in order; when the club chooses, only how many others wait.
+                  Nobody else is named.
                 */}
                 {one.status === "WAITLISTED" && one.waitlistStanding && (
                   <Box sx={{ mb: 2 }} data-testid="manage-waitlist">
