@@ -2,7 +2,7 @@ import { hasDirectAvailability } from "@/modules/registrations/domain/capacity";
 import { newcomerJoinsLine, waitlistHasRoom } from "@/modules/registrations/domain/waitlist";
 
 /**
- * What a person whose declaration hold lapsed can still do (§NNN), said by the
+ * What a person whose declaration hold lapsed can still do (§638), said by the
  * `DECLARATION_HOLD_EXPIRED` email in one sentence:
  *
  * - `register` — registration is open and a newcomer would get a place: «te poți înscrie din nou»;

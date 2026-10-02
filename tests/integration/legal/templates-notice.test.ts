@@ -20,7 +20,7 @@ import { env } from "@/shared/config/env";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Șabloanele textelor legale s-au schimbat»: when a release moves a legal template, the
+ * §639 — «Șabloanele textelor legale s-au schimbat»: when a release moves a legal template, the
  * maintenance job emails every Administrator and Superadministrator, once per change, and the
  * platform still approves nothing. The trigger is `/admin/legal`'s own «Șablon nou» predicate
  * (`readLegalOverview`'s `templateNewer`); the throttle is one overview read an hour; the memory is
@@ -44,7 +44,7 @@ const ownWords = (suffix: string) => [
   { locale: "en" as const, title: `Text ${suffix}`, body: textToBody(`The club's text ${suffix}.`) },
 ];
 
-describe("§NNN the Administrators are emailed when a release moves a legal template", () => {
+describe("§639 the Administrators are emailed when a release moves a legal template", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let superadmin: StaffUser;
@@ -262,7 +262,7 @@ describe("§NNN the Administrators are emailed when a release moves a legal temp
   });
 });
 
-describe("§NNN a failing check never fails the job's other work", () => {
+describe("§639 a failing check never fails the job's other work", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
 

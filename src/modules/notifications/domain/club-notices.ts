@@ -242,7 +242,7 @@ const NOT_A_PARTICIPANT_MESSAGE: ReadonlySet<EmailMessageType> = new Set<EmailMe
   "STAFF_INVITATION",
   // A member's account (§524): to a club member, about no registration.
   "MEMBER_INVITATION",
-  // The Administrators' notice of a moved legal template (§NNN): to the staff, like the invitation.
+  // The Administrators' notice of a moved legal template (§639): to the staff, like the invitation.
   "LEGAL_TEMPLATES_CHANGED",
   "REGISTRATION_OPENED",
   // The newsletter (§445) goes to a subscriber, not a participant, about no registration.

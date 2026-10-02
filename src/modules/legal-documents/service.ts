@@ -1083,7 +1083,7 @@ export type LegalKindOverview = {
   /**
    * The content hash of the template's words, the deployment's facts written in — what `templateNewer`
    * compares with the text in force. The maintenance job's notice to the Administrators fingerprints
-   * a change of the templates by it (§NNN), so a release that moves a template is announced once.
+   * a change of the templates by it (§639), so a release that moves a template is announced once.
    */
   filledHash: string;
   nextVersion: number;

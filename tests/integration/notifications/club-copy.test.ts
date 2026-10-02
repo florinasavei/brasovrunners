@@ -325,7 +325,7 @@ describe("BR-REQ-033-02 criterion 14 no club-bound message carries a token, a li
     const registration = await confirmedRegistration(event);
     // Not a group run's self-declaration (§393): it is about no registration, so it is never copied
     // (`enqueueClubCopies` copies only a message with a registration) and a copy of it cannot exist.
-    // Nor a held place that lapsed (§NNN): about an expired registration only — withdrawn for this
+    // Nor a held place that lapsed (§638): about an expired registration only — withdrawn for this
     // confirmed one — and its club copy is held to the same in `hold-lapsed-email.test.ts`.
     const types = (emailMessageType.enumValues as EmailMessageType[]).filter(
       (type) => isParticipantMessage(type) && type !== "GROUP_RUN_DECLARATION_SIGNED" && type !== "DECLARATION_HOLD_EXPIRED",

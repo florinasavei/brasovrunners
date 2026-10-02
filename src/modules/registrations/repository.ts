@@ -1175,7 +1175,7 @@ async function lapsedDeclarationHoldsToRelease<T extends Record<string, unknown>
  * `wanting` counts a newcomer the waiting list has no room for as one more person wanting a
  * place (§348) — `allocateOrWaitlist` alone passes it; every other caller wants the default.
  *
- * A declaration hold released here queues its one «Locul tău … a expirat» (§NNN,
+ * A declaration hold released here queues its one «Locul tău … a expirat» (§638,
  * `hold-lapsed-email.ts`) in the same transaction — which is why this takes a `Transaction`: every
  * path that releases one comes through here, so every one of them tells the person. A lapsed offer
  * stays silent (§331).
@@ -1239,7 +1239,7 @@ export async function expireStaleHolds<T extends Record<string, unknown>>(
         holdExpiresAt: registrations.holdExpiresAt,
       });
     /*
-      The person who held the place is told (§NNN), in this transaction, once per lapsed hold — but
+      The person who held the place is told (§638), in this transaction, once per lapsed hold — but
       not when the race has started or the event is no longer scheduled (`over`): every hold goes
       then, nobody wanted the place, and there is nothing left to do about it. A cancelled event is
       quiet (§331), and a hold that lapses with the start is the end of the event's registration,

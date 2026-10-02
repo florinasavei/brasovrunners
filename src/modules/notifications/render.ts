@@ -716,7 +716,7 @@ async function renderRow(
     payloadActionUrl = data.signInUrl;
   }
   /*
-    «Șabloanele textelor legale s-au schimbat» (§NNN), to an Administrator or a Superadministrator:
+    «Șabloanele textelor legale s-au schimbat» (§639), to an Administrator or a Superadministrator:
     the greeting's name and the texts' keys are in the payload — no participant, no token. The one
     button is «Versiune nouă» (`/admin/legal/new`) in the recipient's language, from `APP_BASE_URL`
     (AGENTS.md §8); the backoffice's sign-in decides who may open it.
@@ -737,7 +737,7 @@ async function renderRow(
     payloadActionUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/events/[slug]/register", params: { slug: eventDetails.slug } } })}`;
   }
   /*
-    «Locul tău la … a expirat» (§NNN): the deadline that passed, from the payload `expireStaleHolds`
+    «Locul tău la … a expirat» (§638): the deadline that passed, from the payload `expireStaleHolds`
     wrote (the row's own column otherwise), each half in its own words (§377: a stated deadline says
     the date); whether the place went to the waiting list, a fact of the release; and what the person
     can do now, read off the event as it stands at the send (`holdLapsedNext` says why not at the
@@ -1416,7 +1416,7 @@ async function waitlistTakesNewcomer(db: RendererDb, eventId: string, now: Date)
 }
 
 /**
- * A released declaration hold's message (§NNN): the deadline that passed, whether the place went to the
+ * A released declaration hold's message (§638): the deadline that passed, whether the place went to the
  * waiting list, and what the person can do now (`holdLapsedNext`) — or null when there is nothing to
  * tell any more: the event was cancelled or has started since the release (§331, the sweep's own
  * `over`), or the registration is no longer this lapsed hold — restarted or signed late in the meantime,

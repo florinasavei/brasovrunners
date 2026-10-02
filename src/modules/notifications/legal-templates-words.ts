@@ -4,7 +4,7 @@ import type { LegalDocumentKey } from "@/db/schema/legal-documents";
 import { LEGAL_DOCUMENT_KEYS } from "@/modules/legal-documents/domain/keys";
 
 /**
- * The backoffice's own words, as «Șabloanele textelor legale s-au schimbat» quotes them (§NNN): the
+ * The backoffice's own words, as «Șabloanele textelor legale s-au schimbat» quotes them (§639): the
  * texts' names from the catalogue `/admin/legal` lists them by, and the buttons the message tells an
  * Administrator to press, read from the catalogue the screens read — so a renamed button renames the
  * email with it, and the message never sends anybody looking for a word no screen says (§441's rule

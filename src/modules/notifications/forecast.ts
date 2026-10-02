@@ -42,7 +42,7 @@ import { selectDeclarationCandidates, selectReminderCandidates } from "./event-m
  * (§104), the last call to sign at the reminder's lead (§160), the offer to the next in line when
  * a waiting-list offer or a declaration hold lapses with somebody waiting, before registration
  * closes (§160, AGENTS.md §10.5, §420), the «Locul tău … a expirat» to the person whose declaration
- * hold that lapse releases, before the start (§NNN — never for a lapsed offer, §331), and
+ * hold that lapse releases, before the start (§638 — never for a lapsed offer, §331), and
  * "registration is open" to the addresses left on the
  * event's page (§146). No race number is sent on its own since §548: it rides on the confirmation.
  *
@@ -69,7 +69,7 @@ export type AutomaticSend =
   | "lastCall"
   | "participation"
   | "nextInLine"
-  // The person whose declaration hold a lapse releases to somebody waiting (§NNN).
+  // The person whose declaration hold a lapse releases to somebody waiting (§638).
   | "holdLapsed"
   | "registrationOpened"
   // The subscribers' sends, already queued (§445).
@@ -221,7 +221,7 @@ export async function forecastAutomaticEmails<T extends Record<string, unknown>>
         if (!row.holdExpiresAt) continue;
         const releasedAt = notBeforeNow(row.holdExpiresAt);
         consumedByNextInLine.set(row.registrationId, releasedAt);
-        // The person who held it is told (§NNN): a declaration hold only — an offer's lapse is silent (§331).
+        // The person who held it is told (§638): a declaration hold only — an offer's lapse is silent (§331).
         if (row.status === "PENDING_DECLARATION") {
           nextInLinePending.push({ at: releasedAt, eventId, send: "holdLapsed", registrationId: row.registrationId, kind: row.kind });
         }

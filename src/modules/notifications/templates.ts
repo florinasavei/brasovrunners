@@ -945,7 +945,7 @@ export type TemplateData = {
   staffEmail?: string;
   signInUrl?: string;
   /**
-   * «Șabloanele textelor legale s-au schimbat» (§NNN): the keys of the texts whose template is newer
+   * «Șabloanele textelor legale s-au schimbat» (§639): the keys of the texts whose template is newer
    * than the text in force, as the maintenance job found them. Each half names them in its own
    * language, from the catalogue `/admin/legal` lists them by (`legal-templates-words.ts`).
    */
@@ -1093,7 +1093,7 @@ export type TemplateData = {
   cancelledFromWaitlist?: boolean;
   cancelledOthers?: ReadonlyArray<{ name: string; state: FamilyEarlierState }>;
   /**
-   * A released declaration hold (§NNN), on `DECLARATION_HOLD_EXPIRED` only: whether somebody on the
+   * A released declaration hold (§638), on `DECLARATION_HOLD_EXPIRED` only: whether somebody on the
    * waiting list wanted the place (a fact of the release, from the row's payload) — else a newcomer
    * the line had no room for took it — and what the person can do now, read at the send
    * (`domain/hold-lapsed.ts`). The deadline that passed is `holdExpiresAtFormatted`.
@@ -1305,7 +1305,7 @@ function newsletterConfirmEmphasis(d: TemplateData, b: readonly string[]): Empha
 }
 
 /**
- * The texts whose template moved (§NNN), on the message's bold line: «Șablon nou: GDPR · Termeni de
+ * The texts whose template moved (§639), on the message's bold line: «Șablon nou: GDPR · Termeni de
  * concurs», the chip's own words and the names `/admin/legal` lists, in this half's language. None
  * when the payload names no text the catalogue knows.
  */
@@ -1316,7 +1316,7 @@ function legalTemplatesFacts(locale: EmailLocale, d: TemplateData): TemplateCont
 }
 
 /**
- * Whom a lawyer should read first (§NNN), from the texts that moved and nothing else: the declarations
+ * Whom a lawyer should read first (§639), from the texts that moved and nothing else: the declarations
  * when one of them is among them, the terms when they are, and otherwise the changed texts — so a later
  * change of the privacy notice alone never asks for the declarations or the terms. A key the catalogue
  * does not know is ignored, as on the bold line.
@@ -1584,7 +1584,7 @@ const T = {
       action: "Intră în zona membrilor",
       links: (d: TemplateData) => (d.privacyUrl ? [{ label: "Nota de confidențialitate", url: d.privacyUrl }] : []),
     },
-    // To an Administrator or a Superadministrator (§NNN): a release moved a legal template. The texts are
+    // To an Administrator or a Superadministrator (§639): a release moved a legal template. The texts are
     // named on the bold line, the platform's (a club text for this message keeps them); the words ask a
     // person to regenerate and approve — the platform approves nothing (§29, AGENTS.md §10.8).
     legalTemplatesChanged: {
@@ -1633,7 +1633,7 @@ const T = {
       emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
     },
     /*
-      A declaration hold released to somebody who wanted the place (§NNN; the owner, 2026-10-02: «Da, fă
+      A declaration hold released to somebody who wanted the place (§638; the owner, 2026-10-02: «Da, fă
       emailul pentru cel care pierde locul»): the fact, in the second person. When it lapsed and where the
       place went, and what the person can do now, are the platform's lines after the body
       (`holdLapsed`, `holdLapsedNext`), facts of this send whoever wrote the words.
@@ -1989,7 +1989,7 @@ const T = {
     cancelledReleased: (name: string, fromWaitlist: boolean) =>
       fromWaitlist ? `${name || "Persoana"} nu mai este pe lista de așteptare.` : "Locul a fost eliberat.",
     /**
-     * A released declaration hold (§NNN): the deadline that passed (§377), and where the place went. On
+     * A released declaration hold (§638): the deadline that passed (§377), and where the place went. On
      * the band with the body's first line; no bold inside, so the editor's «Înlocuiește cu câmpurile»
      * recognises it as the platform's line (`framingSentencesOf`).
      */
@@ -3163,7 +3163,7 @@ export function buildTemplateContent(
         ? [copy.cancelledOthers(data.cancelledOthers)]
         : []),
       /*
-        A released declaration hold's facts (§NNN), after the body whoever wrote it: the deadline that
+        A released declaration hold's facts (§638), after the body whoever wrote it: the deadline that
         passed and where the place went, then what the person can do now — one sentence, read at the send.
       */
       ...(messageType === "DECLARATION_HOLD_EXPIRED" ? [copy.holdLapsed(data.holdExpiresAtFormatted, data.holdLapsedToWaitlist === true)] : []),
@@ -3272,7 +3272,7 @@ export function buildTemplateContent(
         messageType === "STAFF_INVITATION" ||
         // …nor a member's invitation (§524): no event, no registration, nothing of a participant's to link.
         messageType === "MEMBER_INVITATION" ||
-        // …nor the Administrators' notice of a moved template (§NNN): its one link is its button.
+        // …nor the Administrators' notice of a moved template (§639): its one link is its button.
         messageType === "LEGAL_TEMPLATES_CHANGED"
       ) {
         return own.length > 0 ? own : undefined;
@@ -3375,7 +3375,7 @@ const NOT_A_PARTICIPANT_MESSAGE: ReadonlySet<EmailMessageType> = new Set([
   "STAFF_INVITATION",
   // A member's invitation (§524) says what the account keeps in its own body, as the colleague's does.
   "MEMBER_INVITATION",
-  // To the club's Administrators about its legal texts (§NNN): about nobody's data.
+  // To the club's Administrators about its legal texts (§639): about nobody's data.
   "LEGAL_TEMPLATES_CHANGED",
 ]);
 

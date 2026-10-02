@@ -13,7 +13,7 @@ export type ReleasedHold = {
 };
 
 /**
- * The outbox's key for the one message a released hold is owed (§NNN): one per lapsed hold. It names
+ * The outbox's key for the one message a released hold is owed (§638): one per lapsed hold. It names
  * the hold by its deadline, not the registration alone — a restarted registration (the email's own
  * buttons lead back to the form, which restarts the same row, `domain/family.ts`) gets a new hold with
  * a new deadline, and if that one lapses too the person is told again. The release itself
@@ -24,7 +24,7 @@ export function holdLapsedIdempotencyKey(registrationId: string, holdExpiresAt: 
 }
 
 /**
- * «Locul tău la {event} a expirat» (§NNN; the owner, 2026-10-02: «Da, fă emailul pentru cel care pierde
+ * «Locul tău la {event} a expirat» (§638; the owner, 2026-10-02: «Da, fă emailul pentru cel care pierde
  * locul»): one `DECLARATION_HOLD_EXPIRED` per declaration hold `expireStaleHolds` released to somebody
  * who wanted the place (§160), queued in the transaction that released it, under the same event lock.
  *

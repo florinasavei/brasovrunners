@@ -4,7 +4,7 @@ import type { LegalDocumentKey } from "@/db/schema/legal-documents";
 import { LEGAL_DOCUMENT_KEYS } from "./keys";
 
 /**
- * «Șabloanele textelor legale s-au schimbat» (§NNN; the owner, 2026-10-02: «vreau mail de regenerează
+ * «Șabloanele textelor legale s-au schimbat» (§639; the owner, 2026-10-02: «vreau mail de regenerează
  * toate documentele ASAP») — the arithmetic, pure: when the maintenance job looks, what counts as a
  * change of the templates, and what it remembers in `platform_settings` so each change is announced
  * once, on each environment separately.
@@ -93,7 +93,7 @@ export function isUnannouncedChange(pairs: readonly string[], notice: LegalTempl
   return pairs.some((pair) => !announced.has(pair));
 }
 
-/** The idempotency key of one person's email about one change (§NNN): once per person per change. */
+/** The idempotency key of one person's email about one change (§639): once per person per change. */
 export function legalTemplatesIdempotencyKey(fingerprint: string, staffUserId: string): string {
   return `legal-templates:${fingerprint}:${staffUserId}`;
 }

@@ -26,14 +26,14 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN — «Șabloanele textelor legale s-au schimbat», the pure half: when the job looks, what a change
+ * §639 — «Șabloanele textelor legale s-au schimbat», the pure half: when the job looks, what a change
  * is, the email's place among the message types, and the backoffice words it quotes.
  */
 const NOW = new Date("2026-10-02T08:00:00.000Z");
 const HASH_A = "a".repeat(64);
 const HASH_B = "b".repeat(64);
 
-describe("§NNN when the maintenance job reads the legal texts' overview", () => {
+describe("§639 when the maintenance job reads the legal texts' overview", () => {
   const stamp = legalTemplatesStamp();
   const checkedAgo = (minutes: number) => ({
     ...NO_LEGAL_TEMPLATES_NOTICE,
@@ -58,7 +58,7 @@ describe("§NNN when the maintenance job reads the legal texts' overview", () =>
   });
 });
 
-describe("§NNN what counts as a change of the templates", () => {
+describe("§639 what counts as a change of the templates", () => {
   const pairs = templatePairs([
     { key: "TERMS", filledHash: HASH_A },
     { key: "PRIVACY_NOTICE", filledHash: HASH_B },
@@ -104,7 +104,7 @@ function sources(directory: string): { path: string; text: string }[] {
   });
 }
 
-describe("§NNN the message type", () => {
+describe("§639 the message type", () => {
   it("is a value of the enum, queued in the source, and not among the types nothing queues", () => {
     expect(emailMessageType.enumValues).toContain("LEGAL_TEMPLATES_CHANGED");
     expect(NEVER_QUEUED_MESSAGE_TYPES.has("LEGAL_TEMPLATES_CHANGED")).toBe(false);
@@ -143,7 +143,7 @@ describe("§NNN the message type", () => {
   });
 });
 
-describe("§NNN the email quotes the backoffice's own words", () => {
+describe("§639 the email quotes the backoffice's own words", () => {
   it("names each button as the screen says it, without its count", () => {
     expect(legalTemplatesWords("ro")).toEqual({
       documents: ro.Admin.nav.legal,
@@ -170,7 +170,7 @@ describe("§NNN the email quotes the backoffice's own words", () => {
   });
 });
 
-describe("§NNN whom the email asks a lawyer to read", () => {
+describe("§639 whom the email asks a lawyer to read", () => {
   it("names the declarations and the terms only when they moved, and the changed texts otherwise", () => {
     expect(lawyerReads("ro", ["PRIVACY_NOTICE"])).toBe("Înainte de aprobare, un jurist ar trebui să citească textele schimbate.");
     expect(lawyerReads("en", ["PRIVACY_NOTICE"])).toBe("Before approving, a lawyer should read the changed texts.");

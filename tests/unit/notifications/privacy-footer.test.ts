@@ -23,7 +23,7 @@ const DATA: TemplateData = {
 };
 
 // A member's invitation (§524) says what the account keeps in its own body, as the colleague's does.
-// The Administrators' notice of a moved legal template (§NNN) is about nobody's data either.
+// The Administrators' notice of a moved legal template (§639) is about nobody's data either.
 const CLUB_MAIL: readonly EmailMessageType[] = [
   "DECLARATION_ARCHIVE",
   "GROUP_RUN_DECLARATION_ARCHIVE",

@@ -22,7 +22,7 @@ import { readLegalOverview, templateTranslations } from "./service";
 import { type ClubFacts, clubFactsFromEnv } from "./templates/club-facts";
 
 /**
- * The Administrators are emailed when a release moves a legal template (§NNN; the owner, 2026-10-02:
+ * The Administrators are emailed when a release moves a legal template (§639; the owner, 2026-10-02:
  * «vreau mail de regenerează toate documentele ASAP»). Until now each move sat in `/admin/tasks` and
  * on `/admin/legal`'s «Șablon nou» chip, and nobody was told: CLAUDE.md's «Still owed» item 16 is the
  * list of approvals the club kept missing for weeks. This is the knock on the door; `/admin/tasks`

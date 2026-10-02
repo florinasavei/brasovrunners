@@ -19,7 +19,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { sendHoldEmails } from "../../helpers/outbox";
 
 /**
- * §NNN — «Da, fă emailul pentru cel care pierde locul» (the owner, 2026-10-02). A declaration hold
+ * §638 — «Da, fă emailul pentru cel care pierde locul» (the owner, 2026-10-02). A declaration hold
  * released to somebody who wanted the place (§160) queues one `DECLARATION_HOLD_EXPIRED` for the person
  * who held it, in the transaction that released it, whatever path released it and however often a
  * sweep runs — once per lapsed hold (`registration:<id>:hold-lapsed:<deadline>`), so a restarted
@@ -30,7 +30,7 @@ const NOW = new Date("2026-09-04T10:00:00.000Z");
 const minutes = (n: number) => new Date(NOW.getTime() + n * 60_000);
 const ZONE = "Europe/Bucharest";
 
-describe("§NNN the person whose held place lapses is told by email", () => {
+describe("§638 the person whose held place lapses is told by email", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
 

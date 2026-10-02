@@ -57,7 +57,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
   /** Another person's kept forms nobody confirmed in time, deleted this run (§446). */
   familyEntriesPurged: number;
   /**
-   * «Șabloanele textelor legale s-au schimbat» queued this run (§NNN): one per Administrator and
+   * «Șabloanele textelor legale s-au schimbat» queued this run (§639): one per Administrator and
    * Superadministrator when a release moved a legal template, zero on every other run.
    */
   legalTemplatesNoticesQueued: number;
@@ -239,7 +239,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
   }
 
   /**
-   * The Administrators' notice of a moved legal template (§NNN): at most one read of the legal texts'
+   * The Administrators' notice of a moved legal template (§639): at most one read of the legal texts'
    * overview an hour, whatever the pinger does (§479), and one email per Administrator and
    * Superadministrator per change of the templates. Caught on its own and never retryable: a template
    * that cannot be read is logged by its kind — never the error's text — and counted, and the job's

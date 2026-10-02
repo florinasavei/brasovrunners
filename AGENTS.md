@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.60-2026-10-02 -->
+<!-- PROJECT_BASELINE: BR-V2.61-2026-10-02 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V2.60-2026-10-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.61-2026-10-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1266,7 +1266,7 @@ started, with `expiry_reason = EVENT_STARTED`. No message is sent for it.
 when the place is wanted, and to as many holds as are wanted: `wanted = waiting - free`
 places, released oldest deadline first, or every hold once the event has started or is
 `COMPLETED` (`DECISIONS.md` §160). The person whose hold is released to somebody who wanted
-the place is emailed, once per lapsed hold (`DECLARATION_HOLD_EXPIRED`, §NNN); a hold the start
+the place is emailed, once per lapsed hold (`DECLARATION_HOLD_EXPIRED`, §638); a hold the start
 or a `COMPLETED` event releases is not. Otherwise the hold outlives its deadline and the declaration
 is signed online, or on paper at the desk, at any time before the start; a row the start
 expired is re-allocated by `confirmByStaff` rather than refused, so the desk still confirms
@@ -2777,7 +2777,7 @@ EVENT_CANCELLED
 DECLARATION_HOLD_EXPIRED
 ```
 
-`DECLARATION_HOLD_EXPIRED` (§NNN) is queued by `expireStaleHolds` in the transaction that
+`DECLARATION_HOLD_EXPIRED` (§638) is queued by `expireStaleHolds` in the transaction that
 releases a lapsed declaration hold to somebody who wanted the place (§10.5), whatever path ran it,
 once per lapsed hold (`registration:<id>:hold-lapsed:<deadline>`: a restarted registration whose
 new hold lapses too is told again, and an older message still queued is withdrawn). It says the deadline that passed, whether

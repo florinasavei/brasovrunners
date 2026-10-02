@@ -9,12 +9,12 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN — «Locul tău la {event} a expirat» (the owner, 2026-10-02: «Da, fă emailul pentru cel care pierde
+ * §638 — «Locul tău la {event} a expirat» (the owner, 2026-10-02: «Da, fă emailul pentru cel care pierde
  * locul»): the person whose declaration hold was released to somebody who wanted the place is told the
  * deadline that passed, where the place went, and what they can still do — one of three sentences,
  * decided by the allocator's own rules over the event as it stands at the send.
  */
-describe("§NNN what a person whose hold lapsed can still do", () => {
+describe("§638 what a person whose hold lapsed can still do", () => {
   const open = { registrationOpen: true, capacity: 10, occupied: 10, waitlisted: 0, openOffers: 0, waitlistCapacity: null };
 
   it("register again: open, a free place, and nobody waiting", () => {
@@ -39,7 +39,7 @@ describe("§NNN what a person whose hold lapsed can still do", () => {
   });
 });
 
-describe("§NNN the DECLARATION_HOLD_EXPIRED email's words", () => {
+describe("§638 the DECLARATION_HOLD_EXPIRED email's words", () => {
   const ACTION = "https://example.test/ro/evenimente/crosul/inscriere";
   const render = (locale: "ro" | "en", extra: Partial<TemplateData>, action: string | null = ACTION) =>
     renderBilingual("DECLARATION_HOLD_EXPIRED", locale, { ...emailSampleFor("DECLARATION_HOLD_EXPIRED", locale), ...extra }, action ?? undefined);
