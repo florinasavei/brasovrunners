@@ -115,7 +115,7 @@ function badgeBucket(now: Date) {
     when ${registrations.status} = 'CONFIRMED' then 'confirmed'
     when ${registrations.status} = 'PENDING_DECLARATION'
       or (${registrations.status} = 'WAITLIST_OFFERED' and (${registrations.holdExpiresAt} > ${now} or ${offerAwaitingItsFirstEmail(now)}))
-      or ${familyReservationHolds(now)} then 'place'
+      or (${familyReservationHolds(now)} and not ${registrations.outsideCapacity}) then 'place'
     when ${registrations.status} = 'PENDING_EMAIL_CONFIRMATION' then 'awaitingEmail'
     else 'waitlisted' end`;
 }

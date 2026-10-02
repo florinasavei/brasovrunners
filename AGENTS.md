@@ -1311,8 +1311,9 @@ Rules:
   §12.6). Such a row is given its place directly by the allocator whatever the counts, is never
   waitlisted and never offered anything, and no stale-hold sweep releases its hold for somebody
   waiting (it holds no counted place); it expires at the start like any hold. Marking a row that holds
-  a counted place releases it under the event lock and the ordinary refill follows; unmarking needs
-  `occupied < capacity` under the lock;
+  a counted place releases it under the event lock and the ordinary refill follows; unmarking serves
+  the line first and then needs `occupied < capacity` under the lock; a restart of a cancelled or
+  expired row through the form clears the mark;
 - public count means places a new registrant can receive after active holds and existing waiting-list priority;
 - every capacity-changing transaction expires stale holds and calls the queue allocator before giving a place to a later registration; a lapsed declaration hold is stale only as far as the queue wants its place, or once the event has started or is `COMPLETED` (`DECISIONS.md` §160) — a `CANCELLED` event's holds are left standing (§331) — and a registration that waits behind a kept hold is offered that place in the same transaction;
 - event row lock or equivalent safe serialization protects capacity and FIFO allocation;
@@ -2652,7 +2653,8 @@ BR-REQ-037-05):
      `PENDING_EMAIL_CONFIRMATION` row, the Administrator's alone (`canManageRegistrations`):
      `givePlaceNowByStaff` writes the desk's vouching (`email_confirmed_by_staff_user_id`), spends
      the row's verification link, and gives the place ahead of the waiting list under the event
-     lock — only a counted free place, else §589's refusal — as `PENDING_DECLARATION` with the
+     lock — only a counted free place, else §589's refusal; a row «În afara locurilor» needs none
+     (§NNN) — as `PENDING_DECLARATION` with the
      ordinary declaration email. Audited (`registration.address_vouched_by_staff`) under the
      Administrator's id. The participant still signs their own declaration, online or on paper.
    - **A number by hand** (BR-REQ-038-01 criterion 7) and **check-in** (`checked_in_at`, by
@@ -2669,12 +2671,14 @@ BR-REQ-037-05):
 6. **«În afara locurilor» (2026-10-02, §NNN).** The Administrator (`canManageRegistrations`; the
    Organizer reads the chip and the pill and changes nothing) marks or unmarks a registration on its
    own page — for organizers, pacemakers and invited runners, who run without taking one of the
-   announced places. `setOutsideCapacityByStaff`, under the event lock, after the stale holds expire:
-   marking a row that holds a counted place frees it (`fillAvailableSpots` offers it on «Da», keeps it
+   announced places. `setOutsideCapacityByStaff`, under the event lock, after the stale holds expire
+   and the line is served (`fillAvailableSpots`, as `placeForNewcomer`, so an unmarking takes only a
+   place nobody in line is owed): marking a row that holds a counted place frees it (`fillAvailableSpots` offers it on «Da», keeps it
    free on «Nu»), the person keeping their state, number and emails; marking a `WAITLISTED` row seats
    it now through the allocator (a declaration hold and its email); marking a row waiting for its
    address applies when the address is confirmed; unmarking a row that would then hold a counted place
-   is refused while none is free (§589's sentence). An ended row's flag is read, never changed. Audited
+   is refused while none is free (§589's sentence). An ended row's flag is read, never changed, and a
+   restart of it through the form clears it (the club marks the new cycle again if it wants). Audited
    as `registration.outside_capacity_changed` with `from` and `to`.
 
 Every one of the six writes an `audit_logs` row (§12.12). MUST NOT: a second write path into

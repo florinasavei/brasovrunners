@@ -2473,9 +2473,29 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       // who put an earlier, cancelled one here months ago.
       source: origin.source,
       createdByStaffUserId: origin.createdByStaffUserId ?? null,
+      /*
+        «În afara locurilor» does not survive a restart (§NNN; the review of 2026-10-02, finding 6): the
+        mark is an Administrator's audited act on a registration, and a seat beyond the announced places
+        is given only by an Administrator acting at the time. A cancelled or expired row the person
+        restarts through the form is a new cycle that queues and counts like anybody's; the club marks it
+        again if it still wants to.
+      */
+      outsideCapacity: false,
     };
 
     if (existing) {
+      // The mark's end is written in the journal too, by nobody (the person restarted), never a name.
+      if (existing.outsideCapacity) {
+        await recordAuditEvent(tx, {
+          actorStaffUserId: null,
+          participantId: participant.id,
+          action: "registration.outside_capacity_changed",
+          entityType: "registration",
+          entityId: existing.id,
+          metadata: { from: true, to: false, status: existing.status, restarted: true },
+          now,
+        });
+      }
       // A restart of a Cancelled or Expired registration (AGENTS.md §10.5). Never leapfrogs
       // the waiting list and never lands directly on Confirmed — `allocateOrWaitlist` is the
       // same allocator a first-time registration uses.
@@ -2773,6 +2793,8 @@ export async function confirmEmailOnAddress<T extends Record<string, unknown>>(
  *    waiting list is not consulted for this row**: «while anybody waits every newcomer joins the line»
  *    (§615 criterion 6) is the public door's rule; this is the club choosing a person, as «Trimite-i
  *    oferta» is (§615 criterion 19). Nobody in the line moves and no place promised to anybody is taken.
+ *    A row «În afara locurilor» (§NNN) needs no counted place at all: like a family's reserved one, it
+ *    is given its place whatever the counts.
  * 4. **No counted free place**: the whole press is refused with `NoFreePlaceError` and its sentence
  *    (§589, §592), and nothing is written — the Administrator raises «Număr de locuri» first. (The
  *    sibling change `feat/offer-a-place-any-time-with-a-supplementary-place` adds an audited
@@ -2820,14 +2842,19 @@ export async function givePlaceNowByStaff<T extends Record<string, unknown>>(
     const reserved = await repo.holdsFamilyReservation(tx, current.id, now);
     await releaseOwnFamilyPlaceHold(tx, event.id, current.id);
     await repo.expireStaleHolds(tx, locked, now);
+    /*
+      A row «În afara locurilor» (§NNN) takes no counted place — the allocator seats it whatever the
+      counts — so, like a family's reserved place, it needs no room and lets no lapsed hold go for it.
+    */
+    const needsNoRoom = reserved || current.outsideCapacity;
     let counts = await repo.countOccupied(tx, event.id, now);
     const hasRoom = () => locked.capacity === null || computeOccupied(counts) < locked.capacity;
-    if (!reserved && !hasRoom() && counts.lapsedDeclarationHolds > 0) {
+    if (!needsNoRoom && !hasRoom() && counts.lapsedDeclarationHolds > 0) {
       // One more person wanting a place who is not in the line (§160): one lapsed hold may go for her.
       await repo.expireStaleHolds(tx, locked, now, { wanting: 1 });
       counts = await repo.countOccupied(tx, event.id, now);
     }
-    if (!reserved && !hasRoom()) {
+    if (!needsNoRoom && !hasRoom()) {
       // No place beyond capacity, ever (§10.6, §592): the Administrator raises the places first.
       throw new NoFreePlaceError(locked.capacity ?? 0, counts);
     }
@@ -3512,8 +3539,8 @@ function wouldHoldACountedPlace(registration: Pick<Registration, "status" | "hol
 /**
  * «În afara locurilor» set or cleared by an Administrator (§NNN; the owner, 2026-10-02: «Vreau și o
  * bifă de „ascunde la numărare” per fiecare participant» — for organizers, pacemakers, invited
- * runners). Everything under the event lock, after the stale holds expire (§10.6), in one transaction
- * with its audit row (`registration.outside_capacity_changed`, from → to, who):
+ * runners). Everything under the event lock, after the stale holds expire and the line is served
+ * (§10.6: `fillAvailableSpots`, as `placeForNewcomer`), in one transaction with its audit row (`registration.outside_capacity_changed`, from → to, who):
  *
  * - **Marking** releases a counted place, if the row held one (confirmed, a declaration, an offer, a
  *   family's reservation), and the usual refill follows (`fillAvailableSpots`: with «Da» the first in
@@ -3547,15 +3574,22 @@ export async function setOutsideCapacityByStaff<T extends Record<string, unknown
     if (locked.eventStatus !== "SCHEDULED") {
       throw new DomainError("VALIDATION_ERROR", `the event is ${locked.eventStatus}`);
     }
-    // Stale holds first, as in every capacity-changing transaction (§10.6).
+    /*
+      Stale holds first, and the line served at once (§10.6, invariant 7; the review of 2026-10-02,
+      finding 1), as `placeForNewcomer` does: a kept declaration hold `expireStaleHolds` lets go
+      because somebody waits is that person's place, offered to them in this transaction — so an
+      unmarking below can take only a place nobody in line is owed, and even a press that changes
+      nothing leaves no lapsed offer's place unoffered. A no-op on «Nu» (§615).
+    */
     await repo.expireStaleHolds(tx, locked, now);
+    const servedFirst = await fillAvailableSpots(tx, locked, now, settings);
 
     const current = await repo.findRegistrationById(tx, registrationId);
     if (!current || current.eventId !== event.id) throw new DomainError("NOT_FOUND", "no such registration");
     if (!isActiveStatus(current.status)) {
       throw new DomainError("CONFLICT", `a ${current.status} registration's place cannot be changed`);
     }
-    if (current.outsideCapacity === outside) return { registration: current, offered: 0 };
+    if (current.outsideCapacity === outside) return { registration: current, offered: servedFirst };
 
     if (!outside && lockedEvent.capacity !== null && wouldHoldACountedPlace(current, now)) {
       const counts = await repo.countOccupied(tx, event.id, now);
@@ -3582,7 +3616,7 @@ export async function setOutsideCapacityByStaff<T extends Record<string, unknown
     });
 
     // A place the row held is free now: the line's, with «Da»; the organizer's, with «Nu» (§615).
-    const offered = outside ? await fillAvailableSpots(tx, locked, now, settings) : 0;
+    const offered = servedFirst + (outside ? await fillAvailableSpots(tx, locked, now, settings) : 0);
     return { registration, offered };
   });
   forgetRegisteredBadgeCount();

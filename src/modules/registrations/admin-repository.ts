@@ -1313,6 +1313,8 @@ export async function listQueueForEvent<T extends Record<string, unknown>>(db: D
  * hold counts as past its deadline as the sweep reads it — not while its first declaration email is
  * still queued, since the send re-bases the deadline (§513, `lapsedDeclarationHoldsToRelease`); an
  * offer counts while its deadline is ahead or its email is still queued (§520), as the queue lists it.
+ * A row «În afara locurilor» (§NNN) is in no place's count — it holds none to lose, and no sweep
+ * releases its hold for anybody — though its address link still lapses like anyone's (`awaitingEmail`).
  * Null when the event does not exist.
  */
 export async function readPlaceDeadlines<T extends Record<string, unknown>>(
@@ -1330,11 +1332,11 @@ export async function readPlaceDeadlines<T extends Record<string, unknown>>(
       capacity: events.capacity,
       waitlistCapacity: events.waitlistCapacity,
       waitlistAutoOffer: events.waitlistAutoOffer,
-      held: sql<number>`count(${registrations.id}) filter (where ${registrations.status} = 'PENDING_DECLARATION')::int`,
-      heldPast: sql<number>`count(${registrations.id}) filter (where ${registrations.status} = 'PENDING_DECLARATION' and ${registrations.holdExpiresAt} <= ${now} and not ${awaitingItsFirstEmail()})::int`,
+      held: sql<number>`count(${registrations.id}) filter (where ${registrations.status} = 'PENDING_DECLARATION' and not ${registrations.outsideCapacity})::int`,
+      heldPast: sql<number>`count(${registrations.id}) filter (where ${registrations.status} = 'PENDING_DECLARATION' and not ${registrations.outsideCapacity} and ${registrations.holdExpiresAt} <= ${now} and not ${awaitingItsFirstEmail()})::int`,
       awaitingEmail: sql<number>`count(${registrations.id}) filter (where ${registrations.status} = 'PENDING_EMAIL_CONFIRMATION')::int`,
-      familyReserved: sql<number>`count(${registrations.id}) filter (where ${familyReservationHolds(now)})::int`,
-      offered: sql<number>`count(${registrations.id}) filter (where ${registrations.status} = 'WAITLIST_OFFERED' and (${registrations.holdExpiresAt} > ${now} or ${offerAwaitingItsFirstEmail(now)}))::int`,
+      familyReserved: sql<number>`count(${registrations.id}) filter (where ${familyReservationHolds(now)} and not ${registrations.outsideCapacity})::int`,
+      offered: sql<number>`count(${registrations.id}) filter (where ${registrations.status} = 'WAITLIST_OFFERED' and not ${registrations.outsideCapacity} and (${registrations.holdExpiresAt} > ${now} or ${offerAwaitingItsFirstEmail(now)}))::int`,
     })
     .from(events)
     .leftJoin(registrations, and(eq(registrations.eventId, events.id), eq(registrations.kind, "REAL")))

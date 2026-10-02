@@ -1,5 +1,8 @@
 import { and, eq, sql } from "drizzle-orm";
+import { createTranslator } from "next-intl";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import en from "../../../messages/en.json";
+import ro from "../../../messages/ro.json";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { events, eventTranslations } from "@/db/schema/events";
@@ -10,6 +13,7 @@ import { computeContentHash, type LegalDocumentTranslationInput } from "@/module
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { computeOccupied, NoFreePlaceError } from "@/modules/registrations/domain/capacity";
 import { publicFill } from "@/modules/events/domain/registration-cta";
+import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
@@ -32,19 +36,39 @@ let close: () => Promise<void>;
 let admin: StaffUser;
 let organizer: StaffUser;
 
+const state = vi.hoisted(() => ({ cookie: undefined as string | undefined }));
+
 vi.mock("@/db/client", () => ({ getDb: () => db }));
+// The export route's own door (§NNN, the review of 2026-10-02, finding 2): a staff session by cookie, as `sponsor-list.test.ts` reaches it.
+vi.mock("next/headers", () => ({
+  cookies: async () => ({ get: () => (state.cookie ? { value: state.cookie } : undefined), set: () => {}, delete: () => {} }),
+  headers: async () => new Headers(),
+}));
+vi.mock("@/auth", () => ({ auth: async () => null, signIn: async () => {}, signOut: async () => {} }));
+vi.mock("next-intl/server", () => ({
+  setRequestLocale: () => {},
+  getMessages: async () => ro,
+  getTranslations: async (arg: string | { locale: string; namespace: string }) => {
+    const namespace = typeof arg === "string" ? arg : arg.namespace;
+    const locale = typeof arg === "string" ? "ro" : arg.locale;
+    const catalogue = (locale === "en" ? en : ro) as Record<string, object>;
+    return createTranslator({ locale, messages: catalogue[namespace] as Record<string, string>, namespace: undefined });
+  },
+}));
 vi.mock("@/modules/notifications/drain", () => ({
   drainOutboxAfterResponse: () => undefined,
   drainOutboxRowsAfterResponse: () => undefined,
 }));
 
 const { submitRegistration, confirmEmail, readPublicPlaces } = await import("@/modules/registrations/service");
-const { cancelRegistrationByStaff, confirmRegistrationByStaff, setOutsideCapacity } = await import("@/modules/registrations/admin-service");
+const { cancelRegistrationByStaff, confirmRegistrationByStaff, givePlaceToUnconfirmedByStaff, setOutsideCapacity } = await import("@/modules/registrations/admin-service");
 const { countOccupied, expireStaleHolds, countOutsideOnPublicStartList, countPublicStartList, countAnonymousStartListEntries, countOutsideCapacity } = await import(
   "@/modules/registrations/repository"
 );
 const { forgetCachedDeadlines } = await import("@/modules/deadlines/memo");
-const { summariseRegistrationsForAdmin, listRegistrationsForAdmin } = await import("@/modules/registrations/admin-repository");
+const { summariseRegistrationsForAdmin, listRegistrationsForAdmin, readPlaceDeadlines } = await import("@/modules/registrations/admin-repository");
+const { forecastAutomaticEmails } = await import("@/modules/notifications/forecast");
+const { GET: exportRegistrations } = await import("@/app/api/admin/registrations/export/route");
 const { countRegisteredPerUpcomingEvent, registeredBadgeHint } = await import("@/modules/registrations/nav-count");
 
 type EventInput = Parameters<typeof submitRegistration>[1];
@@ -55,6 +79,7 @@ beforeAll(async () => {
 });
 afterAll(async () => close());
 beforeEach(async () => {
+  state.cookie = undefined;
   await resetTables(db);
   await db.delete(familyPlaceHolds);
   forgetCachedDeadlines();
@@ -194,7 +219,7 @@ describe("§NNN the allocator: a registration outside the places consumes none",
     await db.update(registrations).set({ holdExpiresAt: at(4) }).where(eq(registrations.eventId, event.id));
     await db.delete(emailOutbox);
     const later = at(60);
-    await expireStaleHolds(db, { id: event.id, startsAt: event.startsAt, eventStatus: "SCHEDULED", capacity: 1 }, later);
+    await db.transaction((tx) => expireStaleHolds(tx, { id: event.id, startsAt: event.startsAt, eventStatus: "SCHEDULED", capacity: 1 }, later));
     expect((await rowOf("Ioana")).status).toBe("PENDING_DECLARATION");
     // The counted lapsed hold is still the one released, as before (§160).
     expect((await rowOf("Ana")).status).toBe("EXPIRED");
@@ -348,5 +373,159 @@ describe("§NNN the counts: public apart, backoffice joined apart", () => {
       },
     );
     expect(hint.split("\n")[1]).toBe("Crosul: 2 — 1 cu loc din 5, 1 în afara locurilor");
+  });
+});
+
+describe("§NNN the review of 2026-10-02: the line first, the other doors, the other readers", () => {
+  it("unmarking serves the line before it counts: a kept hold released for a waiting runner is offered to them, never taken by the unmarked row", async () => {
+    const event = await createEvent(2);
+    await confirmedAddress(event, "Ana", 0);
+    await confirmRegistrationByStaff(db, admin, (await rowOf("Ana")).id, at(1));
+    expect((await confirmedAddress(event, "Bogdan", 2)).status).toBe("PENDING_DECLARATION");
+    expect((await confirmedAddress(event, "Radu", 3)).status).toBe("WAITLISTED");
+    const guest = await submitted(event, "Ioana", 4);
+    await setOutsideCapacity(db, admin, guest.id, true, at(5));
+    await confirmEmail(db, event, guest.id, at(5));
+    await confirmRegistrationByStaff(db, admin, guest.id, at(6));
+    // Bogdan's declaration hold lapses and is kept — until somebody wants the place: Radu does.
+    await db.update(registrations).set({ holdExpiresAt: at(10) }).where(eq(registrations.id, (await rowOf("Bogdan")).id));
+    await db.delete(emailOutbox);
+
+    const refused = await refusal(setOutsideCapacity(db, admin, guest.id, false, at(60)));
+    // The released place was Radu's, offered to him first under the lock: no room is left for the guest.
+    expect(refused).toBeInstanceOf(NoFreePlaceError);
+    expect((refused as NoFreePlaceError).places).toMatchObject({ capacity: 2, confirmed: 1, offered: 1 });
+    // A refusal writes nothing: the job serves the line at its next run, as before the press.
+    expect((await rowOf("Ioana")).outsideCapacity).toBe(true);
+    expect((await rowOf("Radu")).status).toBe("WAITLISTED");
+  });
+
+  it("…and with a place left over after the line is served, the unmark takes only that one", async () => {
+    const event = await createEvent(2);
+    await confirmedAddress(event, "Ana", 0);
+    await confirmRegistrationByStaff(db, admin, (await rowOf("Ana")).id, at(1));
+    await confirmedAddress(event, "Bogdan", 2);
+    expect((await confirmedAddress(event, "Radu", 3)).status).toBe("WAITLISTED");
+    const guest = await submitted(event, "Ioana", 4);
+    await setOutsideCapacity(db, admin, guest.id, true, at(5));
+    await confirmEmail(db, event, guest.id, at(5));
+    // Bogdan's hold lapses and two places are added (written straight to the row, so no editor refill ran):
+    // Radu is owed one of them — and Bogdan keeps his, since nobody else wants it (§160) — the guest may take the other.
+    await db.update(registrations).set({ holdExpiresAt: at(10) }).where(eq(registrations.id, (await rowOf("Bogdan")).id));
+    await db.update(events).set({ capacity: 4 }).where(eq(events.id, event.id));
+    await db.delete(emailOutbox);
+
+    await setOutsideCapacity(db, admin, guest.id, false, at(60));
+    expect((await rowOf("Radu")).status).toBe("WAITLIST_OFFERED");
+    expect(await offers()).toHaveLength(1);
+    expect((await rowOf("Bogdan")).status).toBe("PENDING_DECLARATION");
+    expect((await rowOf("Ioana")).outsideCapacity).toBe(false);
+    expect(await occupied(event.id, at(61))).toBe(4);
+  });
+
+  it("a press that changes nothing still serves the line: a lapsed offer's place goes to the next runner", async () => {
+    const event = await createEvent(1);
+    await confirmedAddress(event, "Ana", 0);
+    await confirmRegistrationByStaff(db, admin, (await rowOf("Ana")).id, at(1));
+    const guest = await submitted(event, "Ioana", 2);
+    await setOutsideCapacity(db, admin, guest.id, true, at(2));
+    await confirmedAddress(event, "Radu", 3);
+    await confirmedAddress(event, "Maria", 4);
+    await cancelRegistrationByStaff(db, admin, (await rowOf("Ana")).id, "nu mai vine", at(5));
+    expect((await rowOf("Radu")).status).toBe("WAITLIST_OFFERED");
+    await db.update(registrations).set({ holdExpiresAt: at(10) }).where(eq(registrations.id, (await rowOf("Radu")).id));
+    await db.delete(emailOutbox);
+
+    // Already outside: nothing about the guest changes, and no journal row is written for it.
+    await setOutsideCapacity(db, admin, guest.id, true, at(60));
+    expect((await rowOf("Radu")).status).toBe("EXPIRED");
+    expect((await rowOf("Maria")).status).toBe("WAITLIST_OFFERED");
+    expect(await offers()).toHaveLength(1);
+    expect(await db.select().from(auditLogs).where(eq(auditLogs.action, "registration.outside_capacity_changed"))).toHaveLength(1);
+  });
+
+  it("«Dă-i un loc acum» seats an outside row on a full event: it needs no counted place", async () => {
+    const event = await createEvent(1);
+    await confirmedAddress(event, "Ana", 0);
+    await confirmRegistrationByStaff(db, admin, (await rowOf("Ana")).id, at(1));
+    const guest = await submitted(event, "Ioana", 2);
+    const counted = await submitted(event, "Radu", 3);
+    await setOutsideCapacity(db, admin, guest.id, true, at(4));
+
+    const placed = await givePlaceToUnconfirmedByStaff(db, admin, guest.id, at(5));
+    expect(placed.status).toBe("PENDING_DECLARATION");
+    expect(await occupied(event.id, at(6))).toBe(1);
+    // A counted row on the same full event is still refused, with §589's numbers.
+    expect(await refusal(givePlaceToUnconfirmedByStaff(db, admin, counted.id, at(6)))).toBeInstanceOf(NoFreePlaceError);
+  });
+
+  it("the export follows the «În afara locurilor» pill: the file is the rows on screen", async () => {
+    const event = await createEvent(5);
+    await confirmedAddress(event, "Ana", 0);
+    await confirmedAddress(event, "Ioana", 1);
+    await setOutsideCapacity(db, admin, (await rowOf("Ioana")).id, true, at(2));
+    state.cookie = admin.id;
+    const exported = async (query: string) => {
+      const response = await exportRegistrations(new Request(`http://localhost/api/admin/registrations/export?eventId=${event.id}${query}`));
+      expect(response.status).toBe(200);
+      return (await response.text()).split("\r\n").slice(1).filter((line) => line.length > 0);
+    };
+    const outside = await exported("&outside=1");
+    expect(outside).toHaveLength(1);
+    expect(outside[0]).toContain("Ioana Munteanu");
+    expect(await exported("")).toHaveLength(2);
+  });
+
+  it("the forecast foresees no offer to the line at an outside hold's lapse, and «Când se pierde un loc» counts no outside hold", async () => {
+    const event = await createEvent(1);
+    await confirmedAddress(event, "Ana", 0);
+    await confirmRegistrationByStaff(db, admin, (await rowOf("Ana")).id, at(1));
+    const guest = await submitted(event, "Ioana", 2);
+    await setOutsideCapacity(db, admin, guest.id, true, at(2));
+    await confirmEmail(db, event, guest.id, at(2));
+    expect((await confirmedAddress(event, "Radu", 3)).status).toBe("WAITLISTED");
+    // The guest's hold lapses within the horizon; its first email has left.
+    await db.update(registrations).set({ holdExpiresAt: at(120) }).where(eq(registrations.id, guest.id));
+    await db.delete(emailOutbox);
+
+    const rows = await forecastAutomaticEmails(db, { now: at(10), horizonDays: 14, deadlines: DEFAULT_DEADLINES });
+    expect(rows.filter((row) => row.eventId === event.id && (row.send === "nextInLine" || row.send === "holdLapsed"))).toEqual([]);
+
+    const facts = await readPlaceDeadlines(db, event.id, at(180));
+    expect(facts?.counts).toMatchObject({ held: 0, heldPast: 0, offered: 0 });
+    // The job agrees: the guest's lapsed hold is not released for Radu.
+    await db.transaction((tx) => expireStaleHolds(tx, { id: event.id, startsAt: event.startsAt, eventStatus: "SCHEDULED", capacity: 1 }, at(180)));
+    expect((await rowOf("Ioana")).status).toBe("PENDING_DECLARATION");
+    expect((await rowOf("Radu")).status).toBe("WAITLISTED");
+  });
+
+  it("a restart through the form clears the mark: the new cycle queues and counts like anybody's", async () => {
+    const event = await createEvent(1);
+    await confirmedAddress(event, "Ana", 0);
+    await setOutsideCapacity(db, admin, (await rowOf("Ana")).id, true, at(1));
+    await confirmedAddress(event, "Bogdan", 2);
+    await cancelRegistrationByStaff(db, admin, (await rowOf("Ana")).id, "nu mai vine", at(3));
+
+    // The same person, the same address, the full event: a place outside would need an Administrator now.
+    await submitRegistration(db, event, submission("Ana", "ana@example.ro", at(10)), at(10), "REAL", PUBLIC);
+    const ana = await rowOf("Ana");
+    expect(ana.outsideCapacity).toBe(false);
+    expect(ana.status).toBe("WAITLISTED");
+    expect(await occupied(event.id, at(11))).toBe(1);
+    const trail = await db.select().from(auditLogs).where(eq(auditLogs.action, "registration.outside_capacity_changed"));
+    expect(trail.map((row) => [row.actorStaffUserId, row.metadataJson])).toEqual(
+      expect.arrayContaining([[null, expect.objectContaining({ from: true, to: false, restarted: true })]]),
+    );
+  });
+
+  it("the badge leaves an outside row's family reservation out of «cu loc», as `countOccupied` does", async () => {
+    const event = await createEvent(5);
+    const guest = await submitted(event, "Ioana", 0);
+    await setOutsideCapacity(db, admin, guest.id, true, at(1));
+    // A family's live reservation on the row (§543), still waiting for its address.
+    await db.update(registrations).set({ holdExpiresAt: at(600) }).where(eq(registrations.id, guest.id));
+    expect(await occupied(event.id, at(2))).toBe(0);
+    const [badge] = await countRegisteredPerUpcomingEvent(db, at(2), "ro");
+    expect(badge).toMatchObject({ count: 1, withPlace: 0, awaitingEmail: 1 });
   });
 });

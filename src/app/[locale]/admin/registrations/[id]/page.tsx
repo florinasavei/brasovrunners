@@ -135,11 +135,12 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
     where the press can succeed — a local, scheduled event with a date that has not started. Its question
     says beforehand when no place is free — the allocator's counts, read once per event (§592's forecast),
     a lapsed declaration hold not counted against her (§160); a family's live reservation is the row's
-    own place, so it is never "full" for it. The server decides.
+    own place, so it is never "full" for it; nor is a row «În afara locurilor» (§NNN), which needs no
+    counted place. The server decides.
   */
   const givePlaceNowFacts = mayManage && registration.status === "PENDING_EMAIL_CONFIRMATION" ? await givePlaceNowAhead(registration.eventId) : null;
   const givePlaceNow = givePlaceNowFacts
-    ? { full: givePlaceNowFacts.full && !(registration.holdExpiresAt !== null && registration.holdExpiresAt > new Date()) }
+    ? { full: givePlaceNowFacts.full && !registration.outsideCapacity && !(registration.holdExpiresAt !== null && registration.holdExpiresAt > new Date()) }
     : null;
   // The timeline's short form with the time (§349): a value beside its label, so capitalised;
   // `dtInline` inside a sentence.
