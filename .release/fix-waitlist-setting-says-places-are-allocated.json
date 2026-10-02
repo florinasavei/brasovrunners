@@ -6,11 +6,11 @@
   "specsCriteria": [
     {
       "requirement": "BR-REQ-034-02",
-      "text": "Given the event editor, when it draws the waiting-list setting, then its label is «Locurile din lista de așteptare se alocă automat» (en «Places from the waiting list are allocated automatically»), which supersedes the label quoted in criterion 18 («Ofertele din lista de așteptare pleacă automat»), and its help says that on «Da» a freed or added place is offered at once, by email and with a deadline, to the first on the list, and on «Nu» it stays free until the club gives it; the guide, `SETUP.md` and the tests quote the same words; the column, its values and the behaviour are unchanged (2026-10-01, `DECISIONS.md` §NNN)."
+      "text": "Given the event editor, when it draws the waiting-list setting, then its label is «Locurile din lista de așteptare se alocă automat» (en «Places from the waiting list are allocated automatically»), which supersedes the label quoted in criterion 18 («Ofertele din lista de așteptare pleacă automat»), and its help says that on «Da» a freed or added place is offered at once, by email and with a deadline, to the first on the list, and on «Nu» it stays free until the club gives it; the guide, `SETUP.md` and the tests quote the same words; the column, its values and the behaviour are unchanged (2026-10-02, `DECISIONS.md` §NNN)."
     },
     {
       "requirement": "BR-REQ-038-01",
-      "text": "Given the backoffice in either language, when it names the race number's printing mark, the desk guide's numbers or the start list's toggle, then it spells the term «BIB» («BIB-ul», «BIB-uri», «BIB-urile» in Romanian) and never «BID»; the chip of criterion 16 therefore reads «BIB N tipărit — de retras», superseding its spelling «BID N tipărit — de retras»; the short forms «nr.» and «no.» are unchanged (2026-10-01, `DECISIONS.md` §NNN)."
+      "text": "Given the backoffice in either language, when it names the race number's printing mark, the desk guide's numbers or the start list's toggle, then it spells the term «BIB» («BIB-ul», «BIB-uri», «BIB-urile» in Romanian) and never «BID»; the chip of criterion 16 therefore reads «BIB N tipărit — de retras», superseding its spelling «BID N tipărit — de retras»; the short forms «nr.» and «no.» are unchanged (2026-10-02, `DECISIONS.md` §NNN)."
     }
   ],
   "docsNotes": "",
