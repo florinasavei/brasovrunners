@@ -5257,7 +5257,7 @@
               "steps": [
                 "«Events» → «Edit» → the «Taking part and registration» card.",
                 "«Registration mode» → «Înscrieri pe site» (registration on the site).",
-                "«Capacity» and, beside it, «Waiting list»: «Unlimited», «Limited to a number of places», with as many people as you type, or «No waiting list». Under «Limited», empty or 0 makes it unlimited; only «No waiting list» closes the list. Below them, «Places from the waiting list are allocated automatically»: «Yes» gives every freed or added place to the first on the list; «No» if you want to choose (see “Choose who gets a freed place”).",
+                "«Capacity» and, beside it, «Waiting list»: «Unlimited», «Limited to a number of places», with as many people as you type, or «No waiting list». Under «Limited…», empty or 0 makes it unlimited; only «No waiting list» closes the list. Below them, «Places from the waiting list are allocated automatically»: «Yes» gives every freed or added place to the first on the list; «No» if you want to choose (see “Choose who gets a freed place”).",
                 "«Registration period»: «Registration opens» and «Registration closes».",
                 "«Confirmation window»: «Participation confirmation: asked how many days before» and, in the box beside it, how many days before it is due (0 = the place never lapses before the start).",
                 "«Programme, rules and declaration» → «Rules»: «Minimum age to take part» (14 unless you change it, never under 14), on every type of event. The declaration: «Programme, rules and declaration» → «Self-declaration» → «Declaration a participant signs».",

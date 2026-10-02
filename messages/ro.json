@@ -5257,7 +5257,7 @@
               "steps": [
                 "«Evenimente» → «Editează» → cardul «Participare și înscrieri».",
                 "«Modul de înscriere» → «Înscrieri pe site».",
-                "«Număr de locuri» și, lângă el, «Lista de așteptare»: «Nelimitată», «Limitată la un număr de locuri», cu câte persoane scrii tu, sau «Fără listă de așteptare». Sub «Limitată», gol sau 0 o face nelimitată; doar «Fără listă de așteptare» închide lista. Sub ele, «Locurile din lista de așteptare se alocă automat»: «Da» dă fiecare loc eliberat sau adăugat primului de pe listă; «Nu», dacă vrei să alegi tu (vezi „Alege tu cine primește un loc eliberat”).",
+                "«Număr de locuri» și, lângă el, «Lista de așteptare»: «Nelimitată», «Limitată la un număr de locuri», cu câte persoane scrii tu, sau «Fără listă de așteptare». Sub «Limitată…», gol sau 0 o face nelimitată; doar «Fără listă de așteptare» închide lista. Sub ele, «Locurile din lista de așteptare se alocă automat»: «Da» dă fiecare loc eliberat sau adăugat primului de pe listă; «Nu», dacă vrei să alegi tu (vezi „Alege tu cine primește un loc eliberat”).",
                 "«Perioada de înscriere»: «Înscrierile se deschid» și «Înscrierile se închid».",
                 "«Fereastra de confirmare»: «Confirmarea participării: cu câte zile înainte se cere» și, în căsuța de lângă, cu câte zile înainte expiră (0 = locul nu expiră până la start).",
                 "«Program, regulament și declarație» → «Regulamentul»: «Vârsta minimă de participare» (14 dacă nu o schimbi, niciodată sub 14), la orice tip de eveniment. Declarația: «Program, regulament și declarație» → «Declarația pe propria răspundere» → «Declarația pe care o semnează participantul».",

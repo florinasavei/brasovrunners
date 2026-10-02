@@ -59,6 +59,12 @@ export default function WaitlistLimitOnly({ initialChoice, children }: { initial
       if (!select) return;
       const next = choiceAfterTyping(select.value, box.value, box.validity.badInput);
       if (next === select.value) return;
+      // Emptied, so «Limitată» chosen again opens on a box the save accepts (its `min` is 1). Through
+      // the native setter and an `input` event, so React's onChange runs and MUI lowers the label.
+      if (next === "UNLIMITED" && box.value !== "") {
+        Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(box, "");
+        box.dispatchEvent(new Event("input", { bubbles: true }));
+      }
       select.value = next;
       select.dispatchEvent(new Event("change", { bubbles: true }));
     };
