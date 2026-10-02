@@ -754,8 +754,11 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
     ? await repo.transitionRegistration(db, {
         id: registrationId,
         to: "PENDING_DECLARATION",
-        // Out of the line straight to a declaration only outside the places (§NNN): a counted place reaches the line as an offer.
-        fromStatuses: allowedFromStatuses("PENDING_DECLARATION").filter((from) => outside || from !== "WAITLISTED"),
+        /*
+          Out of the line, or out of an open offer, straight to a declaration only outside the places
+          (§NNN): a counted place reaches the line as an offer, and an offer it made is signed or lapses.
+        */
+        fromStatuses: allowedFromStatuses("PENDING_DECLARATION").filter((from) => outside || (from !== "WAITLISTED" && from !== "WAITLIST_OFFERED")),
         changes: {
           holdExpiresAt: computeDeclarationHoldExpiry({
             now,
@@ -3544,10 +3547,15 @@ function wouldHoldACountedPlace(registration: Pick<Registration, "status" | "hol
  *
  * - **Marking** releases a counted place, if the row held one (confirmed, a declaration, an offer, a
  *   family's reservation), and the usual refill follows (`fillAvailableSpots`: with «Da» the first in
- *   line is offered it; with «Nu» it stays free). The person keeps their state, number and emails.
- *   A `WAITLISTED` row leaves the line and is given a place outside the places now, through the one
- *   allocator (`allocateOrWaitlist`): a declaration to sign with the ordinary deadline and email. A row
- *   waiting for its address is seated outside when the address is confirmed.
+ *   line is offered it; with «Nu» it stays free). A confirmed row or a declaration hold keeps its
+ *   state, number and emails. A `WAITLISTED` row leaves the line and is given a place outside the
+ *   places now, through the one allocator (`allocateOrWaitlist`): a declaration to sign with the
+ *   ordinary deadline and email. An open offer the same (the review of 2026-10-02): an offer is a
+ *   promise to the line, with the line's short deadline, and `expireStaleHolds` lapses every offer at
+ *   it — so the row becomes the declaration hold an outside row is given, its email queued, a queued
+ *   offer email never tried withdrawn, and the offer's link replaced by the declaration's when that
+ *   email leaves (§619, `issueActionToken`). A row waiting for its address is seated outside when
+ *   the address is confirmed.
  * - **Unmarking** a row that would then hold a counted place is allowed only while one is free —
  *   `computeOccupied(counts) < capacity`, the allocator's own count — else `NoFreePlaceError` and
  *   §589's sentence; the row then takes it.
@@ -3599,9 +3607,34 @@ export async function setOutsideCapacityByStaff<T extends Record<string, unknown
     let registration = await repo.writeOutsideCapacity(tx, current.id, outside, now);
     if (!registration) throw new DomainError("CONFLICT", "this registration changed state concurrently");
 
-    // Out of the line, into a place outside the places: the one allocator, then its declaration email.
-    if (outside && registration.status === "WAITLISTED") {
+    // A place the row held is free now: the line's, with «Da»; the organizer's, with «Nu» (§615).
+    const refilled = outside ? await fillAvailableSpots(tx, locked, now, settings) : 0;
+
+    /*
+      Out of the line, or out of an open offer, into a place outside the places: the one allocator,
+      then its declaration email (§NNN). An offer kept as an offer would lapse at the line's deadline
+      (`expireStaleHolds` lapses every offer, §10.5) and end the invited runner's registration; as a
+      declaration hold outside the places nothing releases it for anybody. Its offer email, if still
+      queued and never tried, is withdrawn — the declaration's email says everything now — as «Dă-i un
+      loc acum» withdraws a verification email (§637); the offer's link is replaced when the declaration's
+      email leaves (§619, `issueActionToken`), so one link signs. Withdrawn only after the allocator: while
+      it is queued an offer past its stored deadline is not lapsed (§520), and the allocator's own sweep
+      must still see it so.
+    */
+    if (outside && (registration.status === "WAITLISTED" || registration.status === "WAITLIST_OFFERED")) {
       registration = await allocateOrWaitlist(tx, locked, registration.id, now, settings);
+      if (current.status === "WAITLIST_OFFERED") {
+        await tx
+          .delete(emailOutbox)
+          .where(
+            and(
+              eq(emailOutbox.registrationId, registration.id),
+              eq(emailOutbox.messageType, "WAITLIST_SPOT_OFFER"),
+              eq(emailOutbox.status, "PENDING"),
+              eq(emailOutbox.attemptCount, 0),
+            ),
+          );
+      }
       await enqueueAllocationEmail(tx, registration, await deliveryEmailOf(tx, registration.participantId), `registration:${registration.id}:outside:${now.toISOString()}`, now);
     }
 
@@ -3615,9 +3648,7 @@ export async function setOutsideCapacityByStaff<T extends Record<string, unknown
       now,
     });
 
-    // A place the row held is free now: the line's, with «Da»; the organizer's, with «Nu» (§615).
-    const offered = servedFirst + (outside ? await fillAvailableSpots(tx, locked, now, settings) : 0);
-    return { registration, offered };
+    return { registration, offered: servedFirst + refilled };
   });
   forgetRegisteredBadgeCount();
   wakeMaintenance(event, now, settings, result.registration.holdExpiresAt, result.offered > 0 ? offerDeadline(event, now, settings) : null);

@@ -26,6 +26,9 @@ export const TRANSITIONS: readonly Transition[] = [
   { from: "WAITLISTED", to: "PENDING_DECLARATION" },
   { from: "WAITLISTED", to: "CANCELLED" },
   { from: "WAITLIST_OFFERED", to: "CONFIRMED" },
+  // …and an open offer the same (§NNN, the review of 2026-10-02): seated outside the places, the
+  // offer becomes a declaration hold with the ordinary deadline, so it never lapses for the line.
+  { from: "WAITLIST_OFFERED", to: "PENDING_DECLARATION" },
   { from: "WAITLIST_OFFERED", to: "CANCELLED" },
   { from: "WAITLIST_OFFERED", to: "EXPIRED" },
   { from: "WAITLISTED", to: "EXPIRED" },

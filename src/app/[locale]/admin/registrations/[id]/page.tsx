@@ -550,14 +550,25 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                     }
                   : {
                       title: tr("confirm.outsideMarkTitle"),
+                      /*
+                        A waiting runner, or an open offer (the review of 2026-10-02), is seated now with the
+                        declaration's email; a TEST row's dialog names no email, in its body as in its bold line (§384).
+                      */
                       body:
                         registration.status === "WAITLISTED"
-                          ? tr("confirm.outsideMarkBodyWaitlisted", { name: registration.registeredName, message: tr("emails.types.COMPLETE_DECLARATION") })
-                          : registration.status === "PENDING_EMAIL_CONFIRMATION"
-                            ? tr("confirm.outsideMarkBodyPendingEmail", { name: registration.registeredName })
-                            : tr("confirm.outsideMarkBody", { name: registration.registeredName }),
-                      // The declaration's email goes only to a waiting runner seated now; a TEST row names none (§384).
-                      ...(registration.status !== "WAITLISTED" ? {} : registration.kind === "TEST" ? {} : { email: words.email(1) }),
+                          ? registration.kind === "TEST"
+                            ? tr("confirm.outsideMarkBodyWaitlistedTest", { name: registration.registeredName })
+                            : tr("confirm.outsideMarkBodyWaitlisted", { name: registration.registeredName, message: tr("emails.types.COMPLETE_DECLARATION") })
+                          : registration.status === "WAITLIST_OFFERED"
+                            ? registration.kind === "TEST"
+                              ? tr("confirm.outsideMarkBodyOfferedTest", { name: registration.registeredName })
+                              : tr("confirm.outsideMarkBodyOffered", { name: registration.registeredName, message: tr("emails.types.COMPLETE_DECLARATION") })
+                            : registration.status === "PENDING_EMAIL_CONFIRMATION"
+                              ? tr("confirm.outsideMarkBodyPendingEmail", { name: registration.registeredName })
+                              : tr("confirm.outsideMarkBody", { name: registration.registeredName }),
+                      ...(registration.status !== "WAITLISTED" && registration.status !== "WAITLIST_OFFERED"
+                        ? {}
+                        : registration.kind === "TEST" ? {} : { email: words.email(1) }),
                       confirmLabel: tr("registrations.outside.mark"),
                       cancelLabel: words.cancel,
                     }

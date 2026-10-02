@@ -1244,6 +1244,8 @@ WAITLISTED                 -> PENDING_DECLARATION
                               only when an Administrator seats the row «În afara locurilor» (§NNN)
 WAITLISTED                 -> CANCELLED
 WAITLIST_OFFERED           -> CONFIRMED
+WAITLIST_OFFERED           -> PENDING_DECLARATION
+                              only when an Administrator seats the row «În afara locurilor» (§NNN)
 WAITLIST_OFFERED           -> CANCELLED
 WAITLIST_OFFERED           -> EXPIRED
 WAITLISTED                 -> EXPIRED
@@ -1281,11 +1283,16 @@ and nobody is offered a place. The registrations keep their status as the record
 entered, and a race put back on finds its queue where it left it. Every read still counts an
 offer past its deadline as lapsed, so nothing is overbooked by the rows staying as they were.
 
-`WAITLISTED -> PENDING_DECLARATION` is the one move out of the line that is not an offer, and it
-exists for one reason (§NNN): an Administrator seats a waiting runner outside the places, which
-consumes no place, so the allocator gives them one at once — a declaration to sign with the ordinary
-deadline and email. The allocator guards it on the column (`fromStatuses` excludes `WAITLISTED`
-unless the row is outside), so a counted place still reaches the line only as an offer.
+`WAITLISTED -> PENDING_DECLARATION` is the one move out of the line that is not an offer, and
+`WAITLIST_OFFERED -> PENDING_DECLARATION` the one way an offer ends other than signed, cancelled or
+lapsed; both exist for one reason (§NNN): an Administrator seats a waiting runner, or one holding an
+open offer, outside the places, which consumes no place, so the allocator gives them one at once — a
+declaration to sign with the ordinary deadline and email. An offer kept as an offer would lapse at the
+line's short deadline, as every offer does, and end the registration; the offer's queued email never
+tried is withdrawn, and its link is replaced by the declaration's when that email leaves (§619). The
+allocator guards both on the column (`fromStatuses` excludes `WAITLISTED` and `WAITLIST_OFFERED`
+unless the row is outside), so a counted place still reaches the line only as an offer, and an offer
+of one is signed, cancelled or lapses.
 
 Any other transition requires explicit reviewed rule.
 
@@ -1310,10 +1317,11 @@ Rules:
   any state; the one explicit exclusion, on that audited column only (`kind` stays in no condition,
   §12.6). Such a row is given its place directly by the allocator whatever the counts, is never
   waitlisted and never offered anything, and no stale-hold sweep releases its hold for somebody
-  waiting (it holds no counted place); it expires at the start like any hold. Marking a row that holds
-  a counted place releases it under the event lock and the ordinary refill follows; unmarking serves
-  the line first and then needs `occupied < capacity` under the lock; a restart of a cancelled or
-  expired row through the form clears the mark;
+  waiting (it holds no counted place); it expires at the start like any hold — never an offer's
+  lapse, because an open offer marked outside becomes that declaration hold at once (§10.5). Marking
+  a row that holds a counted place releases it under the event lock and the ordinary refill follows;
+  unmarking serves the line first and then needs `occupied < capacity` under the lock; a restart of a
+  cancelled or expired row through the form clears the mark;
 - public count means places a new registrant can receive after active holds and existing waiting-list priority;
 - every capacity-changing transaction expires stale holds and calls the queue allocator before giving a place to a later registration; a lapsed declaration hold is stale only as far as the queue wants its place, or once the event has started or is `COMPLETED` (`DECISIONS.md` §160) — a `CANCELLED` event's holds are left standing (§331) — and a registration that waits behind a kept hold is offered that place in the same transaction;
 - event row lock or equivalent safe serialization protects capacity and FIFO allocation;
@@ -2673,10 +2681,13 @@ BR-REQ-037-05):
    own page — for organizers, pacemakers and invited runners, who run without taking one of the
    announced places. `setOutsideCapacityByStaff`, under the event lock, after the stale holds expire
    and the line is served (`fillAvailableSpots`, as `placeForNewcomer`, so an unmarking takes only a
-   place nobody in line is owed): marking a row that holds a counted place frees it (`fillAvailableSpots` offers it on «Da», keeps it
-   free on «Nu»), the person keeping their state, number and emails; marking a `WAITLISTED` row seats
-   it now through the allocator (a declaration hold and its email); marking a row waiting for its
-   address applies when the address is confirmed; unmarking a row that would then hold a counted place
+   place nobody in line is owed): marking a row that holds a counted place frees it
+   (`fillAvailableSpots` offers it on «Da», keeps it free on «Nu»), a confirmed row or a declaration
+   hold keeping its state, number and emails; marking a `WAITLISTED` row, or a `WAITLIST_OFFERED` one
+   (the review of 2026-10-02: an offer would lapse at its short deadline), seats it now through the
+   allocator — a declaration hold with the ordinary deadline and its email, an offer's queued email
+   never tried withdrawn and its link replaced by the declaration's (§619); marking a row waiting for
+   its address applies when the address is confirmed; unmarking a row that would then hold a counted place
    is refused while none is free (§589's sentence). An ended row's flag is read, never changed, and a
    restart of it through the form clears it (the club marks the new cycle again if it wants). Audited
    as `registration.outside_capacity_changed` with `from` and `to`.

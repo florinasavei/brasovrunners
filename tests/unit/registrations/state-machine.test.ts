@@ -35,6 +35,8 @@ describe("registration state machine", () => {
       ["WAITLISTED", "PENDING_DECLARATION"],
       ["WAITLISTED", "CANCELLED"],
       ["WAITLIST_OFFERED", "CONFIRMED"],
+      // …and an open offer the same (§NNN, the review of 2026-10-02), so it never lapses for the line.
+      ["WAITLIST_OFFERED", "PENDING_DECLARATION"],
       ["WAITLIST_OFFERED", "CANCELLED"],
       ["WAITLIST_OFFERED", "EXPIRED"],
       ["WAITLISTED", "EXPIRED"],
@@ -86,9 +88,9 @@ describe("registration state machine", () => {
         else refused += 1;
       }
     }
-    // 49 possible pairs (7x7); 21 are named transitions per §10.5's list (WAITLISTED -> PENDING_DECLARATION since §NNN).
-    expect(named).toBe(21);
-    expect(refused).toBe(49 - 21);
+    // 49 possible pairs (7x7); 22 are named transitions per §10.5's list (WAITLISTED and WAITLIST_OFFERED -> PENDING_DECLARATION since §NNN).
+    expect(named).toBe(22);
+    expect(refused).toBe(49 - 22);
   });
 
   it("a status can never transition to itself", () => {

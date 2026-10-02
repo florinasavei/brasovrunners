@@ -1,9 +1,10 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, isNotNull, sql } from "drizzle-orm";
 import { createTranslator } from "next-intl";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import { auditLogs } from "@/db/schema/audit-logs";
+import { emailActionTokens } from "@/db/schema/email-action-tokens";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { events, eventTranslations } from "@/db/schema/events";
 import { familyPlaceHolds } from "@/db/schema/family-entries";
@@ -14,6 +15,7 @@ import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository
 import { computeOccupied, NoFreePlaceError } from "@/modules/registrations/domain/capacity";
 import { publicFill } from "@/modules/events/domain/registration-cta";
 import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
+import { computeDeclarationHoldExpiry, confirmationWindow } from "@/modules/registrations/domain/hold-deadlines";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
@@ -62,9 +64,9 @@ vi.mock("@/modules/notifications/drain", () => ({
 
 const { submitRegistration, confirmEmail, readPublicPlaces } = await import("@/modules/registrations/service");
 const { cancelRegistrationByStaff, confirmRegistrationByStaff, givePlaceToUnconfirmedByStaff, setOutsideCapacity } = await import("@/modules/registrations/admin-service");
-const { countOccupied, expireStaleHolds, countOutsideOnPublicStartList, countPublicStartList, countAnonymousStartListEntries, countOutsideCapacity } = await import(
-  "@/modules/registrations/repository"
-);
+const { countOccupied, expireStaleHolds, countOutsideOnPublicStartList, countPublicStartList, countAnonymousStartListEntries, countOutsideCapacity, findEventsNeedingMaintenance } =
+  await import("@/modules/registrations/repository");
+const { renderOutboxMessage } = await import("@/modules/notifications/render");
 const { forgetCachedDeadlines } = await import("@/modules/deadlines/memo");
 const { summariseRegistrationsForAdmin, listRegistrationsForAdmin, readPlaceDeadlines } = await import("@/modules/registrations/admin-repository");
 const { forecastAutomaticEmails } = await import("@/modules/notifications/forecast");
@@ -527,5 +529,92 @@ describe("§NNN the review of 2026-10-02: the line first, the other doors, the o
     expect(await occupied(event.id, at(2))).toBe(0);
     const [badge] = await countRegisteredPerUpcomingEvent(db, at(2), "ro");
     expect(badge).toMatchObject({ count: 1, withPlace: 0, awaitingEmail: 1 });
+  });
+});
+
+describe("§NNN the review of 2026-10-02, round two: an open offer seated outside the places", () => {
+  /** Ana confirmed on a one-place event, Radu and Maria waiting; Ana cancels, and Radu is offered her place. */
+  async function offeredRadu() {
+    const event = await createEvent(1);
+    await confirmedAddress(event, "Ana", 0);
+    await confirmRegistrationByStaff(db, admin, (await rowOf("Ana")).id, at(1));
+    await confirmedAddress(event, "Radu", 3);
+    await confirmedAddress(event, "Maria", 4);
+    await cancelRegistrationByStaff(db, admin, (await rowOf("Ana")).id, "nu mai vine", at(5));
+    const radu = await rowOf("Radu");
+    expect(radu.status).toBe("WAITLIST_OFFERED");
+    return { event, radu };
+  }
+  const participantEmails = (registrationId: string, messageType: "WAITLIST_SPOT_OFFER" | "COMPLETE_DECLARATION") =>
+    db
+      .select()
+      .from(emailOutbox)
+      .where(and(eq(emailOutbox.registrationId, registrationId), eq(emailOutbox.messageType, messageType), isNotNull(emailOutbox.participantId)));
+
+  it("marking an offered runner makes the offer a declaration hold: past the offer's deadline the sweep keeps it", async () => {
+    const { event, radu } = await offeredRadu();
+    const offerDeadline = radu.holdExpiresAt as Date;
+    // The offer's email left (its clock started, §520): its link is in Radu's inbox.
+    const [offerEmail] = await participantEmails(radu.id, "WAITLIST_SPOT_OFFER");
+    await renderOutboxMessage({ ...offerEmail, status: "PROCESSING", attemptCount: 1, lockedAt: at(6) }, db, at(6));
+    await db.update(emailOutbox).set({ status: "SENT", attemptCount: 1, sentAt: at(6) }).where(eq(emailOutbox.id, offerEmail.id));
+
+    const seated = await setOutsideCapacity(db, admin, radu.id, true, at(10));
+    expect(seated.status).toBe("PENDING_DECLARATION");
+    expect(seated.outsideCapacity).toBe(true);
+    // The ordinary declaration deadline, as the allocator gives a direct place at that instant — never the offer's.
+    const [stored] = await db.select().from(events).where(eq(events.id, event.id));
+    const ordinary = computeDeclarationHoldExpiry({
+      now: at(10),
+      registrationClosesAt: stored.registrationClosesAt,
+      eventStartsAt: stored.startsAt,
+      window: confirmationWindow(stored),
+      deadlines: DEFAULT_DEADLINES,
+    });
+    expect(seated.holdExpiresAt).toEqual(ordinary);
+    expect((seated.holdExpiresAt as Date).getTime()).toBeGreaterThan(offerDeadline.getTime());
+    // One declaration email, the one that starts the hold; the offer's email had left and stays as it was.
+    const declarations = await participantEmails(radu.id, "COMPLETE_DECLARATION");
+    expect(declarations).toHaveLength(1);
+    expect(declarations[0].idempotencyKey).toContain(":outside:");
+    expect(await participantEmails(radu.id, "WAITLIST_SPOT_OFFER")).toHaveLength(1);
+    // The counted place the offer held went to the line: Maria is offered it.
+    expect((await rowOf("Maria")).status).toBe("WAITLIST_OFFERED");
+    expect(await occupied(event.id, at(11))).toBe(1);
+    const [trail] = await db.select().from(auditLogs).where(and(eq(auditLogs.action, "registration.outside_capacity_changed"), eq(auditLogs.entityId, radu.id)));
+    expect(trail.metadataJson).toMatchObject({ from: false, to: true, status: "WAITLIST_OFFERED", statusAfter: "PENDING_DECLARATION" });
+
+    // The declaration's email leaves: its link replaces the offer's (§619), so one link signs.
+    await renderOutboxMessage({ ...declarations[0], status: "PROCESSING", attemptCount: 1, lockedAt: at(12) }, db, at(12));
+    const links = await db.select().from(emailActionTokens).where(eq(emailActionTokens.registrationId, radu.id));
+    const offerLink = links.find((link) => link.purpose === "WAITLIST_OFFER");
+    const declarationLink = links.find((link) => link.purpose === "COMPLETE_DECLARATION");
+    expect(offerLink?.invalidatedAt).not.toBeNull();
+    expect(offerLink?.supersededByTokenId).toBe(declarationLink?.id);
+    expect(declarationLink?.invalidatedAt).toBeNull();
+    await db.update(emailOutbox).set({ status: "SENT", attemptCount: 1, sentAt: at(12) }).where(eq(emailOutbox.id, declarations[0].id));
+
+    // Past the offer's deadline: the sweep and the job leave the invited runner's place alone.
+    const later = new Date(offerDeadline.getTime() + 60_000);
+    expect(await findEventsNeedingMaintenance(db, later)).not.toContain(event.id);
+    await db.transaction((tx) => expireStaleHolds(tx, { id: event.id, startsAt: event.startsAt, eventStatus: "SCHEDULED", capacity: 1 }, later));
+    const kept = await rowOf("Radu");
+    expect(kept.status).toBe("PENDING_DECLARATION");
+    expect(kept.expiryReason).toBeNull();
+    expect(kept.holdExpiresAt).toEqual(seated.holdExpiresAt);
+  });
+
+  it("an offer whose email never left: the queued offer email is withdrawn, the declaration's goes alone", async () => {
+    const { event, radu } = await offeredRadu();
+    expect(await participantEmails(radu.id, "WAITLIST_SPOT_OFFER")).toHaveLength(1);
+    // The stored deadline already behind: while its email waits the offer is not lapsed (§520), and is still seated.
+    await db.update(registrations).set({ holdExpiresAt: at(6) }).where(eq(registrations.id, radu.id));
+
+    const seated = await setOutsideCapacity(db, admin, radu.id, true, at(30));
+    expect(seated.status).toBe("PENDING_DECLARATION");
+    expect(seated.expiryReason).toBeNull();
+    expect(await participantEmails(radu.id, "WAITLIST_SPOT_OFFER")).toHaveLength(0);
+    expect(await participantEmails(radu.id, "COMPLETE_DECLARATION")).toHaveLength(1);
+    expect(await occupied(event.id, at(31))).toBe(1);
   });
 });

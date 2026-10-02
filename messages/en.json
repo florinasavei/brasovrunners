@@ -1228,6 +1228,9 @@
       "outsideMarkTitle": "Seat this registration outside the places?",
       "outsideMarkBody": "{name} no longer takes a place; the freed place goes to the first in line if offers go out automatically. State, number and emails stay.",
       "outsideMarkBodyWaitlisted": "{name} leaves the waiting list and gets a place outside the places now: the email “{message}”, with the usual deadline.",
+      "outsideMarkBodyWaitlistedTest": "{name} leaves the waiting list and gets a place outside the places now: the declaration to sign, with the usual deadline.",
+      "outsideMarkBodyOffered": "Instead of the offer, {name} gets a place outside the places now: the email “{message}”, with the usual deadline. The offer's place is freed.",
+      "outsideMarkBodyOfferedTest": "Instead of the offer, {name} gets a place outside the places now: the declaration to sign, with the usual deadline. The offer's place is freed.",
       "outsideMarkBodyPendingEmail": "{name} gets a place outside the places once they confirm their address; nothing changes until then.",
       "outsideUnmarkTitle": "Count this registration among the places?",
       "outsideUnmarkBody": "{name} will take one of the event's places. If none is free, nothing changes."
@@ -5416,8 +5419,8 @@
                 "For whoever runs on the club's side: organizers, pacemakers, invited runners. They take none of the announced places.",
                 "Open the person's registration → «The event's places» → «Seat outside the places» and confirm.",
                 "If they held a place, it frees up: on «Yes» it goes to the first on the waiting list; on «No» it stays free until you hand it out.",
-                "From the waiting list they get a place now, outside the places: the declaration email, with the usual deadline.",
-                "They keep their state, number and emails. On the site they are in no number; they appear on the list only if they ticked, unmarked.",
+                "From the waiting list or an open offer they get a place now, outside the places: the declaration email, with the usual deadline, not the offer's.",
+                "Confirmed or with a declaration to sign, they keep their state, number and emails. On the site they are in no number; they appear on the list only if they ticked, unmarked.",
                 "«Count among the places» turns it back only if a place is free; otherwise the press is refused and says who holds the places.",
                 "In the registrations list, the pill «Outside the places» shows them all; the export has a column for them."
               ]
