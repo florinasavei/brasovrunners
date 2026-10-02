@@ -5411,7 +5411,7 @@
                 "Mind: each gets a new link, and the link in the earlier email stops working. Tell them to open the newest email.",
                 "Tell them to look for the email in Spam and in Promotions too.",
                 "At most three presses an hour per event. An “i” beside the button says when a press would be refused: the event is cancelled, finished or has started, or the hour's presses are spent.",
-                "Who loses a place, and when: in «Registrations», a race's list says under «Who has signed up» until when places are kept and what follows the deadline; the «How far» column has each one's.",
+                "Who loses a place, and when: in «Registrations», a race's list says under «Who has signed up» until when places are kept and what follows the deadline; the «How far» column has each one's. Whoever loses the place after the deadline gets an email that says so and what they can still do.",
                 "One person only: open their registration → «Resend email»."
               ]
             },

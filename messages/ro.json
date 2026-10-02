@@ -5411,7 +5411,7 @@
                 "Atenție: fiecare primește un link nou, iar linkul din emailul de dinainte nu mai merge. Spune-le să deschidă emailul cel mai nou.",
                 "Spune-le să caute emailul și în Spam și în Promoții.",
                 "Cel mult trei apăsări pe oră la un eveniment. Un „i” lângă buton spune când o apăsare ar fi refuzată: evenimentul e anulat, încheiat sau a început, ori s-au consumat apăsările orei.",
-                "Cine pierde locul și când: în «Înscrieri», lista unei curse spune sub «Cine s-a înscris» până când își țin oamenii locul și ce urmează după termen; coloana «Unde a ajuns» are termenul fiecăruia.",
+                "Cine pierde locul și când: în «Înscrieri», lista unei curse spune sub «Cine s-a înscris» până când își țin oamenii locul și ce urmează după termen; coloana «Unde a ajuns» are termenul fiecăruia. Cine pierde locul după termen primește un email care îi spune asta și ce mai poate face.",
                 "O singură persoană: deschide înscrierea ei → «Retrimite emailul»."
               ]
             },
