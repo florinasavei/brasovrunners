@@ -133,6 +133,26 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   const dt = (value: Date | null) => (value ? formatDay(value, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true }) : null);
   const dtInline = (value: Date | null) =>
     value ? formatDay(value, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" }) : null;
+  /*
+    The deadline a live row waits on, in the timeline (§NNN): «Ține locul până» on a place held for the
+    declaration, an open offer or a family's reservation — past a declaration's deadline with the
+    journey's kept words, since the place is released only when somebody wants it (§160) — and the
+    first email's link on a row still waiting for its address. An ended row keeps «Rezervarea expiră».
+  */
+  const timelineNow = new Date();
+  const holdIsLive =
+    registration.status === "PENDING_DECLARATION" ||
+    registration.status === "WAITLIST_OFFERED" ||
+    (registration.status === "PENDING_EMAIL_CONFIRMATION" && registration.holdExpiresAt !== null && registration.holdExpiresAt > timelineNow);
+  const holdKept = registration.status === "PENDING_DECLARATION" && registration.holdExpiresAt !== null && registration.holdExpiresAt <= timelineNow;
+  const holdLine: [string, string | null] = [
+    tr(holdIsLive ? "registrations.holdKeeps" : "registrations.holdExpires"),
+    holdKept ? `${dt(registration.holdExpiresAt)} — ${tr("registrations.journey.heldKept")}` : dt(registration.holdExpiresAt),
+  ];
+  const linkLine: [string, string | null] = [
+    tr("registrations.linkExpires"),
+    registration.status === "PENDING_EMAIL_CONFIRMATION" ? dt(registration.emailLinkExpiresAt) : null,
+  ];
 
   /*
     The emergency details (§322): the phone, the emergency contact and the health note — what
@@ -913,7 +933,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           ],
           [tr("registrations.waitlisted"), dt(registration.waitlistedAt)],
           [tr("registrations.offerCreated"), dt(registration.offerCreatedAt)],
-          [tr("registrations.holdExpires"), dt(registration.holdExpiresAt)],
+          linkLine,
+          holdLine,
           [tr("registrations.confirmed"), dt(registration.confirmedAt)],
           // "cancelled; bib 27 was printed" on the line itself (§311), whoever cancelled — the
           // participant's link and the job write no audit row, so the row is the record.

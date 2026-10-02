@@ -46,16 +46,21 @@ export type JourneyStepState = "done" | "current" | "pending" | "skipped";
  * - `pickedUp`: checked in with a number, which is what "picked up the bib" means here —
  *   there is no separate pickup event: the number is handed over at the desk where the
  *   person is marked present (BR-REQ-037-08), so the check-in is the pickup.
+ * - `link`: the address is not confirmed yet; the first email's link lapses at `until` (§377),
+ *   and a family's reservation, when the row holds one, at `reservedUntil` (§543) — what the row
+ *   waits on, said beside its step (§NNN).
  */
-export type JourneyStepDetail = "held" | "offered" | "waitlisted" | "bib" | "pickedUp";
+export type JourneyStepDetail = "held" | "offered" | "waitlisted" | "bib" | "pickedUp" | "link";
 
 export type JourneyStep = {
   key: JourneyStepKey;
   state: JourneyStepState;
   /** When the step was done, when the row knows; null when it does not. */
   at: Date | null;
-  /** A deadline the detail refers to (the hold, the offer). */
+  /** A deadline the detail refers to (the hold, the offer, the email's link). */
   until?: Date | null;
+  /** A family's reservation on a row still waiting for its address (§543): its place is held until then. */
+  reservedUntil?: Date | null;
   detail?: JourneyStepDetail;
 };
 
@@ -89,6 +94,11 @@ export type JourneyInput = {
   waitlistedAt: Date | null;
   offerCreatedAt: Date | null;
   holdExpiresAt: Date | null;
+  /**
+   * `registrations.email_link_expires_at` (§377): when the first email's link lapses, said on a row
+   * still waiting for its address (§NNN). Optional: a caller that has not read it says nothing of it.
+   */
+  emailLinkExpiresAt?: Date | null;
   /** The latest declaration acceptance's `accepted_at`, online or on paper; null when none. */
   declarationAcceptedAt: Date | null;
   confirmedAt: Date | null;
@@ -211,7 +221,8 @@ export function journeyOf(input: JourneyInput): Journey {
   switch (input.status) {
     case "PENDING_EMAIL_CONFIRMATION":
       markDone(1);
-      markCurrent(1);
+      // What the row waits on (§NNN): the link's lapse, and a family's reservation when it holds one (§543).
+      markCurrent(1, { detail: "link", until: input.emailLinkExpiresAt ?? null, reservedUntil: input.holdExpiresAt });
       break;
     case "WAITLISTED":
       markDone(2);

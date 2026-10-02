@@ -633,6 +633,8 @@
       "waitlisted": "Pe lista de așteptare",
       "offerCreated": "Ofertă creată",
       "holdExpires": "Rezervarea expiră",
+      "holdKeeps": "Ține locul până",
+      "linkExpires": "Linkul din email expiră",
       "confirmed": "Confirmată",
       "cancelled": "Anulată",
       "cancelReasonLabel": "Motivul anulării",
@@ -812,7 +814,8 @@
       "journey": {
         "title": "Parcursul înscrierii",
         "held": "până {until}",
-        "heldKept": "termen depășit, locul se ține cât nu așteaptă nimeni",
+        "holding": "ține locul până {until}",
+        "heldKept": "termen depășit, locul se ține cât nu-l cere nimeni",
         "offered": "loc oferit, până {until}",
         "waitlisted": "pe lista de așteptare",
         "bib": "nr. {number}",
@@ -822,7 +825,10 @@
         "progress": "{done} din {total} pași",
         "next": "urmează: {step}",
         "complete": "Toți pașii parcurși",
-        "legend": "Cei șase pași ai unei înscrieri:\n– 1 · Formularul trimis — persoana a completat formularul de înscriere.\n– 2 · Emailul confirmat — adresa e confirmată: cu linkul primit pe email, sau de staff la masă.\n– 3 · Locul rezervat — are un loc ținut sau e pe lista de așteptare.\n– 4 · Declarația semnată — a semnat declarația, online sau pe hârtie.\n– 5 · Locul confirmat — înscrierea e completă, cu loc și declarație.\n– 6 · Prezent la cursă — a trecut pe la masă în ziua cursei și a ridicat numărul.\nCifra din coloană arată la câți pași a ajuns înscrierea."
+        "legend": "Cei șase pași ai unei înscrieri:\n– 1 · Formularul trimis — persoana a completat formularul de înscriere.\n– 2 · Emailul confirmat — adresa e confirmată: cu linkul primit pe email, sau de staff la masă.\n– 3 · Locul rezervat — are un loc ținut sau e pe lista de așteptare.\n– 4 · Declarația semnată — a semnat declarația, online sau pe hârtie.\n– 5 · Locul confirmat — înscrierea e completă, cu loc și declarație.\n– 6 · Prezent la cursă — a trecut pe la masă în ziua cursei și a ridicat numărul.\nCifra din coloană arată la câți pași a ajuns înscrierea.",
+        "link": "linkul expiră {until}",
+        "linkLapsed": "linkul a expirat",
+        "reserved": "loc rezervat până {until}"
       },
       "exportExcel": "Exportă Excel",
       "readOnlyNotice": "Vezi lista, exportul și numerele, dar nu le poți modifica. În ziua cursei lucrezi de la „Ziua cursei”.",
@@ -886,7 +892,59 @@
       "promoOnly": "Doar cu oferte și beneficii",
       "promoOnlyHelp": "Cei care au bifat „oferte și beneficii”, cu înscrierea încă valabilă. Exportul ia același filtru.",
       "resendFamily": "Retrimite familiei",
-      "resendFamilyLong": "Trimite un singur email adresei lui {name}, pentru toți cei înscriși de pe ea la eveniment"
+      "resendFamilyLong": "Trimite un singur email adresei lui {name}, pentru toți cei înscriși de pe ea la eveniment",
+      "placeDeadlines": {
+        "title": "Când se pierde un loc",
+        "heldUntil": {
+          "one": "O persoană are de semnat declarația și își ține locul până {due} ({before}).",
+          "few": "{count} persoane au de semnat declarația și își țin locul până {due} ({before}).",
+          "other": "{count} de persoane au de semnat declarația și își țin locul până {due} ({before})."
+        },
+        "heldUntilStart": {
+          "one": "O persoană are de semnat declarația și își ține locul până la start.",
+          "few": "{count} persoane au de semnat declarația și își țin locul până la start.",
+          "other": "{count} de persoane au de semnat declarația și își țin locul până la start."
+        },
+        "held": {
+          "one": "O persoană are de semnat declarația.",
+          "few": "{count} persoane au de semnat declarația.",
+          "other": "{count} de persoane au de semnat declarația."
+        },
+        "windowKept": "Cine și-a confirmat adresa înainte de {opens} își ține locul până {due} ({before}).",
+        "windowKeptStart": "Cine și-a confirmat adresa înainte de {opens} își ține locul până la start.",
+        "holdNow": "Cine își confirmă adresa de acum are cel mult {hold} să semneze, de când pleacă emailul.",
+        "heldPast": {
+          "one": "O persoană are termenul depășit; locul i se ține cât nu-l cere nimeni.",
+          "few": "{count} persoane au termenul depășit; locul li se ține cât nu-l cere nimeni.",
+          "other": "{count} de persoane au termenul depășit; locul li se ține cât nu-l cere nimeni."
+        },
+        "releaseAuto": "După termen locul nu se pierde singur: se eliberează doar când cineva de pe lista de așteptare n-are alt loc liber, și i se oferă primului din listă.",
+        "releaseManual": "După termen locul nu se pierde singur: se eliberează doar când cineva de pe lista de așteptare n-are alt loc liber, apoi stă liber pentru «Trimite-i oferta» sau «Dă-i un loc».",
+        "releaseClosed": "După termen locul nu se pierde singur: se eliberează doar când cineva de pe lista de așteptare n-are alt loc liber; înscrierile s-au închis, deci îl dai la masă cu «Dă-i un loc».",
+        "releaseNoList": "După termen locul nu se pierde singur: se eliberează doar când îl cere cineva nou și nu mai e alt loc liber.",
+        "releaseNever": "După termen locul nu se pierde: evenimentul nu are limită de locuri.",
+        "atStart": "La start, cine n-a semnat pierde locul; la masă poate fi confirmat pe hârtie, dacă mai e un loc liber.",
+        "emailLink": {
+          "one": "O persoană n-a confirmat încă adresa: linkul e valabil {hours} de când pleacă emailul, apoi înscrierea expiră; până atunci nu ține niciun loc.",
+          "few": "{count} persoane n-au confirmat încă adresa: linkul e valabil {hours} de când pleacă emailul, apoi înscrierile expiră; până atunci nu țin niciun loc.",
+          "other": "{count} de persoane n-au confirmat încă adresa: linkul e valabil {hours} de când pleacă emailul, apoi înscrierile expiră; până atunci nu țin niciun loc."
+        },
+        "emailLinkFamily": {
+          "one": "O persoană n-a confirmat încă adresa: linkul e valabil {hours} de când pleacă emailul, apoi înscrierea expiră; până atunci ține un loc doar dacă l-a rezervat o familie.",
+          "few": "{count} persoane n-au confirmat încă adresa: linkul e valabil {hours} de când pleacă emailul, apoi înscrierile expiră; până atunci țin un loc doar cei rezervați de o familie.",
+          "other": "{count} de persoane n-au confirmat încă adresa: linkul e valabil {hours} de când pleacă emailul, apoi înscrierile expiră; până atunci țin un loc doar cei rezervați de o familie."
+        },
+        "offerAuto": {
+          "one": "O persoană are o ofertă din lista de așteptare, valabilă cel mult {hours} de când pleacă emailul; nesemnată la timp, trece la următorul din listă cât sunt deschise înscrierile.",
+          "few": "{count} persoane au câte o ofertă din lista de așteptare, valabilă cel mult {hours} de când pleacă emailul; nesemnată la timp, trece la următorul din listă cât sunt deschise înscrierile.",
+          "other": "{count} de persoane au câte o ofertă din lista de așteptare, valabilă cel mult {hours} de când pleacă emailul; nesemnată la timp, trece la următorul din listă cât sunt deschise înscrierile."
+        },
+        "offerManual": {
+          "one": "O persoană are o ofertă din lista de așteptare, valabilă cel mult {hours} de când pleacă emailul; nesemnată la timp, locul rămâne liber până îl dai tu.",
+          "few": "{count} persoane au câte o ofertă din lista de așteptare, valabilă cel mult {hours} de când pleacă emailul; nesemnată la timp, locul rămâne liber până îl dai tu.",
+          "other": "{count} de persoane au câte o ofertă din lista de așteptare, valabilă cel mult {hours} de când pleacă emailul; nesemnată la timp, locul rămâne liber până îl dai tu."
+        }
+      }
     },
     "events": {
       "empty": "Nu există niciun eveniment în baza de date.",
@@ -5068,7 +5126,7 @@
                 "Sus scrie o dată ce nu poți modifica aici. Rolul Tehnic nu vede înscrierile deloc.",
                 "Pe pagina publică a evenimentului, prima cifră numără înscrierile care țin un loc: confirmații plus cei încă în curs — o declarație nesemnată, o ofertă din lista de așteptare neacceptată, locul ținut de o familie. După liniuță, linia spune doar ce există: câți sunt confirmați și câți în curs, și câte locuri libere sunt păstrate pentru lista de așteptare, de exemplu „6 înscriși din 10 locuri — 4 confirmați, 2 în curs de confirmare, 4 locuri păstrate pentru lista de așteptare”.",
                 "Locurile păstrate sunt locuri libere pe care le cere lista de așteptare, iar cardul le arată în două feluri. Dacă sunt mai multe locuri libere decât oameni care așteaptă, cardul spune «Locurile se dau din lista de așteptare» și nu numără niciun loc liber. Dacă lista cere toate locurile libere, ca în exemplu, cardul spune că locurile s-au ocupat — „Mulțumim! Toate cele 10 locuri s-au ocupat — … așteaptă deja un loc.” — și oferă «Intră pe lista de așteptare», deși linia locurilor numește încă „4 locuri păstrate pentru lista de așteptare”. În ambele cazuri locurile acelea sunt libere: cu «Locurile din lista de așteptare se alocă automat» pe «Nu» le dă clubul, cu «Trimite-i oferta»; pe «Da» le dă coada, primilor de pe listă. Cu «Arată public câți așteaptă» debifat la eveniment, nici cardul, nici pagina, nici cei de pe listă nu află câți așteaptă: cardul spune „Mulțumim! Toate cele 10 locuri s-au ocupat. Intră pe lista de așteptare.”, iar linia locurilor nu mai spune câți sunt pe listă.",
-                "Lista «Cine vine» are doar pe cei care au bifat că vor să apară pe ea, mai ales confirmații, așa că prima cifră și lista diferă. Pe card, „1 loc oferit din lista de așteptare” e un loc trimis cuiva de pe listă, care încă nu l-a acceptat."
+                "La un eveniment cu număr de locuri, titlul «Cine vine» numără, ca prima cifră, pe toți cei cu loc cât timp înscrierile sunt deschise. În tabel apar doar cei care au bifat că vor să apară, mai ales confirmații, așa că titlul și rândurile diferă. Pe card, „1 loc oferit din lista de așteptare” e un loc trimis cuiva de pe listă, care încă nu l-a acceptat."
               ]
             },
             {
@@ -5271,7 +5329,7 @@
               "steps": [
                 "«Evenimente» → «Editează» → cardul «Participare și înscrieri».",
                 "«Modul de înscriere» → «Înscrieri pe site».",
-                "«Număr de locuri» și «Lungimea maximă a listei de așteptare» (gol = fără limită, 0 = fără listă). Sub ele, «Locurile din lista de așteptare se alocă automat»: «Da» dă fiecare loc eliberat sau adăugat primului de pe listă; «Nu», dacă vrei să alegi tu (vezi „Alege tu cine primește un loc eliberat”).",
+                "«Număr de locuri» și, lângă el, «Lista de așteptare»: «Nelimitată», «Limitată la un număr de locuri», cu câte persoane scrii tu, sau «Fără listă de așteptare». Sub «Limitată…», gol sau 0 o face nelimitată; doar «Fără listă de așteptare» închide lista. Sub ele, «Locurile din lista de așteptare se alocă automat»: «Da» dă fiecare loc eliberat sau adăugat primului de pe listă; «Nu», dacă vrei să alegi tu (vezi „Alege tu cine primește un loc eliberat”).",
                 "«Perioada de înscriere»: «Înscrierile se deschid» și «Înscrierile se închid».",
                 "«Fereastra de confirmare»: «Confirmarea participării: cu câte zile înainte se cere» și, în căsuța de lângă, cu câte zile înainte expiră (0 = locul nu expiră până la start).",
                 "«Program, regulament și declarație» → «Regulamentul»: «Vârsta minimă de participare» (14 dacă nu o schimbi, niciodată sub 14), la orice tip de eveniment. Declarația: «Program, regulament și declarație» → «Declarația pe propria răspundere» → «Declarația pe care o semnează participantul».",
@@ -5289,7 +5347,7 @@
                 "Fereastra spune până când are timp; apasă din nou «Trimite-i oferta». Primește emailul obișnuit «S-a eliberat un loc», cu termenul obișnuit, {offer}: din email apasă «Confirmă locul» și semnează declarația, dacă nu a semnat-o încă.",
                 "Nu acceptă la timp? Oferta expiră și locul e din nou liber, pentru cine alegi tu.",
                 "Trebuie un loc liber: o anulare sau mai multe locuri. Pe un eveniment plin apăsarea e refuzată, iar un „i” lângă buton spune de ce. După închiderea înscrierilor nu se mai trimit oferte: la masă, cu persoana de față, «Dă-i un loc» o confirmă pe declarația de hârtie.",
-                "Ceilalți rămân pe lista de așteptare și nu primesc nimic. Pe site, cardul spune «Locurile se dau din lista de așteptare», iar cine se înscrie acum intră tot pe listă cât timp așteaptă cineva. Câți pot aștepta spune «Lungimea maximă a listei de așteptare».",
+                "Ceilalți rămân pe lista de așteptare și nu primesc nimic. Pe site, cardul spune «Locurile se dau din lista de așteptare», iar cine se înscrie acum intră tot pe listă cât timp așteaptă cineva. Câți pot aștepta spune «Lista de așteptare», lângă «Număr de locuri».",
                 "Atenție la capătul listei: când nu mai e nimeni pe lista de așteptare — cine are o ofertă nu mai e pe ea —, locurile încă libere le ia următorul care se înscrie."
               ]
             },
@@ -5334,6 +5392,7 @@
                 "Atenție: fiecare primește un link nou, iar linkul din emailul de dinainte nu mai merge. Spune-le să deschidă emailul cel mai nou.",
                 "Spune-le să caute emailul și în Spam și în Promoții.",
                 "Cel mult trei apăsări pe oră la un eveniment. Un „i” lângă buton spune când o apăsare ar fi refuzată: evenimentul e anulat, încheiat sau a început, ori s-au consumat apăsările orei.",
+                "Cine pierde locul și când: în «Înscrieri», lista unei curse spune sub «Cine s-a înscris» până când își țin oamenii locul și ce urmează după termen; coloana «Unde a ajuns» are termenul fiecăruia.",
                 "O singură persoană: deschide înscrierea ei → «Retrimite emailul»."
               ]
             },
