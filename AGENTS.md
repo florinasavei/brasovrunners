@@ -1376,7 +1376,7 @@ below exists because of that (BR-BUS-039, BR-REQ-039-01).
 - `NAMES` is refused unless `registration_mode = INTERNAL`, in the service and again as a CHECK.
   For `NONE` there is nobody to list; for `EXTERNAL` the entrants are another organizer's;
 - the published set is exactly `status = CONFIRMED AND kind = 'REAL' AND list_opt_out = false`,
-  ordered by `confirmed_at` then `id`. The public list shows the display name and club of registrations that ticked «Vreau să apar»: the confirmed always. Only while the privacy notice in force names `{{participantListStates}}` in every language (`describesListStates`, §396) does it also show the pending (`PENDING_DECLARATION`, `WAITLIST_OFFERED`) and the waiting list, each with its state word and without a position. The waiting list shows only when the event's «Lista de așteptare e publică» (`events.waitlist_public`, off by default, stored true only beside `NAMES`; §628) is on as well — a narrowing on top of the notice's gates, never a way round them. It never shows `PENDING_EMAIL_CONFIRMATION`, `CANCELLED`, `EXPIRED` or `TEST` rows, and never the raw lifecycle state;
+  ordered by `confirmed_at` then `id`. The public list shows the display name and club of registrations that ticked «Vreau să apar»: the confirmed always. Only while the privacy notice in force names `{{participantListStates}}` in every language (`describesListStates`, §396) does it also show the pending (`PENDING_DECLARATION`, `WAITLIST_OFFERED`) and the waiting list, each with its state word and without a position. The waiting list shows only when the event's «Lista de așteptare e publică» (`events.waitlist_public`, off by default, stored true only beside `NAMES`; §628) is on as well — a narrowing on top of the notice's gates, never a way round them. How many wait is a separate switch, «Arată public câți așteaptă» (`events.waitlist_count_public`, on by default; §NNN): off, the card, the page and each waiting person's own page and email say no count of the line; it hides a number, never a name, and opens nothing of the list. It never shows `PENDING_EMAIL_CONFIRMATION`, `CANCELLED`, `EXPIRED` or `TEST` rows, and never the raw lifecycle state;
 - `registrations.list_opt_out` is the participant's own answer, the opposite of the tick "I want
   to appear on the participants & results list" (`DECISIONS.md` §143, §570: one tick for the list
   and, once they are published, the results): no tick, no listing. Asked on the
@@ -1674,6 +1674,7 @@ events
 - external_registration_url text null
 - participant_list_visibility HIDDEN|NAMES NOT NULL DEFAULT HIDDEN  -- §10.10; a disclosure, off by default
 - waitlist_public boolean NOT NULL DEFAULT false  -- §10.10; «Lista de așteptare e publică», true only beside NAMES
+- waitlist_count_public boolean NOT NULL DEFAULT true  -- §10.10; «Arată public câți așteaptă», the line's count on public surfaces
 - cover_media_asset_id uuid null
 - created_by_staff_user_id uuid
 - updated_by_staff_user_id uuid

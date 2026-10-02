@@ -638,6 +638,9 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
     declarationDocumentId: fields.declarationDocumentId,
     participantListVisibility: fields.participantListVisibility,
     ...waitlistPublicColumn(fields),
+    // «Arată public câți așteaptă» (§NNN), by the partners' discipline: a caller that did not post the
+    // box writes nothing, so no save hides or shows the waiting list's count by not mentioning it.
+    ...(fields.waitlistCountPublic === undefined ? {} : { waitlistCountPublic: fields.waitlistCountPublic }),
     externalProvider: fields.externalProvider,
     externalRegistrationUrl: fields.externalRegistrationUrl,
   };
@@ -1672,6 +1675,7 @@ export async function saveEventFields<T extends Record<string, unknown>>(
       now,
     );
     await auditWaitlistAutoOffer(tx, input.actor, current, saved, now);
+    await auditWaitlistCountPublic(tx, input.actor, current, saved, now);
     // The place's name in each language is the event's (§362): written with the row, under its version.
     // An older event's English name follows its Romanian one when only the Romanian moved, which
     // needs the rows as they were (`namesAfterSave`) — the notice compares the same rows.
@@ -1816,6 +1820,8 @@ const SERIES_COLUMNS = [
   "participantListVisibility",
   // Whether the published list also shows the waiting list (§628) travels with the list it qualifies.
   "waitlistPublic",
+  // Whether the waiting list's count is public (§NNN) travels like the line's own settings above.
+  "waitlistCountPublic",
   "externalProvider",
   "externalRegistrationUrl",
   // A recurring Strava club event and a Facebook event with several dates each keep one address
@@ -2042,6 +2048,9 @@ async function applyToSeries<T extends Record<string, unknown>>(
       if (changes.waitlistAutoOffer !== undefined) {
         await auditWaitlistAutoOffer(tx, input.actor, member, { id: member.id, waitlistAutoOffer: changes.waitlistAutoOffer }, now);
       }
+      if (changes.waitlistCountPublic !== undefined) {
+        await auditWaitlistCountPublic(tx, input.actor, member, { id: member.id, waitlistCountPublic: changes.waitlistCountPublic }, now);
+      }
       // Each date has its own queue, checked against its own places (§147): the new capacity
       // is the source's, the raise is measured against what this date had, and the status is
       // this date's as it now stands — a cancelled date offers nothing.
@@ -2109,6 +2118,29 @@ async function auditWaitlistAutoOffer<T extends Record<string, unknown>>(
     entityType: "event",
     entityId: after.id,
     metadata: { from: before.waitlistAutoOffer, to: after.waitlistAutoOffer },
+    now,
+  });
+}
+
+/**
+ * The trail of «Arată public câți așteaptă» (§NNN): who switched it, on which date, from and to — in the
+ * save's transaction, only when the value moved. A display switch, but one over what the public is told
+ * about the line, so the trail says who decided it.
+ */
+async function auditWaitlistCountPublic<T extends Record<string, unknown>>(
+  tx: Database<T> | Transaction<T>,
+  actor: Actor,
+  before: { id: string; waitlistCountPublic: boolean },
+  after: { id: string; waitlistCountPublic: boolean },
+  now: Date,
+): Promise<void> {
+  if (before.waitlistCountPublic === after.waitlistCountPublic) return;
+  await recordAuditEvent(tx, {
+    actorStaffUserId: actor.id,
+    action: "event.waitlist_count_public_changed",
+    entityType: "event",
+    entityId: after.id,
+    metadata: { from: before.waitlistCountPublic, to: after.waitlistCountPublic },
     now,
   });
 }
@@ -2271,6 +2303,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
         now,
       );
       await auditWaitlistAutoOffer(tx, input.actor, current, savedEvent, now);
+      await auditWaitlistCountPublic(tx, input.actor, current, savedEvent, now);
       // Before the words, so each row a text save writes back already carries its new name.
       await writePlaceNames(tx, input.eventId, names);
       // Before the translations loop: a settings-only save (an Organizer without text rights)
@@ -2482,6 +2515,7 @@ function blankEventRow(now: Date): EditableEvent {
     externalRegistrationUrl: null,
     participantListVisibility: "HIDDEN",
     waitlistPublic: false,
+    waitlistCountPublic: true,
     createdByStaffUserId: null,
     updatedByStaffUserId: null,
     createdAt: now,
@@ -3086,6 +3120,9 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     participantListVisibility: "HIDDEN" as const,
     // A copy never inherits the list (AGENTS.md §10.10), so nor the waiting list's place on it (§628).
     waitlistPublic: false,
+    // Whether the line's count is public (§NNN) goes with the line's other settings: a copy, and every
+    // date of a series. It publishes no name, so the list's rule above does not bind it.
+    waitlistCountPublic: source.waitlistCountPublic,
     externalProvider: source.externalProvider,
     externalRegistrationUrl: source.externalRegistrationUrl,
     editorialStatus: "DRAFT" as const,

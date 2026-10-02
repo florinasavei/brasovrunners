@@ -113,3 +113,41 @@ describe("§629 waitlistStandingPhrase — the place in the line and the line's 
     expect(numbers(waitlistStandingPhrase(translator("en"), "en", club))).toEqual(["22"]);
   });
 });
+
+/**
+ * §NNN — «Arată public câți așteaptă» off: a person on the list is outside the backoffice, so a count
+ * told to them is told to anyone who joins. No length of the line in any reading; the place stays with
+ * offers in order (the person's own, the order mechanical); «singura persoană» says one, so it goes too.
+ */
+describe("§NNN waitlistStandingPhrase with the count kept private", () => {
+  const numbers = (text: string) => text.match(/\d+/g);
+
+  it("with offers in order, says the place alone, in both languages", () => {
+    const standing = { position: 3, length: 10, autoOffer: true, countPublic: false };
+    expect(waitlistStandingPhrase(translator("ro"), "ro", standing)).toBe("Ești pe locul 3 pe lista de așteptare. Locurile eliberate se oferă în ordine.");
+    expect(waitlistStandingPhrase(translator("en"), "en", standing)).toBe("You are number 3 on the waiting list. Freed places are offered in order.");
+    expect(numbers(waitlistStandingPhrase(translator("ro"), "ro", standing))).toEqual(["3"]);
+    expect(numbers(waitlistStandingPhrase(translator("en"), "en", standing))).toEqual(["3"]);
+  });
+
+  it("with the club choosing, says no number at all, in both languages", () => {
+    const standing = { position: 3, length: 10, autoOffer: false, countPublic: false };
+    expect(waitlistStandingPhrase(translator("ro"), "ro", standing)).toBe("Ești pe lista de așteptare. Clubul alege cui oferă un loc eliberat.");
+    expect(waitlistStandingPhrase(translator("en"), "en", standing)).toBe("You are on the waiting list. The club chooses whom to offer a freed place.");
+    expect(numbers(waitlistStandingPhrase(translator("ro"), "ro", standing))).toBeNull();
+  });
+
+  it("alone in the line, never «singura persoană»: the place, or only that they wait", () => {
+    const alone = { position: 1, length: 1, countPublic: false };
+    expect(waitlistStandingPhrase(translator("ro"), "ro", { ...alone, autoOffer: true })).toBe("Ești pe locul 1 pe lista de așteptare. Locurile eliberate se oferă în ordine.");
+    expect(waitlistStandingPhrase(translator("ro"), "ro", { ...alone, autoOffer: false })).toBe("Ești pe lista de așteptare. Clubul alege cui oferă un loc eliberat.");
+    expect(waitlistStandingPhrase(translator("en"), "en", { ...alone, autoOffer: false })).not.toContain("only person");
+  });
+
+  it("switched on, or absent, says today's sentence byte for byte", () => {
+    for (const autoOffer of [true, false]) {
+      const today = waitlistStandingPhrase(translator("ro"), "ro", { position: 2, length: 5, autoOffer });
+      expect(waitlistStandingPhrase(translator("ro"), "ro", { position: 2, length: 5, autoOffer, countPublic: true })).toBe(today);
+    }
+  });
+});

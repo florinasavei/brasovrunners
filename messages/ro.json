@@ -322,6 +322,11 @@
         "few": "Mulțumim! Toate cele {capacity} locuri s-au ocupat. Fii primul pe lista de așteptare.",
         "other": "Mulțumim! Toate cele {capacity} de locuri s-au ocupat. Fii primul pe lista de așteptare."
       },
+      "fullThanksJoin": {
+        "one": "Mulțumim! Singurul loc s-a ocupat. Intră pe lista de așteptare.",
+        "few": "Mulțumim! Toate cele {capacity} locuri s-au ocupat. Intră pe lista de așteptare.",
+        "other": "Mulțumim! Toate cele {capacity} de locuri s-au ocupat. Intră pe lista de așteptare."
+      },
       "waitingCount": "{count} pe lista de așteptare",
       "offeredCount": {
         "one": "{count} loc oferit din lista de așteptare",
@@ -1363,6 +1368,8 @@
       "waitlistPublic": "Lista de așteptare e publică",
       "waitlistPublicHelp": "Pe lista publică apar și cei de pe lista de așteptare care au bifat „Vreau să apar”, în ordinea listei, fără poziție — doar cât timp nota de confidențialitate în vigoare descrie stadiile.",
       "waitlistPublicHelpMore": "Are efect doar cu lista participanților publicată, deasupra. Debifată, nimeni de pe lista de așteptare nu apare, nici numărat.",
+      "waitlistCountPublic": "Arată public câți așteaptă",
+      "waitlistCountPublicHelp": "Bifat: cardul, pagina și fiecare persoană de pe listă află câți așteaptă. Debifat: paginile spun doar că există o listă de așteptare și cum intri pe ea; clubul vede numărul oriunde.",
       "externalProvider": "Organizator extern",
       "externalRegistrationUrl": "Link de înscriere extern",
       "externalHelp": "Amândouă doar pentru un eveniment cu înscriere în altă parte. Linkul trebuie să înceapă cu https://.",
@@ -5045,7 +5052,7 @@
                 "Coloana «Unde a ajuns» spune pasul fiecăruia. Apasă pe nume ca să deschizi înscrierea: «Parcursul înscrierii» și «Cronologie» spun tot ce s-a întâmplat.",
                 "Sus scrie o dată ce nu poți modifica aici. Rolul Tehnic nu vede înscrierile deloc.",
                 "Pe pagina publică a evenimentului, prima cifră numără înscrierile care țin un loc: confirmații plus cei încă în curs — o declarație nesemnată, o ofertă din lista de așteptare neacceptată, locul ținut de o familie. După liniuță, linia spune doar ce există: câți sunt confirmați și câți în curs, și câte locuri libere sunt păstrate pentru lista de așteptare, de exemplu „6 înscriși din 10 locuri — 4 confirmați, 2 în curs de confirmare, 4 locuri păstrate pentru lista de așteptare”.",
-                "Locurile păstrate sunt locuri libere pe care le cere lista de așteptare, iar cardul le arată în două feluri. Dacă sunt mai multe locuri libere decât oameni care așteaptă, cardul spune «Locurile se dau din lista de așteptare» și nu numără niciun loc liber. Dacă lista cere toate locurile libere, ca în exemplu, cardul spune că locurile s-au ocupat — „Mulțumim! Toate cele 10 locuri s-au ocupat — … așteaptă deja un loc.” — și oferă «Intră pe lista de așteptare», deși linia locurilor numește încă „4 locuri păstrate pentru lista de așteptare”. În ambele cazuri locurile acelea sunt libere: cu «Locurile din lista de așteptare se alocă automat» pe «Nu» le dă clubul, cu «Trimite-i oferta»; pe «Da» le dă coada, primilor de pe listă.",
+                "Locurile păstrate sunt locuri libere pe care le cere lista de așteptare, iar cardul le arată în două feluri. Dacă sunt mai multe locuri libere decât oameni care așteaptă, cardul spune «Locurile se dau din lista de așteptare» și nu numără niciun loc liber. Dacă lista cere toate locurile libere, ca în exemplu, cardul spune că locurile s-au ocupat — „Mulțumim! Toate cele 10 locuri s-au ocupat — … așteaptă deja un loc.” — și oferă «Intră pe lista de așteptare», deși linia locurilor numește încă „4 locuri păstrate pentru lista de așteptare”. În ambele cazuri locurile acelea sunt libere: cu «Locurile din lista de așteptare se alocă automat» pe «Nu» le dă clubul, cu «Trimite-i oferta»; pe «Da» le dă coada, primilor de pe listă. Cu «Arată public câți așteaptă» debifat la eveniment, nici cardul, nici pagina, nici cei de pe listă nu află câți așteaptă: cardul spune „Mulțumim! Toate cele 10 locuri s-au ocupat. Intră pe lista de așteptare.”, iar linia locurilor nu mai spune câți sunt pe listă.",
                 "Lista «Cine vine» are doar pe cei care au bifat că vor să apară pe ea, mai ales confirmații, așa că prima cifră și lista diferă. Pe card, „1 loc oferit din lista de așteptare” e un loc trimis cuiva de pe listă, care încă nu l-a acceptat."
               ]
             },
@@ -6927,6 +6934,8 @@
         "other": "Ești pe lista de așteptare, împreună cu alte {others} de persoane."
       },
       "alone": "Ești singura persoană pe lista de așteptare.",
+      "placeOnly": "Ești pe locul {position} pe lista de așteptare.",
+      "onList": "Ești pe lista de așteptare.",
       "orderAuto": "Locurile eliberate se oferă în ordine.",
       "orderClub": "Clubul alege cui oferă un loc eliberat."
     },

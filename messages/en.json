@@ -322,6 +322,11 @@
         "few": "Thank you! All {capacity} places are taken. Be the first on the waiting list.",
         "other": "Thank you! All {capacity} places are taken. Be the first on the waiting list."
       },
+      "fullThanksJoin": {
+        "one": "Thank you! The one place is taken. Join the waiting list.",
+        "few": "Thank you! All {capacity} places are taken. Join the waiting list.",
+        "other": "Thank you! All {capacity} places are taken. Join the waiting list."
+      },
       "waitingCount": "{count} on the waiting list",
       "offeredCount": {
         "one": "{count} place offered from the waiting list",
@@ -1363,6 +1368,8 @@
       "waitlistPublic": "The waiting list is public",
       "waitlistPublicHelp": "The public list also shows those on the waiting list who ticked “I want to appear”, in the list's order, with no position — only while the privacy notice in force describes the stages.",
       "waitlistPublicHelpMore": "It applies only with the participant list published, above. Unticked, nobody on the waiting list appears, not even as a count.",
+      "waitlistCountPublic": "Show publicly how many are waiting",
+      "waitlistCountPublicHelp": "Ticked: the card, the page and each person on the list learn how many are waiting. Unticked: the pages say only that there is a waiting list and how to join it; the club sees the number everywhere.",
       "externalProvider": "External organiser",
       "externalRegistrationUrl": "External registration link",
       "externalHelp": "Both only for an event registered elsewhere. The link must start with https://.",
@@ -5045,7 +5052,7 @@
                 "The «How far» column says each person's step. Press a name to open the registration: «The registration's journey» and «Timeline» say everything that happened.",
                 "The top says once what you cannot change here. The Tehnic role does not see registrations at all.",
                 "On the event's public page, the first number counts the registrations holding a place: the confirmed plus those still in progress — a declaration not signed yet, a waiting-list offer not accepted yet, a place a family holds. After the dash the line names only what exists: how many are confirmed and how many in progress, and how many free places are kept for the waiting list, for example “6 registered of 10 places — 4 confirmed, 2 completing their registration, 4 places kept for the waiting list”.",
-                "Places kept are free places the waiting list claims, and the card shows them in two ways. With more places free than people waiting, the card says «Places are given from the waiting list» and counts no free place. When the list claims every free place, as in the example, the card says the places are taken — “Thank you! All 10 places are taken — … already waiting.” — and offers «Join the waiting list», while the places line still names “4 places kept for the waiting list”. Either way those places are free: with «Places from the waiting list are allocated automatically» on «No» the club hands them out, with «Send them the offer»; on «Yes» the queue does, to the first on the list.",
+                "Places kept are free places the waiting list claims, and the card shows them in two ways. With more places free than people waiting, the card says «Places are given from the waiting list» and counts no free place. When the list claims every free place, as in the example, the card says the places are taken — “Thank you! All 10 places are taken — … already waiting.” — and offers «Join the waiting list», while the places line still names “4 places kept for the waiting list”. Either way those places are free: with «Places from the waiting list are allocated automatically» on «No» the club hands them out, with «Send them the offer»; on «Yes» the queue does, to the first on the list. With «Show publicly how many are waiting» unticked on the event, neither the card, nor the page, nor the people on the list learn how many wait: the card says “Thank you! All 10 places are taken. Join the waiting list.”, and the places line no longer says how many are on the list.",
                 "The «Who's coming» list holds only those who ticked that they want to appear on it, mostly the confirmed, so the first number and the list differ. On the card, “1 place offered from the waiting list” is a place sent to somebody on the list who has not accepted it yet."
               ]
             },
@@ -6927,6 +6934,8 @@
         "other": "You are on the waiting list, with {others} others."
       },
       "alone": "You are the only person on the waiting list.",
+      "placeOnly": "You are number {position} on the waiting list.",
+      "onList": "You are on the waiting list.",
       "orderAuto": "Freed places are offered in order.",
       "orderClub": "The club chooses whom to offer a freed place."
     },

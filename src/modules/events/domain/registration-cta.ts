@@ -40,6 +40,12 @@ export type RegistrationCtaInput = RegistrationWindowInput & {
    */
   offered?: number;
   waitlisted?: number;
+  /**
+   * «Arată public câți așteaptă» (§NNN): false withholds the people waiting from what the door says —
+   * `waitlisted` on `OPEN` is said as nought and `waiting` on `FULL` as null. Absent is on, today's
+   * sentences. It changes no decision: who queues is still read from the counts above.
+   */
+  waitlistCountPublic?: boolean;
 };
 
 export type RegistrationCta =
@@ -63,14 +69,22 @@ export type RegistrationCta =
    * waiting list's — its words and its glyph, as `FULL` — and the free places are not advertised:
    * «Locurile se dau din lista de așteptare» stands where «N locuri libere din C» stood. False with
    * nobody waiting — an open offer alone included, since its holder has a place: today's line and door.
+   *
+   * `waitlisted` is the number the door may SAY: nought when the club keeps the count private (§NNN),
+   * whatever the line holds — `fromWaitlist` is decided before, from the real count.
    */
   | { kind: "OPEN"; availablePlaces: number | null; offered: number; waitlisted: number; fromWaitlist: boolean }
   /**
    * No place, and the waiting list takes people: its button. `waitlistRoom` is how many more it
    * takes when it has a limit (§348) — "Mai sunt 3 locuri pe lista de așteptare" — and null when
    * it has none, which says no number, as today.
+   *
+   * `waiting` is the line's length the lead may say, or null when the club keeps it private (§NNN): the
+   * lead is then «Mulțumim! Toate cele 150 de locuri s-au ocupat. Intră pe lista de așteptare.», which
+   * says neither a number nor «Fii primul» (which would say nought). The room stays: it is a fact about
+   * the list's size, like the capacity (§32's reasoning), not a count of people.
    */
-  | { kind: "FULL"; waitlistRoom: number | null; waiting: number }
+  | { kind: "FULL"; waitlistRoom: number | null; waiting: number | null }
   /** No place and the waiting list at its limit (§348): a sentence, no button. */
   | { kind: "WAITLIST_FULL" }
   /** No place on an event with no waiting list (a limit of 0, §348): closed as full, no button. */
@@ -123,7 +137,15 @@ export function registrationCta(event: RegistrationCtaInput, now: Date): Registr
 
     case "OPEN": {
       const offered = event.offered ?? 0;
-      const waitlisted = event.waitlisted ?? 0;
+      /*
+        «Arată public câți așteaptă» off (§NNN): the people waiting are said as nobody — the card's and the
+        page's «N pe lista de așteptare» go, the offered places and «Locurile se dau din lista de așteptare»
+        stay. Applied here, once, so no surface can forget it; the door below is still chosen from the
+        real count. The public list's own waiting group («Cine vine», `StartList.tsx`) is §628's switch,
+        not this one: with the names published, how many they are is visible by nature.
+      */
+      const countPublic = event.waitlistCountPublic !== false;
+      const waitlisted = countPublic ? (event.waitlisted ?? 0) : 0;
       /*
         Somebody waiting (§615): a person in the line with no place yet — or, in a cache entry written
         before the halves were counted, the line's length alone (§587), until it next expires. Then a
@@ -143,7 +165,7 @@ export function registrationCta(event: RegistrationCtaInput, now: Date): Registr
       if (event.waitlistRoom === 0) return { kind: "WAITLIST_FULL" };
       // Places free while somebody is in the line (§615): open, through the line's door.
       if (event.availablePlaces !== 0) return { kind: "OPEN", availablePlaces: event.availablePlaces, offered, waitlisted, fromWaitlist: true };
-      return { kind: "FULL", waitlistRoom: event.waitlistRoom ?? null, waiting: event.waiting ?? 0 };
+      return { kind: "FULL", waitlistRoom: event.waitlistRoom ?? null, waiting: countPublic ? (event.waiting ?? 0) : null };
     }
 
     case "NOT_APPLICABLE":
@@ -163,7 +185,8 @@ export type PublicFill = {
   confirmed?: number;
   /**
    * The free places the waiting list has a claim on (§615, §617): the capacity less the free places the
-   * button shows less `taken`. Absent when nought or unknown.
+   * button shows less `taken`. Absent when nought or unknown — and, with the count kept private (§NNN),
+   * while places are still free, since it is then exactly the number of people waiting.
    */
   kept?: number;
   /**
@@ -171,7 +194,8 @@ export type PublicFill = {
    * line's last part, «10 pe lista de așteptare», so the number is present wherever the line shows. From
    * the same count the door already reads — no query of its own, and the same one every public count is
    * (a `TEST` row stands in the line as a real one, `AGENTS.md` §12.6; production has none). Absent when
-   * nobody waits, and in a cache entry from before the halves were counted.
+   * nobody waits, and in a cache entry from before the halves were counted — and absent too when the
+   * club keeps the count private (§NNN, `waitlistCountPublic: false`): the line then ends where it did.
    */
   waitlisted?: number;
 };
@@ -215,12 +239,14 @@ export type PublicFill = {
 export function publicFill(
   capacity: number | null,
   availablePlaces: number | null,
-  held?: { occupied?: number; confirmed?: number; waitlisted?: number },
+  held?: { occupied?: number; confirmed?: number; waitlisted?: number; waitlistCountPublic?: boolean },
 ): PublicFill | null {
   if (capacity === null || availablePlaces === null) return null;
   const claimed = Math.min(Math.max(capacity - availablePlaces, 0), capacity);
-  // The line's length, the places line's last part (§629): only when anybody waits.
-  const waiting = held?.waitlisted !== undefined && held.waitlisted > 0 ? { waitlisted: held.waitlisted } : {};
+  // The line's length, the places line's last part (§629): only when anybody waits, and only while the
+  // club says it publicly (§NNN) — off, «, 10 pe lista de așteptare» is not drawn; every other part stays.
+  const said = held?.waitlistCountPublic !== false;
+  const waiting = said && held?.waitlisted !== undefined && held.waitlisted > 0 ? { waitlisted: held.waitlisted } : {};
   /*
     The first number is the occupied count in every state (§615): the registrations holding places,
     confirmed and in progress — the count `availablePlaces` is built on — never the capacity less the
@@ -231,6 +257,13 @@ export function publicFill(
   if (held?.occupied === undefined || held.confirmed === undefined) return { taken: claimed, capacity, ...waiting };
   const taken = Math.max(Math.min(held.occupied, capacity), 0);
   const confirmed = Math.min(held.confirmed, taken);
-  const kept = Math.max(claimed - taken, 0);
+  /*
+    The count kept private (§NNN): while places are still free beside the line, the places kept for it
+    are exactly the people waiting (the formula keeps one free place per person waiting), so the part is
+    withheld with the count. Once no place is free, kept is every free place the line claims — a number
+    about places, the line being at least as long — and it stays, so the line still adds up to «Toate
+    cele 10 locuri s-au ocupat» above it (§615's consistency).
+  */
+  const kept = said || availablePlaces === 0 ? Math.max(claimed - taken, 0) : 0;
   return { taken, capacity, confirmed, ...(kept > 0 ? { kept } : {}), ...waiting };
 }

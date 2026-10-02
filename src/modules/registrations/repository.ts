@@ -196,9 +196,16 @@ export async function offersWaitlistAutomatically<T extends Record<string, unkno
 export async function readWaitlistPosition<T extends Record<string, unknown>>(
   db: Database<T>,
   registrationId: string,
-): Promise<{ position: number; length: number; autoOffer: boolean } | null> {
+): Promise<{ position: number; length: number; autoOffer: boolean; countPublic: boolean } | null> {
   const [own] = await db
-    .select({ eventId: registrations.eventId, status: registrations.status, autoOffer: events.waitlistAutoOffer, eventStatus: events.eventStatus })
+    .select({
+      eventId: registrations.eventId,
+      status: registrations.status,
+      autoOffer: events.waitlistAutoOffer,
+      // «Arată public câți așteaptă» (§NNN), from the same read of the event row: whether the sentence may say the line's length.
+      countPublic: events.waitlistCountPublic,
+      eventStatus: events.eventStatus,
+    })
     .from(registrations)
     .innerJoin(events, eq(events.id, registrations.eventId))
     .where(eq(registrations.id, registrationId))
@@ -215,7 +222,7 @@ export async function readWaitlistPosition<T extends Record<string, unknown>>(
     .as("waitlist_line");
   const [row] = await db.select({ position: line.position, length: line.length }).from(line).where(eq(line.id, registrationId));
   // The row left the line between the two statements: it is no longer waiting.
-  return row ? { position: row.position, length: row.length, autoOffer: own.autoOffer } : null;
+  return row ? { position: row.position, length: row.length, autoOffer: own.autoOffer, countPublic: own.countPublic } : null;
 }
 
 /**
