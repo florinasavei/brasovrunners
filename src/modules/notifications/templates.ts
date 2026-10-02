@@ -23,6 +23,7 @@ import { CLUB_LOCALITY } from "@/modules/events/domain/place";
 import { type EventForecast, forecastPlaceName } from "@/modules/weather/domain/forecast";
 import { weatherSpanWords } from "@/modules/weather/words";
 import { CANNOT_COME_GLYPH_PATH, CANNOT_COME_MESSAGES } from "./domain/cannot-come";
+import type { HoldLapsedNext } from "./domain/hold-lapsed";
 
 /**
  * The twelve message types of AGENTS.md §16.3 (BR-REQ-080-01), in Romanian and English.
@@ -1084,6 +1085,14 @@ export type TemplateData = {
   cancelledFromWaitlist?: boolean;
   cancelledOthers?: ReadonlyArray<{ name: string; state: FamilyEarlierState }>;
   /**
+   * A released declaration hold (§NNN), on `DECLARATION_HOLD_EXPIRED` only: whether somebody on the
+   * waiting list wanted the place (a fact of the release, from the row's payload) — else a newcomer
+   * the line had no room for took it — and what the person can do now, read at the send
+   * (`domain/hold-lapsed.ts`). The deadline that passed is `holdExpiresAtFormatted`.
+   */
+  holdLapsedToWaitlist?: boolean;
+  holdLapsedNext?: HoldLapsedNext;
+  /**
    * Why the participant cancelled (§558), from the row: the answer, and the words of «Alt motiv».
    * Quoted on the club's copy of the cancellation only — the person knows why.
    */
@@ -1566,6 +1575,21 @@ const T = {
       // The fact first, and what it released under it on the same band (`cancelledReleased`, §580).
       emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
     },
+    /*
+      A declaration hold released to somebody who wanted the place (§NNN; the owner, 2026-10-02: «Da, fă
+      emailul pentru cel care pierde locul»): the fact, in the second person. When it lapsed and where the
+      place went, and what the person can do now, are the platform's lines after the body
+      (`holdLapsed`, `holdLapsedNext`), facts of this send whoever wrote the words.
+    */
+    declarationHoldExpired: {
+      subject: (d: TemplateData) => `Locul tău la ${d.eventTitle ?? "eveniment"} a expirat`,
+      body: (d: TemplateData) => [
+        `Locul tău la ${d.eventTitle ?? "eveniment"}${d.eventStartsAtFormatted ? `, ${d.eventStartsAtFormatted},` : ""} **a expirat**: declarația nu a fost semnată la timp.`,
+      ],
+      // The button exists only when the form would take the person (`render.ts`): never on «desk».
+      action: (d: TemplateData) => (d.holdLapsedNext === "register" ? "Înscrie-te din nou" : "Intră pe lista de așteptare"),
+      emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
+    },
     waitlistOfferExpired: {
       subject: "Timpul pentru confirmarea locului a expirat",
       body: (d: TemplateData) => [
@@ -1907,6 +1931,20 @@ const T = {
     // A cancellation (§547): what the cancelled person held, and who else the address still holds.
     cancelledReleased: (name: string, fromWaitlist: boolean) =>
       fromWaitlist ? `${name || "Persoana"} nu mai este pe lista de așteptare.` : "Locul a fost eliberat.",
+    /**
+     * A released declaration hold (§NNN): the deadline that passed (§377), and where the place went. On
+     * the band with the body's first line; no bold inside, so the editor's «Înlocuiește cu câmpurile»
+     * recognises it as the platform's line (`framingSentencesOf`).
+     */
+    holdLapsed: (deadline: string | undefined, toWaitlist: boolean) =>
+      `Termenul pentru semnare a fost ${deadline ?? "depășit"}. ${toWaitlist ? "Altcineva aștepta un loc, așa că locul tău a trecut la lista de așteptare." : "Altcineva a cerut un loc, așa că locul tău a devenit liber."}`,
+    /** …and what the person can do now, by the event as it stands at the send (`holdLapsedNext`). */
+    holdLapsedNext: (next: HoldLapsedNext) =>
+      next === "register"
+        ? "Dacă mai vrei să vii, te poți înscrie din nou: mai sunt locuri libere."
+        : next === "waitlist"
+          ? "Dacă mai vrei să vii, poți intra pe lista de așteptare."
+          : "Online nu se mai poate face nimic. Dacă în ziua evenimentului rămân locuri libere, le dă masa de înscriere.",
     /** A verification link on an address with others at the event (§588): the one link confirms everybody waiting. */
     verifyCoversFamily: (others: ReadonlyArray<{ name: string; state: FamilyEarlierState }>) =>
       `Pe această adresă sunt înscriși și: ${others.map((other) => `${other.name} (${EARLIER_STATE_WORDS.ro[other.state]})`).join(", ")}. Butonul de mai sus confirmă adresa pentru toți cei care o așteaptă.`,
@@ -2178,6 +2216,14 @@ const T = {
       ],
       emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
     },
+    declarationHoldExpired: {
+      subject: (d: TemplateData) => `Your place at ${d.eventTitle ?? "the event"} has expired`,
+      body: (d: TemplateData) => [
+        `Your place at ${d.eventTitle ?? "the event"}${d.eventStartsAtFormatted ? `, ${d.eventStartsAtFormatted},` : ""} **has expired**: the declaration was not signed in time.`,
+      ],
+      action: (d: TemplateData) => (d.holdLapsedNext === "register" ? "Register again" : "Join the waiting list"),
+      emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]] }),
+    },
     waitlistOfferExpired: {
       subject: "The time to confirm your place has expired",
       body: (d: TemplateData) => [
@@ -2444,6 +2490,14 @@ const T = {
     waitlistPosition: (standing: WaitlistStandingLine) => waitlistPositionLine("en", standing),
     cancelledReleased: (name: string, fromWaitlist: boolean) =>
       fromWaitlist ? `${name || "The person"} is no longer on the waiting list.` : "The place has been released.",
+    holdLapsed: (deadline: string | undefined, toWaitlist: boolean) =>
+      `The deadline to sign was ${deadline ?? "missed"}. ${toWaitlist ? "Somebody was waiting for a place, so yours went to the waiting list." : "Somebody else asked for a place, so yours has been released."}`,
+    holdLapsedNext: (next: HoldLapsedNext) =>
+      next === "register"
+        ? "If you still want to come, you can register again: there are places free."
+        : next === "waitlist"
+          ? "If you still want to come, you can join the waiting list."
+          : "Nothing more can be done online. If places are left on the day of the event, the registration desk gives them out.",
     verifyCoversFamily: (others: ReadonlyArray<{ name: string; state: FamilyEarlierState }>) =>
       `Also registered on this address: ${others.map((other) => `${other.name} (${EARLIER_STATE_WORDS.en[other.state]})`).join(", ")}. The button above confirms the address for everybody waiting for it.`,
     cancelledOthers: (others: ReadonlyArray<{ name: string; state: FamilyEarlierState }>) =>
@@ -2488,6 +2542,7 @@ const KEY_BY_MESSAGE_TYPE: Record<EmailMessageType, keyof typeof T.ro> = {
   REGISTRATION_CONFIRMED: "registrationConfirmed",
   REGISTRATION_CANCELLED: "registrationCancelled",
   WAITLIST_OFFER_EXPIRED: "waitlistOfferExpired",
+  DECLARATION_HOLD_EXPIRED: "declarationHoldExpired",
   REGISTRATION_MANAGE_LINK: "registrationManageLink",
   PROFILE_MANAGE_LINK: "profileManageLink",
   REGISTRATION_STATE_NOTICE: "registrationStateNotice",
@@ -2886,7 +2941,9 @@ export function buildTemplateContent(
                   ...(data.refusedGround ? [copy.refusedByClub(data.refusedGround)] : []),
                   copy.cancelledReleased(data.participantName, data.cancelledFromWaitlist === true),
                 ]
-              : own.highlight,
+              : messageType === "DECLARATION_HOLD_EXPIRED"
+                ? [...(own.highlight ?? []), copy.holdLapsed(data.holdExpiresAtFormatted, data.holdLapsedToWaitlist === true)]
+                : own.highlight,
         quiet: [...(own.quiet ?? []), ...(messageType === "GROUP_RUN_DECLARATION_SIGNED" ? [copy.groupRunNotYou(data.contactUrl)] : [])],
       };
 
@@ -3032,6 +3089,12 @@ export function buildTemplateContent(
       ...(messageType === "REGISTRATION_CANCELLED" && data.cancelledOthers && data.cancelledOthers.length > 0
         ? [copy.cancelledOthers(data.cancelledOthers)]
         : []),
+      /*
+        A released declaration hold's facts (§NNN), after the body whoever wrote it: the deadline that
+        passed and where the place went, then what the person can do now — one sentence, read at the send.
+      */
+      ...(messageType === "DECLARATION_HOLD_EXPIRED" ? [copy.holdLapsed(data.holdExpiresAtFormatted, data.holdLapsedToWaitlist === true)] : []),
+      ...(messageType === "DECLARATION_HOLD_EXPIRED" && data.holdLapsedNext ? [copy.holdLapsedNext(data.holdLapsedNext)] : []),
       // The participant's reason (§558), on the club's copy only: the club asked for it, the person knows it.
       ...(messageType === "REGISTRATION_CANCELLED" && clubCopy && data.cancelReasonKind
         ? [copy.cancelReason(data.cancelReasonKind, data.cancelReasonText)]

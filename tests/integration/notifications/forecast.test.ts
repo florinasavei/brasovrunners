@@ -149,6 +149,8 @@ describe("§383 the forecast of automatic emails", () => {
   it("lists each automatic send, by the moment it becomes due, and nothing staff send", async () => {
     const { a, c, d, f } = fixture;
     expect(shape(await forecast())).toEqual([
+      // The hold's release tells the person who held it (§NNN), then the place is offered on.
+      { at: at(20 * HOUR).toISOString(), eventId: d, type: "DECLARATION_HOLD_EXPIRED", send: "holdLapsed", recipients: 1 },
       { at: at(20 * HOUR).toISOString(), eventId: d, type: "WAITLIST_SPOT_OFFER", send: "nextInLine", recipients: 1 },
       { at: at(DAY).toISOString(), eventId: a, type: "EVENT_REMINDER", send: "reminder", recipients: 2 },
       { at: at(DAY).toISOString(), eventId: c, type: "COMPLETE_DECLARATION", send: "participation", recipients: 1 },
@@ -208,7 +210,7 @@ describe("§383 the forecast of automatic emails", () => {
 
   it("stops at the horizon", async () => {
     const rows = await forecastAutomaticEmails(db, { now: NOW, horizonDays: 2, deadlines: DEFAULT_DEADLINES });
-    expect(rows.map((row) => row.send)).toEqual(["nextInLine", "reminder", "participation", "registrationOpened"]);
+    expect(rows.map((row) => row.send)).toEqual(["holdLapsed", "nextInLine", "reminder", "participation", "registrationOpened"]);
   });
 
   it("sends to a test registration like a real one, and counts it apart (§12.6, §30)", async () => {
@@ -238,7 +240,7 @@ describe("§383 the forecast of automatic emails", () => {
     const g2 = await registration(g, "g2", "WAITLISTED");
 
     const rows = (await forecast()).filter((row) => row.eventId === g);
-    expect(rows.map((row) => row.send)).toEqual(["participation", "nextInLine"]);
+    expect(rows.map((row) => row.send)).toEqual(["participation", "holdLapsed", "nextInLine"]);
     expect(rows.find((row) => row.send === "nextInLine")?.registrationIds).toEqual([g2]);
     expect(rows.some((row) => row.send === "lastCall")).toBe(false);
 
@@ -311,6 +313,10 @@ describe("§383 the forecast of automatic emails", () => {
     expect(statuses.find((row) => row.id === k2)?.status).toBe("WAITLISTED");
     expect(await queued("WAITLIST_SPOT_OFFER")).not.toContain("k2");
     expect(await queued("COMPLETE_DECLARATION", ":sign-reminder")).not.toContain("k1");
+    // …and the person whose hold it was is told, as the forecast said (§NNN): the race is still ahead.
+    expect(rows.find((row) => row.send === "holdLapsed")?.registrationIds).toEqual([k1]);
+    // (The fixture's d1, lapsed at twenty hours with d2 waiting, is told on the same run.)
+    expect(await queued("DECLARATION_HOLD_EXPIRED")).toEqual(["d1", "k1"]);
   });
 
   /** The labels (registered names) of the registrations the outbox rows of one type are for, whose key ends as given. */
@@ -353,6 +359,11 @@ describe("§383 the forecast of automatic emails", () => {
         await runRegistrationMaintenance(db, when);
         return participantOnly("WAITLIST_SPOT_OFFER", "");
       }
+      // The person whose hold the same run releases (§NNN).
+      case "holdLapsed": {
+        await runRegistrationMaintenance(db, when);
+        return participantOnly("DECLARATION_HOLD_EXPIRED", ":hold-lapsed");
+      }
       case "registrationOpened": {
         const { queued: count } = await queueRegistrationOpenedMessages(db, when);
         return { ids: [], count };
@@ -366,7 +377,7 @@ describe("§383 the forecast of automatic emails", () => {
 
   it("matches, row by row, what the job's own code picks at that moment — and nothing a minute before", async () => {
     const rows = await forecast();
-    expect(rows).toHaveLength(5);
+    expect(rows).toHaveLength(6);
     const expected = new Map<ForecastRow, string[]>();
     for (const row of rows) expected.set(row, await labelsOf(row.registrationIds));
     expect(expected.get(rows.find((row) => row.send === "reminder") as ForecastRow)).toEqual(["a1", "a2"]);
@@ -378,8 +389,10 @@ describe("§383 the forecast of automatic emails", () => {
       const early = await jobAt(row, new Date(row.at.getTime() - MINUTE));
       expect(early.count, `${row.send} a minute early`).toBe(0);
     }
-    // The next in line is the person waiting.
-    await jobAt(rows[0], rows[0].at);
+    // The next in line is the person waiting; the one told is the person whose hold lapsed (§NNN).
+    const nextInLine = rows.find((row) => row.send === "nextInLine") as ForecastRow;
+    await jobAt(nextInLine, nextInLine.at);
     expect(await queued("WAITLIST_SPOT_OFFER")).toEqual(["d2"]);
+    expect(await queued("DECLARATION_HOLD_EXPIRED")).toEqual(["d1"]);
   });
 });

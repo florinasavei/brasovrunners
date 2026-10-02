@@ -1265,7 +1265,9 @@ started, with `expiry_reason = EVENT_STARTED`. No message is sent for it.
 `PENDING_DECLARATION -> EXPIRED` with `expiry_reason = DECLARATION_HOLD_LAPSED` happens only
 when the place is wanted, and to as many holds as are wanted: `wanted = waiting - free`
 places, released oldest deadline first, or every hold once the event has started or is
-`COMPLETED` (`DECISIONS.md` §160). Otherwise the hold outlives its deadline and the declaration
+`COMPLETED` (`DECISIONS.md` §160). The person whose hold is released to somebody who wanted
+the place is emailed, once per registration (`DECLARATION_HOLD_EXPIRED`, §NNN); a hold the start
+or a `COMPLETED` event releases is not. Otherwise the hold outlives its deadline and the declaration
 is signed online, or on paper at the desk, at any time before the start; a row the start
 expired is re-allocated by `confirmByStaff` rather than refused, so the desk still confirms
 it while a place is free. `WAITLIST_OFFERED -> EXPIRED` happens at the offer's deadline
@@ -2765,7 +2767,16 @@ REGISTRATION_OPENED
 CLUB_CONFIRMATION_NOTICE
 EVENT_UPDATE_NOTICE
 EVENT_CANCELLED
+DECLARATION_HOLD_EXPIRED
 ```
+
+`DECLARATION_HOLD_EXPIRED` (§NNN) is queued by `expireStaleHolds` in the transaction that
+releases a lapsed declaration hold to somebody who wanted the place (§10.5), whatever path ran it,
+once per registration (`registration:<id>:hold-lapsed`). It says the deadline that passed, whether
+the place went to the waiting list, and what the person can do now, read at send time: join the
+waiting list, register again, or nothing online — the desk gives free places on the day. No token,
+no «Nu mai pot ajunge»: the registration is over. Not for a hold the start releases, not for a
+cancelled event (§331), and never for a lapsed waiting-list offer, which stays silent.
 
 `EVENT_UPDATE_NOTICE` and `EVENT_CANCELLED` are never automatic (§331): the first goes only
 when an organizer ticks "Anunță participanții despre schimbare" on a save that moved the place,
