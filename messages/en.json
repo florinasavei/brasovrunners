@@ -2058,7 +2058,7 @@
       "waitlistAutoOffer": "Places from the waiting list are allocated automatically",
       "waitlistAutoOfferYes": "Yes",
       "waitlistAutoOfferNo": "No",
-      "waitlistAutoOfferHelp": "On “Yes”, a place that frees up or is added is allocated at once to the first person on the waiting list: they get the offer by email and confirm it by the deadline. On “No”, places stay free until you hand them out.",
+      "waitlistAutoOfferHelp": "On “Yes”, a freed or added place is offered at once, by email and with a deadline, to the first on the waiting list. On “No”, places stay free until you hand them out.",
       "waitlistAutoOfferHelpMore": "You hand them out from the “Registration queue” with “Send them the offer”, or at the desk with “Give a place”. While anyone waits, newcomers join the list too."
     },
     "preview": {
