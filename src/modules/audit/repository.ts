@@ -82,6 +82,13 @@ export type AuditAction =
    * waited before this person in the line (`aheadOf`) — never a name.
    */
   | "registration.offered_by_staff"
+  /**
+   * «Dă-i un loc acum» (§637): an Administrator vouched for the address of a registration still
+   * waiting for it and gave it a place ahead of the line, the declaration still the person's to sign.
+   * From and to, how many waited at that moment (`waiting`), and `familyReservation` when the place
+   * was the family's own reserved one — never a name or an address.
+   */
+  | "registration.address_vouched_by_staff"
   /** The participant is here (BR-REQ-037-08); by staff, or by themselves. */
   | "registration.checked_in"
   | "registration.checkin_undone"

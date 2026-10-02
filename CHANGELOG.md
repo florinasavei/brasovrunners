@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V2.60-2026-10-02
+
+- **«Dă-i un loc acum» for someone whose address was never confirmed** — an Administrator vouches for the address on the registration's page and gives a counted free place at once, ahead of the waiting list; the declaration email leaves straight away and the person only signs (online or on paper at the desk). A full race refuses it until a place is free: raise the capacity with the automatic offers on «Nu», or the added place goes to the waiting list. §637.
 ## BR-V2.59-2026-10-02
 
 - **The headline numbers count everyone with a place** — on a capped event «Cine vine (150)» adds those completing their registration to the confirmed, with «150 de înscriși — 134 de confirmați (120 cu numele afișat), 16 în curs de confirmare» under it, and the backoffice «Înscrieri» badge is everyone with a place, followed by a pill each for those completing their registration, those awaiting the email confirmation and the waiting list. §632.

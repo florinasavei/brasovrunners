@@ -1,4 +1,6 @@
-import { and, count, eq, gt, lt, lte } from "drizzle-orm";
+import { and, count, eq, gt, isNull, lt, lte } from "drizzle-orm";
+import { emailActionTokens } from "@/db/schema/email-action-tokens";
+import { emailOutbox } from "@/db/schema/email-outbox";
 import { type Participant, participants } from "@/db/schema/participants";
 import { familyPlaceHolds, familySittings } from "@/db/schema/family-entries";
 import type {
@@ -46,7 +48,7 @@ import { env } from "@/shared/config/env";
 import { CLUB_NAME } from "@/theme/brand";
 import { DomainError } from "@/shared/errors/domain-error";
 import { computeOccupied, computePublicAvailability, hasDirectAvailability, NoFreePlaceError } from "./domain/capacity";
-import { computeDeclarationHoldExpiry, computeFamilyReservationExpiry, computeWaitlistOfferExpiry, confirmationWindow } from "./domain/hold-deadlines";
+import { computeDeclarationHoldExpiry, computeFamilyReservationExpiry, computeVouchedPlaceExpiry, computeWaitlistOfferExpiry, confirmationWindow } from "./domain/hold-deadlines";
 import { newcomerJoinsLine, occupiedForNewcomer, offerAfterCloseError, waitlistFullError, waitlistHasRoom, waitlistLength, waitlistRoom } from "./domain/waitlist";
 import { canManageRegistrations, type StaffRole } from "@/modules/staff-identity/domain/roles";
 import { deriveAllowedResendMessageType } from "./domain/resend";
@@ -2727,6 +2729,182 @@ export async function confirmEmailOnAddress<T extends Record<string, unknown>>(
     }
     return { registration, alsoConfirmed };
   });
+}
+
+/**
+ * «Dă-i un loc acum» (§637; the owner, 2026-10-02: «Nu vreau să mai facă ea nimic!! Nu mai vreau să
+ * risc»; «trebuie să avem mereu portițe și scurtături din back-office»). A registration still waiting
+ * for its address — the verification email late, in Spam, or pressed when the line was already full
+ * (§348) — is given a place by an Administrator, remotely, in one press: the first half of the desk's
+ * «Confirmă pe hârtie» (§67), without the paper.
+ *
+ * Under the event lock, one transaction:
+ *
+ * 1. **Refused** unless the row is `PENDING_EMAIL_CONFIRMATION` of a local, scheduled event that has
+ *    not started (and whose date is not «to be announced», §533) — the desk's own event checks
+ *    (`assertRegistrationOpen(…, atTheDesk)`), plus the start: once the gun has gone a place given
+ *    remotely could not be signed for anywhere but the desk, which has its own verb. The public
+ *    window is not consulted, as at the desk: the club decides.
+ * 2. **The address vouched for**, exactly as the desk writes it: `email_confirmed_at` and
+ *    `email_confirmed_by_staff_user_id`; the participant's own `email_verified_at` stays unset — an
+ *    attestation is not a delivered click (BR-REQ-037-07 criterion 2). The row's live verification
+ *    link is spent in the same transaction (`used_at`), so the old email can no longer confirm the
+ *    row a second time and its page says where the registration stands — «sign the declaration» —
+ *    rather than "invalid" (`link-status.ts`, `ALREADY_USED`; §619's «replaced» needs a newer link of
+ *    the same purpose, and none exists: the new email carries the declaration's). A verification
+ *    email still waiting in the outbox, never tried, is withdrawn with it, so no late «confirm your
+ *    address» follows the declaration's email; a retry of one is withdrawn by the renderer.
+ * 3. **The place, ahead of the line.** The stale holds expire first (§10.6). A family's live
+ *    reservation (§543) is the row's own place, as the desk's allocator treats it, and the person's
+ *    own family-held place is released before the count, never counted against them. Otherwise the
+ *    place must be a counted free one — `computeOccupied(counts) < capacity`, or an uncapped event —
+ *    with §160's rule for a person wanting a place who is not in the line: one lapsed declaration hold
+ *    may go for it, as `allocateOrWaitlist` lets one go for a newcomer the full line refuses. **The
+ *    waiting list is not consulted for this row**: «while anybody waits every newcomer joins the line»
+ *    (§615 criterion 6) is the public door's rule; this is the club choosing a person, as «Trimite-i
+ *    oferta» is (§615 criterion 19). Nobody in the line moves and no place promised to anybody is taken.
+ * 4. **No counted free place**: the whole press is refused with `NoFreePlaceError` and its sentence
+ *    (§589, §592), and nothing is written — the Administrator raises «Număr de locuri» first. (The
+ *    sibling change `feat/offer-a-place-any-time-with-a-supplementary-place` adds an audited
+ *    supplementary place for this case; it is not on this branch's base, so this refuses instead.)
+ * 5. The row becomes `PENDING_DECLARATION` with `computeVouchedPlaceExpiry`'s deadline, the ordinary
+ *    `COMPLETE_DECLARATION` email is queued — `STARTS_DEADLINE` as anybody's (§513), marked to leave
+ *    now and sent by the caller's drain after the response (§596) — one audit row names who vouched,
+ *    and the maintenance job is told the deadline. Any other place the expiry released goes to the
+ *    line in the same transaction (`fillAvailableSpots`, a no-op on «Nu»), as after an offer.
+ *
+ * Nobody signs for the participant (`AGENTS.md` §15.11): she signs online from the email, or on
+ * paper at the desk, where «Confirmă pe hârtie» on a `PENDING_DECLARATION` row works as for anybody.
+ * `kind` is in no condition here (§30). The Administrator's (`canManageRegistrations`), asserted here
+ * and by the action: the Organizer reads registrations and changes none (§289).
+ */
+export async function givePlaceNowByStaff<T extends Record<string, unknown>>(
+  db: Database<T>,
+  event: EventForRegistration,
+  registrationId: string,
+  actor: { id: string; role: StaffRole },
+  now: Date,
+  /** The club's deadlines (§377); read here when the caller has none. */
+  given?: Deadlines,
+): Promise<Registration> {
+  if (!canManageRegistrations(actor.role)) {
+    throw new DomainError("FORBIDDEN", `role ${actor.role} may not give a place to an unconfirmed registration`);
+  }
+  const settings = given ?? (await currentDeadlines(db));
+  const result = await db.transaction(async (tx) => {
+    const lockedEvent = await repo.lockEventForCapacity(tx, event.id);
+    if (!lockedEvent) throw new DomainError("NOT_FOUND", "no such event");
+    const locked = withLockedRow(event, lockedEvent);
+    assertRegistrationOpen(locked, now, true);
+    if (locked.startsAt.getTime() <= now.getTime()) {
+      throw new DomainError("VALIDATION_ERROR", "the event has started: confirm at the desk instead");
+    }
+
+    const current = await repo.findRegistrationById(tx, registrationId);
+    if (!current || current.eventId !== event.id) throw new DomainError("NOT_FOUND", "no such registration");
+    if (current.status !== "PENDING_EMAIL_CONFIRMATION") {
+      throw new DomainError("CONFLICT", `only a registration waiting for its email confirmation can be given a place this way; this one is ${current.status}`);
+    }
+
+    // The row's own places first, as the allocator reads them (§543): never counted against it.
+    const reserved = await repo.holdsFamilyReservation(tx, current.id, now);
+    await releaseOwnFamilyPlaceHold(tx, event.id, current.id);
+    await repo.expireStaleHolds(tx, locked, now);
+    let counts = await repo.countOccupied(tx, event.id, now);
+    const hasRoom = () => locked.capacity === null || computeOccupied(counts) < locked.capacity;
+    if (!reserved && !hasRoom() && counts.lapsedDeclarationHolds > 0) {
+      // One more person wanting a place who is not in the line (§160): one lapsed hold may go for her.
+      await repo.expireStaleHolds(tx, locked, now, { wanting: 1 });
+      counts = await repo.countOccupied(tx, event.id, now);
+    }
+    if (!reserved && !hasRoom()) {
+      // No place beyond capacity, ever (§10.6, §592): the Administrator raises the places first.
+      throw new NoFreePlaceError(locked.capacity ?? 0, counts);
+    }
+    const waiting = await repo.countEligibleWaitlisted(tx, event.id);
+
+    const holdExpiresAt = computeVouchedPlaceExpiry({
+      now,
+      registrationClosesAt: locked.registrationClosesAt,
+      eventStartsAt: locked.startsAt,
+      window: confirmationWindow(locked),
+      deadlines: settings,
+    });
+    const placed = await repo.transitionRegistration(tx, {
+      id: current.id,
+      to: "PENDING_DECLARATION",
+      fromStatuses: ["PENDING_EMAIL_CONFIRMATION"],
+      // The desk's vouching, word for word (§67): who vouched, never `email_verified_at`.
+      changes: { emailConfirmedAt: now, emailConfirmedByStaffUserId: actor.id, holdExpiresAt },
+      now,
+    });
+    if (!placed) throw new DomainError("CONFLICT", "this registration changed state concurrently");
+
+    // The old verification link is spent: it can no longer confirm, and its page says «sign the declaration».
+    await tx
+      .update(emailActionTokens)
+      .set({ usedAt: now })
+      .where(
+        and(
+          eq(emailActionTokens.registrationId, current.id),
+          eq(emailActionTokens.purpose, "VERIFY_REGISTRATION_EMAIL"),
+          isNull(emailActionTokens.usedAt),
+          isNull(emailActionTokens.invalidatedAt),
+        ),
+      );
+    /*
+      And a verification email not yet sent is withdrawn (the review of 2026-10-02, finding 2): one the
+      outage, a Mailgun pause, the daily allowance or a family sitting (`SITTING_HELD`) kept waiting would
+      mint its link at render time and ask her, after the declaration's email, to confirm an address the
+      club has vouched for — the very step the owner wanted gone («Nu vreau să mai facă ea nimic»). Only
+      rows still waiting and never tried, as `family-sitting.ts` takes one back: a message that may have
+      left is not taken back here; the renderer withdraws a retry of it (`render.ts`, `OutboxMessageWithdrawn`).
+      Its club copy goes with it. A family sitting that held it reads the missing row as gone.
+    */
+    await tx
+      .delete(emailOutbox)
+      .where(
+        and(
+          eq(emailOutbox.registrationId, current.id),
+          eq(emailOutbox.messageType, "VERIFY_REGISTRATION_EMAIL"),
+          eq(emailOutbox.status, "PENDING"),
+          eq(emailOutbox.attemptCount, 0),
+        ),
+      );
+
+    const idempotencyKey = `registration:${placed.id}:address-vouched:${now.toISOString()}`;
+    await enqueueEmail(tx, {
+      participantId: placed.participantId,
+      registrationId: placed.id,
+      messageType: "COMPLETE_DECLARATION",
+      locale: placed.locale,
+      recipientEmail: await deliveryEmailOf(tx, placed.participantId),
+      // The message that starts the hold (§513), and leaves now: the owner asked for the place ASAP.
+      payload: markedForNow(startingDeadline(), "now"),
+      idempotencyKey,
+      now,
+      drainAfter: false,
+    });
+    const leaveNow = await outboxIdsForKey(tx, idempotencyKey);
+
+    await recordAuditEvent(tx, {
+      actorStaffUserId: actor.id,
+      participantId: placed.participantId,
+      action: "registration.address_vouched_by_staff",
+      entityType: "registration",
+      entityId: placed.id,
+      // How many waited when the place was given ahead of them, and whether it was a family's own reserved place.
+      metadata: { from: current.status, to: placed.status, waiting, ...(reserved ? { familyReservation: true } : {}) },
+      now,
+    });
+    // As after an offer: the expiry above may have freed another place, which is the line's (a no-op on «Nu»).
+    const offersMade = await fillAvailableSpots(tx, locked, now, settings);
+    return { placed, leaveNow, offersMade };
+  });
+  // After the response, once the place has committed (§596); an email failure never undoes it (§10.5 rule 10).
+  drainOutboxRowsAfterResponse(result.leaveNow);
+  wakeMaintenance(event, now, settings, result.placed.holdExpiresAt, result.offersMade > 0 ? offerDeadline(event, now, settings) : null);
+  return result.placed;
 }
 
 // --- §15.3 Declaration signing, and offer acceptance (the same act) ------------------------
