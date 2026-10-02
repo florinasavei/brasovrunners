@@ -28,6 +28,7 @@ const state = vi.hoisted(() => ({
   locale: "ro" as "ro" | "en",
   termsVersion: 3 as number | null,
   noticeDescribesEverything: true,
+  termsDescribeRefusal: false,
 }));
 
 vi.mock("next-intl/server", async () => {
@@ -115,7 +116,7 @@ async function render(view: PublicEventPage, door: RegistrationDoor = doorOf(vie
     locale: state.locale,
     now: NOW,
     word: catalogue.Event.previewDoor,
-    steps: { deadlines: DEFAULT_DEADLINES, familyOpen: true },
+    steps: { deadlines: DEFAULT_DEADLINES, familyOpen: true, refusalOn: state.termsDescribeRefusal },
   });
   return renderToStaticMarkup(node);
 }
@@ -124,6 +125,7 @@ beforeEach(() => {
   state.locale = "ro";
   state.termsVersion = 3;
   state.noticeDescribesEverything = true;
+  state.termsDescribeRefusal = false;
 });
 
 describe("§579 amended — which boxes the draft's settings switch on", () => {
@@ -207,6 +209,19 @@ describe("§579 amended — which boxes the draft's settings switch on", () => {
     const html = await render(draft());
     expect(html).toContain('data-testid="registration-terms-missing"');
     expect(html).toContain("(versiunea —)");
+  });
+
+  /** §636 — the express box names the club's refusal only while the terms in force carry it; §421's words otherwise. */
+  it("the terms in force with the refusal clause: the box names it, in both languages; without it, §421's words exactly", async () => {
+    const without = await render(draft());
+    expect(without).toContain("clauzele despre anularea sau modificarea evenimentului de către club, oprirea sau excluderea de pe traseu");
+    expect(without).not.toContain("refuzarea sau anularea unei înscrieri");
+    state.termsDescribeRefusal = true;
+    const withRefusal = await render(draft());
+    expect(withRefusal).toContain("de către club, refuzarea sau anularea unei înscrieri de către club, oprirea sau excluderea de pe traseu");
+    expect(withRefusal).toContain("(versiunea 3)");
+    state.locale = "en";
+    expect(await render(draft())).toContain("the club cancelling or changing an event, the club refusing or cancelling a registration, being stopped");
   });
 
   it("the English form of the same draft is in English", async () => {

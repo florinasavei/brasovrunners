@@ -50,6 +50,8 @@ export async function readRegistrationDoor(event: PublicEventPage, now: Date): P
   let waitlisted = 0;
   let confirmed: number | undefined;
   let occupied: number | undefined;
+  // «Arată public câți așteaptă» (§634), read from the entry the counts come from, so the two are one moment.
+  let waitlistCountPublic = true;
   /*
     Every page that shows a door is kept no longer than the door's next change (§549): the window
     opening or closing, the start, the confirmation window, the weather window — the page's card,
@@ -70,6 +72,7 @@ export async function readRegistrationDoor(event: PublicEventPage, now: Date): P
         waitlisted = availability.waitlisted ?? 0;
         confirmed = availability.confirmed;
         occupied = availability.occupied;
+        waitlistCountPublic = availability.waitlistCountPublic !== false;
       }
     } catch (error) {
       /*
@@ -91,9 +94,9 @@ export async function readRegistrationDoor(event: PublicEventPage, now: Date): P
 
   return {
     kind: "KNOWN",
-    cta: registrationCta({ ...event, availablePlaces, waitlistRoom, waitlistCapacity, waiting, offered, waitlisted }, now),
+    cta: registrationCta({ ...event, availablePlaces, waitlistRoom, waitlistCapacity, waiting, offered, waitlisted, waitlistCountPublic }, now),
     // In progress is counted from the occupied places, in every state (§615).
-    fill: publicFill(capacity, availablePlaces, { occupied, confirmed, waitlisted }),
+    fill: publicFill(capacity, availablePlaces, { occupied, confirmed, waitlisted, waitlistCountPublic }),
   };
 }
 
@@ -136,8 +139,12 @@ export async function draftRegistrationDoor<T extends Record<string, unknown>>(
   }
   return {
     kind: "KNOWN",
-    cta: registrationCta({ ...event, availablePlaces, waitlistRoom, waitlistCapacity: limits.waitlistCapacity, waiting, offered, waitlisted }, now),
-    fill: publicFill(limits.capacity, availablePlaces, { occupied, confirmed, waitlisted }),
+    // The draft's own «Arată public câți așteaptă» (§634): the preview says the count only as the saved page would.
+    cta: registrationCta(
+      { ...event, availablePlaces, waitlistRoom, waitlistCapacity: limits.waitlistCapacity, waiting, offered, waitlisted, waitlistCountPublic: event.waitlistCountPublic },
+      now,
+    ),
+    fill: publicFill(limits.capacity, availablePlaces, { occupied, confirmed, waitlisted, waitlistCountPublic: event.waitlistCountPublic }),
   };
 }
 

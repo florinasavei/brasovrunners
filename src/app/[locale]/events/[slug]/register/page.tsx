@@ -19,6 +19,7 @@ import {
   cachedPromotionalMaterialsOffered,
   cachedPromotionalMaterialsShared,
   cachedPublicAvailability,
+  cachedRefusalDisclosed,
 } from "@/modules/public-cache/reads";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
 import { isColdMiss, throughBreaker } from "@/modules/resilience/breaker";
@@ -253,7 +254,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   */
   let fullNotice: typeof WAITLIST_FULL | typeof NO_WAITLIST | "WAITLIST" | null = null;
   let offerHours: number | null = null;
-  let fullCounts: { capacity: number; waiting: number } | null = null;
+  // `waiting` null: the club keeps the line's count private (§634), and the title says no number.
+  let fullCounts: { capacity: number; waiting: number | null } | null = null;
   if (!submitted && !error && !resting) {
     try {
       const places = await cachedPublicAvailability(event.id, now);
@@ -261,7 +263,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
         fullNotice = places.waitlistCapacity === 0 ? NO_WAITLIST : places.waitlistRoom === 0 ? WAITLIST_FULL : "WAITLIST";
         if (fullNotice === "WAITLIST") {
           offerHours = (await cachedDeadlines()).offerHours;
-          fullCounts = { capacity: places.capacity, waiting: places.waiting ?? places.waitlisted ?? 0 };
+          fullCounts = { capacity: places.capacity, waiting: places.waitlistCountPublic === false ? null : (places.waiting ?? places.waitlisted ?? 0) };
         }
       }
     } catch (failure) {
@@ -302,6 +304,19 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   if (!resting) {
     try {
       [promoOn, promoShared] = await Promise.all([cachedPromotionalMaterialsOffered(now), cachedPromotionalMaterialsShared(now)]);
+    } catch (failure) {
+      unstable_rethrow(failure);
+    }
+  }
+  /*
+    §636: while the terms in force carry the club's right to refuse a registration (§618's grounds,
+    word for word, every language), the express box names that clause too. Off (or unread),
+    the box keeps §421's words exactly.
+  */
+  let refusalOn = false;
+  if (!resting) {
+    try {
+      refusalOn = await cachedRefusalDisclosed(now);
     } catch (failure) {
       unstable_rethrow(failure);
     }
@@ -586,7 +601,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
             locale,
             slug,
             now,
-            settings: { termsVersion, listStatesOn, listSocialsOn, promoOn, promoShared, capMax, familyOpen, siteKey },
+            settings: { termsVersion, refusalOn, listStatesOn, listSocialsOn, promoOn, promoShared, capMax, familyOpen, siteKey },
             address: member
               ? { kind: "member", email: member.email }
               : familyForm && sitting

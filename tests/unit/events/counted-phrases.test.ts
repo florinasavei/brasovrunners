@@ -2,7 +2,7 @@ import { createTranslator } from "next-intl";
 import { describe, expect, it } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
-import { confirmedPhrase, fillPhrase, waitlistOfferPhrase, waitlistRoomPhrase } from "@/modules/events/ui/counted-phrases";
+import { confirmedPhrase, fillPhrase, startListHeadline, waitlistOfferPhrase, waitlistRoomPhrase } from "@/modules/events/ui/counted-phrases";
 
 /**
  * §346 — the two counted sentences an event page can show, assembled from the real catalogues.
@@ -181,5 +181,41 @@ describe("§346 confirmedPhrase — the start list's own header line", () => {
     expect(confirmedPhrase(say, "en", { confirmed: 1, named: 1 })).toBe(
       "1 confirmed participant — 1 with their name shown",
     );
+  });
+});
+
+describe("§632 startListHeadline — the «Cine vine» title and line count everyone with a place", () => {
+  it("adds those completing their registration on a capped event, and says the split, in Romanian", () => {
+    const say = translator("ro");
+    // The owner's race of 2026-10-02.
+    expect(startListHeadline(say, "ro", { confirmed: 134, named: 120 }, { taken: 150, capacity: 150, confirmed: 134 })).toEqual({
+      count: 150,
+      inProgress: 16,
+      line: "150 de înscriși — 134 de confirmați (120 cu numele afișat), 16 în curs de confirmare",
+    });
+    expect(startListHeadline(say, "ro", { confirmed: 4, named: 3 }, { taken: 6, capacity: 10, confirmed: 4 }).line).toBe(
+      "6 înscriși — 4 confirmați (3 cu numele afișat), 2 în curs de confirmare",
+    );
+    expect(startListHeadline(say, "ro", { confirmed: 1, named: 1 }, { taken: 2, capacity: 10, confirmed: 1 }).line).toBe(
+      "2 înscriși — 1 confirmat (1 cu numele afișat), 1 în curs de confirmare",
+    );
+  });
+
+  it("says the same in English", () => {
+    const say = translator("en");
+    expect(startListHeadline(say, "en", { confirmed: 134, named: 120 }, { taken: 150, capacity: 150, confirmed: 134 }).line).toBe(
+      "150 registered — 134 confirmed (120 with their name shown), 16 completing their registration",
+    );
+  });
+
+  it("is today's title and line with nothing in progress, on an uncapped event, and from an entry without the counts", () => {
+    for (const locale of ["ro", "en"] as const) {
+      const say = translator(locale);
+      const counts = { confirmed: 134, named: 120 };
+      const today = { count: 134, inProgress: 0, line: confirmedPhrase(say, locale, counts) };
+      expect(startListHeadline(say, locale, counts, { taken: 134, capacity: 150, confirmed: 134 })).toEqual(today);
+      expect(startListHeadline(say, locale, counts, null)).toEqual(today);
+      expect(startListHeadline(say, locale, counts, { taken: 150, capacity: 150 })).toEqual(today);
+    }
   });
 });

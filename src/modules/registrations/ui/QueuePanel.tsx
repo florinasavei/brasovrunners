@@ -12,7 +12,8 @@ import { deadlineWords } from "@/modules/deadlines/domain/duration-words";
 import { deadlinesForThisRequest } from "@/modules/deadlines/request";
 import { computeOccupied } from "../domain/capacity";
 import { countOccupied } from "../repository";
-import { listFamilyReservationsForEvent, listQueueForEvent } from "../admin-repository";
+import { listFamilyReservationsForEvent, listQueueForEvent, readPlaceDeadlines } from "../admin-repository";
+import { PlaceDeadlineText, placeDeadlineLines } from "./PlaceDeadlines";
 import { familyOf } from "../family-marker";
 import FamilyChip from "./FamilyChip";
 import OfferPlaceButton from "./OfferPlaceButton";
@@ -51,6 +52,7 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
   now,
   offerAction,
   counts: knownCounts,
+  placeDeadlines: knownPlaceDeadlines,
 }: {
   db: Database<T>;
   /** `timezone` is the event's own zone, which every time on the panel is written in (§349). */
@@ -65,11 +67,19 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
   offerAction?: (previous: FormOutcome | null, form: FormData) => Promise<FormOutcome | null>;
   /** The event's `countOccupied`, when the page has already read it (§621) — one aggregate, not two. */
   counts?: Awaited<ReturnType<typeof countOccupied>>;
+  /** «Când se pierde un loc» (§635), when the page has already read it — the held places' sentences beside «Rezervate». */
+  placeDeadlines?: NonNullable<Awaited<ReturnType<typeof readPlaceDeadlines>>>;
 }) {
   const t = await getTranslations("Admin");
   const locale = await getLocale();
   // The hold and the offer the help sentences name: the club's (§377), the lengths new ones get.
-  const words = deadlineWords(locale, await deadlinesForThisRequest());
+  const clubDeadlines = await deadlinesForThisRequest();
+  const words = deadlineWords(locale, clubDeadlines);
+  // «Când se pierde un loc» (§635): the held places' part alone, in the event's zone like every time on the panel.
+  const heldDeadlines = knownPlaceDeadlines ?? (await readPlaceDeadlines(db, event.id, now));
+  const heldLines = heldDeadlines
+    ? placeDeadlineLines({ ...heldDeadlines, deadlines: clubDeadlines, now, timeZone: event.timezone, groups: ["held"], locale, t: (key, values) => t(key, values) })
+    : [];
   /*
     Inside the chip's words ("loc oferit, până la vin., 20 nov. 2026, 10:00"), short (§349), and
     in the event's own zone (§369), like every other time of the event: the offer's deadline is
@@ -138,6 +148,12 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
         {figure(t("queue.offeredFigure"), counts.unexpiredWaitlistOfferedHolds)}
         {figure(t("queue.waiting"), waiting)}
       </Stack>
+      {/* Beside «Rezervate»: until when the held places are kept, and what a passed deadline does (§635). */}
+      {heldLines.length > 0 && (
+        <Box sx={{ mb: 1 }}>
+          <PlaceDeadlineText lines={heldLines} testId="queue-place-deadlines" />
+        </Box>
+      )}
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         {t("queue.holdsHelp", { hold: words.hold, offer: words.offer })}
         <QuietHelp text={t("queue.holdsHelpMore")} />

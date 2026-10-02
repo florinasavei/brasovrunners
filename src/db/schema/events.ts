@@ -663,6 +663,15 @@ export const events = pgTable(
      */
     waitlistPublic: boolean("waitlist_public").notNull().default(false),
 
+    /**
+     * «Arată public câți așteaptă» (§634): whether the public card, the event page and each person
+     * on the waiting list are told how many wait. On by default — every event that exists keeps
+     * the sentences it had — and the club unticks it per event. A display switch over counts that
+     * exist anyway: the allocator and every queue read ignore it, and the backoffice counts stay.
+     * Independent of `waitlist_public`, which publishes names and answers a different question.
+     */
+    waitlistCountPublic: boolean("waitlist_count_public").notNull().default(true),
+
     // AGENTS.md §12.3. Nullable because every row that exists today was written by a seed
     // rather than by a person, and inventing an author for it would be a lie in the trail.
     createdByStaffUserId: uuid("created_by_staff_user_id").references(() => staffUsers.id, {

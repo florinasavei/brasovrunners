@@ -1,3 +1,4 @@
+import Box from "@mui/material/Box";
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
@@ -18,11 +19,14 @@ import {
   DEFAULT_CONFIRMATION_OPENS_DAYS,
 } from "@/modules/registrations/domain/hold-deadlines";
 import { REGISTRATION_MODE_LABEL } from "@/modules/staff-identity/domain/staff-labels";
-import { textFieldConstraints } from "@/shared/forms/constraints";
+import { htmlConstraints, textFieldConstraints } from "@/shared/forms/constraints";
 import RecallField from "@/shared/forms/recall";
 import CheckboxField from "@/shared/ui/CheckboxField";
+import InfoTip from "@/shared/ui/InfoTip";
 import Panel from "@/shared/ui/Panel";
 import { type EventFieldName, eventInputConstraints } from "../../constraints";
+import { waitlistLimitSchema } from "../../fields";
+import { WAITLIST_CHOICES, waitlistChoiceOf } from "../../waitlist-choice";
 import BibDesignPanel from "../BibDesignPanel";
 import {
   bibDesignSummary,
@@ -35,6 +39,7 @@ import {
 } from "../box-summaries";
 import OnlyForMode from "../OnlyForMode";
 import OnlyForType from "../OnlyForType";
+import WaitlistLimitOnly from "../WaitlistLimitOnly";
 import WallTimeField from "../WallTimeField";
 import { BoxNote, type BoxProps, RiskLine, SettingsReadOnly, summaryWords } from "./box-kit";
 import { DEFAULT_TIMEZONE } from "./WhenBox";
@@ -81,8 +86,9 @@ function box(field: EventFieldName, extra: Record<string, unknown> = {}) {
  * mode-dependent box carries a browser `required`: the server decides; and while hidden, the boxes
  * are read-only, so a `min` or a `pattern` left unmet out of sight never stops the save (`ShownWhen`).
  *
- * The waiting list's length sits beside the capacity (§350, the waiting-list cap), and "not here"
- * stores no length either.
+ * The waiting list sits beside the capacity (§350, the waiting-list cap), and "not here" stores no
+ * length either. Since §633 it is a select of three answers in words, with the number shown only
+ * under «Limitată la un număr de locuri».
  */
 export default async function RegistrationBox({
   event,
@@ -117,6 +123,8 @@ export default async function RegistrationBox({
   const zone = event?.timezone ?? DEFAULT_TIMEZONE;
   const initialType = event?.type ?? "GROUP_RUN";
   const initialMode = event?.registrationMode ?? "NONE";
+  // «Lista de așteptare» opens on what is stored (§633): null «Nelimitată», 0 «Fără listă», a count «Limitată».
+  const initialWaitlistChoice = waitlistChoiceOf(event?.waitlistCapacity);
   const declaration = declarations.find((option) => option.id === event?.declarationDocumentId) ?? null;
   const colour = BIB_COLOURS.find((choice) => choice.hex === event?.bibColour);
   const colourLabel = event?.bibColour ? (colour ? t(`editor.bibColours.${colour.key}`) : event.bibColour) : null;
@@ -237,10 +245,15 @@ export default async function RegistrationBox({
 
               <OnlyForMode mode="INTERNAL" initialMode={initialMode}>
                 <Stack spacing={2}>
-                  {/* The places and the waiting list's length side by side (§350, the waiting-list
-                      cap): the second only means anything once the first is set, and a row says
-                      they are one question. Stacked on a phone. Empty is no limit for both; 0 on
-                      the second is no waiting list at all. */}
+                  {/* The places and the waiting list side by side (§350, the waiting-list cap): the
+                      second only means anything once the first is set, and a row says they are one
+                      question. Stacked on a phone. Since §633 the waiting list is a choice in words —
+                      «Nelimitată», «Limitată la un număr de locuri», «Fără listă de așteptare» — and
+                      the number shows only under «Limitată» (`WaitlistLimitOnly`), where an empty box
+                      or a 0 means unlimited: a 0 never closes the list by accident. The select is
+                      native, as «Locurile din lista de așteptare se alocă automat» below, so the island
+                      can switch it; the three meanings are the «i» beside it. Boxes, not Stacks,
+                      inside the row: the row is one Stack, read as one by the form's tests. */}
                   <Stack direction={{ xs: "column", sm: "row" }} spacing={2} data-testid="capacity-row">
                     <RecallField
                       name="event.capacity"
@@ -254,14 +267,39 @@ export default async function RegistrationBox({
                       {...box("capacity", { inputMode: "numeric" })}
                       sx={{ flex: 1 }}
                     />
-                    <RecallField
-                      name="event.waitlistCapacity"
-                      label={t("editor.waitlistCapacity")}
-                      helperText={t("editor.waitlistCapacityHelp")}
-                      defaultValue={event?.waitlistCapacity ?? ""}
-                      {...box("waitlistCapacity", { inputMode: "numeric" })}
-                      sx={{ flex: 1 }}
-                    />
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Box sx={{ display: "flex", alignItems: "flex-start", gap: 0.5 }}>
+                        <RecallField
+                          select
+                          name="event.waitlistMode"
+                          label={t("editor.waitlistMode")}
+                          helperText={t("editor.waitlistModeHelp")}
+                          defaultValue={initialWaitlistChoice}
+                          slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
+                          sx={{ flex: 1, minWidth: 0 }}
+                          data-testid="waitlist-mode"
+                        >
+                          {WAITLIST_CHOICES.map((choice) => (
+                            <option key={choice} value={choice}>
+                              {t(`editor.waitlistModeChoices.${choice}`)}
+                            </option>
+                          ))}
+                        </RecallField>
+                        <InfoTip text={t("editor.waitlistModeTip")} />
+                      </Box>
+                      <WaitlistLimitOnly initialChoice={initialWaitlistChoice}>
+                        <RecallField
+                          name="event.waitlistCapacity"
+                          label={t("editor.waitlistCapacity")}
+                          helperText={t("editor.waitlistCapacityHelp")}
+                          // 0 is «Fără listă», not a limit: the box opens empty then, for a limit to be typed.
+                          defaultValue={event?.waitlistCapacity ? event.waitlistCapacity : ""}
+                          {...textFieldConstraints(htmlConstraints(waitlistLimitSchema), { inputMode: "numeric" })}
+                          fullWidth
+                          sx={{ mt: 2 }}
+                        />
+                      </WaitlistLimitOnly>
+                    </Box>
                   </Stack>
 
                   {/*

@@ -23,7 +23,8 @@ import ro from "../../../messages/ro.json";
  * `register-page-resting.test.ts` shape.
  */
 /** `waitlist`: the event's «Lista de așteptare e publică» (§628), on unless a test says otherwise. */
-const state = vi.hoisted(() => ({ locale: "ro" as "ro" | "en", list: false, familyOpen: false, waitlist: true }));
+/** `refusal`: the terms in force carry the club's right to refuse (§636), off unless a test says otherwise. */
+const state = vi.hoisted(() => ({ locale: "ro" as "ro" | "en", list: false, familyOpen: false, waitlist: true, refusal: false }));
 
 const EVENT = {
   id: "00000000-0000-4000-8000-000000000001",
@@ -78,6 +79,7 @@ vi.mock("@/modules/public-cache/reads", () => ({
   cachedCurrentApprovedDocument: async () => ({ version: 3 }),
   cachedListStatesDisclosed: async () => state.list,
   cachedListSocialsDisclosed: async () => state.list,
+  cachedRefusalDisclosed: async () => state.refusal,
   cachedPublicAvailability: async () => null,
   cachedPublishedEventBySlug: async () => ({ ...EVENT, participantListVisibility: state.list ? "NAMES" : "HIDDEN", waitlistPublic: state.waitlist }),
 }));
@@ -181,6 +183,7 @@ beforeEach(() => {
   state.list = false;
   state.waitlist = true;
   state.familyOpen = false;
+  state.refusal = false;
   forgetLastGood();
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
@@ -241,6 +244,26 @@ describe("§546 the registration form says only what a label cannot", () => {
     state.locale = "en";
     expect(textOf(await render())).toContain("One email address may register at most 4 people for an event, a family for instance.");
   });
+
+  /*
+    §636 — the express box names the club refusing or cancelling a registration only while the terms in
+    force carry it; otherwise §421's words, exactly. The version the tick names and the hidden field
+    that posts it are the same either way, and no help text is added.
+  */
+  for (const [locale, catalogue] of [["ro", ro], ["en", en]] as const) {
+    it(`names the club's refusal in the express box only while the terms in force carry it (${locale})`, async () => {
+      state.locale = locale;
+      const words = (key: "accept" | "acceptWithRefusal") => catalogue.Registration.terms[key].replace(/<\/?terms>/g, "").replace("{version}", "3");
+      const off = await render();
+      expect(textOf(off)).toContain(words("accept"));
+      expect(textOf(off)).not.toContain(words("acceptWithRefusal"));
+      state.refusal = true;
+      const on = await render();
+      expect(textOf(on)).toContain(words("acceptWithRefusal"));
+      expect(on).toContain('name="termsVersionShown" value="3"');
+      expect(helpShown(on, catalogue)).toEqual(helpShown(off, catalogue));
+    });
+  }
 
   it("keeps the words the form lost out of both catalogues, so nothing is left to drift", () => {
     for (const catalogue of [ro, en]) {

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.58-2026-10-02 -->
+<!-- PROJECT_BASELINE: BR-V2.59-2026-10-02 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V2.58-2026-10-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.59-2026-10-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1383,6 +1383,7 @@ else's: they are marked **YOURS**. Everything else below is a value, not a place
 | Când și unde | Link către punctul de întâlnire | a Google Maps link, https |
 | Înscrieri | Modul de înscriere | **Înscrieri pe site** |
 | Înscrieri | Număr de locuri | **YOURS** — how many runners the club can handle. Leave it empty only if there is genuinely no limit; the page then shows no number and the waiting list never engages |
+| Înscrieri | Lista de așteptare | **Nelimitată** — the list is private (§628) and an open-ended line costs the club nothing. The other answers: **Limitată la un număr de locuri** shows a box for how many may wait (empty or **0** there switches back to Nelimitată), and **Fără listă de așteptare** turns everyone away once the places are gone — the only answer that closes the list |
 | Înscrieri | Locurile din lista de așteptare se alocă automat | **Da** (the default) offers a freed or added place to the first person waiting at once. **Nu** leaves every such place to you: hand it out from «Coada de înscrieri» on the event's page with «Trimite-i oferta» (the ordinary offer and its email, to the person you choose), or at the desk with «Dă-i un loc»; while anyone waits, newcomers join the list. The recipe for a margin (say 200 medals, 150 places announced): keep **150** and **Da**; when the list forms, set **Nu**, raise the places by as many as you are about to hand out, then send the offers one by one — once nobody is left waiting, the places still free go to whoever registers next |
 | Înscrieri | Înscrierile se deschid | leave **empty** — entries open the moment the event is published |
 | Înscrieri | Înscrierile se închid | leave **empty** for "until the start", or a date if the club wants the list closed earlier |
@@ -1392,6 +1393,7 @@ else's: they are marked **YOURS**. Everything else below is a value, not a place
 | Înscrieri | Culoarea numerelor de concurs (BIB) | the band colour on the printed bib; any of the palette's |
 | Înscrieri | Declarația pe care o semnează participantul | the approved **EVENT_DECLARATION** — the only entry in the list on production |
 | Înscrieri | Publică lista participanților | leave **off**. It goes on only once the privacy notice describes it |
+| Înscrieri | Arată public câți așteaptă | suggested for the race: **untick it**. The card, the page and each person on the list then learn only that a waiting list exists and how to join it — no count and no place in the line (the newest is always last, so a place would be the count); you still see every number in the backoffice (§634) |
 | Traseu și detalii | Distanță, Denivelare, Dificultate, Suprafață, Cost | as the race is |
 | Română / English | Titlu, Adresa paginii, Rezumat | both languages — the event cannot be published with either missing |
 | Română / English | Regulamentul evenimentului | the race rules. Every entrant ticks "am citit regulamentul", and the emails link here |

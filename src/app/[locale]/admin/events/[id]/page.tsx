@@ -94,6 +94,8 @@ import { countInterests } from "@/modules/registrations/interest";
 import { computeOccupied } from "@/modules/registrations/domain/capacity";
 import { countEligibleWaitlisted, countOccupied, countRegistrationsForEvent, countTestRegistrationsForEvent } from "@/modules/registrations/repository";
 import QueuePanel from "@/modules/registrations/ui/QueuePanel";
+import PlaceDeadlines from "@/modules/registrations/ui/PlaceDeadlines";
+import { readPlaceDeadlines } from "@/modules/registrations/admin-repository";
 import { noFreePlaceValues, type PlacesTaken } from "@/modules/registrations/domain/capacity";
 import GroupRunDeclarationsPanel from "@/modules/group-run-declarations/ui/GroupRunDeclarationsPanel";
 import { listGroupRunDeclarations } from "@/modules/group-run-declarations/repository";
@@ -252,6 +254,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const occupiedCounts =
     internal && event.capacity !== null && canReadRegistrations(staffUser.role) ? await countOccupied(db, event.id, now) : null;
   const placesTaken = occupiedCounts === null ? null : computeOccupied(occupiedCounts);
+  // «Când se pierde un loc» (§635): the real rows waiting on each deadline, one grouped count, for the box and the queue panel.
+  const placeDeadlines = internal && canReadRegistrations(staffUser.role) ? await readPlaceDeadlines(db, event.id, now) : null;
 
   /*
     "Anunță participanții despre schimbare", and the cancellation's "tell them" (§331): how many
@@ -1055,6 +1059,11 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                         </GlyphButton>
                       </Stack>
 
+                      {/* «Când se pierde un loc» (§635): until when this event's people keep their place, and after —
+                          every part, the held places' too, although the queue panel below repeats those beside
+                          «Rezervate»: that fold starts closed (§336), and this block is the answer read without opening it. */}
+                      {placeDeadlines && <PlaceDeadlines event={placeDeadlines.event} counts={placeDeadlines.counts} deadlines={deadlines} now={now} timeZone={event.timezone} />}
+
                       {/* 16.0 — the declaration again, to everyone who has not signed (§606): beside the queue,
                           whose «Rezervate» counts them; one press, Administrator only, asks first. */}
                       {declarationResend && declarationResendConfirm && (
@@ -1086,6 +1095,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                           now={now}
                           offerAction={canManageRegistrations(staffUser.role) ? offerPlaceAction : undefined}
                           counts={occupiedCounts ?? undefined}
+                          placeDeadlines={placeDeadlines ?? undefined}
                         />
                         {interestsWaiting !== null && (
                           <Box sx={{ mt: 3 }}>

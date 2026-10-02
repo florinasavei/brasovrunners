@@ -448,7 +448,8 @@ async function renderRow(
   */
   if (row.messageType === "WAITLIST_JOINED" && registration) {
     const standing = await readWaitlistPosition(db, registration.id);
-    if (standing) data.waitlistStanding = { position: standing.position, length: standing.length, autoOffer: standing.autoOffer };
+    // With the count kept private (§634) the sentence says what the page says: `countPublic` travels with the rest.
+    if (standing) data.waitlistStanding = { position: standing.position, length: standing.length, autoOffer: standing.autoOffer, countPublic: standing.countPublic };
   }
   /*
     One cancellation email per person (§547): whether the person held a place or waited in line —
