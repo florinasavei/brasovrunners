@@ -4,6 +4,7 @@ import { cache } from "react";
 import { getDb } from "@/db/client";
 import { events } from "@/db/schema/events";
 import { formatDay } from "@/i18n/dates";
+import { startHeldBack } from "@/modules/events/domain/dated";
 import { deadlinesForThisRequest } from "@/modules/deadlines/request";
 import { noFreePlace, type PlacesTaken, placesTakenValues } from "./domain/capacity";
 import { computeWaitlistOfferExpiry } from "./domain/hold-deadlines";
@@ -24,6 +25,38 @@ export const placesTakenIfFull = cache(async (eventId: string): Promise<PlacesTa
   const [row] = await db.select({ capacity: events.capacity }).from(events).where(eq(events.id, eventId)).limit(1);
   if (!row || row.capacity === null) return null;
   return noFreePlace(row.capacity, await countOccupied(db, eventId, new Date()));
+});
+
+/**
+ * «Dă-i un loc acum» before the press (§NNN): null where the press is always refused — an event that
+ * is not local, not `SCHEDULED`, whose date is to be announced (§533) or that has started, the
+ * service's own refusals (`givePlaceNowByStaff`), so the button is not drawn there — and otherwise
+ * whether the question must say no place is free. Full reads as the service decides under the lock:
+ * the allocator's counts against the capacity, except that one lapsed declaration hold may go for
+ * this person (§160), so a full race with a lapsed hold is not "full" here. Once per event per
+ * request; a forecast only, the server decides.
+ */
+export const givePlaceNowAhead = cache(async (eventId: string): Promise<{ full: boolean } | null> => {
+  const db = getDb();
+  const [row] = await db
+    .select({
+      capacity: events.capacity,
+      registrationMode: events.registrationMode,
+      eventStatus: events.eventStatus,
+      startsAt: events.startsAt,
+      dateToBeAnnounced: events.dateToBeAnnounced,
+      timeToBeAnnounced: events.timeToBeAnnounced,
+    })
+    .from(events)
+    .where(eq(events.id, eventId))
+    .limit(1);
+  const now = new Date();
+  if (!row || row.registrationMode !== "INTERNAL" || row.eventStatus !== "SCHEDULED" || startHeldBack(row) || row.startsAt.getTime() <= now.getTime()) {
+    return null;
+  }
+  if (row.capacity === null) return { full: false };
+  const counts = await countOccupied(db, eventId, now);
+  return { full: noFreePlace(row.capacity, counts) !== null && counts.lapsedDeclarationHolds === 0 };
 });
 
 /**

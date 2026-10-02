@@ -14,6 +14,8 @@ import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository
 import { NoFreePlaceError } from "@/modules/registrations/domain/capacity";
 import { STARTS_DEADLINE } from "@/modules/notifications/domain/deadline-rebase";
 import { SENT_NOW_FLAG } from "@/modules/notifications/domain/send-at-once";
+import type { OutgoingEmail } from "@/infrastructure/email/adapter";
+import type { EmailSender } from "@/infrastructure/email/delivery";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { signingInput } from "../../helpers/declaration-signing";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
@@ -55,6 +57,9 @@ const { forgetCachedDeadlines } = await import("@/modules/deadlines/memo");
 const { issueActionToken } = await import("@/modules/action-tokens/repository");
 const { consumeAndConfirmEmail, readSpentRegistrationLink } = await import("@/modules/registrations/token-actions");
 const { readPublicPlaces } = await import("@/modules/registrations/service");
+const { processOutboxBatch } = await import("@/modules/notifications/outbox");
+const { createOutboxRenderer } = await import("@/modules/notifications/render");
+const { givePlaceNowAhead } = await import("@/modules/registrations/give-place-tip");
 
 type EventInput = Parameters<typeof submitRegistration>[1];
 
@@ -168,6 +173,38 @@ const declarationEmails = (registrationId: string) =>
   db.select().from(emailOutbox).where(and(eq(emailOutbox.registrationId, registrationId), eq(emailOutbox.messageType, "COMPLETE_DECLARATION")));
 const vouchedTrail = (registrationId: string) =>
   db.select().from(auditLogs).where(and(eq(auditLogs.action, "registration.address_vouched_by_staff"), eq(auditLogs.entityId, registrationId)));
+
+const verificationEmails = (registrationId: string) =>
+  db.select().from(emailOutbox).where(and(eq(emailOutbox.registrationId, registrationId), eq(emailOutbox.messageType, "VERIFY_REGISTRATION_EMAIL")));
+
+/** A provider that takes everything and remembers what it was handed. */
+function provider(): EmailSender & { calls: OutgoingEmail[] } {
+  const calls: OutgoingEmail[] = [];
+  return {
+    calls,
+    async send(message) {
+      calls.push(message);
+      return { outcome: "sent", providerMessageId: `id-${calls.length}` };
+    },
+  };
+}
+
+/** Lapse a declaration hold whose email has left (§160, §520): kept, still counted, releasable. */
+async function lapse(registrationId: string, at: Date) {
+  await db.update(emailOutbox).set({ status: "SENT", sentAt: at }).where(eq(emailOutbox.registrationId, registrationId));
+  await db.update(registrations).set({ holdExpiresAt: at }).where(eq(registrations.id, registrationId));
+}
+
+/** The page's forecast reads the wall clock: set it to the test's instant, the database's timers left alone. */
+async function atTheClock<R>(now: Date, work: () => Promise<R>): Promise<R> {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(now);
+  try {
+    return await work();
+  } finally {
+    vi.useRealTimers();
+  }
+}
 
 async function refusal(work: Promise<unknown>): Promise<unknown> {
   try {
@@ -368,5 +405,78 @@ describe("§NNN «Dă-i un loc acum»: the address vouched for, the place given 
     expect(trail.metadataJson).toMatchObject({ familyReservation: true });
     // Mihai keeps his reserved place: still two places taken, not three.
     expect((await readPublicPlaces(db, { id: event.id, capacity: 2, waitlistCapacity: null }, at(4))).occupied).toBe(2);
+  });
+
+  it("a verification email still waiting in the outbox is withdrawn: after the declaration, no late «confirm your address» (review finding 2)", async () => {
+    const event = await createEvent(3);
+    const mara = await unconfirmed(event, "Mara", 0);
+    // The outage's backlog: her verification email queued and never tried.
+    const [queued] = await verificationEmails(mara.id);
+    expect(queued).toMatchObject({ status: "PENDING", attemptCount: 0 });
+
+    await givePlaceToUnconfirmedByStaff(db, admin, mara.id, at(5));
+    expect(await verificationEmails(mara.id)).toEqual([]);
+
+    const mail = provider();
+    await processOutboxBatch(db, { sender: mail, render: createOutboxRenderer(), now: at(60) });
+    const keys = mail.calls.map((call) => call.idempotencyKey);
+    expect(keys).not.toContain(queued.idempotencyKey);
+    // The declaration's email is what she receives.
+    const [declaration] = await declarationEmails(mara.id);
+    expect(keys).toContain(declaration.idempotencyKey);
+  });
+
+  it("a verification email being retried is withdrawn by the renderer, never sent", async () => {
+    const event = await createEvent(3);
+    const mara = await unconfirmed(event, "Mara", 0);
+    const [queued] = await verificationEmails(mara.id);
+    // A transient failure before the press: tried once, waiting for its retry — the press leaves it, it may have left.
+    await db.update(emailOutbox).set({ attemptCount: 1, nextAttemptAt: null }).where(eq(emailOutbox.id, queued.id));
+
+    await givePlaceToUnconfirmedByStaff(db, admin, mara.id, at(5));
+    expect(await verificationEmails(mara.id)).toHaveLength(1);
+
+    const mail = provider();
+    await processOutboxBatch(db, { sender: mail, render: createOutboxRenderer(), now: at(60) });
+    expect(mail.calls.map((call) => call.idempotencyKey)).not.toContain(queued.idempotencyKey);
+    expect(await verificationEmails(mara.id)).toEqual([]);
+  });
+
+  it("a full race with a lapsed declaration hold and nobody waiting: the lapsed hold goes for her (§160), and the question does not say «full»", async () => {
+    const event = await createEvent(1);
+    const ana = await confirmedAddress(event, "Ana", 0);
+    expect(ana.status).toBe("PENDING_DECLARATION");
+    await lapse(ana.id, at(1));
+    const mara = await unconfirmed(event, "Mara", 2);
+    // The forecast agrees with the press: one lapsed hold may go, so the race is not "full" for her.
+    expect(await atTheClock(at(4), () => givePlaceNowAhead(event.id))).toEqual({ full: false });
+
+    const placed = await givePlaceToUnconfirmedByStaff(db, admin, mara.id, at(5));
+    expect(placed.status).toBe("PENDING_DECLARATION");
+    expect((await rowOf("Ana")).status).toBe("EXPIRED");
+    expect((await readPublicPlaces(db, { id: event.id, capacity: 1, waitlistCapacity: null }, at(6))).occupied).toBe(1);
+  });
+
+  it("the button is offered only where the press can succeed, and says «full» beforehand when it is", async () => {
+    const event = await createEvent(1);
+    await confirmedAddress(event, "Ana", 0);
+    const ahead = (eventId: string) => atTheClock(at(5), () => givePlaceNowAhead(eventId));
+    // A held place still within its deadline: full, and nothing lapsed to release.
+    expect(await ahead(event.id)).toEqual({ full: true });
+    await db.update(events).set({ capacity: 2 }).where(eq(events.id, event.id));
+    expect(await ahead(event.id)).toEqual({ full: false });
+
+    // A started, cancelled, date-to-be-announced or not local event: no button.
+    const started = await createEvent(2, { startsAt: at(1) });
+    expect(await ahead(started.id)).toBeNull();
+    const cancelled = await createEvent(2);
+    await db.update(events).set({ eventStatus: "CANCELLED" }).where(eq(events.id, cancelled.id));
+    expect(await ahead(cancelled.id)).toBeNull();
+    const announced = await createEvent(2);
+    await db.update(events).set({ dateToBeAnnounced: true }).where(eq(events.id, announced.id));
+    expect(await ahead(announced.id)).toBeNull();
+    const notLocal = await createEvent(null);
+    await db.update(events).set({ registrationMode: "NONE" }).where(eq(events.id, notLocal.id));
+    expect(await ahead(notLocal.id)).toBeNull();
   });
 });

@@ -5373,9 +5373,9 @@
             {
               "title": "Give a place to someone who did not confirm the address",
               "steps": [
-                "Open the registration: it says «Așteaptă confirmarea emailului» (the email never arrived, went to Spam, or the places were full when they pressed the link).",
+                "Open the registration: it says «Awaiting email confirmation» (the email never arrived, went to Spam, or the places were full when they pressed the link).",
                 "Press «Give them a place now». The window names the address you vouch for; press «Give them a place now» again.",
-                "The person gets the place and the declaration email at once, with the deadline in it. The old confirmation link no longer confirms anything.",
+                "The person gets the place and the declaration email at once, with the deadline in it. The old confirmation link no longer confirms anything, and a confirmation email still queued is not sent.",
                 "They sign the declaration: online, from the email, or on paper at the desk, where the volunteer presses «Confirm on paper». Nobody signs the declaration for them.",
                 "A free place is needed: with none, the press is refused. Raise «Capacity» first, then press again.",
                 "The people on the waiting list stay where they are. Check the address first: a wrong address holds the place until the deadline."

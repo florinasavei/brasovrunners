@@ -5375,7 +5375,7 @@
               "steps": [
                 "Deschide înscrierea: pe ea scrie «Așteaptă confirmarea emailului» (emailul n-a ajuns, a intrat în Spam sau, când a apăsat linkul, locurile erau pline).",
                 "Apasă «Dă-i un loc acum». Fereastra spune adresa pe care o garantezi; apasă din nou «Dă-i un loc acum».",
-                "Persoana primește imediat locul și emailul cu declarația, cu termenul scris în el. Linkul vechi de confirmare nu mai confirmă nimic.",
+                "Persoana primește imediat locul și emailul cu declarația, cu termenul scris în el. Linkul vechi de confirmare nu mai confirmă nimic, iar un email de confirmare încă la coadă nu mai pleacă.",
                 "Ea semnează declarația: online, din email, sau pe hârtie la masă, unde voluntarul apasă «Confirmă pe hârtie». Declarația nu o semnează nimeni în locul ei.",
                 "Trebuie un loc liber: dacă nu e niciunul, apăsarea e refuzată. Mărește întâi «Număr de locuri», apoi apasă din nou.",
                 "Cei de pe lista de așteptare rămân unde sunt. Verifică adresa înainte: o adresă greșită ține locul până la termen."

@@ -71,7 +71,7 @@ import { withSendNowChoice } from "@/modules/notifications/domain/send-at-once";
 import { sendNowChoiceFor } from "@/modules/notifications/send-now-choice";
 import GivePlaceButton from "@/modules/registrations/ui/GivePlaceButton";
 import OfferPlaceButton from "@/modules/registrations/ui/OfferPlaceButton";
-import { offerDeadlineIfMadeNow, placesTakenIfFull } from "@/modules/registrations/give-place-tip";
+import { givePlaceNowAhead, offerDeadlineIfMadeNow } from "@/modules/registrations/give-place-tip";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
@@ -130,18 +130,16 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   // «Trimite-i oferta»'s deadline in its question (§615): read only where the button can be drawn.
   const offerDeadline = registration.status === "WAITLISTED" && mayManage ? await offerDeadlineIfMadeNow(registration.eventId, locale) : null;
   /*
-    «Dă-i un loc acum» (§NNN): the Administrator's, on a row still waiting for its address. Its question
-    says beforehand when no place is free — the panel's counts, read once per event (§592's forecast);
-    a family's live reservation is the row's own place, so it is never "full" for it. The server decides.
+    «Dă-i un loc acum» (§NNN): the Administrator's, on a row still waiting for its address, and drawn only
+    where the press can succeed — a local, scheduled event with a date that has not started. Its question
+    says beforehand when no place is free — the allocator's counts, read once per event (§592's forecast),
+    a lapsed declaration hold not counted against her (§160); a family's live reservation is the row's
+    own place, so it is never "full" for it. The server decides.
   */
-  const givePlaceNow =
-    mayManage && registration.status === "PENDING_EMAIL_CONFIRMATION"
-      ? {
-          full:
-            !(registration.holdExpiresAt !== null && registration.holdExpiresAt > new Date()) &&
-            (await placesTakenIfFull(registration.eventId)) !== null,
-        }
-      : null;
+  const givePlaceNowFacts = mayManage && registration.status === "PENDING_EMAIL_CONFIRMATION" ? await givePlaceNowAhead(registration.eventId) : null;
+  const givePlaceNow = givePlaceNowFacts
+    ? { full: givePlaceNowFacts.full && !(registration.holdExpiresAt !== null && registration.holdExpiresAt > new Date()) }
+    : null;
   // The timeline's short form with the time (§349): a value beside its label, so capitalised;
   // `dtInline` inside a sentence.
   const dt = (value: Date | null) => (value ? formatDay(value, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true }) : null);

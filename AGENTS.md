@@ -1221,7 +1221,7 @@ Core invariants:
 4. declaration required before Confirmed;
 5. Confirmed plus holds consume capacity: every `PENDING_DECLARATION` hold, and every unexpired `WAITLIST_OFFERED` hold — a declaration hold past its deadline is kept, and keeps its place, until a place is wanted for somebody waiting, or the event starts or is `COMPLETED` (`DECISIONS.md` §160) — a `CANCELLED` event's holds are left standing, like the rest of its queue (§331); one waiter releases one hold, the oldest deadline first, never the event's whole stock of kept places;
 6. Pending email and Waitlisted do not occupy capacity, but eligible Waitlisted entries have allocation priority over later registrations;
-7. no capacity-changing transaction may let a later registration bypass that queue — the Administrator's own choice of a person («Trimite-i oferta», §615; «Dă-i un loc acum», §NNN), audited, is the one exception, and takes only a counted free place;
+7. no capacity-changing transaction may let a later registration bypass that queue;
 8. cancellation is idempotent;
 9. self-cancellation allowed before event start, with the participant's reason — one of three answers, and a short text for «Alt motiv» — at every door (`DECISIONS.md` §558);
 10. email failure does not roll back committed state;

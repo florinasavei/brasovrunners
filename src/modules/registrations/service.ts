@@ -1,5 +1,6 @@
 import { and, count, eq, gt, isNull, lt, lte } from "drizzle-orm";
 import { emailActionTokens } from "@/db/schema/email-action-tokens";
+import { emailOutbox } from "@/db/schema/email-outbox";
 import { type Participant, participants } from "@/db/schema/participants";
 import { familyPlaceHolds, familySittings } from "@/db/schema/family-entries";
 import type {
@@ -2750,7 +2751,9 @@ export async function confirmEmailOnAddress<T extends Record<string, unknown>>(
  *    link is spent in the same transaction (`used_at`), so the old email can no longer confirm the
  *    row a second time and its page says where the registration stands — «sign the declaration» —
  *    rather than "invalid" (`link-status.ts`, `ALREADY_USED`; §619's «replaced» needs a newer link of
- *    the same purpose, and none exists: the new email carries the declaration's).
+ *    the same purpose, and none exists: the new email carries the declaration's). A verification
+ *    email still waiting in the outbox, never tried, is withdrawn with it, so no late «confirm your
+ *    address» follows the declaration's email; a retry of one is withdrawn by the renderer.
  * 3. **The place, ahead of the line.** The stale holds expire first (§10.6). A family's live
  *    reservation (§543) is the row's own place, as the desk's allocator treats it, and the person's
  *    own family-held place is released before the count, never counted against them. Otherwise the
@@ -2847,6 +2850,25 @@ export async function givePlaceNowByStaff<T extends Record<string, unknown>>(
           eq(emailActionTokens.purpose, "VERIFY_REGISTRATION_EMAIL"),
           isNull(emailActionTokens.usedAt),
           isNull(emailActionTokens.invalidatedAt),
+        ),
+      );
+    /*
+      And a verification email not yet sent is withdrawn (the review of 2026-10-02, finding 2): one the
+      outage, a Mailgun pause, the daily allowance or a family sitting (`SITTING_HELD`) kept waiting would
+      mint its link at render time and ask her, after the declaration's email, to confirm an address the
+      club has vouched for — the very step the owner wanted gone («Nu vreau să mai facă ea nimic»). Only
+      rows still waiting and never tried, as `family-sitting.ts` takes one back: a message that may have
+      left is not taken back here; the renderer withdraws a retry of it (`render.ts`, `OutboxMessageWithdrawn`).
+      Its club copy goes with it. A family sitting that held it reads the missing row as gone.
+    */
+    await tx
+      .delete(emailOutbox)
+      .where(
+        and(
+          eq(emailOutbox.registrationId, current.id),
+          eq(emailOutbox.messageType, "VERIFY_REGISTRATION_EMAIL"),
+          eq(emailOutbox.status, "PENDING"),
+          eq(emailOutbox.attemptCount, 0),
         ),
       );
 
