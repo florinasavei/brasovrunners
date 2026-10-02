@@ -21,6 +21,7 @@ import {
   listEventsWithRegistrations,
   listRegistrationsForAdmin,
   listResubmissionMarks,
+  readPlaceDeadlines,
   REGISTRATION_SORT_KEYS,
   type RegistrationListRow,
   type RegistrationSortKey,
@@ -35,6 +36,8 @@ import { deriveAllowedResendMessageType } from "@/modules/registrations/domain/r
 import StaffJourney from "@/modules/registrations/ui/StaffJourney";
 import FamilyChip from "@/modules/registrations/ui/FamilyChip";
 import SummaryStrip from "@/modules/registrations/ui/SummaryStrip";
+import PlaceDeadlines from "@/modules/registrations/ui/PlaceDeadlines";
+import { deadlinesForThisRequest } from "@/modules/deadlines/request";
 import GlyphChip from "@/modules/events/ui/GlyphChip";
 import { familiesTogether, familyOf } from "@/modules/registrations/family-marker";
 import { canExportSponsorList, canManageRegistrations, canMessageParticipants, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
@@ -186,7 +189,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   filters.eventId = eventFilter.eventId;
   const featuredEvent = events.find((event) => event.featured) ?? null;
 
-  const [sortedRows, total, summary, bibs, voidBibs, sponsors] = await Promise.all([
+  const deadlinesNow = new Date();
+  const [sortedRows, total, summary, bibs, voidBibs, sponsors, placeDeadlines] = await Promise.all([
     listRegistrationsForAdmin(db, filters, {
       limit: query.limit,
       offset: query.offset,
@@ -216,6 +220,10 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     filters.eventId ? voidBibsFor(db, filters.eventId) : Promise.resolve([]),
     // «Descarcă lista pentru sponsori» for the chosen event (§570): the count only, for the roles that may take it.
     filters.eventId && canExportSponsorList(actor.role) ? sponsorListSummary(db, actor, { eventId: filters.eventId, now: new Date() }) : Promise.resolve(null),
+    // «Când se pierde un loc» (§NNN): one grouped count of the event's real rows, and the club's deadlines — one event only.
+    filters.eventId
+      ? Promise.all([readPlaceDeadlines(db, filters.eventId, deadlinesNow), deadlinesForThisRequest()]).then(([facts, deadlines]) => (facts ? { ...facts, deadlines } : null))
+      : Promise.resolve(null),
   ]);
 
   // A family's rows side by side (§588), where its first row falls in the chosen order; phone cards read the same rows.
@@ -951,6 +959,14 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           <GlyphChip glyph="membersOnly" color="primary" label={t("events.membersOnlyChip")} />
         )}
       </SummaryStrip>
+      {/*
+        «Când pierde lumea locul?» (§NNN; the owner, 2026-10-02): until when the people of this event
+        keep their place, and what a passed deadline does — right under the counts, and only when the list
+        is about one event; spanning all events, no single window or setting is true of every row.
+      */}
+      {placeDeadlines && (
+        <PlaceDeadlines event={placeDeadlines.event} counts={placeDeadlines.counts} deadlines={placeDeadlines.deadlines} now={deadlinesNow} timeZone={CLUB_TIME_ZONE} spaceAbove={1.5} />
+      )}
       {/*
         Why this number and the tab's badge can differ (§277). The badge counts the confirmed at
         everything still to come (§626); this list opens on one event, in every state. Both are right and the pair

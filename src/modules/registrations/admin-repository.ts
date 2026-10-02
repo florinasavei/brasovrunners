@@ -21,6 +21,7 @@ import { familyEmailQueued, familyReservationHolds, offerAwaitingItsFirstEmail }
 import { promoListed } from "./sponsor-list";
 import { healthNoteShown } from "./domain/health-note";
 import type { QueueOrder } from "./domain/waitlist";
+import type { PlaceDeadlineCounts, PlaceDeadlineEvent } from "./domain/place-deadlines";
 
 /**
  * Read queries for the Administrator-only backoffice (AGENTS.md §15.8, §15.10; BR-REQ-060-01,
@@ -104,6 +105,8 @@ export type RegistrationListRow = {
   waitlistedAt: Date | null;
   offerCreatedAt: Date | null;
   holdExpiresAt: Date | null;
+  /** When the first email's link lapses (§377): the journey's «linkul expiră …» on a row waiting for it (§NNN). A column of the row, no join. */
+  emailLinkExpiresAt: Date | null;
   declarationAcceptedAt: Date | null;
   cancelledAt: Date | null;
   /** The participant's own reason for cancelling (§558): the export's «Cancellation reason». Null on a staff cancellation. */
@@ -359,6 +362,7 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       waitlistedAt: registrations.waitlistedAt,
       offerCreatedAt: registrations.offerCreatedAt,
       holdExpiresAt: registrations.holdExpiresAt,
+      emailLinkExpiresAt: registrations.emailLinkExpiresAt,
       declarationAcceptedAt: latestDeclarationAcceptedAt,
       cancelledAt: registrations.cancelledAt,
       cancelReasonKind: registrations.cancelReasonKind,
@@ -561,6 +565,8 @@ export type RegistrationDetail = {
   waitlistedAt: Date | null;
   offerCreatedAt: Date | null;
   holdExpiresAt: Date | null;
+  /** When the first email's link lapses (§377), for the timeline's «Linkul din email expiră» on a row still waiting for it (§NNN). */
+  emailLinkExpiresAt: Date | null;
   confirmedAt: Date | null;
   cancelledAt: Date | null;
   cancellationSource: string | null;
@@ -659,6 +665,7 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       waitlistedAt: registrations.waitlistedAt,
       offerCreatedAt: registrations.offerCreatedAt,
       holdExpiresAt: registrations.holdExpiresAt,
+      emailLinkExpiresAt: registrations.emailLinkExpiresAt,
       confirmedAt: registrations.confirmedAt,
       cancelledAt: registrations.cancelledAt,
       cancellationSource: registrations.cancellationSource,
@@ -1277,3 +1284,46 @@ export async function listQueueForEvent<T extends Record<string, unknown>>(db: D
     .orderBy(asc(order === "SUBMITTED" ? formSentAt : registrations.waitlistedAt), asc(registrations.id));
 }
 
+
+/**
+ * What «Când se pierde un loc» needs about one event (§NNN; the owner, 2026-10-02: «Când pierde lumea
+ * locul? Trebuie să apară asta în back-office»): the event's window, limits, setting and close, and how
+ * many real registrations wait on each deadline — `domain/place-deadlines.ts` turns them into words.
+ *
+ * **One query**, the event's row with its registrations grouped by filtered counts, read once per page
+ * that shows the sentences: the list scoped to an event, the event's «Înscrierile primite», which hands
+ * it to the queue panel. Never per row. Real rows only: a test registration is in no number the club is
+ * given (§12.6) — this is a display count, never the allocator's (`countOccupied`, where `kind` is in
+ * no condition). The held places count by status, deadline or none, as `countOccupied` does (§160); an
+ * offer counts while its deadline is ahead or its email is still queued (§520), as the queue lists it.
+ * Null when the event does not exist.
+ */
+export async function readPlaceDeadlines<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+  now: Date,
+): Promise<{ event: PlaceDeadlineEvent; counts: PlaceDeadlineCounts } | null> {
+  const [row] = await db
+    .select({
+      startsAt: events.startsAt,
+      eventStatus: events.eventStatus,
+      registrationClosesAt: events.registrationClosesAt,
+      confirmationOpensDaysBefore: events.confirmationOpensDaysBefore,
+      confirmationDeadlineDaysBefore: events.confirmationDeadlineDaysBefore,
+      capacity: events.capacity,
+      waitlistCapacity: events.waitlistCapacity,
+      waitlistAutoOffer: events.waitlistAutoOffer,
+      held: sql<number>`count(${registrations.id}) filter (where ${registrations.status} = 'PENDING_DECLARATION')::int`,
+      heldPast: sql<number>`count(${registrations.id}) filter (where ${registrations.status} = 'PENDING_DECLARATION' and ${registrations.holdExpiresAt} <= ${now})::int`,
+      awaitingEmail: sql<number>`count(${registrations.id}) filter (where ${registrations.status} = 'PENDING_EMAIL_CONFIRMATION')::int`,
+      familyReserved: sql<number>`count(${registrations.id}) filter (where ${familyReservationHolds(now)})::int`,
+      offered: sql<number>`count(${registrations.id}) filter (where ${registrations.status} = 'WAITLIST_OFFERED' and (${registrations.holdExpiresAt} > ${now} or ${offerAwaitingItsFirstEmail(now)}))::int`,
+    })
+    .from(events)
+    .leftJoin(registrations, and(eq(registrations.eventId, events.id), eq(registrations.kind, "REAL")))
+    .where(eq(events.id, eventId))
+    .groupBy(events.id);
+  if (!row) return null;
+  const { held, heldPast, awaitingEmail, familyReserved, offered, ...event } = row;
+  return { event, counts: { held, heldPast, awaitingEmail, familyReserved, offered } };
+}

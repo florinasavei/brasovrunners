@@ -621,6 +621,8 @@
       "waitlisted": "Waitlisted",
       "offerCreated": "Offer created",
       "holdExpires": "Hold expires",
+      "holdKeeps": "Holds the place until",
+      "linkExpires": "The email's link expires",
       "confirmed": "Confirmed",
       "cancelled": "Cancelled",
       "cancelReasonLabel": "Cancellation reason",
@@ -800,7 +802,8 @@
       "journey": {
         "title": "The registration's journey",
         "held": "until {until}",
-        "heldKept": "deadline passed, the place is kept while nobody waits",
+        "holding": "holds the place until {until}",
+        "heldKept": "deadline passed, the place is kept while nobody asks for it",
         "offered": "place offered, until {until}",
         "waitlisted": "on the waiting list",
         "bib": "no. {number}",
@@ -810,7 +813,10 @@
         "progress": "{done} of {total} steps",
         "next": "next: {step}",
         "complete": "Every step done",
-        "legend": "The six steps of a registration:\n– 1 · Form sent — the person filled in the registration form.\n– 2 · Email confirmed — the address is confirmed: with the link from the email, or by staff at the desk.\n– 3 · Place held — has a held place, or is on the waiting list.\n– 4 · Declaration signed — signed the declaration, online or on paper.\n– 5 · Place confirmed — the registration is complete, with a place and a declaration.\n– 6 · Present at the race — came to the desk on race day and picked up the number.\nThe figure in the column shows how many steps the registration has reached."
+        "legend": "The six steps of a registration:\n– 1 · Form sent — the person filled in the registration form.\n– 2 · Email confirmed — the address is confirmed: with the link from the email, or by staff at the desk.\n– 3 · Place held — has a held place, or is on the waiting list.\n– 4 · Declaration signed — signed the declaration, online or on paper.\n– 5 · Place confirmed — the registration is complete, with a place and a declaration.\n– 6 · Present at the race — came to the desk on race day and picked up the number.\nThe figure in the column shows how many steps the registration has reached.",
+        "link": "the link expires {until}",
+        "linkLapsed": "the link has expired",
+        "reserved": "place reserved until {until}"
       },
       "exportExcel": "Export to Excel",
       "readOnlyNotice": "You can read the list, the export and the numbers, but not change them. On race day you work from “Race day”.",
@@ -874,7 +880,59 @@
       "promoOnly": "Only with offers and benefits",
       "promoOnlyHelp": "Those who ticked “offers and benefits”, with a registration that still stands. The export follows the filter.",
       "resendFamily": "Resend to the family",
-      "resendFamilyLong": "Send one email to {name}'s address, for everybody registered from it at the event"
+      "resendFamilyLong": "Send one email to {name}'s address, for everybody registered from it at the event",
+      "placeDeadlines": {
+        "title": "When a place is lost",
+        "heldUntil": {
+          "one": "One person has to sign the declaration and keeps the place until {due} ({before}).",
+          "few": "{count} people have to sign the declaration and keep their place until {due} ({before}).",
+          "other": "{count} people have to sign the declaration and keep their place until {due} ({before})."
+        },
+        "heldUntilStart": {
+          "one": "One person has to sign the declaration and keeps the place until the start.",
+          "few": "{count} people have to sign the declaration and keep their place until the start.",
+          "other": "{count} people have to sign the declaration and keep their place until the start."
+        },
+        "held": {
+          "one": "One person has to sign the declaration.",
+          "few": "{count} people have to sign the declaration.",
+          "other": "{count} people have to sign the declaration."
+        },
+        "windowKept": "Whoever confirmed their address before {opens} keeps the place until {due} ({before}).",
+        "windowKeptStart": "Whoever confirmed their address before {opens} keeps the place until the start.",
+        "holdNow": "Whoever confirms their address from now on has at most {hold} to sign, from when the email leaves.",
+        "heldPast": {
+          "one": "One person is past the deadline; the place is kept for them while nobody asks for it.",
+          "few": "{count} people are past the deadline; their places are kept while nobody asks for them.",
+          "other": "{count} people are past the deadline; their places are kept while nobody asks for them."
+        },
+        "releaseAuto": "Past the deadline a place is not lost by itself: it is released only when someone on the waiting list has no other free place, and offered to the first in line.",
+        "releaseManual": "Past the deadline a place is not lost by itself: it is released only when someone on the waiting list has no other free place, then stays free for «Send them the offer» or «Give a place».",
+        "releaseClosed": "Past the deadline a place is not lost by itself: it is released only when someone on the waiting list has no other free place; registration has closed, so give it at the desk with «Give a place».",
+        "releaseNoList": "Past the deadline a place is not lost by itself: it is released only when someone new asks for it and no other place is free.",
+        "releaseNever": "Past the deadline a place is not lost: the event has no limit of places.",
+        "atStart": "At the start, whoever has not signed loses the place; at the desk they can be confirmed on paper, if a place is still free.",
+        "emailLink": {
+          "one": "One person has not confirmed their address yet: the link is valid for {hours} from when the email leaves, then the registration expires; until then it holds no place.",
+          "few": "{count} people have not confirmed their address yet: the link is valid for {hours} from when the email leaves, then the registrations expire; until then they hold no place.",
+          "other": "{count} people have not confirmed their address yet: the link is valid for {hours} from when the email leaves, then the registrations expire; until then they hold no place."
+        },
+        "emailLinkFamily": {
+          "one": "One person has not confirmed their address yet: the link is valid for {hours} from when the email leaves, then the registration expires; until then it holds a place only if a family reserved it.",
+          "few": "{count} people have not confirmed their address yet: the link is valid for {hours} from when the email leaves, then the registrations expire; until then only those a family reserved hold a place.",
+          "other": "{count} people have not confirmed their address yet: the link is valid for {hours} from when the email leaves, then the registrations expire; until then only those a family reserved hold a place."
+        },
+        "offerAuto": {
+          "one": "One person has an offer from the waiting list, valid for at most {hours} from when the email leaves; unsigned in time, it goes to the next in line while registration is open.",
+          "few": "{count} people have an offer from the waiting list, each valid for at most {hours} from when the email leaves; unsigned in time, it goes to the next in line while registration is open.",
+          "other": "{count} people have an offer from the waiting list, each valid for at most {hours} from when the email leaves; unsigned in time, it goes to the next in line while registration is open."
+        },
+        "offerManual": {
+          "one": "One person has an offer from the waiting list, valid for at most {hours} from when the email leaves; unsigned in time, the place stays free until you give it.",
+          "few": "{count} people have an offer from the waiting list, each valid for at most {hours} from when the email leaves; unsigned in time, the place stays free until you give it.",
+          "other": "{count} people have an offer from the waiting list, each valid for at most {hours} from when the email leaves; unsigned in time, the place stays free until you give it."
+        }
+      }
     },
     "events": {
       "empty": "There is no event in the database.",
@@ -5312,6 +5370,7 @@
                 "Mind: each gets a new link, and the link in the earlier email stops working. Tell them to open the newest email.",
                 "Tell them to look for the email in Spam and in Promotions too.",
                 "At most three presses an hour per event. An “i” beside the button says when a press would be refused: the event is cancelled, finished or has started, or the hour's presses are spent.",
+                "Who loses a place, and when: in «Registrations», a race's list says under «Who has signed up» until when places are kept and what follows the deadline; the «How far» column has each one's.",
                 "One person only: open their registration → «Resend email»."
               ]
             },
