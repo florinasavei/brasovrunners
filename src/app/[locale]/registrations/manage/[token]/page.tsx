@@ -48,6 +48,7 @@ import {
 } from "./actions";
 import { DENSITY } from "@/theme/density";
 import FamilyChip from "@/modules/registrations/ui/FamilyChip";
+import { waitlistStandingPhrase } from "@/modules/registrations/ui/waitlist-position-words";
 
 type Props = {
   params: Promise<{ locale: string; token: string }>;
@@ -228,6 +229,24 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                       data-testid="manage-person-state"
                     />
                   </Stack>
+                )}
+
+                {/*
+                  Where a waiting person stands (§629; the owner: „Ești pe locul 3 din 10”): the state's own words as the heading of a
+                  one-person page — a family's card has the state chip — and the sentence under it. The
+                  place only while offers go out in order; when the club chooses, only how many others wait.
+                  Nobody else is named.
+                */}
+                {one.status === "WAITLISTED" && one.waitlistStanding && (
+                  <Box sx={{ mb: 2 }} data-testid="manage-waitlist">
+                    {!family && (
+                      <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
+                        {t("mine.status.WAITLISTED")}
+                      </Typography>
+                    )}
+                    <Typography data-testid="waitlist-position">{waitlistStandingPhrase(t, locale, one.waitlistStanding)}</Typography>
+                    {!family && <Divider sx={{ mt: 3 }} />}
+                  </Box>
                 )}
 
                 {confirmed && (

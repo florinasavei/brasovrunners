@@ -234,7 +234,7 @@ export type AuditAction =
    */
   | "event.repeat_publish_changed"
   /**
-   * «Ofertele din lista de așteptare pleacă automat» switched (§615): from and to, on every date a
+   * «Locurile din lista de așteptare se alocă automat» switched (§615): from and to, on every date a
    * save changed it — the editor's own date and each date of a series the scoped save carried it to.
    */
   | "event.waitlist_auto_offer_changed"

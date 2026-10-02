@@ -40,8 +40,8 @@ import { queueOrderFor } from "../domain/waitlist";
  * allocator will not honour as if it did. Backoffice only: no time of anybody's reaches the public list.
  *
  * Each waiting row carries «Trimite-i oferta» for the Administrator (`offerAction`, §615): the ordinary
- * offer to the person chosen, ahead of the line — the way places are handed out on an event whose
- * offers do not go out on their own. Drawn while registration is open (an offer after the close would
+ * offer to the person chosen, ahead of the line — the way places are handed out on an event where
+ * places from the waiting list are allocated by hand. Drawn while registration is open (an offer after the close would
  * already be lapsed); the service asserts the role and decides again under the lock.
  */
 export default async function QueuePanel<T extends Record<string, unknown>>({

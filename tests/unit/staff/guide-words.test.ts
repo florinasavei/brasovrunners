@@ -222,14 +222,14 @@ describe("BR-REQ-060-01 criterion 38 the guide quotes the screen's own words", (
         "Planul Mailgun, înainte și după cursă": ["«Limita pe oră»", "«Prin ce pleacă emailurile: Mailgun sau Gmail-ul clubului»", "«Cât costă»"],
         "Emailurile întârzie sau Mailgun a refuzat": ["«Trimise în ultima oră:»", "«Trimite acum»", "Spam"],
         "Retrimite declarația celor care nu au semnat": ["«Retrimite declarația tuturor care nu au semnat»", "Spam"],
-        "Alege tu cine primește un loc eliberat": ["«Ofertele din lista de așteptare pleacă automat»", "«Trimite-i oferta»", "«Dă-i un loc»"],
+        "Alege tu cine primește un loc eliberat": ["«Locurile din lista de așteptare se alocă automat»", "«Trimite-i oferta»", "«Dă-i un loc»"],
         "Ce NU se poate face": ["fără semnătura lui", "«Dă-i un loc»"],
       },
       en: {
         "The Mailgun plan, before and after a race": ["«Hourly limit»", "«How emails leave: Mailgun or the club's Gmail»", "«What it costs»"],
         "Emails are late, or Mailgun refused": ["«Sent in the last hour:»", "«Send now»", "Spam"],
         "Resend the declaration to those who have not signed": ["«Resend the declaration to everyone who has not signed»", "Spam"],
-        "Choose who gets a freed place": ["«Waiting-list offers go out automatically»", "«Send them the offer»", "«Give a place»"],
+        "Choose who gets a freed place": ["«Places from the waiting list are allocated automatically»", "«Send them the offer»", "«Give a place»"],
         "What cannot be done": ["without their own signature", "«Give a place»"],
       },
     } as const;

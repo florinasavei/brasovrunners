@@ -6,7 +6,8 @@ import { isUuid } from "@/shared/ids";
 import { isMinorOn } from "./domain/age";
 import { compareFamilyOrder, withFamilyRank } from "./domain/family-sitting";
 import { sittingOrderFor } from "./family-sitting";
-import { findRegistrationById } from "./repository";
+import type { WaitlistStanding } from "./domain/waitlist-standing";
+import { findRegistrationById, readWaitlistPosition } from "./repository";
 
 /**
  * «Gestionează înscrierea» per person (§547, amending §77 and §471; the owner, 2026-09-28, walking a
@@ -59,6 +60,11 @@ export type ManagedPerson = {
   declarationMethod: "EMAIL_LINK" | "PAPER" | null;
   /** The registration the link itself names. */
   own: boolean;
+  /**
+   * Where a waiting person stands in the line (§629, `readWaitlistPosition`): their place, the line's
+   * length and how freed places are given. Null unless the registration is `WAITLISTED`.
+   */
+  waitlistStanding: WaitlistStanding | null;
 };
 
 /**
@@ -101,6 +107,10 @@ export async function listManagedPeople<T extends Record<string, unknown>>(db: D
     for (const row of acceptances) if (row.registrationId && !methods.has(row.registrationId)) methods.set(row.registrationId, row.method);
   }
   const ordered = withFamilyRank(rows, await sittingOrderFor(db, own.participantId, own.eventId)).sort(compareFamilyOrder);
+  // Only a waiting row asks where it stands (§629): one read each, from the one reader the other pages use.
+  const standings = new Map<string, WaitlistStanding | null>(
+    await Promise.all(ordered.filter((row) => row.status === "WAITLISTED").map(async (row) => [row.id, await readWaitlistPosition(db, row.id)] as const)),
+  );
   return ordered.map((row) => ({
     id: row.id,
     registeredName: row.registeredName,
@@ -116,6 +126,7 @@ export async function listManagedPeople<T extends Record<string, unknown>>(db: D
     anotherAdult: anotherAdultOnTheLink(own, row, now),
     declarationMethod: methods.get(row.id) ?? null,
     own: row.id === own.id,
+    waitlistStanding: standings.get(row.id) ?? null,
   }));
 }
 

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V2.57-2026-10-02 -->
+<!-- PROJECT_BASELINE: BR-V2.58-2026-10-02 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V2.57-2026-10-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V2.58-2026-10-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1383,7 +1383,7 @@ else's: they are marked **YOURS**. Everything else below is a value, not a place
 | Când și unde | Link către punctul de întâlnire | a Google Maps link, https |
 | Înscrieri | Modul de înscriere | **Înscrieri pe site** |
 | Înscrieri | Număr de locuri | **YOURS** — how many runners the club can handle. Leave it empty only if there is genuinely no limit; the page then shows no number and the waiting list never engages |
-| Înscrieri | Ofertele din lista de așteptare pleacă automat | **Da** (the default) offers a freed or added place to the first person waiting at once. **Nu** leaves every such place to you: hand it out from «Coada de înscrieri» on the event's page with «Trimite-i oferta» (the ordinary offer and its email, to the person you choose), or at the desk with «Dă-i un loc»; while anyone waits, newcomers join the list. The recipe for a margin (say 200 medals, 150 places announced): keep **150** and **Da**; when the list forms, set **Nu**, raise the places by as many as you are about to hand out, then send the offers one by one — once nobody is left waiting, the places still free go to whoever registers next |
+| Înscrieri | Locurile din lista de așteptare se alocă automat | **Da** (the default) offers a freed or added place to the first person waiting at once. **Nu** leaves every such place to you: hand it out from «Coada de înscrieri» on the event's page with «Trimite-i oferta» (the ordinary offer and its email, to the person you choose), or at the desk with «Dă-i un loc»; while anyone waits, newcomers join the list. The recipe for a margin (say 200 medals, 150 places announced): keep **150** and **Da**; when the list forms, set **Nu**, raise the places by as many as you are about to hand out, then send the offers one by one — once nobody is left waiting, the places still free go to whoever registers next |
 | Înscrieri | Înscrierile se deschid | leave **empty** — entries open the moment the event is published |
 | Înscrieri | Înscrierile se închid | leave **empty** for "until the start", or a date if the club wants the list closed earlier |
 | Înscrieri | Confirmarea participării: cu câte zile înainte se cere | **YOURS** — the default **7** asks everyone to confirm a week out |

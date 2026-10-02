@@ -879,7 +879,7 @@ export async function fillAvailableSpots<T extends Record<string, unknown>>(
   // A completed event is over: its lapsed holds go as before, and nobody is offered a place in it.
   if (event.eventStatus !== "SCHEDULED") return 0;
   /*
-    «Ofertele din lista de așteptare pleacă automat» — «Nu» (§615, amending §104, §587 and §589): the
+    «Locurile din lista de așteptare se alocă automat» — «Nu» (§615, amending §104, §587 and §589): the
     organizer hands out every freed or added place, to the person of their choice («Trimite-i oferta»,
     `offerPlaceToByStaff`) or to a walk-in at the desk («Dă-i un loc»). The one gate, here and nowhere
     else: every path that frees or adds a place — a cancellation, an offer's expiry or decline, an
