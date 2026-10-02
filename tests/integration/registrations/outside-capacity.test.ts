@@ -12,7 +12,7 @@ import { registrations } from "@/db/schema/registrations";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
-import { computeOccupied, NoFreePlaceError } from "@/modules/registrations/domain/capacity";
+import { computeOccupied, NoFreePlaceError, SUPPLEMENTARY_PLACE_UNCONFIRMED, supplementaryPlaceRefusalOutcome } from "@/modules/registrations/domain/capacity";
 import { publicFill } from "@/modules/events/domain/registration-cta";
 import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
 import { computeDeclarationHoldExpiry, confirmationWindow } from "@/modules/registrations/domain/hold-deadlines";
@@ -457,8 +457,9 @@ describe("§NNN the review of 2026-10-02: the line first, the other doors, the o
     const placed = await givePlaceToUnconfirmedByStaff(db, admin, guest.id, at(5));
     expect(placed.status).toBe("PENDING_DECLARATION");
     expect(await occupied(event.id, at(6))).toBe(1);
-    // A counted row on the same full event is still refused, with §589's numbers.
-    expect(await refusal(givePlaceToUnconfirmedByStaff(db, admin, counted.id, at(6)))).toBeInstanceOf(NoFreePlaceError);
+    // A counted row on the same full event is still refused: without the confirmed supplementary place
+    // («Trimite-i oferta» at any moment, §642) the press is refused as unconfirmed and writes nothing.
+    expect(supplementaryPlaceRefusalOutcome(await refusal(givePlaceToUnconfirmedByStaff(db, admin, counted.id, at(6))))).toEqual({ error: SUPPLEMENTARY_PLACE_UNCONFIRMED });
   });
 
   it("the export follows the «În afara locurilor» pill: the file is the rows on screen", async () => {

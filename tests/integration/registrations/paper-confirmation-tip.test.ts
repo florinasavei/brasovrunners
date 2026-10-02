@@ -55,6 +55,9 @@ vi.mock("@/modules/staff-identity/session", () => ({
   requireStaffCapability: async () => state.actor,
 }));
 vi.mock("@/app/[locale]/admin/registrations/actions", () => ({
+  setOutsideCapacityAction: vi.fn(),
+  resendRegistrationEmailAction: vi.fn(),
+  givePlaceNowAction: vi.fn(),
   bulkCancelRegistrationsAction: vi.fn(),
   bulkDeleteRegistrationsAction: vi.fn(),
   markBibsPrintedAction: vi.fn(),
@@ -206,17 +209,17 @@ describe("§NNN the tip's four lines", () => {
 describe("§NNN the lines are true of every row the press is offered on", () => {
   // What the press queues on the waiting list is nothing: the allocator sends no email, and the declaration stays unrecorded.
   const waitingPhrase = {
-    ro: { email: "niciun email acum", dialog: "fără email acum", guide: "nu primește niciun email acum și oferta vine pe email când primește un loc" },
-    en: { email: "no email now", dialog: "no email yet", guide: "get no email now, and the offer comes by email when they are given a place" },
+    ro: { email: "niciun email acum", dialog: "fără email acum", guide: "nu primește niciun email acum și oferta vine pe email dacă i se oferă loc" },
+    en: { email: "no email now", dialog: "no email yet", guide: "get no email now, and the offer comes by email if they are offered a place" },
   } as const;
   for (const locale of ["ro", "en"] as const) {
-    it(`${locale}: the lines say the waiting list gets no email now and the offer when given a place; none promises a waiting-list email or a confirmation unconditionally`, () => {
+    it(`${locale}: the lines say the waiting list gets no email now and the offer if offered a place; none promises a waiting-list email or a confirmation unconditionally`, () => {
       const email = desk(locale, "paperEmail");
       const phrase = waitingPhrase[locale];
       // A row waiting for its address gets it recorded on the staff member's name before the allocator may waitlist it.
       expect(email, "the address's condition is kept: only an unconfirmed address is recorded on the staff member's name").toMatch(locale === "ro" ? /neconfirmat/i : /unconfirmed/i);
       expect(email, "never «either way»").not.toMatch(/oricum|either way/);
-      expect(email, "the offer comes when the person is given a place, not whenever one frees").toMatch(locale === "ro" ? /când primește un loc/ : /when given a place/);
+      expect(email, "the offer comes if the person is offered a place, not whenever one frees").toMatch(locale === "ro" ? /dacă i se oferă loc/ : /if offered a place/);
       expect(email, "never «a place frees»").not.toMatch(/un loc liber|a place frees/);
       expect(email, "the waiting list is named, with no email").toContain(phrase.email);
       expect(email.toLowerCase(), "never «nothing is recorded»").not.toMatch(/nu se înregistrează nimic|nothing is recorded/);

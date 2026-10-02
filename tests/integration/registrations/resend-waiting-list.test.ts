@@ -47,6 +47,9 @@ vi.mock("@/modules/staff-identity/session", () => ({
   requireStaffCapability: async () => state.actor,
 }));
 vi.mock("@/app/[locale]/admin/registrations/actions", () => ({
+  setOutsideCapacityAction: vi.fn(),
+  resendRegistrationEmailAction: vi.fn(),
+  givePlaceNowAction: vi.fn(),
   bulkCancelRegistrationsAction: vi.fn(),
   bulkDeleteRegistrationsAction: vi.fn(),
   markBibsPrintedAction: vi.fn(),

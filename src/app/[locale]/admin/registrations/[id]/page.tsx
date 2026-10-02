@@ -143,10 +143,10 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   /*
     «Dă-i un loc acum» (§637): the Administrator's, on a row still waiting for its address, and drawn only
     where the press can succeed — a local, scheduled event with a date that has not started. Its question
-    says beforehand when no place is free, and the capacity the supplementary place raises it to (§NNN) —
+    says beforehand when no place is free, and the capacity the supplementary place raises it to (§642) —
     the allocator's counts, read once per event (§592's forecast), a lapsed declaration hold not counted
     against her (§160); a family's live reservation is the row's own place, so it is never "full" for it;
-    nor is a row «În afara locurilor» (§NNN), which needs no counted place. The server decides.
+    nor is a row «În afara locurilor» (§643), which needs no counted place. The server decides.
   */
   const givePlaceNowFacts = mayManage && registration.status === "PENDING_EMAIL_CONFIRMATION" ? await givePlaceNowAhead(registration.eventId) : null;
   const givePlaceNow = givePlaceNowFacts

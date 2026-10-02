@@ -2670,8 +2670,8 @@ BR-REQ-037-05):
      `givePlaceNowByStaff` writes the desk's vouching (`email_confirmed_by_staff_user_id`), spends
      the row's verification link, and gives the place ahead of the waiting list under the event
      lock — a counted free place, or on a full race one supplementary place added as «Trimite-i
-     oferta» adds it (`event.capacity_raised_for_place_now`, §NNN); a row «În afara locurilor» needs
-     none (§NNN) — as `PENDING_DECLARATION` with the
+     oferta» adds it (`event.capacity_raised_for_place_now`, §642); a row «În afara locurilor» needs
+     none (§643) — as `PENDING_DECLARATION` with the
      ordinary declaration email. Audited (`registration.address_vouched_by_staff`) under the
      Administrator's id. The participant still signs their own declaration, online or on paper.
    - **An offer to a chosen person** («Trimite-i oferta», `offerPlaceToByStaff`, `DECISIONS.md`

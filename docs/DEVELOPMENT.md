@@ -188,7 +188,7 @@ docker compose up -d db && yarn db:migrate
 yarn test:concurrency
 ```
 
-**A failure one run in eight is usually a plan, not a race.** The planner's choice follows the
+**A failure one run in eight can be a plan, not a race.** The planner's choice follows the
 table's statistics, and the suite's own deletes and inserts move them — autovacuum on a table
 just emptied leaves "no rows" over pages that remain. `UPDATE … WHERE id IN (SELECT … LIMIT n FOR
 UPDATE SKIP LOCKED)` took more than `n` rows under exactly that (§NNN): never write a limited,

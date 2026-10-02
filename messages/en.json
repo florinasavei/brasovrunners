@@ -4309,7 +4309,7 @@
       "fastTrackHelp": "Confirmed on the spot, without the email link: the participant signs the declaration on paper in front of you; you record it. If full, they join the waiting list; else they get the confirmation.",
       "paperWhen": "Only at the desk, with the declaration the participant signed on paper in front of you. The declaration and, if the address was not confirmed, the address are recorded on your name; you never sign.",
       "paperPlace": "Someone without a place yet gets one as always: if the event is full or somebody is waiting, they join the waiting list, and a full waiting list refuses the press.",
-      "paperEmail": "With a place: confirmation email with QR, number and declaration copy. Waiting list: no email now; the offer by email when given a place; declaration not recorded. Unconfirmed address: on your name.",
+      "paperEmail": "With a place: confirmation email with QR, number and declaration copy. Waiting list: no email now; the offer by email if offered a place; declaration not recorded. Unconfirmed address: on your name.",
       "paperNot": "It is no shortcut before the race, without the person there. If the email did not arrive, an Administrator presses «Resend email» on the registration.",
       "saved": {
         "registrationCreated": "Added — the person is listed below, in the state they landed in.",
@@ -5071,6 +5071,7 @@
                 "The row says «Așteaptă semnarea declarației» (awaiting the declaration) or «Așteaptă confirmarea emailului» (awaiting the email confirmation).",
                 "Give them the printed declaration form. They read it and sign it themselves. A minor: the parent or guardian signs too, each with their own document.",
                 "Press «Confirm on paper», then «Confirm on paper» again in the window.",
+                "If the person gets the place, they get the confirmation email, with the QR code, the number and the copy of the declaration; the sign-the-declaration email is not sent. If there is no place, they go on the waiting list, get no email now, and the offer comes by email if they are offered a place.",
                 "Then «Mark present» and the number. Keep the signed sheet for the organizer."
               ]
             },
@@ -5416,7 +5417,8 @@
                 "No need to raise «Capacity»: when no place is free, «Send them the offer» adds one supplementary place once you confirm (the capacity grows by one, and the registration's trail says who added it and for whom).",
                 "The «Registrations received» card → «Registration queue»: on the chosen person's waiting-list row press «Send them the offer». The same button is on their registration's page too.",
                 "The window says until when they have and, when no place is free, that you add one; press «Send them the offer» or, on a full event, «Add a place and send the offer». They get the ordinary «A place has freed up» email, with the ordinary deadline, {offer}: from the email they press «Confirm the place» and sign the declaration, if they have not yet.",
-                "Not accepted in time? The offer lapses and the place is free again, for whoever you choose. A place added with «Add a place and send the offer» stays in the capacity and, if unused, is like any freed place: on «Yes» the first in line gets it, on «No» it stays free until you give it.",
+                "Not accepted in time? The offer lapses and the place is free again, for whoever you choose.",
+                "A place added with «Add a place and send the offer» stays in the capacity: unused, on «Yes» and before registration closes it goes to the first in line; otherwise it stays free until you give it.",
                 "It works at any moment until the start, after registration closes too: the offer then holds until the start at the latest. At the desk, with the person there, «Give a place» confirms them on the paper declaration, but only into a free place; on a full event an “i” beside it says why.",
                 "The others stay on the waiting list and receive nothing. On the site, the card says «Places are given from the waiting list», and newcomers join the list too while anyone waits. How many may wait is «Waiting list», beside «Capacity».",
                 "Mind the end of the line: once nobody is left on the waiting list — somebody holding an offer is no longer on it —, the places still free go to whoever registers next."
@@ -5432,6 +5434,18 @@
                 "When no place is free, the window says beforehand that you add one supplementary place over the limit and what the capacity becomes; there is no need to raise «Capacity» or to set the automatic allocation to «No».",
                 "The added place is theirs in the same press: it never reaches the waiting list. The registration's trail says who added it, for whom, and from how many to how many.",
                 "The people on the waiting list stay where they are. Check the address first: a wrong address holds the place until the deadline."
+              ]
+            },
+            {
+              "title": "A place outside the places: organizers, pacemakers, invited runners",
+              "steps": [
+                "For whoever runs on the club's side: organizers, pacemakers, invited runners. They take none of the announced places.",
+                "Open the person's registration → «The event's places» → «Seat outside the places» and confirm.",
+                "If they held a place, it frees up: on «Yes» it goes to the first on the waiting list; on «No» it stays free until you hand it out.",
+                "From the waiting list or an open offer they get a place now, outside the places: the declaration email, with the usual deadline, not the offer's.",
+                "Confirmed or with a declaration to sign, they keep their state, number and emails. On the site they are in no number; they appear on the list only if they ticked, unmarked.",
+                "«Count among the places» turns it back only if a place is free; otherwise the press is refused and says who holds the places.",
+                "In the registrations list, the pill «Outside the places» shows them all; the export has a column for them."
               ]
             },
             {
@@ -5460,7 +5474,7 @@
                 "«Registrations» → find the person → press their name.",
                 "Wrong name: under «Correct the name» type the right one → «Save the name».",
                 "Not coming any more: «Cancel the registration», write the «Reason», press «Cancel the registration» and confirm. The place goes to the first on the waiting list; if the event's places are not allocated automatically, it stays free until you hand it out.",
-                "The email never arrived: «Resend email» → «Send now, without waiting for the scheduled round».",
+                "The email never arrived: «Resend email» → «Send now, without waiting for the scheduled round». It works on the waiting list too: the email says where the line stands now.",
                 "They ask for their data to be erased: «Delete permanently», write the «Reason for deletion», tick «I confirm this deletion is permanent» and press «Delete permanently».",
                 "Several at once: tick the rows on the list → «Cancel the ticked ones»."
               ]

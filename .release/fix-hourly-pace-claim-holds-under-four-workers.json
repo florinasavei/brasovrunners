@@ -6,7 +6,7 @@
   "specsCriteria": [
     {
       "requirement": "BR-REQ-080-02",
-      "text": "Given one outbox claim with a limit — the batch size, the room Mailgun's hour leaves or the newsletter's cap — when PostgreSQL plans it with any join, a nested-loop semi join on a table whose statistics say it is empty included, then it marks at most that many rows PROCESSING, the oldest first: one `SELECT … LIMIT … FOR UPDATE SKIP LOCKED` picks the ids and the UPDATE changes exactly those (2026-10-02, `DECISIONS.md` §NNN)."
+      "text": "Given one outbox claim with a limit — the batch size, the room Mailgun's hour leaves or the newsletter's cap — whatever the table's statistics say, an outbox emptied and vacuumed included, then it marks at most that many rows PROCESSING, the oldest first: one `SELECT … LIMIT … FOR UPDATE SKIP LOCKED` picks the ids and the UPDATE changes exactly those (2026-10-02, `DECISIONS.md` §NNN)."
     }
   ],
   "docsNotes": "",
