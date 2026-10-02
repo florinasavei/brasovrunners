@@ -77,7 +77,7 @@ Since the evening of 2026-09-24 at most four changes are built at once: eleven i
 
 | Item | Branch | Notes |
 | --- | --- | --- |
-| Each person waiting is told where they stand — the position only where places are allocated automatically; by hand, how many others wait and that the club chooses («E ok să aștepte, ei nu vor afla când s-au înscris restul pe listă») — and the event page says how many wait | `feat/waiting-list-position-for-each` | fix round on the owner's narrowing, then the next batch |
+| Each person waiting is told where they stand — the position only where places are allocated automatically; by hand, how many others wait and that the club chooses (while the organizers hand out freed places a position would promise an order the club does not follow) — and the event page says how many wait | `feat/waiting-list-position-for-each` | fix round on the owner's narrowing, then the next batch |
 | The setting says what it does, «Locurile din lista de așteptare se alocă automat», and «BID» is spelled «BIB» everywhere | `fix/waitlist-setting-says-places-are-allocated` | fix round: the English help under 200 characters |
 | The cancel dialog says the person is emailed, what the reason does, and where the place goes by the event's setting («eu ca admin trebuie să primesc în pop-up când anulez pe cineva că se va trimite și un mail») | `fix/cancel-dialog-says-the-person-is-emailed` | words only |
 
