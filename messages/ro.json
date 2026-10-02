@@ -1211,7 +1211,7 @@
       "givePlaceNowTitle": "Îi dai un loc acum?",
       "givePlaceNowBody": "Garantezi adresa {email} și îi dai un loc înaintea listei de așteptare.",
       "givePlaceNowBodyMore": "Primește pe loc emailul cu declarația; o semnează online oricând până la termen, sau pe hârtie la masă. Nu mai are de confirmat nimic.",
-      "givePlaceNowFull": "Nu e niciun loc liber: ridică întâi «Număr de locuri»."
+      "givePlaceNowFull": "Nu e niciun loc liber. Pe «Da» la alocarea automată, un loc adăugat merge întâi la lista de așteptare: pune «Nu», ridică «Număr de locuri» cu 1, apoi apasă din nou."
     },
     "errors": {
       "PICTURE_IN_USE": "Imaginea este folosită într-o pagină, într-un eveniment sau într-un album. Scoate-o de acolo mai întâi.",
@@ -5377,7 +5377,8 @@
                 "Apasă «Dă-i un loc acum». Fereastra spune adresa pe care o garantezi; apasă din nou «Dă-i un loc acum».",
                 "Persoana primește imediat locul și emailul cu declarația, cu termenul scris în el. Linkul vechi de confirmare nu mai confirmă nimic, iar un email de confirmare încă la coadă nu mai pleacă.",
                 "Ea semnează declarația: online, din email, sau pe hârtie la masă, unde voluntarul apasă «Confirmă pe hârtie». Declarația nu o semnează nimeni în locul ei.",
-                "Trebuie un loc liber: dacă nu e niciunul, apăsarea e refuzată. Mărește întâi «Număr de locuri», apoi apasă din nou.",
+                "Trebuie un loc liber: dacă nu e niciunul, apăsarea e refuzată. Pe «Da» la «Locurile din lista de așteptare se alocă automat», un loc adăugat merge întâi la lista de așteptare.",
+                "Pune «Nu» acolo și salvează, mărește «Număr de locuri» cu 1 și apasă din nou «Dă-i un loc acum»; pe urmă poți pune iar «Da».",
                 "Cei de pe lista de așteptare rămân unde sunt. Verifică adresa înainte: o adresă greșită ține locul până la termen."
               ]
             },

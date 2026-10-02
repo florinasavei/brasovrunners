@@ -1211,7 +1211,7 @@
       "givePlaceNowTitle": "Give them a place now?",
       "givePlaceNowBody": "You vouch for the address {email} and give them a place ahead of the waiting list.",
       "givePlaceNowBodyMore": "They get the declaration email at once and sign it online any time before the deadline, or on paper at the desk. They have nothing else to confirm.",
-      "givePlaceNowFull": "No place is free: raise «Capacity» first."
+      "givePlaceNowFull": "No place is free. On «Yes» for automatic offers, an added place goes to the waiting list first: set «No», raise «Capacity» by 1, then press again."
     },
     "errors": {
       "PICTURE_IN_USE": "The picture is used on a page, an event or in an album. Take it out of there first.",
@@ -5377,7 +5377,8 @@
                 "Press «Give them a place now». The window names the address you vouch for; press «Give them a place now» again.",
                 "The person gets the place and the declaration email at once, with the deadline in it. The old confirmation link no longer confirms anything, and a confirmation email still queued is not sent.",
                 "They sign the declaration: online, from the email, or on paper at the desk, where the volunteer presses «Confirm on paper». Nobody signs the declaration for them.",
-                "A free place is needed: with none, the press is refused. Raise «Capacity» first, then press again.",
+                "A free place is needed: with none, the press is refused. On «Yes» for «Places from the waiting list are allocated automatically», an added place goes to the waiting list first.",
+                "Set «No» there and save, raise «Capacity» by 1 and press «Give them a place now» again; afterwards you can set «Yes» back.",
                 "The people on the waiting list stay where they are. Check the address first: a wrong address holds the place until the deadline."
               ]
             },
