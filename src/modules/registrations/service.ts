@@ -4028,6 +4028,7 @@ export async function editRegistrationAnswersByStaff<T extends Record<string, un
       minAge: event.minAge,
       kitShirt: event.kitShirt,
       now,
+      createdAt: current.createdAt,
       declarationSigned: signed !== undefined,
     });
     if (plan.nameChange) {

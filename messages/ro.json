@@ -679,7 +679,6 @@
       "newExplanation": "Pentru cineva care a cerut personal. Intră ca orice înscriere; persoana primește emailul de confirmare și semnează singură declarația.",
       "noEventsAcceptingRegistrations": "Niciun eveniment nu primește înscrieri pe site. Setează modul de înscriere pe „Înscrieri pe site” în pagina evenimentului.",
       "event": "Evenimentul",
-      "participantName": "Numele participantului",
       "participantEmail": "Adresa de e-mail a participantului",
       "participantEmailHelp": "Aici ajung confirmarea și linkul pentru declarație. Trebuie să fie adresa persoanei, nu a clubului.",
       "birthDateMinimumAge": "Opțional aici. Dacă o scrii, persoana trebuie să aibă, în ziua cursei, cel puțin vârsta minimă a evenimentului ales (numărul cu „+” de lângă nume); altfel înscrierea este refuzată.",
@@ -735,8 +734,7 @@
           "stravaUrl": "Strava",
           "instagramHandle": "Instagram",
           "tshirtSize": "Mărimea tricoului",
-          "listSocials": "Strava și Instagram pe listă",
-          "registeredName": "Numele oficial"
+          "listSocials": "Strava și Instagram pe listă"
         }
       },
       "memberTick": {
@@ -764,6 +762,7 @@
         "empty": "Nicio bifă de scos",
         "emptyHelp": "Fiecare înscriere bifată are un cont de membru cu aceeași adresă.",
         "ticked": "Înscrierile bifate",
+        "rowHelp": "Bifat = se scoate bifa · debifat = Lasă bifa",
         "cleared": {
           "one": "Am scos bifa de membru la {count} înscriere. Nimic altceva nu s-a schimbat.",
           "few": "Am scos bifa de membru la {count} înscrieri. Nimic altceva nu s-a schimbat.",
@@ -1401,7 +1400,8 @@
       "ANSWERS_UNCHANGED": "Nu s-a schimbat nimic: datele sunt deja acestea. Reîncarcă pagina dacă un coleg le-a corectat între timp.",
       "ANSWER_UNDER_MINIMUM_AGE": "Data nașterii nu s-a salvat: persoana nu ar avea {age} împliniți în ziua cursei, vârsta minimă a evenimentului.",
       "ANSWER_EMERGENCY_SAME": "Telefonul persoanei de contact nu s-a salvat: e chiar numărul participantului. Scrie numărul altcuiva.",
-      "ANSWER_GUARDIAN_SIGNED": "Părintele sau tutorele nu s-a schimbat: declarația semnată îl numește pe cel care a semnat-o."
+      "ANSWER_GUARDIAN_SIGNED": "Părintele sau tutorele nu s-a schimbat: declarația semnată îl numește pe cel care a semnat-o.",
+      "ANSWER_SOCIALS_MINOR_AT_REGISTRATION": "Strava și Instagram nu s-au salvat: persoana era minoră la înscriere, iar curățenia de întreținere le-ar șterge. Lasă-le goale."
     },
     "editor": {
       "draftPreview": {

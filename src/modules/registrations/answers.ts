@@ -107,6 +107,15 @@ export const EMERGENCY_SAME = "emergencySame";
  */
 export const GUARDIAN_SIGNED = "guardianSigned";
 
+/**
+ * The marker a refusal carries beside the socials when the row was a minor's on the day it was
+ * written but the person is an adult today (§NNN): the minors' sweep (`jobs/retention.ts`, step
+ * `minor-socials`, §323) clears the socials of every row written before the eighteenth birthday and
+ * scrubs them from the trail, so a Strava link or username saved here would be gone at the next
+ * maintenance run — the page says so rather than accepting a correction that silently will not last.
+ */
+export const MINOR_AT_REGISTRATION = "minorAtRegistration";
+
 /** The answers whose old and new values the trail shows only beside the emergency details (§322). */
 export const EMERGENCY_ANSWERS: ReadonlySet<string> = new Set(["phone", "emergencyContactName", "emergencyContactPhone"]);
 
@@ -187,7 +196,9 @@ const same = (a: unknown, b: unknown) => (a ?? null) === (b ?? null);
  * rule is tested without a database. Refuses (VALIDATION_ERROR naming the key): a key outside the
  * allowlist, an invalid value, an empty change, a change that changes nothing (`ANSWERS_UNCHANGED`),
  * and the form's cross-field rules on the row as it would be — the emergency contact is somebody
- * else (§228), a minor has a guardian (§108) and no socials (§323), the event's minimum age (§321).
+ * else (§228), a minor has a guardian (§108) and no socials (§323) — the socials judged, as the minors'
+ * sweep judges them, against the day the row was written (`MINOR_AT_REGISTRATION`) — and the event's
+ * minimum age (§321).
  *
  * Carried with the answers, as the form carries them:
  * - the **name of record** is composed from the two names (BR-REQ-031-04 criterion 6), with its key
@@ -205,6 +216,8 @@ export function planAnswerEdit(
     minAge: number | null;
     kitShirt: boolean;
     now: Date;
+    /** When the row was written: the minors' sweep keeps no socials on a row written before the eighteenth birthday (§323). */
+    createdAt: Date;
     /** The row has a declaration acceptance (online or paper): the guardian is the signed text's, not an answer any more. */
     declarationSigned: boolean;
   },
@@ -275,6 +288,8 @@ export function planAnswerEdit(
 
   // The form's cross-field rules, on the row as it would be.
   const minor = typeof next.birthDate === "string" && isMinorOn(next.birthDate, context.now);
+  // The minors' sweep's own test (`jobs/retention.ts`, `minor-socials`): a minor on the day the row was written.
+  const minorAtRegistration = typeof next.birthDate === "string" && isMinorOn(next.birthDate, context.createdAt);
   if ((posted.has("phone") || posted.has("emergencyContactPhone")) && next.phone && next.phone === next.emergencyContactPhone) {
     refuse("the emergency contact must be somebody other than the participant", ["emergencyContactPhone", EMERGENCY_SAME]);
   }
@@ -284,9 +299,11 @@ export function planAnswerEdit(
   if (posted.has("birthDate") && typeof next.birthDate === "string" && isUnderMinimumAge(next.birthDate, context.eventDay, effectiveMinimumAge(context.minAge))) {
     refuse("under the event's minimum age", ["birthDate", UNDER_MINIMUM_AGE]);
   }
-  if ((posted.has("birthDate") || posted.has("stravaUrl") || posted.has("instagramHandle")) && minor) {
+  if ((posted.has("birthDate") || posted.has("stravaUrl") || posted.has("instagramHandle")) && (minor || minorAtRegistration)) {
     const socials = (["stravaUrl", "instagramHandle"] as const).filter((field) => next[field]);
-    if (socials.length > 0) refuse("the club keeps no socials of a minor", socials);
+    if (socials.length > 0 && minor) refuse("the club keeps no socials of a minor", socials);
+    // An adult today on a row a minor's when written: the sweep would clear them at its next run (§323).
+    if (socials.length > 0) refuse("the row was a minor's when written and keeps no socials", [...socials, MINOR_AT_REGISTRATION]);
   }
 
   const listSocials = current.listSocials && (next.stravaUrl !== null || next.instagramHandle !== null);

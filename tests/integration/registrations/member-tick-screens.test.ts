@@ -307,6 +307,8 @@ describe("BR-REQ-037-03 criterion 13: the registrations list", () => {
     const boxes = elements(form).filter((element) => element.props.name === "registrationId");
     expect(boxes.map((box) => box.props.value).sort()).toEqual([stranger, another].sort());
     expect(boxes.every((box) => box.props.defaultChecked === true)).toBe(true);
+    // Each row's box says what its tick means: unticked is «Lasă bifa».
+    expect(boxes.every((box) => box.props.help === "Bifat = se scoate bifa · debifat = Lasă bifa")).toBe(true);
     expect(boxes.map((box) => box.props.value)).not.toContain(memberRow);
     expect(elements(form).find((element) => element.props.name === "eventId")?.props.value).toBe(race.id);
     expect(byTestId(form, "member-sweep-count")[0].props.children).toBe("2 înscrieri cu bifa de membru fără cont de membru");

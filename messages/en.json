@@ -679,7 +679,6 @@
       "newExplanation": "For somebody who asked in person. It enters like any registration; the person gets the confirmation email and signs the declaration themselves.",
       "noEventsAcceptingRegistrations": "No event takes registrations on the site. Set the registration mode to \"Register here\" on the event page.",
       "event": "Event",
-      "participantName": "Participant name",
       "participantEmail": "Participant email address",
       "participantEmailHelp": "The confirmation and the declaration link go here. It must be their address, not the club's.",
       "birthDateMinimumAge": "Optional here. When given, the person must be at least the chosen event's minimum age on the day of the race — the number with a “+” beside its name; otherwise the registration is refused.",
@@ -735,8 +734,7 @@
           "stravaUrl": "Strava",
           "instagramHandle": "Instagram",
           "tshirtSize": "T-shirt size",
-          "listSocials": "Strava and Instagram on the list",
-          "registeredName": "Name of record"
+          "listSocials": "Strava and Instagram on the list"
         }
       },
       "memberTick": {
@@ -764,6 +762,7 @@
         "empty": "No tick to clear",
         "emptyHelp": "Every ticked registration has a member account with the same address.",
         "ticked": "The ticked registrations",
+        "rowHelp": "Ticked = cleared · unticked = Leave the tick",
         "cleared": {
           "one": "Cleared the member tick on {count} registration. Nothing else changed.",
           "few": "Cleared the member tick on {count} registrations. Nothing else changed.",
@@ -1401,7 +1400,8 @@
       "ANSWERS_UNCHANGED": "Nothing changed: the answers already say this. Reload the page if a colleague corrected them meanwhile.",
       "ANSWER_UNDER_MINIMUM_AGE": "The date of birth was not saved: the person would not be {age} on race day, the event's minimum age.",
       "ANSWER_EMERGENCY_SAME": "The emergency contact's phone was not saved: it is the participant's own number. Type someone else's.",
-      "ANSWER_GUARDIAN_SIGNED": "The parent or guardian was not changed: the signed declaration names the one who signed it."
+      "ANSWER_GUARDIAN_SIGNED": "The parent or guardian was not changed: the signed declaration names the one who signed it.",
+      "ANSWER_SOCIALS_MINOR_AT_REGISTRATION": "Strava and Instagram were not saved: the person was a minor when they registered, and the maintenance sweep would delete them. Leave them empty."
     },
     "editor": {
       "draftPreview": {

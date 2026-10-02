@@ -349,6 +349,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   const sweepEvent = filters.eventId ? (events.find((event) => event.id === filters.eventId)?.title ?? filters.eventId) : null;
   // The sweep's dialog counts the rows still ticked at the press (`bodyCount`, §532's shape).
   const sweepBodyForms = t.raw("confirm.memberSweepBody") as Record<CountForm, string>;
+  const sweepRowHelp = t("registrations.memberSweep.rowHelp");
   const sweepCloseHref = buildListHref(basePath, listParams, { memberSweep: undefined, page: current.page });
   // A row's resend asks «Trimite acum» or «Pune la coadă» (§540): read once, for every row.
   const sendNow = mayManage ? await sendNowChoiceFor(db, locale) : null;
@@ -1292,11 +1293,11 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                   {t(`registrations.memberSweep.count.${countForm(sweepRows.length, locale)}`, { count: sweepRows.length })}
                 </Typography>
                 <Alert severity="warning">{t("registrations.memberSweep.otherAddress")}</Alert>
-                {/* One box per row, ticked: untick a member who registered with another address. */}
+                {/* One box per row, ticked: untick a member who registered with another address. Each says what its tick means («Lasă bifa» unticked). */}
                 <Stack component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
                   {sweepRows.map((row) => (
                     <Box component="li" key={row.id} data-testid="member-sweep-row">
-                      <CheckboxField name="registrationId" value={row.id} defaultChecked dense>
+                      <CheckboxField name="registrationId" value={row.id} defaultChecked dense help={sweepRowHelp}>
                         {`${row.registeredName} · ${row.eventTitle ?? row.eventId} · ${row.maskedEmail}`}
                       </CheckboxField>
                     </Box>

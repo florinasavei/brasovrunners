@@ -2626,7 +2626,8 @@ BR-REQ-037-05):
    name of record follows them, with §389's rule), the list name, the birth date, the sex, the
    citizenship, the country, the city, the phone, the emergency contact, the guardian, the club
    and the member tick, the socials, the T-shirt — each met by the form's own Zod rule and the
-   form's cross-field rules. `editRegistrationAnswersByStaff`, under the event lock, writes only
+   form's cross-field rules, the socials judged as the minors' sweep judges them: a row written
+   before the eighteenth birthday keeps none. `editRegistrationAnswersByStaff`, under the event lock, writes only
    the changed columns and one `registration.answer_corrected` `{ field, from, to }` row per
    column (`registration.name_corrected` for the name of record); no state, no place, no email;
    any status, a TEST row like a real one. A key outside the allowlist is refused by name. **Three

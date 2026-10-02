@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Registration } from "@/db/schema/registrations";
-import { ANSWERS_UNCHANGED, EDITABLE_ANSWERS, EMERGENCY_SAME, GUARDIAN_SIGNED, LOCKED_ANSWER_KINDS, planAnswerEdit, typedPhone } from "@/modules/registrations/answers";
+import { ANSWERS_UNCHANGED, EDITABLE_ANSWERS, EMERGENCY_SAME, GUARDIAN_SIGNED, LOCKED_ANSWER_KINDS, MINOR_AT_REGISTRATION, planAnswerEdit, typedPhone } from "@/modules/registrations/answers";
 import { type ConfirmSpec, resolveChangedFields } from "@/shared/feedback/notice";
 import { CLUB_NAME } from "@/theme/brand";
 
@@ -30,7 +30,7 @@ const current = {
   tshirtSize: "NONE",
   listSocials: false,
 } as unknown as Registration;
-const context = { eventDay: "2026-11-21", minAge: 14, kitShirt: true, now: new Date("2026-10-02T10:00:00.000Z"), declarationSigned: false };
+const context = { eventDay: "2026-11-21", minAge: 14, kitShirt: true, now: new Date("2026-10-02T10:00:00.000Z"), createdAt: new Date("2026-09-01T10:00:00.000Z"), declarationSigned: false };
 
 function refusalOf(run: () => unknown): string[] {
   try {
@@ -99,6 +99,22 @@ describe("BR-REQ-037-03 criterion 12: the rules that say which one refused", () 
     expect(planAnswerEdit(minor, { guardianName: "Elena Pop" }, { ...signed, declarationSigned: false }).set).toEqual({ guardianName: "Elena Pop" });
     // The other answers of a signed row are still corrected.
     expect(planAnswerEdit(minor, { city: "Brașov" }, signed).set).toEqual({ city: "Brașov" });
+  });
+
+  it("keeps no socials on a row a minor's when written, as the minors' sweep judges it, with its own marker", () => {
+    // Eighteen on 2026-09-15: a minor on the day the row was written (2026-09-01), an adult today (2026-10-02).
+    const grownUp = { ...current, birthDate: "2008-09-15", guardianName: "Maria Pop" } as unknown as Registration;
+    expect(refusalOf(() => planAnswerEdit(grownUp, { stravaUrl: "https://www.strava.com/athletes/123" }, context))).toEqual(["stravaUrl", MINOR_AT_REGISTRATION]);
+    expect(refusalOf(() => planAnswerEdit(grownUp, { instagramHandle: "@ana.pop" }, context))).toEqual(["instagramHandle", MINOR_AT_REGISTRATION]);
+    // A minor today is refused by the rule of today, without the marker.
+    const minor = { ...current, birthDate: "2012-03-01", guardianName: "Maria Pop" } as unknown as Registration;
+    expect(refusalOf(() => planAnswerEdit(minor, { instagramHandle: "ana.pop" }, { ...context, minAge: null }))).toEqual(["instagramHandle"]);
+    // The same person's row written after the eighteenth birthday keeps them.
+    const later = { ...context, createdAt: new Date("2026-09-20T10:00:00.000Z") };
+    expect(planAnswerEdit(grownUp, { instagramHandle: "@ana.pop" }, later).set).toEqual({ instagramHandle: "ana.pop" });
+    // Clearing them is always allowed.
+    const withSocials = { ...grownUp, instagramHandle: "ana.pop" } as unknown as Registration;
+    expect(planAnswerEdit(withSocials, { instagramHandle: "" }, context).set).toEqual({ instagramHandle: null });
   });
 });
 

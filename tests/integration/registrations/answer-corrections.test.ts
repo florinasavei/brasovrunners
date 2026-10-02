@@ -389,3 +389,39 @@ describe("BR-REQ-037-03 criterion 12: a corrected social leaves the trail with t
     expect(JSON.stringify(await corrections())).not.toContain("ana.runs");
   });
 });
+
+describe("BR-REQ-037-03 criterion 12: the answers the other cases leave out", () => {
+  it("corrects the sex, the country, the emergency contact's name, the list name and the T-shirt into their own columns and enums", async () => {
+    await db.update(events).set({ kitShirt: true }).where(eq(events.id, eventId));
+    const id = await seed();
+
+    await editRegistrationAnswers(
+      db,
+      admin,
+      id,
+      { sex: "MALE", country: "md", emergencyContactName: "Elena Pop", displayName: "Ana P.", tshirtSize: "L" },
+      NOW,
+    );
+    expect(await rowOf(id)).toMatchObject({ sex: "MALE", country: "MD", emergencyContactName: "Elena Pop", displayName: "Ana P.", tshirtSize: "L" });
+    expect(await corrections()).toEqual(
+      expect.arrayContaining([
+        { field: "sex", from: "FEMALE", to: "MALE" },
+        { field: "country", from: "RO", to: "MD" },
+        { field: "emergencyContactName", from: "Ion Pop", to: "Elena Pop" },
+        { field: "displayName", from: "Ana Pop", to: "Ana P." },
+        { field: "tshirtSize", from: null, to: "L" },
+      ]),
+    );
+    expect(await corrections()).toHaveLength(5);
+
+    // The list name cleared goes back to the derived one, the first name and the last name.
+    await editRegistrationAnswers(db, admin, id, { displayName: "" }, NOW);
+    expect((await rowOf(id)).displayName).toBe("Ana Pop");
+    // Every audit row carries the press's `now`, so the trail is matched by content, not by order.
+    expect(await corrections()).toContainEqual({ field: "displayName", from: "Ana P.", to: "Ana Pop" });
+    expect(await corrections()).toHaveLength(6);
+    // None of it is the name of record.
+    expect(await db.select().from(auditLogs).where(eq(auditLogs.action, "registration.name_corrected"))).toHaveLength(0);
+    expect((await rowOf(id)).registeredName).toBe("Ana Pop");
+  });
+});
