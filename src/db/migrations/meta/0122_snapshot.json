@@ -1,6 +1,6 @@
 {
   "id": "52abab22-f066-4c55-921b-2b596c5a5db9",
-  "prevId": "168854ce-1c6b-49b6-b6f2-2f53b332a7a6",
+  "prevId": "88ce89a4-aa52-4b7a-b2b6-03bc1226325a",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -5849,6 +5849,7 @@
         "NEWSLETTER",
         "NEW_EVENT_ALERT",
         "MEMBER_INVITATION",
+        "DECLARATION_HOLD_EXPIRED",
         "LEGAL_TEMPLATES_CHANGED"
       ]
     },
