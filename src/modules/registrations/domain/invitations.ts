@@ -9,7 +9,7 @@ import { DomainError } from "@/shared/errors/domain-error";
 
 /** «Zile până expiră»: seven by default, as the owner was told. */
 export const INVITATION_DAYS_DEFAULT = 7;
-/** The longest an invitation may keep a place; the close and the start cap it anyway. */
+/** The longest an invitation may keep a place; the start caps it anyway. */
 export const INVITATION_DAYS_MAX = 60;
 /** One press invites at most this many people: a list longer than this is a second press. */
 export const INVITATION_BATCH_MAX = 50;
@@ -54,15 +54,14 @@ export function validInvitationDays(days: number): boolean {
 
 /**
  * Until when an invitation keeps its place: the days the Administrator chose from now, capped by the
- * registration close and the start (the brief's «min(now + days, registration close, start)») — never
- * a place kept past the moment the public door shuts. Null when that instant is not ahead: the send is
- * refused (`INVITATION_EVENT_CLOSED`).
+ * start — never a place kept past the moment the race begins. Not by the registration close (the
+ * invitations review of 2026-10-02): the close is the public door's, and the invitations the club
+ * sends late — organizers, pacemakers, volunteers — mostly go after it, as «Trimite-i oferta» does
+ * (§642). Null when that instant is not ahead: the send is refused (`INVITATION_EVENT_CLOSED`).
  */
-export function invitationDeadline(input: { now: Date; days: number; registrationClosesAt: Date | null; startsAt: Date }): Date | null {
+export function invitationDeadline(input: { now: Date; days: number; startsAt: Date }): Date | null {
   const days = Math.min(Math.max(Math.trunc(input.days), 1), INVITATION_DAYS_MAX);
-  const candidates = [input.now.getTime() + days * 24 * 60 * 60_000, input.startsAt.getTime()];
-  if (input.registrationClosesAt) candidates.push(input.registrationClosesAt.getTime());
-  const at = Math.min(...candidates);
+  const at = Math.min(input.now.getTime() + days * 24 * 60 * 60_000, input.startsAt.getTime());
   return at > input.now.getTime() ? new Date(at) : null;
 }
 

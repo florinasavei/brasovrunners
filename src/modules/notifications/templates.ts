@@ -1304,17 +1304,17 @@ function newsletterConfirmEmphasis(d: TemplateData, b: readonly string[]): Empha
   return { highlight: [b[1]], actionAfter: b[1] };
 }
 
-/**
- * The texts whose template moved (§639), on the message's bold line: «Șablon nou: GDPR · Termeni de
- * concurs», the chip's own words and the names `/admin/legal` lists, in this half's language. None
- * when the payload names no text the catalogue knows.
- */
 /** An invitation's emphasis (§NNN): the invitation and its deadline on the band, the button under them, the "ignore it" quiet. */
 function invitationEmphasis(d: TemplateData, b: readonly string[]): Emphasis {
   const lead = d.holdExpiresAtFormatted ? b.slice(0, 2) : b.slice(0, 1);
   return { highlight: lead, actionAfter: lead[lead.length - 1], quiet: [b[b.length - 1]] };
 }
 
+/**
+ * The texts whose template moved (§639), on the message's bold line: «Șablon nou: GDPR · Termeni de
+ * concurs», the chip's own words and the names `/admin/legal` lists, in this half's language. None
+ * when the payload names no text the catalogue knows.
+ */
 function legalTemplatesFacts(locale: EmailLocale, d: TemplateData): TemplateContent["facts"] {
   const names = legalTemplateNames(locale, d.legalTemplateKeys ?? []);
   if (names.length === 0) return undefined;

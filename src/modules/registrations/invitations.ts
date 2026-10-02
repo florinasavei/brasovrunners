@@ -27,7 +27,8 @@ import { seatInvitedRegistration, submitRegistration } from "./service";
  * - `acceptInvitation` is the press: under the event lock, the token spent (single use), the invitation
  *   asked again — open and before its deadline — then the registration created through the one door
  *   (`submitRegistration`, the invitation's origin) and seated in the invitation's place
- *   (`seatInvitedRegistration`): the address proved by the link, the place moved from the invitation to
+ *   (`seatInvitedRegistration`): the address proved by the link, «Sunt membru» set for a member the club
+ *   picked, the place moved from the invitation to
  *   the declaration hold with no gap, the declaration's email queued. One transaction: a refusal of the
  *   form (a field, the terms changed, this runner on the address already) takes the token's spend back
  *   with everything else, and the same link still works.
@@ -130,8 +131,13 @@ export async function acceptInvitation<T extends Record<string, unknown>>(db: Da
     const created = await submitRegistration(
       tx,
       event,
-      // The address is the invitation's, never one posted (§12.8): typed twice nowhere, locked on the form.
-      { ...rawInput, email: invitation.email, emailConfirm: invitation.email },
+      /*
+        The address is the invitation's, never one posted (§12.8): typed twice nowhere, locked on the form.
+        And a member picked from the members' zone (§524) is registered as a club member whatever is
+        posted: the club named the account, so an unticked box or a draft without JavaScript cannot leave
+        `club_member_declared` unset. Anybody typed answers «Sunt membru» themselves.
+      */
+      { ...rawInput, email: invitation.email, emailConfirm: invitation.email, ...(invitation.memberStaffUserId !== null ? { clubMemberDeclared: true } : {}) },
       now,
       "REAL",
       { source: "PUBLIC", createdByStaffUserId: null, invitation: { participantId: invitation.participantId } },

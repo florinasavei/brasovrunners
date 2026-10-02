@@ -667,6 +667,7 @@
       "emailRejected": "Email rejected",
       "testKind": "Test",
       "enteredByStaff": "Entered by staff",
+      "invitedBy": "Registered by invitation — sent by {who}, {when}",
       "livesIn": "Lives in: {place}",
       "sexLine": "Sex: {sex}",
       "sexOptions": {
@@ -1310,7 +1311,7 @@
       "SEND_NOW_MAILGUN_STOPPED_GMAIL_FULL": "Nothing was sent: Mailgun is stopped and Gmail has reached its daily limit. Raise it under «Emails» (500 at most), or choose «Queue it»: it leaves when Mailgun resumes.",
       "SEND_NOW_MAILGUN_STOPPED_NOTICE": "Nothing was sent: Mailgun is stopped, and Gmail takes over only once you approve the privacy notice from the new template. Until then choose «Queue it».",
       "INVITATION_NOT_OPEN": "The invitation is no longer waiting: it was accepted, withdrawn or has expired.",
-      "INVITATION_EVENT_CLOSED": "The event takes no more invitations: it is cancelled, has started, is not published, or registration has closed.",
+      "INVITATION_EVENT_CLOSED": "The event takes no more invitations: it is cancelled, has started, or is not published.",
       "INVITATION_BAD_DAYS": "Days until it expires: a whole number from 1 to 60."
     },
     "editor": {
@@ -5470,10 +5471,11 @@
               "steps": [
                 "For members, partners and guests: each gets an email with a link to the form, with the name and address already filled in.",
                 "«Events» → «Edit» on the race's row → the «Registrations received» card → «Send invitations»: the list's «Invitations» section opens.",
-                "Tick members from the list or type other people, one per line: the name, then the address. Choose «Days until it expires»; tick «Outside the places» for organizers and pacemakers.",
+                "Tick members from the list or type other people, one per line: the name, then the address. Choose «Days until it expires» and «Language of the invitation» (for new addresses); tick «On the hidden list (takes no place)» for organizers, volunteers and pacemakers. You can send after registration closes too, until the start.",
                 "«Send the invitations» asks first: how many invitations, how many places are free and, on a full race, how many supplementary places are added and what the capacity becomes.",
                 "Each invitation holds a place until its deadline; if it is not accepted, the place frees up by itself. The person fills in the rest and signs the declaration themselves.",
-                "On the invitation's row: «Resend» sends a new link and can move the deadline later; «Withdraw» closes it and frees the place."
+                "On the invitation's row: «Resend» sends a new link; the deadline stays, unless you type a number of days that moves it later. «Withdraw» closes it and frees the place.",
+                "If somebody invited registers anyway, through the public form or at the desk, their registration takes the invitation's place once their address is confirmed or they are given a place: the invitation reads «Accepted»."
               ]
             },
             {
@@ -6495,9 +6497,13 @@
       "typedLabel": "Other people: name and address, one per line",
       "typedHelp": "One person per line: the name, then the email address. Blank lines are skipped.",
       "daysLabel": "Days until it expires",
-      "daysHelp": "The place is kept this many days, at most until registration closes; from 1 to {max}.",
-      "outsideLabel": "Outside the places",
-      "outsideHelp": "For organizers and pacemakers: the invitation holds no place, and the registration will be outside the places.",
+      "daysHelp": "The place is kept this many days, at most until the start; from 1 to {max}.",
+      "outsideLabel": "On the hidden list (takes no place)",
+      "outsideHelp": "For organizers, volunteers, pacemakers and invited runners who take none of the advertised places: the invitation holds no place, and the registration will be on the hidden list.",
+      "localeLegend": "Language of the invitation",
+      "localeRo": "Română",
+      "localeEn": "English",
+      "localeHelp": "For typed addresses the club does not know yet. A member gets the invitation in the account's language, and somebody who has registered with the club before in the language they registered in.",
       "submit": "Send the invitations",
       "dialog": {
         "title": "Send the invitations?",
@@ -6513,7 +6519,7 @@
           "other": "{count} supplementary places are added: the capacity becomes {capacity}."
         },
         "noRaise": "No new place: they fit in the free places.",
-        "outside": "Outside the places: they hold no place.",
+        "outside": "On the hidden list: they hold no place.",
         "confirmRaise": {
           "one": "Add {count} place and send",
           "few": "Add {count} places and send",
@@ -6542,7 +6548,8 @@
       "openRegistration": "Open the registration",
       "resendTitle": "Resend the invitation?",
       "resendBody": "{name} gets the invitation again, with a new link; the old link stops working. The deadline moves to {days} days from now, if that is later than the current one.",
-      "resendDays": "Days",
+      "resendBodyKept": "{name} gets the invitation again, with a new link; the old link stops working. The deadline stays as it is; to move it later, type a number of days.",
+      "resendDays": "Days (optional)",
       "resend": "Resend",
       "resending": "Sending…",
       "withdrawTitle": "Withdraw the invitation?",
@@ -6557,7 +6564,7 @@
         "INVITATION_NO_NAME": "A line has no name: no invitation was sent.",
         "INVITATION_NOBODY": "Tick at least one member or type a line.",
         "INVITATION_TOO_MANY": "At most 50 people per press: split the list.",
-        "INVITATION_EVENT_CLOSED": "The event takes no more invitations: it is cancelled, has started, is not published, or registration has closed.",
+        "INVITATION_EVENT_CLOSED": "The event takes no more invitations: it is cancelled, has started, or is not published.",
         "INVITATION_NOT_OPEN": "The invitation is no longer waiting: it was accepted, withdrawn or has expired.",
         "INVITATION_BAD_DAYS": "Days until it expires: a whole number from 1 to 60.",
         "INVITATION_UNREAD_LINE": "Lines {lines} are not a name and an address: no invitation was sent.",
@@ -6998,7 +7005,7 @@
       "invalid": "The link is not valid or no longer works.",
       "askClub": "If you would still like to come, write to us:",
       "contact": "Contact page",
-      "alreadyRegistered": "This address already has a registration with this name for the event: nothing was registered. Write to us if it is a mistake.",
+      "alreadyRegistered": "This address already has a registration with this name for the event: nothing was registered. If you have not confirmed your address yet, press the link in the confirmation email: your registration then gets the place the invitation keeps. Write to us if it is a mistake.",
       "addressAtCap": "This address already has the most registrations allowed for the event: nothing was registered.",
       "notYou": "Not expecting this invitation? Ignore it or write to us:"
     }

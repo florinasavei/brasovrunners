@@ -56,11 +56,10 @@ describe("§NNN BR-REQ-034-01 the invitation's bucket in the one formula", () =>
 
 describe("§NNN the deadline and the state", () => {
   const STARTS = new Date(NOW.getTime() + 30 * DAY);
-  it("is min(now + days, the close, the start), and none when that is not ahead", () => {
-    expect(invitationDeadline({ now: NOW, days: 7, registrationClosesAt: null, startsAt: STARTS })).toEqual(new Date(NOW.getTime() + 7 * DAY));
-    expect(invitationDeadline({ now: NOW, days: 7, registrationClosesAt: new Date(NOW.getTime() + 2 * DAY), startsAt: STARTS })).toEqual(new Date(NOW.getTime() + 2 * DAY));
-    expect(invitationDeadline({ now: NOW, days: 60, registrationClosesAt: null, startsAt: STARTS })).toEqual(STARTS);
-    expect(invitationDeadline({ now: NOW, days: 7, registrationClosesAt: NOW, startsAt: STARTS })).toBeNull();
+  it("is min(now + days, the start) — never capped by the close — and none when that is not ahead", () => {
+    expect(invitationDeadline({ now: NOW, days: 7, startsAt: STARTS })).toEqual(new Date(NOW.getTime() + 7 * DAY));
+    expect(invitationDeadline({ now: NOW, days: 60, startsAt: STARTS })).toEqual(STARTS);
+    expect(invitationDeadline({ now: NOW, days: 7, startsAt: NOW })).toBeNull();
   });
 
   it("days are a whole number from 1 to 60", () => {

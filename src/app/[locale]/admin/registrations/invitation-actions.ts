@@ -72,7 +72,7 @@ export async function inviteAction(_previous: InvitationSendState, form: FormDat
       getDb(),
       actor,
       eventId,
-      { people, days, outsideCapacity: form.get("outside") === "1", addPlaceTo: confirmedCapacityOf(form.get("addPlace")) },
+      { people, days, outsideCapacity: form.get("outside") === "1", locale: form.get("inviteLocale") === "en" ? "en" : "ro", addPlaceTo: confirmedCapacityOf(form.get("addPlace")) },
       new Date(),
     );
   } catch (error) {

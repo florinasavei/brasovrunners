@@ -1426,16 +1426,25 @@ languages go live together; that is the rule, not a setting.
    → «Trimite invitații» opens the «Invitații» section of the race's registrations list:
    - tick members from the members' zone (search by name or address), and/or type other people one per
      line — the name, then the email address;
-   - «Zile până expiră» (7 by default; never past **Înscrierile se închid** or the start);
-   - «În afara locurilor» for organizers and pacemakers: their invitations keep none of the 150;
+   - «Zile până expiră» (7 by default; never past the start — invitations may go after **Înscrierile
+     se închid**, for organizers, pacemakers and volunteers invited late);
+   - «Limba invitației» (Română by default) for typed addresses the club has never seen: a member gets
+     the account's language, somebody already registered with the club the language they used;
+   - «Pe lista ascunsă (nu ocupă un loc)» for organizers, volunteers and pacemakers: their invitations
+     keep none of the 150;
    - «Trimite invitațiile» asks first: how many invitations, how many places are free and — on a full
      race — how many supplementary places it adds and what the capacity becomes; the button names the
      places it adds. Each person gets one email, «Acceptă invitația», which opens the form with their
      name and address filled in; they fill in the rest, accept the terms and sign the declaration
      themselves, from the email that follows.
    - Each invitation keeps its place until its deadline; unaccepted, the place goes back to the line by
-     itself. On the invitation's row: «Retrimite» (a new link, the deadline moved later if you type more
-     days) and «Retrage» (the place goes back at once). The Organizer sees the list, not the buttons.
+     itself. On the invitation's row: «Retrimite» (a new link; the deadline stays, unless you type a
+     number of days in the box and that comes later) and «Retrage» (the place goes back at once). The
+     Organizer sees the list, not the buttons.
+   - Somebody invited who registers anyway, through the public form or at the desk, takes the
+     invitation's place once their address is confirmed or a place is given to them: the invitation
+     reads «Acceptată» and links the registration, and their registration's page says «Înscriere pe
+     invitație — trimisă de …». Nobody waits behind a place kept in their own name.
    - The privacy notice describes invitations once the club approves it from the template:
      `/admin/tasks` shows the row «Nota de confidențialitate: invitațiile pe email» until then.
      Invitations work meanwhile.

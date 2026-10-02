@@ -46,7 +46,8 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
  * A personal invitation's link (§NNN; `EVENT_INVITATION`). The GET reads the link and changes nothing —
  * a mail scanner opening it leaves it working (§12.8) — and draws the event's registration form,
  * prefilled with the invited name, the address said back and locked (the invitation's, never one
- * typed), «Sunt membru» ticked when the club picked a member, under one line: whose invitation, to
+ * typed), «Sunt membru» ticked when the club picked a member (and set by the press whatever is posted,
+ * `invitations.ts#acceptInvitation`), under one line: whose invitation, to
  * which event, until when. Every other field, consent and the declaration stay the person's. Only the
  * POST registers (`acceptInvitationAction`), with no confirmation email: the link proved the inbox.
  *

@@ -25,6 +25,9 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  *   place per invitation that needs it, only on the press that named the capacity (§642);
  * - the link (BR-REQ-036-02): minted at the send, hashed at rest, the GET only reads, the press spends
  *   it once and seats the registration in the invitation's place with no gap, the address proved;
+ * - a registration of the invited address made another way takes the invitation's place over when it
+ *   gets its place (the invitations review of 2026-10-02), and a typed address the club knows keeps its
+ *   participant's name and language;
  * - expiry, «Retrimite» (a new link supersedes the old, §619) and «Retrage»; the Organizer changes
  *   nothing (§289, BR-REQ-037-07); the retention erases an ended invitation (BR-REQ-053-01's notice).
  *
@@ -51,7 +54,7 @@ vi.mock("@/modules/notifications/drain", () => ({
   drainOutboxRowsAfterResponse: () => undefined,
 }));
 
-const { submitRegistration, confirmEmail, inviteToEventByStaff, readPublicPlaces, signDeclaration, withdrawInvitationByStaff, resendInvitationByStaff } = await import(
+const { submitRegistration, confirmEmail, givePlaceNowByStaff, inviteToEventByStaff, readPublicPlaces, signDeclaration, withdrawInvitationByStaff, resendInvitationByStaff } = await import(
   "@/modules/registrations/service"
 );
 const { inviteToEvent } = await import("@/modules/registrations/admin-service");
@@ -89,12 +92,15 @@ beforeEach(async () => {
 const at = (minutes: number) => new Date(NOW.getTime() + minutes * 60_000);
 const PUBLIC = { source: "PUBLIC" as const, createdByStaffUserId: null };
 
-async function createEvent(capacity: number | null, options: { auto?: boolean; closesAt?: Date | null; status?: "SCHEDULED" | "CANCELLED" } = {}): Promise<EventInput> {
+async function createEvent(
+  capacity: number | null,
+  options: { auto?: boolean; closesAt?: Date | null; status?: "SCHEDULED" | "CANCELLED"; startsAt?: Date } = {},
+): Promise<EventInput> {
   const [event] = await db
     .insert(events)
     .values({
       type: "RACE",
-      startsAt: STARTS,
+      startsAt: options.startsAt ?? STARTS,
       registrationMode: "INTERNAL",
       capacity,
       registrationClosesAt: options.closesAt ?? null,
@@ -186,9 +192,54 @@ describe("§NNN BR-REQ-034-01 a send holds one counted place per invitation, unt
     expect(invitation).toMatchObject({ name: "Dana Membru", email: "dana@example.invalid", locale: "en", memberStaffUserId: member.id });
   });
 
-  it("the deadline is never past the registration close", async () => {
+  it("the deadline is capped by the start, never by the registration close", async () => {
     const event = await createEvent(3, { closesAt: at(60 * 24 * 2) });
-    expect((await inviteToEventByStaff(db, event, { people: [{ name: "Ana Pop", email: "ana@example.invalid" }], days: 7, outsideCapacity: false }, admin, NOW)).deadline).toEqual(at(60 * 24 * 2));
+    expect((await inviteToEventByStaff(db, event, { people: [{ name: "Ana Pop", email: "ana@example.invalid" }], days: 7, outsideCapacity: false }, admin, NOW)).deadline).toEqual(at(60 * 24 * 7));
+    const soon = await createEvent(3, { startsAt: at(60 * 24 * 3) });
+    expect((await inviteToEventByStaff(db, soon, { people: [{ name: "Ana Pop", email: "ana@example.invalid" }], days: 7, outsideCapacity: false }, admin, NOW)).deadline).toEqual(at(60 * 24 * 3));
+  });
+
+  it("after the registration close the club still invites, and the accepted registration's hold is capped by the start alone", async () => {
+    // Three days before the start, inside the participation window: a public hold would be capped by the close, already past.
+    const startsAt = new Date(STARTS.getTime());
+    const sendAt = new Date(startsAt.getTime() - 3 * DAY);
+    const event = await createEvent(3, { closesAt: new Date(sendAt.getTime() - 3_600_000), startsAt });
+    const sent = await inviteToEventByStaff(db, event, { people: [{ name: "Ana Pop", email: "ana@example.invalid" }], days: 7, outsideCapacity: false }, admin, sendAt);
+    expect(sent.deadline).toEqual(startsAt);
+    const pressAt = new Date(sendAt.getTime() + 5 * 60_000);
+    const accepted = await acceptInvitation(db, await linkOf("ana@example.invalid", pressAt), form("Ana", pressAt), pressAt);
+    const registration = accepted.ok ? accepted.registration : null;
+    expect(registration?.status).toBe("PENDING_DECLARATION");
+    expect(registration!.holdExpiresAt!.getTime()).toBeGreaterThan(pressAt.getTime());
+    expect(registration!.holdExpiresAt!.getTime()).toBeLessThanOrEqual(startsAt.getTime());
+  });
+
+  it("a typed address the club has never seen is written to in the language chosen («Limba invitației»)", async () => {
+    const event = await createEvent(3);
+    await inviteToEventByStaff(db, event, { people: [{ name: "John Guest", email: "john@example.invalid" }], days: 7, outsideCapacity: false, locale: "en" }, admin, NOW);
+    const [invitation] = await invitationsOf(event.id);
+    expect(invitation.locale).toBe("en");
+    const [email] = await invitationEmails();
+    expect(email.locale).toBe("en");
+    const [participant] = await db.select().from(participants).where(eq(participants.id, invitation.participantId));
+    expect(participant).toMatchObject({ preferredLocale: "en", defaultName: "John Guest" });
+  });
+
+  it("a typed address the club already knows is written to in its participant's language, and its stored name and language are left as they are", async () => {
+    const other = await createEvent(5);
+    await submitRegistration(db, other, { ...form("Ana", NOW), email: "ana@example.invalid", locale: "en" }, NOW, "REAL", PUBLIC);
+    const [before] = await db.select().from(participants).where(eq(participants.canonicalEmail, "ana@example.invalid"));
+    expect(before).toMatchObject({ preferredLocale: "en", emailVerifiedAt: null });
+
+    const event = await createEvent(3);
+    // The Administrator's choice of language is for addresses never seen: this one says its own.
+    await inviteToEventByStaff(db, event, { people: [{ name: "A. Pop (invitată)", email: "ana@example.invalid" }], days: 7, outsideCapacity: false, locale: "ro" }, admin, at(1));
+    const [invitation] = await invitationsOf(event.id);
+    expect(invitation).toMatchObject({ locale: "en", participantId: before.id, name: "A. Pop (invitată)" });
+    const [email] = await invitationEmails();
+    expect(email.locale).toBe("en");
+    const [after] = await db.select().from(participants).where(eq(participants.id, before.id));
+    expect(after).toMatchObject({ defaultName: before.defaultName, preferredLocale: "en" });
   });
 
   it("«În afara locurilor» holds no counted place and needs none on a full race", async () => {
@@ -268,16 +319,19 @@ describe("§NNN the send refuses, naming the person, and writes nothing", () => 
     expect(await invitationsOf(event.id)).toHaveLength(1);
   });
 
-  it("a cancelled event, an event whose registration closed, and the Organizer", async () => {
+  it("a cancelled event and a started one are refused, an event whose registration closed is not, and the Organizer is", async () => {
     const cancelled = await createEvent(5, { status: "CANCELLED" });
     expect(await refusal(inviteToEventByStaff(db, cancelled, { people: [{ name: "Ana Pop", email: "ana@example.invalid" }], days: 7, outsideCapacity: false }, admin, NOW))).toMatchObject({
       refusal: "INVITATION_EVENT_CLOSED",
     });
-    const closed = await createEvent(5, { closesAt: at(-1) });
-    expect(await refusal(inviteToEventByStaff(db, closed, { people: [{ name: "Ana Pop", email: "ana@example.invalid" }], days: 7, outsideCapacity: false }, admin, NOW))).toMatchObject({
+    const started = await createEvent(5, { startsAt: at(-1) });
+    expect(await refusal(inviteToEventByStaff(db, started, { people: [{ name: "Ana Pop", email: "ana@example.invalid" }], days: 7, outsideCapacity: false }, admin, NOW))).toMatchObject({
       refusal: "INVITATION_EVENT_CLOSED",
     });
-    const forbidden = await refusalOf(inviteToEvent(db, organizer, closed.id, { people: [{ name: "Ana Pop", email: "ana@example.invalid" }], days: 7, outsideCapacity: false }, NOW));
+    // Organizers, pacemakers and volunteers are invited late (§642's «Trimite-i oferta» works after the close too).
+    const closed = await createEvent(5, { closesAt: at(-1) });
+    expect((await inviteToEventByStaff(db, closed, { people: [{ name: "Ana Pop", email: "ana@example.invalid" }], days: 7, outsideCapacity: false }, admin, NOW)).sent).toBe(1);
+    const forbidden = await refusalOf(inviteToEvent(db, organizer, closed.id, { people: [{ name: "Ioana M", email: "ioana@example.invalid" }], days: 7, outsideCapacity: false }, NOW));
     expect(isDomainError(forbidden) && forbidden.code).toBe("FORBIDDEN");
   });
 });
@@ -316,6 +370,10 @@ describe("§NNN BR-REQ-036-02 the link: the GET reads, the press spends it once 
     expect(await countOccupied(db, event.id, at(6))).toMatchObject({ invitationHolds: 0, pendingDeclarationHolds: 2, confirmed: 0 });
     expect(await occupied(event.id, at(6))).toBe(2);
     expect((await db.select().from(registrations).where(eq(registrations.status, "WAITLIST_OFFERED")))).toHaveLength(0);
+    // Audited by the ids alone, with no actor (the person, from the link) and never the name or the address.
+    const [acceptedAudit] = await db.select().from(auditLogs).where(eq(auditLogs.action, "event.invitation_accepted"));
+    expect(acceptedAudit).toMatchObject({ actorStaffUserId: null, participantId: null, entityId: event.id, metadataJson: { invitationId: invitation.id, registrationId: registration!.id } });
+    expect(JSON.stringify(acceptedAudit.metadataJson)).not.toMatch(/Ana|ana@/);
 
     // Single use: the same link again finds it spent, and the page says so.
     expect(await acceptInvitation(db, secret, form("Ana", at(7)), at(7))).toEqual({ ok: false, kind: "used" });
@@ -343,6 +401,88 @@ describe("§NNN BR-REQ-036-02 the link: the GET reads, the press spends it once 
     expect(accepted.ok && accepted.registration).toMatchObject({ status: "PENDING_DECLARATION", outsideCapacity: true });
     expect(await occupied(event.id, at(3))).toBe(1);
   });
+
+  it("a member picked from the members' zone: the page presets «Sunt membru», and the press registers a club member whatever is posted", async () => {
+    const event = await createEvent(3);
+    await inviteToEventByStaff(db, event, { people: [{ name: "", email: "", memberStaffUserId: member.id }], days: 7, outsideCapacity: false }, admin, at(1));
+    const secret = await linkOf("dana@example.invalid", at(2));
+    expect(await readInvitationLink(db, secret, "en", at(3))).toMatchObject({ kind: "open", member: true, name: "Dana Membru" });
+    // The box unticked, as a no-JS draft or a slip would post it: the club named the account.
+    const accepted = await acceptInvitation(db, secret, { ...form("Dana", at(4)), clubMemberDeclared: false }, at(4));
+    expect(accepted.ok && accepted.registration).toMatchObject({ status: "PENDING_DECLARATION", clubMemberDeclared: true });
+  });
+
+  it("anybody typed answers «Sunt membru» themselves: an unticked box stays unticked", async () => {
+    const event = await createEvent(3);
+    await inviteToEventByStaff(db, event, { people: [{ name: "Ana Pop", email: "ana@example.invalid" }], days: 7, outsideCapacity: false }, admin, at(1));
+    const secret = await linkOf("ana@example.invalid", at(2));
+    expect(await readInvitationLink(db, secret, "ro", at(3))).toMatchObject({ kind: "open", member: false });
+    const accepted = await acceptInvitation(db, secret, { ...form("Ana", at(4)), clubMemberDeclared: false }, at(4));
+    expect(accepted.ok && accepted.registration).toMatchObject({ clubMemberDeclared: false });
+  });
+});
+
+describe("§NNN the invited address registered by another route takes the invitation's place over", () => {
+  /** The public form for the invited address itself, as anybody might fill it in. */
+  async function viaPublicForm(event: EventInput, minute: number) {
+    await submitRegistration(db, event, { ...form("Ana", at(minute)), email: "ana@example.invalid" }, at(minute), "REAL", PUBLIC);
+    const [row] = await db.select().from(registrations).where(and(eq(registrations.eventId, event.id), eq(registrations.registeredName, "Ana Munteanu")));
+    return row;
+  }
+
+  it("the public form and its confirmation: seated in the invitation's place on a full race, never behind it; the link then says used", async () => {
+    const event = await createEvent(1, { auto: true });
+    await inviteToEventByStaff(db, event, { people: [{ name: "Ana Pop", email: "ana@example.invalid" }], days: 30, outsideCapacity: false }, admin, NOW);
+    expect((await registered(event, "Elena", 1)).status).toBe("WAITLISTED");
+    const secret = await linkOf("ana@example.invalid", at(2));
+    const pending = await viaPublicForm(event, 3);
+    expect(pending.status).toBe("PENDING_EMAIL_CONFIRMATION");
+    // Typing the address takes nothing over: the invitation still holds the place until the inbox answers.
+    expect((await countOccupied(db, event.id, at(4))).invitationHolds).toBe(1);
+
+    const confirmed = await confirmEmail(db, event, pending.id, at(5));
+    expect(confirmed.status).toBe("PENDING_DECLARATION");
+    const [invitation] = await invitationsOf(event.id);
+    expect(invitation).toMatchObject({ acceptedAt: at(5), acceptedRegistrationId: pending.id });
+    // The place moved, with no instant free: one occupied before and after, Elena still waiting, nobody offered.
+    expect(await countOccupied(db, event.id, at(5))).toMatchObject({ invitationHolds: 0, pendingDeclarationHolds: 1 });
+    const [elena] = await db.select().from(registrations).where(eq(registrations.registeredName, "Elena Munteanu"));
+    expect(elena.status).toBe("WAITLISTED");
+    const [audit] = await db.select().from(auditLogs).where(eq(auditLogs.action, "event.invitation_accepted"));
+    expect(audit).toMatchObject({ actorStaffUserId: null, metadataJson: { invitationId: invitation.id, registrationId: pending.id, adopted: true } });
+    expect(await readInvitationLink(db, secret, "ro", at(6))).toMatchObject({ kind: "accepted" });
+    expect(await acceptInvitation(db, secret, form("Ana", at(7)), at(7))).toEqual({ ok: false, kind: "accepted" });
+  });
+
+  it("an invitation on the hidden list taken over seats the registration outside the places", async () => {
+    const event = await createEvent(1);
+    await registered(event, "Ioana", 0);
+    await inviteToEventByStaff(db, event, { people: [{ name: "Pace Maker", email: "ana@example.invalid" }], days: 7, outsideCapacity: true }, admin, at(1));
+    const pending = await viaPublicForm(event, 2);
+    expect(await confirmEmail(db, event, pending.id, at(3))).toMatchObject({ status: "PENDING_DECLARATION", outsideCapacity: true });
+    expect(await occupied(event.id, at(3))).toBe(1);
+  });
+
+  it("a place that was free anyway: the registration takes the invitation's, and the one left free is the line's", async () => {
+    const event = await createEvent(2);
+    await inviteToEventByStaff(db, event, { people: [{ name: "Ana Pop", email: "ana@example.invalid" }], days: 7, outsideCapacity: false }, admin, NOW);
+    const pending = await viaPublicForm(event, 1);
+    await confirmEmail(db, event, pending.id, at(2));
+    expect(await countOccupied(db, event.id, at(2))).toMatchObject({ invitationHolds: 0, pendingDeclarationHolds: 1 });
+    expect(await occupied(event.id, at(2))).toBe(1);
+  });
+
+  it("«Dă-i un loc acum» on the invited address uses the invitation's place: no supplementary place asked or added", async () => {
+    const event = await createEvent(1);
+    await inviteToEventByStaff(db, event, { people: [{ name: "Ana Pop", email: "ana@example.invalid" }], days: 7, outsideCapacity: false }, admin, NOW);
+    const pending = await viaPublicForm(event, 1);
+    const placed = await givePlaceNowByStaff(db, event, pending.id, admin, at(2));
+    expect(placed).toMatchObject({ status: "PENDING_DECLARATION", capacityRaisedTo: null });
+    expect(await capacityOf(event.id)).toBe(1);
+    const [invitation] = await invitationsOf(event.id);
+    expect(invitation.acceptedRegistrationId).toBe(pending.id);
+    expect(await occupied(event.id, at(2))).toBe(1);
+  });
 });
 
 describe("§NNN expiry, «Retrimite» and «Retrage»", () => {
@@ -364,6 +504,38 @@ describe("§NNN expiry, «Retrimite» and «Retrage»", () => {
     expect(await db.select().from(auditLogs).where(eq(auditLogs.action, "event.invitation_expired"))).toHaveLength(1);
     expect(await readInvitationLink(db, secret, "ro", after)).toMatchObject({ kind: "expired" });
     expect(await acceptInvitation(db, secret, form("Ana", after), after)).toEqual({ ok: false, kind: "expired" });
+  });
+
+  it("past its deadline on an event that offers by hand («Nu»): the place is free and nobody is offered", async () => {
+    const event = await createEvent(1, { auto: false });
+    await inviteToEventByStaff(db, event, { people: [{ name: "Ana Pop", email: "ana@example.invalid" }], days: 1, outsideCapacity: false }, admin, NOW);
+    expect((await registered(event, "Elena", 1)).status).toBe("WAITLISTED");
+    const after = new Date(NOW.getTime() + DAY + 60_000);
+    await runRegistrationMaintenance(db, after);
+    const [invitation] = await invitationsOf(event.id);
+    expect(invitation.expiredAt).toEqual(after);
+    expect(await occupied(event.id, after)).toBe(0);
+    const [elena] = await db.select().from(registrations).where(eq(registrations.registeredName, "Elena Munteanu"));
+    expect(elena.status).toBe("WAITLISTED");
+    expect(await db.select().from(registrations).where(eq(registrations.status, "WAITLIST_OFFERED"))).toHaveLength(0);
+  });
+
+  it("«Retrage» on an event that offers by hand («Nu»): the place is free and nobody is offered", async () => {
+    const event = await createEvent(1, { auto: false });
+    await inviteToEventByStaff(db, event, { people: [{ name: "Ana Pop", email: "ana@example.invalid" }], days: 7, outsideCapacity: false }, admin, NOW);
+    expect((await registered(event, "Elena", 1)).status).toBe("WAITLISTED");
+    const [invitation] = await invitationsOf(event.id);
+    await withdrawInvitationByStaff(db, invitation.id, admin, at(2));
+    expect(await occupied(event.id, at(2))).toBe(0);
+    const [elena] = await db.select().from(registrations).where(eq(registrations.registeredName, "Elena Munteanu"));
+    expect(elena.status).toBe("WAITLISTED");
+  });
+
+  it("«Retrimite» with the box empty keeps the deadline", async () => {
+    const event = await createEvent(3);
+    await inviteToEventByStaff(db, event, { people: [{ name: "Ana Pop", email: "ana@example.invalid" }], days: 3, outsideCapacity: false }, admin, NOW);
+    const [before] = await invitationsOf(event.id);
+    expect((await resendInvitationByStaff(db, before.id, { days: null }, admin, at(60 * 24 * 2))).expiresAt).toEqual(before.expiresAt);
   });
 
   it("«Retrimite»: a new link supersedes the old one (§619), the deadline moves later, never earlier", async () => {

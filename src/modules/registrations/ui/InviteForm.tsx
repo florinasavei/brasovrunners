@@ -6,6 +6,8 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
 import FormControlLabel from "@mui/material/FormControlLabel";
+import Radio from "@mui/material/Radio";
+import RadioGroup from "@mui/material/RadioGroup";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
@@ -29,6 +31,11 @@ export type InviteFormWords = {
   daysHelp: string;
   outsideLabel: string;
   outsideHelp: string;
+  /** «Limba invitației», its two answers and the sentence saying whom it is for. */
+  localeLegend: string;
+  localeRo: string;
+  localeEn: string;
+  localeHelp: string;
   submit: string;
   dialogTitle: string;
   /** «{count} invitații», counted. */
@@ -58,7 +65,8 @@ function fill(template: string, values: Record<string, string | number>): string
 
 /**
  * «Trimite invitații» (§NNN): the members' zone accounts as ticks with a search, the typed lines
- * «Nume <adresă>», the days and «În afara locurilor», and — before anything is sent — the dialog that
+ * «Nume <adresă>», the days, «Pe lista ascunsă» (§643's `outside_capacity`) and «Limba invitației» for
+ * an address the club has never seen, and — before anything is sent — the dialog that
  * says how many people, how many places are free, and whether the send adds supplementary places and
  * what the capacity becomes (§642: a raise is never pressed through a button that does not name it).
  * The capacity the dialog named is posted (`addPlace`), and the server adds exactly that or refuses.
@@ -229,6 +237,18 @@ export default function InviteForm({
           slotProps={{ htmlInput: { min: 1, max: daysMax, step: 1, inputMode: "numeric" } }}
           sx={{ maxWidth: 240 }}
         />
+        <Box component="fieldset" sx={{ border: 0, m: 0, p: 0, minWidth: 0 }}>
+          <Typography component="legend" variant="subtitle2">
+            {words.localeLegend}
+          </Typography>
+          <RadioGroup name="inviteLocale" defaultValue="ro" row>
+            <FormControlLabel sx={{ minHeight: TAP_TARGET.minHeight }} value="ro" control={<Radio />} label={words.localeRo} />
+            <FormControlLabel sx={{ minHeight: TAP_TARGET.minHeight }} value="en" control={<Radio />} label={words.localeEn} />
+          </RadioGroup>
+          <Typography variant="body2" color="text.secondary">
+            {words.localeHelp}
+          </Typography>
+        </Box>
         <Box>
           <FormControlLabel
             sx={{ minHeight: TAP_TARGET.minHeight }}

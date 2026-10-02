@@ -667,6 +667,7 @@
       "emailRejected": "Email respins",
       "testKind": "Test",
       "enteredByStaff": "Adăugată de echipă",
+      "invitedBy": "Înscriere pe invitație — trimisă de {who}, {when}",
       "livesIn": "Locuiește în: {place}",
       "sexLine": "Sex: {sex}",
       "sexOptions": {
@@ -1310,7 +1311,7 @@
       "SEND_NOW_MAILGUN_STOPPED_GMAIL_FULL": "Nu s-a trimis nimic: Mailgun e oprit, iar Gmail și-a atins limita pe zi. Ridic-o în «Emailuri» (cel mult 500), sau alege «Pune la coadă»: pleacă singur când Mailgun reia.",
       "SEND_NOW_MAILGUN_STOPPED_NOTICE": "Nu s-a trimis nimic: Mailgun e oprit, iar Gmail preia abia după ce aprobi nota de confidențialitate din șablonul nou. Până atunci alege «Pune la coadă».",
       "INVITATION_NOT_OPEN": "Invitația nu mai e în așteptare: a fost acceptată, retrasă sau a expirat.",
-      "INVITATION_EVENT_CLOSED": "Evenimentul nu mai primește invitații: e anulat, a început, nu e publicat sau înscrierile s-au închis.",
+      "INVITATION_EVENT_CLOSED": "Evenimentul nu mai primește invitații: e anulat, a început sau nu e publicat.",
       "INVITATION_BAD_DAYS": "Zilele până expiră: un număr întreg de la 1 la 60."
     },
     "editor": {
@@ -5470,10 +5471,11 @@
               "steps": [
                 "Pentru membri, parteneri și oaspeți: fiecare primește un email cu un link spre formular, cu numele și adresa deja completate.",
                 "«Evenimente» → «Editează» pe rândul cursei → cardul «Înscrierile primite» → «Trimite invitații»: se deschide secțiunea «Invitații» a listei.",
-                "Bifează membrii din listă sau scrie alte persoane, câte una pe rând: numele, apoi adresa. Alege «Zile până expiră»; bifează «În afara locurilor» pentru organizatori și pacemakeri.",
+                "Bifează membrii din listă sau scrie alte persoane, câte una pe rând: numele, apoi adresa. Alege «Zile până expiră» și «Limba invitației» (pentru adresele noi); bifează «Pe lista ascunsă (nu ocupă un loc)» pentru organizatori, voluntari și pacemakeri. Se poate trimite și după închiderea înscrierilor, până la start.",
                 "«Trimite invitațiile» întreabă întâi: câte invitații, câte locuri libere și, pe o cursă plină, câte locuri suplimentare se adaugă și cât devine capacitatea.",
                 "Fiecare invitație ține un loc până la termen; dacă nu e acceptată, locul se eliberează singur. Persoana completează restul și semnează ea declarația.",
-                "Pe rândul invitației: «Retrimite» trimite un link nou și poate muta termenul mai târziu; «Retrage» o închide și eliberează locul."
+                "Pe rândul invitației: «Retrimite» trimite un link nou; termenul rămâne, dacă nu scrii un număr de zile care îl mută mai târziu. «Retrage» o închide și eliberează locul.",
+                "Dacă cineva invitat se înscrie oricum, din formularul public sau la masă, înscrierea lui ia locul invitației când i se confirmă adresa sau primește un loc: invitația apare «Acceptată»."
               ]
             },
             {
@@ -6495,9 +6497,13 @@
       "typedLabel": "Alte persoane: nume și adresă, una pe rând",
       "typedHelp": "Câte o persoană pe rând: numele, apoi adresa de email. Rândurile goale nu contează.",
       "daysLabel": "Zile până expiră",
-      "daysHelp": "Locul e păstrat atâtea zile, cel mult până la închiderea înscrierilor; între 1 și {max}.",
-      "outsideLabel": "În afara locurilor",
-      "outsideHelp": "Pentru organizatori și pacemakeri: invitația nu ține niciun loc, iar înscrierea va fi în afara locurilor.",
+      "daysHelp": "Locul e păstrat atâtea zile, cel mult până la start; între 1 și {max}.",
+      "outsideLabel": "Pe lista ascunsă (nu ocupă un loc)",
+      "outsideHelp": "Pentru organizatori, voluntari, pacemakeri și alergători invitați care nu iau niciunul dintre locurile anunțate: invitația nu ține niciun loc, iar înscrierea va fi pe lista ascunsă.",
+      "localeLegend": "Limba invitației",
+      "localeRo": "Română",
+      "localeEn": "English",
+      "localeHelp": "Pentru adresele scrise de mână pe care clubul nu le cunoaște încă. Un membru primește invitația în limba contului, iar cineva deja înscris la club în limba în care s-a înscris.",
       "submit": "Trimite invitațiile",
       "dialog": {
         "title": "Trimiți invitațiile?",
@@ -6513,7 +6519,7 @@
           "other": "Se adaugă {count} de locuri suplimentare: capacitatea devine {capacity}."
         },
         "noRaise": "Niciun loc nou: încap în locurile libere.",
-        "outside": "În afara locurilor: nu țin niciun loc.",
+        "outside": "Pe lista ascunsă: nu țin niciun loc.",
         "confirmRaise": {
           "one": "Adaugă {count} loc și trimite",
           "few": "Adaugă {count} locuri și trimite",
@@ -6541,8 +6547,9 @@
       "raised": "cu un loc suplimentar adăugat",
       "openRegistration": "Deschide înscrierea",
       "resendTitle": "Retrimiți invitația?",
-      "resendBody": "{name} primește invitația din nou, cu un link nou; linkul vechi nu mai merge. Termenul devine peste {days} zile, dacă e mai târziu decât cel de acum.",
-      "resendDays": "Zile",
+      "resendBody": "{name} primește invitația din nou, cu un link nou; linkul vechi nu mai merge. Termenul devine peste {days} zile de acum, dacă e mai târziu decât cel de acum.",
+      "resendBodyKept": "{name} primește invitația din nou, cu un link nou; linkul vechi nu mai merge. Termenul rămâne cel de acum; ca să-l muți mai târziu, scrie numărul de zile.",
+      "resendDays": "Zile (opțional)",
       "resend": "Retrimite",
       "resending": "Se trimite…",
       "withdrawTitle": "Retragi invitația?",
@@ -6557,7 +6564,7 @@
         "INVITATION_NO_NAME": "Un rând nu are nume: nu s-a trimis nicio invitație.",
         "INVITATION_NOBODY": "Bifează cel puțin un membru sau scrie un rând.",
         "INVITATION_TOO_MANY": "Cel mult 50 de persoane la o apăsare: împarte lista.",
-        "INVITATION_EVENT_CLOSED": "Evenimentul nu mai primește invitații: e anulat, a început, nu e publicat sau înscrierile s-au închis.",
+        "INVITATION_EVENT_CLOSED": "Evenimentul nu mai primește invitații: e anulat, a început sau nu e publicat.",
         "INVITATION_NOT_OPEN": "Invitația nu mai e în așteptare: a fost acceptată, retrasă sau a expirat.",
         "INVITATION_BAD_DAYS": "Zilele până expiră: un număr întreg de la 1 la 60.",
         "INVITATION_UNREAD_LINE": "Rândurile {lines} nu au un nume și o adresă: nu s-a trimis nicio invitație.",
@@ -6998,7 +7005,7 @@
       "invalid": "Linkul nu e valid sau nu mai funcționează.",
       "askClub": "Dacă vrei totuși să vii, scrie-ne:",
       "contact": "Pagina de contact",
-      "alreadyRegistered": "Pe această adresă e deja o înscriere cu acest nume la eveniment: nu s-a înregistrat nimic. Scrie-ne dacă e o greșeală.",
+      "alreadyRegistered": "Pe această adresă e deja o înscriere cu acest nume la eveniment: nu s-a înregistrat nimic. Dacă nu ți-ai confirmat încă adresa, apasă linkul din emailul de confirmare: înscrierea ta primește locul păstrat de invitație. Scrie-ne dacă e o greșeală.",
       "addressAtCap": "Adresa aceasta are deja numărul maxim de înscrieri la eveniment: nu s-a înregistrat nimic.",
       "notYou": "Nu te așteptai la această invitație? Ignor-o sau scrie-ne:"
     }

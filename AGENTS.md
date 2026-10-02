@@ -1325,14 +1325,17 @@ Rules:
   cancelled or expired row through the form clears the mark;
 - an invitation by email (`event_invitations`, §NNN) holds one counted place from the send until it is
   accepted, withdrawn or its deadline passes — the deadline compared on every read, so the place is free
-  the instant it passes — unless it was sent «În afara locurilor». It is the club's choice, like a
+  the instant it passes — unless it was sent «Pe lista ascunsă» (`outside_capacity`). It is the club's choice, like a
   family's reservation (§543): **never released for somebody waiting before its deadline**, only at the
   deadline (the sweep stamps it and offers the place to the line) or at «Retrage». On a full race a send
   adds one supplementary place per invitation that needs it, under the rule of the bullet below. At the
   acceptance the allocator seats the registration in the invitation's place while the invitation still
   counts, then marks it accepted, in one transaction: the count moves from the invitation to the
   declaration hold with no instant where the place is free; an invitation never takes a lapsed
-  declaration hold's place (§160) — that runner may still sign;
+  declaration hold's place (§160) — that runner may still sign. A registration of the invited address
+  that reaches its place by another route — the public form's confirmation, a staff entry, the desk, a
+  restart, «Dă-i un loc acum» — takes the invitation's place over in the same way and marks it accepted,
+  so no place stays held in the name of somebody already seated;
 - public count means places a new registrant can receive after active holds and existing waiting-list priority;
 - every capacity-changing transaction expires stale holds and calls the queue allocator before giving a place to a later registration; a lapsed declaration hold is stale only as far as the queue wants its place, or once the event has started or is `COMPLETED` (`DECISIONS.md` §160) — a `CANCELLED` event's holds are left standing (§331) — and a registration that waits behind a kept hold is offered that place in the same transaction;
 - event row lock or equivalent safe serialization protects capacity and FIFO allocation;
@@ -2734,19 +2737,22 @@ BR-REQ-037-05):
    address typed, one per line. `inviteToEventByStaff`, under the event lock, in one transaction for the
    whole list: the line served first, every address canonicalized (§10.4), a person already registered
    or already invited refused by name with nothing written; each invitation holds a counted place until
-   its deadline (`min(now + days, close, start)`, §10.6) unless sent «În afara locurilor», and on a full
+   its deadline (`min(now + days, start)`, §10.6 — the public close is not asked) unless sent «Pe lista ascunsă», and on a full
    race adds one supplementary place only on the press that named the capacity. **It creates no
    registration**: the person registers themselves, from the `EVENT_INVITATION` email's link
    (`ACCEPT_INVITATION`, §12.8 — hashed, single use, GET only reads) — the form prefilled with the name
    and the address, locked, every consent and the declaration theirs. The press proves the inbox (no
    verification email) and seats the registration in the invitation's place through the one allocator.
-   «Retrimite» mints a new link (the old one superseded, §619) and may move the deadline later;
+   A registration of the invited address that reaches its place by another route takes the invitation
+   over in the same transaction (`event.invitation_accepted` with `adopted`).
+   «Retrimite» mints a new link (the old one superseded, §619) and moves the deadline only when days
+   are typed and the result is later;
    «Retrage» ends it and the place goes to the line. Audited as `event.invitation_sent`,
    `event.invitation_resent`, `event.invitation_withdrawn`, `event.invitation_expired`,
    `event.invitation_accepted` and `event.capacity_raised_for_invitation`, by the invitation's id, never
    a name or an address.
 
-Every one of the six writes an `audit_logs` row (§12.12). MUST NOT: a second write path into
+Every one of the seven writes an `audit_logs` row (§12.12). MUST NOT: a second write path into
 `registrations`, a staff-signed declaration (a paper one is the participant's, recorded), a
 confirmation that bypasses the allocator or the approved declaration, a staff-entered row that is
 allocated ahead of anybody already waiting, or a delete that skips the allocator and strands the

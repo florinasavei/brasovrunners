@@ -108,6 +108,46 @@ export async function findOpenInvitation<T extends Record<string, unknown>>(
   return row;
 }
 
+/**
+ * The invitation still open, before its deadline, of the address a registration belongs to (§NNN):
+ * the one that registration takes over when it reaches its place by another route than the link —
+ * the public form's confirmation, a staff entry, the desk, a restart, «Dă-i un loc acum» — so no place
+ * stays held in a seated person's name until the deadline. By the participant row the invitation was
+ * sent to: the address's one row, which every registration of that address carries. The deadline is
+ * compared here, whatever the sweep has stamped (§10.6).
+ */
+export async function findLiveInvitationOfParticipant<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+  participantId: string,
+  now: Date,
+): Promise<EventInvitation | undefined> {
+  const [row] = await db
+    .select()
+    .from(eventInvitations)
+    .where(and(eq(eventInvitations.eventId, eventId), eq(eventInvitations.participantId, participantId), gt(eventInvitations.expiresAt, now), invitationOpen()))
+    .limit(1);
+  return row;
+}
+
+/**
+ * The invitation a registration came from (§NNN), for its page's facts: «Înscriere pe invitație —
+ * trimisă de {who}, {when}». The accepted invitation naming the registration, whether by its link or
+ * taken over by another route; who sent it is a staff name, or null once that row is gone.
+ */
+export async function findInvitationOfRegistration<T extends Record<string, unknown>>(
+  db: Database<T>,
+  registrationId: string,
+): Promise<{ sentAt: Date; invitedByName: string | null } | undefined> {
+  const [row] = await db
+    .select({ sentAt: eventInvitations.sentAt, invitedByName: staffUsers.displayName })
+    .from(eventInvitations)
+    .leftJoin(staffUsers, eq(staffUsers.id, eventInvitations.invitedByStaffUserId))
+    .where(eq(eventInvitations.acceptedRegistrationId, registrationId))
+    .limit(1);
+  return row ? { sentAt: row.sentAt, invitedByName: row.invitedByName ?? null } : undefined;
+}
+
 /** An event's invitations, the newest first, for the backoffice's «Invitații», each with who sent it (a staff name, or null once that row is gone). */
 export async function listEventInvitations<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<(EventInvitation & { invitedByName: string | null })[]> {
   const rows = await db

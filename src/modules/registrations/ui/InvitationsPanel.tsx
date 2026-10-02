@@ -88,6 +88,10 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
       daysHelp: t("invitations.daysHelp", { max: INVITATION_DAYS_MAX }),
       outsideLabel: t("invitations.outsideLabel"),
       outsideHelp: t("invitations.outsideHelp"),
+      localeLegend: t("invitations.localeLegend"),
+      localeRo: t("invitations.localeRo"),
+      localeEn: t("invitations.localeEn"),
+      localeHelp: t("invitations.localeHelp"),
       submit: t("invitations.submit"),
       dialogTitle: t("invitations.dialog.title"),
       dialogCount: counted("invitations.dialog.count"),
@@ -171,14 +175,25 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
                     <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ mt: 1, alignItems: { sm: "flex-end" } }}>
                       <ActionForm
                         action={resendAction}
-                        confirm={{
-                          title: t("invitations.resendTitle"),
-                          body: t.raw("invitations.resendBody").replace("{name}", row.name) as string,
-                          fillFrom: ["days"],
-                          email: dialog.email(1),
-                          confirmLabel: t("invitations.resend"),
-                          cancelLabel: dialog.cancel,
-                        }}
+                        confirm={[
+                          // The box left empty keeps the deadline: only a number typed in it moves it, and the dialog says which.
+                          {
+                            title: t("invitations.resendTitle"),
+                            body: t("invitations.resendBodyKept", { name: row.name }),
+                            when: [{ field: "days", equals: "" }],
+                            email: dialog.email(1),
+                            confirmLabel: t("invitations.resend"),
+                            cancelLabel: dialog.cancel,
+                          },
+                          {
+                            title: t("invitations.resendTitle"),
+                            body: t.raw("invitations.resendBody").replace("{name}", row.name) as string,
+                            fillFrom: ["days"],
+                            email: dialog.email(1),
+                            confirmLabel: t("invitations.resend"),
+                            cancelLabel: dialog.cancel,
+                          },
+                        ]}
                         data-testid="invitation-resend-form"
                       >
                         <input type="hidden" name="uiLocale" value={locale} />
@@ -188,11 +203,10 @@ export default async function InvitationsPanel<T extends Record<string, unknown>
                           <TextField
                             name="days"
                             label={t("invitations.resendDays")}
-                            defaultValue={String(INVITATION_DAYS_DEFAULT)}
                             type="number"
                             size="small"
                             slotProps={{ htmlInput: { min: 1, max: INVITATION_DAYS_MAX, step: 1, inputMode: "numeric" } }}
-                            sx={{ width: 120 }}
+                            sx={{ width: 150 }}
                           />
                           <GlyphSubmitButton icon="resend" label={t("invitations.resend")} pendingLabel={t("invitations.resending")} variant="outlined" size="small" />
                         </Stack>

@@ -107,7 +107,7 @@ import {
   type RegistrationEntryDetails,
 } from "./names";
 import * as repo from "./repository";
-import { findInvitationById, findOpenInvitation, invitationOpen } from "./invitation-repository";
+import { findInvitationById, findLiveInvitationOfParticipant, findOpenInvitation, invitationOpen } from "./invitation-repository";
 import { confirmsInvitationRaises, INVITATION_BATCH_MAX, InvitationRefusal, invitationDeadline, invitationRaises, invitationState, validInvitationDays } from "./domain/invitations";
 import { waitlistRefusalOf } from "./domain/waitlist";
 
@@ -698,6 +698,46 @@ async function participantIdOfAddress<T extends Record<string, unknown>>(tx: Tra
 }
 
 /**
+ * The open invitation, before its deadline, of the address a registration belongs to (§NNN), when that
+ * registration is about to be given a place by a route other than the invitation's own link. Never for
+ * a row in the line (`WAITLISTED`, `WAITLIST_OFFERED`), whose place comes as an offer. Read under the
+ * caller's event lock.
+ *
+ * By the address, not by the name: the invitation is the address's — one open per address per event,
+ * refused at the send while the address holds a registration, and its link registers whoever the inbox
+ * names — so the first registration of that address to reach a place is the one the club kept it for.
+ */
+async function invitationToAdopt<T extends Record<string, unknown>>(db: Transaction<T>, eventId: string, registrationId: string, now: Date) {
+  const registration = await repo.findRegistrationById(db, registrationId);
+  if (!registration || registration.status === "WAITLISTED" || registration.status === "WAITLIST_OFFERED") return undefined;
+  return findLiveInvitationOfParticipant(db, eventId, registration.participantId, now);
+}
+
+/**
+ * An open invitation taken over by its address's registration (§NNN): marked accepted with that
+ * registration's id, after the registration took the place — the stamp the link's press writes
+ * (`seatInvitedRegistration`) — and audited `event.invitation_accepted` with `adopted: true` (no actor:
+ * the route that placed the row writes its own row). The link's page then says it was used.
+ */
+async function markInvitationAdopted<T extends Record<string, unknown>>(db: Transaction<T>, invitation: { id: string; eventId: string }, registrationId: string, now: Date): Promise<void> {
+  const [accepted] = await db
+    .update(eventInvitations)
+    .set({ acceptedAt: now, acceptedRegistrationId: registrationId })
+    .where(and(eq(eventInvitations.id, invitation.id), invitationOpen()))
+    .returning({ id: eventInvitations.id });
+  if (!accepted) throw new DomainError("CONFLICT", "the invitation changed state concurrently");
+  await recordAuditEvent(db, {
+    actorStaffUserId: null,
+    participantId: null,
+    action: "event.invitation_accepted",
+    entityType: "event",
+    entityId: invitation.eventId,
+    metadata: { invitationId: invitation.id, registrationId, adopted: true },
+    now,
+  });
+}
+
+/**
  * Allocate a place or add to the waiting list, for one registration already known to be past
  * email confirmation (AGENTS.md §15.2 steps 5-9, reused by the verified-restart path of §15.1
  * step 9 and by re-allocation in `signDeclaration`). The caller must already hold the
@@ -744,6 +784,20 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
   */
   await releaseOwnFamilyPlaceHold(db, event.id, registrationId);
   /*
+    The address's own open invitation (§NNN; the invitations review of 2026-10-02): a registration of
+    the invited address that reaches the allocator by another route — the public form and its
+    confirmation, a staff entry, the desk, a restart, a late signature — takes the invitation over
+    rather than waiting behind a place held in its own name. The place is this registration's, as a
+    family's reserved one is; the invitation's «În afara locurilor» comes with it, as the link's press
+    copies it; and the invitation is marked accepted after the transition, so the place moves from the
+    invitation's bucket to the hold with no instant where it is free. Never when the caller is the
+    link's press, which marks its own.
+  */
+  const adopted = invited ? undefined : await invitationToAdopt(db, event.id, registrationId, now);
+  if (adopted?.outsideCapacity) {
+    await db.update(registrations).set({ outsideCapacity: true, updatedAt: now }).where(eq(registrations.id, registrationId));
+  }
+  /*
     «În afara locurilor» (§643): a registration the club seats outside the places consumes none, so it
     is given its place directly whatever the counts — never waitlisted for want of one, never refused by
     a full line. The stale holds still expire and the line is still served first (`placeForNewcomer`),
@@ -752,7 +806,7 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
   const outside = await repo.isOutsideCapacity(db, registrationId);
   const { free, counts, eligibleWaitlisted } = await placeForNewcomer(db, event, now, settings);
   // An invitation's held place is this registration's (§NNN), as a family's reserved one is.
-  let direct = outside || reserved || invited || free;
+  let direct = outside || reserved || invited || adopted !== undefined || free;
 
   // No place: this registration would join the line, and the line may be full (§348).
   if (
@@ -790,7 +844,11 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
         changes: {
           holdExpiresAt: computeDeclarationHoldExpiry({
             now,
-            registrationClosesAt: event.registrationClosesAt,
+            /*
+              An invitation's registration (§NNN) is capped by the start alone: the club may invite after
+              the public close, and the close is the public door's — as «Dă-i un loc acum»'s place is.
+            */
+            registrationClosesAt: invited ? null : event.registrationClosesAt,
             eventStartsAt: event.startsAt,
             // A week-before confirmation for a race still far off (§104); the club's minutes otherwise (§377).
             window: confirmationWindow(event),
@@ -809,6 +867,16 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
 
   if (!updated) {
     throw new DomainError("CONFLICT", "this registration changed state concurrently");
+  }
+
+  if (adopted) {
+    await markInvitationAdopted(db, adopted, updated.id, now);
+    /*
+      The invitation's place is this registration's now. When the registration needed none of it — a
+      row outside the places, a family's own reserved place, a place that was free anyway — the place
+      the invitation held is free from here, and it is the line's, as the event's setting says.
+    */
+    await fillAvailableSpots(db, event, now, settings);
   }
 
   // The queue has just grown by one (§160): a declaration hold past its deadline was kept
@@ -2997,10 +3065,19 @@ export async function givePlaceNowByStaff<T extends Record<string, unknown>>(
     await releaseOwnFamilyPlaceHold(tx, event.id, current.id);
     await repo.expireStaleHolds(tx, locked, now);
     /*
+      The address's open invitation (§NNN), taken over as the allocator takes it: its place is this
+      row's — no supplementary place is asked or added — and its «În afara locurilor» comes with it.
+      Marked accepted after the transition below.
+    */
+    const adopted = await invitationToAdopt(tx, event.id, current.id, now);
+    if (adopted?.outsideCapacity && !current.outsideCapacity) {
+      await tx.update(registrations).set({ outsideCapacity: true, updatedAt: now }).where(eq(registrations.id, current.id));
+    }
+    /*
       A row «În afara locurilor» (§643) takes no counted place — the allocator seats it whatever the
       counts — so, like a family's reserved place, it needs no room and lets no lapsed hold go for it.
     */
-    const needsNoRoom = reserved || current.outsideCapacity;
+    const needsNoRoom = reserved || current.outsideCapacity || adopted !== undefined;
     let counts = await repo.countOccupied(tx, event.id, now);
     const hasRoom = () => locked.capacity === null || computeOccupied(counts) < locked.capacity;
     if (!needsNoRoom && !hasRoom() && counts.lapsedDeclarationHolds > 0) {
@@ -3044,6 +3121,8 @@ export async function givePlaceNowByStaff<T extends Record<string, unknown>>(
       now,
     });
     if (!placed) throw new DomainError("CONFLICT", "this registration changed state concurrently");
+    // The invitation's place is the row's now (§NNN); one the row did not need goes to the line below.
+    if (adopted) await markInvitationAdopted(tx, adopted, placed.id, now);
 
     // The old verification link is spent: it can no longer confirm, and its page says «sign the declaration».
     await tx
@@ -3099,7 +3178,7 @@ export async function givePlaceNowByStaff<T extends Record<string, unknown>>(
       entityType: "registration",
       entityId: placed.id,
       // How many waited when the place was given ahead of them, and whether it was a family's own reserved place.
-      metadata: { from: current.status, to: placed.status, waiting, ...(reserved ? { familyReservation: true } : {}) },
+      metadata: { from: current.status, to: placed.status, waiting, ...(reserved ? { familyReservation: true } : {}), ...(adopted ? { invitationId: adopted.id } : {}) },
       now,
     });
     // As after an offer: the expiry above may have freed another place, which is the line's (a no-op on «Nu»).
@@ -4031,10 +4110,15 @@ export type InvitationInvitee = { name: string; email: string; memberStaffUserId
 
 export type InvitationSendInput = {
   people: readonly InvitationInvitee[];
-  /** «Zile până expiră» (7 by default): capped by the close and the start (`invitationDeadline`). */
+  /** «Zile până expiră» (7 by default): capped by the start (`invitationDeadline`). */
   days: number;
-  /** «În afara locurilor» (§643) for the whole send: organizers and pacemakers hold no counted place. */
+  /** «Pe lista ascunsă» (§643's `outside_capacity`) for the whole send: organizers, volunteers, pacemakers hold no counted place. */
   outsideCapacity: boolean;
+  /**
+   * «Limba invitației» for a typed address the club has never seen (Romanian by default): a member is
+   * written to in the account's language, and an address the club knows in its participant's.
+   */
+  locale?: "ro" | "en";
   /**
    * The capacity the dialog named when it said supplementary places would be added (§642): exactly the
    * locked capacity plus the places this send needs, or the send is refused and nothing is written.
@@ -4062,9 +4146,10 @@ function invitationIdentity(person: InvitationInvitee) {
  * Under the event lock, in **one transaction for the whole list** — a refusal names the person and
  * nothing of the send is written:
  *
- * 1. **The event**: local, scheduled, dated (§533), not started, and its registration not closed — the
- *    invitation's deadline is `min(now + days, close, start)` (`invitationDeadline`), and one that is not
- *    ahead is refused. The public window's opening is not asked: the club may invite before it opens.
+ * 1. **The event**: local, scheduled, published, dated (§533) and not started — the invitation's deadline
+ *    is `min(now + days, start)` (`invitationDeadline`). Neither end of the public window is asked: the
+ *    club may invite before it opens and after it closes (organizers, pacemakers, volunteers invited
+ *    late), as «Trimite-i oferta» offers after the close (§642).
  * 2. **The line is served first** and the stale holds expire (`fillAvailableSpots`, as `placeForNewcomer`):
  *    a place somebody waiting is owed is offered to them before any invitation counts what is left.
  * 3. **Each person**, in order: the address canonicalized (§10.4); refused when the address already holds
@@ -4079,9 +4164,11 @@ function invitationIdentity(person: InvitationInvitee) {
  *    (`confirmsInvitationRaises`); any other number refuses the whole send with
  *    `SUPPLEMENTARY_PLACE_UNCONFIRMED` before anything is written. Never a lapsed declaration hold taken
  *    for an invitation: that runner may still sign (§160), and the place is the club's addition.
- * 5. **Written**: the address's participant row (the identity the one link is scoped to), the invitation,
- *    its `EVENT_INVITATION` email in the person's language (the member account's, else Romanian) — the
- *    link minted at the send (`render.ts`, §12.8) — and one audit row `event.invitation_sent`.
+ * 5. **Written**: the address's participant row when the address was never seen (the identity the one
+ *    link is scoped to; an existing row is left as it is — never another person's name or language
+ *    rewritten), the invitation, its `EVENT_INVITATION` email in the person's language (the member
+ *    account's, else the known participant's, else «Limba invitației») — the link minted at the send
+ *    (`render.ts`, §12.8) — and one audit row `event.invitation_sent`.
  *
  * After the commit the public count is told (`revalidatePublicContent`) and the job woken for the
  * deadline. `kind` is in no condition (§30).
@@ -4115,7 +4202,7 @@ export async function inviteToEventByStaff<T extends Record<string, unknown>>(
     ) {
       throw new InvitationRefusal("INVITATION_EVENT_CLOSED");
     }
-    const deadline = invitationDeadline({ now, days: input.days, registrationClosesAt: lockedEvent.registrationClosesAt, startsAt: locked.startsAt });
+    const deadline = invitationDeadline({ now, days: input.days, startsAt: locked.startsAt });
     if (!deadline) throw new InvitationRefusal("INVITATION_EVENT_CLOSED");
 
     // The line first, and every stale hold — an invitation past its deadline among them — expired (§10.6).
@@ -4123,7 +4210,14 @@ export async function inviteToEventByStaff<T extends Record<string, unknown>>(
 
     // Who, read and refused before anything is written.
     const seen = new Set<string>();
-    const invitees: { name: string; email: string; locale: "ro" | "en"; memberStaffUserId: string | null; identity: ReturnType<typeof canonicalizeEmail> }[] = [];
+    const invitees: {
+      name: string;
+      email: string;
+      locale: "ro" | "en";
+      memberStaffUserId: string | null;
+      identity: ReturnType<typeof canonicalizeEmail>;
+      known: Awaited<ReturnType<typeof findParticipantByCanonicalEmail>>;
+    }[] = [];
     for (const posted of input.people) {
       let person = { name: posted.name.trim().replace(/\s+/g, " "), email: posted.email.trim(), locale: "ro" as "ro" | "en", memberStaffUserId: null as string | null };
       if (posted.memberStaffUserId) {
@@ -4146,7 +4240,13 @@ export async function inviteToEventByStaff<T extends Record<string, unknown>>(
         if (rows.some((row) => isActiveStatus(row.status))) throw new InvitationRefusal("INVITATION_ALREADY_REGISTERED", person.name);
       }
       if (await findOpenInvitation(tx, event.id, identity.canonicalEmail)) throw new InvitationRefusal("INVITATION_ALREADY_INVITED", person.name);
-      invitees.push({ ...person, identity });
+      /*
+        The person's language: a member's account says it; an address the club knows says it on its
+        participant row — the language that person registered in — and only an address never seen is
+        written to in the language the Administrator chose («Limba invitației», Romanian by default).
+      */
+      const locale = person.memberStaffUserId ? person.locale : (known?.preferredLocale ?? input.locale ?? "ro");
+      invitees.push({ ...person, locale, identity, known });
     }
 
     // The places: one supplementary place per invitation that needs a counted one and finds none (§642).
@@ -4175,7 +4275,12 @@ export async function inviteToEventByStaff<T extends Record<string, unknown>>(
           raised = true;
         }
       }
-      const participant = await findOrCreateParticipant(tx, person.identity, person.name, person.locale, now);
+      /*
+        The address's participant row, which the one link is scoped to: an existing one as it is — an
+        invitation never rewrites another person's stored name or language, verified or not — and a new
+        one only for an address never seen.
+      */
+      const participant = person.known ?? (await findOrCreateParticipant(tx, person.identity, person.name, person.locale, now));
       await tx.insert(eventInvitations).values({
         id: invitationId,
         eventId: event.id,
@@ -4249,8 +4354,8 @@ async function lockOpenInvitation<T extends Record<string, unknown>>(tx: Transac
 
 /**
  * «Retrimite» (§NNN): the email again, with a new link — the old one superseded when the new is minted
- * (§619: its page says a newer email has it) — and the deadline kept or moved to `days` from now, capped
- * by the close and the start as at the send. Never earlier than it was: a resend does not take time back.
+ * (§619: its page says a newer email has it) — and the deadline kept (no `days`) or moved to `days` from
+ * now, capped by the start as at the send. Never earlier than it was: a resend does not take time back.
  * `resend_count + 1`, audited. The Administrator's alone.
  */
 export async function resendInvitationByStaff<T extends Record<string, unknown>>(
@@ -4266,7 +4371,7 @@ export async function resendInvitationByStaff<T extends Record<string, unknown>>
   const result = await db.transaction(async (tx) => {
     const { invitation, lockedEvent } = await lockOpenInvitation(tx, invitationId, now);
     if (lockedEvent.eventStatus !== "SCHEDULED" || lockedEvent.startsAt.getTime() <= now.getTime()) throw new InvitationRefusal("INVITATION_EVENT_CLOSED", invitation.name);
-    const moved = input.days === null ? null : invitationDeadline({ now, days: input.days, registrationClosesAt: lockedEvent.registrationClosesAt, startsAt: lockedEvent.startsAt });
+    const moved = input.days === null ? null : invitationDeadline({ now, days: input.days, startsAt: lockedEvent.startsAt });
     const expiresAt = moved && moved.getTime() > invitation.expiresAt.getTime() ? moved : invitation.expiresAt;
     await tx
       .update(eventInvitations)
